@@ -1385,4 +1385,11 @@ pub(crate) async fn forget_on_waiter(name: &str, ssts: impl Iterator<Item = [u8;
         }
     }
     crate::prefetch::forget(name).await;
+    // the SST mirror (gp3 floor prototype): every file of the database overwritten with zeros and deleted
+    if let Some(m) = tenant_bench::mirror::get() {
+        let (n, b) = m.purge_root(name, &tenant_bench::lifecycle::tenant_path(name));
+        if n > 0 {
+            eprintln!("database {name} dropped or erased: {n} mirror files ({b} bytes) overwritten and deleted");
+        }
+    }
 }

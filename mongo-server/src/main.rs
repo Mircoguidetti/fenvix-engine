@@ -245,6 +245,22 @@ struct Args {
     /// Size of the disk floor in GiB (0 = 80% of the free space of its file system at start).
     #[arg(long, default_value_t = 0)]
     counter_disk_gb: u64,
+    /// gp3 floor prototype (Fable idea 1), off by default, needs --waiter-tools: directory of the SST mirror, a
+    /// byte-for-byte copy of the databases' SST objects (one file per SST, same offsets as on S3). Reads of a mirrored
+    /// SST never go to S3; new SSTs are copied in at their PUT, before the manifest names them; open databases are
+    /// filled from S3; SSTs that leave the manifests leave the mirror; drop and erase overwrite and delete the files.
+    /// Kept across restarts. Empty = off.
+    #[arg(long, default_value = "")]
+    mirror_dir: String,
+    /// Start the mirror empty (its files overwritten and deleted) instead of keeping the files of the last run.
+    #[arg(long, default_value_t = false)]
+    mirror_fresh: bool,
+    /// SSTs copied from S3 into the mirror at once.
+    #[arg(long, default_value_t = 8)]
+    mirror_fill_parallel: usize,
+    /// Pace of the mirror's fill from S3 over all databases, MB/s (0 = as fast as it goes; gp3 baseline is 125).
+    #[arg(long, default_value_t = 0)]
+    mirror_fill_mbps: u64,
     /// Most of the counter's RAM the maps keep when the RAM is full, in percent; the active data keeps the rest (R-T1,
     /// correction 2). The maps beyond it go to the disk floor.
     #[arg(long, default_value_t = 25)]
@@ -674,6 +690,23 @@ async fn run() -> Result<()> {
         other => anyhow::bail!("unknown --store {other}"),
     };
     // trip meter (and simulated S3 latency when FENVIX_SIM_S3 is set: measurement only), then large GETs in pieces
+    // the SST mirror (gp3 floor prototype) sits on the raw store, under every S3 meter: a read it answers is no S3 request
+    let mirror = if args.mirror_dir.is_empty() {
+        None
+    } else {
+        anyhow::ensure!(args.waiter_tools, "--mirror-dir needs --waiter-tools");
+        let m = tenant_bench::mirror::Mirror::open(std::path::PathBuf::from(&args.mirror_dir), !args.mirror_fresh, args.mirror_fill_parallel)?;
+        m.set_fill_mbps(args.mirror_fill_mbps);
+        let (n, b) = m.usage();
+        eprintln!("SST mirror on: {} ({n} files, {} MiB kept)", args.mirror_dir, b >> 20);
+        let _ = tenant_bench::mirror::MIRROR.set(Arc::clone(&m));
+        Some(m)
+    };
+    let raw_for_mirror = Arc::clone(&s3);
+    let s3 = match &mirror {
+        Some(m) => tenant_bench::mirror::wrap(s3, Arc::clone(m)),
+        None => s3,
+    };
     let s3 = tenant_bench::simstore::wrap_sim(s3);
     let s3 = faults::wrap(s3);
     let s3 = tenant_bench::simstore::wrap_split(s3);
@@ -758,6 +791,17 @@ async fn run() -> Result<()> {
     // One counter for every request this process makes (lifecycle, leases, maintenance, listings).
     let global = Arc::new(CountingStore::new(s3));
     let s3: Arc<dyn ObjectStore> = global.clone();
+    if let Some(m) = &mirror {
+        // fills go through the whole stack: their GETs are counted and billed like any other
+        m.set_fill_store(Arc::clone(&s3));
+        let (m, raw) = (Arc::clone(m), raw_for_mirror);
+        tokio::spawn(async move {
+            let n = m.reconcile_with_store(&raw).await;
+            if n > 0 {
+                eprintln!("SST mirror: {n} files whose object is gone from the store overwritten and deleted");
+            }
+        });
+    }
     let counting = Arc::new(CountingStore::new(Arc::clone(&s3)));
     let (queue, rx) = CompactionQueue::new();
     let lc = if args.no_maintenance {

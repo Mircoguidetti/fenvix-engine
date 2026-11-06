@@ -6,5 +6,6 @@ pub mod counting;
 pub mod lifecycle;
 pub mod maps;
 pub mod meter;
+pub mod mirror;
 pub mod simstore;
 pub mod warm;

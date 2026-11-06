@@ -1697,6 +1697,7 @@ pub fn waiter_stats() -> Document {
             "mapsReleased": ld(&m.maps_released), "droppedEntries": ld(&m.dropped_entries), "droppedDiskBytes": ld(&m.dropped_disk_bytes),
             "deadRefused": ld(&m.dead_refused), "warmInflight": ld(&m.warm_inflight), "warmMaxInflight": ld(&m.warm_max_inflight),
             "warmSstsCap": c.warm_ssts_cap as i64, "warmRequestsCap": c.warm_reqs_cap as i64,
+            "mirrorSkipped": ld(&m.mirror_skipped),
         });
         w.insert("maps", doc! {
             "sstsMapped": ssts as i64, "sstBytesMapped": sst_bytes as i64,
@@ -1704,6 +1705,17 @@ pub fn waiter_stats() -> Document {
             "releasedDbs": ld(&tenant_bench::maps::MAPS_RELEASED_DBS), "droppedDbs": ld(&tenant_bench::maps::MAPS_DROPPED_DBS),
             "runs": ld(&tenant_bench::maps::MAPS_RUNS), "fails": ld(&tenant_bench::maps::MAPS_FAILS),
             "busy": ld(&tenant_bench::maps::MAPS_BUSY), "lastMs": ld(&tenant_bench::maps::MAPS_LAST_MS),
+        });
+    }
+    if let Some(mi) = tenant_bench::mirror::get() {
+        let (files, bytes) = mi.usage();
+        let m = &mi.m;
+        w.insert("mirror", doc! {
+            "files": files as i64, "bytes": bytes as i64, "indexBytes": mi.index_bytes() as i64,
+            "hits": ld(&m.hits), "hitBytes": ld(&m.hit_bytes), "misses": ld(&m.misses), "readFails": ld(&m.read_fails),
+            "pushed": ld(&m.pushed), "pushedBytes": ld(&m.pushed_bytes), "pushFails": ld(&m.push_fails),
+            "filled": ld(&m.filled), "filledBytes": ld(&m.filled_bytes), "fillFails": ld(&m.fill_fails), "filling": ld(&m.filling), "lastFillMs": ld(&m.last_fill_ms),
+            "removed": ld(&m.removed), "scrubbedFiles": ld(&m.scrubbed_files), "scrubbedBytes": ld(&m.scrubbed_bytes), "staleRefused": ld(&m.stale_refused),
         });
     }
     w

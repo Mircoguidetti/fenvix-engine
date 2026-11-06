@@ -166,6 +166,8 @@ impl Src {
 pub fn refresh(counter: &Arc<Counter>, id: &str, db: Src) -> Option<tokio::task::JoinHandle<()>> {
     let m = db.manifest();
     let mid = m.id();
+    // the SST mirror (gp3 floor prototype), when on: fill what is new, trim what left
+    crate::mirror::on_manifest(id, &m);
     let mut now: HashMap<[u8; 26], SsTableHandle> = HashMap::new();
     for v in m.all_sst_views() {
         if let Some(s) = sst_of(&v.sst.id) {

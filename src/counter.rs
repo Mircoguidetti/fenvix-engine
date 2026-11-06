@@ -210,6 +210,8 @@ pub struct CounterMeters {
     /// Map loads in flight now, and the most at once.
     pub warm_inflight: AtomicU64,
     pub warm_max_inflight: AtomicU64,
+    /// Entries that would have gone down to the disk floor but were not kept because their SST is in the mirror.
+    pub mirror_skipped: AtomicU64,
 }
 
 /// The two-floor counter. Use [`Counter::split_cache`] to get the cache slatedb takes.
@@ -639,6 +641,12 @@ impl Counter {
     }
 
     fn disk_put(&self, k: Ck, e: &CachedEntry, map: bool) {
+        // gp3 floor prototype: a block of an SST in the mirror is not kept on the disk floor (no per-block entry in
+        // RAM); the next read of it is answered from the mirror file, at the same offset as on S3
+        if crate::mirror::covers(&k.sst) {
+            self.m.mirror_skipped.fetch_add(1, Relaxed);
+            return;
+        }
         let Some(d) = &self.disk else {
             if map {
                 self.m.maps_dropped.fetch_add(1, Relaxed);
