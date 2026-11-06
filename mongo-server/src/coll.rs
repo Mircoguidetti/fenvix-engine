@@ -1145,7 +1145,25 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
                 None => doc_key(coll, id),
             };
             if !ov_keys.contains(&k) {
-                if let Some(v) = g.get(&k).await? {
+                let mut v = g.get(&k).await?;
+                if v.is_none() && id_lookup.is_some() {
+                    // a customer-keyed document that moved (its customer changed) after the locator was read: the
+                    // locator, read again, gives where it is now
+                    if let Plan::Id(id) = &plan {
+                        for _ in 0..3 {
+                            match locate(g, coll, id, o.ov).await? {
+                                Some(now) if [prefix.as_slice(), now.as_slice()].concat() != k => {
+                                    v = g.get(&[prefix.as_slice(), now.as_slice()].concat()).await?;
+                                    if v.is_some() {
+                                        break;
+                                    }
+                                }
+                                _ => break,
+                            }
+                        }
+                    }
+                }
+                if let Some(v) = v {
                     stats.docs = 1;
                     let d = decode(&v)?;
                     if visible(&d, o) && matches(&d, o.filter)? {

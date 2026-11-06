@@ -1210,18 +1210,24 @@ impl Entry {
     }
 
     pub async fn get_doc(&mut self, coll: &str, id: &Bson) -> Result<Option<Document>> {
-        let key = match crate::custkey::of_opts(self.coll_opts(coll).await?.as_ref()) {
-            // customer-first documents: the locator holds the document's suffix
-            Some(_) => match self.get(&crate::custkey::loc_key(coll, id)).await? {
-                Some(suf) => [layout::doc_prefix(coll), suf.to_vec()].concat(),
-                None => return Ok(None),
-            },
-            None => layout::doc_key(coll, id),
-        };
-        match self.get(&key).await? {
-            Some(v) => Ok(Some(Document::from_reader(&v[..])?)),
-            None => Ok(None),
+        let ckey = crate::custkey::of_opts(self.coll_opts(coll).await?.as_ref());
+        // customer-first documents: the locator holds the document's suffix (read again if the document moved meanwhile)
+        for _ in 0..3 {
+            let key = match &ckey {
+                Some(_) => match self.get(&crate::custkey::loc_key(coll, id)).await? {
+                    Some(suf) => [layout::doc_prefix(coll), suf.to_vec()].concat(),
+                    None => return Ok(None),
+                },
+                None => layout::doc_key(coll, id),
+            };
+            if let Some(v) = self.get(&key).await? {
+                return Ok(Some(Document::from_reader(&v[..])?));
+            }
+            if ckey.is_none() {
+                break;
+            }
         }
+        Ok(None)
     }
 
     pub fn put_doc_op(coll: &str, d: &Document) -> Result<Op> {
@@ -1391,16 +1397,23 @@ impl ReadView {
     }
 
     pub async fn get_doc(&self, coll: &str, id: &Bson) -> Result<Option<Document>> {
-        let key = match crate::custkey::of_opts(self.coll_opts(coll).await?.as_ref()) {
-            Some(_) => match self.get(&crate::custkey::loc_key(coll, id)).await? {
-                Some(suf) => [layout::doc_prefix(coll), suf.to_vec()].concat(),
-                None => return Ok(None),
-            },
-            None => layout::doc_key(coll, id),
-        };
-        match self.get(&key).await? {
-            Some(v) => Ok(Some(Document::from_reader(&v[..])?)),
-            None => Ok(None),
+        let ckey = crate::custkey::of_opts(self.coll_opts(coll).await?.as_ref());
+        // customer-first documents: the locator holds the document's suffix (read again if the document moved meanwhile)
+        for _ in 0..3 {
+            let key = match &ckey {
+                Some(_) => match self.get(&crate::custkey::loc_key(coll, id)).await? {
+                    Some(suf) => [layout::doc_prefix(coll), suf.to_vec()].concat(),
+                    None => return Ok(None),
+                },
+                None => layout::doc_key(coll, id),
+            };
+            if let Some(v) = self.get(&key).await? {
+                return Ok(Some(Document::from_reader(&v[..])?));
+            }
+            if ckey.is_none() {
+                break;
+            }
         }
+        Ok(None)
     }
 }
