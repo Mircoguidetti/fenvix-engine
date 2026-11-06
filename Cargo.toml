@@ -5,6 +5,8 @@ edition = "2021"
 
 [workspace]
 members = ["mongo-server", "loadgen"]
+# the log (quaderno) crate is its own workspace; mongo-server uses it as a path dependency
+exclude = ["proto"]
 
 [dependencies]
 slatedb = "=0.17.0"

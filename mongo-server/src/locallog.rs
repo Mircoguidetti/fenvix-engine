@@ -81,6 +81,13 @@ pub struct LocalLog {
     /// uploaded (its segments stay); a background task retries the replay until it succeeds, then the database leaves.
     pinned: Mutex<HashMap<String, Vec<Record>>>,
     pub upload_every: Duration,
+    /// Q8d: the replicated log (quaderno) instead of this machine's disk (`qlog.rs`). Records go to the log and are
+    /// acknowledged when 2 copies of 3 have them; no segment files; the restart reads them back from the log.
+    remote: Option<Arc<crate::qlog::Remote>>,
+    /// Q8d: databases whose ownership was lost with records only in the replicated log (not in object storage). They
+    /// are refused (like `pinned`) and never confirmed to the log until a restart reads the records back and applies
+    /// them. Without this the disk-log rule (a drop record, see `dbs.rs` abandon) would discard acknowledged writes.
+    frozen: Mutex<std::collections::HashSet<String>>,
 }
 
 fn checksum(b: &[u8]) -> [u8; 8] {
@@ -233,7 +240,7 @@ impl LocalLog {
         let old = list_segments(&dir)?;
         let first = old.last().map(|(n, _)| n + 1).unwrap_or(1);
         let (tx, rx) = mpsc::unbounded_channel();
-        let me = Arc::new(Self { dir: dir.clone(), id, next_seq: AtomicU64::new((boot << SEQ_BOOT_SHIFT) + 1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every });
+        let me = Arc::new(Self { dir: dir.clone(), id, next_seq: AtomicU64::new((boot << SEQ_BOOT_SHIFT) + 1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every, remote: None, frozen: Mutex::new(Default::default()) });
         let w = Arc::clone(&me);
         std::thread::Builder::new().name("local-log".into()).spawn(move || w.writer_thread(rx, first))?;
         Ok((me, old))
@@ -310,8 +317,24 @@ impl LocalLog {
 
     /// Sequence number for the next batch of `db` (taken under the database's lock, so records of one database are in
     /// the order they were applied).
+    ///
+    /// With the replicated log the engine may restart on another machine (no BOOT file): the number is a hybrid clock,
+    /// at least (now in ms) << 16 and above every number given before by this process, so a later run (here or on another
+    /// machine with a clock that is not behind by more than the restart takes) never reuses numbers below a marker an
+    /// earlier run stored. The restart also raises it above every record it reads back.
     pub fn next_seq(&self) -> u64 {
-        self.next_seq.fetch_add(1, Relaxed)
+        if self.remote.is_none() {
+            return self.next_seq.fetch_add(1, Relaxed);
+        }
+        let now = (crate::ctl::rec::now_ms() as u64) << 16;
+        let mut cur = self.next_seq.load(Relaxed);
+        loop {
+            let s = cur.max(now);
+            match self.next_seq.compare_exchange_weak(cur, s + 1, Relaxed, Relaxed) {
+                Ok(_) => return s,
+                Err(c) => cur = c,
+            }
+        }
     }
 
     pub fn marker_op(&self, seq: u64) -> Op {
@@ -326,7 +349,26 @@ impl LocalLog {
     /// The database was dropped: its earlier records must not be applied again by a restart.
     pub fn append_drop(&self, db: &str) -> oneshot::Receiver<Result<(), String>> {
         let seq = self.next_seq();
-        let rx = self.append_rec(seq, db, &[], true, 0);
+        let rx = match &self.remote {
+            // Q8d: once the drop record is confirmed, every record of the database up to it can leave the log
+            Some(r) => {
+                let (done, rx) = oneshot::channel();
+                let rrx = r.append(db, record_key(seq), encode(seq, db, &[], true, 0));
+                let (r, db2) = (Arc::clone(r), db.to_string());
+                tokio::spawn(async move {
+                    let res = rrx.await.unwrap_or_else(|_| Err("the log client stopped".into()));
+                    let ok = res.as_ref().ok().copied();
+                    let _ = done.send(res.map(|_| ()));
+                    if let Some(pos) = ok {
+                        if let Err(e) = r.flush_done(&db2, pos).await {
+                            eprintln!("quaderno: {e:#}");
+                        }
+                    }
+                });
+                rx
+            }
+            None => self.append_rec(seq, db, &[], true, 0),
+        };
         let mut t = self.tenants.lock().unwrap();
         let e = t.entry(db.to_string()).or_default();
         e.staged = seq;
@@ -341,6 +383,18 @@ impl LocalLog {
             let e = t.entry(db.to_string()).or_default();
             e.staged = e.staged.max(seq);
         }
+        if let Some(r) = &self.remote {
+            // Q8d: acknowledged when the log confirmed it (2 copies of 3)
+            let rrx = r.append(db, record_key(seq), encode(seq, db, ops, drop, epoch));
+            tokio::spawn(async move {
+                let res = rrx.await.unwrap_or_else(|_| Err("the log client stopped".into()));
+                if res.is_ok() {
+                    RECORDS.fetch_add(1, Relaxed);
+                }
+                let _ = done.send(res.map(|_| ()));
+            });
+            return rx;
+        }
         if self.tx.send(Append { bytes: encode(seq, db, ops, drop, epoch), seq, done }).is_err() {
             let (d2, rx2) = oneshot::channel();
             let _ = d2.send(Err("local log writer stopped".into()));
@@ -351,7 +405,20 @@ impl LocalLog {
 
     /// The database's replay failed at this start and is retried: no client may open it until its records are applied.
     pub fn is_pinned(&self, db: &str) -> bool {
-        self.pinned.lock().unwrap().contains_key(db)
+        self.pinned.lock().unwrap().contains_key(db) || self.frozen.lock().unwrap().contains(db)
+    }
+
+    /// Q8d: true with the replicated log.
+    pub fn is_remote(&self) -> bool {
+        self.remote.is_some()
+    }
+
+    /// Q8d: ownership of `db` was lost while some of its acknowledged records are only in the replicated log. They must
+    /// not be dropped (they are acknowledged) nor confirmed (they are not in object storage): the database is refused
+    /// until a restart of the engine applies them from the log.
+    pub fn freeze(&self, db: &str) {
+        eprintln!("quaderno: ownership of {db} lost with records not yet in object storage; the database is refused until a restart applies them from the log");
+        self.frozen.lock().unwrap().insert(db.to_string());
     }
 
     /// The database was dropped or erased: its kept records must not be applied (the drop record covers the restart).
@@ -373,6 +440,15 @@ impl LocalLog {
         }
         if let Some(e) = self.tenants.lock().unwrap().get_mut(db) {
             e.uploaded = e.staged;
+        }
+        if let Some(r) = &self.remote {
+            // Q8d: every record confirmed so far was staged before the close, so the close's flush covers it
+            let (r, db, pos) = (Arc::clone(r), db.to_string(), r.committed_pos(db));
+            tokio::spawn(async move {
+                if let Err(e) = r.flush_done(&db, pos).await {
+                    eprintln!("quaderno: {e:#}");
+                }
+            });
         }
     }
 
@@ -400,10 +476,13 @@ impl LocalLog {
             tick.tick().await;
             loop {
                 tick.tick().await;
-                let pinned: std::collections::HashSet<String> = me.pinned.lock().unwrap().keys().cloned().collect();
+                let mut pinned: std::collections::HashSet<String> = me.pinned.lock().unwrap().keys().cloned().collect();
+                pinned.extend(me.frozen.lock().unwrap().iter().cloned());
                 let due: Vec<(String, u64)> = me.tenants.lock().unwrap().iter().filter(|(k, e)| e.uploaded < e.staged && !pinned.contains(*k)).map(|(k, e)| (k.clone(), e.staged)).collect();
                 futures::future::join_all(due.into_iter().map(|(db, target)| {
                     let me = Arc::clone(&me);
+                    // Q8d: records confirmed by the log before the flush were staged before it: the flush covers them
+                    let pos = me.remote.as_ref().map_or(0, |r| r.committed_pos(&db));
                     async move {
                         // Every record up to `target` is staged in the writer (appended after staging), so one flush covers it.
                         match tenant_bench::lifecycle::flush_writer(&db).await {
@@ -412,6 +491,11 @@ impl LocalLog {
                                 UPLOADS.fetch_add(1, Relaxed);
                                 if let Some(e) = me.tenants.lock().unwrap().get_mut(&db) {
                                     e.uploaded = e.uploaded.max(target);
+                                }
+                                if let Some(r) = &me.remote {
+                                    if let Err(e) = r.flush_done(&db, pos).await {
+                                        eprintln!("quaderno: {e:#}");
+                                    }
                                 }
                             }
                             Err(e) => eprintln!("local log: upload of {db} failed: {e:#}"),
@@ -423,6 +507,83 @@ impl LocalLog {
             }
         });
     }
+}
+
+/// Q8d: key of a record in the replicated log (unique per record).
+fn record_key(seq: u64) -> Vec<u8> {
+    let mut k = b"r".to_vec();
+    k.extend_from_slice(&seq.to_be_bytes());
+    k
+}
+
+/// Q8d: start the local log on the replicated log (quaderno) at `addrs` (`a:p,b:p,c:p`); `dir` only keeps the records
+/// of a database that conflict with another writer. Waits for the log's leader. The restart is [`recover_remote`].
+pub async fn install_quaderno(addrs: &str, id: &str, dir: &str, upload_secs: u64) -> Result<()> {
+    anyhow::ensure!((1..=60).contains(&upload_secs), "--local-log-upload-secs must be between 1 and 60 with --quaderno");
+    let remote = crate::qlog::Remote::start(addrs)?;
+    remote.ready(Duration::from_secs(60)).await?;
+    let dir = PathBuf::from(dir);
+    std::fs::create_dir_all(&dir).with_context(|| format!("directory {}", dir.display()))?;
+    // the disk writer is never used: its channel stays without a receiver
+    let (tx, _rx) = mpsc::unbounded_channel();
+    let me = Arc::new(LocalLog { dir, id: format!("quaderno:{id}"), next_seq: AtomicU64::new(1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every: Duration::from_secs(upload_secs), remote: Some(remote), frozen: Mutex::new(Default::default()) });
+    tenant_bench::lifecycle::LOCAL_LOG_FLUSH_SECS.store(upload_secs, Relaxed);
+    let _ = LOG.set(me);
+    Ok(())
+}
+
+/// Q8d: the restart with the replicated log. Reads back every record the log still holds (not confirmed as in object
+/// storage), applies them durably (same replay and marker check as the disk log), then confirms them to the log.
+/// Runs before the server accepts connections. Returns (databases, records applied).
+pub async fn recover_remote(dbs: &Arc<crate::dbs::Dbs>, timeout: Duration) -> Result<(usize, u64)> {
+    let Some(log) = get() else { return Ok((0, 0)) };
+    let Some(remote) = log.remote.clone() else { return Ok((0, 0)) };
+    if std::env::var("MONGO_TEST_LOCALLOG_NO_REPLAY").map_or(false, |v| v == "1") {
+        eprintln!("TEST: replay from the log disabled (MONGO_TEST_LOCALLOG_NO_REPLAY): never use this in production");
+        return Ok((0, 0));
+    }
+    let pending = remote.read_pending().await?;
+    let mut by_db: BTreeMap<String, Vec<Record>> = BTreeMap::new();
+    let mut max_pos: HashMap<String, u64> = HashMap::new();
+    let mut max_seq = 0;
+    let mut n_read = 0u64;
+    for (_, recs) in pending {
+        for (pos, bytes) in recs {
+            // the value is the disk log's framing: length, checksum, payload
+            anyhow::ensure!(bytes.len() >= 12, "a record of the log is too short");
+            let len = u32::from_le_bytes(bytes[0..4].try_into().unwrap()) as usize;
+            let payload = &bytes[12..];
+            anyhow::ensure!(payload.len() == len && checksum(payload) == bytes[4..12], "a record of the log has a bad checksum");
+            let r = decode(payload)?;
+            n_read += 1;
+            max_seq = max_seq.max(r.seq);
+            let mp = max_pos.entry(r.db.clone()).or_insert(0);
+            *mp = (*mp).max(pos);
+            remote.note_committed(&r.db, pos);
+            if r.drop {
+                by_db.insert(r.db.clone(), Vec::new());
+                continue;
+            }
+            by_db.entry(r.db.clone()).or_default().push(r);
+        }
+    }
+    log.next_seq.fetch_max(max_seq + 1, Relaxed);
+    eprintln!("quaderno: restart read {n_read} records of {} databases from the log", by_db.len());
+    let names: Vec<String> = by_db.keys().cloned().collect();
+    let (n_dbs, applied, conflicts, failed) = replay_all(dbs, log, by_db, timeout).await?;
+    // confirmed: every database whose records are now in object storage (applied, or already there by the marker)
+    for db in names {
+        if conflicts.contains(&db) || failed.contains(&db) {
+            continue;
+        }
+        if let Some(p) = max_pos.get(&db) {
+            remote.flush_done(&db, *p).await?;
+        }
+    }
+    if !conflicts.is_empty() {
+        eprintln!("quaderno: records of {conflicts:?} conflict with another writer: kept in the log, NOT applied");
+    }
+    Ok((n_dbs, applied))
 }
 
 /// Start the local log (flag set): returns the records a previous run left, for [`recover`].
@@ -473,6 +634,23 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>, timeo
         }
     }
     log.next_seq.fetch_max(max_seq + 1, Relaxed);
+    let (n_dbs, applied, conflicts, _failed) = replay_all(dbs, log, by_db, timeout).await?;
+    for (_, p) in old {
+        if conflicts.is_empty() {
+            let _ = std::fs::remove_file(&p);
+        } else {
+            let _ = std::fs::rename(&p, p.with_extension("conflict"));
+        }
+    }
+    if !conflicts.is_empty() {
+        eprintln!("local log: segments kept as *.conflict for {conflicts:?}");
+    }
+    Ok((n_dbs, applied))
+}
+
+/// Replay every database's records (those after its marker), up to 32 databases at once. Returns (databases applied,
+/// records applied, databases in conflict, databases whose replay failed and whose records are kept and pinned).
+async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTreeMap<String, Vec<Record>>, timeout: Duration) -> Result<(usize, u64, Vec<String>, Vec<String>)> {
     // Databases are independent: check (and replay) up to 32 at once. A clean shutdown leaves every database's marker at
     // its last record, so a restart only reads the markers; one at a time that took 123 s for 100 databases on S3.
     let log_id = log.id.clone();
@@ -494,6 +672,7 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>, timeo
     let mut n_dbs = 0usize;
     let mut conflicts = Vec::new();
     let mut failed = 0usize;
+    let mut failed_dbs = Vec::new();
     for (db, r, seen, keep) in results {
         match r {
             Ok(Outcome::Nothing) => {}
@@ -509,6 +688,7 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>, timeo
                 // read, plus one), so a restart does not take this process's own replay for another writer.
                 eprintln!("local log: replay of database {db} failed ({e:#}); its {} records are kept, the database is refused until they are applied", keep.len());
                 failed += 1;
+                failed_dbs.push(db.clone());
                 let epoch = keep.iter().map(|r| r.epoch).max().unwrap_or(0).max(seen.map_or(0, |s| s + 1));
                 let mut kept = Vec::with_capacity(keep.len());
                 for r in keep {
@@ -526,17 +706,7 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>, timeo
         eprintln!("local log: {failed} databases kept their records; retried in the background");
         spawn_retry(Arc::clone(dbs), timeout);
     }
-    for (_, p) in old {
-        if conflicts.is_empty() {
-            let _ = std::fs::remove_file(&p);
-        } else {
-            let _ = std::fs::rename(&p, p.with_extension("conflict"));
-        }
-    }
-    if !conflicts.is_empty() {
-        eprintln!("local log: segments kept as *.conflict for {conflicts:?}");
-    }
-    Ok((n_dbs, applied))
+    Ok((n_dbs, applied, conflicts, failed_dbs))
 }
 
 enum Outcome {
