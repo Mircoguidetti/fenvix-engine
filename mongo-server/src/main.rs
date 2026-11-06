@@ -54,6 +54,7 @@ mod lease;
 mod localcas;
 mod faults;
 mod locallog;
+mod qlog;
 mod natural;
 mod netguard;
 mod params;
@@ -250,6 +251,15 @@ struct Args {
     local_log_dir: String,
     #[arg(long, default_value_t = 30)]
     local_log_upload_secs: u64,
+    /// Q8d, off by default: the replicated log (quaderno, proto/quaderno) as the durability of every write, at these
+    /// three copies (`a:p,b:p,c:p`). A write is acknowledged when 2 copies of 3 have its record; object storage gets it
+    /// every --local-log-upload-secs (1 to 60 here), then the log drops it. A restart (on any machine) reads back from the
+    /// log what object storage does not have yet. --local-log-dir, if set, only keeps conflicting records. See qlog.rs.
+    #[arg(long, default_value = "")]
+    quaderno: String,
+    /// Name of the log in the markers stored with the data (the same for every engine that uses this log).
+    #[arg(long, default_value = "cell1")]
+    quaderno_id: String,
     /// Local log: the restart gives up on replaying one database after this long (its records are kept for the next
     /// restart) so that one stuck database (its S3 requests hanging or retried) does not keep the whole server down.
     #[arg(long, default_value_t = 120)]
@@ -629,7 +639,16 @@ async fn run() -> Result<()> {
     ctl::durability::install(args.relaxed_flush_ms)?;
     fair::install(args.fair_lag_ms, args.db_max_inflight, args.db_max_rate, args.fair_max_inflight, args.fair_max_flushing, args.db_quota_pts, args.db_burst_pts, args.db_quota_queue, &args.unit_weights).map_err(|e| anyhow::anyhow!(e))?;
     js::COMMAND_MAX_MS.store(args.js_command_max_ms, std::sync::atomic::Ordering::Relaxed);
-    let local_log_old = if args.local_log_dir.is_empty() { None } else { Some(locallog::install(&args.local_log_dir, args.local_log_upload_secs)?) };
+    let local_log_old = if !args.quaderno.is_empty() {
+        let dir = if args.local_log_dir.is_empty() { "fenvix-quaderno-kept" } else { args.local_log_dir.as_str() };
+        locallog::install_quaderno(&args.quaderno, &args.quaderno_id, dir, args.local_log_upload_secs).await?;
+        eprintln!("quaderno: writes are acknowledged by the replicated log at {}", args.quaderno);
+        None
+    } else if args.local_log_dir.is_empty() {
+        None
+    } else {
+        Some(locallog::install(&args.local_log_dir, args.local_log_upload_secs)?)
+    };
     tenant_bench::lifecycle::ADAPTIVE.store(args.adaptive_group_commit, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::ADAPTIVE_MAX_US.store(args.adaptive_group_commit_max_us, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::WRITER_POLL_SECS.store(args.writer_poll_secs, std::sync::atomic::Ordering::Relaxed);
@@ -706,6 +725,12 @@ async fn run() -> Result<()> {
         let t = std::time::Instant::now();
         let (n, recs) = locallog::recover(&dbs, old, Duration::from_secs(args.local_log_replay_timeout_secs)).await?;
         eprintln!("local log: restart applied {recs} records to {n} databases in {:.1} s", t.elapsed().as_secs_f64());
+        locallog::get().unwrap().spawn_uploader();
+    }
+    if !args.quaderno.is_empty() {
+        let t = std::time::Instant::now();
+        let (n, recs) = locallog::recover_remote(&dbs, Duration::from_secs(args.local_log_replay_timeout_secs)).await?;
+        eprintln!("quaderno: restart applied {recs} records to {n} databases in {:.1} s", t.elapsed().as_secs_f64());
         locallog::get().unwrap().spawn_uploader();
     }
     ctl::start(Arc::clone(&dbs), Arc::clone(&server), lc_for_ctl, holder.clone(), args.ctl.clone(), usage).await?;

@@ -560,8 +560,13 @@ impl Entry {
             // Ownership is lost: what was not uploaded can no longer be (another process owns the database). A restart must
             // not apply those records over the new owner's writes.
             if l.has_pending(&self.name) && !l.is_pinned(&self.name) {
-                eprintln!("local log: ownership of {} lost with writes not yet in object storage; they are lost", self.name);
-                let _ = l.append_drop(&self.name).await;
+                if l.is_remote() {
+                    // Q8d: with the replicated log the records are safe on 2 copies of 3: keep them for the restart
+                    l.freeze(&self.name);
+                } else {
+                    eprintln!("local log: ownership of {} lost with writes not yet in object storage; they are lost", self.name);
+                    let _ = l.append_drop(&self.name).await;
+                }
             }
         }
         let mut closed = true;
