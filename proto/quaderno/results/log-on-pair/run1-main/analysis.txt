@@ -1,0 +1,61 @@
+=== 1000 writes/s
+base-near  ack p50 1.75 ms  p99 4.00 ms (reps 4.68, 4.00, 3.96)  p99.9 11.63 ms  | invalid: none
+           cross-zone bytes/write 1668  one copy (r0->r1) 715  crossings 2.33  | r0 CPU 342 us/record
+           disk: reads 0/s 0.0 MB/s, writes 6371/s, flushes 2818/s  | cores {'0': 19.0, '1': 18.0, '2': 45.0, '3': 43.0}
+base-far   ack p50 2.93 ms  p99 6.63 ms (reps 7.12, 5.71, 6.63)  p99.9 15.57 ms  | invalid: none
+           cross-zone bytes/write 2298  one copy (r0->r1) 718  crossings 3.20  | r0 CPU 344 us/record
+           disk: reads 0/s 0.0 MB/s, writes 6351/s, flushes 2852/s  | cores {'0': 19.0, '1': 18.0, '2': 54.0, '3': 51.0}
+pair-0     ack p50 1.76 ms  p99 3.97 ms (reps 4.62, 3.75, 3.97)  p99.9 13.49 ms  | invalid: none
+           cross-zone bytes/write 1670  one copy (r0->r1) 716  crossings 2.33  | r0 CPU 345 us/record  mongo-server 0.00 cores
+           disk: reads 0/s 0.0 MB/s, writes 6460/s, flushes 2813/s  | cores {'0': 20.0, '1': 19.0, '2': 47.0, '3': 46.0}
+pair-2000  ack p50 1.89 ms  p99 4.96 ms (reps 5.59, 4.66, 4.96)  p99.9 16.05 ms  | invalid: none
+           cross-zone bytes/write 1665  one copy (r0->r1) 715  crossings 2.33  | r0 CPU 371 us/record  mongo-server 0.42 cores
+           disk: reads 249/s 1.7 MB/s, writes 6380/s, flushes 2778/s  | reads done 2000/s p99 3.5 ms  | cores {'0': 45.0, '1': 45.0, '2': 60.0, '3': 55.0}
+pair-8000  ack p50 1.96 ms  p99 6.80 ms (reps 6.80, 6.48, 7.06)  p99.9 16.29 ms  | invalid: none
+           cross-zone bytes/write 1652  one copy (r0->r1) 712  crossings 2.32  | r0 CPU 369 us/record  mongo-server 0.99 cores
+           disk: reads 612/s 4.4 MB/s, writes 6300/s, flushes 2747/s  | reads done 8000/s p99 27.1 ms  | cores {'0': 71.0, '1': 72.0, '2': 73.0, '3': 64.0}
+cold-2000  ack p50 1.88 ms  p99 4.91 ms (reps 4.91, 4.45, 5.15)  p99.9 14.07 ms  | invalid: none
+           cross-zone bytes/write 1666  one copy (r0->r1) 715  crossings 2.33  | r0 CPU 370 us/record  mongo-server 0.54 cores
+           disk: reads 1654/s 12.3 MB/s, writes 6457/s, flushes 2806/s  | reads done 2000/s p99 4.1 ms  | cores {'0': 48.0, '1': 48.0, '2': 60.0, '3': 56.0}
+cold-8000  ack p50 2.00 ms  p99 14.65 ms (reps 14.65, 11.07, 16.85)  p99.9 55.71 ms  | invalid: none
+           cross-zone bytes/write 1640  one copy (r0->r1) 709  crossings 2.31  | r0 CPU 343 us/record  mongo-server 1.24 cores
+           disk: reads 7021/s 52.3 MB/s, writes 5957/s, flushes 2637/s  | reads done 8000/s p99 646.7 ms  | cores {'0': 83.0, '1': 79.0, '2': 75.0, '3': 66.0}
+
+=== 5000 writes/s
+base-near  ack p50 1.96 ms  p99 6.93 ms (reps 6.93, 7.00, 6.08)  p99.9 31.05 ms  | invalid: none
+           cross-zone bytes/write 1352  one copy (r0->r1) 640  crossings 2.11  | r0 CPU 100 us/record
+           disk: reads 0/s 0.0 MB/s, writes 8489/s, flushes 3811/s  | cores {'0': 26.0, '1': 26.0, '2': 68.0, '3': 64.0}
+base-far   ack p50 3.74 ms  p99 10.94 ms (reps 10.94, 11.54, 10.45)  p99.9 22.61 ms  | invalid: [(1, ['core mean 91%']), (2, ['core mean 91%']), (3, ['core mean 91%'])]
+           cross-zone bytes/write 2039  one copy (r0->r1) 659  crossings 3.10  | r0 CPU 118 us/record
+           disk: reads 0/s 0.0 MB/s, writes 10583/s, flushes 4793/s  | cores {'0': 34.0, '1': 34.0, '2': 91.0, '3': 87.0}
+pair-0     ack p50 1.96 ms  p99 6.21 ms (reps 6.21, 6.21, 5.67)  p99.9 24.77 ms  | invalid: none
+           cross-zone bytes/write 1354  one copy (r0->r1) 640  crossings 2.11  | r0 CPU 100 us/record  mongo-server 0.00 cores
+           disk: reads 0/s 0.0 MB/s, writes 8582/s, flushes 3860/s  | cores {'0': 30.0, '1': 29.0, '2': 68.0, '3': 64.0}
+pair-2000  ack p50 2.10 ms  p99 7.68 ms (reps 7.68, 8.19, 7.66)  p99.9 24.18 ms  | invalid: none
+           cross-zone bytes/write 1341  one copy (r0->r1) 637  crossings 2.11  | r0 CPU 101 us/record  mongo-server 0.41 cores
+           disk: reads 249/s 1.7 MB/s, writes 8184/s, flushes 3662/s  | reads done 2000/s p99 4.7 ms  | cores {'0': 48.0, '1': 48.0, '2': 77.0, '3': 71.0}
+pair-8000  ack p50 2.23 ms  p99 13.14 ms (reps 10.57, 13.29, 13.14)  p99.9 28.38 ms  | invalid: none
+           cross-zone bytes/write 1325  one copy (r0->r1) 633  crossings 2.09  | r0 CPU 99 us/record  mongo-server 0.95 cores
+           disk: reads 609/s 4.3 MB/s, writes 7680/s, flushes 3434/s  | reads done 8000/s p99 59.3 ms  | cores {'0': 74.0, '1': 75.0, '2': 84.0, '3': 76.0}
+cold-2000  ack p50 2.15 ms  p99 9.31 ms (reps 9.31, 6.56, 10.04)  p99.9 40.83 ms  | invalid: none
+           cross-zone bytes/write 1340  one copy (r0->r1) 637  crossings 2.10  | r0 CPU 103 us/record  mongo-server 0.54 cores
+           disk: reads 1649/s 12.3 MB/s, writes 8227/s, flushes 3679/s  | reads done 2000/s p99 7.7 ms  | cores {'0': 53.0, '1': 54.0, '2': 76.0, '3': 72.0}
+cold-8000  ack p50 2.33 ms  p99 18.29 ms (reps 21.17, 18.29, 18.14)  p99.9 51.62 ms  | invalid: none
+           cross-zone bytes/write 1319  one copy (r0->r1) 631  crossings 2.09  | r0 CPU 98 us/record  mongo-server 1.11 cores
+           disk: reads 6013/s 44.7 MB/s, writes 7430/s, flushes 3277/s  | reads done 8000/s p99 9101.3 ms  | cores {'0': 82.0, '1': 83.0, '2': 85.0, '3': 78.0}
+
+1000 writes/s: base-far - base-near: p99 +2.63 ms, p50 +1.18 ms
+1000 writes/s: pair-0 - base-near: p99 -0.03 ms, p50 +0.01 ms
+1000 writes/s: pair-2000 - base-near: p99 +0.96 ms, p50 +0.13 ms
+1000 writes/s: pair-8000 - base-near: p99 +2.81 ms, p50 +0.21 ms
+1000 writes/s: cold-2000 - base-near: p99 +0.91 ms, p50 +0.13 ms
+1000 writes/s: cold-8000 - base-near: p99 +10.66 ms, p50 +0.25 ms
+
+5000 writes/s: base-far - base-near: p99 +4.01 ms, p50 +1.78 ms
+5000 writes/s: pair-0 - base-near: p99 -0.72 ms, p50 -0.00 ms
+5000 writes/s: pair-2000 - base-near: p99 +0.75 ms, p50 +0.14 ms
+5000 writes/s: pair-8000 - base-near: p99 +6.21 ms, p50 +0.27 ms
+5000 writes/s: cold-2000 - base-near: p99 +2.38 ms, p50 +0.19 ms
+5000 writes/s: cold-8000 - base-near: p99 +11.36 ms, p50 +0.38 ms
+
+VERDICT: KEEP: p99 +0.96 ms at 2,000 reads/s and 1,000 writes/s (pair-2000 4.96 ms vs base-near 4.00 ms, medians of 3 and 3)

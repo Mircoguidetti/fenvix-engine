@@ -1,0 +1,40 @@
+{
+ "base-flusher1": {
+  "leader": 0,
+  "cores": {
+   "dproxy": 0.006,
+   "r0": 0.056,
+   "r1": 0.042,
+   "r2": 0.042,
+   "flusher": 0.002
+  }
+ },
+ "base-flusher0": {
+  "leader": 0,
+  "cores": {
+   "dproxy": 0.006,
+   "r0": 0.055,
+   "r1": 0.042,
+   "r2": 0.041
+  }
+ },
+ "pair-flusher1": {
+  "leader": 0,
+  "cores": {
+   "dproxy": 0.006,
+   "r0": 0.056,
+   "r1": 0.042,
+   "r2": 0.042,
+   "flusher": 0.003
+  }
+ },
+ "pair-flusher0": {
+  "leader": 0,
+  "cores": {
+   "dproxy": 0.006,
+   "r0": 0.054,
+   "r1": 0.041,
+   "r2": 0.041
+  }
+ }
+}

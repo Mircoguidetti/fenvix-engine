@@ -1,0 +1,1 @@
+replica 2 pronta: indice 1..0 mandato 0

@@ -1,0 +1,15 @@
+=== 1000 writes/s
+base-near  ack p50 1.75 ms  p99 4.03 ms (reps 4.03, 4.15, 3.87)  p99.9 11.06 ms  | invalid: none
+           cross-zone bytes/write 1671  one copy (r0->r1) 716  crossings 2.33  | r0 CPU 353 us/record
+           disk: reads 0/s 0.0 MB/s, writes 6474/s, flushes 2849/s  | cores {'0': 20.0, '1': 19.0, '2': 46.0, '3': 45.0}
+pair-2000  ack p50 1.82 ms  p99 4.77 ms (reps 4.77, 4.34, 8.41)  p99.9 12.82 ms  | invalid: none
+           cross-zone bytes/write 1670  one copy (r0->r1) 717  crossings 2.33  | r0 CPU 424 us/record  mongo-server 0.41 cores
+           disk: reads 80/s 0.5 MB/s, writes 6467/s, flushes 2843/s  | reads done 2000/s p99 3.4 ms  | cores {'0': 44.0, '1': 44.0, '2': 59.0, '3': 53.0}
+cold-2000  ack p50 1.85 ms  p99 5.73 ms (reps 5.73, 5.11, 6.96)  p99.9 21.23 ms  | invalid: none
+           cross-zone bytes/write 1668  one copy (r0->r1) 716  crossings 2.33  | r0 CPU 442 us/record  mongo-server 0.54 cores
+           disk: reads 1517/s 10.7 MB/s, writes 6250/s, flushes 2809/s  | reads done 2000/s p99 5.2 ms  | cores {'0': 48.0, '1': 48.0, '2': 61.0, '3': 57.0}
+
+1000 writes/s: pair-2000 - base-near: p99 +0.74 ms, p50 +0.07 ms
+1000 writes/s: cold-2000 - base-near: p99 +1.70 ms, p50 +0.10 ms
+
+VERDICT: KEEP: p99 +0.74 ms at 2,000 reads/s and 1,000 writes/s (pair-2000 4.77 ms vs base-near 4.03 ms, medians of 3 and 3)

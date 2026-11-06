@@ -1,0 +1,39 @@
+16:37:27 START cycles 32 delay_us 500
+16:37:32 first leader 0
+16:37:51 cycle 0 kill9 waiter r0 -> new leader r1 in 4.808 s terms 1 -> 3 | spare durable 10001 keeper durable 10001 | zombie committed 0 not_leader 897 ambiguous 0 no_answer 0 | converged True
+16:38:01 cycle 1 kill9 waiter r1 -> new leader r0 in 3.956 s terms 3 -> 4 | spare durable 21103 keeper durable 21103 | zombie committed 0 not_leader 870 ambiguous 0 no_answer 0 | converged True
+16:38:10 cycle 2 kill9 waiter r0 -> new leader r1 in 3.047 s terms 4 -> 5 | spare durable 31004 keeper durable 31004 | zombie committed 0 not_leader 882 ambiguous 0 no_answer 0 | converged True
+16:38:23 cycle 3 stop waiter r1 -> new leader r0 in 6.115 s terms 5 -> 6 | spare durable 39005 keeper durable 39005 | zombie committed 0 not_leader 892 ambiguous 0 no_answer 0 | converged True
+16:38:33 cycle 4 kill9 waiter r0 -> new leader r1 in 5.077 s terms 6 -> 8 | spare durable 52406 keeper durable 52306 | zombie committed 0 not_leader 867 ambiguous 0 no_answer 0 | converged True
+16:38:44 cycle 5 kill9 waiter r1 -> new leader r0 in 4.866 s terms 8 -> 10 | spare durable 63108 keeper durable 63108 | zombie committed 0 not_leader 861 ambiguous 0 no_answer 0 | converged True
+16:38:53 cycle 6 kill9 waiter r0 -> new leader r1 in 3.633 s terms 10 -> 11 | spare durable 72210 keeper durable 72210 | zombie committed 0 not_leader 847 ambiguous 0 no_answer 0 | converged True
+16:39:09 cycle 7 stop waiter r1 -> new leader r0 in 8.172 s terms 11 -> 13 | spare durable 83211 keeper durable 83211 | zombie committed 0 not_leader 892 ambiguous 0 no_answer 0 | converged True
+16:39:19 cycle 8 kill9 waiter r0 -> new leader r1 in 5.037 s terms 13 -> 15 | spare durable 98113 keeper durable 98113 | zombie committed 0 not_leader 843 ambiguous 0 no_answer 0 | converged True
+16:39:31 cycle 9 kill9 waiter r1 -> new leader r0 in 4.386 s terms 15 -> 17 | spare durable 109215 keeper durable 109215 | zombie committed 0 not_leader 824 ambiguous 0 no_answer 0 | converged True
+16:39:42 cycle 10 kill9 waiter r0 -> new leader r1 in 4.173 s terms 17 -> 19 | spare durable 121417 keeper durable 121417 | zombie committed 0 not_leader 822 ambiguous 0 no_answer 0 | converged True
+16:39:57 cycle 11 stop waiter r1 -> new leader r0 in 6.115 s terms 19 -> 20 | spare durable 133419 keeper durable 133319 | zombie committed 0 not_leader 894 ambiguous 0 no_answer 0 | converged True
+16:40:06 cycle 12 kill9 waiter r0 -> new leader r1 in 3.242 s terms 20 -> 21 | spare durable 146020 keeper durable 145920 | zombie committed 0 not_leader 808 ambiguous 0 no_answer 0 | converged True
+16:40:15 cycle 13 kill9 waiter r1 -> new leader r2 in 2.983 s terms 21 -> 22 | spare durable 155721 keeper durable 155821 | zombie committed 0 not_leader 610 ambiguous 0 no_answer 0 | converged True
+16:40:24 cycle 14 kill9 waiter r0 -> new leader r1 in 4.652 s terms 23 -> 25 | spare durable 163223 keeper durable 163123 | zombie committed 0 not_leader 800 ambiguous 0 no_answer 0 | converged True
+16:40:39 cycle 15 stop waiter r1 -> new leader r0 in 6.115 s terms 25 -> 26 | spare durable 175125 keeper durable 175125 | zombie committed 0 not_leader 887 ambiguous 0 no_answer 0 | converged True
+16:40:49 cycle 16 kill9 waiter r0 -> new leader r1 in 4.345 s terms 26 -> 28 | spare durable 188026 keeper durable 188026 | zombie committed 0 not_leader 795 ambiguous 0 no_answer 0 | converged True
+16:40:59 cycle 17 kill9 waiter r1 -> new leader r0 in 3.122 s terms 28 -> 29 | spare durable 199128 keeper durable 199128 | zombie committed 0 not_leader 765 ambiguous 0 no_answer 0 | converged True
+16:41:09 cycle 18 kill9 waiter r0 -> new leader r1 in 4.73 s terms 29 -> 31 | spare durable 209029 keeper durable 209029 | zombie committed 0 not_leader 773 ambiguous 0 no_answer 0 | converged True
+16:41:24 cycle 19 stop waiter r1 -> new leader r0 in 8.17 s terms 31 -> 33 | spare durable 218131 keeper durable 218131 | zombie committed 0 not_leader 894 ambiguous 0 no_answer 0 | converged True
+16:41:35 cycle 20 kill9 waiter r0 -> new leader r1 in 4.752 s terms 33 -> 35 | spare durable 233033 keeper durable 233033 | zombie committed 0 not_leader 739 ambiguous 0 no_answer 0 | converged True
+16:41:44 cycle 21 kill9 waiter r1 -> new leader r0 in 3.6 s terms 35 -> 36 | spare durable 244135 keeper durable 244135 | zombie committed 0 not_leader 745 ambiguous 0 no_answer 0 | converged True
+16:41:54 cycle 22 kill9 waiter r0 -> new leader r1 in 3.41 s terms 36 -> 37 | spare durable 254236 keeper durable 254136 | zombie committed 0 not_leader 709 ambiguous 0 no_answer 0 | converged True
+16:42:09 cycle 23 stop waiter r1 -> new leader r0 in 8.17 s terms 37 -> 39 | spare durable 263737 keeper durable 263737 | zombie committed 0 not_leader 884 ambiguous 0 no_answer 0 | converged True
+16:42:21 cycle 24 kill9 waiter r0 -> new leader r1 in 3.567 s terms 39 -> 40 | spare durable 280139 keeper durable 280139 | zombie committed 0 not_leader 705 ambiguous 0 no_answer 0 | converged True
+16:42:31 cycle 25 kill9 waiter r1 -> new leader r0 in 4.516 s terms 40 -> 42 | spare durable 290140 keeper durable 290140 | zombie committed 0 not_leader 667 ambiguous 0 no_answer 0 | converged True
+16:42:45 cycle 26 kill9 waiter r0 -> new leader r1 in 6.666 s terms 42 -> 44 | spare durable 301142 keeper durable 301242 | zombie committed 0 not_leader 710 ambiguous 0 no_answer 0 | converged True
+16:43:02 cycle 27 stop waiter r1 -> new leader r0 in 8.172 s terms 44 -> 46 | spare durable 316144 keeper durable 316144 | zombie committed 0 not_leader 879 ambiguous 0 no_answer 0 | converged True
+16:43:13 cycle 28 kill9 waiter r0 -> new leader r1 in 4.718 s terms 46 -> 48 | spare durable 331146 keeper durable 331146 | zombie committed 0 not_leader 672 ambiguous 0 no_answer 0 | converged True
+16:43:23 cycle 29 kill9 waiter r1 -> new leader r0 in 4.728 s terms 48 -> 50 | spare durable 342148 keeper durable 342148 | zombie committed 0 not_leader 660 ambiguous 0 no_answer 0 | converged True
+16:43:33 cycle 30 kill9 waiter r0 -> new leader r1 in 3.297 s terms 50 -> 51 | spare durable 354150 keeper durable 354150 | zombie committed 0 not_leader 690 ambiguous 0 no_answer 0 | converged True
+16:43:47 cycle 31 stop waiter r1 -> new leader r0 in 6.117 s terms 51 -> 52 | spare durable 363151 keeper durable 363151 | zombie committed 0 not_leader 875 ambiguous 0 no_answer 0 | converged True
+16:43:47 cycles done; stopping the writer
+16:43:53 dump r0 rc 0 entries 374200
+16:43:54 dump r1 rc 0 entries 374200
+16:43:55 dump r2 rc 0 entries 374200
+16:43:57 RESULT {"acked": 374200, "cycles": 32, "kill9": 24, "stop": 8, "r0_missing": 0, "r0_wrong_pos": 0, "r1_missing": 0, "r1_wrong_pos": 0, "r2_missing": 0, "r2_wrong_pos": 0, "zombie_committed": 0, "zombie_committed_missing_from_log": 0}

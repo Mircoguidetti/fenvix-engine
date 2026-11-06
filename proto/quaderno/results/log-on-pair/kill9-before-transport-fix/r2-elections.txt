@@ -1,0 +1,77 @@
+replica 2 pronta: indice 1..0 mandato 0
+replica 2: candidata, mandato 2
+replica 2: guida, mandato 2 (indice 10001)
+replica 2: keeper hands over (term 2, commit 10002)
+replica 2: lascio la guida (mandato 2)
+replica 2: candidata, mandato 7
+replica 2: guida, mandato 7 (indice 52406)
+replica 2: keeper hands over (term 7, commit 52407)
+replica 2: lascio la guida (mandato 7)
+replica 2: candidata, mandato 9
+replica 2: guida, mandato 9 (indice 63108)
+replica 2: keeper hands over (term 9, commit 63131)
+replica 2: lascio la guida (mandato 9)
+replica 2: candidata, mandato 12
+replica 2: guida, mandato 12 (indice 83311)
+replica 2: keeper hands over (term 12, commit 83312)
+replica 2: lascio la guida (mandato 12)
+replica 2: candidata, mandato 14
+replica 2: guida, mandato 14 (indice 98113)
+replica 2: keeper hands over (term 14, commit 98114)
+replica 2: lascio la guida (mandato 14)
+replica 2: candidata, mandato 16
+replica 2: guida, mandato 16 (indice 109315)
+replica 2: keeper hands over (term 16, commit 109317)
+replica 2: lascio la guida (mandato 16)
+replica 2: candidata, mandato 18
+replica 2: guida, mandato 18 (indice 121517)
+replica 2: keeper hands over (term 18, commit 121518)
+replica 2: lascio la guida (mandato 18)
+replica 2: candidata, mandato 22
+replica 2: guida, mandato 22 (indice 155821)
+replica 2: keeper hands over (term 22, commit 155832)
+replica 2: lascio la guida (mandato 22)
+replica 2: candidata, mandato 24
+replica 2: guida, mandato 24 (indice 163223)
+replica 2: keeper hands over (term 24, commit 163224)
+replica 2: lascio la guida (mandato 24)
+replica 2: candidata, mandato 27
+replica 2: guida, mandato 27 (indice 188026)
+replica 2: keeper hands over (term 27, commit 188027)
+replica 2: lascio la guida (mandato 27)
+replica 2: candidata, mandato 30
+replica 2: guida, mandato 30 (indice 209029)
+replica 2: keeper hands over (term 30, commit 209030)
+replica 2: lascio la guida (mandato 30)
+replica 2: candidata, mandato 32
+replica 2: guida, mandato 32 (indice 218131)
+replica 2: keeper hands over (term 32, commit 218132)
+replica 2: lascio la guida (mandato 32)
+replica 2: candidata, mandato 34
+replica 2: guida, mandato 34 (indice 233033)
+replica 2: keeper hands over (term 34, commit 233034)
+replica 2: lascio la guida (mandato 34)
+replica 2: candidata, mandato 38
+replica 2: guida, mandato 38 (indice 263937)
+replica 2: keeper hands over (term 38, commit 263938)
+replica 2: lascio la guida (mandato 38)
+replica 2: candidata, mandato 41
+replica 2: guida, mandato 41 (indice 290140)
+replica 2: keeper hands over (term 41, commit 290455)
+replica 2: lascio la guida (mandato 41)
+replica 2: candidata, mandato 43
+replica 2: guida, mandato 43 (indice 301242)
+replica 2: keeper hands over (term 43, commit 301243)
+replica 2: lascio la guida (mandato 43)
+replica 2: candidata, mandato 45
+replica 2: guida, mandato 45 (indice 316144)
+replica 2: keeper hands over (term 45, commit 316145)
+replica 2: lascio la guida (mandato 45)
+replica 2: candidata, mandato 47
+replica 2: guida, mandato 47 (indice 331146)
+replica 2: keeper hands over (term 47, commit 331147)
+replica 2: lascio la guida (mandato 47)
+replica 2: candidata, mandato 49
+replica 2: guida, mandato 49 (indice 342148)
+replica 2: keeper hands over (term 49, commit 342203)
+replica 2: lascio la guida (mandato 49)

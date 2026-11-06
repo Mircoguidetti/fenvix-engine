@@ -1,0 +1,56 @@
+replica 1 pronta: indice 1..0 mandato 0
+replica 1: candidata, mandato 3
+replica 1: guida, mandato 3 (indice 10002)
+replica 1 pronta: indice 1..21103 mandato 3
+replica 1: candidata, mandato 5
+replica 1: guida, mandato 5 (indice 31004)
+replica 1: nessun contatto con le altre repliche da 1s, mi dimetto
+replica 1: lascio la guida (mandato 5)
+replica 1: candidata, mandato 8
+replica 1: guida, mandato 8 (indice 52407)
+replica 1 pronta: indice 1..63108 mandato 8
+replica 1: candidata, mandato 11
+replica 1: guida, mandato 11 (indice 72210)
+replica 1: nessun contatto con le altre repliche da 1s, mi dimetto
+replica 1: lascio la guida (mandato 11)
+replica 1: candidata, mandato 15
+replica 1: guida, mandato 15 (indice 98114)
+replica 1 pronta: indice 1..109315 mandato 15
+replica 1: candidata, mandato 19
+replica 1: guida, mandato 19 (indice 121518)
+replica 1: nessun contatto con le altre repliche da 1s, mi dimetto
+replica 1: lascio la guida (mandato 19)
+replica 1: candidata, mandato 21
+replica 1: guida, mandato 21 (indice 146020)
+replica 1 pronta: indice 1..155821 mandato 21
+replica 1: candidata, mandato 25
+replica 1: guida, mandato 25 (indice 163224)
+replica 1: nessun contatto con le altre repliche da 1s, mi dimetto
+replica 1: lascio la guida (mandato 25)
+replica 1: candidata, mandato 28
+replica 1: guida, mandato 28 (indice 188027)
+replica 1 pronta: indice 1..199228 mandato 28
+replica 1: candidata, mandato 31
+replica 1: guida, mandato 31 (indice 209030)
+replica 1: nessun contatto con le altre repliche da 1s, mi dimetto
+replica 1: lascio la guida (mandato 31)
+replica 1: candidata, mandato 35
+replica 1: guida, mandato 35 (indice 233034)
+replica 1 pronta: indice 1..244235 mandato 35
+replica 1: candidata, mandato 37
+replica 1: guida, mandato 37 (indice 254236)
+replica 1: lascio la guida (mandato 39)
+replica 1: candidata, mandato 40
+replica 1: guida, mandato 40 (indice 280139)
+replica 1 pronta: indice 1..290140 mandato 40
+replica 1: candidata, mandato 44
+replica 1: guida, mandato 44 (indice 301246)
+replica 1: nessun contatto con le altre repliche da 1s, mi dimetto
+replica 1: lascio la guida (mandato 44)
+replica 1: candidata, mandato 48
+replica 1: guida, mandato 48 (indice 331167)
+replica 1 pronta: indice 1..342148 mandato 48
+replica 1: candidata, mandato 51
+replica 1: guida, mandato 51 (indice 354150)
+replica 1: nessun contatto con le altre repliche da 1s, mi dimetto
+replica 1: lascio la guida (mandato 51)

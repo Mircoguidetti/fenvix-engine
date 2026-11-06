@@ -1,0 +1,51 @@
+replica 0 pronta: indice 1..0 mandato 0
+replica 0: candidata, mandato 1
+replica 0: guida, mandato 1 (indice 0)
+replica 0 pronta: indice 1..10001 mandato 1
+replica 0: candidata, mandato 3
+replica 0: guida, mandato 3 (indice 20002)
+replica 0 pronta: indice 1..27503 mandato 3
+replica 0: candidata, mandato 5
+replica 0: guida, mandato 5 (indice 35004)
+replica 0 pronta: indice 1..47005 mandato 5
+replica 0: candidata, mandato 7
+replica 0: guida, mandato 7 (indice 56406)
+replica 0 pronta: indice 1..63007 mandato 7
+replica 0: candidata, mandato 9
+replica 0: guida, mandato 9 (indice 71008)
+replica 0 pronta: indice 1..83409 mandato 9
+replica 0: candidata, mandato 11
+replica 0: guida, mandato 11 (indice 92010)
+replica 0 pronta: indice 1..102011 mandato 11
+replica 0: candidata, mandato 13
+replica 0: guida, mandato 13 (indice 109312)
+replica 0 pronta: indice 1..119513 mandato 13
+replica 0: candidata, mandato 15
+replica 0: guida, mandato 15 (indice 126414)
+replica 0 pronta: indice 1..133415 mandato 15
+replica 0: candidata, mandato 17
+replica 0: guida, mandato 17 (indice 140616)
+replica 0 pronta: indice 1..152417 mandato 17
+replica 0: candidata, mandato 19
+replica 0: guida, mandato 19 (indice 161518)
+replica 0 pronta: indice 1..170019 mandato 19
+replica 0: candidata, mandato 21
+replica 0: guida, mandato 21 (indice 178420)
+replica 0 pronta: indice 1..189521 mandato 21
+replica 0: candidata, mandato 23
+replica 0: guida, mandato 23 (indice 200022)
+replica 0 pronta: indice 1..209523 mandato 23
+replica 0: candidata, mandato 25
+replica 0: guida, mandato 25 (indice 216524)
+replica 0 pronta: indice 1..227925 mandato 25
+replica 0: candidata, mandato 27
+replica 0: guida, mandato 27 (indice 236026)
+replica 0 pronta: indice 1..245027 mandato 27
+replica 0: candidata, mandato 29
+replica 0: guida, mandato 29 (indice 254028)
+replica 0 pronta: indice 1..267029 mandato 29
+replica 0: candidata, mandato 31
+replica 0: guida, mandato 31 (indice 273030)
+replica 0 pronta: indice 1..282431 mandato 31
+replica 0: candidata, mandato 33
+replica 0: guida, mandato 33 (indice 291032)
