@@ -1,0 +1,115 @@
+START 2026-11-06 06:51:42 cycles 110
+cycle 0 two leader_before=1 killed=[1, 2] recovered={1: ('59602', '85817'), 2: ('59802', '85817')} converged=True panics=[] dumps=3/3 t=5s
+cycle 1 one_off leader_before=2 killed=[2, 0] recovered={2: ('59802', '89818'), 0: ('59602', '89818')} converged=True panics=[] dumps=3/3 t=8s
+cycle 2 one leader_before=0 killed=[2] recovered={2: ('59802', '97619')} converged=True panics=[] dumps=3/3 t=10s
+cycle 3 one_off leader_before=0 killed=[0, 1] recovered={0: ('59602', '101319'), 1: ('59602', '105620')} converged=True panics=[] dumps=3/3 t=16s
+cycle 4 two leader_before=2 killed=[2, 0] recovered={2: ('59802', '112821'), 0: ('59602', '112821')} converged=True panics=[] dumps=3/3 t=19s
+cycle 5 one leader_before=2 killed=[2] recovered={2: ('59802', '121238')} converged=True panics=[] dumps=3/3 t=24s
+cycle 6 two leader_before=1 killed=[1, 0] recovered={1: ('111922', '128655'), 0: ('111522', '128655')} converged=True panics=[] dumps=3/3 t=28s
+cycle 7 one leader_before=0 killed=[2] recovered={2: ('119423', '138656')} converged=True panics=[] dumps=3/3 t=30s
+cycle 8 one_off leader_before=0 killed=[1, 2] recovered={1: ('121240', '143656'), 2: ('119423', '147056')} converged=True panics=[] dumps=3/3 t=36s
+cycle 9 two leader_before=0 killed=[0, 1] recovered={0: ('121240', '156456'), 1: ('121240', '156456')} converged=True panics=[] dumps=3/3 t=41s
+cycle 10 three leader_before=1 killed=[0, 1, 2] recovered={0: ('121240', '167057'), 1: ('121240', '167257'), 2: ('119423', '167257')} converged=True panics=[] dumps=3/3 t=46s
+cycle 11 two leader_before=1 killed=[1, 2] recovered={1: ('121240', '172858'), 2: ('119423', '172858')} converged=True panics=[] dumps=3/3 t=50s
+cycle 12 one leader_before=0 killed=[2] recovered={2: ('119423', '184659')} converged=True panics=[] dumps=3/3 t=55s
+cycle 13 two leader_before=0 killed=[0, 2] recovered={0: ('179860', '191517'), 2: ('179327', '191517')} converged=True panics=[] dumps=3/3 t=59s
+cycle 14 three leader_before=0 killed=[2, 1, 0] recovered={2: ('179327', '198376'), 1: ('179960', '198476'), 0: ('179860', '198676')} converged=True panics=[] dumps=3/3 t=62s
+cycle 15 one_off leader_before=0 killed=[2, 1] recovered={2: ('179327', '208477'), 1: ('179960', '213677')} converged=True panics=[] dumps=3/3 t=72s
+cycle 16 two leader_before=0 killed=[0, 2] recovered={0: ('179860', '223478'), 2: ('179327', '223478')} converged=True panics=[] dumps=3/3 t=75s
+cycle 17 three leader_before=0 killed=[2, 0, 1] recovered={2: ('179327', '230179'), 0: ('179860', '230279'), 1: ('179960', '230279')} converged=True panics=[] dumps=3/3 t=78s
+cycle 18 two leader_before=0 killed=[1, 2] recovered={1: ('179960', '237880'), 2: ('179327', '237880')} converged=True panics=[] dumps=3/3 t=82s
+cycle 19 one_off leader_before=0 killed=[1, 2] recovered={1: ('179960', '246897'), 2: ('238481', '252901')} converged=True panics=[] dumps=3/3 t=91s
+cycle 20 two leader_before=0 killed=[0, 1] recovered={0: ('239716', '262702'), 1: ('243127', '262702')} converged=True panics=[] dumps=3/3 t=96s
+cycle 21 two leader_before=2 killed=[2, 0] recovered={2: ('238481', '273103'), 0: ('239716', '273103')} converged=True panics=[] dumps=3/3 t=100s
+cycle 22 one_off leader_before=1 killed=[0, 1] recovered={0: ('239716', '283704'), 1: ('243127', '288304')} converged=True panics=[] dumps=3/3 t=109s
+cycle 23 one_off leader_before=2 killed=[1, 2] recovered={1: ('243127', '302505'), 2: ('238481', '305721')} converged=True panics=[] dumps=3/3 t=116s
+cycle 24 one leader_before=2 killed=[0] recovered={0: ('299806', '313455')} converged=True panics=[] dumps=3/3 t=118s
+cycle 25 one leader_before=2 killed=[0] recovered={0: ('299806', '318355')} converged=True panics=[] dumps=3/3 t=120s
+cycle 26 one_off leader_before=2 killed=[0, 1] recovered={0: ('299806', '320955'), 1: ('301430', '326755')} converged=True panics=[] dumps=3/3 t=125s
+cycle 27 three leader_before=2 killed=[0, 2, 1] recovered={0: ('299806', '331755'), 2: ('298481', '331955'), 1: ('301430', '331955')} converged=True panics=[] dumps=3/3 t=130s
+cycle 28 three leader_before=2 killed=[2, 0, 1] recovered={2: ('298481', '342956'), 0: ('299806', '342956'), 1: ('301430', '342956')} converged=True panics=[] dumps=3/3 t=135s
+cycle 29 one_off leader_before=0 killed=[0, 2] recovered={0: ('299806', '350757'), 2: ('298481', '350777')} converged=True panics=[] dumps=3/3 t=140s
+cycle 30 one leader_before=1 killed=[1] recovered={1: ('301430', '364958')} converged=True panics=[] dumps=3/3 t=146s
+cycle 31 one leader_before=0 killed=[1] recovered={1: ('363459', '377376')} converged=True panics=[] dumps=3/3 t=150s
+cycle 32 two leader_before=0 killed=[0, 1] recovered={0: ('362559', '382976'), 1: ('363459', '382976')} converged=True panics=[] dumps=3/3 t=156s
+cycle 33 two leader_before=2 killed=[0, 1] recovered={0: ('362559', '396777'), 1: ('363459', '396977')} converged=True panics=[] dumps=3/3 t=162s
+cycle 34 one_off leader_before=2 killed=[0, 2] recovered={0: ('362559', '409578'), 2: ('362261', '413378')} converged=True panics=[] dumps=3/3 t=172s
+cycle 35 two leader_before=1 killed=[1, 0] recovered={1: ('363459', '427079'), 0: ('362559', '427079')} converged=True panics=[] dumps=3/3 t=177s
+cycle 36 three leader_before=2 killed=[0, 1, 2] recovered={0: ('423180', '439396'), 1: ('422980', '439596'), 2: ('422786', '439796')} converged=True panics=[] dumps=3/3 t=183s
+cycle 37 two leader_before=1 killed=[1, 2] recovered={1: ('422980', '448597'), 2: ('422786', '448597')} converged=True panics=[] dumps=3/3 t=189s
+cycle 38 one leader_before=0 killed=[2] recovered={2: ('422786', '461398')} converged=True panics=[] dumps=3/3 t=192s
+cycle 39 one_off leader_before=0 killed=[2, 1] recovered={2: ('422786', '464998'), 1: ('422980', '466798')} converged=True panics=[] dumps=3/3 t=198s
+cycle 40 three leader_before=0 killed=[0, 2, 1] recovered={0: ('423180', '482099'), 2: ('422786', '482099'), 1: ('422980', '482099')} converged=True panics=[] dumps=3/3 t=204s
+cycle 41 one_off leader_before=0 killed=[2, 0] recovered={2: ('428456', '494032'), 0: ('482101', '496032')} converged=True panics=[] dumps=3/3 t=211s
+cycle 42 three leader_before=0 killed=[2, 1, 0] recovered={2: ('491433', '506649'), 1: ('492796', '506773'), 0: ('492117', '506853')} converged=True panics=[] dumps=3/3 t=216s
+cycle 43 one leader_before=1 killed=[2] recovered={2: ('491433', '517250')} converged=True panics=[] dumps=3/3 t=220s
+cycle 44 one_off leader_before=1 killed=[0, 1] recovered={0: ('492117', '525850'), 1: ('492796', '529150')} converged=True panics=[] dumps=3/3 t=229s
+cycle 45 two leader_before=2 killed=[0, 1] recovered={0: ('492117', '539851'), 1: ('492796', '539851')} converged=True panics=[] dumps=3/3 t=231s
+cycle 46 one_off leader_before=2 killed=[0, 2] recovered={0: ('492117', '545551'), 2: ('491433', '547051')} converged=True panics=[] dumps=3/3 t=238s
+cycle 47 one_off leader_before=1 killed=[2, 0] recovered={2: ('544852', '559275'), 0: ('546276', '561075')} converged=True panics=[] dumps=3/3 t=243s
+cycle 48 three leader_before=1 killed=[1, 0, 2] recovered={1: ('543852', '571776'), 0: ('546276', '571776'), 2: ('544852', '571776')} converged=True panics=[] dumps=3/3 t=249s
+cycle 49 one leader_before=1 killed=[1] recovered={1: ('543852', '581677')} converged=True panics=[] dumps=3/3 t=254s
+cycle 50 one_off leader_before=0 killed=[0, 1] recovered={0: ('546276', '592278'), 1: ('543852', '595546')} converged=True panics=[] dumps=3/3 t=262s
+cycle 51 one leader_before=2 killed=[2] recovered={2: ('544852', '607680')} converged=True panics=[] dumps=3/3 t=268s
+cycle 52 one leader_before=1 killed=[2] recovered={2: ('607081', '618113')} converged=True panics=[] dumps=3/3 t=272s
+cycle 53 one_off leader_before=1 killed=[2, 1] recovered={2: ('607081', '626513'), 1: ('607281', '629113')} converged=True panics=[] dumps=3/3 t=278s
+cycle 54 one_off leader_before=1 killed=[1, 0] recovered={1: ('607281', '640714'), 0: ('607003', '641614')} converged=True panics=[] dumps=3/3 t=288s
+cycle 55 one leader_before=2 killed=[1] recovered={1: ('607281', '659116')} converged=True panics=[] dumps=3/3 t=291s
+cycle 56 two leader_before=2 killed=[2, 0] recovered={2: ('607081', '664316'), 0: ('607003', '664316')} converged=True panics=[] dumps=3/3 t=297s
+cycle 57 two leader_before=1 killed=[1, 2] recovered={1: ('664318', '679756'), 2: ('664318', '679756')} converged=True panics=[] dumps=3/3 t=304s
+cycle 58 three leader_before=0 killed=[2, 1, 0] recovered={2: ('664318', '690292'), 1: ('664318', '690557'), 0: ('664318', '690657')} converged=True panics=[] dumps=3/3 t=308s
+cycle 59 one_off leader_before=0 killed=[2, 1] recovered={2: ('664318', '699758'), 1: ('664318', '702858')} converged=True panics=[] dumps=3/3 t=314s
+cycle 60 one_off leader_before=0 killed=[1, 2] recovered={1: ('664318', '710461'), 2: ('664318', '714358')} converged=True panics=[] dumps=3/3 t=321s
+cycle 61 one_off leader_before=0 killed=[2, 0] recovered={2: ('664318', '726959'), 0: ('668275', '732766')} converged=True panics=[] dumps=3/3 t=332s
+cycle 62 one leader_before=1 killed=[1] recovered={1: ('731630', '744284')} converged=True panics=[] dumps=3/3 t=334s
+cycle 63 two leader_before=0 killed=[1, 2] recovered={1: ('731630', '750185'), 2: ('731630', '750385')} converged=True panics=[] dumps=3/3 t=339s
+cycle 64 one_off leader_before=0 killed=[1, 2] recovered={1: ('731630', '764386'), 2: ('731630', '767586')} converged=True panics=[] dumps=3/3 t=347s
+cycle 65 one leader_before=0 killed=[0] recovered={0: ('726960', '778987')} converged=True panics=[] dumps=3/3 t=354s
+cycle 66 one leader_before=0 killed=[0] recovered={0: ('726960', '789488')} converged=True panics=[] dumps=3/3 t=358s
+cycle 67 two leader_before=1 killed=[1, 0] recovered={1: ('731630', '797209'), 0: ('726960', '797209')} converged=True panics=[] dumps=3/3 t=362s
+cycle 68 three leader_before=2 killed=[0, 1, 2] recovered={0: ('787063', '803727'), 1: ('789492', '804027'), 2: ('789492', '804227')} converged=True panics=[] dumps=3/3 t=365s
+cycle 69 two leader_before=1 killed=[1, 0] recovered={1: ('789492', '817028'), 0: ('787063', '817028')} converged=True panics=[] dumps=3/3 t=371s
+cycle 70 two leader_before=1 killed=[1, 0] recovered={1: ('789492', '826429'), 0: ('787063', '826429')} converged=True panics=[] dumps=3/3 t=378s
+cycle 71 two leader_before=2 killed=[0, 1] recovered={0: ('787063', '838830'), 1: ('789492', '838930')} converged=True panics=[] dumps=3/3 t=380s
+cycle 72 one leader_before=2 killed=[2] recovered={2: ('789492', '845730')} converged=True panics=[] dumps=3/3 t=387s
+cycle 73 one_off leader_before=1 killed=[1, 2] recovered={1: ('797583', '856850'), 2: ('797583', '856850')} converged=True panics=[] dumps=3/3 t=394s
+cycle 74 three leader_before=0 killed=[2, 0, 1] recovered={2: ('853767', '873671'), 0: ('855249', '873871'), 1: ('856852', '873871')} converged=True panics=[] dumps=3/3 t=400s
+cycle 75 one_off leader_before=0 killed=[1, 0] recovered={1: ('856852', '881672'), 0: ('855249', '887672')} converged=True panics=[] dumps=3/3 t=407s
+cycle 76 two leader_before=0 killed=[0, 1] recovered={0: ('855249', '896873'), 1: ('856852', '896873')} converged=True panics=[] dumps=3/3 t=412s
+cycle 77 one_off leader_before=2 killed=[1, 2] recovered={1: ('856852', '907874'), 2: ('853767', '911974')} converged=True panics=[] dumps=3/3 t=419s
+cycle 78 two leader_before=0 killed=[0, 2] recovered={0: ('906975', '920692'), 2: ('906275', '920692')} converged=True panics=[] dumps=3/3 t=423s
+cycle 79 one_off leader_before=0 killed=[0, 2] recovered={0: ('906975', '928693'), 2: ('906275', '931209')} converged=True panics=[] dumps=3/3 t=430s
+cycle 80 two leader_before=1 killed=[1, 2] recovered={1: ('905851', '942294'), 2: ('906275', '942294')} converged=True panics=[] dumps=3/3 t=436s
+cycle 81 two leader_before=1 killed=[1, 0] recovered={1: ('905851', '954595'), 0: ('906975', '954595')} converged=True panics=[] dumps=3/3 t=441s
+cycle 82 two leader_before=2 killed=[2, 0] recovered={2: ('906275', '965496'), 0: ('906975', '965496')} converged=True panics=[] dumps=3/3 t=446s
+cycle 83 one_off leader_before=2 killed=[2, 0] recovered={2: ('906275', '973898'), 0: ('965498', '978163')} converged=True panics=[] dumps=3/3 t=454s
+cycle 84 one_off leader_before=1 killed=[1, 2] recovered={1: ('965498', '991716'), 2: ('965502', '991716')} converged=True panics=[] dumps=3/3 t=461s
+cycle 85 one_off leader_before=2 killed=[2, 1] recovered={2: ('965502', '1004067'), 1: ('965498', '1009518')} converged=True panics=[] dumps=3/3 t=469s
+cycle 86 two leader_before=0 killed=[1, 2] recovered={1: ('965498', '1024719'), 2: ('965502', '1024819')} converged=True panics=[] dumps=3/3 t=476s
+cycle 87 one_off leader_before=0 killed=[2, 0] recovered={2: ('965502', '1035821'), 0: ('965498', '1040136')} converged=True panics=[] dumps=3/3 t=482s
+cycle 88 two leader_before=0 killed=[1, 2] recovered={1: ('1035722', '1050163'), 2: ('1035922', '1050263')} converged=True panics=[] dumps=3/3 t=488s
+cycle 89 one_off leader_before=2 killed=[2, 1] recovered={2: ('1035922', '1056364'), 1: ('1035722', '1056364')} converged=True panics=[] dumps=3/3 t=493s
+cycle 90 one leader_before=0 killed=[2] recovered={2: ('1035922', '1071365')} converged=True panics=[] dumps=3/3 t=498s
+cycle 91 one leader_before=0 killed=[0] recovered={0: ('1035722', '1080165')} converged=True panics=[] dumps=3/3 t=503s
+cycle 92 three leader_before=1 killed=[2, 1, 0] recovered={2: ('1035922', '1088283'), 1: ('1035722', '1088366'), 0: ('1035722', '1088366')} converged=True panics=[] dumps=3/3 t=507s
+cycle 93 three leader_before=1 killed=[2, 0, 1] recovered={2: ('1035922', '1096767'), 0: ('1035722', '1096967'), 1: ('1035722', '1097167')} converged=True panics=[] dumps=3/3 t=511s
+cycle 94 one_off leader_before=0 killed=[2, 1] recovered={2: ('1035922', '1103769'), 1: ('1095068', '1105584')} converged=True panics=[] dumps=3/3 t=517s
+cycle 95 one_off leader_before=0 killed=[0, 2] recovered={0: ('1095168', '1117585'), 2: ('1096021', '1117585')} converged=True panics=[] dumps=3/3 t=524s
+cycle 96 one_off leader_before=1 killed=[1, 2] recovered={1: ('1095068', '1129086'), 2: ('1096021', '1129259')} converged=True panics=[] dumps=3/3 t=530s
+cycle 97 one leader_before=0 killed=[2] recovered={2: ('1096021', '1146188')} converged=True panics=[] dumps=3/3 t=534s
+cycle 98 one leader_before=0 killed=[0] recovered={0: ('1095168', '1153988')} converged=True panics=[] dumps=3/3 t=539s
+cycle 99 one leader_before=0 killed=[1] recovered={1: ('1148989', '1164605')} converged=True panics=[] dumps=3/3 t=544s
+cycle 100 three leader_before=0 killed=[1, 2, 0] recovered={1: ('1148989', '1170805'), 2: ('1143782', '1171005'), 0: ('1148989', '1171006')} converged=True panics=[] dumps=3/3 t=548s
+cycle 101 two leader_before=0 killed=[1, 2] recovered={1: ('1148989', '1181106'), 2: ('1143782', '1181206')} converged=True panics=[] dumps=3/3 t=553s
+cycle 102 two leader_before=0 killed=[0, 2] recovered={0: ('1148989', '1190207'), 2: ('1143782', '1190207')} converged=True panics=[] dumps=3/3 t=557s
+cycle 103 three leader_before=2 killed=[0, 2, 1] recovered={0: ('1148989', '1198708'), 2: ('1143782', '1198808'), 1: ('1148989', '1198808')} converged=True panics=[] dumps=3/3 t=562s
+cycle 104 two leader_before=2 killed=[0, 1] recovered={0: ('1148989', '1203709'), 1: ('1148989', '1203809')} converged=True panics=[] dumps=3/3 t=563s
+cycle 105 two leader_before=2 killed=[2, 1] recovered={2: ('1143782', '1210309'), 1: ('1148989', '1210309')} converged=True panics=[] dumps=3/3 t=567s
+cycle 106 three leader_before=2 killed=[1, 0, 2] recovered={1: ('1205010', '1220226'), 0: ('1204410', '1220426'), 2: ('1204810', '1220626')} converged=True panics=[] dumps=3/3 t=572s
+cycle 107 one leader_before=2 killed=[2] recovered={2: ('1204810', '1224827')} converged=True panics=[] dumps=3/3 t=575s
+cycle 108 two leader_before=2 killed=[2, 1] recovered={2: ('1204810', '1231628'), 1: ('1205010', '1231628')} converged=True panics=[] dumps=3/3 t=578s
+cycle 109 two leader_before=1 killed=[0, 2] recovered={0: ('1204410', '1241629'), 2: ('1204810', '1241729')} converged=True panics=[] dumps=3/3 t=584s
+kills 213
+confirmed commits 1247200
+RESULT kills=213 cycles=110 confirmed=1247200 distinct_confirmed_checked=1178200 checks=11949710 lost=0 wrong_txn=0 panics=[]
+PASS

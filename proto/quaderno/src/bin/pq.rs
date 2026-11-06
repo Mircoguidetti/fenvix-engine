@@ -223,6 +223,40 @@ fn main() -> anyhow::Result<()> {
             let v = r.block_on(flusher::check_sst(&a.s("s3", "http://127.0.0.1:9000"), &a.s("bucket", "pq-sst"), a.u("groups", 16), bench::db_id(a.u("db", bench::WITNESS_DB)), &a.s("witness", "witness.csv")))?;
             println!("{v}");
         }
+        "retryprobe" => {
+            let r = rt(2);
+            r.block_on(bench::retry_probe(cluster(&a), a.u("window-ms", 2000)));
+        }
+        "doormix" => {
+            let r = rt(2);
+            r.block_on(bench::door_mix(cluster(&a), a.u("flood", 1000) as usize));
+        }
+        "dump" => {
+            // rev-q8c: committed entries of ONE replica (index,txn hex,pos), for the reviewer's kill -9 test
+            let r = rt(1);
+            r.block_on(async {
+                let cl = cluster(&a);
+                let rep = a.u("replica", 0) as usize;
+                let mut from = a.u("from", 0);
+                loop {
+                    match cl.call(rep, &quaderno::codec::Req::Dump { from_index: from, max: 200_000 }, std::time::Duration::from_secs(30)).await {
+                        Ok(quaderno::codec::Resp::Dump(v)) => {
+                            if v.is_empty() {
+                                break;
+                            }
+                            for (i, t, p) in &v {
+                                println!("{i},{},{p}", quaderno::store::hex(t));
+                                from = i + 1;
+                            }
+                        }
+                        _ => {
+                            eprintln!("dump error");
+                            std::process::exit(3);
+                        }
+                    }
+                }
+            });
+        }
         "status" => {
             let r = rt(1);
             r.block_on(async {

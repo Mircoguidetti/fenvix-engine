@@ -905,7 +905,7 @@ pub async fn failover(cl: Arc<Cluster>, secs: u64, dbs: u64, period_ms: u64, out
                         let te = unix_ms_f();
                         match r {
                             Outcome::Committed { pos, attempts, ambiguous, .. } => {
-                                f.lock().write_all(format!("{d},{ts:.3},{te:.3},{pos},{attempts},{}\n", ambiguous as u8).as_bytes()).unwrap();
+                                { let mut g = f.lock(); g.write_all(format!("{d},{ts:.3},{te:.3},{pos},{attempts},{},{}\n", ambiguous as u8, crate::store::hex(&c.txn)).as_bytes()).unwrap(); g.flush().unwrap(); }
                                 done.lock().push((c, pos, ambiguous));
                             }
                             _ => {
@@ -1582,4 +1582,81 @@ pub async fn corsie(cls: Vec<Arc<Cluster>>, c: CorsieCfg) {
                "per_log": a.per_log.iter().map(|h| json!({"n": h.len(), "p50_us": h.value_at_quantile(0.5), "p99_us": h.value_at_quantile(0.99), "p999_us": h.value_at_quantile(0.999), "max_us": h.max()})).collect::<Vec<_>>(),
                "diag": cl.diag.json()})
     );
+}
+
+// ================================================================================================ rev-q8c: door probe
+/// rev-q8c (reviewer): a waiter that multiplexes several databases on one connection sends one CommitBatch with
+/// commits of a database over its door cap (A) and of a quiet database (B). Prints what B gets, with A first and
+/// with B first, after A has been pushed over its cap. Control: B alone.
+pub async fn door_mix(cl: Arc<Cluster>, flood: usize) {
+    let mk = |d: u64| CommitReq { txn: txn_id(), db: db_id(d), read_pos: 0, mode: Mode::Blind, writes: vec![Write { key: doc_key("k"), kind: Kind::Put, val: Bytes::from_static(b"x") }], reads: vec![], session: None };
+    let (a, b) = (424_242u64, 515_151u64);
+    let name = |r: &Resp| match r {
+        Resp::Committed(_) => "Committed".to_string(),
+        Resp::Busy { retry_ms, reason } => format!("Busy(reason {reason}, retry {retry_ms} ms)"),
+        other => format!("{:?}", std::mem::discriminant(other)),
+    };
+    let show = |label: &str, r: Option<Resp>, k: usize| match r {
+        Some(Resp::Batch(v)) => println!("{label}: {} -> B gets {}", v.iter().map(|x| name(x)).collect::<Vec<_>>().join(", "), name(&v[k])),
+        Some(x) => println!("{label}: single answer {}", name(&x)),
+        None => println!("{label}: no answer"),
+    };
+    let r = cl.call_leader(&Req::CommitBatch(vec![mk(b)]), Duration::from_secs(5)).await;
+    show("control, batch [B]", r, 0);
+    for _ in 0..6 {
+        let _ = cl.call_leader(&Req::CommitBatch((0..flood).map(|_| mk(a)).collect()), Duration::from_secs(5)).await;
+    }
+    let r = cl.call_leader(&Req::CommitBatch(vec![mk(a)]), Duration::from_secs(5)).await;
+    show("A over its cap, batch [A]", r, 0);
+    let r = cl.call_leader(&Req::CommitBatch(vec![mk(a), mk(b)]), Duration::from_secs(5)).await;
+    show("A over its cap, batch [A, B]", r, 1);
+    let r = cl.call_leader(&Req::CommitBatch(vec![mk(b), mk(a)]), Duration::from_secs(5)).await;
+    show("A over its cap, batch [B, A]", r, 0);
+    let r = cl.call_leader(&Req::Commit(mk(b)), Duration::from_secs(5)).await;
+    println!("A over its cap, single commit B: {}", r.as_ref().map(|x| name(x)).unwrap_or("no answer".into()));
+}
+
+/// rev-q8c (reviewer): resend of an already committed VALIDATED commit (same txn id, as a client does after an
+/// ambiguous outcome). The leader must answer Committed(same pos) while the record is still in the log (dedup by txn
+/// id in commit_now). Q8c answers "too old" commits in the network thread BEFORE that dedup: if the database's window
+/// has trimmed past the commit's read position but not yet the commit itself, the resend gets Conflict.
+/// Needs a short window (cluster --window-ms 2000) and the null flusher (records leave the window).
+pub async fn retry_probe(cl: Arc<Cluster>, window_ms: u64) {
+    let db = db_id(777_001);
+    let w = |k: &str| Write { key: doc_key(k), kind: Kind::Put, val: Bytes::from_static(b"v") };
+    let a = CommitReq { txn: txn_id(), db, read_pos: 0, mode: Mode::Blind, writes: vec![w("a")], reads: vec![], session: None };
+    let pa = match cl.call_leader(&Req::Commit(a), Duration::from_secs(5)).await {
+        Some(Resp::Committed(p)) => p,
+        _ => {
+            println!("A not committed");
+            return;
+        }
+    };
+    tokio::time::sleep(Duration::from_millis(window_ms * 3 / 4)).await;
+    let t = CommitReq { txn: txn_id(), db, read_pos: pa - 1, mode: Mode::Validated, writes: vec![w("t")], reads: vec![], session: None };
+    let p = match cl.call_leader(&Req::Commit(t.clone()), Duration::from_secs(5)).await {
+        Some(Resp::Committed(p)) => p,
+        other => {
+            println!("T first send not committed: {}", matches!(other, Some(Resp::Conflict(_))));
+            return;
+        }
+    };
+    println!("T committed at pos {p} (read_pos {})", pa - 1);
+    let t0 = Instant::now();
+    let mut last = String::new();
+    while t0.elapsed() < Duration::from_millis(window_ms * 3) {
+        let r = cl.call_leader(&Req::Commit(t.clone()), Duration::from_secs(5)).await;
+        let s = match r {
+            Some(Resp::Committed(q)) if q == p => "Committed(same pos)".to_string(),
+            Some(Resp::Committed(q)) => format!("Committed(OTHER pos {q})"),
+            Some(Resp::Conflict(_)) => "Conflict".to_string(),
+            Some(Resp::Busy { .. }) => "Busy".to_string(),
+            _ => "other".to_string(),
+        };
+        if s != last {
+            println!("t+{:>5} ms resend of T -> {s}", t0.elapsed().as_millis());
+            last = s;
+        }
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
 }

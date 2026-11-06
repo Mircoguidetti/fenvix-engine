@@ -1,0 +1,7 @@
+reference (1 database alone, median of 1): p50 from send 1.484 ms, p99 from send 3.611 ms
+level   1 nessuno   VALID     LIKE ATLAS p50 1.39 p99 3.51 p99.9 15.81 ms (send - ping 0.10); vs alone p99 +0.00 | p99 on the noisy log(s) [] other logs ['5.2'] | max core 33% replicas {} | sent 100/100 rej 0 busy 0 total 100 rec/s
+level   2 nessuno   VALID     LIKE ATLAS p50 1.39 p99 3.86 p99.9 32.57 ms (send - ping 0.10); vs alone p99 +0.35 | p99 on the noisy log(s) [] other logs ['5.5', '5.6'] | max core 44% replicas {} | sent 200/200 rej 0 busy 0 total 201 rec/s
+level   2 mille     VALID     NOT YET    p50 1.26 p99 6.31 p99.9 27.38 ms (send - ping 0.09); vs alone p99 +2.79 | p99 on the noisy log(s) ['8.3'] other logs [] | max core 77% replicas {} | sent 100/100 rej 0 busy 0 total 1100 rec/s
+
+level 1: valid phases 1, like Atlas 1, not yet 0, NOT VALID 0
+level 2: valid phases 2, like Atlas 1, not yet 1, NOT VALID 0
