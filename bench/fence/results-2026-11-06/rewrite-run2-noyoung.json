@@ -1,0 +1,16 @@
+{
+  "cpu_secs": 6.084331,
+  "deletes": 1,
+  "gets": 32,
+  "new_raw_bytes": 1074456147,
+  "new_stored_bytes": 495795173,
+  "old_entries": 2056471,
+  "old_raw_bytes": 1074456147,
+  "old_stored_bytes": 495795173,
+  "parts": 8,
+  "puts": 10,
+  "range_bytes": 16777216,
+  "run": 2,
+  "secs": 8.967796866,
+  "young_entries": 0
+}

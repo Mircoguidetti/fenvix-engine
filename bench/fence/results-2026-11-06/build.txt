@@ -1,0 +1,12 @@
+run 0 fence/run-00000: 1026 blocks, 1026 MiB raw, 474 MiB stored, 10 PUTs
+run 1 fence/run-00001: 1534 blocks, 1533 MiB raw, 699 MiB stored, 13 PUTs
+run 2 fence/run-00002: 1025 blocks, 1025 MiB raw, 473 MiB stored, 10 PUTs
+run 3 fence/run-00003: 1025 blocks, 1024 MiB raw, 471 MiB stored, 10 PUTs
+run 4 fence/run-00004: 1269 blocks, 1268 MiB raw, 581 MiB stored, 12 PUTs
+run 5 fence/run-00005: 1025 blocks, 1024 MiB raw, 472 MiB stored, 10 PUTs
+run 6 fence/run-00006: 1187 blocks, 1186 MiB raw, 533 MiB stored, 11 PUTs
+run 7 fence/run-00007: 1025 blocks, 1024 MiB raw, 471 MiB stored, 10 PUTs
+run 8 fence/run-00008: 1032 blocks, 1031 MiB raw, 475 MiB stored, 10 PUTs
+run 9 fence/run-00009: 1025 blocks, 1024 MiB raw, 473 MiB stored, 10 PUTs
+run 10 fence/run-00010: 218 blocks, 217 MiB raw, 100 MiB stored, 4 PUTs
+built 11 runs, 22845568 docs, 10.05 GiB of BSON, 11391 blocks, 5.10 GiB stored, 110 PUTs, 103 s (76 s CPU)

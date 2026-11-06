@@ -1,0 +1,4 @@
+maps: 11 runs, 11391 blocks, 386692 bytes in RAM = 33.9 bytes per block, 0.0385 MB per GB of data (10.05 GiB BSON), 0.0758 MB per GB stored (5.10 GiB); loaded with 22 GETs in 174 ms
+cold all: {"bytes_mean":487446.5375,"gets_max":2.0,"gets_mean":1.0075,"ms_max":36.013251000000004,"ms_p50":13.687156,"ms_p95":15.172968000000001,"ms_p99":26.064890000000002,"n":400,"one_trip_share":0.9925}
+hot all: {"bytes_mean":0.0,"gets_max":0.0,"gets_mean":0.0,"ms_max":0.048061,"ms_p50":0.009823,"ms_p95":0.017539,"ms_p99":0.029245,"n":400,"one_trip_share":0.0}
+answers checked against the exact model: 800 reads, 0 wrong; hot cache used 392 MiB
