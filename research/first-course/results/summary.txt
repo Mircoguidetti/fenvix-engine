@@ -1,0 +1,53 @@
+== irc: users 27666, eval days 91, session starts 103752, cold (miss 0.2% LRU) 88047 (LRU catches 15.1%)
+  cold starts: new 21.0%; within 1d 44.4%, 3d 56.5%, 7d 64.4%, 14d 69.7%, 30d 74.6%; silent >30d 4.4%; within 30d of returning only 94.5%
+  buckets: 0_1d 44.4%, 14_30d 4.9%, 1_3d 12.1%, 3_7d 7.9%, 7_14d 5.3%
+  all starts (LRU hits included): new 17.9%, within 30d 78.4%
+  new share by period: first 28 eval days 23.8%, last 28 19.7%
+  known users: mean 18583, last day 27154
+  T=1d: openings mean 694 (max 1298), share of known 4.1% (first day 7.6%, last day 4.3%), trace footprint 21.7 MB; 1 TB: 4 MB/user 262144 users -> 0.3 GB fits; 512 KB/user 2097152 users -> 2.6 GB fits; 64 KB/user 16777216 users -> 21.1 GB fits
+  T=3d: openings mean 1616 (max 2492), share of known 9.6% (first day 20.3%, last day 9.2%), trace footprint 50.5 MB; 1 TB: 4 MB/user 262144 users -> 0.8 GB fits; 512 KB/user 2097152 users -> 6.2 GB fits; 64 KB/user 16777216 users -> 49.3 GB NO
+  T=7d: openings mean 3096 (max 3728), share of known 18.5% (first day 37.5%, last day 13.7%), trace footprint 96.7 MB; 1 TB: 4 MB/user 262144 users -> 1.5 GB fits; 512 KB/user 2097152 users -> 11.8 GB fits; 64 KB/user 16777216 users -> 94.7 GB NO
+  T=14d: openings mean 5267 (max 5705), share of known 31.4% (first day 61.6%, last day 21.0%), trace footprint 164.6 MB; 1 TB: 4 MB/user 262144 users -> 2.5 GB fits; 512 KB/user 2097152 users -> 20.1 GB fits; 64 KB/user 16777216 users -> 160.9 GB NO
+  T=30d: openings mean 9458 (max 10063), share of known 56.2% (first day 100.0%, last day 35.0%), trace footprint 295.6 MB; 1 TB: 4 MB/user 262144 users -> 4.5 GB fits; 512 KB/user 2097152 users -> 35.9 GB NO; 64 KB/user 16777216 users -> 287.6 GB NO
+  spread T=30d: 65680 covered starts by 8801 users (of 10049 returning users with a cold start); top 1% users 26.0%, top 10% 64.9%; half of covered starts by 362 users (4.1%); median per user 2
+  spread T=7d: 56692 covered starts by 7223 users (of 10049 returning users with a cold start); top 1% users 26.3%, top 10% 68.7%; half of covered starts by 243 users (3.4%); median per user 2
+  dollars (reference cold-read GETs, quiet 21.0 $ / medium 84.1 $ per 1 TB customer per month): T=1d saves 9.3 / 37.3 $; T=3d saves 11.9 / 47.5 $; T=7d saves 13.5 / 54.1 $; T=14d saves 14.6 / 58.6 $; T=30d saves 15.7 / 62.7 $; idea 2 saves 4.4 / 17.7 $
+  per-group databases (10): within 30d ubuntu 62.7%, kubuntu 62.9%, ubuntu-bugs 74.7%, ubuntu-server 81.1%, ubuntu-de 82.7%, ubuntu-motu 88.7%, ubuntu-kernel 91.0%, ubuntu-devel 91.3%, juju 93.2%, ubuntu-uk 96.0%
+  per-group new share: ubuntu-uk 3.2%, juju 5.5%, ubuntu-devel 6.9%, ubuntu-kernel 7.1%, ubuntu-motu 8.7%, ubuntu-de 14.2%, ubuntu-server 15.8%, ubuntu-bugs 22.2%, ubuntu 31.3%, kubuntu 32.9%
+  per-group 30d openings share of known: kubuntu 52.7%, ubuntu 55.0%, ubuntu-de 56.6%, ubuntu-server 59.0%, ubuntu-bugs 61.6%, ubuntu-uk 63.0%, ubuntu-kernel 64.4%, juju 64.7%, ubuntu-motu 65.1%, ubuntu-devel 70.1%
+  per-group medians: within 30d 85.7%, new 11.5%, 30d share of known 62.3%
+
+== lsapp: users 292, eval days 221, session starts 16856, cold (miss 0.2% LRU) 15608 (LRU catches 7.4%)
+  cold starts: new 1.8%; within 1d 95.7%, 3d 97.5%, 7d 97.9%, 14d 98.0%, 30d 98.1%; silent >30d 0.1%; within 30d of returning only 99.9%
+  buckets: 0_1d 95.7%, 14_30d 0.1%, 1_3d 1.7%, 3_7d 0.5%, 7_14d 0.1%
+  all starts (LRU hits included): new 1.7%, within 30d 98.2%
+  new share by period: first 28 eval days 0.0%, last 28 1.0%
+  known users: mean 74, last day 292
+  T=1d: openings mean 13 (max 78), share of known 16.1% (first day 33.3%, last day 3.1%), trace footprint 0.4 MB; 1 TB: 4 MB/user 262144 users -> 1.3 GB fits; 512 KB/user 2097152 users -> 10.3 GB fits; 64 KB/user 16777216 users -> 82.4 GB NO
+  T=3d: openings mean 17 (max 96), share of known 21.0% (first day 33.3%, last day 9.2%), trace footprint 0.5 MB; 1 TB: 4 MB/user 262144 users -> 1.7 GB fits; 512 KB/user 2097152 users -> 13.4 GB fits; 64 KB/user 16777216 users -> 107.5 GB NO
+  T=7d: openings mean 23 (max 117), share of known 26.7% (first day 33.3%, last day 12.7%), trace footprint 0.7 MB; 1 TB: 4 MB/user 262144 users -> 2.1 GB fits; 512 KB/user 2097152 users -> 17.1 GB fits; 64 KB/user 16777216 users -> 136.5 GB NO
+  T=14d: openings mean 32 (max 145), share of known 34.5% (first day 55.6%, last day 23.6%), trace footprint 1.0 MB; 1 TB: 4 MB/user 262144 users -> 2.8 GB fits; 512 KB/user 2097152 users -> 22.1 GB fits; 64 KB/user 16777216 users -> 176.7 GB NO
+  T=30d: openings mean 46 (max 219), share of known 50.1% (first day 100.0%, last day 57.5%), trace footprint 1.4 MB; 1 TB: 4 MB/user 262144 users -> 4.0 GB fits; 512 KB/user 2097152 users -> 32.1 GB NO; 64 KB/user 16777216 users -> 256.7 GB NO
+  spread T=30d: 15310 covered starts by 286 users (of 286 returning users with a cold start); top 1% users 9.3%, top 10% 41.3%; half of covered starts by 40 users (14.0%); median per user 25
+  spread T=7d: 15281 covered starts by 286 users (of 286 returning users with a cold start); top 1% users 9.3%, top 10% 41.4%; half of covered starts by 40 users (14.0%); median per user 25
+  dollars (reference cold-read GETs, quiet 21.0 $ / medium 84.1 $ per 1 TB customer per month): T=1d saves 20.1 / 80.5 $; T=3d saves 20.5 / 82.0 $; T=7d saves 20.6 / 82.3 $; T=14d saves 20.6 / 82.4 $; T=30d saves 20.6 / 82.5 $; idea 2 saves 0.4 / 1.5 $
+  per-group databases (32): within 30d Google Drive 70.4%, Google Play Music 77.3%, Google Photos 78.3%, Spotify Music 78.9%, Calculator 85.5%, Calendar 87.3%, Samsung Gallery 87.7%, Amazon Shopping 88.5%, Pinterest 88.9%, Camera 89.1%, Google Play Store 89.3%, Clock 89.8%, YouTube 91.2%, Settings 91.3%, Hangouts 92.0%, Snapchat 92.1%, Reddit 92.1%, Contacts 92.4%, Maps 92.5%, Phone 92.5%, Messaging 94.0%, Samsung Internet Browser 94.7%, Twitter 95.4%, Android In Call UI 95.7%, WhatsApp Messenger 96.1%, Messages 96.2%, Facebook Messenger 96.4%, Instagram 96.9%, Google Chrome 96.9%, Google 96.9%, Gmail 97.0%, Facebook 97.3%
+  per-group new share: Facebook 2.6%, Gmail 2.9%, Google 3.0%, Google Chrome 3.0%, Instagram 3.1%, Facebook Messenger 3.5%, Messages 3.7%, WhatsApp Messenger 3.7%, Android In Call UI 4.1%, Twitter 4.5%, Samsung Internet Browser 5.3%, Messaging 6.0%, Contacts 7.3%, Phone 7.4%, Maps 7.4%, Reddit 7.5%, Hangouts 7.6%, Snapchat 7.9%, Settings 8.3%, YouTube 8.6%, Clock 9.7%, Google Play Store 10.3%, Pinterest 10.6%, Camera 10.7%, Amazon Shopping 11.5%, Samsung Gallery 12.1%, Calendar 12.2%, Calculator 14.3%, Spotify Music 20.7%, Google Play Music 21.1%, Google Photos 21.3%, Google Drive 28.3%
+  per-group 30d openings share of known: Hangouts 38.0%, Messages 40.1%, Contacts 40.3%, Spotify Music 40.5%, Camera 40.6%, Twitter 41.4%, Google Drive 41.9%, Samsung Gallery 42.8%, WhatsApp Messenger 43.2%, Gmail 43.5%, Instagram 44.3%, Samsung Internet Browser 45.1%, Google Play Store 45.3%, Google Photos 45.3%, Calendar 45.4%, Phone 46.1%, Settings 46.3%, Messaging 47.0%, Facebook Messenger 47.8%, Maps 48.8%, Google Chrome 49.9%, Google 49.9%, Facebook 50.1%, Amazon Shopping 50.6%, Android In Call UI 50.7%, YouTube 51.0%, Google Play Music 52.3%, Pinterest 53.5%, Calculator 55.5%, Snapchat 58.4%, Reddit 61.3%, Clock 78.6%
+  per-group medians: within 30d 92.1%, new 7.6%, 30d share of known 46.2%
+
+== cdnow: users 23570, eval days 517, session starts 59827, cold (miss 0.2% LRU) 58551 (LRU catches 2.1%)
+  cold starts: new 28.4%; within 1d 0.0%, 3d 3.5%, 7d 10.0%, 14d 18.3%, 30d 31.7%; silent >30d 39.9%; within 30d of returning only 44.3%
+  buckets: 0_1d 0.0%, 14_30d 13.4%, 1_3d 3.5%, 3_7d 6.5%, 7_14d 8.3%
+  all starts (LRU hits included): new 27.8%, within 30d 33.2%
+  new share by period: first 28 eval days 79.1%, last 28 0.0%
+  known users: mean 22673, last day 23570
+  T=1d: openings mean 116 (max 490), share of known 0.6% (first day 4.7%, last day 0.2%), trace footprint 3.6 MB; 1 TB: 4 MB/user 262144 users -> 0.0 GB fits; 512 KB/user 2097152 users -> 0.4 GB fits; 64 KB/user 16777216 users -> 3.2 GB fits
+  T=3d: openings mean 344 (max 1353), share of known 1.8% (first day 14.6%, last day 0.7%), trace footprint 10.7 MB; 1 TB: 4 MB/user 262144 users -> 0.1 GB fits; 512 KB/user 2097152 users -> 1.2 GB fits; 64 KB/user 16777216 users -> 9.4 GB fits
+  T=7d: openings mean 782 (max 3001), share of known 4.2% (first day 31.6%, last day 1.4%), trace footprint 24.4 MB; 1 TB: 4 MB/user 262144 users -> 0.3 GB fits; 512 KB/user 2097152 users -> 2.7 GB fits; 64 KB/user 16777216 users -> 21.4 GB fits
+  T=14d: openings mean 1505 (max 5673), share of known 8.0% (first day 58.7%, last day 2.9%), trace footprint 47.0 MB; 1 TB: 4 MB/user 262144 users -> 0.6 GB fits; 512 KB/user 2097152 users -> 5.1 GB fits; 64 KB/user 16777216 users -> 40.9 GB NO
+  T=30d: openings mean 3008 (max 10938), share of known 15.7% (first day 100.0%, last day 6.5%), trace footprint 94.0 MB; 1 TB: 4 MB/user 262144 users -> 1.3 GB fits; 512 KB/user 2097152 users -> 10.1 GB fits; 64 KB/user 16777216 users -> 80.5 GB NO
+  spread T=30d: 18587 covered starts by 5987 users (of 11275 returning users with a cold start); top 1% users 12.2%, top 10% 43.7%; half of covered starts by 805 users (13.4%); median per user 2
+  spread T=7d: 5855 covered starts by 2644 users (of 11275 returning users with a cold start); top 1% users 15.7%, top 10% 42.8%; half of covered starts by 390 users (14.8%); median per user 1
+  dollars (reference cold-read GETs, quiet 21.0 $ / medium 84.1 $ per 1 TB customer per month): T=1d saves 0.0 / 0.0 $; T=3d saves 0.7 / 2.9 $; T=7d saves 2.1 / 8.4 $; T=14d saves 3.9 / 15.4 $; T=30d saves 6.7 / 26.7 $; idea 2 saves 6.0 / 23.9 $
+

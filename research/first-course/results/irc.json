@@ -1,0 +1,2183 @@
+{
+ "dataset": "irc",
+ "groups": {
+  "juju": {
+   "all_starts": {
+    "bucket_0_1d": 0.7580848383032339,
+    "bucket_14_30d": 0.014699706005879883,
+    "bucket_1_3d": 0.0869382612347753,
+    "bucket_3_7d": 0.054178916421671566,
+    "bucket_7_14d": 0.0251994960100798,
+    "new": 0.0499790004199916,
+    "silent_over_30d": 0.010919781604367913,
+    "starts": 2381,
+    "within_14d": 0.9244015119697606,
+    "within_1d": 0.7580848383032339,
+    "within_30d": 0.9391012179756405,
+    "within_30d_of_returning": 0.9885057471264368,
+    "within_3d": 0.8450230995380092,
+    "within_7d": 0.8992020159596809
+   },
+   "cold": {
+    "bucket_0_1d": 0.7324009324009324,
+    "bucket_14_30d": 0.016317016317016316,
+    "bucket_1_3d": 0.09557109557109557,
+    "bucket_3_7d": 0.06013986013986014,
+    "bucket_7_14d": 0.027972027972027972,
+    "new": 0.05547785547785548,
+    "silent_over_30d": 0.012121212121212121,
+    "starts": 2145,
+    "within_14d": 0.916083916083916,
+    "within_1d": 0.7324009324009324,
+    "within_30d": 0.9324009324009324,
+    "within_30d_of_returning": 0.9871668311944719,
+    "within_3d": 0.827972027972028,
+    "within_7d": 0.8881118881118881
+   },
+   "cold_starts": 2145,
+   "eval_days": 90,
+   "lru_catches": 0.09911801763964723,
+   "new_by_period": {
+    "first_28d": 0.0796812749003984,
+    "last_28d": 0.043478260869565216
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 1.5517361111111112,
+     "max_held": 58,
+     "mean_held": 49.65555555555556,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.3848871468634942,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 27.079097174907954,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 216.63277739926363,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.7936507936507936,
+     "share_last_day": 0.32044198895027626,
+     "share_of_known": 0.4231108933579368
+    },
+    "1d": {
+     "footprint_mb": 0.34965277777777776,
+     "max_held": 23,
+     "mean_held": 11.188888888888888,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.7470802341376326,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 5.976641873101061,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 47.813134984808485,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.07936507936507936,
+     "share_last_day": 0.1270718232044199,
+     "share_of_known": 0.09338502926720407
+    },
+    "30d": {
+     "footprint_mb": 2.3697916666666665,
+     "max_held": 89,
+     "mean_held": 75.83333333333333,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 5.172924916053876,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 41.38339932843101,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 331.0671946274481,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.430939226519337,
+     "share_of_known": 0.6466156145067345
+    },
+    "3d": {
+     "footprint_mb": 0.6600694444444445,
+     "max_held": 35,
+     "mean_held": 21.122222222222224,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.4163551545173962,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 11.33084123613917,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 90.64672988911336,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.25396825396825395,
+     "share_last_day": 0.18232044198895028,
+     "share_of_known": 0.17704439431467453
+    },
+    "7d": {
+     "footprint_mb": 1.0635416666666666,
+     "max_held": 47,
+     "mean_held": 34.03333333333333,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.3041845457138113,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 18.43347636571049,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 147.46781092568392,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5238095238095238,
+     "share_last_day": 0.19889502762430938,
+     "share_of_known": 0.2880230682142264
+    },
+    "days": 90,
+    "known_last_day": 181,
+    "mean_known": 125.53333333333333
+   },
+   "sessions": 2986,
+   "spread": {
+    "30d": {
+     "covered_starts": 2000,
+     "covered_users": 107,
+     "median_starts_per_covered_user": 3.0,
+     "returning_users_with_cold_start": 112,
+     "top10pct_share": 0.7185,
+     "top1pct_share": 0.2655,
+     "users_for_half": 5,
+     "users_for_half_share": 0.04672897196261682,
+     "users_with_cold_start": 156
+    },
+    "7d": {
+     "covered_starts": 1905,
+     "covered_users": 101,
+     "median_starts_per_covered_user": 3.0,
+     "returning_users_with_cold_start": 112,
+     "top10pct_share": 0.7501312335958005,
+     "top1pct_share": 0.27874015748031494,
+     "users_for_half": 5,
+     "users_for_half_share": 0.04950495049504951,
+     "users_with_cold_start": 156
+    }
+   },
+   "starts_eval": 2381,
+   "users": 183
+  },
+  "kubuntu": {
+   "all_starts": {
+    "bucket_0_1d": 0.4100284495021337,
+    "bucket_14_30d": 0.044630156472261734,
+    "bucket_1_3d": 0.10899715504978663,
+    "bucket_3_7d": 0.07645803698435277,
+    "bucket_7_14d": 0.050497866287339974,
+    "new": 0.27382645803698435,
+    "silent_over_30d": 0.03556187766714083,
+    "starts": 5624,
+    "within_14d": 0.6459815078236131,
+    "within_1d": 0.4100284495021337,
+    "within_30d": 0.6906116642958748,
+    "within_30d_of_returning": 0.951028403525955,
+    "within_3d": 0.5190256045519204,
+    "within_7d": 0.5954836415362731
+   },
+   "cold": {
+    "bucket_0_1d": 0.29178228388473854,
+    "bucket_14_30d": 0.0535752401280683,
+    "bucket_1_3d": 0.13084311632870865,
+    "bucket_3_7d": 0.09178228388473852,
+    "bucket_7_14d": 0.06061899679829242,
+    "new": 0.3287086446104589,
+    "silent_over_30d": 0.042689434364994665,
+    "starts": 4685,
+    "within_14d": 0.5750266808964781,
+    "within_1d": 0.29178228388473854,
+    "within_30d": 0.6286019210245464,
+    "within_30d_of_returning": 0.9364069952305246,
+    "within_3d": 0.4226254002134472,
+    "within_7d": 0.5144076840981857
+   },
+   "cold_starts": 4685,
+   "eval_days": 91,
+   "lru_catches": 0.16696301564722615,
+   "new_by_period": {
+    "first_28d": 0.37962962962962965,
+    "last_28d": 0.3
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 11.758928571428571,
+     "max_held": 492,
+     "mean_held": 376.2857142857143,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.279480634755524,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 18.235845078044193,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 145.88676062435354,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.6109510086455331,
+     "share_last_day": 0.18636363636363637,
+     "share_of_known": 0.2849350793444405
+    },
+    "1d": {
+     "footprint_mb": 1.3561126373626373,
+     "max_held": 109,
+     "mean_held": 43.395604395604394,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.25842437161625587,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.067394972930047,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 16.539159783440375,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.08789625360230548,
+     "share_last_day": 0.04363636363636364,
+     "share_of_known": 0.03230304645203198
+    },
+    "30d": {
+     "footprint_mb": 21.94436813186813,
+     "max_held": 844,
+     "mean_held": 702.2197802197802,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.213587810052861,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 33.708702480422886,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 269.6696198433831,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.3190909090909091,
+     "share_of_known": 0.5266984762566076
+    },
+    "3d": {
+     "footprint_mb": 3.3543956043956045,
+     "max_held": 192,
+     "mean_held": 107.34065934065934,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.6477163132333321,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 5.181730505866657,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 41.453844046933256,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.22046109510086456,
+     "share_last_day": 0.08727272727272728,
+     "share_of_known": 0.08096453915416651
+    },
+    "7d": {
+     "footprint_mb": 6.696085164835165,
+     "max_held": 296,
+     "mean_held": 214.27472527472528,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.3003908289871742,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 10.403126631897393,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 83.22501305517915,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.3904899135446686,
+     "share_last_day": 0.12181818181818181,
+     "share_of_known": 0.16254885362339677
+    },
+    "days": 91,
+    "known_last_day": 2200,
+    "mean_known": 1498.021978021978
+   },
+   "sessions": 7414,
+   "spread": {
+    "30d": {
+     "covered_starts": 2945,
+     "covered_users": 555,
+     "median_starts_per_covered_user": 2.0,
+     "returning_users_with_cold_start": 625,
+     "top10pct_share": 0.5724957555178268,
+     "top1pct_share": 0.17487266553480477,
+     "users_for_half": 41,
+     "users_for_half_share": 0.07387387387387387,
+     "users_with_cold_start": 1775
+    },
+    "7d": {
+     "covered_starts": 2410,
+     "covered_users": 433,
+     "median_starts_per_covered_user": 2.0,
+     "returning_users_with_cold_start": 625,
+     "top10pct_share": 0.5921161825726141,
+     "top1pct_share": 0.1879668049792531,
+     "users_for_half": 29,
+     "users_for_half_share": 0.06697459584295612,
+     "users_with_cold_start": 1775
+    }
+   },
+   "starts_eval": 5624,
+   "users": 2246
+  },
+  "ubuntu": {
+   "all_starts": {
+    "bucket_0_1d": 0.4076495065605918,
+    "bucket_14_30d": 0.05315434529598393,
+    "bucket_1_3d": 0.09994738772061286,
+    "bucket_3_7d": 0.07199910718556192,
+    "bucket_7_14d": 0.05406310284903464,
+    "new": 0.26259904660172506,
+    "silent_over_30d": 0.0505875037864898,
+    "starts": 62723,
+    "within_14d": 0.6336591043158012,
+    "within_1d": 0.4076495065605918,
+    "within_30d": 0.6868134496117851,
+    "within_30d_of_returning": 0.9313975611865433,
+    "within_3d": 0.5075968942812047,
+    "within_7d": 0.5795960014667666
+   },
+   "cold": {
+    "bucket_0_1d": 0.2946023428452089,
+    "bucket_14_30d": 0.06329858935657193,
+    "bucket_1_3d": 0.11902185263237836,
+    "bucket_3_7d": 0.08573978090410282,
+    "bucket_7_14d": 0.06438077879668129,
+    "new": 0.3127147766323024,
+    "silent_over_30d": 0.06024187883275427,
+    "starts": 52671,
+    "within_14d": 0.5637447551783714,
+    "within_1d": 0.2946023428452089,
+    "within_30d": 0.6270433445349434,
+    "within_30d_of_returning": 0.9123480662983425,
+    "within_3d": 0.4136241954775873,
+    "within_7d": 0.4993639763816901
+   },
+   "cold_starts": 52671,
+   "eval_days": 91,
+   "lru_catches": 0.16026019163624194,
+   "new_by_period": {
+    "first_28d": 0.35191224429291434,
+    "last_28d": 0.2858282208588957
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 133.27712912087912,
+     "max_held": 4702,
+     "mean_held": 4264.868131868132,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.3860977118091626,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 19.0887816944733,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 152.7102535557864,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5978187693550558,
+     "share_last_day": 0.19889175584789137,
+     "share_of_known": 0.29826221397614533
+    },
+    "1d": {
+     "footprint_mb": 15.147664835164836,
+     "max_held": 960,
+     "mean_held": 484.72527472527474,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.269439500302259,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.155516002418072,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 17.244128019344576,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.06988016695839505,
+     "share_last_day": 0.03646207859227613,
+     "share_of_known": 0.033679937537782374
+    },
+    "30d": {
+     "footprint_mb": 247.13633241758242,
+     "max_held": 8399,
+     "mean_held": 7908.3626373626375,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.400675034053943,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 35.20540027243155,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 281.6432021794524,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.33661858635421515,
+     "share_of_known": 0.5500843792567429
+    },
+    "3d": {
+     "footprint_mb": 37.66277472527472,
+     "max_held": 1973,
+     "mean_held": 1205.2087912087911,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.6727315651947656,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 5.381852521558125,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 43.054820172465,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.18001885014137606,
+     "share_last_day": 0.08345670656909607,
+     "share_of_known": 0.0840914456493457
+    },
+    "7d": {
+     "footprint_mb": 75.69333791208791,
+     "max_held": 3029,
+     "mean_held": 2422.186813186813,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.3561582215824897,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 10.849265772659917,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 86.79412618127934,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.35532516493873706,
+     "share_last_day": 0.12812486781439025,
+     "share_of_known": 0.1695197776978112
+    },
+    "days": 91,
+    "known_last_day": 23641,
+    "mean_known": 15982.208791208792
+   },
+   "sessions": 82163,
+   "spread": {
+    "30d": {
+     "covered_starts": 33027,
+     "covered_users": 6946,
+     "median_starts_per_covered_user": 2.0,
+     "returning_users_with_cold_start": 8071,
+     "top10pct_share": 0.5345323523178006,
+     "top1pct_share": 0.2053168619614255,
+     "users_for_half": 585,
+     "users_for_half_share": 0.08422113446587964,
+     "users_with_cold_start": 19451
+    },
+    "7d": {
+     "covered_starts": 26302,
+     "covered_users": 5549,
+     "median_starts_per_covered_user": 2.0,
+     "returning_users_with_cold_start": 8071,
+     "top10pct_share": 0.5674093224849821,
+     "top1pct_share": 0.23013459052543533,
+     "users_for_half": 382,
+     "users_for_half_share": 0.06884123265453235,
+     "users_with_cold_start": 19451
+    }
+   },
+   "starts_eval": 62723,
+   "users": 24059
+  },
+  "ubuntu-bugs": {
+   "all_starts": {
+    "bucket_0_1d": 0.3649425287356322,
+    "bucket_14_30d": 0.044061302681992334,
+    "bucket_1_3d": 0.14559386973180077,
+    "bucket_3_7d": 0.12835249042145594,
+    "bucket_7_14d": 0.0842911877394636,
+    "new": 0.20402298850574713,
+    "silent_over_30d": 0.028735632183908046,
+    "starts": 1044,
+    "within_14d": 0.7231800766283525,
+    "within_1d": 0.3649425287356322,
+    "within_30d": 0.7672413793103449,
+    "within_30d_of_returning": 0.9638989169675091,
+    "within_3d": 0.5105363984674329,
+    "within_7d": 0.6388888888888888
+   },
+   "cold": {
+    "bucket_0_1d": 0.309375,
+    "bucket_14_30d": 0.04791666666666667,
+    "bucket_1_3d": 0.15833333333333333,
+    "bucket_3_7d": 0.13958333333333334,
+    "bucket_7_14d": 0.09166666666666666,
+    "new": 0.221875,
+    "silent_over_30d": 0.03125,
+    "starts": 960,
+    "within_14d": 0.6989583333333333,
+    "within_1d": 0.309375,
+    "within_30d": 0.746875,
+    "within_30d_of_returning": 0.9598393574297188,
+    "within_3d": 0.46770833333333334,
+    "within_7d": 0.6072916666666667
+   },
+   "cold_starts": 960,
+   "eval_days": 90,
+   "lru_catches": 0.08045977011494254,
+   "new_by_period": {
+    "first_28d": 0.20860927152317882,
+    "last_28d": 0.21283783783783783
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 2.01875,
+     "max_held": 85,
+     "mean_held": 64.6,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.9808488600973337,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 23.84679088077867,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 190.77432704622936,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.7325581395348837,
+     "share_last_day": 0.21768707482993196,
+     "share_of_known": 0.3726061075121667
+    },
+    "1d": {
+     "footprint_mb": 0.27395833333333336,
+     "max_held": 24,
+     "mean_held": 8.766666666666667,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.41242672473899383,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.2994137979119507,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 26.395310383295605,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.10465116279069768,
+     "share_last_day": 0.08163265306122448,
+     "share_of_known": 0.05155334059237423
+    },
+    "30d": {
+     "footprint_mb": 3.3743055555555554,
+     "max_held": 124,
+     "mean_held": 107.97777777777777,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.930019046683473,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 39.44015237346778,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 315.52121898774226,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.391156462585034,
+     "share_of_known": 0.6162523808354341
+    },
+    "3d": {
+     "footprint_mb": 0.665625,
+     "max_held": 33,
+     "mean_held": 21.3,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.9985780981974434,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 7.988624785579547,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 63.908998284636375,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.29069767441860467,
+     "share_last_day": 0.1054421768707483,
+     "share_of_known": 0.12482226227468042
+    },
+    "7d": {
+     "footprint_mb": 1.2552083333333333,
+     "max_held": 58,
+     "mean_held": 40.166666666666664,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.864723629528462,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 14.917789036227695,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 119.34231228982156,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.4186046511627907,
+     "share_last_day": 0.1564625850340136,
+     "share_of_known": 0.23309045369105774
+    },
+    "days": 90,
+    "known_last_day": 294,
+    "mean_known": 193.2
+   },
+   "sessions": 1323,
+   "spread": {
+    "30d": {
+     "covered_starts": 717,
+     "covered_users": 118,
+     "median_starts_per_covered_user": 2.0,
+     "returning_users_with_cold_start": 125,
+     "top10pct_share": 0.48535564853556484,
+     "top1pct_share": 0.14086471408647142,
+     "users_for_half": 13,
+     "users_for_half_share": 0.11016949152542373,
+     "users_with_cold_start": 256
+    },
+    "7d": {
+     "covered_starts": 583,
+     "covered_users": 104,
+     "median_starts_per_covered_user": 2.0,
+     "returning_users_with_cold_start": 125,
+     "top10pct_share": 0.5128644939965694,
+     "top1pct_share": 0.1680960548885077,
+     "users_for_half": 11,
+     "users_for_half_share": 0.10576923076923077,
+     "users_with_cold_start": 256
+    }
+   },
+   "starts_eval": 1044,
+   "users": 301
+  },
+  "ubuntu-de": {
+   "all_starts": {
+    "bucket_0_1d": 0.5969457322061631,
+    "bucket_14_30d": 0.035314971366239435,
+    "bucket_1_3d": 0.10880829015544041,
+    "bucket_3_7d": 0.06476683937823834,
+    "bucket_7_14d": 0.037496591218980094,
+    "new": 0.12817016634851378,
+    "silent_over_30d": 0.02849740932642487,
+    "starts": 7334,
+    "within_14d": 0.8080174529588219,
+    "within_1d": 0.5969457322061631,
+    "within_30d": 0.8433324243250614,
+    "within_30d_of_returning": 0.9673131060369096,
+    "within_3d": 0.7057540223616035,
+    "within_7d": 0.7705208617398418
+   },
+   "cold": {
+    "bucket_0_1d": 0.5538786598249321,
+    "bucket_14_30d": 0.039088439480833084,
+    "bucket_1_3d": 0.12043465137337761,
+    "bucket_3_7d": 0.07168729248415334,
+    "bucket_7_14d": 0.04150316933293088,
+    "new": 0.14186537881074554,
+    "silent_over_30d": 0.03154240869302747,
+    "starts": 6626,
+    "within_14d": 0.7875037730153939,
+    "within_1d": 0.5538786598249321,
+    "within_30d": 0.8265922124962269,
+    "within_30d_of_returning": 0.9632430531129089,
+    "within_3d": 0.6743133111983097,
+    "within_7d": 0.746000603682463
+   },
+   "cold_starts": 6626,
+   "eval_days": 91,
+   "lru_catches": 0.09653667848377423,
+   "new_by_period": {
+    "first_28d": 0.15566681838871188,
+    "last_28d": 0.14627930682976553
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 9.231456043956044,
+     "max_held": 325,
+     "mean_held": 295.4065934065934,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.619249594187225,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 20.9539967534978,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 167.6319740279824,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.6322067594433399,
+     "share_last_day": 0.21558988764044945,
+     "share_of_known": 0.32740619927340314
+    },
+    "1d": {
+     "footprint_mb": 1.3956043956043955,
+     "max_held": 83,
+     "mean_held": 44.65934065934066,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.39661970138516783,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.1729576110813427,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 25.38366088865074,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.09542743538767395,
+     "share_last_day": 0.0449438202247191,
+     "share_of_known": 0.04957746267314598
+    },
+    "30d": {
+     "footprint_mb": 15.955357142857142,
+     "max_held": 556,
+     "mean_held": 510.57142857142856,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.528429996133887,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 36.2274399690711,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 289.8195197525688,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.37359550561797755,
+     "share_of_known": 0.5660537495167359
+    },
+    "3d": {
+     "footprint_mb": 3.055631868131868,
+     "max_held": 138,
+     "mean_held": 97.78021978021978,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.8673613176886612,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 6.93889054150929,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 55.51112433207432,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.19284294234592445,
+     "share_last_day": 0.09691011235955056,
+     "share_of_known": 0.10842016471108265
+    },
+    "7d": {
+     "footprint_mb": 5.582760989010989,
+     "max_held": 209,
+     "mean_held": 178.64835164835165,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.583333591187812,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 12.666668729502495,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 101.33334983601996,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.35984095427435386,
+     "share_last_day": 0.13553370786516855,
+     "share_of_known": 0.1979166988984765
+    },
+    "days": 91,
+    "known_last_day": 1424,
+    "mean_known": 986.6263736263736
+   },
+   "sessions": 9491,
+   "spread": {
+    "30d": {
+     "covered_starts": 5477,
+     "covered_users": 521,
+     "median_starts_per_covered_user": 2.0,
+     "returning_users_with_cold_start": 569,
+     "top10pct_share": 0.7241190432718642,
+     "top1pct_share": 0.2857403688150447,
+     "users_for_half": 15,
+     "users_for_half_share": 0.028790786948176585,
+     "users_with_cold_start": 1166
+    },
+    "7d": {
+     "covered_starts": 4943,
+     "covered_users": 457,
+     "median_starts_per_covered_user": 2.0,
+     "returning_users_with_cold_start": 569,
+     "top10pct_share": 0.7630993323892373,
+     "top1pct_share": 0.27938498887315394,
+     "users_for_half": 13,
+     "users_for_half_share": 0.028446389496717725,
+     "users_with_cold_start": 1166
+    }
+   },
+   "starts_eval": 7334,
+   "users": 1458
+  },
+  "ubuntu-devel": {
+   "all_starts": {
+    "bucket_0_1d": 0.5975954738330976,
+    "bucket_14_30d": 0.03712871287128713,
+    "bucket_1_3d": 0.1387906647807638,
+    "bucket_3_7d": 0.0967114568599717,
+    "bucket_7_14d": 0.048797736916548796,
+    "new": 0.06435643564356436,
+    "silent_over_30d": 0.01661951909476662,
+    "starts": 5656,
+    "within_14d": 0.8818953323903819,
+    "within_1d": 0.5975954738330976,
+    "within_30d": 0.919024045261669,
+    "within_30d_of_returning": 0.9822373393801965,
+    "within_3d": 0.7363861386138614,
+    "within_7d": 0.8330975954738331
+   },
+   "cold": {
+    "bucket_0_1d": 0.5658145745898512,
+    "bucket_14_30d": 0.04006104540251812,
+    "bucket_1_3d": 0.14975200305227013,
+    "bucket_3_7d": 0.10434948492941626,
+    "bucket_7_14d": 0.052651659671880964,
+    "new": 0.06943914536436474,
+    "silent_over_30d": 0.017932086989698587,
+    "starts": 5242,
+    "within_14d": 0.8725677222434185,
+    "within_1d": 0.5658145745898512,
+    "within_30d": 0.9126287676459367,
+    "within_30d_of_returning": 0.980729807298073,
+    "within_3d": 0.7155665776421213,
+    "within_7d": 0.8199160625715376
+   },
+   "cold_starts": 5242,
+   "eval_days": 91,
+   "lru_catches": 0.0731966053748232,
+   "new_by_period": {
+    "first_28d": 0.09059434506635891,
+    "last_28d": 0.05136986301369863
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 5.87190934065934,
+     "max_held": 216,
+     "mean_held": 187.9010989010989,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.8132878848786276,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 30.50630307902902,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 244.05042463223216,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.7685185185185185,
+     "share_last_day": 0.2918825561312608,
+     "share_of_known": 0.47666098560982845
+    },
+    "1d": {
+     "footprint_mb": 1.081043956043956,
+     "max_held": 62,
+     "mean_held": 34.59340659340659,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.7038418357975319,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 5.630734686380255,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 45.04587749104204,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.032407407407407406,
+     "share_last_day": 0.07599309153713299,
+     "share_of_known": 0.08798022947469149
+    },
+    "30d": {
+     "footprint_mb": 8.76923076923077,
+     "max_held": 310,
+     "mean_held": 280.61538461538464,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 5.606107680558058,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 44.84886144446446,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 358.7908915557157,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.45595854922279794,
+     "share_of_known": 0.7007634600697572
+    },
+    "3d": {
+     "footprint_mb": 2.338598901098901,
+     "max_held": 106,
+     "mean_held": 74.83516483516483,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.5320626541117355,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 12.256501232893884,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 98.05200986315107,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.3101851851851852,
+     "share_last_day": 0.13644214162348878,
+     "share_of_known": 0.19150783176396693
+    },
+    "7d": {
+     "footprint_mb": 3.9817994505494507,
+     "max_held": 150,
+     "mean_held": 127.41758241758242,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.6050287411710293,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 20.840229929368235,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 166.72183943494588,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5462962962962963,
+     "share_last_day": 0.19861830742659758,
+     "share_of_known": 0.32562859264637867
+    },
+    "days": 91,
+    "known_last_day": 579,
+    "mean_known": 425.27472527472526
+   },
+   "sessions": 7080,
+   "spread": {
+    "30d": {
+     "covered_starts": 4784,
+     "covered_users": 289,
+     "median_starts_per_covered_user": 4.0,
+     "returning_users_with_cold_start": 310,
+     "top10pct_share": 0.5888377926421404,
+     "top1pct_share": 0.14778428093645485,
+     "users_for_half": 21,
+     "users_for_half_share": 0.0726643598615917,
+     "users_with_cold_start": 525
+    },
+    "7d": {
+     "covered_starts": 4298,
+     "covered_users": 260,
+     "median_starts_per_covered_user": 3.0,
+     "returning_users_with_cold_start": 310,
+     "top10pct_share": 0.6172638436482085,
+     "top1pct_share": 0.1642624476500698,
+     "users_for_half": 17,
+     "users_for_half_share": 0.06538461538461539,
+     "users_with_cold_start": 525
+    }
+   },
+   "starts_eval": 5656,
+   "users": 585
+  },
+  "ubuntu-kernel": {
+   "all_starts": {
+    "bucket_0_1d": 0.6793375987956342,
+    "bucket_14_30d": 0.029356417011667295,
+    "bucket_1_3d": 0.10538200978547234,
+    "bucket_3_7d": 0.06962739932254422,
+    "bucket_7_14d": 0.033496424538953705,
+    "new": 0.06548739179525781,
+    "silent_over_30d": 0.017312758750470454,
+    "starts": 2657,
+    "within_14d": 0.8878434324426044,
+    "within_1d": 0.6793375987956342,
+    "within_30d": 0.9171998494542717,
+    "within_30d_of_returning": 0.9814740233588402,
+    "within_3d": 0.7847196085811066,
+    "within_7d": 0.8543470079036507
+   },
+   "cold": {
+    "bucket_0_1d": 0.6532356532356532,
+    "bucket_14_30d": 0.031746031746031744,
+    "bucket_1_3d": 0.11396011396011396,
+    "bucket_3_7d": 0.0752950752950753,
+    "bucket_7_14d": 0.03622303622303622,
+    "new": 0.07081807081807082,
+    "silent_over_30d": 0.018722018722018723,
+    "starts": 2457,
+    "within_14d": 0.8787138787138787,
+    "within_1d": 0.6532356532356532,
+    "within_30d": 0.9104599104599105,
+    "within_30d_of_returning": 0.9798510731493649,
+    "within_3d": 0.7671957671957672,
+    "within_7d": 0.8424908424908425
+   },
+   "cold_starts": 2457,
+   "eval_days": 89,
+   "lru_catches": 0.07527286413248024,
+   "new_by_period": {
+    "first_28d": 0.09732016925246827,
+    "last_28d": 0.06860158311345646
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 2.4122191011235956,
+     "max_held": 89,
+     "mean_held": 77.19101123595506,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.307562396398572,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 26.460499171188577,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 211.6839933695086,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.7570093457943925,
+     "share_last_day": 0.26714801444043323,
+     "share_of_known": 0.4134452995498215
+    },
+    "1d": {
+     "footprint_mb": 0.43995786516853935,
+     "max_held": 30,
+     "mean_held": 14.07865168539326,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.5956961623424213,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.76556929873937,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 38.12455438991496,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.04672897196261682,
+     "share_last_day": 0.09386281588447654,
+     "share_of_known": 0.07446202029280266
+    },
+    "30d": {
+     "footprint_mb": 3.7826544943820224,
+     "max_held": 134,
+     "mean_held": 121.04494382022472,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 5.148226859342515,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 41.18581487474012,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 329.48651899792094,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.4404332129963899,
+     "share_of_known": 0.6435283574178143
+    },
+    "3d": {
+     "footprint_mb": 0.9396067415730337,
+     "max_held": 47,
+     "mean_held": 30.06741573033708,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.278767322710803,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 10.230138581686424,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 81.84110865349139,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.27102803738317754,
+     "share_last_day": 0.1588447653429603,
+     "share_of_known": 0.15984591533885037
+    },
+    "7d": {
+     "footprint_mb": 1.5860252808988764,
+     "max_held": 63,
+     "mean_held": 50.752808988764045,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.170352879211789,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 17.362823033694312,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 138.9025842695545,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5233644859813084,
+     "share_last_day": 0.20577617328519857,
+     "share_of_known": 0.2712941099014736
+    },
+    "days": 89,
+    "known_last_day": 277,
+    "mean_known": 200.17977528089887
+   },
+   "sessions": 3237,
+   "spread": {
+    "30d": {
+     "covered_starts": 2237,
+     "covered_users": 128,
+     "median_starts_per_covered_user": 3.0,
+     "returning_users_with_cold_start": 138,
+     "top10pct_share": 0.7147966025927581,
+     "top1pct_share": 0.21636119803308002,
+     "users_for_half": 6,
+     "users_for_half_share": 0.046875,
+     "users_with_cold_start": 237
+    },
+    "7d": {
+     "covered_starts": 2070,
+     "covered_users": 114,
+     "median_starts_per_covered_user": 3.0,
+     "returning_users_with_cold_start": 138,
+     "top10pct_share": 0.7526570048309179,
+     "top1pct_share": 0.23381642512077294,
+     "users_for_half": 5,
+     "users_for_half_share": 0.043859649122807015,
+     "users_with_cold_start": 237
+    }
+   },
+   "starts_eval": 2657,
+   "users": 284
+  },
+  "ubuntu-motu": {
+   "all_starts": {
+    "bucket_0_1d": 0.6113102349661489,
+    "bucket_14_30d": 0.03225806451612903,
+    "bucket_1_3d": 0.14217443249701314,
+    "bucket_3_7d": 0.06929510155316607,
+    "bucket_7_14d": 0.04261250497809638,
+    "new": 0.07925129430505774,
+    "silent_over_30d": 0.02309836718438869,
+    "starts": 2511,
+    "within_14d": 0.8653922739944245,
+    "within_1d": 0.6113102349661489,
+    "within_30d": 0.8976503385105535,
+    "within_30d_of_returning": 0.9749134948096886,
+    "within_3d": 0.7534846674631621,
+    "within_7d": 0.8227797690163282
+   },
+   "cold": {
+    "bucket_0_1d": 0.5713658322353975,
+    "bucket_14_30d": 0.03557312252964427,
+    "bucket_1_3d": 0.15678524374176547,
+    "bucket_3_7d": 0.0764163372859025,
+    "bucket_7_14d": 0.046991655687307864,
+    "new": 0.08739569609134827,
+    "silent_over_30d": 0.025472112428634168,
+    "starts": 2277,
+    "within_14d": 0.8515590689503733,
+    "within_1d": 0.5713658322353975,
+    "within_30d": 0.8871321914800175,
+    "within_30d_of_returning": 0.9720885466794995,
+    "within_3d": 0.7281510759771629,
+    "within_7d": 0.8045674132630655
+   },
+   "cold_starts": 2277,
+   "eval_days": 91,
+   "lru_catches": 0.09318996415770608,
+   "new_by_period": {
+    "first_28d": 0.1191553544494721,
+    "last_28d": 0.05605786618444846
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 2.611607142857143,
+     "max_held": 112,
+     "mean_held": 83.57142857142857,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.261955844061921,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 26.09564675249537,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 208.76517401996296,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.6095238095238096,
+     "share_last_day": 0.24092409240924093,
+     "share_of_known": 0.40774448050774015
+    },
+    "1d": {
+     "footprint_mb": 0.4845467032967033,
+     "max_held": 36,
+     "mean_held": 15.505494505494505,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.6051430861161584,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.841144688929267,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 38.72915751143414,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.02857142857142857,
+     "share_last_day": 0.0594059405940594,
+     "share_of_known": 0.0756428857645198
+    },
+    "30d": {
+     "footprint_mb": 4.183035714285714,
+     "max_held": 167,
+     "mean_held": 133.85714285714286,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 5.2106396446907866,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 41.68511715752629,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 333.48093726021034,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.36303630363036304,
+     "share_of_known": 0.6513299555863483
+    },
+    "3d": {
+     "footprint_mb": 0.9975961538461539,
+     "max_held": 54,
+     "mean_held": 31.923076923076923,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.2474716418630274,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 9.97977313490422,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 79.83818507923375,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.20952380952380953,
+     "share_last_day": 0.09900990099009901,
+     "share_of_known": 0.15593395523287842
+    },
+    "7d": {
+     "footprint_mb": 1.7022664835164836,
+     "max_held": 78,
+     "mean_held": 54.472527472527474,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.1306878680999155,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 17.045502944799324,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 136.3640235583946,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.37142857142857144,
+     "share_last_day": 0.16831683168316833,
+     "share_of_known": 0.26633598351248944
+    },
+    "days": 91,
+    "known_last_day": 303,
+    "mean_known": 220.95604395604394
+   },
+   "sessions": 3152,
+   "spread": {
+    "30d": {
+     "covered_starts": 2020,
+     "covered_users": 137,
+     "median_starts_per_covered_user": 4.0,
+     "returning_users_with_cold_start": 159,
+     "top10pct_share": 0.6306930693069307,
+     "top1pct_share": 0.17524752475247524,
+     "users_for_half": 8,
+     "users_for_half_share": 0.058394160583941604,
+     "users_with_cold_start": 263
+    },
+    "7d": {
+     "covered_starts": 1832,
+     "covered_users": 117,
+     "median_starts_per_covered_user": 4.0,
+     "returning_users_with_cold_start": 159,
+     "top10pct_share": 0.6566593886462883,
+     "top1pct_share": 0.19323144104803494,
+     "users_for_half": 7,
+     "users_for_half_share": 0.05982905982905983,
+     "users_with_cold_start": 263
+    }
+   },
+   "starts_eval": 2511,
+   "users": 305
+  },
+  "ubuntu-server": {
+   "all_starts": {
+    "bucket_0_1d": 0.551368094992256,
+    "bucket_14_30d": 0.03820340733092411,
+    "bucket_1_3d": 0.11891240750301153,
+    "bucket_3_7d": 0.08002065049044915,
+    "bucket_7_14d": 0.04508690414730683,
+    "new": 0.1395628979521597,
+    "silent_over_30d": 0.026845637583892617,
+    "starts": 5811,
+    "within_14d": 0.7953880571330236,
+    "within_1d": 0.551368094992256,
+    "within_30d": 0.8335914644639477,
+    "within_30d_of_returning": 0.9688,
+    "within_3d": 0.6702805024952676,
+    "within_7d": 0.7503011529857168
+   },
+   "cold": {
+    "bucket_0_1d": 0.4911184852625415,
+    "bucket_14_30d": 0.04333398399375366,
+    "bucket_1_3d": 0.1348819051337107,
+    "bucket_3_7d": 0.0907671286355651,
+    "bucket_7_14d": 0.05114190903767324,
+    "new": 0.15830568026546946,
+    "silent_over_30d": 0.030450907671286356,
+    "starts": 5123,
+    "within_14d": 0.7679094280694906,
+    "within_1d": 0.4911184852625415,
+    "within_30d": 0.8112434120632442,
+    "within_30d_of_returning": 0.963821892393321,
+    "within_3d": 0.6260003903962522,
+    "within_7d": 0.7167675190318173
+   },
+   "cold_starts": 5123,
+   "eval_days": 91,
+   "lru_catches": 0.11839614524178288,
+   "new_by_period": {
+    "first_28d": 0.1735211267605634,
+    "last_28d": 0.1690245718540581
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 7.9646291208791204,
+     "max_held": 303,
+     "mean_held": 254.86813186813185,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.789858228496484,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 22.318865827971873,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 178.55092662377498,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.6356382978723404,
+     "share_last_day": 0.22731128074639526,
+     "share_of_known": 0.3487322785620605
+    },
+    "1d": {
+     "footprint_mb": 1.196771978021978,
+     "max_held": 69,
+     "mean_held": 38.2967032967033,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.42283128738591375,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.38265029908731,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 27.06120239269848,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0425531914893617,
+     "share_last_day": 0.04240882103477523,
+     "share_of_known": 0.05285391092323922
+    },
+    "30d": {
+     "footprint_mb": 13.542925824175825,
+     "max_held": 490,
+     "mean_held": 433.3736263736264,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.716642956698873,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 37.733143653590986,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 301.8651492287279,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.37743850720949956,
+     "share_of_known": 0.5895803695873592
+    },
+    "3d": {
+     "footprint_mb": 2.6950549450549453,
+     "max_held": 124,
+     "mean_held": 86.24175824175825,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.9550196191029219,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 7.640156952823375,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 61.121255622587,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.2154255319148936,
+     "share_last_day": 0.09838846480067855,
+     "share_of_known": 0.11937745238786523
+    },
+    "7d": {
+     "footprint_mb": 4.9103708791208796,
+     "max_held": 196,
+     "mean_held": 157.13186813186815,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.7335828161430313,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 13.86866252914425,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 110.949300233154,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.3723404255319149,
+     "share_last_day": 0.1484308736217133,
+     "share_of_known": 0.21669785201787892
+    },
+    "days": 91,
+    "known_last_day": 1179,
+    "mean_known": 807.1208791208791
+   },
+   "sessions": 7381,
+   "spread": {
+    "30d": {
+     "covered_starts": 4156,
+     "covered_users": 436,
+     "median_starts_per_covered_user": 2.0,
+     "returning_users_with_cold_start": 477,
+     "top10pct_share": 0.6698748796920115,
+     "top1pct_share": 0.20019249278152068,
+     "users_for_half": 19,
+     "users_for_half_share": 0.04357798165137615,
+     "users_with_cold_start": 1003
+    },
+    "7d": {
+     "covered_starts": 3672,
+     "covered_users": 368,
+     "median_starts_per_covered_user": 2.0,
+     "returning_users_with_cold_start": 477,
+     "top10pct_share": 0.7009803921568627,
+     "top1pct_share": 0.18654684095860566,
+     "users_for_half": 15,
+     "users_for_half_share": 0.04076086956521739,
+     "users_with_cold_start": 1003
+    }
+   },
+   "starts_eval": 5811,
+   "users": 1193
+  },
+  "ubuntu-uk": {
+   "all_starts": {
+    "bucket_0_1d": 0.8049108233569509,
+    "bucket_14_30d": 0.013315416564866846,
+    "bucket_1_3d": 0.08954312240410457,
+    "bucket_3_7d": 0.03591497678964085,
+    "bucket_7_14d": 0.017346689469826534,
+    "new": 0.031639384314683605,
+    "silent_over_30d": 0.007329587099926704,
+    "starts": 8186,
+    "within_14d": 0.9477156120205228,
+    "within_1d": 0.8049108233569509,
+    "within_30d": 0.9610310285853897,
+    "within_30d_of_returning": 0.9924309322568436,
+    "within_3d": 0.8944539457610554,
+    "within_7d": 0.9303689225506964
+   },
+   "cold": {
+    "bucket_0_1d": 0.8012692882030861,
+    "bucket_14_30d": 0.013563962170233947,
+    "bucket_1_3d": 0.09121453459432553,
+    "bucket_3_7d": 0.036585365853658534,
+    "bucket_7_14d": 0.01767048282727725,
+    "new": 0.032229965156794424,
+    "silent_over_30d": 0.007466401194624191,
+    "starts": 8036,
+    "within_14d": 0.9467396714783475,
+    "within_1d": 0.8012692882030861,
+    "within_30d": 0.9603036336485814,
+    "within_30d_of_returning": 0.9922849427799922,
+    "within_3d": 0.8924838227974117,
+    "within_7d": 0.9290691886510701
+   },
+   "cold_starts": 8036,
+   "eval_days": 91,
+   "lru_catches": 0.018323967749816705,
+   "new_by_period": {
+    "first_28d": 0.028350515463917526,
+    "last_28d": 0.039400428265524624
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 3.9591346153846154,
+     "max_held": 142,
+     "mean_held": 126.6923076923077,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.3755851884637833,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 27.004681507710266,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 216.03745206168213,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.7282051282051282,
+     "share_last_day": 0.30337078651685395,
+     "share_of_known": 0.4219481485579729
+    },
+    "1d": {
+     "footprint_mb": 1.1057692307692308,
+     "max_held": 64,
+     "mean_held": 35.38461538461539,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.9417335177132751,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 7.533868141706201,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 60.270945133649604,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.17435897435897435,
+     "share_last_day": 0.09887640449438202,
+     "share_of_known": 0.11771668971415938
+    },
+    "30d": {
+     "footprint_mb": 5.922733516483516,
+     "max_held": 204,
+     "mean_held": 189.52747252747253,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 5.04358816025688,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 40.34870528205504,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 322.78964225644035,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.45393258426966293,
+     "share_of_known": 0.63044852003211
+    },
+    "3d": {
+     "footprint_mb": 1.8777472527472527,
+     "max_held": 84,
+     "mean_held": 60.08791208791209,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.599310004889017,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 12.794480039112136,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 102.35584031289709,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.38461538461538464,
+     "share_last_day": 0.18876404494382024,
+     "share_of_known": 0.19991375061112712
+    },
+    "7d": {
+     "footprint_mb": 2.81146978021978,
+     "max_held": 112,
+     "mean_held": 89.96703296703296,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.395128222339528,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 19.161025778716223,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 153.28820622972978,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5230769230769231,
+     "share_last_day": 0.24943820224719102,
+     "share_of_known": 0.299391027792441
+    },
+    "days": 91,
+    "known_last_day": 445,
+    "mean_known": 318.1978021978022
+   },
+   "sessions": 10983,
+   "spread": {
+    "30d": {
+     "covered_starts": 7717,
+     "covered_users": 213,
+     "median_starts_per_covered_user": 4.0,
+     "returning_users_with_cold_start": 225,
+     "top10pct_share": 0.7067513282363613,
+     "top1pct_share": 0.1867305947907218,
+     "users_for_half": 12,
+     "users_for_half_share": 0.056338028169014086,
+     "users_with_cold_start": 381
+    },
+    "7d": {
+     "covered_starts": 7466,
+     "covered_users": 187,
+     "median_starts_per_covered_user": 4.0,
+     "returning_users_with_cold_start": 225,
+     "top10pct_share": 0.679078489150817,
+     "top1pct_share": 0.14599517814090543,
+     "users_for_half": 12,
+     "users_for_half_share": 0.06417112299465241,
+     "users_with_cold_start": 381
+    }
+   },
+   "starts_eval": 8186,
+   "users": 456
+  }
+ },
+ "pooled": {
+  "all_starts": {
+   "bucket_0_1d": 0.5281825892512916,
+   "bucket_14_30d": 0.041753411982419615,
+   "bucket_1_3d": 0.10243657953581618,
+   "bucket_3_7d": 0.06716978949803377,
+   "bucket_7_14d": 0.04487624334952579,
+   "new": 0.17862788187215667,
+   "silent_over_30d": 0.03695350451075642,
+   "starts": 103752,
+   "within_14d": 0.7426652016346673,
+   "within_1d": 0.5281825892512916,
+   "within_30d": 0.7844186136170869,
+   "within_30d_of_returning": 0.9550100329738673,
+   "within_3d": 0.6306191687871077,
+   "within_7d": 0.6977889582851415
+  },
+  "cold": {
+   "bucket_0_1d": 0.4440242143400684,
+   "bucket_14_30d": 0.049200994923166035,
+   "bucket_1_3d": 0.1207082580894295,
+   "bucket_3_7d": 0.07915090803775257,
+   "bucket_7_14d": 0.0528808477290538,
+   "new": 0.21048985201085785,
+   "silent_over_30d": 0.04354492486967188,
+   "starts": 88047,
+   "within_14d": 0.6967642281963042,
+   "within_1d": 0.4440242143400684,
+   "within_30d": 0.7459652231194703,
+   "within_30d_of_returning": 0.9448456426043674,
+   "within_3d": 0.5647324724294979,
+   "within_7d": 0.6438833804672505
+  },
+  "cold_starts": 88047,
+  "eval_days": 91,
+  "lru_catches": 0.15137057598889658,
+  "new_by_period": {
+   "first_28d": 0.23833592534992223,
+   "last_28d": 0.19664250572726932
+  },
+  "openings": {
+   "14d": {
+    "footprint_mb": 164.58241758241758,
+    "max_held": 5705,
+    "mean_held": 5266.6373626373625,
+    "scale_1tb": {
+     "4 MB": {
+      "fits_29gb": true,
+      "footprint_gb": 2.5143125155390122,
+      "users": 262144
+     },
+     "512 KB": {
+      "fits_29gb": true,
+      "footprint_gb": 20.114500124312098,
+      "users": 2097152
+     },
+     "64 KB": {
+      "fits_29gb": false,
+      "footprint_gb": 160.91600099449678,
+      "users": 16777216
+     }
+    },
+    "share_first_day": 0.6158071748878924,
+    "share_last_day": 0.2100979597849304,
+    "share_of_known": 0.31428906444237653
+   },
+   "1d": {
+    "footprint_mb": 21.68440934065934,
+    "max_held": 1298,
+    "mean_held": 693.9010989010989,
+    "scale_1tb": {
+     "4 MB": {
+      "fits_29gb": true,
+      "footprint_gb": 0.3293411275173848,
+      "users": 262144
+     },
+     "512 KB": {
+      "fits_29gb": true,
+      "footprint_gb": 2.6347290201390785,
+      "users": 2097152
+     },
+     "64 KB": {
+      "fits_29gb": true,
+      "footprint_gb": 21.077832161112628,
+      "users": 16777216
+     }
+    },
+    "share_first_day": 0.0757847533632287,
+    "share_last_day": 0.04282978566693673,
+    "share_of_known": 0.0411676409396731
+   },
+   "30d": {
+    "footprint_mb": 295.57211538461536,
+    "max_held": 10063,
+    "mean_held": 9458.307692307691,
+    "scale_1tb": {
+     "4 MB": {
+      "fits_29gb": true,
+      "footprint_gb": 4.493557225009543,
+      "users": 262144
+     },
+     "512 KB": {
+      "fits_29gb": false,
+      "footprint_gb": 35.94845780007634,
+      "users": 2097152
+     },
+     "64 KB": {
+      "fits_29gb": false,
+      "footprint_gb": 287.5876624006107,
+      "users": 16777216
+     }
+    },
+    "share_first_day": 1.0,
+    "share_last_day": 0.34978272077778594,
+    "share_of_known": 0.5616946531261928
+   },
+   "3d": {
+    "footprint_mb": 50.511675824175825,
+    "max_held": 2492,
+    "mean_held": 1616.3736263736264,
+    "scale_1tb": {
+     "4 MB": {
+      "fits_29gb": true,
+      "footprint_gb": 0.770538879092486,
+      "users": 262144
+     },
+     "512 KB": {
+      "fits_29gb": true,
+      "footprint_gb": 6.164311032739888,
+      "users": 2097152
+     },
+     "64 KB": {
+      "fits_29gb": false,
+      "footprint_gb": 49.3144882619191,
+      "users": 16777216
+     }
+    },
+    "share_first_day": 0.20257847533632287,
+    "share_last_day": 0.09177285114531929,
+    "share_of_known": 0.09631735988656075
+   },
+   "7d": {
+    "footprint_mb": 96.74553571428571,
+    "max_held": 3728,
+    "mean_held": 3095.8571428571427,
+    "scale_1tb": {
+     "4 MB": {
+      "fits_29gb": true,
+      "footprint_gb": 1.479307262506216,
+      "users": 262144
+     },
+     "512 KB": {
+      "fits_29gb": true,
+      "footprint_gb": 11.834458100049728,
+      "users": 2097152
+     },
+     "64 KB": {
+      "fits_29gb": false,
+      "footprint_gb": 94.67566480039783,
+      "users": 16777216
+     }
+    },
+    "share_first_day": 0.375,
+    "share_last_day": 0.13729100684981954,
+    "share_of_known": 0.184913407813277
+   },
+   "days": 91,
+   "known_last_day": 27154,
+   "mean_known": 18583.076923076922
+  },
+  "sessions": 134922,
+  "spread": {
+   "30d": {
+    "covered_starts": 65680,
+    "covered_users": 8801,
+    "median_starts_per_covered_user": 2.0,
+    "returning_users_with_cold_start": 10049,
+    "top10pct_share": 0.6489342265529842,
+    "top1pct_share": 0.2604293544457978,
+    "users_for_half": 362,
+    "users_for_half_share": 0.041131689580729464,
+    "users_with_cold_start": 22463
+   },
+   "7d": {
+    "covered_starts": 56692,
+    "covered_users": 7223,
+    "median_starts_per_covered_user": 2.0,
+    "returning_users_with_cold_start": 10049,
+    "top10pct_share": 0.6867635645240951,
+    "top1pct_share": 0.26340577153743033,
+    "users_for_half": 243,
+    "users_for_half_share": 0.03364253080437491,
+    "users_with_cold_start": 22463
+   }
+  },
+  "starts_eval": 103752,
+  "users": 27666
+ }
+}

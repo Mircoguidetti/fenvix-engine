@@ -1,0 +1,6539 @@
+{
+ "dataset": "lsapp",
+ "groups": {
+  "Amazon Shopping": {
+   "all_starts": {
+    "bucket_0_1d": 0.6754385964912281,
+    "bucket_14_30d": 0.0,
+    "bucket_1_3d": 0.1456140350877193,
+    "bucket_3_7d": 0.07192982456140351,
+    "bucket_7_14d": 0.010526315789473684,
+    "new": 0.09649122807017543,
+    "silent_over_30d": 0.0,
+    "starts": 570,
+    "within_14d": 0.9035087719298246,
+    "within_1d": 0.6754385964912281,
+    "within_30d": 0.9035087719298246,
+    "within_30d_of_returning": 1.0,
+    "within_3d": 0.8210526315789474,
+    "within_7d": 0.8929824561403509
+   },
+   "cold": {
+    "bucket_0_1d": 0.6375,
+    "bucket_14_30d": 0.0,
+    "bucket_1_3d": 0.15833333333333333,
+    "bucket_3_7d": 0.07708333333333334,
+    "bucket_7_14d": 0.0125,
+    "new": 0.11458333333333333,
+    "silent_over_30d": 0.0,
+    "starts": 480,
+    "within_14d": 0.8854166666666666,
+    "within_1d": 0.6375,
+    "within_30d": 0.8854166666666666,
+    "within_30d_of_returning": 1.0,
+    "within_3d": 0.7958333333333333,
+    "within_7d": 0.8729166666666667
+   },
+   "cold_starts": 480,
+   "eval_days": 102,
+   "lru_catches": 0.1578947368421053,
+   "new_by_period": {
+    "first_28d": 0.5,
+    "last_28d": 0.10215053763440861
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.3866421568627451,
+     "max_held": 35,
+     "mean_held": 12.372549019607844,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.324837552203594,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 18.598700417628752,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 148.78960334103002,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.8125,
+     "share_last_day": 0.18309859154929578,
+     "share_of_known": 0.29060469402544925
+    },
+    "1d": {
+     "footprint_mb": 0.09803921568627451,
+     "max_held": 15,
+     "mean_held": 3.1372549019607843,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.6148790669906058,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.919032535924846,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 39.35226028739877,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0625,
+     "share_last_day": 0.014084507042253521,
+     "share_of_known": 0.07685988337382572
+    },
+    "30d": {
+     "footprint_mb": 0.6029411764705882,
+     "max_held": 52,
+     "mean_held": 19.294117647058822,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.047073879414691,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 32.37659103531753,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 259.01272828254025,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.6056338028169014,
+     "share_of_known": 0.5058842349268364
+    },
+    "3d": {
+     "footprint_mb": 0.17830882352941177,
+     "max_held": 24,
+     "mean_held": 5.705882352941177,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.1169800572303297,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 8.935840457842637,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 71.4867236627411,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.125,
+     "share_last_day": 0.056338028169014086,
+     "share_of_known": 0.1396225071537912
+    },
+    "7d": {
+     "footprint_mb": 0.26838235294117646,
+     "max_held": 29,
+     "mean_held": 8.588235294117647,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.6217771932230307,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 12.974217545784246,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 103.79374036627397,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.125,
+     "share_last_day": 0.09859154929577464,
+     "share_of_known": 0.20272214915287884
+    },
+    "days": 102,
+    "known_last_day": 71,
+    "mean_known": 33.19607843137255
+   },
+   "sessions": 607,
+   "spread": {
+    "30d": {
+     "covered_starts": 425,
+     "covered_users": 46,
+     "median_starts_per_covered_user": 5.0,
+     "returning_users_with_cold_start": 46,
+     "top10pct_share": 0.34823529411764703,
+     "top1pct_share": 0.08941176470588236,
+     "users_for_half": 9,
+     "users_for_half_share": 0.1956521739130435,
+     "users_with_cold_start": 56
+    },
+    "7d": {
+     "covered_starts": 419,
+     "covered_users": 46,
+     "median_starts_per_covered_user": 5.0,
+     "returning_users_with_cold_start": 46,
+     "top10pct_share": 0.3532219570405728,
+     "top1pct_share": 0.09069212410501193,
+     "users_for_half": 9,
+     "users_for_half_share": 0.1956521739130435,
+     "users_with_cold_start": 56
+    }
+   },
+   "starts_eval": 570,
+   "users": 71
+  },
+  "Android In Call UI": {
+   "all_starts": {
+    "bucket_0_1d": 0.9175784099197666,
+    "bucket_14_30d": 0.0,
+    "bucket_1_3d": 0.03646973012399708,
+    "bucket_3_7d": 0.007293946024799417,
+    "bucket_7_14d": 0.002188183807439825,
+    "new": 0.0350109409190372,
+    "silent_over_30d": 0.0014587892049598833,
+    "starts": 1371,
+    "within_14d": 0.9635302698760029,
+    "within_1d": 0.9175784099197666,
+    "within_30d": 0.9635302698760029,
+    "within_30d_of_returning": 0.99848828420257,
+    "within_3d": 0.9540481400437637,
+    "within_7d": 0.9613420860685631
+   },
+   "cold": {
+    "bucket_0_1d": 0.905090595340811,
+    "bucket_14_30d": 0.0,
+    "bucket_1_3d": 0.04314063848144953,
+    "bucket_3_7d": 0.006902502157031924,
+    "bucket_7_14d": 0.001725625539257981,
+    "new": 0.04141501294219154,
+    "silent_over_30d": 0.001725625539257981,
+    "starts": 1159,
+    "within_14d": 0.9568593615185504,
+    "within_1d": 0.905090595340811,
+    "within_30d": 0.9568593615185504,
+    "within_30d_of_returning": 0.9981998199819982,
+    "within_3d": 0.9482312338222606,
+    "within_7d": 0.9551337359792925
+   },
+   "cold_starts": 1159,
+   "eval_days": 99,
+   "lru_catches": 0.15463165572574766,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.02679830747531735
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.3399621212121212,
+     "max_held": 34,
+     "mean_held": 10.878787878787879,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.253090820643108,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 18.024726565144864,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 144.1978125211589,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.7692307692307693,
+     "share_last_day": 0.19672131147540983,
+     "share_of_known": 0.2816363525803885
+    },
+    "1d": {
+     "footprint_mb": 0.11205808080808081,
+     "max_held": 16,
+     "mean_held": 3.585858585858586,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.7020072720559184,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 5.616058176447347,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 44.92846541157878,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.04918032786885246,
+     "share_of_known": 0.0877509090069898
+    },
+    "30d": {
+     "footprint_mb": 0.5381944444444444,
+     "max_held": 49,
+     "mean_held": 17.22222222222222,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.0530666970533495,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 32.424533576426796,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 259.39626861141437,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.5573770491803278,
+     "share_of_known": 0.5066333371316687
+    },
+    "3d": {
+     "footprint_mb": 0.16287878787878787,
+     "max_held": 20,
+     "mean_held": 5.212121212121212,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.0421708421665372,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 8.337366737332298,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 66.69893389865838,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.15384615384615385,
+     "share_last_day": 0.06557377049180328,
+     "share_of_known": 0.13027135527081715
+    },
+    "7d": {
+     "footprint_mb": 0.2326388888888889,
+     "max_held": 26,
+     "mean_held": 7.444444444444445,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.5132754544060656,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 12.106203635248525,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 96.8496290819882,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.3076923076923077,
+     "share_last_day": 0.09836065573770492,
+     "share_of_known": 0.1891594318007582
+    },
+    "days": 99,
+    "known_last_day": 61,
+    "mean_known": 27.67676767676768
+   },
+   "sessions": 1451,
+   "spread": {
+    "30d": {
+     "covered_starts": 1109,
+     "covered_users": 44,
+     "median_starts_per_covered_user": 9.5,
+     "returning_users_with_cold_start": 45,
+     "top10pct_share": 0.5256988277727682,
+     "top1pct_share": 0.18214607754733994,
+     "users_for_half": 5,
+     "users_for_half_share": 0.11363636363636363,
+     "users_with_cold_start": 50
+    },
+    "7d": {
+     "covered_starts": 1107,
+     "covered_users": 44,
+     "median_starts_per_covered_user": 9.5,
+     "returning_users_with_cold_start": 45,
+     "top10pct_share": 0.5266485998193315,
+     "top1pct_share": 0.18247515808491419,
+     "users_for_half": 5,
+     "users_for_half_share": 0.11363636363636363,
+     "users_with_cold_start": 50
+    }
+   },
+   "starts_eval": 1371,
+   "users": 61
+  },
+  "Calculator": {
+   "all_starts": {
+    "bucket_0_1d": 0.6716666666666666,
+    "bucket_14_30d": 0.006666666666666667,
+    "bucket_1_3d": 0.14,
+    "bucket_3_7d": 0.05333333333333334,
+    "bucket_7_14d": 0.015,
+    "new": 0.11166666666666666,
+    "silent_over_30d": 0.0016666666666666668,
+    "starts": 600,
+    "within_14d": 0.88,
+    "within_1d": 0.6716666666666666,
+    "within_30d": 0.8866666666666667,
+    "within_30d_of_returning": 0.99812382739212,
+    "within_3d": 0.8116666666666666,
+    "within_7d": 0.865
+   },
+   "cold": {
+    "bucket_0_1d": 0.6085106382978723,
+    "bucket_14_30d": 0.00851063829787234,
+    "bucket_1_3d": 0.1595744680851064,
+    "bucket_3_7d": 0.059574468085106386,
+    "bucket_7_14d": 0.019148936170212766,
+    "new": 0.1425531914893617,
+    "silent_over_30d": 0.002127659574468085,
+    "starts": 470,
+    "within_14d": 0.8468085106382979,
+    "within_1d": 0.6085106382978723,
+    "within_30d": 0.8553191489361702,
+    "within_30d_of_returning": 0.9975186104218362,
+    "within_3d": 0.7680851063829788,
+    "within_7d": 0.8276595744680851
+   },
+   "cold_starts": 470,
+   "eval_days": 101,
+   "lru_catches": 0.21666666666666667,
+   "new_by_period": {
+    "first_28d": 0.08333333333333333,
+    "last_28d": 0.1326530612244898
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.452970297029703,
+     "max_held": 42,
+     "mean_held": 14.495049504950495,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.560102117791333,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 20.480816942330662,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 163.8465355386453,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.7058823529411765,
+     "share_last_day": 0.17857142857142858,
+     "share_of_known": 0.3200127647239166
+    },
+    "1d": {
+     "footprint_mb": 0.09375,
+     "max_held": 14,
+     "mean_held": 3.0,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.5491052294584803,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.392841835667842,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 35.14273468534274,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.011904761904761904,
+     "share_of_known": 0.06863815368231004
+    },
+    "30d": {
+     "footprint_mb": 0.7363861386138614,
+     "max_held": 62,
+     "mean_held": 23.564356435643564,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.439608055457956,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 35.51686444366365,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 284.1349155493092,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.6071428571428571,
+     "share_of_known": 0.5549510069322445
+    },
+    "3d": {
+     "footprint_mb": 0.18316831683168316,
+     "max_held": 22,
+     "mean_held": 5.861386138613861,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.0768828602841474,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 8.615062882273179,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 68.92050305818543,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.058823529411764705,
+     "share_last_day": 0.023809523809523808,
+     "share_of_known": 0.13461035753551842
+    },
+    "7d": {
+     "footprint_mb": 0.2948638613861386,
+     "max_held": 31,
+     "mean_held": 9.435643564356436,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.690996728109993,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 13.527973824879943,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 108.22379059903955,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.23529411764705882,
+     "share_last_day": 0.08333333333333333,
+     "share_of_known": 0.2113745910137491
+    },
+    "days": 101,
+    "known_last_day": 84,
+    "mean_known": 37.415841584158414
+   },
+   "sessions": 648,
+   "spread": {
+    "30d": {
+     "covered_starts": 402,
+     "covered_users": 49,
+     "median_starts_per_covered_user": 3.0,
+     "returning_users_with_cold_start": 50,
+     "top10pct_share": 0.5373134328358209,
+     "top1pct_share": 0.18159203980099503,
+     "users_for_half": 5,
+     "users_for_half_share": 0.10204081632653061,
+     "users_with_cold_start": 72
+    },
+    "7d": {
+     "covered_starts": 389,
+     "covered_users": 46,
+     "median_starts_per_covered_user": 3.0,
+     "returning_users_with_cold_start": 50,
+     "top10pct_share": 0.5526992287917738,
+     "top1pct_share": 0.18766066838046272,
+     "users_for_half": 5,
+     "users_for_half_share": 0.10869565217391304,
+     "users_with_cold_start": 72
+    }
+   },
+   "starts_eval": 600,
+   "users": 84
+  },
+  "Calendar": {
+   "all_starts": {
+    "bucket_0_1d": 0.7241112828438949,
+    "bucket_14_30d": 0.0038639876352395673,
+    "bucket_1_3d": 0.12442040185471406,
+    "bucket_3_7d": 0.04404945904173107,
+    "bucket_7_14d": 0.011591962905718702,
+    "new": 0.08809891808346214,
+    "silent_over_30d": 0.0038639876352395673,
+    "starts": 1294,
+    "within_14d": 0.9041731066460588,
+    "within_1d": 0.7241112828438949,
+    "within_30d": 0.9080370942812983,
+    "within_30d_of_returning": 0.9957627118644068,
+    "within_3d": 0.848531684698609,
+    "within_7d": 0.89258114374034
+   },
+   "cold": {
+    "bucket_0_1d": 0.6267379679144385,
+    "bucket_14_30d": 0.0053475935828877,
+    "bucket_1_3d": 0.16470588235294117,
+    "bucket_3_7d": 0.06096256684491978,
+    "bucket_7_14d": 0.014973262032085561,
+    "new": 0.12192513368983957,
+    "silent_over_30d": 0.0053475935828877,
+    "starts": 935,
+    "within_14d": 0.8673796791443851,
+    "within_1d": 0.6267379679144385,
+    "within_30d": 0.8727272727272727,
+    "within_30d_of_returning": 0.9939098660170523,
+    "within_3d": 0.7914438502673797,
+    "within_7d": 0.8524064171122995
+   },
+   "cold_starts": 935,
+   "eval_days": 220,
+   "lru_catches": 0.2774343122102009,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.09743589743589744
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.34928977272727274,
+     "max_held": 56,
+     "mean_held": 11.177272727272728,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.4055485357014907,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 19.244388285611926,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 153.9551062848954,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.2672413793103448,
+     "share_of_known": 0.30069356696268634
+    },
+    "1d": {
+     "footprint_mb": 0.08366477272727273,
+     "max_held": 21,
+     "mean_held": 2.6772727272727272,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.6435747539207817,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 5.148598031366253,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 41.18878425093003,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.02586206896551724,
+     "share_of_known": 0.08044684424009771
+    },
+    "30d": {
+     "footprint_mb": 0.5176136363636363,
+     "max_held": 88,
+     "mean_held": 16.563636363636363,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.6295252246500747,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 29.036201797200597,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 232.28961437760478,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.6120689655172413,
+     "share_of_known": 0.45369065308125933
+    },
+    "3d": {
+     "footprint_mb": 0.1552556818181818,
+     "max_held": 29,
+     "mean_held": 4.968181818181818,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.1445842482613573,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 9.156673986090858,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 73.25339188872687,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.0603448275862069,
+     "share_of_known": 0.14307303103266966
+    },
+    "7d": {
+     "footprint_mb": 0.24034090909090908,
+     "max_held": 39,
+     "mean_held": 7.6909090909090905,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.7180158390680014,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 13.744126712544011,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 109.95301370035209,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.13793103448275862,
+     "share_of_known": 0.21475197988350017
+    },
+    "days": 220,
+    "known_last_day": 116,
+    "mean_known": 25.70909090909091
+   },
+   "sessions": 1301,
+   "spread": {
+    "30d": {
+     "covered_starts": 816,
+     "covered_users": 78,
+     "median_starts_per_covered_user": 4.0,
+     "returning_users_with_cold_start": 79,
+     "top10pct_share": 0.5343137254901961,
+     "top1pct_share": 0.1409313725490196,
+     "users_for_half": 7,
+     "users_for_half_share": 0.08974358974358974,
+     "users_with_cold_start": 115
+    },
+    "7d": {
+     "covered_starts": 797,
+     "covered_users": 77,
+     "median_starts_per_covered_user": 4.0,
+     "returning_users_with_cold_start": 79,
+     "top10pct_share": 0.5420326223337516,
+     "top1pct_share": 0.14429109159347553,
+     "users_for_half": 7,
+     "users_for_half_share": 0.09090909090909091,
+     "users_with_cold_start": 115
+    }
+   },
+   "starts_eval": 1294,
+   "users": 116
+  },
+  "Camera": {
+   "all_starts": {
+    "bucket_0_1d": 0.716275659824047,
+    "bucket_14_30d": 0.0007331378299120235,
+    "bucket_1_3d": 0.12976539589442815,
+    "bucket_3_7d": 0.050586510263929615,
+    "bucket_7_14d": 0.011730205278592375,
+    "new": 0.08944281524926687,
+    "silent_over_30d": 0.001466275659824047,
+    "starts": 1364,
+    "within_14d": 0.908357771260997,
+    "within_1d": 0.716275659824047,
+    "within_30d": 0.9090909090909091,
+    "within_30d_of_returning": 0.998389694041868,
+    "within_3d": 0.8460410557184751,
+    "within_7d": 0.8966275659824047
+   },
+   "cold": {
+    "bucket_0_1d": 0.6716287215411558,
+    "bucket_14_30d": 0.0008756567425569177,
+    "bucket_1_3d": 0.14535901926444833,
+    "bucket_3_7d": 0.0595446584938704,
+    "bucket_7_14d": 0.014010507880910683,
+    "new": 0.10683012259194395,
+    "silent_over_30d": 0.0017513134851138354,
+    "starts": 1142,
+    "within_14d": 0.8905429071803853,
+    "within_1d": 0.6716287215411558,
+    "within_30d": 0.8914185639229422,
+    "within_30d_of_returning": 0.9980392156862745,
+    "within_3d": 0.8169877408056042,
+    "within_7d": 0.8765323992994746
+   },
+   "cold_starts": 1142,
+   "eval_days": 220,
+   "lru_catches": 0.16275659824046917,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.07196029776674938
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.38139204545454547,
+     "max_held": 62,
+     "mean_held": 12.204545454545455,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.0459027009216273,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 16.36722160737302,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 130.93777285898415,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.18548387096774194,
+     "share_of_known": 0.2557378376152034
+    },
+    "1d": {
+     "footprint_mb": 0.09772727272727273,
+     "max_held": 22,
+     "mean_held": 3.1272727272727274,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.5938789938929772,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.751031951143817,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 38.00825560915054,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.016129032258064516,
+     "share_of_known": 0.07423487423662214
+    },
+    "30d": {
+     "footprint_mb": 0.5788352272727273,
+     "max_held": 93,
+     "mean_held": 18.522727272727273,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.2440567195700436,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 25.95245375656035,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 207.6196300524828,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.4838709677419355,
+     "share_of_known": 0.40550708994625545
+    },
+    "3d": {
+     "footprint_mb": 0.17428977272727272,
+     "max_held": 30,
+     "mean_held": 5.577272727272727,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.0598138009979345,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 8.478510407983476,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 67.82808326386781,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.04032258064516129,
+     "share_of_known": 0.13247672512474182
+    },
+    "7d": {
+     "footprint_mb": 0.26420454545454547,
+     "max_held": 44,
+     "mean_held": 8.454545454545455,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.5433301726998485,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 12.346641381598788,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 98.7731310527903,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.06451612903225806,
+     "share_of_known": 0.19291627158748106
+    },
+    "days": 220,
+    "known_last_day": 124,
+    "mean_known": 30.222727272727273
+   },
+   "sessions": 1378,
+   "spread": {
+    "30d": {
+     "covered_starts": 1018,
+     "covered_users": 103,
+     "median_starts_per_covered_user": 5.0,
+     "returning_users_with_cold_start": 103,
+     "top10pct_share": 0.44695481335952847,
+     "top1pct_share": 0.12770137524557956,
+     "users_for_half": 14,
+     "users_for_half_share": 0.13592233009708737,
+     "users_with_cold_start": 123
+    },
+    "7d": {
+     "covered_starts": 1001,
+     "covered_users": 103,
+     "median_starts_per_covered_user": 5.0,
+     "returning_users_with_cold_start": 103,
+     "top10pct_share": 0.45454545454545453,
+     "top1pct_share": 0.12987012987012986,
+     "users_for_half": 14,
+     "users_for_half_share": 0.13592233009708737,
+     "users_with_cold_start": 123
+    }
+   },
+   "starts_eval": 1364,
+   "users": 124
+  },
+  "Clock": {
+   "all_starts": {
+    "bucket_0_1d": 0.8223495702005731,
+    "bucket_14_30d": 0.0071633237822349575,
+    "bucket_1_3d": 0.09025787965616046,
+    "bucket_3_7d": 0.02148997134670487,
+    "bucket_7_14d": 0.0057306590257879654,
+    "new": 0.050143266475644696,
+    "silent_over_30d": 0.0028653295128939827,
+    "starts": 698,
+    "within_14d": 0.9398280802292264,
+    "within_1d": 0.8223495702005731,
+    "within_30d": 0.9469914040114613,
+    "within_30d_of_returning": 0.9969834087481146,
+    "within_3d": 0.9126074498567335,
+    "within_7d": 0.9340974212034384
+   },
+   "cold": {
+    "bucket_0_1d": 0.6925207756232687,
+    "bucket_14_30d": 0.013850415512465374,
+    "bucket_1_3d": 0.14127423822714683,
+    "bucket_3_7d": 0.04155124653739612,
+    "bucket_7_14d": 0.008310249307479225,
+    "new": 0.09695290858725762,
+    "silent_over_30d": 0.00554016620498615,
+    "starts": 361,
+    "within_14d": 0.8836565096952909,
+    "within_1d": 0.6925207756232687,
+    "within_30d": 0.8975069252077562,
+    "within_30d_of_returning": 0.9938650306748467,
+    "within_3d": 0.8337950138504155,
+    "within_7d": 0.8753462603878116
+   },
+   "cold_starts": 361,
+   "eval_days": 105,
+   "lru_catches": 0.48280802292263614,
+   "new_by_period": {
+    "first_28d": 0.0,
+    "last_28d": 0.10215053763440861
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.26904761904761904,
+     "max_held": 24,
+     "mean_held": 8.60952380952381,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.681422759838885,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 37.45138207871108,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 299.6110566296886,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.325,
+     "share_of_known": 0.5851778449798606
+    },
+    "1d": {
+     "footprint_mb": 0.07470238095238095,
+     "max_held": 9,
+     "mean_held": 2.3904761904761904,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.4768182739446805,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 11.814546191557444,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 94.51636953245955,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.3333333333333333,
+     "share_last_day": 0.0,
+     "share_of_known": 0.18460228424308506
+    },
+    "30d": {
+     "footprint_mb": 0.37589285714285714,
+     "max_held": 34,
+     "mean_held": 12.028571428571428,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 6.286209166932658,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 50.289673335461266,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 402.31738668369013,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.725,
+     "share_of_known": 0.7857761458665823
+    },
+    "3d": {
+     "footprint_mb": 0.12708333333333333,
+     "max_held": 12,
+     "mean_held": 4.066666666666666,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.4088543945589502,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 19.270835156471602,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 154.16668125177281,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.05,
+     "share_of_known": 0.3011067993198688
+    },
+    "7d": {
+     "footprint_mb": 0.18988095238095237,
+     "max_held": 18,
+     "mean_held": 6.076190476190476,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.4209639236159948,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 27.367711388927958,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 218.94169111142367,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.6666666666666666,
+     "share_last_day": 0.175,
+     "share_of_known": 0.42762049045199935
+    },
+    "days": 105,
+    "known_last_day": 40,
+    "mean_known": 14.676190476190476
+   },
+   "sessions": 840,
+   "spread": {
+    "30d": {
+     "covered_starts": 324,
+     "covered_users": 35,
+     "median_starts_per_covered_user": 5.0,
+     "returning_users_with_cold_start": 35,
+     "top10pct_share": 0.5432098765432098,
+     "top1pct_share": 0.2962962962962963,
+     "users_for_half": 4,
+     "users_for_half_share": 0.11428571428571428,
+     "users_with_cold_start": 40
+    },
+    "7d": {
+     "covered_starts": 316,
+     "covered_users": 35,
+     "median_starts_per_covered_user": 5.0,
+     "returning_users_with_cold_start": 35,
+     "top10pct_share": 0.5569620253164557,
+     "top1pct_share": 0.3037974683544304,
+     "users_for_half": 4,
+     "users_for_half_share": 0.11428571428571428,
+     "users_with_cold_start": 40
+    }
+   },
+   "starts_eval": 698,
+   "users": 41
+  },
+  "Contacts": {
+   "all_starts": {
+    "bucket_0_1d": 0.8259207783182766,
+    "bucket_14_30d": 0.001389854065323141,
+    "bucket_1_3d": 0.08130646282140375,
+    "bucket_3_7d": 0.018763029881862403,
+    "bucket_7_14d": 0.00590687977762335,
+    "new": 0.06462821403752605,
+    "silent_over_30d": 0.0020847810979847115,
+    "starts": 2878,
+    "within_14d": 0.9318971507991661,
+    "within_1d": 0.8259207783182766,
+    "within_30d": 0.9332870048644892,
+    "within_30d_of_returning": 0.9977711738484398,
+    "within_3d": 0.9072272411396803,
+    "within_7d": 0.9259902710215427
+   },
+   "cold": {
+    "bucket_0_1d": 0.8032398261556697,
+    "bucket_14_30d": 0.0015804030027657052,
+    "bucket_1_3d": 0.09205847491110233,
+    "bucket_3_7d": 0.020940339786645595,
+    "bucket_7_14d": 0.006321612011062821,
+    "new": 0.07348873962860529,
+    "silent_over_30d": 0.002370604504148558,
+    "starts": 2531,
+    "within_14d": 0.9225602528644804,
+    "within_1d": 0.8032398261556697,
+    "within_30d": 0.9241406558672461,
+    "within_30d_of_returning": 0.9974413646055437,
+    "within_3d": 0.895298301066772,
+    "within_7d": 0.9162386408534177
+   },
+   "cold_starts": 2531,
+   "eval_days": 221,
+   "lru_catches": 0.12056984016678252,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.04107424960505529
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.5489253393665159,
+     "max_held": 91,
+     "mean_held": 17.56561085972851,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.009248273256764,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 16.07398618605411,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 128.59188948843288,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.1702127659574468,
+     "share_of_known": 0.2511560341570955
+    },
+    "1d": {
+     "footprint_mb": 0.14281674208144796,
+     "max_held": 32,
+     "mean_held": 4.570135746606335,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.5706355441912783,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.565084353530226,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 36.52067482824181,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.010638297872340425,
+     "share_of_known": 0.07132944302390978
+    },
+    "30d": {
+     "footprint_mb": 0.849406108597285,
+     "max_held": 139,
+     "mean_held": 27.18099547511312,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.2256281198728747,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 25.805024958982997,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 206.44019967186398,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.526595744680851,
+     "share_of_known": 0.40320351498410933
+    },
+    "3d": {
+     "footprint_mb": 0.24066742081447964,
+     "max_held": 47,
+     "mean_held": 7.701357466063349,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.9861632098084144,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 7.8893056784673155,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 63.114445427738524,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.03723404255319149,
+     "share_of_known": 0.1232704012260518
+    },
+    "7d": {
+     "footprint_mb": 0.3673642533936652,
+     "max_held": 67,
+     "mean_held": 11.755656108597286,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.448349820159603,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 11.586798561276824,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 92.69438849021459,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.07446808510638298,
+     "share_of_known": 0.18104372751995038
+    },
+    "days": 221,
+    "known_last_day": 188,
+    "mean_known": 43.47963800904977
+   },
+   "sessions": 2882,
+   "spread": {
+    "30d": {
+     "covered_starts": 2339,
+     "covered_users": 156,
+     "median_starts_per_covered_user": 5.0,
+     "returning_users_with_cold_start": 157,
+     "top10pct_share": 0.5130397605814451,
+     "top1pct_share": 0.14365113296280463,
+     "users_for_half": 16,
+     "users_for_half_share": 0.10256410256410256,
+     "users_with_cold_start": 187
+    },
+    "7d": {
+     "covered_starts": 2319,
+     "covered_users": 154,
+     "median_starts_per_covered_user": 5.0,
+     "returning_users_with_cold_start": 157,
+     "top10pct_share": 0.517464424320828,
+     "top1pct_share": 0.1448900388098318,
+     "users_for_half": 16,
+     "users_for_half_share": 0.1038961038961039,
+     "users_with_cold_start": 187
+    }
+   },
+   "starts_eval": 2878,
+   "users": 188
+  },
+  "Facebook": {
+   "all_starts": {
+    "bucket_0_1d": 0.9323339293082107,
+    "bucket_14_30d": 0.0005501306560308073,
+    "bucket_1_3d": 0.03548342731398707,
+    "bucket_3_7d": 0.005638839224315775,
+    "bucket_7_14d": 0.0009627286480539128,
+    "new": 0.024343281529363225,
+    "silent_over_30d": 0.0006876633200385092,
+    "starts": 7271,
+    "within_14d": 0.9744189244945675,
+    "within_1d": 0.9323339293082107,
+    "within_30d": 0.9749690551505983,
+    "within_30d_of_returning": 0.9992951790245278,
+    "within_3d": 0.9678173566221978,
+    "within_7d": 0.9734561958465136
+   },
+   "cold": {
+    "bucket_0_1d": 0.9272213126953416,
+    "bucket_14_30d": 0.0005953266855186784,
+    "bucket_1_3d": 0.038249739544575084,
+    "bucket_3_7d": 0.005804435183807114,
+    "bucket_7_14d": 0.001041821699657687,
+    "new": 0.02634320583420152,
+    "silent_over_30d": 0.000744158356898348,
+    "starts": 6719,
+    "within_14d": 0.9723173091233814,
+    "within_1d": 0.9272213126953416,
+    "within_30d": 0.9729126358089001,
+    "within_30d_of_returning": 0.9992357077346378,
+    "within_3d": 0.9654710522399167,
+    "within_7d": 0.9712754874237237
+   },
+   "cold_starts": 6719,
+   "eval_days": 221,
+   "lru_catches": 0.07591803053225143,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.018189334435717238
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.5885180995475113,
+     "max_held": 94,
+     "mean_held": 18.832579185520363,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.757612044921826,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 22.06089635937461,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 176.48717087499688,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.19553072625698323,
+     "share_of_known": 0.3447015056152283
+    },
+    "1d": {
+     "footprint_mb": 0.22652714932126697,
+     "max_held": 47,
+     "mean_held": 7.248868778280543,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.1693330801494346,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 9.354664641195477,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 74.83731712956381,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.0111731843575419,
+     "share_of_known": 0.14616663501867933
+    },
+    "30d": {
+     "footprint_mb": 0.8646776018099548,
+     "max_held": 140,
+     "mean_held": 27.669683257918553,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.005464801150098,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 32.043718409200785,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 256.3497472736063,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.5642458100558659,
+     "share_of_known": 0.5006831001437623
+    },
+    "3d": {
+     "footprint_mb": 0.31391402714932126,
+     "max_held": 57,
+     "mean_held": 10.04524886877828,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.6353545958615203,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 13.082836766892163,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 104.6626941351373,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.0670391061452514,
+     "share_of_known": 0.20441932448269004
+    },
+    "7d": {
+     "footprint_mb": 0.4227941176470588,
+     "max_held": 70,
+     "mean_held": 13.529411764705882,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.1400429557329876,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 17.1203436458639,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 136.9627491669112,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.0893854748603352,
+     "share_of_known": 0.26750536946662345
+    },
+    "days": 221,
+    "known_last_day": 179,
+    "mean_known": 42.1447963800905
+   },
+   "sessions": 7285,
+   "spread": {
+    "30d": {
+     "covered_starts": 6537,
+     "covered_users": 169,
+     "median_starts_per_covered_user": 16.0,
+     "returning_users_with_cold_start": 169,
+     "top10pct_share": 0.4703992657182194,
+     "top1pct_share": 0.0951506807404008,
+     "users_for_half": 19,
+     "users_for_half_share": 0.11242603550295859,
+     "users_with_cold_start": 178
+    },
+    "7d": {
+     "covered_starts": 6526,
+     "covered_users": 169,
+     "median_starts_per_covered_user": 16.0,
+     "returning_users_with_cold_start": 169,
+     "top10pct_share": 0.4707324547961998,
+     "top1pct_share": 0.09531106343855347,
+     "users_for_half": 19,
+     "users_for_half_share": 0.11242603550295859,
+     "users_with_cold_start": 178
+    }
+   },
+   "starts_eval": 7271,
+   "users": 179
+  },
+  "Facebook Messenger": {
+   "all_starts": {
+    "bucket_0_1d": 0.9122653097034568,
+    "bucket_14_30d": 0.001052816283558519,
+    "bucket_1_3d": 0.039831549394630635,
+    "bucket_3_7d": 0.012282856641516056,
+    "bucket_7_14d": 0.0028075100894893843,
+    "new": 0.03070714160379014,
+    "silent_over_30d": 0.001052816283558519,
+    "starts": 5699,
+    "within_14d": 0.9671872258290928,
+    "within_1d": 0.9122653097034568,
+    "within_30d": 0.9682400421126514,
+    "within_30d_of_returning": 0.998913830557567,
+    "within_3d": 0.9520968590980874,
+    "within_7d": 0.9643797157396035
+   },
+   "cold": {
+    "bucket_0_1d": 0.901033386327504,
+    "bucket_14_30d": 0.0011923688394276629,
+    "bucket_1_3d": 0.04491255961844197,
+    "bucket_3_7d": 0.013910969793322734,
+    "bucket_7_14d": 0.0029809220985691576,
+    "new": 0.03477742448330683,
+    "silent_over_30d": 0.0011923688394276629,
+    "starts": 5032,
+    "within_14d": 0.9628378378378378,
+    "within_1d": 0.901033386327504,
+    "within_30d": 0.9640302066772655,
+    "within_30d_of_returning": 0.9987646695491044,
+    "within_3d": 0.9459459459459459,
+    "within_7d": 0.9598569157392687
+   },
+   "cold_starts": 5032,
+   "eval_days": 219,
+   "lru_catches": 0.11703807685558865,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.02705749718151071
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.5753424657534246,
+     "max_held": 92,
+     "mean_held": 18.410958904109588,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.614683305825538,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 20.917466446604305,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 167.33973157283444,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.19886363636363635,
+     "share_of_known": 0.32683541322819226
+    },
+    "1d": {
+     "footprint_mb": 0.18564497716894976,
+     "max_held": 38,
+     "mean_held": 5.940639269406392,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.8162525467086721,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 6.530020373669377,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 52.240162989355014,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.005681818181818182,
+     "share_of_known": 0.10203156833858401
+    },
+    "30d": {
+     "footprint_mb": 0.8474600456621004,
+     "max_held": 139,
+     "mean_held": 27.118721461187214,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.8241786228285757,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 30.593428982628605,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 244.74743186102884,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.5795454545454546,
+     "share_of_known": 0.47802232785357196
+    },
+    "3d": {
+     "footprint_mb": 0.2832477168949772,
+     "max_held": 54,
+     "mean_held": 9.06392694063927,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.2528710756027628,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 10.022968604822102,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 80.18374883857682,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.06818181818181818,
+     "share_of_known": 0.15660888445034535
+    },
+    "7d": {
+     "footprint_mb": 0.4052511415525114,
+     "max_held": 70,
+     "mean_held": 12.968036529680365,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.8320733870508035,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 14.656587096406428,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 117.25269677125142,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.10227272727272728,
+     "share_of_known": 0.22900917338135043
+    },
+    "days": 219,
+    "known_last_day": 176,
+    "mean_known": 41.89497716894977
+   },
+   "sessions": 5711,
+   "spread": {
+    "30d": {
+     "covered_starts": 4851,
+     "covered_users": 158,
+     "median_starts_per_covered_user": 9.0,
+     "returning_users_with_cold_start": 158,
+     "top10pct_share": 0.5866831581117296,
+     "top1pct_share": 0.13151927437641722,
+     "users_for_half": 12,
+     "users_for_half_share": 0.0759493670886076,
+     "users_with_cold_start": 175
+    },
+    "7d": {
+     "covered_starts": 4830,
+     "covered_users": 157,
+     "median_starts_per_covered_user": 9.0,
+     "returning_users_with_cold_start": 158,
+     "top10pct_share": 0.5892339544513457,
+     "top1pct_share": 0.13209109730848861,
+     "users_for_half": 12,
+     "users_for_half_share": 0.07643312101910828,
+     "users_with_cold_start": 175
+    }
+   },
+   "starts_eval": 5699,
+   "users": 177
+  },
+  "Gmail": {
+   "all_starts": {
+    "bucket_0_1d": 0.9282556523935834,
+    "bucket_14_30d": 0.0011367942402425162,
+    "bucket_1_3d": 0.03233548061134268,
+    "bucket_3_7d": 0.007704938739421498,
+    "bucket_7_14d": 0.002147278009346975,
+    "new": 0.027661993179234557,
+    "silent_over_30d": 0.0007578628268283441,
+    "starts": 7917,
+    "within_14d": 0.9704433497536946,
+    "within_1d": 0.9282556523935834,
+    "within_30d": 0.9715801439939371,
+    "within_30d_of_returning": 0.9992205767731879,
+    "within_3d": 0.9605911330049262,
+    "within_7d": 0.9682960717443476
+   },
+   "cold": {
+    "bucket_0_1d": 0.9256406851679724,
+    "bucket_14_30d": 0.001195060416943301,
+    "bucket_1_3d": 0.03332890718364095,
+    "bucket_3_7d": 0.007701500464745718,
+    "bucket_7_14d": 0.002257336343115124,
+    "new": 0.02907980347895366,
+    "silent_over_30d": 0.0007967069446288673,
+    "starts": 7531,
+    "within_14d": 0.9689284291594742,
+    "within_1d": 0.9256406851679724,
+    "within_30d": 0.9701234895764175,
+    "within_30d_of_returning": 0.9991794310722101,
+    "within_3d": 0.9589695923516134,
+    "within_7d": 0.9666710928163591
+   },
+   "cold_starts": 7531,
+   "eval_days": 221,
+   "lru_catches": 0.04875584185929016,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.01704709621496677
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.6934389140271493,
+     "max_held": 105,
+     "mean_held": 22.190045248868778,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.2161699286906833,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 17.729359429525466,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 141.83487543620373,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.3333333333333333,
+     "share_last_day": 0.23555555555555555,
+     "share_of_known": 0.2770212410863354
+    },
+    "1d": {
+     "footprint_mb": 0.23854638009049775,
+     "max_held": 51,
+     "mean_held": 7.633484162895928,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.7515258887096653,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 6.012207109677322,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 48.09765687741858,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.16666666666666666,
+     "share_last_day": 0.017777777777777778,
+     "share_of_known": 0.09394073608870816
+    },
+    "30d": {
+     "footprint_mb": 1.030118778280543,
+     "max_held": 163,
+     "mean_held": 32.963800904977376,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.4830029854518125,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 27.8640238836145,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 222.912191068916,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.5422222222222223,
+     "share_of_known": 0.43537537318147657
+    },
+    "3d": {
+     "footprint_mb": 0.3470022624434389,
+     "max_held": 62,
+     "mean_held": 11.104072398190045,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.1549854969344586,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 9.239883975475669,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 73.91907180380535,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.16666666666666666,
+     "share_last_day": 0.08444444444444445,
+     "share_of_known": 0.14437318711680733
+    },
+    "7d": {
+     "footprint_mb": 0.488829185520362,
+     "max_held": 78,
+     "mean_held": 15.642533936651583,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.618805254902622,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 12.950442039220976,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 103.6035363137678,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.16666666666666666,
+     "share_last_day": 0.11555555555555555,
+     "share_of_known": 0.20235065686282774
+    },
+    "days": 221,
+    "known_last_day": 225,
+    "mean_known": 55.484162895927604
+   },
+   "sessions": 7974,
+   "spread": {
+    "30d": {
+     "covered_starts": 7306,
+     "covered_users": 203,
+     "median_starts_per_covered_user": 14.0,
+     "returning_users_with_cold_start": 203,
+     "top10pct_share": 0.5188885847248836,
+     "top1pct_share": 0.11949082945524227,
+     "users_for_half": 20,
+     "users_for_half_share": 0.09852216748768473,
+     "users_with_cold_start": 220
+    },
+    "7d": {
+     "covered_starts": 7280,
+     "covered_users": 203,
+     "median_starts_per_covered_user": 14.0,
+     "returning_users_with_cold_start": 203,
+     "top10pct_share": 0.5203296703296704,
+     "top1pct_share": 0.11991758241758242,
+     "users_for_half": 20,
+     "users_for_half_share": 0.09852216748768473,
+     "users_with_cold_start": 220
+    }
+   },
+   "starts_eval": 7917,
+   "users": 225
+  },
+  "Google": {
+   "all_starts": {
+    "bucket_0_1d": 0.9300278035217794,
+    "bucket_14_30d": 0.0011584800741427247,
+    "bucket_1_3d": 0.030236329935125116,
+    "bucket_3_7d": 0.007066728452270621,
+    "bucket_7_14d": 0.003938832252085264,
+    "new": 0.026529193697868398,
+    "silent_over_30d": 0.0010426320667284523,
+    "starts": 8632,
+    "within_14d": 0.9712696941612604,
+    "within_1d": 0.9300278035217794,
+    "within_30d": 0.9724281742354032,
+    "within_30d_of_returning": 0.9989289539450197,
+    "within_3d": 0.9602641334569045,
+    "within_7d": 0.9673308619091752
+   },
+   "cold": {
+    "bucket_0_1d": 0.9233076822746837,
+    "bucket_14_30d": 0.0011738620059997392,
+    "bucket_1_3d": 0.032868136167992695,
+    "bucket_3_7d": 0.007304030259553933,
+    "bucket_7_14d": 0.00430416068866571,
+    "new": 0.029868266597104474,
+    "silent_over_30d": 0.0011738620059997392,
+    "starts": 7667,
+    "within_14d": 0.967784009390896,
+    "within_1d": 0.9233076822746837,
+    "within_30d": 0.9689578713968958,
+    "within_30d_of_returning": 0.9987899973111052,
+    "within_3d": 0.9561758184426764,
+    "within_7d": 0.9634798487022304
+   },
+   "cold_starts": 7667,
+   "eval_days": 222,
+   "lru_catches": 0.11179332715477297,
+   "new_by_period": {
+    "first_28d": 0.0,
+    "last_28d": 0.019649874955341193
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.7632319819819819,
+     "max_held": 116,
+     "mean_held": 24.423423423423422,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.729819696875741,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 21.83855757500593,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 174.70846060004743,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.17721518987341772,
+     "share_of_known": 0.34122746210946764
+    },
+    "1d": {
+     "footprint_mb": 0.24535472972972974,
+     "max_held": 49,
+     "mean_held": 7.851351351351352,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.8660385445238339,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 6.928308356190671,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 55.42646684952537,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.25,
+     "share_last_day": 0.004219409282700422,
+     "share_of_known": 0.10825481806547924
+    },
+    "30d": {
+     "footprint_mb": 1.1361204954954955,
+     "max_held": 177,
+     "mean_held": 36.35585585585586,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.990207898507955,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 31.92166318806364,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 255.37330550450912,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.540084388185654,
+     "share_of_known": 0.4987759873134944
+    },
+    "3d": {
+     "footprint_mb": 0.36838400900900903,
+     "max_held": 65,
+     "mean_held": 11.788288288288289,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.3754543268379997,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 11.003634614703998,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 88.02907691763198,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.375,
+     "share_last_day": 0.06329113924050633,
+     "share_of_known": 0.17193179085474997
+    },
+    "7d": {
+     "footprint_mb": 0.5308277027027027,
+     "max_held": 86,
+     "mean_held": 16.986486486486488,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.9909705842607155,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 15.927764674085724,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 127.42211739268579,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.375,
+     "share_last_day": 0.0970464135021097,
+     "share_of_known": 0.24887132303258944
+    },
+    "days": 222,
+    "known_last_day": 237,
+    "mean_known": 59.990990990990994
+   },
+   "sessions": 8728,
+   "spread": {
+    "30d": {
+     "covered_starts": 7429,
+     "covered_users": 206,
+     "median_starts_per_covered_user": 11.5,
+     "returning_users_with_cold_start": 206,
+     "top10pct_share": 0.5615829855969848,
+     "top1pct_share": 0.20621887198815453,
+     "users_for_half": 17,
+     "users_for_half_share": 0.0825242718446602,
+     "users_with_cold_start": 234
+    },
+    "7d": {
+     "covered_starts": 7387,
+     "covered_users": 203,
+     "median_starts_per_covered_user": 11.0,
+     "returning_users_with_cold_start": 206,
+     "top10pct_share": 0.5640990930012184,
+     "top1pct_share": 0.20698524434817922,
+     "users_for_half": 17,
+     "users_for_half_share": 0.08374384236453201,
+     "users_with_cold_start": 234
+    }
+   },
+   "starts_eval": 8632,
+   "users": 237
+  },
+  "Google Chrome": {
+   "all_starts": {
+    "bucket_0_1d": 0.9257124211442245,
+    "bucket_14_30d": 0.00043506634761801175,
+    "bucket_1_3d": 0.03273874265825538,
+    "bucket_3_7d": 0.008810093539264739,
+    "bucket_7_14d": 0.0029366978464215794,
+    "new": 0.028279312595170764,
+    "silent_over_30d": 0.0010876658690450293,
+    "starts": 9194,
+    "within_14d": 0.9701979551881662,
+    "within_1d": 0.9257124211442245,
+    "within_30d": 0.9706330215357842,
+    "within_30d_of_returning": 0.9988806805462279,
+    "within_3d": 0.9584511638024799,
+    "within_7d": 0.9672612573417446
+   },
+   "cold": {
+    "bucket_0_1d": 0.9228362877997914,
+    "bucket_14_30d": 0.0004634457189201715,
+    "bucket_1_3d": 0.03383153748117252,
+    "bucket_3_7d": 0.008921330089213302,
+    "bucket_7_14d": 0.002664812883790986,
+    "new": 0.030123971729811145,
+    "silent_over_30d": 0.0011586142973004287,
+    "starts": 8631,
+    "within_14d": 0.9682539682539683,
+    "within_1d": 0.9228362877997914,
+    "within_30d": 0.9687174139728885,
+    "within_30d_of_returning": 0.9988053995938359,
+    "within_3d": 0.956667825280964,
+    "within_7d": 0.9655891553701773
+   },
+   "cold_starts": 8631,
+   "eval_days": 221,
+   "lru_catches": 0.0612355884272352,
+   "new_by_period": {
+    "first_28d": 0.0,
+    "last_28d": 0.01825013419216318
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.8506787330316742,
+     "max_held": 131,
+     "mean_held": 27.221719457013574,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.803743763382541,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 22.42995010706033,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 179.43960085648263,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.22556390977443608,
+     "share_of_known": 0.35046797042281763
+    },
+    "1d": {
+     "footprint_mb": 0.2999151583710407,
+     "max_held": 65,
+     "mean_held": 9.597285067873303,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.9610030242813478,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 7.688024194250782,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 61.50419355400626,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.022556390977443608,
+     "share_of_known": 0.12012537803516847
+    },
+    "30d": {
+     "footprint_mb": 1.253252262443439,
+     "max_held": 199,
+     "mean_held": 40.10407239819005,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.9890148288171687,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 31.91211863053735,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 255.2969490442988,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.5526315789473685,
+     "share_of_known": 0.4986268536021461
+    },
+    "3d": {
+     "footprint_mb": 0.43453054298642535,
+     "max_held": 80,
+     "mean_held": 13.904977375565611,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.5214913544957114,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 12.171930835965691,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 97.37544668772553,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.07518796992481203,
+     "share_of_known": 0.19018641931196392
+    },
+    "7d": {
+     "footprint_mb": 0.6080316742081447,
+     "max_held": 99,
+     "mean_held": 19.457013574660632,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.165868501594261,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 17.326948012754087,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 138.6155841020327,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.10902255639097744,
+     "share_of_known": 0.2707335626992826
+    },
+    "days": 221,
+    "known_last_day": 266,
+    "mean_known": 64.6289592760181
+   },
+   "sessions": 9270,
+   "spread": {
+    "30d": {
+     "covered_starts": 8361,
+     "covered_users": 253,
+     "median_starts_per_covered_user": 14.0,
+     "returning_users_with_cold_start": 253,
+     "top10pct_share": 0.47601961487860306,
+     "top1pct_share": 0.0985528046884344,
+     "users_for_half": 29,
+     "users_for_half_share": 0.11462450592885376,
+     "users_with_cold_start": 264
+    },
+    "7d": {
+     "covered_starts": 8334,
+     "covered_users": 253,
+     "median_starts_per_covered_user": 14.0,
+     "returning_users_with_cold_start": 253,
+     "top10pct_share": 0.4770818334533237,
+     "top1pct_share": 0.09851211903047756,
+     "users_for_half": 29,
+     "users_for_half_share": 0.11462450592885376,
+     "users_with_cold_start": 264
+    }
+   },
+   "starts_eval": 9194,
+   "users": 266
+  },
+  "Google Drive": {
+   "all_starts": {
+    "bucket_0_1d": 0.412962962962963,
+    "bucket_14_30d": 0.022222222222222223,
+    "bucket_1_3d": 0.17037037037037037,
+    "bucket_3_7d": 0.09814814814814815,
+    "bucket_7_14d": 0.044444444444444446,
+    "new": 0.24074074074074073,
+    "silent_over_30d": 0.011111111111111112,
+    "starts": 540,
+    "within_14d": 0.725925925925926,
+    "within_1d": 0.412962962962963,
+    "within_30d": 0.7481481481481481,
+    "within_30d_of_returning": 0.9853658536585366,
+    "within_3d": 0.5833333333333334,
+    "within_7d": 0.6814814814814815
+   },
+   "cold": {
+    "bucket_0_1d": 0.32679738562091504,
+    "bucket_14_30d": 0.026143790849673203,
+    "bucket_1_3d": 0.18518518518518517,
+    "bucket_3_7d": 0.11328976034858387,
+    "bucket_7_14d": 0.05228758169934641,
+    "new": 0.28322440087145967,
+    "silent_over_30d": 0.013071895424836602,
+    "starts": 459,
+    "within_14d": 0.6775599128540305,
+    "within_1d": 0.32679738562091504,
+    "within_30d": 0.7037037037037037,
+    "within_30d_of_returning": 0.9817629179331308,
+    "within_3d": 0.5119825708061002,
+    "within_7d": 0.6252723311546841
+   },
+   "cold_starts": 459,
+   "eval_days": 219,
+   "lru_catches": 0.15000000000000002,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.22466960352422907
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.372574200913242,
+     "max_held": 58,
+     "mean_held": 11.922374429223744,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.0722542281499043,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 16.578033825199235,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 132.62427060159388,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.25,
+     "share_last_day": 0.2462686567164179,
+     "share_of_known": 0.25903177851873804
+    },
+    "1d": {
+     "footprint_mb": 0.055365296803652965,
+     "max_held": 12,
+     "mean_held": 1.7716894977168949,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.3311146579081109,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.648917263264887,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 21.191338106119098,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.022388059701492536,
+     "share_of_known": 0.04138933223851386
+    },
+    "30d": {
+     "footprint_mb": 0.572060502283105,
+     "max_held": 99,
+     "mean_held": 18.30593607305936,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.353533784197834,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 26.82827027358267,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 214.62616218866137,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.582089552238806,
+     "share_of_known": 0.41919172302472923
+    },
+    "3d": {
+     "footprint_mb": 0.1295662100456621,
+     "max_held": 24,
+     "mean_held": 4.146118721461187,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.7650174945815164,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 6.120139956652131,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 48.96111965321705,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.05223880597014925,
+     "share_of_known": 0.09562718682268954
+    },
+    "7d": {
+     "footprint_mb": 0.23401826484018265,
+     "max_held": 39,
+     "mean_held": 7.488584474885845,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.334656234004608,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 10.677249872036864,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 85.41799897629491,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.25,
+     "share_last_day": 0.08955223880597014,
+     "share_of_known": 0.166832029250576
+    },
+    "days": 219,
+    "known_last_day": 134,
+    "mean_known": 30.71689497716895
+   },
+   "sessions": 548,
+   "spread": {
+    "30d": {
+     "covered_starts": 323,
+     "covered_users": 79,
+     "median_starts_per_covered_user": 2.0,
+     "returning_users_with_cold_start": 82,
+     "top10pct_share": 0.4520123839009288,
+     "top1pct_share": 0.08668730650154799,
+     "users_for_half": 10,
+     "users_for_half_share": 0.12658227848101267,
+     "users_with_cold_start": 132
+    },
+    "7d": {
+     "covered_starts": 287,
+     "covered_users": 73,
+     "median_starts_per_covered_user": 2.0,
+     "returning_users_with_cold_start": 82,
+     "top10pct_share": 0.47735191637630664,
+     "top1pct_share": 0.08710801393728224,
+     "users_for_half": 9,
+     "users_for_half_share": 0.1232876712328767,
+     "users_with_cold_start": 132
+    }
+   },
+   "starts_eval": 540,
+   "users": 135
+  },
+  "Google Photos": {
+   "all_starts": {
+    "bucket_0_1d": 0.563858695652174,
+    "bucket_14_30d": 0.008152173913043478,
+    "bucket_1_3d": 0.17798913043478262,
+    "bucket_3_7d": 0.07336956521739131,
+    "bucket_7_14d": 0.019021739130434784,
+    "new": 0.15489130434782608,
+    "silent_over_30d": 0.002717391304347826,
+    "starts": 736,
+    "within_14d": 0.8342391304347826,
+    "within_1d": 0.563858695652174,
+    "within_30d": 0.842391304347826,
+    "within_30d_of_returning": 0.9967845659163987,
+    "within_3d": 0.7418478260869565,
+    "within_7d": 0.8152173913043478
+   },
+   "cold": {
+    "bucket_0_1d": 0.4411214953271028,
+    "bucket_14_30d": 0.011214953271028037,
+    "bucket_1_3d": 0.205607476635514,
+    "bucket_3_7d": 0.09906542056074766,
+    "bucket_7_14d": 0.026168224299065422,
+    "new": 0.2130841121495327,
+    "silent_over_30d": 0.003738317757009346,
+    "starts": 535,
+    "within_14d": 0.77196261682243,
+    "within_1d": 0.4411214953271028,
+    "within_30d": 0.7831775700934579,
+    "within_30d_of_returning": 0.995249406175772,
+    "within_3d": 0.6467289719626168,
+    "within_7d": 0.7457943925233644
+   },
+   "cold_starts": 535,
+   "eval_days": 195,
+   "lru_catches": 0.27309782608695654,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.18548387096774194
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.3625,
+     "max_held": 57,
+     "mean_held": 11.6,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.5179693739627353,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 20.143754991701883,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 161.15003993361506,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.22807017543859648,
+     "share_of_known": 0.3147461717453419
+    },
+    "1d": {
+     "footprint_mb": 0.06971153846153846,
+     "max_held": 14,
+     "mean_held": 2.230769230769231,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.6065039904211654,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.852031923369323,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 38.81625538695459,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.0,
+     "share_of_known": 0.07581299880264568
+    },
+    "30d": {
+     "footprint_mb": 0.5389423076923077,
+     "max_held": 86,
+     "mean_held": 17.246153846153845,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.6268904043085,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 29.015123234468,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 232.120985875744,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.6228070175438597,
+     "share_of_known": 0.4533613005385625
+    },
+    "3d": {
+     "footprint_mb": 0.1450320512820513,
+     "max_held": 25,
+     "mean_held": 4.641025641025641,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.1512863466314602,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 9.210290773051682,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 73.68232618441345,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.07017543859649122,
+     "share_of_known": 0.14391079332893253
+    },
+    "7d": {
+     "footprint_mb": 0.23830128205128207,
+     "max_held": 41,
+     "mean_held": 7.625641025641026,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.7811585643448995,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 14.249268514759196,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 113.99414811807357,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.10526315789473684,
+     "share_of_known": 0.22264482054311244
+    },
+    "days": 195,
+    "known_last_day": 114,
+    "mean_known": 25.364102564102563
+   },
+   "sessions": 738,
+   "spread": {
+    "30d": {
+     "covered_starts": 419,
+     "covered_users": 77,
+     "median_starts_per_covered_user": 3.0,
+     "returning_users_with_cold_start": 77,
+     "top10pct_share": 0.5393794749403341,
+     "top1pct_share": 0.24105011933174225,
+     "users_for_half": 7,
+     "users_for_half_share": 0.09090909090909091,
+     "users_with_cold_start": 114
+    },
+    "7d": {
+     "covered_starts": 399,
+     "covered_users": 74,
+     "median_starts_per_covered_user": 2.0,
+     "returning_users_with_cold_start": 77,
+     "top10pct_share": 0.5614035087719298,
+     "top1pct_share": 0.2531328320802005,
+     "users_for_half": 6,
+     "users_for_half_share": 0.08108108108108109,
+     "users_with_cold_start": 114
+    }
+   },
+   "starts_eval": 736,
+   "users": 115
+  },
+  "Google Play Music": {
+   "all_starts": {
+    "bucket_0_1d": 0.6443148688046647,
+    "bucket_14_30d": 0.01749271137026239,
+    "bucket_1_3d": 0.15160349854227406,
+    "bucket_3_7d": 0.04081632653061224,
+    "bucket_7_14d": 0.023323615160349854,
+    "new": 0.11370262390670553,
+    "silent_over_30d": 0.008746355685131196,
+    "starts": 343,
+    "within_14d": 0.8600583090379009,
+    "within_1d": 0.6443148688046647,
+    "within_30d": 0.8775510204081632,
+    "within_30d_of_returning": 0.9901315789473685,
+    "within_3d": 0.7959183673469388,
+    "within_7d": 0.8367346938775511
+   },
+   "cold": {
+    "bucket_0_1d": 0.40540540540540543,
+    "bucket_14_30d": 0.032432432432432434,
+    "bucket_1_3d": 0.22162162162162163,
+    "bucket_3_7d": 0.07027027027027027,
+    "bucket_7_14d": 0.043243243243243246,
+    "new": 0.21081081081081082,
+    "silent_over_30d": 0.016216216216216217,
+    "starts": 185,
+    "within_14d": 0.7405405405405405,
+    "within_1d": 0.40540540540540543,
+    "within_30d": 0.772972972972973,
+    "within_30d_of_returning": 0.9794520547945206,
+    "within_3d": 0.6270270270270271,
+    "within_7d": 0.6972972972972973
+   },
+   "cold_starts": 185,
+   "eval_days": 103,
+   "lru_catches": 0.4606413994169096,
+   "new_by_period": {
+    "first_28d": 0.0,
+    "last_28d": 0.21348314606741572
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.29065533980582525,
+     "max_held": 24,
+     "mean_held": 9.300970873786408,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.3590805969526385,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 18.872644775621108,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 150.98115820496886,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.8823529411764706,
+     "share_last_day": 0.26785714285714285,
+     "share_of_known": 0.2948850746190798
+    },
+    "1d": {
+     "footprint_mb": 0.05370145631067961,
+     "max_held": 7,
+     "mean_held": 1.7184466019417475,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.47923564211541797,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.8338851369233438,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 30.67108109538675,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.058823529411764705,
+     "share_last_day": 0.07142857142857142,
+     "share_of_known": 0.059904455264427246
+    },
+    "30d": {
+     "footprint_mb": 0.4899878640776699,
+     "max_held": 40,
+     "mean_held": 15.679611650485437,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.186564690923856,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 33.492517527390845,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 267.94014021912676,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.5892857142857143,
+     "share_of_known": 0.523320586365482
+    },
+    "3d": {
+     "footprint_mb": 0.10770631067961164,
+     "max_held": 12,
+     "mean_held": 3.4466019417475726,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.9389232928062616,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 7.511386342450093,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 60.091090739600745,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.11764705882352941,
+     "share_last_day": 0.08928571428571429,
+     "share_of_known": 0.1173654116007827
+    },
+    "7d": {
+     "footprint_mb": 0.1796116504854369,
+     "max_held": 19,
+     "mean_held": 5.747572815533981,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.4826238646414027,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 11.860990917131222,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 94.88792733704977,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.17647058823529413,
+     "share_last_day": 0.10714285714285714,
+     "share_of_known": 0.18532798308017534
+    },
+    "days": 103,
+    "known_last_day": 56,
+    "mean_known": 27.601941747572816
+   },
+   "sessions": 440,
+   "spread": {
+    "30d": {
+     "covered_starts": 143,
+     "covered_users": 28,
+     "median_starts_per_covered_user": 3.0,
+     "returning_users_with_cold_start": 29,
+     "top10pct_share": 0.3776223776223776,
+     "top1pct_share": 0.14685314685314685,
+     "users_for_half": 5,
+     "users_for_half_share": 0.17857142857142858,
+     "users_with_cold_start": 44
+    },
+    "7d": {
+     "covered_starts": 129,
+     "covered_users": 27,
+     "median_starts_per_covered_user": 2.0,
+     "returning_users_with_cold_start": 29,
+     "top10pct_share": 0.4108527131782946,
+     "top1pct_share": 0.16279069767441862,
+     "users_for_half": 5,
+     "users_for_half_share": 0.18518518518518517,
+     "users_with_cold_start": 44
+    }
+   },
+   "starts_eval": 343,
+   "users": 56
+  },
+  "Google Play Store": {
+   "all_starts": {
+    "bucket_0_1d": 0.6794450529390288,
+    "bucket_14_30d": 0.0032858707557502738,
+    "bucket_1_3d": 0.15151515151515152,
+    "bucket_3_7d": 0.04892296458561519,
+    "bucket_7_14d": 0.01642935377875137,
+    "new": 0.0963855421686747,
+    "silent_over_30d": 0.004016064257028112,
+    "starts": 2739,
+    "within_14d": 0.8963125228185469,
+    "within_1d": 0.6794450529390288,
+    "within_30d": 0.8995983935742972,
+    "within_30d_of_returning": 0.9955555555555555,
+    "within_3d": 0.8309602044541804,
+    "within_7d": 0.8798831690397956
+   },
+   "cold": {
+    "bucket_0_1d": 0.6651035560765924,
+    "bucket_14_30d": 0.0035169988276670576,
+    "bucket_1_3d": 0.15787416959749903,
+    "bucket_3_7d": 0.04884720593982024,
+    "bucket_7_14d": 0.017194216490816726,
+    "new": 0.10316529894490035,
+    "silent_over_30d": 0.0042985541227041815,
+    "starts": 2559,
+    "within_14d": 0.8890191481047284,
+    "within_1d": 0.6651035560765924,
+    "within_30d": 0.8925361469323955,
+    "within_30d_of_returning": 0.9952069716775599,
+    "within_3d": 0.8229777256740914,
+    "within_7d": 0.8718249316139117
+   },
+   "cold_starts": 2559,
+   "eval_days": 220,
+   "lru_catches": 0.0657174151150055,
+   "new_by_period": {
+    "first_28d": 0.0,
+    "last_28d": 0.06739526411657559
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.846875,
+     "max_held": 130,
+     "mean_held": 27.1,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.4014268305769573,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 19.211414644615658,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 153.69131715692527,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.3333333333333333,
+     "share_last_day": 0.22344322344322345,
+     "share_of_known": 0.30017835382211966
+    },
+    "1d": {
+     "footprint_mb": 0.20696022727272728,
+     "max_held": 47,
+     "mean_held": 6.622727272727273,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.5980662571521346,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.784530057217077,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 38.27624045773661,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.014652014652014652,
+     "share_of_known": 0.07475828214401682
+    },
+    "30d": {
+     "footprint_mb": 1.2673295454545455,
+     "max_held": 202,
+     "mean_held": 40.554545454545455,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.621662288655948,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 28.973298309247586,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 231.78638647398068,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.5494505494505495,
+     "share_of_known": 0.4527077860819935
+    },
+    "3d": {
+     "footprint_mb": 0.38181818181818183,
+     "max_held": 68,
+     "mean_held": 12.218181818181819,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.1704566559966214,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 9.363653247972971,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 74.90922598378377,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.2222222222222222,
+     "share_last_day": 0.06227106227106227,
+     "share_of_known": 0.14630708199957768
+    },
+    "7d": {
+     "footprint_mb": 0.5845170454545454,
+     "max_held": 93,
+     "mean_held": 18.704545454545453,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.7587864418610628,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 14.070291534888502,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 112.56233227910802,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.2222222222222222,
+     "share_last_day": 0.10256410256410256,
+     "share_of_known": 0.21984830523263285
+    },
+    "days": 220,
+    "known_last_day": 273,
+    "mean_known": 68.32727272727273
+   },
+   "sessions": 2783,
+   "spread": {
+    "30d": {
+     "covered_starts": 2284,
+     "covered_users": 235,
+     "median_starts_per_covered_user": 6.0,
+     "returning_users_with_cold_start": 237,
+     "top10pct_share": 0.420753064798599,
+     "top1pct_share": 0.10288966725043783,
+     "users_for_half": 33,
+     "users_for_half_share": 0.14042553191489363,
+     "users_with_cold_start": 269
+    },
+    "7d": {
+     "covered_starts": 2231,
+     "covered_users": 232,
+     "median_starts_per_covered_user": 5.0,
+     "returning_users_with_cold_start": 237,
+     "top10pct_share": 0.4294038547736441,
+     "top1pct_share": 0.10398924249215598,
+     "users_for_half": 32,
+     "users_for_half_share": 0.13793103448275862,
+     "users_with_cold_start": 269
+    }
+   },
+   "starts_eval": 2739,
+   "users": 273
+  },
+  "Hangouts": {
+   "all_starts": {
+    "bucket_0_1d": 0.8690476190476191,
+    "bucket_14_30d": 0.004329004329004329,
+    "bucket_1_3d": 0.05519480519480519,
+    "bucket_3_7d": 0.01406926406926407,
+    "bucket_7_14d": 0.007575757575757576,
+    "new": 0.047619047619047616,
+    "silent_over_30d": 0.0021645021645021645,
+    "starts": 924,
+    "within_14d": 0.9458874458874459,
+    "within_1d": 0.8690476190476191,
+    "within_30d": 0.9502164502164502,
+    "within_30d_of_returning": 0.9977272727272727,
+    "within_3d": 0.9242424242424242,
+    "within_7d": 0.9383116883116883
+   },
+   "cold": {
+    "bucket_0_1d": 0.8044982698961938,
+    "bucket_14_30d": 0.006920415224913495,
+    "bucket_1_3d": 0.07612456747404844,
+    "bucket_3_7d": 0.020761245674740483,
+    "bucket_7_14d": 0.012110726643598616,
+    "new": 0.07612456747404844,
+    "silent_over_30d": 0.0034602076124567475,
+    "starts": 578,
+    "within_14d": 0.9134948096885813,
+    "within_1d": 0.8044982698961938,
+    "within_30d": 0.9204152249134948,
+    "within_30d_of_returning": 0.9962546816479401,
+    "within_3d": 0.8806228373702422,
+    "within_7d": 0.9013840830449827
+   },
+   "cold_starts": 578,
+   "eval_days": 219,
+   "lru_catches": 0.3744588744588745,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.05042016806722689
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.14026826484018265,
+     "max_held": 22,
+     "mean_held": 4.488584474885845,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.0713234262491347,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 16.570587409993077,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 132.56469927994462,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.2,
+     "share_of_known": 0.25891542828114184
+    },
+    "1d": {
+     "footprint_mb": 0.036957762557077625,
+     "max_held": 9,
+     "mean_held": 1.182648401826484,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.49417356786978617,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.9533885429582893,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 31.627108343666315,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.06666666666666667,
+     "share_of_known": 0.06177169598372327
+    },
+    "30d": {
+     "footprint_mb": 0.20876141552511415,
+     "max_held": 32,
+     "mean_held": 6.680365296803653,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.0430209733326863,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 24.34416778666149,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 194.75334229329192,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.5777777777777777,
+     "share_of_known": 0.3803776216665858
+    },
+    "3d": {
+     "footprint_mb": 0.0617865296803653,
+     "max_held": 14,
+     "mean_held": 1.9771689497716896,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.8956246564602088,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 7.164997251681671,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 57.319978013453365,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.1111111111111111,
+     "share_of_known": 0.1119530820575261
+    },
+    "7d": {
+     "footprint_mb": 0.09503424657534247,
+     "max_held": 17,
+     "mean_held": 3.041095890410959,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.4443663036842396,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 11.554930429473917,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 92.43944343579133,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.15555555555555556,
+     "share_of_known": 0.18054578796052995
+    },
+    "days": 219,
+    "known_last_day": 45,
+    "mean_known": 11.319634703196346
+   },
+   "sessions": 926,
+   "spread": {
+    "30d": {
+     "covered_starts": 532,
+     "covered_users": 31,
+     "median_starts_per_covered_user": 6.0,
+     "returning_users_with_cold_start": 31,
+     "top10pct_share": 0.5507518796992481,
+     "top1pct_share": 0.23308270676691728,
+     "users_for_half": 4,
+     "users_for_half_share": 0.12903225806451613,
+     "users_with_cold_start": 44
+    },
+    "7d": {
+     "covered_starts": 521,
+     "covered_users": 30,
+     "median_starts_per_covered_user": 6.0,
+     "returning_users_with_cold_start": 31,
+     "top10pct_share": 0.4856046065259117,
+     "top1pct_share": 0.2380038387715931,
+     "users_for_half": 4,
+     "users_for_half_share": 0.13333333333333333,
+     "users_with_cold_start": 44
+    }
+   },
+   "starts_eval": 924,
+   "users": 45
+  },
+  "Instagram": {
+   "all_starts": {
+    "bucket_0_1d": 0.9290446676640308,
+    "bucket_14_30d": 0.0008548835221201111,
+    "bucket_1_3d": 0.03569138704851464,
+    "bucket_3_7d": 0.006411626415900834,
+    "bucket_7_14d": 0.0017097670442402222,
+    "new": 0.025646505663603335,
+    "silent_over_30d": 0.0006411626415900834,
+    "starts": 4679,
+    "within_14d": 0.9728574481726865,
+    "within_1d": 0.9290446676640308,
+    "within_30d": 0.9737123316948065,
+    "within_30d_of_returning": 0.9993419609563501,
+    "within_3d": 0.9647360547125454,
+    "within_7d": 0.9711476811284463
+   },
+   "cold": {
+    "bucket_0_1d": 0.9158782919969317,
+    "bucket_14_30d": 0.0010227563283047815,
+    "bucket_1_3d": 0.04193300946049604,
+    "bucket_3_7d": 0.0076706724622858605,
+    "bucket_7_14d": 0.002045512656609563,
+    "new": 0.030682689849143442,
+    "silent_over_30d": 0.000767067246228586,
+    "starts": 3911,
+    "within_14d": 0.9675274865763231,
+    "within_1d": 0.9158782919969317,
+    "within_30d": 0.968550242904628,
+    "within_30d_of_returning": 0.9992086520706938,
+    "within_3d": 0.9578113014574278,
+    "within_7d": 0.9654819739197136
+   },
+   "cold_starts": 3911,
+   "eval_days": 221,
+   "lru_catches": 0.16413763624706135,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.02190721649484536
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.3936651583710407,
+     "max_held": 57,
+     "mean_held": 12.597285067873303,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.4033013700729016,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 19.226410960583213,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 153.8112876846657,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.19834710743801653,
+     "share_of_known": 0.3004126712591127
+    },
+    "1d": {
+     "footprint_mb": 0.14013009049773756,
+     "max_held": 22,
+     "mean_held": 4.484162895927602,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.0648199878621707,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 8.518559902897366,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 68.14847922317892,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.024793388429752067,
+     "share_of_known": 0.13310249848277134
+    },
+    "30d": {
+     "footprint_mb": 0.577064479638009,
+     "max_held": 91,
+     "mean_held": 18.466063348416288,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.540091315770963,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 28.320730526167704,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 226.56584420934163,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.5454545454545454,
+     "share_of_known": 0.4425114144713704
+    },
+    "3d": {
+     "footprint_mb": 0.2012160633484163,
+     "max_held": 31,
+     "mean_held": 6.4389140271493215,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.4557233878023663,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 11.64578710241893,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 93.16629681935144,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.05785123966942149,
+     "share_of_known": 0.1819654234752958
+    },
+    "7d": {
+     "footprint_mb": 0.2784219457013575,
+     "max_held": 41,
+     "mean_held": 8.90950226244344,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.8667827356292372,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 14.934261885033898,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 119.47409508027118,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.06611570247933884,
+     "share_of_known": 0.23334784195365466
+    },
+    "days": 221,
+    "known_last_day": 121,
+    "mean_known": 27.742081447963802
+   },
+   "sessions": 4748,
+   "spread": {
+    "30d": {
+     "covered_starts": 3788,
+     "covered_users": 110,
+     "median_starts_per_covered_user": 10.0,
+     "returning_users_with_cold_start": 110,
+     "top10pct_share": 0.6174762407602957,
+     "top1pct_share": 0.25844772967265045,
+     "users_for_half": 7,
+     "users_for_half_share": 0.06363636363636363,
+     "users_with_cold_start": 121
+    },
+    "7d": {
+     "covered_starts": 3776,
+     "covered_users": 107,
+     "median_starts_per_covered_user": 11.0,
+     "returning_users_with_cold_start": 110,
+     "top10pct_share": 0.6186440677966102,
+     "top1pct_share": 0.2584745762711864,
+     "users_for_half": 7,
+     "users_for_half_share": 0.06542056074766354,
+     "users_with_cold_start": 121
+    }
+   },
+   "starts_eval": 4679,
+   "users": 121
+  },
+  "Maps": {
+   "all_starts": {
+    "bucket_0_1d": 0.8038674033149171,
+    "bucket_14_30d": 0.003107734806629834,
+    "bucket_1_3d": 0.09564917127071823,
+    "bucket_3_7d": 0.02520718232044199,
+    "bucket_7_14d": 0.005870165745856353,
+    "new": 0.06457182320441988,
+    "silent_over_30d": 0.0017265193370165745,
+    "starts": 2896,
+    "within_14d": 0.9305939226519337,
+    "within_1d": 0.8038674033149171,
+    "within_30d": 0.9337016574585635,
+    "within_30d_of_returning": 0.9981543004798819,
+    "within_3d": 0.8995165745856354,
+    "within_7d": 0.9247237569060773
+   },
+   "cold": {
+    "bucket_0_1d": 0.7792259083728278,
+    "bucket_14_30d": 0.00315955766192733,
+    "bucket_1_3d": 0.10781990521327015,
+    "bucket_3_7d": 0.028041074249605055,
+    "bucket_7_14d": 0.00631911532385466,
+    "new": 0.07385466034755134,
+    "silent_over_30d": 0.001579778830963665,
+    "starts": 2532,
+    "within_14d": 0.9214060031595577,
+    "within_1d": 0.7792259083728278,
+    "within_30d": 0.924565560821485,
+    "within_30d_of_returning": 0.9982942430703625,
+    "within_3d": 0.8870458135860979,
+    "within_7d": 0.915086887835703
+   },
+   "cold_starts": 2532,
+   "eval_days": 221,
+   "lru_catches": 0.12569060773480667,
+   "new_by_period": {
+    "first_28d": 0.0,
+    "last_28d": 0.04987531172069826
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.5764988687782805,
+     "max_held": 89,
+     "mean_held": 18.447963800904976,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.546290432895821,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 20.370323463166567,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 162.96258770533254,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.6666666666666666,
+     "share_last_day": 0.21875,
+     "share_of_known": 0.3182863041119776
+    },
+    "1d": {
+     "footprint_mb": 0.15921945701357465,
+     "max_held": 35,
+     "mean_held": 5.095022624434389,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.6970078835468558,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 5.576063068374847,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 44.60850454699877,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.16666666666666666,
+     "share_last_day": 0.0,
+     "share_of_known": 0.08712598544335698
+    },
+    "30d": {
+     "footprint_mb": 0.870475113122172,
+     "max_held": 145,
+     "mean_held": 27.855203619909503,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.907920487952097,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 31.263363903616774,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 250.1069112289342,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.5520833333333334,
+     "share_of_known": 0.4884900609940121
+    },
+    "3d": {
+     "footprint_mb": 0.27092760180995473,
+     "max_held": 50,
+     "mean_held": 8.669683257918551,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.2248440248685806,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 9.798752198948645,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 78.39001759158916,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.16666666666666666,
+     "share_last_day": 0.06770833333333333,
+     "share_of_known": 0.15310550310857257
+    },
+    "7d": {
+     "footprint_mb": 0.3986142533936652,
+     "max_held": 64,
+     "mean_held": 12.755656108597286,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.8114967150880157,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 14.491973720704125,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 115.935789765633,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.16666666666666666,
+     "share_last_day": 0.10416666666666667,
+     "share_of_known": 0.22643708938600196
+    },
+    "days": 221,
+    "known_last_day": 192,
+    "mean_known": 44.19457013574661
+   },
+   "sessions": 2944,
+   "spread": {
+    "30d": {
+     "covered_starts": 2341,
+     "covered_users": 146,
+     "median_starts_per_covered_user": 6.0,
+     "returning_users_with_cold_start": 147,
+     "top10pct_share": 0.4997864160615122,
+     "top1pct_share": 0.14737291755659973,
+     "users_for_half": 16,
+     "users_for_half_share": 0.1095890410958904,
+     "users_with_cold_start": 190
+    },
+    "7d": {
+     "covered_starts": 2317,
+     "covered_users": 145,
+     "median_starts_per_covered_user": 6.0,
+     "returning_users_with_cold_start": 147,
+     "top10pct_share": 0.5036685369011653,
+     "top1pct_share": 0.1488994389296504,
+     "users_for_half": 15,
+     "users_for_half_share": 0.10344827586206896,
+     "users_with_cold_start": 190
+    }
+   },
+   "starts_eval": 2896,
+   "users": 193
+  },
+  "Messages": {
+   "all_starts": {
+    "bucket_0_1d": 0.903242020608193,
+    "bucket_14_30d": 0.0007539582809751194,
+    "bucket_1_3d": 0.04800201055541593,
+    "bucket_3_7d": 0.011812013068610204,
+    "bucket_7_14d": 0.002261874842925358,
+    "new": 0.03292284493591355,
+    "silent_over_30d": 0.0010052777079668257,
+    "starts": 3979,
+    "within_14d": 0.9653179190751445,
+    "within_1d": 0.903242020608193,
+    "within_30d": 0.9660718773561197,
+    "within_30d_of_returning": 0.998960498960499,
+    "within_3d": 0.9512440311636089,
+    "within_7d": 0.9630560442322191
+   },
+   "cold": {
+    "bucket_0_1d": 0.8923728813559322,
+    "bucket_14_30d": 0.000847457627118644,
+    "bucket_1_3d": 0.052824858757062144,
+    "bucket_3_7d": 0.01327683615819209,
+    "bucket_7_14d": 0.002542372881355932,
+    "new": 0.037005649717514126,
+    "silent_over_30d": 0.0011299435028248588,
+    "starts": 3540,
+    "within_14d": 0.9610169491525423,
+    "within_1d": 0.8923728813559322,
+    "within_30d": 0.961864406779661,
+    "within_30d_of_returning": 0.9988266353769434,
+    "within_3d": 0.9451977401129944,
+    "within_7d": 0.9584745762711865
+   },
+   "cold_starts": 3540,
+   "eval_days": 221,
+   "lru_catches": 0.1103292284493591,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.024783147459727387
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.4227941176470588,
+     "max_held": 60,
+     "mean_held": 13.529411764705882,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.092803198415928,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 16.742425587327425,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 133.9394046986194,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.18045112781954886,
+     "share_of_known": 0.261600399801991
+    },
+    "1d": {
+     "footprint_mb": 0.13914027149321267,
+     "max_held": 26,
+     "mean_held": 4.452488687782806,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.7990618087594802,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 6.3924944700758415,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 51.13995576060673,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.015037593984962405,
+     "share_of_known": 0.09988272609493502
+    },
+    "30d": {
+     "footprint_mb": 0.6281108597285068,
+     "max_held": 99,
+     "mean_held": 20.099547511312217,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.2061214671828977,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 25.64897173746318,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 205.19177389970545,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.5263157894736842,
+     "share_of_known": 0.4007651833978622
+    },
+    "3d": {
+     "footprint_mb": 0.21394230769230768,
+     "max_held": 33,
+     "mean_held": 6.846153846153846,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.2209735850383803,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 9.767788680307042,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 78.14230944245634,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.05263157894736842,
+     "share_of_known": 0.15262169812979753
+    },
+    "7d": {
+     "footprint_mb": 0.30062217194570134,
+     "max_held": 47,
+     "mean_held": 9.619909502262443,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.6203039000794042,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 12.962431200635233,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 103.69944960508187,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.09774436090225563,
+     "share_of_known": 0.20253798750992552
+    },
+    "days": 221,
+    "known_last_day": 133,
+    "mean_known": 33.203619909502265
+   },
+   "sessions": 4005,
+   "spread": {
+    "30d": {
+     "covered_starts": 3405,
+     "covered_users": 123,
+     "median_starts_per_covered_user": 10.0,
+     "returning_users_with_cold_start": 123,
+     "top10pct_share": 0.48722466960352423,
+     "top1pct_share": 0.12687224669603525,
+     "users_for_half": 14,
+     "users_for_half_share": 0.11382113821138211,
+     "users_with_cold_start": 132
+    },
+    "7d": {
+     "covered_starts": 3393,
+     "covered_users": 123,
+     "median_starts_per_covered_user": 10.0,
+     "returning_users_with_cold_start": 123,
+     "top10pct_share": 0.4880636604774536,
+     "top1pct_share": 0.1273209549071618,
+     "users_for_half": 14,
+     "users_for_half_share": 0.11382113821138211,
+     "users_with_cold_start": 132
+    }
+   },
+   "starts_eval": 3979,
+   "users": 134
+  },
+  "Messaging": {
+   "all_starts": {
+    "bucket_0_1d": 0.9180743243243243,
+    "bucket_14_30d": 0.0016891891891891893,
+    "bucket_1_3d": 0.03209459459459459,
+    "bucket_3_7d": 0.0033783783783783786,
+    "bucket_7_14d": 0.002533783783783784,
+    "new": 0.04222972972972973,
+    "silent_over_30d": 0.0,
+    "starts": 1184,
+    "within_14d": 0.956081081081081,
+    "within_1d": 0.9180743243243243,
+    "within_30d": 0.9577702702702703,
+    "within_30d_of_returning": 1.0,
+    "within_3d": 0.950168918918919,
+    "within_7d": 0.9535472972972973
+   },
+   "cold": {
+    "bucket_0_1d": 0.8863636363636364,
+    "bucket_14_30d": 0.0023923444976076554,
+    "bucket_1_3d": 0.0430622009569378,
+    "bucket_3_7d": 0.004784688995215311,
+    "bucket_7_14d": 0.0035885167464114833,
+    "new": 0.05980861244019139,
+    "silent_over_30d": 0.0,
+    "starts": 836,
+    "within_14d": 0.937799043062201,
+    "within_1d": 0.8863636363636364,
+    "within_30d": 0.9401913875598086,
+    "within_30d_of_returning": 1.0,
+    "within_3d": 0.9294258373205742,
+    "within_7d": 0.9342105263157895
+   },
+   "cold_starts": 836,
+   "eval_days": 203,
+   "lru_catches": 0.29391891891891897,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.038910505836575876
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.14886083743842365,
+     "max_held": 28,
+     "mean_held": 4.763546798029557,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.278589434202011,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 18.228715473616088,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 145.8297237889287,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.19607843137254902,
+     "share_of_known": 0.2848236792752514
+    },
+    "1d": {
+     "footprint_mb": 0.043411330049261086,
+     "max_held": 12,
+     "mean_held": 1.3891625615763548,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.493979865710072,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.951838925680576,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 31.61471140544461,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.0392156862745098,
+     "share_of_known": 0.061747483213759
+    },
+    "30d": {
+     "footprint_mb": 0.2245997536945813,
+     "max_held": 40,
+     "mean_held": 7.187192118226601,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.760557329250536,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 30.08445863400429,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 240.6756690720343,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.6078431372549019,
+     "share_of_known": 0.470069666156317
+    },
+    "3d": {
+     "footprint_mb": 0.0648091133004926,
+     "max_held": 16,
+     "mean_held": 2.0738916256157633,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.85513183346153,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 6.84105466769224,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 54.72843734153792,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.0392156862745098,
+     "share_of_known": 0.10689147918269125
+    },
+    "7d": {
+     "footprint_mb": 0.0979064039408867,
+     "max_held": 21,
+     "mean_held": 3.1330049261083746,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.4199044277707145,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 11.359235422165716,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 90.87388337732573,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.0784313725490196,
+     "share_of_known": 0.1774880534713393
+    },
+    "days": 203,
+    "known_last_day": 51,
+    "mean_known": 11.507389162561577
+   },
+   "sessions": 1191,
+   "spread": {
+    "30d": {
+     "covered_starts": 786,
+     "covered_users": 39,
+     "median_starts_per_covered_user": 7.0,
+     "returning_users_with_cold_start": 39,
+     "top10pct_share": 0.49236641221374045,
+     "top1pct_share": 0.17938931297709923,
+     "users_for_half": 5,
+     "users_for_half_share": 0.1282051282051282,
+     "users_with_cold_start": 50
+    },
+    "7d": {
+     "covered_starts": 781,
+     "covered_users": 37,
+     "median_starts_per_covered_user": 8.0,
+     "returning_users_with_cold_start": 39,
+     "top10pct_share": 0.49551856594110116,
+     "top1pct_share": 0.18053777208706787,
+     "users_for_half": 5,
+     "users_for_half_share": 0.13513513513513514,
+     "users_with_cold_start": 50
+    }
+   },
+   "starts_eval": 1184,
+   "users": 51
+  },
+  "Phone": {
+   "all_starts": {
+    "bucket_0_1d": 0.8063540090771558,
+    "bucket_14_30d": 0.0022692889561270802,
+    "bucket_1_3d": 0.10665658093797277,
+    "bucket_3_7d": 0.02723146747352496,
+    "bucket_7_14d": 0.00529500756429652,
+    "new": 0.05143721633888049,
+    "silent_over_30d": 0.0007564296520423601,
+    "starts": 1322,
+    "within_14d": 0.9455370650529501,
+    "within_1d": 0.8063540090771558,
+    "within_30d": 0.9478063540090772,
+    "within_30d_of_returning": 0.9992025518341308,
+    "within_3d": 0.9130105900151286,
+    "within_7d": 0.9402420574886535
+   },
+   "cold": {
+    "bucket_0_1d": 0.7331887201735358,
+    "bucket_14_30d": 0.0032537960954446853,
+    "bucket_1_3d": 0.1442516268980477,
+    "bucket_3_7d": 0.0368763557483731,
+    "bucket_7_14d": 0.007592190889370932,
+    "new": 0.0737527114967462,
+    "silent_over_30d": 0.0010845986984815619,
+    "starts": 922,
+    "within_14d": 0.9219088937093276,
+    "within_1d": 0.7331887201735358,
+    "within_30d": 0.9251626898047722,
+    "within_30d_of_returning": 0.9988290398126464,
+    "within_3d": 0.8774403470715835,
+    "within_7d": 0.9143167028199566
+   },
+   "cold_starts": 922,
+   "eval_days": 218,
+   "lru_catches": 0.302571860816944,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.04448742746615087
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.2279243119266055,
+     "max_held": 36,
+     "mean_held": 7.293577981651376,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.6239024555012094,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 20.991219644009675,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 167.9297571520774,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.2318840579710145,
+     "share_of_known": 0.32798780693765117
+    },
+    "1d": {
+     "footprint_mb": 0.06952408256880734,
+     "max_held": 15,
+     "mean_held": 2.2247706422018347,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.8677392331479216,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 6.9419138651833725,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 55.53531092146698,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.057971014492753624,
+     "share_of_known": 0.1084674041434902
+    },
+    "30d": {
+     "footprint_mb": 0.322677752293578,
+     "max_held": 53,
+     "mean_held": 10.325688073394495,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.684197990477261,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 29.473583923818087,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 235.7886713905447,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.6086956521739131,
+     "share_of_known": 0.4605247488096576
+    },
+    "3d": {
+     "footprint_mb": 0.1158256880733945,
+     "max_held": 21,
+     "mean_held": 3.706422018348624,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.436885965543388,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 11.495087724347105,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 91.96070179477684,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.11594202898550725,
+     "share_of_known": 0.1796107456929235
+    },
+    "7d": {
+     "footprint_mb": 0.16470756880733944,
+     "max_held": 26,
+     "mean_held": 5.270642201834862,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.9989383592927499,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 15.991506874341999,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 127.93205499473599,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.13043478260869565,
+     "share_of_known": 0.24986729491159373
+    },
+    "days": 218,
+    "known_last_day": 69,
+    "mean_known": 16.380733944954127
+   },
+   "sessions": 1341,
+   "spread": {
+    "30d": {
+     "covered_starts": 853,
+     "covered_users": 55,
+     "median_starts_per_covered_user": 7.0,
+     "returning_users_with_cold_start": 55,
+     "top10pct_share": 0.5158264947245017,
+     "top1pct_share": 0.15826494724501758,
+     "users_for_half": 6,
+     "users_for_half_share": 0.10909090909090909,
+     "users_with_cold_start": 68
+    },
+    "7d": {
+     "covered_starts": 843,
+     "covered_users": 55,
+     "median_starts_per_covered_user": 7.0,
+     "returning_users_with_cold_start": 55,
+     "top10pct_share": 0.5183867141162515,
+     "top1pct_share": 0.1601423487544484,
+     "users_for_half": 6,
+     "users_for_half_share": 0.10909090909090909,
+     "users_with_cold_start": 68
+    }
+   },
+   "starts_eval": 1322,
+   "users": 70
+  },
+  "Pinterest": {
+   "all_starts": {
+    "bucket_0_1d": 0.66,
+    "bucket_14_30d": 0.004,
+    "bucket_1_3d": 0.196,
+    "bucket_3_7d": 0.04,
+    "bucket_7_14d": 0.008,
+    "new": 0.088,
+    "silent_over_30d": 0.004,
+    "starts": 750,
+    "within_14d": 0.904,
+    "within_1d": 0.66,
+    "within_30d": 0.908,
+    "within_30d_of_returning": 0.9956140350877193,
+    "within_3d": 0.856,
+    "within_7d": 0.896
+   },
+   "cold": {
+    "bucket_0_1d": 0.6045016077170418,
+    "bucket_14_30d": 0.00482315112540193,
+    "bucket_1_3d": 0.22347266881028938,
+    "bucket_3_7d": 0.04662379421221865,
+    "bucket_7_14d": 0.00964630225080386,
+    "new": 0.10610932475884244,
+    "silent_over_30d": 0.00482315112540193,
+    "starts": 622,
+    "within_14d": 0.8842443729903537,
+    "within_1d": 0.6045016077170418,
+    "within_30d": 0.8890675241157556,
+    "within_30d_of_returning": 0.9946043165467626,
+    "within_3d": 0.8279742765273312,
+    "within_7d": 0.8745980707395499
+   },
+   "cold_starts": 622,
+   "eval_days": 204,
+   "lru_catches": 0.17066666666666663,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.0856269113149847
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.23207720588235295,
+     "max_held": 37,
+     "mean_held": 7.426470588235294,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.8467494824882706,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 22.773995859906165,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 182.19196687924932,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.23880597014925373,
+     "share_of_known": 0.35584368531103383
+    },
+    "1d": {
+     "footprint_mb": 0.06954656862745098,
+     "max_held": 13,
+     "mean_held": 2.2254901960784315,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.8962027190254186,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 7.169621752203349,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 57.35697401762679,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.07462686567164178,
+     "share_of_known": 0.11202533987817732
+    },
+    "30d": {
+     "footprint_mb": 0.3290441176470588,
+     "max_held": 51,
+     "mean_held": 10.529411764705882,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.277979301100207,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 34.22383440880166,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 273.79067527041326,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.6567164179104478,
+     "share_of_known": 0.5347474126375259
+    },
+    "3d": {
+     "footprint_mb": 0.11443014705882353,
+     "max_held": 21,
+     "mean_held": 3.661764705882353,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.441200000709512,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 11.529600005676096,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 92.23680004540877,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.1044776119402985,
+     "share_of_known": 0.180150000088689
+    },
+    "7d": {
+     "footprint_mb": 0.16482843137254902,
+     "max_held": 30,
+     "mean_held": 5.2745098039215685,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.0496694293389615,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 16.39735543471169,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 131.17884347769353,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.13432835820895522,
+     "share_of_known": 0.2562086786673702
+    },
+    "days": 204,
+    "known_last_day": 67,
+    "mean_known": 15.700980392156863
+   },
+   "sessions": 758,
+   "spread": {
+    "30d": {
+     "covered_starts": 553,
+     "covered_users": 60,
+     "median_starts_per_covered_user": 5.0,
+     "returning_users_with_cold_start": 60,
+     "top10pct_share": 0.3688969258589512,
+     "top1pct_share": 0.10488245931283906,
+     "users_for_half": 10,
+     "users_for_half_share": 0.16666666666666666,
+     "users_with_cold_start": 66
+    },
+    "7d": {
+     "covered_starts": 544,
+     "covered_users": 60,
+     "median_starts_per_covered_user": 4.0,
+     "returning_users_with_cold_start": 60,
+     "top10pct_share": 0.3694852941176471,
+     "top1pct_share": 0.10110294117647059,
+     "users_for_half": 10,
+     "users_for_half_share": 0.16666666666666666,
+     "users_with_cold_start": 66
+    }
+   },
+   "starts_eval": 750,
+   "users": 67
+  },
+  "Reddit": {
+   "all_starts": {
+    "bucket_0_1d": 0.8571428571428571,
+    "bucket_14_30d": 0.004160887656033287,
+    "bucket_1_3d": 0.05825242718446602,
+    "bucket_3_7d": 0.023578363384188627,
+    "bucket_7_14d": 0.005547850208044383,
+    "new": 0.04854368932038835,
+    "silent_over_30d": 0.0027739251040221915,
+    "starts": 721,
+    "within_14d": 0.9445214979195562,
+    "within_1d": 0.8571428571428571,
+    "within_30d": 0.9486823855755895,
+    "within_30d_of_returning": 0.9970845481049563,
+    "within_3d": 0.9153952843273232,
+    "within_7d": 0.9389736477115118
+   },
+   "cold": {
+    "bucket_0_1d": 0.7880085653104925,
+    "bucket_14_30d": 0.006423982869379015,
+    "bucket_1_3d": 0.08779443254817987,
+    "bucket_3_7d": 0.032119914346895075,
+    "bucket_7_14d": 0.006423982869379015,
+    "new": 0.07494646680942184,
+    "silent_over_30d": 0.004282655246252677,
+    "starts": 467,
+    "within_14d": 0.9143468950749465,
+    "within_1d": 0.7880085653104925,
+    "within_30d": 0.9207708779443254,
+    "within_30d_of_returning": 0.9953703703703703,
+    "within_3d": 0.8758029978586723,
+    "within_7d": 0.9079229122055674
+   },
+   "cold_starts": 467,
+   "eval_days": 90,
+   "lru_catches": 0.35228848821081826,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.0380952380952381
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.275,
+     "max_held": 23,
+     "mean_held": 8.8,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.250656884495431,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 26.005255075963447,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 208.04204060770758,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.2,
+     "share_last_day": 0.375,
+     "share_of_known": 0.40633211056192886
+    },
+    "1d": {
+     "footprint_mb": 0.07291666666666667,
+     "max_held": 9,
+     "mean_held": 2.3333333333333335,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.8843386109039165,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 7.074708887231332,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 56.59767109785066,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.025,
+     "share_of_known": 0.11054232636298957
+    },
+    "30d": {
+     "footprint_mb": 0.4017361111111111,
+     "max_held": 35,
+     "mean_held": 12.855555555555556,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.901971977545978,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 39.215775820367824,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 313.7262065629426,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.6,
+     "share_of_known": 0.6127464971932473
+    },
+    "3d": {
+     "footprint_mb": 0.12638888888888888,
+     "max_held": 12,
+     "mean_held": 4.044444444444444,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.555903966351175,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 12.4472317308094,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 99.5778538464752,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.05,
+     "share_of_known": 0.19448799579389686
+    },
+    "7d": {
+     "footprint_mb": 0.19409722222222223,
+     "max_held": 16,
+     "mean_held": 6.211111111111111,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.4308611325415423,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 19.44688906033234,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 155.5751124826587,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.2,
+     "share_last_day": 0.15,
+     "share_of_known": 0.3038576415676928
+    },
+    "days": 90,
+    "known_last_day": 40,
+    "mean_known": 16.733333333333334
+   },
+   "sessions": 835,
+   "spread": {
+    "30d": {
+     "covered_starts": 430,
+     "covered_users": 31,
+     "median_starts_per_covered_user": 8.0,
+     "returning_users_with_cold_start": 31,
+     "top10pct_share": 0.513953488372093,
+     "top1pct_share": 0.22790697674418606,
+     "users_for_half": 4,
+     "users_for_half_share": 0.12903225806451613,
+     "users_with_cold_start": 38
+    },
+    "7d": {
+     "covered_starts": 424,
+     "covered_users": 31,
+     "median_starts_per_covered_user": 8.0,
+     "returning_users_with_cold_start": 31,
+     "top10pct_share": 0.5188679245283019,
+     "top1pct_share": 0.23113207547169812,
+     "users_for_half": 4,
+     "users_for_half_share": 0.12903225806451613,
+     "users_with_cold_start": 38
+    }
+   },
+   "starts_eval": 721,
+   "users": 40
+  },
+  "Samsung Gallery": {
+   "all_starts": {
+    "bucket_0_1d": 0.6955782312925171,
+    "bucket_14_30d": 0.004251700680272109,
+    "bucket_1_3d": 0.14030612244897958,
+    "bucket_3_7d": 0.05782312925170068,
+    "bucket_7_14d": 0.004251700680272109,
+    "new": 0.09608843537414966,
+    "silent_over_30d": 0.0017006802721088435,
+    "starts": 1176,
+    "within_14d": 0.8979591836734694,
+    "within_1d": 0.6955782312925171,
+    "within_30d": 0.9022108843537415,
+    "within_30d_of_returning": 0.9981185324553151,
+    "within_3d": 0.8358843537414966,
+    "within_7d": 0.8937074829931972
+   },
+   "cold": {
+    "bucket_0_1d": 0.6252676659528907,
+    "bucket_14_30d": 0.0053533190578158455,
+    "bucket_1_3d": 0.1702355460385439,
+    "bucket_3_7d": 0.07066381156316917,
+    "bucket_7_14d": 0.0053533190578158455,
+    "new": 0.12098501070663811,
+    "silent_over_30d": 0.0021413276231263384,
+    "starts": 934,
+    "within_14d": 0.8715203426124197,
+    "within_1d": 0.6252676659528907,
+    "within_30d": 0.8768736616702355,
+    "within_30d_of_returning": 0.997563946406821,
+    "within_3d": 0.7955032119914347,
+    "within_7d": 0.8661670235546038
+   },
+   "cold_starts": 934,
+   "eval_days": 220,
+   "lru_catches": 0.20578231292517002,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.0810126582278481
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.3424715909090909,
+     "max_held": 57,
+     "mean_held": 10.959090909090909,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.1316972099591722,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 17.053577679673378,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 136.42862143738702,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.1826086956521739,
+     "share_of_known": 0.26646215124489653
+    },
+    "1d": {
+     "footprint_mb": 0.08338068181818181,
+     "max_held": 18,
+     "mean_held": 2.668181818181818,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.5925468156825315,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.740374525460252,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 37.92299620368202,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.034782608695652174,
+     "share_of_known": 0.07406835196031644
+    },
+    "30d": {
+     "footprint_mb": 0.5210227272727272,
+     "max_held": 88,
+     "mean_held": 16.672727272727272,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.427562980055373,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 27.420503840442983,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 219.36403072354386,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.5217391304347826,
+     "share_of_known": 0.4284453725069216
+    },
+    "3d": {
+     "footprint_mb": 0.1546875,
+     "max_held": 27,
+     "mean_held": 4.95,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.0774816248129735,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 8.619852998503788,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 68.9588239880303,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.05217391304347826,
+     "share_of_known": 0.1346852031016217
+    },
+    "7d": {
+     "footprint_mb": 0.23508522727272727,
+     "max_held": 41,
+     "mean_held": 7.5227272727272725,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.5691852419627577,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 12.553481935702061,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 100.42785548561649,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.0782608695652174,
+     "share_of_known": 0.1961481552453447
+    },
+    "days": 220,
+    "known_last_day": 115,
+    "mean_known": 26.240909090909092
+   },
+   "sessions": 1195,
+   "spread": {
+    "30d": {
+     "covered_starts": 819,
+     "covered_users": 93,
+     "median_starts_per_covered_user": 5.0,
+     "returning_users_with_cold_start": 93,
+     "top10pct_share": 0.4456654456654457,
+     "top1pct_share": 0.06105006105006105,
+     "users_for_half": 12,
+     "users_for_half_share": 0.12903225806451613,
+     "users_with_cold_start": 114
+    },
+    "7d": {
+     "covered_starts": 809,
+     "covered_users": 92,
+     "median_starts_per_covered_user": 5.0,
+     "returning_users_with_cold_start": 93,
+     "top10pct_share": 0.4511742892459827,
+     "top1pct_share": 0.06180469715698393,
+     "users_for_half": 12,
+     "users_for_half_share": 0.13043478260869565,
+     "users_with_cold_start": 114
+    }
+   },
+   "starts_eval": 1176,
+   "users": 115
+  },
+  "Samsung Internet Browser": {
+   "all_starts": {
+    "bucket_0_1d": 0.9132507149666349,
+    "bucket_14_30d": 0.0,
+    "bucket_1_3d": 0.030505243088655862,
+    "bucket_3_7d": 0.012392755004766444,
+    "bucket_7_14d": 0.002859866539561487,
+    "new": 0.04099142040038131,
+    "silent_over_30d": 0.0,
+    "starts": 1049,
+    "within_14d": 0.9590085795996187,
+    "within_1d": 0.9132507149666349,
+    "within_30d": 0.9590085795996187,
+    "within_30d_of_returning": 1.0,
+    "within_3d": 0.9437559580552908,
+    "within_7d": 0.9561487130600572
+   },
+   "cold": {
+    "bucket_0_1d": 0.8985330073349633,
+    "bucket_14_30d": 0.0,
+    "bucket_1_3d": 0.029339853300733496,
+    "bucket_3_7d": 0.01589242053789731,
+    "bucket_7_14d": 0.003667481662591687,
+    "new": 0.05256723716381418,
+    "silent_over_30d": 0.0,
+    "starts": 818,
+    "within_14d": 0.9474327628361858,
+    "within_1d": 0.8985330073349633,
+    "within_30d": 0.9474327628361858,
+    "within_30d_of_returning": 1.0,
+    "within_3d": 0.9278728606356969,
+    "within_7d": 0.9437652811735942
+   },
+   "cold_starts": 818,
+   "eval_days": 104,
+   "lru_catches": 0.22020972354623447,
+   "new_by_period": {
+    "first_28d": 0.0,
+    "last_28d": 0.045023696682464455
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.27674278846153844,
+     "max_held": 29,
+     "mean_held": 8.85576923076923,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.0038567284639637,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 16.03085382771171,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 128.24683062169368,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.8,
+     "share_last_day": 0.22413793103448276,
+     "share_of_known": 0.25048209105799546
+    },
+    "1d": {
+     "footprint_mb": 0.07271634615384616,
+     "max_held": 14,
+     "mean_held": 2.326923076923077,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.5352065482992815,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.281652386394252,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 34.253219091154016,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.13333333333333333,
+     "share_last_day": 0.017241379310344827,
+     "share_of_known": 0.06690081853741019
+    },
+    "30d": {
+     "footprint_mb": 0.4522235576923077,
+     "max_held": 40,
+     "mean_held": 14.471153846153847,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.60886300394043,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 28.87090403152344,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 230.96723225218753,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.5,
+     "share_of_known": 0.45110787549255377
+    },
+    "3d": {
+     "footprint_mb": 0.11478365384615384,
+     "max_held": 15,
+     "mean_held": 3.673076923076923,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.838438374410427,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 6.707506995283416,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 53.66005596226733,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.13333333333333333,
+     "share_last_day": 0.017241379310344827,
+     "share_of_known": 0.10480479680130338
+    },
+    "7d": {
+     "footprint_mb": 0.17908653846153846,
+     "max_held": 20,
+     "mean_held": 5.730769230769231,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.2790526532109892,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 10.232421225687913,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 81.8593698055033,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.26666666666666666,
+     "share_last_day": 0.05172413793103448,
+     "share_of_known": 0.15988158165137364
+    },
+    "days": 104,
+    "known_last_day": 58,
+    "mean_known": 27.39423076923077
+   },
+   "sessions": 1134,
+   "spread": {
+    "30d": {
+     "covered_starts": 775,
+     "covered_users": 34,
+     "median_starts_per_covered_user": 5.5,
+     "returning_users_with_cold_start": 34,
+     "top10pct_share": 0.5690322580645162,
+     "top1pct_share": 0.15354838709677418,
+     "users_for_half": 4,
+     "users_for_half_share": 0.11764705882352941,
+     "users_with_cold_start": 44
+    },
+    "7d": {
+     "covered_starts": 772,
+     "covered_users": 32,
+     "median_starts_per_covered_user": 6.5,
+     "returning_users_with_cold_start": 34,
+     "top10pct_share": 0.5712435233160622,
+     "top1pct_share": 0.15414507772020725,
+     "users_for_half": 4,
+     "users_for_half_share": 0.125,
+     "users_with_cold_start": 44
+    }
+   },
+   "starts_eval": 1049,
+   "users": 58
+  },
+  "Settings": {
+   "all_starts": {
+    "bucket_0_1d": 0.739421531869309,
+    "bucket_14_30d": 0.0029459025174076057,
+    "bucket_1_3d": 0.1328334226031066,
+    "bucket_3_7d": 0.039100160685591856,
+    "bucket_7_14d": 0.00856989823245849,
+    "new": 0.07337975361542581,
+    "silent_over_30d": 0.003749330476700589,
+    "starts": 3734,
+    "within_14d": 0.919925013390466,
+    "within_1d": 0.739421531869309,
+    "within_30d": 0.9228709159078736,
+    "within_30d_of_returning": 0.9959537572254336,
+    "within_3d": 0.8722549544724156,
+    "within_7d": 0.9113551151580075
+   },
+   "cold": {
+    "bucket_0_1d": 0.7154471544715447,
+    "bucket_14_30d": 0.00331225534477567,
+    "bucket_1_3d": 0.14182475158084915,
+    "bucket_3_7d": 0.04305931948208371,
+    "bucket_7_14d": 0.009635651912074676,
+    "new": 0.08250526949713942,
+    "silent_over_30d": 0.004215597711532671,
+    "starts": 3321,
+    "within_14d": 0.9099668774465522,
+    "within_1d": 0.7154471544715447,
+    "within_30d": 0.9132791327913279,
+    "within_30d_of_returning": 0.9954053167049557,
+    "within_3d": 0.8572719060523939,
+    "within_7d": 0.9003312255344775
+   },
+   "cold_starts": 3321,
+   "eval_days": 221,
+   "lru_catches": 0.11060524906266733,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.04979253112033195
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.9000282805429864,
+     "max_held": 136,
+     "mean_held": 28.800904977375566,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.49762421965555,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 19.9809937572444,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 159.8479500579552,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.21631205673758866,
+     "share_of_known": 0.3122030274569437
+    },
+    "1d": {
+     "footprint_mb": 0.24688914027149322,
+     "max_held": 55,
+     "mean_held": 7.900452488687783,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.8675597906851225,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 6.94047832548098,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 55.52382660384784,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.25,
+     "share_last_day": 0.024822695035460994,
+     "share_of_known": 0.10844497383564031
+    },
+    "30d": {
+     "footprint_mb": 1.334700226244344,
+     "max_held": 211,
+     "mean_held": 42.710407239819006,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.704450493642659,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 29.635603949141274,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 237.0848315931302,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.5709219858156028,
+     "share_of_known": 0.4630563117053324
+    },
+    "3d": {
+     "footprint_mb": 0.426329185520362,
+     "max_held": 81,
+     "mean_held": 13.642533936651583,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.425855546695055,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 11.40684437356044,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 91.25475498848353,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.25,
+     "share_last_day": 0.08865248226950355,
+     "share_of_known": 0.1782319433368819
+    },
+    "7d": {
+     "footprint_mb": 0.6307975113122172,
+     "max_held": 105,
+     "mean_held": 20.18552036199095,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.909390323205899,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 15.275122585647193,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 122.20098068517754,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.25,
+     "share_last_day": 0.10283687943262411,
+     "share_of_known": 0.23867379040073738
+    },
+    "days": 221,
+    "known_last_day": 282,
+    "mean_known": 70.73755656108597
+   },
+   "sessions": 3851,
+   "spread": {
+    "30d": {
+     "covered_starts": 3033,
+     "covered_users": 242,
+     "median_starts_per_covered_user": 6.0,
+     "returning_users_with_cold_start": 243,
+     "top10pct_share": 0.42927794263105834,
+     "top1pct_share": 0.11078140454995054,
+     "users_for_half": 33,
+     "users_for_half_share": 0.13636363636363635,
+     "users_with_cold_start": 277
+    },
+    "7d": {
+     "covered_starts": 2990,
+     "covered_users": 242,
+     "median_starts_per_covered_user": 6.0,
+     "returning_users_with_cold_start": 243,
+     "top10pct_share": 0.4317725752508361,
+     "top1pct_share": 0.11137123745819398,
+     "users_for_half": 33,
+     "users_for_half_share": 0.13636363636363635,
+     "users_with_cold_start": 277
+    }
+   },
+   "starts_eval": 3734,
+   "users": 282
+  },
+  "Snapchat": {
+   "all_starts": {
+    "bucket_0_1d": 0.8293838862559242,
+    "bucket_14_30d": 0.001184834123222749,
+    "bucket_1_3d": 0.08886255924170616,
+    "bucket_3_7d": 0.027251184834123223,
+    "bucket_7_14d": 0.001184834123222749,
+    "new": 0.052132701421800945,
+    "silent_over_30d": 0.0,
+    "starts": 844,
+    "within_14d": 0.9466824644549763,
+    "within_1d": 0.8293838862559242,
+    "within_30d": 0.9478672985781991,
+    "within_30d_of_returning": 1.0,
+    "within_3d": 0.9182464454976303,
+    "within_7d": 0.9454976303317536
+   },
+   "cold": {
+    "bucket_0_1d": 0.7581227436823105,
+    "bucket_14_30d": 0.0018050541516245488,
+    "bucket_1_3d": 0.12454873646209386,
+    "bucket_3_7d": 0.03429602888086643,
+    "bucket_7_14d": 0.0018050541516245488,
+    "new": 0.07942238267148015,
+    "silent_over_30d": 0.0,
+    "starts": 554,
+    "within_14d": 0.9187725631768953,
+    "within_1d": 0.7581227436823105,
+    "within_30d": 0.9205776173285198,
+    "within_30d_of_returning": 1.0,
+    "within_3d": 0.8826714801444043,
+    "within_7d": 0.9169675090252708
+   },
+   "cold_starts": 554,
+   "eval_days": 100,
+   "lru_catches": 0.3436018957345972,
+   "new_by_period": {
+    "first_28d": 0.0,
+    "last_28d": 0.05897435897435897
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.298125,
+     "max_held": 26,
+     "mean_held": 9.54,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.0058183903654534,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 24.046547122923627,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 192.37237698338902,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.9,
+     "share_last_day": 0.35185185185185186,
+     "share_of_known": 0.3757272987956817
+    },
+    "1d": {
+     "footprint_mb": 0.0934375,
+     "max_held": 11,
+     "mean_held": 2.99,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.0516160561782864,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 8.41292844942629,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 67.30342759541033,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.3,
+     "share_last_day": 0.018518518518518517,
+     "share_of_known": 0.1314520070222858
+    },
+    "30d": {
+     "footprint_mb": 0.435,
+     "max_held": 39,
+     "mean_held": 13.92,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.6759691863494846,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 37.407753490795876,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 299.262027926367,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.6111111111111112,
+     "share_of_known": 0.5844961482936856
+    },
+    "3d": {
+     "footprint_mb": 0.1546875,
+     "max_held": 14,
+     "mean_held": 4.95,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.712171156423862,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 13.697369251390896,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 109.57895401112717,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.4,
+     "share_last_day": 0.1111111111111111,
+     "share_of_known": 0.21402139455298275
+    },
+    "7d": {
+     "footprint_mb": 0.218125,
+     "max_held": 19,
+     "mean_held": 6.98,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.2898388646333303,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 18.318710917066642,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 146.54968733653314,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.4,
+     "share_last_day": 0.18518518518518517,
+     "share_of_known": 0.2862298580791663
+    },
+    "days": 100,
+    "known_last_day": 54,
+    "mean_known": 21.42
+   },
+   "sessions": 955,
+   "spread": {
+    "30d": {
+     "covered_starts": 510,
+     "covered_users": 36,
+     "median_starts_per_covered_user": 7.5,
+     "returning_users_with_cold_start": 36,
+     "top10pct_share": 0.4372549019607843,
+     "top1pct_share": 0.20980392156862746,
+     "users_for_half": 6,
+     "users_for_half_share": 0.16666666666666666,
+     "users_with_cold_start": 47
+    },
+    "7d": {
+     "covered_starts": 508,
+     "covered_users": 36,
+     "median_starts_per_covered_user": 7.5,
+     "returning_users_with_cold_start": 36,
+     "top10pct_share": 0.4389763779527559,
+     "top1pct_share": 0.2106299212598425,
+     "users_for_half": 6,
+     "users_for_half_share": 0.16666666666666666,
+     "users_with_cold_start": 47
+    }
+   },
+   "starts_eval": 844,
+   "users": 54
+  },
+  "Spotify Music": {
+   "all_starts": {
+    "bucket_0_1d": 0.694954128440367,
+    "bucket_14_30d": 0.0022935779816513763,
+    "bucket_1_3d": 0.12155963302752294,
+    "bucket_3_7d": 0.04128440366972477,
+    "bucket_7_14d": 0.020642201834862386,
+    "new": 0.11697247706422019,
+    "silent_over_30d": 0.0022935779816513763,
+    "starts": 436,
+    "within_14d": 0.8784403669724771,
+    "within_1d": 0.694954128440367,
+    "within_30d": 0.8807339449541285,
+    "within_30d_of_returning": 0.9974025974025974,
+    "within_3d": 0.8165137614678899,
+    "within_7d": 0.8577981651376146
+   },
+   "cold": {
+    "bucket_0_1d": 0.483739837398374,
+    "bucket_14_30d": 0.0040650406504065045,
+    "bucket_1_3d": 0.1991869918699187,
+    "bucket_3_7d": 0.06504065040650407,
+    "bucket_7_14d": 0.036585365853658534,
+    "new": 0.2073170731707317,
+    "silent_over_30d": 0.0040650406504065045,
+    "starts": 246,
+    "within_14d": 0.7845528455284553,
+    "within_1d": 0.483739837398374,
+    "within_30d": 0.7886178861788617,
+    "within_30d_of_returning": 0.9948717948717949,
+    "within_3d": 0.6829268292682927,
+    "within_7d": 0.7479674796747967
+   },
+   "cold_starts": 246,
+   "eval_days": 214,
+   "lru_catches": 0.4357798165137615,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.1557377049180328
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.14573598130841123,
+     "max_held": 23,
+     "mean_held": 4.663551401869159,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.056847766893723,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 16.454782135149784,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 131.63825708119828,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.22641509433962265,
+     "share_of_known": 0.2571059708617154
+    },
+    "1d": {
+     "footprint_mb": 0.030957943925233645,
+     "max_held": 8,
+     "mean_held": 0.9906542056074766,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.4218327357847966,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.3746618862783726,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 26.99729509022698,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.03773584905660377,
+     "share_of_known": 0.05272909197309957
+    },
+    "30d": {
+     "footprint_mb": 0.22751168224299065,
+     "max_held": 33,
+     "mean_held": 7.280373831775701,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.236344830570253,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 25.890758644562023,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 207.1260691564962,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.5283018867924528,
+     "share_of_known": 0.4045431038212816
+    },
+    "3d": {
+     "footprint_mb": 0.05914135514018692,
+     "max_held": 12,
+     "mean_held": 1.8925233644859814,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.801491841979005,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 6.41193473583204,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 51.29547788665632,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.07547169811320754,
+     "share_of_known": 0.10018648024737563
+    },
+    "7d": {
+     "footprint_mb": 0.09681658878504673,
+     "max_held": 16,
+     "mean_held": 3.0981308411214954,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.3922374765845407,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 11.137899812676325,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 89.1031985014106,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.1320754716981132,
+     "share_of_known": 0.17402968457306758
+    },
+    "days": 214,
+    "known_last_day": 53,
+    "mean_known": 13.551401869158878
+   },
+   "sessions": 443,
+   "spread": {
+    "30d": {
+     "covered_starts": 194,
+     "covered_users": 33,
+     "median_starts_per_covered_user": 3.0,
+     "returning_users_with_cold_start": 33,
+     "top10pct_share": 0.4536082474226804,
+     "top1pct_share": 0.17525773195876287,
+     "users_for_half": 5,
+     "users_for_half_share": 0.15151515151515152,
+     "users_with_cold_start": 52
+    },
+    "7d": {
+     "covered_starts": 184,
+     "covered_users": 33,
+     "median_starts_per_covered_user": 2.0,
+     "returning_users_with_cold_start": 33,
+     "top10pct_share": 0.45108695652173914,
+     "top1pct_share": 0.15760869565217392,
+     "users_for_half": 5,
+     "users_for_half_share": 0.15151515151515152,
+     "users_with_cold_start": 52
+    }
+   },
+   "starts_eval": 436,
+   "users": 53
+  },
+  "Twitter": {
+   "all_starts": {
+    "bucket_0_1d": 0.9103350637092968,
+    "bucket_14_30d": 0.001415762151958471,
+    "bucket_1_3d": 0.04624823029731005,
+    "bucket_3_7d": 0.0075507314771118455,
+    "bucket_7_14d": 0.0023596035865974517,
+    "new": 0.03114676734308636,
+    "silent_over_30d": 0.0009438414346389807,
+    "starts": 2119,
+    "within_14d": 0.9664936290703162,
+    "within_1d": 0.9103350637092968,
+    "within_30d": 0.9679093912222747,
+    "within_30d_of_returning": 0.9990258158792011,
+    "within_3d": 0.9565832940066069,
+    "within_7d": 0.9641340254837187
+   },
+   "cold": {
+    "bucket_0_1d": 0.8721804511278195,
+    "bucket_14_30d": 0.002050580997949419,
+    "bucket_1_3d": 0.06493506493506493,
+    "bucket_3_7d": 0.010936431989063569,
+    "bucket_7_14d": 0.003417634996582365,
+    "new": 0.045112781954887216,
+    "silent_over_30d": 0.001367053998632946,
+    "starts": 1463,
+    "within_14d": 0.9514695830485305,
+    "within_1d": 0.8721804511278195,
+    "within_30d": 0.9535201640464799,
+    "within_30d_of_returning": 0.9985683607730852,
+    "within_3d": 0.9371155160628845,
+    "within_7d": 0.948051948051948
+   },
+   "cold_starts": 1463,
+   "eval_days": 221,
+   "lru_catches": 0.3095799905615857,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.050445103857566766
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.2234162895927602,
+     "max_held": 29,
+     "mean_held": 7.149321266968326,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.201165419140988,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 17.609323353127905,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 140.87458682502324,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.13636363636363635,
+     "share_of_known": 0.2751456773926235
+    },
+    "1d": {
+     "footprint_mb": 0.07904411764705882,
+     "max_held": 12,
+     "mean_held": 2.5294117647058822,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.9286565454508711,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 7.4292523636069685,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 59.43401890885575,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.0,
+     "share_of_known": 0.11608206818135888
+    },
+    "30d": {
+     "footprint_mb": 0.3372454751131222,
+     "max_held": 47,
+     "mean_held": 10.79185520361991,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.3150255823308368,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 26.520204658646694,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 212.16163726917355,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.42424242424242425,
+     "share_of_known": 0.4143781977913546
+    },
+    "3d": {
+     "footprint_mb": 0.1128393665158371,
+     "max_held": 15,
+     "mean_held": 3.6108597285067874,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.2637268101900583,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 10.109814481520466,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 80.87851585216373,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.030303030303030304,
+     "share_of_known": 0.15796585127375729
+    },
+    "7d": {
+     "footprint_mb": 0.15752262443438914,
+     "max_held": 22,
+     "mean_held": 5.040723981900452,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.6765585331274326,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 13.412468265019461,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 107.29974612015569,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.0,
+     "share_last_day": 0.07575757575757576,
+     "share_of_known": 0.20956981664092908
+    },
+    "days": 221,
+    "known_last_day": 66,
+    "mean_known": 18.16289592760181
+   },
+   "sessions": 2148,
+   "spread": {
+    "30d": {
+     "covered_starts": 1395,
+     "covered_users": 60,
+     "median_starts_per_covered_user": 6.0,
+     "returning_users_with_cold_start": 60,
+     "top10pct_share": 0.625089605734767,
+     "top1pct_share": 0.22795698924731184,
+     "users_for_half": 4,
+     "users_for_half_share": 0.06666666666666667,
+     "users_with_cold_start": 67
+    },
+    "7d": {
+     "covered_starts": 1387,
+     "covered_users": 59,
+     "median_starts_per_covered_user": 6.0,
+     "returning_users_with_cold_start": 60,
+     "top10pct_share": 0.6258111031002163,
+     "top1pct_share": 0.22927180966113914,
+     "users_for_half": 4,
+     "users_for_half_share": 0.06779661016949153,
+     "users_with_cold_start": 67
+    }
+   },
+   "starts_eval": 2119,
+   "users": 67
+  },
+  "WhatsApp Messenger": {
+   "all_starts": {
+    "bucket_0_1d": 0.907331136738056,
+    "bucket_14_30d": 0.0016474464579901153,
+    "bucket_1_3d": 0.04695222405271829,
+    "bucket_3_7d": 0.016062602965403624,
+    "bucket_7_14d": 0.004530477759472817,
+    "new": 0.022240527182866558,
+    "silent_over_30d": 0.0012355848434925864,
+    "starts": 2428,
+    "within_14d": 0.9748764415156508,
+    "within_1d": 0.907331136738056,
+    "within_30d": 0.9765238879736409,
+    "within_30d_of_returning": 0.9987363100252739,
+    "within_3d": 0.9542833607907742,
+    "within_7d": 0.9703459637561779
+   },
+   "cold": {
+    "bucket_0_1d": 0.8477961432506887,
+    "bucket_14_30d": 0.0027548209366391185,
+    "bucket_1_3d": 0.07851239669421488,
+    "bucket_3_7d": 0.025482093663911846,
+    "bucket_7_14d": 0.006198347107438017,
+    "new": 0.0371900826446281,
+    "silent_over_30d": 0.002066115702479339,
+    "starts": 1452,
+    "within_14d": 0.9579889807162535,
+    "within_1d": 0.8477961432506887,
+    "within_30d": 0.9607438016528925,
+    "within_30d_of_returning": 0.9978540772532188,
+    "within_3d": 0.9263085399449036,
+    "within_7d": 0.9517906336088154
+   },
+   "cold_starts": 1452,
+   "eval_days": 222,
+   "lru_catches": 0.40197693574958815,
+   "new_by_period": {
+    "first_28d": null,
+    "last_28d": 0.03571428571428571
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.22761824324324326,
+     "max_held": 27,
+     "mean_held": 7.283783783783784,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.3735657323729447,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 18.988525858983557,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 151.90820687186846,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.1206896551724138,
+     "share_of_known": 0.2966957165466181
+    },
+    "1d": {
+     "footprint_mb": 0.07699887387387387,
+     "max_held": 12,
+     "mean_held": 2.463963963963964,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 0.8023484532130047,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 6.418787625704038,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 51.3503010056323,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.25,
+     "share_last_day": 0.017241379310344827,
+     "share_of_known": 0.10029355665162559
+    },
+    "30d": {
+     "footprint_mb": 0.31855292792792794,
+     "max_held": 36,
+     "mean_held": 10.193693693693694,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 3.4568761336624942,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 27.655009069299954,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 221.24007255439963,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.5172413793103449,
+     "share_of_known": 0.4321095167078118
+    },
+    "3d": {
+     "footprint_mb": 0.12021396396396396,
+     "max_held": 15,
+     "mean_held": 3.8468468468468466,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.2794060420802362,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 10.23524833664189,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 81.88198669313512,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.25,
+     "share_last_day": 0.034482758620689655,
+     "share_of_known": 0.15992575526002953
+    },
+    "7d": {
+     "footprint_mb": 0.16624436936936937,
+     "max_held": 20,
+     "mean_held": 5.31981981981982,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.7938949046070622,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 14.351159236856498,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 114.80927389485198,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.25,
+     "share_last_day": 0.06896551724137931,
+     "share_of_known": 0.22423686307588278
+    },
+    "days": 222,
+    "known_last_day": 58,
+    "mean_known": 19.954954954954953
+   },
+   "sessions": 2488,
+   "spread": {
+    "30d": {
+     "covered_starts": 1395,
+     "covered_users": 44,
+     "median_starts_per_covered_user": 11.5,
+     "returning_users_with_cold_start": 44,
+     "top10pct_share": 0.5971326164874552,
+     "top1pct_share": 0.20931899641577062,
+     "users_for_half": 4,
+     "users_for_half_share": 0.09090909090909091,
+     "users_with_cold_start": 55
+    },
+    "7d": {
+     "covered_starts": 1382,
+     "covered_users": 44,
+     "median_starts_per_covered_user": 11.0,
+     "returning_users_with_cold_start": 44,
+     "top10pct_share": 0.5998552821997105,
+     "top1pct_share": 0.20911722141823444,
+     "users_for_half": 4,
+     "users_for_half_share": 0.09090909090909091,
+     "users_with_cold_start": 55
+    }
+   },
+   "starts_eval": 2428,
+   "users": 58
+  },
+  "YouTube": {
+   "all_starts": {
+    "bucket_0_1d": 0.7900847191716348,
+    "bucket_14_30d": 0.0021964229683087543,
+    "bucket_1_3d": 0.10417320363978663,
+    "bucket_3_7d": 0.028553498588013804,
+    "bucket_7_14d": 0.005961719485409476,
+    "new": 0.0671477878882962,
+    "silent_over_30d": 0.0018826482585503608,
+    "starts": 3187,
+    "within_14d": 0.9287731408848446,
+    "within_1d": 0.7900847191716348,
+    "within_30d": 0.9309695638531534,
+    "within_30d_of_returning": 0.9979818365287588,
+    "within_3d": 0.8942579228114214,
+    "within_7d": 0.9228114213994352
+   },
+   "cold": {
+    "bucket_0_1d": 0.7412,
+    "bucket_14_30d": 0.0028,
+    "bucket_1_3d": 0.1256,
+    "bucket_3_7d": 0.0348,
+    "bucket_7_14d": 0.0076,
+    "new": 0.0856,
+    "silent_over_30d": 0.0024,
+    "starts": 2500,
+    "within_14d": 0.9092,
+    "within_1d": 0.7412,
+    "within_30d": 0.912,
+    "within_30d_of_returning": 0.9973753280839895,
+    "within_3d": 0.8668,
+    "within_7d": 0.9016
+   },
+   "cold_starts": 2500,
+   "eval_days": 220,
+   "lru_catches": 0.2155632256040163,
+   "new_by_period": {
+    "first_28d": 0.0,
+    "last_28d": 0.058163265306122446
+   },
+   "openings": {
+    "14d": {
+     "footprint_mb": 0.6688920454545455,
+     "max_held": 105,
+     "mean_held": 21.404545454545456,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.9562116513468966,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 23.649693210775173,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 189.19754568620138,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.18433179723502305,
+     "share_of_known": 0.36952645641836207
+    },
+    "1d": {
+     "footprint_mb": 0.1794034090909091,
+     "max_held": 42,
+     "mean_held": 5.740909090909091,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.1048548919345174,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 8.838839135476139,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 70.71071308380911,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.0,
+     "share_of_known": 0.13810686149181467
+    },
+    "30d": {
+     "footprint_mb": 1.0140625,
+     "max_held": 163,
+     "mean_held": 32.45,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 4.077026697330162,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 32.61621357864129,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 260.92970862913035,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 1.0,
+     "share_last_day": 0.5529953917050692,
+     "share_of_known": 0.5096283371662702
+    },
+    "3d": {
+     "footprint_mb": 0.31022727272727274,
+     "max_held": 62,
+     "mean_held": 9.927272727272728,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 1.761294237595871,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 14.090353900766967,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 112.72283120613574,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.03686635944700461,
+     "share_of_known": 0.22016177969948386
+    },
+    "7d": {
+     "footprint_mb": 0.4603693181818182,
+     "max_held": 83,
+     "mean_held": 14.731818181818182,
+     "scale_1tb": {
+      "4 MB": {
+       "fits_29gb": true,
+       "footprint_gb": 2.3217034653767543,
+       "users": 262144
+      },
+      "512 KB": {
+       "fits_29gb": true,
+       "footprint_gb": 18.573627723014035,
+       "users": 2097152
+      },
+      "64 KB": {
+       "fits_29gb": false,
+       "footprint_gb": 148.58902178411228,
+       "users": 16777216
+      }
+     },
+     "share_first_day": 0.5,
+     "share_last_day": 0.06451612903225806,
+     "share_of_known": 0.2902129331720943
+    },
+    "days": 220,
+    "known_last_day": 217,
+    "mean_known": 52.486363636363635
+   },
+   "sessions": 3260,
+   "spread": {
+    "30d": {
+     "covered_starts": 2280,
+     "covered_users": 177,
+     "median_starts_per_covered_user": 5.0,
+     "returning_users_with_cold_start": 177,
+     "top10pct_share": 0.5324561403508772,
+     "top1pct_share": 0.11754385964912281,
+     "users_for_half": 16,
+     "users_for_half_share": 0.0903954802259887,
+     "users_with_cold_start": 216
+    },
+    "7d": {
+     "covered_starts": 2254,
+     "covered_users": 175,
+     "median_starts_per_covered_user": 5.0,
+     "returning_users_with_cold_start": 177,
+     "top10pct_share": 0.5368234250221828,
+     "top1pct_share": 0.1188997338065661,
+     "users_for_half": 16,
+     "users_for_half_share": 0.09142857142857143,
+     "users_with_cold_start": 216
+    }
+   },
+   "starts_eval": 3187,
+   "users": 218
+  }
+ },
+ "pooled": {
+  "all_starts": {
+   "bucket_0_1d": 0.9596582819174181,
+   "bucket_14_30d": 0.00047460844803037496,
+   "bucket_1_3d": 0.016729947793070715,
+   "bucket_3_7d": 0.0042121499762695774,
+   "bucket_7_14d": 0.0012458471760797341,
+   "new": 0.016789273849074512,
+   "silent_over_30d": 0.000889890840056953,
+   "starts": 16856,
+   "within_14d": 0.9818462268628382,
+   "within_1d": 0.9596582819174181,
+   "within_30d": 0.9823208353108686,
+   "within_30d_of_returning": 0.9990949134133832,
+   "within_3d": 0.9763882297104889,
+   "within_7d": 0.9806003796867584
+  },
+  "cold": {
+   "bucket_0_1d": 0.9572014351614556,
+   "bucket_14_30d": 0.0005125576627370579,
+   "bucket_1_3d": 0.017298821117375705,
+   "bucket_3_7d": 0.004548949256791389,
+   "bucket_7_14d": 0.001345463864684777,
+   "new": 0.018131727319323426,
+   "silent_over_30d": 0.0009610456176319836,
+   "starts": 15608,
+   "within_14d": 0.9803946694003075,
+   "within_1d": 0.9572014351614556,
+   "within_30d": 0.9809072270630446,
+   "within_30d_of_returning": 0.9990212071778141,
+   "within_3d": 0.9745002562788314,
+   "within_7d": 0.9790492055356228
+  },
+  "cold_starts": 15608,
+  "eval_days": 221,
+  "lru_catches": 0.07403891789273853,
+  "new_by_period": {
+   "first_28d": 0.0,
+   "last_28d": 0.010430439253709416
+  },
+  "openings": {
+   "14d": {
+    "footprint_mb": 0.9974547511312217,
+    "max_held": 145,
+    "mean_held": 31.918552036199095,
+    "scale_1tb": {
+     "4 MB": {
+      "fits_29gb": true,
+      "footprint_gb": 2.761435026645452,
+      "users": 262144
+     },
+     "512 KB": {
+      "fits_29gb": true,
+      "footprint_gb": 22.091480213163617,
+      "users": 2097152
+     },
+     "64 KB": {
+      "fits_29gb": false,
+      "footprint_gb": 176.73184170530894,
+      "users": 16777216
+     }
+    },
+    "share_first_day": 0.5555555555555556,
+    "share_last_day": 0.2363013698630137,
+    "share_of_known": 0.3451793783306815
+   },
+   "1d": {
+    "footprint_mb": 0.407381221719457,
+    "max_held": 78,
+    "mean_held": 13.036199095022624,
+    "scale_1tb": {
+     "4 MB": {
+      "fits_29gb": true,
+      "footprint_gb": 1.2876439947967149,
+      "users": 262144
+     },
+     "512 KB": {
+      "fits_29gb": true,
+      "footprint_gb": 10.301151958373719,
+      "users": 2097152
+     },
+     "64 KB": {
+      "fits_29gb": false,
+      "footprint_gb": 82.40921566698975,
+      "users": 16777216
+     }
+    },
+    "share_first_day": 0.3333333333333333,
+    "share_last_day": 0.030821917808219176,
+    "share_of_known": 0.16095549934958936
+   },
+   "30d": {
+    "footprint_mb": 1.4379242081447965,
+    "max_held": 219,
+    "mean_held": 46.01357466063349,
+    "scale_1tb": {
+     "4 MB": {
+      "fits_29gb": true,
+      "footprint_gb": 4.011479049412673,
+      "users": 262144
+     },
+     "512 KB": {
+      "fits_29gb": false,
+      "footprint_gb": 32.09183239530138,
+      "users": 2097152
+     },
+     "64 KB": {
+      "fits_29gb": false,
+      "footprint_gb": 256.73465916241105,
+      "users": 16777216
+     }
+    },
+    "share_first_day": 1.0,
+    "share_last_day": 0.5753424657534246,
+    "share_of_known": 0.5014348811765841
+   },
+   "3d": {
+    "footprint_mb": 0.5442590497737556,
+    "max_held": 96,
+    "mean_held": 17.41628959276018,
+    "scale_1tb": {
+     "4 MB": {
+      "fits_29gb": true,
+      "footprint_gb": 1.6795817689117483,
+      "users": 262144
+     },
+     "512 KB": {
+      "fits_29gb": true,
+      "footprint_gb": 13.436654151293986,
+      "users": 2097152
+     },
+     "64 KB": {
+      "fits_29gb": false,
+      "footprint_gb": 107.49323321035189,
+      "users": 16777216
+     }
+    },
+    "share_first_day": 0.3333333333333333,
+    "share_last_day": 0.09246575342465753,
+    "share_of_known": 0.20994772111396853
+   },
+   "7d": {
+    "footprint_mb": 0.7282239819004525,
+    "max_held": 117,
+    "mean_held": 23.30316742081448,
+    "scale_1tb": {
+     "4 MB": {
+      "fits_29gb": true,
+      "footprint_gb": 2.1324305121948566,
+      "users": 262144
+     },
+     "512 KB": {
+      "fits_29gb": true,
+      "footprint_gb": 17.059444097558853,
+      "users": 2097152
+     },
+     "64 KB": {
+      "fits_29gb": false,
+      "footprint_gb": 136.47555278047082,
+      "users": 16777216
+     }
+    },
+    "share_first_day": 0.3333333333333333,
+    "share_last_day": 0.1267123287671233,
+    "share_of_known": 0.26655381402435707
+   },
+   "days": 221,
+   "known_last_day": 292,
+   "mean_known": 74.42986425339366
+  },
+  "sessions": 17148,
+  "spread": {
+   "30d": {
+    "covered_starts": 15310,
+    "covered_users": 286,
+    "median_starts_per_covered_user": 25.0,
+    "returning_users_with_cold_start": 286,
+    "top10pct_share": 0.41325930764206403,
+    "top1pct_share": 0.09261920313520575,
+    "users_for_half": 40,
+    "users_for_half_share": 0.13986013986013987,
+    "users_with_cold_start": 288
+   },
+   "7d": {
+    "covered_starts": 15281,
+    "covered_users": 286,
+    "median_starts_per_covered_user": 25.0,
+    "returning_users_with_cold_start": 286,
+    "top10pct_share": 0.4138472613048884,
+    "top1pct_share": 0.09259865192068582,
+    "users_for_half": 40,
+    "users_for_half_share": 0.13986013986013987,
+    "users_with_cold_start": 288
+   }
+  },
+  "starts_eval": 16856,
+  "users": 292
+ }
+}
