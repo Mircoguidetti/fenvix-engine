@@ -1681,11 +1681,11 @@ pub fn waiter_stats() -> Document {
     if let Some(c) = tenant_bench::counter::COUNTER.get() {
         let (mu, mn, du, dn, dp) = c.ram_usage();
         let (disk_used, disk_maps, disk_n) = c.disk_usage();
-        let (ssts, sst_bytes) = tenant_bench::maps::mapped_totals();
+        let (ssts, sst_bytes) = tenant_bench::maps::mapped_totals(c);
         let m = &c.m;
         w.insert("counter", doc! {
             "ramCapacity": c.ram_capacity() as i64, "diskCapacity": c.disk_capacity() as i64,
-            "mapsRamBytes": mu as i64, "mapsRamBlockBytes": c.maps_block_bytes() as i64, "mapsRamEntries": mn as i64, "mapsDiskBytes": disk_maps as i64,
+            "mapsRamBytes": mu as i64, "mapsRamEntries": mn as i64, "mapsDiskBytes": disk_maps as i64,
             "dataRamBytes": du as i64, "dataRamBlocks": dn as i64, "dataProtectedBytes": dp as i64,
             "diskBytes": disk_used as i64, "diskEntries": disk_n as i64,
             "hitsRam": ld(&m.hits_ram), "hitsDisk": ld(&m.hits_disk), "misses": ld(&m.misses),
@@ -1694,10 +1694,14 @@ pub fn waiter_stats() -> Document {
             "prefetchedIn": ld(&m.prefetched_in), "prefetchedUsed": ld(&m.prefetched_used), "prefetchedEvictedUnused": ld(&m.prefetched_evicted_unused),
             "promoted": ld(&m.promoted), "toDisk": ld(&m.to_disk), "diskDropped": ld(&m.disk_dropped),
             "mapsToDisk": ld(&m.maps_to_disk), "mapsDropped": ld(&m.maps_dropped), "mapsForgotten": ld(&m.maps_forgotten),
+            "mapsReleased": ld(&m.maps_released), "droppedEntries": ld(&m.dropped_entries), "droppedDiskBytes": ld(&m.dropped_disk_bytes),
+            "deadRefused": ld(&m.dead_refused), "warmInflight": ld(&m.warm_inflight), "warmMaxInflight": ld(&m.warm_max_inflight),
+            "warmSstsCap": c.warm_ssts_cap as i64, "warmRequestsCap": c.warm_reqs_cap as i64,
         });
         w.insert("maps", doc! {
             "sstsMapped": ssts as i64, "sstBytesMapped": sst_bytes as i64,
-            "sstsWarmed": ld(&tenant_bench::maps::MAPS_SSTS), "mapBlocks": ld(&tenant_bench::maps::MAPS_BLOCKS),
+            "sstsWarmed": ld(&tenant_bench::maps::MAPS_SSTS),
+            "releasedDbs": ld(&tenant_bench::maps::MAPS_RELEASED_DBS), "droppedDbs": ld(&tenant_bench::maps::MAPS_DROPPED_DBS),
             "runs": ld(&tenant_bench::maps::MAPS_RUNS), "fails": ld(&tenant_bench::maps::MAPS_FAILS),
             "busy": ld(&tenant_bench::maps::MAPS_BUSY), "lastMs": ld(&tenant_bench::maps::MAPS_LAST_MS),
         });

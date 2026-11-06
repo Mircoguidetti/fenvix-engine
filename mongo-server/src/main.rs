@@ -245,6 +245,20 @@ struct Args {
     /// Size of the disk floor in GiB (0 = 80% of the free space of its file system at start).
     #[arg(long, default_value_t = 0)]
     counter_disk_gb: u64,
+    /// Most of the counter's RAM the maps keep when the RAM is full, in percent; the active data keeps the rest (R-T1,
+    /// correction 2). The maps beyond it go to the disk floor.
+    #[arg(long, default_value_t = 25)]
+    counter_maps_ram_pct: u64,
+    /// SSTs whose maps are loaded at once, over all databases (R-T1, correction 3).
+    #[arg(long, default_value_t = 16)]
+    maps_ssts_in_flight: u64,
+    /// Map loads (object-store requests) in flight at once, over all databases (R-T1, correction 3).
+    #[arg(long, default_value_t = 32)]
+    maps_requests_in_flight: u64,
+    /// A database closed for this long has its maps released from the counter (they become ordinary data on the disk
+    /// floor and leave like it) (R-T1, correction 1).
+    #[arg(long, default_value_t = 600)]
+    maps_idle_secs: u64,
     /// Ranged GETs at least this long (KiB) are sent as parallel pieces (0 = never; --waiter-tools).
     #[arg(long, default_value_t = 512)]
     split_get_min_kb: u64,
@@ -679,6 +693,10 @@ async fn run() -> Result<()> {
             let gb = if args.counter_disk_gb > 0 { args.counter_disk_gb << 30 } else { tenant_bench::counter::free_disk_bytes(&d).unwrap_or(0) / 10 * 8 };
             (Some(d), gb)
         };
+        tenant_bench::counter::MAPS_RAM_PCT.store(args.counter_maps_ram_pct.min(100), std::sync::atomic::Ordering::Relaxed);
+        tenant_bench::counter::WARM_SSTS_IN_FLIGHT.store(args.maps_ssts_in_flight.max(1), std::sync::atomic::Ordering::Relaxed);
+        tenant_bench::counter::WARM_REQS_IN_FLIGHT.store(args.maps_requests_in_flight.max(1), std::sync::atomic::Ordering::Relaxed);
+        tenant_bench::maps::MAPS_IDLE_SECS.store(args.maps_idle_secs, std::sync::atomic::Ordering::Relaxed);
         anyhow::ensure!(tenant_bench::lifecycle::install_counter(ram, dir, disk)?, "a cache is installed already");
         eprintln!("waiter tools on: counter RAM {} MiB, disk floor {} MiB ({})", ram >> 20, disk >> 20, if args.counter_disk_dir.is_empty() { "none" } else { &args.counter_disk_dir });
         tenant_bench::simstore::SPLIT_GET_MIN.store(args.split_get_min_kb << 10, std::sync::atomic::Ordering::Relaxed);
@@ -761,7 +779,7 @@ async fn run() -> Result<()> {
         let _ = tenant_bench::lifecycle::OWNER_VALID.set(Box::new(move |id: &str| l.disabled.load(std::sync::atomic::Ordering::Relaxed) || l.valid(id)));
     }
     if let Some(c) = tenant_bench::counter::COUNTER.get() {
-        tenant_bench::maps::start(Arc::clone(c), Arc::clone(&lc.store));
+        tenant_bench::maps::start(Arc::clone(c));
         prefetch::install(Arc::clone(c), Arc::clone(&lc.store));
     }
     let lc_for_ctl = Arc::clone(&lc);

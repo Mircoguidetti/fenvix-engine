@@ -10,7 +10,8 @@
 //!   after the other ("viaggi in fila"); requests sent together are one trip.
 //! - [`SplitGetStore`]: a ranged GET larger than `SPLIT_GET_MIN` bytes is sent as pieces of `SPLIT_GET_PIECE` bytes in
 //!   parallel and joined, so a large document (or a large read-ahead) costs one trip of parallel requests instead of
-//!   one long transfer. Same bytes, same order; more requests (each piece is a GET).
+//!   one long transfer. Same bytes, same order; more requests (each piece is a GET), at most `SPLIT_GET_MAX_PARALLEL`
+//!   in flight per GET. Map loads (`counter::warming`) are never split: one map load is one request.
 
 use async_trait::async_trait;
 use bytes::{Bytes, BytesMut};
@@ -221,6 +222,8 @@ impl ObjectStore for SimS3Store {
 pub static SPLIT_GET_MIN: AtomicU64 = AtomicU64::new(512 << 10);
 /// Size of one piece of a split GET (`--split-get-piece-kb`).
 pub static SPLIT_GET_PIECE: AtomicU64 = AtomicU64::new(256 << 10);
+/// Most pieces of one split GET in flight at once (R-T1, correction 3: the fan-out was unbounded).
+pub static SPLIT_GET_MAX_PARALLEL: AtomicU64 = AtomicU64::new(32);
 /// GETs split, and pieces sent for them.
 pub static SPLIT_GETS: AtomicU64 = AtomicU64::new(0);
 pub static SPLIT_PIECES: AtomicU64 = AtomicU64::new(0);
@@ -346,7 +349,7 @@ impl ObjectStore for SplitGetStore {
         let min = SPLIT_GET_MIN.load(Relaxed);
         let piece = SPLIT_GET_PIECE.load(Relaxed).max(4096);
         let (start, end) = match &options.range {
-            Some(GetRange::Bounded(b)) if min > 0 && !options.head && b.end.saturating_sub(b.start) >= min.max(2 * piece) => (b.start, b.end),
+            Some(GetRange::Bounded(b)) if min > 0 && !options.head && !crate::counter::is_warming() && b.end.saturating_sub(b.start) >= min.max(2 * piece) => (b.start, b.end),
             Some(GetRange::Bounded(b))
                 if !options.head && (HEDGE_AFTER_MS.load(Relaxed) > 0 || NEXT_BLOCK_BYTES.load(Relaxed) > 0 && location.as_ref().ends_with(".sst")) =>
             {
@@ -404,7 +407,7 @@ impl ObjectStore for SplitGetStore {
             let loc = location.clone();
             async move { get_body(&inner, &loc, o).await }
         }))
-        .buffered(n)
+        .buffered(n.min(SPLIT_GET_MAX_PARALLEL.load(Relaxed).max(1) as usize))
         .try_collect()
         .await?;
         let meta = results[0].0.clone();

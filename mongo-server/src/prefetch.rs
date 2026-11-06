@@ -9,8 +9,8 @@
 //!   client is scrolling back, "il mese prima") brings the next `READ_AHEAD_DOCS` beyond the frontier. Nothing is read
 //!   ahead without such a read.
 //!
-//! The index entries are maps (pinned on the counter, `maps.rs`): finding the next entries costs no request. The
-//! documents are read through a reader of the database whose cache marks their blocks as taken ahead
+//! The index entries are read like any data (choice (b), 2026-11-06: collection-index blocks are not maps): usually
+//! their block is on the counter already, because the read that gave the signal just read it. The documents are read through a reader of the database whose cache marks their blocks as taken ahead
 //! (`Counter::prefetch_cache`): if nobody reads them they are the first to leave the counter.
 //! The reader sees the database's SSTs, not the writer's memtable: documents written in the last minutes are not read
 //! ahead (they are in the writer's memory already).
@@ -72,6 +72,15 @@ pub fn install(counter: Arc<Counter>, store: Arc<dyn ObjectStore>) {
             }
         }
     });
+}
+
+/// The database was dropped: forget its windows (they hold its index keys) and close its read-ahead reader.
+pub async fn forget(tenant: &str) {
+    WINDOWS.lock().unwrap().retain(|(t, _), _| t != tenant);
+    let d = READERS.lock().await.remove(tenant);
+    if let Some((d, _)) = d {
+        let _ = d.close().await;
+    }
 }
 
 fn lcp(a: &[u8], b: &[u8]) -> Vec<u8> {

@@ -2,21 +2,32 @@
 //! (NVMe), sized from the machine, that holds two kinds of things.
 //!
 //! **The maps** (kitchen: "le mappe sul bancone"): the index, the filters and the stats of every SST of the open
-//! databases, and the data blocks that hold the collections' indexes and metadata (every key that is not a document,
-//! see [`crate::maps`]). They are pinned: data never pushes them out. When the RAM floor is full they move to the disk
-//! floor (coldest first), never to S3. They are forgotten only when their SST leaves the manifest (compaction), or when
-//! even the disk floor is full (counted in `maps_dropped`).
+//! databases (the "stack maps", see [`crate::maps`]). Founder's choice (b), 2026-11-06: only these are maps. The blocks
+//! of the collections' indexes (`idx/`) and metadata are data like the documents: they live on S3 and come to the
+//! counter on demand, under the exit rule below.
+//! Maps are kept before data, but within a share of the RAM: when the RAM is full and the maps take more than
+//! [`MAPS_RAM_PCT`] percent of it, the coldest maps move down to the disk floor (never to S3), so the active data always
+//! keeps at least the rest of the RAM, whatever the maps weigh (reviewer R-T1, correction 2). When the RAM is not full
+//! the maps may use more. Maps leave the counter when their SST leaves the manifest (compaction), when their database
+//! is dropped ([`Counter::drop_ssts`]: gone at once, their bytes on the disk floor overwritten), when their database has
+//! been closed for long ([`Counter::release_ssts`]: they become ordinary data on the disk floor and leave like it), or
+//! when even the disk floor is full (counted in `maps_dropped`).
 //!
 //! **The data blocks**, under an exit rule that protects what comes back (scan resistant, like 2Q / S3-FIFO):
 //! - a new block enters *probation*; a block read ahead ("preso in anticipo", [`PREFETCH`]) enters the *prefetched*
 //!   queue instead and is the first to leave if nobody reads it;
-//! - a block read again while in probation (or a prefetched block read once) is marked; when probation is full its
-//!   oldest block moves to the *protected* LRU if marked, otherwise down to the disk floor;
+//! - a block read again while in probation is marked; a prefetched block read once moves to probation, unmarked (it has
+//!   been read once, like a new block); when probation is full its oldest block moves to the *protected* LRU if marked,
+//!   otherwise down to the disk floor;
 //! - the protected LRU (at most `PROTECTED_SHARE` of the data in RAM) sends its least recently used block down to the
 //!   disk floor;
 //! - a block found on the disk floor comes back to RAM protected (it was read twice).
 //!   A one-off scan of a large collection therefore goes through probation and to disk without touching the blocks of the
 //!   clients that come back often.
+//!
+//! **Loading maps is capped** (R-T1, correction 3): [`crate::maps`] warms at most `warm_ssts` SSTs at once over all
+//! databases, and the map loads it starts ([`warming`]) wait for one of `warm_reqs` permits before they go to the
+//! object store (and are not split in pieces, `simstore.rs`): one load is one request.
 //!
 //! Keys: an SST is named by a ULID that is never reused and its bytes never change, so a cached entry is valid for every
 //! reader of that SST. The counter keys entries by (SST, offset) and ignores slatedb's per-open cache scope: the maps
@@ -35,7 +46,29 @@ use std::sync::{Arc, Mutex};
 tokio::task_local! {
     /// Set around reads that fetch ahead of a request (`counter::prefetching`): their blocks enter the prefetched queue.
     pub static PREFETCH: bool;
+    /// Set around the loading of maps (`counter::warming`): their loads are capped by the counter's `warm_reqs`.
+    pub static WARMING: bool;
 }
+
+/// Run `f` as a load of maps: every map it loads from the object store first takes one of the counter's `warm_reqs`
+/// permits, and large ranges are not split (`simstore::SplitGetStore`), so the requests in flight stay under the cap.
+pub async fn warming<F: std::future::Future>(f: F) -> F::Output {
+    WARMING.scope(true, f).await
+}
+
+/// Inside [`warming`].
+pub fn is_warming() -> bool {
+    WARMING.try_with(|w| *w).unwrap_or(false)
+}
+
+/// Most of the RAM floor the maps keep when the RAM is full (percent; the data keeps the rest). `--counter-maps-ram-pct`.
+pub static MAPS_RAM_PCT: AtomicU64 = AtomicU64::new(25);
+/// SSTs whose maps are loaded at once, over all databases (`--maps-ssts-in-flight`), read when a counter is made.
+pub static WARM_SSTS_IN_FLIGHT: AtomicU64 = AtomicU64::new(16);
+/// Map loads (object-store requests) in flight at once, over all databases (`--maps-requests-in-flight`).
+pub static WARM_REQS_IN_FLIGHT: AtomicU64 = AtomicU64::new(32);
+/// How long a forgotten SST stays refused (a load that was in flight when it was forgotten must not bring it back).
+const DEAD_FOR: std::time::Duration = std::time::Duration::from_secs(600);
 
 /// Run `f` as a read-ahead: the data blocks it brings into the counter are marked as taken ahead.
 pub async fn prefetching<F: std::future::Future>(f: F) -> F::Output {
@@ -48,8 +81,8 @@ fn is_prefetch() -> bool {
 
 /// Share of the RAM data floor the protected LRU may take.
 const PROTECTED_SHARE: f64 = 0.75;
-/// Size of one segment file of the disk floor.
-const SEGMENT_BYTES: u64 = 64 << 20;
+/// Size of one segment file of the disk floor (1 MiB in tests, so a test can fill a small disk floor).
+const SEGMENT_BYTES: u64 = if cfg!(test) { 1 << 20 } else { 64 << 20 };
 
 /// An SST id (the ULID as slatedb serializes it) and an offset in that SST.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
@@ -106,8 +139,6 @@ struct MapSlot {
     entry: CachedEntry,
     size: u64,
     tick: u64,
-    /// A data block of collection indexes or metadata (not an SST index, filter or stats).
-    block: bool,
 }
 
 #[derive(Default)]
@@ -116,17 +147,12 @@ struct Maps {
     lru: BTreeMap<u64, Ck>,
     tick: u64,
     used: u64,
-    /// Of `used`, the map data blocks.
-    block_used: u64,
 }
 
 impl Maps {
     fn take(&mut self, k: &Ck) -> Option<MapSlot> {
         let s = self.slots.remove(k)?;
         self.used -= s.size;
-        if s.block {
-            self.block_used -= s.size;
-        }
         self.lru.remove(&s.tick);
         Some(s)
     }
@@ -172,6 +198,16 @@ pub struct CounterMeters {
     pub maps_to_disk: AtomicU64,
     pub maps_dropped: AtomicU64,
     pub maps_forgotten: AtomicU64,
+    /// Map entries of long-closed databases moved down to the disk floor as ordinary data.
+    pub maps_released: AtomicU64,
+    /// Entries (maps and data, RAM and disk) of dropped databases forgotten, and bytes overwritten on the disk floor.
+    pub dropped_entries: AtomicU64,
+    pub dropped_disk_bytes: AtomicU64,
+    /// Inserts refused because their SST was forgotten (a load in flight when its database was dropped or compacted).
+    pub dead_refused: AtomicU64,
+    /// Map loads in flight now, and the most at once.
+    pub warm_inflight: AtomicU64,
+    pub warm_max_inflight: AtomicU64,
 }
 
 /// The two-floor counter. Use [`Counter::split_cache`] to get the cache slatedb takes.
@@ -181,8 +217,15 @@ pub struct Counter {
     maps: Mutex<Maps>,
     disk: Option<Mutex<Disk>>,
     disk_bytes: u64,
-    /// Data blocks that are maps (collection indexes and metadata), by SST: put there by `maps.rs` before it warms them.
-    map_blocks: Mutex<HashMap<[u8; 26], HashSet<u64>>>,
+    /// The maps loop's registry of the databases it mapped (`maps.rs`).
+    pub(crate) mapped: Mutex<HashMap<String, crate::maps::Mapped>>,
+    /// SSTs forgotten in the last `DEAD_FOR`: nothing of them enters the counter again.
+    dead: Mutex<HashMap<[u8; 26], std::time::Instant>>,
+    /// Caps on the loading of maps (see the module comment).
+    pub warm_ssts: tokio::sync::Semaphore,
+    pub warm_ssts_cap: usize,
+    pub warm_reqs: tokio::sync::Semaphore,
+    pub warm_reqs_cap: usize,
     inflight: Mutex<HashMap<Ck, Arc<tokio::sync::OnceCell<Option<CachedEntry>>>>>,
     pub m: CounterMeters,
 }
@@ -210,7 +253,15 @@ pub fn free_disk_bytes(dir: &std::path::Path) -> Option<u64> {
 
 impl Counter {
     /// A counter with `ram_bytes` of RAM and, when `disk_dir` is given, `disk_bytes` on that directory (emptied first).
+    /// The caps on loading maps come from [`WARM_SSTS_IN_FLIGHT`] and [`WARM_REQS_IN_FLIGHT`].
     pub fn new(ram_bytes: u64, disk_dir: Option<std::path::PathBuf>, disk_bytes: u64) -> std::io::Result<Arc<Self>> {
+        let (s, r) = (WARM_SSTS_IN_FLIGHT.load(Relaxed), WARM_REQS_IN_FLIGHT.load(Relaxed));
+        Self::with_caps(ram_bytes, disk_dir, disk_bytes, s as usize, r as usize)
+    }
+
+    /// [`Counter::new`] with explicit caps: at most `ssts` SSTs warmed at once and `reqs` map loads in flight.
+    pub fn with_caps(ram_bytes: u64, disk_dir: Option<std::path::PathBuf>, disk_bytes: u64, ssts: usize, reqs: usize) -> std::io::Result<Arc<Self>> {
+        let (ssts, reqs) = (ssts.max(1), reqs.max(1));
         let disk = match disk_dir {
             Some(dir) if disk_bytes >= 2 * SEGMENT_BYTES => {
                 std::fs::create_dir_all(&dir)?;
@@ -233,14 +284,19 @@ impl Counter {
             maps: Mutex::new(Maps::default()),
             disk,
             disk_bytes,
-            map_blocks: Mutex::new(HashMap::new()),
+            mapped: Mutex::new(HashMap::new()),
+            dead: Mutex::new(HashMap::new()),
+            warm_ssts: tokio::sync::Semaphore::new(ssts),
+            warm_ssts_cap: ssts,
+            warm_reqs: tokio::sync::Semaphore::new(reqs),
+            warm_reqs_cap: reqs,
             inflight: Mutex::new(HashMap::new()),
             m: CounterMeters::default(),
         }))
     }
 
-    /// slatedb's cache: index, filters and stats go to the maps, data blocks to the data floors (or to the maps when
-    /// [`Counter::mark_map_blocks`] said so).
+    /// slatedb's cache: index, filters and stats go to the maps, data blocks (documents, collection indexes, metadata)
+    /// to the data floors.
     pub fn split_cache(self: &Arc<Self>) -> Arc<dyn DbCache> {
         let block: Arc<dyn DbCache> = Arc::new(BlockView(Arc::clone(self), false));
         let meta: Arc<dyn DbCache> = Arc::new(MetaView(Arc::clone(self)));
@@ -281,32 +337,48 @@ impl Counter {
         }
     }
 
-    /// Say which data blocks of an SST are maps (before they are read): they go to the pinned maps, not to the data floors.
-    pub fn mark_map_blocks(&self, sst: [u8; 26], offsets: impl IntoIterator<Item = u64>) {
-        self.map_blocks.lock().unwrap().entry(sst).or_default().extend(offsets);
+    fn is_dead(&self, sst: &[u8; 26]) -> bool {
+        let d = self.dead.lock().unwrap();
+        !d.is_empty() && d.contains_key(sst)
     }
 
-    fn is_map_block(&self, k: &Ck) -> bool {
-        self.map_blocks.lock().unwrap().get(&k.sst).map(|s| s.contains(&k.off)).unwrap_or(false)
+    fn bury(&self, ssts: &HashSet<[u8; 26]>) {
+        let now = std::time::Instant::now();
+        let mut d = self.dead.lock().unwrap();
+        d.retain(|_, t| now.duration_since(*t) < DEAD_FOR);
+        for s in ssts {
+            d.insert(*s, now);
+        }
     }
 
     /// Forget everything of these SSTs (they left the manifest): maps, data blocks, disk entries.
     pub fn forget_ssts(&self, ssts: &HashSet<[u8; 26]>) {
+        self.forget(ssts, false);
+    }
+
+    /// Forget everything of these SSTs at once, because their database was dropped: maps and data, in RAM and on the
+    /// disk floor, and the bytes they took on the disk floor are overwritten with zeros (the keys of a dropped database
+    /// must not stay on the waiter). Loads of these SSTs still in flight are refused for a while. Returns the entries
+    /// forgotten.
+    pub fn drop_ssts(&self, ssts: &HashSet<[u8; 26]>) -> u64 {
+        let n = self.forget(ssts, true);
+        self.m.dropped_entries.fetch_add(n, Relaxed);
+        n
+    }
+
+    fn forget(&self, ssts: &HashSet<[u8; 26]>, scrub: bool) -> u64 {
         if ssts.is_empty() {
-            return;
+            return 0;
         }
-        {
-            let mut mb = self.map_blocks.lock().unwrap();
-            for s in ssts {
-                mb.remove(s);
-            }
-        }
+        self.bury(ssts);
+        let mut n = 0;
         {
             let mut m = self.maps.lock().unwrap();
             let gone: Vec<Ck> = m.slots.keys().filter(|k| ssts.contains(&k.sst)).copied().collect();
             for k in gone {
                 if m.take(&k).is_some() {
                     self.m.maps_forgotten.fetch_add(1, Relaxed);
+                    n += 1;
                 }
             }
         }
@@ -315,15 +387,72 @@ impl Counter {
             let gone: Vec<Ck> = r.slots.keys().filter(|k| ssts.contains(&k.sst)).copied().collect();
             for k in gone {
                 r.remove(&k);
+                n += 1;
             }
         }
         if let Some(d) = &self.disk {
             let mut d = d.lock().unwrap();
             let gone: Vec<Ck> = d.index.keys().filter(|k| ssts.contains(&k.sst)).copied().collect();
             for k in gone {
-                d.forget(&k);
+                if let Some(l) = d.forget(&k) {
+                    n += 1;
+                    if l.map {
+                        self.m.maps_forgotten.fetch_add(1, Relaxed);
+                    }
+                    if scrub {
+                        if let Some((f, _)) = d.segments.get(&l.seg) {
+                            if f.write_all_at(&vec![0u8; l.len as usize], l.off).is_ok() {
+                                self.m.dropped_disk_bytes.fetch_add(l.len as u64, Relaxed);
+                            }
+                        }
+                    }
+                }
             }
         }
+        n
+    }
+
+    /// The maps of these SSTs (a database closed for long) stop being maps: the ones in RAM move down to the disk floor
+    /// as ordinary data, the ones on the disk floor become ordinary data there. They then leave like data nobody reads
+    /// (the disk floor drops them when their segment is the oldest), unless the database opens again and reads them
+    /// first. Returns the map entries released.
+    pub fn release_ssts(&self, ssts: &HashSet<[u8; 26]>) -> u64 {
+        if ssts.is_empty() {
+            return 0;
+        }
+        let moved: Vec<(Ck, CachedEntry)> = {
+            let mut m = self.maps.lock().unwrap();
+            let ks: Vec<Ck> = m.slots.keys().filter(|k| ssts.contains(&k.sst)).copied().collect();
+            ks.into_iter().filter_map(|k| m.take(&k).map(|s| (k, s.entry))).collect()
+        };
+        let mut n = moved.len() as u64;
+        for (k, e) in moved {
+            self.disk_put(k, &e, false);
+        }
+        if let Some(d) = &self.disk {
+            let mut d = d.lock().unwrap();
+            let ks: Vec<Ck> = d.index.iter().filter(|(k, l)| l.map && ssts.contains(&k.sst)).map(|(k, _)| *k).collect();
+            for k in ks {
+                let len = {
+                    let l = d.index.get_mut(&k).unwrap();
+                    l.map = false;
+                    l.hit = false;
+                    l.len as u64
+                };
+                d.maps_used -= len;
+                n += 1;
+            }
+        }
+        self.m.maps_released.fetch_add(n, Relaxed);
+        n
+    }
+
+    /// (map entries in RAM, data entries in RAM, entries on the disk floor) of these SSTs.
+    pub fn entries_of(&self, ssts: &HashSet<[u8; 26]>) -> (u64, u64, u64) {
+        let m = self.maps.lock().unwrap().slots.keys().filter(|k| ssts.contains(&k.sst)).count() as u64;
+        let r = self.ram.lock().unwrap().slots.keys().filter(|k| ssts.contains(&k.sst)).count() as u64;
+        let d = self.disk.as_ref().map(|d| d.lock().unwrap().index.keys().filter(|k| ssts.contains(&k.sst)).count() as u64).unwrap_or(0);
+        (m, r, d)
     }
 
     // ---------------------------------------------------------------- maps
@@ -351,18 +480,18 @@ impl Counter {
     }
 
     fn maps_put(&self, k: Ck, e: CachedEntry) {
+        if self.is_dead(&k.sst) {
+            self.m.dead_refused.fetch_add(1, Relaxed);
+            return;
+        }
         let size = e.size() as u64 + 64;
-        let block = self.is_map_block(&k);
         {
             let mut m = self.maps.lock().unwrap();
             m.take(&k);
             m.tick += 1;
             let t = m.tick;
-            m.slots.insert(k, MapSlot { entry: e, size, tick: t, block });
+            m.slots.insert(k, MapSlot { entry: e, size, tick: t });
             m.used += size;
-            if block {
-                m.block_used += size;
-            }
             m.lru.insert(t, k);
         }
         if let Some(d) = &self.disk {
@@ -373,12 +502,6 @@ impl Counter {
 
     fn maps_remove(&self, k: &Ck) {
         self.maps.lock().unwrap().take(k);
-    }
-
-    /// Bytes of the maps in RAM that are data blocks (collection indexes, metadata); the rest are SST indexes,
-    /// filters and stats.
-    pub fn maps_block_bytes(&self) -> u64 {
-        self.maps.lock().unwrap().block_used
     }
 
     // ---------------------------------------------------------------- data
@@ -406,6 +529,10 @@ impl Counter {
     }
 
     fn data_put(&self, k: Ck, e: CachedEntry, ahead: bool) {
+        if self.is_dead(&k.sst) {
+            self.m.dead_refused.fetch_add(1, Relaxed);
+            return;
+        }
         let q = if ahead || is_prefetch() {
             self.m.prefetched_in.fetch_add(1, Relaxed);
             Q::Prefetched
@@ -425,41 +552,44 @@ impl Counter {
         self.balance();
     }
 
-    /// Keep RAM within its size: data leaves first (prefetched unused, then probation, then protected), maps leave
-    /// (to disk) only when no data is left in RAM.
+    /// Most bytes of maps the RAM keeps when it is full.
+    fn maps_ram_cap(&self) -> u64 {
+        self.ram_bytes / 100 * MAPS_RAM_PCT.load(Relaxed).min(100)
+    }
+
+    /// Keep RAM within its size. When maps and data together are over it: if the maps take more than their share
+    /// ([`MAPS_RAM_PCT`]), the coldest maps go down to the disk floor; otherwise data leaves (prefetched unused, then
+    /// probation, then protected). So the data always keeps at least the rest of the RAM (R-T1, correction 2).
     fn balance(&self) {
+        let maps_cap = self.maps_ram_cap();
         loop {
             let maps_used = self.maps.lock().unwrap().used;
+            let data_used = self.ram.lock().unwrap().used;
+            if maps_used + data_used <= self.ram_bytes {
+                return;
+            }
             let mut out: Vec<(Ck, CachedEntry, bool)> = Vec::new();
-            {
+            if maps_used > maps_cap {
+                let mut m = self.maps.lock().unwrap();
+                while m.used > maps_cap && m.used + data_used > self.ram_bytes && out.len() < 64 {
+                    let Some((_, &k)) = m.lru.iter().next() else { break };
+                    if let Some(s) = m.take(&k) {
+                        out.push((k, s.entry, true));
+                    }
+                }
+            } else {
                 let mut r = self.ram.lock().unwrap();
                 let budget = self.ram_bytes.saturating_sub(maps_used);
                 let protected_cap = (budget as f64 * PROTECTED_SHARE) as u64;
-                let mut n = 0;
-                while r.used > budget && n < 64 {
+                while r.used > budget && out.len() < 64 {
                     match r.evict_one(protected_cap, &self.m) {
                         Some((k, e)) => out.push((k, e, false)),
                         None => break,
                     }
-                    n += 1;
                 }
-                if out.is_empty() && r.used <= budget {
-                    // data fits: maybe the maps alone are over the RAM size
-                    drop(r);
-                    if maps_used <= self.ram_bytes {
-                        return;
-                    }
-                    let mut m = self.maps.lock().unwrap();
-                    while m.used > self.ram_bytes && out.len() < 64 {
-                        let Some((_, &k)) = m.lru.iter().next() else { break };
-                        if let Some(s) = m.take(&k) {
-                            out.push((k, s.entry, true));
-                        }
-                    }
-                    if out.is_empty() {
-                        return;
-                    }
-                }
+            }
+            if out.is_empty() {
+                return;
             }
             for (k, e, map) in out {
                 if map {
@@ -624,13 +754,13 @@ impl Disk {
         Ok(())
     }
 
-    fn forget(&mut self, k: &Ck) {
-        if let Some(l) = self.index.remove(k) {
-            self.used -= l.len as u64;
-            if l.map {
-                self.maps_used -= l.len as u64;
-            }
+    fn forget(&mut self, k: &Ck) -> Option<Loc> {
+        let l = self.index.remove(k)?;
+        self.used -= l.len as u64;
+        if l.map {
+            self.maps_used -= l.len as u64;
         }
+        Some(l)
     }
 
     fn append(&mut self, k: Ck, buf: &[u8], map: bool, m: &CounterMeters) -> std::io::Result<()> {
@@ -763,7 +893,7 @@ async fn dedup(c: &Counter, k: Ck, loader: CacheLoader, map: bool, ahead: bool) 
 
 /// The maps half (index, filters, stats).
 struct MetaView(Arc<Counter>);
-/// The data half (data blocks; map blocks go to the maps). `ahead`: the view of the read-ahead reader, whose blocks
+/// The data half (data blocks: documents, collection indexes, metadata). `ahead`: the view of the read-ahead reader, whose blocks
 /// enter the prefetched queue.
 struct BlockView(Arc<Counter>, bool);
 
@@ -824,17 +954,29 @@ impl MetaView {
         if let Some(e) = self.0.maps_get(&k) {
             return Ok(CacheFetch::hit(e));
         }
+        let loader = if is_warming() { gated(Arc::clone(&self.0), loader) } else { loader };
         dedup(&self.0, k, loader, true, false).await
     }
+}
+
+/// A map load inside [`warming`]: it waits for one of the counter's `warm_reqs` permits before it goes to the store.
+fn gated(c: Arc<Counter>, loader: CacheLoader) -> CacheLoader {
+    Box::new(move || {
+        Box::pin(async move {
+            let _permit = c.warm_reqs.acquire().await.map_err(|_| slatedb::Error::unavailable("counter: map loads closed".to_string()))?;
+            let n = c.m.warm_inflight.fetch_add(1, Relaxed) + 1;
+            c.m.warm_max_inflight.fetch_max(n, Relaxed);
+            let r = loader().await;
+            c.m.warm_inflight.fetch_sub(1, Relaxed);
+            r
+        })
+    })
 }
 
 #[async_trait]
 impl DbCache for BlockView {
     async fn get_block(&self, key: &CachedKey) -> Result<Option<CachedEntry>, slatedb::Error> {
         let Some(k) = canon(key) else { return Ok(None) };
-        if self.0.is_map_block(&k) {
-            return Ok(self.0.maps_get(&k));
-        }
         let r = self.0.data_get(&k);
         if r.is_none() {
             self.0.m.misses.fetch_add(1, Relaxed);
@@ -853,11 +995,7 @@ impl DbCache for BlockView {
     async fn insert(&self, key: CachedKey, value: CachedEntry) {
         let Some(k) = canon(&key) else { return };
         self.0.m.inserted_bytes.fetch_add(value.size() as u64, Relaxed);
-        if self.0.is_map_block(&k) {
-            self.0.maps_put(k, value);
-        } else {
-            self.0.data_put(k, value, self.1);
-        }
+        self.0.data_put(k, value, self.1);
     }
     async fn remove(&self, key: &CachedKey) {
         if let Some(k) = canon(key) {
@@ -875,12 +1013,10 @@ impl DbCache for BlockView {
         let Some(k) = canon(&key) else {
             return Ok(CacheFetch::miss(loader().await?));
         };
-        let map = self.0.is_map_block(&k);
-        let hit = if map { self.0.maps_get(&k) } else { self.0.data_get(&k) };
-        if let Some(e) = hit {
+        if let Some(e) = self.0.data_get(&k) {
             return Ok(CacheFetch { entry: e, lookup: CacheLookup::Hit });
         }
-        dedup(&self.0, k, loader, map, self.1).await
+        dedup(&self.0, k, loader, false, self.1).await
     }
 }
 
@@ -1067,7 +1203,10 @@ mod tests {
             assert_eq!(&v[..], &val[..]);
         }
         let (mu, mn, du, _, _) = c.ram_usage();
-        assert!(mn > 0 && mu > 0, "maps not kept: {mu} {mn}");
+        // maps are kept, in RAM within their share or on the disk floor (R-T1 correction 2: with 256 KiB of RAM the
+        // SST index alone is over the maps' share, so it lives on the disk floor)
+        let disk_maps = c.disk_usage().1;
+        assert!(mn > 0 && mu > 0 || disk_maps > 0, "maps not kept: {mu} {mn} {disk_maps}");
         assert!(du <= 256 << 10, "RAM data over its size: {du}");
         let (disk_used, _, disk_n) = c.disk_usage();
         assert!(disk_used > 0 && disk_n > 0, "nothing went to the disk floor");
