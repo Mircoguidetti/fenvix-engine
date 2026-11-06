@@ -1,0 +1,8 @@
+1000 writes/s: MEASURED crossings per write: base-near 2.33, base-far 3.20, pair 2.33
+  today, weighted 1/3 near + 2/3 far (MEASURED parts): 2.91 -> pair -20%
+  today + 1.0 for a cross-zone spare feed (ESTIMATED, not measured): 3.91 -> pair -41%
+  leader-near customers only (MEASURED): pair vs today -0%
+5000 writes/s: MEASURED crossings per write: base-near 2.11, base-far 3.10, pair 2.11
+  today, weighted 1/3 near + 2/3 far (MEASURED parts): 2.77 -> pair -24%
+  today + 1.0 for a cross-zone spare feed (ESTIMATED, not measured): 3.77 -> pair -44%
+  leader-near customers only (MEASURED): pair vs today -0%

@@ -19,7 +19,13 @@ NOT have durable at the instant of the kill is counted (they reached it later fr
 
 The spare's and keeper's indexes are sampled 250 ms after the kill (Status is a 100 ms snapshot).
 
-Usage: pair_kill9.py OUT [--cycles 32] [--seed 1] [--delay-us 500]
+Usage: pair_kill9.py OUT [--cycles 32] [--seed 1] [--delay-us 500] [--spare-down-ms 0]
+
+--spare-down-ms N (review): kill -9 of the SPARE N ms before each kill/stop of the waiter, and restart it right after.
+While the spare is down every acknowledged write is on copy 1 and the keeper ONLY, so the waiter dies with acknowledged
+writes the spare lacks: the keeper must lead, bring the spare up to date and hand over. The default run never takes this
+path (the spare and the keeper receive at the same speed; and a merely FROZEN spare loses nothing, the in-flight records
+wait in the proxy and in its socket buffers).
 """
 import csv, json, os, random, signal, subprocess, sys, time
 
@@ -36,6 +42,7 @@ OUT = os.path.abspath(A[0])
 CYCLES = int(opt(A, '--cycles', '32'))
 random.seed(int(opt(A, '--seed', '1')))
 DELAY = int(opt(A, '--delay-us', '500'))
+SPARE_DOWN = int(opt(A, '--spare-down-ms', '0'))
 os.makedirs(OUT, exist_ok=True)
 LOG = open(os.path.join(OUT, 'kill9.log'), 'a')
 EV = open(os.path.join(OUT, 'cycles.jsonl'), 'a')
@@ -101,7 +108,7 @@ def panicked():
 
 
 def main():
-    say('START cycles', CYCLES, 'delay_us', DELAY)
+    say('START cycles', CYCLES, 'delay_us', DELAY, 'spare_down_ms', SPARE_DOWN)
     ld = cell.up(flusher=False)
     say('first leader', ld)
     acked = os.path.join(OUT, 'acked.csv')
@@ -133,11 +140,16 @@ def main():
         mode = 'stop' if k % 4 == 3 else 'kill9'
         time.sleep(random.uniform(1, 4))
         old_term = st[lid]['term']
+        if SPARE_DOWN:
+            cell.kill(f'r{spare}')
+            time.sleep(SPARE_DOWN / 1000)
         tk = time.time()
         if mode == 'kill9':
             cell.kill(f'r{lid}')
         else:
             cell.kill(f'r{lid}', signal.SIGSTOP)
+        if SPARE_DOWN:
+            cell.start_replica(spare)
         # Status is a snapshot the replica refreshes every 100 ms: sample 250 ms after the kill, when the snapshot shows
         # everything the spare and the keeper received from the waiter before it died (no new leader can exist yet: the
         # election timeouts are 1-2 s)
@@ -210,6 +222,8 @@ def main():
     res['acked_not_on_spare_at_kill_per_cycle'] = gaps
     res['failover_s'] = [e.get('failover_s') for e in events]
     res['new_leader'] = [e.get('new_leader') for e in events]
+    res['keeper_led_cycles'] = sum(1 for e in events if e.get('new_leader') == 2)
+    res['spare_down_ms'] = SPARE_DOWN
     res['zombie_outcomes'] = [{k: (len(v) if k == 'committed' else v) for k, v in (e.get('zombie') or {}).items()} for e in events]
     json.dump(res, open(os.path.join(OUT, 'result.json'), 'w'), indent=1)
     say('RESULT', json.dumps({k: v for k, v in res.items() if not isinstance(v, list)}))

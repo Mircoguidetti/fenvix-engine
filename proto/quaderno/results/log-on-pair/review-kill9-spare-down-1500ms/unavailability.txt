@@ -1,0 +1,3 @@
+results/log-on-pair/kill9-after-fix: kill -9 cycles 24: median 1.50 s, max 4.78 s; keeper seen leading next in 0; all cycles median 1.59 s
+results/log-on-pair/kill9-after-fix-sampled-250ms: kill -9 cycles 24: median 1.52 s, max 1.99 s; keeper seen leading next in 0; all cycles median 1.56 s
+results/log-on-pair/review-kill9-spare-down-1500ms: kill -9 cycles 18: median 3.05 s, max 4.96 s; keeper seen leading next in 12 (median 3.07 s); all cycles median 3.05 s

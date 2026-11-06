@@ -1,0 +1,11 @@
+=== 1000 writes/s
+base-near  ack p50 2.01 ms  p99 3.98 ms (reps 4.00, 5.67, 3.55, 3.76, 3.98)  p99.9 9.97 ms  | invalid: none
+           cross-zone bytes/write 1669  one copy (r0->r1) 716  crossings 2.33  | r0 CPU 430 us/record
+           disk: reads 0/s 0.0 MB/s, writes 6286/s, flushes 2777/s  | cores {'0': 24.0, '1': 24.0, '2': 55.0, '3': 52.0}
+pair-2000  ack p50 2.17 ms  p99 4.34 ms (reps 4.43, 5.01, 4.13, 4.34, 4.22)  p99.9 14.52 ms  | invalid: none
+           cross-zone bytes/write 1667  one copy (r0->r1) 716  crossings 2.33  | r0 CPU 446 us/record  mongo-server 0.51 cores
+           disk: reads 0/s 0.0 MB/s, writes 6398/s, flushes 2805/s  | reads done 2000/s p99 3.2 ms  | cores {'0': 45.0, '1': 45.0, '2': 69.0, '3': 63.0}
+
+1000 writes/s: pair-2000 - base-near: p99 +0.36 ms, p50 +0.15 ms
+
+VERDICT: KEEP: p99 +0.36 ms at 2,000 reads/s and 1,000 writes/s (pair-2000 4.34 ms vs base-near 3.98 ms, medians of 5 and 5)
