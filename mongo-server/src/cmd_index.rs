@@ -351,7 +351,7 @@ impl Server {
         let n_indexes = 1 + g.indexes(coll).await?.iter().filter(|i| i.state == State::Ready).count() as i32;
         let uuid = g.collection_uuid(coll).await?;
         let mut ops: Vec<Op> = Vec::new();
-        for prefix in [doc_prefix(coll), idx_collection_prefix(coll), crate::natural::prefix(coll), crate::collopts::idc_prefix(coll)] {
+        for prefix in [doc_prefix(coll), idx_collection_prefix(coll), crate::natural::prefix(coll), crate::collopts::idc_prefix(coll), crate::custkey::loc_prefix(coll)] {
             for (k, _) in g.scan(&prefix).await? {
                 ops.push(Op::Delete(k.to_vec()));
             }
@@ -400,7 +400,7 @@ impl Server {
         let dropped_uuid = if target_exists { Some(g.collection_uuid(&to).await?) } else { None };
         let mut ops: Vec<Op> = Vec::new();
         if target_exists {
-            for prefix in [doc_prefix(&to), idx_collection_prefix(&to), crate::natural::prefix(&to), crate::collopts::idc_prefix(&to)] {
+            for prefix in [doc_prefix(&to), idx_collection_prefix(&to), crate::natural::prefix(&to), crate::collopts::idc_prefix(&to), crate::custkey::loc_prefix(&to)] {
                 for (k, _) in g.scan(&prefix).await? {
                     ops.push(Op::Delete(k.to_vec()));
                 }
@@ -412,7 +412,7 @@ impl Server {
             ops.push(Op::Delete(crate::capped::stat_key(&to)));
             ops.push(Op::Delete(crate::collstat::key(&to)));
         }
-        for (old_prefix, new_prefix) in [(doc_prefix(&from), doc_prefix(&to)), (idx_collection_prefix(&from), idx_collection_prefix(&to)), (crate::natural::prefix(&from), crate::natural::prefix(&to)), (crate::collopts::idc_prefix(&from), crate::collopts::idc_prefix(&to))] {
+        for (old_prefix, new_prefix) in [(doc_prefix(&from), doc_prefix(&to)), (idx_collection_prefix(&from), idx_collection_prefix(&to)), (crate::natural::prefix(&from), crate::natural::prefix(&to)), (crate::collopts::idc_prefix(&from), crate::collopts::idc_prefix(&to)), (crate::custkey::loc_prefix(&from), crate::custkey::loc_prefix(&to))] {
             for (k, v) in g.scan(&old_prefix).await? {
                 let mut nk = new_prefix.clone();
                 nk.extend_from_slice(&k[old_prefix.len()..]);
@@ -834,7 +834,7 @@ impl Server {
             if g.collections().await?.iter().any(|n| n == coll) {
                 let mut opts = doc! { "uuid": Bson::Binary(bson::Binary { subtype: bson::spec::BinarySubtype::Uuid, bytes: g.collection_uuid(coll).await? }) };
                 if let Some(o) = g.coll_opts(coll).await? {
-                    opts.extend(o.raw.iter().filter(|(k, _)| !matches!(k.as_str(), "capped" | "size" | "max" | "collation" | "storageEngine" | "indexOptionDefaults")).map(|(k, v)| (k.clone(), v.clone())));
+                    opts.extend(o.raw.iter().filter(|(k, _)| !matches!(k.as_str(), "capped" | "size" | "max" | "collation" | "storageEngine" | "indexOptionDefaults" | crate::custkey::RAW_KEY)).map(|(k, v)| (k.clone(), v.clone())));
                 }
                 let uuid = match opts.get("uuid") { Some(Bson::Binary(b)) => b.bytes.clone(), _ => Vec::new() };
                 Some((opts, uuid))

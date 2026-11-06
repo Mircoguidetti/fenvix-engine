@@ -16,7 +16,7 @@ use object_store::path::Path;
 use object_store::{ObjectStore, ObjectStoreExt, PutPayload};
 use slatedb::admin::Admin;
 use slatedb::config::{
-    CompactionWorkerOptions, CompactorOptions, DbReaderOptions, GarbageCollectorDirectoryOptions,
+    CompactorOptions, DbReaderOptions, GarbageCollectorDirectoryOptions,
     GarbageCollectorOptions, Settings,
 };
 use slatedb::{CompactorBuilder, Db, DbReader, DbReaderMode, WriteHandle};
@@ -458,7 +458,7 @@ pub(crate) fn writer_builder_in(id: &str, store: &Arc<dyn ObjectStore>, scope: O
         // Durable writes flush explicitly; the periodic flush only has to bound the relaxed ones.
         settings.flush_interval = Some(relaxed);
     }
-    let b = Db::builder(tenant_path(id), crate::counting::owned(store, id)).with_settings(settings).with_block_cache_policy(flush_cache_policy());
+    let b = Db::builder(tenant_path(id), crate::counting::owned(store, id)).with_settings(settings).with_block_cache_policy(flush_cache_policy()).with_sst_block_size(crate::tiered::block_size());
     let b = match filter_policies() {
         Some(p) => b.with_filter_policies(p),
         None => b,
@@ -493,6 +493,7 @@ pub fn writer_settings() -> Settings {
     if l0_bytes > 0 {
         s.l0_sst_size_bytes = l0_bytes as usize;
     }
+    s.compression_codec = crate::tiered::codec();
     s.garbage_collector_options = None;
     s.compactor_options = None;
     s.manifest_poll_interval = Duration::from_secs(WRITER_POLL_SECS.load(std::sync::atomic::Ordering::Relaxed));
@@ -1367,19 +1368,28 @@ pub(crate) async fn compact_tenant_pass_with(
     };
     let mut opts = CompactorOptions::default();
     opts.poll_interval = Duration::from_millis(50);
-    let mut worker = CompactionWorkerOptions::default();
-    worker.compactions_poll_interval = Duration::from_millis(50);
-    opts.worker = Some(worker);
+    // No embedded worker: it would write 4 KiB blocks without compression (M29); the separate worker writes the
+    // configured format (`tiered::worker_builder`).
+    opts.worker = None;
     let started = Instant::now();
     let cb = CompactorBuilder::new(tenant_path(id), crate::counting::owned_background(&store, id)).with_options(opts);
     let cb = match filter_policies() {
         Some(p) => cb.with_filter_policies(p),
         None => cb,
     };
+    let cb = match crate::tiered::scheduler() {
+        Some(s) => cb.with_scheduler_supplier(s),
+        None => cb,
+    };
     let compactor = Arc::new(cb.build());
+    let worker = Arc::new(crate::tiered::worker_builder(tenant_path(id).into(), crate::counting::owned_background(&store, id), filter_policies()).build().await?);
     let mut runner = {
         let c = Arc::clone(&compactor);
-        tokio::spawn(async move { c.run().await })
+        let w = Arc::clone(&worker);
+        tokio::spawn(async move {
+            let (c, w) = tokio::join!(c.run(), w.run());
+            c.and(w)
+        })
     };
     let mut l0_after = l0_before;
     let mut hooks = hooks;
@@ -1510,9 +1520,11 @@ pub(crate) async fn compact_tenant_pass_with(
     // after the deadline is at most `stop_limit` (`COMPACTOR_STOP_LIMIT`, plus at most 2 s for the round in progress). A `stop` that hits
     // its bound is not an error: the next round stops again, and `run` returning is what ends the wait.
     let stop_once = || async {
-        match tokio::time::timeout(Duration::from_secs(1), compactor.stop()).await {
-            Ok(r) => r.map_err(anyhow::Error::from),
-            Err(_) => Ok(()),
+        let w = tokio::time::timeout(Duration::from_secs(1), worker.stop()).await;
+        match (tokio::time::timeout(Duration::from_secs(1), compactor.stop()).await, w) {
+            (Ok(r), Ok(w)) => r.and(w).map_err(anyhow::Error::from),
+            (Ok(r), Err(_)) => r.map_err(anyhow::Error::from),
+            (Err(_), _) => Ok(()),
         }
     };
     let stop_until = Instant::now() + stop_limit;

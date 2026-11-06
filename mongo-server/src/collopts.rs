@@ -20,6 +20,8 @@ pub struct CollOpts {
     pub clustered: Option<String>,
     /// `timeseries`: the time field and the meta field.
     pub series: Option<(String, Option<String>)>,
+    /// The customer key (`custkey.rs`): documents stored customer first.
+    pub customer: Option<String>,
 }
 
 impl CollOpts {
@@ -34,7 +36,8 @@ impl CollOpts {
             _ => None,
         };
         let series = raw.get_document("timeseries").ok().map(|t| (t.get_str("timeField").unwrap_or_default().to_string(), t.get_str("metaField").ok().map(str::to_string)));
-        Arc::new(CollOpts { raw, collation, cap, validator, images, clustered, series })
+        let customer = raw.get_str(crate::custkey::RAW_KEY).ok().map(str::to_string);
+        Arc::new(CollOpts { raw, collation, cap, validator, images, clustered, series, customer })
     }
 }
 

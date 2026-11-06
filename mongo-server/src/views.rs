@@ -442,7 +442,8 @@ impl Server {
             let g = self.dbs.read(db).await?;
             if g.collections().await?.iter().any(|n| n == coll) {
                 let mut shown = doc! { "uuid": "<uuid>" };
-                let o = g.coll_opts(coll).await?.map(|o| o.raw.clone()).unwrap_or_default();
+                let mut o = g.coll_opts(coll).await?.map(|o| o.raw.clone()).unwrap_or_default();
+                crate::custkey::strip(&mut o);
                 shown.extend(o);
                 let body = crate::update::fmt_doc(&shown).replacen("uuid: \"<uuid>\"", &format!("uuid: UUID(\"{}\")", crate::cmd::fake_uuid()), 1);
                 return Err(MongoError::namespace_exists(format!("namespace {ns} already exists, but with different options: {body}")));

@@ -165,6 +165,8 @@ pub struct Entry {
     pub(crate) nat: HashMap<String, (u64, u64)>,
     /// Collection options (default collation) by collection; cleared with `nat`.
     pub(crate) copts: HashMap<String, Option<Arc<crate::collopts::CollOpts>>>,
+    /// Collections whose customer key (`custkey.rs`) was decided since the options were loaded; cleared with `copts`.
+    pub(crate) ckey_decided: std::collections::HashSet<String>,
     /// Storage counters of the collections (`collstat.rs`), by stored key, as the latest state has them (`None`: none
     /// stored); follows every write of the keys (`apply_mode`); cleared with `copts`.
     pub(crate) sstat: HashMap<Vec<u8>, Option<crate::collstat::CollStat>>,
@@ -249,6 +251,7 @@ impl Dbs {
                     inflight: self.inflight_counter(name),
                     nat: HashMap::new(),
                     copts: HashMap::new(),
+                    ckey_decided: Default::default(),
                     sstat: HashMap::new(),
                     meta: Default::default(),
                 }))
@@ -326,6 +329,7 @@ impl Dbs {
                         inflight: self.inflight_counter(name),
                     nat: HashMap::new(),
                     copts: HashMap::new(),
+                    ckey_decided: Default::default(),
                     sstat: HashMap::new(),
                     meta: Default::default(),
                     }))
@@ -554,6 +558,7 @@ impl Entry {
     pub async fn abandon(&mut self) -> bool {
         self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
         if let Some(l) = crate::locallog::get() {
@@ -620,6 +625,7 @@ impl Entry {
                 }
                 self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
                 self.tenant = Some(t);
@@ -647,6 +653,7 @@ impl Entry {
         let had = self.tenant.is_some();
         self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
         if let Some(t) = self.tenant.take() {
@@ -756,6 +763,7 @@ impl Entry {
             lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
             self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
             self.tenant = Some(self.lc.create(&self.name).await?);
@@ -840,6 +848,7 @@ impl Entry {
         }
         self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
         if let Some(t) = self.tenant.take() {
@@ -1009,6 +1018,7 @@ impl Entry {
     /// Forget the cached options of a collection (they changed behind the cache's back).
     pub fn forget_coll_opts(&mut self, coll: &str) {
         self.copts.remove(coll);
+        self.ckey_decided.remove(coll);
     }
 
     /// The UUID of a collection: made (and stored) the first time it is asked for.
@@ -1050,7 +1060,18 @@ impl Entry {
     }
 
     pub fn set_coll_opts(&mut self, coll: &str, o: Option<Arc<crate::collopts::CollOpts>>) {
+        if o.is_none() {
+            self.ckey_decided.remove(coll);
+        }
         self.copts.insert(coll.to_string(), o);
+    }
+
+    pub fn ckey_decided(&self, coll: &str) -> bool {
+        self.ckey_decided.contains(coll)
+    }
+
+    pub fn note_ckey_decided(&mut self, coll: &str) {
+        self.ckey_decided.insert(coll.to_string());
     }
 
     pub fn indexes_op(coll: &str, idx: &[crate::index::IndexDef]) -> Result<Op> {
@@ -1123,6 +1144,7 @@ impl Entry {
             self.leases.acquire(&self.name).await?;
             self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
             self.tenant = Some(self.lc.create(&self.name).await?);
@@ -1188,7 +1210,15 @@ impl Entry {
     }
 
     pub async fn get_doc(&mut self, coll: &str, id: &Bson) -> Result<Option<Document>> {
-        match self.get(&layout::doc_key(coll, id)).await? {
+        let key = match crate::custkey::of_opts(self.coll_opts(coll).await?.as_ref()) {
+            // customer-first documents: the locator holds the document's suffix
+            Some(_) => match self.get(&crate::custkey::loc_key(coll, id)).await? {
+                Some(suf) => [layout::doc_prefix(coll), suf.to_vec()].concat(),
+                None => return Ok(None),
+            },
+            None => layout::doc_key(coll, id),
+        };
+        match self.get(&key).await? {
             Some(v) => Ok(Some(Document::from_reader(&v[..])?)),
             None => Ok(None),
         }
@@ -1361,7 +1391,14 @@ impl ReadView {
     }
 
     pub async fn get_doc(&self, coll: &str, id: &Bson) -> Result<Option<Document>> {
-        match self.get(&layout::doc_key(coll, id)).await? {
+        let key = match crate::custkey::of_opts(self.coll_opts(coll).await?.as_ref()) {
+            Some(_) => match self.get(&crate::custkey::loc_key(coll, id)).await? {
+                Some(suf) => [layout::doc_prefix(coll), suf.to_vec()].concat(),
+                None => return Ok(None),
+            },
+            None => layout::doc_key(coll, id),
+        };
+        match self.get(&key).await? {
             Some(v) => Ok(Some(Document::from_reader(&v[..])?)),
             None => Ok(None),
         }

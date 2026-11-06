@@ -647,7 +647,9 @@ impl Server {
         let mut uuids: HashMap<String, Vec<u8>> = HashMap::new();
         for n in &names {
             if let Some(o) = g.coll_opts(n).await? {
-                options_of.insert(n.clone(), o.raw.clone());
+                let mut raw = o.raw.clone();
+                crate::custkey::strip(&mut raw);
+                options_of.insert(n.clone(), raw);
             }
             if !name_only {
                 uuids.insert(n.clone(), g.collection_uuid(n).await?);
@@ -729,12 +731,29 @@ impl Server {
                 raw.extend(i);
             }
         }
-        let raw = crate::collopts::canonical(&raw);
+        let mut raw = crate::collopts::canonical(&raw);
+        // the customer key (custkey.rs): the `customerKey` option, or `--customer-key` for this collection
+        let explicit_ckey = match cmd.get("customerKey") {
+            None => None,
+            Some(Bson::String(f)) if !f.is_empty() && !f.starts_with('$') => Some(f.clone()),
+            Some(v) => return Err(MongoError::new(2, "BadValue", format!("customerKey must be a field name, not {v}"))),
+        };
+        if explicit_ckey.is_some() && !crate::custkey::allowed(coll, &raw) {
+            return Err(MongoError::new(72, "InvalidOptions", "customerKey is not supported on capped, time-series, clustered or system collections".into()));
+        }
+        if let Some(f) = explicit_ckey.clone().or_else(|| crate::custkey::configured(db, coll).filter(|_| crate::custkey::allowed(coll, &raw))) {
+            raw.insert(crate::custkey::RAW_KEY, f);
+        }
         let mut g = self.dbs.lock(db).await;
         let mut names = g.collections().await?;
         if names.iter().any(|n| n == coll) {
             // MongoDB 7.0: creating an existing collection with the same options succeeds.
-            let existing = g.coll_opts(coll).await?.map(|o| o.raw.clone()).unwrap_or_default();
+            let mut existing = g.coll_opts(coll).await?.map(|o| o.raw.clone()).unwrap_or_default();
+            if explicit_ckey.is_none() {
+                // (a customer key the server added on its own is not an option the client gave)
+                crate::custkey::strip(&mut existing);
+                crate::custkey::strip(&mut raw);
+            }
             let has_options = cmd.iter().any(|(k, v)| {
                 !matches!(k.as_str(), "create" | "$db" | "lsid" | "$clusterTime" | "writeConcern" | "readConcern" | "comment" | "txnNumber" | "$readPreference" | "collation" | "capped" | "size" | "max" | "validator" | "validationLevel" | "validationAction" | "storageEngine" | "indexOptionDefaults")
                     && !(k == "capped" && matches!(v, Bson::Boolean(false)))
@@ -752,7 +771,8 @@ impl Server {
         }
         names.push(coll.to_string());
         let mut ops = vec![Entry::collections_op(&names)?];
-        let options = raw.clone();
+        let mut options = raw.clone();
+        crate::custkey::strip(&mut options);
         {
             let mut initial: Vec<crate::index::IndexDef> = Vec::new();
             if let Some(t) = special.options.get_document("timeseries").ok() {

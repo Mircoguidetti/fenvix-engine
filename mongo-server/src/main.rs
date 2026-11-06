@@ -16,6 +16,7 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 pub static malloc_conf: &[u8] = b"background_thread:true\0";
 
 mod agg;
+mod custkey;
 mod prefetch;
 mod hostinfo;
 mod auth;
@@ -442,6 +443,19 @@ struct Args {
     /// nothing kept) or off.
     #[arg(long, default_value = "cache")]
     tls_session_resumption: String,
+    /// Customer-first keys (custkey.rs): comma separated `[db.]collection=field`; a named collection takes the customer
+    /// key when it is created or first written while empty. Off when empty (the default).
+    #[arg(long, default_value = "")]
+    customer_key: String,
+    /// SST block size in KiB, for the writers' flushes and the compaction's output (M29: 64).
+    #[arg(long, default_value_t = 64)]
+    sst_block_kb: u32,
+    /// SST block compression: lz4 (M29: 2.41x on chat-like documents), zstd or none.
+    #[arg(long, default_value = "lz4")]
+    sst_compression: String,
+    /// T of the tiered-levels compaction scheduler (M26-M31: 4); 0 = SlateDB's size-tiered scheduler.
+    #[arg(long, default_value_t = 4)]
+    compaction_tiers: u32,
 }
 
 async fn handle_connection(server: Arc<Server>, tls: Arc<tls::TlsConfig>, tcp: TcpStream, conn_id: i64) {
@@ -668,6 +682,10 @@ async fn run() -> Result<()> {
     tenant_bench::lifecycle::EXPLICIT_FLUSH.store(args.wal_flush_ms == 0, std::sync::atomic::Ordering::Relaxed);
     dbs::set_wake_limit(args.max_concurrent_wakes);
     tenant_bench::lifecycle::MEMTABLE_MAX_BYTES.store(args.memtable_max_mb << 20, std::sync::atomic::Ordering::Relaxed);
+    custkey::configure(&args.customer_key)?;
+    tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::tiered::set_compression(&args.sst_compression)?;
+    tenant_bench::tiered::TIERS.store(args.compaction_tiers, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::FILTER_BITS.store(args.filter_bits_per_key.clamp(1, 64), std::sync::atomic::Ordering::Relaxed);
     if args.waiter_tools {
         let ram = if args.counter_ram_mb > 0 { args.counter_ram_mb << 20 } else { tenant_bench::counter::machine_ram_bytes() / 100 * args.counter_ram_pct.min(90) };
