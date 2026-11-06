@@ -1,0 +1,6 @@
+20:21:58 START cases ['base-near', 'pair-2000'] writes [1000] reps 1 secs 60 delay_us 500 docs 4000000 ms_mem_mb 1024
+20:21:59 PHASE base-near-w1000-r1 leader 0
+20:23:08   ack p50 1.99 ms p99 4.97 ms ok/s 1000 | reads/s 0 p99 - ms | cores {0: 19.2, 1: 18.2, 2: 52.3, 3: 50.0} | disk r 0/s 0.0 MB/s w 6411/s | r0 cpu 24.43 s
+20:23:11 PHASE pair-2000-w1000-r1 leader 0
+20:24:36   ack p50 2.13 ms p99 6.44 ms ok/s 1000 | reads/s 2000 p99 5.359 ms | cores {0: 48.3, 1: 47.8, 2: 66.9, 3: 59.7} | disk r 0/s 0.0 MB/s w 6389/s | r0 cpu 25.39 s
+20:24:37 END

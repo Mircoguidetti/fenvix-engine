@@ -1,0 +1,13 @@
+mongo-server listening on 127.0.0.1:27018 (idle close after 100000 s, holder 15953-e7c1ecd2, lease ttl 30 s)
+LEASE process_lease tenant=- holder=15953-e7c1ecd2 unix_ms=1793996912474 inc=c16e7dd3ca8935bf gen=1
+LEASE process_lease_revoked tenant=pair holder=15953-e7c1ecd2 unix_ms=1793996912487 of=15103-59830d9a
+LEASE acquired tenant=pair holder=15953-e7c1ecd2 unix_ms=1793996912489 takeover_from=15103-59830d9a
+LEASE takeover_wake tenant=pair holder=15953-e7c1ecd2 unix_ms=1793996912494 unclean=false takeover_from=15103-59830d9a
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true

@@ -1,0 +1,65 @@
+mongo-server listening on 127.0.0.1:27018 (idle close after 100000 s, holder 9955-8d19dd29, lease ttl 30 s)
+LEASE process_lease tenant=- holder=9955-8d19dd29 unix_ms=1793995750232 inc=b176e74e91b1508a gen=1
+LEASE process_lease_revoked tenant=pair holder=9955-8d19dd29 unix_ms=1793995750334 of=9130-144d8f88
+LEASE acquired tenant=pair holder=9955-8d19dd29 unix_ms=1793995750335 takeover_from=9130-144d8f88
+LEASE takeover_wake tenant=pair holder=9955-8d19dd29 unix_ms=1793995750341 unclean=false takeover_from=9130-144d8f88
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+mongo-server listening on 127.0.0.1:27018 (idle close after 100000 s, holder 10794-5b0f58c5, lease ttl 30 s)
+LEASE process_lease tenant=- holder=10794-5b0f58c5 unix_ms=1793995911085 inc=96e76fc7adf9ad0c gen=1
+LEASE process_lease_revoked tenant=pair holder=10794-5b0f58c5 unix_ms=1793995911093 of=9955-8d19dd29
+LEASE acquired tenant=pair holder=10794-5b0f58c5 unix_ms=1793995911167 takeover_from=9955-8d19dd29
+LEASE takeover_wake tenant=pair holder=10794-5b0f58c5 unix_ms=1793995911173 unclean=false takeover_from=9955-8d19dd29
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+mongo-server listening on 127.0.0.1:27018 (idle close after 100000 s, holder 11630-2e460468, lease ttl 30 s)
+LEASE process_lease tenant=- holder=11630-2e460468 unix_ms=1793996071153 inc=b10f287836f01278 gen=1
+LEASE process_lease_revoked tenant=pair holder=11630-2e460468 unix_ms=1793996071153 of=10794-5b0f58c5
+LEASE acquired tenant=pair holder=11630-2e460468 unix_ms=1793996071154 takeover_from=10794-5b0f58c5
+LEASE takeover_wake tenant=pair holder=11630-2e460468 unix_ms=1793996071160 unclean=false takeover_from=10794-5b0f58c5
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+mongo-server listening on 127.0.0.1:27018 (idle close after 100000 s, holder 12500-f2237c19, lease ttl 30 s)
+LEASE process_lease tenant=- holder=12500-f2237c19 unix_ms=1793996232197 inc=72e58e88cf4ae104 gen=1
+LEASE process_lease_revoked tenant=pair holder=12500-f2237c19 unix_ms=1793996232231 of=11630-2e460468
+LEASE acquired tenant=pair holder=12500-f2237c19 unix_ms=1793996232333 takeover_from=11630-2e460468
+LEASE takeover_wake tenant=pair holder=12500-f2237c19 unix_ms=1793996232340 unclean=false takeover_from=11630-2e460468
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+mongo-server listening on 127.0.0.1:27018 (idle close after 100000 s, holder 13351-12ae5e0c, lease ttl 30 s)
+LEASE process_lease tenant=- holder=13351-12ae5e0c unix_ms=1793996392423 inc=bad83631ad31df6b gen=1
+LEASE process_lease_revoked tenant=pair holder=13351-12ae5e0c unix_ms=1793996392425 of=12500-f2237c19
+LEASE acquired tenant=pair holder=13351-12ae5e0c unix_ms=1793996392548 takeover_from=12500-f2237c19
+LEASE takeover_wake tenant=pair holder=13351-12ae5e0c unix_ms=1793996392556 unclean=false takeover_from=12500-f2237c19
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true

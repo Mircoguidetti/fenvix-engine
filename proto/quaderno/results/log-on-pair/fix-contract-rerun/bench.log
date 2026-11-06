@@ -1,0 +1,22 @@
+19:54:39 START cases ['base-near', 'pair-2000'] writes [1000] reps 5 secs 60 delay_us 500 docs 4000000 ms_mem_mb 1024
+19:54:41 PHASE base-near-w1000-r1 leader 0
+19:55:49   ack p50 1.92 ms p99 4.25 ms ok/s 1000 | reads/s 0 p99 - ms | cores {0: 20.0, 1: 18.3, 2: 49.4, 3: 46.8} | disk r 0/s 0.0 MB/s w 6233/s | r0 cpu 23.40 s
+19:55:52 PHASE pair-2000-w1000-r1 leader 0
+19:57:17   ack p50 2.08 ms p99 6.23 ms ok/s 1000 | reads/s 2000 p99 4.963 ms | cores {0: 47.9, 1: 46.5, 2: 63.7, 3: 57.2} | disk r 0/s 0.0 MB/s w 6418/s | r0 cpu 24.81 s
+19:57:20 PHASE base-near-w1000-r2 leader 0
+19:58:29   ack p50 1.94 ms p99 4.86 ms ok/s 1000 | reads/s 0 p99 - ms | cores {0: 19.8, 1: 18.6, 2: 49.6, 3: 47.7} | disk r 0/s 0.0 MB/s w 6439/s | r0 cpu 23.86 s
+19:58:31 PHASE pair-2000-w1000-r2 leader 0
+19:59:56   ack p50 2.12 ms p99 6.87 ms ok/s 1000 | reads/s 2000 p99 6.243 ms | cores {0: 52.6, 1: 52.5, 2: 68.3, 3: 60.5} | disk r 0/s 0.0 MB/s w 6302/s | r0 cpu 25.15 s
+19:59:59 PHASE base-near-w1000-r3 leader 0
+20:01:08   ack p50 1.99 ms p99 4.36 ms ok/s 1000 | reads/s 0 p99 - ms | cores {0: 22.0, 1: 21.4, 2: 52.7, 3: 49.9} | disk r 0/s 0.0 MB/s w 6458/s | r0 cpu 23.94 s
+20:01:11 PHASE pair-2000-w1000-r3 leader 0
+20:02:36   ack p50 2.10 ms p99 7.04 ms ok/s 1000 | reads/s 2000 p99 6.111 ms | cores {0: 49.1, 1: 48.2, 2: 64.0, 3: 57.6} | disk r 0/s 0.0 MB/s w 6326/s | r0 cpu 24.92 s
+20:02:39 PHASE base-near-w1000-r4 leader 0
+20:03:47   ack p50 1.99 ms p99 5.57 ms ok/s 1000 | reads/s 0 p99 - ms | cores {0: 23.2, 1: 22.0, 2: 53.1, 3: 50.3} | disk r 0/s 0.0 MB/s w 6442/s | r0 cpu 24.16 s
+20:03:50 PHASE pair-2000-w1000-r4 leader 0
+20:05:15   ack p50 2.12 ms p99 6.12 ms ok/s 1000 | reads/s 2000 p99 5.167 ms | cores {0: 51.2, 1: 50.7, 2: 67.3, 3: 59.1} | disk r 0/s 0.0 MB/s w 6409/s | r0 cpu 25.24 s
+20:05:18 PHASE base-near-w1000-r5 leader 0
+20:06:26   ack p50 1.93 ms p99 4.51 ms ok/s 1000 | reads/s 0 p99 - ms | cores {0: 20.3, 1: 19.7, 2: 49.7, 3: 48.2} | disk r 0/s 0.0 MB/s w 6448/s | r0 cpu 23.58 s
+20:06:29 PHASE pair-2000-w1000-r5 leader 0
+20:07:54   ack p50 2.15 ms p99 6.91 ms ok/s 1000 | reads/s 2000 p99 5.947 ms | cores {0: 53.4, 1: 53.3, 2: 69.2, 3: 61.7} | disk r 0/s 0.0 MB/s w 6453/s | r0 cpu 25.91 s
+20:07:56 END
