@@ -1,0 +1,12 @@
+{
+ "secs": 2.940988302230835,
+ "files": 21,
+ "bytes": 2773244889,
+ "indexBytes": 4334,
+ "filled": 21,
+ "filledBytes": 2773244889,
+ "fillFails": 0,
+ "lastFillMs": 2632,
+ "readsDuringFill": 171,
+ "sstsMapped": 21
+}

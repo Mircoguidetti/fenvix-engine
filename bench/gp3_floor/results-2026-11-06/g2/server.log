@@ -1,0 +1,561 @@
+mongo-server listening on 127.0.0.1:27051 (idle close after 100000 s, holder gp3-27051, lease ttl 30 s)
+LEASE process_lease tenant=- holder=gp3-27051 unix_ms=1793978418341 inc=6436de29a95061ef gen=1
+LEASE acquired tenant=chat holder=gp3-27051 unix_ms=1793978418344 takeover_from=-
+LEASE acquired tenant=chat holder=gp3-27051 unix_ms=1793978418350 takeover_from=-
+LEASE acquired tenant=chat holder=gp3-27051 unix_ms=1793978418356 takeover_from=-
+LEASE acquired tenant=chat holder=gp3-27051 unix_ms=1793978418362 takeover_from=-
+LEASE acquired tenant=chat holder=gp3-27051 unix_ms=1793978418368 takeover_from=- new=true
+LEASE writer_open tenant=chat holder=gp3-27051 unix_ms=1793978418379 
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SSTGC begin tenant=chat unix_ms=1793978448506
+SSTGC end tenant=chat unix_ms=1793978448529 deleted_ssts=0 deleted_manifests=0 referenced=21 waiting=264
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10004 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW insert db=chat ms=734 ok=true
+SLOW insert db=chat ms=914 ok=true
+SLOW insert db=chat ms=870 ok=true
+SLOW insert db=chat ms=907 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SSTGC begin tenant=chat unix_ms=1793978478680
+SSTGC end tenant=chat unix_ms=1793978478746 deleted_ssts=0 deleted_manifests=0 referenced=12 waiting=540
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW insert db=chat ms=626 ok=true
+SLOW insert db=chat ms=518 ok=true
+SLOW insert db=chat ms=516 ok=true
+SLOW insert db=chat ms=540 ok=true
+SLOW insert db=chat ms=791 ok=true
+SLOW insert db=chat ms=751 ok=true
+SLOW insert db=chat ms=751 ok=true
+SLOW insert db=chat ms=576 ok=true
+SLOW hello db=admin ms=10009 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW insert db=chat ms=535 ok=true
+SSTGC begin tenant=chat unix_ms=1793978509528
+SSTGC end tenant=chat unix_ms=1793978509571 deleted_ssts=0 deleted_manifests=0 referenced=21 waiting=746
+SLOW insert db=chat ms=652 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW insert db=chat ms=1259 ok=true
+SLOW insert db=chat ms=837 ok=true
+SLOW insert db=chat ms=1147 ok=true
+SLOW insert db=chat ms=1238 ok=true
+SLOW insert db=chat ms=609 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW insert db=chat ms=501 ok=true
+SLOW insert db=chat ms=517 ok=true
+SLOW insert db=chat ms=516 ok=true
+SLOW insert db=chat ms=562 ok=true
+SLOW hello db=admin ms=10010 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SSTGC begin tenant=chat unix_ms=1793978540212
+SSTGC end tenant=chat unix_ms=1793978540513 deleted_ssts=83 deleted_manifests=181 referenced=23 waiting=644
+SLOW insert db=chat ms=849 ok=true
+SLOW insert db=chat ms=1083 ok=true
+SLOW insert db=chat ms=1140 ok=true
+SLOW insert db=chat ms=1287 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW insert db=chat ms=595 ok=true
+SLOW insert db=chat ms=593 ok=true
+SLOW insert db=chat ms=552 ok=true
+SLOW insert db=chat ms=667 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW insert db=chat ms=540 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10003 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10007 ok=true
+SSTGC begin tenant=chat unix_ms=1793978571260
+SSTGC end tenant=chat unix_ms=1793978571705 deleted_ssts=108 deleted_manifests=168 referenced=31 waiting=574
+SLOW insert db=chat ms=523 ok=true
+SLOW insert db=chat ms=602 ok=true
+SLOW insert db=chat ms=668 ok=true
+SLOW insert db=chat ms=591 ok=true
+SLOW insert db=chat ms=508 ok=true
+SLOW insert db=chat ms=1270 ok=true
+SLOW insert db=chat ms=750 ok=true
+SLOW insert db=chat ms=1201 ok=true
+SLOW insert db=chat ms=1279 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10004 ok=true
+SLOW hello db=admin ms=10024 ok=true
+SLOW hello db=admin ms=10017 ok=true
+SLOW hello db=admin ms=10009 ok=true
+SLOW insert db=chat ms=550 ok=true
+SLOW insert db=chat ms=528 ok=true
+SLOW insert db=chat ms=578 ok=true
+SLOW insert db=chat ms=639 ok=true
+SLOW insert db=chat ms=542 ok=true
+SLOW insert db=chat ms=581 ok=true
+SLOW insert db=chat ms=507 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW insert db=chat ms=1149 ok=true
+SLOW insert db=chat ms=1203 ok=true
+SLOW insert db=chat ms=1093 ok=true
+SLOW insert db=chat ms=1225 ok=true
+SLOW insert db=chat ms=511 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW insert db=chat ms=544 ok=true
+SSTGC begin tenant=chat unix_ms=1793978602091
+SSTGC end tenant=chat unix_ms=1793978602353 deleted_ssts=65 deleted_manifests=141 referenced=30 waiting=526
+SLOW insert db=chat ms=502 ok=true
+SLOW insert db=chat ms=775 ok=true
+SLOW insert db=chat ms=545 ok=true
+SLOW insert db=chat ms=629 ok=true
+SLOW insert db=chat ms=607 ok=true
+SLOW insert db=chat ms=553 ok=true
+SLOW insert db=chat ms=642 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW insert db=chat ms=659 ok=true
+SLOW insert db=chat ms=670 ok=true
+SLOW insert db=chat ms=674 ok=true
+SLOW insert db=chat ms=586 ok=true
+SLOW insert db=chat ms=539 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW insert db=chat ms=503 ok=true
+SLOW insert db=chat ms=676 ok=true
+SLOW insert db=chat ms=566 ok=true
+SLOW insert db=chat ms=501 ok=true
+SLOW insert db=chat ms=853 ok=true
+SLOW insert db=chat ms=561 ok=true
+SLOW insert db=chat ms=537 ok=true
+SLOW insert db=chat ms=586 ok=true
+SLOW insert db=chat ms=572 ok=true
+SLOW insert db=chat ms=621 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10003 ok=true
+SLOW hello db=admin ms=10003 ok=true
+SLOW hello db=admin ms=10003 ok=true
+SLOW insert db=chat ms=529 ok=true
+SLOW insert db=chat ms=507 ok=true
+SLOW insert db=chat ms=529 ok=true
+SSTGC begin tenant=chat unix_ms=1793978633009
+SSTGC end tenant=chat unix_ms=1793978633138 deleted_ssts=58 deleted_manifests=104 referenced=29 waiting=524
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10003 ok=true
+SLOW hello db=admin ms=10003 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SSTGC begin tenant=chat unix_ms=1793978663403
+SSTGC end tenant=chat unix_ms=1793978663513 deleted_ssts=66 deleted_manifests=140 referenced=24 waiting=350
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+compaction warm-up of tenant chat: stopped after 3s (0 of 0 reads done; reader open at 0.01 s, hot keys at 33.66 s, plan at 0.00 s)
+compaction warm-up of tenant chat: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=chat ms=24012 ok=true
+SLOW insert db=chat ms=24222 ok=true
+SLOW insert db=chat ms=24076 ok=true
+SLOW insert db=chat ms=24336 ok=true
+SLOW insert db=chat ms=680 ok=true
+SLOW insert db=chat ms=503 ok=true
+SLOW insert db=chat ms=685 ok=true
+SLOW insert db=chat ms=752 ok=true
+SLOW insert db=chat ms=776 ok=true
+SLOW insert db=chat ms=783 ok=true
+SLOW insert db=chat ms=735 ok=true
+SLOW insert db=chat ms=585 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW insert db=chat ms=530 ok=true
+SLOW insert db=chat ms=647 ok=true
+SLOW insert db=chat ms=673 ok=true
+SLOW insert db=chat ms=552 ok=true
+SLOW insert db=chat ms=528 ok=true
+SLOW insert db=chat ms=515 ok=true
+SLOW insert db=chat ms=531 ok=true
+SLOW insert db=chat ms=603 ok=true
+SLOW insert db=chat ms=510 ok=true
+SLOW insert db=chat ms=650 ok=true
+SLOW insert db=chat ms=582 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW insert db=chat ms=573 ok=true
+SLOW insert db=chat ms=638 ok=true
+SLOW insert db=chat ms=728 ok=true
+SLOW insert db=chat ms=700 ok=true
+SLOW insert db=chat ms=669 ok=true
+SSTGC begin tenant=chat unix_ms=1793978693776
+SLOW insert db=chat ms=522 ok=true
+SSTGC end tenant=chat unix_ms=1793978693935 deleted_ssts=56 deleted_manifests=102 referenced=26 waiting=306
+SLOW insert db=chat ms=516 ok=true
+SLOW insert db=chat ms=504 ok=true
+SLOW insert db=chat ms=670 ok=true
+SLOW insert db=chat ms=534 ok=true
+SLOW insert db=chat ms=866 ok=true
+SLOW insert db=chat ms=600 ok=true
+SLOW insert db=chat ms=586 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW insert db=chat ms=584 ok=true
+SLOW insert db=chat ms=538 ok=true
+SLOW insert db=chat ms=667 ok=true
+SLOW insert db=chat ms=672 ok=true
+SLOW insert db=chat ms=801 ok=true
+SLOW insert db=chat ms=609 ok=true
+SLOW insert db=chat ms=555 ok=true
+SLOW insert db=chat ms=510 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+compaction warm-up of tenant chat: stopped after 3s (0 of 0 reads done; reader open at 0.03 s, hot keys at 14.02 s, plan at 0.00 s)
+SLOW insert db=chat ms=13698 ok=true
+SLOW insert db=chat ms=13710 ok=true
+SLOW insert db=chat ms=13634 ok=true
+SLOW insert db=chat ms=13684 ok=true
+SLOW insert db=chat ms=521 ok=true
+SLOW insert db=chat ms=502 ok=true
+SLOW insert db=chat ms=511 ok=true
+SLOW hello db=admin ms=10006 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW insert db=chat ms=671 ok=true
+SLOW insert db=chat ms=580 ok=true
+SLOW insert db=chat ms=666 ok=true
+SSTGC begin tenant=chat unix_ms=1793978724034
+SSTGC end tenant=chat unix_ms=1793978724137 deleted_ssts=57 deleted_manifests=100 referenced=18 waiting=253
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10003 ok=true
+SLOW hello db=admin ms=10003 ok=true
+SLOW hello db=admin ms=10003 ok=true
+SLOW insert db=chat ms=602 ok=true
+SLOW insert db=chat ms=591 ok=true
+SLOW insert db=chat ms=684 ok=true
+SLOW insert db=chat ms=575 ok=true
+SLOW insert db=chat ms=572 ok=true
+SLOW insert db=chat ms=521 ok=true
+SLOW insert db=chat ms=574 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10003 ok=true
+SLOW hello db=admin ms=10003 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW insert db=chat ms=1470 ok=true
+SLOW insert db=chat ms=1637 ok=true
+SLOW insert db=chat ms=1668 ok=true
+SLOW insert db=chat ms=1678 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW insert db=chat ms=690 ok=true
+SSTGC begin tenant=chat unix_ms=1793978754678
+SLOW insert db=chat ms=670 ok=true
+SSTGC end tenant=chat unix_ms=1793978754753 deleted_ssts=16 deleted_manifests=19 referenced=32 waiting=373
+SLOW insert db=chat ms=521 ok=true
+SLOW insert db=chat ms=585 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW insert db=chat ms=1320 ok=true
+SLOW insert db=chat ms=1166 ok=true
+SLOW insert db=chat ms=1278 ok=true
+SLOW insert db=chat ms=1326 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW insert db=chat ms=542 ok=true
+SLOW insert db=chat ms=708 ok=true
+SLOW insert db=chat ms=705 ok=true
+SLOW insert db=chat ms=927 ok=true
+SLOW insert db=chat ms=779 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10003 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW insert db=chat ms=551 ok=true
+SSTGC begin tenant=chat unix_ms=1793978785105
+SSTGC end tenant=chat unix_ms=1793978785198 deleted_ssts=40 deleted_manifests=68 referenced=34 waiting=433
+SLOW hello db=admin ms=10009 ok=true
+SLOW hello db=admin ms=10006 ok=true
+SLOW hello db=admin ms=10003 ok=true
+SLOW hello db=admin ms=10003 ok=true
+SLOW hello db=admin ms=10004 ok=true
+SLOW insert db=chat ms=593 ok=true
+SLOW insert db=chat ms=533 ok=true
+SLOW insert db=chat ms=624 ok=true
+SLOW insert db=chat ms=552 ok=true
+SLOW insert db=chat ms=693 ok=true
+SLOW insert db=chat ms=506 ok=true
+SLOW insert db=chat ms=621 ok=true
+SLOW insert db=chat ms=638 ok=true
+SLOW insert db=chat ms=637 ok=true
+SLOW insert db=chat ms=783 ok=true
+SLOW insert db=chat ms=651 ok=true
+SLOW insert db=chat ms=668 ok=true
+SLOW insert db=chat ms=596 ok=true
+SLOW insert db=chat ms=530 ok=true
+SLOW insert db=chat ms=600 ok=true
+SLOW insert db=chat ms=633 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10004 ok=true
+SLOW hello db=admin ms=10005 ok=true
+SLOW hello db=admin ms=10005 ok=true
+SLOW hello db=admin ms=10005 ok=true
+SLOW insert db=chat ms=582 ok=true
+SLOW insert db=chat ms=609 ok=true
+SLOW insert db=chat ms=718 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SSTGC begin tenant=chat unix_ms=1793978815703
+SSTGC end tenant=chat unix_ms=1793978815763 deleted_ssts=44 deleted_manifests=66 referenced=28 waiting=432
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+compaction warm-up of tenant chat: stopped at 37.39 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant chat: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=chat ms=28249 ok=true
+SLOW insert db=chat ms=28100 ok=true
+SLOW insert db=chat ms=28245 ok=true
+SLOW insert db=chat ms=28364 ok=true
+SLOW insert db=chat ms=505 ok=true
+SLOW insert db=chat ms=540 ok=true
+SLOW insert db=chat ms=700 ok=true
+SLOW insert db=chat ms=513 ok=true
+SLOW insert db=chat ms=640 ok=true
+SLOW insert db=chat ms=567 ok=true
+SLOW insert db=chat ms=617 ok=true
+SLOW insert db=chat ms=553 ok=true
+SSTGC begin tenant=chat unix_ms=1793978845826
+SSTGC end tenant=chat unix_ms=1793978846133 deleted_ssts=45 deleted_manifests=109 referenced=19 waiting=341
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW insert db=chat ms=513 ok=true
+SLOW insert db=chat ms=509 ok=true
+SLOW insert db=chat ms=570 ok=true
+SLOW insert db=chat ms=784 ok=true
+SLOW insert db=chat ms=848 ok=true
+SLOW insert db=chat ms=842 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SSTGC begin tenant=chat unix_ms=1793978876719
+SSTGC end tenant=chat unix_ms=1793978876917 deleted_ssts=58 deleted_manifests=111 referenced=32 waiting=330
+SLOW hello db=admin ms=10000 ok=true
+SLOW collStats db=chat ms=11131 ok=true
+SLOW hello db=admin ms=10000 ok=true
+compaction warm-up of tenant chat: stopped after 3s (0 of 0 reads done; reader open at 0.01 s, hot keys at 26.64 s, plan at 0.00 s)
+SSTGC begin tenant=chat unix_ms=1793978906952
+SSTGC end tenant=chat unix_ms=1793978907044 deleted_ssts=44 deleted_manifests=65 referenced=20 waiting=241
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+shutting down: closing tenants cleanly
+LEASE writer_close tenant=chat holder=gp3-27051 unix_ms=1793979106233 
+LEASE release_begin tenant=chat holder=gp3-27051 unix_ms=1793979106233 
+LEASE release tenant=chat holder=gp3-27051 unix_ms=1793979106243 ok=true
+tenants closed; stopping maintenance
+maintenance stopped
+waiter tools on: counter RAM 256 MiB, disk floor 20480 MiB (/home/user/gp3work/g2/floor)
+mongo-server listening on 127.0.0.1:27051 (idle close after 100000 s, holder gp3-27051, lease ttl 30 s)
+LEASE process_lease tenant=- holder=gp3-27051 unix_ms=1793979108279 inc=f0a2993f3cf00a8d gen=1
+LEASE acquired tenant=chat holder=gp3-27051 unix_ms=1793979108282 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+shutting down: closing tenants cleanly
+LEASE release_begin tenant=chat holder=gp3-27051 unix_ms=1793979198549 
+LEASE release tenant=chat holder=gp3-27051 unix_ms=1793979198598 ok=true
+tenants closed; stopping maintenance
+maintenance stopped
+SST mirror on: /home/user/gp3work/g2/mirror (0 files, 0 MiB kept)
+waiter tools on: counter RAM 256 MiB, disk floor 0 MiB (none)
+mongo-server listening on 127.0.0.1:27051 (idle close after 100000 s, holder gp3-27051, lease ttl 30 s)
+LEASE process_lease tenant=- holder=gp3-27051 unix_ms=1793979201111 inc=8ec55d1b8f402423 gen=1
+LEASE acquired tenant=chat holder=gp3-27051 unix_ms=1793979201114 takeover_from=-
+shutting down: closing tenants cleanly
+LEASE release_begin tenant=chat holder=gp3-27051 unix_ms=1793979204795 
+LEASE release tenant=chat holder=gp3-27051 unix_ms=1793979204798 ok=true
+tenants closed; stopping maintenance
+maintenance stopped
+SST mirror on: /home/user/gp3work/g2/mirror (21 files, 2644 MiB kept)
+waiter tools on: counter RAM 256 MiB, disk floor 20480 MiB (/home/user/gp3work/g2/floor)
+mongo-server listening on 127.0.0.1:27051 (idle close after 100000 s, holder gp3-27051, lease ttl 30 s)
+LEASE process_lease tenant=- holder=gp3-27051 unix_ms=1793979207649 inc=4550012ea2437f7b gen=1
+LEASE acquired tenant=chat holder=gp3-27051 unix_ms=1793979207652 takeover_from=-
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+shutting down: closing tenants cleanly
+LEASE release_begin tenant=chat holder=gp3-27051 unix_ms=1793979255827 
+LEASE release tenant=chat holder=gp3-27051 unix_ms=1793979255830 ok=true
+tenants closed; stopping maintenance
+maintenance stopped
+SST mirror on: /home/user/gp3work/g2/mirror (0 files, 0 MiB kept)
+waiter tools on: counter RAM 256 MiB, disk floor 0 MiB (none)
+mongo-server listening on 127.0.0.1:27051 (idle close after 100000 s, holder gp3-27051, lease ttl 30 s)
+LEASE process_lease tenant=- holder=gp3-27051 unix_ms=1793979405649 inc=36b8b8abfd54595d gen=1
+LEASE acquired tenant=chat holder=gp3-27051 unix_ms=1793979405653 takeover_from=-
+shutting down: closing tenants cleanly
+LEASE release_begin tenant=chat holder=gp3-27051 unix_ms=1793979409348 
+LEASE release tenant=chat holder=gp3-27051 unix_ms=1793979409350 ok=true
+tenants closed; stopping maintenance
+maintenance stopped
+SST mirror on: /home/user/gp3work/g2/mirror (21 files, 2644 MiB kept)
+waiter tools on: counter RAM 256 MiB, disk floor 20480 MiB (/home/user/gp3work/g2/floor)
+mongo-server listening on 127.0.0.1:27051 (idle close after 100000 s, holder gp3-27051, lease ttl 30 s)
+LEASE process_lease tenant=- holder=gp3-27051 unix_ms=1793979412199 inc=7f4b9d38d78698d2 gen=1
+LEASE acquired tenant=chat holder=gp3-27051 unix_ms=1793979412202 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+shutting down: closing tenants cleanly
+LEASE release_begin tenant=chat holder=gp3-27051 unix_ms=1793979460903 
+LEASE release tenant=chat holder=gp3-27051 unix_ms=1793979460906 ok=true
+tenants closed; stopping maintenance
+maintenance stopped
+waiter tools on: counter RAM 256 MiB, disk floor 20480 MiB (/home/user/gp3work/g2/floor)
+mongo-server listening on 127.0.0.1:27051 (idle close after 100000 s, holder gp3-27051, lease ttl 30 s)
+LEASE process_lease tenant=- holder=gp3-27051 unix_ms=1793979472495 inc=87ba962ed410f7c4 gen=1
+LEASE acquired tenant=chat holder=gp3-27051 unix_ms=1793979472498 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+shutting down: closing tenants cleanly
+LEASE release_begin tenant=chat holder=gp3-27051 unix_ms=1793979490182 
+LEASE release tenant=chat holder=gp3-27051 unix_ms=1793979490190 ok=true
+tenants closed; stopping maintenance
+maintenance stopped
+SST mirror on: /home/user/gp3work/g2/mirror (21 files, 2644 MiB kept)
+waiter tools on: counter RAM 256 MiB, disk floor 20480 MiB (/home/user/gp3work/g2/floor)
+mongo-server listening on 127.0.0.1:27051 (idle close after 100000 s, holder gp3-27051, lease ttl 30 s)
+LEASE process_lease tenant=- holder=gp3-27051 unix_ms=1793979493033 inc=a7a745756f100e62 gen=1
+LEASE acquired tenant=chat holder=gp3-27051 unix_ms=1793979493036 takeover_from=-
+shutting down: closing tenants cleanly
+LEASE release_begin tenant=chat holder=gp3-27051 unix_ms=1793979501239 
+LEASE release tenant=chat holder=gp3-27051 unix_ms=1793979501242 ok=true
+tenants closed; stopping maintenance
+maintenance stopped

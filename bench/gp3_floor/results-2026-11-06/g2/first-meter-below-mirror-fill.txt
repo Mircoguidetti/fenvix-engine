@@ -1,0 +1,1 @@
+mirror filled: 21 SSTs, 2.58 GiB in 2.9 s (943 MB/s), 171 object-store reads, mirror bookkeeping 4334 bytes
