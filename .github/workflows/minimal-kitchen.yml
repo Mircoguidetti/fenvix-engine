@@ -1,0 +1,357 @@
+# Minimal kitchen (K2, corrected by K2b, 2026-11-05): OUR server (mongo-server, data only on S3) on EC2 in eu-west-1,
+# measured with code-irlanda's m30-corto program ONE TO ONE with the Atlas M30 round from Ireland: same program file,
+# run by the same programma.py, with the founder's script prova_infinite.py p1-1.6.2 unchanged (md5 checked); same
+# databases, seeds and part of the fake year (load.py stops each load where Atlas stopped); the same clients and
+# windows (merge_states.py + compare_plans.py: "PLANS: SAME" before any measurement); the client machine of the program
+# (c7i.2xlarge, 5 copies in carico_massimo); every size on a new cold cook (the load runs on its own cook 0, switched off
+# at the end of the load).
+# One trigger: a push on branch cucina-minima that adds or changes kitchen/command.json. Field "mode":
+#   "permissions" = permission check only, $0;
+#   "run"         = a run. Optional fields (defaults in brackets):
+#       "program":     a folder of kitchen/programs ["m30-corto"];
+#       "sizes":       list of cook types to measure, at most 1 per run (m30-corto lasts about 3 hours) [["m7i.large"]];
+#                      [] = load only (needs "keep_pantry": true);
+#       "pantry":      "new" = load in this run [default]; or the name of a KEPT pantry (fenvix-kitchen-pantry-<run>)
+#                      loaded by an earlier run: no load, the size reads those data;
+#       "keep_pantry": with "pantry": "new", true = keep the pantry after the run for the next runs (founder's road 1
+#                      of A2; needs the IAM lines of the K2b report) [false = deleted at the end, like every test];
+#       "loader":      type of cook 0, the one that loads ["c7i.xlarge"];
+#       "engine":      ref of fenvix-engine to build mongo-server from ["server-per-script"];
+#       "atlas_states": code-irlanda commit with the Atlas state files the Atlas round started from ["501c8fd"];
+#       "client":      client machine [the program's macchina.txt]; a different one is allowed but is NOT one to one;
+#       "server_options": K6, one string per size with options for mongo-server on that cook (for example
+#                      ["--block-cache-mb 4096 --meta-cache-mb 1024"]); [the engine's defaults]. Only --name value tokens,
+#                      never the options server.sh sets itself (store, bucket, listen, TLS, auth...);
+#       "prepare":     K5, true or one true/false per size: before the round, on the size's cook, open every database
+#                      (listCollections) and wait for the pantry to calm down (settle.py) [false: in the K2c local test
+#                      it changed nothing, the compaction during the measures comes from the round's own writes];
+#       "fresh_pantry": K3, true = every size reads its own server-side copy of the pantry as it was right after the load
+#                      (copied before the size, deleted after it) instead of the pantry the earlier sizes wrote into
+#                      [false: needed only with more than one size on the same pantry, founder's A2 road 1 or A6 road b];
+#   "teardown"    = cleanup and check only;
+#   "drop-pantry" = delete the kept pantry named in "pantry", then cleanup and check.
+# A commit that does not change kitchen/command.json does nothing on AWS (mode "none").
+# No keys: OIDC role from the secret AWS_ROLE_ARN (the one of M31 and Ireland: role fenvix-gha-tests, policy
+# fenvix-coldread-test); the machines use the role fenvix-coldread-machine. Same tag (project=fenvix-coldread) and same
+# concurrency group as M31 and Ireland, on the job "run" (K1): the tests never run together, so the cleanup of one cannot touch the machines of
+# another. The server password is new for every run, born on the runner, masked, and reaches the machines only through
+# the private bucket; the TLS certificates are born on the runner (the CA key never leaves it).
+# Spend: a SPESA line every minute (machines, plus S3 from our server's own request counters); block at $5 (founder's
+# rule 2026-11-04); cleanup and final check always ("RIMASTO: niente" or ALLARME and a red job).
+# EMERGENCY BRAKE: the "Cancel workflow" button on the run page (the cleanup runs anyway).
+name: minimal-kitchen
+on:
+  push:
+    branches: [cucina-minima]
+    paths: ['kitchen/command.json']
+permissions:
+  id-token: write
+  contents: write
+# K1 (reviewer of K2b): the concurrency group shared with M31 and Ireland is on the job "run" only, not on the whole
+# workflow, so a commit with "none" (or a refused command) never takes the waiting place of that group and never cancels
+# an Ireland or M31 run waiting in it (GitHub keeps one pending run per group).
+env:
+  RUST_TOOLCHAIN: "1.97.0"
+jobs:
+  decide:
+    if: github.repository == 'Mircoguidetti/fenvix-engine'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      mode: ${{ steps.c.outputs.mode }}
+      sizes: ${{ steps.c.outputs.sizes }}
+      engine: ${{ steps.c.outputs.engine }}
+      x86: ${{ steps.c.outputs.x86 }}
+      arm: ${{ steps.c.outputs.arm }}
+      program: ${{ steps.c.outputs.program }}
+      load: ${{ steps.c.outputs.load }}
+      loader: ${{ steps.c.outputs.loader }}
+      pantry: ${{ steps.c.outputs.pantry }}
+      pantry_mode: ${{ steps.c.outputs.pantry_mode }}
+      atlas_states: ${{ steps.c.outputs.atlas_states }}
+      client: ${{ steps.c.outputs.client }}
+      server_options: ${{ steps.c.outputs.server_options }}
+      prepare: ${{ steps.c.outputs.prepare }}
+      fresh_pantry: ${{ steps.c.outputs.fresh_pantry }}
+      refused: ${{ steps.c.outputs.refused }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: The command (kitchen/command.json)
+        id: c
+        env:
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          C=kitchen/command.json
+          no() { echo "::error title=Command::$1"; echo "refused=1" >> "$GITHUB_OUTPUT"; echo "mode=none" >> "$GITHUB_OUTPUT"; exit 0; }
+          changed=$(git diff --name-only --diff-filter=AM HEAD~1 HEAD)
+          mode=$(jq -r '.mode // "none"' "$C" 2>/dev/null || echo none)
+          grep -qx "$C" <<<"$changed" || mode=none
+          case "$mode" in permissions|run|teardown|drop-pantry) ;; *) mode=none;; esac
+          program=$(jq -r '.program // "m30-corto"' "$C")
+          [[ "$program" =~ ^[a-z0-9-]{1,40}$ ]] && [ -f "kitchen/programs/$program/passi.txt" ] || no "program not found: $program"
+          grep -q " programs/$program/passi.txt$" kitchen/SOURCES.md5 || no "program $program is not a code-irlanda original (SOURCES.md5)"
+          [ -f "kitchen/load-plans/$program.txt" ] || no "no load plan kitchen/load-plans/$program.txt"
+          sizes=$(jq -c '.sizes // ["m7i.large"]' "$C" 2>/dev/null) || no "sizes not readable"
+          python3 kitchen/ci/machine_types.py check-sizes "$sizes" 1 > /tmp/t.txt || no "$(cat /tmp/t.txt)"
+          loader=$(jq -r '.loader // "c7i.xlarge"' "$C")
+          python3 kitchen/ci/machine_types.py check-sizes "[\"$loader\"]" 1 > /tmp/t.txt || no "loader: $(cat /tmp/t.txt)"
+          engine=$(jq -r '.engine // "server-per-script"' "$C")
+          [[ "$engine" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$ ]] || no "engine not valid: $engine"
+          atlas=$(jq -r '.atlas_states // "501c8fd"' "$C")
+          [[ "$atlas" =~ ^[0-9a-f]{7,40}$ ]] || no "atlas_states is not a commit: $atlas"
+          client=$(jq -r ".client // \"$(cut -d' ' -f1 "kitchen/programs/$program/macchina.txt")\"" "$C")
+          [[ "$client" =~ ^c7i\.(x|2x|4x|8x)large$ ]] || no "client not allowed: $client"
+          pantry=$(jq -r '.pantry // "new"' "$C"); keep=$(jq -r '.keep_pantry // false' "$C")
+          if [ "$pantry" = new ]; then
+            load=1
+            if [ "$keep" = true ]; then pantry_mode=keep; pantry="fenvix-kitchen-pantry-$RUN_ID"
+            else pantry_mode=new; pantry="fenvix-coldread-cmd-$RUN_ID"
+              [ "$mode" = run ] && [ "$sizes" = "[]" ] && no "load only with a pantry deleted at the end: nothing to measure (keep_pantry: true?)"
+            fi
+          else
+            [[ "$pantry" =~ ^fenvix-kitchen-pantry-[0-9]+$ ]] || no "pantry: \"new\" or the name of a kept pantry (fenvix-kitchen-pantry-<run>)"
+            load=0; pantry_mode=existing; loader=""
+            [ "$mode" = run ] && [ "$sizes" = "[]" ] && no "no load and no size: nothing to do"
+          fi
+          [ "$mode" = drop-pantry ] && [ "$pantry_mode" != existing ] && no "drop-pantry needs \"pantry\": the name of the kept pantry"
+          # K6, K5, K3: per-size server options, the prepare step, a fresh copy of the pantry for every size
+          server_options=$(jq -c '.server_options // null' "$C" 2>/dev/null) || no "server_options not readable"
+          prepare=$(jq -c '.prepare // null' "$C" 2>/dev/null) || no "prepare not readable"
+          python3 kitchen/ci/size_options.py "$sizes" "$server_options" "$prepare" > /tmp/o.txt || no "$(cat /tmp/o.txt)"
+          server_options=$(sed -n 1p /tmp/o.txt); prepare=$(sed -n 2p /tmp/o.txt)
+          fresh=$(jq -r '.fresh_pantry // false' "$C")
+          case "$fresh" in true) fresh_pantry=1 ;; false) fresh_pantry=0 ;; *) no "fresh_pantry: true or false" ;; esac
+          archs=$(python3 kitchen/ci/machine_types.py archs "$sizes" "$loader")
+          x86=0; arm=0
+          [ "$mode" = run ] && { grep -qw x86_64 <<<"$archs" && x86=1; grep -qw aarch64 <<<"$archs" && arm=1; }
+          { echo "mode=$mode"; echo "sizes=$sizes"; echo "engine=$engine"; echo "x86=$x86"; echo "arm=$arm"; echo "program=$program"
+            echo "load=$load"; echo "loader=$loader"; echo "pantry=$pantry"; echo "pantry_mode=$pantry_mode"
+            echo "atlas_states=$atlas"; echo "client=$client"; echo "server_options=$server_options"; echo "prepare=$prepare"
+            echo "fresh_pantry=$fresh_pantry"; } | tee -a "$GITHUB_OUTPUT"
+          echo "mode: $mode; program $program; sizes $sizes; load $load (loader $loader); pantry $pantry ($pantry_mode); engine $engine; Atlas states $atlas; client $client; server options $server_options; prepare $prepare; fresh pantry per size $fresh_pantry" >> "$GITHUB_STEP_SUMMARY"
+          [ "$client" = "$(cut -d' ' -f1 "kitchen/programs/$program/macchina.txt")" ] || echo "::warning title=Not one to one::client $client is not the one of the program: carico_massimo is not comparable with Atlas"
+      - name: Refused (wrong command, nothing done on AWS)
+        if: steps.c.outputs.refused == '1'
+        run: exit 1
+
+  build-x86:
+    needs: decide
+    if: needs.decide.outputs.x86 == '1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.decide.outputs.engine }}
+          persist-credentials: false
+      - name: Build mongo-server (x86_64, Ubuntu 24.04 like the machine)
+        run: |
+          command -v rustup >/dev/null || { curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none; echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"; export PATH="$HOME/.cargo/bin:$PATH"; }
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          t0=$(date +%s)
+          cargo +"$RUST_TOOLCHAIN" build --release --locked -p mongo-server
+          echo "build x86_64: $(( $(date +%s) - t0 )) s, commit $(git rev-parse HEAD), sha256 $(sha256sum target/release/mongo-server | cut -d' ' -f1)" | tee -a "$GITHUB_STEP_SUMMARY"
+          git rev-parse HEAD > target/release/motore-commit.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mongo-server-x86_64
+          path: |
+            target/release/mongo-server
+            target/release/motore-commit.txt
+          retention-days: 1
+
+  build-arm:
+    needs: decide
+    if: needs.decide.outputs.arm == '1'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.decide.outputs.engine }}
+          persist-credentials: false
+      - name: Build mongo-server (aarch64 for Graviton, Ubuntu 24.04 like the machine)
+        run: |
+          command -v rustup >/dev/null || { curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none; echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"; export PATH="$HOME/.cargo/bin:$PATH"; }
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          t0=$(date +%s)
+          cargo +"$RUST_TOOLCHAIN" build --release --locked -p mongo-server
+          [ "$(uname -m)" = aarch64 ] || { echo "::error::the runner is not aarch64"; exit 1; }
+          echo "build aarch64: $(( $(date +%s) - t0 )) s, commit $(git rev-parse HEAD), sha256 $(sha256sum target/release/mongo-server | cut -d' ' -f1)" | tee -a "$GITHUB_STEP_SUMMARY"
+          git rev-parse HEAD > target/release/motore-commit.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mongo-server-aarch64
+          path: |
+            target/release/mongo-server
+            target/release/motore-commit.txt
+          retention-days: 1
+
+  run:
+    needs: [decide, build-x86, build-arm]
+    if: always() && needs.decide.outputs.mode != 'none' && needs.decide.outputs.mode != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 355
+    concurrency:
+      group: fenvix-m31
+      cancel-in-progress: false
+    env:
+      AWS_PAGER: ""
+      AWS_DEFAULT_REGION: eu-west-1
+      AWS_REGION: eu-west-1
+      CM_ROLE: ${{ secrets.AWS_ROLE_ARN }}
+      MODE: ${{ needs.decide.outputs.mode }}
+      SIZES: ${{ needs.decide.outputs.sizes }}
+      PROGRAM: ${{ needs.decide.outputs.program }}
+      LOAD_PLAN: ${{ needs.decide.outputs.program }}
+      LOAD: ${{ needs.decide.outputs.load }}
+      LOADER: ${{ needs.decide.outputs.loader }}
+      PANTRY: ${{ needs.decide.outputs.pantry }}
+      PANTRY_MODE: ${{ needs.decide.outputs.pantry_mode }}
+      ATLAS_STATES: ${{ needs.decide.outputs.atlas_states }}
+      CLIENT: ${{ needs.decide.outputs.client }}
+      SERVER_OPTIONS: ${{ needs.decide.outputs.server_options }}
+      PREPARE: ${{ needs.decide.outputs.prepare }}
+      FRESH_PANTRY: ${{ needs.decide.outputs.fresh_pantry }}
+      C: kitchen
+      SPEND_CAP: "5"             # block of the estimated spend (founder, RULES.md 2026-11-04)
+      MACHINE_ROLE: fenvix-coldread-machine
+      BUCKET: fenvix-coldread-cm-${{ github.run_id }}
+      CM_OUT: /tmp/cm-out
+      PACKAGES: /tmp/packages
+      CA_DIR: /tmp/ca
+      CEILING_MIN: "320"         # the run stops waiting after 320 minutes; the machines power off by themselves soon after
+      DISK_GB: "20"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Mask account and role; new password of the run (masked)
+        run: |
+          [ -n "$CM_ROLE" ] || { echo "secret AWS_ROLE_ARN missing"; exit 1; }
+          acct=$(cut -d: -f5 <<<"$CM_ROLE"); role=${CM_ROLE##*/}
+          echo "::add-mask::$acct"; echo "::add-mask::$role"
+          pw=$(openssl rand -hex 24); echo "::add-mask::$pw"
+          { echo "CM_ACCT=$acct"; echo "CM_PW=$pw"; echo "CM_START=$(date -u -d '2 minutes ago' +%FT%TZ)"
+            if [ "$PANTRY_MODE" != new ]; then echo "PANTRY_CHECK=1"; fi
+            if [ "$MODE" = drop-pantry ]; then echo "DROP_PANTRY=$PANTRY"; fi; } >> "$GITHUB_ENV"
+
+      - name: Did the build work? (run only)
+        if: env.MODE == 'run'
+        run: |
+          ok=1
+          [ "${{ needs.decide.outputs.x86 }}" = 1 ] && [ "${{ needs.build-x86.result }}" != success ] && { echo "::error::build x86_64: ${{ needs.build-x86.result }}"; ok=0; }
+          [ "${{ needs.decide.outputs.arm }}" = 1 ] && [ "${{ needs.build-arm.result }}" != success ] && { echo "::error::build aarch64: ${{ needs.build-arm.result }}"; ok=0; }
+          [ "$ok" = 1 ]
+
+      - name: The built program
+        if: env.MODE == 'run'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: mongo-server-*
+          path: /tmp/bin
+
+      - name: AWS credentials (OIDC, 1 h)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Permissions and vCPU quota ($0)
+        if: env.MODE == 'permissions' || env.MODE == 'run'
+        run: bash "$C"/ci/permissions.sh
+
+      - name: Atlas state files (code-irlanda, CATENA checked) and packages (no AWS)
+        if: env.MODE == 'run'
+        env:
+          BIN: /tmp/bin
+        run: |
+          states=$(cd "$C"/irlanda && python3 -c "import programma as P; print(' '.join(sorted({p['arg'][0] for p in P.leggi_passi('../programs/$PROGRAM/passi.txt') if p['tipo'] != 'aspetta'})))")
+          # shellcheck disable=SC2086
+          bash "$C"/ci/atlas_states.sh "$ATLAS_STATES" /tmp/atlas-states.tar.gz $states | tee -a "$GITHUB_STEP_SUMMARY"
+          ATLAS_TGZ=/tmp/atlas-states.tar.gz bash "$C"/ci/packages.sh | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Fresh credentials for the run
+        if: env.MODE == 'run'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: The run (buckets, groups, client, loader, sizes one at a time, spend every minute, results)
+        id: run
+        if: env.MODE == 'run'
+        continue-on-error: true
+        run: bash "$C"/ci/run.sh
+
+      - name: Credentials for the cleanup
+        if: always()
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Fetch the results with the fresh credentials, before the cleanup
+        if: always() && env.MODE == 'run'
+        run: bash "$C"/ci/fetch_results.sh
+
+      - name: Cleanup (tagged machines, buckets fenvix-coldread-*, security groups; a kept pantry stays) and check
+        if: always()
+        run: bash "$C"/ci/cleanup.sh
+
+      - name: No secret in the results (otherwise nothing is published)
+        id: secrets
+        if: always() && env.MODE == 'run'
+        run: |
+          [ -d "$CM_OUT" ] || { echo "no results"; exit 0; }
+          python3 "$C"/ci/check_secrets.py "$CM_OUT"
+          echo "clean=1" >> "$GITHUB_OUTPUT"
+
+      - name: Publish the results on the branch (without the account)
+        if: always() && steps.secrets.outputs.clean == '1'
+        run: |
+          R="$C"/results/run-${{ github.run_id }}
+          mkdir -p "$R" && cp -r "$CM_OUT"/. "$R"/ && find "$R" -name .pushed.json -delete
+          grep -rl "$CM_ACCT" "$R" | xargs -r sed -i "s/$CM_ACCT/<ACCOUNT_ID>/g"
+          ! grep -rq "$CM_ACCT" "$R" || { echo "account still in the results: not publishing"; exit 1; }
+          find "$R" -type f -size +90M -print -delete   # over the GitHub limit: they stay in the artifact
+          git config user.name github-actions; git config user.email actions@users.noreply.github.com
+          git add "$R" && git commit -qm "Minimal kitchen run ${{ github.run_id }}: results" || true
+          for _ in 1 2 3; do git pull --rebase -q origin cucina-minima && git push -q origin HEAD:cucina-minima && break; sleep 5; done
+
+      - name: All results as an artifact (if the push fails)
+        if: always() && steps.secrets.outputs.clean == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: kitchen-results-${{ github.run_id }}
+          path: /tmp/cm-out
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Fresh credentials for the final check
+        if: always()
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 900
+          mask-aws-account-id: true
+
+      - name: Final check (machines, disks, Elastic IPs, buckets, groups) - RIMASTO niente or ALLARME and a red job
+        if: always()
+        run: bash "$C"/ci/final_check.sh
+
+      - name: Outcome of the run
+        if: always() && env.MODE == 'run'
+        run: |
+          echo "outcome of the run step: ${{ steps.run.outcome }}"
+          [ "${{ steps.run.outcome }}" = success ]

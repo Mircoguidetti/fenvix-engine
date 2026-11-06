@@ -1,0 +1,12 @@
+# Verbatim copies from branch code-irlanda, commit 501c8fd (do not edit: the kitchen must run exactly what ran against Atlas).
+# Paths are the kitchen's; in code-irlanda they are the same, except programs/NAME/ = irlanda/programmi/NAME/ (K8: the
+# local-test helper is at irlanda/prova-locale/rimpicciolisci.py in both).
+2e4f24226c4ca53d0adec88a145aecdc  irlanda/controlla_parallelo.py
+7c30e06d8b422231b88640569335800f  irlanda/cpu_macchina.py
+c4d4f6e754305725ea6a882a7d9b6d0e  irlanda/programma.py
+8396ca455557baaa4e3a9b1f881451f9  irlanda/prova_infinite.py
+b22886df58155b6a8f05bbd6053a7f24  irlanda/prova-locale/rimpicciolisci.py
+32f78a6f61ce0fdd688df0e1b7d21a72  irlanda/simula_programma.py
+6f6e61f01c41edd3ff5eea2aa38686f9  irlanda/somma_massimo.py
+e448d654c8652df4e12f750c69e8315b  programs/m30-corto/macchina.txt
+1aaf3c97b56bb97e49210c5d4a718774  programs/m30-corto/passi.txt

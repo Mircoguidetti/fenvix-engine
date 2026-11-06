@@ -1,0 +1,64 @@
+#!/bin/bash
+# Kitchen local test (K2, from P1 Ireland) · fake `aws`: passes everything to the real AWS CLI pointed at moto (fake
+# S3, EC2, IAM, SSM), and also plays "machine": `ec2 run-instances` runs the user-data HERE, in a folder of its own, with
+# a fake `shutdown`; `ec2 terminate-instances` also kills the machine's processes. Faults on demand:
+#   $SANDBOX/fault-presign  -> `s3 presign` gives a broken link (download fails)
+#   $SANDBOX/expired        -> credentials "old" are expired (renewal fails)
+#   $SANDBOX/fault-cleanup  -> `ec2 terminate-instances` and `s3 rb` say "done" and do nothing (the final check must say
+#                              ALLARME); `ec2 wait` fails at once instead of after 10 minutes
+#   $SANDBOX/fault-json     -> `ec2 describe-instances` answers broken JSON with exit 0
+# Never touches real AWS: without MOTO_URL it refuses.
+set -u
+REAL_AWS=${REAL_AWS_CLI:-/usr/local/bin/aws}
+[ -n "${MOTO_URL:-}" ] && [ -n "${SANDBOX:-}" ] || { echo "fake aws: MOTO_URL or SANDBOX missing" >&2; exit 2; }
+if [ -e "$SANDBOX/expired" ] && [ "${AWS_ACCESS_KEY_ID:-}" = old ]; then
+  echo "An error occurred (ExpiredToken): The security token included in the request is expired" >&2; exit 255
+fi
+echo "$(date +%T) ${AWS_ACCESS_KEY_ID:-?} $*" >> "$SANDBOX/aws-calls.log"
+real() { "$REAL_AWS" --endpoint-url "$MOTO_URL" "$@"; }
+if [ -e "$SANDBOX/fault-cleanup" ] && { [ "$1 ${2:-}" = "ec2 terminate-instances" ] || [ "$1 ${2:-}" = "s3 rb" ]; }; then
+  echo "$(date +%T) FAKE CLEANUP FAULT: $*" >> "$SANDBOX/aws-calls.log"; exit 0
+fi
+if [ -e "$SANDBOX/fault-json" ] && [ "$1 ${2:-}" = "ec2 describe-instances" ]; then
+  echo '{"Reservations": [ broken'; exit 0   # broken answer with exit 0: the final check must say NON SO
+fi
+if [ -e "$SANDBOX/fault-cleanup" ] && [ "$1 ${2:-}" = "ec2 wait" ]; then
+  echo "Waiter InstanceTerminated failed (fake cleanup fault)" >&2; exit 255   # a real waiter would fail after 10 minutes
+fi
+case "$1 ${2:-}" in
+  "service-quotas get-service-quota")
+    # moto has no Service Quotas: the fake vCPU quota is $SANDBOX/vcpu-quota (default 64)
+    cat "$SANDBOX/vcpu-quota" 2>/dev/null || echo 64.0; exit 0;;
+  "ssm get-parameter")
+    # moto has no public Canonical parameters: any moto image
+    real ec2 describe-images --query 'Images[0].ImageId' --output text; exit $? ;;
+  "s3 presign")
+    if [ -e "$SANDBOX/fault-presign" ]; then echo "http://127.0.0.1:9/broken-link"; exit 0; fi
+    real "$@"; exit $? ;;
+  "ec2 run-instances")
+    for a in "$@"; do [ "$a" = --dry-run ] && { real "$@"; exit $?; }; done
+    ud=""; prev=""
+    for a in "$@"; do [ "$prev" = --user-data ] && ud=${a#file://}; prev=$a; done
+    udcopy=$(mktemp "$SANDBOX/ud.XXXX"); cp "$ud" "$udcopy"
+    out=$(real "$@") || exit $?
+    # the command also asks [InstanceId,PrivateIpAddress]: the first word is the id
+    id=${out%%[[:space:]]*}
+    md="$SANDBOX/machine-$id"; mkdir -p "$md"
+    # the machine: the user-data with its fake shutdown and its role's credentials; the type as FAKE_TYPE
+    itype=""; prev=""; for a in "$@"; do [ "$prev" = --instance-type ] && itype=$a; prev=$a; done
+    ( export MACHINE_DIR="$md/opt" MACHINE_ID="$id" FAKE_TYPE="$itype" PATH="$SANDBOX/bin-machine:$PATH" AWS_ACCESS_KEY_ID=machine AWS_SECRET_ACCESS_KEY=machine
+      unset AWS_SESSION_TOKEN
+      exec setsid bash "$udcopy" > "$md/user-data.log" 2>&1 ) &
+    echo $! > "$md/pid"
+    echo "$out"; exit 0 ;;
+  "ec2 terminate-instances")
+    real "$@"; rc=$?
+    for a in "$@"; do
+      if [ -f "$SANDBOX/machine-$a/pid" ]; then
+        p=$(cat "$SANDBOX/machine-$a/pid"); kill -TERM -- "-$p" 2>/dev/null; pkill -TERM -s "$p" 2>/dev/null
+        echo "$(date +%T) terminated $a" >> "$SANDBOX/machine-$a/state.log"
+      fi
+    done
+    exit $rc ;;
+  *) real "$@"; exit $? ;;
+esac
