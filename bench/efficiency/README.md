@@ -1,6 +1,6 @@
 # bench/efficiency: E1 study, where the engine loses CPU against mongod
 
-Report (Italian): fenvix-brain, `sessions/2026-11-06-studio-efficienza/RAPPORTO.md`.
+Report: fenvix-brain, `sessions/2026-11-06-efficiency-study/REPORT.md`.
 Branch `studio-efficienza` (from `motore-correzioni`). Measurement code only: nothing here is meant for main.
 
 ## What is measured
