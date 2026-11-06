@@ -310,30 +310,49 @@ impl Opening {
     /// Shrink to what the first query needed; exact: an interval is cut to a prefix (or suffix) that still holds all its
     /// keys, and only keys outside every interval are forgotten (they become "not known").
     fn trim(&mut self) {
+        // Consecutive scans of one query (a first batch, then the next) touch each other: they are trimmed together, as
+        // one stretch keeping as many entries as they returned together, so no hole opens between them.
         let mut ivs = std::mem::take(&mut self.ivs);
-        for iv in ivs.iter_mut() {
-            let keep = iv.keep.max(1);
+        ivs.sort_by(|a, b| a.lo.cmp(&b.lo));
+        let mut groups: Vec<Vec<Iv>> = Vec::new();
+        for iv in ivs {
+            let joins = groups.last().map_or(false, |g| g.iter().any(|x| x.hi.as_ref().map_or(true, |h| &iv.lo <= h)));
+            if joins {
+                groups.last_mut().unwrap().push(iv);
+            } else {
+                groups.push(vec![iv]);
+            }
+        }
+        let mut out = Vec::new();
+        for g in groups {
+            let fwd = g.iter().all(|i| !i.rev);
+            let rev = g.iter().all(|i| i.rev);
+            if !fwd && !rev {
+                out.extend(g); // mixed directions: left as recorded
+                continue;
+            }
+            let lo = g.iter().map(|i| i.lo.clone()).min().unwrap();
+            let hi = g.iter().map(|i| i.hi.clone()).reduce(|a, b| if le_hi(&a, &b) { b } else { a }).unwrap();
+            let keep = g.iter().map(|i| i.keep).sum::<usize>().max(1);
             let present: Vec<Vec<u8>> = {
-                let range: Box<dyn DoubleEndedIterator<Item = (&Vec<u8>, &Option<Bytes>)>> = match &iv.hi {
-                    Some(h) => Box::new(self.map.range(iv.lo.clone()..h.clone())),
-                    None => Box::new(self.map.range(iv.lo.clone()..)),
+                let range: Box<dyn DoubleEndedIterator<Item = (&Vec<u8>, &Option<Bytes>)>> = match &hi {
+                    Some(h) => Box::new(self.map.range(lo.clone()..h.clone())),
+                    None => Box::new(self.map.range(lo.clone()..)),
                 };
-                if iv.rev {
+                if rev {
                     range.rev().filter(|(_, v)| v.is_some()).map(|(k, _)| k.clone()).take(keep).collect()
                 } else {
                     range.filter(|(_, v)| v.is_some()).map(|(k, _)| k.clone()).take(keep).collect()
                 }
             };
-            if present.len() >= keep {
-                let edge = present.last().unwrap();
-                if iv.rev {
-                    iv.lo = edge.clone();
-                } else {
-                    iv.hi = Some(succ(edge));
-                }
+            if present.len() < keep {
+                out.extend(g);
+                continue;
             }
+            let edge = present.last().unwrap().clone();
+            out.push(if rev { Iv { lo: edge, hi, keep, rev: true } } else { Iv { lo, hi: Some(succ(&edge)), keep, rev: false } });
         }
-        self.ivs = ivs;
+        self.ivs = out;
         // documents still pointed to by an index entry the opening keeps
         let mut wanted: HashSet<Vec<u8>> = HashSet::new();
         for (k, v) in &self.map {
@@ -933,6 +952,29 @@ mod tests {
         o2.apply(first, None);
         assert!(o2.scan(b"idx/c/i/A", Some(b"idx/c/i/B"), false, Some(5)).is_none());
         assert_eq!(o2.scan(b"idx/c/i/A", Some(b"idx/c/i/B"), false, Some(4)).unwrap(), model_scan(&m, b"idx/c/i/A", Some(b"idx/c/i/B"), false, Some(4)));
+    }
+
+    #[test]
+    fn a_trim_keeps_consecutive_scans_of_one_query_together() {
+        let p = b"idx/c/i/A";
+        let mut m: BTreeMap<Vec<u8>, Vec<u8>> = (100..200).map(|i| (key(p, i), vec![1; 50])).collect();
+        let mut o = Opening::new(vec![(p.to_vec(), b"idx/c/i/B".to_vec())], b"doc/c/".to_vec());
+        // the query reads 20 entries, then one more from where it stopped
+        let first = model_scan(&m, p, Some(b"idx/c/i/B"), false, Some(20));
+        o.note_scan(p, Some(b"idx/c/i/B"), false, Some(20), &first);
+        let next_start = succ(&first.last().unwrap().0);
+        let second = model_scan(&m, &next_start, Some(b"idx/c/i/B"), false, Some(1));
+        o.note_scan(&next_start, Some(b"idx/c/i/B"), false, Some(1), &second);
+        // many new entries in front, then a trim
+        for i in 0..60 {
+            m.insert(key(p, i), vec![2; 50]);
+            o.apply(key(p, i), Some(b(&[2; 50])));
+        }
+        o.trim();
+        let first2 = o.scan(p, Some(b"idx/c/i/B"), false, Some(20)).expect("first batch served");
+        assert_eq!(first2, model_scan(&m, p, Some(b"idx/c/i/B"), false, Some(20)));
+        let next2 = succ(&first2.last().unwrap().0);
+        assert_eq!(o.scan(&next2, Some(b"idx/c/i/B"), false, Some(1)).expect("next batch served"), model_scan(&m, &next2, Some(b"idx/c/i/B"), false, Some(1)));
     }
 
     #[test]
