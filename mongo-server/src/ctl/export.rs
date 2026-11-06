@@ -88,6 +88,8 @@ pub async fn create(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
     // Freeze: no command runs on the database and everything acknowledged is in the manifest.
     let mut g = ctl.dbs.lock(db).await;
     fork::quiesce(ctl, &mut g, db).await?;
+    // a compaction pass running (maybe a long merge) stops instead of making this wait for it
+    let _preempt = tenant_bench::lifecycle::preempt_compaction(db);
     let lock = maint_lock(&ctl.lc.maint_locks, db);
     let _maint = lock.lock().await;
     ctl.dbs.leases.acquire(db).await?;

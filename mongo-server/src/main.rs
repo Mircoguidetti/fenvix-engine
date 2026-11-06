@@ -17,6 +17,7 @@ pub static malloc_conf: &[u8] = b"background_thread:true\0";
 
 mod agg;
 mod prefetch;
+mod hostinfo;
 mod auth;
 mod authz;
 mod scram;

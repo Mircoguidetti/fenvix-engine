@@ -772,6 +772,22 @@ impl Server {
                 "multipartPart": ld(&c.multipart_part), "copy": ld(&c.copy), "delete": ld(&c.delete),
                 "getBytes": ld(&c.get_bytes), "putBytes": ld(&c.put_bytes),
             },
+            // compaction passes (lifecycle.rs): running now, of which long merges without a maintenance slot; ended without
+            // progress; stopped on request; GC rounds that skipped a tenant busy with a pass
+            "compaction": {
+                "passes": tenant_bench::lifecycle::MAINT.compact_runs.load(Relaxed) as i64,
+                "running": tenant_bench::lifecycle::PASSES_RUNNING.load(Relaxed) as i64,
+                "longMerges": tenant_bench::lifecycle::PASSES_LONG.load(Relaxed) as i64,
+                "stalled": tenant_bench::lifecycle::PASSES_STALLED.load(Relaxed) as i64,
+                "preempted": tenant_bench::lifecycle::PASSES_PREEMPTED.load(Relaxed) as i64,
+                "gcSkippedBusy": tenant_bench::lifecycle::GC_SKIPPED_BUSY.load(Relaxed) as i64,
+            },
+            // reads charged to no command: opening and reopening databases, upgrades to a writer, profiler writes
+            "backgroundReads": {
+                "gets": tenant_bench::meter::BACKGROUND.read().0 as i64,
+                "bytes": tenant_bench::meter::BACKGROUND.read().1 as i64,
+                "micros": tenant_bench::meter::BACKGROUND.read().2 as i64,
+            },
             "mapping": {
                 "wiredTiger.cache.bytes currently in the cache": "bytes held by the shared block + metadata cache (RAM)",
                 "wiredTiger.cache.maximum bytes configured": "--block-cache-mb + --meta-cache-mb",
@@ -790,6 +806,7 @@ impl Server {
 
     fn host_info(&self) -> Document {
         let mut d = template(HOST_INFO);
+        crate::hostinfo::fill(&mut d);
         if let Some(Bson::Document(s)) = d.get_mut("system") {
             s.insert("currentTime", Bson::DateTime(bson::DateTime::now()));
             s.insert("hostname", self.host_port());
@@ -1283,7 +1300,8 @@ impl Server {
                     }
                 }
             };
-            if let Err(e) = self.write_profile(db, batch).await {
+            // background work of the database: its reads (the writer's open, the collection list) go to no command (meter.rs)
+            if let Err(e) = tenant_bench::meter::background(db, self.write_profile(db, batch)).await {
                 eprintln!("profiler: entries of {db} not written: {}", e.msg);
             }
         }

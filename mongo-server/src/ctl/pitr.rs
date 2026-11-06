@@ -311,6 +311,8 @@ async fn run(ctl: &Arc<Ctl>, db: &str, detail: &Value, apply: bool) -> ApiResult
     }
     // Quiesce: flushed and closed, no process writing, no compaction or GC pass running.
     fork::quiesce(ctl, &mut g, db).await?;
+    // a compaction pass running (maybe a long merge) stops instead of making this wait for it
+    let _preempt = tenant_bench::lifecycle::preempt_compaction(db);
     let lock = maint_lock(&ctl.lc.maint_locks, db);
     let _maint = lock.lock().await;
     ctl.dbs.leases.acquire(db).await?;

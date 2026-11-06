@@ -8,8 +8,9 @@
 //!   small range arrives with them). The block reads of a scan run in tasks slatedb spawns (no task-local there): a GET
 //!   made outside any command, for a database (the owner of the request, `counting::request_owner`) that has commands
 //!   running ([`register`]), is charged to them: in full when one command runs on that database, split evenly and marked
-//!   `shared` when several do. The compactor's reads are not charged (its store is marked background); other reads of
-//!   the database made outside a command while one runs would be (none known besides the compactor).
+//!   `shared` when several do. Background work is charged to no command: the compactor (its store is marked background),
+//!   and opening or reopening a database, its upgrade to a writer and the writing of profiler entries ([`background`]),
+//!   whose reads go to [`BACKGROUND`].
 
 use async_trait::async_trait;
 use slatedb::db_cache::{CacheFetch, CacheLoader, CacheLookup, CachedEntry, CachedKey, DbCache};
@@ -241,10 +242,55 @@ tokio::task_local! {
     pub static OP_METER: Arc<OpMeter>;
 }
 
+/// Reads of the background work of every database that are not charged to any command (opening or reopening a
+/// database, upgrading it to a writer, writing profiler entries: [`background`]): GETs, bytes, microseconds.
+pub static BACKGROUND: OpMeter = OpMeter {
+    gets: AtomicU64::new(0),
+    bytes: AtomicU64::new(0),
+    micros: AtomicU64::new(0),
+    shared: std::sync::atomic::AtomicBool::new(false),
+};
+
+/// Databases with background work running ([`background`]), with how many such works run on each.
+static IN_BACKGROUND: std::sync::LazyLock<std::sync::Mutex<std::collections::HashMap<String, usize>>> = std::sync::LazyLock::new(Default::default);
+
+/// Run `work`, background work of database `db` (opening or reopening it, its upgrade to a writer, writing profiler entries),
+/// so that its reads go to [`BACKGROUND`] and not to a command: the reads made while `work` is polled (also inside a
+/// command's future, where they would be charged to that command), and the reads slatedb makes for `db` in tasks it spawns
+/// while `work` runs (index, filter and WAL fetches of the open). While it runs, the reads of the commands of `db` made in
+/// such spawned tasks are not charged either; there are none in practice: a command of `db` waits for the open it needs.
+pub async fn background<F: std::future::Future>(db: &str, work: F) -> F::Output {
+    struct Running(String);
+    impl Drop for Running {
+        fn drop(&mut self) {
+            let mut m = IN_BACKGROUND.lock().unwrap();
+            if let Some(n) = m.get_mut(&self.0) {
+                *n -= 1;
+                if *n == 0 {
+                    m.remove(&self.0);
+                }
+            }
+        }
+    }
+    *IN_BACKGROUND.lock().unwrap().entry(db.to_string()).or_default() += 1;
+    let _running = Running(db.to_string());
+    BACKGROUND_SCOPE.scope((), work).await
+}
+
+tokio::task_local! {
+    /// Set while background work ([`background`]) is polled.
+    static BACKGROUND_SCOPE: ();
+}
+
 /// Called by the counting store after each GET (and ranged GET): charge it to the current operation, if one is metered,
-/// otherwise to the commands running on the database that made the request (see the module comment).
+/// otherwise to the commands running on the database that made the request (see the module comment). Reads of background
+/// work ([`background`], the compactor's background store) are charged to no command.
 pub fn note_get(bytes: u64, elapsed: std::time::Duration) {
     let us = elapsed.as_micros() as u64;
+    if BACKGROUND_SCOPE.try_with(|_| ()).is_ok() {
+        BACKGROUND.add(1, bytes, us);
+        return;
+    }
     if OP_METER.try_with(|m| m.add(1, bytes, us)).is_ok() {
         return;
     }
@@ -252,6 +298,10 @@ pub fn note_get(bytes: u64, elapsed: std::time::Duration) {
         return;
     }
     let Some(owner) = crate::counting::request_owner() else { return };
+    if IN_BACKGROUND.lock().unwrap().contains_key(&*owner) {
+        BACKGROUND.add(1, bytes, us);
+        return;
+    }
     let a = ACTIVE.lock().unwrap();
     let Some(v) = a.get(&*owner) else { return };
     let n = v.len() as u64;
@@ -302,6 +352,38 @@ mod tests {
         crate::counting::with_owner_for_test("dba", || note_get(10, std::time::Duration::from_micros(2)));
         assert_eq!(a.read(), (2, 150, 60));
         assert_eq!(b.read(), (2, 60, 22));
+    }
+
+    #[tokio::test]
+    async fn background_work_is_charged_to_no_command() {
+        let m = Arc::new(OpMeter::default());
+        let _r = register("dbbg", &m);
+        let before = BACKGROUND.read();
+        OP_METER
+            .scope(Arc::clone(&m), async {
+                // the open of the database inside the command's future
+                background("dbbg", async { note_get(1000, std::time::Duration::from_micros(100)) }).await;
+                note_get(7, std::time::Duration::from_micros(3));
+            })
+            .await;
+        assert_eq!(m.read(), (1, 7, 3));
+        // a task slatedb spawned for the open, while the open runs
+        let gate = Arc::new(tokio::sync::Notify::new());
+        let g = Arc::clone(&gate);
+        let open = tokio::spawn(background("dbbg", async move { g.notified().await }));
+        tokio::task::yield_now().await;
+        while !IN_BACKGROUND.lock().unwrap().contains_key("dbbg") {
+            tokio::task::yield_now().await;
+        }
+        crate::counting::with_owner_for_test("dbbg", || note_get(500, std::time::Duration::from_micros(50)));
+        assert_eq!(m.read(), (1, 7, 3));
+        gate.notify_one();
+        open.await.unwrap();
+        // once the open is over, the scan reads of the command are charged to it again
+        crate::counting::with_owner_for_test("dbbg", || note_get(20, std::time::Duration::from_micros(2)));
+        assert_eq!(m.read(), (2, 27, 5));
+        let after = BACKGROUND.read();
+        assert!(after.0 >= before.0 + 2 && after.1 >= before.1 + 1500);
     }
 
     #[test]
