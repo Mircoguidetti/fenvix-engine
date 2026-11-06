@@ -1,0 +1,38 @@
+replica 0: candidata, mandato 1
+replica 0: guida, mandato 1 (indice 0)
+replica 0: TimeoutNow from 2 (term 4), campaigning now
+replica 0: candidata, mandato 5
+replica 0: guida, mandato 5 (indice 20508)
+replica 0: TimeoutNow from 2 (term 8), campaigning now
+replica 0: candidata, mandato 9
+replica 0: guida, mandato 9 (indice 38808)
+replica 0: TimeoutNow from 2 (term 12), campaigning now
+replica 0: candidata, mandato 13
+replica 0: guida, mandato 13 (indice 60885)
+replica 0: TimeoutNow from 2 (term 16), campaigning now
+replica 0: candidata, mandato 17
+replica 0: guida, mandato 17 (indice 78916)
+replica 0: TimeoutNow from 2 (term 20), campaigning now
+replica 0: candidata, mandato 21
+replica 0: guida, mandato 21 (indice 98382)
+replica 0: TimeoutNow from 2 (term 24), campaigning now
+replica 0: candidata, mandato 25
+replica 0: guida, mandato 25 (indice 115924)
+replica 0: TimeoutNow from 2 (term 28), campaigning now
+replica 0: candidata, mandato 29
+replica 0: guida, mandato 29 (indice 138976)
+replica 0: TimeoutNow from 2 (term 32), campaigning now
+replica 0: candidata, mandato 33
+replica 0: guida, mandato 33 (indice 156532)
+replica 0: TimeoutNow from 2 (term 36), campaigning now
+replica 0: candidata, mandato 37
+replica 0: guida, mandato 37 (indice 179444)
+replica 0: TimeoutNow from 2 (term 40), campaigning now
+replica 0: candidata, mandato 41
+replica 0: guida, mandato 41 (indice 197940)
+replica 0: TimeoutNow from 2 (term 44), campaigning now
+replica 0: candidata, mandato 45
+replica 0: guida, mandato 45 (indice 221173)
+replica 0: TimeoutNow from 2 (term 48), campaigning now
+replica 0: candidata, mandato 49
+replica 0: guida, mandato 49 (indice 240048)

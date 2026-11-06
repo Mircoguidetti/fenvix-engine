@@ -1,0 +1,1 @@
+.: kill -9 cycles 24: median 0.74 s, max 1.16 s; keeper seen leading next in 0; all cycles median 0.84 s

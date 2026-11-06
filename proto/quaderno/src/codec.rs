@@ -340,6 +340,9 @@ pub enum Msg {
     /// `pre` = pre-voto (non cambia il mandato di nessuno)
     Vote { term: u64, from: u8, last_index: u64, last_term: u64, pre: bool },
     VoteResp { term: u64, from: u8, granted: bool, pre: bool },
+    /// log-on-pair (leadership transfer, Raft thesis 3.10): the leader (the keeper, handing back) tells a follower
+    /// whose log matches its own to campaign at once, without waiting for its election timeout and without a prevote
+    TimeoutNow { term: u64, from: u8 },
 }
 
 pub fn enc_msg(b: &mut BytesMut, m: &Msg) {
@@ -381,6 +384,11 @@ pub fn enc_msg(b: &mut BytesMut, m: &Msg) {
             b.put_u8(*from);
             b.put_u8(*granted as u8);
             b.put_u8(*pre as u8);
+        }
+        Msg::TimeoutNow { term, from } => {
+            b.put_u8(5);
+            b.put_u64_le(*term);
+            b.put_u8(*from);
         }
     }
 }
@@ -427,6 +435,7 @@ pub fn dec_msg(body: Bytes) -> R<Msg> {
         2 => Msg::AppendResp { term: r.u64()?, from: r.u8()?, ok: r.u8()? != 0, ack: r.u64()?, hint: r.u64()?, seq: r.u64()? },
         3 => Msg::Vote { term: r.u64()?, from: r.u8()?, last_index: r.u64()?, last_term: r.u64()?, pre: r.u8()? != 0 },
         4 => Msg::VoteResp { term: r.u64()?, from: r.u8()?, granted: r.u8()? != 0, pre: r.u8()? != 0 },
+        5 => Msg::TimeoutNow { term: r.u64()?, from: r.u8()? },
         _ => return Err(Short),
     })
 }
@@ -977,6 +986,15 @@ pub fn dec_resp(body: Bytes) -> R<(u64, Resp)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn timeout_now_roundtrip() {
+        let mut b = BytesMut::new();
+        enc_msg(&mut b, &Msg::TimeoutNow { term: 42, from: 2 });
+        match dec_msg(b.freeze()).unwrap() {
+            Msg::TimeoutNow { term, from } => assert_eq!((term, from), (42, 2)),
+            _ => panic!(),
+        }
+    }
     #[test]
     fn entry_roundtrip() {
         let w = vec![Write { key: Bytes::from_static(b"doc/a"), kind: Kind::Put, val: Bytes::from(vec![7u8; 200]) }];

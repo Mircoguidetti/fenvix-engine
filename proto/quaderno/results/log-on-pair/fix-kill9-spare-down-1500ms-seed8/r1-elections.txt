@@ -1,0 +1,42 @@
+replica 1: TimeoutNow from 2 (term 2), campaigning now
+replica 1: candidata, mandato 3
+replica 1: guida, mandato 3 (indice 11249)
+replica 1: TimeoutNow from 2 (term 6), campaigning now
+replica 1: candidata, mandato 7
+replica 1: guida, mandato 7 (indice 29274)
+replica 1: lascio la guida (mandato 7)
+replica 1: TimeoutNow from 2 (term 10), campaigning now
+replica 1: candidata, mandato 11
+replica 1: guida, mandato 11 (indice 51365)
+replica 1: TimeoutNow from 2 (term 14), campaigning now
+replica 1: candidata, mandato 15
+replica 1: guida, mandato 15 (indice 70037)
+replica 1: lascio la guida (mandato 15)
+replica 1: TimeoutNow from 2 (term 18), campaigning now
+replica 1: candidata, mandato 19
+replica 1: guida, mandato 19 (indice 91043)
+replica 1: TimeoutNow from 2 (term 22), campaigning now
+replica 1: candidata, mandato 23
+replica 1: guida, mandato 23 (indice 106903)
+replica 1: lascio la guida (mandato 25)
+replica 1: TimeoutNow from 2 (term 26), campaigning now
+replica 1: candidata, mandato 27
+replica 1: guida, mandato 27 (indice 128394)
+replica 1: TimeoutNow from 2 (term 30), campaigning now
+replica 1: candidata, mandato 31
+replica 1: guida, mandato 31 (indice 147262)
+replica 1: lascio la guida (mandato 31)
+replica 1: TimeoutNow from 2 (term 34), campaigning now
+replica 1: candidata, mandato 35
+replica 1: guida, mandato 35 (indice 169476)
+replica 1: TimeoutNow from 2 (term 38), campaigning now
+replica 1: candidata, mandato 39
+replica 1: guida, mandato 39 (indice 190016)
+replica 1: lascio la guida (mandato 39)
+replica 1: TimeoutNow from 2 (term 42), campaigning now
+replica 1: candidata, mandato 43
+replica 1: guida, mandato 43 (indice 211242)
+replica 1: TimeoutNow from 2 (term 46), campaigning now
+replica 1: candidata, mandato 47
+replica 1: guida, mandato 47 (indice 231246)
+replica 1: lascio la guida (mandato 49)

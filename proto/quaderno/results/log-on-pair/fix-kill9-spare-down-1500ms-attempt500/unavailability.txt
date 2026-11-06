@@ -1,0 +1,1 @@
+.: kill -9 cycles 18: median 1.10 s, max 1.16 s; keeper seen leading next in 2 (median 1.11 s); all cycles median 1.10 s

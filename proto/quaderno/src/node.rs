@@ -319,6 +319,14 @@ pub struct Node {
     infl: VecDeque<(u64, u64)>,
     infl_bytes: u64,
     lane_buf: Vec<Item<Reply>>,
+    // ---- log-on-pair fix round: the keeper hands back with a leadership transfer
+    /// keeper leading: the data copy it is handing over to (-1 = none). While set, no new record is accepted, so the
+    /// target can match the keeper's whole log and win the election the keeper's TimeoutNow starts
+    transfer_to: i32,
+    transfer_since: Instant,
+    /// keeper: a data copy that is BEHIND the keeper asked for a (pre)vote while the keeper still counted the old
+    /// leader as heard recently; the keeper campaigns as soon as that leader has been silent for one election timeout
+    keeper_early: bool,
 }
 
 /// log-on-pair: `PQ_LEADER_ACK=1` = a record is acknowledged when the LEADER's own copy is durable AND the first of the
@@ -329,13 +337,16 @@ fn leader_must_ack() -> bool {
 }
 
 /// log-on-pair: `PQ_KEEPER=1` on the third copy (the shared keeper): it campaigns only after `PQ_KEEPER_WAIT_MS`
-/// (default 3000) without a leader, and when it has to lead (the surviving data copy was behind it) it steps down as
-/// soon as a data copy has every committed record, so that copy can take over. Returns the wait, or None.
-fn keeper_wait() -> Option<Duration> {
-    static V: std::sync::OnceLock<Option<Duration>> = std::sync::OnceLock::new();
+/// without a leader (fix round: default the longest election timeout of a data copy plus 100 ms, so a live data copy
+/// always goes first; it was a fixed 3,000 ms), or one election timeout after the old leader's last message when a
+/// data copy that is behind the keeper asked for the vote. When it has to lead (the surviving data copy was behind
+/// it) it hands back with a leadership transfer as soon as a data copy has every committed record.
+/// Returns the explicit `PQ_KEEPER_WAIT_MS`, Some(None) for the default, or None (not the keeper).
+fn keeper_cfg() -> Option<Option<u64>> {
+    static V: std::sync::OnceLock<Option<Option<u64>>> = std::sync::OnceLock::new();
     *V.get_or_init(|| {
         if std::env::var("PQ_KEEPER").map(|x| x == "1").unwrap_or(false) {
-            Some(Duration::from_millis(std::env::var("PQ_KEEPER_WAIT_MS").ok().and_then(|x| x.parse().ok()).unwrap_or(3000)))
+            Some(std::env::var("PQ_KEEPER_WAIT_MS").ok().and_then(|x| x.parse().ok()))
         } else {
             None
         }
@@ -758,6 +769,9 @@ impl Node {
             lane_cfg: LaneCfg::from_env(),
             infl: VecDeque::new(),
             infl_bytes: 0,
+            transfer_to: -1,
+            transfer_since: now,
+            keeper_early: false,
             lane_buf: vec![],
             cfg,
         };
@@ -1124,6 +1138,11 @@ impl Node {
         }
     }
 
+    /// log-on-pair: how long the keeper waits without a leader before it campaigns (None = not the keeper)
+    fn keeper_wait(&self) -> Option<Duration> {
+        keeper_cfg().map(|w| Duration::from_millis(w.unwrap_or(self.cfg.elect_max_ms + 100)))
+    }
+
     fn send_peer(&self, to: u8, m: &Msg) {
         let mut b = BytesMut::with_capacity(64);
         enc_msg(&mut b, m);
@@ -1159,12 +1178,15 @@ impl Node {
         self.prevotes.clear();
         self.votes.clear();
         self.noop_index = u64::MAX;
+        self.transfer_to = -1;
     }
 
     fn become_leader(&mut self) {
         self.flush_index();
         eprintln!("replica {}: guida, mandato {} (indice {})", self.me(), self.term, self.last_index());
         self.role = Role::Leader;
+        self.keeper_early = false;
+        self.transfer_to = -1;
         self.infl.clear();
         self.infl_bytes = 0;
         self.sh.is_leader.store(true, std::sync::atomic::Ordering::Relaxed);
@@ -1202,6 +1224,14 @@ impl Node {
             Msg::AppendResp { term, from, ok, ack, hint, seq } => self.on_append_resp(term, from, ok, ack, hint, seq),
             Msg::Vote { term, from, last_index, last_term, pre } => self.on_vote(term, from, last_index, last_term, pre),
             Msg::VoteResp { term, from, granted, pre } => self.on_vote_resp(term, from, granted, pre),
+            Msg::TimeoutNow { term, from } => {
+                // log-on-pair: the keeper hands the lead back to this data copy (its log matched the keeper's when
+                // the keeper stepped down): campaign now, no prevote (the keeper no longer leads, it will vote)
+                if term == self.term && self.role == Role::Follower && keeper_cfg().is_none() {
+                    eprintln!("replica {}: TimeoutNow from {} (term {}), campaigning now", self.me(), from, term);
+                    self.start_election();
+                }
+            }
         }
     }
 
@@ -1218,6 +1248,7 @@ impl Node {
         let now = Instant::now();
         self.leader = leader as i32;
         self.last_heard_leader = now;
+        self.keeper_early = false;
         self.election_deadline = now + rand_ms(self.cfg.elect_min_ms, self.cfg.elect_max_ms);
         self.last_seen_seq = self.last_seen_seq.max(seq);
         let fail = |n: &Node, hint: u64| {
@@ -1414,13 +1445,21 @@ impl Node {
                 eprintln!("{} replica {}: prevote from {} term {} li {} lt {}: up_to_date {} heard_recently {} granted {} (my term {} last {} / {})",
                     now_ms(), me, from, term, li, lt, up_to_date, heard_recently, granted, self.term, self.last_index(), self.last_term());
             }
-            if let Some(w) = keeper_wait() {
+            if let Some(w) = self.keeper_wait() {
                 if !up_to_date && !heard_recently && self.role != Role::Leader && now.duration_since(self.last_heard_leader) < w {
                     // log-on-pair: a data copy asks for the vote but is behind the keeper, so it cannot win; the keeper
                     // campaigns now (it will bring that copy up to date and hand over), without its long wait
                     eprintln!("replica {}: keeper: candidate {} is behind ({} < {}), campaigning now", me, from, li, self.last_index());
                     self.last_heard_leader = now - w;
                     self.election_deadline = now;
+                } else if !up_to_date && heard_recently && self.role != Role::Leader && !self.keeper_early {
+                    // fix round (review FIX 2): the same, but the keeper still counts the old leader as heard recently
+                    // (a restarted spare can ask before that runs out). Before, the shortcut was lost and the keeper
+                    // waited its whole wait; now it campaigns one election timeout after the old leader's last message
+                    eprintln!("replica {}: keeper: candidate {} is behind ({} < {}), campaigning when the leader has been silent {} ms",
+                        me, from, li, self.last_index(), self.cfg.elect_min_ms);
+                    self.keeper_early = true;
+                    self.election_deadline = self.election_deadline.min(self.last_heard_leader + Duration::from_millis(self.cfg.elect_min_ms));
                 }
             }
             self.send_peer(from, &Msg::VoteResp { term, from: me, granted, pre: true });
@@ -1630,26 +1669,46 @@ impl Node {
             }
             _ => {
                 if now >= self.election_deadline {
-                    match keeper_wait() {
-                        // log-on-pair: the keeper campaigns only after a long silence (the data copies go first)
-                        Some(w) if now.duration_since(self.last_heard_leader) < w => {
-                            self.election_deadline = self.last_heard_leader + w;
+                    match self.keeper_wait() {
+                        // log-on-pair: the keeper campaigns only after a longer silence (the data copies go first), or
+                        // one election timeout after the leader's last message when a data copy behind it asked
+                        Some(w) if now.duration_since(self.last_heard_leader) < if self.keeper_early { emin } else { w } => {
+                            self.election_deadline = self.last_heard_leader + if self.keeper_early { emin } else { w };
                         }
                         _ => self.start_prevote(),
                     }
                 }
             }
         }
-        if self.role == Role::Leader && keeper_wait().is_some() && self.noop_index != u64::MAX && self.commit >= self.noop_index {
+        if self.role == Role::Leader && keeper_cfg().is_some() && self.noop_index != u64::MAX && self.commit >= self.noop_index {
             // log-on-pair: the keeper led only to bring a data copy up to date; once one has every committed record
-            // it hands over (steps down and stays quiet), the caught-up data copy wins the next election
-            if self.peers.iter().any(|p| p.matched >= self.commit && now.duration_since(p.last_heard) < emin) {
-                eprintln!("replica {}: keeper hands over (term {}, commit {})", self.me(), self.term, self.commit);
-                let t = self.term;
-                self.become_follower(t);
-                self.last_heard_leader = now;
-                self.election_deadline = now + Duration::from_secs(10);
-                return;
+            // it hands over. Fix round (review FIX 2): with a leadership transfer. It stops accepting records, waits
+            // until that copy has its WHOLE log on disk (so the keeper will vote for it), sends it TimeoutNow and steps
+            // down: the copy campaigns at once instead of after its election timeout (before: a second write stop of
+            // one election timeout, and the keeper often had to lead again because the copy lacked its newest records)
+            if self.transfer_to < 0 {
+                if let Some(p) = self.peers.iter().filter(|p| p.matched >= self.commit && now.duration_since(p.last_heard) < emin).max_by_key(|p| p.matched) {
+                    eprintln!("replica {}: keeper transfers the lead to {} (term {}, commit {}, last {})", self.me(), p.id, self.term, self.commit, self.last_index());
+                    self.transfer_to = p.id as i32;
+                    self.transfer_since = now;
+                }
+            }
+            if self.transfer_to >= 0 {
+                let to = self.transfer_to as u8;
+                let last = self.last_index();
+                if self.peers.iter().any(|p| p.id == to && p.matched >= last) {
+                    eprintln!("replica {}: keeper hands over to {} (term {}, commit {}, last {})", self.me(), to, self.term, self.commit, last);
+                    let t = self.term;
+                    self.send_peer(to, &Msg::TimeoutNow { term: t, from: self.me() });
+                    self.become_follower(t);
+                    self.last_heard_leader = now;
+                    self.election_deadline = now + Duration::from_secs(10);
+                    return;
+                }
+                if now.duration_since(self.transfer_since) > emin {
+                    eprintln!("replica {}: keeper: transfer to {} timed out, leading on", self.me(), to);
+                    self.transfer_to = -1;
+                }
             }
         }
         // lavori periodici, ciascuno a passi brevi e cronometrato
@@ -1928,7 +1987,7 @@ impl Node {
                 self.need_hb = true;
             }
             Req::FlushDone { items } => {
-                if self.role != Role::Leader {
+                if self.role != Role::Leader || self.transfer_to >= 0 {
                     reply.send(&Resp::NotLeader(self.leader));
                     return;
                 }
@@ -2186,6 +2245,11 @@ impl Node {
     }
 
     fn commit_now(&mut self, reply: Reply, c: CommitReq) {
+        // log-on-pair: the keeper is handing the lead over; the client goes to the new leader
+        if self.transfer_to >= 0 {
+            reply.send(&Resp::NotLeader(self.transfer_to));
+            return;
+        }
         // Q8d (reviewer C4, guarantee 8): a log accepts only the databases assigned to it. Two logs that both accepted
         // the same database would give it two orders of writes (two writers)
         if !self.owns(&c.db) {

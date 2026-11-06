@@ -24,6 +24,15 @@ CPU_TOOLS = os.environ.get('PAIR_CPU_TOOLS', '2,3')
 BASE_ENV = dict(os.environ, PQ_CORSIE='1', PQ_RICICLA='1', PQ_PREALLOC_MBS='64', PQ_PREF='0', PQ_QUOTA_RECS='50000', PQ_QUOTA_MB='64')
 
 
+# log-on-pair fix round (review FIX 2): election timeout of every copy, random in [min, max] ms after the leader's last
+# message (heartbeat every 50 ms, cross-zone round trip 1 ms). The prototype's default is 1,000-2,000 ms, and with it the
+# write stop at a failover cannot go under ~1.5 s median even on the easy path (the spare is current): the stop IS the
+# election timeout. 500-1,000 ms is the setting of the fix round; PAIR_ELECT_MIN_MS=1000 PAIR_ELECT_MAX_MS=2000 gives
+# back the delivered setting. The keeper waits max + 100 ms (PQ_KEEPER_WAIT_MS overrides it).
+ELECT_MIN_MS = int(os.environ.get('PAIR_ELECT_MIN_MS', '500'))
+ELECT_MAX_MS = int(os.environ.get('PAIR_ELECT_MAX_MS', '1000'))
+
+
 def wait_port(port, t=15):
     end = time.time() + t
     while time.time() < end:
@@ -83,7 +92,8 @@ class Cell:
         return [PQ, 'replica', '--id', str(i), '--dir', d, '--peer-listen', f'127.0.0.1:{7100 + i}',
                 '--client-listen', f'127.0.0.1:{7200 + i}', '--peers', peers, '--mem-cap-mb', str(self.mem_cap_mb),
                 '--window-ms', str(self.window_ms), '--seg-mb', str(self.seg_mb),
-                '--first-elect-delay-ms', '0' if i == 0 else '3000']
+                '--first-elect-delay-ms', '0' if i == 0 else '3000',
+                '--elect-min-ms', str(ELECT_MIN_MS), '--elect-max-ms', str(ELECT_MAX_MS)]
 
     def start_replica(self, i):
         # PAIR_R0_RT=1 (information runs only): log copy 1 at real-time priority (SCHED_FIFO 10), above the mongo-server

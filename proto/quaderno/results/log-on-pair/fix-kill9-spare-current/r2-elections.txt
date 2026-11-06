@@ -1,0 +1,10 @@
+replica 2: candidata, mandato 4
+replica 2: guida, mandato 4 (indice 25103)
+replica 2: keeper transfers the lead to 1 (term 4, commit 25104, last 25104)
+replica 2: keeper hands over to 1 (term 4, commit 25104, last 25104)
+replica 2: lascio la guida (mandato 4)
+replica 2: candidata, mandato 17
+replica 2: guida, mandato 17 (indice 125216)
+replica 2: keeper transfers the lead to 1 (term 17, commit 125217, last 125217)
+replica 2: keeper hands over to 1 (term 17, commit 125217, last 125217)
+replica 2: lascio la guida (mandato 17)

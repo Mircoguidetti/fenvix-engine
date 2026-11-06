@@ -1,0 +1,34 @@
+replica 0: candidata, mandato 1
+replica 0: guida, mandato 1 (indice 0)
+replica 0: candidata, mandato 3
+replica 0: guida, mandato 3 (indice 18102)
+replica 0: candidata, mandato 6
+replica 0: guida, mandato 6 (indice 33205)
+replica 0: candidata, mandato 8
+replica 0: guida, mandato 8 (indice 51207)
+replica 0: candidata, mandato 10
+replica 0: guida, mandato 10 (indice 65409)
+replica 0: candidata, mandato 12
+replica 0: guida, mandato 12 (indice 84211)
+replica 0: candidata, mandato 14
+replica 0: guida, mandato 14 (indice 98613)
+replica 0: candidata, mandato 16
+replica 0: guida, mandato 16 (indice 118615)
+replica 0: candidata, mandato 19
+replica 0: guida, mandato 19 (indice 131218)
+replica 0: candidata, mandato 21
+replica 0: guida, mandato 21 (indice 149220)
+replica 0: candidata, mandato 23
+replica 0: guida, mandato 23 (indice 162122)
+replica 0: candidata, mandato 25
+replica 0: guida, mandato 25 (indice 180524)
+replica 0: candidata, mandato 27
+replica 0: guida, mandato 27 (indice 196426)
+replica 0: candidata, mandato 29
+replica 0: guida, mandato 29 (indice 215028)
+replica 0: candidata, mandato 31
+replica 0: guida, mandato 31 (indice 232230)
+replica 0: candidata, mandato 33
+replica 0: guida, mandato 33 (indice 252032)
+replica 0: candidata, mandato 35
+replica 0: guida, mandato 35 (indice 268734)

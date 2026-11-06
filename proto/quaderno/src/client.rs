@@ -14,7 +14,15 @@ use tokio::net::TcpStream;
 use tokio::sync::{mpsc, oneshot};
 
 /// tempo di un tentativo di commit
-pub const ATTEMPT: Duration = Duration::from_millis(1500);
+pub const ATTEMPT_DEFAULT: Duration = Duration::from_millis(1500);
+
+/// Time one attempt waits for an answer before the client tries another replica. `PQ_ATTEMPT_MS` overrides the
+/// 1,500 ms default (log-on-pair fix round, information runs only: a request sent to a FROZEN leader waits this long,
+/// so it is the floor of the write stop the writer sees when the waiter freezes).
+pub fn attempt() -> Duration {
+    static V: std::sync::OnceLock<Duration> = std::sync::OnceLock::new();
+    *V.get_or_init(|| std::env::var("PQ_ATTEMPT_MS").ok().and_then(|x| x.parse().ok()).map(Duration::from_millis).unwrap_or(ATTEMPT_DEFAULT))
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CallErr {
@@ -207,7 +215,7 @@ impl Cluster {
                 // un rifiuto del freno vale solo se nessun tentativo precedente è rimasto senza risposta certa
                 return self.give_up(last_busy, ambiguous, busy);
             }
-            let budget = left.min(ATTEMPT);
+            let budget = left.min(attempt());
             match self.call(target, &q, budget).await {
                 Ok(Resp::Committed(p)) => {
                     self.leader.store(target as i32, Relaxed);
@@ -226,7 +234,7 @@ impl Cluster {
                     // rifiuto ritentabile. Prima si dormiva fino a poco prima della scadenza e l'ultimo tentativo
                     // partiva con pochi ms: scadeva prima della risposta e il commit diventava "esito ignoto"
                     // (MISURATO: tutti gli esiti ignoti sotto il freno erano tentativi così)
-                    if start.elapsed() + Duration::from_millis(ms) + ATTEMPT > deadline {
+                    if start.elapsed() + Duration::from_millis(ms) + attempt() > deadline {
                         let o = self.give_up(last_busy, ambiguous, busy);
                         if matches!(o, Outcome::Rejected(_)) {
                             self.diag.rejected_early.fetch_add(1, Relaxed);
@@ -253,7 +261,7 @@ impl Cluster {
                     let d = &self.diag;
                     if r.is_ok() {
                         d.amb_resp.fetch_add(1, Relaxed);
-                    } else if budget < ATTEMPT {
+                    } else if budget < attempt() {
                         d.to_short.fetch_add(1, Relaxed);
                     } else {
                         d.to_full.fetch_add(1, Relaxed);
@@ -302,7 +310,7 @@ impl Cluster {
                 }
                 break;
             }
-            let budget = left.min(ATTEMPT);
+            let budget = left.min(attempt());
             let q = Req::CommitBatch(todo.iter().map(|i| cs[*i].clone()).collect());
             for i in &todo {
                 st[*i].0 += 1;
@@ -336,7 +344,7 @@ impl Cluster {
                         match &per[j] {
                             Ok(_) => d.amb_resp.fetch_add(1, Relaxed),
                             Err(CallErr::Closed) => d.closed.fetch_add(1, Relaxed),
-                            Err(_) if budget < ATTEMPT => d.to_short.fetch_add(1, Relaxed),
+                            Err(_) if budget < attempt() => d.to_short.fetch_add(1, Relaxed),
                             Err(_) => d.to_full.fetch_add(1, Relaxed),
                         };
                         s.1 = true;
@@ -360,7 +368,7 @@ impl Cluster {
                 rounds_busy += 1;
                 let base = ((retry_ms as u64) << (rounds_busy - 1).min(5)).min(2000);
                 let ms = base / 2 + rand::random::<u64>() % (base / 2 + 1);
-                if start.elapsed() + Duration::from_millis(ms) + ATTEMPT > deadline {
+                if start.elapsed() + Duration::from_millis(ms) + attempt() > deadline {
                     for i in 0..n {
                         if out[i].is_none() {
                             let o = self.give_up(st[i].3, st[i].1, st[i].2);

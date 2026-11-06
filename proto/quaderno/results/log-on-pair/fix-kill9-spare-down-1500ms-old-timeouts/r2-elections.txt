@@ -1,0 +1,131 @@
+replica 2: candidata, mandato 2
+replica 2: guida, mandato 2 (indice 11301)
+replica 2: keeper transfers the lead to 1 (term 2, commit 12292, last 13094)
+replica 2: keeper hands over to 1 (term 2, commit 13094, last 13094)
+replica 2: lascio la guida (mandato 2)
+replica 2: keeper: candidate 0 is behind (20003 < 21403), campaigning now
+replica 2: candidata, mandato 4
+replica 2: guida, mandato 4 (indice 21403)
+replica 2: keeper transfers the lead to 0 (term 4, commit 21500, last 21529)
+replica 2: keeper hands over to 0 (term 4, commit 21529, last 21529)
+replica 2: lascio la guida (mandato 4)
+replica 2: candidata, mandato 6
+replica 2: guida, mandato 6 (indice 30605)
+replica 2: keeper transfers the lead to 1 (term 6, commit 30607, last 30622)
+replica 2: keeper hands over to 1 (term 6, commit 30622, last 30622)
+replica 2: lascio la guida (mandato 6)
+replica 2: keeper: candidate 0 is behind (38007 < 39307), campaigning now
+replica 2: candidata, mandato 8
+replica 2: guida, mandato 8 (indice 39307)
+replica 2: keeper transfers the lead to 0 (term 8, commit 39308, last 39308)
+replica 2: keeper hands over to 0 (term 8, commit 39308, last 39308)
+replica 2: lascio la guida (mandato 8)
+replica 2: candidata, mandato 10
+replica 2: guida, mandato 10 (indice 52709)
+replica 2: keeper transfers the lead to 1 (term 10, commit 52710, last 52717)
+replica 2: keeper hands over to 1 (term 10, commit 52717, last 52717)
+replica 2: lascio la guida (mandato 10)
+replica 2: keeper: candidate 0 is behind (60311 < 62011), campaigning now
+replica 2: candidata, mandato 12
+replica 2: guida, mandato 12 (indice 62011)
+replica 2: keeper transfers the lead to 0 (term 12, commit 62034, last 62169)
+replica 2: keeper hands over to 0 (term 12, commit 62169, last 62169)
+replica 2: lascio la guida (mandato 12)
+replica 2: candidata, mandato 14
+replica 2: guida, mandato 14 (indice 69613)
+replica 2: keeper transfers the lead to 1 (term 14, commit 69629, last 69656)
+replica 2: keeper hands over to 1 (term 14, commit 69656, last 69656)
+replica 2: lascio la guida (mandato 14)
+replica 2: keeper: candidate 0 is behind (79315 < 80715), campaigning now
+replica 2: candidata, mandato 16
+replica 2: guida, mandato 16 (indice 80715)
+replica 2: keeper transfers the lead to 0 (term 16, commit 80716, last 80716)
+replica 2: keeper hands over to 0 (term 16, commit 80716, last 80716)
+replica 2: lascio la guida (mandato 16)
+replica 2: candidata, mandato 18
+replica 2: guida, mandato 18 (indice 93117)
+replica 2: keeper transfers the lead to 1 (term 18, commit 93152, last 93461)
+replica 2: keeper hands over to 1 (term 18, commit 93461, last 93461)
+replica 2: lascio la guida (mandato 18)
+replica 2: candidata, mandato 20
+replica 2: guida, mandato 20 (indice 103219)
+replica 2: keeper transfers the lead to 0 (term 20, commit 103315, last 103410)
+replica 2: keeper hands over to 0 (term 20, commit 103410, last 103410)
+replica 2: lascio la guida (mandato 20)
+replica 2: candidata, mandato 22
+replica 2: guida, mandato 22 (indice 114421)
+replica 2: keeper transfers the lead to 1 (term 22, commit 114423, last 114452)
+replica 2: keeper hands over to 1 (term 22, commit 114452, last 114452)
+replica 2: lascio la guida (mandato 22)
+replica 2: keeper: candidate 0 is behind (124423 < 126023), campaigning now
+replica 2: candidata, mandato 24
+replica 2: guida, mandato 24 (indice 126023)
+replica 2: keeper transfers the lead to 0 (term 24, commit 126024, last 126024)
+replica 2: keeper hands over to 0 (term 24, commit 126024, last 126024)
+replica 2: lascio la guida (mandato 24)
+replica 2: candidata, mandato 26
+replica 2: guida, mandato 26 (indice 138125)
+replica 2: keeper transfers the lead to 1 (term 26, commit 138198, last 138271)
+replica 2: keeper hands over to 1 (term 26, commit 138271, last 138271)
+replica 2: lascio la guida (mandato 26)
+replica 2: keeper: candidate 0 is behind (147027 < 148327), campaigning now
+replica 2: candidata, mandato 28
+replica 2: guida, mandato 28 (indice 148327)
+replica 2: keeper transfers the lead to 0 (term 28, commit 148515, last 148754)
+replica 2: keeper hands over to 0 (term 28, commit 148517, last 148754)
+replica 2: lascio la guida (mandato 28)
+replica 2: candidata, mandato 30
+replica 2: guida, mandato 30 (indice 156329)
+replica 2: keeper transfers the lead to 1 (term 30, commit 156409, last 156481)
+replica 2: keeper hands over to 1 (term 30, commit 156481, last 156481)
+replica 2: lascio la guida (mandato 30)
+replica 2: keeper: candidate 0 is behind (165631 < 167231), campaigning now
+replica 2: candidata, mandato 32
+replica 2: guida, mandato 32 (indice 167231)
+replica 2: keeper transfers the lead to 0 (term 32, commit 167232, last 167232)
+replica 2: keeper hands over to 0 (term 32, commit 167232, last 167232)
+replica 2: lascio la guida (mandato 32)
+replica 2: candidata, mandato 34
+replica 2: guida, mandato 34 (indice 179433)
+replica 2: keeper transfers the lead to 1 (term 34, commit 179666, last 179993)
+replica 2: keeper hands over to 1 (term 34, commit 179993, last 179993)
+replica 2: lascio la guida (mandato 34)
+replica 2: keeper: candidate 0 is behind (188735 < 190335), campaigning now
+replica 2: candidata, mandato 36
+replica 2: guida, mandato 36 (indice 190335)
+replica 2: keeper transfers the lead to 0 (term 36, commit 190617, last 190628)
+replica 2: keeper hands over to 0 (term 36, commit 190628, last 190628)
+replica 2: lascio la guida (mandato 36)
+replica 2: candidata, mandato 38
+replica 2: guida, mandato 38 (indice 199637)
+replica 2: keeper transfers the lead to 1 (term 38, commit 199666, last 200009)
+replica 2: keeper hands over to 1 (term 38, commit 200009, last 200009)
+replica 2: lascio la guida (mandato 38)
+replica 2: keeper: candidate 0 is behind (206339 < 207639), campaigning now
+replica 2: candidata, mandato 40
+replica 2: guida, mandato 40 (indice 207639)
+replica 2: keeper transfers the lead to 0 (term 40, commit 207814, last 207814)
+replica 2: keeper hands over to 0 (term 40, commit 207814, last 207814)
+replica 2: lascio la guida (mandato 40)
+replica 2: candidata, mandato 42
+replica 2: guida, mandato 42 (indice 220341)
+replica 2: keeper transfers the lead to 1 (term 42, commit 220880, last 220880)
+replica 2: keeper hands over to 1 (term 42, commit 220880, last 220880)
+replica 2: lascio la guida (mandato 42)
+replica 2: keeper: candidate 0 is behind (229243 < 230643), campaigning now
+replica 2: candidata, mandato 44
+replica 2: guida, mandato 44 (indice 230643)
+replica 2: keeper transfers the lead to 0 (term 44, commit 231728, last 231728)
+replica 2: keeper hands over to 0 (term 44, commit 231728, last 231728)
+replica 2: lascio la guida (mandato 44)
+replica 2: candidata, mandato 46
+replica 2: guida, mandato 46 (indice 240345)
+replica 2: keeper transfers the lead to 1 (term 46, commit 241985, last 242006)
+replica 2: keeper hands over to 1 (term 46, commit 242006, last 242006)
+replica 2: lascio la guida (mandato 46)
+replica 2: keeper: candidate 0 is behind (248347 < 249747), campaigning now
+replica 2: candidata, mandato 48
+replica 2: guida, mandato 48 (indice 249747)
+replica 2: keeper transfers the lead to 0 (term 48, commit 249748, last 249748)
+replica 2: keeper hands over to 0 (term 48, commit 249748, last 249748)
+replica 2: lascio la guida (mandato 48)

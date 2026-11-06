@@ -1,0 +1,25 @@
+cycle 0 kill9 waiter r0 new leader r1: first stop 1.128 s, later stops none, total 1.128 s
+cycle 1 kill9 waiter r1 new leader r0: first stop 0.908 s, later stops none, total 0.908 s
+cycle 2 kill9 waiter r0 new leader r1: first stop 1.114 s, later stops none, total 1.114 s
+cycle 3 stop waiter r1 new leader r0: first stop 1.555 s, later stops none, total 1.555 s
+cycle 4 kill9 waiter r0 new leader r1: first stop 1.089 s, later stops none, total 1.089 s
+cycle 5 kill9 waiter r1 new leader r0: first stop 0.572 s, later stops none, total 0.572 s
+cycle 6 kill9 waiter r0 new leader r2: first stop 1.146 s, later stops none, total 1.146 s
+cycle 7 stop waiter r1 new leader r0: first stop 1.665 s, later stops none, total 1.665 s
+cycle 8 kill9 waiter r0 new leader r1: first stop 1.123 s, later stops none, total 1.123 s
+cycle 9 kill9 waiter r1 new leader r2: first stop 0.658 s, later stops none, total 0.658 s
+cycle 10 kill9 waiter r0 new leader r2: first stop 1.113 s, later stops none, total 1.113 s
+cycle 11 stop waiter r1 new leader r0: first stop 1.587 s, later stops none, total 1.587 s
+cycle 12 kill9 waiter r0 new leader r1: first stop 1.090 s, later stops none, total 1.090 s
+cycle 13 kill9 waiter r1 new leader r2: first stop 0.927 s, later stops none, total 0.927 s
+cycle 14 kill9 waiter r0 new leader r2: first stop 1.092 s, later stops none, total 1.092 s
+cycle 15 stop waiter r1 new leader r0: first stop 1.528 s, later stops none, total 1.528 s
+cycle 16 kill9 waiter r0 new leader r1: first stop 1.102 s, later stops none, total 1.102 s
+cycle 17 kill9 waiter r1 new leader r0: first stop 1.020 s, later stops none, total 1.020 s
+cycle 18 kill9 waiter r0 new leader r1: first stop 1.109 s, later stops none, total 1.109 s
+cycle 19 stop waiter r1 new leader r0: first stop 1.662 s, later stops none, total 1.662 s
+cycle 20 kill9 waiter r0 new leader r2: first stop 1.146 s, later stops none, total 1.146 s
+cycle 21 kill9 waiter r1 new leader r2: first stop 1.108 s, later stops none, total 1.108 s
+cycle 22 kill9 waiter r0 new leader r2: first stop 1.163 s, later stops none, total 1.163 s
+cycle 23 stop waiter r1 new leader r0: first stop 1.562 s, later stops none, total 1.562 s
+.: 24 cycles; first stop (kill to first ack) median 1.113 s, max 1.665 s; later stops (> 500 ms) median 0.000 s, max 0.000 s; total median 1.113 s, max 1.665 s
