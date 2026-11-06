@@ -1,0 +1,3 @@
+warmup 300 finds in 25 s
+active (customers drawn by activity): GETs mean 177.53, p50 192, p95 221, max 225; ms p50 32.8
+any (customers drawn uniformly): GETs mean 151.97, p50 141, p95 225, max 229; ms p50 113.2
