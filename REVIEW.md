@@ -1,88 +1,58 @@
-FIX 2
+APPROVED: fence-layout 670321c (verdict file a1a0cdc). No failing test. 7 notes, none blocking; notes 1, 3 and 4 matter for the waiter sizing and the cost model at 1 TB.
 
-# Review of compaction 91414a6 (customer-first keys, tiered compaction)
+# Review of fence-layout (idea A, step 1)
 
-Reviewer, 2026-11-06. Branch `review-compaction` (based on 91414a6). Base `integration` (6ff285a). Tests:
-`ctl-tests/test_43_review_compaction.py` (run: `cd ctl-tests && python -m pytest -q test_43_review_compaction.py`).
-Every number is labelled MEASURED (run here, on this sandbox, local MinIO), ESTIMATED, DECLARED (the owner's), or UNKNOWN.
+Reviewer session, 2026-11-06. Delivery: fenvix-engine branch `fence-layout`, commit 670321c (code and results) and a1a0cdc (verdict file), base `compaction` a7890b3. Contract: `prompts/P-fence-layout-local.md` ("Done means"). Owner's report: `sessions/2026-11-06-fence-layout-local/REPORT.md`. Spend: $0, local only.
 
-## The two fixes (tests that fail on 91414a6)
+Branch note: this harness only lets me push to `claude/r-review-fence-layout-agrpwy`, so this review sits there (based on 670321c), not on `review-fence-layout`. It holds this file and my judge output only. No test was added, because no defect became a failing test.
 
-1. **Two writes of one `_id` for two customers are both acknowledged** (guarantees 4 and 7: `_id` uniqueness, indexes
-   consistent with data). The locator `loc/{coll}/{_id}` is the unique `_id` index, but `Writes::put` only checks it
-   against the committed state and never locks it (`check_conflict` runs on the customer-specific document key only).
-   Two transactions inserting `_id: 7` for `alice` and `bob` both commit; so does a plain insert of `_id: 8` while an
-   open transaction holds `_id: 8` for another customer. Result MEASURED: two documents with the same `_id`; a scan
-   returns both, `find({_id})` returns one (the locator points at the last writer), `validate` does not check the locators (code reading, `cmd_index.rs` validate).
-   mongod lets only one of the two commit. The control (same test on a collection without a customer key) passes.
-   Tests: `test_two_transactions_cannot_insert_the_same_id_for_two_customers[m]`,
-   `test_insert_outside_a_transaction_cannot_duplicate_an_id_a_transaction_holds[m]`.
-   Fix hint: `check_conflict` (lock and `modified_after`) on the locator key too, for inserts and moves.
+## What I did
 
-2. **With customer keys off, the storage format still changes and the previous release can no longer read it**
-   ("with the option off nothing changes"; guarantee 10, rollback). `--sst-compression lz4` and `--sst-block-kb 64` are
-   the new defaults for every database, keyed or not. MEASURED: a database written by 91414a6 with no flag at all,
-   then opened by the integration binary: `Data error: invalid composite filter block`. Deploying this commit makes
-   every database it flushes or compacts unreadable by the release before it, with no way back but forward.
-   Test: `test_with_customer_keys_off_the_stored_format_does_not_change` (checks the codec; with `INTEGRATION_BIN` set
-   it also does the rollback read). Fix: defaults off (`none`, 4 KiB) until the founder decides a one-way format
-   migration, or ship a release that can read lz4 first.
+- Read the contract, the report and the whole diff against a7890b3: `src/fence.rs`, `src/bin/fence_layout.rs`, `bench/fence/dump.py`, `server_reads.py`, the `cold_customer.py` refactor, the new test in `custkey.rs`, and the result files.
+- Re-ran `judge/run.sh fast` on 670321c.
+- Mutation test of the reader. I broke `Reader::newest` and its helpers in 7 ways, one at a time, and ran the owner's `fence::` unit tests each time: stop after the first fetch, ignore a run that starts with the customer, read blocks oldest-first, drop the upper bound (next customer leaks in), drop the lower bound (previous customer leaks in), skip the first block, fetch only the last missing block. The tests caught all 7 (MEASURED).
+- Checked the cold-read rows of `fence-t1.json` one by one.
 
-## Priority from the founder: `test_05_erase.py` leaves control-layer objects
+## The judge (MEASURED, my run on 670321c)
 
-- Found the cause. It is **not** caused by this branch. In `test_concurrent_erase_and_fork_are_serialised`, when the
-  erase wins, the fork (`ctl/fork.rs`) takes the target's lease, finds the source gone, answers 404 and deletes the
-  lease; but those requests were charged to the target's (and source's) usage counters, and the usage flusher then
-  writes `control/usage/<target>/<day>/...` (and `control/usage/<source>/...`) for databases that do not exist. Nothing
-  ever deletes them (guarantee 6). test_05 only sees it when a flush (every 1 s there) lands between the fork's answer
-  and its listing: that is why it is flaky.
-- Deterministic test: `test_a_refused_fork_leaves_no_object_of_its_target` (a fork of a source that never existed,
-  wait 3 s, list). MEASURED: fails on 91414a6 **and on integration**, with the same two leftover records.
-- Does the branch make it worse? MEASURED, the race of test_05 repeated 30 times per binary: the leftover is there 3 s
-  later every time the erase wins (91414a6 12 of 12, integration 8 of 8); the test's own listing caught it 0 times in
-  30 on 91414a6 and 1 in 30 on integration. Fork and erase times are the same (p50 110 ms both). The owner's 3 of 4
-  vs 1 of 4 is within noise for 4 rounds. My own full runs of test_05 on 91414a6: 2 passed, then 1 failed in the judge.
-- `tenants/<db>/_lease` left behind: not reproduced (UNKNOWN); every failure I saw was the usage records above.
-- Not counted against this commit (contract point 5: identical on integration). Owner of the control layer: charge
-  nothing to a database a refused fork never created (or `drop_db` both names when the fork fails).
+- build: PASS.
+- unit: FAIL, 114 passed and 1 failed: `counter::tests::rev_maps_leave_room_for_active_data`, the known waiter defect, also failing on `compaction`.
+- diff-py and diff-node: FAIL, 412/413 each. The only difference is `bucketauto.infinity`, the same as on `compaction`.
+- ctl: PASS (3 files). `test_05_erase` passed 19/19.
+- kill: PASS.
 
-## Judge (`judge/run.sh fast` on 91414a6, MEASURED)
+Point 6 of the prompt: `test_05_erase` is flaky, not caused by this branch. It failed once in the owner's run, then passed 3 times in the owner's re-runs and once in mine. The branch changes no server code path: the only change under `mongo-server/` is one unit test inside `#[cfg(test)]`.
 
-Same verdict as the owner's: build PASS; unit FAIL only `counter::tests::rev_maps_leave_room_for_active_data`;
-diff-py and diff-node FAIL only `bucketauto.infinity` (412/413 each); ctl FAIL only test_05_erase (above); kill PASS
-(0 lost). All match integration's known failures. The 3 failures of the owner's customer-key stress run
-(`cs.delete_many`, `bucketauto.POWERSOF2.decimal_special`, `bucketauto.infinity`): MEASURED, also fail with the
-integration binary.
+## Answers to the six questions
 
-## Do the tests measure what they claim?
+1. Trips. Yes, a trip is counted the same way on both sides. The prototype goes through the server's own simulated store (`simstore::wrap_sim`), and both sides use the same `TripMeter`: a trip is a wave of GETs, counted when GETs in flight go from 0 to 1. On all 400 cold rows, the prototype's own count matches the meter (MEASURED, 0 mismatches). The 1 MiB cache really makes data cold. A decoded block is just over 1 MiB, so the cache holds one block at a time, and none of the 400 cold reads hit the cache: 397 reads took 1 GET and 3 took 2 GETs (MEASURED). Long histories are still one trip, because a user's newest messages sit at the end of their range: the 200 users drawn by activity, the whales included, scored 99.0% (MEASURED). Histories cannot be scattered inside one sealed run. But in idea A the newest messages of an active user are often the young ones, still in the log and not yet in the run (note 6). A query sorted on a field that does not follow `_id` is not one trip, and the report's "most likely a second trip" is optimistic (note 2).
 
-- **Cold-read bench (contract point 2).** Re-run at 2 GB, 20,000 customers (`review-2026-11-06/`), MEASURED: default
-  settings mean 2.46 / 2.27 GETs, max 5 (owner: 2.8, max 7). The GET meter is right: over 300 finds, server meter
-  1,631 vs MinIO's own getobject counter 1,630. But the measure is not of a cold find: the 256 MiB block cache keeps
-  the data blocks read by the 300 warm-up finds (the bench says only indexes and filters are warm), and neighbouring
-  customers share 64 KiB blocks. A mean below the number of sorted runs (3 here) shows it. With data blocks cold
-  (`--block-cache-mb 1`), MEASURED here: mean 5.38, p95 6, max 7 (3 sorted runs); the owner's 4-run dataset: mean
-  6.5-7.1, max 9 (6 of 400 finds over 8, DECLARED). So "at most 8" holds or not depending on how many runs the data has
-  at that moment; 8 GB was not measured (DECLARED); ESTIMATED one more run per 4x of data, so about 2 GETs more at 8 GB.
-  NOTE, not a fix (no deterministic failing test), but the contract's point 2 is not proven for a cold find.
-- `test_index_matches_documents_during_compaction`: readers hold the customer's lock, so no read ever overlaps a write
-  or a move of that customer; it checks consistency between writes, not during them. I probed the during part
-  (MEASURED, 30-40 s each, 4 movers): collection scans, counts and `$natural` during 2,365 moves: 0 wrong of 410;
-  index range scans during 2,783 moves: 0 duplicates or misses in 538; `find_one({_id})` on one document moved 4,092
-  times: 0 misses.
-- `loadtest/test_open_gc.py` (prints read violations, never fails): run with `--customer-key c=v` (every update moves
-  the document), 2 trials x 60 s, MEASURED: 69,468 reads checked, 0 missing, 0 stale, 0 lost inserts or updates, both
-  kills inside a cleanup pass. It hides no defect here; it should still fail on violations (judge gap, not this branch).
-- Moves inside transactions (commit, abort), unique secondary index across a move, collation `_id` with a customer
-  key: behave as without the key (MEASURED, probes).
+2. Map size. Yes, every byte the reader needs at serve time is counted. That covers the fence separators and their ends, the offsets, the run directory (path and first key per run) and the struct sizes. Only the run's last key is dropped, and the reader never uses it. Paths are counted by length, not capacity, which is a few bytes. 0.0385 MB per GB of BSON is right (MEASURED by the owner, recomputed from `fence-t1.json`: 386,692 bytes for 10.05 GiB). The run held one collection and no index entries or `_id` locator. A real run would hold those too, so the per-stored-GB figure, 0.0758 MB per GB, is the better one for sizing. It is still 6.6 times under the CONTINUE line.
 
-## Notes (never block)
+3. Answers. Yes. The model in `dump.py` comes from the generator: the 20 newest by global order `n` (time order), not by `_id`. So the check is independent of the key order and really confirms that `_id` follows time in this dataset. `check()` compares the count, then each `_id` and the sha256 of each document's bytes, in order. A missing, extra, wrong or out-of-order message fails. The 400 measured users all have at least 20 messages, so the 10 GB run never checked absent users or users with fewer than 20. The unit tests cover both: users with 0, 1, 3 and 19 messages, users across 2 KiB blocks, and a customer that starts a run. The mutation test shows those tests would catch the likely bugs. No user straddles a run, by construction: buckets are cut at customer boundaries, and dump partitions are user ranges. That limit is note 3.
 
-- Rule 18 (one snapshot per read): an `_id` read goes locator, then document, as two reads with up to 3 retries if the
-  document moved in between (and `moved_doc` once). Not a snapshot; no wrong answer seen (above).
-- The cleanup keeps the outputs of unfinished or uncommitted compactions (`Compacted` counts as active): a resumed job
-  of the separate worker cannot point at deleted SSTs. Checked by reading slatedb 0.17 and `gc_tenant_ssts`.
-- `stop_once` ignores a worker `stop` that times out; after `stop_limit` the runner is aborted and the worker's tasks may
-  live on until their store request ends (as for the compactor before). No test shows harm.
-- Contract point 1 was shown on the stress suite with the key on for some collections (63,076 documents written customer
-  first, 2,249 locator lookups, DECLARED); the natural run had 1 locator lookup.
+4. RAM per hot user. Confirmed: 392 MiB for 400 hot users with one block per read, 0.98 MiB per user. With two blocks per read it is 558 MiB, 1.4 MiB per user (MEASURED by the owner, recomputed). For an 8 GB waiter, if about 6 GB go to the block cache, that is about 6,000 hot users with one block per read, or about 4,300 with two (ESTIMATED). With 64 KiB blocks, a hot user holds 1-2 decoded blocks, 64-128 KiB, so the same 6 GB keeps about 50,000-100,000 hot users (ESTIMATED). That is 8 to 16 times fewer hot users with 1 MiB blocks. The fix the owner names, caching only the user's slice of a block, would bring this back to about the user's own bytes. It is not built. See also note 1.
+
+5. Rewrite cost. It is only a merge of pre-sorted inputs, not a rewrite under writes. The "young" records are copies of existing messages with the top bit of the ObjectId time set, and they are appended after each customer's old ones. There are no updates, no deletes, no keys that interleave with old ones, no log to sort, no index entries to regenerate, and no reads or writes running during the rewrite. The old run is deleted right away, so a reader still holding the old fence would get a 404. A real rewrite needs a manifest swap and a delayed delete, like today's garbage collection. The request counts (32 GETs, 11 PUTs per GB of BSON) are believable for a sequential copy: the merge comparisons are the same work with updates. The CPU of 6.3 s per GB is a floor (MEASURED floor; the real figure is UNKNOWN until updates and indexes are in). The bigger missing number is how often rewrites happen (note 4).
+
+6. Judge: see above. Flaky, not this branch.
+
+## Notes (none can be a failing test against this contract; none blocks)
+
+1. Cold-read bytes and network ceiling. A cold read fetched 487 KB on average (MEASURED) to return about 9.4 KB, 20 messages of about 470 B (ESTIMATED): about 50 times more bytes than the answer. Requests cost the same, but the waiter's network does not. At 10,000 cold reads per second, that is about 4.9 GB/s into one waiter, more than a 10-25 Gbit/s NIC carries (1.25-3.1 GB/s, DECLARED by AWS for the instance class). So one waiter tops out at about 2,500-6,000 cold reads per second (ESTIMATED), against roughly 15 times more with 64 KiB blocks. Block size is a knob. With 256 KiB blocks the maps would be about 0.15 MB per GB (ESTIMATED, 4 times the blocks), still under the 0.5 line, with 4 times fewer bytes per read and per hot user. Suggest measuring 256 KiB in step 2.
+
+2. Queries not ordered by `_id`. The run holds no index entries, so today such a query on this layout is a scan of the user's whole range. For the busiest customer here, about 1 GB, that is about 1,000 GETs (ESTIMATED). With a secondary index in the run, the count is one trip for the index part, then up to 20 documents spread over up to 20 different 1 MiB blocks of a long history. That is 2 trips but up to 21 GETs and about 10 MB fetched for 9.4 KB (ESTIMATED). So the trip count holds only for this one query shape, and the bytes get much worse.
+
+3. A single customer is never split, so a run has no upper size. Here one run is 1.5 GiB because of one customer (MEASURED). With zipf s = 1 over 20,000 customers, the top customer holds 1/H(20000), about 9.5% of the data (ESTIMATED). In a 1 TB database of the same shape, that is a run of about 95 GB that must be rewritten whole, about 13 minutes per rewrite at 0.937 Gbit/s (ESTIMATED). The reader also assumes one run per customer (`run_for` returns a single run). Splitting a whale across runs needs a reader change. This works for small databases only until a customer can span runs, and the CLAUDE.md principle asks to say so.
+
+4. Rewrite frequency, the missing line of the cost model. If a 1 GB bucket is rewritten each time its young records reach 10%, each byte written is rewritten about 10 times (ESTIMATED). Per GB of new data that is about 320 GETs, 110 PUTs, 63 s of one core and about 10 GB moved (ESTIMATED from the owner's per-rewrite figures). Request costs stay tiny, but CPU and network should go into the cost model per GB written, not per rewrite.
+
+5. No Bloom filters means a lookup of an absent key costs one GET of about 470 KB instead of none (ESTIMATED from the block size). The owner found that every insert into a customer-keyed collection does a uniqueness point read on the `_id` locator. If that read reaches the sealed run, 10,000 inserts per second means 10,000 GETs per second (about $0.004/s, $350/day at the DECLARED $0.0004 per 1,000 GETs) plus about 4.7 GB/s of traffic (ESTIMATED). Possible ways out: answer uniqueness from the log and the run's last key, since new ObjectIds sort after all old ones, or keep a filter only for the locator. The design should say which one before step 2.
+
+6. Young records. In idea A, the newest messages of an active user are written after the last rewrite, so they sit in the log, not in the run. The 99.25% is for the sealed part. A real read merges log and run. If the log is local this adds no S3 trip, but that is not measured. The prompt left this out of step 1. I note it so the headline is not read as end-to-end.
+
+7. Small things, no effect on the numbers. `rewrite` does not update `MANIFEST.json`, so after it runs, `measure` points at a deleted run. The owner ran `rewrite` last, so the results are fine, but the order matters if anyone re-runs. The baseline's 2 GiB metadata cache and the 1 MiB block cache are a fair "maps in RAM" comparison, and the report says so.
+
+## Bottom line
+
+The headline numbers hold. Maps are 0.0385 MB per GB (0.0758 per stored GB), one trip serves 99.25% of cold reads, and there were 0 wrong answers. The tests measure what they claim, and the judge matches `compaction` apart from one flaky ctl run. CONTINUE is justified for step 1. Before step 2, the plan should cover 1 MiB blocks against network and RAM per hot user (note 1 and answer 4), whale customers (note 3), rewrite frequency (note 4) and absent-key lookups (note 5).
