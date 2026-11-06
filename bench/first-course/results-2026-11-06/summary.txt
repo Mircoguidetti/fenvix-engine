@@ -11,6 +11,14 @@ on-long: share 99.7% (active 99.8, uniform 99.6, written 99.0, not 100.0); wrong
     sizes_after_visit1 {'n': 1300, 'bytes_median': 19674, 'bytes_p95': 21215, 'bytes_max': 22146, 'entries_median': 100, 'bytes_total': 23637717}
     sizes_after_gap {'n': 1300, 'bytes_median': 21064, 'bytes_p95': 109814, 'bytes_max': 257866, 'entries_median': 104, 'bytes_total': 51231692}
     sizes_after_visit2 {'n': 1600, 'bytes_median': 20512, 'bytes_p95': 67402, 'bytes_max': 239520, 'entries_median': 104, 'bytes_total': 44001017}
+on-long-commit: share 99.8% (active 99.8, uniform 99.8, written 99.3, not 100.0); wrong 0; v2 Q1 GETs 0.01 ms p50 1.25 p99 2.45; v2 later GETs/visit 12.16 -> visit total 12.17 (v1 total 9.89); later ms p50 15.04 p99 39.17; gap msgs 2362472 passes 22 cGets 38916 cPuts 1553 cpu 540.4s hook 3976ms applied 119022 trimmed 44
+    sizes_after_visit1 {'n': 1300, 'bytes_median': 19674, 'bytes_p95': 21215, 'bytes_max': 22146, 'entries_median': 100, 'bytes_total': 23637717}
+    sizes_after_gap {'n': 1300, 'bytes_median': 21064, 'bytes_p95': 110792, 'bytes_max': 258687, 'entries_median': 104, 'bytes_total': 51505710}
+    sizes_after_visit2 {'n': 1600, 'bytes_median': 20512, 'bytes_p95': 67402, 'bytes_max': 239520, 'entries_median': 104, 'bytes_total': 43985321}
+on-long-commit2: share 99.9% (active 100.0, uniform 99.8, written 99.7, not 100.0); wrong 0; v2 Q1 GETs 0.01 ms p50 1.21 p99 2.21; v2 later GETs/visit 12.80 -> visit total 12.80 (v1 total 9.90); later ms p50 20.33 p99 38.79; gap msgs 2362472 passes 23 cGets 39096 cPuts 1572 cpu 538.9s hook 3934ms applied 119022 trimmed 47
+    sizes_after_visit1 {'n': 1300, 'bytes_median': 19674, 'bytes_p95': 21215, 'bytes_max': 22146, 'entries_median': 100, 'bytes_total': 23637717}
+    sizes_after_gap {'n': 1300, 'bytes_median': 21070, 'bytes_p95': 109814, 'bytes_max': 257866, 'entries_median': 104, 'bytes_total': 51364154}
+    sizes_after_visit2 {'n': 1600, 'bytes_median': 20513, 'bytes_p95': 67774, 'bytes_max': 239520, 'entries_median': 104, 'bytes_total': 44175984}
 base-long: share 0.0% (active 0.0, uniform 0.0, written 0.0, not 0.0); wrong 0; v2 Q1 GETs 7.89 ms p50 21.82 p99 32.68; v2 later GETs/visit 3.08 -> visit total 10.97 (v1 total 9.90); later ms p50 10.05 p99 37.40; gap msgs 2362472 passes 21 cGets 40264 cPuts 1581 cpu 556.6s hook 0ms applied 0 trimmed 0
 on-busy: share 99.8% (active 100.0, uniform 99.6, written 99.3, not 100.0); wrong 0; v2 Q1 GETs 0.01 ms p50 1.13 p99 1.94; v2 later GETs/visit 8.98 -> visit total 8.99 (v1 total 9.88); later ms p50 12.65 p99 34.65; gap msgs 843748 passes 12 cGets 12908 cPuts 566 cpu 163.6s hook 1656ms applied 32412 trimmed 12
     sizes_after_visit1 {'n': 1300, 'bytes_median': 19674, 'bytes_p95': 21215, 'bytes_max': 22146, 'entries_median': 100, 'bytes_total': 23637717}
