@@ -3,6 +3,7 @@
 
 pub mod counter;
 pub mod counting;
+pub mod fence;
 pub mod lifecycle;
 pub mod maps;
 pub mod meter;

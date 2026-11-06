@@ -46,35 +46,44 @@ def zipf_weights(n, s):
     return [1.0 / ((i + 1) ** s) for i in range(n)]
 
 
-def worker(args):
-    uri, wid, nworkers, n_docs, customers, s, seed, t0 = args
+def gen_batches(wid, nworkers, n_docs, customers, s, seed, t0):
+    """The messages of one load worker, in batches of up to 1,000, with their global order number n. The same random
+    sequence feeds the server load (`load`) and the file dump of the fence-layout test (`dump`), so both hold the same
+    dataset."""
     words, ww = vocab()
     r = random.Random(seed * 1000 + wid)
     cw = zipf_weights(customers, s)
     # a fixed shuffle of customer ids, so the busiest customers are not the smallest ids
     perm = list(range(customers))
     random.Random(seed).shuffle(perm)
-    c = MongoClient(uri, w=1)
-    coll = c[DB][COLL]
-    batch, done = [], 0
-    counts = {}
-    last = {}
     i = 0
     while i < n_docs:
         k = min(1000, n_docs - i)
         cust = r.choices(range(customers), weights=cw, k=k)
+        batch = []
         for j in range(k):
             n = (i + j) * nworkers + wid  # global order: workers interleave in time
             ts = t0 + dt.timedelta(milliseconds=n * 10)
             u = perm[cust[j]]
             text = " ".join(r.choices(words, weights=ww, k=r.randint(30, 80)))
             oid = ObjectId(int(ts.timestamp()).to_bytes(4, "big") + n.to_bytes(8, "big"))
-            batch.append({"_id": oid, "userId": u, "convId": u * 16 + r.randint(0, 15), "role": "user" if n % 2 else "assistant", "ts": ts, "text": text, "tokens": len(text) // 4})
+            batch.append((n, {"_id": oid, "userId": u, "convId": u * 16 + r.randint(0, 15), "role": "user" if n % 2 else "assistant", "ts": ts, "text": text, "tokens": len(text) // 4}))
+        yield batch
+        i += k
+
+
+def worker(args):
+    uri, wid, nworkers, n_docs, customers, s, seed, t0 = args
+    c = MongoClient(uri, w=1)
+    coll = c[DB][COLL]
+    counts = {}
+    last = {}
+    for batch in gen_batches(wid, nworkers, n_docs, customers, s, seed, t0):
+        for n, d in batch:
+            u = d["userId"]
             counts[u] = counts.get(u, 0) + 1
             last[u] = max(last.get(u, 0), n)
-        coll.insert_many(batch, ordered=False)
-        batch = []
-        i += k
+        coll.insert_many([d for _, d in batch], ordered=False)
     return counts, last
 
 

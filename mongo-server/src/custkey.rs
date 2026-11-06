@@ -173,6 +173,17 @@ mod tests {
     use bson::doc;
 
     #[test]
+    fn the_fence_layout_prototype_writes_the_same_document_keys() {
+        // tenant_bench::fence (the fence-layout measurement) builds customer-first keys itself; they must be these bytes
+        for u in [0i64, 7, 19_999, -5, 1 << 40] {
+            let oid = bson::oid::ObjectId::from_bytes([0x69, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+            let v = if u.abs() < i32::MAX as i64 { Bson::Int32(u as i32) } else { Bson::Int64(u) };
+            let ours = doc_key("messages", Some("userId"), &doc! { "_id": oid, "userId": v });
+            assert_eq!(ours, tenant_bench::fence::doc_key("messages", u, &oid.bytes()), "customer {u}");
+        }
+    }
+
+    #[test]
     fn one_customer_shares_a_prefix_whatever_the_number_type() {
         let a = dsuf(Some("u"), &doc! { "_id": 1, "u": 7 });
         let b = dsuf(Some("u"), &doc! { "_id": 2, "u": 7.0 });
