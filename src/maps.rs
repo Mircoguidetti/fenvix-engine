@@ -493,6 +493,73 @@ mod tests {
         let _ = std::fs::remove_dir_all(dir);
     }
 
+    /// Review (guarantee 6): a block read back from the disk floor leaves its old bytes in the segment, no longer
+    /// indexed; dropDatabase overwrites only the indexed copies, so the dropped database's keys stay on the waiter's disk.
+    #[tokio::test]
+    async fn rev_drop_leaves_no_stale_copy_on_disk() {
+        let dir = std::env::temp_dir().join(format!("maps-rev-stale-{}", std::process::id()));
+        let c = Counter::new(96 << 10, Some(dir.clone()), 16 << 20).unwrap();
+        let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        write(&store, "a", customer_batches("SECRETAAA", 40, 10, 3)).await;
+        write(&store, "b", customer_batches("KEEPBBB", 40, 10, 3)).await;
+        let (da, db) = (open(&store, "a", &c).await, open(&store, "b", &c).await);
+        refresh(&c, "a", Src::W(da.clone())).unwrap().await.unwrap();
+        refresh(&c, "b", Src::W(db.clone())).unwrap().await.unwrap();
+        // customer a's documents are read, pushed down to the disk floor by b's reads, then read again (back to RAM from
+        // the disk floor), twice: the ordinary life of a block that comes back
+        for _ in 0..3 {
+            for cu in 0..40 {
+                assert!(da.get(format!("doc/c{cu:05}/004")).await.unwrap().is_some());
+            }
+            for cu in 0..40 {
+                assert!(db.get(format!("doc/c{cu:05}/004")).await.unwrap().is_some());
+            }
+        }
+        assert!(c.m.hits_disk.load(Relaxed) > 0, "the test must read blocks back from the disk floor");
+        let n = forget_database(&c, "a", ssts_under(&store, "a").await);
+        assert_eq!(c.entries_of(&ssts_under(&store, "a").await), (0, 0, 0));
+        let left = count_in_dir(&dir, b"SECRETAAA");
+        eprintln!("drop: {n} entries forgotten; 'SECRETAAA' still {left} times on the disk floor");
+        da.close().await.unwrap();
+        db.close().await.unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(left, 0, "keys of the dropped database stay on the disk floor (stale copies not overwritten)");
+    }
+
+    /// Review (guarantee 5, isolation): a shallow fork (fork mode "clone", also PITR restore) reads its source's SSTs,
+    /// same SST ids. Dropping the fork forgets those SSTs for the source too and refuses them for 10 minutes: the
+    /// source, still alive and open, can cache neither its maps nor its blocks, and every read of it goes to S3.
+    #[tokio::test]
+    async fn rev_drop_of_a_fork_spares_its_source() {
+        let c = Counter::new(64 << 20, None, 0).unwrap();
+        let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        write(&store, "src", customer_batches("SRC", 40, 10, 3)).await;
+        slatedb::admin::Admin::builder("fork", Arc::clone(&store))
+            .build()
+            .create_clone_builder_from_source(slatedb::CloneSourceSpec::new("src"))
+            .build()
+            .await
+            .unwrap();
+        let (ds, df) = (open(&store, "src", &c).await, open(&store, "fork", &c).await);
+        refresh(&c, "src", Src::W(ds.clone())).unwrap().await.unwrap();
+        refresh(&c, "fork", Src::W(df.clone())).unwrap().await.unwrap();
+        let src_ssts = mapped_ssts(&c, "src");
+        assert!(!src_ssts.is_disjoint(&mapped_ssts(&c, "fork")), "the fork must share its source's SSTs");
+        // the fork is dropped (the server's hook: the SSTs mapped for it, plus the ones under its own prefix)
+        df.close().await.unwrap();
+        forget_database(&c, "fork", ssts_under(&store, "fork").await);
+        // the source keeps being read
+        for _ in 0..2 {
+            for cu in 0..40 {
+                assert!(ds.get(format!("doc/c{cu:05}/004")).await.unwrap().is_some());
+            }
+        }
+        let (m, r, _) = c.entries_of(&src_ssts);
+        eprintln!("source after the fork's drop: {m} maps, {r} data blocks on the counter; refused {}", c.m.dead_refused.load(Relaxed));
+        ds.close().await.unwrap();
+        assert!(m > 0 && r > 0, "the source can no longer cache its own SSTs after its fork was dropped: {m} maps, {r} blocks");
+    }
+
     /// R-T1, correction 1: the maps of a database closed for long leave the RAM (they become ordinary data on the disk
     /// floor), then leave the disk floor too as other data comes; a database still open keeps its maps.
     #[tokio::test]
