@@ -54,8 +54,51 @@ pub struct Mapped {
     manifest: u64,
     /// SST -> its estimated size in bytes.
     ssts: HashMap<[u8; 26], u64>,
+    /// The SSTs it borrows from another database (a shallow fork or a PITR restore reads its source's SSTs, under the
+    /// same ids): never its own, so its drop does not forget them.
+    ext: HashSet<[u8; 26]>,
     /// Since when the database is not open (None while open).
     closed_since: Option<Instant>,
+}
+
+/// Every database mapped, and how many of them use each SST (forks share their source's SSTs): an SST leaves the
+/// counter only when no database mapped uses it any more.
+#[derive(Default)]
+pub struct Registry {
+    dbs: HashMap<String, Mapped>,
+    refs: HashMap<[u8; 26], u32>,
+}
+
+impl Registry {
+    fn add(refs: &mut HashMap<[u8; 26], u32>, s: [u8; 26]) {
+        *refs.entry(s).or_insert(0) += 1;
+    }
+
+    /// True when no database uses it any more.
+    fn sub(refs: &mut HashMap<[u8; 26], u32>, s: &[u8; 26]) -> bool {
+        match refs.get_mut(s) {
+            Some(n) if *n > 1 => {
+                *n -= 1;
+                false
+            }
+            Some(_) => {
+                refs.remove(s);
+                true
+            }
+            None => true,
+        }
+    }
+
+    /// Takes the database out; returns it and the SSTs of it that no other database uses.
+    fn remove(&mut self, id: &str) -> Option<(Mapped, HashSet<[u8; 26]>)> {
+        let e = self.dbs.remove(id)?;
+        let alone = e.ssts.keys().filter(|s| Self::sub(&mut self.refs, s)).copied().collect();
+        Some((e, alone))
+    }
+
+    fn used(&self, s: &[u8; 26]) -> bool {
+        self.refs.contains_key(s)
+    }
 }
 
 /// (SSTs mapped, their bytes) over all databases: the denominator of "maps per GB of data".
@@ -63,7 +106,7 @@ pub fn mapped_totals(counter: &Counter) -> (u64, u64) {
     let m = counter.mapped.lock().unwrap();
     let mut n = 0;
     let mut b = 0;
-    for v in m.values() {
+    for v in m.dbs.values() {
         n += v.ssts.len() as u64;
         b += v.ssts.values().sum::<u64>();
     }
@@ -72,7 +115,7 @@ pub fn mapped_totals(counter: &Counter) -> (u64, u64) {
 
 /// The SSTs mapped for one database.
 pub fn mapped_ssts(counter: &Counter, id: &str) -> HashSet<[u8; 26]> {
-    counter.mapped.lock().unwrap().get(id).map(|e| e.ssts.keys().copied().collect()).unwrap_or_default()
+    counter.mapped.lock().unwrap().dbs.get(id).map(|e| e.ssts.keys().copied().collect()).unwrap_or_default()
 }
 
 /// Start the loop.
@@ -130,20 +173,30 @@ pub fn refresh(counter: &Arc<Counter>, id: &str, db: Src) -> Option<tokio::task:
         }
     }
     let (new, gone) = {
-        let mut mapped = counter.mapped.lock().unwrap();
-        let e = mapped.entry(id.to_string()).or_insert_with(|| Mapped { manifest: u64::MAX, ssts: HashMap::new(), closed_since: None });
+        let mut reg = counter.mapped.lock().unwrap();
+        let Registry { dbs, refs } = &mut *reg;
+        let e = dbs.entry(id.to_string()).or_insert_with(|| Mapped { manifest: u64::MAX, ssts: HashMap::new(), ext: HashSet::new(), closed_since: None });
         e.closed_since = None;
         if e.manifest == mid {
             return None;
         }
         e.manifest = mid;
+        e.ext = m.external_dbs().iter().flat_map(|x| x.sst_ids.iter()).filter_map(sst_of).collect();
         let new: Vec<SsTableHandle> = now.iter().filter(|(s, _)| !e.ssts.contains_key(*s)).map(|(_, h)| h.clone()).collect();
-        let gone: HashSet<[u8; 26]> = e.ssts.keys().filter(|s| !now.contains_key(*s)).copied().collect();
-        for s in &gone {
-            e.ssts.remove(s);
+        let left: Vec<[u8; 26]> = e.ssts.keys().filter(|s| !now.contains_key(*s)).copied().collect();
+        let mut gone: HashSet<[u8; 26]> = HashSet::new();
+        for s in left {
+            e.ssts.remove(&s);
+            // a fork may still read it (it left this manifest only)
+            if Registry::sub(refs, &s) {
+                gone.insert(s);
+            }
         }
         for (s, h) in &now {
-            e.ssts.entry(*s).or_insert_with(|| h.estimate_size());
+            if !e.ssts.contains_key(s) {
+                e.ssts.insert(*s, h.estimate_size());
+                Registry::add(refs, *s);
+            }
         }
         (new, gone)
     };
@@ -181,9 +234,13 @@ pub fn refresh(counter: &Arc<Counter>, id: &str, db: Src) -> Option<tokio::task:
         }
         if failed > 0 {
             // warm again at the next look
-            if let Some(e) = counter.mapped.lock().unwrap().get_mut(&id) {
+            let mut reg = counter.mapped.lock().unwrap();
+            let Registry { dbs, refs } = &mut *reg;
+            if let Some(e) = dbs.get_mut(&id) {
                 e.manifest = u64::MAX;
-                e.ssts.clear();
+                for (s, _) in e.ssts.drain() {
+                    Registry::sub(refs, &s);
+                }
             }
         }
         MAPS_RUNS.fetch_add(1, Relaxed);
@@ -208,20 +265,25 @@ pub fn release_idle(counter: &Counter, open: &HashSet<String>, idle: Duration) -
     let mut out: HashSet<[u8; 26]> = HashSet::new();
     let mut dbs = 0;
     {
-        let mut mapped = counter.mapped.lock().unwrap();
-        mapped.retain(|id, e| {
+        let mut reg = counter.mapped.lock().unwrap();
+        let mut idle_dbs: Vec<String> = Vec::new();
+        for (id, e) in reg.dbs.iter_mut() {
             if open.contains(id) {
                 e.closed_since = None;
-                return true;
+                continue;
             }
             let since = *e.closed_since.get_or_insert(now);
-            if now.duration_since(since) < idle {
-                return true;
+            if now.duration_since(since) >= idle {
+                idle_dbs.push(id.clone());
             }
-            out.extend(e.ssts.keys().copied());
-            dbs += 1;
-            false
-        });
+        }
+        for id in idle_dbs {
+            // only the SSTs no other database uses (a fork closed for long keeps its open source's maps)
+            if let Some((_, alone)) = reg.remove(&id) {
+                out.extend(alone);
+                dbs += 1;
+            }
+        }
     }
     if dbs > 0 {
         counter.release_ssts(&out);
@@ -230,13 +292,22 @@ pub fn release_idle(counter: &Counter, open: &HashSet<String>, idle: Duration) -
     dbs
 }
 
-/// The database was dropped: forget at once everything the counter holds of its SSTs (the ones mapped, plus `more`, for
-/// example the SSTs found under its prefix in the store). Returns the counter entries forgotten.
+/// The database was dropped: forget at once everything the counter holds of its own SSTs (the ones mapped, plus `more`,
+/// for example the SSTs found under its prefix in the store). SSTs it borrowed from a source (a shallow fork, a PITR
+/// restore) are not its own: they stay, and if no database uses them any more their maps are released like a closed
+/// database's. An SST another mapped database still uses is not forgotten either. Returns the counter entries forgotten.
 pub fn forget_database(counter: &Counter, id: &str, more: impl IntoIterator<Item = [u8; 26]>) -> u64 {
-    let mut ssts: HashSet<[u8; 26]> = counter.mapped.lock().unwrap().remove(id).map(|e| e.ssts.into_keys().collect()).unwrap_or_default();
-    ssts.extend(more);
+    let (own, borrowed) = {
+        let mut reg = counter.mapped.lock().unwrap();
+        let (ext, alone) = reg.remove(id).map(|(e, alone)| (e.ext, alone)).unwrap_or_default();
+        let mut own: HashSet<[u8; 26]> = alone.iter().filter(|s| !ext.contains(*s)).copied().collect();
+        own.extend(more.into_iter().filter(|s| !ext.contains(s) && !reg.used(s)));
+        let borrowed: HashSet<[u8; 26]> = alone.into_iter().filter(|s| ext.contains(s)).collect();
+        (own, borrowed)
+    };
     MAPS_DROPPED_DBS.fetch_add(1, Relaxed);
-    counter.drop_ssts(&ssts)
+    counter.release_ssts(&borrowed);
+    counter.drop_ssts(&own)
 }
 
 /// The counter key of the SST stored at `path` (`.../compacted/<ULID>.sst`), if it is one. The key is the ULID's
@@ -473,7 +544,6 @@ mod tests {
         assert!(mapped_ssts(&c, "a").is_empty());
         assert!(took < Duration::from_secs(2));
         // a load in flight when the drop happened (here: the same database warmed and read again) cannot bring them back
-        c.mapped.lock().unwrap().remove("a");
         if let Some(h) = refresh(&c, "a", Src::W(da.clone())) {
             h.await.unwrap();
         }
@@ -651,7 +721,14 @@ mod tests {
         // the server's store layers above S3 (`mongo-server/src/main.rs`): large GETs in pieces and the next block read
         // along (`--next-block-kb`, 8 by default with the waiter's tools: slatedb reads the block before a key that
         // starts a block first, T1). The probe is where S3 would be.
-        crate::simstore::NEXT_BLOCK_BYTES.store(8 << 10, Relaxed);
+        // set for this test only: given back when it ends, even on a failure (the setting is global to the test binary)
+        struct Restore(u64);
+        impl Drop for Restore {
+            fn drop(&mut self) {
+                crate::simstore::NEXT_BLOCK_BYTES.store(self.0, Relaxed);
+            }
+        }
+        let _restore = Restore(crate::simstore::NEXT_BLOCK_BYTES.swap(8 << 10, Relaxed));
         let store: Arc<dyn ObjectStore> = crate::simstore::wrap_split(probe.clone());
         write(&store, "shop", customer_batches("S", 2000, 10, 4)).await;
         let c = Counter::new(64 << 20, None, 0).unwrap();

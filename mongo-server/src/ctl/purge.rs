@@ -19,6 +19,8 @@ pub struct PurgeReport {
     pub deleted: u64,
     pub passes: u32,
     pub checkpoints_released: u32,
+    /// The SSTs found under the tenant's prefix at the first listing (for the waiter's counter).
+    pub ssts: Vec<[u8; 26]>,
 }
 
 pub fn tenant_path(db: &str) -> String {
@@ -85,6 +87,9 @@ pub async fn purge_tenant(ctl: &Ctl, db: &str) -> Result<PurgeReport> {
     for pass in 0..6 {
         rep.passes = pass + 1;
         let objs = list(&ctl.store, &prefix).await?;
+        if pass == 0 {
+            rep.ssts = objs.iter().filter_map(|p| tenant_bench::maps::sst_of_path(p.as_ref())).collect();
+        }
         if objs.is_empty() {
             break;
         }

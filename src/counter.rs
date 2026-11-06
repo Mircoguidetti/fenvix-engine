@@ -171,8 +171,10 @@ struct Disk {
     dir: std::path::PathBuf,
     cap_segments: u64,
     index: HashMap<Ck, Loc>,
-    /// Segment number -> (file, keys written in it).
-    segments: BTreeMap<u64, (std::fs::File, Vec<Ck>)>,
+    /// Segment number -> (file, every copy written in it: key, offset, length). A copy stays listed after its key moved
+    /// on (read back to RAM, written again): its bytes are still in the file until the segment goes, and a drop must
+    /// overwrite them too.
+    segments: BTreeMap<u64, (std::fs::File, Vec<(Ck, u64, u32)>)>,
     cur: u64,
     pos: u64,
     used: u64,
@@ -218,7 +220,7 @@ pub struct Counter {
     disk: Option<Mutex<Disk>>,
     disk_bytes: u64,
     /// The maps loop's registry of the databases it mapped (`maps.rs`).
-    pub(crate) mapped: Mutex<HashMap<String, crate::maps::Mapped>>,
+    pub(crate) mapped: Mutex<crate::maps::Registry>,
     /// SSTs forgotten in the last `DEAD_FOR`: nothing of them enters the counter again.
     dead: Mutex<HashMap<[u8; 26], std::time::Instant>>,
     /// Caps on the loading of maps (see the module comment).
@@ -284,7 +286,7 @@ impl Counter {
             maps: Mutex::new(Maps::default()),
             disk,
             disk_bytes,
-            mapped: Mutex::new(HashMap::new()),
+            mapped: Mutex::new(Default::default()),
             dead: Mutex::new(HashMap::new()),
             warm_ssts: tokio::sync::Semaphore::new(ssts),
             warm_ssts_cap: ssts,
@@ -370,7 +372,11 @@ impl Counter {
         if ssts.is_empty() {
             return 0;
         }
-        self.bury(ssts);
+        // only a drop refuses later loads: SSTs that left a manifest (compaction) may still be read by an older
+        // snapshot, and caching them then is harmless (they leave like data nobody reads)
+        if scrub {
+            self.bury(ssts);
+        }
         let mut n = 0;
         {
             let mut m = self.maps.lock().unwrap();
@@ -399,13 +405,21 @@ impl Counter {
                     if l.map {
                         self.m.maps_forgotten.fetch_add(1, Relaxed);
                     }
-                    if scrub {
-                        if let Some((f, _)) = d.segments.get(&l.seg) {
-                            if f.write_all_at(&vec![0u8; l.len as usize], l.off).is_ok() {
-                                self.m.dropped_disk_bytes.fetch_add(l.len as u64, Relaxed);
-                            }
+                }
+            }
+            if scrub {
+                // every copy still in a segment file, the indexed ones and the ones left behind when a block went back
+                // to RAM or was written again
+                for (f, recs) in d.segments.values_mut() {
+                    recs.retain(|(k, off, len)| {
+                        if !ssts.contains(&k.sst) {
+                            return true;
                         }
-                    }
+                        if f.write_all_at(&vec![0u8; *len as usize], *off).is_ok() {
+                            self.m.dropped_disk_bytes.fetch_add(*len as u64, Relaxed);
+                        }
+                        false
+                    });
                 }
             }
         }
@@ -480,13 +494,15 @@ impl Counter {
     }
 
     fn maps_put(&self, k: Ck, e: CachedEntry) {
-        if self.is_dead(&k.sst) {
-            self.m.dead_refused.fetch_add(1, Relaxed);
-            return;
-        }
         let size = e.size() as u64 + 64;
         {
             let mut m = self.maps.lock().unwrap();
+            // checked under the lock: a drop marks its SSTs dead before it takes this lock, so a put either sees the
+            // mark or is in place before the drop clears it
+            if self.is_dead(&k.sst) {
+                self.m.dead_refused.fetch_add(1, Relaxed);
+                return;
+            }
             m.take(&k);
             m.tick += 1;
             let t = m.tick;
@@ -516,9 +532,13 @@ impl Counter {
         }
         let e = self.disk_get(k)?;
         self.m.hits_disk.fetch_add(1, Relaxed);
-        // read twice: back to RAM, protected
+        // read twice: back to RAM, protected (unless its database was dropped meanwhile)
         {
             let mut r = self.ram.lock().unwrap();
+            if self.is_dead(&k.sst) {
+                self.m.dead_refused.fetch_add(1, Relaxed);
+                return Some(e);
+            }
             r.insert(*k, e.clone(), Q::Protected);
         }
         if let Some(d) = &self.disk {
@@ -529,10 +549,6 @@ impl Counter {
     }
 
     fn data_put(&self, k: Ck, e: CachedEntry, ahead: bool) {
-        if self.is_dead(&k.sst) {
-            self.m.dead_refused.fetch_add(1, Relaxed);
-            return;
-        }
         let q = if ahead || is_prefetch() {
             self.m.prefetched_in.fetch_add(1, Relaxed);
             Q::Prefetched
@@ -541,6 +557,11 @@ impl Counter {
         };
         {
             let mut r = self.ram.lock().unwrap();
+            // under the lock, as in maps_put
+            if self.is_dead(&k.sst) {
+                self.m.dead_refused.fetch_add(1, Relaxed);
+                return;
+            }
             if r.slots.contains_key(&k) {
                 return; // already here (a concurrent read): keep its queue
             }
@@ -628,6 +649,11 @@ impl Counter {
         };
         let Ok(buf) = bincode::serialize(e) else { return };
         let mut d = d.lock().unwrap();
+        // an entry on its way down (taken out of RAM before a drop) must not land on the disk floor after the drop
+        if self.is_dead(&k.sst) {
+            self.m.dead_refused.fetch_add(1, Relaxed);
+            return;
+        }
         if !map {
             self.m.to_disk.fetch_add(1, Relaxed);
         }
@@ -774,7 +800,7 @@ impl Disk {
         let seg = self.cur;
         let off = self.pos;
         self.segments.get(&seg).unwrap().0.write_all_at(buf, off)?;
-        self.segments.get_mut(&seg).unwrap().1.push(k);
+        self.segments.get_mut(&seg).unwrap().1.push((k, off, buf.len() as u32));
         self.pos += buf.len() as u64;
         self.index.insert(k, Loc { seg, off, len: buf.len() as u32, map, hit: false });
         self.used += buf.len() as u64;
@@ -795,7 +821,7 @@ impl Disk {
             let (file, keys) = self.segments.remove(&old).unwrap();
             let path = self.dir.join(format!("{old:010}.seg"));
             let mut keep: Vec<(Ck, Vec<u8>, bool)> = Vec::new();
-            for k in keys {
+            for (k, _, _) in keys {
                 let Some(l) = self.index.get(&k).copied() else { continue };
                 if l.seg != old {
                     continue;
@@ -830,7 +856,7 @@ impl Disk {
                 let seg = self.cur;
                 let off = self.pos;
                 self.segments.get(&seg).unwrap().0.write_all_at(&b, off)?;
-                self.segments.get_mut(&seg).unwrap().1.push(k);
+                self.segments.get_mut(&seg).unwrap().1.push((k, off, b.len() as u32));
                 self.pos += b.len() as u64;
                 self.index.insert(k, Loc { seg, off, len: b.len() as u32, map, hit: false });
                 self.used += b.len() as u64;

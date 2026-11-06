@@ -129,6 +129,9 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
         l.forget_pinned(db);
     }
     let report = purge::purge_tenant(ctl, db).await?;
+    // the waiter's counter and read-ahead: the erased database's maps and blocks leave the RAM and the disk floor (their
+    // bytes there are overwritten); also on a resumed erase (this runs again after a crash)
+    crate::dbs::forget_on_waiter(db, report.ssts.iter().copied()).await;
     ctl.dbs.leases.forget(db);
     ctl.lc.touched.lock().unwrap().remove(db);
     // as a drop: a database created again with this name starts with none of the erased one's state

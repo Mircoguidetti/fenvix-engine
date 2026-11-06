@@ -857,7 +857,7 @@ impl Entry {
                 // The waiter's counter (R-T1, correction 1): the database's maps and blocks leave the RAM and the disk
                 // floor now, the ones it mapped and every SST found under its prefix.
                 forgotten = true;
-                self.forget_on_waiter(objs.iter().filter_map(|p| tenant_bench::maps::sst_of_path(p.as_ref()))).await;
+                forget_on_waiter(&self.name, objs.iter().filter_map(|p| tenant_bench::maps::sst_of_path(p.as_ref()))).await;
             }
             if objs.is_empty() {
                 break;
@@ -875,17 +875,6 @@ impl Entry {
             None => crate::ctl::erase::forget_in_memory(&self.name),
         }
         Ok(())
-    }
-
-    /// Forget the database on the waiter's tools (counter and read-ahead), when they are on.
-    async fn forget_on_waiter(&self, ssts: impl Iterator<Item = [u8; 26]>) {
-        if let Some(c) = tenant_bench::counter::COUNTER.get() {
-            let n = tenant_bench::maps::forget_database(c, &self.name, ssts);
-            if n > 0 {
-                eprintln!("dropDatabase {}: {n} entries forgotten on the counter", self.name);
-            }
-        }
-        crate::prefetch::forget(&self.name).await;
     }
 
     pub(crate) fn is_writer_open(&self) -> bool {
@@ -1384,4 +1373,16 @@ impl ReadView {
             None => Ok(None),
         }
     }
+}
+
+/// Forget a dropped or erased database on the waiter's tools (counter and read-ahead), when they are on: its maps and
+/// blocks leave the RAM and the disk floor at once (`maps::forget_database`), its read-ahead windows go.
+pub(crate) async fn forget_on_waiter(name: &str, ssts: impl Iterator<Item = [u8; 26]>) {
+    if let Some(c) = tenant_bench::counter::COUNTER.get() {
+        let n = tenant_bench::maps::forget_database(c, name, ssts);
+        if n > 0 {
+            eprintln!("database {name} dropped or erased: {n} entries forgotten on the counter");
+        }
+    }
+    crate::prefetch::forget(name).await;
 }
