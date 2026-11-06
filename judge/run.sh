@@ -2,6 +2,8 @@
 # The judge: runs every existing suite against the current commit and writes one verdict per phase.
 # Runs inside any session sandbox (after judge/setup.sh), $0, no docker, no GitHub Actions minutes.
 # Usage: judge/run.sh [phase ...]   phases: build unit diff-py diff-node ctl kill   (default: all, in that order)
+#   judge/run.sh fast   the quick judge for the end of every task (founder, 2026-11-06): build, unit, one tenth of both
+#   differential suites (every 10th test, all categories), 3 control-layer files, one short kill trial. The full judge is for releases.
 # Output: judge/out/<commit>/<phase>.log and judge/out/<commit>/VERDICT.md (one line per phase: PASS, FAIL or NOT RUN, with counts).
 # A phase FAILs when anything in it fails; there is no "almost". The author and the reviewer run the same script on the same commit.
 set -uo pipefail
@@ -12,14 +14,17 @@ export PATH="$ENV/bin:$PATH"
 SHA=$(git rev-parse --short HEAD); DIRTY=$(git status --porcelain -- mongo-server src Cargo.toml Cargo.lock | head -1)
 OUT="$ROOT/judge/out/$SHA"; mkdir -p "$OUT"; V="$OUT/VERDICT.md"
 PHASES=${*:-build unit diff-py diff-node ctl kill}
-[ -f "$V" ] || { echo "# Judge verdict, commit $SHA${DIRTY:+ (with uncommitted engine changes: not a valid verdict)}"; echo; } > "$V"
+FAST=0; if [ "$PHASES" = fast ]; then FAST=1; PHASES="build unit diff-py diff-node ctl kill"; fi
+SHARD=""; [ $FAST = 1 ] && SHARD="0/10"
+[ $FAST = 1 ] && V="$OUT/VERDICT-FAST.md"
+[ -f "$V" ] || { echo "# Judge verdict$([ $FAST = 1 ] && echo " (fast)"), commit $SHA${DIRTY:+ (with uncommitted engine changes: not a valid verdict)}"; echo; } > "$V"
 verdict() { sed -i "/^- $1:/d" "$V"; echo "- $1: $2" >> "$V"; echo "JUDGE $1: $2"; }
 
 # the reference mongod (replica set rs0, as the suites expect) and MinIO with the bucket "bench"
 env_up() {
   mkdir -p "$JH/data/rs" "$JH/data/minio/bench"
   if ! (exec 3<>/dev/tcp/127.0.0.1/27020) 2>/dev/null; then
-    mongod --replSet rs0 --port 27020 --bind_ip 127.0.0.1 --dbpath "$JH/data/rs" --fork --logpath "$JH/data/rs.log" > /dev/null
+    mongod --replSet rs0 --setParameter ttlMonitorSleepSecs=1 --port 27020 --bind_ip 127.0.0.1 --dbpath "$JH/data/rs" --fork --logpath "$JH/data/rs.log" > /dev/null
     "$PY" - <<'P'
 import pymongo, time
 c = pymongo.MongoClient("mongodb://127.0.0.1:27020/?directConnection=true")
@@ -53,9 +58,9 @@ for p in $PHASES; do
     diff-py|diff-node)
       env_up; servers; (cd mongo-tests && "$PY" gen_tests.py tests.json > /dev/null)
       if [ $p = diff-py ]; then
-        (cd mongo-tests && "$PY" run_py.py --real "$REAL" --ours "$OURS" --idle "$IDLE" --out "$OUT/$p.json") > "$log" 2>&1
+        (cd mongo-tests && "$PY" run_py.py --real "$REAL" --ours "$OURS" --idle "$IDLE" ${SHARD:+--shard $SHARD} --out "$OUT/$p.json") > "$log" 2>&1
       else
-        (cd mongo-tests/node && node run_node.js "--real=$REAL" "--ours=$OURS" "--idle=$IDLE" "--out=$OUT/$p.json") > "$log" 2>&1
+        (cd mongo-tests/node && node run_node.js "--real=$REAL" "--ours=$OURS" "--idle=$IDLE" ${SHARD:+"--shard=$SHARD"} "--out=$OUT/$p.json") > "$log" 2>&1
       fi
       if [ -f "$OUT/$p.json" ]; then
         r=$("$PY" -c "import json,sys;r=json.load(open(sys.argv[1]));n=len(r);ok=sum(x['status']=='pass' for x in r);print(ok,n)" "$OUT/$p.json")
@@ -63,7 +68,8 @@ for p in $PHASES; do
       else verdict $p "FAIL (no result file, see $p.log)"; fi ;;
     ctl)
       env_up; pass=0; fail=0; bad=""
-      for f in ctl-tests/test_*.py; do
+      CTL_FILES=$(ls ctl-tests/test_*.py); [ $FAST = 1 ] && CTL_FILES="ctl-tests/test_01_databases.py ctl-tests/test_05_erase.py ctl-tests/test_09_security.py"
+      for f in $CTL_FILES; do
         n=$(basename "$f" .py)
         (cd ctl-tests && timeout 1500 "$PY" -m pytest -q -p no:cacheprovider --tb=short "$n.py") > "$OUT/ctl_$n.log" 2>&1 && pass=$((pass+1)) || { fail=$((fail+1)); bad="$bad $n"; }
       done
@@ -71,8 +77,12 @@ for p in $PHASES; do
     kill)
       # SIGKILL durability: no acknowledged write may be lost; each test has a negative control that MUST lose writes
       env_up; ok=1; : > "$log"
-      (cd loadtest && "$PY" test_group_commit.py --trials 2 --secs 30) >> "$log" 2>&1 || ok=0
-      (cd loadtest && "$PY" test_open_gc.py --trials 1 --secs 60) >> "$log" 2>&1 || ok=0
+      if [ $FAST = 1 ]; then
+        (cd loadtest && "$PY" test_group_commit.py --trials 1 --secs 15) >> "$log" 2>&1 || ok=0
+      else
+        (cd loadtest && "$PY" test_group_commit.py --trials 2 --secs 30) >> "$log" 2>&1 || ok=0
+        (cd loadtest && "$PY" test_open_gc.py --trials 1 --secs 60) >> "$log" 2>&1 || ok=0
+      fi
       [ $ok = 1 ] && verdict kill "PASS (see kill.log for counts)" || verdict kill "FAIL (see kill.log)" ;;
     *) echo "unknown phase $p"; exit 2 ;;
   esac
