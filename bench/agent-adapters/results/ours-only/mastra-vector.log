@@ -1,0 +1,450 @@
+
+ RUN  v5.1.0 /home/user/adapters/mastra/stores/mongodb
+
+ ✓ |e2e:stores/mongodb| src/vector/filter.test.ts (36 tests) 15ms
+ ✓ |e2e:stores/mongodb| src/vector/query-initial-sync-retry.test.ts (3 tests) 22ms
+ ↓ |e2e:stores/mongodb| src/vector/memory-autoembed.test.ts (4 tests | 4 skipped)
+stdout | src/vector/index.test.ts > MongoDBVector Integration Tests
+[waitForAtlasSearchReady] Atlas Search is ready! (attempt 1)
+
+stdout | src/vector/index.test.ts > MongoDBVector
+Connecting to vector store...
+
+stdout | src/vector/index.test.ts > MongoDBVector
+Vector store connected in 6ms
+
+ ↓ |e2e:stores/mongodb| src/vector/om-autoembed.test.ts (9 tests | 9 skipped)
+ ↓ |e2e:stores/mongodb| src/vector/workspace-autoembed.test.ts (5 tests | 5 skipped)
+stderr | src/vector/index.test.ts > MongoDBVector > Basic Vector Operations > Index Lifecycle
+Error deleting index lifecycle_test_1794000881819: MastraError: Index "lifecycle_test_1794000881819" is not registered and collection "lifecycle_test_1794000881819" carries no "lifecycle_test_1794000881819_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/basic-operations.ts:28:11 {
+  cause: Error: Index "lifecycle_test_1794000881819" is not registered and collection "lifecycle_test_1794000881819" carries no "lifecycle_test_1794000881819_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/basic-operations.ts:28:11,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'lifecycle_test_1794000881819' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Error Handling
+Error deleting index errorhandlingtest1794001220727ppasz: MastraError: Index "errorhandlingtest1794001220727ppasz" is not registered and collection "errorhandlingtest1794001220727ppasz" carries no "errorhandlingtest1794001220727ppasz_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/error-handling.ts:35:9 {
+  cause: Error: Index "errorhandlingtest1794001220727ppasz" is not registered and collection "errorhandlingtest1794001220727ppasz" carries no "errorhandlingtest1794001220727ppasz_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/error-handling.ts:35:9,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'errorhandlingtest1794001220727ppasz' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Error Handling > Concurrent Operation Errors > should handle double deletion of same index gracefully
+Error deleting index temp_double_delete_1794001261129: MastraError: Index "temp_double_delete_1794001261129" is not registered and collection "temp_double_delete_1794001261129" carries no "temp_double_delete_1794001261129_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 3 lines matching cause stack trace ...
+    at async file:///root/.local/share/pnpm/store/v11/links/@/vitest/5.1.0/2e9379fe144a208e6c9e1e25a68303c0a692ad2a98aa99342b4bd942d8bd91ca/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:2801:20 {
+  cause: Error: Index "temp_double_delete_1794001261129" is not registered and collection "temp_double_delete_1794001261129" carries no "temp_double_delete_1794001261129_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/error-handling.ts:460:11
+      at async file:///root/.local/share/pnpm/store/v11/links/@/vitest/5.1.0/2e9379fe144a208e6c9e1e25a68303c0a692ad2a98aa99342b4bd942d8bd91ca/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:2801:20,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'temp_double_delete_1794001261129' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > deleteVectors() with filter > should delete vectors matching a simple filter
+Error deleting index advancedopstest1794001291462ozhn0t: MastraError: Index "advancedopstest1794001291462ozhn0t" is not registered and collection "advancedopstest1794001291462ozhn0t" carries no "advancedopstest1794001291462ozhn0t_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  cause: Error: Index "advancedopstest1794001291462ozhn0t" is not registered and collection "advancedopstest1794001291462ozhn0t" carries no "advancedopstest1794001291462ozhn0t_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest1794001291462ozhn0t' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > deleteVectors() with filter > should delete vectors matching complex filters with $and
+Error deleting index advancedopstest1794001321876rmxr3x: MastraError: Index "advancedopstest1794001321876rmxr3x" is not registered and collection "advancedopstest1794001321876rmxr3x" carries no "advancedopstest1794001321876rmxr3x_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  cause: Error: Index "advancedopstest1794001321876rmxr3x" is not registered and collection "advancedopstest1794001321876rmxr3x" carries no "advancedopstest1794001321876rmxr3x_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest1794001321876rmxr3x' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > deleteVectors() with filter > should delete vectors matching filters with $or
+Error deleting index advancedopstest1794001352118lgjig: MastraError: Index "advancedopstest1794001352118lgjig" is not registered and collection "advancedopstest1794001352118lgjig" carries no "advancedopstest1794001352118lgjig_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  cause: Error: Index "advancedopstest1794001352118lgjig" is not registered and collection "advancedopstest1794001352118lgjig" carries no "advancedopstest1794001352118lgjig_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest1794001352118lgjig' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > deleteVectors() with filter > should delete vectors matching filters with $in
+Error deleting index advancedopstest1794001382502bodjuo: MastraError: Index "advancedopstest1794001382502bodjuo" is not registered and collection "advancedopstest1794001382502bodjuo" carries no "advancedopstest1794001382502bodjuo_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  cause: Error: Index "advancedopstest1794001382502bodjuo" is not registered and collection "advancedopstest1794001382502bodjuo" carries no "advancedopstest1794001382502bodjuo_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest1794001382502bodjuo' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > deleteVectors() with filter > should handle deletion when no vectors match the filter
+Error deleting index advancedopstest17940014129118o0iv: MastraError: Index "advancedopstest17940014129118o0iv" is not registered and collection "advancedopstest17940014129118o0iv" carries no "advancedopstest17940014129118o0iv_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  cause: Error: Index "advancedopstest17940014129118o0iv" is not registered and collection "advancedopstest17940014129118o0iv" carries no "advancedopstest17940014129118o0iv_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest17940014129118o0iv' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > deleteVectors() with filter > should throw error for empty filter
+Error deleting index advancedopstest17940014434009anug: MastraError: Index "advancedopstest17940014434009anug" is not registered and collection "advancedopstest17940014434009anug" carries no "advancedopstest17940014434009anug_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  cause: Error: Index "advancedopstest17940014434009anug" is not registered and collection "advancedopstest17940014434009anug" carries no "advancedopstest17940014434009anug_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest17940014434009anug' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > deleteVectors() with IDs > should delete vectors by array of IDs
+Error deleting index advancedopstest1794001453546ptz6ls: MastraError: Index "advancedopstest1794001453546ptz6ls" is not registered and collection "advancedopstest1794001453546ptz6ls" carries no "advancedopstest1794001453546ptz6ls_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  cause: Error: Index "advancedopstest1794001453546ptz6ls" is not registered and collection "advancedopstest1794001453546ptz6ls" carries no "advancedopstest1794001453546ptz6ls_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest1794001453546ptz6ls' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > deleteVectors() with IDs > should handle empty ids array
+Error deleting index advancedopstest1794001478700wv631j: MastraError: Index "advancedopstest1794001478700wv631j" is not registered and collection "advancedopstest1794001478700wv631j" carries no "advancedopstest1794001478700wv631j_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  cause: Error: Index "advancedopstest1794001478700wv631j" is not registered and collection "advancedopstest1794001478700wv631j" carries no "advancedopstest1794001478700wv631j_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest1794001478700wv631j' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > deleteVectors() with IDs > should handle deletion of non-existent IDs gracefully
+Error deleting index advancedopstest1794001488868y4i7nd: MastraError: Index "advancedopstest1794001488868y4i7nd" is not registered and collection "advancedopstest1794001488868y4i7nd" carries no "advancedopstest1794001488868y4i7nd_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  cause: Error: Index "advancedopstest1794001488868y4i7nd" is not registered and collection "advancedopstest1794001488868y4i7nd" carries no "advancedopstest1794001488868y4i7nd_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest1794001488868y4i7nd' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > deleteVectors() with IDs > should reject when both filter and ids are provided
+Error deleting index advancedopstest1794001514025iy2go7: MastraError: Index "advancedopstest1794001514025iy2go7" is not registered and collection "advancedopstest1794001514025iy2go7" carries no "advancedopstest1794001514025iy2go7_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  cause: Error: Index "advancedopstest1794001514025iy2go7" is not registered and collection "advancedopstest1794001514025iy2go7" carries no "advancedopstest1794001514025iy2go7_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest1794001514025iy2go7' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > deleteVectors() with IDs > should reject when neither filter nor ids are provided
+Error deleting index advancedopstest1794001524212itq8y: MastraError: Index "advancedopstest1794001524212itq8y" is not registered and collection "advancedopstest1794001524212itq8y" carries no "advancedopstest1794001524212itq8y_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  cause: Error: Index "advancedopstest1794001524212itq8y" is not registered and collection "advancedopstest1794001524212itq8y" carries no "advancedopstest1794001524212itq8y_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest1794001524212itq8y' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > updateVector() with filter > should update multiple vectors matching a filter
+Error deleting index advancedopstest17940015344178n5sjh: MastraError: Index "advancedopstest17940015344178n5sjh" is not registered and collection "advancedopstest17940015344178n5sjh" carries no "advancedopstest17940015344178n5sjh_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  cause: Error: Index "advancedopstest17940015344178n5sjh" is not registered and collection "advancedopstest17940015344178n5sjh" carries no "advancedopstest17940015344178n5sjh_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest17940015344178n5sjh' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > updateVector() with filter > should update vectors with complex filter
+Error deleting index advancedopstest17940015647127pn2nn: MastraError: Index "advancedopstest17940015647127pn2nn" is not registered and collection "advancedopstest17940015647127pn2nn" carries no "advancedopstest17940015647127pn2nn_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  cause: Error: Index "advancedopstest17940015647127pn2nn" is not registered and collection "advancedopstest17940015647127pn2nn" carries no "advancedopstest17940015647127pn2nn_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest17940015647127pn2nn' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > updateVector() with filter > should update vectors when no matches exist
+Error deleting index advancedopstest17940015949801m3tel: MastraError: Index "advancedopstest17940015949801m3tel" is not registered and collection "advancedopstest17940015949801m3tel" carries no "advancedopstest17940015949801m3tel_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  cause: Error: Index "advancedopstest17940015949801m3tel" is not registered and collection "advancedopstest17940015949801m3tel" carries no "advancedopstest17940015949801m3tel_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest17940015949801m3tel' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > updateVector() with filter > should reject when both id and filter are provided
+Error deleting index advancedopstest179400162553429glj: MastraError: Index "advancedopstest179400162553429glj" is not registered and collection "advancedopstest179400162553429glj" carries no "advancedopstest179400162553429glj_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  cause: Error: Index "advancedopstest179400162553429glj" is not registered and collection "advancedopstest179400162553429glj" carries no "advancedopstest179400162553429glj_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest179400162553429glj' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > updateVector() with filter > should reject when neither id nor filter are provided
+Error deleting index advancedopstest17940016357158yq2piv: MastraError: Index "advancedopstest17940016357158yq2piv" is not registered and collection "advancedopstest17940016357158yq2piv" carries no "advancedopstest17940016357158yq2piv_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  cause: Error: Index "advancedopstest17940016357158yq2piv" is not registered and collection "advancedopstest17940016357158yq2piv" carries no "advancedopstest17940016357158yq2piv_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9,
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest17940016357158yq2piv' }
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > updateVector() with filter > should reject update with empty filter
+Error deleting index advancedopstest1794001645896wa0dzm: MastraError: Index "advancedopstest1794001645896wa0dzm" is not registered and collection "advancedopstest1794001645896wa0dzm" carries no "advancedopstest1794001645896wa0dzm_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest1794001645896wa0dzm' },
+  [cause]: Error: Index "advancedopstest1794001645896wa0dzm" is not registered and collection "advancedopstest1794001645896wa0dzm" carries no "advancedopstest1794001645896wa0dzm_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > updateVector() with filter > should update only metadata by id, preserving vector
+Error deleting index advancedopstest1794001656082cxmnl: MastraError: Index "advancedopstest1794001656082cxmnl" is not registered and collection "advancedopstest1794001656082cxmnl" carries no "advancedopstest1794001656082cxmnl_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest1794001656082cxmnl' },
+  [cause]: Error: Index "advancedopstest1794001656082cxmnl" is not registered and collection "advancedopstest1794001656082cxmnl" carries no "advancedopstest1794001656082cxmnl_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > updateVector() with filter > should update only vector by id, preserving metadata
+Error deleting index advancedopstest1794001686692xtj0pd: MastraError: Index "advancedopstest1794001686692xtj0pd" is not registered and collection "advancedopstest1794001686692xtj0pd" carries no "advancedopstest1794001686692xtj0pd_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest1794001686692xtj0pd' },
+  [cause]: Error: Index "advancedopstest1794001686692xtj0pd" is not registered and collection "advancedopstest1794001686692xtj0pd" carries no "advancedopstest1794001686692xtj0pd_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > updateVector() with filter > should reject update with no updates provided
+Error deleting index advancedopstest1794001717301om81s: MastraError: Index "advancedopstest1794001717301om81s" is not registered and collection "advancedopstest1794001717301om81s" carries no "advancedopstest1794001717301om81s_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest1794001717301om81s' },
+  [cause]: Error: Index "advancedopstest1794001717301om81s" is not registered and collection "advancedopstest1794001717301om81s" carries no "advancedopstest1794001717301om81s_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9
+}
+
+stderr | src/vector/index.test.ts > MongoDBVector > Advanced Vector Operations > Real-world scenarios > should handle document re-indexing workflow
+Error deleting index advancedopstest1794001737676lhqk47: MastraError: Index "advancedopstest1794001737676lhqk47" is not registered and collection "advancedopstest1794001737676lhqk47" carries no "advancedopstest1794001737676lhqk47_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+    at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1965:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 2 lines matching cause stack trace ...
+    at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9 {
+  id: 'MASTRA_VECTOR_MONGODB_DELETE_INDEX_FAILED',
+  domain: 'STORAGE',
+  category: 'THIRD_PARTY',
+  details: { indexName: 'advancedopstest1794001737676lhqk47' },
+  [cause]: Error: Index "advancedopstest1794001737676lhqk47" is not registered and collection "advancedopstest1794001737676lhqk47" carries no "advancedopstest1794001737676lhqk47_vector_index" search index — refusing to drop a collection this store cannot verify it manages.
+      at MongoDBVector.deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.ts:1939:21)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at deleteIndexAndWait (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:172:5)
+      at deleteIndex (/home/user/adapters/mastra/stores/mongodb/src/vector/index.test.ts:427:5)
+      at /home/user/adapters/mastra/stores/_test-utils/src/domains/vector/advanced-operations.ts:27:9
+}
+
