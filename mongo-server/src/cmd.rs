@@ -450,6 +450,16 @@ impl Server {
             "listDatabases" => return Box::pin(self.list_databases(db, cmd, conn_id)).await,
             "tenantStats" => return Ok(self.tenant_stats()),
             "fenvixSstInfo" => return self.sst_info(cmd).await,
+            "fenvixFirstCourse" => {
+                // first course (opening.rs): the size of every opening of a database, for measurements
+                let db = cmd.get_str("fenvixFirstCourse").map_err(|_| MongoError::bad_value("fenvixFirstCourse needs a database name".into()))?;
+                let sizes = crate::opening::sizes(db);
+                return Ok(doc! {
+                    "bytes": sizes.iter().map(|(b, _)| Bson::Int64(*b as i64)).collect::<Vec<_>>(),
+                    "entries": sizes.iter().map(|(_, e)| Bson::Int64(*e as i64)).collect::<Vec<_>>(),
+                    "ok": 1.0,
+                });
+            }
             "renameCollection" => return Box::pin(self.rename_collection(db, cmd)).await,
             "ttlPass" => {
                 let gap = int_arg(cmd.get("minGapSecs")).unwrap_or(0) as u64;

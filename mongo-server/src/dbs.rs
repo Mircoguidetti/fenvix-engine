@@ -365,9 +365,9 @@ impl Dbs {
             let mut w = Arc::clone(&e).write_owned().await;
             w.absent = false;
             if !w.ensure_open().await? {
-                return Ok(ReadView { g: None, copts: Default::default() });
+                return Ok(ReadView { g: None, copts: Default::default(), fc: Default::default() });
             }
-            return Ok(ReadView { g: Some(Guard::Write(w)), copts: Default::default() });
+            return Ok(ReadView { g: Some(Guard::Write(w)), copts: Default::default(), fc: Default::default() });
         }
         loop {
             {
@@ -375,13 +375,13 @@ impl Dbs {
                 if g.tenant.is_some() && g.leases.valid(&g.name) {
                     crate::locallog::check_open(&g.name)?;
                     g.touch();
-                    return Ok(ReadView { g: Some(Guard::Read(g)), copts: Default::default() });
+                    return Ok(ReadView { g: Some(Guard::Read(g)), copts: Default::default(), fc: Default::default() });
                 }
             }
             let mut w = Arc::clone(&e).write_owned().await;
             w.absent = false;
             if !w.ensure_open().await? {
-                return Ok(ReadView { g: None, copts: Default::default() });
+                return Ok(ReadView { g: None, copts: Default::default(), fc: Default::default() });
             }
         }
     }
@@ -575,6 +575,7 @@ impl Entry {
             }
         }
         let mut closed = true;
+        crate::opening::forget_db(&self.name);
         if let Some(t) = self.tenant.take() {
             closed = t.abandon().await;
             self.closes += 1;
@@ -628,7 +629,8 @@ impl Entry {
         self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
-                self.tenant = Some(t);
+                crate::opening::forget_db(&self.name);
+            self.tenant = Some(t);
                 self.wakes += 1;
                 self.sync_gauges();
                 crate::fair::register(&self.name);
@@ -656,6 +658,7 @@ impl Entry {
         self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
+        crate::opening::forget_db(&self.name);
         if let Some(t) = self.tenant.take() {
             crate::fair::note_written(&self.name, 0, true);
             let r = t.close().await;
@@ -766,6 +769,7 @@ impl Entry {
         self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
+            crate::opening::forget_db(&self.name);
             self.tenant = Some(self.lc.create(&self.name).await?);
             self.absent = false;
             self.wakes += 1;
@@ -797,7 +801,10 @@ impl Entry {
                 _ => None,
             })
             .collect();
+        // first course (opening.rs): writes to a user's kept opening follow it
+        let fc = crate::opening::write_hook(&self.name, &ops);
         let staged = self.tenant.as_mut().unwrap().stage(ops).await;
+        crate::opening::after_stage(&self.name, fc, staged.is_ok());
         if staged.is_ok() {
             // the counters in memory follow the latest state (`collstat.rs`)
             self.sstat.extend(sstat_ops);
@@ -852,6 +859,7 @@ impl Entry {
         self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
+        crate::opening::forget_db(&self.name);
         if let Some(t) = self.tenant.take() {
             t.close().await?;
             self.closes += 1;
@@ -1148,6 +1156,7 @@ impl Entry {
         self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
+            crate::opening::forget_db(&self.name);
             self.tenant = Some(self.lc.create(&self.name).await?);
             self.absent = false;
             self.wakes += 1;
@@ -1253,6 +1262,8 @@ pub static GET_MANY_PARALLEL: std::sync::atomic::AtomicUsize = std::sync::atomic
 pub struct ReadView {
     g: Option<Guard>,
     copts: std::sync::Mutex<HashMap<String, Option<Arc<crate::collopts::CollOpts>>>>,
+    /// First course (opening.rs): the session of this view's query, when it is a user's first query of a visit.
+    fc: std::sync::Mutex<Option<crate::opening::Session>>,
 }
 
 enum Guard {
@@ -1297,7 +1308,13 @@ impl ReadView {
     async fn scan_uncounted(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
         let t = g.tenant.as_ref().unwrap();
+        let end = crate::keyenc::prefix_end(prefix);
+        if let Some(r) = self.fc_with(|s| s.scan(prefix, end.as_deref(), false, None)).flatten() {
+            self.fc_with(|s| s.note_scan(prefix, end.as_deref(), false, None, &r));
+            return self.done(r);
+        }
         let r = if durable_reads(&g.name) { t.scan_prefix_durable(prefix).await? } else { t.scan_prefix(prefix).await? };
+        self.fc_with(|s| s.note_scan(prefix, end.as_deref(), false, None, &r));
         self.done(r)
     }
 
@@ -1319,8 +1336,36 @@ impl ReadView {
             };
             return self.done(r);
         }
+        if let Some(v) = self.fc_with(|s| s.get(key)).flatten() {
+            return self.done(v);
+        }
         let r = if durable_reads(&g.name) { t.get_durable(key).await? } else { t.get(key).await? };
+        self.fc_with(|s| s.note_get(key, &r));
         self.done(r)
+    }
+
+    fn fc_with<T>(&self, f: impl FnOnce(&mut crate::opening::Session) -> T) -> Option<T> {
+        self.fc.lock().unwrap().as_mut().map(f)
+    }
+
+    /// First course: start a session if this find is a user's first query of a visit (opening.rs).
+    pub async fn first_course_begin(&self, coll: &str, filter: &Document) {
+        if !crate::opening::ENABLED.load(Relaxed) {
+            return;
+        }
+        let Some(g) = &self.g else { return };
+        let Ok(opts) = self.coll_opts(coll).await else { return };
+        let Some(field) = crate::custkey::of_opts(opts.as_ref()) else { return };
+        let Ok(indexes) = self.indexes(coll).await else { return };
+        let all_durable = !durable_reads(&g.name) || g.tenant.as_ref().map_or(false, |t| t.all_durable());
+        *self.fc.lock().unwrap() = crate::opening::begin(&g.name, coll, &field, filter, &indexes, all_durable);
+    }
+
+    /// First course: end of the query (keeps the opening when `ok`).
+    pub fn first_course_end(&self, ok: bool) {
+        if let Some(s) = self.fc.lock().unwrap().take() {
+            crate::opening::finish(s, ok);
+        }
     }
 
     pub async fn get_many(&self, keys: &[Vec<u8>]) -> Result<Vec<Option<Bytes>>> {
@@ -1337,8 +1382,23 @@ impl ReadView {
             return Ok(vec![]);
         }
         let t = g.tenant.as_ref().unwrap();
-        let futs: Vec<_> = keys.iter().map(|k| t.get(k.clone())).collect();
-        let r = futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect::<Vec<_>>().await?;
+        // first course: the keys the opening answers exactly, the others from storage
+        let mut out: Vec<Option<Option<Bytes>>> = match self.fc_with(|s| keys.iter().map(|k| s.get(k)).collect::<Vec<_>>()) {
+            Some(v) => v,
+            None => vec![None; keys.len()],
+        };
+        let miss: Vec<usize> = (0..keys.len()).filter(|i| out[*i].is_none()).collect();
+        let futs: Vec<_> = miss.iter().map(|i| t.get(keys[*i].clone())).collect();
+        let fetched = futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect::<Vec<_>>().await?;
+        for (i, v) in miss.into_iter().zip(fetched) {
+            out[i] = Some(v);
+        }
+        let r: Vec<Option<Bytes>> = out.into_iter().map(|v| v.unwrap()).collect();
+        self.fc_with(|s| {
+            for (k, v) in keys.iter().zip(r.iter()) {
+                s.note_get(k, v);
+            }
+        });
         self.done(r)
     }
 
@@ -1352,7 +1412,12 @@ impl ReadView {
 
     async fn scan_range_uncounted(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
+        if let Some(r) = self.fc_with(|s| s.scan(start, end, reverse, limit)).flatten() {
+            self.fc_with(|s| s.note_scan(start, end, reverse, limit, &r));
+            return self.done(r);
+        }
         let r = g.tenant.as_ref().unwrap().scan_range(start, end, reverse, limit, read_ahead).await?;
+        self.fc_with(|s| s.note_scan(start, end, reverse, limit, &r));
         self.done(r)
     }
 

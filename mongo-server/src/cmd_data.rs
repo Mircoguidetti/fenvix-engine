@@ -130,7 +130,10 @@ impl Server {
             }
         } else if tx.is_none() {
             let mut g = self.dbs.read(db).await?;
-            let docs = self.find_part(&mut g, db, coll, &filter, &sort, want, hint_arg, None).await.map_err(|e| crate::find_ext::hint_error(e, &format!("{db}.{coll}"), &filter, cmd.get_document("sort").ok(), cmd.get_document("projection").ok()))?;
+            g.first_course_begin(coll, &filter).await;
+            let res = self.find_part(&mut g, db, coll, &filter, &sort, want, hint_arg, None).await;
+            g.first_course_end(res.is_ok());
+            let docs = res.map_err(|e| crate::find_ext::hint_error(e, &format!("{db}.{coll}"), &filter, cmd.get_document("sort").ok(), cmd.get_document("projection").ok()))?;
             // the collection's options are already in this view (read by `find_part`): no second view and no second read
             clustered = Some(g.coll_opts(coll).await?.map(|k| k.clustered.is_some()).unwrap_or(false));
             docs

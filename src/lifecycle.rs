@@ -867,6 +867,13 @@ pub struct Tenant {
 }
 
 impl Tenant {
+    /// Every staged write is in a durable WAL object (explicit flush mode; otherwise unknown here, so false). A read of
+    /// durable data then sees exactly what a read of the memtable sees.
+    pub fn all_durable(&self) -> bool {
+        use std::sync::atomic::Ordering::Acquire;
+        EXPLICIT_FLUSH.load(std::sync::atomic::Ordering::Relaxed) && self.group.flushed_seq.load(Acquire) >= self.group.staged_seq.load(Acquire)
+    }
+
     /// slatedb writer epoch of this writer (None for a reader).
     pub fn writer_epoch(&self) -> Option<u64> {
         match &self.mode {
