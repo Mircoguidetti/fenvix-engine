@@ -1,0 +1,367 @@
+CPU Intel(R) Xeon(R) Processor @ 2.10GHz, zstd 1.5.7, single thread, 3 repetitions (median)
+agent traces: 337517 day-1 messages, 93305 later messages, loaded in 2.3 s
+== chat: 50000 measure records, mean 384 B, p10 297 p50 385 p90 468 p99 525 max 572; training 5000 records, 1908786 bytes
+  dictionary max 32768 -> 32768 bytes, trained in 0.13 s
+  dictionary max 65536 -> 65536 bytes, trained in 0.13 s
+  dictionary max 114688 -> 114688 bytes, trained in 0.14 s
+  chat           measure                          single   zstd1  dict      0 lean     ratio 0.748  comp    5.63 us/rec  dec   2.39 us/rec
+  chat           measure                          single   zstd1  dict      0 standard ratio 0.758  comp    5.15 us/rec  dec   2.29 us/rec
+  chat           measure                          single   zstd1  dict  32768 lean     ratio 0.333  comp    1.71 us/rec  dec   0.67 us/rec
+  chat           measure                          single   zstd1  dict  32768 standard ratio 0.354  comp    1.68 us/rec  dec   0.66 us/rec
+  chat           measure                          single   zstd1  dict  65536 lean     ratio 0.335  comp    1.69 us/rec  dec   0.69 us/rec
+  chat           measure                          single   zstd1  dict  65536 standard ratio 0.356  comp    1.79 us/rec  dec   0.65 us/rec
+  chat           measure                          single   zstd1  dict 114688 lean     ratio 0.337  comp    1.43 us/rec  dec   0.57 us/rec
+  chat           measure                          single   zstd1  dict 114688 standard ratio 0.357  comp    1.47 us/rec  dec   0.54 us/rec
+  chat           measure                          single   zstd3  dict      0 lean     ratio 0.735  comp    6.05 us/rec  dec   2.56 us/rec
+  chat           measure                          single   zstd3  dict      0 standard ratio 0.745  comp    5.73 us/rec  dec   2.45 us/rec
+  chat           measure                          single   zstd3  dict  32768 lean     ratio 0.312  comp    1.83 us/rec  dec   0.62 us/rec
+  chat           measure                          single   zstd3  dict  32768 standard ratio 0.333  comp    1.80 us/rec  dec   0.62 us/rec
+  chat           measure                          single   zstd3  dict  65536 lean     ratio 0.306  comp    1.78 us/rec  dec   0.50 us/rec
+  chat           measure                          single   zstd3  dict  65536 standard ratio 0.327  comp    1.51 us/rec  dec   0.49 us/rec
+  chat           measure                          single   zstd3  dict 114688 lean     ratio 0.303  comp    1.47 us/rec  dec   0.46 us/rec
+  chat           measure                          single   zstd3  dict 114688 standard ratio 0.324  comp    1.45 us/rec  dec   0.46 us/rec
+  chat           measure                          batch16  zstd1  dict      0 lean     ratio 0.371  comp    1.13 us/rec  dec   0.41 us/rec
+  chat           measure                          batch16  zstd1  dict      0 standard ratio 0.371  comp    1.13 us/rec  dec   0.41 us/rec
+  chat           measure                          batch16  zstd1  dict  32768 lean     ratio 0.295  comp    1.04 us/rec  dec   0.47 us/rec
+  chat           measure                          batch16  zstd1  dict  32768 standard ratio 0.296  comp    1.02 us/rec  dec   0.47 us/rec
+  chat           measure                          batch16  zstd1  dict  65536 lean     ratio 0.295  comp    1.09 us/rec  dec   0.50 us/rec
+  chat           measure                          batch16  zstd1  dict  65536 standard ratio 0.296  comp    1.21 us/rec  dec   0.49 us/rec
+  chat           measure                          batch16  zstd1  dict 114688 lean     ratio 0.298  comp    1.03 us/rec  dec   0.48 us/rec
+  chat           measure                          batch16  zstd1  dict 114688 standard ratio 0.299  comp    1.07 us/rec  dec   0.48 us/rec
+  chat           measure                          batch16  zstd3  dict      0 lean     ratio 0.364  comp    1.46 us/rec  dec   0.43 us/rec
+  chat           measure                          batch16  zstd3  dict      0 standard ratio 0.364  comp    1.43 us/rec  dec   0.42 us/rec
+  chat           measure                          batch16  zstd3  dict  32768 lean     ratio 0.275  comp    1.17 us/rec  dec   0.43 us/rec
+  chat           measure                          batch16  zstd3  dict  32768 standard ratio 0.276  comp    1.16 us/rec  dec   0.44 us/rec
+  chat           measure                          batch16  zstd3  dict  65536 lean     ratio 0.267  comp    1.14 us/rec  dec   0.43 us/rec
+  chat           measure                          batch16  zstd3  dict  65536 standard ratio 0.269  comp    1.29 us/rec  dec   0.48 us/rec
+  chat           measure                          batch16  zstd3  dict 114688 lean     ratio 0.263  comp    1.15 us/rec  dec   0.43 us/rec
+  chat           measure                          batch16  zstd3  dict 114688 standard ratio 0.264  comp    1.18 us/rec  dec   0.42 us/rec
+  chat           measure                          block64k zstd1  dict      0 lean     ratio 0.283  comp    0.81 us/rec  dec   0.24 us/rec
+  chat           measure                          block64k zstd1  dict  32768 lean     ratio 0.271  comp    1.02 us/rec  dec   0.30 us/rec
+  chat           measure                          block64k zstd1  dict  65536 lean     ratio 0.270  comp    0.99 us/rec  dec   0.30 us/rec
+  chat           measure                          block64k zstd1  dict 114688 lean     ratio 0.270  comp    1.12 us/rec  dec   0.31 us/rec
+  chat           measure                          block64k zstd3  dict      0 lean     ratio 0.272  comp    1.00 us/rec  dec   0.25 us/rec
+  chat           measure                          block64k zstd3  dict  32768 lean     ratio 0.256  comp    1.34 us/rec  dec   0.34 us/rec
+  chat           measure                          block64k zstd3  dict  65536 lean     ratio 0.251  comp    1.36 us/rec  dec   0.35 us/rec
+  chat           measure                          block64k zstd3  dict 114688 lean     ratio 0.249  comp    1.28 us/rec  dec   0.35 us/rec
+  chat           measure                          block64k lz4    dict      0 block    ratio 0.398  comp    0.61 us/rec  dec   0.13 us/rec
+  drift set new-seed-90-days-later: 10000 records, mean 384 B
+  chat           new-seed-90-days-later           single   zstd1  dict      0 lean     ratio 0.749  comp    4.31 us/rec  dec   1.89 us/rec
+  chat           new-seed-90-days-later           single   zstd1  dict  32768 lean     ratio 0.362  comp    1.41 us/rec  dec   0.56 us/rec
+  chat           new-seed-90-days-later           single   zstd1  dict  65536 lean     ratio 0.366  comp    1.35 us/rec  dec   0.56 us/rec
+  chat           new-seed-90-days-later           single   zstd1  dict 114688 lean     ratio 0.368  comp    1.36 us/rec  dec   0.57 us/rec
+  chat           new-seed-90-days-later           single   zstd3  dict      0 lean     ratio 0.747  comp    4.77 us/rec  dec   1.95 us/rec
+  chat           new-seed-90-days-later           single   zstd3  dict  32768 lean     ratio 0.338  comp    1.51 us/rec  dec   0.48 us/rec
+  chat           new-seed-90-days-later           single   zstd3  dict  65536 lean     ratio 0.333  comp    1.47 us/rec  dec   0.45 us/rec
+  chat           new-seed-90-days-later           single   zstd3  dict 114688 lean     ratio 0.331  comp    1.46 us/rec  dec   0.43 us/rec
+  chat           new-seed-90-days-later           block64k zstd1  dict      0 lean     ratio 0.287  comp    0.80 us/rec  dec   0.25 us/rec
+  chat           new-seed-90-days-later           block64k zstd1  dict  65536 lean     ratio 0.275  comp    0.95 us/rec  dec   0.30 us/rec
+  drift set new-vocabulary: 10000 records, mean 382 B
+  chat           new-vocabulary                   single   zstd1  dict      0 lean     ratio 0.760  comp    4.31 us/rec  dec   1.87 us/rec
+  chat           new-vocabulary                   single   zstd1  dict  32768 lean     ratio 0.451  comp    1.32 us/rec  dec   0.68 us/rec
+  chat           new-vocabulary                   single   zstd1  dict  65536 lean     ratio 0.464  comp    1.44 us/rec  dec   0.63 us/rec
+  chat           new-vocabulary                   single   zstd1  dict 114688 lean     ratio 0.476  comp    1.33 us/rec  dec   0.68 us/rec
+  chat           new-vocabulary                   single   zstd3  dict      0 lean     ratio 0.759  comp    4.74 us/rec  dec   1.94 us/rec
+  chat           new-vocabulary                   single   zstd3  dict  32768 lean     ratio 0.427  comp    1.94 us/rec  dec   0.59 us/rec
+  chat           new-vocabulary                   single   zstd3  dict  65536 lean     ratio 0.428  comp    1.93 us/rec  dec   0.59 us/rec
+  chat           new-vocabulary                   single   zstd3  dict 114688 lean     ratio 0.429  comp    1.87 us/rec  dec   0.60 us/rec
+  chat           new-vocabulary                   block64k zstd1  dict      0 lean     ratio 0.291  comp    0.81 us/rec  dec   0.25 us/rec
+  chat           new-vocabulary                   block64k zstd1  dict  65536 lean     ratio 0.287  comp    0.95 us/rec  dec   0.28 us/rec
+  drift set schema-added-and-renamed: 10000 records, mean 394 B
+  chat           schema-added-and-renamed         single   zstd1  dict      0 lean     ratio 0.748  comp    4.30 us/rec  dec   1.86 us/rec
+  chat           schema-added-and-renamed         single   zstd1  dict  32768 lean     ratio 0.358  comp    1.39 us/rec  dec   0.56 us/rec
+  chat           schema-added-and-renamed         single   zstd1  dict  65536 lean     ratio 0.360  comp    1.39 us/rec  dec   0.56 us/rec
+  chat           schema-added-and-renamed         single   zstd1  dict 114688 lean     ratio 0.363  comp    1.39 us/rec  dec   0.57 us/rec
+  chat           schema-added-and-renamed         single   zstd3  dict      0 lean     ratio 0.736  comp    4.73 us/rec  dec   1.94 us/rec
+  chat           schema-added-and-renamed         single   zstd3  dict  32768 lean     ratio 0.337  comp    1.60 us/rec  dec   0.54 us/rec
+  chat           schema-added-and-renamed         single   zstd3  dict  65536 lean     ratio 0.331  comp    1.55 us/rec  dec   0.51 us/rec
+  chat           schema-added-and-renamed         single   zstd3  dict 114688 lean     ratio 0.330  comp    1.53 us/rec  dec   0.52 us/rec
+  chat           schema-added-and-renamed         block64k zstd1  dict      0 lean     ratio 0.285  comp    0.83 us/rec  dec   0.27 us/rec
+  chat           schema-added-and-renamed         block64k zstd1  dict  65536 lean     ratio 0.273  comp    1.01 us/rec  dec   0.32 us/rec
+  (chat done in 14 s)
+== agent: 50000 measure records, mean 592 B, p10 293 p50 459 p90 860 p99 2711 max 21116; training 5000 records, 2912599 bytes
+  dictionary max 32768 -> 32768 bytes, trained in 0.19 s
+  dictionary max 65536 -> 65536 bytes, trained in 0.18 s
+  dictionary max 114688 -> 114688 bytes, trained in 0.18 s
+  agent          measure                          single   zstd1  dict      0 lean     ratio 0.759  comp    5.50 us/rec  dec   2.34 us/rec
+  agent          measure                          single   zstd1  dict      0 standard ratio 0.766  comp    5.84 us/rec  dec   2.45 us/rec
+  agent          measure                          single   zstd1  dict  32768 lean     ratio 0.440  comp    2.19 us/rec  dec   1.13 us/rec
+  agent          measure                          single   zstd1  dict  32768 standard ratio 0.453  comp    2.31 us/rec  dec   1.17 us/rec
+  agent          measure                          single   zstd1  dict  65536 lean     ratio 0.426  comp    2.17 us/rec  dec   1.16 us/rec
+  agent          measure                          single   zstd1  dict  65536 standard ratio 0.439  comp    2.25 us/rec  dec   1.14 us/rec
+  agent          measure                          single   zstd1  dict 114688 lean     ratio 0.430  comp    2.16 us/rec  dec   1.11 us/rec
+  agent          measure                          single   zstd1  dict 114688 standard ratio 0.444  comp    2.14 us/rec  dec   1.10 us/rec
+  agent          measure                          single   zstd3  dict      0 lean     ratio 0.758  comp    5.42 us/rec  dec   2.08 us/rec
+  agent          measure                          single   zstd3  dict      0 standard ratio 0.765  comp    6.61 us/rec  dec   2.54 us/rec
+  agent          measure                          single   zstd3  dict  32768 lean     ratio 0.419  comp    3.03 us/rec  dec   1.16 us/rec
+  agent          measure                          single   zstd3  dict  32768 standard ratio 0.432  comp    2.87 us/rec  dec   1.09 us/rec
+  agent          measure                          single   zstd3  dict  65536 lean     ratio 0.395  comp    2.68 us/rec  dec   0.99 us/rec
+  agent          measure                          single   zstd3  dict  65536 standard ratio 0.408  comp    2.73 us/rec  dec   0.98 us/rec
+  agent          measure                          single   zstd3  dict 114688 lean     ratio 0.381  comp    2.77 us/rec  dec   1.02 us/rec
+  agent          measure                          single   zstd3  dict 114688 standard ratio 0.395  comp    2.72 us/rec  dec   0.99 us/rec
+  agent          measure                          batch16  zstd1  dict      0 lean     ratio 0.518  comp    1.78 us/rec  dec   0.75 us/rec
+  agent          measure                          batch16  zstd1  dict      0 standard ratio 0.519  comp    1.73 us/rec  dec   0.74 us/rec
+  agent          measure                          batch16  zstd1  dict  32768 lean     ratio 0.420  comp    2.13 us/rec  dec   0.69 us/rec
+  agent          measure                          batch16  zstd1  dict  32768 standard ratio 0.421  comp    1.77 us/rec  dec   0.57 us/rec
+  agent          measure                          batch16  zstd1  dict  65536 lean     ratio 0.406  comp    1.71 us/rec  dec   0.59 us/rec
+  agent          measure                          batch16  zstd1  dict  65536 standard ratio 0.407  comp    1.73 us/rec  dec   0.59 us/rec
+  agent          measure                          batch16  zstd1  dict 114688 lean     ratio 0.411  comp    2.04 us/rec  dec   0.72 us/rec
+  agent          measure                          batch16  zstd1  dict 114688 standard ratio 0.412  comp    2.07 us/rec  dec   0.73 us/rec
+  agent          measure                          batch16  zstd3  dict      0 lean     ratio 0.511  comp    2.05 us/rec  dec   0.66 us/rec
+  agent          measure                          batch16  zstd3  dict      0 standard ratio 0.511  comp    2.05 us/rec  dec   0.66 us/rec
+  agent          measure                          batch16  zstd3  dict  32768 lean     ratio 0.397  comp    2.31 us/rec  dec   0.58 us/rec
+  agent          measure                          batch16  zstd3  dict  32768 standard ratio 0.398  comp    2.31 us/rec  dec   0.58 us/rec
+  agent          measure                          batch16  zstd3  dict  65536 lean     ratio 0.374  comp    2.20 us/rec  dec   0.56 us/rec
+  agent          measure                          batch16  zstd3  dict  65536 standard ratio 0.375  comp    2.20 us/rec  dec   0.57 us/rec
+  agent          measure                          batch16  zstd3  dict 114688 lean     ratio 0.361  comp    2.56 us/rec  dec   0.66 us/rec
+  agent          measure                          batch16  zstd3  dict 114688 standard ratio 0.362  comp    2.32 us/rec  dec   0.56 us/rec
+  agent          measure                          block64k zstd1  dict      0 lean     ratio 0.318  comp    0.95 us/rec  dec   0.37 us/rec
+  agent          measure                          block64k zstd1  dict  32768 lean     ratio 0.297  comp    1.11 us/rec  dec   0.39 us/rec
+  agent          measure                          block64k zstd1  dict  65536 lean     ratio 0.293  comp    1.09 us/rec  dec   0.39 us/rec
+  agent          measure                          block64k zstd1  dict 114688 lean     ratio 0.294  comp    1.33 us/rec  dec   0.47 us/rec
+  agent          measure                          block64k zstd3  dict      0 lean     ratio 0.306  comp    1.48 us/rec  dec   0.47 us/rec
+  agent          measure                          block64k zstd3  dict  32768 lean     ratio 0.280  comp    2.53 us/rec  dec   0.54 us/rec
+  agent          measure                          block64k zstd3  dict  65536 lean     ratio 0.272  comp    2.55 us/rec  dec   0.55 us/rec
+  agent          measure                          block64k zstd3  dict 114688 lean     ratio 0.267  comp    2.22 us/rec  dec   0.52 us/rec
+  agent          measure                          block64k lz4    dict      0 block    ratio 0.412  comp    0.94 us/rec  dec   0.19 us/rec
+  drift set later-runs-newer-models-2026-08: 10000 records, mean 669 B
+  agent          later-runs-newer-models-2026-08  single   zstd1  dict      0 lean     ratio 0.687  comp    6.38 us/rec  dec   2.59 us/rec
+  agent          later-runs-newer-models-2026-08  single   zstd1  dict  32768 lean     ratio 0.409  comp    2.59 us/rec  dec   1.41 us/rec
+  agent          later-runs-newer-models-2026-08  single   zstd1  dict  65536 lean     ratio 0.395  comp    2.59 us/rec  dec   1.35 us/rec
+  agent          later-runs-newer-models-2026-08  single   zstd1  dict 114688 lean     ratio 0.398  comp    2.57 us/rec  dec   1.38 us/rec
+  agent          later-runs-newer-models-2026-08  single   zstd3  dict      0 lean     ratio 0.685  comp    6.98 us/rec  dec   2.63 us/rec
+  agent          later-runs-newer-models-2026-08  single   zstd3  dict  32768 lean     ratio 0.385  comp    3.82 us/rec  dec   1.27 us/rec
+  agent          later-runs-newer-models-2026-08  single   zstd3  dict  65536 lean     ratio 0.359  comp    3.24 us/rec  dec   1.26 us/rec
+  agent          later-runs-newer-models-2026-08  single   zstd3  dict 114688 lean     ratio 0.342  comp    3.08 us/rec  dec   1.75 us/rec
+  agent          later-runs-newer-models-2026-08  block64k zstd1  dict      0 lean     ratio 0.263  comp    1.41 us/rec  dec   0.49 us/rec
+  agent          later-runs-newer-models-2026-08  block64k zstd1  dict  65536 lean     ratio 0.242  comp    1.61 us/rec  dec   0.52 us/rec
+  drift set schema-added-and-renamed: 10000 records, mean 599 B
+  agent          schema-added-and-renamed         single   zstd1  dict      0 lean     ratio 0.761  comp    5.76 us/rec  dec   2.42 us/rec
+  agent          schema-added-and-renamed         single   zstd1  dict  32768 lean     ratio 0.469  comp    2.33 us/rec  dec   1.23 us/rec
+  agent          schema-added-and-renamed         single   zstd1  dict  65536 lean     ratio 0.456  comp    2.34 us/rec  dec   1.18 us/rec
+  agent          schema-added-and-renamed         single   zstd1  dict 114688 lean     ratio 0.463  comp    2.32 us/rec  dec   1.18 us/rec
+  agent          schema-added-and-renamed         single   zstd3  dict      0 lean     ratio 0.761  comp    6.66 us/rec  dec   2.50 us/rec
+  agent          schema-added-and-renamed         single   zstd3  dict  32768 lean     ratio 0.445  comp    3.06 us/rec  dec   1.20 us/rec
+  agent          schema-added-and-renamed         single   zstd3  dict  65536 lean     ratio 0.424  comp    3.40 us/rec  dec   1.83 us/rec
+  agent          schema-added-and-renamed         single   zstd3  dict 114688 lean     ratio 0.411  comp    2.84 us/rec  dec   1.03 us/rec
+  agent          schema-added-and-renamed         block64k zstd1  dict      0 lean     ratio 0.377  comp    1.21 us/rec  dec   0.51 us/rec
+  agent          schema-added-and-renamed         block64k zstd1  dict  65536 lean     ratio 0.345  comp    1.31 us/rec  dec   0.45 us/rec
+  (agent done in 19 s)
+== orders: 50000 measure records, mean 401 B, p10 322 p50 401 p90 482 p99 493 max 508; training 5000 records, 1998883 bytes
+  dictionary max 32768 -> 32768 bytes, trained in 0.12 s
+  dictionary max 65536 -> 65536 bytes, trained in 0.09 s
+  dictionary max 114688 -> 114688 bytes, trained in 0.09 s
+  orders         measure                          single   zstd1  dict      0 lean     ratio 0.787  comp    4.38 us/rec  dec   1.80 us/rec
+  orders         measure                          single   zstd1  dict      0 standard ratio 0.797  comp    4.39 us/rec  dec   1.81 us/rec
+  orders         measure                          single   zstd1  dict  32768 lean     ratio 0.306  comp    1.57 us/rec  dec   0.69 us/rec
+  orders         measure                          single   zstd1  dict  32768 standard ratio 0.325  comp    1.53 us/rec  dec   0.67 us/rec
+  orders         measure                          single   zstd1  dict  65536 lean     ratio 0.309  comp    1.59 us/rec  dec   0.69 us/rec
+  orders         measure                          single   zstd1  dict  65536 standard ratio 0.329  comp    1.55 us/rec  dec   0.68 us/rec
+  orders         measure                          single   zstd1  dict 114688 lean     ratio 0.314  comp    1.60 us/rec  dec   0.71 us/rec
+  orders         measure                          single   zstd1  dict 114688 standard ratio 0.334  comp    1.62 us/rec  dec   0.72 us/rec
+  orders         measure                          single   zstd3  dict      0 lean     ratio 0.786  comp    6.01 us/rec  dec   2.29 us/rec
+  orders         measure                          single   zstd3  dict      0 standard ratio 0.796  comp    5.85 us/rec  dec   2.39 us/rec
+  orders         measure                          single   zstd3  dict  32768 lean     ratio 0.285  comp    1.68 us/rec  dec   0.61 us/rec
+  orders         measure                          single   zstd3  dict  32768 standard ratio 0.305  comp    1.69 us/rec  dec   0.62 us/rec
+  orders         measure                          single   zstd3  dict  65536 lean     ratio 0.281  comp    1.73 us/rec  dec   0.59 us/rec
+  orders         measure                          single   zstd3  dict  65536 standard ratio 0.301  comp    1.79 us/rec  dec   0.62 us/rec
+  orders         measure                          single   zstd3  dict 114688 lean     ratio 0.280  comp    1.75 us/rec  dec   0.58 us/rec
+  orders         measure                          single   zstd3  dict 114688 standard ratio 0.300  comp    1.92 us/rec  dec   0.59 us/rec
+  orders         measure                          batch16  zstd1  dict      0 lean     ratio 0.340  comp    1.39 us/rec  dec   0.55 us/rec
+  orders         measure                          batch16  zstd1  dict      0 standard ratio 0.340  comp    1.39 us/rec  dec   0.56 us/rec
+  orders         measure                          batch16  zstd1  dict  32768 lean     ratio 0.271  comp    1.19 us/rec  dec   0.63 us/rec
+  orders         measure                          batch16  zstd1  dict  32768 standard ratio 0.272  comp    1.17 us/rec  dec   0.63 us/rec
+  orders         measure                          batch16  zstd1  dict  65536 lean     ratio 0.272  comp    1.15 us/rec  dec   0.63 us/rec
+  orders         measure                          batch16  zstd1  dict  65536 standard ratio 0.274  comp    0.92 us/rec  dec   0.52 us/rec
+  orders         measure                          batch16  zstd1  dict 114688 lean     ratio 0.275  comp    1.18 us/rec  dec   0.62 us/rec
+  orders         measure                          batch16  zstd1  dict 114688 standard ratio 0.276  comp    1.09 us/rec  dec   0.62 us/rec
+  orders         measure                          batch16  zstd3  dict      0 lean     ratio 0.334  comp    1.31 us/rec  dec   0.53 us/rec
+  orders         measure                          batch16  zstd3  dict      0 standard ratio 0.335  comp    1.63 us/rec  dec   0.58 us/rec
+  orders         measure                          batch16  zstd3  dict  32768 lean     ratio 0.248  comp    1.30 us/rec  dec   0.54 us/rec
+  orders         measure                          batch16  zstd3  dict  32768 standard ratio 0.249  comp    1.13 us/rec  dec   0.46 us/rec
+  orders         measure                          batch16  zstd3  dict  65536 lean     ratio 0.243  comp    1.06 us/rec  dec   0.45 us/rec
+  orders         measure                          batch16  zstd3  dict  65536 standard ratio 0.244  comp    1.05 us/rec  dec   0.46 us/rec
+  orders         measure                          batch16  zstd3  dict 114688 lean     ratio 0.242  comp    1.05 us/rec  dec   0.43 us/rec
+  orders         measure                          batch16  zstd3  dict 114688 standard ratio 0.243  comp    1.06 us/rec  dec   0.44 us/rec
+  orders         measure                          block64k zstd1  dict      0 lean     ratio 0.269  comp    0.90 us/rec  dec   0.35 us/rec
+  orders         measure                          block64k zstd1  dict  32768 lean     ratio 0.256  comp    1.23 us/rec  dec   0.42 us/rec
+  orders         measure                          block64k zstd1  dict  65536 lean     ratio 0.255  comp    1.22 us/rec  dec   0.42 us/rec
+  orders         measure                          block64k zstd1  dict 114688 lean     ratio 0.255  comp    1.19 us/rec  dec   0.42 us/rec
+  orders         measure                          block64k zstd3  dict      0 lean     ratio 0.253  comp    1.12 us/rec  dec   0.36 us/rec
+  orders         measure                          block64k zstd3  dict  32768 lean     ratio 0.237  comp    1.68 us/rec  dec   0.43 us/rec
+  orders         measure                          block64k zstd3  dict  65536 lean     ratio 0.234  comp    1.39 us/rec  dec   0.36 us/rec
+  orders         measure                          block64k zstd3  dict 114688 lean     ratio 0.232  comp    1.66 us/rec  dec   0.44 us/rec
+  orders         measure                          block64k lz4    dict      0 block    ratio 0.384  comp    0.75 us/rec  dec   0.17 us/rec
+  drift set new-seed-90-days-later: 10000 records, mean 401 B
+  orders         new-seed-90-days-later           single   zstd1  dict      0 lean     ratio 0.793  comp    5.60 us/rec  dec   2.29 us/rec
+  orders         new-seed-90-days-later           single   zstd1  dict  32768 lean     ratio 0.331  comp    1.60 us/rec  dec   0.70 us/rec
+  orders         new-seed-90-days-later           single   zstd1  dict  65536 lean     ratio 0.331  comp    1.63 us/rec  dec   0.68 us/rec
+  orders         new-seed-90-days-later           single   zstd1  dict 114688 lean     ratio 0.336  comp    1.50 us/rec  dec   0.71 us/rec
+  orders         new-seed-90-days-later           single   zstd3  dict      0 lean     ratio 0.793  comp    5.92 us/rec  dec   2.22 us/rec
+  orders         new-seed-90-days-later           single   zstd3  dict  32768 lean     ratio 0.309  comp    1.78 us/rec  dec   0.60 us/rec
+  orders         new-seed-90-days-later           single   zstd3  dict  65536 lean     ratio 0.304  comp    1.72 us/rec  dec   0.58 us/rec
+  orders         new-seed-90-days-later           single   zstd3  dict 114688 lean     ratio 0.303  comp    1.72 us/rec  dec   0.61 us/rec
+  orders         new-seed-90-days-later           block64k zstd1  dict      0 lean     ratio 0.271  comp    0.91 us/rec  dec   0.35 us/rec
+  orders         new-seed-90-days-later           block64k zstd1  dict  65536 lean     ratio 0.257  comp    1.19 us/rec  dec   0.41 us/rec
+  drift set new-vocabulary: 10000 records, mean 399 B
+  orders         new-vocabulary                   single   zstd1  dict      0 lean     ratio 0.797  comp    5.29 us/rec  dec   2.18 us/rec
+  orders         new-vocabulary                   single   zstd1  dict  32768 lean     ratio 0.373  comp    1.49 us/rec  dec   0.73 us/rec
+  orders         new-vocabulary                   single   zstd1  dict  65536 lean     ratio 0.379  comp    1.52 us/rec  dec   0.77 us/rec
+  orders         new-vocabulary                   single   zstd1  dict 114688 lean     ratio 0.383  comp    1.50 us/rec  dec   0.77 us/rec
+  orders         new-vocabulary                   single   zstd3  dict      0 lean     ratio 0.798  comp    5.91 us/rec  dec   2.23 us/rec
+  orders         new-vocabulary                   single   zstd3  dict  32768 lean     ratio 0.352  comp    1.88 us/rec  dec   0.68 us/rec
+  orders         new-vocabulary                   single   zstd3  dict  65536 lean     ratio 0.351  comp    1.87 us/rec  dec   0.70 us/rec
+  orders         new-vocabulary                   single   zstd3  dict 114688 lean     ratio 0.348  comp    1.83 us/rec  dec   0.66 us/rec
+  orders         new-vocabulary                   block64k zstd1  dict      0 lean     ratio 0.271  comp    1.17 us/rec  dec   0.36 us/rec
+  orders         new-vocabulary                   block64k zstd1  dict  65536 lean     ratio 0.264  comp    1.14 us/rec  dec   0.39 us/rec
+  drift set schema-added-and-renamed: 10000 records, mean 426 B
+  orders         schema-added-and-renamed         single   zstd1  dict      0 lean     ratio 0.776  comp    5.63 us/rec  dec   2.20 us/rec
+  orders         schema-added-and-renamed         single   zstd1  dict  32768 lean     ratio 0.338  comp    1.52 us/rec  dec   0.73 us/rec
+  orders         schema-added-and-renamed         single   zstd1  dict  65536 lean     ratio 0.344  comp    1.53 us/rec  dec   0.75 us/rec
+  orders         schema-added-and-renamed         single   zstd1  dict 114688 lean     ratio 0.349  comp    1.57 us/rec  dec   0.78 us/rec
+  orders         schema-added-and-renamed         single   zstd3  dict      0 lean     ratio 0.779  comp    5.91 us/rec  dec   2.27 us/rec
+  orders         schema-added-and-renamed         single   zstd3  dict  32768 lean     ratio 0.317  comp    1.94 us/rec  dec   0.70 us/rec
+  orders         schema-added-and-renamed         single   zstd3  dict  65536 lean     ratio 0.315  comp    1.95 us/rec  dec   0.70 us/rec
+  orders         schema-added-and-renamed         single   zstd3  dict 114688 lean     ratio 0.316  comp    1.97 us/rec  dec   0.72 us/rec
+  orders         schema-added-and-renamed         block64k zstd1  dict      0 lean     ratio 0.261  comp    1.05 us/rec  dec   0.41 us/rec
+  orders         schema-added-and-renamed         block64k zstd1  dict  65536 lean     ratio 0.248  comp    1.24 us/rec  dec   0.45 us/rec
+  (orders done in 14 s)
+== agent_emb_bin: 50000 measure records, mean 3720 B, p10 3421 p50 3587 p90 3988 p99 5839 max 24244; training 5000 records, 18552599 bytes
+  dictionary max 32768 -> 32768 bytes, trained in 1.02 s
+  dictionary max 65536 -> 65536 bytes, trained in 1.03 s
+  dictionary max 114688 -> 114688 bytes, trained in 1.05 s
+  agent_emb_bin  measure                          single   zstd1  dict      0 lean     ratio 0.931  comp    9.49 us/rec  dec   5.52 us/rec
+  agent_emb_bin  measure                          single   zstd1  dict      0 standard ratio 0.932  comp   10.11 us/rec  dec   5.00 us/rec
+  agent_emb_bin  measure                          single   zstd1  dict  32768 lean     ratio 0.857  comp   10.68 us/rec  dec   3.99 us/rec
+  agent_emb_bin  measure                          single   zstd1  dict  32768 standard ratio 0.859  comp   12.50 us/rec  dec   4.25 us/rec
+  agent_emb_bin  measure                          single   zstd1  dict  65536 lean     ratio 0.857  comp   12.01 us/rec  dec   4.32 us/rec
+  agent_emb_bin  measure                          single   zstd1  dict  65536 standard ratio 0.860  comp   12.84 us/rec  dec   4.11 us/rec
+  agent_emb_bin  measure                          single   zstd1  dict 114688 lean     ratio 0.857  comp    8.97 us/rec  dec   3.41 us/rec
+  agent_emb_bin  measure                          single   zstd1  dict 114688 standard ratio 0.860  comp   11.36 us/rec  dec   4.59 us/rec
+  agent_emb_bin  measure                          single   zstd3  dict      0 lean     ratio 0.929  comp   12.32 us/rec  dec   6.07 us/rec
+  agent_emb_bin  measure                          single   zstd3  dict      0 standard ratio 0.930  comp   14.87 us/rec  dec   4.90 us/rec
+  agent_emb_bin  measure                          single   zstd3  dict  32768 lean     ratio 0.853  comp   15.10 us/rec  dec   4.35 us/rec
+  agent_emb_bin  measure                          single   zstd3  dict  32768 standard ratio 0.855  comp   16.29 us/rec  dec   3.44 us/rec
+  agent_emb_bin  measure                          single   zstd3  dict  65536 lean     ratio 0.851  comp   15.69 us/rec  dec   4.14 us/rec
+  agent_emb_bin  measure                          single   zstd3  dict  65536 standard ratio 0.853  comp   15.12 us/rec  dec   5.02 us/rec
+  agent_emb_bin  measure                          single   zstd3  dict 114688 lean     ratio 0.850  comp   16.75 us/rec  dec   4.27 us/rec
+  agent_emb_bin  measure                          single   zstd3  dict 114688 standard ratio 0.852  comp   14.44 us/rec  dec   3.45 us/rec
+  agent_emb_bin  measure                          batch16  zstd1  dict      0 lean     ratio 0.884  comp    5.01 us/rec  dec   3.20 us/rec
+  agent_emb_bin  measure                          batch16  zstd1  dict      0 standard ratio 0.885  comp    6.90 us/rec  dec   3.86 us/rec
+  agent_emb_bin  measure                          batch16  zstd1  dict  32768 lean     ratio 0.864  comp    6.58 us/rec  dec   3.73 us/rec
+  agent_emb_bin  measure                          batch16  zstd1  dict  32768 standard ratio 0.864  comp    8.01 us/rec  dec   3.85 us/rec
+  agent_emb_bin  measure                          batch16  zstd1  dict  65536 lean     ratio 0.864  comp    5.91 us/rec  dec   3.12 us/rec
+  agent_emb_bin  measure                          batch16  zstd1  dict  65536 standard ratio 0.865  comp    6.36 us/rec  dec   3.11 us/rec
+  agent_emb_bin  measure                          batch16  zstd1  dict 114688 lean     ratio 0.864  comp    6.31 us/rec  dec   3.45 us/rec
+  agent_emb_bin  measure                          batch16  zstd1  dict 114688 standard ratio 0.864  comp    7.77 us/rec  dec   3.96 us/rec
+  agent_emb_bin  measure                          batch16  zstd3  dict      0 lean     ratio 0.879  comp    8.93 us/rec  dec   3.37 us/rec
+  agent_emb_bin  measure                          batch16  zstd3  dict      0 standard ratio 0.879  comp    8.88 us/rec  dec   4.02 us/rec
+  agent_emb_bin  measure                          batch16  zstd3  dict  32768 lean     ratio 0.855  comp   15.40 us/rec  dec   3.18 us/rec
+  agent_emb_bin  measure                          batch16  zstd3  dict  32768 standard ratio 0.855  comp   19.44 us/rec  dec   4.05 us/rec
+  agent_emb_bin  measure                          batch16  zstd3  dict  65536 lean     ratio 0.852  comp   15.56 us/rec  dec   3.72 us/rec
+  agent_emb_bin  measure                          batch16  zstd3  dict  65536 standard ratio 0.852  comp   23.04 us/rec  dec   4.28 us/rec
+  agent_emb_bin  measure                          batch16  zstd3  dict 114688 lean     ratio 0.851  comp   15.63 us/rec  dec   3.75 us/rec
+  agent_emb_bin  measure                          batch16  zstd3  dict 114688 standard ratio 0.851  comp   13.46 us/rec  dec   3.11 us/rec
+  agent_emb_bin  measure                          block64k zstd1  dict      0 lean     ratio 0.859  comp    5.57 us/rec  dec   3.22 us/rec
+  agent_emb_bin  measure                          block64k zstd1  dict  32768 lean     ratio 0.845  comp    6.45 us/rec  dec   3.79 us/rec
+  agent_emb_bin  measure                          block64k zstd1  dict  65536 lean     ratio 0.845  comp    6.02 us/rec  dec   3.03 us/rec
+  agent_emb_bin  measure                          block64k zstd1  dict 114688 lean     ratio 0.845  comp    5.18 us/rec  dec   2.99 us/rec
+  agent_emb_bin  measure                          block64k zstd3  dict      0 lean     ratio 0.854  comp    8.19 us/rec  dec   3.07 us/rec
+  agent_emb_bin  measure                          block64k zstd3  dict  32768 lean     ratio 0.837  comp   19.29 us/rec  dec   4.13 us/rec
+  agent_emb_bin  measure                          block64k zstd3  dict  65536 lean     ratio 0.835  comp   17.41 us/rec  dec   3.73 us/rec
+  agent_emb_bin  measure                          block64k zstd3  dict 114688 lean     ratio 0.834  comp   14.25 us/rec  dec   3.67 us/rec
+  agent_emb_bin  measure                          block64k lz4    dict      0 block    ratio 0.922  comp    2.14 us/rec  dec   0.55 us/rec
+  drift set later-runs-newer-models-2026-08: 10000 records, mean 3797 B
+  agent_emb_bin  later-runs-newer-models-2026-08  single   zstd1  dict      0 lean     ratio 0.917  comp   11.39 us/rec  dec   7.08 us/rec
+  agent_emb_bin  later-runs-newer-models-2026-08  single   zstd1  dict  32768 lean     ratio 0.844  comp   14.97 us/rec  dec   4.34 us/rec
+  agent_emb_bin  later-runs-newer-models-2026-08  single   zstd1  dict  65536 lean     ratio 0.843  comp   13.22 us/rec  dec   4.33 us/rec
+  agent_emb_bin  later-runs-newer-models-2026-08  single   zstd1  dict 114688 lean     ratio 0.843  comp   13.24 us/rec  dec   4.48 us/rec
+  agent_emb_bin  later-runs-newer-models-2026-08  single   zstd3  dict      0 lean     ratio 0.914  comp   14.20 us/rec  dec   5.82 us/rec
+  agent_emb_bin  later-runs-newer-models-2026-08  single   zstd3  dict  32768 lean     ratio 0.837  comp   17.08 us/rec  dec   4.26 us/rec
+  agent_emb_bin  later-runs-newer-models-2026-08  single   zstd3  dict  65536 lean     ratio 0.834  comp   17.14 us/rec  dec   4.30 us/rec
+  agent_emb_bin  later-runs-newer-models-2026-08  single   zstd3  dict 114688 lean     ratio 0.834  comp   17.09 us/rec  dec   4.22 us/rec
+  agent_emb_bin  later-runs-newer-models-2026-08  block64k zstd1  dict      0 lean     ratio 0.841  comp    6.92 us/rec  dec   3.79 us/rec
+  agent_emb_bin  later-runs-newer-models-2026-08  block64k zstd1  dict  65536 lean     ratio 0.828  comp    7.85 us/rec  dec   3.88 us/rec
+  drift set schema-added-and-renamed: 10000 records, mean 3727 B
+  agent_emb_bin  schema-added-and-renamed         single   zstd1  dict      0 lean     ratio 0.932  comp   11.23 us/rec  dec   5.78 us/rec
+  agent_emb_bin  schema-added-and-renamed         single   zstd1  dict  32768 lean     ratio 0.862  comp   12.96 us/rec  dec   4.41 us/rec
+  agent_emb_bin  schema-added-and-renamed         single   zstd1  dict  65536 lean     ratio 0.862  comp   12.92 us/rec  dec   4.28 us/rec
+  agent_emb_bin  schema-added-and-renamed         single   zstd1  dict 114688 lean     ratio 0.862  comp   12.27 us/rec  dec   4.14 us/rec
+  agent_emb_bin  schema-added-and-renamed         single   zstd3  dict      0 lean     ratio 0.929  comp   13.68 us/rec  dec   5.87 us/rec
+  agent_emb_bin  schema-added-and-renamed         single   zstd3  dict  32768 lean     ratio 0.857  comp   16.64 us/rec  dec   4.31 us/rec
+  agent_emb_bin  schema-added-and-renamed         single   zstd3  dict  65536 lean     ratio 0.855  comp   16.82 us/rec  dec   4.30 us/rec
+  agent_emb_bin  schema-added-and-renamed         single   zstd3  dict 114688 lean     ratio 0.855  comp   16.99 us/rec  dec   4.27 us/rec
+  agent_emb_bin  schema-added-and-renamed         block64k zstd1  dict      0 lean     ratio 0.865  comp    8.51 us/rec  dec   5.64 us/rec
+  agent_emb_bin  schema-added-and-renamed         block64k zstd1  dict  65536 lean     ratio 0.851  comp    7.64 us/rec  dec   3.88 us/rec
+  random part: 83.4% of raw bytes are embedding values and 128-bit ids; embedding values alone compress to 0.941 with zstd-1, ids alone 1.156
+  (agent_emb_bin done in 87 s)
+== agent_emb_arr: 50000 measure records, mean 10522 B, p10 10223 p50 10389 p90 10790 p99 12641 max 31046; training 5000 records, 52562599 bytes
+  dictionary max 32768 -> 32768 bytes, trained in 3.17 s
+  dictionary max 65536 -> 65536 bytes, trained in 3.99 s
+  dictionary max 114688 -> 114688 bytes, trained in 3.94 s
+  agent_emb_arr  measure                          single   zstd1  dict      0 lean     ratio 0.850  comp   18.10 us/rec  dec  12.71 us/rec
+  agent_emb_arr  measure                          single   zstd1  dict      0 standard ratio 0.851  comp   18.43 us/rec  dec  10.21 us/rec
+  agent_emb_arr  measure                          single   zstd1  dict  32768 lean     ratio 0.791  comp   26.82 us/rec  dec  10.84 us/rec
+  agent_emb_arr  measure                          single   zstd1  dict  32768 standard ratio 0.792  comp   30.63 us/rec  dec  11.09 us/rec
+  agent_emb_arr  measure                          single   zstd1  dict  65536 lean     ratio 0.756  comp   31.35 us/rec  dec  13.26 us/rec
+  agent_emb_arr  measure                          single   zstd1  dict  65536 standard ratio 0.756  comp   34.77 us/rec  dec  13.70 us/rec
+  agent_emb_arr  measure                          single   zstd1  dict 114688 lean     ratio 0.780  comp   25.76 us/rec  dec  12.70 us/rec
+  agent_emb_arr  measure                          single   zstd1  dict 114688 standard ratio 0.780  comp   28.53 us/rec  dec  13.26 us/rec
+  agent_emb_arr  measure                          single   zstd3  dict      0 lean     ratio 0.773  comp   56.70 us/rec  dec  18.38 us/rec
+  agent_emb_arr  measure                          single   zstd3  dict      0 standard ratio 0.774  comp   54.14 us/rec  dec  18.74 us/rec
+  agent_emb_arr  measure                          single   zstd3  dict  32768 lean     ratio 0.742  comp   81.62 us/rec  dec  12.95 us/rec
+  agent_emb_arr  measure                          single   zstd3  dict  32768 standard ratio 0.743  comp   86.73 us/rec  dec  11.12 us/rec
+  agent_emb_arr  measure                          single   zstd3  dict  65536 lean     ratio 0.645  comp   83.02 us/rec  dec  13.36 us/rec
+  agent_emb_arr  measure                          single   zstd3  dict  65536 standard ratio 0.646  comp   88.67 us/rec  dec  14.51 us/rec
+  agent_emb_arr  measure                          single   zstd3  dict 114688 lean     ratio 0.638  comp   79.74 us/rec  dec  13.33 us/rec
+  agent_emb_arr  measure                          single   zstd3  dict 114688 standard ratio 0.638  comp   81.39 us/rec  dec  12.83 us/rec
+  agent_emb_arr  measure                          batch16  zstd1  dict      0 lean     ratio 0.626  comp   23.78 us/rec  dec   9.65 us/rec
+  agent_emb_arr  measure                          batch16  zstd1  dict      0 standard ratio 0.626  comp   22.41 us/rec  dec   9.39 us/rec
+  agent_emb_arr  measure                          batch16  zstd1  dict  32768 lean     ratio 0.623  comp   25.90 us/rec  dec  10.56 us/rec
+  agent_emb_arr  measure                          batch16  zstd1  dict  32768 standard ratio 0.623  comp   27.85 us/rec  dec   9.73 us/rec
+  agent_emb_arr  measure                          batch16  zstd1  dict  65536 lean     ratio 0.618  comp   26.67 us/rec  dec   9.44 us/rec
+  agent_emb_arr  measure                          batch16  zstd1  dict  65536 standard ratio 0.618  comp   25.85 us/rec  dec   9.45 us/rec
+  agent_emb_arr  measure                          batch16  zstd1  dict 114688 lean     ratio 0.618  comp   23.80 us/rec  dec   9.45 us/rec
+  agent_emb_arr  measure                          batch16  zstd1  dict 114688 standard ratio 0.618  comp   25.82 us/rec  dec   9.49 us/rec
+  agent_emb_arr  measure                          batch16  zstd3  dict      0 lean     ratio 0.750  comp   49.14 us/rec  dec  12.59 us/rec
+  agent_emb_arr  measure                          batch16  zstd3  dict      0 standard ratio 0.750  comp   50.49 us/rec  dec  13.51 us/rec
+  agent_emb_arr  measure                          batch16  zstd3  dict  32768 lean     ratio 0.648  comp   81.90 us/rec  dec  13.31 us/rec
+  agent_emb_arr  measure                          batch16  zstd3  dict  32768 standard ratio 0.648  comp   87.55 us/rec  dec  14.76 us/rec
+  agent_emb_arr  measure                          batch16  zstd3  dict  65536 lean     ratio 0.643  comp   75.05 us/rec  dec  13.48 us/rec
+  agent_emb_arr  measure                          batch16  zstd3  dict  65536 standard ratio 0.643  comp   69.78 us/rec  dec  14.80 us/rec
+  agent_emb_arr  measure                          batch16  zstd3  dict 114688 lean     ratio 0.644  comp   70.75 us/rec  dec  13.22 us/rec
+  agent_emb_arr  measure                          batch16  zstd3  dict 114688 standard ratio 0.644  comp   71.75 us/rec  dec  14.22 us/rec
+  agent_emb_arr  measure                          block64k zstd1  dict      0 lean     ratio 0.650  comp   20.74 us/rec  dec   9.57 us/rec
+  agent_emb_arr  measure                          block64k zstd1  dict  32768 lean     ratio 0.643  comp   24.33 us/rec  dec   9.74 us/rec
+  agent_emb_arr  measure                          block64k zstd1  dict  65536 lean     ratio 0.631  comp   24.47 us/rec  dec   9.62 us/rec
+  agent_emb_arr  measure                          block64k zstd1  dict 114688 lean     ratio 0.631  comp   25.94 us/rec  dec   9.66 us/rec
+  agent_emb_arr  measure                          block64k zstd3  dict      0 lean     ratio 0.676  comp   37.69 us/rec  dec  11.70 us/rec
+  agent_emb_arr  measure                          block64k zstd3  dict  32768 lean     ratio 0.647  comp   91.22 us/rec  dec  11.35 us/rec
+  agent_emb_arr  measure                          block64k zstd3  dict  65536 lean     ratio 0.631  comp   89.17 us/rec  dec  13.74 us/rec
+  agent_emb_arr  measure                          block64k zstd3  dict 114688 lean     ratio 0.634  comp   76.88 us/rec  dec  14.22 us/rec
+  agent_emb_arr  measure                          block64k lz4    dict      0 block    ratio 0.930  comp   21.74 us/rec  dec   3.42 us/rec
+  drift set later-runs-newer-models-2026-08: 10000 records, mean 10599 B
+  agent_emb_arr  later-runs-newer-models-2026-08  single   zstd1  dict      0 lean     ratio 0.846  comp   18.60 us/rec  dec  10.41 us/rec
+  agent_emb_arr  later-runs-newer-models-2026-08  single   zstd1  dict  32768 lean     ratio 0.788  comp   25.14 us/rec  dec   9.09 us/rec
+  agent_emb_arr  later-runs-newer-models-2026-08  single   zstd1  dict  65536 lean     ratio 0.753  comp   33.81 us/rec  dec  12.78 us/rec
+  agent_emb_arr  later-runs-newer-models-2026-08  single   zstd1  dict 114688 lean     ratio 0.777  comp   28.07 us/rec  dec  13.20 us/rec
+  agent_emb_arr  later-runs-newer-models-2026-08  single   zstd3  dict      0 lean     ratio 0.769  comp   61.51 us/rec  dec  18.45 us/rec
+  agent_emb_arr  later-runs-newer-models-2026-08  single   zstd3  dict  32768 lean     ratio 0.739  comp   82.14 us/rec  dec  12.05 us/rec
+  agent_emb_arr  later-runs-newer-models-2026-08  single   zstd3  dict  65536 lean     ratio 0.642  comp   82.89 us/rec  dec  11.02 us/rec
+  agent_emb_arr  later-runs-newer-models-2026-08  single   zstd3  dict 114688 lean     ratio 0.635  comp   69.50 us/rec  dec  11.09 us/rec
+  agent_emb_arr  later-runs-newer-models-2026-08  block64k zstd1  dict      0 lean     ratio 0.645  comp   22.07 us/rec  dec   9.63 us/rec
+  agent_emb_arr  later-runs-newer-models-2026-08  block64k zstd1  dict  65536 lean     ratio 0.627  comp   29.82 us/rec  dec  12.43 us/rec
+  drift set schema-added-and-renamed: 10000 records, mean 10529 B
+  agent_emb_arr  schema-added-and-renamed         single   zstd1  dict      0 lean     ratio 0.851  comp   22.43 us/rec  dec  13.00 us/rec
+  agent_emb_arr  schema-added-and-renamed         single   zstd1  dict  32768 lean     ratio 0.793  comp   29.23 us/rec  dec  10.70 us/rec
+  agent_emb_arr  schema-added-and-renamed         single   zstd1  dict  65536 lean     ratio 0.758  comp   34.02 us/rec  dec  13.00 us/rec
+  agent_emb_arr  schema-added-and-renamed         single   zstd1  dict 114688 lean     ratio 0.781  comp   26.62 us/rec  dec  10.81 us/rec
+  agent_emb_arr  schema-added-and-renamed         single   zstd3  dict      0 lean     ratio 0.773  comp   46.97 us/rec  dec  15.01 us/rec
+  agent_emb_arr  schema-added-and-renamed         single   zstd3  dict  32768 lean     ratio 0.743  comp   73.58 us/rec  dec  10.23 us/rec
+  agent_emb_arr  schema-added-and-renamed         single   zstd3  dict  65536 lean     ratio 0.647  comp   69.15 us/rec  dec  11.47 us/rec
+  agent_emb_arr  schema-added-and-renamed         single   zstd3  dict 114688 lean     ratio 0.640  comp   70.88 us/rec  dec  11.06 us/rec
+  agent_emb_arr  schema-added-and-renamed         block64k zstd1  dict      0 lean     ratio 0.654  comp   23.80 us/rec  dec   9.65 us/rec
+  agent_emb_arr  schema-added-and-renamed         block64k zstd1  dict  65536 lean     ratio 0.634  comp   26.43 us/rec  dec  12.02 us/rec
+  random part: 58.7% of raw bytes are embedding values and 128-bit ids; embedding values alone compress to 0.943 with zstd-1, ids alone 1.156
+  (agent_emb_arr done in 341 s)
+EXIT 0

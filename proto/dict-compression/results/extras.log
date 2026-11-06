@@ -1,0 +1,23 @@
+CPU Intel(R) Xeon(R) Processor @ 2.10GHz, zstd 1.5.7, single thread, 1 repetitions (median)
+agent traces: 337517 day-1 messages, 93305 later messages, loaded in 3.1 s
+  domain airline: 28216 day-1 messages
+  domain retail: 63457 day-1 messages
+  domain telecom: 133374 day-1 messages
+  domain banking_knowledge: 112470 day-1 messages
+  agent_per_domain measure                          single   zstd1  dict      0 lean     ratio 0.747  comp    5.75 us/rec  dec   2.25 us/rec
+  agent_per_domain measure                          single   zstd1  dict  32768 lean     ratio 0.406  comp    1.90 us/rec  dec   0.92 us/rec
+  agent_per_domain measure                          single   zstd1  dict  65536 lean     ratio 0.398  comp    2.03 us/rec  dec   1.10 us/rec
+  agent_per_domain measure                          single   zstd1  dict 114688 lean     ratio 0.402  comp    1.81 us/rec  dec   0.90 us/rec
+  agent_per_domain measure                          single   zstd3  dict      0 lean     ratio 0.746  comp    6.84 us/rec  dec   2.61 us/rec
+  agent_per_domain measure                          single   zstd3  dict  32768 lean     ratio 0.387  comp    2.70 us/rec  dec   0.98 us/rec
+  agent_per_domain measure                          single   zstd3  dict  65536 lean     ratio 0.370  comp    2.56 us/rec  dec   0.91 us/rec
+  agent_per_domain measure                          single   zstd3  dict 114688 lean     ratio 0.360  comp    2.74 us/rec  dec   0.97 us/rec
+  agent_train50k measure                          single   zstd1  dict      0 lean     ratio 0.759  comp    6.97 us/rec  dec   2.56 us/rec
+  agent_train50k measure                          single   zstd1  dict  32768 lean     ratio 0.434  comp    1.83 us/rec  dec   0.94 us/rec
+  agent_train50k measure                          single   zstd1  dict  65536 lean     ratio 0.425  comp    2.47 us/rec  dec   1.33 us/rec
+  agent_train50k measure                          single   zstd1  dict 114688 lean     ratio 0.429  comp    2.21 us/rec  dec   1.56 us/rec
+  agent_train50k measure                          single   zstd3  dict      0 lean     ratio 0.758  comp    7.02 us/rec  dec   3.07 us/rec
+  agent_train50k measure                          single   zstd3  dict  32768 lean     ratio 0.411  comp    3.01 us/rec  dec   1.07 us/rec
+  agent_train50k measure                          single   zstd3  dict  65536 lean     ratio 0.391  comp    3.05 us/rec  dec   1.05 us/rec
+  agent_train50k measure                          single   zstd3  dict 114688 lean     ratio 0.377  comp    2.28 us/rec  dec   0.83 us/rec
+  (agent_extras done in 26 s)

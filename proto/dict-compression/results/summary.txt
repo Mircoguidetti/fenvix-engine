@@ -1,0 +1,83 @@
+CPU: Intel(R) Xeon(R) Processor @ 2.10GHz (one core, taskset), zstd 1.5.7, median of 3 repetitions. All numbers MEASURED.
+
+== chat: mean 384 B BSON, p50 385, p90 468, p99 525
+   dictionary 32 KB: 32768 bytes, trained on 5000 docs in 0.13 s
+   dictionary 64 KB: 65536 bytes, trained on 5000 docs in 0.13 s
+   dictionary 112 KB: 114688 bytes, trained on 5000 docs in 0.14 s
+   single   zstd1: none 0.748 (std frame 0.758) [5.63+2.39 us]; 32K 0.333 (std frame 0.354) [1.71+0.67 us]; 64K 0.335 (std frame 0.356) [1.69+0.69 us]; 112K 0.337 (std frame 0.357) [1.43+0.57 us]
+   single   zstd3: none 0.735 (std frame 0.745) [6.05+2.56 us]; 32K 0.312 (std frame 0.333) [1.83+0.62 us]; 64K 0.306 (std frame 0.327) [1.78+0.50 us]; 112K 0.303 (std frame 0.324) [1.47+0.46 us]
+   batch16  zstd1: none 0.371 (std frame 0.371) [1.13+0.41 us]; 32K 0.295 (std frame 0.296) [1.04+0.47 us]; 64K 0.295 (std frame 0.296) [1.09+0.50 us]; 112K 0.298 (std frame 0.299) [1.03+0.48 us]
+   batch16  zstd3: none 0.364 (std frame 0.364) [1.46+0.43 us]; 32K 0.275 (std frame 0.276) [1.17+0.43 us]; 64K 0.267 (std frame 0.269) [1.14+0.43 us]; 112K 0.263 (std frame 0.264) [1.15+0.43 us]
+   block64k zstd1: none 0.283 [0.81+0.24 us]; 32K 0.271 [1.02+0.30 us]; 64K 0.270 [0.99+0.30 us]; 112K 0.270 [1.12+0.31 us]
+   block64k zstd3: none 0.272 [1.00+0.25 us]; 32K 0.256 [1.34+0.34 us]; 64K 0.251 [1.36+0.35 us]; 112K 0.249 [1.28+0.35 us]
+   block64k lz4  : 0.398 [0.61+0.13 us, 633 MB/s comp, 3047 MB/s dec]
+   drift new-seed-90-days-later: single zstd1 none 0.749; zstd1 32K 0.362; zstd1 64K 0.366; zstd1 112K 0.368; zstd3 none 0.747; zstd3 32K 0.338; zstd3 64K 0.333; zstd3 112K 0.331 | block64k zstd1 none 0.287, 64K 0.275
+   drift new-vocabulary: single zstd1 none 0.760; zstd1 32K 0.451; zstd1 64K 0.464; zstd1 112K 0.476; zstd3 none 0.759; zstd3 32K 0.427; zstd3 64K 0.428; zstd3 112K 0.429 | block64k zstd1 none 0.291, 64K 0.287
+   drift schema-added-and-renamed: single zstd1 none 0.748; zstd1 32K 0.358; zstd1 64K 0.360; zstd1 112K 0.363; zstd3 none 0.736; zstd3 32K 0.337; zstd3 64K 0.331; zstd3 112K 0.330 | block64k zstd1 none 0.285, 64K 0.273
+
+== agent: mean 592 B BSON, p50 459, p90 860, p99 2711
+   dictionary 32 KB: 32768 bytes, trained on 5000 docs in 0.19 s
+   dictionary 64 KB: 65536 bytes, trained on 5000 docs in 0.18 s
+   dictionary 112 KB: 114688 bytes, trained on 5000 docs in 0.18 s
+   single   zstd1: none 0.759 (std frame 0.766) [5.50+2.34 us]; 32K 0.440 (std frame 0.453) [2.19+1.13 us]; 64K 0.426 (std frame 0.439) [2.17+1.16 us]; 112K 0.430 (std frame 0.444) [2.16+1.11 us]
+   single   zstd3: none 0.758 (std frame 0.765) [5.42+2.08 us]; 32K 0.419 (std frame 0.432) [3.03+1.16 us]; 64K 0.395 (std frame 0.408) [2.68+0.99 us]; 112K 0.381 (std frame 0.395) [2.77+1.02 us]
+   batch16  zstd1: none 0.518 (std frame 0.519) [1.78+0.75 us]; 32K 0.420 (std frame 0.421) [2.13+0.69 us]; 64K 0.406 (std frame 0.407) [1.71+0.59 us]; 112K 0.411 (std frame 0.412) [2.04+0.72 us]
+   batch16  zstd3: none 0.511 (std frame 0.511) [2.05+0.66 us]; 32K 0.397 (std frame 0.398) [2.31+0.58 us]; 64K 0.374 (std frame 0.375) [2.20+0.56 us]; 112K 0.361 (std frame 0.362) [2.56+0.66 us]
+   block64k zstd1: none 0.318 [0.95+0.37 us]; 32K 0.297 [1.11+0.39 us]; 64K 0.293 [1.09+0.39 us]; 112K 0.294 [1.33+0.47 us]
+   block64k zstd3: none 0.306 [1.48+0.47 us]; 32K 0.280 [2.53+0.54 us]; 64K 0.272 [2.55+0.55 us]; 112K 0.267 [2.22+0.52 us]
+   block64k lz4  : 0.412 [0.94+0.19 us, 629 MB/s comp, 3104 MB/s dec]
+   drift later-runs-newer-models-2026-08: single zstd1 none 0.687; zstd1 32K 0.409; zstd1 64K 0.395; zstd1 112K 0.398; zstd3 none 0.685; zstd3 32K 0.385; zstd3 64K 0.359; zstd3 112K 0.342 | block64k zstd1 none 0.263, 64K 0.242
+   drift schema-added-and-renamed: single zstd1 none 0.761; zstd1 32K 0.469; zstd1 64K 0.456; zstd1 112K 0.463; zstd3 none 0.761; zstd3 32K 0.445; zstd3 64K 0.424; zstd3 112K 0.411 | block64k zstd1 none 0.377, 64K 0.345
+
+== orders: mean 401 B BSON, p50 401, p90 482, p99 493
+   dictionary 32 KB: 32768 bytes, trained on 5000 docs in 0.12 s
+   dictionary 64 KB: 65536 bytes, trained on 5000 docs in 0.09 s
+   dictionary 112 KB: 114688 bytes, trained on 5000 docs in 0.09 s
+   single   zstd1: none 0.787 (std frame 0.797) [4.38+1.80 us]; 32K 0.306 (std frame 0.325) [1.57+0.69 us]; 64K 0.309 (std frame 0.329) [1.59+0.69 us]; 112K 0.314 (std frame 0.334) [1.60+0.71 us]
+   single   zstd3: none 0.786 (std frame 0.796) [6.01+2.29 us]; 32K 0.285 (std frame 0.305) [1.68+0.61 us]; 64K 0.281 (std frame 0.301) [1.73+0.59 us]; 112K 0.280 (std frame 0.300) [1.75+0.58 us]
+   batch16  zstd1: none 0.340 (std frame 0.340) [1.39+0.55 us]; 32K 0.271 (std frame 0.272) [1.19+0.63 us]; 64K 0.272 (std frame 0.274) [1.15+0.63 us]; 112K 0.275 (std frame 0.276) [1.18+0.62 us]
+   batch16  zstd3: none 0.334 (std frame 0.335) [1.31+0.53 us]; 32K 0.248 (std frame 0.249) [1.30+0.54 us]; 64K 0.243 (std frame 0.244) [1.06+0.45 us]; 112K 0.242 (std frame 0.243) [1.05+0.43 us]
+   block64k zstd1: none 0.269 [0.90+0.35 us]; 32K 0.256 [1.23+0.42 us]; 64K 0.255 [1.22+0.42 us]; 112K 0.255 [1.19+0.42 us]
+   block64k zstd3: none 0.253 [1.12+0.36 us]; 32K 0.237 [1.68+0.43 us]; 64K 0.234 [1.39+0.36 us]; 112K 0.232 [1.66+0.44 us]
+   block64k lz4  : 0.384 [0.75+0.17 us, 534 MB/s comp, 2299 MB/s dec]
+   drift new-seed-90-days-later: single zstd1 none 0.793; zstd1 32K 0.331; zstd1 64K 0.331; zstd1 112K 0.336; zstd3 none 0.793; zstd3 32K 0.309; zstd3 64K 0.304; zstd3 112K 0.303 | block64k zstd1 none 0.271, 64K 0.257
+   drift new-vocabulary: single zstd1 none 0.797; zstd1 32K 0.373; zstd1 64K 0.379; zstd1 112K 0.383; zstd3 none 0.798; zstd3 32K 0.352; zstd3 64K 0.351; zstd3 112K 0.348 | block64k zstd1 none 0.271, 64K 0.264
+   drift schema-added-and-renamed: single zstd1 none 0.776; zstd1 32K 0.338; zstd1 64K 0.344; zstd1 112K 0.349; zstd3 none 0.779; zstd3 32K 0.317; zstd3 64K 0.315; zstd3 112K 0.316 | block64k zstd1 none 0.261, 64K 0.248
+
+== agent_emb_bin: mean 3720 B BSON, p50 3587, p90 3988, p99 5839
+   dictionary 32 KB: 32768 bytes, trained on 5000 docs in 1.02 s
+   dictionary 64 KB: 65536 bytes, trained on 5000 docs in 1.03 s
+   dictionary 112 KB: 114688 bytes, trained on 5000 docs in 1.05 s
+   random part: 83.4% of raw bytes are embedding values + 128-bit ids; embedding values alone zstd-1 0.941, ids alone 1.156
+   single   zstd1: none 0.931 (std frame 0.932) [9.49+5.52 us]; 32K 0.857 (std frame 0.859) [10.68+3.99 us]; 64K 0.857 (std frame 0.860) [12.01+4.32 us]; 112K 0.857 (std frame 0.860) [8.97+3.41 us]
+   single   zstd3: none 0.929 (std frame 0.930) [12.32+6.07 us]; 32K 0.853 (std frame 0.855) [15.10+4.35 us]; 64K 0.851 (std frame 0.853) [15.69+4.14 us]; 112K 0.850 (std frame 0.852) [16.75+4.27 us]
+   batch16  zstd1: none 0.884 (std frame 0.885) [5.01+3.20 us]; 32K 0.864 (std frame 0.864) [6.58+3.73 us]; 64K 0.864 (std frame 0.865) [5.91+3.12 us]; 112K 0.864 (std frame 0.864) [6.31+3.45 us]
+   batch16  zstd3: none 0.879 (std frame 0.879) [8.93+3.37 us]; 32K 0.855 (std frame 0.855) [15.40+3.18 us]; 64K 0.852 (std frame 0.852) [15.56+3.72 us]; 112K 0.851 (std frame 0.851) [15.63+3.75 us]
+   block64k zstd1: none 0.859 [5.57+3.22 us]; 32K 0.845 [6.45+3.79 us]; 64K 0.845 [6.02+3.03 us]; 112K 0.845 [5.18+2.99 us]
+   block64k zstd3: none 0.854 [8.19+3.07 us]; 32K 0.837 [19.29+4.13 us]; 64K 0.835 [17.41+3.73 us]; 112K 0.834 [14.25+3.67 us]
+   block64k lz4  : 0.922 [2.14+0.55 us, 1735 MB/s comp, 6753 MB/s dec]
+   drift later-runs-newer-models-2026-08: single zstd1 none 0.917; zstd1 32K 0.844; zstd1 64K 0.843; zstd1 112K 0.843; zstd3 none 0.914; zstd3 32K 0.837; zstd3 64K 0.834; zstd3 112K 0.834 | block64k zstd1 none 0.841, 64K 0.828
+   drift schema-added-and-renamed: single zstd1 none 0.932; zstd1 32K 0.862; zstd1 64K 0.862; zstd1 112K 0.862; zstd3 none 0.929; zstd3 32K 0.857; zstd3 64K 0.855; zstd3 112K 0.855 | block64k zstd1 none 0.865, 64K 0.851
+
+== agent_emb_arr: mean 10522 B BSON, p50 10389, p90 10790, p99 12641
+   dictionary 32 KB: 32768 bytes, trained on 5000 docs in 3.17 s
+   dictionary 64 KB: 65536 bytes, trained on 5000 docs in 3.99 s
+   dictionary 112 KB: 114688 bytes, trained on 5000 docs in 3.94 s
+   random part: 58.7% of raw bytes are embedding values + 128-bit ids; embedding values alone zstd-1 0.943, ids alone 1.156
+   single   zstd1: none 0.850 (std frame 0.851) [18.10+12.71 us]; 32K 0.791 (std frame 0.792) [26.82+10.84 us]; 64K 0.756 (std frame 0.756) [31.35+13.26 us]; 112K 0.780 (std frame 0.780) [25.76+12.70 us]
+   single   zstd3: none 0.773 (std frame 0.774) [56.70+18.38 us]; 32K 0.742 (std frame 0.743) [81.62+12.95 us]; 64K 0.645 (std frame 0.646) [83.02+13.36 us]; 112K 0.638 (std frame 0.638) [79.74+13.33 us]
+   batch16  zstd1: none 0.626 (std frame 0.626) [23.78+9.65 us]; 32K 0.623 (std frame 0.623) [25.90+10.56 us]; 64K 0.618 (std frame 0.618) [26.67+9.44 us]; 112K 0.618 (std frame 0.618) [23.80+9.45 us]
+   batch16  zstd3: none 0.750 (std frame 0.750) [49.14+12.59 us]; 32K 0.648 (std frame 0.648) [81.90+13.31 us]; 64K 0.643 (std frame 0.643) [75.05+13.48 us]; 112K 0.644 (std frame 0.644) [70.75+13.22 us]
+   block64k zstd1: none 0.650 [20.74+9.57 us]; 32K 0.643 [24.33+9.74 us]; 64K 0.631 [24.47+9.62 us]; 112K 0.631 [25.94+9.66 us]
+   block64k zstd3: none 0.676 [37.69+11.70 us]; 32K 0.647 [91.22+11.35 us]; 64K 0.631 [89.17+13.74 us]; 112K 0.634 [76.88+14.22 us]
+   block64k lz4  : 0.930 [21.74+3.42 us, 484 MB/s comp, 3073 MB/s dec]
+   drift later-runs-newer-models-2026-08: single zstd1 none 0.846; zstd1 32K 0.788; zstd1 64K 0.753; zstd1 112K 0.777; zstd3 none 0.769; zstd3 32K 0.739; zstd3 64K 0.642; zstd3 112K 0.635 | block64k zstd1 none 0.645, 64K 0.627
+   drift schema-added-and-renamed: single zstd1 none 0.851; zstd1 32K 0.793; zstd1 64K 0.758; zstd1 112K 0.781; zstd3 none 0.773; zstd3 32K 0.743; zstd3 64K 0.647; zstd3 112K 0.640 | block64k zstd1 none 0.654, 64K 0.634
+
+== agent_per_domain
+   single   zstd1: none 0.747 [5.75+2.25 us]; 32K 0.406 [1.90+0.92 us]; 64K 0.398 [2.03+1.10 us]; 112K 0.402 [1.81+0.90 us]
+   single   zstd3: none 0.746 [6.84+2.61 us]; 32K 0.387 [2.70+0.98 us]; 64K 0.370 [2.56+0.91 us]; 112K 0.360 [2.74+0.97 us]
+
+== agent_train50k
+   single   zstd1: none 0.759 [6.97+2.56 us]; 32K 0.434 [1.83+0.94 us]; 64K 0.425 [2.47+1.33 us]; 112K 0.429 [2.21+1.56 us]
+   single   zstd3: none 0.758 [7.02+3.07 us]; 32K 0.411 [3.01+1.07 us]; 64K 0.391 [3.05+1.05 us]; 112K 0.377 [2.28+0.83 us]
