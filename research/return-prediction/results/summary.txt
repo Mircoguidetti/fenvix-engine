@@ -1,0 +1,151 @@
+=== cdnow (pooled: one database) ===
+  users 23570, accesses 69659, sessions 67591, days 545, nights simulated 517, night boundary 0:00 UTC, known users per night 22673, daily active 116 (0.6% of known)
+  population known: h per predictor at q = 2/5/8/15/20%
+    p1_yesterday  11.3%  23.8%  33.9%  51.3%  60.0%
+    p2_last7      11.3%  23.7%  33.6%  51.1%  59.7%
+    p3_weekday    13.8%  24.3%  33.9%  52.1%  60.6%
+    p4_gaphist    10.1%  17.6%  26.3%  46.5%  55.7%
+    p5_lr         19.6%  32.4%  41.5%  55.6%  63.1%
+    p5_gbm        12.8%  25.8%  36.0%  52.0%  60.4%
+    oracle        100.0%  100.0%  100.0%  100.0%  100.0%
+  population active28: h per predictor at q = 2/5/8/15/20%
+    p1_yesterday  2.2%  4.1%  5.6%  9.7%  12.4%
+    p2_last7      3.3%  4.9%  6.3%  9.7%  12.1%
+    p3_weekday    3.5%  5.9%  7.3%  10.8%  15.3%
+    p4_gaphist    3.2%  5.8%  8.1%  11.0%  12.5%
+    p5_lr         5.6%  9.5%  12.5%  17.6%  20.4%
+    p5_gbm        4.0%  7.1%  9.4%  14.0%  16.7%
+    oracle        43.6%  44.2%  44.2%  44.2%  44.2%
+  at q = 8% (known users):
+    p1_yesterday  h 33.9% (nights p10-p90 20.3%-46.8%); first-of-day per user 33.9%; incl. brand-new users 24.5%; after an LRU of 0.2% of users 31.8% (the LRU already catches 3.0%); after 1% LRU 28.7% (catches 7.2%); selected users' share of past accesses 22.6%
+    p2_last7      h 33.6% (nights p10-p90 19.6%-46.7%); first-of-day per user 33.6%; incl. brand-new users 24.3%; after an LRU of 0.2% of users 31.6% (the LRU already catches 3.0%); after 1% LRU 28.5% (catches 7.2%); selected users' share of past accesses 22.5%
+    p3_weekday    h 33.9% (nights p10-p90 19.8%-46.8%); first-of-day per user 33.9%; incl. brand-new users 24.5%; after an LRU of 0.2% of users 32.6% (the LRU already catches 3.0%); after 1% LRU 29.6% (catches 7.2%); selected users' share of past accesses 22.5%
+    p4_gaphist    h 26.3% (nights p10-p90 15.8%-38.0%); first-of-day per user 26.3%; incl. brand-new users 19.0%; after an LRU of 0.2% of users 24.7% (the LRU already catches 3.0%); after 1% LRU 22.3% (catches 7.2%); selected users' share of past accesses 17.3%
+    p5_lr         h 41.5% (nights p10-p90 30.5%-54.0%); first-of-day per user 41.5%; incl. brand-new users 31.0%; after an LRU of 0.2% of users 40.4% (the LRU already catches 2.9%); after 1% LRU 38.1% (catches 7.2%); selected users' share of past accesses 30.7%
+    p5_gbm        h 36.0% (nights p10-p90 26.2%-47.3%); first-of-day per user 36.0%; incl. brand-new users 26.9%; after an LRU of 0.2% of users 35.0% (the LRU already catches 2.9%); after 1% LRU 33.0% (catches 7.2%); selected users' share of past accesses 25.1%
+    oracle        h 100.0% (nights p10-p90 100.0%-100.0%); first-of-day per user 100.0%; incl. brand-new users 72.2%; after an LRU of 0.2% of users 100.0% (the LRU already catches 3.0%); after 1% LRU 100.0% (catches 7.2%); selected users' share of past accesses n/a
+  best at q 8%: p5_lr 41.5% -> saved cold-read GETs per 1 TB per month 8.7 $ quiet, 34.9 $ medium (reference 21 and 84 $)
+
+=== irc (pooled: one database) ===
+  users 27666, accesses 1019976, sessions 134922, days 119, nights simulated 91, night boundary 6:00 UTC, known users per night 18583, daily active 695 (4.1% of known)
+  population known: h per predictor at q = 2/5/8/15/20%
+    p1_yesterday  43.9%  59.1%  67.8%  78.5%  82.8%
+    p2_last7      52.3%  66.0%  72.2%  79.8%  83.2%
+    p3_weekday    36.0%  51.7%  58.2%  73.2%  80.6%
+    p4_gaphist    50.4%  63.0%  70.0%  77.1%  80.9%
+    p5_lr         55.3%  69.6%  76.4%  84.0%  87.1%
+    p5_gbm        54.8%  69.3%  76.1%  84.0%  87.1%
+    oracle        85.6%  99.9%  100.0%  100.0%  100.0%
+  population active28: h per predictor at q = 2/5/8/15/20%
+    p1_yesterday  35.2%  46.9%  55.0%  67.3%  72.6%
+    p2_last7      41.3%  56.0%  63.0%  72.2%  75.4%
+    p3_weekday    24.0%  43.4%  49.0%  58.3%  62.7%
+    p4_gaphist    41.0%  53.7%  59.7%  69.4%  72.6%
+    p5_lr         42.9%  58.3%  65.7%  74.9%  78.9%
+    p5_gbm        42.2%  57.9%  65.3%  74.8%  78.7%
+    oracle        63.0%  91.5%  93.9%  94.0%  94.0%
+  at q = 8% (known users):
+    p1_yesterday  h 67.8% (nights p10-p90 60.7%-73.6%); first-of-day per user 55.3%; incl. brand-new users 53.5%; after an LRU of 0.2% of users 64.6% (the LRU already catches 17.4%); after 1% LRU 54.7% (catches 44.0%); selected users' share of past accesses 45.5%
+    p2_last7      h 72.2% (nights p10-p90 66.4%-76.0%); first-of-day per user 59.6%; incl. brand-new users 57.0%; after an LRU of 0.2% of users 69.1% (the LRU already catches 17.4%); after 1% LRU 59.6% (catches 44.0%); selected users' share of past accesses 50.0%
+    p3_weekday    h 58.2% (nights p10-p90 49.8%-65.0%); first-of-day per user 44.7%; incl. brand-new users 46.0%; after an LRU of 0.2% of users 55.1% (the LRU already catches 17.4%); after 1% LRU 45.5% (catches 44.0%); selected users' share of past accesses 49.2%
+    p4_gaphist    h 70.0% (nights p10-p90 64.3%-74.5%); first-of-day per user 57.3%; incl. brand-new users 55.2%; after an LRU of 0.2% of users 66.7% (the LRU already catches 17.4%); after 1% LRU 57.0% (catches 44.0%); selected users' share of past accesses 48.4%
+    p5_lr         h 76.4% (nights p10-p90 72.0%-79.7%); first-of-day per user 64.8%; incl. brand-new users 60.6%; after an LRU of 0.2% of users 73.5% (the LRU already catches 17.4%); after 1% LRU 64.8% (catches 43.9%); selected users' share of past accesses 58.5%
+    p5_gbm        h 76.1% (nights p10-p90 71.6%-79.9%); first-of-day per user 64.5%; incl. brand-new users 60.3%; after an LRU of 0.2% of users 73.2% (the LRU already catches 17.4%); after 1% LRU 64.5% (catches 43.9%); selected users' share of past accesses 57.8%
+    oracle        h 100.0% (nights p10-p90 100.0%-100.0%); first-of-day per user 100.0%; incl. brand-new users 78.9%; after an LRU of 0.2% of users 100.0% (the LRU already catches 17.4%); after 1% LRU 100.0% (catches 44.0%); selected users' share of past accesses n/a
+  best at q 8%: p5_lr 76.4% -> saved cold-read GETs per 1 TB per month 16.0 $ quiet, 64.1 $ medium (reference 21 and 84 $)
+  spread across 10 groups (each its own database), best predictor at q 8%: min 50.2%, median 71.6%, max 76.5%; groups at 35% or more: 10, under 15%: 0
+    kubuntu                      users   2246 daily-active   3.2%  best  76.5% (p5_lr)  p2  68.9%  oracle 100.0%
+    ubuntu-de                    users   1458 daily-active   5.0%  best  75.6% (p2_last7)  p2  75.6%  oracle 100.0%
+    juju                         users    183 daily-active   9.4%  best  74.6% (p2_last7)  p2  74.6%  oracle 92.3%
+    ubuntu-uk                    users    456 daily-active  11.8%  best  73.8% (p2_last7)  p2  73.8%  oracle 89.9%
+    ubuntu-kernel                users    284 daily-active   7.6%  best  73.1% (p2_last7)  p2  73.1%  oracle 94.9%
+    ubuntu-server                users   1193 daily-active   5.3%  best  70.1% (p2_last7)  p2  70.1%  oracle 99.2%
+    ubuntu                       users  24059 daily-active   3.4%  best  69.1% (p5_lr)  p2  64.0%  oracle 100.0%
+    ubuntu-motu                  users    305 daily-active   7.7%  best  66.3% (p2_last7)  p2  66.3%  oracle 95.8%
+    ubuntu-devel                 users    585 daily-active   8.9%  best  60.1% (p2_last7)  p2  60.1%  oracle 90.6%
+    ubuntu-bugs                  users    301 daily-active   5.2%  best  50.2% (p2_last7)  p2  50.2%  oracle 99.4%
+
+=== lsapp (pooled: one database) ===
+  users 292, accesses 3658589, sessions 17148, days 249, nights simulated 221, night boundary 9:00 UTC, known users per night 74, daily active 13 (16.6% of known)
+  population known: h per predictor at q = 2/5/8/15/20%
+    p1_yesterday  18.4%  34.7%  48.4%  72.1%  81.8%
+    p2_last7      18.7%  33.4%  44.5%  63.6%  72.7%
+    p3_weekday    13.6%  21.8%  27.9%  46.0%  55.4%
+    p4_gaphist    18.6%  34.6%  46.9%  70.9%  81.4%
+    p5_lr         18.3%  34.2%  47.0%  71.6%  82.5%
+    p5_gbm        19.2%  36.1%  49.7%  72.4%  82.0%
+    oracle        27.4%  48.7%  63.6%  85.2%  93.0%
+  population active28: h per predictor at q = 2/5/8/15/20%
+    p1_yesterday  14.4%  25.5%  35.7%  57.3%  67.7%
+    p2_last7      15.1%  25.4%  34.4%  51.0%  60.1%
+    p3_weekday    10.8%  16.9%  21.6%  32.9%  40.5%
+    p4_gaphist    14.9%  25.6%  35.8%  56.2%  66.7%
+    p5_lr         14.3%  25.0%  35.0%  55.9%  66.8%
+    p5_gbm        14.8%  26.7%  37.3%  57.5%  68.0%
+    oracle        22.1%  37.2%  50.4%  72.3%  81.4%
+  at q = 8% (known users):
+    p1_yesterday  h 48.4% (nights p10-p90 31.6%-100.0%); first-of-day per user 43.8%; incl. brand-new users 44.9%; after an LRU of 0.2% of users 45.7% (the LRU already catches 7.8%); after 1% LRU 43.5% (catches 18.6%); selected users' share of past accesses 20.5%
+    p2_last7      h 44.5% (nights p10-p90 28.6%-100.0%); first-of-day per user 39.0%; incl. brand-new users 41.3%; after an LRU of 0.2% of users 41.4% (the LRU already catches 7.8%); after 1% LRU 39.1% (catches 18.6%); selected users' share of past accesses 25.6%
+    p3_weekday    h 27.9% (nights p10-p90 12.0%-100.0%); first-of-day per user 28.3%; incl. brand-new users 25.9%; after an LRU of 0.2% of users 24.3% (the LRU already catches 7.8%); after 1% LRU 21.5% (catches 18.6%); selected users' share of past accesses 29.9%
+    p4_gaphist    h 46.9% (nights p10-p90 29.7%-100.0%); first-of-day per user 44.3%; incl. brand-new users 43.6%; after an LRU of 0.2% of users 43.9% (the LRU already catches 7.8%); after 1% LRU 41.1% (catches 18.6%); selected users' share of past accesses 25.4%
+    p5_lr         h 47.0% (nights p10-p90 28.3%-100.0%); first-of-day per user 44.7%; incl. brand-new users 43.6%; after an LRU of 0.2% of users 44.1% (the LRU already catches 7.6%); after 1% LRU 41.3% (catches 18.3%); selected users' share of past accesses 25.0%
+    p5_gbm        h 49.7% (nights p10-p90 30.6%-100.0%); first-of-day per user 44.1%; incl. brand-new users 46.2%; after an LRU of 0.2% of users 47.1% (the LRU already catches 7.6%); after 1% LRU 44.9% (catches 18.3%); selected users' share of past accesses 20.5%
+    oracle        h 63.6% (nights p10-p90 45.8%-100.0%); first-of-day per user 48.3%; incl. brand-new users 59.1%; after an LRU of 0.2% of users 61.3% (the LRU already catches 7.8%); after 1% LRU 58.9% (catches 18.6%); selected users' share of past accesses n/a
+  best at q 8%: p5_gbm 49.7% -> saved cold-read GETs per 1 TB per month 10.4 $ quiet, 41.8 $ medium (reference 21 and 84 $)
+  spread across 32 groups (each its own database), best predictor at q 8%: min 48.3%, median 61.3%, max 75.1%; groups at 35% or more: 32, under 15%: 0
+    Samsung Internet Browser     users     58 daily-active   6.8%  best  75.1% (p1_yesterday)  p2  71.7%  oracle 85.5%
+    Google Play Music            users     56 daily-active   6.1%  best  73.2% (p1_yesterday)  p2  69.4%  oracle 95.1%
+    Spotify Music                users     53 daily-active   5.7%  best  73.0% (p1_yesterday)  p2  68.1%  oracle 97.4%
+    Hangouts                     users     45 daily-active   7.1%  best  69.6% (p4_gaphist)  p2  69.5%  oracle 84.7%
+    YouTube                      users    218 daily-active  14.2%  best  64.8% (p1_yesterday)  p2  63.0%  oracle 87.4%
+    WhatsApp Messenger           users     58 daily-active  10.3%  best  64.2% (p1_yesterday)  p2  61.0%  oracle 82.0%
+    Calendar                     users    116 daily-active   8.5%  best  63.8% (p2_last7)  p2  63.8%  oracle 86.4%
+    Messaging                    users     51 daily-active   7.1%  best  63.1% (p1_yesterday)  p2  59.0%  oracle 77.9%
+    Contacts                     users    188 daily-active   8.2%  best  63.0% (p1_yesterday)  p2  59.7%  oracle 83.5%
+    Phone                        users     70 daily-active  11.2%  best  63.0% (p1_yesterday)  p2  60.3%  oracle 85.1%
+    Snapchat                     users     54 daily-active  13.3%  best  62.9% (p1_yesterday)  p2  51.3%  oracle 83.2%
+    Calculator                   users     84 daily-active   7.2%  best  62.6% (p1_yesterday)  p2  62.4%  oracle 88.4%
+    Google                       users    237 daily-active  11.2%  best  62.5% (p1_yesterday)  p2  59.1%  oracle 78.0%
+    Clock                        users     41 daily-active  18.7%  best  62.4% (p4_gaphist)  p2  61.7%  oracle 79.8%
+    Twitter                      users     67 daily-active  13.3%  best  61.8% (p4_gaphist)  p2  60.3%  oracle 77.3%
+    Google Photos                users    115 daily-active   8.8%  best  61.5% (p2_last7)  p2  61.5%  oracle 92.7%
+    Messages                     users    134 daily-active  10.9%  best  61.0% (p1_yesterday)  p2  52.6%  oracle 79.3%
+    Maps                         users    193 daily-active   9.1%  best  59.5% (p4_gaphist)  p2  58.0%  oracle 82.6%
+    Facebook Messenger           users    177 daily-active  11.2%  best  59.0% (p1_yesterday)  p2  58.7%  oracle 74.8%
+    Gmail                        users    225 daily-active   9.8%  best  58.8% (p1_yesterday)  p2  53.2%  oracle 74.5%
+    Settings                     users    282 daily-active  11.3%  best  58.3% (p1_yesterday)  p2  50.5%  oracle 82.2%
+    Reddit                       users     40 daily-active  11.9%  best  57.7% (p4_gaphist)  p2  53.4%  oracle 83.5%
+    Android In Call UI           users     61 daily-active   9.3%  best  56.9% (p1_yesterday)  p2  53.5%  oracle 72.4%
+    Instagram                    users    121 daily-active  14.9%  best  56.5% (p4_gaphist)  p2  56.0%  oracle 71.6%
+    Google Chrome                users    266 daily-active  12.5%  best  55.5% (p1_yesterday)  p2  49.8%  oracle 72.0%
+    Camera                       users    124 daily-active   8.3%  best  53.0% (p1_yesterday)  p2  50.9%  oracle 83.0%
+    Facebook                     users    179 daily-active  15.8%  best  52.5% (p1_yesterday)  p2  48.7%  oracle 66.4%
+    Samsung Gallery              users    115 daily-active   8.3%  best  51.9% (p4_gaphist)  p2  51.2%  oracle 84.1%
+    Pinterest                    users     67 daily-active  12.4%  best  50.8% (p1_yesterday)  p2  45.2%  oracle 77.7%
+    Google Drive                 users    135 daily-active   4.5%  best  49.6% (p2_last7)  p2  49.6%  oracle 95.7%
+    Google Play Store            users    273 daily-active   8.0%  best  49.3% (p1_yesterday)  p2  44.9%  oracle 81.8%
+    Amazon Shopping              users     71 daily-active   8.0%  best  48.3% (p1_yesterday)  p2  39.5%  oracle 74.5%
+
+=== rees46_m24 (pooled: one database) ===
+  users 159250, accesses 1708282, sessions 313694, days 12, nights simulated 5, night boundary 23:00 UTC, known users per night 119582, daily active 21642 (18.5% of known)
+  population known: h per predictor at q = 2/5/8/15/20%
+    p1_yesterday  11.9%  19.1%  24.9%  36.3%  43.4%
+    p2_last7      13.1%  23.1%  30.6%  43.5%  49.9%
+    p3_weekday    6.2%  9.6%  11.4%  24.9%  38.0%
+    p4_gaphist    12.4%  19.5%  27.7%  36.5%  43.4%
+    oracle        40.3%  66.5%  92.5%  100.0%  100.0%
+  population active28: h per predictor at q = 2/5/8/15/20%
+    p1_yesterday  11.9%  19.1%  24.9%  36.3%  43.4%
+    p2_last7      13.1%  23.1%  30.6%  43.5%  49.9%
+    p3_weekday    6.2%  9.6%  11.4%  24.9%  38.0%
+    p4_gaphist    12.4%  19.5%  27.7%  36.5%  43.4%
+    oracle        40.3%  66.5%  92.5%  100.0%  100.0%
+  at q = 8% (known users):
+    p1_yesterday  h 24.9% (nights p10-p90 24.4%-25.7%); first-of-day per user 20.9%; incl. brand-new users 13.2%; after an LRU of 0.2% of users 24.9% (the LRU already catches 0.2%); after 1% LRU 24.0% (catches 5.5%); selected users' share of past accesses 17.3%
+    p2_last7      h 30.6% (nights p10-p90 29.4%-31.7%); first-of-day per user 25.8%; incl. brand-new users 16.2%; after an LRU of 0.2% of users 30.5% (the LRU already catches 0.2%); after 1% LRU 29.7% (catches 5.5%); selected users' share of past accesses 34.0%
+    p3_weekday    h 11.4% (nights p10-p90 8.2%-16.8%); first-of-day per user 11.1%; incl. brand-new users 6.0%; after an LRU of 0.2% of users 11.4% (the LRU already catches 0.2%); after 1% LRU 11.4% (catches 5.5%); selected users' share of past accesses 12.3%
+    p4_gaphist    h 27.7% (nights p10-p90 26.7%-28.6%); first-of-day per user 23.6%; incl. brand-new users 14.7%; after an LRU of 0.2% of users 27.7% (the LRU already catches 0.2%); after 1% LRU 27.0% (catches 5.5%); selected users' share of past accesses 25.7%
+    oracle        h 92.5% (nights p10-p90 87.6%-97.8%); first-of-day per user 90.2%; incl. brand-new users 48.9%; after an LRU of 0.2% of users 92.5% (the LRU already catches 0.2%); after 1% LRU 92.1% (catches 5.5%); selected users' share of past accesses n/a
+  best at q 8%: p2_last7 30.6% -> saved cold-read GETs per 1 TB per month 6.4 $ quiet, 25.7 $ medium (reference 21 and 84 $)
+
+Disk quota at 1 TB with the prompt's rule (users x average bytes per user = q x 1 TB): q 2% 20 GB, q 5% 51 GB, q 8% 82 GB, q 15% 154 GB, q 20% 205 GB; free NVMe on m8gd.large beside the maps: 51 GB
