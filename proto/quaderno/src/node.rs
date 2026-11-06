@@ -1410,6 +1410,10 @@ impl Node {
         let heard_recently = self.role == Role::Leader || (self.leader >= 0 && now.duration_since(self.last_heard_leader) < Duration::from_millis(self.cfg.elect_min_ms));
         if pre {
             let granted = term > self.term && up_to_date && !heard_recently;
+            if std::env::var("PQ_TRACE_VOTES").is_ok() {
+                eprintln!("{} replica {}: prevote from {} term {} li {} lt {}: up_to_date {} heard_recently {} granted {} (my term {} last {} / {})",
+                    now_ms(), me, from, term, li, lt, up_to_date, heard_recently, granted, self.term, self.last_index(), self.last_term());
+            }
             if let Some(w) = keeper_wait() {
                 if !up_to_date && !heard_recently && self.role != Role::Leader && now.duration_since(self.last_heard_leader) < w {
                     // log-on-pair: a data copy asks for the vote but is behind the keeper, so it cannot win; the keeper
@@ -1461,6 +1465,9 @@ impl Node {
     }
 
     fn start_prevote(&mut self) {
+        if std::env::var("PQ_TRACE_VOTES").is_ok() {
+            eprintln!("{} replica {}: prevote for term {} (last {} / {})", now_ms(), self.me(), self.term + 1, self.last_index(), self.last_term());
+        }
         self.prevotes.clear();
         self.prevote_term = self.term + 1;
         let m = Msg::Vote { term: self.term + 1, from: self.me(), last_index: self.last_index(), last_term: self.last_term(), pre: true };

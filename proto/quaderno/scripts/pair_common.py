@@ -61,7 +61,7 @@ class Cell:
 
     def spawn(self, name, args, cpus, env=None, rt=False):
         f = open(os.path.join(self.work, f'{name}.log'), 'ab')
-        pre = ['taskset', '-c', cpus] + (['chrt', '-f', '20'] if rt else [])
+        pre = ['taskset', '-c', cpus] + (['chrt', '-f', '10'] if rt else [])
         p = subprocess.Popen(pre + args, stdout=f, stderr=f, start_new_session=True, env=env or BASE_ENV)
         self.p[name] = p.pid
         return p.pid
@@ -76,13 +76,20 @@ class Cell:
 
     def replica_args(self, i):
         peers = ','.join(f'{b}=127.0.0.1:{7300 + 10 * i + b}' for b in range(N) if b != i)
-        return [PQ, 'replica', '--id', str(i), '--dir', os.path.join(self.work, f'r{i}'), '--peer-listen', f'127.0.0.1:{7100 + i}',
+        # PAIR_REMOTE_DIR (information runs only): copies 2 and 3 in another directory, e.g. /dev/shm (no disk), so that
+        # only copy 1's fsync shares the disk with the reads
+        rdir = os.environ.get('PAIR_REMOTE_DIR')
+        d = os.path.join(rdir, f'r{i}') if (rdir and i != 0) else os.path.join(self.work, f'r{i}')
+        return [PQ, 'replica', '--id', str(i), '--dir', d, '--peer-listen', f'127.0.0.1:{7100 + i}',
                 '--client-listen', f'127.0.0.1:{7200 + i}', '--peers', peers, '--mem-cap-mb', str(self.mem_cap_mb),
                 '--window-ms', str(self.window_ms), '--seg-mb', str(self.seg_mb),
                 '--first-elect-delay-ms', '0' if i == 0 else '3000']
 
     def start_replica(self, i):
-        self.spawn(f'r{i}', self.replica_args(i), CPU_WAITER if i == 0 else CPU_REMOTE, env=self.replica_env(i))
+        # PAIR_R0_RT=1 (information runs only): log copy 1 at real-time priority (SCHED_FIFO 10), above the mongo-server
+        # that shares its cores
+        rt = i == 0 and os.environ.get('PAIR_R0_RT') == '1'
+        self.spawn(f'r{i}', self.replica_args(i), CPU_WAITER if i == 0 else CPU_REMOTE, env=self.replica_env(i), rt=rt)
         wait_port(7200 + i)
 
     def up(self, fresh=True, flusher=True):
@@ -90,6 +97,8 @@ class Cell:
         if fresh:
             for i in range(N):
                 subprocess.run(['rm', '-rf', os.path.join(self.work, f'r{i}')])
+                if os.environ.get('PAIR_REMOTE_DIR'):
+                    subprocess.run(['rm', '-rf', os.path.join(os.environ['PAIR_REMOTE_DIR'], f'r{i}')])
         json.dump(self.routes(), open(os.path.join(self.work, 'routes.json'), 'w'))
         self.stats_path = os.path.join(self.work, 'dproxy-stats.json')
         self.spawn('dproxy', [PQ, 'dproxy', '--routes', os.path.join(self.work, 'routes.json'), '--stats', self.stats_path], CPU_TOOLS)

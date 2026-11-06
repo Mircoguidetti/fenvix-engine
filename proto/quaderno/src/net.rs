@@ -131,7 +131,11 @@ pub fn spawn_out_link(addr: String) -> mpsc::UnboundedSender<Out> {
                         }
                         if wr.write_all(&buf).await.is_err() { break; }
                     }
-                    _ = tokio::time::sleep(Duration::from_millis(200)), if closed.is_finished() => { break; }
+                    // log-on-pair: the closure check runs every 200 ms even on an idle link. Before, the guard was
+                    // evaluated only when the select started, so a link closed while idle (the peer restarted, or was
+                    // not listening yet when this side connected) was noticed only by losing the next frame on it:
+                    // the first vote request of a failover was lost and the election waited one more timeout
+                    _ = tokio::time::sleep(Duration::from_millis(200)) => { if closed.is_finished() { break; } }
                 }
                 if closed.is_finished() {
                     break;

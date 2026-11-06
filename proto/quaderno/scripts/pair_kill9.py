@@ -17,6 +17,8 @@ acknowledged commit must be in each of them at its acknowledged position (no ack
 one), every zombie "Committed" must be in the log, and for each kill the number of acknowledged commits the spare did
 NOT have durable at the instant of the kill is counted (they reached it later from the keeper).
 
+The spare's and keeper's indexes are sampled 250 ms after the kill (Status is a 100 ms snapshot).
+
 Usage: pair_kill9.py OUT [--cycles 32] [--seed 1] [--delay-us 500]
 """
 import csv, json, os, random, signal, subprocess, sys, time
@@ -136,6 +138,10 @@ def main():
             cell.kill(f'r{lid}')
         else:
             cell.kill(f'r{lid}', signal.SIGSTOP)
+        # Status is a snapshot the replica refreshes every 100 ms: sample 250 ms after the kill, when the snapshot shows
+        # everything the spare and the keeper received from the waiter before it died (no new leader can exist yet: the
+        # election timeouts are 1-2 s)
+        time.sleep(0.25)
         sp, kp = fast_status(spare), fast_status(2)
         t_snap = time.time() - tk
         new, t_fail = leader_not(lid)
