@@ -7,9 +7,10 @@
 //! the path and the offset alone, because the offsets are the S3 object's own.
 //!
 //! What it does:
-//! - **Reads.** [`MirrorStore`] sits directly on the raw object store, under the S3 meters (trip meter, usage, counting
-//!   store). A GET of an SST that is in the mirror is answered from the file with the same offsets and never reaches S3;
-//!   it is not counted as an S3 request anywhere. A GET of an SST not (yet) in the mirror goes to S3 as before.
+//! - **Reads.** [`MirrorStore`] sits above the S3 meters (trip meter, usage per database, the process's counting store),
+//!   right under the users of the store (slatedb, the server). A GET of an SST that is in the mirror is answered from
+//!   the file with the same offsets and never reaches the meters or S3. A GET of an SST not (yet) in the mirror goes
+//!   down to S3 as before, counted.
 //! - **New SSTs.** A PUT (single or multipart) of an SST written by flush or compaction goes to S3 first; then, before the
 //!   PUT returns, the same bytes are written to a temporary file, synced and renamed into place. slatedb publishes the
 //!   manifest that names an SST only after its PUT returned, so the mirror holds every new SST before any reader can see

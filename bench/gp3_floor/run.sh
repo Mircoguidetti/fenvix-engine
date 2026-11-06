@@ -10,6 +10,7 @@
 #   mirror    the server WITH the filled mirror, restarted (empty RAM): the same N cold finds (same seed, same customers)
 #
 # Usage: bench/gp3_floor/run.sh BINARY OUTDIR GB [steps...]      (steps default: load base fill mirror)
+# EXTRA="server flags" are added to the waiter's; LABEL=x names the result files base-x.json and so on.
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/../.." && pwd); cd "$ROOT"
 BIN=$(readlink -f "$1"); OUT=$(mkdir -p "$2" && readlink -f "$2"); GB=$3; shift 3
@@ -20,7 +21,8 @@ PORT=${PORT:-27051}; BUCKET=gp3-$(basename "$OUT" | tr '_.' '--' | tr 'A-Z' 'a-z
 URI="mongodb://127.0.0.1:$PORT/?directConnection=true"
 RAM_MB=${RAM_MB:-256}; N=${N:-500}; WARMUP=${WARMUP:-300}; SEED=${SEED:-11}
 WORK=${WORK:-$OUT/work}; mkdir -p "$WORK"
-WAITER="--waiter-tools --counter-ram-mb $RAM_MB"
+L=${LABEL:+-$LABEL}
+WAITER="--waiter-tools --counter-ram-mb $RAM_MB ${EXTRA:-}"
 
 start() {
   # shellcheck disable=SC2086
@@ -85,12 +87,12 @@ P
     base)
       rm -rf "$WORK/floor"; mkdir -p "$WORK/floor"
       start $WAITER --counter-disk-dir "$WORK/floor" --counter-disk-gb 20
-      "$PY" bench/gp3_floor/cold_customer.py measure --uri "$URI" --state "$OUT/state.json" --n "$N" --warmup "$WARMUP" --seed "$SEED" --out "$OUT/base.json" | tee "$OUT/base.txt"
-      snap "$OUT/base-status.json"; stop; rm -rf "$WORK/floor" ;;
+      "$PY" bench/gp3_floor/cold_customer.py measure --uri "$URI" --state "$OUT/state.json" --n "$N" --warmup "$WARMUP" --seed "$SEED" --out "$OUT/base$L.json" | tee "$OUT/base$L.txt"
+      snap "$OUT/base$L-status.json"; stop; rm -rf "$WORK/floor" ;;
     fill)
       rm -rf "$WORK/mirror"
       start $WAITER --mirror-dir "$WORK/mirror" --mirror-fresh ${FILL_FLAGS:-}
-      "$PY" - "$URI" "$OUT/fill.json" <<'P' | tee "$OUT/fill.txt"
+      "$PY" - "$URI" "$OUT/fill$L.json" <<'P' | tee "$OUT/fill$L.txt"
 import json, sys, time
 from pymongo import MongoClient
 c = MongoClient(sys.argv[1])
@@ -111,12 +113,12 @@ json.dump(out, open(sys.argv[2], "w"), indent=1)
 print(f"mirror filled: {m['files']} SSTs, {m['bytes'] / 2**30:.2f} GiB in {secs:.1f} s ({m['bytes'] / 1e6 / secs:.0f} MB/s), "
       f"{out['readsDuringFill']} object-store reads, mirror bookkeeping {m['indexBytes']} bytes")
 P
-      snap "$OUT/fill-status.json"; stop ;;
+      snap "$OUT/fill$L-status.json"; stop ;;
     mirror)
       rm -rf "$WORK/floor"; mkdir -p "$WORK/floor"
       start $WAITER --counter-disk-dir "$WORK/floor" --counter-disk-gb 20 --mirror-dir "$WORK/mirror"
-      "$PY" bench/gp3_floor/cold_customer.py measure --uri "$URI" --state "$OUT/state.json" --n "$N" --warmup "$WARMUP" --seed "$SEED" --out "$OUT/mirror.json" | tee "$OUT/mirror.txt"
-      snap "$OUT/mirror-status.json"; stop; rm -rf "$WORK/floor" ;;
+      "$PY" bench/gp3_floor/cold_customer.py measure --uri "$URI" --state "$OUT/state.json" --n "$N" --warmup "$WARMUP" --seed "$SEED" --out "$OUT/mirror$L.json" | tee "$OUT/mirror$L.txt"
+      snap "$OUT/mirror$L-status.json"; stop; rm -rf "$WORK/floor" ;;
   esac
 done
 echo "=== done $(date -u +%H:%M:%S)" | tee -a "$OUT/steps.log"

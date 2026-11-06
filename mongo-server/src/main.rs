@@ -690,7 +690,6 @@ async fn run() -> Result<()> {
         other => anyhow::bail!("unknown --store {other}"),
     };
     // trip meter (and simulated S3 latency when FENVIX_SIM_S3 is set: measurement only), then large GETs in pieces
-    // the SST mirror (gp3 floor prototype) sits on the raw store, under every S3 meter: a read it answers is no S3 request
     let mirror = if args.mirror_dir.is_empty() {
         None
     } else {
@@ -701,11 +700,6 @@ async fn run() -> Result<()> {
         eprintln!("SST mirror on: {} ({n} files, {} MiB kept)", args.mirror_dir, b >> 20);
         let _ = tenant_bench::mirror::MIRROR.set(Arc::clone(&m));
         Some(m)
-    };
-    let raw_for_mirror = Arc::clone(&s3);
-    let s3 = match &mirror {
-        Some(m) => tenant_bench::mirror::wrap(s3, Arc::clone(m)),
-        None => s3,
     };
     let s3 = tenant_bench::simstore::wrap_sim(s3);
     let s3 = faults::wrap(s3);
@@ -791,17 +785,25 @@ async fn run() -> Result<()> {
     // One counter for every request this process makes (lifecycle, leases, maintenance, listings).
     let global = Arc::new(CountingStore::new(s3));
     let s3: Arc<dyn ObjectStore> = global.clone();
-    if let Some(m) = &mirror {
-        // fills go through the whole stack: their GETs are counted and billed like any other
-        m.set_fill_store(Arc::clone(&s3));
-        let (m, raw) = (Arc::clone(m), raw_for_mirror);
-        tokio::spawn(async move {
-            let n = m.reconcile_with_store(&raw).await;
-            if n > 0 {
-                eprintln!("SST mirror: {n} files whose object is gone from the store overwritten and deleted");
-            }
-        });
-    }
+    // The SST mirror (gp3 floor prototype) sits above every S3 meter (trip meter, usage per database, the process's
+    // counting store), right under the users of the store: a read it answers never reaches them, so it is counted
+    // nowhere as an S3 request. Its fills and its start-up LIST go to the metered stack below it: counted and billed.
+    let s3: Arc<dyn ObjectStore> = match &mirror {
+        Some(m) => {
+            let below: Arc<dyn ObjectStore> = global.clone();
+            m.set_fill_store(Arc::clone(&below));
+            let m2 = Arc::clone(m);
+            let raw = Arc::clone(&below);
+            tokio::spawn(async move {
+                let n = m2.reconcile_with_store(&raw).await;
+                if n > 0 {
+                    eprintln!("SST mirror: {n} files whose object is gone from the store overwritten and deleted");
+                }
+            });
+            tenant_bench::mirror::wrap(below, Arc::clone(m))
+        }
+        None => s3,
+    };
     let counting = Arc::new(CountingStore::new(Arc::clone(&s3)));
     let (queue, rx) = CompactionQueue::new();
     let lc = if args.no_maintenance {
