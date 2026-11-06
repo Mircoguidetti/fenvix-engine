@@ -1,0 +1,22 @@
+reference (1 database alone, median of 3): p50 from send 1.528 ms, p99 from send 3.687 ms
+level   1 nessuno   VALID     LIKE ATLAS p50 1.41 p99 3.48 p99.9 78.72 ms (send - ping 0.12); vs alone p99 -0.08 | p99 on the noisy log(s) [] other logs ['5.2'] | max core 19% replicas {} | sent 100/100 rej 0 busy 0 total 100 rec/s
+level   1 nessuno   VALID     LIKE ATLAS p50 1.46 p99 3.79 p99.9 35.30 ms (send - ping 0.12); vs alone p99 +0.22 | p99 on the noisy log(s) [] other logs ['5.7'] | max core 18% replicas {} | sent 100/100 rej 0 busy 0 total 100 rec/s
+level   1 nessuno   VALID     LIKE ATLAS p50 1.30 p99 3.57 p99.9 33.35 ms (send - ping 0.12); vs alone p99 +0.00 | p99 on the noisy log(s) [] other logs ['5.2'] | max core 17% replicas {} | sent 100/100 rej 0 busy 0 total 100 rec/s
+level   2 nessuno   VALID     LIKE ATLAS p50 1.25 p99 3.49 p99.9 17.19 ms (send - ping 0.11); vs alone p99 -0.09 | p99 on the noisy log(s) [] other logs ['4.4'] | max core 25% replicas {} | sent 200/200 rej 0 busy 0 total 201 rec/s
+level   2 mille     VALID     LIKE ATLAS p50 1.12 p99 4.75 p99.9 28.43 ms (send - ping 0.09); vs alone p99 +1.16 | p99 on the noisy log(s) ['6.5'] other logs [] | max core 64% replicas {} | sent 100/100 rej 0 busy 0 total 1100 rec/s
+level   2 raffiche  VALID     NOT YET    p50 1.25 p99 8.04 p99.9 37.88 ms (send - ping 0.10); vs alone p99 +4.45 | p99 on the noisy log(s) ['9.5'] other logs [] | max core 56% replicas {} | sent 100/100 rej 0 busy 0 total 1101 rec/s
+level  20 nessuno   VALID     NOT YET    p50 1.05 p99 12.79 p99.9 40.24 ms (send - ping 0.11); vs alone p99 +9.21 | p99 on the noisy log(s) [] other logs ['14.4'] | max core 74% replicas {} | sent 2000/2000 rej 0 busy 0 total 2007 rec/s
+level  20 mille     VALID     NOT YET    p50 1.18 p99 15.37 p99.9 47.39 ms (send - ping 0.10); vs alone p99 +11.78 | p99 on the noisy log(s) ['16.5'] other logs [] | max core 84% replicas {} | sent 1900/1900 rej 0 busy 0 total 2907 rec/s
+level  20 raffiche  VALID     NOT YET    p50 1.18 p99 20.32 p99.9 48.79 ms (send - ping 0.11); vs alone p99 +16.74 | p99 on the noisy log(s) ['22.2'] other logs [] | max core 81% replicas {} | sent 1900/1900 rej 0 busy 0 total 2907 rec/s
+level  50 nessuno   VALID     NOT YET    p50 1.34 p99 30.91 p99.9 64.42 ms (send - ping 0.13); vs alone p99 +27.35 | p99 on the noisy log(s) [] other logs ['32.6'] | max core 83% replicas {} | sent 5000/5000 rej 0 busy 0 total 5007 rec/s
+level  50 mille     NOT VALID NOT YET    p50 1.57 p99 24.10 p99.9 46.12 ms (send - ping 0.12); vs alone p99 +20.54 | p99 on the noisy log(s) ['25.2'] other logs [] | max core 90% replicas {} | sent 4900/4900 rej 0 busy 0 total 5904 rec/s
+level  50 raffiche  VALID     NOT YET    p50 1.86 p99 35.47 p99.9 79.86 ms (send - ping 0.14); vs alone p99 +31.93 | p99 on the noisy log(s) ['36.5'] other logs [] | max core 89% replicas {} | sent 4900/4900 rej 0 busy 0 total 5908 rec/s
+level 100 nessuno   NOT VALID NOT YET    p50 3.05 p99 24.81 p99.9 39.87 ms (send - ping 0.23); vs alone p99 +21.35 | p99 on the noisy log(s) [] other logs ['26.0'] | max core 95% replicas {} | sent 10000/10000 rej 0 busy 0 total 10011 rec/s
+level 100 mille     NOT VALID NOT YET    p50 7.80 p99 120.34 p99.9 415.95 ms (send - ping 0.30); vs alone p99 +116.95 | p99 on the noisy log(s) ['121.9'] other logs [] | max core 97% replicas {} | sent 9900/9900 rej 0 busy 4585 total 10895 rec/s
+level 100 raffiche  NOT VALID NOT YET    p50 10.36 p99 244.64 p99.9 512.42 ms (send - ping 0.35); vs alone p99 +241.30 | p99 on the noisy log(s) ['245.9'] other logs [] | max core 95% replicas {} | sent 9900/9900 rej 0 busy 11045 total 10820 rec/s
+
+level 1: valid phases 3, like Atlas 3, not yet 0, NOT VALID 0
+level 2: valid phases 3, like Atlas 2, not yet 1, NOT VALID 0
+level 20: valid phases 3, like Atlas 0, not yet 3, NOT VALID 0
+level 50: valid phases 2, like Atlas 0, not yet 2, NOT VALID 1
+level 100: valid phases 0, like Atlas 0, not yet 0, NOT VALID 3

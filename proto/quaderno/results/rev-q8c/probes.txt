@@ -1,0 +1,22 @@
+## doormix (PQ_DOOR=1, cap 1000 rec/s; A pushed over its cap, B quiet; one CommitBatch from one waiter connection)
+control, batch [B]: Committed -> B gets Committed
+A over its cap, batch [A]: Busy(reason 6, retry 377 ms) -> B gets Busy(reason 6, retry 377 ms)
+A over its cap, batch [A, B]: Busy(reason 6, retry 377 ms), Busy(reason 6, retry 377 ms) -> B gets Busy(reason 6, retry 377 ms)
+A over its cap, batch [B, A]: Committed, Busy(reason 6, retry 377 ms) -> B gets Committed
+A over its cap, single commit B: Committed
+
+## retryprobe (window 2000 ms, null flusher age 100 ms): resend of an already committed VALIDATED commit, same txn id
+== PQ_DOOR=0
+T committed at pos 117568422179045376 (read_pos 117568422080544767)
+t+    0 ms resend of T -> Committed(same pos)
+t+  625 ms resend of T -> Conflict
+== PQ_DOOR=1
+T committed at pos 117568422993657856 (read_pos 117568422895157247)
+t+    0 ms resend of T -> Committed(same pos)
+t+  580 ms resend of T -> Conflict
+== CONTROL: same code with the early 'too old' answer of the network thread disabled (node.rs lane_push/door_push: read_pos_too_old -> false), PQ_DOOR=1
+T committed; t+0 ms resend -> Committed(same pos); t+2134 ms resend -> Conflict (T itself left the window)
+
+## two logs, same database 7 written to both (no server-side check of database -> log)
+corsie log0: inviati 200 confermati 200
+corsie log1: inviati 200 confermati 200
