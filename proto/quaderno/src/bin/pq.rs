@@ -111,6 +111,11 @@ fn main() -> anyhow::Result<()> {
             let routes: Vec<proxy::Route> = serde_json::from_str(&std::fs::read_to_string(a.s("routes", "routes.json"))?)?;
             rt(a.u("threads", 2) as usize).block_on(proxy::run(routes, a.s("ctl", "ctl.json")));
         }
+        "dproxy" => {
+            // log-on-pair: delay-line proxy with sub-millisecond delays and byte counters per route
+            let routes: Vec<proxy::DelayRoute> = serde_json::from_str(&std::fs::read_to_string(a.s("routes", "routes.json"))?)?;
+            proxy::run_delay(routes, a.u("delay-us", 0), a.s("stats", "dproxy-stats.json"));
+        }
         "valbench" => bench::valbench(a.u("records", 2_000_000), a.u("keys", 5) as usize, a.u("dbs", 10_000), a.u("keyspace", 1_000_000), a.u("val", 200) as usize, a.u("window", 1_200_000)),
         "commit" => {
             let r = rt(a.u("threads", 2) as usize);
@@ -233,6 +238,10 @@ fn main() -> anyhow::Result<()> {
         "foreigndb" => {
             let r = rt(2);
             r.block_on(bench::foreign_db(cluster(&a), a.u("n", 8)));
+        }
+        "zombieprobe" => {
+            let r = rt(2);
+            r.block_on(bench::zombie_probe(cluster(&a), a.u("replica", 0) as usize, a.u("ms", 2000), a.u("every-ms", 2)));
         }
         "doormix" => {
             let r = rt(2);

@@ -321,6 +321,27 @@ pub struct Node {
     lane_buf: Vec<Item<Reply>>,
 }
 
+/// log-on-pair: `PQ_LEADER_ACK=1` = a record is acknowledged when the LEADER's own copy is durable AND the first of the
+/// two other copies has it (the waiter's own copy plus the first remote ack). Default: any 2 of 3 (plain Raft).
+fn leader_must_ack() -> bool {
+    static V: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *V.get_or_init(|| std::env::var("PQ_LEADER_ACK").map(|x| x == "1").unwrap_or(false))
+}
+
+/// log-on-pair: `PQ_KEEPER=1` on the third copy (the shared keeper): it campaigns only after `PQ_KEEPER_WAIT_MS`
+/// (default 3000) without a leader, and when it has to lead (the surviving data copy was behind it) it steps down as
+/// soon as a data copy has every committed record, so that copy can take over. Returns the wait, or None.
+fn keeper_wait() -> Option<Duration> {
+    static V: std::sync::OnceLock<Option<Duration>> = std::sync::OnceLock::new();
+    *V.get_or_init(|| {
+        if std::env::var("PQ_KEEPER").map(|x| x == "1").unwrap_or(false) {
+            Some(Duration::from_millis(std::env::var("PQ_KEEPER_WAIT_MS").ok().and_then(|x| x.parse().ok()).unwrap_or(3000)))
+        } else {
+            None
+        }
+    })
+}
+
 fn rand_ms(a: u64, b: u64) -> Duration {
     Duration::from_millis(a + rand::random::<u64>() % (b - a + 1))
 }
@@ -1305,8 +1326,14 @@ impl Node {
     fn maybe_commit(&mut self) {
         let mut m = vec![self.durable.min(self.last_index())];
         m.extend(self.peers.iter().map(|p| p.matched));
+        let n = if leader_must_ack() {
+            // log-on-pair: own durable copy AND the first remote copy (still 2 of 3, so still a Raft majority)
+            m[0].min(m[1..].iter().copied().max().unwrap_or(0))
+        } else {
+            m.sort_unstable_by(|a, b| b.cmp(a));
+            m[1]
+        };
         m.sort_unstable_by(|a, b| b.cmp(a));
-        let n = m[1];
         if n > self.commit && self.term_at(n) == Some(self.term) {
             self.advance_commit(n);
         }
@@ -1383,6 +1410,15 @@ impl Node {
         let heard_recently = self.role == Role::Leader || (self.leader >= 0 && now.duration_since(self.last_heard_leader) < Duration::from_millis(self.cfg.elect_min_ms));
         if pre {
             let granted = term > self.term && up_to_date && !heard_recently;
+            if let Some(w) = keeper_wait() {
+                if !up_to_date && !heard_recently && self.role != Role::Leader && now.duration_since(self.last_heard_leader) < w {
+                    // log-on-pair: a data copy asks for the vote but is behind the keeper, so it cannot win; the keeper
+                    // campaigns now (it will bring that copy up to date and hand over), without its long wait
+                    eprintln!("replica {}: keeper: candidate {} is behind ({} < {}), campaigning now", me, from, li, self.last_index());
+                    self.last_heard_leader = now - w;
+                    self.election_deadline = now;
+                }
+            }
             self.send_peer(from, &Msg::VoteResp { term, from: me, granted, pre: true });
             return;
         }
@@ -1587,8 +1623,26 @@ impl Node {
             }
             _ => {
                 if now >= self.election_deadline {
-                    self.start_prevote();
+                    match keeper_wait() {
+                        // log-on-pair: the keeper campaigns only after a long silence (the data copies go first)
+                        Some(w) if now.duration_since(self.last_heard_leader) < w => {
+                            self.election_deadline = self.last_heard_leader + w;
+                        }
+                        _ => self.start_prevote(),
+                    }
                 }
+            }
+        }
+        if self.role == Role::Leader && keeper_wait().is_some() && self.noop_index != u64::MAX && self.commit >= self.noop_index {
+            // log-on-pair: the keeper led only to bring a data copy up to date; once one has every committed record
+            // it hands over (steps down and stays quiet), the caught-up data copy wins the next election
+            if self.peers.iter().any(|p| p.matched >= self.commit && now.duration_since(p.last_heard) < emin) {
+                eprintln!("replica {}: keeper hands over (term {}, commit {})", self.me(), self.term, self.commit);
+                let t = self.term;
+                self.become_follower(t);
+                self.last_heard_leader = now;
+                self.election_deadline = now + Duration::from_secs(10);
+                return;
             }
         }
         // lavori periodici, ciascuno a passi brevi e cronometrato

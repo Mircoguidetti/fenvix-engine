@@ -12,7 +12,7 @@
 
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 
@@ -118,4 +118,93 @@ pub async fn run(routes: Vec<Route>, ctl_path: String) {
     }
     println!("READY");
     std::future::pending::<()>().await;
+}
+
+// ================================================================================================ log-on-pair: delay line
+/// log-on-pair: a TCP proxy with a fixed, sub-millisecond one-way delay per route (a delay LINE: every chunk is sent
+/// `delay_us` after it was read, chunks in flight do not wait for each other, so the delay does not limit throughput)
+/// and byte counters per route and direction. Blocking OS threads (two per connection) sleeping with a 1 ns timer
+/// slack, because the tokio timer of `run` has a 1 ms resolution and this kernel has no tc netem.
+/// `routes.json`: `[{"name": "r0->r1", "listen": "...", "target": "...", "delay_us": 500}, ...]` (no `delay_us` =
+/// `--delay-us`). Counters are written to `stats` every 200 ms: `{"r0->r1": [bytes_c2s, bytes_s2c, conns], ...}`.
+pub fn run_delay(routes: Vec<DelayRoute>, default_delay_us: u64, stats_path: String) {
+    use std::io::{Read, Write};
+    use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
+    unsafe {
+        libc::prctl(libc::PR_SET_TIMERSLACK, 1, 0, 0, 0);
+    }
+    let counters: Vec<(String, Arc<[AtomicU64; 3]>)> =
+        routes.iter().map(|r| (r.name.clone(), Arc::new([AtomicU64::new(0), AtomicU64::new(0), AtomicU64::new(0)]))).collect();
+    for (r, (_, cnt)) in routes.iter().zip(counters.iter()) {
+        let l = std::net::TcpListener::bind(&r.listen).unwrap_or_else(|e| panic!("bind {}: {e}", r.listen));
+        let (target, d, cnt) = (r.target.clone(), Duration::from_micros(r.delay_us.unwrap_or(default_delay_us)), cnt.clone());
+        std::thread::spawn(move || {
+            for c in l.incoming() {
+                let Ok(client) = c else { continue };
+                let Ok(server) = std::net::TcpStream::connect(&target) else { continue };
+                let _ = client.set_nodelay(true);
+                let _ = server.set_nodelay(true);
+                cnt[2].fetch_add(1, Relaxed);
+                for (from, to, k) in [(client.try_clone().unwrap(), server.try_clone().unwrap(), 0usize), (server, client, 1usize)] {
+                    let cnt = cnt.clone();
+                    let (tx, rx) = crossbeam_channel::unbounded::<(Instant, Vec<u8>)>();
+                    let mut from = from;
+                    let shut = to.try_clone().unwrap();
+                    std::thread::spawn(move || {
+                        unsafe {
+                            libc::prctl(libc::PR_SET_TIMERSLACK, 1, 0, 0, 0);
+                        }
+                        let mut buf = vec![0u8; 256 << 10];
+                        loop {
+                            match from.read(&mut buf) {
+                                Ok(0) | Err(_) => break,
+                                Ok(n) => {
+                                    cnt[k].fetch_add(n as u64, Relaxed);
+                                    if tx.send((Instant::now() + d, buf[..n].to_vec())).is_err() {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        let _ = from.shutdown(std::net::Shutdown::Both);
+                    });
+                    let mut to = to;
+                    std::thread::spawn(move || {
+                        unsafe {
+                            libc::prctl(libc::PR_SET_TIMERSLACK, 1, 0, 0, 0);
+                        }
+                        while let Ok((at, b)) = rx.recv() {
+                            let now = Instant::now();
+                            if at > now {
+                                std::thread::sleep(at - now);
+                            }
+                            if to.write_all(&b).is_err() {
+                                break;
+                            }
+                        }
+                        let _ = shut.shutdown(std::net::Shutdown::Both);
+                    });
+                }
+            }
+        });
+    }
+    println!("READY");
+    loop {
+        std::thread::sleep(Duration::from_millis(200));
+        let m: serde_json::Map<String, serde_json::Value> =
+            counters.iter().map(|(n, c)| (n.clone(), serde_json::json!([c[0].load(Relaxed), c[1].load(Relaxed), c[2].load(Relaxed)]))).collect();
+        let tmp = format!("{stats_path}.tmp");
+        if std::fs::write(&tmp, serde_json::Value::Object(m).to_string()).is_ok() {
+            let _ = std::fs::rename(&tmp, &stats_path);
+        }
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct DelayRoute {
+    pub name: String,
+    pub listen: String,
+    pub target: String,
+    #[serde(default)]
+    pub delay_us: Option<u64>,
 }

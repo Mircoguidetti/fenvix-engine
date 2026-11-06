@@ -1675,3 +1675,31 @@ pub async fn foreign_db(cl: Arc<Cluster>, n: u64) {
         println!("db {d}: {s}");
     }
 }
+
+// ================================================================================================ log-on-pair: zombie probe
+/// log-on-pair (guarantee 8): commits sent STRAIGHT to replica `rep` (the old waiter that just came back, after a
+/// kill -9 and restart or after SIGSTOP/SIGCONT), one every `every_ms` for `ms`, without following redirects. Prints
+/// one JSON line with the outcomes and the txn ids that replica said were Committed (they must then be in the log of the
+/// new turn; any other outcome means the old waiter could not write).
+pub async fn zombie_probe(cl: Arc<Cluster>, rep: usize, ms: u64, every_ms: u64) {
+    let db = db_id(888_001);
+    let t0 = Instant::now();
+    let (mut committed, mut not_leader, mut ambiguous, mut other, mut errs) = (vec![], 0u64, 0u64, 0u64, 0u64);
+    let mut first_answer_ms: Option<u64> = None;
+    while t0.elapsed() < Duration::from_millis(ms) {
+        let c = CommitReq { txn: txn_id(), db, read_pos: 0, mode: Mode::Blind, writes: vec![Write { key: doc_key("z"), kind: Kind::Put, val: Bytes::from_static(b"zombie") }], reads: vec![], session: None };
+        let r = cl.call(rep, &Req::Commit(c.clone()), Duration::from_millis(1500)).await;
+        if r.is_ok() && first_answer_ms.is_none() {
+            first_answer_ms = Some(t0.elapsed().as_millis() as u64);
+        }
+        match r {
+            Ok(Resp::Committed(p)) => committed.push(format!("{}:{p}", crate::store::hex(&c.txn))),
+            Ok(Resp::NotLeader(_)) => not_leader += 1,
+            Ok(Resp::Ambiguous) => ambiguous += 1,
+            Ok(_) => other += 1,
+            Err(_) => errs += 1,
+        }
+        tokio::time::sleep(Duration::from_millis(every_ms)).await;
+    }
+    println!("{}", json!({"zombie_probe": rep, "committed": committed, "not_leader": not_leader, "ambiguous": ambiguous, "other": other, "no_answer": errs, "first_answer_ms": first_answer_ms}));
+}
