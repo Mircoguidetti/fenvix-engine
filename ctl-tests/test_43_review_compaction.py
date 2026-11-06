@@ -1,9 +1,11 @@
 """Reviewer tests for compaction step 1 (commit 91414a6): customer-first keys.
 
-Each test states the guarantee it checks. Every server runs with `--customer-key cc.m=u` (collection cc.m stores its
-documents customer first; the locator `loc/m/{_id}` is its unique `_id` index).
+Each test states the guarantee it checks. The `srv` fixture runs with `--customer-key cc.m=u` (collection cc.m stores
+its documents customer first; the locator `loc/m/{_id}` is its unique `_id` index); `plain` is the control without a key.
+Expected on 91414a6: the [m] cases and the format test FAIL (defects of this commit), the [plain] cases PASS, and the
+refused-fork test FAILS on 91414a6 and on integration alike (pre-existing, not counted against this commit).
 """
-import threading
+import time
 
 import pytest
 from pymongo.errors import PyMongoError
@@ -113,3 +115,23 @@ def test_with_customer_keys_off_the_stored_format_does_not_change():
         finally:
             s2.term()
     assert codecs == ["none"], f"with no customer key and no compaction flag, the SSTs are written {codecs}: the previous release cannot read them"
+
+
+def test_a_refused_fork_leaves_no_object_of_its_target():
+    """Guarantee 6, and the cause of the flaky test_05_erase.py::test_concurrent_erase_and_fork_are_serialised. A fork
+    whose source does not exist (in test_05: erased by the erase that won the race) takes the target's lease, then
+    returns 404 and deletes the lease; but those requests were charged to the target's usage counters, and the usage
+    flusher writes `control/usage/<target>/<day>/...` for a database that never existed, which nothing deletes. test_05
+    only sees it when a flush (every 1 s there) lands between the fork's answer and its listing. Same on integration
+    (this is not caused by compaction-1; see REVIEW.md)."""
+    from lib import list_prefix
+    b = make_bucket("revfork")
+    s = Server(b, "revfork", idle=300, extra=["--usage-flush-secs", "1"]).start()
+    try:
+        st, _ = s.admin.post("/v1/databases/never_was/fork", {"target": "nf_k"})
+        assert st == 404, st
+        time.sleep(3)  # three usage flushes
+        left = [k for k, _ in list_prefix(b, "") if "nf_k" in k or "never_was" in k]
+        assert left == [], f"a fork refused with 404 left {left}"
+    finally:
+        s.term()
