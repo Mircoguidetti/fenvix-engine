@@ -1,0 +1,52 @@
+corsie restart t=5s inviati 14998 confermati(misura) 14970 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 29587 confermati(misura) 29207 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 45003 confermati(misura) 45003 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 0 A quiet: kill leader 2 + follower 0 PASS C=45404 recovered={2: 45404, 0: 45404} commit_after=45405 leader=2 panics=[] segments_before={0: 14, 1: 14, 2: 15}
+corsie restart t=5s inviati 14944 confermati(misura) 14789 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30090 confermati(misura) 30081 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 45003 confermati(misura) 45003 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 0 A2 quiet: kill both followers [0, 1] PASS C=90808 recovered={0: 90808, 1: 90808} commit_after=90808 leader=2 panics=[] segments_before={0: 12, 1: 11, 2: 12}
+corsie restart t=5s inviati 14997 confermati(misura) 14997 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 29490 confermati(misura) 22911 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 45001 confermati(misura) 44992 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=20s inviati 58938 confermati(misura) 57434 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 0 B under load: kill leader 2 + follower 1 PASS commit_before_kill=113350 converged_commit=154252 panics=[] last={0: 154252, 1: 154252, 2: 154252}
+corsie restart t=5s inviati 14997 confermati(misura) 14996 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30001 confermati(misura) 29991 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 45000 confermati(misura) 44993 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 0 C quiet: kill all three PASS C=199652 recovered={0: 199652, 1: 199652, 2: 199652} commit_after=199653 leader=0 panics=[] segments_before={0: 11, 1: 12, 2: 11}
+corsie restart t=5s inviati 13938 confermati(misura) 12629 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 29649 confermati(misura) 29234 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 44868 confermati(misura) 44505 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 1 A quiet: kill leader 0 + follower 1 PASS C=244940 recovered={0: 244940, 1: 244940} commit_after=244941 leader=1 panics=[] segments_before={0: 11, 1: 12, 2: 11}
+corsie restart t=5s inviati 14909 confermati(misura) 14729 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 29688 confermati(misura) 29552 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 44988 confermati(misura) 44988 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 1 A2 quiet: kill both followers [0, 2] PASS C=290329 recovered={0: 290329, 2: 290329} commit_after=290329 leader=1 panics=[] segments_before={0: 11, 1: 12, 2: 11}
+corsie restart t=5s inviati 14997 confermati(misura) 14991 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 28486 confermati(misura) 23414 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 42511 confermati(misura) 40169 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 224
+corsie restart t=20s inviati 59967 confermati(misura) 59845 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 224
+round 1 B under load: kill leader 1 + follower 2 PASS commit_before_kill=313002 converged_commit=353882 panics=[] last={0: 353882, 1: 353882, 2: 353882}
+corsie restart t=5s inviati 14998 confermati(misura) 14861 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 29970 confermati(misura) 29966 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 44411 confermati(misura) 44161 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 1 C quiet: kill all three FAIL C=399282 recovered={0: 399282, 1: 394632, 2: 399282} commit_after=399283 leader=0 panics=[] segments_before={0: 12, 1: 14, 2: 12}
+corsie restart t=5s inviati 13385 confermati(misura) 11003 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30000 confermati(misura) 29997 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 44997 confermati(misura) 44997 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 2 A quiet: kill leader 0 + follower 1 FAIL C=444701 recovered={0: 444701, 1: 440215} commit_after=444702 leader=0 panics=[] segments_before={0: 12, 1: 14, 2: 12}
+corsie restart t=5s inviati 14973 confermati(misura) 14949 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30004 confermati(misura) 29982 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 45003 confermati(misura) 45003 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 2 A2 quiet: kill both followers [1, 2] FAIL C=490105 recovered={1: 485396, 2: 490105} commit_after=490105 leader=0 panics=[] segments_before={0: 12, 1: 14, 2: 12}
+corsie restart t=5s inviati 14994 confermati(misura) 14168 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 885
+corsie restart t=10s inviati 29261 confermati(misura) 22922 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 3918
+corsie restart t=15s inviati 45006 confermati(misura) 38987 rifiutati 0 ignoti 1448 scartati 0 rifiuti_freno 3918
+corsie restart t=20s inviati 60010 confermati(misura) 53993 rifiutati 0 ignoti 1448 scartati 0 rifiuti_freno 3918
+round 2 B under load: kill leader 0 + follower 2 FAIL commit_before_kill=512485 converged_commit=None panics=[] last={0: 547751, 1: 485396, 2: 547751}
+corsie restart t=5s inviati 14997 confermati(misura) 14963 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 773
+corsie restart t=10s inviati 30001 confermati(misura) 29979 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 860
+corsie restart t=15s inviati 45006 confermati(misura) 45003 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 860
+round 2 C quiet: kill all three NOT CAUGHT UP {"0": [593093, 593093, 593093], "1": [485396, 485396, 485396], "2": [593093, 593093, 593093]}
+RESULT SOME FAIL

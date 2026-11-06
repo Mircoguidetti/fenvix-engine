@@ -332,9 +332,21 @@ pub struct Recovered {
 /// o a una voce che non continua il registro (indice non contiguo, mandato che scende); da lì azzera il segmento e
 /// cancella quelli successivi.
 pub fn recover(dir: &Path) -> std::io::Result<(Vec<Recovered>, u32, u64)> {
+    recover_after(dir, None)
+}
+
+/// Q8d: recovery that knows the checkpoint (`prev_index`: every entry up to it is checkpointed). Entries up to the
+/// checkpoint at the start of the log are read and skipped (not returned), so they are never the reference of the
+/// contiguity check. Before this, a segment left on disk below the checkpoint (killed between the checkpoint and the
+/// deletion of its segments, and then never deleted) followed by a gap made the recovery take the first live segment
+/// for stale bytes: it was zeroed and every later segment deleted, losing durable confirmed entries (found by the Q8d
+/// rerun of `restart_test.py` under CPU load: a copy restarted with 4,650 confirmed entries missing).
+pub fn recover_after(dir: &Path, prev_index: Option<u64>) -> std::io::Result<(Vec<Recovered>, u32, u64)> {
     let mut segs: Vec<u32> = std::fs::read_dir(dir)?.flatten().filter_map(|e| parse_seg(&e.file_name().to_string_lossy())).collect();
     segs.sort();
     let mut out: Vec<Recovered> = vec![];
+    // Q8d: entries up to the checkpoint (returned after the live ones, see `recover_after`)
+    let mut skipped: Vec<Recovered> = vec![];
     let mut last_seg = 0;
     let mut last_len = 0;
     let mut stop = false;
@@ -350,6 +362,12 @@ pub fn recover(dir: &Path) -> std::io::Result<(Vec<Recovered>, u32, u64)> {
                 FrameRead::Ok(_, end) => {
                     let raw = Bytes::copy_from_slice(&data[p..p + end]);
                     let Ok(e) = Entry::decode(raw) else { break };
+                    if out.is_empty() && prev_index.map_or(false, |pi| e.index <= pi) {
+                        // checkpointed entry before the live log: skipped (Q8d)
+                        skipped.push(Recovered { entry: e, seg: s, off: p as u64 });
+                        p += end;
+                        continue;
+                    }
                     if let Some(prev) = out.last() {
                         if e.index != prev.entry.index + 1 || e.term < prev.entry.term {
                             break;
@@ -380,7 +398,9 @@ pub fn recover(dir: &Path) -> std::io::Result<(Vec<Recovered>, u32, u64)> {
         last_seg = s;
         last_len = p as u64;
     }
-    Ok((out, last_seg, last_len))
+    // the caller skips entries below its front anyway; returned first so it can register their segments for deletion
+    skipped.append(&mut out);
+    Ok((skipped, last_seg, last_len))
 }
 
 /// True when the first frame of segment `n` is a valid entry that continues the log after `prev` (index + 1, term
@@ -507,6 +527,32 @@ mod tests_riciclo {
         assert_eq!(last, 4, "il segmento 4 (voci durevoli e confermate) deve sopravvivere");
         assert_eq!(idx, (401..=650).collect::<Vec<_>>());
     }
+    /// Q8d: a segment left below the checkpoint (its deletion did not happen before a kill) and a gap after it (the
+    /// segments in between were deleted). Without the checkpoint the recovery zeroes the first live segment and deletes
+    /// the later ones; with it every live entry survives.
+    #[test]
+    fn q8d_leftover_segment_below_checkpoint_then_gap() {
+        let seg_bytes = 256 << 10;
+        for with_ckpt in [true, false] {
+            let dir = std::env::temp_dir().join(format!("pq-q8d-gap-{}", rand::random::<u64>()));
+            std::fs::create_dir_all(&dir).unwrap();
+            write_seg(&dir, 5, 1001, 1100, seg_bytes); // leftover, all checkpointed
+            // segments 6 and 7 (1101..1300) were deleted; the live log is 1301..1500 in 8 and 9, checkpoint 1300
+            write_seg(&dir, 8, 1301, 1400, seg_bytes);
+            write_seg(&dir, 9, 1401, 1500, seg_bytes);
+            let (v, last, _) = recover_after(&dir, if with_ckpt { Some(1300) } else { None }).unwrap();
+            let live: Vec<u64> = v.iter().map(|r| r.entry.index).filter(|i| *i > 1300).collect();
+            let _ = std::fs::remove_dir_all(&dir);
+            if with_ckpt {
+                assert_eq!(live, (1301..=1500).collect::<Vec<_>>(), "every live entry must survive");
+                assert_eq!(last, 9);
+            } else {
+                // the old behaviour (negative control): the live segments are lost
+                assert!(live.is_empty(), "control: without the checkpoint the gap loses the live log");
+            }
+        }
+    }
+
     /// Q8c: several recycled segments in a row, none of them the last one, each with stale old entries in its tail.
     /// Recovery keeps every entry, twice in a row (the first recovery zeroes the stale tails).
     #[test]

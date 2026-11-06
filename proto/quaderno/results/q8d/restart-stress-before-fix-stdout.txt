@@ -1,0 +1,4 @@
+round 0 A quiet: kill leader 0 + follower 1 PASS C=42202 recovered={0: 42202, 1: 42202} commit_after=42203 leader=0 panics=[] segments_before={0: 9, 1: 9, 2: 8}
+round 0 A2 quiet: kill both followers [1, 2] FAIL C=87177 recovered={1: 81360, 2: 87177} commit_after=87178 leader=0 panics=[] segments_before={0: 15, 1: 16, 2: 15}
+round 0 B under load: kill leader 0 + follower 2 FAIL commit_before_kill=108724 converged_commit=None panics=[] last={0: 140503, 1: 81360, 2: 140503}
+round 0 C quiet: kill all three NOT CAUGHT UP {"0": [185759, 185759, 185759], "1": [81360, 81360, 81360], "2": [185759, 185759, 185759]}

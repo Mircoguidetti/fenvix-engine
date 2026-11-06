@@ -14,7 +14,7 @@ flusher (no S3) so old segments leave the log and are recycled as spares. A writ
 Usage: restart_test.py OUT_DIR [--rounds 3] [--rate 3000] [--fill-s 15]
 Exit code 0 only if every case of every round passes.
 """
-import json, os, re, signal, subprocess, sys, time
+import json, shutil, os, re, signal, subprocess, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PQ = os.environ.get('PQ_BIN') or os.path.join(HERE, '..', 'target', 'release', 'pq')
@@ -30,6 +30,7 @@ OUT = args[0]
 ROUNDS = int(opt(args, '--rounds', '3'))
 RATE = opt(args, '--rate', '3000')
 FILL = int(opt(args, '--fill-s', '15'))
+KEEP = '--keep-dirs' in args
 os.makedirs(OUT, exist_ok=True)
 ENV = dict(os.environ, PQ_RICICLA='1', PQ_SEG_MB=os.environ.get('PQ_SEG_MB', '1'), PQ_CORSIE=os.environ.get('PQ_CORSIE', '1'), PQ_BIN=PQ)
 LOG = open(os.path.join(OUT, 'restart_test.log'), 'a')
@@ -122,6 +123,11 @@ def case_quiet(name, kill):
     for i in kill:
         cl('kill', str(i))
     time.sleep(0.5)
+    keep = os.path.join(OUT, 'keep', name.replace(' ', '_'))
+    if KEEP:
+        # Q8d: forensic copy of the killed replicas' directories (state on disk before their restart), kept on FAIL
+        for i in kill:
+            shutil.copytree(os.path.join(WORK, f'r{i}'), os.path.join(keep, f'r{i}'))
     for i in kill:
         cl('start', str(i))
     lid = leader()
@@ -131,6 +137,8 @@ def case_quiet(name, kill):
     commit2 = max((s['commit_index'] for s in st2.values()), default=0)
     bad = panicked(off)
     ok = all(got[i] == c for i in kill) and commit2 >= c and not bad and lid >= 0
+    if KEEP and ok:
+        shutil.rmtree(keep, ignore_errors=True)
     say(name, 'PASS' if ok else 'FAIL', f'C={c} recovered={got} commit_after={commit2} leader={lid} panics={bad} segments_before={ {i: len(v) for i, v in segs.items()} }')
     return ok
 

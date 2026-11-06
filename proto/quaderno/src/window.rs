@@ -1003,12 +1003,17 @@ impl Window {
     /// scaricabili: record confermati in (flushed, upto], fino a `budget` byte. Gira su un thread di rete. Sotto il lock
     /// copia solo i riferimenti (breve), poi costruisce la risposta senza lock.
     pub fn flushable(&self, db: &Db, upto: Pos, budget: &mut usize) -> Vec<FlushRec> {
+        self.flushable_from(db, 0, upto, budget)
+    }
+
+    /// Q8d: like `flushable`, only records with position above `from` (paging without confirming)
+    pub fn flushable_from(&self, db: &Db, from: Pos, upto: Pos, budget: &mut usize) -> Vec<FlushRec> {
         let Some(dr) = self.db(db) else { return vec![] };
         let mut out = vec![];
         // 1) la dispensa: run interi, dal più vecchio (le loro posizioni vengono prima di quelle in RAM)
         let (spill, flushed) = {
             let d = dr.read();
-            (d.spill.iter().copied().collect::<Vec<_>>(), d.flushed)
+            (d.spill.iter().copied().collect::<Vec<_>>(), d.flushed.max(from))
         };
         if !spill.is_empty() {
             let mut last_loc: Option<(Loc, Arc<Entry>)> = None;
@@ -1067,7 +1072,7 @@ impl Window {
                 if r.pos > upto || b == 0 {
                     break;
                 }
-                if r.pos <= d.flushed {
+                if r.pos <= d.flushed.max(from) {
                     continue;
                 }
                 b = b.saturating_sub(r.bytes as usize);

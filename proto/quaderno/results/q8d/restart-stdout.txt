@@ -1,0 +1,13 @@
+round 0 A quiet: kill leader 2 + follower 0 PASS C=45404 recovered={2: 45404, 0: 45404} commit_after=45405 leader=2 panics=[] segments_before={0: 14, 1: 14, 2: 15}
+round 0 A2 quiet: kill both followers [0, 1] PASS C=90808 recovered={0: 90808, 1: 90808} commit_after=90808 leader=2 panics=[] segments_before={0: 12, 1: 11, 2: 12}
+round 0 B under load: kill leader 2 + follower 1 PASS commit_before_kill=113350 converged_commit=154252 panics=[] last={0: 154252, 1: 154252, 2: 154252}
+round 0 C quiet: kill all three PASS C=199652 recovered={0: 199652, 1: 199652, 2: 199652} commit_after=199653 leader=0 panics=[] segments_before={0: 11, 1: 12, 2: 11}
+round 1 A quiet: kill leader 0 + follower 1 PASS C=244940 recovered={0: 244940, 1: 244940} commit_after=244941 leader=1 panics=[] segments_before={0: 11, 1: 12, 2: 11}
+round 1 A2 quiet: kill both followers [0, 2] PASS C=290329 recovered={0: 290329, 2: 290329} commit_after=290329 leader=1 panics=[] segments_before={0: 11, 1: 12, 2: 11}
+round 1 B under load: kill leader 1 + follower 2 PASS commit_before_kill=313002 converged_commit=353882 panics=[] last={0: 353882, 1: 353882, 2: 353882}
+round 1 C quiet: kill all three FAIL C=399282 recovered={0: 399282, 1: 394632, 2: 399282} commit_after=399283 leader=0 panics=[] segments_before={0: 12, 1: 14, 2: 12}
+round 2 A quiet: kill leader 0 + follower 1 FAIL C=444701 recovered={0: 444701, 1: 440215} commit_after=444702 leader=0 panics=[] segments_before={0: 12, 1: 14, 2: 12}
+round 2 A2 quiet: kill both followers [1, 2] FAIL C=490105 recovered={1: 485396, 2: 490105} commit_after=490105 leader=0 panics=[] segments_before={0: 12, 1: 14, 2: 12}
+round 2 B under load: kill leader 0 + follower 2 FAIL commit_before_kill=512485 converged_commit=None panics=[] last={0: 547751, 1: 485396, 2: 547751}
+round 2 C quiet: kill all three NOT CAUGHT UP {"0": [593093, 593093, 593093], "1": [485396, 485396, 485396], "2": [593093, 593093, 593093]}
+RESULT SOME FAIL

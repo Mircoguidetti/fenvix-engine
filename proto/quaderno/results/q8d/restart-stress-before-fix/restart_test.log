@@ -1,0 +1,18 @@
+corsie restart t=5s inviati 11464 confermati(misura) 9149 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 4043
+corsie restart t=10s inviati 28474 confermati(misura) 27507 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 4047
+corsie restart t=15s inviati 41799 confermati(misura) 41799 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 4047
+round 0 A quiet: kill leader 0 + follower 1 PASS C=42202 recovered={0: 42202, 1: 42202} commit_after=42203 leader=0 panics=[] segments_before={0: 9, 1: 9, 2: 8}
+corsie restart t=5s inviati 14499 confermati(misura) 12167 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 5030
+corsie restart t=10s inviati 30250 confermati(misura) 27068 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 14953
+corsie restart t=15s inviati 42733 confermati(misura) 39309 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 30735
+round 0 A2 quiet: kill both followers [1, 2] FAIL C=87177 recovered={1: 81360, 2: 87177} commit_after=87178 leader=0 panics=[] segments_before={0: 15, 1: 16, 2: 15}
+corsie restart t=5s inviati 14975 confermati(misura) 14704 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 5427
+corsie restart t=10s inviati 27992 confermati(misura) 23850 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 5427
+corsie restart t=17s inviati 41443 confermati(misura) 29723 rifiutati 0 ignoti 4909 scartati 0 rifiuti_freno 5427
+corsie restart t=22s inviati 57528 confermati(misura) 52167 rifiutati 0 ignoti 5361 scartati 0 rifiuti_freno 5508
+round 0 B under load: kill leader 0 + follower 2 FAIL commit_before_kill=108724 converged_commit=None panics=[] last={0: 140503, 1: 81360, 2: 140503}
+corsie restart t=5s inviati 14998 confermati(misura) 14757 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 592
+corsie restart t=10s inviati 29125 confermati(misura) 28327 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 606
+corsie restart t=15s inviati 45000 confermati(misura) 44162 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 2093
+round 0 C quiet: kill all three NOT CAUGHT UP {"0": [185759, 185759, 185759], "1": [81360, 81360, 81360], "2": [185759, 185759, 185759]}
+corsie restart t=5s inviati 14702 confermati(misura) 14536 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 2753

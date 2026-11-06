@@ -451,6 +451,10 @@ pub enum Req {
     Wait { pos: Pos, timeout_ms: u32 },
     /// scaricabili(db, fino_a) per più database in un colpo (raggruppamento di trasporto)
     Flushable { dbs: Vec<Db>, upto: Pos },
+    /// Q8d (the log inside the engine): records of ONE database with position in (`from`, `upto`] not yet on S3, in
+    /// position order (a prefix, at most about 4 MB): the engine's restart pages through them with `from` = the last
+    /// position it got, without confirming anything
+    FlushableFrom { db: Db, from: Pos, upto: Pos },
     /// conferma_scarico(db, fino_a, etag) per più database in un colpo
     FlushDone { items: Vec<(Db, Pos, Bytes)> },
     /// aiuto per gli scaricatori: database con record non ancora su S3 (posizione del più vecchio, numero, byte,
@@ -700,6 +704,12 @@ pub fn enc_req(id: u64, q: &Req) -> Vec<u8> {
                 b.put_slice(d);
             }
         }
+        Req::FlushableFrom { db, from, upto } => {
+            b.put_u8(13);
+            b.put_slice(db);
+            b.put_u64_le(*from);
+            b.put_u64_le(*upto);
+        }
         Req::FlushDone { items } => {
             b.put_u8(7);
             b.put_u32_le(items.len() as u32);
@@ -756,6 +766,7 @@ pub fn dec_req(body: Bytes) -> R<(u64, Req)> {
             }
             Req::Flushable { dbs, upto }
         }
+        13 => Req::FlushableFrom { db: r.a16()?, from: r.u64()?, upto: r.u64()? },
         7 => {
             let n = r.u32()? as usize;
             let mut items = Vec::with_capacity(n.min(1 << 16));

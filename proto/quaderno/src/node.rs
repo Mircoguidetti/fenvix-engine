@@ -638,7 +638,7 @@ impl Node {
     fn recover(cfg: Config, rx: Receiver<Ev>, disk_tx: Sender<DiskOp>, peers: Vec<(u8, UnboundedSender<Out>)>, sh: Arc<Shared>, spill_tx: Sender<SpillReq>) -> anyhow::Result<Node> {
         let st: RaftState = std::fs::read(cfg.dir.join("state")).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or(RaftState { term: 0, voted: -1 });
         let ck: Option<Ckpt> = std::fs::read(cfg.dir.join("ckpt")).ok().and_then(|b| serde_json::from_slice(&b).ok());
-        let (recs, last_seg, last_len) = store::recover(&cfg.dir)?;
+        let (recs, last_seg, last_len) = store::recover_after(&cfg.dir, ck.as_ref().map(|c| c.prev_index))?;
         let now = Instant::now();
         let ckv = ck.as_ref();
         let prev_index = ckv.map(|c| c.prev_index).unwrap_or(0);
@@ -751,6 +751,11 @@ impl Node {
         for r in recs {
             let e = r.entry;
             if e.index < n.front {
+                // Q8d: a segment below the front (checkpointed, its deletion did not happen before the stop) is
+                // registered, so the normal rule deletes it (in order, after the dispensa no longer needs it). Before,
+                // it stayed on disk for ever and, once the segments after it were deleted, left a gap below the live log
+                n.segs.entry(r.seg).or_insert((e.index, e.index)).1 = e.index;
+                n.seg_pos.insert(r.seg, e.pos);
                 continue;
             }
             assert_eq!(e.index, n.last_index() + 1, "registro non contiguo sul disco");
@@ -1872,7 +1877,7 @@ impl Node {
                 self.pending.entry(idx).or_default().push(reply);
             }
             // servite dai thread di rete (serve_local): qui non arrivano
-            Req::CommitBatch(_) | Req::Get { .. } | Req::Scan { .. } | Req::Wait { .. } | Req::Flushable { .. } | Req::Pending { .. } | Req::FlushState { .. } | Req::Status => {
+            Req::CommitBatch(_) | Req::Get { .. } | Req::Scan { .. } | Req::Wait { .. } | Req::Flushable { .. } | Req::FlushableFrom { .. } | Req::Pending { .. } | Req::FlushState { .. } | Req::Status => {
                 reply.send(&Resp::Err("richiesta servita dai thread di rete".into()));
             }
             Req::Dump { from_index: u64::MAX, .. } => {
@@ -2305,6 +2310,17 @@ fn serve_local(sh: &Arc<Shared>, conn: &UnboundedSender<Vec<u8>>, id: u64, q: Re
                         out.push((db, recs));
                     }
                 }
+                let _ = conn.send(enc_resp(id, &Resp::Flushable(out)));
+            });
+            None
+        }
+        Req::FlushableFrom { db, from, upto } => {
+            let (sh, conn) = (sh.clone(), conn.clone());
+            tokio::task::spawn_blocking(move || {
+                let upto = upto.min(*sh.readable.borrow());
+                let mut budget = 4usize << 20;
+                let recs = sh.win.flushable_from(&db, from, upto, &mut budget);
+                let out = if recs.is_empty() { vec![] } else { vec![(db, recs)] };
                 let _ = conn.send(enc_resp(id, &Resp::Flushable(out)));
             });
             None

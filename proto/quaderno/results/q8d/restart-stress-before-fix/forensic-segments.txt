@@ -1,0 +1,30 @@
+Forensic copy of the two killed copies BEFORE their restart (code before the fix, under CPU load). Copy 1: leftover segment 79 far below the checkpoint (81360), then a gap, then the live segments. The old recovery zeroes segment 162 and deletes 163..174: the copy restarts at 81360 instead of 87177.
+== r1
+seg-0000000079.log entries 39268 .. 39777 n 510
+seg-0000000162.log entries 81051 .. 81559 n 509
+seg-0000000163.log entries 81560 .. 82066 n 507
+seg-0000000164.log entries 82067 .. 82576 n 510
+seg-0000000165.log entries 82577 .. 83083 n 507
+seg-0000000166.log entries 83084 .. 83593 n 510
+seg-0000000167.log entries 83594 .. 84092 n 499
+seg-0000000168.log entries 84093 .. 84593 n 501
+seg-0000000169.log entries 84594 .. 85095 n 502
+seg-0000000170.log entries 85096 .. 85596 n 501
+seg-0000000171.log entries 85597 .. 86098 n 502
+seg-0000000172.log entries 86099 .. 86597 n 499
+seg-0000000173.log entries 86598 .. 87096 n 499
+seg-0000000174.log entries 87097 .. 87177 n 81
+== r2
+seg-0000000163.log entries 81560 .. 82066 n 507
+seg-0000000164.log entries 82067 .. 82576 n 510
+seg-0000000165.log entries 82577 .. 83083 n 507
+seg-0000000166.log entries 83084 .. 83593 n 510
+seg-0000000167.log entries 83594 .. 84092 n 499
+seg-0000000168.log entries 84093 .. 84593 n 501
+seg-0000000169.log entries 84594 .. 85095 n 502
+seg-0000000170.log entries 85096 .. 85596 n 501
+seg-0000000171.log entries 85597 .. 86098 n 502
+seg-0000000172.log entries 86099 .. 86597 n 499
+seg-0000000173.log entries 86598 .. 87096 n 499
+seg-0000000174.log entries 87097 .. 87177 n 81
+r1 ckpt prev_index 81360
