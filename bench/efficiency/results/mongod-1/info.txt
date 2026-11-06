@@ -1,0 +1,6 @@
+server mongod pid 18852
+4
+               total        used        free      shared  buff/cache   available
+Mem:           16086         980       14717          15         701       15105
+CPU(s):                                  4
+Model name:                              Intel(R) Xeon(R) Processor @ 2.10GHz

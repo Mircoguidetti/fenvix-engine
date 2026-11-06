@@ -1,0 +1,367 @@
+samples: 28754
+
+View 1 (flat):
+  slatedb.read          23.4%
+  slatedb.compaction    19.5%
+  alloc                 14.7%   (from: mongo.bson 4.7, slatedb.read 4.2, slatedb.compaction 2.5, mongo.command 1.3)
+  memcpy                11.2%   (from: mongo.bson 3.5, slatedb.compaction 2.9, slatedb.read 2.3, slatedb.memtable 0.6)
+  mongo.bson            10.7%
+  slatedb.memtable       4.7%
+  mongo.command          4.0%
+  slatedb.flush_l0       3.7%
+  store.files            3.5%
+  slatedb.wal            1.3%
+  lock                   1.2%   (from: mongo.bson 0.3, runtime 0.2, slatedb.read 0.2, slatedb.compaction 0.1)
+  mongo.index            1.0%
+  other                  0.6%
+  mongo.protocol         0.4%
+  runtime                0.2%
+  mongo.plan             0.1%
+  SUM                  100.0%
+
+View 2 (alloc, memcpy, lock given back to their owner):
+  slatedb.read          30.0%
+  slatedb.compaction    25.1%
+  mongo.bson            19.1%
+  slatedb.memtable       5.9%
+  mongo.command          5.9%
+  slatedb.flush_l0       4.7%
+  store.files            3.9%
+  slatedb.wal            1.8%
+  mongo.index            1.7%
+  other                  0.7%
+  mongo.protocol         0.5%
+  runtime                0.4%
+  mongo.plan             0.2%
+
+Threads (perf comm):
+  tokio-rt-worker           99.3%
+  jemalloc_bg_thd            0.7%
+
+Callers (nearest mongo_server function) per piece of view 2, % of all samples:
+  [slatedb.read]
+     26.25%  <mongo_server::coll::Writes>::exists
+      3.37%  (no mongo_server frame)
+      0.27%  mongo_server::diag::needs_js::has
+      0.08%  <tokio::task::task_local::TaskLocalFuture<alloc::sync::Arc<tenant_bench::meter::OpMeter>, tokio::task::task_lo
+      0.02%  <tokio::task::task_local::TaskLocalFuture<core::cell::RefCell<alloc::vec::Vec<mongo_server::dbs::InflightToken
+      0.02%  <mongo_server::dbs::Entry>::apply
+      0.01%  mongo_server::localcas::LocalCas::get_opts
+      0.00%  <&mut <mongo_server::dbs::Entry>::apply_mode as core::ops::function::FnMut<(&tenant_bench::lifecycle::Op,)>>::
+      0.00%  mongo_server::ctl::usage::UsageStore::get_opts
+      0.00%  <tokio::task::task_local::TaskLocalFuture<i64, <mongo_server::diag::Diag>::guarded<<mongo_server::cmd::Server>
+  [slatedb.compaction]
+     25.00%  (no mongo_server frame)
+      0.03%  <futures_util::stream::stream::Inspect<core::pin::Pin<alloc::boxed::Box<dyn futures_core::stream::Stream<Item 
+      0.03%  mongo_server::localcas::LocalCas::get_opts
+      0.02%  mongo_server::localcas::LocalCas::put_multipart_opts
+      0.01%  mongo_server::ctl::usage::UsageStore::get_opts
+      0.00%  mongo_server::localcas::LocalCas::put_opts
+      0.00%  mongo_server::localcas::LocalCas::list
+  [mongo.bson]
+      5.10%  <mongo_server::coll::Writes>::put
+      4.29%  mongo_server::wire::parse_msg
+      3.82%  <mongo_server::cmd::Server>::insert
+      2.09%  <mongo_server::changes::ChangeLog>::publish
+      0.91%  <mongo_server::index::IndexDef>::entries_in_scope
+      0.90%  <alloc::sync::Arc<mongo_server::changes::Ev>>::drop_slow
+      0.89%  <core::pin::Pin<alloc::boxed::Box<<mongo_server::cmd::Server>::handle>> as core::future::future::Future>::poll
+      0.83%  core::ptr::drop_glue::<mongo_server::coll::Writes>
+      0.09%  <alloc::vec::Vec<alloc::vec::Vec<u8>> as alloc::vec::spec_from_iter::SpecFromIter<alloc::vec::Vec<u8>, core::i
+      0.09%  mongo_server::query::path_values
+  [slatedb.memtable]
+      2.97%  (no mongo_server frame)
+      1.67%  <mongo_server::coll::Writes>::exists
+      1.27%  <mongo_server::dbs::Entry>::apply
+      0.01%  <tokio::task::task_local::TaskLocalFuture<core::cell::RefCell<alloc::vec::Vec<mongo_server::dbs::InflightToken
+  [mongo.command]
+      1.66%  <mongo_server::coll::Writes>::put
+      0.60%  <mongo_server::changes::ChangeLog>::publish
+      0.59%  <mongo_server::cmd::Server>::insert
+      0.47%  mongo_server::layout::doc_prefix
+      0.32%  <mongo_server::dbs::Entry>::ensure_open
+      0.23%  <alloc::sync::Arc<mongo_server::changes::Ev>>::drop_slow
+      0.21%  <mongo_server::coll::Writes>::exists
+      0.19%  mongo_server::handle_connection
+      0.19%  mongo_server::layout::doc_key
+      0.15%  <alloc::raw_vec::RawVec<mongo_server::changes::EvSpec>>::grow_one
+  [slatedb.flush_l0]
+      4.69%  (no mongo_server frame)
+      0.01%  <mongo_server::coll::Writes>::exists
+  [store.files]
+      3.70%  (no mongo_server frame)
+      0.16%  mongo_server::localcas::LocalCas::get_opts
+      0.00%  <tokio::runtime::task::harness::Harness<mongo_server::handle_connection, alloc::sync::Arc<tokio::runtime::sche
+      0.00%  <core::pin::Pin<alloc::boxed::Box<<mongo_server::cmd::Server>::handle>> as core::future::future::Future>::poll
+  [slatedb.wal]
+      1.71%  (no mongo_server frame)
+      0.08%  mongo_server::localcas::LocalCas::put_opts
+      0.01%  <mongo_server::coll::Writes>::exists
+      0.00%  mongo_server::ctl::usage::UsageStore::put_opts
+      0.00%  <mongo_server::dbs::Entry>::apply
+      0.00%  mongo_server::ctl::usage::db_of
+  [mongo.index]
+      1.04%  <mongo_server::index::IndexDef>::entries_in_scope
+      0.30%  mongo_server::layout::encode_sortable_with
+      0.16%  <mongo_server::index::IndexDef>::prefix
+      0.05%  <mongo_server::coll::Writes>::put
+      0.05%  <tokio::task::task_local::TaskLocalFuture<core::cell::RefCell<mongo_server::collation::Ctx>, <mongo_server::cm
+      0.04%  mongo_server::keyenc::encode
+      0.03%  mongo_server::keyenc::body
+      0.03%  mongo_server::index::entry_key
+      0.01%  <mongo_server::collation::CUR::__KEY::{K#0} as core::ops::function::FnOnce<(core::option::Option<&mut core::op
+      0.01%  core::ptr::drop_glue::<mongo_server::index::IndexDef>
+  [other]
+      0.73%  (no mongo_server frame)
+  [mongo.protocol]
+      0.23%  <tokio::io::split::ReadHalf<mongo_server::tls::Stream> as tokio::io::async_read::AsyncRead>::poll_read
+      0.11%  <tokio::io::split::WriteHalf<mongo_server::tls::Stream> as tokio::io::async_write::AsyncWrite>::poll_write
+      0.10%  (no mongo_server frame)
+      0.03%  mongo_server::wire::parse_msg
+      0.01%  <tokio::io::util::buf_reader::BufReader<tokio::io::split::ReadHalf<mongo_server::tls::Stream>> as tokio::io::a
+      0.00%  <tokio::io::split::WriteHalf<mongo_server::tls::Stream> as tokio::io::async_write::AsyncWrite>::poll_flush
+  [runtime]
+      0.42%  (no mongo_server frame)
+  [mongo.plan]
+      0.12%  mongo_server::query::path_values
+      0.04%  mongo_server::query::resolve
+
+Top 15 leaf functions per piece (self time, % of all samples):
+  [slatedb.read]
+      1.21%  bytes::bytes::shared_drop
+      1.18%  bytes::bytes::shared_clone
+      0.81%  <slatedb::filter::BloomFilter>::might_contain
+      0.66%  <futures_util::stream::futures_unordered::FuturesUnordered<futures_util::stream::futures_ordered::OrderWrapper<<slatedb::db_iter::GetIterator>::with_l
+      0.62%  <foyer_memory::raw::RawCache<foyer_memory::eviction::lru::Lru<slatedb::db_cache::CachedKey, slatedb::db_cache::CachedEntry, foyer_memory::cache::Cache
+      0.55%  <core::str::pattern::TwoWaySearcher>::next::<core::str::pattern::MatchOnly>
+      0.54%  do_rallocx
+      0.52%  <tenant_bench::meter::MeteredCache>::dedup_fetch::{closure#0}
+      0.44%  <alloc::boxed::Box<dyn slatedb::iter::RowEntryIterator> as slatedb::iter::RowEntryIterator>::init::{closure#0}
+      0.41%  <slatedb::db_iter::GetIterator as slatedb::iter::RowEntryIterator>::next::{closure#0}
+      0.40%  <futures_util::stream::futures_unordered::FuturesUnordered<futures_util::stream::futures_ordered::OrderWrapper<<slatedb::db_iter::GetIterator>::with_l
+      0.39%  <alloc::boxed::Box<dyn slatedb::iter::RowEntryIterator> as slatedb::iter::RowEntryIterator>::next::{closure#0}
+      0.39%  <slatedb::sst_iter::FilterIterator as slatedb::iter::RowEntryIterator>::init::{closure#0}
+      0.38%  <alloc::borrow::Cow<str> as core::convert::From<percent_encoding::PercentEncode>>::from
+      0.38%  slatedb::segment_iterator::build_segment_iter
+  [slatedb.compaction]
+      1.78%  <slatedb::retention_iterator::RetentionIterator<alloc::boxed::Box<dyn slatedb::iter::TrackedRowEntryIterator>> as slatedb::iter::RowEntryIterator>::ne
+      1.46%  bytes::bytes::shared_drop
+      0.84%  bytes::bytes::shared_clone
+      0.74%  <core::panic::unwind_safe::AssertUnwindSafe<<slatedb::compactor_executor::TokioCompactionExecutorInner>::execute_compaction_job::{closure#0}::{closure
+      0.66%  <alloc::boxed::Box<dyn slatedb::iter::TrackedRowEntryIterator> as slatedb::iter::RowEntryIterator>::next::{closure#0}
+      0.65%  bytes::bytes::promotable_even_clone
+      0.62%  <slatedb::tablestore::EncodedSsTableWriter>::add::{closure#0}
+      0.57%  <slatedb::merge_iterator::MergeIterator>::advance::{closure#0}
+      0.56%  __vdso_clock_gettime
+      0.50%  <alloc::boxed::Box<dyn slatedb::iter::RowEntryIterator> as slatedb::iter::RowEntryIterator>::next::{closure#0}
+      0.49%  <slatedb::format::block_v2::BlockBuilderV2>::add
+      0.47%  <slatedb::peeking_iterator::PeekingIterator<alloc::boxed::Box<dyn slatedb::iter::TrackedRowEntryIterator>> as slatedb::iter::RowEntryIterator>::next::
+      0.47%  <alloc::collections::binary_heap::BinaryHeap<core::cmp::Reverse<slatedb::merge_iterator::MergeIteratorHeapEntry>>>::pop
+      0.47%  <alloc::collections::btree::map::entry::VacantEntry<core::cmp::Reverse<u64>, slatedb::types::RowEntry>>::insert_entry
+      0.44%  <slatedb::sorted_run_iterator::SortedRunIterator as slatedb::iter::RowEntryIterator>::next::{closure#0}
+  [alloc]
+      2.97%  _rjem_sdallocx
+      2.30%  _rjem_malloc
+      1.79%  _rjem_je_edata_heap_remove_first
+      1.04%  _rjem_je_arena_cache_bin_fill_small
+      0.91%  _rjem_je_arena_ralloc
+      0.72%  _rjem_je_arena_ralloc_no_move
+      0.62%  __rustc::__rust_dealloc
+      0.57%  _rjem_je_tcache_bin_flush_small
+      0.49%  __rustc::__rust_alloc
+      0.40%  <alloc::raw_vec::RawVecInner>::finish_grow
+      0.31%  <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>
+      0.27%  [k] exc_page_fault
+      0.19%  _rjem_je_edata_heap_insert
+      0.18%  _rjem_realloc
+      0.17%  _rjem_je_edata_heap_remove
+  [memcpy]
+     10.91%  __memmove_avx512_unaligned_erms
+      0.23%  __memset_avx512_unaligned_erms
+      0.04%  memcpy@plt
+      0.01%  memset@plt
+      0.01%  memmove@plt
+  [mongo.bson]
+      1.96%  <indexmap::inner::Core<alloc::string::String, bson::bson::Bson> as core::clone::Clone>::clone
+      1.04%  core::ptr::drop_glue::<bson::bson::Bson>
+      0.92%  <bson::document::Document>::append_to
+      0.67%  <hashbrown::raw::RawTable<usize>>::reserve_rehash::<indexmap::inner::get_hash<alloc::string::String, bson::bson::Bson>::{closure#0}>
+      0.66%  <core::iter::adapters::map::Map<bson::raw::iter::Iter, <bson::document::Document as core::convert::TryFrom<&bson::raw::document::RawDocument>>::try_fr
+      0.35%  <bson::bson::Bson>::append_to
+      0.33%  do_rallocx
+      0.29%  <indexmap::inner::Core<alloc::string::String, bson::bson::Bson>>::insert_full
+      0.29%  <bson::document::Document as core::iter::traits::collect::FromIterator<(alloc::string::String, bson::bson::Bson)>>::from_iter::<core::iter::adapters::
+      0.27%  <bson::bson::Bson as core::clone::Clone>::clone
+      0.27%  tcache_bin_flush_edatas_lookup.isra.0
+      0.27%  core::ptr::drop_glue::<core::option::Option<bson::document::Document>>
+      0.24%  core::ptr::drop_glue::<(alloc::vec::Vec<u8>, core::option::Option<bson::document::Document>)>
+      0.23%  <alloc::string::String as core::clone::Clone>::clone
+      0.22%  <ahash::random_state::DefaultRandomSource as ahash::random_state::RandomSource>::gen_hasher_seed
+  [slatedb.memtable]
+      1.06%  __memcmp_evex_movbe
+      0.63%  <crossbeam_skiplist::base::SkipList<slatedb::mem_table::SequencedKey, slatedb::types::RowEntry>>::search_position::<slatedb::mem_table::SequencedKey>
+      0.47%  <crossbeam_skiplist::base::RefRange<slatedb::mem_table::SequencedKey, slatedb::mem_table::KVTableInternalKeyRange, slatedb::mem_table::SequencedKey, s
+      0.43%  <crossbeam_skiplist::base::SkipList<slatedb::mem_table::SequencedKey, slatedb::types::RowEntry>>::insert_internal::<<crossbeam_skiplist::base::SkipLis
+      0.17%  <alloc::collections::btree::map::BTreeMap<bytes::bytes::Bytes, smallvec::SmallVec<[slatedb::batch::WriteOp; 1: usize]>>>::insert
+      0.16%  bytes::bytes::shallow_clone_vec
+      0.16%  bytes::bytes::promotable_even_clone
+      0.15%  bytes::bytes::shared_drop
+      0.13%  <slatedb::batch::WriteBatch>::put_bytes_with_options
+      0.10%  crossbeam_epoch::default::with_handle::<crossbeam_epoch::default::pin::{closure#0}, crossbeam_epoch::guard::Guard>
+      0.09%  <slatedb::mem_table::WritableKVTable>::put
+      0.08%  bytes::bytes::shared_clone
+      0.07%  <slatedb::db::DbInner>::write_batch::{closure#0}::{closure#0}
+      0.05%  <alloc::collections::btree::map::entry::VacantEntry<bytes::bytes::Bytes, smallvec::SmallVec<[slatedb::batch::WriteOp; 1: usize]>>>::insert_entry
+      0.05%  <crossbeam_skiplist::map::Entry<slatedb::mem_table::SequencedKey, slatedb::types::RowEntry> as core::ops::drop::Drop>::drop
+  [mongo.command]
+      0.45%  <mongo_server::coll::Writes>::put::{closure#0}
+      0.34%  <core::hash::sip::Hasher<core::hash::sip::Sip13Rounds> as core::hash::Hasher>::write
+      0.34%  <mongo_server::cmd::Server>::insert::{closure#0}
+      0.31%  <mongo_server::changes::ChangeLog>::publish
+      0.22%  __memcmp_evex_movbe
+      0.20%  do_rallocx
+      0.16%  __vdso_clock_gettime
+      0.13%  tcache_bin_flush_edatas_lookup.isra.0
+      0.10%  <mongo_server::lease::Leases>::valid
+      0.09%  <mongo_server::coll::Writes>::exists::{closure#0}
+      0.08%  <mongo_server::dbs::Entry>::get_live::{closure#0}
+      0.08%  <alloc::sync::Arc<mongo_server::changes::Ev>>::drop_slow
+      0.08%  <std::hash::random::RandomState as core::hash::BuildHasher>::hash_one::<&str>
+      0.07%  <ahash::random_state::RandomState as core::hash::BuildHasher>::hash_one::<&alloc::string::String>
+      0.06%  mongo_server::layout::escape_collection
+  [slatedb.flush_l0]
+      0.58%  bytes::bytes::shared_clone
+      0.44%  bytes::bytes::shared_drop
+      0.28%  <slatedb::retention_iterator::RetentionIterator<alloc::boxed::Box<dyn slatedb::iter::RowEntryIterator>> as slatedb::iter::RowEntryIterator>::next::{cl
+      0.27%  __memcmp_evex_movbe
+      0.24%  <crossbeam_skiplist::base::RefRange<slatedb::mem_table::SequencedKey, slatedb::mem_table::KVTableInternalKeyRange, slatedb::mem_table::SequencedKey, s
+      0.16%  <slatedb::tablestore::EncodedSsTableWriter>::add::{closure#0}
+      0.10%  __vdso_clock_gettime
+      0.09%  <slatedb::format::block_v2::BlockBuilderV2>::add
+      0.09%  <slatedb::mem_table::ouroboros_impl_mem_table_iterator_inner::MemTableIteratorInner<slatedb::mem_table::KVTableInternalKeyRange>>::next_sync
+      0.09%  <alloc::collections::btree::map::entry::VacantEntry<core::cmp::Reverse<u64>, slatedb::types::RowEntry>>::insert_entry
+      0.08%  <alloc::sync::Arc<crossbeam_skiplist::map::SkipMap<slatedb::mem_table::SequencedKey, slatedb::types::RowEntry>>>::drop_slow
+      0.08%  slatedb::filter::probes_for_key
+      0.07%  <slatedb::format::block_v2::BlockBuilderV2>::entry_encoded_size
+      0.06%  slatedb::utils::compute_index_key
+      0.06%  <slatedb::retention_iterator::RetentionBuffer>::pop
+  [store.files]
+      0.68%  [k] copy_folio_from_iter_atomic
+      0.32%  [k] find_get_block_common
+      0.24%  [k] _copy_to_iter
+      0.19%  [k] recently_deleted
+      0.11%  [k] _raw_spin_unlock_irq
+      0.11%  [k] __brelse
+      0.10%  [k] _raw_spin_unlock_irqrestore
+      0.09%  [k] _raw_spin_lock
+      0.08%  [k] block_commit_write
+      0.08%  [k] filemap_get_entry
+      0.07%  [k] finish_task_switch.isra.0
+      0.06%  [k] __d_lookup_rcu
+      0.04%  [k] __raw_callee_save___pv_queued_spin_unlock
+      0.04%  [k] memcg1_commit_charge
+      0.04%  [k] folio_mark_accessed
+  [slatedb.wal]
+      0.26%  bytes::bytes::shared_drop
+      0.23%  bytes::bytes::shared_clone
+      0.13%  <slatedb::format::block_v2::BlockBuilderV2>::entry_encoded_size
+      0.09%  <slatedb::format::block_v2::BlockBuilderV2>::add
+      0.06%  <alloc::collections::vec_deque::iter::Iter<slatedb::types::RowEntry> as core::iter::traits::iterator::Iterator>::fold::<(), core::iter::adapters::map:
+      0.04%  <slatedb::wal::slatedb::writer::WalFlushHandler>::do_flush_one_wal::{closure#0}
+      0.03%  <slatedb::wal::slatedb::writer::SlateDbWalWriter as slatedb::wal::WalWriter>::append::{closure#0}
+      0.03%  <core::iter::adapters::map::Map<core::ops::range::Range<usize>, <slatedb::format::sst::SsTableFormat>::read_blocks<slatedb::wal::slatedb::store::WalRe
+      0.03%  [k] finish_task_switch.isra.0
+      0.02%  <bytes::bytes::Bytes>::copy_from_slice
+      0.02%  [k] _raw_spin_lock
+      0.02%  <bytes::bytes::Bytes as core::convert::From<alloc::vec::Vec<u8>>>::from
+      0.01%  <hashbrown::raw::RawTable<(core::any::TypeId, alloc::boxed::Box<dyn http::extensions::AnyClone + core::marker::Sync + core::marker::Send>)> as core::o
+      0.01%  core::ptr::drop_glue::<<slatedb::wal::slatedb::sst_builder::EncodedWalSsTableBuilder>::add::{closure#0}>
+      0.01%  tcache_bin_flush_edatas_lookup.isra.0
+  [lock]
+      0.38%  pthread_mutex_trylock@@GLIBC_2.34
+      0.25%  pthread_mutex_unlock@@GLIBC_2.2.5
+      0.17%  [k] finish_task_switch.isra.0
+      0.15%  [k] _raw_spin_unlock_irqrestore
+      0.09%  <parking_lot::raw_rwlock::RawRwLock>::lock_exclusive_slow
+      0.03%  <parking_lot::condvar::Condvar>::wait_until_internal
+      0.02%  pthread_mutex_trylock@plt
+      0.01%  <parking_lot::raw_rwlock::RawRwLock>::wait_for_readers
+      0.01%  <hashbrown::map::HashMap<alloc::string::String, alloc::sync::Arc<tokio::sync::rwlock::RwLock<mongo_server::dbs::Entry>>, std::hash::random::RandomStat
+      0.01%  <parking_lot::condvar::Condvar>::notify_one_slow
+      0.01%  <tokio::sync::batch_semaphore::Semaphore>::add_permits_locked
+      0.00%  <tokio::sync::batch_semaphore::Acquire as core::future::future::Future>::poll
+      0.00%  [k] futex_unqueue
+      0.00%  [k] futex_wake
+      0.00%  <tokio::sync::mutex::Mutex<()>>::lock::{closure#0}
+  [mongo.index]
+      0.63%  <mongo_server::index::IndexDef>::entries_in_scope
+      0.08%  do_rallocx
+      0.05%  mongo_server::layout::encode_sortable_with
+      0.05%  <tokio::task::task_local::LocalKey<core::cell::RefCell<mongo_server::collation::Ctx>>>::sync_scope::<<mongo_server::index::IndexDef>::entries::{closur
+      0.03%  mongo_server::keyenc::body
+      0.03%  <mongo_server::index::IndexDef>::prefix
+      0.03%  <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core::str::iter::Split<char>>>::from_iter
+      0.02%  <core::str::pattern::CharSearcher as core::str::pattern::Searcher>::next_match
+      0.01%  <mongo_server::collation::CUR::__KEY::{K#0}::{closure#0} as core::ops::function::FnOnce<(core::option::Option<&mut core::option::Option<core::cell::Re
+      0.01%  mongo_server::keyenc::encode
+      0.01%  <tokio::task::task_local::TaskLocalFuture<core::cell::RefCell<mongo_server::collation::Ctx>, <mongo_server::cmd::Server>::route::{closure#0}> as core:
+      0.01%  <ahash::random_state::RandomState as core::hash::BuildHasher>::hash_one::<&alloc::string::String>
+      0.01%  __popcountdi2
+      0.01%  alloc::boxed::box_new_uninit
+      0.01%  <alloc::string::String as core::clone::Clone>::clone
+  [other]
+      0.32%  [k] smp_call_function_many_cond
+      0.17%  [k] native_write_msr
+      0.01%  [k] _raw_spin_unlock_irqrestore
+      0.01%  <std::sys::pal::unix::time::Timespec>::sub_timespec
+      0.01%  [k] __raw_callee_save___pv_queued_spin_unlock
+      0.01%  <alloc::string::String as core::fmt::Write>::write_str
+      0.01%  [k] free_pages_and_swap_cache
+      0.01%  [k] do_syscall_64
+      0.01%  emap_try_acquire_edata_neighbor_impl
+      0.00%  clock_gettime@@GLIBC_2.17
+      0.00%  [k] mas_walk
+      0.00%  [k] should_flush_tlb
+      0.00%  [k] page_counter_uncharge
+      0.00%  [k] memcg1_uncharge_batch
+      0.00%  [k] flush_tlb_mm_range
+  [mongo.protocol]
+      0.06%  [k] finish_task_switch.isra.0
+      0.04%  [k] _copy_to_iter
+      0.03%  mongo_server::wire::parse_msg
+      0.03%  [k] _raw_spin_lock
+      0.02%  [k] _raw_spin_unlock_irqrestore
+      0.01%  [k] fdget
+      0.01%  [k] do_syscall_64
+      0.01%  [k] mt_find
+      0.01%  [k] kmem_cache_alloc_node_noprof
+      0.01%  [k] __inet_lookup_established
+      0.01%  [k] do_epoll_wait
+      0.01%  [k] __virt_addr_valid
+      0.00%  [k] eth_type_trans
+      0.00%  [k] tcp_ack
+      0.00%  epoll_wait
+  [runtime]
+      0.04%  <tokio::runtime::scheduler::multi_thread::worker::Context>::run
+      0.02%  __vdso_clock_gettime
+      0.02%  <tokio::runtime::scheduler::multi_thread::worker::Context>::run_task
+      0.01%  syscall
+      0.01%  [k] __get_user_8
+      0.01%  <tokio::runtime::time::Driver>::park_internal
+      0.01%  clock_gettime@@GLIBC_2.17
+      0.01%  __ieee754_pow_fma
+      0.01%  <tokio::runtime::time::Driver>::park_thread_timeout
+      0.01%  [k] exit_to_user_mode_loop
+      0.01%  <tokio::runtime::blocking::pool::Inner>::run
+      0.00%  <std::time::SystemTime>::checked_add
+      0.00%  [k] do_syscall_64
+      0.00%  [k] finish_task_switch.isra.0
+      0.00%  <tokio::runtime::time::wheel::Wheel>::poll
+  [mongo.plan]
+      0.03%  <core::str::pattern::CharSearcher as core::str::pattern::Searcher>::next_match
+      0.03%  mongo_server::query::path_values
+      0.02%  <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core::str::iter::Split<char>>>::from_iter
+      0.01%  mongo_server::query::resolve
+      0.01%  <ahash::random_state::RandomState as core::hash::BuildHasher>::hash_one::<&str>
+      0.00%  [k] irqentry_exit_to_user_mode
+      0.00%  __rustc::__rust_no_alloc_shim_is_unstable_v2

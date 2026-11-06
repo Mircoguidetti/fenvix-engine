@@ -1,0 +1,179 @@
+mongo-server listening on 127.0.0.1:27017 (idle close after 60 s, holder 21112-1e74e106, lease ttl 30 s)
+LEASE process_lease tenant=- holder=21112-1e74e106 unix_ms=1793957353356 inc=725b18519a065ce2 gen=1
+LEASE acquired tenant=app_data_1 holder=21112-1e74e106 unix_ms=1793957353356 takeover_from=-
+LEASE acquired tenant=app_data_1 holder=21112-1e74e106 unix_ms=1793957353358 takeover_from=-
+LEASE acquired tenant=app_data_1 holder=21112-1e74e106 unix_ms=1793957353359 takeover_from=- new=true
+LEASE writer_open tenant=app_data_1 holder=21112-1e74e106 unix_ms=1793957353361 
+LEASE acquired tenant=app_data_2 holder=21112-1e74e106 unix_ms=1793957353366 takeover_from=-
+LEASE acquired tenant=app_data_2 holder=21112-1e74e106 unix_ms=1793957353367 takeover_from=-
+LEASE acquired tenant=app_data_2 holder=21112-1e74e106 unix_ms=1793957353368 takeover_from=- new=true
+LEASE writer_open tenant=app_data_2 holder=21112-1e74e106 unix_ms=1793957353370 
+LEASE acquired tenant=app_data_3 holder=21112-1e74e106 unix_ms=1793957353607 takeover_from=-
+LEASE acquired tenant=app_data_3 holder=21112-1e74e106 unix_ms=1793957353611 takeover_from=-
+LEASE acquired tenant=app_data_3 holder=21112-1e74e106 unix_ms=1793957353611 takeover_from=- new=true
+LEASE writer_open tenant=app_data_3 holder=21112-1e74e106 unix_ms=1793957353613 
+LEASE acquired tenant=app_data_4 holder=21112-1e74e106 unix_ms=1793957353784 takeover_from=-
+LEASE acquired tenant=app_data_4 holder=21112-1e74e106 unix_ms=1793957353790 takeover_from=-
+LEASE acquired tenant=app_data_4 holder=21112-1e74e106 unix_ms=1793957353797 takeover_from=- new=true
+LEASE writer_open tenant=app_data_4 holder=21112-1e74e106 unix_ms=1793957353800 
+LEASE acquired tenant=app_data_5 holder=21112-1e74e106 unix_ms=1793957353988 takeover_from=-
+LEASE acquired tenant=app_data_5 holder=21112-1e74e106 unix_ms=1793957353989 takeover_from=-
+LEASE acquired tenant=app_data_5 holder=21112-1e74e106 unix_ms=1793957353990 takeover_from=- new=true
+LEASE writer_open tenant=app_data_5 holder=21112-1e74e106 unix_ms=1793957353992 
+LEASE acquired tenant=app_data_6 holder=21112-1e74e106 unix_ms=1793957354244 takeover_from=-
+LEASE acquired tenant=app_data_6 holder=21112-1e74e106 unix_ms=1793957354249 takeover_from=-
+LEASE acquired tenant=app_data_6 holder=21112-1e74e106 unix_ms=1793957354250 takeover_from=- new=true
+LEASE writer_open tenant=app_data_6 holder=21112-1e74e106 unix_ms=1793957354256 
+SLOW insert db=app_data_2 ms=504 ok=true
+SLOW insert db=app_data_2 ms=501 ok=true
+SLOW insert db=app_data_2 ms=522 ok=true
+SLOW insert db=app_data_2 ms=560 ok=true
+SLOW insert db=app_data_2 ms=535 ok=true
+SLOW insert db=app_data_2 ms=540 ok=true
+SLOW insert db=app_data_2 ms=559 ok=true
+SLOW hello db=admin ms=10013 ok=true
+SLOW insert db=app_data_1 ms=654 ok=true
+SLOW insert db=app_data_1 ms=542 ok=true
+SLOW insert db=app_data_1 ms=558 ok=true
+SLOW insert db=app_data_1 ms=570 ok=true
+SLOW insert db=app_data_1 ms=591 ok=true
+SLOW insert db=app_data_1 ms=553 ok=true
+SLOW insert db=app_data_6 ms=503 ok=true
+SLOW insert db=app_data_6 ms=508 ok=true
+SLOW insert db=app_data_6 ms=531 ok=true
+SLOW insert db=app_data_2 ms=530 ok=true
+SLOW insert db=app_data_2 ms=555 ok=true
+SLOW insert db=app_data_2 ms=525 ok=true
+SLOW insert db=app_data_2 ms=503 ok=true
+SLOW insert db=app_data_2 ms=508 ok=true
+SLOW insert db=app_data_4 ms=506 ok=true
+SLOW insert db=app_data_4 ms=514 ok=true
+SLOW insert db=app_data_4 ms=554 ok=true
+SLOW insert db=app_data_4 ms=620 ok=true
+SLOW insert db=app_data_4 ms=687 ok=true
+SLOW insert db=app_data_4 ms=718 ok=true
+SLOW insert db=app_data_4 ms=751 ok=true
+SLOW insert db=app_data_4 ms=785 ok=true
+SLOW insert db=app_data_6 ms=556 ok=true
+SLOW insert db=app_data_6 ms=600 ok=true
+SLOW insert db=app_data_6 ms=633 ok=true
+SLOW insert db=app_data_6 ms=658 ok=true
+SLOW hello db=admin ms=10037 ok=true
+SLOW insert db=app_data_1 ms=561 ok=true
+SLOW insert db=app_data_1 ms=628 ok=true
+SLOW insert db=app_data_1 ms=684 ok=true
+SLOW insert db=app_data_5 ms=508 ok=true
+SLOW insert db=app_data_5 ms=508 ok=true
+SLOW insert db=app_data_5 ms=562 ok=true
+SLOW insert db=app_data_5 ms=606 ok=true
+SLOW insert db=app_data_5 ms=713 ok=true
+SLOW insert db=app_data_5 ms=729 ok=true
+SLOW insert db=app_data_5 ms=894 ok=true
+SLOW insert db=app_data_5 ms=952 ok=true
+SLOW insert db=app_data_6 ms=511 ok=true
+SLOW insert db=app_data_1 ms=512 ok=true
+SLOW insert db=app_data_4 ms=673 ok=true
+SLOW insert db=app_data_4 ms=758 ok=true
+SLOW insert db=app_data_4 ms=779 ok=true
+SLOW insert db=app_data_4 ms=846 ok=true
+SLOW insert db=app_data_4 ms=529 ok=true
+SLOW insert db=app_data_4 ms=542 ok=true
+SLOW insert db=app_data_4 ms=558 ok=true
+SLOW insert db=app_data_4 ms=560 ok=true
+SLOW insert db=app_data_5 ms=509 ok=true
+SLOW insert db=app_data_5 ms=573 ok=true
+SLOW insert db=app_data_5 ms=684 ok=true
+SLOW insert db=app_data_5 ms=736 ok=true
+SLOW insert db=app_data_5 ms=779 ok=true
+SLOW insert db=app_data_5 ms=825 ok=true
+SLOW insert db=app_data_3 ms=514 ok=true
+SLOW insert db=app_data_3 ms=564 ok=true
+SLOW insert db=app_data_3 ms=594 ok=true
+SLOW insert db=app_data_4 ms=572 ok=true
+SLOW insert db=app_data_4 ms=642 ok=true
+SLOW insert db=app_data_3 ms=546 ok=true
+SLOW insert db=app_data_3 ms=578 ok=true
+SLOW insert db=app_data_3 ms=560 ok=true
+SLOW insert db=app_data_3 ms=662 ok=true
+SLOW insert db=app_data_3 ms=668 ok=true
+SLOW insert db=app_data_6 ms=505 ok=true
+SLOW insert db=app_data_6 ms=512 ok=true
+SLOW insert db=app_data_6 ms=518 ok=true
+SLOW insert db=app_data_6 ms=547 ok=true
+SLOW insert db=app_data_6 ms=618 ok=true
+SLOW insert db=app_data_6 ms=660 ok=true
+SLOW insert db=app_data_6 ms=664 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW insert db=app_data_4 ms=506 ok=true
+SLOW insert db=app_data_6 ms=509 ok=true
+SLOW insert db=app_data_6 ms=526 ok=true
+SLOW insert db=app_data_5 ms=543 ok=true
+SLOW insert db=app_data_4 ms=544 ok=true
+SLOW insert db=app_data_5 ms=558 ok=true
+SLOW insert db=app_data_6 ms=568 ok=true
+SLOW insert db=app_data_5 ms=591 ok=true
+SLOW insert db=app_data_6 ms=591 ok=true
+SLOW insert db=app_data_6 ms=609 ok=true
+SLOW insert db=app_data_5 ms=627 ok=true
+SLOW insert db=app_data_5 ms=649 ok=true
+SLOW insert db=app_data_5 ms=660 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+shutting down: closing tenants cleanly

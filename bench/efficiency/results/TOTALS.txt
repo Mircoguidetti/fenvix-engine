@@ -1,0 +1,60 @@
+E1: totals of every run (bench/efficiency/summarize.py). Machine: 4 vCPU Intel Xeon 2.1 GHz VM, 15.7 GB RAM; server on 2 cores, generator on the other 2. 10 million documents per write run unless written.
+Columns: run, phase, totals (ops, ops/s, server cores, server us per op, generator cores, errors). All MISURATO on this machine, not AWS.
+engine-1 write TOTAL (0-457 s): ops 10049000 ops/s 21970 server cores 1.92 us/op 87.5 gen cores 0.39 errors 0
+engine-1 read TOTAL (0-150 s): ops 2853292 ops/s 19020 server cores 1.93 us/op 101.7 gen cores 0.92 errors 0
+engine-1 disk_after_write_MB 8435
+engine-2 write TOTAL (0-466 s): ops 10052000 ops/s 21577 server cores 1.91 us/op 88.7 gen cores 0.38 errors 0
+engine-2 read TOTAL (0-150 s): ops 3106663 ops/s 20709 server cores 1.94 us/op 93.6 gen cores 0.94 errors 0
+engine-2 disk_after_write_MB 8955
+engine-2 quiet after 20 s, server CPU in the wait 19 ticks (1/100 s)
+engine-cache2g write TOTAL (0-465 s): ops 10058000 ops/s 21631 server cores 1.91 us/op 88.1 gen cores 0.38 errors 0
+engine-cache2g read TOTAL (0-150 s): ops 2964281 ops/s 19760 server cores 1.94 us/op 98.4 gen cores 0.92 errors 0
+engine-cache2g disk_after_write_MB 9377
+engine-cache2g quiet after 20 s, server CPU in the wait 29 ticks (1/100 s)
+engine-e1-base write TOTAL (0-482 s): ops 10058000 ops/s 20854 server cores 1.92 us/op 92.0 gen cores 0.38 errors 0
+engine-e1-base read TOTAL (0-60 s): ops 1160614 ops/s 19339 server cores 1.94 us/op 100.2 gen cores 0.95 errors 0
+engine-e1-base disk_after_write_MB 10180
+engine-e1-base quiet after 20 s, server CPU in the wait 18 ticks (1/100 s)
+engine-e1-base-2 write TOTAL (0-463 s): ops 10052000 ops/s 21689 server cores 1.92 us/op 88.4 gen cores 0.39 errors 0
+engine-e1-base-2 read TOTAL (0-30 s): ops 601576 ops/s 20042 server cores 1.93 us/op 96.1 gen cores 0.96 errors 0
+engine-e1-base-2 disk_after_write_MB 9049
+engine-e1-base-2 quiet after 20 s, server CPU in the wait 23 ticks (1/100 s)
+engine-e1-both write TOTAL (0-198 s): ops 10058000 ops/s 50740 server cores 1.88 us/op 37.0 gen cores 0.80 errors 0
+engine-e1-both read TOTAL (0-30 s): ops 573885 ops/s 19119 server cores 1.93 us/op 100.8 gen cores 0.92 errors 0
+engine-e1-both disk_after_write_MB 11469
+engine-e1-both quiet after 20 s, server CPU in the wait 43 ticks (1/100 s)
+engine-e1-nochangelog write TOTAL (0-399 s): ops 10051000 ops/s 25174 server cores 1.93 us/op 76.7 gen cores 0.44 errors 0
+engine-e1-nochangelog read TOTAL (0-30 s): ops 586468 ops/s 19542 server cores 1.94 us/op 99.2 gen cores 0.92 errors 0
+engine-e1-nochangelog disk_after_write_MB 9098
+engine-e1-nochangelog quiet after 20 s, server CPU in the wait 36 ticks (1/100 s)
+engine-e1-nochangelog-2 write TOTAL (0-396 s): ops 10051000 ops/s 25410 server cores 1.93 us/op 76.0 gen cores 0.45 errors 0
+engine-e1-nochangelog-2 read TOTAL (0-30 s): ops 603590 ops/s 20113 server cores 1.94 us/op 96.7 gen cores 0.93 errors 0
+engine-e1-nochangelog-2 disk_after_write_MB 8766
+engine-e1-nochangelog-2 quiet after 20 s, server CPU in the wait 35 ticks (1/100 s)
+engine-e1-noidcheck write TOTAL (0-269 s): ops 10055000 ops/s 37385 server cores 1.87 us/op 50.1 gen cores 0.61 errors 0
+engine-e1-noidcheck read TOTAL (0-30 s): ops 613221 ops/s 20429 server cores 1.93 us/op 94.3 gen cores 0.96 errors 0
+engine-e1-noidcheck disk_after_write_MB 12744
+engine-e1-noidcheck quiet after 20 s, server CPU in the wait 36 ticks (1/100 s)
+engine-noidx write TOTAL (0-386 s): ops 10050000 ops/s 26003 server cores 1.91 us/op 73.5 gen cores 0.46 errors 0
+engine-noidx read TOTAL (0-30 s): ops 685625 ops/s 22839 server cores 1.93 us/op 84.3 gen cores 1.01 errors 0
+engine-noidx disk_after_write_MB 7802
+engine-noidx quiet after 25 s, server CPU in the wait 138 ticks (1/100 s)
+engine-nomaint write TOTAL (0-625 s): ops 1045808 ops/s 1673 server cores 0.10 us/op 59.4 gen cores 0.03 errors 0
+engine-prof write TOTAL (0-285 s): ops 6550000 ops/s 22990 server cores 1.92 us/op 83.6 gen cores 0.41 errors 0
+engine-prof read TOTAL (0-60 s): ops 1164485 ops/s 19404 server cores 1.89 us/op 97.5 gen cores 0.84 errors 0
+engine-prof disk_after_write_MB 7391
+engine-prof quiet after 20 s, server CPU in the wait 29 ticks (1/100 s)
+mongod-1 write TOTAL (0-154 s): ops 10061000 ops/s 65198 server cores 1.93 us/op 29.6 gen cores 1.03 errors 0
+mongod-1 read TOTAL (0-150 s): ops 6462724 ops/s 43079 server cores 1.71 us/op 39.6 gen cores 1.54 errors 0
+mongod-1 disk_after_write_MB 4928
+mongod-1 quiet after 21 s
+mongod-2 write TOTAL (0-151 s): ops 10062000 ops/s 66795 server cores 1.92 us/op 28.8 gen cores 1.00 errors 0
+mongod-2 read TOTAL (0-150 s): ops 4347245 ops/s 28977 server cores 1.37 us/op 47.2 gen cores 1.04 errors 0
+mongod-2 disk_after_write_MB 4960
+mongod-2 quiet after 20 s, server CPU in the wait 27 ticks (1/100 s)
+mongod-noidx write TOTAL (0-82 s): ops 10054000 ops/s 122684 server cores 1.15 us/op 9.4 gen cores 1.92 errors 0
+mongod-noidx read TOTAL (0-30 s): ops 1311929 ops/s 43702 server cores 1.69 us/op 38.7 gen cores 1.56 errors 0
+mongod-noidx disk_after_write_MB 4462
+mongod-noidx quiet after 20 s, server CPU in the wait 25 ticks (1/100 s)
+engine-nomaint: --no-maintenance, writes stalled after 1,045,808 documents (L0 full), stopped by hand: not used.
+engine-prof: perf running for 30 s of the writes and 30 s of the reads: numbers slowed by perf, only the profile is used.

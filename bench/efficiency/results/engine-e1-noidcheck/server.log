@@ -1,0 +1,1407 @@
+mongo-server listening on 127.0.0.1:27017 (idle close after 60 s, holder 26175-318d4c49, lease ttl 30 s)
+LEASE process_lease tenant=- holder=26175-318d4c49 unix_ms=1793960206068 inc=ec245d6a2d2639eb gen=1
+LEASE acquired tenant=app_data_1 holder=26175-318d4c49 unix_ms=1793960206069 takeover_from=-
+LEASE acquired tenant=app_data_1 holder=26175-318d4c49 unix_ms=1793960206070 takeover_from=-
+LEASE acquired tenant=app_data_1 holder=26175-318d4c49 unix_ms=1793960206071 takeover_from=- new=true
+LEASE writer_open tenant=app_data_1 holder=26175-318d4c49 unix_ms=1793960206073 
+LEASE acquired tenant=app_data_2 holder=26175-318d4c49 unix_ms=1793960206077 takeover_from=-
+LEASE acquired tenant=app_data_2 holder=26175-318d4c49 unix_ms=1793960206078 takeover_from=-
+LEASE acquired tenant=app_data_2 holder=26175-318d4c49 unix_ms=1793960206079 takeover_from=- new=true
+LEASE writer_open tenant=app_data_2 holder=26175-318d4c49 unix_ms=1793960206080 
+WARNING: E1_UNSAFE_SKIP_ID_CHECK=1 (E1 measurement switch, unsafe)
+LEASE acquired tenant=app_data_3 holder=26175-318d4c49 unix_ms=1793960206242 takeover_from=-
+LEASE acquired tenant=app_data_3 holder=26175-318d4c49 unix_ms=1793960206244 takeover_from=-
+LEASE acquired tenant=app_data_3 holder=26175-318d4c49 unix_ms=1793960206245 takeover_from=- new=true
+LEASE writer_open tenant=app_data_3 holder=26175-318d4c49 unix_ms=1793960206247 
+LEASE acquired tenant=app_data_4 holder=26175-318d4c49 unix_ms=1793960206644 takeover_from=-
+LEASE acquired tenant=app_data_4 holder=26175-318d4c49 unix_ms=1793960206651 takeover_from=-
+LEASE acquired tenant=app_data_4 holder=26175-318d4c49 unix_ms=1793960206659 takeover_from=- new=true
+LEASE writer_open tenant=app_data_4 holder=26175-318d4c49 unix_ms=1793960206689 
+LEASE acquired tenant=app_data_5 holder=26175-318d4c49 unix_ms=1793960207187 takeover_from=-
+LEASE acquired tenant=app_data_5 holder=26175-318d4c49 unix_ms=1793960207207 takeover_from=-
+LEASE acquired tenant=app_data_5 holder=26175-318d4c49 unix_ms=1793960207229 takeover_from=- new=true
+LEASE writer_open tenant=app_data_5 holder=26175-318d4c49 unix_ms=1793960207247 
+LEASE acquired tenant=app_data_6 holder=26175-318d4c49 unix_ms=1793960207926 takeover_from=-
+LEASE acquired tenant=app_data_6 holder=26175-318d4c49 unix_ms=1793960207938 takeover_from=-
+LEASE acquired tenant=app_data_6 holder=26175-318d4c49 unix_ms=1793960207940 takeover_from=- new=true
+LEASE writer_open tenant=app_data_6 holder=26175-318d4c49 unix_ms=1793960207978 
+SLOW insert db=app_data_1 ms=686 ok=true
+SLOW insert db=app_data_1 ms=792 ok=true
+SLOW insert db=app_data_1 ms=789 ok=true
+SLOW insert db=app_data_1 ms=777 ok=true
+SLOW insert db=app_data_1 ms=778 ok=true
+SLOW insert db=app_data_1 ms=776 ok=true
+SLOW insert db=app_data_1 ms=782 ok=true
+SLOW insert db=app_data_1 ms=770 ok=true
+SLOW insert db=app_data_1 ms=769 ok=true
+SLOW insert db=app_data_1 ms=770 ok=true
+SLOW insert db=app_data_1 ms=810 ok=true
+SLOW insert db=app_data_1 ms=750 ok=true
+SLOW insert db=app_data_1 ms=743 ok=true
+SLOW insert db=app_data_1 ms=713 ok=true
+SLOW insert db=app_data_1 ms=673 ok=true
+SLOW insert db=app_data_1 ms=650 ok=true
+SLOW insert db=app_data_3 ms=688 ok=true
+SLOW insert db=app_data_3 ms=562 ok=true
+SLOW insert db=app_data_4 ms=517 ok=true
+SLOW insert db=app_data_4 ms=508 ok=true
+SLOW insert db=app_data_6 ms=531 ok=true
+SLOW insert db=app_data_5 ms=602 ok=true
+SLOW insert db=app_data_5 ms=573 ok=true
+SLOW insert db=app_data_5 ms=514 ok=true
+SLOW insert db=app_data_5 ms=511 ok=true
+SLOW insert db=app_data_5 ms=526 ok=true
+SLOW insert db=app_data_5 ms=513 ok=true
+SLOW insert db=app_data_5 ms=500 ok=true
+SLOW insert db=app_data_5 ms=902 ok=true
+SLOW insert db=app_data_5 ms=880 ok=true
+SLOW insert db=app_data_5 ms=886 ok=true
+SLOW insert db=app_data_5 ms=615 ok=true
+SLOW insert db=app_data_5 ms=616 ok=true
+SLOW insert db=app_data_5 ms=633 ok=true
+SLOW insert db=app_data_5 ms=646 ok=true
+SLOW insert db=app_data_5 ms=657 ok=true
+SLOW insert db=app_data_5 ms=653 ok=true
+SLOW insert db=app_data_5 ms=667 ok=true
+SLOW insert db=app_data_5 ms=687 ok=true
+SLOW insert db=app_data_5 ms=688 ok=true
+SLOW insert db=app_data_5 ms=681 ok=true
+SLOW insert db=app_data_6 ms=876 ok=true
+SLOW insert db=app_data_6 ms=887 ok=true
+SLOW insert db=app_data_6 ms=878 ok=true
+SLOW hello db=admin ms=10098 ok=true
+SLOW insert db=app_data_3 ms=545 ok=true
+SLOW insert db=app_data_3 ms=532 ok=true
+SLOW insert db=app_data_3 ms=518 ok=true
+SLOW insert db=app_data_3 ms=503 ok=true
+SLOW insert db=app_data_5 ms=613 ok=true
+SLOW insert db=app_data_5 ms=613 ok=true
+SLOW insert db=app_data_5 ms=620 ok=true
+SLOW insert db=app_data_4 ms=992 ok=true
+SLOW insert db=app_data_4 ms=691 ok=true
+SLOW insert db=app_data_4 ms=685 ok=true
+SLOW insert db=app_data_4 ms=701 ok=true
+SLOW insert db=app_data_4 ms=716 ok=true
+SLOW insert db=app_data_4 ms=759 ok=true
+SLOW insert db=app_data_4 ms=759 ok=true
+SLOW insert db=app_data_4 ms=757 ok=true
+SLOW insert db=app_data_4 ms=747 ok=true
+SLOW insert db=app_data_4 ms=734 ok=true
+SLOW insert db=app_data_4 ms=756 ok=true
+SLOW insert db=app_data_4 ms=761 ok=true
+SLOW insert db=app_data_4 ms=834 ok=true
+compaction warm-up of tenant app_data_2: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_1: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_4: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_6: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_3: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_3 ms=3716 ok=true
+SLOW insert db=app_data_3 ms=3714 ok=true
+SLOW insert db=app_data_3 ms=3726 ok=true
+SLOW insert db=app_data_3 ms=3734 ok=true
+SLOW insert db=app_data_3 ms=3773 ok=true
+SLOW insert db=app_data_3 ms=3586 ok=true
+SLOW hello db=admin ms=10029 ok=true
+SLOW insert db=app_data_3 ms=3618 ok=true
+SLOW insert db=app_data_3 ms=3618 ok=true
+SLOW insert db=app_data_3 ms=3608 ok=true
+SLOW insert db=app_data_3 ms=3611 ok=true
+SLOW insert db=app_data_3 ms=3612 ok=true
+SLOW insert db=app_data_3 ms=3603 ok=true
+SLOW insert db=app_data_3 ms=3586 ok=true
+SLOW insert db=app_data_3 ms=3594 ok=true
+SLOW insert db=app_data_3 ms=3606 ok=true
+SLOW insert db=app_data_3 ms=3595 ok=true
+SLOW insert db=app_data_4 ms=502 ok=true
+SLOW insert db=app_data_4 ms=500 ok=true
+SLOW insert db=app_data_1 ms=513 ok=true
+SLOW insert db=app_data_1 ms=507 ok=true
+SLOW insert db=app_data_4 ms=565 ok=true
+SLOW insert db=app_data_4 ms=560 ok=true
+SLOW insert db=app_data_1 ms=515 ok=true
+SLOW insert db=app_data_1 ms=504 ok=true
+SLOW insert db=app_data_5 ms=515 ok=true
+SLOW insert db=app_data_5 ms=523 ok=true
+compaction warm-up of tenant app_data_5: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_5 ms=1326 ok=true
+SLOW insert db=app_data_5 ms=1336 ok=true
+SLOW insert db=app_data_5 ms=1327 ok=true
+SLOW insert db=app_data_5 ms=1292 ok=true
+SLOW insert db=app_data_5 ms=1198 ok=true
+SLOW insert db=app_data_5 ms=1211 ok=true
+SLOW insert db=app_data_5 ms=1045 ok=true
+SLOW insert db=app_data_5 ms=1046 ok=true
+SLOW insert db=app_data_5 ms=1046 ok=true
+SLOW insert db=app_data_5 ms=1083 ok=true
+SLOW insert db=app_data_5 ms=1153 ok=true
+SLOW insert db=app_data_5 ms=1152 ok=true
+SLOW insert db=app_data_5 ms=1193 ok=true
+SLOW insert db=app_data_5 ms=1183 ok=true
+SLOW insert db=app_data_5 ms=1123 ok=true
+SLOW insert db=app_data_5 ms=1114 ok=true
+compaction warm-up of tenant app_data_2: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_3 ms=545 ok=true
+SLOW insert db=app_data_6 ms=670 ok=true
+SLOW insert db=app_data_6 ms=681 ok=true
+SLOW insert db=app_data_6 ms=686 ok=true
+SLOW insert db=app_data_6 ms=682 ok=true
+SLOW insert db=app_data_6 ms=682 ok=true
+SLOW insert db=app_data_6 ms=680 ok=true
+SLOW insert db=app_data_6 ms=680 ok=true
+SLOW insert db=app_data_6 ms=674 ok=true
+SLOW insert db=app_data_5 ms=927 ok=true
+SLOW insert db=app_data_5 ms=967 ok=true
+SLOW insert db=app_data_5 ms=966 ok=true
+SLOW insert db=app_data_5 ms=1018 ok=true
+SLOW insert db=app_data_5 ms=1020 ok=true
+SLOW insert db=app_data_5 ms=1018 ok=true
+SLOW insert db=app_data_5 ms=1023 ok=true
+SLOW insert db=app_data_5 ms=1020 ok=true
+SLOW insert db=app_data_5 ms=607 ok=true
+SLOW insert db=app_data_5 ms=603 ok=true
+SLOW insert db=app_data_5 ms=596 ok=true
+SLOW insert db=app_data_3 ms=526 ok=true
+SLOW insert db=app_data_3 ms=526 ok=true
+SLOW insert db=app_data_3 ms=522 ok=true
+SLOW insert db=app_data_3 ms=532 ok=true
+SLOW insert db=app_data_3 ms=629 ok=true
+SLOW insert db=app_data_6 ms=680 ok=true
+SLOW insert db=app_data_6 ms=679 ok=true
+SLOW insert db=app_data_6 ms=676 ok=true
+SLOW insert db=app_data_6 ms=623 ok=true
+SLOW insert db=app_data_6 ms=623 ok=true
+SLOW insert db=app_data_6 ms=561 ok=true
+SLOW insert db=app_data_6 ms=502 ok=true
+SLOW insert db=app_data_6 ms=512 ok=true
+SLOW insert db=app_data_6 ms=512 ok=true
+SLOW insert db=app_data_6 ms=501 ok=true
+SLOW insert db=app_data_6 ms=500 ok=true
+SLOW hello db=admin ms=10072 ok=true
+SLOW insert db=app_data_6 ms=596 ok=true
+SLOW insert db=app_data_6 ms=598 ok=true
+compaction warm-up of tenant app_data_4: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_1: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_3: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_6: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_3 ms=2758 ok=true
+SLOW insert db=app_data_3 ms=2708 ok=true
+SLOW insert db=app_data_3 ms=2277 ok=true
+SLOW insert db=app_data_3 ms=2278 ok=true
+SLOW insert db=app_data_3 ms=2279 ok=true
+SLOW insert db=app_data_3 ms=2279 ok=true
+SLOW insert db=app_data_3 ms=2282 ok=true
+SLOW insert db=app_data_3 ms=2282 ok=true
+SLOW insert db=app_data_3 ms=2280 ok=true
+SLOW insert db=app_data_3 ms=2316 ok=true
+SLOW insert db=app_data_3 ms=2360 ok=true
+SLOW insert db=app_data_3 ms=2352 ok=true
+SLOW insert db=app_data_3 ms=2346 ok=true
+SLOW insert db=app_data_3 ms=2356 ok=true
+SLOW insert db=app_data_3 ms=2342 ok=true
+SLOW insert db=app_data_3 ms=2368 ok=true
+SLOW insert db=app_data_6 ms=506 ok=true
+SLOW insert db=app_data_6 ms=501 ok=true
+SLOW insert db=app_data_6 ms=508 ok=true
+SLOW insert db=app_data_3 ms=527 ok=true
+SLOW insert db=app_data_3 ms=523 ok=true
+SLOW insert db=app_data_3 ms=517 ok=true
+SLOW insert db=app_data_3 ms=518 ok=true
+SLOW insert db=app_data_3 ms=515 ok=true
+SLOW insert db=app_data_3 ms=538 ok=true
+SLOW insert db=app_data_3 ms=536 ok=true
+SLOW insert db=app_data_4 ms=653 ok=true
+SLOW insert db=app_data_4 ms=657 ok=true
+SLOW insert db=app_data_1 ms=694 ok=true
+SLOW insert db=app_data_1 ms=500 ok=true
+SLOW insert db=app_data_1 ms=513 ok=true
+SLOW insert db=app_data_1 ms=510 ok=true
+SLOW insert db=app_data_1 ms=514 ok=true
+SLOW insert db=app_data_1 ms=521 ok=true
+SLOW insert db=app_data_1 ms=548 ok=true
+SLOW insert db=app_data_1 ms=568 ok=true
+SLOW insert db=app_data_1 ms=584 ok=true
+SLOW insert db=app_data_1 ms=598 ok=true
+SLOW insert db=app_data_1 ms=618 ok=true
+SLOW insert db=app_data_1 ms=640 ok=true
+SLOW insert db=app_data_1 ms=667 ok=true
+compaction warm-up of tenant app_data_2: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_5: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_5 ms=1885 ok=true
+SLOW insert db=app_data_5 ms=1718 ok=true
+SLOW insert db=app_data_5 ms=1775 ok=true
+SLOW insert db=app_data_5 ms=1774 ok=true
+SLOW insert db=app_data_5 ms=1767 ok=true
+SLOW insert db=app_data_5 ms=1780 ok=true
+SLOW insert db=app_data_5 ms=1765 ok=true
+SLOW insert db=app_data_5 ms=1773 ok=true
+SLOW insert db=app_data_5 ms=1788 ok=true
+SLOW insert db=app_data_5 ms=1808 ok=true
+SLOW insert db=app_data_5 ms=1768 ok=true
+SLOW insert db=app_data_5 ms=1828 ok=true
+SLOW insert db=app_data_5 ms=1823 ok=true
+SLOW insert db=app_data_5 ms=1816 ok=true
+SLOW insert db=app_data_5 ms=1815 ok=true
+SLOW insert db=app_data_5 ms=1831 ok=true
+SLOW hello db=admin ms=10034 ok=true
+SLOW insert db=app_data_5 ms=507 ok=true
+SLOW insert db=app_data_5 ms=503 ok=true
+SLOW insert db=app_data_5 ms=506 ok=true
+SLOW insert db=app_data_5 ms=503 ok=true
+SLOW insert db=app_data_5 ms=503 ok=true
+SLOW insert db=app_data_6 ms=511 ok=true
+SLOW insert db=app_data_6 ms=509 ok=true
+SLOW insert db=app_data_6 ms=506 ok=true
+SLOW insert db=app_data_5 ms=544 ok=true
+SLOW insert db=app_data_5 ms=577 ok=true
+SLOW insert db=app_data_5 ms=604 ok=true
+SLOW insert db=app_data_5 ms=611 ok=true
+SLOW insert db=app_data_5 ms=637 ok=true
+SLOW insert db=app_data_5 ms=642 ok=true
+compaction warm-up of tenant app_data_4: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_4 ms=842 ok=true
+SLOW insert db=app_data_4 ms=847 ok=true
+SLOW insert db=app_data_4 ms=856 ok=true
+compaction warm-up of tenant app_data_6: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_6 ms=2248 ok=true
+SLOW insert db=app_data_6 ms=2250 ok=true
+SLOW insert db=app_data_6 ms=2250 ok=true
+SLOW insert db=app_data_6 ms=1240 ok=true
+SLOW insert db=app_data_6 ms=1265 ok=true
+SLOW insert db=app_data_6 ms=1255 ok=true
+SLOW insert db=app_data_6 ms=1263 ok=true
+SLOW insert db=app_data_6 ms=1269 ok=true
+SLOW insert db=app_data_6 ms=1278 ok=true
+SLOW insert db=app_data_6 ms=1289 ok=true
+SLOW insert db=app_data_6 ms=1296 ok=true
+SLOW insert db=app_data_6 ms=1304 ok=true
+SLOW insert db=app_data_6 ms=1309 ok=true
+SLOW insert db=app_data_6 ms=1313 ok=true
+SLOW insert db=app_data_6 ms=1320 ok=true
+SLOW insert db=app_data_6 ms=1327 ok=true
+compaction warm-up of tenant app_data_3: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_3 ms=4375 ok=true
+SLOW insert db=app_data_3 ms=4349 ok=true
+SLOW insert db=app_data_3 ms=4306 ok=true
+SLOW insert db=app_data_3 ms=4138 ok=true
+SLOW insert db=app_data_3 ms=4232 ok=true
+SLOW insert db=app_data_3 ms=4236 ok=true
+SLOW insert db=app_data_3 ms=4243 ok=true
+SLOW insert db=app_data_3 ms=4240 ok=true
+SLOW insert db=app_data_3 ms=4249 ok=true
+SLOW insert db=app_data_3 ms=4239 ok=true
+SLOW insert db=app_data_3 ms=4230 ok=true
+SLOW insert db=app_data_3 ms=4224 ok=true
+SLOW insert db=app_data_3 ms=4223 ok=true
+SLOW insert db=app_data_3 ms=4220 ok=true
+SLOW insert db=app_data_3 ms=4217 ok=true
+SLOW insert db=app_data_3 ms=4220 ok=true
+SLOW hello db=admin ms=10000 ok=true
+compaction warm-up of tenant app_data_5: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_1: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_1 ms=4087 ok=true
+SLOW insert db=app_data_1 ms=4109 ok=true
+SLOW insert db=app_data_1 ms=4109 ok=true
+SLOW insert db=app_data_1 ms=4122 ok=true
+SLOW insert db=app_data_1 ms=4122 ok=true
+SLOW insert db=app_data_1 ms=4123 ok=true
+SLOW insert db=app_data_1 ms=4141 ok=true
+SLOW insert db=app_data_1 ms=4167 ok=true
+SLOW insert db=app_data_1 ms=4184 ok=true
+SLOW insert db=app_data_1 ms=4221 ok=true
+SLOW insert db=app_data_1 ms=4268 ok=true
+SLOW insert db=app_data_1 ms=4336 ok=true
+SLOW insert db=app_data_1 ms=3514 ok=true
+SLOW insert db=app_data_1 ms=3515 ok=true
+SLOW insert db=app_data_1 ms=3535 ok=true
+SLOW insert db=app_data_1 ms=3535 ok=true
+SLOW insert db=app_data_1 ms=799 ok=true
+SLOW insert db=app_data_1 ms=801 ok=true
+SLOW insert db=app_data_1 ms=785 ok=true
+SLOW insert db=app_data_1 ms=585 ok=true
+SLOW insert db=app_data_1 ms=583 ok=true
+SLOW insert db=app_data_1 ms=606 ok=true
+SLOW insert db=app_data_1 ms=587 ok=true
+SLOW insert db=app_data_1 ms=595 ok=true
+SLOW insert db=app_data_1 ms=624 ok=true
+SLOW insert db=app_data_1 ms=618 ok=true
+SLOW insert db=app_data_1 ms=687 ok=true
+SLOW insert db=app_data_1 ms=733 ok=true
+SLOW insert db=app_data_1 ms=717 ok=true
+SLOW insert db=app_data_1 ms=716 ok=true
+SLOW insert db=app_data_1 ms=729 ok=true
+SLOW insert db=app_data_1 ms=691 ok=true
+SLOW hello db=admin ms=10035 ok=true
+SLOW insert db=app_data_2 ms=4488 ok=true
+SLOW insert db=app_data_2 ms=4491 ok=true
+SLOW insert db=app_data_2 ms=4483 ok=true
+SLOW insert db=app_data_2 ms=4485 ok=true
+SLOW insert db=app_data_2 ms=4485 ok=true
+SLOW insert db=app_data_2 ms=4503 ok=true
+SLOW insert db=app_data_2 ms=4204 ok=true
+SLOW insert db=app_data_2 ms=4243 ok=true
+SLOW insert db=app_data_2 ms=4234 ok=true
+SLOW insert db=app_data_2 ms=4338 ok=true
+SLOW insert db=app_data_2 ms=4315 ok=true
+SLOW insert db=app_data_2 ms=4314 ok=true
+SLOW insert db=app_data_2 ms=4317 ok=true
+SLOW insert db=app_data_2 ms=4418 ok=true
+SLOW insert db=app_data_2 ms=4414 ok=true
+SLOW insert db=app_data_2 ms=4406 ok=true
+SSTGC begin tenant=app_data_3 unix_ms=1793960267482
+SSTGC begin tenant=app_data_4 unix_ms=1793960267482
+SSTGC begin tenant=app_data_5 unix_ms=1793960267483
+SSTGC begin tenant=app_data_1 unix_ms=1793960267483
+SSTGC begin tenant=app_data_2 unix_ms=1793960267484
+SSTGC end tenant=app_data_3 unix_ms=1793960267485 deleted_ssts=0 deleted_manifests=0 referenced=20 waiting=86
+SSTGC end tenant=app_data_1 unix_ms=1793960267493 deleted_ssts=0 deleted_manifests=0 referenced=12 waiting=113
+SSTGC end tenant=app_data_4 unix_ms=1793960267493 deleted_ssts=0 deleted_manifests=0 referenced=22 waiting=102
+SSTGC end tenant=app_data_5 unix_ms=1793960267516 deleted_ssts=0 deleted_manifests=0 referenced=18 waiting=87
+SSTGC end tenant=app_data_2 unix_ms=1793960267516 deleted_ssts=0 deleted_manifests=0 referenced=22 waiting=96
+SLOW insert db=app_data_2 ms=569 ok=true
+SLOW insert db=app_data_2 ms=558 ok=true
+SSTGC begin tenant=app_data_6 unix_ms=1793960269518
+SSTGC end tenant=app_data_6 unix_ms=1793960269523 deleted_ssts=0 deleted_manifests=0 referenced=20 waiting=82
+SLOW hello db=admin ms=10001 ok=true
+compaction warm-up of tenant app_data_6: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_6 ms=7685 ok=true
+SLOW insert db=app_data_6 ms=7681 ok=true
+SLOW insert db=app_data_6 ms=7395 ok=true
+SLOW insert db=app_data_6 ms=7633 ok=true
+SLOW insert db=app_data_6 ms=7603 ok=true
+SLOW insert db=app_data_6 ms=7603 ok=true
+SLOW insert db=app_data_6 ms=7541 ok=true
+SLOW insert db=app_data_6 ms=7548 ok=true
+SLOW insert db=app_data_6 ms=7556 ok=true
+SLOW insert db=app_data_6 ms=7547 ok=true
+SLOW insert db=app_data_6 ms=7547 ok=true
+SLOW insert db=app_data_6 ms=7537 ok=true
+SLOW insert db=app_data_6 ms=7548 ok=true
+SLOW insert db=app_data_6 ms=7545 ok=true
+SLOW insert db=app_data_6 ms=7546 ok=true
+SLOW insert db=app_data_6 ms=7506 ok=true
+compaction warm-up of tenant app_data_1: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_3: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_3 ms=7445 ok=true
+SLOW insert db=app_data_1 ms=4703 ok=true
+SLOW insert db=app_data_3 ms=7487 ok=true
+SLOW insert db=app_data_3 ms=6046 ok=true
+SLOW insert db=app_data_1 ms=4722 ok=true
+SLOW insert db=app_data_1 ms=4722 ok=true
+SLOW insert db=app_data_1 ms=4722 ok=true
+SLOW insert db=app_data_1 ms=4722 ok=true
+SLOW insert db=app_data_3 ms=6136 ok=true
+SLOW insert db=app_data_3 ms=6071 ok=true
+SLOW insert db=app_data_3 ms=6071 ok=true
+SLOW insert db=app_data_1 ms=4747 ok=true
+SLOW insert db=app_data_1 ms=4747 ok=true
+SLOW insert db=app_data_1 ms=4747 ok=true
+SLOW insert db=app_data_3 ms=6082 ok=true
+SLOW insert db=app_data_3 ms=6106 ok=true
+SLOW insert db=app_data_3 ms=6106 ok=true
+SLOW insert db=app_data_3 ms=6115 ok=true
+SLOW insert db=app_data_3 ms=6115 ok=true
+SLOW insert db=app_data_3 ms=6128 ok=true
+SLOW insert db=app_data_1 ms=4802 ok=true
+SLOW insert db=app_data_1 ms=4802 ok=true
+SLOW insert db=app_data_3 ms=6139 ok=true
+SLOW insert db=app_data_3 ms=6148 ok=true
+SLOW insert db=app_data_3 ms=6157 ok=true
+SLOW insert db=app_data_1 ms=4827 ok=true
+SLOW insert db=app_data_1 ms=3976 ok=true
+SLOW insert db=app_data_3 ms=6189 ok=true
+SLOW insert db=app_data_1 ms=4014 ok=true
+SLOW insert db=app_data_1 ms=4023 ok=true
+SLOW insert db=app_data_1 ms=4031 ok=true
+SLOW insert db=app_data_1 ms=4031 ok=true
+SLOW hello db=admin ms=10000 ok=true
+compaction warm-up of tenant app_data_5: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_5 ms=7135 ok=true
+SLOW insert db=app_data_5 ms=7173 ok=true
+SLOW insert db=app_data_5 ms=7173 ok=true
+SLOW insert db=app_data_5 ms=7159 ok=true
+SLOW insert db=app_data_5 ms=7169 ok=true
+SLOW insert db=app_data_5 ms=7176 ok=true
+SLOW insert db=app_data_5 ms=7043 ok=true
+SLOW insert db=app_data_5 ms=7038 ok=true
+SLOW insert db=app_data_5 ms=7036 ok=true
+SLOW insert db=app_data_5 ms=7026 ok=true
+SLOW insert db=app_data_5 ms=7020 ok=true
+SLOW insert db=app_data_5 ms=7019 ok=true
+SLOW insert db=app_data_5 ms=7030 ok=true
+SLOW insert db=app_data_5 ms=7028 ok=true
+SLOW insert db=app_data_5 ms=7048 ok=true
+SLOW insert db=app_data_5 ms=7047 ok=true
+SLOW insert db=app_data_2 ms=645 ok=true
+SLOW insert db=app_data_2 ms=671 ok=true
+SLOW insert db=app_data_2 ms=662 ok=true
+SLOW insert db=app_data_2 ms=704 ok=true
+SLOW insert db=app_data_2 ms=753 ok=true
+SLOW insert db=app_data_2 ms=753 ok=true
+SLOW insert db=app_data_2 ms=779 ok=true
+SLOW insert db=app_data_2 ms=776 ok=true
+SLOW insert db=app_data_2 ms=771 ok=true
+SLOW insert db=app_data_2 ms=773 ok=true
+SLOW insert db=app_data_2 ms=772 ok=true
+SLOW insert db=app_data_2 ms=763 ok=true
+SLOW insert db=app_data_2 ms=763 ok=true
+SLOW insert db=app_data_2 ms=748 ok=true
+SLOW insert db=app_data_2 ms=788 ok=true
+SLOW insert db=app_data_2 ms=789 ok=true
+SLOW insert db=app_data_5 ms=1085 ok=true
+SLOW insert db=app_data_5 ms=1109 ok=true
+SLOW insert db=app_data_5 ms=1037 ok=true
+SLOW insert db=app_data_5 ms=1046 ok=true
+SLOW insert db=app_data_5 ms=1058 ok=true
+SLOW insert db=app_data_5 ms=1036 ok=true
+SLOW insert db=app_data_5 ms=1046 ok=true
+SLOW insert db=app_data_5 ms=1036 ok=true
+SLOW insert db=app_data_5 ms=975 ok=true
+SLOW insert db=app_data_5 ms=792 ok=true
+SLOW insert db=app_data_5 ms=828 ok=true
+SLOW insert db=app_data_5 ms=823 ok=true
+SLOW insert db=app_data_5 ms=863 ok=true
+SLOW insert db=app_data_5 ms=852 ok=true
+SLOW insert db=app_data_5 ms=823 ok=true
+SLOW insert db=app_data_5 ms=825 ok=true
+SLOW hello db=admin ms=10072 ok=true
+SLOW insert db=app_data_4 ms=510 ok=true
+SLOW insert db=app_data_4 ms=511 ok=true
+SLOW insert db=app_data_4 ms=528 ok=true
+SLOW insert db=app_data_4 ms=520 ok=true
+SLOW insert db=app_data_4 ms=508 ok=true
+SLOW insert db=app_data_4 ms=503 ok=true
+SLOW insert db=app_data_4 ms=500 ok=true
+SLOW insert db=app_data_5 ms=505 ok=true
+SLOW insert db=app_data_6 ms=518 ok=true
+SLOW insert db=app_data_6 ms=517 ok=true
+SLOW insert db=app_data_6 ms=513 ok=true
+SLOW insert db=app_data_6 ms=522 ok=true
+SLOW insert db=app_data_6 ms=519 ok=true
+SLOW insert db=app_data_5 ms=535 ok=true
+SLOW insert db=app_data_1 ms=523 ok=true
+SLOW insert db=app_data_1 ms=520 ok=true
+SLOW insert db=app_data_1 ms=519 ok=true
+SLOW insert db=app_data_1 ms=532 ok=true
+compaction warm-up of tenant app_data_1: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_4: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_5: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_5 ms=3640 ok=true
+SLOW insert db=app_data_5 ms=3642 ok=true
+SLOW insert db=app_data_5 ms=3531 ok=true
+SLOW insert db=app_data_5 ms=3514 ok=true
+SLOW insert db=app_data_5 ms=3507 ok=true
+SLOW insert db=app_data_5 ms=3513 ok=true
+SLOW insert db=app_data_5 ms=3518 ok=true
+SLOW insert db=app_data_5 ms=3515 ok=true
+SLOW insert db=app_data_5 ms=3524 ok=true
+SLOW insert db=app_data_5 ms=3520 ok=true
+SLOW insert db=app_data_5 ms=3523 ok=true
+SLOW insert db=app_data_5 ms=3528 ok=true
+SLOW insert db=app_data_5 ms=3524 ok=true
+SLOW insert db=app_data_5 ms=3525 ok=true
+SLOW insert db=app_data_5 ms=3502 ok=true
+SLOW insert db=app_data_5 ms=2170 ok=true
+compaction warm-up of tenant app_data_6: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_6 ms=4154 ok=true
+SLOW insert db=app_data_6 ms=2713 ok=true
+SLOW insert db=app_data_6 ms=2728 ok=true
+SLOW insert db=app_data_6 ms=2739 ok=true
+SLOW insert db=app_data_6 ms=2739 ok=true
+SLOW insert db=app_data_6 ms=2747 ok=true
+SLOW insert db=app_data_6 ms=2754 ok=true
+SLOW insert db=app_data_6 ms=2764 ok=true
+SLOW insert db=app_data_6 ms=2782 ok=true
+SLOW insert db=app_data_6 ms=2797 ok=true
+SLOW insert db=app_data_6 ms=2813 ok=true
+SLOW insert db=app_data_6 ms=2836 ok=true
+SLOW insert db=app_data_6 ms=2874 ok=true
+SLOW insert db=app_data_6 ms=2941 ok=true
+SLOW insert db=app_data_6 ms=2974 ok=true
+SLOW insert db=app_data_6 ms=2975 ok=true
+compaction warm-up of tenant app_data_2: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_5 ms=506 ok=true
+SLOW insert db=app_data_5 ms=506 ok=true
+SLOW insert db=app_data_2 ms=547 ok=true
+SLOW insert db=app_data_5 ms=538 ok=true
+SLOW insert db=app_data_5 ms=534 ok=true
+SLOW insert db=app_data_5 ms=532 ok=true
+SLOW insert db=app_data_3 ms=527 ok=true
+SLOW insert db=app_data_3 ms=518 ok=true
+SLOW insert db=app_data_3 ms=512 ok=true
+SLOW insert db=app_data_3 ms=506 ok=true
+SLOW insert db=app_data_3 ms=505 ok=true
+SLOW insert db=app_data_3 ms=503 ok=true
+SLOW insert db=app_data_3 ms=502 ok=true
+SLOW insert db=app_data_3 ms=500 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW insert db=app_data_2 ms=1256 ok=true
+SLOW insert db=app_data_2 ms=1134 ok=true
+SLOW insert db=app_data_2 ms=1134 ok=true
+SLOW insert db=app_data_2 ms=1146 ok=true
+SLOW insert db=app_data_2 ms=1151 ok=true
+SLOW insert db=app_data_2 ms=1059 ok=true
+SLOW insert db=app_data_2 ms=1058 ok=true
+SLOW insert db=app_data_2 ms=1066 ok=true
+SLOW insert db=app_data_2 ms=1069 ok=true
+SLOW insert db=app_data_2 ms=1077 ok=true
+SLOW insert db=app_data_2 ms=1079 ok=true
+SLOW insert db=app_data_2 ms=1105 ok=true
+SLOW insert db=app_data_2 ms=1131 ok=true
+SLOW insert db=app_data_2 ms=1126 ok=true
+SLOW insert db=app_data_2 ms=1118 ok=true
+SLOW insert db=app_data_2 ms=1116 ok=true
+compaction warm-up of tenant app_data_3: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_3 ms=1793 ok=true
+SLOW insert db=app_data_3 ms=1807 ok=true
+SLOW insert db=app_data_3 ms=1815 ok=true
+SLOW insert db=app_data_3 ms=1826 ok=true
+SLOW insert db=app_data_3 ms=1836 ok=true
+SLOW insert db=app_data_3 ms=1842 ok=true
+SLOW insert db=app_data_3 ms=1868 ok=true
+SLOW insert db=app_data_3 ms=1869 ok=true
+SLOW insert db=app_data_3 ms=1869 ok=true
+SLOW insert db=app_data_3 ms=1892 ok=true
+SLOW insert db=app_data_3 ms=1947 ok=true
+SLOW insert db=app_data_3 ms=1527 ok=true
+SLOW insert db=app_data_3 ms=1525 ok=true
+SLOW insert db=app_data_3 ms=1533 ok=true
+SLOW insert db=app_data_3 ms=1532 ok=true
+SLOW insert db=app_data_3 ms=1522 ok=true
+SLOW insert db=app_data_3 ms=531 ok=true
+SLOW insert db=app_data_6 ms=755 ok=true
+SLOW insert db=app_data_6 ms=759 ok=true
+SLOW insert db=app_data_6 ms=687 ok=true
+SLOW insert db=app_data_6 ms=688 ok=true
+SLOW insert db=app_data_6 ms=696 ok=true
+SLOW insert db=app_data_6 ms=700 ok=true
+SLOW insert db=app_data_6 ms=592 ok=true
+SLOW insert db=app_data_6 ms=565 ok=true
+SLOW insert db=app_data_6 ms=546 ok=true
+SLOW insert db=app_data_6 ms=547 ok=true
+SLOW insert db=app_data_6 ms=557 ok=true
+SLOW insert db=app_data_6 ms=564 ok=true
+SLOW insert db=app_data_6 ms=589 ok=true
+SLOW insert db=app_data_6 ms=593 ok=true
+SLOW insert db=app_data_6 ms=600 ok=true
+SLOW insert db=app_data_6 ms=620 ok=true
+compaction warm-up of tenant app_data_5: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW hello db=admin ms=10000 ok=true
+compaction warm-up of tenant app_data_2: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_6: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_6 ms=6008 ok=true
+SLOW insert db=app_data_6 ms=6126 ok=true
+SLOW insert db=app_data_6 ms=6120 ok=true
+SLOW insert db=app_data_6 ms=6112 ok=true
+SLOW insert db=app_data_6 ms=5803 ok=true
+SLOW insert db=app_data_6 ms=5886 ok=true
+SLOW insert db=app_data_6 ms=5886 ok=true
+SLOW insert db=app_data_6 ms=5883 ok=true
+SLOW insert db=app_data_6 ms=5887 ok=true
+SLOW insert db=app_data_6 ms=5881 ok=true
+SLOW insert db=app_data_6 ms=5875 ok=true
+SLOW insert db=app_data_6 ms=5870 ok=true
+SLOW insert db=app_data_6 ms=5865 ok=true
+SLOW insert db=app_data_6 ms=5861 ok=true
+SLOW insert db=app_data_6 ms=5857 ok=true
+SLOW insert db=app_data_6 ms=5854 ok=true
+compaction warm-up of tenant app_data_3: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_4: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_4 ms=5968 ok=true
+SLOW insert db=app_data_4 ms=5976 ok=true
+SLOW insert db=app_data_4 ms=5987 ok=true
+SLOW insert db=app_data_4 ms=6013 ok=true
+SLOW insert db=app_data_4 ms=6021 ok=true
+SLOW insert db=app_data_4 ms=6021 ok=true
+SLOW insert db=app_data_4 ms=6061 ok=true
+SLOW insert db=app_data_4 ms=6119 ok=true
+SLOW insert db=app_data_4 ms=6119 ok=true
+SLOW insert db=app_data_4 ms=6142 ok=true
+SLOW insert db=app_data_4 ms=6143 ok=true
+SLOW insert db=app_data_4 ms=6143 ok=true
+SLOW insert db=app_data_4 ms=6156 ok=true
+SLOW insert db=app_data_4 ms=5081 ok=true
+SLOW insert db=app_data_4 ms=5043 ok=true
+SLOW insert db=app_data_4 ms=5043 ok=true
+SLOW hello db=admin ms=10029 ok=true
+SLOW insert db=app_data_4 ms=873 ok=true
+SLOW insert db=app_data_4 ms=761 ok=true
+SLOW insert db=app_data_4 ms=766 ok=true
+SLOW insert db=app_data_4 ms=768 ok=true
+SLOW insert db=app_data_4 ms=762 ok=true
+SLOW insert db=app_data_4 ms=756 ok=true
+SLOW insert db=app_data_4 ms=770 ok=true
+SLOW insert db=app_data_4 ms=777 ok=true
+SLOW insert db=app_data_4 ms=778 ok=true
+SLOW insert db=app_data_4 ms=781 ok=true
+SLOW insert db=app_data_4 ms=743 ok=true
+SLOW insert db=app_data_4 ms=742 ok=true
+SLOW insert db=app_data_4 ms=656 ok=true
+SLOW insert db=app_data_3 ms=856 ok=true
+SLOW insert db=app_data_3 ms=1026 ok=true
+SLOW insert db=app_data_3 ms=1011 ok=true
+SLOW insert db=app_data_3 ms=538 ok=true
+SLOW insert db=app_data_3 ms=519 ok=true
+SLOW insert db=app_data_3 ms=510 ok=true
+SLOW insert db=app_data_3 ms=503 ok=true
+SLOW insert db=app_data_3 ms=501 ok=true
+SSTGC begin tenant=app_data_3 unix_ms=1793960327927
+SSTGC begin tenant=app_data_4 unix_ms=1793960327927
+SSTGC begin tenant=app_data_5 unix_ms=1793960327929
+SSTGC end tenant=app_data_3 unix_ms=1793960327931 deleted_ssts=0 deleted_manifests=0 referenced=21 waiting=204
+SSTGC begin tenant=app_data_1 unix_ms=1793960327932
+SSTGC begin tenant=app_data_2 unix_ms=1793960327932
+SSTGC end tenant=app_data_5 unix_ms=1793960327961 deleted_ssts=0 deleted_manifests=0 referenced=20 waiting=198
+SSTGC end tenant=app_data_4 unix_ms=1793960327977 deleted_ssts=0 deleted_manifests=0 referenced=14 waiting=240
+SSTGC end tenant=app_data_2 unix_ms=1793960327978 deleted_ssts=0 deleted_manifests=0 referenced=18 waiting=243
+SSTGC end tenant=app_data_1 unix_ms=1793960327994 deleted_ssts=0 deleted_manifests=0 referenced=16 waiting=242
+SLOW insert db=app_data_1 ms=511 ok=true
+SLOW insert db=app_data_1 ms=503 ok=true
+SSTGC begin tenant=app_data_6 unix_ms=1793960330031
+SSTGC end tenant=app_data_6 unix_ms=1793960330061 deleted_ssts=0 deleted_manifests=0 referenced=22 waiting=210
+SLOW insert db=app_data_4 ms=554 ok=true
+SLOW insert db=app_data_4 ms=560 ok=true
+SLOW insert db=app_data_4 ms=554 ok=true
+SLOW insert db=app_data_4 ms=560 ok=true
+SLOW insert db=app_data_4 ms=546 ok=true
+SLOW insert db=app_data_4 ms=543 ok=true
+SLOW insert db=app_data_4 ms=545 ok=true
+SLOW insert db=app_data_4 ms=511 ok=true
+SLOW insert db=app_data_4 ms=518 ok=true
+SLOW insert db=app_data_4 ms=529 ok=true
+SLOW insert db=app_data_4 ms=586 ok=true
+SLOW insert db=app_data_4 ms=568 ok=true
+SLOW insert db=app_data_4 ms=567 ok=true
+SLOW insert db=app_data_4 ms=600 ok=true
+SLOW insert db=app_data_4 ms=600 ok=true
+SLOW insert db=app_data_4 ms=592 ok=true
+compaction warm-up of tenant app_data_5: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_5 ms=1059 ok=true
+SLOW insert db=app_data_5 ms=1080 ok=true
+SLOW insert db=app_data_5 ms=1088 ok=true
+SLOW insert db=app_data_5 ms=1148 ok=true
+SLOW insert db=app_data_5 ms=1067 ok=true
+SLOW insert db=app_data_5 ms=1062 ok=true
+SLOW insert db=app_data_5 ms=1085 ok=true
+SLOW insert db=app_data_5 ms=1112 ok=true
+SLOW insert db=app_data_5 ms=1144 ok=true
+SLOW insert db=app_data_5 ms=1141 ok=true
+SLOW insert db=app_data_5 ms=1139 ok=true
+SLOW insert db=app_data_5 ms=1139 ok=true
+SLOW insert db=app_data_5 ms=1147 ok=true
+SLOW insert db=app_data_5 ms=1169 ok=true
+SLOW insert db=app_data_5 ms=1201 ok=true
+SLOW insert db=app_data_5 ms=1199 ok=true
+SLOW hello db=admin ms=10001 ok=true
+compaction warm-up of tenant app_data_6: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_1: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_1 ms=5175 ok=true
+SLOW insert db=app_data_1 ms=5181 ok=true
+SLOW insert db=app_data_1 ms=4225 ok=true
+SLOW insert db=app_data_1 ms=4223 ok=true
+SLOW insert db=app_data_1 ms=4247 ok=true
+SLOW insert db=app_data_1 ms=4260 ok=true
+SLOW insert db=app_data_1 ms=4260 ok=true
+SLOW insert db=app_data_1 ms=4262 ok=true
+SLOW insert db=app_data_1 ms=4263 ok=true
+SLOW insert db=app_data_1 ms=4263 ok=true
+SLOW insert db=app_data_1 ms=4251 ok=true
+SLOW insert db=app_data_1 ms=4257 ok=true
+SLOW insert db=app_data_1 ms=4268 ok=true
+SLOW insert db=app_data_1 ms=4271 ok=true
+SLOW insert db=app_data_1 ms=4276 ok=true
+SLOW insert db=app_data_1 ms=4281 ok=true
+compaction warm-up of tenant app_data_4: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_4 ms=10601 ok=true
+SLOW insert db=app_data_4 ms=10597 ok=true
+SLOW insert db=app_data_4 ms=10596 ok=true
+SLOW insert db=app_data_4 ms=10603 ok=true
+SLOW insert db=app_data_4 ms=10572 ok=true
+SLOW insert db=app_data_4 ms=10574 ok=true
+SLOW insert db=app_data_4 ms=10489 ok=true
+SLOW insert db=app_data_4 ms=10589 ok=true
+SLOW insert db=app_data_4 ms=10588 ok=true
+SLOW insert db=app_data_4 ms=10554 ok=true
+SLOW insert db=app_data_4 ms=10562 ok=true
+SLOW insert db=app_data_4 ms=10558 ok=true
+SLOW insert db=app_data_4 ms=10569 ok=true
+SLOW insert db=app_data_4 ms=10573 ok=true
+SLOW insert db=app_data_4 ms=10567 ok=true
+SLOW insert db=app_data_4 ms=10566 ok=true
+SLOW hello db=admin ms=10000 ok=true
+compaction warm-up of tenant app_data_2: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_2 ms=12199 ok=true
+SLOW insert db=app_data_2 ms=12205 ok=true
+SLOW insert db=app_data_2 ms=12207 ok=true
+SLOW insert db=app_data_2 ms=12208 ok=true
+SLOW insert db=app_data_2 ms=12218 ok=true
+SLOW insert db=app_data_2 ms=12227 ok=true
+SLOW insert db=app_data_2 ms=12231 ok=true
+SLOW insert db=app_data_2 ms=12246 ok=true
+SLOW insert db=app_data_2 ms=12255 ok=true
+SLOW insert db=app_data_2 ms=12235 ok=true
+SLOW insert db=app_data_2 ms=12239 ok=true
+SLOW insert db=app_data_2 ms=12245 ok=true
+SLOW insert db=app_data_2 ms=12251 ok=true
+SLOW insert db=app_data_2 ms=12258 ok=true
+SLOW insert db=app_data_2 ms=12263 ok=true
+SLOW insert db=app_data_2 ms=12272 ok=true
+compaction warm-up of tenant app_data_3: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_3 ms=14959 ok=true
+SLOW insert db=app_data_3 ms=14959 ok=true
+SLOW insert db=app_data_3 ms=14959 ok=true
+SLOW insert db=app_data_3 ms=14964 ok=true
+SLOW insert db=app_data_3 ms=14970 ok=true
+SLOW insert db=app_data_3 ms=14979 ok=true
+SLOW insert db=app_data_3 ms=14984 ok=true
+SLOW insert db=app_data_3 ms=14993 ok=true
+SLOW insert db=app_data_3 ms=14161 ok=true
+SLOW insert db=app_data_3 ms=14172 ok=true
+SLOW insert db=app_data_3 ms=14177 ok=true
+SLOW insert db=app_data_3 ms=14182 ok=true
+SLOW insert db=app_data_3 ms=14187 ok=true
+SLOW insert db=app_data_3 ms=14192 ok=true
+SLOW insert db=app_data_3 ms=14195 ok=true
+SLOW insert db=app_data_3 ms=14199 ok=true
+compaction warm-up of tenant app_data_6: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_5: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_5 ms=7979 ok=true
+SLOW insert db=app_data_5 ms=7985 ok=true
+SLOW insert db=app_data_5 ms=7985 ok=true
+SLOW insert db=app_data_5 ms=7992 ok=true
+SLOW insert db=app_data_5 ms=8002 ok=true
+SLOW insert db=app_data_5 ms=8009 ok=true
+SLOW insert db=app_data_5 ms=8024 ok=true
+SLOW insert db=app_data_5 ms=8048 ok=true
+SLOW insert db=app_data_5 ms=8052 ok=true
+SLOW insert db=app_data_5 ms=7228 ok=true
+SLOW insert db=app_data_5 ms=7239 ok=true
+SLOW insert db=app_data_5 ms=7286 ok=true
+SLOW insert db=app_data_5 ms=7372 ok=true
+SLOW insert db=app_data_5 ms=7388 ok=true
+SLOW insert db=app_data_5 ms=7388 ok=true
+SLOW insert db=app_data_5 ms=7387 ok=true
+SLOW insert db=app_data_6 ms=501 ok=true
+SLOW hello db=admin ms=10079 ok=true
+SLOW insert db=app_data_5 ms=958 ok=true
+SLOW insert db=app_data_5 ms=1088 ok=true
+SLOW insert db=app_data_5 ms=930 ok=true
+SLOW insert db=app_data_5 ms=930 ok=true
+SLOW insert db=app_data_5 ms=945 ok=true
+SLOW insert db=app_data_5 ms=937 ok=true
+SLOW insert db=app_data_5 ms=921 ok=true
+SLOW insert db=app_data_5 ms=913 ok=true
+SLOW insert db=app_data_5 ms=922 ok=true
+SLOW insert db=app_data_5 ms=877 ok=true
+SLOW insert db=app_data_5 ms=1081 ok=true
+SLOW insert db=app_data_5 ms=1074 ok=true
+SLOW insert db=app_data_5 ms=1070 ok=true
+SLOW insert db=app_data_5 ms=1073 ok=true
+SLOW insert db=app_data_5 ms=1063 ok=true
+SLOW insert db=app_data_5 ms=1056 ok=true
+SLOW insert db=app_data_6 ms=509 ok=true
+SLOW insert db=app_data_6 ms=503 ok=true
+SLOW insert db=app_data_6 ms=509 ok=true
+SLOW insert db=app_data_6 ms=507 ok=true
+SLOW insert db=app_data_1 ms=544 ok=true
+SLOW insert db=app_data_1 ms=538 ok=true
+SLOW insert db=app_data_1 ms=532 ok=true
+SLOW insert db=app_data_1 ms=553 ok=true
+SLOW insert db=app_data_1 ms=514 ok=true
+SLOW insert db=app_data_1 ms=508 ok=true
+SLOW insert db=app_data_1 ms=507 ok=true
+SLOW insert db=app_data_1 ms=511 ok=true
+SLOW insert db=app_data_2 ms=601 ok=true
+SLOW insert db=app_data_2 ms=560 ok=true
+SLOW insert db=app_data_4 ms=642 ok=true
+SLOW insert db=app_data_4 ms=641 ok=true
+SLOW insert db=app_data_4 ms=639 ok=true
+SLOW insert db=app_data_4 ms=642 ok=true
+SLOW insert db=app_data_4 ms=527 ok=true
+SLOW insert db=app_data_4 ms=520 ok=true
+SLOW insert db=app_data_4 ms=538 ok=true
+SLOW insert db=app_data_6 ms=566 ok=true
+SLOW insert db=app_data_6 ms=566 ok=true
+SLOW insert db=app_data_6 ms=549 ok=true
+SLOW insert db=app_data_4 ms=541 ok=true
+SLOW insert db=app_data_5 ms=744 ok=true
+SLOW insert db=app_data_5 ms=741 ok=true
+SLOW insert db=app_data_5 ms=730 ok=true
+SLOW insert db=app_data_5 ms=578 ok=true
+SLOW insert db=app_data_5 ms=589 ok=true
+SLOW insert db=app_data_5 ms=596 ok=true
+SLOW insert db=app_data_5 ms=592 ok=true
+SLOW insert db=app_data_5 ms=636 ok=true
+SLOW insert db=app_data_5 ms=722 ok=true
+SLOW insert db=app_data_5 ms=724 ok=true
+SLOW insert db=app_data_5 ms=763 ok=true
+SLOW insert db=app_data_5 ms=758 ok=true
+SLOW insert db=app_data_5 ms=757 ok=true
+SLOW insert db=app_data_5 ms=752 ok=true
+SLOW insert db=app_data_5 ms=735 ok=true
+SLOW insert db=app_data_5 ms=736 ok=true
+compaction warm-up of tenant app_data_2: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_3: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_3 ms=1457 ok=true
+SLOW insert db=app_data_3 ms=1443 ok=true
+SLOW insert db=app_data_3 ms=1404 ok=true
+SLOW insert db=app_data_3 ms=1402 ok=true
+compaction warm-up of tenant app_data_1: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_5: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_5 ms=2675 ok=true
+SLOW insert db=app_data_5 ms=2675 ok=true
+SLOW insert db=app_data_5 ms=2614 ok=true
+SLOW insert db=app_data_5 ms=2617 ok=true
+SLOW insert db=app_data_5 ms=2559 ok=true
+SLOW insert db=app_data_5 ms=2569 ok=true
+SLOW insert db=app_data_5 ms=2571 ok=true
+SLOW insert db=app_data_5 ms=2578 ok=true
+SLOW insert db=app_data_5 ms=2423 ok=true
+SLOW insert db=app_data_5 ms=2419 ok=true
+SLOW insert db=app_data_5 ms=2424 ok=true
+SLOW insert db=app_data_5 ms=2451 ok=true
+SLOW insert db=app_data_5 ms=1076 ok=true
+SLOW insert db=app_data_5 ms=1071 ok=true
+SLOW insert db=app_data_5 ms=1095 ok=true
+SLOW insert db=app_data_5 ms=1100 ok=true
+SLOW hello db=admin ms=10056 ok=true
+SLOW insert db=app_data_3 ms=663 ok=true
+SLOW insert db=app_data_5 ms=566 ok=true
+SLOW insert db=app_data_5 ms=570 ok=true
+SLOW insert db=app_data_5 ms=562 ok=true
+SLOW insert db=app_data_5 ms=560 ok=true
+SLOW insert db=app_data_1 ms=649 ok=true
+SLOW insert db=app_data_1 ms=554 ok=true
+SLOW insert db=app_data_1 ms=564 ok=true
+SLOW insert db=app_data_5 ms=593 ok=true
+SLOW insert db=app_data_1 ms=575 ok=true
+SLOW insert db=app_data_5 ms=591 ok=true
+SLOW insert db=app_data_5 ms=603 ok=true
+SLOW insert db=app_data_5 ms=570 ok=true
+SLOW insert db=app_data_1 ms=515 ok=true
+SLOW insert db=app_data_5 ms=577 ok=true
+SLOW insert db=app_data_5 ms=564 ok=true
+compaction warm-up of tenant app_data_6: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_6 ms=1607 ok=true
+SLOW insert db=app_data_6 ms=705 ok=true
+SLOW insert db=app_data_6 ms=704 ok=true
+SLOW insert db=app_data_6 ms=704 ok=true
+compaction warm-up of tenant app_data_4: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_6 ms=758 ok=true
+SLOW insert db=app_data_6 ms=798 ok=true
+SLOW insert db=app_data_6 ms=814 ok=true
+SLOW insert db=app_data_6 ms=809 ok=true
+SLOW insert db=app_data_6 ms=808 ok=true
+SLOW insert db=app_data_6 ms=812 ok=true
+SLOW insert db=app_data_6 ms=804 ok=true
+SLOW insert db=app_data_6 ms=805 ok=true
+SLOW insert db=app_data_6 ms=797 ok=true
+SLOW insert db=app_data_6 ms=790 ok=true
+SLOW insert db=app_data_6 ms=802 ok=true
+SLOW insert db=app_data_6 ms=815 ok=true
+SLOW insert db=app_data_4 ms=547 ok=true
+SLOW insert db=app_data_4 ms=572 ok=true
+SLOW insert db=app_data_4 ms=567 ok=true
+SLOW insert db=app_data_4 ms=565 ok=true
+compaction warm-up of tenant app_data_2: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_2 ms=1347 ok=true
+SLOW insert db=app_data_2 ms=1353 ok=true
+SLOW insert db=app_data_2 ms=1350 ok=true
+SLOW insert db=app_data_2 ms=1352 ok=true
+SLOW insert db=app_data_2 ms=1338 ok=true
+SLOW insert db=app_data_2 ms=1343 ok=true
+SLOW insert db=app_data_2 ms=1358 ok=true
+SLOW insert db=app_data_2 ms=1364 ok=true
+SLOW insert db=app_data_2 ms=1332 ok=true
+SLOW insert db=app_data_2 ms=1332 ok=true
+SLOW insert db=app_data_2 ms=1347 ok=true
+SLOW insert db=app_data_2 ms=1402 ok=true
+SLOW insert db=app_data_2 ms=847 ok=true
+SLOW insert db=app_data_2 ms=836 ok=true
+SLOW insert db=app_data_2 ms=813 ok=true
+SLOW insert db=app_data_2 ms=815 ok=true
+SLOW hello db=admin ms=10048 ok=true
+compaction warm-up of tenant app_data_1: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW hello db=admin ms=10014 ok=true
+SLOW insert db=app_data_3 ms=7227 ok=true
+SLOW insert db=app_data_3 ms=7229 ok=true
+SLOW insert db=app_data_3 ms=7246 ok=true
+SLOW insert db=app_data_3 ms=7247 ok=true
+SLOW insert db=app_data_3 ms=7247 ok=true
+SLOW insert db=app_data_3 ms=7258 ok=true
+SLOW insert db=app_data_3 ms=7269 ok=true
+SLOW insert db=app_data_3 ms=6320 ok=true
+SLOW insert db=app_data_3 ms=6316 ok=true
+SLOW insert db=app_data_3 ms=6318 ok=true
+SLOW insert db=app_data_3 ms=6325 ok=true
+SLOW insert db=app_data_3 ms=6334 ok=true
+SLOW insert db=app_data_3 ms=6342 ok=true
+SLOW insert db=app_data_3 ms=6347 ok=true
+SLOW insert db=app_data_3 ms=6352 ok=true
+SLOW insert db=app_data_3 ms=6355 ok=true
+SSTGC begin tenant=app_data_3 unix_ms=1793960387959
+SSTGC begin tenant=app_data_4 unix_ms=1793960387962
+SSTGC begin tenant=app_data_5 unix_ms=1793960387962
+SSTGC begin tenant=app_data_1 unix_ms=1793960387970
+SSTGC begin tenant=app_data_2 unix_ms=1793960387971
+SLOW insert db=app_data_5 ms=9870 ok=true
+SLOW insert db=app_data_5 ms=9868 ok=true
+SLOW insert db=app_data_5 ms=9888 ok=true
+SLOW insert db=app_data_5 ms=9901 ok=true
+SLOW insert db=app_data_5 ms=9899 ok=true
+SLOW insert db=app_data_5 ms=9919 ok=true
+SLOW insert db=app_data_5 ms=9926 ok=true
+SLOW insert db=app_data_5 ms=9722 ok=true
+SLOW insert db=app_data_5 ms=9718 ok=true
+SLOW insert db=app_data_5 ms=9719 ok=true
+SLOW insert db=app_data_5 ms=9721 ok=true
+SLOW insert db=app_data_5 ms=9726 ok=true
+SLOW insert db=app_data_5 ms=9722 ok=true
+SLOW insert db=app_data_5 ms=9724 ok=true
+SLOW insert db=app_data_5 ms=9720 ok=true
+SLOW insert db=app_data_5 ms=9725 ok=true
+SSTGC end tenant=app_data_3 unix_ms=1793960388435 deleted_ssts=24 deleted_manifests=62 referenced=21 waiting=230
+SSTGC end tenant=app_data_5 unix_ms=1793960388437 deleted_ssts=24 deleted_manifests=63 referenced=16 waiting=221
+SSTGC end tenant=app_data_2 unix_ms=1793960388437 deleted_ssts=26 deleted_manifests=70 referenced=20 waiting=246
+SSTGC end tenant=app_data_4 unix_ms=1793960388437 deleted_ssts=27 deleted_manifests=75 referenced=28 waiting=212
+SSTGC end tenant=app_data_1 unix_ms=1793960388440 deleted_ssts=37 deleted_manifests=76 referenced=22 waiting=256
+SSTGC begin tenant=app_data_6 unix_ms=1793960390441
+SSTGC end tenant=app_data_6 unix_ms=1793960390528 deleted_ssts=24 deleted_manifests=58 referenced=28 waiting=230
+SLOW hello db=admin ms=10021 ok=true
+compaction warm-up of tenant app_data_4: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_6: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_6 ms=11882 ok=true
+SLOW insert db=app_data_6 ms=11882 ok=true
+SLOW insert db=app_data_6 ms=11879 ok=true
+SLOW insert db=app_data_6 ms=11885 ok=true
+SLOW insert db=app_data_6 ms=11892 ok=true
+SLOW insert db=app_data_6 ms=11876 ok=true
+SLOW insert db=app_data_6 ms=11871 ok=true
+SLOW insert db=app_data_6 ms=11870 ok=true
+SLOW insert db=app_data_6 ms=11878 ok=true
+SLOW insert db=app_data_6 ms=11846 ok=true
+SLOW insert db=app_data_6 ms=11865 ok=true
+SLOW insert db=app_data_6 ms=11855 ok=true
+SLOW insert db=app_data_6 ms=11898 ok=true
+SLOW insert db=app_data_6 ms=11899 ok=true
+SLOW insert db=app_data_6 ms=11911 ok=true
+SLOW insert db=app_data_6 ms=11908 ok=true
+SLOW insert db=app_data_4 ms=10776 ok=true
+SLOW insert db=app_data_4 ms=10785 ok=true
+SLOW insert db=app_data_4 ms=10789 ok=true
+SLOW insert db=app_data_4 ms=9832 ok=true
+SLOW insert db=app_data_4 ms=9837 ok=true
+SLOW insert db=app_data_4 ms=9841 ok=true
+SLOW insert db=app_data_4 ms=9849 ok=true
+SLOW insert db=app_data_4 ms=9855 ok=true
+SLOW insert db=app_data_4 ms=9862 ok=true
+SLOW insert db=app_data_4 ms=9867 ok=true
+SLOW insert db=app_data_4 ms=9875 ok=true
+SLOW insert db=app_data_4 ms=9882 ok=true
+SLOW insert db=app_data_4 ms=9888 ok=true
+SLOW insert db=app_data_4 ms=9900 ok=true
+SLOW insert db=app_data_4 ms=9907 ok=true
+SLOW insert db=app_data_4 ms=9912 ok=true
+compaction warm-up of tenant app_data_2: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_2 ms=7556 ok=true
+SLOW insert db=app_data_2 ms=7564 ok=true
+SLOW insert db=app_data_2 ms=7575 ok=true
+SLOW insert db=app_data_2 ms=7584 ok=true
+SLOW insert db=app_data_2 ms=6611 ok=true
+SLOW insert db=app_data_2 ms=6614 ok=true
+SLOW insert db=app_data_2 ms=6626 ok=true
+SLOW insert db=app_data_2 ms=6632 ok=true
+SLOW insert db=app_data_2 ms=6644 ok=true
+SLOW insert db=app_data_2 ms=6652 ok=true
+SLOW insert db=app_data_2 ms=6659 ok=true
+SLOW insert db=app_data_2 ms=6672 ok=true
+SLOW insert db=app_data_2 ms=6687 ok=true
+SLOW insert db=app_data_2 ms=6731 ok=true
+SLOW insert db=app_data_2 ms=6745 ok=true
+SLOW insert db=app_data_2 ms=6746 ok=true
+compaction warm-up of tenant app_data_5: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW hello db=admin ms=10001 ok=true
+compaction warm-up of tenant app_data_1: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_1 ms=4863 ok=true
+SLOW insert db=app_data_1 ms=4862 ok=true
+SLOW insert db=app_data_1 ms=4868 ok=true
+SLOW insert db=app_data_1 ms=4880 ok=true
+SLOW insert db=app_data_1 ms=4888 ok=true
+SLOW insert db=app_data_1 ms=4884 ok=true
+SLOW insert db=app_data_1 ms=4898 ok=true
+SLOW insert db=app_data_1 ms=4699 ok=true
+SLOW insert db=app_data_1 ms=4716 ok=true
+SLOW insert db=app_data_1 ms=4710 ok=true
+SLOW insert db=app_data_1 ms=4733 ok=true
+SLOW insert db=app_data_1 ms=4725 ok=true
+SLOW insert db=app_data_1 ms=4761 ok=true
+SLOW insert db=app_data_1 ms=4768 ok=true
+SLOW insert db=app_data_1 ms=4765 ok=true
+SLOW insert db=app_data_1 ms=4775 ok=true
+SLOW insert db=app_data_1 ms=982 ok=true
+SLOW insert db=app_data_1 ms=991 ok=true
+SLOW insert db=app_data_1 ms=991 ok=true
+SLOW insert db=app_data_1 ms=560 ok=true
+SLOW insert db=app_data_1 ms=586 ok=true
+SLOW insert db=app_data_1 ms=585 ok=true
+SLOW insert db=app_data_1 ms=578 ok=true
+SLOW insert db=app_data_1 ms=585 ok=true
+SLOW insert db=app_data_1 ms=587 ok=true
+SLOW insert db=app_data_1 ms=592 ok=true
+SLOW insert db=app_data_3 ms=1303 ok=true
+SLOW insert db=app_data_3 ms=1311 ok=true
+SLOW insert db=app_data_3 ms=1307 ok=true
+SLOW insert db=app_data_3 ms=1290 ok=true
+SLOW insert db=app_data_3 ms=1317 ok=true
+SLOW insert db=app_data_3 ms=1316 ok=true
+SLOW insert db=app_data_3 ms=540 ok=true
+SLOW insert db=app_data_3 ms=605 ok=true
+SLOW insert db=app_data_5 ms=509 ok=true
+SLOW insert db=app_data_5 ms=509 ok=true
+SLOW insert db=app_data_3 ms=606 ok=true
+SLOW insert db=app_data_3 ms=628 ok=true
+SLOW insert db=app_data_3 ms=619 ok=true
+SLOW insert db=app_data_3 ms=610 ok=true
+SLOW insert db=app_data_5 ms=547 ok=true
+SLOW insert db=app_data_3 ms=621 ok=true
+SLOW insert db=app_data_5 ms=569 ok=true
+SLOW insert db=app_data_3 ms=643 ok=true
+SLOW insert db=app_data_3 ms=650 ok=true
+SLOW insert db=app_data_5 ms=590 ok=true
+SLOW insert db=app_data_3 ms=714 ok=true
+SLOW insert db=app_data_5 ms=730 ok=true
+SLOW insert db=app_data_5 ms=851 ok=true
+SLOW insert db=app_data_5 ms=518 ok=true
+SLOW insert db=app_data_5 ms=510 ok=true
+SLOW insert db=app_data_5 ms=510 ok=true
+SLOW insert db=app_data_5 ms=504 ok=true
+SLOW insert db=app_data_5 ms=516 ok=true
+SLOW insert db=app_data_5 ms=500 ok=true
+SLOW insert db=app_data_5 ms=551 ok=true
+SLOW insert db=app_data_5 ms=520 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW insert db=app_data_3 ms=848 ok=true
+SLOW insert db=app_data_3 ms=636 ok=true
+SLOW insert db=app_data_3 ms=581 ok=true
+SLOW insert db=app_data_3 ms=643 ok=true
+SLOW insert db=app_data_3 ms=645 ok=true
+SLOW insert db=app_data_3 ms=603 ok=true
+SLOW insert db=app_data_3 ms=671 ok=true
+SLOW insert db=app_data_3 ms=668 ok=true
+SLOW insert db=app_data_3 ms=683 ok=true
+SLOW insert db=app_data_3 ms=694 ok=true
+SLOW insert db=app_data_3 ms=691 ok=true
+SLOW insert db=app_data_3 ms=701 ok=true
+SLOW insert db=app_data_3 ms=685 ok=true
+SLOW insert db=app_data_3 ms=767 ok=true
+SLOW insert db=app_data_3 ms=797 ok=true
+SLOW insert db=app_data_3 ms=782 ok=true
+SLOW insert db=app_data_5 ms=518 ok=true
+SLOW insert db=app_data_5 ms=521 ok=true
+SLOW insert db=app_data_5 ms=534 ok=true
+SLOW insert db=app_data_5 ms=527 ok=true
+SLOW insert db=app_data_5 ms=531 ok=true
+compaction warm-up of tenant app_data_1: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_3: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_3 ms=3483 ok=true
+SLOW insert db=app_data_3 ms=3511 ok=true
+SLOW insert db=app_data_3 ms=3374 ok=true
+SLOW insert db=app_data_3 ms=3508 ok=true
+SLOW insert db=app_data_3 ms=3521 ok=true
+SLOW insert db=app_data_3 ms=3518 ok=true
+SLOW insert db=app_data_3 ms=3489 ok=true
+SLOW insert db=app_data_3 ms=3468 ok=true
+SLOW insert db=app_data_3 ms=3461 ok=true
+SLOW insert db=app_data_3 ms=3461 ok=true
+SLOW insert db=app_data_3 ms=3479 ok=true
+SLOW insert db=app_data_3 ms=3499 ok=true
+SLOW insert db=app_data_3 ms=3495 ok=true
+SLOW insert db=app_data_3 ms=3514 ok=true
+SLOW insert db=app_data_3 ms=3531 ok=true
+SLOW insert db=app_data_3 ms=3529 ok=true
+compaction warm-up of tenant app_data_5: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_5 ms=2720 ok=true
+SLOW insert db=app_data_5 ms=2720 ok=true
+SLOW insert db=app_data_5 ms=2727 ok=true
+SLOW insert db=app_data_5 ms=2733 ok=true
+SLOW insert db=app_data_5 ms=2742 ok=true
+SLOW insert db=app_data_5 ms=2743 ok=true
+SLOW insert db=app_data_5 ms=2756 ok=true
+SLOW insert db=app_data_5 ms=2761 ok=true
+SLOW insert db=app_data_5 ms=2769 ok=true
+SLOW insert db=app_data_5 ms=2779 ok=true
+SLOW insert db=app_data_5 ms=2784 ok=true
+SLOW insert db=app_data_5 ms=2798 ok=true
+SLOW insert db=app_data_5 ms=2806 ok=true
+SLOW insert db=app_data_5 ms=1521 ok=true
+SLOW insert db=app_data_5 ms=1473 ok=true
+SLOW insert db=app_data_5 ms=1462 ok=true
+SLOW hello db=admin ms=10001 ok=true
+compaction warm-up of tenant app_data_4: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_6: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_6 ms=2669 ok=true
+SLOW insert db=app_data_4 ms=2686 ok=true
+SLOW insert db=app_data_4 ms=2752 ok=true
+SLOW insert db=app_data_4 ms=2752 ok=true
+SLOW insert db=app_data_4 ms=2753 ok=true
+SLOW insert db=app_data_6 ms=1664 ok=true
+SLOW insert db=app_data_6 ms=1659 ok=true
+SLOW insert db=app_data_6 ms=1654 ok=true
+SLOW insert db=app_data_6 ms=1650 ok=true
+SLOW insert db=app_data_4 ms=2767 ok=true
+SLOW insert db=app_data_4 ms=2767 ok=true
+SLOW insert db=app_data_4 ms=2767 ok=true
+SLOW insert db=app_data_4 ms=2767 ok=true
+SLOW insert db=app_data_6 ms=1658 ok=true
+SLOW insert db=app_data_6 ms=1650 ok=true
+SLOW insert db=app_data_6 ms=1646 ok=true
+SLOW insert db=app_data_6 ms=1043 ok=true
+SLOW insert db=app_data_4 ms=1053 ok=true
+SLOW insert db=app_data_4 ms=1098 ok=true
+SLOW insert db=app_data_4 ms=1055 ok=true
+SLOW insert db=app_data_4 ms=1055 ok=true
+SLOW insert db=app_data_6 ms=1061 ok=true
+SLOW insert db=app_data_6 ms=1062 ok=true
+SLOW insert db=app_data_6 ms=1062 ok=true
+SLOW insert db=app_data_4 ms=1062 ok=true
+SLOW insert db=app_data_4 ms=1062 ok=true
+SLOW insert db=app_data_4 ms=1063 ok=true
+SLOW insert db=app_data_6 ms=1073 ok=true
+SLOW insert db=app_data_6 ms=1073 ok=true
+SLOW insert db=app_data_6 ms=1073 ok=true
+SLOW insert db=app_data_6 ms=1073 ok=true
+SLOW insert db=app_data_4 ms=1078 ok=true
+SLOW insert db=app_data_6 ms=594 ok=true
+SLOW insert db=app_data_4 ms=524 ok=true
+SLOW insert db=app_data_1 ms=501 ok=true
+SLOW insert db=app_data_1 ms=502 ok=true
+SLOW insert db=app_data_2 ms=546 ok=true
+SLOW insert db=app_data_2 ms=541 ok=true
+SLOW insert db=app_data_2 ms=531 ok=true
+SLOW insert db=app_data_2 ms=510 ok=true
+SLOW insert db=app_data_6 ms=896 ok=true
+SLOW insert db=app_data_4 ms=918 ok=true
+SLOW insert db=app_data_6 ms=1257 ok=true
+SLOW insert db=app_data_6 ms=1257 ok=true
+SLOW insert db=app_data_4 ms=1153 ok=true
+SLOW insert db=app_data_4 ms=1152 ok=true
+SLOW insert db=app_data_4 ms=1155 ok=true
+SLOW insert db=app_data_4 ms=1131 ok=true
+SLOW insert db=app_data_4 ms=1125 ok=true
+SLOW insert db=app_data_4 ms=1125 ok=true
+SLOW insert db=app_data_4 ms=1126 ok=true
+SLOW insert db=app_data_4 ms=1106 ok=true
+SLOW insert db=app_data_4 ms=1100 ok=true
+SLOW insert db=app_data_4 ms=1102 ok=true
+SLOW insert db=app_data_5 ms=500 ok=true
+SLOW insert db=app_data_4 ms=1089 ok=true
+SLOW insert db=app_data_4 ms=1090 ok=true
+SLOW insert db=app_data_4 ms=582 ok=true
+SLOW insert db=app_data_4 ms=576 ok=true
+SLOW insert db=app_data_4 ms=576 ok=true
+SLOW insert db=app_data_5 ms=561 ok=true
+SLOW insert db=app_data_5 ms=557 ok=true
+SLOW insert db=app_data_5 ms=549 ok=true
+SLOW insert db=app_data_1 ms=516 ok=true
+SLOW insert db=app_data_1 ms=515 ok=true
+SLOW insert db=app_data_4 ms=518 ok=true
+SLOW insert db=app_data_4 ms=509 ok=true
+SLOW insert db=app_data_4 ms=508 ok=true
+SLOW insert db=app_data_6 ms=551 ok=true
+SLOW insert db=app_data_6 ms=524 ok=true
+SLOW insert db=app_data_6 ms=522 ok=true
+SLOW insert db=app_data_6 ms=542 ok=true
+SLOW insert db=app_data_4 ms=522 ok=true
+SLOW insert db=app_data_4 ms=521 ok=true
+SLOW insert db=app_data_4 ms=515 ok=true
+SLOW insert db=app_data_4 ms=542 ok=true
+SLOW insert db=app_data_6 ms=588 ok=true
+SLOW insert db=app_data_6 ms=665 ok=true
+SLOW insert db=app_data_6 ms=600 ok=true
+SLOW insert db=app_data_6 ms=654 ok=true
+SLOW insert db=app_data_6 ms=651 ok=true
+SLOW insert db=app_data_6 ms=644 ok=true
+SLOW insert db=app_data_6 ms=635 ok=true
+SLOW insert db=app_data_6 ms=675 ok=true
+SLOW insert db=app_data_6 ms=675 ok=true
+SLOW insert db=app_data_6 ms=667 ok=true
+SLOW insert db=app_data_6 ms=574 ok=true
+SLOW insert db=app_data_6 ms=657 ok=true
+SLOW insert db=app_data_6 ms=660 ok=true
+SLOW insert db=app_data_6 ms=676 ok=true
+SLOW insert db=app_data_6 ms=800 ok=true
+SLOW hello db=admin ms=10026 ok=true
+compaction warm-up of tenant app_data_1: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_3: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_3 ms=1157 ok=true
+SLOW insert db=app_data_3 ms=1157 ok=true
+SLOW insert db=app_data_3 ms=1190 ok=true
+SLOW insert db=app_data_3 ms=1191 ok=true
+SLOW insert db=app_data_3 ms=1192 ok=true
+compaction warm-up of tenant app_data_2: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_5: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_5 ms=7177 ok=true
+SLOW insert db=app_data_5 ms=7187 ok=true
+SLOW insert db=app_data_5 ms=7188 ok=true
+SLOW insert db=app_data_5 ms=7190 ok=true
+SLOW insert db=app_data_5 ms=7204 ok=true
+SLOW insert db=app_data_5 ms=7206 ok=true
+SLOW insert db=app_data_5 ms=7200 ok=true
+SLOW insert db=app_data_5 ms=6969 ok=true
+SLOW insert db=app_data_5 ms=6969 ok=true
+SLOW insert db=app_data_5 ms=6967 ok=true
+SLOW insert db=app_data_5 ms=6962 ok=true
+SLOW insert db=app_data_5 ms=6964 ok=true
+SLOW insert db=app_data_5 ms=6960 ok=true
+SLOW insert db=app_data_5 ms=6972 ok=true
+SLOW insert db=app_data_5 ms=6965 ok=true
+SLOW insert db=app_data_5 ms=6958 ok=true
+compaction warm-up of tenant app_data_4: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_6: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_4 ms=4248 ok=true
+SLOW insert db=app_data_4 ms=4263 ok=true
+SLOW insert db=app_data_4 ms=4268 ok=true
+SLOW insert db=app_data_4 ms=4286 ok=true
+SLOW insert db=app_data_4 ms=4289 ok=true
+SLOW insert db=app_data_4 ms=4309 ok=true
+SLOW insert db=app_data_4 ms=4311 ok=true
+SLOW insert db=app_data_4 ms=4311 ok=true
+SLOW insert db=app_data_4 ms=4317 ok=true
+SLOW insert db=app_data_4 ms=4325 ok=true
+SLOW insert db=app_data_4 ms=4334 ok=true
+SLOW insert db=app_data_4 ms=3481 ok=true
+SLOW insert db=app_data_4 ms=3496 ok=true
+SLOW insert db=app_data_4 ms=3496 ok=true
+SLOW insert db=app_data_4 ms=3496 ok=true
+SLOW insert db=app_data_4 ms=3505 ok=true
+SLOW insert db=app_data_6 ms=4692 ok=true
+SLOW insert db=app_data_6 ms=4707 ok=true
+SLOW insert db=app_data_6 ms=4715 ok=true
+SLOW insert db=app_data_6 ms=4715 ok=true
+SLOW insert db=app_data_6 ms=4725 ok=true
+SLOW insert db=app_data_6 ms=4734 ok=true
+SLOW insert db=app_data_6 ms=4754 ok=true
+SLOW insert db=app_data_6 ms=4762 ok=true
+SLOW insert db=app_data_6 ms=4771 ok=true
+SLOW insert db=app_data_6 ms=4781 ok=true
+SLOW insert db=app_data_6 ms=4790 ok=true
+SLOW insert db=app_data_6 ms=4803 ok=true
+SLOW insert db=app_data_6 ms=4815 ok=true
+SLOW insert db=app_data_6 ms=3976 ok=true
+SLOW insert db=app_data_6 ms=3998 ok=true
+SLOW insert db=app_data_6 ms=3998 ok=true
+SLOW hello db=admin ms=10072 ok=true
+SLOW insert db=app_data_6 ms=514 ok=true
+SLOW insert db=app_data_6 ms=561 ok=true
+SLOW insert db=app_data_6 ms=560 ok=true
+SLOW insert db=app_data_2 ms=502 ok=true
+SLOW insert db=app_data_2 ms=503 ok=true
+SLOW insert db=app_data_2 ms=500 ok=true
+SSTGC begin tenant=app_data_3 unix_ms=1793960448207
+SSTGC begin tenant=app_data_4 unix_ms=1793960448208
+SSTGC begin tenant=app_data_5 unix_ms=1793960448208
+SSTGC begin tenant=app_data_1 unix_ms=1793960448212
+SSTGC begin tenant=app_data_2 unix_ms=1793960448213
+SSTGC end tenant=app_data_3 unix_ms=1793960449820 deleted_ssts=46 deleted_manifests=72 referenced=15 waiting=242
+SSTGC end tenant=app_data_1 unix_ms=1793960449823 deleted_ssts=45 deleted_manifests=84 referenced=27 waiting=240
+SSTGC end tenant=app_data_5 unix_ms=1793960449823 deleted_ssts=42 deleted_manifests=69 referenced=12 waiting=248
+SSTGC end tenant=app_data_4 unix_ms=1793960449826 deleted_ssts=59 deleted_manifests=79 referenced=27 waiting=191
+SSTGC end tenant=app_data_2 unix_ms=1793960449827 deleted_ssts=58 deleted_manifests=89 referenced=22 waiting=221
+SLOW insert db=app_data_2 ms=537 ok=true
+SLOW insert db=app_data_2 ms=552 ok=true
+SLOW insert db=app_data_2 ms=549 ok=true
+SLOW insert db=app_data_2 ms=538 ok=true
+SLOW insert db=app_data_2 ms=533 ok=true
+SLOW insert db=app_data_5 ms=713 ok=true
+SLOW insert db=app_data_5 ms=722 ok=true
+SLOW insert db=app_data_5 ms=751 ok=true
+SSTGC begin tenant=app_data_6 unix_ms=1793960451873
+SSTGC end tenant=app_data_6 unix_ms=1793960452250 deleted_ssts=47 deleted_manifests=81 referenced=30 waiting=221
+compaction warm-up of tenant app_data_3: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_5: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW hello db=admin ms=10012 ok=true
+compaction warm-up of tenant app_data_1: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_1 ms=5268 ok=true
+SLOW insert db=app_data_1 ms=5272 ok=true
+SLOW insert db=app_data_1 ms=5279 ok=true
+SLOW insert db=app_data_1 ms=5201 ok=true
+SLOW insert db=app_data_1 ms=5202 ok=true
+SLOW insert db=app_data_1 ms=5212 ok=true
+SLOW insert db=app_data_1 ms=5207 ok=true
+SLOW insert db=app_data_1 ms=5224 ok=true
+SLOW insert db=app_data_1 ms=5219 ok=true
+SLOW insert db=app_data_1 ms=5240 ok=true
+SLOW insert db=app_data_1 ms=5242 ok=true
+SLOW insert db=app_data_1 ms=5231 ok=true
+SLOW insert db=app_data_1 ms=5227 ok=true
+SLOW insert db=app_data_1 ms=5227 ok=true
+SLOW insert db=app_data_1 ms=5238 ok=true
+SLOW insert db=app_data_1 ms=5252 ok=true
+compaction warm-up of tenant app_data_2: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW hello db=admin ms=10001 ok=true
+compaction warm-up of tenant app_data_4: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+compaction warm-up of tenant app_data_3: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW hello db=admin ms=10001 ok=true
+compaction warm-up of tenant app_data_6: stopped at 0.00 s, the writer's L0 is one SST from full (0 of 0 reads done)
+SLOW insert db=app_data_6 ms=18108 ok=true
+SLOW insert db=app_data_6 ms=18045 ok=true
+SLOW insert db=app_data_6 ms=18044 ok=true
+SLOW insert db=app_data_6 ms=18048 ok=true
+SLOW insert db=app_data_6 ms=18024 ok=true
+SLOW insert db=app_data_6 ms=18022 ok=true
+SLOW insert db=app_data_6 ms=18009 ok=true
+LEASE acquired tenant=admin holder=26175-318d4c49 unix_ms=1793960481309 takeover_from=-
+LEASE acquired tenant=admin holder=26175-318d4c49 unix_ms=1793960481310 takeover_from=-
+UNKNOWN COMMAND "atlasVersion" db=admin
+SLOW dbStats db=app_data_1 ms=3877 ok=true
+SLOW dbStats db=app_data_2 ms=3846 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW dbStats db=app_data_3 ms=3742 ok=true
+SLOW dbStats db=app_data_4 ms=3917 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW dbStats db=app_data_5 ms=5824 ok=true
+SLOW dbStats db=app_data_6 ms=3784 ok=true
+SSTGC begin tenant=app_data_3 unix_ms=1793960508765
+SSTGC begin tenant=app_data_4 unix_ms=1793960508765
+SSTGC begin tenant=app_data_5 unix_ms=1793960508765
+SSTGC begin tenant=app_data_1 unix_ms=1793960508766
+SSTGC begin tenant=app_data_2 unix_ms=1793960508766
+SSTGC end tenant=app_data_4 unix_ms=1793960509662 deleted_ssts=21 deleted_manifests=53 referenced=7 waiting=192
+SSTGC end tenant=app_data_2 unix_ms=1793960509729 deleted_ssts=37 deleted_manifests=62 referenced=14 waiting=173
+SSTGC end tenant=app_data_3 unix_ms=1793960509731 deleted_ssts=44 deleted_manifests=66 referenced=16 waiting=165
+SSTGC end tenant=app_data_5 unix_ms=1793960509732 deleted_ssts=43 deleted_manifests=64 referenced=16 waiting=183
+SSTGC end tenant=app_data_1 unix_ms=1793960509733 deleted_ssts=46 deleted_manifests=81 referenced=16 waiting=169
+SSTGC begin tenant=app_data_6 unix_ms=1793960513735
+SSTGC end tenant=app_data_6 unix_ms=1793960513877 deleted_ssts=37 deleted_manifests=65 referenced=8 waiting=207
+SLOW find db=app_data_1 ms=963 ok=true
+SLOW find db=app_data_2 ms=843 ok=true
+SLOW find db=app_data_3 ms=782 ok=true
+SLOW find db=app_data_4 ms=847 ok=true
+SLOW find db=app_data_5 ms=728 ok=true
+SLOW find db=app_data_6 ms=805 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10002 ok=true
+LEASE acquired tenant=admin holder=26175-318d4c49 unix_ms=1793960562378 takeover_from=-
+LEASE acquired tenant=admin holder=26175-318d4c49 unix_ms=1793960562380 takeover_from=-
+UNKNOWN COMMAND "atlasVersion" db=admin
+shutting down: closing tenants cleanly
+LEASE writer_close tenant=app_data_1 holder=26175-318d4c49 unix_ms=1793960562496 
+LEASE release_begin tenant=app_data_1 holder=26175-318d4c49 unix_ms=1793960562496 
+LEASE release tenant=app_data_1 holder=26175-318d4c49 unix_ms=1793960562496 ok=true
+LEASE writer_close tenant=app_data_6 holder=26175-318d4c49 unix_ms=1793960562518 
+LEASE release_begin tenant=app_data_6 holder=26175-318d4c49 unix_ms=1793960562518 
+LEASE release tenant=app_data_6 holder=26175-318d4c49 unix_ms=1793960562519 ok=true
+LEASE writer_close tenant=app_data_3 holder=26175-318d4c49 unix_ms=1793960562526 
+LEASE release_begin tenant=app_data_3 holder=26175-318d4c49 unix_ms=1793960562526 
+LEASE release tenant=app_data_3 holder=26175-318d4c49 unix_ms=1793960562527 ok=true
+LEASE writer_close tenant=app_data_2 holder=26175-318d4c49 unix_ms=1793960562565 
+LEASE release_begin tenant=app_data_2 holder=26175-318d4c49 unix_ms=1793960562565 
+LEASE release tenant=app_data_2 holder=26175-318d4c49 unix_ms=1793960562566 ok=true
+LEASE writer_close tenant=app_data_4 holder=26175-318d4c49 unix_ms=1793960562581 
+LEASE release_begin tenant=app_data_4 holder=26175-318d4c49 unix_ms=1793960562581 
+LEASE release tenant=app_data_4 holder=26175-318d4c49 unix_ms=1793960562582 ok=true
+LEASE writer_close tenant=app_data_5 holder=26175-318d4c49 unix_ms=1793960562583 
+LEASE release_begin tenant=app_data_5 holder=26175-318d4c49 unix_ms=1793960562583 
+LEASE release tenant=app_data_5 holder=26175-318d4c49 unix_ms=1793960562583 ok=true
+tenants closed; stopping maintenance
+maintenance stopped

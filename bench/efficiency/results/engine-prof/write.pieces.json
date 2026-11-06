@@ -1,0 +1,77 @@
+{
+ "samples": 28754,
+ "flat": {
+  "mongo.plan": 0.1043333101481533,
+  "slatedb.read": 23.381094804201155,
+  "alloc": 14.7005633998748,
+  "mongo.bson": 10.694164290185713,
+  "slatedb.memtable": 4.705432287681714,
+  "memcpy": 11.19496417889685,
+  "mongo.command": 3.9646657856298253,
+  "slatedb.wal": 1.2589552757877165,
+  "mongo.protocol": 0.3929888015580441,
+  "lock": 1.1511441886346248,
+  "slatedb.compaction": 19.541628990749114,
+  "slatedb.flush_l0": 3.6516658551853656,
+  "mongo.index": 1.0050775544272101,
+  "other": 0.5842665368296585,
+  "store.files": 3.481254781943382,
+  "runtime": 0.18779995826667595
+ },
+ "full": {
+  "mongo.plan": 0.15649996522222995,
+  "slatedb.read": 30.044515545663213,
+  "mongo.index": 1.7110662864297141,
+  "mongo.bson": 19.110384642136747,
+  "slatedb.memtable": 5.922654239410169,
+  "mongo.command": 5.922654239410169,
+  "slatedb.wal": 1.811921819572929,
+  "mongo.protocol": 0.49384433470125894,
+  "slatedb.compaction": 25.102594421645684,
+  "slatedb.flush_l0": 4.701954510676775,
+  "other": 0.7303331710370731,
+  "store.files": 3.867288029491549,
+  "runtime": 0.4242887946024901
+ },
+ "cross_owner": {
+  "alloc": {
+   "mongo.index": 0.5460109897753356,
+   "slatedb.read": 4.190721290950824,
+   "mongo.bson": 4.674132294637268,
+   "mongo.command": 1.2589552757877165,
+   "slatedb.memtable": 0.5007998887111358,
+   "slatedb.compaction": 2.5074772205606175,
+   "slatedb.wal": 0.1599777422271684,
+   "other": 0.1043333101481533,
+   "slatedb.flush_l0": 0.40689990957779787,
+   "store.files": 0.2017110662864297,
+   "mongo.plan": 0.05216665507407665,
+   "mongo.protocol": 0.09737775613827641
+  },
+  "memcpy": {
+   "mongo.bson": 3.491688112958197,
+   "slatedb.read": 2.2535994992001114,
+   "mongo.command": 0.6259998608889198,
+   "slatedb.wal": 0.35473325450372123,
+   "slatedb.memtable": 0.6329554148987967,
+   "slatedb.compaction": 2.9421993461779232,
+   "store.files": 0.13563330319259928,
+   "mongo.index": 0.13911108019753773,
+   "slatedb.flush_l0": 0.6155665298741044,
+   "mongo.protocol": 0.0034777770049384434
+  },
+  "lock": {
+   "slatedb.read": 0.21909995131112192,
+   "mongo.command": 0.07303331710370731,
+   "mongo.bson": 0.2503999443555679,
+   "slatedb.memtable": 0.08346664811852264,
+   "slatedb.wal": 0.03825554705432287,
+   "mongo.index": 0.02086666202963066,
+   "slatedb.compaction": 0.11128886415803019,
+   "store.files": 0.04868887806913821,
+   "other": 0.04173332405926132,
+   "runtime": 0.23648883633581413,
+   "slatedb.flush_l0": 0.027822216039507547
+  }
+ }
+}

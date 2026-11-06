@@ -1,0 +1,1 @@
+4928	/home/user/data/mongod
