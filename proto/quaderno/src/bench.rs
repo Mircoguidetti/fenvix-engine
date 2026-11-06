@@ -1660,3 +1660,18 @@ pub async fn retry_probe(cl: Arc<Cluster>, window_ms: u64) {
         tokio::time::sleep(Duration::from_millis(20)).await;
     }
 }
+
+/// Q8d (reviewer C4): commits of databases 0..n to one log; prints, per database, Committed or the refusal. With
+/// `--logs L` on the replicas, only the databases with `n % L == log_id` must be committed.
+pub async fn foreign_db(cl: Arc<Cluster>, n: u64) {
+    for d in 0..n {
+        let c = CommitReq { txn: txn_id(), db: db_id(d), read_pos: 0, mode: Mode::Blind, writes: vec![Write { key: doc_key("k"), kind: Kind::Put, val: Bytes::from_static(b"x") }], reads: vec![], session: None };
+        let s = match cl.call_leader(&Req::Commit(c), Duration::from_secs(5)).await {
+            Some(Resp::Committed(_)) => "Committed".to_string(),
+            Some(Resp::Err(e)) => format!("Refused({e})"),
+            Some(_) => "other".to_string(),
+            None => "no answer".to_string(),
+        };
+        println!("db {d}: {s}");
+    }
+}

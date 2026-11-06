@@ -14,8 +14,10 @@ on:
 permissions:
   id-token: write
   contents: write
+# Q8d (reviewer C2): same group as the other tests with the tag project=fenvix-coldread (code-irlanda, minimal-kitchen,
+# M31): they never run together; the cleanup also touches only this run's machines and buckets (pulizia.sh)
 concurrency:
-  group: fenvix-coldread
+  group: fenvix-m31
   cancel-in-progress: false
 jobs:
   run:
@@ -103,9 +105,9 @@ jobs:
         if: always() && steps.mode.outputs.modo == 'prova'
         run: bash $G/recupera.sh
 
-      - name: Pulizia (macchine con il tag, bucket fenvix-coldread-*)
+      - name: Pulizia (solo le macchine e i bucket di questa prova)
         if: always()
-        run: bash $G/pulizia.sh
+        run: Q8_MODO=${{ steps.mode.outputs.modo }} bash $G/pulizia.sh
 
       - name: Pubblico i risultati sul branch (senza l'account)
         if: always() && steps.mode.outputs.modo == 'prova'

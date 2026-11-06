@@ -45,7 +45,7 @@ PY
 oltre_tetto() { python3 -c "import sys; sys.exit(0 if float(sys.argv[1]) >= float(sys.argv[2]) else 1)" "$SPESA_ORA" "$TETTO_DOLLARI"; }
 conta_macchine() {
   local n
-  n=$(aws ec2 describe-instances --filters Name=tag:project,Values=fenvix-coldread Name=instance-state-name,Values=pending,running,stopping,stopped,shutting-down --query 'length(Reservations[].Instances[])' --output text 2>/dev/null) || n=""
+  n=$(aws ec2 describe-instances --filters Name=tag:project,Values=fenvix-coldread "Name=tag:Name,Values=fenvix-q8-${GITHUB_RUN_ID:-0}-*" Name=instance-state-name,Values=pending,running,stopping,stopped,shutting-down --query 'length(Reservations[].Instances[])' --output text 2>/dev/null) || n=""
   [[ "$n" =~ ^[0-9]+$ ]] && N_MAC=$(( n > 4 ? n : 4 ))
 }
 user_data() { # URL BUCKET RUOLO
@@ -84,7 +84,7 @@ lancia() { # RUOLO SUBNET
     --iam-instance-profile Name="$RUOLO_MACCHINA" --instance-initiated-shutdown-behavior terminate \
     --metadata-options HttpTokens=required,HttpEndpoint=enabled \
     --block-device-mappings 'DeviceName=/dev/sda1,Ebs={VolumeSize=30,VolumeType=gp3,DeleteOnTermination=true}' \
-    --tag-specifications "ResourceType=instance,Tags=[{Key=project,Value=fenvix-coldread},{Key=Name,Value=fenvix-q8-$1}]" "ResourceType=volume,Tags=[{Key=project,Value=fenvix-coldread}]" \
+    --tag-specifications "ResourceType=instance,Tags=[{Key=project,Value=fenvix-coldread},{Key=Name,Value=fenvix-q8-${GITHUB_RUN_ID:-0}-$1}]" "ResourceType=volume,Tags=[{Key=project,Value=fenvix-coldread}]" \
     --user-data "file://$ud" --query 'Instances[0].[InstanceId,PrivateIpAddress]' --output text
   rm -f "$ud"
 }

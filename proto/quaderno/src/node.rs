@@ -65,6 +65,10 @@ pub struct Config {
     /// Q8c: extra delay before this replica's first election (spreads the leaders of the logs of a cell over the
     /// machines: each log has a preferred leader, the other two replicas wait this much longer at start)
     pub first_elect_delay_ms: u64,
+    /// Q8d (reviewer C4): this log's number in the cell and the number of logs of the cell. A commit of a database
+    /// whose log (`codec::log_of_db`) is another one is refused. `logs = 1` (default): this log owns every database
+    pub log_id: u32,
+    pub logs: u32,
 }
 
 /// Costi stimati in RAM per il conto unico della memoria (byte). Tarati confrontando il conto con l'RSS misurato.
@@ -627,6 +631,10 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
 }
 
 impl Node {
+    fn owns(&self, db: &Db) -> bool {
+        self.cfg.logs <= 1 || crate::codec::log_of_db(db, self.cfg.logs) == self.cfg.log_id
+    }
+
     fn recover(cfg: Config, rx: Receiver<Ev>, disk_tx: Sender<DiskOp>, peers: Vec<(u8, UnboundedSender<Out>)>, sh: Arc<Shared>, spill_tx: Sender<SpillReq>) -> anyhow::Result<Node> {
         let st: RaftState = std::fs::read(cfg.dir.join("state")).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or(RaftState { term: 0, voted: -1 });
         let ck: Option<Ckpt> = std::fs::read(cfg.dir.join("ckpt")).ok().and_then(|b| serde_json::from_slice(&b).ok());
@@ -2112,6 +2120,12 @@ impl Node {
     }
 
     fn commit_now(&mut self, reply: Reply, c: CommitReq) {
+        // Q8d (reviewer C4, guarantee 8): a log accepts only the databases assigned to it. Two logs that both accepted
+        // the same database would give it two orders of writes (two writers)
+        if !self.owns(&c.db) {
+            reply.send(&Resp::Err(format!("database not on this log (log {} of {})", self.cfg.log_id, self.cfg.logs)));
+            return;
+        }
         // stesso id (o stessa sessione) già nel registro: stessa posizione
         let dup = self.txns.get(&c.txn).copied().or_else(|| c.session.as_ref().and_then(|s| self.sessions.get(&(s.lsid.clone(), s.txn_number)).copied()));
         if let Some((i, p)) = dup {
@@ -2164,13 +2178,9 @@ async fn door_push(sh: &Arc<Shared>, t: &Sender<Ev>, enter: &Arc<dyn Fn(Vec<Vec<
         lane_push(sh, t, items);
         return;
     };
-    // stale commits (read position older than the window) are answered before the door: they must not spend the
-    // database's budget nor keep its connection waiting
-    let (stale, items): (Vec<_>, Vec<_>) = items.into_iter().partition(|(_, c)| c.mode == Mode::Validated && sh.win.read_pos_too_old(&c.db, c.read_pos));
-    for (r, c) in stale {
-        sh.stale_early.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        r.send(&Resp::Conflict(c.writes.first().map(|w| w.key.clone()).unwrap_or_default()));
-    }
+    // Q8d (reviewer C1): no early "too old" answer here. A resend of a commit that is already in the log (same txn id,
+    // after a lost reply) must get `Committed(same pos)` from the leader's dedup in `commit_now`, which runs BEFORE
+    // validation; only the leader's main thread has the txn table. A stale commit pays the door like any commit.
     if items.is_empty() {
         return;
     }
@@ -2221,21 +2231,8 @@ async fn door_push(sh: &Arc<Shared>, t: &Sender<Ev>, enter: &Arc<dyn Fn(Vec<Vec<
 fn lane_push(sh: &Arc<Shared>, t: &Sender<Ev>, items: Vec<(Reply, CommitReq)>) {
     let now = Instant::now();
     let mut rej = vec![];
-    // Q8c: a validated commit whose read position is older than the window can only get a conflict: answer it here
-    // (same answer as the main thread), so commits that waited too long outside never cost the leader anything
-    let items: Vec<(Reply, CommitReq)> = items
-        .into_iter()
-        .filter_map(|(r, c)| {
-            if c.mode == Mode::Validated && sh.win.read_pos_too_old(&c.db, c.read_pos) {
-                let k = c.writes.first().map(|w| w.key.clone()).unwrap_or_default();
-                rej.push((r, Resp::Conflict(k)));
-                sh.stale_early.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                None
-            } else {
-                Some((r, c))
-            }
-        })
-        .collect();
+    // Q8d (reviewer C1): stale commits are NOT answered here any more (see `door_push`): dedup comes first, in the
+    // leader's main thread
     {
         let mut l = sh.lanes.lock();
         for (r, c) in items {

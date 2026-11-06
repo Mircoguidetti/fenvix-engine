@@ -43,8 +43,10 @@ guarda "dischi EBS non attaccati" aws ec2 describe-volumes --filters Name=status
 FILTRO='.Addresses[] | "indirizzo \(.PublicIp) (\(.AllocationId // "?"))"'
 guarda "indirizzi Elastic IP" aws ec2 describe-addresses --filters "$TAGF"
 
-# 4. bucket fenvix-coldread-*
-FILTRO='.Buckets[].Name | select(startswith("fenvix-coldread-")) | "bucket \(.)"'
+# 4. bucket fenvix-coldread-q8-* (Q8d, reviewer C2: the kept pantry of the minimal kitchen, fenvix-coldread-cmd-*, is
+# kept on purpose and is not this test's) and this run's permission bucket
+export RUNID=${GITHUB_RUN_ID:-0}
+FILTRO='.Buckets[].Name | select(startswith("fenvix-coldread-q8-") or . == ("fenvix-coldread-permessi-" + $ENV.RUNID)) | "bucket \(.)"'
 guarda "bucket S3" aws s3api list-buckets
 
 S=${GITHUB_STEP_SUMMARY:-/dev/null}

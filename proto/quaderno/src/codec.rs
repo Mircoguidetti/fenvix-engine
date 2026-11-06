@@ -1037,13 +1037,25 @@ pub fn peek_commit(body: &[u8]) -> Option<(u64, u32, Db)> {
         1 => Some((id, 1, body.get(9 + 16..9 + 32)?.try_into().ok()?)),
         12 => {
             let n = u32::from_le_bytes(body.get(9..13)?.try_into().ok()?);
-            if n == 0 {
+            // Q8d (reviewer C3): only the first commit's database sits at a fixed place. A batch of several commits may
+            // carry several databases (a waiter multiplexes them): it is decoded and the door decides per database
+            if n != 1 {
                 return None;
             }
             Some((id, n, body.get(13 + 16..13 + 32)?.try_into().ok()?))
         }
         _ => None,
     }
+}
+
+/// Q8d (reviewer C4): database -> log of the cell. Fixed rule for the prototype: the last 8 bytes of the database id
+/// (big endian) modulo the number of logs; `bench::db_id(n)` puts `n` there, so it equals `bench::log_of(n, logs)`.
+/// In the product this is a directory entry (so a database can be moved, with a numbered turn).
+pub fn log_of_db(db: &Db, logs: u32) -> u32 {
+    if logs <= 1 {
+        return 0;
+    }
+    (u64::from_be_bytes(db[8..16].try_into().unwrap()) % logs as u64) as u32
 }
 
 #[cfg(test)]
@@ -1054,9 +1066,18 @@ mod tests_peek {
         let c = |db: u8| CommitReq { txn: [9; 16], db: [db; 16], read_pos: 77, mode: Mode::Validated, writes: vec![], reads: vec![], session: None };
         let one = enc_req(5, &Req::Commit(c(3)));
         assert_eq!(peek_commit(&one[8..]), Some((5, 1, [3; 16])));
+        let one_in_batch = enc_req(8, &Req::CommitBatch(vec![c(4)]));
+        assert_eq!(peek_commit(&one_in_batch[8..]), Some((8, 1, [4; 16])));
+        // Q8d (reviewer C3): a batch of several commits is never judged by its first database
         let many = enc_req(6, &Req::CommitBatch(vec![c(4), c(4), c(7)]));
-        assert_eq!(peek_commit(&many[8..]), Some((6, 3, [4; 16])));
+        assert_eq!(peek_commit(&many[8..]), None);
+        let mixed = enc_req(9, &Req::CommitBatch(vec![c(7), c(4)]));
+        assert_eq!(peek_commit(&mixed[8..]), None);
         let other = enc_req(7, &Req::Status);
+        let mut d = [0u8; 16];
+        d[8..].copy_from_slice(&13u64.to_be_bytes());
+        assert_eq!(log_of_db(&d, 4), 1);
+        assert_eq!(log_of_db(&d, 1), 0);
         assert_eq!(peek_commit(&other[8..]), None);
     }
 }

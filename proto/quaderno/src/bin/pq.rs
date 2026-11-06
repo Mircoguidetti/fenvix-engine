@@ -102,6 +102,9 @@ fn main() -> anyhow::Result<()> {
                 disk_ro: a.u("disk-ro-mb", 0) << 20,
                 alarm_s: a.u("alarm-s", 120),
                 first_elect_delay_ms: a.u("first-elect-delay-ms", 0),
+                // Q8d (reviewer C4): which databases this log owns (--log-id / --logs, or PQ_LOG_ID / PQ_LOGS)
+                log_id: a.u("log-id", std::env::var("PQ_LOG_ID").ok().and_then(|x| x.parse().ok()).unwrap_or(0)) as u32,
+                logs: a.u("logs", std::env::var("PQ_LOGS").ok().and_then(|x| x.parse().ok()).unwrap_or(1)) as u32,
             })?;
         }
         "proxy" => {
@@ -226,6 +229,10 @@ fn main() -> anyhow::Result<()> {
         "retryprobe" => {
             let r = rt(2);
             r.block_on(bench::retry_probe(cluster(&a), a.u("window-ms", 2000)));
+        }
+        "foreigndb" => {
+            let r = rt(2);
+            r.block_on(bench::foreign_db(cluster(&a), a.u("n", 8)));
         }
         "doormix" => {
             let r = rt(2);

@@ -42,7 +42,7 @@ case "$RUOLO" in
       delay=0; [ $((g % 3)) = "$i" ] || delay=3000
       mkdir -p /opt/q8/dati/g$g
       ./pq replica --id "$i" --dir /opt/q8/dati/g$g --peer-listen 0.0.0.0:$((7100 + 1000 * g)) --client-listen 0.0.0.0:$((7200 + 1000 * g)) --peers "$peers" \
-        --mem-cap-mb "$MEM" --window-ms 10000 --first-elect-delay-ms $delay > out/replica-g$g.log 2>&1 &
+        --mem-cap-mb "$MEM" --window-ms 10000 --first-elect-delay-ms $delay --log-id $g --logs $LOGS > out/replica-g$g.log 2>&1 &
       PIDS="$PIDS $!"
     done
     passo "replicas of $LOGS logs started (pids$PIDS)"

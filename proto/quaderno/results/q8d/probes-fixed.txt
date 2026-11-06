@@ -1,0 +1,26 @@
+PASS C1 retry of a committed validated commit (door 0): no Conflict while it is in the log
+T committed at pos 117568603915812864 (read_pos 117568603817246719)
+t+    0 ms resend of T -> Committed(same pos)
+t+ 2148 ms resend of T -> Conflict
+PASS C1 retry of a committed validated commit (door 1): no Conflict while it is in the log
+T committed at pos 117568604620062720 (read_pos 117568604521496575)
+t+    0 ms resend of T -> Committed(same pos)
+t+ 2100 ms resend of T -> Conflict
+PASS C3 batch [A over cap, B quiet]: B gets Committed
+PASS C3 control: A over its cap is still refused
+control, batch [B]: Committed -> B gets Committed
+A over its cap, batch [A]: Busy(reason 6, retry 367 ms) -> B gets Busy(reason 6, retry 367 ms)
+A over its cap, batch [A, B]: Busy(reason 6, retry 367 ms), Committed -> B gets Committed
+A over its cap, batch [B, A]: Committed, Busy(reason 6, retry 364 ms) -> B gets Committed
+A over its cap, single commit B: Committed
+PASS C4 log 1 of 2 commits only odd databases and refuses the others
+db 0: Refused(database not on this log (log 1 of 2))
+db 1: Committed
+db 2: Refused(database not on this log (log 1 of 2))
+db 3: Committed
+db 4: Refused(database not on this log (log 1 of 2))
+db 5: Committed
+db 6: Refused(database not on this log (log 1 of 2))
+db 7: Committed
+PASS C4 control: a single log owns every database
+RESULT PASS

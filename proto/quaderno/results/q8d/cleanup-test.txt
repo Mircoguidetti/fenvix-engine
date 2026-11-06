@@ -1,0 +1,9 @@
+PASS normal run deletes only run 111
+PASS smonta deletes every Q8 leftover, never the others
+PASS workflow in group fenvix-m31
+exit 0
+--- old code (0a40a9d pulizia.sh and workflow):
+FAIL normal run deletes only run 111: got [RB s3://fenvix-coldread-cmd-pantry;RB s3://fenvix-coldread-irl-42;RB s3://fenvix-coldread-permessi-111;RB s3://fenvix-coldread-permessi-7;RB s3://fenvix-coldread-q8-111;RB s3://fenvix-coldread-q8-99;] expected [RB s3://fenvix-coldread-permessi-111;RB s3://fenvix-coldread-q8-111;TERMINATE i-q8a i-q8b;]
+FAIL smonta deletes every Q8 leftover, never the others: got [RB s3://fenvix-coldread-cmd-pantry;RB s3://fenvix-coldread-irl-42;RB s3://fenvix-coldread-permessi-111;RB s3://fenvix-coldread-permessi-7;RB s3://fenvix-coldread-q8-111;RB s3://fenvix-coldread-q8-99;] expected [RB s3://fenvix-coldread-q8-111;RB s3://fenvix-coldread-q8-99;TERMINATE i-q8a i-q8b i-q8old;]
+FAIL workflow group
+exit 1

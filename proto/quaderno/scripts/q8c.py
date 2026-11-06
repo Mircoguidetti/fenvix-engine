@@ -65,7 +65,9 @@ def sh(cmd, **kw):
 
 
 def genv(g):
-    return dict(ENV, PQ_WORK=os.path.join(WORK, f'g{g}'), PQ_PORT_OFF=str(1000 * g), PQ_PREF=str(g % 3))
+    return dict(ENV, PQ_WORK=os.path.join(WORK, f'g{g}'), PQ_PORT_OFF=str(1000 * g), PQ_PREF=str(g % 3),
+                # Q8d (reviewer C4): each log refuses the databases of the other logs
+                PQ_LOG_ID=str(g), PQ_LOGS=str(LOGS))
 
 
 def group_addrs(g):

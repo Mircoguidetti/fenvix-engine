@@ -1,0 +1,19 @@
+FAIL C1 retry of a committed validated commit (door 0): no Conflict while it is in the log :: T committed at pos 117568622916730880 (read_pos 117568622818230271) | t+    0 ms resend of T -> Committed(same pos) | t+  656 ms resend of T -> Conflict | 
+T committed at pos 117568622916730880 (read_pos 117568622818230271)
+t+    0 ms resend of T -> Committed(same pos)
+t+  656 ms resend of T -> Conflict
+FAIL C1 retry of a committed validated commit (door 1): no Conflict while it is in the log :: T committed at pos 117568623676030976 (read_pos 117568623577464831) | t+    0 ms resend of T -> Committed(same pos) | t+  623 ms resend of T -> Conflict | 
+T committed at pos 117568623676030976 (read_pos 117568623577464831)
+t+    0 ms resend of T -> Committed(same pos)
+t+  623 ms resend of T -> Conflict
+FAIL C3 batch [A over cap, B quiet]: B gets Committed :: control, batch [B]: Committed -> B gets Committed | A over its cap, batch [A]: Busy(reason 6, retry 378 ms) -> B gets Busy(reason 6, retry 378 ms) | A over its cap, batch [A, B]: Busy(reason 6, retry 378 ms), Busy(reason 6, retry 378 ms) -> B gets Busy(reason 6, retry 378 ms) | A over its cap, batch [B, A]: Committed, Busy(reason 6, retry 378 ms) -> B gets Committed | A over its cap, single commit B: Committed | 
+PASS C3 control: A over its cap is still refused
+control, batch [B]: Committed -> B gets Committed
+A over its cap, batch [A]: Busy(reason 6, retry 378 ms) -> B gets Busy(reason 6, retry 378 ms)
+A over its cap, batch [A, B]: Busy(reason 6, retry 378 ms), Busy(reason 6, retry 378 ms) -> B gets Busy(reason 6, retry 378 ms)
+A over its cap, batch [B, A]: Committed, Busy(reason 6, retry 378 ms) -> B gets Committed
+A over its cap, single commit B: Committed
+FAIL C4 log 1 of 2 commits only odd databases and refuses the others :: 
+
+FAIL C4 control: a single log owns every database :: 
+RESULT FAIL C1 retry of a committed validated commit (door 0): no Conflict while it is in the log, C1 retry of a committed validated commit (door 1): no Conflict while it is in the log, C3 batch [A over cap, B quiet]: B gets Committed, C4 log 1 of 2 commits only odd databases and refuses the others, C4 control: a single log owns every database
