@@ -1,0 +1,12 @@
+10:51:15 cliente-c0-s0-l1-v0-r2-2gb
+ERRORE cliente-c0-s0-l1-v0-r2-2gb
+  11: __libc_start_main_impl
+             at ./csu/../csu/libc-start.c:360:3
+  12: _start
+ERRORE misura cliente-c0-s0-l1-v0-r2-2gb
+  11: __libc_start_main_impl
+             at ./csu/../csu/libc-start.c:360:3
+  12: _start
+11:44:34 cliente-c0-s0-l1-v4-r2-2gb
+12:38:08 cliente-c0-s0-l0-v0-r0-2gb
+12:42:05 fine

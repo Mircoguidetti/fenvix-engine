@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+# Prova locale M31 metriche · `aws` FINTO: risponde solo alle letture che fa metriche.sh, nessun contatto con AWS.
+# Scenario dalle variabili: FINTO_VISIBILE (1/0: la macchina si vede in DescribeInstances), FINTO_MAPPINGS (1/0: i dischi
+# si vedono nella macchina), FINTO_N_EC2 (numero di metriche AWS/EC2), FINTO_LOG (file dove si scrive ogni chiamata).
+import json, os, sys
+a = sys.argv[1:]
+open(os.environ["FINTO_LOG"], "a").write(" ".join(a) + "\n")
+ACCT = "123456789012"; ID = "i-0abc123def4567890"; VOL = "vol-0aaa111"; ALTRO = "vol-0bbb222"
+vis = os.environ.get("FINTO_VISIBILE", "1") == "1"
+def arg(n):
+    return a[a.index(n) + 1] if n in a else None
+def out(x):
+    print(json.dumps(x)); sys.exit(0)
+def err(code, msg):
+    sys.stderr.write(f"An error occurred ({code}) when calling the operation: {msg}\n"); sys.exit(254)
+istanza = {"InstanceId": ID, "InstanceType": "c7i.xlarge", "LaunchTime": "2026-11-05T08:07:31+00:00",
+           "State": {"Name": "terminated"}, "StateTransitionReason": "User initiated (2026-11-05 09:44:10 GMT)",
+           "Tags": [{"Key": "project", "Value": "fenvix-coldread"}],
+           "IamInstanceProfile": {"Arn": f"arn:aws:iam::{ACCT}:instance-profile/fenvix-coldread-machine"},
+           "BlockDeviceMappings": [{"DeviceName": "/dev/sda1", "Ebs": {"VolumeId": VOL}}] if os.environ.get("FINTO_MAPPINGS") == "1" else []}
+if a[:2] == ["ec2", "describe-instances"]:
+    if not vis:
+        if "--instance-ids" in a: err("InvalidInstanceID.NotFound", f"The instance ID '{ID}' does not exist")
+        out({"Reservations": []})
+    if "--instance-ids" in a and a[a.index("--instance-ids") + 1] != ID: err("InvalidInstanceID.NotFound", "no")
+    out({"Reservations": [{"OwnerId": ACCT, "Instances": [istanza]}]})
+if a[:2] == ["ec2", "describe-volumes"]:
+    v = arg("--volume-ids")
+    if v == ALTRO: out({"Volumes": [{"VolumeId": ALTRO, "State": "in-use", "Tags": []}]})
+    err("InvalidVolume.NotFound", f"The volume '{v}' does not exist.")
+NOMI_EC2 = ["CPUUtilization", "NetworkIn", "NetworkOut", "NetworkPacketsIn", "NetworkPacketsOut", "EBSReadOps", "EBSWriteOps",
+            "EBSReadBytes", "EBSWriteBytes", "EBSIOBalance%", "EBSByteBalance%", "StatusCheckFailed", "StatusCheckFailed_Instance",
+            "StatusCheckFailed_System", "StatusCheckFailed_AttachedEBS", "MetadataNoToken", "MetadataNoTokenRejected"]
+NOMI_EBS = ["VolumeReadBytes", "VolumeWriteBytes", "VolumeReadOps", "VolumeWriteOps", "VolumeTotalReadTime", "VolumeTotalWriteTime",
+            "VolumeIdleTime", "VolumeQueueLength", "VolumeThroughputPercentage", "VolumeConsumedReadWriteOps", "BurstBalance"]
+if a[:2] == ["cloudwatch", "list-metrics"]:
+    ns = arg("--namespace"); d = arg("--dimensions")
+    if os.environ.get("FINTO_CW_NEGATO") == "1": err("AccessDenied", f"User: arn:aws:sts::{ACCT}:assumed-role/x is not authorized to perform: cloudwatch:ListMetrics")
+    if ns == "AWS/EC2":
+        n = int(os.environ.get("FINTO_N_EC2", len(NOMI_EC2)))
+        nomi = (NOMI_EC2 + [f"Finta{i}" for i in range(n)])[:n]
+        v = d.split("Value=")[1]
+        out({"Metrics": [{"Namespace": ns, "MetricName": m, "Dimensions": [{"Name": "InstanceId", "Value": v}]} for m in nomi] if v == ID else []})
+    if ns == "AWS/EBS":
+        if d:
+            v = d.split("Value=")[1]
+            out({"Metrics": [{"Namespace": ns, "MetricName": m, "Dimensions": [{"Name": "VolumeId", "Value": v}]} for m in NOMI_EBS]})
+        out({"Metrics": [{"Namespace": ns, "MetricName": m, "Dimensions": [{"Name": "VolumeId", "Value": v}]} for v in (VOL, ALTRO) for m in NOMI_EBS[:3]]})
+if a[:2] == ["cloudwatch", "get-metric-data"]:
+    q = json.load(open(arg("--metric-data-queries").removeprefix("file://")))
+    assert len(q) <= 500, "più di 500 domande in una chiamata"
+    assert arg("--start-time") < arg("--end-time")
+    p = q[0]["MetricStat"]["Period"]; npunti = 6000 // p
+    out({"MetricDataResults": [{"Id": x["Id"], "Label": x["Label"], "StatusCode": "Complete",
+                                "Timestamps": [f"2026-11-05T08:{i % 60:02d}:00+00:00" for i in range(npunti)],
+                                "Values": [float(i) for i in range(npunti)]} for x in q], "Messages": []})
+err("Finto", "chiamata non prevista dalla prova: " + " ".join(a))

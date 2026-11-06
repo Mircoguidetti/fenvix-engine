@@ -1,0 +1,1 @@
+SPESA: 0,89 $ finora a 62 minuti (stima per eccesso: macchine 0,23 per 1,2 ore-macchina, disco 0,009, IPv4 0,006, S3 0,64 = tetto dei freni), tetto 5,00 $

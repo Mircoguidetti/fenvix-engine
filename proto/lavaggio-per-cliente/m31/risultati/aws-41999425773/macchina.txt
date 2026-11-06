@@ -1,0 +1,3 @@
+4
+Model name:                              Intel(R) Xeon(R) Platinum 8488C
+BIOS Model name:                         Intel(R) Xeon(R) Platinum 8488C  CPU @ 2.4GHz

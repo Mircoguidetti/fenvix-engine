@@ -1,0 +1,27 @@
+1. permessi.sh
+   codice 0 (PERMESSI: tutti presenti)
+2. pacco (come il workflow: programma già costruito con --locked, strip)
+3. giornata-ci.sh
+   codice 0, 318 s; {"esito": "FINITA", "minuti": 63, "macchina": "c7i.xlarge", "id": "i-19c3b7fed57a79476"}
+4. recupera.sh
+   RECUPERO: 19 file in /tmp/m31-prova/giornata/giornata/out
+5. pulizia.sh
+   bucket cancellato: fenvix-coldread-2870912483
+   RIMASTO: niente
+6. controllo-finale.sh (ultimo passo del job)
+   RIMASTO: niente (controllo finale: macchine, dischi, indirizzi IP, bucket in eu-west-1, dal 2026-11-04T18:04:41Z)
+   codice 0
+7. risultati senza l'account
+   nessun numero dell'account
+   passi:
+     2026-11-04T18:05:01Z inizio; macchina 2 vCPU, 7 GB
+     2026-11-04T18:05:01Z carica p1
+     2026-11-04T18:05:44Z copia p1
+     2026-11-04T18:05:45Z tempi p1
+     2026-11-04T18:09:03Z carica d2k
+     2026-11-04T18:09:11Z copia d2k
+     2026-11-04T18:09:11Z tempi d2k
+     2026-11-04T18:09:34Z scrivi lotto 1 flush 100
+     2026-11-04T18:09:44Z scrivi lotto 1 flush 10
+     2026-11-04T18:09:54Z scrivi lotto 100 flush 100
+     2026-11-04T18:10:12Z fine

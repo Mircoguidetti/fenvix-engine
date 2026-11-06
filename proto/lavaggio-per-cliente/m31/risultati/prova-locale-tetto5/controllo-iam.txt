@@ -1,0 +1,6 @@
+== controllo-finale.sh con la policy oggi
+ALLARME: rimasto NON SO, lettura non riuscita: dischi EBS: ; An error occurred (AccessDenied) when calling the DescribeVolumes operation: User: arn:aws:iam::123456789012:user/gha is not authorized to perform: ec2:DescribeVolumes; NON SO, lettura non riuscita: indirizzi Elastic IP: ; An error occurred (AccessDenied) when calling the DescribeAddresses operation: User: arn:aws:iam::123456789012:user/gha is not authorized to perform: ec2:DescribeAddresses
+codice 1
+== controllo-finale.sh con la policy aggiornata
+RIMASTO: niente (controllo finale: macchine, dischi, indirizzi IP, bucket in eu-west-1, dal 2026-11-03T18:06:06Z)
+codice 0

@@ -1,0 +1,87 @@
+### policy: github
+OK    sts:GetCallerIdentity
+OK    ssm:GetParameter (AMI Ubuntu 24.04 pubblica)
+OK    ec2:DescribeVpcs
+OK    ec2:DescribeSubnets
+OK    ec2:DescribeInstances
+MANCA iam:GetInstanceProfile (fenvix-coldread-machine, creato a mano dal fondatore): 
+An error occurred (AccessDenied) when calling the GetInstanceProfile operation: User: arn:aws:iam::123456789012:user/gha is not authorized to perform: iam:GetInstanceProfile
+MANCA ec2:RunInstances c7i.xlarge con tag, ruolo e disco (iam:PassRole compreso): 
+An error occurred (AccessDenied) when calling the RunInstances operation: User: arn:aws:iam::123456789012:user/gha is not authorized to perform: ec2:RunInstances
+OK    s3:CreateBucket
+OK    s3:PutBucketPublicAccessBlock
+OK    s3:PutBucketTagging
+OK    s3:PutLifecycleConfiguration
+OK    s3:PutObject
+OK    s3:GetObject
+OK    s3:ListBucket
+OK    s3:DeleteObject
+OK    s3:DeleteBucket
+OK    s3:ListAllMyBuckets
+PERMESSI MANCANTI:
+- iam:GetInstanceProfile (fenvix-coldread-machine, creato a mano dal fondatore)
+- ec2:RunInstances c7i.xlarge con tag, ruolo e disco (iam:PassRole compreso)
+codice 1
+### policy: ristretta
+OK    sts:GetCallerIdentity
+OK    ssm:GetParameter (AMI Ubuntu 24.04 pubblica)
+OK    ec2:DescribeVpcs
+OK    ec2:DescribeSubnets
+OK    ec2:DescribeInstances
+MANCA iam:GetInstanceProfile (fenvix-coldread-machine, creato a mano dal fondatore): 
+An error occurred (AccessDenied) when calling the GetInstanceProfile operation: User: arn:aws:iam::123456789012:user/gha is not authorized to perform: iam:GetInstanceProfile
+MANCA ec2:RunInstances c7i.xlarge con tag, ruolo e disco (iam:PassRole compreso): 
+An error occurred (AccessDenied) when calling the RunInstances operation: User: arn:aws:iam::123456789012:user/gha is not authorized to perform: ec2:RunInstances
+OK    s3:CreateBucket
+OK    s3:PutBucketPublicAccessBlock
+OK    s3:PutBucketTagging
+OK    s3:PutLifecycleConfiguration
+OK    s3:PutObject
+OK    s3:GetObject
+OK    s3:ListBucket
+OK    s3:DeleteObject
+OK    s3:DeleteBucket
+OK    s3:ListAllMyBuckets
+PERMESSI MANCANTI:
+- iam:GetInstanceProfile (fenvix-coldread-machine, creato a mano dal fondatore)
+- ec2:RunInstances c7i.xlarge con tag, ruolo e disco (iam:PassRole compreso)
+codice 1
+### policy: vecchia
+OK    sts:GetCallerIdentity
+OK    ssm:GetParameter (AMI Ubuntu 24.04 pubblica)
+OK    ec2:DescribeVpcs
+OK    ec2:DescribeSubnets
+OK    ec2:DescribeInstances
+MANCA iam:GetInstanceProfile (fenvix-coldread-machine, creato a mano dal fondatore): 
+An error occurred (AccessDenied) when calling the GetInstanceProfile operation: User: arn:aws:iam::123456789012:user/gha is not authorized to perform: iam:GetInstanceProfile
+MANCA ec2:RunInstances c7i.xlarge con tag, ruolo e disco (iam:PassRole compreso): 
+An error occurred (AccessDenied) when calling the RunInstances operation: User: arn:aws:iam::123456789012:user/gha is not authorized to perform: ec2:RunInstances
+MANCA s3:CreateBucket: 
+An error occurred (AccessDenied) when calling the CreateBucket operation: Access Denied
+MANCA s3:PutBucketPublicAccessBlock: 
+An error occurred (AccessDenied) when calling the PutPublicAccessBlock operation: Access Denied
+MANCA s3:PutBucketTagging: 
+An error occurred (AccessDenied) when calling the PutBucketTagging operation: Access Denied
+MANCA s3:PutLifecycleConfiguration: 
+An error occurred (AccessDenied) when calling the PutBucketLifecycleConfiguration operation: Access Denied
+MANCA s3:PutObject: upload failed: - to s3://fenvix-coldread-permessi-iam/prova.txt An error occurred (AccessDenied) when calling the PutObject operation: Access Denied
+MANCA s3:GetObject: download failed: s3://fenvix-coldread-permessi-iam/prova.txt to - An error occurred (403) when calling the HeadObject operation: Forbidden
+MANCA s3:ListBucket: 
+An error occurred (AccessDenied) when calling the ListObjectsV2 operation: Access Denied
+MANCA s3:DeleteObject: delete failed: s3://fenvix-coldread-permessi-iam/prova.txt An error occurred (AccessDenied) when calling the DeleteObject operation: Access Denied
+MANCA s3:DeleteBucket: 
+An error occurred (AccessDenied) when calling the DeleteBucket operation: Access Denied
+OK    s3:ListAllMyBuckets
+PERMESSI MANCANTI:
+- iam:GetInstanceProfile (fenvix-coldread-machine, creato a mano dal fondatore)
+- ec2:RunInstances c7i.xlarge con tag, ruolo e disco (iam:PassRole compreso)
+- s3:CreateBucket
+- s3:PutBucketPublicAccessBlock
+- s3:PutBucketTagging
+- s3:PutLifecycleConfiguration
+- s3:PutObject
+- s3:GetObject
+- s3:ListBucket
+- s3:DeleteObject
+- s3:DeleteBucket
+codice 1

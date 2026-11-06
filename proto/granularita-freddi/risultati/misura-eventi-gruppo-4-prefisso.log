@@ -1,0 +1,5 @@
+{"byte_filtri":18177659,"byte_indici_blocchi":30611456,"byte_scatole":2280032992,"etichetta":"eventi-gruppo-4-prefisso","l0":2,"run":[[4,29265610],[4,58365267],[4,58406761],[4,233141439],[4,385957194],[8,1507117530]],"scatole":30,"sorted_run":6,"tipo":"stato"}
+{"byte_filtri":18177659,"byte_indici_blocchi":30611456,"byte_scatole":2280032992,"etichetta":"eventi-gruppo-4-prefisso","l0":2,"run":[[4,29265610],[4,58365267],[4,58406761],[4,233141439],[4,385957194],[8,1507117530]],"scatole":30,"sorted_run":6,"tipo":"stato"}
+riscaldo: 1500 query in 1 s; bancone: indici 30 voci 30611336 byte, filtri 30 voci 18176279 byte, stat 0 voci
+{"byte_filtri":18177659,"byte_indici_blocchi":30611456,"byte_scatole":2280032992,"etichetta":"eventi-gruppo-4-prefisso","l0":2,"run":[[4,29265610],[4,58365267],[4,58406761],[4,233141439],[4,385957194],[8,1507117530]],"scatole":30,"sorted_run":6,"tipo":"stato"}
+riscaldo: 1500 query in 1 s; bancone: indici 30 voci 30611336 byte, filtri 30 voci 18176279 byte, stat 0 voci

@@ -1,0 +1,3 @@
+{"N": 1000000, "pile_uniforme": 4.63, "pile_pesato_letture": 5.32, "pile_tutte": 6.43, "find_uniforme_M26": 4.9, "find_pesato": 5.46, "find_peggio_M26": 7.63}
+{"N": 10000000, "pile_uniforme": 3.56, "pile_pesato_letture": 4.07, "pile_tutte": 6.43, "find_uniforme_M26": 4.05, "find_pesato": 4.45, "find_peggio_M26": 7.63}
+{"N": 100000000, "pile_uniforme": 2.57, "pile_pesato_letture": 3.03, "pile_tutte": 6.43, "find_uniforme_M26": 3.25, "find_pesato": 3.62, "find_peggio_M26": 7.63}
