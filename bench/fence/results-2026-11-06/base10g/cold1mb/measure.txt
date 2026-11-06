@@ -1,0 +1,5 @@
+warmup 300 finds in 7 s
+cold active: {"n": 200, "gets_mean": 9.91, "gets_p95": 12, "gets_max": 13, "trips_mean": 2.305, "chain_mean": 87.76, "chain_max": 300, "one_get_share": 0.0, "one_chain_share": 0.0, "ms_p50": 19.65457299957052, "ms_p95": 27.698699999746168, "ms_p99": 28.973332000532537, "ms_max": 31.9959349999408}
+cold uniform: {"n": 200, "gets_mean": 9.145, "gets_p95": 11, "gets_max": 13, "trips_mean": 2.115, "chain_mean": 227.39, "chain_max": 438, "one_get_share": 0.0, "one_chain_share": 0.0, "ms_p50": 19.610880999607616, "ms_p95": 27.354589001333807, "ms_p99": 28.69851600007678, "ms_max": 35.64747299969895}
+cold all: {"n": 400, "gets_mean": 9.5275, "gets_p95": 12, "gets_max": 13, "trips_mean": 2.21, "chain_mean": 157.575, "chain_max": 438, "one_get_share": 0.0, "one_chain_share": 0.0, "ms_p50": 19.63517799958936, "ms_p95": 27.680491999490187, "ms_p99": 28.95036900008563, "ms_max": 35.64747299969895}
+ping p50 0.115 ms, p99 0.318 ms; answers checked: 700, wrong 0
