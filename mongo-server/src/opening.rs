@@ -297,9 +297,14 @@ impl Opening {
         self.ivs.push(Iv { lo, hi, keep: rows.len(), rev: reverse });
     }
 
-    /// A write to one of the opening's regions.
+    /// A write to one of the opening's regions (keeps `bytes` up to date without a full recount).
     fn apply(&mut self, k: Vec<u8>, v: Option<Bytes>) {
-        self.map.insert(k, v);
+        let size = |k: &[u8], v: &Option<Bytes>| k.len() + v.as_ref().map_or(0, |v| v.len()) + 16;
+        self.bytes += size(&k, &v);
+        let kl = k.len();
+        if let Some(old) = self.map.insert(k, v) {
+            self.bytes -= kl + old.as_ref().map_or(0, |v| v.len()) + 16;
+        }
     }
 
     /// Shrink to what the first query needed; exact: an interval is cut to a prefix (or suffix) that still holds all its
@@ -743,28 +748,34 @@ pub fn after_stage(db: &str, c: Captured, ok: bool) {
             let max = MAX_BYTES.load(Relaxed) as usize;
             let mut reg = REG.lock().unwrap();
             if let Some(st) = reg.get_mut(db) {
+                // the whole batch first, then the size check: a trim between a new document and its index entry (same
+                // batch) would forget the document the entry points to
+                let mut touched: Vec<(Cust, usize)> = Vec::new();
                 for (k, v) in w {
                     let Some(c) = st.owner(&k).cloned() else { continue };
                     if let Some(p) = st.pending.get_mut(&c) {
                         p.0.apply(k.clone(), v.clone());
                     }
                     let Some(o) = st.openings.get_mut(&c) else { continue };
-                    let before = o.bytes;
+                    if !touched.iter().any(|(t, _)| *t == c) {
+                        touched.push((c.clone(), o.bytes));
+                    }
                     o.apply(k, v);
-                    o.recount_incremental(before);
                     STATS.writes_applied.fetch_add(1, Relaxed);
+                }
+                for (c, before) in touched {
+                    let Some(o) = st.openings.get_mut(&c) else { continue };
                     if o.bytes > max {
                         o.trim();
                         STATS.trimmed.fetch_add(1, Relaxed);
-                        if o.bytes > max {
-                            st.remove(&c);
-                            STATS.dropped_too_big.fetch_add(1, Relaxed);
-                            continue;
-                        }
                     }
-                    let after = st.openings.get(&c).map_or(0, |o| o.bytes);
+                    let after = o.bytes;
                     STATS.bytes.fetch_add(after as u64, Relaxed);
                     STATS.bytes.fetch_sub(before as u64, Relaxed);
+                    if after > max {
+                        st.remove(&c);
+                        STATS.dropped_too_big.fetch_add(1, Relaxed);
+                    }
                 }
             }
             STATS.write_hook_ns.fetch_add(t.elapsed().as_nanos() as u64, Relaxed);
@@ -773,13 +784,6 @@ pub fn after_stage(db: &str, c: Captured, ok: bool) {
     }
 }
 
-impl Opening {
-    /// Byte count after one `apply` (a full recount is linear in the opening; this one is not exact for replaced values,
-    /// so it recounts fully; openings are small).
-    fn recount_incremental(&mut self, _before: usize) {
-        self.recount();
-    }
-}
 
 /// Size in bytes and entries of every opening of a database (diagnostics: `{fenvixFirstCourse: "<db>"}`).
 pub fn sizes(db: &str) -> Vec<(usize, usize)> {
@@ -929,6 +933,19 @@ mod tests {
         o2.apply(first, None);
         assert!(o2.scan(b"idx/c/i/A", Some(b"idx/c/i/B"), false, Some(5)).is_none());
         assert_eq!(o2.scan(b"idx/c/i/A", Some(b"idx/c/i/B"), false, Some(4)).unwrap(), model_scan(&m, b"idx/c/i/A", Some(b"idx/c/i/B"), false, Some(4)));
+    }
+
+    #[test]
+    fn apply_keeps_the_byte_count_exact() {
+        let mut o = Opening::new(vec![(b"doc/c/A".to_vec(), b"doc/c/B".to_vec())], b"doc/c/".to_vec());
+        o.note_scan(b"doc/c/A", Some(b"doc/c/B"), false, Some(2), &[(b(b"doc/c/A1"), b(b"xx")), (b(b"doc/c/A2"), b(b"y"))]);
+        o.recount();
+        for (k, v) in [(&b"doc/c/A1"[..], Some(b(b"zzzz"))), (&b"doc/c/A3"[..], None), (&b"doc/c/A2"[..], None), (&b"doc/c/A3"[..], Some(b(b"q")))] {
+            o.apply(k.to_vec(), v);
+            let incremental = o.bytes;
+            o.recount();
+            assert_eq!(incremental, o.bytes);
+        }
     }
 
     #[test]
