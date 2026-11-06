@@ -1,0 +1,90 @@
+diff --git a/src/lifecycle.rs b/src/lifecycle.rs
+index 2989241..1b0ef44 100644
+--- a/src/lifecycle.rs
++++ b/src/lifecycle.rs
+@@ -2248,3 +2248,85 @@ mod tests {
+         assert_eq!(log.errors.front().unwrap(), "e500");
+     }
+ }
++
++#[cfg(test)]
++mod rev_l1_long_pass {
++    use super::*;
++    use object_store::memory::InMemory;
++
++    /// A store whose GETs of compacted SSTs each take `ms` milliseconds (a slow store, or a busy machine).
++    #[derive(Debug)]
++    struct Slow {
++        inner: Arc<dyn ObjectStore>,
++        ms: u64,
++    }
++
++    impl std::fmt::Display for Slow {
++        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
++            write!(f, "Slow({})", self.inner)
++        }
++    }
++
++    #[async_trait::async_trait]
++    impl ObjectStore for Slow {
++        async fn put_opts(&self, l: &Path, p: PutPayload, o: object_store::PutOptions) -> object_store::Result<object_store::PutResult> {
++            self.inner.put_opts(l, p, o).await
++        }
++        async fn put_multipart_opts(&self, l: &Path, o: object_store::PutMultipartOptions) -> object_store::Result<Box<dyn object_store::MultipartUpload>> {
++            self.inner.put_multipart_opts(l, o).await
++        }
++        async fn get_opts(&self, l: &Path, o: object_store::GetOptions) -> object_store::Result<object_store::GetResult> {
++            if l.as_ref().contains("/compacted/") {
++                tokio::time::sleep(Duration::from_millis(self.ms)).await;
++            }
++            self.inner.get_opts(l, o).await
++        }
++        fn delete_stream(&self, l: futures::stream::BoxStream<'static, object_store::Result<Path>>) -> futures::stream::BoxStream<'static, object_store::Result<Path>> {
++            self.inner.delete_stream(l)
++        }
++        fn list(&self, p: Option<&Path>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
++            self.inner.list(p)
++        }
++        async fn list_with_delimiter(&self, p: Option<&Path>) -> object_store::Result<object_store::ListResult> {
++            self.inner.list_with_delimiter(p).await
++        }
++        async fn copy_opts(&self, f: &Path, t: &Path, o: object_store::CopyOptions) -> object_store::Result<()> {
++            self.inner.copy_opts(f, t, o).await
++        }
++    }
++
++    /// A tenant whose L0 holds `n` SSTs of about `mb` MB of random values each.
++    async fn tenant_with_l0(raw: &Arc<dyn ObjectStore>, id: &str, n: usize, mb: usize) {
++        use rand::RngCore;
++        let db = Db::builder(tenant_path(id), Arc::clone(raw)).with_settings(writer_settings()).build().await.unwrap();
++        let mut rng = rand::thread_rng();
++        for i in 0..n {
++            for j in 0..mb * 16 {
++                let mut v = vec![0u8; 64 * 1024];
++                rng.fill_bytes(&mut v);
++                db.put(format!("k{j:06}-{i:03}").as_bytes(), &v).await.unwrap();
++            }
++            db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await.unwrap();
++        }
++        assert!(db.manifest().l0().len() >= L0_COMPACT_THRESHOLD);
++        db.close().await.unwrap();
++    }
++
++    /// L1: a compaction that needs longer than the stall window, but makes progress all along, finishes in one pass. Before,
++    /// every pass was stopped after 30 s whatever it was doing ("did not finish (L0 8)"), the next one started the same
++    /// compaction from the beginning, and a database whose compactions need longer (large, slow store, busy machine) never
++    /// compacted again: its L0 stayed full and its writes stopped.
++    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
++    async fn compaction_pass_longer_than_its_stall_window_finishes() {
++        let id = "test-compact-long";
++        let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
++        tenant_with_l0(&raw, id, 8, 4).await;
++        let s3: Arc<dyn ObjectStore> = Arc::new(Slow { inner: Arc::clone(&raw), ms: 400 });
++        let stall = Duration::from_secs(1);
++        let rec = compact_tenant_pass(&s3, &raw, id, stall, COMPACTOR_STOP_LIMIT, false).await.expect("the pass failed").expect("no pass");
++        eprintln!("compaction pass: {:.2} s, L0 {} -> {}", rec.secs, rec.l0_before, rec.l0_after);
++        assert!(rec.l0_after < L0_COMPACT_THRESHOLD, "L0 {} after the pass", rec.l0_after);
++        assert!(rec.secs > 2.0 * stall.as_secs_f64(), "the compaction took {:.2} s: not longer than the stall window, the test proves nothing", rec.secs);
++    }
++
++}
