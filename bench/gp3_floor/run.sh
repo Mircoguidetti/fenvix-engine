@@ -86,7 +86,7 @@ P
       ;;
     base)
       rm -rf "$WORK/floor"; mkdir -p "$WORK/floor"
-      start $WAITER --counter-disk-dir "$WORK/floor" --counter-disk-gb 20
+      start $WAITER --counter-disk-dir "$WORK/floor" --counter-disk-gb ${FLOOR_GB:-20}
       "$PY" bench/gp3_floor/cold_customer.py measure --uri "$URI" --state "$OUT/state.json" --n "$N" --warmup "$WARMUP" --seed "$SEED" --out "$OUT/base$L.json" | tee "$OUT/base$L.txt"
       snap "$OUT/base$L-status.json"; stop; rm -rf "$WORK/floor" ;;
     fill)
@@ -116,7 +116,7 @@ P
       snap "$OUT/fill$L-status.json"; stop ;;
     mirror)
       rm -rf "$WORK/floor"; mkdir -p "$WORK/floor"
-      start $WAITER --counter-disk-dir "$WORK/floor" --counter-disk-gb 20 --mirror-dir "$WORK/mirror"
+      start $WAITER --counter-disk-dir "$WORK/floor" --counter-disk-gb ${FLOOR_GB:-20} --mirror-dir "$WORK/mirror"
       "$PY" bench/gp3_floor/cold_customer.py measure --uri "$URI" --state "$OUT/state.json" --n "$N" --warmup "$WARMUP" --seed "$SEED" --out "$OUT/mirror$L.json" | tee "$OUT/mirror$L.txt"
       snap "$OUT/mirror$L-status.json"; stop; rm -rf "$WORK/floor" ;;
   esac
