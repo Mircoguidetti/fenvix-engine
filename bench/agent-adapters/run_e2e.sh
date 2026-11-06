@@ -25,7 +25,8 @@ for a in ${*:-langgraph openai-agents llamaindex mem0 langgraph-js mastra}; do
     # the bytes right after the burst include compacted-away SSTs not yet collected: reopen the database, let the SST
     # cleanup run (unreferenced for --sst-gc-min-unref-secs 120, a pass every 60 s), stop cleanly, count again
     KEEP=1 "$HERE/target.sh" ours > /dev/null
-    "$PY" -c "import pymongo,sys;d=pymongo.MongoClient('mongodb://localhost:27017/?directConnection=true')[sys.argv[1]];[d[c].find_one() for c in d.list_collection_names()]" "$db"
+    # the SST cleanup runs for databases open for writing: one tiny write (collection _settle, 1 document) opens it so
+    "$PY" -c "import pymongo,sys;d=pymongo.MongoClient('mongodb://localhost:27017/?directConnection=true')[sys.argv[1]];d['_settle'].insert_one({'x':1})" "$db"
     sleep ${SETTLE_SECS:-300}; "$HERE/target.sh" stop; settled=$("$PY" "$HERE/sizes.py" s3 "$db")
   fi
   echo "{\"db\": \"$db\", \"dbStats\": $dbs, \"s3_at_stop\": $s3, \"s3_settled\": $settled}" > "$OUT/e2e-$a.sizes.json"
