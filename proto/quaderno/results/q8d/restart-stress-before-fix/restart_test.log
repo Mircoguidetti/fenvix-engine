@@ -16,3 +16,19 @@ corsie restart t=10s inviati 29125 confermati(misura) 28327 rifiutati 0 ignoti 0
 corsie restart t=15s inviati 45000 confermati(misura) 44162 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 2093
 round 0 C quiet: kill all three NOT CAUGHT UP {"0": [185759, 185759, 185759], "1": [81360, 81360, 81360], "2": [185759, 185759, 185759]}
 corsie restart t=5s inviati 14702 confermati(misura) 14536 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 2753
+corsie restart t=10s inviati 30931 confermati(misura) 30706 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 2753
+corsie restart t=15s inviati 45009 confermati(misura) 45009 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 2974
+round 1 A quiet: kill leader 0 + follower 1 NOT CAUGHT UP {"0": [234456, 234456, 234456], "1": [81360, 81360, 81360], "2": [234556, 234556, 234556]}
+corsie restart t=5s inviati 14758 confermati(misura) 14698 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 2433
+corsie restart t=10s inviati 29773 confermati(misura) 29412 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 4841
+corsie restart t=15s inviati 45003 confermati(misura) 45003 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 6129
+round 1 A2 quiet: kill both followers [1, 2] NOT CAUGHT UP {"0": [358188, 358188, 358188], "1": [81360, 81360, 81360], "2": [358188, 358188, 358188]}
+corsie restart t=5s inviati 14922 confermati(misura) 14088 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 869
+corsie restart t=10s inviati 29917 confermati(misura) 26249 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 984
+corsie restart t=15s inviati 42472 confermati(misura) 26249 rifiutati 0 ignoti 991 scartati 0 rifiuti_freno 984
+corsie restart t=20s inviati 53311 confermati(misura) 28736 rifiutati 1 ignoti 14043 scartati 0 rifiuti_freno 987
+round 1 B under load: kill leader 0 + follower 2 FAIL commit_before_kill=395673 converged_commit=None panics=[] last={0: 514950, 1: 81360, 2: 514750}
+corsie restart t=6s inviati 14005 confermati(misura) 13148 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 315
+corsie restart t=11s inviati 31914 confermati(misura) 29004 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 320
+corsie restart t=16s inviati 43566 confermati(misura) 43566 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 602
+round 1 C quiet: kill all three NOT CAUGHT UP {}

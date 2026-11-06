@@ -2,3 +2,8 @@ round 0 A quiet: kill leader 0 + follower 1 PASS C=42202 recovered={0: 42202, 1:
 round 0 A2 quiet: kill both followers [1, 2] FAIL C=87177 recovered={1: 81360, 2: 87177} commit_after=87178 leader=0 panics=[] segments_before={0: 15, 1: 16, 2: 15}
 round 0 B under load: kill leader 0 + follower 2 FAIL commit_before_kill=108724 converged_commit=None panics=[] last={0: 140503, 1: 81360, 2: 140503}
 round 0 C quiet: kill all three NOT CAUGHT UP {"0": [185759, 185759, 185759], "1": [81360, 81360, 81360], "2": [185759, 185759, 185759]}
+round 1 A quiet: kill leader 0 + follower 1 NOT CAUGHT UP {"0": [234456, 234456, 234456], "1": [81360, 81360, 81360], "2": [234556, 234556, 234556]}
+round 1 A2 quiet: kill both followers [1, 2] NOT CAUGHT UP {"0": [358188, 358188, 358188], "1": [81360, 81360, 81360], "2": [358188, 358188, 358188]}
+round 1 B under load: kill leader 0 + follower 2 FAIL commit_before_kill=395673 converged_commit=None panics=[] last={0: 514950, 1: 81360, 2: 514750}
+round 1 C quiet: kill all three NOT CAUGHT UP {}
+NOTE (Q8d): run stopped by hand after round 0. From 09:20:34 another test (kill9-final) was started by mistake on the same ports; only the lines before that time count: round 0 A and A2 (A2 FAIL, forensic copy at 09:18:22, see ../forensic-segments.txt). Round 0 B is not valid.

@@ -2,3 +2,6 @@ kill9/dumps/
 kill9/writer.*
 restart-stress-*/keep/
 kill9/acked.csv
+kill9-final/dumps/
+kill9-final/writer.*
+kill9-final/acked.csv
