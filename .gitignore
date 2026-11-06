@@ -8,3 +8,7 @@ loadtest/out/*
 ctl-tests/out/
 .pytest_cache/
 .tools/
+# judge: keep only the verdicts in git; logs and result files stay local
+judge/out/**/*.log
+judge/out/**/*.json
+mongo-tests/.venv
