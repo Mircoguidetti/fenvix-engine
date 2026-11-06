@@ -1,3 +1,97 @@
+APPROVED: both FIX items resolved. Cross-zone saving -20% (1,000 writes/s) / -24% (5,000) MEASURED, -41% / -44% ESTIMATED; keeper-led failover 1.12 s median, max 1.88 s, 0 acks lost (MEASURED, with the fix round's 0.5-1 s election timeouts; 2.07 s median, max 2.21 s with the delivered 1-2 s). KEEP is NOT settled: +0.30 ms on my sandbox, +1.63 ms on the owner's (MEASURED); my round-1 "KEEP stands" is withdrawn
+
+# Review of log-on-pair, round 2 (fix round 5602bf5..fc800ea; code and results 2ed5163, verdict fc800ea)
+
+Reviewer branch: `review-log-on-pair-r2` (based on fc800ea). Scope as asked: only my two round-1 FIX items, the owner's
+KEEP warning, and the fast judge. One 4-core sandbox, $0. The owner's report is in fenvix-brain, which I did not attach
+(my instructions: fenvix-engine only), so I checked the figures as the coordinator relayed them against the committed
+data and my own runs. For the same reason I did not write the copy to fenvix-brain `sessions/.../REPORT.md`: this
+file is the report, to be copied by someone with access.
+
+## FIX 1 (cross-zone): resolved
+
+The relayed wording, -20% / -24% MEASURED and -41% ESTIMATED, is what `proto/quaderno/review/crosszone_today.py`
+gives. The fix round does not change what crosses zones: on the fix binary the pair still measures 2.32-2.33 copies
+per write, the same as base-near (`pair_analyze.py results/log-on-pair/fix-contract-rerun/phases.jsonl`). The fifth
+number in round 1, "0% for a leader-near customer", should travel with it.
+
+## FIX 2 (failover when the keeper must lead): resolved, with one condition on how the number is quoted
+
+The code fix (`node.rs`): the keeper campaigns one election timeout after the old leader's last message when a
+behind data copy asked for its vote, even if it still counted that leader as heard recently. It hands back by a
+leadership transfer: it stops taking records, waits until the target has its whole log on disk, sends `TimeoutNow`,
+and steps down. Safety: `TimeoutNow` only skips the target's prevote; its real election still needs a majority under
+the usual up-to-date rule, and the keeper refuses commits while the transfer is under way. Nothing here weakens the ack
+or vote rules.
+
+My re-run of my own command, `pair_kill9.py OUT --cycles 24 --seed 7 --spare-down-ms 1500` on 2ed5163
+(`results/log-on-pair/review2-kill9-spare-down-1500ms/`), MEASURED:
+
+* 0 of 242,400 acknowledged writes lost or misplaced on any copy; 20,225 probe writes to the old waiter, all refused
+  (NotLeader); no panics.
+* The keeper led in **24 of 24** cycles and handed back by transfer in 24 of 24 (its log; the status poll saw it lead
+  in 2). No transfer timed out.
+* Write stop: **1.12 s median, max 1.88 s** (owner: 1.13 / 1.63; same 24 cycles, so the max is run-to-run noise).
+
+**The second stop at the hand-back.** The owner is right that my round-1 metric (kill to first ack) missed it.
+`pair_stops.py` only counts later gaps above 500 ms, so I checked below that, subtracting the same gap sum over a quiet
+window before each kill (the writer acknowledges in bursts): `proto/quaderno/review/stops_vs_baseline.py`.
+On the fix: excess later stop **-0.02 s median** at a 150 ms threshold, -0.004 s at 250 ms. The transfer hands back
+with no visible stop. On the round-1 code it was +0.49 s / +0.67 s median, so the old total was about 4 s, not 3.05 s
+(`pair_stops.py` there: 3.96 s total median).
+
+**The condition.** The fix round also halved the harness's election timeout, from 1-2 s to 0.5-1 s (`pair_common.py`),
+and the 1.13 s needs it. With the delivered timeouts (`PAIR_ELECT_MIN_MS=1000 PAIR_ELECT_MAX_MS=2000`, same command,
+`results/log-on-pair/review2-kill9-spare-down-1500ms-old-timeouts/`): **1.99 s first stop, 2.07 s total median, max
+2.21 s**, 0 of 258,000 lost (owner: 2.08 s). So the code fix takes the keeper path from about 4.0 s to about 2.1 s, and the
+timeout change takes it to 1.1 s. The shorter timeout would speed up today's shape just as much, so it is not a gain of
+the pair. Quote 1.13 s only with "0.5-1 s election timeouts". The commit message and the committed old-timeout run say
+this, so it is disclosed. In my 20 latency phases on the fix binary (0.5-1 s) no copy other than the first leader ever
+campaigned (the owner reports the same over 46 phases). That setting is untested at 8,000 reads/s and with cold reads,
+where cores 0-1 run at 70-83%.
+
+## The KEEP warning: confirmed on the owner's sandbox, not on mine
+
+My fix-binary re-run, 5 interleaved reps, warm page cache (`results/log-on-pair/review2-contract-rerun-warm/`):
+base-near 3.71 ms, pair-2000 3.94 ms, **+0.23 ms**. With my round-1 reps (10+10): **+0.30 ms, 90% interval
++0.02..+0.61** (`results/log-on-pair/review2-contract-stats.txt`). The owner's fix-round sandbox (18+18):
+**+1.63 ms, interval +1.24..+1.97**. Pooling every phase from both sandboxes gives +1.23 ms (NEITHER), but that mixes
+two baselines (base-near 3.7-3.9 ms on mine, 4.8 ms on the owner's), so I report the two sandboxes separately. Both runs
+have 0 disk reads in the pair phases, and the same code (the delivered binary also gave +1.24 ms on the owner's
+sandbox), so the gap between them is the machine. The verdict depends on the sandbox it runs on, and the sandbox cannot
+decide it. It needs the contract case on the real instance types (m8gd.large class for the waiter). My round-1 line
+"KEEP stands narrowly" is withdrawn.
+
+A first attempt right after a container restart, with a cold page cache (`results/log-on-pair/review2-contract-rerun-cold/`),
+broke: mongo-server finds took 500+ ms, 2 of 5 pair phases failed (the read generator timed out), and one phase had an
+ack **p99 of 1,213 ms**. No election happened; copy 1 was starved by a mongo-server reading a cold disk on its cores.
+That is information for contract point 2 (reads that hit the disk), not a valid contract phase. It also shows that
+`pair_analyze.py` does not flag such a phase as invalid (it passed its checks).
+
+## Fast judge on fc800ea
+
+Two fast runs on fc800ea. Both: build PASS; unit FAIL 101/1 (`counter::tests::rev_maps_leave_room_for_active_data`);
+diff-py and diff-node FAIL 412/413 (`bucketauto.infinity`); kill PASS. These are identical to integration's 01d64c6.
+**ctl FAILed once in each run, on a different file each time**:
+* run 1, `test_01_databases::test_registry_survives_restart`: the restarted server exited with "Address already in use"
+  (a port-reuse race on restart). 5 of 5 passes when re-run alone.
+* run 2 (the committed `judge/out/fc800ea/VERDICT-FAST.md`), `test_05_erase::test_erase_refused_while_forks_read_it_then_allowed`:
+  one usage record (`control/usage/par/<date>/erase-...json`) was still in the bucket after the erase. 3 of 3 passes
+  when re-run alone.
+
+The only change outside `proto/` since 01d64c6 is the new `loadgen/src/bin/pairload.rs`, so this branch cannot cause
+them. They are flaky engine tests in this sandbox, worth an issue for integration; they do not count against log-on-pair.
+The owner's "identical to integration" holds except for this flakiness.
+
+## NOTES
+
+1. FIX 1's wording could not be read in the report itself (fenvix-brain not attached); only the relayed figures were checked.
+2. The keeper path is now 0.3 s slower than the spare-current path at the same timeouts (1.12 s vs 0.84 s median over all cycles, owner's
+   `fix-kill9-spare-current`), which is reasonable.
+3. Round-1 content follows unchanged below.
+
+---
+
 FIX 2: KEEP stands (pooled p99 +0.79 ms, 12+12 reps, 90% interval +0.44..+1.14 ms, MEASURED); cross-zone saving MEASURED is -20% (1,000 writes/s) / -24% (5,000), the -41% / -45% needs an unmeasured spare feed (ESTIMATED); failover when the keeper must lead: writes stop 3.05 s median, max 4.96 s (MEASURED), not 1.5-1.9 s
 
 # Review of log-on-pair, commits 8185868..465f93b (code 1118801, results 8d125b8, verdict 465f93b)

@@ -1,0 +1,10 @@
+## reviewer r2, warm page cache (fix binary)
+POOLED (5 + 5 phases): base-near 3.71 ms, pair-2000 3.94 ms -> +0.23 ms KEEP; bootstrap 90% interval [-0.23, +0.69] ms, P(< 1 ms) = 1.00
+## reviewer r2, cold page cache after a container restart (2 pair phases failed: read generator timed out; 1 phase stalled 1.2 s)
+POOLED (5 + 3 phases): base-near 3.80 ms, pair-2000 4.81 ms -> +1.01 ms NEITHER; bootstrap 90% interval [+0.28, +1209.66] ms, P(< 1 ms) = 0.41
+## every valid contract phase: owner (both sandboxes) + reviewer r1 + reviewer r2 warm
+POOLED (35 + 35 phases): base-near 4.35 ms, pair-2000 5.58 ms -> +1.23 ms NEITHER; bootstrap 90% interval [+0.58, +1.75] ms, P(< 1 ms) = 0.30
+## reviewer only (r1 + r2 warm)
+POOLED (10 + 10 phases): base-near 3.87 ms, pair-2000 4.18 ms -> +0.30 ms KEEP; bootstrap 90% interval [+0.02, +0.61] ms, P(< 1 ms) = 1.00
+## owner fix-round sandbox only
+POOLED (18 + 18 phases): base-near 4.82 ms, pair-2000 6.45 ms -> +1.63 ms NEITHER; bootstrap 90% interval [+1.24, +1.97] ms, P(< 1 ms) = 0.00

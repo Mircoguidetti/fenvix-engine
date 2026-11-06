@@ -1,0 +1,22 @@
+22:08:55 START cases ['base-near', 'pair-2000'] writes [1000] reps 5 secs 60 delay_us 500 docs 4000000 ms_mem_mb 1024
+22:08:56 PHASE base-near-w1000-r1 leader 0
+22:10:05   ack p50 1.91 ms p99 4.08 ms ok/s 1000 | reads/s 0 p99 - ms | cores {0: 18.2, 1: 17.5, 2: 45.3, 3: 46.4} | disk r 0/s 0.0 MB/s w 6209/s | r0 cpu 22.43 s
+22:10:10 PHASE pair-2000-w1000-r1 leader 0
+22:13:31 PHASE FAILED pair-2000 1000 1 TimeoutExpired(['taskset', '-c', '2,3', '/home/user/fenvix-engine/target/release/pairload', 'read', '--docs', '4000000', '--rate', '2000', '--conns', '64', '--secs', '70', '--warm', '15', '--hot-pct', '90', '--hot-frac', '0.05', '--threads', '2'], 120)
+22:13:33 PHASE base-near-w1000-r2 leader 0
+22:14:41   ack p50 1.90 ms p99 3.94 ms ok/s 1000 | reads/s 0 p99 - ms | cores {0: 16.8, 1: 15.3, 2: 44.3, 3: 45.8} | disk r 0/s 0.0 MB/s w 6418/s | r0 cpu 21.82 s
+22:14:44 PHASE pair-2000-w1000-r2 leader 0
+22:18:05 PHASE FAILED pair-2000 1000 2 TimeoutExpired(['taskset', '-c', '2,3', '/home/user/fenvix-engine/target/release/pairload', 'read', '--docs', '4000000', '--rate', '2000', '--conns', '64', '--secs', '70', '--warm', '15', '--hot-pct', '90', '--hot-frac', '0.05', '--threads', '2'], 120)
+22:18:07 PHASE base-near-w1000-r3 leader 0
+22:19:16   ack p50 1.90 ms p99 3.76 ms ok/s 1000 | reads/s 0 p99 - ms | cores {0: 17.8, 1: 17.2, 2: 46.2, 3: 47.7} | disk r 0/s 0.0 MB/s w 6441/s | r0 cpu 22.47 s
+22:19:19 PHASE pair-2000-w1000-r3 leader 0
+22:20:44   ack p50 2.23 ms p99 1213.44 ms ok/s 1000 | reads/s 2000 p99 1182.719 ms | cores {0: 35.7, 1: 35.9, 2: 49.0, 3: 45.6} | disk r 95/s 0.7 MB/s w 4172/s | r0 cpu 20.04 s
+22:20:46 PHASE base-near-w1000-r4 leader 0
+22:21:55   ack p50 1.90 ms p99 3.78 ms ok/s 1000 | reads/s 0 p99 - ms | cores {0: 20.0, 1: 18.9, 2: 48.9, 3: 48.8} | disk r 0/s 0.0 MB/s w 6480/s | r0 cpu 22.39 s
+22:21:58 PHASE pair-2000-w1000-r4 leader 0
+22:23:23   ack p50 2.03 ms p99 4.22 ms ok/s 1000 | reads/s 2000 p99 2.717 ms | cores {0: 41.6, 1: 41.1, 2: 63.3, 3: 57.7} | disk r 0/s 0.0 MB/s w 6507/s | r0 cpu 24.40 s
+22:23:26 PHASE base-near-w1000-r5 leader 0
+22:24:34   ack p50 1.92 ms p99 3.80 ms ok/s 1000 | reads/s 0 p99 - ms | cores {0: 18.4, 1: 16.9, 2: 46.5, 3: 47.2} | disk r 0/s 0.0 MB/s w 6452/s | r0 cpu 21.97 s
+22:24:37 PHASE pair-2000-w1000-r5 leader 0
+22:26:02   ack p50 2.05 ms p99 4.81 ms ok/s 1000 | reads/s 2000 p99 2.871 ms | cores {0: 42.2, 1: 41.4, 2: 62.4, 3: 58.8} | disk r 0/s 0.0 MB/s w 6380/s | r0 cpu 24.88 s
+22:26:03 END

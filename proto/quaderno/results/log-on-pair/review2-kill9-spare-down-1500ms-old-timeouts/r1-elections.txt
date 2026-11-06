@@ -1,0 +1,30 @@
+replica 1: TimeoutNow from 2 (term 2), campaigning now
+replica 1: guida, mandato 3 (indice 11951)
+replica 1: TimeoutNow from 2 (term 6), campaigning now
+replica 1: guida, mandato 7 (indice 32394)
+replica 1: lascio la guida (mandato 9)
+replica 1: TimeoutNow from 2 (term 10), campaigning now
+replica 1: guida, mandato 11 (indice 52470)
+replica 1: TimeoutNow from 2 (term 14), campaigning now
+replica 1: guida, mandato 15 (indice 68907)
+replica 1: lascio la guida (mandato 17)
+replica 1: TimeoutNow from 2 (term 18), campaigning now
+replica 1: guida, mandato 19 (indice 92071)
+replica 1: TimeoutNow from 2 (term 22), campaigning now
+replica 1: guida, mandato 23 (indice 115146)
+replica 1: lascio la guida (mandato 24)
+replica 1: TimeoutNow from 2 (term 26), campaigning now
+replica 1: guida, mandato 27 (indice 137013)
+replica 1: TimeoutNow from 2 (term 30), campaigning now
+replica 1: guida, mandato 31 (indice 155538)
+replica 1: lascio la guida (mandato 31)
+replica 1: TimeoutNow from 2 (term 34), campaigning now
+replica 1: guida, mandato 35 (indice 178591)
+replica 1: TimeoutNow from 2 (term 38), campaigning now
+replica 1: guida, mandato 39 (indice 199369)
+replica 1: lascio la guida (mandato 39)
+replica 1: TimeoutNow from 2 (term 42), campaigning now
+replica 1: guida, mandato 43 (indice 220960)
+replica 1: TimeoutNow from 2 (term 46), campaigning now
+replica 1: guida, mandato 47 (indice 241002)
+replica 1: lascio la guida (mandato 49)
