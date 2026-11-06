@@ -1099,7 +1099,7 @@ impl Entry {
         if let Some(s) = &self.snap {
             let opts = slatedb::config::ScanOptions {
                 read_ahead_bytes: read_ahead,
-                max_fetch_tasks: 4,
+                max_fetch_tasks: tenant_bench::tiered::scan_fetch_tasks(read_ahead),
                 cache_blocks: true,
                 order: if reverse { slatedb::IterationOrder::Descending } else { slatedb::IterationOrder::Ascending },
                 ..Default::default()

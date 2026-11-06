@@ -25,6 +25,11 @@
 
 use bson::{Bson, Document};
 
+/// Documents written customer first, and `_id` lookups through the locator, since the start (serverStatus
+/// `fenvix.customerKeys`).
+pub static DOCS_WRITTEN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static LOCATOR_LOOKUPS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 /// Where the customer key lives in the collection's stored options (`meta/copt/`), hidden from `listCollections`.
 pub const RAW_KEY: &str = "fenvixCustomerKey";
 

@@ -456,6 +456,9 @@ struct Args {
     /// T of the tiered-levels compaction scheduler (M26-M31: 4); 0 = SlateDB's size-tiered scheduler.
     #[arg(long, default_value_t = 4)]
     compaction_tiers: u32,
+    /// Fetch tasks of a scan that reads ahead at most 64 KiB (index scans, a find's documents); M29: 1.
+    #[arg(long, default_value_t = 1)]
+    small_scan_fetch_tasks: usize,
 }
 
 async fn handle_connection(server: Arc<Server>, tls: Arc<tls::TlsConfig>, tcp: TcpStream, conn_id: i64) {
@@ -686,6 +689,7 @@ async fn run() -> Result<()> {
     tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::tiered::set_compression(&args.sst_compression)?;
     tenant_bench::tiered::TIERS.store(args.compaction_tiers, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::tiered::SMALL_SCAN_FETCH_TASKS.store(args.small_scan_fetch_tasks, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::FILTER_BITS.store(args.filter_bits_per_key.clamp(1, 64), std::sync::atomic::Ordering::Relaxed);
     if args.waiter_tools {
         let ram = if args.counter_ram_mb > 0 { args.counter_ram_mb << 20 } else { tenant_bench::counter::machine_ram_bytes() / 100 * args.counter_ram_pct.min(90) };

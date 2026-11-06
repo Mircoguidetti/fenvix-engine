@@ -774,6 +774,10 @@ impl Server {
             },
             // compaction passes (lifecycle.rs): running now, of which long merges without a maintenance slot; ended without
             // progress; stopped on request; GC rounds that skipped a tenant busy with a pass
+            "customerKeys": {
+                "docsWritten": crate::custkey::DOCS_WRITTEN.load(Relaxed) as i64,
+                "locatorLookups": crate::custkey::LOCATOR_LOOKUPS.load(Relaxed) as i64,
+            },
             "compaction": {
                 "passes": tenant_bench::lifecycle::MAINT.compact_runs.load(Relaxed) as i64,
                 "running": tenant_bench::lifecycle::PASSES_RUNNING.load(Relaxed) as i64,

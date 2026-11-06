@@ -1018,7 +1018,7 @@ impl Tenant {
     pub async fn scan_range(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
         let opts = slatedb::config::ScanOptions {
             read_ahead_bytes: read_ahead,
-            max_fetch_tasks: 4,
+            max_fetch_tasks: crate::tiered::scan_fetch_tasks(read_ahead),
             cache_blocks: true,
             order: if reverse { slatedb::IterationOrder::Descending } else { slatedb::IterationOrder::Ascending },
             ..Default::default()

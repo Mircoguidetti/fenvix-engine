@@ -220,6 +220,19 @@ pub fn worker_builder(path: slatedb::object_store::path::Path, store: Arc<dyn sl
     }
 }
 
+/// Fetch tasks of a scan with a small read-ahead (at most one 64 KiB block per request: an index scan, a find's
+/// documents). M29: one task per sorted run reads 0.92-1.00 GET per run on a find; four (SlateDB's default) read
+/// 1.37-1.62, the extra requests fetching blocks past the end of what the find needed. `--small-scan-fetch-tasks`.
+pub static SMALL_SCAN_FETCH_TASKS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(1);
+
+pub fn scan_fetch_tasks(read_ahead: usize) -> usize {
+    if read_ahead <= 64 << 10 {
+        SMALL_SCAN_FETCH_TASKS.load(Ordering::Relaxed).max(1)
+    } else {
+        4
+    }
+}
+
 /// One SST of a database's current manifest (`fenvixSstInfo`, tests and measurements).
 #[derive(Clone, Debug)]
 pub struct SstSummary {

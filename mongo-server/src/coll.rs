@@ -312,7 +312,7 @@ async fn docs_by_ids(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Docu
     let prefix = doc_prefix(coll);
     tenant_bench::counting::set_phase(2);
     if prefer_scan(g.approx_bytes(), ids.len()) {
-        return docs_by_scan(g, &prefix, ids).await;
+        return docs_by_scan(g, coll, ids).await;
     }
     let keys: Vec<Vec<u8>> = ids
         .iter()
@@ -323,11 +323,44 @@ async fn docs_by_ids(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Docu
         })
         .collect();
     let vals = g.get_many(&keys).await?;
-    vals.into_iter().flatten().map(|v| decode(&v)).collect()
+    let mut out = Vec::with_capacity(ids.len());
+    for (i, v) in vals.into_iter().enumerate() {
+        match v {
+            Some(v) => out.push(decode(&v)?),
+            None => {
+                if let Some(d) = moved_doc(g, coll, &ids[i]).await? {
+                    out.push(d);
+                }
+            }
+        }
+    }
+    Ok(out)
+}
+
+/// A customer-keyed document not found under the suffix an index entry (or natural-order entry) gave: its customer
+/// changed after the entry was read, and it moved. The locator (`_id` -> current suffix) finds it where it is now, so a
+/// read through an index does not miss a document that a concurrent update moved to another customer.
+async fn moved_doc(g: &mut impl Rd, coll: &str, suffix: &[u8]) -> R<Option<Document>> {
+    let Some(&n) = suffix.first() else { return Ok(None) };
+    if crate::custkey::of(g, coll).await?.is_none() || suffix.len() <= 1 + n as usize {
+        return Ok(None);
+    }
+    let mut lk = crate::custkey::loc_prefix(coll);
+    lk.extend(&suffix[1 + n as usize..]);
+    let Some(now) = g.get(&lk).await? else { return Ok(None) };
+    if now.as_ref() == suffix {
+        return Ok(None);
+    }
+    Ok(match g.get(&[doc_prefix(coll), now.to_vec()].concat()).await? {
+        Some(v) => Some(decode(&v)?),
+        None => None,
+    })
 }
 
 /// The documents with these ids (in the order of `ids`) from one ascending range scan over the id span.
-async fn docs_by_scan(g: &mut impl Rd, prefix: &[u8], ids: &[Vec<u8>]) -> R<Vec<Document>> {
+async fn docs_by_scan(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Document>> {
+    let prefix_v = doc_prefix(coll);
+    let prefix = &prefix_v[..];
     let want: HashSet<&[u8]> = ids.iter().map(|i| i.as_slice()).collect();
     let (Some(lo), Some(hi)) = (ids.iter().min(), ids.iter().max()) else { return Ok(vec![]) };
     let mut start = prefix.to_vec();
@@ -355,6 +388,13 @@ async fn docs_by_scan(g: &mut impl Rd, prefix: &[u8], ids: &[Vec<u8>]) -> R<Vec<
         }
         start = k;
     }
+    for id in ids {
+        if !found.contains_key(id) {
+            if let Some(d) = moved_doc(g, coll, id).await? {
+                found.insert(id.clone(), d);
+            }
+        }
+    }
     Ok(ids.iter().filter_map(|i| found.get(i).cloned()).collect())
 }
 
@@ -374,12 +414,14 @@ async fn each_doc_by_ids(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>], mut f: im
         let mut stop = prefix.clone();
         stop.extend(hi);
         stop.push(0);
+        let mut seen = vec![false; ids.len()];
         loop {
             let rows = g.scan_range(&start, Some(&stop), false, Some(FETCH_CHUNK), FETCH_SCAN_READ_AHEAD).await?;
             let n = rows.len();
             for (k, v) in &rows {
                 if let Some(&i) = pos.get(&k[prefix.len()..]) {
                     n_docs += 1;
+                    seen[i] = true;
                     f(i, decode(v)?)?;
                 }
             }
@@ -393,6 +435,14 @@ async fn each_doc_by_ids(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>], mut f: im
             }
             start = k;
         }
+        for (i, id) in ids.iter().enumerate() {
+            if !seen[i] {
+                if let Some(d) = moved_doc(g, coll, id).await? {
+                    n_docs += 1;
+                    f(i, d)?;
+                }
+            }
+        }
         return Ok(n_docs);
     }
     for (c, chunk) in ids.chunks(FETCH_CHUNK).enumerate() {
@@ -405,9 +455,13 @@ async fn each_doc_by_ids(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>], mut f: im
             })
             .collect();
         for (j, v) in g.get_many(&keys).await?.into_iter().enumerate() {
-            if let Some(v) = v {
+            let d = match v {
+                Some(v) => Some(decode(&v)?),
+                None => moved_doc(g, coll, &chunk[j]).await?,
+            };
+            if let Some(d) = d {
                 n_docs += 1;
-                f(c * FETCH_CHUNK + j, decode(&v)?)?;
+                f(c * FETCH_CHUNK + j, d)?;
             }
         }
     }
@@ -455,6 +509,7 @@ async fn resolve_id(g: &mut impl Rd, coll: &str, id: &Bson, ov: Option<&Overlay>
 /// The document suffix of `_id` in a customer-keyed collection, from the overlay of the write set, then the locator.
 async fn locate(g: &mut impl Rd, coll: &str, id: &Bson, ov: Option<&Overlay>) -> R<Option<Vec<u8>>> {
     let lk = crate::custkey::loc_key(coll, id);
+    crate::custkey::LOCATOR_LOOKUPS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     if let Some(v) = ov.and_then(|m| m.get(&lk)) {
         return Ok(v.as_ref().and_then(loc_suffix));
     }
@@ -1505,6 +1560,9 @@ impl Writes {
         // the document suffix: the `_id` encoding, after the customer component in a customer-keyed collection
         let ckey = crate::custkey::for_write(g, ns, coll).await?;
         let id_enc = crate::custkey::dsuf(ckey.as_deref(), new);
+        if ckey.is_some() {
+            crate::custkey::DOCS_WRITTEN.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        }
         // an update that changes the customer moves the document (and its index entries) to the new customer's place
         let old_enc = old.map(|o| crate::custkey::dsuf(ckey.as_deref(), o)).filter(|e| *e != id_enc);
         if !self.quiet && !self.bypass_validation && !coll.starts_with("system.") {
