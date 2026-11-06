@@ -1,0 +1,1 @@
+Read-only copies of the brain documents the owner and reviewer sessions need (copied by the coordinator, 2026-11-06). The brain repo (fenvix-brain) is the source of truth; paths here mirror it. Wherever a prompt names a brain path (DECISIONS.md, NOW.md, prompts/..., sessions/...), read it under `coordination/brain/`. Do not edit these copies.
