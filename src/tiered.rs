@@ -220,6 +220,53 @@ pub fn worker_builder(path: slatedb::object_store::path::Path, store: Arc<dyn sl
     }
 }
 
+/// One SST of a database's current manifest (`fenvixSstInfo`, tests and measurements).
+#[derive(Clone, Debug)]
+pub struct SstSummary {
+    pub id: String,
+    pub codec: &'static str,
+    /// Bytes of the data blocks as stored (compressed when the SST is).
+    pub data_bytes: u64,
+    pub blocks: usize,
+}
+
+/// The SSTs of a database's latest manifest: the L0 SSTs (newest first) and the sorted runs (newest first).
+pub async fn sst_info(store: Arc<dyn slatedb::object_store::ObjectStore>, id: &str) -> anyhow::Result<(Vec<SstSummary>, Vec<(u32, Vec<SstSummary>)>)> {
+    let path = crate::lifecycle::tenant_path(id);
+    let admin = slatedb::admin::Admin::builder(path.clone(), Arc::clone(&store)).build();
+    let Some(m) = admin.read_manifest(None).await? else { return Ok((vec![], vec![])) };
+    let reader = slatedb::SstReader::new(path, store, None, None);
+    let one = |v: &slatedb::manifest::SsTableView| {
+        let h = v.sst.clone();
+        let r = &reader;
+        async move {
+            let codec = match h.info.compression_codec {
+                None => "none",
+                Some(slatedb::config::CompressionCodec::Lz4) => "lz4",
+                Some(slatedb::config::CompressionCodec::Zstd) => "zstd",
+                #[allow(unreachable_patterns)]
+                Some(_) => "other",
+            };
+            let data_bytes = h.info.index_offset;
+            let blocks = r.open_with_handle(h.clone())?.index().await?.len();
+            anyhow::Ok(SstSummary { id: h.id.value().to_string(), codec, data_bytes, blocks })
+        }
+    };
+    let mut l0 = Vec::new();
+    for v in m.l0() {
+        l0.push(one(v).await?);
+    }
+    let mut runs = Vec::new();
+    for r in m.compacted() {
+        let mut ssts = Vec::new();
+        for v in r.sst_views() {
+            ssts.push(one(v).await?);
+        }
+        runs.push((r.id, ssts));
+    }
+    Ok((l0, runs))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

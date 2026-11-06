@@ -449,6 +449,7 @@ impl Server {
             "connectionStatus" => return Box::pin(self.connection_status(conn_id, cmd)).await,
             "listDatabases" => return Box::pin(self.list_databases(db, cmd, conn_id)).await,
             "tenantStats" => return Ok(self.tenant_stats()),
+            "fenvixSstInfo" => return self.sst_info(cmd).await,
             "renameCollection" => return Box::pin(self.rename_collection(db, cmd)).await,
             "ttlPass" => {
                 let gap = int_arg(cmd.get("minGapSecs")).unwrap_or(0) as u64;
@@ -807,6 +808,19 @@ impl Server {
     }
 
     /// Process-wide gauges and counters for the load tests: open tenants and every object-store request.
+    /// `{fenvixSstInfo: "<db>"}`: the SSTs of a database's latest manifest, with their compression and block count
+    /// (tests and measurements of the compaction, `tiered.rs`). Root only, like `tenantStats`.
+    async fn sst_info(&self, cmd: &Document) -> R<Document> {
+        let db = cmd.get_str("fenvixSstInfo").map_err(|_| MongoError::bad_value("fenvixSstInfo needs a database name".into()))?;
+        let (l0, runs) = tenant_bench::tiered::sst_info(self.dbs.store(), db).await?;
+        let one = |s: &tenant_bench::tiered::SstSummary| doc! { "id": s.id.clone(), "codec": s.codec, "dataBytes": s.data_bytes as i64, "blocks": s.blocks as i64 };
+        Ok(doc! {
+            "l0": l0.iter().map(|s| Bson::Document(one(s))).collect::<Vec<_>>(),
+            "runs": runs.iter().map(|(id, ssts)| Bson::Document(doc! { "id": *id as i64, "ssts": ssts.iter().map(|s| Bson::Document(one(s))).collect::<Vec<_>>() })).collect::<Vec<_>>(),
+            "ok": 1.0,
+        })
+    }
+
     fn tenant_stats(&self) -> Document {
         use std::sync::atomic::Ordering::Relaxed;
         let s = self.dbs.global.counters.snapshot();
