@@ -1,0 +1,6 @@
+loaded 4569112 messages, 20000 customers, 2.01 GiB of BSON in 537 s
+settled after 34 s
+load + settle 582 s
+after load: L0 3, sorted runs 2: run 30: 4 SSTs 50 MiB, run 0: 8 SSTs 1370 MiB
+  codecs ['lz4'], sorted-run data 1420 MiB in 47613 blocks (30.5 KiB stored per block)
+bucket: 309 compacted objects, 5.71 GiB
