@@ -158,10 +158,12 @@ pub fn check(tree: Option<&[SourceId]>, spec: &CompactionSpec) -> Result<(), Str
 use std::sync::atomic::{AtomicU32, AtomicU8, Ordering};
 use std::sync::Arc;
 
-/// SST block size in KiB for the writer's flushes and the compaction worker's output (64: M29).
-pub static SST_BLOCK_KB: AtomicU32 = AtomicU32::new(64);
-/// Block compression: 0 none, 1 lz4 (default: M29, 2.41x, +18% compaction CPU), 2 zstd.
-pub static SST_COMPRESSION: AtomicU8 = AtomicU8::new(1);
+/// SST block size in KiB for the writer's flushes and the compaction worker's output. Default 4 (the format of the
+/// releases before compaction-1); M29 measured 64 (`--sst-block-kb 64`).
+pub static SST_BLOCK_KB: AtomicU32 = AtomicU32::new(4);
+/// Block compression: 0 none (default: a release without lz4 must still read the data, review of 91414a6), 1 lz4
+/// (M29: 2.41x, +18% compaction CPU; `--sst-compression lz4`), 2 zstd. Turning it on is a one-way format change.
+pub static SST_COMPRESSION: AtomicU8 = AtomicU8::new(0);
 /// T of the tiered scheduler; 0 = SlateDB's own size-tiered scheduler (the engine before this change).
 pub static TIERS: AtomicU32 = AtomicU32::new(4);
 

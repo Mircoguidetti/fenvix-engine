@@ -1592,6 +1592,11 @@ impl Writes {
         if let Some(oe) = &old_enc {
             self.check_conflict(g, &[doc_prefix(coll), oe.clone()].concat())?;
         }
+        if ckey.is_some() && (old.is_none() || old_enc.is_some()) {
+            // the locator is the unique `_id` index: it is locked like a document key, so two writers of one `_id`
+            // for two customers conflict (review of 91414a6)
+            self.check_conflict(g, &crate::custkey::loc_key(coll, &id))?;
+        }
         if old.is_none() && ckey.is_some() {
             // the locator is the unique `_id` index: another customer may hold this `_id`
             let lk = crate::custkey::loc_key(coll, &id);
@@ -1808,6 +1813,7 @@ impl Writes {
         self.check_conflict(g, &k)?;
         if ckey.is_some() {
             let lk = crate::custkey::loc_key(coll, &id);
+            self.check_conflict(g, &lk)?;
             self.ops.push(Op::Delete(lk.clone()));
             self.ov.insert(lk, None);
         }

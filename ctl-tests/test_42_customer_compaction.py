@@ -22,7 +22,8 @@ from pymongo import ASCENDING
 
 from lib import Server, make_bucket, list_prefix, wait_until
 
-FLAGS = ["--customer-key", "cc.m=u", "--memtable-max-mb", "1", "--sst-gc-secs", "2", "--sst-gc-min-unref-secs", "8", "--writer-poll-secs", "1"]
+# lz4 and 64 KiB blocks are options (the default stays the old format); the test checks the worker writes them
+FLAGS = ["--sst-compression", "lz4", "--sst-block-kb", "64", "--customer-key", "cc.m=u", "--memtable-max-mb", "1", "--sst-gc-secs", "2", "--sst-gc-min-unref-secs", "8", "--writer-poll-secs", "1"]
 CUSTOMERS = 40
 PAD = "p" * 700
 

@@ -447,11 +447,13 @@ struct Args {
     /// key when it is created or first written while empty. Off when empty (the default).
     #[arg(long, default_value = "")]
     customer_key: String,
-    /// SST block size in KiB, for the writers' flushes and the compaction's output (M29: 64).
-    #[arg(long, default_value_t = 64)]
+    /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
+    /// releases before); M29 measured 64.
+    #[arg(long, default_value_t = 4)]
     sst_block_kb: u32,
-    /// SST block compression: lz4 (M29: 2.41x on chat-like documents), zstd or none.
-    #[arg(long, default_value = "lz4")]
+    /// SST block compression: none (default: the release before cannot read lz4, so turning it on is a one-way change),
+    /// lz4 (M29: 2.41x on chat-like documents) or zstd.
+    #[arg(long, default_value = "none")]
     sst_compression: String,
     /// T of the tiered-levels compaction scheduler (M26-M31: 4); 0 = SlateDB's size-tiered scheduler.
     #[arg(long, default_value_t = 4)]

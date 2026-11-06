@@ -778,7 +778,8 @@ impl Entry {
                 let k = match op {
                     Op::Put(k, _) | Op::Delete(k) => k,
                 };
-                if k.starts_with(b"doc/") {
+                // documents and the locators of customer-keyed collections (their unique `_id` index, custkey.rs)
+                if k.starts_with(b"doc/") || k.starts_with(b"loc/") {
                     self.modified.insert(k.clone(), self.seq);
                 }
             }
