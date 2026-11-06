@@ -1,6 +1,6 @@
-FIX 2
+APPROVED
 
-# Review of compaction 91414a6 (customer-first keys, tiered compaction)
+# Review of compaction 91414a6 (round 1: FIX 2) and 1ae8158 (round 2: APPROVED) (customer-first keys, tiered compaction)
 
 Reviewer, 2026-11-06. Branch `review-compaction` (based on 91414a6). Base `integration` (6ff285a). Tests:
 `ctl-tests/test_43_review_compaction.py` (run: `cd ctl-tests && python -m pytest -q test_43_review_compaction.py`).
@@ -86,3 +86,25 @@ integration binary.
   live on until their store request ends (as for the compactor before). No test shows harm.
 - Contract point 1 was shown on the stress suite with the key on for some collections (63,076 documents written customer
   first, 2,249 locator lookups, DECLARED); the natural run had 1 locator lookup.
+
+## Round 2: the owner's fixes, commit 1ae8158 (APPROVED)
+
+Checked only the two fixes (`git diff 91414a6..1ae8158`) and my tests. Everything MEASURED here.
+
+- My tests were not weakened: `ctl-tests/test_43_review_compaction.py` and this file are byte-identical between my
+  round-1 commit (6df560c) and 1ae8158. The owner's only test change adds `--sst-compression lz4 --sst-block-kb 64` to
+  `test_42_customer_compaction.py`, which checks the lz4 output: right, since lz4 is now an option.
+- Fix 1 (duplicate `_id`): the locator is now locked and conflict-checked like a document key on insert, move and
+  delete (`coll.rs`), and `loc/` keys are recorded in `modified` (`dbs.rs`) so a transaction's commit sees a
+  plain write of the same locator. Both duplicate-`_id` tests [m] pass 3 runs of 3; the [plain] controls still pass.
+- Fix 2 (format): defaults back to `none` and 4 KiB (`main.rs`, `tiered.rs`); lz4 / 64 KiB only by option. The format
+  test passes 3 of 3 with `INTEGRATION_BIN` set (the integration binary reads all 5,000 documents back). Byte
+  compatibility: the same 5,000 documents plus an index written by 1ae8158 and by integration, with no option: one
+  compacted SST each, both 6,016,927 bytes.
+- `test_a_refused_fork_leaves_no_object_of_its_target` still fails, as on integration (pre-existing; separate task).
+- `judge/run.sh fast` on 1ae8158: build PASS; unit FAIL only `counter::tests::rev_maps_leave_room_for_active_data`;
+  diff-py and diff-node FAIL only `bucketauto.infinity` (412/413 each); ctl FAIL only test_05_erase, by the same
+  leftover usage record of a refused fork's target (`control/usage/ef1_k/...`), identical on integration; kill PASS.
+  Every failure is one shown identical on integration (contract point 5).
+- Not re-checked (outside round 2): the cold-read numbers. Note that with lz4 / 64 KiB now off by default, the
+  owner's cold-read results (measured with them on) hold only with `--sst-compression lz4 --sst-block-kb 64`.
