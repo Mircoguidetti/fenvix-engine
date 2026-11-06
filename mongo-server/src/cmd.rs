@@ -211,11 +211,27 @@ impl Server {
                 self.dbs.changes.advance(*ts);
             }
         }
-        let (r, op_time) = crate::fair::timed(db, permit.as_mut(), crate::changes::OP_TIME.scope(std::cell::Cell::new(None), async { let r = self.run_command(db, &name, &cmd, conn_id, opid, kill, killable).await; (r, crate::changes::OP_TIME.with(|c| c.get())) })).await;
+        // K1: a reader of the profiler sees every entry of the commands that finished before (they are written after the reply)
+        if crate::diag::reads_profile(&name, &cmd) {
+            self.profile_flush(db).await;
+        }
+        // K1: the object-store reads (meter.rs) and the examined keys and documents (coll.rs) of this command, for its profiler entry
+        let meter = std::sync::Arc::new(tenant_bench::meter::OpMeter::default());
+        let _registered = tenant_bench::meter::register(db, &meter);
+        let ((r, op_time), note) = tenant_bench::meter::OP_METER
+            .scope(std::sync::Arc::clone(&meter), crate::coll::EXEC_NOTE.scope(std::cell::RefCell::new(Default::default()), async {
+                let out = crate::fair::timed(db, permit.as_mut(), crate::changes::OP_TIME.scope(std::cell::Cell::new(None), async { let r = self.run_command(db, &name, &cmd, conn_id, opid, kill, killable).await; (r, crate::changes::OP_TIME.with(|c| c.get())) })).await;
+                (out, crate::coll::EXEC_NOTE.with(|c| c.borrow().clone()))
+            }))
+            .await;
         let r: R<Document> = r;
         let micros = t0.elapsed().as_micros() as i64;
         self.diag.end(opid, db, &name, &cmd, &r, micros);
-        self.profile_record(db, &name, &cmd, &r, micros, conn_id).await;
+        drop(_registered);
+        if let Some(entry) = self.profile_record(db, &name, &cmd, &r, micros, conn_id, (meter.read(), meter.is_shared()), &note) {
+            // written after the reply, not before it (it was an insert before the reply: one more S3 write per operation)
+            self.profile_enqueue(db, entry);
+        }
         let ms = t0.elapsed().as_millis();
         if ms >= 500 {
             eprintln!("SLOW {name} db={db} ms={ms} ok={}", r.is_ok());
@@ -761,6 +777,8 @@ impl Server {
         if capped.is_some() {
             ops.push(Op::Put(crate::capped::stat_key(coll), doc! { "docs": 0_i64, "bytes": 0_i64 }.to_vec()?));
         }
+        // a new collection: its storage counters start from zero (collstat.rs)
+        ops.push(crate::collstat::CollStat::default().op(coll));
         g.apply(ops).await?;
         let uuid = g.collection_uuid(coll).await?;
         drop(g);

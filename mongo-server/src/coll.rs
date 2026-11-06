@@ -33,9 +33,16 @@ pub trait Rd: Send {
     fn note_ttl(&self);
     /// The options of a collection (its default collation).
     fn coll_opts(&mut self, coll: &str) -> impl std::future::Future<Output = anyhow::Result<Option<Arc<crate::collopts::CollOpts>>>> + Send;
+    /// The database's name (T1: the read-ahead of `prefetch.rs` reads it on its own).
+    fn tenant_name(&self) -> Option<String> {
+        None
+    }
 }
 
 impl Rd for Entry {
+    fn tenant_name(&self) -> Option<String> {
+        Some(self.name().to_string())
+    }
     async fn get(&mut self, key: &[u8]) -> anyhow::Result<Option<Bytes>> {
         Entry::get(self, key).await
     }
@@ -60,6 +67,9 @@ impl Rd for Entry {
 }
 
 impl Rd for tokio::sync::OwnedRwLockWriteGuard<Entry> {
+    fn tenant_name(&self) -> Option<String> {
+        Some(self.name().to_string())
+    }
     async fn get(&mut self, key: &[u8]) -> anyhow::Result<Option<Bytes>> {
         Entry::get(self, key).await
     }
@@ -84,6 +94,9 @@ impl Rd for tokio::sync::OwnedRwLockWriteGuard<Entry> {
 }
 
 impl Rd for ReadView {
+    fn tenant_name(&self) -> Option<String> {
+        ReadView::tenant_name(self)
+    }
     async fn get(&mut self, key: &[u8]) -> anyhow::Result<Option<Bytes>> {
         ReadView::get(self, key).await
     }
@@ -668,9 +681,50 @@ fn visible(d: &Document, o: &FindOpts) -> bool {
     }
 }
 
+/// What the reads of one command examined, for its profiler entry (K1): keys and documents examined and the plan of
+/// its first read, as mongod's `planSummary` writes it. Set around a command by the server (`EXEC_NOTE.scope`).
+#[derive(Clone, Debug, Default)]
+pub struct ExecNote {
+    pub keys: u64,
+    pub docs: u64,
+    pub plan: Option<String>,
+}
+
+tokio::task_local! {
+    pub static EXEC_NOTE: std::cell::RefCell<ExecNote>;
+}
+
+/// mongod's `planSummary` of a plan: `COLLSCAN`, `IDHACK`, `IXSCAN { a: 1, b: -1 }` (an `$or`: its branches, comma separated).
+pub fn plan_summary(plan: &Plan, indexes: &[IndexDef]) -> String {
+    match plan {
+        Plan::Coll { .. } => "COLLSCAN".to_string(),
+        Plan::Id(_) => "IDHACK".to_string(),
+        Plan::Ix(s) => match indexes.get(s.idx) {
+            Some(i) => format!("IXSCAN {}", crate::update::fmt_doc(&i.key_pattern())),
+            None => "IXSCAN".to_string(),
+        },
+        Plan::Or(v) => v.iter().map(|p| plan_summary(p, indexes)).collect::<Vec<_>>().join(", "),
+    }
+}
+
 /// Documents matching `o.filter`, in plan order (sort not applied unless the index provides it). A `$text` condition
 /// needs a text index; the documents of such a query carry their text score in the hidden [`crate::text::SCORE_KEY`] field.
 pub async fn find_docs(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
+    let r = find_docs_any(g, coll, indexes, o).await;
+    if let Ok((_, st, plan)) = &r {
+        let _ = EXEC_NOTE.try_with(|c| {
+            let mut n = c.borrow_mut();
+            n.keys += if matches!(plan, Plan::Coll { .. }) { 0 } else { st.keys as u64 };
+            n.docs += st.docs as u64;
+            if n.plan.is_none() {
+                n.plan = Some(plan_summary(plan, indexes));
+            }
+        });
+    }
+    r
+}
+
+async fn find_docs_any(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
     crate::js::validate_filter(o.filter)?;
     if let Hint::Index(i) = &o.hint {
         if matches!(indexes.get(*i).map(|x| &x.kind), Some(index::Kind::Wildcard(_))) && !index::wild_hint_ok(indexes, *i, o.filter) {
@@ -1156,12 +1210,14 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
             let mut c = IxCursor::new(coll, &indexes[s.idx], s);
             let mut seen: HashSet<Vec<u8>> = HashSet::new();
             let mut batch = want.max(1);
+            let mut last_entry: Option<Bytes> = None;
             'ix: loop {
                 let b = c.next_batch(g, batch).await?;
                 batch = (batch * 2).min(4096);
                 if b.is_empty() {
                     break;
                 }
+                last_entry = b.last().cloned();
                 stats.keys += b.len();
                 let ids: Vec<Vec<u8>> = b
                     .iter()
@@ -1178,6 +1234,12 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
                             break 'ix;
                         }
                     }
+                }
+            }
+            // T1: read ahead on a signal (one interval: a client's entries, maybe with a date bound)
+            if c.ivs.len() == 1 && o.ov.is_none() {
+                if let Some(t) = g.tenant_name() {
+                    crate::prefetch::note(&t, coll, &c.ivs[0].0, &c.ivs[0].1, c.reverse, last_entry.as_deref());
                 }
             }
         }
@@ -1286,6 +1348,8 @@ pub struct Writes {
     pub extra: Vec<Op>,
     /// Capped collections: how this write set moves the (document count, byte count) of each.
     pub cap_delta: HashMap<String, (i64, i64)>,
+    /// How this write set moves the storage counters of each collection it writes (`collstat.rs`).
+    pub stat: HashMap<String, crate::collstat::Delta>,
     /// A document is being dropped by the cap, not by a user: no counts, no change event.
     quiet: bool,
     /// `bypassDocumentValidation` of the command that writes.
@@ -1294,7 +1358,7 @@ pub struct Writes {
 
 impl Writes {
     pub fn new() -> Self {
-        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None, seqs: HashMap::new(), extra: Vec::new(), cap_delta: HashMap::new(), quiet: false, bypass_validation: false }
+        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None, seqs: HashMap::new(), extra: Vec::new(), cap_delta: HashMap::new(), stat: HashMap::new(), quiet: false, bypass_validation: false }
     }
 
     /// The collection validator on a document that is written: `old` is what an update started from.
@@ -1476,9 +1540,26 @@ impl Writes {
             },
         };
         // Commit to the write set.
+        let entry_val_len = crate::natural::entry_value(seq).len() as i64;
+        let st = self.stat.entry(coll.to_string()).or_default();
+        match old {
+            None => {
+                st.docs += 1;
+                st.bytes += bytes.len() as i64;
+                st.id_bytes += id_enc.len() as i64;
+            }
+            Some(o) => st.bytes += bytes.len() as i64 - o.to_vec()?.len() as i64,
+        }
         for (i, add, rem, mk) in plans {
             let idx = &mut indexes[i];
             let prefix = idx.prefix(coll);
+            let st = self.stat.entry(coll.to_string()).or_default();
+            for c in &rem {
+                st.index(&idx.name, -((entry_key(&prefix, c, &id_enc).len() as i64) + entry_val_len));
+            }
+            for c in &add {
+                st.index(&idx.name, entry_key(&prefix, c, &id_enc).len() as i64 + entry_val_len);
+            }
             for c in rem {
                 self.ops.push(Op::Delete(entry_key(&prefix, &c, &id_enc)));
                 self.claims.remove(&(i, c.clone()));
@@ -1548,27 +1629,38 @@ impl Writes {
         }
         self.check_conflict(g, &doc_key(coll, &id))?;
         let id_enc = encode_sortable(&id);
+        let k = doc_key(coll, &id);
+        let seq = match self.seqs.get(&k) {
+            Some(s) => Some(*s),
+            None => crate::natural::stored_seq(g, &k).await?,
+        };
+        let entry_val_len = crate::natural::entry_value(seq).len() as i64;
+        let mut st = crate::collstat::Delta { docs: -1, bytes: -(old.to_vec()?.len() as i64), id_bytes: -(id_enc.len() as i64), ..Default::default() };
         for (i, idx) in indexes.iter().enumerate() {
             if !idx.has_entries() || idx.state == State::Dropping {
                 continue;
             }
             let prefix = idx.prefix(coll);
             for c in idx.entries(old)?.0.into_keys() {
+                st.index(&idx.name, -((entry_key(&prefix, &c, &id_enc).len() as i64) + entry_val_len));
                 self.ops.push(Op::Delete(entry_key(&prefix, &c, &id_enc)));
                 self.claims.remove(&(i, c.clone()));
                 self.released.insert((i, c, id_enc.clone()));
             }
         }
-        let k = doc_key(coll, &id);
         if let (Some(c), true) = (g.collation_of(coll), crate::collopts::has_string(&id)) {
             let ck = crate::collopts::idc_key(coll, &c, &id);
             self.ops.push(Op::Delete(ck.clone()));
             self.ov.insert(ck, None);
         }
-        let seq = match self.seqs.remove(&k) {
-            Some(s) => Some(s),
-            None => crate::natural::stored_seq(g, &k).await?,
-        };
+        self.seqs.remove(&k);
+        let e = self.stat.entry(coll.to_string()).or_default();
+        e.docs += st.docs;
+        e.bytes += st.bytes;
+        e.id_bytes += st.id_bytes;
+        for (n, b) in st.idx {
+            e.index(&n, b);
+        }
         if let Some(s) = seq {
             self.ops.push(Op::Delete(crate::natural::key(coll, s)));
         }

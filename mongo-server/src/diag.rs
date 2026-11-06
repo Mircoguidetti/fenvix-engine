@@ -149,6 +149,8 @@ pub struct Diag {
     prof: Mutex<HashMap<String, Prof>>,
     /// slowms and sampleRate are server-wide
     prof_global: Mutex<(i64, f64)>,
+    /// Profile entries waiting to be written, by database, and the databases whose writer task runs.
+    prof_queue: Mutex<(HashMap<String, Vec<Document>>, std::collections::HashSet<String>)>,
     pub filters: Mutex<HashMap<String, Vec<Document>>>,
     log: Mutex<(u64, VecDeque<String>)>,
     rwc: Mutex<Option<Document>>,
@@ -173,6 +175,7 @@ impl Default for Diag {
             top: Default::default(),
             prof: Default::default(),
             prof_global: Mutex::new((100, 1.0)),
+            prof_queue: Default::default(),
             filters: Default::default(),
             log: Default::default(),
             rwc: Default::default(),
@@ -675,6 +678,7 @@ impl Server {
             set_path(&mut d, "mem.virtual", Bson::Int32((virt * 4096 / 1048576) as i32));
         }
         set_path(&mut d, "mem.supported", Bson::Boolean(true));
+        self.real_process_and_cache_stats(&mut d);
         set_path(&mut d, "featureCompatibilityVersion.major", Bson::Int32(7));
         if rs {
             let h = self.hello_doc();
@@ -704,6 +708,84 @@ impl Server {
         }
         d.insert("ok", 1.0);
         Ok(d)
+    }
+
+    /// K1: the numbers of this process instead of the template's (which were mongod's of the recording, or zero).
+    /// - `extra_info`: CPU of the process (getrusage), peak memory, page faults, context switches, threads;
+    /// - `wiredTiger.cache`: the shared block and metadata cache and the object-store traffic, under the
+    ///   names mongod uses, so a tool written for mongod reads them (mapping below and in `fenvix.mapping`);
+    /// - `fenvix`: the same numbers under their own names, with the S3 request counts.
+    fn real_process_and_cache_stats(&self, d: &mut Document) {
+        let mut ru: libc::rusage = unsafe { std::mem::zeroed() };
+        if unsafe { libc::getrusage(libc::RUSAGE_SELF, &mut ru) } == 0 {
+            let us = |t: libc::timeval| t.tv_sec as i64 * 1_000_000 + t.tv_usec as i64;
+            set_path(d, "extra_info.user_time_us", Bson::Int64(us(ru.ru_utime)));
+            set_path(d, "extra_info.system_time_us", Bson::Int64(us(ru.ru_stime)));
+            set_path(d, "extra_info.maximum_resident_set_kb", Bson::Int64(ru.ru_maxrss as i64));
+            set_path(d, "extra_info.input_blocks", Bson::Int64(ru.ru_inblock as i64));
+            set_path(d, "extra_info.output_blocks", Bson::Int64(ru.ru_oublock as i64));
+            set_path(d, "extra_info.page_reclaims", Bson::Int64(ru.ru_minflt as i64));
+            set_path(d, "extra_info.page_faults", Bson::Int64(ru.ru_majflt as i64));
+            set_path(d, "extra_info.voluntary_context_switches", Bson::Int64(ru.ru_nvcsw as i64));
+            set_path(d, "extra_info.involuntary_context_switches", Bson::Int64(ru.ru_nivcsw as i64));
+        }
+        if let Some(n) = std::fs::read_to_string("/proc/self/status").ok().and_then(|s| s.lines().find(|l| l.starts_with("Threads:")).and_then(|l| l.split_whitespace().nth(1)).and_then(|x| x.parse::<i64>().ok())) {
+            set_path(d, "extra_info.threads", Bson::Int64(n));
+        }
+        let c = &self.dbs.global.counters;
+        let ld = |a: &std::sync::atomic::AtomicU64| a.load(Relaxed) as i64;
+        let gets = ld(&c.get) + ld(&c.get_range);
+        let puts = ld(&c.put) + ld(&c.multipart_part);
+        let cs = tenant_bench::meter::cache_stats().unwrap_or_default();
+        let in_cache = (cs.block_usage + cs.meta_usage) as i64;
+        let wt = [
+            ("bytes currently in the cache", in_cache),
+            ("maximum bytes configured", (cs.block_capacity + cs.meta_capacity) as i64),
+            ("bytes read into cache", ld(&c.get_bytes)),
+            ("pages read into cache", gets),
+            ("bytes written from cache", ld(&c.put_bytes)),
+            ("pages written from cache", puts),
+            ("pages requested from the cache", (cs.hits + cs.misses) as i64),
+            ("bytes belonging to page images in the cache", (cs.block_usage) as i64),
+            ("pages currently held in the cache", cs.block_entries as i64),
+        ];
+        for (k, v) in wt {
+            if let Some(Bson::Document(w)) = d.get_mut("wiredTiger") {
+                if let Some(Bson::Document(cache)) = w.get_mut("cache") {
+                    cache.insert(k, Bson::Int64(v));
+                    continue;
+                }
+                w.insert("cache", doc! { k: Bson::Int64(v) });
+            } else {
+                d.insert("wiredTiger", doc! { "cache": { k: Bson::Int64(v) } });
+            }
+        }
+        d.insert("fenvix", doc! {
+            "cache": {
+                "blockBytes": cs.block_usage as i64, "blockCapacity": cs.block_capacity as i64, "blockEntries": cs.block_entries as i64,
+                "metaBytes": cs.meta_usage as i64, "metaCapacity": cs.meta_capacity as i64,
+                "hits": cs.hits as i64, "misses": cs.misses as i64,
+                "bytesLoadedByFetch": cs.loaded_bytes as i64, "bytesInserted": cs.inserted_bytes as i64,
+            },
+            "s3": {
+                "get": ld(&c.get), "getRange": ld(&c.get_range), "head": ld(&c.head), "list": ld(&c.list), "put": ld(&c.put),
+                "multipartPart": ld(&c.multipart_part), "copy": ld(&c.copy), "delete": ld(&c.delete),
+                "getBytes": ld(&c.get_bytes), "putBytes": ld(&c.put_bytes),
+            },
+            "mapping": {
+                "wiredTiger.cache.bytes currently in the cache": "bytes held by the shared block + metadata cache (RAM)",
+                "wiredTiger.cache.maximum bytes configured": "--block-cache-mb + --meta-cache-mb",
+                "wiredTiger.cache.bytes read into cache": "bytes of S3 GET bodies (whole and ranged)",
+                "wiredTiger.cache.pages read into cache": "S3 GET requests (whole and ranged)",
+                "wiredTiger.cache.bytes written from cache": "bytes of S3 PUT bodies",
+                "wiredTiger.cache.pages written from cache": "S3 PUT requests (and multipart parts)",
+                "wiredTiger.cache.pages requested from the cache": "lookups of the shared cache (hits + misses)",
+                "extra_info.user_time_us / system_time_us": "CPU of this process (getrusage)",
+            },
+        });
+        if let Some(Bson::Document(f)) = d.get_mut("fenvix") {
+            f.insert("waiter", waiter_stats());
+        }
     }
 
     fn host_info(&self) -> Document {
@@ -1072,20 +1154,24 @@ impl Server {
         Ok(reply)
     }
 
-    /// After a command ran: write its profile entry when the database profiles.
-    pub(crate) async fn profile_record(&self, db: &str, name: &str, cmd: &Document, r: &R<Document>, micros: i64, conn: i64) {
+    /// After a command ran: its profile entry, when the database profiles (written by [`Server::profile_enqueue`]).
+    /// `io` is what the command read from the object store (requests, bytes, microseconds: `storage.data`), `note` the keys
+    /// and documents its reads examined and the plan of the first one (K1: they were 0 and COLLSCAN).
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn profile_record(&self, db: &str, name: &str, cmd: &Document, r: &R<Document>, micros: i64, conn: i64, io: ((u64, u64, u64), bool), note: &crate::coll::ExecNote) -> Option<Document> {
+        let (io, io_shared) = io;
         let p = self.diag.prof_of(db);
         if p.level == 0 || db == "admin" && name == "profile" || matches!(name, "profile" | "hello" | "isMaster" | "ismaster" | "ping" | "saslStart" | "saslContinue" | "endSessions") {
-            return;
+            return None;
         }
         let ns_target = cmd.get(name).and_then(|v| v.as_str()).unwrap_or("");
         if ns_target == "system.profile" || (name == "getMore" && cmd.get_str("collection").ok() == Some("system.profile")) {
-            return;
+            return None;
         }
         let millis = micros / 1000;
         let (slowms, sample) = *self.diag.prof_global.lock().unwrap();
         if p.level == 1 && p.filter.is_none() && millis < slowms {
-            return;
+            return None;
         }
         let (op, ns) = op_kind(name, db, cmd);
         let reply = r.as_ref().ok();
@@ -1120,7 +1206,11 @@ impl Server {
             "update" | "delete" => cmd.get_array(if name == "update" { "updates" } else { "deletes" }).ok().and_then(|a| a.first()).and_then(|b| b.as_document()).map(stmt_filter).unwrap_or_default(),
             _ => Document::new(),
         };
-        let plan = if filter.len() == 1 && filter.get("_id").map(|v| !matches!(v, Bson::Document(_))).unwrap_or(false) { "IDHACK" } else { "COLLSCAN" };
+        let plan_guess = if filter.len() == 1 && filter.get("_id").map(|v| !matches!(v, Bson::Document(_))).unwrap_or(false) { "IDHACK" } else { "COLLSCAN" };
+        let plan_s: String = note.plan.clone().unwrap_or_else(|| plan_guess.to_string());
+        let plan = plan_s.as_str();
+        let (keys_x, docs_x) = (note.keys as i64, note.docs as i64);
+        let stage_of = |p: &str| if p.starts_with("IXSCAN") { "FETCH" } else if p == "IDHACK" { "IDHACK" } else { "COLLSCAN" };
         let hash = |salt: &str| format!("{:08X}", md5_hex(format!("{salt}{}", crate::update::fmt_doc(&filter)).as_bytes())[..8].chars().fold(0_u32, |a, c| a.wrapping_mul(31).wrapping_add(c as u32)));
         let exhausted = reply.and_then(|d| d.get_document("cursor").ok()).map(|c| matches!(c.get("id"), Some(Bson::Int64(0)))).unwrap_or(true);
         let locks_r = || Bson::Document(doc! { "FeatureCompatibilityVersion": { "acquireCount": { "r": Bson::Int64(1) } }, "Global": { "acquireCount": { "r": Bson::Int64(1) } } });
@@ -1129,12 +1219,20 @@ impl Server {
         let resp_len = reply.map(|d| d.to_vec().map(|v| v.len()).unwrap_or(0)).unwrap_or(0) as i32;
         let mut e = doc! { "op": op, "ns": ns, "command": command };
         match (op, name) {
-            ("query", _) => e.extend(doc! { "keysExamined": 0_i64, "docsExamined": nreturned, "nBatches": 1, "cursorExhausted": exhausted, "numYield": 0, "nreturned": nreturned as i32, "queryHash": hash("q"), "planCacheKey": hash("p"), "queryFramework": "classic", "locks": locks_r(), "flowControl": {}, "responseLength": resp_len, "protocol": "op_msg", "cpuNanos": Bson::Int64(micros * 1000), "millis": millis as i32, "planSummary": plan, "planningTimeMicros": Bson::Int64(0), "execStats": exec(if plan == "IDHACK" { "IDHACK" } else { "COLLSCAN" }, nreturned) }),
-            ("insert", _) => e.extend(doc! { "ninserted": count("n") as i32, "keysInserted": Bson::Int64(count("n") * 2), "numYield": 0, "locks": locks_w(), "flowControl": { "acquireCount": Bson::Int64(1) }, "responseLength": resp_len, "protocol": "op_msg", "cpuNanos": Bson::Int64(micros * 1000), "millis": millis as i32 }),
-            ("update", _) => e.extend(doc! { "keysExamined": 0_i64, "docsExamined": count("n"), "nMatched": count("n") as i32, "nModified": count("nModified") as i32, "nUpserted": reply.and_then(|d| d.get_array("upserted").ok()).map(|a| a.len()).unwrap_or(0) as i32, "keysInserted": 0, "keysDeleted": 0, "numYield": 0, "locks": locks_w(), "flowControl": { "acquireCount": Bson::Int64(1) }, "cpuNanos": Bson::Int64(micros * 1000), "millis": millis as i32, "planSummary": plan, "planningTimeMicros": Bson::Int64(0), "execStats": exec("UPDATE", 0) }),
-            ("remove", _) => e.extend(doc! { "keysExamined": 0_i64, "docsExamined": count("n"), "ndeleted": count("n") as i32, "keysDeleted": Bson::Int64(count("n") * 2), "numYield": 0, "locks": locks_w(), "flowControl": { "acquireCount": Bson::Int64(1) }, "cpuNanos": Bson::Int64(micros * 1000), "millis": millis as i32, "planSummary": plan, "planningTimeMicros": Bson::Int64(0), "execStats": exec("DELETE", 0) }),
-            _ if batch_len.is_some() || matches!(name, "count" | "distinct") => e.extend(doc! { "keysExamined": 0_i64, "docsExamined": nreturned, "cursorExhausted": exhausted, "numYield": 0, "nreturned": nreturned as i32, "queryHash": hash("q"), "planCacheKey": hash("p"), "queryFramework": "classic", "locks": locks_r(), "flowControl": {}, "responseLength": resp_len, "protocol": "op_msg", "cpuNanos": Bson::Int64(micros * 1000), "millis": millis as i32, "planSummary": plan, "planningTimeMicros": Bson::Int64(0) }),
-            _ => e.extend(doc! { "numYield": 0, "locks": locks_w(), "flowControl": { "acquireCount": Bson::Int64(1) }, "responseLength": resp_len, "protocol": "op_msg", "cpuNanos": Bson::Int64(micros * 1000), "millis": millis as i32 }),
+            ("query", _) => e.extend(doc! { "keysExamined": keys_x, "docsExamined": docs_x, "nBatches": 1, "cursorExhausted": exhausted, "numYield": 0, "nreturned": nreturned as i32, "queryHash": hash("q"), "planCacheKey": hash("p"), "queryFramework": "classic", "locks": locks_r(), "flowControl": {}, "responseLength": resp_len, "protocol": "op_msg", "millis": millis as i32, "planSummary": plan, "planningTimeMicros": Bson::Int64(0), "execStats": exec(stage_of(plan), nreturned) }),
+            ("insert", _) => e.extend(doc! { "ninserted": count("n") as i32, "keysInserted": Bson::Int64(count("n") * 2), "numYield": 0, "locks": locks_w(), "flowControl": { "acquireCount": Bson::Int64(1) }, "responseLength": resp_len, "protocol": "op_msg", "millis": millis as i32 }),
+            ("update", _) => e.extend(doc! { "keysExamined": keys_x, "docsExamined": docs_x, "nMatched": count("n") as i32, "nModified": count("nModified") as i32, "nUpserted": reply.and_then(|d| d.get_array("upserted").ok()).map(|a| a.len()).unwrap_or(0) as i32, "keysInserted": 0, "keysDeleted": 0, "numYield": 0, "locks": locks_w(), "flowControl": { "acquireCount": Bson::Int64(1) }, "millis": millis as i32, "planSummary": plan, "planningTimeMicros": Bson::Int64(0), "execStats": exec("UPDATE", 0) }),
+            ("remove", _) => e.extend(doc! { "keysExamined": keys_x, "docsExamined": docs_x, "ndeleted": count("n") as i32, "keysDeleted": Bson::Int64(count("n") * 2), "numYield": 0, "locks": locks_w(), "flowControl": { "acquireCount": Bson::Int64(1) }, "millis": millis as i32, "planSummary": plan, "planningTimeMicros": Bson::Int64(0), "execStats": exec("DELETE", 0) }),
+            _ if batch_len.is_some() || matches!(name, "count" | "distinct") => e.extend(doc! { "keysExamined": keys_x, "docsExamined": docs_x, "cursorExhausted": exhausted, "numYield": 0, "nreturned": nreturned as i32, "queryHash": hash("q"), "planCacheKey": hash("p"), "queryFramework": "classic", "locks": locks_r(), "flowControl": {}, "responseLength": resp_len, "protocol": "op_msg", "millis": millis as i32, "planSummary": plan, "planningTimeMicros": Bson::Int64(0) }),
+            _ => e.extend(doc! { "numYield": 0, "locks": locks_w(), "flowControl": { "acquireCount": Bson::Int64(1) }, "responseLength": resp_len, "protocol": "op_msg", "millis": millis as i32 }),
+        }
+        // what the operation read from the object store (S3): mongod's bytes and time read from disk into its cache.
+        // (No `cpuNanos`: it was the elapsed time written as CPU time; the CPU of the process is in serverStatus.)
+        e.insert("storage", doc! { "data": { "bytesRead": Bson::Int64(io.1 as i64), "timeReadingMicros": Bson::Int64(io.2 as i64) } });
+        e.insert("fenvixS3Gets", Bson::Int64(io.0 as i64));
+        if io_shared {
+            // some reads were split with other commands running on the same database at the same time (meter.rs)
+            e.insert("fenvixS3Shared", true);
         }
         e.insert("ts", Bson::DateTime(bson::DateTime::now()));
         e.insert("client", client);
@@ -1150,21 +1248,63 @@ impl Server {
             let mut probe = e.clone();
             probe.insert("millis", millis as i32);
             if !crate::query::matches(&probe, f).unwrap_or(false) {
-                return;
+                return None;
             }
         } else if sample < 1.0 && rand::random::<f64>() >= sample {
-            return;
+            return None;
         }
-        let _ = self.write_profile(db, e).await;
+        Some(e)
     }
 
-    async fn write_profile(&self, db: &str, entry: Document) -> R<()> {
+    /// Queue a profile entry; a task of its own writes the queue of the database (in order, in batches), after the
+    /// replies (K1: the write was part of every profiled operation, an S3 write before the reply).
+    pub(crate) fn profile_enqueue(self: &Arc<Self>, db: &str, entry: Document) {
+        let start = {
+            let mut q = self.diag.prof_queue.lock().unwrap();
+            q.0.entry(db.to_string()).or_default().push(entry);
+            q.1.insert(db.to_string())
+        };
+        if start {
+            let me = Arc::clone(self);
+            let db = db.to_string();
+            tokio::spawn(async move { me.profile_drain(&db).await });
+        }
+    }
+
+    async fn profile_drain(&self, db: &str) {
+        loop {
+            let batch = {
+                let mut q = self.diag.prof_queue.lock().unwrap();
+                match q.0.remove(db) {
+                    Some(v) if !v.is_empty() => v,
+                    _ => {
+                        q.1.remove(db);
+                        return;
+                    }
+                }
+            };
+            if let Err(e) = self.write_profile(db, batch).await {
+                eprintln!("profiler: entries of {db} not written: {}", e.msg);
+            }
+        }
+    }
+
+    /// Wait until the profile entries queued for `db` are written (a reader of `system.profile` sees them all).
+    pub(crate) async fn profile_flush(&self, db: &str) {
+        let t0 = Instant::now();
+        while self.diag.prof_queue.lock().unwrap().1.contains(db) && t0.elapsed() < std::time::Duration::from_secs(30) {
+            tokio::time::sleep(std::time::Duration::from_millis(2)).await;
+        }
+    }
+
+    async fn write_profile(&self, db: &str, entries: Vec<Document>) -> R<()> {
         let names = self.dbs.lock(db).await.collections().await?;
         if !names.iter().any(|n| n == "system.profile") {
             self.create(db, &doc! { "create": "system.profile", "capped": true, "size": 1048576 }).await?;
         }
         let mut none = None;
-        self.insert(db, &doc! { "insert": "system.profile", "documents": [entry] }, &mut none).await?;
+        let docs: Vec<Bson> = entries.into_iter().map(Bson::Document).collect();
+        self.insert(db, &doc! { "insert": "system.profile", "documents": docs }, &mut none).await?;
         Ok(())
     }
 
@@ -1457,6 +1597,11 @@ fn sha_empty() -> Vec<u8> {
     Sha256::digest(b"").to_vec()
 }
 
+/// A command that reads `system.profile` (it waits for the queued profile entries first).
+pub(crate) fn reads_profile(name: &str, cmd: &Document) -> bool {
+    matches!(name, "find" | "aggregate" | "count" | "distinct") && cmd.get_str(name).ok() == Some("system.profile")
+}
+
 fn op_kind(name: &str, db: &str, cmd: &Document) -> (&'static str, String) {
     let coll = cmd.get(name).and_then(|v| v.as_str()).map(str::to_string);
     let ns_cmd = format!("{db}.$cmd");
@@ -1500,3 +1645,44 @@ pub const IMPLEMENTED: &[&str] = &[
     "profile", "reIndex", "refreshSessions", "renameCollection", "revokePrivilegesFromRole", "revokeRolesFromRole", "revokeRolesFromUser", "rolesInfo", "saslContinue", "saslStart", "serverStatus", "setClusterParameter", "setDefaultRWConcern", "setIndexCommitQuorum", "setParameter",
     "startSession", "top", "update", "updateRole", "updateUser", "usersInfo", "validate", "validateDBMetadata", "whatsmyuri",
 ];
+
+/// T1, the waiter's tools: trips to the object store, the two-floor counter, the maps, the read-ahead.
+pub fn waiter_stats() -> Document {
+    use std::sync::atomic::Ordering::Relaxed;
+    use tenant_bench::simstore as ss;
+    let ld = |a: &std::sync::atomic::AtomicU64| a.load(Relaxed) as i64;
+    let mut w = doc! {
+        "trips": ld(&ss::TRIPS.trips), "reads": ld(&ss::TRIPS.reads),
+        "chains": ss::CHAIN.lock().unwrap().chains as i64, "lastChainDepth": ss::CHAIN.lock().unwrap().last_chain_depth as i64, "readsInFlight": ld(&ss::TRIPS.inflight), "maxReadsInFlight": ld(&ss::TRIPS.max_inflight),
+        "splitGets": ld(&ss::SPLIT_GETS), "splitPieces": ld(&ss::SPLIT_PIECES), "hedges": ld(&ss::HEDGES), "hedgeWins": ld(&ss::HEDGE_WINS), "nextBlockHits": ld(&ss::NEXT_BLOCK_HITS),
+        "readAhead": {
+            "first": ld(&crate::prefetch::FIRST), "next": ld(&crate::prefetch::NEXT), "docs": ld(&crate::prefetch::DOCS),
+            "fails": ld(&crate::prefetch::FAILS), "busy": ld(&crate::prefetch::BUSY),
+        },
+    };
+    if let Some(c) = tenant_bench::counter::COUNTER.get() {
+        let (mu, mn, du, dn, dp) = c.ram_usage();
+        let (disk_used, disk_maps, disk_n) = c.disk_usage();
+        let (ssts, sst_bytes) = tenant_bench::maps::mapped_totals();
+        let m = &c.m;
+        w.insert("counter", doc! {
+            "ramCapacity": c.ram_capacity() as i64, "diskCapacity": c.disk_capacity() as i64,
+            "mapsRamBytes": mu as i64, "mapsRamBlockBytes": c.maps_block_bytes() as i64, "mapsRamEntries": mn as i64, "mapsDiskBytes": disk_maps as i64,
+            "dataRamBytes": du as i64, "dataRamBlocks": dn as i64, "dataProtectedBytes": dp as i64,
+            "diskBytes": disk_used as i64, "diskEntries": disk_n as i64,
+            "hitsRam": ld(&m.hits_ram), "hitsDisk": ld(&m.hits_disk), "misses": ld(&m.misses),
+            "mapsHits": ld(&m.maps_hits), "mapsMisses": ld(&m.maps_misses),
+            "loadedBytes": ld(&m.loaded_bytes), "insertedBytes": ld(&m.inserted_bytes),
+            "prefetchedIn": ld(&m.prefetched_in), "prefetchedUsed": ld(&m.prefetched_used), "prefetchedEvictedUnused": ld(&m.prefetched_evicted_unused),
+            "promoted": ld(&m.promoted), "toDisk": ld(&m.to_disk), "diskDropped": ld(&m.disk_dropped),
+            "mapsToDisk": ld(&m.maps_to_disk), "mapsDropped": ld(&m.maps_dropped), "mapsForgotten": ld(&m.maps_forgotten),
+        });
+        w.insert("maps", doc! {
+            "sstsMapped": ssts as i64, "sstBytesMapped": sst_bytes as i64,
+            "sstsWarmed": ld(&tenant_bench::maps::MAPS_SSTS), "mapBlocks": ld(&tenant_bench::maps::MAPS_BLOCKS),
+            "runs": ld(&tenant_bench::maps::MAPS_RUNS), "fails": ld(&tenant_bench::maps::MAPS_FAILS),
+            "busy": ld(&tenant_bench::maps::MAPS_BUSY), "lastMs": ld(&tenant_bench::maps::MAPS_LAST_MS),
+        });
+    }
+    w
+}

@@ -16,6 +16,7 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 pub static malloc_conf: &[u8] = b"background_thread:true\0";
 
 mod agg;
+mod prefetch;
 mod auth;
 mod authz;
 mod scram;
@@ -31,6 +32,7 @@ mod cmd_changes;
 mod collation;
 mod collmod_index;
 mod collopts;
+mod collstat;
 mod coll;
 mod cmd_data;
 mod cmd_index;
@@ -224,6 +226,45 @@ struct Args {
     /// One metadata cache (SST indexes and filters) shared by every open database, in MiB (slatedb's default: 128 MiB per database).
     #[arg(long, default_value_t = 64)]
     meta_cache_mb: u64,
+    /// The waiter's tools (T1): the two-floor counter (RAM + local disk) with the maps pinned (SST indexes and filters,
+    /// collection indexes, metadata), one trip per cold read, read-ahead on a signal. Replaces --block-cache-mb and
+    /// --meta-cache-mb. Off by default until reviewed.
+    #[arg(long, default_value_t = false)]
+    waiter_tools: bool,
+    /// RAM of the counter, in percent of the machine's (or cgroup's) memory (--waiter-tools).
+    #[arg(long, default_value_t = 50)]
+    counter_ram_pct: u64,
+    /// RAM of the counter in MiB, instead of the percentage (0 = use the percentage).
+    #[arg(long, default_value_t = 0)]
+    counter_ram_mb: u64,
+    /// Directory of the counter's disk floor (local NVMe). Empty = no disk floor. Emptied at start.
+    #[arg(long, default_value = "")]
+    counter_disk_dir: String,
+    /// Size of the disk floor in GiB (0 = 80% of the free space of its file system at start).
+    #[arg(long, default_value_t = 0)]
+    counter_disk_gb: u64,
+    /// Ranged GETs at least this long (KiB) are sent as parallel pieces (0 = never; --waiter-tools).
+    #[arg(long, default_value_t = 512)]
+    split_get_min_kb: u64,
+    /// Size of one piece of a split GET, KiB.
+    #[arg(long, default_value_t = 256)]
+    split_get_piece_kb: u64,
+    /// Hedged reads (--waiter-tools): a ranged GET not answered after this many ms is sent again, first answer wins
+    /// (0 = off).
+    #[arg(long, default_value_t = 0)]
+    hedge_after_ms: u64,
+    /// Bloom filter bits per key of new SSTs (slatedb's default 10). More bits, fewer false positives: a cold point read
+    /// then waits for one read, not two in a row (T1).
+    #[arg(long, default_value_t = 10)]
+    filter_bits_per_key: u32,
+    /// Next-block read-along (--waiter-tools): a small ranged GET of an SST also brings this many KiB after it (T1:
+    /// slatedb reads the block before a key that starts a block first; this keeps both in one trip). 0 = off.
+    #[arg(long, default_value_t = 8)]
+    next_block_kb: u64,
+    /// Read ahead on a signal (T1, prefetch.rs): the first indexed read of a key prefix brings this many more entries'
+    /// documents in the background, and a read that goes past them brings the next ones. 0 = off.
+    #[arg(long, default_value_t = 200)]
+    read_ahead_docs: usize,
     /// Memory the change-stream event log may hold, in MiB (estimated). Older events are dropped first; a resume token older than
     /// the oldest event kept fails with ChangeStreamHistoryLost. The log keeps whole documents, so without this limit every
     /// write grew the process by ~4 KB until 100 000 events were held.
@@ -607,14 +648,39 @@ async fn run() -> Result<()> {
         "memory" => Arc::new(object_store::memory::InMemory::new()),
         other => anyhow::bail!("unknown --store {other}"),
     };
+    // trip meter (and simulated S3 latency when FENVIX_SIM_S3 is set: measurement only), then large GETs in pieces
+    let s3 = tenant_bench::simstore::wrap_sim(s3);
     let s3 = faults::wrap(s3);
+    let s3 = tenant_bench::simstore::wrap_split(s3);
     tenant_bench::lifecycle::FLUSH_INTERVAL_MS.store(args.wal_flush_ms, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::ACK_BEFORE_DURABLE.store(args.ack_before_durable, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::EXPLICIT_FLUSH.store(args.wal_flush_ms == 0, std::sync::atomic::Ordering::Relaxed);
     dbs::set_wake_limit(args.max_concurrent_wakes);
     tenant_bench::lifecycle::MEMTABLE_MAX_BYTES.store(args.memtable_max_mb << 20, std::sync::atomic::Ordering::Relaxed);
-    if args.block_cache_mb > 0 || args.meta_cache_mb > 0 {
-        tenant_bench::lifecycle::install_shared_cache(args.block_cache_mb << 20, args.meta_cache_mb << 20);
+    tenant_bench::lifecycle::FILTER_BITS.store(args.filter_bits_per_key.clamp(1, 64), std::sync::atomic::Ordering::Relaxed);
+    if args.waiter_tools {
+        let ram = if args.counter_ram_mb > 0 { args.counter_ram_mb << 20 } else { tenant_bench::counter::machine_ram_bytes() / 100 * args.counter_ram_pct.min(90) };
+        let (dir, disk) = if args.counter_disk_dir.is_empty() {
+            (None, 0)
+        } else {
+            let d = std::path::PathBuf::from(&args.counter_disk_dir);
+            std::fs::create_dir_all(&d)?;
+            let gb = if args.counter_disk_gb > 0 { args.counter_disk_gb << 30 } else { tenant_bench::counter::free_disk_bytes(&d).unwrap_or(0) / 10 * 8 };
+            (Some(d), gb)
+        };
+        anyhow::ensure!(tenant_bench::lifecycle::install_counter(ram, dir, disk)?, "a cache is installed already");
+        eprintln!("waiter tools on: counter RAM {} MiB, disk floor {} MiB ({})", ram >> 20, disk >> 20, if args.counter_disk_dir.is_empty() { "none" } else { &args.counter_disk_dir });
+        tenant_bench::simstore::SPLIT_GET_MIN.store(args.split_get_min_kb << 10, std::sync::atomic::Ordering::Relaxed);
+        tenant_bench::simstore::SPLIT_GET_PIECE.store(args.split_get_piece_kb << 10, std::sync::atomic::Ordering::Relaxed);
+        tenant_bench::simstore::HEDGE_AFTER_MS.store(args.hedge_after_ms, std::sync::atomic::Ordering::Relaxed);
+        tenant_bench::simstore::NEXT_BLOCK_BYTES.store(args.next_block_kb << 10, std::sync::atomic::Ordering::Relaxed);
+        prefetch::READ_AHEAD_DOCS.store(args.read_ahead_docs, std::sync::atomic::Ordering::Relaxed);
+        dbs::GET_MANY_PARALLEL.store(512, std::sync::atomic::Ordering::Relaxed);
+    } else {
+        tenant_bench::simstore::SPLIT_GET_MIN.store(0, std::sync::atomic::Ordering::Relaxed);
+        if args.block_cache_mb > 0 || args.meta_cache_mb > 0 {
+            tenant_bench::lifecycle::install_shared_cache(args.block_cache_mb << 20, args.meta_cache_mb << 20);
+        }
     }
     changes::MAX_BYTES.store(args.change_log_max_mb << 20, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::MEMTABLE_MAX_AGE_SECS.store(args.memtable_max_age_secs, std::sync::atomic::Ordering::Relaxed);
@@ -673,6 +739,10 @@ async fn run() -> Result<()> {
         // The hot WAL cleanup of an open writer runs only while this process owns the tenant.
         let l = Arc::clone(&leases);
         let _ = tenant_bench::lifecycle::OWNER_VALID.set(Box::new(move |id: &str| l.disabled.load(std::sync::atomic::Ordering::Relaxed) || l.valid(id)));
+    }
+    if let Some(c) = tenant_bench::counter::COUNTER.get() {
+        tenant_bench::maps::start(Arc::clone(c), Arc::clone(&lc.store));
+        prefetch::install(Arc::clone(c), Arc::clone(&lc.store));
     }
     let lc_for_ctl = Arc::clone(&lc);
     let dbs = Dbs::new(lc, Arc::clone(&s3), Duration::from_secs(args.idle_secs), Arc::clone(&leases), global);

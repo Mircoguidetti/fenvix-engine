@@ -272,9 +272,12 @@ static DB_CACHE: std::sync::OnceLock<Arc<dyn slatedb::db_cache::DbCache>> = std:
 static CACHE_SCOPE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
 pub fn install_shared_cache(block_bytes: u64, meta_bytes: u64) {
-    use slatedb::db_cache::foyer::{FoyerCache, FoyerCacheOptions};
-    let block: Arc<dyn slatedb::db_cache::DbCache> = Arc::new(FoyerCache::new_with_opts(FoyerCacheOptions { max_capacity: block_bytes, ..Default::default() }));
-    let meta: Arc<dyn slatedb::db_cache::DbCache> = Arc::new(FoyerCache::new_with_opts(FoyerCacheOptions { max_capacity: meta_bytes, ..Default::default() }));
+    // slatedb's foyer cache, metered (`meter.rs`): serverStatus reports its size and lookups
+    let block_m = Arc::new(crate::meter::MeteredCache::new(block_bytes));
+    let meta_m = Arc::new(crate::meter::MeteredCache::new(meta_bytes));
+    let _ = crate::meter::CACHES.set((Arc::clone(&block_m), Arc::clone(&meta_m)));
+    let block: Arc<dyn slatedb::db_cache::DbCache> = block_m;
+    let meta: Arc<dyn slatedb::db_cache::DbCache> = meta_m;
     let split = slatedb::db_cache::SplitCache::new().with_block_cache(Some(block)).with_meta_cache(Some(meta)).build();
     let _ = DB_CACHE.set(Arc::new(split));
 }
@@ -354,6 +357,42 @@ fn flush_old_memtables() {
     }
 }
 
+/// Bloom filter bits per key of the SSTs written by writers and compactions (`--filter-bits-per-key`; slatedb's default
+/// is 10). T1: with the filters on the counter, a false positive is the only reason a cold point read waits for a second
+/// read in a row (about 1% per SST level at 10 bits; about 0.01% at 20).
+pub static FILTER_BITS: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(10);
+
+fn filter_policies() -> Option<Vec<Arc<dyn slatedb::FilterPolicy>>> {
+    let bits = FILTER_BITS.load(std::sync::atomic::Ordering::Relaxed);
+    (bits != 10).then(|| vec![Arc::new(slatedb::BloomFilterPolicy::new(bits)) as Arc<dyn slatedb::FilterPolicy>])
+}
+
+/// The open writers (T1: the maps loop looks at their manifests).
+pub fn open_writers() -> Vec<(String, Db)> {
+    WRITER_DBS.lock().unwrap().iter().map(|(k, v)| (k.clone(), v.clone())).collect()
+}
+
+/// Tenants open as readers (woken, not written yet), weakly: the tenant owns its reader.
+static READER_DBS: std::sync::LazyLock<Mutex<HashMap<String, std::sync::Weak<DbReader>>>> = std::sync::LazyLock::new(Default::default);
+
+/// The tenants open as readers (T1: the maps loop looks at their manifests too).
+pub fn open_readers() -> Vec<(String, Arc<DbReader>)> {
+    let mut m = READER_DBS.lock().unwrap();
+    m.retain(|_, w| w.strong_count() > 0);
+    m.iter().filter_map(|(k, w)| w.upgrade().map(|r| (k.clone(), r))).collect()
+}
+
+/// Install the waiter's two-floor counter (T1, `counter.rs`) as the shared cache instead of `install_shared_cache`:
+/// `ram_bytes` of RAM, and `disk_bytes` on `disk_dir` when given. False if a cache is installed already.
+pub fn install_counter(ram_bytes: u64, disk_dir: Option<std::path::PathBuf>, disk_bytes: u64) -> std::io::Result<bool> {
+    let c = crate::counter::Counter::new(ram_bytes, disk_dir, disk_bytes)?;
+    if DB_CACHE.set(c.split_cache()).is_err() {
+        return Ok(false);
+    }
+    let _ = crate::counter::COUNTER.set(c);
+    Ok(true)
+}
+
 fn cache_scope() -> Option<(Arc<dyn slatedb::db_cache::DbCache>, u64)> {
     DB_CACHE.get().map(|c| (Arc::clone(c), CACHE_SCOPE.fetch_add(1, std::sync::atomic::Ordering::Relaxed)))
 }
@@ -412,6 +451,10 @@ pub(crate) fn writer_builder(id: &str, store: &Arc<dyn ObjectStore>) -> slatedb:
         settings.flush_interval = Some(relaxed);
     }
     let b = Db::builder(tenant_path(id), crate::counting::owned(store, id)).with_settings(settings).with_block_cache_policy(flush_cache_policy());
+    let b = match filter_policies() {
+        Some(p) => b.with_filter_policies(p),
+        None => b,
+    };
     match cache_scope() {
         Some((c, scope)) => {
             WRITER_SCOPE.lock().unwrap().insert(id.to_string(), scope);
@@ -589,6 +632,8 @@ impl Lifecycle {
             self.stats.lock().unwrap().unclean_wakes += 1;
         }
         let l0_at_wake = reader.manifest().l0().len();
+        let reader = Arc::new(reader);
+        READER_DBS.lock().unwrap().insert(id.clone(), Arc::downgrade(&reader));
         Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake })
     }
 }
@@ -600,7 +645,8 @@ pub enum Op {
 }
 
 enum Mode {
-    Reader(DbReader),
+    /// Shared with the maps loop (T1) through `READER_DBS` (a weak handle: the tenant owns it).
+    Reader(Arc<DbReader>),
     Writer(Db),
 }
 
@@ -1185,7 +1231,12 @@ pub(crate) async fn compact_tenant_pass(
     worker.compactions_poll_interval = Duration::from_millis(50);
     opts.worker = Some(worker);
     let started = Instant::now();
-    let compactor = Arc::new(CompactorBuilder::new(tenant_path(id), crate::counting::owned(&store, id)).with_options(opts).build());
+    let cb = CompactorBuilder::new(tenant_path(id), crate::counting::owned_background(&store, id)).with_options(opts);
+    let cb = match filter_policies() {
+        Some(p) => cb.with_filter_policies(p),
+        None => cb,
+    };
+    let compactor = Arc::new(cb.build());
     let mut runner = {
         let c = Arc::clone(&compactor);
         tokio::spawn(async move { c.run().await })

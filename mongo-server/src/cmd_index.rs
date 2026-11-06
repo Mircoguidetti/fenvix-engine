@@ -361,6 +361,7 @@ impl Server {
         ops.push(Op::Delete(crate::collopts::meta_key(coll)));
         ops.push(Op::Delete(crate::collopts::uuid_key(coll)));
         ops.push(Op::Delete(crate::capped::stat_key(coll)));
+        ops.push(Op::Delete(crate::collstat::key(coll)));
         ops.push(Server::search_idx_delete_op(coll));
         names.remove(pos);
         ops.push(Entry::collections_op(&names)?);
@@ -409,6 +410,7 @@ impl Server {
             ops.push(Op::Delete(crate::collopts::meta_key(&to)));
             ops.push(Op::Delete(crate::collopts::uuid_key(&to)));
             ops.push(Op::Delete(crate::capped::stat_key(&to)));
+            ops.push(Op::Delete(crate::collstat::key(&to)));
         }
         for (old_prefix, new_prefix) in [(doc_prefix(&from), doc_prefix(&to)), (idx_collection_prefix(&from), idx_collection_prefix(&to)), (crate::natural::prefix(&from), crate::natural::prefix(&to)), (crate::collopts::idc_prefix(&from), crate::collopts::idc_prefix(&to))] {
             for (k, v) in g.scan(&old_prefix).await? {
@@ -441,6 +443,12 @@ impl Server {
             ops.push(Op::Put(crate::capped::stat_key(&to), v.to_vec()));
             ops.push(Op::Delete(crate::capped::stat_key(&from)));
         }
+        // the storage counters move with the collection; none stored: the target has none either (counted when asked)
+        match g.sstat(&from).await? {
+            Some(st) => ops.push(st.op(&to)),
+            None => ops.push(Op::Delete(crate::collstat::key(&to))),
+        }
+        ops.push(Op::Delete(crate::collstat::key(&from)));
         g.forget_coll_opts(&from);
         g.forget_coll_opts(&to);
         names.retain(|n| *n != from && *n != to);
@@ -742,6 +750,11 @@ impl Server {
         if !existed {
             names.push(coll.to_string());
             ops.push(Entry::collections_op(&names)?);
+            // a new collection: its storage counters start from zero (collstat.rs)
+            ops.push(crate::collstat::CollStat::default().op(coll));
+        } else if changed {
+            // a new index starts uncounted: it is read once when its size is first asked for
+            ops.extend(crate::collstat::forget_indexes_op(&mut g, coll, &new_names).await?);
         }
         if changed {
             ops.push(Entry::indexes_op(coll, &indexes)?);
@@ -962,7 +975,10 @@ impl Server {
         let ttl_none = targets.is_empty();
         let uuid = if dropped.is_empty() { Vec::new() } else { g.collection_uuid(coll).await? };
         if !ttl_none {
-            g.apply(vec![Entry::indexes_op(coll, &indexes)?]).await?;
+            let gone: Vec<String> = targets.iter().map(|p| indexes[*p].name.clone()).collect();
+            let mut ops = vec![Entry::indexes_op(coll, &indexes)?];
+            ops.extend(crate::collstat::forget_indexes_op(&mut g, coll, &gone).await?);
+            g.apply(ops).await?;
         }
         drop(g);
         for spec in &dropped {
@@ -1041,12 +1057,17 @@ impl Server {
         let plan = plan_for(&indexes, &opts);
         let mut exec = None;
         if verbosity != "queryPlanner" {
+            // K1: the time of the execution, as mongod measures it (it was always 0)
+            let t0 = std::time::Instant::now();
             let (docs, stats, _) = find_docs(&mut g, coll, &indexes, &opts).await?;
+            let ms = t0.elapsed().as_millis() as i64;
             let n = docs.len().saturating_sub(skip.max(0) as usize);
             let n = if limit > 0 { n.min(limit as usize) } else { n };
-            exec = Some((n, stats));
+            exec = Some((n, stats, ms));
         }
         drop(g);
+        let exec_ms = exec.as_ref().map(|e| e.2).unwrap_or(0);
+        let exec = exec.map(|(n, st, _)| (n, st));
         let winning = winning_plan(&plan, &indexes, &filter, &sort, limit, skip, projection.as_ref(), &exec);
         let mut qp = doc! {
             "namespace": ns.clone(),
@@ -1097,7 +1118,7 @@ impl Server {
                 doc! {
                     "executionSuccess": true,
                     "nReturned": n as i32,
-                    "executionTimeMillis": 0,
+                    "executionTimeMillis": crate::capped::n32(exec_ms),
                     "totalKeysExamined": if matches!(plan, Plan::Coll { .. }) { 0 } else { stats.keys as i32 },
                     "totalDocsExamined": stats.docs as i32,
                     "executionStages": winning,
@@ -1227,6 +1248,11 @@ impl Server {
             }
         }
         let _ = (missing_total, extra_total);
+        if full {
+            // `validate {full: true}` also recounts the storage counters (collstat.rs): they are counted again from the
+            // data when next asked for
+            g.apply(vec![Op::Delete(crate::collstat::key(coll))]).await?;
+        }
         Ok(doc! {
             "ns": format!("{db}.{coll}"),
             "uuid": uuid,
@@ -1247,33 +1273,81 @@ impl Server {
         })
     }
 
-    /// Document count, data size and per-index sizes of a collection (O(n): read from the store).
-    pub(crate) async fn storage_stats(&self, g: &mut Entry, db: &str, coll: &str) -> R<Document> {
+    /// The storage counters of a collection (`collstat.rs`). Counters never stored are read once from the data (the
+    /// collection, or only the indexes whose size is missing), in key-ordered chunks, and stored.
+    pub(crate) async fn coll_counters(&self, g: &mut Entry, coll: &str) -> R<crate::collstat::CollStat> {
+        async fn read_prefix(g: &mut Entry, prefix: &[u8], mut each: impl FnMut(&[u8], &[u8])) -> R<()> {
+            let stop = crate::keyenc::prefix_end(prefix);
+            let mut start = prefix.to_vec();
+            loop {
+                let rows = g.scan_range(&start, stop.as_deref(), false, Some(4096), 1 << 20).await?;
+                for (k, v) in &rows {
+                    each(k, v);
+                }
+                if rows.len() < 4096 {
+                    return Ok(());
+                }
+                start = rows.last().unwrap().0.to_vec();
+                start.push(0);
+            }
+        }
         let indexes = g.indexes(coll).await?;
-        let rows = g.scan(&doc_prefix(coll)).await?;
-        let size: usize = rows.iter().map(|(_, v)| crate::natural::bson_part(v).len()).sum();
-        let mut sizes = doc! { "_id_": 0_i64 };
-        let mut total = 0_i64;
+        let stored = g.sstat(coll).await?;
+        let mut changed = stored.is_none();
+        let mut st = match stored {
+            Some(s) => s,
+            None => {
+                let prefix = doc_prefix(coll);
+                let mut s = crate::collstat::CollStat::default();
+                read_prefix(g, &prefix, |k, v| {
+                    s.docs += 1;
+                    s.bytes += crate::natural::bson_part(v).len() as i64;
+                    s.id_bytes += (k.len() - prefix.len()) as i64;
+                })
+                .await?;
+                s
+            }
+        };
+        let before = st.idx.len();
+        st.idx.retain(|name, _| indexes.iter().any(|i| i.name == *name));
+        changed |= st.idx.len() != before;
+        for idx in indexes.iter().filter(|i| i.state == State::Ready) {
+            if st.idx.contains_key(&idx.name) {
+                continue;
+            }
+            let mut bytes = 0_i64;
+            read_prefix(g, &idx.prefix(coll), |k, v| bytes += (k.len() + v.len()) as i64).await?;
+            st.idx.insert(idx.name.clone(), bytes);
+            changed = true;
+        }
+        if changed {
+            g.apply(vec![st.op(coll)]).await?;
+        }
+        Ok(st)
+    }
+
+    /// Document count, data size and per-index sizes of a collection, from its storage counters (`collstat.rs`).
+    pub(crate) async fn storage_stats(&self, g: &mut Entry, db: &str, coll: &str) -> R<Document> {
+        let _ = db;
+        let st = self.coll_counters(g, coll).await?;
+        let indexes = g.indexes(coll).await?;
+        let mut sizes = doc! { "_id_": st.id_bytes };
+        let mut total = st.id_bytes;
         let mut n_idx = 1;
         for idx in indexes.iter().filter(|i| i.state == State::Ready) {
-            let r = g.scan(&idx.prefix(coll)).await?;
-            let bytes: usize = r.iter().map(|(k, v)| k.len() + v.len()).sum();
-            sizes.insert(idx.name.clone(), bytes as i64);
-            total += bytes as i64;
+            let b = st.idx.get(&idx.name).copied().unwrap_or(0);
+            sizes.insert(idx.name.clone(), b);
+            total += b;
             n_idx += 1;
         }
-        let id_bytes: usize = rows.iter().map(|(k, _)| k.len() - doc_prefix(coll).len()).sum();
-        sizes.insert("_id_", id_bytes as i64);
-        total += id_bytes as i64;
-        let count = rows.len() as i64;
-        let _ = db;
+        let (size, count) = (st.bytes, st.docs);
         let cap = g.coll_opts(coll).await?.and_then(|o| o.cap.clone());
         let mut out = doc! {
-            "size": crate::capped::n32(size as i64),
-            "count": rows.len() as i32,
-            "avgObjSize": crate::capped::n32(if count > 0 { size as i64 / count } else { 0 }),
+            "size": crate::capped::n32(size),
+            "count": crate::capped::n32(count),
+            "avgObjSize": crate::capped::n32(if count > 0 { size / count } else { 0 }),
             "numOrphanDocs": 0,
-            "storageSize": size as i64,
+            "storageSize": size,
             "freeStorageSize": 0_i64,
             "capped": cap.is_some(),
         };
@@ -1288,7 +1362,7 @@ impl Server {
             "indexBuilds": [],
             "totalIndexSize": total,
             "indexSizes": sizes,
-            "totalSize": size as i64 + total,
+            "totalSize": size + total,
             "scaleFactor": 1,
         });
         Ok(out)
@@ -1316,11 +1390,14 @@ impl Server {
         let names = g.collections().await?;
         let (mut objects, mut data, mut indexes_n, mut index_size) = (0_i64, 0_i64, 0_i64, 0_i64);
         for c in &names {
-            let s = self.storage_stats(&mut g, db, c).await?;
-            objects += s.get_i32("count").unwrap_or(0) as i64;
-            data += s.get_i64("size").unwrap_or(0);
-            indexes_n += s.get_i32("nindexes").unwrap_or(0) as i64;
-            index_size += s.get_i64("totalIndexSize").unwrap_or(0);
+            // from the storage counters (it read every collection and index); `size` is no longer read as a long only,
+            // which made `dataSize` 0 for every collection under 2 GiB (an Int32 there)
+            let st = self.coll_counters(&mut g, c).await?;
+            let ready = g.indexes(c).await?.into_iter().filter(|i| i.state == State::Ready).collect::<Vec<_>>();
+            objects += st.docs;
+            data += st.bytes;
+            indexes_n += 1 + ready.len() as i64;
+            index_size += st.id_bytes + ready.iter().map(|i| st.idx.get(&i.name).copied().unwrap_or(0)).sum::<i64>();
         }
         let mut out = doc! {
             "db": db, "collections": names.len() as i64, "views": views, "objects": objects, "avgObjSize": if objects > 0 { data as f64 / objects as f64 } else { 0.0 },

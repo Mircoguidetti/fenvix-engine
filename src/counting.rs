@@ -399,6 +399,7 @@ impl ObjectStore for CountingStore {
                 tokio::time::sleep(std::time::Duration::from_millis(d)).await;
             }
         }
+        let is_head = options.head;
         let counter = if options.head {
             &self.counters.head
         } else if options.range.is_some() {
@@ -442,6 +443,9 @@ impl ObjectStore for CountingStore {
         }
         let bytes = res.as_ref().map(|r| r.range.end - r.range.start).unwrap_or(0);
         self.counters.get_bytes.fetch_add(bytes, Relaxed);
+        if !is_head {
+            crate::meter::note_get(bytes, t0.elapsed());
+        }
         self.trace.end(token, bytes);
         res
     }
@@ -519,16 +523,40 @@ pub fn request_owner() -> Option<Arc<str>> {
     REQUEST_OWNER.try_with(Arc::clone).ok()
 }
 
+/// Tests only: run `f` as a request of the database `owner` (see [`request_owner`]).
+#[cfg(test)]
+pub fn with_owner_for_test<T>(owner: &str, f: impl FnOnce() -> T) -> T {
+    REQUEST_OWNER.sync_scope(Arc::from(owner), f)
+}
+
 /// A database's view of the shared store: every request it makes is made with [`request_owner`] = `owner`, so the
 /// server can charge it to the database that asked for it, not to the one whose path it reads (review of S4, error 3).
 #[derive(Debug)]
 pub struct OwnedStore {
     inner: Arc<dyn ObjectStore>,
     owner: Arc<str>,
+    /// A store for background work of the database (its compactor): its reads are not charged to the commands that run
+    /// on the database meanwhile (`meter.rs`).
+    background: bool,
 }
 
 pub fn owned(store: &Arc<dyn ObjectStore>, owner: &str) -> Arc<dyn ObjectStore> {
-    Arc::new(OwnedStore { inner: Arc::clone(store), owner: Arc::from(owner) })
+    Arc::new(OwnedStore { inner: Arc::clone(store), owner: Arc::from(owner), background: false })
+}
+
+/// [`owned`] for the background work of a database (see [`OwnedStore::background`]).
+pub fn owned_background(store: &Arc<dyn ObjectStore>, owner: &str) -> Arc<dyn ObjectStore> {
+    Arc::new(OwnedStore { inner: Arc::clone(store), owner: Arc::from(owner), background: true })
+}
+
+tokio::task_local! {
+    /// Set while a background store (see [`owned_background`]) makes a request.
+    static BACKGROUND: ();
+}
+
+/// The request being polled is made by the background work of a database (see [`owned_background`]).
+pub fn is_background_request() -> bool {
+    BACKGROUND.try_with(|_| ()).is_ok()
 }
 
 impl fmt::Display for OwnedStore {
@@ -548,6 +576,9 @@ impl ObjectStore for OwnedStore {
     }
 
     async fn get_opts(&self, location: &Path, options: GetOptions) -> Result<GetResult> {
+        if self.background {
+            return BACKGROUND.scope((), REQUEST_OWNER.scope(Arc::clone(&self.owner), self.inner.get_opts(location, options))).await;
+        }
         REQUEST_OWNER.scope(Arc::clone(&self.owner), self.inner.get_opts(location, options)).await
     }
 
