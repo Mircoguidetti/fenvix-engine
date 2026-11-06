@@ -1,0 +1,8 @@
+s3 durable 0 {'secs': 30.0, 'acked_ids': 31506, 'acked_writes_before_kill': 62975, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.069}
+s3 durable 1 {'secs': 30.0, 'acked_ids': 35943, 'acked_writes_before_kill': 71864, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.07}
+TOTAL s3 durable {'acked_ids': 67449, 'lost_inserts': 0, 'lost_updates': 0}
+GC_RC 0
+0 {'killed_inside_cleanup_pass': True, 'cleanup_passes': 6, 'ssts_deleted': 50, 'manifests_deleted': 122, 'acked_docs': 6437, 'acked_updates': 6431, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'reads_checked': 61640, 'missing': 1, 'stale': 0, 'padding': 0, 'errors': 0, 'count_below_acked': 0}, 'recovery_read_error': None, 'control_deleted_referenced': False}
+TOTAL safe {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 50, 'acked_docs': 6437, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'reads_checked': 61640, 'missing': 1, 'stale': 0, 'padding': 0, 'errors': 0, 'count_below_acked': 0}}
+OG_RC 0
+DONE
