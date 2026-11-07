@@ -340,7 +340,14 @@ impl Server {
         let hinted = if writes { self.txn_hint(&tc.lsid, &txn.db).await } else { Ok(()) };
         let db = txn.db.clone();
         let mut g = self.dbs.lock(&db).await;
-        let conflict = txn.w.ov.keys().any(|k| g.modified_after(k, txn.seq));
+        // a unique value this transaction adds counts like a document it writes: a plain write that committed the same value
+        // after the snapshot (plain writes do not wait for the transaction's claim) is a conflict, so no duplicate commits
+        // the same for the index definitions of every collection it wrote: an index built (or dropped) after the snapshot
+        // is not maintained by this write set, so committing it would leave the new index without its entries. mongod makes
+        // the index build wait for the transaction; here the transaction retries and then sees the new index.
+        let conflict = txn.w.ov.keys().chain(txn.w.uniq.iter()).any(|k| g.modified_after(k, txn.seq))
+            || txn.w.stat.keys().any(|c| g.modified_after(&crate::layout::index_key(c), txn.seq));
+        let uniq = std::mem::take(&mut txn.w.uniq);
         let result = if let Err(e) = hinted {
             Err(e)
         } else if conflict {
@@ -356,7 +363,10 @@ impl Server {
                         ops.push(crate::retry::txn_outcome_op(&tc.lsid, txn.number));
                         ops.extend(self.session_sweep_ops(&mut g, &db, &tc.lsid).await);
                     }
-                    g.apply(ops).await.map_err(MongoError::from).map(|_| self.dbs.changes.publish(events))
+                    g.apply(ops).await.map_err(MongoError::from).map(|_| {
+                        g.mark_unique(&uniq);
+                        self.dbs.changes.publish(events)
+                    })
                 }
                 Err(e) => Err(e),
             }

@@ -1157,6 +1157,8 @@ pub(super) fn convert(v: &Bson, to: &str, name: &str) -> R<Bson> {
                 Bson::Boolean(b) => *b as i64,
                 Bson::String(s) => s.trim_end().parse::<i64>().map_err(|_| fail(&format!("Failed to parse number '{s}' in $convert with no onError value: Did not consume whole string.")))?,
                 Bson::Decimal128(d) => d.to_string().parse::<f64>().map(|f| f.trunc() as i64).map_err(|_| fail("bad decimal"))?,
+                // milliseconds since the epoch, as on mongod; to int a date stays unsupported there too
+                Bson::DateTime(d) if to == "long" => d.timestamp_millis(),
                 other => return Err(fail(&format!("Unsupported conversion from {} to {to} in $convert with no onError value", type_name(other)))),
             };
             if n < lo || n > hi {
