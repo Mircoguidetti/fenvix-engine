@@ -1250,7 +1250,11 @@ impl Entry {
                 },
                 None => layout::doc_key(coll, id),
             };
-            if let Some(v) = self.get(&key).await? {
+            // (a customer-keyed document is read like its locator, with a range-read kind of read: a `ReadView` with
+            // durable reads answers point reads from durable data only, range reads and `get_many` from the latest
+            // state, and the two must agree on where the document is)
+            let v = if ckey.is_some() { self.get_many(std::slice::from_ref(&key)).await?.pop().flatten() } else { self.get(&key).await? };
+            if let Some(v) = v {
                 return Ok(Some(Document::from_reader(&v[..])?));
             }
             if ckey.is_none() {
@@ -1394,9 +1398,7 @@ impl ReadView {
             return Ok(vec![]);
         }
         let t = g.tenant.as_ref().unwrap();
-        // (the same durability as `get`: with layout v2 a read by `_id` goes locator then document, and both must see the
-        // same state)
-        let r = crate::layout2::get_many(&crate::layout2::Raw::Tenant(t, durable_reads(&g.name)), keys, GET_MANY_PARALLEL.load(Relaxed)).await?;
+        let r = crate::layout2::get_many(&crate::layout2::Raw::Tenant(t, false), keys, GET_MANY_PARALLEL.load(Relaxed)).await?;
         self.done(r)
     }
 
@@ -1411,7 +1413,7 @@ impl ReadView {
     async fn scan_range_uncounted(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
         let segs = self.segs_for(start, end).await?;
-        let r = crate::layout2::scan(&crate::layout2::Raw::Tenant(g.tenant.as_ref().unwrap(), durable_reads(&g.name)), &segs, start, end, reverse, limit, read_ahead).await?;
+        let r = crate::layout2::scan(&crate::layout2::Raw::Tenant(g.tenant.as_ref().unwrap(), false), &segs, start, end, reverse, limit, read_ahead).await?;
         self.done(r)
     }
 
@@ -1470,7 +1472,11 @@ impl ReadView {
                 },
                 None => layout::doc_key(coll, id),
             };
-            if let Some(v) = self.get(&key).await? {
+            // (a customer-keyed document is read like its locator, with a range-read kind of read: a `ReadView` with
+            // durable reads answers point reads from durable data only, range reads and `get_many` from the latest
+            // state, and the two must agree on where the document is)
+            let v = if ckey.is_some() { self.get_many(std::slice::from_ref(&key)).await?.pop().flatten() } else { self.get(&key).await? };
+            if let Some(v) = v {
                 return Ok(Some(Document::from_reader(&v[..])?));
             }
             if ckey.is_none() {
