@@ -351,7 +351,7 @@ async fn moved_doc(g: &mut impl Rd, coll: &str, suffix: &[u8]) -> R<Option<Docum
     if now.len() != 1 || rows.len() != 1 {
         return Ok(None);
     }
-    Ok(match g.get(&[doc_prefix(coll), now[0].to_vec()].concat()).await? {
+    Ok(match g.get_many(&[[doc_prefix(coll), now[0].to_vec()].concat()]).await?.pop().flatten() {
         Some(v) => Some(decode(&v)?),
         None => None,
     })
@@ -1170,7 +1170,9 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
                     if !tried.insert(k.clone()) || ov_keys.contains(&k) {
                         continue;
                     }
-                    match g.get(&k).await? {
+                    // (read like the locators: see `Entry::get_doc`)
+                    let v = if id_lookup.is_some() { g.get_many(std::slice::from_ref(&k)).await?.pop().flatten() } else { g.get(&k).await? };
+                    match v {
                         Some(v) => docs.push(decode(&v)?),
                         None => missed = true,
                     }
