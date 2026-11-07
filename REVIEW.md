@@ -1,88 +1,93 @@
-FIX 2
+FIX 1: a run's blocks are not bound to their run, so the blocks of one run under the footer of another are read as data (test `review_blocks_of_one_run_with_the_footer_of_another_are_an_error`). Everything else holds: 0 wrong reads in 1,000,000 plus 600,000 of mine, every flipped bit caught, 12 of 12 owner mutations and 11 of 14 of mine caught (the 3 missed only remove redundant checks), maps and CPU re-measured as reported.
 
-# Review of compaction 91414a6 (customer-first keys, tiered compaction)
+# Review: compaction 2, step 1 (sealed-run format v1)
 
-Reviewer, 2026-11-06. Branch `review-compaction` (based on 91414a6). Base `integration` (6ff285a). Tests:
-`ctl-tests/test_43_review_compaction.py` (run: `cd ctl-tests && python -m pytest -q test_43_review_compaction.py`).
-Every number is labelled MEASURED (run here, on this sandbox, local MinIO), ESTIMATED, DECLARED (the owner's), or UNKNOWN.
+Reviewer session 2026-11-07, prompt fenvix-brain `prompts/R-review-c2-step1.md`. Spend: $0, local only, no AWS, nothing merged.
+Delivery: fenvix-engine `c2-step1-runformat`, ee374b8 (from `compaction` a7890b3). Contract: `prompts/P-c2-step1-runformat.md`. Owner's report: `sessions/2026-11-07-c2-step1-runformat/REPORT.md`.
+My branch: `review-c2-step1` (from ee374b8). What it adds:
+- two tests at the end of `src/runfmt/tests.rs`;
+- `research/c2-step1-runformat/review/mutations_review.py`, my mutation runner;
+- `research/c2-step1-runformat/review/results/`, every output quoted here;
+- `judge/out/ee374b8/VERDICT-FAST.md`, my judge run.
 
-## The two fixes (tests that fail on 91414a6)
+## The defect
 
-1. **Two writes of one `_id` for two customers are both acknowledged** (guarantees 4 and 7: `_id` uniqueness, indexes
-   consistent with data). The locator `loc/{coll}/{_id}` is the unique `_id` index, but `Writes::put` only checks it
-   against the committed state and never locks it (`check_conflict` runs on the customer-specific document key only).
-   Two transactions inserting `_id: 7` for `alice` and `bob` both commit; so does a plain insert of `_id: 8` while an
-   open transaction holds `_id: 8` for another customer. Result MEASURED: two documents with the same `_id`; a scan
-   returns both, `find({_id})` returns one (the locator points at the last writer), `validate` does not check the locators (code reading, `cmd_index.rs` validate).
-   mongod lets only one of the two commit. The control (same test on a collection without a customer key) passes.
-   Tests: `test_two_transactions_cannot_insert_the_same_id_for_two_customers[m]`,
-   `test_insert_outside_a_transaction_cannot_duplicate_an_id_a_transaction_holds[m]`.
-   Fix hint: `check_conflict` (lock and `modified_after`) on the locator key too, for inserts and moves.
+**FIX 1. The blocks of one run under the footer of another are read as data.** Test: `review_blocks_of_one_run_with_the_footer_of_another_are_an_error`. It FAILS on ee374b8 (MEASURED, `results/review-tests.txt`).
 
-2. **With customer keys off, the storage format still changes and the previous release can no longer read it**
-   ("with the option off nothing changes"; guarantee 10, rollback). `--sst-compression lz4` and `--sst-block-kb 64` are
-   the new defaults for every database, keyed or not. MEASURED: a database written by 91414a6 with no flag at all,
-   then opened by the integration binary: `Data error: invalid composite filter block`. Deploying this commit makes
-   every database it flushes or compacts unreadable by the release before it, with no way back but forward.
-   Test: `test_with_customer_keys_off_the_stored_format_does_not_change` (checks the codec; with `INTEGRATION_BIN` set
-   it also does the rollback read). Fix: defaults off (`none`, 4 KiB) until the founder decides a one-way format
-   migration, or ship a release that can read lz4 first.
+What the test does:
+- Run A: 400 rows. Run B: the same rows with one value changed in place, as in a reseal of the same group. B has the same block offsets and the same size as A (the test checks this first).
+- The test builds an object from A's blocks followed by B's footer and trailer.
+- Both readers return A's 400 rows under B's footer, with no error: the random reader and the stream.
 
-## Priority from the founder: `test_05_erase.py` leaves control-layer objects
+Why it passes the checks today: the block CRC covers the block index and the block's bytes, and the footer CRC covers the footer, but nothing ties a block to the footer of its own run. So any block written at the same position in a run with the same layout passes as valid.
 
-- Found the cause. It is **not** caused by this branch. In `test_concurrent_erase_and_fork_are_serialised`, when the
-  erase wins, the fork (`ctl/fork.rs`) takes the target's lease, finds the source gone, answers 404 and deletes the
-  lease; but those requests were charged to the target's (and source's) usage counters, and the usage flusher then
-  writes `control/usage/<target>/<day>/...` (and `control/usage/<source>/...`) for databases that do not exist. Nothing
-  ever deletes them (guarantee 6). test_05 only sees it when a flush (every 1 s there) lands between the fork's answer
-  and its listing: that is why it is flaky.
-- Deterministic test: `test_a_refused_fork_leaves_no_object_of_its_target` (a fork of a source that never existed,
-  wait 3 s, list). MEASURED: fails on 91414a6 **and on integration**, with the same two leftover records.
-- Does the branch make it worse? MEASURED, the race of test_05 repeated 30 times per binary: the leftover is there 3 s
-  later every time the erase wins (91414a6 12 of 12, integration 8 of 8); the test's own listing caught it 0 times in
-  30 on 91414a6 and 1 in 30 on integration. Fork and erase times are the same (p50 110 ms both). The owner's 3 of 4
-  vs 1 of 4 is within noise for 4 rounds. My own full runs of test_05 on 91414a6: 2 passed, then 1 failed in the judge.
-- `tenants/<db>/_lease` left behind: not reproduced (UNKNOWN); every failure I saw was the usage records above.
-- Not counted against this commit (contract point 5: identical on integration). Owner of the control layer: charge
-  nothing to a database a refused fork never created (or `drop_db` both names when the fork fails).
+How it can happen:
+- a path written twice, for example a retry, or a reseal that keeps the same name (the plan's names are `{X_g}-{writer epoch}`, so a rewrite at the same X_g and epoch keeps the name);
+- a reader whose footer is older than the object now at its path;
+- a later writer (step 4) that copies the byte ranges of unchanged blocks from the old run with UploadPartCopy and gets one range wrong.
 
-## Judge (`judge/run.sh fast` on 91414a6, MEASURED)
+In every case the reader returns stale rows with no error. This is the "footer from another run" case of the review prompt.
 
-Same verdict as the owner's: build PASS; unit FAIL only `counter::tests::rev_maps_leave_room_for_active_data`;
-diff-py and diff-node FAIL only `bucketauto.infinity` (412/413 each); ctl FAIL only test_05_erase (above); kill PASS
-(0 lost). All match integration's known failures. The 3 failures of the owner's customer-key stress run
-(`cs.delete_many`, `bucketauto.POWERSOF2.decimal_special`, `bucketauto.infinity`): MEASURED, also fail with the
-integration binary.
+Remedy: put a random run id (16 bytes) in the footer and the trailer, and mix it into every block CRC (for example, as the CRC's starting bytes in front of the block index). It costs 16 bytes per run and no CPU. Step 3 should also carry the id in the manifest line and check it at open. Then a manifest that points to the wrong object of the same size is also an error. Today the reader trusts the (path, size) pair alone.
 
-## Do the tests measure what they claim?
+## The done-means, re-run on the delivered code
 
-- **Cold-read bench (contract point 2).** Re-run at 2 GB, 20,000 customers (`review-2026-11-06/`), MEASURED: default
-  settings mean 2.46 / 2.27 GETs, max 5 (owner: 2.8, max 7). The GET meter is right: over 300 finds, server meter
-  1,631 vs MinIO's own getobject counter 1,630. But the measure is not of a cold find: the 256 MiB block cache keeps
-  the data blocks read by the 300 warm-up finds (the bench says only indexes and filters are warm), and neighbouring
-  customers share 64 KiB blocks. A mean below the number of sorted runs (3 here) shows it. With data blocks cold
-  (`--block-cache-mb 1`), MEASURED here: mean 5.38, p95 6, max 7 (3 sorted runs); the owner's 4-run dataset: mean
-  6.5-7.1, max 9 (6 of 400 finds over 8, DECLARED). So "at most 8" holds or not depending on how many runs the data has
-  at that moment; 8 GB was not measured (DECLARED); ESTIMATED one more run per 4x of data, so about 2 GETs more at 8 GB.
-  NOTE, not a fix (no deterministic failing test), but the contract's point 2 is not proven for a cold find.
-- `test_index_matches_documents_during_compaction`: readers hold the customer's lock, so no read ever overlaps a write
-  or a move of that customer; it checks consistency between writes, not during them. I probed the during part
-  (MEASURED, 30-40 s each, 4 movers): collection scans, counts and `$natural` during 2,365 moves: 0 wrong of 410;
-  index range scans during 2,783 moves: 0 duplicates or misses in 538; `find_one({_id})` on one document moved 4,092
-  times: 0 misses.
-- `loadtest/test_open_gc.py` (prints read violations, never fails): run with `--customer-key c=v` (every update moves
-  the document), 2 trials x 60 s, MEASURED: 69,468 reads checked, 0 missing, 0 stale, 0 lost inserts or updates, both
-  kills inside a cleanup pass. It hides no defect here; it should still fail on violations (judge gap, not this branch).
-- Moves inside transactions (commit, abort), unique secondary index across a move, collation `_id` with a customer
-  key: behave as without the key (MEASURED, probes).
+1. Property test, 1,000,000 reads: 0 wrong, 766,341,234 rows compared (MEASURED, `results/long-tests-rerun.txt`). This is byte for byte the owner's line.
 
-## Notes (never block)
+   The model is an independent BTreeMap, and the test compares every row (key, seq, envelope), so it can fail. My own fuzz, `review_fuzz_odd_keys_match_an_exact_model`, gave 0 wrong in 600,000 reads (MEASURED, RFUZZ=2000). It covers what the owner's test leaves out:
+   - keys with 0x00, 0xFF and '/' bytes, keys that are prefixes of other keys, and the empty key;
+   - all three customer kinds (the owner's test uses only V2);
+   - blocks of 1 to 1,000 bytes, so one row per block and restart groups cut anywhere;
+   - 0 to 3 run cuts.
 
-- Rule 18 (one snapshot per read): an `_id` read goes locator, then document, as two reads with up to 3 retries if the
-  document moved in between (and `moved_doc` once). Not a snapshot; no wrong answer seen (above).
-- The cleanup keeps the outputs of unfinished or uncommitted compactions (`Compacted` counts as active): a resumed job
-  of the separate worker cannot point at deleted SSTs. Checked by reading slatedb 0.17 and `gc_tenant_ssts`.
-- `stop_once` ignores a worker `stop` that times out; after `stop_limit` the runner is aborted and the worker's tasks may
-  live on until their store request ends (as for the compactor before). No test shows harm.
-- Contract point 1 was shown on the stress suite with the key on for some collections (63,076 documents written customer
-  first, 2,249 locator lookups, DECLARED); the natural run had 1 locator lookup.
+   I checked the customer filter against the real key builders (`layout.rs`, `custkey.rs`). The rule is a function of a prefix of the key, and every key in a one-customer range shares that prefix, so it cannot give a false "no" in either layout.
+2. Flipped bits (MEASURED):
+   - small run, exhaustive: 9,328 of 9,328 bits caught by both readers, and 3,016 of them at open;
+   - 275 MB run: 2,000 of 2,000 flips caught, the neighbouring block read right 1,805 times, and 50 of 50 full scans were errors.
+
+   The test opens a fresh reader for every bit and flips the bit in every GET, so it measures what it claims.
+3. Mutations (MEASURED, `results/mutations-owner-rerun.txt`):
+   - The owner's 12, re-applied one at a time on a clean copy: 12 of 12 caught. Number 6 is caught as a hang of more than 300 s, as reported.
+   - My 14 (`results/mutations-review.txt`), run against the owner's tests only: 11 of 14 caught. Caught:
+     - the block cache ignores the run;
+     - the filter is used for ranges that cross customers;
+     - the writer filters only the customers that start a block;
+     - newest returns one row too many;
+     - the separator is the previous key;
+     - a point read returns the next row;
+     - a point read hashes the wrong bytes;
+     - a range loses its lower bound;
+     - the front coding forgets a shared byte;
+     - the group search starts one group late;
+     - the stream drops a block.
+   - Not caught, and none of them changes an answer:
+     - R12, no fence check on decoded blocks;
+     - R13, no count check at the end of the stream;
+     - R14, the block CRC without the block index.
+
+     These are defence in depth behind the CRC. No test reads a valid block from the wrong place, so they are untested. That is a NOTE. The remedy of FIX 1 comes with a test that also covers R14.
+4. Maps: 0.2336 MB per stored GiB, 0.1197 MB per raw GiB, at 256 KiB blocks (MEASURED, `results/bench-1gib-256k-rerun.txt`). The same as the owner's.
+5. Writer CPU: 3.30 s per raw GiB, 6.44 s per stored GiB, on an Intel Xeon @ 2.10 GHz, one thread (MEASURED). The judge was running at the same time; the owner measured 3.21 s. It is measured on the right thing: a current-thread runtime, `RUSAGE_THREAD`, and rows generated before the clock starts.
+
+## Judge
+
+`judge/run.sh fast` on ee374b8 (MEASURED, `judge/out/ee374b8/VERDICT-FAST.md`):
+- build PASS;
+- unit FAIL, 122 passed and 1 failed. The failure is `counter::tests::rev_maps_leave_room_for_active_data`, the known one;
+- diff-py and diff-node FAIL, 412/413 each, the known `bucketauto.infinity`;
+- ctl PASS;
+- kill PASS.
+
+This is the owner's verdict exactly, and the same known failures as `compaction`, none added. The kill phase rewrote `loadtest/results/gc/durability-s3-durable.json` in my judge worktree; I did not commit it.
+
+## Notes (not blocking)
+
+- **The maps target depends on the data, in two ways.**
+  - The lz4 ratio, which the owner already reports.
+  - Customers per GiB. The filter costs 1.25 bytes per customer. The bench has 7,308 customers per raw GiB (MEASURED), while the bench's own doc comment says about 2,100. At 100,000 customers per raw GiB (10 KB each, a plausible agent app) the filter is 125 KB per raw GiB. Maps would then be about 0.25 MB per raw GiB, about 0.48 MB per stored GiB at a 1.95 ratio, over the 0.3 MB target (ESTIMATED).
+
+  State the target per raw GiB and per customer, and re-measure with a many-small-customers profile in step 2.
+- **`DocV1` on a collection without a customer key** reads the first byte of the `_id` encoding as a length, so fragments of `_id`s are counted as customers. This is correct for reads (the rule is a function of a key prefix), but it can grow the filter. The writer should pass a filter kind per collection, or step 2 should make the question moot.
+- **Orphaned multipart uploads cost money.** A writer dropped without `abort` (an error in `add`, a crash, a cancelled task) leaves an incomplete upload. On S3 its parts are billed until it is aborted (DECLARED, AWS S3 multipart documentation). The bucket needs an `AbortIncompleteMultipartUpload` lifecycle rule, or the compactor needs a sweep. Also, after a failed `put_part` the writer is not poisoned. A caller that ignores the error and calls `finish` relies on the store to refuse the missing part: object_store's S3 client does, but the writer should refuse by itself.
+- **The random reader never checks a row's seq against the footer's min and max** (the stream does), and `parse` does not check that min_seq <= max_seq. Both are covered by CRCs today. Step 3 skips runs by max_seq, so a check is cheap insurance.
+- `sessions/README.md` still asks for `RAPPORTO.md` in Italian (noted by earlier sessions).
