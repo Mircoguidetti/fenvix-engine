@@ -85,8 +85,25 @@ for n in ('checkpoints', 'checkpoint_writes'):
   # the SST cleanup deletes compacted-away SSTs after a minimum age: restart, one tiny write so the database opens for
   # writing, wait, stop (as sessions/2026-11-06-agent-adapters-local did)
   start
-  "$PY" -c "from pymongo import MongoClient; MongoClient('$URI').checkpointing_db._settle.insert_one({'x': 1})"
-  sleep "${GC_WAIT:-300}"
+  # the cleanup of an open writer is due only when its manifest has moved on: a trickle of tiny writes (one per second,
+  # in a side collection) keeps the memtable flushing; stop when the bucket stops shrinking
+  "$PY" - "$URI" "$BUCKET" "${GC_WAIT:-900}" <<'Q'
+import sys, time, boto3
+from pymongo import MongoClient
+c = MongoClient(sys.argv[1]); s3 = boto3.client("s3", endpoint_url="http://127.0.0.1:9000", aws_access_key_id="minioadmin", aws_secret_access_key="minioadmin", region_name="us-east-1")
+def size():
+    return sum(o["Size"] for p in s3.get_paginator("list_objects_v2").paginate(Bucket=sys.argv[2], Prefix="tenants/checkpointing_db/compacted/") for o in p.get("Contents", []))
+t0, last, same = time.time(), None, 0
+while time.time() - t0 < float(sys.argv[3]):
+    for _ in range(30):
+        c.checkpointing_db["_settle"].insert_one({"pad": "x" * 2000})
+        time.sleep(1)
+    b = size(); print(f"cleanup {time.time() - t0:.0f} s: compacted/ {b / 2**30:.3f} GiB", flush=True)
+    same = same + 1 if last is not None and b == last else 0
+    last = b
+    if same >= 6:
+        break
+Q
   sstinfo "after cleanup" | tee -a "$OUT/load.txt"
   stop
   bucket | sed 's/^/after cleanup: /' | tee -a "$OUT/load.txt"
