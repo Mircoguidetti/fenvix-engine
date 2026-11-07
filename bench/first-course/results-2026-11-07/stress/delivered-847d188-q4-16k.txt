@@ -1,0 +1,4 @@
+binary d847, server flags: --first-course-queries 4 --first-course-max-kb 16, stress flags: 
+checks 2652, wrong 0; served queries 0, partial 0, missed 0, no opening 4119, kept 0, unkeepable 132, trimmed 1527, dropped 1527, writes applied 0, forgotten 0; reads served from openings 0, missed 0
+STRESS FAIL
+firstCourse at the end: {'enabled': True, 'openings': 0, 'bytes': 0, 'firstQueries': 1686, 'servedQueries': 0, 'partialQueries': 0, 'missedQueries': 0, 'noOpening': 4119, 'notDurable': 0, 'servedReads': 0, 'missedReads': 0, 'kept': 0, 'unkeepable': 132, 'trimmed': 1527, 'droppedTooBig': 1527, 'evicted': 0, 'expired': 0, 'forgotten': 0, 'writesApplied': 0, 'writeHookNs': 31468108, 'recordNs': 163156185}
