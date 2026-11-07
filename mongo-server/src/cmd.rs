@@ -16,6 +16,26 @@ pub(crate) type R<T> = Result<T, MongoError>;
 
 const MAX_WIRE_VERSION: i32 = 21;
 const DEFAULT_FIRST_BATCH: usize = 101;
+/// Like mongod, a batch of a cursor reply holds at most this many bytes of documents (16 MiB, the largest BSON object a
+/// user may store); it always holds at least one document. Before, a `getMore` without `batchSize` returned everything
+/// left in one reply, which a driver refuses above its maximum message size (48 MB): a LangGraph checkpointer `list` of
+/// a thread with 10,000 checkpoints of 160 kB failed with "Message length 1609330630 is larger than server max".
+const MAX_BATCH_BYTES: usize = 16 * 1024 * 1024;
+
+/// How many of `docs` the next batch takes: at most `want`, and no more than `MAX_BATCH_BYTES` (but at least one).
+fn capped_batch_len(docs: &VecDeque<Document>, want: usize) -> usize {
+    let mut bytes = 0usize;
+    let mut n = 0usize;
+    for d in docs.iter().take(want) {
+        let len = crate::query::bson_size(d);
+        if n > 0 && bytes + len > MAX_BATCH_BYTES {
+            break;
+        }
+        bytes += len;
+        n += 1;
+    }
+    n
+}
 
 pub struct Server {
     pub dbs: Arc<Dbs>,
@@ -924,7 +944,7 @@ impl Server {
     // ---- cursors ---------------------------------------------------------------------------
 
     pub(crate) fn cursor_reply(&self, ns: String, mut docs: VecDeque<Document>, batch: Option<usize>, single_batch: bool) -> Document {
-        let n = batch.unwrap_or(DEFAULT_FIRST_BATCH).min(docs.len());
+        let n = capped_batch_len(&docs, batch.unwrap_or(DEFAULT_FIRST_BATCH));
         let first: Vec<Bson> = docs.drain(..n).map(Bson::Document).collect();
         let id = if docs.is_empty() || single_batch { 0 } else { self.store_cursor(ns.clone(), docs) };
         // (the list commands put the cursor id and namespace first)
@@ -935,7 +955,7 @@ impl Server {
     /// next `getMore` finds out that it is exhausted), unless a `limit` was reached.
     pub(crate) fn cursor_reply_open(&self, ns: String, mut docs: VecDeque<Document>, batch: Option<usize>, single_batch: bool, limited: bool) -> Document {
         let want = batch.unwrap_or(DEFAULT_FIRST_BATCH);
-        let n = want.min(docs.len());
+        let n = capped_batch_len(&docs, want);
         let first: Vec<Bson> = docs.drain(..n).map(Bson::Document).collect();
         let open = !single_batch && (!docs.is_empty() || (!limited && n > 0 && n == want));
         let id = if open { self.store_cursor(ns.clone(), docs) } else { 0 };
@@ -996,7 +1016,7 @@ impl Server {
         let mut cursors = self.cursors.lock().unwrap();
         let c = cursors.get_mut(&id).ok_or_else(|| MongoError::cursor_not_found(id))?;
         c.used = std::time::Instant::now();
-        let n = batch.unwrap_or(usize::MAX).min(c.docs.len());
+        let n = capped_batch_len(&c.docs, batch.unwrap_or(usize::MAX));
         let next: Vec<Bson> = c.docs.drain(..n).map(Bson::Document).collect();
         let ns = c.ns.clone();
         let done = c.docs.is_empty() && !(batch.is_some() && n > 0 && n == batch.unwrap_or(0));

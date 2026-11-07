@@ -19,7 +19,7 @@ except Exception as e: print("bucket:", str(e)[:80])
 P
 start() {
   # shellcheck disable=SC2086
-  "$BIN" --listen 127.0.0.1:$PORT --idle-secs 100000 --holder ckpt-$PORT --bucket "$BUCKET" --no-ttl $CK "$@" >> "$OUT/server.log" 2>&1 &
+  "$BIN" --listen 127.0.0.1:$PORT --idle-secs "${IDLE:-100000}" --holder ckpt-$PORT --bucket "$BUCKET" --no-ttl $CK "$@" >> "$OUT/server.log" 2>&1 &
   echo $! > "$OUT/server.pid"
   for _ in $(seq 1 100); do (exec 3<>/dev/tcp/127.0.0.1/$PORT) 2>/dev/null && return 0; sleep 0.2; done
   echo "server did not start"; exit 1
@@ -70,7 +70,13 @@ print(f"bucket total: {sum(n.values())} objects, {sum(by.values())} bytes")
 P
 }
 if [ "$WHAT" != measure ]; then
-  start
+  # load: the SST cleanup of the open writer runs more often (GC timing only, no format change), so the bucket's
+  # compacted-away SSTs do not fill the sandbox's disk; a guard stops the load if free disk falls under 1.5 GB
+  start ${LOAD_EXTRA:---sst-gc-secs 15 --sst-gc-min-unref-secs 75}
+  ( while kill -0 "$(cat "$OUT/server.pid")" 2>/dev/null; do
+      f=$(df -k --output=avail / | tail -1); echo "$(date +%s) $f $(du -sk "$JH/data/minio/$BUCKET" | cut -f1)" >> "$OUT/disk.log"
+      [ "$f" -lt 1500000 ] && { echo "DISK GUARD: stopping the load"; pkill -f "ckpt.py load"; }
+      sleep 10; done ) &
   t=$(date +%s)
   "$PY" bench/checkpoint-history/ckpt.py load --uri "$URI" --threads "$THREADS" --long "$LONG" --plan "$OUT/plan.json" --workers "${WORKERS:-8}" | tee "$OUT/load.txt"
   settle | tee -a "$OUT/load.txt"
@@ -82,29 +88,18 @@ for n in ('checkpoints', 'checkpoint_writes'):
     s = d.command('collStats', n); print(n, 'count', s['count'], 'size', s['size'])" | tee -a "$OUT/load.txt"
   bucket | sed 's/^/right after settle: /' | tee -a "$OUT/load.txt"
   stop
-  # the SST cleanup deletes compacted-away SSTs after a minimum age: restart, one tiny write so the database opens for
-  # writing, wait, stop (as sessions/2026-11-06-agent-adapters-local did)
-  start
-  # the cleanup of an open writer is due only when its manifest has moved on: a trickle of tiny writes (one per second,
-  # in a side collection) keeps the memtable flushing; stop when the bucket stops shrinking
-  "$PY" - "$URI" "$BUCKET" "${GC_WAIT:-900}" <<'Q'
-import sys, time, boto3
-from pymongo import MongoClient
-c = MongoClient(sys.argv[1]); s3 = boto3.client("s3", endpoint_url="http://127.0.0.1:9000", aws_access_key_id="minioadmin", aws_secret_access_key="minioadmin", region_name="us-east-1")
-def size():
-    return sum(o["Size"] for p in s3.get_paginator("list_objects_v2").paginate(Bucket=sys.argv[2], Prefix="tenants/checkpointing_db/compacted/") for o in p.get("Contents", []))
-t0, last, same = time.time(), None, 0
-while time.time() - t0 < float(sys.argv[3]):
-    for _ in range(30):
-        c.checkpointing_db["_settle"].insert_one({"pad": "x" * 2000})
-        time.sleep(1)
-    b = size(); print(f"cleanup {time.time() - t0:.0f} s: compacted/ {b / 2**30:.3f} GiB", flush=True)
-    same = same + 1 if last is not None and b == last else 0
-    last = b
-    if same >= 6:
-        break
-Q
-  sstinfo "after cleanup" | tee -a "$OUT/load.txt"
+  # The SST cleanup: an open writer's cleanup runs only when its manifest moves on; a tenant that closes when idle is
+  # collected as a whole. So: restart with a short idle close, one tiny write so the database opens, wait until the
+  # tenant has closed and the compacted SSTs stop changing (as sessions/2026-11-06-agent-adapters-local did, by hand).
+  L0=$(wc -l < "$OUT/server.log"); IDLE=20 start
+  "$PY" -c "from pymongo import MongoClient; MongoClient('$URI').checkpointing_db['_settle'].insert_one({'x': 1})"
+  last=-1; same=0
+  for _ in $(seq 1 120); do
+    sleep 10
+    n=$(find "$JH/data/minio/$BUCKET/tenants/checkpointing_db/compacted" -maxdepth 1 | wc -l)
+    if [ "$n" = "$last" ] && tail -n +"$L0" "$OUT/server.log" | grep -q "LEASE release tenant=checkpointing_db"; then same=$((same + 1)); else same=0; fi
+    last=$n; [ $same -ge 6 ] && break
+  done
   stop
   bucket | sed 's/^/after cleanup: /' | tee -a "$OUT/load.txt"
 fi
