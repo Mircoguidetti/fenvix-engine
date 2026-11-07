@@ -1,0 +1,4 @@
+test runfmt::tests::review_blocks_of_one_run_with_the_footer_of_another_are_an_error ... ok
+test runfmt::tests::review_r2_a_run_rewritten_at_the_same_path_is_an_error ... ok
+test runfmt::tests::review_fuzz_odd_keys_match_an_exact_model ... ok
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 53 filtered out; finished in 1.78s

@@ -789,3 +789,48 @@ async fn review_blocks_of_one_run_with_the_footer_of_another_are_an_error() {
     };
     assert!(random.is_err() && stream.is_err(), "blocks of A under the footer of B: random reader {}; stream {}", show(&random), show(&stream));
 }
+
+/// Review round 2 (FIX 1): the attack once more. Run A is opened by a reader; then its path is rewritten with run B
+/// (the same rows, one value changed in place, so the same size and the same block offsets). Reads through the reader
+/// that holds A's footer must be errors, a fresh open with A's recorded id must be an error, and the footer of one run
+/// with the trailer of the other must be an error at open.
+#[tokio::test]
+async fn review_r2_a_run_rewritten_at_the_same_path_is_an_error() {
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let mut rng = StdRng::seed_from_u64(3);
+    let mut a = Model::new();
+    for n in 0..400u64 {
+        let v: Vec<u8> = (0..60).map(|_| rng.gen()).collect();
+        a.insert(doc_key((n / 40) as i64, "a", n), (n, live(&v)));
+    }
+    let k = a.keys().nth(123).unwrap().clone();
+    let mut b = a.clone();
+    b.get_mut(&k).unwrap().1[1] ^= 0x55;
+    let opts = RunOptions::unchecked(1024, 1 << 20, CustomerKind::V2);
+    let ma = write_runs(&store, &a, &[], &opts, "P").await.remove(0);
+    let rd = open_all(&store, &[ma.clone()], 0, 1).await;
+    assert_eq!(rd.range(b"", None).await.unwrap().0, model_range(&a, b"", None));
+    // run B written to the same path (write_runs names it P/0000 as well)
+    let mb = write_runs(&store, &b, &[], &opts, "P").await.remove(0);
+    assert_eq!((mb.path.clone(), mb.block_offsets.clone(), mb.size), (ma.path.clone(), ma.block_offsets.clone(), ma.size), "precondition: same path, layout and size");
+    for blk in 0..ma.blocks as usize {
+        assert!(rd.read_block(0, blk).await.is_err(), "block {blk} of B read under A's footer");
+    }
+    assert!(rd.range(b"", None).await.is_err() && rd.get(&k).await.is_err());
+    assert!(Run::open_expecting(&store, Path::from(ma.path.as_str()), ma.size, &ma.run_id).await.is_err());
+    assert_eq!(random_all(&store, &mb).await.unwrap(), model_range(&b, b"", None));
+    // B's footer with A's trailer, and A's footer with B's trailer
+    let ob = store.get(&Path::from(mb.path.as_str())).await.unwrap().bytes().await.unwrap();
+    store.put(&Path::from("Q/a"), PutPayload::from(ob.to_vec())).await.unwrap();
+    let mut a2 = Model::new();
+    a2.extend(a.clone());
+    let ma2 = write_runs(&store, &a2, &[], &opts, "R").await.remove(0);
+    let oa = store.get(&Path::from(ma2.path.as_str())).await.unwrap().bytes().await.unwrap();
+    let t = TRAILER as usize;
+    for (x, y) in [(&ob, &oa), (&oa, &ob)] {
+        let mut s = x[..x.len() - t].to_vec();
+        s.extend_from_slice(&y[y.len() - t..]);
+        store.put(&Path::from("Q/s"), PutPayload::from(s)).await.unwrap();
+        assert!(Run::open(&store, Path::from("Q/s"), ma.size).await.is_err(), "a footer under another run's trailer");
+    }
+}
