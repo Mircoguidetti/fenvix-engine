@@ -319,11 +319,14 @@ def test_kill9_during_commits_keeps_no_duplicate():
                 n = 0
                 while not stop.is_set():
                     n += 1
-                    k = random.randrange(400) + trial * 1000
+                    k = trial * 1_000_000 + n      # the workers run at about the same pace: they race for the same values
                     _id = f"t{trial}-w{w}-{n}"
                     try:
+                        # an explicit transaction, not with_transaction: after the kill a worker must stop, not retry for 120 s
                         with cl.start_session() as s:
-                            s.with_transaction(lambda s: cc.insert_one({"_id": _id, "k": k}, session=s))
+                            s.start_transaction()
+                            cc.insert_one({"_id": _id, "k": k}, session=s)
+                            s.commit_transaction()
                         with lock:
                             acked.append((_id, k))
                     except PyMongoError:
@@ -347,7 +350,43 @@ def test_kill9_during_commits_keeps_no_duplicate():
             have = {d["_id"] for d in co.find({}, {"_id": 1})}
             lost = [a for a in acked if a[0] not in have]
             assert lost == [], lost[:5]
+            print(f"trial {trial}: {len(acked)} acknowledged commits so far, {len(have)} documents, 0 duplicates, 0 lost")
             c.close()
-        assert len(acked) > 20, len(acked)      # the trials did commit something
+        assert len(acked) > 100, len(acked)      # the trials did commit something
     finally:
         srv.term()
+
+
+# ------------------------------------------------------------------------------------------------ index built during a transaction
+
+@pytest.mark.parametrize("unique", [True, False])
+def test_index_built_while_transaction_open(client, unique):
+    # mongod: the index build waits for the transaction; the transaction commits, then a unique build fails with 11000.
+    # Ours before the fix: the build finished at once, the transaction committed a document the new index did not contain
+    # (two documents with the same "unique" value, and an index that missed one). Now the transaction gets WriteConflict.
+    co = _fresh(client, f"build_{unique}").c
+    co.insert_one({"_id": 0, "k": 1})
+    a = client.start_session()
+    a.start_transaction()
+    co.insert_one({"_id": 1, "k": 1}, session=a)
+    res = {}
+
+    def build():
+        try:
+            co.create_index("k", unique=unique)
+            res["build"] = "ok"
+        except OperationFailure as e:
+            res["build"] = e.code
+    t = threading.Thread(target=build)
+    t.start()
+    time.sleep(1.0)
+    res["txn"] = _code(lambda: a.commit_transaction())
+    t.join()
+    a.end_session()
+    names = [i["name"] for i in co.list_indexes()]
+    scan = co.count_documents({"k": 1}, hint=[("$natural", 1)])
+    if "k_1" in names:
+        assert co.count_documents({"k": 1}, hint="k_1") == scan, res      # the index holds every document
+        if unique:
+            assert scan == 1, res
+    assert res["txn"] in ("ok", (112, True)) and res["build"] in ("ok", 11000), res
