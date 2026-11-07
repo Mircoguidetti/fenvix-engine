@@ -4,7 +4,7 @@ Every rule below is a guard in `Compaction2.tla`. When a rule has a negative con
 
 ## Reads (step 3)
 1. A read takes our version and its SlateDB view as one pair, at begin, and uses that pair for every step: index scan, document fetches, every page of an export. A transaction never re-reads the manifest [TxnRereads].
-2. The read rule has three bounds: SlateDB rows with X_d < seq <= S, delta rows of the key's group with X_g < seq <= X_d, the group's sealed run. All three bounds are needed [ReadNoCut]. The failure needs dead rows dropped by a delta merge, so a short test will not see it: keep the unit test from TLC's trace (21 steps, `output/ReadNoCut.txt`).
+2. The read rule has three bounds: SlateDB rows with X_d < seq <= S, delta rows of the key's group with X_g < seq <= X_d, the group's sealed run. All three bounds are needed [ReadNoCut]. The failure needs dead rows dropped by a delta merge, so a short test will not see it: keep the unit test from TLC's trace (20 steps, `output/ReadNoCut.txt`).
 3. A delete envelope or an erasure (range tombstone over the customer's range) that wins means "absent".
 
 ## Holds (steps 3, 4)

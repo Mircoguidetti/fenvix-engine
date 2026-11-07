@@ -6,9 +6,9 @@ Every number here is MEASURED by TLC on this commit's spec; the outputs are in `
 
 Shape: 2 groups (3 keys, 2 customers), 3 parent writes (put, delete, erasure), 2 rewrites (delta merges, reseals, group merge), 1 crash, 1 fork, 1 checkpoint, the find reader, the transaction and the follower, E0 then E1, lost and slow PUTs, owner and remote drops, GC.
 
-PASS within the time budget: 114,291,793 distinct states (604,346,821 generated) with no violation of any invariant, 60 minutes, depth 12 reached, so BFS is complete for every behaviour of up to 11 steps; 80,217,363 states were left on the queue. TLC's fingerprint collision estimate: 0.0017 (based on the actual fingerprints).
+PASS within the time budget: 114,291,793 distinct states (604,346,821 generated) with no violation of any invariant, 60 minutes, TLC was at depth 12 (the initial state is depth 1), so every behaviour of up to 10 steps is checked completely; 80,217,363 states were left on the queue. TLC's fingerprint collision estimate: 0.0017 (based on the actual fingerprints).
 
-The full shape does not close: its state space grows with every level, because every component (writes, flushes, the compactor, three readers, the checkpoint, the fork, time) interleaves with every other. TLC stops it at the time budget (`StopAfter`, through `MCBudget` in `MC.tla`), so "no violation" holds for every state explored, and BFS is complete up to the reported depth minus one.
+The full shape does not close: its state space grows with every level, because every component (writes, flushes, the compactor, three readers, the checkpoint, the fork, time) interleaves with every other. TLC stops it at the time budget (`StopAfter`, through `MCBudget` in `MC.tla`), so "no violation" holds for every state explored, and every behaviour shorter than the reported depth minus one is checked completely.
 
 ## The correct model, complete runs
 
