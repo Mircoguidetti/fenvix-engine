@@ -3,7 +3,7 @@
 //! Usage: `cargo run --release --bin runfmt_bench -- [raw GiB, default 1] [block KiB, default 256]`
 //!
 //! Data: customer-keyed chat messages in key layout v2 (`u/{customer}/messages/d/{_id}`), each about 470 bytes of
-//! BSON-like bytes (field names, an ObjectId, a time, words), 2% delete envelopes, plus one index entry per message
+//! BSON-like bytes (field names, an ObjectId, a time, words: half from 28 common ones, half from 20,000 random ones), 2% delete envelopes, plus one index entry per message
 //! (`u/{customer}/messages/x/1/{ts}{_id}`), customers with Pareto-distributed message counts (about 2,100 customers
 //! per GiB, the 1 TB medium profile's 2.1 million users per TB). Rows are generated first, into one arena, so the CPU
 //! measured is the writer's only: lz4, CRC32C, the customer filter, the fence, and the multipart upload into an
@@ -55,6 +55,12 @@ impl Arena {
 }
 
 fn generate(raw_target: u64, rng: &mut StdRng) -> (Arena, u64) {
+    // a vocabulary of 20,000 random words next to the common ones: chat text that lz4 compresses about like BSON
+    let mut vocab: Vec<Vec<u8>> = WORDS.iter().map(|w| w.as_bytes().to_vec()).collect();
+    for _ in 0..20_000 {
+        let n = rng.gen_range(2..11);
+        vocab.push((0..n).map(|_| b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJ0123456789"[rng.gen_range(0..46)]).collect());
+    }
     let mut a = Arena { bytes: Vec::with_capacity(raw_target as usize + (raw_target as usize / 8)), rows: Vec::new() };
     let (mut u, mut seq, mut ts) = (0i64, 1u64, 1_700_000_000_000u64);
     let mut customers = 0;
@@ -68,7 +74,9 @@ fn generate(raw_target: u64, rng: &mut StdRng) -> (Arena, u64) {
             ts += rng.gen_range(1..5000);
             let mut oid = [0u8; 12];
             oid[0..4].copy_from_slice(&((ts / 1000) as u32).to_be_bytes());
-            rng.fill(&mut oid[4..]);
+            // machine and process bytes, then a counter: ObjectIds grow within a customer, as the driver makes them
+            oid[4..9].copy_from_slice(&[0x5a, 0x11, 0x3c, 0x07, 0x42]);
+            oid[9..12].copy_from_slice(&(seq as u32).to_be_bytes()[1..]);
             let mut k = p.clone();
             k.extend(b"/messages/d/");
             k.push(7);
@@ -86,7 +94,8 @@ fn generate(raw_target: u64, rng: &mut StdRng) -> (Arena, u64) {
                 d.extend(b"\x02role\x00\x05\x00\x00\x00user\x00\x02text\x00");
                 let target = rng.gen_range(300..560);
                 while d.len() < target {
-                    d.extend(WORDS[rng.gen_range(0..WORDS.len())].as_bytes());
+                    let w = if rng.gen_bool(0.5) { &vocab[rng.gen_range(0..WORDS.len())] } else { &vocab[rng.gen_range(0..vocab.len())] };
+                    d.extend(w);
                     d.push(b' ');
                 }
                 d.push(0);

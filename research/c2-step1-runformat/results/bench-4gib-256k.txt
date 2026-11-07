@@ -1,0 +1,5 @@
+RUNFMT bench: cpu Intel(R) Xeon(R) Processor @ 2.10GHz, 4 logical CPUs, one thread
+RUNFMT bench: 16235284 rows (325968 deleted), 25674 customers, 4.212 GiB raw rows, stored 2.158 GiB (lz4 ratio 1.95), 17267 blocks of 256 KiB, 139 parts, 141 PUT-class requests
+RUNFMT bench: write CPU 14.03 s (3.33 s per raw GiB, 6.50 s per stored GiB), wall 14.35 s
+RUNFMT bench: maps in RAM 463086 bytes (fence 430577 bytes, customer filter 32093 bytes): 0.2146 MB per stored GiB, 0.1099 MB per raw GiB; opening took 2 GET(s)
+RUNFMT bench: streaming read-back CPU 3.55 s (0.84 s per raw GiB), 16235284 rows, every block checked

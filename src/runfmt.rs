@@ -494,57 +494,197 @@ impl RunWriter {
 
 // ---- the fence array and the run handle (what stays in RAM)
 
-/// One run's fence array. Separators are stored without the prefix all keys of the run share.
+/// Separators are front-coded in RAM in groups of this many blocks (the first of each group is stored whole).
+pub const RESTART: usize = 16;
+
+fn put_varint(out: &mut Vec<u8>, mut v: u32) {
+    while v >= 0x80 {
+        out.push((v as u8) | 0x80);
+        v >>= 7;
+    }
+    out.push(v as u8);
+}
+
+fn get_varint(d: &[u8], p: &mut usize) -> u32 {
+    let mut v = 0u32;
+    let mut s = 0;
+    loop {
+        let b = d[*p];
+        *p += 1;
+        v |= ((b & 0x7F) as u32) << s;
+        if b < 0x80 {
+            return v;
+        }
+        s += 7;
+    }
+}
+
+/// One run's fence array: the separator and the offset of every block. Separators are kept without the prefix all keys
+/// of the run share, front-coded against the separator before them (like the index of an SST), with a whole one every
+/// `RESTART` blocks; offsets are u32 deltas from a u64 base per group. A lookup is a binary search over the group
+/// starts, then a scan of at most `RESTART` separators.
 pub struct Fence {
     pub prefix: Box<[u8]>,
-    seps: Box<[u8]>,
-    /// end of separator i in `seps` (n entries)
-    sep_end: Box<[u32]>,
-    /// offset of block i (n + 1 entries: the last is the end of the data)
-    offs: Box<[u64]>,
+    /// per block: varint shared length, varint suffix length, suffix
+    data: Box<[u8]>,
+    /// start of each group in `data`
+    restarts: Box<[u32]>,
+    /// offset of each group's first block
+    base: Box<[u64]>,
+    /// offset of block i minus its group's base
+    rel: Box<[u32]>,
+    /// end of the data (the offset after the last block)
+    end: u64,
 }
 
 impl Fence {
-    pub fn blocks(&self) -> usize {
-        self.sep_end.len()
+    /// Builds the fence from separators without the prefix (increasing) and n + 1 increasing offsets.
+    pub fn build(prefix: Box<[u8]>, seps: &[&[u8]], offs: &[u64]) -> anyhow::Result<Fence> {
+        anyhow::ensure!(!seps.is_empty() && offs.len() == seps.len() + 1, "corrupt run: fence sizes");
+        let mut data = Vec::new();
+        let (mut restarts, mut base, mut rel) = (Vec::new(), Vec::new(), Vec::with_capacity(seps.len()));
+        let mut prev: &[u8] = &[];
+        for (i, s) in seps.iter().enumerate() {
+            let shared = if i % RESTART == 0 {
+                restarts.push(data.len() as u32);
+                base.push(offs[i]);
+                0
+            } else {
+                lcp(prev, s)
+            };
+            put_varint(&mut data, shared as u32);
+            put_varint(&mut data, (s.len() - shared) as u32);
+            data.extend_from_slice(&s[shared..]);
+            let d = offs[i] - base[i / RESTART];
+            anyhow::ensure!(d <= u32::MAX as u64, "corrupt run: a group of blocks over 4 GiB");
+            rel.push(d as u32);
+            prev = s;
+        }
+        Ok(Fence {
+            prefix,
+            data: data.into_boxed_slice(),
+            restarts: restarts.into_boxed_slice(),
+            base: base.into_boxed_slice(),
+            rel: rel.into_boxed_slice(),
+            end: offs[seps.len()],
+        })
     }
 
-    fn sep(&self, i: usize) -> &[u8] {
-        let a = if i == 0 { 0 } else { self.sep_end[i - 1] as usize };
-        &self.seps[a..self.sep_end[i] as usize]
+    pub fn blocks(&self) -> usize {
+        self.rel.len()
+    }
+
+    /// Calls `f(block, separator without the prefix)` for the blocks of group `g` in order, until it returns false.
+    fn scan_group(&self, g: usize, mut f: impl FnMut(usize, &[u8]) -> bool) {
+        let mut p = self.restarts[g] as usize;
+        let end = self.restarts.get(g + 1).map_or(self.data.len(), |&e| e as usize);
+        let mut cur = Vec::new();
+        let mut i = g * RESTART;
+        while p < end {
+            let shared = get_varint(&self.data, &mut p) as usize;
+            let n = get_varint(&self.data, &mut p) as usize;
+            cur.truncate(shared);
+            cur.extend_from_slice(&self.data[p..p + n]);
+            p += n;
+            if !f(i, &cur) {
+                return;
+            }
+            i += 1;
+        }
+    }
+
+    /// The separator of block i without the prefix.
+    fn sep(&self, i: usize) -> Vec<u8> {
+        let mut out = Vec::new();
+        self.scan_group(i / RESTART, |j, s| {
+            if j == i {
+                out = s.to_vec();
+                false
+            } else {
+                true
+            }
+        });
+        out
+    }
+
+    /// The first separator of group g (stored whole).
+    fn group_first(&self, g: usize) -> &[u8] {
+        let mut p = self.restarts[g] as usize;
+        let _shared = get_varint(&self.data, &mut p);
+        let n = get_varint(&self.data, &mut p) as usize;
+        &self.data[p..p + n]
     }
 
     /// The full separator of block i (prefix + stored part).
     pub fn separator(&self, i: usize) -> Vec<u8> {
         let mut v = self.prefix.to_vec();
-        v.extend_from_slice(self.sep(i));
+        v.extend_from_slice(&self.sep(i));
         v
     }
 
-    /// prefix + sep(i) compared with `t`.
-    fn cmp(&self, i: usize, t: &[u8]) -> Ordering {
+    /// prefix + s compared with `t`.
+    fn cmp_sep(&self, s: &[u8], t: &[u8]) -> Ordering {
         let p = &self.prefix[..];
         let n = p.len().min(t.len());
         match p[..n].cmp(&t[..n]) {
             Ordering::Equal if t.len() < p.len() => Ordering::Greater,
-            Ordering::Equal => self.sep(i).cmp(&t[p.len()..]),
+            Ordering::Equal => s.cmp(&t[p.len()..]),
             o => o,
         }
     }
 
+    /// prefix + sep(i) compared with `t`.
+    fn cmp(&self, i: usize, t: &[u8]) -> Ordering {
+        self.cmp_sep(&self.sep(i), t)
+    }
+
     /// Number of blocks whose separator is < t (or <= t when `inclusive`).
     fn count_below(&self, t: &[u8], inclusive: bool) -> usize {
-        let (mut lo, mut hi) = (0, self.blocks());
+        let cond = |s: &[u8]| {
+            let c = self.cmp_sep(s, t);
+            c == Ordering::Less || (inclusive && c == Ordering::Equal)
+        };
+        let (mut lo, mut hi) = (0, self.restarts.len());
         while lo < hi {
             let m = (lo + hi) / 2;
-            let c = self.cmp(m, t);
-            if c == Ordering::Less || (inclusive && c == Ordering::Equal) {
+            if cond(self.group_first(m)) {
                 lo = m + 1;
             } else {
                 hi = m;
             }
         }
-        lo
+        if lo == 0 {
+            return 0;
+        }
+        let g = lo - 1;
+        let mut n = 0;
+        self.scan_group(g, |_, s| {
+            if cond(s) {
+                n += 1;
+                true
+            } else {
+                false
+            }
+        });
+        g * RESTART + n
+    }
+
+    /// Checks that the separators increase and that the first one is `first` (without the prefix).
+    fn check(&self, first: &[u8]) -> anyhow::Result<()> {
+        let mut prev: Option<Vec<u8>> = None;
+        let mut ok = true;
+        for g in 0..self.restarts.len() {
+            self.scan_group(g, |_, s| {
+                ok &= match &prev {
+                    None => s == first,
+                    Some(p) => &p[..] < s,
+                };
+                prev = Some(s.to_vec());
+                ok
+            });
+        }
+        anyhow::ensure!(ok, "corrupt run: separators");
+        Ok(())
     }
 
     /// The blocks that may hold keys in [lo, hi) (hi None: unbounded): first..=last, or None.
@@ -563,13 +703,22 @@ impl Fence {
         Some((first, last - 1))
     }
 
+    /// Offset of block i (i = blocks(): the end of the data).
+    pub fn offset(&self, i: usize) -> u64 {
+        if i == self.blocks() {
+            self.end
+        } else {
+            self.base[i / RESTART] + self.rel[i] as u64
+        }
+    }
+
     /// Byte range of blocks first..=last.
     pub fn range(&self, first: usize, last: usize) -> (u64, u64) {
-        (self.offs[first], self.offs[last + 1])
+        (self.offset(first), self.offset(last + 1))
     }
 
     pub fn mem_bytes(&self) -> usize {
-        std::mem::size_of::<Self>() + self.prefix.len() + self.seps.len() + self.sep_end.len() * 4 + self.offs.len() * 8
+        std::mem::size_of::<Self>() + self.prefix.len() + self.data.len() + self.restarts.len() * 4 + self.base.len() * 8 + self.rel.len() * 4
     }
 }
 
@@ -659,12 +808,10 @@ impl Run {
         anyhow::ensure!(first_key.starts_with(&prefix) && last_key.starts_with(&prefix) && first_key <= last_key, "corrupt run: keys");
         let n = c.u32()? as usize;
         anyhow::ensure!(n >= 1 && n as u64 <= entries, "corrupt run: {n} blocks for {entries} entries");
-        let mut seps = Vec::new();
-        let mut sep_end = Vec::with_capacity(n);
+        let mut seps: Vec<&[u8]> = Vec::with_capacity(n);
         for _ in 0..n {
             let l = c.u16()? as usize;
-            seps.extend_from_slice(c.take(l)?);
-            sep_end.push(seps.len() as u32);
+            seps.push(c.take(l)?);
         }
         let mut offs = Vec::with_capacity(n + 1);
         for _ in 0..=n {
@@ -677,12 +824,9 @@ impl Run {
         anyhow::ensure!(bits % 8 == 0, "corrupt run: filter bits");
         let data: Box<[u8]> = c.take((bits / 8) as usize)?.into();
         anyhow::ensure!(c.r.is_empty(), "corrupt run: footer has {} extra bytes", c.r.len());
-        let fence = Fence { prefix, seps: seps.into_boxed_slice(), sep_end: sep_end.into_boxed_slice(), offs: offs.into_boxed_slice() };
+        let fence = Fence::build(prefix, &seps, &offs)?;
         // the separators must increase, the first equals the first key, and the last key is past the last separator
-        anyhow::ensure!(fence.separator(0)[..] == first_key[..], "corrupt run: first separator");
-        for i in 1..n {
-            anyhow::ensure!(fence.cmp(i - 1, &fence.separator(i)) == Ordering::Less, "corrupt run: separators out of order");
-        }
+        fence.check(&first_key[fence.prefix.len()..])?;
         anyhow::ensure!(fence.cmp(n - 1, &last_key) != Ordering::Greater, "corrupt run: last key");
         Ok(Run {
             path,
@@ -1173,7 +1317,7 @@ impl RunStream {
         }
         let a = self.next_block;
         let mut z = a;
-        while z + 1 < n && self.run.fence.offs[z + 2] - self.run.fence.offs[a] <= self.chunk_bytes {
+        while z + 1 < n && self.run.fence.offset(z + 2) - self.run.fence.offset(a) <= self.chunk_bytes {
             z += 1;
         }
         let (lo, hi) = self.run.fence.range(a, z);
