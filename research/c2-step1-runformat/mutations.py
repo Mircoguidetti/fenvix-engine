@@ -28,6 +28,8 @@ M = [
      "if self.bits != u64::MAX {\n            return false;\n        }"),
     ("fence lookup skips the block holding the lower bound", "let first = self.count_below(lo, true).max(1) - 1;",
      "let first = self.count_below(lo, true).min(self.blocks() - 1);"),
+    ("block CRC without the run id (FIX 1)", "crc32c::crc32c_append(crc32c::crc32c_append(crc32c::crc32c(run_id), &idx.to_le_bytes()), c)",
+     "crc32c::crc32c_append(crc32c::crc32c(&idx.to_le_bytes()), c)"),
     ("point read looks one block too far", "let b = &self.fetch(ri, i - 1, i - 1, &mut st).await?[0];",
      "let b = &self.fetch(ri, i.min(run.fence.blocks() - 1), i.min(run.fence.blocks() - 1), &mut st).await?[0];"),
 ]

@@ -14,19 +14,24 @@
 //! Object layout (all integers little endian):
 //! ```text
 //! [block 0] ... [block n-1] [footer] [trailer, 24 bytes]
-//! block   = lz4 (size-prepended) of entries, then crc32c u32 over (block index u32, the lz4 bytes)
+//! block   = lz4 (size-prepended) of entries, then crc32c u32 over (run id, block index u32, the lz4 bytes)
 //! entry   = key length u16, key, seq u64, envelope length u32, envelope
-//! footer  = version u32, block bytes u32, customer kind u8, entries u64, deleted u64, raw bytes u64,
+//! footer  = version u32, run id [16], block bytes u32, customer kind u8, entries u64, deleted u64, raw bytes u64,
 //!           min seq u64, max seq u64, first key (u32 length + bytes), last key (same),
 //!           prefix (u32 length + bytes), n u32, n x (separator length u16, separator without the prefix),
 //!           n + 1 block offsets u64 (the last = end of the data),
 //!           customers u64, filter hashes u8, filter bits u64, filter bytes (bits / 8)
-//! trailer = footer offset u64, footer length u32, version u32, crc32c u32 over (footer, the first 16 trailer bytes),
+//! trailer = footer offset u64, footer length u32, version u32, run id [16], crc32c u32 over (footer, the first 32
+//!           trailer bytes),
 //!           magic u32 "FXR1"
 //! ```
 //! Every byte of the object is covered by a check: block bytes by their block CRC, footer bytes by the footer CRC, the
-//! trailer's offset and length by `offset + length + 24 == size` and the CRC, its version and magic by equality. So a
+//! trailer's offset and length by `offset + length + 40 == size` and the CRC, its version and magic by equality. So a
 //! flipped bit anywhere is an error when the reader touches that byte, never different data.
+//!
+//! The run id is 16 random bytes drawn by the writer, in the footer and the trailer and mixed into every block CRC, so a
+//! block is valid only in its own run: the blocks of one run under the footer of another (a path written twice, a stale
+//! footer, a wrong copied range) are errors, even when both runs have the same layout (review of step 1, FIX 1).
 //!
 //! The envelope (the value as stored): first byte 0 = a live document, followed by its bytes; first byte 1 = deleted,
 //! nothing after it. SlateDB's own tombstones are invisible to merged scans (probe 1 of the plan), so deletes travel as
@@ -43,7 +48,8 @@ use std::sync::{Arc, Mutex};
 
 pub const FORMAT_VERSION: u32 = 1;
 pub const MAGIC: u32 = u32::from_le_bytes(*b"FXR1");
-pub const TRAILER: u64 = 24;
+pub const TRAILER: u64 = 40;
+pub const RUN_ID_LEN: usize = 16;
 pub const DEFAULT_BLOCK: usize = 256 << 10;
 pub const MIN_BLOCK: usize = 64 << 10;
 pub const MAX_BLOCK: usize = 1 << 20;
@@ -56,6 +62,11 @@ pub const OPEN_TAIL: u64 = 256 << 10;
 /// Customer filter: bits per customer (about 0.8% false positives with 7 hashes, ESTIMATED from the Bloom formula).
 pub const FILTER_BITS_PER_CUSTOMER: u64 = 10;
 const FILTER_SEED: u64 = 0x4658_5231_6669_6c74; // "FXR1filt"
+
+/// The CRC of a stored block: over the run id, the block index and the lz4 bytes.
+fn block_crc(run_id: &[u8; RUN_ID_LEN], idx: u32, c: &[u8]) -> u32 {
+    crc32c::crc32c_append(crc32c::crc32c_append(crc32c::crc32c(run_id), &idx.to_le_bytes()), c)
+}
 
 pub const LIVE: u8 = 0;
 pub const DELETED: u8 = 1;
@@ -271,6 +282,8 @@ impl RunOptions {
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct RunMeta {
     pub path: String,
+    /// 16 random bytes that bind every block to this run (step 3 keeps it in the manifest line)
+    pub run_id: [u8; RUN_ID_LEN],
     pub size: u64,
     pub data_end: u64,
     pub first_key: Vec<u8>,
@@ -292,6 +305,7 @@ pub struct RunMeta {
 /// Writes one run as a multipart upload. The object becomes visible only when `finish` completes the upload.
 pub struct RunWriter {
     path: Path,
+    run_id: [u8; RUN_ID_LEN],
     upload: Box<dyn MultipartUpload>,
     opts: RunOptions,
     out: Vec<u8>,
@@ -316,6 +330,7 @@ impl RunWriter {
         let upload = store.put_multipart_opts(&path, Default::default()).await?;
         Ok(RunWriter {
             path,
+            run_id: rand::random(),
             upload,
             out: Vec::with_capacity(opts.part_bytes.min(64 << 20)),
             raw: Vec::with_capacity(opts.block_bytes + 4096),
@@ -386,7 +401,7 @@ impl RunWriter {
         }
         let idx = (self.seps.len() - 1) as u32;
         let mut c = lz4_flex::compress_prepend_size(&self.raw);
-        let crc = crc32c::crc32c_append(crc32c::crc32c(&idx.to_le_bytes()), &c);
+        let crc = block_crc(&self.run_id, idx, &c);
         c.extend_from_slice(&crc.to_le_bytes());
         self.raw_bytes += self.raw.len() as u64;
         self.raw.clear();
@@ -432,6 +447,7 @@ impl RunWriter {
         let filter = CustomerFilter::build(&self.cust_hashes);
         let mut f = Vec::with_capacity(64 + self.seps.len() * 40 + filter.data.len());
         f.extend(FORMAT_VERSION.to_le_bytes());
+        f.extend(self.run_id);
         f.extend((self.opts.block_bytes as u32).to_le_bytes());
         f.push(self.opts.customers as u8);
         f.extend(self.entries.to_le_bytes());
@@ -465,6 +481,7 @@ impl RunWriter {
         t.extend(data_end.to_le_bytes());
         t.extend(footer_len.to_le_bytes());
         t.extend(FORMAT_VERSION.to_le_bytes());
+        t.extend(self.run_id);
         let crc = crc32c::crc32c_append(crc32c::crc32c(&f), &t);
         t.extend(crc.to_le_bytes());
         t.extend(MAGIC.to_le_bytes());
@@ -474,6 +491,7 @@ impl RunWriter {
         self.upload.complete().await?;
         Ok(RunMeta {
             path: self.path.to_string(),
+            run_id: self.run_id,
             size: self.written,
             data_end,
             first_key,
@@ -725,6 +743,8 @@ impl Fence {
 /// An opened run: everything the reader keeps in RAM for it.
 pub struct Run {
     pub path: Path,
+    /// binds the blocks to this run: mixed into every block CRC
+    pub run_id: [u8; RUN_ID_LEN],
     pub size: u64,
     pub first_key: Box<[u8]>,
     pub last_key: Box<[u8]>,
@@ -769,13 +789,13 @@ impl<'a> Cursor<'a> {
     }
 }
 
-/// Checks the trailer (the last 24 bytes of a run of `size` bytes): returns (footer offset, footer length).
+/// Checks the trailer (the last 40 bytes of a run of `size` bytes): returns (footer offset, footer length).
 pub fn parse_trailer(t: &[u8], size: u64) -> anyhow::Result<(u64, u32)> {
     anyhow::ensure!(t.len() == TRAILER as usize, "corrupt run: trailer of {} bytes", t.len());
     let foff = u64::from_le_bytes(t[0..8].try_into()?);
     let flen = u32::from_le_bytes(t[8..12].try_into()?);
     let ver = u32::from_le_bytes(t[12..16].try_into()?);
-    let magic = u32::from_le_bytes(t[20..24].try_into()?);
+    let magic = u32::from_le_bytes(t[36..40].try_into()?);
     anyhow::ensure!(magic == MAGIC, "not a run (magic {magic:#x})");
     anyhow::ensure!(ver == FORMAT_VERSION, "run format version {ver}, this reader knows {FORMAT_VERSION}");
     anyhow::ensure!(foff.checked_add(flen as u64).and_then(|x| x.checked_add(TRAILER)) == Some(size), "corrupt run: footer at {foff}+{flen} in {size} bytes");
@@ -783,18 +803,20 @@ pub fn parse_trailer(t: &[u8], size: u64) -> anyhow::Result<(u64, u32)> {
 }
 
 impl Run {
-    /// Parses and checks a footer and its trailer (`ft` = footer bytes followed by the 24 trailer bytes).
+    /// Parses and checks a footer and its trailer (`ft` = footer bytes followed by the 40 trailer bytes).
     pub fn parse(path: Path, size: u64, ft: &[u8]) -> anyhow::Result<Run> {
         anyhow::ensure!(ft.len() >= TRAILER as usize, "corrupt run: short tail");
         let (f, t) = ft.split_at(ft.len() - TRAILER as usize);
         let (_, flen) = parse_trailer(t, size)?;
         anyhow::ensure!(f.len() == flen as usize, "corrupt run: footer length");
-        let want = u32::from_le_bytes(t[16..20].try_into()?);
-        let got = crc32c::crc32c_append(crc32c::crc32c(f), &t[..16]);
+        let want = u32::from_le_bytes(t[32..36].try_into()?);
+        let got = crc32c::crc32c_append(crc32c::crc32c(f), &t[..32]);
         anyhow::ensure!(want == got, "corrupt run: footer checksum");
         let mut c = Cursor { r: f };
         let ver = c.u32()?;
         anyhow::ensure!(ver == FORMAT_VERSION, "corrupt run: footer version {ver}");
+        let run_id: [u8; RUN_ID_LEN] = c.take(RUN_ID_LEN)?.try_into()?;
+        anyhow::ensure!(run_id[..] == t[16..32], "corrupt run: the footer's and the trailer's run ids differ");
         let block_bytes = c.u32()?;
         let customers = CustomerKind::from_u8(c.u8()?)?;
         let entries = c.u64()?;
@@ -830,6 +852,7 @@ impl Run {
         anyhow::ensure!(fence.cmp(n - 1, &last_key) != Ordering::Greater, "corrupt run: last key");
         Ok(Run {
             path,
+            run_id,
             size,
             first_key,
             last_key,
@@ -858,6 +881,14 @@ impl Run {
         }
         let ft = get_range(store, &path, foff, size).await?;
         Ok((Run::parse(path, size, &ft)?, 2))
+    }
+
+    /// Opens a run and checks its id against the one the caller recorded (step 3: the manifest line), so a path that now
+    /// holds another object of the same size is an error.
+    pub async fn open_expecting(store: &Arc<dyn ObjectStore>, path: Path, size: u64, run_id: &[u8; RUN_ID_LEN]) -> anyhow::Result<(Run, u64)> {
+        let (run, gets) = Run::open(store, path, size).await?;
+        anyhow::ensure!(&run.run_id == run_id, "run {} has another id than expected: another object at this path", run.path);
+        Ok((run, gets))
     }
 
     /// RAM of this run's maps: the fence array, the customer filter and the fixed fields.
@@ -901,12 +932,12 @@ pub struct Block {
 }
 
 impl Block {
-    /// Checks the CRC of stored block `idx`, decompresses it and checks every entry. Errors, never panics, on bad bytes.
-    pub fn decode(stored: &[u8], idx: u32) -> anyhow::Result<Block> {
+    /// Checks the CRC of stored block `idx` of the run with id `run_id`, decompresses it and checks every entry. Errors, never panics, on bad bytes.
+    pub fn decode(stored: &[u8], run_id: &[u8; RUN_ID_LEN], idx: u32) -> anyhow::Result<Block> {
         anyhow::ensure!(stored.len() > 4, "corrupt run: block {idx} of {} bytes", stored.len());
         let (c, crc) = stored.split_at(stored.len() - 4);
         let want = u32::from_le_bytes(crc.try_into()?);
-        let got = crc32c::crc32c_append(crc32c::crc32c(&idx.to_le_bytes()), c);
+        let got = block_crc(run_id, idx, c);
         anyhow::ensure!(want == got, "corrupt run: block {idx} checksum");
         let raw = lz4_flex::decompress_size_prepended(c).map_err(|e| anyhow::anyhow!("corrupt run: block {idx}: {e}"))?;
         let mut starts = Vec::new();
@@ -991,7 +1022,7 @@ impl Block {
 
 /// Decodes block `i` of `run` and checks it against the fence: every key at or above its separator and below the next.
 fn decode_checked(run: &Run, i: usize, stored: &[u8]) -> anyhow::Result<Block> {
-    let b = Block::decode(stored, i as u32)?;
+    let b = Block::decode(stored, &run.run_id, i as u32)?;
     anyhow::ensure!(run.fence.cmp(i, b.key(0)) != Ordering::Greater, "corrupt run: block {i} starts below its separator");
     if i + 1 < run.fence.blocks() {
         anyhow::ensure!(run.fence.cmp(i + 1, b.key(b.len() - 1)) == Ordering::Greater, "corrupt run: block {i} reaches the next separator");

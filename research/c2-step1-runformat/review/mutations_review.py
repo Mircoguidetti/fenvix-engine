@@ -29,8 +29,8 @@ M = [
     ("no end-of-run count check in the stream (defence in depth)",
      [('anyhow::ensure!(self.seen == self.run.entries && self.seen_deleted == self.run.deleted, "corrupt run: entry count");', "")]),
     ("the block CRC no longer covers the block index (writer and reader)",
-     [("let crc = crc32c::crc32c_append(crc32c::crc32c(&idx.to_le_bytes()), &c);", "let crc = crc32c::crc32c(&c);"),
-      ("let got = crc32c::crc32c_append(crc32c::crc32c(&idx.to_le_bytes()), c);", "let got = crc32c::crc32c(c);")]),
+     # updated by the fix of FIX 1: the block CRC is now computed in one place, `block_crc`
+     [("crc32c::crc32c_append(crc32c::crc32c_append(crc32c::crc32c(run_id), &idx.to_le_bytes()), c)", "crc32c::crc32c_append(crc32c::crc32c(run_id), c)")]),
 ]
 
 orig = SRC.read_text()

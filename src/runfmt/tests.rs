@@ -361,6 +361,23 @@ async fn opening_costs_one_get_for_a_footer_under_the_open_tail() {
 }
 
 #[tokio::test]
+async fn runs_get_distinct_ids_and_open_expecting_checks_them() {
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let mut m = Model::new();
+    for n in 0..50u64 {
+        m.insert(doc_key(1, "a", n), (n, live(b"v")));
+    }
+    let o = RunOptions::unchecked(256, 1 << 20, CustomerKind::V2);
+    let a = write_runs(&store, &m, &[], &o, "ida").await.remove(0);
+    let b = write_runs(&store, &m, &[], &o, "idb").await.remove(0);
+    assert_ne!(a.run_id, b.run_id);
+    let (r, _) = Run::open(&store, Path::from(a.path.as_str()), a.size).await.unwrap();
+    assert_eq!(r.run_id, a.run_id);
+    assert!(Run::open_expecting(&store, Path::from(a.path.as_str()), a.size, &a.run_id).await.is_ok());
+    assert!(Run::open_expecting(&store, Path::from(a.path.as_str()), a.size, &b.run_id).await.is_err());
+}
+
+#[tokio::test]
 async fn overlapping_runs_are_refused() {
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
     let mut a = Model::new();
