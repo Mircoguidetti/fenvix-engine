@@ -1,0 +1,4 @@
+1 TB medium, theta 0.25 (reseal every 6.7 days): GETs per cold read: once, 0-3 days ago 1.7-2.0; weekly 1.5-2.2; daily 3.4-4.9; hourly 6.9-8.7
+1 TB busy, theta 0.25 (reseal every 1.3 days): GETs per cold read: once, 0-3 days ago 1.4-1.8; weekly 1.1-1.4; daily 1.5-3.0; hourly 5.1-9.0
+10 TB medium, theta 0.25 (reseal every 66.8 days): GETs per cold read: once, 0-3 days ago 1.7-1.7; weekly 3.5-5.5; daily 5.8-7.8; hourly 9.3-11.3
+10 TB busy, theta 0.25 (reseal every 13.4 days): GETs per cold read: once, 0-3 days ago 1.8-2.0; weekly 2.0-3.5; daily 3.9-5.8; hourly 7.7-9.6

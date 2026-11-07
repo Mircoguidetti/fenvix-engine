@@ -1,0 +1,9 @@
+A pinned reader across publish + drop: before the drop = model true; after, the reader still on v0 (X = 0) sees 0 of 1000 keys, 1000 missing: BREAKS
+A control: the same read with v1 (X = 1000) = model true
+B transaction snapshot (seq 1000) across the drop: with its pinned v0 it sees 0 of 1000 keys, 1000 missing: BREAKS; with v1 = model true
+C snapshot at S = 1000, manifest v2 with X = 1100 > S: 100 of 1000 keys return a value written after S (a transaction reads the future): BREAKS
+D 30 absorb + drop rounds: SlateDB sorted runs 2 -> 32 (32 with no SST), drop jobs 32: BREAKS
+D2 30 more rounds folding each drop into the newest sorted run: sorted runs 32 -> 32; merged read = model true: PASS
+E detail: the fenced writer's put returned Ok (seq Some(62)); its flush failed true; the new writer's next seq 63; the old writer's row present after reopen: false
+E restart: last seq before 60, first after restart 61; writer change: first seq of the new writer 62, old writer fenced true: PASS
+F clone from a checkpoint at seq 100: the parent went on to seq 200; the clone's first write gets seq 101. Paired with the parent's newest cut (X_d = 200) the fork's own write is visible: false: BREAKS

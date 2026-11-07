@@ -1,0 +1,12 @@
+1 TB medium theta 0.25: inserted 38.3 GB/day; reseal period 6.7 days; delta tiers 7, delta runs at most 21 + 4 L0; plan amplification 13, today's tiered 10, reference mid 14.0
+1 TB medium theta 0.10: inserted 38.3 GB/day; reseal period 2.7 days; delta tiers 7, delta runs at most 21 + 4 L0; plan amplification 19, today's tiered 10, reference mid 14.0
+1 TB medium deletion trigger on every group daily: +31,130 GB/month rewritten (+27 amplification, 12 MB/s average), 104 core-h, 5.89 $/month against the plan's 2.64 $
+1 TB busy theta 0.25: inserted 191.6 GB/day; reseal period 1.3 days; delta tiers 7, delta runs at most 21 + 4 L0; plan amplification 13, today's tiered 10, reference mid 14.0
+1 TB busy theta 0.10: inserted 191.6 GB/day; reseal period 0.5 days; delta tiers 7, delta runs at most 21 + 4 L0; plan amplification 19, today's tiered 10, reference mid 14.0
+1 TB busy deletion trigger on every group daily: +31,130 GB/month rewritten (+5 amplification, 12 MB/s average), 104 core-h, 5.89 $/month against the plan's 13.22 $
+10 TB medium theta 0.25: inserted 38.3 GB/day; reseal period 66.8 days; delta tiers 9, delta runs at most 27 + 4 L0; plan amplification 15, today's tiered 12, reference mid 25.5
+10 TB medium theta 0.10: inserted 38.3 GB/day; reseal period 26.7 days; delta tiers 8, delta runs at most 24 + 4 L0; plan amplification 20, today's tiered 12, reference mid 25.5
+10 TB medium deletion trigger on every group daily: +311,296 GB/month rewritten (+267 amplification, 119 MB/s average), 1,038 core-h, 58.89 $/month against the plan's 3.09 $
+10 TB busy theta 0.25: inserted 191.6 GB/day; reseal period 13.4 days; delta tiers 9, delta runs at most 27 + 4 L0; plan amplification 15, today's tiered 12, reference mid 25.5
+10 TB busy theta 0.10: inserted 191.6 GB/day; reseal period 5.3 days; delta tiers 8, delta runs at most 24 + 4 L0; plan amplification 20, today's tiered 12, reference mid 25.5
+10 TB busy deletion trigger on every group daily: +311,296 GB/month rewritten (+53 amplification, 119 MB/s average), 1,038 core-h, 58.89 $/month against the plan's 15.43 $
