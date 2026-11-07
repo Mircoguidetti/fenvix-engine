@@ -1004,6 +1004,7 @@ mod tests {
 
     #[test]
     fn a_visit_of_three_queries_is_kept_and_follows_writes() {
+        let _g = GLOBALS.lock().unwrap_or_else(|e| e.into_inner()); // review: the tests that set the globals run one at a time
         use tenant_bench::lifecycle::Op;
         ENABLED.store(true, Relaxed);
         QUERIES.store(3, Relaxed);
@@ -1069,5 +1070,108 @@ mod tests {
                 }
             }
         }
+    }
+
+    // ---- Review (2026-11-07): tests that fail on the delivered commit 847d188 ----
+
+    /// The tests below and `a_visit_of_three_queries_is_kept_and_follows_writes` set the module's globals: one at a time.
+    static GLOBALS: Mutex<()> = Mutex::new(());
+
+    /// Puts the globals back when a test ends (also when it fails).
+    struct Restore;
+    impl Drop for Restore {
+        fn drop(&mut self) {
+            QUERIES.store(1, Relaxed);
+            IDLE_SECS.store(1800, Relaxed);
+            MAX_BYTES.store(256 << 10, Relaxed);
+            BUDGET_BYTES.store(1 << 30, Relaxed);
+        }
+    }
+
+    fn review_key(user: i32, n: u32) -> Vec<u8> {
+        let mut k = crate::layout::doc_prefix("c");
+        k.extend(crate::custkey::comp(&bson::Bson::Int32(user)));
+        k.extend(n.to_be_bytes());
+        k
+    }
+
+    /// One query of a visit (the variant with N > 1), then the user leaves.
+    fn review_one_query(db: &str, user: i32) {
+        let f = bson::doc! { "u": user };
+        let mut s = begin(db, "c", "u", &f, &[], true).expect("first query of the visit");
+        s.note_get(&review_key(user, 0), &Some(b(b"first")));
+        finish(s, true);
+    }
+
+    fn review_write(db: &str, ops: Vec<tenant_bench::lifecycle::Op>) {
+        let c = write_hook(db, &ops);
+        after_stage(db, c, true);
+    }
+
+    /// Bytes held for one database: its openings and the openings still being built (pending).
+    fn review_held(db: &str) -> (usize, usize) {
+        let reg = REG.lock().unwrap();
+        let Some(st) = reg.get(db) else { return (0, 0) };
+        let open = st.openings.values().map(|o| o.bytes).sum();
+        let pending = st
+            .pending
+            .values()
+            .map(|(p, _, _)| {
+                let mut p = p.clone();
+                p.recount();
+                p.bytes
+            })
+            .sum();
+        (open, pending)
+    }
+
+    /// Why it matters: with `--first-course-queries N` (N > 1, the variant the report recommends) a visit of fewer than N
+    /// queries leaves its opening pending until the user's next visit, which may be 14 days later. Every write to the
+    /// user's ranges is applied to it, with no size check: a user who receives 1 MB of messages meanwhile holds 1 MB in
+    /// the waiter's memory, past the 256 KB (here 64 KB) cap that openings obey. At 1 TB with users of 512 KB that is
+    /// up to the whole user per pending opening.
+    #[test]
+    fn review_a_pending_opening_obeys_the_size_cap() {
+        let _g = GLOBALS.lock().unwrap_or_else(|e| e.into_inner());
+        let _r = Restore;
+        ENABLED.store(true, Relaxed);
+        QUERIES.store(3, Relaxed);
+        IDLE_SECS.store(3600, Relaxed);
+        MAX_BYTES.store(64 << 10, Relaxed);
+        let db = "fc-review-pending-cap";
+        review_one_query(db, 7);
+        // 1,000 messages of 1 KB for this user while the opening is pending
+        for i in 1..=1000u32 {
+            review_write(db, vec![tenant_bench::lifecycle::Op::Put(review_key(7, i), vec![b'x'; 1024])]);
+        }
+        let (_, pending) = review_held(db);
+        forget_db(db);
+        assert!(pending <= 64 << 10, "a pending opening holds {pending} bytes, the cap is {}", 64 << 10);
+    }
+
+    /// Why it matters: the memory budget (`--first-course-mb`, 1 GiB by default) counts and evicts only finished
+    /// openings. Pending ones are neither counted in `STATS.bytes` nor evicted, so with many users whose last visit had
+    /// fewer than N queries the waiter's memory grows past the budget without limit (at 1 TB the report counts 658,000
+    /// openings; each pending one also takes every write to its user, test above).
+    #[test]
+    fn review_pending_openings_stay_inside_the_memory_budget() {
+        let _g = GLOBALS.lock().unwrap_or_else(|e| e.into_inner());
+        let _r = Restore;
+        ENABLED.store(true, Relaxed);
+        QUERIES.store(3, Relaxed);
+        IDLE_SECS.store(3600, Relaxed);
+        BUDGET_BYTES.store(1 << 20, Relaxed); // 1 MiB for all openings
+        let db = "fc-review-pending-budget";
+        // 200 users, one query each, then 20 KB of messages each (every pending opening stays under the 256 KB cap)
+        for u in 0..200 {
+            review_one_query(db, 1000 + u);
+        }
+        for u in 0..200 {
+            let ops = (1..=20u32).map(|i| tenant_bench::lifecycle::Op::Put(review_key(1000 + u, i), vec![b'y'; 1024])).collect();
+            review_write(db, ops);
+        }
+        let (open, pending) = review_held(db);
+        forget_db(db);
+        assert!(open + pending <= 1 << 20, "openings {open} bytes + pending {pending} bytes, the budget is {} bytes", 1 << 20);
     }
 }
