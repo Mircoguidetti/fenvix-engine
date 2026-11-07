@@ -1,88 +1,52 @@
-FIX 2
+FIX 3
 
-# Review of compaction 91414a6 (customer-first keys, tiered compaction)
+# Review: compaction 2 step 2 (key layout v2, `_id` per customer, envelope deletes)
 
-Reviewer, 2026-11-06. Branch `review-compaction` (based on 91414a6). Base `integration` (6ff285a). Tests:
-`ctl-tests/test_43_review_compaction.py` (run: `cd ctl-tests && python -m pytest -q test_43_review_compaction.py`).
-Every number is labelled MEASURED (run here, on this sandbox, local MinIO), ESTIMATED, DECLARED (the owner's), or UNKNOWN.
+Reviewer session 2026-11-07, prompt `prompts/R-review-c2-step2.md`. Delivery: fenvix-engine `c2-step2-layout` at 660d46e (engine of 51b9a90), and `c2-step2-layout-e0` at 5a17ea9. Contract: `prompts/P-c2-step2-layout.md`. Owner's report: fenvix-brain `sessions/2026-11-07-c2-step2-layout/REPORT.md`. Spend: $0, local only (4 vCPU sandbox, MinIO, mongod 7.0.34 from `judge/setup.sh`). Nothing merged, no branch deleted.
 
-## The two fixes (tests that fail on 91414a6)
+The failing tests are in `ctl-tests/test_46_review_c2_step2.py` on this branch (`review-c2-step2`, based on 660d46e). Run:
+`cd ctl-tests && python -m pytest -q test_46_review_c2_step2.py` (MEASURED on 660d46e: 3 failed, 9 passed).
 
-1. **Two writes of one `_id` for two customers are both acknowledged** (guarantees 4 and 7: `_id` uniqueness, indexes
-   consistent with data). The locator `loc/{coll}/{_id}` is the unique `_id` index, but `Writes::put` only checks it
-   against the committed state and never locks it (`check_conflict` runs on the customer-specific document key only).
-   Two transactions inserting `_id: 7` for `alice` and `bob` both commit; so does a plain insert of `_id: 8` while an
-   open transaction holds `_id: 8` for another customer. Result MEASURED: two documents with the same `_id`; a scan
-   returns both, `find({_id})` returns one (the locator points at the last writer), `validate` does not check the locators (code reading, `cmd_index.rs` validate).
-   mongod lets only one of the two commit. The control (same test on a collection without a customer key) passes.
-   Tests: `test_two_transactions_cannot_insert_the_same_id_for_two_customers[m]`,
-   `test_insert_outside_a_transaction_cannot_duplicate_an_id_a_transaction_holds[m]`.
-   Fix hint: `check_conflict` (lock and `modified_after`) on the locator key too, for inserts and moves.
+## Verdict
 
-2. **With customer keys off, the storage format still changes and the previous release can no longer read it**
-   ("with the option off nothing changes"; guarantee 10, rollback). `--sst-compression lz4` and `--sst-block-kb 64` are
-   the new defaults for every database, keyed or not. MEASURED: a database written by 91414a6 with no flag at all,
-   then opened by the integration binary: `Data error: invalid composite filter block`. Deploying this commit makes
-   every database it flushes or compacts unreadable by the release before it, with no way back but forward.
-   Test: `test_with_customer_keys_off_the_stored_format_does_not_change` (checks the codec; with `INTEGRATION_BIN` set
-   it also does the rollback read). Fix: defaults off (`none`, 4 KiB) until the founder decides a one-way format
-   migration, or ship a release that can read lz4 first.
+Viva, con correzioni (alive, with fixes). The storage work holds: the range cutting, the envelopes, the two-release rule, export, PITR and forks all survived every attack I made. The three defects are all on the same edge: places that still identify a document by `_id` alone, now that `_id` is unique per customer only. One of them hands one customer's document to another customer's watcher.
 
-## Priority from the founder: `test_05_erase.py` leaves control-layer objects
+## The three failing tests (defects)
 
-- Found the cause. It is **not** caused by this branch. In `test_concurrent_erase_and_fork_are_serialised`, when the
-  erase wins, the fork (`ctl/fork.rs`) takes the target's lease, finds the source gone, answers 404 and deletes the
-  lease; but those requests were charged to the target's (and source's) usage counters, and the usage flusher then
-  writes `control/usage/<target>/<day>/...` (and `control/usage/<source>/...`) for databases that do not exist. Nothing
-  ever deletes them (guarantee 6). test_05 only sees it when a flush (every 1 s there) lands between the fork's answer
-  and its listing: that is why it is flaky.
-- Deterministic test: `test_a_refused_fork_leaves_no_object_of_its_target` (a fork of a source that never existed,
-  wait 3 s, list). MEASURED: fails on 91414a6 **and on integration**, with the same two leftover records.
-- Does the branch make it worse? MEASURED, the race of test_05 repeated 30 times per binary: the leftover is there 3 s
-  later every time the erase wins (91414a6 12 of 12, integration 8 of 8); the test's own listing caught it 0 times in
-  30 on 91414a6 and 1 in 30 on integration. Fork and erase times are the same (p50 110 ms both). The owner's 3 of 4
-  vs 1 of 4 is within noise for 4 rounds. My own full runs of test_05 on 91414a6: 2 passed, then 1 failed in the judge.
-- `tenants/<db>/_lease` left behind: not reproduced (UNKNOWN); every failure I saw was the usage records above.
-- Not counted against this commit (contract point 5: identical on integration). Owner of the control layer: charge
-  nothing to a database a refused fork never created (or `drop_db` both names when the fork fails).
+1. `test_change_stream_update_lookup_returns_the_updated_customers_document`. Alice and bob both hold `_id` 1. An update of bob's document, watched with `fullDocument: "updateLookup"`, delivers alice's document (`{'_id': 1, 'u': 'alice', 'secret': 'alice-data'}`) (MEASURED). Why it matters: it shows one customer's data to another customer's watcher, and it gives the wrong data to any app that syncs through a change stream. Cause: `cmd_changes.rs:261` calls `Entry::get_doc(coll, _id)`, which takes the first customer holding the `_id` (`dbs.rs:1239`).
+2. `test_change_stream_document_key_names_the_customer`. The delete event of bob's document 1 has `documentKey: {_id: 1}` (MEASURED). The founder's rule is "like MongoDB sharded collections", and mongod puts the shard key in `documentKey` for those. Why it matters: a consumer (a cache, a search index, an agent's memory) cannot tell bob's delete from alice's document 1, so it deletes or overwrites the wrong one. The same key is also what defect 1 needs to look up the right document. Cause: `cmd_changes.rs:210` writes `{_id}` only.
+3. `test_same_string_id_under_two_customers_in_a_collated_collection`. In a collection with a default collation, `{_id: "doc-1", u: "bob"}` is refused with 11000 when alice already holds `"doc-1"` (MEASURED). This breaks the done-means "the same `_id` under two customers is accepted". Why it matters: the application's write fails. The owner's report lists it as a known limit ("stricter than the founder's rule"), but nobody decided it, and the contract does not allow it. Cause: the collation `_id` index (`idc/`) is still one per collection.
 
-## Judge (`judge/run.sh fast` on 91414a6, MEASURED)
+A fix for 1 and 2 would be: put the customer field (and the time field, if any) into `documentKey`, as mongod does for a shard key, and do the lookup by the full key. A fix for 3 would be: key `idc/` per customer too, or else the coordinator and founder decide to refuse `customerKey` together with a default collation (that is a design change, not the reviewer's call).
 
-Same verdict as the owner's: build PASS; unit FAIL only `counter::tests::rev_maps_leave_room_for_active_data`;
-diff-py and diff-node FAIL only `bucketauto.infinity` (412/413 each); ctl FAIL only test_05_erase (above); kill PASS
-(0 lost). All match integration's known failures. The 3 failures of the owner's customer-key stress run
-(`cs.delete_many`, `bucketauto.POWERSOF2.decimal_special`, `bucketauto.infinity`): MEASURED, also fail with the
-integration binary.
+## What I re-ran (the prompt's list)
 
-## Do the tests measure what they claim?
+- `judge/run.sh fast` on 660d46e: build PASS; unit 114 passed, 1 failed (`counter::tests::rev_maps_leave_room_for_active_data`, known on `integration`); diff-py 412/413 and diff-node 412/413 (only `bucketauto.infinity`, known); ctl PASS (3 files); kill PASS (MEASURED, `judge/out/660d46e/VERDICT-FAST.md`). Identical to the owner's verdict on 51b9a90.
+- Diff suites with customer keys on and `--envelopes write` (`bench/c2-step2/diff_keys.sh`, every test): diff-py 4,124/4,127, with the same three differences as the owner (`cs.delete_many`, `bucketauto.POWERSOF2.decimal_special`, `bucketauto.infinity`) (MEASURED). diff-node: see the section "diff-node and Mastra" below.
+- Agent adapter suites, with customer keys declared on the adapters' collections and `--envelopes write` (MEASURED): LangGraph saver 146 passed, 0 failed; LangGraph store 29 passed, 3 failed (all three `$vectorSearch`, Atlas-only, also errors on mongod); LangGraph JS 123/0; OpenAI Agents 72/0; LlamaIndex 18/0; Mem0 23/0. Customer-first documents written: 61, 201, 10, 0, 34, 0, and envelope rows read in every suite that reached the server. The OpenAI Agents and Mem0 suites fake the driver, so 0 documents reach the server (as the owner says). I did not re-run the end-to-end loops (50 users × 200 turns): too long next to the rest. That is UNKNOWN from me; the owner's numbers stand on their own.
+- First-course `stress.py`, 60 rounds, 40 users, against mongod: 2,574 checks, 0 wrong, 0 differing from mongod, with `--envelopes read` and with `--envelopes write` (MEASURED).
+- Two-release rollback (`test_45`) with my own builds of E0 (5a17ea9) and `compaction` (a7890b3): 2 passed. The E0 binary reads everything E1 wrote, and the old binary fails with "Malformed BSON bytes" (MEASURED).
+- The delivered ctl tests: test_44 5/5, test_42_customer_compaction 3/3, test_42_unique_txn 33/33, test_42s 28/28, test_42b 12/12. test_43 5/6: the failure is `test_a_refused_fork_leaves_no_object_of_its_target`, known on `integration` (MEASURED).
+- The merge of `fix-unique-txn`: `test_42r_review_unique_build` fails here with its own guard ("the build finished before the writes: raise DOCS"). It fails the same way on my build of the `fix-unique-txn` tip (bc49e06) and on `compaction`, so it is the test's timing in this sandbox, not the merge. With `DOCS = 30000`, the delivered binary passes, and the `compaction` binary leaves 2 documents with the "unique" value (MEASURED). So the fix survived the merge, and the test still detects the hole. NOTE: raise DOCS in that test.
 
-- **Cold-read bench (contract point 2).** Re-run at 2 GB, 20,000 customers (`review-2026-11-06/`), MEASURED: default
-  settings mean 2.46 / 2.27 GETs, max 5 (owner: 2.8, max 7). The GET meter is right: over 300 finds, server meter
-  1,631 vs MinIO's own getobject counter 1,630. But the measure is not of a cold find: the 256 MiB block cache keeps
-  the data blocks read by the 300 warm-up finds (the bench says only indexes and filters are warm), and neighbouring
-  customers share 64 KiB blocks. A mean below the number of sorted runs (3 here) shows it. With data blocks cold
-  (`--block-cache-mb 1`), MEASURED here: mean 5.38, p95 6, max 7 (3 sorted runs); the owner's 4-run dataset: mean
-  6.5-7.1, max 9 (6 of 400 finds over 8, DECLARED). So "at most 8" holds or not depending on how many runs the data has
-  at that moment; 8 GB was not measured (DECLARED); ESTIMATED one more run per 4x of data, so about 2 GETs more at 8 GB.
-  NOTE, not a fix (no deterministic failing test), but the contract's point 2 is not proven for a cold find.
-- `test_index_matches_documents_during_compaction`: readers hold the customer's lock, so no read ever overlaps a write
-  or a move of that customer; it checks consistency between writes, not during them. I probed the during part
-  (MEASURED, 30-40 s each, 4 movers): collection scans, counts and `$natural` during 2,365 moves: 0 wrong of 410;
-  index range scans during 2,783 moves: 0 duplicates or misses in 538; `find_one({_id})` on one document moved 4,092
-  times: 0 misses.
-- `loadtest/test_open_gc.py` (prints read violations, never fails): run with `--customer-key c=v` (every update moves
-  the document), 2 trials x 60 s, MEASURED: 69,468 reads checked, 0 missing, 0 stale, 0 lost inserts or updates, both
-  kills inside a cleanup pass. It hides no defect here; it should still fail on violations (judge gap, not this branch).
-- Moves inside transactions (commit, abort), unique secondary index across a move, collation `_id` with a customer
-  key: behave as without the key (MEASURED, probes).
+## What I attacked and could not break (the 9 passing tests, MEASURED)
 
-## Notes (never block)
+- Range reads cut across the mapped and plain key spaces: 25 query shapes, run on a customer-keyed collection (with and without the time field) and on the same data in a plain collection, give equal answers. They cover ascending and descending sorts, limits, skips, hints on `_id_`, on an index led by the customer field and on one not led by it, `_id` ranges and `$in`, and customers that are arrays, missing, null or numbers, after moves between customers and in time and after deletes. Counts, distinct and `validate` agree too.
+- Rename within a database and across databases, an index dropped and rebuilt, `$out`, drop and re-create of the same name, `convertToCapped`, `cloneCollectionAsCapped` and capped eviction: all equal the plain control.
+- `_id` per customer in index builds and upserts: a unique co-located index refuses a build over a value one customer holds twice, and accepts it across customers. A unique index not led by the customer stays unique across customers. An upsert by `_id` alone updates one document and inserts none, and `updateMany` reaches both. 6 threads × 40 concurrent upserts of one (customer, `_id`) leave one document with n = 240. In transactions, upserts of one `_id` under two customers both commit, and under one customer at most one commits.
+- Envelopes against export and PITR: a database written by E0 (restore point P0), then by E1 (marker, envelopes, delete envelopes; restore point P1). The export holds exactly the documents. A restore to P0, a past without a marker going into a live database with one, gives P0's state, and writes after it read back. A restore to P1 gives P1's state.
+- Forks across the envelope boundary (round-2 note on E_env), modes `copy` and `clone`: a database without a marker, forked by an E1 process, then the fork and the source both written with envelopes. Each reads its own model after a close and reopen, and a fork of the enveloped source reads the source. The owner's argument holds: the marker lives inside the database, so a clone from before it has none.
 
-- Rule 18 (one snapshot per read): an `_id` read goes locator, then document, as two reads with up to 3 retries if the
-  document moved in between (and `moved_doc` once). Not a snapshot; no wrong answer seen (above).
-- The cleanup keeps the outputs of unfinished or uncommitted compactions (`Compacted` counts as active): a resumed job
-  of the separate worker cannot point at deleted SSTs. Checked by reading slatedb 0.17 and `gc_tenant_ssts`.
-- `stop_once` ignores a worker `stop` that times out; after `stop_limit` the runner is aborted and the worker's tasks may
-  live on until their store request ends (as for the compactor before). No test shows harm.
-- Contract point 1 was shown on the stress suite with the key on for some collections (63,076 documents written customer
-  first, 2,249 locator lookups, DECLARED); the natural run had 1 locator lookup.
+## Notes (risks, not failing tests; they do not block)
+
+- Reads across customers: a scan of a whole customer-keyed collection, or of a co-located index without a customer equality, opens a new iterator up to twice per customer. The owner states it. At 1 TB with millions of customers, a collection scan or an unindexed query costs millions of iterator opens (ESTIMATED; it does not scale per CLAUDE.md's principle). Step 3's merged reader should avoid it, or the planner should say so.
+- `prefetch.rs` scans logical keys (`idx/...`, `doc/...`) in the physical store. For customer-keyed collections it now warms nothing: the GETs are wasted, and the results stay correct (code reading).
+- `moved_doc` (`coll.rs:343`): during a concurrent move, if the document was deleted rather than moved and exactly one other customer holds its `_id`, a read through an index fetches that other customer's document. The caller re-applies the filter, so the risk is a duplicate or a foreign document only when it also matches (code reading; a race, I could not make it deterministic).
+- `ReadView::segs_for` lists every collection and index of the database on each range read whose bounds do not tell the area. That is a cost on databases with many collections (code reading, not measured).
+- A follower in another process (warm spare) reads E_env only when it opens. The owner states this; E1 must stay off until step 3 carries E_env in the manifest. I agree.
+- Arrays as customer values are accepted. MongoDB refuses them in shard keys. `{u: "a"}` and `{u: ["a"]}` are then two customers that both match `{u: "a"}`, each with its own `_id` space. That is a product choice for the coordinator.
+- Not re-run by me: the adapters' end-to-end loops, and a SlateDB sorted-run compaction between the two releases (the owner marks that UNKNOWN too).
+
+## Corrections for fenvix-brain
+
+- None to the owner's report beyond the three defects above. Its section 4 already names defect 3 as a limit, but it should have been a stop: the done-means says "accepted".
