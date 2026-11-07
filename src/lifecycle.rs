@@ -616,7 +616,9 @@ impl Lifecycle {
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
         let scope = writer_scope(&id);
-        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope })
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None };
+        t.load_env().await?;
+        Ok(t)
     }
 
     pub fn new(counting: Arc<CountingStore>, queue: Option<Arc<CompactionQueue>>) -> Arc<Self> {
@@ -661,7 +663,9 @@ impl Lifecycle {
         let l0_at_wake = reader.manifest().l0().len();
         let reader = Arc::new(reader);
         READER_DBS.lock().unwrap().insert(id.clone(), Arc::downgrade(&reader));
-        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope })
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None };
+        t.load_env().await?;
+        Ok(t)
     }
 }
 
@@ -864,6 +868,8 @@ pub struct Tenant {
     pub l0_at_wake: usize,
     /// Cache scope of the reader or writer (kept by the upgrade to a writer, see [`writer_builder_in`]).
     scope: Option<u64>,
+    /// E_env, the sequence number of the envelope marker (`envelope.rs`); `None`: no marker, every row is plain.
+    env: Option<u64>,
 }
 
 impl Tenant {
@@ -893,20 +899,51 @@ impl Tenant {
     }
 
     pub async fn get<K: AsRef<[u8]> + Send>(&self, key: K) -> Result<Option<Bytes>> {
-        Ok(match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
-            Mode::Reader(r) => r.get(key).await?,
-            Mode::Writer(db) => db.get(key).await?,
-        })
+        if self.env.is_none() {
+            return Ok(match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
+                Mode::Reader(r) => r.get(key).await?,
+                Mode::Writer(db) => db.get(key).await?,
+            });
+        }
+        let kv = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
+            Mode::Reader(r) => r.get_key_value(key).await?,
+            Mode::Writer(db) => db.get_key_value(key).await?,
+        };
+        match kv {
+            Some(kv) => crate::envelope::decode(self.env, &kv.key, kv.seq, kv.value),
+            None => Ok(None),
+        }
+    }
+
+    /// E_env of this database (`envelope.rs`): `None` when it has no envelope marker.
+    pub fn envelope_seq(&self) -> Option<u64> {
+        self.env
+    }
+
+    /// Read the envelope marker (at open and after an upgrade).
+    async fn load_env(&mut self) -> Result<()> {
+        let kv = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
+            Mode::Reader(r) => r.get_key_value(crate::envelope::MARKER).await?,
+            Mode::Writer(db) => db.get_key_value(crate::envelope::MARKER).await?,
+        };
+        self.env = kv.map(|kv| kv.seq);
+        Ok(())
     }
 
     /// Like [`Tenant::get`], but a writer only returns data that is already in a durable WAL object or SST, not
     /// writes that are staged and waiting for their flush (a reader's data is always durable).
     pub async fn get_durable<K: AsRef<[u8]> + Send>(&self, key: K) -> Result<Option<Bytes>> {
         Ok(match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
-            Mode::Reader(r) => r.get(key).await?,
+            Mode::Reader(r) => match r.get_key_value(key).await? {
+                Some(kv) => crate::envelope::decode(self.env, &kv.key, kv.seq, kv.value)?,
+                None => None,
+            },
             Mode::Writer(db) => {
                 let opts = slatedb::config::ReadOptions { durability_filter: slatedb::config::DurabilityLevel::Remote, ..Default::default() };
-                db.get_with_options(key, &opts).await?
+                match db.get_key_value_with_options(key, &opts).await? {
+                    Some(kv) => crate::envelope::decode(self.env, &kv.key, kv.seq, kv.value)?,
+                    None => None,
+                }
             }
         })
     }
@@ -959,6 +996,7 @@ impl Tenant {
         let db = db?;
         writer_opened(&self.id, &db);
         self.mode = Some(Mode::Writer(db));
+        self.load_env().await?;
         self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
         Ok(())
     }
@@ -990,7 +1028,9 @@ impl Tenant {
         };
         let mut out = Vec::new();
         while let Some(kv) = it.next().await? {
-            out.push((kv.key, kv.value));
+            if let Some(v) = crate::envelope::decode(self.env, &kv.key, kv.seq, kv.value)? {
+                out.push((kv.key, v));
+            }
         }
         Ok(out)
     }
@@ -1016,11 +1056,17 @@ impl Tenant {
     /// Key/value pairs with `start <= key < end` (`end == None`: to the end of the keyspace), at most `limit`,
     /// ascending or descending. `read_ahead` is the bytes fetched per request (small for short index scans).
     pub async fn scan_range(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
+        self.scan_range_at(start, end, reverse, limit, read_ahead, false).await
+    }
+
+    /// [`Tenant::scan_range`]; `durable`: a writer returns only durable data (see [`Tenant::get_durable`]).
+    pub async fn scan_range_at(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize, durable: bool) -> Result<Vec<(Bytes, Bytes)>> {
         let opts = slatedb::config::ScanOptions {
             read_ahead_bytes: read_ahead,
             max_fetch_tasks: crate::tiered::scan_fetch_tasks(read_ahead),
             cache_blocks: true,
             order: if reverse { slatedb::IterationOrder::Descending } else { slatedb::IterationOrder::Ascending },
+            durability_filter: if durable { slatedb::config::DurabilityLevel::Remote } else { slatedb::config::DurabilityLevel::Memory },
             ..Default::default()
         };
         if let Some(e) = end {
@@ -1039,7 +1085,8 @@ impl Tenant {
         };
         let mut out = Vec::new();
         while let Some(kv) = it.next().await? {
-            out.push((kv.key, kv.value));
+            let Some(v) = crate::envelope::decode(self.env, &kv.key, kv.seq, kv.value)? else { continue };
+            out.push((kv.key, v));
             if limit.map(|l| out.len() >= l).unwrap_or(false) {
                 break;
             }
@@ -1064,9 +1111,20 @@ impl Tenant {
         }
         self.upgrade().await?;
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
+        if self.env.is_none() && crate::envelope::START.load(std::sync::atomic::Ordering::Relaxed) {
+            // release E1: the marker alone in its own batch; its sequence number is E_env, and every later row of this
+            // database is an envelope (`envelope.rs`)
+            let mut m = slatedb::WriteBatch::new();
+            m.put(crate::envelope::MARKER, b"E1");
+            let h = db.write(m).await?;
+            self.env = Some(h.seqnum());
+        }
         let mut batch = slatedb::WriteBatch::new();
+        let enveloped = self.env.is_some();
         for op in ops {
             match op {
+                Op::Put(k, v) if enveloped && k != crate::envelope::MARKER => batch.put(k, crate::envelope::live(v)),
+                Op::Delete(k) if enveloped && k != crate::envelope::MARKER => batch.put(k, crate::envelope::dead()),
                 Op::Put(k, v) => batch.put(k, v),
                 Op::Delete(k) => batch.delete(k),
             }
@@ -1080,6 +1138,9 @@ impl Tenant {
     pub async fn put(&mut self, key: &str, value: &[u8]) -> Result<WriteHandle> {
         self.upgrade().await?;
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
+        if self.env.is_some() {
+            return Ok(db.put(key, crate::envelope::live(value.to_vec())).await?);
+        }
         Ok(db.put(key, value).await?)
     }
 

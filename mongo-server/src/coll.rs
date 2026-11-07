@@ -15,7 +15,7 @@ use crate::layout::{doc_key, doc_prefix, encode_sortable};
 use crate::query::matches;
 use bson::{Bson, Document};
 use bytes::Bytes;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 use tenant_bench::lifecycle::Op;
 
@@ -341,17 +341,17 @@ async fn docs_by_ids(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Docu
 /// changed after the entry was read, and it moved. The locator (`_id` -> current suffix) finds it where it is now, so a
 /// read through an index does not miss a document that a concurrent update moved to another customer.
 async fn moved_doc(g: &mut impl Rd, coll: &str, suffix: &[u8]) -> R<Option<Document>> {
-    let Some(&n) = suffix.first() else { return Ok(None) };
-    if crate::custkey::of(g, coll).await?.is_none() || suffix.len() <= 1 + n as usize {
+    let Some(key) = crate::custkey::of(g, coll).await? else { return Ok(None) };
+    let Some((_, id_enc)) = crate::custkey::split_dsuf(suffix, key.order.is_some()) else { return Ok(None) };
+    // every customer holding this `_id` (it is unique per customer only): the document moved if exactly one other place
+    // holds it now (with two or more, the moved one cannot be told apart, and none is returned)
+    let lp = crate::custkey::loc_id_prefix(coll, id_enc);
+    let rows = g.scan_range(&lp, prefix_end(&lp).as_deref(), false, Some(3), 4096).await?;
+    let now: Vec<&Bytes> = rows.iter().map(|(_, v)| v).filter(|v| v.as_ref() != suffix).collect();
+    if now.len() != 1 || rows.len() != 1 {
         return Ok(None);
     }
-    let mut lk = crate::custkey::loc_prefix(coll);
-    lk.extend(&suffix[1 + n as usize..]);
-    let Some(now) = g.get(&lk).await? else { return Ok(None) };
-    if now.as_ref() == suffix {
-        return Ok(None);
-    }
-    Ok(match g.get(&[doc_prefix(coll), now.to_vec()].concat()).await? {
+    Ok(match g.get(&[doc_prefix(coll), now[0].to_vec()].concat()).await? {
         Some(v) => Some(decode(&v)?),
         None => None,
     })
@@ -488,6 +488,8 @@ enum IdRes {
     Found(Vec<u8>),
     /// No document has an `_id` equal to it.
     Absent,
+    /// Customer-keyed collection: several customers hold this `_id` (`_id` is unique per customer), stored under these.
+    Many(Vec<Vec<u8>>),
     /// The query's collation is not the one that decides which `_id`s are equal: every document is a candidate.
     Scan,
 }
@@ -495,25 +497,40 @@ enum IdRes {
 async fn resolve_id(g: &mut impl Rd, coll: &str, id: &Bson, ov: Option<&Overlay>) -> R<IdRes> {
     match resolve_id_collated(g, coll, id, ov).await? {
         IdRes::Direct => match crate::custkey::of(g, coll).await? {
-            // customer-first documents: the locator gives the document suffix
-            Some(_) => Ok(match locate(g, coll, id, ov).await? {
-                Some(suf) => IdRes::Found(suf),
-                None => IdRes::Absent,
-            }),
+            // customer-keyed documents: the locators give the document suffix under every customer holding the `_id`
+            Some(_) => {
+                let mut sufs = locate(g, coll, id, ov).await?;
+                Ok(match sufs.len() {
+                    0 => IdRes::Absent,
+                    1 => IdRes::Found(sufs.pop().unwrap()),
+                    _ => IdRes::Many(sufs),
+                })
+            }
             None => Ok(IdRes::Direct),
         },
         r => Ok(r),
     }
 }
 
-/// The document suffix of `_id` in a customer-keyed collection, from the overlay of the write set, then the locator.
-async fn locate(g: &mut impl Rd, coll: &str, id: &Bson, ov: Option<&Overlay>) -> R<Option<Vec<u8>>> {
-    let lk = crate::custkey::loc_key(coll, id);
+/// The document suffixes of `_id` in a customer-keyed collection (one per customer holding it), from the locators: the
+/// latest state, then the overlay of the write set on top.
+async fn locate(g: &mut impl Rd, coll: &str, id: &Bson, ov: Option<&Overlay>) -> R<Vec<Vec<u8>>> {
+    let lp = crate::custkey::loc_id_prefix(coll, &encode_sortable(id));
     crate::custkey::LOCATOR_LOOKUPS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    if let Some(v) = ov.and_then(|m| m.get(&lk)) {
-        return Ok(v.as_ref().and_then(loc_suffix));
+    let mut found: BTreeMap<Vec<u8>, Vec<u8>> = g.scan_range(&lp, prefix_end(&lp).as_deref(), false, None, 4096).await?.into_iter().map(|(k, v)| (k.to_vec(), v.to_vec())).collect();
+    if let Some(m) = ov {
+        for (k, v) in m.iter().filter(|(k, _)| k.starts_with(&lp)) {
+            match v.as_ref().and_then(loc_suffix) {
+                Some(suf) => {
+                    found.insert(k.clone(), suf);
+                }
+                None => {
+                    found.remove(k);
+                }
+            }
+        }
     }
-    Ok(g.get(&lk).await?.map(|v| v.to_vec()))
+    Ok(found.into_values().collect())
 }
 
 /// The document suffix an overlay entry of a locator holds.
@@ -610,6 +627,7 @@ impl<'p> PlanIds<'p> {
                         Plan::Id(id) => match resolve_id(g, coll, id, None).await? {
                             IdRes::Direct => ids.push(encode_sortable(id)),
                             IdRes::Found(enc) => ids.push(enc),
+                            IdRes::Many(encs) => ids.extend(encs),
                             IdRes::Absent => {}
                             IdRes::Scan => self.cur = Some(IdSource::Docs(doc_prefix(coll))),
                         },
@@ -696,7 +714,7 @@ async fn sort_candidates(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], plan
     let (buffer_ids, chunk_ids, scan_after) = sort_chunks();
     let prefix = doc_prefix(coll);
     let ckey = crate::custkey::of(g, coll).await?;
-    let in_ov = |d: &Document| !ov_keys.is_empty() && ov_keys.contains(&crate::custkey::doc_key(coll, ckey.as_deref(), d));
+    let in_ov = |d: &Document| !ov_keys.is_empty() && ov_keys.contains(&crate::custkey::doc_key(coll, ckey.as_ref(), d));
     let mut src = PlanIds::new(plan);
     let mut buf: Vec<Vec<u8>> = Vec::new();
     let mut seen: HashSet<Vec<u8>> = HashSet::new();
@@ -1076,12 +1094,13 @@ async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &
 /// [`find_docs_inner`] with the plan chosen.
 async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>, plan: Plan) -> R<(Vec<Document>, Stats, Plan)> {
     let mut plan = plan;
-    let mut id_lookup: Option<Vec<u8>> = None;
+    let mut id_lookup: Option<Vec<Vec<u8>>> = None;
     let mut id_absent = false;
     if let Plan::Id(id) = &plan {
         match resolve_id(g, coll, id, o.ov).await? {
             IdRes::Direct => {}
-            IdRes::Found(enc) => id_lookup = Some(enc),
+            IdRes::Found(enc) => id_lookup = Some(vec![enc]),
+            IdRes::Many(encs) => id_lookup = Some(encs),
             IdRes::Absent => id_absent = true,
             IdRes::Scan => plan = Plan::Coll { reverse: false },
         }
@@ -1136,43 +1155,42 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
         Plan::Id(_) if id_absent => {}
         Plan::Id(id) => {
             stats.keys = 1;
-            let k = match &id_lookup {
-                Some(enc) => {
-                    let mut k = prefix.clone();
-                    k.extend(enc);
-                    k
-                }
-                None => doc_key(coll, id),
+            let keys: Vec<Vec<u8>> = match &id_lookup {
+                Some(encs) => encs.iter().map(|enc| [prefix.as_slice(), enc.as_slice()].concat()).collect(),
+                None => vec![doc_key(coll, id)],
             };
-            if !ov_keys.contains(&k) {
-                let mut v = g.get(&k).await?;
-                if v.is_none() && id_lookup.is_some() {
-                    // a customer-keyed document that moved (its customer changed) after the locator was read: the
-                    // locator, read again, gives where it is now
-                    if let Plan::Id(id) = &plan {
-                        for _ in 0..3 {
-                            match locate(g, coll, id, o.ov).await? {
-                                Some(now) if [prefix.as_slice(), now.as_slice()].concat() != k => {
-                                    v = g.get(&[prefix.as_slice(), now.as_slice()].concat()).await?;
-                                    if v.is_some() {
-                                        break;
-                                    }
-                                }
-                                _ => break,
-                            }
-                        }
+            let mut tried: HashSet<Vec<u8>> = HashSet::new();
+            let mut docs: Vec<Document> = Vec::new();
+            let mut pending = keys;
+            // a customer-keyed document that moved (its customer or time changed) after the locators were read: the
+            // locators, read again, give where it is now (at most 3 rounds)
+            for round in 0..4 {
+                let mut missed = false;
+                for k in std::mem::take(&mut pending) {
+                    if !tried.insert(k.clone()) || ov_keys.contains(&k) {
+                        continue;
+                    }
+                    match g.get(&k).await? {
+                        Some(v) => docs.push(decode(&v)?),
+                        None => missed = true,
                     }
                 }
-                if let Some(v) = v {
-                    stats.docs = 1;
-                    let d = decode(&v)?;
-                    if visible(&d, o) && matches(&d, o.filter)? {
-                        match topk.as_mut() {
-                            Some(t) => t.push(d),
-                            None => {
-                                charge(&mut sort_bytes, &d)?;
-                                out.push(d)
-                            }
+                if !missed || id_lookup.is_none() || round == 3 {
+                    break;
+                }
+                pending = locate(g, coll, id, o.ov).await?.into_iter().map(|enc| [prefix.as_slice(), enc.as_slice()].concat()).filter(|k| !tried.contains(k)).collect();
+                if pending.is_empty() {
+                    break;
+                }
+            }
+            for d in docs {
+                stats.docs += 1;
+                if visible(&d, o) && matches(&d, o.filter)? {
+                    match topk.as_mut() {
+                        Some(t) => t.push(d),
+                        None => {
+                            charge(&mut sort_bytes, &d)?;
+                            out.push(d)
                         }
                     }
                 }
@@ -1236,7 +1254,7 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
                     stats.docs += 1;
                     let mut d = stored;
                     if !ov_keys.is_empty() {
-                        let k = crate::custkey::doc_key(coll, ckey.as_deref(), &d);
+                        let k = crate::custkey::doc_key(coll, ckey.as_ref(), &d);
                         let mut rk = b"reins/".to_vec();
                         rk.extend(&k);
                         if o.ov.map(|m| m.contains_key(&rk)).unwrap_or(false) {
@@ -1378,7 +1396,7 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
             let docs = docs_by_ids(g, coll, &ids).await?;
             stats.docs += docs.len();
             for d in docs {
-                if !ov_keys.is_empty() && ov_keys.contains(&crate::custkey::doc_key(coll, ckey.as_deref(), &d)) {
+                if !ov_keys.is_empty() && ov_keys.contains(&crate::custkey::doc_key(coll, ckey.as_ref(), &d)) {
                     continue;
                 }
                 if visible(&d, o) && matches(&d, o.filter)? {
@@ -1500,7 +1518,8 @@ impl Writes {
     /// Current version of a document: this write set first, then the store.
     pub async fn get(&self, g: &mut Entry, coll: &str, id: &Bson) -> R<Option<Document>> {
         let k = match crate::custkey::of(g, coll).await? {
-            Some(_) => match locate(g, coll, id, Some(&self.ov)).await? {
+            // (the first customer holding this `_id`)
+            Some(_) => match locate(g, coll, id, Some(&self.ov)).await?.into_iter().next() {
                 Some(suf) => [doc_prefix(coll), suf].concat(),
                 None => return Ok(None),
             },
@@ -1515,17 +1534,17 @@ impl Writes {
         })
     }
 
-    /// Does a document with this `_id` exist now (latest committed state plus this write set)?
-    pub async fn exists(&self, g: &mut Entry, coll: &str, id: &Bson) -> R<bool> {
-        if crate::custkey::of(g, coll).await?.is_some() {
-            // the locator is the unique `_id` index of a customer-keyed collection
-            let lk = crate::custkey::loc_key(coll, id);
+    /// Does a document with the `_id` of `d` exist now (latest committed state plus this write set)? In a customer-keyed
+    /// collection: under the customer of `d` (`_id` is unique per customer, `custkey.rs`).
+    pub async fn exists(&self, g: &mut Entry, coll: &str, d: &Document) -> R<bool> {
+        let id = d.get("_id").unwrap_or(&Bson::Null);
+        if let Some(key) = crate::custkey::of(g, coll).await? {
+            // the locator is the per-customer unique `_id` index of a customer-keyed collection
+            let lk = crate::custkey::loc_key_of(coll, &key, d);
             if let Some(v) = self.ov.get(&lk) {
                 return Ok(v.is_some());
             }
-            if g.get_live(&lk).await?.is_some() {
-                return Ok(true);
-            }
+            return Ok(g.get_live(&lk).await?.is_some());
         }
         let k = doc_key(coll, id);
         if let Some(v) = self.ov.get(&k) {
@@ -1587,12 +1606,12 @@ impl Writes {
         let id = new.get("_id").cloned().ok_or_else(|| MongoError::internal("document without _id".into()))?;
         // the document suffix: the `_id` encoding, after the customer component in a customer-keyed collection
         let ckey = crate::custkey::for_write(g, ns, coll).await?;
-        let id_enc = crate::custkey::dsuf(ckey.as_deref(), new);
+        let id_enc = crate::custkey::dsuf(ckey.as_ref(), new);
         if ckey.is_some() {
             crate::custkey::DOCS_WRITTEN.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         }
         // an update that changes the customer moves the document (and its index entries) to the new customer's place
-        let old_enc = old.map(|o| crate::custkey::dsuf(ckey.as_deref(), o)).filter(|e| *e != id_enc);
+        let old_enc = old.map(|o| crate::custkey::dsuf(ckey.as_ref(), o)).filter(|e| *e != id_enc);
         if !self.quiet && !self.bypass_validation && !coll.starts_with("system.") {
             if let Some(v) = g.validator_of(coll) {
                 self.validate_document(g, &v, new, old)?;
@@ -1602,21 +1621,32 @@ impl Writes {
         if let Some(oe) = &old_enc {
             self.check_conflict(g, &[doc_prefix(coll), oe.clone()].concat())?;
         }
-        if ckey.is_some() && (old.is_none() || old_enc.is_some()) {
-            // the locator is the unique `_id` index: it is locked like a document key, so two writers of one `_id`
-            // for two customers conflict (review of 91414a6)
-            self.check_conflict(g, &crate::custkey::loc_key(coll, &id))?;
-        }
-        if old.is_none() && ckey.is_some() {
-            // the locator is the unique `_id` index: another customer may hold this `_id`
-            let lk = crate::custkey::loc_key(coll, &id);
-            let taken = match self.ov.get(&lk) {
-                Some(v) => v.is_some(),
-                None => g.get_live(&lk).await?.is_some(),
-            };
-            if taken {
-                return Err(MongoError::duplicate_key_c(ns, "_id_", &bson::doc! { "_id": 1 }, &bson::doc! { "_id": id.clone() }, g.collation_of(coll).as_deref()));
+        // the locator `loc/{coll}/{_id}{customer}` is the per-customer unique `_id` index of a customer-keyed collection
+        // (custkey.rs): it is locked like a document key, so two writers of one `_id` for the same customer conflict, and
+        // writers for two customers do not
+        let new_lk = ckey.as_ref().map(|k| crate::custkey::loc_key_of(coll, k, new));
+        let old_lk = match (ckey.as_ref(), old) {
+            (Some(k), Some(o)) => Some(crate::custkey::loc_key_of(coll, k, o)),
+            _ => None,
+        };
+        let moved_customer = old_lk.is_some() && old_lk != new_lk;
+        if let Some(lk) = &new_lk {
+            if old.is_none() || old_enc.is_some() {
+                self.check_conflict(g, lk)?;
             }
+            if old.is_none() || moved_customer {
+                // the customer may already hold this `_id`
+                let taken = match self.ov.get(lk) {
+                    Some(v) => v.is_some(),
+                    None => g.get_live(lk).await?.is_some(),
+                };
+                if taken {
+                    return Err(MongoError::duplicate_key_c(ns, "_id_", &bson::doc! { "_id": 1 }, &bson::doc! { "_id": id.clone() }, g.collation_of(coll).as_deref()));
+                }
+            }
+        }
+        if moved_customer {
+            self.check_conflict(g, old_lk.as_ref().unwrap())?;
         }
         let is_self = |owner: &[u8]| owner == id_enc.as_slice() || old_enc.as_deref() == Some(owner);
         let mut plans: Vec<(usize, Vec<Vec<u8>>, Vec<Vec<u8>>, bool)> = Vec::new(); // (idx, to_add, to_remove, multikey)
@@ -1726,10 +1756,16 @@ impl Writes {
                 self.ops.push(Op::Put(crate::collopts::idc_key(coll, &c, &id), id_enc.clone()));
             }
         }
-        if ckey.is_some() && (old.is_none() || old_enc.is_some()) {
-            let lk = crate::custkey::loc_key(coll, &id);
-            self.ops.push(Op::Put(lk.clone(), id_enc.clone()));
-            self.ov.insert(lk, Some(loc_overlay(&id_enc)));
+        if let Some(lk) = &new_lk {
+            if old.is_none() || old_enc.is_some() {
+                self.ops.push(Op::Put(lk.clone(), id_enc.clone()));
+                self.ov.insert(lk.clone(), Some(loc_overlay(&id_enc)));
+            }
+        }
+        if moved_customer {
+            let ol = old_lk.clone().unwrap();
+            self.ops.push(Op::Delete(ol.clone()));
+            self.ov.insert(ol, None);
         }
         let mut bytes = new.to_vec()?;
         let seq = match old {
@@ -1864,11 +1900,11 @@ impl Writes {
             e.1 -= old.to_vec()?.len() as i64;
         }
         let ckey = crate::custkey::of(g, coll).await?;
-        let id_enc = crate::custkey::dsuf(ckey.as_deref(), old);
+        let id_enc = crate::custkey::dsuf(ckey.as_ref(), old);
         let k = [doc_prefix(coll), id_enc.clone()].concat();
         self.check_conflict(g, &k)?;
-        if ckey.is_some() {
-            let lk = crate::custkey::loc_key(coll, &id);
+        if let Some(key) = &ckey {
+            let lk = crate::custkey::loc_key_of(coll, key, old);
             self.check_conflict(g, &lk)?;
             self.ops.push(Op::Delete(lk.clone()));
             self.ov.insert(lk, None);

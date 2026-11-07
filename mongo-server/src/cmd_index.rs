@@ -589,6 +589,9 @@ impl Server {
             g = self.dbs.lock(db).await;
             indexes = g.indexes(coll).await?;
         }
+        // layout v2: an index led by the customer field is stored with the customer's documents (`custkey.rs`); a collection
+        // that `--customer-key` names takes its key now if it is still empty
+        let ckey = crate::custkey::for_write(&mut g, &ns, coll).await?;
         let default_collation = g.coll_opts(coll).await?.and_then(|o| o.collation.clone());
         let series_base = if g.coll_opts(coll).await?.map(|k| k.series.is_some()).unwrap_or(false) { 0 } else { 1 };
         let before = series_base + indexes.iter().filter(|i| !crate::special_colls::is_internal(i)).count() as i32;
@@ -779,6 +782,9 @@ impl Server {
                 return Err(MongoError::new(85, "IndexOptionsConflict", format!("An equivalent index already exists with a different name and options. Requested index: {}, existing index: {}", fmt_doc(&idx), fmt_doc(&ex.spec))));
             }
             let mut def = wanted;
+            if let Some(k) = &ckey {
+                def.colocated = !def.name.contains('\0') && crate::custkey::colocates(k, &def.key_pattern(), !def.special && matches!(def.kind, crate::index::Kind::Regular), def.collation.is_some());
+            }
             if has_docs && !def.special {
                 def.state = State::Building;
                 building = true;
@@ -875,7 +881,7 @@ impl Server {
             if g.collections().await?.iter().any(|n| n == coll) {
                 let mut opts = doc! { "uuid": Bson::Binary(bson::Binary { subtype: bson::spec::BinarySubtype::Uuid, bytes: g.collection_uuid(coll).await? }) };
                 if let Some(o) = g.coll_opts(coll).await? {
-                    opts.extend(o.raw.iter().filter(|(k, _)| !matches!(k.as_str(), "capped" | "size" | "max" | "collation" | "storageEngine" | "indexOptionDefaults" | crate::custkey::RAW_KEY)).map(|(k, v)| (k.clone(), v.clone())));
+                    opts.extend(o.raw.iter().filter(|(k, _)| !matches!(k.as_str(), "capped" | "size" | "max" | "collation" | "storageEngine" | "indexOptionDefaults" | crate::custkey::RAW_KEY | crate::custkey::RAW_ORDER)).map(|(k, v)| (k.clone(), v.clone())));
                 }
                 let uuid = match opts.get("uuid") { Some(Bson::Binary(b)) => b.bytes.clone(), _ => Vec::new() };
                 Some((opts, uuid))

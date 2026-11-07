@@ -237,7 +237,7 @@ impl Server {
         if ext.show_rid {
             let ckey = crate::custkey::of(g, coll).await?;
             for d in docs.iter_mut() {
-                let key = crate::custkey::doc_key(coll, ckey.as_deref(), d);
+                let key = crate::custkey::doc_key(coll, ckey.as_ref(), d);
                 if let Some(raw) = g.get(&key).await? {
                     if let Some(seq) = crate::natural::seq_of(&raw) {
                         d.insert("$recordId", Bson::Int64(seq as i64));

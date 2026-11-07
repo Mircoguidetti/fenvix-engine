@@ -686,7 +686,8 @@ impl Entry {
             return Ok(None);
         }
         if let Some(s) = &self.snap {
-            return Ok(s.get(key).await?);
+            let env = self.tenant.as_ref().and_then(|t| t.envelope_seq());
+            return crate::layout2::get(&crate::layout2::Raw::Snap(s, env), key).await;
         }
         if META_CACHE.load(Relaxed) && is_meta_key(key) {
             if let Some(v) = self.meta_lookup(key) {
@@ -694,7 +695,34 @@ impl Entry {
             }
             return self.meta_read(self.tenant.as_ref().unwrap(), key, false).await;
         }
-        self.tenant.as_ref().unwrap().get(key).await
+        self.tenant.as_ref().unwrap().get(crate::layout2::phys(key)).await
+    }
+
+    /// The mapped areas of layout v2 (`custkey.rs`) a logical range read may cross: from its bounds when they tell,
+    /// otherwise from the catalog (the collections with a customer key and their co-located indexes).
+    async fn segs_for(&mut self, lo: &[u8], hi: Option<&[u8]>) -> Result<Vec<crate::custkey::Seg>> {
+        match crate::custkey::area_of(lo, hi) {
+            Some(Some(s)) => return Ok(vec![s]),
+            Some(None) => return Ok(vec![]),
+            None => {}
+        }
+        let only = crate::custkey::coll_of_range(lo, hi).map(|(_, esc)| esc);
+        let mut segs = Vec::new();
+        for n in self.collections().await? {
+            let esc = layout::escape_collection(&n);
+            if only.as_ref().map_or(false, |o| *o != esc) {
+                continue;
+            }
+            if crate::custkey::of_opts(self.coll_opts(&n).await?.as_ref()).is_some() {
+                segs.push(crate::custkey::Seg::docs(&esc));
+            }
+            for i in self.indexes(&n).await? {
+                if i.colocated {
+                    segs.push(crate::custkey::Seg::index(&esc, &layout::escape_collection(&i.name)));
+                }
+            }
+        }
+        Ok(segs)
     }
 
     /// Like [`Entry::get`] but always reads the latest committed state, not the command's snapshot.
@@ -710,7 +738,7 @@ impl Entry {
         if !self.ensure_open().await? {
             return Ok(None);
         }
-        self.tenant.as_ref().unwrap().get(key).await
+        self.tenant.as_ref().unwrap().get(crate::layout2::phys(key)).await
     }
 
     pub async fn scan(&mut self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
@@ -725,11 +753,8 @@ impl Entry {
         if !self.ensure_open().await? {
             return Ok(vec![]);
         }
-        if self.snap.is_some() {
-            let end = crate::keyenc::prefix_end(prefix);
-            return self.scan_range_uncounted(prefix, end.as_deref(), false, None, 4 << 20).await;
-        }
-        self.tenant.as_ref().unwrap().scan_prefix(prefix).await
+        let end = crate::keyenc::prefix_end(prefix);
+        self.scan_range_uncounted(prefix, end.as_deref(), false, None, 4 << 20).await
     }
 
     /// Apply writes atomically and durably, creating the database on its first write.
@@ -799,7 +824,8 @@ impl Entry {
                 _ => None,
             })
             .collect();
-        let staged = self.tenant.as_mut().unwrap().stage(ops).await;
+        // layout v2: customer-keyed documents and co-located index entries are stored under `u/` (custkey.rs)
+        let staged = self.tenant.as_mut().unwrap().stage(crate::layout2::phys_ops(ops)).await;
         if staged.is_ok() {
             // the counters in memory follow the latest state (`collstat.rs`)
             self.sstat.extend(sstat_ops);
@@ -1099,29 +1125,12 @@ impl Entry {
         if !self.ensure_open().await? {
             return Ok(vec![]);
         }
-        if let Some(s) = &self.snap {
-            let opts = slatedb::config::ScanOptions {
-                read_ahead_bytes: read_ahead,
-                max_fetch_tasks: tenant_bench::tiered::scan_fetch_tasks(read_ahead),
-                cache_blocks: true,
-                order: if reverse { slatedb::IterationOrder::Descending } else { slatedb::IterationOrder::Ascending },
-                ..Default::default()
-            };
-            let range = match end {
-                Some(e) => (std::ops::Bound::Included(start.to_vec()), std::ops::Bound::Excluded(e.to_vec())),
-                None => (std::ops::Bound::Included(start.to_vec()), std::ops::Bound::Unbounded),
-            };
-            let mut it = s.scan_with_options(range, &opts).await?;
-            let mut out = Vec::new();
-            while let Some(kv) = it.next().await? {
-                out.push((kv.key, kv.value));
-                if limit.map(|l| out.len() >= l).unwrap_or(false) {
-                    break;
-                }
-            }
-            return Ok(out);
+        let segs = self.segs_for(start, end).await?;
+        let t = self.tenant.as_ref().unwrap();
+        match &self.snap {
+            Some(s) => crate::layout2::scan(&crate::layout2::Raw::Snap(s, t.envelope_seq()), &segs, start, end, reverse, limit, read_ahead).await,
+            None => crate::layout2::scan(&crate::layout2::Raw::Tenant(t, false), &segs, start, end, reverse, limit, read_ahead).await,
         }
-        self.tenant.as_ref().unwrap().scan_range(start, end, reverse, limit, read_ahead).await
     }
 
     /// [`Entry::scan_range`] on the latest committed state.
@@ -1137,7 +1146,12 @@ impl Entry {
         if !self.ensure_open().await? {
             return Ok(vec![]);
         }
-        self.tenant.as_ref().unwrap().scan_range(start, end, false, limit, 4096).await
+        // (the catalog as the latest state has it, not the snapshot's)
+        let snap = self.snap.take();
+        let segs = self.segs_for(start, end).await;
+        self.snap = snap;
+        let segs = segs?;
+        crate::layout2::scan(&crate::layout2::Raw::Tenant(self.tenant.as_ref().unwrap(), false), &segs, start, end, false, limit, 4096).await
     }
 
     /// Take a snapshot for a transaction (opens the tenant as a writer) and remember the write counter.
@@ -1210,12 +1224,11 @@ impl Entry {
             return Ok(vec![None; keys.len()]);
         }
         let t = self.tenant.as_ref().unwrap();
-        if let Some(s) = &self.snap {
-            let futs: Vec<_> = keys.iter().map(|k| s.get(k.clone())).collect();
-            return Ok(futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect::<Vec<_>>().await?);
+        let par = GET_MANY_PARALLEL.load(Relaxed);
+        match &self.snap {
+            Some(s) => crate::layout2::get_many(&crate::layout2::Raw::Snap(s, t.envelope_seq()), keys, par).await,
+            None => crate::layout2::get_many(&crate::layout2::Raw::Tenant(t, false), keys, par).await,
         }
-        let futs: Vec<_> = keys.iter().map(|k| t.get(k.clone())).collect();
-        futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect().await
     }
 
     pub async fn scan_collection(&mut self, coll: &str) -> Result<Vec<Document>> {
@@ -1225,11 +1238,14 @@ impl Entry {
 
     pub async fn get_doc(&mut self, coll: &str, id: &Bson) -> Result<Option<Document>> {
         let ckey = crate::custkey::of_opts(self.coll_opts(coll).await?.as_ref());
-        // customer-first documents: the locator holds the document's suffix (read again if the document moved meanwhile)
+        // customer-keyed documents: the locators hold the document's suffix under every customer holding the `_id` (the
+        // first one is taken; read again if the document moved meanwhile)
+        let lp = crate::custkey::loc_id_prefix(coll, &layout::encode_sortable(id));
+        let lend = crate::keyenc::prefix_end(&lp);
         for _ in 0..3 {
             let key = match &ckey {
-                Some(_) => match self.get(&crate::custkey::loc_key(coll, id)).await? {
-                    Some(suf) => [layout::doc_prefix(coll), suf.to_vec()].concat(),
+                Some(_) => match self.scan_range(&lp, lend.as_deref(), false, Some(1), 4096).await?.into_iter().next() {
+                    Some((_, suf)) => [layout::doc_prefix(coll), suf.to_vec()].concat(),
                     None => return Ok(None),
                 },
                 None => layout::doc_key(coll, id),
@@ -1309,9 +1325,37 @@ impl ReadView {
 
     async fn scan_uncounted(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
+        let end = crate::keyenc::prefix_end(prefix);
+        let segs = self.segs_for(prefix, end.as_deref()).await?;
         let t = g.tenant.as_ref().unwrap();
-        let r = if durable_reads(&g.name) { t.scan_prefix_durable(prefix).await? } else { t.scan_prefix(prefix).await? };
+        let r = crate::layout2::scan(&crate::layout2::Raw::Tenant(t, durable_reads(&g.name)), &segs, prefix, end.as_deref(), false, None, 4 << 20).await?;
         self.done(r)
+    }
+
+    /// See [`Entry::segs_for`].
+    async fn segs_for(&self, lo: &[u8], hi: Option<&[u8]>) -> Result<Vec<crate::custkey::Seg>> {
+        match crate::custkey::area_of(lo, hi) {
+            Some(Some(s)) => return Ok(vec![s]),
+            Some(None) => return Ok(vec![]),
+            None => {}
+        }
+        let only = crate::custkey::coll_of_range(lo, hi).map(|(_, esc)| esc);
+        let mut segs = Vec::new();
+        for n in self.collections().await? {
+            let esc = layout::escape_collection(&n);
+            if only.as_ref().map_or(false, |o| *o != esc) {
+                continue;
+            }
+            if crate::custkey::of_opts(self.coll_opts(&n).await?.as_ref()).is_some() {
+                segs.push(crate::custkey::Seg::docs(&esc));
+            }
+            for i in self.indexes(&n).await? {
+                if i.colocated {
+                    segs.push(crate::custkey::Seg::index(&esc, &layout::escape_collection(&i.name)));
+                }
+            }
+        }
+        Ok(segs)
     }
 
     pub async fn get(&self, key: &[u8]) -> Result<Option<Bytes>> {
@@ -1332,7 +1376,7 @@ impl ReadView {
             };
             return self.done(r);
         }
-        let r = if durable_reads(&g.name) { t.get_durable(key).await? } else { t.get(key).await? };
+        let r = crate::layout2::get(&crate::layout2::Raw::Tenant(t, durable_reads(&g.name)), key).await?;
         self.done(r)
     }
 
@@ -1350,8 +1394,7 @@ impl ReadView {
             return Ok(vec![]);
         }
         let t = g.tenant.as_ref().unwrap();
-        let futs: Vec<_> = keys.iter().map(|k| t.get(k.clone())).collect();
-        let r = futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect::<Vec<_>>().await?;
+        let r = crate::layout2::get_many(&crate::layout2::Raw::Tenant(t, false), keys, GET_MANY_PARALLEL.load(Relaxed)).await?;
         self.done(r)
     }
 
@@ -1365,7 +1408,8 @@ impl ReadView {
 
     async fn scan_range_uncounted(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
-        let r = g.tenant.as_ref().unwrap().scan_range(start, end, reverse, limit, read_ahead).await?;
+        let segs = self.segs_for(start, end).await?;
+        let r = crate::layout2::scan(&crate::layout2::Raw::Tenant(g.tenant.as_ref().unwrap(), false), &segs, start, end, reverse, limit, read_ahead).await?;
         self.done(r)
     }
 
@@ -1412,11 +1456,14 @@ impl ReadView {
 
     pub async fn get_doc(&self, coll: &str, id: &Bson) -> Result<Option<Document>> {
         let ckey = crate::custkey::of_opts(self.coll_opts(coll).await?.as_ref());
-        // customer-first documents: the locator holds the document's suffix (read again if the document moved meanwhile)
+        // customer-keyed documents: the locators hold the document's suffix under every customer holding the `_id` (the
+        // first one is taken; read again if the document moved meanwhile)
+        let lp = crate::custkey::loc_id_prefix(coll, &layout::encode_sortable(id));
+        let lend = crate::keyenc::prefix_end(&lp);
         for _ in 0..3 {
             let key = match &ckey {
-                Some(_) => match self.get(&crate::custkey::loc_key(coll, id)).await? {
-                    Some(suf) => [layout::doc_prefix(coll), suf.to_vec()].concat(),
+                Some(_) => match self.scan_range(&lp, lend.as_deref(), false, Some(1), 4096).await?.into_iter().next() {
+                    Some((_, suf)) => [layout::doc_prefix(coll), suf.to_vec()].concat(),
                     None => return Ok(None),
                 },
                 None => layout::doc_key(coll, id),

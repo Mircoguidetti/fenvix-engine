@@ -128,6 +128,92 @@ pub fn invert(b: &mut [u8]) {
     }
 }
 
+/// The length of the one ascending component at the start of `b` (the inverse of [`encode`]'s framing: the encoding is
+/// prefix-free, so a component ends where its own structure says). `None` if `b` does not start with a whole component.
+/// Layout v2 (`custkey.rs`) uses it to find the customer component inside a key.
+pub fn skip(b: &[u8]) -> Option<usize> {
+    let mut i = 0;
+    skip_val(b, &mut i)?;
+    Some(i)
+}
+
+fn take(b: &[u8], i: &mut usize, n: usize) -> Option<()> {
+    if *i + n > b.len() {
+        return None;
+    }
+    *i += n;
+    Some(())
+}
+
+fn skip_escaped(b: &[u8], i: &mut usize) -> Option<()> {
+    loop {
+        let x = *b.get(*i)?;
+        *i += 1;
+        if x == 0 {
+            let y = *b.get(*i)?;
+            *i += 1;
+            match y {
+                1 => return Some(()),
+                0xFF => continue,
+                _ => return None,
+            }
+        }
+    }
+}
+
+fn skip_val(b: &[u8], i: &mut usize) -> Option<()> {
+    let rank = *b.get(*i)?;
+    *i += 1;
+    skip_body(rank, b, i)
+}
+
+fn skip_body(rank: u8, b: &[u8], i: &mut usize) -> Option<()> {
+    match rank {
+        1 | 20 => Some(()),
+        2 => take(b, i, 1),
+        3 => {
+            let x = *b.get(*i)?;
+            *i += 1;
+            if x == 1 {
+                take(b, i, 16)
+            } else {
+                Some(())
+            }
+        }
+        4 | 12 | 13 | 14 | 15 => {
+            skip_escaped(b, i)?;
+            if rank == 12 {
+                skip_escaped(b, i)?;
+            }
+            Some(())
+        }
+        5 => loop {
+            let r = *b.get(*i)?;
+            *i += 1;
+            if r == 0 {
+                return Some(());
+            }
+            skip_escaped(b, i)?;
+            skip_body(r, b, i)?;
+        },
+        6 => loop {
+            if *b.get(*i)? == 0 {
+                *i += 1;
+                return Some(());
+            }
+            skip_val(b, i)?;
+        },
+        7 => {
+            let n = u32::from_be_bytes(b.get(*i..*i + 4)?.try_into().ok()?) as usize;
+            take(b, i, 4 + 1 + n)
+        }
+        8 => take(b, i, 12),
+        9 => take(b, i, 1),
+        10 | 11 => take(b, i, 8),
+        _ => None,
+    }
+}
+
 /// Smallest byte string greater than every string that starts with `p`; `None` if there is none.
 pub fn prefix_end(p: &[u8]) -> Option<Vec<u8>> {
     let mut e = p.to_vec();
@@ -187,6 +273,27 @@ mod tests {
             Bson::DateTime(DateTime::from_millis(1_700_000_000_000)),
             Bson::MaxKey,
         ]
+    }
+
+    #[test]
+    fn skip_finds_the_end_of_every_component() {
+        let mut vals = sample();
+        vals.push(Bson::Undefined);
+        vals.push(Bson::Binary(bson::Binary { subtype: bson::spec::BinarySubtype::Generic, bytes: vec![0, 1, 2, 0] }));
+        vals.push(Bson::Timestamp(bson::Timestamp { time: 5, increment: 6 }));
+        vals.push(Bson::RegularExpression(bson::Regex { pattern: "ab".try_into().unwrap(), options: "i".try_into().unwrap() }));
+        vals.push(Bson::Document(doc! { "a": [1, { "b\0": Bson::Null }], "c": "x\0y" }));
+        vals.push(Bson::Decimal128("1.5".parse().unwrap()));
+        for v in &vals {
+            let e = encode(v);
+            assert_eq!(skip(&e), Some(e.len()), "{v:?}");
+            let mut t = e.clone();
+            t.extend([7, 0, 1, 2]);
+            assert_eq!(skip(&t), Some(e.len()), "{v:?} with a tail");
+            if e.len() > 1 {
+                assert_eq!(skip(&e[..e.len() - 1]).filter(|n| *n == e.len()), None, "{v:?} cut");
+            }
+        }
     }
 
     #[test]

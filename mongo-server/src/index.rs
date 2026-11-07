@@ -61,6 +61,9 @@ pub struct IndexDef {
     pub spec: Document,
     /// The collation of the index (its entries are the collation keys of the strings); `None` is the simple collation.
     pub collation: Option<std::sync::Arc<crate::collation::Collation>>,
+    /// Layout v2 (`custkey.rs`): the index is led by its collection's customer field, and its entries are stored with the
+    /// customer's documents. Decided when the index is created, stored with its definition (`fenvixColocated`).
+    pub colocated: bool,
 }
 
 /// Numeric value of an int / long / double.
@@ -120,7 +123,7 @@ impl IndexDef {
             State::Ready
         };
         let mut spec = stored.clone();
-        for internal in ["building", "dropping", "buildCursor", "multikey", "textKey"] {
+        for internal in ["building", "dropping", "buildCursor", "multikey", "textKey", "fenvixColocated"] {
             spec.remove(internal);
         }
         let text_key = stored.get_document("textKey").ok().cloned();
@@ -161,6 +164,7 @@ impl IndexDef {
             kind,
             text_key,
             collation: stored.get("collation").and_then(|c| crate::collation::parse(c).ok().flatten()),
+            colocated: flag("fenvixColocated"),
             spec,
         })
     }
@@ -183,6 +187,9 @@ impl IndexDef {
         if self.multikey {
             d.insert("multikey", true);
         }
+        if self.colocated {
+            d.insert("fenvixColocated", true);
+        }
         d
     }
 
@@ -201,6 +208,10 @@ impl IndexDef {
         let mut k = b"idx/".to_vec();
         k.extend(escape_collection(coll));
         k.push(b'/');
+        if self.colocated {
+            // layout v2: the entries live with the customer's documents (`custkey.rs`)
+            k.push(crate::custkey::MARK);
+        }
         k.extend(escape_collection(&self.name));
         k.push(b'/');
         k
