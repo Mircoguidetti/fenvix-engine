@@ -161,3 +161,75 @@ def test_without_the_option_nothing_is_enveloped():
             assert old.client().rb.plain.count_documents({}) == 400
         finally:
             old.term()
+
+
+E0_BEFORE_FIX = os.environ.get("E0_BEFORE_FIX_BIN")
+
+
+def _collated_check(c):
+    m = c.rb.ci
+    got = sorted((d["u"], d["_id"]) for d in m.find({"_id": "doc-1"}))
+    assert got == [("alice", "doc-1"), ("bob", "DOC-1"), ("carol", "Doc-1")], got
+    assert m.count_documents({}) == 3 + 40
+
+
+@pytest.mark.skipif(not E0, reason="E0_BIN (a build of the reading release) not set")
+def test_reading_release_reads_the_per_customer_collation_id_index():
+    """Fix round (review FIX 3): the collation `_id` index of a customer-keyed collection is per customer
+    (`custkey::idc_key_of`), a new key format. E1 writes it (inserts, a move, deletes, with envelopes); E0 must find
+    every customer holding a collation-equal `_id`, refuse one under a customer that holds it and accept one under
+    another; then E1 reads E0's writes. With `E0_BEFORE_FIX_BIN` (the E0 build before the fix round), that build is shown
+    not to read it, so E0 had to take the fix."""
+    bucket = make_bucket("envci")
+    coll_opts = dict(customerKey="u", collation={"locale": "en", "strength": 2})
+    e1 = Server(bucket, "envci-e1", idle=600, extra=["--memtable-max-mb", "1", "--envelopes", "write"]).start()
+    try:
+        c = e1.client()
+        c.rb.create_collection("ci", **coll_opts)
+        m = c.rb.ci
+        m.insert_one({"_id": "doc-1", "u": "alice"})
+        m.insert_one({"_id": "DOC-1", "u": "bob"})
+        m.insert_one({"_id": "doc-1", "u": "dave"})
+        m.update_one({"_id": "doc-1", "u": "dave"}, {"$set": {"u": "carol"}})
+        m.update_one({"_id": "doc-1", "u": "carol"}, {"$set": {"_x": 1}})
+        m.replace_one({"_id": "doc-1", "u": "carol"}, {"u": "carol"})
+        m.delete_one({"_id": "doc-1", "u": "carol"})
+        m.insert_one({"_id": "Doc-1", "u": "carol"})
+        m.insert_many([{"_id": f"s{i}", "u": f"c{i % 4}"} for i in range(40)])
+        _flush(c)
+        _collated_check(c)
+    finally:
+        e1.term()
+    if E0_BEFORE_FIX:
+        old = Server(bucket, "envci-e0old", idle=600, extra=["--memtable-max-mb", "1"], binary=E0_BEFORE_FIX).start()
+        try:
+            try:
+                _collated_check(old.client())
+                wrong, detail = False, "read correctly"
+            except Exception as e:
+                wrong, detail = True, f"{type(e).__name__}: {str(e)[:200]}"
+            print("E0 before the fix round on a per-customer collation index:", detail)
+            assert wrong, "the E0 build before the fix round read the new collation index: E0 would not need the fix"
+        finally:
+            old.term()
+    e0 = Server(bucket, "envci-e0", idle=600, extra=["--memtable-max-mb", "1"], binary=E0).start()
+    try:
+        c = e0.client()
+        _collated_check(c)
+        from pymongo.errors import DuplicateKeyError
+        with pytest.raises(DuplicateKeyError):
+            c.rb.ci.insert_one({"_id": "dOc-1", "u": "bob"})
+        c.rb.ci.insert_one({"_id": "dOc-1", "u": "erin"})
+        c.rb.ci.delete_one({"_id": "s0", "u": "c0"})
+        _flush(c)
+    finally:
+        e0.term()
+    e1 = Server(bucket, "envci-e1b", idle=600, extra=["--memtable-max-mb", "1", "--envelopes", "write"]).start()
+    try:
+        c = e1.client()
+        got = sorted(d["u"] for d in c.rb.ci.find({"_id": "DOC-1"}))
+        assert got == ["alice", "bob", "carol", "erin"], got
+        assert c.rb.ci.count_documents({}) == 3 + 40
+        assert c.rb.command("validate", "ci")["valid"]
+    finally:
+        e1.term()
