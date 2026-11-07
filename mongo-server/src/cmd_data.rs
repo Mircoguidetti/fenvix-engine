@@ -618,9 +618,11 @@ impl Server {
             events.clear();
         }
         let stat_ops = crate::collstat::ops_for(g, &mut w.stat).await?;
+        let uniq = std::mem::take(&mut w.uniq);
         let mut ops = w.final_ops()?;
         ops.extend(stat_ops);
         g.apply(ops).await?;
+        g.mark_unique(&uniq);
         if created {
             // a collection made by a write: its `create` event comes first
             let uuid = g.collection_uuid(coll).await?;
