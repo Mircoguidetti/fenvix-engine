@@ -21,7 +21,8 @@ pub static MAX_BYTES: std::sync::atomic::AtomicUsize = std::sync::atomic::Atomic
 fn est_size(s: &EvSpec) -> usize {
     let doc = |d: &Option<Document>| d.as_ref().map_or(0, |d| d.to_vec().map(|v| v.len()).unwrap_or(256));
     let key = s.doc_key.as_ref().map_or(0, |k| bson::doc! { "k": k.clone() }.to_vec().map(|v| v.len()).unwrap_or(64));
-    384 + 3 * (doc(&s.full) + doc(&s.desc) + doc(&s.pre) + doc(&s.post) + doc(&s.op_desc) + doc(&s.state_before) + key)
+    let cust = s.cust.as_ref().map_or(0, |(f, v)| f.to_vec().map(|x| x.len()).unwrap_or(64) + bson::doc! { "k": v.clone() }.to_vec().map(|x| x.len()).unwrap_or(64));
+    384 + 3 * (doc(&s.full) + doc(&s.desc) + doc(&s.pre) + doc(&s.post) + doc(&s.op_desc) + doc(&s.state_before) + key + cust)
 }
 
 /// Set once a stream with `showExpandedEvents` was opened: data events then carry the UUID of their collection from the start.
@@ -39,6 +40,9 @@ pub struct EvSpec {
     pub coll: Option<String>,
     pub op: &'static str,
     pub doc_key: Option<Bson>,
+    /// A customer-keyed collection (`custkey.rs`): the customer fields of `documentKey` (before `_id`, as mongod
+    /// writes a shard key) and the customer value, which with `_id` names one document (`_id` is unique per customer).
+    pub cust: Option<(Document, Bson)>,
     pub full: Option<Document>,
     pub desc: Option<Document>,
     /// Transaction number and session id, for events of a committed transaction.

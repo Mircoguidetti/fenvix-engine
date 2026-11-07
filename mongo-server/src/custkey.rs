@@ -242,6 +242,51 @@ pub fn loc_key_of_suffix(coll: &str, timed: bool, suf: &[u8]) -> Option<Vec<u8>>
     Some(k)
 }
 
+/// The customer fields of a change event's `documentKey`, as mongod writes them for a sharded collection whose shard
+/// key is the customer key (MEASURED against mongos 7.0.34): the customer field, then the time field if the key has
+/// one, each under its full (dotted) path, a field the document lacks left out; `_id` follows them.
+pub fn doc_key_fields(k: &Ckey, d: &Document) -> Document {
+    let mut out = Document::new();
+    for f in std::iter::once(&k.field).chain(k.order.as_ref()) {
+        if !crate::query::path_values(d, f).is_empty() {
+            out.insert(f.clone(), value(f, d));
+        }
+    }
+    out
+}
+
+/// The locator key of `_id` (encoded) under the customer value `cust` (as [`value`] gives it).
+pub fn loc_key_of_value(coll: &str, id_enc: &[u8], cust: &Bson) -> Vec<u8> {
+    let mut k = loc_id_prefix(coll, id_enc);
+    k.extend(comp(cust));
+    k
+}
+
+/// The collation `_id` index of a customer-keyed collection with a default collation is per customer, like the
+/// locator: `idc/{coll}/{n:u32}{collation key of _id}{customer}` -> document suffix. (A plain collection keeps
+/// `idc/{coll}/{collation key of _id}`, `collopts.rs`.) The prefix of every customer holding a collation-equal `_id`:
+pub fn idc_id_prefix(coll: &str, c: &crate::collation::Collation, id: &Bson) -> Vec<u8> {
+    let ck = crate::layout::encode_sortable_with(id, Some(c));
+    let mut k = crate::collopts::idc_prefix(coll);
+    k.extend((ck.len() as u32).to_be_bytes());
+    k.extend(ck);
+    k
+}
+
+/// The collation `_id` index key of `d` in a collection with a default collation: per customer with a customer key,
+/// per collection without.
+pub fn idc_key_of(coll: &str, c: &crate::collation::Collation, key: Option<&Ckey>, d: &Document) -> Vec<u8> {
+    let id = d.get("_id").unwrap_or(&Bson::Null);
+    match key {
+        Some(k) => {
+            let mut p = idc_id_prefix(coll, c, id);
+            p.extend(cust_comp(k, d));
+            p
+        }
+        None => crate::collopts::idc_key(coll, c, id),
+    }
+}
+
 /// The customer key of a collection from its options.
 pub fn of_opts(o: Option<&std::sync::Arc<crate::collopts::CollOpts>>) -> Option<Ckey> {
     o.and_then(|o| o.customer.clone())

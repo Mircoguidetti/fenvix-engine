@@ -554,6 +554,30 @@ async fn resolve_id_collated(g: &mut impl Rd, coll: &str, id: &Bson, ov: Option<
     if !crate::collation::same(&Some(eff.clone()), &coll_c) {
         return Ok(IdRes::Scan);
     }
+    if crate::custkey::of(g, coll).await?.is_some() {
+        // a customer-keyed collection: the collation `_id` index is per customer (`custkey::idc_key_of`), every
+        // customer holding a collation-equal `_id` is under one prefix (the latest state, then the write set on top)
+        let p = crate::custkey::idc_id_prefix(coll, &eff, id);
+        let mut found: BTreeMap<Vec<u8>, Vec<u8>> = g.scan_range(&p, prefix_end(&p).as_deref(), false, None, 4096).await?.into_iter().map(|(k, v)| (k.to_vec(), v.to_vec())).collect();
+        if let Some(m) = ov {
+            for (k, v) in m.iter().filter(|(k, _)| k.starts_with(&p)) {
+                match v.as_ref().and_then(loc_suffix) {
+                    Some(suf) => {
+                        found.insert(k.clone(), suf);
+                    }
+                    None => {
+                        found.remove(k);
+                    }
+                }
+            }
+        }
+        let mut sufs: Vec<Vec<u8>> = found.into_values().collect();
+        return Ok(match sufs.len() {
+            0 => IdRes::Absent,
+            1 => IdRes::Found(sufs.pop().unwrap()),
+            _ => IdRes::Many(sufs),
+        });
+    }
     let ck = crate::collopts::idc_key(coll, &eff, id);
     if let Some(v) = ov.and_then(|m| m.get(&ck)) {
         return Ok(match v {
@@ -1517,25 +1541,6 @@ impl Writes {
         }
     }
 
-    /// Current version of a document: this write set first, then the store.
-    pub async fn get(&self, g: &mut Entry, coll: &str, id: &Bson) -> R<Option<Document>> {
-        let k = match crate::custkey::of(g, coll).await? {
-            // (the first customer holding this `_id`)
-            Some(_) => match locate(g, coll, id, Some(&self.ov)).await?.into_iter().next() {
-                Some(suf) => [doc_prefix(coll), suf].concat(),
-                None => return Ok(None),
-            },
-            None => doc_key(coll, id),
-        };
-        if let Some(v) = self.ov.get(&k) {
-            return Ok(v.clone());
-        }
-        Ok(match g.get(&k).await? {
-            Some(v) => Some(decode(&v)?),
-            None => None,
-        })
-    }
-
     /// Does a document with the `_id` of `d` exist now (latest committed state plus this write set)? In a customer-keyed
     /// collection: under the customer of `d` (`_id` is unique per customer, `custkey.rs`).
     pub async fn exists(&self, g: &mut Entry, coll: &str, d: &Document) -> R<bool> {
@@ -1734,29 +1739,36 @@ impl Writes {
                 Some(o) => e.1 += new.to_vec()?.len() as i64 - o.to_vec()?.len() as i64,
             }
         }
-        if old.is_none() {
-            if let (Some(c), true) = (g.collation_of(coll), crate::collopts::has_string(&id)) {
-                let ck = crate::collopts::idc_key(coll, &c, &id);
+        if let (Some(c), true, true) = (g.collation_of(coll), crate::collopts::has_string(&id), old.is_none() || old_enc.is_some()) {
+            // the collation `_id` index: per customer in a customer-keyed collection (`custkey::idc_key_of`), so a
+            // collation-equal `_id` is refused under one customer and accepted under another, as the plain `_id` is
+            let ck = crate::custkey::idc_key_of(coll, &c, ckey.as_ref(), new);
+            let old_ck = old.map(|o| crate::custkey::idc_key_of(coll, &c, ckey.as_ref(), o));
+            // (an overlay entry of a customer-keyed collection holds the document suffix, as the locator's does)
+            let ov_val = if ckey.is_some() { loc_overlay(&id_enc) } else { Document::new() };
+            if old_ck.as_ref() != Some(&ck) {
+                // a new document, or one that moved to another customer: the `_id` must be free under its customer
                 // (callers check `exists` first; this one also guards the paths that do not)
                 let taken = match self.ov.get(&ck) {
                     Some(v) => v.is_some(),
                     None => {
                         self.claim_unique(g, &ck)?;
-                        g.get_live(&ck).await?.map(|v| v.as_ref() != id_enc.as_slice()).unwrap_or(false)
+                        g.get_live(&ck).await?.map(|v| v.as_ref() != id_enc.as_slice() && old_enc.as_deref() != Some(v.as_ref())).unwrap_or(false)
                     }
                 };
                 if taken {
                     return Err(MongoError::duplicate_key_c(ns, "_id_", &bson::doc! { "_id": 1 }, &bson::doc! { "_id": id.clone() }, Some(&c)));
                 }
                 self.uniq.insert(ck.clone());
-                self.ops.push(Op::Put(ck.clone(), id_enc.clone()));
-                self.ov.insert(ck, Some(Document::new()));
+                if let Some(ok) = old_ck {
+                    self.check_conflict(g, &ok)?;
+                    self.ops.push(Op::Delete(ok.clone()));
+                    self.ov.insert(ok, None);
+                }
             }
-        } else if old_enc.is_some() {
-            if let (Some(c), true) = (g.collation_of(coll), crate::collopts::has_string(&id)) {
-                // the collation `_id` index points at the document's new place
-                self.ops.push(Op::Put(crate::collopts::idc_key(coll, &c, &id), id_enc.clone()));
-            }
+            // the collation `_id` index points at the document's (new) place
+            self.ops.push(Op::Put(ck.clone(), id_enc.clone()));
+            self.ov.insert(ck, Some(ov_val));
         }
         if let Some(lk) = &new_lk {
             if old.is_none() || old_enc.is_some() {
@@ -1860,11 +1872,18 @@ impl Writes {
         self.ov.insert(k, Some(new.clone()));
         let db = ns.split('.').next().unwrap_or("").to_string();
         let images = g.images_of(coll);
+        // a customer-keyed collection: the event names the document by its customer too; an update or replace by the
+        // customer it had before the write (mongod's documentKey of a shard key update, MEASURED on mongos 7.0.34)
+        let cust = ckey.as_ref().map(|k| {
+            let d = old.unwrap_or(new);
+            (crate::custkey::doc_key_fields(k, d), crate::custkey::value(&k.field, d))
+        });
         let mut spec = match (old, self.pending_update.take()) {
             (None, _) => crate::changes::EvSpec { doc_key: Some(id.clone()), full: Some(new.clone()), ..crate::changes::EvSpec::on(&db, coll, "insert") },
             (Some(o), Some(u)) => crate::changes::EvSpec { doc_key: Some(id.clone()), desc: Some(crate::changes::update_description(o, new, &u)), ..crate::changes::EvSpec::on(&db, coll, "update") },
             (Some(_), None) => crate::changes::EvSpec { doc_key: Some(id.clone()), full: Some(new.clone()), ..crate::changes::EvSpec::on(&db, coll, "replace") },
         };
+        spec.cust = cust;
         if crate::changes::WANTS_UUID.load(std::sync::atomic::Ordering::Relaxed) {
             spec.uuid = Some(g.collection_uuid(coll).await?);
         }
@@ -1930,7 +1949,7 @@ impl Writes {
             }
         }
         if let (Some(c), true) = (g.collation_of(coll), crate::collopts::has_string(&id)) {
-            let ck = crate::collopts::idc_key(coll, &c, &id);
+            let ck = crate::custkey::idc_key_of(coll, &c, ckey.as_ref(), old);
             self.ops.push(Op::Delete(ck.clone()));
             self.ov.insert(ck, None);
         }
@@ -1950,7 +1969,8 @@ impl Writes {
         if !self.quiet {
             let images = g.images_of(coll);
             let uuid = if crate::changes::WANTS_UUID.load(std::sync::atomic::Ordering::Relaxed) { Some(g.collection_uuid(coll).await?) } else { None };
-            self.events.push(crate::changes::EvSpec { doc_key: Some(id), images, uuid, pre: images.then(|| old.clone()), ..crate::changes::EvSpec::on(db, coll, "delete") });
+            let cust = ckey.as_ref().map(|k| (crate::custkey::doc_key_fields(k, old), crate::custkey::value(&k.field, old)));
+            self.events.push(crate::changes::EvSpec { doc_key: Some(id), cust, images, uuid, pre: images.then(|| old.clone()), ..crate::changes::EvSpec::on(db, coll, "delete") });
         }
         Ok(())
     }
