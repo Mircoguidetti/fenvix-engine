@@ -1,0 +1,80 @@
+== none-DropBeforePublish-ok
+Progress(15) at 2026-11-07 21:57:20: 180,120 states generated (180,120 s/min), 59,458 distinct states found (59,458 ds/min), 27,322 states left on queue.
+Progress(23) at 2026-11-07 21:58:20: 7,987,260 states generated (7,807,140 s/min), 2,263,746 distinct states found (2,204,288 ds/min), 546,261 states left on queue.
+Progress(31) at 2026-11-07 21:59:20: 17,830,525 states generated (9,843,265 s/min), 4,125,366 distinct states found (1,861,620 ds/min), 3,534 states left on queue.
+Model checking completed. No error has been found.
+  because two distinct states had the same fingerprint:
+17838084 states generated, 4125682 distinct states found, 0 states left on queue.
+== StaleOwner
+Error: Invariant NoBadRead is violated.
+Error: The behavior up to this point is:
+134159 states generated, 28615 distinct states found, 12283 states left on queue.
+The depth of the complete state graph search is 13.
+== ZombieHolds
+Error: Invariant NoBadRead is violated.
+Error: The behavior up to this point is:
+125708 states generated, 26532 distinct states found, 11258 states left on queue.
+The depth of the complete state graph search is 13.
+== FollowerEenv
+Finished computing initial states: 2 distinct states generated at 2026-11-07 21:59:26.
+Error: Invariant NoBadRead is violated.
+Error: The behavior up to this point is:
+4651 states generated, 1436 distinct states found, 813 states left on queue.
+The depth of the complete state graph search is 7.
+== Rollback
+Finished computing initial states: 2 distinct states generated at 2026-11-07 21:59:27.
+Error: Invariant EncodingOK is violated.
+Error: The behavior up to this point is:
+431 states generated, 198 distinct states found, 122 states left on queue.
+The depth of the complete state graph search is 5.
+== SpanGroups
+Error: Invariant LatestReadOK is violated.
+Error: The behavior up to this point is:
+4244 states generated, 1733 distinct states found, 964 states left on queue.
+The depth of the complete state graph search is 9.
+== CkLeaseExpiry
+Error: Invariant CkptReadOK is violated.
+Error: The behavior up to this point is:
+109519 states generated, 38976 distinct states found, 14737 states left on queue.
+The depth of the complete state graph search is 15.
+== Cov-TwoDrops-witness
+Error: Invariant WitnessTwoDrops is violated.
+Error: The behavior up to this point is:
+240962 states generated, 47883 distinct states found, 15214 states left on queue.
+The depth of the complete state graph search is 13.
+== Rollback-fix
+Finished computing initial states: 2 distinct states generated at 2026-11-07 21:59:36.
+Model checking completed. No error has been found.
+  because two distinct states had the same fingerprint:
+179297 states generated, 52979 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 20.
+== SpanGroups-fix
+Progress(14) at 2026-11-07 21:59:42: 180,488 states generated (180,488 s/min), 58,253 distinct states found (58,253 ds/min), 23,611 states left on queue.
+Model checking completed. No error has been found.
+  because two distinct states had the same fingerprint:
+4727658 states generated, 1761478 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 22.
+== CkLeaseExpiry-fix
+Progress(16) at 2026-11-07 22:00:29: 212,055 states generated (212,055 s/min), 76,649 distinct states found (76,649 ds/min), 25,604 states left on queue.
+Model checking completed. No error has been found.
+  because two distinct states had the same fingerprint:
+582330 states generated, 208661 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 23.
+== StaleOwner-fix
+Progress(14) at 2026-11-07 22:00:36: 301,542 states generated (301,542 s/min), 67,340 distinct states found (67,340 ds/min), 28,450 states left on queue.
+Model checking completed. No error has been found.
+  because two distinct states had the same fingerprint:
+3966198 states generated, 692606 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 23.
+== ZombieHolds-fix
+Progress(13) at 2026-11-07 22:01:03: 253,197 states generated (253,197 s/min), 51,243 distinct states found (51,243 ds/min), 20,230 states left on queue.
+Model checking completed. No error has been found.
+  because two distinct states had the same fingerprint:
+1716149 states generated, 284950 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 21.
+== Cov-TwoDrops
+Progress(14) at 2026-11-07 22:01:16: 309,164 states generated (309,164 s/min), 61,024 distinct states found (61,024 ds/min), 16,919 states left on queue.
+Model checking completed. No error has been found.
+  because two distinct states had the same fingerprint:
+808524 states generated, 142804 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 19.

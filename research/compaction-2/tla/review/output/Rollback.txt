@@ -1,0 +1,123 @@
+TLC2 Version 2026.11.06.222357 (rev: d8fb231)
+Running breadth-first search Model-Checking with fp 49 and seed -4963634391010852343 with 4 workers on 4 cores with 9102MB heap and 64MB offheap memory [pid: 1889] (Linux 6.18.44-fc-v310 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/user/fenvix-engine/research/compaction-2/tla/review/MCR.tla
+Parsing file /home/user/fenvix-engine/research/compaction-2/tla/review/Compaction2R.tla
+Parsing file /tmp/tlc-1077348690976167130/_TLCTrace.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-1077348690976167130/Integers.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Parsing file /tmp/tlc-1077348690976167130/FiniteSets.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-1077348690976167130/Sequences.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-1077348690976167130/TLC.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-1077348690976167130/Naturals.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-1077348690976167130/TLCExt.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Semantic processing of module Naturals
+Semantic processing of module Integers
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module Compaction2R
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module MCR
+Linting of module Compaction2R
+Linting of module TLCExt
+Linting of module _TLCTrace
+Linting of module MCR
+Starting... (2026-11-07 21:59:27)
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-11-07 21:59:27.
+Error: Invariant EncodingOK is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ bad = {}
+/\ seq = 0
+/\ runRows = <<{}, {}, {}, {}, {}>>
+/\ nMerge = 0
+/\ nComp = 0
+/\ job = [k |-> "none"]
+/\ rage = <<-1, -1, -1, -1, -1>>
+/\ ck = [v |-> 0, st |-> "none", rows |-> {}, cs |-> 0, lease |-> FALSE, lage |-> 0]
+/\ rd = <<>>
+/\ hist = <<[k |-> "none", t |-> "none"]>>
+/\ fk = [on |-> FALSE]
+/\ fl = [eenv |-> 0, v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0]
+/\ rx = [e0 |-> FALSE, known |-> 1, across |-> <<>>]
+/\ ver = << [ delta |-> {},
+     sealed |-> [g2 |-> 0, g1 |-> 0],
+     own |-> (a1 :> "g1" @@ a2 :> "g1" @@ b1 :> "g2"),
+     xd |-> 0,
+     xg |-> [g2 |-> 0, g1 |-> 0] ] >>
+/\ sr = {}
+/\ tr = (0 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0) @@ 1 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0))
+/\ crashes = 0
+/\ eenv = 0
+/\ stamp = <<-1, -1, -1, -1, -1, -1>>
+/\ runSt = <<"free", "free", "free", "free", "free">>
+/\ l0 = <<>>
+/\ flushed = 0
+/\ mem = {}
+/\ seen = <<-1, -1, -1, -1, -1, -1>>
+
+State 2: <Rollback line 576, col 13 to line 576, col 102 of module Compaction2R>
+/\ bad = {}
+/\ seq = 0
+/\ runRows = <<{}, {}, {}, {}, {}>>
+/\ nMerge = 0
+/\ nComp = 0
+/\ job = [k |-> "none"]
+/\ rage = <<-1, -1, -1, -1, -1>>
+/\ ck = [v |-> 0, st |-> "none", rows |-> {}, cs |-> 0, lease |-> FALSE, lage |-> 0]
+/\ rd = <<>>
+/\ hist = <<[k |-> "none", t |-> "none"]>>
+/\ fk = [on |-> FALSE]
+/\ fl = [eenv |-> 0, v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0]
+/\ rx = [e0 |-> TRUE, known |-> 1, across |-> <<>>]
+/\ ver = << [ delta |-> {},
+     sealed |-> [g2 |-> 0, g1 |-> 0],
+     own |-> (a1 :> "g1" @@ a2 :> "g1" @@ b1 :> "g2"),
+     xd |-> 0,
+     xg |-> [g2 |-> 0, g1 |-> 0] ] >>
+/\ sr = {}
+/\ tr = (0 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0) @@ 1 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0))
+/\ crashes = 0
+/\ eenv = 0
+/\ stamp = <<-1, -1, -1, -1, -1, -1>>
+/\ runSt = <<"free", "free", "free", "free", "free">>
+/\ l0 = <<>>
+/\ flushed = 0
+/\ mem = {}
+/\ seen = <<-1, -1, -1, -1, -1, -1>>
+
+State 3: <NextR line 582, col 11 to line 582, col 23 of module Compaction2R>
+/\ bad = {}
+/\ seq = 1
+/\ runRows = <<{}, {}, {}, {}, {}>>
+/\ nMerge = 0
+/\ nComp = 0
+/\ job = [k |-> "none"]
+/\ rage = <<-1, -1, -1, -1, -1>>
+/\ ck = [v |-> 0, st |-> "none", rows |-> {}, cs |-> 0, lease |-> FALSE, lage |-> 0]
+/\ rd = <<>>
+/\ hist = <<[k |-> a1, t |-> "put"]>>
+/\ fk = [on |-> FALSE]
+/\ fl = [eenv |-> 0, v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0]
+/\ rx = [e0 |-> TRUE, known |-> 1, across |-> <<>>]
+/\ ver = << [ delta |-> {},
+     sealed |-> [g2 |-> 0, g1 |-> 0],
+     own |-> (a1 :> "g1" @@ a2 :> "g1" @@ b1 :> "g2"),
+     xd |-> 0,
+     xg |-> [g2 |-> 0, g1 |-> 0] ] >>
+/\ sr = {}
+/\ tr = (0 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0) @@ 1 :> (a1 :> 1 @@ a2 :> 0 @@ b1 :> 0))
+/\ crashes = 0
+/\ eenv = 0
+/\ stamp = <<-1, -1, -1, -1, -1, -1>>
+/\ runSt = <<"free", "free", "free", "free", "free">>
+/\ l0 = <<>>
+/\ flushed = 0
+/\ mem = {[k |-> a1, t |-> "put", s |-> 1, enc |-> FALSE]}
+/\ seen = <<-1, -1, -1, -1, -1, -1>>
+
+431 states generated, 198 distinct states found, 122 states left on queue.
+The depth of the complete state graph search is 5.
+Finished in 00s at (2026-11-07 21:59:27)
+Trace exploration spec path: ./MCR_TTrace_1794088766.tla

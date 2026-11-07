@@ -1,88 +1,113 @@
-FIX 2
+FIX 5
 
-# Review of compaction 91414a6 (customer-first keys, tiered compaction)
+# Review: compaction 2 step 0, the TLA+ model (`c2-step0-tla`, 4f3d889)
 
-Reviewer, 2026-11-06. Branch `review-compaction` (based on 91414a6). Base `integration` (6ff285a). Tests:
-`ctl-tests/test_43_review_compaction.py` (run: `cd ctl-tests && python -m pytest -q test_43_review_compaction.py`).
-Every number is labelled MEASURED (run here, on this sandbox, local MinIO), ESTIMATED, DECLARED (the owner's), or UNKNOWN.
+Reviewer session 2026-11-07, prompt fenvix-brain `prompts/R-review-c2-step0.md`. Spend: $0, local only, no AWS, nothing merged. Contract: `prompts/P-c2-step0-tla.md`. Owner's report: `sessions/2026-11-07-c2-step0-tla/REPORT.md`.
 
-## The two fixes (tests that fail on 91414a6)
+Branch `review-c2-step0` (from 4f3d889). Everything I added is in `research/compaction-2/tla/review/`:
+- `Compaction2R.tla`: a copy of the delivered spec with six review scenarios (constant `Rv`) and each one's remedy (`RvFix`). With `Rv = "none"` it is the delivered spec.
+- `MCR.tla`, `gen_review.py`, `run_review.sh`, `trace.py` (prints a counterexample as what changed at each step).
+- `output/`: every TLC output, with every trace. `_run.log` is the summary.
+- Run: `TLA2TOOLS=/path/tla2tools.jar ./run_review.sh all` (about 5 minutes on 4 cores).
 
-1. **Two writes of one `_id` for two customers are both acknowledged** (guarantees 4 and 7: `_id` uniqueness, indexes
-   consistent with data). The locator `loc/{coll}/{_id}` is the unique `_id` index, but `Writes::put` only checks it
-   against the committed state and never locks it (`check_conflict` runs on the customer-specific document key only).
-   Two transactions inserting `_id: 7` for `alice` and `bob` both commit; so does a plain insert of `_id: 8` while an
-   open transaction holds `_id: 8` for another customer. Result MEASURED: two documents with the same `_id`; a scan
-   returns both, `find({_id})` returns one (the locator points at the last writer), `validate` does not check the locators (code reading, `cmd_index.rs` validate).
-   mongod lets only one of the two commit. The control (same test on a collection without a customer key) passes.
-   Tests: `test_two_transactions_cannot_insert_the_same_id_for_two_customers[m]`,
-   `test_insert_outside_a_transaction_cannot_duplicate_an_id_a_transaction_holds[m]`.
-   Fix hint: `check_conflict` (lock and `modified_after`) on the locator key too, for inserts and moves.
+Tool: TLC 1.8.0, the same `tla2tools.jar` as the owner (DECLARED, tlaplus GitHub releases), Java 21, 4 workers.
 
-2. **With customer keys off, the storage format still changes and the previous release can no longer read it**
-   ("with the option off nothing changes"; guarantee 10, rollback). `--sst-compression lz4` and `--sst-block-kb 64` are
-   the new defaults for every database, keyed or not. MEASURED: a database written by 91414a6 with no flag at all,
-   then opened by the integration binary: `Data error: invalid composite filter block`. Deploying this commit makes
-   every database it flushes or compacts unreadable by the release before it, with no way back but forward.
-   Test: `test_with_customer_keys_off_the_stored_format_does_not_change` (checks the codec; with `INTEGRATION_BIN` set
-   it also does the rollback read). Fix: defaults off (`none`, 4 KiB) until the founder decides a one-way format
-   migration, or ship a release that can read lz4 first.
+## 1. In one line
 
-## Priority from the founder: `test_05_erase.py` leaves control-layer objects
+The model is careful, its controls fail for the right reason, and the group-merge finding is real. But it leaves out five things the plan's code will do, and each one breaks a delivered rule in TLC (MEASURED): a restarted waiter that does not know a version the dead one published; a follower that knows an old E_env; a whale customer spread over two groups; a checkpoint lease that expires; and a rollback from E1 to E0 under rule 21 as written. Every remedy is small, and each passes to completion in the same configuration (MEASURED). There is one more case, a NOTE: the old waiter's open transactions still reading after a takeover.
 
-- Found the cause. It is **not** caused by this branch. In `test_concurrent_erase_and_fork_are_serialised`, when the
-  erase wins, the fork (`ctl/fork.rs`) takes the target's lease, finds the source gone, answers 404 and deletes the
-  lease; but those requests were charged to the target's (and source's) usage counters, and the usage flusher then
-  writes `control/usage/<target>/<day>/...` (and `control/usage/<source>/...`) for databases that do not exist. Nothing
-  ever deletes them (guarantee 6). test_05 only sees it when a flush (every 1 s there) lands between the fork's answer
-  and its listing: that is why it is flaky.
-- Deterministic test: `test_a_refused_fork_leaves_no_object_of_its_target` (a fork of a source that never existed,
-  wait 3 s, list). MEASURED: fails on 91414a6 **and on integration**, with the same two leftover records.
-- Does the branch make it worse? MEASURED, the race of test_05 repeated 30 times per binary: the leftover is there 3 s
-  later every time the erase wins (91414a6 12 of 12, integration 8 of 8); the test's own listing caught it 0 times in
-  30 on 91414a6 and 1 in 30 on integration. Fork and erase times are the same (p50 110 ms both). The owner's 3 of 4
-  vs 1 of 4 is within noise for 4 rounds. My own full runs of test_05 on 91414a6: 2 passed, then 1 failed in the judge.
-- `tenants/<db>/_lease` left behind: not reproduced (UNKNOWN); every failure I saw was the usage records above.
-- Not counted against this commit (contract point 5: identical on integration). Owner of the control layer: charge
-  nothing to a database a refused fork never created (or `drop_db` both names when the fork fails).
+## 2. What I checked and what holds
 
-## Judge (`judge/run.sh fast` on 91414a6, MEASURED)
+- **The review copy is the delivered spec when `Rv = "none"`.** The owner's `DropBeforePublish-ok` configuration gives exactly the same count in my copy: 4,125,682 distinct states, complete, depth 31 (MEASURED, `output/none-DropBeforePublish-ok.txt`). So every failure below comes from the scenario I added, not from a change in the copy.
+- **The owner's outputs.** I read all 17 control traces with `summarize.py`. Each one fails for the reason its name says. Some examples:
+  - In `GcNoGrace`, the transaction pins the version just before the group merge lands, and GC removes the retired sealed run at once.
+  - In `LeaseFromStamp`, the follower refreshes while the PUT is in flight, and the drop counts from the stamp.
+  - In `ForkCopyEenv`, the checkpoint is at seq 0, so the fork's first write is an envelope that its copied E_env says is plain.
 
-Same verdict as the owner's: build PASS; unit FAIL only `counter::tests::rev_maps_leave_room_for_active_data`;
-diff-py and diff-node FAIL only `bucketauto.infinity` (412/413 each); ctl FAIL only test_05_erase (above); kill PASS
-(0 lost). All match integration's known failures. The 3 failures of the owner's customer-key stress run
-(`cs.delete_many`, `bucketauto.POWERSOF2.decimal_special`, `bucketauto.infinity`): MEASURED, also fail with the
-integration binary.
+  None of them fails on an unrelated invariant.
+- **The group merge at max(X_gA, X_gB).** I followed the 15-step trace by hand: it is right. A delta merge may keep only the newest erasure of a customer, and then the cut misses the older one. The rewrite at X_d fixes it.
+- **A reader across two drops is reached, and holds.** The owner asked TLC for no such witness, so I added one, `WitnessTwoDrops`: a transaction still held after two drop jobs changed SlateDB, with a newer version published since its pin. TLC reaches it at depth 13 (MEASURED, `output/Cov-TwoDrops-witness.txt`): erasure, put, two absorptions, two drops while the transaction holds v2. In the same configuration, the correct model passes to completion: 142,804 distinct states, depth 19 (MEASURED, `output/Cov-TwoDrops.txt`).
+- **A crash between publish and drop** is in the delivered main shape, and it is the core of the first defect below.
+- **A fork during a fold** cannot go wrong in this model. The fork reads its own copy of the checkpoint rows and the paired runs, which GC keeps. It is not a gap in the model, but see note N4 on the fork's own GC.
+- **The judge.** `judge/run.sh fast` on 4f3d889: see section 5. The diff against `review-compaction-2-plan-r2` touches only `research/compaction-2/tla/` and the owner's verdict file: 84 files, no engine code (MEASURED, `git diff --stat`).
 
-## Do the tests measure what they claim?
+## 3. The five defects (each a configuration that FAILS with the delivered rules, `Ctl = "none"`)
 
-- **Cold-read bench (contract point 2).** Re-run at 2 GB, 20,000 customers (`review-2026-11-06/`), MEASURED: default
-  settings mean 2.46 / 2.27 GETs, max 5 (owner: 2.8, max 7). The GET meter is right: over 300 finds, server meter
-  1,631 vs MinIO's own getobject counter 1,630. But the measure is not of a cold find: the 256 MiB block cache keeps
-  the data blocks read by the 300 warm-up finds (the bench says only indexes and filters are warm), and neighbouring
-  customers share 64 KiB blocks. A mean below the number of sorted runs (3 here) shows it. With data blocks cold
-  (`--block-cache-mb 1`), MEASURED here: mean 5.38, p95 6, max 7 (3 sorted runs); the owner's 4-run dataset: mean
-  6.5-7.1, max 9 (6 of 400 finds over 8, DECLARED). So "at most 8" holds or not depending on how many runs the data has
-  at that moment; 8 GB was not measured (DECLARED); ESTIMATED one more run per 4x of data, so about 2 GETs more at 8 GB.
-  NOTE, not a fix (no deterministic failing test), but the contract's point 2 is not proven for a cold find.
-- `test_index_matches_documents_during_compaction`: readers hold the customer's lock, so no read ever overlaps a write
-  or a move of that customer; it checks consistency between writes, not during them. I probed the during part
-  (MEASURED, 30-40 s each, 4 movers): collection scans, counts and `$natural` during 2,365 moves: 0 wrong of 410;
-  index range scans during 2,783 moves: 0 duplicates or misses in 538; `find_one({_id})` on one document moved 4,092
-  times: 0 misses.
-- `loadtest/test_open_gc.py` (prints read violations, never fails): run with `--customer-key c=v` (every update moves
-  the document), 2 trials x 60 s, MEASURED: 69,468 reads checked, 0 missing, 0 stale, 0 lost inserts or updates, both
-  kills inside a cleanup pass. It hides no defect here; it should still fail on violations (judge gap, not this branch).
-- Moves inside transactions (commit, abort), unique secondary index across a move, collation `_id` with a customer
-  key: behave as without the key (MEASURED, probes).
+### F1. A restarted waiter pins a version older than the store's newest: a committed write disappears from a read (`MCR-StaleOwner.cfg`)
 
-## Notes (never block)
+What the model leaves out: `RBegin` pins `Len(ver)`, the newest version in the store, without cost. Real holds pin the version the waiter's process knows, in memory (plan section 6: "pins the manifest version in memory"). The spec itself says a PUT in flight can land after the compactor crashed. When it does, the restarted waiter does not know the new version. It learns of it only when its own conditional create fails or it reloads.
 
-- Rule 18 (one snapshot per read): an `_id` read goes locator, then document, as two reads with up to 3 retries if the
-  document moved in between (and `moved_doc` once). Not a snapshot; no wrong answer seen (above).
-- The cleanup keeps the outputs of unfinished or uncommitted compactions (`Compacted` counts as active): a resumed job
-  of the separate worker cannot point at deleted SSTs. Checked by reading slatedb 0.17 and `gc_tenant_ssts`.
-- `stop_once` ignores a worker `stop` that times out; after `stop_limit` the runner is aborted and the worker's tasks may
-  live on until their store request ends (as for the compactor before). No test shows harm.
-- Contract point 1 was shown on the stress suite with the key on for some collections (63,076 documents written customer
-  first, 2,249 locator lookups, DECLARED); the natural run had 1 locator lookup.
+TLC's trace (MEASURED, `NoBadRead` violated at depth 13, 28,615 states):
+1. put a1 at seq 1, flush, absorb; the PUT of v2 starts.
+2. The waiter crashes and restarts. It reads the store and knows v1.
+3. The dead process's PUT lands: v2, with X_d = 1.
+4. The drop job sees v2, two ticks pass, and the drop removes the put from SlateDB. This is correct by rule 7 and rule 8.
+5. A find begins on v1, the version the waiter knows. v1 has no delta run, and SlateDB no longer has the row, so the find reads a1 as absent. The truth is 1.
+
+The same gap also breaks the remote time-only floor (rule 10) and GC grace (rule 23). Both assume that no hold can pin a version older than one already seen in the store.
+
+Remedy (PASS, complete, 692,606 distinct states, depth 23, MEASURED, `output/StaleOwner-fix.txt`): at open, before it serves any read, the waiter publishes a fence version (a copy of the newest, written with the same conditional create). A late PUT of the dead process then targets a slot that is taken, and it fails as an orphan. Or the waiter's own create fails, and it reloads. Either way, the waiter knows the newest version. The cost is one small PUT per open (ESTIMATED: about 64 KB at 10 TB, the plan's manifest size). Missing rule for the code: "a hold pins the waiter's version, and the waiter publishes a fence version at open".
+
+### F2. A follower decodes with an old E_env: an envelope is read as data (`MCR-FollowerEenv.cfg`)
+
+What the model leaves out: the reads never decode. `EncodingOK` checks only that each stored row's format matches its database's E_env. It never checks the E_env that a reader uses. The step 2 report says step 3 will carry E_env in the manifest and give it to followers through the T_pin refresh. I modelled exactly that best case: the follower takes E_env with each refresh.
+
+TLC's trace (MEASURED, `NoBadRead` violated at depth 7): the follower refreshes in release E0 (E_env not set). Release E1 starts, an erasure is written as an envelope and flushed, and the follower's next step, still inside T_pin, decodes that envelope as a plain value. A refresh every T_pin bounds how old the version is. It does not stop a follower from seeing a row written after its refresh in a new format.
+
+Remedy (in words, not modelled): a follower must know E_env before any row above it can reach its view. For example, E1 is first announced in a version, and envelope writing starts only after that version is older than T_pin. A follower that has seen the announcement reads the marker (or E_env from its version) before each step. Today step 2 keeps E1 off, so nothing is broken in code yet. But the rule is missing from `RULES-FOR-THE-CODE.md`, and step 3 must have it before E1 is turned on.
+
+### F3. A customer whose keys sit in two groups: the erasure misses one group, and the erased data comes back (`MCR-SpanGroups.cfg`)
+
+What the model leaves out: `GroupOf` gives an erasure (a range tombstone over a customer) one group only: the group of one chosen key. In `MC.tla` every customer sits inside one group, so this never matters. But the plan says a whale (about 95 GB at 1 TB, against groups of about 1 GB) spans many groups. A group split by key range can also cut a small customer in two.
+
+TLC's trace (MEASURED, `LatestReadOK` violated at depth 9; keys a1 in g1 and a2 in g2, both customer A): put a2, erase customer A, flush, absorb, land. The read of a2 in g2 takes only g2's delta rows, and the erasure counts for g1 only. So a2 reads as present right after the erasure, from the newest version.
+
+Remedy (PASS, complete, 1,761,478 distinct states, depth 22, MEASURED, `output/SpanGroups-fix.txt`), in three parts:
+- An erasure belongs to every group its range overlaps, for reads and for reseals.
+- A delta merge keeps it while it is above the X_g of any of those groups.
+- Rules 13, 14 and 22 should say so.
+
+### F4. A checkpoint lease that expires mid-checkpoint: the pair loses rows (`MCR-CkLeaseExpiry.cfg`)
+
+What the model leaves out: rule 18's lease in the store never expires in the model. A real lease must expire, or a control layer that dies mid-checkpoint blocks every drop forever, and the L0 SSTs pile up.
+
+TLC's trace (MEASURED, `CkptReadOK` violated at depth 15, lease life 3 ticks):
+1. The checkpoint pairs with v1 and takes the lease.
+2. v2 lands, and the checkpoint is slow.
+3. The lease expires. The drop job sees v2 for one lease and drops the put.
+4. SlateDB's checkpoint is taken, without the rows of (X_v1, X_v2].
+
+Remedy (PASS, complete, 208,661 distinct states, depth 23, MEASURED, `output/CkLeaseExpiry-fix.txt`): after SlateDB's checkpoint exists, check that the lease is still held. If it expired, delete that checkpoint and start again. Rule 18 should add this check and the lease's life.
+
+### F5. Rule 21 as written breaks a rollback from E1 to E0 (`MCR-Rollback.cfg`)
+
+What the model leaves out: the plan's 7-day rollback goes from E1 back to E0 (plan round 2, I6; DECISIONS 2026-11-07). The model has no rollback action, and `RULES-FOR-THE-CODE.md` rule 21 says "Release E0 reads envelopes above E_env and writes none". Followed literally after a rollback, E0 writes plain rows above E_env.
+
+TLC's trace (MEASURED, `EncodingOK` violated at depth 5): E1 is on, rollback to E0, a put at seq 1 is stored plain above E_env. With step 2's actual rule, the rollback model passes (complete, 52,979 distinct states, depth 20, MEASURED, `output/Rollback-fix.txt`). That rule is: E0 writes envelopes in any database that has the marker, and never writes the marker.
+
+Step 2's code already does the right thing (its `test_45`). The defect is in the rules document that steps 1-8 will follow. Rule 21 should be replaced by step 2's rule, and the model should get the rollback action.
+
+## 4. Notes (they do not block)
+
+- **N1. The old waiter's open transactions after a takeover (`MCR-ZombieHolds.cfg`: fails, not counted).** The model's crash ends every hold. In a takeover where the old waiter is slow or cut off, not dead, its open transactions may keep reading. The new waiter's drop then uses the ordinary lease (60 s), which is shorter than the hold life (120 s). TLC breaks `NoBadRead` at depth 13 (MEASURED).
+  - Whether the real system breaks depends on whether a fenced-out SlateDB 0.17 writer's open snapshot picks up the new owner's compaction, or keeps its old SSTs, which `SST_GC_MIN_UNREF_SECS` keeps for 120 s (UNKNOWN). So I do not count it.
+  - Cheap remedy, PASS (complete, 284,950 distinct states, MEASURED): after a takeover, the new waiter's drops use the remote lease (longer than the hold life) until one hold life has passed. Step 4 should test the takeover case with an open transaction.
+- **N2. The full shape is checked completely only up to 10 steps** (depth 12, owner's main run). Every interesting violation in the owner's controls and in mine is 6 to 21 steps deep. Each deep case is covered only in a reduced configuration. That is acceptable for a paper check, but "114 million states" should not be read as "every interleaving of all parts together". The 10-million-state target is met (MEASURED).
+- **N3. `ErasedGone` checks only the newest version's sealed runs.** It does not check the delta runs, SlateDB's sorted run, or the 24-hour deadline, which is liveness and is not modelled. The erasure test of step 7 must cover those.
+- **N4. A fork's own GC is not modelled** (the fork does no compaction). A fork shares the parent's runs by reference. Its GC must never delete an object outside its own prefix, and the parent's GC must count the fork's references, as the model does on the parent side.
+- **N5. Reads are atomic steps in the model.** The real "check after each step" must happen before any row of that step is returned to the client. Rule 5 should say "before returning".
+- **N6. Rule 17, "a lost PUT leaves an orphan run that GC removes".** GC must decide what is an orphan from the store (runs not listed by any version), never from the publisher's belief. A PUT that timed out may have landed (F1 is that case).
+
+## 5. Judge
+
+`judge/run.sh fast` on 4f3d889, the delivered commit: see `judge/out/4f3d889/VERDICT-FAST.md`, and the summary added at the end of this file.
+
+## 6. Corrections for fenvix-brain
+
+- `components/compaction.md` and the step 3, 4 and 7 prompts need the five rules of section 3:
+  - the fence version at open;
+  - followers learn E_env before rows above it are visible;
+  - an erasure belongs to every group it overlaps;
+  - the checkpoint lease is checked after the checkpoint exists;
+  - E0 writes envelopes in a database with the marker.
+- The owner's correction stands: round 2's I2 should cut a group merge at X_d.

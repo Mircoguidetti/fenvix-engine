@@ -1,0 +1,36 @@
+TLC2 Version 2026.11.06.222357 (rev: d8fb231)
+Running breadth-first search Model-Checking with fp 77 and seed 3149294105482672949 with 4 workers on 4 cores with 9102MB heap and 64MB offheap memory [pid: 2039] (Linux 6.18.44-fc-v310 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/user/fenvix-engine/research/compaction-2/tla/review/MCR.tla
+Parsing file /home/user/fenvix-engine/research/compaction-2/tla/review/Compaction2R.tla
+Parsing file /tmp/tlc-8058282779323141963/_TLCTrace.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-8058282779323141963/Integers.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Parsing file /tmp/tlc-8058282779323141963/FiniteSets.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-8058282779323141963/Sequences.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-8058282779323141963/TLC.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-8058282779323141963/Naturals.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-8058282779323141963/TLCExt.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Semantic processing of module Naturals
+Semantic processing of module Integers
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module Compaction2R
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module MCR
+Linting of module Compaction2R
+Linting of module TLCExt
+Linting of module _TLCTrace
+Linting of module MCR
+Starting... (2026-11-07 21:59:35)
+Computing initial states...
+Finished computing initial states: 2 distinct states generated at 2026-11-07 21:59:36.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 3.6E-10
+  based on the actual fingerprints:  val = 6.5E-11
+179297 states generated, 52979 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 20.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 9 and the 95th percentile is 3).
+Finished in 03s at (2026-11-07 21:59:38)
