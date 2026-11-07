@@ -518,6 +518,19 @@ impl LocalLog {
                     }
                 }))
                 .await;
+                // agent lane: bound the WAL tail a takeover replays (agentlane.rs, take_dirty)
+                // (in their own tasks: a flush that waits for room in L0 must not hold up the uploads)
+                for db in crate::agentlane::take_dirty() {
+                    tokio::spawn(async move {
+                        match tenant_bench::lifecycle::flush_writer_memtable(&db).await {
+                            Ok(true) => {
+                                crate::agentlane::MEMTABLE_FLUSHES.fetch_add(1, Relaxed);
+                            }
+                            Ok(false) => {}
+                            Err(e) => eprintln!("agent lane: memtable flush of {db} failed: {e:#}"),
+                        }
+                    });
+                }
                 me.trim();
             }
         });

@@ -436,6 +436,19 @@ pub async fn flush_writer(id: &str) -> Result<bool> {
     }
 }
 
+/// Flush the memtable of the open writer of `id` into an L0 SST. Ok(false): no writer is open. The agent lane does this
+/// at every upload of the local log, so a takeover replays at most one upload interval of small WAL objects.
+pub async fn flush_writer_memtable(id: &str) -> Result<bool> {
+    let db = WRITER_DBS.lock().unwrap().get(id).cloned();
+    match db {
+        Some(db) => {
+            db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await?;
+            Ok(true)
+        }
+        None => Ok(false),
+    }
+}
+
 pub fn relaxed_window(id: &str) -> Duration {
     RELAXED_WINDOW.get().map(|f| f(id)).unwrap_or_default()
 }

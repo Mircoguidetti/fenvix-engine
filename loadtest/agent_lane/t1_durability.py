@@ -18,7 +18,9 @@ Checks after every restart: every acknowledged document is there; every transact
 not at all; and at the end, the same over everything.
 Negative control (`--control`): agent-lane writes acknowledged before their PUT (MONGO_TEST_AGENT_ACK_EARLY=1): the check
 must see losses.
-  t1_durability.py OUT_DIR [--rounds 100] [--control] [--seed 1]      exit 0 = PASS (or, with --control, loss seen)
+  t1_durability.py OUT_DIR [--rounds 100] [--control] [--seed 1] [--port 27961] [--log-off 3200]
+(MONGO_SERVER_BIN picks another engine binary: the check of the hot documents was shown to fail on a build without the
+fix of kept records in locallog.rs, see the report.)      exit 0 = PASS (or, with --control, loss seen)
 """
 import itertools
 from pymongo import WriteConcern
@@ -33,6 +35,8 @@ random.seed(int(opt(args, '--seed', '1')))
 WORK = os.path.join(OUT.dir, 'work')
 DBS = [f'dur_{j}' for j in range(3)]
 FAULTS = os.path.join(OUT.dir, 'faults')
+PORT = int(opt(args, '--port', '27961'))
+LOG_OFF = int(opt(args, '--log-off', '3200'))
 
 acked = set()          # (db, coll, _id) acknowledged
 hot_acked = {}         # (db, thread) -> last acknowledged version of the thread's hot document
@@ -119,14 +123,14 @@ cur_round = 0
 
 def main():
     global cur_round
-    kill_leftovers((27961,), 3200)
+    kill_leftovers((PORT,), LOG_OFF)
     shutil.rmtree(WORK, ignore_errors=True)
     os.makedirs(WORK)
     open(FAULTS, 'w').write('')
-    log = Log(os.path.join(WORK, 'log'), 3200)
+    log = Log(os.path.join(WORK, 'log'), LOG_OFF)
     log.up()
     env = {'MONGO_TEST_AGENT_ACK_EARLY': '1'} if CONTROL else {}
-    eng = Engine(OUT.dir, 'p', 27961, ['--store', 'local', '--local-dir', os.path.join(WORK, 'store')], log=log, env=env, faults=FAULTS)
+    eng = Engine(OUT.dir, 'p', PORT, ['--store', 'local', '--local-dir', os.path.join(WORK, 'store')], log=log, env=env, faults=FAULTS)
     assert eng.start(True), 'engine did not start'
     OUT.say('START', time.strftime('%F %T'), 'rounds', ROUNDS, 'control' if CONTROL else '')
     total_lost = total_torn = 0

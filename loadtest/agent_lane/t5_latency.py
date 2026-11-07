@@ -126,9 +126,15 @@ def takeover(mode):
             break
         except PyMongoError:
             time.sleep(0.05)
+    reads = []
+    for _ in range(200):
+        t = time.perf_counter()
+        sc[DB]['agent'].find_one({'_id': 'probe'})
+        reads.append((time.perf_counter() - t) * 1e3)
     ss = lane_stats(sc)
-    OUT.say(f'failover {mode}: tail writes {n}, WAL objects written by the primary {ps["flushes"]}, spare followed {ss["followed"]} '
-            f'and answered {ss["followHits"]} reads from them; first answer {first:.2f} s after the kill (lease ttl 4 s)')
+    OUT.say(f'failover {mode}: tail writes {n}, WAL objects written by the primary {ps["flushes"]} (memtable flushes {ps.get("memtableFlushes")}), '
+            f'spare followed {ss["followed"]} and answered {ss["followHits"]} reads from them; first answer {first:.2f} s after the kill '
+            f'(lease ttl 4 s); then 200 point reads on the spare p50 {pct(reads, 50):.2f} ms p99 {pct(reads, 99):.2f} ms')
     sc.close()
     S.kill9()
     log.down()

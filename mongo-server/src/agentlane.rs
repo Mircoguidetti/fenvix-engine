@@ -40,6 +40,25 @@ static ACTIVE: AtomicBool = AtomicBool::new(false);
 /// (mixed with other collections or with the catalog).
 pub static AGENT_BATCHES: AtomicU64 = AtomicU64::new(0);
 pub static MIXED_BATCHES: AtomicU64 = AtomicU64::new(0);
+/// Memtable flushes of databases with agent-lane writes, at the uploads of the local log (see [`take_dirty`]).
+pub static MEMTABLE_FLUSHES: AtomicU64 = AtomicU64::new(0);
+static DIRTY: std::sync::LazyLock<std::sync::Mutex<std::collections::HashSet<String>>> = std::sync::LazyLock::new(Default::default);
+
+/// A batch of `db` went on the lane.
+pub fn note_write(db: &str) {
+    let mut d = DIRTY.lock().unwrap();
+    if !d.contains(db) {
+        d.insert(db.to_string());
+    }
+}
+
+/// The databases with agent-lane writes since the last call. The local log's uploader flushes their memtables into L0
+/// SSTs: each lane batch is its own small WAL object (one per window), and a takeover replays every WAL object written
+/// since the last memtable flush (a reader keeps each as its own table, so its reads get slow with thousands). With the
+/// flush at every upload (`--local-log-upload-secs`) a takeover replays at most about one interval of them.
+pub fn take_dirty() -> Vec<String> {
+    DIRTY.lock().unwrap().drain().collect()
+}
 
 /// `--agent-lane` (comma-separated `db.collection` patterns).
 pub fn configure(spec: &str, window_ms: u64) -> anyhow::Result<()> {

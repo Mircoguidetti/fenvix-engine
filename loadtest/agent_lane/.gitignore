@@ -1,6 +1,7 @@
-results/*/work/
-results/*/engine-*.log
-results/*/faults*
-results/*/mongod.log
-results/*/minio.log
+results/**/work/
+results/**/engine-*.log
+results/**/faults*
+results/**/mongod.log
+results/**/minio.log
+results/**/log-up.txt
 __pycache__/

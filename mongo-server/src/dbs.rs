@@ -106,7 +106,12 @@ pub(crate) struct MetaCache {
 
 /// Reads of a database with relaxed durability see the writes acknowledged before they were durable (read-your-writes).
 fn durable_reads(db: &str) -> bool {
-    DURABLE_READS.load(Relaxed) && crate::ctl::durability::relaxed_ms(db) == 0
+    // With the local or replicated log (`locallog.rs`, Q8d) a write is acknowledged when its record is in the log, long
+    // before its WAL object is in object storage (every --local-log-upload-secs): a read of the object-storage state would
+    // not see it (a point read right after an acknowledged insert answered nothing: read-your-writes broken), and the
+    // agent lane (agentlane.rs) makes object storage hold some later batches and not earlier ones. Reads then see the
+    // latest state, as on a MongoDB primary, where a write is visible to local reads before it is majority-acknowledged.
+    DURABLE_READS.load(Relaxed) && crate::ctl::durability::relaxed_ms(db) == 0 && crate::locallog::get().is_none()
 }
 
 pub fn set_wake_limit(n: usize) {
@@ -796,6 +801,7 @@ impl Entry {
         let agent = use_local_log && self.agent_lane_batch(&ops).await?;
         if agent {
             crate::agentlane::AGENT_BATCHES.fetch_add(1, Relaxed);
+            crate::agentlane::note_write(&self.name);
         }
         // Local log (prototype): the batch carries its record's marker, and is durable once the record is on the local disk.
         let local = if use_local_log && !agent { crate::locallog::get() } else { None };
