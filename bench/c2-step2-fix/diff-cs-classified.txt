@@ -1,0 +1,2 @@
+/tmp/claude-0/diffkeys/diff-py.json: 24 change-stream differences; only the customer field in documentKey: 21; that and the lookup of a document moved to another customer (null, as on mongos): 1 ['cs.update_lookup_returns_current_document']; other: ['cs.delete_many', 'cs.update_lookup_sees_later_update']
+/tmp/claude-0/diffkeys/diff-node.json: 0 change-stream differences; only the customer field in documentKey: 0; that and the lookup of a document moved to another customer (null, as on mongos): 0 []; other: []
