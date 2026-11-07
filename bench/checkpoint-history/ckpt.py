@@ -133,7 +133,8 @@ def write_steps(saver, t, start, stop):
 
 
 def load_worker(args):
-    uri, jobs = args
+    uri, jobs, rate = args  # rate: bytes per second for this worker (0 = no limit)
+    t0 = time.time()
     corpus()
     client, saver = saver_for(uri)
     total = 0
@@ -147,6 +148,10 @@ def load_worker(args):
             b = min(pos[t] + 4, end[t])
             total += write_steps(saver, t, pos[t], b)
             pos[t] = b
+            if rate:
+                ahead = total / rate - (time.time() - t0)
+                if ahead > 0:
+                    time.sleep(ahead)
             if b < end[t]:
                 nxt.append(t)
         live = nxt
@@ -162,13 +167,14 @@ def cmd_load(a):
     with mp.Pool(a.workers) as pool:
         # phase 1: every thread at its short length
         jobs = [(t, 0, counts[t]) for t in range(a.threads)]
-        chunks = [(a.uri, jobs[w::a.workers]) for w in range(a.workers)]
+        chunks = [(a.uri, jobs[w::a.workers], a.rate_mb * 1e6 / a.workers) for w in range(a.workers)]
         written += sum(pool.map(load_worker, chunks))
         t1 = time.time()
         print(f"phase 1: {a.threads} threads, {sum(counts)} checkpoints, {written / 1e9:.2f} GB written, {t1 - t0:.0f} s", flush=True)
         # phase 2: the long threads grow to long_steps checkpoints
         jobs = [(t, counts[t], long_steps) for t in long_ids]
-        chunks = [(a.uri, jobs[w::a.workers]) for w in range(a.workers) if jobs[w::a.workers]]
+        nw = min(a.workers, len(jobs))
+        chunks = [(a.uri, jobs[w::nw], a.rate_mb * 1e6 / nw) for w in range(nw)]
         w2 = sum(pool.map(load_worker, chunks))
         written += w2
         print(f"phase 2: {len(long_ids)} threads grown to {long_steps}, {w2 / 1e9:.2f} GB written, {time.time() - t1:.0f} s", flush=True)
@@ -336,6 +342,7 @@ def main():
     l.add_argument("--long-steps", type=int, default=10000)
     l.add_argument("--workers", type=int, default=8)
     l.add_argument("--plan", required=True)
+    l.add_argument("--rate-mb", type=float, default=0, help="total write rate cap in MB/s (0 = none): lets the SST cleanup keep up on a small disk")
     m = s.add_parser("measure")
     m.add_argument("--uri", required=True)
     m.add_argument("--plan", required=True)

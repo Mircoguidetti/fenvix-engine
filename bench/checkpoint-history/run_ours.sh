@@ -78,7 +78,7 @@ if [ "$WHAT" != measure ]; then
       [ "$f" -lt 1500000 ] && { echo "DISK GUARD: stopping the load"; pkill -f "ckpt.py load"; }
       sleep 10; done ) &
   t=$(date +%s)
-  "$PY" bench/checkpoint-history/ckpt.py load --uri "$URI" --threads "$THREADS" --long "$LONG" --plan "$OUT/plan.json" --workers "${WORKERS:-8}" | tee "$OUT/load.txt"
+  "$PY" bench/checkpoint-history/ckpt.py load --uri "$URI" --threads "$THREADS" --long "$LONG" --plan "$OUT/plan.json" --workers "${WORKERS:-8}" --rate-mb "${RATE_MB:-0}" | tee "$OUT/load.txt"
   settle | tee -a "$OUT/load.txt"
   echo "load + settle $(( $(date +%s) - t )) s" | tee -a "$OUT/load.txt"
   sstinfo "after load" | tee -a "$OUT/load.txt"
