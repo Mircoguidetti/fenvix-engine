@@ -1,0 +1,16 @@
+phase 1: 400 threads, 7007 checkpoints, 1.13 GB written, 49 s
+phase 2: 2 threads grown to 10000, 3.27 GB written, 213 s
+{"threads": 400, "long": [192, 294], "long_steps": 10000, "bytes_written_bson": 4397562714, "checkpoints": 26974, "load_secs": 262.157372713089}
+settled after 33 s
+load + settle 298 s
+after load: L0 2 SSTs, sorted runs 2: run 6: 4 SSTs 58 MiB, run 0: 12 SSTs 2109 MiB
+  codecs ['lz4']
+checkpoints count 26974 size 4364729289
+checkpoint_writes count 53148 size 35556457
+right after settle: bucket processes: 1 objects, 86 bytes (0.000 GiB)
+right after settle: bucket tenants/checkpointing_db/_lease: 1 objects, 86 bytes (0.000 GiB)
+right after settle: bucket tenants/checkpointing_db/compacted: 727 objects, 14261193514 bytes (13.282 GiB)
+right after settle: bucket tenants/checkpointing_db/compactions: 589 objects, 869954 bytes (0.001 GiB)
+right after settle: bucket tenants/checkpointing_db/manifest: 599 objects, 3160326 bytes (0.003 GiB)
+right after settle: bucket tenants/checkpointing_db/wal: 24 objects, 938881 bytes (0.001 GiB)
+right after settle: bucket total: 1941 objects, 14266162847 bytes
