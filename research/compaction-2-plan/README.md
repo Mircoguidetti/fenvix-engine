@@ -18,3 +18,16 @@ Plan: fenvix-brain `sessions/2026-11-07-compaction-2-plan/REPORT.md`. Nothing he
   (about 5 minutes). Result: `results/probe-2.txt`.
 - `review/review_cost.py` (imports the plan's `plan_cost.py` unchanged; argument: a fenvix-brain checkout) and
   `review/delta_sim.py` (model of the delta tier): results in `review/*.txt`. Both `python3 -I`, no network.
+
+## Round 2 (2026-11-07, branch `compaction-2-plan-r2`)
+
+The plan owner's answer to the review's 7 fixes: fenvix-brain `sessions/2026-11-07-compaction-2-plan-r2/REPORT.md`.
+
+- `probe/src/bin/probe3.rs`: probe 3, probe 2's sequences under the round-2 protocol (pins, a lease for readers in
+  other processes, the drop floor read from the published manifest, every drop folded into the newest sorted run,
+  checkpoints paired with a version under the drop lock), plus a follower case, the fail point "cut set in memory,
+  publish refused", and the fix-4 invariants on a model. Controls switch the rules off and must reproduce probe 2's
+  failures. Run: `cd probe && cargo run --release --bin probe3` (about 5 minutes). Result: `results/probe-3.txt`.
+- `r2/r2_numbers.py` (imports the plan's `plan_cost.py` unchanged; argument: a fenvix-brain checkout): GETs per cold
+  read by write pattern with the round-2 options, amplification against today's tiered compaction, monthly costs,
+  hedged-GET tail, CPU per database. `python3 -I`, no network, about 50 seconds. Result: `r2/r2_numbers.txt`.

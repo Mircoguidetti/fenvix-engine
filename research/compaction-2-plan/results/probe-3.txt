@@ -1,0 +1,13 @@
+A pinned reader across publish + drop (pins on): the reader on v0 misses 0 of 1000 keys; SlateDB rows <= X left while pinned 1000, after release 0; read with v1 after release = model true: PASS
+B transaction snapshot across publish + drop (pins on): the snapshot with its pinned v0 misses 0 of 1000 keys: PASS
+A/B control (pins ignored, probe 2's protocol): the reader misses 1000 of 1000, the snapshot 1000 of 1000: reproduces the failure, as expected
+C transaction at S = 1000 keeps its version (X = 1000 <= S) while v2 (X = 1100 > S) is published and dropped: 0 of 1000 keys differ from the state at S (control, re-reading the newest version: 100); a read after the write sees it = true: PASS
+D2 30 absorb + publish + drop rounds folded into the newest run, with pins and the lease: sorted runs 1 -> 1; SlateDB rows <= X left at the end 0; merged read = model true: PASS
+FOLLOW a DbReader in another process: newest SlateDB view with an older known version, before the lease ends (view newer true; drop floor held at or below the known X true; known version refreshed 3344 ms ago): misses 0 keys; after the lease and the drop (SlateDB rows <= X left 0), with its refreshed version: misses 0; a follower that stopped refreshing is refused true (control: had it read, it would miss 100): PASS
+H fail point: the loser set its cut X = 200 in memory and its publish was refused true; the winner published X = 100; the drop reads the floor from the published manifest: the winner's read misses 0 of 200 keys: PASS
+H control (the drop trusts the cut in memory, probe 2's AtomicU64): the winner's read misses 100 of 200 keys: reproduces the failure, as expected
+F export from a checkpoint (seq 101) paired with version 1 (X = 101 <= 101): 0 of 99 documents differ from the model at the checkpoint, the deleted one included (control, today's raw export: 99 wrong): PASS
+F PITR diff (restore the live database to the checkpoint) through the pairing: 100 changes, the model's 100; equal true. Control, today's raw diff: 0 changes: PASS
+F fork from the checkpoint: the fork's first write gets seq 102, above its paired X = 101; fork read = model at the checkpoint plus its write true (control, paired with the parent's newest X = 201: the fork's write visible false): PASS
+G fix 4 on a model: group merge by concatenation with the smaller X_g brings a deleted key back true, rewrite at the common cut false; a delta merge that drops an envelope above X_g brings the sealed value back true, keeping it false: PASS
+probe 3 finished in 248 s

@@ -1,0 +1,63 @@
+== 1. GETs per cold read (mean; ESTIMATED, model) ==
+1 TB medium: inserted 38.3 GB/day; reseal period 6.7 days as written
+  plan: once 2.0 (review bounds 2.0-2.0); idle 1.0 (review bounds 1.0-1.2); weekly 1.4 (review bounds 1.4-2.2); daily 3.3 (review bounds 3.3-5.8); hourly 7.1 (review bounds 7.1-9.8); session 3.9 (review bounds 3.9-6.2)
+  R1: once 1.9; idle 1.0; weekly 1.3; daily 3.2; hourly 4.9; session 3.0
+  R1+R2 A=7d: once 1.9; idle 1.0; weekly 1.3; daily 3.2; hourly 4.9; session 3.0
+  R1+R2 A=3d: once 1.5; idle 1.0; weekly 1.2; daily 2.2; hourly 3.7; session 2.0
+1 TB busy: inserted 191.6 GB/day; reseal period 1.3 days as written
+  plan: once 1.2 (review bounds 1.2-1.5); idle 1.0 (review bounds 1.0-1.0); weekly 1.1 (review bounds 1.1-1.6); daily 1.7 (review bounds 1.7-4.5); hourly 5.1 (review bounds 5.1-9.5); session 1.8 (review bounds 1.8-3.1)
+  R1: once 1.2; idle 1.0; weekly 1.1; daily 1.7; hourly 4.6; session 1.4
+  R1+R2 A=7d: once 1.2; idle 1.0; weekly 1.1; daily 1.7; hourly 4.6; session 1.4
+  R1+R2 A=3d: once 1.2; idle 1.0; weekly 1.1; daily 1.7; hourly 4.6; session 1.4
+10 TB medium: inserted 38.3 GB/day; reseal period 66.8 days as written
+  plan: once 2.0 (review bounds 2.0-2.0); idle 1.6 (review bounds 1.6-1.8); weekly 3.6 (review bounds 3.6-5.5); daily 5.9 (review bounds 5.9-7.8); hourly 9.3 (review bounds 9.3-11.2); session 6.2 (review bounds 6.2-8.4)
+  R1: once 1.9; idle 1.6; weekly 3.6; daily 5.8; hourly 7.3; session 5.4
+  R1+R2 A=7d: once 1.6; idle 1.0; weekly 1.5; daily 3.4; hourly 4.7; session 2.8
+  R1+R2 A=3d: once 1.5; idle 1.0; weekly 1.2; daily 2.2; hourly 3.7; session 2.0
+10 TB busy: inserted 191.6 GB/day; reseal period 13.4 days as written
+  plan: once 2.0 (review bounds 2.0-2.0); idle 1.0 (review bounds 1.0-1.2); weekly 1.9 (review bounds 1.9-3.1); daily 4.0 (review bounds 4.0-5.9); hourly 7.7 (review bounds 7.7-9.6); session 3.8 (review bounds 3.8-5.7)
+  R1: once 2.0; idle 1.0; weekly 1.9; daily 4.0; hourly 7.3; session 3.5
+  R1+R2 A=7d: once 1.7; idle 1.0; weekly 1.5; daily 3.2; hourly 6.3; session 2.8
+  R1+R2 A=3d: once 1.6; idle 1.0; weekly 1.2; daily 2.4; hourly 5.5; session 1.9
+
+== 2. Write amplification (ESTIMATED, the plan's formula) ==
+1 TB medium: today's tiered 10; plan 13 (theta_eff 0.250, delta tiers 7, sealed 5.0); R1 13 (theta_eff 0.250, delta tiers 7, sealed 5.0); R1+R2 A=7d 13 (theta_eff 0.250, delta tiers 7, sealed 5.0); R1+R2 A=3d 18 (theta_eff 0.112, delta tiers 7, sealed 9.9)
+1 TB busy: today's tiered 10; plan 13 (theta_eff 0.250, delta tiers 7, sealed 5.0); R1 13 (theta_eff 0.250, delta tiers 7, sealed 5.0); R1+R2 A=7d 13 (theta_eff 0.250, delta tiers 7, sealed 5.0); R1+R2 A=3d 13 (theta_eff 0.250, delta tiers 7, sealed 5.0)
+10 TB medium: today's tiered 12; plan 15 (theta_eff 0.250, delta tiers 9, sealed 5.0); R1 15 (theta_eff 0.250, delta tiers 9, sealed 5.0); R1+R2 A=7d 48 (theta_eff 0.026, delta tiers 8, sealed 39.2); R1+R2 A=3d 98 (theta_eff 0.011, delta tiers 7, sealed 90.1)
+10 TB busy: today's tiered 12; plan 15 (theta_eff 0.250, delta tiers 9, sealed 5.0); R1 15 (theta_eff 0.250, delta tiers 9, sealed 5.0); R1+R2 A=7d 19 (theta_eff 0.131, delta tiers 9, sealed 8.6); R1+R2 A=3d 28 (theta_eff 0.056, delta tiers 8, sealed 18.8)
+
+== 3. Monthly cost per database, Ireland prices as in cost.py (ESTIMATED) ==
+1 TB medium (20 cold reads/s; 1 GET per cold read = 21.02 $ a month):
+  plan: compaction 2.64 $ (13,980 GB rewritten, 5.3 MB/s, 0.06 cores); cold-read GETs before the first course: all daily writers 69.61 $, all session writers 81.64 $; after the first course and the new-user filter (9% of cold reads, idle pattern 1.0 GETs): 1.89 $
+  R1: compaction 2.64 $ (13,980 GB rewritten, 5.3 MB/s, 0.06 cores); cold-read GETs before the first course: all daily writers 67.04 $, all session writers 63.72 $; after the first course and the new-user filter (9% of cold reads, idle pattern 1.0 GETs): 1.89 $
+  R1+R2 A=7d: compaction 2.64 $ (13,980 GB rewritten, 5.3 MB/s, 0.06 cores); cold-read GETs before the first course: all daily writers 67.04 $, all session writers 63.72 $; after the first course and the new-user filter (9% of cold reads, idle pattern 1.0 GETs): 1.89 $
+  R1+R2 A=3d: compaction 3.73 $ (19,696 GB rewritten, 7.5 MB/s, 0.09 cores); cold-read GETs before the first course: all daily writers 47.30 $, all session writers 41.44 $; after the first course and the new-user filter (9% of cold reads, idle pattern 1.0 GETs): 1.89 $
+1 TB busy (80 cold reads/s; 1 GET per cold read = 84.10 $ a month):
+  plan: compaction 13.22 $ (69,900 GB rewritten, 26.6 MB/s, 0.32 cores); cold-read GETs before the first course: all daily writers 143.90 $, all session writers 149.69 $; after the first course and the new-user filter (9% of cold reads, idle pattern 1.0 GETs): 7.57 $
+  R1: compaction 13.22 $ (69,900 GB rewritten, 26.6 MB/s, 0.32 cores); cold-read GETs before the first course: all daily writers 141.09 $, all session writers 119.99 $; after the first course and the new-user filter (9% of cold reads, idle pattern 1.0 GETs): 7.57 $
+  R1+R2 A=7d: compaction 13.22 $ (69,900 GB rewritten, 26.6 MB/s, 0.32 cores); cold-read GETs before the first course: all daily writers 141.09 $, all session writers 119.99 $; after the first course and the new-user filter (9% of cold reads, idle pattern 1.0 GETs): 7.57 $
+  R1+R2 A=3d: compaction 13.22 $ (69,900 GB rewritten, 26.6 MB/s, 0.32 cores); cold-read GETs before the first course: all daily writers 141.09 $, all session writers 119.99 $; after the first course and the new-user filter (9% of cold reads, idle pattern 1.0 GETs): 7.57 $
+10 TB medium (20 cold reads/s; 1 GET per cold read = 21.02 $ a month):
+  plan: compaction 3.09 $ (16,310 GB rewritten, 6.2 MB/s, 0.07 cores); cold-read GETs before the first course: all daily writers 124.63 $, all session writers 130.75 $; after the first course and the new-user filter (9% of cold reads, idle pattern 1.6 GETs): 3.05 $
+  R1: compaction 3.09 $ (16,310 GB rewritten, 6.2 MB/s, 0.07 cores); cold-read GETs before the first course: all daily writers 122.41 $, all session writers 112.81 $; after the first course and the new-user filter (9% of cold reads, idle pattern 1.6 GETs): 3.05 $
+  R1+R2 A=7d: compaction 10.40 $ (54,956 GB rewritten, 20.9 MB/s, 0.25 cores); cold-read GETs before the first course: all daily writers 70.55 $, all session writers 58.09 $; after the first course and the new-user filter (9% of cold reads, idle pattern 1.0 GETs): 1.89 $
+  R1+R2 A=3d: compaction 21.39 $ (113,085 GB rewritten, 43.0 MB/s, 0.52 cores); cold-read GETs before the first course: all daily writers 47.30 $, all session writers 41.44 $; after the first course and the new-user filter (9% of cold reads, idle pattern 1.0 GETs): 1.89 $
+10 TB busy (80 cold reads/s; 1 GET per cold read = 84.10 $ a month):
+  plan: compaction 15.43 $ (81,549 GB rewritten, 31.0 MB/s, 0.37 cores); cold-read GETs before the first course: all daily writers 332.65 $, all session writers 322.89 $; after the first course and the new-user filter (9% of cold reads, idle pattern 1.0 GETs): 7.57 $
+  R1: compaction 15.43 $ (81,549 GB rewritten, 31.0 MB/s, 0.37 cores); cold-read GETs before the first course: all daily writers 332.65 $, all session writers 290.70 $; after the first course and the new-user filter (9% of cold reads, idle pattern 1.0 GETs): 7.57 $
+  R1+R2 A=7d: compaction 19.43 $ (102,720 GB rewritten, 39.1 MB/s, 0.47 cores); cold-read GETs before the first course: all daily writers 272.38 $, all session writers 233.67 $; after the first course and the new-user filter (9% of cold reads, idle pattern 1.0 GETs): 7.57 $
+  R1+R2 A=3d: compaction 29.55 $ (156,190 GB rewritten, 59.4 MB/s, 0.71 cores); cold-read GETs before the first course: all daily writers 199.96 $, all session writers 159.55 $; after the first course and the new-user filter (9% of cold reads, idle pattern 1.0 GETs): 7.57 $
+
+== 4. Cold p99 of one wave of n parallel GETs (ESTIMATED, lognormal median 30 ms, p99 130 ms) ==
+  n = 1: no hedge p50 30 ms, p99 130 ms; hedged at the single-GET p95 (85 ms): p50 30 ms, p99 112 ms, extra GETs 5.0%
+  n = 2: no hedge p50 42 ms, p99 151 ms; hedged at the single-GET p95 (85 ms): p50 42 ms, p99 121 ms, extra GETs 5.0%
+  n = 4: no hedge p50 56 ms, p99 175 ms; hedged at the single-GET p95 (85 ms): p50 56 ms, p99 130 ms, extra GETs 5.0%
+  n = 6: no hedge p50 65 ms, p99 191 ms; hedged at the single-GET p95 (85 ms): p50 65 ms, p99 135 ms, extra GETs 5.0%
+  n = 9: no hedge p50 75 ms, p99 207 ms; hedged at the single-GET p95 (85 ms): p50 75 ms, p99 141 ms, extra GETs 5.0%
+  n = 12: no hedge p50 82 ms, p99 219 ms; hedged at the single-GET p95 (85 ms): p50 82 ms, p99 145 ms, extra GETs 5.0%
+
+== 5. Compaction CPU across databases (ESTIMATED, 12 s per GB rewritten) ==
+1 TB medium: plan 0.06 cores, 44 databases per c8g.xlarge at 70%; R1 0.06 cores, 44 databases per c8g.xlarge at 70%; R1+R2 A=7d 0.06 cores, 44 databases per c8g.xlarge at 70%; R1+R2 A=3d 0.09 cores, 31 databases per c8g.xlarge at 70%
+1 TB busy: plan 0.32 cores, 9 databases per c8g.xlarge at 70%; R1 0.32 cores, 9 databases per c8g.xlarge at 70%; R1+R2 A=7d 0.32 cores, 9 databases per c8g.xlarge at 70%; R1+R2 A=3d 0.32 cores, 9 databases per c8g.xlarge at 70%
+10 TB medium: plan 0.07 cores, 38 databases per c8g.xlarge at 70%; R1 0.07 cores, 38 databases per c8g.xlarge at 70%; R1+R2 A=7d 0.25 cores, 11 databases per c8g.xlarge at 70%; R1+R2 A=3d 0.52 cores, 5 databases per c8g.xlarge at 70%
+10 TB busy: plan 0.37 cores, 8 databases per c8g.xlarge at 70%; R1 0.37 cores, 8 databases per c8g.xlarge at 70%; R1+R2 A=7d 0.47 cores, 6 databases per c8g.xlarge at 70%; R1+R2 A=3d 0.71 cores, 4 databases per c8g.xlarge at 70%
