@@ -97,4 +97,8 @@ def no_lane_flag_on_base():
             i = cmd.index('--agent-lane')
             cmd = cmd[:i] + cmd[i + 2:]
         return real(cmd, *a, **k)
-    common.subprocess = type('S', (), {'Popen': staticmethod(popen), 'run': staticmethod(subprocess.run), 'TimeoutExpired': subprocess.TimeoutExpired})
+    import types
+    shim = types.ModuleType('subprocess_shim')
+    shim.__dict__.update(subprocess.__dict__)
+    shim.Popen = popen
+    common.subprocess = shim
