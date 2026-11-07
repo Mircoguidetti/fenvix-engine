@@ -1,3 +1,4 @@
+   Compiling tenant-bench v0.1.0 (/home/user/fenvix-engine)
 warning: unnecessary parentheses around closure body
     --> src/warm.rs:1211:42
      |
@@ -12,7 +13,7 @@ help: remove these parentheses
      |
 
 warning: `tenant-bench` (lib test) generated 1 warning (run `cargo fix --lib -p tenant-bench --tests` to apply 1 suggestion)
-    Finished `release` profile [optimized] target(s) in 0.25s
+    Finished `release` profile [optimized] target(s) in 33.80s
      Running unittests src/lib.rs (target/release/deps/tenant_bench-11b972cb31418ff3)
 
 running 14 tests
@@ -45,5 +46,5 @@ RUNFMT layout: block 65536, 1 runs, 221 blocks, cache 262144, tail 2
 RUNFMT layout: block 65536, 1 runs, 221 blocks, cache 0, tail 4
 test runfmt::tests::random_reads_match_an_exact_model ... ok
 
-test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 38 filtered out; finished in 553.95s
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 38 filtered out; finished in 544.46s
 
