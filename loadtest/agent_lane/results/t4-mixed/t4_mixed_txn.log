@@ -1,0 +1,3 @@
+transactions 3000: mongod {'committed': 1388, 'aborted': 329, 'error': 1283, 'failed': 0} in 12 s; ours in 33 s; agentLane {'batches': 621, 'mixedBatches': 335, 'commits': 621, 'flushes': 621, 'txnFlushes': 617, 'ackRefused': 0, 'windowUs': 100000, 'followed': 0, 'memtableFlushes': 1, 'followHits': 0}
+outcome differences 0; document differences 0; after kill -9 and restart on a new local directory 0; documents: agent 225, agent_b 208, fast 226
+RESULT PASS

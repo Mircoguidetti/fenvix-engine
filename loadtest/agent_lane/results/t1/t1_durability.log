@@ -1,104 +1,104 @@
-START 2026-11-07 18:33:34 rounds 100 
-round 0 random point_hit=True disk_wiped=False acked_total=92 txns_tried=24 lost=0 torn=0 t=6s
-round 1 during_put point_hit=True disk_wiped=True acked_total=338 txns_tried=94 lost=0 torn=0 t=12s
-round 2 after_put point_hit=True disk_wiped=False acked_total=448 txns_tried=131 lost=0 torn=0 t=20s
-round 3 random point_hit=True disk_wiped=True acked_total=830 txns_tried=230 lost=0 torn=0 t=28s
-round 4 during_put point_hit=True disk_wiped=False acked_total=1278 txns_tried=349 lost=0 torn=0 t=35s
-round 5 after_put point_hit=True disk_wiped=True acked_total=1372 txns_tried=376 lost=0 torn=0 t=41s
-round 6 random point_hit=True disk_wiped=False acked_total=1798 txns_tried=495 lost=0 torn=0 t=48s
-round 7 during_put point_hit=True disk_wiped=True acked_total=1993 txns_tried=552 lost=0 torn=0 t=55s
-round 8 after_put point_hit=True disk_wiped=False acked_total=2068 txns_tried=579 lost=0 torn=0 t=61s
-round 9 random point_hit=True disk_wiped=True acked_total=2458 txns_tried=681 lost=0 torn=0 t=68s
-round 10 during_put point_hit=True disk_wiped=False acked_total=2519 txns_tried=701 lost=0 torn=0 t=74s
-round 11 after_put point_hit=True disk_wiped=True acked_total=2602 txns_tried=726 lost=0 torn=0 t=80s
-round 12 random point_hit=True disk_wiped=False acked_total=3083 txns_tried=864 lost=0 torn=0 t=87s
-round 13 during_put point_hit=True disk_wiped=True acked_total=3208 txns_tried=900 lost=0 torn=0 t=93s
-round 14 after_put point_hit=True disk_wiped=False acked_total=3338 txns_tried=934 lost=0 torn=0 t=100s
-round 15 random point_hit=True disk_wiped=True acked_total=3549 txns_tried=993 lost=0 torn=0 t=107s
-round 16 during_put point_hit=True disk_wiped=False acked_total=3958 txns_tried=1103 lost=0 torn=0 t=114s
-round 17 after_put point_hit=True disk_wiped=True acked_total=4017 txns_tried=1122 lost=0 torn=0 t=120s
-round 18 random point_hit=True disk_wiped=False acked_total=4102 txns_tried=1146 lost=0 torn=0 t=126s
-round 19 during_put point_hit=True disk_wiped=True acked_total=4163 txns_tried=1163 lost=0 torn=0 t=132s
-round 20 after_put point_hit=True disk_wiped=False acked_total=4284 txns_tried=1199 lost=0 torn=0 t=141s
-round 21 random point_hit=True disk_wiped=True acked_total=4760 txns_tried=1322 lost=0 torn=0 t=148s
-round 22 during_put point_hit=True disk_wiped=False acked_total=5048 txns_tried=1397 lost=0 torn=0 t=156s
-round 23 after_put point_hit=True disk_wiped=True acked_total=5174 txns_tried=1432 lost=0 torn=0 t=165s
-round 24 random point_hit=True disk_wiped=False acked_total=5473 txns_tried=1508 lost=0 torn=0 t=172s
-round 25 during_put point_hit=True disk_wiped=True acked_total=5569 txns_tried=1540 lost=0 torn=0 t=178s
-round 26 after_put point_hit=True disk_wiped=False acked_total=5617 txns_tried=1554 lost=0 torn=0 t=184s
-round 27 random point_hit=True disk_wiped=True acked_total=5763 txns_tried=1599 lost=0 torn=0 t=190s
-round 28 during_put point_hit=True disk_wiped=False acked_total=6132 txns_tried=1695 lost=0 torn=0 t=197s
-round 29 after_put point_hit=True disk_wiped=True acked_total=6170 txns_tried=1707 lost=0 torn=0 t=203s
-round 30 random point_hit=True disk_wiped=False acked_total=6543 txns_tried=1801 lost=0 torn=0 t=211s
-round 31 during_put point_hit=True disk_wiped=True acked_total=6809 txns_tried=1868 lost=0 torn=0 t=220s
-round 32 after_put point_hit=True disk_wiped=False acked_total=6856 txns_tried=1884 lost=0 torn=0 t=228s
-round 33 random point_hit=True disk_wiped=True acked_total=7209 txns_tried=1973 lost=0 torn=0 t=236s
-round 34 during_put point_hit=True disk_wiped=False acked_total=7528 txns_tried=2045 lost=0 torn=0 t=243s
-round 35 after_put point_hit=True disk_wiped=True acked_total=7673 txns_tried=2086 lost=0 torn=0 t=250s
-round 36 random point_hit=True disk_wiped=False acked_total=7993 txns_tried=2168 lost=0 torn=0 t=257s
-round 37 during_put point_hit=True disk_wiped=True acked_total=8227 txns_tried=2227 lost=0 torn=0 t=264s
-round 38 after_put point_hit=True disk_wiped=False acked_total=8293 txns_tried=2248 lost=0 torn=0 t=272s
-round 39 random point_hit=True disk_wiped=True acked_total=8404 txns_tried=2282 lost=0 torn=0 t=280s
-round 40 during_put point_hit=True disk_wiped=False acked_total=8730 txns_tried=2367 lost=0 torn=0 t=287s
-round 41 after_put point_hit=True disk_wiped=True acked_total=8853 txns_tried=2399 lost=0 torn=0 t=294s
-round 42 random point_hit=True disk_wiped=False acked_total=9079 txns_tried=2457 lost=0 torn=0 t=301s
-round 43 during_put point_hit=True disk_wiped=True acked_total=9333 txns_tried=2523 lost=0 torn=0 t=308s
-round 44 after_put point_hit=True disk_wiped=False acked_total=9490 txns_tried=2562 lost=0 torn=0 t=316s
-round 45 random point_hit=True disk_wiped=True acked_total=9802 txns_tried=2645 lost=0 torn=0 t=323s
-round 46 during_put point_hit=True disk_wiped=False acked_total=10033 txns_tried=2715 lost=0 torn=0 t=331s
-round 47 after_put point_hit=True disk_wiped=True acked_total=10060 txns_tried=2726 lost=0 torn=0 t=337s
-round 48 random point_hit=True disk_wiped=False acked_total=10127 txns_tried=2749 lost=0 torn=0 t=343s
-round 49 during_put point_hit=True disk_wiped=True acked_total=10520 txns_tried=2845 lost=0 torn=0 t=350s
-round 50 after_put point_hit=True disk_wiped=False acked_total=10656 txns_tried=2884 lost=0 torn=0 t=358s
-round 51 random point_hit=True disk_wiped=True acked_total=11136 txns_tried=3010 lost=0 torn=0 t=365s
-round 52 during_put point_hit=True disk_wiped=False acked_total=11533 txns_tried=3114 lost=0 torn=0 t=373s
-round 53 after_put point_hit=True disk_wiped=True acked_total=11562 txns_tried=3124 lost=0 torn=0 t=379s
-round 54 random point_hit=True disk_wiped=False acked_total=11848 txns_tried=3199 lost=0 torn=0 t=386s
-round 55 during_put point_hit=True disk_wiped=True acked_total=12094 txns_tried=3260 lost=0 torn=0 t=393s
-round 56 after_put point_hit=True disk_wiped=False acked_total=12186 txns_tried=3293 lost=0 torn=0 t=402s
-round 57 random point_hit=True disk_wiped=True acked_total=12290 txns_tried=3324 lost=0 torn=0 t=409s
-round 58 during_put point_hit=True disk_wiped=False acked_total=12348 txns_tried=3340 lost=0 torn=0 t=415s
-round 59 after_put point_hit=True disk_wiped=True acked_total=12447 txns_tried=3367 lost=0 torn=0 t=422s
-round 60 random point_hit=True disk_wiped=False acked_total=12553 txns_tried=3392 lost=0 torn=0 t=429s
-round 61 during_put point_hit=True disk_wiped=True acked_total=12652 txns_tried=3422 lost=0 torn=0 t=435s
-round 62 after_put point_hit=True disk_wiped=False acked_total=12696 txns_tried=3435 lost=0 torn=0 t=441s
-round 63 random point_hit=True disk_wiped=True acked_total=13016 txns_tried=3511 lost=0 torn=0 t=449s
-round 64 during_put point_hit=True disk_wiped=False acked_total=13149 txns_tried=3549 lost=0 torn=0 t=455s
-round 65 after_put point_hit=True disk_wiped=True acked_total=13319 txns_tried=3592 lost=0 torn=0 t=463s
-round 66 random point_hit=True disk_wiped=False acked_total=13537 txns_tried=3649 lost=0 torn=0 t=471s
-round 67 during_put point_hit=True disk_wiped=True acked_total=13703 txns_tried=3690 lost=0 torn=0 t=479s
-round 68 after_put point_hit=True disk_wiped=False acked_total=13897 txns_tried=3742 lost=0 torn=0 t=487s
-round 69 random point_hit=True disk_wiped=True acked_total=14278 txns_tried=3840 lost=0 torn=0 t=495s
-round 70 during_put point_hit=True disk_wiped=False acked_total=14626 txns_tried=3931 lost=0 torn=0 t=502s
-round 71 after_put point_hit=True disk_wiped=True acked_total=14716 txns_tried=3958 lost=0 torn=0 t=509s
-round 72 random point_hit=True disk_wiped=False acked_total=14805 txns_tried=3981 lost=0 torn=0 t=516s
-round 73 during_put point_hit=True disk_wiped=True acked_total=15043 txns_tried=4035 lost=0 torn=0 t=523s
-round 74 after_put point_hit=True disk_wiped=False acked_total=15058 txns_tried=4041 lost=0 torn=0 t=529s
-round 75 random point_hit=True disk_wiped=True acked_total=15321 txns_tried=4112 lost=0 torn=0 t=536s
-round 76 during_put point_hit=True disk_wiped=False acked_total=15575 txns_tried=4176 lost=0 torn=0 t=543s
-round 77 after_put point_hit=True disk_wiped=True acked_total=15653 txns_tried=4204 lost=0 torn=0 t=552s
-round 78 random point_hit=True disk_wiped=False acked_total=15916 txns_tried=4271 lost=0 torn=0 t=559s
-round 79 during_put point_hit=True disk_wiped=True acked_total=16263 txns_tried=4352 lost=0 torn=0 t=566s
-round 80 after_put point_hit=True disk_wiped=False acked_total=16281 txns_tried=4361 lost=0 torn=0 t=573s
-round 81 random point_hit=True disk_wiped=True acked_total=16471 txns_tried=4411 lost=0 torn=0 t=579s
-round 82 during_put point_hit=True disk_wiped=False acked_total=16575 txns_tried=4438 lost=0 torn=0 t=587s
-round 83 after_put point_hit=True disk_wiped=True acked_total=16762 txns_tried=4491 lost=0 torn=0 t=595s
-round 84 random point_hit=True disk_wiped=False acked_total=16979 txns_tried=4549 lost=0 torn=0 t=602s
-round 85 during_put point_hit=True disk_wiped=True acked_total=17337 txns_tried=4639 lost=0 torn=0 t=610s
-round 86 after_put point_hit=True disk_wiped=False acked_total=17475 txns_tried=4675 lost=0 torn=0 t=619s
-round 87 random point_hit=True disk_wiped=True acked_total=17624 txns_tried=4716 lost=0 torn=0 t=626s
-round 88 during_put point_hit=True disk_wiped=False acked_total=17731 txns_tried=4751 lost=0 torn=0 t=634s
-round 89 after_put point_hit=True disk_wiped=True acked_total=17768 txns_tried=4763 lost=0 torn=0 t=640s
-round 90 random point_hit=True disk_wiped=False acked_total=18174 txns_tried=4860 lost=0 torn=0 t=648s
-round 91 during_put point_hit=True disk_wiped=True acked_total=18390 txns_tried=4918 lost=0 torn=0 t=655s
-round 92 after_put point_hit=True disk_wiped=False acked_total=18515 txns_tried=4952 lost=0 torn=0 t=663s
-round 93 random point_hit=True disk_wiped=True acked_total=18730 txns_tried=5007 lost=0 torn=0 t=670s
-round 94 during_put point_hit=True disk_wiped=False acked_total=19127 txns_tried=5106 lost=0 torn=0 t=678s
-round 95 after_put point_hit=True disk_wiped=True acked_total=19233 txns_tried=5135 lost=0 torn=0 t=686s
-round 96 random point_hit=True disk_wiped=False acked_total=19429 txns_tried=5195 lost=0 torn=0 t=693s
-round 97 during_put point_hit=True disk_wiped=True acked_total=19485 txns_tried=5210 lost=0 torn=0 t=701s
-round 98 after_put point_hit=True disk_wiped=False acked_total=19631 txns_tried=5252 lost=0 torn=0 t=708s
-round 99 random point_hit=True disk_wiped=True acked_total=19774 txns_tried=5294 lost=0 torn=0 t=716s
-final full check: acked=19774 lost=0 torn=0
-agentLane counters (last run of the engine): {'batches': 0, 'mixedBatches': 0, 'commits': 0, 'flushes': 0, 'txnFlushes': 0, 'ackRefused': 0, 'windowUs': 100000, 'followed': 0, 'followHits': 0}
-RESULT kills=100 points_hit={'random': 34, 'during_put': 33, 'after_put': 33} acked=19774 (agent lane 14546) txns_tried=5294 lost=0 torn=0 -> PASS
+START 2026-11-07 19:37:09 rounds 100 
+round 0 random point_hit=True disk_wiped=False acked_total=24 txns_tried=6 hot_updates_acked=11 lost=0 torn_or_stale=0 t=6s
+round 1 during_put point_hit=True disk_wiped=True acked_total=305 txns_tried=84 hot_updates_acked=88 lost=0 torn_or_stale=0 t=13s
+round 2 after_put point_hit=True disk_wiped=False acked_total=320 txns_tried=91 hot_updates_acked=95 lost=0 torn_or_stale=0 t=19s
+round 3 random point_hit=True disk_wiped=True acked_total=555 txns_tried=155 hot_updates_acked=139 lost=0 torn_or_stale=0 t=27s
+round 4 during_put point_hit=True disk_wiped=False acked_total=839 txns_tried=234 hot_updates_acked=221 lost=0 torn_or_stale=0 t=34s
+round 5 after_put point_hit=True disk_wiped=True acked_total=931 txns_tried=264 hot_updates_acked=244 lost=0 torn_or_stale=0 t=42s
+round 6 random point_hit=True disk_wiped=False acked_total=1077 txns_tried=308 hot_updates_acked=290 lost=0 torn_or_stale=0 t=48s
+round 7 during_put point_hit=True disk_wiped=True acked_total=1231 txns_tried=344 hot_updates_acked=334 lost=0 torn_or_stale=0 t=56s
+round 8 after_put point_hit=True disk_wiped=False acked_total=1315 txns_tried=368 hot_updates_acked=359 lost=0 torn_or_stale=0 t=65s
+round 9 random point_hit=True disk_wiped=True acked_total=1671 txns_tried=472 hot_updates_acked=440 lost=0 torn_or_stale=0 t=72s
+round 10 during_put point_hit=True disk_wiped=False acked_total=1917 txns_tried=534 hot_updates_acked=506 lost=0 torn_or_stale=0 t=79s
+round 11 after_put point_hit=True disk_wiped=True acked_total=2000 txns_tried=559 hot_updates_acked=522 lost=0 torn_or_stale=0 t=87s
+round 12 random point_hit=True disk_wiped=False acked_total=2274 txns_tried=632 hot_updates_acked=599 lost=0 torn_or_stale=0 t=95s
+round 13 during_put point_hit=True disk_wiped=True acked_total=2508 txns_tried=696 hot_updates_acked=661 lost=0 torn_or_stale=0 t=102s
+round 14 after_put point_hit=True disk_wiped=False acked_total=2646 txns_tried=734 hot_updates_acked=706 lost=0 torn_or_stale=0 t=110s
+round 15 random point_hit=True disk_wiped=True acked_total=2750 txns_tried=768 hot_updates_acked=726 lost=0 torn_or_stale=0 t=116s
+round 16 during_put point_hit=True disk_wiped=False acked_total=2816 txns_tried=788 hot_updates_acked=744 lost=0 torn_or_stale=0 t=122s
+round 17 after_put point_hit=True disk_wiped=True acked_total=2858 txns_tried=800 hot_updates_acked=750 lost=0 torn_or_stale=0 t=128s
+round 18 random point_hit=True disk_wiped=False acked_total=3046 txns_tried=854 hot_updates_acked=810 lost=0 torn_or_stale=0 t=136s
+round 19 during_put point_hit=True disk_wiped=True acked_total=3339 txns_tried=928 hot_updates_acked=878 lost=0 torn_or_stale=0 t=143s
+round 20 after_put point_hit=True disk_wiped=False acked_total=3365 txns_tried=939 hot_updates_acked=891 lost=0 torn_or_stale=0 t=149s
+round 21 random point_hit=True disk_wiped=True acked_total=3458 txns_tried=964 hot_updates_acked=907 lost=0 torn_or_stale=0 t=156s
+round 22 during_put point_hit=True disk_wiped=False acked_total=3755 txns_tried=1046 hot_updates_acked=969 lost=0 torn_or_stale=0 t=163s
+round 23 after_put point_hit=True disk_wiped=True acked_total=3855 txns_tried=1074 hot_updates_acked=987 lost=0 torn_or_stale=0 t=171s
+round 24 random point_hit=True disk_wiped=False acked_total=3958 txns_tried=1106 hot_updates_acked=1014 lost=0 torn_or_stale=0 t=178s
+round 25 during_put point_hit=True disk_wiped=True acked_total=4157 txns_tried=1154 hot_updates_acked=1071 lost=0 torn_or_stale=0 t=185s
+round 26 after_put point_hit=True disk_wiped=False acked_total=4306 txns_tried=1197 hot_updates_acked=1101 lost=0 torn_or_stale=0 t=192s
+round 27 random point_hit=True disk_wiped=True acked_total=4354 txns_tried=1215 hot_updates_acked=1113 lost=0 torn_or_stale=0 t=198s
+round 28 during_put point_hit=True disk_wiped=False acked_total=4478 txns_tried=1245 hot_updates_acked=1154 lost=0 torn_or_stale=0 t=204s
+round 29 after_put point_hit=True disk_wiped=True acked_total=4519 txns_tried=1260 hot_updates_acked=1171 lost=0 torn_or_stale=0 t=210s
+round 30 random point_hit=True disk_wiped=False acked_total=4702 txns_tried=1308 hot_updates_acked=1211 lost=0 torn_or_stale=0 t=217s
+round 31 during_put point_hit=True disk_wiped=True acked_total=4790 txns_tried=1333 hot_updates_acked=1228 lost=0 torn_or_stale=0 t=223s
+round 32 after_put point_hit=True disk_wiped=False acked_total=4886 txns_tried=1359 hot_updates_acked=1252 lost=0 torn_or_stale=0 t=232s
+round 33 random point_hit=True disk_wiped=True acked_total=5172 txns_tried=1430 hot_updates_acked=1321 lost=0 torn_or_stale=0 t=239s
+round 34 during_put point_hit=True disk_wiped=False acked_total=5468 txns_tried=1507 hot_updates_acked=1415 lost=0 torn_or_stale=0 t=246s
+round 35 after_put point_hit=True disk_wiped=True acked_total=5605 txns_tried=1544 hot_updates_acked=1450 lost=0 torn_or_stale=0 t=254s
+round 36 random point_hit=True disk_wiped=False acked_total=5744 txns_tried=1586 hot_updates_acked=1489 lost=0 torn_or_stale=0 t=261s
+round 37 during_put point_hit=True disk_wiped=True acked_total=5988 txns_tried=1652 hot_updates_acked=1550 lost=0 torn_or_stale=0 t=269s
+round 38 after_put point_hit=True disk_wiped=False acked_total=6012 txns_tried=1660 hot_updates_acked=1563 lost=0 torn_or_stale=0 t=275s
+round 39 random point_hit=True disk_wiped=True acked_total=6300 txns_tried=1731 hot_updates_acked=1633 lost=0 torn_or_stale=0 t=282s
+round 40 during_put point_hit=True disk_wiped=False acked_total=6339 txns_tried=1741 hot_updates_acked=1649 lost=0 torn_or_stale=0 t=288s
+round 41 after_put point_hit=True disk_wiped=True acked_total=6404 txns_tried=1761 hot_updates_acked=1670 lost=0 torn_or_stale=0 t=296s
+round 42 random point_hit=True disk_wiped=False acked_total=6666 txns_tried=1826 hot_updates_acked=1738 lost=0 torn_or_stale=0 t=304s
+round 43 during_put point_hit=True disk_wiped=True acked_total=6907 txns_tried=1886 hot_updates_acked=1802 lost=0 torn_or_stale=0 t=311s
+round 44 after_put point_hit=True disk_wiped=False acked_total=7051 txns_tried=1925 hot_updates_acked=1835 lost=0 torn_or_stale=0 t=318s
+round 45 random point_hit=True disk_wiped=True acked_total=7244 txns_tried=1973 hot_updates_acked=1892 lost=0 torn_or_stale=0 t=326s
+round 46 during_put point_hit=True disk_wiped=False acked_total=7289 txns_tried=1985 hot_updates_acked=1906 lost=0 torn_or_stale=0 t=332s
+round 47 after_put point_hit=True disk_wiped=True acked_total=7336 txns_tried=1998 hot_updates_acked=1921 lost=0 torn_or_stale=0 t=340s
+round 48 random point_hit=True disk_wiped=False acked_total=7626 txns_tried=2070 hot_updates_acked=2016 lost=0 torn_or_stale=0 t=347s
+round 49 during_put point_hit=True disk_wiped=True acked_total=7819 txns_tried=2121 hot_updates_acked=2062 lost=0 torn_or_stale=0 t=355s
+round 50 after_put point_hit=True disk_wiped=False acked_total=7951 txns_tried=2155 hot_updates_acked=2088 lost=0 torn_or_stale=0 t=363s
+round 51 random point_hit=True disk_wiped=True acked_total=8078 txns_tried=2186 hot_updates_acked=2123 lost=0 torn_or_stale=0 t=371s
+round 52 during_put point_hit=True disk_wiped=False acked_total=8370 txns_tried=2259 hot_updates_acked=2187 lost=0 torn_or_stale=0 t=378s
+round 53 after_put point_hit=True disk_wiped=True acked_total=8530 txns_tried=2302 hot_updates_acked=2221 lost=0 torn_or_stale=0 t=386s
+round 54 random point_hit=True disk_wiped=False acked_total=8606 txns_tried=2322 hot_updates_acked=2242 lost=0 torn_or_stale=0 t=392s
+round 55 during_put point_hit=True disk_wiped=True acked_total=8859 txns_tried=2388 hot_updates_acked=2311 lost=0 torn_or_stale=0 t=400s
+round 56 after_put point_hit=True disk_wiped=False acked_total=8918 txns_tried=2409 hot_updates_acked=2328 lost=0 torn_or_stale=0 t=408s
+round 57 random point_hit=True disk_wiped=True acked_total=8948 txns_tried=2418 hot_updates_acked=2336 lost=0 torn_or_stale=0 t=414s
+round 58 during_put point_hit=True disk_wiped=False acked_total=9184 txns_tried=2475 hot_updates_acked=2419 lost=0 torn_or_stale=0 t=421s
+round 59 after_put point_hit=True disk_wiped=True acked_total=9279 txns_tried=2503 hot_updates_acked=2438 lost=0 torn_or_stale=0 t=429s
+round 60 random point_hit=True disk_wiped=False acked_total=9462 txns_tried=2549 hot_updates_acked=2478 lost=0 torn_or_stale=0 t=435s
+round 61 during_put point_hit=True disk_wiped=True acked_total=9588 txns_tried=2585 hot_updates_acked=2509 lost=0 torn_or_stale=0 t=443s
+round 62 after_put point_hit=True disk_wiped=False acked_total=9652 txns_tried=2602 hot_updates_acked=2520 lost=0 torn_or_stale=0 t=451s
+round 63 random point_hit=True disk_wiped=True acked_total=9852 txns_tried=2662 hot_updates_acked=2581 lost=0 torn_or_stale=0 t=458s
+round 64 during_put point_hit=True disk_wiped=False acked_total=10157 txns_tried=2740 hot_updates_acked=2655 lost=0 torn_or_stale=0 t=466s
+round 65 after_put point_hit=True disk_wiped=True acked_total=10245 txns_tried=2766 hot_updates_acked=2678 lost=0 torn_or_stale=0 t=474s
+round 66 random point_hit=True disk_wiped=False acked_total=10507 txns_tried=2834 hot_updates_acked=2744 lost=0 torn_or_stale=0 t=482s
+round 67 during_put point_hit=True disk_wiped=True acked_total=10769 txns_tried=2903 hot_updates_acked=2815 lost=0 torn_or_stale=0 t=489s
+round 68 after_put point_hit=True disk_wiped=False acked_total=10874 txns_tried=2933 hot_updates_acked=2855 lost=0 torn_or_stale=0 t=496s
+round 69 random point_hit=True disk_wiped=True acked_total=11025 txns_tried=2974 hot_updates_acked=2894 lost=0 torn_or_stale=0 t=504s
+round 70 during_put point_hit=True disk_wiped=False acked_total=11211 txns_tried=3020 hot_updates_acked=2954 lost=0 torn_or_stale=0 t=512s
+round 71 after_put point_hit=True disk_wiped=True acked_total=11258 txns_tried=3033 hot_updates_acked=2976 lost=0 torn_or_stale=0 t=519s
+round 72 random point_hit=True disk_wiped=False acked_total=11394 txns_tried=3077 hot_updates_acked=2994 lost=0 torn_or_stale=0 t=525s
+round 73 during_put point_hit=True disk_wiped=True acked_total=11446 txns_tried=3091 hot_updates_acked=3016 lost=0 torn_or_stale=0 t=531s
+round 74 after_put point_hit=True disk_wiped=False acked_total=11577 txns_tried=3130 hot_updates_acked=3058 lost=0 torn_or_stale=0 t=539s
+round 75 random point_hit=True disk_wiped=True acked_total=11605 txns_tried=3138 hot_updates_acked=3071 lost=0 torn_or_stale=0 t=545s
+round 76 during_put point_hit=True disk_wiped=False acked_total=11675 txns_tried=3157 hot_updates_acked=3094 lost=0 torn_or_stale=0 t=551s
+round 77 after_put point_hit=True disk_wiped=True acked_total=11710 txns_tried=3170 hot_updates_acked=3098 lost=0 torn_or_stale=0 t=558s
+round 78 random point_hit=True disk_wiped=False acked_total=11937 txns_tried=3226 hot_updates_acked=3175 lost=0 torn_or_stale=0 t=565s
+round 79 during_put point_hit=True disk_wiped=True acked_total=11978 txns_tried=3238 hot_updates_acked=3185 lost=0 torn_or_stale=0 t=571s
+round 80 after_put point_hit=True disk_wiped=False acked_total=12098 txns_tried=3277 hot_updates_acked=3217 lost=0 torn_or_stale=0 t=579s
+round 81 random point_hit=True disk_wiped=True acked_total=12275 txns_tried=3323 hot_updates_acked=3274 lost=0 torn_or_stale=0 t=586s
+round 82 during_put point_hit=True disk_wiped=False acked_total=12314 txns_tried=3337 hot_updates_acked=3285 lost=0 torn_or_stale=0 t=593s
+round 83 after_put point_hit=True disk_wiped=True acked_total=12344 txns_tried=3346 hot_updates_acked=3295 lost=0 torn_or_stale=0 t=599s
+round 84 random point_hit=True disk_wiped=False acked_total=12382 txns_tried=3358 hot_updates_acked=3303 lost=0 torn_or_stale=0 t=605s
+round 85 during_put point_hit=True disk_wiped=True acked_total=12623 txns_tried=3422 hot_updates_acked=3396 lost=0 torn_or_stale=0 t=613s
+round 86 after_put point_hit=True disk_wiped=False acked_total=12728 txns_tried=3447 hot_updates_acked=3427 lost=0 torn_or_stale=0 t=621s
+round 87 random point_hit=True disk_wiped=True acked_total=12807 txns_tried=3469 hot_updates_acked=3443 lost=0 torn_or_stale=0 t=628s
+round 88 during_put point_hit=True disk_wiped=False acked_total=12922 txns_tried=3499 hot_updates_acked=3483 lost=0 torn_or_stale=0 t=635s
+round 89 after_put point_hit=True disk_wiped=True acked_total=12945 txns_tried=3508 hot_updates_acked=3484 lost=0 torn_or_stale=0 t=641s
+round 90 random point_hit=True disk_wiped=False acked_total=12956 txns_tried=3513 hot_updates_acked=3489 lost=0 torn_or_stale=0 t=647s
+round 91 during_put point_hit=True disk_wiped=True acked_total=13105 txns_tried=3548 hot_updates_acked=3525 lost=0 torn_or_stale=0 t=654s
+round 92 after_put point_hit=True disk_wiped=False acked_total=13190 txns_tried=3573 hot_updates_acked=3551 lost=0 torn_or_stale=0 t=662s
+round 93 random point_hit=True disk_wiped=True acked_total=13272 txns_tried=3597 hot_updates_acked=3571 lost=0 torn_or_stale=0 t=669s
+round 94 during_put point_hit=True disk_wiped=False acked_total=13450 txns_tried=3642 hot_updates_acked=3626 lost=0 torn_or_stale=0 t=677s
+round 95 after_put point_hit=True disk_wiped=True acked_total=13496 txns_tried=3655 hot_updates_acked=3645 lost=0 torn_or_stale=0 t=686s
+round 96 random point_hit=True disk_wiped=False acked_total=13573 txns_tried=3677 hot_updates_acked=3663 lost=0 torn_or_stale=0 t=695s
+round 97 during_put point_hit=True disk_wiped=True acked_total=13841 txns_tried=3747 hot_updates_acked=3747 lost=0 torn_or_stale=0 t=703s
+round 98 after_put point_hit=True disk_wiped=False acked_total=13990 txns_tried=3786 hot_updates_acked=3773 lost=0 torn_or_stale=0 t=712s
+round 99 random point_hit=True disk_wiped=True acked_total=14289 txns_tried=3867 hot_updates_acked=3849 lost=0 torn_or_stale=0 t=720s
+final full check: acked=14289 lost=0 torn=0
+agentLane counters (last run of the engine): {'batches': 0, 'mixedBatches': 0, 'commits': 0, 'flushes': 0, 'txnFlushes': 0, 'ackRefused': 0, 'windowUs': 100000, 'followed': 0, 'memtableFlushes': 0, 'followHits': 0}
+RESULT kills=100 points_hit={'random': 34, 'during_put': 33, 'after_put': 33} acked=14289 (agent lane 10471) txns_tried=3867 hot_versions_acked=3849 lost=0 torn_or_stale=0 -> PASS

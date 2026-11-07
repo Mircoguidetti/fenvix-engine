@@ -7,8 +7,8 @@
 # Needs judge/setup.sh, the release build, proto/quaderno built, and the LangGraph suites installed by
 # bench/agent-adapters/install.sh (only the venv-lg part is used).
 set -uo pipefail
+OUT=$(mkdir -p "$1" && cd "$1" && pwd)   # relative to the caller's directory
 ROOT=$(cd "$(dirname "$0")/../.." && pwd); cd "$ROOT"
-OUT=$(mkdir -p "$1" && cd "$1" && pwd)
 JH=${JUDGE_HOME:-$HOME/.fenvix-judge}; PY="$JH/env/bin/python"
 A=${ADAPTERS_HOME:-/home/user/adapters}
 # the adapters harness lives on branch agent-adapters; take it from there when it is not checked out here

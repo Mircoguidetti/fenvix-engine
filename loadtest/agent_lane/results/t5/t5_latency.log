@@ -1,0 +1,32 @@
+START 2026-11-07 20:33:02 models=[30, 100, 200] secs=20.0 tail=60.0
+PUT model median 30 ms | agent    lone: n=148 p50=134.0 ms p99=169.2 ms
+PUT model median 30 ms | agent    64 agents: n=9335 p50=136.0 ms p99=176.1 ms
+PUT model median 30 ms | agenttxn lone: n=557 p50=34.8 ms p99=67.9 ms
+PUT model median 30 ms | agenttxn 64 agents: n=13367 p50=91.8 ms p99=166.8 ms
+PUT model median 30 ms | fast     lone: n=10058 p50=1.9 ms p99=3.3 ms
+PUT model median 30 ms | fast     64 agents: n=37392 p50=27.7 ms p99=112.8 ms
+PUT model median 30 ms | fasttxn  lone: n=5926 p50=3.3 ms p99=5.3 ms
+PUT model median 30 ms | fasttxn  64 agents: n=13434 p50=87.4 ms p99=216.1 ms
+PUT model median 30 ms | agentLane {'batches': 23447, 'mixedBatches': 2, 'commits': 23437, 'flushes': 1437, 'txnFlushes': 1138, 'ackRefused': 0, 'windowUs': 100000, 'followed': 0, 'memtableFlushes': 3, 'followHits': 0} | writes per PUT 16.3
+PUT model median 100 ms | agent    lone: n=97 p50=204.6 ms p99=299.2 ms
+PUT model median 100 ms | agent    64 agents: n=6127 p50=205.2 ms p99=285.0 ms
+PUT model median 100 ms | agenttxn lone: n=184 p50=102.2 ms p99=198.2 ms
+PUT model median 100 ms | agenttxn 64 agents: n=5988 p50=207.0 ms p99=367.7 ms
+PUT model median 100 ms | fast     lone: n=9528 p50=2.0 ms p99=3.9 ms
+PUT model median 100 ms | fast     64 agents: n=34860 p50=29.8 ms p99=121.0 ms
+PUT model median 100 ms | fasttxn  lone: n=5604 p50=3.5 ms p99=6.0 ms
+PUT model median 100 ms | fasttxn  64 agents: n=13106 p50=90.0 ms p99=218.9 ms
+PUT model median 100 ms | agentLane {'batches': 12418, 'mixedBatches': 2, 'commits': 12411, 'flushes': 572, 'txnFlushes': 374, 'ackRefused': 0, 'windowUs': 100000, 'followed': 0, 'memtableFlushes': 3, 'followHits': 0} | writes per PUT 21.7
+PUT model median 200 ms | agent    lone: n=63 p50=303.1 ms p99=509.1 ms
+PUT model median 200 ms | agent    64 agents: n=3402 p50=369.0 ms p99=648.1 ms
+PUT model median 200 ms | agenttxn lone: n=98 p50=192.5 ms p99=361.3 ms
+PUT model median 200 ms | agenttxn 64 agents: n=3127 p50=387.1 ms p99=757.1 ms
+PUT model median 200 ms | fast     lone: n=10058 p50=1.9 ms p99=3.2 ms
+PUT model median 200 ms | fast     64 agents: n=33791 p50=30.3 ms p99=123.5 ms
+PUT model median 200 ms | fasttxn  lone: n=5813 p50=3.3 ms p99=4.9 ms
+PUT model median 200 ms | fasttxn  64 agents: n=13421 p50=88.0 ms p99=219.8 ms
+PUT model median 200 ms | agentLane {'batches': 6703, 'mixedBatches': 2, 'commits': 6699, 'flushes': 339, 'txnFlushes': 196, 'ackRefused': 0, 'windowUs': 100000, 'followed': 0, 'memtableFlushes': 3, 'followHits': 0} | writes per PUT 19.8
+failover base: tail writes 0, WAL objects written by the primary 3 (memtable flushes 1), spare followed 0 and answered 0 reads from them; first answer 5.24 s after the kill (lease ttl 4 s); then 200 point reads on the spare p50 0.71 ms p99 1.19 ms
+failover tail: tail writes 27466, WAL objects written by the primary 445 (memtable flushes 13), spare followed 0 and answered 0 reads from them; first answer 5.43 s after the kill (lease ttl 4 s); then 200 point reads on the spare p50 0.67 ms p99 1.06 ms
+failover follow: tail writes 27894, WAL objects written by the primary 454 (memtable flushes 13), spare followed 458 and answered 40 reads from them; first answer 5.28 s after the kill (lease ttl 4 s); then 200 point reads on the spare p50 0.66 ms p99 1.01 ms
+RESULT failover first answer after kill: base 5.24 s, agent-lane tail 5.43 s (extra 0.19 s), tail with the spare following 5.28 s (extra 0.04 s)
