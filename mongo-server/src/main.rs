@@ -448,6 +448,11 @@ struct Args {
     /// takes the customer key when it is created, first indexed or first written while empty. Off when empty (default).
     #[arg(long, default_value = "")]
     customer_key: String,
+    /// Envelope values (envelope.rs): `read` (release E0: read envelopes, write them only in a database that already has
+    /// them) or `write` (release E1: also start them in a database that has none). Default `read`. Rolling back from
+    /// `write` is safe only to a release that has `read`.
+    #[arg(long, default_value = "read")]
+    envelopes: String,
     /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
     /// releases before); M29 measured 64.
     #[arg(long, default_value_t = 4)]
@@ -689,6 +694,11 @@ async fn run() -> Result<()> {
     dbs::set_wake_limit(args.max_concurrent_wakes);
     tenant_bench::lifecycle::MEMTABLE_MAX_BYTES.store(args.memtable_max_mb << 20, std::sync::atomic::Ordering::Relaxed);
     custkey::configure(&args.customer_key)?;
+    match args.envelopes.as_str() {
+        "read" => {}
+        "write" => tenant_bench::envelope::START.store(true, std::sync::atomic::Ordering::Relaxed),
+        other => anyhow::bail!("--envelopes must be read or write, not {other}"),
+    }
     tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::tiered::set_compression(&args.sst_compression)?;
     tenant_bench::tiered::TIERS.store(args.compaction_tiers, std::sync::atomic::Ordering::Relaxed);
