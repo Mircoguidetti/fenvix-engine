@@ -20,6 +20,8 @@ pub struct CollOpts {
     pub clustered: Option<String>,
     /// `timeseries`: the time field and the meta field.
     pub series: Option<(String, Option<String>)>,
+    /// `fenvixAgentLane: true`: the collection is on the agent lane (`agentlane.rs`).
+    pub agent: bool,
 }
 
 impl CollOpts {
@@ -34,7 +36,11 @@ impl CollOpts {
             _ => None,
         };
         let series = raw.get_document("timeseries").ok().map(|t| (t.get_str("timeField").unwrap_or_default().to_string(), t.get_str("metaField").ok().map(str::to_string)));
-        Arc::new(CollOpts { raw, collation, cap, validator, images, clustered, series })
+        let agent = raw.get_bool(crate::agentlane::OPTION).unwrap_or(false);
+        if agent {
+            crate::agentlane::note_option();
+        }
+        Arc::new(CollOpts { raw, collation, cap, validator, images, clustered, series, agent })
     }
 }
 
@@ -225,4 +231,13 @@ pub fn uuid_key(coll: &str) -> Vec<u8> {
     let mut k = b"meta/cuuid/".to_vec();
     k.extend(escape_collection(coll));
     k
+}
+
+/// The `fenvixAgentLane` option of a `create` / `collMod` command (`agentlane.rs`): a boolean.
+pub fn agent_lane_option(cmd_name: &str, cmd: &Document) -> Result<Option<bool>, crate::error::MongoError> {
+    match cmd.get(crate::agentlane::OPTION) {
+        None => Ok(None),
+        Some(Bson::Boolean(b)) => Ok(Some(*b)),
+        Some(v) => Err(type_error(cmd_name, crate::agentlane::OPTION, v, "bool")),
+    }
 }

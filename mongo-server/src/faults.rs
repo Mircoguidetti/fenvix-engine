@@ -6,6 +6,9 @@
 //!   fail_put SUBSTR        a PUT to such a path fails (an S3 error)
 //!   fail_get SUBSTR        a GET (or HEAD) of such a path fails (an S3 error)
 //!   delay_get SUBSTR MS    a GET of such a path is sent after MS milliseconds
+//!   delay_after_put SUBSTR MS   a PUT to such a path is sent at once, and its answer is held MS milliseconds (the object
+//!                          is stored, the writer does not know it yet: the window between a PUT and its acknowledgement)
+//!   log_put SUBSTR         every PUT to such a path prints `PUTLOG <ok|exists|error> <path>` on stderr when it ends
 //!
 //! Every triggered rule prints `FAULT <rule> <path>` on stderr, so a test knows the point was reached.
 use async_trait::async_trait;
@@ -25,6 +28,8 @@ enum Rule {
     Fail(String),
     FailGet(String),
     DelayGet(String, u64),
+    DelayAfter(String, u64),
+    Log(String),
 }
 
 pub struct FaultStore {
@@ -59,6 +64,8 @@ impl FaultStore {
                     ["fail_put", s] => rules.push(Rule::Fail(s.to_string())),
                     ["fail_get", s] => rules.push(Rule::FailGet(s.to_string())),
                     ["delay_get", s, ms] => rules.push(Rule::DelayGet(s.to_string(), ms.parse().unwrap_or(0))),
+                    ["delay_after_put", s, ms] => rules.push(Rule::DelayAfter(s.to_string(), ms.parse().unwrap_or(0))),
+                    ["log_put", s] => rules.push(Rule::Log(s.to_string())),
                     _ => {}
                 }
             }
@@ -108,7 +115,28 @@ impl fmt::Display for FaultStore {
 impl ObjectStore for FaultStore {
     async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> OsResult<PutResult> {
         self.before_put(location).await?;
-        self.inner.put_opts(location, payload, opts).await
+        let r = self.inner.put_opts(location, payload, opts).await;
+        let p = location.as_ref();
+        let rules = self.rules();
+        if rules.iter().any(|x| matches!(x, Rule::Log(s) if p.contains(s.as_str()))) {
+            let what = match &r {
+                Ok(_) => "ok",
+                Err(object_store::Error::AlreadyExists { .. }) => "exists",
+                Err(_) => "error",
+            };
+            match &r {
+                Err(e) if what == "error" => eprintln!("PUTLOG {what} {p} {e}"),
+                _ => eprintln!("PUTLOG {what} {p}"),
+            }
+        }
+        if let Some(ms) = rules.iter().find_map(|x| match x {
+            Rule::DelayAfter(s, ms) if p.contains(s.as_str()) => Some(*ms),
+            _ => None,
+        }) {
+            eprintln!("FAULT delay_after_put {p} {ms}");
+            tokio::time::sleep(Duration::from_millis(ms)).await;
+        }
+        r
     }
 
     async fn put_multipart_opts(&self, location: &Path, opts: PutMultipartOptions) -> OsResult<Box<dyn MultipartUpload>> {

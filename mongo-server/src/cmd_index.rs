@@ -908,6 +908,18 @@ impl Server {
             g.apply(vec![Op::Put(crate::collopts::meta_key(coll), raw.to_vec()?)]).await?;
             g.set_coll_opts(coll, Some(crate::collopts::CollOpts::parse(raw)));
         }
+        if let Some(on) = crate::collopts::agent_lane_option("collMod", cmd)? {
+            let opts = g.coll_opts(coll).await?;
+            let mut raw = opts.as_ref().map(|o| o.raw.clone()).unwrap_or_default();
+            if on {
+                raw.insert(crate::agentlane::OPTION, true);
+            } else {
+                raw.remove(crate::agentlane::OPTION);
+            }
+            let raw = crate::collopts::canonical(&raw);
+            g.apply(vec![Op::Put(crate::collopts::meta_key(coll), raw.to_vec()?)]).await?;
+            g.set_coll_opts(coll, Some(crate::collopts::CollOpts::parse(raw)));
+        }
         if cmd.contains_key("cappedSize") || cmd.contains_key("cappedMax") {
             self.coll_mod_capped(&mut g, coll, cmd).await?;
         }

@@ -97,7 +97,7 @@ fn checksum(b: &[u8]) -> [u8; 8] {
     out
 }
 
-fn encode(seq: u64, db: &str, ops: &[Op], drop: bool, epoch: u64) -> Vec<u8> {
+fn encode(seq: u64, db: &str, ops: &[Op], drop: bool, epoch: u64, orig: u64) -> Vec<u8> {
     let ops_b: Vec<Bson> = ops
         .iter()
         .map(|o| match o {
@@ -105,7 +105,11 @@ fn encode(seq: u64, db: &str, ops: &[Op], drop: bool, epoch: u64) -> Vec<u8> {
             Op::Delete(k) => Bson::Array(vec![Bson::Binary(bson::Binary { subtype: bson::spec::BinarySubtype::Generic, bytes: k.clone() })]),
         })
         .collect();
-    let d = doc! { "s": seq as i64, "d": db, "o": ops_b, "x": drop, "e": epoch as i64 };
+    let mut d = doc! { "s": seq as i64, "d": db, "o": ops_b, "x": drop, "e": epoch as i64 };
+    if orig != seq {
+        // a kept record written again after a failed replay: the sequence number it had when it was staged
+        d.insert("g", orig as i64);
+    }
     let payload = d.to_vec().expect("bson");
     let mut out = Vec::with_capacity(payload.len() + 12);
     out.extend_from_slice(&(payload.len() as u32).to_le_bytes());
@@ -116,6 +120,11 @@ fn encode(seq: u64, db: &str, ops: &[Op], drop: bool, epoch: u64) -> Vec<u8> {
 
 struct Record {
     seq: u64,
+    /// The sequence number the record had when its batch was staged (the one its marker in the data names). A kept
+    /// record written again after a failed replay gets a new `seq` but keeps this one: the restart compares and marks with
+    /// it, so a record whose batch already reached object storage is never applied again over newer data there (the
+    /// agent lane puts newer batches in object storage that are not in this log, see agentlane.rs).
+    orig: u64,
     db: String,
     ops: Vec<Op>,
     drop: bool,
@@ -136,7 +145,8 @@ fn decode(payload: &[u8]) -> Result<Record> {
         };
         ops.push(if a.len() == 2 { Op::Put(bin(0)?, bin(1)?) } else { Op::Delete(bin(0)?) });
     }
-    Ok(Record { seq: d.get_i64("s")? as u64, db: d.get_str("d")?.to_string(), ops, drop: d.get_bool("x").unwrap_or(false), epoch: d.get_i64("e").unwrap_or(0) as u64 })
+    let seq = d.get_i64("s")? as u64;
+    Ok(Record { seq, orig: d.get_i64("g").map(|g| g as u64).unwrap_or(seq), db: d.get_str("d")?.to_string(), ops, drop: d.get_bool("x").unwrap_or(false), epoch: d.get_i64("e").unwrap_or(0) as u64 })
 }
 
 /// Records of one segment file, up to the first torn or corrupt one.
@@ -343,7 +353,12 @@ impl LocalLog {
 
     /// Queue a record; the receiver resolves once it is on disk (fsync).
     pub fn append(&self, seq: u64, db: &str, ops: &[Op], epoch: u64) -> oneshot::Receiver<Result<(), String>> {
-        self.append_rec(seq, db, ops, false, epoch)
+        self.append_rec(seq, db, ops, false, epoch, seq)
+    }
+
+    /// A kept record written again (new `seq`) with the sequence number it was staged with (`orig`, see `Record::orig`).
+    fn append_kept(&self, seq: u64, db: &str, ops: &[Op], epoch: u64, orig: u64) -> oneshot::Receiver<Result<(), String>> {
+        self.append_rec(seq, db, ops, false, epoch, orig)
     }
 
     /// The database was dropped: its earlier records must not be applied again by a restart.
@@ -353,7 +368,7 @@ impl LocalLog {
             // Q8d: once the drop record is confirmed, every record of the database up to it can leave the log
             Some(r) => {
                 let (done, rx) = oneshot::channel();
-                let rrx = r.append(db, record_key(seq), encode(seq, db, &[], true, 0));
+                let rrx = r.append(db, record_key(seq), encode(seq, db, &[], true, 0, seq));
                 let (r, db2) = (Arc::clone(r), db.to_string());
                 tokio::spawn(async move {
                     let res = rrx.await.unwrap_or_else(|_| Err("the log client stopped".into()));
@@ -367,7 +382,7 @@ impl LocalLog {
                 });
                 rx
             }
-            None => self.append_rec(seq, db, &[], true, 0),
+            None => self.append_rec(seq, db, &[], true, 0, seq),
         };
         let mut t = self.tenants.lock().unwrap();
         let e = t.entry(db.to_string()).or_default();
@@ -376,7 +391,7 @@ impl LocalLog {
         rx
     }
 
-    fn append_rec(&self, seq: u64, db: &str, ops: &[Op], drop: bool, epoch: u64) -> oneshot::Receiver<Result<(), String>> {
+    fn append_rec(&self, seq: u64, db: &str, ops: &[Op], drop: bool, epoch: u64, orig: u64) -> oneshot::Receiver<Result<(), String>> {
         let (done, rx) = oneshot::channel();
         {
             let mut t = self.tenants.lock().unwrap();
@@ -385,7 +400,7 @@ impl LocalLog {
         }
         if let Some(r) = &self.remote {
             // Q8d: acknowledged when the log confirmed it (2 copies of 3)
-            let rrx = r.append(db, record_key(seq), encode(seq, db, ops, drop, epoch));
+            let rrx = r.append(db, record_key(seq), encode(seq, db, ops, drop, epoch, orig));
             tokio::spawn(async move {
                 let res = rrx.await.unwrap_or_else(|_| Err("the log client stopped".into()));
                 if res.is_ok() {
@@ -395,7 +410,7 @@ impl LocalLog {
             });
             return rx;
         }
-        if self.tx.send(Append { bytes: encode(seq, db, ops, drop, epoch), seq, done }).is_err() {
+        if self.tx.send(Append { bytes: encode(seq, db, ops, drop, epoch, orig), seq, done }).is_err() {
             let (d2, rx2) = oneshot::channel();
             let _ = d2.send(Err("local log writer stopped".into()));
             return rx2;
@@ -694,8 +709,8 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
                 for r in keep {
                     let seq = log.next_seq();
                     let ep = if r.epoch > 0 { epoch } else { 0 };
-                    log.append(seq, &db, &r.ops, ep).await.map_err(|_| anyhow!("local log stopped"))?.map_err(|e| anyhow!(e))?;
-                    kept.push(Record { seq, db: db.clone(), ops: r.ops, drop: false, epoch: ep });
+                    log.append_kept(seq, &db, &r.ops, ep, r.orig).await.map_err(|_| anyhow!("local log stopped"))?.map_err(|e| anyhow!(e))?;
+                    kept.push(Record { seq, orig: r.orig, db: db.clone(), ops: r.ops, drop: false, epoch: ep });
                 }
                 log.pinned.lock().unwrap().insert(db.clone(), kept);
             }
@@ -716,7 +731,7 @@ enum Outcome {
 }
 
 fn copy_record(r: &Record) -> Record {
-    Record { seq: r.seq, db: r.db.clone(), ops: copy_ops(&r.ops), drop: r.drop, epoch: r.epoch }
+    Record { seq: r.seq, orig: r.orig, db: r.db.clone(), ops: copy_ops(&r.ops), drop: r.drop, epoch: r.epoch }
 }
 
 tokio::task_local! {
@@ -756,7 +771,7 @@ async fn replay_with_timeout(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str,
 /// Apply one database's records durably (those after its marker). `seen`: the stored writer epoch the check read.
 /// `retry`: a background retry of kept records (the database may have been dropped meanwhile).
 async fn replay_db(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str, mut recs: Vec<Record>, retry: bool, seen: &mut Option<u64>) -> Result<Outcome> {
-    recs.sort_by_key(|r| r.seq);
+    recs.sort_by_key(|r| (r.orig, r.seq));
     // Another writer opened the database after the one that staged these records (another process took it over, or this
     // one lost and re-took it): replaying them would overwrite newer writes and leave the secondary indexes inconsistent.
     // Refused, kept as conflict, like a marker of another log.
@@ -784,7 +799,8 @@ async fn replay_db(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str, mut recs:
         }
         None => 0,
     };
-    let todo: Vec<Record> = recs.into_iter().filter(|r| r.seq > done_seq).collect();
+    // compared with the sequence number each record was staged with: a kept record has a new one (see `Record::orig`)
+    let todo: Vec<Record> = recs.into_iter().filter(|r| r.orig > done_seq).collect();
     if todo.is_empty() {
         return Ok(Outcome::Nothing);
     }
@@ -794,7 +810,7 @@ async fn replay_db(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str, mut recs:
         for r in chunk {
             ops.extend(copy_ops(&r.ops));
         }
-        ops.push(log.marker_op(chunk.last().unwrap().seq));
+        ops.push(log.marker_op(chunk.last().unwrap().orig));
         g.apply_durable(ops).await?;
     }
     eprintln!("local log: database {db}: {} records applied again (after record {done_seq})", todo.len());
@@ -832,7 +848,7 @@ fn spawn_retry(dbs: Arc<crate::dbs::Dbs>, timeout: Duration) {
                         // applied by a restart (the drop record), and the database is open again.
                         let recs = log.pinned.lock().unwrap().remove(&db).unwrap_or_default();
                         let path = log.dir.join(format!("kept-{db}-{}.conflict", crate::ctl::rec::now_ms()));
-                        let bytes: Vec<u8> = recs.iter().flat_map(|r| encode(r.seq, &db, &r.ops, false, r.epoch)).collect();
+                        let bytes: Vec<u8> = recs.iter().flat_map(|r| encode(r.seq, &db, &r.ops, false, r.epoch, r.orig)).collect();
                         let _ = std::fs::write(&path, bytes).and_then(|_| std::fs::File::open(&path)?.sync_all());
                         let _ = log.append_drop(&db).await;
                         eprintln!("local log: database {db}: {} kept records conflict with another writer; saved in {}", recs.len(), path.display());
@@ -846,7 +862,7 @@ fn spawn_retry(dbs: Arc<crate::dbs::Dbs>, timeout: Duration) {
                             let seq = log.next_seq();
                             if let Ok(Ok(())) = log.append(seq, &db, &[], ep).await {
                                 if let Some(v) = log.pinned.lock().unwrap().get_mut(&db) {
-                                    v.push(Record { seq, db: db.clone(), ops: Vec::new(), drop: false, epoch: ep });
+                                    v.push(Record { seq, orig: seq, db: db.clone(), ops: Vec::new(), drop: false, epoch: ep });
                                 }
                             }
                         }

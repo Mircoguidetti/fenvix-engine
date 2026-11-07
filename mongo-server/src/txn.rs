@@ -356,7 +356,7 @@ impl Server {
                         ops.push(crate::retry::txn_outcome_op(&tc.lsid, txn.number));
                         ops.extend(self.session_sweep_ops(&mut g, &db, &tc.lsid).await);
                     }
-                    g.apply(ops).await.map_err(MongoError::from).map(|_| self.dbs.changes.publish(events))
+                    g.apply_txn(ops).await.map_err(MongoError::from).map(|_| self.dbs.changes.publish(events))
                 }
                 Err(e) => Err(e),
             }

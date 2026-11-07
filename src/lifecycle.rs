@@ -694,7 +694,22 @@ pub struct GroupFlush {
     last_arrival_us: std::sync::atomic::AtomicU64,
     gap_ewma_us: std::sync::atomic::AtomicU64,
     flush_ewma_us: std::sync::atomic::AtomicU64,
+    /// Agent lane: when the current batch window opened (microseconds of [`mono_us`], 0 = no window open).
+    agent_open_us: std::sync::atomic::AtomicU64,
 }
+
+/// Agent lane (PROTOTYPE, off unless a collection is on the lane, see the server's `agentlane.rs`): a batch of the lane is
+/// acknowledged only once the WAL object holding it is in object storage. The first write of a batch opens a window of
+/// this many microseconds; at its end one WAL flush (one PUT) covers every write staged meanwhile, of both lanes.
+pub static AGENT_WINDOW_US: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(100_000);
+/// Agent-lane writes waited for, WAL flushes issued for them, of which flushes at a transaction's commit (no window).
+pub static AGENT_COMMITS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static AGENT_FLUSHES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static AGENT_TXN_FLUSHES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Agent-lane writes not acknowledged: the WAL write failed (fenced by another writer, store error) or ownership was lost.
+pub static AGENT_ACK_REFUSED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// TEST ONLY (negative control, `MONGO_TEST_AGENT_ACK_EARLY`): acknowledge agent-lane writes without waiting for the PUT.
+pub static AGENT_ACK_EARLY: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// Adaptive group commit (`--adaptive-group-commit`): the leader of a flush waits a short window, only when more writes of
 /// the same database are expected within it (their average gap is at most twice the window) or already on their way.
@@ -740,6 +755,9 @@ pub struct Commit {
     tenant: String,
     /// Local log (prototype): the batch is durable once this resolves (its record is on the local disk).
     local: Option<futures::future::Shared<futures::future::BoxFuture<'static, std::result::Result<(), String>>>>,
+    /// Agent lane: `Some(at_commit)` when the batch is durable only in a WAL object in object storage, never in the local
+    /// or replicated log. `at_commit` (a transaction's commit) flushes at once instead of waiting for the batch window.
+    agent: Option<bool>,
 }
 
 impl Commit {
@@ -748,6 +766,73 @@ impl Commit {
         use futures::FutureExt;
         self.local = Some(rx.map(|r| r.unwrap_or_else(|_| Err("local log stopped".to_string()))).boxed().shared());
         self
+    }
+
+    /// Put the batch on the agent lane: durable once its WAL object is in object storage (see [`AGENT_WINDOW_US`]).
+    pub fn with_agent(mut self, at_commit: bool) -> Self {
+        self.local = None;
+        self.agent = Some(at_commit);
+        self
+    }
+
+    /// Whether the batch is on the agent lane.
+    pub fn is_agent(&self) -> bool {
+        self.agent.is_some()
+    }
+
+    /// Agent lane: wait for the batch window (not at a transaction's commit), flush the WAL once for every write staged
+    /// so far, then wait until the WAL object holding this batch is durable. The WAL objects are numbered and written with
+    /// create-if-absent (S3 `If-None-Match: *`, slatedb's WAL fencing): a writer fenced by a newer one gets an error from
+    /// its next WAL write and never acknowledges, and the newer writer replays every WAL object before its fence.
+    async fn wait_agent(self, at_commit: bool) -> Result<()> {
+        use std::sync::atomic::Ordering::{AcqRel, Acquire, Relaxed, Release};
+        GROUP_COMMITS.fetch_add(1, Relaxed);
+        AGENT_COMMITS.fetch_add(1, Relaxed);
+        if AGENT_ACK_EARLY.load(Relaxed) {
+            return Ok(());
+        }
+        let seq = self.handle.seqnum();
+        let r: Result<()> = async {
+            if self.group.flushed_seq.load(Acquire) < seq {
+                if !at_commit {
+                    let now = mono_us();
+                    let opened = match self.group.agent_open_us.compare_exchange(0, now, AcqRel, Acquire) {
+                        Ok(_) => now,
+                        Err(t) => t,
+                    };
+                    let left = (opened + AGENT_WINDOW_US.load(Relaxed)).saturating_sub(now);
+                    if left > 0 {
+                        tokio::time::sleep(Duration::from_micros(left)).await;
+                    }
+                }
+                let _lead = self.group.lock.lock().await;
+                if self.group.flushed_seq.load(Acquire) < seq {
+                    // writes that arrive from now on open the next window
+                    self.group.agent_open_us.store(0, Release);
+                    let target = self.group.staged_seq.load(Acquire);
+                    let wal = slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::Wal };
+                    self.db.flush_with_options(wal).await?;
+                    AGENT_FLUSHES.fetch_add(1, Relaxed);
+                    if at_commit {
+                        AGENT_TXN_FLUSHES.fetch_add(1, Relaxed);
+                    }
+                    GROUP_FLUSHES.fetch_add(1, Relaxed);
+                    self.group.flushed_seq.fetch_max(target, Release);
+                }
+            }
+            self.handle.await_durable().await?;
+            Ok(())
+        }
+        .await;
+        if r.is_err() {
+            AGENT_ACK_REFUSED.fetch_add(1, Relaxed);
+            return r;
+        }
+        if !owner_valid(&self.tenant) {
+            AGENT_ACK_REFUSED.fetch_add(1, Relaxed);
+            return Err(anyhow!("ownership of database {} was lost before the write was acknowledged; its outcome is unknown, retry", self.tenant));
+        }
+        Ok(())
     }
 
     /// Sequence number of the batch in its database's writer.
@@ -772,6 +857,9 @@ impl Commit {
     /// together by the next one.
     pub async fn wait(mut self) -> Result<()> {
         use std::sync::atomic::Ordering::{Acquire, Relaxed, Release};
+        if let Some(at_commit) = self.agent {
+            return self.wait_agent(at_commit).await;
+        }
         if let Some(rx) = self.local.take() {
             GROUP_COMMITS.fetch_add(1, Relaxed);
             rx.await.map_err(|e| anyhow!(e))?;
@@ -1073,7 +1161,7 @@ impl Tenant {
         let handle = db.write(batch).await?;
         note_unflushed(&self.id, handle.seqnum());
         self.group.staged_seq.fetch_max(handle.seqnum(), std::sync::atomic::Ordering::Release);
-        Ok(Some(Commit { db: db.clone(), handle, group: Arc::clone(&self.group), tenant: self.id.clone(), local: None }))
+        Ok(Some(Commit { db: db.clone(), handle, group: Arc::clone(&self.group), tenant: self.id.clone(), local: None, agent: None }))
     }
 
     pub async fn put(&mut self, key: &str, value: &[u8]) -> Result<WriteHandle> {

@@ -727,21 +727,78 @@ impl Entry {
 
     /// Apply writes atomically and durably, creating the database on its first write.
     pub async fn apply(&mut self, ops: Vec<Op>) -> Result<()> {
-        self.apply_mode(ops, true).await
+        self.apply_mode(ops, true, false).await
+    }
+
+    /// [`Entry::apply`] for a transaction's commit: on the agent lane its batch is flushed at once (one PUT at the
+    /// commit) instead of waiting for the lane's batch window.
+    pub async fn apply_txn(&mut self, ops: Vec<Op>) -> Result<()> {
+        self.apply_mode(ops, true, true).await
+    }
+
+    /// Agent lane (`agentlane.rs`): whether this batch goes on it. Only batches whose collection keys all belong to
+    /// agent-lane collections and that touch no catalog key; a batch with a key of an agent-lane collection and anything
+    /// else (another collection, the catalog) takes the default path as a whole, so it stays one atomic record.
+    async fn agent_lane_batch(&mut self, ops: &[Op]) -> Result<bool> {
+        use crate::agentlane::{classify, KeyClass};
+        if !crate::agentlane::active() {
+            return Ok(false);
+        }
+        let mut colls: Vec<Vec<u8>> = Vec::new();
+        let mut other = false;
+        for op in ops {
+            let k = match op {
+                Op::Put(k, _) | Op::Delete(k) => k,
+            };
+            match classify(k) {
+                KeyClass::Coll(c) => {
+                    if !colls.contains(&c) {
+                        colls.push(c);
+                    }
+                }
+                KeyClass::Neutral => {}
+                KeyClass::Other => {
+                    if std::env::var("FENVIX_DEBUG_LANE").is_ok() {
+                        eprintln!("agent lane: other key {:?}", String::from_utf8_lossy(k));
+                    }
+                    other = true
+                }
+            }
+        }
+        if colls.is_empty() {
+            return Ok(false);
+        }
+        let (mut any, mut all) = (false, true);
+        for c in colls {
+            let name = crate::agentlane::unescape(&c);
+            let on = crate::agentlane::flag_matches(&self.name, &name) || (!other && self.coll_opts(&name).await?.map_or(false, |o| o.agent));
+            any |= on;
+            all &= on;
+        }
+        if (any && !all) || (any && other) {
+            crate::agentlane::MIXED_BATCHES.fetch_add(1, Relaxed);
+        }
+        Ok(all && !other)
     }
 
     /// Like [`Entry::apply`] but always durable in object storage before it returns, also with the local log on (the
     /// restart of the local log applies its records this way).
     pub async fn apply_durable(&mut self, ops: Vec<Op>) -> Result<()> {
-        self.apply_mode(ops, false).await
+        self.apply_mode(ops, false, false).await
     }
 
-    async fn apply_mode(&mut self, mut ops: Vec<Op>, use_local_log: bool) -> Result<()> {
+    async fn apply_mode(&mut self, mut ops: Vec<Op>, use_local_log: bool, at_commit: bool) -> Result<()> {
         if ops.is_empty() {
             return Ok(());
         }
+        // Agent lane (prototype): the batch skips the local and replicated log and is durable once its WAL object is in
+        // object storage.
+        let agent = use_local_log && self.agent_lane_batch(&ops).await?;
+        if agent {
+            crate::agentlane::AGENT_BATCHES.fetch_add(1, Relaxed);
+        }
         // Local log (prototype): the batch carries its record's marker, and is durable once the record is on the local disk.
-        let local = if use_local_log { crate::locallog::get() } else { None };
+        let local = if use_local_log && !agent { crate::locallog::get() } else { None };
         let local_seq = local.map(|l| {
             let seq = l.next_seq();
             ops.push(l.marker_op(seq));
@@ -801,6 +858,9 @@ impl Entry {
             t.bind_inflight(Arc::clone(&self.inflight));
         }
         let Some(mut commit) = staged? else { return Ok(()) };
+        if agent {
+            commit = commit.with_agent(at_commit);
+        }
         if let (Some((log, rec_ops)), Some(seq)) = (record, local_seq) {
             let epoch = self.tenant.as_ref().and_then(|t| t.writer_epoch()).unwrap_or(0);
             commit = commit.with_local(log.append(seq, &self.name, &rec_ops, epoch));
