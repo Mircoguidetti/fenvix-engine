@@ -1,0 +1,2 @@
+diff-py 4124 / 4127 same as mongod; differ: ['cs.delete_many', 'bucketauto.POWERSOF2.decimal_special', 'bucketauto.infinity']
+diff-node 4125 / 4127 same as mongod; differ: ['bucketauto.POWERSOF2.decimal_special', 'bucketauto.infinity']

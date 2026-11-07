@@ -4,15 +4,6 @@
 stdout | src/storage/index.test.ts > MongoDBStore
 Initializing storage...
 
-stdout | src/storage/index.test.ts > MongoDBStore
-Storage initialized in 137ms
-
-stdout | src/storage/index.test.ts > MongoDBStore
-Clearing memory domain data before tests
-
-stdout | src/storage/index.test.ts > MongoDBStore
-Memory domain cleared in 3ms
-
 stderr | src/vector/index.test.ts > MongoDBVector Integration Tests
 Failed to delete test collection: MongoTopologyClosedError: Topology is closed
     at processWaitQueue (/root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:570:44)
@@ -61,50 +52,27 @@ Failed to delete test collection: MongoTopologyClosedError: Topology is closed
 stdout | src/vector/index.test.ts > MongoDBVector
 Connecting to vector store...
 
-stdout | src/storage/index.test.ts > MongoDBStore > Agents Storage
-Clearing agents domain data before tests
+stdout | src/storage/index.test.ts > MongoDBStore
+Storage initialized in 154ms
 
-stdout | src/storage/index.test.ts > MongoDBStore > Agents Storage
-Agents domain cleared in 1ms
+stdout | src/storage/index.test.ts > MongoDBStore
+Clearing memory domain data before tests
 
- ✓ |e2e:stores/mongodb| src/storage/domains/knowledge/index.test.ts (69 tests) 12260ms
-   ✓ knowledge page store contract (schema 4) (64)
-     ✓ scopes (6)
-       ✓ materializes a scope once, with its template children and keyed pages 344ms
-     ✓ read filters agree across methods (2)
-       ✓ lists and finds a page exactly when getPage returns it, for every read scope shape 981ms
-     ✓ pages (13)
-       ✓ refuses moving more than 500 pages at once 2366ms
-       ✓ refuses a merge past the depth cap or carrying too many pages, changing nothing 2469ms
-stderr | src/storage/index.test.ts > MemoryStorageMongoDB error propagation (no empty-on-error) > listThreads re-throws backend failures instead of returning empty
-{"message":"simulated backend outage","domain":"STORAGE","category":"THIRD_PARTY","code":"MASTRA_STORAGE_MONGODB_LIST_THREADS_FAILED","details":{"hasMetadataFilter":false},"cause":{"message":"simulated backend outage","name":"Error"}}
+stdout | src/storage/index.test.ts > MongoDBStore
+Memory domain cleared in 4ms
 
-stderr | src/storage/index.test.ts > MemoryStorageMongoDB error propagation (no empty-on-error) > listMessages re-throws backend failures instead of returning empty
-{"message":"simulated backend outage","domain":"STORAGE","category":"THIRD_PARTY","code":"MASTRA_STORAGE_MONGODB_LIST_MESSAGES_FAILED","details":{"threadId":"thread-err","resourceId":""},"cause":{"message":"simulated backend outage","name":"Error"}}
-
-stderr | src/storage/index.test.ts > MemoryStorageMongoDB error propagation (no empty-on-error) > listMessagesByResourceId re-throws backend failures instead of returning empty
-{"message":"simulated backend outage","domain":"STORAGE","category":"THIRD_PARTY","code":"MASTRA_STORAGE_MONGODB_LIST_MESSAGES_BY_RESOURCE_ID_FAILED","details":{"resourceId":"res-err"},"cause":{"message":"simulated backend outage","name":"Error"}}
-
-stdout | src/storage/index.test.ts > MongoDB Specific Tests > MongoDB Schemaless Collection Behavior > should create collections on-demand when using connector directly
-Skipping schemaless test - connector not accessible
-
- ✓ |e2e:stores/mongodb| src/storage/index.test.ts (854 tests | 194 skipped) 18848ms
-   ✓ MongoDBStore (806)
-     ✓ listMessages (19)
-       ✓ should upsert messages: duplicate id+threadId results in update, not duplicate row 515ms
-     ✓ Run fencing: prune (3)
-       ✓ deletes claims idle longer than maxAge and keeps recently active ones 2024ms
-       ✓ claims above a surviving fence after the claim was pruned 2018ms
-       ✓ deletes fences retired longer than maxAge and never deletes a fence that is not retired 2025ms
- ❯ |e2e:stores/mongodb| src/vector/index.test.ts (313 tests | 173 skipped | 4 todo) 20412ms
+ ✓ |e2e:stores/mongodb| src/storage/migration.test.ts (12 tests) 1708ms
+   ✓ MongoDB Migration Required Error (3)
+     ✓ should NOT throw when no duplicates exist (auto-migration succeeds) 382ms
+ ❯ |e2e:stores/mongodb| src/vector/index.test.ts (313 tests | 173 skipped | 4 todo) 632ms
    ✓ MongoDBVector embedding field path configuration (#6563) (3)
-     ✓ should accept an optional embeddingFieldPath parameter 3ms
+     ✓ should accept an optional embeddingFieldPath parameter 4ms
      ✓ should default to "embedding" when embeddingFieldPath is not provided 1ms
      ✓ should use custom embedding field path when provided 1ms
    ✓ MongoDBVector constructor (#11697) (3)
      ✓ should accept "uri" parameter 1ms
-     ✓ should work with MongoDB Atlas connection strings 1ms
-     ✓ should throw clear error when uri is not provided 0ms
+     ✓ should work with MongoDB Atlas connection strings 2ms
+     ✓ should throw clear error when uri is not provided 1ms
    ❯ MongoDBVector Integration Tests (9)
      ↓ Metadata Field Filtering Bug Reproduction (4)
        ↓ filtering by thread_id WITHOUT metadata prefix works correctly
@@ -300,12 +268,12 @@ Skipping schemaless test - connector not accessible
          ↓ should handle multi-tenant data isolation with filters
    ❯ MongoDBVector filterFields (#18587) (73)
      ✓ createIndex (8)
-       ✓ registers each filterFields entry as a metadata.<field> filter field 3ms
+       ✓ registers each filterFields entry as a metadata.<field> filter field 4ms
        ✓ declares only _id and document when filterFields is omitted 2ms
-       ✓ still creates the full-text index when the vector index already exists, without caching paths 1ms
+       ✓ still creates the full-text index when the vector index already exists, without caching paths 2ms
        ✓ does NOT auto-create a full-text index for a BYO collection (opt-in) (#round3-fix3) 1ms
        ✓ DOES auto-create the companion full-text index for a MANAGED collection (back-compat) (#round3-fix3) 1ms
-       ✓ throws a USER MastraError when retargeting an index to a different collection (#round3-fix4) 1ms
+       ✓ throws a USER MastraError when retargeting an index to a different collection (#round3-fix4) 3ms
        ✓ allows idempotent re-createIndex against the SAME collection (#round3-fix4) 1ms
        ✓ tolerates the full-text index already existing 1ms
      ✓ buildDeclaredMetadataPaths (2)
@@ -316,17 +284,17 @@ Skipping schemaless test - connector not accessible
        ✓ rejects filters that reference an undeclared field 0ms
        ✓ rejects operators that $vectorSearch.filter does not support 0ms
      ✓ buildProjection document-mode embedding exclusion (#round3-fix2) (4)
-       ✓ appends a $unset to strip the embedding from metadata in document mode by default 1ms
+       ✓ appends a $unset to strip the embedding from metadata in document mode by default 3ms
        ✓ keeps the embedding in metadata AND exposes vector when includeVector is true 1ms
        ✓ honors a dot-path embeddingFieldName in the $unset 1ms
        ✓ field mode never $unsets (managed metadata subdocument has no embedding) 1ms
      ✓ getDeclaredFilterPaths (2)
-       ✓ does not cache when the index definition is missing, then hydrates once it is READY 44ms
-       ✓ ignores a building latestDefinition until the index is READY (staged-definition race) 35ms
+       ✓ does not cache when the index definition is missing, then hydrates once it is READY 61ms
+       ✓ ignores a building latestDefinition until the index is READY (staged-definition race) 43ms
      ✓ query push-down (3)
-       ✓ passes the metadata filter straight to $vectorSearch when every field is declared 16ms
-       ✓ materialises candidate _ids via $match when a field is not declared 17ms
-       ✓ uses the fallback while an index update declaring the filtered field is still building 27ms
+       ✓ passes the metadata filter straight to $vectorSearch when every field is declared 21ms
+       ✓ materialises candidate _ids via $match when a field is not declared 23ms
+       ✓ uses the fallback while an index update declaring the filtered field is still building 40ms
      ❯ bring-your-own collection (4)
        ↓ creates the vector index on the operational collection, not a managed one
        ↓ queries the operational collection and returns full docs as metadata in document mode
@@ -339,13 +307,13 @@ Skipping schemaless test - connector not accessible
        ↓ hybridQuery fuses vector and text results via $rankFusion
      ✓ deleteIndex BYO classification (unit) (6)
        ✓ drops only the search index for a BYO index even when collectionName === indexName 2ms
-       ✓ also drops the companion text search index for a BYO index when present (#round3-fix1) 1ms
+       ✓ also drops the companion text search index for a BYO index when present (#round3-fix1) 2ms
        ✓ does not attempt to drop a text index for a BYO index that never opted in (#round3-fix1) 1ms
        ✓ ignores "index not found" when dropping the companion text index (#round3-fix1) 1ms
-       ✓ drops the collection for a managed index (no registered target) 6ms
+       ✓ drops the collection for a managed index (no registered target) 1ms
        ✓ resolves a BYO target from the durable registry when the in-memory map is empty (restart durability) 1ms
      ✓ BYO write guard (unit) (12)
-       ✓ upsert refuses a read-only BYO index with a USER-category error 1ms
+       ✓ upsert refuses a read-only BYO index with a USER-category error 2ms
        ✓ updateVector refuses a read-only BYO index 1ms
        ✓ deleteVector refuses a read-only BYO index 1ms
        ✓ deleteVectors refuses a read-only BYO index (both ids and filter forms) 2ms
@@ -360,13 +328,13 @@ Skipping schemaless test - connector not accessible
      ✓ round5 registry-integrity fixes (unit) (10)
        ✓ R5-1: re-createIndex WITHOUT collectionName must not reclassify a same-name BYO index as managed 1ms
        ✓ R5-1b: allowWrites explicitly passed on refresh updates the persisted policy 1ms
-       ✓ R5-2: deleteIndex refuses to drop an UNREGISTERED collection without a legacy vector index 1ms
+       ✓ R5-2: deleteIndex refuses to drop an UNREGISTERED collection without a legacy vector index 2ms
        ✓ R5-3: createIndex rejects a vector searchIndexName that collides with the companion text index name 1ms
        ✓ R5-3b: createSearchIndex rejects a text name that collides with the vector index name 1ms
        ✓ R5-4: createSearchIndex persists the registry target BEFORE provisioning (crash-safe ordering) 1ms
        ✓ R5-5: deleteIndex preserves a physical index still referenced by a sibling logical index 1ms
        ✓ R5-6: deleteIndex on a BYO index whose collection was dropped externally still clears the registry 1ms
-       ✓ R5-7: upsert matches existing ObjectId documents via dual-form _id (no duplicate insert) 1ms
+       ✓ R5-7: upsert matches existing ObjectId documents via dual-form _id (no duplicate insert) 2ms
        ✓ R5-7b: upsert keeps the plain equality filter (and no $setOnInsert) for non-hex string ids 1ms
      ✓ round4 fixes (unit) (15)
        ✓ FIX1: createSearchIndex persists a COMPLETE registry target (never partial) 1ms
@@ -374,16 +342,16 @@ Skipping schemaless test - connector not accessible
        ✓ FIX6: field-mapped search index name is unique per logical index 1ms
        ✓ FIX4: deleteIndex clears a stranded registry entry when the physical index is already gone 1ms
        ✓ FIX4: deleteIndex on a managed index whose collection is already dropped still clears the registry 1ms
-       ✓ FIX3: hybridQuery floors numCandidates at the branch limit (topK:10, numCandidates:10) 1ms
+       ✓ FIX3: hybridQuery floors numCandidates at the branch limit (topK:10, numCandidates:10) 2ms
        ✓ round5: hybridQuery caps the branch limit at 10000 for large topK (topK:3000) 1ms
        ✓ round5: createSearchIndex updates the mapping in place when the index already exists 1ms
-       ✓ round6: assertRankFusionSupported admits MongoDB 8.0.x and rejects 7.x 3ms
+       ✓ round6: assertRankFusionSupported admits MongoDB 8.0.x and rejects 7.x 15ms
        ✓ FIX7: transformMetadataFilter does NOT prefix bare fields in document mode 1ms
-       ✓ FIX7: query threads document metadataMode into the root-field filter 25ms
-       ✓ FIX2: idToString coerces ObjectId to its hex string 3ms
+       ✓ FIX7: query threads document metadataMode into the root-field filter 22ms
+       ✓ FIX2: idToString coerces ObjectId to its hex string 1ms
        ✓ FIX2: buildIdMatch matches both string and ObjectId for a 24-hex id, string-only otherwise 1ms
        ✓ FIX5: waitForSearchIndexReady resolves once the text index reports READY 12ms
-       ✓ FIX5: waitForSearchIndexReady throws when the text index never becomes ready 32ms
+       ✓ FIX5: waitForSearchIndexReady throws when the text index never becomes ready 33ms
    ❯ MongoDBVector BYO durability across instances (1)
      ↓ a fresh instance deleteIndex drops only the search index; the BYO collection + docs SURVIVE
    ❯ MongoDBVector listIndexes logical names (1)
@@ -407,13 +375,13 @@ Skipping schemaless test - connector not accessible
    ✓ MongoDBVector autoEmbed (65)
      ✓ createIndex (23)
        ✓ emits an autoEmbed field instead of a vector field 1ms
-       ✓ forwards the optional autoEmbed tuning knobs 1ms
+       ✓ forwards the optional autoEmbed tuning knobs 2ms
        ✓ omits tuning knobs that were not supplied so MongoDB applies its defaults 1ms
-       ✓ does not declare the embedded field as a filter field 2ms
+       ✓ does not declare the embedded field as a filter field 1ms
        ✓ keeps document as a filter field when a custom path is embedded 1ms
        ✓ does not infer a similarity function from the default metric 1ms
        ✓ sends a similarity function only when explicitly configured 1ms
-       ✓ rejects dimension combined with autoEmbed 2ms
+       ✓ rejects dimension combined with autoEmbed 1ms
        ✓ rejects metric combined with autoEmbed 1ms
        ✓ rejects metric combined with autoEmbed even when it matches the default 1ms
        ✓ creates an autoEmbed index when metric is omitted 1ms
@@ -434,46 +402,46 @@ Skipping schemaless test - connector not accessible
        ✓ points the search at the embedded text field, not the embedding field 1ms
        ✓ pre-filters on document instead of pushing it into $vectorSearch when it is the embedded field 1ms
        ✓ still pushes documentFilter into $vectorSearch on a client-embedded index 1ms
-       ✓ pushes documentFilter on a BYO index that declares the document field 3ms
+       ✓ pushes documentFilter on a BYO index that declares the document field 1ms
        ✓ pre-filters documentFilter on a BYO index whose search index does not declare it 1ms
        ✓ pre-filters a documentFilter with a $regex operator, which $vectorSearch.filter rejects 1ms
-       ✓ pre-filters a documentFilter with a bare RegExp, which $vectorSearch.filter rejects 3ms
+       ✓ pre-filters a documentFilter with a bare RegExp, which $vectorSearch.filter rejects 1ms
        ✓ pre-filters a documentFilter with a RegExp inside $in, which $vectorSearch.filter rejects 1ms
        ✓ pre-filters a documentFilter with a RegExp inside $ne, which $vectorSearch.filter rejects 1ms
        ✓ returns the embedded text as document when a custom path is configured 1ms
-       ✓ applies documentFilter to the embedded field when a custom path is configured 2ms
-       ✓ rejects supplying both queryText and queryVector 2ms
+       ✓ applies documentFilter to the embedded field when a custom path is configured 5ms
+       ✓ rejects supplying both queryText and queryVector 1ms
        ✓ rejects queryText against an index that was not created with autoEmbed 1ms
        ✓ rejects includeVector on an autoEmbed index as a USER error 1ms
-       ✓ still rejects a query with neither input 1ms
+       ✓ still rejects a query with neither input 7ms
        ✓ lets a query override the index model 1ms
        ✓ leaves the model out so the index model applies 1ms
-       ✓ rejects a model override alongside a precomputed vector 1ms
+       ✓ rejects a model override alongside a precomputed vector 2ms
        ✓ rejects includeVector on an autoEmbed index because no vector is stored 1ms
      ✓ hybridQuery (3)
-       ✓ feeds the vector branch a query string while the text branch keeps its own term 1ms
+       ✓ feeds the vector branch a query string while the text branch keeps its own term 2ms
        ✓ lets a hybrid query override the index model for its vector branch 1ms
-       ✓ rejects a hybrid query with neither queryVector nor queryText 1ms
+       ✓ rejects a hybrid query with neither queryVector nor queryText 2ms
      ✓ registry hydration in a fresh process (2)
-       ✓ queries by text using the persisted autoEmbed config 2ms
-       ✓ accepts a text upsert using the persisted autoEmbed config 1ms
+       ✓ queries by text using the persisted autoEmbed config 1ms
+       ✓ accepts a text upsert using the persisted autoEmbed config 2ms
      ✓ upsert (7)
        ✓ writes the text without an embedding field 1ms
        ✓ writes the text to the configured autoEmbed path 1ms
        ✓ generates one id per document 1ms
        ✓ does not consult describeIndex, since there is no dimension to validate 1ms
-       ✓ rejects vectors supplied alongside documents on an autoEmbed index 1ms
+       ✓ rejects vectors supplied alongside documents on an autoEmbed index 7ms
        ✓ rejects an empty documents array 1ms
        ✓ rejects metadata that does not line up with documents 1ms
      ✓ describeIndex (9)
-       ✓ reports no metric for a float autoEmbed index that declares no similarity 2ms
+       ✓ reports no metric for a float autoEmbed index that declares no similarity 1ms
        ✓ reports no metric for a scalar autoEmbed index that declares no similarity 1ms
-       ✓ reports no metric for a binary autoEmbed index that declares no similarity 0ms
-       ✓ reports no metric for a binaryNoRescore autoEmbed index that declares no similarity 0ms
+       ✓ reports no metric for a binary autoEmbed index that declares no similarity 1ms
+       ✓ reports no metric for a binaryNoRescore autoEmbed index that declares no similarity 1ms
        ✓ reports the similarity an autoEmbed index declares 1ms
        ✓ reads stats from an autoEmbed definition instead of throwing 1ms
        ✓ reports MongoDB's default embedding size when the index does not pin one 1ms
-       ✓ reports the pinned embedding size when the index declares one 1ms
+       ✓ reports the pinned embedding size when the index declares one 2ms
        ✓ counts documents carrying the embedded text, not an embedding field 1ms
      ✓ updateVector (1)
        ✓ rejects a vector update on an autoEmbed index instead of writing a dead field 1ms
@@ -485,52 +453,91 @@ Skipping schemaless test - connector not accessible
      ↓ honours a query-time model override from the same family
      ↓ surfaces MongoDB's rejection of an incompatible model
      ↓ reports stats for an autoEmbed index
- ✓ |e2e:stores/mongodb| src/storage/run-fencing.test.ts (28 tests | 1 skipped) 7979ms
+ ✓ |e2e:stores/mongodb| src/storage/retention.test.ts (28 tests) 1924ms
+ ✓ |e2e:stores/mongodb| src/storage/domains/knowledge/pages.test.ts (14 tests) 2344ms
+   ✓ MongoKnowledgePages (schema 4) (14)
+     ✓ keeps pins from before pin kinds as page pins and then takes a list pin on the same page 379ms
+stdout | src/storage/index.test.ts > MongoDBStore > Agents Storage
+Clearing agents domain data before tests
+
+stdout | src/storage/index.test.ts > MongoDBStore > Agents Storage
+Agents domain cleared in 4ms
+
+ ✓ |e2e:stores/mongodb| src/storage/domains/notifications/index.test.ts (9 tests) 6674ms
+   ✓ NotificationsMongoDB (9)
+     ✓ coalesces pending notifications by dedupeKey or coalesceKey within matching scope 400ms
+     ✓ bulk status update accepts more ids than one statement can bind and returns each record once 5634ms
+ ✓ |e2e:stores/mongodb| src/storage/domains/memory/om-lifecycle-concurrency.test.ts (25 tests) 8098ms
+   ✓ MongoDB (two clients) observational memory lifecycle concurrency (8)
+     ✓ rollover vs append: the appended chunk lands on the head 746ms
+     ✓ rollover vs swap: activated observations reach the head; unactivated chunks move to it 784ms
+     ✓ swap vs append: a chunk appended after the caller read the record is never dropped 552ms
+     ✓ duplicate append: the same cycle is stored once 359ms
+     ✓ rollover vs rollover: exactly one reflection applies 720ms
+     ✓ rollover vs active-observation commit: an applied commit reaches the head 654ms
+     ✓ rollover vs pending-token and buffering-flag writes: the values reach the head 748ms
+   ✓ MongoDB observational memory supersededBy, rollover recovery, and appends (17)
+     ✓ a backfill racing a rollover always leaves exactly one live record 1298ms
+     ✓ concurrent roll-forwards from two stores create one successor 368ms
+ ✓ |e2e:stores/mongodb| src/vector/filter.test.ts (36 tests) 16ms
+ ✓ |e2e:stores/mongodb| src/storage/transactions.test.ts (11 tests) 1193ms
+ ↓ |e2e:stores/mongodb| src/vector/om-autoembed.test.ts (9 tests | 9 skipped)
+ ↓ |e2e:stores/mongodb| src/vector/memory-autoembed.test.ts (4 tests | 4 skipped)
+ ↓ |e2e:stores/mongodb| src/vector/workspace-autoembed.test.ts (5 tests | 5 skipped)
+ ✓ |e2e:stores/mongodb| src/storage/domains/memory/memory-data-modeling.test.ts (8 tests | 2 todo) 326ms
+ ✓ |e2e:stores/mongodb| src/vector/query-initial-sync-retry.test.ts (3 tests) 22ms
+ ✓ |e2e:stores/mongodb| src/storage/domains/memory/include-tied-timestamps.test.ts (4 tests) 285ms
+ ✓ |e2e:stores/mongodb| src/storage/connectors/MongoDBConnector.test.ts (3 tests) 5ms
+ ✓ |e2e:stores/mongodb| src/storage/dataset-fidelity.test.ts (33 tests) 2312ms
+stderr | src/storage/index.test.ts > MemoryStorageMongoDB error propagation (no empty-on-error) > listThreads re-throws backend failures instead of returning empty
+{"message":"simulated backend outage","domain":"STORAGE","category":"THIRD_PARTY","code":"MASTRA_STORAGE_MONGODB_LIST_THREADS_FAILED","details":{"hasMetadataFilter":false},"cause":{"message":"simulated backend outage","name":"Error"}}
+
+stderr | src/storage/index.test.ts > MemoryStorageMongoDB error propagation (no empty-on-error) > listMessages re-throws backend failures instead of returning empty
+{"message":"simulated backend outage","domain":"STORAGE","category":"THIRD_PARTY","code":"MASTRA_STORAGE_MONGODB_LIST_MESSAGES_FAILED","details":{"threadId":"thread-err","resourceId":""},"cause":{"message":"simulated backend outage","name":"Error"}}
+
+stderr | src/storage/index.test.ts > MemoryStorageMongoDB error propagation (no empty-on-error) > listMessagesByResourceId re-throws backend failures instead of returning empty
+{"message":"simulated backend outage","domain":"STORAGE","category":"THIRD_PARTY","code":"MASTRA_STORAGE_MONGODB_LIST_MESSAGES_BY_RESOURCE_ID_FAILED","details":{"resourceId":"res-err"},"cause":{"message":"simulated backend outage","name":"Error"}}
+
+stdout | src/storage/index.test.ts > MongoDB Specific Tests > MongoDB Schemaless Collection Behavior > should create collections on-demand when using connector directly
+Skipping schemaless test - connector not accessible
+
+ ✓ |e2e:stores/mongodb| src/storage/domains/memory/om-history-search.test.ts (1 test) 305ms
+ ✓ |e2e:stores/mongodb| src/storage/index.test.ts (854 tests | 194 skipped) 26048ms
+   ✓ MongoDBStore (806)
+     ✓ listMessages (19)
+       ✓ should upsert messages: duplicate id+threadId results in update, not duplicate row 522ms
+     ✓ Resources (15)
+       ✓ should create and retrieve a resource 390ms
+     ✓ Observational Memory (99)
+       ✓ should create a new observational memory record 356ms
+     ✓ Run fencing: prune (3)
+       ✓ deletes claims idle longer than maxAge and keeps recently active ones 2025ms
+       ✓ claims above a surviving fence after the claim was pruned 2025ms
+       ✓ deletes fences retired longer than maxAge and never deletes a fence that is not retired 2036ms
+ ✓ |e2e:stores/mongodb| src/storage/run-fencing.test.ts (28 tests | 1 skipped) 8182ms
    ✓ MongoDB run fencing (28)
      ✓ Run fencing: workflows (13)
        ✓ ownership (8)
          ✓ claims a run whose lease expired without force 612ms
-         ✓ renews only while the claim is current, even after the lease expired 614ms
+         ✓ renews only while the claim is current, even after the lease expired 613ms
      ✓ Run fencing: prune (3)
-       ✓ deletes claims idle longer than maxAge and keeps recently active ones 2022ms
-       ✓ claims above a surviving fence after the claim was pruned 2019ms
-       ✓ deletes fences retired longer than maxAge and never deletes a fence that is not retired 2038ms
- ✓ |e2e:stores/mongodb| src/storage/dataset-fidelity.test.ts (33 tests) 1904ms
- ✓ |e2e:stores/mongodb| src/storage/domains/knowledge/pages.test.ts (14 tests) 2113ms
-   ✓ MongoKnowledgePages (schema 4) (14)
-     ✓ keeps pins from before pin kinds as page pins and then takes a list pin on the same page 323ms
- ✓ |e2e:stores/mongodb| src/storage/domains/memory/om-lifecycle-concurrency.test.ts (25 tests) 7749ms
-   ✓ MongoDB (two clients) observational memory lifecycle concurrency (8)
-     ✓ rollover vs append: the appended chunk lands on the head 617ms
-     ✓ rollover vs swap: activated observations reach the head; unactivated chunks move to it 625ms
-     ✓ swap vs append: a chunk appended after the caller read the record is never dropped 461ms
-     ✓ duplicate append: the same cycle is stored once 407ms
-     ✓ rollover vs rollover: exactly one reflection applies 664ms
-     ✓ rollover vs active-observation commit: an applied commit reaches the head 628ms
-     ✓ rollover vs pending-token and buffering-flag writes: the values reach the head 696ms
-   ✓ MongoDB observational memory supersededBy, rollover recovery, and appends (17)
-     ✓ a backfill racing a rollover always leaves exactly one live record 1554ms
-     ✓ concurrent roll-forwards from two stores create one successor 321ms
- ✓ |e2e:stores/mongodb| src/storage/domains/notifications/index.test.ts (9 tests) 6346ms
-   ✓ NotificationsMongoDB (9)
-     ✓ bulk status update accepts more ids than one statement can bind and returns each record once 5756ms
- ✓ |e2e:stores/mongodb| src/storage/transactions.test.ts (11 tests) 934ms
- ✓ |e2e:stores/mongodb| src/storage/migration.test.ts (12 tests) 1509ms
- ✓ |e2e:stores/mongodb| src/storage/retention.test.ts (28 tests) 1740ms
- ✓ |e2e:stores/mongodb| src/storage/domains/memory/memory-data-modeling.test.ts (8 tests | 2 todo) 322ms
- ✓ |e2e:stores/mongodb| src/storage/domains/memory/include-tied-timestamps.test.ts (4 tests) 252ms
- ✓ |e2e:stores/mongodb| src/vector/filter.test.ts (36 tests) 24ms
- ✓ |e2e:stores/mongodb| src/storage/domains/memory/om-history-search.test.ts (1 test) 283ms
- ✓ |e2e:stores/mongodb| src/vector/query-initial-sync-retry.test.ts (3 tests) 28ms
- ✓ |e2e:stores/mongodb| src/storage/connectors/MongoDBConnector.test.ts (3 tests) 7ms
- ↓ |e2e:stores/mongodb| src/vector/memory-autoembed.test.ts (4 tests | 4 skipped)
- ↓ |e2e:stores/mongodb| src/vector/om-autoembed.test.ts (9 tests | 9 skipped)
- ↓ |e2e:stores/mongodb| src/vector/workspace-autoembed.test.ts (5 tests | 5 skipped)
+       ✓ deletes claims idle longer than maxAge and keeps recently active ones 2023ms
+       ✓ claims above a surviving fence after the claim was pruned 2022ms
+       ✓ deletes fences retired longer than maxAge and never deletes a fence that is not retired 2068ms
+ ✓ |e2e:stores/mongodb| src/storage/domains/knowledge/index.test.ts (69 tests) 17188ms
+   ✓ knowledge page store contract (schema 4) (64)
+     ✓ scopes (6)
+       ✓ materializes a scope once, with its template children and keyed pages 424ms
+     ✓ read filters agree across methods (2)
+       ✓ lists and finds a page exactly when getPage returns it, for every read scope shape 1811ms
+     ✓ pages (13)
+       ✓ refuses moving more than 500 pages at once 3433ms
+       ✓ refuses a merge past the depth cap or carrying too many pages, changing nothing 3396ms
 
 ⎯⎯⎯⎯⎯⎯ Failed Suites 10 ⎯⎯⎯⎯⎯⎯
 
  FAIL  |e2e:stores/mongodb| src/vector/index.test.ts > MongoDBVector Integration Tests
-Error: connect ECONNREFUSED 127.0.0.1:27018
+Error: Authentication failed.
  ❯ MongoDBVector.connect src/vector/index.ts:640:13
     638|       await this.client.connect();
     639|     } catch (error) {
@@ -540,30 +547,20 @@ Error: connect ECONNREFUSED 127.0.0.1:27018
     642|           id: createVectorErrorId('MONGODB', 'CONNECT', 'FAILED'),
  ❯ src/vector/index.test.ts:195:5
 
-Caused by: MongoServerSelectionError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Topology.selectServer ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:350:38
- ❯ Topology._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:222:28
- ❯ Topology.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:173:13
- ❯ topologyConnect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:258:17
- ❯ MongoClient._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:271:13
- ❯ MongoClient.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:196:13
- ❯ MongoDBVector.connect src/vector/index.ts:638:7
- ❯ src/vector/index.test.ts:195:5
+Caused by: MongoServerError: Authentication failed.
+ ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
+ ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
+ ❯ executeScram ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:78:22
+ ❯ ScramSHA256.auth ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:38:16
+ ❯ performInitialHandshake ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:110:13
+ ❯ connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:28:9
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 0, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, reason: { type: 'Single', servers: { 'localhost:27018': { address: 'localhost:27018', type: 'Unknown', hosts: [], passives: [], arbiters: [], tags: {}, minWireVersion: 0, maxWireVersion: 0, roundTripTime: -1, minRoundTripTime: 0, lastUpdateTime: 3760, lastWriteDate: 0, error: { errorLabelSet: {}, beforeHandshake: false }, topologyVersion: null, setName: null, setVersion: null, electionId: null, logicalSessionTimeoutMinutes: null, maxMessageSizeBytes: null, maxWriteBatchSize: null, maxBsonObjectSize: null, primary: null, me: null, '$clusterTime': null, iscryptd: false } }, stale: false, compatible: true, heartbeatFrequencyMS: 10000, localThresholdMS: 15, setName: null, maxElectionId: null, maxSetVersion: null, commonWireVersion: 0, logicalSessionTimeoutMinutes: null }, code: undefined }
-Caused by: MongoNetworkError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Socket.<anonymous> ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:314:44
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 3, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, beforeHandshake: false }
-Caused by: Error: connect ECONNREFUSED 127.0.0.1:27018
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 27018 }
+Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 2, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, errorResponse: { ok: 0, errmsg: 'Authentication failed.', code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' } }, code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' }, connectionGeneration: 0 }
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/11]⎯
 
  FAIL  |e2e:stores/mongodb| src/vector/index.test.ts > MongoDBVector
-Error: connect ECONNREFUSED 127.0.0.1:27018
+Error: Authentication failed.
  ❯ MongoDBVector.connect src/vector/index.ts:640:13
     638|       await this.client.connect();
     639|     } catch (error) {
@@ -574,31 +571,20 @@ Error: connect ECONNREFUSED 127.0.0.1:27018
  ❯ connect src/vector/index.test.ts:417:5
  ❯ ../_test-utils/src/vector-factory.ts:191:11
 
-Caused by: MongoServerSelectionError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Topology.selectServer ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:350:38
- ❯ Topology._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:222:28
- ❯ Topology.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:173:13
- ❯ topologyConnect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:258:17
- ❯ MongoClient._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:271:13
- ❯ MongoClient.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:196:13
- ❯ MongoDBVector.connect src/vector/index.ts:638:7
- ❯ connect src/vector/index.test.ts:417:5
- ❯ ../_test-utils/src/vector-factory.ts:191:11
+Caused by: MongoServerError: Authentication failed.
+ ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
+ ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
+ ❯ executeScram ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:78:22
+ ❯ ScramSHA256.auth ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:38:16
+ ❯ performInitialHandshake ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:110:13
+ ❯ connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:28:9
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 0, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, reason: { type: 'Single', servers: { 'localhost:27018': { address: 'localhost:27018', type: 'Unknown', hosts: [], passives: [], arbiters: [], tags: {}, minWireVersion: 0, maxWireVersion: 0, roundTripTime: -1, minRoundTripTime: 0, lastUpdateTime: 5776, lastWriteDate: 0, error: { errorLabelSet: {}, beforeHandshake: false }, topologyVersion: null, setName: null, setVersion: null, electionId: null, logicalSessionTimeoutMinutes: null, maxMessageSizeBytes: null, maxWriteBatchSize: null, maxBsonObjectSize: null, primary: null, me: null, '$clusterTime': null, iscryptd: false } }, stale: false, compatible: true, heartbeatFrequencyMS: 10000, localThresholdMS: 15, setName: null, maxElectionId: null, maxSetVersion: null, commonWireVersion: 0, logicalSessionTimeoutMinutes: null }, code: undefined }
-Caused by: MongoNetworkError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Socket.<anonymous> ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:314:44
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 3, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, beforeHandshake: false }
-Caused by: Error: connect ECONNREFUSED 127.0.0.1:27018
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 27018 }
+Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 2, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, errorResponse: { ok: 0, errmsg: 'Authentication failed.', code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' } }, code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' }, connectionGeneration: 0 }
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/11]⎯
 
  FAIL  |e2e:stores/mongodb| src/vector/index.test.ts > MongoDBVector filterFields (#18587) > bring-your-own collection
-Error: connect ECONNREFUSED 127.0.0.1:27018
+Error: Authentication failed.
  ❯ MongoDBVector.connect src/vector/index.ts:640:13
     638|       await this.client.connect();
     639|     } catch (error) {
@@ -608,30 +594,20 @@ Error: connect ECONNREFUSED 127.0.0.1:27018
     642|           id: createVectorErrorId('MONGODB', 'CONNECT', 'FAILED'),
  ❯ src/vector/index.test.ts:876:7
 
-Caused by: MongoServerSelectionError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Topology.selectServer ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:350:38
- ❯ Topology._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:222:28
- ❯ Topology.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:173:13
- ❯ topologyConnect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:258:17
- ❯ MongoClient._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:271:13
- ❯ MongoClient.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:196:13
- ❯ MongoDBVector.connect src/vector/index.ts:638:7
- ❯ src/vector/index.test.ts:876:7
+Caused by: MongoServerError: Authentication failed.
+ ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
+ ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
+ ❯ executeScram ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:78:22
+ ❯ ScramSHA256.auth ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:38:16
+ ❯ performInitialHandshake ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:110:13
+ ❯ connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:28:9
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 0, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, reason: { type: 'Single', servers: { 'localhost:27018': { address: 'localhost:27018', type: 'Unknown', hosts: [], passives: [], arbiters: [], tags: {}, minWireVersion: 0, maxWireVersion: 0, roundTripTime: -1, minRoundTripTime: 0, lastUpdateTime: 7939, lastWriteDate: 0, error: { errorLabelSet: {}, beforeHandshake: false }, topologyVersion: null, setName: null, setVersion: null, electionId: null, logicalSessionTimeoutMinutes: null, maxMessageSizeBytes: null, maxWriteBatchSize: null, maxBsonObjectSize: null, primary: null, me: null, '$clusterTime': null, iscryptd: false } }, stale: false, compatible: true, heartbeatFrequencyMS: 10000, localThresholdMS: 15, setName: null, maxElectionId: null, maxSetVersion: null, commonWireVersion: 0, logicalSessionTimeoutMinutes: null }, code: undefined }
-Caused by: MongoNetworkError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Socket.<anonymous> ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:314:44
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 3, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, beforeHandshake: false }
-Caused by: Error: connect ECONNREFUSED 127.0.0.1:27018
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 27018 }
+Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 2, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, errorResponse: { ok: 0, errmsg: 'Authentication failed.', code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' } }, code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' }, connectionGeneration: 0 }
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/11]⎯
 
  FAIL  |e2e:stores/mongodb| src/vector/index.test.ts > MongoDBVector filterFields (#18587) > text and hybrid search
-Error: connect ECONNREFUSED 127.0.0.1:27018
+Error: Authentication failed.
  ❯ MongoDBVector.connect src/vector/index.ts:640:13
     638|       await this.client.connect();
     639|     } catch (error) {
@@ -641,30 +617,20 @@ Error: connect ECONNREFUSED 127.0.0.1:27018
     642|           id: createVectorErrorId('MONGODB', 'CONNECT', 'FAILED'),
  ❯ src/vector/index.test.ts:989:7
 
-Caused by: MongoServerSelectionError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Topology.selectServer ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:350:38
- ❯ Topology._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:222:28
- ❯ Topology.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:173:13
- ❯ topologyConnect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:258:17
- ❯ MongoClient._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:271:13
- ❯ MongoClient.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:196:13
- ❯ MongoDBVector.connect src/vector/index.ts:638:7
- ❯ src/vector/index.test.ts:989:7
+Caused by: MongoServerError: Authentication failed.
+ ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
+ ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
+ ❯ executeScram ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:78:22
+ ❯ ScramSHA256.auth ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:38:16
+ ❯ performInitialHandshake ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:110:13
+ ❯ connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:28:9
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 0, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, reason: { type: 'Single', servers: { 'localhost:27018': { address: 'localhost:27018', type: 'Unknown', hosts: [], passives: [], arbiters: [], tags: {}, minWireVersion: 0, maxWireVersion: 0, roundTripTime: -1, minRoundTripTime: 0, lastUpdateTime: 9942, lastWriteDate: 0, error: { errorLabelSet: {}, beforeHandshake: false }, topologyVersion: null, setName: null, setVersion: null, electionId: null, logicalSessionTimeoutMinutes: null, maxMessageSizeBytes: null, maxWriteBatchSize: null, maxBsonObjectSize: null, primary: null, me: null, '$clusterTime': null, iscryptd: false } }, stale: false, compatible: true, heartbeatFrequencyMS: 10000, localThresholdMS: 15, setName: null, maxElectionId: null, maxSetVersion: null, commonWireVersion: 0, logicalSessionTimeoutMinutes: null }, code: undefined }
-Caused by: MongoNetworkError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Socket.<anonymous> ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:314:44
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 3, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, beforeHandshake: false }
-Caused by: Error: connect ECONNREFUSED 127.0.0.1:27018
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 27018 }
+Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 2, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, errorResponse: { ok: 0, errmsg: 'Authentication failed.', code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' } }, code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' }, connectionGeneration: 0 }
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/11]⎯
 
  FAIL  |e2e:stores/mongodb| src/vector/index.test.ts > MongoDBVector BYO durability across instances
-Error: connect ECONNREFUSED 127.0.0.1:27018
+Error: Authentication failed.
  ❯ MongoDBVector.connect src/vector/index.ts:640:13
     638|       await this.client.connect();
     639|     } catch (error) {
@@ -674,30 +640,20 @@ Error: connect ECONNREFUSED 127.0.0.1:27018
     642|           id: createVectorErrorId('MONGODB', 'CONNECT', 'FAILED'),
  ❯ src/vector/index.test.ts:1944:5
 
-Caused by: MongoServerSelectionError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Topology.selectServer ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:350:38
- ❯ Topology._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:222:28
- ❯ Topology.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:173:13
- ❯ topologyConnect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:258:17
- ❯ MongoClient._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:271:13
- ❯ MongoClient.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:196:13
- ❯ MongoDBVector.connect src/vector/index.ts:638:7
- ❯ src/vector/index.test.ts:1944:5
+Caused by: MongoServerError: Authentication failed.
+ ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
+ ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
+ ❯ executeScram ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:78:22
+ ❯ ScramSHA256.auth ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:38:16
+ ❯ performInitialHandshake ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:110:13
+ ❯ connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:28:9
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 0, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, reason: { type: 'Single', servers: { 'localhost:27018': { address: 'localhost:27018', type: 'Unknown', hosts: [], passives: [], arbiters: [], tags: {}, minWireVersion: 0, maxWireVersion: 0, roundTripTime: -1, minRoundTripTime: 0, lastUpdateTime: 12060, lastWriteDate: 0, error: { errorLabelSet: {}, beforeHandshake: false }, topologyVersion: null, setName: null, setVersion: null, electionId: null, logicalSessionTimeoutMinutes: null, maxMessageSizeBytes: null, maxWriteBatchSize: null, maxBsonObjectSize: null, primary: null, me: null, '$clusterTime': null, iscryptd: false } }, stale: false, compatible: true, heartbeatFrequencyMS: 10000, localThresholdMS: 15, setName: null, maxElectionId: null, maxSetVersion: null, commonWireVersion: 0, logicalSessionTimeoutMinutes: null }, code: undefined }
-Caused by: MongoNetworkError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Socket.<anonymous> ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:314:44
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 3, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, beforeHandshake: false }
-Caused by: Error: connect ECONNREFUSED 127.0.0.1:27018
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 27018 }
+Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 2, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, errorResponse: { ok: 0, errmsg: 'Authentication failed.', code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' } }, code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' }, connectionGeneration: 0 }
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/11]⎯
 
  FAIL  |e2e:stores/mongodb| src/vector/index.test.ts > MongoDBVector listIndexes logical names
-Error: connect ECONNREFUSED 127.0.0.1:27018
+Error: Authentication failed.
  ❯ MongoDBVector.connect src/vector/index.ts:640:13
     638|       await this.client.connect();
     639|     } catch (error) {
@@ -707,30 +663,20 @@ Error: connect ECONNREFUSED 127.0.0.1:27018
     642|           id: createVectorErrorId('MONGODB', 'CONNECT', 'FAILED'),
  ❯ src/vector/index.test.ts:2015:5
 
-Caused by: MongoServerSelectionError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Topology.selectServer ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:350:38
- ❯ Topology._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:222:28
- ❯ Topology.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:173:13
- ❯ topologyConnect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:258:17
- ❯ MongoClient._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:271:13
- ❯ MongoClient.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:196:13
- ❯ MongoDBVector.connect src/vector/index.ts:638:7
- ❯ src/vector/index.test.ts:2015:5
+Caused by: MongoServerError: Authentication failed.
+ ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
+ ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
+ ❯ executeScram ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:78:22
+ ❯ ScramSHA256.auth ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:38:16
+ ❯ performInitialHandshake ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:110:13
+ ❯ connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:28:9
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 0, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, reason: { type: 'Single', servers: { 'localhost:27018': { address: 'localhost:27018', type: 'Unknown', hosts: [], passives: [], arbiters: [], tags: {}, minWireVersion: 0, maxWireVersion: 0, roundTripTime: -1, minRoundTripTime: 0, lastUpdateTime: 14064, lastWriteDate: 0, error: { errorLabelSet: {}, beforeHandshake: false }, topologyVersion: null, setName: null, setVersion: null, electionId: null, logicalSessionTimeoutMinutes: null, maxMessageSizeBytes: null, maxWriteBatchSize: null, maxBsonObjectSize: null, primary: null, me: null, '$clusterTime': null, iscryptd: false } }, stale: false, compatible: true, heartbeatFrequencyMS: 10000, localThresholdMS: 15, setName: null, maxElectionId: null, maxSetVersion: null, commonWireVersion: 0, logicalSessionTimeoutMinutes: null }, code: undefined }
-Caused by: MongoNetworkError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Socket.<anonymous> ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:314:44
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 3, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, beforeHandshake: false }
-Caused by: Error: connect ECONNREFUSED 127.0.0.1:27018
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 27018 }
+Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 2, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, errorResponse: { ok: 0, errmsg: 'Authentication failed.', code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' } }, code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' }, connectionGeneration: 0 }
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/11]⎯
 
  FAIL  |e2e:stores/mongodb| src/vector/index.test.ts > MongoDBVector document-mode clean projection
-Error: connect ECONNREFUSED 127.0.0.1:27018
+Error: Authentication failed.
  ❯ MongoDBVector.connect src/vector/index.ts:640:13
     638|       await this.client.connect();
     639|     } catch (error) {
@@ -740,30 +686,20 @@ Error: connect ECONNREFUSED 127.0.0.1:27018
     642|           id: createVectorErrorId('MONGODB', 'CONNECT', 'FAILED'),
  ❯ src/vector/index.test.ts:2062:5
 
-Caused by: MongoServerSelectionError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Topology.selectServer ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:350:38
- ❯ Topology._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:222:28
- ❯ Topology.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:173:13
- ❯ topologyConnect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:258:17
- ❯ MongoClient._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:271:13
- ❯ MongoClient.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:196:13
- ❯ MongoDBVector.connect src/vector/index.ts:638:7
- ❯ src/vector/index.test.ts:2062:5
+Caused by: MongoServerError: Authentication failed.
+ ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
+ ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
+ ❯ executeScram ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:78:22
+ ❯ ScramSHA256.auth ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:38:16
+ ❯ performInitialHandshake ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:110:13
+ ❯ connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:28:9
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 0, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, reason: { type: 'Single', servers: { 'localhost:27018': { address: 'localhost:27018', type: 'Unknown', hosts: [], passives: [], arbiters: [], tags: {}, minWireVersion: 0, maxWireVersion: 0, roundTripTime: -1, minRoundTripTime: 0, lastUpdateTime: 16067, lastWriteDate: 0, error: { errorLabelSet: {}, beforeHandshake: false }, topologyVersion: null, setName: null, setVersion: null, electionId: null, logicalSessionTimeoutMinutes: null, maxMessageSizeBytes: null, maxWriteBatchSize: null, maxBsonObjectSize: null, primary: null, me: null, '$clusterTime': null, iscryptd: false } }, stale: false, compatible: true, heartbeatFrequencyMS: 10000, localThresholdMS: 15, setName: null, maxElectionId: null, maxSetVersion: null, commonWireVersion: 0, logicalSessionTimeoutMinutes: null }, code: undefined }
-Caused by: MongoNetworkError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Socket.<anonymous> ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:314:44
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 3, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, beforeHandshake: false }
-Caused by: Error: connect ECONNREFUSED 127.0.0.1:27018
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 27018 }
+Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 2, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, errorResponse: { ok: 0, errmsg: 'Authentication failed.', code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' } }, code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' }, connectionGeneration: 0 }
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/11]⎯
 
  FAIL  |e2e:stores/mongodb| src/vector/index.test.ts > MongoDBVector BYO ObjectId _ids (round4-fix2)
-Error: connect ECONNREFUSED 127.0.0.1:27018
+Error: Authentication failed.
  ❯ MongoDBVector.connect src/vector/index.ts:640:13
     638|       await this.client.connect();
     639|     } catch (error) {
@@ -773,30 +709,20 @@ Error: connect ECONNREFUSED 127.0.0.1:27018
     642|           id: createVectorErrorId('MONGODB', 'CONNECT', 'FAILED'),
  ❯ src/vector/index.test.ts:2162:5
 
-Caused by: MongoServerSelectionError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Topology.selectServer ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:350:38
- ❯ Topology._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:222:28
- ❯ Topology.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:173:13
- ❯ topologyConnect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:258:17
- ❯ MongoClient._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:271:13
- ❯ MongoClient.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:196:13
- ❯ MongoDBVector.connect src/vector/index.ts:638:7
- ❯ src/vector/index.test.ts:2162:5
+Caused by: MongoServerError: Authentication failed.
+ ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
+ ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
+ ❯ executeScram ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:78:22
+ ❯ ScramSHA256.auth ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:38:16
+ ❯ performInitialHandshake ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:110:13
+ ❯ connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:28:9
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 0, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, reason: { type: 'Single', servers: { 'localhost:27018': { address: 'localhost:27018', type: 'Unknown', hosts: [], passives: [], arbiters: [], tags: {}, minWireVersion: 0, maxWireVersion: 0, roundTripTime: -1, minRoundTripTime: 0, lastUpdateTime: 18073, lastWriteDate: 0, error: { errorLabelSet: {}, beforeHandshake: false }, topologyVersion: null, setName: null, setVersion: null, electionId: null, logicalSessionTimeoutMinutes: null, maxMessageSizeBytes: null, maxWriteBatchSize: null, maxBsonObjectSize: null, primary: null, me: null, '$clusterTime': null, iscryptd: false } }, stale: false, compatible: true, heartbeatFrequencyMS: 10000, localThresholdMS: 15, setName: null, maxElectionId: null, maxSetVersion: null, commonWireVersion: 0, logicalSessionTimeoutMinutes: null }, code: undefined }
-Caused by: MongoNetworkError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Socket.<anonymous> ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:314:44
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 3, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, beforeHandshake: false }
-Caused by: Error: connect ECONNREFUSED 127.0.0.1:27018
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 27018 }
+Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 2, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, errorResponse: { ok: 0, errmsg: 'Authentication failed.', code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' } }, code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' }, connectionGeneration: 0 }
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/11]⎯
 
  FAIL  |e2e:stores/mongodb| src/vector/index.test.ts > MongoDBVector describeIndex embedded-only count (round4-fix8)
-Error: connect ECONNREFUSED 127.0.0.1:27018
+Error: Authentication failed.
  ❯ MongoDBVector.connect src/vector/index.ts:640:13
     638|       await this.client.connect();
     639|     } catch (error) {
@@ -806,30 +732,20 @@ Error: connect ECONNREFUSED 127.0.0.1:27018
     642|           id: createVectorErrorId('MONGODB', 'CONNECT', 'FAILED'),
  ❯ src/vector/index.test.ts:2261:5
 
-Caused by: MongoServerSelectionError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Topology.selectServer ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:350:38
- ❯ Topology._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:222:28
- ❯ Topology.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:173:13
- ❯ topologyConnect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:258:17
- ❯ MongoClient._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:271:13
- ❯ MongoClient.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:196:13
- ❯ MongoDBVector.connect src/vector/index.ts:638:7
- ❯ src/vector/index.test.ts:2261:5
+Caused by: MongoServerError: Authentication failed.
+ ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
+ ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
+ ❯ executeScram ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:78:22
+ ❯ ScramSHA256.auth ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:38:16
+ ❯ performInitialHandshake ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:110:13
+ ❯ connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:28:9
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 0, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, reason: { type: 'Single', servers: { 'localhost:27018': { address: 'localhost:27018', type: 'Unknown', hosts: [], passives: [], arbiters: [], tags: {}, minWireVersion: 0, maxWireVersion: 0, roundTripTime: -1, minRoundTripTime: 0, lastUpdateTime: 20075, lastWriteDate: 0, error: { errorLabelSet: {}, beforeHandshake: false }, topologyVersion: null, setName: null, setVersion: null, electionId: null, logicalSessionTimeoutMinutes: null, maxMessageSizeBytes: null, maxWriteBatchSize: null, maxBsonObjectSize: null, primary: null, me: null, '$clusterTime': null, iscryptd: false } }, stale: false, compatible: true, heartbeatFrequencyMS: 10000, localThresholdMS: 15, setName: null, maxElectionId: null, maxSetVersion: null, commonWireVersion: 0, logicalSessionTimeoutMinutes: null }, code: undefined }
-Caused by: MongoNetworkError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Socket.<anonymous> ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:314:44
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 3, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, beforeHandshake: false }
-Caused by: Error: connect ECONNREFUSED 127.0.0.1:27018
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 27018 }
+Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 2, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, errorResponse: { ok: 0, errmsg: 'Authentication failed.', code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' } }, code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' }, connectionGeneration: 0 }
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/11]⎯
 
  FAIL  |e2e:stores/mongodb| src/vector/index.test.ts > MongoDBVector registry claim
-Error: connect ECONNREFUSED 127.0.0.1:27018
+Error: Authentication failed.
  ❯ MongoDBVector.connect src/vector/index.ts:640:13
     638|       await this.client.connect();
     639|     } catch (error) {
@@ -839,26 +755,16 @@ Error: connect ECONNREFUSED 127.0.0.1:27018
     642|           id: createVectorErrorId('MONGODB', 'CONNECT', 'FAILED'),
  ❯ src/vector/index.test.ts:2306:5
 
-Caused by: MongoServerSelectionError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Topology.selectServer ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:350:38
- ❯ Topology._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:222:28
- ❯ Topology.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/sdam/topology.js:173:13
- ❯ topologyConnect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:258:17
- ❯ MongoClient._connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:271:13
- ❯ MongoClient.connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/mongo_client.js:196:13
- ❯ MongoDBVector.connect src/vector/index.ts:638:7
- ❯ src/vector/index.test.ts:2306:5
+Caused by: MongoServerError: Authentication failed.
+ ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
+ ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
+ ❯ executeScram ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:78:22
+ ❯ ScramSHA256.auth ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/auth/scram.js:38:16
+ ❯ performInitialHandshake ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:110:13
+ ❯ connect ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:28:9
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 0, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, reason: { type: 'Single', servers: { 'localhost:27018': { address: 'localhost:27018', type: 'Unknown', hosts: [], passives: [], arbiters: [], tags: {}, minWireVersion: 0, maxWireVersion: 0, roundTripTime: -1, minRoundTripTime: 0, lastUpdateTime: 22078, lastWriteDate: 0, error: { errorLabelSet: {}, beforeHandshake: false }, topologyVersion: null, setName: null, setVersion: null, electionId: null, logicalSessionTimeoutMinutes: null, maxMessageSizeBytes: null, maxWriteBatchSize: null, maxBsonObjectSize: null, primary: null, me: null, '$clusterTime': null, iscryptd: false } }, stale: false, compatible: true, heartbeatFrequencyMS: 10000, localThresholdMS: 15, setName: null, maxElectionId: null, maxSetVersion: null, commonWireVersion: 0, logicalSessionTimeoutMinutes: null }, code: undefined }
-Caused by: MongoNetworkError: connect ECONNREFUSED 127.0.0.1:27018
- ❯ Socket.<anonymous> ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connect.js:314:44
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 3, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, beforeHandshake: false }
-Caused by: Error: connect ECONNREFUSED 127.0.0.1:27018
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: { errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 27018 }
+Serialized Error: { errorLabelSet: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 2, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, errorResponse: { ok: 0, errmsg: 'Authentication failed.', code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' } }, code: 18, codeName: 'AuthenticationFailed', '$clusterTime': { clusterTime: { '$timestamp': '7705524113342726177' }, signature: { hash: 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', keyId: 0 } }, operationTime: { '$timestamp': '7705524113342726177' }, connectionGeneration: 0 }
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/11]⎯
 
  FAIL  |e2e:stores/mongodb| src/vector/index.test.ts > MongoDBVector registry claim
@@ -876,7 +782,7 @@ TypeError: Cannot read properties of undefined (reading 'deleteOne')
 
  Test Files  1 failed | 16 passed | 3 skipped (20)
       Tests  1077 passed | 390 skipped | 2 todo (1469)
-   Start at  17:35:01
-   Duration  36.65s (tests 77%, import 20%, transform 3%)
+   Start at  20:09:16
+   Duration  45.11s (tests 64%, import 20%, transform 16%)
 
 JUNIT report written to /home/user/fenvix-engine/bench/agent-adapters/results/ours/mastra.xml
