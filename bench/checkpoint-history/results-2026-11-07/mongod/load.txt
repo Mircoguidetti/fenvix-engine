@@ -1,0 +1,6 @@
+phase 1: 800 threads, 13994 checkpoints, 2.26 GB written, 11 s
+phase 2: 3 threads grown to 10000, 4.86 GB written, 25 s
+{"threads": 800, "long": [328, 372, 718], "long_steps": 10000, "bytes_written_bson": 7122008688, "checkpoints": 43953, "load_secs": 36.01753783226013}
+checkpoints count 43953 size 7068929240 storageSize 3496968192 indexSize 1990656
+checkpoint_writes count 86306 size 57506396 storageSize 7041024 indexSize 3518464
+7298384301	/root/.fenvix-judge/data/ckpt-mongod
