@@ -100,7 +100,14 @@ Step 2's code already does the right thing (its `test_45`). The defect is in the
 
 ## 5. Judge
 
-`judge/run.sh fast` on 4f3d889, the delivered commit: see `judge/out/4f3d889/VERDICT-FAST.md`, and the summary added at the end of this file.
+`judge/run.sh fast` on 4f3d889, the delivered commit (MEASURED, `judge/out/4f3d889/VERDICT-FAST.md`):
+- build PASS.
+- unit FAIL, 108 passed and 1 failed: `counter::tests::rev_maps_leave_room_for_active_data`, the known one.
+- diff-py and diff-node FAIL, 412/413 each: the known `bucketauto` difference.
+- ctl FAIL, 1 of 3 files: `test_05_erase::test_concurrent_erase_and_fork_are_serialised`. A usage file `control/usage/ef5_k/.../erase-*.json` was left behind. That is the pre-existing usage-file leak that the compaction-1 review and the step 2 report describe. The owner's run of the same engine passed it, so it is a race. It cannot come from this delivery, which changes no engine code.
+- kill PASS. The kill phase rewrote the tracked `loadtest/results/gc/durability-s3-durable.json`; I restored it.
+
+So I see no failure that this delivery added.
 
 ## 6. Corrections for fenvix-brain
 
