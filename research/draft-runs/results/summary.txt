@@ -1,0 +1,366 @@
+POINT 1 and 2, by source (writing runs only unless said)
+
+[tau2_paper]
+  runs: 4448
+  writing_runs: 3197
+  writing_share: 71.9
+  length_median_s: 78.6
+  length_p90_s: 173.3
+  length_capped_median_s: 78.6
+  length_capped_p90_s: 172.3
+  over_60s: 73.1
+  length_agent_only_median_s: 58.4
+  over_60s_agent_only: 47.3
+  span_txn_median_s: 42.9
+  span_txn_over_60s: 30.7
+  writes_mean: 1.63
+  writes_2plus: 41.5
+  single_customer: 100.0
+  several_customers: 0.0
+  touches_shared_doc: 2.9
+  ryw_doc: 19.5
+  ryw_customer: 28.0
+  multi_doc_cross_calls: 39.1
+  multi_doc_within_call: 29.8
+  ryw_or_multi: 45.2
+  ryw_or_multi_incl_within: 59.1
+  neither: 54.8
+  span_between_writes_median_s_2plus: 12.7
+  span_between_writes_over_60s: 4.6
+  owner_fallback_runs: 0.1
+
+[tau2_board]
+  runs: 10083
+  writing_runs: 6750
+  writing_share: 66.9
+  length_median_s: 302.9
+  length_p90_s: 6731.1
+  length_capped_median_s: 301.5
+  length_capped_p90_s: 1800.0
+  over_60s: 97.7
+  length_agent_only_median_s: 260.0
+  over_60s_agent_only: 82.3
+  span_txn_median_s: 141.8
+  span_txn_over_60s: 72.3
+  writes_mean: 2.38
+  writes_2plus: 55.2
+  single_customer: 99.8
+  several_customers: 0.2
+  touches_shared_doc: 2.4
+  ryw_doc: 17.7
+  ryw_customer: 43.5
+  multi_doc_cross_calls: 53.8
+  multi_doc_within_call: 33.3
+  ryw_or_multi: 55.9
+  ryw_or_multi_incl_within: 67.9
+  neither: 44.1
+  span_between_writes_median_s_2plus: 110.8
+  span_between_writes_over_60s: 35.4
+  owner_fallback_runs: 0.8
+
+[taubench]
+  runs: 1980
+  writing_runs: 1502
+  writing_share: 75.9
+  length_median_s: 70.8
+  length_p90_s: 110.3
+  length_capped_median_s: 70.8
+  length_capped_p90_s: 110.3
+  over_60s: 70.0
+  length_agent_only_median_s: 55.9
+  over_60s_agent_only: 43.2
+  span_txn_median_s: 45.5
+  span_txn_over_60s: 27.4
+  writes_mean: 1.6
+  writes_2plus: 38.8
+  single_customer: 100.0
+  several_customers: 0.0
+  touches_shared_doc: 5.3
+  ryw_doc: 1.6
+  ryw_customer: 12.1
+  multi_doc_cross_calls: 35.3
+  multi_doc_within_call: 20.9
+  ryw_or_multi: 36.4
+  ryw_or_multi_incl_within: 47.3
+  neither: 63.6
+  span_between_writes_median_s_2plus: 17.6
+  span_between_writes_over_60s: 1.9
+  owner_fallback_runs: 0.2
+
+[taubench_median_steps]
+  runs: 1980
+  writing_runs: 1502
+  writing_share: 75.9
+  length_median_s: 59.3
+  length_p90_s: 84.7
+  length_capped_median_s: 59.3
+  length_capped_p90_s: 84.7
+  over_60s: 46.6
+  length_agent_only_median_s: 49.1
+  over_60s_agent_only: 20.3
+  span_txn_median_s: 37.4
+  span_txn_over_60s: 12.1
+  writes_mean: 1.6
+  writes_2plus: 38.8
+  single_customer: 100.0
+  several_customers: 0.0
+  touches_shared_doc: 5.3
+  ryw_doc: 1.6
+  ryw_customer: 12.1
+  multi_doc_cross_calls: 35.3
+  multi_doc_within_call: 20.9
+  ryw_or_multi: 36.4
+  ryw_or_multi_incl_within: 47.3
+  neither: 63.6
+  span_between_writes_median_s_2plus: 15.5
+  span_between_writes_over_60s: 0.3
+  owner_fallback_runs: 0.2
+
+[swe]
+  runs: 441
+  writing_runs: 441
+  writing_share: 100.0
+  length_median_s: 132.7
+  length_p90_s: 287.9
+  length_capped_median_s: 132.7
+  length_capped_p90_s: 287.9
+  over_60s: 96.4
+  length_agent_only_median_s: 132.7
+  over_60s_agent_only: 96.4
+  span_txn_median_s: 132.7
+  span_txn_over_60s: 96.4
+  writes_mean: 5.88
+  writes_2plus: 100.0
+  single_customer: 100.0
+  several_customers: 0.0
+  touches_shared_doc: 0.0
+  ryw_doc: 100.0
+  ryw_customer: 100.0
+  multi_doc_cross_calls: 100.0
+  multi_doc_within_call: 0.0
+  ryw_or_multi: 100.0
+  ryw_or_multi_incl_within: 100.0
+  neither: 0.0
+  span_between_writes_median_s_2plus: 51.0
+  span_between_writes_over_60s: 44.0
+  owner_fallback_runs: 0.0
+
+[customer_service_all]
+  runs: 16511
+  writing_runs: 11449
+  writing_share: 69.3
+  length_median_s: 131.8
+  length_p90_s: 1501.4
+  length_capped_median_s: 131.8
+  length_capped_p90_s: 1240.4
+  over_60s: 87.2
+  length_agent_only_median_s: 91.1
+  over_60s_agent_only: 67.4
+  span_txn_median_s: 68.2
+  span_txn_over_60s: 54.8
+  writes_mean: 2.07
+  writes_2plus: 49.2
+  single_customer: 99.9
+  several_customers: 0.1
+  touches_shared_doc: 3.0
+  ryw_doc: 16.1
+  ryw_customer: 35.0
+  multi_doc_cross_calls: 47.3
+  multi_doc_within_call: 30.7
+  ryw_or_multi: 50.4
+  ryw_or_multi_incl_within: 62.8
+  neither: 49.6
+  span_between_writes_median_s_2plus: 47.8
+  span_between_writes_over_60s: 22.4
+  owner_fallback_runs: 0.5
+
+[customer_service_clocked]
+  runs: 14531
+  writing_runs: 9947
+  writing_share: 68.5
+  length_median_s: 157.6
+  length_p90_s: 2611.9
+  length_capped_median_s: 157.6
+  length_capped_p90_s: 1440.0
+  over_60s: 89.8
+  length_agent_only_median_s: 112.8
+  over_60s_agent_only: 71.1
+  span_txn_median_s: 78.1
+  span_txn_over_60s: 58.9
+  writes_mean: 2.14
+  writes_2plus: 50.8
+  single_customer: 99.9
+  several_customers: 0.1
+  touches_shared_doc: 2.6
+  ryw_doc: 18.3
+  ryw_customer: 38.5
+  multi_doc_cross_calls: 49.1
+  multi_doc_within_call: 32.1
+  ryw_or_multi: 52.5
+  ryw_or_multi_incl_within: 65.1
+  neither: 47.5
+  span_between_writes_median_s_2plus: 60.6
+  span_between_writes_over_60s: 25.5
+  owner_fallback_runs: 0.6
+
+[tau2_board_core]
+  runs: 10083
+  writing_runs: 6327
+  writing_share: 62.7
+  length_median_s: 311.5
+  length_p90_s: 7595.7
+  length_capped_median_s: 309.5
+  length_capped_p90_s: 1793.5
+  over_60s: 97.7
+  length_agent_only_median_s: 262.4
+  over_60s_agent_only: 81.5
+  span_txn_median_s: 155.5
+  span_txn_over_60s: 76.0
+  writes_mean: 2.21
+  writes_2plus: 53.1
+  single_customer: 100.0
+  several_customers: 0.0
+  touches_shared_doc: 2.6
+  ryw_doc: 18.9
+  ryw_customer: 24.7
+  multi_doc_cross_calls: 51.6
+  multi_doc_within_call: 35.5
+  ryw_or_multi: 54.4
+  ryw_or_multi_incl_within: 67.4
+  neither: 45.6
+  span_between_writes_median_s_2plus: 49.8
+  span_between_writes_over_60s: 24.5
+  owner_fallback_runs: 0.9
+
+[customer_service_all_core]
+  runs: 16511
+  writing_runs: 11026
+  writing_share: 66.8
+  length_median_s: 128.8
+  length_p90_s: 1481.6
+  length_capped_median_s: 128.8
+  length_capped_p90_s: 1230.1
+  over_60s: 86.8
+  length_agent_only_median_s: 87.4
+  over_60s_agent_only: 66.4
+  span_txn_median_s: 70.5
+  span_txn_over_60s: 56.2
+  writes_mean: 1.96
+  writes_2plus: 47.8
+  single_customer: 100.0
+  several_customers: 0.0
+  touches_shared_doc: 3.1
+  ryw_doc: 16.7
+  ryw_customer: 23.9
+  multi_doc_cross_calls: 45.8
+  multi_doc_within_call: 31.8
+  ryw_or_multi: 49.3
+  ryw_or_multi_incl_within: 62.3
+  neither: 50.7
+  span_between_writes_median_s_2plus: 28.0
+  span_between_writes_over_60s: 15.7
+  owner_fallback_runs: 0.6
+
+[board_banking_core]
+  runs: 3411
+  writing_runs: 1703
+  writing_share: 49.9
+  length_median_s: 334.8
+  length_p90_s: 3801.1
+  length_capped_median_s: 334.5
+  length_capped_p90_s: 3508.5
+  over_60s: 99.4
+  length_agent_only_median_s: 320.2
+  over_60s_agent_only: 98.8
+  span_txn_median_s: 173.7
+  span_txn_over_60s: 80.4
+  writes_mean: 3.83
+  writes_2plus: 78.6
+  single_customer: 100.0
+  several_customers: 0.0
+  touches_shared_doc: 0.0
+  ryw_doc: 25.2
+  ryw_customer: 40.4
+  multi_doc_cross_calls: 78.6
+  multi_doc_within_call: 30.7
+  ryw_or_multi: 80.4
+  ryw_or_multi_incl_within: 81.3
+  neither: 19.6
+  span_between_writes_median_s_2plus: 43.9
+  span_between_writes_over_60s: 35.2
+  owner_fallback_runs: 3.2
+
+By source and domain: over_60s / single_customer / touches_shared / ryw_doc / multi_cross / ryw_or_multi
+  tau2_paper|airline: 511 writing; 65.0 / 100.0 / 18.2 / 2.5 / 36.6 / 37.6; median length 70.0 s
+  tau2_paper|retail: 1605 writing; 61.4 / 100.0 / 0.0 / 1.3 / 36.9 / 37.5; median length 66.3 s
+  tau2_paper|telecom: 1081 writing; 94.4 / 100.0 / 0.0 / 54.5 / 43.5 / 60.3; median length 132.9 s
+  tau2_board|airline: 583 writing; 99.1 / 100.0 / 28.3 / 3.6 / 41.9 / 43.1; median length 666.2 s
+  tau2_board|banking_knowledge: 2126 writing; 99.1 / 99.4 / 0.0 / 20.2 / 80.1 / 80.1; median length 318.0 s
+  tau2_board|retail: 2223 writing; 99.6 / 100.0 / 0.0 / 1.3 / 36.8 / 37.8; median length 362.8 s
+  tau2_board|telecom: 1818 writing; 93.5 / 100.0 / 0.0 / 39.2 / 47.6 / 53.9; median length 261.1 s
+  taubench|airline: 354 writing; 68.9 / 100.0 / 22.6 / 1.4 / 35.9 / 36.4; median length 68.4 s
+  taubench|retail: 1148 writing; 70.4 / 100.0 / 0.0 / 1.7 / 35.1 / 36.3; median length 71.5 s
+
+2026 leaderboard by model: median length (capped) / over_60s / ryw_doc / ryw_or_multi
+  claude-fable-5_sierra_2026-08-04: 475.0 s / 100.0 / 21.2 / 83.1
+  claude-opus-4-5_sierra_2026-02-26: 113.7 s / 95.2 / 14.9 / 52.1
+  claude-opus-5_sierra_2026-08-04: 436.8 s / 100.0 / 23.5 / 83.3
+  claude-sonnet-4-5_sierra_2026-02-26: 139.6 s / 96.0 / 16.2 / 51.8
+  gemini-3-pro_sierra_2026-03-02: 160.1 s / 99.0 / 8.8 / 44.3
+  glm-5-think_sierra_2026-03-02: 1800.0 s / 100.0 / 7.8 / 43.1
+  gpt-5-2_sierra_2026-02-26: 665.0 s / 95.8 / 27.6 / 59.4
+  gpt-5-6-sol_sierra_2026-08-04: 192.4 s / 98.6 / 22.8 / 80.3
+  kimi-k3_sierra_2026-08-04: 397.3 s / 100.0 / 24.1 / 78.7
+  qwen3.5-397b-a17b-think_sierra_2026-03-02: 792.3 s / 100.0 / 18.9 / 45.8
+
+DAB: 13482 runs, 76213 queries, 18 writing queries in 15 runs (all temporary or scratch tables)
+Step model (tau2 paper, MEASURED): {'agent_step_median_s': 3.5, 'user_step_median_s': 1.46, 'agent_steps': 34046, 'user_steps': 39409}
+
+POINT 3: collision probability (%) by L (uniform moment / event anchor / session-start anchor)
+  irc: 27666 users, 1019976 events, 83122 active user-days, clock 60.0 s
+    L=60.0 s: 0.6 / 48.5 / 33.11
+    L=78.6 s: 0.73 / 55.66 / 39.08
+    L=131.8 s: 1.02 / 67.3 / 49.7
+    L=301.5 s: 1.64 / 78.33 / 61.07
+    L=600.0 s: 2.43 / 82.85 / 66.53
+    L=1200.0 s: 3.74 / 85.63 / 70.25
+    L=1240.4 s: 3.82 / 85.73 / 70.41
+    L=1501.4 s: 4.34 / 86.31 / 71.27
+    L=1800.0 s: 4.89 / 86.82 / 72.08
+    L=3600.0 s: 7.97 / 88.52 / 74.97
+  lsapp: 292 users, 3658589 events, 2950 active user-days, clock 1.0 s
+    L=60.0 s: 7.74 / 94.63 / 86.57
+    L=78.6 s: 9.07 / 95.36 / 87.45
+    L=131.8 s: 12.12 / 96.53 / 88.87
+    L=301.5 s: 18.56 / 97.92 / 91.2
+    L=600.0 s: 25.41 / 98.75 / 93.02
+    L=1200.0 s: 33.33 / 99.31 / 94.96
+    L=1240.4 s: 33.7 / 99.33 / 95.06
+    L=1501.4 s: 35.97 / 99.44 / 95.41
+    L=1800.0 s: 38.11 / 99.53 / 95.87
+    L=3600.0 s: 46.62 / 99.76 / 97.37
+  cdnow: 23570 users, 69659 events, 67591 active user-days, clock 86400.0 s
+    L=60.0 s: 0.07 / 0.0 / 0.0
+    L=78.6 s: 0.1 / 0.01 / 0.01
+    L=131.8 s: 0.16 / 0.01 / 0.01
+    L=301.5 s: 0.36 / 0.03 / 0.03
+    L=600.0 s: 0.71 / 0.05 / 0.05
+    L=1200.0 s: 1.42 / 0.1 / 0.09
+    L=1240.4 s: 1.47 / 0.1 / 0.1
+    L=1501.4 s: 1.78 / 0.13 / 0.12
+    L=1800.0 s: 2.12 / 0.15 / 0.14
+    L=3600.0 s: 4.2 / 0.28 / 0.27
+
+GATES (pool: tau2 paper + tau2 2026 leaderboard + tau-bench, customer-service agents)
+  1. over 60 s 87.2%, single customer 99.9%, several 0.1% -> CONTINUE
+  2. RYW or multi-document 50.4% (RYW alone 16.1%) -> CONTINUE
+  3. chat at the median length L=131.8 s: uniform moment 1.02% -> CONTINUE; session-start anchor 49.7%
+
+POINT 4: 100 customer-service runs of the median length
+  no write at all: 30.7; write but pause-and-ask is enough: 34.4; need a draft: 34.9
+  irc uniform_moment: conflict and re-run 0.4, approved in one click 34.6
+  irc session_start_anchor: conflict and re-run 17.4, approved in one click 17.6
+  lsapp uniform_moment: conflict and re-run 4.2, approved in one click 30.7
+  lsapp session_start_anchor: conflict and re-run 31.0, approved in one click 3.9
+  cdnow uniform_moment: conflict and re-run 0.1, approved in one click 34.9
+  cdnow session_start_anchor: conflict and re-run 0.0, approved in one click 34.9

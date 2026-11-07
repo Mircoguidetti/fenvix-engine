@@ -1,0 +1,193 @@
+{
+ "L_seconds": [
+  60.0,
+  78.6,
+  131.8,
+  301.5,
+  600.0,
+  1200.0,
+  1240.4,
+  1501.4,
+  1800.0,
+  3600.0
+ ],
+ "datasets": {
+  "irc": {
+   "events": 1019976,
+   "users": 27666,
+   "active_user_days": 83122,
+   "sessions": 134419,
+   "by_L": {
+    "60.0": {
+     "uniform_moment": 0.6,
+     "event_anchor": 48.5,
+     "session_start_anchor": 33.11
+    },
+    "78.6": {
+     "uniform_moment": 0.73,
+     "event_anchor": 55.66,
+     "session_start_anchor": 39.08
+    },
+    "131.8": {
+     "uniform_moment": 1.02,
+     "event_anchor": 67.3,
+     "session_start_anchor": 49.7
+    },
+    "301.5": {
+     "uniform_moment": 1.64,
+     "event_anchor": 78.33,
+     "session_start_anchor": 61.07
+    },
+    "600.0": {
+     "uniform_moment": 2.43,
+     "event_anchor": 82.85,
+     "session_start_anchor": 66.53
+    },
+    "1200.0": {
+     "uniform_moment": 3.74,
+     "event_anchor": 85.63,
+     "session_start_anchor": 70.25
+    },
+    "1240.4": {
+     "uniform_moment": 3.82,
+     "event_anchor": 85.73,
+     "session_start_anchor": 70.41
+    },
+    "1501.4": {
+     "uniform_moment": 4.34,
+     "event_anchor": 86.31,
+     "session_start_anchor": 71.27
+    },
+    "1800.0": {
+     "uniform_moment": 4.89,
+     "event_anchor": 86.82,
+     "session_start_anchor": 72.08
+    },
+    "3600.0": {
+     "uniform_moment": 7.97,
+     "event_anchor": 88.52,
+     "session_start_anchor": 74.97
+    }
+   },
+   "clock_resolution_s": 60.0
+  },
+  "lsapp": {
+   "events": 3658589,
+   "users": 292,
+   "active_user_days": 2950,
+   "sessions": 17130,
+   "by_L": {
+    "60.0": {
+     "uniform_moment": 7.74,
+     "event_anchor": 94.63,
+     "session_start_anchor": 86.57
+    },
+    "78.6": {
+     "uniform_moment": 9.07,
+     "event_anchor": 95.36,
+     "session_start_anchor": 87.45
+    },
+    "131.8": {
+     "uniform_moment": 12.12,
+     "event_anchor": 96.53,
+     "session_start_anchor": 88.87
+    },
+    "301.5": {
+     "uniform_moment": 18.56,
+     "event_anchor": 97.92,
+     "session_start_anchor": 91.2
+    },
+    "600.0": {
+     "uniform_moment": 25.41,
+     "event_anchor": 98.75,
+     "session_start_anchor": 93.02
+    },
+    "1200.0": {
+     "uniform_moment": 33.33,
+     "event_anchor": 99.31,
+     "session_start_anchor": 94.96
+    },
+    "1240.4": {
+     "uniform_moment": 33.7,
+     "event_anchor": 99.33,
+     "session_start_anchor": 95.06
+    },
+    "1501.4": {
+     "uniform_moment": 35.97,
+     "event_anchor": 99.44,
+     "session_start_anchor": 95.41
+    },
+    "1800.0": {
+     "uniform_moment": 38.11,
+     "event_anchor": 99.53,
+     "session_start_anchor": 95.87
+    },
+    "3600.0": {
+     "uniform_moment": 46.62,
+     "event_anchor": 99.76,
+     "session_start_anchor": 97.37
+    }
+   },
+   "clock_resolution_s": 1.0
+  },
+  "cdnow": {
+   "events": 69659,
+   "users": 23570,
+   "active_user_days": 67591,
+   "sessions": 69553,
+   "by_L": {
+    "60.0": {
+     "uniform_moment": 0.07,
+     "event_anchor": 0.0,
+     "session_start_anchor": 0.0
+    },
+    "78.6": {
+     "uniform_moment": 0.1,
+     "event_anchor": 0.01,
+     "session_start_anchor": 0.01
+    },
+    "131.8": {
+     "uniform_moment": 0.16,
+     "event_anchor": 0.01,
+     "session_start_anchor": 0.01
+    },
+    "301.5": {
+     "uniform_moment": 0.36,
+     "event_anchor": 0.03,
+     "session_start_anchor": 0.03
+    },
+    "600.0": {
+     "uniform_moment": 0.71,
+     "event_anchor": 0.05,
+     "session_start_anchor": 0.05
+    },
+    "1200.0": {
+     "uniform_moment": 1.42,
+     "event_anchor": 0.1,
+     "session_start_anchor": 0.09
+    },
+    "1240.4": {
+     "uniform_moment": 1.47,
+     "event_anchor": 0.1,
+     "session_start_anchor": 0.1
+    },
+    "1501.4": {
+     "uniform_moment": 1.78,
+     "event_anchor": 0.13,
+     "session_start_anchor": 0.12
+    },
+    "1800.0": {
+     "uniform_moment": 2.12,
+     "event_anchor": 0.15,
+     "session_start_anchor": 0.14
+    },
+    "3600.0": {
+     "uniform_moment": 4.2,
+     "event_anchor": 0.28,
+     "session_start_anchor": 0.27
+    }
+   },
+   "clock_resolution_s": 86400.0
+  }
+ }
+}
