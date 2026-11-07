@@ -99,12 +99,14 @@ pub async fn create(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
         let cp = admin.create_detached_checkpoint(&CheckpointOptions { lifetime: Some(ttl), source: None, name: Some(format!("export:{id}")) }).await.map_err(anyhow::Error::from)?;
         super::failpoint("export.after_checkpoint").await;
         let reader = open_snapshot(ctl, db, &cp.id.to_string()).await?;
-        let Some(raw) = reader.get(crate::layout::META_COLLECTIONS).await.map_err(anyhow::Error::from)? else { anyhow::bail!("database {db} has no collection list") };
+        let env = crate::layout2::reader_env(&reader).await?;
+        let rr = crate::layout2::Raw::Reader(&reader, env);
+        let Some(raw) = crate::layout2::get(&rr, crate::layout::META_COLLECTIONS).await? else { anyhow::bail!("database {db} has no collection list") };
         let names: Vec<String> = Document::from_reader(&raw[..])?.get_array("names")?.iter().filter_map(|b| b.as_str().map(str::to_string)).collect();
         let mut files = Vec::new();
         for n in &names {
             let esc = escape_name(n);
-            let idx = match reader.get(&crate::layout::index_key(n)).await.map_err(anyhow::Error::from)? {
+            let idx = match crate::layout2::get(&rr, &crate::layout::index_key(n)).await? {
                 Some(v) => {
                     let d = Document::from_reader(&v[..])?;
                     d.get_array("indexes")?.iter().filter_map(|b| b.as_document().and_then(crate::index::IndexDef::from_stored)).collect::<Vec<_>>()
@@ -196,7 +198,8 @@ pub async fn download(ctl: &Arc<Ctl>, id: &str, file: &str, headers: &std::colle
     let coll = entry["collection"].as_str().unwrap_or("").to_string();
     if entry["kind"] == "metadata" {
         let reader = open_snapshot(ctl, db, rec_v["checkpoint_id"].as_str().unwrap_or("")).await?;
-        let idx = match reader.get(&crate::layout::index_key(&coll)).await.map_err(anyhow::Error::from)? {
+        let env = crate::layout2::reader_env(&reader).await?;
+        let idx = match crate::layout2::get(&crate::layout2::Raw::Reader(&reader, env), &crate::layout::index_key(&coll)).await? {
             Some(v) => Document::from_reader(&v[..]).map_err(anyhow::Error::from)?.get_array("indexes").map_err(anyhow::Error::from)?.iter().filter_map(|b| b.as_document().and_then(crate::index::IndexDef::from_stored)).collect::<Vec<_>>(),
             None => vec![],
         };
@@ -227,13 +230,42 @@ pub async fn download(ctl: &Arc<Ctl>, id: &str, file: &str, headers: &std::colle
     Ok(Response { status, headers, body: Body::Stream(rx) })
 }
 
+/// One document row of the export stream.
+struct KvRow {
+    value: Bytes,
+}
+
 async fn stream_collection(ctl: &Arc<Ctl>, reader: DbReader, db: &str, id: &str, coll: &str, start: u64, tx: tokio::sync::mpsc::Sender<std::io::Result<Bytes>>) -> anyhow::Result<()> {
-    let opts = slatedb::config::ScanOptions { read_ahead_bytes: 4 << 20, max_fetch_tasks: 4, cache_blocks: false, ..Default::default() };
-    let mut it = reader.scan_prefix_with_options(crate::layout::doc_prefix(coll), .., &opts).await?;
+    // layout v2 and envelopes (custkey.rs, envelope.rs): the documents are read through the same mapping as the server's,
+    // a chunk at a time
+    let env = crate::layout2::reader_env(&reader).await?;
+    let rr = crate::layout2::Raw::Reader(&reader, env);
+    let opts_raw = crate::layout2::get(&rr, &crate::collopts::meta_key(coll)).await?;
+    let keyed = match opts_raw {
+        Some(v) => crate::custkey::from_raw(&Document::from_reader(&v[..])?).is_some(),
+        None => false,
+    };
+    let prefix = crate::layout::doc_prefix(coll);
+    let end = crate::keyenc::prefix_end(&prefix);
+    let segs = if keyed { vec![crate::custkey::Seg::docs(&crate::layout::escape_collection(coll))] } else { vec![] };
+    let mut cursor = prefix.clone();
+    let mut pending: std::collections::VecDeque<(Bytes, Bytes)> = Default::default();
+    let mut exhausted = false;
     let (mut offset, mut docs) = (0u64, 0u64);
     let mut hasher = Sha256::new();
     let mut buf: Vec<u8> = Vec::with_capacity(512 * 1024);
-    while let Some(kv) = it.next().await? {
+    loop {
+        if pending.is_empty() && !exhausted {
+            let rows = crate::layout2::scan(&rr, &segs, &cursor, end.as_deref(), false, Some(1000), 4 << 20).await?;
+            exhausted = rows.len() < 1000;
+            if let Some((k, _)) = rows.last() {
+                cursor = k.to_vec();
+                cursor.push(0);
+            }
+            pending.extend(rows);
+        }
+        let Some((_, value)) = pending.pop_front() else { break };
+        let kv = KvRow { value };
         // the stored value carries the insertion-order trailer of natural.rs; the dump holds the BSON document only
         let v = crate::natural::bson_part(&kv.value[..]);
         hasher.update(v);

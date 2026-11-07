@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="52" failures="0" errors="0" time="0.595024733">
+    <testsuite name="src/tests/checkpoints.int.test.ts" timestamp="2026-11-06T20:37:05.819Z" hostname="vm" tests="9" failures="0" errors="0" skipped="0" time="0.23893464">
+        <testcase classname="src/tests/checkpoints.int.test.ts" name="MongoDBSaver &gt; should save and retrieve checkpoints correctly" time="0.119897293">
+        </testcase>
+        <testcase classname="src/tests/checkpoints.int.test.ts" name="MongoDBSaver &gt; enableTimestamps &gt; should set upserted_at on checkpoint and write documents" time="0.011354908">
+        </testcase>
+        <testcase classname="src/tests/checkpoints.int.test.ts" name="MongoDBSaver &gt; enableTimestamps &gt; should not set upserted_at when enableTimestamps is false" time="0.012665312">
+        </testcase>
+        <testcase classname="src/tests/checkpoints.int.test.ts" name="MongoDBSaver &gt; should delete thread" time="0.017525696">
+        </testcase>
+        <testcase classname="src/tests/checkpoints.int.test.ts" name="MongoDBSaver &gt; should no-op on empty writes without throwing" time="0.004809935">
+        </testcase>
+        <testcase classname="src/tests/checkpoints.int.test.ts" name="MongoDBSaver &gt; TTL support &gt; should create TTL indexes on setup()" time="0.019329942">
+        </testcase>
+        <testcase classname="src/tests/checkpoints.int.test.ts" name="MongoDBSaver &gt; TTL support &gt; should add upserted_at field to checkpoints when TTL is enabled" time="0.010053919">
+        </testcase>
+        <testcase classname="src/tests/checkpoints.int.test.ts" name="MongoDBSaver &gt; TTL support &gt; should add upserted_at field to writes when TTL is enabled" time="0.012999042">
+        </testcase>
+        <testcase classname="src/tests/checkpoints.int.test.ts" name="MongoDBSaver &gt; TTL support &gt; should NOT add upserted_at field when TTL is not enabled" time="0.011132601">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/tests/store.int.test.ts" timestamp="2026-11-06T20:37:05.821Z" hostname="vm" tests="43" failures="0" errors="0" skipped="7" time="0.356090093">
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; put &gt; should store and retrieve an item" time="0.010643664">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; put &gt; should update an existing item" time="0.012590192">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; put &gt; should delete an item when value is null" time="0.014367207">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; get &gt; should return null for non-existent item" time="0.001397145">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; search &gt; should filter with exact match" time="0.00241194">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; search &gt; should filter with comparison operator $gt" time="0.001461797">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; search &gt; should filter with comparison operator $lte" time="0.001265641">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; search &gt; should filter with multiple conditions" time="0.001326084">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; search &gt; should match nested namespaces when searching by prefix" time="0.002338477">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; search &gt; should apply limit" time="0.001770775">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; search &gt; should apply offset" time="0.002520262">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; search &gt; should return empty array for non-matching filter" time="0.00217586">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; listNamespaces &gt; should list all unique namespaces" time="0.002452686">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; listNamespaces &gt; should apply limit" time="0.001322076">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; listNamespaces &gt; should apply offset" time="0.003172543">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; listNamespaces &gt; should filter by prefix matchCondition" time="0.001591053">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; listNamespaces &gt; should match labels that start with &apos;$&apos;" time="0.010990566">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; listNamespaces &gt; should filter by suffix matchCondition" time="0.0014261">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; listNamespaces &gt; should support wildcard in matchCondition" time="0.007554259">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; batch &gt; should execute mixed operations in one batch" time="0.011544463">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; literal matching &gt; should compare an object key as a value on get" time="0.008821524">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; literal matching &gt; should compare an object key as a value on put" time="0.014686852">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; literal matching &gt; should compare an object key as a value on delete" time="0.01644038">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; literal matching &gt; should compare an object key as a value when refreshing the TTL on read" time="0.010856644">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; literal matching &gt; should reject a string namespace on get and delete" time="0.012660412">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; literal matching &gt; should reject an object namespace passed to batch()" time="0.00772599">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; literal matching &gt; should compare an object prefix label passed to batch() as a value" time="0.00870418">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; literal matching &gt; should compare an object filter $eq operand as a value" time="0.013862636">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; literal matching &gt; should still match number keys" time="0.01682557">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; literal matching &gt; should still match $-prefixed labels and keys" time="0.015956764">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; literal matching &gt; should still match filter $eq values, including objects" time="0.019847553">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; literal matching &gt; should still refresh the TTL when reading a string key" time="0.021258374">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; vector search &gt; manual embedding &gt; should create a vectorSearch index with vector field" time="0">
+            <skipped/>
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; vector search &gt; manual embedding &gt; should store embedding vector on put" time="0">
+            <skipped/>
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; vector search &gt; manual embedding &gt; should store namespacePath on put" time="0">
+            <skipped/>
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; vector search &gt; manual embedding &gt; should skip embedding when op.index is false" time="0">
+            <skipped/>
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; vector search &gt; manual embedding &gt; should return scored results ranked by similarity" time="0">
+            <skipped/>
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; vector search &gt; manual embedding &gt; should scope results to the searched namespace prefix" time="0">
+            <skipped/>
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; vector search &gt; manual embedding &gt; should not return [&apos;docs&apos;, &apos;db&apos;] items when searching [&apos;docs/db&apos;]" time="0">
+            <skipped/>
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; vector search &gt; auto embedding &gt; should create a vectorSearch index with autoEmbed field" time="0">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; vector search &gt; auto embedding &gt; should store documents without a separate embedding field" time="0">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; vector search &gt; auto embedding &gt; should return the most relevant result first" time="0">
+        </testcase>
+        <testcase classname="src/tests/store.int.test.ts" name="MongoDBStore Integration Tests &gt; vector search &gt; auto embedding &gt; should scope results to the searched namespace prefix" time="0">
+        </testcase>
+    </testsuite>
+</testsuites>

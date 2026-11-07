@@ -22,6 +22,13 @@ pub enum Raw<'a> {
     Tenant(&'a Tenant, bool),
     /// A transaction's snapshot, with the database's E_env (`envelope.rs`).
     Snap(&'a slatedb::DbSnapshot, Option<u64>),
+    /// A reader the control layer opened on its own (export of a checkpoint), with its E_env ([`reader_env`]).
+    Reader(&'a slatedb::DbReader, Option<u64>),
+}
+
+/// E_env of a database as a reader the control layer opened sees it (`envelope.rs`).
+pub async fn reader_env(r: &slatedb::DbReader) -> Result<Option<u64>> {
+    Ok(r.get_key_value(tenant_bench::envelope::MARKER).await?.map(|kv| kv.seq))
 }
 
 /// A source of physical rows for range reads (the store, or a map in the tests).
@@ -45,6 +52,10 @@ impl Raw<'_> {
                 Some(kv) => tenant_bench::envelope::decode(*env, &kv.key, kv.seq, kv.value),
                 None => Ok(None),
             },
+            Raw::Reader(r, env) => match r.get_key_value(key).await? {
+                Some(kv) => tenant_bench::envelope::decode(*env, &kv.key, kv.seq, kv.value),
+                None => Ok(None),
+            },
         }
     }
 
@@ -56,7 +67,7 @@ impl Raw<'_> {
         }
         match self {
             Raw::Tenant(t, durable) => t.scan_range_at(lo, hi, reverse, limit, read_ahead, *durable).await,
-            Raw::Snap(s, env) => {
+            Raw::Snap(..) | Raw::Reader(..) => {
                 let opts = slatedb::config::ScanOptions {
                     read_ahead_bytes: read_ahead,
                     max_fetch_tasks: tenant_bench::tiered::scan_fetch_tasks(read_ahead),
@@ -68,7 +79,11 @@ impl Raw<'_> {
                     Some(e) => (std::ops::Bound::Included(lo.to_vec()), std::ops::Bound::Excluded(e.to_vec())),
                     None => (std::ops::Bound::Included(lo.to_vec()), std::ops::Bound::Unbounded),
                 };
-                let mut it = s.scan_with_options(range, &opts).await?;
+                let (mut it, env) = match self {
+                    Raw::Snap(s, env) => (s.scan_with_options(range, &opts).await?, env),
+                    Raw::Reader(r, env) => (r.scan_with_options(range, &opts).await?, env),
+                    Raw::Tenant(..) => unreachable!(),
+                };
                 let mut out = Vec::new();
                 while let Some(kv) = it.next().await? {
                     let Some(v) = tenant_bench::envelope::decode(*env, &kv.key, kv.seq, kv.value)? else { continue };

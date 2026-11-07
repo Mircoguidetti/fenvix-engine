@@ -405,11 +405,30 @@ async fn diff_and_apply(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, db: &str, sta
     let range = (std::ops::Bound::<Vec<u8>>::Unbounded, std::ops::Bound::<Vec<u8>>::Unbounded);
     let mut pi = past.scan_with_options(range.clone(), &opts).await.map_err(anyhow::Error::from)?;
     let mut li = live.scan_with_options(range, &opts).await.map_err(anyhow::Error::from)?;
+    // envelopes (envelope.rs): each side's rows decoded with its own E_env; deleted rows and the marker itself are not
+    // data (the diff never writes or deletes the marker: the live database keeps its own E_env). Keys are compared
+    // physically (layout v2 keys under `u/` are written back as they are: the mapping leaves them unchanged).
+    let (penv, lenv) = (crate::layout2::reader_env(&past).await?, crate::layout2::reader_env(&live).await?);
+    async fn next_row(it: &mut slatedb::DbIterator, env: Option<u64>) -> anyhow::Result<Option<slatedb::KeyValue>> {
+        while let Some(mut kv) = it.next().await? {
+            if kv.key.as_ref() == tenant_bench::envelope::MARKER {
+                continue;
+            }
+            match tenant_bench::envelope::decode(env, &kv.key, kv.seq, kv.value.clone())? {
+                Some(v) => {
+                    kv.value = v;
+                    return Ok(Some(kv));
+                }
+                None => continue,
+            }
+        }
+        Ok(None)
+    }
     let mut d = Diff::default();
     let mut batch: Vec<Op> = Vec::new();
     let mut batch_bytes = 0usize;
     let mut applying = false;
-    let (mut p, mut l) = (pi.next().await.map_err(anyhow::Error::from)?, li.next().await.map_err(anyhow::Error::from)?);
+    let (mut p, mut l) = (next_row(&mut pi, penv).await?, next_row(&mut li, lenv).await?);
     macro_rules! flush {
         () => {
             if apply && !batch.is_empty() {
@@ -438,13 +457,13 @@ async fn diff_and_apply(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, db: &str, sta
                 d.bytes_put += kv.value.len() as u64;
                 batch_bytes += kv.key.len() + kv.value.len();
                 batch.push(Op::Put(kv.key.to_vec(), kv.value.to_vec()));
-                p = pi.next().await.map_err(anyhow::Error::from)?;
+                p = next_row(&mut pi, penv).await?;
             }
             Greater => {
                 let kv = l.take().unwrap();
                 d.deletes += 1;
                 batch.push(Op::Delete(kv.key.to_vec()));
-                l = li.next().await.map_err(anyhow::Error::from)?;
+                l = next_row(&mut li, lenv).await?;
             }
             Equal => {
                 let (a, b) = (p.take().unwrap(), l.take().unwrap());
@@ -456,8 +475,8 @@ async fn diff_and_apply(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, db: &str, sta
                     batch_bytes += a.key.len() + a.value.len();
                     batch.push(Op::Put(a.key.to_vec(), a.value.to_vec()));
                 }
-                p = pi.next().await.map_err(anyhow::Error::from)?;
-                l = li.next().await.map_err(anyhow::Error::from)?;
+                p = next_row(&mut pi, penv).await?;
+                l = next_row(&mut li, lenv).await?;
             }
         }
         if batch.len() >= 1000 || batch_bytes >= 4 << 20 {

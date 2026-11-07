@@ -444,8 +444,8 @@ struct Args {
     /// nothing kept) or off.
     #[arg(long, default_value = "cache")]
     tls_session_resumption: String,
-    /// Customer-first keys (custkey.rs): comma separated `[db.]collection=field`; a named collection takes the customer
-    /// key when it is created or first written while empty. Off when empty (the default).
+    /// Customer keys and layout v2 (custkey.rs): comma separated `[db.]collection=field[:timefield]`; a named collection
+    /// takes the customer key when it is created, first indexed or first written while empty. Off when empty (default).
     #[arg(long, default_value = "")]
     customer_key: String,
     /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
