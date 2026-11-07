@@ -23,8 +23,10 @@ TRIALS = int(os.environ.get("KILL_TRIALS", "20"))
 DOCS = 20000
 
 
-def wait_builds_done(co, timeout=180):
-    """Until no index of `co` is building: listIndexes shows only ready indexes, validate also shows building ones."""
+def wait_builds_done(co, timeout=600):
+    """Until no index of `co` is building: listIndexes shows only ready indexes, validate also shows building ones.
+    A build resumed after the restart runs at about 350 documents a second with one document per chunk (MEASURED), so
+    two indexes over 20,000 documents can take about two minutes."""
     end = time.time() + timeout
     while time.time() < end:
         co.find_one()                       # loading the collection resumes an unfinished build
