@@ -208,7 +208,11 @@ impl Server {
             d.insert("ns", ns);
         }
         if let Some(k) = &s.doc_key {
-            d.insert("documentKey", doc! { "_id": k.clone() });
+            // a customer-keyed collection: the customer (and time) fields first, then `_id`, as mongod's documentKey
+            // of a sharded collection
+            let mut dk = s.cust.as_ref().map(|(f, _)| f.clone()).unwrap_or_default();
+            dk.insert("_id", k.clone());
+            d.insert("documentKey", dk);
         }
         if let Some(u) = &s.desc {
             let mut u = u.clone();
@@ -257,9 +261,13 @@ impl Server {
             let lookup = if cur.full == FullDoc::UpdateLookup && e.spec.op == "update" {
                 let mut g = self.dbs.lock(&e.spec.db).await;
                 let coll = e.spec.coll.clone().unwrap_or_default();
-                let found = match &e.spec.doc_key {
-                    Some(k) => g.get_doc(&coll, k).await.map_err(MongoError::from)?,
-                    None => None,
+                // by the whole document key: in a customer-keyed collection `_id` is unique per customer only, so the
+                // lookup takes the event's customer, never the first one holding the `_id` (after a move to another
+                // customer the document is not under its key any more, and the lookup finds none, as on mongod)
+                let found = match (&e.spec.doc_key, &e.spec.cust) {
+                    (Some(k), Some((_, cust))) => g.get_doc_of(&coll, k, cust).await.map_err(MongoError::from)?,
+                    (Some(k), None) => g.get_doc(&coll, k).await.map_err(MongoError::from)?,
+                    (None, _) => None,
                 };
                 Some(found)
             } else {

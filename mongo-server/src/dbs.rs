@@ -3,7 +3,7 @@
 
 use crate::layout;
 use crate::lease::{self, Leases};
-use anyhow::{bail, Result};
+use anyhow::Result;
 use bson::{doc, Bson, Document};
 use bytes::Bytes;
 use futures::{StreamExt, TryStreamExt};
@@ -1264,17 +1264,27 @@ impl Entry {
         Ok(None)
     }
 
-    pub fn put_doc_op(coll: &str, d: &Document) -> Result<Op> {
-        let id = match d.get("_id") {
-            Some(id) => id,
-            None => bail!("document without _id"),
-        };
-        Ok(Op::Put(layout::doc_key(coll, id), d.to_vec()?))
+    /// The document of `_id` under the customer value `cust` (a change event's document key). In a collection that
+    /// is not customer-keyed (any more), the document of `_id`.
+    pub async fn get_doc_of(&mut self, coll: &str, id: &Bson, cust: &Bson) -> Result<Option<Document>> {
+        if crate::custkey::of_opts(self.coll_opts(coll).await?.as_ref()).is_none() {
+            return self.get_doc(coll, id).await;
+        }
+        // the locator of (`_id`, customer) holds the document's suffix; read again if the document moved meanwhile
+        // (its time changed), with the same kinds of read as [`Entry::get_doc`]
+        let lk = crate::custkey::loc_key_of_value(coll, &layout::encode_sortable(id), cust);
+        let mut lend = lk.clone();
+        lend.push(0);
+        for _ in 0..3 {
+            let Some((_, suf)) = self.scan_range(&lk, Some(&lend), false, Some(1), 4096).await?.into_iter().next() else { return Ok(None) };
+            let key = [layout::doc_prefix(coll), suf.to_vec()].concat();
+            if let Some(v) = self.get_many(std::slice::from_ref(&key)).await?.pop().flatten() {
+                return Ok(Some(Document::from_reader(&v[..])?));
+            }
+        }
+        Ok(None)
     }
 
-    pub fn delete_doc_op(coll: &str, id: &Bson) -> Op {
-        Op::Delete(layout::doc_key(coll, id))
-    }
 }
 
 /// A shared (read) hold on a database. Every read re-checks that this process still owns the tenant before
