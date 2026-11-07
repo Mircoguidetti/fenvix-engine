@@ -23,7 +23,7 @@ Every rule below is a guard in `Compaction2.tla`. When a rule has a negative con
 ## Rewrites (step 4)
 13. A delta merge drops a row only at or below its group's X_g; an envelope or an erasure above X_g stays [DeltaDropEnv].
 14. A reseal of group g reads its sealed run and every delta run's rows of g in (X_g, X_d] [ResealSkip], applies erasures, and drops every envelope; X_g becomes X_d.
-15. A group merge is a rewrite at the common cut max(X_gA, X_gB); X_g never goes down [MergeConcat]. With concatenation, the read failure needs three rewrites (`output/MergeConcat-reads.txt`); the structural check `XgOK` catches it at the merge.
+15. A group merge rewrites both groups at X_d; X_g never goes down [MergeConcat]. With concatenation, the read failure needs three rewrites (`output/MergeConcat-reads.txt`); the structural check `XgOK` catches it at the merge. The cut max(X_gA, X_gB) of review round 2 keeps reads right but can copy an erased put into the new sealed run after a delta merge folded the older erasure into a newer one [MergeAtMaxCut]; X_d removes that case.
 16. Absorption takes the oldest L0 SST not absorbed yet, with no gap (I3); X_d is its highest seq.
 17. A publish is a conditional create; a PUT can land after the compactor crashed, and a lost PUT leaves an orphan run that GC removes.
 

@@ -1,14 +1,14 @@
 TLC2 Version 2026.11.06.222357 (rev: d8fb231)
-Running breadth-first search Model-Checking with fp 128 and seed 4293078546640325966 with 4 workers on 4 cores with 9102MB heap and 64MB offheap memory [pid: 5278] (Linux 6.18.44-fc-v310 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Running breadth-first search Model-Checking with fp 87 and seed 5403430041170694285 with 4 workers on 4 cores with 9102MB heap and 64MB offheap memory [pid: 9978] (Linux 6.18.44-fc-v310 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
 Parsing file /home/user/fenvix-engine/research/compaction-2/tla/MC.tla
 Parsing file /home/user/fenvix-engine/research/compaction-2/tla/Compaction2.tla
-Parsing file /tmp/tlc-4919669709205953877/_TLCTrace.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
-Parsing file /tmp/tlc-4919669709205953877/Integers.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
-Parsing file /tmp/tlc-4919669709205953877/FiniteSets.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
-Parsing file /tmp/tlc-4919669709205953877/Sequences.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
-Parsing file /tmp/tlc-4919669709205953877/TLC.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
-Parsing file /tmp/tlc-4919669709205953877/Naturals.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
-Parsing file /tmp/tlc-4919669709205953877/TLCExt.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-14433889457617978615/_TLCTrace.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-14433889457617978615/Integers.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Parsing file /tmp/tlc-14433889457617978615/FiniteSets.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-14433889457617978615/Sequences.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-14433889457617978615/TLC.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-14433889457617978615/Naturals.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-14433889457617978615/TLCExt.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
 Semantic processing of module Naturals
 Semantic processing of module Integers
 Semantic processing of module Sequences
@@ -22,9 +22,9 @@ Linting of module Compaction2
 Linting of module TLCExt
 Linting of module _TLCTrace
 Linting of module MC
-Starting... (2026-11-07 15:58:50)
+Starting... (2026-11-07 17:39:34)
 Computing initial states...
-Finished computing initial states: 1 distinct state generated at 2026-11-07 15:58:51.
+Finished computing initial states: 1 distinct state generated at 2026-11-07 17:39:34.
 Error: Invariant CkptReadOK is violated.
 Error: The behavior up to this point is:
 State 1: <Initial predicate>
@@ -56,7 +56,7 @@ State 1: <Initial predicate>
 /\ mem = {}
 /\ seen = <<-1, -1, -1, -1, -1, -1>>
 
-State 2: <Write("put",a1) line 186, col 3 to line 198, col 62 of module Compaction2>
+State 2: <Write("put",a1) line 187, col 3 to line 199, col 62 of module Compaction2>
 /\ bad = {}
 /\ seq = 1
 /\ runRows = <<{}, {}, {}, {}, {}>>
@@ -85,7 +85,7 @@ State 2: <Write("put",a1) line 186, col 3 to line 198, col 62 of module Compacti
 /\ mem = {[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}
 /\ seen = <<-1, -1, -1, -1, -1, -1>>
 
-State 3: <Flush line 207, col 3 to line 212, col 62 of module Compaction2>
+State 3: <Flush line 208, col 3 to line 213, col 62 of module Compaction2>
 /\ bad = {}
 /\ seq = 1
 /\ runRows = <<{}, {}, {}, {}, {}>>
@@ -114,7 +114,7 @@ State 3: <Flush line 207, col 3 to line 212, col 62 of module Compaction2>
 /\ mem = {}
 /\ seen = <<-1, -1, -1, -1, -1, -1>>
 
-State 4: <Absorb line 237, col 3 to line 244, col 62 of module Compaction2>
+State 4: <Absorb line 238, col 3 to line 245, col 62 of module Compaction2>
 /\ bad = {}
 /\ seq = 1
 /\ runRows = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}, {}, {}, {}, {}>>
@@ -152,7 +152,7 @@ State 4: <Absorb line 237, col 3 to line 244, col 62 of module Compaction2>
 /\ mem = {}
 /\ seen = <<-1, -1, -1, -1, -1, -1>>
 
-State 5: <CkBegin line 457, col 3 to line 460, col 69 of module Compaction2>
+State 5: <CkBegin line 463, col 3 to line 466, col 69 of module Compaction2>
 /\ bad = {}
 /\ seq = 1
 /\ runRows = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}, {}, {}, {}, {}>>
@@ -190,7 +190,7 @@ State 5: <CkBegin line 457, col 3 to line 460, col 69 of module Compaction2>
 /\ mem = {}
 /\ seen = <<-1, -1, -1, -1, -1, -1>>
 
-State 6: <PublishLand line 305, col 3 to line 314, col 62 of module Compaction2>
+State 6: <PublishLand line 311, col 3 to line 320, col 62 of module Compaction2>
 /\ bad = {}
 /\ seq = 1
 /\ runRows = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}, {}, {}, {}, {}>>
@@ -224,7 +224,7 @@ State 6: <PublishLand line 305, col 3 to line 314, col 62 of module Compaction2>
 /\ mem = {}
 /\ seen = <<-1, -1, -1, -1, -1, -1>>
 
-State 7: <DropJob line 362, col 15 to line 362, col 33 of module Compaction2>
+State 7: <DropJob line 368, col 15 to line 368, col 33 of module Compaction2>
 /\ bad = {}
 /\ seq = 1
 /\ runRows = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}, {}, {}, {}, {}>>
@@ -258,7 +258,7 @@ State 7: <DropJob line 362, col 15 to line 362, col 33 of module Compaction2>
 /\ mem = {}
 /\ seen = <<0, 0, -1, -1, -1, -1>>
 
-State 8: <Tick line 505, col 3 to line 518, col 54 of module Compaction2>
+State 8: <Tick line 511, col 3 to line 524, col 54 of module Compaction2>
 /\ bad = {}
 /\ seq = 1
 /\ runRows = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}, {}, {}, {}, {}>>
@@ -292,7 +292,7 @@ State 8: <Tick line 505, col 3 to line 518, col 54 of module Compaction2>
 /\ mem = {}
 /\ seen = <<1, 1, -1, -1, -1, -1>>
 
-State 9: <Tick line 505, col 3 to line 518, col 54 of module Compaction2>
+State 9: <Tick line 511, col 3 to line 524, col 54 of module Compaction2>
 /\ bad = {}
 /\ seq = 1
 /\ runRows = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}, {}, {}, {}, {}>>
@@ -326,7 +326,7 @@ State 9: <Tick line 505, col 3 to line 518, col 54 of module Compaction2>
 /\ mem = {}
 /\ seen = <<2, 2, -1, -1, -1, -1>>
 
-State 10: <DropJob line 362, col 15 to line 362, col 33 of module Compaction2>
+State 10: <DropJob line 368, col 15 to line 368, col 33 of module Compaction2>
 /\ bad = {}
 /\ seq = 1
 /\ runRows = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}, {}, {}, {}, {}>>
@@ -360,7 +360,7 @@ State 10: <DropJob line 362, col 15 to line 362, col 33 of module Compaction2>
 /\ mem = {}
 /\ seen = <<2, 2, -1, -1, -1, -1>>
 
-State 11: <CkTake line 462, col 3 to line 465, col 69 of module Compaction2>
+State 11: <CkTake line 468, col 3 to line 471, col 69 of module Compaction2>
 /\ bad = {}
 /\ seq = 1
 /\ runRows = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}, {}, {}, {}, {}>>
@@ -394,7 +394,7 @@ State 11: <CkTake line 462, col 3 to line 465, col 69 of module Compaction2>
 /\ mem = {}
 /\ seen = <<2, 2, -1, -1, -1, -1>>
 
-55382 states generated, 16369 distinct states found, 8684 states left on queue.
+57319 states generated, 16698 distinct states found, 8786 states left on queue.
 The depth of the complete state graph search is 11.
-Finished in 02s at (2026-11-07 15:58:53)
-Trace exploration spec path: ./MC_TTrace_1794067130.tla
+Finished in 02s at (2026-11-07 17:39:36)
+Trace exploration spec path: ./MC_TTrace_1794073173.tla

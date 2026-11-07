@@ -6,7 +6,9 @@ Files:
 - `Compaction2.tla`: the spec. The header comment lists what is modelled.
 - `MC.tla`: the model values (keys a1, a2 of customer A in group g1, b1 of customer B in group g2) and the symmetry a1 <-> a2.
 - `gen.py`: writes every configuration `MC-<name>.cfg`. `MC-main.cfg` is the correct model in the shape the prompt fixes; `MC-<control>.cfg` is one negative control; `MC-<control>-ok.cfg` is the same configuration with the correct model, which must pass, so each failure is caused by the control alone.
-- `run.sh`: runs TLC. `./run.sh main`, `./run.sh ReadNoCut ReadNoCut-ok`, or `./run.sh all`. Output in `output/<name>.txt` (every counterexample trace is there).
+- `run.sh`: runs TLC: `./run.sh main`, `./run.sh ReadNoCut ReadNoCut-ok`, or `./run.sh all`. Output in `output/<name>.txt` (every counterexample trace is there).
+- `summarize.py output/*.txt`: each verdict, and the action sequence of each counterexample.
+- `RULES-FOR-THE-CODE.md`: the rules the model shows are needed, for build steps 1-8.
 - `RESULTS.md`: what TLC found, run by run.
 
 TLC: `tla2tools.jar` v1.8.0 from the tlaplus GitHub releases, Java 21. `TLA2TOOLS=/path/tla2tools.jar WORKERS=4 ./run.sh main`.
@@ -24,7 +26,7 @@ Actions:
 - Absorb: the oldest L0 SST not yet absorbed (no gap, I3) becomes a new delta run, newest row per key; the new version has X_d = its highest seq.
 - Delta merge of two runs: rows at or below their group's X_g are dead and leave; an envelope above X_g stays (I1).
 - Reseal of a group at X_d: its sealed run plus its delta rows in (X_g, X_d], erasures applied, every envelope dropped; X_g = X_d.
-- Group merge: a rewrite at the common cut max(X_gA, X_gB) (I2).
+- Group merge: a rewrite of both groups at X_d (I2). The plan's cut max(X_gA, X_gB) is the control `MergeAtMaxCut`: see `RESULTS.md`.
 - Publish in two steps: the PUT starts (with the stamp), then lands with a conditional create, or is lost (the run is an orphan). Time can pass in between: a slow publish. A crash does not stop a PUT in flight.
 - Drop job: folds the absorbed L0 SSTs and the sorted run into the sorted run (one sorted run, always), keeping rows above the floor. The floor is computed inside the job from the versions in the store. Every floor computation records the first sight of each version; the lease counts from it. In the hold owner's process the floor is min(X of the newest version seen at least one lease ago, X of every live hold). In the remote pool it is the X of the newest version seen at least `RemoteLease` ago, with `RemoteLease` > the hold life, and no holds. Both wait while the checkpoint lease is held.
 - Holds (owner's process): a find reader and a transaction. Begin pins the newest version and S as one pair; every step reads one key with that pair; a hold reaching the hold life is revoked (it leaves the floor), and the check after each step then fails the operation.
@@ -64,6 +66,7 @@ Each one is a single change, and each must make TLC report a violation:
 - `MergeConcat`: a group merge by concatenation with the smaller X_g (X_g lowered).
 - `DeltaDropEnv`: a delta merge drops envelopes above X_g (SlateDB's last-run rule).
 - Two more from review round 1: `FollowerNoTpin` (a follower reading past T_pin) and `ForkNewestCut` (a fork paired with the parent's newest cut).
+- One found by this model: `MergeAtMaxCut` (a group merge at max(X_gA, X_gB) instead of X_d).
 
 ## What is not modelled
 

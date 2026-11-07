@@ -13,7 +13,7 @@
 (* Modelled, from the plan and both review rounds:                         *)
 (*  - writes (put, delete envelope, customer erasure as a range tombstone),*)
 (*    flushes, absorption of the oldest L0 SST into a new delta run,       *)
-(*    delta merges, group reseals, one group merge at the common cut;      *)
+(*    delta merges, group reseals, one group merge rewritten at X_d;       *)
 (*  - publishes in two steps (the PUT starts, then lands or is lost), so a *)
 (*    publish can be slow, and can still land after the compactor crashed; *)
 (*  - drop jobs that fold the absorbed L0 SSTs and the sorted run into the *)
@@ -59,7 +59,8 @@ CONSTANTS Keys, Groups, Cust, Grp0,      \* keys, groups, key -> customer, key -
 Controls == {"none", "DropBeforePublish", "GcNoGrace", "ReadNoCut", "ResealSkip",
              "HoldsIgnored", "TxnRereads", "LeaseFromStamp", "FollowerCheckOnce",
              "RevokeNoCheck", "DropRemoteShortLease", "ForkCopyEenv", "CkptNoLease",
-             "MergeConcat", "DeltaDropEnv", "FollowerNoTpin", "ForkNewestCut"}
+             "MergeConcat", "DeltaDropEnv", "FollowerNoTpin", "ForkNewestCut",
+             "MergeAtMaxCut"}
 ASSUME Ctl \in Controls
 ASSUME Readers \subseteq {"find", "txn"}
 ASSUME Tpin < Lease /\ Lease < HoldLife /\ HoldLife < RemoteLease /\ HoldLife < Grace
@@ -275,7 +276,10 @@ Reseal ==
   /\ UNCHANGED <<seq, hist, tr, eenv, mem, l0, sr, flushed, ver, seen, stamp, rage,
                  nMerge, rd, fl, ck, fk, crashes, bad>>
 
-\* merge every other group into Gmerge: a rewrite at the common cut C = max X_g (I2).
+\* merge every other group into Gmerge: a rewrite at a common cut C >= both X_g (I2).
+\* The correct model uses C = X_d: the plan's C = max(X_gA, X_gB) (control MergeAtMaxCut)
+\* keeps reads right but can copy an erased put into the new sealed run, when a delta
+\* merge has already folded the older erasure into a newer one above C.
 \* MergeConcat concatenates the sealed runs and takes the smaller X_g.
 GroupMerge ==
   /\ job = NoJob /\ nComp < MaxComp /\ nMerge < 1
@@ -284,7 +288,9 @@ GroupMerge ==
        /\ LET g1 == Gmerge
               x1 == Latest.xg[g1]
               x2 == Latest.xg[g2]
-              C  == IF Ctl = "MergeConcat" THEN Min(x1, x2) ELSE Max(x1, x2)
+              C  == CASE Ctl = "MergeConcat"   -> Min(x1, x2)
+                      [] Ctl = "MergeAtMaxCut" -> Max(x1, x2)
+                      [] OTHER                 -> Latest.xd
               out == IF Ctl = "MergeConcat"
                      THEN SealedRows(Latest, g1) \cup SealedRows(Latest, g2)
                      ELSE SealOut(SealedRows(Latest, g1) \cup SealedRows(Latest, g2)
