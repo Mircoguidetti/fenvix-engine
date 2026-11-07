@@ -20,7 +20,7 @@ from pymongo.errors import OperationFailure, PyMongoError
 from lib import Server, free_port, make_bucket
 
 TRIALS = int(os.environ.get("KILL_TRIALS", "20"))
-DOCS = 3000
+DOCS = 20000
 
 
 def wait_builds_done(co, timeout=180):
@@ -85,7 +85,7 @@ def test_kill9_during_index_build_with_writes():
             bt.start()
             for t in ws:
                 t.start()
-            time.sleep(0.3 + r0.random() * 2.5)
+            time.sleep(0.3 + r0.random() * 1.5)
             building = bt.is_alive()
             srv.kill9()
             stop.set()
