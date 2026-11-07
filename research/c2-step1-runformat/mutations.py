@@ -40,7 +40,16 @@ try:
         name, old, new = M[n - 1]
         assert orig.count(old) == 1, f"mutation {n}: the original text occurs {orig.count(old)} times"
         SRC.write_text(orig.replace(old, new))
-        r = subprocess.run(["cargo", "test", "--release", "--lib", "runfmt"], capture_output=True, text=True)
+        b = subprocess.run(["cargo", "test", "--release", "--lib", "--no-run"], capture_output=True, text=True)
+        try:
+            r = subprocess.run(["cargo", "test", "--release", "--lib", "runfmt"], capture_output=True, text=True, timeout=300)
+        except subprocess.TimeoutExpired:
+            # the tests take about 20 s unmutated: a run past 300 s is a hang, which fails the test run
+            print(f"mutation {n} ({name}): caught as a hang (the tests did not finish in 300 s)", flush=True)
+            caught += 1
+            subprocess.run(["pkill", "-f", "tenant_bench-"], capture_output=True)
+            continue
+        r.stderr = b.stderr + r.stderr
         failed = [l.split()[1] for l in r.stdout.splitlines() if l.startswith("test ") and l.endswith("FAILED")]
         built = "error[" not in r.stderr and "could not compile" not in r.stderr
         ok = built and r.returncode != 0 and failed
