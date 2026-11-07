@@ -1,88 +1,73 @@
 FIX 2
 
-# Review of compaction 91414a6 (customer-first keys, tiered compaction)
+# Review of first-course-engine 847d188 (the opening kept for a returning user)
 
-Reviewer, 2026-11-06. Branch `review-compaction` (based on 91414a6). Base `integration` (6ff285a). Tests:
-`ctl-tests/test_43_review_compaction.py` (run: `cd ctl-tests && python -m pytest -q test_43_review_compaction.py`).
-Every number is labelled MEASURED (run here, on this sandbox, local MinIO), ESTIMATED, DECLARED (the owner's), or UNKNOWN.
+Reviewer, 2026-11-07. Branch `review-first-course-engine` (based on 847d188). Base `compaction` a7890b3. Contract: `prompts/P-first-course-engine.md` (fenvix-brain). Owner's report: `sessions/2026-11-06-first-course-engine/REPORT.md` (fenvix-brain). Spend: $0, local only.
 
-## The two fixes (tests that fail on 91414a6)
+In one line: no wrong answer found. The exactness design holds up under every check below. The two failing tests are both about memory in the 4-query variant (`--first-course-queries N`, N > 1), which is the variant the report recommends: an opening that is still being built has no size cap and is not counted in the memory budget.
 
-1. **Two writes of one `_id` for two customers are both acknowledged** (guarantees 4 and 7: `_id` uniqueness, indexes
-   consistent with data). The locator `loc/{coll}/{_id}` is the unique `_id` index, but `Writes::put` only checks it
-   against the committed state and never locks it (`check_conflict` runs on the customer-specific document key only).
-   Two transactions inserting `_id: 7` for `alice` and `bob` both commit; so does a plain insert of `_id: 8` while an
-   open transaction holds `_id: 8` for another customer. Result MEASURED: two documents with the same `_id`; a scan
-   returns both, `find({_id})` returns one (the locator points at the last writer), `validate` does not check the locators (code reading, `cmd_index.rs` validate).
-   mongod lets only one of the two commit. The control (same test on a collection without a customer key) passes.
-   Tests: `test_two_transactions_cannot_insert_the_same_id_for_two_customers[m]`,
-   `test_insert_outside_a_transaction_cannot_duplicate_an_id_a_transaction_holds[m]`.
-   Fix hint: `check_conflict` (lock and `modified_after`) on the locator key too, for inserts and moves.
+## Failing tests (commit 1941519, `mongo-server/src/opening.rs`, end of the test module)
 
-2. **With customer keys off, the storage format still changes and the previous release can no longer read it**
-   ("with the option off nothing changes"; guarantee 10, rollback). `--sst-compression lz4` and `--sst-block-kb 64` are
-   the new defaults for every database, keyed or not. MEASURED: a database written by 91414a6 with no flag at all,
-   then opened by the integration binary: `Data error: invalid composite filter block`. Deploying this commit makes
-   every database it flushes or compacts unreadable by the release before it, with no way back but forward.
-   Test: `test_with_customer_keys_off_the_stored_format_does_not_change` (checks the codec; with `INTEGRATION_BIN` set
-   it also does the rollback read). Fix: defaults off (`none`, 4 KiB) until the founder decides a one-way format
-   migration, or ship a release that can read lz4 first.
+Run: `cargo test --release -p mongo-server opening::` gives 7 passed, 2 failed (MEASURED).
 
-## Priority from the founder: `test_05_erase.py` leaves control-layer objects
+1. `review_a_pending_opening_obeys_the_size_cap`. With N > 1, a visit of fewer than N queries leaves its opening "pending" until the user's next visit, which can be 14 days later. Every write to the user's key ranges is applied to the pending opening, and nothing checks its size (`after_stage` trims and drops only finished openings). The test runs one query, then sends 1,000 messages of 1 KB to that user: the pending opening holds 1,068,049 bytes against a 65,536-byte cap (MEASURED). Why it matters: a user who receives a lot of data between visits keeps all of it in the waiter's memory. At 1 TB with users of 512 KB, that can be the whole user for every pending opening.
+2. `review_pending_openings_stay_inside_the_memory_budget`. The budget (`--first-course-mb`, 1 GiB by default) counts and evicts only finished openings: pending ones are not in `STATS.bytes`, and `evict` does not look at them. The test runs 200 users, one query each, then 20 KB of messages each, with a 1 MiB budget: pending openings hold 4,281,800 bytes and nothing is evicted (MEASURED). Why it matters: memory grows past the budget with no limit. The report's 1 TB footprint (18-27 GB against a 29 GB budget) assumes the budget holds.
 
-- Found the cause. It is **not** caused by this branch. In `test_concurrent_erase_and_fork_are_serialised`, when the
-  erase wins, the fork (`ctl/fork.rs`) takes the target's lease, finds the source gone, answers 404 and deletes the
-  lease; but those requests were charged to the target's (and source's) usage counters, and the usage flusher then
-  writes `control/usage/<target>/<day>/...` (and `control/usage/<source>/...`) for databases that do not exist. Nothing
-  ever deletes them (guarantee 6). test_05 only sees it when a flush (every 1 s there) lands between the fork's answer
-  and its listing: that is why it is flaky.
-- Deterministic test: `test_a_refused_fork_leaves_no_object_of_its_target` (a fork of a source that never existed,
-  wait 3 s, list). MEASURED: fails on 91414a6 **and on integration**, with the same two leftover records.
-- Does the branch make it worse? MEASURED, the race of test_05 repeated 30 times per binary: the leftover is there 3 s
-  later every time the erase wins (91414a6 12 of 12, integration 8 of 8); the test's own listing caught it 0 times in
-  30 on 91414a6 and 1 in 30 on integration. Fork and erase times are the same (p50 110 ms both). The owner's 3 of 4
-  vs 1 of 4 is within noise for 4 rounds. My own full runs of test_05 on 91414a6: 2 passed, then 1 failed in the judge.
-- `tenants/<db>/_lease` left behind: not reproduced (UNKNOWN); every failure I saw was the usage records above.
-- Not counted against this commit (contract point 5: identical on integration). Owner of the control layer: charge
-  nothing to a database a refused fork never created (or `drop_db` both names when the fork fails).
+Possible fix (the owner decides): apply the same trim/drop rule to pending openings, count them in `STATS.bytes`, and let `evict` remove them (dropping a pending opening is always safe: its user just gets no opening). One more line in my commit: the existing test `a_visit_of_three_queries_is_kept_and_follows_writes` now takes a test lock, because my tests set the same global settings and cargo runs tests in parallel.
 
-## Judge (`judge/run.sh fast` on 91414a6, MEASURED)
+## The six questions of the review prompt
 
-Same verdict as the owner's: build PASS; unit FAIL only `counter::tests::rev_maps_leave_room_for_active_data`;
-diff-py and diff-node FAIL only `bucketauto.infinity` (412/413 each); ctl FAIL only test_05_erase (above); kill PASS
-(0 lost). All match integration's known failures. The 3 failures of the owner's customer-key stress run
-(`cs.delete_many`, `bucketauto.POWERSOF2.decimal_special`, `bucketauto.infinity`): MEASURED, also fail with the
-integration binary.
+### 1. Does every write path go through the one hook?
 
-## Do the tests measure what they claim?
+Yes, by code inspection. I did not write a test per path, because they all end in the same function. What I checked:
+- In `mongo-server`, the only call of `Tenant::stage` is `Entry::apply_mode` (`dbs.rs`), which runs the hook. `Tenant::apply` and `Tenant::put` (which also write) are never called by the server. `Entry::apply` and `Entry::apply_durable` both go through `apply_mode`.
+- Transactions: commit stages the whole batch through `g.apply` (`txn.rs`). Abort stages nothing. A find inside a transaction is never answered from an opening (`cmd_data.rs`, only when `tx.is_none()`).
+- Multi-document updates and deletes, update pipelines, upserts, findAndModify and bulk writes all build one `Writes` batch (`retry.rs` only adds its session record to that batch), and the batch ends in `g.apply`. The same holds for capped collections and index commands (`capped_cmds.rs`, `cmd_index.rs`). TTL deletes: `ttl.rs` calls `g.apply`. Cross-database rename and `$out`/`$merge`: `xdb.rs` calls `dst.apply`.
+- Collection drop and rename, index create and drop, collection options: they write `meta/collections`, `meta/indexes/` or `meta/copt/`, and the hook then forgets every opening of the database. The list of metadata keys in `opening.rs` is the same as `is_meta_key` in `dbs.rs`.
+- dropDatabase, idle close, lost lease, wake and create: all six places that set or take `Entry::tenant` call `forget_db`. PITR restore and fork first quiesce and close the tenant, so they forget too.
+- Writes replayed on the spare after a failover: the spare's process never had openings, and the old owner forgets its own when it loses the lease (`abandon`) or wakes again (`ensure_open`). Local-log records replayed at restart go through `apply_durable`, so through the hook.
+- What is tested end to end: `stress.py` (inserts, text updates, timestamp moves, deletes, documents moved to another user, array user fields), and the owner's negative control (hook switched off) shows the test finds wrong answers. Not tested end to end: transactions, findAndModify, upserts, bulk writes, TTL, drop, rename, index changes. They are safe only because they share the one function. NOTE: a future write path that calls `Tenant::stage` directly would bypass the hook without any test failing. A debug assertion or a comment on `Tenant::stage` would protect it.
 
-- **Cold-read bench (contract point 2).** Re-run at 2 GB, 20,000 customers (`review-2026-11-06/`), MEASURED: default
-  settings mean 2.46 / 2.27 GETs, max 5 (owner: 2.8, max 7). The GET meter is right: over 300 finds, server meter
-  1,631 vs MinIO's own getobject counter 1,630. But the measure is not of a cold find: the 256 MiB block cache keeps
-  the data blocks read by the 300 warm-up finds (the bench says only indexes and filters are warm), and neighbouring
-  customers share 64 KiB blocks. A mean below the number of sorted runs (3 here) shows it. With data blocks cold
-  (`--block-cache-mb 1`), MEASURED here: mean 5.38, p95 6, max 7 (3 sorted runs); the owner's 4-run dataset: mean
-  6.5-7.1, max 9 (6 of 400 finds over 8, DECLARED). So "at most 8" holds or not depending on how many runs the data has
-  at that moment; 8 GB was not measured (DECLARED); ESTIMATED one more run per 4x of data, so about 2 GETs more at 8 GB.
-  NOTE, not a fix (no deterministic failing test), but the contract's point 2 is not proven for a cold find.
-- `test_index_matches_documents_during_compaction`: readers hold the customer's lock, so no read ever overlaps a write
-  or a move of that customer; it checks consistency between writes, not during them. I probed the during part
-  (MEASURED, 30-40 s each, 4 movers): collection scans, counts and `$natural` during 2,365 moves: 0 wrong of 410;
-  index range scans during 2,783 moves: 0 duplicates or misses in 538; `find_one({_id})` on one document moved 4,092
-  times: 0 misses.
-- `loadtest/test_open_gc.py` (prints read violations, never fails): run with `--customer-key c=v` (every update moves
-  the document), 2 trials x 60 s, MEASURED: 69,468 reads checked, 0 missing, 0 stale, 0 lost inserts or updates, both
-  kills inside a cleanup pass. It hides no defect here; it should still fail on violations (judge gap, not this branch).
-- Moves inside transactions (commit, abort), unique secondary index across a move, collation `_id` with a customer
-  key: behave as without the key (MEASURED, probes).
+### 2. The "complete range" rule
 
-## Notes (never block)
+I found no way for a key to be missing:
+- A write between recording and hook: not possible. A recording runs entirely under the database's shared lock (`first_course_end` runs before the `ReadView` is dropped), and every write stages under the exclusive lock. The hook's capture (before `stage`) and its apply (after `stage`) both run under that same exclusive lock.
+- A trim cutting a range: a trimmed interval is cut to `[lo, succ(edge))`, and every key inside it is kept, because covered keys are never dropped. The randomized unit test (400 rounds, trims included) checks this against a model and passes.
+- Another user's key in the middle of a recorded range: user ranges are prefix-free (`custkey::comp` is length-prefixed and gives the same encoding for 1, 1_i64 and 1.0). Other users' keys cannot land inside. A document of user V whose user field is an array that includes U puts an index entry in U's range. That entry is a write to U's range, so the hook applies it. The document itself lives outside U's range, so it is "not known" and is read from storage.
+- Durable reads: an opening is answered from only when every staged write is durable, so a non-durable write is never shown.
 
-- Rule 18 (one snapshot per read): an `_id` read goes locator, then document, as two reads with up to 3 retries if the
-  document moved in between (and `moved_doc` once). Not a snapshot; no wrong answer seen (above).
-- The cleanup keeps the outputs of unfinished or uncommitted compactions (`Compacted` counts as active): a resumed job
-  of the separate worker cannot point at deleted SSTs. Checked by reading slatedb 0.17 and `gc_tenant_ssts`.
-- `stop_once` ignores a worker `stop` that times out; after `stop_limit` the runner is aborted and the worker's tasks may
-  live on until their store request ends (as for the compactor before). No test shows harm.
-- Contract point 1 was shown on the stress suite with the key on for some collections (63,076 documents written customer
-  first, 2,249 locator lookups, DECLARED); the natural run had 1 locator lookup.
+### 3. The fix in cf25457 (writes skipped while an opening was being built)
+
+Complete for exactness, as far as I can see. The hook now looks at pending openings too (`write_hook` no longer returns early when only pending ones exist, and `after_stage` applies writes to them). Queries of one visit that run at the same time all hold the shared lock, so they see one state, and merging their recordings is exact. A failed query, a non-durable state or a metadata write drops the pending opening. What the fix does not cover is memory: failing tests 1 and 2.
+
+### 4. Memory
+
+- Finished openings: the 256 KB cap, the trim and the least-recently-visited eviction work as described.
+- Pending openings (N > 1): no cap, no budget, no age limit (failing tests 1 and 2).
+- NOTE, cost at scale: `evict` scans every opening of every database to find the oldest one, under the global `REG` mutex, which the write hook also takes on every write of every database. With the budget full (steady state at 1 TB: the report counts 658,000 openings, ESTIMATED), each new opening triggers a full scan while all writes of the process wait. Fine for a prototype; it needs an LRU list before production.
+- NOTE: the per-database `access` map and the `REG` entries of dropped databases are never removed. Small (one timestamp per user).
+- Idle close: confirmed. `Entry::close` calls `forget_db`, so a database that is idle for 60 s (`--idle-secs`) loses every opening. For quiet databases this cancels the idea; the report says so. Whether a medium or busy 1 TB customer is one database that never idles, or many small databases that do: UNKNOWN. That decides whether the dollars hold.
+
+### 5. Hot reads
+
+Confirmed from `bench/first-course/results-2026-11-06/summary.txt` (MEASURED by the owner; I did not re-run the 2 GB bench). Single-query mode: the visit's later queries have a p50 of 11.8 ms against 3.5 ms on the baseline (short gap). The 4-query variant removes it: 1.16 ms p50, 1.98 ms p99 (short), and 0.00 GETs per later query.
+
+Two NOTES on the numbers:
+- The final code (cf25457 and 2748e34, runs `on-long-commit` and `on-long-commit2`) is worse than the report says for single-query mode on the long gap: 12.2 and 12.8 GETs per whole visit against 11.0 on the baseline, and later-query p50 15.0 and 20.3 ms against 10.1 ms. The report's "long 5.6 against 11.0" comes from the older run `on-long` (c6032e3). So, kept as specified, idea 1 saves nothing per whole visit on the final code. This makes the 4-query variant necessary, not optional.
+- The 4-query numbers (`q4-short`, `q4-long`) were measured on c6032e3, before the cf25457 fix of the bug that affects exactly that variant. They showed 0 wrong answers, probably because the test users are not written during visit 1. The headline "a whole visit costs about 0 GETs" should be re-measured on the final commit, together with failing tests 1 and 2, before it goes into the numbers.
+
+### 6. Judge
+
+`judge/run.sh fast` on 847d188 (engine code identical to 0ca5697), MEASURED:
+- build PASS.
+- unit FAIL, 115 passed and 1 failed. The failure is `counter::tests::rev_maps_leave_room_for_active_data`, which is known on `compaction` (its fast verdict on 1ae8158: 108 passed, 1 failed, the same test). The 7 extra passing tests are the first course's own. So, as the owner says, "unit PASS" is not met, for a reason outside this task.
+- diff-py and diff-node FAIL, 412/413 each. The one difference is `bucketauto.infinity`, the same as `compaction`.
+- ctl PASS (3 files). kill PASS (0 lost inserts, 0 lost updates).
+- Identical to the owner's verdict on 0ca5697. Every failure is a known one on `compaction`. My verdict file: `judge/out/847d188/VERDICT-FAST.md` on this branch. With my two tests added, unit would show 2 more failures: those are the FIX 2.
+
+## Other notes (none blocks)
+
+- With `--wal-flush-ms` above 0 (EXPLICIT_FLUSH off) and durable reads on, an opening never answers (`all_durable` is false). It is safe. If production uses a flush interval, the feature is off in practice. Which flush setting production will use: UNKNOWN to me.
+- With the metadata cache off (`META_CACHE`), metadata reads would go through the recording and make every opening unkeepable. It is safe, just never served.
+- One long-gap miss (1 of 1,000) is still unexplained by the owner. It is not a wrong answer (exact, read from storage).
+- The tests do measure what they claim: the visit-2 reference read uses `{userId: {$in: [u]}}`, which `customer_value` never accepts, so it always reads storage. The second check (an exact model) does not depend on the server.
