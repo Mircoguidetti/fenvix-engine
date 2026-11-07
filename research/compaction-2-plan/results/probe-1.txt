@@ -1,0 +1,6 @@
+point 1: 1101 raw rows from 2 L0 SSTs, seq ranges [(1, 1000), (1001, 1101)], 1 raw tombstone seen; cut X = 1101
+point 2: merged read = model before publish (949 keys) and after publish; snapshot rows carry seq (3 above X)
+point 3: absorbed L0 SSTs left SlateDB's manifest; drop jobs 1, rows dropped 999, rows kept 0; SlateDB alone holds 3 rows; sorted runs 1; merged read = model
+restart: merged read = model (949 keys)
+point 5: conditional create: first publisher wins, second refused (Object at location db/fenvix/manifest/00000000000000000007 already exists: Object already exists at that location: db/fenvix/manifest/00000000000000000007)
+PROBE PASS

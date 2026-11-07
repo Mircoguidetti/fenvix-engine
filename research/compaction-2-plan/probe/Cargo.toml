@@ -1,0 +1,17 @@
+[package]
+name = "compaction-2-probe"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# Standalone: not a member of the engine workspace.
+[workspace]
+
+[dependencies]
+slatedb = { version = "=0.17.0", features = ["lz4", "compaction_filters"] }
+object_store = { version = "=0.14.2" }
+tokio = { version = "1", features = ["full"] }
+async-trait = "0.1"
+bytes = "1"
+ulid = "=1.2.1"
+anyhow = "1"
