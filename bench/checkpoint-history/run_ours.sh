@@ -74,7 +74,7 @@ if [ "$WHAT" != measure ]; then
   # compacted-away SSTs do not fill the sandbox's disk; a guard stops the load if free disk falls under 1.5 GB
   start ${LOAD_EXTRA:---sst-gc-secs 15 --sst-gc-min-unref-secs 75}
   ( while kill -0 "$(cat "$OUT/server.pid")" 2>/dev/null; do
-      f=$(df -k --output=avail / | tail -1); echo "$(date +%s) $f $(du -sk "$JH/data/minio/$BUCKET" | cut -f1)" >> "$OUT/disk.log"
+      f=$(df -k --output=avail / | tail -1); echo "$(date +%s) $f $(du -sk "$JH/data/minio" 2>/dev/null | cut -f1)" >> "$OUT/disk.log"
       [ "$f" -lt 1500000 ] && { echo "DISK GUARD: stopping the load"; pkill -f "ckpt.py load"; }
       sleep 10; done ) &
   t=$(date +%s)
