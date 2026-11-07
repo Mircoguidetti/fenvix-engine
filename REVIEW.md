@@ -1,55 +1,74 @@
-FIX 1 (fix-unique-txn c113062: 1 failing test on review-fix-unique-txn, `ctl-tests/test_42r_review_unique_build.py`)
+APPROVED (fix-unique-txn bc49e06: the round-1 test passes, no failing test found)
 
-# Review: fix-unique-txn (unique indexes across concurrent transactions)
+# Review round 2: fix-unique-txn (unique index built on a live collection)
 
-Reviewer session of 2026-11-07. Delivery: fenvix-engine branch `fix-unique-txn`, tests ca3125a and 536655a, fix e456d5c, verdict c113062, base `integration` d6ce3d4. Contract: `prompts/P-fix-unique-in-transactions.md`. Owner's report: `sessions/2026-11-07-fix-unique-txn/REPORT.md`. Everything ran locally in one sandbox (4 CPUs), $0: no AWS, nothing merged. Reference: mongod 7.0.34 from `judge/setup.sh`.
+Reviewer session of 2026-11-07, round 2 only. Prompt: fenvix-brain `prompts/R-review-fix-unique-txn-r2.md`. Round 1: `REVIEW.md` at 49b4e3b (FIX 1, `ctl-tests/test_42r_review_unique_build.py`). Fix: branch `fix-unique-txn`, commits 2cbf245, bc96d4e, 2da7a79, bc49e06. Owner's report: fenvix-brain `sessions/2026-11-07-fix-unique-txn-r2/REPORT.md`. Everything ran locally in one sandbox (4 CPUs), $0: no AWS, nothing merged. Reference: mongod 7.0.34 from `judge/setup.sh`. "Old binary" means 49b4e3b.
 
 ## In one line
 
-The transaction fix is correct and costs nothing measurable, but one path still lets writers create a duplicate under a unique index: writes made while a unique index is being built in chunks. Both writes are accepted, the build finishes, and the finished unique index holds the same value twice. The hole was already on `integration`; this fix does not add it. It is the defect the coordinator's points 1 and 4 ask about, so it blocks: FIX 1.
+The hole is closed. The round-1 test passes unchanged, no test was weakened, 29 extra write paths I tried end safely and like mongod, the kill test is clean, and the judge shows only the known failures of `integration`.
 
-## The defect (a failing test)
+## 1. The round-1 test, unchanged
 
-Kitchen picture: the manager checks the new reservation book page by page (an index built in chunks). Everything on the pages already checked is trusted. A waiter who writes two reservations for the same table on a page already checked is never questioned, by the waiter or by the manager.
+- `git diff 49b4e3b bc49e06` touches only `mongo-server/src/{coll,cmd_index,index}.rs`, two new test files and the verdict file. No existing test changed, so none was weakened.
+- On this sandbox the 3000-document build finishes in about the test's 0.5 s sleep, so with nothing else running the test fails on BOTH binaries with "the build finished before the writes" (MEASURED, 3 runs each). The owner saw the same. I reproduced the slower sandbox as the owner did: the test and server pinned to one CPU, with a busy loop on that CPU.
+- Result (MEASURED, 5 runs per binary): fix 4 passes, 1 run missed the window. Old binary 4 failures with `{'build': 'ok', 'writes': ['ok', 'ok'], 'docs_with_k=-1': 2}` (the finished unique index holds the value twice), 1 run missed the window. mongod passes.
+- Note: the test depends on machine speed (see notes).
 
-Real terms: an index on a collection that already has documents is built in chunks (`cmd_index.rs`, `build_step`, 2000 documents per chunk), and the database lock is released between chunks. While the index is `Building`, `Writes::put` (`coll.rs`) adds its entries but checks uniqueness only for indexes in `State::Ready`. The build checks only documents still ahead of its cursor. So a write to a document behind the cursor is checked by nobody. Two such writes with the same value (or one update to a value an already-indexed document holds) leave a finished `unique: true` index with a duplicate. This breaks guarantee 4 (indexes always consistent with the data) and the contract of a unique index. A transaction that writes between two chunks and commits before the next chunk goes through the same gap: the new commit check in `txn.rs` only catches index changes made after its snapshot.
+## 2. Behaviour against mongod, and the hunt for a write path that still leaves a duplicate
 
-Test: `ctl-tests/test_42r_review_unique_build.py`. It starts the server with `MONGO_BUILD_CHUNK=1` (the existing test setting) and 3000 documents with `_id` 1000 and up. It starts `create_index("k", unique=True)`, and while the build runs inserts `{_id: 1, k: -1}` and `{_id: 2, k: -1}`. MEASURED on c113062: build ok, both inserts ok, index `k_1` unique, 2 documents with `k: -1`. The test fails on ours and passes on the reference mongod. It also fails on the `integration` binary (MEASURED), so the hole was there before. The test fails on purpose if the build ends before the writes arrive, so it cannot pass without hitting the gap. What mongod does: a hybrid build accepts the concurrent writes and then fails the build with DuplicateKey (11000) (DECLARED, mongod documentation on index builds against populated collections). It never finishes a unique index with a duplicate.
+I read the whole engine diff and the paths around it:
+- Only `Writes::put` and `Writes::delete` write index entries (grep for `entry_key`). Every write path goes through them: insert, update, replace, upsert, findAndModify, bulk write, `$merge`, transactions.
+- A write to a unique index that is `Building` looks up the value. If another document holds it, the write is still accepted and a re-check key goes into the same atomic batch. The last build step re-checks those values under the database lock and becomes `Ready` only when none are left. A plain write loads the index definitions and commits under the same lock, so it cannot see `Building` and commit after `Ready`.
+- In a transaction: two open transactions cannot both add the value (claim, 112). A plain write of the same value makes the transaction fail with 112 at commit (`uniq` / `modified`, now also recorded for `Building` indexes). A transaction that spans any build step gets 112 at commit, because every step rewrites the index definition key.
+- Same-database and cross-database renames refuse while a build runs. Drop and convertToCapped delete the whole `idx/{coll}/` prefix, re-check keys included.
 
-Why it matters at scale: the window is the whole build. On a 1 TB collection that is hours. Inserts with increasing ObjectIds land ahead of the cursor and are caught. But updates to existing documents, and inserts with string or UUID `_id`s (agent frameworks often use those, Mastra included), land behind the cursor at random and are not checked (ESTIMATED from the code path). A possible fix, for the owner to choose: in `put`, run the same unique check (scan of the value's entries plus `claim_unique`) for a unique index in `State::Building` as for `Ready`, or fail the build at the end if any value has two entries, as mongod does.
+Probes: `ctl-tests/probe_42u_review_build_paths.py` (committed on this branch). 29 cases, each run on ours (6,000 documents, one per build chunk) and on mongod (300,000 documents). The check after each case: a ready unique index must not hold a value for two documents (by aggregation, honouring partial filter and collation), and `validate` must be valid. The cases:
+- findAndModify update, replace and upsert into a held value;
+- findAndModify remove, then insert of the freed value;
+- bulk writes: mixed insert/update/delete that resolve; ordered with two duplicates; a swap through a temporary value;
+- a transient duplicate inside one command (update A into B's value, then B away);
+- updateMany with a pipeline that reverses 10 values (transient duplicates, unique at the end), and updateMany `$inc` that collides;
+- delete then re-insert: the same value once (ok), twice (duplicate), and the same `_id` with another document's value;
+- a duplicate fixed by a later update; three holders of one value, one removed (still a duplicate);
+- partial index: a document moved into the filter onto a held value, and a duplicate outside the filter;
+- collation strength 2 (`"V3"` against `"v3"`);
+- string prefixes (`"v1x"`, `"v"` next to `"v1"`), so no false duplicate;
+- multikey: overlapping arrays, and one array that repeats its own value;
+- compound with and without a duplicate;
+- `$merge` of two duplicates;
+- two unique indexes in one createIndexes, duplicate on the second;
+- a transaction writing a duplicate;
+- drop and re-create of the collection, renameCollection dropTarget onto it, and convertToCapped, all during the build.
 
-## What I checked and found right (no failing test)
+Results (MEASURED):
+- Fix: 0 holes. The 25 cases with a fixed outcome all match mongod: 14 give "writes ok, build 11000, no index" and 11 give "build ok, index ready, no duplicate". `validate` is valid in all 29.
+- The transaction case differs only in the known round-1 way. Ours answers 112 while build steps run, `with_transaction` retries until the build is done, and the insert then gets 11000 on the ready index. mongod accepts the write and fails the build. No duplicate either way.
+- Old binary: 13 cases end with a ready unique index holding a value twice (for example `{'k': 1, 'ids': [1000, 1001]}` after findAndModify), and its `validate` says valid. So the probes do reach the hole, and the new uniqueness check in `validate` is useful.
+- mongod: no holes. My first mongod run had two probe bugs of my own (one "no duplicate" insert was a real duplicate, and the counter counted `[-5,-5]` twice for one document). After fixing them, both cases match.
 
-1. Two writers, every path in the coordinator's list. The owner's 45 cases pass on ours and on mongod. 21 of them fail on the `integration` binary (MEASURED, matches the report). I read the whole diff. I also probed by hand on both servers (MEASURED, same safe outcome on both, never a duplicate):
-   - a value deleted and re-inserted inside one transaction, against another transaction (112 with the label) and a plain insert (11000);
-   - a transaction update against a plain update into the same value: on ours the plain update wins and the transaction gets 112 at commit; on mongod the transaction gets 251. One document either way;
-   - a write in a transaction that fails with 11000 aborts the transaction (`run_in_txn` treats writeErrors as failure), so it holds no claim afterwards.
+## 3. Kill test
 
-   Upserts, findAndModify, bulk writes, compound, sub-document, partial, `_id` under a collation, and two databases are covered by the owner's tests. I read why each one works: they all go through `Writes::put`. Plain writes all commit through `cmd_data.rs` (and the capped conversion), which now calls `mark_unique`. The only other `Writes` users are TTL and capped trimming, which only delete. Kill -9: the owner's kill test passed in my run, 3 trials, 1174 acknowledged commits, 0 duplicates, 0 lost (MEASURED). That is far from the 100 kills of guarantee 1; see the notes.
-2. Error codes and labels: 112 with TransientTransactionError for a value held by an open transaction or committed after the snapshot, 11000 for a value committed before it, 11000 outside transactions. Checked on both servers by `test_errors_like_mongod` and by my probes (MEASURED).
-3. Claims are released on commit, abort, transaction timeout (`transactionLifetimeLimitSeconds=2`, then another transaction takes the value) and session end (`endSessions` from closing the client). All MEASURED on ours, same as mongod. Claims live in the same lock table as document locks and are released by the same `end_txn`.
-4. The index-build fix for transactions: a transaction that wrote to a collection whose index definitions changed after its snapshot gets 112 at commit. This is correct, and the owner's test passes on both servers. As the owner reports, a build does finish while a transaction is open, unlike mongod. The transaction is the side that gives way, which is safe. The chunked-build gap above is a separate path.
-5. Performance (MEASURED, 8 client threads, 20 s per run, two runs per binary alternated, collection with two unique indexes, no transactions): bulk inserts `integration` 7355 and 7595 docs/s, fix 7412 and 7398 docs/s. Single inserts `integration` 1650 and 1757/s, fix 1745 and 1673/s. With one idle transaction open on the same database the whole time (this turns on the recording of unique values): `integration` 7235 and 7262, fix 7300 and 7505 docs/s. The difference is within the run-to-run noise (about 3%) in both directions.
-6. `judge/run.sh fast` on c113062: same as `integration` (see the judge section below).
+`ctl-tests/test_42t_kill_index_build.py` on bc49e06, MEASURED: 20 trials, 20 SIGKILLs, 16 of them during a build, 4 just after. 8 unique indexes kept and 12 builds failed with 11000. 0 duplicates, `validate` valid in all 20, 0 of 8,915 acknowledged inserts lost. Passed in 840 s. I read the test: it kills at a random moment, restarts, waits for the resumed build, and checks duplicates, validate and acknowledged inserts. It requires at least half of the kills to land inside a build.
 
-## Judge
+## 4. Judge
 
-`judge/run.sh fast` on c113062 (same engine as e456d5c), MEASURED, after restarting the reference mongod with the judge's own settings (my first run used a mongod I had started without `ttlMonitorSleepSecs=1`, so 3 TTL cases differed; that was my setup, not the engine):
+`judge/run.sh fast` on bc49e06, MEASURED (`judge/out/bc49e06/VERDICT-FAST.md` on this branch):
 - build PASS;
 - unit 101 passed, 1 failed: the known `counter::tests::rev_maps_leave_room_for_active_data`, as on `integration`;
 - diff-py 412/413 and diff-node 412/413: the one difference on both is the known `bucketauto.infinity`, as on `integration`;
-- ctl: 2 of 3 files pass, `test_05_erase` fails (`test_concurrent_erase_and_fork_are_serialised`: a usage file `control/usage/<db>_k/2026-11-07/erase-...json` is left in the bucket). It fails the same way on the `integration` binary, 3 runs out of 3 on each binary (MEASURED), so it is not caused by this delivery. The owner's run passed it. Why my sandbox differs: UNKNOWN (maybe the date or the MinIO state). It needs a look outside this review;
+- ctl PASS (3 files; `test_05_erase` passed this time);
 - kill PASS.
 
-Verdict file: `judge/out/c113062/VERDICT-FAST.md` on this branch. Apart from the ctl file above, which fails on both, it is identical to the owner's verdict and to `integration`.
+This is the same as `integration`'s known failures and the owner's verdict on 2da7a79.
 
-## Notes (not blocking: I could not turn these into failing tests)
+## Notes (not blocking)
 
-- The `modified` map growth the owner reports (emptied only when no transaction is open) is real (read in `dbs.rs`), and this fix adds unique values to it. I agree with the owner's proposal of a separate task; it matters before a busy database uses overlapping transactions.
-- Guarantee 1 asks for at least 100 kills at random points. The kill test here does 3 per run. It found nothing and the fix keeps no new durable state (claims are in memory, a commit is one batch), so I do not expect a difference. But the count is below the bar.
-- The two known differences from mongod (a plain write and an index build win over an open transaction, and the transaction retries) are safe for correctness. They can make a transaction retry where mongod would make the plain write wait. Drivers handle this with the label.
-- `locks.retain` in `end_txn` walks the whole lock table on every transaction end, and that table now also holds claims. This is fine for small transactions. It could matter with thousands of concurrent large transactions. UNKNOWN, not measured.
+- Drop, renameCollection dropTarget, and convertToCapped during a build behave differently from mongod. They are older than this fix: same on the old binary (MEASURED), and no duplicate is possible. Ours accepts the command, the index disappears, and the waiting `createIndexes` still answers ok. So a client is told a unique index was created that does not exist. mongod refuses rename and convertToCapped (12587, BackgroundOperationInProgress) and fails the build on drop (276, IndexBuildAborted). Worth a small task next to the owner's `dropIndexes` and `createIndexes` differences.
+- On ours, a failed build's cleanup at one document per chunk is slow: a failed 20,000-document build took over 120 s to answer (MEASURED, client timeout in my first probe run). This is the drop cost the owner flags in section 7. The real chunk is 2000, so it is not a correctness issue, but the drop measurement the owner proposes should be done.
+- The kill test checks acknowledged inserts, not acknowledged updates. A lost acknowledged update would go unseen. It is not needed for this fix (the update path writes one batch, like the insert), but guarantee 1 is about all acknowledged writes.
+- `test_42r_review_unique_build.py` (my predecessor's test) depends on machine speed. It should wait until the build is under way instead of sleeping 0.5 s, so it can never pass or fail by missing the window. The owner proposed the same.
 
 ## Links
 
-- fenvix-engine branch `review-fix-unique-txn` (based on c113062): the failing test `ctl-tests/test_42r_review_unique_build.py` and this file.
+- fenvix-engine branch `review-fix-unique-txn-r2` (from bc49e06): this file, `ctl-tests/probe_42u_review_build_paths.py`, `judge/out/bc49e06/VERDICT-FAST.md`.
