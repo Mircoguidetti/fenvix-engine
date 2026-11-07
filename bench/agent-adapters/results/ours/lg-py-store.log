@@ -212,7 +212,7 @@ pool_opts = None
             raise CursorNotFound(errmsg, code, response, max_wire_version)
     
 >       raise OperationFailure(errmsg, code, response, max_wire_version)
-E       pymongo.errors.OperationFailure: Unrecognized pipeline stage name: '$vectorSearch', full error: {'ok': 0.0, 'errmsg': "Unrecognized pipeline stage name: '$vectorSearch'", 'code': 40324, 'codeName': 'Location40324', '$clusterTime': {'clusterTime': Timestamp(1793997415, 6), 'signature': {'hash': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'keyId': 0}}, 'operationTime': Timestamp(1793997415, 6)}
+E       pymongo.errors.OperationFailure: Unrecognized pipeline stage name: '$vectorSearch', full error: {'ok': 0.0, 'errmsg': "Unrecognized pipeline stage name: '$vectorSearch'", 'code': 40324, 'codeName': 'Location40324', '$clusterTime': {'clusterTime': Timestamp(1794072774, 6), 'signature': {'hash': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'keyId': 0}}, 'operationTime': Timestamp(1794072774, 6)}
 
 ../../../venv-lg/lib/python3.12/site-packages/pymongo/helpers_shared.py:327: OperationFailure
 _________________________________ test_filters _________________________________
@@ -378,7 +378,7 @@ pool_opts = None
             raise CursorNotFound(errmsg, code, response, max_wire_version)
     
 >       raise OperationFailure(errmsg, code, response, max_wire_version)
-E       pymongo.errors.OperationFailure: Unrecognized pipeline stage name: '$vectorSearch', full error: {'ok': 0.0, 'errmsg': "Unrecognized pipeline stage name: '$vectorSearch'", 'code': 40324, 'codeName': 'Location40324', '$clusterTime': {'clusterTime': Timestamp(1793997416, 6), 'signature': {'hash': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'keyId': 0}}, 'operationTime': Timestamp(1793997416, 6)}
+E       pymongo.errors.OperationFailure: Unrecognized pipeline stage name: '$vectorSearch', full error: {'ok': 0.0, 'errmsg': "Unrecognized pipeline stage name: '$vectorSearch'", 'code': 40324, 'codeName': 'Location40324', '$clusterTime': {'clusterTime': Timestamp(1794072774, 12), 'signature': {'hash': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'keyId': 0}}, 'operationTime': Timestamp(1794072774, 12)}
 
 ../../../venv-lg/lib/python3.12/site-packages/pymongo/helpers_shared.py:327: OperationFailure
 _________________________________ test_filters _________________________________
@@ -555,18 +555,18 @@ pool_opts = None
             raise CursorNotFound(errmsg, code, response, max_wire_version)
     
 >       raise OperationFailure(errmsg, code, response, max_wire_version)
-E       pymongo.errors.OperationFailure: Unrecognized pipeline stage name: '$vectorSearch', full error: {'ok': 0.0, 'errmsg': "Unrecognized pipeline stage name: '$vectorSearch'", 'code': 40324, 'codeName': 'Location40324', '$clusterTime': {'clusterTime': Timestamp(1793997416, 12), 'signature': {'hash': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'keyId': 0}}, 'operationTime': Timestamp(1793997416, 12)}
+E       pymongo.errors.OperationFailure: Unrecognized pipeline stage name: '$vectorSearch', full error: {'ok': 0.0, 'errmsg': "Unrecognized pipeline stage name: '$vectorSearch'", 'code': 40324, 'codeName': 'Location40324', '$clusterTime': {'clusterTime': Timestamp(1794072775, 6), 'signature': {'hash': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'keyId': 0}}, 'operationTime': Timestamp(1794072775, 6)}
 
 ../../../venv-lg/lib/python3.12/site-packages/pymongo/helpers_shared.py:327: OperationFailure
 - generated xml file: /home/user/fenvix-engine/bench/agent-adapters/results/ours/lg-py-store.xml -
 ============================= slowest 5 durations ==============================
-0.47s call     tests/unit_tests/test_store_async.py::test_ttl
+0.46s call     tests/unit_tests/test_store_async.py::test_ttl
 0.46s call     tests/unit_tests/test_store.py::test_ttl
-0.07s setup    tests/integration_tests/test_autoembedded_index.py::test_filters
-0.05s setup    tests/unit_tests/test_store.py::test_namespace_separator_collision_raises
-0.05s setup    tests/unit_tests/test_store_async.py::test_aput
+0.06s setup    tests/integration_tests/test_autoembedded_index.py::test_filters
+0.05s setup    tests/integration_tests/test_store_semantic_async.py::test_filters
+0.04s setup    tests/unit_tests/test_store_async.py::test_aput
 =========================== short test summary info ============================
 FAILED tests/integration_tests/test_autoembedded_index.py::test_filters - pym...
 FAILED tests/integration_tests/test_store_semantic.py::test_filters - pymongo...
 FAILED tests/integration_tests/test_store_semantic_async.py::test_filters - p...
-=================== 3 failed, 29 passed, 7 skipped in 3.31s ====================
+=================== 3 failed, 29 passed, 7 skipped in 2.85s ====================

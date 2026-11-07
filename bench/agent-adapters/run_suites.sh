@@ -36,6 +36,10 @@ for s in $SUITES; do
              MONGODB_REPLICA_SET_URL="mongodb://localhost:27019/?directConnection=true" timeout 3600 npx vitest run --reporter=default --reporter=junit --outputFile.junit="$x") > "$log" 2>&1 ;;
     *) echo "unknown suite $s"; continue ;;
   esac
+  if [ $T = ours ]; then
+    # compaction 2 step 2: proof the declared customer keys were used (documents written customer first, layout v2)
+    "$A/venv-lg/bin/python" -c "import pymongo,sys;f=pymongo.MongoClient('mongodb://localhost:27017/?directConnection=true').admin.command('serverStatus').get('fenvix',{});print(f.get('customerKeys'),f.get('envelopes'))" > "$OUT/$s.ckeys.txt" 2>&1
+  fi
   echo "$s on $T: $(( $(date +%s) - start )) s, $("$A/venv-lg/bin/python" "$HERE/compare.py" --count "$x" 2>/dev/null)"
 done
 "$HERE/target.sh" stopall

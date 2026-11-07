@@ -1,2 +1,2 @@
-mongo-server (b0ebe6c, standalone) up on 27017
-mongo-server (b0ebe6c, rs) up on 27019
+mongo-server (e9f4a13, standalone) up on 27017
+mongo-server (e9f4a13, rs) up on 27019

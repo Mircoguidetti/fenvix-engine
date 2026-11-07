@@ -331,10 +331,6 @@ OPENAI_API_KEY is not set, skipping trace export
 OPENAI_API_KEY is not set, skipping trace export
 OPENAI_API_KEY is not set, skipping trace export
 OPENAI_API_KEY is not set, skipping trace export
-OPENAI_API_KEY is not set, skipping trace export
-OPENAI_API_KEY is not set, skipping trace export
-OPENAI_API_KEY is not set, skipping trace export
-OPENAI_API_KEY is not set, skipping trace export
-openai-agents: 50 users x 200 turns in 249 s
+openai-agents: 50 users x 200 turns in 217 s
 OPENAI_API_KEY is not set, skipping trace export
 OPENAI_API_KEY is not set, skipping trace export

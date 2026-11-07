@@ -165,9 +165,9 @@ tests/integration_tests/test_highlevel_graph.py:25
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 - generated xml file: /home/user/fenvix-engine/bench/agent-adapters/results/ours/lg-py-saver.xml -
 ============================= slowest 5 durations ==============================
-4.03s call     tests/unit_tests/test_sync.py::test_ttl
-0.31s call     tests/integration_tests/test_highlevel_graph.py::test_fanout
-0.08s setup    tests/unit_tests/test_interrupt.py::test_put_writes_on_interrupt
-0.07s setup    tests/integration_tests/test_highlevel_graph.py::test_fanout
-0.06s call     tests/integration_tests/test_interrupts.py::test[checkpointer_mongodb]
-======================== 146 passed, 1 warning in 6.44s ========================
+4.06s call     tests/unit_tests/test_sync.py::test_ttl
+0.50s call     tests/integration_tests/test_highlevel_graph.py::test_fanout
+0.14s setup    tests/unit_tests/test_interrupt.py::test_put_writes_on_interrupt
+0.12s call     tests/integration_tests/test_interrupts.py::test[checkpointer_mongodb]
+0.11s setup    tests/integration_tests/test_highlevel_graph.py::test_fanout
+======================== 146 passed, 1 warning in 7.20s ========================
