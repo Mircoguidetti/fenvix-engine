@@ -1,225 +1,57 @@
-mongod: 1084 passed, 21 failed, 369 skipped
-ours:   1048 passed, 57 failed, 369 skipped
-pass on mongod, not on ours: 36
+mongod: 1072 passed, 10 failed, 392 skipped
+ours:   1049 passed, 33 failed, 392 skipped
+pass on mongod, not on ours: 23
 - src/storage/domains/knowledge/index.test.ts::knowledge page store contract (schema 4) > key paths > lets one of several concurrent creates of a key win and refuses the rest as a key conflict [failed]
-    expected [ { status: 'fulfilled', …(1) }, …(2) ] to have a length of 1 but got 3
+    expected [ { status: 'fulfilled', …(1) }, …(3) ] to have a length of 1 but got 4
     
-    AssertionError: expected [ { status: 'fulfilled', …(1) }, …(2) ] to have a length of 1 but got 3
+    AssertionError: expected [ { status: 'fulfilled', …(1) }, …(3) ] to have a length of 1 but got 4
     
     - Expected
     + Received
     
     - 1
-    + 3
+    + 4
     
      ❯ ../_test-utils/src/domains/knowledge/pages.ts:348:73
 - src/storage/domains/knowledge/index.test.ts::knowledge page store contract (schema 4) > key paths > materializes concurrently without throwing or duplicating a template page [failed]
-    expected '01M6S9EPA4DJ7PFT701GZRC6HB' to be '01M6S9EPA4DJ7PFT701GZRC6HC' // Object.is equality
+    expected '01M6SNKA0EX8ZN8RFDJZ17NVDS' to be '01M6SNKA0EX8ZN8RFDJZ17NVDT' // Object.is equality
     
-    AssertionError: expected '01M6S9EPA4DJ7PFT701GZRC6HB' to be '01M6S9EPA4DJ7PFT701GZRC6HC' // Object.is equality
+    AssertionError: expected '01M6SNKA0EX8ZN8RFDJZ17NVDS' to be '01M6SNKA0EX8ZN8RFDJZ17NVDT' // Object.is equality
     
-    Expected: "01M6S9EPA4DJ7PFT701GZRC6HC"
-    Received: "01M6S9EPA4DJ7PFT701GZRC6HB"
+    Expected: "01M6SNKA0EX8ZN8RFDJZ17NVDT"
+    Received: "01M6SNKA0EX8ZN8RFDJZ17NVDS"
     
      ❯ ../_test-utils/src/domains/knowledge/pages.ts:418:28
-- src/storage/index.test.ts::MongoDBStore > Run fencing: workflows > ownership > claims an unowned run at a generation seeded from the store's clock [failed]
-    Failed to convert 'new Date(1793997619375)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-    
-    Error: Failed to convert 'new Date(1793997619375)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
-     ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
-     ❯ ../_test-utils/src/domains/run-fencing/index.ts:118:24
-    
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-d4c02ef1-83d2-400e-b969-7554aba0277a' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997619375)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
-     ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
-- src/storage/index.test.ts::MongoDBStore > Run fencing: workflows > ownership > refuses to claim a live run without force, and takes it over with force [failed]
-    Failed to convert 'new Date(1793997619384)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-    
-    Error: Failed to convert 'new Date(1793997619384)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
-     ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
-     ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
-     ❯ ../_test-utils/src/domains/run-fencing/index.ts:142:24
-    
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-4e264edd-aada-4f3e-84c3-4d6e77c8fb7e' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997619384)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
-- src/storage/index.test.ts::MongoDBStore > Run fencing: workflows > ownership > claims a run whose lease expired without force [failed]
-    Failed to convert 'new Date(1793997619388)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-    
-    Error: Failed to convert 'new Date(1793997619388)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
-     ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
-     ❯ ../_test-utils/src/domains/run-fencing/index.ts:156:23
-    
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-146e1eb4-44c5-4a1d-950c-f6cf9d5a45e6' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997619388)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
-     ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
-- src/storage/index.test.ts::MongoDBStore > Run fencing: workflows > ownership > lets exactly one of several concurrent claims win [failed]
-    expected [] to have a length of 1 but got +0
-    
-    AssertionError: expected [] to have a length of 1 but got +0
-    
-    - Expected
-    + Received
-    
-    - 1
-    + 0
-    
-     ❯ ../_test-utils/src/domains/run-fencing/index.ts:175:25
-- src/storage/index.test.ts::MongoDBStore > Run fencing: workflows > ownership > lets exactly one of several concurrent forced claims that saw the same generation win [failed]
-    Failed to convert 'new Date(1793997619396)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-    
-    Error: Failed to convert 'new Date(1793997619396)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
-     ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
-     ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
-     ❯ ../_test-utils/src/domains/run-fencing/index.ts:184:24
-    
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-190e1e3d-448b-4c90-aa8d-0dc01f0bdfbd' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997619396)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
-- src/storage/index.test.ts::MongoDBStore > Run fencing: workflows > ownership > refuses a claim whose expected generation is stale [failed]
-    Failed to convert 'new Date(1793997619397)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-    
-    Error: Failed to convert 'new Date(1793997619397)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
-     ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
-     ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
-     ❯ ../_test-utils/src/domains/run-fencing/index.ts:201:24
-    
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-f9400650-19ea-408b-b7e3-5e4198f5ac01' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997619397)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
-- src/storage/index.test.ts::MongoDBStore > Run fencing: workflows > ownership > renews only while the claim is current, even after the lease expired [failed]
-    Failed to convert 'new Date(1793997619399)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-    
-    Error: Failed to convert 'new Date(1793997619399)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
-     ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
-     ❯ ../_test-utils/src/domains/run-fencing/index.ts:211:23
-    
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-d6356cea-ed17-4393-a22a-d4cbd506ccab' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997619399)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
-     ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
-- src/storage/index.test.ts::MongoDBStore > Run fencing: workflows > ownership > release clears the lease and keeps the generation and owner [failed]
-    Failed to convert 'new Date(1793997619400)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-    
-    Error: Failed to convert 'new Date(1793997619400)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
-     ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
-     ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
-     ❯ ../_test-utils/src/domains/run-fencing/index.ts:228:24
-    
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-df218a3d-cc47-484c-8dd9-70b643d751d5' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997619400)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
-- src/storage/index.test.ts::MongoDBStore > Run fencing: workflows > fenced writes > accepts writes from the current claim and rejects writes from a superseded one [failed]
-    Failed to convert 'new Date(1793997619402)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-    
-    Error: Failed to convert 'new Date(1793997619402)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
-     ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
-     ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
-     ❯ ../_test-utils/src/domains/run-fencing/index.ts:258:24
-    
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-714a2931-cdb9-4418-8f2b-32e83bb94e33' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997619402)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
-- src/storage/index.test.ts::MongoDBStore > Run fencing: workflows > fenced writes > accepts the released owner's writes until the run is claimed again [failed]
-    Failed to convert 'new Date(1793997619403)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-    
-    Error: Failed to convert 'new Date(1793997619403)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
-     ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
-     ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
-     ❯ ../_test-utils/src/domains/run-fencing/index.ts:325:24
-    
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-96b77bbb-b450-46c1-a50a-4573ade3e082' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997619403)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
-- src/storage/index.test.ts::MongoDBStore > Run fencing: workflows > fenced writes > fences writes made inside a run fence scope with the fence of the run they write [failed]
-    Failed to convert 'new Date(1793997619404)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-    
-    Error: Failed to convert 'new Date(1793997619404)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
-     ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
-     ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
-     ❯ ../_test-utils/src/domains/run-fencing/index.ts:353:24
-    
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-1d694fb5-0a7f-45a1-bd58-c24edf5f6999' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997619404)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
-- src/storage/index.test.ts::MongoDBStore > Run fencing: workflows > fenced writes > leaves writes without a fence unchanged [failed]
-    Failed to convert 'new Date(1793997619405)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-    
-    Error: Failed to convert 'new Date(1793997619405)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
-     ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
-     ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
-     ❯ ../_test-utils/src/domains/run-fencing/index.ts:401:9
-    
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-22765e12-2b25-4cc6-8ad3-2e3bd48cab79' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997619405)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
-- src/storage/index.test.ts::MongoDBStore > Run fencing: workflows > fenced writes > never lets a superseded writer overwrite the new owner, even while racing the takeover [failed]
-    Failed to convert 'new Date(1793997619407)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-    
-    Error: Failed to convert 'new Date(1793997619407)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
-     ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
-     ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
-     ❯ ../_test-utils/src/domains/run-fencing/index.ts:410:24
-    
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-6cdcec26-3aa1-4c1d-a396-3cadcc62cb0f' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997619407)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
-     ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
 - src/storage/index.test.ts::MongoDBStore > Run fencing: prune > deletes claims idle longer than maxAge and keeps recently active ones [failed]
-    Failed to convert 'new Date(1793997619648)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010372563)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997619648)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010372563)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ ../_test-utils/src/domains/run-fencing/index.ts:805:24
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-a85d7b7f-c7da-40a9-8ec8-20bd4f6a8a18' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997619648)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-60c86ce7-d019-4c70-914b-569b339ae3b9' } }
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010372563)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
      ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
 - src/storage/index.test.ts::MongoDBStore > Run fencing: prune > claims above a surviving fence after the claim was pruned [failed]
-    Failed to convert 'new Date(1793997619649)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010372573)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997619649)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010372573)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ ../_test-utils/src/domains/run-fencing/index.ts:824:21
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-9ccb2a5b-b755-42d0-8411-c0ebdca56368' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997619649)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-8d79fd5e-1f3e-4089-960f-6d80c00c8884' } }
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010372573)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
      ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
 - src/storage/retention.test.ts::MongoDB retention > run ownership > deletes owner documents idle longer than maxAge and keeps one that was just renewed [failed]
-    Failed to convert 'new Date(1793997633725)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010380450)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997633725)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010380450)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ claim src/storage/retention.test.ts:421:23
@@ -227,12 +59,12 @@ pass on mongod, not on ours: 36
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
     Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-idle' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997633725)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010380450)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
 - src/storage/retention.test.ts::MongoDB retention > run ownership > claims above a surviving fence after the owner document was pruned [failed]
-    Failed to convert 'new Date(1793997633737)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010380464)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997633737)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010380464)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ claim src/storage/retention.test.ts:421:23
@@ -240,12 +72,12 @@ pass on mongod, not on ours: 36
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
     Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-reused' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997633737)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010380464)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
 - src/storage/retention.test.ts::MongoDB retention > run ownership > routes workflows.runOwnership and memory.runFences through the composite prune() [failed]
-    Failed to convert 'new Date(1793997633898)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010380643)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997633898)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010380643)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ claim src/storage/retention.test.ts:421:23
@@ -253,12 +85,12 @@ pass on mongod, not on ours: 36
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
     Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-settled' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997633898)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010380643)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
 - src/storage/retention.test.ts::MongoDB retention > run ownership > keeps a document renewed between the batch find and its delete [failed]
-    Failed to convert 'new Date(1793997633902)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010380649)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997633902)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010380649)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ claim src/storage/retention.test.ts:421:23
@@ -266,45 +98,45 @@ pass on mongod, not on ours: 36
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
     Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-renewed-mid-prune' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997633902)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010380649)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
 - src/storage/run-fencing.test.ts::MongoDB run fencing > Run fencing: workflows > ownership > claims an unowned run at a generation seeded from the store's clock [failed]
-    Failed to convert 'new Date(1793997624697)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010377365)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997624697)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010377365)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ ../_test-utils/src/domains/run-fencing/index.ts:118:24
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-fca3ba6f-263d-4d13-9862-4505db9825c5' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997624697)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-f231075e-e7b4-43cc-b0b8-bd296b1edf48' } }
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010377365)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
      ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
 - src/storage/run-fencing.test.ts::MongoDB run fencing > Run fencing: workflows > ownership > refuses to claim a live run without force, and takes it over with force [failed]
-    Failed to convert 'new Date(1793997624707)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010377382)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997624707)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010377382)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
      ❯ ../_test-utils/src/domains/run-fencing/index.ts:142:24
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-868ecfa7-59dc-4b90-a61f-1b00107a3596' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997624707)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-a6033dcb-7e15-48d9-b655-7ceeaa635ded' } }
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010377382)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
 - src/storage/run-fencing.test.ts::MongoDB run fencing > Run fencing: workflows > ownership > claims a run whose lease expired without force [failed]
-    Failed to convert 'new Date(1793997624709)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010377384)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997624709)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010377384)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ ../_test-utils/src/domains/run-fencing/index.ts:156:23
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-89c01db0-2a8c-4917-9e9f-cb1221282554' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997624709)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-72504d0f-983c-4e17-bb64-9cdb35c35026' } }
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010377384)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
      ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
 - src/storage/run-fencing.test.ts::MongoDB run fencing > Run fencing: workflows > ownership > lets exactly one of several concurrent claims win [failed]
@@ -320,145 +152,145 @@ pass on mongod, not on ours: 36
     
      ❯ ../_test-utils/src/domains/run-fencing/index.ts:175:25
 - src/storage/run-fencing.test.ts::MongoDB run fencing > Run fencing: workflows > ownership > lets exactly one of several concurrent forced claims that saw the same generation win [failed]
-    Failed to convert 'new Date(1793997624720)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010377401)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997624720)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010377401)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
      ❯ ../_test-utils/src/domains/run-fencing/index.ts:184:24
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-82be49af-3c6f-445f-844d-6b17fb347d9d' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997624720)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-02757cf4-395a-4476-a8bf-28c322a0abb2' } }
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010377401)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
 - src/storage/run-fencing.test.ts::MongoDB run fencing > Run fencing: workflows > ownership > refuses a claim whose expected generation is stale [failed]
-    Failed to convert 'new Date(1793997624725)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010377407)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997624725)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010377407)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
      ❯ ../_test-utils/src/domains/run-fencing/index.ts:201:24
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-04564d08-bda9-4cb5-8e96-6376efbea7c3' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997624725)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-e5867eaf-4243-4387-9464-c5ed0a87aa5a' } }
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010377407)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
 - src/storage/run-fencing.test.ts::MongoDB run fencing > Run fencing: workflows > ownership > renews only while the claim is current, even after the lease expired [failed]
-    Failed to convert 'new Date(1793997624727)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010377410)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997624727)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010377410)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ ../_test-utils/src/domains/run-fencing/index.ts:211:23
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-9e761c9f-ab77-4236-9dfa-22aad2747517' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997624727)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-f3dbff64-30f2-4b85-a7d3-604aea8108bf' } }
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010377410)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
      ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
 - src/storage/run-fencing.test.ts::MongoDB run fencing > Run fencing: workflows > ownership > release clears the lease and keeps the generation and owner [failed]
-    Failed to convert 'new Date(1793997624729)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010377412)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997624729)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010377412)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
      ❯ ../_test-utils/src/domains/run-fencing/index.ts:228:24
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-bd37340d-d630-4ff4-9cf8-540e9f3db372' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997624729)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-f2f58faa-c09a-4001-abec-b41d1227a310' } }
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010377412)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
 - src/storage/run-fencing.test.ts::MongoDB run fencing > Run fencing: workflows > fenced writes > accepts writes from the current claim and rejects writes from a superseded one [failed]
-    Failed to convert 'new Date(1793997624732)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010377416)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997624732)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010377416)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
      ❯ ../_test-utils/src/domains/run-fencing/index.ts:258:24
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-7926e576-2972-468d-96cf-335960146095' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997624732)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-7d487a5b-be4c-4c46-bf5a-d1ba781ff3e8' } }
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010377416)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
 - src/storage/run-fencing.test.ts::MongoDB run fencing > Run fencing: workflows > fenced writes > accepts the released owner's writes until the run is claimed again [failed]
-    Failed to convert 'new Date(1793997624734)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010377419)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997624734)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010377419)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
      ❯ ../_test-utils/src/domains/run-fencing/index.ts:325:24
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-84ad9264-933c-4aa3-9457-3ec3f143451c' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997624734)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-3fced197-aaed-4c9d-a9ed-a7405c0c544c' } }
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010377419)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
 - src/storage/run-fencing.test.ts::MongoDB run fencing > Run fencing: workflows > fenced writes > fences writes made inside a run fence scope with the fence of the run they write [failed]
-    Failed to convert 'new Date(1793997624736)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010377421)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997624736)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010377421)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
      ❯ ../_test-utils/src/domains/run-fencing/index.ts:353:24
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-44ae5798-cf27-46bc-996b-7903079deb72' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997624736)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-ac24bdb1-5a14-4049-8582-e6e3e1e336e0' } }
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010377421)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
 - src/storage/run-fencing.test.ts::MongoDB run fencing > Run fencing: workflows > fenced writes > leaves writes without a fence unchanged [failed]
-    Failed to convert 'new Date(1793997624738)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010377424)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997624738)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010377424)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
      ❯ ../_test-utils/src/domains/run-fencing/index.ts:401:9
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-cdab9c2e-d0d3-4733-89f4-7cffb4837aca' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997624738)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-095e1180-e69d-4dc3-baf1-4f55e4566a78' } }
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010377424)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
 - src/storage/run-fencing.test.ts::MongoDB run fencing > Run fencing: workflows > fenced writes > never lets a superseded writer overwrite the new owner, even while racing the takeover [failed]
-    Failed to convert 'new Date(1793997624739)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010377426)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997624739)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010377426)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ claimed ../_test-utils/src/domains/run-fencing/index.ts:106:22
      ❯ ../_test-utils/src/domains/run-fencing/index.ts:410:24
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-34cefe14-a062-4a95-8d82-12802238347b' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997624739)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-3f90f948-497c-4536-a67e-a0eae2a7e90b' } }
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010377426)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
 - src/storage/run-fencing.test.ts::MongoDB run fencing > Run fencing: prune > deletes claims idle longer than maxAge and keeps recently active ones [failed]
-    Failed to convert 'new Date(1793997625088)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010377881)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997625088)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010377881)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ ../_test-utils/src/domains/run-fencing/index.ts:805:24
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-3aa9a250-4cc0-4ed0-ac23-2b3372610a29' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997625088)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-fdd8f6b1-21d8-450c-b4b7-093709a1ca34' } }
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010377881)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
      ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
 - src/storage/run-fencing.test.ts::MongoDB run fencing > Run fencing: prune > claims above a surviving fence after the claim was pruned [failed]
-    Failed to convert 'new Date(1793997625089)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Failed to convert 'new Date(1794010377883)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
     
-    Error: Failed to convert 'new Date(1793997625089)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Error: Failed to convert 'new Date(1794010377883)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ WorkflowsStorageMongoDB.#ownershipError src/storage/domains/workflows/index.ts:130:12
      ❯ WorkflowsStorageMongoDB.claimRunOwnership src/storage/domains/workflows/index.ts:197:18
      ❯ ../_test-utils/src/domains/run-fencing/index.ts:824:21
     
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-4a3dd109-bd59-4b7f-9a4d-de2927074bb9' } }
-    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1793997625089)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
+    Serialized Error: { domain: 'STORAGE', category: 'THIRD_PARTY', code: 'MASTRA_STORAGE_MONGODB_CLAIM_RUN_OWNERSHIP_FAILED', details: { runId: 'run-895c4ccd-b698-40da-98e5-929830e42a3d' } }
+    Caused by: Caused by: MongoServerError: Failed to convert 'new Date(1794010377883)' to long in $convert with no onError value: Unsupported conversion from date to long in $convert with no onError value
      ❯ Connection.sendCommand ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:322:27
      ❯ Connection.command ../../../../../../root/.local/share/pnpm/store/v11/links/@/mongodb/7.8.0/b2eb2b6df17c29189af7fbc425fda103c34dd19246e8770c4cc6d7f2e11818db/node_modules/mongodb/lib/cmap/connection.js:349:26
