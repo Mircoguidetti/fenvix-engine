@@ -481,7 +481,7 @@ mod tests {
     async fn trips_count_waves_not_requests() {
         let mem: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
         mem.put(&Path::from("x"), PutPayload::from(vec![1u8; 100])).await.unwrap();
-        let s = Arc::new(SimS3Store { inner: mem, model: Some(SimModel { median_ms: 20.0, sigma: 0.0, mbps: 1000.0 }) });
+        let s = Arc::new(SimS3Store { inner: mem, model: Some(SimModel { median_ms: 20.0, sigma: 0.0, mbps: 1000.0 }), put_model: None });
         let t0 = TRIPS.trips.load(Relaxed);
         // one wave of 10 parallel GETs, then one more GET after it: 2 trips
         let p = Path::from("x");
