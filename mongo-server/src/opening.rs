@@ -30,6 +30,15 @@
 //! number of entries its first query needed (keeping only exact, complete prefixes of its intervals), and dropped if
 //! that is not enough. All openings together stay under `BUDGET_BYTES` (the least recently visited go first) and an
 //! opening older than `MAX_AGE_SECS` is not used.
+//!
+//! Pending openings (`QUERIES` > 1: the opening a visit is still building, which may wait until the user's next visit)
+//! obey the same rules: the same cap with the same trim and drop after every write and every recorded query, counted
+//! in the same budget (`STATS.bytes`), and evicted in the same least-recently-used order. Dropping a pending opening is
+//! always safe: the user's next visit just finds no opening (or the previous one) and reads storage.
+//!
+//! Eviction order: every opening and pending opening carries a sequence number taken when it was last visited; `LRU`
+//! maps sequence numbers to their owner, so the oldest is found in O(log n). Entries whose owner was removed or
+//! visited again are stale: they are skipped when popped and swept when they outnumber the live ones.
 
 use bytes::Bytes;
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -71,8 +80,12 @@ pub struct Stats {
     pub writes_applied: AtomicU64,
     pub write_hook_ns: AtomicU64,
     pub record_ns: AtomicU64,
+    /// bytes of every opening and every pending opening (what the budget limits)
     pub bytes: AtomicU64,
     pub openings: AtomicU64,
+    pub pending: AtomicU64,
+    pub evicted_pending: AtomicU64,
+    pub dropped_pending_too_big: AtomicU64,
 }
 
 pub static STATS: Stats = Stats {
@@ -96,6 +109,9 @@ pub static STATS: Stats = Stats {
     record_ns: AtomicU64::new(0),
     bytes: AtomicU64::new(0),
     openings: AtomicU64::new(0),
+    pending: AtomicU64::new(0),
+    evicted_pending: AtomicU64::new(0),
+    dropped_pending_too_big: AtomicU64::new(0),
 };
 
 /// One user: a collection and the customer component of the user's key.
@@ -146,6 +162,8 @@ pub struct Opening {
     doc_prefix: Vec<u8>,
     bytes: usize,
     visit: Option<Instant>,
+    /// position in `LRU` (0: none)
+    lru: u64,
 }
 
 impl Opening {
@@ -370,23 +388,72 @@ impl Opening {
         }
         self.recount();
     }
+
+    /// The cap rule, the same for finished and pending openings: above `MAX_BYTES` trim; `false` when the trim was not
+    /// enough and the opening must be dropped.
+    fn fit(&mut self) -> bool {
+        let max = MAX_BYTES.load(Relaxed) as usize;
+        if self.bytes > max {
+            self.trim();
+            STATS.trimmed.fetch_add(1, Relaxed);
+        }
+        self.bytes <= max
+    }
 }
 
 /// The openings of one database.
 #[derive(Default)]
 struct DbOpenings {
+    /// the database's name (the owner recorded in `LRU`)
+    name: String,
     openings: HashMap<Cust, Opening>,
     /// region start -> (region end, user); regions never overlap
     regions: BTreeMap<Vec<u8>, (Vec<u8>, Cust)>,
     /// last query of each user
     access: HashMap<Cust, Instant>,
     /// `QUERIES` > 1: the opening a visit is building (queries begun, queries recorded); writes follow it like an
-    /// opening; it becomes the user's opening after its N-th query or when the next visit starts
+    /// opening, and it obeys the same cap and budget; it becomes the user's opening after its N-th query or when the
+    /// next visit starts
     pending: HashMap<Cust, (Opening, u64, u64)>,
     accesses: u64,
 }
 
+/// Least recently visited first: sequence number -> (database, user, pending). See the module comment.
+static LRU: std::sync::LazyLock<Mutex<BTreeMap<u64, (String, Cust, bool)>>> = std::sync::LazyLock::new(|| Mutex::new(BTreeMap::new()));
+static SEQ: AtomicU64 = AtomicU64::new(1);
+
+/// A new position in `LRU` for an opening (finished or pending) visited now. Called with `REG` held (lock order: `REG`
+/// then `LRU`).
+fn touch(db: &str, c: &Cust, pending: bool, o: &mut Opening) {
+    let seq = SEQ.fetch_add(1, Relaxed);
+    let mut lru = LRU.lock().unwrap();
+    if o.lru != 0 {
+        lru.remove(&o.lru);
+    }
+    lru.insert(seq, (db.to_string(), c.clone(), pending));
+    o.lru = seq;
+}
+
+fn untouch(o: &Opening) {
+    if o.lru != 0 {
+        LRU.lock().unwrap().remove(&o.lru);
+    }
+}
+
+/// Adjust the budget's byte count after an opening changed size in place.
+fn resize(before: usize, after: usize) {
+    if after >= before {
+        STATS.bytes.fetch_add((after - before) as u64, Relaxed);
+    } else {
+        STATS.bytes.fetch_sub((before - after) as u64, Relaxed);
+    }
+}
+
 impl DbOpenings {
+    fn new(name: &str) -> Self {
+        DbOpenings { name: name.to_string(), ..Default::default() }
+    }
+
     fn owner(&self, k: &[u8]) -> Option<&Cust> {
         let (_, (end, c)) = self.regions.range(..=k.to_vec()).next_back()?;
         if k < &end[..] {
@@ -401,6 +468,7 @@ impl DbOpenings {
         if !self.pending.contains_key(c) {
             self.unclaim(c, &o.regions);
         }
+        untouch(&o);
         STATS.bytes.fetch_sub(o.bytes as u64, Relaxed);
         STATS.openings.fetch_sub(1, Relaxed);
         Some(o)
@@ -420,40 +488,71 @@ impl DbOpenings {
         }
     }
 
+    /// A new, empty pending opening for a visit that starts now.
+    fn start_pending(&mut self, c: &Cust, mut p: Opening) {
+        self.drop_pending(c);
+        self.claim(c, &p.regions);
+        p.visit = Some(Instant::now());
+        p.recount();
+        touch(&self.name, c, true, &mut p);
+        STATS.bytes.fetch_add(p.bytes as u64, Relaxed);
+        STATS.pending.fetch_add(1, Relaxed);
+        self.pending.insert(c.clone(), (p, 1, 0));
+    }
+
+    /// Take the pending opening out of the bookkeeping (its bytes leave the budget, its regions stay claimed only when
+    /// the user still has a finished opening).
+    fn take_pending(&mut self, c: &Cust) -> Option<(Opening, u64, u64)> {
+        let p = self.pending.remove(c)?;
+        if !self.openings.contains_key(c) {
+            self.unclaim(c, &p.0.regions);
+        }
+        untouch(&p.0);
+        STATS.bytes.fetch_sub(p.0.bytes as u64, Relaxed);
+        STATS.pending.fetch_sub(1, Relaxed);
+        Some(p)
+    }
+
+    /// Dropping a pending opening is always safe: the user's next visit reads storage.
     fn drop_pending(&mut self, c: &Cust) {
-        if let Some((p, _, _)) = self.pending.remove(c) {
-            if !self.openings.contains_key(c) {
-                self.unclaim(c, &p.regions);
-            }
+        self.take_pending(c);
+    }
+
+    /// After a pending opening changed (writes applied or a query recorded, its `bytes` exact): the same cap rule as
+    /// finished openings, and the budget count follows.
+    fn settle_pending(&mut self, c: &Cust, before: usize) {
+        let Some(p) = self.pending.get_mut(c) else { return };
+        let keep = p.0.fit();
+        resize(before, p.0.bytes);
+        if !keep {
+            STATS.dropped_pending_too_big.fetch_add(1, Relaxed);
+            self.drop_pending(c);
         }
     }
 
     /// The visit's pending opening becomes the user's opening (trimmed or dropped when too big).
     fn install_pending(&mut self, c: &Cust) {
-        let Some((mut p, _, _)) = self.pending.remove(c) else { return };
+        let Some((mut p, _, _)) = self.take_pending(c) else { return };
         p.visit = Some(Instant::now());
+        p.lru = 0;
         p.recount();
-        let max = MAX_BYTES.load(Relaxed) as usize;
-        if p.bytes > max {
-            p.trim();
-            STATS.trimmed.fetch_add(1, Relaxed);
-            if p.bytes > max {
-                STATS.dropped_too_big.fetch_add(1, Relaxed);
-                let regions = p.regions.clone();
-                self.remove(c);
-                self.unclaim(c, &regions);
-                return;
-            }
+        if !p.fit() {
+            STATS.dropped_too_big.fetch_add(1, Relaxed);
+            let regions = p.regions.clone();
+            self.remove(c);
+            self.unclaim(c, &regions);
+            return;
         }
         self.insert(c.clone(), p);
         STATS.kept.fetch_add(1, Relaxed);
     }
 
-    fn insert(&mut self, c: Cust, o: Opening) {
+    fn insert(&mut self, c: Cust, mut o: Opening) {
         self.remove(&c);
         for (s, e) in &o.regions {
             self.regions.insert(s.clone(), (e.clone(), c.clone()));
         }
+        touch(&self.name, &c, false, &mut o);
         STATS.bytes.fetch_add(o.bytes as u64, Relaxed);
         STATS.openings.fetch_add(1, Relaxed);
         self.openings.insert(c, o);
@@ -562,7 +661,7 @@ pub fn begin(db: &str, coll: &str, field: &str, filter: &bson::Document, indexes
     let now = Instant::now();
     let idle = Duration::from_secs(IDLE_SECS.load(Relaxed));
     let mut reg = REG.lock().unwrap();
-    let st = reg.entry(db.to_string()).or_default();
+    let st = reg.entry(db.to_string()).or_insert_with(|| DbOpenings::new(db));
     let last = st.access.insert(cust.clone(), now);
     st.accesses += 1;
     if st.accesses % 4096 == 0 {
@@ -603,8 +702,7 @@ pub fn begin(db: &str, coll: &str, field: &str, filter: &bson::Document, indexes
     }
     let serve = st.openings.get(&cust).cloned();
     if n > 1 {
-        st.claim(&cust, &regions);
-        st.pending.insert(cust.clone(), (Opening::new(regions.clone(), crate::layout::doc_prefix(coll)), 1, 0));
+        st.start_pending(&cust, Opening::new(regions.clone(), crate::layout::doc_prefix(coll)));
     }
     Some(mk(serve))
 }
@@ -637,12 +735,20 @@ pub fn finish(s: Session, ok: bool) {
             return;
         }
         // both are exact now (the pending one followed every write since its queries): their union is exact
+        let name = st.name.clone();
         let p = st.pending.get_mut(&cust).unwrap();
+        let before = p.0.bytes;
         p.0.map.extend(rec.map);
         p.0.ivs.extend(rec.ivs);
+        p.0.recount();
+        p.0.visit = Some(Instant::now());
+        touch(&name, &cust, true, &mut p.0);
         p.2 += 1;
         if p.2 >= QUERIES.load(Relaxed) {
+            resize(before, p.0.bytes);
             st.install_pending(&cust);
+        } else {
+            st.settle_pending(&cust, before);
         }
         evict(&mut reg);
         return;
@@ -665,38 +771,54 @@ pub fn finish(s: Session, ok: bool) {
     }
     rec.visit = Some(Instant::now());
     rec.recount();
-    let max = MAX_BYTES.load(Relaxed) as usize;
-    if rec.bytes > max {
-        rec.trim();
-        STATS.trimmed.fetch_add(1, Relaxed);
-        if rec.bytes > max {
-            STATS.dropped_too_big.fetch_add(1, Relaxed);
-            return;
-        }
+    if !rec.fit() {
+        STATS.dropped_too_big.fetch_add(1, Relaxed);
+        return;
     }
     let mut reg = REG.lock().unwrap();
-    reg.entry(db).or_default().insert(cust, rec);
+    reg.entry(db.clone()).or_insert_with(|| DbOpenings::new(&db)).insert(cust, rec);
     STATS.kept.fetch_add(1, Relaxed);
     evict(&mut reg);
 }
 
+/// Keep every opening and pending opening together inside `BUDGET_BYTES`: the least recently visited go first.
 fn evict(reg: &mut HashMap<String, DbOpenings>) {
     let budget = BUDGET_BYTES.load(Relaxed);
     while STATS.bytes.load(Relaxed) > budget {
-        // least recently visited (linear: fine for a measurement prototype)
-        let mut oldest: Option<(String, Cust, Instant)> = None;
-        for (db, st) in reg.iter() {
-            for (c, o) in &st.openings {
-                let t = o.visit.unwrap_or_else(Instant::now);
-                if oldest.as_ref().map_or(true, |(_, _, ot)| t < *ot) {
-                    oldest = Some((db.clone(), c.clone(), t));
-                }
+        let Some((seq, (db, c, pending))) = LRU.lock().unwrap().pop_first() else { break };
+        let Some(st) = reg.get_mut(&db) else { continue };
+        if pending {
+            if st.pending.get(&c).map_or(false, |p| p.0.lru == seq) {
+                st.pending.get_mut(&c).unwrap().0.lru = 0;
+                st.drop_pending(&c);
+                STATS.evicted_pending.fetch_add(1, Relaxed);
             }
+        } else if st.openings.get(&c).map_or(false, |o| o.lru == seq) {
+            st.openings.get_mut(&c).unwrap().lru = 0;
+            st.remove(&c);
+            STATS.evicted.fetch_add(1, Relaxed);
         }
-        let Some((db, c, _)) = oldest else { break };
-        reg.get_mut(&db).map(|st| st.remove(&c));
-        STATS.evicted.fetch_add(1, Relaxed);
     }
+    sweep(reg);
+}
+
+/// Drop stale `LRU` entries once they outnumber the live ones (amortized: a sweep follows at least as many changes as
+/// it visits).
+fn sweep(reg: &HashMap<String, DbOpenings>) {
+    let live = (STATS.openings.load(Relaxed) + STATS.pending.load(Relaxed)) as usize;
+    let mut lru = LRU.lock().unwrap();
+    if lru.len() <= 2 * live + 1024 {
+        return;
+    }
+    lru.retain(|seq, (db, c, pending)| {
+        reg.get(db).map_or(false, |st| {
+            if *pending {
+                st.pending.get(c).map_or(false, |p| p.0.lru == *seq)
+            } else {
+                st.openings.get(c).map_or(false, |o| o.lru == *seq)
+            }
+        })
+    });
 }
 
 fn is_meta_key(k: &[u8]) -> bool {
@@ -764,39 +886,40 @@ pub fn after_stage(db: &str, c: Captured, ok: bool) {
         (Captured::Nothing, true) => {}
         (Captured::Apply(w), true) => {
             let t = Instant::now();
-            let max = MAX_BYTES.load(Relaxed) as usize;
             let mut reg = REG.lock().unwrap();
             if let Some(st) = reg.get_mut(db) {
                 // the whole batch first, then the size check: a trim between a new document and its index entry (same
                 // batch) would forget the document the entry points to
-                let mut touched: Vec<(Cust, usize)> = Vec::new();
+                // (user, bytes of its opening before, bytes of its pending opening before)
+                let mut touched: Vec<(Cust, Option<usize>, Option<usize>)> = Vec::new();
                 for (k, v) in w {
                     let Some(c) = st.owner(&k).cloned() else { continue };
+                    if !touched.iter().any(|(t, _, _)| *t == c) {
+                        touched.push((c.clone(), st.openings.get(&c).map(|o| o.bytes), st.pending.get(&c).map(|p| p.0.bytes)));
+                    }
                     if let Some(p) = st.pending.get_mut(&c) {
                         p.0.apply(k.clone(), v.clone());
                     }
                     let Some(o) = st.openings.get_mut(&c) else { continue };
-                    if !touched.iter().any(|(t, _)| *t == c) {
-                        touched.push((c.clone(), o.bytes));
-                    }
                     o.apply(k, v);
                     STATS.writes_applied.fetch_add(1, Relaxed);
                 }
-                for (c, before) in touched {
-                    let Some(o) = st.openings.get_mut(&c) else { continue };
-                    if o.bytes > max {
-                        o.trim();
-                        STATS.trimmed.fetch_add(1, Relaxed);
+                for (c, before, pending_before) in touched {
+                    if let (Some(before), Some(o)) = (before, st.openings.get_mut(&c)) {
+                        let keep = o.fit();
+                        resize(before, o.bytes);
+                        if !keep {
+                            st.remove(&c);
+                            STATS.dropped_too_big.fetch_add(1, Relaxed);
+                        }
                     }
-                    let after = o.bytes;
-                    STATS.bytes.fetch_add(after as u64, Relaxed);
-                    STATS.bytes.fetch_sub(before as u64, Relaxed);
-                    if after > max {
-                        st.remove(&c);
-                        STATS.dropped_too_big.fetch_add(1, Relaxed);
+                    if let Some(before) = pending_before {
+                        st.settle_pending(&c, before);
                     }
                 }
             }
+            // writes make openings grow: the budget holds after every batch, not only when an opening is kept
+            evict(&mut reg);
             STATS.write_hook_ns.fetch_add(t.elapsed().as_nanos() as u64, Relaxed);
         }
         _ => forget_db(db),
@@ -817,7 +940,10 @@ pub fn forget_db(db: &str) {
     }
     let mut reg = REG.lock().unwrap();
     if let Some(st) = reg.get_mut(db) {
-        st.pending.clear();
+        let ps: Vec<Cust> = st.pending.keys().cloned().collect();
+        for c in ps {
+            st.drop_pending(&c);
+        }
         let cs: Vec<Cust> = st.openings.keys().cloned().collect();
         for c in cs {
             st.remove(&c);
@@ -1173,5 +1299,145 @@ mod tests {
         let (open, pending) = review_held(db);
         forget_db(db);
         assert!(open + pending <= 1 << 20, "openings {open} bytes + pending {pending} bytes, the budget is {} bytes", 1 << 20);
+    }
+
+    // ---- Fix round (2026-11-07): pending openings obey the cap and the budget ----
+
+    /// The budget's count equals the bytes really held, every opening and pending opening is under the cap, the total
+    /// is under the budget, and every live opening has its `LRU` entry.
+    fn fix_check_invariants(ctx: &str) {
+        let reg = REG.lock().unwrap();
+        let lru = LRU.lock().unwrap();
+        let max = MAX_BYTES.load(Relaxed) as usize;
+        let mut held = 0usize;
+        let (mut n_open, mut n_pend) = (0u64, 0u64);
+        for st in reg.values() {
+            for o in st.openings.values() {
+                let mut x = o.clone();
+                x.recount();
+                assert_eq!(x.bytes, o.bytes, "{ctx}: an opening's byte count drifted");
+                assert!(o.bytes <= max, "{ctx}: an opening holds {} bytes, cap {max}", o.bytes);
+                assert!(lru.contains_key(&o.lru), "{ctx}: an opening is missing from the LRU");
+                held += o.bytes;
+                n_open += 1;
+            }
+            for (p, _, _) in st.pending.values() {
+                let mut x = p.clone();
+                x.recount();
+                assert_eq!(x.bytes, p.bytes, "{ctx}: a pending opening's byte count drifted");
+                assert!(p.bytes <= max, "{ctx}: a pending opening holds {} bytes, cap {max}", p.bytes);
+                assert!(lru.contains_key(&p.lru), "{ctx}: a pending opening is missing from the LRU");
+                held += p.bytes;
+                n_pend += 1;
+            }
+        }
+        assert_eq!(STATS.bytes.load(Relaxed) as usize, held, "{ctx}: STATS.bytes differs from the bytes held");
+        assert_eq!(STATS.openings.load(Relaxed), n_open, "{ctx}: STATS.openings");
+        assert_eq!(STATS.pending.load(Relaxed), n_pend, "{ctx}: STATS.pending");
+        assert!(held as u64 <= BUDGET_BYTES.load(Relaxed), "{ctx}: {held} bytes held, budget {}", BUDGET_BYTES.load(Relaxed));
+    }
+
+    /// Random visits (1 to 4 queries with N = 3), writes of every size, idle gaps, metadata writes and failed stages:
+    /// after every step the invariants above hold, and every read an opening answers equals storage (a model).
+    #[test]
+    fn fix_random_visits_and_writes_keep_cap_budget_and_exactness() {
+        use tenant_bench::lifecycle::Op;
+        let _g = GLOBALS.lock().unwrap_or_else(|e| e.into_inner());
+        let _r = Restore;
+        ENABLED.store(true, Relaxed);
+        QUERIES.store(3, Relaxed);
+        IDLE_SECS.store(0, Relaxed); // every query starts a visit unless the test says otherwise (below)
+        MAX_BYTES.store(8 << 10, Relaxed);
+        BUDGET_BYTES.store(64 << 10, Relaxed);
+        let db = "fc-fix-random";
+        forget_db(db);
+        fix_check_invariants("start");
+        let mut rng = rand::rngs::StdRng::seed_from_u64(7);
+        let mut m: BTreeMap<Vec<u8>, Vec<u8>> = BTreeMap::new();
+        let users: Vec<i32> = (0..30).collect();
+        let (mut served, mut evicted_pending) = (0u64, STATS.evicted_pending.load(Relaxed));
+        for step in 0..3000 {
+            let u = users[rng.gen_range(0..users.len())];
+            let f = bson::doc! { "u": u };
+            let lo = review_key(u, 0);
+            let hi = review_key(u, u32::MAX);
+            match rng.gen_range(0..10) {
+                0..=4 => {
+                    // a query: one visit's first query, or (idle long) a later one of the same visit
+                    IDLE_SECS.store(if rng.gen_bool(0.6) { 3600 } else { 0 }, Relaxed);
+                    let Some(mut s) = begin(db, "c", "u", &f, &[], true) else { continue };
+                    let lim = Some(rng.gen_range(1..20));
+                    let rows: Vec<(Bytes, Bytes)> = model_scan(&m, &lo, Some(&hi), true, lim);
+                    if let Some(r) = s.scan(&lo, Some(&hi), true, lim) {
+                        assert_eq!(r, rows, "step {step}: an answer from an opening differs from storage");
+                        served += 1;
+                    }
+                    s.note_scan(&lo, Some(&hi), true, lim, &rows);
+                    finish(s, rng.gen_bool(0.97));
+                }
+                5..=8 => {
+                    // writes for this user (sometimes a burst), with deletes
+                    let n = if rng.gen_bool(0.1) { rng.gen_range(50..300) } else { rng.gen_range(1..5) };
+                    let mut ops = Vec::new();
+                    for _ in 0..n {
+                        let k = review_key(u, rng.gen_range(1..2000));
+                        if rng.gen_bool(0.2) {
+                            m.remove(&k);
+                            ops.push(Op::Delete(k));
+                        } else {
+                            let v = vec![b'z'; rng.gen_range(10..400)];
+                            m.insert(k.clone(), v.clone());
+                            ops.push(Op::Put(k, v));
+                        }
+                    }
+                    review_write(db, ops);
+                }
+                _ => {
+                    if rng.gen_bool(0.02) {
+                        // a metadata write forgets everything
+                        review_write(db, vec![Op::Put(b"meta/indexes/c/x".to_vec(), vec![1])]);
+                    }
+                }
+            }
+            fix_check_invariants(&format!("step {step}"));
+        }
+        assert!(served > 100, "the test must serve from openings: {served}");
+        assert!(STATS.evicted_pending.load(Relaxed) > evicted_pending, "the test must evict pending openings");
+        forget_db(db);
+        fix_check_invariants("end");
+    }
+
+    /// The least recently visited goes first, pending or finished; an evicted pending opening leaves the user with a
+    /// plain storage read on the next visit.
+    #[test]
+    fn fix_eviction_takes_the_least_recently_visited_first() {
+        let _g = GLOBALS.lock().unwrap_or_else(|e| e.into_inner());
+        let _r = Restore;
+        ENABLED.store(true, Relaxed);
+        QUERIES.store(3, Relaxed);
+        IDLE_SECS.store(3600, Relaxed);
+        let db = "fc-fix-lru";
+        forget_db(db);
+        // users 1, 2, 3 visit in this order (one query each: pending openings of about 1 KB)
+        for u in 1..=3 {
+            let f = bson::doc! { "u": u };
+            let mut s = begin(db, "c", "u", &f, &[], true).unwrap();
+            s.note_get(&review_key(u, 0), &Some(b(&[b'v'; 1000])));
+            finish(s, true);
+        }
+        let held = STATS.bytes.load(Relaxed);
+        // a budget that holds two of the three: user 1 (the oldest) goes
+        BUDGET_BYTES.store(held - 1, Relaxed);
+        evict(&mut REG.lock().unwrap());
+        let pend: HashSet<i32> = {
+            let reg = REG.lock().unwrap();
+            (1..=3).filter(|u| reg[db].pending.contains_key(&Cust { coll: "c".into(), comp: crate::custkey::comp(&bson::Bson::Int32(*u)) })).collect()
+        };
+        assert_eq!(pend, HashSet::from([2, 3]), "the oldest pending opening is evicted first");
+        // user 1's next query of the visit is not recorded (its pending opening is gone) and nothing breaks
+        assert!(begin(db, "c", "u", &bson::doc! { "u": 1 }, &[], true).is_none());
+        fix_check_invariants("after eviction");
+        forget_db(db);
+        fix_check_invariants("end");
     }
 }
