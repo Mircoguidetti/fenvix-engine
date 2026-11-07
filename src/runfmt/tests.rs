@@ -659,3 +659,116 @@ async fn random_flipped_bits_of_a_large_run_are_errors() {
     );
     assert_eq!(caught, flips);
 }
+
+// ---- review of step 1 (branch review-c2-step1)
+
+/// Review: a fuzz over odd key shapes (0x00, 0xFF and '/' bytes, keys that are prefixes of others, the empty key), all
+/// three customer kinds, blocks of 1 to 1,000 bytes (one row per block, restart groups cut anywhere) and 0 to 3 run cuts.
+/// It passes on the delivered commit; it is here to judge the reviewer's extra mutations. RFUZZ=2000 for 600,000 reads.
+fn rkey(rng: &mut StdRng, kind: CustomerKind) -> Vec<u8> {
+    const A: &[u8] = &[0, 1, b'/', b'u', b'd', 0xFE, 0xFF, 3, 2];
+    let tail: Vec<u8> = (0..rng.gen_range(0..6)).map(|_| A[rng.gen_range(0..A.len())]).collect();
+    match (kind, rng.gen_range(0..4)) {
+        (CustomerKind::V2, 0..=2) => {
+            let l = rng.gen_range(1..4u8);
+            let mut k = b"u/".to_vec();
+            k.push(l);
+            for _ in 0..l { k.push(A[rng.gen_range(0..A.len())]); }
+            k.extend(tail);
+            k
+        }
+        (CustomerKind::DocV1, 0..=2) => {
+            let mut k = b"doc/".to_vec();
+            k.extend([b"a".as_slice(), b"bb", b""][rng.gen_range(0..3)]);
+            k.push(b'/');
+            let l = rng.gen_range(1..4u8);
+            k.push(l);
+            for _ in 0..l { k.push(A[rng.gen_range(0..A.len())]); }
+            k.extend(tail);
+            k
+        }
+        _ => {
+            let mut k: Vec<u8> = (0..rng.gen_range(0..5)).map(|_| A[rng.gen_range(0..A.len())]).collect();
+            k.extend(tail);
+            k
+        }
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn review_fuzz_odd_keys_match_an_exact_model() {
+    let iters = env_or("RFUZZ", 300);
+    let mut wrong = 0;
+    for it in 0..iters {
+        let mut rng = StdRng::seed_from_u64(it);
+        let kind = [CustomerKind::None, CustomerKind::V2, CustomerKind::DocV1][(it % 3) as usize];
+        let mut m = Model::new();
+        for _ in 0..rng.gen_range(1..400) {
+            let k = rkey(&mut rng, kind);
+            m.insert(k, (rng.gen_range(0..1000), if rng.gen_bool(0.2) { deleted() } else { live(&vec![7u8; rng.gen_range(0..40)]) }));
+        }
+        let keys: Vec<Vec<u8>> = m.keys().cloned().collect();
+        let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let ncut = rng.gen_range(0..4);
+        let mut cuts: Vec<usize> = (0..ncut).map(|_| rng.gen_range(1..m.len().max(2))).filter(|&c| c < m.len()).collect();
+        cuts.sort(); cuts.dedup();
+        let block = [1usize, 20, 60, 200, 1000][rng.gen_range(0..5)];
+        let metas = write_runs(&store, &m, &cuts, &RunOptions::unchecked(block, 1 << 20, kind), "z").await;
+        let rd = open_all(&store, &metas, if rng.gen() { 0 } else { 1 << 16 }, rng.gen_range(1..4)).await;
+        for _ in 0..300 {
+            let probe = |rng: &mut StdRng| if rng.gen_bool(0.6) && !keys.is_empty() { let i = rng.gen_range(0..keys.len()); perturb(rng, &keys[i]) } else { rkey(rng, kind) };
+            let op = rng.gen_range(0..4);
+            let (got, want) = match op {
+                0 => { let k = probe(&mut rng); (rd.get(&k).await.unwrap().0.into_iter().collect::<Vec<_>>(), m.get(&k).map(|(s, e)| vec![Row { key: k.clone(), seq: *s, env: e.clone() }]).unwrap_or_default()) }
+                1 => { let lo = probe(&mut rng); let hi = if rng.gen_bool(0.1) { None } else { Some(probe(&mut rng)) }; (rd.range(&lo, hi.as_deref()).await.unwrap().0, model_range(&m, &lo, hi.as_deref())) }
+                2 => { let mut p = probe(&mut rng); p.truncate(rng.gen_range(0..=p.len())); (rd.prefix(&p).await.unwrap().0, model_range(&m, &p, prefix_successor(&p).as_deref())) }
+                _ => { let mut p = probe(&mut rng); p.truncate(rng.gen_range(0..=p.len())); let l = rng.gen_range(1..50); (rd.newest(&p, l).await.unwrap().0, model_newest(&m, &p, l)) }
+            };
+            if got != want { wrong += 1; if wrong < 5 { eprintln!("WRONG it {it} kind {kind:?} op {op} block {block}: got {} want {}", got.len(), want.len()); } }
+        }
+        for mt in &metas { assert_eq!(stream_all(&store, mt, 100).await.unwrap().len() as u64, mt.entries); }
+    }
+    assert_eq!(wrong, 0);
+}
+
+/// Review, FIX 1: a run's blocks are not bound to the run. The block CRC covers the block index and its bytes, the
+/// footer CRC covers the footer, and nothing ties one to the other. So an object made of the blocks of run A and the
+/// footer of run B (same key layout, one value changed in place, so the same block offsets) is read without an error,
+/// and returns A's value under B's footer. This is the case of a path written twice (a retry, or a reseal that keeps the
+/// same name), of a reader whose footer is older than the object at its path, or of a later writer that copies byte
+/// ranges of unchanged blocks from the old run (UploadPartCopy) and gets one range wrong: stale rows, no error.
+/// Expected: an error. A remedy: a random run id in the footer and the trailer, mixed into every block CRC.
+#[tokio::test]
+async fn review_blocks_of_one_run_with_the_footer_of_another_are_an_error() {
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let mut rng = StdRng::seed_from_u64(3);
+    let mut a = Model::new();
+    for n in 0..400u64 {
+        let v: Vec<u8> = (0..60).map(|_| rng.gen()).collect();
+        a.insert(doc_key((n / 40) as i64, "a", n), (n, live(&v)));
+    }
+    let opts = RunOptions::unchecked(1024, 1 << 20, CustomerKind::V2);
+    let ma = write_runs(&store, &a, &[], &opts, "A").await.remove(0);
+    // run B: the same rows, one value changed in place (a reseal of the same group)
+    let k = a.keys().nth(123).unwrap().clone();
+    let mut b = a.clone();
+    b.get_mut(&k).unwrap().1[1] ^= 0x55;
+    let mb = write_runs(&store, &b, &[], &opts, "B").await.remove(0);
+    assert!(ma.blocks > 10);
+    assert_eq!((ma.block_offsets.clone(), ma.size), (mb.block_offsets.clone(), mb.size), "precondition: the same layout");
+    // the object: A's blocks, then B's footer and trailer
+    let oa = store.get(&Path::from(ma.path.as_str())).await.unwrap().bytes().await.unwrap();
+    let ob = store.get(&Path::from(mb.path.as_str())).await.unwrap().bytes().await.unwrap();
+    assert_ne!(oa[..ma.data_end as usize], ob[..mb.data_end as usize]);
+    let mut spliced = oa[..ma.data_end as usize].to_vec();
+    spliced.extend_from_slice(&ob[mb.data_end as usize..]);
+    store.put(&Path::from("S/0000"), PutPayload::from(spliced)).await.unwrap();
+    let ms = RunMeta { path: "S/0000".into(), ..mb.clone() };
+    let random = random_all(&store, &ms).await;
+    let stream = stream_all(&store, &ms, 4096).await;
+    let show = |r: &anyhow::Result<Vec<Row>>| match r {
+        Ok(rows) => format!("{} rows, equal to run A: {}, equal to run B: {}", rows.len(), rows == &model_range(&a, b"", None), rows == &model_range(&b, b"", None)),
+        Err(e) => format!("error: {e}"),
+    };
+    assert!(random.is_err() && stream.is_err(), "blocks of A under the footer of B: random reader {}; stream {}", show(&random), show(&stream));
+}
