@@ -1,15 +1,15 @@
 Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=39237 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
 TLC2 Version 2026.11.06.222357 (rev: d8fb231)
-Running breadth-first search Model-Checking with fp 115 and seed -6755574936831994063 with 4 workers on 4 cores with 7282MB heap and 64MB offheap memory [pid: 5166] (Linux 6.18.44-fc-v310 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Running breadth-first search Model-Checking with fp 99 and seed 4476393094519537927 with 4 workers on 4 cores with 7282MB heap and 64MB offheap memory [pid: 6042] (Linux 6.18.44-fc-v310 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
 Parsing file /home/user/fenvix-engine/research/compaction-2/tla/MC.tla
 Parsing file /home/user/fenvix-engine/research/compaction-2/tla/Compaction2.tla
-Parsing file /tmp/tlc-14812502350053883397/_TLCTrace.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
-Parsing file /tmp/tlc-14812502350053883397/Integers.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
-Parsing file /tmp/tlc-14812502350053883397/FiniteSets.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
-Parsing file /tmp/tlc-14812502350053883397/Sequences.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
-Parsing file /tmp/tlc-14812502350053883397/TLC.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
-Parsing file /tmp/tlc-14812502350053883397/Naturals.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
-Parsing file /tmp/tlc-14812502350053883397/TLCExt.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-1781527616128040157/_TLCTrace.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-1781527616128040157/Integers.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Parsing file /tmp/tlc-1781527616128040157/FiniteSets.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-1781527616128040157/Sequences.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-1781527616128040157/TLC.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-1781527616128040157/Naturals.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-1781527616128040157/TLCExt.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
 Semantic processing of module Naturals
 Semantic processing of module Integers
 Semantic processing of module Sequences
@@ -23,17 +23,7 @@ Linting of module Compaction2
 Linting of module TLCExt
 Linting of module _TLCTrace
 Linting of module MC
-Starting... (2026-11-08 09:33:12)
+Starting... (2026-11-08 09:53:59)
 Computing initial states...
-Finished computing initial states: 2 distinct states generated at 2026-11-08 09:33:12.
-Progress(7) at 2026-11-08 09:33:15: 286,577 states generated (286,577 s/min), 99,462 distinct states found (99,462 ds/min), 84,058 states left on queue.
-Progress(9) at 2026-11-08 09:34:15: 11,714,295 states generated (11,427,718 s/min), 3,176,282 distinct states found (3,076,820 ds/min), 2,542,699 states left on queue.
-Progress(10) at 2026-11-08 09:35:15: 23,124,086 states generated (11,409,791 s/min), 6,010,494 distinct states found (2,834,212 ds/min), 4,737,796 states left on queue.
-Progress(10) at 2026-11-08 09:36:15: 34,757,989 states generated (11,633,903 s/min), 8,916,442 distinct states found (2,905,948 ds/min), 6,981,703 states left on queue.
-Progress(10) at 2026-11-08 09:37:15: 46,271,866 states generated (11,513,877 s/min), 11,749,863 distinct states found (2,833,421 ds/min), 9,189,800 states left on queue.
-Progress(10) at 2026-11-08 09:38:15: 58,205,555 states generated (11,933,689 s/min), 14,570,149 distinct states found (2,820,286 ds/min), 11,407,013 states left on queue.
-Progress(10) at 2026-11-08 09:39:15: 69,924,696 states generated (11,719,141 s/min), 17,204,266 distinct states found (2,634,117 ds/min), 13,396,737 states left on queue.
-Progress(10) at 2026-11-08 09:40:15: 81,164,213 states generated (11,239,517 s/min), 19,923,375 distinct states found (2,719,109 ds/min), 15,442,817 states left on queue.
-Progress(10) at 2026-11-08 09:41:15: 92,943,436 states generated (11,779,223 s/min), 22,778,313 distinct states found (2,854,938 ds/min), 17,660,998 states left on queue.
-Progress(10) at 2026-11-08 09:42:15: 105,091,053 states generated (12,147,617 s/min), 25,523,376 distinct states found (2,745,063 ds/min), 19,716,981 states left on queue.
-Progress(11) at 2026-11-08 09:43:15: 116,557,563 states generated (11,466,510 s/min), 28,228,632 distinct states found (2,705,256 ds/min), 21,799,521 states left on queue.
+Finished computing initial states: 2 distinct states generated at 2026-11-08 09:53:59.
+Progress(8) at 2026-11-08 09:54:02: 259,849 states generated (259,849 s/min), 88,592 distinct states found (88,592 ds/min), 74,100 states left on queue.
