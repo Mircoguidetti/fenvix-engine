@@ -1,0 +1,8 @@
+on round 1 (76 s): 59 passed in 74.67s (0:01:14) 
+on round 2 (77 s): 59 passed in 76.60s (0:01:16) 
+on round 3 (77 s): E   AssertionError: assert ([] == [] /home/user/fenvix-engine/ctl-tests/test_05_erase.py:156: AssertionError: assert ([] == [] 1 failed, 58 passed in 76.53s (0:01:16) 
+on round 4 (80 s): 59 passed in 78.62s (0:01:18) 
+off round 1 (65 s): 59 passed in 64.66s (0:01:04) 
+off round 2 (61 s): /home/user/fenvix-engine/ctl-tests/test_05_erase.py:87: AssertionError: assert (200 == 200 and [('control/us...2.json', 447)] == [] FAILED test_05_erase.py::test_erase_awake_and_asleep - AssertionError: assert... 1 failed, 58 passed in 60.68s (0:01:00) 
+off round 3 (62 s): E   AssertionError: assert ([] == [] /home/user/fenvix-engine/ctl-tests/test_05_erase.py:156: AssertionError: assert ([] == [] 1 failed, 58 passed in 60.57s (0:01:00) 
+off round 4 (61 s): 59 passed in 60.54s (0:01:00) 
