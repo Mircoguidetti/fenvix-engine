@@ -735,6 +735,7 @@ async fn run() -> Result<()> {
     };
     // With the log, reads, acknowledgements and change streams follow the confirmed state (lifecycle::TRACK_VISIBLE).
     tenant_bench::lifecycle::TRACK_VISIBLE.store(locallog::get().is_some(), std::sync::atomic::Ordering::Relaxed);
+    let _ = tenant_bench::lifecycle::VIS_IGNORE_KEY.set(locallog::MARKER_KEY.to_vec());
     tenant_bench::lifecycle::ADAPTIVE.store(args.adaptive_group_commit, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::ADAPTIVE_MAX_US.store(args.adaptive_group_commit_max_us, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::WRITER_POLL_SECS.store(args.writer_poll_secs, std::sync::atomic::Ordering::Relaxed);

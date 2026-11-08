@@ -12,7 +12,7 @@ A dirty read is a read that returned a write that was then lost: readers (readCo
 stream records every inserted id it announces. After the restart, every acknowledged write must be there, every id a
 reader or the stream saw must be there, and each hot counter must be at least the highest value a reader saw and at
 least its number of acknowledged increments.
-  kill_random.py OUT_DIR [--rounds 100] [--seed N]
+  kill_random.py OUT_DIR [--rounds 100] [--seed N] [--one-copy-down]
 """
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'agent_lane'))
@@ -25,6 +25,8 @@ args = sys.argv[1:]
 OUT = Out(args[0], 'kill_random')
 ROUNDS = int(opt(args, '--rounds', '100'))
 SEED = int(opt(args, '--seed', str(int(time.time()))))
+# --one-copy-down: one of the 3 log copies is frozen (SIGSTOP) for the whole round, a different one each round
+ONE_DOWN = '--one-copy-down' in args
 rng = random.Random(SEED)
 WORK = os.path.join(OUT.dir, 'work')
 DB = 'kr'
@@ -34,7 +36,7 @@ os.makedirs(WORK)
 log = Log(os.path.join(WORK, "log"), 9500)
 log.up()
 P = Engine(OUT.dir, 'P', 28131, ['--store', 'local', '--local-dir', os.path.join(WORK, 'store')], log=log, extra=['--agent-lane-window-ms', '50'])
-OUT.say(f'seed {SEED}, {ROUNDS} rounds')
+OUT.say(f'seed {SEED}, {ROUNDS} rounds' + (', one log copy frozen in every round' if ONE_DOWN else ''))
 
 acked = {'fast': set(), 'agent': set()}
 seen = {'fast': set(), 'agent': set()}
@@ -162,7 +164,11 @@ for rnd in range(ROUNDS):
     retry(lambda: c[DB].get_collection('fast', write_concern=WriteConcern(w='majority')).update_one({'_id': 'probe'}, {'$set': {'r': rnd}}, upsert=True), 120)
     c.close()
     secs = rng.uniform(0.5, 4.0)
+    if ONE_DOWN:
+        log.cl('sigstop', str(rnd % 3))
     got, saw = run_round(rnd, secs)
+    if ONE_DOWN:
+        log.cl('sigcont', str(rnd % 3))
     for k in ('fast', 'agent'):
         acked[k].update(got[k])
         seen[k].update(saw[k])

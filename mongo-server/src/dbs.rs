@@ -498,8 +498,9 @@ impl Entry {
         }
         Ok(if durable {
             durable_v
-        } else if reader && t.visible_snapshot().is_some() {
-            t.get_visible(key).await?
+        } else if let Some(snap) = reader.then(|| t.visible_snapshot_for(key)).flatten() {
+            // the log path: an in-flight batch writes this key (see `lifecycle::TRACK_VISIBLE`)
+            snap.get(key).await?
         } else {
             latest
         })
@@ -1395,17 +1396,9 @@ impl ReadView {
             return Ok(vec![]);
         }
         let t = g.tenant.as_ref().unwrap();
-        let r = match t.visible_snapshot() {
-            // the log path: the confirmed state (see `lifecycle::TRACK_VISIBLE`)
-            Some(s) => {
-                let futs: Vec<_> = keys.iter().map(|k| s.get(k.clone())).collect();
-                futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect::<Vec<_>>().await?
-            }
-            None => {
-                let futs: Vec<_> = keys.iter().map(|k| t.get(k.clone())).collect();
-                futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect::<Vec<_>>().await?
-            }
-        };
+        // the log path: the visible value of each key (see `lifecycle::TRACK_VISIBLE`); the latest one otherwise
+        let futs: Vec<_> = keys.iter().map(|k| t.get_visible(k.clone())).collect();
+        let r = futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect::<Vec<_>>().await?;
         self.done(r)
     }
 
