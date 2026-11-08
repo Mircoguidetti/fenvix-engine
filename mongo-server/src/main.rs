@@ -472,6 +472,10 @@ struct Args {
     /// and envelopes start this long after release E1 is announced. FENVIX_SEALED_TPIN_MS does the same.
     #[arg(long, default_value_t = 30_000)]
     sealed_t_pin_ms: u64,
+    /// How long after release E1 is announced envelopes start, in milliseconds (default: T_pin, as rule 26 asks; tests
+    /// set it lower). FENVIX_SEALED_E1_WAIT_MS does the same.
+    #[arg(long)]
+    sealed_e1_wait_ms: Option<u64>,
     /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
     /// releases before); M29 measured 64.
     #[arg(long, default_value_t = 4)]
@@ -730,6 +734,9 @@ async fn run() -> Result<()> {
         tenant_bench::fx::RESEAL_EVERY.store(args.sealed_reseal_every.max(1), Relaxed);
         let t_pin = std::env::var("FENVIX_SEALED_TPIN_MS").ok().and_then(|v| v.parse().ok()).unwrap_or(args.sealed_t_pin_ms);
         tenant_bench::fx::T_PIN_MS.store(t_pin.max(1), Relaxed);
+        if let Some(w) = args.sealed_e1_wait_ms.or_else(|| std::env::var("FENVIX_SEALED_E1_WAIT_MS").ok().and_then(|v| v.parse().ok())) {
+            tenant_bench::fx::E1_WAIT_MS.store(w, Relaxed);
+        }
     }
     tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::tiered::set_compression(&args.sst_compression)?;

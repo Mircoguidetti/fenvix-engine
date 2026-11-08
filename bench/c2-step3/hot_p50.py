@@ -33,8 +33,8 @@ def stop():
 
 
 def one(mode, rnd):
-    # T_pin 200 ms: envelopes start (rule 26) early in the load, so the publishes cover it
-    extra = "--sealed-runs 60 --sealed-group-mb 4 --sealed-t-pin-ms 200" if mode == "on" else ""
+    # envelopes start at the first publish (rule 26 wait 0: one process), so the publishes cover the load
+    extra = "--sealed-runs 60 --sealed-group-mb 4 --sealed-e1-wait-ms 0" if mode == "on" else ""
     start(extra)
     c = MongoClient(f"mongodb://127.0.0.1:{PORT}/?directConnection=true")
     db = c[f"hot{mode}{rnd}{int(time.time())}"]

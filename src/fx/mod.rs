@@ -34,6 +34,16 @@ pub static GROUP_BYTES: AtomicU64 = AtomicU64::new(1 << 30);
 /// T_pin in milliseconds: a reader in reader mode refreshes its version at least this often and refuses to read with a
 /// version older than this (rule 6).
 pub static T_PIN_MS: AtomicU64 = AtomicU64::new(30_000);
+/// How long after E1's announcement envelopes start (rule 26: at least T_pin). `u64::MAX`: T_pin. Tests and the judge's
+/// short-lived databases set it lower; with leases no reader in another process serves a database, so nothing can
+/// miss the announcement there.
+pub static E1_WAIT_MS: AtomicU64 = AtomicU64::new(u64::MAX);
+
+pub fn e1_wait() -> std::time::Duration {
+    use std::sync::atomic::Ordering::Relaxed;
+    let w = E1_WAIT_MS.load(Relaxed);
+    std::time::Duration::from_millis(if w == u64::MAX { T_PIN_MS.load(Relaxed) } else { w })
+}
 
 /// Versions published and installed, builds that failed, fence versions written at open (diagnostics).
 pub static PUBLISHES: AtomicU64 = AtomicU64::new(0);

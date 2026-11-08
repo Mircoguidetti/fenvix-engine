@@ -1074,7 +1074,7 @@ impl Tenant {
         }
         self.fx_announced = true;
         let seen = *self.fx_announce_seen.get_or_insert_with(Instant::now);
-        if seen.elapsed() < Duration::from_millis(crate::fx::T_PIN_MS.load(Relaxed)) {
+        if seen.elapsed() < crate::fx::e1_wait() {
             return Ok(false);
         }
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
