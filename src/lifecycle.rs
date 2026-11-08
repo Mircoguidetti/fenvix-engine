@@ -2744,6 +2744,53 @@ mod tests {
     use object_store::memory::InMemory;
     use std::sync::atomic::Ordering::Relaxed;
 
+    /// The confirmed state (log path): a read sees every confirmed batch and no batch staged after the oldest pending one;
+    /// a later batch confirmed first stays invisible (and its acknowledgement waits) until the earlier one is confirmed.
+    #[tokio::test]
+    async fn visible_state_is_a_confirmed_prefix() {
+        let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let db = Db::builder("vis", store).build().await.unwrap();
+        let vis = Visible::default();
+        let mut seqs = Vec::new();
+        for k in ["a", "b", "c"] {
+            let before = db.snapshot().await.unwrap();
+            let h = db.put_with_options(k, b"v", &Default::default(), &slatedb::config::WriteOptions::default()).await.unwrap();
+            vis.add(h.seqnum(), before);
+            seqs.push(h.seqnum());
+        }
+        let read = |k: &'static str| {
+            let s = vis.snapshot();
+            let db = db.clone();
+            async move {
+                match s {
+                    Some(s) => s.get(k).await.unwrap(),
+                    None => db.get(k).await.unwrap(),
+                }
+            }
+        };
+        assert!(read("a").await.is_none(), "nothing is confirmed yet");
+        vis.confirm(seqs[1]);
+        assert!(read("b").await.is_none(), "b is confirmed but a, before it, is not");
+        assert_eq!(vis.state(seqs[1]), VisState::Pending);
+        let waiter = tokio::time::timeout(Duration::from_millis(50), vis.wait_visible(seqs[1], Duration::from_secs(5))).await;
+        assert!(waiter.is_err(), "b's acknowledgement waits for a");
+        vis.confirm(seqs[0]);
+        assert!(read("a").await.is_some() && read("b").await.is_some());
+        assert!(read("c").await.is_none(), "c is still pending");
+        vis.wait_visible(seqs[1], Duration::from_secs(1)).await.unwrap();
+        vis.confirm_upto(seqs[2]);
+        assert!(vis.snapshot().is_none());
+        assert!(read("c").await.is_some());
+        // a lost owner: what was pending is never confirmed
+        let before = db.snapshot().await.unwrap();
+        let h = db.put_with_options("d", b"v", &Default::default(), &slatedb::config::WriteOptions::default()).await.unwrap();
+        vis.add(h.seqnum(), before);
+        vis.kill();
+        assert_eq!(vis.state(h.seqnum()), VisState::Lost);
+        assert!(vis.wait_visible(h.seqnum(), Duration::from_secs(1)).await.is_err());
+        db.close().await.unwrap();
+    }
+
     /// One minute of L0 watch rounds (one per second) over a tenant whose compaction fails every time: the pause after each
     /// failure (1, 2, 4, 8, 16, 32 s) leaves only a handful of passes, and a pass that succeeds clears the pause.
     #[test]
