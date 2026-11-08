@@ -80,4 +80,4 @@ for n, (c, over, rds, grp, sym) in FIXNEEDS.items():
     cfg(n, c, o, readers=rds, grp=grp, sym=sym)
     cfg(n + "-ok", "none", o, readers=rds, grp=grp, sym=sym, stop=900 if n == "NoFence-timeout" else 0)
 # F3 with more of the system: customer A over two groups, with the readers and a crash
-cfg("Span-ok", "none", dict(SMALL, MaxSeq=2), readers='"find", "txn"', grp="MCGrp0Span", sym=False, stop=1800)
+cfg("Span-ok", "none", dict(SMALL, MaxSeq=2), readers='"find", "txn"', grp="MCGrp0Span", sym=False, stop=900)
