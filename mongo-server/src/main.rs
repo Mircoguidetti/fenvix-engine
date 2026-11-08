@@ -733,6 +733,8 @@ async fn run() -> Result<()> {
     } else {
         Some(locallog::install(&args.local_log_dir, args.local_log_upload_secs)?)
     };
+    // With the log, reads, acknowledgements and change streams follow the confirmed state (lifecycle::TRACK_VISIBLE).
+    tenant_bench::lifecycle::TRACK_VISIBLE.store(locallog::get().is_some(), std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::ADAPTIVE.store(args.adaptive_group_commit, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::ADAPTIVE_MAX_US.store(args.adaptive_group_commit_max_us, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::WRITER_POLL_SECS.store(args.writer_poll_secs, std::sync::atomic::Ordering::Relaxed);
@@ -785,6 +787,11 @@ async fn run() -> Result<()> {
     let lc_for_ctl = Arc::clone(&lc);
     let dbs = Dbs::new(lc, Arc::clone(&s3), Duration::from_secs(args.idle_secs), Arc::clone(&leases), global);
     dbs.spawn_reaper();
+    {
+        // a change-stream reader waiting on an event whose batch was not confirmed yet wakes when it is
+        let changes = Arc::clone(&dbs.changes);
+        let _ = tenant_bench::lifecycle::ON_VISIBLE.set(Box::new(move || changes.notify.notify_waiters()));
+    }
     let (lost_tx, lost_rx) = tokio::sync::mpsc::unbounded_channel();
     leases.spawn_renewer(lost_tx);
     dbs.spawn_lost_handler(lost_rx);

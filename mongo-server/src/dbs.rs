@@ -111,6 +111,9 @@ fn durable_reads(db: &str) -> bool {
     // not see it (a point read right after an acknowledged insert answered nothing: read-your-writes broken), and the
     // agent lane (agentlane.rs) makes object storage hold some later batches and not earlier ones. Reads then see the
     // latest state, as on a MongoDB primary, where a write is visible to local reads before it is majority-acknowledged.
+    // With the log, reads see the confirmed state instead (`lifecycle::TRACK_VISIBLE`): every write whose log record is
+    // confirmed (or that is in object storage), nothing staged and still waiting for its record. The 8fbdd8d fix read the
+    // latest state, which also returned writes the log had not confirmed (dirty reads, review R5).
     DURABLE_READS.load(Relaxed) && crate::ctl::durability::relaxed_ms(db) == 0 && crate::locallog::get().is_none()
 }
 
@@ -477,7 +480,8 @@ impl Entry {
 
     /// Read a metadata key from the open tenant `t`: the durable state when `durable`, the latest state otherwise. The
     /// value is cached only if the two states agree (no write of the key is staged and still on its way to durability).
-    async fn meta_read(&self, t: &Tenant, key: &[u8], durable: bool) -> Result<Option<Bytes>> {
+    /// `reader`: a read command (not a write deciding on the latest state): with the log on it gets the confirmed state.
+    async fn meta_read(&self, t: &Tenant, key: &[u8], durable: bool, reader: bool) -> Result<Option<Bytes>> {
         let latest = t.get(key).await?;
         // A reader's data is all durable; a writer's latest state may hold staged writes.
         let durable_v = if t.is_writer() { t.get_durable(key).await? } else { latest.clone() };
@@ -492,7 +496,13 @@ impl Entry {
                 m.vals.insert(key.to_vec(), latest.as_ref().map(|v| Bytes::copy_from_slice(v)));
             }
         }
-        Ok(if durable { durable_v } else { latest })
+        Ok(if durable {
+            durable_v
+        } else if reader && t.visible_snapshot().is_some() {
+            t.get_visible(key).await?
+        } else {
+            latest
+        })
     }
 
     pub fn touch(&self) {
@@ -627,11 +637,20 @@ impl Entry {
         self.copts.clear();
         self.sstat.clear();
         self.meta_clear();
+                let unclean = t.unclean;
                 self.tenant = Some(t);
                 self.wakes += 1;
                 self.sync_gauges();
                 crate::fair::register(&self.name);
                 tenant_bench::counting::set_phase(0);
+                if unclean || took.is_some() {
+                    // the replicated log may hold acknowledged writes object storage does not have yet (review R4)
+                    if let Err(e) = Box::pin(crate::locallog::replay_on_wake(self)).await {
+                        // not served without them: the next command retries the open
+                        self.abandon().await;
+                        return Err(e.context(format!("database {} was taken over but its records in the log could not be read back; retry", self.name)));
+                    }
+                }
                 Ok(true)
             }
             Err(e) => {
@@ -690,7 +709,7 @@ impl Entry {
             if let Some(v) = self.meta_lookup(key) {
                 return Ok(v);
             }
-            return self.meta_read(self.tenant.as_ref().unwrap(), key, false).await;
+            return self.meta_read(self.tenant.as_ref().unwrap(), key, false, false).await;
         }
         self.tenant.as_ref().unwrap().get(key).await
     }
@@ -872,7 +891,9 @@ impl Entry {
             commit = commit.with_local(log.append(seq, &self.name, &rec_ops, epoch));
         }
         let mut slot = Some(commit);
-        if GROUP_COMMIT.load(Relaxed) {
+        // `apply_durable` (the log's replays) waits here, also inside a command: the takeover replay runs inside the
+        // command that opened the database, and its reads must see the replayed records
+        if GROUP_COMMIT.load(Relaxed) && use_local_log {
             let _ = PENDING.try_with(|p| p.borrow_mut().push(slot.take().unwrap()));
         }
         match slot {
@@ -946,6 +967,10 @@ impl Entry {
 
     pub(crate) fn name(&self) -> &str {
         &self.name
+    }
+
+    pub(crate) fn raw_store(&self) -> Arc<dyn ObjectStore> {
+        Arc::clone(&self.raw)
     }
 
     /// Earliest instant (ms) at which any document of this tenant expires, from the first date entry of each TTL index.
@@ -1196,6 +1221,10 @@ impl Entry {
             self.wakes += 1;
             self.sync_gauges();
         }
+        // With the log on, a transaction reads a confirmed snapshot (no write its log has not confirmed yet): it waits,
+        // holding the database's exclusive lock (nothing new is staged meanwhile), until the batches staged so far are
+        // confirmed, usually one log round trip.
+        self.tenant.as_ref().unwrap().wait_all_visible(tenant_bench::lifecycle::VISIBLE_WAIT).await?;
         let snap = self.tenant.as_mut().unwrap().snapshot().await?;
         self.sync_gauges();
         self.active_txns += 1;
@@ -1326,7 +1355,7 @@ impl ReadView {
     async fn scan_uncounted(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
         let t = g.tenant.as_ref().unwrap();
-        let r = if durable_reads(&g.name) { t.scan_prefix_durable(prefix).await? } else { t.scan_prefix(prefix).await? };
+        let r = if durable_reads(&g.name) { t.scan_prefix_durable(prefix).await? } else { t.scan_prefix_visible(prefix).await? };
         self.done(r)
     }
 
@@ -1344,11 +1373,11 @@ impl ReadView {
         if META_CACHE.load(Relaxed) && is_meta_key(key) {
             let r = match g.meta_lookup(key) {
                 Some(v) => v,
-                None => g.meta_read(t, key, durable_reads(&g.name)).await?,
+                None => g.meta_read(t, key, durable_reads(&g.name), true).await?,
             };
             return self.done(r);
         }
-        let r = if durable_reads(&g.name) { t.get_durable(key).await? } else { t.get(key).await? };
+        let r = if durable_reads(&g.name) { t.get_durable(key).await? } else { t.get_visible(key).await? };
         self.done(r)
     }
 
@@ -1366,8 +1395,17 @@ impl ReadView {
             return Ok(vec![]);
         }
         let t = g.tenant.as_ref().unwrap();
-        let futs: Vec<_> = keys.iter().map(|k| t.get(k.clone())).collect();
-        let r = futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect::<Vec<_>>().await?;
+        let r = match t.visible_snapshot() {
+            // the log path: the confirmed state (see `lifecycle::TRACK_VISIBLE`)
+            Some(s) => {
+                let futs: Vec<_> = keys.iter().map(|k| s.get(k.clone())).collect();
+                futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect::<Vec<_>>().await?
+            }
+            None => {
+                let futs: Vec<_> = keys.iter().map(|k| t.get(k.clone())).collect();
+                futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect::<Vec<_>>().await?
+            }
+        };
         self.done(r)
     }
 
@@ -1381,7 +1419,7 @@ impl ReadView {
 
     async fn scan_range_uncounted(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
-        let r = g.tenant.as_ref().unwrap().scan_range(start, end, reverse, limit, read_ahead).await?;
+        let r = g.tenant.as_ref().unwrap().scan_range_visible(start, end, reverse, limit, read_ahead).await?;
         self.done(r)
     }
 

@@ -191,6 +191,34 @@ impl Remote {
         Ok(out)
     }
 
+    /// The records of one database still in the log (not confirmed as in object storage), in position order. Read by a
+    /// warm spare when it takes the database over (`locallog::replay_on_wake`).
+    pub async fn read_db(&self, name: &str) -> Result<Vec<(Pos, Bytes)>> {
+        let upto = match self.cl.call_leader(&Req::Confirmed, Duration::from_secs(10)).await {
+            Some(Resp::Pos(p)) => p,
+            other => bail!("the log did not give its confirmed position: {}", other.map(|r| format!("{r:?}")).unwrap_or_else(|| "no answer".into())),
+        };
+        let mut recs: Vec<(Pos, Bytes)> = Vec::new();
+        let mut from: Pos = 0;
+        loop {
+            let r = self.cl.call_leader(&Req::FlushableFrom { db: db_key(name), from, upto }, Duration::from_secs(30)).await;
+            let page = match r {
+                Some(Resp::Flushable(v)) => v.into_iter().flat_map(|(_, rs)| rs).collect::<Vec<_>>(),
+                other => bail!("the log did not give the records of {name}: {}", other.map(|r| format!("{r:?}")).unwrap_or_else(|| "no answer".into())),
+            };
+            if page.is_empty() {
+                break;
+            }
+            for fr in page {
+                from = from.max(fr.pos);
+                for w in fr.writes {
+                    recs.push((fr.pos, w.val));
+                }
+            }
+        }
+        Ok(recs)
+    }
+
     /// Mark positions already known as confirmed for `db` (records read back at restart).
     pub fn note_committed(&self, db: &str, pos: Pos) {
         let mut c = self.committed.lock().unwrap();

@@ -614,6 +614,86 @@ pub async fn recover_remote(dbs: &Arc<crate::dbs::Dbs>, timeout: Duration) -> Re
     Ok((n_dbs, applied))
 }
 
+/// Takeovers that read the database's records back from the replicated log, and records they applied.
+pub static WAKE_REPLAYS: AtomicU64 = AtomicU64::new(0);
+pub static WAKE_REPLAYED: AtomicU64 = AtomicU64::new(0);
+
+/// Q8d, review R4: a database opened without its clean marker (a takeover from a dead or frozen owner, or this process
+/// after a close that could not flush) may have acknowledged writes that are only in the replicated log: the restart
+/// replay ([`recover_remote`]) only covers the databases of a process that restarts, not a warm spare taking one over
+/// live. Before the database serves, its records still in the log are read back and the ones after its marker applied
+/// durably (the same marker and epoch checks as the restart), then confirmed to the log. Called by `Entry::ensure_open`
+/// under the database's exclusive lock, after the lease is taken: the old owner can no longer acknowledge (its lease
+/// lapsed, and the first write of the new writer fences its WAL).
+pub async fn replay_on_wake(g: &mut crate::dbs::Entry) -> Result<()> {
+    let Some(log) = get() else { return Ok(()) };
+    let Some(remote) = log.remote.clone() else { return Ok(()) };
+    let name = g.name().to_string();
+    let raw = remote.read_db(&name).await?;
+    if raw.is_empty() {
+        return Ok(());
+    }
+    let mut recs: Vec<Record> = Vec::new();
+    let mut max_pos = 0;
+    let mut max_seq = 0;
+    for (pos, bytes) in raw {
+        anyhow::ensure!(bytes.len() >= 12, "a record of the log is too short");
+        let len = u32::from_le_bytes(bytes[0..4].try_into().unwrap()) as usize;
+        let payload = &bytes[12..];
+        anyhow::ensure!(payload.len() == len && checksum(payload) == bytes[4..12], "a record of the log has a bad checksum");
+        let r = decode(payload)?;
+        anyhow::ensure!(r.db == name, "a record of {} in the log of {name}", r.db);
+        max_pos = max_pos.max(pos);
+        max_seq = max_seq.max(r.seq);
+        if r.drop {
+            // the database was dropped after the records before this one
+            recs.clear();
+            continue;
+        }
+        recs.push(r);
+    }
+    remote.note_committed(&name, max_pos);
+    log.next_seq.fetch_max(max_seq + 1, Relaxed);
+    WAKE_REPLAYS.fetch_add(1, Relaxed);
+    let rec_epoch = recs.iter().map(|r| r.epoch).max().unwrap_or(0);
+    if rec_epoch > 0 {
+        if let Some(stored) = tenant_bench::lifecycle::stored_writer_epoch(&g.raw_store(), &name).await? {
+            if stored > rec_epoch {
+                // a later writer opened the database after these records were staged: applying them would overwrite its
+                // writes (as at a restart, they stay in the log for an operator; the database is served without them)
+                eprintln!("quaderno: takeover of {name}: its {} records in the log are from writer epoch {rec_epoch}, older than the stored {stored}: NOT applied", recs.len());
+                return Ok(());
+            }
+        }
+    }
+    let done_seq = match g.get_live(MARKER_KEY).await?.as_deref().and_then(parse_marker) {
+        Some((id, s)) if id == log.id => s,
+        Some((other, _)) => {
+            eprintln!("quaderno: takeover of {name}: written by another log ({other}) since; its {} records are NOT applied", recs.len());
+            return Ok(());
+        }
+        None => 0,
+    };
+    recs.sort_by_key(|r| (r.orig, r.seq));
+    let todo: Vec<Record> = recs.into_iter().filter(|r| r.orig > done_seq).collect();
+    let n = todo.len() as u64;
+    for chunk in todo.chunks(256) {
+        let mut ops: Vec<Op> = Vec::new();
+        for r in chunk {
+            ops.extend(copy_ops(&r.ops));
+        }
+        ops.push(log.marker_op(chunk.last().unwrap().orig));
+        Box::pin(g.apply_durable(ops)).await?;
+    }
+    // every record read is now in object storage (applied, or already there by the marker): the log may drop them
+    remote.flush_done(&name, max_pos).await?;
+    if n > 0 {
+        WAKE_REPLAYED.fetch_add(n, Relaxed);
+        eprintln!("quaderno: takeover of {name}: {n} records applied from the log (after record {done_seq})");
+    }
+    Ok(())
+}
+
 /// Start the local log (flag set): returns the records a previous run left, for [`recover`].
 pub fn install(dir: &str, upload_secs: u64) -> Result<Vec<(u64, PathBuf)>> {
     anyhow::ensure!((30..=60).contains(&upload_secs), "--local-log-upload-secs must be between 30 and 60");

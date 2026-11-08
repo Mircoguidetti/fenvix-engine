@@ -169,7 +169,9 @@ mod tests {
 // per batch window), so read one by one at takeover they cost seconds. The spare instead follows them while the primary
 // writes: for each followed database it asks object storage for the next WAL number (one GET; a GET of a missing object
 // costs the price of a GET, not of a LIST) and keeps every object found in memory. At takeover slatedb's replay reads them
-// from this memory. WAL objects never change once written (create-if-absent), so a kept copy is always the stored one.
+// from this memory. A WAL object never changes once written (create-if-absent), but its path can be reused (drop and
+// recreate, erase, restore: numbering starts again at 1), so a kept copy is answered only after a listing of the
+// database's WAL shows the same object at that path (review R3).
 
 use bytes::Bytes;
 use futures::stream::BoxStream;
@@ -195,6 +197,79 @@ struct Kept {
     objs: HashMap<String, (Bytes, ObjectMeta)>,
     order: VecDeque<String>,
     bytes: usize,
+    /// When the kept objects of each database were last checked against a listing of its WAL (see `FollowStore::check`).
+    checked: HashMap<String, std::time::Instant>,
+}
+
+/// Kept objects dropped because the stored object at their path is another one (the path was reused: drop and recreate,
+/// erase, restore) or is gone; listings made to check them.
+pub static FOLLOW_STALE: AtomicU64 = AtomicU64::new(0);
+pub static FOLLOW_CHECKS: AtomicU64 = AtomicU64::new(0);
+/// A kept object is answered from memory only if its database's kept objects were checked against a listing this
+/// recently. Within a replay at takeover (seconds) one listing covers every read. Between the listing and the read only
+/// the database's owner can reuse a path, and this process's own writes and deletes go through the follower, which
+/// forgets those paths; another owner would need the lease this process holds.
+const FOLLOW_CHECK_EVERY: Duration = Duration::from_secs(1);
+
+/// The database a WAL path belongs to (`tenants/{db}/wal/NNN.sst`).
+fn wal_db(path: &str) -> Option<&str> {
+    let rest = path.strip_prefix("tenants/")?;
+    let (db, tail) = rest.split_once('/')?;
+    tail.starts_with("wal/").then_some(db)
+}
+
+/// Whether a kept object is the stored one: same ETag when both have one, same size, and same modification time when
+/// there is no ETag.
+fn same_object(kept: &ObjectMeta, stored: &ObjectMeta) -> bool {
+    kept.size == stored.size
+        && match (&kept.e_tag, &stored.e_tag) {
+            (Some(a), Some(b)) => a == b,
+            _ => kept.last_modified == stored.last_modified,
+        }
+}
+
+fn forget(kept: &Mutex<Kept>, path: &str) {
+    let mut k = kept.lock().unwrap();
+    if let Some((b, _)) = k.objs.remove(path) {
+        k.bytes -= b.len();
+        k.order.retain(|p| p != path);
+    }
+}
+
+/// Drop every kept object of `db` that the listing does not show as the same stored object. Returns how many.
+fn drop_stale(kept: &Mutex<Kept>, db: &str, listed: &HashMap<String, ObjectMeta>) -> usize {
+    let mut k = kept.lock().unwrap();
+    let stale: Vec<String> = k
+        .objs
+        .iter()
+        .filter(|(p, (_, m))| wal_db(p) == Some(db) && !listed.get(p.as_str()).map_or(false, |l| same_object(m, l)))
+        .map(|(p, _)| p.clone())
+        .collect();
+    for p in &stale {
+        if let Some((b, _)) = k.objs.remove(p) {
+            k.bytes -= b.len();
+        }
+    }
+    if !stale.is_empty() {
+        let k = &mut *k;
+        let objs = &k.objs;
+        k.order.retain(|p| objs.contains_key(p));
+    }
+    k.checked.insert(db.to_string(), std::time::Instant::now());
+    FOLLOW_STALE.fetch_add(stale.len() as u64, Relaxed);
+    stale.len()
+}
+
+async fn list_wal(inner: &Arc<dyn ObjectStore>, db: &str) -> OsResult<HashMap<String, ObjectMeta>> {
+    let prefix = Path::from(format!("{}/wal/", tenant_bench::lifecycle::tenant_path(db)));
+    let mut out = HashMap::new();
+    let mut it = inner.list(Some(&prefix));
+    while let Some(m) = it.next().await {
+        let m = m?;
+        out.insert(m.location.to_string(), m);
+    }
+    FOLLOW_CHECKS.fetch_add(1, Relaxed);
+    Ok(out)
 }
 
 pub struct FollowStore {
@@ -254,6 +329,7 @@ pub fn wrap_follow(inner: Arc<dyn ObjectStore>, dbs: &str) -> Arc<dyn ObjectStor
                 }
             }
             eprintln!("agent lane: following the WAL of {db} from number {next}");
+            let mut misses = 0u32;
             loop {
                 let p = wal_path(&db, next);
                 match inner.get_opts(&p, GetOptions::default()).await {
@@ -264,6 +340,7 @@ pub fn wrap_follow(inner: Arc<dyn ObjectStore>, dbs: &str) -> Arc<dyn ObjectStor
                                 keep(&kept, p.to_string(), body, meta);
                                 FOLLOWED.fetch_add(1, Relaxed);
                                 next += 1;
+                                misses = 0;
                                 continue;
                             }
                             Err(_) => {}
@@ -275,6 +352,19 @@ pub fn wrap_follow(inner: Arc<dyn ObjectStore>, dbs: &str) -> Arc<dyn ObjectStor
                     }
                     Err(_) => {}
                 }
+                misses += 1;
+                if misses % 40 == 0 {
+                    // nothing new for 2 s: check the kept objects against a listing (review R3: a dropped and recreated
+                    // database writes its WAL again from number 1 at the same paths), and follow a restarted numbering
+                    if let Ok(listed) = list_wal(&inner, &db).await {
+                        let n = drop_stale(&kept, &db, &listed);
+                        let top = listed.keys().filter_map(|p| p.rsplit('/').next()).filter_map(|f| f.strip_suffix(".sst")).filter_map(|f| f.parse::<u64>().ok()).max().unwrap_or(0);
+                        if top + 1 < next {
+                            eprintln!("agent lane: the WAL of {db} restarted at a lower number ({top}, was {}): {n} kept objects dropped, following from {}", next - 1, top + 1);
+                            next = top + 1;
+                        }
+                    }
+                }
                 tokio::time::sleep(FOLLOW_POLL).await;
             }
         });
@@ -285,6 +375,8 @@ pub fn wrap_follow(inner: Arc<dyn ObjectStore>, dbs: &str) -> Arc<dyn ObjectStor
 #[async_trait::async_trait]
 impl ObjectStore for FollowStore {
     async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> OsResult<PutResult> {
+        // this process writes the path itself: a kept copy of it is no longer the stored object
+        forget(&self.kept, location.as_ref());
         self.inner.put_opts(location, payload, opts).await
     }
 
@@ -296,6 +388,23 @@ impl ObjectStore for FollowStore {
         let plain = options.if_match.is_none() && options.if_none_match.is_none() && options.if_modified_since.is_none() && options.if_unmodified_since.is_none() && options.version.is_none();
         let hit = if plain { self.kept.lock().unwrap().objs.get(location.as_ref()).cloned() } else { None };
         let Some((body, meta)) = hit else { return self.inner.get_opts(location, options).await };
+        // never answer from memory without knowing the kept copy is the stored object (review R3)
+        if let Some(db) = wal_db(location.as_ref()) {
+            let fresh = self.kept.lock().unwrap().checked.get(db).map_or(false, |t| t.elapsed() < FOLLOW_CHECK_EVERY);
+            if !fresh {
+                match list_wal(&self.inner, db).await {
+                    Ok(listed) => {
+                        drop_stale(&self.kept, db, &listed);
+                    }
+                    Err(_) => return self.inner.get_opts(location, options).await,
+                }
+                if !self.kept.lock().unwrap().objs.contains_key(location.as_ref()) {
+                    return self.inner.get_opts(location, options).await;
+                }
+            }
+        } else {
+            return self.inner.get_opts(location, options).await;
+        }
         let len = body.len() as u64;
         let range = match &options.range {
             None => 0..len,
@@ -310,6 +419,16 @@ impl ObjectStore for FollowStore {
     }
 
     fn delete_stream(&self, locations: BoxStream<'static, OsResult<Path>>) -> BoxStream<'static, OsResult<Path>> {
+        // this process deletes the paths itself (drop, erase, WAL cleanup): forget the kept copies
+        let kept = Arc::clone(&self.kept);
+        let locations = locations
+            .map(move |p| {
+                if let Ok(p) = &p {
+                    forget(&kept, p.as_ref());
+                }
+                p
+            })
+            .boxed();
         self.inner.delete_stream(locations)
     }
 
@@ -322,10 +441,13 @@ impl ObjectStore for FollowStore {
     }
 
     async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> OsResult<()> {
+        forget(&self.kept, to.as_ref());
         self.inner.copy_opts(from, to, options).await
     }
 
     async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> OsResult<()> {
+        forget(&self.kept, from.as_ref());
+        forget(&self.kept, to.as_ref());
         self.inner.rename_opts(from, to, options).await
     }
 }
