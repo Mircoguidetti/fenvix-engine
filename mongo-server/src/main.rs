@@ -468,6 +468,10 @@ struct Args {
     /// Every how many publishes every group is resealed (the others write a delta run only).
     #[arg(long, default_value_t = 3)]
     sealed_reseal_every: u64,
+    /// T_pin in milliseconds (fx, rules 6 and 26): a reader refreshes its version of our manifest at least this often,
+    /// and envelopes start this long after release E1 is announced. FENVIX_SEALED_TPIN_MS does the same.
+    #[arg(long, default_value_t = 30_000)]
+    sealed_t_pin_ms: u64,
     /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
     /// releases before); M29 measured 64.
     #[arg(long, default_value_t = 4)]
@@ -724,6 +728,8 @@ async fn run() -> Result<()> {
         tenant_bench::fx::GROUP_BYTES.store(args.sealed_group_mb.max(1) << 20, Relaxed);
         tenant_bench::fx::view::CACHE_BYTES.store(args.sealed_cache_mb << 20, Relaxed);
         tenant_bench::fx::RESEAL_EVERY.store(args.sealed_reseal_every.max(1), Relaxed);
+        let t_pin = std::env::var("FENVIX_SEALED_TPIN_MS").ok().and_then(|v| v.parse().ok()).unwrap_or(args.sealed_t_pin_ms);
+        tenant_bench::fx::T_PIN_MS.store(t_pin.max(1), Relaxed);
     }
     tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::tiered::set_compression(&args.sst_compression)?;

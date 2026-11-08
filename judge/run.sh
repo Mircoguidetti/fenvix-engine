@@ -15,7 +15,12 @@ SHA=$(git rev-parse --short HEAD); DIRTY=$(git status --porcelain -- mongo-serve
 # JUDGE_SEALED_RUNS=N: every server the phases start reads through our manifest and sealed runs, with a publish every N
 # write batches of a database (compaction 2, step 3: `--sealed-runs N`, passed as FENVIX_SEALED_RUNS); its verdict goes
 # to judge/out/<commit>-sealed<N>/
-SUFFIX=""; if [ -n "${JUDGE_SEALED_RUNS:-}" ]; then export FENVIX_SEALED_RUNS=$JUDGE_SEALED_RUNS; SUFFIX="-sealed$JUDGE_SEALED_RUNS"; else unset FENVIX_SEALED_RUNS; fi
+# (JUDGE_SEALED_TPIN_MS, default 1000: T_pin of those servers, so a short-lived test database starts envelopes, rule 26,
+# and publishes within a second instead of the production 30 s)
+SUFFIX=""
+if [ -n "${JUDGE_SEALED_RUNS:-}" ]; then
+  export FENVIX_SEALED_RUNS=$JUDGE_SEALED_RUNS FENVIX_SEALED_TPIN_MS=${JUDGE_SEALED_TPIN_MS:-1000}; SUFFIX="-sealed$JUDGE_SEALED_RUNS"
+else unset FENVIX_SEALED_RUNS FENVIX_SEALED_TPIN_MS; fi
 OUT="$ROOT/judge/out/$SHA$SUFFIX"; mkdir -p "$OUT"; V="$OUT/VERDICT.md"
 PHASES=${*:-readers build unit diff-py diff-node ctl kill}
 FAST=0; if [ "$PHASES" = fast ]; then FAST=1; PHASES="readers build unit diff-py diff-node ctl kill"; fi
