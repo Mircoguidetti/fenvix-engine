@@ -10,6 +10,7 @@ Files:
 - `summarize.py output/*.txt`: each verdict, and the action sequence of each counterexample.
 - `RULES-FOR-THE-CODE.md`: the rules the model shows are needed, for build steps 1-8.
 - `RESULTS.md`: what TLC found, run by run.
+- `review/`: the reviewer's copy of the spec (FIX 5, 2026-11-07), kept as delivered. Its six scenarios and their remedies are now in `Compaction2.tla` itself (fix round, 2026-11-08).
 
 TLC: `tla2tools.jar` v1.8.0 from the tlaplus GitHub releases, Java 21. `TLA2TOOLS=/path/tla2tools.jar WORKERS=4 ./run.sh main`.
 
@@ -34,7 +35,14 @@ Actions:
 - Checkpoint (control layer): begin pairs with the newest version and takes the drop lease in the store; take copies SlateDB's checkpoint state (flushed rows and `last_l0_seq`) and releases the lease.
 - Fork / PITR staging clone from the checkpoint (after E1): continues at the checkpoint's seq, starts from a copy of the paired version (runs shared by reference), E_env = min(parent E_env, checkpoint `last_l0_seq`); one write of its own.
 - GC: a run retired from the newest version (or orphaned) for at least `Grace` > the hold life, and not listed by the checkpoint pair or the fork.
-- Crash of the owner's process: holds and first sights are lost; the memtable survives (WAL).
+- Crash of the owner's process: first sights are lost; the memtable survives (WAL); a PUT in flight is no longer heard by the owner. "dead": the holds end. "cutoff" (a takeover of a slow process, N1): its open holds keep reading, unknown to the new waiter, until their hold life. The new waiter loads the newest version and must fence.
+- Fix round (FIX 5), each with its remedy in the correct model:
+  - The version the owner knows (F1): holds pin it, the compactor builds on it. A PUT can time out (`PublishTimeout`) and still land later, unheard. After a restart or a timeout the owner publishes a fence version (`Fence`) before any hold or publish.
+  - E_env in the store (F2): `AnnounceE1`, then `EnableE1` at least `Tpin` later. The follower takes the announcement and E_env with each refresh, and reads the marker before a step when it knows of the announcement but not the value. A follower step that decodes an envelope as data is a failure (`follower:envelope-misread`).
+  - An erasure belongs to every group its customer overlaps (F3, `InG`). `MCGrp0Span` puts customer A over both groups.
+  - The checkpoint lease expires after `CkLeaseLife` (F4). `CkTake` makes SlateDB's checkpoint, and `CkCheck` keeps it only if the lease is still held; otherwise it deletes it and starts again.
+  - `Rollback` from E1 to E0 and `RollForward` (F5): E0 writes envelopes above E_env once the marker is set.
+  - For one hold life after a takeover, the owner's drops use `RemoteLease` (N1).
 - Tick: every clock ages by one, saturating at its threshold (`Tpin` 1, `Lease` 2, hold life 3, `RemoteLease` 4, `Grace` 4).
 
 The read rule (every reader, the checkpoint read, the fork read): for key k in group g, the newest row among SlateDB rows with X_d < seq <= S, delta rows of g with X_g < seq <= X_d, and g's sealed run; a delete envelope or an erasure covering k means "absent".
@@ -67,6 +75,13 @@ Each one is a single change, and each must make TLC report a violation:
 - `DeltaDropEnv`: a delta merge drops envelopes above X_g (SlateDB's last-run rule).
 - Two more from review round 1: `FollowerNoTpin` (a follower reading past T_pin) and `ForkNewestCut` (a fork paired with the parent's newest cut).
 - One found by this model: `MergeAtMaxCut` (a group merge at max(X_gA, X_gB) instead of X_d).
+- Fix round (FIX 5), each one the delivered rule without its remedy:
+  - `NoFence` (F1; configurations `NoFence-crash` and `NoFence-timeout`).
+  - `FollowerOldEenv` (F2, the delivered rules), plus its two halves, `E1NoWait` and `FollowerNoMarker`.
+  - `EraseOneGroup` (F3).
+  - `CkNoRecheck` (F4).
+  - `RollbackPlain` (F5, rule 21 as delivered).
+  - `ZombieShortLease` (N1).
 
 ## What is not modelled
 
@@ -74,5 +89,7 @@ Each one is a single change, and each must make TLC report a violation:
 - SlateDB's GC of dropped SST objects: reads see SlateDB's live state, which is the worst case; `SST_GC_MIN_UNREF_SECS` >= the hold life is review round 2's rule for the code.
 - Splits (a split gives both halves the parent's X_g; nothing can go down).
 - Run contents at block level, checksums, multipart: step 1 and its property tests.
-- Two concurrent publishers: after a crash a new compactor waits for the PUT in flight (M28 checked the conditional create with two writers).
+- Two concurrent publishers: after a crash a new compactor waits for the PUT in flight (M28 checked the conditional create with two writers). A cut-off old waiter's compactor is assumed to stop at its first fencing error (rule 28).
+- The fence is one atomic step (holds and publishes wait for its outcome); clock skew between processes (one shared clock).
+- In the main shape every customer sits inside one group (with symmetry). The spanning layout is checked in `EraseOneGroup`, `EraseOneGroup-ok` and `Span-ok`.
 - Liveness (that drops and erasures eventually happen): safety only.
