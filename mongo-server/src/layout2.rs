@@ -20,8 +20,9 @@ pub static SEEKS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::n
 pub enum Raw<'a> {
     /// The tenant's latest state; `true`: durable data only.
     Tenant(&'a Tenant, bool),
-    /// A transaction's snapshot, with the database's E_env (`envelope.rs`).
-    Snap(&'a slatedb::DbSnapshot, Option<u64>),
+    /// A transaction's snapshot: SlateDB's snapshot and the version of our manifest held with it (`fx/read.rs`), with
+    /// the database's E_env (`envelope.rs`).
+    Snap(&'a tenant_bench::fx::read::Snap),
     /// A reader the control layer opened on its own (export of a checkpoint), with its E_env ([`reader_env`]).
     Reader(&'a slatedb::DbReader, Option<u64>),
 }
@@ -47,11 +48,7 @@ impl Raw<'_> {
         match self {
             Raw::Tenant(t, false) => t.get(key).await,
             Raw::Tenant(t, true) => t.get_durable(key).await,
-            Raw::Snap(s, None) => Ok(s.get(key).await?),
-            Raw::Snap(s, env) => match s.get_key_value(key).await? {
-                Some(kv) => tenant_bench::envelope::decode(*env, &kv.key, kv.seq, kv.value),
-                None => Ok(None),
-            },
+            Raw::Snap(s) => s.get(key).await,
             Raw::Reader(r, env) => match r.get_key_value(key).await? {
                 Some(kv) => tenant_bench::envelope::decode(*env, &kv.key, kv.seq, kv.value),
                 None => Ok(None),
@@ -67,7 +64,8 @@ impl Raw<'_> {
         }
         match self {
             Raw::Tenant(t, durable) => t.scan_range_at(lo, hi, reverse, limit, read_ahead, *durable).await,
-            Raw::Snap(..) | Raw::Reader(..) => {
+            Raw::Snap(s) => s.scan(lo, hi, reverse, limit, read_ahead).await,
+            Raw::Reader(r, env) => {
                 let opts = slatedb::config::ScanOptions {
                     read_ahead_bytes: read_ahead,
                     max_fetch_tasks: tenant_bench::tiered::scan_fetch_tasks(read_ahead),
@@ -79,11 +77,7 @@ impl Raw<'_> {
                     Some(e) => (std::ops::Bound::Included(lo.to_vec()), std::ops::Bound::Excluded(e.to_vec())),
                     None => (std::ops::Bound::Included(lo.to_vec()), std::ops::Bound::Unbounded),
                 };
-                let (mut it, env) = match self {
-                    Raw::Snap(s, env) => (s.scan_with_options(range, &opts).await?, env),
-                    Raw::Reader(r, env) => (r.scan_with_options(range, &opts).await?, env),
-                    Raw::Tenant(..) => unreachable!(),
-                };
+                let mut it = r.scan_with_options(range, &opts).await?;
                 let mut out = Vec::new();
                 while let Some(kv) = it.next().await? {
                     let Some(v) = tenant_bench::envelope::decode(*env, &kv.key, kv.seq, kv.value)? else { continue };

@@ -152,7 +152,7 @@ pub struct Entry {
     /// When each collection's expired documents were last swept by a write command.
     pub(crate) swept: HashMap<String, Instant>,
     /// Snapshot that this command's reads go through (a transaction's), set after taking the lock.
-    pub(crate) snap: Option<Arc<slatedb::DbSnapshot>>,
+    pub(crate) snap: Option<Arc<tenant_bench::fx::read::Snap>>,
     /// Write counter and, while transactions are open, the last write of each document key (conflict detection).
     pub(crate) seq: u64,
     pub(crate) modified: HashMap<Vec<u8>, u64>,
@@ -372,7 +372,7 @@ impl Dbs {
         loop {
             {
                 let g = Arc::clone(&e).read_owned().await;
-                if g.tenant.is_some() && g.leases.valid(&g.name) {
+                if g.tenant.as_ref().is_some_and(|t| !t.fx_refresh_due()) && g.leases.valid(&g.name) {
                     crate::locallog::check_open(&g.name)?;
                     g.touch();
                     return Ok(ReadView { g: Some(Guard::Read(g)), copts: Default::default() });
@@ -595,6 +595,10 @@ impl Entry {
         }
         if self.tenant.is_some() {
             if self.leases.valid(&self.name) {
+                // a reader refreshes its version of our manifest before T_pin (fx, rule 6)
+                if self.tenant.as_ref().unwrap().fx_refresh_due() {
+                    self.tenant.as_mut().unwrap().fx_refresh().await?;
+                }
                 return Ok(true);
             }
             // The lease lapsed (not renewed in time) or was lost: stop acting as the owner.
@@ -686,8 +690,7 @@ impl Entry {
             return Ok(None);
         }
         if let Some(s) = &self.snap {
-            let env = self.tenant.as_ref().and_then(|t| t.envelope_seq());
-            return crate::layout2::get(&crate::layout2::Raw::Snap(s, env), key).await;
+            return crate::layout2::get(&crate::layout2::Raw::Snap(s), key).await;
         }
         if META_CACHE.load(Relaxed) && is_meta_key(key) {
             if let Some(v) = self.meta_lookup(key) {
@@ -797,6 +800,15 @@ impl Entry {
             self.sync_gauges();
         }
         self.touch();
+        // --sealed-runs N: a publish of our manifest every N write batches (fx/build.rs), under this exclusive lock
+        if self.tenant.as_mut().unwrap().fx_note_write() {
+            let t = self.tenant.as_mut().unwrap();
+            let opts = t.fx_auto_opts();
+            // a failed publish leaves orphan runs only; fx_publish reloads or fences as the failure needs (rules 24, 25)
+            if let Err(e) = t.fx_publish(&opts, None).await {
+                eprintln!("sealed runs: publish of database {} failed: {e:#}", self.name);
+            }
+        }
         self.seq += 1;
         if self.active_txns > 0 {
             for op in &ops {
@@ -1128,7 +1140,7 @@ impl Entry {
         let segs = self.segs_for(start, end).await?;
         let t = self.tenant.as_ref().unwrap();
         match &self.snap {
-            Some(s) => crate::layout2::scan(&crate::layout2::Raw::Snap(s, t.envelope_seq()), &segs, start, end, reverse, limit, read_ahead).await,
+            Some(s) => crate::layout2::scan(&crate::layout2::Raw::Snap(s), &segs, start, end, reverse, limit, read_ahead).await,
             None => crate::layout2::scan(&crate::layout2::Raw::Tenant(t, false), &segs, start, end, reverse, limit, read_ahead).await,
         }
     }
@@ -1155,7 +1167,7 @@ impl Entry {
     }
 
     /// Take a snapshot for a transaction (opens the tenant as a writer) and remember the write counter.
-    pub async fn begin_snapshot(&mut self) -> Result<(Arc<slatedb::DbSnapshot>, u64)> {
+    pub async fn begin_snapshot(&mut self) -> Result<(Arc<tenant_bench::fx::read::Snap>, u64)> {
         if !self.ensure_open().await? {
             // The database does not exist yet: create it so the transaction has something to snapshot.
             self.leases.acquire(&self.name).await?;
@@ -1169,7 +1181,7 @@ impl Entry {
             self.wakes += 1;
             self.sync_gauges();
         }
-        let snap = self.tenant.as_mut().unwrap().snapshot().await?;
+        let snap = self.tenant.as_mut().unwrap().txn_snapshot().await?;
         self.sync_gauges();
         self.active_txns += 1;
         Ok((snap, self.seq))
@@ -1226,7 +1238,7 @@ impl Entry {
         let t = self.tenant.as_ref().unwrap();
         let par = GET_MANY_PARALLEL.load(Relaxed);
         match &self.snap {
-            Some(s) => crate::layout2::get_many(&crate::layout2::Raw::Snap(s, t.envelope_seq()), keys, par).await,
+            Some(s) => crate::layout2::get_many(&crate::layout2::Raw::Snap(s), keys, par).await,
             None => crate::layout2::get_many(&crate::layout2::Raw::Tenant(t, false), keys, par).await,
         }
     }

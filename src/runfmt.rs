@@ -657,7 +657,7 @@ impl Fence {
     }
 
     /// Number of blocks whose separator is < t (or <= t when `inclusive`).
-    fn count_below(&self, t: &[u8], inclusive: bool) -> usize {
+    pub fn count_below(&self, t: &[u8], inclusive: bool) -> usize {
         let cond = |s: &[u8]| {
             let c = self.cmp_sep(s, t);
             c == Ordering::Less || (inclusive && c == Ordering::Equal)
@@ -1021,7 +1021,7 @@ impl Block {
 }
 
 /// Decodes block `i` of `run` and checks it against the fence: every key at or above its separator and below the next.
-fn decode_checked(run: &Run, i: usize, stored: &[u8]) -> anyhow::Result<Block> {
+pub fn decode_checked(run: &Run, i: usize, stored: &[u8]) -> anyhow::Result<Block> {
     let b = Block::decode(stored, &run.run_id, i as u32)?;
     anyhow::ensure!(run.fence.cmp(i, b.key(0)) != Ordering::Greater, "corrupt run: block {i} starts below its separator");
     if i + 1 < run.fence.blocks() {
@@ -1085,7 +1085,7 @@ impl BlockCache {
     }
 }
 
-async fn get_range(store: &Arc<dyn ObjectStore>, path: &Path, a: u64, b: u64) -> anyhow::Result<Bytes> {
+pub async fn get_range(store: &Arc<dyn ObjectStore>, path: &Path, a: u64, b: u64) -> anyhow::Result<Bytes> {
     let opts = GetOptions { range: Some(GetRange::Bounded(a..b)), ..Default::default() };
     let data = store.get_opts(path, opts).await?.bytes().await?;
     anyhow::ensure!(data.len() as u64 == b - a, "short read of {path}: {} of {} bytes", data.len(), b - a);

@@ -4,6 +4,7 @@
 pub mod counter;
 pub mod counting;
 pub mod envelope;
+pub mod fx;
 pub mod lifecycle;
 pub mod maps;
 pub mod meter;

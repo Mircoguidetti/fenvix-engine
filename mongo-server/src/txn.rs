@@ -22,7 +22,7 @@ pub struct Txn {
     pub db: String,
     pub number: i64,
     pub w: Writes,
-    pub snap: Arc<slatedb::DbSnapshot>,
+    pub snap: Arc<tenant_bench::fx::read::Snap>,
     pub seq: u64,
     pub started: Instant,
 }

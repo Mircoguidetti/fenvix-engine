@@ -25,7 +25,7 @@ use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use slatedb::admin::Admin;
 use slatedb::config::{CheckpointOptions, DbReaderOptions};
-use slatedb::{DbReader, DbReaderMode};
+use slatedb::DbReader;
 use std::sync::Arc;
 use std::time::Duration;
 use tenant_bench::lifecycle::maint_lock;
@@ -55,7 +55,7 @@ async fn open_snapshot(ctl: &Ctl, db: &str, checkpoint: &str) -> anyhow::Result<
     let mut o = DbReaderOptions::default();
     o.skip_wal_replay = true; // the snapshot was taken after a clean close: nothing is left in the WAL
     o.manifest_poll_interval = Duration::from_secs(3600);
-    Ok(DbReader::builder(purge::tenant_path(db), Arc::clone(&ctl.store)).with_reader_mode(DbReaderMode::Checkpoint(id)).with_options(o).build().await?)
+    tenant_bench::fx::read::open_checkpoint_reader(purge::tenant_path(db), Arc::clone(&ctl.store), id, o).await
 }
 
 fn index_specs(idx: &[crate::index::IndexDef]) -> Vec<Bson> {

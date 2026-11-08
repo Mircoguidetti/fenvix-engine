@@ -1,0 +1,122 @@
+//! Holds: a reader's hold on one version of our manifest (plan round 2, fix 1; RULES-FOR-THE-CODE rules 1, 4, 5).
+//!
+//! In code these are "holds", not "pins": `ctl/pin.rs` already names the keep-awake pins (review round 2 note).
+//!
+//! - A hold keeps its version (and so its runs) alive in this process, and counts in the drop floor while it lives
+//!   (rule 4). The floor is for step 4's drop job: in this step nothing drops SlateDB rows, so the floor is only
+//!   computed and tested.
+//! - A hold lives at most the hold life (120 s proposed). Past it, the hold is revoked: it leaves the floor, and the
+//!   reader, which checks its hold after every step, fails with a retryable error (rule 5).
+//!
+//! Who takes a hold: a transaction, at begin, for its whole life (it never re-reads the manifest, rule 1). A plain
+//! operation (a find, an update's reads) reads the tenant's current version under the database's lock, and that version
+//! only changes under the exclusive lock (`Tenant::fx_install`), so every step of one operation reads the same version;
+//! it takes a short hold per read, so that the floor sees it.
+
+use super::view::View;
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering::Relaxed};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
+
+/// Hold life in milliseconds (rule 5).
+pub static HOLD_LIFE_MS: AtomicU64 = AtomicU64::new(120_000);
+
+pub fn hold_life() -> Duration {
+    Duration::from_millis(HOLD_LIFE_MS.load(Relaxed))
+}
+
+/// The marker text of the retryable error of a revoked hold (the server labels it TransientTransactionError).
+pub const REVOKED: &str = "fx hold revoked";
+
+/// The holds of one database in this process.
+#[derive(Default)]
+pub struct Holds {
+    next: AtomicU64,
+    live: Mutex<HashMap<u64, Entry>>,
+}
+
+struct Entry {
+    version: u64,
+    x_d: u64,
+    since: Instant,
+    revoked: Arc<AtomicBool>,
+}
+
+pub struct Hold {
+    pub view: Arc<View>,
+    id: u64,
+    holds: Arc<Holds>,
+    since: Instant,
+    revoked: Arc<AtomicBool>,
+}
+
+impl Holds {
+    pub fn take(self: &Arc<Self>, view: Arc<View>) -> Hold {
+        let id = self.next.fetch_add(1, Relaxed);
+        let since = Instant::now();
+        let revoked = Arc::new(AtomicBool::new(false));
+        self.live.lock().unwrap().insert(id, Entry { version: view.version, x_d: view.x_d, since, revoked: revoked.clone() });
+        Hold { view, id, holds: Arc::clone(self), since, revoked }
+    }
+
+    /// Revoke every hold older than the hold life: it leaves the floor, and its reader fails at its next check.
+    pub fn revoke_expired(&self) -> usize {
+        let life = hold_life();
+        let mut n = 0;
+        let mut m = self.live.lock().unwrap();
+        m.retain(|_, e| {
+            if e.since.elapsed() > life {
+                e.revoked.store(true, Relaxed);
+                n += 1;
+                false
+            } else {
+                true
+            }
+        });
+        n
+    }
+
+    /// The drop floor's share of the holds: the smallest X_d of a live, unrevoked hold (None: no hold). Step 4's drop
+    /// job takes the smaller of this and the X of the newest version published at least one lease ago (rule 7, 8).
+    pub fn floor(&self) -> Option<u64> {
+        self.revoke_expired();
+        self.live.lock().unwrap().values().map(|e| e.x_d).min()
+    }
+
+    /// The oldest version held (diagnostics, GC in step 4).
+    pub fn oldest_version(&self) -> Option<u64> {
+        self.live.lock().unwrap().values().map(|e| e.version).min()
+    }
+
+    pub fn count(&self) -> usize {
+        self.live.lock().unwrap().len()
+    }
+}
+
+impl Hold {
+    /// After every step of a read: an error once the hold was revoked or outlived the hold life (rule 5).
+    pub fn check(&self) -> anyhow::Result<()> {
+        if self.revoked.load(Relaxed) || self.since.elapsed() > hold_life() {
+            self.revoked.store(true, Relaxed);
+            return Err(anyhow::Error::new(super::Retry(format!("{REVOKED}: the read held version {} for more than {:?}; retry", self.view.version, hold_life()))));
+        }
+        Ok(())
+    }
+
+    pub fn age(&self) -> Duration {
+        self.since.elapsed()
+    }
+
+    /// Revoke now (tests; an operator's kill).
+    pub fn revoke(&self) {
+        self.revoked.store(true, Relaxed);
+        self.holds.live.lock().unwrap().remove(&self.id);
+    }
+}
+
+impl Drop for Hold {
+    fn drop(&mut self) {
+        self.holds.live.lock().unwrap().remove(&self.id);
+    }
+}

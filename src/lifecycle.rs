@@ -616,8 +616,9 @@ impl Lifecycle {
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
         let scope = writer_scope(&id);
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None };
         t.load_env().await?;
+        t.load_fx().await?;
         Ok(t)
     }
 
@@ -663,8 +664,9 @@ impl Lifecycle {
         let l0_at_wake = reader.manifest().l0().len();
         let reader = Arc::new(reader);
         READER_DBS.lock().unwrap().insert(id.clone(), Arc::downgrade(&reader));
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None };
         t.load_env().await?;
+        t.load_fx().await?;
         Ok(t)
     }
 }
@@ -870,6 +872,22 @@ pub struct Tenant {
     scope: Option<u64>,
     /// E_env, the sequence number of the envelope marker (`envelope.rs`); `None`: no marker, every row is plain.
     env: Option<u64>,
+    /// Compaction 2 (`fx`): the version of our manifest this tenant reads with (None: no version, or `--sealed-runs` off).
+    /// It changes only through `&mut self` (open, publish, refresh), so under the database's exclusive lock, and every
+    /// operation, which runs under the shared or the exclusive lock, reads one version from its first step to its last.
+    fx: Option<Arc<crate::fx::view::View>>,
+    /// Holds on versions taken by this tenant's reads and transactions (`fx/hold.rs`).
+    holds: Arc<crate::fx::hold::Holds>,
+    /// When the version was last loaded from the store (a reader's T_pin, rule 6).
+    fx_loaded: Instant,
+    /// Write batches since the last publish, and publishes made (`--sealed-runs N`).
+    fx_writes: u64,
+    fx_builds: u64,
+    /// Release E1 was announced in the store (`fx/manifest.rs`, rule 26): while this tenant knows no E_env, a reader reads
+    /// the marker before decoding each step's rows.
+    fx_announced: bool,
+    /// When this process first saw the announcement (the writer starts envelopes one T_pin later, rule 26).
+    fx_announce_seen: Option<Instant>,
 }
 
 impl Tenant {
@@ -899,7 +917,10 @@ impl Tenant {
     }
 
     pub async fn get<K: AsRef<[u8]> + Send>(&self, key: K) -> Result<Option<Bytes>> {
-        if self.env.is_none() {
+        if let Some(v) = &self.fx {
+            return self.fx_get(v, key.as_ref(), false).await;
+        }
+        if self.env.is_none() && !self.fx_announced {
             return Ok(match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
                 Mode::Reader(r) => r.get(key).await?,
                 Mode::Writer(db) => db.get(key).await?,
@@ -909,8 +930,9 @@ impl Tenant {
             Mode::Reader(r) => r.get_key_value(key).await?,
             Mode::Writer(db) => db.get_key_value(key).await?,
         };
+        let env = self.step_env().await?;
         match kv {
-            Some(kv) => crate::envelope::decode(self.env, &kv.key, kv.seq, kv.value),
+            Some(kv) => crate::envelope::decode(env, &kv.key, kv.seq, kv.value),
             None => Ok(None),
         }
     }
@@ -918,6 +940,219 @@ impl Tenant {
     /// E_env of this database (`envelope.rs`): `None` when it has no envelope marker.
     pub fn envelope_seq(&self) -> Option<u64> {
         self.env
+    }
+
+    /// The version of our manifest this tenant reads with (None: none, or `--sealed-runs` off).
+    pub fn fx_view(&self) -> Option<&Arc<crate::fx::view::View>> {
+        self.fx.as_ref()
+    }
+
+    /// The holds of this tenant (the drop floor of step 4, tests).
+    pub fn fx_holds(&self) -> &Arc<crate::fx::hold::Holds> {
+        &self.holds
+    }
+
+    /// A reader in reader mode refuses to read with a version older than T_pin (rule 6): before every step that reads
+    /// SlateDB. The writer is the only publisher of its database, so its version is always the newest.
+    fn fx_fresh(&self) -> Result<()> {
+        if matches!(self.mode, Some(Mode::Reader(_))) {
+            let t_pin = Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed));
+            if self.fx_loaded.elapsed() > t_pin {
+                return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: our manifest was last read {:?} ago, more than T_pin; retry", self.id, self.fx_loaded.elapsed()))));
+            }
+        }
+        Ok(())
+    }
+
+    /// Due for a refresh of the version (a reader at half its T_pin); the caller refreshes under the exclusive lock.
+    pub fn fx_refresh_due(&self) -> bool {
+        crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed)
+            && matches!(self.mode, Some(Mode::Reader(_)))
+            && self.fx_loaded.elapsed() > Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed) / 2)
+    }
+
+    /// Load the newest version again (a reader's refresh), with E_env and E1's announcement (rule 6).
+    pub async fn fx_refresh(&mut self) -> Result<()> {
+        self.load_env().await?;
+        self.load_fx().await
+    }
+
+    /// The E_env to decode one step's rows with, read after the step's SlateDB view is open: the known one, or, once E1
+    /// was announced and this tenant knows no E_env yet, the marker read now (rule 26). Without an announcement, no read.
+    async fn step_env(&self) -> Result<Option<u64>> {
+        if self.env.is_some() || !self.fx_announced {
+            return Ok(self.env);
+        }
+        let kv = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
+            Mode::Reader(r) => r.get_key_value(crate::envelope::MARKER).await?,
+            Mode::Writer(db) => db.get_key_value(crate::envelope::MARKER).await?,
+        };
+        Ok(kv.map(|kv| kv.seq))
+    }
+
+    async fn fx_get(&self, v: &Arc<crate::fx::view::View>, key: &[u8], durable: bool) -> Result<Option<Bytes>> {
+        self.fx_fresh()?;
+        let hold = self.holds.take(Arc::clone(v));
+        let opts = slatedb::config::ReadOptions {
+            durability_filter: if durable { slatedb::config::DurabilityLevel::Remote } else { slatedb::config::DurabilityLevel::Memory },
+            ..Default::default()
+        };
+        let r = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
+            Mode::Reader(r) => crate::fx::read::get(&**r, &slatedb::config::ReadOptions::default(), Some(v), self.env, key).await?,
+            Mode::Writer(db) => crate::fx::read::get(db, &opts, Some(v), self.env, key).await?,
+        };
+        hold.check()?;
+        Ok(r)
+    }
+
+    async fn fx_scan(&self, v: &Arc<crate::fx::view::View>, opts: &slatedb::config::ScanOptions, lo: &[u8], hi: Option<&[u8]>, reverse: bool, limit: Option<usize>) -> Result<Vec<(Bytes, Bytes)>> {
+        self.fx_fresh()?;
+        let hold = self.holds.take(Arc::clone(v));
+        let r = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
+            Mode::Reader(r) => crate::fx::read::scan(&**r, opts, Some(v), self.env, lo, hi, reverse, limit).await?,
+            Mode::Writer(db) => crate::fx::read::scan(db, opts, Some(v), self.env, lo, hi, reverse, limit).await?,
+        };
+        hold.check()?;
+        Ok(r)
+    }
+
+    /// Load the newest version of our manifest (at open, after an upgrade, on a reader's refresh). A writer checks that
+    /// SlateDB has every row up to X_d and publishes a fence version, a copy of the newest under the next number (review
+    /// of step 0, F1): a late PUT of a dead process then cannot land a version this writer does not know.
+    async fn load_fx(&mut self) -> Result<()> {
+        use crate::fx::manifest;
+        use std::sync::atomic::Ordering::Relaxed;
+        if !crate::fx::ENABLED.load(Relaxed) {
+            self.fx = None;
+            return Ok(());
+        }
+        let store = Arc::clone(&self.lc.store);
+        if self.env.is_none() {
+            self.fx_announced = manifest::announced(&store, &self.id).await?;
+        }
+        let Some(mut v) = manifest::load_newest(&store, &self.id).await? else {
+            self.fx = None;
+            self.fx_loaded = Instant::now();
+            return Ok(());
+        };
+        if let Some(Mode::Writer(db)) = &self.mode {
+            let seq = db.snapshot().await?.seq();
+            anyhow::ensure!(v.x_d <= seq, "database {}: our manifest {} has X_d {} but SlateDB's last seq is {seq}: rows at or below X_d are missing from SlateDB", self.id, v.version, v.x_d);
+            let epoch = Some(db.manifest().writer_epoch());
+            let mut fenced = false;
+            for _ in 0..8 {
+                let f = v.fence(epoch);
+                if manifest::create(&store, &self.id, &f).await? {
+                    v = f;
+                    fenced = true;
+                    crate::fx::FENCES.fetch_add(1, Relaxed);
+                    break;
+                }
+                v = manifest::load_newest(&store, &self.id).await?.ok_or_else(|| anyhow!("database {}: our manifest vanished", self.id))?;
+            }
+            anyhow::ensure!(fenced, "database {}: could not publish a fence version of our manifest", self.id);
+        }
+        anyhow::ensure!(v.e_env == self.env, "database {}: our manifest {} has E_env {:?}, the database's marker {:?}", self.id, v.version, v.e_env, self.env);
+        self.fx = Some(Arc::new(crate::fx::view::View::new(store, v, self.fx.as_deref())?));
+        self.fx_loaded = Instant::now();
+        Ok(())
+    }
+
+    /// Start envelopes if the database has none (a version needs E_env <= X_d, `fx/manifest.rs`), in two steps (rule
+    /// 26): announce release E1 in the store; write the marker (E_env) only once this process saw the announcement at
+    /// least T_pin ago, so every follower has taken the announcement with a refresh and reads the marker before each
+    /// step. Returns whether E_env is set.
+    async fn ensure_marker(&mut self) -> Result<bool> {
+        use std::sync::atomic::Ordering::Relaxed;
+        if self.env.is_some() {
+            return Ok(true);
+        }
+        self.upgrade().await?;
+        let store = Arc::clone(&self.lc.store);
+        if !crate::fx::manifest::announced(&store, &self.id).await? {
+            crate::fx::manifest::announce(&store, &self.id).await?;
+        }
+        self.fx_announced = true;
+        let seen = *self.fx_announce_seen.get_or_insert_with(Instant::now);
+        if seen.elapsed() < Duration::from_millis(crate::fx::T_PIN_MS.load(Relaxed)) {
+            return Ok(false);
+        }
+        let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
+        let mut m = slatedb::WriteBatch::new();
+        m.put(crate::envelope::MARKER, b"E1");
+        let h = db.write(m).await?;
+        self.env = Some(h.seqnum());
+        Ok(true)
+    }
+
+    /// Count a write batch for `--sealed-runs N`; true when a publish is due.
+    pub fn fx_note_write(&mut self) -> bool {
+        use std::sync::atomic::Ordering::Relaxed;
+        let every = crate::fx::PUBLISH_EVERY.load(Relaxed);
+        if every == 0 || !crate::fx::ENABLED.load(Relaxed) {
+            return false;
+        }
+        self.fx_writes += 1;
+        if self.fx_writes >= every {
+            self.fx_writes = 0;
+            return true;
+        }
+        false
+    }
+
+    /// The build options of the server's own publishes: every `RESEAL_EVERY`-th reseals every group, the others write a
+    /// delta run.
+    pub fn fx_auto_opts(&mut self) -> crate::fx::build::BuildOpts {
+        use std::sync::atomic::Ordering::Relaxed;
+        self.fx_builds += 1;
+        let every = crate::fx::RESEAL_EVERY.load(Relaxed).max(1);
+        let reseal = if self.fx.is_none() || self.fx_builds % every == 0 { crate::fx::build::Reseal::All } else { crate::fx::build::Reseal::None };
+        crate::fx::build::BuildOpts { reseal, group_bytes: crate::fx::GROUP_BYTES.load(Relaxed), ..Default::default() }
+    }
+
+    /// Build runs offline from this database and publish the next version, then read with it (`fx/build.rs`). Needs
+    /// `&mut self`: under the database's exclusive lock. `fail` names fail points for tests ("after_runs" before the
+    /// publish, "after_publish" before the tenant reads with the new version): an error there leaves orphan runs or a
+    /// published version this tenant does not read with yet, as a crash would.
+    pub async fn fx_publish(&mut self, opts: &crate::fx::build::BuildOpts, fail: Option<&(dyn Fn(&str) -> Result<()> + Sync)>) -> Result<Option<crate::fx::build::BuildReport>> {
+        use std::sync::atomic::Ordering::Relaxed;
+        anyhow::ensure!(crate::fx::ENABLED.load(Relaxed), "--sealed-runs is off");
+        self.upgrade().await?;
+        if !self.ensure_marker().await? {
+            return Ok(None); // E1 announced, envelopes start one T_pin later (rule 26)
+        }
+        let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
+        let epoch = Some(db.manifest().writer_epoch());
+        let env = self.env.expect("marker written");
+        let store = Arc::clone(&self.lc.store);
+        let r = crate::fx::build::build_and_publish(db, &store, &self.id, self.fx.as_deref(), env, epoch, opts, fail).await;
+        let (v, rep) = match r {
+            Ok(Some(x)) => x,
+            Ok(None) => return Ok(None),
+            Err(e) => {
+                crate::fx::PUBLISH_ERRORS.fetch_add(1, Relaxed);
+                if e.downcast_ref::<crate::fx::LostRace>().is_some() {
+                    // the outcome is known: another publisher holds the slot; read with the newest version (rule 24)
+                    if let Some(v) = crate::fx::manifest::load_newest(&store, &self.id).await? {
+                        self.fx = Some(Arc::new(crate::fx::view::View::new(Arc::clone(&store), v, self.fx.as_deref())?));
+                    }
+                } else if !crate::fx::is_fenced(&e) {
+                    // the outcome of the publish's PUT may be unknown (a timeout): publish a fence version before another
+                    // hold or publish (rule 25); load_fx does it for a writer. A fenced writer publishes nothing (rule 28).
+                    if let Err(e2) = self.load_fx().await {
+                        eprintln!("sealed runs: fence of database {} after a failed publish: {e2:#}", self.id);
+                    }
+                }
+                return Err(e);
+            }
+        };
+        if let Some(f) = fail {
+            f("after_publish")?;
+        }
+        self.fx = Some(Arc::new(crate::fx::view::View::new(store, v, self.fx.as_deref())?));
+        self.fx_loaded = Instant::now();
+        crate::fx::PUBLISHES.fetch_add(1, Relaxed);
+        Ok(Some(rep))
     }
 
     /// Read the envelope marker (at open and after an upgrade).
@@ -933,9 +1168,12 @@ impl Tenant {
     /// Like [`Tenant::get`], but a writer only returns data that is already in a durable WAL object or SST, not
     /// writes that are staged and waiting for their flush (a reader's data is always durable).
     pub async fn get_durable<K: AsRef<[u8]> + Send>(&self, key: K) -> Result<Option<Bytes>> {
+        if let Some(v) = &self.fx {
+            return self.fx_get(v, key.as_ref(), true).await;
+        }
         Ok(match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
             Mode::Reader(r) => match r.get_key_value(key).await? {
-                Some(kv) => crate::envelope::decode(self.env, &kv.key, kv.seq, kv.value)?,
+                Some(kv) => crate::envelope::decode(self.step_env().await?, &kv.key, kv.seq, kv.value)?,
                 None => None,
             },
             Mode::Writer(db) => {
@@ -997,6 +1235,7 @@ impl Tenant {
         writer_opened(&self.id, &db);
         self.mode = Some(Mode::Writer(db));
         self.load_env().await?;
+        self.load_fx().await?;
         self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
         Ok(())
     }
@@ -1012,6 +1251,12 @@ impl Tenant {
     }
 
     async fn scan_prefix_at(&self, prefix: &[u8], durable: bool) -> Result<Vec<(Bytes, Bytes)>> {
+        if let Some(v) = &self.fx {
+            let hi = crate::runfmt::prefix_successor(prefix);
+            let mut opts = crate::fx::read::scan_options(4 << 20, false, durable);
+            opts.max_fetch_tasks = 4;
+            return self.fx_scan(v, &opts, prefix, hi.as_deref(), false, None).await;
+        }
         // slatedb's scan defaults fetch one 4 KiB block per request, one at a time, and do not cache
         // the blocks: a 1 MB scan costs ~250 sequential GETs every time. Read ahead in large
         // requests, fetch in parallel, and keep the blocks.
@@ -1026,9 +1271,10 @@ impl Tenant {
             Mode::Reader(r) => r.scan_prefix_with_options(prefix, .., &opts).await?,
             Mode::Writer(db) => db.scan_prefix_with_options(prefix, .., &opts).await?,
         };
+        let env = self.step_env().await?;
         let mut out = Vec::new();
         while let Some(kv) = it.next().await? {
-            if let Some(v) = crate::envelope::decode(self.env, &kv.key, kv.seq, kv.value)? {
+            if let Some(v) = crate::envelope::decode(env, &kv.key, kv.seq, kv.value)? {
                 out.push((kv.key, v));
             }
         }
@@ -1036,10 +1282,13 @@ impl Tenant {
     }
 
     /// A consistent snapshot of the database as of now (upgrades to a writer first: snapshots exist on writers only).
-    pub async fn snapshot(&mut self) -> Result<Arc<slatedb::DbSnapshot>> {
+    /// With a version of ours, the snapshot holds it, taken first (so its X_d <= the snapshot's seq) and kept for the
+    /// transaction's whole life: the pair of rule 1.
+    pub async fn txn_snapshot(&mut self) -> Result<Arc<crate::fx::read::Snap>> {
         self.upgrade().await?;
+        let hold = self.fx.as_ref().map(|v| self.holds.take(Arc::clone(v)));
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
-        Ok(db.snapshot().await?)
+        Ok(Arc::new(crate::fx::read::Snap { slate: db.snapshot().await?, hold, env: self.env }))
     }
 
     /// Rough size in bytes of the data in the tenant's SSTs (from the manifest: no request). Unflushed writes are not
@@ -1074,6 +1323,9 @@ impl Tenant {
                 return Ok(Vec::new()); // an empty range would panic the store
             }
         }
+        if let Some(v) = &self.fx {
+            return self.fx_scan(v, &opts, start, end, reverse, limit).await;
+        }
         let s = start.to_vec();
         let range = match end {
             Some(e) => (std::ops::Bound::Included(s), std::ops::Bound::Excluded(e.to_vec())),
@@ -1083,9 +1335,10 @@ impl Tenant {
             Mode::Reader(r) => r.scan_with_options(range, &opts).await?,
             Mode::Writer(db) => db.scan_with_options(range, &opts).await?,
         };
+        let env = self.step_env().await?;
         let mut out = Vec::new();
         while let Some(kv) = it.next().await? {
-            let Some(v) = crate::envelope::decode(self.env, &kv.key, kv.seq, kv.value)? else { continue };
+            let Some(v) = crate::envelope::decode(env, &kv.key, kv.seq, kv.value)? else { continue };
             out.push((kv.key, v));
             if limit.map(|l| out.len() >= l).unwrap_or(false) {
                 break;

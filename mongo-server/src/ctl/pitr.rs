@@ -32,7 +32,7 @@ use object_store::ObjectStoreExt;
 use serde_json::{json, Value};
 use slatedb::admin::Admin;
 use slatedb::config::{CheckpointOptions, DbReaderOptions};
-use slatedb::{DbReader, DbReaderMode};
+use slatedb::DbReader;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
@@ -395,7 +395,7 @@ async fn open_reader(ctl: &Ctl, path: &str, skip_replay: bool) -> anyhow::Result
     let mut o = DbReaderOptions::default();
     o.skip_wal_replay = skip_replay;
     o.manifest_poll_interval = Duration::from_secs(3600);
-    Ok(DbReader::builder(path.to_string(), Arc::clone(&ctl.store)).with_reader_mode(DbReaderMode::FollowLatest).with_options(o).build().await?)
+    tenant_bench::fx::read::open_follow_reader(path.to_string(), Arc::clone(&ctl.store), o).await
 }
 
 async fn diff_and_apply(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, db: &str, staging: &str, apply: bool, _opid: &str) -> ApiResult<Diff> {

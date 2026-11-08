@@ -453,6 +453,21 @@ struct Args {
     /// `write` is safe only to a release that has `read`.
     #[arg(long, default_value = "read")]
     envelopes: String,
+    /// Compaction 2, step 3 (`fx`): read through our manifest and sealed runs. The value is how many write batches of a
+    /// database between two offline publishes of runs (`fx/build.rs`; 0: none by the server itself). Off by default.
+    /// A database that published a version has every SlateDB row too in this step (nothing drops them yet), so turning
+    /// it off again reads the same data. The environment variable FENVIX_SEALED_RUNS=N does the same.
+    #[arg(long)]
+    sealed_runs: Option<u64>,
+    /// Raw MB per group when a database's first version cuts its groups (the plan's 1 GB).
+    #[arg(long, default_value_t = 1024)]
+    sealed_group_mb: u64,
+    /// RAM for decoded blocks of our runs, shared by every database (MB).
+    #[arg(long, default_value_t = 256)]
+    sealed_cache_mb: u64,
+    /// Every how many publishes every group is resealed (the others write a delta run only).
+    #[arg(long, default_value_t = 3)]
+    sealed_reseal_every: u64,
     /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
     /// releases before); M29 measured 64.
     #[arg(long, default_value_t = 4)]
@@ -698,6 +713,17 @@ async fn run() -> Result<()> {
         "read" => {}
         "write" => tenant_bench::envelope::START.store(true, std::sync::atomic::Ordering::Relaxed),
         other => anyhow::bail!("--envelopes must be read or write, not {other}"),
+    }
+    // FENVIX_SEALED_RUNS=N: the same as --sealed-runs N, for every server a test harness starts (`judge/run.sh` with
+    // JUDGE_SEALED_RUNS)
+    let sealed_runs = args.sealed_runs.or_else(|| std::env::var("FENVIX_SEALED_RUNS").ok().and_then(|v| v.parse().ok()));
+    if let Some(n) = sealed_runs {
+        use std::sync::atomic::Ordering::Relaxed;
+        tenant_bench::fx::ENABLED.store(true, Relaxed);
+        tenant_bench::fx::PUBLISH_EVERY.store(n, Relaxed);
+        tenant_bench::fx::GROUP_BYTES.store(args.sealed_group_mb.max(1) << 20, Relaxed);
+        tenant_bench::fx::view::CACHE_BYTES.store(args.sealed_cache_mb << 20, Relaxed);
+        tenant_bench::fx::RESEAL_EVERY.store(args.sealed_reseal_every.max(1), Relaxed);
     }
     tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::tiered::set_compression(&args.sst_compression)?;
