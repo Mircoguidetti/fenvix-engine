@@ -7,7 +7,9 @@ For each round, two servers are started one after the other on MinIO (judge envi
        server's serverStatus.sealedRuns.rowsFromRuns is checked to grow by at least the number of reads).
 Each server loads DOCS documents of about 300 bytes in batches of 100, then reads HOT of them by _id, WARM rounds first
 (blocks cached), then READS timed reads in random order. p50 and p99 are of the client round trip (pymongo).
-Usage: python -I hot_p50.py <engine root> [rounds]
+Usage: python -I hot_p50.py <engine root> [rounds] [interleaved]
+With "interleaved": both servers run at once (two ports), are loaded the same way, and the timed reads alternate between
+them in blocks of 1,000, so that drift of the machine over time hits both equally; p50 per server over all its reads.
 """
 import json, os, random, statistics, subprocess, sys, time
 
@@ -67,6 +69,76 @@ def one(mode, rnd):
     return {"mode": mode, "round": rnd, "p50_us": lat[len(lat) // 2], "p99_us": lat[int(len(lat) * 0.99)], "mean_us": statistics.mean(lat),
             "rows_from_runs": from_runs, "publishes": s1.get("publishes", 0), "run_gets_during_reads": s1.get("runGets", 0) - s0.get("runGets", 0)}
 
+
+def start_at(port, extra):
+    env = dict(os.environ, SERVER_EXTRA=extra)
+    env.pop("FENVIX_SEALED_RUNS", None)
+    subprocess.run([os.path.join(ROOT, "mongo-tests", "server.sh"), str(port), "600"], check=True, env=env, cwd=ROOT, stdout=subprocess.DEVNULL)
+
+
+def stop_at(port):
+    pid = open(os.path.join(ROOT, "mongo-tests", "out", f"server-{port}.pid")).read().strip()
+    subprocess.run(["kill", "-TERM", pid])
+    while subprocess.run(["kill", "-0", pid], stderr=subprocess.DEVNULL).returncode == 0:
+        time.sleep(0.2)
+
+
+def interleaved(rnd):
+    ports = {"off": PORT, "on": PORT + 1}
+    start_at(ports["off"], "")
+    start_at(ports["on"], "--sealed-runs 60 --sealed-group-mb 4 --sealed-e1-wait-ms 0")
+    cols, clients = {}, {}
+    for mode, port in ports.items():
+        c = MongoClient(f"mongodb://127.0.0.1:{port}/?directConnection=true")
+        col = c[f"hot{mode}{rnd}{int(time.time())}"].d
+        pad = "x" * 260
+        for b in range(DOCS // 100):
+            col.insert_many([{"_id": b * 100 + i, "u": (b * 100 + i) % 997, "pad": pad} for i in range(100)])
+        time.sleep(0.5)
+        for i in range(70):
+            col.update_one({"_id": -1}, {"$inc": {"n": 1}}, upsert=True)
+        cols[mode], clients[mode] = col, c
+    ids = random.Random(rnd).sample(range(DOCS), HOT)
+    s0 = clients["on"].admin.command("serverStatus")["fenvix"]["sealedRuns"]
+    for mode in ports:
+        for _ in range(WARM):
+            for i in ids:
+                assert cols[mode].find_one({"_id": i}) is not None
+    rng = random.Random(1000 + rnd)
+    lat = {"off": [], "on": []}
+    for blk in range(2 * READS // 1000):
+        mode = ("off", "on")[(blk + rnd) % 2]
+        col = cols[mode]
+        for _ in range(1000):
+            i = rng.choice(ids)
+            t = time.perf_counter_ns()
+            d = col.find_one({"_id": i})
+            lat[mode].append((time.perf_counter_ns() - t) / 1000)
+            assert d is not None and d["_id"] == i
+    s1 = clients["on"].admin.command("serverStatus")["fenvix"]["sealedRuns"]
+    for c in clients.values():
+        c.close()
+    for port in ports.values():
+        stop_at(port)
+    res = {"round": rnd, "rows_from_runs_on": s1["rowsFromRuns"] - s0["rowsFromRuns"], "publishes_on": s1["publishes"]}
+    for mode, l in lat.items():
+        l.sort()
+        res[f"p50_{mode}_us"] = l[len(l) // 2]
+        res[f"p99_{mode}_us"] = l[int(len(l) * 0.99)]
+        res[f"reads_{mode}"] = len(l)
+    res["ratio_p50"] = res["p50_on_us"] / res["p50_off_us"]
+    return res
+
+
+if len(sys.argv) > 3 and sys.argv[3] == "interleaved":
+    rs = []
+    for r in range(ROUNDS):
+        x = interleaved(r)
+        print(json.dumps(x), flush=True)
+        rs.append(x)
+    print(json.dumps({"median_ratio_p50": statistics.median(x["ratio_p50"] for x in rs), "median_p50_off_us": statistics.median(x["p50_off_us"] for x in rs),
+                      "median_p50_on_us": statistics.median(x["p50_on_us"] for x in rs), "rounds": ROUNDS, "cpu": open("/proc/cpuinfo").read().split("model name")[1].split("\n")[0].strip(": \t")}))
+    sys.exit(0)
 
 out = []
 for r in range(ROUNDS):

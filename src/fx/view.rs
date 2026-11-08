@@ -162,7 +162,8 @@ async fn fetch(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, last: usiz
     Ok(out.into_iter().map(|b| b.expect("block fetched")).collect())
 }
 
-/// A row from our runs: seq and envelope (first byte 0 live, 1 deleted).
+/// A row from our runs: seq and envelope (first byte 0 live, 1 deleted). A point read leaves `key` empty (the caller
+/// knows it).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RRow {
     pub key: Vec<u8>,
@@ -176,6 +177,10 @@ impl RRow {
     }
     pub fn doc(&self) -> Bytes {
         Bytes::copy_from_slice(&self.env[1..])
+    }
+    /// The live document, without a copy.
+    pub fn into_doc(self) -> Bytes {
+        Bytes::from(self.env).slice(1..)
     }
 }
 
@@ -194,9 +199,16 @@ async fn run_get(store: &Arc<dyn ObjectStore>, h: &RunH, key: &[u8]) -> Result<O
     if i == 0 {
         return Ok(None);
     }
-    let b = fetch(store, run, i - 1, i - 1).await?.pop().unwrap();
+    // a point read needs one block: probe the cache directly before the general fetch
+    let b = match cache_get(&(run.run_id, (i - 1) as u32)) {
+        Some(b) => {
+            BLOCK_HITS.fetch_add(1, Relaxed);
+            b
+        }
+        None => fetch(store, run, i - 1, i - 1).await?.pop().unwrap(),
+    };
     let j = b.lower_bound(key);
-    Ok((j < b.len() && b.key(j) == key).then(|| RRow { key: key.to_vec(), seq: b.seq(j), env: b.env(j).to_vec() }))
+    Ok((j < b.len() && b.key(j) == key).then(|| RRow { key: Vec::new(), seq: b.seq(j), env: b.env(j).to_vec() }))
 }
 
 pub struct Group {

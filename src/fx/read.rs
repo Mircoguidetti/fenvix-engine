@@ -33,7 +33,7 @@ pub async fn get<R: DbReadOps + Sync>(src: &R, opts: &ReadOptions, view: Option<
         }
     }
     Ok(match v.get(key).await? {
-        Some(r) if !r.is_dead() => Some(r.doc()),
+        Some(r) if !r.is_dead() => Some(r.into_doc()),
         _ => None,
     })
 }
@@ -113,10 +113,10 @@ pub async fn scan<R: DbReadOps + Sync>(src: &R, opts: &ScanOptions, view: Option
                 out.push((kv.key, val));
             }
         } else {
-            let r = r_head.take().unwrap();
+            let mut r = r_head.take().unwrap();
             if !r.is_dead() {
-                let d = r.doc();
-                out.push((Bytes::from(r.key), d));
+                let k = Bytes::from(std::mem::take(&mut r.key));
+                out.push((k, r.into_doc()));
             }
         }
         if full(&out) {
