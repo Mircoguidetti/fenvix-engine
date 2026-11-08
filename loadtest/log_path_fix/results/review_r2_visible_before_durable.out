@@ -1,0 +1,6 @@
+round 0: majority read saw the unacknowledged write: False; change stream announced it: False; it survived the kill: False
+round 1: majority read saw the unacknowledged write: False; change stream announced it: False; it survived the kill: False
+round 2: majority read saw the unacknowledged write: False; change stream announced it: False; it survived the kill: False
+round 3: majority read saw the unacknowledged write: False; change stream announced it: False; it survived the kill: False
+round 4: majority read saw the unacknowledged write: False; change stream announced it: False; it survived the kill: False
+RESULT r2_visible_before_durable rounds=5 majority_reads_of_unacked=0 events_of_unacked=0 seen_then_lost=0 -> PASS

@@ -1,0 +1,23 @@
+seed 11, 10 rounds
+  agent: lost []; seen then lost ['a0-0-65', 'a0-1-65']
+round 0: upload 30 s, killed after 3.53 s; acknowledged fast=1893 agent=460 hot=764/65; seen by readers or the stream fast=1891 agent=462; lost=0 dirty=3
+  agent: lost []; seen then lost ['a0-0-65', 'a0-1-65', 'a1-0-39', 'a1-1-39']
+round 1: upload 30 s, killed after 2.08 s; acknowledged fast=3153 agent=763 hot=1289/104; seen by readers or the stream fast=3147 agent=767; lost=0 dirty=5
+  agent: lost []; seen then lost ['a0-0-65', 'a0-1-65', 'a1-0-39', 'a1-1-39', 'a2-0-21', 'a2-1-21']
+round 2: upload 5 s, killed after 1.15 s; acknowledged fast=3842 agent=930 hot=1571/125; seen by readers or the stream fast=3833 agent=936; lost=0 dirty=7
+  agent: lost []; seen then lost ['a0-0-65', 'a0-1-65', 'a1-0-39', 'a1-1-39', 'a2-0-21', 'a2-1-21', 'a3-0-50', 'a3-1-50']
+round 3: upload 30 s, killed after 2.70 s; acknowledged fast=5533 agent=1337 hot=2250/175; seen by readers or the stream fast=5522 agent=1345; lost=0 dirty=9
+  agent: lost []; seen then lost ['a0-0-65', 'a0-1-65', 'a1-0-39', 'a1-1-39', 'a2-0-21', 'a2-1-21', 'a3-0-50', 'a3-1-50', 'a4-0-15', 'a4-1-15']
+round 4: upload 5 s, killed after 0.83 s; acknowledged fast=6028 agent=1457 hot=2441/190; seen by readers or the stream fast=6012 agent=1466; lost=0 dirty=11
+  agent: lost []; seen then lost ['a0-0-65', 'a0-1-65', 'a1-0-39', 'a1-1-39', 'a2-0-21', 'a2-1-21', 'a3-0-50', 'a3-1-50', 'a4-0-15', 'a4-1-15', 'a5-0-18', 'a5-1-18']
+round 5: upload 10 s, killed after 1.00 s; acknowledged fast=6658 agent=1599 hot=2693/208; seen by readers or the stream fast=6634 agent=1610; lost=0 dirty=13
+  agent: lost []; seen then lost ['a0-0-65', 'a0-1-65', 'a1-0-39', 'a1-1-39', 'a2-0-21', 'a2-1-21', 'a3-0-50', 'a3-1-50', 'a4-0-15', 'a4-1-15', 'a5-0-18', 'a5-1-18']
+round 6: upload 2 s, killed after 2.58 s; acknowledged fast=8224 agent=1968 hot=3344/256; seen by readers or the stream fast=8199 agent=1981; lost=0 dirty=15
+  agent: lost []; seen then lost ['a0-0-65', 'a0-1-65', 'a1-0-39', 'a1-1-39', 'a2-0-21', 'a2-1-21', 'a3-0-50', 'a3-1-50', 'a4-0-15', 'a4-1-15', 'a5-0-18', 'a5-1-18']
+round 7: upload 30 s, killed after 3.88 s; acknowledged fast=10601 agent=2531 hot=4312/328; seen by readers or the stream fast=10568 agent=2543; lost=0 dirty=14
+  agent: lost []; seen then lost ['a0-0-65', 'a0-1-65', 'a1-0-39', 'a1-1-39', 'a2-0-21', 'a2-1-21', 'a3-0-50', 'a3-1-50', 'a4-0-15', 'a4-1-15', 'a5-0-18', 'a5-1-18']
+round 8: upload 5 s, killed after 2.68 s; acknowledged fast=12102 agent=2893 hot=4950/377; seen by readers or the stream fast=12062 agent=2907; lost=0 dirty=17
+  agent: lost []; seen then lost ['a0-0-65', 'a0-1-65', 'a1-0-39', 'a1-1-39', 'a2-0-21', 'a2-1-21', 'a3-0-50', 'a3-1-50', 'a4-0-15', 'a4-1-15', 'a5-0-18', 'a5-1-18']
+round 9: upload 2 s, killed after 0.71 s; acknowledged fast=12554 agent=2997 hot=5132/390; seen by readers or the stream fast=12514 agent=3013; lost=0 dirty=19
+reads of in-flight writes 13831, change-stream insert events 15464
+RESULT kill_random rounds=10 acked_fast=12554 acked_agent=2997 acked_hot=5132+390 seen=15527 lost=0 dirty=113 -> FAIL

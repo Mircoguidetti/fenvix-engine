@@ -1,0 +1,33 @@
+seed 1794128862, 30 rounds, one log copy frozen in every round
+round 0: upload 5 s, killed after 1.22 s; acknowledged fast=92 agent=45 hot=36/16; seen by readers or the stream fast=91 agent=46; lost=0 dirty=0
+round 1: upload 2 s, killed after 1.61 s; acknowledged fast=92 agent=91 hot=36/38; seen by readers or the stream fast=94 agent=93; lost=0 dirty=0
+round 2: upload 10 s, killed after 2.66 s; acknowledged fast=303 agent=200 hot=127/81; seen by readers or the stream fast=305 agent=202; lost=0 dirty=0
+round 3: upload 5 s, killed after 1.34 s; acknowledged fast=303 agent=250 hot=127/106; seen by readers or the stream fast=308 agent=253; lost=0 dirty=0
+round 4: upload 30 s, killed after 3.45 s; acknowledged fast=599 agent=396 hot=247/160; seen by readers or the stream fast=597 agent=397; lost=0 dirty=0
+round 5: upload 30 s, killed after 2.78 s; acknowledged fast=599 agent=500 hot=247/211; seen by readers or the stream fast=600 agent=502; lost=0 dirty=0
+round 6: upload 30 s, killed after 3.73 s; acknowledged fast=701 agent=646 hot=274/279; seen by readers or the stream fast=702 agent=648; lost=0 dirty=0
+round 7: upload 10 s, killed after 3.66 s; acknowledged fast=1002 agent=796 hot=410/338; seen by readers or the stream fast=1002 agent=795; lost=0 dirty=0
+round 8: upload 30 s, killed after 1.48 s; acknowledged fast=1002 agent=852 hot=410/366; seen by readers or the stream fast=1005 agent=852; lost=0 dirty=0
+round 9: upload 10 s, killed after 3.27 s; acknowledged fast=1285 agent=995 hot=521/419; seen by readers or the stream fast=1285 agent=995; lost=0 dirty=0
+round 10: upload 2 s, killed after 3.81 s; acknowledged fast=1607 agent=1126 hot=533/482; seen by readers or the stream fast=1607 agent=1126; lost=0 dirty=0
+round 11: upload 30 s, killed after 3.22 s; acknowledged fast=1868 agent=1266 hot=640/533; seen by readers or the stream fast=1866 agent=1266; lost=0 dirty=0
+round 12: upload 5 s, killed after 3.18 s; acknowledged fast=1892 agent=1387 hot=643/592; seen by readers or the stream fast=1891 agent=1387; lost=0 dirty=0
+round 13: upload 5 s, killed after 0.74 s; acknowledged fast=1892 agent=1415 hot=643/605; seen by readers or the stream fast=1894 agent=1416; lost=0 dirty=0
+round 14: upload 30 s, killed after 3.23 s; acknowledged fast=2153 agent=1547 hot=754/657; seen by readers or the stream fast=2155 agent=1548; lost=0 dirty=0
+round 15: upload 2 s, killed after 3.97 s; acknowledged fast=2157 agent=1677 hot=754/722; seen by readers or the stream fast=2161 agent=1678; lost=0 dirty=0
+round 16: upload 2 s, killed after 3.89 s; acknowledged fast=2492 agent=1845 hot=903/785; seen by readers or the stream fast=2496 agent=1845; lost=0 dirty=0
+round 17: upload 30 s, killed after 1.35 s; acknowledged fast=2492 agent=1845 hot=903/785; seen by readers or the stream fast=2496 agent=1845; lost=0 dirty=0
+round 18: upload 10 s, killed after 2.36 s; acknowledged fast=2688 agent=1946 hot=986/825; seen by readers or the stream fast=2692 agent=1946; lost=0 dirty=0
+round 19: upload 5 s, killed after 1.66 s; acknowledged fast=2688 agent=1948 hot=986/825; seen by readers or the stream fast=2692 agent=1946; lost=0 dirty=0
+round 20: upload 5 s, killed after 2.18 s; acknowledged fast=2861 agent=2042 hot=1062/861; seen by readers or the stream fast=2864 agent=2040; lost=0 dirty=0
+round 21: upload 10 s, killed after 2.28 s; acknowledged fast=2861 agent=2042 hot=1062/861; seen by readers or the stream fast=2864 agent=2040; lost=0 dirty=0
+round 22: upload 2 s, killed after 0.58 s; acknowledged fast=2861 agent=2044 hot=1062/861; seen by readers or the stream fast=2864 agent=2040; lost=0 dirty=0
+round 23: upload 30 s, killed after 2.37 s; acknowledged fast=3051 agent=2144 hot=1149/899; seen by readers or the stream fast=3054 agent=2140; lost=0 dirty=0
+round 24: upload 10 s, killed after 2.76 s; acknowledged fast=3051 agent=2145 hot=1149/899; seen by readers or the stream fast=3054 agent=2140; lost=0 dirty=0
+round 25: upload 30 s, killed after 3.90 s; acknowledged fast=3123 agent=2180 hot=1184/910; seen by readers or the stream fast=3124 agent=2175; lost=0 dirty=0
+round 26: upload 10 s, killed after 2.76 s; acknowledged fast=3123 agent=2284 hot=1184/962; seen by readers or the stream fast=3127 agent=2280; lost=0 dirty=0
+round 27: upload 2 s, killed after 3.22 s; acknowledged fast=3197 agent=2376 hot=1219/1008; seen by readers or the stream fast=3195 agent=2373; lost=0 dirty=0
+round 28: upload 2 s, killed after 2.53 s; acknowledged fast=3423 agent=2484 hot=1317/1041; seen by readers or the stream fast=3417 agent=2481; lost=0 dirty=0
+round 29: upload 10 s, killed after 3.76 s; acknowledged fast=3510 agent=2627 hot=1342/1109; seen by readers or the stream fast=3504 agent=2624; lost=0 dirty=0
+reads of in-flight writes 100841, change-stream insert events 5992
+RESULT kill_random rounds=30 acked_fast=3510 acked_agent=2627 acked_hot=1342+1109 seen=6128 lost=0 dirty=0 -> PASS

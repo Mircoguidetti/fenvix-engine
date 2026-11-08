@@ -194,8 +194,9 @@ for rnd in range(ROUNDS):
         dirty += 1 if hot_seen[k] > h else 0
     c.close()
     P.kill9()
-    tot['lost'] += lost
-    tot['dirty'] += dirty
+    # the sets are cumulative: the last round's counts are the distinct writes lost or seen then lost over the run
+    tot['lost'] = lost
+    tot['dirty'] = dirty
     OUT.say(f'round {rnd}: upload {up} s, killed after {secs:.2f} s; acknowledged fast={len(acked["fast"])} agent={len(acked["agent"])} '
             f'hot={hot_acked["fast"]}/{hot_acked["agent"]}; seen by readers or the stream fast={len(seen["fast"])} agent={len(seen["agent"])}; lost={lost} dirty={dirty}')
 log.down()
