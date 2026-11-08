@@ -614,6 +614,27 @@ pub async fn recover_remote(dbs: &Arc<crate::dbs::Dbs>, timeout: Duration) -> Re
     Ok((n_dbs, applied))
 }
 
+/// Records of the replicated log dropped at a replay because a later writer had opened the database (see `drop_stale`).
+pub static STALE_DROPPED: AtomicU64 = AtomicU64::new(0);
+
+/// Replicated log: drop the records staged by a writer older than the one stored (`stored`, the writer epoch in the
+/// manifest). The last writer's records carry its epoch, which is the stored one until the next writer opens, and a
+/// replay reads every record the log has confirmed before it opens one (`qlog::Remote::caught_up`). So a record of an
+/// older epoch was confirmed by the log only after a replay had read the log and a newer writer had opened: it was in
+/// flight when its writer died, never acknowledged, and applying it now would put old values over newer writes (a kill
+/// test under load lost natural-order entries this way: the late record reused a number a newer document held). Kept
+/// copies of records whose replay failed are written again with the epoch of the writer that will apply them, so they
+/// pass. Records without an epoch (0) are kept.
+fn drop_stale(db: &str, recs: &mut Vec<Record>, stored: u64) {
+    let before = recs.len();
+    recs.retain(|r| r.epoch == 0 || r.epoch >= stored);
+    let n = before - recs.len();
+    if n > 0 {
+        STALE_DROPPED.fetch_add(n as u64, Relaxed);
+        eprintln!("quaderno: database {db}: {n} records from a writer older than the stored one (epoch {stored}) were confirmed after a later replay read the log: never acknowledged, dropped");
+    }
+}
+
 /// Takeovers that read the database's records back from the replicated log, and records they applied.
 pub static WAKE_REPLAYS: AtomicU64 = AtomicU64::new(0);
 pub static WAKE_REPLAYED: AtomicU64 = AtomicU64::new(0);
@@ -655,6 +676,9 @@ pub async fn replay_on_wake(g: &mut crate::dbs::Entry) -> Result<()> {
     remote.note_committed(&name, max_pos);
     log.next_seq.fetch_max(max_seq + 1, Relaxed);
     WAKE_REPLAYS.fetch_add(1, Relaxed);
+    if let Some(stored) = tenant_bench::lifecycle::stored_writer_epoch(&g.raw_store(), &name).await? {
+        drop_stale(&name, &mut recs, stored);
+    }
     let rec_epoch = recs.iter().map(|r| r.epoch).max().unwrap_or(0);
     if rec_epoch > 0 {
         if let Some(stored) = tenant_bench::lifecycle::stored_writer_epoch(&g.raw_store(), &name).await? {
@@ -868,6 +892,15 @@ async fn replay_db(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str, mut recs:
     // Another writer opened the database after the one that staged these records (another process took it over, or this
     // one lost and re-took it): replaying them would overwrite newer writes and leave the secondary indexes inconsistent.
     // Refused, kept as conflict, like a marker of another log.
+    // (not for a background retry: its records are the kept ones, held in memory, see `pinned`)
+    if !retry && get().map_or(false, |l| l.is_remote()) {
+        if let Some(stored) = tenant_bench::lifecycle::stored_writer_epoch(&dbs.store(), db).await? {
+            drop_stale(db, &mut recs, stored);
+        }
+        if recs.is_empty() {
+            return Ok(Outcome::Nothing);
+        }
+    }
     let rec_epoch = recs.iter().map(|r| r.epoch).max().unwrap_or(0);
     if rec_epoch > 0 {
         if let Some(stored) = tenant_bench::lifecycle::stored_writer_epoch(&dbs.store(), db).await? {

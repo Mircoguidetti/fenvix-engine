@@ -12,7 +12,7 @@ A dirty read is a read that returned a write that was then lost: readers (readCo
 stream records every inserted id it announces. After the restart, every acknowledged write must be there, every id a
 reader or the stream saw must be there, and each hot counter must be at least the highest value a reader saw and at
 least its number of acknowledged increments.
-  kill_random.py OUT_DIR [--rounds 100] [--seed N] [--one-copy-down]
+  kill_random.py OUT_DIR [--rounds 100] [--seed N] [--one-copy-down] [--port 28131] [--log-off 9500]
 """
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'agent_lane'))
@@ -30,12 +30,14 @@ ONE_DOWN = '--one-copy-down' in args
 rng = random.Random(SEED)
 WORK = os.path.join(OUT.dir, 'work')
 DB = 'kr'
-kill_leftovers((28131,), 9500)
+PORT = int(opt(args, '--port', '28131'))
+LOG_OFF = int(opt(args, '--log-off', '9500'))   # the log copies and their proxy use LOG_OFF + 7100..7402: keep runs 1000 apart
+kill_leftovers((PORT,), LOG_OFF)
 shutil.rmtree(WORK, ignore_errors=True)
 os.makedirs(WORK)
-log = Log(os.path.join(WORK, "log"), 9500)
+log = Log(os.path.join(WORK, "log"), LOG_OFF)
 log.up()
-P = Engine(OUT.dir, 'P', 28131, ['--store', 'local', '--local-dir', os.path.join(WORK, 'store')], log=log, extra=['--agent-lane-window-ms', '50'])
+P = Engine(OUT.dir, 'P', PORT, ['--store', 'local', '--local-dir', os.path.join(WORK, 'store')], log=log, extra=['--agent-lane-window-ms', '50'])
 OUT.say(f'seed {SEED}, {ROUNDS} rounds' + (', one log copy frozen in every round' if ONE_DOWN else ''))
 
 acked = {'fast': set(), 'agent': set()}
@@ -185,6 +187,8 @@ for rnd in range(ROUNDS):
         have = find_ids(c, DB, k, acked[k] | seen[k])
         lost += len(acked[k] - have)
         dirty += len(seen[k] - have)
+        if acked[k] - have or seen[k] - have:
+            OUT.say(f'  {k}: lost {sorted(acked[k] - have)[:12]}; seen then lost {sorted(seen[k] - have)[:12]}')
         h = (c[DB][k].find_one({'_id': 'hot'}) or {}).get('n', 0)
         lost += max(0, hot_acked[k] - h)
         dirty += 1 if hot_seen[k] > h else 0

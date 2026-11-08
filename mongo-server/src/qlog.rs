@@ -152,24 +152,50 @@ impl Remote {
         }
     }
 
-    /// Every record still in the log (not confirmed as in object storage), of every database, with its position, in
-    /// position order per database. Read at restart only.
-    pub async fn read_pending(&self) -> Result<Vec<(Db, Vec<(Pos, Bytes)>)>> {
-        let list = match self.cl.call_leader(&Req::Pending { limit: u32::MAX }, Duration::from_secs(30)).await {
-            Some(Resp::Pending(v)) => v,
-            other => bail!("the log did not list its pending records: {}", other.map(|r| format!("{r:?}")).unwrap_or_else(|| "no answer".into())),
-        };
-        // read from the leader (it has every confirmed record), up to its confirmed position
+    /// The leader's confirmed position, and a copy of the log that has applied every record up to it.
+    ///
+    /// The lists of pending records (`Pending`, `FlushableFrom`) are answered by any copy from the records it has applied
+    /// to its window, which can lag behind what the leader confirmed (a busy copy, a follower answering a stale leader
+    /// guess). A restart right after a kill read such a list without the last confirmed records (acknowledged writes),
+    /// served the database without them, and its next writer epoch then made them a "conflict" that no restart applies
+    /// (found by the log-path fix's kill test under load). So: ask the leader for its confirmed position (a ReadIndex
+    /// round), then wait (`Wait`) until one copy has applied up to it, and read the lists from that copy only.
+    async fn caught_up(&self) -> Result<(usize, Pos)> {
         let upto = match self.cl.call_leader(&Req::Confirmed, Duration::from_secs(10)).await {
             Some(Resp::Pos(p)) => p,
             other => bail!("the log did not give its confirmed position: {}", other.map(|r| format!("{r:?}")).unwrap_or_else(|| "no answer".into())),
+        };
+        for _ in 0..3 {
+            for r in 0..3 {
+                if let Ok(Resp::Pos(p)) = self.cl.call(r, &Req::Wait { pos: upto, timeout_ms: 5000 }, Duration::from_secs(6)).await {
+                    if p >= upto {
+                        return Ok((r, upto));
+                    }
+                }
+            }
+        }
+        bail!("no copy of the log applied its records up to the confirmed position {upto}")
+    }
+
+    /// `q` to copy `r` of the log.
+    async fn call_copy(&self, r: usize, q: &Req, timeout: Duration) -> Option<Resp> {
+        self.cl.call(r, q, timeout).await.ok()
+    }
+
+    /// Every record still in the log (not confirmed as in object storage), of every database, with its position, in
+    /// position order per database. Read at restart only.
+    pub async fn read_pending(&self) -> Result<Vec<(Db, Vec<(Pos, Bytes)>)>> {
+        let (copy, upto) = self.caught_up().await?;
+        let list = match self.call_copy(copy, &Req::Pending { limit: u32::MAX }, Duration::from_secs(30)).await {
+            Some(Resp::Pending(v)) => v,
+            other => bail!("the log did not list its pending records: {}", other.map(|r| format!("{r:?}")).unwrap_or_else(|| "no answer".into())),
         };
         let mut out = Vec::new();
         for p in list {
             let mut recs: Vec<(Pos, Bytes)> = Vec::new();
             let mut from: Pos = 0;
             loop {
-                let r = self.cl.call_leader(&Req::FlushableFrom { db: p.db, from, upto }, Duration::from_secs(30)).await;
+                let r = self.call_copy(copy, &Req::FlushableFrom { db: p.db, from, upto }, Duration::from_secs(30)).await;
                 let page = match r {
                     Some(Resp::Flushable(v)) => v.into_iter().flat_map(|(_, rs)| rs).collect::<Vec<_>>(),
                     other => bail!("the log did not give the records of a database: {}", other.map(|r| format!("{r:?}")).unwrap_or_else(|| "no answer".into())),
@@ -194,14 +220,11 @@ impl Remote {
     /// The records of one database still in the log (not confirmed as in object storage), in position order. Read by a
     /// warm spare when it takes the database over (`locallog::replay_on_wake`).
     pub async fn read_db(&self, name: &str) -> Result<Vec<(Pos, Bytes)>> {
-        let upto = match self.cl.call_leader(&Req::Confirmed, Duration::from_secs(10)).await {
-            Some(Resp::Pos(p)) => p,
-            other => bail!("the log did not give its confirmed position: {}", other.map(|r| format!("{r:?}")).unwrap_or_else(|| "no answer".into())),
-        };
+        let (copy, upto) = self.caught_up().await?;
         let mut recs: Vec<(Pos, Bytes)> = Vec::new();
         let mut from: Pos = 0;
         loop {
-            let r = self.cl.call_leader(&Req::FlushableFrom { db: db_key(name), from, upto }, Duration::from_secs(30)).await;
+            let r = self.call_copy(copy, &Req::FlushableFrom { db: db_key(name), from, upto }, Duration::from_secs(30)).await;
             let page = match r {
                 Some(Resp::Flushable(v)) => v.into_iter().flat_map(|(_, rs)| rs).collect::<Vec<_>>(),
                 other => bail!("the log did not give the records of {name}: {}", other.map(|r| format!("{r:?}")).unwrap_or_else(|| "no answer".into())),

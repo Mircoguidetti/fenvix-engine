@@ -631,10 +631,11 @@ impl Lifecycle {
     pub async fn create(self: &Arc<Self>, id: impl std::fmt::Display) -> Result<Tenant> {
         let id = id.to_string();
         let db = writer_builder(&id, &self.store).build().await?;
+        let epoch = opened_epoch(&self.store, &id).await?;
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
         let scope = writer_scope(&id);
-        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope })
+        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, epoch })
     }
 
     pub fn new(counting: Arc<CountingStore>, queue: Option<Arc<CompactionQueue>>) -> Arc<Self> {
@@ -679,7 +680,7 @@ impl Lifecycle {
         let l0_at_wake = reader.manifest().l0().len();
         let reader = Arc::new(reader);
         READER_DBS.lock().unwrap().insert(id.clone(), Arc::downgrade(&reader));
-        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope })
+        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, epoch: 0 })
     }
 }
 
@@ -1314,13 +1315,29 @@ pub struct Tenant {
     pub l0_at_wake: usize,
     /// Cache scope of the reader or writer (kept by the upgrade to a writer, see [`writer_builder_in`]).
     scope: Option<u64>,
+    /// With the log on: the writer epoch this writer fenced with, read from object storage when it opened (0: not read).
+    epoch: u64,
+}
+
+/// The writer epoch a writer just opened on `id` fenced with, read from the stored manifest (with the log on only: the log
+/// stamps every record with it, see `writer_epoch`). 0 when the log is off.
+async fn opened_epoch(store: &Arc<dyn ObjectStore>, id: &str) -> Result<u64> {
+    if LOCAL_LOG_FLUSH_SECS.load(std::sync::atomic::Ordering::Relaxed) == 0 {
+        return Ok(0);
+    }
+    Ok(stored_writer_epoch(store, id).await?.unwrap_or(0))
 }
 
 impl Tenant {
     /// slatedb writer epoch of this writer (None for a reader).
+    ///
+    /// With the log on, the epoch read from object storage when the writer opened: `Db::manifest()` is the writer's cached
+    /// view of the manifest, which can still show the previous writer's epoch after this one fenced (MEASURED: most
+    /// records of a writer opened at epoch 3 were stamped 2), and a restart then took that writer's acknowledged records
+    /// for an older writer's ("opened by another writer after these records": not applied).
     pub fn writer_epoch(&self) -> Option<u64> {
         match &self.mode {
-            Some(Mode::Writer(db)) => Some(db.manifest().writer_epoch()),
+            Some(Mode::Writer(db)) => Some(if self.epoch > 0 { self.epoch } else { db.manifest().writer_epoch() }),
             _ => None,
         }
     }
@@ -1473,6 +1490,7 @@ impl Tenant {
             Err(e) => return Err(e.into()),
         }
         let db = db?;
+        self.epoch = opened_epoch(store, &self.id).await?;
         writer_opened(&self.id, &db);
         self.mode = Some(Mode::Writer(db));
         self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
