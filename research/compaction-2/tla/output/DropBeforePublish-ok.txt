@@ -1,14 +1,14 @@
 TLC2 Version 2026.11.06.222357 (rev: d8fb231)
-Running breadth-first search Model-Checking with fp 26 and seed -7578191573281732930 with 4 workers on 4 cores with 9102MB heap and 64MB offheap memory [pid: 10167] (Linux 6.18.44-fc-v310 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Running breadth-first search Model-Checking with fp 18 and seed -8346175664484287060 with 4 workers on 4 cores with 7282MB heap and 64MB offheap memory [pid: 2275] (Linux 6.18.44-fc-v310 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
 Parsing file /home/user/fenvix-engine/research/compaction-2/tla/MC.tla
 Parsing file /home/user/fenvix-engine/research/compaction-2/tla/Compaction2.tla
-Parsing file /tmp/tlc-18425753864985013757/_TLCTrace.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
-Parsing file /tmp/tlc-18425753864985013757/Integers.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
-Parsing file /tmp/tlc-18425753864985013757/FiniteSets.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
-Parsing file /tmp/tlc-18425753864985013757/Sequences.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
-Parsing file /tmp/tlc-18425753864985013757/TLC.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
-Parsing file /tmp/tlc-18425753864985013757/Naturals.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
-Parsing file /tmp/tlc-18425753864985013757/TLCExt.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-891938986731440308/_TLCTrace.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-891938986731440308/Integers.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Parsing file /tmp/tlc-891938986731440308/FiniteSets.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-891938986731440308/Sequences.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-891938986731440308/TLC.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-891938986731440308/Naturals.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-891938986731440308/TLCExt.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
 Semantic processing of module Naturals
 Semantic processing of module Integers
 Semantic processing of module Sequences
@@ -22,18 +22,19 @@ Linting of module Compaction2
 Linting of module TLCExt
 Linting of module _TLCTrace
 Linting of module MC
-Starting... (2026-11-07 17:42:12)
+Starting... (2026-11-08 07:51:53)
 Computing initial states...
-Finished computing initial states: 1 distinct state generated at 2026-11-07 17:42:12.
-Progress(15) at 2026-11-07 17:42:15: 194,697 states generated (194,697 s/min), 63,906 distinct states found (63,906 ds/min), 28,967 states left on queue.
-Progress(23) at 2026-11-07 17:43:15: 7,760,299 states generated (7,565,602 s/min), 2,188,792 distinct states found (2,124,886 ds/min), 494,623 states left on queue.
-Progress(27) at 2026-11-07 17:44:15: 16,234,019 states generated (8,473,720 s/min), 3,917,525 distinct states found (1,728,733 ds/min), 248,618 states left on queue.
+Finished computing initial states: 1 distinct state generated at 2026-11-08 07:51:53.
+Progress(13) at 2026-11-08 07:51:56: 229,691 states generated (229,691 s/min), 86,501 distinct states found (86,501 ds/min), 45,122 states left on queue.
+Progress(19) at 2026-11-08 07:52:56: 8,601,783 states generated (8,372,092 s/min), 3,088,042 distinct states found (3,001,541 ds/min), 1,379,870 states left on queue.
+Progress(20) at 2026-11-08 07:53:56: 17,195,657 states generated (8,593,874 s/min), 6,053,559 distinct states found (2,965,517 ds/min), 2,582,440 states left on queue.
+Progress(20) at 2026-11-08 07:54:23: 21,278,387 states generated (4,082,730 s/min), 7,443,849 distinct states found (1,390,290 ds/min), 3,157,050 states left on queue.
 Model checking completed. No error has been found.
   Estimates of the probability that TLC did not check all reachable states
   because two distinct states had the same fingerprint:
-  calculated (optimistic):  val = 3.1E-6
-  based on the actual fingerprints:  val = 5.3E-7
-17838084 states generated, 4125682 distinct states found, 0 states left on queue.
-The depth of the complete state graph search is 31.
-The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 9 and the 95th percentile is 3).
-Finished in 02min 13s at (2026-11-07 17:44:25)
+  calculated (optimistic):  val = 5.6E-6
+  based on the actual fingerprints:  val = 2.9E-6
+21278407 states generated, 7443854 distinct states found, 3157055 states left on queue.
+The depth of the complete state graph search is 20.
+The average outdegree of the complete state graph is 2 (minimum is 0, the maximum 9 and the 95th percentile is 4).
+Finished in 02min 31s at (2026-11-08 07:54:24)

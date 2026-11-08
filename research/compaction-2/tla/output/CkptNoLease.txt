@@ -1,14 +1,14 @@
 TLC2 Version 2026.11.06.222357 (rev: d8fb231)
-Running breadth-first search Model-Checking with fp 87 and seed 5403430041170694285 with 4 workers on 4 cores with 9102MB heap and 64MB offheap memory [pid: 9978] (Linux 6.18.44-fc-v310 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Running breadth-first search Model-Checking with fp 65 and seed 7148511633183604139 with 4 workers on 4 cores with 7282MB heap and 64MB offheap memory [pid: 3406] (Linux 6.18.44-fc-v310 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
 Parsing file /home/user/fenvix-engine/research/compaction-2/tla/MC.tla
 Parsing file /home/user/fenvix-engine/research/compaction-2/tla/Compaction2.tla
-Parsing file /tmp/tlc-14433889457617978615/_TLCTrace.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
-Parsing file /tmp/tlc-14433889457617978615/Integers.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
-Parsing file /tmp/tlc-14433889457617978615/FiniteSets.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
-Parsing file /tmp/tlc-14433889457617978615/Sequences.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
-Parsing file /tmp/tlc-14433889457617978615/TLC.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
-Parsing file /tmp/tlc-14433889457617978615/Naturals.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
-Parsing file /tmp/tlc-14433889457617978615/TLCExt.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-13661242290442600393/_TLCTrace.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-13661242290442600393/Integers.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Parsing file /tmp/tlc-13661242290442600393/FiniteSets.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-13661242290442600393/Sequences.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-13661242290442600393/TLC.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-13661242290442600393/Naturals.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-13661242290442600393/TLCExt.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
 Semantic processing of module Naturals
 Semantic processing of module Integers
 Semantic processing of module Sequences
@@ -22,24 +22,30 @@ Linting of module Compaction2
 Linting of module TLCExt
 Linting of module _TLCTrace
 Linting of module MC
-Starting... (2026-11-07 17:39:34)
+Starting... (2026-11-08 08:30:44)
 Computing initial states...
-Finished computing initial states: 1 distinct state generated at 2026-11-07 17:39:34.
+Finished computing initial states: 1 distinct state generated at 2026-11-08 08:30:44.
+Progress(12) at 2026-11-08 08:30:47: 217,731 states generated (217,731 s/min), 75,967 distinct states found (75,967 ds/min), 43,847 states left on queue.
 Error: Invariant CkptReadOK is violated.
 Error: The behavior up to this point is:
 State 1: <Initial predicate>
+/\ unsure = FALSE
 /\ bad = {}
+/\ tko = -1
 /\ seq = 0
 /\ runRows = <<{}, {}, {}, {}, {}>>
 /\ nMerge = 0
 /\ nComp = 0
 /\ job = [k |-> "none"]
 /\ rage = <<-1, -1, -1, -1, -1>>
-/\ ck = [v |-> 0, st |-> "none", rows |-> {}, cs |-> 0, lease |-> FALSE]
+/\ ck = [v |-> 0, st |-> "none", rows |-> {}, cs |-> 0, lease |-> FALSE, lage |-> 0]
+/\ e1ann = 1
+/\ rb = 0
 /\ rd = <<>>
+/\ rel = "E1"
 /\ hist = <<[k |-> "none", t |-> "none"]>>
 /\ fk = [on |-> FALSE]
-/\ fl = [v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0]
+/\ fl = [eenv |-> 0, v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0, ann |-> TRUE]
 /\ ver = << [ delta |-> {},
      sealed |-> [g2 |-> 0, g1 |-> 0],
      own |-> (a1 :> "g1" @@ a2 :> "g1" @@ b1 :> "g2"),
@@ -49,6 +55,7 @@ State 1: <Initial predicate>
 /\ tr = (0 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0) @@ 1 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0))
 /\ crashes = 0
 /\ eenv = 0
+/\ known = 1
 /\ stamp = <<-1, -1, -1, -1, -1, -1>>
 /\ runSt = <<"free", "free", "free", "free", "free">>
 /\ l0 = <<>>
@@ -56,19 +63,24 @@ State 1: <Initial predicate>
 /\ mem = {}
 /\ seen = <<-1, -1, -1, -1, -1, -1>>
 
-State 2: <Write("put",a1) line 187, col 3 to line 199, col 62 of module Compaction2>
+State 2: <Write("put",a1) line 235, col 3 to line 249, col 19 of module Compaction2>
+/\ unsure = FALSE
 /\ bad = {}
+/\ tko = -1
 /\ seq = 1
 /\ runRows = <<{}, {}, {}, {}, {}>>
 /\ nMerge = 0
 /\ nComp = 0
 /\ job = [k |-> "none"]
 /\ rage = <<-1, -1, -1, -1, -1>>
-/\ ck = [v |-> 0, st |-> "none", rows |-> {}, cs |-> 0, lease |-> FALSE]
+/\ ck = [v |-> 0, st |-> "none", rows |-> {}, cs |-> 0, lease |-> FALSE, lage |-> 0]
+/\ e1ann = 1
+/\ rb = 0
 /\ rd = <<>>
+/\ rel = "E1"
 /\ hist = <<[k |-> a1, t |-> "put"]>>
 /\ fk = [on |-> FALSE]
-/\ fl = [v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0]
+/\ fl = [eenv |-> 0, v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0, ann |-> TRUE]
 /\ ver = << [ delta |-> {},
      sealed |-> [g2 |-> 0, g1 |-> 0],
      own |-> (a1 :> "g1" @@ a2 :> "g1" @@ b1 :> "g2"),
@@ -78,6 +90,7 @@ State 2: <Write("put",a1) line 187, col 3 to line 199, col 62 of module Compacti
 /\ tr = (0 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0) @@ 1 :> (a1 :> 1 @@ a2 :> 0 @@ b1 :> 0))
 /\ crashes = 0
 /\ eenv = 0
+/\ known = 1
 /\ stamp = <<-1, -1, -1, -1, -1, -1>>
 /\ runSt = <<"free", "free", "free", "free", "free">>
 /\ l0 = <<>>
@@ -85,19 +98,24 @@ State 2: <Write("put",a1) line 187, col 3 to line 199, col 62 of module Compacti
 /\ mem = {[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}
 /\ seen = <<-1, -1, -1, -1, -1, -1>>
 
-State 3: <Flush line 208, col 3 to line 213, col 62 of module Compaction2>
+State 3: <Flush line 281, col 3 to line 287, col 19 of module Compaction2>
+/\ unsure = FALSE
 /\ bad = {}
+/\ tko = -1
 /\ seq = 1
 /\ runRows = <<{}, {}, {}, {}, {}>>
 /\ nMerge = 0
 /\ nComp = 0
 /\ job = [k |-> "none"]
 /\ rage = <<-1, -1, -1, -1, -1>>
-/\ ck = [v |-> 0, st |-> "none", rows |-> {}, cs |-> 0, lease |-> FALSE]
+/\ ck = [v |-> 0, st |-> "none", rows |-> {}, cs |-> 0, lease |-> FALSE, lage |-> 0]
+/\ e1ann = 1
+/\ rb = 0
 /\ rd = <<>>
+/\ rel = "E1"
 /\ hist = <<[k |-> a1, t |-> "put"]>>
 /\ fk = [on |-> FALSE]
-/\ fl = [v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0]
+/\ fl = [eenv |-> 0, v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0, ann |-> TRUE]
 /\ ver = << [ delta |-> {},
      sealed |-> [g2 |-> 0, g1 |-> 0],
      own |-> (a1 :> "g1" @@ a2 :> "g1" @@ b1 :> "g2"),
@@ -107,6 +125,7 @@ State 3: <Flush line 208, col 3 to line 213, col 62 of module Compaction2>
 /\ tr = (0 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0) @@ 1 :> (a1 :> 1 @@ a2 :> 0 @@ b1 :> 0))
 /\ crashes = 0
 /\ eenv = 0
+/\ known = 1
 /\ stamp = <<-1, -1, -1, -1, -1, -1>>
 /\ runSt = <<"free", "free", "free", "free", "free">>
 /\ l0 = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}>>
@@ -114,13 +133,16 @@ State 3: <Flush line 208, col 3 to line 213, col 62 of module Compaction2>
 /\ mem = {}
 /\ seen = <<-1, -1, -1, -1, -1, -1>>
 
-State 4: <Absorb line 238, col 3 to line 245, col 62 of module Compaction2>
+State 4: <Absorb line 313, col 3 to line 321, col 19 of module Compaction2>
+/\ unsure = FALSE
 /\ bad = {}
+/\ tko = -1
 /\ seq = 1
 /\ runRows = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}, {}, {}, {}, {}>>
 /\ nMerge = 0
 /\ nComp = 0
 /\ job = [ k |-> "absorb",
+  own |-> TRUE,
   st |-> 0,
   rec |->
       [ delta |-> {1},
@@ -131,11 +153,14 @@ State 4: <Absorb line 238, col 3 to line 245, col 62 of module Compaction2>
   base |-> 1,
   runs |-> {1} ]
 /\ rage = <<-1, -1, -1, -1, -1>>
-/\ ck = [v |-> 0, st |-> "none", rows |-> {}, cs |-> 0, lease |-> FALSE]
+/\ ck = [v |-> 0, st |-> "none", rows |-> {}, cs |-> 0, lease |-> FALSE, lage |-> 0]
+/\ e1ann = 1
+/\ rb = 0
 /\ rd = <<>>
+/\ rel = "E1"
 /\ hist = <<[k |-> a1, t |-> "put"]>>
 /\ fk = [on |-> FALSE]
-/\ fl = [v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0]
+/\ fl = [eenv |-> 0, v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0, ann |-> TRUE]
 /\ ver = << [ delta |-> {},
      sealed |-> [g2 |-> 0, g1 |-> 0],
      own |-> (a1 :> "g1" @@ a2 :> "g1" @@ b1 :> "g2"),
@@ -145,6 +170,7 @@ State 4: <Absorb line 238, col 3 to line 245, col 62 of module Compaction2>
 /\ tr = (0 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0) @@ 1 :> (a1 :> 1 @@ a2 :> 0 @@ b1 :> 0))
 /\ crashes = 0
 /\ eenv = 0
+/\ known = 1
 /\ stamp = <<-1, -1, -1, -1, -1, -1>>
 /\ runSt = <<"live", "free", "free", "free", "free">>
 /\ l0 = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}>>
@@ -152,13 +178,16 @@ State 4: <Absorb line 238, col 3 to line 245, col 62 of module Compaction2>
 /\ mem = {}
 /\ seen = <<-1, -1, -1, -1, -1, -1>>
 
-State 5: <CkBegin line 463, col 3 to line 466, col 69 of module Compaction2>
+State 5: <CkBegin line 604, col 3 to line 608, col 19 of module Compaction2>
+/\ unsure = FALSE
 /\ bad = {}
+/\ tko = -1
 /\ seq = 1
 /\ runRows = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}, {}, {}, {}, {}>>
 /\ nMerge = 0
 /\ nComp = 0
 /\ job = [ k |-> "absorb",
+  own |-> TRUE,
   st |-> 0,
   rec |->
       [ delta |-> {1},
@@ -169,11 +198,14 @@ State 5: <CkBegin line 463, col 3 to line 466, col 69 of module Compaction2>
   base |-> 1,
   runs |-> {1} ]
 /\ rage = <<-1, -1, -1, -1, -1>>
-/\ ck = [v |-> 1, st |-> "begun", rows |-> {}, cs |-> 0, lease |-> FALSE]
+/\ ck = [v |-> 1, st |-> "begun", rows |-> {}, cs |-> 0, lease |-> FALSE, lage |-> 0]
+/\ e1ann = 1
+/\ rb = 0
 /\ rd = <<>>
+/\ rel = "E1"
 /\ hist = <<[k |-> a1, t |-> "put"]>>
 /\ fk = [on |-> FALSE]
-/\ fl = [v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0]
+/\ fl = [eenv |-> 0, v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0, ann |-> TRUE]
 /\ ver = << [ delta |-> {},
      sealed |-> [g2 |-> 0, g1 |-> 0],
      own |-> (a1 :> "g1" @@ a2 :> "g1" @@ b1 :> "g2"),
@@ -183,6 +215,7 @@ State 5: <CkBegin line 463, col 3 to line 466, col 69 of module Compaction2>
 /\ tr = (0 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0) @@ 1 :> (a1 :> 1 @@ a2 :> 0 @@ b1 :> 0))
 /\ crashes = 0
 /\ eenv = 0
+/\ known = 1
 /\ stamp = <<-1, -1, -1, -1, -1, -1>>
 /\ runSt = <<"live", "free", "free", "free", "free">>
 /\ l0 = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}>>
@@ -190,19 +223,24 @@ State 5: <CkBegin line 463, col 3 to line 466, col 69 of module Compaction2>
 /\ mem = {}
 /\ seen = <<-1, -1, -1, -1, -1, -1>>
 
-State 6: <PublishLand line 311, col 3 to line 320, col 62 of module Compaction2>
+State 6: <PublishLand line 393, col 3 to line 404, col 46 of module Compaction2>
+/\ unsure = FALSE
 /\ bad = {}
+/\ tko = -1
 /\ seq = 1
 /\ runRows = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}, {}, {}, {}, {}>>
 /\ nMerge = 0
 /\ nComp = 0
 /\ job = [k |-> "none"]
 /\ rage = <<-1, -1, -1, -1, -1>>
-/\ ck = [v |-> 1, st |-> "begun", rows |-> {}, cs |-> 0, lease |-> FALSE]
+/\ ck = [v |-> 1, st |-> "begun", rows |-> {}, cs |-> 0, lease |-> FALSE, lage |-> 0]
+/\ e1ann = 1
+/\ rb = 0
 /\ rd = <<>>
+/\ rel = "E1"
 /\ hist = <<[k |-> a1, t |-> "put"]>>
 /\ fk = [on |-> FALSE]
-/\ fl = [v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0]
+/\ fl = [eenv |-> 0, v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0, ann |-> TRUE]
 /\ ver = << [ delta |-> {},
      sealed |-> [g2 |-> 0, g1 |-> 0],
      own |-> (a1 :> "g1" @@ a2 :> "g1" @@ b1 :> "g2"),
@@ -217,6 +255,7 @@ State 6: <PublishLand line 311, col 3 to line 320, col 62 of module Compaction2>
 /\ tr = (0 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0) @@ 1 :> (a1 :> 1 @@ a2 :> 0 @@ b1 :> 0))
 /\ crashes = 0
 /\ eenv = 0
+/\ known = 2
 /\ stamp = <<-1, -1, -1, -1, -1, -1>>
 /\ runSt = <<"live", "free", "free", "free", "free">>
 /\ l0 = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}>>
@@ -224,19 +263,24 @@ State 6: <PublishLand line 311, col 3 to line 320, col 62 of module Compaction2>
 /\ mem = {}
 /\ seen = <<-1, -1, -1, -1, -1, -1>>
 
-State 7: <DropJob line 368, col 15 to line 368, col 33 of module Compaction2>
+State 7: <DropJob line 484, col 15 to line 484, col 33 of module Compaction2>
+/\ unsure = FALSE
 /\ bad = {}
+/\ tko = -1
 /\ seq = 1
 /\ runRows = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}, {}, {}, {}, {}>>
 /\ nMerge = 0
 /\ nComp = 0
 /\ job = [k |-> "none"]
 /\ rage = <<-1, -1, -1, -1, -1>>
-/\ ck = [v |-> 1, st |-> "begun", rows |-> {}, cs |-> 0, lease |-> FALSE]
+/\ ck = [v |-> 1, st |-> "begun", rows |-> {}, cs |-> 0, lease |-> FALSE, lage |-> 0]
+/\ e1ann = 1
+/\ rb = 0
 /\ rd = <<>>
+/\ rel = "E1"
 /\ hist = <<[k |-> a1, t |-> "put"]>>
 /\ fk = [on |-> FALSE]
-/\ fl = [v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0]
+/\ fl = [eenv |-> 0, v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0, ann |-> TRUE]
 /\ ver = << [ delta |-> {},
      sealed |-> [g2 |-> 0, g1 |-> 0],
      own |-> (a1 :> "g1" @@ a2 :> "g1" @@ b1 :> "g2"),
@@ -251,6 +295,7 @@ State 7: <DropJob line 368, col 15 to line 368, col 33 of module Compaction2>
 /\ tr = (0 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0) @@ 1 :> (a1 :> 1 @@ a2 :> 0 @@ b1 :> 0))
 /\ crashes = 0
 /\ eenv = 0
+/\ known = 2
 /\ stamp = <<-1, -1, -1, -1, -1, -1>>
 /\ runSt = <<"live", "free", "free", "free", "free">>
 /\ l0 = <<>>
@@ -258,19 +303,24 @@ State 7: <DropJob line 368, col 15 to line 368, col 33 of module Compaction2>
 /\ mem = {}
 /\ seen = <<0, 0, -1, -1, -1, -1>>
 
-State 8: <Tick line 511, col 3 to line 524, col 54 of module Compaction2>
+State 8: <Tick line 671, col 3 to line 690, col 74 of module Compaction2>
+/\ unsure = FALSE
 /\ bad = {}
+/\ tko = -1
 /\ seq = 1
 /\ runRows = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}, {}, {}, {}, {}>>
 /\ nMerge = 0
 /\ nComp = 0
 /\ job = [k |-> "none"]
 /\ rage = <<-1, -1, -1, -1, -1>>
-/\ ck = [v |-> 1, st |-> "begun", rows |-> {}, cs |-> 0, lease |-> FALSE]
+/\ ck = [v |-> 1, st |-> "begun", rows |-> {}, cs |-> 0, lease |-> FALSE, lage |-> 0]
+/\ e1ann = 1
+/\ rb = 0
 /\ rd = <<>>
+/\ rel = "E1"
 /\ hist = <<[k |-> a1, t |-> "put"]>>
 /\ fk = [on |-> FALSE]
-/\ fl = [v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0]
+/\ fl = [eenv |-> 0, v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0, ann |-> TRUE]
 /\ ver = << [ delta |-> {},
      sealed |-> [g2 |-> 0, g1 |-> 0],
      own |-> (a1 :> "g1" @@ a2 :> "g1" @@ b1 :> "g2"),
@@ -285,6 +335,7 @@ State 8: <Tick line 511, col 3 to line 524, col 54 of module Compaction2>
 /\ tr = (0 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0) @@ 1 :> (a1 :> 1 @@ a2 :> 0 @@ b1 :> 0))
 /\ crashes = 0
 /\ eenv = 0
+/\ known = 2
 /\ stamp = <<-1, -1, -1, -1, -1, -1>>
 /\ runSt = <<"live", "free", "free", "free", "free">>
 /\ l0 = <<>>
@@ -292,19 +343,24 @@ State 8: <Tick line 511, col 3 to line 524, col 54 of module Compaction2>
 /\ mem = {}
 /\ seen = <<1, 1, -1, -1, -1, -1>>
 
-State 9: <Tick line 511, col 3 to line 524, col 54 of module Compaction2>
+State 9: <Tick line 671, col 3 to line 690, col 74 of module Compaction2>
+/\ unsure = FALSE
 /\ bad = {}
+/\ tko = -1
 /\ seq = 1
 /\ runRows = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}, {}, {}, {}, {}>>
 /\ nMerge = 0
 /\ nComp = 0
 /\ job = [k |-> "none"]
 /\ rage = <<-1, -1, -1, -1, -1>>
-/\ ck = [v |-> 1, st |-> "begun", rows |-> {}, cs |-> 0, lease |-> FALSE]
+/\ ck = [v |-> 1, st |-> "begun", rows |-> {}, cs |-> 0, lease |-> FALSE, lage |-> 0]
+/\ e1ann = 1
+/\ rb = 0
 /\ rd = <<>>
+/\ rel = "E1"
 /\ hist = <<[k |-> a1, t |-> "put"]>>
 /\ fk = [on |-> FALSE]
-/\ fl = [v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0]
+/\ fl = [eenv |-> 0, v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0, ann |-> TRUE]
 /\ ver = << [ delta |-> {},
      sealed |-> [g2 |-> 0, g1 |-> 0],
      own |-> (a1 :> "g1" @@ a2 :> "g1" @@ b1 :> "g2"),
@@ -319,6 +375,7 @@ State 9: <Tick line 511, col 3 to line 524, col 54 of module Compaction2>
 /\ tr = (0 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0) @@ 1 :> (a1 :> 1 @@ a2 :> 0 @@ b1 :> 0))
 /\ crashes = 0
 /\ eenv = 0
+/\ known = 2
 /\ stamp = <<-1, -1, -1, -1, -1, -1>>
 /\ runSt = <<"live", "free", "free", "free", "free">>
 /\ l0 = <<>>
@@ -326,19 +383,24 @@ State 9: <Tick line 511, col 3 to line 524, col 54 of module Compaction2>
 /\ mem = {}
 /\ seen = <<2, 2, -1, -1, -1, -1>>
 
-State 10: <DropJob line 368, col 15 to line 368, col 33 of module Compaction2>
+State 10: <DropJob line 484, col 15 to line 484, col 33 of module Compaction2>
+/\ unsure = FALSE
 /\ bad = {}
+/\ tko = -1
 /\ seq = 1
 /\ runRows = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}, {}, {}, {}, {}>>
 /\ nMerge = 0
 /\ nComp = 0
 /\ job = [k |-> "none"]
 /\ rage = <<-1, -1, -1, -1, -1>>
-/\ ck = [v |-> 1, st |-> "begun", rows |-> {}, cs |-> 0, lease |-> FALSE]
+/\ ck = [v |-> 1, st |-> "begun", rows |-> {}, cs |-> 0, lease |-> FALSE, lage |-> 0]
+/\ e1ann = 1
+/\ rb = 0
 /\ rd = <<>>
+/\ rel = "E1"
 /\ hist = <<[k |-> a1, t |-> "put"]>>
 /\ fk = [on |-> FALSE]
-/\ fl = [v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0]
+/\ fl = [eenv |-> 0, v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0, ann |-> TRUE]
 /\ ver = << [ delta |-> {},
      sealed |-> [g2 |-> 0, g1 |-> 0],
      own |-> (a1 :> "g1" @@ a2 :> "g1" @@ b1 :> "g2"),
@@ -353,6 +415,7 @@ State 10: <DropJob line 368, col 15 to line 368, col 33 of module Compaction2>
 /\ tr = (0 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0) @@ 1 :> (a1 :> 1 @@ a2 :> 0 @@ b1 :> 0))
 /\ crashes = 0
 /\ eenv = 0
+/\ known = 2
 /\ stamp = <<-1, -1, -1, -1, -1, -1>>
 /\ runSt = <<"live", "free", "free", "free", "free">>
 /\ l0 = <<>>
@@ -360,19 +423,24 @@ State 10: <DropJob line 368, col 15 to line 368, col 33 of module Compaction2>
 /\ mem = {}
 /\ seen = <<2, 2, -1, -1, -1, -1>>
 
-State 11: <CkTake line 468, col 3 to line 471, col 69 of module Compaction2>
+State 11: <CkTake line 610, col 3 to line 614, col 19 of module Compaction2>
+/\ unsure = FALSE
 /\ bad = {}
+/\ tko = -1
 /\ seq = 1
 /\ runRows = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}, {}, {}, {}, {}>>
 /\ nMerge = 0
 /\ nComp = 0
 /\ job = [k |-> "none"]
 /\ rage = <<-1, -1, -1, -1, -1>>
-/\ ck = [v |-> 1, st |-> "taken", rows |-> {}, cs |-> 1, lease |-> FALSE]
+/\ ck = [v |-> 1, st |-> "made", rows |-> {}, cs |-> 1, lease |-> FALSE, lage |-> 0]
+/\ e1ann = 1
+/\ rb = 0
 /\ rd = <<>>
+/\ rel = "E1"
 /\ hist = <<[k |-> a1, t |-> "put"]>>
 /\ fk = [on |-> FALSE]
-/\ fl = [v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0]
+/\ fl = [eenv |-> 0, v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0, ann |-> TRUE]
 /\ ver = << [ delta |-> {},
      sealed |-> [g2 |-> 0, g1 |-> 0],
      own |-> (a1 :> "g1" @@ a2 :> "g1" @@ b1 :> "g2"),
@@ -387,6 +455,7 @@ State 11: <CkTake line 468, col 3 to line 471, col 69 of module Compaction2>
 /\ tr = (0 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0) @@ 1 :> (a1 :> 1 @@ a2 :> 0 @@ b1 :> 0))
 /\ crashes = 0
 /\ eenv = 0
+/\ known = 2
 /\ stamp = <<-1, -1, -1, -1, -1, -1>>
 /\ runSt = <<"live", "free", "free", "free", "free">>
 /\ l0 = <<>>
@@ -394,7 +463,47 @@ State 11: <CkTake line 468, col 3 to line 471, col 69 of module Compaction2>
 /\ mem = {}
 /\ seen = <<2, 2, -1, -1, -1, -1>>
 
-57319 states generated, 16698 distinct states found, 8786 states left on queue.
-The depth of the complete state graph search is 11.
-Finished in 02s at (2026-11-07 17:39:36)
-Trace exploration spec path: ./MC_TTrace_1794073173.tla
+State 12: <CkCheck line 616, col 3 to line 622, col 19 of module Compaction2>
+/\ unsure = FALSE
+/\ bad = {}
+/\ tko = -1
+/\ seq = 1
+/\ runRows = <<{[k |-> a1, t |-> "put", s |-> 1, enc |-> TRUE]}, {}, {}, {}, {}>>
+/\ nMerge = 0
+/\ nComp = 0
+/\ job = [k |-> "none"]
+/\ rage = <<-1, -1, -1, -1, -1>>
+/\ ck = [v |-> 1, st |-> "taken", rows |-> {}, cs |-> 1, lease |-> FALSE, lage |-> 0]
+/\ e1ann = 1
+/\ rb = 0
+/\ rd = <<>>
+/\ rel = "E1"
+/\ hist = <<[k |-> a1, t |-> "put"]>>
+/\ fk = [on |-> FALSE]
+/\ fl = [eenv |-> 0, v |-> 1, ph |-> "idle", age |-> 0, steps |-> 0, ann |-> TRUE]
+/\ ver = << [ delta |-> {},
+     sealed |-> [g2 |-> 0, g1 |-> 0],
+     own |-> (a1 :> "g1" @@ a2 :> "g1" @@ b1 :> "g2"),
+     xd |-> 0,
+     xg |-> [g2 |-> 0, g1 |-> 0] ],
+   [ delta |-> {1},
+     sealed |-> [g2 |-> 0, g1 |-> 0],
+     own |-> (a1 :> "g1" @@ a2 :> "g1" @@ b1 :> "g2"),
+     xd |-> 1,
+     xg |-> [g2 |-> 0, g1 |-> 0] ] >>
+/\ sr = {}
+/\ tr = (0 :> (a1 :> 0 @@ a2 :> 0 @@ b1 :> 0) @@ 1 :> (a1 :> 1 @@ a2 :> 0 @@ b1 :> 0))
+/\ crashes = 0
+/\ eenv = 0
+/\ known = 2
+/\ stamp = <<-1, -1, -1, -1, -1, -1>>
+/\ runSt = <<"live", "free", "free", "free", "free">>
+/\ l0 = <<>>
+/\ flushed = 1
+/\ mem = {}
+/\ seen = <<2, 2, -1, -1, -1, -1>>
+
+598636 states generated, 204673 distinct states found, 114828 states left on queue.
+The depth of the complete state graph search is 13.
+Finished in 06s at (2026-11-08 08:30:50)
+Trace exploration spec path: ./MC_TTrace_1794126643.tla
