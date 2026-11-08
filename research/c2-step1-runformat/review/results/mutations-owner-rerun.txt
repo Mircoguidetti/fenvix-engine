@@ -1,0 +1,13 @@
+mutation 1 (stop after the first fetch): caught by 2 test(s): newest_reads_match_an_exact_model_across_block_and_run_boundaries, random_reads_match_an_exact_model
+mutation 2 (ignore a run that starts with the customer): caught by 4 test(s): every_flipped_bit_of_a_small_run_is_an_error, newest_reads_match_an_exact_model_across_block_and_run_boundaries, default_and_64k_blocks_round_trip, random_reads_match_an_exact_model
+mutation 3 (read blocks oldest-first): caught by 2 test(s): newest_reads_match_an_exact_model_across_block_and_run_boundaries, random_reads_match_an_exact_model
+mutation 4 (drop the upper bound (the next customer leaks in)): caught by 2 test(s): newest_reads_match_an_exact_model_across_block_and_run_boundaries, random_reads_match_an_exact_model
+mutation 5 (drop the lower bound (the previous customer leaks in)): caught by 2 test(s): newest_reads_match_an_exact_model_across_block_and_run_boundaries, random_reads_match_an_exact_model
+mutation 6 (skip the first block): caught as a hang (the tests did not finish in 300 s)
+mutation 7 (fetch only the last missing block): caught by 4 test(s): every_flipped_bit_of_a_small_run_is_an_error, newest_reads_match_an_exact_model_across_block_and_run_boundaries, default_and_64k_blocks_round_trip, random_reads_match_an_exact_model
+mutation 8 (no block checksum check): caught by 2 test(s): every_flipped_bit_of_a_small_run_is_an_error, random_flipped_bits_of_a_large_run_are_errors
+mutation 9 (no footer checksum check): caught by 2 test(s): random_flipped_bits_of_a_large_run_are_errors, every_flipped_bit_of_a_small_run_is_an_error
+mutation 10 (customer filter answers no for everyone): caught by 5 test(s): a_customer_inside_one_block_costs_one_get_and_an_absent_one_none, customer_filter_has_no_false_negatives_and_few_false_positives, newest_reads_match_an_exact_model_across_block_and_run_boundaries, default_and_64k_blocks_round_trip, random_reads_match_an_exact_model
+mutation 11 (fence lookup skips the block holding the lower bound): caught by 3 test(s): newest_reads_match_an_exact_model_across_block_and_run_boundaries, default_and_64k_blocks_round_trip, random_reads_match_an_exact_model
+mutation 12 (point read looks one block too far): caught by 1 test(s): random_reads_match_an_exact_model
+MUTATIONS: 12 of 12 caught

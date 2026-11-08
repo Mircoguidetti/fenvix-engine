@@ -1,0 +1,50 @@
+   Compiling tenant-bench v0.1.0 (/home/user/fenvix-engine)
+warning: unnecessary parentheses around closure body
+    --> src/warm.rs:1211:42
+     |
+1211 |                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+     |                                          ^                                ^
+     |
+     = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+     |
+1211 -                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+1211 +                     (0..40).flat_map(|c| c * (n / 40)..c * (n / 40) + per).collect()
+     |
+
+warning: `tenant-bench` (lib test) generated 1 warning (run `cargo fix --lib -p tenant-bench --tests` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 33.80s
+     Running unittests src/lib.rs (target/release/deps/tenant_bench-11b972cb31418ff3)
+
+running 14 tests
+test runfmt::tests::block_size_knob_is_checked ... ok
+test runfmt::tests::customer_components_are_found_in_both_layouts ... ok
+test runfmt::tests::a_customer_inside_one_block_costs_one_get_and_an_absent_one_none ... ok
+RUNFMT filter false positives: 825 of 100000 absent customers (0.825%)
+test runfmt::tests::customer_filter_has_no_false_negatives_and_few_false_positives ... ok
+test runfmt::tests::envelopes_and_successors ... ok
+RUNFMT flips exhaustive: run of 1166 bytes (6 blocks, 28 rows), 9328 bits flipped one at a time: stream caught 9328, random reader caught 9328; open alone caught 3016 (the 3016 footer and trailer bits are caught at open)
+test runfmt::tests::every_flipped_bit_of_a_small_run_is_an_error ... ok
+test runfmt::tests::multipart_parts_and_visibility ... ok
+test runfmt::tests::newest_reads_match_an_exact_model_across_block_and_run_boundaries ... ok
+test runfmt::tests::opening_costs_one_get_for_a_footer_under_the_open_tail ... ok
+test runfmt::tests::overlapping_runs_are_refused ... ok
+test runfmt::tests::default_and_64k_blocks_round_trip ... ok
+RUNFMT flips large: run of 275087052 bytes (1633 blocks of 256 KiB, 2237190 rows): 2000 of 2000 random flips caught (195 in the footer or trailer, caught at open; the others by reading their block, and the neighbouring block read right 1805 times); full streaming scans with a random flip: 50 of 50 were errors
+test runfmt::tests::random_flipped_bits_of_a_large_run_are_errors ... ok
+test runfmt::tests::writer_checks_order_and_envelopes ... ok
+test runfmt::tests::random_reads_match_an_exact_model has been running for over 60 seconds
+RUNFMT property: 1000000 reads, 0 wrong, 766341234 rows compared; by kind (get, near-get, range, customer, customer+coll, newest) [166625, 166721, 166458, 166620, 166711, 166865]; rows 75759, customers 420 (60 absent); absent-customer reads touching a block 266 of 47470
+RUNFMT layout: block 700, 6 runs, 17546 blocks, cache 0, tail 1
+RUNFMT layout: block 700, 6 runs, 17546 blocks, cache 262144, tail 2
+RUNFMT layout: block 700, 6 runs, 17546 blocks, cache 0, tail 4
+RUNFMT layout: block 4096, 3 runs, 3538 blocks, cache 0, tail 1
+RUNFMT layout: block 4096, 3 runs, 3538 blocks, cache 262144, tail 2
+RUNFMT layout: block 4096, 3 runs, 3538 blocks, cache 0, tail 4
+RUNFMT layout: block 65536, 1 runs, 221 blocks, cache 0, tail 1
+RUNFMT layout: block 65536, 1 runs, 221 blocks, cache 262144, tail 2
+RUNFMT layout: block 65536, 1 runs, 221 blocks, cache 0, tail 4
+test runfmt::tests::random_reads_match_an_exact_model ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 38 filtered out; finished in 544.46s
+
