@@ -33,7 +33,8 @@ def stop():
 
 
 def one(mode, rnd):
-    extra = "--sealed-runs 60 --sealed-group-mb 4" if mode == "on" else ""
+    # T_pin 200 ms: envelopes start (rule 26) early in the load, so the publishes cover it
+    extra = "--sealed-runs 60 --sealed-group-mb 4 --sealed-t-pin-ms 200" if mode == "on" else ""
     start(extra)
     c = MongoClient(f"mongodb://127.0.0.1:{PORT}/?directConnection=true")
     db = c[f"hot{mode}{rnd}{int(time.time())}"]
@@ -42,10 +43,11 @@ def one(mode, rnd):
     for b in range(DOCS // 100):
         col.insert_many([{"_id": b * 100 + i, "u": (b * 100 + i) % 997, "pad": pad} for i in range(100)])
     # a few more write batches so the last publish covers every document read below
+    time.sleep(0.5)
     for i in range(70):
         col.update_one({"_id": -1}, {"$inc": {"n": 1}}, upsert=True)
     ids = random.Random(rnd).sample(range(DOCS), HOT)
-    s0 = c.admin.command("serverStatus").get("sealedRuns", {})
+    s0 = c.admin.command("serverStatus").get("fenvix", {}).get("sealedRuns", {})
     for _ in range(WARM):
         for i in ids:
             assert col.find_one({"_id": i}) is not None
@@ -57,7 +59,7 @@ def one(mode, rnd):
         d = col.find_one({"_id": i})
         lat.append((time.perf_counter_ns() - t) / 1000)
         assert d is not None and d["_id"] == i
-    s1 = c.admin.command("serverStatus").get("sealedRuns", {})
+    s1 = c.admin.command("serverStatus").get("fenvix", {}).get("sealedRuns", {})
     c.close()
     stop()
     lat.sort()

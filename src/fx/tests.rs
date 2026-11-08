@@ -674,3 +674,67 @@ async fn model_publish_every_100_ops_with_crashes() {
     assert_eq!(st.wrong, 0, "{st:?}");
     t.abandon().await;
 }
+
+/// Hot point reads inside the process (no network, no server): p50 of `Tenant::get` on 2,000 hot keys of 30,000, today's
+/// path (no version) against the merged reader (every key at or below X_d, answered by a sealed run, blocks cached).
+/// Run: cargo test --release -p tenant-bench --lib fx::tests::hot_get_p50 -- --ignored --nocapture
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+#[ignore]
+async fn hot_get_p50() {
+    let _s = SERIAL.lock().await;
+    enable();
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let mut t = lc(&store).create("fx-hot").await.unwrap();
+    let mut m = BTreeMap::new();
+    let pad = vec![b'x'; 300];
+    for b in 0..300 {
+        let ops = (0..100).map(|i| (format!("doc/d/{:06}", b * 100 + i).into_bytes(), Some(pad.clone()))).collect();
+        apply(&mut t, &mut m, ops).await;
+    }
+    let mut rng = StdRng::seed_from_u64(5);
+    let hot: Vec<Vec<u8>> = (0..2000).map(|_| format!("doc/d/{:06}", rng.gen_range(0..30_000)).into_bytes()).collect();
+    async fn measure(t: &Tenant, hot: &[Vec<u8>], rng: &mut StdRng) -> (f64, f64) {
+        for k in hot {
+            t.get(k).await.unwrap().unwrap();
+        }
+        let mut lat = Vec::with_capacity(100_000);
+        for _ in 0..100_000 {
+            let k = &hot[rng.gen_range(0..hot.len())];
+            let s = std::time::Instant::now();
+            let v = t.get(k).await.unwrap();
+            lat.push(s.elapsed().as_nanos() as f64 / 1000.0);
+            assert!(v.is_some());
+        }
+        lat.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        (lat[lat.len() / 2], lat[lat.len() * 99 / 100])
+    }
+    // the same database first without a version (today's path), then with one; three alternations
+    let mut out = Vec::new();
+    let before_pub = measure(&t, &hot, &mut rng).await;
+    out.push(("off", before_pub));
+    publish(&mut t, &small_opts(Reseal::All)).await;
+    let v = t.fx_view().cloned();
+    for round in 0..3 {
+        let on = measure(&t, &hot, &mut rng).await;
+        out.push(("on", on));
+        // the same tenant with the version taken away reads SlateDB alone (it still holds every row in this step)
+        ENABLED.store(false, Relaxed);
+        t.fx_refresh().await.unwrap();
+        let off = measure(&t, &hot, &mut rng).await;
+        out.push(("off", off));
+        ENABLED.store(true, Relaxed);
+        t.fx_refresh().await.unwrap();
+        let _ = round;
+    }
+    let med = |w: &str| {
+        let mut p: Vec<f64> = out.iter().filter(|(m, _)| *m == w).map(|(_, (p50, _))| *p50).collect();
+        p.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        p[p.len() / 2]
+    };
+    let line = format!("HOT_GET {out:?} median_p50_off_us={:.2} median_p50_on_us={:.2} ratio={:.3} version={:?}", med("off"), med("on"), med("on") / med("off"), v.map(|v| v.version));
+    eprintln!("{line}");
+    if let Ok(p) = std::env::var("FX_HOT_OUT") {
+        std::fs::write(p, format!("{line}\n")).unwrap();
+    }
+    t.abandon().await;
+}
