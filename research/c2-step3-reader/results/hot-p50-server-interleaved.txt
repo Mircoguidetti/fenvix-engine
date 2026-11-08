@@ -1,6 +1,6 @@
-{"round": 0, "rows_from_runs_on": 34000, "publishes_on": 6, "p50_off_us": 245.396, "p99_off_us": 711.485, "reads_off": 30000, "p50_on_us": 271.735, "p99_on_us": 739.055, "reads_on": 30000, "ratio_p50": 1.107332637858808}
-{"round": 1, "rows_from_runs_on": 34000, "publishes_on": 6, "p50_off_us": 261.542, "p99_off_us": 807.812, "reads_off": 30000, "p50_on_us": 282.422, "p99_on_us": 812.59, "reads_on": 30000, "ratio_p50": 1.079834214007693}
-{"round": 2, "rows_from_runs_on": 34000, "publishes_on": 6, "p50_off_us": 223.36, "p99_off_us": 633.438, "reads_off": 30000, "p50_on_us": 237.61, "p99_on_us": 727.739, "reads_on": 30000, "ratio_p50": 1.0637983524355301}
-{"round": 3, "rows_from_runs_on": 34000, "publishes_on": 6, "p50_off_us": 223.141, "p99_off_us": 653.781, "reads_off": 30000, "p50_on_us": 231.669, "p99_on_us": 660.138, "reads_on": 30000, "ratio_p50": 1.0382179877297315}
-{"round": 4, "rows_from_runs_on": 34000, "publishes_on": 6, "p50_off_us": 210.788, "p99_off_us": 477.113, "reads_off": 30000, "p50_on_us": 218.174, "p99_on_us": 517.315, "reads_on": 30000, "ratio_p50": 1.0350399453479324}
-{"median_ratio_p50": 1.0637983524355301, "median_p50_off_us": 223.36, "median_p50_on_us": 237.61, "rounds": 5, "cpu": "Intel(R) Xeon(R) Processor @ 2.30GHz"}
+{"round": 0, "rows_from_runs_on": 34000, "publishes_on": 6, "p50_off_us": 292.647, "p99_off_us": 859.366, "reads_off": 30000, "p50_on_us": 316.714, "p99_on_us": 936.232, "reads_on": 30000, "ratio_p50": 1.0822390115053289}
+{"round": 1, "rows_from_runs_on": 34000, "publishes_on": 6, "p50_off_us": 246.075, "p99_off_us": 667.553, "reads_off": 30000, "p50_on_us": 250.957, "p99_on_us": 668.473, "reads_on": 30000, "ratio_p50": 1.019839479833384}
+{"round": 2, "rows_from_runs_on": 34000, "publishes_on": 6, "p50_off_us": 282.934, "p99_off_us": 773.568, "reads_off": 30000, "p50_on_us": 297.392, "p99_on_us": 776.209, "reads_on": 30000, "ratio_p50": 1.0511002565969447}
+{"round": 3, "rows_from_runs_on": 34000, "publishes_on": 6, "p50_off_us": 222.868, "p99_off_us": 592.407, "reads_off": 30000, "p50_on_us": 234.374, "p99_on_us": 655.394, "reads_on": 30000, "ratio_p50": 1.0516269720193119}
+{"round": 4, "rows_from_runs_on": 34000, "publishes_on": 6, "p50_off_us": 263.51, "p99_off_us": 746.386, "reads_off": 30000, "p50_on_us": 266.77, "p99_on_us": 752.088, "reads_on": 30000, "ratio_p50": 1.0123714470039087}
+{"median_ratio_p50": 1.0511002565969447, "median_p50_off_us": 263.51, "median_p50_on_us": 266.77, "rounds": 5, "cpu": "Intel(R) Xeon(R) Processor @ 2.30GHz"}
