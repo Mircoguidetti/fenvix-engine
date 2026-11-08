@@ -12,7 +12,7 @@ Files:
 - `RESULTS.md`: what TLC found, run by run.
 - `review/`: the reviewer's copy of the spec (FIX 5, 2026-11-07), kept as delivered. Its six scenarios and their remedies are now in `Compaction2.tla` itself (fix round, 2026-11-08).
 
-TLC: `tla2tools.jar` v1.8.0 from the tlaplus GitHub releases, Java 21. `TLA2TOOLS=/path/tla2tools.jar WORKERS=4 ./run.sh main`.
+TLC: `tla2tools.jar` v1.8.0 from the tlaplus GitHub releases, Java 21. `TLA2TOOLS=/path/tla2tools.jar WORKERS=4 TLCARGS=-gzip ./run.sh main` (90 minutes; `-gzip` keeps the disk queue small). `./run.sh all` runs everything (about 4 hours on 4 cores).
 
 ## The model in one page
 

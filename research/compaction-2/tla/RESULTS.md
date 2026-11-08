@@ -8,7 +8,11 @@ The five review scenarios and the takeover note (fenvix-brain `sessions/2026-11-
 
 ### The correct model, full shape (`MC-main.cfg`)
 
-@@MAIN@@
+Shape: as delivered (2 groups, 3 keys, 2 customers, 3 parent writes, 2 rewrites, 1 crash, 1 fork, 1 checkpoint, the find reader, the transaction and the follower, E0 then E1, lost and slow PUTs, owner and remote drops, GC), plus everything the fix round adds: a crash can be a takeover with live old holds, PUT timeouts, the fence, E1's announcement and marker, one rollback to E0 and back, and an expiring checkpoint lease (`CkLeaseLife` 3).
+
+PASS within the time budget: 220,881,773 distinct states (993,771,187 generated), with no violation of any invariant, in 90 minutes. TLC was at depth 13, so every behaviour of up to 11 steps is checked completely; 165,149,753 states were left on the queue. TLC's fingerprint collision estimate, based on the actual fingerprints: 0.0038. The delivered run reached 114,291,793 distinct states at depth 12 in 60 minutes.
+
+Run with `TLCARGS=-gzip` (the compressed disk queue took about 36 bytes per state, against about 250 without it). Without it, the queue would have filled this sandbox's disk before reaching the delivered count. `DURATION`-free: the budget is `StopAfter = 5400` (`MAIN_STOP` in `gen.py`).
 
 ### The new controls (each must fail) and their twins (each must pass)
 
