@@ -20,6 +20,8 @@ pub mod read;
 pub mod view;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod review_tests;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 

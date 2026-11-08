@@ -1,3 +1,99 @@
+FIX 2
+
+# Review of compaction 2 step 3 (our manifest and the merged reader), `c2-step3-reader` at dedb4e5
+
+Reviewer session, 2026-11-08. Contract: fenvix-brain `prompts/P-c2-step3-reader.md`. Owner's report: `sessions/2026-11-08-c2-step3-reader/REPORT.md`. Rules checked against: `RULES-FOR-THE-CODE.md` version ff27fb9 on `c2-step0-tla`. Its head, ce42354, has no change to that file, so ff27fb9 is still the newest. Spend: $0, local only (the same 4 vCPU sandbox, in-memory store and local MinIO).
+
+Branch `review-c2-step3` (based on dedb4e5) has the two failing tests below and this file.
+
+## Verdict
+
+The merged reader holds. I found no wrong, missing or extra row. Two defects, each with a test that fails on dedb4e5:
+
+1. The judge's raw-reader check misses three ways of reading SlateDB directly.
+2. A publish whose outcome is unknown, followed by a fence that fails, leaves the writer taking holds without a fence. That breaks rule 25.
+
+Neither one gives a wrong read in this step, because nothing drops SlateDB rows yet. Both are guards that step 4 relies on, and the contract (defect 1) or the rules the report says it follows (defect 2) ask for them now.
+
+## What I re-ran (all MEASURED)
+
+- `judge/run.sh fast` on dedb4e5 with `--sealed-runs` off: readers PASS; build PASS. Unit: 140 passed, 1 failed, the known `counter::tests::rev_maps_leave_room_for_active_data`; this phase also re-ran the 100,000-operation model test, which passed. diff-py 412/413 and diff-node 412/413, only the known `bucketauto.infinity`. kill PASS. ctl: 1 of 3 files failed, `test_05_erase::test_concurrent_erase_and_fork_are_serialised`, which left `control/usage/ef2_k/...json`.
+- The same with `JUDGE_SEALED_RUNS=2`: identical, line by line, including the same `test_05_erase` failure. The owner measured that flake at 1 of 4 rounds with sealed runs on and 2 of 4 with them off. It leaves a control-layer record and no `fx/` object, so I count it as the known flake, not as a sealed-runs defect. It still makes ctl FAIL in both of my runs, where the owner's 520c338 verdicts show ctl PASS. Verdicts: `judge/out/dedb4e5/VERDICT-FAST.md` and `judge/out/dedb4e5-sealed2/VERDICT-FAST.md` in my sandbox (not committed, same as the owner's).
+- The model test with my own seeds, which also gives new crash points (the fail points and the random crashes come from the seed). 0 wrong in 100,000 operations each for seeds 1, 31337 and 990077:
+  - 105, 127 and 121 crashes;
+  - 28/18, 33/28 and 25/21 crashes at the after-runs / after-publish fail points;
+  - 939, 924 and 942 publishes;
+  - about 4.9 million rows answered by runs in each run.
+  - Files: `research/c2-step3-reader/review/results/model-100k-seed*.txt`.
+
+## Defects (tests that fail on dedb4e5)
+
+### 1. The raw-reader check misses direct SlateDB readers
+
+Test: `research/c2-step3-reader/review/raw_readers_misses.sh`. It adds one stray reader to a copy of the tree and runs `judge/raw_readers.sh` on that copy.
+
+`judge/raw_readers.sh` passes with each of these in `mongo-server/src`:
+- `slatedb::DbReader::open(...)` followed by `get`: `DbReader::open` is public in slatedb 0.17 (`db_reader.rs:910`);
+- `slatedb::Db::open(...)` followed by `get`;
+- `slatedb::Db::builder(...).build()` followed by a `scan`.
+
+The control case, `DbReader::builder`, is caught.
+
+Result: `research/c2-step3-reader/review/results/raw-readers-misses.txt`, 3 missed (MEASURED).
+
+Why it matters: round 2's fix 3 says the check must fail on any direct SlateDB reader outside `fx` and `lifecycle.rs`. Once step 4 drops absorbed rows, a reader built one of these ways answers from SlateDB alone and misses rows, and the judge stays green.
+
+Possible fix: add `DbReader::open`, `Db::open`, `Db::builder` and `DbBuilder` to the pattern. A grep cannot see reads through the `Db` handles that `lifecycle::open_writers()` and `open_readers()` hand out, so `maps.rs` should stay the only caller of those two.
+
+### 2. Rule 25: a hold is pinned with no fence after an unknown publish
+
+Test: `cargo test --release -p tenant-bench --lib fx::review_tests` (`review_no_hold_after_an_unknown_publish_whose_fence_failed`).
+
+What the test does:
+1. A store wrapper lets the publish's conditional create land and then return a timeout, so the outcome is unknown and version 2 is in the store.
+2. The next manifest creates time out without landing.
+3. `fx_publish` tries its fence (rule 25), and the fence times out. `fx_publish` prints the error (`eprintln!` in `Tenant::fx_publish`) and goes on.
+4. The next `Tenant::get` takes a hold on version 1, while version 2 is in the store and no fence was published.
+
+The test fails with: "rule 25: a hold was pinned on version 1 (known before the publish: 1) while version 2 is in the store and no fence was published" (MEASURED).
+
+The server's publish in `Entry::write` also swallows the error, so the server takes the same path.
+
+Rule 25 says: "it publishes a fence version before it pins any hold and before it starts another publish ... holds wait until the fence's outcome is known, and a fence that times out is itself followed by another fence". This is the state of TLC's `NoFence-timeout` trace. In step 4 the drop floor treats the holds and the newest version in the store as true.
+
+Possible fix: when a fence fails, set a "fence pending" flag on the tenant. Until a fence succeeds, every hold and every publish first retries the fence, and fails with the retryable error if the fence still fails.
+
+## Notes (risks; no failing test, so they do not block)
+
+- **`load_fx` checks X_d once.** It checks X_d <= SlateDB's last seq only on the version it loaded first. When its fence loses the race and it reloads, it does not check the reloaded version. I believe that case cannot happen: a version needs a durable WAL flush before its PUT, and the new writer's open fences any later WAL write of the old one. So I wrote no test. Still, a version with X_d above the writer's seq would hide the writer's new rows at or below X_d, a lost write. The check costs nothing; put it inside the loop.
+- **Holds only last one read.** Plain operations take one short hold per read, not one per operation. Today that is safe because the version changes only under the exclusive lock (the report says so). Some operations take the lock more than once: an aggregation with `$lookup` reads each foreign collection under a new `dbs.read`. A publish can land between those reads. That changes nothing today, because a publish does not change the logical state. Under step 4, the drop floor must cover the gap between them (rules 7 and 8, the lease).
+- **No T_pin refusal without a version.** The refusal past T_pin (rule 6) runs only when the tenant already has a version. A reader in reader mode with no version and no announcement never refuses. With leases, no writer in another process serves the database, so this case is not reachable today.
+- **The model test is milder than the server.** Its crash is `abandon()`, which still flushes the WAL. Its reader mode only comes after a crash, so no writer is writing at the same time. It never has two processes. The fence test and my test 2 cover part of what is missing.
+- **Defects I looked for and did not find:**
+  - direct writes that bypass envelopes: every write goes through `Tenant::stage` or `Tenant::put`;
+  - a store wrapper that drops `PutMode::Create`: `CountingStore`, `OwnedStore`, `LocalCas` and the sim stores all pass it through;
+  - `dropDatabase` or erase leaving `fx/` behind: both delete the tenant prefix;
+  - a fork copying `fx/`: the fork filters it out;
+  - PITR writing plain deletes: it applies its diff through `Entry::apply`, so it writes envelopes.
+- **The report's own open items stand as written:**
+  - export and PITR read SlateDB only;
+  - `--envelopes write` skips the announcement;
+  - the offline builder does not scale;
+  - one JSON object per version;
+  - no GC;
+  - holds are per process;
+  - the `moved_doc` race of step 2 is still open.
+
+  Step 4's drop must not start before export, PITR and `--envelopes write` are fixed.
+
+## Errors or gaps in fenvix-brain
+
+- The prompt asks to "re-run the model test with your own seeds and crash points". The model takes its crash points only from the seed (`FX_MODEL_SEED`); there is no knob for the crash rate. New seeds were the only way to get new crash points.
+
+---
+
+# Earlier reviews (kept as they were on the base branch)
+
 FIX 3
 
 # Review: compaction 2 step 2 (key layout v2, `_id` per customer, envelope deletes)
