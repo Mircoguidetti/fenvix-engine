@@ -164,12 +164,13 @@ pub struct Piece {
     /// Warmed by a staged publish: while no read relied on it yet, a trim keeps it as it is (its customer has not come
     /// back yet) instead of dropping it.
     keep_unused: bool,
+    born: std::time::Instant,
     relied: Mutex<Option<(Vec<u8>, Vec<u8>)>>,
 }
 
 impl Piece {
     fn new(blk: Block, whole_slice: bool) -> Piece {
-        Piece { blk, lo: None, hi: None, whole_slice, keep_unused: false, relied: Mutex::new(None) }
+        Piece { blk, lo: None, hi: None, whole_slice, keep_unused: false, born: std::time::Instant::now(), relied: Mutex::new(None) }
     }
 
     /// Whether `k` is inside the covered interval.
@@ -223,7 +224,7 @@ impl Piece {
         let j = b.lower_bound(&rhi); // rows i..j are inside [rlo, rhi)
         let lo = if i == 0 { self.lo.clone() } else { Some(succ(b.key(i - 1)).into_boxed_slice()) };
         let hi = if j >= b.len() { self.hi.clone() } else { Some(b.key(j).to_vec().into_boxed_slice()) };
-        Some(Piece { blk: b.slice(i, j), lo, hi, whole_slice: false, keep_unused: false, relied: Mutex::new(None) })
+        Some(Piece { blk: b.slice(i, j), lo, hi, whole_slice: false, keep_unused: false, born: std::time::Instant::now(), relied: Mutex::new(None) })
     }
 
     pub fn mem_bytes(&self) -> usize {
@@ -233,6 +234,8 @@ impl Piece {
 
 /// How long a slice is kept whole before it is trimmed to what reads relied on (ms; `u64::MAX`: never trimmed).
 pub static TRIM_MS: AtomicU64 = AtomicU64::new(1_000);
+/// How long a slice warmed by a staged publish waits for its customer's next read before it is dropped (ms).
+pub static KEEP_UNUSED_MS: AtomicU64 = AtomicU64::new(600_000);
 pub static TRIMS: AtomicU64 = AtomicU64::new(0);
 pub static TRIM_DROPS: AtomicU64 = AtomicU64::new(0);
 pub static REFETCHES: AtomicU64 = AtomicU64::new(0);
@@ -338,8 +341,9 @@ fn trim_locked(c: &mut Cache, age: Option<std::time::Duration>, max: usize) {
         if !p.whole_slice {
             continue; // replaced meanwhile
         }
-        if p.keep_unused && p.relied().is_none() {
-            // a staged slice whose customer has not read yet: kept as it is, looked at again later
+        if p.keep_unused && p.relied().is_none() && now.duration_since(p.born) < std::time::Duration::from_millis(KEEP_UNUSED_MS.load(Relaxed)) {
+            // a staged slice whose customer has not read yet: kept as it is, looked at again later (dropped once it is
+            // older than KEEP_UNUSED_MS with no read: its customer is not coming back soon)
             c.untrimmed.push_back((now, k));
             continue;
         }
@@ -766,7 +770,7 @@ fn cut_range(b: &Block, p: &[u8], h: &Held) -> Piece {
     };
     let j = phi.map_or(b.len(), |x| b.lower_bound(x));
     // trimmable once a read relies on it (the rows written since the retired run are kept only if read), kept until then
-    Piece { blk: b.slice(i, j.max(i)), lo: h.lo.clone().map(|x| x.into_boxed_slice()), hi: h.hi.clone().map(|x| x.into_boxed_slice()), whole_slice: true, keep_unused: true, relied: Mutex::new(None) }
+    Piece { blk: b.slice(i, j.max(i)), lo: h.lo.clone().map(|x| x.into_boxed_slice()), hi: h.hi.clone().map(|x| x.into_boxed_slice()), whole_slice: true, keep_unused: true, born: std::time::Instant::now(), relied: Mutex::new(None) }
 }
 
 async fn warm(store: &Arc<dyn ObjectStore>, fresh: &[Arc<super::view::RunH>], prefixes: &BTreeMap<Vec<u8>, Held>, ranges: &[(Vec<u8>, Vec<u8>)], rep: &mut StageReport) {

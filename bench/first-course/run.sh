@@ -61,6 +61,7 @@ for page in s3.get_paginator('list_objects_v2').paginate(Bucket='${BASE:-fc-base
 print(f'copied {n} objects into {b}')" "$B" | tee "$OUT/copy.txt"
     # shellcheck disable=SC2086
     FENVIX_SIM_S3=${SIM:-5,0,100000} start "$B" --block-cache-mb 1 $EXTRA
+    export SEALED_BUCKET=$B  # two_visits.py --sealed: bench-only cleanup of retired runs after each publish
     "$PY" bench/first-course/two_visits.py visits --uri "$URI" --state "${STATE:-$ROOT/bench/first-course/results/load/state.json}" --gap "$GAP" \
       --users "${USERS:-1000}" --scale "${SCALE:-1}" --warm "${WARM:-300}" --pid "$(cat "$OUT/server.pid")" --out "$OUT/result.json" ${SEALED:+--sealed} | tee "$OUT/visits.txt"
     stop
