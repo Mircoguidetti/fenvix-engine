@@ -74,6 +74,7 @@ fn teardown() {
     crate::lifecycle::L0_MAX_SSTS_OVERRIDE.store(0, Relaxed);
     crate::lifecycle::WRITER_POLL_SECS.store(30, Relaxed);
     hold::HOLD_LIFE_MS.store(120_000, Relaxed);
+    T_PIN_MS.store(TEST_T_PIN_MS, Relaxed);
     local::set_store(None);
 }
 
@@ -132,10 +133,25 @@ async fn compactor_model_drop_on() {
     }
     publish(&mut t, &small_opts(build::Reseal::All)).await;
     m.insert(crate::envelope::MARKER.to_vec(), b"E1".to_vec()); // the envelope marker is a row of the keyspace
+    T_PIN_MS.store(350, Relaxed); // the follower below keeps a version up to 330 ms (under T_pin, under the 400 ms lease)
     let k = test_knobs(true);
     let mut c = start(&mut t, &store, &k).await;
     let mut st = St::default();
-    let mut snaps: Vec<(Arc<read::Snap>, BTreeMap<Vec<u8>, Vec<u8>>, Instant)> = Vec::new();
+    let mut snaps: Vec<(Arc<read::Snap>, BTreeMap<Vec<u8>, Vec<u8>>, Instant, Vec<Vec<u8>>)> = Vec::new();
+    // keys written lately: transactions read them (the rows a floor that ignores holds would drop, review of step 4, Q3)
+    let mut recent: std::collections::VecDeque<Vec<u8>> = std::collections::VecDeque::new();
+    // a follower in another process (review of step 4, Q3): its own SlateDB reader, which re-reads SlateDB's manifest
+    // every 20 ms, and a version it keeps for less than T_pin. Its answer for a key nobody wrote since it took that
+    // version must not change: a row dropped under it (a floor that ignored the lease) would change it.
+    let mut fopts = slatedb::config::DbReaderOptions::default();
+    fopts.manifest_poll_interval = Duration::from_millis(20);
+    fopts.skip_wal_replay = true;
+    let freader = read::open_follow_reader(crate::lifecycle::tenant_path(id), Arc::clone(&store), fopts).await.unwrap();
+    let mut follower: Option<(Arc<view::View>, Instant, BTreeMap<Vec<u8>, Vec<u8>>, std::collections::HashSet<Vec<u8>>)> = None;
+    let (mut f_reads, mut f_wrong, mut f_opens) = (0u64, 0u64, 0u64);
+    // the versions the tenant served, with when it installed them: a follower refreshed up to T_pin ago reads with an
+    // older version than the newest, so it takes the one that was newest 200 ms ago
+    let mut served: std::collections::VecDeque<(Instant, manifest::Version)> = std::collections::VecDeque::new();
     let mut erased: Vec<(Vec<u8>, Vec<u8>, u64)> = Vec::new();
     let (mut drops, mut gcs, mut stats_absorbs, mut stats_merges, mut stats_reseals, mut splits, mut gmerges) = (0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64);
     macro_rules! check {
@@ -161,6 +177,14 @@ async fn compactor_model_drop_on() {
     for op in 0..n_ops {
         st.ops = op + 1;
         t.fx_sync(); // the server's exclusive step installs the compactor's newest version
+        if let Some(v) = t.fx_view() {
+            if served.back().is_none_or(|(_, b)| b.version != v.version) {
+                served.push_back((Instant::now(), v.meta.clone()));
+            }
+            while served.len() > 2 && served[1].0.elapsed() > Duration::from_millis(400) {
+                served.pop_front();
+            }
+        }
         if let Some(n) = t.writer_l0() {
             st.max_l0 = st.max_l0.max(n);
         }
@@ -178,6 +202,15 @@ async fn compactor_model_drop_on() {
                     ops.push((key, Some(v)));
                 }
             }
+            for (k, _) in &ops {
+                recent.push_back(k.clone());
+                if let Some(f) = follower.as_mut() {
+                    f.3.insert(k.clone());
+                }
+            }
+            while recent.len() > 300 {
+                recent.pop_front();
+            }
             apply(&mut t, &mut m, ops).await;
             st.writes += 1;
         } else if r < 700 {
@@ -188,7 +221,7 @@ async fn compactor_model_drop_on() {
                 Err(e) => panic!("get: {e:#}"),
             }
             st.reads += 1;
-        } else if r < 850 {
+        } else if r < 800 {
             let a = &keys[rng.gen_range(0..keys.len())];
             let b = &keys[rng.gen_range(0..keys.len())];
             let (lo, hi) = if a <= b { (a.clone(), b.clone()) } else { (b.clone(), a.clone()) };
@@ -213,11 +246,12 @@ async fn compactor_model_drop_on() {
             // transactions: open one, or read through a held one and compare with the model at its begin
             if snaps.len() < 3 && rng.gen_bool(0.5) {
                 let s = t.txn_snapshot().await.unwrap();
-                snaps.push((s, m.clone(), Instant::now()));
+                // the last 30 keys written: their rows are still above the transaction's X_d (memtable, L0 not absorbed)
+                snaps.push((s, m.clone(), Instant::now(), recent.iter().rev().take(30).cloned().collect()));
             } else if !snaps.is_empty() {
                 let i = rng.gen_range(0..snaps.len());
-                let (s, sm, at) = &snaps[i];
-                let key = &keys[rng.gen_range(0..keys.len())];
+                let (s, sm, at, rec) = &snaps[i];
+                let key = if !rec.is_empty() && rng.gen_bool(0.6) { &rec[rng.gen_range(0..rec.len())] } else { &keys[rng.gen_range(0..keys.len())] };
                 match s.get(key).await {
                     Ok(got) => check!(format!("txn get (age {:?})", at.elapsed()), got.map(|b| b.to_vec()), sm.get(key).cloned()),
                     Err(e) if e.downcast_ref::<Retry>().is_some() => {
@@ -228,7 +262,7 @@ async fn compactor_model_drop_on() {
                     Err(e) => panic!("txn get: {e:#}"),
                 }
                 st.txn_reads += 1;
-                if at.elapsed() > Duration::from_millis(HOLD_MS / 2) || rng.gen_bool(0.05) {
+                if at.elapsed() > Duration::from_millis(HOLD_MS - 500) || rng.gen_bool(0.02) {
                     snaps.remove(i);
                 }
             }
@@ -245,11 +279,16 @@ async fn compactor_model_drop_on() {
             commit.wait().await.unwrap();
             for k in &gone {
                 m.remove(k);
+                if let Some(f) = follower.as_mut() {
+                    f.3.insert(k.clone());
+                }
             }
             c.erase(lo.clone(), hi.clone(), seq);
             erased.push((lo, hi, seq));
             st.erasures += 1;
-        } else if r < 904 && op > 500 {
+        } else if r < 905 && op > 500 && op < n_ops / 2 {
+            // crashes in the first half only: after each one the takeover window (rule 27) keeps the floor low for one
+            // serving lease plus one hold life, so the second half runs with drops working (review of step 4, Q3)
             // a crash of the waiter: the compactor stops mid-job, the tenant is abandoned, a new writer opens
             c.stop().await;
             collect(&c);
@@ -263,6 +302,49 @@ async fn compactor_model_drop_on() {
                 c.erase(lo.clone(), hi.clone(), *seq);
             }
             st.crashes += 1;
+        } else if r < 990 {
+            // the follower: take the newest version from the store (as a refresh would) at most every 150 ms, under T_pin
+            // (the model's 200 ms) and the lease (400 ms); read its answers for every key once, then re-read keys nobody
+            // wrote since
+            if follower.as_ref().is_none_or(|f| f.1.elapsed() > Duration::from_millis(330)) {
+                follower = None;
+                // the version that was newest 200 ms ago, and the time the follower took it (its T_pin counts from then)
+                let pick = served.iter().rev().find(|(at, _)| at.elapsed() >= Duration::from_millis(200)).or(served.front()).cloned();
+                if let Some((taken, v)) = pick.filter(|(at, _)| at.elapsed() < Duration::from_millis(300)) {
+                    let env = v.e_env;
+                    let view = Arc::new(view::View::new(Arc::clone(&store), v, None).unwrap());
+                    let opts = read::scan_options(1 << 20, false, false);
+                    match read::scan(&freader, &opts, Some(&view), env, b"", None, false, None).await {
+                        Ok(rows) => {
+                            let base: BTreeMap<Vec<u8>, Vec<u8>> = rows.into_iter().map(|(k, v)| (k.to_vec(), v.to_vec())).collect();
+                            // keys whose answer already differs from the model lag (their newest row is not flushed yet,
+                            // and this reader replays no WAL): they are not checked, as if written since
+                            let mut lagging: std::collections::HashSet<Vec<u8>> = Default::default();
+                            for k in m.keys().chain(base.keys()) {
+                                if m.get(k) != base.get(k) {
+                                    lagging.insert(k.clone());
+                                }
+                            }
+                            follower = Some((view, taken, base, lagging));
+                            f_opens += 1;
+                        }
+                        Err(e) => panic!("follower scan: {e:#}"),
+                    }
+                }
+            } else if let Some((view, _, base, written)) = follower.as_ref() {
+                let key = if !recent.is_empty() && rng.gen_bool(0.7) { recent[rng.gen_range(0..recent.len())].clone() } else { keys[rng.gen_range(0..keys.len())].clone() };
+                if !written.contains(&key) {
+                    let got = read::get(&freader, &slatedb::config::ReadOptions::default(), Some(view), view.e_env, &key).await.unwrap();
+                    f_reads += 1;
+                    if got.as_deref() != base.get(&key).map(|v| &v[..]) {
+                        f_wrong += 1;
+                        st.wrong += 1;
+                        if f_wrong <= 3 {
+                            eprintln!("WRONG at op {}: follower answer for {:?} changed under its version {}", st.ops, String::from_utf8_lossy(&key), view.version);
+                        }
+                    }
+                }
+            }
         } else {
             // let the background jobs run
             tokio::time::sleep(Duration::from_millis(rng.gen_range(0..4))).await;
@@ -318,6 +400,7 @@ async fn compactor_model_drop_on() {
     t.abandon().await;
     teardown();
     eprintln!("compactor model: {st:?}");
+    eprintln!("compactor model: follower versions {f_opens}, follower reads {f_reads}, follower answers that changed {f_wrong}");
     eprintln!("compactor model: absorbs {stats_absorbs}, merges {stats_merges}, reseals {stats_reseals} (splits {splits}, group merges {gmerges}), rows dropped from SlateDB {drops}, runs deleted by GC {gcs}, erasure leftovers {leftovers}, erasures pending {pending}, groups {}, delta runs {}", v.groups.len(), v.delta.len());
     assert_eq!(st.wrong, 0, "wrong answers");
     assert_eq!(leftovers, 0, "erased rows left in live runs");
