@@ -760,6 +760,24 @@ impl Entry {
         self.scan_range_uncounted(prefix, end.as_deref(), false, None, 4 << 20).await
     }
 
+    /// Record an erasure whose deletes this entry just committed (`fx/erase.rs`; the caller holds the exclusive lock).
+    pub async fn fx_erasure_register(&mut self, coll: &str, customer: &[u8], t: &tenant_bench::fx::erase::Targets) -> Result<Option<tenant_bench::fx::erase::Erasure>> {
+        if !self.ensure_open().await? {
+            return Ok(None);
+        }
+        self.tenant.as_mut().unwrap().fx_erasure_register(coll, customer, t).await
+    }
+
+    /// The erasure pass of this database (`fx/erase.rs`). Empty when the database does not exist.
+    pub async fn fx_erase_pass(&mut self) -> Result<Vec<tenant_bench::fx::erase::Erasure>> {
+        if !self.ensure_open().await? {
+            return Ok(Vec::new());
+        }
+        self.touch();
+        let opts = tenant_bench::fx::erase::ScrubOpts::default();
+        self.tenant.as_mut().unwrap().fx_erase_pass(&opts).await
+    }
+
     /// Apply writes atomically and durably, creating the database on its first write.
     pub async fn apply(&mut self, ops: Vec<Op>) -> Result<()> {
         self.apply_mode(ops, true).await

@@ -68,7 +68,7 @@ pub struct BuildReport {
     pub resealed: usize,
 }
 
-fn line(m: &runfmt::RunMeta) -> RunLine {
+pub(crate) fn line(m: &runfmt::RunMeta) -> RunLine {
     RunLine { path: m.path.clone(), size: m.size, id: hex(&m.run_id), min_seq: m.min_seq, max_seq: m.max_seq, first: hex(&m.first_key), last: hex(&m.last_key), entries: m.entries }
 }
 

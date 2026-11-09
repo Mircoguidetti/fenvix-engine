@@ -169,11 +169,49 @@ where
     Fut: std::future::Future<Output = Result<slatedb::CheckpointCreateResult>>,
 {
     let cp = make().await?;
+    // review of step 7a, note 3: an error after the checkpoint exists deletes it, so no unpaired checkpoint is left (a
+    // restore point without a pair refuses every restore in its window until it expires)
+    let r = pair_checkpoint(store, id, admin, lease, &cp).await;
+    #[cfg(test)]
+    let keep = CONTROL_KEEP_FAILED_CHECKPOINT.load(Relaxed);
+    #[cfg(not(test))]
+    let keep = false;
+    match r {
+        Ok(Some(p)) => Ok(Some((cp, Some(p)))),
+        Ok(None) => {
+            admin.delete_checkpoint(cp.id).await?;
+            Ok(None)
+        }
+        Err(e) if keep => Err(e),
+        Err(e) => {
+            if let Err(d) = admin.delete_checkpoint(cp.id).await {
+                eprintln!("database {id}: pairing of checkpoint {} failed ({e:#}) and its delete failed too: {d:#}", cp.id);
+            }
+            // a pair written before the error goes with its checkpoint
+            let _ = delete_pair(store, id, &cp.id).await;
+            Err(e)
+        }
+    }
+}
+
+/// Fail point of the tests (review note 3): the pairing fails right after `make()`.
+#[cfg(test)]
+pub static FAIL_AFTER_MAKE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Negative control of review note 3, tests only: a pairing that fails after `make()` keeps its checkpoint, as before.
+#[cfg(test)]
+pub static CONTROL_KEEP_FAILED_CHECKPOINT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// The pairing of a checkpoint that exists: Ok(None) when the lease expired first [CkNoRecheck] (the caller deletes
+/// the checkpoint and starts again).
+async fn pair_checkpoint(store: &Arc<dyn ObjectStore>, id: &str, admin: &slatedb::admin::Admin, lease: &Lease, cp: &slatedb::CheckpointCreateResult) -> Result<Option<Pair>> {
+    #[cfg(test)]
+    if FAIL_AFTER_MAKE.load(Relaxed) {
+        bail!("database {id}: injected failure after the checkpoint was made");
+    }
     let m = admin.read_manifest(Some(cp.manifest_id)).await?.ok_or_else(|| anyhow!("database {id}: the manifest of checkpoint {} is gone", cp.id))?;
     let last_l0 = m.last_l0_seq();
     // [CkNoRecheck]: the lease must still be ours, with the margin, now that the checkpoint exists
     if now_ms() + SKEW_MARGIN_MS.load(Relaxed) >= lease.expires_ms {
-        admin.delete_checkpoint(cp.id).await?;
         return Ok(None);
     }
     let versions = manifest::list_versions(store, id).await?;
@@ -196,7 +234,7 @@ where
         created_ms: now_ms(),
     };
     store.put(&pair_path(id, &cp.id), PutPayload::from(serde_json::to_vec(&pair)?)).await?;
-    Ok(Some((cp, Some(pair))))
+    Ok(Some(pair))
 }
 
 /// The pair of a checkpoint (None: none recorded).
@@ -313,4 +351,123 @@ impl PairedReader {
     pub async fn close(self) -> Result<()> {
         Ok(self.reader.close().await?)
     }
+}
+
+/// A fork's reference on the version (and runs) it shares with a database (rule 20; plan round 2, fix 3: GC counts
+/// forks as references). Written at `{owner}/fx/forks/{fork}` in every database whose runs the fork's first version
+/// lists, before the fork's version exists, and deleted when the fork is erased, dropped or rolled back.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ForkRef {
+    pub fork: String,
+    pub source: String,
+    /// The source's version the fork's first version copies.
+    pub version: u64,
+    /// The run paths of that version that live under this database.
+    pub runs: Vec<String>,
+    pub created_ms: u64,
+}
+
+pub fn fork_ref_path(owner: &str, fork: &str) -> Path {
+    Path::from(format!("{}/forks/{fork}", root(owner)))
+}
+
+/// The database a run path belongs to (`tenants/{db}/fx/run/...`).
+fn owner_of(run: &str) -> Option<&str> {
+    let rest = run.strip_prefix("tenants/")?;
+    let (db, tail) = rest.split_once('/')?;
+    tail.starts_with("fx/").then_some(db)
+}
+
+/// How a fork gets its first version of our manifest.
+pub enum ForkRuns {
+    /// Shallow (`clone` mode): the fork's version lists the source's runs by reference.
+    Shared,
+    /// Deep (`copy` mode): every run is copied under the fork, the fork's version lists the copies.
+    Copied,
+}
+
+/// Seed fork `target` with the version paired with checkpoint `pair` of `src` (rule 20): its first version is a copy of
+/// the paired version, number unchanged and kind `fork`. The fork's SlateDB state is the checkpoint's, so its first write
+/// gets a seq above the checkpoint's `last_l0_seq`, which is at or above the paired X_d. Release E1's announcement is
+/// copied too, so the fork never reads an envelope as a plain value. Returns the version written (None: the source had
+/// none at or below the checkpoint, nothing to copy).
+pub async fn seed_fork(store: &Arc<dyn ObjectStore>, src: &str, target: &str, pair: &Pair, runs: ForkRuns) -> Result<Option<u64>> {
+    if manifest::announced(store, src).await? {
+        manifest::announce(store, target).await?;
+    }
+    let Some(n) = pair.version else { return Ok(None) };
+    let mut v = manifest::load(store, src, n).await?;
+    match runs {
+        ForkRuns::Shared => {
+            // the references first, so GC never sees the fork's version without them
+            let mut by_owner: std::collections::BTreeMap<String, Vec<String>> = Default::default();
+            by_owner.entry(src.to_string()).or_default();
+            let paths: Vec<String> = v.groups.iter().filter_map(|g| g.sealed.as_ref().map(|r| r.path.clone())).chain(v.delta.iter().map(|r| r.path.clone())).collect();
+            for p in paths {
+                if let Some(o) = owner_of(&p) {
+                    by_owner.entry(o.to_string()).or_default().push(p);
+                }
+            }
+            for (owner, runs) in by_owner {
+                let r = ForkRef { fork: target.to_string(), source: src.to_string(), version: n, runs, created_ms: now_ms() };
+                store.put(&fork_ref_path(&owner, target), PutPayload::from(serde_json::to_vec(&r)?)).await?;
+            }
+        }
+        ForkRuns::Copied => {
+            let copy = |r: &mut manifest::RunLine| -> Result<(Path, Path)> {
+                let from = Path::from(r.path.as_str());
+                let to = format!("{}/run/fork/{}", root(target), r.path.replace('/', "_"));
+                let pair = (from, Path::from(to.as_str()));
+                r.path = to;
+                Ok(pair)
+            };
+            let mut jobs = Vec::new();
+            for g in v.groups.iter_mut() {
+                if let Some(r) = g.sealed.as_mut() {
+                    jobs.push(copy(r)?);
+                }
+            }
+            for r in v.delta.iter_mut() {
+                jobs.push(copy(r)?);
+            }
+            for (from, to) in jobs {
+                store.copy(&from, &to).await?;
+            }
+        }
+    }
+    v.kind = "fork".into();
+    v.writer_epoch = None;
+    v.published_ms = now_ms();
+    ensure!(manifest::create(store, target, &v).await?, "fork {target}: its first version {n} already exists");
+    Ok(Some(n))
+}
+
+/// Remove the fork references `fork` holds in its ancestors' `fx/` (fork erased, dropped or rolled back). Missing ones
+/// need nothing.
+pub async fn drop_fork_refs(store: &Arc<dyn ObjectStore>, owners: &[String], fork: &str) -> Result<()> {
+    for o in owners {
+        match store.delete(&fork_ref_path(o, fork)).await {
+            Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
+            Err(e) => return Err(e.into()),
+        }
+    }
+    Ok(())
+}
+
+/// The databases holding a fork reference of `fork`, read from the fork's own first version (whose runs name them),
+/// plus `extra` (the source and the ancestors the caller knows).
+pub async fn fork_ref_owners(store: &Arc<dyn ObjectStore>, fork: &str, extra: &[String]) -> Result<Vec<String>> {
+    let mut out: std::collections::BTreeSet<String> = extra.iter().cloned().collect();
+    if let Some(&first) = manifest::list_versions(store, fork).await?.first() {
+        if let Ok(v) = manifest::load(store, fork, first).await {
+            for p in v.groups.iter().filter_map(|g| g.sealed.as_ref().map(|r| r.path.as_str())).chain(v.delta.iter().map(|r| r.path.as_str())) {
+                if let Some(o) = owner_of(p) {
+                    if o != fork {
+                        out.insert(o.to_string());
+                    }
+                }
+            }
+        }
+    }
+    Ok(out.into_iter().collect())
 }

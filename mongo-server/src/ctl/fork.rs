@@ -223,15 +223,17 @@ async fn do_fork(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, src: &str, target: &
         }
         super::failpoint("fork.after_markers").await;
         ops::phase(ctl, target, "copying").await?;
-        let manifest_id = match mode {
-            "clone" => {
-                let admin = Admin::builder(purge::tenant_path(target), Arc::clone(&ctl.store)).build();
-                admin.create_clone_builder_from_source(slatedb::CloneSourceSpec::new(purge::tenant_path(src))).build().await.map_err(anyhow::Error::from)?;
-                Admin::builder(purge::tenant_path(src), Arc::clone(&ctl.store)).build().read_manifest(None).await.map_err(anyhow::Error::from)?.map(|m| m.id())
-            }
-            _ => {
-                copy_objects(ctl, src, target).await?;
-                None
+        let manifest_id = if paired() { fork_paired(ctl, src, target, mode).await? } else {
+            match mode {
+                "clone" => {
+                    let admin = Admin::builder(purge::tenant_path(target), Arc::clone(&ctl.store)).build();
+                    admin.create_clone_builder_from_source(slatedb::CloneSourceSpec::new(purge::tenant_path(src))).build().await.map_err(anyhow::Error::from)?;
+                    Admin::builder(purge::tenant_path(src), Arc::clone(&ctl.store)).build().read_manifest(None).await.map_err(anyhow::Error::from)?.map(|m| m.id())
+                }
+                _ => {
+                    copy_objects(ctl, src, target).await?;
+                    None
+                }
             }
         };
         super::failpoint("fork.after_clone").await;
@@ -270,15 +272,60 @@ async fn do_fork(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, src: &str, target: &
     Ok(r?)
 }
 
+/// Forks read through a pair (compaction 2 step 7b; RULES-FOR-THE-CODE rule 20): with `--sealed-runs` on, unless the
+/// test control `FENVIX_CONTROL_RAW_PATHS=1` asks for the paths of before. With it off nothing changes: no checkpoint,
+/// no extra request.
+fn paired() -> bool {
+    tenant_bench::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) && !tenant_bench::fx::pair::control_raw()
+}
+
+/// The fork through a pair (rule 20). Once step 4 drops SlateDB rows at or below X_d, the source's SlateDB alone lacks
+/// rows our runs hold, so:
+/// 1. a checkpoint of the (quiesced) source, paired with a version under the drop lease (`fx/pair.rs`, rule 18);
+/// 2. `clone`: SlateDB's clone of that checkpoint (it adds its own permanent checkpoint in the source); `copy`: a copy of
+///    every SlateDB object of the source (quiesced: its latest state is the checkpoint's);
+/// 3. the fork's first version of our manifest: the paired version, its runs shared by reference with a fork reference
+///    in each database that holds them (`clone`), or copied under the fork (`copy`); E1's announcement copied;
+/// 4. the checkpoint of step 1 and its pair are deleted (the clone's own checkpoint keeps SlateDB's objects; the fork
+///    reference keeps our runs).
+async fn fork_paired(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> anyhow::Result<Option<u64>> {
+    use tenant_bench::fx::pair;
+    let store = &ctl.store;
+    let src_admin = Admin::builder(purge::tenant_path(src), Arc::clone(store)).build();
+    let (cp, p) = pair::checkpoint_paired(store, src, || async { Ok(src_admin.create_detached_checkpoint(&slatedb::config::CheckpointOptions::default()).await?) }).await?;
+    let r = async {
+        if mode == "clone" {
+            let admin = Admin::builder(purge::tenant_path(target), Arc::clone(store)).build();
+            admin.create_clone_builder_from_source(slatedb::CloneSourceSpec::with_checkpoint(purge::tenant_path(src), cp.id)).build().await?;
+        } else {
+            copy_objects(ctl, src, target).await?;
+            // the copy carries the source's checkpoint list; this one is the fork step's own, not a restore point
+            let _ = Admin::builder(purge::tenant_path(target), Arc::clone(store)).build().delete_checkpoint(cp.id).await;
+        }
+        if let Some(p) = &p {
+            let runs = if mode == "clone" { pair::ForkRuns::Shared } else { pair::ForkRuns::Copied };
+            pair::seed_fork(store, src, target, p, runs).await?;
+        }
+        Ok::<_, anyhow::Error>(())
+    }
+    .await;
+    // the pairing checkpoint goes in every case (a failed fork must not leave it in the source)
+    let d = src_admin.delete_checkpoint(cp.id).await;
+    pair::delete_pair(store, src, &cp.id).await?;
+    r?;
+    d?;
+    Ok(Some(cp.manifest_id))
+}
+
 /// Server-side copy of every data object of `src` to `target` (not the lease or the marker).
 async fn copy_objects(ctl: &Arc<Ctl>, src: &str, target: &str) -> anyhow::Result<()> {
     let from = Path::from(purge::tenant_path(src));
     let metas: Vec<object_store::ObjectMeta> = ctl.store.list(Some(&from)).try_collect().await?;
     let pre_from = format!("{}/", purge::tenant_path(src));
     let pre_to = format!("{}/", purge::tenant_path(target));
-    // compaction 2 (`fx/`, step 3): a fork reads SlateDB only, which still holds every row (nothing drops them yet). Our
-    // manifest is not copied: a copy would read with the parent's newest version, not one paired with the fork's
-    // state (RULES-FOR-THE-CODE rule 20, ForkNewestCut); pairing is step 7. The fork publishes versions of its own.
+    // compaction 2: our manifest and runs are not copied here: a copy would read with the parent's newest version, not
+    // one paired with the fork's state (RULES-FOR-THE-CODE rule 20, ForkNewestCut). `fork_paired` copies the paired
+    // version and its runs (step 7b).
     let fx = format!("{pre_from}fx/");
     let copies = metas.into_iter().filter(|m| !matches!(m.location.filename(), Some("_lease") | Some("_clean") | Some(".deleting")) && !m.location.as_ref().starts_with(&fx)).map(|m| {
         let to = Path::from(format!("{pre_to}{}", m.location.as_ref().strip_prefix(&pre_from).unwrap_or(m.location.as_ref())));
@@ -297,12 +344,13 @@ pub async fn rollback(ctl: &Arc<Ctl>, target: &str, op: &Value) -> ApiResult<()>
 
 /// [`rollback`] for a caller that holds the branch's entry lock.
 async fn rollback_locked(ctl: &Arc<Ctl>, target: &str, op: &Value) -> ApiResult<()> {
+    let chain: Vec<String> = op["ancestors"].as_array().map(|a| a.iter().filter_map(|a| a.as_str().map(|s| s.to_string())).collect()).unwrap_or_default();
+    let owners = tenant_bench::fx::pair::fork_ref_owners(&ctl.store, target, &chain).await?;
     purge::purge_tenant(ctl, target).await?;
-    if let Some(a) = op["ancestors"].as_array() {
-        for a in a.iter().filter_map(|a| a.as_str()) {
-            rec::delete(&ctl.store, &fork_marker(a, target)).await?;
-        }
+    for a in &chain {
+        rec::delete(&ctl.store, &fork_marker(a, target)).await?;
     }
+    tenant_bench::fx::pair::drop_fork_refs(&ctl.store, &owners, target).await?;
     rec::delete(&ctl.store, &meta::meta_path(target)).await?;
     ops::finish(ctl, target).await?;
     Ok(())
@@ -322,11 +370,12 @@ pub async fn on_drop(db: &str, owner: &(dyn Fn() -> bool + Send + Sync)) -> anyh
     if !owner() {
         return Err(crate::lease::LeaseHeld { tenant: db.to_string(), holder: "(ownership lost during the drop)".into(), remaining_ms: 0 }.into());
     }
-    for (path, _) in ancestors {
-        if let Some(a) = db_of_path(&path) {
-            rec::delete(&ctl.store, &fork_marker(&a, db)).await?;
-        }
+    let names: Vec<String> = ancestors.iter().filter_map(|(p, _)| db_of_path(p)).collect();
+    let owners = tenant_bench::fx::pair::fork_ref_owners(&ctl.store, db, &names).await?;
+    for a in &names {
+        rec::delete(&ctl.store, &fork_marker(a, db)).await?;
     }
+    tenant_bench::fx::pair::drop_fork_refs(&ctl.store, &owners, db).await?;
     purge::release_pins(&ctl.store, db).await?;
     Ok(())
 }

@@ -18,6 +18,7 @@
 
 pub mod build;
 pub mod droptest;
+pub mod erase;
 pub mod hold;
 pub mod manifest;
 pub mod pair;
@@ -31,6 +32,8 @@ mod review_tests;
 mod fix_tests;
 #[cfg(test)]
 mod tests_7a;
+#[cfg(test)]
+mod tests_7b;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 
@@ -49,6 +52,10 @@ pub static T_PIN_MS: AtomicU64 = AtomicU64::new(30_000);
 /// short-lived databases set it lower; with leases no reader in another process serves a database, so nothing can
 /// miss the announcement there.
 pub static E1_WAIT_MS: AtomicU64 = AtomicU64::new(u64::MAX);
+
+/// Set by `--sealed-test-short-e1-wait` (or FENVIX_SEALED_TEST_SHORT_E1_WAIT=1), tests only: [`check_config`] then
+/// accepts an E1 wait shorter than T_pin (review of step 7a, note 4).
+pub static E1_WAIT_TEST: AtomicBool = AtomicBool::new(false);
 
 pub fn e1_wait() -> std::time::Duration {
     use std::sync::atomic::Ordering::Relaxed;
@@ -87,6 +94,9 @@ pub fn check_config() -> anyhow::Result<()> {
     anyhow::ensure!(lease > t_pin, "sealed runs: the lease ({lease} ms) must be longer than T_pin ({t_pin} ms) (rule 8)");
     anyhow::ensure!(remote > hold + put, "sealed runs: the remote lease ({remote} ms) must exceed the hold life plus the PUT timeout ({hold} + {put} ms) (rule 10, F6)");
     anyhow::ensure!(grace > hold + put, "sealed runs: the GC grace ({grace} ms) must exceed the hold life plus the PUT timeout ({hold} + {put} ms) (rule 23, F6)");
+    // review of step 7a, note 4: envelopes must not start before every follower has taken E1's announcement (rule 26)
+    let wait = E1_WAIT_MS.load(Relaxed);
+    anyhow::ensure!(wait == u64::MAX || wait >= t_pin || E1_WAIT_TEST.load(Relaxed), "sealed runs: E1's wait ({wait} ms) must be at least T_pin ({t_pin} ms) (rule 26); a shorter one is for tests only (--sealed-test-short-e1-wait)");
     Ok(())
 }
 
@@ -107,6 +117,19 @@ pub static CONTROL_NO_XD_LOOP_CHECK: AtomicBool = AtomicBool::new(false);
 pub static CONTROL_NO_OP_HOLDS: AtomicBool = AtomicBool::new(false);
 #[cfg(test)]
 pub static CONTROL_E1_AT_ONCE: AtomicBool = AtomicBool::new(false);
+
+/// Negative control of review note 5, tests only: a refresh's T_pin window starts when its answer arrives, as before.
+#[cfg(test)]
+pub static CONTROL_LOADED_AFTER_ANSWER: AtomicBool = AtomicBool::new(false);
+
+/// The instant a refresh that started at `t0` counts from (rule 6 with note 5: its start).
+pub fn loaded_at(t0: std::time::Instant) -> std::time::Instant {
+    #[cfg(test)]
+    if CONTROL_LOADED_AFTER_ANSWER.load(std::sync::atomic::Ordering::Relaxed) {
+        return std::time::Instant::now();
+    }
+    t0
+}
 
 /// A retryable read error: a revoked hold, or a reader whose version is older than T_pin. The server answers it with a
 /// retryable code and the TransientTransactionError label.

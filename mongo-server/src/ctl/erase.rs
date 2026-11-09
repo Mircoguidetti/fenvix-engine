@@ -24,6 +24,7 @@ pub fn prefixes(db: &str) -> Vec<String> {
         format!("control/staging/{db}/"),
         format!("control/retention/{db}"),
         format!("control/ops/{db}.json"),
+        format!("control/erasures/{db}/"),
     ]
 }
 
@@ -128,6 +129,8 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
         let _ = l.append_drop(db).await;
         l.forget_pinned(db);
     }
+    // the databases holding a fork reference of this one (read before its manifest goes)
+    let owners = tenant_bench::fx::pair::fork_ref_owners(&ctl.store, db, ancestors).await?;
     let report = purge::purge_tenant(ctl, db).await?;
     ctl.dbs.leases.forget(db);
     ctl.lc.touched.lock().unwrap().remove(db);
@@ -138,8 +141,10 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
     for a in ancestors {
         rec::delete(&ctl.store, &fork::fork_marker(a, db)).await?;
     }
+    // the fork references this database held on its ancestors' runs (compaction 2, step 7b)
+    tenant_bench::fx::pair::drop_fork_refs(&ctl.store, &owners, db).await?;
     rec::delete(&ctl.store, &rec::path(&["control", "retention", db])).await?;
-    for prefix in [rec::path(&["control", "dbs", db]), rec::path(&["control", "usage", db]), rec::path(&["control", "forks", db]), rec::path(&["control", "exports", db]), rec::path(&["control", "staging", db])] {
+    for prefix in [rec::path(&["control", "erasures", db]), rec::path(&["control", "dbs", db]), rec::path(&["control", "usage", db]), rec::path(&["control", "forks", db]), rec::path(&["control", "exports", db]), rec::path(&["control", "staging", db])] {
         purge::delete_prefix(&ctl.store, &prefix).await?;
     }
     // the allow list went with the metadata record: forget it at once (a database created again with this name has none)
@@ -181,4 +186,81 @@ pub async fn resume(ctl: &Arc<Ctl>, db: &str, op: &Value) -> ApiResult<()> {
         }
     }
     Ok(())
+}
+
+// ---- customer erasures (compaction 2, step 7b; `tenant_bench::fx::erase`) -------------------------------------------
+
+/// Wakes the erasure agent at once after an erasure is recorded.
+static WAKE: tokio::sync::Notify = tokio::sync::Notify::const_new();
+/// How often the agent looks for erasures not done (`--sealed-erasure-poll-ms`).
+pub static POLL_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(60_000);
+
+fn index_path(db: &str, eid: &str) -> object_store::path::Path {
+    rec::path(&["control", "erasures", db, eid])
+}
+
+/// An erasure of `db` was recorded: index it under `control/erasures/` (so the agent finds it after a crash without
+/// listing every database) and wake the agent. A failure here only delays the pass to the agent's next start.
+pub async fn note_erasure(db: &str, eid: &str) {
+    if let Some(ctl) = super::get() {
+        if let Err(e) = object_store::ObjectStoreExt::put(&ctl.store, &index_path(db, eid), object_store::PutPayload::from_static(b"{}")).await {
+            eprintln!("erasure {eid} of {db}: index not written ({e}); the pass runs at the database's next erasure or the agent's start");
+        }
+    }
+    WAKE.notify_one();
+}
+
+/// Run the erasure pass of `db` now, under its entry lock; the index entries of erasures that are done go.
+pub async fn run_pass(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Vec<tenant_bench::fx::erase::Erasure>> {
+    let all = {
+        let mut g = ctl.dbs.lock(db).await;
+        g.fx_erase_pass().await?
+    };
+    for e in all.iter().filter(|e| e.done_ms.is_some()) {
+        rec::delete(&ctl.store, &index_path(db, &e.id)).await?;
+    }
+    Ok(all)
+}
+
+/// `GET /v1/databases/{db}/erasures`: every erasure of the database with its state, deadline and whether it is late.
+pub async fn status(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
+    meta::check_name(db)?;
+    let all = tenant_bench::fx::erase::list(&ctl.store, db).await?;
+    let now = now_ms() as u64;
+    Ok(json!({ "database": db, "erasures": all.iter().map(|e| e.to_json()).collect::<Vec<_>>(), "overdue": all.iter().filter(|e| e.overdue(now)).count() }))
+}
+
+/// `POST /v1/databases/{db}/erasures/run`: the pass now (operators, tests).
+pub async fn run_now(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
+    meta::check_name(db)?;
+    let _op = ctl.ops.lock(db).await?;
+    let all = run_pass(ctl, db).await?;
+    Ok(json!({ "database": db, "erasures": all.iter().map(|e| e.to_json()).collect::<Vec<_>>() }))
+}
+
+/// The erasure agent: every `POLL_MS`, and at once when an erasure is recorded, runs the pass of every database with an
+/// erasure not done. Priority and the CPU cap across databases are step 4's pool (plan round 2: erasures come after
+/// absorption and drops, before tier merges and reseals).
+pub fn spawn_agent(ctl: &Arc<Ctl>) {
+    let ctl = Arc::clone(ctl);
+    tokio::spawn(async move {
+        loop {
+            let poll = std::time::Duration::from_millis(POLL_MS.load(std::sync::atomic::Ordering::Relaxed).max(10));
+            let _ = tokio::time::timeout(poll, WAKE.notified()).await;
+            if !tenant_bench::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) {
+                continue;
+            }
+            let Some(_gate) = super::agent_gate().await else { return };
+            use futures::StreamExt;
+            let listed: Vec<object_store::path::Path> = ctl.store.list(Some(&rec::path(&["control", "erasures"]))).filter_map(|m| async { m.ok().map(|m| m.location) }).collect().await;
+            let mut dbs: Vec<String> = listed.iter().filter_map(|p| p.parts().nth(2).map(|x| x.as_ref().to_string())).collect();
+            dbs.dedup();
+            for db in dbs {
+                let Ok(_op) = ctl.ops.lock(&db).await else { continue };
+                if let Err(e) = run_pass(&ctl, &db).await {
+                    eprintln!("erasure pass of {db}: {}", e.message);
+                }
+            }
+        }
+    });
 }

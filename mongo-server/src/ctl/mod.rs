@@ -182,6 +182,10 @@ pub async fn start(dbs: Arc<Dbs>, server: Arc<crate::cmd::Server>, lc: Arc<Lifec
     let ctl = Arc::new(Ctl { dbs, store, lc, holder, args: args.clone(), ops: OpLocks::default(), usage, start_ms: rec::now_ms(), server });
     let _ = CTL.set(Arc::clone(&ctl));
     pitr::install_wal_retention(&ctl);
+    // compaction 2 step 7b: erasures recorded by a whole-customer delete are processed with or without the admin API
+    if tenant_bench::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) {
+        erase::spawn_agent(&ctl);
+    }
     if args.admin_listen.is_none() {
         return Ok(ctl);
     }
