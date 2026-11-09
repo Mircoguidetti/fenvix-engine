@@ -328,6 +328,17 @@ def visits(a):
                      "exact_vs_normal": ok_normal, "exact_vs_model": ok_model, "later": lat})
     fc4 = fen(admin).get("firstCourse", {})
     res["sizes_after_visit2"] = size_summary(admin)
+    if a.sealed:
+        # reviewer (review-c2-step6): the counter after visit 2, which follows a staged reseal
+        for name, trim in (("counter_after_visit2", False), ("counter_after_visit2_trimmed", True)):
+            cnt = sealed.counter(admin, trim=trim)
+            per = sorted(cnt.get("perCustomer", []))
+            res[name] = {k: v for k, v in cnt.items() if k not in ("perCustomer", "ok")}
+            res[name]["ram_per_hot_customer_mean"] = cnt["bytes"] / max(1, len(v1))
+            res[name]["customers_charged"] = len(per)
+            res[name]["charged_p50"] = per[len(per) // 2] if per else 0
+            res[name]["charged_p95"] = per[int(len(per) * 0.95)] if per else 0
+            print(f"{name}: {res[name]}", flush=True)
     res["first_course_counters"] = {"visit1": {k: fc1.get(k, 0) - fc0.get(k, 0) for k in fc1 if isinstance(fc1.get(k), int)},
                                     "visit2": {k: fc4.get(k, 0) - fc3.get(k, 0) for k in fc4 if isinstance(fc4.get(k), int)}, "end": fc4}
     res["wrong"] = wrong
