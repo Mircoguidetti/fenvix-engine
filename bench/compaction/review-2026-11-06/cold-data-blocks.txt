@@ -1,0 +1,4 @@
+Reviewer, 2026-11-06, binary 91414a6, data of rev2g (load.txt), 200 finds after 300 warm-up finds, seed 13, probe measure2.py
+default block cache (256 MiB): server GETs mean 2.44, p95 4, max 5
+--block-cache-mb 1 (data blocks cold, metadata cache warm): server GETs mean 5.38, p95 6, max 7
+GET meter checked against MinIO's own getobject counter of the bucket (totals, 300 finds, 1 MiB cache): server 1631, MinIO 1630

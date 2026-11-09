@@ -1,0 +1,2834 @@
+{
+ "state": {
+  "docs": 4569112,
+  "customers": 20000,
+  "zipf": 1.0,
+  "seed": 7,
+  "customer_key": false,
+  "load_secs": 898.629560470581,
+  "data_bytes": 2158613075,
+  "storage_bytes": 2158613075
+ },
+ "n": 200,
+ "warmup": 300,
+ "groups": {
+  "active (customers drawn by activity)": {
+   "gets_mean": 32.46,
+   "gets_p50": 31,
+   "gets_p95": 39,
+   "gets_max": 84,
+   "ms_p50": 31.895031000203744,
+   "ms_p95": 70.75089500085596
+  },
+  "any (customers drawn uniformly)": {
+   "gets_mean": 30.605,
+   "gets_p50": 30,
+   "gets_p95": 34,
+   "gets_max": 37,
+   "ms_p50": 40.72320100021898,
+   "ms_p95": 81.95826100018166
+  }
+ },
+ "rows": [
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 16873,
+   "messages": 66,
+   "gets": 32,
+   "ms": 29.442989000017405
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 14982,
+   "messages": 72815,
+   "gets": 56,
+   "ms": 48.2165849998637
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 17825,
+   "messages": 68,
+   "gets": 32,
+   "ms": 29.90815900011512
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 10565,
+   "messages": 17275,
+   "gets": 38,
+   "ms": 47.17932200037467
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 9639,
+   "messages": 33470,
+   "gets": 34,
+   "ms": 33.92118700048741
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 13356,
+   "messages": 436639,
+   "gets": 82,
+   "ms": 70.75089500085596
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2280,
+   "messages": 4442,
+   "gets": 32,
+   "ms": 44.773313000405324
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 19171,
+   "messages": 5771,
+   "gets": 33,
+   "ms": 40.76708499997039
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 11569,
+   "messages": 368,
+   "gets": 31,
+   "ms": 33.88568500031397
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 19167,
+   "messages": 382,
+   "gets": 25,
+   "ms": 87.86304099976405
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 18637,
+   "messages": 372,
+   "gets": 29,
+   "ms": 42.63101000015013
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 13275,
+   "messages": 38,
+   "gets": 32,
+   "ms": 55.56255699957546
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 12279,
+   "messages": 363,
+   "gets": 34,
+   "ms": 61.79381099991588
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 4453,
+   "messages": 218202,
+   "gets": 84,
+   "ms": 134.0699600004882
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 6968,
+   "messages": 31071,
+   "gets": 35,
+   "ms": 52.743633999853046
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 9990,
+   "messages": 916,
+   "gets": 30,
+   "ms": 47.08000499977061
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 17381,
+   "messages": 489,
+   "gets": 30,
+   "ms": 32.42526200028806
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 14030,
+   "messages": 24386,
+   "gets": 35,
+   "ms": 30.838965999464563
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 3148,
+   "messages": 892,
+   "gets": 29,
+   "ms": 20.522325999991153
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 18861,
+   "messages": 616,
+   "gets": 27,
+   "ms": 34.009770000011486
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 8108,
+   "messages": 96,
+   "gets": 31,
+   "ms": 31.908100999316957
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 7325,
+   "messages": 758,
+   "gets": 28,
+   "ms": 74.35496800007968
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 3619,
+   "messages": 398,
+   "gets": 30,
+   "ms": 27.313651000440586
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 8563,
+   "messages": 374,
+   "gets": 28,
+   "ms": 27.83375899980456
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 16488,
+   "messages": 64,
+   "gets": 28,
+   "ms": 26.724731999820506
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 4517,
+   "messages": 1138,
+   "gets": 30,
+   "ms": 19.44511900001089
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 19866,
+   "messages": 43629,
+   "gets": 39,
+   "ms": 22.107840999524342
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 6132,
+   "messages": 2438,
+   "gets": 29,
+   "ms": 28.50515299996914
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 15850,
+   "messages": 1057,
+   "gets": 30,
+   "ms": 28.099174000089988
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 18739,
+   "messages": 9268,
+   "gets": 34,
+   "ms": 38.62719199969433
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 15655,
+   "messages": 4945,
+   "gets": 31,
+   "ms": 25.94007000061538
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 7696,
+   "messages": 202,
+   "gets": 29,
+   "ms": 34.59501599991199
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 13558,
+   "messages": 337,
+   "gets": 33,
+   "ms": 18.96016699993197
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 14176,
+   "messages": 64,
+   "gets": 30,
+   "ms": 33.55998100050783
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 19778,
+   "messages": 5417,
+   "gets": 31,
+   "ms": 43.40438899998844
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2361,
+   "messages": 459,
+   "gets": 27,
+   "ms": 31.7401840002276
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 15171,
+   "messages": 475,
+   "gets": 29,
+   "ms": 35.1692340000227
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 9789,
+   "messages": 108,
+   "gets": 30,
+   "ms": 25.969414999963192
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 6590,
+   "messages": 1647,
+   "gets": 32,
+   "ms": 60.71352900016791
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 3489,
+   "messages": 229,
+   "gets": 31,
+   "ms": 32.213030999628245
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 1634,
+   "messages": 30,
+   "gets": 28,
+   "ms": 27.63344800041523
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 1662,
+   "messages": 30,
+   "gets": 27,
+   "ms": 48.87526299989986
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 17619,
+   "messages": 62,
+   "gets": 30,
+   "ms": 37.224540000352135
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 1524,
+   "messages": 2067,
+   "gets": 29,
+   "ms": 33.022562000041944
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 10468,
+   "messages": 402,
+   "gets": 30,
+   "ms": 18.23956200041721
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 10657,
+   "messages": 144909,
+   "gets": 69,
+   "ms": 45.435572000315005
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 13042,
+   "messages": 268,
+   "gets": 31,
+   "ms": 31.656238000323356
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 10047,
+   "messages": 5408,
+   "gets": 32,
+   "ms": 51.605091000055836
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 10581,
+   "messages": 7256,
+   "gets": 32,
+   "ms": 31.856261000029917
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 17022,
+   "messages": 238,
+   "gets": 30,
+   "ms": 69.65719600066222
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 11035,
+   "messages": 1260,
+   "gets": 31,
+   "ms": 29.96683500077779
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 15728,
+   "messages": 10486,
+   "gets": 31,
+   "ms": 28.0831380005111
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 3786,
+   "messages": 126,
+   "gets": 30,
+   "ms": 68.51670299965917
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 18553,
+   "messages": 382,
+   "gets": 30,
+   "ms": 21.935843999926874
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 14799,
+   "messages": 5735,
+   "gets": 33,
+   "ms": 85.34729700022581
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 7871,
+   "messages": 688,
+   "gets": 31,
+   "ms": 35.17665900017164
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 3581,
+   "messages": 108227,
+   "gets": 69,
+   "ms": 86.40921400001389
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 11130,
+   "messages": 15508,
+   "gets": 35,
+   "ms": 24.025512000662275
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 12510,
+   "messages": 204,
+   "gets": 31,
+   "ms": 36.56497500014666
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 8574,
+   "messages": 238,
+   "gets": 31,
+   "ms": 16.639274000226578
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 19322,
+   "messages": 438,
+   "gets": 30,
+   "ms": 15.737591000288376
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 1466,
+   "messages": 30,
+   "gets": 29,
+   "ms": 19.864394000251195
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 3587,
+   "messages": 16268,
+   "gets": 34,
+   "ms": 24.895575999835273
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 13032,
+   "messages": 104,
+   "gets": 31,
+   "ms": 28.398464000019885
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 979,
+   "messages": 16878,
+   "gets": 34,
+   "ms": 46.08582299988484
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 11124,
+   "messages": 6725,
+   "gets": 34,
+   "ms": 29.31341500061535
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 8291,
+   "messages": 87073,
+   "gets": 62,
+   "ms": 60.265093999987585
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 9217,
+   "messages": 111,
+   "gets": 30,
+   "ms": 17.85186100005376
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 4293,
+   "messages": 4819,
+   "gets": 29,
+   "ms": 16.215566000028048
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2012,
+   "messages": 565,
+   "gets": 34,
+   "ms": 27.520069999809493
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 4199,
+   "messages": 161,
+   "gets": 30,
+   "ms": 22.533193000526808
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 13316,
+   "messages": 4113,
+   "gets": 31,
+   "ms": 20.18978700016305
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 13076,
+   "messages": 67,
+   "gets": 29,
+   "ms": 20.327941000687133
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 8147,
+   "messages": 79,
+   "gets": 30,
+   "ms": 18.37963599973591
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 14368,
+   "messages": 502,
+   "gets": 31,
+   "ms": 25.713234999784618
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 18130,
+   "messages": 37,
+   "gets": 28,
+   "ms": 33.67969999999332
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2085,
+   "messages": 3964,
+   "gets": 34,
+   "ms": 26.388910000605392
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 18937,
+   "messages": 7046,
+   "gets": 30,
+   "ms": 46.60077999960777
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 17179,
+   "messages": 7092,
+   "gets": 33,
+   "ms": 44.83667200020136
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 13933,
+   "messages": 691,
+   "gets": 29,
+   "ms": 21.519486000215693
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 17147,
+   "messages": 29,
+   "gets": 30,
+   "ms": 35.87833199981105
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 9396,
+   "messages": 10928,
+   "gets": 34,
+   "ms": 54.0089629994327
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2122,
+   "messages": 8079,
+   "gets": 34,
+   "ms": 30.640457999652426
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 17431,
+   "messages": 1457,
+   "gets": 30,
+   "ms": 42.474185999708425
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 19202,
+   "messages": 1799,
+   "gets": 28,
+   "ms": 31.895031000203744
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 11689,
+   "messages": 5470,
+   "gets": 34,
+   "ms": 31.883929000287026
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 9115,
+   "messages": 21,
+   "gets": 30,
+   "ms": 49.8674469999969
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 254,
+   "messages": 238,
+   "gets": 34,
+   "ms": 34.64248100044642
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2087,
+   "messages": 23035,
+   "gets": 36,
+   "ms": 32.96560400031012
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 13421,
+   "messages": 36069,
+   "gets": 35,
+   "ms": 18.56110200060357
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 16367,
+   "messages": 66,
+   "gets": 33,
+   "ms": 33.54020999995555
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 14907,
+   "messages": 111,
+   "gets": 31,
+   "ms": 23.832078999475925
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 3088,
+   "messages": 443,
+   "gets": 30,
+   "ms": 49.43099799947959
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 82,
+   "messages": 61,
+   "gets": 33,
+   "ms": 35.2822559998458
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 8580,
+   "messages": 369,
+   "gets": 29,
+   "ms": 20.035864999954356
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 7015,
+   "messages": 39489,
+   "gets": 42,
+   "ms": 25.65199400032725
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2010,
+   "messages": 2275,
+   "gets": 29,
+   "ms": 31.55821800010017
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 7258,
+   "messages": 3204,
+   "gets": 28,
+   "ms": 15.574400999867066
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 18724,
+   "messages": 2316,
+   "gets": 30,
+   "ms": 20.034960999510076
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 12358,
+   "messages": 460,
+   "gets": 34,
+   "ms": 30.994777999694634
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 16226,
+   "messages": 19958,
+   "gets": 38,
+   "ms": 52.49110700060555
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 15392,
+   "messages": 54784,
+   "gets": 43,
+   "ms": 63.69900899971981
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 13247,
+   "messages": 1858,
+   "gets": 27,
+   "ms": 34.83309400053258
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 5120,
+   "messages": 48390,
+   "gets": 47,
+   "ms": 82.98396000009234
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 7168,
+   "messages": 1369,
+   "gets": 27,
+   "ms": 23.743450999972993
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 6317,
+   "messages": 2189,
+   "gets": 30,
+   "ms": 23.534218999884615
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 15079,
+   "messages": 1097,
+   "gets": 30,
+   "ms": 28.205346000504505
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 6865,
+   "messages": 601,
+   "gets": 27,
+   "ms": 27.144824999595585
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2649,
+   "messages": 3426,
+   "gets": 30,
+   "ms": 47.986095999476674
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 6629,
+   "messages": 254,
+   "gets": 30,
+   "ms": 82.99585900022066
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 10562,
+   "messages": 691,
+   "gets": 29,
+   "ms": 36.59373099981167
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2276,
+   "messages": 38,
+   "gets": 30,
+   "ms": 38.93634500036569
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 19887,
+   "messages": 58,
+   "gets": 31,
+   "ms": 25.386764000359108
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 1063,
+   "messages": 61,
+   "gets": 31,
+   "ms": 26.215683999907924
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2905,
+   "messages": 12417,
+   "gets": 34,
+   "ms": 34.35993400034931
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 4755,
+   "messages": 27,
+   "gets": 30,
+   "ms": 23.54423399992811
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 10983,
+   "messages": 57,
+   "gets": 32,
+   "ms": 22.742572000424843
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 15576,
+   "messages": 13470,
+   "gets": 33,
+   "ms": 34.9432720004188
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 6255,
+   "messages": 9660,
+   "gets": 36,
+   "ms": 51.81061499934003
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2963,
+   "messages": 1997,
+   "gets": 31,
+   "ms": 29.64129799966031
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 12808,
+   "messages": 62241,
+   "gets": 50,
+   "ms": 52.43902399979561
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 17690,
+   "messages": 531,
+   "gets": 28,
+   "ms": 36.679300000287185
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 4502,
+   "messages": 42,
+   "gets": 30,
+   "ms": 36.3505229997827
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2606,
+   "messages": 1367,
+   "gets": 32,
+   "ms": 40.73185899960663
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 12439,
+   "messages": 8460,
+   "gets": 33,
+   "ms": 50.26081699998031
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 18292,
+   "messages": 290,
+   "gets": 28,
+   "ms": 29.896252999606077
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 17922,
+   "messages": 1002,
+   "gets": 29,
+   "ms": 48.29877699921781
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 13301,
+   "messages": 30,
+   "gets": 29,
+   "ms": 75.89529500000936
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 17980,
+   "messages": 54,
+   "gets": 32,
+   "ms": 36.34985299959226
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 16912,
+   "messages": 7718,
+   "gets": 33,
+   "ms": 53.806649999387446
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 5646,
+   "messages": 1198,
+   "gets": 33,
+   "ms": 40.39539000041259
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 5576,
+   "messages": 136,
+   "gets": 30,
+   "ms": 26.068391000080737
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 8536,
+   "messages": 387,
+   "gets": 31,
+   "ms": 38.88327899949218
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 4812,
+   "messages": 801,
+   "gets": 28,
+   "ms": 31.013361999612243
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 15049,
+   "messages": 410,
+   "gets": 32,
+   "ms": 27.454480999949737
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2521,
+   "messages": 31,
+   "gets": 34,
+   "ms": 33.963935000429046
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 11454,
+   "messages": 53,
+   "gets": 29,
+   "ms": 36.48489699935453
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 15222,
+   "messages": 50,
+   "gets": 31,
+   "ms": 35.213371999816445
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 19450,
+   "messages": 5246,
+   "gets": 37,
+   "ms": 46.44639100024506
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 17291,
+   "messages": 218,
+   "gets": 28,
+   "ms": 42.47366999970836
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 15386,
+   "messages": 14884,
+   "gets": 33,
+   "ms": 23.07032099997741
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 9699,
+   "messages": 6925,
+   "gets": 31,
+   "ms": 35.40703199996642
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2933,
+   "messages": 679,
+   "gets": 30,
+   "ms": 35.772324000390654
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 8599,
+   "messages": 9931,
+   "gets": 34,
+   "ms": 36.35775000020658
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 16596,
+   "messages": 2407,
+   "gets": 29,
+   "ms": 44.28842099969188
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 1238,
+   "messages": 152,
+   "gets": 30,
+   "ms": 48.42977299995255
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 1064,
+   "messages": 4421,
+   "gets": 29,
+   "ms": 27.09371499986446
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 6542,
+   "messages": 238,
+   "gets": 29,
+   "ms": 30.204131000573398
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 3609,
+   "messages": 5292,
+   "gets": 31,
+   "ms": 29.186040999775287
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 9521,
+   "messages": 5456,
+   "gets": 33,
+   "ms": 27.6753150001241
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 9856,
+   "messages": 87,
+   "gets": 30,
+   "ms": 25.788426000872278
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 16554,
+   "messages": 1079,
+   "gets": 30,
+   "ms": 24.034062000282574
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2672,
+   "messages": 263,
+   "gets": 30,
+   "ms": 27.73236699977133
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2517,
+   "messages": 29,
+   "gets": 29,
+   "ms": 37.47701800057257
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 1784,
+   "messages": 2642,
+   "gets": 30,
+   "ms": 41.541374000189535
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 18537,
+   "messages": 2028,
+   "gets": 29,
+   "ms": 29.3281290005325
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 10857,
+   "messages": 24,
+   "gets": 31,
+   "ms": 37.860131000343245
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 7527,
+   "messages": 119,
+   "gets": 35,
+   "ms": 32.42360900003405
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 18778,
+   "messages": 71,
+   "gets": 29,
+   "ms": 25.481015999503143
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 14911,
+   "messages": 288,
+   "gets": 27,
+   "ms": 24.182275000384834
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 4664,
+   "messages": 447,
+   "gets": 34,
+   "ms": 37.85664400038513
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 14427,
+   "messages": 24,
+   "gets": 33,
+   "ms": 46.89927999970678
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 7418,
+   "messages": 1003,
+   "gets": 30,
+   "ms": 47.76257699995767
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 6929,
+   "messages": 48,
+   "gets": 33,
+   "ms": 34.33178299928841
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 9739,
+   "messages": 96,
+   "gets": 34,
+   "ms": 24.462376999508706
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 12580,
+   "messages": 592,
+   "gets": 31,
+   "ms": 22.72863899997901
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 12899,
+   "messages": 356,
+   "gets": 30,
+   "ms": 21.709333999751834
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 17706,
+   "messages": 656,
+   "gets": 29,
+   "ms": 27.728394999940065
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 10097,
+   "messages": 1499,
+   "gets": 29,
+   "ms": 29.91775000009511
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 10166,
+   "messages": 130,
+   "gets": 28,
+   "ms": 56.88139100038825
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 8486,
+   "messages": 940,
+   "gets": 29,
+   "ms": 25.448713000514545
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 4596,
+   "messages": 21661,
+   "gets": 36,
+   "ms": 23.60351199968136
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 19003,
+   "messages": 14622,
+   "gets": 33,
+   "ms": 30.54615200016997
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 1706,
+   "messages": 1184,
+   "gets": 33,
+   "ms": 21.750494000116305
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 18865,
+   "messages": 212,
+   "gets": 30,
+   "ms": 20.09265000015148
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 7006,
+   "messages": 1300,
+   "gets": 32,
+   "ms": 28.689343000223744
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 11027,
+   "messages": 13226,
+   "gets": 37,
+   "ms": 61.987957000383176
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 10274,
+   "messages": 113,
+   "gets": 28,
+   "ms": 38.65858399967692
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 3680,
+   "messages": 1894,
+   "gets": 30,
+   "ms": 20.537319999675674
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 14246,
+   "messages": 4157,
+   "gets": 33,
+   "ms": 33.339614999931655
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 17826,
+   "messages": 20,
+   "gets": 30,
+   "ms": 20.38316299967846
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 583,
+   "messages": 204,
+   "gets": 28,
+   "ms": 29.70976899996458
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 8502,
+   "messages": 4026,
+   "gets": 31,
+   "ms": 17.765220000001136
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 10830,
+   "messages": 333,
+   "gets": 31,
+   "ms": 31.617900999663107
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 14018,
+   "messages": 60,
+   "gets": 30,
+   "ms": 39.80488599972887
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 9349,
+   "messages": 578,
+   "gets": 33,
+   "ms": 23.388102000353683
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 3972,
+   "messages": 989,
+   "gets": 31,
+   "ms": 31.602216000464978
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2037,
+   "messages": 124,
+   "gets": 30,
+   "ms": 94.91612199963129
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 11128,
+   "messages": 4227,
+   "gets": 28,
+   "ms": 27.888614999938
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 10763,
+   "messages": 58,
+   "gets": 30,
+   "ms": 29.855887999474362
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 19563,
+   "messages": 3516,
+   "gets": 31,
+   "ms": 27.152114000273286
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 8374,
+   "messages": 40,
+   "gets": 32,
+   "ms": 29.52025099966704
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 12175,
+   "messages": 51,
+   "gets": 29,
+   "ms": 24.617788999421464
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 18028,
+   "messages": 74,
+   "gets": 31,
+   "ms": 25.488541000413534
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 5941,
+   "messages": 668,
+   "gets": 30,
+   "ms": 88.28731500034337
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 8741,
+   "messages": 194,
+   "gets": 31,
+   "ms": 64.43295699955343
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 16779,
+   "messages": 89,
+   "gets": 29,
+   "ms": 54.64718100029131
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 2918,
+   "messages": 12127,
+   "gets": 34,
+   "ms": 28.610925999601022
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 16380,
+   "messages": 6240,
+   "gets": 34,
+   "ms": 25.428644999919925
+  },
+  {
+   "group": "active (customers drawn by activity)",
+   "customer": 1617,
+   "messages": 105,
+   "gets": 29,
+   "ms": 21.955617000458005
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 7084,
+   "messages": 64,
+   "gets": 27,
+   "ms": 14.695066000058432
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 1756,
+   "messages": 187,
+   "gets": 29,
+   "ms": 17.91492200027278
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 16817,
+   "messages": 47,
+   "gets": 29,
+   "ms": 21.140773999832163
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 4421,
+   "messages": 32,
+   "gets": 31,
+   "ms": 20.5758110005263
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 7230,
+   "messages": 171,
+   "gets": 31,
+   "ms": 20.42515999983152
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 2414,
+   "messages": 75,
+   "gets": 32,
+   "ms": 38.56923600051232
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 7943,
+   "messages": 42,
+   "gets": 29,
+   "ms": 27.44241299933492
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 4553,
+   "messages": 25,
+   "gets": 34,
+   "ms": 65.72270299966476
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 13334,
+   "messages": 28,
+   "gets": 36,
+   "ms": 42.29359399960231
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 18015,
+   "messages": 159,
+   "gets": 34,
+   "ms": 27.814196999315755
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 17479,
+   "messages": 24,
+   "gets": 29,
+   "ms": 29.381798000031267
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 11543,
+   "messages": 74,
+   "gets": 29,
+   "ms": 29.00032299930899
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 9838,
+   "messages": 20,
+   "gets": 31,
+   "ms": 34.43687399976625
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 8651,
+   "messages": 91,
+   "gets": 34,
+   "ms": 40.87403799985623
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 6760,
+   "messages": 22,
+   "gets": 30,
+   "ms": 44.81107700030407
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 6641,
+   "messages": 65,
+   "gets": 29,
+   "ms": 59.3524609994347
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 5913,
+   "messages": 21,
+   "gets": 29,
+   "ms": 20.839499000430806
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 18653,
+   "messages": 508,
+   "gets": 34,
+   "ms": 30.74696700059576
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 15041,
+   "messages": 146,
+   "gets": 29,
+   "ms": 31.337996000729618
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 578,
+   "messages": 61,
+   "gets": 32,
+   "ms": 76.12840599995252
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 9924,
+   "messages": 97,
+   "gets": 28,
+   "ms": 23.079408999365114
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 17928,
+   "messages": 97,
+   "gets": 29,
+   "ms": 29.32354699987627
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 2326,
+   "messages": 34,
+   "gets": 31,
+   "ms": 49.07768199973361
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 18905,
+   "messages": 86,
+   "gets": 31,
+   "ms": 47.063828999853285
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 11359,
+   "messages": 58,
+   "gets": 32,
+   "ms": 39.30177900019771
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 14820,
+   "messages": 29,
+   "gets": 30,
+   "ms": 53.43751600048563
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 13601,
+   "messages": 40,
+   "gets": 31,
+   "ms": 28.723834000629722
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 6962,
+   "messages": 928,
+   "gets": 32,
+   "ms": 53.66902999958256
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 16439,
+   "messages": 246,
+   "gets": 31,
+   "ms": 40.72320100021898
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 14287,
+   "messages": 31,
+   "gets": 30,
+   "ms": 35.370632000194746
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 5629,
+   "messages": 23,
+   "gets": 29,
+   "ms": 38.56222899958084
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 18099,
+   "messages": 46,
+   "gets": 33,
+   "ms": 28.357162999782304
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 4824,
+   "messages": 22,
+   "gets": 35,
+   "ms": 38.735080000151356
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 971,
+   "messages": 491,
+   "gets": 33,
+   "ms": 36.508508999759215
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 12843,
+   "messages": 26,
+   "gets": 29,
+   "ms": 39.13901099986106
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 9573,
+   "messages": 263,
+   "gets": 31,
+   "ms": 65.04469700030313
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 18968,
+   "messages": 30,
+   "gets": 32,
+   "ms": 46.63506500037329
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 127,
+   "messages": 73,
+   "gets": 32,
+   "ms": 25.330407000183186
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 17653,
+   "messages": 46,
+   "gets": 30,
+   "ms": 33.44231299979583
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 2134,
+   "messages": 127,
+   "gets": 31,
+   "ms": 56.34946999998647
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 17046,
+   "messages": 292,
+   "gets": 29,
+   "ms": 86.73019900015788
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 6100,
+   "messages": 71,
+   "gets": 31,
+   "ms": 71.8936589992154
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 15068,
+   "messages": 113,
+   "gets": 28,
+   "ms": 25.19296199989185
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 17268,
+   "messages": 228,
+   "gets": 27,
+   "ms": 62.67200900038006
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 3766,
+   "messages": 58,
+   "gets": 32,
+   "ms": 25.52125599959254
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 8899,
+   "messages": 124,
+   "gets": 30,
+   "ms": 47.7660790002119
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 15679,
+   "messages": 26,
+   "gets": 31,
+   "ms": 48.948248999295174
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 7169,
+   "messages": 69,
+   "gets": 31,
+   "ms": 36.85004899944033
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 6776,
+   "messages": 48,
+   "gets": 28,
+   "ms": 27.98124499986443
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 3996,
+   "messages": 64,
+   "gets": 31,
+   "ms": 28.70524399986607
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 302,
+   "messages": 46,
+   "gets": 29,
+   "ms": 40.677158999642415
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 14841,
+   "messages": 21,
+   "gets": 30,
+   "ms": 34.58147099991038
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 6662,
+   "messages": 32,
+   "gets": 34,
+   "ms": 21.518374000152107
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 18039,
+   "messages": 27,
+   "gets": 31,
+   "ms": 38.82791499927407
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 8388,
+   "messages": 145,
+   "gets": 31,
+   "ms": 50.91016000005766
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 968,
+   "messages": 20,
+   "gets": 32,
+   "ms": 50.66104199977417
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 17971,
+   "messages": 29,
+   "gets": 32,
+   "ms": 66.54712599993218
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 7371,
+   "messages": 41,
+   "gets": 36,
+   "ms": 45.00763499981986
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 3186,
+   "messages": 35,
+   "gets": 33,
+   "ms": 24.093718000585795
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 8964,
+   "messages": 541,
+   "gets": 30,
+   "ms": 27.96575299998949
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 5633,
+   "messages": 34,
+   "gets": 32,
+   "ms": 40.355045999604044
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 9561,
+   "messages": 76,
+   "gets": 33,
+   "ms": 53.36753800020233
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 18921,
+   "messages": 44,
+   "gets": 30,
+   "ms": 60.37221399947157
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 12658,
+   "messages": 45,
+   "gets": 33,
+   "ms": 59.686913000405184
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 19639,
+   "messages": 34,
+   "gets": 31,
+   "ms": 30.74256600029912
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 18761,
+   "messages": 232,
+   "gets": 30,
+   "ms": 36.19748399978562
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 15556,
+   "messages": 20,
+   "gets": 29,
+   "ms": 65.74917000034475
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 15324,
+   "messages": 31,
+   "gets": 31,
+   "ms": 63.156528000035905
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 9955,
+   "messages": 31,
+   "gets": 34,
+   "ms": 42.78450299989345
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 11242,
+   "messages": 91,
+   "gets": 30,
+   "ms": 50.67423099990265
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 1100,
+   "messages": 22,
+   "gets": 31,
+   "ms": 30.262137999670813
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 15542,
+   "messages": 37,
+   "gets": 26,
+   "ms": 84.4058689999656
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 10584,
+   "messages": 29,
+   "gets": 33,
+   "ms": 66.92171299982874
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 1235,
+   "messages": 155,
+   "gets": 32,
+   "ms": 44.31695699986449
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 3968,
+   "messages": 69,
+   "gets": 31,
+   "ms": 35.238553000453976
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 15185,
+   "messages": 26,
+   "gets": 31,
+   "ms": 49.780907000240404
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 7957,
+   "messages": 299,
+   "gets": 37,
+   "ms": 119.64471400006005
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 18510,
+   "messages": 127,
+   "gets": 28,
+   "ms": 54.961267999715346
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 5043,
+   "messages": 47,
+   "gets": 32,
+   "ms": 41.3303690002067
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 17233,
+   "messages": 206,
+   "gets": 28,
+   "ms": 31.16783400037093
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 18255,
+   "messages": 52,
+   "gets": 32,
+   "ms": 58.25523799921939
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 10312,
+   "messages": 20,
+   "gets": 30,
+   "ms": 175.6543129995407
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 11606,
+   "messages": 37,
+   "gets": 29,
+   "ms": 60.796133999247104
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 13911,
+   "messages": 2206,
+   "gets": 31,
+   "ms": 53.03432900018379
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 3873,
+   "messages": 178,
+   "gets": 30,
+   "ms": 27.32229999946867
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 4779,
+   "messages": 277,
+   "gets": 28,
+   "ms": 36.74843199951283
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 7217,
+   "messages": 31,
+   "gets": 30,
+   "ms": 34.184111000286066
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 11882,
+   "messages": 29,
+   "gets": 29,
+   "ms": 29.85355799955869
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 1455,
+   "messages": 33,
+   "gets": 30,
+   "ms": 31.589769999300188
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 18115,
+   "messages": 69,
+   "gets": 28,
+   "ms": 29.774517999612726
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 15230,
+   "messages": 140,
+   "gets": 30,
+   "ms": 67.7036399993085
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 18530,
+   "messages": 63,
+   "gets": 31,
+   "ms": 71.83207599973684
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 6750,
+   "messages": 30,
+   "gets": 28,
+   "ms": 33.75705599955836
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 2460,
+   "messages": 25,
+   "gets": 28,
+   "ms": 19.839472000057867
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 19733,
+   "messages": 35,
+   "gets": 33,
+   "ms": 33.95363300023746
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 2506,
+   "messages": 38,
+   "gets": 32,
+   "ms": 35.317088000738295
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 276,
+   "messages": 55,
+   "gets": 29,
+   "ms": 17.414382999959344
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 4254,
+   "messages": 29,
+   "gets": 28,
+   "ms": 17.24250799998117
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 19362,
+   "messages": 37,
+   "gets": 29,
+   "ms": 17.389964000358304
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 13089,
+   "messages": 134,
+   "gets": 29,
+   "ms": 23.86898300028406
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 15037,
+   "messages": 23,
+   "gets": 30,
+   "ms": 33.94161400046869
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 6971,
+   "messages": 47,
+   "gets": 31,
+   "ms": 31.571046999488317
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 18463,
+   "messages": 108,
+   "gets": 33,
+   "ms": 94.73398699992686
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 186,
+   "messages": 401,
+   "gets": 30,
+   "ms": 28.778173999853607
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 4889,
+   "messages": 221,
+   "gets": 27,
+   "ms": 21.45578799991199
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 2827,
+   "messages": 32,
+   "gets": 29,
+   "ms": 43.14731300019048
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 12674,
+   "messages": 34,
+   "gets": 29,
+   "ms": 30.55013199991663
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 788,
+   "messages": 36,
+   "gets": 31,
+   "ms": 35.62320600030944
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 13589,
+   "messages": 24,
+   "gets": 31,
+   "ms": 30.42575899962685
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 4924,
+   "messages": 36,
+   "gets": 28,
+   "ms": 42.367304999970656
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 4436,
+   "messages": 175,
+   "gets": 29,
+   "ms": 49.69535199961683
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 8854,
+   "messages": 65,
+   "gets": 29,
+   "ms": 65.79242199950386
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 3129,
+   "messages": 117,
+   "gets": 28,
+   "ms": 43.29997000058938
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 6194,
+   "messages": 25,
+   "gets": 29,
+   "ms": 46.291599000142014
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 2966,
+   "messages": 148,
+   "gets": 36,
+   "ms": 68.721459999324
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 6723,
+   "messages": 31,
+   "gets": 30,
+   "ms": 45.0192230000539
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 19314,
+   "messages": 29,
+   "gets": 32,
+   "ms": 31.91498199976195
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 3305,
+   "messages": 26,
+   "gets": 31,
+   "ms": 25.868957999591657
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 15935,
+   "messages": 28,
+   "gets": 30,
+   "ms": 28.621966999708093
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 7366,
+   "messages": 26,
+   "gets": 29,
+   "ms": 35.92302200013364
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 13196,
+   "messages": 105,
+   "gets": 33,
+   "ms": 39.1643330003717
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 9274,
+   "messages": 22,
+   "gets": 31,
+   "ms": 45.26278299999831
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 3787,
+   "messages": 49,
+   "gets": 31,
+   "ms": 38.6734419998902
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 12886,
+   "messages": 31,
+   "gets": 32,
+   "ms": 38.98217999994813
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 10903,
+   "messages": 256,
+   "gets": 32,
+   "ms": 20.790976000171213
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 12180,
+   "messages": 36,
+   "gets": 32,
+   "ms": 35.96325600028649
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 5746,
+   "messages": 29,
+   "gets": 29,
+   "ms": 52.72420100027375
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 1795,
+   "messages": 27,
+   "gets": 30,
+   "ms": 46.25825099992653
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 2373,
+   "messages": 25,
+   "gets": 32,
+   "ms": 74.60499399985565
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 3431,
+   "messages": 47,
+   "gets": 31,
+   "ms": 38.18793100072071
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 3852,
+   "messages": 70,
+   "gets": 33,
+   "ms": 46.36546700021427
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 3337,
+   "messages": 114,
+   "gets": 30,
+   "ms": 48.13933500008716
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 6783,
+   "messages": 190,
+   "gets": 30,
+   "ms": 67.91632800013758
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 1775,
+   "messages": 46,
+   "gets": 28,
+   "ms": 54.28621400005795
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 5840,
+   "messages": 106,
+   "gets": 29,
+   "ms": 31.154342999798246
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 14090,
+   "messages": 71,
+   "gets": 29,
+   "ms": 25.183213000673277
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 16135,
+   "messages": 143,
+   "gets": 29,
+   "ms": 33.2874890000312
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 9006,
+   "messages": 61,
+   "gets": 28,
+   "ms": 34.34452300007251
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 5138,
+   "messages": 112,
+   "gets": 27,
+   "ms": 19.319571000778524
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 14569,
+   "messages": 71,
+   "gets": 28,
+   "ms": 24.75454900013574
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 10574,
+   "messages": 246,
+   "gets": 30,
+   "ms": 26.349391000621836
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 13132,
+   "messages": 55,
+   "gets": 29,
+   "ms": 36.13064000001032
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 4614,
+   "messages": 46,
+   "gets": 30,
+   "ms": 49.33656999946834
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 7897,
+   "messages": 39,
+   "gets": 30,
+   "ms": 41.19242100023257
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 8304,
+   "messages": 38,
+   "gets": 28,
+   "ms": 52.441609000197786
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 2704,
+   "messages": 267,
+   "gets": 28,
+   "ms": 29.900428000473767
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 15525,
+   "messages": 39,
+   "gets": 30,
+   "ms": 41.71669199968164
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 12540,
+   "messages": 40,
+   "gets": 29,
+   "ms": 34.37830899929395
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 17884,
+   "messages": 48,
+   "gets": 30,
+   "ms": 29.986759000166785
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 528,
+   "messages": 28,
+   "gets": 31,
+   "ms": 23.736891000226024
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 11061,
+   "messages": 101,
+   "gets": 35,
+   "ms": 34.82195499964291
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 18146,
+   "messages": 22,
+   "gets": 30,
+   "ms": 59.235169000203314
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 13112,
+   "messages": 51,
+   "gets": 31,
+   "ms": 74.78780500059656
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 6049,
+   "messages": 47,
+   "gets": 32,
+   "ms": 63.90205800016702
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 11671,
+   "messages": 75,
+   "gets": 32,
+   "ms": 45.97463800018886
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 11440,
+   "messages": 61,
+   "gets": 32,
+   "ms": 63.53216599927691
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 13121,
+   "messages": 25,
+   "gets": 30,
+   "ms": 56.771124000079
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 11007,
+   "messages": 38,
+   "gets": 36,
+   "ms": 69.3807879997621
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 3829,
+   "messages": 160,
+   "gets": 34,
+   "ms": 62.7365539994571
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 1846,
+   "messages": 56,
+   "gets": 30,
+   "ms": 36.92642299938598
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 1210,
+   "messages": 27,
+   "gets": 30,
+   "ms": 74.56598299995676
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 2547,
+   "messages": 1063,
+   "gets": 31,
+   "ms": 47.1881849998681
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 11962,
+   "messages": 44,
+   "gets": 29,
+   "ms": 83.81714099959936
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 14765,
+   "messages": 38,
+   "gets": 35,
+   "ms": 48.34519699943485
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 13950,
+   "messages": 29,
+   "gets": 32,
+   "ms": 90.23158700074418
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 5800,
+   "messages": 47,
+   "gets": 29,
+   "ms": 40.27454300012323
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 908,
+   "messages": 26,
+   "gets": 31,
+   "ms": 95.77937599988218
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 71,
+   "messages": 38,
+   "gets": 31,
+   "ms": 48.68410500057507
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 13602,
+   "messages": 53,
+   "gets": 34,
+   "ms": 57.445765000011306
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 3847,
+   "messages": 33,
+   "gets": 30,
+   "ms": 74.94693699936761
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 8994,
+   "messages": 37,
+   "gets": 30,
+   "ms": 24.944705999587313
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 6589,
+   "messages": 189,
+   "gets": 28,
+   "ms": 37.99040200010495
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 3046,
+   "messages": 28,
+   "gets": 28,
+   "ms": 37.82412900000054
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 17541,
+   "messages": 359,
+   "gets": 29,
+   "ms": 34.04136299923266
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 11850,
+   "messages": 64,
+   "gets": 29,
+   "ms": 43.77062100047624
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 16126,
+   "messages": 37,
+   "gets": 29,
+   "ms": 40.70662800040736
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 820,
+   "messages": 30,
+   "gets": 30,
+   "ms": 19.042716000512883
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 8569,
+   "messages": 23,
+   "gets": 29,
+   "ms": 47.21017699921504
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 18954,
+   "messages": 354,
+   "gets": 36,
+   "ms": 68.52957800037984
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 9516,
+   "messages": 123,
+   "gets": 33,
+   "ms": 103.20575700006884
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 453,
+   "messages": 28,
+   "gets": 31,
+   "ms": 81.17275699987658
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 13613,
+   "messages": 55,
+   "gets": 34,
+   "ms": 31.16068599956634
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 3948,
+   "messages": 40,
+   "gets": 27,
+   "ms": 32.93186699920625
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 3432,
+   "messages": 37,
+   "gets": 28,
+   "ms": 41.55327999978908
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 16401,
+   "messages": 31,
+   "gets": 31,
+   "ms": 44.44814399994357
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 12570,
+   "messages": 80,
+   "gets": 30,
+   "ms": 68.69657700008247
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 16545,
+   "messages": 25,
+   "gets": 28,
+   "ms": 59.28608100020938
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 2227,
+   "messages": 40,
+   "gets": 31,
+   "ms": 47.62579799989908
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 11233,
+   "messages": 220,
+   "gets": 34,
+   "ms": 81.95826100018166
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 3865,
+   "messages": 36,
+   "gets": 34,
+   "ms": 60.646490000181075
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 10477,
+   "messages": 27,
+   "gets": 30,
+   "ms": 94.02923700054089
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 10264,
+   "messages": 52,
+   "gets": 33,
+   "ms": 65.4583020004793
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 11807,
+   "messages": 45,
+   "gets": 32,
+   "ms": 39.68958899986319
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 11734,
+   "messages": 1175,
+   "gets": 34,
+   "ms": 37.494545000299695
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 18522,
+   "messages": 59,
+   "gets": 28,
+   "ms": 54.09668399988732
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 10375,
+   "messages": 210,
+   "gets": 30,
+   "ms": 72.90293799997016
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 19423,
+   "messages": 37,
+   "gets": 29,
+   "ms": 39.92812500018772
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 13697,
+   "messages": 30,
+   "gets": 32,
+   "ms": 52.828311999292055
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 17582,
+   "messages": 56,
+   "gets": 29,
+   "ms": 54.61949700020341
+  },
+  {
+   "group": "any (customers drawn uniformly)",
+   "customer": 10333,
+   "messages": 1222,
+   "gets": 30,
+   "ms": 58.46388600002683
+  }
+ ]
+}

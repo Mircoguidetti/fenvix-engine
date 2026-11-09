@@ -173,6 +173,8 @@ pub struct Entry {
     pub(crate) nat: HashMap<String, (u64, u64)>,
     /// Collection options (default collation) by collection; cleared with `nat`.
     pub(crate) copts: HashMap<String, Option<Arc<crate::collopts::CollOpts>>>,
+    /// Collections whose customer key (`custkey.rs`) was decided since the options were loaded; cleared with `copts`.
+    pub(crate) ckey_decided: std::collections::HashSet<String>,
     /// Storage counters of the collections (`collstat.rs`), by stored key, as the latest state has them (`None`: none
     /// stored); follows every write of the keys (`apply_mode`); cleared with `copts`.
     pub(crate) sstat: HashMap<Vec<u8>, Option<crate::collstat::CollStat>>,
@@ -257,6 +259,7 @@ impl Dbs {
                     inflight: self.inflight_counter(name),
                     nat: HashMap::new(),
                     copts: HashMap::new(),
+                    ckey_decided: Default::default(),
                     sstat: HashMap::new(),
                     meta: Default::default(),
                 }))
@@ -334,6 +337,7 @@ impl Dbs {
                         inflight: self.inflight_counter(name),
                     nat: HashMap::new(),
                     copts: HashMap::new(),
+                    ckey_decided: Default::default(),
                     sstat: HashMap::new(),
                     meta: Default::default(),
                     }))
@@ -369,9 +373,9 @@ impl Dbs {
             let mut w = Arc::clone(&e).write_owned().await;
             w.absent = false;
             if !w.ensure_open().await? {
-                return Ok(ReadView { g: None, copts: Default::default() });
+                return Ok(ReadView { g: None, copts: Default::default(), fc: Default::default() });
             }
-            return Ok(ReadView { g: Some(Guard::Write(w)), copts: Default::default() });
+            return Ok(ReadView { g: Some(Guard::Write(w)), copts: Default::default(), fc: Default::default() });
         }
         loop {
             {
@@ -379,13 +383,13 @@ impl Dbs {
                 if g.tenant.is_some() && g.leases.valid(&g.name) {
                     crate::locallog::check_open(&g.name)?;
                     g.touch();
-                    return Ok(ReadView { g: Some(Guard::Read(g)), copts: Default::default() });
+                    return Ok(ReadView { g: Some(Guard::Read(g)), copts: Default::default(), fc: Default::default() });
                 }
             }
             let mut w = Arc::clone(&e).write_owned().await;
             w.absent = false;
             if !w.ensure_open().await? {
-                return Ok(ReadView { g: None, copts: Default::default() });
+                return Ok(ReadView { g: None, copts: Default::default(), fc: Default::default() });
             }
         }
     }
@@ -570,6 +574,7 @@ impl Entry {
     pub async fn abandon(&mut self) -> bool {
         self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
         if let Some(l) = crate::locallog::get() {
@@ -586,6 +591,7 @@ impl Entry {
             }
         }
         let mut closed = true;
+        crate::opening::forget_db(&self.name);
         if let Some(t) = self.tenant.take() {
             closed = t.abandon().await;
             self.closes += 1;
@@ -636,8 +642,10 @@ impl Entry {
                 }
                 self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
+                crate::opening::forget_db(&self.name);
                 let unclean = t.unclean;
                 self.tenant = Some(t);
                 self.wakes += 1;
@@ -672,8 +680,10 @@ impl Entry {
         let had = self.tenant.is_some();
         self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
+        crate::opening::forget_db(&self.name);
         if let Some(t) = self.tenant.take() {
             crate::fair::note_written(&self.name, 0, true);
             let r = t.close().await;
@@ -839,8 +849,10 @@ impl Entry {
             lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
             self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
+            crate::opening::forget_db(&self.name);
             self.tenant = Some(self.lc.create(&self.name).await?);
             self.absent = false;
             self.wakes += 1;
@@ -853,7 +865,8 @@ impl Entry {
                 let k = match op {
                     Op::Put(k, _) | Op::Delete(k) => k,
                 };
-                if k.starts_with(b"doc/") {
+                // documents and the locators of customer-keyed collections (their unique `_id` index, custkey.rs)
+                if k.starts_with(b"doc/") || k.starts_with(b"loc/") {
                     self.modified.insert(k.clone(), self.seq);
                 }
             }
@@ -871,7 +884,10 @@ impl Entry {
                 _ => None,
             })
             .collect();
+        // first course (opening.rs): writes to a user's kept opening follow it
+        let fc = crate::opening::write_hook(&self.name, &ops);
         let staged = self.tenant.as_mut().unwrap().stage(ops).await;
+        crate::opening::after_stage(&self.name, fc, staged.is_ok());
         if staged.is_ok() {
             // the counters in memory follow the latest state (`collstat.rs`)
             self.sstat.extend(sstat_ops);
@@ -928,8 +944,10 @@ impl Entry {
         }
         self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
+        crate::opening::forget_db(&self.name);
         if let Some(t) = self.tenant.take() {
             t.close().await?;
             self.closes += 1;
@@ -1101,6 +1119,7 @@ impl Entry {
     /// Forget the cached options of a collection (they changed behind the cache's back).
     pub fn forget_coll_opts(&mut self, coll: &str) {
         self.copts.remove(coll);
+        self.ckey_decided.remove(coll);
     }
 
     /// The UUID of a collection: made (and stored) the first time it is asked for.
@@ -1142,7 +1161,18 @@ impl Entry {
     }
 
     pub fn set_coll_opts(&mut self, coll: &str, o: Option<Arc<crate::collopts::CollOpts>>) {
+        if o.is_none() {
+            self.ckey_decided.remove(coll);
+        }
         self.copts.insert(coll.to_string(), o);
+    }
+
+    pub fn ckey_decided(&self, coll: &str) -> bool {
+        self.ckey_decided.contains(coll)
+    }
+
+    pub fn note_ckey_decided(&mut self, coll: &str) {
+        self.ckey_decided.insert(coll.to_string());
     }
 
     pub fn indexes_op(coll: &str, idx: &[crate::index::IndexDef]) -> Result<Op> {
@@ -1170,7 +1200,7 @@ impl Entry {
         if let Some(s) = &self.snap {
             let opts = slatedb::config::ScanOptions {
                 read_ahead_bytes: read_ahead,
-                max_fetch_tasks: 4,
+                max_fetch_tasks: tenant_bench::tiered::scan_fetch_tasks(read_ahead),
                 cache_blocks: true,
                 order: if reverse { slatedb::IterationOrder::Descending } else { slatedb::IterationOrder::Ascending },
                 ..Default::default()
@@ -1215,8 +1245,10 @@ impl Entry {
             self.leases.acquire(&self.name).await?;
             self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
+            crate::opening::forget_db(&self.name);
             self.tenant = Some(self.lc.create(&self.name).await?);
             self.absent = false;
             self.wakes += 1;
@@ -1284,10 +1316,24 @@ impl Entry {
     }
 
     pub async fn get_doc(&mut self, coll: &str, id: &Bson) -> Result<Option<Document>> {
-        match self.get(&layout::doc_key(coll, id)).await? {
-            Some(v) => Ok(Some(Document::from_reader(&v[..])?)),
-            None => Ok(None),
+        let ckey = crate::custkey::of_opts(self.coll_opts(coll).await?.as_ref());
+        // customer-first documents: the locator holds the document's suffix (read again if the document moved meanwhile)
+        for _ in 0..3 {
+            let key = match &ckey {
+                Some(_) => match self.get(&crate::custkey::loc_key(coll, id)).await? {
+                    Some(suf) => [layout::doc_prefix(coll), suf.to_vec()].concat(),
+                    None => return Ok(None),
+                },
+                None => layout::doc_key(coll, id),
+            };
+            if let Some(v) = self.get(&key).await? {
+                return Ok(Some(Document::from_reader(&v[..])?));
+            }
+            if ckey.is_none() {
+                break;
+            }
         }
+        Ok(None)
     }
 
     pub fn put_doc_op(coll: &str, d: &Document) -> Result<Op> {
@@ -1312,6 +1358,8 @@ pub static GET_MANY_PARALLEL: std::sync::atomic::AtomicUsize = std::sync::atomic
 pub struct ReadView {
     g: Option<Guard>,
     copts: std::sync::Mutex<HashMap<String, Option<Arc<crate::collopts::CollOpts>>>>,
+    /// First course (opening.rs): the session of this view's query, when it is a user's first query of a visit.
+    fc: std::sync::Mutex<Option<crate::opening::Session>>,
 }
 
 enum Guard {
@@ -1356,7 +1404,13 @@ impl ReadView {
     async fn scan_uncounted(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
         let t = g.tenant.as_ref().unwrap();
+        let end = crate::keyenc::prefix_end(prefix);
+        if let Some(r) = self.fc_with(|s| s.scan(prefix, end.as_deref(), false, None)).flatten() {
+            self.fc_with(|s| s.note_scan(prefix, end.as_deref(), false, None, &r));
+            return self.done(r);
+        }
         let r = if durable_reads(&g.name) { t.scan_prefix_durable(prefix).await? } else { t.scan_prefix_visible(prefix).await? };
+        self.fc_with(|s| s.note_scan(prefix, end.as_deref(), false, None, &r));
         self.done(r)
     }
 
@@ -1378,8 +1432,38 @@ impl ReadView {
             };
             return self.done(r);
         }
+        if let Some(v) = self.fc_with(|s| s.get(key)).flatten() {
+            return self.done(v);
+        }
         let r = if durable_reads(&g.name) { t.get_durable(key).await? } else { t.get_visible(key).await? };
+        self.fc_with(|s| s.note_get(key, &r));
         self.done(r)
+    }
+
+    fn fc_with<T>(&self, f: impl FnOnce(&mut crate::opening::Session) -> T) -> Option<T> {
+        self.fc.lock().unwrap().as_mut().map(f)
+    }
+
+    /// First course: start a session if this find is a user's first query of a visit (opening.rs).
+    pub async fn first_course_begin(&self, coll: &str, filter: &Document) {
+        if !crate::opening::ENABLED.load(Relaxed) {
+            return;
+        }
+        let Some(g) = &self.g else { return };
+        let Ok(opts) = self.coll_opts(coll).await else { return };
+        let Some(field) = crate::custkey::of_opts(opts.as_ref()) else { return };
+        let Ok(indexes) = self.indexes(coll).await else { return };
+        // with the log on (`lifecycle::TRACK_VISIBLE`) an opening holds staged writes at once, but a read sees a write only
+        // once its record is confirmed: serve or record only while nothing is in flight
+        let all_durable = g.tenant.as_ref().map_or(false, |t| (!durable_reads(&g.name) || t.all_durable()) && t.reads_see_latest());
+        *self.fc.lock().unwrap() = crate::opening::begin(&g.name, coll, &field, filter, &indexes, all_durable);
+    }
+
+    /// First course: end of the query (keeps the opening when `ok`).
+    pub fn first_course_end(&self, ok: bool) {
+        if let Some(s) = self.fc.lock().unwrap().take() {
+            crate::opening::finish(s, ok);
+        }
     }
 
     pub async fn get_many(&self, keys: &[Vec<u8>]) -> Result<Vec<Option<Bytes>>> {
@@ -1396,9 +1480,24 @@ impl ReadView {
             return Ok(vec![]);
         }
         let t = g.tenant.as_ref().unwrap();
-        // the log path: the visible value of each key (see `lifecycle::TRACK_VISIBLE`); the latest one otherwise
-        let futs: Vec<_> = keys.iter().map(|k| t.get_visible(k.clone())).collect();
-        let r = futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect::<Vec<_>>().await?;
+        // first course: the keys the opening answers exactly, the others from storage (the visible value of each key on
+        // the log path, see `lifecycle::TRACK_VISIBLE`; the latest one otherwise)
+        let mut out: Vec<Option<Option<Bytes>>> = match self.fc_with(|s| keys.iter().map(|k| s.get(k)).collect::<Vec<_>>()) {
+            Some(v) => v,
+            None => vec![None; keys.len()],
+        };
+        let miss: Vec<usize> = (0..keys.len()).filter(|i| out[*i].is_none()).collect();
+        let futs: Vec<_> = miss.iter().map(|i| t.get_visible(keys[*i].clone())).collect();
+        let fetched = futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect::<Vec<_>>().await?;
+        for (i, v) in miss.into_iter().zip(fetched) {
+            out[i] = Some(v);
+        }
+        let r: Vec<Option<Bytes>> = out.into_iter().map(|v| v.unwrap()).collect();
+        self.fc_with(|s| {
+            for (k, v) in keys.iter().zip(r.iter()) {
+                s.note_get(k, v);
+            }
+        });
         self.done(r)
     }
 
@@ -1412,7 +1511,12 @@ impl ReadView {
 
     async fn scan_range_uncounted(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
+        if let Some(r) = self.fc_with(|s| s.scan(start, end, reverse, limit)).flatten() {
+            self.fc_with(|s| s.note_scan(start, end, reverse, limit, &r));
+            return self.done(r);
+        }
         let r = g.tenant.as_ref().unwrap().scan_range_visible(start, end, reverse, limit, read_ahead).await?;
+        self.fc_with(|s| s.note_scan(start, end, reverse, limit, &r));
         self.done(r)
     }
 
@@ -1458,9 +1562,23 @@ impl ReadView {
     }
 
     pub async fn get_doc(&self, coll: &str, id: &Bson) -> Result<Option<Document>> {
-        match self.get(&layout::doc_key(coll, id)).await? {
-            Some(v) => Ok(Some(Document::from_reader(&v[..])?)),
-            None => Ok(None),
+        let ckey = crate::custkey::of_opts(self.coll_opts(coll).await?.as_ref());
+        // customer-first documents: the locator holds the document's suffix (read again if the document moved meanwhile)
+        for _ in 0..3 {
+            let key = match &ckey {
+                Some(_) => match self.get(&crate::custkey::loc_key(coll, id)).await? {
+                    Some(suf) => [layout::doc_prefix(coll), suf.to_vec()].concat(),
+                    None => return Ok(None),
+                },
+                None => layout::doc_key(coll, id),
+            };
+            if let Some(v) = self.get(&key).await? {
+                return Ok(Some(Document::from_reader(&v[..])?));
+            }
+            if ckey.is_none() {
+                break;
+            }
         }
+        Ok(None)
     }
 }

@@ -7,4 +7,5 @@ pub mod lifecycle;
 pub mod maps;
 pub mod meter;
 pub mod simstore;
+pub mod tiered;
 pub mod warm;

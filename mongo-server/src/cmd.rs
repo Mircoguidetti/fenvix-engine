@@ -451,6 +451,17 @@ impl Server {
             "connectionStatus" => return Box::pin(self.connection_status(conn_id, cmd)).await,
             "listDatabases" => return Box::pin(self.list_databases(db, cmd, conn_id)).await,
             "tenantStats" => return Ok(self.tenant_stats()),
+            "fenvixSstInfo" => return self.sst_info(cmd).await,
+            "fenvixFirstCourse" => {
+                // first course (opening.rs): the size of every opening of a database, for measurements
+                let db = cmd.get_str("fenvixFirstCourse").map_err(|_| MongoError::bad_value("fenvixFirstCourse needs a database name".into()))?;
+                let sizes = crate::opening::sizes(db);
+                return Ok(doc! {
+                    "bytes": sizes.iter().map(|(b, _)| Bson::Int64(*b as i64)).collect::<Vec<_>>(),
+                    "entries": sizes.iter().map(|(_, e)| Bson::Int64(*e as i64)).collect::<Vec<_>>(),
+                    "ok": 1.0,
+                });
+            }
             "renameCollection" => return Box::pin(self.rename_collection(db, cmd)).await,
             "ttlPass" => {
                 let gap = int_arg(cmd.get("minGapSecs")).unwrap_or(0) as u64;
@@ -649,7 +660,9 @@ impl Server {
         let mut uuids: HashMap<String, Vec<u8>> = HashMap::new();
         for n in &names {
             if let Some(o) = g.coll_opts(n).await? {
-                options_of.insert(n.clone(), o.raw.clone());
+                let mut raw = o.raw.clone();
+                crate::custkey::strip(&mut raw);
+                options_of.insert(n.clone(), raw);
             }
             if !name_only {
                 uuids.insert(n.clone(), g.collection_uuid(n).await?);
@@ -734,12 +747,29 @@ impl Server {
                 raw.extend(i);
             }
         }
-        let raw = crate::collopts::canonical(&raw);
+        let mut raw = crate::collopts::canonical(&raw);
+        // the customer key (custkey.rs): the `customerKey` option, or `--customer-key` for this collection
+        let explicit_ckey = match cmd.get("customerKey") {
+            None => None,
+            Some(Bson::String(f)) if !f.is_empty() && !f.starts_with('$') => Some(f.clone()),
+            Some(v) => return Err(MongoError::new(2, "BadValue", format!("customerKey must be a field name, not {v}"))),
+        };
+        if explicit_ckey.is_some() && !crate::custkey::allowed(coll, &raw) {
+            return Err(MongoError::new(72, "InvalidOptions", "customerKey is not supported on capped, time-series, clustered or system collections".into()));
+        }
+        if let Some(f) = explicit_ckey.clone().or_else(|| crate::custkey::configured(db, coll).filter(|_| crate::custkey::allowed(coll, &raw))) {
+            raw.insert(crate::custkey::RAW_KEY, f);
+        }
         let mut g = self.dbs.lock(db).await;
         let mut names = g.collections().await?;
         if names.iter().any(|n| n == coll) {
             // MongoDB 7.0: creating an existing collection with the same options succeeds.
-            let existing = g.coll_opts(coll).await?.map(|o| o.raw.clone()).unwrap_or_default();
+            let mut existing = g.coll_opts(coll).await?.map(|o| o.raw.clone()).unwrap_or_default();
+            if explicit_ckey.is_none() {
+                // (a customer key the server added on its own is not an option the client gave)
+                crate::custkey::strip(&mut existing);
+                crate::custkey::strip(&mut raw);
+            }
             let has_options = cmd.iter().any(|(k, v)| {
                 !matches!(k.as_str(), "create" | "$db" | "lsid" | "$clusterTime" | "writeConcern" | "readConcern" | "comment" | "txnNumber" | "$readPreference" | "collation" | "capped" | "size" | "max" | "validator" | "validationLevel" | "validationAction" | "storageEngine" | "indexOptionDefaults")
                     && !(k == "capped" && matches!(v, Bson::Boolean(false)))
@@ -757,7 +787,8 @@ impl Server {
         }
         names.push(coll.to_string());
         let mut ops = vec![Entry::collections_op(&names)?];
-        let options = raw.clone();
+        let mut options = raw.clone();
+        crate::custkey::strip(&mut options);
         {
             let mut initial: Vec<crate::index::IndexDef> = Vec::new();
             if let Some(t) = special.options.get_document("timeseries").ok() {
@@ -792,6 +823,19 @@ impl Server {
     }
 
     /// Process-wide gauges and counters for the load tests: open tenants and every object-store request.
+    /// `{fenvixSstInfo: "<db>"}`: the SSTs of a database's latest manifest, with their compression and block count
+    /// (tests and measurements of the compaction, `tiered.rs`). Root only, like `tenantStats`.
+    async fn sst_info(&self, cmd: &Document) -> R<Document> {
+        let db = cmd.get_str("fenvixSstInfo").map_err(|_| MongoError::bad_value("fenvixSstInfo needs a database name".into()))?;
+        let (l0, runs) = tenant_bench::tiered::sst_info(self.dbs.store(), db).await?;
+        let one = |s: &tenant_bench::tiered::SstSummary| doc! { "id": s.id.clone(), "codec": s.codec, "dataBytes": s.data_bytes as i64, "blocks": s.blocks as i64 };
+        Ok(doc! {
+            "l0": l0.iter().map(|s| Bson::Document(one(s))).collect::<Vec<_>>(),
+            "runs": runs.iter().map(|(id, ssts)| Bson::Document(doc! { "id": *id as i64, "ssts": ssts.iter().map(|s| Bson::Document(one(s))).collect::<Vec<_>>() })).collect::<Vec<_>>(),
+            "ok": 1.0,
+        })
+    }
+
     fn tenant_stats(&self) -> Document {
         use std::sync::atomic::Ordering::Relaxed;
         let s = self.dbs.global.counters.snapshot();

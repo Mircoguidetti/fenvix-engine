@@ -1,0 +1,8 @@
+0 {'killed_inside_cleanup_pass': True, 'cleanup_passes': 7, 'ssts_deleted': 58, 'manifests_deleted': 134, 'acked_docs': 9504, 'acked_updates': 9500, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'reads_checked': 41722, 'missing': 0, 'stale': 0, 'padding': 0, 'errors': 0, 'count_below_acked': 0}, 'recovery_read_error': None, 'control_deleted_referenced': False}
+1 {'killed_inside_cleanup_pass': True, 'cleanup_passes': 8, 'ssts_deleted': 75, 'manifests_deleted': 189, 'acked_docs': 10797, 'acked_updates': 10791, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'reads_checked': 36799, 'missing': 0, 'stale': 0, 'padding': 0, 'errors': 0, 'count_below_acked': 0}, 'recovery_read_error': None, 'control_deleted_referenced': False}
+TOTAL safe {'trials': 2, 'killed_inside_cleanup_pass': 2, 'ssts_deleted': 133, 'acked_docs': 20301, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'reads_checked': 78521, 'missing': 0, 'stale': 0, 'padding': 0, 'errors': 0, 'count_below_acked': 0}}
+OG_RC 0
+s3 control 0 {'secs': 30.0, 'acked_ids': 48065, 'acked_writes_before_kill': 96077, 'lost_inserts': 204, 'lost_updates': 19, 'wal_puts_per_write': 0.0}
+TOTAL s3 control {'acked_ids': 48065, 'lost_inserts': 204, 'lost_updates': 19}
+GCC_RC 0
+DONE

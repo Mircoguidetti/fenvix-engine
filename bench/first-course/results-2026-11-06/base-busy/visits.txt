@@ -1,0 +1,8 @@
+visit 1: 1000 users in 71 s; openings None
+gap day 1/1: 843748 messages, compaction passes so far 9
+settled after 21 s
+gap: {'profile': 'busy', 'days': 1, 'messages': 843748, 'test_users_written': 291, 'test_messages': 7896, 'write_secs': 103.08117341995239, 'gap_secs': 124.21494936943054, 'compaction_passes': 10, 'compaction': {'compactRuns': 10, 'compactPuts': 558, 'compactGets': 12839}, 'server_cpu_secs': 164.49, 'first_course_writes_applied': 0, 'first_course_write_hook_ms': 0.0, 'trimmed': 0, 'dropped_too_big': 0}
+visit 2: zero-GET exact answers 0/1000 (0.0%), active 0.0%, uniform 0.0%, written 0.0%, not written 0.0%; wrong answers 0
+Q1 visit 1: GETs mean 7.55, ms p50 20.9; visit 2: GETs mean 8.43, ms p50 21.99, p99 34.65
+later queries ms: visit 1 p50 4.09 p99 30.98; visit 2 p50 6.51 p99 37.36
+opening sizes: after visit 1 None; after gap None; after visit 2 None

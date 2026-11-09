@@ -1,0 +1,4 @@
+at measure: fenvixSstInfo not available (no such command: 'fenvixSstInfo', full error: {'ok': 0.0, 'errmsg': "no such com)
+warmup 300 finds in 13 s
+active (customers drawn by activity): GETs mean 26.25, p50 26, p95 31, max 40; ms p50 24.0
+any (customers drawn uniformly): GETs mean 26.86, p50 27, p95 32, max 37; ms p50 25.9

@@ -1,0 +1,4 @@
+133/134 same answers as mongod 7.0
+FAIL bucketauto.POWERSOF2.decimal_special
+27018 {'docsWritten': 649, 'locatorLookups': 1}
+27019 {'docsWritten': 0, 'locatorLookups': 0}

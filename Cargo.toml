@@ -9,7 +9,7 @@ members = ["mongo-server", "loadgen"]
 exclude = ["proto"]
 
 [dependencies]
-slatedb = "=0.17.0"
+slatedb = { version = "=0.17.0", features = ["lz4", "zstd"] }
 foyer = "=0.22.6"
 object_store = { version = "=0.14.2", features = ["aws"] }
 tokio = { version = "1", features = ["full"] }

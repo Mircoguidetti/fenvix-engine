@@ -1,0 +1,4 @@
+4124/4127 same answers as mongod 7.0
+FAIL cs.delete_many
+FAIL bucketauto.POWERSOF2.decimal_special
+FAIL bucketauto.infinity

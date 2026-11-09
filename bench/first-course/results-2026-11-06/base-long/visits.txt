@@ -1,0 +1,21 @@
+visit 1: 1000 users in 74 s; openings None
+gap day 1/14: 168748 messages, compaction passes so far 2
+gap day 2/14: 337496 messages, compaction passes so far 4
+gap day 3/14: 506244 messages, compaction passes so far 5
+gap day 4/14: 674992 messages, compaction passes so far 7
+gap day 5/14: 843740 messages, compaction passes so far 8
+gap day 6/14: 1012488 messages, compaction passes so far 11
+gap day 7/14: 1181236 messages, compaction passes so far 11
+gap day 8/14: 1349984 messages, compaction passes so far 11
+gap day 9/14: 1518732 messages, compaction passes so far 11
+gap day 10/14: 1687480 messages, compaction passes so far 12
+gap day 11/14: 1856228 messages, compaction passes so far 14
+gap day 12/14: 2024976 messages, compaction passes so far 17
+gap day 13/14: 2193724 messages, compaction passes so far 18
+gap day 14/14: 2362472 messages, compaction passes so far 20
+settled after 27 s
+gap: {'profile': 'medium', 'days': 14, 'messages': 2362472, 'test_users_written': 291, 'test_messages': 32373, 'write_secs': 287.3008267879486, 'gap_secs': 314.4461090564728, 'compaction_passes': 21, 'compaction': {'compactRuns': 21, 'compactPuts': 1581, 'compactGets': 40264}, 'server_cpu_secs': 556.63, 'first_course_writes_applied': 0, 'first_course_write_hook_ms': 0.0, 'trimmed': 0, 'dropped_too_big': 0}
+visit 2: zero-GET exact answers 0/1000 (0.0%), active 0.0%, uniform 0.0%, written 0.0%, not written 0.0%; wrong answers 0
+Q1 visit 1: GETs mean 7.57, ms p50 21.2; visit 2: GETs mean 7.89, ms p50 21.82, p99 32.68
+later queries ms: visit 1 p50 4.31 p99 31.86; visit 2 p50 10.05 p99 37.40
+opening sizes: after visit 1 None; after gap None; after visit 2 None

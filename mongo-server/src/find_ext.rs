@@ -235,9 +235,10 @@ impl Server {
             return Ok(docs);
         }
         if ext.show_rid {
+            let ckey = crate::custkey::of(g, coll).await?;
             for d in docs.iter_mut() {
-                let id = d.get("_id").cloned().unwrap_or(Bson::Null);
-                if let Some(raw) = g.get(&crate::layout::doc_key(coll, &id)).await? {
+                let key = crate::custkey::doc_key(coll, ckey.as_deref(), d);
+                if let Some(raw) = g.get(&key).await? {
                     if let Some(seq) = crate::natural::seq_of(&raw) {
                         d.insert("$recordId", Bson::Int64(seq as i64));
                     }

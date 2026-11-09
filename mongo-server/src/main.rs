@@ -17,6 +17,8 @@ pub static malloc_conf: &[u8] = b"background_thread:true\0";
 
 mod agg;
 mod agentlane;
+mod custkey;
+mod opening;
 mod prefetch;
 mod hostinfo;
 mod auth;
@@ -457,6 +459,43 @@ struct Args {
     /// nothing kept) or off.
     #[arg(long, default_value = "cache")]
     tls_session_resumption: String,
+    /// Customer-first keys (custkey.rs): comma separated `[db.]collection=field`; a named collection takes the customer
+    /// key when it is created or first written while empty. Off when empty (the default).
+    #[arg(long, default_value = "")]
+    customer_key: String,
+    /// First course (opening.rs, measurement prototype, off by default): keep the key-value pairs of each user's first
+    /// query of a visit and answer the next visit's first query from them when the answer is exact.
+    #[arg(long, default_value_t = false)]
+    first_course: bool,
+    /// First course: a query of a user idle for this long starts a visit.
+    #[arg(long, default_value_t = 1800)]
+    first_course_idle_secs: u64,
+    /// First course: an opening not refreshed by a visit for this many days is not used (T).
+    #[arg(long, default_value_t = 14)]
+    first_course_days: u64,
+    /// First course: all openings together, in MiB.
+    #[arg(long, default_value_t = 1024)]
+    first_course_mb: u64,
+    /// First course: one opening at most, in KiB (trimmed above it, then dropped).
+    #[arg(long, default_value_t = 256)]
+    first_course_max_kb: u64,
+    /// First course: the opening keeps what this many queries of a visit read (1: the first query only).
+    #[arg(long, default_value_t = 1)]
+    first_course_queries: u64,
+    /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
+    /// releases before); M29 measured 64.
+    #[arg(long, default_value_t = 4)]
+    sst_block_kb: u32,
+    /// SST block compression: none (default: the release before cannot read lz4, so turning it on is a one-way change),
+    /// lz4 (M29: 2.41x on chat-like documents) or zstd.
+    #[arg(long, default_value = "none")]
+    sst_compression: String,
+    /// T of the tiered-levels compaction scheduler (M26-M31: 4); 0 = SlateDB's size-tiered scheduler.
+    #[arg(long, default_value_t = 4)]
+    compaction_tiers: u32,
+    /// Fetch tasks of a scan that reads ahead at most 64 KiB (index scans, a find's documents); M29: 1.
+    #[arg(long, default_value_t = 1)]
+    small_scan_fetch_tasks: usize,
 }
 
 async fn handle_connection(server: Arc<Server>, tls: Arc<tls::TlsConfig>, tcp: TcpStream, conn_id: i64) {
@@ -685,6 +724,17 @@ async fn run() -> Result<()> {
     tenant_bench::lifecycle::EXPLICIT_FLUSH.store(args.wal_flush_ms == 0, std::sync::atomic::Ordering::Relaxed);
     dbs::set_wake_limit(args.max_concurrent_wakes);
     tenant_bench::lifecycle::MEMTABLE_MAX_BYTES.store(args.memtable_max_mb << 20, std::sync::atomic::Ordering::Relaxed);
+    custkey::configure(&args.customer_key)?;
+    opening::ENABLED.store(args.first_course, std::sync::atomic::Ordering::Relaxed);
+    opening::IDLE_SECS.store(args.first_course_idle_secs, std::sync::atomic::Ordering::Relaxed);
+    opening::MAX_AGE_SECS.store(args.first_course_days * 86_400, std::sync::atomic::Ordering::Relaxed);
+    opening::BUDGET_BYTES.store(args.first_course_mb << 20, std::sync::atomic::Ordering::Relaxed);
+    opening::QUERIES.store(args.first_course_queries.max(1), std::sync::atomic::Ordering::Relaxed);
+    opening::MAX_BYTES.store(args.first_course_max_kb << 10, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::tiered::set_compression(&args.sst_compression)?;
+    tenant_bench::tiered::TIERS.store(args.compaction_tiers, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::tiered::SMALL_SCAN_FETCH_TASKS.store(args.small_scan_fetch_tasks, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::FILTER_BITS.store(args.filter_bits_per_key.clamp(1, 64), std::sync::atomic::Ordering::Relaxed);
     if args.waiter_tools {
         let ram = if args.counter_ram_mb > 0 { args.counter_ram_mb << 20 } else { tenant_bench::counter::machine_ram_bytes() / 100 * args.counter_ram_pct.min(90) };

@@ -702,7 +702,13 @@ mod tests {
         for i in (per * 3)..KEYS {
             db.put(&key(i), &value(i, 0)).await.unwrap();
         }
-        let hot: Vec<usize> = (0..KEYS).step_by(HOT_EVERY).collect();
+        // Hot keys far enough apart that the cold keys between them sit in other blocks. The warm-up warms every key of
+        // a hot block of the replaced SSTs, and such a block straddles up to two blocks of the new SST: a cold key must
+        // be more than two blocks away from a hot one. HOT_EVERY (50 keys of 1 KB) was chosen for 4 KiB blocks; with
+        // larger blocks (64 KiB since compaction-1) the spacing grows with the block.
+        let per_block = (crate::tiered::SST_BLOCK_KB.load(Relaxed) as usize * 1024 / (VALUE + 16)).max(1);
+        let hot_every = HOT_EVERY.max(6 * per_block);
+        let hot: Vec<usize> = (0..KEYS).step_by(hot_every).collect();
         let rewritten: HashSet<usize> = hot.iter().copied().step_by(4).collect();
         for &i in &rewritten {
             db.put(&key(i), &value(i, 1)).await.unwrap();
@@ -720,7 +726,7 @@ mod tests {
         let rec = compact_tenant_pass(&raw, &raw, id, Duration::from_secs(30), COMPACTOR_STOP_LIMIT, warm).await.unwrap().expect("no pass");
         assert!(db.manifest().l0().is_empty(), "the writer did not switch to the compacted manifest");
         let after = read(&db, &counting, &cache, &hot, &expect(&version)).await;
-        let cold: Vec<usize> = (HOT_EVERY / 2..KEYS).step_by(HOT_EVERY).collect();
+        let cold: Vec<usize> = (hot_every / 2..KEYS).step_by(hot_every).collect();
         let cold_after = read(&db, &counting, &cache, &cold, &expect(&version)).await;
         // Second pass over a database that already has a sorted run: 4 more L0 SSTs rewrite one key in 3 (a third of the
         // hot), the hot keys are read, the pass runs again.

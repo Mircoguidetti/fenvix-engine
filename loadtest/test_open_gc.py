@@ -35,6 +35,8 @@ def start(flags, log):
     with socket.socket() as so:
         if so.connect_ex(("127.0.0.1", PORT)) == 0:
             raise RuntimeError("port in use")
+    # OPEN_GC_EXTRA_FLAGS: more server flags for every start (e.g. the same run with customer-first keys on)
+    flags = flags + os.environ.get("OPEN_GC_EXTRA_FLAGS", "").split()
     p = subprocess.Popen([BIN, "--listen", f"127.0.0.1:{PORT}", "--idle-secs", "100000", "--holder", "G", "--lease-ttl-secs", "30", "--endpoint", EP] + flags,
                          stdout=open(log, "wb"), stderr=subprocess.STDOUT)
     for _ in range(300):
