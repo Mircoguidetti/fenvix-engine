@@ -622,6 +622,7 @@ async fn late_put_answer_is_a_timeout_then_a_fence() {
     };
     assert!(msg.contains("timed out"), "the commit must time out: {msg}");
     *manifest::SLOW_PUT.lock().unwrap() = None;
+    manifest::SLOW_PUT_WAITING.store(0, std::sync::atomic::Ordering::SeqCst); // step 3's tests count from 0
     assert!(c.fence_pending());
     // the late PUT lands now (the waiting create goes on in the background)
     gate.notify_waiters();
