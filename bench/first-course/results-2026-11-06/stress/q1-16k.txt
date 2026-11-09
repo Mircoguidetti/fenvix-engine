@@ -1,0 +1,2 @@
+checks 2652, wrong 0; served queries 7, partial 946, missed 70, no opening 663, kept 79, unkeepable 131, trimmed 1683, dropped 1477, writes applied 9410, forgotten 1; reads served from openings 24448, missed 75372
+STRESS PASS

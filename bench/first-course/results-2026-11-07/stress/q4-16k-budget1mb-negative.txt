@@ -1,0 +1,4 @@
+binary fix, server flags: --first-course-queries 4 --first-course-max-kb 16 --first-course-mb 1, stress flags: --users 150 --expect-wrong
+checks 2727, wrong 571; served queries 1687, partial 158, missed 6, no opening 2569, kept 996, unkeepable 55, trimmed 115, dropped 1, writes applied 0, forgotten 0; reads served from openings 45365, missed 504
+NEGATIVE CONTROL PASS: wrong answers found
+firstCourse at the end: {'enabled': True, 'openings': 29, 'bytes': 1035784, 'pending': 56, 'evictedPending': 1169, 'droppedPendingTooBig': 114, 'firstQueries': 2391, 'servedQueries': 1687, 'partialQueries': 158, 'missedQueries': 6, 'noOpening': 2569, 'notDurable': 0, 'servedReads': 45365, 'missedReads': 504, 'kept': 996, 'unkeepable': 55, 'trimmed': 115, 'droppedTooBig': 1, 'evicted': 584, 'expired': 0, 'forgotten': 0, 'writesApplied': 0, 'writeHookNs': 0, 'recordNs': 43918743}

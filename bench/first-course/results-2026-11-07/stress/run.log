@@ -1,0 +1,11 @@
+checks 2652, wrong 0; served queries 0, partial 0, missed 0, no opening 1771, kept 0, unkeepable 132, trimmed 1553, dropped 0, writes applied 0, forgotten 0; reads served from openings 0, missed 0
+STRESS FAIL
+checks 2652, wrong 0; served queries 2946, partial 513, missed 15, no opening 167, kept 1536, unkeepable 132, trimmed 25, dropped 8, writes applied 13922, forgotten 0; reads served from openings 304818, missed 8594
+STRESS PASS
+checks 2727, wrong 0; served queries 1646, partial 166, missed 6, no opening 2600, kept 983, unkeepable 55, trimmed 155, dropped 1, writes applied 3802, forgotten 0; reads served from openings 44522, missed 223
+STRESS PASS
+checks 2652, wrong 1766; served queries 3645, partial 360, missed 4, no opening 150, kept 1559, unkeepable 95, trimmed 7, dropped 0, writes applied 0, forgotten 0; reads served from openings 292181, missed 7763
+NEGATIVE CONTROL PASS: wrong answers found
+checks 2727, wrong 571; served queries 1687, partial 158, missed 6, no opening 2569, kept 996, unkeepable 55, trimmed 115, dropped 1, writes applied 0, forgotten 0; reads served from openings 45365, missed 504
+NEGATIVE CONTROL PASS: wrong answers found
+ALLDONE
