@@ -163,12 +163,20 @@ async fn main() {
     let a: Vec<String> = std::env::args().collect();
     let unit_kib: usize = a.get(1).and_then(|s| s.parse().ok()).unwrap_or(1024);
     let units = 12usize; // the same rows in every layout: 12 L0 SSTs' worth
-    let layouts = [
-        Layout { name: "rule 12: 1 run + 2 L0", runs: 1, l0: 2 },
-        Layout { name: "1 run + 6 L0", runs: 1, l0: 6 },
-        Layout { name: "aged busy: 4 runs + 6 L0", runs: 4, l0: 6 },
-        Layout { name: "aged cap: 6 runs + 6 L0", runs: 6, l0: 6 },
-    ];
+    // fix round of step 4: `FX_SR_LAYOUTS=runs x L0,...` (for example 1x2,2x2,3x3,6x6) measures other layouts
+    let names: Vec<(String, usize, usize)> = match std::env::var("FX_SR_LAYOUTS") {
+        Ok(v) => v
+            .split(',')
+            .map(|x| {
+                let (r, l) = x.split_once('x').expect("runs x L0");
+                let (r, l): (usize, usize) = (r.parse().unwrap(), l.parse().unwrap());
+                (format!("{r} run(s) + {l} L0"), r, l)
+            })
+            .collect(),
+        Err(_) => vec![("rule 12: 1 run + 2 L0".into(), 1, 2), ("1 run + 6 L0".into(), 1, 6), ("aged busy: 4 runs + 6 L0".into(), 4, 6), ("aged cap: 6 runs + 6 L0".into(), 6, 6)],
+    };
+    let names: &'static [(String, usize, usize)] = Box::leak(names.into_boxed_slice());
+    let layouts: Vec<Layout> = names.iter().map(|(n, r, l)| Layout { name: n.as_str(), runs: *r, l0: *l }).collect();
     let customers = 4000u32;
     let zipf: Vec<f64> = {
         let w: Vec<f64> = (1..=customers).map(|r| 1.0 / (r as f64).powf(1.1)).collect();

@@ -54,6 +54,35 @@ use std::time::{Duration, Instant};
 /// reader. Tests and benches turn it on per compactor (`Knobs::drop`).
 pub static DROP_DEFAULT: AtomicBool = AtomicBool::new(false);
 
+/// The server runs one compactor per open writer (`--sealed-compactor`, FENVIX_SEALED_COMPACTOR=1), with sealed runs on.
+pub static SERVER_ON: AtomicBool = AtomicBool::new(false);
+/// Small knobs for the judge's tiny databases (FENVIX_SEALED_COMPACTOR=small): reseals, merges and GC happen at all.
+pub static SERVER_SMALL: AtomicBool = AtomicBool::new(false);
+
+static ACTIVE: std::sync::LazyLock<Mutex<HashSet<String>>> = std::sync::LazyLock::new(Default::default);
+
+/// Whether a compactor of this process runs on database `id` (today's compaction pass then leaves it alone).
+pub fn is_active(id: &str) -> bool {
+    ACTIVE.lock().unwrap().contains(id)
+}
+
+/// The knobs of the server's compactors.
+pub fn server_knobs() -> Knobs {
+    let mut k = Knobs::default();
+    if SERVER_SMALL.load(Relaxed) {
+        k.tier_unit = 64 << 10;
+        k.absorb_min_l0 = 1;
+        k.split_bytes = 4 << 20;
+        k.merge_bytes = 256 << 10;
+        k.min_seal_bytes = 64 << 10;
+        k.local_max_bytes = 0;
+        k.gc_every = Duration::from_secs(5);
+        k.sealed = RunOptions::unchecked(16 << 10, 1 << 20, runfmt::CustomerKind::V2);
+        k.delta = RunOptions::unchecked(16 << 10, 1 << 20, runfmt::CustomerKind::V2);
+    }
+    k
+}
+
 #[derive(Clone, Debug)]
 pub struct Knobs {
     /// Reseal a group when its unsealed bytes reach theta of its size.
@@ -333,6 +362,7 @@ impl Compactor {
             absorb_lock: tokio::sync::Mutex::new(()),
         });
         t.fx_attach(Arc::clone(&sh));
+        ACTIVE.lock().unwrap().insert(c.id().to_string());
         // L0 SSTs already at or below X_d (a restart) count as absorbed
         c.recognise_absorbed().await?;
         super::drop::start_slate(&c).await?;
@@ -364,6 +394,7 @@ impl Compactor {
     /// Stop: no new job, SlateDB's side stopped. Jobs already running finish or abandon.
     pub async fn stop(&self) {
         self.stopped.store(true, Relaxed);
+        ACTIVE.lock().unwrap().remove(self.id());
         let s = self.slate_stop.lock().unwrap().take();
         if let Some((c, w)) = s {
             let _ = c.stop().await;

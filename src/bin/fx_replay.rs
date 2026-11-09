@@ -309,6 +309,8 @@ async fn main() -> Result<()> {
             min_seal_bytes: d / groups / 2,
             drop: true,
             fold_one_run: std::env::var("FX_FOLD_ONE").is_ok(),
+            fold_at_l0: std::env::var("FX_FOLD_AT_L0").ok().and_then(|v| v.parse().ok()).unwrap_or(6),
+            fold_max_runs: std::env::var("FX_FOLD_MAX_RUNS").ok().and_then(|v| v.parse().ok()).unwrap_or(6),
             lease: Duration::from_millis(1600),
             remote_lease: Duration::from_millis(3200),
             serving_lease: Duration::from_millis(200),
@@ -359,6 +361,7 @@ async fn main() -> Result<()> {
     let mut cpu_window = 0u64;
     let mut last_print = Instant::now();
     let mut started = false;
+    let (mut samples, mut sum_l0, mut sum_runs) = (0u64, 0u64, 0u64);
     let base_stats = |c: &Option<Arc<fx::compactor::Compactor>>| c.as_ref().map(|c| (c.sh.stats.absorbed_raw.load(Relaxed), c.sh.stats.merge_raw_out.load(Relaxed), c.sh.stats.reseal_raw_out.load(Relaxed), c.sh.stats.job_cpu_us.load(Relaxed)));
     let mut base = base_stats(&comp);
     while w.written < end {
@@ -381,6 +384,12 @@ async fn main() -> Result<()> {
         }
         if let Some(n) = t.writer_l0() {
             max_l0.fetch_max(n as u64, Relaxed);
+            if started {
+                // what a cold read meets in SlateDB: L0 SSTs and sorted runs (the writer's view), sampled per batch
+                samples += 1;
+                sum_l0 += n as u64;
+                sum_runs += comp.as_ref().map_or(0, |c| c.writer_db().manifest().compacted().len()) as u64;
+            }
         }
         if last_print.elapsed() > Duration::from_secs(20) {
             last_print = Instant::now();
@@ -411,6 +420,7 @@ async fn main() -> Result<()> {
     let runs = delta("c", "fxrun");
     let amp = (l0_bytes + comp_sst + runs) as f64 / l0_bytes.max(1) as f64;
     println!("RESULT mode {mode} ratio {ratio} D {d_mib} MiB L0 {l0} B: inserted {:.1} MiB raw in the window ({:.2} compressed days), L0 flushes {:.1} MiB, SlateDB compaction {:.1} MiB, our runs {:.1} MiB, WAL {:.1} MiB, our manifests {:.1} MiB", mib(inserted_window), inserted_window as f64 / (d as f64 / days_per_d), mib(l0_bytes), mib(comp_sst), mib(runs), mib(delta("w", "wal")), mib(delta("c", "fxmeta")));
+    println!("RESULT SlateDB side: {:.2} bytes written per flushed byte; mean L0 {:.2}, mean sorted runs {:.2} (fold_at_l0 {}, max runs {}, one run {})", comp_sst as f64 / l0_bytes.max(1) as f64, sum_l0 as f64 / samples.max(1) as f64, sum_runs as f64 / samples.max(1) as f64, std::env::var("FX_FOLD_AT_L0").unwrap_or("6".into()), std::env::var("FX_FOLD_MAX_RUNS").unwrap_or("6".into()), std::env::var("FX_FOLD_ONE").is_ok());
     println!("RESULT amplification {amp:.2} (stored bytes written per stored byte flushed to L0); L0 max {}; longest write {:.0} ms; window {:.0} s, process CPU {:.0} s", max_l0.load(Relaxed), stall_max.as_secs_f64() * 1000.0, wall, cpu as f64 / 1e6);
     if let (Some(c), Some(b)) = (&comp, base) {
         let s = &c.sh.stats;

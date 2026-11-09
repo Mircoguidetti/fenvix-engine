@@ -1884,6 +1884,11 @@ pub(crate) async fn compact_tenant_pass_with(
 ) -> Result<Option<CompactionRecord>> {
     let id = id.to_string();
     let id = id.as_str();
+    if crate::fx::compactor::is_active(id) {
+        // compaction 2, step 4: this database's compactor runs SlateDB's compaction (the fold, or the gated tiered
+        // compaction with the drop off); two compactors on one database would fence each other
+        return Ok(None);
+    }
     let l0_before = l0_count(raw, id).await?;
     if l0_before < L0_COMPACT_THRESHOLD {
         // The L0 watch queued this pass from the writer's own view. When the stored manifest has fewer L0 SSTs, the writer

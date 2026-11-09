@@ -492,6 +492,14 @@ struct Args {
     sealed_gc_grace_ms: u64,
     #[arg(long, default_value_t = 120_000)]
     sealed_hold_life_ms: u64,
+    /// Compaction 2, step 4: with sealed runs on, one compactor per open writer (absorption, delta tiers, reseals, GC)
+    /// instead of the offline publishes and today's compaction pass. FENVIX_SEALED_COMPACTOR=1 does the same; =small also
+    /// uses small knobs, for tests on tiny databases.
+    #[arg(long)]
+    sealed_compactor: bool,
+    /// With `--sealed-compactor`: the drop of absorbed SlateDB rows (off by default until step 7b pairs forks).
+    #[arg(long)]
+    sealed_drop: bool,
     /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
     /// releases before); M29 measured 64.
     #[arg(long, default_value_t = 4)]
@@ -763,6 +771,12 @@ async fn run() -> Result<()> {
         tenant_bench::fx::REMOTE_LEASE_MS.store(args.sealed_remote_lease_ms, Relaxed);
         tenant_bench::fx::GC_GRACE_MS.store(args.sealed_gc_grace_ms, Relaxed);
         tenant_bench::fx::hold::HOLD_LIFE_MS.store(args.sealed_hold_life_ms, Relaxed);
+        let env_c = std::env::var("FENVIX_SEALED_COMPACTOR").unwrap_or_default();
+        if args.sealed_compactor || env_c == "1" || env_c == "small" {
+            tenant_bench::fx::compactor::SERVER_ON.store(true, Relaxed);
+            tenant_bench::fx::compactor::SERVER_SMALL.store(env_c == "small", Relaxed);
+            tenant_bench::fx::compactor::DROP_DEFAULT.store(args.sealed_drop, Relaxed);
+        }
         tenant_bench::fx::check_config()?;
     }
     tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);
@@ -819,6 +833,11 @@ async fn run() -> Result<()> {
     tenant_bench::lifecycle::ADAPTIVE.store(args.adaptive_group_commit, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::ADAPTIVE_MAX_US.store(args.adaptive_group_commit_max_us, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::WRITER_POLL_SECS.store(args.writer_poll_secs, std::sync::atomic::Ordering::Relaxed);
+    if tenant_bench::fx::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed) {
+        // a memtable flush that stalled on a full L0 retries only at the writer's manifest poll; the compactor's folds
+        // free L0 within a second or two, so the writer looks at least every 2 s (step 4 report, section 4)
+        tenant_bench::lifecycle::WRITER_POLL_SECS.store(args.writer_poll_secs.min(2), std::sync::atomic::Ordering::Relaxed);
+    }
     tenant_bench::lifecycle::HOT_GC_EVERY_SECS.store(args.wal_gc_secs, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::GROUP_WINDOW_US.store((args.group_commit_window_ms * 1000.0) as u64, std::sync::atomic::Ordering::Relaxed);
     dbs::DURABLE_READS.store(args.durable_reads, std::sync::atomic::Ordering::Relaxed);
