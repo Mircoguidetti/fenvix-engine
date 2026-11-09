@@ -238,6 +238,13 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
     let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: delta_runs, next_group_id };
     rep.version = version;
     rep.groups = v.groups.len();
+    // the staged publish (step 6, `counter.rs`): before the version that retires runs becomes current, warm the new runs'
+    // ranges of what this process holds of the retired ones (bounded wait). Step 4's compactor calls the same function
+    // in the same place: after its runs are written, before the conditional create.
+    if let Some(old) = cur {
+        let staged = View::new(Arc::clone(store), v.clone(), Some(old))?;
+        rep.stage = Some(super::counter::stage(old, &staged).await);
+    }
     let created = match manifest::create(store, id, &v).await {
         Ok(c) => c,
         // the outcome is unknown (an error, a timeout: the PUT may still land); the caller fences the slot this version

@@ -477,6 +477,20 @@ struct Args {
     /// set it lower). FENVIX_SEALED_E1_WAIT_MS does the same.
     #[arg(long)]
     sealed_e1_wait_ms: Option<u64>,
+    /// What the counter keeps of a run block fetched by a one-customer read (fx/counter.rs, step 6): `off` (the whole
+    /// block), `customer` (the customer's rows) or `area` (the rows of the read's collection documents or index).
+    #[arg(long, default_value = "area")]
+    sealed_slices: String,
+    /// Bits per customer of the customer filter of new runs (the new-user filter).
+    #[arg(long, default_value_t = 16)]
+    sealed_filter_bits: u64,
+    /// The staged publish (step 6): before a version that retires runs becomes current, warm the new runs' ranges of what
+    /// the counter holds of the retired ones, for at most this many milliseconds (0: no staging).
+    #[arg(long, default_value_t = 10_000)]
+    sealed_stage_ms: u64,
+    /// A slice is kept whole this many milliseconds after a read made it, then trimmed to what reads relied on.
+    #[arg(long, default_value_t = 1_000)]
+    sealed_trim_ms: u64,
     /// Timing of our manifest (fx; review round 2 of step 0, F6), in milliseconds, checked at startup: a manifest PUT
     /// with no answer within the PUT timeout counts as timed out (a fence follows); it must be shorter than the lease
     /// minus its margin, and the remote lease and the GC grace must each exceed the hold life plus it.
@@ -774,6 +788,18 @@ async fn run() -> Result<()> {
         if let Some(w) = args.sealed_e1_wait_ms.or_else(|| std::env::var("FENVIX_SEALED_E1_WAIT_MS").ok().and_then(|v| v.parse().ok())) {
             tenant_bench::fx::E1_WAIT_MS.store(w, Relaxed);
         }
+        use tenant_bench::fx::counter::{SliceMode, SLICES, STAGED, STAGE_DEADLINE_MS};
+        let mode = match args.sealed_slices.as_str() {
+            "off" => SliceMode::Off,
+            "customer" => SliceMode::Customer,
+            "area" => SliceMode::Area,
+            other => anyhow::bail!("--sealed-slices must be off, customer or area, not {other}"),
+        };
+        SLICES.store(mode as u8, Relaxed);
+        tenant_bench::runfmt::FILTER_BITS_PER_CUSTOMER.store(args.sealed_filter_bits.clamp(1, 64), Relaxed);
+        STAGED.store(args.sealed_stage_ms > 0, Relaxed);
+        STAGE_DEADLINE_MS.store(args.sealed_stage_ms, Relaxed);
+        tenant_bench::fx::counter::TRIM_MS.store(args.sealed_trim_ms, Relaxed);
         tenant_bench::fx::PUT_TIMEOUT_MS.store(args.sealed_put_timeout_ms, Relaxed);
         tenant_bench::fx::LEASE_MS.store(args.sealed_lease_ms, Relaxed);
         tenant_bench::fx::LEASE_MARGIN_MS.store(args.sealed_lease_margin_ms, Relaxed);
