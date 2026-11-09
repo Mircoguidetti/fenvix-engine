@@ -12,7 +12,7 @@
 //! A read whose range is not inside one customer (the shared keyspace, `loc/`, a scan across customers) caches whole
 //! blocks, as in step 3.
 //!
-//! The new-user filter is the run's customer filter (`runfmt::CustomerFilter`, 10 bits per customer): `view.rs` asks it
+//! The new-user filter is the run's customer filter (`runfmt::CustomerFilter`, 16 bits per customer by default): `view.rs` asks it
 //! before every block fetch of a one-customer read, point or range. If every run says no, our tiers answer "nothing"
 //! with 0 GETs. The counters are here.
 //!
