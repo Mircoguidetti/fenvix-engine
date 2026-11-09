@@ -29,6 +29,12 @@ pub static LOCAL_OPENS: AtomicU64 = AtomicU64::new(0);
 /// fetches the first block of every run of a group at once; `read.rs` also starts SlateDB's read beside ours. Fewer trips,
 /// sometimes more GETs (the sealed run is read even when a delta run answers).
 pub static WAVE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Step 5: a range read inside one customer skips the runs whose customer filter says the customer is not there, as a
+/// point read does (on by default; a filter has no false negatives, so the answer cannot change). Step 3's cursor read a
+/// block of every delta run above the group's cut, whoever wrote it. Off: the reader as step 3 built it.
+pub static RANGE_FILTER: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+/// Runs a range read skipped by their customer filter (diagnostics).
+pub static RANGE_FILTER_SKIPS: AtomicU64 = AtomicU64::new(0);
 
 /// Step 4, R3: GETs that point reads paid in delta runs since a group's last reseal, by group id. The compactor reseals a
 /// group early once these GETs cost more than the reseal (`compactor.rs`).
@@ -182,6 +188,17 @@ impl RunH {
 
     fn holds_key(&self, k: &[u8]) -> bool {
         &self.first[..] <= k && k <= &self.last[..]
+    }
+
+    /// Whether the run certainly holds no row in [lo, hi): both ends are keys of one customer and the run's customer filter
+    /// says that customer is not in the run. Only for a run already opened (its filter in RAM); an unopened run is kept.
+    fn filter_excludes(&self, lo: &[u8], hi: Option<&[u8]>) -> bool {
+        let (Some(run), Some(hi)) = (self.run.get(), hi) else { return false };
+        let (Some(a), Some(b)) = (run.customers.customer_of(lo), run.customers.customer_of(hi)) else { return false };
+        if lo[a.clone()] != hi[b] {
+            return false;
+        }
+        !run.filter.may_contain(&lo[a])
     }
 
     /// Whether [lo, hi) meets the run's key range.
@@ -559,11 +576,19 @@ impl RunsCursor {
             (None, Some(b)) => Some(b.to_vec()),
             (None, None) => None,
         };
-        let sealed = g.sealed.as_ref().filter(|s| s.meets(&lo, hi.as_deref())).map(|s| RunCur::new(s.clone(), &lo, hi.as_deref(), self.reverse, self.read_ahead));
+        let rf = RANGE_FILTER.load(Relaxed);
+        let skip = |h: &RunH| {
+            let x = rf && h.filter_excludes(&self.lo, self.hi.as_deref());
+            if x {
+                RANGE_FILTER_SKIPS.fetch_add(1, Relaxed);
+            }
+            x
+        };
+        let sealed = g.sealed.as_ref().filter(|s| s.meets(&lo, hi.as_deref()) && !skip(s)).map(|s| RunCur::new(s.clone(), &lo, hi.as_deref(), self.reverse, self.read_ahead));
         let delta = v
             .delta
             .iter()
-            .filter(|d| !skip_delta() && above_cut(d.line.max_seq, g.x_g) && d.meets(&lo, hi.as_deref()))
+            .filter(|d| !skip_delta() && above_cut(d.line.max_seq, g.x_g) && d.meets(&lo, hi.as_deref()) && !skip(d))
             .map(|d| RunCur::new(d.clone(), &lo, hi.as_deref(), self.reverse, self.read_ahead))
             .collect();
         Seg { primed: false, x_g: g.x_g, sealed, delta }
