@@ -14,12 +14,15 @@
 //! `judge/raw_readers.sh` (plan round 2, fix 3, and its review).
 
 pub mod build;
+pub mod droptest;
 pub mod hold;
 pub mod manifest;
 pub mod read;
 pub mod view;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_7a;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 

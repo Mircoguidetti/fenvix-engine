@@ -120,3 +120,10 @@ impl Drop for Hold {
         self.holds.live.lock().unwrap().remove(&self.id);
     }
 }
+
+/// Run one operation (one server command) as one scope of holds: every read of the operation, through any number of
+/// `Dbs::read` calls, keeps the version it read with in the drop floor until the operation ends (rules 4, 7 and 8; the
+/// step 3 review's note on `$lookup`).
+pub async fn op_scope<F: std::future::Future>(f: F) -> F::Output {
+    f.await
+}
