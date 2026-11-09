@@ -617,7 +617,7 @@ impl Lifecycle {
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
         let scope = writer_scope(&id);
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: None };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: Default::default() };
         t.load_env().await?;
         t.load_fx().await?;
         Ok(t)
@@ -665,7 +665,7 @@ impl Lifecycle {
         let l0_at_wake = reader.manifest().l0().len();
         let reader = Arc::new(reader);
         READER_DBS.lock().unwrap().insert(id.clone(), Arc::downgrade(&reader));
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: None };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: Default::default() };
         t.load_env().await?;
         t.load_fx().await?;
         Ok(t)
@@ -901,7 +901,7 @@ pub struct Tenant {
     /// Step 4, F7: the end of this process's serving lease of the database, as the server last renewed it. Past it the
     /// tenant begins no hold (no new read, no new transaction): a waiter that was cut off rather than dead must not
     /// start reads after the new waiter's drop window opened (RULES-FOR-THE-CODE rules 27, 28 with F7).
-    serving_until: Option<Instant>,
+    serving_until: std::sync::Mutex<Option<Instant>>,
 }
 
 impl Tenant {
@@ -1043,7 +1043,7 @@ impl Tenant {
 
     /// F7: refuse to begin a hold once the serving lease has expired (retryable).
     fn fx_serving(&self) -> Result<()> {
-        if let Some(t) = self.serving_until {
+        if let Some(t) = *self.serving_until.lock().unwrap() {
             if Instant::now() >= t {
                 return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: this process's serving lease expired; it begins no new read (F7); retry", self.id))));
             }
@@ -1052,8 +1052,8 @@ impl Tenant {
     }
 
     /// Set the end of this process's serving lease of the database (the server, at each renewal; tests).
-    pub fn set_serving_until(&mut self, t: Option<Instant>) {
-        self.serving_until = t;
+    pub fn set_serving_until(&self, t: Option<Instant>) {
+        *self.serving_until.lock().unwrap() = t;
     }
 
     /// The SlateDB writer, for this database's compactor (`fx/compactor.rs`): it reads the L0 list and the raw L0 SSTs.

@@ -41,8 +41,17 @@ pub struct DropCtl {
     serving_lease: Duration,
     /// Versions seen in the store: first sight on this process's clock, and X_d (rules 8, 9).
     seen: Mutex<HashMap<u64, (Instant, u64)>>,
-    /// L0 SSTs absorbed into a published version.
-    foldable: Mutex<HashSet<ulid::Ulid>>,
+    /// L0 SSTs absorbed into a published version, with their highest seq.
+    foldable: Mutex<HashMap<ulid::Ulid, u64>>,
+    /// Aged folds: the highest seq each sorted run can hold (a run is dropped whole once the floor reaches it).
+    sr_max: Mutex<HashMap<u32, u64>>,
+    next_sr: AtomicU64,
+    /// The newest X_d this process published (an upper bound for runs it does not know).
+    pub known_xd: AtomicU64,
+    /// One sorted run, always (rule 12 as written), or aged runs (`Knobs::fold_one_run` false).
+    one_run: bool,
+    max_runs: usize,
+    fold_at_l0: usize,
     /// The floor the last job computed, and the floor last applied to the sorted run.
     pub last_floor: AtomicU64,
     pub applied_floor: AtomicU64,
@@ -72,7 +81,13 @@ impl DropCtl {
             remote_lease: k.remote_lease,
             serving_lease: k.serving_lease,
             seen: Mutex::new(HashMap::new()),
-            foldable: Mutex::new(HashSet::new()),
+            foldable: Mutex::new(HashMap::new()),
+            sr_max: Mutex::new(HashMap::new()),
+            next_sr: AtomicU64::new(0),
+            known_xd: AtomicU64::new(0),
+            one_run: k.fold_one_run,
+            max_runs: k.fold_max_runs,
+            fold_at_l0: k.fold_at_l0,
             last_floor: AtomicU64::new(0),
             applied_floor: AtomicU64::new(0),
             observed: AtomicU64::new(0),
@@ -92,7 +107,10 @@ impl DropCtl {
 
     pub fn set_foldable(&self, absorbed: &HashMap<ulid::Ulid, u64>) {
         let mut f = self.foldable.lock().unwrap();
-        f.extend(absorbed.keys().copied());
+        f.extend(absorbed.iter().map(|(k, v)| (*k, *v)));
+        if let Some(m) = absorbed.values().max() {
+            self.known_xd.fetch_max(*m, Relaxed);
+        }
     }
 
     /// The lease in force now: the remote lease during the takeover window (rule 27, F7).
@@ -201,7 +219,71 @@ impl DropCtl {
         self.refold.store(true, Relaxed);
     }
 
+    /// Aged folds (the default; measured against rule 12's one run in this step's report): every fold writes its absorbed
+    /// L0 SSTs into a new sorted run, so a row is written once on SlateDB's side; a run whose highest seq is at or below
+    /// the floor is dropped whole (a job over the oldest such runs keeps nothing); at most `max_runs` runs (the two
+    /// newest merge past it). One run, always, rewrites the run at every fold, and the run holds about one lease of
+    /// writes: its cost grows with write rate times lease (MEASURED in the replay).
+    fn propose_aged(&self, state: &CompactorStateView) -> Vec<CompactionSpec> {
+        let m = state.manifest();
+        let tail = self.tail(m.l0());
+        let srs: Vec<u32> = m.compacted().iter().map(|r| r.id).collect(); // newest first
+        let max_id = srs.iter().copied().max().map_or(0, |x| x as u64 + 1);
+        self.next_sr.fetch_max(max_id, Relaxed);
+        let mut sr_max = self.sr_max.lock().unwrap();
+        let known = self.known_xd.load(Relaxed);
+        for id in &srs {
+            sr_max.entry(*id).or_insert(known); // a run from before (or after a restart): at most every absorbed row
+        }
+        sr_max.retain(|id, _| srs.contains(id));
+        // lazy fold: absorbed L0 SSTs whose rows the floor has passed are folded with nothing written; younger ones wait,
+        // unless L0 reached `fold_at_l0` (then they go into a new run, one more write of those rows)
+        let floor_now = self.observed.load(Relaxed);
+        let tail: Vec<ulid::Ulid> = {
+            let f = self.foldable.lock().unwrap();
+            let below: Vec<ulid::Ulid> = tail.iter().rev().take_while(|id| f.get(id).is_some_and(|x| *x <= floor_now)).copied().collect();
+            if m.l0().len() >= self.fold_at_l0 || below.len() == tail.len() {
+                tail
+            } else {
+                let mut b = below;
+                b.reverse();
+                b
+            }
+        };
+        if !tail.is_empty() {
+            let f = self.foldable.lock().unwrap();
+            let hi = tail.iter().filter_map(|id| f.get(id)).copied().max().unwrap_or(known);
+            let dst = self.next_sr.fetch_add(1, Relaxed) as u32;
+            sr_max.insert(dst, hi);
+            return vec![CompactionSpec::new(tail.iter().map(|id| SourceId::SstView(*id)).collect(), dst)];
+        }
+        // the oldest runs wholly at or below the floor: dropped (the job keeps only the envelope marker); a run already
+        // emptied this way (its highest seq set to 0) is not proposed again on its own
+        let floor = self.observed.load(Relaxed);
+        let below: Vec<u32> = srs.iter().rev().take_while(|id| sr_max.get(id).is_some_and(|x| *x <= floor)).copied().collect();
+        if below.len() > 1 || below.first().is_some_and(|id| sr_max.get(id).is_some_and(|x| *x > 0)) {
+            let dst = *below.iter().min().unwrap();
+            let src: Vec<SourceId> = srs.iter().filter(|id| below.contains(id)).map(|id| SourceId::SortedRun(*id)).collect();
+            sr_max.insert(dst, 0);
+            return vec![CompactionSpec::new(src, dst)];
+        }
+        if srs.len() > self.max_runs {
+            // past the cap, the adjacent pair with the smallest combined size merges (tiered, so no run is rewritten at
+            // every fold; the oldest can be large while the floor lags, and it leaves whole once the floor passes it)
+            let sizes: Vec<u64> = m.compacted().iter().map(|r| r.estimate_size()).collect();
+            let i = (0..srs.len() - 1).min_by_key(|&i| sizes[i] + sizes[i + 1]).unwrap();
+            let (a, b) = (srs[i], srs[i + 1]);
+            let hi = sr_max.get(&a).copied().unwrap_or(known).max(sr_max.get(&b).copied().unwrap_or(known));
+            sr_max.insert(a.min(b), hi);
+            return vec![CompactionSpec::new(vec![SourceId::SortedRun(a), SourceId::SortedRun(b)], a.min(b))];
+        }
+        vec![]
+    }
+
     fn propose_fold(&self, state: &CompactorStateView) -> Vec<CompactionSpec> {
+        if !self.one_run {
+            return self.propose_aged(state);
+        }
         let m = state.manifest();
         let tail = self.tail(m.l0());
         let srs: Vec<u32> = m.compacted().iter().map(|r| r.id).collect(); // newest first
@@ -251,7 +333,7 @@ impl DropCtl {
     /// The oldest L0 SSTs that are absorbed, with no gap, newest first (read order).
     fn tail(&self, l0: &std::collections::VecDeque<slatedb::manifest::SsTableView>) -> Vec<ulid::Ulid> {
         let f = self.foldable.lock().unwrap();
-        let mut t: Vec<ulid::Ulid> = l0.iter().rev().take_while(|v| f.contains(&v.id)).map(|v| v.id).collect();
+        let mut t: Vec<ulid::Ulid> = l0.iter().rev().take_while(|v| f.contains_key(&v.id)).map(|v| v.id).collect();
         t.reverse();
         t
     }
@@ -286,7 +368,7 @@ impl CompactionScheduler for Sched {
         let f = self.0.foldable.lock().unwrap();
         for s in spec.sources() {
             if let SourceId::SstView(id) = s {
-                if !f.contains(id) {
+                if !f.contains_key(id) {
                     return Err(slatedb::Error::invalid(format!("L0 SST {id} is not absorbed")));
                 }
             }

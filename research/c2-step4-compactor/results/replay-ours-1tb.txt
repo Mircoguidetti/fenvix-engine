@@ -1,0 +1,1 @@
+replay: mode ours, ratio 1tb, D 1024 MiB, L0 8192 bytes, measured 0.5 D after a warm-up of 0.25 D, seed 42

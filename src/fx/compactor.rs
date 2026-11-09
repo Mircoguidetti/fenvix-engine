@@ -81,6 +81,12 @@ pub struct Knobs {
     pub delta: RunOptions,
     /// The fold drop (off by default).
     pub drop: bool,
+    /// Rule 12 as written: every fold rewrites SlateDB's one sorted run. False (the default): aged runs (`drop.rs`).
+    pub fold_one_run: bool,
+    /// Aged runs: at most this many sorted runs.
+    pub fold_max_runs: usize,
+    /// Aged runs: absorbed L0 SSTs wait for the floor (then they leave with nothing written) until L0 holds this many.
+    pub fold_at_l0: usize,
     /// Lease of a version for the floor (rule 8), the remote lease (rules 10, 27), the serving lease (F7).
     pub lease: Duration,
     pub remote_lease: Duration,
@@ -117,6 +123,9 @@ impl Default for Knobs {
             sealed: RunOptions::sealed(runfmt::CustomerKind::V2),
             delta: RunOptions { block_bytes: runfmt::MIN_BLOCK, part_bytes: runfmt::DEFAULT_PART, customers: runfmt::CustomerKind::V2 },
             drop: DROP_DEFAULT.load(Relaxed),
+            fold_one_run: false,
+            fold_max_runs: 6,
+            fold_at_l0: 6,
             // the server's options of step 3 (`--sealed-lease-ms`, `--sealed-remote-lease-ms`, `--sealed-put-timeout-ms`,
             // `--sealed-gc-grace-ms`), checked at startup by `fx::check_config`
             lease: Duration::from_millis(super::LEASE_MS.load(Relaxed)),
@@ -395,6 +404,7 @@ impl Compactor {
         match tokio::time::timeout(self.knobs.put_timeout, self.create(&next)).await {
             Ok(Ok(true)) => {
                 c.v = next.clone();
+                self.drop.known_xd.fetch_max(next.x_d, Relaxed);
                 *self.sh.pending.lock().unwrap() = Some(next.clone());
                 self.sh.stats.publishes.fetch_add(1, Relaxed);
                 Ok(Some(next))

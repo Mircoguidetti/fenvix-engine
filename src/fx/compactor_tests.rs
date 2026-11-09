@@ -39,6 +39,9 @@ fn test_knobs(drop: bool) -> Knobs {
         sealed: RunOptions::unchecked(2048, 1 << 20, CustomerKind::V2),
         delta: RunOptions::unchecked(1024, 1 << 20, CustomerKind::V2),
         drop,
+        fold_one_run: std::env::var("FX_FOLD_ONE").is_ok(),
+        fold_max_runs: 6,
+        fold_at_l0: 6,
         lease: Duration::from_millis(400),
         remote_lease: Duration::from_millis(HOLD_MS + 600),
         serving_lease: Duration::from_millis(300),
@@ -296,6 +299,18 @@ async fn compactor_model_drop_on() {
         }
     }
     let pending = c.sh.erasures.lock().unwrap().iter().filter(|e| e.done.is_none()).count();
+    // GC after its grace (crashes above restart its count), then every read again: GC kept what is live
+    gc::gc_once(&c).await.unwrap();
+    tokio::time::sleep(k.gc_grace + Duration::from_millis(300)).await;
+    gc::gc_once(&c).await.unwrap();
+    view::clear_cache();
+    t.fx_sync();
+    let all = t.scan_range(b"", None, false, None, 1 << 20).await.unwrap();
+    check!("full scan after GC", as_vec(all), model_range(&m, b"", None, false, None));
+    for key in &keys {
+        let got = t.get(key).await.unwrap();
+        check!("get after GC", got.map(|b| b.to_vec()), m.get(key).cloned());
+    }
     c.stop().await;
     collect(&c);
     t.abandon().await;

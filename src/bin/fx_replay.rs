@@ -308,6 +308,7 @@ async fn main() -> Result<()> {
             merge_bytes: d / groups / 4,
             min_seal_bytes: d / groups / 2,
             drop: true,
+            fold_one_run: std::env::var("FX_FOLD_ONE").is_ok(),
             lease: Duration::from_millis(1600),
             remote_lease: Duration::from_millis(3200),
             serving_lease: Duration::from_millis(200),

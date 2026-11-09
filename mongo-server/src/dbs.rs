@@ -374,6 +374,8 @@ impl Dbs {
                 let g = Arc::clone(&e).read_owned().await;
                 if g.tenant.as_ref().is_some_and(|t| !t.fx_refresh_due()) && g.leases.valid(&g.name) {
                     crate::locallog::check_open(&g.name)?;
+                    // F7: the tenant begins no hold past the end of this process's serving lease
+                    g.tenant.as_ref().unwrap().set_serving_until(g.leases.serving_until(&g.name));
                     g.touch();
                     return Ok(ReadView { g: Some(Guard::Read(g)), copts: Default::default() });
                 }
@@ -595,6 +597,9 @@ impl Entry {
         }
         if self.tenant.is_some() {
             if self.leases.valid(&self.name) {
+                // F7 (compaction 2, step 4): the tenant begins no hold past the end of this process's serving lease
+                let until = self.leases.serving_until(&self.name);
+                self.tenant.as_ref().unwrap().set_serving_until(until);
                 // a reader refreshes its version of our manifest before T_pin (fx, rule 6)
                 if self.tenant.as_ref().unwrap().fx_refresh_due() {
                     self.tenant.as_mut().unwrap().fx_refresh().await?;
