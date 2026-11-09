@@ -13,3 +13,11 @@
 1tbb-r1on-r3on-wave exit 0
 1tbm-r1on-r3on-unsettled exit 0
 ALL DONE
+1tbm-r1off-r3off exit 0
+10tbm-r1off-r3off exit 0
+1tbm-d256-r1on-r3off-memory exit 0
+1tbm-d256-r1on-r3off-minio exit 0
+EXTRA DONE
+1tbb-realtime-2mbs exit 0
+1tbm-realtime-0.4mbs exit 0
+REALTIME DONE
