@@ -133,6 +133,7 @@ fn restore() {
     E1_WAIT_MS.store(u64::MAX, Relaxed);
     PUT_TIMEOUT_MS.store(20_000, Relaxed);
     CONTROL_NO_FENCE_PENDING.store(false, Relaxed);
+    CONTROL_NO_FIRST_FENCE.store(false, Relaxed);
 }
 
 /// The scenario of review defect 2: a publish lands and errs (outcome unknown), and its fence and the next fences fail.
@@ -320,4 +321,52 @@ async fn review_r2_a_late_first_publish_put_lands_unfenced() {
         refused == 1 || read.is_err() || known_now == newest.as_ref().map(|n| n.0),
         "rule 25 / F6: the first publish timed out, the fence was skipped (pending after the publish: {pending_after}, known version: {known_after:?}), the late PUT landed {newest:?} unrefused, and a read succeeded with known version {known_now:?}"
     );
+}
+
+/// Review round 2 of step 3, the fix and its control. With the fix, the first publish's timed-out PUT is fenced at its
+/// own slot (version 1, the version it tried), the late PUT is refused, and the waiter reads with version 1. With the
+/// control (an empty store clears the pending fence, as before the fix), the late PUT lands version 1 unrefused while
+/// the waiter knows no version.
+async fn first_publish_scenario(control: bool) -> (u64, Option<u64>, Option<(u64, String)>, bool) {
+    ENABLED.store(true, Relaxed);
+    PUBLISH_EVERY.store(0, Relaxed);
+    T_PIN_MS.store(200, Relaxed);
+    E1_WAIT_MS.store(0, Relaxed);
+    CONTROL_NO_FIRST_FENCE.store(control, Relaxed);
+    let id = if control { "fx-fix-first-ctl" } else { "fx-fix-first" };
+    let st = Arc::new(Store { inner: Arc::new(InMemory::new()), acts: Mutex::new(Default::default()), late_refused: Default::default() });
+    let store: Arc<dyn ObjectStore> = st.clone();
+    let lc = Lifecycle::new(Arc::new(CountingStore::new(Arc::clone(&store))), None);
+    let mut t = lc.create(id).await.unwrap();
+    for i in 0..60 {
+        t.apply(vec![Op::Put(key(i), b"one".to_vec())]).await.unwrap();
+    }
+    PUT_TIMEOUT_MS.store(200, Relaxed);
+    st.acts.lock().unwrap().extend([Act::LandLate(600)]);
+    assert!(t.fx_publish(&opts(Reseal::All), None).await.is_err());
+    tokio::time::sleep(Duration::from_millis(900)).await;
+    let read_ok = t.get(key(3)).await.map(|v| v.as_deref() == Some(&b"one"[..])).unwrap_or(false);
+    let out = (st.late_refused.load(Relaxed), t.fx_view().map(|v| v.version), manifest::load_newest(&store, id).await.unwrap().map(|v| (v.version, v.kind)), read_ok);
+    restore();
+    t.abandon().await;
+    out
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn first_publish_timeout_is_fenced_at_its_own_slot() {
+    let _s = super::tests::SERIAL.lock().await;
+    let (refused, known, newest, read_ok) = first_publish_scenario(false).await;
+    assert_eq!(refused, 1, "the late PUT must find its slot taken");
+    assert_eq!(known, Some(1));
+    assert_eq!(newest, Some((1, "fence".to_string())));
+    assert!(read_ok, "the waiter reads with the fence version");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn first_publish_control_without_the_fix_lands_unfenced() {
+    let _s = super::tests::SERIAL.lock().await;
+    let (refused, known, newest, _) = first_publish_scenario(true).await;
+    assert_eq!(refused, 0, "the control: nothing refuses the late PUT");
+    assert_eq!(known, None, "the control: the waiter knows no version");
+    assert_eq!(newest.map(|n| n.0), Some(1), "the control: the late PUT landed version 1");
 }

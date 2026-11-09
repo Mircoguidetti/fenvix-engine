@@ -235,7 +235,13 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
     let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: delta_runs, next_group_id };
     rep.version = version;
     rep.groups = v.groups.len();
-    if !manifest::create(store, id, &v).await? {
+    let created = match manifest::create(store, id, &v).await {
+        Ok(c) => c,
+        // the outcome is unknown (an error, a timeout: the PUT may still land); the caller fences the slot this version
+        // targeted, with this version when the store is still empty (review round 2 of step 3)
+        Err(e) => return Err(anyhow::Error::new(super::UnknownPublish { version: Box::new(v), msg: format!("{e:#}") })),
+    };
+    if !created {
         return Err(anyhow::Error::new(super::LostRace(format!("publish of version {version} of {id} lost the race: another publisher wrote it; this build's runs are orphans"))));
     }
     Ok(Some((v, rep)))

@@ -117,6 +117,27 @@ impl std::fmt::Display for LostRace {
 
 impl std::error::Error for LostRace {}
 
+/// A publish whose conditional create failed with an unknown outcome (an error or the F6 timeout): the PUT may still
+/// land. It carries the version it tried, so the fence can take that same slot even when the store is still empty.
+#[derive(Debug)]
+pub struct UnknownPublish {
+    pub version: Box<manifest::Version>,
+    pub msg: String,
+}
+
+impl std::fmt::Display for UnknownPublish {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "publish of version {} has an unknown outcome: {}", self.version.version, self.msg)
+    }
+}
+
+impl std::error::Error for UnknownPublish {}
+
+/// Negative control of the first-publish fence (review round 2 of step 3), tests only: an empty store clears the
+/// pending fence, as before the fix.
+#[cfg(test)]
+pub static CONTROL_NO_FIRST_FENCE: AtomicBool = AtomicBool::new(false);
+
 /// Whether an error says this process's SlateDB writer was fenced by a newer one (rule 28: then it publishes nothing more).
 pub fn is_fenced(e: &anyhow::Error) -> bool {
     e.chain().any(|c| c.downcast_ref::<slatedb::Error>().is_some_and(|s| s.kind() == slatedb::ErrorKind::Closed(slatedb::CloseReason::Fenced)))

@@ -616,7 +616,7 @@ impl Lifecycle {
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
         let scope = writer_scope(&id);
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None };
         t.load_env().await?;
         t.load_fx().await?;
         Ok(t)
@@ -664,7 +664,7 @@ impl Lifecycle {
         let l0_at_wake = reader.manifest().l0().len();
         let reader = Arc::new(reader);
         READER_DBS.lock().unwrap().insert(id.clone(), Arc::downgrade(&reader));
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None };
         t.load_env().await?;
         t.load_fx().await?;
         Ok(t)
@@ -892,6 +892,9 @@ pub struct Tenant {
     /// version in the store this tenant may not know. Until a fence succeeds, no read takes a hold (it fails with the
     /// retryable error, and the next exclusive step retries the fence) and no publish starts.
     fx_fence_pending: bool,
+    /// The version of a publish whose outcome is unknown, until a fence covers its slot. When the store is still empty
+    /// (a first publish), the fence is this version itself, created at its own slot (review round 2 of step 3).
+    fx_unknown: Option<Box<crate::fx::manifest::Version>>,
 }
 
 impl Tenant {
@@ -1070,10 +1073,45 @@ impl Tenant {
         if self.env.is_none() {
             self.fx_announced = manifest::announced(&store, &self.id).await?;
         }
-        let Some(mut v) = manifest::load_newest(&store, &self.id).await? else {
-            // no version in the store: nothing landed, so there is nothing to fence (and no version to copy)
+        let newest = manifest::load_newest(&store, &self.id).await?;
+        let newest = match (newest, self.fx_unknown.take()) {
+            (Some(v), _) => Some(v),
+            // a publish with an unknown outcome and an empty store (a first publish whose PUT may still land): fence its
+            // slot with the version it tried, so a late PUT finds the slot taken; only then is the fence settled
+            #[cfg(test)]
+            (None, Some(_)) if crate::fx::CONTROL_NO_FIRST_FENCE.load(Relaxed) => None,
+            (None, Some(u)) if matches!(self.mode, Some(Mode::Writer(_))) => {
+                let mut f = (*u).clone();
+                f.kind = "fence".into();
+                f.published_ms = manifest::now_ms();
+                match manifest::create(&store, &self.id, &f).await {
+                    Ok(true) => {
+                        crate::fx::FENCES.fetch_add(1, Relaxed);
+                        self.fx = Some(Arc::new(crate::fx::view::View::new(Arc::clone(&store), f, self.fx.as_deref())?));
+                        self.fx_fence_pending = false;
+                        self.fx_loaded = Instant::now();
+                        return Ok(());
+                    }
+                    // the late PUT landed meanwhile: fence above it as usual
+                    Ok(false) => manifest::load_newest(&store, &self.id).await?,
+                    Err(e) => {
+                        self.fx_unknown = Some(u);
+                        self.fx_fence_pending = true;
+                        return Err(e);
+                    }
+                }
+            }
+            (None, u) => {
+                self.fx_unknown = u;
+                None
+            }
+        };
+        let Some(mut v) = newest else {
+            // no version in the store and no publish of unknown outcome: nothing landed, nothing to fence
             self.fx = None;
-            self.fx_fence_pending = false;
+            if self.fx_unknown.is_none() {
+                self.fx_fence_pending = false;
+            }
             self.fx_loaded = Instant::now();
             return Ok(());
         };
@@ -1190,6 +1228,9 @@ impl Tenant {
                     // stays pending: reads refuse and every exclusive step retries it. A fenced writer publishes nothing
                     // (rule 28).
                     self.fx_fence_pending = true;
+                    if let Some(u) = e.downcast_ref::<crate::fx::UnknownPublish>() {
+                        self.fx_unknown = Some(u.version.clone());
+                    }
                     if let Err(e2) = self.load_fx().await {
                         eprintln!("sealed runs: fence of database {} after a failed publish: {e2:#}; the fence stays pending", self.id);
                     }
