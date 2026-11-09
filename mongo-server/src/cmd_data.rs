@@ -499,6 +499,10 @@ impl Server {
         let mut w = take_writes(tx);
         // Merging and keep-existing are executed as `$set`-style upserts: new fields are applied in name order.
         let sorted_mode = on == ["_id".to_string()] && matches!(&when_matched, Bson::String(m) if m == "merge" || m == "keepExisting");
+        // a customer-keyed target with `on: _id`: `_id` is unique per customer only, so a source document matches the
+        // target document of its own customer (its customer field, missing = null, as stored), never another
+        // customer's document with the same `_id` (mongos matches a sharded target on the shard key and `_id`)
+        let by_customer = if on == ["_id".to_string()] { crate::custkey::of(&mut g, &into).await? } else { None };
         for d in docs {
             let mut filter = Document::new();
             let mut no_match = false;
@@ -513,7 +517,12 @@ impl Server {
                     _ => return Err(MongoError::new(51132, "Location51132", format!("$merge write error: 'on' field '{f}' cannot be missing, null, undefined or an array")))
                 }
             }
-            let found = if no_match { Vec::new() } else { find_docs(&mut g, &into, &indexes, &FindOpts { filter: &filter, sort: &[], want: Some(1), hint: Hint::None, ttl: None, ov: Some(&w.ov) }).await?.0 };
+            let want = if by_customer.is_some() { None } else { Some(1) };
+            let mut found = if no_match { Vec::new() } else { find_docs(&mut g, &into, &indexes, &FindOpts { filter: &filter, sort: &[], want, hint: Hint::None, ttl: None, ov: Some(&w.ov) }).await?.0 };
+            if let Some(k) = &by_customer {
+                let mine = crate::custkey::cust_comp(k, &d);
+                found.retain(|o| crate::custkey::cust_comp(k, o) == mine);
+            }
             match found.into_iter().next() {
                 Some(old) => {
                     let new = match &when_matched {
@@ -703,7 +712,7 @@ impl Server {
                 if ordered { break } else { continue }
             }
             // An expired-but-not-yet-removed document still holds its _id and its unique keys.
-            if w.exists(&mut g, coll, &id).await? {
+            if w.exists(&mut g, coll, &d).await? {
                 let mut e = MongoError::duplicate_key_c(&ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": id.clone() }, g.collation_of(coll).as_deref());
                 if kind.as_ref().map(|k| k.clustered.is_some()).unwrap_or(false) {
                     // (a clustered collection has no _id index to name)
@@ -1006,7 +1015,7 @@ impl Server {
             None if upsert => {
                 let nd = u.upsert()?;
                 let id = nd.get("_id").cloned().unwrap();
-                if w.exists(&mut g, coll, &id).await? {
+                if w.exists(&mut g, coll, &nd).await? {
                     return Err(MongoError::duplicate_key_c(&ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": nd.get("_id").cloned().unwrap_or(Bson::Null) }, g.collation_of(coll).as_deref()));
                 }
                 w.put(&mut g, coll, &ns, &mut indexes, &nd, None).await?;
@@ -1156,7 +1165,7 @@ async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<Inde
                     }
                     let nd = u.upsert()?;
                     let id = nd.get("_id").cloned().unwrap();
-                    if w.exists(g, coll, &id).await? {
+                    if w.exists(g, coll, &nd).await? {
                         return Err(MongoError::duplicate_key_c(ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": id }, g.collation_of(coll).as_deref()));
                     }
                     w.put(g, coll, ns, indexes, &nd, None).await?;

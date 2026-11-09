@@ -1,0 +1,14 @@
+cs.insert: SAME as mongos
+cs.update_set: SAME as mongos
+cs.update_inc: SAME as mongos
+cs.update_unset: SAME as mongos
+cs.update_push_append: SAME as mongos
+cs.replace: SAME as mongos
+cs.delete: SAME as mongos
+cs.find_one_and_update: SAME as mongos
+cs.find_one_and_delete: SAME as mongos
+cs.update_lookup_returns_current_document: SAME as mongos
+cs.update_lookup_null_when_deleted_later: SAME as mongos
+cs.update_lookup_sees_later_update: SAME as mongos
+cs.update_lookup_customer_unchanged: SAME as mongos
+13/13 the same as mongos with the collection sharded on the customer field

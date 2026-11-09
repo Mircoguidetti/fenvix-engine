@@ -803,6 +803,26 @@ impl Server {
             "customerKeys": {
                 "docsWritten": crate::custkey::DOCS_WRITTEN.load(Relaxed) as i64,
                 "locatorLookups": crate::custkey::LOCATOR_LOOKUPS.load(Relaxed) as i64,
+                // layout v2 (layout2.rs): seeks of range reads across customers
+                "layoutSeeks": crate::layout2::SEEKS.load(Relaxed) as i64,
+            },
+            // envelope values (envelope.rs): rows read as live and as deleted envelopes; whether this process starts them
+            "envelopes": {
+                "liveRead": tenant_bench::envelope::READ_LIVE.load(Relaxed) as i64,
+                "deadRead": tenant_bench::envelope::READ_DEAD.load(Relaxed) as i64,
+                "start": tenant_bench::envelope::START.load(Relaxed),
+            },
+            // compaction 2, step 3 (fx): versions published and installed, failed builds, fence versions written at
+            // open, rows answered by our runs, GETs of run blocks, runs opened
+            "sealedRuns": {
+                "enabled": tenant_bench::fx::ENABLED.load(Relaxed),
+                "publishes": tenant_bench::fx::PUBLISHES.load(Relaxed) as i64,
+                "publishErrors": tenant_bench::fx::PUBLISH_ERRORS.load(Relaxed) as i64,
+                "fences": tenant_bench::fx::FENCES.load(Relaxed) as i64,
+                "rowsFromRuns": tenant_bench::fx::view::ROWS_FROM_RUNS.load(Relaxed) as i64,
+                "runGets": tenant_bench::fx::view::RUN_GETS.load(Relaxed) as i64,
+                "runOpens": tenant_bench::fx::view::RUN_OPENS.load(Relaxed) as i64,
+                "blockHits": tenant_bench::fx::view::BLOCK_HITS.load(Relaxed) as i64,
             },
             "compaction": {
                 "passes": tenant_bench::lifecycle::MAINT.compact_runs.load(Relaxed) as i64,

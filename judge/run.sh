@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The judge: runs every existing suite against the current commit and writes one verdict per phase.
 # Runs inside any session sandbox (after judge/setup.sh), $0, no docker, no GitHub Actions minutes.
-# Usage: judge/run.sh [phase ...]   phases: build unit diff-py diff-node ctl kill   (default: all, in that order)
+# Usage: judge/run.sh [phase ...]   phases: readers build unit diff-py diff-node ctl kill   (default: all, in that order)
 #   judge/run.sh fast   the quick judge for the end of every task (founder, 2026-11-06): build, unit, one tenth of both
 #   differential suites (every 10th test, all categories), 3 control-layer files, one short kill trial. The full judge is for releases.
 # Output: judge/out/<commit>/<phase>.log and judge/out/<commit>/VERDICT.md (one line per phase: PASS, FAIL or NOT RUN, with counts).
@@ -12,12 +12,22 @@ JH=${JUDGE_HOME:-$HOME/.fenvix-judge}; ENV="$JH/env"; PY="$ENV/bin/python"
 [ -x "$ENV/bin/mongod" ] || { echo "run judge/setup.sh first"; exit 2; }
 export PATH="$ENV/bin:$PATH"
 SHA=$(git rev-parse --short HEAD); DIRTY=$(git status --porcelain -- mongo-server src Cargo.toml Cargo.lock | head -1)
-OUT="$ROOT/judge/out/$SHA"; mkdir -p "$OUT"; V="$OUT/VERDICT.md"
-PHASES=${*:-build unit diff-py diff-node ctl kill}
-FAST=0; if [ "$PHASES" = fast ]; then FAST=1; PHASES="build unit diff-py diff-node ctl kill"; fi
+# JUDGE_SEALED_RUNS=N: every server the phases start reads through our manifest and sealed runs, with a publish every N
+# write batches of a database (compaction 2, step 3: `--sealed-runs N`, passed as FENVIX_SEALED_RUNS); its verdict goes
+# to judge/out/<commit>-sealed<N>/
+# (JUDGE_SEALED_TPIN_MS, default 1000, is their T_pin; JUDGE_SEALED_E1_WAIT_MS, default 0, how long after E1's
+# announcement envelopes start, rule 26: a test database lives less than a second, and would never publish otherwise)
+SUFFIX=""
+if [ -n "${JUDGE_SEALED_RUNS:-}" ]; then
+  export FENVIX_SEALED_RUNS=$JUDGE_SEALED_RUNS FENVIX_SEALED_TPIN_MS=${JUDGE_SEALED_TPIN_MS:-1000} FENVIX_SEALED_E1_WAIT_MS=${JUDGE_SEALED_E1_WAIT_MS:-0}
+  SUFFIX="-sealed$JUDGE_SEALED_RUNS"
+else unset FENVIX_SEALED_RUNS FENVIX_SEALED_TPIN_MS FENVIX_SEALED_E1_WAIT_MS; fi
+OUT="$ROOT/judge/out/$SHA$SUFFIX"; mkdir -p "$OUT"; V="$OUT/VERDICT.md"
+PHASES=${*:-readers build unit diff-py diff-node ctl kill}
+FAST=0; if [ "$PHASES" = fast ]; then FAST=1; PHASES="readers build unit diff-py diff-node ctl kill"; fi
 SHARD=""; [ $FAST = 1 ] && SHARD="0/10"
 [ $FAST = 1 ] && V="$OUT/VERDICT-FAST.md"
-[ -f "$V" ] || { echo "# Judge verdict$([ $FAST = 1 ] && echo " (fast)"), commit $SHA${DIRTY:+ (with uncommitted engine changes: not a valid verdict)}"; echo; } > "$V"
+[ -f "$V" ] || { echo "# Judge verdict$([ $FAST = 1 ] && echo " (fast)"), commit $SHA${SUFFIX:+, with --sealed-runs $JUDGE_SEALED_RUNS}${DIRTY:+ (with uncommitted engine changes: not a valid verdict)}"; echo; } > "$V"
 verdict() { sed -i "/^- $1:/d" "$V"; echo "- $1: $2" >> "$V"; echo "JUDGE $1: $2"; }
 
 # the reference mongod (replica set rs0, as the suites expect) and MinIO with the bucket "bench"
@@ -49,6 +59,9 @@ export SERVER_EXTRA="--ttl-sweep-secs 1 --replica-set rs0 --advertise localhost:
 for p in $PHASES; do
   log="$OUT/$p.log"
   case $p in
+    readers)
+      # every direct SlateDB reader is in src/fx/ or src/lifecycle.rs, or named with its reason (judge/raw_readers.sh)
+      if judge/raw_readers.sh > "$log" 2>&1; then verdict readers "PASS ($(tail -1 "$log"))"; else verdict readers "FAIL (see readers.log)"; fi ;;
     build)
       if cargo build --release -p mongo-server > "$log" 2>&1; then verdict build PASS; else verdict build "FAIL (see build.log)"; exit 1; fi ;;
     unit)

@@ -626,6 +626,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "crc32c"
+version = "0.6.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f132a176423ee852e8f0a35d43088d1850966b50745be818a88b76f64b1c6cb"
+dependencies = [
+ "rustc_version",
+]
+
+[[package]]
 name = "crc32fast"
 version = "1.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3803,16 +3812,20 @@ dependencies = [
  "bincode",
  "bytes",
  "clap",
+ "crc32c",
  "foyer",
  "futures",
  "libc",
+ "lz4_flex",
  "object_store 0.14.2",
  "rand 0.8.8",
  "serde",
  "serde_json",
  "slatedb",
  "tokio",
+ "twox-hash",
  "ulid",
+ "uuid",
 ]
 
 [[package]]
@@ -4135,6 +4148,9 @@ name = "twox-hash"
 version = "2.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "86a801b3cea342a06d468c8710662aa29e5e05e4f5c0d62f00bbb7f2ad7941c2"
+dependencies = [
+ "rand 0.10.3",
+]
 
 [[package]]
 name = "typed-builder"

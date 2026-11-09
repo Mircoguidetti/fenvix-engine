@@ -58,6 +58,12 @@ def test_two_transactions_cannot_insert_the_same_id_for_two_customers(srv, coll)
         s1.end_session()
     docs = list(m.find({"_id": 7}))
     scan = [d for d in m.find({}) if d["_id"] == 7]
+    if coll == "m":
+        # compaction 2 step 2 (founder, 2026-11-07): `_id` is unique per customer in a customer-keyed collection, like a
+        # sharded collection whose shard key is not `_id`, so both commit; every read agrees on what was committed. The
+        # same `_id` twice under ONE customer is refused: test_44_layout_v2.py.
+        assert committed == 2 and len(scan) == 2 and len(docs) == 2, f"{committed} commits, scan {scan}, find by _id {docs}"
+        return
     assert committed <= 1 and len(scan) <= 1, f"{committed} transactions committed _id 7; a collection scan finds {scan}, find by _id finds {docs}"
 
 
@@ -86,6 +92,10 @@ def test_insert_outside_a_transaction_cannot_duplicate_an_id_a_transaction_holds
     finally:
         s1.end_session()
     scan = [d for d in m.find({}) if d["_id"] == 8]
+    if coll == "m":
+        # `_id` unique per customer (founder, 2026-11-07): alice's and bob's `_id` 8 are two documents
+        assert ok == 2 and len(scan) == 2 and len(list(m.find({"_id": 8}))) == 2, f"{ok} acknowledged, scan {scan}"
+        return
     assert ok <= 1 and len(scan) <= 1, f"both writes of _id 8 were acknowledged; a collection scan finds {scan}"
 
 

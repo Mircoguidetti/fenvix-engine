@@ -1,0 +1,1 @@
+{'docsWritten': 3, 'locatorLookups': 0, 'layoutSeeks': 0} {'liveRead': 0, 'deadRead': 0, 'start': False}

@@ -1,0 +1,3 @@
+update {'u': 'alice', '_id': 1} None
+update {'u': None, '_id': 4} None
+delete {'u': None, '_id': 4} None

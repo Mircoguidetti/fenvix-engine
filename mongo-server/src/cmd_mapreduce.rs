@@ -172,10 +172,15 @@ impl Server {
                     Mode::Reduce => {
                         let keys: Vec<Bson> = results.iter().filter_map(|d| d.get("_id").cloned()).collect();
                         let existing = self.agg_docs(&target_db, &name, vec![Bson::Document(doc! { "$match": { "_id": { "$in": keys } } })], tx).await?;
+                        // a customer-keyed target: an output document (`{_id, value}`) is reduced only with the target
+                        // document of its own customer, the one the `$merge` below replaces (`_id` is unique per
+                        // customer only)
+                        let ckey = { let mut g = self.dbs.lock(&target_db).await; crate::custkey::of(&mut *g, &name).await? };
+                        let same_customer = |e: &Document, r: &Document| ckey.as_ref().map_or(true, |k| crate::custkey::cust_comp(k, e) == crate::custkey::cust_comp(k, r));
                         let mut merged = Vec::with_capacity(results.len());
                         for r in results {
                             let key = r.get("_id").cloned().unwrap_or(Bson::Null);
-                            let old = existing.iter().find(|e| e.get("_id").map(|k| crate::query::equal(k, &key)).unwrap_or(false));
+                            let old = existing.iter().find(|e| e.get("_id").map(|k| crate::query::equal(k, &key)).unwrap_or(false) && same_customer(e, &r));
                             merged.push(match old {
                                 Some(o) => {
                                     let v = crate::js::reduce_pair(&reduce, finalize.as_deref(), &key, o.get("value").unwrap_or(&Bson::Null), r.get("value").unwrap_or(&Bson::Null))?;

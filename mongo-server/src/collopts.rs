@@ -23,7 +23,7 @@ pub struct CollOpts {
     /// `fenvixAgentLane: true`: the collection is on the agent lane (`agentlane.rs`).
     pub agent: bool,
     /// The customer key (`custkey.rs`): documents stored customer first.
-    pub customer: Option<String>,
+    pub customer: Option<crate::custkey::Ckey>,
 }
 
 impl CollOpts {
@@ -42,7 +42,7 @@ impl CollOpts {
         if agent {
             crate::agentlane::note_option();
         }
-        let customer = raw.get_str(crate::custkey::RAW_KEY).ok().map(str::to_string);
+        let customer = crate::custkey::from_raw(&raw);
         Arc::new(CollOpts { raw, collation, cap, validator, images, clustered, series, agent, customer })
     }
 }

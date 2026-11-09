@@ -631,7 +631,9 @@ fn customer_value(field: &str, filter: &bson::Document) -> Option<bson::Bson> {
 /// The regions of a user: its documents and its entries in every index that starts with the customer field.
 fn regions_of(coll: &str, field: &str, v: &bson::Bson, indexes: &[crate::index::IndexDef]) -> Vec<(Vec<u8>, Vec<u8>)> {
     let mut out = Vec::new();
+    // layout v2 (custkey.rs): a customer-keyed document suffix starts with the mark, then the customer component
     let mut d = crate::layout::doc_prefix(coll);
+    d.push(crate::custkey::MARK);
     d.extend(crate::custkey::comp(v));
     out.push(d);
     for ix in indexes {
@@ -1138,6 +1140,7 @@ mod tests {
         let db = "fc-unit-visit";
         let f = bson::doc! { "u": 5 };
         let mut base = crate::layout::doc_prefix("c");
+        base.push(crate::custkey::MARK);
         base.extend(crate::custkey::comp(&bson::Bson::Int32(5)));
         let k = |n: u8| [base.clone(), vec![n]].concat();
         for (i, n) in [1u8, 2, 3].iter().enumerate() {
@@ -1216,6 +1219,7 @@ mod tests {
 
     fn review_key(user: i32, n: u32) -> Vec<u8> {
         let mut k = crate::layout::doc_prefix("c");
+        k.push(crate::custkey::MARK);
         k.extend(crate::custkey::comp(&bson::Bson::Int32(user)));
         k.extend(n.to_be_bytes());
         k

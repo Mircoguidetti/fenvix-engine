@@ -1,0 +1,6 @@
+[envelopes read] checks 2574, wrong 0, differing from mongod 0 (no first course on this server)
+[envelopes read] STRESS PASS
+[envelopes write] checks 2574, wrong 0, differing from mongod 0 (no first course on this server)
+[envelopes write] STRESS PASS
+checks 702, differing from mongod 57
+NEGATIVE CONTROL PASS: differences found

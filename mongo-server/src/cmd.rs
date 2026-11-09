@@ -751,14 +751,13 @@ impl Server {
         // the customer key (custkey.rs): the `customerKey` option, or `--customer-key` for this collection
         let explicit_ckey = match cmd.get("customerKey") {
             None => None,
-            Some(Bson::String(f)) if !f.is_empty() && !f.starts_with('$') => Some(f.clone()),
-            Some(v) => return Err(MongoError::new(2, "BadValue", format!("customerKey must be a field name, not {v}"))),
+            Some(v) => Some(crate::custkey::parse_option(v).map_err(|e| MongoError::new(2, "BadValue", e))?),
         };
         if explicit_ckey.is_some() && !crate::custkey::allowed(coll, &raw) {
             return Err(MongoError::new(72, "InvalidOptions", "customerKey is not supported on capped, time-series, clustered or system collections".into()));
         }
         if let Some(f) = explicit_ckey.clone().or_else(|| crate::custkey::configured(db, coll).filter(|_| crate::custkey::allowed(coll, &raw))) {
-            raw.insert(crate::custkey::RAW_KEY, f);
+            crate::custkey::store(&mut raw, &f);
         }
         let mut g = self.dbs.lock(db).await;
         let mut names = g.collections().await?;

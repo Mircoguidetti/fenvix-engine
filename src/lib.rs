@@ -3,9 +3,12 @@
 
 pub mod counter;
 pub mod counting;
+pub mod envelope;
+pub mod fx;
 pub mod lifecycle;
 pub mod maps;
 pub mod meter;
+pub mod runfmt;
 pub mod simstore;
 pub mod tiered;
 pub mod warm;

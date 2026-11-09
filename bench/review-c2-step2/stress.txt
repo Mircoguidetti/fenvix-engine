@@ -1,0 +1,6 @@
+[envelopes read] rc=0 checks 2574, wrong 0, differing from mongod 0 (no first course on this server)
+STRESS PASS
+ 
+[envelopes write] rc=0 checks 2574, wrong 0, differing from mongod 0 (no first course on this server)
+STRESS PASS
+ 

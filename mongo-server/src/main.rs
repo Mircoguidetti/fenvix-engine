@@ -19,6 +19,7 @@ mod agg;
 mod agentlane;
 mod custkey;
 mod opening;
+mod layout2;
 mod prefetch;
 mod hostinfo;
 mod auth;
@@ -459,8 +460,8 @@ struct Args {
     /// nothing kept) or off.
     #[arg(long, default_value = "cache")]
     tls_session_resumption: String,
-    /// Customer-first keys (custkey.rs): comma separated `[db.]collection=field`; a named collection takes the customer
-    /// key when it is created or first written while empty. Off when empty (the default).
+    /// Customer keys and layout v2 (custkey.rs): comma separated `[db.]collection=field[:timefield]`; a named collection
+    /// takes the customer key when it is created, first indexed or first written while empty. Off when empty (default).
     #[arg(long, default_value = "")]
     customer_key: String,
     /// First course (opening.rs, measurement prototype, off by default): keep the key-value pairs of each user's first
@@ -482,6 +483,49 @@ struct Args {
     /// First course: the opening keeps what this many queries of a visit read (1: the first query only).
     #[arg(long, default_value_t = 1)]
     first_course_queries: u64,
+    /// Envelope values (envelope.rs): `read` (release E0: read envelopes, write them only in a database that already has
+    /// them) or `write` (release E1: also start them in a database that has none). Default `read`. Rolling back from
+    /// `write` is safe only to a release that has `read`.
+    #[arg(long, default_value = "read")]
+    envelopes: String,
+    /// Compaction 2, step 3 (`fx`): read through our manifest and sealed runs. The value is how many write batches of a
+    /// database between two offline publishes of runs (`fx/build.rs`; 0: none by the server itself). Off by default.
+    /// A database that published a version has every SlateDB row too in this step (nothing drops them yet), so turning
+    /// it off again reads the same data. The environment variable FENVIX_SEALED_RUNS=N does the same.
+    #[arg(long)]
+    sealed_runs: Option<u64>,
+    /// Raw MB per group when a database's first version cuts its groups (the plan's 1 GB).
+    #[arg(long, default_value_t = 1024)]
+    sealed_group_mb: u64,
+    /// RAM for decoded blocks of our runs, shared by every database (MB).
+    #[arg(long, default_value_t = 256)]
+    sealed_cache_mb: u64,
+    /// Every how many publishes every group is resealed (the others write a delta run only).
+    #[arg(long, default_value_t = 3)]
+    sealed_reseal_every: u64,
+    /// T_pin in milliseconds (fx, rules 6 and 26): a reader refreshes its version of our manifest at least this often,
+    /// and envelopes start this long after release E1 is announced. FENVIX_SEALED_TPIN_MS does the same.
+    #[arg(long, default_value_t = 30_000)]
+    sealed_t_pin_ms: u64,
+    /// How long after release E1 is announced envelopes start, in milliseconds (default: T_pin, as rule 26 asks; tests
+    /// set it lower). FENVIX_SEALED_E1_WAIT_MS does the same.
+    #[arg(long)]
+    sealed_e1_wait_ms: Option<u64>,
+    /// Timing of our manifest (fx; review round 2 of step 0, F6), in milliseconds, checked at startup: a manifest PUT
+    /// with no answer within the PUT timeout counts as timed out (a fence follows); it must be shorter than the lease
+    /// minus its margin, and the remote lease and the GC grace must each exceed the hold life plus it.
+    #[arg(long, default_value_t = 20_000)]
+    sealed_put_timeout_ms: u64,
+    #[arg(long, default_value_t = 60_000)]
+    sealed_lease_ms: u64,
+    #[arg(long, default_value_t = 30_000)]
+    sealed_lease_margin_ms: u64,
+    #[arg(long, default_value_t = 180_000)]
+    sealed_remote_lease_ms: u64,
+    #[arg(long, default_value_t = 600_000)]
+    sealed_gc_grace_ms: u64,
+    #[arg(long, default_value_t = 120_000)]
+    sealed_hold_life_ms: u64,
     /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
     /// releases before); M29 measured 64.
     #[arg(long, default_value_t = 4)]
@@ -731,6 +775,34 @@ async fn run() -> Result<()> {
     opening::BUDGET_BYTES.store(args.first_course_mb << 20, std::sync::atomic::Ordering::Relaxed);
     opening::QUERIES.store(args.first_course_queries.max(1), std::sync::atomic::Ordering::Relaxed);
     opening::MAX_BYTES.store(args.first_course_max_kb << 10, std::sync::atomic::Ordering::Relaxed);
+    match args.envelopes.as_str() {
+        "read" => {}
+        "write" => tenant_bench::envelope::START.store(true, std::sync::atomic::Ordering::Relaxed),
+        other => anyhow::bail!("--envelopes must be read or write, not {other}"),
+    }
+    // FENVIX_SEALED_RUNS=N: the same as --sealed-runs N, for every server a test harness starts (`judge/run.sh` with
+    // JUDGE_SEALED_RUNS)
+    let sealed_runs = args.sealed_runs.or_else(|| std::env::var("FENVIX_SEALED_RUNS").ok().and_then(|v| v.parse().ok()));
+    if let Some(n) = sealed_runs {
+        use std::sync::atomic::Ordering::Relaxed;
+        tenant_bench::fx::ENABLED.store(true, Relaxed);
+        tenant_bench::fx::PUBLISH_EVERY.store(n, Relaxed);
+        tenant_bench::fx::GROUP_BYTES.store(args.sealed_group_mb.max(1) << 20, Relaxed);
+        tenant_bench::fx::view::CACHE_BYTES.store(args.sealed_cache_mb << 20, Relaxed);
+        tenant_bench::fx::RESEAL_EVERY.store(args.sealed_reseal_every.max(1), Relaxed);
+        let t_pin = std::env::var("FENVIX_SEALED_TPIN_MS").ok().and_then(|v| v.parse().ok()).unwrap_or(args.sealed_t_pin_ms);
+        tenant_bench::fx::T_PIN_MS.store(t_pin.max(1), Relaxed);
+        if let Some(w) = args.sealed_e1_wait_ms.or_else(|| std::env::var("FENVIX_SEALED_E1_WAIT_MS").ok().and_then(|v| v.parse().ok())) {
+            tenant_bench::fx::E1_WAIT_MS.store(w, Relaxed);
+        }
+        tenant_bench::fx::PUT_TIMEOUT_MS.store(args.sealed_put_timeout_ms, Relaxed);
+        tenant_bench::fx::LEASE_MS.store(args.sealed_lease_ms, Relaxed);
+        tenant_bench::fx::LEASE_MARGIN_MS.store(args.sealed_lease_margin_ms, Relaxed);
+        tenant_bench::fx::REMOTE_LEASE_MS.store(args.sealed_remote_lease_ms, Relaxed);
+        tenant_bench::fx::GC_GRACE_MS.store(args.sealed_gc_grace_ms, Relaxed);
+        tenant_bench::fx::hold::HOLD_LIFE_MS.store(args.sealed_hold_life_ms, Relaxed);
+        tenant_bench::fx::check_config()?;
+    }
     tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::tiered::set_compression(&args.sst_compression)?;
     tenant_bench::tiered::TIERS.store(args.compaction_tiers, std::sync::atomic::Ordering::Relaxed);
