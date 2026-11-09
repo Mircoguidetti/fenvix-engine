@@ -22,6 +22,8 @@ pub mod view;
 mod tests;
 #[cfg(test)]
 mod review_tests;
+#[cfg(test)]
+mod fix_tests;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 
@@ -46,6 +48,44 @@ pub fn e1_wait() -> std::time::Duration {
     let w = E1_WAIT_MS.load(Relaxed);
     std::time::Duration::from_millis(if w == u64::MAX { T_PIN_MS.load(Relaxed) } else { w })
 }
+
+/// F6 (review round 2 of step 0): a manifest PUT whose answer has not arrived within this timeout, retries included,
+/// counts as timed out (outcome unknown: the fence of rule 25 follows). It must stay shorter than the lease minus its
+/// margin, and the remote lease and the GC grace must each exceed the hold life plus it ([`check_config`]).
+pub static PUT_TIMEOUT_MS: AtomicU64 = AtomicU64::new(20_000);
+/// The ordinary lease of a version for the drop floor (rule 8: T_pin plus a margin) and its margin.
+pub static LEASE_MS: AtomicU64 = AtomicU64::new(60_000);
+pub static LEASE_MARGIN_MS: AtomicU64 = AtomicU64::new(30_000);
+/// The time-only lease of a drop job outside the waiter's process (rule 10).
+pub static REMOTE_LEASE_MS: AtomicU64 = AtomicU64::new(180_000);
+/// GC's grace before it deletes a retired or orphaned run (rule 23; the plan's 10 minutes).
+pub static GC_GRACE_MS: AtomicU64 = AtomicU64::new(600_000);
+
+/// The timing rules the drop floor (step 4) relies on, checked at startup: a bad combination is refused.
+/// - the PUT timeout is shorter than the lease minus its margin (F6), and the margin is shorter than the lease;
+/// - the lease is longer than T_pin (rule 8: T_pin plus a margin);
+/// - the remote lease (rule 10) and the GC grace (rule 23) each exceed the hold life plus the PUT timeout (F6).
+pub fn check_config() -> anyhow::Result<()> {
+    use std::sync::atomic::Ordering::Relaxed;
+    let put = PUT_TIMEOUT_MS.load(Relaxed);
+    let lease = LEASE_MS.load(Relaxed);
+    let margin = LEASE_MARGIN_MS.load(Relaxed);
+    let t_pin = T_PIN_MS.load(Relaxed);
+    let hold = hold::HOLD_LIFE_MS.load(Relaxed);
+    let remote = REMOTE_LEASE_MS.load(Relaxed);
+    let grace = GC_GRACE_MS.load(Relaxed);
+    anyhow::ensure!(put > 0, "sealed runs: the manifest PUT timeout must be above 0");
+    anyhow::ensure!(margin < lease, "sealed runs: the lease margin ({margin} ms) must be shorter than the lease ({lease} ms)");
+    anyhow::ensure!(put < lease - margin, "sealed runs: the manifest PUT timeout ({put} ms) must be shorter than the lease minus its margin ({lease} - {margin} ms) (F6)");
+    anyhow::ensure!(lease > t_pin, "sealed runs: the lease ({lease} ms) must be longer than T_pin ({t_pin} ms) (rule 8)");
+    anyhow::ensure!(remote > hold + put, "sealed runs: the remote lease ({remote} ms) must exceed the hold life plus the PUT timeout ({hold} + {put} ms) (rule 10, F6)");
+    anyhow::ensure!(grace > hold + put, "sealed runs: the GC grace ({grace} ms) must exceed the hold life plus the PUT timeout ({hold} + {put} ms) (rule 23, F6)");
+    Ok(())
+}
+
+/// Negative control of rule 25's fence-pending state, tests only: reads take holds while a fence is pending.
+#[cfg(test)]
+pub static CONTROL_NO_FENCE_PENDING: AtomicBool = AtomicBool::new(false);
 
 /// Versions published and installed, builds that failed, fence versions written at open (diagnostics).
 pub static PUBLISHES: AtomicU64 = AtomicU64::new(0);

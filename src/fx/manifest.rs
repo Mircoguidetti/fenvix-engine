@@ -207,9 +207,13 @@ pub async fn create(store: &Arc<dyn ObjectStore>, id: &str, v: &Version) -> Resu
         w.await;
     }
     let opts = PutOptions { mode: PutMode::Create, ..Default::default() };
-    match store.put_opts(&manifest_path(id, v.version), PutPayload::from(body), opts).await {
-        Ok(_) => Ok(true),
-        Err(object_store::Error::AlreadyExists { .. }) | Err(object_store::Error::Precondition { .. }) => Ok(false),
-        Err(e) => Err(e.into()),
+    // F6: no answer within the PUT timeout (the store's own retries included) is a timeout: the PUT may still land,
+    // so the caller treats the outcome as unknown and fences (rule 25)
+    let limit = std::time::Duration::from_millis(super::PUT_TIMEOUT_MS.load(std::sync::atomic::Ordering::Relaxed));
+    match tokio::time::timeout(limit, store.put_opts(&manifest_path(id, v.version), PutPayload::from(body), opts)).await {
+        Err(_) => Err(anyhow::anyhow!("manifest PUT of version {} of {id} timed out after {limit:?}: outcome unknown", v.version)),
+        Ok(Ok(_)) => Ok(true),
+        Ok(Err(object_store::Error::AlreadyExists { .. })) | Ok(Err(object_store::Error::Precondition { .. })) => Ok(false),
+        Ok(Err(e)) => Err(e.into()),
     }
 }

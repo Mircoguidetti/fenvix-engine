@@ -616,7 +616,7 @@ impl Lifecycle {
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
         let scope = writer_scope(&id);
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false };
         t.load_env().await?;
         t.load_fx().await?;
         Ok(t)
@@ -664,7 +664,7 @@ impl Lifecycle {
         let l0_at_wake = reader.manifest().l0().len();
         let reader = Arc::new(reader);
         READER_DBS.lock().unwrap().insert(id.clone(), Arc::downgrade(&reader));
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false };
         t.load_env().await?;
         t.load_fx().await?;
         Ok(t)
@@ -888,6 +888,10 @@ pub struct Tenant {
     fx_announced: bool,
     /// When this process first saw the announcement (the writer starts envelopes one T_pin later, rule 26).
     fx_announce_seen: Option<Instant>,
+    /// Rule 25 (review of step 3, defect 2): a publish or a fence whose outcome is unknown (an error, a timeout) left a
+    /// version in the store this tenant may not know. Until a fence succeeds, no read takes a hold (it fails with the
+    /// retryable error, and the next exclusive step retries the fence) and no publish starts.
+    fx_fence_pending: bool,
 }
 
 impl Tenant {
@@ -917,6 +921,7 @@ impl Tenant {
     }
 
     pub async fn get<K: AsRef<[u8]> + Send>(&self, key: K) -> Result<Option<Bytes>> {
+        self.fx_no_fence_pending()?;
         if let Some(v) = &self.fx {
             return self.fx_get(v, key.as_ref(), false).await;
         }
@@ -964,17 +969,52 @@ impl Tenant {
         Ok(())
     }
 
-    /// Due for a refresh of the version (a reader at half its T_pin); the caller refreshes under the exclusive lock.
+    /// Due for a refresh of the version (a reader at half its T_pin, or a fence pending); the caller refreshes under the
+    /// exclusive lock.
     pub fn fx_refresh_due(&self) -> bool {
-        crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed)
-            && matches!(self.mode, Some(Mode::Reader(_)))
-            && self.fx_loaded.elapsed() > Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed) / 2)
+        self.fx_fence_pending
+            || crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed)
+                && matches!(self.mode, Some(Mode::Reader(_)))
+                && self.fx_loaded.elapsed() > Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed) / 2)
     }
 
-    /// Load the newest version again (a reader's refresh), with E_env and E1's announcement (rule 6).
+    /// Whether a fence is pending (rule 25; diagnostics and tests).
+    pub fn fx_fence_pending(&self) -> bool {
+        self.fx_fence_pending
+    }
+
+    /// Rule 25: no read takes a hold while a fence is pending. The read fails with the retryable error; the server's next
+    /// exclusive step (`Entry::ensure_open`, `Dbs::read`) retries the fence through `fx_refresh`.
+    fn fx_no_fence_pending(&self) -> Result<()> {
+        #[cfg(test)]
+        if crate::fx::CONTROL_NO_FENCE_PENDING.load(std::sync::atomic::Ordering::Relaxed) {
+            return Ok(());
+        }
+        if self.fx_fence_pending {
+            return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: a publish of our manifest has an unknown outcome and its fence has not succeeded yet; retry", self.id))));
+        }
+        Ok(())
+    }
+
+    /// Load the newest version again (a reader's refresh, or the retry of a pending fence), with E_env and E1's
+    /// announcement (rule 6). A fence that fails again is a retryable error.
     pub async fn fx_refresh(&mut self) -> Result<()> {
         self.load_env().await?;
-        self.load_fx().await
+        let r = self.load_fx().await;
+        if self.fx_fence_pending {
+            if let Err(e) = r {
+                return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: the fence of our manifest failed again: {e:#}; retry", self.id))));
+            }
+        }
+        r
+    }
+
+    /// Before a hold that `&mut self` can take (a transaction, a publish): retry a pending fence first (rule 25).
+    async fn fx_settle_fence(&mut self) -> Result<()> {
+        if self.fx_fence_pending {
+            self.fx_refresh().await?;
+        }
+        Ok(())
     }
 
     /// The E_env to decode one step's rows with, read after the step's SlateDB view is open: the known one, or, once E1
@@ -1031,16 +1071,21 @@ impl Tenant {
             self.fx_announced = manifest::announced(&store, &self.id).await?;
         }
         let Some(mut v) = manifest::load_newest(&store, &self.id).await? else {
+            // no version in the store: nothing landed, so there is nothing to fence (and no version to copy)
             self.fx = None;
+            self.fx_fence_pending = false;
             self.fx_loaded = Instant::now();
             return Ok(());
         };
         if let Some(Mode::Writer(db)) = &self.mode {
+            // a fence is pending from here until one is published (a create that errors or times out leaves it so)
+            self.fx_fence_pending = true;
             let seq = db.snapshot().await?.seq();
-            anyhow::ensure!(v.x_d <= seq, "database {}: our manifest {} has X_d {} but SlateDB's last seq is {seq}: rows at or below X_d are missing from SlateDB", self.id, v.version, v.x_d);
             let epoch = Some(db.manifest().writer_epoch());
             let mut fenced = false;
             for _ in 0..8 {
+                // on every version this loop reads, not only the first (review of step 3, note 1)
+                anyhow::ensure!(v.x_d <= seq, "database {}: our manifest {} has X_d {} but SlateDB's last seq is {seq}: rows at or below X_d are missing from SlateDB", self.id, v.version, v.x_d);
                 let f = v.fence(epoch);
                 if manifest::create(&store, &self.id, &f).await? {
                     v = f;
@@ -1051,6 +1096,7 @@ impl Tenant {
                 v = manifest::load_newest(&store, &self.id).await?.ok_or_else(|| anyhow!("database {}: our manifest vanished", self.id))?;
             }
             anyhow::ensure!(fenced, "database {}: could not publish a fence version of our manifest", self.id);
+            self.fx_fence_pending = false;
         }
         anyhow::ensure!(v.e_env == self.env, "database {}: our manifest {} has E_env {:?}, the database's marker {:?}", self.id, v.version, v.e_env, self.env);
         self.fx = Some(Arc::new(crate::fx::view::View::new(store, v, self.fx.as_deref())?));
@@ -1118,6 +1164,8 @@ impl Tenant {
         use std::sync::atomic::Ordering::Relaxed;
         anyhow::ensure!(crate::fx::ENABLED.load(Relaxed), "--sealed-runs is off");
         self.upgrade().await?;
+        // no publish starts while a fence is pending (rule 25)
+        self.fx_settle_fence().await?;
         if !self.ensure_marker().await? {
             return Ok(None); // E1 announced, envelopes start one T_pin later (rule 26)
         }
@@ -1137,10 +1185,13 @@ impl Tenant {
                         self.fx = Some(Arc::new(crate::fx::view::View::new(Arc::clone(&store), v, self.fx.as_deref())?));
                     }
                 } else if !crate::fx::is_fenced(&e) {
-                    // the outcome of the publish's PUT may be unknown (a timeout): publish a fence version before another
-                    // hold or publish (rule 25); load_fx does it for a writer. A fenced writer publishes nothing (rule 28).
+                    // the outcome of the publish's PUT may be unknown (an error, a timeout: the PUT may have landed):
+                    // publish a fence version before another hold or publish (rule 25). If the fence fails too, the fence
+                    // stays pending: reads refuse and every exclusive step retries it. A fenced writer publishes nothing
+                    // (rule 28).
+                    self.fx_fence_pending = true;
                     if let Err(e2) = self.load_fx().await {
-                        eprintln!("sealed runs: fence of database {} after a failed publish: {e2:#}", self.id);
+                        eprintln!("sealed runs: fence of database {} after a failed publish: {e2:#}; the fence stays pending", self.id);
                     }
                 }
                 return Err(e);
@@ -1168,6 +1219,7 @@ impl Tenant {
     /// Like [`Tenant::get`], but a writer only returns data that is already in a durable WAL object or SST, not
     /// writes that are staged and waiting for their flush (a reader's data is always durable).
     pub async fn get_durable<K: AsRef<[u8]> + Send>(&self, key: K) -> Result<Option<Bytes>> {
+        self.fx_no_fence_pending()?;
         if let Some(v) = &self.fx {
             return self.fx_get(v, key.as_ref(), true).await;
         }
@@ -1251,6 +1303,7 @@ impl Tenant {
     }
 
     async fn scan_prefix_at(&self, prefix: &[u8], durable: bool) -> Result<Vec<(Bytes, Bytes)>> {
+        self.fx_no_fence_pending()?;
         if let Some(v) = &self.fx {
             let hi = crate::runfmt::prefix_successor(prefix);
             let mut opts = crate::fx::read::scan_options(4 << 20, false, durable);
@@ -1286,6 +1339,7 @@ impl Tenant {
     /// transaction's whole life: the pair of rule 1.
     pub async fn txn_snapshot(&mut self) -> Result<Arc<crate::fx::read::Snap>> {
         self.upgrade().await?;
+        self.fx_settle_fence().await?;
         let hold = self.fx.as_ref().map(|v| self.holds.take(Arc::clone(v)));
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
         Ok(Arc::new(crate::fx::read::Snap { slate: db.snapshot().await?, hold, env: self.env }))
@@ -1323,6 +1377,7 @@ impl Tenant {
                 return Ok(Vec::new()); // an empty range would panic the store
             }
         }
+        self.fx_no_fence_pending()?;
         if let Some(v) = &self.fx {
             return self.fx_scan(v, &opts, start, end, reverse, limit).await;
         }

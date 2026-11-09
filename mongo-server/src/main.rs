@@ -476,6 +476,21 @@ struct Args {
     /// set it lower). FENVIX_SEALED_E1_WAIT_MS does the same.
     #[arg(long)]
     sealed_e1_wait_ms: Option<u64>,
+    /// Timing of our manifest (fx; review round 2 of step 0, F6), in milliseconds, checked at startup: a manifest PUT
+    /// with no answer within the PUT timeout counts as timed out (a fence follows); it must be shorter than the lease
+    /// minus its margin, and the remote lease and the GC grace must each exceed the hold life plus it.
+    #[arg(long, default_value_t = 20_000)]
+    sealed_put_timeout_ms: u64,
+    #[arg(long, default_value_t = 60_000)]
+    sealed_lease_ms: u64,
+    #[arg(long, default_value_t = 30_000)]
+    sealed_lease_margin_ms: u64,
+    #[arg(long, default_value_t = 180_000)]
+    sealed_remote_lease_ms: u64,
+    #[arg(long, default_value_t = 600_000)]
+    sealed_gc_grace_ms: u64,
+    #[arg(long, default_value_t = 120_000)]
+    sealed_hold_life_ms: u64,
     /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
     /// releases before); M29 measured 64.
     #[arg(long, default_value_t = 4)]
@@ -737,6 +752,13 @@ async fn run() -> Result<()> {
         if let Some(w) = args.sealed_e1_wait_ms.or_else(|| std::env::var("FENVIX_SEALED_E1_WAIT_MS").ok().and_then(|v| v.parse().ok())) {
             tenant_bench::fx::E1_WAIT_MS.store(w, Relaxed);
         }
+        tenant_bench::fx::PUT_TIMEOUT_MS.store(args.sealed_put_timeout_ms, Relaxed);
+        tenant_bench::fx::LEASE_MS.store(args.sealed_lease_ms, Relaxed);
+        tenant_bench::fx::LEASE_MARGIN_MS.store(args.sealed_lease_margin_ms, Relaxed);
+        tenant_bench::fx::REMOTE_LEASE_MS.store(args.sealed_remote_lease_ms, Relaxed);
+        tenant_bench::fx::GC_GRACE_MS.store(args.sealed_gc_grace_ms, Relaxed);
+        tenant_bench::fx::hold::HOLD_LIFE_MS.store(args.sealed_hold_life_ms, Relaxed);
+        tenant_bench::fx::check_config()?;
     }
     tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::tiered::set_compression(&args.sst_compression)?;
