@@ -1,0 +1,23 @@
+fx_cold: 1tb-busy r1 on r3 off, D 256 MiB, L0 2048 B, day 47.9 MiB of inserts, warm-up 3.2 days, window 8.0 days, background cold reads 1728 per day, S3 latency 5000 us, seed 5
+112 pattern customers, 40 agent threads (20 young)
+loaded 258 MiB in 5.6 s
+first version built: 47 groups
+  20 s: day 1.68, groups 49, delta runs 10, reseals 46 (r3 0), L0 max 64, reads 0, wrong 0
+  40 s: day 3.15, groups 54, delta runs 8, reseals 100 (r3 0), L0 max 64, reads 0, wrong 0
+measured window starts at 154 MiB written (3.2 days)
+  60 s: day 4.01, groups 57, delta runs 12, reseals 130 (r3 0), L0 max 64, reads 216, wrong 0
+  80 s: day 4.68, groups 67, delta runs 7, reseals 156 (r3 0), L0 max 64, reads 432, wrong 0
+  101 s: day 5.36, groups 83, delta runs 13, reseals 186 (r3 0), L0 max 64, reads 756, wrong 0
+  121 s: day 6.26, groups 86, delta runs 14, reseals 217 (r3 0), L0 max 64, reads 972, wrong 0
+  141 s: day 6.74, groups 87, delta runs 13, reseals 254 (r3 0), L0 max 64, reads 1188, wrong 0
+  161 s: day 7.50, groups 88, delta runs 13, reseals 274 (r3 0), L0 max 64, reads 1404, wrong 0
+  185 s: day 8.13, groups 89, delta runs 15, reseals 289 (r3 0), L0 max 64, reads 1728, wrong 0
+  213 s: day 8.75, groups 96, delta runs 13, reseals 337 (r3 0), L0 max 64, reads 1944, wrong 0
+  233 s: day 9.42, groups 97, delta runs 15, reseals 358 (r3 0), L0 max 64, reads 2160, wrong 0
+retry after 10014 ms: fx hold revoked: the read held version 22928 for more than 10s; retry
+  253 s: day 9.73, groups 98, delta runs 12, reseals 362 (r3 0), L0 max 64, reads 2268, wrong 0
+  273 s: day 10.38, groups 99, delta runs 4, reseals 385 (r3 0), L0 max 64, reads 2484, wrong 0
+  293 s: day 11.06, groups 100, delta runs 9, reseals 420 (r3 0), L0 max 64, reads 2700, wrong 0
+retry after 12732 ms: fx hold revoked: the read held version 26473 for more than 10s; retry
+RESULT 1tb-busy r1 on r3 off: reads 2808, wrong 0, retried 2; background point reads 19377; L0 max 64; wall 313 s
+RESULT 1tb-busy r1 on r3 off: in the window: reseals 333 (r3 0, theta 333), stored amplification 11.86 (L0 277.6 MiB, SlateDB 506.8 MiB, our runs 2509.6 MiB), raw: absorbed 392.3 MiB, merges 1998.5 MiB, reseals 1758.7 MiB (4.48 per absorbed byte)
