@@ -1,0 +1,50 @@
+{
+ "mode": "delta",
+ "n": 300,
+ "threads": 8,
+ "pg_toast": "pglz",
+ "run_seconds": 18.9,
+ "postgres": {
+  "checkpoints": {
+   "heap": 2801664,
+   "toast": 0,
+   "toast_index": 8192,
+   "indexes": 212992,
+   "total": 3055616
+  },
+  "checkpoint_blobs": {
+   "heap": 270336,
+   "toast": 2605056,
+   "toast_index": 49152,
+   "indexes": 81920,
+   "total": 3072000
+  },
+  "checkpoint_writes": {
+   "heap": 2162688,
+   "toast": 1572864,
+   "toast_index": 40960,
+   "indexes": 507904,
+   "total": 4349952
+  },
+  "total": 10477568
+ },
+ "mongo": {
+  "checkpoints": {
+   "count": 2400,
+   "size": 8412304,
+   "storageSize": 3190784,
+   "totalIndexSize": 159744
+  },
+  "checkpoint_writes": {
+   "count": 3606,
+   "size": 5696959,
+   "storageSize": 2818048,
+   "totalIndexSize": 270336
+  },
+  "total_on_disk": 6438912,
+  "total_data_size": 14109263
+ },
+ "sqlite": {
+  "file_bytes": 14749696
+ }
+}

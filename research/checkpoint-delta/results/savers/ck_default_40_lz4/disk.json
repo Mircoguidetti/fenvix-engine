@@ -1,0 +1,31 @@
+{
+ "mode": "default",
+ "n": 40,
+ "threads": 150,
+ "pg_toast": "lz4",
+ "run_seconds": 26.8,
+ "postgres": {
+  "checkpoints": {
+   "heap": 6225920,
+   "toast": 0,
+   "toast_index": 8192,
+   "indexes": 491520,
+   "total": 6758400
+  },
+  "checkpoint_blobs": {
+   "heap": 1736704,
+   "toast": 93020160,
+   "toast_index": 1064960,
+   "indexes": 647168,
+   "total": 96550912
+  },
+  "checkpoint_writes": {
+   "heap": 5144576,
+   "toast": 4194304,
+   "toast_index": 73728,
+   "indexes": 1097728,
+   "total": 10575872
+  },
+  "total": 113885184
+ }
+}

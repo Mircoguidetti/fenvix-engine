@@ -1,0 +1,107 @@
+{
+ "n": 300,
+ "threads": 8,
+ "bytes_total": {
+  "logical": 704459231,
+  "full": 209772739,
+  "bin": 1934262,
+  "json": 2359323,
+  "log": 1709073,
+  "bin_10": 22107832,
+  "bin_50": 5408858,
+  "json_10": 22634432,
+  "json_50": 5849407
+ },
+ "bytes_per_thread": {
+  "logical": 88057403.875,
+  "full": 26221592.375,
+  "bin": 241782.75,
+  "json": 294915.375,
+  "log": 213634.125,
+  "bin_10": 2763479.0,
+  "bin_50": 676107.25,
+  "json_10": 2829304.0,
+  "json_50": 731175.875
+ },
+ "read": {
+  "latest": {
+   "full": {
+    "bytes_mean": 164850.5,
+    "ms_median": 5.6169135000345705
+   },
+   "bin": {
+    "bytes_mean": 234901.25,
+    "ms_median": 19.52265600004921
+   },
+   "json": {
+    "bytes_mean": 287283.25,
+    "ms_median": 12.318315999948481
+   },
+   "bin_10": {
+    "bytes_mean": 167103.75,
+    "ms_median": 5.521126499957063
+   },
+   "json_10": {
+    "bytes_mean": 169516.5,
+    "ms_median": 4.195709000043735
+   },
+   "bin_50": {
+    "bytes_mean": 177720,
+    "ms_median": 8.251215999962369
+   },
+   "json_50": {
+    "bytes_mean": 186297.5,
+    "ms_median": 5.368437000015547
+   },
+   "log": {
+    "bytes_mean": 177626.5,
+    "ms_median": 3.8979980000135583
+   },
+   "logical": {
+    "bytes_mean": 564450.25,
+    "ms_median": null
+   }
+  },
+  "old": {
+   "full": {
+    "bytes_mean": 44822.25,
+    "ms_median": 0.8302875000367749
+   },
+   "bin": {
+    "bytes_mean": 60096,
+    "ms_median": 3.207441500023833
+   },
+   "json": {
+    "bytes_mean": 72939.5,
+    "ms_median": 3.125758000010137
+   },
+   "bin_10": {
+    "bytes_mean": 45791.25,
+    "ms_median": 1.0367110000402135
+   },
+   "json_10": {
+    "bytes_mean": 46728.5,
+    "ms_median": 1.1039860000323642
+   },
+   "bin_50": {
+    "bytes_mean": 49889.25,
+    "ms_median": 1.7288225000129387
+   },
+   "json_50": {
+    "bytes_mean": 54495.25,
+    "ms_median": 1.7681489999858968
+   },
+   "log": {
+    "bytes_mean": 86839,
+    "ms_median": 1.1523794999561687
+   },
+   "logical": {
+    "bytes_mean": 143643,
+    "ms_median": null
+   }
+  }
+ },
+ "read_threads": 4,
+ "rebuild_checked": 56,
+ "rebuild_mismatches": 0
+}

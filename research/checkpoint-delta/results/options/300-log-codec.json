@@ -1,0 +1,8 @@
+{
+ "n": 300,
+ "threads": 8,
+ "bytes_per_thread": {
+  "log_zstd": 213634.125,
+  "log_lz4": 329070.875
+ }
+}

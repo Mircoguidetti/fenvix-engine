@@ -1,0 +1,107 @@
+{
+ "n": 10,
+ "threads": 400,
+ "bytes_total": {
+  "logical": 41606177,
+  "full": 15697650,
+  "bin": 3255859,
+  "json": 3595121,
+  "log": 2978510,
+  "bin_10": 3255859,
+  "bin_50": 3255859,
+  "json_10": 3595121,
+  "json_50": 3595121
+ },
+ "bytes_per_thread": {
+  "logical": 104015.4425,
+  "full": 39244.125,
+  "bin": 8139.6475,
+  "json": 8987.8025,
+  "log": 7446.275,
+  "bin_10": 8139.6475,
+  "bin_50": 8139.6475,
+  "json_10": 8987.8025,
+  "json_50": 8987.8025
+ },
+ "read": {
+  "latest": {
+   "full": {
+    "bytes_mean": 4470.5,
+    "ms_median": 0.1549534999867319
+   },
+   "bin": {
+    "bytes_mean": 6097.5,
+    "ms_median": 0.28835000000526634
+   },
+   "json": {
+    "bytes_mean": 6848.75,
+    "ms_median": 0.3358490000096026
+   },
+   "bin_10": {
+    "bytes_mean": 6097.5,
+    "ms_median": 0.27327749995720296
+   },
+   "json_10": {
+    "bytes_mean": 6848.75,
+    "ms_median": 0.3273164999200162
+   },
+   "bin_50": {
+    "bytes_mean": 6097.5,
+    "ms_median": 0.2801745000056144
+   },
+   "json_50": {
+    "bytes_mean": 6848.75,
+    "ms_median": 0.33861699995441086
+   },
+   "log": {
+    "bytes_mean": 5457.75,
+    "ms_median": 0.17568250001431807
+   },
+   "logical": {
+    "bytes_mean": 11174.5,
+    "ms_median": null
+   }
+  },
+  "old": {
+   "full": {
+    "bytes_mean": 1556,
+    "ms_median": 0.05157749995987615
+   },
+   "bin": {
+    "bytes_mean": 1869,
+    "ms_median": 0.08595650001552713
+   },
+   "json": {
+    "bytes_mean": 1906.75,
+    "ms_median": 0.10223099997119789
+   },
+   "bin_10": {
+    "bytes_mean": 1869,
+    "ms_median": 0.08613300002480173
+   },
+   "json_10": {
+    "bytes_mean": 1906.75,
+    "ms_median": 0.10041199999477612
+   },
+   "bin_50": {
+    "bytes_mean": 1869,
+    "ms_median": 0.08623550002084812
+   },
+   "json_50": {
+    "bytes_mean": 1906.75,
+    "ms_median": 0.09922750001578606
+   },
+   "log": {
+    "bytes_mean": 5457.75,
+    "ms_median": 0.10601449997693635
+   },
+   "logical": {
+    "bytes_mean": 3165,
+    "ms_median": null
+   }
+  }
+ },
+ "read_threads": 4,
+ "rebuild_checked": 56,
+ "rebuild_mismatches": 0
+}

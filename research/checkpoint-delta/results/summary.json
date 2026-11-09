@@ -1,0 +1,664 @@
+{
+ "mix": {
+  "10": 0.4,
+  "40": 0.35,
+  "100": 0.2,
+  "300": 0.05
+ },
+ "per_thread": {
+  "10": {
+   "pg_default": 68485.12,
+   "pg_default_blobs": 41963.52,
+   "pg_default_writes": 16076.8,
+   "pg_default_checkpoints": 10444.8,
+   "mongo_default_disk": 35870.72,
+   "mongo_default_data": 111393.2125,
+   "sqlite_default": 117299.2,
+   "pg_delta": 29327.36,
+   "pg_delta_blobs": 1822.72,
+   "pg_delta_writes": 16056.32,
+   "pg_delta_checkpoints": 11448.32,
+   "mongo_delta_disk": 13557.76,
+   "mongo_delta_data": 33741.535,
+   "sqlite_delta": 34314.24,
+   "pg_default_lz4": 71372.8,
+   "ours_logical": 104015.4425,
+   "ours_full": 39244.125,
+   "ours_bin": 8139.6475,
+   "ours_json": 8987.8025,
+   "ours_log": 7446.275,
+   "ours_bin_10": 8139.6475,
+   "ours_bin_50": 8139.6475,
+   "ours_json_10": 8987.8025,
+   "ours_json_50": 8987.8025,
+   "ours_log_lz4": 10486.055
+  },
+  "40": {
+   "pg_default": 739573.76,
+   "pg_default_blobs": 627452.5866666667,
+   "pg_default_writes": 67174.4,
+   "pg_default_checkpoints": 44946.77333333333,
+   "mongo_default_disk": 739027.6266666667,
+   "mongo_default_data": 1622647.1066666667,
+   "sqlite_default": 1649268.0533333332,
+   "pg_delta": 122497.70666666667,
+   "pg_delta_blobs": 6225.92,
+   "pg_delta_writes": 67174.4,
+   "pg_delta_checkpoints": 49097.386666666665,
+   "mongo_delta_disk": 58572.8,
+   "mongo_delta_data": 142313.60666666666,
+   "sqlite_delta": 145872.21333333335,
+   "pg_default_lz4": 759234.56,
+   "ours_logical": 1590911.36,
+   "ours_full": 532197.18,
+   "ours_bin": 31825.81333333333,
+   "ours_json": 37738.26666666667,
+   "ours_log": 28139.053333333333,
+   "ours_bin_10": 70955.06,
+   "ours_bin_50": 31825.81333333333,
+   "ours_json_10": 76279.3,
+   "ours_json_50": 37738.26666666667,
+   "ours_log_lz4": 41629.89333333333
+  },
+  "100": {
+   "pg_default": 4148224.0,
+   "pg_default_blobs": 3853312.0,
+   "pg_default_writes": 174899.2,
+   "pg_default_checkpoints": 120012.8,
+   "mongo_default_disk": 4807475.2,
+   "mongo_default_data": 10048410.475,
+   "sqlite_default": 10121011.2,
+   "pg_delta": 315187.2,
+   "pg_delta_blobs": 14745.6,
+   "pg_delta_writes": 175104.0,
+   "pg_delta_checkpoints": 125337.6,
+   "mongo_delta_disk": 149606.4,
+   "mongo_delta_data": 366402.925,
+   "sqlite_delta": 373964.8,
+   "pg_default_lz4": 4265779.2,
+   "ours_logical": 9967855.275,
+   "ours_full": 3103592.475,
+   "ours_bin": 79483.125,
+   "ours_json": 96229.65,
+   "ours_log": 69687.05,
+   "ours_bin_10": 355036.275,
+   "ours_bin_50": 109955.15,
+   "ours_json_10": 370972.975,
+   "ours_json_50": 126632.125,
+   "ours_log_lz4": 106771.125
+  },
+  "300": {
+   "pg_default": 35275776.0,
+   "pg_default_blobs": 34362368.0,
+   "pg_default_writes": 543744.0,
+   "pg_default_checkpoints": 369664.0,
+   "mongo_default_disk": 40886272.0,
+   "mongo_default_data": 88298260.5,
+   "sqlite_default": 88576000.0,
+   "pg_delta": 1309696.0,
+   "pg_delta_blobs": 384000.0,
+   "pg_delta_writes": 543744.0,
+   "pg_delta_checkpoints": 381952.0,
+   "mongo_delta_disk": 804864.0,
+   "mongo_delta_data": 1817417.875,
+   "sqlite_delta": 1843712.0,
+   "pg_default_lz4": 36148224.0,
+   "ours_logical": 88057403.875,
+   "ours_full": 26221592.375,
+   "ours_bin": 241782.75,
+   "ours_json": 294915.375,
+   "ours_log": 213634.125,
+   "ours_bin_10": 2763479.0,
+   "ours_bin_50": 676107.25,
+   "ours_json_10": 2829304.0,
+   "ours_json_50": 731175.875,
+   "ours_log_lz4": 329070.875
+  }
+ },
+ "mix_per_thread": {
+  "mongo_default_data": 7037078.892333333,
+  "mongo_default_disk": 3278816.5973333335,
+  "mongo_delta_data": 227457.85508333333,
+  "mongo_delta_disk": 96088.064,
+  "ours_bin": 42380.65616666667,
+  "ours_bin_10": 237271.33500000002,
+  "ours_bin_50": 70191.28616666667,
+  "ours_full": 2133764.77675,
+  "ours_json": 50795.213083333336,
+  "ours_json_10": 245952.671,
+  "ours_json_50": 78688.73308333334,
+  "ours_log": 37446.294916666666,
+  "ours_log_lz4": 56572.65341666667,
+  "ours_logical": 6994866.401750001,
+  "pg_default": 2879678.464,
+  "pg_default_blobs": 2725174.6133333333,
+  "pg_default_checkpoints": 62395.05066666666,
+  "pg_default_lz4": 2954848.2560000005,
+  "pg_default_writes": 92108.8,
+  "pg_delta": 183127.38133333332,
+  "pg_delta_blobs": 25057.28,
+  "pg_delta_checkpoints": 65928.53333333334,
+  "pg_delta_writes": 92141.568,
+  "sqlite_default": 7077165.738666667,
+  "sqlite_delta": 231759.5306666667
+ },
+ "money": {
+  "Postgres saver default, Aurora": {
+   "bytes_per_thread_mix": 2879678.464,
+   "stored_gb_month12": 3455.6141568,
+   "usd_month12": 345.56141568,
+   "usd_first_year": 2246.14920192,
+   "price_per_gb_month": 0.1
+  },
+  "Postgres saver default, Supabase": {
+   "bytes_per_thread_mix": 2879678.464,
+   "stored_gb_month12": 3455.6141568,
+   "usd_month12": 431.9517696,
+   "usd_first_year": 2807.6865024,
+   "price_per_gb_month": 0.125
+  },
+  "Postgres saver DeltaChannel, Aurora": {
+   "bytes_per_thread_mix": 183127.38133333332,
+   "stored_gb_month12": 219.7528576,
+   "usd_month12": 21.975285760000002,
+   "usd_first_year": 142.83935744000001,
+   "price_per_gb_month": 0.1
+  },
+  "Postgres saver DeltaChannel, Supabase": {
+   "bytes_per_thread_mix": 183127.38133333332,
+   "stored_gb_month12": 219.7528576,
+   "usd_month12": 27.4691072,
+   "usd_first_year": 178.5491968,
+   "price_per_gb_month": 0.125
+  },
+  "Mongo saver default, Atlas Infinite (uncompressed)": {
+   "bytes_per_thread_mix": 7037078.892333333,
+   "stored_gb_month12": 8444.4946708,
+   "usd_month12": 2533.34840124,
+   "usd_first_year": 16466.76460806,
+   "price_per_gb_month": 0.3
+  },
+  "Mongo saver DeltaChannel, Atlas Infinite (uncompressed)": {
+   "bytes_per_thread_mix": 227457.85508333333,
+   "stored_gb_month12": 272.9494261,
+   "usd_month12": 81.88482782999999,
+   "usd_first_year": 532.251380895,
+   "price_per_gb_month": 0.3
+  },
+  "Ours, full checkpoints zstd, price": {
+   "bytes_per_thread_mix": 2133764.77675,
+   "stored_gb_month12": 2560.5177321,
+   "usd_month12": 107.07619606963637,
+   "usd_first_year": 695.9952744526364,
+   "price_per_gb_month": 0.04181818181818182
+  },
+  "Ours, thread message log, cost": {
+   "bytes_per_thread_mix": 37446.294916666666,
+   "stored_gb_month12": 44.9355539,
+   "usd_month12": 1.0335177397,
+   "usd_first_year": 6.7178653080499995,
+   "price_per_gb_month": 0.023
+  },
+  "Ours, thread message log, price": {
+   "bytes_per_thread_mix": 37446.294916666666,
+   "stored_gb_month12": 44.9355539,
+   "usd_month12": 1.879123163090909,
+   "usd_first_year": 12.214300560090908,
+   "price_per_gb_month": 0.04181818181818182
+  },
+  "Ours, thread message log with lz4 (today's run codec), price": {
+   "bytes_per_thread_mix": 56572.65341666667,
+   "stored_gb_month12": 67.8871841,
+   "usd_month12": 2.8389186078181816,
+   "usd_first_year": 18.45297095081818,
+   "price_per_gb_month": 0.04181818181818182
+  },
+  "Ours, JSON delta K=10, price": {
+   "bytes_per_thread_mix": 245952.671,
+   "stored_gb_month12": 295.1432052,
+   "usd_month12": 12.342352217454545,
+   "usd_first_year": 80.22528941345455,
+   "price_per_gb_month": 0.04181818181818182
+  },
+  "Ours, binary delta K=10, price": {
+   "bytes_per_thread_mix": 237271.33500000002,
+   "stored_gb_month12": 284.725602,
+   "usd_month12": 11.90670699272727,
+   "usd_first_year": 77.39359545272728,
+   "price_per_gb_month": 0.04181818181818182
+  }
+ },
+ "prices": {
+  "aurora": 0.1,
+  "supabase": 0.125,
+  "atlas": 0.3,
+  "s3_cost": 0.023,
+  "ours_price": 0.04181818181818182
+ },
+ "option_reads": {
+  "10": {
+   "latest": {
+    "full": {
+     "bytes_mean": 4470.5,
+     "ms_median": 0.1549534999867319
+    },
+    "bin": {
+     "bytes_mean": 6097.5,
+     "ms_median": 0.28835000000526634
+    },
+    "json": {
+     "bytes_mean": 6848.75,
+     "ms_median": 0.3358490000096026
+    },
+    "bin_10": {
+     "bytes_mean": 6097.5,
+     "ms_median": 0.27327749995720296
+    },
+    "json_10": {
+     "bytes_mean": 6848.75,
+     "ms_median": 0.3273164999200162
+    },
+    "bin_50": {
+     "bytes_mean": 6097.5,
+     "ms_median": 0.2801745000056144
+    },
+    "json_50": {
+     "bytes_mean": 6848.75,
+     "ms_median": 0.33861699995441086
+    },
+    "log": {
+     "bytes_mean": 5457.75,
+     "ms_median": 0.17568250001431807
+    },
+    "logical": {
+     "bytes_mean": 11174.5,
+     "ms_median": null
+    }
+   },
+   "old": {
+    "full": {
+     "bytes_mean": 1556,
+     "ms_median": 0.05157749995987615
+    },
+    "bin": {
+     "bytes_mean": 1869,
+     "ms_median": 0.08595650001552713
+    },
+    "json": {
+     "bytes_mean": 1906.75,
+     "ms_median": 0.10223099997119789
+    },
+    "bin_10": {
+     "bytes_mean": 1869,
+     "ms_median": 0.08613300002480173
+    },
+    "json_10": {
+     "bytes_mean": 1906.75,
+     "ms_median": 0.10041199999477612
+    },
+    "bin_50": {
+     "bytes_mean": 1869,
+     "ms_median": 0.08623550002084812
+    },
+    "json_50": {
+     "bytes_mean": 1906.75,
+     "ms_median": 0.09922750001578606
+    },
+    "log": {
+     "bytes_mean": 5457.75,
+     "ms_median": 0.10601449997693635
+    },
+    "logical": {
+     "bytes_mean": 3165,
+     "ms_median": null
+    }
+   }
+  },
+  "40": {
+   "latest": {
+    "full": {
+     "bytes_mean": 19736.5,
+     "ms_median": 0.5174134999492708
+    },
+    "bin": {
+     "bytes_mean": 27569.5,
+     "ms_median": 1.210652499992193
+    },
+    "json": {
+     "bytes_mean": 33099.75,
+     "ms_median": 1.4097350000383813
+    },
+    "bin_10": {
+     "bytes_mean": 21651,
+     "ms_median": 0.6281665000074099
+    },
+    "json_10": {
+     "bytes_mean": 23265.75,
+     "ms_median": 0.6905289999963315
+    },
+    "bin_50": {
+     "bytes_mean": 27569.5,
+     "ms_median": 1.2670230000253468
+    },
+    "json_50": {
+     "bytes_mean": 33099.75,
+     "ms_median": 1.5822854999782976
+    },
+    "log": {
+     "bytes_mean": 23846.25,
+     "ms_median": 0.5075654999586732
+    },
+    "logical": {
+     "bytes_mean": 60516,
+     "ms_median": null
+    }
+   },
+   "old": {
+    "full": {
+     "bytes_mean": 6248.5,
+     "ms_median": 0.1428479999958654
+    },
+    "bin": {
+     "bytes_mean": 8169.25,
+     "ms_median": 0.33691499999122243
+    },
+    "json": {
+     "bytes_mean": 9206.25,
+     "ms_median": 0.3950024999994639
+    },
+    "bin_10": {
+     "bytes_mean": 6248.5,
+     "ms_median": 0.13714549999122028
+    },
+    "json_10": {
+     "bytes_mean": 6313,
+     "ms_median": 0.14613100000815393
+    },
+    "bin_50": {
+     "bytes_mean": 8169.25,
+     "ms_median": 0.3263119999701303
+    },
+    "json_50": {
+     "bytes_mean": 9206.25,
+     "ms_median": 0.39339850002306775
+    },
+    "log": {
+     "bytes_mean": 23846.25,
+     "ms_median": 0.265407499966841
+    },
+    "logical": {
+     "bytes_mean": 17177.25,
+     "ms_median": null
+    }
+   }
+  },
+  "100": {
+   "latest": {
+    "full": {
+     "bytes_mean": 51827.25,
+     "ms_median": 1.2365910000653457
+    },
+    "bin": {
+     "bytes_mean": 71958.25,
+     "ms_median": 3.88713000000962
+    },
+    "json": {
+     "bytes_mean": 87445.25,
+     "ms_median": 3.785556000025281
+    },
+    "bin_10": {
+     "bytes_mean": 53817,
+     "ms_median": 1.3770965000503566
+    },
+    "json_10": {
+     "bytes_mean": 55578.5,
+     "ms_median": 1.4431439999498252
+    },
+    "bin_50": {
+     "bytes_mean": 62181.5,
+     "ms_median": 2.4407555000038883
+    },
+    "json_50": {
+     "bytes_mean": 70116,
+     "ms_median": 2.3927125000113847
+    },
+    "log": {
+     "bytes_mean": 54712,
+     "ms_median": 1.211079499967127
+    },
+    "logical": {
+     "bytes_mean": 169191.5,
+     "ms_median": null
+    }
+   },
+   "old": {
+    "full": {
+     "bytes_mean": 15653.5,
+     "ms_median": 0.3633444999877611
+    },
+    "bin": {
+     "bytes_mean": 20641,
+     "ms_median": 0.9380640000244966
+    },
+    "json": {
+     "bytes_mean": 24362.75,
+     "ms_median": 1.0069339999745353
+    },
+    "bin_10": {
+     "bytes_mean": 16709.25,
+     "ms_median": 0.4237269999975979
+    },
+    "json_10": {
+     "bytes_mean": 17638,
+     "ms_median": 0.4634444999283005
+    },
+    "bin_50": {
+     "bytes_mean": 20641,
+     "ms_median": 0.9326565000264964
+    },
+    "json_50": {
+     "bytes_mean": 24362.75,
+     "ms_median": 1.1477275000402187
+    },
+    "log": {
+     "bytes_mean": 59789.75,
+     "ms_median": 0.5178135000392103
+    },
+    "logical": {
+     "bytes_mean": 46645.75,
+     "ms_median": null
+    }
+   }
+  },
+  "300": {
+   "latest": {
+    "full": {
+     "bytes_mean": 164850.5,
+     "ms_median": 5.6169135000345705
+    },
+    "bin": {
+     "bytes_mean": 234901.25,
+     "ms_median": 19.52265600004921
+    },
+    "json": {
+     "bytes_mean": 287283.25,
+     "ms_median": 12.318315999948481
+    },
+    "bin_10": {
+     "bytes_mean": 167103.75,
+     "ms_median": 5.521126499957063
+    },
+    "json_10": {
+     "bytes_mean": 169516.5,
+     "ms_median": 4.195709000043735
+    },
+    "bin_50": {
+     "bytes_mean": 177720,
+     "ms_median": 8.251215999962369
+    },
+    "json_50": {
+     "bytes_mean": 186297.5,
+     "ms_median": 5.368437000015547
+    },
+    "log": {
+     "bytes_mean": 177626.5,
+     "ms_median": 3.8979980000135583
+    },
+    "logical": {
+     "bytes_mean": 564450.25,
+     "ms_median": null
+    }
+   },
+   "old": {
+    "full": {
+     "bytes_mean": 44822.25,
+     "ms_median": 0.8302875000367749
+    },
+    "bin": {
+     "bytes_mean": 60096,
+     "ms_median": 3.207441500023833
+    },
+    "json": {
+     "bytes_mean": 72939.5,
+     "ms_median": 3.125758000010137
+    },
+    "bin_10": {
+     "bytes_mean": 45791.25,
+     "ms_median": 1.0367110000402135
+    },
+    "json_10": {
+     "bytes_mean": 46728.5,
+     "ms_median": 1.1039860000323642
+    },
+    "bin_50": {
+     "bytes_mean": 49889.25,
+     "ms_median": 1.7288225000129387
+    },
+    "json_50": {
+     "bytes_mean": 54495.25,
+     "ms_median": 1.7681489999858968
+    },
+    "log": {
+     "bytes_mean": 86839,
+     "ms_median": 1.1523794999561687
+    },
+    "logical": {
+     "bytes_mean": 143643,
+     "ms_median": null
+    }
+   }
+  }
+ },
+ "rebuild_mismatches": {
+  "10": 0,
+  "40": 0,
+  "100": 0,
+  "300": 0
+ },
+ "saver_reads": {
+  "10": {
+   "n": 10,
+   "threads": 4,
+   "ms_median": {
+    "default/postgres/latest": 0.5619964999823424,
+    "default/postgres/old": 0.41180249996841667,
+    "default/mongo/latest": 1.4339240000253994,
+    "default/mongo/old": 1.5351685000268844,
+    "delta/postgres/latest": 1.100294500020027,
+    "delta/postgres/old": 0.8804315000361385,
+    "delta/mongo/latest": 6.459184499988169,
+    "delta/mongo/old": 2.7468720000456415
+   },
+   "ms_max": {
+    "default/postgres/latest": 0.7668939999803115,
+    "default/postgres/old": 0.5560350000450853,
+    "default/mongo/latest": 1.6341599999805112,
+    "default/mongo/old": 1.6852469999548703,
+    "delta/postgres/latest": 1.5318030000344152,
+    "delta/postgres/old": 1.0614990000021862,
+    "delta/mongo/latest": 8.710099999916565,
+    "delta/mongo/old": 3.941298999961873
+   },
+   "state_compared": 24,
+   "state_mismatches": 0
+  },
+  "40": {
+   "n": 40,
+   "threads": 4,
+   "ms_median": {
+    "default/postgres/latest": 1.158307500020328,
+    "default/postgres/old": 0.8436729999630188,
+    "default/mongo/latest": 1.5429270000026918,
+    "default/mongo/old": 1.3442790000226523,
+    "delta/postgres/latest": 2.6901425000005474,
+    "delta/postgres/old": 1.7789510000056907,
+    "delta/mongo/latest": 39.43277049995686,
+    "delta/mongo/old": 12.728145500034316
+   },
+   "ms_max": {
+    "default/postgres/latest": 1.5947540000524896,
+    "default/postgres/old": 1.3548139999102204,
+    "default/mongo/latest": 1.9246980000389158,
+    "default/mongo/old": 5.403916999966896,
+    "delta/postgres/latest": 3.159349000043221,
+    "delta/postgres/old": 2.627019999977165,
+    "delta/mongo/latest": 41.64919299989833,
+    "delta/mongo/old": 14.319265999915842
+   },
+   "state_compared": 24,
+   "state_mismatches": 0
+  },
+  "100": {
+   "n": 100,
+   "threads": 4,
+   "ms_median": {
+    "default/postgres/latest": 2.0913689999702,
+    "default/postgres/old": 1.1861419999377176,
+    "default/mongo/latest": 2.2919044999980542,
+    "default/mongo/old": 1.49981299995261,
+    "delta/postgres/latest": 3.7167770000223754,
+    "delta/postgres/old": 2.284439500044755,
+    "delta/mongo/latest": 62.52232099996036,
+    "delta/mongo/old": 20.81088200003478
+   },
+   "ms_max": {
+    "default/postgres/latest": 2.3215680000703287,
+    "default/postgres/old": 1.329424999994444,
+    "default/mongo/latest": 2.7121530000613348,
+    "default/mongo/old": 1.5638930000250184,
+    "delta/postgres/latest": 5.15885699996943,
+    "delta/postgres/old": 2.478722999967431,
+    "delta/mongo/latest": 63.27095699998608,
+    "delta/mongo/old": 22.160305000056724
+   },
+   "state_compared": 24,
+   "state_mismatches": 0
+  },
+  "300": {
+   "n": 300,
+   "threads": 4,
+   "ms_median": {
+    "default/postgres/latest": 5.805808499985687,
+    "default/postgres/old": 1.8751879999854282,
+    "default/mongo/latest": 4.3720034999523705,
+    "default/mongo/old": 2.481754000029923,
+    "delta/postgres/latest": 7.4347974999682265,
+    "delta/postgres/old": 3.2372580000128437,
+    "delta/mongo/latest": 43.64952200000971,
+    "delta/mongo/old": 45.72206349996577
+   },
+   "ms_max": {
+    "default/postgres/latest": 6.15614999992431,
+    "default/postgres/old": 1.956619999987197,
+    "default/mongo/latest": 4.961961999924824,
+    "default/mongo/old": 2.9049519999944096,
+    "delta/postgres/latest": 9.834715000010874,
+    "delta/postgres/old": 3.7289109999392167,
+    "delta/mongo/latest": 51.608957999974336,
+    "delta/mongo/old": 56.30845500002124
+   },
+   "state_compared": 24,
+   "state_mismatches": 0
+  }
+ }
+}

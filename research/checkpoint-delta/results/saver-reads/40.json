@@ -1,0 +1,26 @@
+{
+ "n": 40,
+ "threads": 4,
+ "ms_median": {
+  "default/postgres/latest": 1.158307500020328,
+  "default/postgres/old": 0.8436729999630188,
+  "default/mongo/latest": 1.5429270000026918,
+  "default/mongo/old": 1.3442790000226523,
+  "delta/postgres/latest": 2.6901425000005474,
+  "delta/postgres/old": 1.7789510000056907,
+  "delta/mongo/latest": 39.43277049995686,
+  "delta/mongo/old": 12.728145500034316
+ },
+ "ms_max": {
+  "default/postgres/latest": 1.5947540000524896,
+  "default/postgres/old": 1.3548139999102204,
+  "default/mongo/latest": 1.9246980000389158,
+  "default/mongo/old": 5.403916999966896,
+  "delta/postgres/latest": 3.159349000043221,
+  "delta/postgres/old": 2.627019999977165,
+  "delta/mongo/latest": 41.64919299989833,
+  "delta/mongo/old": 14.319265999915842
+ },
+ "state_compared": 24,
+ "state_mismatches": 0
+}
