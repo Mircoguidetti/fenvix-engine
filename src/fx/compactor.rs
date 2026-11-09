@@ -59,6 +59,19 @@ pub static SERVER_ON: AtomicBool = AtomicBool::new(false);
 /// Small knobs for the judge's tiny databases (FENVIX_SEALED_COMPACTOR=small): reseals, merges and GC happen at all.
 pub static SERVER_SMALL: AtomicBool = AtomicBool::new(false);
 
+/// Process-wide counters of every compactor (serverStatus `fenvix.compactor`).
+pub static G_STARTED: AtomicU64 = AtomicU64::new(0);
+pub static G_PUBLISHES: AtomicU64 = AtomicU64::new(0);
+pub static G_ABSORBS: AtomicU64 = AtomicU64::new(0);
+pub static G_MERGES: AtomicU64 = AtomicU64::new(0);
+pub static G_RESEALS: AtomicU64 = AtomicU64::new(0);
+pub static G_ERRORS: AtomicU64 = AtomicU64::new(0);
+
+/// Compactors running now.
+pub fn active_count() -> usize {
+    ACTIVE.lock().unwrap().len()
+}
+
 static ACTIVE: std::sync::LazyLock<Mutex<HashSet<String>>> = std::sync::LazyLock::new(Default::default);
 
 /// Whether a compactor of this process runs on database `id` (today's compaction pass then leaves it alone).
@@ -363,6 +376,7 @@ impl Compactor {
         });
         t.fx_attach(Arc::clone(&sh));
         ACTIVE.lock().unwrap().insert(c.id().to_string());
+        G_STARTED.fetch_add(1, Relaxed);
         // L0 SSTs already at or below X_d (a restart) count as absorbed
         c.recognise_absorbed().await?;
         super::drop::start_slate(&c).await?;
@@ -443,6 +457,7 @@ impl Compactor {
                 self.drop.known_xd.fetch_max(next.x_d, Relaxed);
                 *self.sh.pending.lock().unwrap() = Some(next.clone());
                 self.sh.stats.publishes.fetch_add(1, Relaxed);
+                G_PUBLISHES.fetch_add(1, Relaxed);
                 Ok(Some(next))
             }
             Ok(Ok(false)) => {
@@ -638,6 +653,7 @@ impl Compactor {
             }
             self.drop.set_foldable(&a);
             self.sh.stats.absorbs.fetch_add(1, Relaxed);
+            G_ABSORBS.fetch_add(1, Relaxed);
             self.sh.stats.l0_absorbed.fetch_add(ids.len() as u64, Relaxed);
             self.sh.stats.absorbed_rows.fetch_add(rows.len() as u64, Relaxed);
             self.sh.stats.absorbed_raw.fetch_add(raw, Relaxed);
@@ -719,6 +735,7 @@ impl Compactor {
             .await?;
         if r.is_some() {
             self.sh.stats.merges.fetch_add(1, Relaxed);
+            G_MERGES.fetch_add(1, Relaxed);
         }
         Ok(r.is_some())
     }
@@ -897,6 +914,7 @@ impl Compactor {
         let Some(_) = r else { return Ok(false) };
         let st = &self.sh.stats;
         st.reseals.fetch_add(1, Relaxed);
+        G_RESEALS.fetch_add(1, Relaxed);
         st.reseal_raw_out.fetch_add(out_raw, Relaxed);
         if parts.len() > 1 {
             st.splits.fetch_add(1, Relaxed);
@@ -1104,6 +1122,7 @@ impl Compactor {
             if let Err(e) = r {
                 if e.downcast_ref::<super::LostRace>().is_none() && !c.stopped.load(Relaxed) {
                     c.sh.stats.errors.fetch_add(1, Relaxed);
+                    G_ERRORS.fetch_add(1, Relaxed);
                     eprintln!("fx compactor {}: {prio:?} job: {e:#}", c.id());
                 }
             }

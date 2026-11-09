@@ -1,0 +1,4 @@
+judge/out/2b58afa/kill.log:s3 durable 0 {'secs': 15.0, 'acked_ids': 21201, 'acked_writes_before_kill': 42368, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.149}
+judge/out/2b58afa/kill.log:TOTAL s3 durable {'acked_ids': 21201, 'lost_inserts': 0, 'lost_updates': 0}
+judge/out/2b58afa-sealed2/kill.log:s3 durable 0 {'secs': 15.0, 'acked_ids': 21885, 'acked_writes_before_kill': 43727, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.142}
+judge/out/2b58afa-sealed2/kill.log:TOTAL s3 durable {'acked_ids': 21885, 'lost_inserts': 0, 'lost_updates': 0}
