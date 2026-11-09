@@ -1,0 +1,10 @@
+M1-trim-drops-last-relied-row {'slices_are_exact_under_writes_and_reseals': 'CAUGHT', 'staged_publish_keeps_hot_customers_warm_across_a_reseal': 'missed', 'model_publish_every_100_ops_with_crashes': 'CAUGHT'}
+M2-trim-claims-rows-below {'slices_are_exact_under_writes_and_reseals': 'CAUGHT', 'staged_publish_keeps_hot_customers_warm_across_a_reseal': 'missed', 'model_publish_every_100_ops_with_crashes': 'CAUGHT'}
+M3-trim-claims-rows-above {'slices_are_exact_under_writes_and_reseals': 'CAUGHT', 'staged_publish_keeps_hot_customers_warm_across_a_reseal': 'missed', 'model_publish_every_100_ops_with_crashes': 'CAUGHT'}
+M4-slice-crosses-customer {'slices_are_exact_under_writes_and_reseals': 'CAUGHT', 'staged_publish_keeps_hot_customers_warm_across_a_reseal': 'missed', 'model_publish_every_100_ops_with_crashes': 'CAUGHT'}
+M5-part-not-clipped {'slices_are_exact_under_writes_and_reseals': 'CAUGHT', 'staged_publish_keeps_hot_customers_warm_across_a_reseal': 'missed', 'model_publish_every_100_ops_with_crashes': 'CAUGHT'}
+M6-down-ignores-top {'slices_are_exact_under_writes_and_reseals': 'CAUGHT', 'staged_publish_keeps_hot_customers_warm_across_a_reseal': 'missed', 'model_publish_every_100_ops_with_crashes': 'CAUGHT'}
+M7-staged-claims-rows-below {'slices_are_exact_under_writes_and_reseals': 'CAUGHT', 'staged_publish_keeps_hot_customers_warm_across_a_reseal': 'missed', 'model_publish_every_100_ops_with_crashes': 'CAUGHT'}
+M8-no-refetch-past-trim {'slices_are_exact_under_writes_and_reseals': 'CAUGHT', 'staged_publish_keeps_hot_customers_warm_across_a_reseal': 'missed', 'model_publish_every_100_ops_with_crashes': 'CAUGHT'}
+M9-filter-says-no-to-present {'slices_are_exact_under_writes_and_reseals': 'missed', 'staged_publish_keeps_hot_customers_warm_across_a_reseal': 'missed', 'model_publish_every_100_ops_with_crashes': 'CAUGHT'}
+DONE

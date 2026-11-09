@@ -24,6 +24,8 @@ pub mod view;
 #[cfg(test)]
 mod counter_bench;
 #[cfg(test)]
+mod review_tests;
+#[cfg(test)]
 mod counter_tests;
 #[cfg(test)]
 mod tests;

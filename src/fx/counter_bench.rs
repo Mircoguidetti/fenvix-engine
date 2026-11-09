@@ -29,32 +29,32 @@ use std::collections::{HashMap, HashSet};
 use std::sync::atomic::Ordering::Relaxed;
 use std::sync::Arc;
 
-fn env(k: &str, d: u64) -> u64 {
+pub(super) fn env(k: &str, d: u64) -> u64 {
     std::env::var(k).ok().and_then(|v| v.parse().ok()).unwrap_or(d)
 }
 
-fn comp(c: usize) -> Vec<u8> {
+pub(super) fn comp(c: usize) -> Vec<u8> {
     let name = format!("user{c:07}");
     let mut k = vec![name.len() as u8];
     k.extend(name.as_bytes());
     k
 }
 
-fn pre(c: usize) -> Vec<u8> {
+pub(super) fn pre(c: usize) -> Vec<u8> {
     let mut k = b"u/".to_vec();
     k.extend(comp(c));
     k.extend(b"messages/");
     k
 }
 
-fn doc_key(c: usize, n: u64) -> Vec<u8> {
+pub(super) fn doc_key(c: usize, n: u64) -> Vec<u8> {
     let mut k = pre(c);
     k.extend(b"d/");
     k.extend(n.to_be_bytes());
     k
 }
 
-fn idx_key(c: usize, n: u64) -> Vec<u8> {
+pub(super) fn idx_key(c: usize, n: u64) -> Vec<u8> {
     let mut k = pre(c);
     k.extend(b"x/ts/");
     k.extend(n.to_be_bytes());
@@ -63,7 +63,7 @@ fn idx_key(c: usize, n: u64) -> Vec<u8> {
 }
 
 /// The document of message n of customer c: about 470 bytes, text-like (lz4 about 2x, like the chat bench).
-fn body(c: usize, n: u64) -> Vec<u8> {
+pub(super) fn body(c: usize, n: u64) -> Vec<u8> {
     const WORDS: [&str; 16] = ["hello", "agent", "memory", "step", "thread", "the", "user", "said", "tool", "call", "result", "and", "then", "plan", "reply", "ok"];
     let mut r = StdRng::seed_from_u64(n ^ ((c as u64) << 40));
     let mut v = format!("{{u:{c},n:{n},text:\"").into_bytes();
@@ -75,12 +75,12 @@ fn body(c: usize, n: u64) -> Vec<u8> {
     v
 }
 
-struct Zipf {
+pub(super) struct Zipf {
     cdf: Vec<f64>,
 }
 
 impl Zipf {
-    fn new(n: usize) -> Zipf {
+    pub(super) fn new(n: usize) -> Zipf {
         let mut cdf = Vec::with_capacity(n);
         let mut s = 0.0;
         for i in 0..n {
@@ -92,21 +92,21 @@ impl Zipf {
         }
         Zipf { cdf }
     }
-    fn sample(&self, r: &mut StdRng) -> usize {
+    pub(super) fn sample(&self, r: &mut StdRng) -> usize {
         let u: f64 = r.gen();
         self.cdf.partition_point(|&x| x < u).min(self.cdf.len() - 1)
     }
 }
 
 /// The dataset: per customer, its message numbers in time order.
-struct Data {
-    users: usize,
-    msgs: Vec<Vec<u64>>,
-    next: u64,
-    raw: u64,
+pub(super) struct Data {
+    pub(super) users: usize,
+    pub(super) msgs: Vec<Vec<u64>>,
+    pub(super) next: u64,
+    pub(super) raw: u64,
 }
 
-async fn load(t: &mut Tenant, store: &Arc<dyn ObjectStore>, id: &str, mb: u64, users: usize, seed: u64) -> Data {
+pub(super) async fn load(t: &mut Tenant, store: &Arc<dyn ObjectStore>, id: &str, mb: u64, users: usize, seed: u64) -> Data {
     let z = Zipf::new(users);
     let mut r = StdRng::seed_from_u64(seed);
     // user ids shuffled, so the heavy users are spread over the key space
@@ -140,7 +140,7 @@ async fn load(t: &mut Tenant, store: &Arc<dyn ObjectStore>, id: &str, mb: u64, u
 }
 
 /// The 20 newest messages of customer c, checked against the data. Returns true when the read needed a GET on our runs.
-async fn newest(t: &Tenant, d: &Data, c: usize) -> bool {
+pub(super) async fn newest(t: &Tenant, d: &Data, c: usize) -> bool {
     let g0 = view::RUN_GETS.load(Relaxed);
     let mut lo = pre(c);
     lo.extend(b"x/ts/");
@@ -156,7 +156,7 @@ async fn newest(t: &Tenant, d: &Data, c: usize) -> bool {
     view::RUN_GETS.load(Relaxed) > g0
 }
 
-fn hot_set(d: &Data, k: usize, r: &mut StdRng) -> Vec<usize> {
+pub(super) fn hot_set(d: &Data, k: usize, r: &mut StdRng) -> Vec<usize> {
     // half by activity (a random message's author), half uniformly, distinct, only customers with a message
     let all: Vec<(usize, u64)> = d.msgs.iter().enumerate().flat_map(|(c, v)| v.iter().map(move |n| (c, *n))).collect();
     let mut out = Vec::new();
@@ -176,7 +176,7 @@ fn hot_set(d: &Data, k: usize, r: &mut StdRng) -> Vec<usize> {
     out
 }
 
-fn pct(v: &mut [f64], p: f64) -> f64 {
+pub(super) fn pct(v: &mut [f64], p: f64) -> f64 {
     v.sort_by(|a, b| a.partial_cmp(b).unwrap());
     if v.is_empty() {
         return 0.0;
@@ -184,11 +184,11 @@ fn pct(v: &mut [f64], p: f64) -> f64 {
     v[((v.len() - 1) as f64 * p).round() as usize]
 }
 
-fn opts(reseal: Reseal, block_kb: u64) -> BuildOpts {
+pub(super) fn opts(reseal: Reseal, block_kb: u64) -> BuildOpts {
     BuildOpts { reseal, sealed: RunOptions::unchecked((block_kb as usize) << 10, 16 << 20, CustomerKind::V2), delta: RunOptions::unchecked(64 << 10, 16 << 20, CustomerKind::V2), ..Default::default() }
 }
 
-fn write_out(v: serde_json::Value) {
+pub(super) fn write_out(v: serde_json::Value) {
     eprintln!("{}", serde_json::to_string_pretty(&v).unwrap());
     if let Ok(p) = std::env::var("CB_OUT") {
         std::fs::write(p, serde_json::to_string_pretty(&v).unwrap()).unwrap();
