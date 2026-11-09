@@ -10,9 +10,9 @@ use anyhow::{ensure, Result};
 use bytes::Bytes;
 use object_store::path::Path;
 use object_store::ObjectStore;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 /// Bytes of decoded run blocks kept in RAM, shared by every database of the process (`--sealed-cache-mb`).
 pub static CACHE_BYTES: AtomicU64 = AtomicU64::new(256 << 20);
@@ -48,58 +48,9 @@ fn above_cut(seq: u64, x_g: u64) -> bool {
     seq > x_g
 }
 
-type BKey = ([u8; RUN_ID_LEN], u32);
-
-/// A byte-bounded LRU of decoded blocks, keyed by (run id, block), so versions that share a run share its blocks.
-struct Cache {
-    used: usize,
-    tick: u64,
-    map: HashMap<BKey, (Arc<Block>, u64)>,
-    order: BTreeMap<u64, BKey>,
-}
-
-static CACHE: Mutex<Option<Cache>> = Mutex::new(None);
-
-fn cache_get(k: &BKey) -> Option<Arc<Block>> {
-    let mut g = CACHE.lock().unwrap();
-    let c = g.as_mut()?;
-    c.tick += 1;
-    let t = c.tick;
-    let (b, old) = c.map.get_mut(k)?;
-    let b = b.clone();
-    let o = std::mem::replace(old, t);
-    c.order.remove(&o);
-    c.order.insert(t, *k);
-    Some(b)
-}
-
-fn cache_put(k: BKey, b: Arc<Block>) {
-    let cap = CACHE_BYTES.load(Relaxed) as usize;
-    if cap == 0 {
-        return;
-    }
-    let mut g = CACHE.lock().unwrap();
-    let c = g.get_or_insert_with(|| Cache { used: 0, tick: 0, map: HashMap::new(), order: BTreeMap::new() });
-    c.tick += 1;
-    if let Some((old, t)) = c.map.remove(&k) {
-        c.order.remove(&t);
-        c.used -= old.mem_bytes();
-    }
-    c.used += b.mem_bytes();
-    c.map.insert(k, (b, c.tick));
-    c.order.insert(c.tick, k);
-    while c.used > cap && c.order.len() > 1 {
-        let (&t, &victim) = c.order.iter().next().unwrap();
-        c.order.remove(&t);
-        if let Some((old, _)) = c.map.remove(&victim) {
-            c.used -= old.mem_bytes();
-        }
-    }
-}
-
-/// Drop every cached block (tests that count GETs).
+/// Drop every cached block and slice (tests that count GETs).
 pub fn clear_cache() {
-    *CACHE.lock().unwrap() = None;
+    super::counter::clear();
 }
 
 /// One run of a version: its manifest line, and the opened run (footer, fence, filter) once a read needed it.
@@ -139,27 +90,8 @@ impl RunH {
     }
 }
 
-/// Blocks first..=last of a run: cached ones from the cache, the others in one range GET.
-async fn fetch(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, last: usize) -> Result<Vec<Arc<Block>>> {
-    let mut out: Vec<Option<Arc<Block>>> = (first..=last).map(|b| cache_get(&(run.run_id, b as u32))).collect();
-    let hits = out.iter().filter(|b| b.is_some()).count();
-    BLOCK_HITS.fetch_add(hits as u64, Relaxed);
-    let miss: Vec<usize> = (first..=last).filter(|b| out[b - first].is_none()).collect();
-    if let (Some(&a), Some(&z)) = (miss.first(), miss.last()) {
-        let (lo, hi) = run.fence.range(a, z);
-        let data = runfmt::get_range(store, &run.path, lo, hi).await?;
-        RUN_GETS.fetch_add(1, Relaxed);
-        for b in a..=z {
-            if out[b - first].is_some() {
-                continue;
-            }
-            let (x, y) = run.fence.range(b, b);
-            let blk = Arc::new(runfmt::decode_checked(run, b, &data[(x - lo) as usize..(y - lo) as usize])?);
-            cache_put((run.run_id, b as u32), blk.clone());
-            out[b - first] = Some(blk);
-        }
-    }
-    Ok(out.into_iter().map(|b| b.expect("block fetched")).collect())
+async fn fetch(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, last: usize, prefix: Option<&[u8]>) -> Result<Vec<Arc<Block>>> {
+    super::counter::fetch(store, run, first, last, prefix).await
 }
 
 /// A row from our runs: seq and envelope (first byte 0 live, 1 deleted). A point read leaves `key` empty (the caller
@@ -191,7 +123,10 @@ async fn run_get(store: &Arc<dyn ObjectStore>, h: &RunH, key: &[u8]) -> Result<O
     }
     let run = h.open(store).await?;
     if let Some(r) = run.customers.customer_of(key) {
+        // the new-user filter: a customer the run has no row of costs no GET
+        super::counter::FILTER_CHECKS.fetch_add(1, Relaxed);
         if !run.filter.may_contain(&key[r]) {
+            super::counter::FILTER_SKIPS.fetch_add(1, Relaxed);
             return Ok(None);
         }
     }
@@ -199,14 +134,9 @@ async fn run_get(store: &Arc<dyn ObjectStore>, h: &RunH, key: &[u8]) -> Result<O
     if i == 0 {
         return Ok(None);
     }
-    // a point read needs one block: probe the cache directly before the general fetch
-    let b = match cache_get(&(run.run_id, (i - 1) as u32)) {
-        Some(b) => {
-            BLOCK_HITS.fetch_add(1, Relaxed);
-            b
-        }
-        None => fetch(store, run, i - 1, i - 1).await?.pop().unwrap(),
-    };
+    // a point read needs one block (or its slice of the key's area)
+    let p = super::counter::point_prefix(run.customers, key, super::counter::slice_mode());
+    let b = fetch(store, run, i - 1, i - 1, p.as_deref()).await?.pop().unwrap();
     let j = b.lower_bound(key);
     Ok((j < b.len() && b.key(j) == key).then(|| RRow { key: Vec::new(), seq: b.seq(j), env: b.env(j).to_vec() }))
 }
@@ -326,11 +256,13 @@ struct RunCur {
     buf: std::collections::VecDeque<(Arc<Block>, usize, usize)>,
     head: Option<RRow>,
     started: bool,
+    /// what fetched blocks are cut to (`counter.rs`): None, whole blocks
+    prefix: Option<Vec<u8>>,
 }
 
 impl RunCur {
     fn new(h: Arc<RunH>, lo: &[u8], hi: Option<&[u8]>, reverse: bool, read_ahead: usize) -> RunCur {
-        RunCur { h, lo: lo.to_vec(), hi: hi.map(|x| x.to_vec()), reverse, blocks: None, per_fetch: read_ahead, buf: Default::default(), head: None, started: false }
+        RunCur { h, lo: lo.to_vec(), hi: hi.map(|x| x.to_vec()), reverse, blocks: None, per_fetch: read_ahead, buf: Default::default(), head: None, started: false, prefix: None }
     }
 
     async fn peek(&mut self, store: &Arc<dyn ObjectStore>) -> Result<Option<&RRow>> {
@@ -366,6 +298,17 @@ impl RunCur {
                 // blocks per GET from the caller's read-ahead bytes
                 self.per_fetch = (self.per_fetch / (run.block_bytes.max(1) as usize)).clamp(1, 64);
                 self.blocks = run.fence.blocks_for(&self.lo, self.hi.as_deref()).map(|(a, z)| if self.reverse { (z, a) } else { (a, z) });
+                // a read inside one customer: the new-user filter first, then fetched blocks are cut to the read's area
+                if let Some(r) = run.customers.customer_of(&self.lo) {
+                    if super::counter::slice_prefix(run.customers, &self.lo, self.hi.as_deref(), super::counter::SliceMode::Customer).is_some() {
+                        super::counter::FILTER_CHECKS.fetch_add(1, Relaxed);
+                        if !run.filter.may_contain(&self.lo[r]) {
+                            super::counter::FILTER_SKIPS.fetch_add(1, Relaxed);
+                            self.blocks = None;
+                        }
+                    }
+                }
+                self.prefix = super::counter::slice_prefix(run.customers, &self.lo, self.hi.as_deref(), super::counter::slice_mode());
             }
             let Some((next, end)) = self.blocks else { return Ok(None) };
             let (a, z, rest) = if self.reverse {
@@ -376,7 +319,7 @@ impl RunCur {
                 (next, z, if z < end { Some((z + 1, end)) } else { None })
             };
             self.blocks = rest;
-            let got = fetch(store, &run, a, z).await?;
+            let got = fetch(store, &run, a, z, self.prefix.as_deref()).await?;
             let mut parts: Vec<(Arc<Block>, usize, usize)> = got
                 .into_iter()
                 .map(|b| {

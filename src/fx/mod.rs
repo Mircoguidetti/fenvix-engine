@@ -6,6 +6,8 @@
 //!   transaction snapshot; the control layer's raw readers.
 //! - `hold.rs`: holds on a version (the drop floor of step 4, the hold life).
 //! - `build.rs`: sealed and delta runs built offline from a loaded database (step 3; the compactor is step 4).
+//! - `counter.rs`: the waiter's cache of our runs: physical slices, the new-user filter's counters, the staged publish
+//!   of a reseal (step 6).
 //!
 //! Off by default (`--sealed-runs`). With it off, no code here runs and the server reads SlateDB as before. With it on, a
 //! database reads through the merged reader once it has a published version.
@@ -14,10 +16,13 @@
 //! `judge/raw_readers.sh` (plan round 2, fix 3, and its review).
 
 pub mod build;
+pub mod counter;
 pub mod hold;
 pub mod manifest;
 pub mod read;
 pub mod view;
+#[cfg(test)]
+mod counter_tests;
 #[cfg(test)]
 mod tests;
 
