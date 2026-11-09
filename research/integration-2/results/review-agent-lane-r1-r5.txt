@@ -1,0 +1,11 @@
+off r1_log_read_your_writes (code 0, 2 s): RESULT r1_log_read_your_writes n=100 misses={'point': 0, 'index': 0, 'range': 0, 'count': 0, 'aggregate': 0, 'update': 0, 'delete': 0, 'txn': 0, 'in_txn': 0} -> PASS
+off r2_visible_before_durable (code 0, 55 s): RESULT r2_visible_before_durable rounds=5 majority_reads_of_unacked=0 events_of_unacked=0 seen_then_lost=0 -> PASS
+off r3_spare_cache_after_drop (code 0, 10 s): RESULT r3_spare_cache_after_drop dropped_documents_back=0 acknowledged_missing=0 -> PASS
+off r4_spare_takeover_log_records (code 0, 44 s): RESULT r4_spare_takeover_log_records acked=200 missing_on_spare=0 -> PASS
+off r5_log_visible_before_durable (code 0, 26 s): RESULT r5_log_visible_before_durable rounds=3 majority_reads_of_unacked=0 seen_then_lost=0 -> PASS
+sealed2 r1_log_read_your_writes (code 0, 3 s): RESULT r1_log_read_your_writes n=100 misses={'point': 0, 'index': 0, 'range': 0, 'count': 0, 'aggregate': 0, 'update': 0, 'delete': 0, 'txn': 0, 'in_txn': 0} -> PASS
+sealed2 r2_visible_before_durable (code 0, 55 s): RESULT r2_visible_before_durable rounds=5 majority_reads_of_unacked=0 events_of_unacked=0 seen_then_lost=0 -> PASS
+sealed2 r3_spare_cache_after_drop (code 0, 10 s): RESULT r3_spare_cache_after_drop dropped_documents_back=0 acknowledged_missing=0 -> PASS
+sealed2 r4_spare_takeover_log_records (code 0, 43 s): RESULT r4_spare_takeover_log_records acked=200 missing_on_spare=0 -> PASS
+sealed2 r5_log_visible_before_durable (code 0, 23 s): RESULT r5_log_visible_before_durable rounds=3 majority_reads_of_unacked=0 seen_then_lost=0 -> PASS
+R_DONE

@@ -1,0 +1,4 @@
+binary mongo-server, server flags: --first-course-max-kb 64 --local-log-dir /tmp/claude-0/-home-user/3cf4561b-abdb-5f63-90d8-a484ae36730d/scratchpad/fclog-d --local-log-upload-secs 60, stress flags: --rounds 60 --users 40 --expect-wrong
+checks 2652, wrong 446; served queries 1177, partial 397, missed 6, no opening 106, kept 1559, unkeepable 127, trimmed 0, dropped 0, writes applied 0, forgotten 0; reads served from openings 131148, missed 26000
+NEGATIVE CONTROL PASS: wrong answers found
+firstCourse at the end: {'enabled': True, 'openings': 39, 'bytes': 1570852, 'pending': 0, 'evictedPending': 0, 'droppedPendingTooBig': 0, 'firstQueries': 1686, 'servedQueries': 1177, 'partialQueries': 397, 'missedQueries': 6, 'noOpening': 106, 'notDurable': 0, 'servedReads': 131148, 'missedReads': 26000, 'kept': 1559, 'unkeepable': 127, 'trimmed': 0, 'droppedTooBig': 0, 'evicted': 0, 'expired': 0, 'forgotten': 0, 'writesApplied': 0, 'writeHookNs': 0, 'recordNs': 44825096}

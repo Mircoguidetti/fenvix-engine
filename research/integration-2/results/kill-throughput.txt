@@ -1,0 +1,15 @@
+off trial 1: s3 durable 0 {'secs': 15.0, 'acked_ids': 21399, 'acked_writes_before_kill': 42742, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.116}
+off trial 2: s3 durable 0 {'secs': 15.0, 'acked_ids': 22913, 'acked_writes_before_kill': 45782, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.119}
+off trial 3: s3 durable 0 {'secs': 15.0, 'acked_ids': 22025, 'acked_writes_before_kill': 44013, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.118}
+sealed2 trial 1: s3 durable 0 {'secs': 15.0, 'acked_ids': 899, 'acked_writes_before_kill': 1781, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.993}
+sealed2 trial 2: s3 durable 0 {'secs': 15.0, 'acked_ids': 916, 'acked_writes_before_kill': 1815, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.994}
+sealed2 trial 3: s3 durable 0 {'secs': 15.0, 'acked_ids': 896, 'acked_writes_before_kill': 1771, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.993}
+sealed10 trial 1: s3 durable 0 {'secs': 15.0, 'acked_ids': 3214, 'acked_writes_before_kill': 6416, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.225}
+sealed10 trial 2: s3 durable 0 {'secs': 15.0, 'acked_ids': 3233, 'acked_writes_before_kill': 6447, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.223}
+sealed10 trial 3: s3 durable 0 {'secs': 15.0, 'acked_ids': 3267, 'acked_writes_before_kill': 6517, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.23}
+sealed50 trial 1: s3 durable 0 {'secs': 15.0, 'acked_ids': 8302, 'acked_writes_before_kill': 16588, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.124}
+sealed50 trial 2: s3 durable 0 {'secs': 15.0, 'acked_ids': 7883, 'acked_writes_before_kill': 15751, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.123}
+sealed50 trial 3: s3 durable 0 {'secs': 15.0, 'acked_ids': 8503, 'acked_writes_before_kill': 16984, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.123}
+sealed0 trial 1: s3 durable 0 {'secs': 15.0, 'acked_ids': 23587, 'acked_writes_before_kill': 47133, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.111}
+sealed0 trial 2: s3 durable 0 {'secs': 15.0, 'acked_ids': 21221, 'acked_writes_before_kill': 42408, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.112}
+sealed0 trial 3: s3 durable 0 {'secs': 15.0, 'acked_ids': 22544, 'acked_writes_before_kill': 45067, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.116}

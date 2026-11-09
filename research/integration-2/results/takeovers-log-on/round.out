@@ -1,0 +1,18 @@
+== 0. docker image of the machines, MinIO
+== 1. fake Atlas and the shrunk kitchen (fake_atlas.sh)
+== round takeovers-on: {"mode": "run", "data": "atlas", "log": "m7i.large", "phases": ["load", "measure", "extras"], "pantry": "new", "programs": ["takeovers"], "takeovers_args": "--n 50 --writers 8 --between-s 3 --lease-ttl 4 --log on", "ceiling_min": 150}
+mode=run
+engine=integration
+data=atlas
+pantry_mode=new
+vcpu_peak=10
+vcpu_peaks={'load': 8, 'measure (m30)': 6, 'extras': 10}
+x86=1
+arm=0
+run.py: code 0 in 1618 s; outcome: FINITO; {"load": "LOADED", "client": "LOADED_ONLY", "extras": "takeovers:rc=0"}
+2026-11-09T18:22:20Z SPESA: 0.91 $ so far at 26 minutes (upper bound; machines 0.24 $, alive: none; S3 0.67 $ from the servers' counters, storage and margin), cap 5.00 $
+teardown: code 0
+secrets check: no secret in the files (2 pieces searched, password included)
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+total time: 1647 s
