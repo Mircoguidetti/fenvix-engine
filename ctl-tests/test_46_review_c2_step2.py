@@ -299,7 +299,7 @@ def test_export_and_restore_across_the_envelope_boundary():
         assert c.admin.command("serverStatus")["fenvix"]["envelopes"]["start"] is False
     finally:
         a.term()
-    b = Server(bucket, "revenv-e1", idle=600, extra=ret + ["--envelopes", "write"]).start()
+    b = Server(bucket, "revenv-e1", idle=600, extra=ret + ["--envelopes", "write", "--sealed-e1-wait-ms", "0"]).start()
     try:
         c = b.client()
         assert (_model_docs(c.e.k), _model_docs(c.e.p)) == s0
@@ -401,7 +401,7 @@ def test_fork_across_the_envelope_boundary(mode):
         c.s.command("tenantAdmin", close=True)
     finally:
         a.term()
-    b = Server(bucket, "revfork-e1", idle=600, extra=["--memtable-max-mb", "1", "--envelopes", "write"]).start()
+    b = Server(bucket, "revfork-e1", idle=600, extra=["--memtable-max-mb", "1", "--envelopes", "write", "--sealed-e1-wait-ms", "0"]).start()
     try:
         c = b.client()
         st, res = b.admin.post("/v1/databases/s/fork", {"target": "f", "mode": mode})

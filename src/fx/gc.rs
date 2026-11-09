@@ -2,8 +2,8 @@
 //!
 //! What a database keeps, decided from the store, never from what a publisher believes (rule 17):
 //! - versions: the newest; every version published within the retention window (restore points, 7 days by default);
-//!   every version a checkpoint pair (`fx/pairs/*`), a reference (`fx/refs/*`) or the checkpoint lease (`fx/drop-lease`)
-//!   names; and every version from the oldest one this process holds or serves. Other versions are deleted;
+//!   every version a checkpoint pair (`fx/pairs/*`) or a reference (`fx/refs/*`) names (and nothing at all is deleted
+//!   while a checkpoint holds the drop lease: the lease names no version); and every version from the oldest one this process holds or serves. Other versions are deleted;
 //! - runs: every run listed by a kept version, plus the runs a reference lists by path (a fork's first manifest lists
 //!   its parent's runs; the parent keeps them through the fork's reference object, rule 30).
 //!
@@ -30,6 +30,10 @@ pub struct GcState {
     first_unref: Mutex<HashMap<String, Instant>>,
     /// Runs listed by each version (versions never change).
     listed: Mutex<HashMap<u64, (Vec<String>, u64)>>,
+    /// FIX 4: the newest version listed, the versions listed and not loaded yet, versions loaded (diagnostics).
+    listed_upto: AtomicU64,
+    to_load: Mutex<std::collections::VecDeque<u64>>,
+    pub versions_loaded: AtomicU64,
     pub runs_deleted: AtomicU64,
     pub versions_deleted: AtomicU64,
     pub local_deleted: AtomicU64,
@@ -50,7 +54,6 @@ pub async fn references(store: &Arc<dyn ObjectStore>, id: &str) -> Result<(HashS
         let metas: Vec<_> = store.list(Some(&Path::from(format!("{root}/{d}")))).try_collect().await?;
         objs.extend(metas.into_iter().map(|m| m.location));
     }
-    objs.push(Path::from(format!("{root}/drop-lease")));
     for p in objs {
         let b = match store.get(&p).await {
             Ok(r) => r.bytes().await?,
@@ -68,13 +71,54 @@ pub async fn references(store: &Arc<dyn ObjectStore>, id: &str) -> Result<(HashS
     Ok((versions, runs))
 }
 
+/// Versions GC loads per pass at most (a restart with a week of versions spreads its loads over passes).
+pub const GC_LOAD_PER_PASS: usize = 200;
+
 /// One GC pass of a database.
 pub async fn gc_once(c: &Compactor) -> Result<()> {
     let store = &c.store;
     let id = c.id();
     let st = &c.gc;
-    let versions = manifest::list_versions(store, id).await?;
+    // FIX 4 of the review: list only after the newest version listed so far, and load at most `GC_LOAD_PER_PASS` new
+    // versions per pass; until every listed version is loaded, this pass deletes nothing (GC must know every run a
+    // retained version lists). The versions are then the loaded ones (`listed`), minus those GC itself deleted.
+    let fresh = manifest::list_versions_after(store, id, st.listed_upto.load(Relaxed)).await?;
+    if let Some(&m) = fresh.last() {
+        st.listed_upto.fetch_max(m, Relaxed);
+    }
+    st.to_load.lock().unwrap().extend(fresh);
+    let mut loaded_now = 0;
+    loop {
+        let next = st.to_load.lock().unwrap().pop_front();
+        let Some(n) = next else { break };
+        match manifest::load(store, id, n).await {
+            Ok(v) => {
+                st.listed.lock().unwrap().insert(n, (runs_of(&v), v.published_ms));
+                st.versions_loaded.fetch_add(1, Relaxed);
+            }
+            Err(_) => {} // deleted meanwhile
+        }
+        loaded_now += 1;
+        if loaded_now >= GC_LOAD_PER_PASS {
+            break;
+        }
+    }
+    if !st.to_load.lock().unwrap().is_empty() {
+        st.passes.fetch_add(1, Relaxed);
+        return Ok(());
+    }
+    let versions: Vec<u64> = {
+        let mut v: Vec<u64> = st.listed.lock().unwrap().keys().copied().collect();
+        v.sort_unstable();
+        v
+    };
     let Some(&newest) = versions.last() else { return Ok(()) };
+    // rule 19: while a checkpoint holds the drop lease, the version it will pair with is not named anywhere yet (the lease
+    // names none, step 7a's format): GC deletes nothing until the lease ends (review of step 4, FIX 1)
+    if super::pair::lease_held(store, id).await? {
+        st.passes.fetch_add(1, Relaxed);
+        return Ok(());
+    }
     let (ref_versions, ref_runs) = references(store, id).await?;
     let retention = c.knobs.version_retention.as_millis() as u64;
     let now_ms = manifest::now_ms();
@@ -92,15 +136,7 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
     }
     let mut referenced: HashSet<String> = ref_runs;
     for &n in &versions {
-        let cached = st.listed.lock().unwrap().get(&n).cloned();
-        let (runs, stamp) = match cached {
-            Some(x) => x,
-            None => match manifest::load(store, id, n).await {
-                Ok(v) => (runs_of(&v), v.published_ms),
-                Err(_) => continue, // deleted meanwhile
-            },
-        };
-        st.listed.lock().unwrap().insert(n, (runs.clone(), stamp));
+        let Some((runs, stamp)) = st.listed.lock().unwrap().get(&n).cloned() else { continue };
         let young = retention > 0 && now_ms.saturating_sub(stamp) < retention;
         if n >= floor_v || ref_versions.contains(&n) || young {
             referenced.extend(runs);

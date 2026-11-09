@@ -1235,6 +1235,8 @@ impl LazyRun {
 /// A sequential scan of one run's rows in [lo, hi), several blocks per GET, bypassing the read cache.
 struct Scan {
     store: Arc<dyn ObjectStore>,
+    /// The object store's copy, when `store` is the NVMe copy: any error there falls back to it (FIX 3 of the review).
+    primary: Option<Arc<dyn ObjectStore>>,
     run: Arc<Run>,
     next: usize,
     end: usize,
@@ -1258,16 +1260,18 @@ impl Scan {
                 }
             }
         }
+        let local = opened.is_some();
         let (run, st) = match opened {
             Some(x) => x,
             None => (Run::open_expecting(store, path, line.size, &id).await.with_context(|| format!("run {}", line.path))?.0, Arc::clone(store)),
         };
+        let primary = local.then(|| Arc::clone(store));
         let (next, end) = match run.fence.blocks_for(lo.unwrap_or(&[]), hi) {
             Some((a, z)) => (a, z + 1),
             None => (0, 0),
         };
         let per = (read_ahead / (run.block_bytes.max(1) as usize)).clamp(1, 256);
-        Ok(Scan { store: st, run: Arc::new(run), next, end, per, lo: lo.map(|x| x.to_vec()), hi: hi.map(|x| x.to_vec()), buf: VecDeque::new(), from_sealed })
+        Ok(Scan { store: st, primary, run: Arc::new(run), next, end, per, lo: lo.map(|x| x.to_vec()), hi: hi.map(|x| x.to_vec()), buf: VecDeque::new(), from_sealed })
     }
 
     async fn next(&mut self, st: &Stats) -> Result<Option<Row>> {
@@ -1279,12 +1283,21 @@ impl Scan {
                 return Ok(None);
             }
             let z = (self.next + self.per).min(self.end) - 1;
-            let (lo, hi) = self.run.fence.range(self.next, z);
-            let data = runfmt::get_range(&self.store, &self.run.path, lo, hi).await?;
-            st.run_read_bytes.fetch_add(data.len() as u64, Relaxed);
-            for b in self.next..=z {
-                let (x, y) = self.run.fence.range(b, b);
-                let blk = runfmt::decode_checked(&self.run, b, &data[(x - lo) as usize..(y - lo) as usize])?;
+            let blocks = match self.read_blocks(z, st).await {
+                Ok(b) => b,
+                Err(e) => match self.primary.take() {
+                    // a damaged NVMe copy: drop it and read the store's copy (the copy is a cache, FIX 3)
+                    Some(p) if !scan_control_no_fallback() => {
+                        let _ = object_store::ObjectStoreExt::delete(&*self.store, &self.run.path).await;
+                        LOCAL_FALLBACKS.fetch_add(1, Relaxed);
+                        self.store = p;
+                        self.read_blocks(z, st).await?
+                    }
+                    _ => return Err(e),
+                },
+            };
+            for (b, blk) in (self.next..=z).zip(blocks) {
+                let _ = b;
                 for i in 0..blk.len() {
                     let k = blk.key(i);
                     if self.lo.as_ref().is_some_and(|l| k < &l[..]) || self.hi.as_ref().is_some_and(|h| k >= &h[..]) {
@@ -1296,6 +1309,33 @@ impl Scan {
             self.next = z + 1;
         }
     }
+
+    async fn read_blocks(&self, z: usize, st: &Stats) -> Result<Vec<runfmt::Block>> {
+        let (lo, hi) = self.run.fence.range(self.next, z);
+        let data = runfmt::get_range(&self.store, &self.run.path, lo, hi).await?;
+        st.run_read_bytes.fetch_add(data.len() as u64, Relaxed);
+        let mut out = Vec::with_capacity(z + 1 - self.next);
+        for b in self.next..=z {
+            let (x, y) = self.run.fence.range(b, b);
+            out.push(runfmt::decode_checked(&self.run, b, &data[(x - lo) as usize..(y - lo) as usize])?);
+        }
+        Ok(out)
+    }
+}
+
+/// Jobs that fell back from a damaged NVMe copy to the store.
+pub static LOCAL_FALLBACKS: AtomicU64 = AtomicU64::new(0);
+
+/// Negative control of FIX 3, tests only: the jobs' reader does not fall back.
+#[cfg(test)]
+pub static CONTROL_SCAN_NO_FALLBACK: AtomicBool = AtomicBool::new(false);
+
+fn scan_control_no_fallback() -> bool {
+    #[cfg(test)]
+    if CONTROL_SCAN_NO_FALLBACK.load(Relaxed) {
+        return true;
+    }
+    false
 }
 
 pub(crate) struct Src {

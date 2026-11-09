@@ -190,6 +190,18 @@ pub async fn list_versions(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Vec
     Ok(out)
 }
 
+/// Version numbers above `after`, ascending (one LIST page from the offset; `after` 0: every version). Review of step 4,
+/// FIX 4: the drop floor and GC page from the newest version already seen instead of listing every retained version.
+pub async fn list_versions_after(store: &Arc<dyn ObjectStore>, id: &str, after: u64) -> Result<Vec<u64>> {
+    if after == 0 {
+        return list_versions(store, id).await;
+    }
+    let metas: Vec<_> = store.list_with_offset(Some(&manifest_dir(id)), &manifest_path(id, after)).try_collect().await?;
+    let mut out: Vec<u64> = metas.iter().filter_map(|m| m.location.filename().and_then(|f| f.parse::<u64>().ok())).filter(|n| *n > after).collect();
+    out.sort_unstable();
+    Ok(out)
+}
+
 pub async fn load(store: &Arc<dyn ObjectStore>, id: &str, version: u64) -> Result<Version> {
     let b = store.get(&manifest_path(id, version)).await?.bytes().await?;
     let v: Version = serde_json::from_slice(&b).with_context(|| format!("manifest {version} of {id}"))?;

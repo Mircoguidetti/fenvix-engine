@@ -22,15 +22,23 @@
 use super::compactor::{Compactor, Knobs, Shared};
 use super::manifest;
 use async_trait::async_trait;
-use object_store::path::Path;
+
+#[allow(unused_imports)]
 use object_store::{ObjectStore, ObjectStoreExt};
 use slatedb::compactor::{CompactionScheduler, CompactionSchedulerSupplier, CompactionSpec, CompactorStateView, SourceId};
 use slatedb::config::CompactorOptions;
 use slatedb::{CompactionFilter, CompactionFilterDecision, CompactionFilterError, CompactionFilterSupplier, CompactionJobContext, RowEntry};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
+
+/// Negative control of FIX 1, tests only: the lease read as step 4 read it before the fix.
+#[cfg(test)]
+pub static CONTROL_LEASE_UNTIL_MS: AtomicBool = AtomicBool::new(false);
+/// Negative control of FIX 4, tests only: every version listed and loaded.
+#[cfg(test)]
+pub static CONTROL_FULL_LOAD: AtomicBool = AtomicBool::new(false);
 
 pub struct DropCtl {
     sh: Arc<Shared>,
@@ -41,6 +49,9 @@ pub struct DropCtl {
     serving_lease: Duration,
     /// Versions seen in the store: first sight on this process's clock, and X_d (rules 8, 9).
     seen: Mutex<HashMap<u64, (Instant, u64)>>,
+    /// The newest version listed so far (FIX 4: the next floor lists after it), and versions loaded (diagnostics).
+    listed_upto: AtomicU64,
+    pub versions_loaded: AtomicU64,
     /// L0 SSTs absorbed into a published version, with their highest seq.
     foldable: Mutex<HashMap<ulid::Ulid, u64>>,
     /// Aged folds: the highest seq each sorted run can hold (a run is dropped whole once the floor reaches it).
@@ -81,6 +92,8 @@ impl DropCtl {
             remote_lease: k.remote_lease,
             serving_lease: k.serving_lease,
             seen: Mutex::new(HashMap::new()),
+            listed_upto: AtomicU64::new(0),
+            versions_loaded: AtomicU64::new(0),
             foldable: Mutex::new(HashMap::new()),
             sr_max: Mutex::new(HashMap::new()),
             next_sr: AtomicU64::new(0),
@@ -123,20 +136,21 @@ impl DropCtl {
         }
     }
 
-    /// Rule 11: a checkpoint lease in the store (`fx/drop-lease`, JSON `{"until_ms": n}`) stops every drop while it lives.
+    /// Rule 11: while a checkpoint holds the drop lease (step 7a's `pair.rs`, the one lease format) the floor is 0. An
+    /// expired lease, or one that cannot be read as a lease, is not held (review of step 4, FIX 1).
     async fn checkpoint_lease_held(&self) -> anyhow::Result<bool> {
-        let p = Path::from(format!("{}/drop-lease", manifest::root(&self.sh.id)));
-        match self.store.get(&p).await {
-            Ok(r) => {
-                let b = r.bytes().await?;
-                let v: serde_json::Value = serde_json::from_slice(&b)?;
+        #[cfg(test)]
+        if CONTROL_LEASE_UNTIL_MS.load(Relaxed) {
+            // the step 4 code before the fix: `until_ms`, missing means held forever
+            if let Some((_, _)) = super::pair::read_lease(&self.store, &self.sh.id).await? {
+                let b = self.store.get(&super::pair::lease_path(&self.sh.id)).await?.bytes().await?;
+                let v: serde_json::Value = serde_json::from_slice(&b).unwrap_or_default();
                 let until = v.get("until_ms").and_then(|x| x.as_u64()).unwrap_or(u64::MAX);
-                // the margin for clock skew between the control layer and this process (rule 18): 2 s
-                Ok(manifest::now_ms() < until.saturating_add(2000))
+                return Ok(manifest::now_ms() < until.saturating_add(2000));
             }
-            Err(object_store::Error::NotFound { .. }) => Ok(false),
-            Err(e) => Err(e.into()),
+            return Ok(false);
         }
+        super::pair::lease_held(&self.store, &self.sh.id).await
     }
 
     /// The floor (see the module comment). 0 with the drop off.
@@ -147,22 +161,43 @@ impl DropCtl {
         if self.checkpoint_lease_held().await? {
             return Ok(0);
         }
-        let versions = manifest::list_versions(&self.store, &self.sh.id).await?;
+        // FIX 4 of the review: list only the versions after the newest one already listed (one page), starting after
+        // restart from the version the tenant knows, and load only the newest of each listing. X_d never goes down from
+        // one version to the next, and the versions of one listing share their first sight, so the newest of them is the
+        // only one the floor can use (rule 8 per version, unchanged).
+        let after = match self.listed_upto.load(Relaxed) {
+            0 => {
+                let known = [self.sh.pending_version(), Some(self.sh.serving_version.load(Relaxed)).filter(|v| *v != u64::MAX)].into_iter().flatten().min();
+                known.map_or(0, |k| k.saturating_sub(1))
+            }
+            n => n,
+        };
+        #[cfg(test)]
+        if CONTROL_FULL_LOAD.load(Relaxed) {
+            // the code before FIX 4: list every version and load every one not seen yet
+            for n in manifest::list_versions(&self.store, &self.sh.id).await? {
+                if !self.seen.lock().unwrap().contains_key(&n) {
+                    if let Ok(v) = manifest::load(&self.store, &self.sh.id, n).await {
+                        self.seen.lock().unwrap().insert(n, (Instant::now(), v.x_d));
+                        self.versions_loaded.fetch_add(1, Relaxed);
+                    }
+                }
+            }
+        }
+        let fresh = manifest::list_versions_after(&self.store, &self.sh.id, after).await?;
         let now = Instant::now();
         let mut stamps: HashMap<u64, u64> = HashMap::new();
-        {
-            let known: HashSet<u64> = self.seen.lock().unwrap().keys().copied().collect();
-            let listed: HashSet<u64> = versions.iter().copied().collect();
-            self.seen.lock().unwrap().retain(|n, _| listed.contains(n));
-            for n in versions.iter().filter(|n| !known.contains(n)) {
-                match manifest::load(&self.store, &self.sh.id, *n).await {
-                    Ok(v) => {
-                        stamps.insert(*n, v.published_ms);
-                        self.seen.lock().unwrap().insert(*n, (now, v.x_d));
-                    }
-                    Err(e) if e.downcast_ref::<object_store::Error>().is_some_and(|e| matches!(e, object_store::Error::NotFound { .. })) => {} // GC took it
-                    Err(e) => return Err(e),
+        for &n in fresh.iter().rev() {
+            match manifest::load(&self.store, &self.sh.id, n).await {
+                Ok(v) => {
+                    stamps.insert(n, v.published_ms);
+                    self.seen.lock().unwrap().insert(n, (now, v.x_d));
+                    self.versions_loaded.fetch_add(1, Relaxed);
+                    self.listed_upto.fetch_max(n, Relaxed);
+                    break;
                 }
+                Err(e) if e.downcast_ref::<object_store::Error>().is_some_and(|e| matches!(e, object_store::Error::NotFound { .. })) => continue, // GC took it
+                Err(e) => return Err(e),
             }
         }
         let mut lease = self.lease_now();
@@ -179,6 +214,13 @@ impl DropCtl {
                 seen.values().filter(|(t, _)| t.elapsed() >= lease).map(|(_, x)| *x).max().unwrap_or(0)
             }
         };
+        {
+            // keep the newest entry the floor can use and every younger one (the memory stays bounded)
+            let mut seen = self.seen.lock().unwrap();
+            if let Some(best) = seen.iter().filter(|(_, (t, _))| t.elapsed() >= lease).map(|(n, _)| *n).max() {
+                seen.retain(|n, _| *n >= best);
+            }
+        }
         if !self.control_ignore_holds.load(Relaxed) && super::compactor::REVIEW_PLANT.load(Relaxed) != 4 {
             if let Some(h) = self.sh.holds.floor() {
                 f = f.min(h);

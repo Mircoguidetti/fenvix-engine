@@ -280,66 +280,11 @@ async fn r4_expired_lease_in_step7a_format_must_not_stop_the_drop() {
 // Q4: step 7a's take_lease, two takers after an expired lease
 
 mod step7a_copy {
-    //! Copied verbatim from fenvix-engine `c2-step7a-paths` 06fb271, `src/fx/pair.rs` (`Lease`, `lease_held`,
-    //! `take_lease`), with only the lease path and the two statics made local.
-    use super::super::manifest::{now_ms, root};
-    use anyhow::{bail, Result};
-    use object_store::path::Path;
-    use object_store::{ObjectStore, ObjectStoreExt, PutMode, PutOptions, PutPayload};
-    use serde::{Deserialize, Serialize};
-    use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
-    use std::sync::Arc;
-    use std::time::Duration;
-
-    pub static LEASE_LIFE_MS: AtomicU64 = AtomicU64::new(60_000);
-    pub static SKEW_MARGIN_MS: AtomicU64 = AtomicU64::new(5_000);
-
-    pub fn lease_path(id: &str) -> Path {
-        Path::from(format!("{}/drop-lease", root(id)))
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize)]
-    pub struct Lease {
-        pub holder: String,
-        pub nonce: u64,
-        pub taken_ms: u64,
-        pub expires_ms: u64,
-    }
-
-    pub async fn lease_held(store: &Arc<dyn ObjectStore>, id: &str) -> Result<bool> {
-        match store.get(&lease_path(id)).await {
-            Ok(g) => {
-                let l: Lease = serde_json::from_slice(&g.bytes().await?)?;
-                Ok(now_ms() < l.expires_ms + SKEW_MARGIN_MS.load(Relaxed))
-            }
-            Err(object_store::Error::NotFound { .. }) => Ok(false),
-            Err(e) => Err(e.into()),
-        }
-    }
-
-    pub async fn take_lease(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Lease> {
-        let path = lease_path(id);
-        for _ in 0..300 {
-            let now = now_ms();
-            let l = Lease { holder: format!("pid-{}", std::process::id()), nonce: rand::random(), taken_ms: now, expires_ms: now + LEASE_LIFE_MS.load(Relaxed) };
-            let opts = PutOptions { mode: PutMode::Create, ..Default::default() };
-            match store.put_opts(&path, PutPayload::from(serde_json::to_vec(&l)?), opts).await {
-                Ok(_) => return Ok(l),
-                Err(object_store::Error::AlreadyExists { .. }) | Err(object_store::Error::Precondition { .. }) => {
-                    if !lease_held(store, id).await? {
-                        match store.delete(&path).await {
-                            Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
-                            Err(e) => return Err(e.into()),
-                        }
-                        continue;
-                    }
-                    tokio::time::sleep(Duration::from_millis(100)).await;
-                }
-                Err(e) => return Err(e.into()),
-            }
-        }
-        bail!("database {id}: the drop lease stayed taken for 30 s")
-    }
+    //! The reviewer copied step 7a's `Lease`, `lease_held` and `take_lease` here verbatim, because `c2-step7a-paths`
+    //! was not under the review branch. The fix round merged it: these now name the real code (`fx/pair.rs`), so the
+    //! test below, unchanged, runs against the fix.
+    #[allow(unused_imports)]
+    pub use super::super::pair::{lease_held, lease_path, take_lease, Lease, LEASE_LIFE_MS, SKEW_MARGIN_MS};
 }
 
 /// Q4 (step 7a review, note 2): two control-layer processes take the drop lease after it expired. Both read the
@@ -369,16 +314,16 @@ async fn r4_q4_two_takers_of_an_expired_lease() {
 /// The wrapper of Q4: the second DELETE waits (asynchronously) until a create succeeded after the first DELETE; while
 /// it waits, a drop job's check (a GET) is simulated and counted when it finds no lease.
 #[derive(Debug)]
-struct GateStore {
+pub(super) struct GateStore {
     inner: Arc<dyn ObjectStore>,
     deletes: AtomicUsize,
     gets_blocked: AtomicUsize,
     created: Arc<tokio::sync::watch::Sender<bool>>,
-    empty_seen: Arc<AtomicU64>,
+    pub(super) empty_seen: Arc<AtomicU64>,
 }
 
 impl GateStore {
-    fn new(inner: Arc<dyn ObjectStore>) -> GateStore {
+    pub(super) fn new(inner: Arc<dyn ObjectStore>) -> GateStore {
         let (tx, _rx) = tokio::sync::watch::channel(false);
         GateStore { inner, deletes: AtomicUsize::new(0), gets_blocked: AtomicUsize::new(0), created: Arc::new(tx), empty_seen: Arc::new(AtomicU64::new(0)) }
     }
