@@ -22,7 +22,7 @@ use std::sync::Arc;
 /// The fx tests change process-wide settings (ENABLED, hold life, T_pin): one at a time.
 pub(super) static SERIAL: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
-fn small_opts(reseal: Reseal) -> BuildOpts {
+pub(super) fn small_opts(reseal: Reseal) -> BuildOpts {
     BuildOpts {
         reseal,
         group_bytes: 16 << 10,
@@ -31,11 +31,11 @@ fn small_opts(reseal: Reseal) -> BuildOpts {
     }
 }
 
-fn lc(store: &Arc<dyn ObjectStore>) -> Arc<Lifecycle> {
+pub(super) fn lc(store: &Arc<dyn ObjectStore>) -> Arc<Lifecycle> {
     Lifecycle::new(Arc::new(CountingStore::new(Arc::clone(store))), None)
 }
 
-fn ckey(c: usize, i: usize) -> Vec<u8> {
+pub(super) fn ckey(c: usize, i: usize) -> Vec<u8> {
     let name = format!("c{c:02}");
     let mut k = b"u/".to_vec();
     k.push(name.len() as u8);
@@ -45,7 +45,7 @@ fn ckey(c: usize, i: usize) -> Vec<u8> {
 }
 
 /// The key universe: layout v2 customer keys and shared keyspace keys.
-fn universe() -> Vec<Vec<u8>> {
+pub(super) fn universe() -> Vec<Vec<u8>> {
     let mut u = Vec::new();
     for c in 0..40 {
         for i in 0..50 {
@@ -62,7 +62,7 @@ fn universe() -> Vec<Vec<u8>> {
     u
 }
 
-fn model_range(m: &BTreeMap<Vec<u8>, Vec<u8>>, lo: &[u8], hi: Option<&[u8]>, rev: bool, limit: Option<usize>) -> Vec<(Vec<u8>, Vec<u8>)> {
+pub(super) fn model_range(m: &BTreeMap<Vec<u8>, Vec<u8>>, lo: &[u8], hi: Option<&[u8]>, rev: bool, limit: Option<usize>) -> Vec<(Vec<u8>, Vec<u8>)> {
     let it: Box<dyn Iterator<Item = (&Vec<u8>, &Vec<u8>)>> = match hi {
         Some(h) if lo >= h => return vec![],
         Some(h) => Box::new(m.range(lo.to_vec()..h.to_vec())),
@@ -78,11 +78,11 @@ fn model_range(m: &BTreeMap<Vec<u8>, Vec<u8>>, lo: &[u8], hi: Option<&[u8]>, rev
     v
 }
 
-fn as_vec(r: Vec<(Bytes, Bytes)>) -> Vec<(Vec<u8>, Vec<u8>)> {
+pub(super) fn as_vec(r: Vec<(Bytes, Bytes)>) -> Vec<(Vec<u8>, Vec<u8>)> {
     r.into_iter().map(|(k, v)| (k.to_vec(), v.to_vec())).collect()
 }
 
-async fn apply(t: &mut Tenant, m: &mut BTreeMap<Vec<u8>, Vec<u8>>, ops: Vec<(Vec<u8>, Option<Vec<u8>>)>) {
+pub(super) async fn apply(t: &mut Tenant, m: &mut BTreeMap<Vec<u8>, Vec<u8>>, ops: Vec<(Vec<u8>, Option<Vec<u8>>)>) {
     let mut batch = Vec::new();
     for (k, v) in &ops {
         match v {
@@ -101,16 +101,16 @@ async fn apply(t: &mut Tenant, m: &mut BTreeMap<Vec<u8>, Vec<u8>>, ops: Vec<(Vec
 
 /// T_pin of these tests: envelopes start one T_pin after E1's announcement (rule 26), and a reader refreshes its
 /// version every half T_pin.
-const TEST_T_PIN_MS: u64 = 200;
+pub(super) const TEST_T_PIN_MS: u64 = 200;
 
-fn enable() {
+pub(super) fn enable() {
     ENABLED.store(true, Relaxed);
     PUBLISH_EVERY.store(0, Relaxed);
     T_PIN_MS.store(TEST_T_PIN_MS, Relaxed);
 }
 
 /// Publish, waiting out E1's announcement the first time (rule 26).
-async fn publish(t: &mut Tenant, o: &BuildOpts) -> super::build::BuildReport {
+pub(super) async fn publish(t: &mut Tenant, o: &BuildOpts) -> super::build::BuildReport {
     for _ in 0..50 {
         if let Some(r) = t.fx_publish(o, None).await.unwrap() {
             return r;
@@ -395,7 +395,7 @@ async fn envelopes_start_one_t_pin_after_the_announcement() {
 /// The structural rules of a version.
 #[test]
 fn version_check_refuses_broken_versions() {
-    let ok = manifest::Version { format: 1, version: 3, kind: "publish".into(), writer_epoch: Some(1), x_d: 10, e_env: Some(2), published_ms: 0, groups: vec![manifest::GroupLine { id: 0, lo: String::new(), x_g: 8, sealed: None }], delta: vec![], next_group_id: 1 };
+    let ok = manifest::Version { format: 1, version: 3, kind: "publish".into(), writer_epoch: Some(1), x_d: 10, e_env: Some(2), published_ms: 0, groups: vec![manifest::GroupLine { id: 0, lo: String::new(), x_g: 8, sealed: None, unsealed: 0, unsealed_since_ms: 0, sealed_ms: 0 }], delta: vec![], next_group_id: 1 };
     ok.check().unwrap();
     let mut v = ok.clone();
     v.e_env = None;

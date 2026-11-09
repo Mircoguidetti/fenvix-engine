@@ -362,7 +362,7 @@ fn flush_old_memtables() {
 /// read in a row (about 1% per SST level at 10 bits; about 0.01% at 20).
 pub static FILTER_BITS: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(10);
 
-fn filter_policies() -> Option<Vec<Arc<dyn slatedb::FilterPolicy>>> {
+pub(crate) fn filter_policies() -> Option<Vec<Arc<dyn slatedb::FilterPolicy>>> {
     let bits = FILTER_BITS.load(std::sync::atomic::Ordering::Relaxed);
     (bits != 10).then(|| vec![Arc::new(slatedb::BloomFilterPolicy::new(bits)) as Arc<dyn slatedb::FilterPolicy>])
 }
@@ -487,7 +487,8 @@ pub fn writer_settings() -> Settings {
     let l0_max = L0_MAX_SSTS_OVERRIDE.load(std::sync::atomic::Ordering::Relaxed);
     if l0_max > 0 {
         s.l0_max_ssts = l0_max;
-        s.l0_max_ssts_per_key = s.l0_max_ssts_per_key.min(l0_max);
+        // both limits (the per-key one is also 8 by default): a value above 8 lets a test see L0 pass 8 instead of stalling
+        s.l0_max_ssts_per_key = l0_max;
     }
     let l0_bytes = L0_SST_BYTES_OVERRIDE.load(std::sync::atomic::Ordering::Relaxed);
     if l0_bytes > 0 {
@@ -616,7 +617,7 @@ impl Lifecycle {
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
         let scope = writer_scope(&id);
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: None };
         t.load_env().await?;
         t.load_fx().await?;
         Ok(t)
@@ -664,7 +665,7 @@ impl Lifecycle {
         let l0_at_wake = reader.manifest().l0().len();
         let reader = Arc::new(reader);
         READER_DBS.lock().unwrap().insert(id.clone(), Arc::downgrade(&reader));
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: None };
         t.load_env().await?;
         t.load_fx().await?;
         Ok(t)
@@ -895,6 +896,12 @@ pub struct Tenant {
     /// The version of a publish whose outcome is unknown, until a fence covers its slot. When the store is still empty
     /// (a first publish), the fence is this version itself, created at its own slot (review round 2 of step 3).
     fx_unknown: Option<Box<crate::fx::manifest::Version>>,
+    /// Step 4: the state shared with this database's compactor (`fx/compactor.rs`), when one runs.
+    fx_shared: Option<Arc<crate::fx::compactor::Shared>>,
+    /// Step 4, F7: the end of this process's serving lease of the database, as the server last renewed it. Past it the
+    /// tenant begins no hold (no new read, no new transaction): a waiter that was cut off rather than dead must not
+    /// start reads after the new waiter's drop window opened (RULES-FOR-THE-CODE rules 27, 28 with F7).
+    serving_until: Option<Instant>,
 }
 
 impl Tenant {
@@ -972,15 +979,19 @@ impl Tenant {
         Ok(())
     }
 
-    /// Due for a refresh of the version (a reader at half its T_pin, or a fence pending); the caller refreshes under the
-    /// exclusive lock.
+    /// Due for a refresh of the version (a reader at half its T_pin, a fence pending, or a writer whose compactor
+    /// published a newer version); the caller refreshes under the exclusive lock.
     pub fn fx_refresh_due(&self) -> bool {
-        self.fx_fence_pending
-            || crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed)
-                && matches!(self.mode, Some(Mode::Reader(_)))
-                && self.fx_loaded.elapsed() > Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed) / 2)
+        if self.fx_fence_pending {
+            return true;
+        }
+        if let (Some(sh), Some(v)) = (&self.fx_shared, &self.fx) {
+            return sh.pending_version().is_some_and(|p| p > v.version);
+        }
+        crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed)
+            && matches!(self.mode, Some(Mode::Reader(_)))
+            && self.fx_loaded.elapsed() > Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed) / 2)
     }
-
     /// Whether a fence is pending (rule 25; diagnostics and tests).
     pub fn fx_fence_pending(&self) -> bool {
         self.fx_fence_pending
@@ -1000,8 +1011,13 @@ impl Tenant {
     }
 
     /// Load the newest version again (a reader's refresh, or the retry of a pending fence), with E_env and E1's
-    /// announcement (rule 6). A fence that fails again is a retryable error.
+    /// announcement (rule 6). A fence that fails again is a retryable error. A writer with a compactor installs the
+    /// compactor's newest version instead (the compactor is then the only publisher).
     pub async fn fx_refresh(&mut self) -> Result<()> {
+        if self.fx_shared.is_some() && !self.fx_fence_pending {
+            self.fx_sync();
+            return Ok(());
+        }
         self.load_env().await?;
         let r = self.load_fx().await;
         if self.fx_fence_pending {
@@ -1020,6 +1036,71 @@ impl Tenant {
         Ok(())
     }
 
+    /// The database's id.
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    /// F7: refuse to begin a hold once the serving lease has expired (retryable).
+    fn fx_serving(&self) -> Result<()> {
+        if let Some(t) = self.serving_until {
+            if Instant::now() >= t {
+                return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: this process's serving lease expired; it begins no new read (F7); retry", self.id))));
+            }
+        }
+        Ok(())
+    }
+
+    /// Set the end of this process's serving lease of the database (the server, at each renewal; tests).
+    pub fn set_serving_until(&mut self, t: Option<Instant>) {
+        self.serving_until = t;
+    }
+
+    /// The SlateDB writer, for this database's compactor (`fx/compactor.rs`): it reads the L0 list and the raw L0 SSTs.
+    pub(crate) fn fx_writer_db(&self) -> Option<&Db> {
+        match &self.mode {
+            Some(Mode::Writer(db)) => Some(db),
+            _ => None,
+        }
+    }
+
+    /// Attach this database's compactor: its versions are installed here at the next exclusive step (`fx_sync`), the
+    /// served version's X_d is published to the drop floor, and point reads count R3's GETs.
+    pub fn fx_attach(&mut self, sh: Arc<crate::fx::compactor::Shared>) {
+        if let Some(v) = &self.fx {
+            if let Ok(mut nv) = crate::fx::view::View::new(Arc::clone(&self.lc.store), v.meta.clone(), Some(v)) {
+                nv.r3 = Some(Arc::clone(&sh.r3));
+                sh.serving.store(nv.x_d, std::sync::atomic::Ordering::Relaxed);
+                sh.serving_version.store(nv.version, std::sync::atomic::Ordering::Relaxed);
+                self.fx = Some(Arc::new(nv));
+            }
+        }
+        self.fx_shared = Some(sh);
+    }
+
+    /// Install the compactor's newest version, if newer than the one served. Under `&mut self`: the exclusive lock.
+    /// Returns whether a version was installed.
+    pub fn fx_sync(&mut self) -> bool {
+        let (Some(sh), Some(cur)) = (&self.fx_shared, &self.fx) else { return false };
+        let p = sh.pending.lock().unwrap().clone();
+        let Some(p) = p.filter(|p| p.version > cur.version) else { return false };
+        match crate::fx::view::View::new(Arc::clone(&self.lc.store), p, Some(cur)) {
+            Ok(mut nv) => {
+                nv.r3 = Some(Arc::clone(&sh.r3));
+                // the floor may pass the old X_d only once nothing reads with it: holds cover reads in flight
+                sh.serving.store(nv.x_d, std::sync::atomic::Ordering::Relaxed);
+                sh.serving_version.store(nv.version, std::sync::atomic::Ordering::Relaxed);
+                self.fx = Some(Arc::new(nv));
+                self.fx_loaded = Instant::now();
+                true
+            }
+            Err(e) => {
+                eprintln!("sealed runs: database {}: install of version from the compactor: {e:#}", self.id);
+                false
+            }
+        }
+    }
+
     /// The E_env to decode one step's rows with, read after the step's SlateDB view is open: the known one, or, once E1
     /// was announced and this tenant knows no E_env yet, the marker read now (rule 26). Without an announcement, no read.
     async fn step_env(&self) -> Result<Option<u64>> {
@@ -1035,6 +1116,7 @@ impl Tenant {
 
     async fn fx_get(&self, v: &Arc<crate::fx::view::View>, key: &[u8], durable: bool) -> Result<Option<Bytes>> {
         self.fx_fresh()?;
+        self.fx_serving()?;
         let hold = self.holds.take(Arc::clone(v));
         let opts = slatedb::config::ReadOptions {
             durability_filter: if durable { slatedb::config::DurabilityLevel::Remote } else { slatedb::config::DurabilityLevel::Memory },
@@ -1050,6 +1132,7 @@ impl Tenant {
 
     async fn fx_scan(&self, v: &Arc<crate::fx::view::View>, opts: &slatedb::config::ScanOptions, lo: &[u8], hi: Option<&[u8]>, reverse: bool, limit: Option<usize>) -> Result<Vec<(Bytes, Bytes)>> {
         self.fx_fresh()?;
+        self.fx_serving()?;
         let hold = self.holds.take(Arc::clone(v));
         let r = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
             Mode::Reader(r) => crate::fx::read::scan(&**r, opts, Some(v), self.env, lo, hi, reverse, limit).await?,
@@ -1201,6 +1284,7 @@ impl Tenant {
     pub async fn fx_publish(&mut self, opts: &crate::fx::build::BuildOpts, fail: Option<&(dyn Fn(&str) -> Result<()> + Sync)>) -> Result<Option<crate::fx::build::BuildReport>> {
         use std::sync::atomic::Ordering::Relaxed;
         anyhow::ensure!(crate::fx::ENABLED.load(Relaxed), "--sealed-runs is off");
+        anyhow::ensure!(self.fx_shared.is_none(), "database {}: a compactor publishes this database's versions", self.id);
         self.upgrade().await?;
         // no publish starts while a fence is pending (rule 25)
         self.fx_settle_fence().await?;
@@ -1381,6 +1465,10 @@ impl Tenant {
     pub async fn txn_snapshot(&mut self) -> Result<Arc<crate::fx::read::Snap>> {
         self.upgrade().await?;
         self.fx_settle_fence().await?;
+        if self.fx.is_some() {
+            self.fx_sync();
+            self.fx_serving()?;
+        }
         let hold = self.fx.as_ref().map(|v| self.holds.take(Arc::clone(v)));
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
         Ok(Arc::new(crate::fx::read::Snap { slate: db.snapshot().await?, hold, env: self.env }))
