@@ -1,0 +1,1 @@
+{"version": 3, "x_d": 9147, "rows_scanned": 18276455, "delta_rows": 0, "sealed_rows": 18276455, "runs_written": 4, "groups": 4, "resealed": 4, "stage": {"retired_runs": 4, "held": 0, "wanted": 0, "warmed": 0, "missed": 0, "gets": 0, "millis": 0, "timed_out": false}, "millis": 51469}

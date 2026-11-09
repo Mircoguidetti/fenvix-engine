@@ -27,8 +27,8 @@ def publish(admin, db, reseal="all", block_kb=None, tries=120):
     raise SystemExit(f"no publish of {db} after {tries} tries")
 
 
-def counter(admin, clear=False):
-    return admin.command({"fenvixCounter": 1, "clear": bool(clear)})
+def counter(admin, clear=False, trim=False):
+    return admin.command({"fenvixCounter": 1, "clear": bool(clear), "trim": bool(trim)})
 
 
 def main():

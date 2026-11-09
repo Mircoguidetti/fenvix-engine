@@ -645,6 +645,40 @@ mod tests {
         assert_eq!(id, crate::layout::encode_sortable(&Bson::Int32(9)).as_slice());
     }
 
+    /// Compaction 2 step 6: the run format's customer rule for the server's keys (`runfmt::CustomerKind::V2K`) finds
+    /// exactly the customer component of every physical key, documents and co-located index entries, for every type a
+    /// customer value can have; step 1's rule (V2, a length byte) does not.
+    #[test]
+    fn run_format_finds_the_customer_component_of_server_keys() {
+        use tenant_bench::runfmt::CustomerKind;
+        let values = [Bson::Int32(7), Bson::Int64(1 << 40), Bson::Double(2.5), Bson::String("alice".into()), Bson::String("a\u{0}b".into()), Bson::ObjectId(bson::oid::ObjectId::new())];
+        let mut v2_wrong = 0;
+        for v in &values {
+            let d = doc! { "_id": 3, "u": v.clone() };
+            let docp = to_phys(&doc_key("messages", Some(&k("u")), &d)).unwrap();
+            let mut want = U.to_vec();
+            want.extend(comp(v));
+            let r = CustomerKind::V2K.customer_of(&docp).unwrap();
+            assert_eq!(&docp[..r.end], &want[..], "{v:?}");
+            assert_eq!(r.start, 2);
+            let mut ix = b"idx/messages/".to_vec();
+            ix.push(MARK);
+            ix.extend(b"u_1_ts_-1/");
+            ix.extend(comp(v));
+            ix.extend(comp(&Bson::Int32(99)));
+            ix.extend(crate::layout::encode_sortable(&Bson::Int32(3)));
+            let ixp = to_phys(&ix).unwrap();
+            let r = CustomerKind::V2K.customer_of(&ixp).unwrap();
+            assert_eq!(&ixp[..r.end], &want[..], "{v:?} index entry");
+            if CustomerKind::V2.customer_of(&docp).map(|r| docp[..r.end].to_vec()) != Some(want.clone()) {
+                v2_wrong += 1;
+            }
+        }
+        assert_eq!(v2_wrong, values.len(), "step 1's rule misreads every server component");
+        assert_eq!(CustomerKind::V2K.customer_of(b"loc/messages/x"), None);
+        assert_eq!(CustomerKind::V2K.customer_of(b"u/"), None);
+    }
+
     #[test]
     fn config_matches_db_and_collection() {
         let _ = configure("chat.messages=userId, orders=customerId:ts");

@@ -87,7 +87,7 @@ pub fn slice_prefix(kind: CustomerKind, lo: &[u8], hi: Option<&[u8]>, mode: Slic
     if !inside(cust) {
         return None;
     }
-    if mode == SliceMode::Area && kind == CustomerKind::V2 {
+    if mode == SliceMode::Area && matches!(kind, CustomerKind::V2 | CustomerKind::V2K) {
         if let Some(n) = area_len(lo, r.end) {
             if inside(&lo[..n]) {
                 return Some(lo[..n].to_vec());
@@ -103,7 +103,7 @@ pub fn point_prefix(kind: CustomerKind, key: &[u8], mode: SliceMode) -> Option<V
         return None;
     }
     let r = kind.customer_of(key)?;
-    if mode == SliceMode::Area && kind == CustomerKind::V2 {
+    if mode == SliceMode::Area && matches!(kind, CustomerKind::V2 | CustomerKind::V2K) {
         if let Some(n) = area_len(key, r.end) {
             return Some(key[..n].to_vec());
         }
@@ -495,6 +495,13 @@ pub fn cached(run: &Run, b: usize, prefix: Option<&[u8]>, need: &Need) -> bool {
 /// decoded and checked, and each is kept whole or as its slice (a new slice keeps what the piece it replaces relied on).
 /// A returned slice may end before the read's range does (a trimmed slice): the caller continues with [`refetch`].
 pub async fn fetch<'n>(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, last: usize, prefix: Option<&[u8]>, need: &(dyn Fn(usize) -> Need<'n> + Sync)) -> Result<Vec<Arc<Piece>>> {
+    // a few due trims on every fetch, so a counter that only serves hits is trimmed too
+    {
+        let mut g = CACHE.lock().unwrap();
+        if let Some(c) = g.as_mut() {
+            trim_locked(c, Some(std::time::Duration::from_millis(TRIM_MS.load(Relaxed))), 8);
+        }
+    }
     let mut out: Vec<Option<Arc<Piece>>> = Vec::with_capacity(last + 1 - first);
     let mut stale: Vec<Option<Arc<Piece>>> = Vec::with_capacity(last + 1 - first);
     for b in first..=last {
@@ -651,22 +658,29 @@ pub async fn stage(old: &View, new: &View) -> StageReport {
                 rep.held += 1;
                 match k {
                     CKey::Slice(_, _, p) => {
-                        let h = prefixes.entry(p.to_vec()).or_insert_with(|| Held { lo: b.lo.as_deref().map(|x| x.to_vec()), hi: b.hi.as_deref().map(|x| x.to_vec()), whole: false, relied: None });
-                        h.lo = match (&h.lo, b.lo.as_deref()) {
-                            (Some(a), Some(x)) => Some(std::cmp::min(a.clone(), x.to_vec())),
-                            _ => None,
+                        // a trimmed slice: its interval; a slice still whole: what reads relied on so far (it would be
+                        // trimmed to that), or nothing when no read relied on it yet
+                        let (lo, hi) = if b.whole_slice {
+                            match b.relied() {
+                                Some((x, y)) => (Some(x), Some(y)),
+                                None => continue,
+                            }
+                        } else {
+                            (b.lo.as_deref().map(|x| x.to_vec()), b.hi.as_deref().map(|x| x.to_vec()))
                         };
-                        h.hi = match (&h.hi, b.hi.as_deref()) {
-                            (Some(a), Some(x)) => Some(std::cmp::max(a.clone(), x.to_vec())),
-                            _ => None,
-                        };
-                        if b.whole_slice {
-                            h.whole = true;
-                            if let Some((x, y)) = b.relied() {
-                                h.relied = Some(match h.relied.take() {
-                                    None => (x, y),
-                                    Some((a, z)) => (std::cmp::min(a, x), std::cmp::max(z, y)),
-                                });
+                        match prefixes.get_mut(&p[..]) {
+                            None => {
+                                prefixes.insert(p.to_vec(), Held { lo, hi, whole: false, relied: None });
+                            }
+                            Some(h) => {
+                                h.lo = match (&h.lo, lo) {
+                                    (Some(a), Some(x)) => Some(std::cmp::min(a.clone(), x)),
+                                    _ => None,
+                                };
+                                h.hi = match (&h.hi, hi) {
+                                    (Some(a), Some(x)) => Some(std::cmp::max(a.clone(), x)),
+                                    _ => None,
+                                };
                             }
                         }
                     }

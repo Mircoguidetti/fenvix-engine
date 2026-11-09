@@ -488,6 +488,9 @@ struct Args {
     /// the counter holds of the retired ones, for at most this many milliseconds (0: no staging).
     #[arg(long, default_value_t = 10_000)]
     sealed_stage_ms: u64,
+    /// A slice is kept whole this many milliseconds after a read made it, then trimmed to what reads relied on.
+    #[arg(long, default_value_t = 1_000)]
+    sealed_trim_ms: u64,
     /// First course (opening.rs, measurement prototype, off by default): keep the key-value pairs of each user's first
     /// query of a visit and answer the next visit's first query from them when the answer is exact.
     #[arg(long, default_value_t = false)]
@@ -504,8 +507,10 @@ struct Args {
     /// First course: one opening at most, in KiB (trimmed above it, then dropped).
     #[arg(long, default_value_t = 256)]
     first_course_max_kb: u64,
-    /// First course: the opening keeps what this many queries of a visit read (1: the first query only).
-    #[arg(long, default_value_t = 1)]
+    /// First course: the opening keeps what this many queries of a visit read (1: the first query only). Default 4, the
+    /// logical images of compaction 2 step 6 (the first course's review: with 1 query a visit's next query pays the
+    /// cold read instead).
+    #[arg(long, default_value_t = 4)]
     first_course_queries: u64,
     /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
     /// releases before); M29 measured 64.
@@ -779,6 +784,7 @@ async fn run() -> Result<()> {
         tenant_bench::runfmt::FILTER_BITS_PER_CUSTOMER.store(args.sealed_filter_bits.clamp(1, 64), Relaxed);
         STAGED.store(args.sealed_stage_ms > 0, Relaxed);
         STAGE_DEADLINE_MS.store(args.sealed_stage_ms, Relaxed);
+        tenant_bench::fx::counter::TRIM_MS.store(args.sealed_trim_ms, Relaxed);
     }
     opening::ENABLED.store(args.first_course, std::sync::atomic::Ordering::Relaxed);
     opening::IDLE_SECS.store(args.first_course_idle_secs, std::sync::atomic::Ordering::Relaxed);

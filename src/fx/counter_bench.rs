@@ -185,7 +185,7 @@ fn pct(v: &mut [f64], p: f64) -> f64 {
 }
 
 fn opts(reseal: Reseal, block_kb: u64) -> BuildOpts {
-    BuildOpts { reseal, sealed: RunOptions::unchecked((block_kb as usize) << 10, 16 << 20, CustomerKind::V2), ..Default::default() }
+    BuildOpts { reseal, sealed: RunOptions::unchecked((block_kb as usize) << 10, 16 << 20, CustomerKind::V2), delta: RunOptions::unchecked(64 << 10, 16 << 20, CustomerKind::V2), ..Default::default() }
 }
 
 fn write_out(v: serde_json::Value) {

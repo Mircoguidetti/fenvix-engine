@@ -132,8 +132,12 @@ pub enum CustomerKind {
     /// Today's customer-keyed document keys (`custkey.rs` on branch `compaction`):
     /// `doc/{escaped collection}/{component}{_id}`, component = length byte + `encode_sortable` of the customer value.
     DocV1 = 1,
-    /// Key layout v2 of the plan (build step 2): `u/{component}/...`.
+    /// Key layout v2 of the plan (build step 2): `u/{component}/...`, the component read as a length byte and its bytes.
+    /// The server's real components are not framed that way (see V2K); kept so runs written with it read the same.
     V2 = 2,
+    /// Key layout v2 as the server writes it (`custkey.rs`, compaction 2 step 6): `u/{component}{collection}/...`, the
+    /// component a `keyenc` encoding of the customer value, self-delimiting (its type byte and its body).
+    V2K = 3,
 }
 
 impl CustomerKind {
@@ -142,6 +146,7 @@ impl CustomerKind {
             0 => CustomerKind::None,
             1 => CustomerKind::DocV1,
             2 => CustomerKind::V2,
+            3 => CustomerKind::V2K,
             _ => anyhow::bail!("corrupt run: customer kind {b}"),
         })
     }
@@ -149,8 +154,14 @@ impl CustomerKind {
     /// Where the customer component (length byte included) sits in `key`, or None if the key has no customer
     /// (the shared keyspace: collections without a customer key, `loc/`, global indexes).
     pub fn customer_of(self, key: &[u8]) -> Option<Range<usize>> {
+        if self == CustomerKind::V2K {
+            let t = key.strip_prefix(b"u/")?;
+            let n = keyenc_skip(t)?;
+            return (n > 0).then_some(2..2 + n);
+        }
         let start = match self {
             CustomerKind::None => return None,
+            CustomerKind::V2K => unreachable!(),
             CustomerKind::V2 => {
                 if !key.starts_with(b"u/") {
                     return None;
@@ -171,6 +182,87 @@ impl CustomerKind {
         }
         Some(start..end)
     }
+}
+
+/// The length of the one `keyenc` component at the start of `b` (a copy of `mongo-server/src/keyenc.rs` `skip`, which
+/// this crate cannot import; a test in `custkey.rs` checks the two agree on the server's keys).
+pub fn keyenc_skip(b: &[u8]) -> Option<usize> {
+    fn take(b: &[u8], i: &mut usize, n: usize) -> Option<()> {
+        if *i + n > b.len() {
+            return None;
+        }
+        *i += n;
+        Some(())
+    }
+    fn escaped(b: &[u8], i: &mut usize) -> Option<()> {
+        loop {
+            let x = *b.get(*i)?;
+            *i += 1;
+            if x == 0 {
+                let y = *b.get(*i)?;
+                *i += 1;
+                match y {
+                    1 => return Some(()),
+                    0xFF => continue,
+                    _ => return None,
+                }
+            }
+        }
+    }
+    fn val(b: &[u8], i: &mut usize) -> Option<()> {
+        let rank = *b.get(*i)?;
+        *i += 1;
+        body(rank, b, i)
+    }
+    fn body(rank: u8, b: &[u8], i: &mut usize) -> Option<()> {
+        match rank {
+            1 | 20 => Some(()),
+            2 => take(b, i, 1),
+            3 => {
+                let x = *b.get(*i)?;
+                *i += 1;
+                if x == 1 {
+                    take(b, i, 16)
+                } else {
+                    Some(())
+                }
+            }
+            4 | 12 | 13 | 14 | 15 => {
+                escaped(b, i)?;
+                if rank == 12 {
+                    escaped(b, i)?;
+                }
+                Some(())
+            }
+            5 => loop {
+                let r = *b.get(*i)?;
+                *i += 1;
+                if r == 0 {
+                    return Some(());
+                }
+                escaped(b, i)?;
+                body(r, b, i)?;
+            },
+            6 => loop {
+                if *b.get(*i)? == 0 {
+                    *i += 1;
+                    return Some(());
+                }
+                val(b, i)?;
+            },
+            7 => {
+                let n = u32::from_be_bytes(b.get(*i..*i + 4)?.try_into().ok()?) as usize;
+                take(b, i, 4 + 1 + n)
+            }
+            8 => take(b, i, 12),
+            9 => take(b, i, 1),
+            10 | 11 => take(b, i, 8),
+            _ => None,
+        }
+    }
+    let mut i = 0;
+    val(b, &mut i)?;
+    Some(i)
 }
 
 fn customer_hash(comp: &[u8]) -> u64 {
