@@ -190,3 +190,67 @@ async fn an_operation_keeps_the_floor_across_its_reads() {
     let e = second.expect_err("an operation past the hold life must fail at its next read (rule 5)");
     assert!(e.chain().any(|c| c.downcast_ref::<Retry>().is_some()), "{e:#}");
 }
+
+/// Pairing (rule 18): the checkpoint is paired with the newest version at or below its `last_l0_seq`; a checkpoint whose
+/// drop lease expired before it existed is deleted and taken again [CkNoRecheck]; a drop does not start while the lease
+/// is held (rule 11); a paired reader of the checkpoint answers rows a later drop removed from SlateDB.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_checkpoint_is_paired_under_the_drop_lease() {
+    let _s = super::tests::SERIAL.lock().await;
+    settings(true);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = "pairing";
+    let mut t = lc(&store).create(id).await.unwrap();
+    for i in 0..60 {
+        put(&mut t, i, "a").await;
+    }
+    publish(&mut t).await;
+    t.close().await.unwrap();
+    let v = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    let admin = slatedb::admin::Admin::builder(crate::lifecycle::tenant_path(id), Arc::clone(&store)).build();
+    pair::LEASE_LIFE_MS.store(400, Relaxed);
+    pair::SKEW_MARGIN_MS.store(50, Relaxed);
+    let calls = std::sync::atomic::AtomicU64::new(0);
+    let held_during = std::sync::Mutex::new(Vec::new());
+    let (cp, p) = pair::checkpoint_paired(&store, id, || async {
+        held_during.lock().unwrap().push(pair::lease_held(&store, id).await.unwrap());
+        let refused = droptest::drop_at_or_below(&store, id, v.x_d).await.is_err();
+        assert!(refused, "a drop started while a checkpoint held the drop lease (rule 11)");
+        if calls.fetch_add(1, SeqCst) == 0 {
+            tokio::time::sleep(Duration::from_millis(500)).await; // past the lease's life: this checkpoint must go
+        }
+        Ok(admin.create_detached_checkpoint(&slatedb::config::CheckpointOptions::default()).await?)
+    })
+    .await
+    .unwrap();
+    pair::LEASE_LIFE_MS.store(60_000, Relaxed);
+    pair::SKEW_MARGIN_MS.store(5_000, Relaxed);
+    assert_eq!(calls.load(SeqCst), 2, "the checkpoint taken after the lease expired was not taken again");
+    assert!(held_during.lock().unwrap().iter().all(|h| *h));
+    let cps = admin.list_checkpoints(None).await.unwrap();
+    assert_eq!(cps.len(), 1, "the checkpoint of the expired lease must be deleted: {cps:?}");
+    assert_eq!(cps[0].id, cp.id);
+    let p = p.unwrap();
+    assert_eq!((p.version, p.exact), (Some(v.version), true), "{p:?}");
+    assert!(!pair::lease_held(&store, id).await.unwrap(), "the lease is released");
+    // a drop now removes the rows from SlateDB (the checkpoint above keeps its own SSTs); a checkpoint taken after the
+    // drop has them only through its pair
+    let rep = droptest::drop_at_or_below(&store, id, v.x_d).await.unwrap();
+    assert!(rep.dropped >= 60, "{rep:?}");
+    let (cp2, p2) = pair::checkpoint_paired(&store, id, || async { Ok(admin.create_detached_checkpoint(&slatedb::config::CheckpointOptions::default()).await?) }).await.unwrap();
+    assert_eq!(p2.unwrap().version, Some(v.version));
+    let mut o = slatedb::config::DbReaderOptions::default();
+    o.skip_wal_replay = true;
+    for c in [cp.id, cp2.id] {
+        let r = pair::PairedReader::open_checkpoint(&store, id, c, o.clone()).await.unwrap();
+        assert_eq!(r.version(), Some(v.version));
+        let rows = r.scan(b"doc/", Some(b"doc0"), false, None, 1 << 20).await.unwrap();
+        assert_eq!(rows.len(), 60);
+        assert_eq!(r.get(&key(7)).await.unwrap().as_deref(), Some(&b"a"[..]));
+        r.close().await.unwrap();
+    }
+    // the checkpoint after the drop read without its pair misses them (what export read before step 7a)
+    let raw = read::open_checkpoint_reader(crate::lifecycle::tenant_path(id), Arc::clone(&store), cp2.id, o).await.unwrap();
+    assert!(raw.get(&key(7)).await.unwrap().is_none(), "the drop did not remove the row from SlateDB");
+    raw.close().await.unwrap();
+}

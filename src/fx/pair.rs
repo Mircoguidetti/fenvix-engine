@@ -150,44 +150,53 @@ where
         return Ok((make().await?, None));
     }
     let admin = slatedb::admin::Admin::builder(crate::lifecycle::tenant_path(id), Arc::clone(store)).build();
-    let lease = take_lease(store, id).await?;
-    let r = async {
-        for _ in 0..3 {
-            let cp = make().await?;
-            let m = admin.read_manifest(Some(cp.manifest_id)).await?.ok_or_else(|| anyhow!("database {id}: the manifest of checkpoint {} is gone", cp.id))?;
-            let last_l0 = m.last_l0_seq();
-            // [CkNoRecheck]: the lease must still be ours, with the margin, now that the checkpoint exists
-            if now_ms() + SKEW_MARGIN_MS.load(Relaxed) >= lease.expires_ms {
-                admin.delete_checkpoint(cp.id).await?;
-                continue;
-            }
-            let versions = manifest::list_versions(store, id).await?;
-            let newest = versions.last().copied();
-            let mut pick = None;
-            for &n in versions.iter().rev() {
-                let v = manifest::load(store, id, n).await?;
-                if v.x_d <= last_l0 {
-                    pick = Some(v);
-                    break;
-                }
-            }
-            let pair = Pair {
-                checkpoint: cp.id.to_string(),
-                version: pick.as_ref().map(|v| v.version),
-                x_d: pick.as_ref().map(|v| v.x_d),
-                e_env: pick.as_ref().and_then(|v| v.e_env),
-                last_l0_seq: last_l0,
-                exact: pick.as_ref().map(|v| v.version) == newest,
-                created_ms: now_ms(),
-            };
-            store.put(&pair_path(id, &cp.id), PutPayload::from(serde_json::to_vec(&pair)?)).await?;
-            return Ok((cp, Some(pair)));
+    for _ in 0..3 {
+        // a fresh lease for every attempt: a retry after an expired lease must not run unleased
+        let lease = take_lease(store, id).await?;
+        let r = paired_once(store, id, &admin, &lease, &make).await;
+        release_lease(store, id, &lease).await;
+        if let Some(x) = r? {
+            return Ok(x);
         }
-        bail!("database {id}: the drop lease expired three times while a checkpoint was taken")
     }
-    .await;
-    release_lease(store, id, &lease).await;
-    r
+    bail!("database {id}: the drop lease expired three times while a checkpoint was taken")
+}
+
+/// One attempt under `lease`: None when the lease expired before the checkpoint existed (the checkpoint is deleted).
+async fn paired_once<F, Fut>(store: &Arc<dyn ObjectStore>, id: &str, admin: &slatedb::admin::Admin, lease: &Lease, make: &F) -> Result<Option<(slatedb::CheckpointCreateResult, Option<Pair>)>>
+where
+    F: Fn() -> Fut,
+    Fut: std::future::Future<Output = Result<slatedb::CheckpointCreateResult>>,
+{
+    let cp = make().await?;
+    let m = admin.read_manifest(Some(cp.manifest_id)).await?.ok_or_else(|| anyhow!("database {id}: the manifest of checkpoint {} is gone", cp.id))?;
+    let last_l0 = m.last_l0_seq();
+    // [CkNoRecheck]: the lease must still be ours, with the margin, now that the checkpoint exists
+    if now_ms() + SKEW_MARGIN_MS.load(Relaxed) >= lease.expires_ms {
+        admin.delete_checkpoint(cp.id).await?;
+        return Ok(None);
+    }
+    let versions = manifest::list_versions(store, id).await?;
+    let newest = versions.last().copied();
+    let mut pick = None;
+    for &n in versions.iter().rev() {
+        let v = manifest::load(store, id, n).await?;
+        if v.x_d <= last_l0 {
+            pick = Some(v);
+            break;
+        }
+    }
+    let pair = Pair {
+        checkpoint: cp.id.to_string(),
+        version: pick.as_ref().map(|v| v.version),
+        x_d: pick.as_ref().map(|v| v.x_d),
+        e_env: pick.as_ref().and_then(|v| v.e_env),
+        last_l0_seq: last_l0,
+        exact: pick.as_ref().map(|v| v.version) == newest,
+        created_ms: now_ms(),
+    };
+    store.put(&pair_path(id, &cp.id), PutPayload::from(serde_json::to_vec(&pair)?)).await?;
+    Ok(Some((cp, Some(pair))))
 }
 
 /// The pair of a checkpoint (None: none recorded).
