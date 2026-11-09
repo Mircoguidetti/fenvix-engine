@@ -5,7 +5,8 @@
    listed by the source's newest version. The source must keep every acknowledged row.
 2. FIX 2: a kill after fork_paired() made its pairing checkpoint and pair, before it deletes them (probe failpoint
    `fork.after_pairing`, review build only): nothing may be left in the source.
-3. Note: the `_lease` leftover of test_02b_fork_crash::test_random_kill_loop (probe failpoint `fork.after_lease`).
+3. FIX 3: an erased customer stays readable through a change stream resumed from before the erasure.
+4. Note: the `_lease` leftover of test_02b_fork_crash::test_random_kill_loop (probe failpoint `fork.after_lease`).
 
 The failpoints `fork.after_pairing` and `fork.after_lease` and the env-gated remedy `REVIEW_FIX1` in fx/erase.rs exist
 only on the review branch; they are probes, not for merge.
@@ -142,3 +143,28 @@ def test_a_kill_after_the_fork_pairing_leaves_no_checkpoint_or_pair(mode):
         assert cp_ids(srv, "src") == pins_before and pairs == [], f"left in the source: checkpoints {sorted(set(cp_ids(srv, 'src')) - set(pins_before))}, pairs {pairs}"
     finally:
         srv.term()
+
+
+def test_an_erased_customer_is_not_readable_through_a_change_stream(srv):
+    """The change log (`changes.rs`) keeps inserted documents whole, in memory, bounded by count and size only. After an
+    erasure is scrubbed, a change stream resumed from a token taken before it must not return the erased customer's
+    documents (the erasure's rows leave within 24 hours; nothing here bounds the log's age)."""
+    c = srv.client()
+    db = "cs"
+    c[db].create_collection("msgs", customerKey="userId")
+    with c[db]["msgs"].watch() as st:
+        c[db]["msgs"].insert_one({"_id": "first", "userId": "u2", "body": "keep"})
+        st.next()
+        token = st.resume_token
+    c[db]["msgs"].insert_many([{"_id": f"u1-{i}", "userId": "u1", "body": "ERASEDMARK"} for i in range(20)])
+    assert c[db]["msgs"].delete_many({"userId": "u1"}).deleted_count == 20
+    wait_until(lambda: (e := erasures(srv, db)) and e[0]["state"] == "scrubbed", timeout=30, what="the scrub")
+    seen = []
+    with c[db]["msgs"].watch(resume_after=token, max_await_time_ms=500) as st:
+        for _ in range(60):
+            ev = st.try_next()
+            if ev is None:
+                break
+            if "ERASEDMARK" in str(ev.get("fullDocument")):
+                seen.append(ev["documentKey"]["_id"])
+    assert seen == [], f"{len(seen)} documents of the erased customer still readable through a change stream after the scrub: {seen[:3]}"
