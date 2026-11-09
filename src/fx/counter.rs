@@ -137,6 +137,102 @@ pub fn cut(b: &Block, p: &[u8]) -> Block {
     b.slice(i, j)
 }
 
+// ---- pieces: what the counter holds of one block of a run
+
+/// The immediate successor of a key (the smallest key greater than it).
+pub fn succ(k: &[u8]) -> Vec<u8> {
+    let mut v = k.to_vec();
+    v.push(0);
+    v
+}
+
+/// What the counter holds of one block: a whole block, or a slice of the rows under a prefix. A slice covers the key
+/// interval [lo, hi) of its prefix (None: to the prefix's edge): it holds every row of the block whose key starts with the
+/// prefix and lies in that interval, so a read inside the interval is answered from it exactly.
+///
+/// A slice is first kept whole (every row of the prefix in the block), and the reads that use it note the key intervals
+/// they relied on (`rely`). After `TRIM_MS` it is trimmed to the hull of those intervals ([`trim_due`]): RAM per hot
+/// customer becomes the rows its reads use, not the rows of its area. A read that needs keys outside a trimmed slice's
+/// interval fetches the block again; the new slice keeps what the old one relied on.
+pub struct Piece {
+    pub blk: Block,
+    pub lo: Option<Box<[u8]>>,
+    pub hi: Option<Box<[u8]>>,
+    /// Kept whole until trimmed (slices only).
+    whole_slice: bool,
+    relied: Mutex<Option<(Vec<u8>, Vec<u8>)>>,
+}
+
+impl Piece {
+    fn new(blk: Block, whole_slice: bool) -> Piece {
+        Piece { blk, lo: None, hi: None, whole_slice, relied: Mutex::new(None) }
+    }
+
+    /// Whether `k` is inside the covered interval.
+    pub fn covers(&self, k: &[u8]) -> bool {
+        self.lo.as_deref().is_none_or(|l| l <= k) && self.hi.as_deref().is_none_or(|h| k < h)
+    }
+
+    /// Whether the interval reaches down to `lo` (inclusive).
+    pub fn covers_down_to(&self, lo: &[u8]) -> bool {
+        self.lo.as_deref().is_none_or(|l| l <= lo)
+    }
+
+    /// Whether the interval reaches up to `hi` (exclusive; None: the prefix's end).
+    pub fn covers_up_to(&self, hi: Option<&[u8]>) -> bool {
+        match (self.hi.as_deref(), hi) {
+            (None, _) => true,
+            (Some(_), None) => false,
+            (Some(h), Some(x)) => h >= x,
+        }
+    }
+
+    /// A read relied on the rows of [lo, hi) of this piece (hi exclusive).
+    pub fn rely(&self, lo: &[u8], hi: &[u8]) {
+        if !self.whole_slice || lo >= hi {
+            return;
+        }
+        let mut g = self.relied.lock().unwrap();
+        match g.as_mut() {
+            None => *g = Some((lo.to_vec(), hi.to_vec())),
+            Some((a, b)) => {
+                if lo < &a[..] {
+                    *a = lo.to_vec();
+                }
+                if hi > &b[..] {
+                    *b = hi.to_vec();
+                }
+            }
+        }
+    }
+
+    fn relied(&self) -> Option<(Vec<u8>, Vec<u8>)> {
+        self.relied.lock().unwrap().clone()
+    }
+
+    /// The piece trimmed to the hull of what reads relied on, with the widest exact interval: from just above the row
+    /// before the first kept row, up to the row after the last kept one. None: nothing was relied on.
+    fn trimmed(&self) -> Option<Piece> {
+        let (rlo, rhi) = self.relied()?;
+        let b = &self.blk;
+        let i = b.lower_bound(&rlo);
+        let j = b.lower_bound(&rhi); // rows i..j are inside [rlo, rhi)
+        let lo = if i == 0 { self.lo.clone() } else { Some(succ(b.key(i - 1)).into_boxed_slice()) };
+        let hi = if j >= b.len() { self.hi.clone() } else { Some(b.key(j).to_vec().into_boxed_slice()) };
+        Some(Piece { blk: b.slice(i, j), lo, hi, whole_slice: false, relied: Mutex::new(None) })
+    }
+
+    pub fn mem_bytes(&self) -> usize {
+        self.blk.mem_bytes() + self.lo.as_ref().map_or(0, |x| x.len()) + self.hi.as_ref().map_or(0, |x| x.len())
+    }
+}
+
+/// How long a slice is kept whole before it is trimmed to what reads relied on (ms; `u64::MAX`: never trimmed).
+pub static TRIM_MS: AtomicU64 = AtomicU64::new(1_000);
+pub static TRIMS: AtomicU64 = AtomicU64::new(0);
+pub static TRIM_DROPS: AtomicU64 = AtomicU64::new(0);
+pub static REFETCHES: AtomicU64 = AtomicU64::new(0);
+
 // ---- the cache: whole blocks and slices, one byte budget (`--sealed-cache-mb`), least recently used out
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -159,20 +255,22 @@ impl CKey {
     }
 }
 
-fn cost(k: &CKey, b: &Block) -> usize {
+fn cost(k: &CKey, b: &Piece) -> usize {
     b.mem_bytes() + k.extra() + ENTRY_OVERHEAD
 }
 
 struct Cache {
     used: usize,
     tick: u64,
-    map: HashMap<CKey, (Arc<Block>, u64)>,
+    map: HashMap<CKey, (Arc<Piece>, u64)>,
     order: BTreeMap<u64, CKey>,
+    /// Whole slices waiting to be trimmed, oldest first.
+    untrimmed: std::collections::VecDeque<(std::time::Instant, CKey)>,
 }
 
 static CACHE: Mutex<Option<Cache>> = Mutex::new(None);
 
-pub fn cache_get(k: &CKey) -> Option<Arc<Block>> {
+pub fn cache_get(k: &CKey) -> Option<Arc<Piece>> {
     let mut g = CACHE.lock().unwrap();
     let c = g.as_mut()?;
     c.tick += 1;
@@ -185,17 +283,14 @@ pub fn cache_get(k: &CKey) -> Option<Arc<Block>> {
     Some(b)
 }
 
-pub fn cache_put(k: CKey, b: Arc<Block>) {
-    let cap = super::view::CACHE_BYTES.load(Relaxed) as usize;
-    if cap == 0 {
-        return;
-    }
-    let mut g = CACHE.lock().unwrap();
-    let c = g.get_or_insert_with(|| Cache { used: 0, tick: 0, map: HashMap::new(), order: BTreeMap::new() });
+fn put_locked(c: &mut Cache, k: CKey, b: Arc<Piece>, cap: usize) {
     c.tick += 1;
     if let Some((old, t)) = c.map.remove(&k) {
         c.order.remove(&t);
         c.used -= cost(&k, &old);
+    }
+    if b.whole_slice && !b.blk.is_empty() {
+        c.untrimmed.push_back((std::time::Instant::now(), k.clone()));
     }
     c.used += cost(&k, &b);
     c.map.insert(k.clone(), (b, c.tick));
@@ -206,6 +301,67 @@ pub fn cache_put(k: CKey, b: Arc<Block>) {
         if let Some((old, _)) = c.map.remove(&victim) {
             c.used -= cost(&victim, &old);
         }
+    }
+}
+
+fn cache_put(k: CKey, b: Arc<Piece>) {
+    let cap = super::view::CACHE_BYTES.load(Relaxed) as usize;
+    if cap == 0 {
+        return;
+    }
+    let mut g = CACHE.lock().unwrap();
+    let c = g.get_or_insert_with(|| Cache { used: 0, tick: 0, map: HashMap::new(), order: BTreeMap::new(), untrimmed: Default::default() });
+    put_locked(c, k, b, cap);
+    trim_locked(c, Some(std::time::Duration::from_millis(TRIM_MS.load(Relaxed))), 8);
+}
+
+/// Trim whole slices older than `age` (None: every one), at most `max` of them.
+fn trim_locked(c: &mut Cache, age: Option<std::time::Duration>, max: usize) {
+    let now = std::time::Instant::now();
+    let mut n = 0;
+    while n < max {
+        let Some((born, _)) = c.untrimmed.front() else { break };
+        if let Some(a) = age {
+            if now.duration_since(*born) < a {
+                break;
+            }
+        }
+        let (_, k) = c.untrimmed.pop_front().unwrap();
+        n += 1;
+        let Some((p, tick)) = c.map.get(&k).map(|(p, t)| (p.clone(), *t)) else { continue };
+        if !p.whole_slice {
+            continue; // replaced meanwhile
+        }
+        c.used -= cost(&k, &p);
+        match p.trimmed() {
+            Some(t) => {
+                TRIMS.fetch_add(1, Relaxed);
+                let t = Arc::new(t);
+                c.used += cost(&k, &t);
+                c.map.insert(k, (t, tick));
+            }
+            None => {
+                TRIM_DROPS.fetch_add(1, Relaxed);
+                c.map.remove(&k);
+                c.order.remove(&tick);
+            }
+        }
+    }
+}
+
+/// Trim the whole slices that are due (older than `TRIM_MS`).
+pub fn trim_due() {
+    let mut g = CACHE.lock().unwrap();
+    if let Some(c) = g.as_mut() {
+        trim_locked(c, Some(std::time::Duration::from_millis(TRIM_MS.load(Relaxed))), usize::MAX);
+    }
+}
+
+/// Trim every whole slice now (tests and benches: the state between two visits).
+pub fn trim_all() {
+    let mut g = CACHE.lock().unwrap();
+    if let Some(c) = g.as_mut() {
+        trim_locked(c, None, usize::MAX);
     }
 }
 
@@ -239,6 +395,7 @@ pub struct CacheStats {
     pub slices: usize,
     pub slice_bytes: usize,
     pub empty_slices: usize,
+    pub untrimmed_slices: usize,
 }
 
 pub fn stats() -> CacheStats {
@@ -255,7 +412,8 @@ pub fn stats() -> CacheStats {
                 CKey::Slice(..) => {
                     s.slices += 1;
                     s.slice_bytes += cost(k, b);
-                    s.empty_slices += b.is_empty() as usize;
+                    s.empty_slices += b.blk.is_empty() as usize;
+                    s.untrimmed_slices += b.whole_slice as usize;
                 }
             }
         }
@@ -280,9 +438,9 @@ pub fn bytes_per_customer(kind: CustomerKind, hot: Option<&HashSet<Vec<u8>>>) ->
             }
             CKey::Block(..) => {
                 let mut custs: BTreeSet<Vec<u8>> = BTreeSet::new();
-                for i in 0..b.len() {
-                    if let Some(r) = kind.customer_of(b.key(i)) {
-                        custs.insert(b.key(i)[r].to_vec());
+                for i in 0..b.blk.len() {
+                    if let Some(r) = kind.customer_of(b.blk.key(i)) {
+                        custs.insert(b.blk.key(i)[r].to_vec());
                     }
                 }
                 if let Some(h) = hot {
@@ -303,17 +461,53 @@ pub fn bytes_per_customer(kind: CustomerKind, hot: Option<&HashSet<Vec<u8>>>) ->
 
 // ---- fetching blocks of a run: cached whole blocks and slices first, the rest in one range GET
 
-/// Blocks first..=last of `run`, for a read that slices by `prefix` (None: whole blocks). A cached slice of the prefix
-/// or a cached whole block answers without a GET; the missing blocks come in one range GET, are decoded and checked,
-/// and each is kept whole or as its slice. Every returned block holds every row of its block inside the prefix.
-pub async fn fetch(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, last: usize, prefix: Option<&[u8]>) -> Result<Vec<Arc<Block>>> {
-    let mut out: Vec<Option<Arc<Block>>> = Vec::with_capacity(last + 1 - first);
+/// What a read needs of block b: whether a cached piece will do.
+pub enum Need<'a> {
+    /// A point read of this key.
+    Key(&'a [u8]),
+    /// A range read of [lo, hi) in this block that starts at its top (reverse): the piece must cover the top of it.
+    Down(&'a [u8], Option<&'a [u8]>),
+    /// A range read of [lo, hi) in this block that starts at its bottom (forward).
+    Up(&'a [u8], Option<&'a [u8]>),
+}
+
+fn good(p: &Piece, need: &Need) -> bool {
+    match need {
+        Need::Key(k) => p.covers(k),
+        // the top is covered, and the interval reaches into the range (not wholly above it)
+        Need::Down(lo, hi) => p.covers_up_to(*hi) && p.lo.as_deref().is_none_or(|l| hi.is_none_or(|h| l < h)) && p.hi.as_deref().is_none_or(|h| h > *lo),
+        Need::Up(lo, hi) => p.covers_down_to(lo) && p.hi.as_deref().is_none_or(|h| h > *lo) && p.lo.as_deref().is_none_or(|l| hi.is_none_or(|x| l < x)),
+    }
+}
+
+/// Whether block b of the run is in the counter in a form that serves `need` (no GET), for the read-ahead decision.
+pub fn cached(run: &Run, b: usize, prefix: Option<&[u8]>, need: &Need) -> bool {
+    if let Some(p) = prefix {
+        if cache_get(&CKey::Slice(run.run_id, b as u32, p.into())).is_some_and(|s| good(&s, need)) {
+            return true;
+        }
+    }
+    cache_get(&CKey::Block(run.run_id, b as u32)).is_some()
+}
+
+/// Blocks first..=last of `run`, for a read that slices by `prefix` (None: whole blocks). A cached piece answers without
+/// a GET when it covers where the read starts in that block (`need(b)`); the missing blocks come in one range GET, are
+/// decoded and checked, and each is kept whole or as its slice (a new slice keeps what the piece it replaces relied on).
+/// A returned slice may end before the read's range does (a trimmed slice): the caller continues with [`refetch`].
+pub async fn fetch<'n>(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, last: usize, prefix: Option<&[u8]>, need: &(dyn Fn(usize) -> Need<'n> + Sync)) -> Result<Vec<Arc<Piece>>> {
+    let mut out: Vec<Option<Arc<Piece>>> = Vec::with_capacity(last + 1 - first);
+    let mut stale: Vec<Option<Arc<Piece>>> = Vec::with_capacity(last + 1 - first);
     for b in first..=last {
         let mut hit = None;
+        let mut old = None;
         if let Some(p) = prefix {
-            hit = cache_get(&CKey::Slice(run.run_id, b as u32, p.into()));
-            if hit.is_some() {
-                SLICE_HITS.fetch_add(1, Relaxed);
+            if let Some(s) = cache_get(&CKey::Slice(run.run_id, b as u32, p.into())) {
+                if good(&s, &need(b)) {
+                    SLICE_HITS.fetch_add(1, Relaxed);
+                    hit = Some(s);
+                } else {
+                    old = Some(s);
+                }
             }
         }
         if hit.is_none() {
@@ -323,6 +517,7 @@ pub async fn fetch(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, last: 
             }
         }
         out.push(hit);
+        stale.push(old);
     }
     let hits = out.iter().filter(|b| b.is_some()).count();
     super::view::BLOCK_HITS.fetch_add(hits as u64, Relaxed);
@@ -337,23 +532,66 @@ pub async fn fetch(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, last: 
             }
             let (x, y) = run.fence.range(b, b);
             let blk = runfmt::decode_checked(run, b, &data[(x - lo) as usize..(y - lo) as usize])?;
-            let kept = match prefix {
-                Some(p) => {
-                    let s = Arc::new(cut(&blk, p));
-                    SLICES_MADE.fetch_add(1, Relaxed);
-                    cache_put(CKey::Slice(run.run_id, b as u32, p.into()), s.clone());
-                    s
-                }
-                None => {
-                    let s = Arc::new(blk);
-                    cache_put(CKey::Block(run.run_id, b as u32), s.clone());
-                    s
-                }
-            };
-            out[b - first] = Some(kept);
+            out[b - first] = Some(keep(run, b, blk, prefix, stale[b - first].as_deref()));
         }
     }
     Ok(out.into_iter().map(|b| b.expect("block fetched")).collect())
+}
+
+/// Block b of `run` again, from the store, for a read that ran past a trimmed slice's interval.
+pub async fn refetch(store: &Arc<dyn ObjectStore>, run: &Run, b: usize, prefix: &[u8], old: &Piece) -> Result<Arc<Piece>> {
+    REFETCHES.fetch_add(1, Relaxed);
+    let (lo, hi) = run.fence.range(b, b);
+    let data = runfmt::get_range(store, &run.path, lo, hi).await?;
+    super::view::RUN_GETS.fetch_add(1, Relaxed);
+    let blk = runfmt::decode_checked(run, b, &data)?;
+    Ok(keep(run, b, blk, Some(prefix), Some(old)))
+}
+
+/// Keep a fetched block whole (no prefix) or as its whole slice, which inherits what `old` relied on.
+fn keep(run: &Run, b: usize, blk: Block, prefix: Option<&[u8]>, old: Option<&Piece>) -> Arc<Piece> {
+    match prefix {
+        Some(p) => {
+            let s = Arc::new(Piece::new(cut(&blk, p), true));
+            if let Some(o) = old {
+                if let Some((a, z)) = o.relied() {
+                    s.rely(&a, &z);
+                } else if !o.blk.is_empty() {
+                    s.rely(o.blk.key(0), &succ(o.blk.key(o.blk.len() - 1)));
+                }
+            }
+            SLICES_MADE.fetch_add(1, Relaxed);
+            cache_put(CKey::Slice(run.run_id, b as u32, p.into()), s.clone());
+            // area slices: the customer's other areas in this block (its documents next to the index entries just read)
+            // are kept too, whole, so the read's next step finds them without a second GET of the same block; trimming
+            // drops the ones no read relies on
+            if let Some(r) = run.customers.customer_of(p) {
+                let cust = &p[..r.end];
+                if cust.len() < p.len() {
+                    let rows = cut(&blk, cust);
+                    let mut i = 0;
+                    while i < rows.len() {
+                        let Some(a) = point_prefix(run.customers, rows.key(i), SliceMode::Area) else { break };
+                        let end = runfmt::prefix_successor(&a);
+                        let j = end.as_deref().map_or(rows.len(), |e| rows.lower_bound(e));
+                        if a[..] != p[..] {
+                            let k = CKey::Slice(run.run_id, b as u32, a.clone().into_boxed_slice());
+                            if cache_get(&k).is_none() {
+                                cache_put(k, Arc::new(Piece::new(rows.slice(i, j), true)));
+                            }
+                        }
+                        i = j.max(i + 1);
+                    }
+                }
+            }
+            s
+        }
+        None => {
+            let s = Arc::new(Piece::new(blk, false));
+            cache_put(CKey::Block(run.run_id, b as u32), s.clone());
+            s
+        }
+    }
 }
 
 // ---- the staged publish (reseal interface)
@@ -399,8 +637,9 @@ pub async fn stage(old: &View, new: &View) -> StageReport {
         return rep;
     }
     STAGES.fetch_add(1, Relaxed);
-    // what this process holds of the retired runs: slice prefixes, and the key ranges of whole blocks
-    let mut prefixes: BTreeSet<Vec<u8>> = BTreeSet::new();
+    // what this process holds of the retired runs: per slice prefix the hull of the held intervals (and whether a slice
+    // was still whole, with what it relied on), and the key ranges of whole blocks
+    let mut prefixes: BTreeMap<Vec<u8>, Held> = BTreeMap::new();
     let mut ranges: Vec<(Vec<u8>, Vec<u8>)> = Vec::new();
     {
         let g = CACHE.lock().unwrap();
@@ -412,11 +651,28 @@ pub async fn stage(old: &View, new: &View) -> StageReport {
                 rep.held += 1;
                 match k {
                     CKey::Slice(_, _, p) => {
-                        prefixes.insert(p.to_vec());
+                        let h = prefixes.entry(p.to_vec()).or_insert_with(|| Held { lo: b.lo.as_deref().map(|x| x.to_vec()), hi: b.hi.as_deref().map(|x| x.to_vec()), whole: false, relied: None });
+                        h.lo = match (&h.lo, b.lo.as_deref()) {
+                            (Some(a), Some(x)) => Some(std::cmp::min(a.clone(), x.to_vec())),
+                            _ => None,
+                        };
+                        h.hi = match (&h.hi, b.hi.as_deref()) {
+                            (Some(a), Some(x)) => Some(std::cmp::max(a.clone(), x.to_vec())),
+                            _ => None,
+                        };
+                        if b.whole_slice {
+                            h.whole = true;
+                            if let Some((x, y)) = b.relied() {
+                                h.relied = Some(match h.relied.take() {
+                                    None => (x, y),
+                                    Some((a, z)) => (std::cmp::min(a, x), std::cmp::max(z, y)),
+                                });
+                            }
+                        }
                     }
                     CKey::Block(..) => {
-                        if !b.is_empty() {
-                            ranges.push((b.key(0).to_vec(), b.key(b.len() - 1).to_vec()));
+                        if !b.blk.is_empty() {
+                            ranges.push((b.blk.key(0).to_vec(), b.blk.key(b.blk.len() - 1).to_vec()));
                         }
                     }
                 }
@@ -447,26 +703,63 @@ pub async fn stage(old: &View, new: &View) -> StageReport {
     rep
 }
 
-async fn warm(store: &Arc<dyn ObjectStore>, fresh: &[Arc<super::view::RunH>], prefixes: &BTreeSet<Vec<u8>>, ranges: &[(Vec<u8>, Vec<u8>)], rep: &mut StageReport) {
-    // first what each new run must give: per block, the prefixes to slice it by and whether it is wanted whole
-    let mut plan: Vec<(Arc<Run>, BTreeMap<usize, (Vec<Vec<u8>>, bool)>)> = Vec::new();
+/// What the counter held under one slice prefix of a retired run: the hull of the slices' intervals (None: to the
+/// prefix's edge), whether one was still whole, and what the whole ones relied on.
+#[derive(Clone, Debug)]
+struct Held {
+    lo: Option<Vec<u8>>,
+    hi: Option<Vec<u8>>,
+    whole: bool,
+    relied: Option<(Vec<u8>, Vec<u8>)>,
+}
+
+/// The rows of `b` under prefix `p` inside [lo, hi), as a piece covering exactly that interval.
+fn cut_range(b: &Block, p: &[u8], h: &Held) -> Piece {
+    if h.whole {
+        let s = Piece::new(cut(b, p), true);
+        if let Some((x, y)) = &h.relied {
+            s.rely(x, y);
+        }
+        return s;
+    }
+    let plo = std::cmp::max(p, h.lo.as_deref().unwrap_or(p));
+    let i = b.lower_bound(plo);
+    let end = runfmt::prefix_successor(p);
+    let phi: Option<&[u8]> = match (h.hi.as_deref(), end.as_deref()) {
+        (Some(x), Some(e)) => Some(std::cmp::min(x, e)),
+        (Some(x), None) => Some(x),
+        (None, e) => e,
+    };
+    let j = phi.map_or(b.len(), |x| b.lower_bound(x));
+    Piece { blk: b.slice(i, j.max(i)), lo: h.lo.clone().map(|x| x.into_boxed_slice()), hi: h.hi.clone().map(|x| x.into_boxed_slice()), whole_slice: false, relied: Mutex::new(None) }
+}
+
+async fn warm(store: &Arc<dyn ObjectStore>, fresh: &[Arc<super::view::RunH>], prefixes: &BTreeMap<Vec<u8>, Held>, ranges: &[(Vec<u8>, Vec<u8>)], rep: &mut StageReport) {
+    // first what each new run must give: per block, the slices to cut it into and whether it is wanted whole
+    type Want = BTreeMap<usize, (Vec<(Vec<u8>, Held)>, bool)>;
+    let mut plan: Vec<(Arc<Run>, Want)> = Vec::new();
     rep.wanted = rep.held; // until the plan is known, everything held counts as wanted
     let mut wanted = 0usize;
     for h in fresh {
         let Ok(run) = h.open(store).await else { continue };
-        let mut want: BTreeMap<usize, (Vec<Vec<u8>>, bool)> = BTreeMap::new();
-        for p in prefixes {
-            let hi = runfmt::prefix_successor(p);
-            if !run.may_hold(p, hi.as_deref()) {
+        let mut want: Want = BTreeMap::new();
+        for (p, held) in prefixes {
+            // the held interval, open upward to the end of the prefix: the rows written since the retired run (new
+            // messages, new index entries of time-ordered keys) land at the top of the area, where the hot reads go next
+            let mut held = held.clone();
+            held.hi = None;
+            let lo = std::cmp::max(p.clone(), held.lo.clone().unwrap_or_default());
+            let end = runfmt::prefix_successor(p);
+            let hi: Option<Vec<u8>> = end.clone();
+            if !run.may_hold(p, end.as_deref()) {
                 continue; // the run's key bounds or its customer filter rule it out
             }
-            if let Some((a, z)) = run.fence.blocks_for(p, hi.as_deref()) {
+            if let Some((a, z)) = run.fence.blocks_for(&lo, hi.as_deref()) {
                 for b in a..=z {
-                    if cache_get(&CKey::Slice(run.run_id, b as u32, p.clone().into())).is_none() {
-                        want.entry(b).or_default().0.push(p.clone());
-                        wanted += 1;
-                    }
+                    want.entry(b).or_default().0.push((p.clone(), held.clone()));
+                    wanted += 1;
                 }
+                let _ = &hi;
             }
         }
         for (lo, last) in ranges {
@@ -507,7 +800,7 @@ async fn warm(store: &Arc<dyn ObjectStore>, fresh: &[Arc<super::view::RunH>], pr
 #[cfg(test)]
 pub static TEST_WARM_DELAY_MS: AtomicU64 = AtomicU64::new(0);
 
-async fn warm_blocks(store: &Arc<dyn ObjectStore>, run: &Run, a: usize, z: usize, want: &BTreeMap<usize, (Vec<Vec<u8>>, bool)>) -> Result<usize> {
+async fn warm_blocks(store: &Arc<dyn ObjectStore>, run: &Run, a: usize, z: usize, want: &BTreeMap<usize, (Vec<(Vec<u8>, Held)>, bool)>) -> Result<usize> {
     #[cfg(test)]
     {
         let d = TEST_WARM_DELAY_MS.load(Relaxed);
@@ -523,12 +816,12 @@ async fn warm_blocks(store: &Arc<dyn ObjectStore>, run: &Run, a: usize, z: usize
         let Some((ps, whole)) = want.get(&b) else { continue };
         let (x, y) = run.fence.range(b, b);
         let blk = runfmt::decode_checked(run, b, &data[(x - lo) as usize..(y - lo) as usize])?;
-        for p in ps {
-            cache_put(CKey::Slice(run.run_id, b as u32, p.clone().into()), Arc::new(cut(&blk, p)));
+        for (p, h) in ps {
+            cache_put(CKey::Slice(run.run_id, b as u32, p.clone().into_boxed_slice()), Arc::new(cut_range(&blk, p, h)));
             n += 1;
         }
         if *whole {
-            cache_put(CKey::Block(run.run_id, b as u32), Arc::new(blk));
+            cache_put(CKey::Block(run.run_id, b as u32), Arc::new(Piece::new(blk, false)));
             n += 1;
         }
     }

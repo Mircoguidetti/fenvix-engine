@@ -585,6 +585,11 @@ impl Entry {
         closed
     }
 
+    /// The open tenant, for the control commands (`fenvixSealedPublish`), under this exclusive lock.
+    pub fn tenant_mut(&mut self) -> Option<&mut Tenant> {
+        self.tenant.as_mut()
+    }
+
     /// Wake the tenant as a reader if it is closed. `Ok(false)` if the database does not exist.
     /// The tenant's lease is taken first: a process that does not own the tenant gets [`lease::LeaseHeld`].
     pub async fn ensure_open(&mut self) -> Result<bool> {

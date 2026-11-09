@@ -823,6 +823,20 @@ impl Server {
                 "runGets": tenant_bench::fx::view::RUN_GETS.load(Relaxed) as i64,
                 "runOpens": tenant_bench::fx::view::RUN_OPENS.load(Relaxed) as i64,
                 "blockHits": tenant_bench::fx::view::BLOCK_HITS.load(Relaxed) as i64,
+                // step 6 (fx/counter.rs): slices, the new-user filter, the staged publish
+                "counter": {
+                    "bytes": tenant_bench::fx::counter::stats().bytes as i64,
+                    "slicesMade": tenant_bench::fx::counter::SLICES_MADE.load(Relaxed) as i64,
+                    "sliceHits": tenant_bench::fx::counter::SLICE_HITS.load(Relaxed) as i64,
+                    "wholeHits": tenant_bench::fx::counter::WHOLE_HITS.load(Relaxed) as i64,
+                    "filterChecks": tenant_bench::fx::counter::FILTER_CHECKS.load(Relaxed) as i64,
+                    "filterSkips": tenant_bench::fx::counter::FILTER_SKIPS.load(Relaxed) as i64,
+                    "stages": tenant_bench::fx::counter::STAGES.load(Relaxed) as i64,
+                    "stageWarmed": tenant_bench::fx::counter::STAGE_WARMED.load(Relaxed) as i64,
+                    "stageMissed": tenant_bench::fx::counter::STAGE_MISSED.load(Relaxed) as i64,
+                    "stageGets": tenant_bench::fx::counter::STAGE_GETS.load(Relaxed) as i64,
+                    "stageTimeouts": tenant_bench::fx::counter::STAGE_TIMEOUTS.load(Relaxed) as i64,
+                },
             },
             "compaction": {
                 "passes": tenant_bench::lifecycle::MAINT.compact_runs.load(Relaxed) as i64,
