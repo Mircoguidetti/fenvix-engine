@@ -1,0 +1,13 @@
+counter_after_visit1: {'bytes': 39872524, 'blocks': 0, 'blockBytes': 0, 'slices': 2156, 'sliceBytes': 39872524, 'emptySlices': 0, 'ram_per_hot_customer_mean': 39872.524, 'customers_charged': 1000, 'charged_p50': 45921, 'charged_p95': 50805}
+counter_after_visit1_trimmed: {'bytes': 39397516, 'blocks': 0, 'blockBytes': 0, 'slices': 2156, 'sliceBytes': 39397516, 'emptySlices': 0, 'ram_per_hot_customer_mean': 39397.516, 'customers_charged': 1000, 'charged_p50': 45880, 'charged_p95': 50753}
+visit 1: 1000 users in 135 s; openings {'n': 1000, 'bytes_median': 45169.5, 'bytes_p95': 49168, 'bytes_max': 50839, 'entries_median': 160.0, 'bytes_total': 38541672}
+gap day 1/1: 168748 messages, compaction passes so far 2
+  publish (all): version 5 in 55969 ms, stage {'retired_runs': 4, 'held': 2157, 'held_bytes': 39676143, 'wanted': 2198, 'warmed': 2198, 'warmed_bytes': 58104429, 'missed': 0, 'gets': 812, 'millis': 7064, 'timed_out': False, 'capped': False}
+settled after 20 s
+gap: {'profile': 'medium', 'days': 1, 'messages': 168797, 'test_users_written': 291, 'test_messages': 1628, 'write_secs': 82.27972960472107, 'gap_secs': 102.38625144958496, 'compaction_passes': 3, 'compaction': {'compactRuns': 3, 'compactPuts': 114, 'compactGets': 2805}, 'server_cpu_secs': 78.71000000000001, 'first_course_writes_applied': 3256, 'first_course_write_hook_ms': 318.444934, 'trimmed': 0, 'dropped_too_big': 0}
+counter_after_visit2: {'bytes': 43956442, 'blocks': 63, 'blockBytes': 17552935, 'slices': 2758, 'sliceBytes': 26403507, 'emptySlices': 1, 'ram_per_hot_customer_mean': 43956.442, 'customers_charged': 1300, 'charged_p50': 21573, 'charged_p95': 23752}
+counter_after_visit2_trimmed: {'bytes': 43805868, 'blocks': 63, 'blockBytes': 17552935, 'slices': 2758, 'sliceBytes': 26252933, 'emptySlices': 1, 'ram_per_hot_customer_mean': 43805.868, 'customers_charged': 1300, 'charged_p50': 21564, 'charged_p95': 23690}
+visit 2: zero-GET exact answers 1000/1000 (100.0%), active 100.0%, uniform 100.0%, written 100.0%, not written 100.0%; wrong answers 0
+Q1 visit 1: GETs mean 9.16, ms p50 25.2; visit 2: GETs mean 0.00, ms p50 1.04, p99 2.35
+later queries ms: visit 1 p50 3.99 p99 310.52; visit 2 p50 1.00 p99 1.94
+opening sizes: after visit 1 {'n': 1000, 'bytes_median': 45169.5, 'bytes_p95': 49168, 'bytes_max': 50839, 'entries_median': 160.0, 'bytes_total': 38541672}; after gap {'n': 1000, 'bytes_median': 46120.5, 'bytes_p95': 51005, 'bytes_max': 231739, 'entries_median': 165.0, 'bytes_total': 39593043}; after visit 2 {'n': 1000, 'bytes_median': 45297.5, 'bytes_p95': 49168, 'bytes_max': 51090, 'entries_median': 162.0, 'bytes_total': 38789152}
