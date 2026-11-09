@@ -1,0 +1,20 @@
+replay: mode ours, ratio 10tb, D 1024 MiB, L0 819 bytes, measured 0.5 D after a warm-up of 0.25 D, seed 42
+loaded 1024 MiB in 22.0 s
+first version built: 45 groups
+  20 s: 1110 MiB written, L0 max 69, groups 45, delta runs 12, reseals 1, merges 203, absorbs 621, drop jobs 1651
+  40 s: 1215 MiB written, L0 max 69, groups 45, delta runs 13, reseals 10, merges 584, absorbs 1765, drop jobs 4473
+measured window starts at 1280 MiB written
+  60 s: 1305 MiB written, L0 max 69, groups 46, delta runs 11, reseals 41, merges 944, absorbs 2843, drop jobs 6848
+  80 s: 1391 MiB written, L0 max 69, groups 47, delta runs 19, reseals 46, merges 1308, absorbs 3943, drop jobs 9041
+  100 s: 1461 MiB written, L0 max 69, groups 48, delta runs 15, reseals 75, merges 1607, absorbs 4835, drop jobs 10860
+  120 s: 1508 MiB written, L0 max 69, groups 48, delta runs 18, reseals 81, merges 1823, absorbs 5487, drop jobs 12303
+  140 s: 1560 MiB written, L0 max 69, groups 49, delta runs 10, reseals 86, merges 2042, absorbs 6136, drop jobs 13905
+  160 s: 1609 MiB written, L0 max 69, groups 51, delta runs 14, reseals 90, merges 2243, absorbs 6743, drop jobs 15441
+  180 s: 1649 MiB written, L0 max 69, groups 51, delta runs 11, reseals 97, merges 2439, absorbs 7328, drop jobs 16695
+  200 s: 1721 MiB written, L0 max 69, groups 51, delta runs 14, reseals 124, merges 2749, absorbs 8261, drop jobs 18633
+  220 s: 1748 MiB written, L0 max 69, groups 53, delta runs 9, reseals 127, merges 2894, absorbs 8691, drop jobs 19615
+RESULT mode ours ratio 10tb D 1024 MiB L0 819 B: inserted 512.0 MiB raw in the window (133.50 compressed days), L0 flushes 379.8 MiB, SlateDB compaction 1252.7 MiB, our runs 3328.6 MiB, WAL 336.2 MiB, our manifests 253.5 MiB
+RESULT amplification 13.06 (stored bytes written per stored byte flushed to L0); L0 max 69; longest write 8487 ms; window 191 s, process CPU 413 s
+RESULT ours, raw rows: amplification 11.31 = 1 (L0) + delta 6.19 (absorb + merges) + reseals 4.11; reseals 135, splits 9, group merges 0, merges 3139, absorbs 9426, groups 54, delta runs 9 holding 131.9 MiB raw; job CPU 130.3 s, 24.2 s per GiB written by our jobs
+RESULT formula for these parameters: 1 + 8.66 delta writes + 5.00 reseal = 14.66 (the plan's formula at full size: 13 at 1 TB, 15 at 10 TB)
+RESULT drop: jobs 21235, rows dropped 3642597, rows kept 8947069, GC runs deleted 12460, versions deleted 12483

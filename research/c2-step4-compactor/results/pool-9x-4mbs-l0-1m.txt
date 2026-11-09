@@ -1,0 +1,20 @@
+pool: 9 databases of 64 MiB, 4 MB/s of inserts each, L0 1024 KiB, 3 pool threads, a compressed day is 2.892623448s, 10 days
+loaded and sealed 9 databases
+  15 s (5.2 days): max L0 [17, 25, 23, 25, 22, 22, 32, 32, 30], reseals due now 6, pool busy 4 waiting 1
+after the writes stopped: reseals due 0, erasures pending 2, after 2.965783906s
+db 0: max L0 24, longest write 138 ms, absorbs 187, merges 61, reseals 222 (splits 34, group merges 0), erasures 54 done 53, longest reseal wait 0.88 days, drop jobs 299 rows dropped 0, job CPU 22.3 s
+db 1: max L0 25, longest write 98 ms, absorbs 183, merges 60, reseals 207 (splits 32, group merges 1), erasures 51 done 51, longest reseal wait 0.82 days, drop jobs 247 rows dropped 0, job CPU 20.3 s
+db 2: max L0 24, longest write 276 ms, absorbs 159, merges 52, reseals 190 (splits 35, group merges 0), erasures 47 done 47, longest reseal wait 0.75 days, drop jobs 228 rows dropped 519718, job CPU 18.2 s
+db 3: max L0 25, longest write 138 ms, absorbs 161, merges 53, reseals 170 (splits 26, group merges 0), erasures 45 done 45, longest reseal wait 1.25 days, drop jobs 198 rows dropped 495658, job CPU 16.7 s
+db 4: max L0 22, longest write 168 ms, absorbs 137, merges 45, reseals 155 (splits 22, group merges 1), erasures 41 done 41, longest reseal wait 0.76 days, drop jobs 182 rows dropped 0, job CPU 14.3 s
+db 5: max L0 29, longest write 117 ms, absorbs 134, merges 44, reseals 145 (splits 19, group merges 0), erasures 37 done 37, longest reseal wait 0.99 days, drop jobs 135 rows dropped 0, job CPU 13.6 s
+db 6: max L0 32, longest write 116 ms, absorbs 96, merges 31, reseals 116 (splits 17, group merges 1), erasures 32 done 32, longest reseal wait 1.29 days, drop jobs 128 rows dropped 175839, job CPU 11.0 s
+db 7: max L0 32, longest write 261 ms, absorbs 66, merges 21, reseals 80 (splits 11, group merges 1), erasures 26 done 26, longest reseal wait 1.18 days, drop jobs 109 rows dropped 220061, job CPU 7.0 s
+db 8: max L0 30, longest write 98 ms, absorbs 55, merges 18, reseals 59 (splits 9, group merges 1), erasures 20 done 19, longest reseal wait 0.67 days, drop jobs 64 rows dropped 259782, job CPU 4.9 s
+RESULT 9 databases, 3 pool threads: max L0 over all databases 32; erasures 353, late (over one compressed day) 7, longest 1.63 days; longest reseal wait 1.29 days; reseals 1344
+RESULT CPU over 29 s: process 3.88 cores, pool threads 2.14 cores (0.238 cores per database); inserted 1685.6 MiB raw (6.74 MB/s per database)
+RESULT pool Absorb: jobs 1178, mean wait 0.0 ms, longest wait 0 ms, mean held 33.3 ms
+RESULT pool Erase: jobs 400, mean wait 3.1 ms, longest wait 277 ms, mean held 152.3 ms
+RESULT pool Merge: jobs 413, mean wait 6.3 ms, longest wait 492 ms, mean held 97.2 ms
+RESULT pool Reseal: jobs 995, mean wait 6.2 ms, longest wait 654 ms, mean held 45.9 ms
+RESULT pool Gc: jobs 657, mean wait 8.9 ms, longest wait 791 ms, mean held 1.5 ms
