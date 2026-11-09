@@ -220,7 +220,7 @@ async fn plain<R: RawScan>(raw: &R, lo: &[u8], hi: Option<&[u8]>, reverse: bool,
 async fn area<R: RawScan>(raw: &R, s: &Seg, lo: &[u8], hi: &[u8], reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
     use std::sync::atomic::Ordering::Relaxed;
     let plo = s.phys_bound(lo);
-    let phi = s.phys_upper(hi);
+    let phi = s.phys_upper_within(lo, hi);
     let mut out: Vec<(Bytes, Bytes)> = Vec::new();
     let full = |out: &Vec<(Bytes, Bytes)>| limit.map(|l| out.len() >= l).unwrap_or(false);
     if !reverse {

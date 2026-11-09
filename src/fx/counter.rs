@@ -530,6 +530,9 @@ pub async fn fetch<'n>(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, la
     super::view::BLOCK_HITS.fetch_add(hits as u64, Relaxed);
     let miss: Vec<usize> = (first..=last).filter(|b| out[b - first].is_none()).collect();
     if let (Some(&a), Some(&z)) = (miss.first(), miss.last()) {
+        if std::env::var("FENVIX_COUNTER_DEBUG").is_ok() {
+            eprintln!("counter: GET blocks {a}..={z} of {} for prefix {:?} (stale piece: {})", run.path, prefix.map(|p| String::from_utf8_lossy(p).to_string()), stale.iter().any(|x| x.is_some()));
+        }
         let (lo, hi) = run.fence.range(a, z);
         let data = runfmt::get_range(store, &run.path, lo, hi).await?;
         super::view::RUN_GETS.fetch_add(1, Relaxed);
