@@ -22,6 +22,8 @@ pub mod manifest;
 pub mod read;
 pub mod view;
 #[cfg(test)]
+mod counter_bench;
+#[cfg(test)]
 mod counter_tests;
 #[cfg(test)]
 mod tests;

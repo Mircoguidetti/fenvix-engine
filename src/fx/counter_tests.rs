@@ -119,6 +119,15 @@ async fn slices_keep_only_the_read_area_and_answer_exactly() {
             newest(&t, &m, c, 5).await;
         }
         assert_eq!(view::RUN_GETS.load(Relaxed) - g0, 0, "{mode:?}: hot reads need no GET");
+        if mode != SliceMode::Off {
+            // trimmed to what the visit relied on, the slices still answer the same visit with 0 GETs
+            counter::trim_all();
+            let g2 = view::RUN_GETS.load(Relaxed);
+            for &c in &hot {
+                newest(&t, &m, c, 5).await;
+            }
+            assert_eq!(view::RUN_GETS.load(Relaxed) - g2, 0, "{mode:?}: trimmed slices answer the same reads");
+        }
         let hot_set: std::collections::HashSet<Vec<u8>> = hot.iter().map(|c| comp(*c)).collect();
         let per = counter::bytes_per_customer(CustomerKind::V2, Some(&hot_set));
         let held: f64 = hot.iter().map(|c| per.get(&comp(*c)).copied().unwrap_or(0.0)).sum::<f64>() / hot.len() as f64;
@@ -133,8 +142,9 @@ async fn slices_keep_only_the_read_area_and_answer_exactly() {
         eprintln!("mode {mode:?}: {held:.0} bytes per hot customer, cache {st:?}");
         per_mode.push(held);
     }
-    // a customer has 30 x (200 + about 30) bytes of rows; whole 32 KiB blocks hold about 5 customers each
-    assert!(per_mode[1] < per_mode[0] / 2.0, "customer slices {} against whole blocks {}", per_mode[1], per_mode[0]);
+    // a customer has 30 x (200 + about 30) bytes of rows; whole 32 KiB blocks hold about 5 customers each; the visit
+    // relies on 5 documents and 5 index entries of them
+    assert!(per_mode[1] < per_mode[0] / 4.0, "customer slices {} against whole blocks {}", per_mode[1], per_mode[0]);
     // here a customer is one collection read whole (index and documents): area slices hold the same rows, in two
     // entries per block instead of one
     assert!(per_mode[2] <= per_mode[1] + 2.0 * (counter::ENTRY_OVERHEAD as f64 + 32.0), "area slices {} against customer slices {}", per_mode[2], per_mode[1]);
@@ -147,7 +157,8 @@ async fn slices_keep_only_the_read_area_and_answer_exactly() {
 async fn slices_are_exact_under_writes_and_reseals() {
     let _s = SERIAL.lock().await;
     enable();
-    for mode in [SliceMode::Off, SliceMode::Customer, SliceMode::Area] {
+    let trim0 = counter::TRIM_MS.swap(u64::MAX, Relaxed);
+    for (mode, trim) in [(SliceMode::Off, false), (SliceMode::Customer, false), (SliceMode::Area, false), (SliceMode::Customer, true), (SliceMode::Area, true)] {
         let _m = Mode::set(mode);
         view::clear_cache();
         let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
@@ -205,14 +216,19 @@ async fn slices_are_exact_under_writes_and_reseals() {
                     }
                 }
             }
+            if trim {
+                // slices trimmed to what the reads so far relied on: later reads meet trimmed slices and refetch
+                counter::trim_all();
+            }
             if step % 500 == 499 {
                 view::clear_cache();
             }
         }
-        eprintln!("mode {mode:?}: {reads} reads, {wrong} wrong, cache {:?}", counter::stats());
-        assert_eq!(wrong, 0, "{mode:?}");
+        eprintln!("mode {mode:?}, trimmed after every step {trim}: {reads} reads, {wrong} wrong, cache {:?}, refetches {}", counter::stats(), counter::REFETCHES.load(Relaxed));
+        assert_eq!(wrong, 0, "{mode:?} trim {trim}");
         t.abandon().await;
     }
+    counter::TRIM_MS.store(trim0, Relaxed);
 }
 
 /// The new-user filter: customers that no run holds cost 0 GETs on our runs, point and range reads alike, except the
@@ -310,6 +326,7 @@ async fn staged_publish_keeps_hot_customers_warm_across_a_reseal() {
         for &c in &hot {
             newest(&t, &m, c, 5).await;
         }
+        counter::trim_all();
         // new rows for some hot customers and some others, then the reseal (step 4's trigger, stubbed)
         let mut ops = Vec::new();
         for c in (0..200).step_by(3) {

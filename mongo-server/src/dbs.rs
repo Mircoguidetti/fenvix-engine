@@ -585,6 +585,11 @@ impl Entry {
         closed
     }
 
+    /// The open tenant, for the control commands (`fenvixSealedPublish`), under this exclusive lock.
+    pub fn tenant_mut(&mut self) -> Option<&mut Tenant> {
+        self.tenant.as_mut()
+    }
+
     /// Wake the tenant as a reader if it is closed. `Ok(false)` if the database does not exist.
     /// The tenant's lease is taken first: a process that does not own the tenant gets [`lease::LeaseHeld`].
     pub async fn ensure_open(&mut self) -> Result<bool> {
@@ -1440,7 +1445,7 @@ impl ReadView {
         let Some(field) = crate::custkey::of_opts(opts.as_ref()) else { return };
         let Ok(indexes) = self.indexes(coll).await else { return };
         let all_durable = !durable_reads(&g.name) || g.tenant.as_ref().map_or(false, |t| t.all_durable());
-        *self.fc.lock().unwrap() = crate::opening::begin(&g.name, coll, &field, filter, &indexes, all_durable);
+        *self.fc.lock().unwrap() = crate::opening::begin(&g.name, coll, &field.field, filter, &indexes, all_durable);
     }
 
     /// First course: end of the query (keeps the opening when `ok`).
@@ -1470,7 +1475,7 @@ impl ReadView {
             None => vec![None; keys.len()],
         };
         let miss: Vec<usize> = (0..keys.len()).filter(|i| out[*i].is_none()).collect();
-        let miss_keys: Vec<Bytes> = miss.iter().map(|i| keys[*i].clone()).collect();
+        let miss_keys: Vec<Vec<u8>> = miss.iter().map(|i| keys[*i].clone()).collect();
         let fetched = crate::layout2::get_many(&crate::layout2::Raw::Tenant(t, false), &miss_keys, GET_MANY_PARALLEL.load(Relaxed)).await?;
         for (i, v) in miss.into_iter().zip(fetched) {
             out[i] = Some(v);

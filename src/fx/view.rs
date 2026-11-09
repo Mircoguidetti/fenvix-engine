@@ -5,7 +5,7 @@
 //! <= X_g). This file has the two run tiers; `read.rs` adds SlateDB on top. A winning delete envelope means absent.
 
 use super::manifest::{unhex, GroupLine, RunLine, Version};
-use crate::runfmt::{self, Block, Run, RUN_ID_LEN};
+use crate::runfmt::{self, Run, RUN_ID_LEN};
 use anyhow::{ensure, Result};
 use bytes::Bytes;
 use object_store::path::Path;
@@ -90,10 +90,6 @@ impl RunH {
     }
 }
 
-async fn fetch(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, last: usize, prefix: Option<&[u8]>) -> Result<Vec<Arc<Block>>> {
-    super::counter::fetch(store, run, first, last, prefix).await
-}
-
 /// A row from our runs: seq and envelope (first byte 0 live, 1 deleted). A point read leaves `key` empty (the caller
 /// knows it).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -134,9 +130,11 @@ async fn run_get(store: &Arc<dyn ObjectStore>, h: &RunH, key: &[u8]) -> Result<O
     if i == 0 {
         return Ok(None);
     }
-    // a point read needs one block (or its slice of the key's area)
+    // a point read needs one block (or its slice of the key's area, when the slice covers the key)
     let p = super::counter::point_prefix(run.customers, key, super::counter::slice_mode());
-    let b = fetch(store, run, i - 1, i - 1, p.as_deref()).await?.pop().unwrap();
+    let piece = super::counter::fetch(store, run, i - 1, i - 1, p.as_deref(), &|_| super::counter::Need::Key(key)).await?.pop().unwrap();
+    piece.rely(key, &super::counter::succ(key));
+    let b = &piece.blk;
     let j = b.lower_bound(key);
     Ok((j < b.len() && b.key(j) == key).then(|| RRow { key: Vec::new(), seq: b.seq(j), env: b.env(j).to_vec() }))
 }
@@ -243,6 +241,90 @@ impl View {
     }
 }
 
+/// The rows of one block a cursor reads: rows i..j of its piece are still to read (i0..j0 at the start), inside the
+/// read's range in this block, [need_lo, need_hi).
+struct Part {
+    piece: Arc<super::counter::Piece>,
+    b: usize,
+    i: usize,
+    j: usize,
+    i0: usize,
+    j0: usize,
+    need_lo: Vec<u8>,
+    need_hi: Option<Vec<u8>>,
+}
+
+impl Part {
+    fn new(piece: Arc<super::counter::Piece>, b: usize, need_lo: Vec<u8>, need_hi: Option<Vec<u8>>) -> Part {
+        let blk = &piece.blk;
+        let i = blk.lower_bound(&need_lo);
+        let j = need_hi.as_deref().map_or(blk.len(), |h| blk.lower_bound(h)).max(i);
+        Part { piece, b, i, j, i0: i, j0: j, need_lo, need_hi }
+    }
+
+    /// The part of [need_lo, need_hi) that the piece covers.
+    fn covered(&self) -> (Vec<u8>, Option<Vec<u8>>) {
+        let lo = match self.piece.lo.as_deref() {
+            Some(l) if l > &self.need_lo[..] => l.to_vec(),
+            _ => self.need_lo.clone(),
+        };
+        let hi = match (self.piece.hi.as_deref(), self.need_hi.as_deref()) {
+            (Some(h), Some(n)) => Some(std::cmp::min(h, n).to_vec()),
+            (Some(h), None) => Some(h.to_vec()),
+            (None, n) => n.map(|x| x.to_vec()),
+        };
+        (lo, hi)
+    }
+
+    /// Note what the cursor relied on in this piece: everything it covers once it is read to its end, or, mid-way,
+    /// from the last row read to the end the read started at.
+    fn rely(&self, reverse: bool) {
+        let blk = &self.piece.blk;
+        let (lo, hi) = self.covered();
+        let done = self.i >= self.j;
+        let (a, z): (Vec<u8>, Option<Vec<u8>>) = if done {
+            (lo, hi)
+        } else if reverse {
+            if self.j == self.j0 {
+                return;
+            }
+            (blk.key(self.j).to_vec(), hi)
+        } else {
+            if self.i == self.i0 {
+                return;
+            }
+            (lo, Some(super::counter::succ(blk.key(self.i - 1))))
+        };
+        // an open end is the end of the prefix: the slice's last row bounds it
+        let z = match z {
+            Some(z) => z,
+            None => match blk.len() {
+                0 => return,
+                n => super::counter::succ(blk.key(n - 1)),
+            },
+        };
+        self.piece.rely(&a, &z);
+    }
+
+    /// The range still to read in this block once the piece's rows are read: below the piece's interval (reverse) or
+    /// above it (forward), when the read's range goes on there.
+    fn beyond(&self, reverse: bool) -> Option<(Vec<u8>, Option<Vec<u8>>)> {
+        // clipped to the read's range in this block: a slice's interval may lie wholly above (reverse) or below it
+        if reverse {
+            let l = self.piece.lo.as_deref()?;
+            let top = match self.need_hi.as_deref() {
+                Some(n) => std::cmp::min(l, n),
+                None => l,
+            };
+            (top > &self.need_lo[..]).then(|| (self.need_lo.clone(), Some(top.to_vec())))
+        } else {
+            let h = self.piece.hi.as_deref()?;
+            let bottom = std::cmp::max(h, &self.need_lo[..]);
+            self.need_hi.as_deref().is_none_or(|n| bottom < n).then(|| (bottom.to_vec(), self.need_hi.clone()))
+        }
+    }
+}
+
 /// A lazy cursor over one run's rows in [lo, hi).
 struct RunCur {
     h: Arc<RunH>,
@@ -253,11 +335,20 @@ struct RunCur {
     blocks: Option<(usize, usize)>,
     /// read-ahead bytes until the run is open, then blocks per GET
     per_fetch: usize,
-    buf: std::collections::VecDeque<(Arc<Block>, usize, usize)>,
+    buf: std::collections::VecDeque<Part>,
     head: Option<RRow>,
     started: bool,
     /// what fetched blocks are cut to (`counter.rs`): None, whole blocks
     prefix: Option<Vec<u8>>,
+}
+
+impl Drop for RunCur {
+    fn drop(&mut self) {
+        // what the read relied on in the block it stopped in
+        if let Some(p) = self.buf.front() {
+            p.rely(self.reverse);
+        }
+    }
 }
 
 impl RunCur {
@@ -276,20 +367,44 @@ impl RunCur {
         self.head.take()
     }
 
+    /// The read's range inside block b: [max(lo, sep(b)), min(hi, sep(b + 1))).
+    fn need(&self, run: &Run, b: usize) -> (Vec<u8>, Option<Vec<u8>>) {
+        let s = run.fence.separator(b);
+        let lo = std::cmp::max(self.lo.clone(), s);
+        let hi = if b + 1 < run.fence.blocks() {
+            let n = run.fence.separator(b + 1);
+            Some(match &self.hi {
+                Some(h) => std::cmp::min(h.clone(), n),
+                None => n,
+            })
+        } else {
+            self.hi.clone()
+        };
+        (lo, hi)
+    }
+
     async fn next_row(&mut self, store: &Arc<dyn ObjectStore>) -> Result<Option<RRow>> {
         loop {
-            if let Some((b, i, j)) = self.buf.front_mut() {
-                if *i < *j {
+            if let Some(p) = self.buf.front_mut() {
+                if p.i < p.j {
+                    let blk = &p.piece.blk;
                     let k = if self.reverse {
-                        *j -= 1;
-                        *j
+                        p.j -= 1;
+                        p.j
                     } else {
-                        *i += 1;
-                        *i - 1
+                        p.i += 1;
+                        p.i - 1
                     };
-                    return Ok(Some(RRow { key: b.key(k).to_vec(), seq: b.seq(k), env: b.env(k).to_vec() }));
+                    return Ok(Some(RRow { key: blk.key(k).to_vec(), seq: blk.seq(k), env: blk.env(k).to_vec() }));
                 }
-                self.buf.pop_front();
+                let p = self.buf.pop_front().unwrap();
+                p.rely(self.reverse);
+                // a trimmed slice ends before the read's range does in this block: the block again, for the rest
+                if let (Some(prefix), Some((lo, hi))) = (self.prefix.clone(), p.beyond(self.reverse)) {
+                    let run = self.h.open(store).await?.clone();
+                    let piece = super::counter::refetch(store, &run, p.b, &prefix, &p.piece).await?;
+                    self.buf.push_front(Part::new(piece, p.b, lo, hi));
+                }
                 continue;
             }
             let run = self.h.open(store).await?.clone();
@@ -311,26 +426,43 @@ impl RunCur {
                 self.prefix = super::counter::slice_prefix(run.customers, &self.lo, self.hi.as_deref(), super::counter::slice_mode());
             }
             let Some((next, end)) = self.blocks else { return Ok(None) };
+            // read-ahead: up to per_fetch blocks in one GET; but when the next blocks are in the counter, only those (a
+            // read that stops inside them must not pay a GET for blocks after them)
+            let mut ahead = self.per_fetch;
+            let mut k = 0;
+            while k < ahead {
+                let b = if self.reverse { next.checked_sub(k).filter(|b| *b >= end) } else { Some(next + k).filter(|b| *b <= end) };
+                let Some(b) = b else { break };
+                let (lo, hi) = self.need(&run, b);
+                let need = if self.reverse { super::counter::Need::Down(&lo, hi.as_deref()) } else { super::counter::Need::Up(&lo, hi.as_deref()) };
+                if !super::counter::cached(&run, b, self.prefix.as_deref(), &need) {
+                    break;
+                }
+                k += 1;
+            }
+            if k > 0 {
+                ahead = k;
+            }
             let (a, z, rest) = if self.reverse {
-                let a = next.saturating_sub(self.per_fetch - 1).max(end);
+                let a = next.saturating_sub(ahead - 1).max(end);
                 (a, next, if a > end { Some((a - 1, end)) } else { None })
             } else {
-                let z = (next + self.per_fetch - 1).min(end);
+                let z = (next + ahead - 1).min(end);
                 (next, z, if z < end { Some((z + 1, end)) } else { None })
             };
             self.blocks = rest;
-            let got = fetch(store, &run, a, z, self.prefix.as_deref()).await?;
-            let mut parts: Vec<(Arc<Block>, usize, usize)> = got
-                .into_iter()
-                .map(|b| {
-                    let i = b.lower_bound(&self.lo);
-                    let j = match &self.hi {
-                        Some(h) => b.lower_bound(h),
-                        None => b.len(),
-                    };
-                    (b, i, j.max(i))
-                })
-                .collect();
+            let needs: Vec<(Vec<u8>, Option<Vec<u8>>)> = (a..=z).map(|b| self.need(&run, b)).collect();
+            let reverse = self.reverse;
+            let need = |b: usize| {
+                let (lo, hi) = &needs[b - a];
+                if reverse {
+                    super::counter::Need::Down(&lo[..], hi.as_deref())
+                } else {
+                    super::counter::Need::Up(&lo[..], hi.as_deref())
+                }
+            };
+            let got = super::counter::fetch(store, &run, a, z, self.prefix.as_deref(), &need).await?;
+            let mut parts: Vec<Part> = got.into_iter().zip(needs.iter().cloned()).enumerate().map(|(o, (piece, (lo, hi)))| Part::new(piece, a + o, lo, hi)).collect();
             if self.reverse {
                 parts.reverse();
             }
