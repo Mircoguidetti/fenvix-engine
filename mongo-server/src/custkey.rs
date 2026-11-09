@@ -723,6 +723,32 @@ mod tests {
         assert_eq!(CustomerKind::V2K.customer_of(b"u/"), None);
     }
 
+    /// Compaction 2 step 6 fix round (review FIX 1): a collection or index name with a '/' is escaped in the server's
+    /// keys, so the counter's area rule (`fx::counter::area_prefix`, the first '/' after the customer component ends the
+    /// collection name) finds the area of every server key, documents and co-located index entries alike.
+    #[test]
+    fn counter_finds_the_area_of_a_collection_named_with_a_slash() {
+        use tenant_bench::fx::counter::area_prefix;
+        use tenant_bench::runfmt::CustomerKind;
+        let d = doc! { "_id": 3, "u": 7 };
+        let docp = to_phys(&doc_key("zz/q", Some(&k("u")), &d)).unwrap();
+        let mut want = U.to_vec();
+        want.extend(comp(&Bson::Int32(7)));
+        want.extend(b"zz%2Fq/d/");
+        assert_eq!(area_prefix(CustomerKind::V2K, &docp), Some(want));
+        let mut ix = b"idx/zz%2Fq/".to_vec();
+        ix.push(MARK);
+        ix.extend(b"a%2Fb_1/");
+        ix.extend(comp(&Bson::Int32(7)));
+        ix.extend(crate::layout::encode_sortable(&Bson::Int32(3)));
+        let ixp = to_phys(&ix).unwrap();
+        let mut want = U.to_vec();
+        want.extend(comp(&Bson::Int32(7)));
+        want.extend(b"zz%2Fq/x/a%2Fb_1/");
+        assert_eq!(area_prefix(CustomerKind::V2K, &ixp), Some(want));
+        assert_eq!(crate::layout::escape_collection("zz/q"), b"zz%2Fq".to_vec());
+    }
+
     #[test]
     fn config_matches_db_and_collection() {
         let _ = configure("chat.messages=userId, orders=customerId:ts");

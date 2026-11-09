@@ -30,6 +30,15 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::atomic::{AtomicU64, AtomicU8, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
 
+/// Negative controls of the step 6 fix round, tests only: `FX_CONTROL_SIBLING` keeps a sibling slice whose area cannot
+/// be read from its key (under the customer's key, from that row), `FX_CONTROL_STAGE_HULL` warms one hull per prefix,
+/// open upward, without a byte cap (both as delivered before the review). Read from the environment, so a test can run
+/// a reviewer's test, unchanged, in a child process with the old behaviour.
+#[cfg(test)]
+pub fn control(name: &str) -> bool {
+    std::env::var(name).is_ok()
+}
+
 /// What a one-customer read keeps of a fetched block (`--sealed-slices`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SliceMode {
@@ -111,8 +120,21 @@ pub fn point_prefix(kind: CustomerKind, key: &[u8], mode: SliceMode) -> Option<V
     Some(key[..r.end].to_vec())
 }
 
+/// The area prefix of `key` (layout v2: `u/{customer}{collection}/d/` or `u/{customer}{collection}/x/{index}/`), or
+/// None when the key has no area this rule can read. Never the customer prefix.
+pub fn area_prefix(kind: CustomerKind, key: &[u8]) -> Option<Vec<u8>> {
+    if !matches!(kind, CustomerKind::V2 | CustomerKind::V2K) {
+        return None;
+    }
+    let r = kind.customer_of(key)?;
+    area_len(key, r.end).map(|n| key[..n].to_vec())
+}
+
 /// Layout v2 (`custkey.rs`): after the customer component, `{coll}/d/...` or `{coll}/x/{index}/...`. The length of the
-/// key's area prefix, if the key has that shape.
+/// key's area prefix, if the key has that shape. The server escapes '/' in collection and index names (`%2F`,
+/// `layout::escape_collection`), so in its keys the first '/' after the customer component ends the collection name and
+/// the next one the index name: this reads the area by the key encoding. A key not of that shape (a raw '/' in a name,
+/// only in synthetic keys) has no area: its reads slice by the customer, cut from the customer's first row.
 fn area_len(key: &[u8], cust_end: usize) -> Option<usize> {
     let rest = &key[cust_end..];
     let slash = rest.iter().position(|&b| b == b'/')?;
@@ -589,20 +611,39 @@ fn keep(run: &Run, b: usize, blk: Block, prefix: Option<&[u8]>, old: Option<&Pie
             cache_put(CKey::Slice(run.run_id, b as u32, p.into()), s.clone());
             // area slices: the customer's other areas in this block (its documents next to the index entries just read)
             // are kept too, whole, so the read's next step finds them without a second GET of the same block; trimming
-            // drops the ones no read relies on
+            // drops the ones no read relies on. Only true areas: a row whose area cannot be read from its key is never
+            // kept as a sibling (it would be stored under the customer's key, starting mid-customer, review of step 6
+            // FIX 1), and each sibling is cut from the whole block by its own prefix, so it holds every row of its area.
             if let Some(r) = run.customers.customer_of(p) {
                 let cust = &p[..r.end];
                 if cust.len() < p.len() {
                     let rows = cut(&blk, cust);
                     let mut i = 0;
                     while i < rows.len() {
-                        let Some(a) = point_prefix(run.customers, rows.key(i), SliceMode::Area) else { break };
+                        #[cfg(test)]
+                        if control("FX_CONTROL_SIBLING") {
+                            let Some(a) = point_prefix(run.customers, rows.key(i), SliceMode::Area) else { break };
+                            let end = runfmt::prefix_successor(&a);
+                            let j = end.as_deref().map_or(rows.len(), |e| rows.lower_bound(e));
+                            if a[..] != p[..] {
+                                let k = CKey::Slice(run.run_id, b as u32, a.clone().into_boxed_slice());
+                                if cache_get(&k).is_none() {
+                                    cache_put(k, Arc::new(Piece::new(rows.slice(i, j), true)));
+                                }
+                            }
+                            i = j.max(i + 1);
+                            continue;
+                        }
+                        let Some(a) = area_prefix(run.customers, rows.key(i)) else {
+                            i += 1;
+                            continue;
+                        };
                         let end = runfmt::prefix_successor(&a);
                         let j = end.as_deref().map_or(rows.len(), |e| rows.lower_bound(e));
                         if a[..] != p[..] {
                             let k = CKey::Slice(run.run_id, b as u32, a.clone().into_boxed_slice());
                             if cache_get(&k).is_none() {
-                                cache_put(k, Arc::new(Piece::new(rows.slice(i, j), true)));
+                                cache_put(k, Arc::new(Piece::new(cut(&blk, &a), true)));
                             }
                         }
                         i = j.max(i + 1);
@@ -628,16 +669,29 @@ pub struct StageReport {
     pub retired_runs: usize,
     /// Slices and whole blocks held of retired runs.
     pub held: usize,
+    /// Their bytes.
+    pub held_bytes: usize,
     /// Slices and blocks of the new runs that cover them and were not cached yet.
     pub wanted: usize,
-    /// Of those, fetched before the deadline.
+    /// Of those, fetched before the deadline and within the byte cap.
     pub warmed: usize,
-    /// Wanted but not fetched before the deadline.
+    /// Their bytes.
+    pub warmed_bytes: usize,
+    /// Wanted but not fetched (the deadline or the byte cap).
     pub missed: usize,
     pub gets: u64,
     pub millis: u64,
     pub timed_out: bool,
+    /// The warm-up reached `STAGE_BYTES_PCT` of the bytes held and stopped.
+    pub capped: bool,
 }
+
+/// The staged publish warms at most this share of the bytes it held of the retired runs, in percent, plus
+/// `STAGE_BYTES_EXTRA` (the rows written since the retired run, at the top of the areas). Review of step 6, FIX 2: a
+/// reseal must not multiply the counter.
+pub static STAGE_BYTES_PCT: AtomicU64 = AtomicU64::new(150);
+pub static STAGE_BYTES_EXTRA: AtomicU64 = AtomicU64::new(1 << 20);
+pub static STAGE_CAPPED: AtomicU64 = AtomicU64::new(0);
 
 /// The runs of `old` that `new` does not list.
 pub fn retired(old: &View, new: &View) -> HashSet<[u8; RUN_ID_LEN]> {
@@ -646,10 +700,18 @@ pub fn retired(old: &View, new: &View) -> HashSet<[u8; RUN_ID_LEN]> {
     ids(old).into_iter().filter(|i| !n.contains(i)).collect()
 }
 
-/// Before `new` becomes current: fetch, from its runs that `old` does not list, the ranges of every slice and whole
-/// block this process holds of a run that `new` retires, within the deadline. Reads keep using `old` meanwhile (the
-/// version is not published yet), and nothing fetched here is visible to a read before a version that lists the new
-/// runs is installed, because cache keys carry the run id.
+/// One key interval to warm under a slice prefix: [lo, hi), hi None = open upward to the end of the prefix.
+type Interval = (Vec<u8>, Option<Vec<u8>>);
+
+/// Before `new` becomes current: fetch, from its runs that `old` does not list, what this process holds of a run that
+/// `new` retires, within the deadline and a byte cap. Reads keep using `old` meanwhile (the version is not published
+/// yet), and nothing fetched here is visible to a read before a version that lists the new runs is installed, because
+/// cache keys carry the run id.
+///
+/// Each held slice is carried as its own interval, with its old block's edges for its open ends (review of step 6,
+/// FIX 2: one hull per prefix, open upward, fetched whole histories of customers that read their newest and oldest
+/// rows). A slice is opened upward to the end of its area only when it reached the top of the area in the old run:
+/// the rows written since land there. The warmed bytes are capped against the bytes held.
 pub async fn stage(old: &View, new: &View) -> StageReport {
     let t0 = std::time::Instant::now();
     let mut rep = StageReport::default();
@@ -662,9 +724,9 @@ pub async fn stage(old: &View, new: &View) -> StageReport {
         return rep;
     }
     STAGES.fetch_add(1, Relaxed);
-    // what this process holds of the retired runs: per slice prefix the hull of the held intervals (and whether a slice
-    // was still whole, with what it relied on), and the key ranges of whole blocks
-    let mut prefixes: BTreeMap<Vec<u8>, Held> = BTreeMap::new();
+    // what this process holds of the retired runs: per slice its block, prefix and interval (None: to the edge of what
+    // it covers), and the key ranges of whole blocks
+    let mut held: Vec<([u8; RUN_ID_LEN], usize, Vec<u8>, Option<Vec<u8>>, Option<Vec<u8>>)> = Vec::new();
     let mut ranges: Vec<(Vec<u8>, Vec<u8>)> = Vec::new();
     {
         let g = CACHE.lock().unwrap();
@@ -674,39 +736,18 @@ pub async fn stage(old: &View, new: &View) -> StageReport {
                     continue;
                 }
                 rep.held += 1;
+                rep.held_bytes += cost(k, b);
                 match k {
-                    CKey::Slice(_, _, p) => {
-                        // a trimmed slice: its interval; a slice still whole: what reads relied on so far (it would be
-                        // trimmed to that), or nothing when no read relied on it yet
-                        let (lo, hi) = if b.whole_slice && !b.keep_unused {
-                            match b.relied() {
-                                Some((x, y)) => (Some(x), Some(y)),
-                                None => continue,
-                            }
-                        } else if b.whole_slice {
-                            // warmed by an earlier staged publish: what a read relied on, else the interval it covers
-                            match b.relied() {
-                                Some((x, y)) => (Some(x), Some(y)),
-                                None => (b.lo.as_deref().map(|x| x.to_vec()), b.hi.as_deref().map(|x| x.to_vec())),
-                            }
-                        } else {
-                            (b.lo.as_deref().map(|x| x.to_vec()), b.hi.as_deref().map(|x| x.to_vec()))
+                    CKey::Slice(run, blk, p) => {
+                        // a slice still whole: what reads relied on so far (it would be trimmed to that); a slice nobody
+                        // relied on yet is not carried. A trimmed slice, or one warmed earlier and not read since: its
+                        // interval.
+                        let (lo, hi) = match (b.whole_slice, b.relied()) {
+                            (true, Some((x, y))) => (Some(x), Some(y)),
+                            (true, None) if !b.keep_unused => continue,
+                            _ => (b.lo.as_deref().map(|x| x.to_vec()), b.hi.as_deref().map(|x| x.to_vec())),
                         };
-                        match prefixes.get_mut(&p[..]) {
-                            None => {
-                                prefixes.insert(p.to_vec(), Held { lo, hi, whole: false, relied: None });
-                            }
-                            Some(h) => {
-                                h.lo = match (&h.lo, lo) {
-                                    (Some(a), Some(x)) => Some(std::cmp::min(a.clone(), x)),
-                                    _ => None,
-                                };
-                                h.hi = match (&h.hi, hi) {
-                                    (Some(a), Some(x)) => Some(std::cmp::max(a.clone(), x)),
-                                    _ => None,
-                                };
-                            }
-                        }
+                        held.push((*run, *blk as usize, p.to_vec(), lo, hi));
                     }
                     CKey::Block(..) => {
                         if !b.blk.is_empty() {
@@ -721,17 +762,77 @@ pub async fn stage(old: &View, new: &View) -> StageReport {
         rep.millis = t0.elapsed().as_millis() as u64;
         return rep;
     }
-    let old_ids: HashSet<[u8; RUN_ID_LEN]> = old.groups.iter().filter_map(|g| g.sealed.as_ref().map(|h| h.id)).chain(old.delta.iter().map(|h| h.id)).collect();
+    // open ends become the old block's edges; a slice opens upward only at the top of its area in the old run
+    let old_runs: HashMap<[u8; RUN_ID_LEN], Arc<super::view::RunH>> = old.groups.iter().filter_map(|g| g.sealed.clone()).chain(old.delta.iter().cloned()).map(|h| (h.id, h)).collect();
+    let mut prefixes: BTreeMap<Vec<u8>, Vec<Interval>> = BTreeMap::new();
+    for (run, b, p, lo, hi) in held {
+        let Some(h) = old_runs.get(&run) else { continue };
+        let Ok(r) = h.open(&old.store).await else { continue };
+        let end = runfmt::prefix_successor(&p);
+        let lo = match lo {
+            Some(l) => std::cmp::max(l, p.clone()),
+            None => std::cmp::max(r.fence.separator(b), p.clone()),
+        };
+        let hi = match hi {
+            Some(x) => Some(x),
+            None => {
+                let next = (b + 1 < r.fence.blocks()).then(|| r.fence.separator(b + 1));
+                match (next, &end) {
+                    // the next block starts inside the area: this slice is not its top
+                    (Some(n), Some(e)) if n < *e => Some(n),
+                    (Some(n), None) => Some(n),
+                    _ => None,
+                }
+            }
+        };
+        prefixes.entry(p).or_default().push((lo, hi));
+    }
+    #[cfg(test)]
+    if control("FX_CONTROL_STAGE_HULL") {
+        // as delivered: one hull per prefix, open upward, no cap
+        for v in prefixes.values_mut() {
+            let lo = v.iter().map(|x| x.0.clone()).min().unwrap();
+            *v = vec![(lo, None)];
+        }
+    }
+    for v in prefixes.values_mut() {
+        v.sort();
+        let mut merged: Vec<Interval> = Vec::new();
+        for (lo, hi) in v.drain(..) {
+            if let Some(last) = merged.last_mut() {
+                let touches = last.1.as_ref().is_none_or(|h| lo <= *h);
+                if touches {
+                    last.1 = match (&last.1, hi) {
+                        (None, _) | (_, None) => None,
+                        (Some(a), Some(b)) => Some(std::cmp::max(a.clone(), b)),
+                    };
+                    continue;
+                }
+            }
+            merged.push((lo, hi));
+        }
+        *v = merged;
+    }
+    let old_ids: HashSet<[u8; RUN_ID_LEN]> = old_runs.keys().copied().collect();
     let fresh: Vec<Arc<super::view::RunH>> = new.groups.iter().filter_map(|g| g.sealed.clone()).chain(new.delta.iter().cloned()).filter(|h| !old_ids.contains(&h.id)).collect();
     let deadline = std::time::Duration::from_millis(STAGE_DEADLINE_MS.load(Relaxed));
+    #[allow(unused_mut)]
+    let mut cap = rep.held_bytes * STAGE_BYTES_PCT.load(Relaxed) as usize / 100 + STAGE_BYTES_EXTRA.load(Relaxed) as usize;
+    #[cfg(test)]
+    if control("FX_CONTROL_STAGE_HULL") {
+        cap = usize::MAX;
+    }
     let gets0 = super::view::RUN_GETS.load(Relaxed);
-    let work = warm(&new.store, &fresh, &prefixes, &ranges, &mut rep);
+    let work = warm(&new.store, &fresh, &prefixes, &ranges, cap, &mut rep);
     let done = tokio::time::timeout(deadline, work).await;
     if done.is_err() {
         rep.timed_out = true;
         STAGE_TIMEOUTS.fetch_add(1, Relaxed);
     }
-    // what was wanted and is not in the cache now was missed (the deadline, or an error on the way)
+    if rep.capped {
+        STAGE_CAPPED.fetch_add(1, Relaxed);
+    }
+    // what was wanted and is not in the cache now was missed (the deadline, the cap, or an error on the way)
     rep.missed = rep.wanted.saturating_sub(rep.warmed);
     rep.gets = super::view::RUN_GETS.load(Relaxed) - gets0;
     STAGE_GETS.fetch_add(rep.gets, Relaxed);
@@ -741,64 +842,64 @@ pub async fn stage(old: &View, new: &View) -> StageReport {
     rep
 }
 
-/// What the counter held under one slice prefix of a retired run: the hull of the slices' intervals (None: to the
-/// prefix's edge), whether one was still whole, and what the whole ones relied on.
-#[derive(Clone, Debug)]
-struct Held {
-    lo: Option<Vec<u8>>,
-    hi: Option<Vec<u8>>,
-    whole: bool,
-    relied: Option<(Vec<u8>, Vec<u8>)>,
-}
-
-/// The rows of `b` under prefix `p` inside [lo, hi), as a piece covering exactly that interval.
-fn cut_range(b: &Block, p: &[u8], h: &Held) -> Piece {
-    if h.whole {
-        let s = Piece::new(cut(b, p), true);
-        if let Some((x, y)) = &h.relied {
-            s.rely(x, y);
-        }
-        return s;
-    }
-    let plo = std::cmp::max(p, h.lo.as_deref().unwrap_or(p));
+/// The rows of `b` under prefix `p` inside [lo, hi) (hi None: to the end of the prefix), as a staged piece covering
+/// exactly that interval: trimmed once a read relies on it, dropped after `KEEP_UNUSED_MS` if none does.
+fn cut_range(b: &Block, p: &[u8], lo: &[u8], hi: Option<&[u8]>) -> Piece {
+    let plo = std::cmp::max(p, lo);
     let i = b.lower_bound(plo);
     let end = runfmt::prefix_successor(p);
-    let phi: Option<&[u8]> = match (h.hi.as_deref(), end.as_deref()) {
+    let phi: Option<&[u8]> = match (hi, end.as_deref()) {
         (Some(x), Some(e)) => Some(std::cmp::min(x, e)),
         (Some(x), None) => Some(x),
         (None, e) => e,
     };
     let j = phi.map_or(b.len(), |x| b.lower_bound(x));
-    // trimmable once a read relies on it (the rows written since the retired run are kept only if read), kept until then
-    Piece { blk: b.slice(i, j.max(i)), lo: h.lo.clone().map(|x| x.into_boxed_slice()), hi: h.hi.clone().map(|x| x.into_boxed_slice()), whole_slice: true, keep_unused: true, born: std::time::Instant::now(), relied: Mutex::new(None) }
+    Piece {
+        blk: b.slice(i, j.max(i)),
+        lo: Some(plo.to_vec().into_boxed_slice()),
+        hi: hi.map(|x| x.to_vec().into_boxed_slice()),
+        whole_slice: true,
+        keep_unused: true,
+        born: std::time::Instant::now(),
+        relied: Mutex::new(None),
+    }
 }
 
-async fn warm(store: &Arc<dyn ObjectStore>, fresh: &[Arc<super::view::RunH>], prefixes: &BTreeMap<Vec<u8>, Held>, ranges: &[(Vec<u8>, Vec<u8>)], rep: &mut StageReport) {
-    // first what each new run must give: per block, the slices to cut it into and whether it is wanted whole
-    type Want = BTreeMap<usize, (Vec<(Vec<u8>, Held)>, bool)>;
+/// Per block of a new run: for each prefix, the hull of the held intervals that meet the block (clipped to the block
+/// by the cut), and whether the block is wanted whole.
+type Want = BTreeMap<usize, (BTreeMap<Vec<u8>, Interval>, bool)>;
+
+async fn warm(store: &Arc<dyn ObjectStore>, fresh: &[Arc<super::view::RunH>], prefixes: &BTreeMap<Vec<u8>, Vec<Interval>>, ranges: &[(Vec<u8>, Vec<u8>)], cap: usize, rep: &mut StageReport) {
     let mut plan: Vec<(Arc<Run>, Want)> = Vec::new();
     rep.wanted = rep.held; // until the plan is known, everything held counts as wanted
     let mut wanted = 0usize;
     for h in fresh {
         let Ok(run) = h.open(store).await else { continue };
         let mut want: Want = BTreeMap::new();
-        for (p, held) in prefixes {
-            // the held interval, open upward to the end of the prefix: the rows written since the retired run (new
-            // messages, new index entries of time-ordered keys) land at the top of the area, where the hot reads go next
-            let mut held = held.clone();
-            held.hi = None;
-            let lo = std::cmp::max(p.clone(), held.lo.clone().unwrap_or_default());
+        for (p, ivs) in prefixes {
             let end = runfmt::prefix_successor(p);
-            let hi: Option<Vec<u8>> = end.clone();
             if !run.may_hold(p, end.as_deref()) {
                 continue; // the run's key bounds or its customer filter rule it out
             }
-            if let Some((a, z)) = run.fence.blocks_for(&lo, hi.as_deref()) {
+            for (lo, hi) in ivs {
+                let top = hi.clone().or_else(|| end.clone());
+                let Some((a, z)) = run.fence.blocks_for(lo, top.as_deref()) else { continue };
                 for b in a..=z {
-                    want.entry(b).or_default().0.push((p.clone(), held.clone()));
-                    wanted += 1;
+                    let e = want.entry(b).or_default();
+                    match e.0.get_mut(p) {
+                        None => {
+                            e.0.insert(p.clone(), (lo.clone(), hi.clone()));
+                            wanted += 1;
+                        }
+                        Some(x) => {
+                            x.0 = std::cmp::min(x.0.clone(), lo.clone());
+                            x.1 = match (&x.1, hi) {
+                                (None, _) | (_, None) => None,
+                                (Some(u), Some(v)) => Some(std::cmp::max(u.clone(), v.clone())),
+                            };
+                        }
+                    }
                 }
-                let _ = &hi;
             }
         }
         for (lo, last) in ranges {
@@ -818,17 +919,22 @@ async fn warm(store: &Arc<dyn ObjectStore>, fresh: &[Arc<super::view::RunH>], pr
         plan.push((run.clone(), want));
     }
     rep.wanted = wanted;
-    // then contiguous blocks in one range GET, at most 64 blocks each
+    // then contiguous blocks in one range GET, at most 64 blocks each, until the byte cap
     for (run, want) in &plan {
         let blocks: Vec<usize> = want.keys().copied().collect();
         let mut i = 0;
         while i < blocks.len() {
+            if rep.warmed_bytes >= cap {
+                rep.capped = true;
+                return;
+            }
             let mut j = i;
             while j + 1 < blocks.len() && blocks[j + 1] == blocks[j] + 1 && j + 1 - i < 64 {
                 j += 1;
             }
-            if let Ok(n) = warm_blocks(store, run, blocks[i], blocks[j], want).await {
+            if let Ok((n, bytes)) = warm_blocks(store, run, blocks[i], blocks[j], want).await {
                 rep.warmed += n;
+                rep.warmed_bytes += bytes;
             }
             i = j + 1;
         }
@@ -839,7 +945,7 @@ async fn warm(store: &Arc<dyn ObjectStore>, fresh: &[Arc<super::view::RunH>], pr
 #[cfg(test)]
 pub static TEST_WARM_DELAY_MS: AtomicU64 = AtomicU64::new(0);
 
-async fn warm_blocks(store: &Arc<dyn ObjectStore>, run: &Run, a: usize, z: usize, want: &BTreeMap<usize, (Vec<(Vec<u8>, Held)>, bool)>) -> Result<usize> {
+async fn warm_blocks(store: &Arc<dyn ObjectStore>, run: &Run, a: usize, z: usize, want: &Want) -> Result<(usize, usize)> {
     #[cfg(test)]
     {
         let d = TEST_WARM_DELAY_MS.load(Relaxed);
@@ -850,19 +956,25 @@ async fn warm_blocks(store: &Arc<dyn ObjectStore>, run: &Run, a: usize, z: usize
     let (lo, hi) = run.fence.range(a, z);
     let data = runfmt::get_range(store, &run.path, lo, hi).await?;
     super::view::RUN_GETS.fetch_add(1, Relaxed);
-    let mut n = 0;
+    let (mut n, mut bytes) = (0, 0);
     for b in a..=z {
         let Some((ps, whole)) = want.get(&b) else { continue };
         let (x, y) = run.fence.range(b, b);
         let blk = runfmt::decode_checked(run, b, &data[(x - lo) as usize..(y - lo) as usize])?;
-        for (p, h) in ps {
-            cache_put(CKey::Slice(run.run_id, b as u32, p.clone().into_boxed_slice()), Arc::new(cut_range(&blk, p, h)));
+        for (p, (ilo, ihi)) in ps {
+            let k = CKey::Slice(run.run_id, b as u32, p.clone().into_boxed_slice());
+            let piece = Arc::new(cut_range(&blk, p, ilo, ihi.as_deref()));
+            bytes += cost(&k, &piece);
+            cache_put(k, piece);
             n += 1;
         }
         if *whole {
-            cache_put(CKey::Block(run.run_id, b as u32), Arc::new(Piece::new(blk, false)));
+            let k = CKey::Block(run.run_id, b as u32);
+            let piece = Arc::new(Piece::new(blk, false));
+            bytes += cost(&k, &piece);
+            cache_put(k, piece);
             n += 1;
         }
     }
-    Ok(n)
+    Ok((n, bytes))
 }
