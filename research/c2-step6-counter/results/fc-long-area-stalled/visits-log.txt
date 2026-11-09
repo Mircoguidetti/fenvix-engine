@@ -1,0 +1,29 @@
+copied 566 objects into fc-fc-long-area
+counter_after_visit1: {'bytes': 39743891, 'blocks': 0, 'blockBytes': 0, 'slices': 2156, 'sliceBytes': 39743891, 'emptySlices': 0, 'ram_per_hot_customer_mean': 39743.891, 'customers_charged': 1000, 'charged_p50': 45880, 'charged_p95': 50786}
+counter_after_visit1_trimmed: {'bytes': 39378892, 'blocks': 0, 'blockBytes': 0, 'slices': 2156, 'sliceBytes': 39378892, 'emptySlices': 0, 'ram_per_hot_customer_mean': 39378.892, 'customers_charged': 1000, 'charged_p50': 45857, 'charged_p95': 50753}
+visit 1: 1000 users in 142 s; openings {'n': 1000, 'bytes_median': 45169.5, 'bytes_p95': 49168, 'bytes_max': 50839, 'entries_median': 160.0, 'bytes_total': 38541672}
+gap day 1/14: 168748 messages, compaction passes so far 3
+  publish (none): version 5 in 30656 ms, stage {'retired_runs': 0, 'held': 0, 'wanted': 0, 'warmed': 0, 'missed': 0, 'gets': 0, 'millis': 0, 'timed_out': False}
+gap day 2/14: 337496 messages, compaction passes so far 6
+  publish (none): version 6 in 33199 ms, stage {'retired_runs': 0, 'held': 0, 'wanted': 0, 'warmed': 0, 'missed': 0, 'gets': 0, 'millis': 0, 'timed_out': False}
+gap day 3/14: 506244 messages, compaction passes so far 10
+  publish (all): version 7 in 60503 ms, stage {'retired_runs': 6, 'held': 2159, 'wanted': 5609, 'warmed': 5609, 'missed': 0, 'gets': 812, 'millis': 8801, 'timed_out': False}
+gap day 4/14: 674992 messages, compaction passes so far 13
+  publish (none): version 8 in 33731 ms, stage {'retired_runs': 0, 'held': 0, 'wanted': 0, 'warmed': 0, 'missed': 0, 'gets': 0, 'millis': 0, 'timed_out': False}
+gap day 5/14: 843740 messages, compaction passes so far 17
+  publish (none): version 9 in 33029 ms, stage {'retired_runs': 0, 'held': 0, 'wanted': 0, 'warmed': 0, 'missed': 0, 'gets': 0, 'millis': 0, 'timed_out': False}
+gap day 6/14: 1012488 messages, compaction passes so far 17
+  publish (all): version 10 in 81149 ms, stage {'retired_runs': 6, 'held': 5611, 'wanted': 5969, 'warmed': 5952, 'missed': 17, 'gets': 840, 'millis': 10012, 'timed_out': True}
+gap day 7/14: 1181236 messages, compaction passes so far 20
+  publish (none): version 11 in 37021 ms, stage {'retired_runs': 0, 'held': 0, 'wanted': 0, 'warmed': 0, 'missed': 0, 'gets': 0, 'millis': 0, 'timed_out': False}
+gap day 8/14: 1349984 messages, compaction passes so far 24
+  publish (none): version 12 in 37207 ms, stage {'retired_runs': 0, 'held': 0, 'wanted': 0, 'warmed': 0, 'missed': 0, 'gets': 0, 'millis': 0, 'timed_out': False}
+gap day 9/14: 1518732 messages, compaction passes so far 26
+  publish (all): version 13 in 72701 ms, stage {'retired_runs': 6, 'held': 5954, 'wanted': 6256, 'warmed': 6256, 'missed': 0, 'gets': 864, 'millis': 9603, 'timed_out': False}
+gap day 10/14: 1687480 messages, compaction passes so far 29
+  publish (none): version 14 in 38677 ms, stage {'retired_runs': 0, 'held': 0, 'wanted': 0, 'warmed': 0, 'missed': 0, 'gets': 0, 'millis': 0, 'timed_out': False}
+gap day 11/14: 1856228 messages, compaction passes so far 31
+  publish (none): version 15 in 39669 ms, stage {'retired_runs': 0, 'held': 0, 'wanted': 0, 'warmed': 0, 'missed': 0, 'gets': 0, 'millis': 0, 'timed_out': False}
+gap day 12/14: 2024976 messages, compaction passes so far 36
+  publish (all): version 16 in 78690 ms, stage {'retired_runs': 6, 'held': 6258, 'wanted': 6569, 'warmed': 6545, 'missed': 24, 'gets': 892, 'millis': 10020, 'timed_out': True}
+Terminated

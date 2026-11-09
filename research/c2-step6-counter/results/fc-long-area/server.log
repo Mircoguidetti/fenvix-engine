@@ -1,0 +1,35 @@
+SIMULATED S3 LATENCY ON (SimModel { median_ms: 5.0, sigma: 0.0, mbps: 100000.0 }): measurement only, never in production
+mongo-server listening on 127.0.0.1:27063 (idle close after 100000 s, holder fc-27063, lease ttl 30 s)
+LEASE process_lease tenant=- holder=fc-27063 unix_ms=1794240682176 inc=017fb7415b0a253b gen=1
+LEASE acquired tenant=chat holder=fc-27063 unix_ms=1794240682192 takeover_from=-
+SLOW find db=chat ms=552 ok=true
+SLOW find db=chat ms=525 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW find db=chat ms=555 ok=true
+SLOW find db=chat ms=582 ok=true
+SLOW find db=chat ms=3257 ok=true
+SLOW find db=chat ms=3282 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=chat ms=3190 ok=true
+SLOW find db=chat ms=3342 ok=true
+SLOW find db=chat ms=1695 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW find db=chat ms=1719 ok=true
+SLOW find db=chat ms=1670 ok=true
+SLOW find db=chat ms=1608 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=chat ms=1128 ok=true
+SLOW find db=chat ms=1195 ok=true
+SLOW find db=chat ms=1134 ok=true
+SLOW find db=chat ms=1096 ok=true
+SLOW find db=chat ms=812 ok=true
+SLOW find db=chat ms=810 ok=true
+SLOW find db=chat ms=904 ok=true
+SLOW find db=chat ms=855 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW find db=chat ms=711 ok=true
+SLOW find db=chat ms=699 ok=true
+SLOW find db=chat ms=649 ok=true
+SLOW find db=chat ms=663 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true

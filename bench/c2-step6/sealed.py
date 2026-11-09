@@ -27,6 +27,25 @@ def publish(admin, db, reseal="all", block_kb=None, tries=120):
     raise SystemExit(f"no publish of {db} after {tries} tries")
 
 
+def gc(bucket, db):
+    """Bench hygiene, not the product's GC (step 4): delete the run objects of `db` that the newest version of our
+    manifest no longer lists. Safe in the two-visit bench only: it holds no transaction across a publish, and a
+    publish installs its version before this runs. Returns (objects, bytes) deleted."""
+    import boto3
+    s3 = boto3.client("s3", endpoint_url="http://127.0.0.1:9000", aws_access_key_id="minioadmin", aws_secret_access_key="minioadmin", region_name="us-east-1")
+    pre = f"tenants/{db}/fx/"
+    mans = [o["Key"] for p in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=pre + "manifest/") for o in p.get("Contents", [])]
+    if not mans:
+        return 0, 0
+    v = json.loads(s3.get_object(Bucket=bucket, Key=sorted(mans)[-1])["Body"].read())
+    listed = {g["sealed"]["path"] for g in v["groups"] if g.get("sealed")} | {d["path"] for d in v["delta"]}
+    runs = [o for p in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=pre + "run/") for o in p.get("Contents", [])]
+    gone = [o for o in runs if o["Key"] not in listed]
+    for i in range(0, len(gone), 1000):
+        s3.delete_objects(Bucket=bucket, Delete={"Objects": [{"Key": o["Key"]} for o in gone[i:i + 1000]]})
+    return len(gone), sum(o["Size"] for o in gone)
+
+
 def counter(admin, clear=False, trim=False):
     return admin.command({"fenvixCounter": 1, "clear": bool(clear), "trim": bool(trim)})
 

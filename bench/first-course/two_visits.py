@@ -268,6 +268,8 @@ def visits(a):
             # (the stub of step 4's triggers), so visit 2 reads right after a reseal
             rs = "all" if (day + 1) % 3 == 0 or day == days - 1 else "none"
             rep = sealed.publish(admin, DB, rs)
+            if os.environ.get("SEALED_BUCKET"):
+                rep["bench_gc"] = sealed.gc(os.environ["SEALED_BUCKET"], DB)
             res.setdefault("publishes", []).append(rep)
             print(f"  publish ({rs}): version {rep['version']} in {rep['millis']} ms, stage {rep.get('stage')}", flush=True)
     # every test user chosen for new messages gets at least one

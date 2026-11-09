@@ -1,0 +1,68 @@
+{
+  "block_kb": 256,
+  "hot_customers": 400,
+  "raw_mb_loaded": 1024,
+  "reads_per_hot_customer_in_window": 33,
+  "seed": 7,
+  "test": "counter_reseal",
+  "users": 2000,
+  "windows": [
+    {
+      "all_miss_pct": 1.0303030303030303,
+      "cold_misses": 136,
+      "cold_reads": 139,
+      "counter_bytes": 6141691,
+      "hot_miss_pct": 0.0,
+      "hot_misses": 0,
+      "hot_misses_first_tenth": 0,
+      "hot_reads": 13061,
+      "stage": null,
+      "variant": "none",
+      "window_reads": 13200
+    },
+    {
+      "all_miss_pct": 0.9924242424242424,
+      "cold_misses": 128,
+      "cold_reads": 143,
+      "counter_bytes": 26482894,
+      "hot_miss_pct": 0.02297618135865819,
+      "hot_misses": 3,
+      "hot_misses_first_tenth": 3,
+      "hot_reads": 13057,
+      "stage": {
+        "gets": 398,
+        "held": 1091,
+        "millis": 150,
+        "missed": 0,
+        "retired_runs": 2,
+        "timed_out": false,
+        "wanted": 1167,
+        "warmed": 1167
+      },
+      "variant": "staged",
+      "window_reads": 13200
+    },
+    {
+      "all_miss_pct": 3.9545454545454546,
+      "cold_misses": 122,
+      "cold_reads": 122,
+      "counter_bytes": 6127443,
+      "hot_miss_pct": 3.0585716470408317,
+      "hot_misses": 400,
+      "hot_misses_first_tenth": 387,
+      "hot_reads": 13078,
+      "stage": {
+        "gets": 0,
+        "held": 0,
+        "millis": 0,
+        "missed": 0,
+        "retired_runs": 0,
+        "timed_out": false,
+        "wanted": 0,
+        "warmed": 0
+      },
+      "variant": "unstaged",
+      "window_reads": 13200
+    }
+  ]
+}
