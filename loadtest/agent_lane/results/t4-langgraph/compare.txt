@@ -1,0 +1,8 @@
+== lg-py-saver: mongod vs ours (agent lane on every collection)
+mongod: 146 passed, 0 failed, 0 skipped
+ours:   146 passed, 0 failed, 0 skipped
+pass on mongod, not on ours: 0
+== lg-py-store: mongod vs ours (agent lane on every collection)
+mongod: 29 passed, 3 failed, 7 skipped
+ours:   29 passed, 3 failed, 7 skipped
+pass on mongod, not on ours: 0

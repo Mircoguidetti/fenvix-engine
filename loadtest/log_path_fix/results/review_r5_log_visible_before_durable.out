@@ -1,0 +1,4 @@
+round 0: majority read saw the write the log never confirmed: False; it survived the kill: False
+round 1: majority read saw the write the log never confirmed: False; it survived the kill: True
+round 2: majority read saw the write the log never confirmed: False; it survived the kill: True
+RESULT r5_log_visible_before_durable rounds=3 majority_reads_of_unacked=0 seen_then_lost=0 -> PASS

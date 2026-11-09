@@ -1,0 +1,21 @@
+== lg-py-saver: mongod vs ours (agent lane on every collection)
+mongod: 146 passed, 0 failed, 0 skipped
+ours:   146 passed, 0 failed, 0 skipped
+pass on mongod, not on ours: 0
+== lg-py-store: mongod vs ours (agent lane on every collection)
+mongod: 29 passed, 3 failed, 7 skipped
+ours:   28 passed, 4 failed, 7 skipped
+pass on mongod, not on ours: 1
+- tests.unit_tests.test_store::test_upgrade_idempotent [failed]
+    pymongo.errors.DuplicateKeyError: Index build failed: c7e939d5-c72a-402e-fd81-04791a146ba3: Collection langgraph-test.long_term_memory_legacy ( a29f761b-c8ce-ddb0-c553-27e2a5cc65c2 ) :: caused by :: E11000 duplicate key error collection: langgraph-test.long_term_memory_legacy index: namespace_str_1_key_1 dup key: { namespace_str: null, key: "k" }, full error: {'ok': 0.0, 'errmsg': 'Index build failed: c7e939d5-c72a-402e-fd81-04791a146ba3: Collection langgraph-test.long_term_memory_legacy ( a29f7...
+    [truncated; full report in element text]
+    legacy_collection = Collection(Database(MongoClient(host=['localhost:27017'], document_class=dict, tz_aware=False, connect=True, directconnection=True), 'langgraph-test'), 'long_term_memory_legacy')
+    
+        def test_upgrade_idempotent(legacy_collection) -> None:  # type: ignore[no-untyped-def]
+            """Re-initializing MongoDBStore against an already-migrated collection
+            should be a no-op: no doc changes, no index churn."""
+            legacy_collection.create_index([("namespace", 1), ("key", 1)], unique=True)
+            now = datetime.now()
+            legacy_collection.insert_many(
+                [
+                    {

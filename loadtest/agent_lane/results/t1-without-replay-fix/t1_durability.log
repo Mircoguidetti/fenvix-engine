@@ -1,0 +1,41 @@
+START 2026-11-07 19:15:35 rounds 15 
+round 0 random point_hit=True disk_wiped=False acked_total=26 txns_tried=6 hot_updates_acked=10 lost=0 torn_or_stale=0 t=7s
+round 1 during_put point_hit=True disk_wiped=True acked_total=138 txns_tried=39 hot_updates_acked=45 lost=0 torn_or_stale=0 t=13s
+  STALE hot document dur_1.agent hot-2: version 4, last acknowledged 5, highest tried 5
+round 2 after_put point_hit=True disk_wiped=False acked_total=211 txns_tried=62 hot_updates_acked=67 lost=0 torn_or_stale=1 t=21s
+  STALE hot document dur_1.agent hot-2: version 4, last acknowledged 5, highest tried 5
+  STALE hot document dur_2.agent hot-1: version 4, last acknowledged 5, highest tried 5
+  STALE hot document dur_2.agent hot-6: version 6, last acknowledged 7, highest tried 7
+  STALE hot document dur_2.agent hot-4: version 4, last acknowledged 5, highest tried 5
+  STALE hot document dur_2.agent hot-2: version 2, last acknowledged 3, highest tried 3
+  STALE hot document dur_1.agent hot-7: version 2, last acknowledged 3, highest tried 3
+round 3 random point_hit=True disk_wiped=True acked_total=385 txns_tried=113 hot_updates_acked=110 lost=0 torn_or_stale=6 t=29s
+  STALE hot document dur_1.agent hot-2: version 4, last acknowledged 5, highest tried 5
+  STALE hot document dur_2.agent hot-6: version 6, last acknowledged 7, highest tried 7
+  STALE hot document dur_2.agent hot-2: version 2, last acknowledged 3, highest tried 3
+round 4 during_put point_hit=True disk_wiped=False acked_total=456 txns_tried=132 hot_updates_acked=122 lost=0 torn_or_stale=3 t=35s
+round 5 after_put point_hit=True disk_wiped=True acked_total=600 txns_tried=172 hot_updates_acked=154 lost=0 torn_or_stale=0 t=42s
+round 6 random point_hit=True disk_wiped=False acked_total=882 txns_tried=247 hot_updates_acked=229 lost=0 torn_or_stale=0 t=49s
+round 7 during_put point_hit=True disk_wiped=True acked_total=998 txns_tried=283 hot_updates_acked=275 lost=0 torn_or_stale=0 t=56s
+round 8 after_put point_hit=True disk_wiped=False acked_total=1023 txns_tried=294 hot_updates_acked=282 lost=0 torn_or_stale=0 t=61s
+round 9 random point_hit=True disk_wiped=True acked_total=1149 txns_tried=329 hot_updates_acked=323 lost=0 torn_or_stale=0 t=68s
+round 10 during_put point_hit=True disk_wiped=False acked_total=1210 txns_tried=343 hot_updates_acked=339 lost=0 torn_or_stale=0 t=74s
+round 11 after_put point_hit=True disk_wiped=True acked_total=1311 txns_tried=373 hot_updates_acked=363 lost=0 torn_or_stale=0 t=81s
+round 12 random point_hit=True disk_wiped=False acked_total=1687 txns_tried=479 hot_updates_acked=450 lost=0 torn_or_stale=0 t=88s
+  STALE hot document dur_0.agent hot-7: version 28, last acknowledged 29, highest tried 29
+  STALE hot document dur_1.agent hot-6: version 20, last acknowledged 21, highest tried 21
+  STALE hot document dur_1.agent hot-0: version 24, last acknowledged 25, highest tried 25
+  STALE hot document dur_0.agent hot-1: version 16, last acknowledged 17, highest tried 17
+round 13 during_put point_hit=True disk_wiped=True acked_total=1864 txns_tried=526 hot_updates_acked=497 lost=0 torn_or_stale=4 t=96s
+  STALE hot document dur_0.agent hot-7: version 28, last acknowledged 29, highest tried 29
+  STALE hot document dur_1.agent hot-6: version 20, last acknowledged 21, highest tried 21
+  STALE hot document dur_1.agent hot-0: version 24, last acknowledged 25, highest tried 25
+  STALE hot document dur_0.agent hot-1: version 16, last acknowledged 17, highest tried 17
+round 14 after_put point_hit=True disk_wiped=False acked_total=1889 txns_tried=536 hot_updates_acked=506 lost=0 torn_or_stale=4 t=102s
+  STALE hot document dur_0.agent hot-7: version 28, last acknowledged 29, highest tried 29
+  STALE hot document dur_1.agent hot-6: version 20, last acknowledged 21, highest tried 21
+  STALE hot document dur_1.agent hot-0: version 24, last acknowledged 25, highest tried 25
+  STALE hot document dur_0.agent hot-1: version 16, last acknowledged 17, highest tried 17
+final full check: acked=1889 lost=0 torn=4
+agentLane counters (last run of the engine): {'batches': 0, 'mixedBatches': 0, 'commits': 0, 'flushes': 0, 'txnFlushes': 0, 'ackRefused': 0, 'windowUs': 100000, 'followed': 0, 'followHits': 0}
+RESULT kills=15 points_hit={'random': 5, 'during_put': 5, 'after_put': 5} acked=1889 (agent lane 1370) txns_tried=536 hot_versions_acked=506 lost=0 torn_or_stale=22 -> FAIL

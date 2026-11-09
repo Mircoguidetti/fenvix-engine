@@ -1530,7 +1530,7 @@ impl Writes {
                     rk.extend(&k);
                     self.ov.insert(rk, Some(Document::new()));
                 }
-                let s = crate::natural::alloc(g, coll).await?;
+                let s = crate::natural::alloc(g, coll, &mut self.ops).await?;
                 self.ops.push(Op::Put(crate::natural::key(coll, s), id_enc.clone()));
                 Some(s)
             }

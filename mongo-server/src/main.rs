@@ -16,6 +16,7 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 pub static malloc_conf: &[u8] = b"background_thread:true\0";
 
 mod agg;
+mod agentlane;
 mod prefetch;
 mod hostinfo;
 mod auth;
@@ -301,6 +302,20 @@ struct Args {
     /// Name of the log in the markers stored with the data (the same for every engine that uses this log).
     #[arg(long, default_value = "cell1")]
     quaderno_id: String,
+    /// PROTOTYPE, off by default: collections on the agent lane, comma-separated `database.collection` patterns (`*` matches
+    /// any run of characters), e.g. `*.checkpoints,*.checkpoint_writes`. Their writes skip the local and replicated log and
+    /// are acknowledged once the WAL object holding them is in object storage. A collection can also be put on the lane
+    /// with `collMod` / `create` and the option `fenvixAgentLane: true`. See agentlane.rs.
+    #[arg(long, default_value = "")]
+    agent_lane: String,
+    /// Agent lane: the batch window (ms). The first write of a batch waits this long for others to share its PUT;
+    /// a transaction's commit does not wait.
+    #[arg(long, default_value_t = 100)]
+    agent_lane_window_ms: u64,
+    /// Agent lane: follow these databases' WAL objects in object storage (comma-separated names), as a warm spare does,
+    /// so that a takeover replays the last batches from memory instead of reading them one by one. See agentlane.rs.
+    #[arg(long, default_value = "")]
+    agent_lane_follow: String,
     /// Local log: the restart gives up on replaying one database after this long (its records are kept for the next
     /// restart) so that one stuck database (its S3 requests hanging or retried) does not keep the whole server down.
     #[arg(long, default_value_t = 120)]
@@ -663,6 +678,8 @@ async fn run() -> Result<()> {
     let s3 = tenant_bench::simstore::wrap_sim(s3);
     let s3 = faults::wrap(s3);
     let s3 = tenant_bench::simstore::wrap_split(s3);
+    // agent lane: the warm spare keeps the followed databases' new WAL objects in memory (agentlane.rs)
+    let s3 = agentlane::wrap_follow(s3, &args.agent_lane_follow);
     tenant_bench::lifecycle::FLUSH_INTERVAL_MS.store(args.wal_flush_ms, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::ACK_BEFORE_DURABLE.store(args.ack_before_durable, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::EXPLICIT_FLUSH.store(args.wal_flush_ms == 0, std::sync::atomic::Ordering::Relaxed);
@@ -705,6 +722,7 @@ async fn run() -> Result<()> {
     ctl::durability::install(args.relaxed_flush_ms)?;
     fair::install(args.fair_lag_ms, args.db_max_inflight, args.db_max_rate, args.fair_max_inflight, args.fair_max_flushing, args.db_quota_pts, args.db_burst_pts, args.db_quota_queue, &args.unit_weights).map_err(|e| anyhow::anyhow!(e))?;
     js::COMMAND_MAX_MS.store(args.js_command_max_ms, std::sync::atomic::Ordering::Relaxed);
+    agentlane::configure(&args.agent_lane, args.agent_lane_window_ms)?;
     let local_log_old = if !args.quaderno.is_empty() {
         let dir = if args.local_log_dir.is_empty() { "fenvix-quaderno-kept" } else { args.local_log_dir.as_str() };
         locallog::install_quaderno(&args.quaderno, &args.quaderno_id, dir, args.local_log_upload_secs).await?;
@@ -715,6 +733,9 @@ async fn run() -> Result<()> {
     } else {
         Some(locallog::install(&args.local_log_dir, args.local_log_upload_secs)?)
     };
+    // With the log, reads, acknowledgements and change streams follow the confirmed state (lifecycle::TRACK_VISIBLE).
+    tenant_bench::lifecycle::TRACK_VISIBLE.store(locallog::get().is_some(), std::sync::atomic::Ordering::Relaxed);
+    let _ = tenant_bench::lifecycle::VIS_IGNORE_KEY.set(locallog::MARKER_KEY.to_vec());
     tenant_bench::lifecycle::ADAPTIVE.store(args.adaptive_group_commit, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::ADAPTIVE_MAX_US.store(args.adaptive_group_commit_max_us, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::WRITER_POLL_SECS.store(args.writer_poll_secs, std::sync::atomic::Ordering::Relaxed);
@@ -767,6 +788,11 @@ async fn run() -> Result<()> {
     let lc_for_ctl = Arc::clone(&lc);
     let dbs = Dbs::new(lc, Arc::clone(&s3), Duration::from_secs(args.idle_secs), Arc::clone(&leases), global);
     dbs.spawn_reaper();
+    {
+        // a change-stream reader waiting on an event whose batch was not confirmed yet wakes when it is
+        let changes = Arc::clone(&dbs.changes);
+        let _ = tenant_bench::lifecycle::ON_VISIBLE.set(Box::new(move || changes.notify.notify_waiters()));
+    }
     let (lost_tx, lost_rx) = tokio::sync::mpsc::unbounded_channel();
     leases.spawn_renewer(lost_tx);
     dbs.spawn_lost_handler(lost_rx);

@@ -292,9 +292,11 @@ impl Server {
                     .await;
                 // Later commits of a database flush after its earlier ones, so waiting for the last one of each database
                 // covers all of them (a command can write to more than one database: $out, renameCollection).
+                // Per lane: a later batch on the agent lane covers earlier batches of both lanes (one WAL object holds
+                // them all), but a later batch on the log does not cover an earlier agent-lane one (agentlane.rs).
                 let mut last: Vec<tenant_bench::lifecycle::Commit> = Vec::new();
                 for c in commits.into_iter().rev() {
-                    if !last.iter().any(|l| l.tenant() == c.tenant()) {
+                    if !last.iter().any(|l| l.tenant() == c.tenant() && l.is_agent() == c.is_agent()) {
                         last.push(c);
                     }
                 }
@@ -722,6 +724,9 @@ impl Server {
             raw.insert("encryptedFields", crate::special_colls::encrypted_fields(coll, v, self.is_rs())?);
         }
         raw.extend(crate::collopts::plain_options("create", cmd)?);
+        if crate::collopts::agent_lane_option("create", cmd)? == Some(true) {
+            raw.insert(crate::agentlane::OPTION, true);
+        }
         raw.extend(crate::collopts::validation_options("create", cmd)?);
         if let Some(i) = crate::collopts::images_option("create", cmd)? {
             // (a disabled option is not kept)
@@ -813,6 +818,7 @@ impl Server {
                 "putBytes": self.dbs.global.counters.put_bytes.load(Relaxed) as i64, "getBytes": self.dbs.global.counters.get_bytes.load(Relaxed) as i64,
             },
             "groupCommit": { "commits": tenant_bench::lifecycle::GROUP_COMMITS.load(Relaxed) as i64, "flushes": tenant_bench::lifecycle::GROUP_FLUSHES.load(Relaxed) as i64, "windowUs": tenant_bench::lifecycle::GROUP_WINDOW_US.load(Relaxed) as i64, "adaptiveWaits": tenant_bench::lifecycle::ADAPTIVE_WAITS.load(Relaxed) as i64, "adaptiveWaitUs": tenant_bench::lifecycle::ADAPTIVE_WAIT_US.load(Relaxed) as i64, "relaxedAcks": tenant_bench::lifecycle::RELAXED_ACKS.load(Relaxed) as i64 },
+            "agentLane": { "batches": crate::agentlane::AGENT_BATCHES.load(Relaxed) as i64, "mixedBatches": crate::agentlane::MIXED_BATCHES.load(Relaxed) as i64, "commits": tenant_bench::lifecycle::AGENT_COMMITS.load(Relaxed) as i64, "flushes": tenant_bench::lifecycle::AGENT_FLUSHES.load(Relaxed) as i64, "txnFlushes": tenant_bench::lifecycle::AGENT_TXN_FLUSHES.load(Relaxed) as i64, "ackRefused": tenant_bench::lifecycle::AGENT_ACK_REFUSED.load(Relaxed) as i64, "windowUs": tenant_bench::lifecycle::AGENT_WINDOW_US.load(Relaxed) as i64, "followed": crate::agentlane::FOLLOWED.load(Relaxed) as i64, "memtableFlushes": crate::agentlane::MEMTABLE_FLUSHES.load(Relaxed) as i64, "followHits": crate::agentlane::FOLLOW_HITS.load(Relaxed) as i64 },
             "localLog": { "records": crate::locallog::RECORDS.load(Relaxed) as i64, "fsyncs": crate::locallog::FSYNCS.load(Relaxed) as i64, "uploads": crate::locallog::UPLOADS.load(Relaxed) as i64, "replayed": crate::locallog::REPLAYED.load(Relaxed) as i64 },
             "quaderno": { "sent": crate::qlog::SENT.load(Relaxed) as i64, "batches": crate::qlog::BATCHES.load(Relaxed) as i64, "failed": crate::qlog::FAILED.load(Relaxed) as i64, "confirmedFlush": crate::qlog::CONFIRMED_FLUSH.load(Relaxed) as i64 },
             "walGc": { "passes": tenant_bench::lifecycle::WAL_GC_PASSES.load(Relaxed) as i64, "deleted": tenant_bench::lifecycle::WAL_GC_DELETED.load(Relaxed) as i64, "listUs": tenant_bench::lifecycle::WAL_GC_LIST_US.load(Relaxed) as i64, "deleteUs": tenant_bench::lifecycle::WAL_GC_DELETE_US.load(Relaxed) as i64, "totalUs": tenant_bench::lifecycle::WAL_GC_TOTAL_US.load(Relaxed) as i64, "noop": tenant_bench::lifecycle::WAL_GC_NOOP.load(Relaxed) as i64 },

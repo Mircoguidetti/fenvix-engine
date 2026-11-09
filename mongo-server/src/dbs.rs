@@ -106,7 +106,15 @@ pub(crate) struct MetaCache {
 
 /// Reads of a database with relaxed durability see the writes acknowledged before they were durable (read-your-writes).
 fn durable_reads(db: &str) -> bool {
-    DURABLE_READS.load(Relaxed) && crate::ctl::durability::relaxed_ms(db) == 0
+    // With the local or replicated log (`locallog.rs`, Q8d) a write is acknowledged when its record is in the log, long
+    // before its WAL object is in object storage (every --local-log-upload-secs): a read of the object-storage state would
+    // not see it (a point read right after an acknowledged insert answered nothing: read-your-writes broken), and the
+    // agent lane (agentlane.rs) makes object storage hold some later batches and not earlier ones. Reads then see the
+    // latest state, as on a MongoDB primary, where a write is visible to local reads before it is majority-acknowledged.
+    // With the log, reads see the confirmed state instead (`lifecycle::TRACK_VISIBLE`): every write whose log record is
+    // confirmed (or that is in object storage), nothing staged and still waiting for its record. The 8fbdd8d fix read the
+    // latest state, which also returned writes the log had not confirmed (dirty reads, review R5).
+    DURABLE_READS.load(Relaxed) && crate::ctl::durability::relaxed_ms(db) == 0 && crate::locallog::get().is_none()
 }
 
 pub fn set_wake_limit(n: usize) {
@@ -472,7 +480,8 @@ impl Entry {
 
     /// Read a metadata key from the open tenant `t`: the durable state when `durable`, the latest state otherwise. The
     /// value is cached only if the two states agree (no write of the key is staged and still on its way to durability).
-    async fn meta_read(&self, t: &Tenant, key: &[u8], durable: bool) -> Result<Option<Bytes>> {
+    /// `reader`: a read command (not a write deciding on the latest state): with the log on it gets the confirmed state.
+    async fn meta_read(&self, t: &Tenant, key: &[u8], durable: bool, reader: bool) -> Result<Option<Bytes>> {
         let latest = t.get(key).await?;
         // A reader's data is all durable; a writer's latest state may hold staged writes.
         let durable_v = if t.is_writer() { t.get_durable(key).await? } else { latest.clone() };
@@ -487,7 +496,14 @@ impl Entry {
                 m.vals.insert(key.to_vec(), latest.as_ref().map(|v| Bytes::copy_from_slice(v)));
             }
         }
-        Ok(if durable { durable_v } else { latest })
+        Ok(if durable {
+            durable_v
+        } else if let Some(snap) = reader.then(|| t.visible_snapshot_for(key)).flatten() {
+            // the log path: an in-flight batch writes this key (see `lifecycle::TRACK_VISIBLE`)
+            snap.get(key).await?
+        } else {
+            latest
+        })
     }
 
     pub fn touch(&self) {
@@ -622,11 +638,20 @@ impl Entry {
         self.copts.clear();
         self.sstat.clear();
         self.meta_clear();
+                let unclean = t.unclean;
                 self.tenant = Some(t);
                 self.wakes += 1;
                 self.sync_gauges();
                 crate::fair::register(&self.name);
                 tenant_bench::counting::set_phase(0);
+                if unclean || took.is_some() {
+                    // the replicated log may hold acknowledged writes object storage does not have yet (review R4)
+                    if let Err(e) = Box::pin(crate::locallog::replay_on_wake(self)).await {
+                        // not served without them: the next command retries the open
+                        self.abandon().await;
+                        return Err(e.context(format!("database {} was taken over but its records in the log could not be read back; retry", self.name)));
+                    }
+                }
                 Ok(true)
             }
             Err(e) => {
@@ -685,7 +710,7 @@ impl Entry {
             if let Some(v) = self.meta_lookup(key) {
                 return Ok(v);
             }
-            return self.meta_read(self.tenant.as_ref().unwrap(), key, false).await;
+            return self.meta_read(self.tenant.as_ref().unwrap(), key, false, false).await;
         }
         self.tenant.as_ref().unwrap().get(key).await
     }
@@ -727,21 +752,79 @@ impl Entry {
 
     /// Apply writes atomically and durably, creating the database on its first write.
     pub async fn apply(&mut self, ops: Vec<Op>) -> Result<()> {
-        self.apply_mode(ops, true).await
+        self.apply_mode(ops, true, false).await
+    }
+
+    /// [`Entry::apply`] for a transaction's commit: on the agent lane its batch is flushed at once (one PUT at the
+    /// commit) instead of waiting for the lane's batch window.
+    pub async fn apply_txn(&mut self, ops: Vec<Op>) -> Result<()> {
+        self.apply_mode(ops, true, true).await
+    }
+
+    /// Agent lane (`agentlane.rs`): whether this batch goes on it. Only batches whose collection keys all belong to
+    /// agent-lane collections and that touch no catalog key; a batch with a key of an agent-lane collection and anything
+    /// else (another collection, the catalog) takes the default path as a whole, so it stays one atomic record.
+    async fn agent_lane_batch(&mut self, ops: &[Op]) -> Result<bool> {
+        use crate::agentlane::{classify, KeyClass};
+        if !crate::agentlane::active() {
+            return Ok(false);
+        }
+        let mut colls: Vec<Vec<u8>> = Vec::new();
+        let mut other = false;
+        for op in ops {
+            let k = match op {
+                Op::Put(k, _) | Op::Delete(k) => k,
+            };
+            match classify(k) {
+                KeyClass::Coll(c) => {
+                    if !colls.contains(&c) {
+                        colls.push(c);
+                    }
+                }
+                KeyClass::Neutral => {}
+                KeyClass::Other => {
+                    if std::env::var("FENVIX_DEBUG_LANE").is_ok() {
+                        eprintln!("agent lane: other key {:?}", String::from_utf8_lossy(k));
+                    }
+                    other = true
+                }
+            }
+        }
+        if colls.is_empty() {
+            return Ok(false);
+        }
+        let (mut any, mut all) = (false, true);
+        for c in colls {
+            let name = crate::agentlane::unescape(&c);
+            let on = crate::agentlane::flag_matches(&self.name, &name) || (!other && self.coll_opts(&name).await?.map_or(false, |o| o.agent));
+            any |= on;
+            all &= on;
+        }
+        if (any && !all) || (any && other) {
+            crate::agentlane::MIXED_BATCHES.fetch_add(1, Relaxed);
+        }
+        Ok(all && !other)
     }
 
     /// Like [`Entry::apply`] but always durable in object storage before it returns, also with the local log on (the
     /// restart of the local log applies its records this way).
     pub async fn apply_durable(&mut self, ops: Vec<Op>) -> Result<()> {
-        self.apply_mode(ops, false).await
+        self.apply_mode(ops, false, false).await
     }
 
-    async fn apply_mode(&mut self, mut ops: Vec<Op>, use_local_log: bool) -> Result<()> {
+    async fn apply_mode(&mut self, mut ops: Vec<Op>, use_local_log: bool, at_commit: bool) -> Result<()> {
         if ops.is_empty() {
             return Ok(());
         }
+        // Agent lane (prototype): the batch skips the local and replicated log and is durable once its WAL object is in
+        // object storage.
+        let agent = use_local_log && self.agent_lane_batch(&ops).await?;
+        if agent {
+            crate::agentlane::AGENT_BATCHES.fetch_add(1, Relaxed);
+            crate::agentlane::note_write(&self.name);
+        }
         // Local log (prototype): the batch carries its record's marker, and is durable once the record is on the local disk.
-        let local = if use_local_log { crate::locallog::get() } else { None };
+        let local = if use_local_log && !agent { crate::locallog::get() } else { None };
         let local_seq = local.map(|l| {
             let seq = l.next_seq();
             ops.push(l.marker_op(seq));
@@ -801,12 +884,17 @@ impl Entry {
             t.bind_inflight(Arc::clone(&self.inflight));
         }
         let Some(mut commit) = staged? else { return Ok(()) };
+        if agent {
+            commit = commit.with_agent(at_commit);
+        }
         if let (Some((log, rec_ops)), Some(seq)) = (record, local_seq) {
             let epoch = self.tenant.as_ref().and_then(|t| t.writer_epoch()).unwrap_or(0);
             commit = commit.with_local(log.append(seq, &self.name, &rec_ops, epoch));
         }
         let mut slot = Some(commit);
-        if GROUP_COMMIT.load(Relaxed) {
+        // `apply_durable` (the log's replays) waits here, also inside a command: the takeover replay runs inside the
+        // command that opened the database, and its reads must see the replayed records
+        if GROUP_COMMIT.load(Relaxed) && use_local_log {
             let _ = PENDING.try_with(|p| p.borrow_mut().push(slot.take().unwrap()));
         }
         match slot {
@@ -880,6 +968,10 @@ impl Entry {
 
     pub(crate) fn name(&self) -> &str {
         &self.name
+    }
+
+    pub(crate) fn raw_store(&self) -> Arc<dyn ObjectStore> {
+        Arc::clone(&self.raw)
     }
 
     /// Earliest instant (ms) at which any document of this tenant expires, from the first date entry of each TTL index.
@@ -1130,6 +1222,10 @@ impl Entry {
             self.wakes += 1;
             self.sync_gauges();
         }
+        // With the log on, a transaction reads a confirmed snapshot (no write its log has not confirmed yet): it waits,
+        // holding the database's exclusive lock (nothing new is staged meanwhile), until the batches staged so far are
+        // confirmed, usually one log round trip.
+        self.tenant.as_ref().unwrap().wait_all_visible(tenant_bench::lifecycle::VISIBLE_WAIT).await?;
         let snap = self.tenant.as_mut().unwrap().snapshot().await?;
         self.sync_gauges();
         self.active_txns += 1;
@@ -1260,7 +1356,7 @@ impl ReadView {
     async fn scan_uncounted(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
         let t = g.tenant.as_ref().unwrap();
-        let r = if durable_reads(&g.name) { t.scan_prefix_durable(prefix).await? } else { t.scan_prefix(prefix).await? };
+        let r = if durable_reads(&g.name) { t.scan_prefix_durable(prefix).await? } else { t.scan_prefix_visible(prefix).await? };
         self.done(r)
     }
 
@@ -1278,11 +1374,11 @@ impl ReadView {
         if META_CACHE.load(Relaxed) && is_meta_key(key) {
             let r = match g.meta_lookup(key) {
                 Some(v) => v,
-                None => g.meta_read(t, key, durable_reads(&g.name)).await?,
+                None => g.meta_read(t, key, durable_reads(&g.name), true).await?,
             };
             return self.done(r);
         }
-        let r = if durable_reads(&g.name) { t.get_durable(key).await? } else { t.get(key).await? };
+        let r = if durable_reads(&g.name) { t.get_durable(key).await? } else { t.get_visible(key).await? };
         self.done(r)
     }
 
@@ -1300,7 +1396,8 @@ impl ReadView {
             return Ok(vec![]);
         }
         let t = g.tenant.as_ref().unwrap();
-        let futs: Vec<_> = keys.iter().map(|k| t.get(k.clone())).collect();
+        // the log path: the visible value of each key (see `lifecycle::TRACK_VISIBLE`); the latest one otherwise
+        let futs: Vec<_> = keys.iter().map(|k| t.get_visible(k.clone())).collect();
         let r = futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect::<Vec<_>>().await?;
         self.done(r)
     }
@@ -1315,7 +1412,7 @@ impl ReadView {
 
     async fn scan_range_uncounted(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
-        let r = g.tenant.as_ref().unwrap().scan_range(start, end, reverse, limit, read_ahead).await?;
+        let r = g.tenant.as_ref().unwrap().scan_range_visible(start, end, reverse, limit, read_ahead).await?;
         self.done(r)
     }
 
