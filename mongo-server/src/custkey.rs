@@ -495,6 +495,23 @@ impl Seg {
         p
     }
 
+    /// The physical upper bound (exclusive) of logical keys below `x`: [`Seg::phys_bound`], except when `x`'s tail is
+    /// exactly one customer component c. Then every key of the area below `x` belongs to a customer sorting before c,
+    /// and no key of the area lies in [`u/c`, `phys_bound(x)`): that interval holds only c's other areas. The bound is
+    /// `u/c`, so a read of one customer does not touch the next customer's keys (compaction 2 step 6: a reverse index
+    /// read of one customer read the next customer's documents first, which cost the counter a block and a GET).
+    pub fn phys_upper(&self, x: &[u8]) -> Vec<u8> {
+        if x > self.lp.as_slice() && x < self.lp_end().as_slice() {
+            let tail = &x[self.lp.len()..];
+            if crate::keyenc::skip(tail) == Some(tail.len()) {
+                let mut p = U.to_vec();
+                p.extend(tail);
+                return p;
+            }
+        }
+        self.phys_bound(x)
+    }
+
     /// Where a physical key of the customer space stands against this area: `Ok(logical key)` inside it,
     /// `Err(Before)` before the area within its customer (`seek`: the area's start for that customer), `Err(After)`
     /// after it within its customer (`area_end`: the end of the area for that customer). `customer` is `u/{customer}`.

@@ -325,6 +325,10 @@ impl Part {
     }
 }
 
+fn hexs(b: &[u8]) -> String {
+    b.iter().map(|c| if c.is_ascii_graphic() { (*c as char).to_string() } else { format!("\\x{c:02x}") }).collect()
+}
+
 /// A lazy cursor over one run's rows in [lo, hi).
 struct RunCur {
     h: Arc<RunH>,
@@ -424,6 +428,9 @@ impl RunCur {
                     }
                 }
                 self.prefix = super::counter::slice_prefix(run.customers, &self.lo, self.hi.as_deref(), super::counter::slice_mode());
+                if self.prefix.is_none() && std::env::var("FENVIX_COUNTER_DEBUG").is_ok() {
+                    eprintln!("counter: whole blocks for [{}, {})", hexs(&self.lo), self.hi.as_deref().map(hexs).unwrap_or_default());
+                }
             }
             let Some((next, end)) = self.blocks else { return Ok(None) };
             // read-ahead: up to per_fetch blocks in one GET; but when the next blocks are in the counter, only those (a
