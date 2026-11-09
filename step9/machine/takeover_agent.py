@@ -3,11 +3,12 @@
   tk/<NAME>/cmd-<n>.json  {"action": "start" | "kill9" | "stop" | "freeze" | "thaw", "log": true|false, "lease_ttl": 4}
   tk/<NAME>/ack-<n>.json  written back: {"n", "action", "t" (epoch seconds when done), "pid", "ok", "error"}
 Commands are numbered 1, 2, 3... and run in order. "start" launches the TAKEOVER PAIR process: a second mongo-server on
-port 27018, on the same pantry, with a short lease (lease_ttl seconds) so a takeover takes seconds, not the default 30 s,
-and with the 3-zone log unless "log": false. Its databases (tk_*) are not the measured ones, so the measured server on
-27017 is not touched. The pair process uses the same TLS certificate, the same users (they live in the pantry) and a
-fixed holder id per machine.
-Usage: takeover_agent.py BUCKET NAME PRIVATE_IP   (PANTRY in the environment; out/config.json gives the log)"""
+port 27018, on its OWN bucket (config takeover_bucket: its databases and users apart from the measured cook's, whose
+process owns the pantry's admin database), with a short lease (lease_ttl seconds) so a takeover takes seconds, not the default 30 s,
+and with the 3-zone log unless "log": false. The measured server on 27017 is not touched. The pair process uses the same TLS certificate and
+password; the first process to start creates the root user from localhost (create_user.py), the standby's attempt is
+refused while the other owns admin, which is expected.
+Usage: takeover_agent.py BUCKET NAME PRIVATE_IP   (out/config.json gives the log and the takeover bucket; CM_PW in the environment)"""
 import json
 import os
 import signal
@@ -19,11 +20,11 @@ import boto3
 from botocore.exceptions import ClientError
 
 BUCKET, NAME, IP = sys.argv[1:4]
-PANTRY = os.environ["PANTRY"]
 PORT = 27018
 POLL_S = 0.5
 s3 = boto3.client("s3", region_name="eu-west-1")
 cfg = json.load(open("out/config.json"))
+TK_BUCKET = cfg["takeover_bucket"]
 
 
 def get(key):
@@ -48,7 +49,7 @@ n_start = 0
 def start(c):
     global proc, n_start
     n_start += 1
-    cmd = ["./mongo-server", "--listen", f"0.0.0.0:{PORT}", "--store", "s3", "--bucket", PANTRY, "--region", "eu-west-1",
+    cmd = ["./mongo-server", "--listen", f"0.0.0.0:{PORT}", "--store", "s3", "--bucket", TK_BUCKET, "--region", "eu-west-1",
            "--auth", "--tls-mode", "requireTLS", "--tls-certificate-key-file", "cert/server.pem",
            "--lease-ttl-secs", str(int(c.get("lease_ttl", 4))), "--holder", f"tk-{NAME}-{n_start}"]
     if os.environ.get("LOCAL_TEST") and os.environ.get("AWS_ENDPOINT_URL"):
@@ -59,6 +60,8 @@ def start(c):
     out = open(f"out/takeover-pair-{n_start}.log", "w")
     proc = subprocess.Popen(cmd, stdout=out, stderr=subprocess.STDOUT)
     log(f"started pair process {proc.pid}: {' '.join(cmd)}")
+    r = subprocess.run([sys.executable, "create_user.py", str(PORT), "cert/ca.pem"], capture_output=True, text=True, timeout=180)
+    log(f"root user on the pair: code {r.returncode}: {(r.stdout + r.stderr).strip().splitlines()[-1:] if (r.stdout + r.stderr).strip() else ''}")
     return proc.pid
 
 
@@ -72,7 +75,7 @@ def signal_pair(sig):
 
 
 n = 1
-log(f"takeover agent of {NAME} ({IP}), pantry {PANTRY}")
+log(f"takeover agent of {NAME} ({IP}), takeover bucket {TK_BUCKET}")
 while True:
     c = get(f"tk/{NAME}/cmd-{n}.json")
     if c is None:

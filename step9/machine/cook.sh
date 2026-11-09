@@ -75,9 +75,15 @@ step "start: ${CMD[*]}"
 SRV=$!
 ( while kill -0 "$SRV" 2>/dev/null; do echo "$(date -u +%FT%TZ) $(ps -o rss= -p "$SRV" | tr -d ' ')" >> out/rss-kib.log; sleep 5; done ) &
 WATCH=$!
-if [ "$ROLE" != compactor ]; then
+if [ "$ROLE" = loader ] || [ "$ROLE" = cook ]; then
   $PY create_user.py "$PORT" cert/ca.pem >> out/steps.log 2>&1 || { tail -20 out/mongo-server.log >> out/steps.log; finish SERVER_DID_NOT_START; }
   $PY s3_counters.py "$PORT" cert/ca.pem out/s3-counters.json "$PUSH_S" 2>> out/s3-counters.err & CNT_PID=$!
+else
+  # the spare (and the compactor) cannot log in: every database, admin included, is owned by the cook's process while
+  # it lives (that is the point of a standby). Ready = the server listens. Its S3 requests count in SPESA as a fixed
+  # allowance (run.py).
+  for _ in $(seq 1 60); do grep -q "listening on" out/mongo-server.log 2>/dev/null && break; kill -0 "$SRV" 2>/dev/null || break; sleep 2; done
+  grep -q "listening on" out/mongo-server.log 2>/dev/null || [ "$ROLE" = compactor ] || { tail -20 out/mongo-server.log >> out/steps.log; finish SERVER_DID_NOT_START; }
 fi
 ( while sleep "${SST_EVERY_S:-300}"; do kill -0 "$SRV" 2>/dev/null || break
     $PY sst_count.py "$PANTRY" out/sst-during.jsonl "$NAME during" >> out/sst-during.txt 2>&1; done ) & SST_PID=$!

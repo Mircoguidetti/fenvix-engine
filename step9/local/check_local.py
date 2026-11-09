@@ -46,7 +46,7 @@ check("script and code-irlanda files: originals" in steps, "client: founder's sc
 m = re.search(r"size 1 \(([^)]*)\): (\S+);", steps)
 check(bool(m) and m.group(2).startswith("FINITO"), f"client: m30 program on cook 1: {m.groups() if m else 'not found'}")
 reads = read("client/size-1/reads.txt").strip().splitlines()
-check(bool(reads) and "SAME" in reads[-1].upper(), f"client: reads against the plan: {reads[-1] if reads else 'none'}")
+check(bool(reads) and "ONE TO ONE" in reads[-1].upper(), f"client: reads against the plan: {reads[-1] if reads else 'none'}")
 filler = read("filler/steps.log")
 check("BALLAST: DONE" in filler, f"filler: {[l for l in filler.splitlines() if 'BALLAST' in l][-1:]}")
 ex = read("extras/steps.log")

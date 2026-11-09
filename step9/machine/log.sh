@@ -49,7 +49,8 @@ PQ_PID=$!
 BENCH_PID=$!
 sleep 3
 kill -0 "$PQ_PID" 2>/dev/null || { tail -20 out/pq.log >> out/steps.log; finish LOG_DID_NOT_START; }
-put_json "$P/ready.json" "{\"ip\": \"$IP\", \"port\": 7200, \"peer_port\": 7100, \"id\": $ID, \"az\": \"$AZ\", \"type\": \"$TYPE\"}" || finish NO_BUCKET
+printf '{"ip": "%s", "port": 7200, "peer_port": 7100, "bench_port": 7201, "id": %s, "az": "%s", "type": "%s"}\n' "$IP" "$ID" "$AZ" "$TYPE" > out/ready.json
+$PY s3io.py put "$BUCKET" "$P/ready.json" out/ready.json || finish NO_BUCKET
 step "ready: log replica $ID on $IP:7200"
 while :; do
   sleep "$PUSH_S"

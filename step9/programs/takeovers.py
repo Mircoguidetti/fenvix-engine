@@ -98,7 +98,9 @@ def wait_ping(node, wait_s=120):
         try:
             c.admin.command("ping")
             return True
-        except Exception:
+        except Exception as e:
+            if "is owned by" in str(e):   # a standby answers: its databases belong to the other process for now
+                return True
             time.sleep(0.3)
     raise RuntimeError(f"{node} does not answer on 27018 after {wait_s} s")
 
@@ -175,13 +177,19 @@ for t in ths:
     t.join(timeout=30)
 # every acknowledged _id must be in the surviving process
 survivor = state["serving"]
-present = set()
-for d in colls[survivor].with_options(write_concern=WriteConcern(w=1)).find({}, {"_id": 1}):
-    present.add(d["_id"])
-lost = sorted(set(acked) - present)
+present, verify_error = set(), None
+ip_s = NODES[survivor][0]
+try:   # a client without a socket timeout: the read-back of millions of _ids takes longer than one write
+    vc = MongoClient(f"mongodb://root:{pw}@{ip_s}:27018/?directConnection=true&tls=true&tlsCAFile={a.ca}&authSource=admin",
+                     appname="app-demo", serverSelectionTimeoutMS=30000, socketTimeoutMS=0)
+    for d in vc["tk_app"]["w"].find({}, {"_id": 1}, batch_size=20000):
+        present.add(d["_id"])
+except Exception as e:
+    verify_error = f"{type(e).__name__}: {e}"[:300]
+lost = sorted(set(acked) - present) if verify_error is None else []
 times = sorted(r["takeover_s"] for r in summary["takeovers"] if r["takeover_s"] is not None)
 pct = lambda p: times[min(len(times) - 1, int(round(p / 100 * (len(times) - 1))))] if times else None
-summary.update({"done": len(times), "acknowledged": len(acked), "lost": len(lost), "lost_ids_first": lost[:50],
+summary.update({"verify_error": verify_error, "done": len(times), "acknowledged": len(acked), "lost": len(lost), "lost_ids_first": lost[:50],
                 "confirmed_after_kill": state["after_kill"], "failed_writes": state["failed"], "survivor": survivor,
                 "takeover_s_p50": pct(50), "takeover_s_p99": pct(99), "takeover_s_max": times[-1] if times else None})
 for k in ("A", "B"):
@@ -189,7 +197,7 @@ for k in ("A", "B"):
         command(k, "stop", wait_s=60)
     except Exception as e:
         print(f"stop {k}: {e}")
-passed = ok and len(times) == a.n and not lost and state["after_kill"] == 0
+passed = ok and verify_error is None and len(times) == a.n and not lost and state["after_kill"] == 0
 summary["verdict"] = "PASS" if passed else "FAIL"
 json.dump(summary, open(os.path.join(a.out, f"{tag}-summary.json"), "w"), indent=1)
 print(json.dumps({k: v for k, v in summary.items() if k != "takeovers"}))

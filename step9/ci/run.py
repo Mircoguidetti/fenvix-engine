@@ -45,6 +45,7 @@ CAP = float(cmd["spend_cap"])
 CEILING_MIN = float(cmd["ceiling_min"])
 DISK_GB = int(os.environ.get("DISK_GB", "20"))
 BUCKET = f"fenvix-coldread-s9-{RUN}"
+TK_BUCKET = f"fenvix-coldread-s9t-{RUN}"
 PANTRY = cmd["pantry_name"]   # decided by decide.py (new, kept, or an existing kept pantry)
 T0 = time.time()
 plat = infra.make(MODE)
@@ -131,7 +132,7 @@ def s3_dollars():
     plus the storage of the data for the hours so far, plus a margin for the client's files and the counters' delay."""
     tot = 0.0
     for m in machines.values():
-        if m["role"] in ("loader", "cook", "spare"):
+        if m["role"] in ("loader", "cook", "spare", "compactor"):
             c = get(f"results/{m['name']}/s3-counters.json") or {}
             if c.get("available"):
                 tot += float(c.get("dollars", 0))
@@ -243,7 +244,7 @@ def stop(name, mid, wait_s=180):
 
 def server_config(name, role, logs):
     opts = cmd["server_options"] if role in ("cook", "spare") else (cmd["compactor_options"] if role == "compactor" else cmd.get("loader_options", ""))
-    put(f"{name}/config.json", {"pantry": PANTRY, "server_options": opts, "logs": logs, "log_id": "cell1"})
+    put(f"{name}/config.json", {"pantry": PANTRY, "server_options": opts, "logs": logs, "log_id": "cell1", "takeover_bucket": TK_BUCKET})
 
 
 # ---------- the round ----------
@@ -274,6 +275,10 @@ try:
             s3.upload_file(os.path.join(os.environ["PACKAGES"], f), BUCKET, f"program/{f}")
     s3.upload_file(os.path.join(os.environ["CA_DIR"], "ca.pem"), BUCKET, "program/ca.pem")
     put("secret/pw", os.environ["CM_PW"])
+    if "takeovers" in cmd["programs"] and "extras" in PHASES:
+        # the takeover pair's own data bucket: its databases and its users stay apart from the measured cook's (the
+        # cook's process owns the pantry's admin database, where the users live, for as long as it runs)
+        plat.new_bucket(TK_BUCKET, 1)
     if cmd.get("filler"):
         put("filler/plan.json", {"pantry": PANTRY, **cmd["ballast"]})
     say("3/8 network")
