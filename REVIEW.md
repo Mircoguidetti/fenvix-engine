@@ -1,3 +1,80 @@
+FIX 1
+
+# Review round 2 of compaction 2 step 3, `c2-step3-reader` at e7c22ef (fixes in 2a381ac)
+
+Reviewer session, 2026-11-09. Scope, as the coordinator set it:
+- my two defects of round 1;
+- F6 of `sessions/2026-11-09-review-c2-step0-r2/REPORT.md`.
+
+Owner's report: fenvix-brain `sessions/2026-11-09-c2-step3-fix/REPORT.md`. Spend: $0, local only.
+
+Branch `review-c2-step3` is now at a8c47c7: e7c22ef plus one new failing test.
+
+This is the last round. What remains goes to the founder.
+
+## Verdict
+
+- Defect 1 (the raw-reader check) is fixed and complete.
+- Defect 2 (rule 25, fence pending) is fixed for every case where a version already exists in the store.
+- F6 is fixed: the timeout, the startup check, and the late-answer test.
+
+One hole is left, and it is in the new code. On a database's **first** publish, a timed-out PUT is treated as "nothing landed". The fence is skipped, and the late PUT then lands a version this waiter does not know. One failing test.
+
+## Checks (all MEASURED)
+
+- My round 1 tests, unchanged:
+  - `raw_readers_misses.sh`: all 4 cases caught (it missed 3 on dedb4e5).
+  - `review_no_hold_after_an_unknown_publish_whose_fence_failed`: passes.
+- The owner's new handle check (`fix/raw_readers_handles.sh`): a stray `open_writers()` and a stray `open_readers()` are both caught.
+- Controls fail without their fix:
+  - `rule25_control_without_the_pending_state_breaks` passes; it asserts the violation when the pending state is switched off.
+  - I removed the PUT timeout from `manifest::create` in a scratch copy, and `f6_a_put_whose_answer_is_late_is_a_timeout_and_the_next_hold_fences_first` then fails (`fix_tests.rs:208`).
+  - The old raw-reader pattern misses the cases shown in round 1.
+- F6 timing:
+  - The PUT timeout wraps the whole `put_opts` call, so it covers the store's own retries.
+  - Fences go through the same `create`, so they get the same timeout.
+  - `check_config` refuses each of the four bad timings (owner's test passes), and it runs at startup whenever `--sealed-runs` is on.
+- `load_fx` now checks that X_d <= SlateDB's last seq on every version its loop reads (my round 1 note 1).
+- Judge fast on e7c22ef (fix code of 2a381ac), my run:
+  - Sealed runs off:
+    - readers PASS, 22 matches, all in named files;
+    - build PASS;
+    - unit 146 passed, 1 failed: the known `counter::tests::rev_maps_leave_room_for_active_data`;
+    - diff-py 412/413 and diff-node 412/413, only the known `bucketauto.infinity`;
+    - ctl FAIL, 1 of 3 files: the known `test_05_erase::test_concurrent_erase_and_fork_are_serialised` flake (a leftover `control/usage/` record, no `fx/` object);
+    - kill PASS.
+  - `JUDGE_SEALED_RUNS=2`: the same, except ctl PASS (3 files).
+  - This is the same picture as the owner's two verdicts.
+  - My first attempt at the off run compiled my new failing test into its unit phase, because I had written it in the judge's working tree. I stopped that run and ran both again on a clean e7c22ef; the numbers above are from the clean runs.
+
+## Defect (a test that fails on e7c22ef)
+
+### 1. A late PUT of the first publish lands unfenced
+
+Test: `cargo test --release -p tenant-bench --lib fx::fix_tests::review_r2_a_late_first_publish_put_lands_unfenced`. It uses the owner's own `LandLate` store action.
+
+What happens:
+1. A database's first publish times out under F6's PUT timeout (200 ms), and the PUT is still on its way.
+2. `fx_publish` sets the fence-pending state and calls `load_fx`. `load_fx` finds no version in the store, so it clears the pending state ("nothing landed, nothing to fence") and writes no fence.
+3. 600 ms later the late PUT lands version 1, and nothing refuses it.
+4. The waiter still knows no version, and its reads succeed.
+
+The test fails with: "the first publish timed out, the fence was skipped (pending after the publish: false, known version: None), the late PUT landed Some((1, "publish")) unrefused, and a read succeeded with known version None".
+
+Why it matters: F6 exists because a timed-out PUT can still land. Rule 25 says the fence must take the slot so that "either way the waiter knows the newest version". An empty listing does not show that nothing will land; it only shows that nothing has landed yet. In step 4, a drop job that reads the store sees version 1 and, one lease later, drops SlateDB rows at or below its X_d, while this waiter still reads SlateDB alone. That is the NoFence-timeout trace, with "no version" in the place of the old version.
+
+Possible fix: when the outcome is unknown and the store holds no version, write a fence at the slot the timed-out PUT targeted. That slot is version 1 for a first publish, or `last + 1` in general. The fence copies nothing: it is a version whose kind says "no runs", or the first publish's own version re-created. Clear the pending state only once that fence is published. A simpler alternative: never clear the pending state on an empty store while a PUT with an unknown outcome targeted that slot.
+
+## Notes (no test; for the founder)
+
+- **A woken tenant in reader mode after a restart takes holds without a fence.** It fences only when it upgrades to a writer. Rule 25 lists "just opened after a restart" among the cases that need a fence before any hold. A reader-mode tenant runs no drop job and refreshes within T_pin, so I did not count it as a step 3 defect; step 4's drop floor should not count on it. This was outside this round's scope.
+- **Reads refuse while a fence is pending, and they do not wait.** Reads fail with the retryable error (code 134), and the next exclusive step retries the fence. That meets rule 25. While the store stays down, every read of that database fails retryably, even though SlateDB could answer it. This is availability, not correctness.
+- **The owner's F7 reading and step 4 preconditions look right to me.** F7: today's lease, checked against the waiter's own clock, stops an old waiter from starting reads. The step 4 preconditions: export, PITR and `--envelopes write`, plus a hold per command. I did not test them; they were outside this round's scope.
+
+---
+
+# Round 1
+
 FIX 2
 
 # Review of compaction 2 step 3 (our manifest and the merged reader), `c2-step3-reader` at dedb4e5
