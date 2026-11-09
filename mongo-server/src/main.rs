@@ -508,8 +508,10 @@ struct Args {
     /// First course: one opening at most, in KiB (trimmed above it, then dropped).
     #[arg(long, default_value_t = 256)]
     first_course_max_kb: u64,
-    /// First course: the opening keeps what this many queries of a visit read (1: the first query only).
-    #[arg(long, default_value_t = 1)]
+    /// First course: the opening keeps what this many queries of a visit read (1: the first query only). Default 4, the
+    /// logical images of compaction 2 step 6 (the first course's review: with 1 query a visit's next query pays the
+    /// cold read instead).
+    #[arg(long, default_value_t = 4)]
     first_course_queries: u64,
     /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
     /// releases before); M29 measured 64.

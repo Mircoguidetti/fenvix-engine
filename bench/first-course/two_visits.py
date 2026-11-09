@@ -237,14 +237,17 @@ def visits(a):
     res["visit1_secs"] = time.time() - t
     res["sizes_after_visit1"] = size_summary(admin)
     if a.sealed:
-        cnt = sealed.counter(admin)
-        per = sorted(cnt.get("perCustomer", []))
-        res["counter_after_visit1"] = {k: v for k, v in cnt.items() if k not in ("perCustomer", "ok")}
-        res["counter_after_visit1"]["ram_per_hot_customer_mean"] = cnt["bytes"] / max(1, len(v1))
-        res["counter_after_visit1"]["customers_charged"] = len(per)
-        res["counter_after_visit1"]["charged_p50"] = per[len(per) // 2] if per else 0
-        res["counter_after_visit1"]["charged_p95"] = per[int(len(per) * 0.95)] if per else 0
-        print(f"counter after visit 1: {res['counter_after_visit1']}", flush=True)
+        # right after the visit (slices still whole), then trimmed to what the visit relied on (the server does it
+        # --sealed-trim-ms after a slice is made)
+        for name, trim in (("counter_after_visit1", False), ("counter_after_visit1_trimmed", True)):
+            cnt = sealed.counter(admin, trim=trim)
+            per = sorted(cnt.get("perCustomer", []))
+            res[name] = {k: v for k, v in cnt.items() if k not in ("perCustomer", "ok")}
+            res[name]["ram_per_hot_customer_mean"] = cnt["bytes"] / max(1, len(v1))
+            res[name]["customers_charged"] = len(per)
+            res[name]["charged_p50"] = per[len(per) // 2] if per else 0
+            res[name]["charged_p95"] = per[int(len(per) * 0.95)] if per else 0
+            print(f"{name}: {res[name]}", flush=True)
     fc1 = fen(admin).get("firstCourse", {})
     print(f"visit 1: {len(v1)} users in {res['visit1_secs']:.0f} s; openings {res['sizes_after_visit1']}", flush=True)
 

@@ -836,6 +836,9 @@ impl Server {
                     "stageMissed": tenant_bench::fx::counter::STAGE_MISSED.load(Relaxed) as i64,
                     "stageGets": tenant_bench::fx::counter::STAGE_GETS.load(Relaxed) as i64,
                     "stageTimeouts": tenant_bench::fx::counter::STAGE_TIMEOUTS.load(Relaxed) as i64,
+                    "trims": tenant_bench::fx::counter::TRIMS.load(Relaxed) as i64,
+                    "trimDrops": tenant_bench::fx::counter::TRIM_DROPS.load(Relaxed) as i64,
+                    "refetches": tenant_bench::fx::counter::REFETCHES.load(Relaxed) as i64,
                 },
             },
             "compaction": {

@@ -1,0 +1,14 @@
+mongo-server listening on 127.0.0.1:27052 (idle close after 100000 s, holder fc-27052, lease ttl 30 s)
+LEASE process_lease tenant=- holder=fc-27052 unix_ms=1794234055545 inc=68d904388ce7b5f7 gen=1
+LEASE acquired tenant=chat holder=fc-27052 unix_ms=1794234055551 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW fenvixSealedPublish db=admin ms=51528 ok=true
+shutting down: closing tenants cleanly
+LEASE release_begin tenant=chat holder=fc-27052 unix_ms=1794234107630 
+LEASE release tenant=chat holder=fc-27052 unix_ms=1794234107634 ok=true
+tenants closed; stopping maintenance
+maintenance stopped

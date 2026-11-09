@@ -865,15 +865,18 @@ impl Server {
         Ok(doc! { "published": published, "report": rep, "millis": ms, "ok": 1.0 })
     }
 
-    /// `{fenvixCounter: 1, clear: bool}`: what the counter of our runs holds (`fx/counter.rs`), with the bytes held per
-    /// customer, for measurements; `clear` empties it first.
+    /// `{fenvixCounter: 1, clear: bool, trim: bool}`: what the counter of our runs holds (`fx/counter.rs`), with the
+    /// bytes held per customer, for measurements; `clear` empties it first, `trim` trims every whole slice first.
     fn counter_info(&self, cmd: &Document) -> Document {
         use tenant_bench::fx::counter;
         if cmd.get_bool("clear").unwrap_or(false) {
             counter::clear();
         }
+        if cmd.get_bool("trim").unwrap_or(false) {
+            counter::trim_all();
+        }
         let st = counter::stats();
-        let mut per: Vec<f64> = counter::bytes_per_customer(tenant_bench::runfmt::CustomerKind::V2, None).into_values().collect();
+        let mut per: Vec<f64> = counter::bytes_per_customer(tenant_bench::runfmt::CustomerKind::V2K, None).into_values().collect();
         per.sort_by(|a, b| a.partial_cmp(b).unwrap());
         doc! {
             "bytes": st.bytes as i64, "blocks": st.blocks as i64, "blockBytes": st.block_bytes as i64,
