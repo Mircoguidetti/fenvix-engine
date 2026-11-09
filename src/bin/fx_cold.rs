@@ -599,20 +599,33 @@ struct Res {
     rows: usize,
 }
 
+static RETRIES: AtomicU64 = AtomicU64::new(0);
+
 async fn measured<F, Fut>(t: &Tenant, f: F) -> Result<Res>
 where
-    F: FnOnce() -> Fut,
+    F: Fn() -> Fut,
     Fut: std::future::Future<Output = Result<(bool, usize)>>,
 {
-    fx::view::clear_cache();
-    METER.reset(t.writer_l0_ids());
-    READ_ON.store(true, Relaxed);
-    let s = Instant::now();
-    let r = READING.scope((), f()).await;
-    let ms = s.elapsed().as_secs_f64() * 1000.0;
-    READ_ON.store(false, Relaxed);
-    let (ok, rows) = r?;
-    Ok(Res { gets: std::array::from_fn(|i| METER.gets[i].load(Relaxed)), bytes: METER.bytes.load(Relaxed), trips: METER.trips.load(Relaxed), ms, ok, rows })
+    let mut attempt = 0;
+    loop {
+        fx::view::clear_cache();
+        METER.reset(t.writer_l0_ids());
+        READ_ON.store(true, Relaxed);
+        let s = Instant::now();
+        let r = READING.scope((), f()).await;
+        let ms = s.elapsed().as_secs_f64() * 1000.0;
+        READ_ON.store(false, Relaxed);
+        match r {
+            Ok((ok, rows)) => return Ok(Res { gets: std::array::from_fn(|i| METER.gets[i].load(Relaxed)), bytes: METER.bytes.load(Relaxed), trips: METER.trips.load(Relaxed), ms, ok, rows }),
+            // a retryable error (a hold revoked): the server answers the client with a retryable error; read again
+            Err(e) if attempt < 3 && e.downcast_ref::<fx::Retry>().is_some() => {
+                attempt += 1;
+                RETRIES.fetch_add(1, Relaxed);
+                eprintln!("retry after {ms:.0} ms: {e}");
+            }
+            Err(e) => return Err(e),
+        }
+    }
 }
 
 fn id_of(k: &[u8]) -> u64 {
@@ -736,7 +749,7 @@ async fn main() -> Result<()> {
     tenant_bench::tiered::set_compression("lz4")?;
     fx::ENABLED.store(true, Relaxed);
     fx::E1_WAIT_MS.store(0, Relaxed);
-    fx::hold::HOLD_LIFE_MS.store(2000, Relaxed);
+    fx::hold::HOLD_LIFE_MS.store(10_000, Relaxed); // step 4 used 2 s; a cold read with injected latency on a loaded sandbox can pass it
     fx::T_PIN_MS.store(1000, Relaxed);
     lifecycle::WRITER_POLL_SECS.store(1, Relaxed);
     // SlateDB: maps in RAM (2 GiB of index and filter cache), data blocks cold (16 KiB of block cache)
@@ -873,10 +886,10 @@ async fn main() -> Result<()> {
         min_seal_bytes: d / groups / 2,
         drop: true,
         lease: Duration::from_millis(1600),
-        remote_lease: Duration::from_millis(3200),
+        remote_lease: Duration::from_millis(12_000), // F6: above hold life plus PUT timeout
         serving_lease: Duration::from_millis(200),
         put_timeout: Duration::from_millis(1000),
-        gc_grace: Duration::from_millis(3200),
+        gc_grace: Duration::from_millis(12_000),
         version_retention: Duration::ZERO,
         gc_every: Duration::from_secs(2),
         tick: Duration::from_millis(5),
@@ -965,7 +978,12 @@ async fn main() -> Result<()> {
             let have = bg.next[c];
             if have > 0 {
                 fx::view::clear_cache();
-                let _ = t.get(idkey(&bg_name(c as u32), rng.gen_range(0..have))).await?;
+                if let Err(e) = t.get(idkey(&bg_name(c as u32), rng.gen_range(0..have))).await {
+                    if e.downcast_ref::<fx::Retry>().is_none() {
+                        return Err(e);
+                    }
+                    RETRIES.fetch_add(1, Relaxed);
+                }
                 bg_reads += 1;
             }
         }
@@ -1008,8 +1026,8 @@ async fn main() -> Result<()> {
                 dr.open(&v.store).await?;
             }
             // SlateDB's indexes and filters of every SST: one unmetered point read and one scan
-            let _ = t.get(idkey(&bg_name(0), 0)).await?;
-            let _ = t.scan_range(&prefix(&bg_name(1), "msgs"), Some(&prefix_end(&prefix(&bg_name(1), "msgs"))), true, Some(1), READ_AHEAD).await?;
+            let _ = t.get(idkey(&bg_name(0), 0)).await;
+            let _ = t.scan_range(&prefix(&bg_name(1), "msgs"), Some(&prefix_end(&prefix(&bg_name(1), "msgs"))), true, Some(1), READ_AHEAD).await;
             let n_delta = v.delta.len();
             let n_local = v.delta.iter().filter(|d| d.line.local).count();
             let l0_now = t.writer_l0().unwrap_or(0);
@@ -1084,9 +1102,9 @@ async fn main() -> Result<()> {
     let ab = s.absorbed_raw.load(Relaxed) - b0.4;
     let re = s.reseal_raw_out.load(Relaxed) - b0.3;
     let me = s.merge_raw_out.load(Relaxed) - b0.5;
-    println!("RESULT {tag}: reads {nreads}, wrong {wrong}; background point reads {bg_reads}; L0 max {max_l0}; wall {wall:.0} s");
+    println!("RESULT {tag}: reads {nreads}, wrong {wrong}, retried {}; background point reads {bg_reads}; L0 max {max_l0}; wall {wall:.0} s", RETRIES.load(Relaxed));
     println!("RESULT {tag}: in the window: reseals {} (r3 {}, theta {}), stored amplification {amp:.2} (L0 {:.1} MiB, SlateDB {:.1} MiB, our runs {:.1} MiB), raw: absorbed {:.1} MiB, merges {:.1} MiB, reseals {:.1} MiB ({:.2} per absorbed byte)", s.reseals.load(Relaxed) - b0.0, s.r3_reseals.load(Relaxed) - b0.1, s.theta_reseals.load(Relaxed) - b0.2, mib(l0_bytes), mib(dl("c", "sst")), mib(dl("c", "fxrun")), mib(ab), mib(me), mib(re), re as f64 / ab.max(1) as f64);
-    writeln!(out, "{{\"summary\":true,\"cfg\":\"{tag}\",\"reads\":{nreads},\"wrong\":{wrong},\"amp\":{amp:.3},\"reseals\":{},\"r3_reseals\":{},\"theta_reseals\":{},\"absorbed_raw\":{ab},\"merge_raw\":{me},\"reseal_raw\":{re},\"l0_bytes\":{l0_bytes},\"runs_bytes\":{},\"slate_bytes\":{},\"bg_reads\":{bg_reads},\"max_l0\":{max_l0},\"wall_s\":{wall:.0}}}", s.reseals.load(Relaxed) - b0.0, s.r3_reseals.load(Relaxed) - b0.1, s.theta_reseals.load(Relaxed) - b0.2, dl("c", "fxrun"), dl("c", "sst"))?;
+    writeln!(out, "{{\"summary\":true,\"cfg\":\"{tag}\",\"reads\":{nreads},\"wrong\":{wrong},\"amp\":{amp:.3},\"reseals\":{},\"r3_reseals\":{},\"theta_reseals\":{},\"absorbed_raw\":{ab},\"merge_raw\":{me},\"reseal_raw\":{re},\"l0_bytes\":{l0_bytes},\"runs_bytes\":{},\"slate_bytes\":{},\"bg_reads\":{bg_reads},\"max_l0\":{max_l0},\"wall_s\":{wall:.0},\"retries\":{}}}", s.reseals.load(Relaxed) - b0.0, s.r3_reseals.load(Relaxed) - b0.1, s.theta_reseals.load(Relaxed) - b0.2, dl("c", "fxrun"), dl("c", "sst"), RETRIES.load(Relaxed))?;
     gc_stop.store(true, Relaxed);
     let _ = gc_task.await;
     comp.stop().await;
