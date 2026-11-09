@@ -512,6 +512,33 @@ impl Seg {
         self.phys_bound(x)
     }
 
+    /// The physical upper bound (exclusive) of a read of [lo, hi) inside this area: [`Seg::phys_upper`], tightened to the
+    /// end of one customer's part of the area when [lo, hi) holds keys of that customer only (lo starts with its
+    /// component c, hi <= lp + prefix_end(c)). Every area key of the read is then `u/c{infix}...`, below
+    /// `prefix_end(u/c{infix})`. A one-customer read then stays inside its area, which the counter of step 6 slices by.
+    pub fn phys_upper_within(&self, lo: &[u8], hi: &[u8]) -> Vec<u8> {
+        let p = self.phys_upper(hi);
+        if lo <= self.lp.as_slice() || lo >= self.lp_end().as_slice() {
+            return p;
+        }
+        let tail = &lo[self.lp.len()..];
+        let Some(n) = crate::keyenc::skip(tail) else { return p };
+        let c = &tail[..n];
+        let Some(ce) = crate::keyenc::prefix_end(c) else { return p };
+        let mut cust_end = self.lp.clone();
+        cust_end.extend(ce);
+        if hi > cust_end.as_slice() {
+            return p;
+        }
+        let mut a = U.to_vec();
+        a.extend(c);
+        a.extend(&self.infix);
+        match crate::keyenc::prefix_end(&a) {
+            Some(e) if e < p => e,
+            _ => p,
+        }
+    }
+
     /// Where a physical key of the customer space stands against this area: `Ok(logical key)` inside it,
     /// `Err(Before)` before the area within its customer (`seek`: the area's start for that customer), `Err(After)`
     /// after it within its customer (`area_end`: the end of the area for that customer). `customer` is `u/{customer}`.
