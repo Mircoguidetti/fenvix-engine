@@ -1,0 +1,4 @@
+fx_cold: 1tb-medium r1 off r3 off, D 512 MiB, L0 4096 B, day 19.2 MiB of inserts, warm-up 6.7 days, window 13.3 days, background cold reads 864 per day, S3 latency 5000 us, seed 5
+112 pattern customers, 40 agent threads (20 young)
+loaded 513 MiB in 12.1 s
+first version built: 46 groups

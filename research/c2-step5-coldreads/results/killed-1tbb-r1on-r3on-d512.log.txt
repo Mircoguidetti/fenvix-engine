@@ -1,0 +1,24 @@
+fx_cold: 1tb-busy r1 on r3 on, D 512 MiB, L0 4096 B, day 95.9 MiB of inserts, warm-up 3.2 days, window 8.0 days, background cold reads 3456 per day, S3 latency 5000 us, seed 5
+112 pattern customers, 40 agent threads (20 young)
+loaded 513 MiB in 11.5 s
+first version built: 46 groups
+  20 s: day 0.70, groups 47, delta runs 11, reseals 223 (r3 222), L0 max 64, reads 0, wrong 0
+  40 s: day 1.36, groups 47, delta runs 10, reseals 483 (r3 476), L0 max 64, reads 0, wrong 0
+  60 s: day 1.90, groups 48, delta runs 9, reseals 704 (r3 697), L0 max 64, reads 0, wrong 0
+  80 s: day 2.45, groups 51, delta runs 11, reseals 920 (r3 911), L0 max 64, reads 0, wrong 0
+  100 s: day 2.94, groups 51, delta runs 8, reseals 1130 (r3 1116), L0 max 64, reads 0, wrong 0
+measured window starts at 307 MiB written (3.2 days)
+  120 s: day 3.39, groups 53, delta runs 6, reseals 1321 (r3 1306), L0 max 64, reads 0, wrong 0
+  140 s: day 3.77, groups 54, delta runs 11, reseals 1454 (r3 1437), L0 max 64, reads 108, wrong 0
+  160 s: day 4.13, groups 55, delta runs 6, reseals 1602 (r3 1580), L0 max 64, reads 324, wrong 0
+  180 s: day 4.53, groups 60, delta runs 10, reseals 1761 (r3 1736), L0 max 64, reads 432, wrong 0
+  200 s: day 4.89, groups 74, delta runs 7, reseals 1911 (r3 1885), L0 max 64, reads 540, wrong 0
+  220 s: day 5.27, groups 92, delta runs 11, reseals 2089 (r3 2060), L0 max 64, reads 648, wrong 0
+  240 s: day 5.60, groups 96, delta runs 7, reseals 2256 (r3 2223), L0 max 64, reads 756, wrong 0
+  260 s: day 5.94, groups 96, delta runs 13, reseals 2430 (r3 2392), L0 max 64, reads 864, wrong 0
+  280 s: day 6.24, groups 98, delta runs 9, reseals 2586 (r3 2547), L0 max 64, reads 972, wrong 0
+  300 s: day 6.56, groups 100, delta runs 8, reseals 2746 (r3 2706), L0 max 64, reads 1080, wrong 0
+retry after 14915 ms: fx hold revoked: the read held version 29546 for more than 10s; retry
+  338 s: day 6.90, groups 98, delta runs 10, reseals 2926 (r3 2880), L0 max 64, reads 1296, wrong 0
+  358 s: day 7.22, groups 98, delta runs 9, reseals 3077 (r3 3027), L0 max 64, reads 1404, wrong 0
+  379 s: day 7.52, groups 100, delta runs 12, reseals 3230 (r3 3178), L0 max 64, reads 1512, wrong 0

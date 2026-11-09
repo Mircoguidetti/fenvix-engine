@@ -59,6 +59,27 @@ def age_bucket(a):
     return "e: > 7 days (sealed or old)"
 
 
+# Product translation. Real S3 first byte 20-80 ms per GET (MEASURED by three parties, sessions/2026-11-08-chat-new-light);
+# one trip costs one first byte, plus the bytes at the waiter's NIC (0.937 Gbit/s baseline, DECLARED, fence report).
+NIC = 0.937e9 / 8
+READS_PER_MONTH = {"medium": 20 * 86400 * 30.4, "busy": 80 * 86400 * 30.4}
+
+
+def product(cfg, v):
+    if not v:
+        return
+    prof = "busy" if "busy" in cfg else "medium"
+    g = [gets(x) for x in v]
+    mean_g = sum(g) / len(g)
+    out = []
+    for fb in (20, 80):
+        lat = [x["trips"] * fb + x["bytes"] / NIC * 1000 for x in v]
+        out.append(f"first byte {fb} ms: p50 {pct(lat,50):.0f} ms, p99 {pct(lat,99):.0f} ms")
+    per_m = mean_g * GET_PRICE * 1e6
+    month = mean_g * GET_PRICE * READS_PER_MONTH[prof]
+    print(f"  product (ESTIMATED from these counts): {'; '.join(out)}; GETs cost {per_m:.2f} $ per million cold reads, {month:.2f} $ a month at {prof} ({READS_PER_MONTH[prof]/1e6:.1f} M cold reads a month), before the first course")
+
+
 def main():
     rows, summ = [], []
     for f in sys.argv[1:]:
@@ -95,6 +116,7 @@ def main():
         for k in sorted({x["kind"] for x in v if x["pat"].startswith("agent")}):
             for p in ["agent_young", "agent_old"]:
                 print(line(f"{p} {k}", [x for x in v if x["pat"] == p and x["kind"] == k]))
+        product(cfg, doc)
         n_delta = [x["n_delta"] for x in v]
         print(f"  state at the measurement points: delta runs mean {sum(n_delta)/len(n_delta):.1f} max {max(n_delta)}, on NVMe mean {sum(x['n_local'] for x in v)/len(v):.1f}; SlateDB L0 mean {sum(x['l0_ssts'] for x in v)/len(v):.1f}, sorted runs mean {sum(x.get('slate_srs',0) for x in v)/len(v):.1f}")
         print()

@@ -1,0 +1,21 @@
+fx_cold: 1tb-busy r1 on r3 on wave, D 256 MiB, L0 2048 B, day 47.9 MiB of inserts, warm-up 3.2 days, window 8.0 days, background cold reads 1728 per day, S3 latency 5000 us, seed 5
+112 pattern customers, 40 agent threads (20 young)
+loaded 258 MiB in 5.9 s
+first version built: 47 groups
+  20 s: day 1.61, groups 50, delta runs 13, reseals 346 (r3 339), L0 max 64, reads 0, wrong 0
+  40 s: day 3.02, groups 55, delta runs 8, reseals 687 (r3 668), L0 max 64, reads 0, wrong 0
+measured window starts at 154 MiB written (3.2 days)
+  61 s: day 3.82, groups 62, delta runs 13, reseals 884 (r3 857), L0 max 64, reads 216, wrong 0
+  81 s: day 4.74, groups 75, delta runs 9, reseals 1111 (r3 1074), L0 max 64, reads 432, wrong 0
+  107 s: day 5.36, groups 91, delta runs 12, reseals 1281 (r3 1240), L0 max 64, reads 756, wrong 0
+  127 s: day 6.25, groups 99, delta runs 10, reseals 1548 (r3 1495), L0 max 64, reads 972, wrong 0
+  147 s: day 6.97, groups 101, delta runs 13, reseals 1752 (r3 1692), L0 max 64, reads 1296, wrong 0
+  169 s: day 7.52, groups 104, delta runs 9, reseals 1917 (r3 1849), L0 max 64, reads 1512, wrong 0
+  189 s: day 8.24, groups 108, delta runs 10, reseals 2123 (r3 2051), L0 max 64, reads 1728, wrong 0
+  209 s: day 8.67, groups 110, delta runs 9, reseals 2259 (r3 2179), L0 max 64, reads 1836, wrong 0
+  229 s: day 9.34, groups 110, delta runs 10, reseals 2469 (r3 2376), L0 max 64, reads 2052, wrong 0
+  252 s: day 9.67, groups 111, delta runs 7, reseals 2577 (r3 2480), L0 max 64, reads 2268, wrong 0
+  272 s: day 10.41, groups 115, delta runs 13, reseals 2792 (r3 2684), L0 max 64, reads 2484, wrong 0
+  292 s: day 11.11, groups 118, delta runs 14, reseals 3004 (r3 2890), L0 max 64, reads 2700, wrong 0
+RESULT 1tb-busy r1 on r3 on wave: reads 2808, wrong 0, retried 0; background point reads 19377; L0 max 64; wall 297 s
+RESULT 1tb-busy r1 on r3 on wave: in the window: reseals 2305 (r3 2212, theta 93), stored amplification 34.90 (L0 277.7 MiB, SlateDB 506.3 MiB, our runs 8906.8 MiB), raw: absorbed 392.3 MiB, merges 1455.4 MiB, reseals 12996.9 MiB (33.13 per absorbed byte)
