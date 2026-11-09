@@ -18,6 +18,14 @@ use slatedb::config::{ReadOptions, ScanOptions};
 use slatedb::DbReadOps;
 use std::sync::Arc;
 
+/// Negative control of the step 7b fix round, tests only: a bounded read walks SlateDB's rows at or below X_d to the end
+/// of its range, as step 3 did.
+pub static CONTROL_FULL_WALK: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+fn control_full_walk() -> bool {
+    CONTROL_FULL_WALK.load(std::sync::atomic::Ordering::Relaxed)
+}
+
 /// A point read. `view` None: the plain SlateDB read of the releases before.
 pub async fn get<R: DbReadOps + Sync>(src: &R, opts: &ReadOptions, view: Option<&View>, env: Option<u64>, key: &[u8]) -> Result<Option<Bytes>> {
     let kv = src.get_key_value_with_options(key, opts).await?;
@@ -74,6 +82,10 @@ pub async fn scan<R: DbReadOps + Sync>(src: &R, opts: &ScanOptions, view: Option
     let mut r_head: Option<super::view::RRow> = None;
     let mut r_done = false;
     loop {
+        if r_head.is_none() && !r_done {
+            r_head = runs.next().await?;
+            r_done = r_head.is_none();
+        }
         if s_head.is_none() && !s_done {
             loop {
                 match it.next().await? {
@@ -81,17 +93,28 @@ pub async fn scan<R: DbReadOps + Sync>(src: &R, opts: &ScanOptions, view: Option
                         s_head = Some(kv);
                         break;
                     }
-                    Some(_) => continue,
+                    Some(kv) => {
+                        // a row at or below X_d is ignored; once one lies past the runs' next row (SlateDB yields one row
+                        // per key, in order), no SlateDB row above X_d comes before it: the runs' row goes first and the
+                        // search goes on later. Without this a bounded read walked every such row to the end of its range
+                        // (step 7b fix round: 4.7 s for a read of one row over 100,000 rows not yet dropped).
+                        if let Some(r) = &r_head {
+                            if control_full_walk() {
+                                continue;
+                            }
+                            let past = if reverse { kv.key[..] < r.key[..] } else { kv.key[..] > r.key[..] };
+                            if past {
+                                break;
+                            }
+                        }
+                        continue;
+                    }
                     None => {
                         s_done = true;
                         break;
                     }
                 }
             }
-        }
-        if r_head.is_none() && !r_done {
-            r_head = runs.next().await?;
-            r_done = r_head.is_none();
         }
         let take_s = match (&s_head, &r_head) {
             (None, None) => break,

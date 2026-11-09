@@ -1560,6 +1560,10 @@ pub fn interleave_at() -> Option<u32> {
     *K.get_or_init(|| std::env::var("FENVIX_TEST_INTERLEAVE").ok().and_then(|v| v.parse().ok()))
 }
 
+/// The same hook set at run time (`PUT /v1/test/interleave {"database", "at"}`; `DELETE` clears it): only commands on
+/// that database count.
+pub static INTERLEAVE_SET: std::sync::Mutex<Option<(String, u32)>> = std::sync::Mutex::new(None);
+
 /// Interleavings run (tests read it through serverStatus is not needed: the log says it).
 pub static INTERLEAVED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
@@ -1569,7 +1573,15 @@ fn interleave(name: &str) -> std::pin::Pin<Box<dyn std::future::Future<Output = 
 }
 
 async fn interleave_inner(name: &str) {
-    let Some(k) = interleave_at() else { return };
+    let set = INTERLEAVE_SET.lock().unwrap().clone();
+    let k = match set {
+        Some((db, k)) if db == name => k,
+        Some(_) => return,
+        None => match interleave_at() {
+            Some(k) => k,
+            None => return,
+        },
+    };
     let Ok(n) = STEPS.try_with(|c| {
         let n = c.get() + 1;
         c.set(n);

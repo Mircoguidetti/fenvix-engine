@@ -766,6 +766,7 @@ async fn run() -> Result<()> {
     tenant_bench::fx::hold::CONTROL_KEEP_VIEW.store(ctl_env("FENVIX_CONTROL_KEEP_VIEW"), std::sync::atomic::Ordering::Relaxed);
     tenant_bench::fx::hold::CONTROL_OP_HOLDS.store(ctl_env("FENVIX_CONTROL_OP_HOLDS"), std::sync::atomic::Ordering::Relaxed);
     tenant_bench::fx::erase::CONTROL_NO_OWNERSHIP.store(ctl_env("FENVIX_CONTROL_NO_OWNERSHIP"), std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::fx::read::CONTROL_FULL_WALK.store(ctl_env("FENVIX_CONTROL_FULL_WALK"), std::sync::atomic::Ordering::Relaxed);
     if sealed_runs.is_some() || tenant_bench::envelope::START.load(std::sync::atomic::Ordering::Relaxed) {
         // T_pin and E1's wait (rules 6 and 26) apply to release E1 with or without sealed runs (`--envelopes write`)
         use std::sync::atomic::Ordering::Relaxed;

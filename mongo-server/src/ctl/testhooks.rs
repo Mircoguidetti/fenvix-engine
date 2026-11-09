@@ -55,3 +55,21 @@ pub async fn publish_and_drop(db: &str) -> ApiResult<Value> {
     }
     drop_rows(ctl, db, &json!({})).await
 }
+
+/// `PUT /v1/test/interleave {"database": D, "at": K}`: before the K-th storage access of every command on D, a publish
+/// and a drop (`dbs::interleave`). `DELETE` clears it.
+pub fn set_interleave(body: Option<&Value>) -> ApiResult<Value> {
+    if !enabled() {
+        return Err(ApiError::new(404, "no_route", "test hooks are off"));
+    }
+    let v = match body {
+        Some(b) => {
+            let db = b["database"].as_str().ok_or_else(|| ApiError::bad("body needs database"))?.to_string();
+            let at = b["at"].as_u64().ok_or_else(|| ApiError::bad("body needs at"))? as u32;
+            Some((db, at))
+        }
+        None => None,
+    };
+    *crate::dbs::INTERLEAVE_SET.lock().unwrap() = v.clone();
+    Ok(json!({ "interleave": v.map(|(d, k)| json!({ "database": d, "at": k })), "interleaved": crate::dbs::INTERLEAVED.load(std::sync::atomic::Ordering::Relaxed) }))
+}
