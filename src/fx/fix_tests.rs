@@ -277,3 +277,47 @@ async fn f6_config_check_refuses_bad_timings() {
     assert!(ok.is_ok(), "{ok:?}");
     assert!(put_too_long.is_err() && remote_too_short.is_err() && grace_too_short.is_err() && lease_not_above_tpin.is_err());
 }
+
+/// Review round 2 of step 3: the same late PUT as above, on the database's FIRST publish (no version in the store yet).
+/// The publish times out (F6), the PUT is still on its way, and the fence path finds no version in the store: the fix
+/// clears the pending state there ("nothing landed, nothing to fence") and publishes no fence. The late PUT then lands
+/// version 1, which this waiter does not know, and no fence ever took its slot. Rule 25: "either way the waiter knows the
+/// newest version"; F6: a PUT whose answer is late may land after the timeout. Why it matters: in step 4 a drop job that
+/// reads the store sees version 1 and, one lease later, drops SlateDB rows at or below its X_d, while this waiter still
+/// reads SlateDB alone (no version): the NoFence-timeout trace with "no version" as the old one.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn review_r2_a_late_first_publish_put_lands_unfenced() {
+    let _s = super::tests::SERIAL.lock().await;
+    ENABLED.store(true, Relaxed);
+    PUBLISH_EVERY.store(0, Relaxed);
+    T_PIN_MS.store(200, Relaxed);
+    E1_WAIT_MS.store(0, Relaxed);
+    let id = "fx-review-r2-first";
+    let st = Arc::new(Store { inner: Arc::new(InMemory::new()), acts: Mutex::new(Default::default()), late_refused: Default::default() });
+    let store: Arc<dyn ObjectStore> = st.clone();
+    let lc = Lifecycle::new(Arc::new(CountingStore::new(Arc::clone(&store))), None);
+    let mut t = lc.create(id).await.unwrap();
+    for i in 0..60 {
+        t.apply(vec![Op::Put(key(i), b"one".to_vec())]).await.unwrap();
+    }
+    PUT_TIMEOUT_MS.store(200, Relaxed);
+    st.acts.lock().unwrap().extend([Act::LandLate(600)]);
+    // the first publish (E1 wait 0: the marker is written in this call): its PUT times out, outcome unknown
+    let r = t.fx_publish(&opts(Reseal::All), None).await;
+    assert!(r.is_err(), "the first publish's PUT timed out: {r:?}");
+    let pending_after = t.fx_fence_pending();
+    let known_after = t.fx_view().map(|v| v.version);
+    // the late PUT lands
+    tokio::time::sleep(Duration::from_millis(900)).await;
+    let newest = manifest::load_newest(&store, id).await.unwrap().map(|v| (v.version, v.kind.clone()));
+    // a read now: it must refuse until a fence is published, or read with the newest version
+    let read = t.get(key(3)).await;
+    let known_now = t.fx_view().map(|v| v.version);
+    let refused = st.late_refused.load(Relaxed);
+    restore();
+    t.abandon().await;
+    assert!(
+        refused == 1 || read.is_err() || known_now == newest.as_ref().map(|n| n.0),
+        "rule 25 / F6: the first publish timed out, the fence was skipped (pending after the publish: {pending_after}, known version: {known_after:?}), the late PUT landed {newest:?} unrefused, and a read succeeded with known version {known_now:?}"
+    );
+}
