@@ -59,8 +59,11 @@ pub const DEFAULT_PART: usize = 16 << 20;
 /// Bytes read from the end of a run when it is opened: the trailer and, for runs up to about 1.5 GB at 256 KiB blocks,
 /// the whole footer, so opening costs one GET (two when the footer is larger).
 pub const OPEN_TAIL: u64 = 256 << 10;
-/// Customer filter: bits per customer (about 0.8% false positives with 7 hashes, ESTIMATED from the Bloom formula).
-pub const FILTER_BITS_PER_CUSTOMER: u64 = 10;
+/// Bits per customer of a new run's customer filter (`--sealed-filter-bits`). The footer stores the filter's size, so a
+/// reader reads runs written with any value. Step 1 wrote 10 (about 0.8% false positives per run); step 6 raised the
+/// default to 16 (about 0.07% per run, MEASURED in `fx::counter_tests`), because an absent customer is checked against
+/// every run that can hold it (the sealed run and each delta run) and the plan asks for at most 1% per read.
+pub static FILTER_BITS_PER_CUSTOMER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(16);
 const FILTER_SEED: u64 = 0x4658_5231_6669_6c74; // "FXR1filt"
 
 /// The CRC of a stored block: over the run id, the block index and the lz4 bytes.
@@ -187,7 +190,7 @@ impl CustomerFilter {
         if hs.is_empty() {
             return CustomerFilter { hashes: 0, bits: 0, data: Box::new([]) };
         }
-        let bits = (hs.len() as u64 * FILTER_BITS_PER_CUSTOMER).max(64).div_ceil(8) * 8;
+        let bits = (hs.len() as u64 * FILTER_BITS_PER_CUSTOMER.load(std::sync::atomic::Ordering::Relaxed).max(1)).max(64).div_ceil(8) * 8;
         let hashes = 7u8;
         let mut data = vec![0u8; (bits / 8) as usize];
         for &h in hs {
@@ -904,7 +907,7 @@ impl Run {
 
     /// Whether keys in [lo, hi) can be in this run by its key bounds and, when the range lies inside one customer, by
     /// its customer filter.
-    fn may_hold(&self, lo: &[u8], hi: Option<&[u8]>) -> bool {
+    pub fn may_hold(&self, lo: &[u8], hi: Option<&[u8]>) -> bool {
         if !below(&self.first_key, hi) || &self.last_key[..] < lo {
             return false;
         }
@@ -1017,6 +1020,20 @@ impl Block {
 
     pub fn mem_bytes(&self) -> usize {
         self.raw.capacity() + self.starts.capacity() * 4
+    }
+
+    /// Entries i..j as a block of their own, with only their bytes (compaction 2 step 6, physical slices: the waiter
+    /// keeps a customer's rows of a block, not the block). May be empty: an exact "no row here".
+    pub fn slice(&self, i: usize, j: usize) -> Block {
+        let j = j.min(self.len());
+        if i >= j {
+            return Block { raw: Vec::new(), starts: Vec::new() };
+        }
+        let a = self.starts[i] as usize;
+        let z = if j < self.len() { self.starts[j] as usize } else { self.raw.len() };
+        let raw = self.raw[a..z].to_vec();
+        let starts = self.starts[i..j].iter().map(|s| s - a as u32).collect();
+        Block { raw, starts }
     }
 }
 

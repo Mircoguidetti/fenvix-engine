@@ -1144,9 +1144,18 @@ impl Tenant {
             self.fx_fence_pending = false;
         }
         anyhow::ensure!(v.e_env == self.env, "database {}: our manifest {} has E_env {:?}, the database's marker {:?}", self.id, v.version, v.e_env, self.env);
-        self.fx = Some(Arc::new(crate::fx::view::View::new(store, v, self.fx.as_deref())?));
+        self.fx_install(crate::fx::view::View::new(store, v, self.fx.as_deref())?);
         self.fx_loaded = Instant::now();
         Ok(())
+    }
+
+    /// Read with `view` from now on. What the counter holds of runs the new version no longer lists is dropped
+    /// (`fx/counter.rs`): those runs are read again only by holds on older versions, which fetch what they need.
+    fn fx_install(&mut self, view: crate::fx::view::View) {
+        if let Some(old) = self.fx.as_deref() {
+            crate::fx::counter::forget_runs(&crate::fx::counter::retired(old, &view));
+        }
+        self.fx = Some(Arc::new(view));
     }
 
     /// Start envelopes if the database has none (a version needs E_env <= X_d, `fx/manifest.rs`), in two steps (rule
@@ -1227,7 +1236,7 @@ impl Tenant {
                 if e.downcast_ref::<crate::fx::LostRace>().is_some() {
                     // the outcome is known: another publisher holds the slot; read with the newest version (rule 24)
                     if let Some(v) = crate::fx::manifest::load_newest(&store, &self.id).await? {
-                        self.fx = Some(Arc::new(crate::fx::view::View::new(Arc::clone(&store), v, self.fx.as_deref())?));
+                        self.fx_install(crate::fx::view::View::new(Arc::clone(&store), v, self.fx.as_deref())?);
                     }
                 } else if !crate::fx::is_fenced(&e) {
                     // the outcome of the publish's PUT may be unknown (an error, a timeout: the PUT may have landed):
@@ -1248,7 +1257,7 @@ impl Tenant {
         if let Some(f) = fail {
             f("after_publish")?;
         }
-        self.fx = Some(Arc::new(crate::fx::view::View::new(store, v, self.fx.as_deref())?));
+        self.fx_install(crate::fx::view::View::new(store, v, self.fx.as_deref())?);
         self.fx_loaded = Instant::now();
         crate::fx::PUBLISHES.fetch_add(1, Relaxed);
         Ok(Some(rep))

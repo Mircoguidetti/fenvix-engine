@@ -22,7 +22,7 @@ use std::sync::Arc;
 /// The fx tests change process-wide settings (ENABLED, hold life, T_pin): one at a time.
 pub(super) static SERIAL: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
-fn small_opts(reseal: Reseal) -> BuildOpts {
+pub(super) fn small_opts(reseal: Reseal) -> BuildOpts {
     BuildOpts {
         reseal,
         group_bytes: 16 << 10,
@@ -31,7 +31,7 @@ fn small_opts(reseal: Reseal) -> BuildOpts {
     }
 }
 
-fn lc(store: &Arc<dyn ObjectStore>) -> Arc<Lifecycle> {
+pub(super) fn lc(store: &Arc<dyn ObjectStore>) -> Arc<Lifecycle> {
     Lifecycle::new(Arc::new(CountingStore::new(Arc::clone(store))), None)
 }
 
@@ -62,7 +62,7 @@ fn universe() -> Vec<Vec<u8>> {
     u
 }
 
-fn model_range(m: &BTreeMap<Vec<u8>, Vec<u8>>, lo: &[u8], hi: Option<&[u8]>, rev: bool, limit: Option<usize>) -> Vec<(Vec<u8>, Vec<u8>)> {
+pub(super) fn model_range(m: &BTreeMap<Vec<u8>, Vec<u8>>, lo: &[u8], hi: Option<&[u8]>, rev: bool, limit: Option<usize>) -> Vec<(Vec<u8>, Vec<u8>)> {
     let it: Box<dyn Iterator<Item = (&Vec<u8>, &Vec<u8>)>> = match hi {
         Some(h) if lo >= h => return vec![],
         Some(h) => Box::new(m.range(lo.to_vec()..h.to_vec())),
@@ -78,11 +78,11 @@ fn model_range(m: &BTreeMap<Vec<u8>, Vec<u8>>, lo: &[u8], hi: Option<&[u8]>, rev
     v
 }
 
-fn as_vec(r: Vec<(Bytes, Bytes)>) -> Vec<(Vec<u8>, Vec<u8>)> {
+pub(super) fn as_vec(r: Vec<(Bytes, Bytes)>) -> Vec<(Vec<u8>, Vec<u8>)> {
     r.into_iter().map(|(k, v)| (k.to_vec(), v.to_vec())).collect()
 }
 
-async fn apply(t: &mut Tenant, m: &mut BTreeMap<Vec<u8>, Vec<u8>>, ops: Vec<(Vec<u8>, Option<Vec<u8>>)>) {
+pub(super) async fn apply(t: &mut Tenant, m: &mut BTreeMap<Vec<u8>, Vec<u8>>, ops: Vec<(Vec<u8>, Option<Vec<u8>>)>) {
     let mut batch = Vec::new();
     for (k, v) in &ops {
         match v {
@@ -101,16 +101,16 @@ async fn apply(t: &mut Tenant, m: &mut BTreeMap<Vec<u8>, Vec<u8>>, ops: Vec<(Vec
 
 /// T_pin of these tests: envelopes start one T_pin after E1's announcement (rule 26), and a reader refreshes its
 /// version every half T_pin.
-const TEST_T_PIN_MS: u64 = 200;
+pub(super) const TEST_T_PIN_MS: u64 = 200;
 
-fn enable() {
+pub(super) fn enable() {
     ENABLED.store(true, Relaxed);
     PUBLISH_EVERY.store(0, Relaxed);
     T_PIN_MS.store(TEST_T_PIN_MS, Relaxed);
 }
 
 /// Publish, waiting out E1's announcement the first time (rule 26).
-async fn publish(t: &mut Tenant, o: &BuildOpts) -> super::build::BuildReport {
+pub(super) async fn publish(t: &mut Tenant, o: &BuildOpts) -> super::build::BuildReport {
     for _ in 0..50 {
         if let Some(r) = t.fx_publish(o, None).await.unwrap() {
             return r;
@@ -438,6 +438,12 @@ async fn model_publish_every_100_ops_with_crashes() {
     let mut rng = StdRng::seed_from_u64(seed);
     // FX_MODEL_CONTROL=nocut|skipdelta: a broken reader, which the model must catch
     let control = std::env::var("FX_MODEL_CONTROL").unwrap_or_default();
+    // FX_SLICES=0|1|2: what the counter keeps of a fetched block (step 6: whole blocks, the customer's rows, the area's)
+    let slices_before = counter::SLICES.load(Relaxed);
+    if let Some(m) = std::env::var("FX_SLICES").ok().and_then(|s| s.parse::<u8>().ok()) {
+        counter::SLICES.store(m, Relaxed);
+    }
+    eprintln!("model test: slice mode {:?}", counter::slice_mode());
     match control.as_str() {
         "nocut" => view::CONTROL_NO_CUT.store(true, Relaxed),
         "skipdelta" => view::CONTROL_SKIP_DELTA.store(true, Relaxed),
@@ -653,9 +659,11 @@ async fn model_publish_every_100_ops_with_crashes() {
     let from_runs = view::ROWS_FROM_RUNS.load(Relaxed) - runs_before;
     view::CONTROL_NO_CUT.store(false, Relaxed);
     view::CONTROL_SKIP_DELTA.store(false, Relaxed);
+    let mode_used = counter::slice_mode();
+    counter::SLICES.store(slices_before, Relaxed);
     let summary = format!(
-        "FX_MODEL control={control:?} seed={seed} ops={} wrong={} writes={} gets={} scans={} snapshot_reads={} reader_mode_reads={} publishes={} crashes={} fail_after_runs={} fail_after_publish={} refreshes={} slatedb_compactions={} final_version={} groups={} delta_runs={} rows_from_runs={from_runs} versions_in_store={}",
-        st.ops, st.wrong, st.writes, st.gets, st.scans, st.snap_reads, st.reader_mode_reads, st.publishes, st.crashes, st.fail_after_runs, st.fail_after_publish, st.retries, st.compactions, v.version, v.groups.len(), v.delta.len(),
+        "FX_MODEL control={control:?} slices={:?} seed={seed} ops={} wrong={} writes={} gets={} scans={} snapshot_reads={} reader_mode_reads={} publishes={} crashes={} fail_after_runs={} fail_after_publish={} refreshes={} slatedb_compactions={} final_version={} groups={} delta_runs={} rows_from_runs={from_runs} versions_in_store={}",
+        mode_used, st.ops, st.wrong, st.writes, st.gets, st.scans, st.snap_reads, st.reader_mode_reads, st.publishes, st.crashes, st.fail_after_runs, st.fail_after_publish, st.retries, st.compactions, v.version, v.groups.len(), v.delta.len(),
         manifest::list_versions(&store, id).await.unwrap().len()
     );
     eprintln!("{summary}");

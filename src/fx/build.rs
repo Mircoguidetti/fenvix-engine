@@ -66,6 +66,8 @@ pub struct BuildReport {
     pub runs_written: u64,
     pub groups: usize,
     pub resealed: usize,
+    /// The staged publish's warm-up of the new runs (step 6).
+    pub stage: Option<super::counter::StageReport>,
 }
 
 fn line(m: &runfmt::RunMeta) -> RunLine {
