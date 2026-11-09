@@ -637,6 +637,7 @@ impl Lifecycle {
         writer_opened(&id, &db);
         let scope = writer_scope(&id);
         let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, epoch: epoch };
+        t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
         Ok(t)
@@ -685,6 +686,7 @@ impl Lifecycle {
         let reader = Arc::new(reader);
         READER_DBS.lock().unwrap().insert(id.clone(), Arc::downgrade(&reader));
         let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, epoch: 0 };
+        t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
         Ok(t)
@@ -1403,6 +1405,7 @@ impl Tenant {
         if let Some(v) = &self.fx {
             return self.fx_get(v, key.as_ref(), false).await;
         }
+        self.e1_fresh()?;
         if self.env.is_none() && !self.fx_announced {
             return Ok(match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
                 Mode::Reader(r) => r.get(key).await?,
@@ -1451,7 +1454,7 @@ impl Tenant {
     /// exclusive lock.
     pub fn fx_refresh_due(&self) -> bool {
         self.fx_fence_pending
-            || crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed)
+            || (crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) || self.e1_tracked())
                 && matches!(self.mode, Some(Mode::Reader(_)))
                 && self.fx_loaded.elapsed() > Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed) / 2)
     }
@@ -1470,6 +1473,26 @@ impl Tenant {
         }
         if self.fx_fence_pending {
             return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: a publish of our manifest has an unknown outcome and its fence has not succeeded yet; retry", self.id))));
+        }
+        Ok(())
+    }
+
+    /// A reader that must follow release E1's start (rules 6 and 26): it knows no E_env yet, and this process runs with
+    /// sealed runs or `--envelopes write`. Once it knows E_env, every row decides itself by its seq.
+    fn e1_tracked(&self) -> bool {
+        use std::sync::atomic::Ordering::Relaxed;
+        self.env.is_none() && matches!(self.mode, Some(Mode::Reader(_))) && (crate::fx::ENABLED.load(Relaxed) || crate::envelope::START.load(Relaxed))
+    }
+
+    /// Rule 6 for a reader that has no version of ours (`fx_fresh` covers one that has): while it follows E1's start, it
+    /// refuses to read with an announcement state older than T_pin (step 3 review note: "no T_pin refusal without a
+    /// version"). Before every step that reads SlateDB.
+    fn e1_fresh(&self) -> Result<()> {
+        if self.fx.is_none() && self.e1_tracked() {
+            let t_pin = Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed));
+            if self.fx_loaded.elapsed() > t_pin {
+                return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: release E1's announcement was last read {:?} ago, more than T_pin; retry", self.id, self.fx_loaded.elapsed()))));
+            }
         }
         Ok(())
     }
@@ -1511,6 +1534,7 @@ impl Tenant {
     async fn fx_get(&self, v: &Arc<crate::fx::view::View>, key: &[u8], durable: bool) -> Result<Option<Bytes>> {
         self.fx_fresh()?;
         let hold = self.holds.take(Arc::clone(v));
+        crate::fx::hold::op_note(&self.holds, v);
         let opts = slatedb::config::ReadOptions {
             durability_filter: if durable { slatedb::config::DurabilityLevel::Remote } else { slatedb::config::DurabilityLevel::Memory },
             ..Default::default()
@@ -1520,17 +1544,20 @@ impl Tenant {
             Mode::Writer(db) => crate::fx::read::get(db, &opts, Some(v), self.env, key).await?,
         };
         hold.check()?;
+        crate::fx::hold::op_check()?;
         Ok(r)
     }
 
     async fn fx_scan(&self, v: &Arc<crate::fx::view::View>, opts: &slatedb::config::ScanOptions, lo: &[u8], hi: Option<&[u8]>, reverse: bool, limit: Option<usize>) -> Result<Vec<(Bytes, Bytes)>> {
         self.fx_fresh()?;
         let hold = self.holds.take(Arc::clone(v));
+        crate::fx::hold::op_note(&self.holds, v);
         let r = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
             Mode::Reader(r) => crate::fx::read::scan(&**r, opts, Some(v), self.env, lo, hi, reverse, limit).await?,
             Mode::Writer(db) => crate::fx::read::scan(db, opts, Some(v), self.env, lo, hi, reverse, limit).await?,
         };
         hold.check()?;
+        crate::fx::hold::op_check()?;
         Ok(r)
     }
 
@@ -1542,6 +1569,11 @@ impl Tenant {
         use std::sync::atomic::Ordering::Relaxed;
         if !crate::fx::ENABLED.load(Relaxed) {
             self.fx = None;
+            if self.env.is_none() && crate::envelope::START.load(Relaxed) {
+                // release E1 without sealed runs: a reader still takes the announcement with every refresh (rules 6, 26)
+                self.fx_announced = manifest::announced(&self.lc.store, &self.id).await?;
+                self.fx_loaded = Instant::now();
+            }
             return Ok(());
         }
         let store = Arc::clone(&self.lc.store);
@@ -1593,12 +1625,20 @@ impl Tenant {
         if let Some(Mode::Writer(db)) = &self.mode {
             // a fence is pending from here until one is published (a create that errors or times out leaves it so)
             self.fx_fence_pending = true;
+            #[cfg(test)]
+            let first = v.version;
             let seq = db.snapshot().await?.seq();
             let epoch = Some(db.manifest().writer_epoch());
             let mut fenced = false;
             for _ in 0..8 {
                 // on every version this loop reads, not only the first (review of step 3, note 1)
-                anyhow::ensure!(v.x_d <= seq, "database {}: our manifest {} has X_d {} but SlateDB's last seq is {seq}: rows at or below X_d are missing from SlateDB", self.id, v.version, v.x_d);
+                #[cfg(test)]
+                let check = !crate::fx::CONTROL_NO_XD_LOOP_CHECK.load(std::sync::atomic::Ordering::Relaxed) || v.version == first;
+                #[cfg(not(test))]
+                let check = true;
+                if check {
+                    anyhow::ensure!(v.x_d <= seq, "database {}: our manifest {} has X_d {} but SlateDB's last seq is {seq}: rows at or below X_d are missing from SlateDB", self.id, v.version, v.x_d);
+                }
                 let f = v.fence(epoch);
                 if manifest::create(&store, &self.id, &f).await? {
                     v = f;
@@ -1627,14 +1667,23 @@ impl Tenant {
             return Ok(true);
         }
         self.upgrade().await?;
-        let store = Arc::clone(&self.lc.store);
-        if !crate::fx::manifest::announced(&store, &self.id).await? {
-            crate::fx::manifest::announce(&store, &self.id).await?;
-        }
-        self.fx_announced = true;
-        let seen = *self.fx_announce_seen.get_or_insert_with(Instant::now);
-        if seen.elapsed() < crate::fx::e1_wait() {
-            return Ok(false);
+        #[cfg(test)]
+        let at_once = crate::fx::CONTROL_E1_AT_ONCE.load(Relaxed);
+        #[cfg(not(test))]
+        let at_once = false;
+        if !at_once {
+            if !self.fx_announced || self.fx_announce_seen.is_none() {
+                // the announcement may be known from the open (`load_fx`); confirm it in the store once, write it if missing
+                let store = Arc::clone(&self.lc.store);
+                if !crate::fx::manifest::announced(&store, &self.id).await? {
+                    crate::fx::manifest::announce(&store, &self.id).await?;
+                }
+                self.fx_announced = true;
+            }
+            let seen = *self.fx_announce_seen.get_or_insert_with(Instant::now);
+            if seen.elapsed() < crate::fx::e1_wait() {
+                return Ok(false);
+            }
         }
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
         let mut m = slatedb::WriteBatch::new();
@@ -1753,6 +1802,7 @@ impl Tenant {
                 Ok(r)
             }
             None => {
+                self.e1_fresh()?;
                 let env = self.step_env().await?;
                 crate::fx::read::get(&**snap, &opts, None, env, key).await
             }
@@ -1833,6 +1883,7 @@ impl Tenant {
         if let Some(v) = &self.fx {
             return self.fx_get(v, key.as_ref(), true).await;
         }
+        self.e1_fresh()?;
         Ok(match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
             Mode::Reader(r) => match r.get_key_value(key).await? {
                 Some(kv) => crate::envelope::decode(self.step_env().await?, &kv.key, kv.seq, kv.value)?,
@@ -1921,6 +1972,7 @@ impl Tenant {
             opts.max_fetch_tasks = 4;
             return self.fx_scan(v, &opts, prefix, hi.as_deref(), false, None).await;
         }
+        self.e1_fresh()?;
         // slatedb's scan defaults fetch one 4 KiB block per request, one at a time, and do not cache
         // the blocks: a 1 MB scan costs ~250 sequential GETs every time. Read ahead in large
         // requests, fetch in parallel, and keep the blocks.
@@ -2015,6 +2067,7 @@ impl Tenant {
         if let Some(v) = &self.fx {
             return self.fx_scan(v, &opts, start, end, reverse, limit).await;
         }
+        self.e1_fresh()?;
         let s = start.to_vec();
         let range = match end {
             Some(e) => (std::ops::Bound::Included(s), std::ops::Bound::Excluded(e.to_vec())),
@@ -2052,17 +2105,15 @@ impl Tenant {
             return Ok(None);
         }
         self.upgrade().await?;
-        let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
         let track = TRACK_VISIBLE.load(std::sync::atomic::Ordering::Relaxed);
         let keys: Vec<Vec<u8>> = if track { ops.iter().map(|o| match o { Op::Put(k, _) | Op::Delete(k) => k.clone() }).collect() } else { Vec::new() };
         if self.env.is_none() && crate::envelope::START.load(std::sync::atomic::Ordering::Relaxed) {
-            // release E1: the marker alone in its own batch; its sequence number is E_env, and every later row of this
-            // database is an envelope (`envelope.rs`)
-            let mut m = slatedb::WriteBatch::new();
-            m.put(crate::envelope::MARKER, b"E1");
-            let h = db.write(m).await?;
-            self.env = Some(h.seqnum());
+            // release E1 (rule 26): the first write announces it in the store; envelopes start (the marker alone in its own
+            // batch, whose sequence number is E_env, `envelope.rs`) only once this process saw the announcement at least
+            // one T_pin ago. Until then the writes stay plain, as release E0 writes them.
+            self.ensure_marker().await?;
         }
+        let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
         let mut batch = slatedb::WriteBatch::new();
         let enveloped = self.env.is_some();
         for op in ops {
@@ -2091,6 +2142,9 @@ impl Tenant {
 
     pub async fn put(&mut self, key: &str, value: &[u8]) -> Result<WriteHandle> {
         self.upgrade().await?;
+        if self.env.is_none() && crate::envelope::START.load(std::sync::atomic::Ordering::Relaxed) {
+            self.ensure_marker().await?; // release E1, as in `stage`
+        }
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
         if self.env.is_some() {
             return Ok(db.put(key, crate::envelope::live(value.to_vec())).await?);

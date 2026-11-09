@@ -282,8 +282,10 @@ impl Server {
     /// durable after its locks were released, and the reply waits for that. The scopes are task-locals, so they are opened here,
     /// in the task that runs the command (JavaScript commands run on a thread of their own, see `run_command`).
     async fn dispatch_durable(&self, db: &str, name: &str, cmd: &Document, conn_id: i64) -> R<Document> {
+        // one scope of holds per command: every read of the command, through any number of `Dbs::read` calls, keeps the
+        // version of our manifest it read with in the drop floor until the command ends (compaction 2, `fx/hold.rs`)
         crate::dbs::TOKENS
-            .scope(Default::default(), async {
+            .scope(Default::default(), tenant_bench::fx::hold::op_scope(async {
                 let (mut r, commits, relax) = crate::dbs::RELAX
                     .scope(std::cell::Cell::new(false), crate::dbs::PENDING.scope(Default::default(), async {
                         let r = crate::js::scoped(db, self.dispatch(db, name, cmd, conn_id)).await;
@@ -309,7 +311,7 @@ impl Server {
                     }
                 }
                 r
-            })
+            }))
             .await
     }
 

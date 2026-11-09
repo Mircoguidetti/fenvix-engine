@@ -503,8 +503,9 @@ struct Args {
     /// Every how many publishes every group is resealed (the others write a delta run only).
     #[arg(long, default_value_t = 3)]
     sealed_reseal_every: u64,
-    /// T_pin in milliseconds (fx, rules 6 and 26): a reader refreshes its version of our manifest at least this often,
-    /// and envelopes start this long after release E1 is announced. FENVIX_SEALED_TPIN_MS does the same.
+    /// T_pin in milliseconds (fx, rules 6 and 26): a reader refreshes its version of our manifest (and release E1's
+    /// announcement) at least this often, and envelopes start this long after release E1 is announced, with sealed runs
+    /// or with `--envelopes write`. FENVIX_SEALED_TPIN_MS does the same.
     #[arg(long, default_value_t = 30_000)]
     sealed_t_pin_ms: u64,
     /// How long after release E1 is announced envelopes start, in milliseconds (default: T_pin, as rule 26 asks; tests
@@ -790,6 +791,10 @@ async fn run() -> Result<()> {
         tenant_bench::fx::GROUP_BYTES.store(args.sealed_group_mb.max(1) << 20, Relaxed);
         tenant_bench::fx::view::CACHE_BYTES.store(args.sealed_cache_mb << 20, Relaxed);
         tenant_bench::fx::RESEAL_EVERY.store(args.sealed_reseal_every.max(1), Relaxed);
+    }
+    if sealed_runs.is_some() || tenant_bench::envelope::START.load(std::sync::atomic::Ordering::Relaxed) {
+        // T_pin and E1's wait (rules 6 and 26) apply to release E1 with or without sealed runs (`--envelopes write`)
+        use std::sync::atomic::Ordering::Relaxed;
         let t_pin = std::env::var("FENVIX_SEALED_TPIN_MS").ok().and_then(|v| v.parse().ok()).unwrap_or(args.sealed_t_pin_ms);
         tenant_bench::fx::T_PIN_MS.store(t_pin.max(1), Relaxed);
         if let Some(w) = args.sealed_e1_wait_ms.or_else(|| std::env::var("FENVIX_SEALED_E1_WAIT_MS").ok().and_then(|v| v.parse().ok())) {
