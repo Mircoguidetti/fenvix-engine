@@ -1,0 +1,49 @@
+SIMULATED S3 LATENCY ON (SimModel { median_ms: 5.0, sigma: 0.0, mbps: 100000.0 }): measurement only, never in production
+mongo-server listening on 127.0.0.1:27051 (idle close after 100000 s, holder fc-27051, lease ttl 30 s)
+LEASE process_lease tenant=- holder=fc-27051 unix_ms=1794044247052 inc=1ad3ed85e76d9428 gen=1
+LEASE acquired tenant=chat holder=fc-27051 unix_ms=1794044247063 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE writer_open tenant=chat holder=fc-27051 unix_ms=1794044322453 
+SLOW hello db=admin ms=10000 ok=true
+SLOW insert db=chat ms=544 ok=true
+SLOW insert db=chat ms=516 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW insert db=chat ms=517 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW insert db=chat ms=509 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SSTGC begin tenant=chat unix_ms=1794044382817
+SSTGC end tenant=chat unix_ms=1794044382918 deleted_ssts=0 deleted_manifests=0 referenced=12 waiting=921
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+shutting down: closing tenants cleanly
+LEASE writer_close tenant=chat holder=fc-27051 unix_ms=1794044446300 
+LEASE release_begin tenant=chat holder=fc-27051 unix_ms=1794044446300 
+LEASE release tenant=chat holder=fc-27051 unix_ms=1794044446303 ok=true
+tenants closed; stopping maintenance
+maintenance stopped

@@ -1,0 +1,8 @@
+visit 1: 1000 users in 70 s; openings {'n': 1300, 'bytes_median': 19674.5, 'bytes_p95': 21215, 'bytes_max': 22146, 'entries_median': 100.0, 'bytes_total': 23637717}
+gap day 1/1: 168748 messages, compaction passes so far 3
+settled after 20 s
+gap: {'profile': 'medium', 'days': 1, 'messages': 168797, 'test_users_written': 291, 'test_messages': 1628, 'write_secs': 18.055030584335327, 'gap_secs': 38.18767213821411, 'compaction_passes': 3, 'compaction': {'compactRuns': 3, 'compactPuts': 97, 'compactGets': 1866}, 'server_cpu_secs': 26.36, 'first_course_writes_applied': 6530, 'first_course_write_hook_ms': 273.25154, 'trimmed': 0, 'dropped_too_big': 0}
+visit 2: zero-GET exact answers 1000/1000 (100.0%), active 100.0%, uniform 100.0%, written 100.0%, not written 100.0%; wrong answers 0
+Q1 visit 1: GETs mean 7.56, ms p50 20.5; visit 2: GETs mean 0.00, ms p50 1.03, p99 1.87
+later queries ms: visit 1 p50 4.06 p99 29.84; visit 2 p50 11.92 p99 31.43
+opening sizes: after visit 1 {'n': 1300, 'bytes_median': 19674.5, 'bytes_p95': 21215, 'bytes_max': 22146, 'entries_median': 100.0, 'bytes_total': 23637717}; after gap {'n': 1300, 'bytes_median': 20124.5, 'bytes_p95': 24119, 'bytes_max': 206644, 'entries_median': 104.0, 'bytes_total': 25754569}; after visit 2 {'n': 1600, 'bytes_median': 19674.5, 'bytes_p95': 21850, 'bytes_max': 143980, 'entries_median': 94.0, 'bytes_total': 30009839}

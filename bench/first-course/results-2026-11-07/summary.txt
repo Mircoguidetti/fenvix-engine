@@ -1,0 +1,17 @@
+q4-short: share 100.0% (active 100.0, uniform 100.0, written 100.0, not 100.0); wrong 0; v2 Q1 GETs 0.00 ms p50 0.60 p99 2.24; v2 later GETs/visit 0.00 -> visit total 0.00 (v1 total 10.90); later ms p50 0.60 p99 2.56; gap msgs 168797 passes 1 cGets 9265 cPuts 161 cpu 87.8s hook 396ms applied 3256 trimmed 0
+    sizes_after_visit1 {'n': 1000, 'bytes_median': 44880, 'bytes_p95': 48832, 'bytes_max': 50503, 'entries_median': 160, 'bytes_total': 38299677}
+    sizes_after_gap {'n': 1000, 'bytes_median': 45809, 'bytes_p95': 50654, 'bytes_max': 230645, 'entries_median': 165, 'bytes_total': 39346164}
+    sizes_after_visit2 {'n': 1000, 'bytes_median': 45032, 'bytes_p95': 48832, 'bytes_max': 50754, 'entries_median': 162, 'bytes_total': 38545397}
+q4-long: share 100.0% (active 100.0, uniform 100.0, written 100.0, not 100.0); wrong 0; v2 Q1 GETs 0.00 ms p50 0.67 p99 1.61; v2 later GETs/visit 0.01 -> visit total 0.01 (v1 total 10.91); later ms p50 0.67 p99 2.07; gap msgs 2362472 passes 13 cGets 44832 cPuts 1620 cpu 564.5s hook 3649ms applied 64746 trimmed 77
+    sizes_after_visit1 {'n': 1000, 'bytes_median': 44880, 'bytes_p95': 48832, 'bytes_max': 50503, 'entries_median': 160, 'bytes_total': 38299677}
+    sizes_after_gap {'n': 1000, 'bytes_median': 47508, 'bytes_p95': 110859, 'bytes_max': 259126, 'entries_median': 184, 'bytes_total': 52412784}
+    sizes_after_visit2 {'n': 1000, 'bytes_median': 46666, 'bytes_p95': 48957, 'bytes_max': 49972, 'entries_median': 184, 'bytes_total': 40546094}
+delivered-q4-short: share 100.0% (active 100.0, uniform 100.0, written 100.0, not 100.0); wrong 0; v2 Q1 GETs 0.00 ms p50 0.68 p99 2.09; v2 later GETs/visit 0.00 -> visit total 0.00 (v1 total 10.89); later ms p50 0.67 p99 1.61; gap msgs 168797 passes 1 cGets 7570 cPuts 159 cpu 94.9s hook 230ms applied 3256 trimmed 0
+    sizes_after_visit1 {'n': 1000, 'bytes_median': 44880, 'bytes_p95': 48832, 'bytes_max': 50503, 'entries_median': 160, 'bytes_total': 38299677}
+    sizes_after_gap {'n': 1000, 'bytes_median': 45809, 'bytes_p95': 50654, 'bytes_max': 230645, 'entries_median': 165, 'bytes_total': 39346164}
+    sizes_after_visit2 {'n': 1000, 'bytes_median': 45032, 'bytes_p95': 48832, 'bytes_max': 50754, 'entries_median': 162, 'bytes_total': 38545397}
+delivered-q4-long: share 100.0% (active 100.0, uniform 100.0, written 100.0, not 100.0); wrong 0; v2 Q1 GETs 0.00 ms p50 0.67 p99 1.39; v2 later GETs/visit 0.00 -> visit total 0.00 (v1 total 10.90); later ms p50 0.68 p99 1.70; gap msgs 2362472 passes 19 cGets 43046 cPuts 1617 cpu 593.9s hook 3357ms applied 64746 trimmed 62
+    sizes_after_visit1 {'n': 1000, 'bytes_median': 44880, 'bytes_p95': 48832, 'bytes_max': 50503, 'entries_median': 160, 'bytes_total': 38299677}
+    sizes_after_gap {'n': 1000, 'bytes_median': 47508, 'bytes_p95': 110359, 'bytes_max': 259704, 'entries_median': 184, 'bytes_total': 52308672}
+    sizes_after_visit2 {'n': 1000, 'bytes_median': 46666, 'bytes_p95': 48957, 'bytes_max': 49972, 'entries_median': 184, 'bytes_total': 40546094}
+

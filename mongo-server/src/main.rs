@@ -18,6 +18,7 @@ pub static malloc_conf: &[u8] = b"background_thread:true\0";
 mod agg;
 mod custkey;
 mod layout2;
+mod opening;
 mod prefetch;
 mod hostinfo;
 mod auth;
@@ -491,6 +492,25 @@ struct Args {
     sealed_gc_grace_ms: u64,
     #[arg(long, default_value_t = 120_000)]
     sealed_hold_life_ms: u64,
+    /// First course (opening.rs, measurement prototype, off by default): keep the key-value pairs of each user's first
+    /// query of a visit and answer the next visit's first query from them when the answer is exact.
+    #[arg(long, default_value_t = false)]
+    first_course: bool,
+    /// First course: a query of a user idle for this long starts a visit.
+    #[arg(long, default_value_t = 1800)]
+    first_course_idle_secs: u64,
+    /// First course: an opening not refreshed by a visit for this many days is not used (T).
+    #[arg(long, default_value_t = 14)]
+    first_course_days: u64,
+    /// First course: all openings together, in MiB.
+    #[arg(long, default_value_t = 1024)]
+    first_course_mb: u64,
+    /// First course: one opening at most, in KiB (trimmed above it, then dropped).
+    #[arg(long, default_value_t = 256)]
+    first_course_max_kb: u64,
+    /// First course: the opening keeps what this many queries of a visit read (1: the first query only).
+    #[arg(long, default_value_t = 1)]
+    first_course_queries: u64,
     /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
     /// releases before); M29 measured 64.
     #[arg(long, default_value_t = 4)]
@@ -760,6 +780,12 @@ async fn run() -> Result<()> {
         tenant_bench::fx::hold::HOLD_LIFE_MS.store(args.sealed_hold_life_ms, Relaxed);
         tenant_bench::fx::check_config()?;
     }
+    opening::ENABLED.store(args.first_course, std::sync::atomic::Ordering::Relaxed);
+    opening::IDLE_SECS.store(args.first_course_idle_secs, std::sync::atomic::Ordering::Relaxed);
+    opening::MAX_AGE_SECS.store(args.first_course_days * 86_400, std::sync::atomic::Ordering::Relaxed);
+    opening::BUDGET_BYTES.store(args.first_course_mb << 20, std::sync::atomic::Ordering::Relaxed);
+    opening::QUERIES.store(args.first_course_queries.max(1), std::sync::atomic::Ordering::Relaxed);
+    opening::MAX_BYTES.store(args.first_course_max_kb << 10, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::tiered::set_compression(&args.sst_compression)?;
     tenant_bench::tiered::TIERS.store(args.compaction_tiers, std::sync::atomic::Ordering::Relaxed);

@@ -259,7 +259,7 @@ pub fn required(name: &str, db: &str, cmd: &Document) -> Option<Vec<Need>> {
         // mongod: the cluster action rotateCertificates (root, hostManager, clusterAdmin, or a custom role that carries it)
         "rotateCertificates" => vec![(cl, "rotateCertificates")],
         // the S3 request counters of the whole process: root only, checked on the roles (`Server::authorize`)
-        "tenantStats" | "fenvixSstInfo" => vec![],
+        "tenantStats" | "fenvixSstInfo" | "fenvixFirstCourse" => vec![],
         _ => vec![(Res::Any, "anyAction")], // unknown commands need everything (only __system has it)
     })
 }
