@@ -20,6 +20,19 @@ use std::sync::Arc;
 
 /// A point read. `view` None: the plain SlateDB read of the releases before.
 pub async fn get<R: DbReadOps + Sync>(src: &R, opts: &ReadOptions, view: Option<&View>, env: Option<u64>, key: &[u8]) -> Result<Option<Bytes>> {
+    if let Some(v) = view.filter(|_| super::view::WAVE.load(std::sync::atomic::Ordering::Relaxed)) {
+        // one wave: SlateDB's read and the runs' read at once
+        let (kv, r) = futures::future::try_join(async { Ok::<_, anyhow::Error>(src.get_key_value_with_options(key, opts).await?) }, v.get(key)).await?;
+        if let Some(kv) = kv {
+            if kv.seq > v.x_d {
+                return crate::envelope::decode(env, &kv.key, kv.seq, kv.value);
+            }
+        }
+        return Ok(match r {
+            Some(r) if !r.is_dead() => Some(r.into_doc()),
+            _ => None,
+        });
+    }
     let kv = src.get_key_value_with_options(key, opts).await?;
     let Some(v) = view else {
         return match kv {
@@ -73,6 +86,17 @@ pub async fn scan<R: DbReadOps + Sync>(src: &R, opts: &ScanOptions, view: Option
     let mut s_done = false;
     let mut r_head: Option<super::view::RRow> = None;
     let mut r_done = false;
+    if super::view::WAVE.load(std::sync::atomic::Ordering::Relaxed) {
+        // one wave: SlateDB's first row and the runs' first rows at once
+        let (s1, r1) = futures::future::try_join(async { Ok::<_, anyhow::Error>(it.next().await?) }, runs.next()).await?;
+        match s1 {
+            Some(kv) if kv.seq > x_d => s_head = Some(kv),
+            Some(_) => {}
+            None => s_done = true,
+        }
+        r_done = r1.is_none();
+        r_head = r1;
+    }
     loop {
         if s_head.is_none() && !s_done {
             loop {

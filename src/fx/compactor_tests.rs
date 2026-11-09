@@ -115,6 +115,9 @@ async fn compactor_model_drop_on() {
     setup();
     let n_ops: u64 = std::env::var("FX_C_OPS").ok().and_then(|s| s.parse().ok()).unwrap_or(20_000);
     let seed: u64 = std::env::var("FX_C_SEED").ok().and_then(|s| s.parse().ok()).unwrap_or(20261109);
+    // step 5: FX_WAVE=1 runs the same model test with the one-wave reader
+    let wave = std::env::var("FX_WAVE").is_ok();
+    crate::fx::view::WAVE.store(wave, std::sync::atomic::Ordering::Relaxed);
     let mut rng = StdRng::seed_from_u64(seed);
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
     let id = "fx-cmodel";
