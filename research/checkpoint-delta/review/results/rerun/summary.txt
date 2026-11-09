@@ -1,0 +1,59 @@
+Bytes per thread (B), by thread length
+  mongo_default_data           10:      111,435  40:    1,621,197  100:   10,044,722  300:   88,296,681   mix:   7,035,772
+  mongo_default_disk           10:       35,901  40:      726,958  100:    4,716,544  300:   40,900,608   mix:   3,257,135
+  mongo_delta_data             10:       33,762  40:      144,168  100:      366,605  300:    1,817,963   mix:     228,183
+  mongo_delta_disk             10:       13,548  40:       86,125  100:      148,685  300:      788,992   mix:     104,749
+  ours_bin                     10:        8,143  40:       31,836  100:       79,498  300:      241,877   mix:      42,393
+  ours_bin_10                  10:        8,143  40:       70,966  100:      355,053  300:    2,763,486   mix:     237,280
+  ours_bin_50                  10:        8,143  40:       31,836  100:      109,973  300:      676,182   mix:      70,204
+  ours_full                    10:       39,247  40:      532,188  100:    3,103,671  300:   26,220,707   mix:   2,133,734
+  ours_json                    10:        8,991  40:       37,739  100:       96,225  300:      295,066   mix:      50,803
+  ours_json_10                 10:        8,991  40:       76,277  100:      370,963  300:    2,829,269   mix:     245,950
+  ours_json_50                 10:        8,991  40:       37,739  100:      126,631  300:      731,282   mix:      78,695
+  ours_log                     10:        7,450  40:       28,155  100:       69,697  300:      213,652   mix:      37,456
+  ours_log_lz4                 10:       10,487  40:       41,660  100:      106,758  300:      328,902   mix:      56,573
+  ours_logical                 10:      104,015  40:    1,590,902  100:    9,967,836  300:   88,057,402   mix:   6,994,859
+  pg_default                   10:       68,506  40:      739,683  100:    4,149,043  300:   35,272,704   mix:   2,879,735
+  pg_default_blobs             10:       41,964  40:      627,398  100:    3,853,722  300:   34,362,368   mix:   2,725,237
+  pg_default_checkpoints       10:       10,445  40:       45,056  100:      120,013  300:      367,616   mix:      62,331
+  pg_default_lz4               10:       71,352  40:      759,125  100:    4,265,779  300:   36,149,248   mix:   2,954,853
+  pg_default_writes            10:       16,097  40:       67,229  100:      175,309  300:      542,720   mix:      92,167
+  pg_delta                     10:       29,327  40:      122,388  100:      315,392  300:    1,308,672   mix:     183,079
+  pg_delta_blobs               10:        1,823  40:        6,226  100:       14,746  300:      384,000   mix:      25,057
+  pg_delta_checkpoints         10:       11,448  40:       49,097  100:      125,542  300:      381,952   mix:      65,969
+  pg_delta_writes              10:       16,056  40:       67,065  100:      175,104  300:      542,720   mix:      92,052
+  sqlite_default               10:      117,115  40:    1,648,968  100:   10,120,397  300:   88,576,000   mix:   7,076,864
+  sqlite_delta                 10:       34,355  40:      145,845  100:      373,862  300:    1,845,248   mix:     231,823
+
+Ratios on the mix (stored bytes, lower is better)
+  pg_default / ours_log = 76.88
+  pg_delta / ours_log = 4.89
+  pg_default / ours_full = 1.35
+  pg_delta / ours_full = 0.09
+  pg_default / ours_json_10 = 11.71
+  pg_delta / ours_json_10 = 0.74
+  pg_default / ours_bin_10 = 12.14
+  pg_delta / ours_bin_10 = 0.77
+  ours_logical / ours_log = 186.75
+  mongo_default_disk / ours_log = 86.96
+  mongo_delta_disk / ours_log = 2.80
+  pg_default / pg_delta = 15.73
+  pg_default / ours_log_lz4 = 50.90
+  pg_delta / ours_log_lz4 = 3.24
+  pg_default_lz4 / ours_log = 78.89
+  mongo_delta_data / ours_log = 6.09
+  ours_full / ours_log = 56.97
+
+Money, 100,000 threads a month kept one year
+  Postgres saver default, Aurora                                2.880 MB/thread       3,456 GB at month 12  $       346/month at month 12  $      2,246 first year  ($0.1000/GB-month)
+  Postgres saver default, Supabase                              2.880 MB/thread       3,456 GB at month 12  $       432/month at month 12  $      2,808 first year  ($0.1250/GB-month)
+  Postgres saver DeltaChannel, Aurora                           0.183 MB/thread         220 GB at month 12  $        22/month at month 12  $        143 first year  ($0.1000/GB-month)
+  Postgres saver DeltaChannel, Supabase                         0.183 MB/thread         220 GB at month 12  $        27/month at month 12  $        179 first year  ($0.1250/GB-month)
+  Mongo saver default, Atlas Infinite (uncompressed)            7.036 MB/thread       8,443 GB at month 12  $     2,533/month at month 12  $     16,464 first year  ($0.3000/GB-month)
+  Mongo saver DeltaChannel, Atlas Infinite (uncompressed)       0.228 MB/thread         274 GB at month 12  $        82/month at month 12  $        534 first year  ($0.3000/GB-month)
+  Ours, full checkpoints zstd, price                            2.134 MB/thread       2,560 GB at month 12  $       107/month at month 12  $        696 first year  ($0.0418/GB-month)
+  Ours, thread message log, cost                                0.037 MB/thread          45 GB at month 12  $         1/month at month 12  $          7 first year  ($0.0230/GB-month)
+  Ours, thread message log, price                               0.037 MB/thread          45 GB at month 12  $         2/month at month 12  $         12 first year  ($0.0418/GB-month)
+  Ours, thread message log with lz4 (today's run codec), price    0.057 MB/thread          68 GB at month 12  $         3/month at month 12  $         18 first year  ($0.0418/GB-month)
+  Ours, JSON delta K=10, price                                  0.246 MB/thread         295 GB at month 12  $        12/month at month 12  $         80 first year  ($0.0418/GB-month)
+  Ours, binary delta K=10, price                                0.237 MB/thread         285 GB at month 12  $        12/month at month 12  $         77 first year  ($0.0418/GB-month)

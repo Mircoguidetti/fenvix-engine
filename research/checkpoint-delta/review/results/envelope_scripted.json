@@ -1,0 +1,27 @@
+{
+ "10": {
+  "envelope_per_thread": 891.885,
+  "log_objects_latest": 2.0,
+  "log_objects_old": 2.0,
+  "log_blocks_total_mean": null
+ },
+ "40": {
+  "envelope_per_thread": 2580.7266666666665,
+  "log_objects_latest": 2.0,
+  "log_objects_old": 2.0,
+  "log_blocks_total_mean": null
+ },
+ "100": {
+  "envelope_per_thread": 6327.05,
+  "log_objects_latest": 2.0,
+  "log_objects_old": 2.0,
+  "log_blocks_total_mean": null
+ },
+ "300": {
+  "envelope_per_thread": 19257.875,
+  "log_objects_latest": 3.75,
+  "log_objects_old": 2.0,
+  "log_blocks_total_mean": null
+ },
+ "mix_envelope": 3488.3120833333332
+}
