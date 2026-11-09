@@ -1,0 +1,5 @@
+test fx::tests_7a::envelopes_write_waits_one_t_pin_after_its_announcement ... ok
+test fx::tests_7a::an_operation_keeps_the_floor_across_its_reads ... ok
+test fx::tests_7a::a_checkpoint_is_paired_under_the_drop_lease ... ok
+test fx::tests_7a::a_reloaded_version_above_slatedb_is_refused_at_open ... ok
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 67 filtered out; finished in 4.82s
