@@ -6,6 +6,9 @@
 //!   transaction snapshot; the control layer's raw readers.
 //! - `hold.rs`: holds on a version (the drop floor of step 4, the hold life).
 //! - `build.rs`: sealed and delta runs built offline from a loaded database (step 3; the compactor is step 4).
+//! - `pair.rs`: checkpoints paired with a version, and the control layer's readers through that pair (step 7a: export,
+//!   PITR).
+//! - `droptest.rs`: a stand-in for step 4's drop job, for tests of the paths that must read through our runs.
 //!
 //! Off by default (`--sealed-runs`). With it off, no code here runs and the server reads SlateDB as before. With it on, a
 //! database reads through the merged reader once it has a published version.
@@ -17,6 +20,7 @@ pub mod build;
 pub mod droptest;
 pub mod hold;
 pub mod manifest;
+pub mod pair;
 pub mod read;
 pub mod view;
 #[cfg(test)]
@@ -52,6 +56,15 @@ pub fn e1_wait() -> std::time::Duration {
 pub static PUBLISHES: AtomicU64 = AtomicU64::new(0);
 pub static PUBLISH_ERRORS: AtomicU64 = AtomicU64::new(0);
 pub static FENCES: AtomicU64 = AtomicU64::new(0);
+
+/// Negative controls of step 7a, tests only (`fx/tests_7a.rs`, `FX_7A_CONTROL`): the X_d check only on the first version
+/// `load_fx` reads; no operation holds; release E1 writes its marker at once.
+#[cfg(test)]
+pub static CONTROL_NO_XD_LOOP_CHECK: AtomicBool = AtomicBool::new(false);
+#[cfg(test)]
+pub static CONTROL_NO_OP_HOLDS: AtomicBool = AtomicBool::new(false);
+#[cfg(test)]
+pub static CONTROL_E1_AT_ONCE: AtomicBool = AtomicBool::new(false);
 
 /// A retryable read error: a revoked hold, or a reader whose version is older than T_pin. The server answers it with a
 /// retryable code and the TransientTransactionError label.

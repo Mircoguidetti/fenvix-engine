@@ -4,10 +4,11 @@
 //! It does what RULES-FOR-THE-CODE rule 12 says a drop does, once: it folds every L0 SST and every SlateDB sorted run
 //! into one sorted run and drops every row with seq <= `floor` (SlateDB's compaction filter, the plan's probe 3). The
 //! caller picks the floor (normally the X_d of the newest version); nothing here computes a floor from holds or leases
-//! (rules 7-11 are step 4's). Two differences from the real job, both on purpose:
-//! - the envelope marker row is kept: the server reads E_env from SlateDB at open (`Tenant::load_env`), and a drop that
-//!   removed it would make a reopened writer decode every envelope as data. Step 4 must keep it the same way, or take
-//!   E_env from the version (noted in the step 7a report);
+//! (rules 7-10 are step 4's); it refuses to start while a checkpoint holds the drop lease (rule 11, `pair.rs`). One
+//! difference from the real job, on purpose:
+//! the envelope marker row is kept: the server reads E_env from SlateDB at open (`Tenant::load_env`), and a drop that
+//! removed it would make a reopened writer decode every envelope as data. Step 4 must keep it the same way, or take
+//! E_env from the version (noted in the step 7a report).
 //!
 //! The database must be closed in this process (the caller holds its lock): it opens a writer of its own, which fences
 //! any other writer.
@@ -103,6 +104,7 @@ impl CompactionFilterSupplier for Job {
 /// Drop every SlateDB row of database `id` with seq <= `floor` (the envelope marker excepted), folding everything
 /// into one sorted run.
 pub async fn drop_at_or_below(store: &Arc<dyn ObjectStore>, id: &str, floor: u64) -> Result<DropReport> {
+    ensure!(!super::pair::lease_held(store, id).await?, "database {id}: a checkpoint holds the drop lease (rule 11)");
     let job = Job { floor, armed: Default::default(), started: Default::default(), done: Default::default(), dropped: Default::default(), kept: Default::default() };
     let mut s = crate::lifecycle::writer_settings();
     s.compactor_options = None;

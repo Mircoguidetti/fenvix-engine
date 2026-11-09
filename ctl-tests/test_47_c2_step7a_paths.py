@@ -19,7 +19,10 @@ import export_client as xc
 from lib import Server, make_bucket, dump_db, TOKEN
 
 GAP = 1.15  # states are separated by more than the 1 s resolution of the object store's timestamps
-SEALED = ["--sealed-runs", "2", "--sealed-t-pin-ms", "1000", "--sealed-e1-wait-ms", "0", "--retention-interval-secs", "2", "--retention-prune-secs", "3600"]
+# After the first version every publish writes a delta run only: step 3's offline builder reseals a group from SlateDB's
+# rows, which a drop removed (`fx/build.rs`: it assumes SlateDB keeps every row; step 4's reseal reads the runs instead).
+SEALED = ["--sealed-runs", "2", "--sealed-reseal-every", "1000000", "--sealed-t-pin-ms", "1000", "--sealed-e1-wait-ms", "0",
+          "--retention-interval-secs", "2", "--retention-prune-secs", "3600"]
 CONTROL = os.environ.get("FENVIX_CONTROL_RAW_PATHS") == "1"
 
 
@@ -113,6 +116,7 @@ def test_restore_after_drops_equals_each_state(srv):
         time.sleep(0.5)
     time.sleep(0.05)
     t2, want2 = now_ms(), dump_db(c, db)
+    assert len(want2["a"]) > len(want1["a"]), "the server's own reads lost rows after the drop"
     time.sleep(GAP)
     # state 3: more writes, and everything dropped again
     write_rounds(c, db, 20_000)

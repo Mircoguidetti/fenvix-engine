@@ -121,9 +121,53 @@ impl Drop for Hold {
     }
 }
 
+/// The holds of every database of this process, one `Holds` per database name, shared by every `Tenant` that serves it
+/// (a reopen keeps the holds of the reads still running on the old one) and by the control layer's readers (an export
+/// page, PITR's diff). Entries go away with their last user.
+static REGISTRY: Mutex<Option<HashMap<String, std::sync::Weak<Holds>>>> = Mutex::new(None);
+
+pub fn for_db(id: &str) -> Arc<Holds> {
+    let mut g = REGISTRY.lock().unwrap();
+    let m = g.get_or_insert_with(HashMap::new);
+    if let Some(h) = m.get(id).and_then(|w| w.upgrade()) {
+        return h;
+    }
+    m.retain(|_, w| w.strong_count() > 0);
+    let h = Arc::new(Holds::default());
+    m.insert(id.to_string(), Arc::downgrade(&h));
+    h
+}
+
+tokio::task_local! {
+    /// The holds of the operation running on this task (`op_scope`): one per database and version it read with.
+    static OP: std::cell::RefCell<Vec<Hold>>;
+}
+
 /// Run one operation (one server command) as one scope of holds: every read of the operation, through any number of
 /// `Dbs::read` calls, keeps the version it read with in the drop floor until the operation ends (rules 4, 7 and 8; the
-/// step 3 review's note on `$lookup`).
+/// step 3 review's note on `$lookup`, whose foreign collections are read under new `Dbs::read` calls, between which a
+/// publish can land). A read outside any scope keeps only its own short hold.
 pub async fn op_scope<F: std::future::Future>(f: F) -> F::Output {
-    f.await
+    OP.scope(std::cell::RefCell::new(Vec::new()), f).await
+}
+
+/// A read of the current operation is about to read `view` of the database whose holds are `holds`: the operation
+/// keeps a hold on that version until it ends (one per database and version).
+pub fn op_note(holds: &Arc<Holds>, view: &Arc<View>) {
+    #[cfg(test)]
+    if super::CONTROL_NO_OP_HOLDS.load(Relaxed) {
+        return;
+    }
+    let _ = OP.try_with(|op| {
+        let mut op = op.borrow_mut();
+        if !op.iter().any(|h| Arc::ptr_eq(&h.holds, holds) && h.view.version == view.version) {
+            op.push(holds.take(Arc::clone(view)));
+        }
+    });
+}
+
+/// After every step of a read: the operation's holds are still alive (rule 5: an operation that outlived the hold life
+/// fails with the retryable error).
+pub fn op_check() -> anyhow::Result<()> {
+    OP.try_with(|op| op.borrow().iter().try_for_each(|h| h.check())).unwrap_or(Ok(()))
 }

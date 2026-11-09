@@ -32,6 +32,11 @@ async fn put(t: &mut Tenant, i: usize, v: &str) {
     t.apply(vec![Op::Put(key(i), v.as_bytes().to_vec())]).await.unwrap();
 }
 
+/// Negative controls: `FX_7A_CONTROL=e1now|xdloop|opholds` removes one fix (the test must then fail).
+fn control(name: &str, flag: &std::sync::atomic::AtomicBool) {
+    flag.store(std::env::var("FX_7A_CONTROL").ok().as_deref() == Some(name), Relaxed);
+}
+
 /// Settings of these tests; `sealed`: `--sealed-runs` on (no publish by itself).
 fn settings(sealed: bool) {
     ENABLED.store(sealed, Relaxed);
@@ -59,6 +64,7 @@ async fn publish(t: &mut Tenant) {
 async fn envelopes_write_waits_one_t_pin_after_its_announcement() {
     let _s = super::tests::SERIAL.lock().await;
     settings(false);
+    control("e1now", &CONTROL_E1_AT_ONCE);
     crate::envelope::START.store(true, Relaxed);
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
     let id = "e1-write";
@@ -95,6 +101,7 @@ async fn envelopes_write_waits_one_t_pin_after_its_announcement() {
 async fn a_reloaded_version_above_slatedb_is_refused_at_open() {
     let _s = super::tests::SERIAL.lock().await;
     settings(true);
+    control("xdloop", &CONTROL_NO_XD_LOOP_CHECK);
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
     let id = "xd-loop";
     let mut a = lc(&store).create(id).await.unwrap();
@@ -141,6 +148,7 @@ async fn a_reloaded_version_above_slatedb_is_refused_at_open() {
 async fn an_operation_keeps_the_floor_across_its_reads() {
     let _s = super::tests::SERIAL.lock().await;
     settings(true);
+    control("opholds", &CONTROL_NO_OP_HOLDS);
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
     let id = "op-holds";
     let mut t = lc(&store).create(id).await.unwrap();

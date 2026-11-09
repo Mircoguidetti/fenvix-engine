@@ -23,8 +23,11 @@ pub enum Raw<'a> {
     /// A transaction's snapshot: SlateDB's snapshot and the version of our manifest held with it (`fx/read.rs`), with
     /// the database's E_env (`envelope.rs`).
     Snap(&'a tenant_bench::fx::read::Snap),
-    /// A reader the control layer opened on its own (export of a checkpoint), with its E_env ([`reader_env`]).
+    /// A reader the control layer opened on its own, with its E_env ([`reader_env`]).
     Reader(&'a slatedb::DbReader, Option<u64>),
+    /// A reader of the control layer paired with a version of our manifest (export of a checkpoint, PITR's diff;
+    /// `fx/pair.rs`): every call is one page, read through the merged rule with that version.
+    Paired(&'a tenant_bench::fx::pair::PairedReader),
 }
 
 /// E_env of a database as a reader the control layer opened sees it (`envelope.rs`).
@@ -53,6 +56,7 @@ impl Raw<'_> {
                 Some(kv) => tenant_bench::envelope::decode(*env, &kv.key, kv.seq, kv.value),
                 None => Ok(None),
             },
+            Raw::Paired(p) => p.get(key).await,
         }
     }
 
@@ -65,6 +69,7 @@ impl Raw<'_> {
         match self {
             Raw::Tenant(t, durable) => t.scan_range_at(lo, hi, reverse, limit, read_ahead, *durable).await,
             Raw::Snap(s) => s.scan(lo, hi, reverse, limit, read_ahead).await,
+            Raw::Paired(p) => p.scan(lo, hi, reverse, limit, read_ahead).await,
             Raw::Reader(r, env) => {
                 let opts = slatedb::config::ScanOptions {
                     read_ahead_bytes: read_ahead,
