@@ -482,8 +482,12 @@ pub async fn retire(store: &Arc<dyn ObjectStore>, id: &str, e: &mut Erasure, new
         kept.push((why.clone(), listed));
     }
     let no_retire = ctl(&CONTROL_NO_RETIRE);
+    let own = format!("tenants/{id}/");
     for r in e.retired.iter_mut().filter(|r| r.deleted_ms.is_none()) {
         let mut by: Vec<String> = kept.iter().filter(|(_, l)| l.iter().any(|p| *p == r.path)).map(|(w, _)| w.clone()).collect();
+        if std::env::var("REVIEW_FIX1").is_ok() && !r.path.starts_with(&own) {
+            by.push("ancestor".into());
+        }
         if in_grace {
             by.push("grace".into());
         }

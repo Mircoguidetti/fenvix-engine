@@ -145,6 +145,7 @@ pub async fn fork(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> ApiRes
     // (an entry of its own is open on the name: the check below then finds the database), it is not released here.
     let ours = !ctl.dbs.leases.is_held(target);
     ctl.dbs.leases.acquire(target).await?;
+    super::failpoint("fork.after_lease").await; // review probe (not for merge)
     let r = fork_leased(ctl, g, src, target, mode, &list, std::time::Instant::now()).await;
     if ours {
         // A fork that leaves no branch (refused, or rolled back) leaves no lease object either, like a database that turned
@@ -294,6 +295,7 @@ async fn fork_paired(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> any
     let src_admin = Admin::builder(purge::tenant_path(src), Arc::clone(store)).build();
     let (cp, p) = pair::checkpoint_paired(store, src, || async { Ok(src_admin.create_detached_checkpoint(&slatedb::config::CheckpointOptions::default()).await?) }).await?;
     let r = async {
+        super::failpoint("fork.after_pairing").await; // review probe (not for merge)
         if mode == "clone" {
             let admin = Admin::builder(purge::tenant_path(target), Arc::clone(store)).build();
             admin.create_clone_builder_from_source(slatedb::CloneSourceSpec::with_checkpoint(purge::tenant_path(src), cp.id)).build().await?;
