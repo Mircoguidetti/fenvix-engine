@@ -923,6 +923,23 @@ impl Tenant {
         }
     }
 
+    /// Step 5 (cold reads): the ids of the writer's L0 SSTs, as SlateDB prints them (the store paths of these SSTs contain the
+    /// ULID), so a meter can tell an L0 GET from a GET in a sorted run. Empty for a reader.
+    pub fn writer_l0_ids(&self) -> Vec<String> {
+        match &self.mode {
+            Some(Mode::Writer(db)) => db.manifest().l0().iter().map(|v| format!("{:?}", v.sst.id)).collect(),
+            _ => Vec::new(),
+        }
+    }
+
+    /// Step 5 (cold reads): SlateDB sorted runs in the writer's local manifest view (None for a reader).
+    pub fn writer_sorted_runs(&self) -> Option<usize> {
+        match &self.mode {
+            Some(Mode::Writer(db)) => Some(db.manifest().compacted().len()),
+            _ => None,
+        }
+    }
+
     /// Give group commit the tenant's in-flight write counter (see `GroupFlush::inflight`).
     pub fn bind_inflight(&self, counter: Arc<std::sync::atomic::AtomicU64>) {
         let _ = self.group.inflight.set(counter);
