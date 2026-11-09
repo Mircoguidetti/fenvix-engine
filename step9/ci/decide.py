@@ -56,6 +56,7 @@ DEFAULTS = {
     "extras_client": "c7i.large", "log_colocate": True, "pgbox": "m7i.large", "network": "default-sg",
     "server_options": "", "prepare": False, "programs": PROGRAMS,
     "takeovers_args": "--n 50 --writers 8 --between-s 3 --lease-ttl 4 --log on",
+    "takeovers_off_args": "--n 50 --writers 8 --between-s 3 --lease-ttl 4 --log off --label logoff",
     "log_ack_args": "--n 1000 --conc 8,64 --secs 20",
     "s3_first_byte_args": "--objects 40 --reads 300",
     "agent_bench_args": "--profile standard --workers 1",
@@ -182,6 +183,13 @@ def resolve(raw, quota=None):
         refuse(f"{c['vcpu_peak']} vCPU at once ({peaks}); the limit is {VCPU_LIMIT} (on-demand quota).{hint}")
     if quota is not None and c["mode"] == "run" and c["vcpu_peak"] > quota:
         refuse(f"{c['vcpu_peak']} vCPU at once, the quota is {quota}")
+    if c["mode"] == "run" and os.environ.get("S9_MODE", "aws") == "aws":
+        # RULES.md 8-9 (founder, 2026-11-09): no AWS run while a local result loses a write or is worse than the competitors
+        import subprocess
+        g = subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "gate.py")],
+                           capture_output=True, text=True)
+        if g.returncode != 0:
+            refuse("the gate before any AWS run is closed:\n" + g.stdout.strip())
     c["arches"] = sorted({TYPES[c[r]][2] for r in ("cook", "spare", "log", "compactor", "loader") if c[r]} | {"x86_64"})
     c["loader_uses_log"] = False
     return c

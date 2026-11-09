@@ -66,6 +66,7 @@ c["ballast_rounds_args"] = "--n-q2 6 --n-q3 6 --n-q1 6 --n-q1d 6 --n-q4 4 --dorm
 c["log_ack_args"] = "--n 300 --conc 8 --secs 10"
 c["agent_bench_args"] = "--profile small --workers 1 --local"
 c["takeovers_args"] = c["takeovers_args"].replace("--n 50", f"--n {sys.argv[2]}")
+c["takeovers_off_args"] = c["takeovers_off_args"].replace("--n 50", f"--n {sys.argv[2]}")
 c["data_gb_upper"] = 1
 json.dump(c, open(f, "w"), indent=1)
 PY

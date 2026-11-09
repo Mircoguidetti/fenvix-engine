@@ -22,7 +22,9 @@ Commands:
     python record.py rec-fake --model fake --support 20 --coding 20          # $0, local
     python claude_cost.py estimate rec-fake --thinking-factor 2
     python replay.py rec-fake out-mongo --target mongo --uri mongodb://127.0.0.1:27017 --copies 2
-    python record.py rec-pilot --model claude-opus-5-5 --pilot --max-dollars 5   # PAID: only after the gate of RULES.md
+    python record.py rec-pilot --model claude-sonnet-5-5 --pilot --max-dollars 5   # PAID: only after the gate of RULES.md
+
+Model (coordinator's decision, 2026-11-09): Claude Sonnet 5.5, the typical agent model and half Opus 5.5's price.
 
 Local validation (MEASURED, 2026-11-09, fake model, validation not results): 40 conversations recorded, 10.3 model
 calls, 24.1 checkpoints and 0.18 MB of checkpoints per conversation (mean); replayed twice against local mongod 7.0:

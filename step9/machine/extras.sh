@@ -74,6 +74,9 @@ if has takeovers; then
   [ -n "$SPARE_IP" ] || { step "takeovers: no spare in this round: skipped"; outcomes+=("takeovers:SKIPPED"); }
   # shellcheck disable=SC2046
   [ -n "$SPARE_IP" ] && run_prog takeovers $PY takeovers.py "$BUCKET" out/takeovers --a "$COOK_IP" --b "$SPARE_IP" --ca "$PWD/ca.pem" $(cfg takeovers_args)
+  # coordinator's decision 2026-11-09: also N takeovers with the log off (S3 WAL path only), to separate the two paths
+  # shellcheck disable=SC2046
+  [ -n "$SPARE_IP" ] && [ -n "$(cfg takeovers_off_args)" ] && run_prog takeovers-logoff $PY takeovers.py "$BUCKET" out/takeovers --a "$COOK_IP" --b "$SPARE_IP" --ca "$PWD/ca.pem" $(cfg takeovers_off_args)
 fi
 if has agent-bench; then
   PG=$(cfg pgbox.ip); AU=$($PY s3io.py text "$BUCKET" secret/aurora-uri 2>/dev/null || true)

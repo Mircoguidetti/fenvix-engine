@@ -31,7 +31,7 @@ def line(label, value, how):
 
 
 def size(name, bson_gb, per_proc_mb_s=1.55, cook="m7i.large", log="c7g.medium", loader="c7i.xlarge",
-         client="c7i.xlarge", filler="c7i.xlarge", extras_client="c7i.large", m30_h=3.0, extras_h=1.0):
+         client="c7i.xlarge", filler="c7i.xlarge", extras_client="c7i.large", m30_h=3.0, extras_h=2.6):
     """The 8-vCPU plan (founder, 2026-11-09): job 1 loads the Atlas databases (loader + m30 client), ballast jobs load
     the ballast (loader + filler), the last job measures (cook with log-0 + 2 log nodes + client, then cook + logs +
     spare + extras client). Never more than 8 vCPU at once."""
@@ -89,10 +89,45 @@ def atlas_1tb(price_h, days_load):
     print("  Atlas storage cap: must be raised to at least 2.6 TB before the load (the 60 GB cap stopped the 2026-11-05 load)")
 
 
+def paper_direct(name, bson_gb, gen_mb_s=100.0, cook="m7i.large", log="c7g.medium", loader="c7i.xlarge",
+                 client="c7i.xlarge", extras_client="c7i.large", m30_h=3.0, extras_h=1.6, agent_h=1.0):
+    """ON PAPER (coordinator, 2026-11-09; RULES.md 10): the ballast is GENERATED on the loader machine straight into S3
+    in our own stored format, with no client and no wire; only the five Atlas-shaped databases go through the frozen
+    script. The generator does not exist yet (section 4b of the report)."""
+    print(f"\n== ON PAPER, data {name}: ballast generated in our format on the loader machine")
+    ballast_gb = max(0.0, bson_gb - 26.6)
+    gen_h = ballast_gb * 1000 / gen_mb_s / 3600 + (0.3 if ballast_gb else 0)
+    atlas_h = 2.8
+    tot = 0.0
+    tot += line("job 1: loader + m30 client, the 5 Atlas databases", (hour(loader) + hour(client)) * atlas_h, f"{atlas_h} h x ({hour(loader):.4f} + {hour(client):.4f})")
+    tot += line("job 1: S3 PUTs of that load (WAL)", 26.6e9 / DOC_B / BATCH * PUT, "78 M documents / 1,000 per batch x $0.005 per 1,000")
+    if ballast_gb:
+        tot += line("job 2: generator on the loader machine", hour(loader) * gen_h,
+                    f"{ballast_gb:.0f} GB / {gen_mb_s:.0f} MB/s = {gen_h - 0.3:.2f} h + 0.3 h boot, x {hour(loader):.4f}")
+        tot += line("job 2: S3 PUTs of the generated runs", ballast_gb * 1000 / PART_MB * PUT,
+                    f"{ballast_gb:.0f} GB / {PART_MB} MB parts x $0.005 per 1,000 (no WAL, no compaction rewrite)")
+    mh = m30_h + 0.5
+    tot += line("job 3, m30: cook+log-0, 2 log nodes, client", (hour(cook) + 2 * hour(log) + hour(client)) * mh,
+                f"{mh} h x ({hour(cook):.4f} + 2 x {hour(log):.4f} + {hour(client):.4f})")
+    tot += line("job 3, extras: cook, logs, spare, client", (2 * hour(cook) + 2 * hour(log) + hour(extras_client)) * extras_h,
+                f"{extras_h} h x (2 x {hour(cook):.4f} + 2 x {hour(log):.4f} + {hour(extras_client):.4f})")
+    tot += line("job 3, agent benchmark: cook, logs, Postgres, client", (2 * hour(cook) + 2 * hour(log) + hour(extras_client)) * agent_h,
+                f"{agent_h} h x (cook and Postgres 2 x {hour(cook):.4f} + 2 x {hour(log):.4f} + {hour(extras_client):.4f})")
+    days = (atlas_h + gen_h + mh + extras_h + agent_h) / 24 + 0.5
+    tot += line("S3 storage while the pantry lives", bson_gb * 1.1 * GBM / 30 * days, f"{bson_gb * 1.1:.0f} GB (x 1.1, no unmerged runs) x {GBM} x {days:.2f} days / 30")
+    tot += line("S3 GETs (reads, programs) and cross-zone log copies", 0.10 + 0.20 + 0.02, "0.10 reads + 0.20 cross-zone + 0.02 S3 programs")
+    print(f"  TOTAL ON PAPER: {tot:.2f} $, 3 jobs, about {atlas_h + gen_h + mh + extras_h + agent_h:.0f} h of jobs; generator rate "
+          f"{gen_mb_s:.0f} MB/s ESTIMATED (compaction writes about 42 MB/s per core, MEASURED M26: 22.5-24.5 s of CPU per GB; "
+          f"3 cores minus document generation)")
+    return tot
+
+
 if __name__ == "__main__":
     print("Step 9 cost estimate, 8-vCPU plan (ESTIMATED; prices DECLARED, sources in the docstring)")
     pilot()
     size("atlas (the size measured on Atlas)", 26.6)
     size("100gb", 100)
     size("1tb", 1000)
+    paper_direct("100gb", 100)
+    paper_direct("1tb", 1000)
     # no Atlas rerun (founder, 2026-11-09): the comparison uses the Atlas numbers measured in Ireland on 2026-11-05
