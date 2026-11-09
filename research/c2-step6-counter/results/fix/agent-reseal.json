@@ -1,0 +1,24 @@
+{
+  "block_kb": 256,
+  "growth_at_stage": 1.5735696772705439,
+  "next_visit_gets": 73,
+  "per_thread_after_next_visit_trimmed": 70997.62171052632,
+  "per_thread_after_stage": 82426.48355263157,
+  "per_thread_before": 52381.84539473684,
+  "stage": {
+    "capped": true,
+    "gets": 88,
+    "held": 912,
+    "held_bytes": 15924081,
+    "millis": 56,
+    "missed": 142,
+    "retired_runs": 1,
+    "timed_out": false,
+    "wanted": 1002,
+    "warmed": 860,
+    "warmed_bytes": 25057651
+  },
+  "test": "fix6_agent_reseal_ram",
+  "threads": 304,
+  "threads_needing_a_get_max": 73
+}
