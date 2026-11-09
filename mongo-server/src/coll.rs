@@ -1440,6 +1440,9 @@ pub struct Writes {
     claims: HashMap<(usize, Vec<u8>), Vec<u8>>,
     /// Entries removed by this write set.
     released: HashSet<(usize, Vec<u8>, Vec<u8>)>,
+    /// Unique values this write set adds (index prefix + entry components, and the collation `_id` keys): a commit marks
+    /// them written (`Entry::mark_unique`), and a transaction holding one conflicts with any other writer of the same value.
+    pub uniq: HashSet<Vec<u8>>,
     /// Index definitions changed (multikey flag set).
     pub indexes_dirty: bool,
     /// Index definitions to persist at commit (collection -> all its indexes) and the collection list, for transactions.
@@ -1468,7 +1471,7 @@ pub struct Writes {
 
 impl Writes {
     pub fn new() -> Self {
-        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None, seqs: HashMap::new(), extra: Vec::new(), cap_delta: HashMap::new(), stat: HashMap::new(), quiet: false, bypass_validation: false }
+        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), uniq: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None, seqs: HashMap::new(), extra: Vec::new(), cap_delta: HashMap::new(), stat: HashMap::new(), quiet: false, bypass_validation: false }
     }
 
     /// The collection validator on a document that is written: `old` is what an update started from.
@@ -1572,6 +1575,13 @@ impl Writes {
         }
     }
 
+    /// A unique value this write set is about to add. In a transaction it is a write conflict (as on mongod, where both
+    /// write the same key of the unique index) when another open transaction holds the value or a commit wrote it after
+    /// this transaction's snapshot; otherwise the transaction takes the value until it ends.
+    fn claim_unique(&self, g: &mut Entry, key: &[u8]) -> R<()> {
+        self.check_conflict(g, key)
+    }
+
     /// Insert or replace a document, maintaining every index. Nothing is recorded if it fails.
     pub async fn put(&mut self, g: &mut Entry, coll: &str, ns: &str, indexes: &mut [IndexDef], new: &Document, old: Option<&Document>) -> R<()> {
         let id = new.get("_id").cloned().ok_or_else(|| MongoError::internal("document without _id".into()))?;
@@ -1610,6 +1620,8 @@ impl Writes {
         }
         let is_self = |owner: &[u8]| owner == id_enc.as_slice() || old_enc.as_deref() == Some(owner);
         let mut plans: Vec<(usize, Vec<Vec<u8>>, Vec<Vec<u8>>, bool)> = Vec::new(); // (idx, to_add, to_remove, multikey)
+        // (index position, components, value as BSON): values a unique index being built already holds for another document
+        let mut suspects: Vec<(usize, Vec<u8>, Vec<u8>)> = Vec::new();
         for (i, idx) in indexes.iter().enumerate() {
             if !idx.has_entries() || idx.state == State::Dropping {
                 continue;
@@ -1634,6 +1646,7 @@ impl Writes {
                     }
                     let mut p = idx.prefix(coll);
                     p.extend(c);
+                    self.claim_unique(g, &p)?;
                     let end = prefix_end(&p);
                     for (k, _) in g.scan_range_live(&p, end.as_deref(), Some(8)).await? {
                         if let Some(owner) = entry_id(&k) {
@@ -1641,6 +1654,33 @@ impl Writes {
                                 return Err(dup());
                             }
                         }
+                    }
+                }
+            }
+            if idx.unique && idx.state == State::Building {
+                // A unique index being built (in chunks, the database released between chunks): the write is accepted,
+                // as on mongod, but a value another document already holds is recorded, and the build re-checks it before
+                // the index becomes ready. The build itself checks only the documents ahead of its cursor, so without this
+                // two writes behind the cursor would leave the finished unique index holding a value twice.
+                for c in &add {
+                    let mut held = matches!(self.claims.get(&(i, c.clone())), Some(owner) if *owner != id_enc);
+                    let mut p = idx.prefix(coll);
+                    p.extend(c);
+                    // a transaction takes the value as for a ready index: two open transactions cannot both add it
+                    self.claim_unique(g, &p)?;
+                    if !held {
+                        let end = prefix_end(&p);
+                        for (k, _) in g.scan_range_live(&p, end.as_deref(), Some(8)).await? {
+                            if let Some(owner) = entry_id(&k) {
+                                if owner != id_enc.as_slice() && !self.released.contains(&(i, c.clone(), owner.to_vec())) {
+                                    held = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if held {
+                        suspects.push((i, c.clone(), new_e.get(c).map(|d| d.to_vec()).transpose()?.unwrap_or_default()));
                     }
                 }
             }
@@ -1668,11 +1708,15 @@ impl Writes {
                 // (callers check `exists` first; this one also guards the paths that do not)
                 let taken = match self.ov.get(&ck) {
                     Some(v) => v.is_some(),
-                    None => g.get_live(&ck).await?.map(|v| v.as_ref() != id_enc.as_slice()).unwrap_or(false),
+                    None => {
+                        self.claim_unique(g, &ck)?;
+                        g.get_live(&ck).await?.map(|v| v.as_ref() != id_enc.as_slice()).unwrap_or(false)
+                    }
                 };
                 if taken {
                     return Err(MongoError::duplicate_key_c(ns, "_id_", &bson::doc! { "_id": 1 }, &bson::doc! { "_id": id.clone() }, Some(&c)));
                 }
+                self.uniq.insert(ck.clone());
                 self.ops.push(Op::Put(ck.clone(), id_enc.clone()));
                 self.ov.insert(ck, Some(Document::new()));
             }
@@ -1726,9 +1770,21 @@ impl Writes {
             Some(o) => st.bytes += bytes.len() as i64 - o.to_vec()?.len() as i64,
         }
         let rem_enc = old_enc.clone().unwrap_or_else(|| id_enc.clone());
+        for (i, c, kv) in suspects {
+            let mut sk = indexes[i].suspect_prefix(coll);
+            sk.extend(&c);
+            self.ops.push(Op::Put(sk, kv));
+        }
         for (i, add, rem, mk) in plans {
             let idx = &mut indexes[i];
             let prefix = idx.prefix(coll);
+            if (idx.unique || idx.prepare_unique) && idx.state != State::Dropping {
+                for c in &add {
+                    let mut p = prefix.clone();
+                    p.extend(c);
+                    self.uniq.insert(p);
+                }
+            }
             let st = self.stat.entry(coll.to_string()).or_default();
             for c in &rem {
                 st.index(&idx.name, -((entry_key(&prefix, c, &rem_enc).len() as i64) + entry_val_len));

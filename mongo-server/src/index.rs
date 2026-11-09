@@ -206,6 +206,20 @@ impl IndexDef {
         k
     }
 
+    /// Unique index build: values that a concurrent write found already held by another document while the index was
+    /// `Building` (`idx/{coll}//bdup/{name}/{components}` -> the value as BSON). The build re-checks each one before the
+    /// index becomes ready and fails with 11000 if the value is still held twice, as mongod's hybrid build does.
+    /// The key sits under the collection's index prefix (an escaped index name never starts with `/`), so dropping,
+    /// renaming, forking or converting the collection carries or removes it with the index entries.
+    pub fn suspect_prefix(&self, coll: &str) -> Vec<u8> {
+        let mut k = b"idx/".to_vec();
+        k.extend(escape_collection(coll));
+        k.extend(b"//bdup/");
+        k.extend(escape_collection(&self.name));
+        k.push(b'/');
+        k
+    }
+
     /// Whether this index maintains entries (every state except `special`).
     pub fn has_entries(&self) -> bool {
         !self.special

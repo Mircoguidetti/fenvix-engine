@@ -865,8 +865,10 @@ impl Entry {
                 let k = match op {
                     Op::Put(k, _) | Op::Delete(k) => k,
                 };
-                // documents and the locators of customer-keyed collections (their unique `_id` index, custkey.rs)
-                if k.starts_with(b"doc/") || k.starts_with(b"loc/") {
+                // documents, the locators of customer-keyed collections (their unique `_id` index, custkey.rs), and the index
+                // definitions of a collection (an open transaction that wrote to a collection whose indexes changed since its
+                // snapshot did not maintain the new ones: it conflicts at commit, see `txn.rs`)
+                if k.starts_with(b"doc/") || k.starts_with(b"loc/") || k.starts_with(b"meta/indexes/") {
                     self.modified.insert(k.clone(), self.seq);
                 }
             }
@@ -1280,6 +1282,17 @@ impl Entry {
         self.active_txns = self.active_txns.saturating_sub(1);
         if self.active_txns == 0 {
             self.modified.clear();
+        }
+    }
+
+    /// Record that the batch just applied wrote these unique values (see `Writes::uniq`), so that an open transaction that
+    /// writes one of them conflicts. Only needed while transactions are open, like the document keys in `apply`.
+    pub(crate) fn mark_unique<'a>(&mut self, keys: impl IntoIterator<Item = &'a Vec<u8>>) {
+        if self.active_txns == 0 {
+            return;
+        }
+        for k in keys {
+            self.modified.insert(k.clone(), self.seq);
         }
     }
 

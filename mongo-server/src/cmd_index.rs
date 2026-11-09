@@ -39,7 +39,13 @@ pub async fn build_step(dbs: &Arc<Dbs>, db: &str, coll: &str) -> R<Step> {
     let prefix = indexes[pos].prefix(coll);
     if indexes[pos].state == State::Dropping {
         let end = prefix_end(&prefix);
-        let rows = g.scan_range(&prefix, end.as_deref(), false, Some(n), 1 << 20).await?;
+        let mut rows = g.scan_range(&prefix, end.as_deref(), false, Some(n), 1 << 20).await?;
+        if rows.len() < n {
+            // then the values a failed unique build still had to re-check
+            let sp = indexes[pos].suspect_prefix(coll);
+            let send = prefix_end(&sp);
+            rows.extend(g.scan_range(&sp, send.as_deref(), false, Some(n - rows.len()), 1 << 20).await?);
+        }
         let mut ops: Vec<Op> = rows.iter().map(|(k, _)| Op::Delete(k.to_vec())).collect();
         let last = rows.len() < n;
         if last {
@@ -103,15 +109,50 @@ pub async fn build_step(dbs: &Arc<Dbs>, db: &str, coll: &str) -> R<Step> {
         g.apply(vec![Entry::indexes_op(coll, &indexes)?]).await?;
         return Ok(Step::Failed(e));
     }
-    let done = rows.len() < n;
+    let mut done = rows.len() < n;
+    if done && idx.unique {
+        // Every document is scanned. Before the index is ready, re-check the values that concurrent writes found already
+        // held (`IndexDef::suspect_prefix`): a write behind the cursor is not seen by the scan, so a value written twice
+        // there, or written once and held by a scanned document, is only caught here. As on mongod, the build then
+        // fails with 11000, unless a later write removed the duplicate. A step checks at most `n` values; the index stays
+        // `Building` (and new writes keep recording values) until a step finds none left, under the same lock.
+        let sp = idx.suspect_prefix(coll);
+        let send = prefix_end(&sp);
+        let sus = g.scan_range(&sp, send.as_deref(), false, Some(n), 1 << 20).await?;
+        for (sk, kv) in &sus {
+            let c = &sk[sp.len()..];
+            let mut p = prefix.clone();
+            p.extend(c);
+            let end = prefix_end(&p);
+            let mut owners: HashSet<Vec<u8>> = g.scan_range(&p, end.as_deref(), false, Some(8), 4096).await?.iter().filter_map(|(ek, _)| entry_id(ek).map(|o| o.to_vec())).collect();
+            if let Some(o) = seen.get(c) {
+                owners.insert(o.clone());
+            }
+            if owners.len() > 1 {
+                let kv = decode(&kv[..]).unwrap_or_default();
+                let mut e = MongoError::duplicate_key_c(&ns, &idx.name, &idx.key_pattern(), &kv, idx.collation.as_deref());
+                e.msg = format!("Index build failed: {}: Collection {ns} ( {} ) :: caused by :: {}", fake_uuid(), fake_uuid(), e.msg);
+                for i in indexes.iter_mut().filter(|i| i.state == State::Building) {
+                    i.state = State::Dropping;
+                    i.cursor = None;
+                }
+                g.apply(vec![Entry::indexes_op(coll, &indexes)?]).await?;
+                return Ok(Step::Failed(e));
+            }
+            ops.push(Op::Delete(sk.to_vec()));
+        }
+        if sus.len() >= n {
+            done = false;
+        }
+    }
     if multikey {
         indexes[pos].multikey = true;
     }
     if done {
         indexes[pos].state = State::Ready;
         indexes[pos].cursor = None;
-    } else {
-        let mut c = rows.last().unwrap().0.to_vec();
+    } else if let Some((last, _)) = rows.last() {
+        let mut c = last.to_vec();
         c.push(0);
         indexes[pos].cursor = Some(c);
     }
@@ -1199,6 +1240,21 @@ impl Server {
             let prefix = idx.prefix(coll);
             let stored = g.scan(&prefix).await?;
             keys_per_index.insert(idx.name.clone(), stored.len() as i32);
+            if idx.unique && idx.state == State::Ready {
+                // a unique index never holds one value for two documents (entries are sorted: equal values are adjacent)
+                let mut last: Option<&[u8]> = None;
+                for (k, _) in &stored {
+                    let Some(value) = crate::index::entry_comps(k, &prefix) else { continue };
+                    if last == Some(value) {
+                        extra_total += 1;
+                        bad_indexes.insert(idx.name.clone());
+                        if errors.len() < 20 {
+                            errors.push(Bson::String(format!("unique index {} holds the same value for two documents", idx.name)));
+                        }
+                    }
+                    last = Some(value);
+                }
+            }
             let mut have: HashSet<Vec<u8>> = stored.iter().map(|(k, _)| k.to_vec()).collect();
             // Documents behind the build cursor must be fully indexed; a building index only covers the part before its cursor
             // plus whatever concurrent writes added, so only check completeness for ready indexes.
