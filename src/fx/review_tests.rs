@@ -553,3 +553,86 @@ async fn review_staged_publish_warms_only_what_was_held() {
     // the new rows are 40 x (200 + 30) bytes; allow three times what was held, plus them
     assert!(after <= 3 * before + 40 * 230 * 2, "a staged reseal grew the counter from {before} to {after} bytes");
 }
+
+/// Hot read latency through slices, inside the process: 30,000 documents of 300 bytes under 1,000 customers (layout
+/// v2 keys, with an index entry each), 2,000 hot documents. p50 of `Tenant::get` (point) and of a reverse range read of
+/// the customer's 5 newest index entries, for three paths on the same tenant, alternated three times: SlateDB alone (no
+/// version: today's path), the merged reader with whole blocks (step 3's counter), the merged reader with area slices
+/// (step 6's default, trimmed). Run: cargo test --release -p tenant-bench --lib fx::review_tests::review_hot_p50 --
+/// --ignored --nocapture
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+#[ignore]
+async fn review_hot_p50() {
+    let _s = SERIAL.lock().await;
+    enable();
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let mut t = lc(&store).create("review-hot").await.unwrap();
+    let mut m = BTreeMap::new();
+    let pad = vec![b'x'; 300];
+    let doc = |i: usize| key(i % 1000, &format!("d/d/{i:06}"));
+    let idx = |i: usize| key(i % 1000, &format!("d/x/ts/{i:06}"));
+    for b in 0..300 {
+        let ops = (0..100).flat_map(|j| { let i = b * 100 + j; [(doc(i), Some(pad.clone())), (idx(i), Some(doc(i)))] }).collect();
+        apply(&mut t, &mut m, ops).await;
+    }
+    let mut rng = StdRng::seed_from_u64(5);
+    let hot: Vec<usize> = (0..2000).map(|_| rng.gen_range(0..30_000)).collect();
+    async fn measure(t: &Tenant, hot: &[usize], rng: &mut StdRng, range: bool) -> f64 {
+        let one = |i: usize| async move {
+            if range {
+                let lo = key(i % 1000, "d/x/ts/");
+                let hi = crate::runfmt::prefix_successor(&lo).unwrap();
+                assert_eq!(t.scan_range(&lo, Some(&hi), true, Some(5), 64 << 10).await.unwrap().len(), 5);
+            } else {
+                assert!(t.get(key(i % 1000, &format!("d/d/{i:06}"))).await.unwrap().is_some());
+            }
+        };
+        for &i in hot {
+            one(i).await;
+        }
+        counter::trim_all();
+        for &i in hot {
+            one(i).await;
+        }
+        let mut lat = Vec::with_capacity(50_000);
+        for _ in 0..50_000 {
+            let i = hot[rng.gen_range(0..hot.len())];
+            let s = std::time::Instant::now();
+            one(i).await;
+            lat.push(s.elapsed().as_nanos() as f64 / 1000.0);
+        }
+        lat.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        lat[lat.len() / 2]
+    }
+    let mut o = small(Reseal::All);
+    o.sealed = RunOptions::unchecked(256 << 10, 1 << 20, CustomerKind::V2);
+    publish(&mut t, &o).await;
+    let mut out: Vec<(String, f64)> = Vec::new();
+    for _round in 0..3 {
+        for range in [false, true] {
+            let shape = if range { "range" } else { "point" };
+            super::ENABLED.store(false, Relaxed);
+            t.fx_refresh().await.unwrap();
+            out.push((format!("{shape}/slatedb"), measure(&t, &hot, &mut rng, range).await));
+            super::ENABLED.store(true, Relaxed);
+            t.fx_refresh().await.unwrap();
+            for mode in [SliceMode::Off, SliceMode::Area] {
+                let _m = Mode::set(mode);
+                view::clear_cache();
+                out.push((format!("{shape}/{mode:?}"), measure(&t, &hot, &mut rng, range).await));
+            }
+        }
+    }
+    let med = |w: &str| {
+        let mut p: Vec<f64> = out.iter().filter(|(m, _)| m == w).map(|(_, x)| *x).collect();
+        p.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        p[p.len() / 2]
+    };
+    let mut res = serde_json::Map::new();
+    for shape in ["point", "range"] {
+        let (s, w, a) = (med(&format!("{shape}/slatedb")), med(&format!("{shape}/Off")), med(&format!("{shape}/Area")));
+        res.insert(shape.into(), serde_json::json!({"p50_us_slatedb": s, "p50_us_whole": w, "p50_us_area": a, "area_over_slatedb": a / s, "area_over_whole": a / w, "whole_over_slatedb": w / s}));
+    }
+    cb::write_out(serde_json::json!({"test": "review_hot_p50", "rounds": out, "median": res}));
+    t.abandon().await;
+}

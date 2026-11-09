@@ -29,7 +29,9 @@ def rnd(r):
         for b in range(DOCS // 100):
             col.insert_many([{"_id": b * 100 + i, "u": (b * 100 + i) % 997, "pad": pad} for i in range(100)])
         time.sleep(0.5)
-        for i in range(70): col.update_one({"_id": -1, "u": 0}, {"$inc": {"n": 1}}, upsert=True)
+        # a few more write batches so the last publish covers every document read (inserts: an upsert on this
+        # customer-keyed collection took 4 s without sealed runs and 27 s with them, see the review report)
+        for i in range(70): col.insert_one({"_id": DOCS + i, "u": 0})
         cols[m], cl[m] = col, c
     ids = random.Random(r).sample(range(DOCS), HOT)
     us = sorted({i % 997 for i in ids})[:300]
