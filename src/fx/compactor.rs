@@ -250,6 +250,11 @@ struct Running {
     groups: HashSet<u32>,
 }
 
+/// Review of step 4 only: planted bugs, to check that the model test catches them (0 = none; 1 = a merge drops an
+/// envelope above X_g; 2 = a reseal skips the newest delta run; 3 = the floor ignores the lease; 4 = the floor ignores
+/// holds and the served version).
+pub static REVIEW_PLANT: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+
 pub struct Compactor {
     pub sh: Arc<Shared>,
     pub store: Arc<dyn ObjectStore>,
@@ -657,6 +662,9 @@ impl Compactor {
             if best.seq <= xg.of(&best.key) {
                 continue; // dead for reads: at or below its group's X_g (an envelope included)
             }
+            if REVIEW_PLANT.load(Relaxed) == 1 && best.dead() {
+                continue; // planted bug 1
+            }
             w.add(&best.key, best.seq, &best.env).await?;
         }
         let line = w.finish(&self.sh.stats, 1).await?;
@@ -748,7 +756,10 @@ impl Compactor {
         let target = if split { (self.knobs.split_bytes / 2).max(1) } else { u64::MAX };
         let sealed_src: Vec<RunLine> = groups.iter().filter_map(|g| g.sealed.clone()).collect();
         // delta rows of these groups in (X_g, X_cut]: every delta run meeting [lo, hi)
-        let delta_src: Vec<RunLine> = v0.delta.iter().filter(|d| meets(d, &lo, hi.as_deref())).cloned().collect();
+        let mut delta_src: Vec<RunLine> = v0.delta.iter().filter(|d| meets(d, &lo, hi.as_deref())).cloned().collect();
+        if REVIEW_PLANT.load(Relaxed) == 2 && !delta_src.is_empty() {
+            delta_src.remove(0); // planted bug 2: the newest delta run is skipped
+        }
         let mut m = Merger::open(&self.store, &delta_src, &sealed_src, Some(&lo), hi.as_deref(), self.knobs.read_ahead, &self.sh.stats).await?;
         let mut parts: Vec<(Vec<u8>, Option<RunLine>)> = Vec::new();
         let mut cur_lo = lo.clone();

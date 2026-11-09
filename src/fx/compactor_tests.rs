@@ -57,6 +57,7 @@ fn test_knobs(drop: bool) -> Knobs {
 
 fn setup() {
     enable();
+    compactor::REVIEW_PLANT.store(std::env::var("FX_REVIEW_PLANT").ok().and_then(|s| s.parse().ok()).unwrap_or(0), Relaxed);
     hold::HOLD_LIFE_MS.store(HOLD_MS, Relaxed);
     // small L0 SSTs, so the writes of a test make many of them
     crate::lifecycle::L0_SST_BYTES_OVERRIDE.store(3 << 10, Relaxed);
@@ -115,6 +116,7 @@ async fn compactor_model_drop_on() {
     setup();
     let n_ops: u64 = std::env::var("FX_C_OPS").ok().and_then(|s| s.parse().ok()).unwrap_or(20_000);
     let seed: u64 = std::env::var("FX_C_SEED").ok().and_then(|s| s.parse().ok()).unwrap_or(20261109);
+    compactor::REVIEW_PLANT.store(std::env::var("FX_REVIEW_PLANT").ok().and_then(|s| s.parse().ok()).unwrap_or(0), Relaxed);
     let mut rng = StdRng::seed_from_u64(seed);
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
     let id = "fx-cmodel";
@@ -459,7 +461,7 @@ async fn floor_respects_holds_and_control_breaks() {
         let mut k = test_knobs(true);
         // the one-run fold drops row by row, so the floor alone decides what goes (aged runs leave only whole, once the
         // floor passes their highest seq, which a held transaction prevents here anyway)
-        k.fold_one_run = true;
+        k.fold_one_run = std::env::var("R4_AGED").is_err(); // review: R4_AGED=1 keeps the default aged runs
         let c = Compactor::start(&mut t, Arc::clone(&store), k, pool::Pool::new(2), tokio::runtime::Handle::current()).await.unwrap();
         hold::HOLD_LIFE_MS.store(60_000, Relaxed); // the transaction lives through the wait below
         c.drop.control_ignore_holds.store(control, Relaxed);

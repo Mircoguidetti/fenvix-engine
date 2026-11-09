@@ -165,7 +165,10 @@ impl DropCtl {
                 }
             }
         }
-        let lease = self.lease_now();
+        let mut lease = self.lease_now();
+        if super::compactor::REVIEW_PLANT.load(Relaxed) == 3 {
+            lease = Duration::ZERO; // planted bug 3
+        }
         let mut f = {
             let seen = self.seen.lock().unwrap();
             if self.control_lease_from_stamp.load(Relaxed) {
@@ -176,7 +179,7 @@ impl DropCtl {
                 seen.values().filter(|(t, _)| t.elapsed() >= lease).map(|(_, x)| *x).max().unwrap_or(0)
             }
         };
-        if !self.control_ignore_holds.load(Relaxed) {
+        if !self.control_ignore_holds.load(Relaxed) && super::compactor::REVIEW_PLANT.load(Relaxed) != 4 {
             if let Some(h) = self.sh.holds.floor() {
                 f = f.min(h);
             }
@@ -377,6 +380,10 @@ impl CompactionScheduler for Sched {
     }
 }
 
+/// Review of step 4 only: hold every drop job at its first row (its floor is computed) while set.
+pub static REVIEW_HOLD_JOB: AtomicBool = AtomicBool::new(false);
+pub static REVIEW_JOB_HELD: AtomicBool = AtomicBool::new(false);
+
 struct Filter {
     floor: u64,
     ctl: Arc<DropCtl>,
@@ -387,6 +394,12 @@ struct Filter {
 #[async_trait]
 impl CompactionFilter for Filter {
     async fn filter(&mut self, entry: &RowEntry) -> Result<CompactionFilterDecision, CompactionFilterError> {
+        if self.dropped + self.kept == 0 && REVIEW_HOLD_JOB.load(Relaxed) {
+            REVIEW_JOB_HELD.store(true, Relaxed);
+            while REVIEW_HOLD_JOB.load(Relaxed) {
+                tokio::time::sleep(Duration::from_millis(1)).await;
+            }
+        }
         // the envelope marker stays in SlateDB whatever its seq: every open reads E_env from it there (`load_env`); a drop
         // of it made the next open fail ("our manifest has E_env, the database's marker None": MEASURED by the model test)
         if entry.key.as_ref() == crate::envelope::MARKER {
