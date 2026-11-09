@@ -1059,6 +1059,13 @@ impl Tenant {
         Ok(())
     }
 
+    /// Tests only: give this tenant holds of its own, as a tenant in another process has (step 7a shares the holds of
+    /// every opening of a database in one process).
+    #[cfg(test)]
+    pub fn fx_own_holds(&mut self) {
+        self.holds = Default::default();
+    }
+
     /// The database's id.
     pub fn id(&self) -> &str {
         &self.id

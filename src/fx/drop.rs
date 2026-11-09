@@ -281,6 +281,17 @@ impl DropCtl {
             sr_max.entry(*id).or_insert(known); // a run from before (or after a restart): at most every absorbed row
         }
         sr_max.retain(|id, _| srs.contains(id));
+        if srs.len() > self.max_runs {
+            // past the cap, the adjacent pair with the smallest combined size merges, before any fold (the cap bounds what a
+            // cold scan pays: about one GET per run, fix round of the review); tiered, so no run is rewritten at every
+            // fold; the oldest can be large while the floor lags, and it leaves whole once the floor passes it
+            let sizes: Vec<u64> = m.compacted().iter().map(|r| r.estimate_size()).collect();
+            let i = (0..srs.len() - 1).min_by_key(|&i| sizes[i] + sizes[i + 1]).unwrap();
+            let (a, b) = (srs[i], srs[i + 1]);
+            let hi = sr_max.get(&a).copied().unwrap_or(known).max(sr_max.get(&b).copied().unwrap_or(known));
+            sr_max.insert(a.min(b), hi);
+            return vec![CompactionSpec::new(vec![SourceId::SortedRun(a), SourceId::SortedRun(b)], a.min(b))];
+        }
         // lazy fold: absorbed L0 SSTs whose rows the floor has passed are folded with nothing written; younger ones wait,
         // unless L0 reached `fold_at_l0` (then they go into a new run, one more write of those rows)
         let floor_now = self.observed.load(Relaxed);
@@ -311,16 +322,6 @@ impl DropCtl {
             let src: Vec<SourceId> = srs.iter().filter(|id| below.contains(id)).map(|id| SourceId::SortedRun(*id)).collect();
             sr_max.insert(dst, 0);
             return vec![CompactionSpec::new(src, dst)];
-        }
-        if srs.len() > self.max_runs {
-            // past the cap, the adjacent pair with the smallest combined size merges (tiered, so no run is rewritten at
-            // every fold; the oldest can be large while the floor lags, and it leaves whole once the floor passes it)
-            let sizes: Vec<u64> = m.compacted().iter().map(|r| r.estimate_size()).collect();
-            let i = (0..srs.len() - 1).min_by_key(|&i| sizes[i] + sizes[i + 1]).unwrap();
-            let (a, b) = (srs[i], srs[i + 1]);
-            let hi = sr_max.get(&a).copied().unwrap_or(known).max(sr_max.get(&b).copied().unwrap_or(known));
-            sr_max.insert(a.min(b), hi);
-            return vec![CompactionSpec::new(vec![SourceId::SortedRun(a), SourceId::SortedRun(b)], a.min(b))];
         }
         vec![]
     }

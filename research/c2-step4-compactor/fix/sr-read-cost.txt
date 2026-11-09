@@ -1,0 +1,12 @@
+review_sr_bench: 12 units of 1024 KiB of ~400-byte rows, 4000 customers (Zipf 1.1), SlateDB 0.17 defaults (4 KiB blocks, bloom filters), in-memory store, GETs counted
+1 run(s) + 2 L0: L0 2, sorted runs 1; warm-up 0 GETs; per read: absent key 0.05 GETs, present key 0.99, customer scan with rows 3.10 (3.9 rows), customer scan without rows 2.75
+1 run(s) + 3 L0: L0 3, sorted runs 1; warm-up 0 GETs; per read: absent key 0.07 GETs, present key 0.98, customer scan with rows 4.00 (3.9 rows), customer scan without rows 3.65
+1 run(s) + 6 L0: L0 6, sorted runs 1; warm-up 0 GETs; per read: absent key 0.13 GETs, present key 0.98, customer scan with rows 6.73 (3.9 rows), customer scan without rows 6.39
+2 run(s) + 2 L0: L0 2, sorted runs 2; warm-up 0 GETs; per read: absent key 0.11 GETs, present key 0.97, customer scan with rows 4.00 (3.9 rows), customer scan without rows 3.64
+2 run(s) + 3 L0: L0 3, sorted runs 2; warm-up 0 GETs; per read: absent key 0.10 GETs, present key 0.98, customer scan with rows 4.88 (3.9 rows), customer scan without rows 4.55
+2 run(s) + 6 L0: L0 6, sorted runs 2; warm-up 0 GETs; per read: absent key 0.12 GETs, present key 1.00, customer scan with rows 7.67 (3.9 rows), customer scan without rows 7.30
+3 run(s) + 2 L0: L0 2, sorted runs 3; warm-up 0 GETs; per read: absent key 0.09 GETs, present key 0.98, customer scan with rows 4.95 (3.9 rows), customer scan without rows 4.58
+3 run(s) + 3 L0: L0 3, sorted runs 3; warm-up 0 GETs; per read: absent key 0.11 GETs, present key 1.00, customer scan with rows 5.82 (3.9 rows), customer scan without rows 5.46
+3 run(s) + 6 L0: L0 6, sorted runs 3; warm-up 0 GETs; per read: absent key 0.14 GETs, present key 0.99, customer scan with rows 8.54 (3.9 rows), customer scan without rows 8.14
+6 run(s) + 2 L0: L0 2, sorted runs 6; warm-up 0 GETs; per read: absent key 0.14 GETs, present key 1.00, customer scan with rows 7.66 (3.9 rows), customer scan without rows 7.21
+6 run(s) + 6 L0: L0 6, sorted runs 6; warm-up 0 GETs; per read: absent key 0.17 GETs, present key 0.98, customer scan with rows 11.23 (3.9 rows), customer scan without rows 10.81

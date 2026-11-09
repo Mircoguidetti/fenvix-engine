@@ -1,0 +1,6 @@
+done 6:6
+done 3:3
+done 2:2
+done 2:6
+done 6:2
+done 3:2

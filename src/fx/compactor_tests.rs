@@ -626,6 +626,7 @@ async fn takeover_with_an_open_transaction() {
         let at = m.clone();
         // the takeover: B opens the database (fences A's SlateDB writer and our manifest), starts its compactor
         let mut b = lc(&store).wake(id).await.unwrap();
+        b.fx_own_holds(); // B is another process: A's holds are not B's (step 7a shares them inside one process)
         b.upgrade().await.unwrap();
         let cb = start(&mut b, &store, &k).await;
         cb.drop.control_no_takeover_window.store(control, Relaxed);
