@@ -114,8 +114,6 @@ pub static FENCES: AtomicU64 = AtomicU64::new(0);
 #[cfg(test)]
 pub static CONTROL_NO_XD_LOOP_CHECK: AtomicBool = AtomicBool::new(false);
 #[cfg(test)]
-pub static CONTROL_NO_OP_HOLDS: AtomicBool = AtomicBool::new(false);
-#[cfg(test)]
 pub static CONTROL_E1_AT_ONCE: AtomicBool = AtomicBool::new(false);
 
 /// Negative control of review note 5, tests only: a refresh's T_pin window starts when its answer arrives, as before.

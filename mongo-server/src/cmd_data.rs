@@ -1062,7 +1062,7 @@ impl Server {
         // erasure (compaction 2 step 7b, DECISIONS 2026-11-07): a statement that deletes a whole customer of a
         // customer-keyed collection is recorded as an erasure once its deletes commit
         let ckey = if tenant_bench::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) && tx.is_none() && g.collation_of(coll).is_none() { crate::custkey::of_opts(g.coll_opts(coll).await?.as_ref()) } else { None };
-        let mut erasures: Vec<(Vec<u8>, tenant_bench::fx::erase::Targets)> = Vec::new();
+        let mut erasures: Vec<(Bson, Vec<u8>, tenant_bench::fx::erase::Targets)> = Vec::new();
         for (i, spec) in specs.iter().enumerate() {
             if let Some(b) = rr.as_mut() {
                 if b.run.is_retried(i) {
@@ -1092,7 +1092,8 @@ impl Server {
             }
             if res.is_ok() {
                 if let Some(v) = &whole {
-                    erasures.push(erasure_targets(coll, v, &w.ops[ops_before..]));
+                    let (cust, t) = erasure_targets(coll, v, &w.ops[ops_before..]);
+                    erasures.push((v.clone(), cust, t));
                 }
             }
             if let Err(e) = res {
@@ -1111,8 +1112,12 @@ impl Server {
         }
         self.commit(&mut g, coll, w, &indexes, None, tx).await?;
         // the deletes are committed and the exclusive lock is still held: S_e is the database's last seq now
-        for (cust, t) in &erasures {
+        for (value, cust, t) in &erasures {
             if let Some(e) = g.fx_erasure_register(coll, cust, t).await? {
+                // the change log keeps whole documents in memory: the customer's events go too (review of 7b, FIX 3)
+                if let Some(k) = ckey.as_ref().filter(|_| !crate::ctl::fork::control("FENVIX_CONTROL_KEEP_CHANGES")) {
+                    self.dbs.changes.forget_customer(db, coll, &k.field, value);
+                }
                 crate::ctl::erase::note_erasure(db, &e.id).await;
             }
         }

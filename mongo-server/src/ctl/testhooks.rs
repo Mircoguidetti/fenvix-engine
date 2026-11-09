@@ -41,3 +41,17 @@ pub async fn drop_rows(ctl: &Arc<Ctl>, db: &str, body: &Value) -> ApiResult<Valu
     drop(g);
     Ok(r?)
 }
+
+/// The test hook between two reads of one command (`dbs::interleave`, step 7b fix round, option (b)): publish a version
+/// of `db` with what SlateDB holds above X_d, then drop SlateDB's rows at or below its X_d, as `drop_rows` does.
+pub async fn publish_and_drop(db: &str) -> ApiResult<Value> {
+    let Some(ctl) = super::get() else { return Err(ApiError::new(404, "no_route", "no control layer")) };
+    if !enabled() || !tenant_bench::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) {
+        return Err(ApiError::new(404, "no_route", "test hooks or sealed runs are off"));
+    }
+    {
+        let mut g = ctl.dbs.lock(db).await;
+        g.fx_test_publish().await?;
+    }
+    drop_rows(ctl, db, &json!({})).await
+}

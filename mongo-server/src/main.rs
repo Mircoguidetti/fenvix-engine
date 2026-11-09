@@ -761,6 +761,11 @@ async fn run() -> Result<()> {
         tenant_bench::fx::erase::DEADLINE_MS.store(args.sealed_erasure_deadline_ms, Relaxed);
         ctl::erase::POLL_MS.store(args.sealed_erasure_poll_ms, Relaxed);
     }
+    // negative controls of the step 7b fix round, tests only
+    let ctl_env = |k: &str| std::env::var(k).map(|v| v == "1").unwrap_or(false);
+    tenant_bench::fx::hold::CONTROL_KEEP_VIEW.store(ctl_env("FENVIX_CONTROL_KEEP_VIEW"), std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::fx::hold::CONTROL_OP_HOLDS.store(ctl_env("FENVIX_CONTROL_OP_HOLDS"), std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::fx::erase::CONTROL_NO_OWNERSHIP.store(ctl_env("FENVIX_CONTROL_NO_OWNERSHIP"), std::sync::atomic::Ordering::Relaxed);
     if sealed_runs.is_some() || tenant_bench::envelope::START.load(std::sync::atomic::Ordering::Relaxed) {
         // T_pin and E1's wait (rules 6 and 26) apply to release E1 with or without sealed runs (`--envelopes write`)
         use std::sync::atomic::Ordering::Relaxed;

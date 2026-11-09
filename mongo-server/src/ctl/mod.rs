@@ -200,6 +200,7 @@ pub async fn start(dbs: Arc<Dbs>, server: Arc<crate::cmd::Server>, lc: Arc<Lifec
     durability::load_settings(&ctl).await;
     if !args.no_ctl_recovery {
         ops::recover(&ctl).await;
+        fork::recover_leases(&ctl).await;
     }
     usage::spawn_flusher(&ctl);
     pin::spawn_agent(&ctl);

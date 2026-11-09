@@ -144,7 +144,20 @@ pub async fn fork(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> ApiRes
     // writing. A process that already owns it refuses the fork (409 `owned_elsewhere`). When this process already held it
     // (an entry of its own is open on the name: the check below then finds the database), it is not released here.
     let ours = !ctl.dbs.leases.is_held(target);
-    ctl.dbs.leases.acquire(target).await?;
+    // Before the branch's lease is taken: a record that this process may hold it for a fork. A kill between the lease
+    // and the intent record (`fork_leased`) leaves a lease object of a database that does not exist, which no intent
+    // names; the recovery at the next start removes it through this record ([`recover_leases`]; review of step 7b, the
+    // `_lease` leftover of test_02b_fork_crash).
+    if ours {
+        rec::put(&ctl.store, &forking_path(target), &json!({ "holder": ctl.dbs.leases.holder, "source": src, "at_ms": now_ms() })).await?;
+    }
+    if let Err(e) = ctl.dbs.leases.acquire(target).await {
+        if ours {
+            rec::delete(&ctl.store, &forking_path(target)).await?;
+        }
+        return Err(e.into());
+    }
+    super::failpoint("fork.after_lease").await;
     let r = fork_leased(ctl, g, src, target, mode, &list, std::time::Instant::now()).await;
     if ours {
         // A fork that leaves no branch (refused, or rolled back) leaves no lease object either, like a database that turned
@@ -157,9 +170,91 @@ pub async fn fork(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> ApiRes
             ctl.dbs.leases.release(target).await;
         }
     }
+    if ours {
+        rec::delete(&ctl.store, &forking_path(target)).await?;
+    }
     // The branch's entry lock last: no command of this process opens the branch while the lease is being released.
     drop(gt);
     r
+}
+
+fn forking_path(target: &str) -> Path {
+    rec::path(&["control", "forking", &format!("{target}.json")])
+}
+
+/// At start, after the interrupted operations were finished (`ops::recover`): a fork killed between taking its branch's
+/// lease and writing its intent record left the lease of a database that does not exist. Remove it when this process
+/// took it (same holder), the branch has no registry record and no intent; then the record goes.
+/// A negative control of the step 7b fix round (tests only): the environment variable names a fix to switch off.
+pub(crate) fn control(name: &str) -> bool {
+    std::env::var(name).map(|v| v == "1").unwrap_or(false)
+}
+
+pub async fn recover_leases(ctl: &Arc<Ctl>) {
+    if control("FENVIX_CONTROL_NO_LEASE_RECOVERY") {
+        return;
+    }
+    let listed: Vec<Path> = match ctl.store.list(Some(&rec::path(&["control", "forking"]))).map_ok(|m| m.location).try_collect().await {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("ctl recovery: fork lease records not listed: {e}");
+            return;
+        }
+    };
+    for p in listed {
+        let target = p.filename().unwrap_or("").trim_end_matches(".json").to_string();
+        let r: anyhow::Result<()> = async {
+            let Some(m) = rec::get(&ctl.store, &p).await? else { return Ok(()) };
+            if m["holder"].as_str() != Some(ctl.dbs.leases.holder.as_str()) {
+                return Ok(()); // another process's fork: its own recovery handles it
+            }
+            if !meta::exists(ctl, &target).await? && ops::get(ctl, &target).await?.is_none() && crate::lease::holder_of(&ctl.store, &target).await?.as_deref() == Some(ctl.dbs.leases.holder.as_str()) {
+                // only a lone lease object: anything else under the name is data, never touched here
+                let objs: Vec<Path> = ctl.store.list(Some(&Path::from(purge::tenant_path(&target)))).map_ok(|m| m.location).try_collect().await?;
+                if !objs.is_empty() && objs.iter().all(|o| o.filename() == Some("_lease")) {
+                    for o in objs {
+                        rec::delete(&ctl.store, &o).await?;
+                    }
+                    eprintln!("ctl recovery: removed the lease of {target} left by a fork interrupted before its intent record");
+                }
+            }
+            rec::delete(&ctl.store, &p).await?;
+            Ok(())
+        }
+        .await;
+        if let Err(e) = r {
+            eprintln!("ctl recovery: fork lease record of {target}: {e:#}");
+        }
+    }
+}
+
+/// The name of the checkpoint `fork_paired` takes in the source for branch `target`: the fork's rollback finds it by it
+/// (review of step 7b, FIX 2).
+fn pairing_name(target: &str) -> String {
+    format!("fork-pairing:{target}")
+}
+
+/// Remove what a paired fork into `target` may have left in `src` (a kill between the pairing and its cleanup): the
+/// pairing checkpoint, found by its name, its pair, and any pair of `src` whose checkpoint no longer exists.
+async fn drop_pairing_leftovers(ctl: &Arc<Ctl>, src: &str, target: &str) -> anyhow::Result<()> {
+    let admin = Admin::builder(purge::tenant_path(src), Arc::clone(&ctl.store)).build();
+    if admin.read_manifest(None).await?.is_none() {
+        return Ok(());
+    }
+    let cps = admin.list_checkpoints(None).await?;
+    let name = pairing_name(target);
+    for c in cps.iter().filter(|c| c.name.as_deref() == Some(name.as_str())) {
+        admin.delete_checkpoint(c.id).await?;
+        tenant_bench::fx::pair::delete_pair(&ctl.store, src, &c.id).await?;
+    }
+    let live: std::collections::HashSet<String> = admin.list_checkpoints(None).await?.into_iter().map(|c| c.id.to_string()).collect();
+    let pairs: Vec<Path> = ctl.store.list(Some(&Path::from(format!("{}/pairs", tenant_bench::fx::manifest::root(src))))).map_ok(|m| m.location).try_collect().await?;
+    for p in pairs {
+        if !live.contains(p.filename().unwrap_or("")) {
+            rec::delete(&ctl.store, &p).await?;
+        }
+    }
+    Ok(())
 }
 
 /// [`fork`] once the locks and the branch's lease are held: `g` is the entry lock of the source (the caller holds the
@@ -292,8 +387,11 @@ async fn fork_paired(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> any
     use tenant_bench::fx::pair;
     let store = &ctl.store;
     let src_admin = Admin::builder(purge::tenant_path(src), Arc::clone(store)).build();
-    let (cp, p) = pair::checkpoint_paired(store, src, || async { Ok(src_admin.create_detached_checkpoint(&slatedb::config::CheckpointOptions::default()).await?) }).await?;
+    // named, so that the rollback of a fork killed before the cleanup below finds and deletes it (review of 7b, FIX 2)
+    let opts = slatedb::config::CheckpointOptions { name: Some(pairing_name(target)), ..Default::default() };
+    let (cp, p) = pair::checkpoint_paired(store, src, || async { Ok(src_admin.create_detached_checkpoint(&opts).await?) }).await?;
     let r = async {
+        super::failpoint("fork.after_pairing").await;
         if mode == "clone" {
             let admin = Admin::builder(purge::tenant_path(target), Arc::clone(store)).build();
             admin.create_clone_builder_from_source(slatedb::CloneSourceSpec::with_checkpoint(purge::tenant_path(src), cp.id)).build().await?;
@@ -345,6 +443,11 @@ pub async fn rollback(ctl: &Arc<Ctl>, target: &str, op: &Value) -> ApiResult<()>
 /// [`rollback`] for a caller that holds the branch's entry lock.
 async fn rollback_locked(ctl: &Arc<Ctl>, target: &str, op: &Value) -> ApiResult<()> {
     let chain: Vec<String> = op["ancestors"].as_array().map(|a| a.iter().filter_map(|a| a.as_str().map(|s| s.to_string())).collect()).unwrap_or_default();
+    if let Some(src) = op["source"].as_str() {
+        if !control("FENVIX_CONTROL_NO_PAIRING_CLEANUP") {
+            drop_pairing_leftovers(ctl, src, target).await?;
+        }
+    }
     let owners = tenant_bench::fx::pair::fork_ref_owners(&ctl.store, target, &chain).await?;
     purge::purge_tenant(ctl, target).await?;
     for a in &chain {

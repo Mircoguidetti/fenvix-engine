@@ -67,6 +67,8 @@ pub static CONTROL_NO_SCRUB: std::sync::atomic::AtomicBool = std::sync::atomic::
 pub static CONTROL_NO_DELTA_SCRUB: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 pub static CONTROL_NO_SEQ_BOUND: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 pub static CONTROL_NO_RETIRE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Negative control of the step 7b fix round (FIX 1): the retire step deletes a run whatever database owns it.
+pub static CONTROL_NO_OWNERSHIP: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 #[inline]
 fn ctl(f: &std::sync::atomic::AtomicBool) -> bool {
@@ -160,6 +162,10 @@ impl Targets {
 pub struct Retired {
     pub path: String,
     pub deleted_ms: Option<u64>,
+    /// A run of another database (an ancestor, for a `clone` fork): never deleted here; once nothing of this database
+    /// needs it, this database's fork reference in the owner stops naming it (released by reference).
+    #[serde(default)]
+    pub released_ms: Option<u64>,
     /// Why it is kept: "grace", "restore point {checkpoint}", "fork {db}".
     pub kept_by: Vec<String>,
 }
@@ -432,6 +438,41 @@ fn names(v: &Version) -> (Vec<&str>, Vec<Vec<u8>>) {
     (runs, keys)
 }
 
+/// Whether database `id` owns the object at `path` (it lives under `tenants/{id}/`). A database deletes only objects it
+/// owns: a `clone` fork's versions list runs of its ancestors, which those ancestors' versions may list too (review of
+/// step 7b, FIX 1). Step 4's GC, reseals and merges must delete runs only through [`delete_run`].
+pub fn owns(id: &str, path: &str) -> bool {
+    path.starts_with(&format!("{}/", crate::lifecycle::tenant_path(id)))
+}
+
+/// Delete a run of database `id`: refused for a run another database owns.
+pub async fn delete_run(store: &Arc<dyn ObjectStore>, id: &str, path: &str) -> Result<()> {
+    ensure!(owns(id, path) || ctl(&CONTROL_NO_OWNERSHIP), "database {id} does not own run {path}: never deleted by it");
+    match store.delete(&Path::from(path)).await {
+        Ok(()) | Err(object_store::Error::NotFound { .. }) => Ok(()),
+        Err(x) => Err(x.into()),
+    }
+}
+
+/// This database stops naming `path` in its fork reference in the run's owner (the shared run is released by
+/// reference; the owner's own versions and GC decide its life).
+async fn release_ref(store: &Arc<dyn ObjectStore>, id: &str, path: &str) -> Result<()> {
+    let Some(owner) = path.strip_prefix("tenants/").and_then(|r| r.split('/').next()) else { return Ok(()) };
+    let p = super::pair::fork_ref_path(owner, id);
+    let b = match store.get(&p).await {
+        Ok(g) => g.bytes().await?,
+        Err(object_store::Error::NotFound { .. }) => return Ok(()),
+        Err(e) => return Err(e.into()),
+    };
+    let mut r: super::pair::ForkRef = serde_json::from_slice(&b)?;
+    let n = r.runs.len();
+    r.runs.retain(|x| x != path);
+    if r.runs.len() != n {
+        store.put(&p, PutPayload::from(serde_json::to_vec(&r)?)).await?;
+    }
+    Ok(())
+}
+
 /// What keeps objects of a database alive besides the newest version: the versions named by pairs (restore points,
 /// exports) and fork references, with the name of what keeps them.
 pub async fn referenced_versions(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Vec<(u64, String, Vec<String>)>> {
@@ -482,7 +523,7 @@ pub async fn retire(store: &Arc<dyn ObjectStore>, id: &str, e: &mut Erasure, new
         kept.push((why.clone(), listed));
     }
     let no_retire = ctl(&CONTROL_NO_RETIRE);
-    for r in e.retired.iter_mut().filter(|r| r.deleted_ms.is_none()) {
+    for r in e.retired.iter_mut().filter(|r| r.deleted_ms.is_none() && r.released_ms.is_none()) {
         let mut by: Vec<String> = kept.iter().filter(|(_, l)| l.iter().any(|p| *p == r.path)).map(|(w, _)| w.clone()).collect();
         if in_grace {
             by.push("grace".into());
@@ -491,12 +532,16 @@ pub async fn retire(store: &Arc<dyn ObjectStore>, id: &str, e: &mut Erasure, new
             by.push("control".into());
         }
         if by.is_empty() {
-            match store.delete(&Path::from(r.path.as_str())).await {
-                Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
-                Err(x) => return Err(x.into()),
+            if owns(id, &r.path) || ctl(&CONTROL_NO_OWNERSHIP) {
+                delete_run(store, id, &r.path).await?;
+                r.deleted_ms = Some(now);
+                RUNS_RETIRED.fetch_add(1, Relaxed);
+            } else {
+                // a run of an ancestor: the rows in it are the ancestor's own data, erased (or not) by the ancestor
+                release_ref(store, id, &r.path).await?;
+                r.released_ms = Some(now);
+                by.push(format!("owned by database {}: released by reference, not deleted", r.path.strip_prefix("tenants/").and_then(|x| x.split('/').next()).unwrap_or("?")));
             }
-            r.deleted_ms = Some(now);
-            RUNS_RETIRED.fetch_add(1, Relaxed);
         }
         r.kept_by = by;
     }
@@ -533,7 +578,7 @@ pub async fn retire(store: &Arc<dyn ObjectStore>, id: &str, e: &mut Erasure, new
     if e.live_done_ms.is_none() {
         e.live_done_ms = Some(now);
     }
-    if e.retired.iter().all(|r| r.deleted_ms.is_some()) && e.versions_kept.is_empty() {
+    if e.retired.iter().all(|r| r.deleted_ms.is_some() || r.released_ms.is_some()) && e.versions_kept.is_empty() {
         e.done_ms.get_or_insert(now);
     }
     Ok(())
@@ -551,7 +596,7 @@ pub async fn record_scrub(store: &Arc<dyn ObjectStore>, id: &str, e: &mut Erasur
     e.scrubbed_ms = Some(now_ms());
     e.rows_erased = s.rows;
     e.runs_rewritten = s.runs;
-    e.retired = s.retired.iter().map(|p| Retired { path: p.clone(), deleted_ms: None, kept_by: vec!["grace".into()] }).collect();
+    e.retired = s.retired.iter().map(|p| Retired { path: p.clone(), deleted_ms: None, released_ms: None, kept_by: vec!["grace".into()] }).collect();
     e.boundaries_on_targets = boundaries_on(newest, t);
     save(store, id, e).await?;
     match store.delete(&keys_path(id, &e.id)).await {

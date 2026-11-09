@@ -2,7 +2,7 @@
 //! 2 fix 5; DECISIONS 2026-11-07), and the review notes 3, 4 and 5 of step 7a. The fork is tested end to end, through
 //! the control API, in `ctl-tests/test_48_c2_step7b_forks_erasure.py`.
 //!
-//! Negative controls: `FX_7B_CONTROL=keepcp|afteranswer|noscrub|nodelta|noseqbound|noretire|forkraw` removes one fix
+//! Negative controls: `FX_7B_CONTROL=keepcp|afteranswer|noscrub|nodelta|noseqbound|noretire|forkraw|noownership` removes one fix
 //! (the test that covers it must then fail).
 
 use super::build::{BuildOpts, Reseal};
@@ -53,6 +53,7 @@ fn settings(sealed: bool) {
     erase::CONTROL_NO_DELTA_SCRUB.store(control_is("nodelta"), Relaxed);
     erase::CONTROL_NO_SEQ_BOUND.store(control_is("noseqbound"), Relaxed);
     erase::CONTROL_NO_RETIRE.store(control_is("noretire"), Relaxed);
+    erase::CONTROL_NO_OWNERSHIP.store(control_is("noownership"), Relaxed);
     pair::CONTROL_KEEP_FAILED_CHECKPOINT.store(control_is("keepcp"), Relaxed);
     CONTROL_LOADED_AFTER_ANSWER.store(control_is("afteranswer"), Relaxed);
 }
@@ -398,6 +399,68 @@ async fn an_erasure_reports_its_deadline() {
     assert!(late.overdue(manifest::now_ms()), "an erasure past its deadline without a pass must say so");
     assert!(all.iter().find(|x| x.id == e.id).unwrap().overdue(manifest::now_ms()), "done after its deadline: still reported late");
     assert!(!all.iter().find(|x| x.id == e2.id).unwrap().overdue(manifest::now_ms()), "done in time");
+}
+
+/// Review of step 7b, FIX 1: an erasure inside a `clone` fork. The fork's first version lists its source's runs; the
+/// fork's scrub replaces them in the fork, and its retire step must never delete them (they are the source's, and the
+/// source's versions list them): it releases them from its fork reference instead. The source keeps every row and
+/// every run; the fork's erasure is done and the customer is gone from the fork's own objects. Control `noownership`.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn an_erasure_in_a_fork_never_deletes_a_run_of_its_source() {
+    let _s = super::tests::SERIAL.lock().await;
+    settings(true);
+    let _g = Grace0::new();
+    E1_WAIT_MS.store(0, Relaxed);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let (src, fork) = ("own-src", "own-fork");
+    erasure_setup(&store, src).await.close().await.unwrap();
+    let src_runs = |store: Arc<dyn ObjectStore>| async move {
+        let m: Vec<ObjectMeta> = store.list(Some(&Path::from(format!("{}/run", manifest::root(src))))).try_collect().await.unwrap();
+        m.into_iter().map(|m| m.location.to_string()).collect::<std::collections::BTreeSet<_>>()
+    };
+    let before = src_runs(Arc::clone(&store)).await;
+    let admin = slatedb::admin::Admin::builder(crate::lifecycle::tenant_path(src), Arc::clone(&store)).build();
+    let fadmin = slatedb::admin::Admin::builder(crate::lifecycle::tenant_path(fork), Arc::clone(&store)).build();
+    let (cp, p) = pair::checkpoint_paired(&store, src, || async { Ok(admin.create_detached_checkpoint(&slatedb::config::CheckpointOptions::default()).await?) }).await.unwrap();
+    fadmin.create_clone_builder_from_source(slatedb::CloneSourceSpec::with_checkpoint(crate::lifecycle::tenant_path(src), cp.id)).build().await.unwrap();
+    pair::seed_fork(&store, src, fork, p.as_ref().unwrap(), pair::ForkRuns::Shared).await.unwrap();
+    admin.delete_checkpoint(cp.id).await.unwrap();
+    pair::delete_pair(&store, src, &cp.id).await.unwrap();
+    let mut f = lc(&store).create(fork).await.unwrap();
+    let e = erase_a(&mut f).await;
+    let e = f.fx_erase_pass(&scrub_opts()).await.unwrap().into_iter().find(|x| x.id == e.id).unwrap();
+    let fork_a = f.get(a_key(3)).await.unwrap();
+    f.close().await.unwrap();
+    let after = src_runs(Arc::clone(&store)).await;
+    let deleted: Vec<&String> = before.difference(&after).collect();
+    let r: pair::ForkRef = serde_json::from_slice(&store.get(&pair::fork_ref_path(src, fork)).await.unwrap().bytes().await.unwrap()).unwrap();
+    let in_fork: Vec<String> = holders(&store, fork, ERASED).await.into_iter().filter(|p| p.contains("/fx/")).collect();
+    let s = lc(&store).wake(src).await.unwrap();
+    let mut lost = 0;
+    for i in 0..30 {
+        if s.get(a_key(i)).await.map(|v| v.is_none()).unwrap_or(true) || s.get(c_key(i)).await.map(|v| v.is_none()).unwrap_or(true) {
+            lost += 1;
+        }
+    }
+    s.abandon().await;
+    assert!(deleted.is_empty(), "the fork's erasure deleted {} runs of its source: {deleted:?}", deleted.len());
+    assert_eq!(lost, 0, "the source lost rows after an erasure in its fork");
+    assert!(fork_a.is_none());
+    assert!(in_fork.is_empty(), "the fork's own objects still hold the customer: {in_fork:?}");
+    assert!(e.done_ms.is_some(), "{e:?}");
+    for x in &e.retired {
+        if erase::owns(fork, &x.path) {
+            assert!(x.deleted_ms.is_some(), "the fork's own replaced run must go: {x:?}");
+        } else {
+            assert!(x.released_ms.is_some() && x.deleted_ms.is_none(), "a run of the source is released, never deleted: {x:?}");
+        }
+    }
+    assert!(e.retired.iter().any(|x| !erase::owns(fork, &x.path)), "the test must make the fork replace a run of its source: {e:?}");
+    assert!(e.retired.iter().all(|x| !r.runs.contains(&x.path)), "the released runs must leave the fork's reference: {:?}", r.runs);
+    assert!(!r.runs.is_empty() || before.len() <= e.retired.len(), "only the released runs leave the reference");
+    // and a direct delete of a run the database does not own is refused
+    let foreign = before.iter().next().unwrap();
+    assert!(erase::delete_run(&store, fork, foreign).await.is_err() || control_is("noownership"));
 }
 
 // ---- review notes of step 7a ----------------------------------------------------------------------------------------

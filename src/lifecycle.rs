@@ -1059,8 +1059,9 @@ impl Tenant {
 
     async fn fx_get(&self, v: &Arc<crate::fx::view::View>, key: &[u8], durable: bool) -> Result<Option<Bytes>> {
         self.fx_fresh()?;
-        let hold = self.holds.take(Arc::clone(v));
         crate::fx::hold::op_note(&self.holds, v);
+        let v = &crate::fx::hold::op_view(&self.holds, v);
+        let hold = self.holds.take(Arc::clone(v));
         let opts = slatedb::config::ReadOptions {
             durability_filter: if durable { slatedb::config::DurabilityLevel::Remote } else { slatedb::config::DurabilityLevel::Memory },
             ..Default::default()
@@ -1076,8 +1077,9 @@ impl Tenant {
 
     async fn fx_scan(&self, v: &Arc<crate::fx::view::View>, opts: &slatedb::config::ScanOptions, lo: &[u8], hi: Option<&[u8]>, reverse: bool, limit: Option<usize>) -> Result<Vec<(Bytes, Bytes)>> {
         self.fx_fresh()?;
-        let hold = self.holds.take(Arc::clone(v));
         crate::fx::hold::op_note(&self.holds, v);
+        let v = &crate::fx::hold::op_view(&self.holds, v);
+        let hold = self.holds.take(Arc::clone(v));
         let r = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
             Mode::Reader(r) => crate::fx::read::scan(&**r, opts, Some(v), self.env, lo, hi, reverse, limit).await?,
             Mode::Writer(db) => crate::fx::read::scan(db, opts, Some(v), self.env, lo, hi, reverse, limit).await?,
