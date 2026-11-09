@@ -1,0 +1,49 @@
+{
+  "_about": "List prices for cost.py. Every value has a label: DECLARED (vendor page, URL given, as reported by the fact-check of early Nov 2026), UNKNOWN (page not opened; where we looked is given). value null = UNKNOWN. On 2026-11-09 the benchmark session could not open aws.amazon.com, supabase.com, neon.com, mongodb.com or bytebase.com (sandbox network allowlist); fill the UNKNOWN values before the AWS round and keep the URL.",
+  "options": {
+    "aurora_standard": {
+      "target": "postgres",
+      "storage_gb_month": {"value": 0.10, "label": "DECLARED", "url": "https://aws.amazon.com/rds/aurora/pricing/"},
+      "io_per_million": {"value": 0.20, "label": "DECLARED", "url": "https://aws.amazon.com/rds/aurora/pricing/"},
+      "instance_hour": {"value": null, "label": "UNKNOWN", "instance": "db.r7g.large eu-west-1", "where_looked": "https://aws.amazon.com/rds/aurora/pricing/ (not reachable from the sandbox). Lead only, NOT verified: a web search snippet of bytebase.com/dbcost/aurora/instance/db.r7g.large says eu-west-1 on-demand $222/month (= $0.304/h at 730 h), without saying Standard or I/O-Optimized."}
+    },
+    "aurora_io_optimized": {
+      "target": "postgres",
+      "storage_gb_month": {"value": 0.225, "label": "DECLARED", "url": "https://aws.amazon.com/rds/aurora/pricing/"},
+      "io_per_million": {"value": 0.0, "label": "DECLARED", "url": "https://aws.amazon.com/rds/aurora/pricing/"},
+      "instance_hour": {"value": null, "label": "UNKNOWN", "instance": "db.r7g.large eu-west-1", "where_looked": "https://aws.amazon.com/rds/aurora/pricing/ (not reachable from the sandbox)"}
+    },
+    "supabase": {
+      "target": "postgres",
+      "storage_gb_month": {"value": 0.125, "label": "DECLARED", "url": "https://supabase.com/pricing", "note": "above 8 GB included"},
+      "io_per_million": {"value": 0.0, "label": "DECLARED", "url": "https://supabase.com/pricing", "note": "no I/O charge listed"},
+      "instance_hour": {"value": null, "label": "UNKNOWN", "instance": "compute size Large (2 vCPU dedicated, 8 GB) per runbooks/supabase.md", "where_looked": "https://supabase.com/pricing (not reachable from the sandbox)"}
+    },
+    "neon": {
+      "target": "postgres",
+      "storage_gb_month": {"value": 0.35, "label": "DECLARED", "url": "https://neon.com/pricing", "note": "updated 2026-11-04; history (PITR) $0.20/GB-month and snapshots $0.09/GB-month are extra and not modelled here"},
+      "io_per_million": {"value": 0.0, "label": "DECLARED", "url": "https://neon.com/pricing"},
+      "instance_hour": {"value": null, "label": "UNKNOWN", "instance": "2 CU fixed (2 vCPU, 8 GB) per runbooks/neon.md, price per CU-hour", "where_looked": "https://neon.com/pricing (not reachable from the sandbox)"}
+    },
+    "atlas_dedicated_m30": {
+      "target": "mongo",
+      "storage_gb_month": {"value": null, "label": "UNKNOWN", "where_looked": "https://www.mongodb.com/pricing (not reachable); M30 includes a storage allowance, extra storage price not gathered"},
+      "io_per_million": {"value": 0.0, "label": "DECLARED", "url": "https://www.mongodb.com/pricing", "note": "no per-request charge"},
+      "instance_hour": {"value": 0.54, "label": "DECLARED", "url": "https://www.mongodb.com/pricing", "note": "M30, 3-node replica set price as listed"}
+    },
+    "atlas_infinite_m30": {
+      "target": "mongo",
+      "storage_gb_month": {"value": 0.30, "label": "DECLARED", "url": "https://www.mongodb.com/pricing", "note": "Infinite is in preview"},
+      "io_per_million": {"value": 0.0, "label": "DECLARED", "url": "https://www.mongodb.com/pricing"},
+      "instance_hour": {"value": 0.677, "label": "DECLARED", "url": "https://www.mongodb.com/pricing", "note": "Infinite M30 Gen2"}
+    },
+    "fenvix_s3_floor": {
+      "target": "fenvix",
+      "_note": "NOT a list price: Fenvix has none yet. This is the AWS cost floor of our storage (S3 Standard) plus requests; the machine is left UNKNOWN until the step9 kitchen size is fixed.",
+      "storage_gb_month": {"value": 0.023, "label": "DECLARED", "url": "https://aws.amazon.com/s3/pricing/"},
+      "put_per_1000": {"value": 0.005, "label": "DECLARED", "url": "https://aws.amazon.com/s3/pricing/"},
+      "get_per_1000": {"value": 0.0004, "label": "DECLARED", "url": "https://aws.amazon.com/s3/pricing/"},
+      "instance_hour": {"value": null, "label": "UNKNOWN", "where_looked": "step9 kitchen machine not chosen in this session"}
+    }
+  }
+}

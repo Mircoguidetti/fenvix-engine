@@ -1,0 +1,83 @@
+{
+  "note": "LOCAL runs are validation, not results",
+  "framework": "mastra",
+  "store": "pg",
+  "turns": 599,
+  "threads": 41,
+  "messages": 1952,
+  "write_seconds": 5.462,
+  "logical_message_bytes": 4116719,
+  "latency_ms": {
+    "erase_user": {
+      "n": 2,
+      "p50": 19.49,
+      "p99": 19.49,
+      "max": 19.49
+    },
+    "list": {
+      "n": 30,
+      "p50": 1.311,
+      "p99": 5.338,
+      "max": 5.338
+    },
+    "resume[first]": {
+      "n": 41,
+      "p50": 0.498,
+      "p99": 2.052,
+      "max": 2.052
+    },
+    "resume[long]": {
+      "n": 8,
+      "p50": 0.859,
+      "p99": 1.084,
+      "max": 1.084
+    },
+    "resume[none]": {
+      "n": 536,
+      "p50": 1.045,
+      "p99": 3.149,
+      "max": 7.97
+    },
+    "resume[short]": {
+      "n": 14,
+      "p50": 0.85,
+      "p99": 1.522,
+      "max": 1.522
+    },
+    "resume_last40[first]": {
+      "n": 41,
+      "p50": 0.448,
+      "p99": 2.769,
+      "max": 2.769
+    },
+    "resume_last40[long]": {
+      "n": 8,
+      "p50": 0.804,
+      "p99": 1.188,
+      "max": 1.188
+    },
+    "resume_last40[none]": {
+      "n": 536,
+      "p50": 0.994,
+      "p99": 4.475,
+      "max": 7.802
+    },
+    "resume_last40[short]": {
+      "n": 14,
+      "p50": 0.785,
+      "p99": 1.23,
+      "max": 1.23
+    },
+    "save_step": {
+      "n": 1952,
+      "p50": 1.806,
+      "p99": 5.046,
+      "max": 32.752
+    }
+  },
+  "erase": {
+    "users": 2,
+    "messages_left": 0
+  },
+  "ok": true
+}

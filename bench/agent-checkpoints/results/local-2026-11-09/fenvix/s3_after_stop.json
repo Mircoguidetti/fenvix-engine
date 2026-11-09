@@ -1,0 +1,1 @@
+{"total": 145244757, "objects": 25, "by_kind": {"_clean": 5, "_lease": 50, "compacted": 145211430, "compactions": 1250, "gc": 4, "manifest": 4714, "wal": 27304}, "count_by_kind": {"_clean": 1, "_lease": 1, "compacted": 18, "compactions": 1, "gc": 2, "manifest": 1, "wal": 1}}

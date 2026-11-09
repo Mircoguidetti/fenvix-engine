@@ -1,0 +1,66 @@
+{
+  "seed": 42,
+  "profile": "small",
+  "users": 20,
+  "threads": 41,
+  "turns": 599,
+  "gaps": {
+    "first": 41,
+    "none": 536,
+    "short": 14,
+    "long": 8
+  },
+  "chat": {
+    "threads": 38,
+    "turns": {
+      "p50": 10,
+      "p90": 33,
+      "p99": 73,
+      "max": 73,
+      "n": 38
+    },
+    "full_copy_MB": {
+      "p50": 0.316,
+      "p90": 4.32,
+      "p99": 18.543,
+      "max": 18.543,
+      "n": 38
+    },
+    "full_copy_MB_mean": 1.729,
+    "content_KB": {
+      "p50": 22.7,
+      "p90": 88.9,
+      "p99": 173.7,
+      "max": 173.7,
+      "n": 38
+    }
+  },
+  "coding": {
+    "threads": 3,
+    "turns": {
+      "p50": 9,
+      "p90": 13,
+      "p99": 13,
+      "max": 13,
+      "n": 3
+    },
+    "full_copy_MB": {
+      "p50": 5.698,
+      "p90": 9.088,
+      "p99": 9.088,
+      "max": 9.088,
+      "n": 3
+    },
+    "full_copy_MB_mean": 5.499,
+    "content_KB": {
+      "p50": 155.3,
+      "p90": 183.2,
+      "p99": 183.2,
+      "max": 183.2,
+      "n": 3
+    }
+  },
+  "checkpoints_total": 1952,
+  "full_copy_GB_total": 0.0822,
+  "full_copy_MB_mean_all_threads": 2.005
+}

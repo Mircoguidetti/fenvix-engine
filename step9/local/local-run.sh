@@ -61,7 +61,8 @@ PY
   mkdir -p "$W/bin/mongo-server-x86_64" "$W/bin/pq-x86_64"
   cp "$SRV" "$W/bin/mongo-server-x86_64/mongo-server"; echo "local $(cd "$ENG" && git rev-parse --short HEAD)" > "$W/bin/mongo-server-x86_64/motore-commit.txt"
   cp "$PQ" "$W/bin/pq-x86_64/pq"
-  S9=$S9 K=$W/kitchen-small CA_DIR=$CA_DIR PACKAGES=$PACKAGES BIN=$W/bin ATLAS_TGZ=$W/atlas-$name.tgz PANTRY=unused \
+  S9=$S9 K=$W/kitchen-small CA_DIR=$CA_DIR PACKAGES=$PACKAGES BIN=$W/bin ATLAS_TGZ=$W/atlas-$name.tgz \
+    PANTRY=$("$PY" "$S9/machine/cfg.py" "$W/resolved-$name.json" pantry_name) LOAD=$("$PY" -c "import json,sys; print(1 if json.load(open(sys.argv[1]))['atlas_load'] else 0)" "$W/resolved-$name.json") \
     WAIT_COOK_MIN=120 bash "$S9/ci/packages.sh" > "packages-$name.txt" 2>&1 || { tail -5 "packages-$name.txt"; return 1; }
   grep -E "^(client|node)" "packages-$name.txt"
   echo "-- run.py"

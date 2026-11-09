@@ -1,0 +1,118 @@
+mongo-server listening on 127.0.0.1:27202 (idle close after 60 s, holder agentbench, lease ttl 30 s)
+LEASE process_lease tenant=- holder=agentbench unix_ms=1794228008570 inc=83baaaced96f491a gen=1
+LEASE acquired tenant=app_demo holder=agentbench unix_ms=1794228008573 takeover_from=-
+LEASE acquired tenant=app_demo holder=agentbench unix_ms=1794228008607 takeover_from=-
+LEASE acquired tenant=app_demo holder=agentbench unix_ms=1794228008615 takeover_from=-
+LEASE acquired tenant=app_demo holder=agentbench unix_ms=1794228008624 takeover_from=-
+LEASE acquired tenant=app_demo holder=agentbench unix_ms=1794228008631 takeover_from=-
+LEASE acquired tenant=app_demo holder=agentbench unix_ms=1794228008639 takeover_from=- new=true
+LEASE writer_open tenant=app_demo holder=agentbench unix_ms=1794228008653 
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+UNKNOWN COMMAND "fenvixSstInfo" db=app_demo
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SSTGC begin tenant=app_demo unix_ms=1794228069335
+SSTGC end tenant=app_demo unix_ms=1794228069367 deleted_ssts=0 deleted_manifests=0 referenced=17 waiting=82
+LEASE acquired tenant=app_chat holder=agentbench unix_ms=1794228094020 takeover_from=-
+LEASE acquired tenant=app_chat holder=agentbench unix_ms=1794228094033 takeover_from=-
+LEASE acquired tenant=app_chat holder=agentbench unix_ms=1794228094042 takeover_from=- new=true
+LEASE writer_open tenant=app_chat holder=agentbench unix_ms=1794228094064 
+SLOW hello db=admin ms=10000 ok=true
+LEASE writer_close tenant=app_demo holder=agentbench unix_ms=1794228112419 
+LEASE release_begin tenant=app_demo holder=agentbench unix_ms=1794228112419 
+LEASE release tenant=app_demo holder=agentbench unix_ms=1794228112422 ok=true
+SLOW hello db=admin ms=10000 ok=true
+LEASE writer_close tenant=app_chat holder=agentbench unix_ms=1794228186617 
+LEASE release_begin tenant=app_chat holder=agentbench unix_ms=1794228186617 
+LEASE release tenant=app_chat holder=agentbench unix_ms=1794228186620 ok=true
+shutting down: closing tenants cleanly
+tenants closed; stopping maintenance
+maintenance stopped

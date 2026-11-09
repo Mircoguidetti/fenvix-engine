@@ -30,8 +30,8 @@ gid() { aws ec2 describe-security-groups --filters Name=group-name,Values="$1" -
 GC=$(gid "$G-client"); GK=$(gid "$G-kitchen")
 try "ec2:AuthorizeSecurityGroupIngress (27017-27018, 7200 from client and kitchen; 7100 inside the kitchen)" aws ec2 authorize-security-group-ingress --group-id "$GK" \
   --ip-permissions "IpProtocol=tcp,FromPort=27017,ToPort=27018,UserIdGroupPairs=[{GroupId=$GC},{GroupId=$GK}]" \
-  "IpProtocol=tcp,FromPort=7200,ToPort=7200,UserIdGroupPairs=[{GroupId=$GC},{GroupId=$GK}]" "IpProtocol=tcp,FromPort=7100,ToPort=7100,UserIdGroupPairs=[{GroupId=$GK}]"
-try "ec2:RevokeSecurityGroupIngress (teardown)" aws ec2 revoke-security-group-ingress --group-id "$GK" --ip-permissions "IpProtocol=tcp,FromPort=7100,ToPort=7100,UserIdGroupPairs=[{GroupId=$GK}]"
+  "IpProtocol=tcp,FromPort=7200,ToPort=7201,UserIdGroupPairs=[{GroupId=$GC},{GroupId=$GK}]" "IpProtocol=tcp,FromPort=7100,ToPort=7101,UserIdGroupPairs=[{GroupId=$GK}]"
+try "ec2:RevokeSecurityGroupIngress (teardown)" aws ec2 revoke-security-group-ingress --group-id "$GK" --ip-permissions "IpProtocol=tcp,FromPort=7100,ToPort=7101,UserIdGroupPairs=[{GroupId=$GK}]"
 try "ec2:DeleteSecurityGroup (kitchen)" aws ec2 delete-security-group --group-id "$GK"
 try "ec2:DeleteSecurityGroup (client)" aws ec2 delete-security-group --group-id "$GC"
 try "iam:GetInstanceProfile ($MACHINE_ROLE)" aws iam get-instance-profile --instance-profile-name "$MACHINE_ROLE" --query 'InstanceProfile.Roles[0].RoleName' --output text

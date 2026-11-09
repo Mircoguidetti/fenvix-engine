@@ -7,7 +7,7 @@
 #   node-ARCH.tar.gz     one per CPU: mongo-server and pq built from the engine ref, the kitchen server helpers, the
 #                        step 9 machine scripts; for the roles log, loader, cook, spare, compactor.
 # Variables: S9 (step9 folder), K (kitchen folder), PACKAGES, CA_DIR, BIN (mongo-server-ARCH/ and pq-ARCH/ folders),
-# ATLAS_TGZ, PANTRY, WAIT_COOK_MIN.
+# ATLAS_TGZ, PANTRY (the resolved pantry name), LOAD (1 = the client loads the Atlas databases), WAIT_COOK_MIN.
 set -euo pipefail
 mkdir -p "$PACKAGES"
 vendor() { # vendor FOLDER CPU PACKAGES...: Python libraries for Ubuntu 24.04's Python 3.12 on that CPU
@@ -17,7 +17,7 @@ vendor() { # vendor FOLDER CPU PACKAGES...: Python libraries for Ubuntu 24.04's 
 }
 # 1. the kitchen's client package, built by the kitchen's own script (its SOURCES.md5 check included)
 kp=$(mktemp -d)
-C="$K" PACKAGES="$kp" CA_DIR="$CA_DIR" PANTRY="$PANTRY" LOAD=1 PROGRAM=m30-corto LOAD_PLAN=m30-corto ATLAS_TGZ="$ATLAS_TGZ" \
+C="$K" PACKAGES="$kp" CA_DIR="$CA_DIR" PANTRY="$PANTRY" LOAD="$LOAD" PROGRAM=m30-corto LOAD_PLAN=m30-corto ATLAS_TGZ="$ATLAS_TGZ" \
   BIN="$BIN" bash "$K/ci/packages.sh" > "$PACKAGES/kitchen-packages.txt"
 grep -E "^client" "$PACKAGES/kitchen-packages.txt"
 d=$(mktemp -d); tar xzf "$kp/client.tar.gz" -C "$d"

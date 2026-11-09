@@ -98,9 +98,10 @@ class AwsPlatform(Buckets):
         # kitchen: 27017-27018 (our server, the takeover pair) and 7200 (log clients) from the client group and from the
         # kitchen itself; 7100 (log replicas between them) only inside the kitchen. No port from the internet.
         k, c = self.group["kitchen"], self.group["client"]
+        # (7101/7201: the separate log group of the raw log-ack benchmark, see machine/log.sh)
         perms = [{"IpProtocol": "tcp", "FromPort": 27017, "ToPort": 27018, "UserIdGroupPairs": [{"GroupId": c}, {"GroupId": k}]},
-                 {"IpProtocol": "tcp", "FromPort": 7200, "ToPort": 7200, "UserIdGroupPairs": [{"GroupId": c}, {"GroupId": k}]},
-                 {"IpProtocol": "tcp", "FromPort": 7100, "ToPort": 7100, "UserIdGroupPairs": [{"GroupId": k}]}]
+                 {"IpProtocol": "tcp", "FromPort": 7200, "ToPort": 7201, "UserIdGroupPairs": [{"GroupId": c}, {"GroupId": k}]},
+                 {"IpProtocol": "tcp", "FromPort": 7100, "ToPort": 7101, "UserIdGroupPairs": [{"GroupId": k}]}]
         self.ec2.authorize_security_group_ingress(GroupId=k, IpPermissions=perms)
         for arch, ssm_arch in (("x86_64", "amd64"), ("aarch64", "arm64")):
             self.ami[arch] = self.ssm.get_parameter(

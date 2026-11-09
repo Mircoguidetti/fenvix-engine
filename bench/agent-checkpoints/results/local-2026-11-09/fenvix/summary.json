@@ -1,0 +1,311 @@
+{
+  "note": "LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+  "target": "fenvix",
+  "label": "local mongo-server on MinIO",
+  "profile": "small",
+  "seed": 42,
+  "workers": 1,
+  "plan": {
+    "threads": 41,
+    "turns": 599,
+    "digest": "1618df2b0b847193"
+  },
+  "client": {
+    "python": "3.12.15",
+    "host": "vm"
+  },
+  "write": {
+    "seconds": 23.982,
+    "errors": [],
+    "steps_per_second": 106.37
+  },
+  "read": {
+    "threads_read": 30,
+    "inconsistencies": 0
+  },
+  "erase": {
+    "users_erased": 2,
+    "threads_erased": 3,
+    "threads_left_readable": 0
+  },
+  "latency_ms": {
+    "delete_thread": {
+      "n": 3,
+      "p50": 35.118,
+      "p90": 46.045,
+      "p99": 46.045,
+      "max": 46.045,
+      "mean": 35.266
+    },
+    "erase_user": {
+      "n": 2,
+      "p50": 70.772,
+      "p90": 70.772,
+      "p99": 70.772,
+      "max": 70.772,
+      "mean": 52.969
+    },
+    "list": {
+      "n": 30,
+      "p50": 142.836,
+      "p90": 770.879,
+      "p99": 1330.503,
+      "max": 1330.503,
+      "mean": 252.158
+    },
+    "list_limit10": {
+      "n": 30,
+      "p50": 17.701,
+      "p90": 35.942,
+      "p99": 57.068,
+      "max": 57.068,
+      "mean": 20.067
+    },
+    "put": {
+      "n": 2551,
+      "p50": 6.004,
+      "p90": 9.355,
+      "p99": 21.702,
+      "max": 109.42,
+      "mean": 6.785
+    },
+    "put[chat]": {
+      "n": 2290,
+      "p50": 5.906,
+      "p90": 9.266,
+      "p99": 21.702,
+      "max": 109.42,
+      "mean": 6.699
+    },
+    "put[coding]": {
+      "n": 261,
+      "p50": 6.689,
+      "p90": 10.633,
+      "p99": 22.622,
+      "max": 37.829,
+      "mean": 7.533
+    },
+    "put_writes": {
+      "n": 1952,
+      "p50": 4.906,
+      "p90": 8.808,
+      "p99": 21.948,
+      "max": 82.699,
+      "mean": 5.945
+    },
+    "resume[erase_verify]": {
+      "n": 3,
+      "p50": 0.841,
+      "p90": 1.029,
+      "p99": 1.029,
+      "max": 1.029,
+      "mean": 0.852
+    },
+    "resume[read]": {
+      "n": 30,
+      "p50": 5.638,
+      "p90": 10.062,
+      "p99": 11.744,
+      "max": 11.744,
+      "mean": 5.883
+    },
+    "resume[write/first]": {
+      "n": 41,
+      "p50": 0.858,
+      "p90": 2.682,
+      "p99": 3.221,
+      "max": 3.221,
+      "mean": 1.327
+    },
+    "resume[write/long]": {
+      "n": 8,
+      "p50": 7.214,
+      "p90": 11.141,
+      "p99": 11.141,
+      "max": 11.141,
+      "mean": 6.597
+    },
+    "resume[write/none]": {
+      "n": 536,
+      "p50": 2.537,
+      "p90": 4.526,
+      "p99": 7.339,
+      "max": 12.698,
+      "mean": 2.894
+    },
+    "resume[write/short]": {
+      "n": 14,
+      "p50": 2.061,
+      "p90": 3.26,
+      "p99": 10.76,
+      "max": 10.76,
+      "mean": 2.751
+    },
+    "save_step": {
+      "n": 2551,
+      "p50": 10.449,
+      "p90": 17.219,
+      "p99": 38.087,
+      "max": 192.119,
+      "mean": 11.333
+    },
+    "save_step[chat]": {
+      "n": 2290,
+      "p50": 10.357,
+      "p90": 17.183,
+      "p99": 39.773,
+      "max": 192.119,
+      "mean": 11.226
+    },
+    "save_step[coding]": {
+      "n": 261,
+      "p50": 11.091,
+      "p90": 17.436,
+      "p99": 30.873,
+      "max": 70.813,
+      "mean": 12.273
+    },
+    "time_travel": {
+      "n": 90,
+      "p50": 2.389,
+      "p90": 3.507,
+      "p99": 6.454,
+      "max": 6.454,
+      "mean": 2.568
+    }
+  },
+  "bytes": {
+    "checkpoints": 2551,
+    "put_writes_calls": 1952,
+    "checkpoint_bytes": 139707606,
+    "writes_bytes": 2336887,
+    "message_payload_bytes_all_checkpoints": 138599529,
+    "unique_message_bytes": 2359166,
+    "logical_total": 142044493,
+    "stored": 295752619,
+    "stored_from": "S3 objects under tenants/app_demo/",
+    "stored_per_logical": 2.0821,
+    "stored_per_checkpoint": 115936.0
+  },
+  "sizes": {
+    "dbStats": {
+      "objects": 5856,
+      "dataSize": 143726437,
+      "storageSize": 143726437,
+      "indexSize": 1162919,
+      "totalSize": 144889356
+    },
+    "collStats": {
+      "checkpoint_writes": {
+        "count": 3305,
+        "size": 3252661,
+        "storageSize": 3252661,
+        "totalIndexSize": 770065
+      },
+      "checkpoints": {
+        "count": 2551,
+        "size": 140473776,
+        "storageSize": 140473776,
+        "totalIndexSize": 392854
+      }
+    },
+    "s3": {
+      "total": 295752619,
+      "objects": 931,
+      "by_kind": {
+        "_lease": 86,
+        "compacted": 274970458,
+        "compactions": 36962,
+        "manifest": 87894,
+        "wal": 20657219
+      },
+      "count_by_kind": {
+        "_lease": 1,
+        "compacted": 33,
+        "compactions": 33,
+        "manifest": 35,
+        "wal": 829
+      }
+    },
+    "stored_bytes": 295752619,
+    "stored_from": "S3 objects under tenants/app_demo/",
+    "serverStatus_s3": {
+      "get": 473,
+      "getRange": 2359,
+      "head": 15,
+      "list": 87,
+      "put": 4584,
+      "multipartPart": 0,
+      "copy": 0,
+      "delete": 3651,
+      "getBytes": 268737937,
+      "putBytes": 421678728
+    }
+  },
+  "sizes_after_erase": {
+    "dbStats": {
+      "objects": 5208,
+      "dataSize": 123501910,
+      "storageSize": 123501910,
+      "indexSize": 1033028,
+      "totalSize": 124534938
+    },
+    "collStats": {
+      "checkpoint_writes": {
+        "count": 2924,
+        "size": 2805406,
+        "storageSize": 2805406,
+        "totalIndexSize": 681292
+      },
+      "checkpoints": {
+        "count": 2284,
+        "size": 120696504,
+        "storageSize": 120696504,
+        "totalIndexSize": 351736
+      }
+    },
+    "s3": {
+      "total": 278775137,
+      "objects": 357,
+      "by_kind": {
+        "_lease": 86,
+        "compacted": 274970458,
+        "compactions": 36962,
+        "manifest": 87894,
+        "wal": 3679737
+      },
+      "count_by_kind": {
+        "_lease": 1,
+        "compacted": 33,
+        "compactions": 33,
+        "manifest": 35,
+        "wal": 255
+      }
+    },
+    "stored_bytes": 278775137,
+    "stored_from": "S3 objects under tenants/app_demo/",
+    "serverStatus_s3": {
+      "get": 474,
+      "getRange": 2359,
+      "head": 15,
+      "list": 87,
+      "put": 4591,
+      "multipartPart": 0,
+      "copy": 0,
+      "delete": 4231,
+      "getBytes": 268742411,
+      "putBytes": 421767243
+    }
+  },
+  "s3_put_requests_during_write": 4579,
+  "delta_test": {
+    "test": "agent checkpoint delta test",
+    "target": "fenvix",
+    "stored_bytes_source": "UNKNOWN until fenvixSstInfo exists (compaction 2 steps 4-8)",
+    "threads": 41,
+    "logical_bytes": 142044493,
+    "unique_bytes": 2359166,
+    "stored_bytes": null
+  },
+  "ok": true
+}

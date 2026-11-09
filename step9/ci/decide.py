@@ -24,10 +24,10 @@ Fields of step9/command.json (defaults in brackets):
   takeovers_args, log_ack_args, s3_first_byte_args, sealed_run_args, ballast_rounds_args: extra arguments [see DEFAULTS]
   spend_cap     dollars; the round blocks itself there [5]. Above 5 only with "cap_approved": "<date, the founder's yes>"
   ceiling_min   minutes after which the round stops and every machine powers off [330, at most 340]
-Usage: decide.py COMMAND_JSON RESOLVED_OUT [VCPU_QUOTA]
+Usage: decide.py COMMAND_JSON RESOLVED_OUT [VCPU_QUOTA]   (RUN_ID in the environment: the GitHub run id)
 Prints key=value lines (for GITHUB_OUTPUT) and exits 1 with "REFUSED: reason" if the command is not allowed."""
 import json
-import math
+import os
 import re
 import sys
 
@@ -112,6 +112,10 @@ def resolve(raw, quota=None):
             refuse("an existing pantry already has the Atlas databases: phase load only adds ballast (data 100gb or 1tb)")
     else:
         refuse("pantry: new, keep, or fenvix-kitchen-pantry-<digits>")
+    # the pantry's name, known before the packages are built (the client needs it): new = deleted at the end, keep =
+    # the prefix of the minimal kitchen's kept pantries (teardown never deletes it), or the existing one
+    run = os.environ.get("RUN_ID", "0")
+    c["pantry_name"] = {"new": f"fenvix-coldread-s9d-{run}", "keep": f"fenvix-kitchen-pantry-{run}"}.get(c["pantry_mode"], p)
     if c["pantry_mode"] in ("new", "keep") and "load" not in c["phases"]:
         refuse("a new pantry is empty: the round must load")
     if c["mode"] == "drop-pantry" and c["pantry_mode"] != "existing":

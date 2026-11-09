@@ -1,0 +1,16 @@
+VALIDATION, NOT RESULTS. Local sandbox vm, 4 vCPU, client and databases on one machine, MinIO for S3.
+engine commit 73b78a9; profile small; seed 42; 2026-11-09T12:40:07Z
+langchain-core==1.7.6
+langgraph==1.2.20
+langgraph-checkpoint==4.3.1
+langgraph-checkpoint-mongodb==0.5.1
+langgraph-checkpoint-postgres==3.2.0
+langgraph-prebuilt==1.1.1
+langgraph-sdk==0.4.14
+psycopg==3.3.8
+psycopg-binary==3.3.8
+psycopg-pool==3.3.3
+pymongo==4.19.0
+pymongo-search-utils==0.3.1
+db version v7.0.34
+postgres (PostgreSQL) 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)

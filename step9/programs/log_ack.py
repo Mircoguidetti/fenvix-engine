@@ -5,11 +5,11 @@ Two measures:
           our server + one round of the log (leader, then 2 of 3 copies fsynced). One writer, then CONC writers at once.
           Database s9_logack (not one of the measured databases; dropped at the end).
   raw     the log alone, without our server: `pq commit` (proto/quaderno bench) from this client to the three log nodes,
-          at 1, 8 and 64 commits in flight, 20 s each. Its records belong to databases that no engine owns (random ids of
-          the bench), so the cook never replays them; they stay in the log's window until it drops them.
+          at 1, 8 and 64 commits in flight, 20 s each, on the SEPARATE log group of each node (port 7201, same machines,
+          same disks, same network): the bench's records are not engine records and must never enter the kitchen's log.
 Raw lines in OUT/log-ack.jsonl (engine), OUT/log-ack-raw.txt (pq output); summary in OUT/log-ack-summary.json.
 Cost: no S3 request beyond the cook's own uploads; seconds of machine time already paid by the round.
-Usage: log_ack.py OUT --uri URI --logs IP:7200,IP:7200,IP:7200 [--n 1000] [--conc 8,64] [--secs 20] [--pq ./pq]"""
+Usage: log_ack.py OUT --uri URI --logs IP:7201,IP:7201,IP:7201 (the bench group) [--n 1000] [--conc 8,64] [--secs 20] [--pq ./pq]"""
 import argparse
 import json
 import os

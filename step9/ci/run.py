@@ -45,10 +45,7 @@ CAP = float(cmd["spend_cap"])
 CEILING_MIN = float(cmd["ceiling_min"])
 DISK_GB = int(os.environ.get("DISK_GB", "20"))
 BUCKET = f"fenvix-coldread-s9-{RUN}"
-# the pantry: new and deleted at the end (fenvix-coldread-s9d-<run>), new and KEPT for later rounds
-# (fenvix-kitchen-pantry-<run>, the prefix of the minimal kitchen's kept pantries, which teardown never deletes), or an
-# existing kept pantry loaded by earlier rounds
-PANTRY = {"new": f"fenvix-coldread-s9d-{RUN}", "keep": f"fenvix-kitchen-pantry-{RUN}"}.get(cmd["pantry_mode"], cmd["pantry"])
+PANTRY = cmd["pantry_name"]   # decided by decide.py (new, kept, or an existing kept pantry)
 T0 = time.time()
 plat = infra.make(MODE)
 s3 = plat.s3
@@ -357,7 +354,7 @@ try:
     extras = [p for p in cmd["programs"] if p != "m30"]
     if "extras" in PHASES and extras and mid1:
         say(f"7/8 the extras client: {extras}")
-        put("extras/config.json", {"programs": extras, "pantry": PANTRY, "logs": LOGS,
+        put("extras/config.json", {"programs": extras, "pantry": PANTRY, "logs": LOGS, "bench_logs": LOGS.replace(":7200", ":7201"),
                                    "cook": {"ip": ip1, "port": 27017}, "spare": {"ip": sp[1]} if sp else {},
                                    **{k: v for k, v in cmd.items() if k.endswith("_args")}})
         ex_id, _ = launch("extras", "extras", cmd["client"], infra.ZONES[0])

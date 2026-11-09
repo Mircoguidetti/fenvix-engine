@@ -5,6 +5,10 @@
 # Flow: this node's address -> wait for log/peers.json from the runner (the three private IPs, written once all three
 # machines exist) -> pq replica (peer port 7100, client port 7200) -> "ready" -> every PUSH_S logs, CPU and memory to
 # the bucket -> on "stop": SIGTERM, final logs, "stopped", power off.
+# A SECOND, separate log group runs beside it on ports 7101/7201 (own folder): only the raw log-ack benchmark
+# (programs/log_ack.py, `pq commit`) writes there. Its records are not engine records; written into the kitchen's log
+# they make every engine restart and takeover refuse to start ("a record of the log has a bad checksum": found by the
+# local validation of 2026-11-09).
 # Usage: log.sh NAME BUCKET   (NAME = log-0, log-1 or log-2; the number is the replica id)
 set -u
 cd "$(dirname "$0")" || exit 1
@@ -12,9 +16,10 @@ NAME=$1; BUCKET=$2; P=$NAME
 ID=${NAME#log-}
 source ./common.sh
 DIR=${LOG_DIR:-/var/lib/fenvix-log}
-mkdir -p "$DIR"
+mkdir -p "$DIR" "$DIR-bench"
 finish() {
   step "finish: $1"
+  [ -n "${BENCH_PID:-}" ] && kill -TERM "$BENCH_PID" 2>/dev/null
   if [ -n "${PQ_PID:-}" ]; then kill -TERM "$PQ_PID" 2>/dev/null; for _ in $(seq 1 20); do kill -0 "$PQ_PID" 2>/dev/null || break; sleep 1; done
     kill -KILL "$PQ_PID" 2>/dev/null; fi
   [ -n "${CPU_PID:-}" ] && kill "$CPU_PID" 2>/dev/null
@@ -31,13 +36,17 @@ put_json "$P/hello.json" "{\"ip\": \"$IP\", \"az\": \"$AZ\", \"type\": \"$TYPE\"
 for _ in $(seq 1 120); do exists log/peers.json && break; sleep 5; done
 $PY s3io.py get "$BUCKET" log/peers.json out/peers.json || finish NO_PEERS
 # peers: every other replica as id=ip:7100
-PEERS=$($PY -c "import json,sys; d=json.load(open('out/peers.json')); print(','.join(f'{i}={ip}:7100' for i, ip in enumerate(d['ips']) if str(i) != sys.argv[1]))" "$ID")
+peers() { $PY -c "import json,sys; d=json.load(open('out/peers.json')); print(','.join(f'{i}={ip}:{sys.argv[2]}' for i, ip in enumerate(d['ips']) if str(i) != sys.argv[1]))" "$ID" "$1"; }
+PEERS=$(peers 7100)
 CMD=(./pq replica --id "$ID" --dir "$DIR" --peer-listen "0.0.0.0:7100" --client-listen "0.0.0.0:7200" --peers "$PEERS")
 [ -n "${LOG_OPTIONS:-}" ] && read -ra MORE <<<"$LOG_OPTIONS" && CMD+=("${MORE[@]}")
 echo "${CMD[*]}" > out/log-command.txt
 step "start: ${CMD[*]}"
 "${CMD[@]}" > out/pq.log 2>&1 &
 PQ_PID=$!
+./pq replica --id "$ID" --dir "$DIR-bench" --peer-listen "0.0.0.0:7101" --client-listen "0.0.0.0:7201" --peers "$(peers 7101)" \
+  --mem-cap-mb 512 > out/pq-bench.log 2>&1 &
+BENCH_PID=$!
 sleep 3
 kill -0 "$PQ_PID" 2>/dev/null || { tail -20 out/pq.log >> out/steps.log; finish LOG_DID_NOT_START; }
 put_json "$P/ready.json" "{\"ip\": \"$IP\", \"port\": 7200, \"peer_port\": 7100, \"id\": $ID, \"az\": \"$AZ\", \"type\": \"$TYPE\"}" || finish NO_BUCKET

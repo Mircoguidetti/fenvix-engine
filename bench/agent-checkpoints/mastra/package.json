@@ -1,0 +1,1 @@
+{"name":"agent-checkpoints-mastra","private":true,"type":"module","dependencies":{"@mastra/core":"1.82.0","@mastra/mongodb":"1.26.0","@mastra/pg":"1.35.0"}}

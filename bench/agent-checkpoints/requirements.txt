@@ -1,0 +1,10 @@
+# Python packages of the agent checkpoint benchmark, versions of the local validation run (2026-11-09).
+langgraph==1.2.20
+langgraph-checkpoint==4.3.1
+langgraph-checkpoint-mongodb==0.5.1
+langgraph-checkpoint-postgres==3.2.0
+langchain-core==1.7.6
+pymongo==4.19.0
+psycopg[binary]==3.3.8
+psycopg-pool==3.3.3
+boto3==1.43.126

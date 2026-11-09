@@ -47,7 +47,7 @@ step "programs: $PROGRAMS; cook $COOK_IP:$COOK_PORT; spare ${SPARE_IP:-none}; lo
 FENVIX_P1_URI=$URI $PY wait_db.py 15 >> out/steps.log 2>&1 || finish COOK_UNREACHABLE
 has s3-first-byte && run_prog s3-first-byte $PY s3_first_byte.py "$BUCKET" out/s3-first-byte $(cfg s3_first_byte_args)
 has sealed-run && run_prog sealed-run $PY sealed_run_read.py "$BUCKET" out/sealed-run $(cfg sealed_run_args)
-has log-ack && run_prog log-ack $PY log_ack.py out/log-ack --uri "$URI" --logs "$LOGS" --pq ./pq $(cfg log_ack_args)
+has log-ack && run_prog log-ack $PY log_ack.py out/log-ack --uri "$URI" --logs "$(cfg bench_logs)" --pq ./pq $(cfg log_ack_args)
 if has ballast-rounds; then
   # two ballast databases, their state files from the pantry, the read phases of m30-corto through programma.py
   mkdir -p ballast/lavoro/stati

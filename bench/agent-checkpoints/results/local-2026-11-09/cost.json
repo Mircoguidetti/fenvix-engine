@@ -1,0 +1,144 @@
+[
+ {
+  "option": "fenvix_s3_floor",
+  "target": "fenvix",
+  "gb_per_million_steps": 56.9364,
+  "storage_1y_per_million": 15.714446399999998,
+  "requests_per_million": 8.974911799294395,
+  "compute_per_million": null,
+  "per_million_steps": null,
+  "history_gb_per_year": 35910.926208,
+  "history_storage_year": 5368.683468095999,
+  "year_total": null,
+  "lines": [
+   "== fenvix_s3_floor on fenvix (local mongo-server on MinIO); LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+   "stored bytes per checkpoint: 56,936 (MEASURED, S3 objects under tenants/app_demo/ after the idle close (WAL garbage-collected); 145,244,757 B / 2,551 checkpoints)",
+   "storage, 1 M steps kept 1 year: 56.94 GB x $0.023/GB-month x 12 = $15.7144 (ESTIMATED; price DECLARED)",
+   "S3 PUT, 1 M steps: 1.795 PUT per step (MEASURED this run; depends on write rate and flush interval) x 1e6 / 1000 x $0.0050 = $8.9749",
+   "compute, 1 M steps at 200 steps/s sustained (ASSUMPTION): UNKNOWN/h x 1.39 h = UNKNOWN",
+   "=> cost per 1 M steps (incl. 1 year of keeping them): UNKNOWN (ESTIMATED)",
+   "one year of history at 20 steps/s average (ASSUMPTION): 35,910.9 GB written; storage $0.023 x 35,910.9 x 78/12 = $5,368.68; + instance UNKNOWN x 8760 h => UNKNOWN (ESTIMATED)"
+  ]
+ },
+ {
+  "option": "atlas_dedicated_m30",
+  "target": "mongo",
+  "gb_per_million_steps": 26.3727,
+  "storage_1y_per_million": null,
+  "requests_per_million": 0.0,
+  "compute_per_million": 0.75,
+  "per_million_steps": null,
+  "history_gb_per_year": 16633.789344,
+  "history_storage_year": null,
+  "year_total": null,
+  "lines": [
+   "== atlas_dedicated_m30 on mongo (local mongod 7.0); LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+   "stored bytes per checkpoint: 26,373 (MEASURED, dbStats storageSize + indexSize; 67,276,800.0 B / 2,551 checkpoints)",
+   "storage, 1 M steps kept 1 year: 26.37 GB x UNKNOWN/GB-month x 12 = UNKNOWN (ESTIMATED; price UNKNOWN)",
+   "compute, 1 M steps at 200 steps/s sustained (ASSUMPTION): $0.540/h x 1.39 h = $0.7500",
+   "=> cost per 1 M steps (incl. 1 year of keeping them): UNKNOWN (ESTIMATED)",
+   "one year of history at 20 steps/s average (ASSUMPTION): 16,633.8 GB written; storage UNKNOWN x 16,633.8 x 78/12 = UNKNOWN; + instance $0.540 x 8760 h => UNKNOWN (ESTIMATED)"
+  ]
+ },
+ {
+  "option": "atlas_infinite_m30",
+  "target": "mongo",
+  "gb_per_million_steps": 26.3727,
+  "storage_1y_per_million": 94.94171999999999,
+  "requests_per_million": 0.0,
+  "compute_per_million": 0.9402777777777778,
+  "per_million_steps": 95.88199777777777,
+  "history_gb_per_year": 16633.789344,
+  "history_storage_year": 32435.8892208,
+  "year_total": 38366.4092208,
+  "lines": [
+   "== atlas_infinite_m30 on mongo (local mongod 7.0); LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+   "stored bytes per checkpoint: 26,373 (MEASURED, dbStats storageSize + indexSize; 67,276,800.0 B / 2,551 checkpoints)",
+   "storage, 1 M steps kept 1 year: 26.37 GB x $0.300/GB-month x 12 = $94.9417 (ESTIMATED; price DECLARED)",
+   "compute, 1 M steps at 200 steps/s sustained (ASSUMPTION): $0.677/h x 1.39 h = $0.9403",
+   "=> cost per 1 M steps (incl. 1 year of keeping them): $95.8820 (ESTIMATED)",
+   "one year of history at 20 steps/s average (ASSUMPTION): 16,633.8 GB written; storage $0.300 x 16,633.8 x 78/12 = $32,435.89; + instance $0.677 x 8760 h => $38,366.41 (ESTIMATED)"
+  ]
+ },
+ {
+  "option": "aurora_standard",
+  "target": "postgres",
+  "gb_per_million_steps": 21.6441,
+  "storage_1y_per_million": 25.972920000000002,
+  "requests_per_million": 1.2000000000000002,
+  "compute_per_million": null,
+  "per_million_steps": null,
+  "history_gb_per_year": 13651.366752,
+  "history_storage_year": 8873.3883888,
+  "year_total": null,
+  "lines": [
+   "== aurora_standard on postgres (local Postgres 16); LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+   "stored bytes per checkpoint: 21,644 (MEASURED, sum of pg_total_relation_size of the 4 saver tables (heap + TOAST + indexes); 55,214,080 B / 2,551 checkpoints)",
+   "storage, 1 M steps kept 1 year: 21.64 GB x $0.100/GB-month x 12 = $25.9729 (ESTIMATED; price DECLARED)",
+   "I/O, 1 M steps: 6 write I/Os per step (ceil(21,644/4096), ESTIMATED) x $0.20/M = $1.2000",
+   "compute, 1 M steps at 200 steps/s sustained (ASSUMPTION): UNKNOWN/h x 1.39 h = UNKNOWN",
+   "=> cost per 1 M steps (incl. 1 year of keeping them): UNKNOWN (ESTIMATED)",
+   "one year of history at 20 steps/s average (ASSUMPTION): 13,651.4 GB written; storage $0.100 x 13,651.4 x 78/12 = $8,873.39; + instance UNKNOWN x 8760 h => UNKNOWN (ESTIMATED)"
+  ]
+ },
+ {
+  "option": "aurora_io_optimized",
+  "target": "postgres",
+  "gb_per_million_steps": 21.6441,
+  "storage_1y_per_million": 58.43907,
+  "requests_per_million": 0.0,
+  "compute_per_million": null,
+  "per_million_steps": null,
+  "history_gb_per_year": 13651.366752,
+  "history_storage_year": 19965.1238748,
+  "year_total": null,
+  "lines": [
+   "== aurora_io_optimized on postgres (local Postgres 16); LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+   "stored bytes per checkpoint: 21,644 (MEASURED, sum of pg_total_relation_size of the 4 saver tables (heap + TOAST + indexes); 55,214,080 B / 2,551 checkpoints)",
+   "storage, 1 M steps kept 1 year: 21.64 GB x $0.225/GB-month x 12 = $58.4391 (ESTIMATED; price DECLARED)",
+   "compute, 1 M steps at 200 steps/s sustained (ASSUMPTION): UNKNOWN/h x 1.39 h = UNKNOWN",
+   "=> cost per 1 M steps (incl. 1 year of keeping them): UNKNOWN (ESTIMATED)",
+   "one year of history at 20 steps/s average (ASSUMPTION): 13,651.4 GB written; storage $0.225 x 13,651.4 x 78/12 = $19,965.12; + instance UNKNOWN x 8760 h => UNKNOWN (ESTIMATED)"
+  ]
+ },
+ {
+  "option": "supabase",
+  "target": "postgres",
+  "gb_per_million_steps": 21.6441,
+  "storage_1y_per_million": 32.46615,
+  "requests_per_million": 0.0,
+  "compute_per_million": null,
+  "per_million_steps": null,
+  "history_gb_per_year": 13651.366752,
+  "history_storage_year": 11091.735486,
+  "year_total": null,
+  "lines": [
+   "== supabase on postgres (local Postgres 16); LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+   "stored bytes per checkpoint: 21,644 (MEASURED, sum of pg_total_relation_size of the 4 saver tables (heap + TOAST + indexes); 55,214,080 B / 2,551 checkpoints)",
+   "storage, 1 M steps kept 1 year: 21.64 GB x $0.125/GB-month x 12 = $32.4661 (ESTIMATED; price DECLARED)",
+   "compute, 1 M steps at 200 steps/s sustained (ASSUMPTION): UNKNOWN/h x 1.39 h = UNKNOWN",
+   "=> cost per 1 M steps (incl. 1 year of keeping them): UNKNOWN (ESTIMATED)",
+   "one year of history at 20 steps/s average (ASSUMPTION): 13,651.4 GB written; storage $0.125 x 13,651.4 x 78/12 = $11,091.74; + instance UNKNOWN x 8760 h => UNKNOWN (ESTIMATED)"
+  ]
+ },
+ {
+  "option": "neon",
+  "target": "postgres",
+  "gb_per_million_steps": 21.6441,
+  "storage_1y_per_million": 90.90522,
+  "requests_per_million": 0.0,
+  "compute_per_million": null,
+  "per_million_steps": null,
+  "history_gb_per_year": 13651.366752,
+  "history_storage_year": 31056.859360799997,
+  "year_total": null,
+  "lines": [
+   "== neon on postgres (local Postgres 16); LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+   "stored bytes per checkpoint: 21,644 (MEASURED, sum of pg_total_relation_size of the 4 saver tables (heap + TOAST + indexes); 55,214,080 B / 2,551 checkpoints)",
+   "storage, 1 M steps kept 1 year: 21.64 GB x $0.350/GB-month x 12 = $90.9052 (ESTIMATED; price DECLARED)",
+   "compute, 1 M steps at 200 steps/s sustained (ASSUMPTION): UNKNOWN/h x 1.39 h = UNKNOWN",
+   "=> cost per 1 M steps (incl. 1 year of keeping them): UNKNOWN (ESTIMATED)",
+   "one year of history at 20 steps/s average (ASSUMPTION): 13,651.4 GB written; storage $0.350 x 13,651.4 x 78/12 = $31,056.86; + instance UNKNOWN x 8760 h => UNKNOWN (ESTIMATED)"
+  ]
+ }
+]

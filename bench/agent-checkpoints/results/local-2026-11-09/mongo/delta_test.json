@@ -1,0 +1,382 @@
+{
+ "test": "agent checkpoint delta test",
+ "target": "mongo",
+ "stored_bytes_source": "MEASURED $bsonSize (UNCOMPRESSED documents; WiredTiger compresses blocks)",
+ "threads": 41,
+ "logical_bytes": 142044530,
+ "unique_bytes": 2359166,
+ "stored_bytes": 143726474,
+ "rows": [
+  {
+   "thread_id": "u000015-t001",
+   "checkpoints": 289,
+   "logical_bytes": 33887825,
+   "unique_bytes": 232792,
+   "stored_bytes": 34074295,
+   "ratio": 1.0055,
+   "delta_capture": -0.0055
+  },
+  {
+   "thread_id": "u000000-t004",
+   "checkpoints": 262,
+   "logical_bytes": 26854993,
+   "unique_bytes": 212100,
+   "stored_bytes": 27024186,
+   "ratio": 1.0063,
+   "delta_capture": -0.0064
+  },
+  {
+   "thread_id": "u000010-t002",
+   "checkpoints": 186,
+   "logical_bytes": 16342215,
+   "unique_bytes": 165914,
+   "stored_bytes": 16461376,
+   "ratio": 1.0073,
+   "delta_capture": -0.0074
+  },
+  {
+   "thread_id": "u000009-t000",
+   "checkpoints": 113,
+   "logical_bytes": 12102931,
+   "unique_bytes": 212124,
+   "stored_bytes": 12188593,
+   "ratio": 1.0071,
+   "delta_capture": -0.0072
+  },
+  {
+   "thread_id": "u000001-t000",
+   "checkpoints": 137,
+   "logical_bytes": 7810282,
+   "unique_bytes": 117496,
+   "stored_bytes": 7899976,
+   "ratio": 1.0115,
+   "delta_capture": -0.0117
+  },
+  {
+   "thread_id": "u000010-t000",
+   "checkpoints": 87,
+   "logical_bytes": 7467615,
+   "unique_bytes": 178025,
+   "stored_bytes": 7534387,
+   "ratio": 1.0089,
+   "delta_capture": -0.0092
+  },
+  {
+   "thread_id": "u000006-t000",
+   "checkpoints": 130,
+   "logical_bytes": 7010871,
+   "unique_bytes": 107822,
+   "stored_bytes": 7097060,
+   "ratio": 1.0123,
+   "delta_capture": -0.0125
+  },
+  {
+   "thread_id": "u000016-t000",
+   "checkpoints": 90,
+   "logical_bytes": 3552321,
+   "unique_bytes": 76957,
+   "stored_bytes": 3610966,
+   "ratio": 1.0165,
+   "delta_capture": -0.0169
+  },
+  {
+   "thread_id": "u000002-t001",
+   "checkpoints": 61,
+   "logical_bytes": 2465332,
+   "unique_bytes": 92920,
+   "stored_bytes": 2511570,
+   "ratio": 1.0188,
+   "delta_capture": -0.0195
+  },
+  {
+   "thread_id": "u000004-t000",
+   "checkpoints": 78,
+   "logical_bytes": 2247679,
+   "unique_bytes": 60106,
+   "stored_bytes": 2297732,
+   "ratio": 1.0223,
+   "delta_capture": -0.0229
+  },
+  {
+   "thread_id": "u000012-t001",
+   "checkpoints": 68,
+   "logical_bytes": 2168847,
+   "unique_bytes": 58571,
+   "stored_bytes": 2212014,
+   "ratio": 1.0199,
+   "delta_capture": -0.0205
+  },
+  {
+   "thread_id": "u000010-t001",
+   "checkpoints": 70,
+   "logical_bytes": 2152746,
+   "unique_bytes": 57457,
+   "stored_bytes": 2199263,
+   "ratio": 1.0216,
+   "delta_capture": -0.0222
+  },
+  {
+   "thread_id": "u000000-t002",
+   "checkpoints": 73,
+   "logical_bytes": 2099630,
+   "unique_bytes": 54450,
+   "stored_bytes": 2147884,
+   "ratio": 1.023,
+   "delta_capture": -0.0236
+  },
+  {
+   "thread_id": "u000011-t002",
+   "checkpoints": 65,
+   "logical_bytes": 1901884,
+   "unique_bytes": 55657,
+   "stored_bytes": 1944958,
+   "ratio": 1.0226,
+   "delta_capture": -0.0233
+  },
+  {
+   "thread_id": "u000008-t000",
+   "checkpoints": 73,
+   "logical_bytes": 1821484,
+   "unique_bytes": 53301,
+   "stored_bytes": 1868094,
+   "ratio": 1.0256,
+   "delta_capture": -0.0264
+  },
+  {
+   "thread_id": "u000007-t000",
+   "checkpoints": 65,
+   "logical_bytes": 1627268,
+   "unique_bytes": 50223,
+   "stored_bytes": 1670342,
+   "ratio": 1.0265,
+   "delta_capture": -0.0273
+  },
+  {
+   "thread_id": "u000002-t002",
+   "checkpoints": 58,
+   "logical_bytes": 1419104,
+   "unique_bytes": 47427,
+   "stored_bytes": 1455385,
+   "ratio": 1.0256,
+   "delta_capture": -0.0265
+  },
+  {
+   "thread_id": "u000012-t000",
+   "checkpoints": 60,
+   "logical_bytes": 1305237,
+   "unique_bytes": 41931,
+   "stored_bytes": 1343224,
+   "ratio": 1.0291,
+   "delta_capture": -0.0301
+  },
+  {
+   "thread_id": "u000013-t001",
+   "checkpoints": 49,
+   "logical_bytes": 1130096,
+   "unique_bytes": 43186,
+   "stored_bytes": 1161166,
+   "ratio": 1.0275,
+   "delta_capture": -0.0286
+  },
+  {
+   "thread_id": "u000000-t005",
+   "checkpoints": 40,
+   "logical_bytes": 739617,
+   "unique_bytes": 34268,
+   "stored_bytes": 765476,
+   "ratio": 1.035,
+   "delta_capture": -0.0367
+  },
+  {
+   "thread_id": "u000018-t000",
+   "checkpoints": 42,
+   "logical_bytes": 667963,
+   "unique_bytes": 30661,
+   "stored_bytes": 695528,
+   "ratio": 1.0413,
+   "delta_capture": -0.0433
+  },
+  {
+   "thread_id": "u000003-t004",
+   "checkpoints": 39,
+   "logical_bytes": 635147,
+   "unique_bytes": 33952,
+   "stored_bytes": 659331,
+   "ratio": 1.0381,
+   "delta_capture": -0.0402
+  },
+  {
+   "thread_id": "u000000-t000",
+   "checkpoints": 37,
+   "logical_bytes": 579619,
+   "unique_bytes": 30431,
+   "stored_bytes": 603741,
+   "ratio": 1.0416,
+   "delta_capture": -0.0439
+  },
+  {
+   "thread_id": "u000003-t003",
+   "checkpoints": 33,
+   "logical_bytes": 489634,
+   "unique_bytes": 26985,
+   "stored_bytes": 510344,
+   "ratio": 1.0423,
+   "delta_capture": -0.0448
+  },
+  {
+   "thread_id": "u000003-t000",
+   "checkpoints": 32,
+   "logical_bytes": 488849,
+   "unique_bytes": 28225,
+   "stored_bytes": 509528,
+   "ratio": 1.0423,
+   "delta_capture": -0.0449
+  },
+  {
+   "thread_id": "u000005-t000",
+   "checkpoints": 29,
+   "logical_bytes": 452074,
+   "unique_bytes": 27609,
+   "stored_bytes": 471016,
+   "ratio": 1.0419,
+   "delta_capture": -0.0446
+  },
+  {
+   "thread_id": "u000017-t000",
+   "checkpoints": 32,
+   "logical_bytes": 345825,
+   "unique_bytes": 22939,
+   "stored_bytes": 366504,
+   "ratio": 1.0598,
+   "delta_capture": -0.064
+  },
+  {
+   "thread_id": "u000003-t002",
+   "checkpoints": 26,
+   "logical_bytes": 306592,
+   "unique_bytes": 20992,
+   "stored_bytes": 323797,
+   "ratio": 1.0561,
+   "delta_capture": -0.0602
+  },
+  {
+   "thread_id": "u000019-t000",
+   "checkpoints": 28,
+   "logical_bytes": 303057,
+   "unique_bytes": 19567,
+   "stored_bytes": 321968,
+   "ratio": 1.0624,
+   "delta_capture": -0.0667
+  },
+  {
+   "thread_id": "u000000-t003",
+   "checkpoints": 26,
+   "logical_bytes": 281262,
+   "unique_bytes": 19759,
+   "stored_bytes": 298467,
+   "ratio": 1.0612,
+   "delta_capture": -0.0658
+  },
+  {
+   "thread_id": "u000018-t001",
+   "checkpoints": 27,
+   "logical_bytes": 264014,
+   "unique_bytes": 17516,
+   "stored_bytes": 281250,
+   "ratio": 1.0653,
+   "delta_capture": -0.0699
+  },
+  {
+   "thread_id": "u000014-t000",
+   "checkpoints": 21,
+   "logical_bytes": 224043,
+   "unique_bytes": 19080,
+   "stored_bytes": 237805,
+   "ratio": 1.0614,
+   "delta_capture": -0.0671
+  },
+  {
+   "thread_id": "u000013-t000",
+   "checkpoints": 19,
+   "logical_bytes": 208556,
+   "unique_bytes": 17619,
+   "stored_bytes": 220612,
+   "ratio": 1.0578,
+   "delta_capture": -0.0631
+  },
+  {
+   "thread_id": "u000000-t001",
+   "checkpoints": 20,
+   "logical_bytes": 164432,
+   "unique_bytes": 13826,
+   "stored_bytes": 178163,
+   "ratio": 1.0835,
+   "delta_capture": -0.0912
+  },
+  {
+   "thread_id": "u000001-t001",
+   "checkpoints": 17,
+   "logical_bytes": 125497,
+   "unique_bytes": 14082,
+   "stored_bytes": 135847,
+   "ratio": 1.0825,
+   "delta_capture": -0.0929
+  },
+  {
+   "thread_id": "u000002-t000",
+   "checkpoints": 13,
+   "logical_bytes": 116180,
+   "unique_bytes": 15667,
+   "stored_bytes": 124762,
+   "ratio": 1.0739,
+   "delta_capture": -0.0854
+  },
+  {
+   "thread_id": "u000000-t006",
+   "checkpoints": 18,
+   "logical_bytes": 115749,
+   "unique_bytes": 13990,
+   "stored_bytes": 127774,
+   "ratio": 1.1039,
+   "delta_capture": -0.1182
+  },
+  {
+   "thread_id": "u000015-t000",
+   "checkpoints": 10,
+   "logical_bytes": 47871,
+   "unique_bytes": 9474,
+   "stored_bytes": 54716,
+   "ratio": 1.143,
+   "delta_capture": -0.1783
+  },
+  {
+   "thread_id": "u000011-t000",
+   "checkpoints": 11,
+   "logical_bytes": 45500,
+   "unique_bytes": 9089,
+   "stored_bytes": 52376,
+   "ratio": 1.1511,
+   "delta_capture": -0.1888
+  },
+  {
+   "thread_id": "u000011-t001",
+   "checkpoints": 9,
+   "logical_bytes": 38393,
+   "unique_bytes": 7512,
+   "stored_bytes": 43563,
+   "ratio": 1.1347,
+   "delta_capture": -0.1674
+  },
+  {
+   "thread_id": "u000003-t001",
+   "checkpoints": 8,
+   "logical_bytes": 36296,
+   "unique_bytes": 7464,
+   "stored_bytes": 41435,
+   "ratio": 1.1416,
+   "delta_capture": -0.1782
+  }
+ ],
+ "ratio_stored_per_logical": 1.0118,
+ "ratio_unique_per_logical": 0.0166
+}
