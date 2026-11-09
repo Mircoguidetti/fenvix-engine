@@ -742,11 +742,15 @@ async fn main() -> Result<()> {
     let threads_path = std::env::var("FX_THREADS").unwrap_or_else(|_| "research/c2-step5-coldreads/checkpoint-threads.txt".into());
     let theta = 0.25;
     let d = d_mib << 20;
-    let l0 = ((theta * d as f64 / 2.0) / pr.tiers_div).max(512.0) as u64;
+    // FX_REALTIME_MBS=<MB/s>: no compression of time for SlateDB's side: production L0 SSTs (8 MiB), the production lease
+    // (60 s), and inserts throttled to this rate (2 for 1 TB busy, 0.4 for 1 TB medium). What it measures is SlateDB's
+    // share of a cold read (L0 SSTs and the drop's sorted runs, whose rows are at or below X_d); our tiers stay compressed.
+    let realtime: Option<f64> = std::env::var("FX_REALTIME_MBS").ok().and_then(|x| x.parse().ok());
+    let l0 = if realtime.is_some() { 8 << 20 } else { ((theta * d as f64 / 2.0) / pr.tiers_div).max(512.0) as u64 };
     let day = d as f64 / pr.days_per_d; // bytes of inserts per compressed day
     let horizon = (pr.warm + pr.window) * pr.days_per_d;
     let bg_reads_per_day = pr.cold_per_s * 86_400.0 / pr.db_gb * (d as f64 / (1u64 << 30) as f64);
-    let tag = format!("{pname} r1 {} r3 {}{}", if r1 { "on" } else { "off" }, if r3 { "on" } else { "off" }, format!("{}{}", if wave { " wave" } else { "" }, if no_settle { " unsettled" } else { "" }) + if as_built { " no-range-filter" } else { "" } + if std::env::var("FX_MINIO").is_ok() { " minio" } else { "" });
+    let tag = format!("{pname} r1 {} r3 {}{}", if r1 { "on" } else { "off" }, if r3 { "on" } else { "off" }, format!("{}{}", if wave { " wave" } else { "" }, if no_settle { " unsettled" } else { "" }) + if as_built { " no-range-filter" } else { "" } + if std::env::var("FX_MINIO").is_ok() { " minio" } else { "" } + &realtime.map(|r| format!(" realtime {r} MB/s")).unwrap_or_default());
     println!("fx_cold: {tag}, D {d_mib} MiB, L0 {l0} B, day {:.1} MiB of inserts, warm-up {:.1} days, window {:.1} days, background cold reads {bg_reads_per_day:.0} per day, S3 latency {} us, seed {seed}", day / 1048576.0, pr.warm * pr.days_per_d, pr.window * pr.days_per_d, S3_LAT_US.load(Relaxed));
     let mut out = std::fs::File::create(&out_path)?;
 
@@ -889,7 +893,7 @@ async fn main() -> Result<()> {
         merge_bytes: d / groups / 4,
         min_seal_bytes: d / groups / 2,
         drop: true,
-        lease: Duration::from_millis(1600),
+        lease: if realtime.is_some() { Duration::from_secs(60) } else { Duration::from_millis(1600) },
         remote_lease: Duration::from_millis(12_000), // F6: above hold life plus PUT timeout
         serving_lease: Duration::from_millis(200),
         put_timeout: Duration::from_millis(1000),
@@ -970,6 +974,14 @@ async fn main() -> Result<()> {
         }
         t.apply(ops).await?;
         written += b;
+        if let Some(mbs) = realtime {
+            // throttle the inserts to the profile's rate (measured from the start of the replay)
+            let due = Duration::from_secs_f64((written - base) as f64 / (mbs * 1e6));
+            let el = t_start.elapsed();
+            if due > el {
+                tokio::time::sleep(due - el).await;
+            }
+        }
         if let Some(n) = t.writer_l0() {
             max_l0 = max_l0.max(n);
         }

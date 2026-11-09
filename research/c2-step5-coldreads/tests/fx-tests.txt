@@ -1,0 +1,56 @@
+warning: unused import: `std::sync::atomic::Ordering::Relaxed`
+    --> src/lifecycle.rs:1250:13
+     |
+1250 |         use std::sync::atomic::Ordering::Relaxed;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary parentheses around closure body
+    --> src/warm.rs:1211:42
+     |
+1211 |                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+     |                                          ^                                ^
+     |
+     = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+     |
+1211 -                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+1211 +                     (0..40).flat_map(|c| c * (n / 40)..c * (n / 40) + per).collect()
+     |
+
+warning: `tenant-bench` (lib test) generated 2 warnings (run `cargo fix --lib -p tenant-bench --tests` to apply 2 suggestions)
+    Finished `release` profile [optimized] target(s) in 0.23s
+     Running unittests src/lib.rs (target/release/deps/tenant_bench-b0e7ff32e036352f)
+
+running 27 tests
+test fx::compactor_tests::compactor_model_drop_on ... ok
+test fx::compactor_tests::floor_respects_holds_and_control_breaks ... ok
+test fx::compactor_tests::held_reads_across_drop_and_gc ... ok
+test fx::compactor_tests::late_put_answer_is_a_timeout_then_a_fence ... ok
+test fx::compactor_tests::r3_reseals_a_group_whose_reads_pay ... ok
+test fx::compactor_tests::small_delta_runs_read_from_nvme ... ok
+test fx::compactor_tests::takeover_with_an_open_transaction ... ok
+test fx::fix_tests::f6_a_late_put_finds_its_slot_taken_by_the_fence ... ok
+test fx::fix_tests::f6_a_put_whose_answer_is_late_is_a_timeout_and_the_next_hold_fences_first ... ok
+test fx::fix_tests::f6_config_check_refuses_bad_timings ... ok
+test fx::fix_tests::first_publish_control_without_the_fix_lands_unfenced ... ok
+test fx::fix_tests::first_publish_timeout_is_fenced_at_its_own_slot ... ok
+test fx::fix_tests::review_r2_a_late_first_publish_put_lands_unfenced ... ok
+test fx::fix_tests::rule25_control_without_the_pending_state_breaks ... ok
+test fx::fix_tests::rule25_no_hold_while_a_fence_is_pending ... ok
+test fx::pool::tests::priorities_and_absorption_never_waits ... ok
+test fx::review_tests::review_no_hold_after_an_unknown_publish_whose_fence_failed ... ok
+test fx::tests::a_late_put_of_a_dead_process_is_refused_by_the_fence ... ok
+test fx::tests::a_reader_refuses_past_t_pin_and_refreshes ... ok
+test fx::tests::a_run_replaced_at_its_path_is_an_error ... ok
+test fx::tests::envelopes_start_one_t_pin_after_the_announcement ... ok
+test fx::tests::holds_floor_revocation_and_snapshots_across_publishes ... ok
+test fx::tests::hot_get_p50 ... ignored
+test fx::tests::model_publish_every_100_ops_with_crashes ... ok
+test fx::tests::read_no_cut_trace ... ok
+test fx::tests::rows_at_or_below_xd_come_from_the_runs ... ok
+test fx::tests::version_check_refuses_broken_versions ... ok
+
+test result: ok. 26 passed; 0 failed; 1 ignored; 0 measured; 56 filtered out; finished in 201.15s
+
