@@ -1,0 +1,212 @@
+# Step 9 of compaction 2: the AWS round that decides the product. Our full kitchen (3-zone log, cook, warm spare,
+# optional compactor, data only on S3) in eu-west-1, on machines matching Atlas M30's nodes (2 vCPU, 8 GB), measured
+# with the SAME program, harness, data and region as the Atlas Infinite M30 round from Ireland: code-irlanda's
+# m30-corto run by kitchen/client.sh unchanged, the founder's script prova_infinite.py unchanged (md5 checked on every
+# machine), the Atlas state files (PLANS: SAME before any measurement). Then the separate programs: S3 first byte by
+# size, one-trip read of a sealed run, 3-zone log ack, takeovers with 0 lost writes, ballast rounds at 100 GB and 1 TB.
+# Everything is explained in step9/README.md; the command fields in step9/ci/decide.py.
+#
+# One trigger: a push on branch step9-prep that changes step9/command.json. Modes: "permissions" ($0), "run",
+# "teardown", "drop-pantry". A commit that does not change step9/command.json does nothing on AWS.
+# No keys: OIDC role from the secret AWS_ROLE_ARN (role fenvix-gha-tests); machines use the role
+# fenvix-coldread-machine; tag project=fenvix-coldread and buckets fenvix-coldread-* like M31, Ireland and the minimal
+# kitchen, and the same concurrency group (fenvix-m31) on the job "run": never two of them at once.
+# RULES.md: a SPESA line every minute, BLOCCO at the cap (5 $ unless the command carries the founder's yes), teardown
+# and final check always ("RIMASTO: niente" or ALLARME and a red job). EMERGENCY BRAKE: "Cancel workflow" (the
+# teardown still runs).
+name: step9-kitchen
+on:
+  push:
+    branches: [step9-prep]
+    paths: ['step9/command.json']
+permissions:
+  id-token: write
+  contents: write
+env:
+  RUST_TOOLCHAIN: "1.97.0"
+jobs:
+  decide:
+    if: github.repository == 'Mircoguidetti/fenvix-engine'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      mode: ${{ steps.c.outputs.mode }}
+      engine: ${{ steps.c.outputs.engine }}
+      x86: ${{ steps.c.outputs.x86 }}
+      arm: ${{ steps.c.outputs.arm }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: The command (step9/command.json), checked and resolved
+        id: c
+        run: |
+          if ! git diff --name-only HEAD~1 HEAD | grep -qx step9/command.json; then echo "mode=none" >> "$GITHUB_OUTPUT"; exit 0; fi
+          cd step9/ci
+          python3 decide.py ../command.json /tmp/resolved.json | tee -a "$GITHUB_OUTPUT" "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: steps.c.outputs.mode != 'none'
+        with:
+          name: resolved-command
+          path: /tmp/resolved.json
+          retention-days: 7
+
+  build:
+    needs: decide
+    if: needs.decide.outputs.mode == 'run'
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+            want: ${{ needs.decide.outputs.x86 }}
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+            want: ${{ needs.decide.outputs.arm }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+        if: matrix.want == '1'
+        with:
+          ref: ${{ needs.decide.outputs.engine }}
+          persist-credentials: false
+      - name: Build mongo-server and pq (the log) for ${{ matrix.arch }}, Ubuntu 24.04 like the machines
+        if: matrix.want == '1'
+        run: |
+          command -v rustup >/dev/null || { curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none; echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"; export PATH="$HOME/.cargo/bin:$PATH"; }
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          [ "$(uname -m)" = "${{ matrix.arch }}" ] || { echo "::error::runner is $(uname -m)"; exit 1; }
+          cargo +"$RUST_TOOLCHAIN" build --release --locked -p mongo-server
+          cargo +"$RUST_TOOLCHAIN" build --release --locked --manifest-path proto/quaderno/Cargo.toml --bin pq
+          mkdir -p out/mongo-server-${{ matrix.arch }} out/pq-${{ matrix.arch }}
+          cp target/release/mongo-server out/mongo-server-${{ matrix.arch }}/; git rev-parse HEAD > out/mongo-server-${{ matrix.arch }}/motore-commit.txt
+          cp proto/quaderno/target/release/pq out/pq-${{ matrix.arch }}/
+          echo "build ${{ matrix.arch }}: commit $(git rev-parse HEAD), mongo-server $(sha256sum target/release/mongo-server | cut -c1-16), pq $(sha256sum proto/quaderno/target/release/pq | cut -c1-16)" | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: matrix.want == '1'
+        with:
+          name: bin-${{ matrix.arch }}
+          path: out/
+          retention-days: 1
+
+  run:
+    needs: [decide, build]
+    if: always() && needs.decide.outputs.mode != 'none' && needs.decide.outputs.mode != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 358
+    concurrency:
+      group: fenvix-m31
+      cancel-in-progress: false
+    env:
+      AWS_PAGER: ""
+      AWS_DEFAULT_REGION: eu-west-1
+      AWS_REGION: eu-west-1
+      CM_ROLE: ${{ secrets.AWS_ROLE_ARN }}
+      MODE: ${{ needs.decide.outputs.mode }}
+      S9_MODE: aws
+      RUN_ID: ${{ github.run_id }}
+      RESOLVED: /tmp/resolved/resolved.json
+      MACHINE_ROLE: fenvix-coldread-machine
+      DISK_GB: "20"
+      CA_DIR: /tmp/ca
+      PACKAGES: /tmp/packages
+      OUT: /tmp/s9-out
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/download-artifact@v4
+        with:
+          name: resolved-command
+          path: /tmp/resolved
+      - name: Mask account and role; the password of the round (new, masked); Python libraries
+        run: |
+          [ -n "$CM_ROLE" ] || { echo "secret AWS_ROLE_ARN missing"; exit 1; }
+          acct=$(cut -d: -f5 <<<"$CM_ROLE"); echo "::add-mask::$acct"; echo "::add-mask::${CM_ROLE##*/}"
+          pw=$(openssl rand -hex 24); echo "::add-mask::$pw"
+          { echo "CM_ACCT=$acct"; echo "CM_PW=$pw"; echo "CM_START=$(date -u -d '2 minutes ago' +%FT%TZ)"; } >> "$GITHUB_ENV"
+          python3 -m pip install -q --user boto3
+      - name: Did the build work? (run only)
+        if: env.MODE == 'run'
+        run: '[ "${{ needs.build.result }}" = success ] || { echo "::error::build: ${{ needs.build.result }}"; exit 1; }'
+      - uses: actions/download-artifact@v4
+        if: env.MODE == 'run'
+        with:
+          pattern: bin-*
+          path: /tmp/bin
+          merge-multiple: true
+      - name: AWS credentials (OIDC, 1 h)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+      - name: Permissions and vCPU quota ($0)
+        if: env.MODE == 'permissions' || env.MODE == 'run'
+        run: bash step9/ci/permissions.sh
+      - name: Atlas state files (code-irlanda, CATENA checked) and packages (no AWS)
+        if: env.MODE == 'run'
+        run: |
+          bash kitchen/ci/atlas_states.sh "$(python3 step9/machine/cfg.py "$RESOLVED" atlas_states)" /tmp/atlas-states.tar.gz m10p m10s m30p m30s vecchio | tee -a "$GITHUB_STEP_SUMMARY"
+          S9=step9 K=kitchen BIN=/tmp/bin ATLAS_TGZ=/tmp/atlas-states.tar.gz PANTRY=unused WAIT_COOK_MIN=600 bash step9/ci/packages.sh | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: The round (log, load, measured kitchen, m30 program, extras; SPESA every minute, BLOCCO at the cap)
+        id: run
+        if: env.MODE == 'run'
+        continue-on-error: true
+        run: python3 step9/ci/run.py "$RESOLVED" "$OUT"
+      - name: Credentials for the teardown
+        if: always()
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+      - name: Teardown (tagged machines, buckets fenvix-coldread-*, security groups; a kept pantry stays)
+        if: always()
+        run: python3 step9/ci/teardown.py aws
+      - name: Drop the kept pantry (mode drop-pantry only)
+        if: env.MODE == 'drop-pantry'
+        run: |
+          p=$(python3 step9/machine/cfg.py "$RESOLVED" pantry)
+          [[ "$p" =~ ^fenvix-kitchen-pantry-[0-9]+$ ]] || { echo "not a kept pantry: $p"; exit 1; }
+          aws s3 rb "s3://$p" --force && echo "kept pantry deleted: $p"
+      - name: No secret in the results (otherwise nothing is published)
+        id: secrets
+        if: always() && env.MODE == 'run'
+        run: |
+          [ -d "$OUT" ] || { echo "no results"; exit 0; }
+          grep -rl "$CM_ACCT" "$OUT" 2>/dev/null | xargs -r sed -i "s/$CM_ACCT/<ACCOUNT_ID>/g"
+          python3 kitchen/ci/check_secrets.py "$OUT"
+          echo "clean=1" >> "$GITHUB_OUTPUT"
+      - name: Publish the results on the branch (files over 90 MB stay in the artifact)
+        if: always() && steps.secrets.outputs.clean == '1'
+        run: |
+          R=step9/results/run-${{ github.run_id }}
+          mkdir -p "$R" && cp -r "$OUT"/. "$R"/ && find "$R" -name .pushed.json -delete && find "$R" -type f -size +90M -delete
+          git config user.name github-actions; git config user.email actions@users.noreply.github.com
+          git add "$R" && git commit -qm "Step 9 round ${{ github.run_id }}: results" || true
+          for _ in 1 2 3; do git pull --rebase -q origin step9-prep && git push -q origin HEAD:step9-prep && break; sleep 5; done
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.secrets.outputs.clean == '1'
+        with:
+          name: step9-results-${{ github.run_id }}
+          path: /tmp/s9-out
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Fresh credentials for the final check
+        if: always()
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 900
+          mask-aws-account-id: true
+      - name: Final check - RIMASTO niente, or ALLARME and a red job
+        if: always()
+        run: python3 step9/ci/final_check.py aws "$CM_START"
+      - name: Outcome of the round
+        if: always() && env.MODE == 'run'
+        run: '[ "${{ steps.run.outcome }}" = success ]'
