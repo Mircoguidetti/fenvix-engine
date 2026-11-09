@@ -64,6 +64,7 @@ c["s3_first_byte_args"] = "--objects 4 --reads 30 --sizes-kib 1,64,1024 --range-
 c["sealed_run_args"] = "--run-mib 64 --block-kib 256 --reads 60"
 c["ballast_rounds_args"] = "--n-q2 6 --n-q3 6 --n-q1 6 --n-q1d 6 --n-q4 4 --dorm-q2 3 --dorm-q3 3 --dorm-q1 3 --dorm-q1d 3 --dorm-q4 3 --pausa-s 2 --min-secondi-fase 2"
 c["log_ack_args"] = "--n 300 --conc 8 --secs 10"
+c["agent_bench_args"] = "--profile small --workers 1 --local"
 c["takeovers_args"] = c["takeovers_args"].replace("--n 50", f"--n {sys.argv[2]}")
 c["data_gb_upper"] = 1
 json.dump(c, open(f, "w"), indent=1)

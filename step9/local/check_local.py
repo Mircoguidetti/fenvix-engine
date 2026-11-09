@@ -79,6 +79,13 @@ tj = json.loads(t) if t else {}
 check(tj.get("verdict") == "PASS", f"takeovers: {tj.get('verdict')}, {tj.get('done')}/{tj.get('n')} done, acknowledged "
       f"{tj.get('acknowledged')}, lost {tj.get('lost')}, confirmed after a kill {tj.get('confirmed_after_kill')}, "
       f"p50 {tj.get('takeover_s_p50')} s")
+ag = read("agent/steps.log")
+line = [l for l in ag.splitlines() if "program agent-bench:" in l]
+check(bool(line) and "code 0" in line[-1], f"agent-bench (our cook, Postgres machine): {line[-1][21:200] if line else 'not run'}")
+for t in ("fenvix", "postgres"):
+    sm = read(f"agent/agent-bench/{t}/summary.json")
+    check(bool(sm), f"agent-bench {t}: summary.json {'present' if sm else 'missing'}")
+check(json.loads(read("pgbox/ready.json") or "{}").get("port") == 5432, "pgbox: PostgreSQL ready on 5432")
 check(all(os.path.exists(os.path.join(W, f"teardown-{n}.txt")) for n in (load, ballast, name)), "teardown ran after every job")
 print(f"LOCAL ROUND: {'PASS' if not fails else 'FAIL (' + str(len(fails)) + ')'}")
 sys.exit(0 if not fails else 1)

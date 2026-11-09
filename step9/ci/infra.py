@@ -85,13 +85,23 @@ class AwsPlatform(Buckets):
         t = [{"Key": "project", "Value": TAG}] + ([{"Key": "Name", "Value": name}] if name else [])
         return [{"ResourceType": kind, "Tags": t}]
 
-    def setup(self, run):
+    def setup(self, run, network="default-sg"):
         vpc = self.ec2.describe_vpcs(Filters=[{"Name": "isDefault", "Values": ["true"]}])["Vpcs"][0]["VpcId"]
         for s in self.ec2.describe_subnets(Filters=[{"Name": "vpc-id", "Values": [vpc]}, {"Name": "default-for-az", "Values": ["true"]}])["Subnets"]:
             self.subnet[s["AvailabilityZone"]] = s["SubnetId"]
         missing = [z for z in ZONES if z not in self.subnet]
         if missing:
             raise RuntimeError(f"no default subnet in {missing}")
+        if network == "default-sg":
+            # the default VPC's own group: its members reach each other on every port, nothing from the internet;
+            # nothing to create or delete, so no security-group permission is needed (founder: zero new IAM)
+            gid = self.ec2.describe_security_groups(Filters=[{"Name": "vpc-id", "Values": [vpc]},
+                                                            {"Name": "group-name", "Values": ["default"]}])["SecurityGroups"][0]["GroupId"]
+            self.group = {"client": gid, "kitchen": gid}
+            for arch, ssm_arch in (("x86_64", "amd64"), ("aarch64", "arm64")):
+                self.ami[arch] = self.ssm.get_parameter(
+                    Name=f"/aws/service/canonical/ubuntu/server/24.04/stable/current/{ssm_arch}/hvm/ebs-gp3/ami-id")["Parameter"]["Value"]
+            return {"subnets": self.subnet, "groups": self.group, "network": "default-sg"}
         for g in ("client", "kitchen"):
             self.group[g] = self.ec2.create_security_group(
                 GroupName=f"{PREFIX}s9-{g}-{run}", Description=f"step9 {g} (deleted at the end of the run)", VpcId=vpc,
@@ -102,7 +112,8 @@ class AwsPlatform(Buckets):
         # (7101/7201: the separate log group of the raw log-ack benchmark, see machine/log.sh)
         perms = [{"IpProtocol": "tcp", "FromPort": 27017, "ToPort": 27018, "UserIdGroupPairs": [{"GroupId": c}, {"GroupId": k}]},
                  {"IpProtocol": "tcp", "FromPort": 7200, "ToPort": 7201, "UserIdGroupPairs": [{"GroupId": c}, {"GroupId": k}]},
-                 {"IpProtocol": "tcp", "FromPort": 7100, "ToPort": 7101, "UserIdGroupPairs": [{"GroupId": k}]}]
+                 {"IpProtocol": "tcp", "FromPort": 7100, "ToPort": 7101, "UserIdGroupPairs": [{"GroupId": k}]},
+                 {"IpProtocol": "tcp", "FromPort": 5432, "ToPort": 5432, "UserIdGroupPairs": [{"GroupId": c}]}]
         self.ec2.authorize_security_group_ingress(GroupId=k, IpPermissions=perms)
         for arch, ssm_arch in (("x86_64", "amd64"), ("aarch64", "arm64")):
             self.ami[arch] = self.ssm.get_parameter(
@@ -110,7 +121,7 @@ class AwsPlatform(Buckets):
         return {"subnets": self.subnet, "groups": self.group}
 
     def launch(self, name, role, mtype, az, user_data, arch):
-        group = self.group["client" if role in ("client", "filler", "extras") else "kitchen"]
+        group = self.group["client" if role in ("client", "filler", "extras") else "kitchen"]   # pgbox: kitchen (5432 from clients)
         r = self.ec2.run_instances(
             ImageId=self.ami[arch], InstanceType=mtype, MinCount=1, MaxCount=1,
             NetworkInterfaces=[{"DeviceIndex": 0, "SubnetId": self.subnet[az], "Groups": [group], "AssociatePublicIpAddress": True}],
@@ -197,7 +208,7 @@ class LocalPlatform(Buckets):
             raise RuntimeError(f"docker {' '.join(args[:3])}: {r.stderr.strip()[:300]}")
         return r.stdout.strip()
 
-    def setup(self, run):
+    def setup(self, run, network="default-sg"):
         self.network = f"{PREFIX}s9-{run}"
         self._docker("network", "create", "--label", f"project={TAG}", self.network)
         gw = json.loads(self._docker("network", "inspect", self.network))[0]["IPAM"]["Config"][0]["Gateway"]

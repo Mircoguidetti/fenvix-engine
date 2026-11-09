@@ -13,7 +13,7 @@ Fields of step9/command.json (defaults in brackets):
   engine        branch, tag or commit of fenvix-engine the servers are built from ["integration"]
   atlas_states  code-irlanda commit with the Atlas state files the Atlas round started from ["501c8fd"]
   cook, spare   type of the measured cook and of the warm spare; spare null = no spare (not like for like) ["m7i.large"]
-  log           type of the three log nodes ["m7g.medium"]
+  log           type of the three log nodes ["c7g.medium"]
   compactor     type of the separate compactor, or null [null]; compactor_options: its whole command line (step 4)
   loader        type of cook 0 ["c7i.xlarge"] (it loads without the log)
   client        the m30 client ["c7i.xlarge"] (the program's macchina.txt says c7i.2xlarge with 5 copies: with the
@@ -21,9 +21,13 @@ Fields of step9/command.json (defaults in brackets):
   filler        the ballast loader, for 100gb and 1tb ["c7i.xlarge": 3 script processes]
   extras_client the client of the extra programs ["c7i.large"]
   log_colocate  log-0 on the cook's machine (true) or on its own machine [true]
+  pgbox         the Postgres machine of the agent benchmark (Supabase stand-in) ["m7i.large"]
+  network       "default-sg": every machine in the default VPC's security group (its members talk to each other, no
+                port from the internet; needs no security-group permission) | "own-groups": two new tagged groups
+                ["default-sg"]
   server_options extra options of mongo-server on the cook and the spare, one string [""]
   prepare       open every database and settle before the m30 program (kitchen K5) [false]
-  programs      any of "m30", "s3-first-byte", "sealed-run", "log-ack", "ballast-rounds", "takeovers" [all]
+  programs      any of "m30", "s3-first-byte", "sealed-run", "log-ack", "ballast-rounds", "takeovers", "agent-bench" [all]
   takeovers_args, log_ack_args, s3_first_byte_args, sealed_run_args, ballast_rounds_args: extra arguments [see DEFAULTS]
   spend_cap     dollars; the round blocks itself there [5]. Above 5 only with "cap_approved": "<date, the founder's yes>"
   ceiling_min   minutes after which the round stops and every machine powers off [330, at most 340]
@@ -36,7 +40,7 @@ import sys
 
 from machine_types import ROLES, TYPES
 
-PROGRAMS = ["m30", "s3-first-byte", "sealed-run", "log-ack", "ballast-rounds", "takeovers"]
+PROGRAMS = ["m30", "s3-first-byte", "sealed-run", "log-ack", "ballast-rounds", "takeovers", "agent-bench"]
 DATA = {  # BSON GB of the five Atlas databases: 4 x 3.1 + 10.74 (MEASURED, Atlas state files of code-irlanda) + the 2 KB
           # collections (2 x 1.22 GiB + about 1 GiB): about 26.6 GB; ballast databases of 24.3 GB to reach the size
     "atlas": {"target_gb": 26.6, "ballast_dbs": 0},
@@ -47,13 +51,14 @@ BALLAST_DB_GB = 24.3
 DEFAULTS = {
     "data": "atlas", "phases": ["load", "measure", "extras"], "pantry": "new", "ballast_slice": None,
     "engine": "integration", "atlas_states": "501c8fd",
-    "cook": "m7i.large", "spare": "m7i.large", "log": "m7g.medium", "compactor": None, "compactor_options": "",
+    "cook": "m7i.large", "spare": "m7i.large", "log": "c7g.medium", "compactor": None, "compactor_options": "",
     "loader": "c7i.xlarge", "loader_options": "", "client": "c7i.xlarge", "filler": "c7i.xlarge",
-    "extras_client": "c7i.large", "log_colocate": True,
+    "extras_client": "c7i.large", "log_colocate": True, "pgbox": "m7i.large", "network": "default-sg",
     "server_options": "", "prepare": False, "programs": PROGRAMS,
     "takeovers_args": "--n 50 --writers 8 --between-s 3 --lease-ttl 4 --log on",
     "log_ack_args": "--n 1000 --conc 8,64 --secs 20",
     "s3_first_byte_args": "--objects 40 --reads 300",
+    "agent_bench_args": "--profile standard --workers 1",
     "sealed_run_args": "--run-mib 1024 --block-kib 256 --reads 300",
     "ballast_rounds_args": "--n-q2 300 --n-q3 300 --n-q1 300 --n-q1d 300 --n-q4 300 --dorm-q2 300 --dorm-q3 300 "
                            "--dorm-q1 300 --dorm-q1d 300 --dorm-q4 300",
@@ -89,7 +94,7 @@ def resolve(raw, quota=None):
         refuse("phases: a non-empty list of load, measure, extras")
     if not set(c["programs"]) <= set(PROGRAMS):
         refuse(f"programs: any of {PROGRAMS}")
-    for role in ("cook", "spare", "log", "compactor", "loader", "client", "filler", "extras_client"):
+    for role in ("cook", "spare", "log", "compactor", "loader", "client", "filler", "extras_client", "pgbox"):
         t = c[role]
         if t is None and role in ("spare", "compactor"):
             continue
@@ -125,6 +130,8 @@ def resolve(raw, quota=None):
     c["pantry_name"] = {"new": f"fenvix-coldread-s9d-{run}", "keep": f"fenvix-kitchen-pantry-{run}"}.get(c["pantry_mode"], p)
     if c["pantry_mode"] in ("new", "keep") and "load" not in c["phases"]:
         refuse("a new pantry is empty: the round must load")
+    if c["network"] not in ("default-sg", "own-groups"):
+        refuse("network: default-sg (the default VPC's group: no security-group permission needed) or own-groups")
     if c["mode"] == "drop-pantry" and c["pantry_mode"] != "existing":
         refuse("drop-pantry: give the name of the kept pantry")
     # the data: the Atlas databases are loaded by the m30 client when the pantry is new or kept; ballast by the filler
@@ -163,6 +170,8 @@ def resolve(raw, quota=None):
             (v(c["client"]) if "m30" in c["programs"] else 0)
     if "extras" in c["phases"]:
         peaks["extras"] = v(c["cook"]) + log_machines * v(c["log"]) + v(c["compactor"]) + v(c["spare"]) + v(c["extras_client"])
+        if "agent-bench" in c["programs"]:   # the spare is off by then; the Postgres machine is on
+            peaks["agent-bench"] = v(c["cook"]) + log_machines * v(c["log"]) + v(c["compactor"]) + v(c["pgbox"]) + v(c["extras_client"])
     c["vcpu_peaks"] = peaks
     c["vcpu_peak"] = max(peaks.values()) if peaks else 0
     if c["mode"] == "run" and c["vcpu_peak"] > VCPU_LIMIT:

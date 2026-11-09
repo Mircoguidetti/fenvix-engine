@@ -291,7 +291,7 @@ try:
     if cmd.get("filler"):
         put("filler/plan.json", {"pantry": PANTRY, **cmd["ballast"]})
     say("3/8 network")
-    say(f"network: {json.dumps(plat.setup(RUN))}")
+    say(f"network: {json.dumps(plat.setup(RUN, cmd['network']))}")
 
     logs, LOGS = {}, ""
     say("4/8 the load runs without the log (the loader writes straight to S3; nothing is measured while loading)")
@@ -362,7 +362,7 @@ try:
         plat.terminate([client_id])
         machines[client_id]["end"] = time.time()
 
-    extras = [p for p in cmd["programs"] if p != "m30"]
+    extras = [p for p in cmd["programs"] if p not in ("m30", "agent-bench")]
     if "extras" in PHASES and extras and mid1:
         if cmd.get("spare"):
             say("7/8 the warm spare (zone b), now that the m30 client is off")
@@ -381,11 +381,28 @@ try:
         machines[ex_id]["end"] = time.time()
     else:
         say("7/8 no extra program in this round")
+    pg = None
+    if "extras" in PHASES and "agent-bench" in cmd["programs"] and mid1:
+        # 8 vCPU: the spare goes, the Postgres machine (the Supabase stand-in) comes, then the agent client
+        if sp:
+            stop("spare", sp[0], wait_s=120)
+            sp = None
+        say("7/8 the agent benchmark: the Postgres machine (zone a) and the agent client")
+        pg = launch("pgbox", "pgbox", cmd["pgbox"], infra.ZONES[0])
+        wait_for("pgbox/ready.json", watch="pgbox", limit_min=20, what="pgbox")
+        put("agent/config.json", {"programs": ["agent-bench"], "pantry": PANTRY, "logs": LOGS,
+                                  "cook": {"ip": ip1, "port": 27017}, "pgbox": {"ip": pg[1]},
+                                  "agent_bench_args": cmd["agent_bench_args"]})
+        ag_id, _ = launch("agent", "extras", cmd["extras_client"], infra.ZONES[0])
+        wait_for("agent/end.json", watch="agent")
+        outcomes["agent"] = (get("agent/end.json") or {}).get("programs", "")
+        plat.terminate([ag_id])
+        machines[ag_id]["end"] = time.time()
     say("8/8 everything off")
     # the cook first (on its machine log-0 keeps running until its own stop), log-0 last: it powers that machine off
     if mid1:
         stop("server-1", mid1, wait_s=120, terminate=not cmd["log_colocate"])
-    for name, pair in ([("spare", sp)] if sp else []) + ([("compactor", comp)] if comp else []) \
+    for name, pair in ([("spare", sp)] if sp else []) + ([("pgbox", pg)] if pg else []) + ([("compactor", comp)] if comp else []) \
             + sorted(logs.items(), key=lambda kv: kv[0] == "log-0"):
         stop(name, pair[0], wait_s=120)
     if "measure" in PHASES and "m30" in cmd["programs"]:

@@ -30,7 +30,7 @@ def line(label, value, how):
     return value
 
 
-def size(name, bson_gb, per_proc_mb_s=1.55, cook="m7i.large", log="m7g.medium", loader="c7i.xlarge",
+def size(name, bson_gb, per_proc_mb_s=1.55, cook="m7i.large", log="c7g.medium", loader="c7i.xlarge",
          client="c7i.xlarge", filler="c7i.xlarge", extras_client="c7i.large", m30_h=3.0, extras_h=1.0):
     """The 8-vCPU plan (founder, 2026-11-09): job 1 loads the Atlas databases (loader + m30 client), ballast jobs load
     the ballast (loader + filler), the last job measures (cook with log-0 + 2 log nodes + client, then cook + logs +
@@ -66,13 +66,15 @@ def size(name, bson_gb, per_proc_mb_s=1.55, cook="m7i.large", log="m7g.medium", 
     tot += line("S3 storage (kept pantry, data x 1.6)", bson_gb * 1.6 * GBM / 30 * keep_days, f"{bson_gb * 1.6:.0f} GB x {GBM} $/GB-month x {keep_days:.2f} days")
     tot += line("cross-zone: log copies of the measured writes", 5 * XZ * 2, "about 5 GB written during measure (ESTIMATED) x 2 zones x 0.02 $/GB")
     tot += line("extras: S3 programs", 0.02, "s3-first-byte, sealed-run: about 4,000 requests and 1.3 GB for an hour")
+    tot += line("agent benchmark: cook, logs, Postgres machine, client", (2 * hour(cook) + 2 * hour(log) + hour(extras_client)) * 1.0,
+                f"1.0 h x (cook {hour(cook):.4f} + Postgres m7i.large {hour(cook):.4f} + 2 x {hour(log):.4f} + {hour(extras_client):.4f})")
     print(f"  TOTAL ESTIMATED: {tot:.2f} $ ({1 + jobs_b + 1} jobs; never more than 8 vCPU at once)")
     return tot
 
 
 def pilot():
     print("\n== pilot: Atlas-size load job, then 1 h of the measured kitchen with the extra programs (5 takeovers), no m30 program")
-    t = (hour("c7i.xlarge") * 2) * 2.8 + (2 * hour("m7i.large") + 2 * hour("m7g.medium") + hour("c7i.large")) * 1.3 + 0.39 + 0.15
+    t = (hour("c7i.xlarge") * 2) * 2.8 + (2 * hour("m7i.large") + 2 * hour("c7g.medium") + hour("c7i.large")) * 1.3 + 0.39 + 0.15
     print(f"  about {t:.2f} $ ESTIMATED")
 
 
@@ -93,5 +95,4 @@ if __name__ == "__main__":
     size("atlas (the size measured on Atlas)", 26.6)
     size("100gb", 100)
     size("1tb", 1000)
-    for p in (0.677, 0.77):
-        atlas_1tb(p, days_load=1.0)
+    # no Atlas rerun (founder, 2026-11-09): the comparison uses the Atlas numbers measured in Ireland on 2026-11-05

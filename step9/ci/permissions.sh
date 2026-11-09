@@ -21,6 +21,7 @@ try "ec2:DescribeInstances" aws ec2 describe-instances --filters Name=tag:projec
 try "ec2:DescribeVolumes" aws ec2 describe-volumes --filters Name=tag:project,Values=fenvix-coldread --query 'length(Volumes)'
 try "ec2:DescribeAddresses" aws ec2 describe-addresses --filters Name=tag:project,Values=fenvix-coldread --query 'length(Addresses)'
 try "ec2:DescribeSecurityGroups" aws ec2 describe-security-groups --filters Name=tag:project,Values=fenvix-coldread --query 'length(SecurityGroups)'
+if [ "$(r network)" = own-groups ]; then   # only with "network": "own-groups"; the default needs no group permission
 G="fenvix-coldread-s9-perm-${GITHUB_RUN_ID:-0}"
 try "ec2:CreateSecurityGroup with the tag (client)" aws ec2 create-security-group --group-name "$G-client" --description "step9 permission check" \
   --vpc-id "$VPC" --tag-specifications "ResourceType=security-group,Tags=[{Key=project,Value=fenvix-coldread}]"
@@ -34,18 +35,22 @@ try "ec2:AuthorizeSecurityGroupIngress (27017-27018, 7200 from client and kitche
 try "ec2:RevokeSecurityGroupIngress (teardown)" aws ec2 revoke-security-group-ingress --group-id "$GK" --ip-permissions "IpProtocol=tcp,FromPort=7100,ToPort=7101,UserIdGroupPairs=[{GroupId=$GK}]"
 try "ec2:DeleteSecurityGroup (kitchen)" aws ec2 delete-security-group --group-id "$GK"
 try "ec2:DeleteSecurityGroup (client)" aws ec2 delete-security-group --group-id "$GC"
+else
+  try "ec2:DescribeSecurityGroups (the default VPC's default group)" aws ec2 describe-security-groups --filters Name=vpc-id,Values="$VPC" Name=group-name,Values=default --query 'SecurityGroups[0].GroupId' --output text
+fi
 try "iam:GetInstanceProfile ($MACHINE_ROLE)" aws iam get-instance-profile --instance-profile-name "$MACHINE_ROLE" --query 'InstanceProfile.Roles[0].RoleName' --output text
+DEFAULT_SG=$(aws ec2 describe-security-groups --filters Name=vpc-id,Values="$VPC" Name=group-name,Values=default --query 'SecurityGroups[0].GroupId' --output text 2>/dev/null)
 declare -A AMI
 AMI[x86_64]=$(aws ssm get-parameter --name /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id --query Parameter.Value --output text 2>/dev/null)
 AMI[aarch64]=$(aws ssm get-parameter --name /aws/service/canonical/ubuntu/server/24.04/stable/current/arm64/hvm/ebs-gp3/ami-id --query Parameter.Value --output text 2>/dev/null)
 [ -n "${AMI[x86_64]}" ] && [ -n "${AMI[aarch64]}" ] && echo "OK    ssm:GetParameter (Ubuntu 24.04 amd64 and arm64)" || { echo "MANCA ssm:GetParameter"; missing+=("ssm:GetParameter"); }
 # every machine of this round, in its zone: dry launch with tag, role and disk (iam:PassRole included)
 for pair in "cook eu-west-1a" "spare eu-west-1b" "log eu-west-1a" "log eu-west-1b" "log eu-west-1c" "compactor eu-west-1c" \
-            "loader eu-west-1a" "client eu-west-1a" "filler eu-west-1a" "extras_client eu-west-1a"; do
+            "loader eu-west-1a" "client eu-west-1a" "filler eu-west-1a" "extras_client eu-west-1a" "pgbox eu-west-1a"; do
   read -r role z <<<"$pair"; t=$(r "$role"); [ -n "$t" ] || continue
   a=$(python3 "$HERE/machine_types.py" arch "$t")
   try "ec2:RunInstances $role $t ($a) in $z" aws ec2 run-instances --dry-run --image-id "${AMI[$a]}" --instance-type "$t" \
-    --network-interfaces "DeviceIndex=0,SubnetId=${SUB[$z]},AssociatePublicIpAddress=true" \
+    --network-interfaces "DeviceIndex=0,SubnetId=${SUB[$z]},AssociatePublicIpAddress=true${DEFAULT_SG:+,Groups=$DEFAULT_SG}" \
     --iam-instance-profile Name="$MACHINE_ROLE" --instance-initiated-shutdown-behavior terminate \
     --metadata-options HttpTokens=required,HttpEndpoint=enabled --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=${DISK_GB:-20},VolumeType=gp3,DeleteOnTermination=true}" \
     --tag-specifications "ResourceType=instance,Tags=[{Key=project,Value=fenvix-coldread},{Key=Name,Value=fenvix-coldread-s9-perm}]" "ResourceType=volume,Tags=[{Key=project,Value=fenvix-coldread}]"

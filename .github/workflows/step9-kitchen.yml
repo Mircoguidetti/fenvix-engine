@@ -17,7 +17,7 @@
 name: step9-kitchen
 on:
   push:
-    branches: [step9-prep]
+    branches: [step9-prep, 'aws-*']   # aws-*: the branches one OIDC trust condition (StringLike) can cover for good
     paths: ['step9/command.json']
 permissions:
   id-token: write
@@ -199,7 +199,7 @@ jobs:
           mkdir -p "$R" && cp -r "$OUT"/. "$R"/ && find "$R" -name .pushed.json -delete && find "$R" -type f -size +90M -delete
           git config user.name github-actions; git config user.email actions@users.noreply.github.com
           git add "$R" && git commit -qm "Step 9 round ${{ github.run_id }}: results" || true
-          for _ in 1 2 3; do git pull --rebase -q origin step9-prep && git push -q origin HEAD:step9-prep && break; sleep 5; done
+          for _ in 1 2 3; do git pull --rebase -q origin "$GITHUB_REF_NAME" && git push -q origin "HEAD:$GITHUB_REF_NAME" && break; sleep 5; done
       - uses: actions/upload-artifact@v4
         if: always() && steps.secrets.outputs.clean == '1'
         with:

@@ -23,6 +23,11 @@ grep -E "^client" "$PACKAGES/kitchen-packages.txt"
 d=$(mktemp -d); tar xzf "$kp/client.tar.gz" -C "$d"
 cp "$S9"/machine/{node.sh,common.sh,cfg.py,filler.sh,ballast.py,extras.sh} "$S9"/programs/*.py "$d"/
 cp "$BIN/pq-x86_64/pq" "$d"/pq; chmod +x "$d"/pq "$d"/*.sh
+# the agent benchmark (bench/agent-checkpoints) and its libraries, apart from the kitchen's (its own vendor folder)
+AB="$S9/../bench/agent-checkpoints"
+mkdir -p "$d"/agentbench && cp "$AB"/{bench,generator,graph_runner,targets,cost,delta_hook}.py "$AB"/prices.json "$d"/agentbench/
+/usr/bin/python3 -m pip install -q --target "$d/agentbench/vendor" --only-binary=:all: --implementation cp --python-version 3.12 \
+  --platform manylinux_2_28_x86_64 --platform manylinux_2_17_x86_64 --platform manylinux2014_x86_64 -r "$AB/requirements.txt"
 echo "WAIT_COOK_MIN=${WAIT_COOK_MIN:-45}" >> "$d"/client.env
 ( cd "$d" && md5sum -c --quiet vendored.md5 ) || { echo "client package: a code-irlanda file changed"; exit 1; }
 tar czf "$PACKAGES"/client.tar.gz -C "$d" .
@@ -34,7 +39,7 @@ for cpu in x86_64 aarch64; do
   vendor "$d" "$cpu" 'pymongo>=4.6,<5' boto3
   cp "$BIN/mongo-server-$cpu"/mongo-server "$BIN/mongo-server-$cpu"/motore-commit.txt "$BIN/pq-$cpu"/pq "$d"/
   cp "$K"/s3io.py "$K"/create_user.py "$K"/s3_counters.py "$K"/sst_count.py "$K"/irlanda/cpu_macchina.py "$d"/
-  cp "$S9"/machine/{node.sh,common.sh,cfg.py,log.sh,cook.sh,takeover_agent.py} "$d"/
+  cp "$S9"/machine/{node.sh,common.sh,cfg.py,log.sh,cook.sh,takeover_agent.py,pgbox.sh} "$d"/
   chmod +x "$d"/mongo-server "$d"/pq "$d"/*.sh
   tar czf "$PACKAGES/node-$cpu.tar.gz" -C "$d" .
   echo "node $cpu: engine $(cat "$d"/motore-commit.txt), mongo-server sha256 $(sha256sum "$d"/mongo-server | cut -c1-16), pq sha256 $(sha256sum "$d"/pq | cut -c1-16)"

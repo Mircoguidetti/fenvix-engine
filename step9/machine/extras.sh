@@ -8,18 +8,20 @@
 #   ballast-rounds  the same cold read phases as m30-corto (Q2, Q3, Q1, Q1d, Q4), on two ballast databases, through
 #                   code-irlanda's programma.py and the founder's script unchanged (100 GB and 1 TB only)
 #   takeovers       programs/takeovers.py       N takeovers cook <-> spare, 0 acknowledged writes lost
-# Then extras/end.json and power off. Settings from the runner in extras/config.json (no secrets).
-# Usage: extras.sh BUCKET
+# Then <NAME>/end.json and power off. Settings from the runner in <NAME>/config.json (no secrets).
+#   agent-bench     programs/agent_bench.py     the agent checkpoint benchmark against our cook, the Postgres machine (and
+#                   Aurora if given); run by a second client named "agent", after the spare is off (8 vCPU)
+# Usage: extras.sh BUCKET [NAME]   (NAME: extras, or agent for the agent benchmark; its folder in the run bucket)
 set -u
 cd "$(dirname "$0")" || exit 1
-BUCKET=$1; P=extras
+BUCKET=$1; P=${2:-extras}
 source ./common.sh
 SCRIPT_MD5=8396ca455557baaa4e3a9b1f881451f9
 outcomes=()
 finish() {
   step "finish: $1"; [ -n "${CPU_PID:-}" ] && kill "$CPU_PID" 2>/dev/null; [ -n "${PUSHER:-}" ] && kill "$PUSHER" 2>/dev/null
   printf '{"finished": true, "outcome": "%s", "programs": "%s"}\n' "$1" "${outcomes[*]:-}" > out/end.json
-  push; push; $PY s3io.py put "$BUCKET" extras/end.json out/end.json
+  push; push; $PY s3io.py put "$BUCKET" "$P/end.json" out/end.json
   power_off "extras finished"
 }
 ( while sleep "$PUSH_S"; do push; done ) & PUSHER=$!
@@ -28,8 +30,8 @@ $PY cpu_macchina.py out/cpu-machine.log 5 & CPU_PID=$!
 [ "$(md5sum prova_infinite.py | cut -d' ' -f1)" = "$SCRIPT_MD5" ] || finish SCRIPT_CHANGED
 CM_PW=$(text secret/pw) && [ -n "$CM_PW" ] || finish NO_PASSWORD
 export CM_PW
-for _ in $(seq 1 60); do exists extras/config.json && break; sleep 5; done
-$PY s3io.py get "$BUCKET" extras/config.json out/config.json || finish NO_CONFIG
+for _ in $(seq 1 60); do exists $P/config.json && break; sleep 5; done
+$PY s3io.py get "$BUCKET" $P/config.json out/config.json || finish NO_CONFIG
 cfg() { $PY cfg.py out/config.json "$1"; }
 PROGRAMS=$(cfg programs); COOK_IP=$(cfg cook.ip); COOK_PORT=$(cfg cook.port); SPARE_IP=$(cfg spare.ip); LOGS=$(cfg logs)
 PANTRY=$(cfg pantry)
@@ -72,6 +74,11 @@ if has takeovers; then
   [ -n "$SPARE_IP" ] || { step "takeovers: no spare in this round: skipped"; outcomes+=("takeovers:SKIPPED"); }
   # shellcheck disable=SC2046
   [ -n "$SPARE_IP" ] && run_prog takeovers $PY takeovers.py "$BUCKET" out/takeovers --a "$COOK_IP" --b "$SPARE_IP" --ca "$PWD/ca.pem" $(cfg takeovers_args)
+fi
+if has agent-bench; then
+  PG=$(cfg pgbox.ip); AU=$($PY s3io.py text "$BUCKET" secret/aurora-uri 2>/dev/null || true)
+  # shellcheck disable=SC2046
+  run_prog agent-bench $PY agent_bench.py out/agent-bench --fenvix-uri "$URI" --pg-host "$PG" --aurora-uri "$AU" --s3-bucket "$PANTRY" $(cfg agent_bench_args)
 fi
 step "programs done: ${outcomes[*]:-none}"
 finish EXTRAS_DONE
