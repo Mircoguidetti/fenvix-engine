@@ -158,14 +158,18 @@ pub struct Piece {
     pub blk: Block,
     pub lo: Option<Box<[u8]>>,
     pub hi: Option<Box<[u8]>>,
-    /// Kept whole until trimmed (slices only).
+    /// Waiting to be trimmed to what reads relied on (a slice kept whole after a cold read, or warmed by a staged
+    /// publish); false once trimmed, and for whole blocks.
     whole_slice: bool,
+    /// Warmed by a staged publish: while no read relied on it yet, a trim keeps it as it is (its customer has not come
+    /// back yet) instead of dropping it.
+    keep_unused: bool,
     relied: Mutex<Option<(Vec<u8>, Vec<u8>)>>,
 }
 
 impl Piece {
     fn new(blk: Block, whole_slice: bool) -> Piece {
-        Piece { blk, lo: None, hi: None, whole_slice, relied: Mutex::new(None) }
+        Piece { blk, lo: None, hi: None, whole_slice, keep_unused: false, relied: Mutex::new(None) }
     }
 
     /// Whether `k` is inside the covered interval.
@@ -219,7 +223,7 @@ impl Piece {
         let j = b.lower_bound(&rhi); // rows i..j are inside [rlo, rhi)
         let lo = if i == 0 { self.lo.clone() } else { Some(succ(b.key(i - 1)).into_boxed_slice()) };
         let hi = if j >= b.len() { self.hi.clone() } else { Some(b.key(j).to_vec().into_boxed_slice()) };
-        Some(Piece { blk: b.slice(i, j), lo, hi, whole_slice: false, relied: Mutex::new(None) })
+        Some(Piece { blk: b.slice(i, j), lo, hi, whole_slice: false, keep_unused: false, relied: Mutex::new(None) })
     }
 
     pub fn mem_bytes(&self) -> usize {
@@ -318,6 +322,8 @@ fn cache_put(k: CKey, b: Arc<Piece>) {
 /// Trim whole slices older than `age` (None: every one), at most `max` of them.
 fn trim_locked(c: &mut Cache, age: Option<std::time::Duration>, max: usize) {
     let now = std::time::Instant::now();
+    // each queued slice is looked at most once per call (staged slices nobody relied on go back to the queue)
+    let max = max.min(c.untrimmed.len());
     let mut n = 0;
     while n < max {
         let Some((born, _)) = c.untrimmed.front() else { break };
@@ -331,6 +337,11 @@ fn trim_locked(c: &mut Cache, age: Option<std::time::Duration>, max: usize) {
         let Some((p, tick)) = c.map.get(&k).map(|(p, t)| (p.clone(), *t)) else { continue };
         if !p.whole_slice {
             continue; // replaced meanwhile
+        }
+        if p.keep_unused && p.relied().is_none() {
+            // a staged slice whose customer has not read yet: kept as it is, looked at again later
+            c.untrimmed.push_back((now, k));
+            continue;
         }
         c.used -= cost(&k, &p);
         match p.trimmed() {
@@ -663,10 +674,16 @@ pub async fn stage(old: &View, new: &View) -> StageReport {
                     CKey::Slice(_, _, p) => {
                         // a trimmed slice: its interval; a slice still whole: what reads relied on so far (it would be
                         // trimmed to that), or nothing when no read relied on it yet
-                        let (lo, hi) = if b.whole_slice {
+                        let (lo, hi) = if b.whole_slice && !b.keep_unused {
                             match b.relied() {
                                 Some((x, y)) => (Some(x), Some(y)),
                                 None => continue,
+                            }
+                        } else if b.whole_slice {
+                            // warmed by an earlier staged publish: what a read relied on, else the interval it covers
+                            match b.relied() {
+                                Some((x, y)) => (Some(x), Some(y)),
+                                None => (b.lo.as_deref().map(|x| x.to_vec()), b.hi.as_deref().map(|x| x.to_vec())),
                             }
                         } else {
                             (b.lo.as_deref().map(|x| x.to_vec()), b.hi.as_deref().map(|x| x.to_vec()))
@@ -748,7 +765,8 @@ fn cut_range(b: &Block, p: &[u8], h: &Held) -> Piece {
         (None, e) => e,
     };
     let j = phi.map_or(b.len(), |x| b.lower_bound(x));
-    Piece { blk: b.slice(i, j.max(i)), lo: h.lo.clone().map(|x| x.into_boxed_slice()), hi: h.hi.clone().map(|x| x.into_boxed_slice()), whole_slice: false, relied: Mutex::new(None) }
+    // trimmable once a read relies on it (the rows written since the retired run are kept only if read), kept until then
+    Piece { blk: b.slice(i, j.max(i)), lo: h.lo.clone().map(|x| x.into_boxed_slice()), hi: h.hi.clone().map(|x| x.into_boxed_slice()), whole_slice: true, keep_unused: true, relied: Mutex::new(None) }
 }
 
 async fn warm(store: &Arc<dyn ObjectStore>, fresh: &[Arc<super::view::RunH>], prefixes: &BTreeMap<Vec<u8>, Held>, ranges: &[(Vec<u8>, Vec<u8>)], rep: &mut StageReport) {
