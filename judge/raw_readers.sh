@@ -18,6 +18,7 @@ declare -A WHY=(
   [src/experiment.rs]="a research experiment of the tenant-bench binary, not a server path"
   [src/lifecycle_exp.rs]="a research experiment of the tenant-bench binary, not a server path"
   [src/main.rs]="the tenant-bench research binary (wake and request-count experiments), not a server path"
+  [src/bin/review_sr_bench.rs]="the review of step 4's bench of SlateDB's own read cost by layout (a research binary on its own in-memory store), not a server path"
 )
 PAT='DbReader::builder|DbReader::open|SstReader::new|Db::open|Db::builder|DbBuilder|DbSnapshot|\.snapshot\(\)\.await'
 bad=0; named=0
