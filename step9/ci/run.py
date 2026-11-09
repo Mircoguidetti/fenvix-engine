@@ -1,7 +1,9 @@
 """Step 9 · the round, from the runner (GitHub Actions in mode aws, this machine in mode local).
 
 The kitchen it builds (all in eu-west-1, the zones of Atlas's three M30 nodes):
-  log-0, log-1, log-2   the 3-zone log, one node per zone (a, b, c)
+  log-0, log-1, log-2   the 3-zone log, one copy per zone (a, b, c); log-0 runs on the cook's machine
+At most 8 vCPU are on at the same time (founder, 2026-11-09: the on-demand quota stays 8): decide.py refuses a command
+that would need more, and the phases below never overlap their machines.
   server-0              cook 0, the loader (zone a): the data go in through it; switched off after the load
   server-1              the measured cook (zone a, like the client), new machine, new process, cold
   spare                 the warm spare (zone b), same type as the cook, same pantry and log
@@ -11,8 +13,9 @@ The kitchen it builds (all in eu-west-1, the zones of Atlas's three M30 nodes):
   filler                only for data 100gb and 1tb: the ballast, at the same time as the client's load
   extras                after the m30 client: the separate programs (S3 first byte, sealed run, log ack, ballast
                         rounds, takeovers)
-Order: buckets -> packages, CA, password -> network -> log nodes -> cook 0 + client (+ filler) -> load -> cook 0 off ->
-cook 1 + spare (+ compactor) -> the m30 program -> client off -> extras -> everything off -> results.
+Order: buckets -> packages, CA, password -> network -> load: cook 0 + the m30 client (Atlas databases) OR cook 0 + the
+filler (ballast) -> cook 0 off -> cook 1 with log-0, log-1, log-2 (+ compactor) -> the m30 program -> client off ->
+spare + extras client -> everything off -> results.
 
 RULES.md (founder, 2026-11-04), in this file:
   - a SPESA line every minute: machines (each one's own minutes at its DECLARED price, gp3 disk, IPv4) plus S3 (our
@@ -231,15 +234,17 @@ def cert_for(name, ip):
     os.remove(pem)
 
 
-def stop(name, mid, wait_s=180):
-    """Ask a machine to stop by itself (final logs into the bucket), then terminate it anyway."""
+def stop(name, mid, wait_s=180, terminate=True):
+    """Ask a machine to stop by itself (final logs into the bucket), then terminate it anyway (not when another
+    process of the same machine still has to stop: the cook beside log-0)."""
     put(f"{name}/stop", "1")
     t = time.time()
     while time.time() - t < wait_s and not exists(f"{name}/stopped"):
         time.sleep(min(10, MINUTE_S))
-    say(f"{name}: {'stopped by itself' if exists(f'{name}/stopped') else 'no answer to stop: terminating'}")
-    plat.terminate([mid])
-    machines[mid]["end"] = time.time()
+    say(f"{name}: {'stopped by itself' if exists(f'{name}/stopped') else 'no answer to stop' + (': terminating' if terminate else '')}")
+    if terminate:
+        plat.terminate([mid])
+        machines[mid]["end"] = time.time()
 
 
 def server_config(name, role, logs):
@@ -275,6 +280,10 @@ try:
             s3.upload_file(os.path.join(os.environ["PACKAGES"], f), BUCKET, f"program/{f}")
     s3.upload_file(os.path.join(os.environ["CA_DIR"], "ca.pem"), BUCKET, "program/ca.pem")
     put("secret/pw", os.environ["CM_PW"])
+    if cmd["pantry_mode"] == "keep":
+        # the root user lives in the pantry: later rounds on this pantry must use the same password (the workflow and
+        # the local mode read it back from here, masked); the object goes away with the pantry
+        s3.put_object(Bucket=PANTRY, Key="step9-secret/pw", Body=os.environ["CM_PW"].encode())
     if "takeovers" in cmd["programs"] and "extras" in PHASES:
         # the takeover pair's own data bucket: its databases and its users stay apart from the measured cook's (the
         # cook's process owns the pantry's admin database, where the users live, for as long as it runs)
@@ -285,17 +294,7 @@ try:
     say(f"network: {json.dumps(plat.setup(RUN))}")
 
     logs, LOGS = {}, ""
-    if "measure" in PHASES or cmd["loader_uses_log"]:
-        say("4/8 the 3-zone log: one node per zone")
-        for i, z in enumerate(infra.ZONES):
-            logs[f"log-{i}"] = launch(f"log-{i}", "log", cmd["log"], z)
-        put("log/peers.json", {"ips": [logs[f"log-{i}"][1] for i in range(3)]})
-        for i in range(3):
-            wait_for(f"log-{i}/ready.json", watch=f"log-{i}", limit_min=20, what=f"log-{i}")
-        LOGS = ",".join(f"{logs[f'log-{i}'][1]}:7200" for i in range(3))
-        say(f"log ready: {LOGS}")
-    else:
-        say("4/8 no log in a load-only round (the loader writes straight to S3)")
+    say("4/8 the load runs without the log (the loader writes straight to S3; nothing is measured while loading)")
 
     if "load" in PHASES:
         who = (["the m30 client (the Atlas databases)"] if cmd["atlas_load"] else []) + (["the filler (ballast)"] if cmd.get("filler") else [])
@@ -324,14 +323,21 @@ try:
 
     mid1 = ip1 = sp = comp = None
     if "measure" in PHASES:
-        say("6/8 the measured kitchen: cook 1 (zone a), the warm spare (zone b)" + (", the compactor (zone c)" if cmd.get("compactor") else ""))
-        server_config("server-1", "cook", LOGS)
-        mid1, ip1 = launch("server-1", "cook", cmd["cook"], infra.ZONES[0])
+        # at most 8 vCPU at once (founder, 2026-11-09): log-0 lives on the cook's own machine (as Atlas keeps its oplog
+        # on its nodes), log-1 and log-2 on small machines in zones b and c; the spare comes later, with the extras
+        say("6/8 the measured kitchen: cook 1 with log-0 (zone a), log-1 (zone b), log-2 (zone c)"
+            + (", the compactor (zone c)" if cmd.get("compactor") else ""))
+        mid1, ip1 = launch("server-1", "cooklog" if cmd["log_colocate"] else "cook", cmd["cook"], infra.ZONES[0])
         cert_for("server-1", ip1)
-        if cmd.get("spare"):
-            server_config("spare", "spare", LOGS)
-            sp = launch("spare", "spare", cmd["spare"], infra.ZONES[1])
-            cert_for("spare", sp[1])
+        logs["log-0"] = (mid1, ip1) if cmd["log_colocate"] else launch("log-0", "log", cmd["log"], infra.ZONES[0])
+        for i in (1, 2):
+            logs[f"log-{i}"] = launch(f"log-{i}", "log", cmd["log"], infra.ZONES[i])
+        put("log/peers.json", {"ips": [logs[f"log-{i}"][1] for i in range(3)]})
+        for i in range(3):
+            wait_for(f"log-{i}/ready.json", watch=f"log-{i}", limit_min=20, what=f"log-{i}")
+        LOGS = ",".join(f"{logs[f'log-{i}'][1]}:7200" for i in range(3))
+        say(f"log ready: {LOGS}")
+        server_config("server-1", "cook", LOGS)
         if cmd.get("compactor"):
             server_config("compactor", "compactor", LOGS)
             comp = launch("compactor", "compactor", cmd["compactor"], infra.ZONES[2])
@@ -358,11 +364,17 @@ try:
 
     extras = [p for p in cmd["programs"] if p != "m30"]
     if "extras" in PHASES and extras and mid1:
+        if cmd.get("spare"):
+            say("7/8 the warm spare (zone b), now that the m30 client is off")
+            server_config("spare", "spare", LOGS)
+            sp = launch("spare", "spare", cmd["spare"], infra.ZONES[1])
+            cert_for("spare", sp[1])
+            wait_for("spare/ready.json", watch="spare", limit_min=20, what="spare")
         say(f"7/8 the extras client: {extras}")
         put("extras/config.json", {"programs": extras, "pantry": PANTRY, "logs": LOGS, "bench_logs": LOGS.replace(":7200", ":7201"),
                                    "cook": {"ip": ip1, "port": 27017}, "spare": {"ip": sp[1]} if sp else {},
                                    **{k: v for k, v in cmd.items() if k.endswith("_args")}})
-        ex_id, _ = launch("extras", "extras", cmd["client"], infra.ZONES[0])
+        ex_id, _ = launch("extras", "extras", cmd["extras_client"], infra.ZONES[0])
         wait_for("extras/end.json", watch="extras")
         outcomes["extras"] = (get("extras/end.json") or {}).get("programs", "")
         plat.terminate([ex_id])
@@ -370,8 +382,11 @@ try:
     else:
         say("7/8 no extra program in this round")
     say("8/8 everything off")
-    for name, pair in ([("server-1", (mid1, ip1))] if mid1 else []) + ([("spare", sp)] if sp else []) \
-            + ([("compactor", comp)] if comp else []) + list(logs.items()):
+    # the cook first (on its machine log-0 keeps running until its own stop), log-0 last: it powers that machine off
+    if mid1:
+        stop("server-1", mid1, wait_s=120, terminate=not cmd["log_colocate"])
+    for name, pair in ([("spare", sp)] if sp else []) + ([("compactor", comp)] if comp else []) \
+            + sorted(logs.items(), key=lambda kv: kv[0] == "log-0"):
         stop(name, pair[0], wait_s=120)
     if "measure" in PHASES and "m30" in cmd["programs"]:
         outcome = "FINITO" if outcomes.get("m30", "").startswith("FINITO") else outcomes.get("m30", "NOT DONE")

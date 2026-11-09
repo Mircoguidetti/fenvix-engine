@@ -41,7 +41,8 @@ class Buckets:
         self.s3 = s3_client()
 
     def new_bucket(self, name, days=1):
-        assert name.startswith(PREFIX)
+        if not (name.startswith(PREFIX) or name.startswith("fenvix-kitchen-pantry-")):
+            raise ValueError(f"bucket name not allowed: {name}")   # only the prefixes the IAM policies cover
         self.s3.create_bucket(Bucket=name, CreateBucketConfiguration={"LocationConstraint": REGION})
         if not self.local:
             self.s3.put_public_access_block(Bucket=name, PublicAccessBlockConfiguration={

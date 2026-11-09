@@ -15,9 +15,12 @@ Fields of step9/command.json (defaults in brackets):
   cook, spare   type of the measured cook and of the warm spare; spare null = no spare (not like for like) ["m7i.large"]
   log           type of the three log nodes ["m7g.medium"]
   compactor     type of the separate compactor, or null [null]; compactor_options: its whole command line (step 4)
-  loader        type of cook 0 ["c7i.xlarge"]; loader_uses_log [false]
-  client        the m30 client (the program's macchina.txt: c7i.2xlarge with 5 copies) ["c7i.2xlarge"]
-  filler        the ballast loader, for 100gb and 1tb ["c7i.4xlarge"]
+  loader        type of cook 0 ["c7i.xlarge"] (it loads without the log)
+  client        the m30 client ["c7i.xlarge"] (the program's macchina.txt says c7i.2xlarge with 5 copies: with the
+                8-vCPU limit the maximum-load test is NOT like for like, see the report)
+  filler        the ballast loader, for 100gb and 1tb ["c7i.xlarge": 3 script processes]
+  extras_client the client of the extra programs ["c7i.large"]
+  log_colocate  log-0 on the cook's machine (true) or on its own machine [true]
   server_options extra options of mongo-server on the cook and the spare, one string [""]
   prepare       open every database and settle before the m30 program (kitchen K5) [false]
   programs      any of "m30", "s3-first-byte", "sealed-run", "log-ack", "ballast-rounds", "takeovers" [all]
@@ -45,7 +48,8 @@ DEFAULTS = {
     "data": "atlas", "phases": ["load", "measure", "extras"], "pantry": "new", "ballast_slice": None,
     "engine": "integration", "atlas_states": "501c8fd",
     "cook": "m7i.large", "spare": "m7i.large", "log": "m7g.medium", "compactor": None, "compactor_options": "",
-    "loader": "c7i.xlarge", "loader_uses_log": False, "loader_options": "", "client": "c7i.2xlarge", "filler": "c7i.2xlarge",
+    "loader": "c7i.xlarge", "loader_options": "", "client": "c7i.xlarge", "filler": "c7i.xlarge",
+    "extras_client": "c7i.large", "log_colocate": True,
     "server_options": "", "prepare": False, "programs": PROGRAMS,
     "takeovers_args": "--n 50 --writers 8 --between-s 3 --lease-ttl 4 --log on",
     "log_ack_args": "--n 1000 --conc 8,64 --secs 20",
@@ -56,6 +60,9 @@ DEFAULTS = {
     "spend_cap": 5, "cap_approved": "", "ceiling_min": 330, "keep_days": 7, "kept_max_days": 5,
     "s3_fallback_dollars": 1.5,
 }
+# The founder's limit (2026-11-09): the on-demand standard vCPU quota stays 8; no job may run more at the same time.
+# S9_VCPU_LIMIT overrides it for the LOCAL mode only (x86 containers replace the 1-vCPU Graviton log nodes).
+VCPU_LIMIT = int(os.environ.get("S9_VCPU_LIMIT", "8"))
 SAFE_ARGS = re.compile(r"^[A-Za-z0-9 ,._:-]{0,400}$")
 RESERVED = {"--listen", "--store", "--bucket", "--region", "--endpoint", "--local-dir", "--replica-set", "--advertise",
             "--auth", "--tls-mode", "--tls-certificate-key-file", "--tls-ca-file", "--holder", "--no-leases",
@@ -82,7 +89,7 @@ def resolve(raw, quota=None):
         refuse("phases: a non-empty list of load, measure, extras")
     if not set(c["programs"]) <= set(PROGRAMS):
         refuse(f"programs: any of {PROGRAMS}")
-    for role in ("cook", "spare", "log", "compactor", "loader", "client", "filler"):
+    for role in ("cook", "spare", "log", "compactor", "loader", "client", "filler", "extras_client"):
         t = c[role]
         if t is None and role in ("spare", "compactor"):
             continue
@@ -145,16 +152,29 @@ def resolve(raw, quota=None):
         refuse("ceiling_min: 10 to 340 (a GitHub job lasts at most 360 minutes)")
     if "ballast-rounds" in c["programs"] and c["data"] == "atlas":
         c["programs"] = [x for x in c["programs"] if x != "ballast-rounds"]
-    # the vCPU on at the same time, against the on-demand standard quota (L-1216C47A)
+    # the vCPU on at the same time, phase by phase (the phases never overlap their machines; run.py)
     v = lambda t: TYPES[t][0] if t else 0
-    logs = 3 * v(c["log"]) if ("measure" in c["phases"] or c["loader_uses_log"]) else 0
-    load_peak = logs + v(c["loader"]) + (v(c["client"]) if c["atlas_load"] else 0) + v(c["filler"])
-    measure_peak = logs + v(c["cook"]) + v(c["spare"]) + v(c["compactor"]) + v(c["client"])
-    c["vcpu_peak"] = max(load_peak if "load" in c["phases"] else 0, measure_peak if "measure" in c["phases"] else 0)
+    log_machines = 2 if c["log_colocate"] else 3            # log-0 on the cook's machine, or on its own
+    peaks = {}
+    if "load" in c["phases"]:
+        peaks["load"] = v(c["loader"]) + (v(c["client"]) if c["atlas_load"] else 0) + v(c["filler"])
+    if "measure" in c["phases"]:
+        peaks["measure (m30)"] = v(c["cook"]) + log_machines * v(c["log"]) + v(c["compactor"]) + \
+            (v(c["client"]) if "m30" in c["programs"] else 0)
+    if "extras" in c["phases"]:
+        peaks["extras"] = v(c["cook"]) + log_machines * v(c["log"]) + v(c["compactor"]) + v(c["spare"]) + v(c["extras_client"])
+    c["vcpu_peaks"] = peaks
+    c["vcpu_peak"] = max(peaks.values()) if peaks else 0
+    if c["mode"] == "run" and c["vcpu_peak"] > VCPU_LIMIT:
+        hint = ""
+        if peaks.get("load", 0) > VCPU_LIMIT and c["atlas_load"] and c.get("filler"):
+            hint = (' Load the Atlas databases and the ballast in separate rounds: first "phases": ["load"], "pantry": "keep",'
+                    ' "ballast_slice": [0, 0]; then "phases": ["load"] on the kept pantry with the ballast slices.')
+        refuse(f"{c['vcpu_peak']} vCPU at once ({peaks}); the limit is {VCPU_LIMIT} (on-demand quota).{hint}")
     if quota is not None and c["mode"] == "run" and c["vcpu_peak"] > quota:
-        refuse(f"{c['vcpu_peak']} vCPU on at once, the quota is {quota}: ask for more (Service Quotas, L-1216C47A) "
-               f"or choose smaller machines")
+        refuse(f"{c['vcpu_peak']} vCPU at once, the quota is {quota}")
     c["arches"] = sorted({TYPES[c[r]][2] for r in ("cook", "spare", "log", "compactor", "loader") if c[r]} | {"x86_64"})
+    c["loader_uses_log"] = False
     return c
 
 
@@ -163,7 +183,7 @@ def main():
     quota = float(sys.argv[3]) if len(sys.argv) > 3 and sys.argv[3] else None
     c = resolve(raw, quota)
     json.dump(c, open(sys.argv[2], "w"), indent=1)
-    for k in ("mode", "engine", "data", "pantry_mode", "vcpu_peak"):
+    for k in ("mode", "engine", "data", "pantry_mode", "vcpu_peak", "vcpu_peaks"):
         print(f"{k}={c[k]}")
     print(f"x86={'1' if 'x86_64' in c['arches'] else '0'}")
     print(f"arm={'1' if 'aarch64' in c['arches'] else '0'}")

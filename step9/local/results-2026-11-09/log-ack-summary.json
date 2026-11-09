@@ -1,0 +1,30 @@
+{
+ "engine": {
+  "single": {
+   "conc": 1,
+   "n": 300,
+   "p50": 2.434,
+   "p95": 3.313,
+   "p99": 4.574,
+   "max": 5.488,
+   "writes_per_s": 386.5
+  },
+  "conc8": {
+   "conc": 8,
+   "n": 12226,
+   "p50": 5.814,
+   "p95": 11.601,
+   "p99": 18.199,
+   "max": 58.175,
+   "writes_per_s": 1219.5
+  }
+ },
+ "raw": {
+  "rc": 0,
+  "last_lines": [
+   "{\"bench\":\"1b-commit\",\"conc\":1,\"conflicts\":0,\"dbs\":100,\"keys_per_rec\":1,\"latency\":{\"max_us\":23247,\"n\":10532,\"p50_us\":889,\"p90_us\":1200,\"p999_us\":5087,\"p99_us\":1937},\"payload_bytes_per_s\":210615.256056196,\"recs_per_s\":1053.07628028098,\"secs\":10.001174841,\"unknown\":0,\"val_bytes\":200}",
+   "{\"bench\":\"1b-commit\",\"conc\":8,\"conflicts\":0,\"dbs\":100,\"keys_per_rec\":1,\"latency\":{\"max_us\":9831,\"n\":62819,\"p50_us\":1201,\"p90_us\":1662,\"p999_us\":4759,\"p99_us\":2727},\"payload_bytes_per_s\":1256330.7846234762,\"recs_per_s\":6281.653923117382,\"secs\":10.000391739,\"unknown\":0,\"val_bytes\":200}",
+   "{\"bench\":\"1b-commit\",\"conc\":64,\"conflicts\":0,\"dbs\":100,\"keys_per_rec\":1,\"latency\":{\"max_us\":118335,\"n\":200156,\"p50_us\":2287,\"p90_us\":3685,\"p999_us\":22991,\"p99_us\":10039},\"payload_bytes_per_s\":4002706.7381411963,\"recs_per_s\":20013.533690705983,\"secs\":10.001032456,\"unknown\":0,\"val_bytes\":200}"
+  ]
+ }
+}

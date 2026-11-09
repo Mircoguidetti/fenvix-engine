@@ -40,6 +40,8 @@ jobs:
           fetch-depth: 2
       - name: The command (step9/command.json), checked and resolved
         id: c
+        env:
+          RUN_ID: ${{ github.run_id }}
         run: |
           if ! git diff --name-only HEAD~1 HEAD | grep -qx step9/command.json; then echo "mode=none" >> "$GITHUB_OUTPUT"; exit 0; fi
           cd step9/ci
@@ -143,6 +145,13 @@ jobs:
           aws-region: eu-west-1
           role-duration-seconds: 3600
           mask-aws-account-id: true
+      - name: The password of a kept pantry (its root user was made by the round that created it)
+        if: env.MODE == 'run'
+        run: |
+          [ "$(python3 step9/machine/cfg.py "$RESOLVED" pantry_mode)" = existing ] || { echo "new pantry: new password"; exit 0; }
+          p=$(python3 step9/machine/cfg.py "$RESOLVED" pantry_name)
+          pw=$(aws s3 cp "s3://$p/step9-secret/pw" -) && [ -n "$pw" ] || { echo "no password in the kept pantry $p"; exit 1; }
+          echo "::add-mask::$pw"; echo "CM_PW=$pw" >> "$GITHUB_ENV"
       - name: Permissions and vCPU quota ($0)
         if: env.MODE == 'permissions' || env.MODE == 'run'
         run: bash step9/ci/permissions.sh
@@ -150,7 +159,9 @@ jobs:
         if: env.MODE == 'run'
         run: |
           bash kitchen/ci/atlas_states.sh "$(python3 step9/machine/cfg.py "$RESOLVED" atlas_states)" /tmp/atlas-states.tar.gz m10p m10s m30p m30s vecchio | tee -a "$GITHUB_STEP_SUMMARY"
-          S9=step9 K=kitchen BIN=/tmp/bin ATLAS_TGZ=/tmp/atlas-states.tar.gz PANTRY=unused WAIT_COOK_MIN=600 bash step9/ci/packages.sh | tee -a "$GITHUB_STEP_SUMMARY"
+          PANTRY=$(python3 step9/machine/cfg.py "$RESOLVED" pantry_name)
+          LOAD=$(python3 -c "import json,sys; print(1 if json.load(open(sys.argv[1]))['atlas_load'] else 0)" "$RESOLVED")
+          S9=step9 K=kitchen BIN=/tmp/bin ATLAS_TGZ=/tmp/atlas-states.tar.gz PANTRY="$PANTRY" LOAD="$LOAD" WAIT_COOK_MIN=600 bash step9/ci/packages.sh | tee -a "$GITHUB_STEP_SUMMARY"
       - name: The round (log, load, measured kitchen, m30 program, extras; SPESA every minute, BLOCCO at the cap)
         id: run
         if: env.MODE == 'run'

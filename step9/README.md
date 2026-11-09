@@ -21,15 +21,21 @@ Nothing here has run on AWS. Every script is meant to be read by the reviewer be
   sizes keep the five Atlas databases exactly and add ballast databases of the same shape, loaded by the founder's
   script (`carica`, own seeds) on a filler machine; the ballast rounds read two of them with the same phases.
 
-## The kitchen of the round
+## The kitchen of the round: never more than 8 vCPU at once (founder, 2026-11-09)
 
 ```
-zone a: log-0, server-0 (loader, off after the load), server-1 (the measured cook), client, filler, extras
-zone b: log-1, spare (warm spare, same type as the cook)
-zone c: log-2, compactor (only if the command gives one: compaction 2 step 4)
+load job, Atlas databases: loader c7i.xlarge (4) + m30 client c7i.xlarge (4)                         = 8
+load job, ballast:         loader c7i.xlarge (4) + filler c7i.xlarge (4)                             = 8
+measure job, m30:          cook m7i.large + log-0 (2, zone a) + log-1, log-2 m7g.medium (1+1, b, c)
+                           + m30 client c7i.xlarge (4, zone a)                                        = 8
+measure job, extras:       cook + log-0 (2) + log-1, log-2 (2) + spare m7i.large (2, zone b)
+                           + extras client c7i.large (2)                                              = 8
 ```
-The cook and the spare run `mongo-server --quaderno log-0:7200,log-1:7200,log-2:7200`: a write is confirmed when 2 of
-the 3 log copies have it (like w: majority on three zones). Ports open only between the round's own groups.
+`ci/decide.py` refuses any command above 8 (`S9_VCPU_LIMIT` raises it only in local mode). The cook and the spare run
+`mongo-server --quaderno log-0:7200,log-1:7200,log-2:7200`: a write is confirmed when 2 of the 3 copies have it (like
+w: majority on three zones); log-0 shares the cook's machine as Atlas's oplog shares its nodes. Ports open only between
+the round's own groups. Not like for like within 8 vCPU: the maximum-load test's client (4 vCPU, 3 copies of the script,
+against Atlas's c7i.2xlarge with 5); `somma_massimo.py` says when the client was the limit.
 
 ## Files
 
@@ -44,17 +50,21 @@ the 3 log copies have it (like w: majority on three zones). Ports open only betw
   cook, spare, compactor), `takeover_agent.py` (starts/kills the takeover pair on 27018), `filler.sh` + `ballast.py`,
   `extras.sh`, `common.sh`, `cfg.py`.
 - `programs/`: `s3_first_byte.py`, `sealed_run_read.py`, `log_ack.py`, `takeovers.py`.
-- `local/`: the $0 validation: `local-run.sh WORK` (docker containers as machines, MinIO as S3, a fake Atlas made
-  like the kitchen's local test, the same scripts), `check_local.py`, `fake_atlas.sh`, `Dockerfile`.
+- `local/`: the $0 validation: `local-run.sh WORK` runs the three jobs (Atlas databases into a kept pantry, ballast,
+  measure) with docker containers as machines, MinIO as S3, a fake Atlas made like the kitchen's local test, the same
+  scripts; then drops the pantry; `BLOCK_TEST=1` adds a round with a $0.05 cap. `check_local.py`, `fake_atlas.sh`,
+  `Dockerfile`.
 
 ## Commands (examples)
 
 - `{"mode": "permissions"}`: $0, every permission and the vCPU quota.
-- Atlas size, two jobs (a GitHub job lasts at most 6 hours; load about 2.8 h + measure about 4.4 h, ESTIMATED):
+- Atlas size, two jobs (a GitHub job lasts at most 6 hours; load about 2.8 h + measure about 4.5 h, ESTIMATED):
   `{"mode": "run", "data": "atlas", "phases": ["load"], "pantry": "keep"}` then
   `{"mode": "run", "data": "atlas", "phases": ["measure", "extras"], "pantry": "fenvix-kitchen-pantry-<run>"}`.
-- 1 TB: one `keep` load round, then load rounds with `"ballast_slice": [a, b]` on the kept pantry, then the measure
-  round; `{"mode": "drop-pantry", "pantry": "..."}` at the end.
+- 100 GB and 1 TB: `{"mode": "run", "data": "1tb", "phases": ["load"], "pantry": "keep", "ballast_slice": [0, 0]}`
+  (the Atlas databases), then `{"mode": "run", "data": "1tb", "phases": ["load"], "pantry": "<kept>", "ballast_slice":
+  [a, b]}` per ballast job (3 databases per job), then the measure job; `{"mode": "drop-pantry", "pantry": "..."}` at
+  the end. The first job stores the round password in the kept pantry; later jobs read it (the root user lives there).
 - `"spend_cap"` above 5 needs `"cap_approved"`: the date and words of the founder's yes.
 
 ## What depends on compaction 2 steps 4-8
@@ -64,6 +74,5 @@ counter, the first course, hedged GETs and the new compaction are options of the
 approved. The compactor machine runs only when `"compactor"` and its command line are given (step 4). The sealed-run
 program measures the physical one-trip read; its hook `--engine-reader` runs the engine's own reader once
 `src/runfmt.rs` is in the engine ref (step 3). The warm spare is today a second server on the same pantry and log that
-takes the databases over when the cook's lease lapses; known gap (Q8d, agent-lane report): a live takeover does not
-replay the log's records not yet in S3, so the takeovers program may count lost writes with `--log on` until the
-warm-spare work fixes it.
+takes the databases over when the cook's lease lapses. The takeover program reads the acknowledged writes back three
+times (at once, after 90 s, after a clean restart that replays the log) to tell a loss from late visibility.

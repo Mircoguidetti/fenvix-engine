@@ -42,6 +42,7 @@ ROLES = {
     "compactor": ["c7g.large", "m7g.large", "m8g.large", "m7i.large"],
     "loader": ["m7i.large", "c7i.xlarge", "c7i.2xlarge", "c7i.4xlarge"],  # cook 0: loads, never measured
     "client": ["c7i.xlarge", "c7i.2xlarge", "c7i.4xlarge", "c7i.8xlarge"],  # x86_64 (the founder's script)
+    "extras_client": ["c7i.large", "c7i.xlarge"],
     "filler": ["c7i.xlarge", "c7i.2xlarge", "c7i.4xlarge", "c7i.8xlarge"],  # loads the ballast for 100 GB / 1 TB
 }
 EBS_GB_MONTH = 0.088

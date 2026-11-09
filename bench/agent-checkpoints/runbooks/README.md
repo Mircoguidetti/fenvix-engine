@@ -11,7 +11,10 @@ One file per target: `aurora-postgresql.md`, `neon.md`, `supabase.md`, `atlas.md
 - Credentials only in GitHub secrets (repository fenvix-engine, environment `bench-aws`), never in a file of any repo.
 - Same workload everywhere: `generator.py --profile standard --seed 42` (2,453 threads, 25,398 turns, 96,754 checkpoints,
   about 4.4 GB of full-copy message payload: ESTIMATED by `generator.py --describe`, serializer overhead not included).
-- Same client everywhere: one EC2 instance in eu-west-1 running `bench.py` with one worker, then `--workers 8`. A target
+- Same client everywhere: one EC2 c7i.large (2 vCPU) in eu-west-1 running `bench.py` with one worker, then `--workers 8`.
+  The AWS on-demand quota stays 8 vCPU (founder, 2026-11-09): against our server the kitchen is the cook with log-0
+  (m7i.large, 2) + log-1 and log-2 (m7g.medium, 1 + 1) + this client (2) = 6 vCPU; against Aurora, Supabase, Neon or
+  Atlas only the client runs on our account (2 vCPU). Never two targets at once. A target
   outside eu-west-1 is noted in its runbook, and its latencies are reported with the measured client-to-database
   round trip next to them (`ping`-style: 20 `hello`/`SELECT 1` round trips before the run, MEASURED).
 - Run length budget: 3 hours of provisioned time per target (create, load ~30-60 min, reads, erase, sizes, delete).

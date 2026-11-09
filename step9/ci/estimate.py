@@ -30,41 +30,50 @@ def line(label, value, how):
     return value
 
 
-def size(name, bson_gb, filler="c7i.2xlarge", per_proc_mb_s=1.55, cook="m7i.large", log="m7g.medium",
-         loader="c7i.xlarge", client="c7i.2xlarge", m30_h=3.0, extras_h=1.0):
+def size(name, bson_gb, per_proc_mb_s=1.55, cook="m7i.large", log="m7g.medium", loader="c7i.xlarge",
+         client="c7i.xlarge", filler="c7i.xlarge", extras_client="c7i.large", m30_h=3.0, extras_h=1.0):
+    """The 8-vCPU plan (founder, 2026-11-09): job 1 loads the Atlas databases (loader + m30 client), ballast jobs load
+    the ballast (loader + filler), the last job measures (cook with log-0 + 2 log nodes + client, then cook + logs +
+    spare + extras client). Never more than 8 vCPU at once."""
     print(f"\n== data {name}: {bson_gb:.0f} GB of BSON")
     procs = TYPES[filler][0] - 1
-    atlas_dbs_h = 2.5   # the five Atlas databases: the old one (10.7 GB at 1.28 MB/s) is the long pole, 2.3 h MEASURED on Atlas
+    atlas_h = 2.5 + 0.3   # the five Atlas databases: the old one (10.7 GB at 1.28 MB/s, 1 process) is the long pole, MEASURED on Atlas
     ballast_gb = max(0.0, bson_gb - 26.6)
     rate = procs * per_proc_mb_s
     ballast_h = ballast_gb * 1000 / rate / 3600 if ballast_gb else 0
-    load_h = max(atlas_dbs_h, ballast_h) + 0.3
-    print(f"  load time: max(Atlas databases {atlas_dbs_h} h, ballast {ballast_gb:.0f} GB / ({procs} processes x {per_proc_mb_s} MB/s"
-          f" = {rate:.1f} MB/s) = {ballast_h:.1f} h) + 0.3 h boot = {load_h:.1f} h  ESTIMATED (per-process rate MEASURED on"
-          f" Atlas; whether our loader cook {loader} keeps up is UNKNOWN)")
-    jobs = max(1, -(-load_h // 5.5))
-    print(f"  GitHub jobs for the load (5.5 h each): {jobs:.0f}; then one job to measure ({m30_h} h m30 + {extras_h} h extras + 0.4 h boot)")
+    jobs_b = int(-(-ballast_h // 5.0)) if ballast_h else 0
+    ballast_h_total = ballast_h + 0.3 * jobs_b
+    print(f"  job 1 (Atlas databases): {atlas_h:.1f} h; ballast: {ballast_gb:.0f} GB / ({procs} processes x {per_proc_mb_s} MB/s = "
+          f"{rate:.2f} MB/s) = {ballast_h:.1f} h in {jobs_b} jobs of at most 5 h; measure job {m30_h + extras_h + 0.5:.1f} h")
+    print(f"  wall time: about {atlas_h + ballast_h_total + m30_h + extras_h + 0.5:.0f} h of jobs, one after the other; ESTIMATED "
+          f"(per-process rate MEASURED on Atlas; whether our loader {loader} keeps up is UNKNOWN)")
     tot = 0.0
-    tot += line("load: loader cook", hour(loader) * load_h, f"{load_h:.1f} h x {hour(loader):.4f} $/h ({loader}, gp3 20 GB, IPv4)")
-    tot += line("load: m30 client (Atlas databases)", hour(client) * (atlas_dbs_h + 0.3), f"{atlas_dbs_h + 0.3:.1f} h x {hour(client):.4f}")
+    tot += line("load job 1: loader + m30 client", (hour(loader) + hour(client)) * atlas_h, f"{atlas_h:.1f} h x ({hour(loader):.4f} + {hour(client):.4f}) $/h")
     if ballast_gb:
-        tot += line("load: filler", hour(filler) * (ballast_h + 0.3), f"{ballast_h + 0.3:.1f} h x {hour(filler):.4f} ({filler})")
-    mh = m30_h + extras_h + 0.4
-    tot += line("measure: 3 log nodes", 3 * hour(log) * mh, f"3 x {mh:.1f} h x {hour(log):.4f} ({log})")
-    tot += line("measure: cook + warm spare", 2 * hour(cook) * mh, f"2 x {mh:.1f} h x {hour(cook):.4f} ({cook})")
-    tot += line("measure: m30 client, then extras client", hour(client) * mh, f"{mh:.1f} h x {hour(client):.4f} ({client})")
+        tot += line("ballast jobs: loader + filler", (hour(loader) + hour(filler)) * ballast_h_total, f"{ballast_h_total:.1f} h x ({hour(loader):.4f} + {hour(filler):.4f})")
+    mh = m30_h + 0.5
+    tot += line("measure, m30: cook+log-0, 2 log nodes, client", (hour(cook) + 2 * hour(log) + hour(client)) * mh,
+                f"{mh:.1f} h x ({hour(cook):.4f} + 2 x {hour(log):.4f} + {hour(client):.4f})")
+    tot += line("measure, extras: cook, logs, spare, extras client", (2 * hour(cook) + 2 * hour(log) + hour(extras_client)) * extras_h,
+                f"{extras_h:.1f} h x (2 x {hour(cook):.4f} + 2 x {hour(log):.4f} + {hour(extras_client):.4f})")
     docs = bson_gb * 1e9 / DOC_B
     wal = docs / BATCH * PUT
     sst = bson_gb * WRITE_AMP * 1000 / PART_MB * PUT
     tot += line("S3 PUT: WAL objects of the load", wal, f"{docs / 1e6:.0f} M documents / {BATCH} per batch x {PUT * 1000:.3f} $/1000")
     tot += line("S3 PUT: compaction output", sst, f"{bson_gb:.0f} GB x {WRITE_AMP} rewritten / {PART_MB} MB parts x PUT")
     tot += line("S3 GET: compaction input and cold reads", sst * 0.4 + 0.10, "about as many GETs as parts written (x 0.08 price ratio) + 0.10 $ reads")
-    keep_days = (load_h + mh) / 24 + 0.5
+    keep_days = (atlas_h + ballast_h_total + m30_h + extras_h + 0.5) / 24 + 0.5
     tot += line("S3 storage (kept pantry, data x 1.6)", bson_gb * 1.6 * GBM / 30 * keep_days, f"{bson_gb * 1.6:.0f} GB x {GBM} $/GB-month x {keep_days:.2f} days")
     tot += line("cross-zone: log copies of the measured writes", 5 * XZ * 2, "about 5 GB written during measure (ESTIMATED) x 2 zones x 0.02 $/GB")
     tot += line("extras: S3 programs", 0.02, "s3-first-byte, sealed-run: about 4,000 requests and 1.3 GB for an hour")
-    print(f"  TOTAL ESTIMATED: {tot:.2f} $ (upper side; the SPESA line measures the real one; cap per job: the founder's)")
+    print(f"  TOTAL ESTIMATED: {tot:.2f} $ ({1 + jobs_b + 1} jobs; never more than 8 vCPU at once)")
     return tot
+
+
+def pilot():
+    print("\n== pilot: Atlas-size load job, then 1 h of the measured kitchen with the extra programs (5 takeovers), no m30 program")
+    t = (hour("c7i.xlarge") * 2) * 2.8 + (2 * hour("m7i.large") + 2 * hour("m7g.medium") + hour("c7i.large")) * 1.3 + 0.39 + 0.15
+    print(f"  about {t:.2f} $ ESTIMATED")
 
 
 def atlas_1tb(price_h, days_load):
@@ -79,10 +88,10 @@ def atlas_1tb(price_h, days_load):
 
 
 if __name__ == "__main__":
-    print("Step 9 cost estimate (ESTIMATED; prices DECLARED, sources in the docstring)")
+    print("Step 9 cost estimate, 8-vCPU plan (ESTIMATED; prices DECLARED, sources in the docstring)")
+    pilot()
     size("atlas (the size measured on Atlas)", 26.6)
     size("100gb", 100)
-    size("1tb, filler c7i.2xlarge (7 processes)", 1000)
-    size("1tb, filler c7i.8xlarge (31 processes)", 1000, filler="c7i.8xlarge")
+    size("1tb", 1000)
     for p in (0.677, 0.77):
         atlas_1tb(p, days_load=1.0)

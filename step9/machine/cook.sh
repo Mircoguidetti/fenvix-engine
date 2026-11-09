@@ -17,6 +17,7 @@
 set -u
 cd "$(dirname "$0")" || exit 1
 ROLE=$1; NAME=$2; BUCKET=$3; P=$NAME
+mkdir -p "cook-$NAME" && cp -r ./*.sh ./*.py mongo-server vendor "cook-$NAME"/ 2>/dev/null; cd "cook-$NAME" || exit 1   # own out/ folder beside log-0
 source ./common.sh
 PORT=${DB_PORT:-27017}
 mkdir -p cert
@@ -47,7 +48,7 @@ chmod 600 cert/server.pem
 CM_PW=$(text secret/pw) && [ -n "$CM_PW" ] || finish NO_PASSWORD
 export CM_PW
 # 3. this machine's settings from the runner: pantry, extra server options, the log
-for _ in $(seq 1 60); do exists "$P/config.json" && break; sleep 5; done
+for _ in $(seq 1 240); do exists "$P/config.json" && break; sleep 5; done   # written once the log is ready
 $PY s3io.py get "$BUCKET" "$P/config.json" out/config.json || finish NO_CONFIG
 cfg() { $PY cfg.py out/config.json "$1"; }
 PANTRY=$(cfg pantry); OPTS=$(cfg server_options); LOGS=$(cfg logs); LOG_ID=$(cfg log_id)

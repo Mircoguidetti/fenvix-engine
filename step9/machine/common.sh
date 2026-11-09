@@ -15,7 +15,7 @@ private_ip() { if [ -n "${LOCAL_TEST:-}" ]; then hostname -i | awk '{print $1}';
 machine_type() { if [ -n "${LOCAL_TEST:-}" ]; then echo "${FAKE_TYPE:-?}"; else imds instance-type || echo "?"; fi; }
 zone() { if [ -n "${LOCAL_TEST:-}" ]; then echo "${FAKE_AZ:-?}"; else imds placement/availability-zone || echo "?"; fi; }
 power_off() { # power_off REASON: on EC2 the power-off is the termination (set at launch); in a container, exit
-  [ -n "${LOCAL_TEST:-}" ] && exit 0
+  [ -n "${LOCAL_TEST:-}" ] || [ -n "${S9_NO_POWEROFF:-}" ] && exit 0
   shutdown -h now "step9: $1"; exit 0
 }
 # S3 endpoint for our programs (only in local mode: MinIO)

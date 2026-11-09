@@ -8,7 +8,8 @@ answered last first, the other on error); every acknowledged _id is kept with th
 it. After BETWEEN_S seconds the process that is serving is killed (SIGKILL, through its agent); the takeover time is
 from the kill's acknowledgement to the first write the other process confirms; then the killed process is started
 again and becomes the spare of the next round. At the end every acknowledged _id is looked for in the surviving
-process: LOST = acknowledged but missing (must be 0). Also counted: confirmations from a process after its kill (must
+process three times (at once, after --settle-s, after a clean restart that replays the log): LOST = acknowledged but
+missing at the third read (must be 0); the first two counts are kept to tell loss from late visibility. Also counted: confirmations from a process after its kill (must
 be 0) and writes that failed (an unknown outcome, not counted as acknowledged).
 Raw lines in OUT/takeovers.jsonl, summary OUT/takeovers-summary.json; final line "TAKEOVERS: PASS" or "FAIL".
 Usage: takeovers.py BUCKET OUT --a IP --b IP --ca CA_FILE [--n 50] [--writers 8] [--between-s 3] [--log on|off]
@@ -39,6 +40,7 @@ ap.add_argument("--lease-ttl", type=int, default=4)
 ap.add_argument("--log", default="on")
 ap.add_argument("--max-takeover-s", type=float, default=120)
 ap.add_argument("--label", default="")
+ap.add_argument("--settle-s", type=float, default=90.0, help="wait before the second read-back (> the log's upload interval)")
 a = ap.parse_args()
 os.makedirs(a.out, exist_ok=True)
 tag = f"takeovers{('-' + a.label) if a.label else ''}"
@@ -175,31 +177,65 @@ for i in range(a.n):
 state["stop"] = True
 for t in ths:
     t.join(timeout=30)
-# every acknowledged _id must be in the surviving process
+# every acknowledged _id must be in the surviving process. Three reads, so a loss is told apart from a write that is
+# durable but not visible yet (integration's reads see only what is in S3 when the log is on: agent-lane report, bug 2):
+#   1. at once; 2. after SETTLE_S (longer than the log's upload interval); 3. after a clean restart of the survivor (the
+#   restart replays the log's records that S3 does not have yet). LOST = missing at read 3.
 survivor = state["serving"]
-present, verify_error = set(), None
-ip_s = NODES[survivor][0]
-try:   # a client without a socket timeout: the read-back of millions of _ids takes longer than one write
-    vc = MongoClient(f"mongodb://root:{pw}@{ip_s}:27018/?directConnection=true&tls=true&tlsCAFile={a.ca}&authSource=admin",
-                     appname="app-demo", serverSelectionTimeoutMS=30000, socketTimeoutMS=0)
-    for d in vc["tk_app"]["w"].find({}, {"_id": 1}, batch_size=20000):
-        present.add(d["_id"])
+other = "B" if survivor == "A" else "A"
+verify_error = None
+
+
+def read_back(wait_s=180):
+    """The acknowledged _ids not found. Reads through whichever pair process owns the databases now: the admin
+    database (users, login) belongs to whichever process opened it first, which need not be the survivor of tk_app."""
+    end = time.time() + wait_s
+    while True:
+        for node in (survivor, other):
+            ip = NODES[node][0]
+            try:
+                vc = MongoClient(f"mongodb://root:{pw}@{ip}:27018/?directConnection=true&tls=true&tlsCAFile={a.ca}&authSource=admin",
+                                 appname="app-demo", serverSelectionTimeoutMS=10000, socketTimeoutMS=0)
+                got = {d["_id"] for d in vc["tk_app"]["w"].find({}, {"_id": 1}, batch_size=20000)}
+                vc.close()
+                note(kind="read_back", node=node, found=len(got))
+                return set(acked) - got
+            except Exception as e:
+                note(kind="read_back_error", node=node, error=f"{type(e).__name__}: {str(e)[:200]}")
+        if time.time() > end:
+            raise RuntimeError("no pair process answered the read-back")
+        time.sleep(2)
+
+
+missing = {}
+try:
+    missing["at_once"] = len(read_back())
+    time.sleep(a.settle_s)
+    missing["after_settle"] = len(read_back())
+    command(other, "stop", wait_s=120)
+    command(survivor, "stop", wait_s=120)
+    command(survivor, "start")
+    wait_ping(survivor, wait_s=300)
+    lost_set = read_back()
+    missing["after_clean_restart"] = len(lost_set)
+    lost = sorted(lost_set)
 except Exception as e:
     verify_error = f"{type(e).__name__}: {e}"[:300]
-lost = sorted(set(acked) - present) if verify_error is None else []
+    lost = []
+print(f"missing acknowledged writes: {missing}", flush=True)
 times = sorted(r["takeover_s"] for r in summary["takeovers"] if r["takeover_s"] is not None)
 pct = lambda p: times[min(len(times) - 1, int(round(p / 100 * (len(times) - 1))))] if times else None
-summary.update({"verify_error": verify_error, "done": len(times), "acknowledged": len(acked), "lost": len(lost), "lost_ids_first": lost[:50],
+summary.update({"verify_error": verify_error, "missing_by_read": missing, "done": len(times), "acknowledged": len(acked), "lost": len(lost) if verify_error is None else "UNKNOWN", "lost_ids_first": lost[:50],
                 "confirmed_after_kill": state["after_kill"], "failed_writes": state["failed"], "survivor": survivor,
                 "takeover_s_p50": pct(50), "takeover_s_p99": pct(99), "takeover_s_max": times[-1] if times else None})
 for k in ("A", "B"):
     try:
-        command(k, "stop", wait_s=60)
+        command(k, "stop", wait_s=60)  # (already stopped ones answer at once)
     except Exception as e:
         print(f"stop {k}: {e}")
 passed = ok and verify_error is None and len(times) == a.n and not lost and state["after_kill"] == 0
 summary["verdict"] = "PASS" if passed else "FAIL"
 json.dump(summary, open(os.path.join(a.out, f"{tag}-summary.json"), "w"), indent=1)
 print(json.dumps({k: v for k, v in summary.items() if k != "takeovers"}))
-print(f"TAKEOVERS: {summary['verdict']} ({len(times)}/{a.n} takeovers, {len(acked)} acknowledged, {len(lost)} lost, "
+print(f"TAKEOVERS: {summary['verdict']} ({len(times)}/{a.n} takeovers, {len(acked)} acknowledged, {summary['lost']} lost (missing by read {missing}), "
       f"{state['after_kill']} confirmed after a kill)")

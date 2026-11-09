@@ -41,7 +41,7 @@ AMI[aarch64]=$(aws ssm get-parameter --name /aws/service/canonical/ubuntu/server
 [ -n "${AMI[x86_64]}" ] && [ -n "${AMI[aarch64]}" ] && echo "OK    ssm:GetParameter (Ubuntu 24.04 amd64 and arm64)" || { echo "MANCA ssm:GetParameter"; missing+=("ssm:GetParameter"); }
 # every machine of this round, in its zone: dry launch with tag, role and disk (iam:PassRole included)
 for pair in "cook eu-west-1a" "spare eu-west-1b" "log eu-west-1a" "log eu-west-1b" "log eu-west-1c" "compactor eu-west-1c" \
-            "loader eu-west-1a" "client eu-west-1a" "filler eu-west-1a"; do
+            "loader eu-west-1a" "client eu-west-1a" "filler eu-west-1a" "extras_client eu-west-1a"; do
   read -r role z <<<"$pair"; t=$(r "$role"); [ -n "$t" ] || continue
   a=$(python3 "$HERE/machine_types.py" arch "$t")
   try "ec2:RunInstances $role $t ($a) in $z" aws ec2 run-instances --dry-run --image-id "${AMI[$a]}" --instance-type "$t" \
