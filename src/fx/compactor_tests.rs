@@ -456,8 +456,12 @@ async fn floor_respects_holds_and_control_breaks() {
             apply(&mut t, &mut m, vec![(ckey(1, i), Some(b"old".to_vec()))]).await;
         }
         publish(&mut t, &small_opts(build::Reseal::All)).await;
-        let k = test_knobs(true);
+        let mut k = test_knobs(true);
+        // the one-run fold drops row by row, so the floor alone decides what goes (aged runs leave only whole, once the
+        // floor passes their highest seq, which a held transaction prevents here anyway)
+        k.fold_one_run = true;
         let c = Compactor::start(&mut t, Arc::clone(&store), k, pool::Pool::new(2), tokio::runtime::Handle::current()).await.unwrap();
+        hold::HOLD_LIFE_MS.store(60_000, Relaxed); // the transaction lives through the wait below
         c.drop.control_ignore_holds.store(control, Relaxed);
         c.drop.control_no_takeover_window.store(true, Relaxed);
         // new rows, flushed to L0 but not absorbed yet, then a transaction: its version's X_d is below them
@@ -472,8 +476,11 @@ async fn floor_respects_holds_and_control_breaks() {
         c.drain(false).await.unwrap();
         tokio::time::sleep(k_lease() + Duration::from_millis(200)).await;
         c.drop.request_refold();
-        for _ in 0..50 {
+        // until the drop has removed rows (the floor reached the held version's X_d), at most 15 s
+        let t0 = Instant::now();
+        while (c.drop.rows_dropped.load(Relaxed) == 0 || t0.elapsed() < Duration::from_secs(2)) && t0.elapsed() < Duration::from_secs(15) {
             c.drop.maybe_refold();
+            c.drop.request_refold();
             tokio::time::sleep(Duration::from_millis(40)).await;
         }
         // the writer sees the fold (the compactor's loop refreshes it; this test drives the jobs by hand)
@@ -485,12 +492,14 @@ async fn floor_respects_holds_and_control_breaks() {
             }
         }
         eprintln!("floor with holds (control {control}): wrong {wrong}, last floor {}, snapshot seq {}, rows dropped {}", c.drop.last_floor.load(Relaxed), snap.seq(), c.drop.rows_dropped.load(Relaxed));
+        assert!(c.drop.rows_dropped.load(Relaxed) > 0, "the drop removed nothing: the test proves nothing");
         if control {
             assert!(wrong > 0, "the control should miss rows");
         } else {
             assert_eq!(wrong, 0);
         }
         drop(snap);
+        hold::HOLD_LIFE_MS.store(HOLD_MS, Relaxed);
         c.stop().await;
         t.abandon().await;
     }

@@ -1,0 +1,33 @@
+replay: mode today, ratio 1tb, D 1024 MiB, L0 8192 bytes, measured 0.5 D after a warm-up of 0.25 D, seed 42
+loaded 1024 MiB in 21.7 s
+  20 s: 1070 MiB written, L0 max 69
+  40 s: 1088 MiB written, L0 max 69
+  60 s: 1118 MiB written, L0 max 69
+  80 s: 1137 MiB written, L0 max 69
+  101 s: 1160 MiB written, L0 max 69
+  121 s: 1185 MiB written, L0 max 69
+  141 s: 1222 MiB written, L0 max 69
+  161 s: 1251 MiB written, L0 max 69
+  182 s: 1269 MiB written, L0 max 69
+measured window starts at 1280 MiB written
+  202 s: 1299 MiB written, L0 max 69
+  223 s: 1335 MiB written, L0 max 69
+  243 s: 1361 MiB written, L0 max 69
+  264 s: 1379 MiB written, L0 max 69
+  286 s: 1411 MiB written, L0 max 69
+  306 s: 1437 MiB written, L0 max 69
+  326 s: 1473 MiB written, L0 max 69
+  347 s: 1509 MiB written, L0 max 69
+  369 s: 1533 MiB written, L0 max 69
+  392 s: 1567 MiB written, L0 max 69
+  414 s: 1580 MiB written, L0 max 69
+  434 s: 1624 MiB written, L0 max 69
+  454 s: 1650 MiB written, L0 max 69
+  477 s: 1671 MiB written, L0 max 69
+  497 s: 1695 MiB written, L0 max 69
+  517 s: 1730 MiB written, L0 max 69
+  541 s: 1749 MiB written, L0 max 69
+  565 s: 1763 MiB written, L0 max 69
+  586 s: 1783 MiB written, L0 max 69
+RESULT mode today ratio 1tb D 1024 MiB L0 8192 B: inserted 512.0 MiB raw in the window (13.35 compressed days), L0 flushes 373.3 MiB, SlateDB compaction 5276.3 MiB, our runs 0.0 MiB, WAL 336.3 MiB, our manifests 0.0 MiB
+RESULT amplification 15.14 (stored bytes written per stored byte flushed to L0); L0 max 69; longest write 6593 ms; window 406 s, process CPU 469 s

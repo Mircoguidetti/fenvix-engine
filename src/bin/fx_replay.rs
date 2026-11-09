@@ -384,7 +384,13 @@ async fn main() -> Result<()> {
         }
         if last_print.elapsed() > Duration::from_secs(20) {
             last_print = Instant::now();
-            let extra = comp.as_ref().map(|c| format!(", groups {}, delta runs {}, reseals {}, merges {}, absorbs {}, drop jobs {}", c.sh.pending.lock().unwrap().as_ref().map_or(0, |v| v.groups.len()), c.sh.pending.lock().unwrap().as_ref().map_or(0, |v| v.delta.len()), c.sh.stats.reseals.load(Relaxed), c.sh.stats.merges.load(Relaxed), c.sh.stats.absorbs.load(Relaxed), c.drop.jobs_done.load(Relaxed))).unwrap_or_default();
+            let extra = comp
+                .as_ref()
+                .map(|c| {
+                    let (g, d) = c.sh.pending.lock().unwrap().as_ref().map_or((0, 0), |v| (v.groups.len(), v.delta.len()));
+                    format!(", groups {g}, delta runs {d}, reseals {}, merges {}, absorbs {}, drop jobs {}", c.sh.stats.reseals.load(Relaxed), c.sh.stats.merges.load(Relaxed), c.sh.stats.absorbs.load(Relaxed), c.drop.jobs_done.load(Relaxed))
+                })
+                .unwrap_or_default();
             println!("  {:.0} s: {:.0} MiB written, L0 max {}{extra}", t_start.elapsed().as_secs_f64(), mib(w.written), max_l0.load(Relaxed));
         }
     }

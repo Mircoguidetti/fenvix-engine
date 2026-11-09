@@ -1,0 +1,14 @@
+test fx::compactor_tests::compactor_model_drop_on ... compactor model: St { ops: 20000, wrong: 0, writes: 8873, reads: 4999, ranges: 3132, txn_reads: 864, retries: 0, crashes: 21, erasures: 65, max_l0: 25 }
+compactor model: absorbs 640, merges 211, reseals 643 (splits 34, group merges 36), rows dropped from SlateDB 10032, runs deleted by GC 2899, erasure leftovers 0, erasures pending 0, groups 9, delta runs 2
+test fx::compactor_tests::floor_respects_holds_and_control_breaks ... floor with holds (control false): wrong 0, last floor 51, snapshot seq 251, rows dropped 50   [rerun after the fix of this test: one-run fold]
+floor with holds (control true): wrong 200, last floor 251, snapshot seq 251, rows dropped 250
+test fx::compactor_tests::held_reads_across_drop_and_gc ... held reads (control false): transaction wrong 0 errors 0; follower (reads 153.44142ms after its refresh) wrong 0 errors 0 (); runs deleted 0
+held reads (control true): transaction wrong 0 errors 0; follower (reads 281.580374ms after its refresh) wrong 0 errors 400 (Object at location tenants/fx-held-ctl/fx/run/g0/00000000000000000589-1-85e0a69b not found: No data in memory found. Location: tenants/fx-held-ctl/fx/run/g0/00000000000000000589-1-85e0a69b: No data in memory found. Location: tenants/fx-held-ctl/fx/run/g0/00000000000000000589-1-85e0a69b); runs deleted 8
+test fx::compactor_tests::late_put_answer_is_a_timeout_then_a_fence ... late put: before 1, landed versions [1, 2], now 3, fences 0
+test fx::compactor_tests::r3_reseals_a_group_whose_reads_pay ... R3: gets noted, reseals 1 (r3 1)
+test fx::compactor_tests::small_delta_runs_read_from_nvme ... r1 write 0: L0 Some(1), absorbs 0, drop jobs 0/0, errors 0
+R1: store GETs 0 and NVMe reads 19 for 300 point reads of delta rows
+test fx::compactor_tests::takeover_with_an_open_transaction ... takeover (control false): old transaction wrong 0, errors 100 (Closed error: detected newer DB client), new transaction refused true, B's floor passed A's X_d 101 within the window: false, A's compactor stopped or outdated true, lease now 3.6s
+takeover (control true): old transaction wrong 0, errors 100 (Closed error: detected newer DB client), new transaction refused true, B's floor passed A's X_d 101 within the window: true, A's compactor stopped or outdated true, lease now 400ms
+test fx::pool::tests::priorities_and_absorption_never_waits ... ok
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 75 filtered out; finished in 41.52s
