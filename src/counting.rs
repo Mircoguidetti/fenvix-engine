@@ -615,8 +615,9 @@ tokio::task_local! {
 /// The request being made is maintenance work of a database: its sealed-run compactor (`fx/compactor.rs`: absorptions,
 /// merges, GC, and the SlateDB compactor and worker it keeps running, which poll the store). The server still counts it
 /// in the database's points, but it does not draw the database's quota: no waiting command can slow it, so charging it
-/// to the quota only starved the database's commands (c2-fix-hangs: an idle database's compactor polled about 370 GETs
-/// a second, 74 000 points against a quota of 2 000, and its reads waited forever).
+/// to the quota only starved the database's commands (c2-fix-hangs: on an idle database the server counted about 370 GETs
+/// a second, 74 000 points against a quota of 2 000, and its reads waited forever; every request is counted twice, see
+/// the c2-fix-hangs report, so about 185 real GETs a second).
 pub fn is_maintenance_request() -> bool {
     MAINTENANCE.try_with(|_| ()).is_ok()
 }

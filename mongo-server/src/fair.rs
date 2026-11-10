@@ -434,8 +434,8 @@ fn on_s3_request(path: &str, put: bool) {
     // c2-fix-hangs: upkeep outside a command is counted in the database's points but does not draw its quota: the work of
     // its sealed-run compactor (its jobs, its GC, and the SlateDB compactor and worker that poll the store all the time,
     // `counting::maintenance`), and the writer's own reads of SlateDB's manifest (every 2 s while the compactor runs,
-    // main.rs). No waiting command can slow that work, so drawing it only kept the bucket empty: an idle database's
-    // compactor made about 370 GETs a second (74 000 points against a quota of 2 000), and its commands waited forever.
+    // main.rs). No waiting command can slow that work, so drawing it only kept the bucket empty: on an idle database the
+    // server counted about 370 GETs a second (74 000 points against a quota of 2 000), and its commands waited forever.
     let quota = by_command.is_some() || !(tenant_bench::counting::is_maintenance_request() || is_manifest_poll(path, put));
     for db in [by_command.as_deref(), by_store.as_deref(), by_path].into_iter().flatten() {
         if let Some(rate) = charge(db, pts, quota, part) {

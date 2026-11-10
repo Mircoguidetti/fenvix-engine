@@ -3,8 +3,8 @@
 
  1. test_compactor_upkeep_does_not_starve_the_quota (ctl test_36 hung): with sealed runs and the compactor on, a
     database's compactor keeps a SlateDB compactor and worker polling the store (every 20 ms and 10 ms), runs its GC, and
-    makes the writer read SlateDB's manifest every 2 s: about 370 GETs a second on an idle database (MEASURED), 74 000
-    points against a quota of 2 000. All of it drew the database's quota, so the bucket never refilled and every command
+    makes the writer read SlateDB's manifest every 2 s: the server counted about 370 GETs a second on an idle database
+    (MEASURED; each request is counted twice, so about 185 real ones), 74 000 points against a quota of 2 000. All of it drew the database's quota, so the bucket never refilled and every command
     of the database waited forever. Now that upkeep is counted in the database's points but does not draw its quota.
     Fails when, after 3 s idle under a quota, the bucket is not positive or five small reads do not all answer within
     their socket timeout; also checks that the upkeep is still counted (points grow while idle).
