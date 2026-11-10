@@ -890,9 +890,17 @@ impl Entry {
                 eprintln!("sealed runs: publish of database {} failed: {e:#}", self.name);
             }
         }
-        if self.fxc.is_none() && tenant_bench::fx::compactor::SERVER_ON.load(Relaxed) {
+        if self.fxc.is_none() && tenant_bench::fx::compactor::SERVER_ON.load(Relaxed) && self.tenant.as_ref().is_some_and(|t| t.is_writer() && t.fx_view().is_some()) {
+            // the registered collections' customer keys, from their stored options (after a restart nothing has been
+            // written yet: the compactor must still know which collections are keyed by thread_id)
+            for coll in crate::agentck::registered(&self.name) {
+                if let Ok(o) = self.coll_opts(&coll).await {
+                    let key = crate::custkey::of_opts(o.as_ref());
+                    crate::agentck::note_key(&self.name, &coll, key.as_ref().map(|k| k.field.as_str()));
+                }
+            }
             let t = self.tenant.as_mut().unwrap();
-            if t.is_writer() && t.fx_view().is_some() {
+            {
                 let mut k = tenant_bench::fx::compactor::server_knobs();
                 k.derive = crate::agentck::spec_for(&self.name);
                 match tenant_bench::fx::compactor::Compactor::start(t, Arc::clone(&self.raw), k, tenant_bench::fx::pool::global(), tokio::runtime::Handle::current()).await {

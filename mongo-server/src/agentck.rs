@@ -20,6 +20,11 @@ static CONFIG: OnceLock<Vec<(Option<String>, String)>> = OnceLock::new();
 /// compactor reseals it; an unknown one is left as written.
 static THREAD_KEYED: std::sync::LazyLock<Mutex<HashMap<(String, Vec<u8>), bool>>> = std::sync::LazyLock::new(Default::default);
 
+/// The registered collections of database `db`.
+pub fn registered(db: &str) -> Vec<String> {
+    CONFIG.get().map(|c| c.iter().filter(|(d, _)| d.as_deref().map_or(true, |d| d == db)).map(|(_, c)| c.clone()).collect()).unwrap_or_default()
+}
+
 /// Note the customer key of `db.coll` (None: no customer key).
 pub fn note_key(db: &str, coll: &str, field: Option<&str>) {
     let Some(cfg) = CONFIG.get() else { return };

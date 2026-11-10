@@ -85,7 +85,8 @@ pub fn prefetch_span(run: &runfmt::Run, key: &[u8]) -> Option<(usize, usize)> {
 
 /// Negative controls of the fix round (review of c2-delta-log), tests only: 1, the one-wave point read takes the
 /// sealed row as it is (FIX 1); 2, the erasure's scrub copies a derived thread row by row (FIX 2); 3, no shape check:
-/// every msgpack array of any binary field of a registered collection is cut (FIX 3).
+/// every msgpack array of any binary field of a registered collection is cut (FIX 3); 4, a reseal whose spec does not
+/// know a derived thread's collection writes it plain (the adapter rerun's finding).
 pub static FIX_CONTROL: AtomicUsize = AtomicUsize::new(0);
 
 pub fn fix_control(n: usize) -> bool {
@@ -489,6 +490,12 @@ pub struct Encoder {
     unit: Option<Unit>,
     /// customer whose buffer overflowed: its later rows pass plain
     overflow: Option<Vec<u8>>,
+    /// documents of the buffered customer that were derived in the old run: they stay checkpoint documents even when
+    /// the spec does not know their collection yet (after a restart, before the collection's customer key is learnt;
+    /// fix round, the adapter rerun's finding), so a derived thread is never rewritten plain by accident
+    was_derived: std::collections::HashSet<Vec<u8>>,
+    /// the row `resolve` just rebuilt was a derived document (marked once the previous customer is flushed)
+    just_derived: bool,
     pub stats: EncStats,
 }
 
@@ -517,6 +524,8 @@ impl Encoder {
             old: HashMap::new(),
             unit: None,
             overflow: None,
+            was_derived: Default::default(),
+            just_derived: false,
             stats: EncStats::default(),
         }
     }
@@ -551,6 +560,7 @@ impl Encoder {
                 let doc = assemble(&sk, &|i| old.get(&i).cloned())?;
                 self.stats.rebuilt += 1;
                 RESEAL_REBUILDS.fetch_add(1, Relaxed);
+                self.just_derived = !fix_control(4);
                 let mut e = Vec::with_capacity(doc.len() + 1);
                 e.push(LIVE);
                 e.extend(doc);
@@ -572,6 +582,7 @@ impl Encoder {
 
     /// One winning row of the reseal (key order; a live, deleted-free row of any envelope). Returns what to write now.
     pub fn push(&mut self, key: &[u8], seq: u64, env: Vec<u8>) -> Result<Vec<Out>> {
+        self.just_derived = false;
         let Some(env) = self.resolve(key, env)? else { return Ok(Vec::new()) };
         let mut out = Vec::new();
         if !self.write {
@@ -593,7 +604,10 @@ impl Encoder {
             out.push(Out { rows: vec![(key.to_vec(), seq, env)], atomic: false, prefix: None });
             return Ok(out);
         }
-        let ck = spec.is_checkpoint_doc(key);
+        if self.just_derived {
+            self.was_derived.insert(key.to_vec());
+        }
+        let ck = spec.is_checkpoint_doc(key) || self.was_derived.contains(key);
         let u = self.unit.get_or_insert_with(|| Unit { prefix: p.to_vec(), rows: Vec::new(), bytes: 0, has_ck: false });
         u.bytes += key.len() + env.len() + 8;
         u.has_ck |= ck;
@@ -614,10 +628,11 @@ impl Encoder {
 
     fn flush(&mut self) -> Result<Vec<Out>> {
         let Some(u) = self.unit.take() else { return Ok(Vec::new()) };
+        let was = std::mem::take(&mut self.was_derived);
         if !u.has_ck {
             return Ok(vec![Out { rows: u.rows, atomic: false, prefix: None }]);
         }
-        let spec = self.spec.clone().expect("write implies a spec");
+        let spec: Arc<dyn Spec> = Arc::new(OrDerived { inner: self.spec.clone().expect("write implies a spec"), was });
         let f = FAIL_AT_UNIT.load(Relaxed);
         if f > 0 {
             if f == 1 {
@@ -627,6 +642,21 @@ impl Encoder {
             FAIL_AT_UNIT.store(f - 1, Relaxed);
         }
         Ok(vec![encode_customer(&*spec, &u.prefix, u.rows, &mut self.stats)?])
+    }
+}
+
+/// The encoder's spec plus the documents that were already derived.
+struct OrDerived {
+    inner: Arc<dyn Spec>,
+    was: std::collections::HashSet<Vec<u8>>,
+}
+
+impl Spec for OrDerived {
+    fn customer_prefix(&self, key: &[u8]) -> Option<usize> {
+        self.inner.customer_prefix(key)
+    }
+    fn is_checkpoint_doc(&self, key: &[u8]) -> bool {
+        self.inner.is_checkpoint_doc(key) || self.was.contains(key)
     }
 }
 

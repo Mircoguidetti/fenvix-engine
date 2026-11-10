@@ -1248,3 +1248,44 @@ async fn fix2_erasure_of_one_collection_keeps_the_messages_still_used() {
     t.abandon().await;
     teardown();
 }
+
+/// Fix round, the adapter rerun's finding: after a restart the server learns which collections are keyed by thread_id
+/// only when they are written, so a reseal before that saw a spec that knew no checkpoint collection and rewrote every
+/// derived thread plain (exact, but the saving lost). A thread that is derived stays derived through a reseal whose
+/// spec does not know its collection; `FX_FIX_CONTROL=4` (the code before) loses every derived row.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn fix_derived_threads_stay_derived_when_the_spec_does_not_know_them() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let mut k = knobs(BlockCodec::Zstd);
+    let (mut t, c, m) = derived_db(&store, "fx-fix-unknown-spec", 8, 12, &k).await;
+    let v0 = c.current().await;
+    let before = all_run_rows(&store, &v0).await.iter().filter(|r| r.env[0] == runfmt::DERIVED).count();
+    let mut young = 0;
+    for d in &v0.delta {
+        young += compactor::run_rows(&store, d).await.unwrap().iter().filter(|r| r.key.starts_with(b"u/") && r.seq > v0.groups.iter().map(|g| g.x_g).min().unwrap_or(0)).count();
+    }
+    let ckdocs = all_run_rows(&store, &v0).await.iter().filter(|r| r.key.starts_with(b"u/") && r.env[0] == runfmt::LIVE).count();
+    eprintln!("fix unknown spec: before the restart: {young} customer rows in delta runs above the lowest X_g, {ckdocs} plain customer rows in runs");
+    c.stop().await;
+    // a compactor whose spec registers no collection (the server right after a restart)
+    if std::env::var("FX_DBG_SAME_SPEC").is_err() {
+        k.derive = Some(SpecRef(Arc::new(LenSpec { colls: vec![] })));
+    }
+    let c2 = Compactor::start(&mut t, Arc::clone(&store), k.clone(), pool::Pool::new(2), tokio::runtime::Handle::current()).await.unwrap();
+    for _ in 0..2 {
+        reseal_all(&c2).await;
+    }
+    t.fx_sync();
+    let after = all_run_rows(&store, &c2.current().await).await.iter().filter(|r| r.env[0] == runfmt::DERIVED).count();
+    view::clear_cache();
+    let (wrong, errors, first) = count_wrong(&t, &m).await;
+    eprintln!("fix unknown spec: derived rows before {before}, after reseals by a compactor that knows no collection {after}; reseals {}, re-encoded {}; wrong {wrong}, errors {errors} {first}", c2.sh.stats.reseals.load(Relaxed), c2.sh.stats.derive_encoded.load(Relaxed));
+    assert_eq!((wrong, errors), (0, 0));
+    assert!(c2.sh.stats.reseals.load(Relaxed) > 0);
+    assert_eq!(after, before, "derived threads were rewritten plain");
+    c2.stop().await;
+    t.abandon().await;
+    teardown();
+}

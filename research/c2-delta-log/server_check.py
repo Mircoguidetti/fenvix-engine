@@ -211,6 +211,19 @@ def main():
     wrong += compare(after, raw_docs(c), "raw documents after a restart (cold)", res)
     wrong += compare_views(vk, saver_view(saver, graph, keep), "saver reads after a restart (cold)", res)
     res["derived_after_restart_reads"] = derived(c)
+    # fix round (the adapter rerun's finding): after the restart, a write to another collection of the database starts
+    # its compactor and a reseal runs before the saver writes anything; the threads must stay derived
+    for i in range(4):
+        c[DB]["notes"].insert_one({"i": i})
+    enc0 = derived(c)["encoded"]
+    r = c.admin.command("fenvixReseal", DB)
+    res["reseal_after_restart"] = {"resealed": r.get("resealed"), "encoded": derived(c)["encoded"] - enc0}
+    print("reseal after the restart, before any saver write", res["reseal_after_restart"], flush=True)
+    if res["reseal_after_restart"]["encoded"] == 0:
+        print("THREADS REWRITTEN PLAIN after the restart", flush=True)
+        wrong += 1
+    wrong += compare(after, raw_docs(c), "raw documents after the reseal that followed the restart", res)
+    wrong += compare_views(vk, saver_view(saver, graph, keep), "saver reads after the reseal that followed the restart", res)
     st = c.admin.command("serverStatus")["fenvix"]
     res["compactor"] = st.get("compactor")
     res["wrong"] = wrong
