@@ -19,6 +19,7 @@ mod agg;
 
 /// `--sealed-runs` when neither the flag nor FENVIX_SEALED_RUNS says otherwise (integration-3: sealed runs on).
 const DEFAULT_SEALED_RUNS: u64 = 2;
+mod ballast;
 mod agentlane;
 mod agentck;
 mod custkey;
@@ -484,6 +485,10 @@ struct Args {
     /// Turn sealed runs (and with them the compactor) off.
     #[arg(long)]
     no_sealed_runs: bool,
+    /// Step 9 ballast generator: generate the databases of this plan (JSON, `step9/machine/ballast_plan.py`) straight
+    /// into sealed runs and our manifest with this process's options, then exit (`ballast.rs`). Needs `--sealed-runs`.
+    #[arg(long)]
+    ballast: Option<String>,
     /// Raw MB per group when a database's first version cuts its groups (the plan's 1 GB).
     #[arg(long, default_value_t = 1024)]
     sealed_group_mb: u64,
@@ -1074,6 +1079,13 @@ async fn run() -> Result<()> {
         let (n, recs) = locallog::recover_remote(&dbs, Duration::from_secs(args.local_log_replay_timeout_secs)).await?;
         eprintln!("quaderno: restart applied {recs} records to {n} databases in {:.1} s", t.elapsed().as_secs_f64());
         locallog::get().unwrap().spawn_uploader();
+    }
+    if let Some(plan) = &args.ballast {
+        // the step 9 ballast generator: this process's options, no listener, no control layer
+        let r = ballast::run(Arc::clone(&server), plan).await;
+        dbs.close_all().await;
+        leases.release_process().await;
+        return r;
     }
     ctl::start(Arc::clone(&dbs), Arc::clone(&server), lc_for_ctl, holder.clone(), args.ctl.clone(), usage).await?;
     let tls_cfg = Arc::new(tls::load(&tls::Options { mode: &args.tls_mode, certificate_key_file: &args.tls_certificate_key_file, ca_file: &args.tls_ca_file, allow_without_certificates: args.tls_allow_connections_without_certificates })?);
