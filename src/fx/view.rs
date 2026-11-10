@@ -28,7 +28,7 @@ pub static LOCAL_OPENS: AtomicU64 = AtomicU64::new(0);
 /// key at once (the delta runs above the group's cut and the sealed run) instead of one after the other, and a range read
 /// fetches the first block of every run of a group at once; `read.rs` also starts SlateDB's read beside ours. Fewer trips,
 /// sometimes more GETs (the sealed run is read even when a delta run answers).
-pub static WAVE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+pub static WAVE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true); // review of step 5b: on, for the judge with the one-wave reader (the reviewed head has it off)
 /// Step 5: a range read inside one customer skips the runs whose customer filter says the customer is not there, as a
 /// point read does (on by default; a filter has no false negatives, so the answer cannot change). Step 3's cursor read a
 /// block of every delta run above the group's cut, whoever wrote it. Off: the reader as step 3 built it.

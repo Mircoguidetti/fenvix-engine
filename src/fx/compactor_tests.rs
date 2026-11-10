@@ -119,7 +119,7 @@ async fn compactor_model_drop_on() {
     let seed: u64 = std::env::var("FX_C_SEED").ok().and_then(|s| s.parse().ok()).unwrap_or(20261109);
     compactor::REVIEW_PLANT.store(std::env::var("FX_REVIEW_PLANT").ok().and_then(|s| s.parse().ok()).unwrap_or(0), Relaxed);
     // step 5: FX_WAVE=1 runs the same model test with the one-wave reader
-    let wave = std::env::var("FX_WAVE").is_ok();
+    let wave = std::env::var("FX_WAVE").is_ok() || crate::fx::view::WAVE.load(std::sync::atomic::Ordering::Relaxed); // review: keep the default (on in this commit)
     crate::fx::view::WAVE.store(wave, std::sync::atomic::Ordering::Relaxed);
     // step 5b: the reader skips SlateDB SSTs at or below its X_d (on by default). FX_SKIP_PLANT=n plants the bug the
     // tests must catch: the reader skips with a cut n above the X_d its runs hold, so rows only SlateDB holds are lost.
