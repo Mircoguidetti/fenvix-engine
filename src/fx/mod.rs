@@ -31,6 +31,8 @@ mod review_tests;
 mod fix_tests;
 #[cfg(test)]
 mod tests_7a;
+#[cfg(test)]
+mod tests_gen;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 

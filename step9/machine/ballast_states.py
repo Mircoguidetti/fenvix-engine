@@ -20,7 +20,7 @@ for d in plan["databases"]:
         continue
     g = json.load(open(g_f))
     assert g["customers"] == len(d["taglie"]), (d["db"], g["customers"], len(d["taglie"]))
-    now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+    now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")   # the script's iso() format
     line = d["line"]
     st = {
         "versione_script": plan["script"]["versione"], "db": d["db"],

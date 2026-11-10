@@ -616,6 +616,7 @@ pub async fn run(server: Arc<Server>, plan_path: &str) -> Result<()> {
     use std::sync::atomic::Ordering::Relaxed;
     ensure!(tenant_bench::fx::ENABLED.load(Relaxed), "--ballast writes sealed runs: start it with --sealed-runs (the round's server options)");
     ensure!(crate::locallog::get().is_none(), "--ballast writes no log: start it without --quaderno");
+    ensure!(tenant_bench::envelope::START.load(Relaxed), "--ballast publishes runs, which needs envelopes on: start it with --envelopes write (release E1)");
     // the generator publishes each database once, at the end; no automatic publishes in between
     tenant_bench::fx::PUBLISH_EVERY.store(0, Relaxed);
     let plan: Plan = parse_plan(&serde_json::from_slice(&std::fs::read(plan_path).with_context(|| format!("plan {plan_path}"))?)?)?;

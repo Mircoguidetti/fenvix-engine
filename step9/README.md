@@ -87,7 +87,11 @@ against Atlas's c7i.2xlarge with 5); `somma_massimo.py` says when the client was
 - `machine/`: what runs on the machines. `node.sh` (dispatch by role), `log.sh` (a log node), `cook.sh` (loader,
   cook, spare, compactor), `takeover_agent.py` (starts/kills the takeover pair on 27018), `filler.sh` + `ballast.py`,
   `extras.sh`, `common.sh`, `cfg.py`.
-- `programs/`: `s3_first_byte.py`, `sealed_run_read.py`, `log_ack.py`, `takeovers.py`.
+- `programs/`: `s3_first_byte.py`, `sealed_run_read.py`, `log_ack.py`, `takeovers.py`, `agent_bench.py`.
+- aws-ready (2026-11-10): `ci/aurora.py` (the Aurora cluster, its policy and $0 check), `machine/generator.sh`,
+  `machine/ballast_plan.py`, `machine/ballast_states.py` (the ballast generator's machine side), `local/ballast_check.py`
+  (the generated data against mongod 7.0), `local/test_aurora.py` (aurora.py against moto, offline),
+  `local/benchmark_report.py` (the report the gate needs).
 - `local/`: the $0 validation: `local-run.sh WORK` runs the three jobs (Atlas databases into a kept pantry, ballast,
   measure) with docker containers as machines, MinIO as S3, a fake Atlas made like the kitchen's local test, the same
   scripts; then drops the pantry; `BLOCK_TEST=1` adds a round with a $0.05 cap. `check_local.py`, `fake_atlas.sh`,

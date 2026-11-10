@@ -188,6 +188,9 @@ def resolve(raw, quota=None):
         if "--sealed-runs" not in [o.split("=")[0] for o in opts]:
             refuse('ballast_mode generate: server_options must turn on compaction 2\'s reader ("--sealed-runs 0" or N): '
                    "the generated ballast is sealed runs and our manifest, which the server reads only with it on")
+        if "--envelopes" not in [o.split("=")[0] for o in opts] or "write" not in opts:
+            refuse('ballast_mode generate: server_options must have "--envelopes write" (release E1): a version of our '
+                   "manifest is published only with envelopes on")
         if "--customer-key" not in [o.split("=")[0] for o in opts]:
             refuse('ballast_mode generate: server_options must give the customer key of layout v2 (e.g. "--customer-key '
                    'messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts"); the generator writes the keys the round reads')

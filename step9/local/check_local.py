@@ -43,8 +43,10 @@ check("load finished with code 0" in read("client/steps.log", oa), "job A: the c
 check("loads in this run: 1" in open(os.path.join(W, f"packages-{load}.txt")).read(), "job A: client package loads (LOAD=1)")
 # job B: the ballast into the kept pantry
 rb = runjson(ballast)
-check(rb.get("outcome") == "FINITO" and rb.get("outcomes", {}).get("ballast") == "BALLAST_LOADED", f"job B (ballast): {rb.get('outcome')} {rb.get('outcomes')}")
-check("BALLAST: DONE" in read("filler/steps.log", os.path.join(W, f"out-{ballast}")), "job B: filler BALLAST: DONE")
+# aws-ready: the ballast is generated (ballast_mode generate) by the generator machine; the old filler path if not
+gen = rb.get("outcomes", {}).get("ballast") == "BALLAST_GENERATED"
+check(rb.get("outcome") == "FINITO" and rb.get("outcomes", {}).get("ballast") in ("BALLAST_LOADED", "BALLAST_GENERATED"), f"job B (ballast): {rb.get('outcome')} {rb.get('outcomes')}")
+check("BALLAST: DONE" in read("generator/steps.log" if gen else "filler/steps.log", os.path.join(W, f"out-{ballast}")), f"job B: {'generator' if gen else 'filler'} BALLAST: DONE")
 # job C: the measured kitchen
 run = runjson(name)
 check(run.get("outcome") == "FINITO", f"job C outcome {run.get('outcome')} ({json.dumps(run.get('outcomes'))})")
