@@ -49,8 +49,9 @@ impl Default for BuildOpts {
         BuildOpts {
             reseal: Reseal::All,
             group_bytes: 1 << 30,
-            sealed: RunOptions::sealed(CustomerKind::V2),
-            delta: RunOptions { block_bytes: runfmt::MIN_BLOCK, part_bytes: runfmt::DEFAULT_PART, customers: CustomerKind::V2 },
+            // the server's keys (layout v2 with keyenc components, step 6; runs written with V2 keep reading as V2)
+            sealed: RunOptions::sealed(CustomerKind::V2K),
+            delta: RunOptions { block_bytes: runfmt::MIN_BLOCK, part_bytes: runfmt::DEFAULT_PART, customers: CustomerKind::V2K },
         }
     }
 }
@@ -66,6 +67,8 @@ pub struct BuildReport {
     pub runs_written: u64,
     pub groups: usize,
     pub resealed: usize,
+    /// The staged publish's warm-up of the new runs (step 6).
+    pub stage: Option<super::counter::StageReport>,
 }
 
 pub(crate) fn line(m: &runfmt::RunMeta) -> RunLine {
@@ -238,6 +241,13 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
     let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: delta_runs, next_group_id };
     rep.version = version;
     rep.groups = v.groups.len();
+    // the staged publish (step 6, `counter.rs`): before the version that retires runs becomes current, warm the new runs'
+    // ranges of what this process holds of the retired ones (bounded wait). Step 4's compactor calls the same function
+    // in the same place: after its runs are written, before the conditional create.
+    if let Some(old) = cur {
+        let staged = View::new(Arc::clone(store), v.clone(), Some(old))?;
+        rep.stage = Some(super::counter::stage(old, &staged).await);
+    }
     let created = match manifest::create(store, id, &v).await {
         Ok(c) => c,
         // the outcome is unknown (an error, a timeout: the PUT may still land); the caller fences the slot this version

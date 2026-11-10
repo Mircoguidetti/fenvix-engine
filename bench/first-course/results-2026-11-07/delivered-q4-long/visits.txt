@@ -1,0 +1,21 @@
+visit 1: 1000 users in 69 s; openings {'n': 1000, 'bytes_median': 44879.5, 'bytes_p95': 48832, 'bytes_max': 50503, 'entries_median': 160.0, 'bytes_total': 38299677}
+gap day 1/14: 168748 messages, compaction passes so far 0
+gap day 2/14: 337496 messages, compaction passes so far 3
+gap day 3/14: 506244 messages, compaction passes so far 4
+gap day 4/14: 674992 messages, compaction passes so far 6
+gap day 5/14: 843740 messages, compaction passes so far 7
+gap day 6/14: 1012488 messages, compaction passes so far 10
+gap day 7/14: 1181236 messages, compaction passes so far 11
+gap day 8/14: 1349984 messages, compaction passes so far 13
+gap day 9/14: 1518732 messages, compaction passes so far 13
+gap day 10/14: 1687480 messages, compaction passes so far 13
+gap day 11/14: 1856228 messages, compaction passes so far 13
+gap day 12/14: 2024976 messages, compaction passes so far 14
+gap day 13/14: 2193724 messages, compaction passes so far 16
+gap day 14/14: 2362472 messages, compaction passes so far 18
+settled after 24 s
+gap: {'profile': 'medium', 'days': 14, 'messages': 2362472, 'test_users_written': 291, 'test_messages': 32373, 'write_secs': 312.3415837287903, 'gap_secs': 336.4379436969757, 'compaction_passes': 19, 'compaction': {'compactRuns': 19, 'compactPuts': 1617, 'compactGets': 43046}, 'server_cpu_secs': 593.87, 'first_course_writes_applied': 64746, 'first_course_write_hook_ms': 3357.307055, 'trimmed': 62, 'dropped_too_big': 0}
+visit 2: zero-GET exact answers 1000/1000 (100.0%), active 100.0%, uniform 100.0%, written 100.0%, not written 100.0%; wrong answers 0
+Q1 visit 1: GETs mean 8.26, ms p50 25.3; visit 2: GETs mean 0.00, ms p50 0.67, p99 1.39
+later queries ms: visit 1 p50 3.82 p99 28.50; visit 2 p50 0.68 p99 1.70
+opening sizes: after visit 1 {'n': 1000, 'bytes_median': 44879.5, 'bytes_p95': 48832, 'bytes_max': 50503, 'entries_median': 160.0, 'bytes_total': 38299677}; after gap {'n': 1000, 'bytes_median': 47508.5, 'bytes_p95': 110359, 'bytes_max': 259704, 'entries_median': 184.0, 'bytes_total': 52308672}; after visit 2 {'n': 1000, 'bytes_median': 46666.5, 'bytes_p95': 48957, 'bytes_max': 49972, 'entries_median': 184.0, 'bytes_total': 40546094}

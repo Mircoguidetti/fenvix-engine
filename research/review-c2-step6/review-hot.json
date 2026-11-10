@@ -1,0 +1,95 @@
+{
+  "median": {
+    "point": {
+      "area_over_slatedb": 1.089244521337947,
+      "area_over_whole": 1.024267895878525,
+      "p50_us_area": 60.44,
+      "p50_us_slatedb": 55.488,
+      "p50_us_whole": 59.008,
+      "whole_over_slatedb": 1.063437139561707
+    },
+    "range": {
+      "area_over_slatedb": 1.664756009018304,
+      "area_over_whole": 0.9633869469711488,
+      "p50_us_area": 130.695,
+      "p50_us_slatedb": 78.507,
+      "p50_us_whole": 135.662,
+      "whole_over_slatedb": 1.7280242526144165
+    }
+  },
+  "rounds": [
+    [
+      "point/slatedb",
+      55.668
+    ],
+    [
+      "point/Off",
+      59.008
+    ],
+    [
+      "point/Area",
+      61.265
+    ],
+    [
+      "range/slatedb",
+      80.603
+    ],
+    [
+      "range/Off",
+      136.147
+    ],
+    [
+      "range/Area",
+      130.014
+    ],
+    [
+      "point/slatedb",
+      54.3
+    ],
+    [
+      "point/Off",
+      59.937
+    ],
+    [
+      "point/Area",
+      59.39
+    ],
+    [
+      "range/slatedb",
+      77.372
+    ],
+    [
+      "range/Off",
+      132.757
+    ],
+    [
+      "range/Area",
+      130.695
+    ],
+    [
+      "point/slatedb",
+      55.488
+    ],
+    [
+      "point/Off",
+      59.005
+    ],
+    [
+      "point/Area",
+      60.44
+    ],
+    [
+      "range/slatedb",
+      78.507
+    ],
+    [
+      "range/Off",
+      135.662
+    ],
+    [
+      "range/Area",
+      135.49
+    ]
+  ],
+  "test": "review_hot_p50"
+}

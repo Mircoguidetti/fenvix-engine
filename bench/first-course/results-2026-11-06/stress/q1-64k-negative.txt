@@ -1,0 +1,2 @@
+checks 1230, wrong 193; served queries 568, partial 173, missed 5, no opening 80, kept 768, unkeepable 58, trimmed 0, dropped 0, writes applied 0, forgotten 0; reads served from openings 53108, missed 6667
+NEGATIVE CONTROL PASS: wrong answers found

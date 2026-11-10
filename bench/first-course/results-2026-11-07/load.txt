@@ -1,0 +1,3 @@
+loaded 4569112 messages, 20000 customers, 2.01 GiB of BSON in 454 s
+settled after 20 s
+load + settle 483 s

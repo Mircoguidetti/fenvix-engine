@@ -1,0 +1,11 @@
+counter_after_visit1: {'bytes': 285567365, 'blocks': 1070, 'blockBytes': 285567365, 'slices': 0, 'sliceBytes': 0, 'emptySlices': 0, 'ram_per_hot_customer_mean': 285567.365, 'customers_charged': 5091, 'charged_p50': 38007, 'charged_p95': 135168}
+counter_after_visit1_trimmed: {'bytes': 285567365, 'blocks': 1070, 'blockBytes': 285567365, 'slices': 0, 'sliceBytes': 0, 'emptySlices': 0, 'ram_per_hot_customer_mean': 285567.365, 'customers_charged': 5091, 'charged_p50': 38007, 'charged_p95': 135168}
+visit 1: 1000 users in 139 s; openings {'n': 1000, 'bytes_median': 45169.5, 'bytes_p95': 49168, 'bytes_max': 50839, 'entries_median': 160.0, 'bytes_total': 38541672}
+gap day 1/1: 168748 messages, compaction passes so far 3
+  publish (all): version 5 in 58252 ms, stage {'retired_runs': 4, 'held': 1071, 'wanted': 2001, 'warmed': 2001, 'missed': 0, 'gets': 707, 'millis': 6977, 'timed_out': False}
+settled after 20 s
+gap: {'profile': 'medium', 'days': 1, 'messages': 168797, 'test_users_written': 291, 'test_messages': 1628, 'write_secs': 83.40179562568665, 'gap_secs': 103.51623392105103, 'compaction_passes': 3, 'compaction': {'compactRuns': 3, 'compactPuts': 110, 'compactGets': 2807}, 'server_cpu_secs': 86.03, 'first_course_writes_applied': 3256, 'first_course_write_hook_ms': 313.840859, 'trimmed': 0, 'dropped_too_big': 0}
+visit 2: zero-GET exact answers 1000/1000 (100.0%), active 100.0%, uniform 100.0%, written 100.0%, not written 100.0%; wrong answers 0
+Q1 visit 1: GETs mean 9.03, ms p50 23.6; visit 2: GETs mean 0.00, ms p50 1.25, p99 2.65
+later queries ms: visit 1 p50 4.44 p99 324.99; visit 2 p50 1.19 p99 2.39
+opening sizes: after visit 1 {'n': 1000, 'bytes_median': 45169.5, 'bytes_p95': 49168, 'bytes_max': 50839, 'entries_median': 160.0, 'bytes_total': 38541672}; after gap {'n': 1000, 'bytes_median': 46120.5, 'bytes_p95': 51005, 'bytes_max': 231739, 'entries_median': 165.0, 'bytes_total': 39593043}; after visit 2 {'n': 1000, 'bytes_median': 45297.5, 'bytes_p95': 49168, 'bytes_max': 51090, 'entries_median': 162.0, 'bytes_total': 38789152}

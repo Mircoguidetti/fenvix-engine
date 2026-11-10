@@ -1,0 +1,51 @@
+{
+  "block_kb": 256,
+  "results": [
+    {
+      "hot": 400,
+      "next_visit_gets": 2,
+      "pattern": "newest20",
+      "per_hot_after_next_visit_trimmed": 11739.9225,
+      "per_hot_after_stage": 11920.0375,
+      "per_hot_before": 11739.345,
+      "stage": {
+        "capped": false,
+        "gets": 352,
+        "held": 816,
+        "held_bytes": 4695738,
+        "millis": 89,
+        "missed": 0,
+        "retired_runs": 2,
+        "timed_out": false,
+        "wanted": 814,
+        "warmed": 814,
+        "warmed_bytes": 4768015
+      },
+      "stage_gets": 352
+    },
+    {
+      "hot": 400,
+      "next_visit_gets": 5,
+      "pattern": "newest20+oldest20",
+      "per_hot_after_next_visit_trimmed": 78618.005,
+      "per_hot_after_stage": 96215.2225,
+      "per_hot_before": 74889.9375,
+      "stage": {
+        "capped": false,
+        "gets": 391,
+        "held": 1211,
+        "held_bytes": 29955975,
+        "millis": 130,
+        "missed": 0,
+        "retired_runs": 2,
+        "timed_out": false,
+        "wanted": 1221,
+        "warmed": 1221,
+        "warmed_bytes": 38486089
+      },
+      "stage_gets": 391
+    }
+  ],
+  "test": "review_reseal_patterns",
+  "users": 2000
+}

@@ -18,6 +18,7 @@ pub static malloc_conf: &[u8] = b"background_thread:true\0";
 mod agg;
 mod custkey;
 mod layout2;
+mod opening;
 mod prefetch;
 mod hostinfo;
 mod auth;
@@ -487,6 +488,20 @@ struct Args {
     sealed_erasure_deadline_ms: u64,
     #[arg(long, default_value_t = 60_000)]
     sealed_erasure_poll_ms: u64,
+    /// What the counter keeps of a run block fetched by a one-customer read (fx/counter.rs, step 6): `off` (the whole
+    /// block), `customer` (the customer's rows) or `area` (the rows of the read's collection documents or index).
+    #[arg(long, default_value = "area")]
+    sealed_slices: String,
+    /// Bits per customer of the customer filter of new runs (the new-user filter).
+    #[arg(long, default_value_t = 16)]
+    sealed_filter_bits: u64,
+    /// The staged publish (step 6): before a version that retires runs becomes current, warm the new runs' ranges of what
+    /// the counter holds of the retired ones, for at most this many milliseconds (0: no staging).
+    #[arg(long, default_value_t = 10_000)]
+    sealed_stage_ms: u64,
+    /// A slice is kept whole this many milliseconds after a read made it, then trimmed to what reads relied on.
+    #[arg(long, default_value_t = 1_000)]
+    sealed_trim_ms: u64,
     /// Timing of our manifest (fx; review round 2 of step 0, F6), in milliseconds, checked at startup: a manifest PUT
     /// with no answer within the PUT timeout counts as timed out (a fence follows); it must be shorter than the lease
     /// minus its margin, and the remote lease and the GC grace must each exceed the hold life plus it.
@@ -510,6 +525,27 @@ struct Args {
     /// With `--sealed-compactor`: the drop of absorbed SlateDB rows (off by default until step 7b pairs forks).
     #[arg(long)]
     sealed_drop: bool,
+    /// First course (opening.rs, measurement prototype, off by default): keep the key-value pairs of each user's first
+    /// query of a visit and answer the next visit's first query from them when the answer is exact.
+    #[arg(long, default_value_t = false)]
+    first_course: bool,
+    /// First course: a query of a user idle for this long starts a visit.
+    #[arg(long, default_value_t = 1800)]
+    first_course_idle_secs: u64,
+    /// First course: an opening not refreshed by a visit for this many days is not used (T).
+    #[arg(long, default_value_t = 14)]
+    first_course_days: u64,
+    /// First course: all openings together, in MiB.
+    #[arg(long, default_value_t = 1024)]
+    first_course_mb: u64,
+    /// First course: one opening at most, in KiB (trimmed above it, then dropped).
+    #[arg(long, default_value_t = 256)]
+    first_course_max_kb: u64,
+    /// First course: the opening keeps what this many queries of a visit read (1: the first query only). Default 4, the
+    /// logical images of compaction 2 step 6 (the first course's review: with 1 query a visit's next query pays the
+    /// cold read instead).
+    #[arg(long, default_value_t = 4)]
+    first_course_queries: u64,
     /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
     /// releases before); M29 measured 64.
     #[arg(long, default_value_t = 4)]
@@ -785,6 +821,18 @@ async fn run() -> Result<()> {
         }
         let short = args.sealed_test_short_e1_wait || std::env::var("FENVIX_SEALED_TEST_SHORT_E1_WAIT").map(|v| v == "1").unwrap_or(false);
         tenant_bench::fx::E1_WAIT_TEST.store(short, Relaxed);
+        use tenant_bench::fx::counter::{SliceMode, SLICES, STAGED, STAGE_DEADLINE_MS};
+        let mode = match args.sealed_slices.as_str() {
+            "off" => SliceMode::Off,
+            "customer" => SliceMode::Customer,
+            "area" => SliceMode::Area,
+            other => anyhow::bail!("--sealed-slices must be off, customer or area, not {other}"),
+        };
+        SLICES.store(mode as u8, Relaxed);
+        tenant_bench::runfmt::FILTER_BITS_PER_CUSTOMER.store(args.sealed_filter_bits.clamp(1, 64), Relaxed);
+        STAGED.store(args.sealed_stage_ms > 0, Relaxed);
+        STAGE_DEADLINE_MS.store(args.sealed_stage_ms, Relaxed);
+        tenant_bench::fx::counter::TRIM_MS.store(args.sealed_trim_ms, Relaxed);
         tenant_bench::fx::PUT_TIMEOUT_MS.store(args.sealed_put_timeout_ms, Relaxed);
         tenant_bench::fx::LEASE_MS.store(args.sealed_lease_ms, Relaxed);
         tenant_bench::fx::LEASE_MARGIN_MS.store(args.sealed_lease_margin_ms, Relaxed);
@@ -799,6 +847,12 @@ async fn run() -> Result<()> {
         }
         tenant_bench::fx::check_config()?;
     }
+    opening::ENABLED.store(args.first_course, std::sync::atomic::Ordering::Relaxed);
+    opening::IDLE_SECS.store(args.first_course_idle_secs, std::sync::atomic::Ordering::Relaxed);
+    opening::MAX_AGE_SECS.store(args.first_course_days * 86_400, std::sync::atomic::Ordering::Relaxed);
+    opening::BUDGET_BYTES.store(args.first_course_mb << 20, std::sync::atomic::Ordering::Relaxed);
+    opening::QUERIES.store(args.first_course_queries.max(1), std::sync::atomic::Ordering::Relaxed);
+    opening::MAX_BYTES.store(args.first_course_max_kb << 10, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::tiered::set_compression(&args.sst_compression)?;
     tenant_bench::tiered::TIERS.store(args.compaction_tiers, std::sync::atomic::Ordering::Relaxed);

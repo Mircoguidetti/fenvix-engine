@@ -495,6 +495,50 @@ impl Seg {
         p
     }
 
+    /// The physical upper bound (exclusive) of logical keys below `x`: [`Seg::phys_bound`], except when `x`'s tail is
+    /// exactly one customer component c. Then every key of the area below `x` belongs to a customer sorting before c,
+    /// and no key of the area lies in [`u/c`, `phys_bound(x)`): that interval holds only c's other areas. The bound is
+    /// `u/c`, so a read of one customer does not touch the next customer's keys (compaction 2 step 6: a reverse index
+    /// read of one customer read the next customer's documents first, which cost the counter a block and a GET).
+    pub fn phys_upper(&self, x: &[u8]) -> Vec<u8> {
+        if x > self.lp.as_slice() && x < self.lp_end().as_slice() {
+            let tail = &x[self.lp.len()..];
+            if crate::keyenc::skip(tail) == Some(tail.len()) {
+                let mut p = U.to_vec();
+                p.extend(tail);
+                return p;
+            }
+        }
+        self.phys_bound(x)
+    }
+
+    /// The physical upper bound (exclusive) of a read of [lo, hi) inside this area: [`Seg::phys_upper`], tightened to the
+    /// end of one customer's part of the area when [lo, hi) holds keys of that customer only (lo starts with its
+    /// component c, hi <= lp + prefix_end(c)). Every area key of the read is then `u/c{infix}...`, below
+    /// `prefix_end(u/c{infix})`. A one-customer read then stays inside its area, which the counter of step 6 slices by.
+    pub fn phys_upper_within(&self, lo: &[u8], hi: &[u8]) -> Vec<u8> {
+        let p = self.phys_upper(hi);
+        if lo <= self.lp.as_slice() || lo >= self.lp_end().as_slice() {
+            return p;
+        }
+        let tail = &lo[self.lp.len()..];
+        let Some(n) = crate::keyenc::skip(tail) else { return p };
+        let c = &tail[..n];
+        let Some(ce) = crate::keyenc::prefix_end(c) else { return p };
+        let mut cust_end = self.lp.clone();
+        cust_end.extend(ce);
+        if hi > cust_end.as_slice() {
+            return p;
+        }
+        let mut a = U.to_vec();
+        a.extend(c);
+        a.extend(&self.infix);
+        match crate::keyenc::prefix_end(&a) {
+            Some(e) if e < p => e,
+            _ => p,
+        }
+    }
+
     /// Where a physical key of the customer space stands against this area: `Ok(logical key)` inside it,
     /// `Err(Before)` before the area within its customer (`seek`: the area's start for that customer), `Err(After)`
     /// after it within its customer (`area_end`: the end of the area for that customer). `customer` is `u/{customer}`.
@@ -643,6 +687,66 @@ mod tests {
         let (c, id) = split_dsuf(&d1, true).unwrap();
         assert_eq!(c, comp(&Bson::String("a".into())).as_slice());
         assert_eq!(id, crate::layout::encode_sortable(&Bson::Int32(9)).as_slice());
+    }
+
+    /// Compaction 2 step 6: the run format's customer rule for the server's keys (`runfmt::CustomerKind::V2K`) finds
+    /// exactly the customer component of every physical key, documents and co-located index entries, for every type a
+    /// customer value can have; step 1's rule (V2, a length byte) does not.
+    #[test]
+    fn run_format_finds_the_customer_component_of_server_keys() {
+        use tenant_bench::runfmt::CustomerKind;
+        let values = [Bson::Int32(7), Bson::Int64(1 << 40), Bson::Double(2.5), Bson::String("alice".into()), Bson::String("a\u{0}b".into()), Bson::ObjectId(bson::oid::ObjectId::new())];
+        let mut v2_wrong = 0;
+        for v in &values {
+            let d = doc! { "_id": 3, "u": v.clone() };
+            let docp = to_phys(&doc_key("messages", Some(&k("u")), &d)).unwrap();
+            let mut want = U.to_vec();
+            want.extend(comp(v));
+            let r = CustomerKind::V2K.customer_of(&docp).unwrap();
+            assert_eq!(&docp[..r.end], &want[..], "{v:?}");
+            assert_eq!(r.start, 2);
+            let mut ix = b"idx/messages/".to_vec();
+            ix.push(MARK);
+            ix.extend(b"u_1_ts_-1/");
+            ix.extend(comp(v));
+            ix.extend(comp(&Bson::Int32(99)));
+            ix.extend(crate::layout::encode_sortable(&Bson::Int32(3)));
+            let ixp = to_phys(&ix).unwrap();
+            let r = CustomerKind::V2K.customer_of(&ixp).unwrap();
+            assert_eq!(&ixp[..r.end], &want[..], "{v:?} index entry");
+            if CustomerKind::V2.customer_of(&docp).map(|r| docp[..r.end].to_vec()) != Some(want.clone()) {
+                v2_wrong += 1;
+            }
+        }
+        assert_eq!(v2_wrong, values.len(), "step 1's rule misreads every server component");
+        assert_eq!(CustomerKind::V2K.customer_of(b"loc/messages/x"), None);
+        assert_eq!(CustomerKind::V2K.customer_of(b"u/"), None);
+    }
+
+    /// Compaction 2 step 6 fix round (review FIX 1): a collection or index name with a '/' is escaped in the server's
+    /// keys, so the counter's area rule (`fx::counter::area_prefix`, the first '/' after the customer component ends the
+    /// collection name) finds the area of every server key, documents and co-located index entries alike.
+    #[test]
+    fn counter_finds_the_area_of_a_collection_named_with_a_slash() {
+        use tenant_bench::fx::counter::area_prefix;
+        use tenant_bench::runfmt::CustomerKind;
+        let d = doc! { "_id": 3, "u": 7 };
+        let docp = to_phys(&doc_key("zz/q", Some(&k("u")), &d)).unwrap();
+        let mut want = U.to_vec();
+        want.extend(comp(&Bson::Int32(7)));
+        want.extend(b"zz%2Fq/d/");
+        assert_eq!(area_prefix(CustomerKind::V2K, &docp), Some(want));
+        let mut ix = b"idx/zz%2Fq/".to_vec();
+        ix.push(MARK);
+        ix.extend(b"a%2Fb_1/");
+        ix.extend(comp(&Bson::Int32(7)));
+        ix.extend(crate::layout::encode_sortable(&Bson::Int32(3)));
+        let ixp = to_phys(&ix).unwrap();
+        let mut want = U.to_vec();
+        want.extend(comp(&Bson::Int32(7)));
+        want.extend(b"zz%2Fq/x/a%2Fb_1/");
+        assert_eq!(area_prefix(CustomerKind::V2K, &ixp), Some(want));
+        assert_eq!(crate::layout::escape_collection("zz/q"), b"zz%2Fq".to_vec());
     }
 
     #[test]

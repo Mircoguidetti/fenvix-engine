@@ -1,0 +1,50 @@
+SLOW insert db=chat ms=627 ok=true
+SLOW insert db=chat ms=609 ok=true
+SLOW insert db=chat ms=627 ok=true
+SLOW insert db=chat ms=542 ok=true
+SLOW insert db=chat ms=521 ok=true
+SLOW insert db=chat ms=563 ok=true
+SLOW insert db=chat ms=587 ok=true
+SLOW insert db=chat ms=680 ok=true
+SLOW insert db=chat ms=501 ok=true
+SLOW insert db=chat ms=549 ok=true
+SLOW insert db=chat ms=575 ok=true
+SLOW insert db=chat ms=512 ok=true
+SLOW insert db=chat ms=540 ok=true
+SLOW insert db=chat ms=514 ok=true
+SLOW insert db=chat ms=501 ok=true
+SLOW insert db=chat ms=583 ok=true
+SLOW insert db=chat ms=628 ok=true
+SLOW insert db=chat ms=511 ok=true
+SLOW insert db=chat ms=562 ok=true
+SLOW insert db=chat ms=623 ok=true
+SLOW insert db=chat ms=569 ok=true
+SSTGC begin tenant=chat unix_ms=1794238420071
+SSTGC end tenant=chat unix_ms=1794238420154 deleted_ssts=0 deleted_manifests=0 referenced=19 waiting=410
+SLOW insert db=chat ms=62293 ok=true
+SLOW insert db=chat ms=123409 ok=true
+SSTGC begin tenant=chat unix_ms=1794238540379
+SSTGC end tenant=chat unix_ms=1794238540682 deleted_ssts=144 deleted_manifests=266 referenced=16 waiting=32
+SLOW insert db=chat ms=187322 ok=true
+SLOW insert db=chat ms=187634 ok=true
+SLOW insert db=chat ms=312439 ok=true
+SLOW insert db=chat ms=249959 ok=true
+SLOW insert db=chat ms=184942 ok=true
+SLOW insert db=chat ms=308819 ok=true
+SLOW insert db=chat ms=244661 ok=true
+SLOW insert db=chat ms=182703 ok=true
+SLOW insert db=chat ms=307316 ok=true
+SLOW insert db=chat ms=263371 ok=true
+SLOW insert db=chat ms=281972 ok=true
+SLOW insert db=chat ms=300788 ok=true
+SLOW insert db=chat ms=318136 ok=true
+SLOW insert db=chat ms=238992 ok=true
+SLOW insert db=chat ms=396422 ok=true
+SLOW insert db=chat ms=304535 ok=true
+SLOW insert db=chat ms=286191 ok=true
+SLOW insert db=chat ms=268828 ok=true
+SLOW insert db=chat ms=256192 ok=true
+SLOW insert db=chat ms=192631 ok=true
+SLOW insert db=chat ms=316633 ok=true
+SLOW insert db=chat ms=190224 ok=true
+shutting down: closing tenants cleanly

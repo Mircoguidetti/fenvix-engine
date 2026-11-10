@@ -452,6 +452,18 @@ impl Server {
             "listDatabases" => return Box::pin(self.list_databases(db, cmd, conn_id)).await,
             "tenantStats" => return Ok(self.tenant_stats()),
             "fenvixSstInfo" => return self.sst_info(cmd).await,
+            "fenvixFirstCourse" => {
+                // first course (opening.rs): the size of every opening of a database, for measurements
+                let db = cmd.get_str("fenvixFirstCourse").map_err(|_| MongoError::bad_value("fenvixFirstCourse needs a database name".into()))?;
+                let sizes = crate::opening::sizes(db);
+                return Ok(doc! {
+                    "bytes": sizes.iter().map(|(b, _)| Bson::Int64(*b as i64)).collect::<Vec<_>>(),
+                    "entries": sizes.iter().map(|(_, e)| Bson::Int64(*e as i64)).collect::<Vec<_>>(),
+                    "ok": 1.0,
+                });
+            }
+            "fenvixSealedPublish" => return Box::pin(self.sealed_publish(cmd)).await,
+            "fenvixCounter" => return Ok(self.counter_info(cmd)),
             "renameCollection" => return Box::pin(self.rename_collection(db, cmd)).await,
             "ttlPass" => {
                 let gap = int_arg(cmd.get("minGapSecs")).unwrap_or(0) as u64;
@@ -820,6 +832,60 @@ impl Server {
             "runs": runs.iter().map(|(id, ssts)| Bson::Document(doc! { "id": *id as i64, "ssts": ssts.iter().map(|s| Bson::Document(one(s))).collect::<Vec<_>>() })).collect::<Vec<_>>(),
             "ok": 1.0,
         })
+    }
+
+    /// `{fenvixSealedPublish: "<db>", reseal: "all" | "none" | [group index, ...]}`: build and publish the next version
+    /// of our manifest now (compaction 2). It stands in for step 4's reseal trigger in tests and benches: a reseal
+    /// retires the groups' sealed runs, so the staged publish of step 6 runs before the version becomes current.
+    async fn sealed_publish(&self, cmd: &Document) -> R<Document> {
+        use tenant_bench::fx::build::{BuildOpts, Reseal};
+        let db = cmd.get_str("fenvixSealedPublish").map_err(|_| MongoError::bad_value("fenvixSealedPublish needs a database name".into()))?;
+        let reseal = match cmd.get("reseal") {
+            None => Reseal::All,
+            Some(Bson::String(s)) if s == "all" => Reseal::All,
+            Some(Bson::String(s)) if s == "none" => Reseal::None,
+            Some(Bson::Array(a)) => Reseal::Some(a.iter().filter_map(|v| int_arg(Some(v)).map(|x| x as usize)).collect()),
+            Some(_) => return Err(MongoError::bad_value("reseal must be \"all\", \"none\" or an array of group indexes".into())),
+        };
+        let mut e = self.dbs.lock(db).await;
+        if !e.ensure_open().await? {
+            return Err(MongoError::bad_value(format!("database {db} does not exist")));
+        }
+        let t = e.tenant_mut().ok_or_else(|| MongoError::bad_value(format!("database {db} is not open")))?;
+        let mut opts = BuildOpts { reseal, group_bytes: tenant_bench::fx::GROUP_BYTES.load(std::sync::atomic::Ordering::Relaxed), ..Default::default() };
+        if let Some(kb) = int_arg(cmd.get("sealedBlockKb")) {
+            opts.sealed.block_bytes = (kb as usize) << 10;
+        }
+        let t0 = std::time::Instant::now();
+        let rep = t.fx_publish(&opts, None).await?;
+        let ms = t0.elapsed().as_millis() as i64;
+        // the build report as JSON text (published false: nothing new, or E1 announced and envelopes not started yet)
+        let (published, rep) = match rep {
+            Some(r) => (true, serde_json::to_string(&r).unwrap_or_default()),
+            None => (false, String::new()),
+        };
+        Ok(doc! { "published": published, "report": rep, "millis": ms, "ok": 1.0 })
+    }
+
+    /// `{fenvixCounter: 1, clear: bool, trim: bool}`: what the counter of our runs holds (`fx/counter.rs`), with the
+    /// bytes held per customer, for measurements; `clear` empties it first, `trim` trims every whole slice first.
+    fn counter_info(&self, cmd: &Document) -> Document {
+        use tenant_bench::fx::counter;
+        if cmd.get_bool("clear").unwrap_or(false) {
+            counter::clear();
+        }
+        if cmd.get_bool("trim").unwrap_or(false) {
+            counter::trim_all();
+        }
+        let st = counter::stats();
+        let mut per: Vec<f64> = counter::bytes_per_customer(tenant_bench::runfmt::CustomerKind::V2K, None).into_values().collect();
+        per.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        doc! {
+            "bytes": st.bytes as i64, "blocks": st.blocks as i64, "blockBytes": st.block_bytes as i64,
+            "slices": st.slices as i64, "sliceBytes": st.slice_bytes as i64, "emptySlices": st.empty_slices as i64,
+            "perCustomer": per.into_iter().map(|b| Bson::Int64(b as i64)).collect::<Vec<_>>(),
+            "ok": 1.0,
+        }
     }
 
     fn tenant_stats(&self) -> Document {

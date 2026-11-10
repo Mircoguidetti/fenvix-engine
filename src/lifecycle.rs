@@ -907,6 +907,13 @@ pub struct Tenant {
 }
 
 impl Tenant {
+    /// Every staged write is in a durable WAL object (explicit flush mode; otherwise unknown here, so false). A read of
+    /// durable data then sees exactly what a read of the memtable sees.
+    pub fn all_durable(&self) -> bool {
+        use std::sync::atomic::Ordering::Acquire;
+        EXPLICIT_FLUSH.load(std::sync::atomic::Ordering::Relaxed) && self.group.flushed_seq.load(Acquire) >= self.group.staged_seq.load(Acquire)
+    }
+
     /// slatedb writer epoch of this writer (None for a reader).
     pub fn writer_epoch(&self) -> Option<u64> {
         match &self.mode {
@@ -1103,7 +1110,7 @@ impl Tenant {
                 nv.r3 = Some(Arc::clone(&sh.r3));
                 sh.serving.store(nv.x_d, std::sync::atomic::Ordering::Relaxed);
                 sh.serving_version.store(nv.version, std::sync::atomic::Ordering::Relaxed);
-                self.fx = Some(Arc::new(nv));
+                self.fx_install(nv);
             }
         }
         self.fx_shared = Some(sh);
@@ -1121,7 +1128,7 @@ impl Tenant {
                 // the floor may pass the old X_d only once nothing reads with it: holds cover reads in flight
                 sh.serving.store(nv.x_d, std::sync::atomic::Ordering::Relaxed);
                 sh.serving_version.store(nv.version, std::sync::atomic::Ordering::Relaxed);
-                self.fx = Some(Arc::new(nv));
+                self.fx_install(nv);
                 self.fx_loaded = Instant::now();
                 true
             }
@@ -1220,7 +1227,7 @@ impl Tenant {
                 match manifest::create(&store, &self.id, &f).await {
                     Ok(true) => {
                         crate::fx::FENCES.fetch_add(1, Relaxed);
-                        self.fx = Some(Arc::new(crate::fx::view::View::new(Arc::clone(&store), f, self.fx.as_deref())?));
+                        self.fx_install(crate::fx::view::View::new(Arc::clone(&store), f, self.fx.as_deref())?);
                         self.fx_fence_pending = false;
                         self.fx_loaded = crate::fx::loaded_at(t0);
                         return Ok(());
@@ -1278,9 +1285,18 @@ impl Tenant {
             self.fx_fence_pending = false;
         }
         anyhow::ensure!(v.e_env == self.env, "database {}: our manifest {} has E_env {:?}, the database's marker {:?}", self.id, v.version, v.e_env, self.env);
-        self.fx = Some(Arc::new(crate::fx::view::View::new(store, v, self.fx.as_deref())?));
+        self.fx_install(crate::fx::view::View::new(store, v, self.fx.as_deref())?);
         self.fx_loaded = crate::fx::loaded_at(t0);
         Ok(())
+    }
+
+    /// Read with `view` from now on. What the counter holds of runs the new version no longer lists is dropped
+    /// (`fx/counter.rs`): those runs are read again only by holds on older versions, which fetch what they need.
+    fn fx_install(&mut self, view: crate::fx::view::View) {
+        if let Some(old) = self.fx.as_deref() {
+            crate::fx::counter::forget_runs(&crate::fx::counter::retired(old, &view));
+        }
+        self.fx = Some(Arc::new(view));
     }
 
     /// Start envelopes if the database has none (a version needs E_env <= X_d, `fx/manifest.rs`), in two steps (rule
@@ -1371,7 +1387,7 @@ impl Tenant {
         if let Some(f) = fail {
             f("after_publish")?;
         }
-        self.fx = Some(Arc::new(crate::fx::view::View::new(store, v, self.fx.as_deref())?));
+        self.fx_install(crate::fx::view::View::new(store, v, self.fx.as_deref())?);
         self.fx_loaded = Instant::now();
         crate::fx::PUBLISHES.fetch_add(1, Relaxed);
         Ok(Some(rep))
@@ -1387,7 +1403,7 @@ impl Tenant {
                 if e.downcast_ref::<crate::fx::LostRace>().is_some() {
                     // the outcome is known: another publisher holds the slot; read with the newest version (rule 24)
                     if let Some(v) = crate::fx::manifest::load_newest(&store, &self.id).await? {
-                        self.fx = Some(Arc::new(crate::fx::view::View::new(Arc::clone(&store), v, self.fx.as_deref())?));
+                        self.fx_install(crate::fx::view::View::new(Arc::clone(&store), v, self.fx.as_deref())?);
                     }
                 } else if !crate::fx::is_fenced(&e) {
                     // the outcome of the publish's PUT may be unknown (an error, a timeout: the PUT may have landed):
@@ -1466,7 +1482,7 @@ impl Tenant {
                             Ok(false) => return Err(self.fx_publish_failed(anyhow::Error::new(crate::fx::LostRace(format!("erasure version {} of {} lost the race", v.version, self.id)))).await),
                             Err(x) => return Err(self.fx_publish_failed(anyhow::Error::new(crate::fx::UnknownPublish { version: Box::new(v.clone()), msg: format!("{x:#}") })).await),
                         }
-                        self.fx = Some(Arc::new(crate::fx::view::View::new(Arc::clone(&store), v.clone(), self.fx.as_deref())?));
+                        self.fx_install(crate::fx::view::View::new(Arc::clone(&store), v.clone(), self.fx.as_deref())?);
                         self.fx_loaded = Instant::now();
                         crate::fx::PUBLISHES.fetch_add(1, Relaxed);
                         v.version

@@ -9,6 +9,8 @@
 //! - `pair.rs`: checkpoints paired with a version, and the control layer's readers through that pair (step 7a: export,
 //!   PITR).
 //! - `droptest.rs`: a stand-in for step 4's drop job, for tests of the paths that must read through our runs.
+//! - `counter.rs`: the waiter's cache of our runs: physical slices, the new-user filter's counters, the staged publish
+//!   of a reseal (step 6).
 //!
 //! Off by default (`--sealed-runs`). With it off, no code here runs and the server reads SlateDB as before. With it on, a
 //! database reads through the merged reader once it has a published version.
@@ -23,6 +25,7 @@ pub mod drop;
 pub mod gc;
 pub mod droptest;
 pub mod erase;
+pub mod counter;
 pub mod hold;
 pub mod local;
 pub mod pool;
@@ -30,6 +33,14 @@ pub mod manifest;
 pub mod pair;
 pub mod read;
 pub mod view;
+#[cfg(test)]
+mod counter_bench;
+#[cfg(test)]
+mod fix6_tests;
+#[cfg(test)]
+mod review6_tests;
+#[cfg(test)]
+mod counter_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

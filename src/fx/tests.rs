@@ -438,6 +438,17 @@ async fn model_publish_every_100_ops_with_crashes() {
     let mut rng = StdRng::seed_from_u64(seed);
     // FX_MODEL_CONTROL=nocut|skipdelta: a broken reader, which the model must catch
     let control = std::env::var("FX_MODEL_CONTROL").unwrap_or_default();
+    // FX_SLICES=0|1|2: what the counter keeps of a fetched block (step 6: whole blocks, the customer's rows, the area's)
+    let slices_before = counter::SLICES.load(Relaxed);
+    if let Some(m) = std::env::var("FX_SLICES").ok().and_then(|s| s.parse::<u8>().ok()) {
+        counter::SLICES.store(m, Relaxed);
+    }
+    // FX_TRIM_MS=n: slices are trimmed to what reads relied on n ms after they are made (0: at the next insert)
+    let trim_before = counter::TRIM_MS.load(Relaxed);
+    if let Some(ms) = std::env::var("FX_TRIM_MS").ok().and_then(|s| s.parse::<u64>().ok()) {
+        counter::TRIM_MS.store(ms, Relaxed);
+    }
+    eprintln!("model test: slice mode {:?}, trim after {} ms", counter::slice_mode(), counter::TRIM_MS.load(Relaxed));
     match control.as_str() {
         "nocut" => view::CONTROL_NO_CUT.store(true, Relaxed),
         "skipdelta" => view::CONTROL_SKIP_DELTA.store(true, Relaxed),
@@ -653,9 +664,12 @@ async fn model_publish_every_100_ops_with_crashes() {
     let from_runs = view::ROWS_FROM_RUNS.load(Relaxed) - runs_before;
     view::CONTROL_NO_CUT.store(false, Relaxed);
     view::CONTROL_SKIP_DELTA.store(false, Relaxed);
+    let mode_used = format!("{:?} trim_ms={} trims={} trim_drops={} refetches={}", counter::slice_mode(), counter::TRIM_MS.load(Relaxed), counter::TRIMS.load(Relaxed), counter::TRIM_DROPS.load(Relaxed), counter::REFETCHES.load(Relaxed));
+    counter::SLICES.store(slices_before, Relaxed);
+    counter::TRIM_MS.store(trim_before, Relaxed);
     let summary = format!(
-        "FX_MODEL control={control:?} seed={seed} ops={} wrong={} writes={} gets={} scans={} snapshot_reads={} reader_mode_reads={} publishes={} crashes={} fail_after_runs={} fail_after_publish={} refreshes={} slatedb_compactions={} final_version={} groups={} delta_runs={} rows_from_runs={from_runs} versions_in_store={}",
-        st.ops, st.wrong, st.writes, st.gets, st.scans, st.snap_reads, st.reader_mode_reads, st.publishes, st.crashes, st.fail_after_runs, st.fail_after_publish, st.retries, st.compactions, v.version, v.groups.len(), v.delta.len(),
+        "FX_MODEL control={control:?} slices={:?} seed={seed} ops={} wrong={} writes={} gets={} scans={} snapshot_reads={} reader_mode_reads={} publishes={} crashes={} fail_after_runs={} fail_after_publish={} refreshes={} slatedb_compactions={} final_version={} groups={} delta_runs={} rows_from_runs={from_runs} versions_in_store={}",
+        mode_used, st.ops, st.wrong, st.writes, st.gets, st.scans, st.snap_reads, st.reader_mode_reads, st.publishes, st.crashes, st.fail_after_runs, st.fail_after_publish, st.retries, st.compactions, v.version, v.groups.len(), v.delta.len(),
         manifest::list_versions(&store, id).await.unwrap().len()
     );
     eprintln!("{summary}");
