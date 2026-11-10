@@ -1193,9 +1193,10 @@ impl Compactor {
         let done = self.drop.jobs_done.load(Relaxed);
         if done > self.refreshed_jobs.swap(done, Relaxed) {
             let db = self.db.clone();
-            self.runtime.spawn(async move {
+            // c2-fix-hangs: the compactor's work, not drawn from the database's quota (`counting::as_maintenance`)
+            self.runtime.spawn(crate::counting::as_maintenance(async move {
                 let _ = db.refresh_manifest().await;
-            });
+            }));
         }
     }
 

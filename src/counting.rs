@@ -607,6 +607,83 @@ impl ObjectStore for OwnedStore {
     }
 }
 
+tokio::task_local! {
+    /// Set while a database's maintenance store (see [`maintenance`]) makes a request.
+    static MAINTENANCE: ();
+}
+
+/// The request being made is maintenance work of a database: its sealed-run compactor (`fx/compactor.rs`: absorptions,
+/// merges, GC, and the SlateDB compactor and worker it keeps running, which poll the store). The server still counts it
+/// in the database's points, but it does not draw the database's quota: no waiting command can slow it, so charging it
+/// to the quota only starved the database's commands (c2-fix-hangs: an idle database's compactor polled about 370 GETs
+/// a second, 74 000 points against a quota of 2 000, and its reads waited forever).
+pub fn is_maintenance_request() -> bool {
+    MAINTENANCE.try_with(|_| ()).is_ok()
+}
+
+/// Run `f` as maintenance work (see [`is_maintenance_request`]): for a database's compactor calling into a store that is
+/// not its own maintenance store (the writer's manifest refresh after a SlateDB compaction job).
+pub async fn as_maintenance<F: std::future::Future>(f: F) -> F::Output {
+    MAINTENANCE.scope((), f).await
+}
+
+/// A store whose every request is made as maintenance work (see [`is_maintenance_request`]). Owner and path attribution
+/// are left to the layers around it.
+#[derive(Debug)]
+pub struct MaintenanceStore {
+    inner: Arc<dyn ObjectStore>,
+}
+
+pub fn maintenance(store: &Arc<dyn ObjectStore>) -> Arc<dyn ObjectStore> {
+    Arc::new(MaintenanceStore { inner: Arc::clone(store) })
+}
+
+impl fmt::Display for MaintenanceStore {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "MaintenanceStore({})", self.inner)
+    }
+}
+
+#[async_trait]
+impl ObjectStore for MaintenanceStore {
+    async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult> {
+        MAINTENANCE.scope((), self.inner.put_opts(location, payload, opts)).await
+    }
+
+    async fn put_multipart_opts(&self, location: &Path, opts: PutMultipartOptions) -> Result<Box<dyn MultipartUpload>> {
+        MAINTENANCE.scope((), self.inner.put_multipart_opts(location, opts)).await
+    }
+
+    async fn get_opts(&self, location: &Path, options: GetOptions) -> Result<GetResult> {
+        MAINTENANCE.scope((), self.inner.get_opts(location, options)).await
+    }
+
+    fn delete_stream(&self, locations: BoxStream<'static, Result<Path>>) -> BoxStream<'static, Result<Path>> {
+        self.inner.delete_stream(locations)
+    }
+
+    // a LIST is charged when the stream is made (`CountingStore::list`), so the scope of the call covers it
+    fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>> {
+        MAINTENANCE.sync_scope((), || self.inner.list(prefix))
+    }
+
+    fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, Result<ObjectMeta>> {
+        MAINTENANCE.sync_scope((), || self.inner.list_with_offset(prefix, offset))
+    }
+
+    async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult> {
+        MAINTENANCE.scope((), self.inner.list_with_delimiter(prefix)).await
+    }
+
+    async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> Result<()> {
+        MAINTENANCE.scope((), self.inner.copy_opts(from, to, options)).await
+    }
+
+    async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> Result<()> {
+        MAINTENANCE.scope((), self.inner.rename_opts(from, to, options)).await
+    }
+}
+
 #[derive(Debug)]
 struct CountingUpload {
     inner: Box<dyn MultipartUpload>,

@@ -995,7 +995,9 @@ impl Entry {
             {
                 let mut k = tenant_bench::fx::compactor::server_knobs();
                 k.derive = crate::agentck::spec_for(&self.name);
-                match tenant_bench::fx::compactor::Compactor::start(t, Arc::clone(&self.raw), k, tenant_bench::fx::pool::global(), tokio::runtime::Handle::current()).await {
+                // c2-fix-hangs: the compactor's requests are maintenance work, counted but not drawn from the quota
+                // (`counting::maintenance`)
+                match tenant_bench::fx::compactor::Compactor::start(t, tenant_bench::counting::maintenance(&self.raw), k, tenant_bench::fx::pool::global(), tokio::runtime::Handle::current()).await {
                     Ok(c) => {
                         c.run();
                         self.fxc = Some(c);
