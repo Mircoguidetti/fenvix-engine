@@ -61,6 +61,8 @@ mod tests_7a;
 mod derive_tests;
 #[cfg(test)]
 mod tests_7b;
+#[cfg(test)]
+mod tests_gen;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 
