@@ -1,0 +1,4 @@
+# C-lz4: 3 EntityTooSmall lines; first compactor error:
+fx compactor e2e_langgraph: Absorb job: Generic S3 error: Error performing POST http://127.0.0.1:9000/adapters/tenants/e2e_langgraph/fx/run/delta/00000000000000001896-1-6219809a?uploadId=YzJhY2Y3MGEtNDUyYS00MTY5LTg3OTQtMWNkNGJmZjI4MjkwLmJhMGIyZWM2LTY3MGQtNGQ2ZC05MDgwLWE5YTYxYTEyNTIzYngxNzk0MzA1MzIzNjY0MjkyNjE2 in 955.563µs - Server returned non-2xx status code: 400 Bad Request: <?xml version="1.0
+<Error><Code>EntityTooSmall</Code><Message>Your proposed upload is smaller than the minimum allowed object size.</Message><Key>tenants/e2e_langgraph/fx/run/delta/00000000000000001896-1-6219809a</Key><BucketName>adapters</BucketName><Resource>/adapters/tenants/e2e_langgraph/fx/run/delta/0000000000000
+langgraph: 10 users x 60 turns in 14 s

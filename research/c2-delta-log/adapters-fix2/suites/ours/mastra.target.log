@@ -1,0 +1,4 @@
+fatal: not a git repository (or any of the parent directories): .git
+mongo-server (, standalone) up on 27017
+fatal: not a git repository (or any of the parent directories): .git
+mongo-server (, rs) up on 27021

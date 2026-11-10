@@ -1,0 +1,28 @@
+test fx::derive_tests::review_erasure_of_a_derived_thread ... review erasure (scrub opens sealed runs for derived rows: false): pass error: corrupt run: envelope byte 3; rows of the erased thread left in the newest version: 25 message rows, 24 skeletons, 24 other; reads of the other threads: wrong 0
+review erasure (scrub opens sealed runs for derived rows: true): pass ok, states ["scrubbed", "scrubbed"]; rows of the erased thread left in the newest version: 25 message rows, 0 skeletons, 0 other; reads of the other threads: wrong 0, errors 0 
+thread 'fx::derive_tests::review_erasure_of_a_derived_thread' (1037) panicked at src/fx/derive_tests.rs:1180:9:
+test fx::derive_tests::review_follower_reads_derived_documents_exactly ... review follower: 412 reads, wrong 0, follower rebuilds 1372, writer rebuilt by reseals 600
+test fx::derive_tests::review_more_planted_bugs_are_caught ... review plant 2 crc check true: 192 docs, wrong 0, errors 96 (corrupt derived document: rebuilt 777 bytes, the skeleton says 778); full scan equal: Err(corrupt derived document: rebuilt 777 bytes, the skeleton says 778
+review plant 2 crc check false: 192 docs, wrong 192, errors 0 (); full scan equal: Ok(false); encoded 192
+review plant 3 crc check true: 192 docs, wrong 0, errors 68 (corrupt derived document: rebuilt 778 bytes, the skeleton says 7651); full scan equal: Err(corrupt derived document: rebuilt 778 bytes, the skeleton says 7651
+review plant 3 crc check false: 192 docs, wrong 145, errors 0 (); full scan equal: Ok(false); encoded 326
+review plant 4 crc check true: 192 docs, wrong 0, errors 7 (corrupt derived document: message 24 is missing); full scan equal: Err(corrupt derived document: message 24 is missing
+review plant 4 crc check false: 192 docs, wrong 0, errors 7 (corrupt derived document: message 24 is missing); full scan equal: Err(corrupt derived document: message 24 is missing
+test fx::derive_tests::review_near_miss_shapes_are_left_untouched ... review near-miss: LangGraph saver checkpoint (control): encoded true (message rows 6), expected true
+review near-miss: LangGraph saver write (control): encoded true (message rows 1), expected true
+review near-miss: the same saver document in a collection that is not registered: encoded false (message rows 0), expected false
+review near-miss: LangGraph JS saver (type json): encoded false (message rows 0), expected false
+review near-miss: a saver version with the checkpoint as a BSON subdocument: encoded false (message rows 0), expected false
+review near-miss: msgpack followed by a stray byte: encoded false (message rows 0), expected false
+review near-miss: another app's document in a collection named like the saver's: encoded true (message rows 4), expected false
+review near-miss: a saver-like document without its type field: encoded true (message rows 4), expected false
+thread 'fx::derive_tests::review_near_miss_shapes_are_left_untouched' (1053) panicked at src/fx/derive_tests.rs:1036:5:
+test fx::derive_tests::review_rollback_leaves_derived_rows_in_quiet_groups ... review rollback: flag off, compactor idle for 3 s: reseals 0, derived rows still in runs 416, v2 sealed runs 2 (a v1 reader refuses 2), wrong 0, errors 0
+test fx::derive_tests::review_wave_reader_rebuilds_derived_documents ... review wave false: 192 point reads, wrong 0, errors 0 (); range scan equal Ok(true); encoded 600
+review wave true: 192 point reads, wrong 192, errors 0 (); range scan equal Ok(true); encoded 600
+thread 'fx::derive_tests::review_wave_reader_rebuilds_derived_documents' (1062) panicked at src/fx/derive_tests.rs:1106:9:
+test fx::fix_tests::review_r2_a_late_first_publish_put_lands_unfenced ... ok
+test fx::review_tests::review_no_hold_after_an_unknown_publish_whose_fence_failed ... sealed runs: fence of database fx-review-fence after a failed publish: Generic Flaky error: request timed out: PUT tenants/fx-review-fence/fx/manifest/00000000000000000003: request timed out: PUT tenants/fx-review-
+test runfmt::tests::review_blocks_of_one_run_with_the_footer_of_another_are_an_error ... ok
+test runfmt::tests::review_fuzz_odd_keys_match_an_exact_model ... ok
+test result: FAILED. 7 passed; 3 failed; 0 ignored; 0 measured; 111 filtered out; finished in 18.07s

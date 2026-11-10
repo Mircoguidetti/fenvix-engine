@@ -1,0 +1,19 @@
+langgraph: 50 users x 80 turns in 93 s
+derived at the end of the loop (loop process): {"derived": {"write": true, "encoded": 41468, "plain": 8300, "messageRows": 26076, "fallbacks": 0, "rebuilds": 19878, "resealRebuilds": 21632, "rebuildErrors": 0}, "compactor": {"enabled": true, "started": 2, "running": 1, "publishes": 12, "absorbs": 9, "merges": 0, "reseals": 3, "errors": 0}}
+derived after warm restart: {"derived": {"write": true, "encoded": 0, "plain": 0, "messageRows": 0, "fallbacks": 0, "rebuilds": 0, "resealRebuilds": 0, "rebuildErrors": 0}, "compactor": {"enabled": true, "started": 0, "running": 0, "publishes": 0, "absorbs": 0, "merges": 0, "reseals": 0, "errors": 0}}
+checkpoints thread_id_1_checkpoint_ns_1_checkpoint_id_-1 {'numIndexesBefore': 2, 'numIndexesAfter': 2, 'note': 'all indexes already exist', 'ok': 1.0}
+checkpoint_writes thread_id_1_checkpoint_ns_1_checkpoint_id_-1_task_id_1_idx_1 {'numIndexesBefore': 2, 'numIndexesAfter': 2, 'note': 'all indexes already exist', 'ok': 1.0}
+derived after register: {"derived": {"write": true, "encoded": 0, "plain": 0, "messageRows": 0, "fallbacks": 0, "rebuilds": 3, "resealRebuilds": 0, "rebuildErrors": 0}, "compactor": {"enabled": true, "started": 0, "running": 0, "publishes": 0, "absorbs": 0, "merges": 0, "reseals": 0, "errors": 0}}
+derived_check exit 0
+reseal {'resealed': 1, 'encoded': 20000, 'ok': 1.0, 'operationTime': 'Timestamp(1794321128, 2)'}
+after reseal {'write': True, 'encoded': 20000, 'plain': 4000, 'messageRows': 12575, 'fallbacks': 0, 'rebuilds': 63479, 'resealRebuilds': 19836, 'rebuildErrors': 0}
+checkpoints {'docs_before': 12000, 'docs_after': 12000, 'bytes': 268179600, 'byte_differences': 0, 'sha256_before': '9d91fa5ee556b22f856aa509e21d183eca35cda87925f5821a4493f97d2fad54', 'sha256_after': '9d91fa5ee556b22f856aa509e21d183eca35cda87925f5821a4493f97d2fad54'}
+checkpoint_writes {'docs_before': 12000, 'docs_after': 12000, 'bytes': 5319831, 'byte_differences': 0, 'sha256_before': 'ffaa64c894aa8a4978ae4a17a60c9d7844c318375638061b21fe340ba0cb1af1', 'sha256_after': 'ffaa64c894aa8a4978ae4a17a60c9d7844c318375638061b21fe340ba0cb1af1'}
+re-read 50 threads; differences from the e2e answers of the same run: 0 []
+derived after re-read: {"derived": {"write": true, "encoded": 20000, "plain": 4000, "messageRows": 12575, "fallbacks": 0, "rebuilds": 147529, "resealRebuilds": 19836, "rebuildErrors": 0}, "compactor": {"enabled": true, "started": 1, "running": 1, "publishes": 2, "absorbs": 1, "merges": 0, "reseals": 1, "errors": 0}}
+cold restart e2e_langgraph.checkpoints: 12000 docs, identical to before the reseal: True
+cold restart e2e_langgraph.checkpoint_writes: 12000 docs, identical to before the reseal: True
+cold restart scans repeated after SealedRunsRetry: 0
+derived after cold restart raw read (before any write): {"derived": {"write": true, "encoded": 0, "plain": 0, "messageRows": 0, "fallbacks": 0, "rebuilds": 64000, "resealRebuilds": 0, "rebuildErrors": 0}, "compactor": {"enabled": true, "started": 0, "running": 0, "publishes": 0, "absorbs": 0, "merges": 0, "reseals": 0, "errors": 0}}
+re-read 50 threads; differences from the e2e answers of the same run: 0 []
+derived after cold re-read: {"derived": {"write": true, "encoded": 0, "plain": 0, "messageRows": 0, "fallbacks": 0, "rebuilds": 84050, "resealRebuilds": 0, "rebuildErrors": 0}, "compactor": {"enabled": true, "started": 1, "running": 1, "publishes": 0, "absorbs": 0, "merges": 0, "reseals": 0, "errors": 0}}

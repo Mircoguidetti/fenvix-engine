@@ -1,0 +1,15 @@
+test fx::derive::tests::cuts_and_rebuilds_exactly ... ok
+test fx::derive::tests::skeleton_round_trip_and_crc ... ok
+test fx::derive_tests::derived_model_with_crashes_and_erasures ... fx compactor fx-derive-model: Reseal job: planted cra
+test fx::derive_tests::fix2_erasure_of_one_collection_keeps_the_messages_still_used ... fix2 erasure of ck: state Some("
+test fx::derive_tests::paired_checkpoint_reads_exact_documents ... paired checkpoint: 120 rows scanned, 120 gets, wrong 
+test fx::derive_tests::planted_wrong_reference_is_caught ... plant 0 crc check true: wrong 0, errors 0 (); full scan equ
+test fx::derive_tests::review_erasure_of_a_derived_thread ... review erasure (scrub opens sealed runs for derived rows: 
+test fx::derive_tests::review_follower_reads_derived_documents_exactly ... review follower: 412 reads, wrong 0, follower
+test fx::derive_tests::review_more_planted_bugs_are_caught ... review plant 2 crc check true: 192 docs, wrong 0, errors 
+test fx::derive_tests::review_near_miss_shapes_are_left_untouched ... review near-miss: LangGraph saver checkpoint (cont
+test fx::derive_tests::review_rollback_leaves_derived_rows_in_quiet_groups ... review rollback: flag off, compactor idle
+test fx::derive_tests::review_wave_reader_rebuilds_derived_documents ... review wave false: 192 point reads, wrong 0, er
+test fx::derive_tests::takeover_while_threads_are_reencoded ... takeover: A's transaction wrong 0, errors 96 of 96; B wr
+test fx::derive_tests::v1_reader_refuses_v2_and_rollback_writes_plain ... v2 runs 1, refused by a v1 reader 1; after the
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 108 filtered out; finished in 55.73s

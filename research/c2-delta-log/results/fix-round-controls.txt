@@ -1,0 +1,27 @@
+=== control 1
+test fx::derive_tests::review_erasure_of_a_derived_thread ... review erasure (scrub opens sealed runs for derived rows: false): pass ok, states ["scrubbed", "scrubbed"]; rows of the erased thread left in the newest version: 0 mess
+review erasure (scrub opens sealed runs for derived rows: true): pass ok, states ["scrubbed", "scrubbed"]; rows of the erased thread left in the newest version: 0 message rows, 0 skeletons, 0 other; reads of the other threads: wro
+review near-miss: another app's document in a collection named like the saver's: encoded false (message rows 0), expected false
+review near-miss: a saver-like document without its type field: encoded false (message rows 0), expected false
+test fx::derive_tests::review_wave_reader_rebuilds_derived_documents ... review wave false: 192 point reads, wrong 0, errors 0 (); range scan equal Ok(true); encoded 600
+review wave true: 192 point reads, wrong 192, errors 0 (); range scan equal Ok(true); encoded 600
+thread 'fx::derive_tests::review_wave_reader_rebuilds_derived_documents' (1973) panicked at src/fx/derive_tests.rs:1111:9:
+test result: FAILED. 9 passed; 1 failed; 0 ignored; 0 measured; 111 filtered out; finished in 17.24s
+=== control 2
+test fx::derive_tests::review_erasure_of_a_derived_thread ... review erasure (scrub opens sealed runs for derived rows: false): pass error: corrupt run: envelope byte 3; rows of the erased thread left in the newest version: 25 mes
+review erasure (scrub opens sealed runs for derived rows: true): pass ok, states ["scrubbed", "scrubbed"]; rows of the erased thread left in the newest version: 25 message rows, 0 skeletons, 0 other; reads of the other threads: wr
+thread 'fx::derive_tests::review_erasure_of_a_derived_thread' (1992) panicked at src/fx/derive_tests.rs:1185:9:
+review near-miss: another app's document in a collection named like the saver's: encoded false (message rows 0), expected false
+review near-miss: a saver-like document without its type field: encoded false (message rows 0), expected false
+test fx::derive_tests::review_wave_reader_rebuilds_derived_documents ... review wave false: 192 point reads, wrong 0, errors 0 (); range scan equal Ok(true); encoded 600
+review wave true: 192 point reads, wrong 0, errors 0 (); range scan equal Ok(true); encoded 600
+test result: FAILED. 9 passed; 1 failed; 0 ignored; 0 measured; 111 filtered out; finished in 17.16s
+=== control 3
+test fx::derive_tests::review_erasure_of_a_derived_thread ... review erasure (scrub opens sealed runs for derived rows: false): pass ok, states ["scrubbed", "scrubbed"]; rows of the erased thread left in the newest version: 0 mess
+review erasure (scrub opens sealed runs for derived rows: true): pass ok, states ["scrubbed", "scrubbed"]; rows of the erased thread left in the newest version: 0 message rows, 0 skeletons, 0 other; reads of the other threads: wro
+review near-miss: another app's document in a collection named like the saver's: encoded true (message rows 4), expected false
+review near-miss: a saver-like document without its type field: encoded true (message rows 4), expected false
+thread 'fx::derive_tests::review_near_miss_shapes_are_left_untouched' (2050) panicked at src/fx/derive_tests.rs:1041:5:
+test fx::derive_tests::review_wave_reader_rebuilds_derived_documents ... review wave false: 192 point reads, wrong 0, errors 0 (); range scan equal Ok(true); encoded 600
+review wave true: 192 point reads, wrong 0, errors 0 (); range scan equal Ok(true); encoded 600
+test result: FAILED. 9 passed; 1 failed; 0 ignored; 0 measured; 111 filtered out; finished in 17.31s

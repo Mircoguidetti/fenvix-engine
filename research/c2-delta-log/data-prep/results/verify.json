@@ -1,0 +1,402 @@
+{
+ "scripted_10x400": {
+  "threads_in_file": 400,
+  "thread_id_mismatches": 0,
+  "checkpoints": {
+   "file_docs": 4000,
+   "mongo_count": 4000,
+   "mongo_count_documents": 4000,
+   "file_bytes": 35489698,
+   "mongo_size": 35489698,
+   "mongo_bsonsize_sum": 35489698,
+   "sha_match": true,
+   "ok": true
+  },
+  "checkpoint_writes": {
+   "file_docs": 5600,
+   "mongo_count": 5600,
+   "mongo_count_documents": 5600,
+   "file_bytes": 8413227,
+   "mongo_size": 8413227,
+   "mongo_bsonsize_sum": 8413227,
+   "sha_match": true,
+   "ok": true
+  },
+  "ok": true
+ },
+ "scripted_40x150": {
+  "threads_in_file": 150,
+  "thread_id_mismatches": 0,
+  "checkpoints": {
+   "file_docs": 6000,
+   "mongo_count": 6000,
+   "mongo_count_documents": 6000,
+   "file_bytes": 228736482,
+   "mongo_size": 228736482,
+   "mongo_bsonsize_sum": 228736482,
+   "sha_match": true,
+   "ok": true
+  },
+  "checkpoint_writes": {
+   "file_docs": 8796,
+   "mongo_count": 8796,
+   "mongo_count_documents": 8796,
+   "file_bytes": 13448408,
+   "mongo_size": 13448408,
+   "mongo_bsonsize_sum": 13448408,
+   "sha_match": true,
+   "ok": true
+  },
+  "ok": true
+ },
+ "scripted_100x40": {
+  "threads_in_file": 40,
+  "thread_id_mismatches": 0,
+  "checkpoints": {
+   "file_docs": 4000,
+   "mongo_count": 4000,
+   "mongo_count_documents": 4000,
+   "file_bytes": 391781304,
+   "mongo_size": 391781304,
+   "mongo_bsonsize_sum": 391781304,
+   "sha_match": true,
+   "ok": true
+  },
+  "checkpoint_writes": {
+   "file_docs": 5960,
+   "mongo_count": 5960,
+   "mongo_count_documents": 5960,
+   "file_bytes": 9331638,
+   "mongo_size": 9331638,
+   "mongo_bsonsize_sum": 9331638,
+   "sha_match": true,
+   "ok": true
+  },
+  "ok": true
+ },
+ "scripted_300x8": {
+  "threads_in_file": 8,
+  "thread_id_mismatches": 0,
+  "checkpoints": {
+   "file_docs": 2400,
+   "mongo_count": 2400,
+   "mongo_count_documents": 2400,
+   "file_bytes": 700210222,
+   "mongo_size": 700210222,
+   "mongo_bsonsize_sum": 700210222,
+   "sha_match": true,
+   "ok": true
+  },
+  "checkpoint_writes": {
+   "file_docs": 3606,
+   "mongo_count": 3606,
+   "mongo_count_documents": 3606,
+   "file_bytes": 5696626,
+   "mongo_size": 5696626,
+   "mongo_bsonsize_sum": 5696626,
+   "sha_match": true,
+   "ok": true
+  },
+  "ok": true
+ },
+ "real_tau_gpt_4o_airline": {
+  "threads_in_file": 200,
+  "thread_id_mismatches": 0,
+  "checkpoints": {
+   "file_docs": 6351,
+   "mongo_count": 6351,
+   "mongo_count_documents": 6351,
+   "file_bytes": 64836158,
+   "mongo_size": 64836158,
+   "mongo_bsonsize_sum": 64836158,
+   "sha_match": true,
+   "ok": true
+  },
+  "checkpoint_writes": {
+   "file_docs": 8679,
+   "mongo_count": 8679,
+   "mongo_count_documents": 8679,
+   "file_bytes": 5543121,
+   "mongo_size": 5543121,
+   "mongo_bsonsize_sum": 5543121,
+   "sha_match": true,
+   "ok": true
+  },
+  "ok": true
+ },
+ "real_tau_sonnet_35_new_retail": {
+  "threads_in_file": 300,
+  "thread_id_mismatches": 0,
+  "checkpoints": {
+   "file_docs": 9686,
+   "mongo_count": 9686,
+   "mongo_count_documents": 9686,
+   "file_bytes": 128844475,
+   "mongo_size": 128844475,
+   "mongo_bsonsize_sum": 128844475,
+   "sha_match": true,
+   "ok": true
+  },
+  "checkpoint_writes": {
+   "file_docs": 14068,
+   "mongo_count": 14068,
+   "mongo_count_documents": 14068,
+   "file_bytes": 11190368,
+   "mongo_size": 11190368,
+   "mongo_bsonsize_sum": 11190368,
+   "sha_match": true,
+   "ok": true
+  },
+  "ok": true
+ },
+ "real_swe4": {
+  "threads_in_file": 80,
+  "thread_id_mismatches": 0,
+  "checkpoints": {
+   "file_docs": 10218,
+   "mongo_count": 10218,
+   "mongo_count_documents": 10218,
+   "file_bytes": 1154489025,
+   "mongo_size": 1154489025,
+   "mongo_bsonsize_sum": 1154489025,
+   "sha_match": true,
+   "ok": true
+  },
+  "checkpoint_writes": {
+   "file_docs": 20196,
+   "mongo_count": 20196,
+   "mongo_count_documents": 20196,
+   "file_bytes": 22686660,
+   "mongo_size": 22686660,
+   "mongo_bsonsize_sum": 22686660,
+   "sha_match": true,
+   "ok": true
+  },
+  "ok": true
+ },
+ "real_swe35": {
+  "threads_in_file": 80,
+  "thread_id_mismatches": 0,
+  "checkpoints": {
+   "file_docs": 5400,
+   "mongo_count": 5400,
+   "mongo_count_documents": 5400,
+   "file_bytes": 539377680,
+   "mongo_size": 539377680,
+   "mongo_bsonsize_sum": 539377680,
+   "sha_match": true,
+   "ok": true
+  },
+  "checkpoint_writes": {
+   "file_docs": 10560,
+   "mongo_count": 10560,
+   "mongo_count_documents": 10560,
+   "file_bytes": 14778850,
+   "mongo_size": 14778850,
+   "mongo_bsonsize_sum": 14778850,
+   "sha_match": true,
+   "ok": true
+  },
+  "ok": true
+ },
+ "edge_base_40x3": {
+  "threads_in_file": 3,
+  "thread_id_mismatches": 0,
+  "checkpoints": {
+   "file_docs": 120,
+   "mongo_count": 120,
+   "mongo_count_documents": 120,
+   "file_bytes": 3554455,
+   "mongo_size": 3554455,
+   "mongo_bsonsize_sum": 3554455,
+   "sha_match": true,
+   "ok": true
+  },
+  "checkpoint_writes": {
+   "file_docs": 180,
+   "mongo_count": 180,
+   "mongo_count_documents": 180,
+   "file_bytes": 241058,
+   "mongo_size": 241058,
+   "mongo_bsonsize_sum": 241058,
+   "sha_match": true,
+   "ok": true
+  },
+  "ok": true
+ },
+ "edge_summarize_40x3": {
+  "threads_in_file": 3,
+  "thread_id_mismatches": 0,
+  "checkpoints": {
+   "file_docs": 120,
+   "mongo_count": 120,
+   "mongo_count_documents": 120,
+   "file_bytes": 3554610,
+   "mongo_size": 3554610,
+   "mongo_bsonsize_sum": 3554610,
+   "sha_match": true,
+   "ok": true
+  },
+  "checkpoint_writes": {
+   "file_docs": 180,
+   "mongo_count": 180,
+   "mongo_count_documents": 180,
+   "file_bytes": 241058,
+   "mongo_size": 241058,
+   "mongo_bsonsize_sum": 241058,
+   "sha_match": true,
+   "ok": true
+  },
+  "ok": true
+ },
+ "edge_edit_40x3": {
+  "threads_in_file": 3,
+  "thread_id_mismatches": 0,
+  "checkpoints": {
+   "file_docs": 120,
+   "mongo_count": 120,
+   "mongo_count_documents": 120,
+   "file_bytes": 2613437,
+   "mongo_size": 2613437,
+   "mongo_bsonsize_sum": 2613437,
+   "sha_match": true,
+   "ok": true
+  },
+  "checkpoint_writes": {
+   "file_docs": 180,
+   "mongo_count": 180,
+   "mongo_count_documents": 180,
+   "file_bytes": 248690,
+   "mongo_size": 248690,
+   "mongo_bsonsize_sum": 248690,
+   "sha_match": true,
+   "ok": true
+  },
+  "ok": true
+ },
+ "edge_remove_40x3": {
+  "threads_in_file": 3,
+  "thread_id_mismatches": 0,
+  "checkpoints": {
+   "file_docs": 120,
+   "mongo_count": 120,
+   "mongo_count_documents": 120,
+   "file_bytes": 1894589,
+   "mongo_size": 1894589,
+   "mongo_bsonsize_sum": 1894589,
+   "sha_match": true,
+   "ok": true
+  },
+  "checkpoint_writes": {
+   "file_docs": 180,
+   "mongo_count": 180,
+   "mongo_count_documents": 180,
+   "file_bytes": 251378,
+   "mongo_size": 251378,
+   "mongo_bsonsize_sum": 251378,
+   "sha_match": true,
+   "ok": true
+  },
+  "ok": true
+ },
+ "edge_base_100x8": {
+  "threads_in_file": 8,
+  "thread_id_mismatches": 0,
+  "checkpoints": {
+   "file_docs": 800,
+   "mongo_count": 800,
+   "mongo_count_documents": 800,
+   "file_bytes": 71247452,
+   "mongo_size": 71247452,
+   "mongo_bsonsize_sum": 71247452,
+   "sha_match": true,
+   "ok": true
+  },
+  "checkpoint_writes": {
+   "file_docs": 1162,
+   "mongo_count": 1162,
+   "mongo_count_documents": 1162,
+   "file_bytes": 1669223,
+   "mongo_size": 1669223,
+   "mongo_bsonsize_sum": 1669223,
+   "sha_match": true,
+   "ok": true
+  },
+  "ok": true
+ },
+ "edge_summarize_100x8": {
+  "threads_in_file": 8,
+  "thread_id_mismatches": 0,
+  "checkpoints": {
+   "file_docs": 816,
+   "mongo_count": 816,
+   "mongo_count_documents": 816,
+   "file_bytes": 33531791,
+   "mongo_size": 33531791,
+   "mongo_bsonsize_sum": 33531791,
+   "sha_match": true,
+   "ok": true
+  },
+  "checkpoint_writes": {
+   "file_docs": 1194,
+   "mongo_count": 1194,
+   "mongo_count_documents": 1194,
+   "file_bytes": 1812382,
+   "mongo_size": 1812382,
+   "mongo_bsonsize_sum": 1812382,
+   "sha_match": true,
+   "ok": true
+  },
+  "ok": true
+ },
+ "edge_edit_100x8": {
+  "threads_in_file": 8,
+  "thread_id_mismatches": 0,
+  "checkpoints": {
+   "file_docs": 800,
+   "mongo_count": 800,
+   "mongo_count_documents": 800,
+   "file_bytes": 36524345,
+   "mongo_size": 36524345,
+   "mongo_bsonsize_sum": 36524345,
+   "sha_match": true,
+   "ok": true
+  },
+  "checkpoint_writes": {
+   "file_docs": 1162,
+   "mongo_count": 1162,
+   "mongo_count_documents": 1162,
+   "file_bytes": 1723220,
+   "mongo_size": 1723220,
+   "mongo_bsonsize_sum": 1723220,
+   "sha_match": true,
+   "ok": true
+  },
+  "ok": true
+ },
+ "edge_remove_100x8": {
+  "threads_in_file": 8,
+  "thread_id_mismatches": 0,
+  "checkpoints": {
+   "file_docs": 800,
+   "mongo_count": 800,
+   "mongo_count_documents": 800,
+   "file_bytes": 27549285,
+   "mongo_size": 27549285,
+   "mongo_bsonsize_sum": 27549285,
+   "sha_match": true,
+   "ok": true
+  },
+  "checkpoint_writes": {
+   "file_docs": 1162,
+   "mongo_count": 1162,
+   "mongo_count_documents": 1162,
+   "file_bytes": 1747893,
+   "mongo_size": 1747893,
+   "mongo_bsonsize_sum": 1747893,
+   "sha_match": true,
+   "ok": true
+  },
+  "ok": true
+ }
+}

@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="3" failures="0" skipped="7" tests="39" time="3.834" timestamp="2026-11-10T09:18:24.554693+00:00" hostname="vm"><testcase classname="tests.integration_tests.test_autoembedded_index" name="test_filters" time="0.020"><error message="failed on setup with &quot;pymongo.errors.OperationFailure: $listSearchIndexes stage is only allowed on MongoDB Atlas, full error: {'ok': 0.0, 'errmsg': '$listSearchIndexes stage is only allowed on MongoDB Atlas', 'code': 6047401, 'codeName': 'Location6047401', '$clusterTime': {'clusterTime': Timestamp(1794302305, 1), 'signature': {'hash': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'keyId': 0}}, 'operationTime': Timestamp(1794302305, 1)}&quot;">@pytest.fixture
+    def collection() -&gt; Generator[Collection, None, None]:
+        client: MongoClient = MongoClient(MONGODB_URI)
+        db = client[DB_NAME]
+        db.drop_collection(COLLECTION_NAME)
+        collection = db.create_collection(COLLECTION_NAME)
+        wait_until(lambda: collection.count_documents({}) == 0, TIMEOUT, INTERVAL)
+        try:
+            collection.drop_search_index(INDEX_NAME)
+        except OperationFailure:
+            pass
+&gt;       wait_until(
+            lambda: len(collection.list_search_indexes().to_list()) == 0, TIMEOUT, INTERVAL
+        )
+
+tests/integration_tests/test_autoembedded_index.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration_tests/test_autoembedded_index.py:37: in wait_until
+    if predicate():
+       ^^^^^^^^^^^
+tests/integration_tests/test_autoembedded_index.py:56: in &lt;lambda&gt;
+    lambda: len(collection.list_search_indexes().to_list()) == 0, TIMEOUT, INTERVAL
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/collection.py:2666: in list_search_indexes
+    return self._database.client._retryable_read(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/aggregation.py:163: in get_cursor
+    result = conn.command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+response = {'ok': 0.0, 'errmsg': '$listSearchIndexes stage is only allowed on MongoDB Atlas', 'code': 6047401, 'codeName': 'Location6047401', ...}
+max_wire_version = 21, allowable_errors = None, parse_write_concern_error = True
+pool_opts = None
+
+    def _check_command_response(
+        response: _DocumentOut,
+        max_wire_version: Optional[int],
+        allowable_errors: Optional[Container[Union[int, str]]] = None,
+        parse_write_concern_error: bool = False,
+        pool_opts: Optional[PoolOptions] = None,
+    ) -&gt; None:
+        """Check the response to a command for errors."""
+        if "ok" not in response:
+            # Server didn't recognize our message as a command.
+            raise OperationFailure(
+                response.get("$err"),  # type: ignore[arg-type]
+                response.get("code"),
+                response,
+                max_wire_version,
+            )
+    
+        if parse_write_concern_error and "writeConcernError" in response:
+            _error = response["writeConcernError"]
+            _labels = response.get("errorLabels")
+            if _labels:
+                _error.update({"errorLabels": _labels})
+            _raise_write_concern_error(_error)
+    
+        if response["ok"]:
+            return
+    
+        details = response
+        errmsg = details["errmsg"]
+        code = details.get("code")
+    
+        # For allowable errors, only check for error messages when the code is not
+        # included.
+        if allowable_errors:
+            if code is not None:
+                if code in allowable_errors:
+                    return
+            elif errmsg in allowable_errors:
+                return
+    
+        # Server is "not primary" or "recovering"
+        if code is not None:
+            if code in _NOT_PRIMARY_CODES:
+                raise NotPrimaryError(errmsg, response)
+        elif HelloCompat.LEGACY_ERROR in errmsg or "node is recovering" in errmsg:
+            raise NotPrimaryError(errmsg, response)
+    
+        # Other errors
+        # findAndModify with upsert can raise duplicate key error
+        if code in (11000, 11001, 12582):
+            raise DuplicateKeyError(errmsg, code, response, max_wire_version)
+        elif code == 50:
+            # Append timeout details to MaxTimeMSExpired responses.
+            if pool_opts:
+                timeout_details = _get_timeout_details(pool_opts)
+                errmsg += format_timeout_details(timeout_details)
+            raise ExecutionTimeout(errmsg, code, response, max_wire_version)
+        elif code == 43:
+            raise CursorNotFound(errmsg, code, response, max_wire_version)
+    
+&gt;       raise OperationFailure(errmsg, code, response, max_wire_version)
+E       pymongo.errors.OperationFailure: $listSearchIndexes stage is only allowed on MongoDB Atlas, full error: {'ok': 0.0, 'errmsg': '$listSearchIndexes stage is only allowed on MongoDB Atlas', 'code': 6047401, 'codeName': 'Location6047401', '$clusterTime': {'clusterTime': Timestamp(1794302305, 1), 'signature': {'hash': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'keyId': 0}}, 'operationTime': Timestamp(1794302305, 1)}
+
+../../../venv-lg/lib/python3.12/site-packages/pymongo/helpers_shared.py:327: OperationFailure</error></testcase><testcase classname="tests.integration_tests.test_store_rerank" name="test_rerank_returns_limit_results" time="0.000"><skipped type="pytest.skip" message="$rerank is not supported on local MongoDB. Run against an Atlas cluster with MongoDB 8.3+, Native Reranking enabled in Atlas Project Settings, and a Voyage AI API key configured.">/home/user/adapters/langchain-mongodb/libs/langgraph-store-mongodb/tests/integration_tests/test_store_rerank.py:162: $rerank is not supported on local MongoDB. Run against an Atlas cluster with MongoDB 8.3+, Native Reranking enabled in Atlas Project Settings, and a Voyage AI API key configured.</skipped></testcase><testcase classname="tests.integration_tests.test_store_rerank" name="test_rerank_score_is_positive_float" time="0.000"><skipped type="pytest.skip" message="$rerank is not supported on local MongoDB. Run against an Atlas cluster with MongoDB 8.3+, Native Reranking enabled in Atlas Project Settings, and a Voyage AI API key configured.">/home/user/adapters/langchain-mongodb/libs/langgraph-store-mongodb/tests/integration_tests/test_store_rerank.py:169: $rerank is not supported on local MongoDB. Run against an Atlas cluster with MongoDB 8.3+, Native Reranking enabled in Atlas Project Settings, and a Voyage AI API key configured.</skipped></testcase><testcase classname="tests.integration_tests.test_store_rerank" name="test_rerank_scores_are_descending" time="0.000"><skipped type="pytest.skip" message="$rerank is not supported on local MongoDB. Run against an Atlas cluster with MongoDB 8.3+, Native Reranking enabled in Atlas Project Settings, and a Voyage AI API key configured.">/home/user/adapters/langchain-mongodb/libs/langgraph-store-mongodb/tests/integration_tests/test_store_rerank.py:179: $rerank is not supported on local MongoDB. Run against an Atlas cluster with MongoDB 8.3+, Native Reranking enabled in Atlas Project Settings, and a Voyage AI API key configured.</skipped></testcase><testcase classname="tests.integration_tests.test_store_rerank" name="test_rerank_scores_are_not_constant" time="0.000"><skipped type="pytest.skip" message="$rerank is not supported on local MongoDB. Run against an Atlas cluster with MongoDB 8.3+, Native Reranking enabled in Atlas Project Settings, and a Voyage AI API key configured.">/home/user/adapters/langchain-mongodb/libs/langgraph-store-mongodb/tests/integration_tests/test_store_rerank.py:188: $rerank is not supported on local MongoDB. Run against an Atlas cluster with MongoDB 8.3+, Native Reranking enabled in Atlas Project Settings, and a Voyage AI API key configured.</skipped></testcase><testcase classname="tests.integration_tests.test_store_rerank" name="test_rerank_num_docs_to_rerank_still_returns_limit" time="0.000"><skipped type="pytest.skip" message="$rerank is not supported on local MongoDB. Run against an Atlas cluster with MongoDB 8.3+, Native Reranking enabled in Atlas Project Settings, and a Voyage AI API key configured.">/home/user/adapters/langchain-mongodb/libs/langgraph-store-mongodb/tests/integration_tests/test_store_rerank.py:202: $rerank is not supported on local MongoDB. Run against an Atlas cluster with MongoDB 8.3+, Native Reranking enabled in Atlas Project Settings, and a Voyage AI API key configured.</skipped></testcase><testcase classname="tests.integration_tests.test_store_rerank" name="test_rerank_semantic_ordering" time="0.000"><skipped type="pytest.skip" message="$rerank is not supported on local MongoDB. Run against an Atlas cluster with MongoDB 8.3+, Native Reranking enabled in Atlas Project Settings, and a Voyage AI API key configured.">/home/user/adapters/langchain-mongodb/libs/langgraph-store-mongodb/tests/integration_tests/test_store_rerank.py:213: $rerank is not supported on local MongoDB. Run against an Atlas cluster with MongoDB 8.3+, Native Reranking enabled in Atlas Project Settings, and a Voyage AI API key configured.</skipped></testcase><testcase classname="tests.integration_tests.test_store_rerank" name="test_rerank_changes_ordering_vs_vector_search" time="0.000"><skipped type="pytest.skip" message="$rerank is not supported on local MongoDB. Run against an Atlas cluster with MongoDB 8.3+, Native Reranking enabled in Atlas Project Settings, and a Voyage AI API key configured.">/home/user/adapters/langchain-mongodb/libs/langgraph-store-mongodb/tests/integration_tests/test_store_rerank.py:226: $rerank is not supported on local MongoDB. Run against an Atlas cluster with MongoDB 8.3+, Native Reranking enabled in Atlas Project Settings, and a Voyage AI API key configured.</skipped></testcase><testcase classname="tests.integration_tests.test_store_semantic" name="test_filters" time="0.013"><error message="failed on setup with &quot;pymongo.errors.OperationFailure: $listSearchIndexes stage is only allowed on MongoDB Atlas, full error: {'ok': 0.0, 'errmsg': '$listSearchIndexes stage is only allowed on MongoDB Atlas', 'code': 6047401, 'codeName': 'Location6047401', '$clusterTime': {'clusterTime': Timestamp(1794302305, 2), 'signature': {'hash': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'keyId': 0}}, 'operationTime': Timestamp(1794302305, 2)}&quot;">@pytest.fixture
+    def collection() -&gt; Generator[Collection, None, None]:
+        client: MongoClient = MongoClient(MONGODB_URI)
+        db = client[DB_NAME]
+        db.drop_collection(COLLECTION_NAME)
+        collection = db.create_collection(COLLECTION_NAME)
+        wait_until(lambda: collection.count_documents({}) == 0, TIMEOUT, INTERVAL)
+        try:
+            collection.drop_search_index(INDEX_NAME)
+        except OperationFailure:
+            pass
+&gt;       wait_until(
+            lambda: len(collection.list_search_indexes().to_list()) == 0, TIMEOUT, INTERVAL
+        )
+
+tests/integration_tests/test_store_semantic.py:68: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration_tests/test_store_semantic.py:34: in wait_until
+    if predicate():
+       ^^^^^^^^^^^
+tests/integration_tests/test_store_semantic.py:69: in &lt;lambda&gt;
+    lambda: len(collection.list_search_indexes().to_list()) == 0, TIMEOUT, INTERVAL
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/collection.py:2666: in list_search_indexes
+    return self._database.client._retryable_read(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/aggregation.py:163: in get_cursor
+    result = conn.command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+response = {'ok': 0.0, 'errmsg': '$listSearchIndexes stage is only allowed on MongoDB Atlas', 'code': 6047401, 'codeName': 'Location6047401', ...}
+max_wire_version = 21, allowable_errors = None, parse_write_concern_error = True
+pool_opts = None
+
+    def _check_command_response(
+        response: _DocumentOut,
+        max_wire_version: Optional[int],
+        allowable_errors: Optional[Container[Union[int, str]]] = None,
+        parse_write_concern_error: bool = False,
+        pool_opts: Optional[PoolOptions] = None,
+    ) -&gt; None:
+        """Check the response to a command for errors."""
+        if "ok" not in response:
+            # Server didn't recognize our message as a command.
+            raise OperationFailure(
+                response.get("$err"),  # type: ignore[arg-type]
+                response.get("code"),
+                response,
+                max_wire_version,
+            )
+    
+        if parse_write_concern_error and "writeConcernError" in response:
+            _error = response["writeConcernError"]
+            _labels = response.get("errorLabels")
+            if _labels:
+                _error.update({"errorLabels": _labels})
+            _raise_write_concern_error(_error)
+    
+        if response["ok"]:
+            return
+    
+        details = response
+        errmsg = details["errmsg"]
+        code = details.get("code")
+    
+        # For allowable errors, only check for error messages when the code is not
+        # included.
+        if allowable_errors:
+            if code is not None:
+                if code in allowable_errors:
+                    return
+            elif errmsg in allowable_errors:
+                return
+    
+        # Server is "not primary" or "recovering"
+        if code is not None:
+            if code in _NOT_PRIMARY_CODES:
+                raise NotPrimaryError(errmsg, response)
+        elif HelloCompat.LEGACY_ERROR in errmsg or "node is recovering" in errmsg:
+            raise NotPrimaryError(errmsg, response)
+    
+        # Other errors
+        # findAndModify with upsert can raise duplicate key error
+        if code in (11000, 11001, 12582):
+            raise DuplicateKeyError(errmsg, code, response, max_wire_version)
+        elif code == 50:
+            # Append timeout details to MaxTimeMSExpired responses.
+            if pool_opts:
+                timeout_details = _get_timeout_details(pool_opts)
+                errmsg += format_timeout_details(timeout_details)
+            raise ExecutionTimeout(errmsg, code, response, max_wire_version)
+        elif code == 43:
+            raise CursorNotFound(errmsg, code, response, max_wire_version)
+    
+&gt;       raise OperationFailure(errmsg, code, response, max_wire_version)
+E       pymongo.errors.OperationFailure: $listSearchIndexes stage is only allowed on MongoDB Atlas, full error: {'ok': 0.0, 'errmsg': '$listSearchIndexes stage is only allowed on MongoDB Atlas', 'code': 6047401, 'codeName': 'Location6047401', '$clusterTime': {'clusterTime': Timestamp(1794302305, 2), 'signature': {'hash': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'keyId': 0}}, 'operationTime': Timestamp(1794302305, 2)}
+
+../../../venv-lg/lib/python3.12/site-packages/pymongo/helpers_shared.py:327: OperationFailure</error></testcase><testcase classname="tests.integration_tests.test_store_semantic_async" name="test_filters" time="0.017"><error message="failed on setup with &quot;pymongo.errors.OperationFailure: $listSearchIndexes stage is only allowed on MongoDB Atlas, full error: {'ok': 0.0, 'errmsg': '$listSearchIndexes stage is only allowed on MongoDB Atlas', 'code': 6047401, 'codeName': 'Location6047401', '$clusterTime': {'clusterTime': Timestamp(1794302305, 3), 'signature': {'hash': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'keyId': 0}}, 'operationTime': Timestamp(1794302305, 3)}&quot;">@pytest.fixture
+    def collection() -&gt; Generator[Collection, None, None]:
+        client: MongoClient = MongoClient(MONGODB_URI)
+        db = client[DB_NAME]
+        db.drop_collection(COLLECTION_NAME)
+        collection = db.create_collection(COLLECTION_NAME)
+        wait_until(lambda: collection.count_documents({}) == 0, TIMEOUT, INTERVAL)
+        try:
+            collection.drop_search_index(INDEX_NAME)
+        except OperationFailure:
+            pass
+&gt;       wait_until(
+            lambda: len(collection.list_search_indexes().to_list()) == 0, TIMEOUT, INTERVAL
+        )
+
+tests/integration_tests/test_store_semantic_async.py:68: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration_tests/test_store_semantic_async.py:34: in wait_until
+    if predicate():
+       ^^^^^^^^^^^
+tests/integration_tests/test_store_semantic_async.py:69: in &lt;lambda&gt;
+    lambda: len(collection.list_search_indexes().to_list()) == 0, TIMEOUT, INTERVAL
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/collection.py:2666: in list_search_indexes
+    return self._database.client._retryable_read(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/aggregation.py:163: in get_cursor
+    result = conn.command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+response = {'ok': 0.0, 'errmsg': '$listSearchIndexes stage is only allowed on MongoDB Atlas', 'code': 6047401, 'codeName': 'Location6047401', ...}
+max_wire_version = 21, allowable_errors = None, parse_write_concern_error = True
+pool_opts = None
+
+    def _check_command_response(
+        response: _DocumentOut,
+        max_wire_version: Optional[int],
+        allowable_errors: Optional[Container[Union[int, str]]] = None,
+        parse_write_concern_error: bool = False,
+        pool_opts: Optional[PoolOptions] = None,
+    ) -&gt; None:
+        """Check the response to a command for errors."""
+        if "ok" not in response:
+            # Server didn't recognize our message as a command.
+            raise OperationFailure(
+                response.get("$err"),  # type: ignore[arg-type]
+                response.get("code"),
+                response,
+                max_wire_version,
+            )
+    
+        if parse_write_concern_error and "writeConcernError" in response:
+            _error = response["writeConcernError"]
+            _labels = response.get("errorLabels")
+            if _labels:
+                _error.update({"errorLabels": _labels})
+            _raise_write_concern_error(_error)
+    
+        if response["ok"]:
+            return
+    
+        details = response
+        errmsg = details["errmsg"]
+        code = details.get("code")
+    
+        # For allowable errors, only check for error messages when the code is not
+        # included.
+        if allowable_errors:
+            if code is not None:
+                if code in allowable_errors:
+                    return
+            elif errmsg in allowable_errors:
+                return
+    
+        # Server is "not primary" or "recovering"
+        if code is not None:
+            if code in _NOT_PRIMARY_CODES:
+                raise NotPrimaryError(errmsg, response)
+        elif HelloCompat.LEGACY_ERROR in errmsg or "node is recovering" in errmsg:
+            raise NotPrimaryError(errmsg, response)
+    
+        # Other errors
+        # findAndModify with upsert can raise duplicate key error
+        if code in (11000, 11001, 12582):
+            raise DuplicateKeyError(errmsg, code, response, max_wire_version)
+        elif code == 50:
+            # Append timeout details to MaxTimeMSExpired responses.
+            if pool_opts:
+                timeout_details = _get_timeout_details(pool_opts)
+                errmsg += format_timeout_details(timeout_details)
+            raise ExecutionTimeout(errmsg, code, response, max_wire_version)
+        elif code == 43:
+            raise CursorNotFound(errmsg, code, response, max_wire_version)
+    
+&gt;       raise OperationFailure(errmsg, code, response, max_wire_version)
+E       pymongo.errors.OperationFailure: $listSearchIndexes stage is only allowed on MongoDB Atlas, full error: {'ok': 0.0, 'errmsg': '$listSearchIndexes stage is only allowed on MongoDB Atlas', 'code': 6047401, 'codeName': 'Location6047401', '$clusterTime': {'clusterTime': Timestamp(1794302305, 3), 'signature': {'hash': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'keyId': 0}}, 'operationTime': Timestamp(1794302305, 3)}
+
+../../../venv-lg/lib/python3.12/site-packages/pymongo/helpers_shared.py:327: OperationFailure</error></testcase><testcase classname="tests.unit_tests.test_index_config" name="test_create_vector_index_config_with_autoembeddings" time="0.000" /><testcase classname="tests.unit_tests.test_index_config" name="test_create_vector_index_config_with_manual_embeddings" time="0.000" /><testcase classname="tests.unit_tests.test_index_config" name="test_create_vector_index_config_requires_manual_embedding_dimensions" time="0.000" /><testcase classname="tests.unit_tests.test_index_config" name="test_create_vector_index_config_rejects_autoembedding_dimensions" time="0.000" /><testcase classname="tests.unit_tests.test_index_config" name="test_create_vector_index_config_rejects_autoembedding_similarity" time="0.000" /><testcase classname="tests.unit_tests.test_index_config" name="test_store_creates_autoembedding_index_from_raw_config" time="0.002" /><testcase classname="tests.unit_tests.test_store" name="test_list_namespaces" time="0.088" /><testcase classname="tests.unit_tests.test_store" name="test_get" time="0.125" /><testcase classname="tests.unit_tests.test_store" name="test_ttl" time="0.487" /><testcase classname="tests.unit_tests.test_store" name="test_put" time="0.058" /><testcase classname="tests.unit_tests.test_store" name="test_put_no_multikey_collision" time="0.058" /><testcase classname="tests.unit_tests.test_store" name="test_namespace_separator_collision_raises" time="0.060" /><testcase classname="tests.unit_tests.test_store" name="test_delete" time="0.047" /><testcase classname="tests.unit_tests.test_store" name="test_batch" time="0.037" /><testcase classname="tests.unit_tests.test_store" name="test_search_basic" time="0.051" /><testcase classname="tests.unit_tests.test_store" name="test_search_rejects_mql_operator_keys" time="0.050" /><testcase classname="tests.unit_tests.test_store" name="test_search_filter_normal_behavior" time="0.100" /><testcase classname="tests.unit_tests.test_store" name="test_upgrade_from_legacy_index" time="0.168" /><testcase classname="tests.unit_tests.test_store" name="test_upgrade_with_conflicting_non_unique_index" time="0.037" /><testcase classname="tests.unit_tests.test_store" name="test_upgrade_idempotent" time="0.161" /><testcase classname="tests.unit_tests.test_store_async" name="test_alist_namespaces" time="0.081" /><testcase classname="tests.unit_tests.test_store_async" name="test_aget" time="0.062" /><testcase classname="tests.unit_tests.test_store_async" name="test_ttl" time="0.517" /><testcase classname="tests.unit_tests.test_store_async" name="test_aput" time="0.059" /><testcase classname="tests.unit_tests.test_store_async" name="test_adelete" time="0.053" /><testcase classname="tests.unit_tests.test_store_async" name="test_abatch" time="0.029" /><testcase classname="tests.unit_tests.test_store_async" name="test_asearch_basic" time="0.072" /><testcase classname="tests.unit_tests.test_store_async" name="test_asearch_rejects_mql_operator_keys" time="0.047" /><testcase classname="tests.unit_tests.test_store_async" name="test_asearch_filter_normal_behavior" time="0.100" /></testsuite></testsuites>

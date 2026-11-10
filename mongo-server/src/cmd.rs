@@ -466,6 +466,17 @@ impl Server {
             }
             "fenvixSealedPublish" => return Box::pin(self.sealed_publish(cmd)).await,
             "fenvixCounter" => return Ok(self.counter_info(cmd)),
+            "fenvixReseal" => {
+                // tests and measurements of derived documents (`fx/derive.rs`): reseal every group of a database now
+                let target = cmd.get_str("fenvixReseal").map_err(|_| MongoError::bad_value("fenvixReseal needs a database name".into()))?.to_string();
+                let mut g = self.dbs.lock(&target).await;
+                g.ensure_open().await?;
+                let r = g.fx_reseal_now().await?;
+                return Ok(match r {
+                    Some((n, enc)) => doc! { "resealed": n as i64, "encoded": enc as i64, "ok": 1.0 },
+                    None => doc! { "resealed": 0i64, "compactor": false, "ok": 1.0 },
+                });
+            }
             "renameCollection" => return Box::pin(self.rename_collection(db, cmd)).await,
             "ttlPass" => {
                 let gap = int_arg(cmd.get("minGapSecs")).unwrap_or(0) as u64;

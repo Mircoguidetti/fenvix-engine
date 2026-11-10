@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="9" failures="0" errors="0" time="7.090368359">
+    <testsuite name="src/storage/domains/notifications/index.test.ts" timestamp="2026-11-10T09:27:11.881Z" hostname="vm" tests="9" failures="0" errors="0" skipped="0" time="7.090368359">
+        <testcase classname="src/storage/domains/notifications/index.test.ts" name="NotificationsMongoDB &gt; creates, gets, and lists notifications with document fields and dates" time="0.118363879">
+        </testcase>
+        <testcase classname="src/storage/domains/notifications/index.test.ts" name="NotificationsMongoDB &gt; filters notifications by status, priority, source, resource, agent, search, and limit" time="0.051457529">
+        </testcase>
+        <testcase classname="src/storage/domains/notifications/index.test.ts" name="NotificationsMongoDB &gt; coalesces pending notifications by dedupeKey or coalesceKey within matching scope" time="0.052336541">
+        </testcase>
+        <testcase classname="src/storage/domains/notifications/index.test.ts" name="NotificationsMongoDB &gt; updates status timestamps and delivery metadata" time="0.022920345">
+        </testcase>
+        <testcase classname="src/storage/domains/notifications/index.test.ts" name="NotificationsMongoDB &gt; bulk status update accepts more ids than one statement can bind and returns each record once" time="6.436430643">
+        </testcase>
+        <testcase classname="src/storage/domains/notifications/index.test.ts" name="NotificationsMongoDB &gt; updates the status of many notifications in one write, scoped to the thread" time="0.109855112">
+        </testcase>
+        <testcase classname="src/storage/domains/notifications/index.test.ts" name="NotificationsMongoDB &gt; lists due pending notifications sorted by earliest due time with agent/resource filters and limit" time="0.069394502">
+        </testcase>
+        <testcase classname="src/storage/domains/notifications/index.test.ts" name="NotificationsMongoDB &gt; clears summaryAt while preserving deliverAt and due ordering after summary dispatch metadata updates" time="0.037408863">
+        </testcase>
+        <testcase classname="src/storage/domains/notifications/index.test.ts" name="NotificationsMongoDB &gt; exposes notifications through MongoDBStore" time="0.189920716">
+        </testcase>
+    </testsuite>
+</testsuites>

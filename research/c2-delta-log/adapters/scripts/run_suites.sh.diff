@@ -1,0 +1,32 @@
+--- bench/agent-adapters/run_suites.sh	2026-11-10 09:14:33.000000000 +0000
++++ /tmp/claude-0/-home-user/9129b5ca-4194-55a1-8a84-bd2fce2b2dd9/scratchpad/run/bench/agent-adapters/run_suites.sh	2026-11-10 09:21:16.727014540 +0000
+@@ -13,9 +13,9 @@
+ export MONGODB_URI="$URI" MONGODB_URL="$URI" MONGODB_REPLICA_SET_URL="$URI" MONGODB_DB_NAME=adapters_test
+ for s in $SUITES; do
+   if [ $s = mastra ]; then
+-    # Mastra's CI runs a standalone mongod on 27017 and a replica set on 27019 (and Atlas Local on 27018 for vectors:
++    # Mastra's CI runs a standalone mongod on 27017 and a replica set on 27021 (and Atlas Local on 27018 for vectors:
+     # Atlas-only, not started here); the replica-set tests read MONGODB_RS_URL / MONGODB_REPLICA_SET_URL.
+-    { MODE=standalone "$HERE/target.sh" "$T" && PORT=27019 "$HERE/target.sh" "$T"; } > "$OUT/$s.target.log" 2>&1 \
++    { MODE=standalone "$HERE/target.sh" "$T" && PORT=27021 "$HERE/target.sh" "$T"; } > "$OUT/$s.target.log" 2>&1 \
+       || { echo "$s: target failed to start"; cat "$OUT/$s.target.log"; continue; }
+   else
+     "$HERE/target.sh" "$T" > "$OUT/$s.target.log" 2>&1 || { echo "$s: target failed to start"; cat "$OUT/$s.target.log"; continue; }
+@@ -32,13 +32,14 @@
+             PYTHONPATH="$HERE" timeout 900 "$A/venv-llama/bin/python" -m pytest -p no:cacheprovider -p fake_docker -q tests --junitxml="$x") > "$log" 2>&1 ;;
+     mem0) (cd "$A/mem0" && timeout 900 "$A/venv-mem0/bin/python" -m pytest -p no:cacheprovider -q tests/vector_stores/test_mongodb.py --junitxml="$x") > "$log" 2>&1 ;;
+     mastra) (cd "$A/mastra/stores/mongodb" && unset MONGODB_URL MONGODB_URI && \
+-             RS="mongodb://localhost:27019/?directConnection=true" MONGODB_RS_URL="mongodb://localhost:27019/?directConnection=true" \
+-             MONGODB_REPLICA_SET_URL="mongodb://localhost:27019/?directConnection=true" timeout 3600 npx vitest run --reporter=default --reporter=junit --outputFile.junit="$x") > "$log" 2>&1 ;;
++             RS="mongodb://localhost:27021/?directConnection=true" MONGODB_RS_URL="mongodb://localhost:27021/?directConnection=true" \
++             MONGODB_REPLICA_SET_URL="mongodb://localhost:27021/?directConnection=true" timeout 3600 npx vitest run --exclude "src/vector/index.test.ts" --exclude "src/vector/*autoembed.test.ts" --reporter=default --reporter=junit --outputFile.junit="$x") > "$log" 2>&1 ;;
+     *) echo "unknown suite $s"; continue ;;
+   esac
+   if [ $T = ours ]; then
+     # compaction 2 step 2: proof the declared customer keys were used (documents written customer first, layout v2)
+-    "$A/venv-lg/bin/python" -c "import pymongo,sys;f=pymongo.MongoClient('mongodb://localhost:27017/?directConnection=true').admin.command('serverStatus').get('fenvix',{});print(f.get('customerKeys'),f.get('envelopes'))" > "$OUT/$s.ckeys.txt" 2>&1
++    "$A/venv-lg/bin/python" -c "import pymongo,sys;f=pymongo.MongoClient('mongodb://localhost:27017/?directConnection=true').admin.command('serverStatus').get('fenvix',{});print(f.get('customerKeys'),f.get('envelopes'));print('derived',f.get('derived'));print('compactor',f.get('compactor'))" > "$OUT/$s.ckeys.txt" 2>&1
++    ps -o args= -p "$(cat ${ADAPTERS_WORK:-$HOME/.fenvix-adapters}/27017/pid)" >> "$OUT/$s.ckeys.txt"; env | grep '^FENVIX_SEALED' >> "$OUT/$s.ckeys.txt"
+   fi
+   echo "$s on $T: $(( $(date +%s) - start )) s, $("$A/venv-lg/bin/python" "$HERE/compare.py" --count "$x" 2>/dev/null)"
+ done

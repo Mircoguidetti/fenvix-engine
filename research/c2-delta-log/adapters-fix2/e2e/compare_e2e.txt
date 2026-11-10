@@ -1,0 +1,7 @@
+langgraph: 50 users x 80 turns; differences: 0 (mongod 76.9 s, ours 93.1 s)
+langgraph-js: 50 users x 80 turns; differences: 0 (mongod 58.2 s, ours 88.9 s)
+mastra: 50 users x 200 turns; differences: 0 (mongod 36.3 s, ours 72.6 s)
+re-read langgraph after-reseal vs mongod: langgraph: 50 users x 80 turns; differences: 0 (mongod 76.9 s, ours 0 s)
+re-read langgraph cold vs mongod: langgraph: 50 users x 80 turns; differences: 0 (mongod 76.9 s, ours 0 s)
+re-read langgraph-js after-reseal vs mongod: langgraph-js: 50 users x 80 turns; differences: 0 (mongod 58.2 s, ours 0 s)
+re-read langgraph-js cold vs mongod: langgraph-js: 50 users x 80 turns; differences: 0 (mongod 58.2 s, ours 0 s)

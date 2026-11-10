@@ -1,0 +1,69 @@
+{
+ "databases": {
+  "e2e_langgraph_js": {
+   "reseal": {
+    "resealed": 1,
+    "encoded": 0,
+    "ok": 1.0,
+    "operationTime": "Timestamp(1794323619, 2)"
+   },
+   "derived_after_reseal": {
+    "write": true,
+    "encoded": 0,
+    "plain": 24000,
+    "messageRows": 0,
+    "fallbacks": 0,
+    "rebuilds": 0,
+    "resealRebuilds": 0,
+    "rebuildErrors": 0
+   },
+   "checkpoints": {
+    "docs_before": 12000,
+    "docs_after": 12000,
+    "bytes": 286096600,
+    "byte_differences": 0,
+    "sha256_before": "5d64d8c1b9b402ee666022656a8b1d1af00920d2a4b89c8b0b2812223311af5a",
+    "sha256_after": "5d64d8c1b9b402ee666022656a8b1d1af00920d2a4b89c8b0b2812223311af5a"
+   },
+   "checkpoint_writes": {
+    "docs_before": 12000,
+    "docs_after": 12000,
+    "bytes": 5251650,
+    "byte_differences": 0,
+    "sha256_before": "4b8dd888c074ec74711702b5121437e1b94f0192764c574668ded02f645fb4a1",
+    "sha256_after": "4b8dd888c074ec74711702b5121437e1b94f0192764c574668ded02f645fb4a1"
+   }
+  }
+ },
+ "derived_start": {
+  "write": true,
+  "encoded": 0,
+  "plain": 0,
+  "messageRows": 0,
+  "fallbacks": 0,
+  "rebuilds": 0,
+  "resealRebuilds": 0,
+  "rebuildErrors": 0
+ },
+ "derived_end": {
+  "write": true,
+  "encoded": 0,
+  "plain": 24000,
+  "messageRows": 0,
+  "fallbacks": 0,
+  "rebuilds": 0,
+  "resealRebuilds": 0,
+  "rebuildErrors": 0
+ },
+ "scan_retries_SealedRunsRetry": [],
+ "compactor": {
+  "enabled": true,
+  "started": 1,
+  "running": 1,
+  "publishes": 2,
+  "absorbs": 1,
+  "merges": 0,
+  "reseals": 1,
+  "errors": 0
+ }
+}

@@ -56,6 +56,7 @@ fn knobs(drop: bool) -> Knobs {
         tick: Duration::from_millis(10),
         reseal_parallel: 1,
         read_ahead: 64 << 10,
+        derive: None,
     }
 }
 
