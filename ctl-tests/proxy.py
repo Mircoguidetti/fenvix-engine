@@ -104,7 +104,13 @@ class _Handler(http.server.BaseHTTPRequestHandler):
             if k.lower() in ("transfer-encoding", "connection", "content-length"):
                 continue
             self.send_header(k, v)
-        self.send_header("Content-Length", str(len(data)))
+        # a HEAD answer carries the object's own length (integration-3: this proxy sent 0, so every object looked empty
+        # to a HEAD; SlateDB then took the WAL files of a restarted writer for empty fences and skipped them, and
+        # test_07's kill -9 after a restart lost every write since the restart, through this proxy only)
+        if self.command == "HEAD" and r.getheader("Content-Length") is not None:
+            self.send_header("Content-Length", r.getheader("Content-Length"))
+        else:
+            self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         if self.command != "HEAD":
             self.wfile.write(data)
