@@ -1,0 +1,56 @@
+{
+ "reseal": {
+  "resealed": 1,
+  "encoded": 1920,
+  "$clusterTime": {
+   "clusterTime": "Timestamp(1794311384, 860)",
+   "signature": {
+    "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+    "keyId": 0
+   }
+  },
+  "operationTime": "Timestamp(1794311384, 860)"
+ },
+ "derived_after_reseal": {
+  "write": true,
+  "encoded": 1920,
+  "plain": 0,
+  "messageRows": 1935,
+  "fallbacks": 0,
+  "rebuilds": 0,
+  "resealRebuilds": 0,
+  "rebuildErrors": 0
+ },
+ "warm": [
+  5354,
+  {}
+ ],
+ "change_stream": {
+  "mongod_events": 6,
+  "ours_events": 6,
+  "equal": true
+ },
+ "after_update_and_reseal": [
+  5352,
+  {}
+ ],
+ "cold_restart": [
+  5352,
+  {}
+ ],
+ "derived_end": {
+  "write": true,
+  "encoded": 0,
+  "plain": 0,
+  "messageRows": 0,
+  "fallbacks": 0,
+  "rebuilds": 1948650,
+  "resealRebuilds": 0,
+  "rebuildErrors": 0
+ },
+ "docs": {
+  "checkpoints": 960,
+  "checkpoint_writes": 960,
+  "threads": 24
+ }
+}

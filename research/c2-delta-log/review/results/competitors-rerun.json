@@ -1,0 +1,502 @@
+[
+ {
+  "cell": "scripted_10x400",
+  "kind": "scripted",
+  "threads": 400,
+  "mean_checkpoints_per_thread": 10,
+  "postgres_default_bytes_per_thread": 68485.12,
+  "postgres_delta_bytes_per_thread": 29327.36,
+  "mongo_default_disk_per_thread": 35870.72,
+  "mongo_default_uncompressed_per_thread": 111393.2125,
+  "mongo_delta_disk_per_thread": 13557.76,
+  "mongo_delta_uncompressed_per_thread": 33741.535,
+  "label": "MEASURED (this rerun)",
+  "published": {
+   "source": "owner results/summary.json per_thread",
+   "postgres_default_bytes_per_thread": 68485.12,
+   "postgres_delta_bytes_per_thread": 29327.36,
+   "mongo_default_disk_per_thread": 35870.72,
+   "mongo_default_uncompressed_per_thread": 111393.2125,
+   "mongo_delta_disk_per_thread": 13557.76,
+   "mongo_delta_uncompressed_per_thread": 33741.535
+  },
+  "diff_vs_published_pct": {
+   "postgres_default_bytes_per_thread": 0.0,
+   "postgres_delta_bytes_per_thread": 0.0,
+   "mongo_default_disk_per_thread": 0.0,
+   "mongo_default_uncompressed_per_thread": 0.0,
+   "mongo_delta_disk_per_thread": 0.0,
+   "mongo_delta_uncompressed_per_thread": 0.0
+  }
+ },
+ {
+  "cell": "scripted_40x150",
+  "kind": "scripted",
+  "threads": 150,
+  "mean_checkpoints_per_thread": 40,
+  "postgres_default_bytes_per_thread": 739573.76,
+  "postgres_delta_bytes_per_thread": 122497.70666666667,
+  "mongo_default_disk_per_thread": 739027.6266666667,
+  "mongo_default_uncompressed_per_thread": 1622647.1066666667,
+  "mongo_delta_disk_per_thread": 58572.8,
+  "mongo_delta_uncompressed_per_thread": 142313.60666666666,
+  "label": "MEASURED (this rerun)",
+  "published": {
+   "source": "owner results/summary.json per_thread",
+   "postgres_default_bytes_per_thread": 739573.76,
+   "postgres_delta_bytes_per_thread": 122497.70666666667,
+   "mongo_default_disk_per_thread": 739027.6266666667,
+   "mongo_default_uncompressed_per_thread": 1622647.1066666667,
+   "mongo_delta_disk_per_thread": 58572.8,
+   "mongo_delta_uncompressed_per_thread": 142313.60666666666
+  },
+  "diff_vs_published_pct": {
+   "postgres_default_bytes_per_thread": 0.0,
+   "postgres_delta_bytes_per_thread": 0.0,
+   "mongo_default_disk_per_thread": 0.0,
+   "mongo_default_uncompressed_per_thread": 0.0,
+   "mongo_delta_disk_per_thread": 0.0,
+   "mongo_delta_uncompressed_per_thread": 0.0
+  }
+ },
+ {
+  "cell": "scripted_100x40",
+  "kind": "scripted",
+  "threads": 40,
+  "mean_checkpoints_per_thread": 100,
+  "postgres_default_bytes_per_thread": 4148224.0,
+  "postgres_delta_bytes_per_thread": 315187.2,
+  "mongo_default_disk_per_thread": 4807475.2,
+  "mongo_default_uncompressed_per_thread": 10048410.475,
+  "mongo_delta_disk_per_thread": 149606.4,
+  "mongo_delta_uncompressed_per_thread": 366402.925,
+  "label": "MEASURED (this rerun)",
+  "published": {
+   "source": "owner results/summary.json per_thread",
+   "postgres_default_bytes_per_thread": 4148224.0,
+   "postgres_delta_bytes_per_thread": 315187.2,
+   "mongo_default_disk_per_thread": 4807475.2,
+   "mongo_default_uncompressed_per_thread": 10048410.475,
+   "mongo_delta_disk_per_thread": 149606.4,
+   "mongo_delta_uncompressed_per_thread": 366402.925
+  },
+  "diff_vs_published_pct": {
+   "postgres_default_bytes_per_thread": 0.0,
+   "postgres_delta_bytes_per_thread": 0.0,
+   "mongo_default_disk_per_thread": 0.0,
+   "mongo_default_uncompressed_per_thread": 0.0,
+   "mongo_delta_disk_per_thread": 0.0,
+   "mongo_delta_uncompressed_per_thread": 0.0
+  }
+ },
+ {
+  "cell": "scripted_300x8",
+  "kind": "scripted",
+  "threads": 8,
+  "mean_checkpoints_per_thread": 300,
+  "postgres_default_bytes_per_thread": 35275776.0,
+  "postgres_delta_bytes_per_thread": 1309696.0,
+  "mongo_default_disk_per_thread": 40886272.0,
+  "mongo_default_uncompressed_per_thread": 88298260.5,
+  "mongo_delta_disk_per_thread": 804864.0,
+  "mongo_delta_uncompressed_per_thread": 1817417.875,
+  "label": "MEASURED (this rerun)",
+  "published": {
+   "source": "owner results/summary.json per_thread",
+   "postgres_default_bytes_per_thread": 35275776.0,
+   "postgres_delta_bytes_per_thread": 1309696.0,
+   "mongo_default_disk_per_thread": 40886272.0,
+   "mongo_default_uncompressed_per_thread": 88298260.5,
+   "mongo_delta_disk_per_thread": 804864.0,
+   "mongo_delta_uncompressed_per_thread": 1817417.875
+  },
+  "diff_vs_published_pct": {
+   "postgres_default_bytes_per_thread": 0.0,
+   "postgres_delta_bytes_per_thread": 0.0,
+   "mongo_default_disk_per_thread": 0.0,
+   "mongo_default_uncompressed_per_thread": 0.0,
+   "mongo_delta_disk_per_thread": 0.0,
+   "mongo_delta_uncompressed_per_thread": 0.0
+  }
+ },
+ {
+  "cell": "real_tau_gpt_4o_airline",
+  "kind": "real",
+  "threads": 200,
+  "mean_checkpoints_per_thread": 31.755,
+  "postgres_default_bytes_per_thread": 167198.72,
+  "postgres_delta_bytes_per_thread": 72212.48,
+  "mongo_default_disk_per_thread": 78028.8,
+  "mongo_default_uncompressed_per_thread": 358755.365,
+  "mongo_delta_disk_per_thread": 19927.04,
+  "mongo_delta_uncompressed_per_thread": 67682.025,
+  "same_threads_as_reviewer": {
+   "checkpoints_equal": true,
+   "logical_bytes_max_rel_diff_pct": 0.1071
+  },
+  "label": "MEASURED (this rerun)",
+  "published": {
+   "source": "reviewer review/results/real/tau_gpt_4o_airline.json per_thread",
+   "mean_checkpoints_per_thread": 31.755,
+   "postgres_default_bytes_per_thread": 167280.64,
+   "postgres_delta_bytes_per_thread": 72212.48,
+   "mongo_default_disk_per_thread": 67788.8,
+   "mongo_default_uncompressed_per_thread": 356750.49,
+   "mongo_delta_disk_per_thread": 24248.32,
+   "mongo_delta_uncompressed_per_thread": 68850.895
+  },
+  "diff_vs_published_pct": {
+   "mean_checkpoints_per_thread": 0.0,
+   "postgres_default_bytes_per_thread": -0.05,
+   "postgres_delta_bytes_per_thread": 0.0,
+   "mongo_default_disk_per_thread": 15.11,
+   "mongo_default_uncompressed_per_thread": 0.56,
+   "mongo_delta_disk_per_thread": -17.82,
+   "mongo_delta_uncompressed_per_thread": -1.7
+  },
+  "dump": {
+   "file": "/home/user/c2data/dumps/real_tau_gpt_4o_airline.fxd",
+   "file_bytes": 70829817,
+   "docs": {
+    "checkpoints": 6351,
+    "checkpoint_writes": 8679
+   },
+   "total_bson_bytes": 70378913
+  }
+ },
+ {
+  "cell": "real_tau_sonnet_35_new_retail",
+  "kind": "real",
+  "threads": 300,
+  "mean_checkpoints_per_thread": 32.28666666666667,
+  "postgres_default_bytes_per_thread": 193495.04,
+  "postgres_delta_bytes_per_thread": 81210.02666666667,
+  "mongo_default_disk_per_thread": 93102.08,
+  "mongo_default_uncompressed_per_thread": 472269.91,
+  "mongo_delta_disk_per_thread": 25722.88,
+  "mongo_delta_uncompressed_per_thread": 79431.88333333333,
+  "same_threads_as_reviewer": {
+   "checkpoints_equal": true,
+   "logical_bytes_max_rel_diff_pct": 0.062
+  },
+  "label": "MEASURED (this rerun)",
+  "published": {
+   "source": "reviewer review/results/real/tau_sonnet_35_new_retail.json per_thread",
+   "mean_checkpoints_per_thread": 32.28666666666667,
+   "postgres_default_bytes_per_thread": 193604.26666666666,
+   "postgres_delta_bytes_per_thread": 81210.02666666667,
+   "mongo_default_disk_per_thread": 93156.69333333333,
+   "mongo_default_uncompressed_per_thread": 472540.71,
+   "mongo_delta_disk_per_thread": 30760.96,
+   "mongo_delta_uncompressed_per_thread": 80158.77666666667
+  },
+  "diff_vs_published_pct": {
+   "mean_checkpoints_per_thread": 0.0,
+   "postgres_default_bytes_per_thread": -0.06,
+   "postgres_delta_bytes_per_thread": 0.0,
+   "mongo_default_disk_per_thread": -0.06,
+   "mongo_default_uncompressed_per_thread": -0.06,
+   "mongo_delta_disk_per_thread": -16.38,
+   "mongo_delta_uncompressed_per_thread": -0.91
+  },
+  "dump": {
+   "file": "/home/user/c2data/dumps/real_tau_sonnet_35_new_retail.fxd",
+   "file_bytes": 140889529,
+   "docs": {
+    "checkpoints": 9686,
+    "checkpoint_writes": 14068
+   },
+   "total_bson_bytes": 140034381
+  }
+ },
+ {
+  "cell": "real_swe4",
+  "kind": "real",
+  "threads": 80,
+  "mean_checkpoints_per_thread": 127.725,
+  "postgres_default_bytes_per_thread": 5310976.0,
+  "postgres_delta_bytes_per_thread": 423116.8,
+  "mongo_default_disk_per_thread": 4882227.2,
+  "mongo_default_uncompressed_per_thread": 14739745.2875,
+  "mongo_delta_disk_per_thread": 217139.2,
+  "mongo_delta_uncompressed_per_thread": 599028.6625,
+  "same_threads_as_reviewer": {
+   "checkpoints_equal": true,
+   "logical_bytes_max_rel_diff_pct": 0.0041
+  },
+  "label": "MEASURED (this rerun)",
+  "published": {
+   "source": "reviewer review/results/real/swe4.json per_thread",
+   "mean_checkpoints_per_thread": 127.725,
+   "postgres_default_bytes_per_thread": 5311692.8,
+   "postgres_delta_bytes_per_thread": 423014.4,
+   "mongo_default_disk_per_thread": 4897740.8,
+   "mongo_default_uncompressed_per_thread": 14739718.025,
+   "mongo_delta_disk_per_thread": 184524.8,
+   "mongo_delta_uncompressed_per_thread": 592103.3375
+  },
+  "diff_vs_published_pct": {
+   "mean_checkpoints_per_thread": 0.0,
+   "postgres_default_bytes_per_thread": -0.01,
+   "postgres_delta_bytes_per_thread": 0.02,
+   "mongo_default_disk_per_thread": -0.32,
+   "mongo_default_uncompressed_per_thread": 0.0,
+   "mongo_delta_disk_per_thread": 17.67,
+   "mongo_delta_uncompressed_per_thread": 1.17
+  },
+  "dump": {
+   "file": "/home/user/c2data/dumps/real_swe4.fxd",
+   "file_bytes": 1177663307,
+   "docs": {
+    "checkpoints": 10218,
+    "checkpoint_writes": 20196
+   },
+   "total_bson_bytes": 1177176679
+  }
+ },
+ {
+  "cell": "real_swe35",
+  "kind": "real",
+  "threads": 80,
+  "mean_checkpoints_per_thread": 67.5,
+  "postgres_default_bytes_per_thread": 2610995.2,
+  "postgres_delta_bytes_per_thread": 239411.2,
+  "mongo_default_disk_per_thread": 2003456.0,
+  "mongo_default_uncompressed_per_thread": 6941306.95,
+  "mongo_delta_disk_per_thread": 97075.2,
+  "mongo_delta_uncompressed_per_thread": 322294.6125,
+  "same_threads_as_reviewer": {
+   "checkpoints_equal": true,
+   "logical_bytes_max_rel_diff_pct": 0.0172
+  },
+  "label": "MEASURED (this rerun)",
+  "published": {
+   "source": "reviewer review/results/real/swe35.json per_thread",
+   "mean_checkpoints_per_thread": 67.5,
+   "postgres_default_bytes_per_thread": 2611404.8,
+   "postgres_delta_bytes_per_thread": 239513.6,
+   "mongo_default_disk_per_thread": 1992857.6,
+   "mongo_default_uncompressed_per_thread": 6940892.425,
+   "mongo_delta_disk_per_thread": 97075.2,
+   "mongo_delta_uncompressed_per_thread": 322283.3625
+  },
+  "diff_vs_published_pct": {
+   "mean_checkpoints_per_thread": 0.0,
+   "postgres_default_bytes_per_thread": -0.02,
+   "postgres_delta_bytes_per_thread": -0.04,
+   "mongo_default_disk_per_thread": 0.53,
+   "mongo_default_uncompressed_per_thread": 0.01,
+   "mongo_delta_disk_per_thread": 0.0,
+   "mongo_delta_uncompressed_per_thread": 0.0
+  },
+  "dump": {
+   "file": "/home/user/c2data/dumps/real_swe35.fxd",
+   "file_bytes": 554429000,
+   "docs": {
+    "checkpoints": 5400,
+    "checkpoint_writes": 10560
+   },
+   "total_bson_bytes": 554157676
+  }
+ },
+ {
+  "cell": "edge_base_40x3",
+  "kind": "edge",
+  "threads": 3,
+  "mean_checkpoints_per_thread": 40.0,
+  "postgres_default_bytes_per_thread": 729088.0,
+  "postgres_delta_bytes_per_thread": 207530.66666666666,
+  "mongo_default_disk_per_thread": 0.0,
+  "mongo_default_uncompressed_per_thread": 0.0,
+  "mongo_delta_disk_per_thread": 0.0,
+  "mongo_delta_uncompressed_per_thread": 0.0,
+  "state_mismatches_default_vs_delta": 0,
+  "label": "MEASURED (this rerun)",
+  "published": {
+   "source": "reviewer review/results/edge/40.json (Postgres only; Mongo not published)",
+   "mean_checkpoints_per_thread": 40.0,
+   "postgres_default_bytes_per_thread": 729088.0,
+   "postgres_delta_bytes_per_thread": 207530.66666666666
+  },
+  "diff_vs_published_pct": {
+   "mean_checkpoints_per_thread": 0.0,
+   "postgres_default_bytes_per_thread": 0.0,
+   "postgres_delta_bytes_per_thread": 0.0
+  }
+ },
+ {
+  "cell": "edge_summarize_40x3",
+  "kind": "edge",
+  "threads": 3,
+  "mean_checkpoints_per_thread": 40.0,
+  "postgres_default_bytes_per_thread": 729088.0,
+  "postgres_delta_bytes_per_thread": 204800.0,
+  "mongo_default_disk_per_thread": 0.0,
+  "mongo_default_uncompressed_per_thread": 0.0,
+  "mongo_delta_disk_per_thread": 0.0,
+  "mongo_delta_uncompressed_per_thread": 0.0,
+  "state_mismatches_default_vs_delta": 0,
+  "label": "MEASURED (this rerun)",
+  "published": {
+   "source": "reviewer review/results/edge/40.json (Postgres only; Mongo not published)",
+   "mean_checkpoints_per_thread": 40.0,
+   "postgres_default_bytes_per_thread": 729088.0,
+   "postgres_delta_bytes_per_thread": 204800.0
+  },
+  "diff_vs_published_pct": {
+   "mean_checkpoints_per_thread": 0.0,
+   "postgres_default_bytes_per_thread": 0.0,
+   "postgres_delta_bytes_per_thread": 0.0
+  }
+ },
+ {
+  "cell": "edge_edit_40x3",
+  "kind": "edge",
+  "threads": 3,
+  "mean_checkpoints_per_thread": 40.0,
+  "postgres_default_bytes_per_thread": 589824.0,
+  "postgres_delta_bytes_per_thread": 207530.66666666666,
+  "mongo_default_disk_per_thread": 0.0,
+  "mongo_default_uncompressed_per_thread": 0.0,
+  "mongo_delta_disk_per_thread": 0.0,
+  "mongo_delta_uncompressed_per_thread": 0.0,
+  "state_mismatches_default_vs_delta": 0,
+  "label": "MEASURED (this rerun)",
+  "published": {
+   "source": "reviewer review/results/edge/40.json (Postgres only; Mongo not published)",
+   "mean_checkpoints_per_thread": 40.0,
+   "postgres_default_bytes_per_thread": 589824.0,
+   "postgres_delta_bytes_per_thread": 207530.66666666666
+  },
+  "diff_vs_published_pct": {
+   "mean_checkpoints_per_thread": 0.0,
+   "postgres_default_bytes_per_thread": 0.0,
+   "postgres_delta_bytes_per_thread": 0.0
+  }
+ },
+ {
+  "cell": "edge_remove_40x3",
+  "kind": "edge",
+  "threads": 3,
+  "mean_checkpoints_per_thread": 40.0,
+  "postgres_default_bytes_per_thread": 510634.6666666667,
+  "postgres_delta_bytes_per_thread": 210261.33333333334,
+  "mongo_default_disk_per_thread": 0.0,
+  "mongo_default_uncompressed_per_thread": 0.0,
+  "mongo_delta_disk_per_thread": 0.0,
+  "mongo_delta_uncompressed_per_thread": 0.0,
+  "state_mismatches_default_vs_delta": 0,
+  "label": "MEASURED (this rerun)",
+  "published": {
+   "source": "reviewer review/results/edge/40.json (Postgres only; Mongo not published)",
+   "mean_checkpoints_per_thread": 40.0,
+   "postgres_default_bytes_per_thread": 510634.6666666667,
+   "postgres_delta_bytes_per_thread": 210261.33333333334
+  },
+  "diff_vs_published_pct": {
+   "mean_checkpoints_per_thread": 0.0,
+   "postgres_default_bytes_per_thread": 0.0,
+   "postgres_delta_bytes_per_thread": 0.0
+  }
+ },
+ {
+  "cell": "edge_base_100x8",
+  "kind": "edge",
+  "threads": 8,
+  "mean_checkpoints_per_thread": 100.0,
+  "postgres_default_bytes_per_thread": 3718144.0,
+  "postgres_delta_bytes_per_thread": 327680.0,
+  "mongo_default_disk_per_thread": 0.0,
+  "mongo_default_uncompressed_per_thread": 0.0,
+  "mongo_delta_disk_per_thread": 0.0,
+  "mongo_delta_uncompressed_per_thread": 0.0,
+  "state_mismatches_default_vs_delta": 0,
+  "label": "MEASURED (this rerun)",
+  "published": {
+   "source": "reviewer review/results/edge/100.json (Postgres only; Mongo not published)",
+   "mean_checkpoints_per_thread": 100.0,
+   "postgres_default_bytes_per_thread": 3718144.0,
+   "postgres_delta_bytes_per_thread": 327680.0
+  },
+  "diff_vs_published_pct": {
+   "mean_checkpoints_per_thread": 0.0,
+   "postgres_default_bytes_per_thread": 0.0,
+   "postgres_delta_bytes_per_thread": 0.0
+  }
+ },
+ {
+  "cell": "edge_summarize_100x8",
+  "kind": "edge",
+  "threads": 8,
+  "mean_checkpoints_per_thread": 102.0,
+  "postgres_default_bytes_per_thread": 2030592.0,
+  "postgres_delta_bytes_per_thread": 348160.0,
+  "mongo_default_disk_per_thread": 0.0,
+  "mongo_default_uncompressed_per_thread": 0.0,
+  "mongo_delta_disk_per_thread": 0.0,
+  "mongo_delta_uncompressed_per_thread": 0.0,
+  "state_mismatches_default_vs_delta": 46,
+  "label": "MEASURED (this rerun)",
+  "published": {
+   "source": "reviewer review/results/edge/100.json (Postgres only; Mongo not published)",
+   "mean_checkpoints_per_thread": 102.0,
+   "postgres_default_bytes_per_thread": 2030592.0,
+   "postgres_delta_bytes_per_thread": 348160.0
+  },
+  "diff_vs_published_pct": {
+   "mean_checkpoints_per_thread": 0.0,
+   "postgres_default_bytes_per_thread": 0.0,
+   "postgres_delta_bytes_per_thread": 0.0
+  }
+ },
+ {
+  "cell": "edge_edit_100x8",
+  "kind": "edge",
+  "threads": 8,
+  "mean_checkpoints_per_thread": 100.0,
+  "postgres_default_bytes_per_thread": 1986560.0,
+  "postgres_delta_bytes_per_thread": 330752.0,
+  "mongo_default_disk_per_thread": 0.0,
+  "mongo_default_uncompressed_per_thread": 0.0,
+  "mongo_delta_disk_per_thread": 0.0,
+  "mongo_delta_uncompressed_per_thread": 0.0,
+  "state_mismatches_default_vs_delta": 0,
+  "label": "MEASURED (this rerun)",
+  "published": {
+   "source": "reviewer review/results/edge/100.json (Postgres only; Mongo not published)",
+   "mean_checkpoints_per_thread": 100.0,
+   "postgres_default_bytes_per_thread": 1986560.0,
+   "postgres_delta_bytes_per_thread": 330752.0
+  },
+  "diff_vs_published_pct": {
+   "mean_checkpoints_per_thread": 0.0,
+   "postgres_default_bytes_per_thread": 0.0,
+   "postgres_delta_bytes_per_thread": 0.0
+  }
+ },
+ {
+  "cell": "edge_remove_100x8",
+  "kind": "edge",
+  "threads": 8,
+  "mean_checkpoints_per_thread": 100.0,
+  "postgres_default_bytes_per_thread": 1679360.0,
+  "postgres_delta_bytes_per_thread": 335872.0,
+  "mongo_default_disk_per_thread": 0.0,
+  "mongo_default_uncompressed_per_thread": 0.0,
+  "mongo_delta_disk_per_thread": 0.0,
+  "mongo_delta_uncompressed_per_thread": 0.0,
+  "state_mismatches_default_vs_delta": 0,
+  "label": "MEASURED (this rerun)",
+  "published": {
+   "source": "reviewer review/results/edge/100.json (Postgres only; Mongo not published)",
+   "mean_checkpoints_per_thread": 100.0,
+   "postgres_default_bytes_per_thread": 1679360.0,
+   "postgres_delta_bytes_per_thread": 335872.0
+  },
+  "diff_vs_published_pct": {
+   "mean_checkpoints_per_thread": 0.0,
+   "postgres_default_bytes_per_thread": 0.0,
+   "postgres_delta_bytes_per_thread": 0.0
+  }
+ }
+]

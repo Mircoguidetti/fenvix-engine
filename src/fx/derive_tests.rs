@@ -312,8 +312,10 @@ fn setup() {
     local::set_store(Some(Arc::new(InMemory::new())));
     view::clear_cache();
     derive::WRITE.store(true, Relaxed);
-    derive::CHECK_CRC.store(true, Relaxed);
-    derive::PLANT.store(0, Relaxed);
+    // review: FX_D_PLANT=n runs a test with planted bug n, FX_D_NOCRC=1 without the reader's CRC check
+    derive::CHECK_CRC.store(std::env::var("FX_D_NOCRC").is_err(), Relaxed);
+    derive::PLANT.store(std::env::var("FX_D_PLANT").ok().and_then(|s| s.parse().ok()).unwrap_or(0), Relaxed);
+    derive::REVIEW_PREV.lock().unwrap().clear();
     derive::FAIL_AT_UNIT.store(0, Relaxed);
 }
 
@@ -879,6 +881,198 @@ async fn paired_checkpoint_reads_exact_documents() {
     eprintln!("paired checkpoint: {} rows scanned, {n} gets, wrong {wrong}; live database wrong {lw}, errors {le}", rows.len());
     assert_eq!(wrong + lw + le, 0);
     c.stop().await;
+    t.abandon().await;
+    teardown();
+}
+
+// ---- review (fenvix-brain prompts/R-review-c2-delta-log.md)
+
+/// Review, check 1: three more planted bugs, each placed after the encoder's own check (as a bug in the writing would
+/// be): 2, a literal range one byte short; 3, references that resolve to another thread's messages (a thread's message
+/// rows hold the message table of the thread encoded before it); 4, a message row missing while a skeleton refers to
+/// it. With the reader's checks each one is an error, never a wrong document. With the CRC check off, the byte
+/// comparison finds 2 and 3, and 4 is still an error (a missing message cannot be assembled).
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn review_more_planted_bugs_are_caught() {
+    let _s = SERIAL.lock().await;
+    let mut out = Vec::new();
+    for (plant, crc) in [(2, true), (2, false), (3, true), (3, false), (4, true), (4, false)] {
+        setup();
+        derive::PLANT.store(plant, Relaxed);
+        derive::CHECK_CRC.store(crc, Relaxed);
+        let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let k = knobs(BlockCodec::Zstd);
+        let (t, c, m) = derived_db(&store, &format!("fx-rplant-{plant}-{crc}"), 8, 12, &k).await;
+        view::clear_cache();
+        let (wrong, errors, first) = count_wrong(&t, &m).await;
+        let scan = t.scan_range(b"u/", Some(b"u0"), false, None, 1 << 20).await.map(|r| as_vec(r) == model_range(&m, b"u/", Some(b"u0"), false, None));
+        eprintln!("review plant {plant} crc check {crc}: {} docs, wrong {wrong}, errors {errors} ({first}); full scan equal: {scan:?}; encoded {}", m.len(), c.sh.stats.derive_encoded.load(Relaxed));
+        out.push((plant, crc, wrong, errors, scan.ok()));
+        c.stop().await;
+        t.abandon().await;
+        teardown();
+    }
+    for &(plant, crc, wrong, errors, scan) in &out {
+        if crc || plant == 4 {
+            assert!(wrong == 0 && errors > 0 && scan.is_none(), "plant {plant} crc {crc}: errors, never a wrong document ({wrong} wrong, {errors} errors, scan {scan:?})");
+        } else {
+            assert!(wrong > 0 && scan == Some(false), "plant {plant} without the CRC: the comparison finds it ({wrong} wrong, scan {scan:?})");
+        }
+    }
+}
+
+/// Review, check 1: a follower (another process: its own lifecycle, reader mode) reads every derived document exactly,
+/// point reads and both scan directions with limits, before and after the writer re-encodes every thread.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn review_follower_reads_derived_documents_exactly() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let k = knobs(BlockCodec::Zstd);
+    let id = "fx-review-follower";
+    let (mut t, c, mut m) = derived_db(&store, id, 8, 12, &k).await;
+    let mut f = lc(&store).wake(id).await.unwrap();
+    f.fx_refresh().await.unwrap();
+    let mut wrong = 0u64;
+    let mut reads = 0u64;
+    let rb0 = derive::REBUILDS.load(Relaxed);
+    for round in 0..2 {
+        view::clear_cache();
+        let (w, e, first) = count_wrong(&f, &m).await;
+        assert_eq!(e, 0, "follower errors: {first}");
+        wrong += w;
+        reads += m.len() as u64;
+        for rev in [false, true] {
+            for limit in [None, Some(3), Some(40)] {
+                let got = as_vec(f.scan_range(b"u/", Some(b"u0"), rev, limit, 64 << 10).await.unwrap());
+                wrong += (got != model_range(&m, b"u/", Some(b"u0"), rev, limit)) as u64;
+                reads += 1;
+            }
+        }
+        if round == 0 {
+            // the writer moves on: new steps on every thread, absorbed and re-encoded; the follower refreshes
+            let mut rng = StdRng::seed_from_u64(99);
+            let mut ths: Vec<Thread> = (0..8).map(|i| Thread { step: 300, ..new_thread(i) }).collect();
+            let mut oid = 1 << 42;
+            for th in ths.iter_mut() {
+                let rows = step(&mut rng, th, &mut oid);
+                apply(&mut t, &mut m, rows.into_iter().map(|(k, v)| (k, Some(v))).collect()).await;
+            }
+            absorb_all(&mut t, &c).await;
+            reseal_all(&c).await;
+            t.fx_sync();
+            f.fx_refresh().await.unwrap();
+        }
+    }
+    let rebuilds = derive::REBUILDS.load(Relaxed) - rb0;
+    eprintln!("review follower: {reads} reads, wrong {wrong}, follower rebuilds {rebuilds}, writer rebuilt by reseals {}", c.sh.stats.derive_rebuilt.load(Relaxed));
+    assert_eq!(wrong, 0);
+    assert!(rebuilds > 0 && c.sh.stats.derive_rebuilt.load(Relaxed) > 0);
+    c.stop().await;
+    let _ = f.abandon().await;
+    t.abandon().await;
+    teardown();
+}
+
+/// Review, check 3: what the encoder rewrites in a registered collection. The prompt (P-c2-delta-log task 3, R-review
+/// check 3): only LangGraph Mongo-saver checkpoint documents; a collection that is not registered, or a document of
+/// another shape, is left untouched. The encoder looks at the collection name only (`LenSpec` here, `AgentSpec` in the
+/// server: the same name test), then cuts any msgpack array inside any binary field. Each case is encoded alone, as
+/// one thread; every encoded document must still rebuild exactly.
+#[test]
+fn review_near_miss_shapes_are_left_untouched() {
+    use derive::Spec as _;
+    let spec = LenSpec { colls: vec![b"ck".to_vec(), b"cw".to_vec()] };
+    let mut rng = StdRng::seed_from_u64(3);
+    let mut th = new_thread(0);
+    let mut oid = 0u64;
+    let mut saver = Vec::new();
+    for _ in 0..4 {
+        saver = step(&mut rng, &mut th, &mut oid);
+    }
+    let msgs: Vec<Vec<u8>> = (0..4).map(|i| message(&mut rng, 300, 900 + i)).collect();
+    let mut arr = Vec::new();
+    mp_array_header(&mut arr, msgs.len());
+    for m in &msgs {
+        arr.extend(m);
+    }
+    let sub = |inner: &[u8]| {
+        let mut b = Bson::new().oid("_id", 7).str("thread_id", "t").str("checkpoint_id", "1f0").str("type", "bson");
+        b.name(0x03, "checkpoint");
+        b.0.extend(inner);
+        b.done()
+    };
+    let json: String = format!("{{\"v\":4,\"channel_values\":{{\"messages\":[{}]}}}}", (0..4).map(|i| format!("{{\"type\":\"ai\",\"content\":\"{}\"}}", "x".repeat(200 + i))).collect::<Vec<_>>().join(","));
+    let mut trailing = arr.clone();
+    trailing.push(0);
+    let cases: Vec<(&str, Vec<u8>, &str, bool)> = vec![
+        ("LangGraph saver checkpoint (control)", saver[0].1.clone(), "ck", true),
+        ("LangGraph saver write (control)", saver[1].1.clone(), "cw", true),
+        ("the same saver document in a collection that is not registered", saver[0].1.clone(), "notes", false),
+        ("LangGraph JS saver (type json)", Bson::new().oid("_id", 1).str("thread_id", "t").str("type", "json").bin("checkpoint", json.as_bytes()).done(), "ck", false),
+        ("a saver version with the checkpoint as a BSON subdocument", sub(&Bson::new().bin("messages", &arr).done()), "ck", false),
+        ("msgpack followed by a stray byte", Bson::new().oid("_id", 2).str("thread_id", "t").str("type", "msgpack").bin("checkpoint", &trailing).done(), "ck", false),
+        ("another app's document in a collection named like the saver's", Bson::new().oid("_id", 3).str("user_id", "u1").str("kind", "game-save").bin("state", &arr).done(), "ck", false),
+        ("a saver-like document without its type field", Bson::new().oid("_id", 4).str("thread_id", "t").str("checkpoint_id", "1f0").bin("checkpoint", &arr).done(), "ck", false),
+    ];
+    let mut bad = Vec::new();
+    for (i, (what, doc, coll, want_encoded)) in cases.iter().enumerate() {
+        let key = tkey(&format!("t{i}"), coll, "d", 1);
+        let p = spec.customer_prefix(&key).unwrap();
+        let mut env = vec![runfmt::LIVE];
+        env.extend(doc);
+        let mut st = derive::EncStats::default();
+        let out = derive::encode_customer(&spec, &key[..p], vec![(key.clone(), 1, env.clone())], &mut st).unwrap();
+        let parts: std::collections::HashMap<u32, Vec<u8>> = out.rows.iter().filter(|r| r.2[0] == runfmt::PART).map(|r| (derive::parse_msg_key(&r.0).unwrap().1, r.2[1..].to_vec())).collect();
+        let d = out.rows.iter().find(|r| r.0 == key).unwrap();
+        let rebuilt = if d.2[0] == runfmt::DERIVED { derive::assemble(&derive::parse_skeleton(&d.2).unwrap(), &|i| parts.get(&i).cloned()).unwrap() } else { d.2[1..].to_vec() };
+        assert_eq!(&rebuilt, doc, "{what}: rebuilt exactly");
+        let encoded = st.encoded > 0;
+        eprintln!("review near-miss: {what}: encoded {encoded} (message rows {}), expected {want_encoded}", parts.len());
+        if encoded != *want_encoded {
+            bad.push(*what);
+        }
+    }
+    assert!(bad.is_empty(), "rewritten although not a LangGraph Mongo-saver document: {bad:?}");
+}
+
+/// Review, check 2: the rollback to E0 (release flag off). Derived rows leave a group only when it is resealed: with no
+/// new writes, the compactor has nothing due, so a quiet group keeps them, readable by this release and refused (never
+/// misread) by a release before it. Facts only: the test passes and prints the counts.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn review_rollback_leaves_derived_rows_in_quiet_groups() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let mut k = knobs(BlockCodec::Zstd);
+    let id = "fx-review-rollback";
+    let (mut t, c, m) = derived_db(&store, id, 8, 12, &k).await;
+    c.stop().await;
+    derive::WRITE.store(false, Relaxed);
+    k.sealed.codec = BlockCodec::Lz4;
+    let c2 = Compactor::start(&mut t, Arc::clone(&store), k.clone(), pool::Pool::new(2), tokio::runtime::Handle::current()).await.unwrap();
+    c2.drain(true).await.unwrap();
+    c2.run();
+    tokio::time::sleep(Duration::from_secs(3)).await;
+    t.fx_sync();
+    let v = c2.current().await;
+    let rows = all_run_rows(&store, &v).await;
+    let derived = rows.iter().filter(|r| matches!(r.env[0], runfmt::DERIVED | runfmt::PART)).count();
+    let (mut v2, mut refused) = (0, 0);
+    for g in v.groups.iter().filter_map(|g| g.sealed.clone()) {
+        let path = object_store::path::Path::from(g.path.as_str());
+        let tail = runfmt::get_range(&store, &path, g.size - runfmt::TRAILER, g.size).await.unwrap();
+        if runfmt::Run::open(&store, path, g.size).await.unwrap().0.version == 2 {
+            v2 += 1;
+            refused += runfmt::parse_trailer_known(&tail, g.size, 1).is_err() as u32;
+        }
+    }
+    view::clear_cache();
+    let (wrong, errors, _) = count_wrong(&t, &m).await;
+    eprintln!("review rollback: flag off, compactor idle for 3 s: reseals {}, derived rows still in runs {derived}, v2 sealed runs {v2} (a v1 reader refuses {refused}), wrong {wrong}, errors {errors}", c2.sh.stats.reseals.load(Relaxed));
+    assert_eq!((wrong, errors), (0, 0));
+    assert_eq!(refused, v2);
+    c2.stop().await;
     t.abandon().await;
     teardown();
 }

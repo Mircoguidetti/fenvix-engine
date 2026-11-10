@@ -1,0 +1,46 @@
+mongo-server listening on 127.0.0.1:27051 (idle close after 600 s, holder rvreads, lease ttl 30 s)
+LEASE process_lease tenant=- holder=rvreads unix_ms=1794311383306 inc=a3a9a36eb0e8b2a1 gen=1
+LEASE acquired tenant=agentdb holder=rvreads unix_ms=1794311383310 takeover_from=-
+LEASE acquired tenant=agentdb holder=rvreads unix_ms=1794311383318 takeover_from=-
+LEASE acquired tenant=agentdb holder=rvreads unix_ms=1794311383325 takeover_from=-
+LEASE acquired tenant=agentdb holder=rvreads unix_ms=1794311383333 takeover_from=- new=true
+LEASE writer_open tenant=agentdb holder=rvreads unix_ms=1794311383349 
+SLOW fenvixReseal db=admin ms=4311 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=agentdb ms=593 ok=true
+SLOW find db=agentdb ms=518 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW aggregate db=agentdb ms=531 ok=true
+SLOW find db=agentdb ms=550 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW aggregate db=agentdb ms=587 ok=true
+shutting down: closing tenants cleanly
+LEASE writer_close tenant=agentdb holder=rvreads unix_ms=1794311461786 
+LEASE release_begin tenant=agentdb holder=rvreads unix_ms=1794311461787 
+LEASE release tenant=agentdb holder=rvreads unix_ms=1794311461791 ok=true
+tenants closed; stopping maintenance
+maintenance stopped
+mongo-server listening on 127.0.0.1:27051 (idle close after 600 s, holder rvreads, lease ttl 30 s)
+LEASE process_lease tenant=- holder=rvreads unix_ms=1794311463765 inc=870c4b39dc90e249 gen=1
+LEASE acquired tenant=agentdb holder=rvreads unix_ms=1794311463773 takeover_from=-
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW aggregate db=agentdb ms=531 ok=true
+LEASE writer_open tenant=agentdb holder=rvreads unix_ms=1794311497120 
+shutting down: closing tenants cleanly
+LEASE writer_close tenant=agentdb holder=rvreads unix_ms=1794311497538 
+LEASE release_begin tenant=agentdb holder=rvreads unix_ms=1794311497538 
+LEASE release tenant=agentdb holder=rvreads unix_ms=1794311497541 ok=true
+tenants closed; stopping maintenance
+maintenance stopped
