@@ -263,6 +263,17 @@ pub(super) async fn fetch_blocks(store: &Arc<dyn ObjectStore>, h: &RunH, run: &R
     fetch_h(store, h, run, first, last).await
 }
 
+/// The number of blocks of a run, and blocks first..=last of it (the erasure's rewrite reads a run whole, a chunk of
+/// blocks per range GET, `erase.rs`).
+pub async fn block_count(store: &Arc<dyn ObjectStore>, h: &RunH) -> Result<usize> {
+    Ok(h.open(store).await?.fence.blocks())
+}
+
+pub async fn blocks(store: &Arc<dyn ObjectStore>, h: &RunH, first: usize, last: usize) -> Result<Vec<Arc<Block>>> {
+    let run = h.open(store).await?;
+    fetch(store, run, first, last).await
+}
+
 /// A row from our runs: seq and envelope (first byte 0 live, 1 deleted). A point read leaves `key` empty (the caller
 /// knows it).
 #[derive(Clone, Debug, PartialEq, Eq)]

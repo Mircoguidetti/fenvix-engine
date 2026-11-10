@@ -112,6 +112,7 @@ pub async fn leftovers(ctl: &Ctl, db: &str) -> Result<Vec<String>> {
         rec::path(&["control", "forks", db]),
         rec::path(&["control", "exports", db]),
         rec::path(&["control", "staging", db]),
+        rec::path(&["control", "erasures", db]),
     ] {
         out.extend(list(&ctl.store, &prefix).await?.into_iter().map(|p| p.to_string()));
     }

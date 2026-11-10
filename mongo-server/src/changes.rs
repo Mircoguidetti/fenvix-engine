@@ -86,6 +86,9 @@ struct Inner {
     bytes: usize,
     next_seq: u64,
     last_time: (u32, u32),
+    /// The highest position pushed out of the log by its bounds: a resume token at or below it is lost. (Events an
+    /// erasure removes do not move it: a stream resumed from before an erasure goes on, without the erased events.)
+    trimmed: u64,
 }
 
 pub struct ChangeLog {
@@ -101,7 +104,7 @@ pub struct ChangeLog {
 
 impl Default for ChangeLog {
     fn default() -> Self {
-        ChangeLog { inner: Mutex::new(Inner { events: VecDeque::new(), sizes: VecDeque::new(), bytes: 0, next_seq: 1, last_time: (0, 0) }), notify: Notify::new(), nonce: rand::random(), boot: (bson::DateTime::now().timestamp_millis() / 1000) as u32, born: Mutex::default() }
+        ChangeLog { inner: Mutex::new(Inner { events: VecDeque::new(), sizes: VecDeque::new(), bytes: 0, next_seq: 1, last_time: (0, 0), trimmed: 0 }), notify: Notify::new(), nonce: rand::random(), boot: (bson::DateTime::now().timestamp_millis() / 1000) as u32, born: Mutex::default() }
     }
 }
 
@@ -151,7 +154,9 @@ impl ChangeLog {
                 g.bytes += size;
                 let max = MAX_BYTES.load(std::sync::atomic::Ordering::Relaxed);
                 while g.events.len() > 1 && (g.events.len() > RETAINED || g.bytes > max) {
-                    g.events.pop_front();
+                    if let Some(e) = g.events.pop_front() {
+                        g.trimmed = g.trimmed.max(e.seq);
+                    }
                     let s = g.sizes.pop_front().unwrap_or(0);
                     g.bytes -= s;
                 }
@@ -244,7 +249,7 @@ impl ChangeLog {
             return Err(lost());
         }
         let g = self.inner.lock().unwrap();
-        let oldest = g.events.front().map(|e| e.seq).unwrap_or(g.next_seq);
+        let oldest = g.trimmed + 1;
         if seq + 1 < oldest && seq != 0 {
             return Err(lost());
         }
@@ -274,6 +279,37 @@ impl ChangeLog {
             Some(&at) if seq < at => Err(MongoError::new(286, "ChangeStreamHistoryLost", format!("Resume of change stream was not possible: the resume token is from before database '{db}' was forked from another database."))),
             _ => Ok(()),
         }
+    }
+
+    /// An erasure of customer `value` of `db.coll` (compaction 2 step 7b, `fx/erase.rs`): every event of that customer
+    /// leaves the log (inserts carry whole documents, deletes and updates its key), so no stream, resumed or not, returns
+    /// the erased customer. A stream resumed from before the erasure goes on with the other events. MongoDB itself keeps
+    /// removed documents in the oplog until it rolls over; an erasure here does not wait for that. Returns the number
+    /// of events removed.
+    pub fn forget_customer(&self, db: &str, coll: &str, field: &str, value: &Bson) -> usize {
+        // compared by the customer key's encoding (1 and 1.0 are one customer), on the event's customer and on the
+        // customer of any document the event carries (a replace that moved a document to this customer)
+        let want = crate::custkey::comp(value);
+        let of = |d: &Option<Document>| d.as_ref().is_some_and(|d| d.get(field).is_some() && crate::custkey::comp(&crate::custkey::value(field, d)) == want);
+        let mut g = self.inner.lock().unwrap();
+        let g = &mut *g;
+        let mut kept_e = VecDeque::with_capacity(g.events.len());
+        let mut kept_s = VecDeque::with_capacity(g.sizes.len());
+        let mut n = 0;
+        for (e, sz) in g.events.drain(..).zip(g.sizes.drain(..)) {
+            let s = &e.spec;
+            let hit = s.db == db && s.coll.as_deref() == Some(coll) && (s.cust.as_ref().is_some_and(|(_, v)| crate::custkey::comp(v) == want) || of(&s.full) || of(&s.pre) || of(&s.post));
+            if hit {
+                g.bytes -= sz;
+                n += 1;
+            } else {
+                kept_e.push_back(e);
+                kept_s.push_back(sz);
+            }
+        }
+        g.events = kept_e;
+        g.sizes = kept_s;
+        n
     }
 
     /// Position of "now": events published later have a larger sequence number.

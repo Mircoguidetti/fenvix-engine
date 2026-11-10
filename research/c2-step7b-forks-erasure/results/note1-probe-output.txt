@@ -1,0 +1,2 @@
+hold_life_ms 500 createIndexes: error: fx hold revoked: the read held version 2 for more than 500ms; retry (code 134) in 4.7 s; $lookup over 100k: error: fx hold revoked ... (code 134) in 1.09 s; indexes: ['_id_']
+hold_life_ms 120000 createIndexes: ok in 7.05 s; $lookup over 100k: ok (100000 docs) in 3.72 s; indexes: ['_id_', 'x_1']

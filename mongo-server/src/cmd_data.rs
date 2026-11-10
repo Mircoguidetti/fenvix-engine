@@ -1059,6 +1059,10 @@ impl Server {
         let mut n = 0;
         let mut errors: Vec<Bson> = Vec::new();
         let ordered = bool_arg(cmd.get("ordered"), true) || tx.is_some();
+        // erasure (compaction 2 step 7b, DECISIONS 2026-11-07): a statement that deletes a whole customer of a
+        // customer-keyed collection is recorded as an erasure once its deletes commit
+        let ckey = if tenant_bench::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) && tx.is_none() && g.collation_of(coll).is_none() { crate::custkey::of_opts(g.coll_opts(coll).await?.as_ref()) } else { None };
+        let mut erasures: Vec<(Bson, Vec<u8>, tenant_bench::fx::erase::Targets)> = Vec::new();
         for (i, spec) in specs.iter().enumerate() {
             if let Some(b) = rr.as_mut() {
                 if b.run.is_retried(i) {
@@ -1075,10 +1079,21 @@ impl Server {
                 }
             }
             let n_before = n;
+            let ops_before = w.ops.len();
+            let whole = match (&ckey, &cols[i]) {
+                (Some(k), Ok(None)) => whole_customer(spec, k),
+                _ => None,
+            };
             let res: R<()> = match &cols[i] { Err(e) => Err(e.clone()), Ok(None) => delete_stmt(&mut g, db, coll, &indexes, &ttl_specs, &mut w, spec, &mut n).await, Ok(Some(c)) => crate::collation::scope(Some(c.clone()), delete_stmt(&mut g, db, coll, &indexes, &ttl_specs, &mut w, spec, &mut n)).await };
             if res.is_ok() && n > n_before {
                 if let Some(b) = rr.as_mut() {
                     b.run.record(i, doc! { "t": "d" });
+                }
+            }
+            if res.is_ok() {
+                if let Some(v) = &whole {
+                    let (cust, t) = erasure_targets(coll, v, &w.ops[ops_before..]);
+                    erasures.push((v.clone(), cust, t));
                 }
             }
             if let Err(e) = res {
@@ -1096,6 +1111,16 @@ impl Server {
             w.extra.extend(self.session_sweep_ops(&mut g, db, &b.key).await);
         }
         self.commit(&mut g, coll, w, &indexes, None, tx).await?;
+        // the deletes are committed and the exclusive lock is still held: S_e is the database's last seq now
+        for (value, cust, t) in &erasures {
+            if let Some(e) = g.fx_erasure_register(coll, cust, t).await? {
+                // the change log keeps whole documents in memory: the customer's events go too (review of 7b, FIX 3)
+                if let Some(k) = ckey.as_ref().filter(|_| !crate::ctl::fork::control("FENVIX_CONTROL_KEEP_CHANGES")) {
+                    self.dbs.changes.forget_customer(db, coll, &k.field, value);
+                }
+                crate::ctl::erase::note_erasure(db, &e.id).await;
+            }
+        }
         if let Some(b) = rr.as_mut() {
             b.run.apply();
         }
@@ -1205,6 +1230,49 @@ async fn delete_stmt(g: &mut Entry, db: &str, coll: &str, indexes: &[IndexDef], 
                 // MongoDB's oplog (and so a change stream) lists the documents of one delete statement last-first.
                 w.events[ev_start..].reverse();
                 Ok(())
+}
+
+/// The customer value of a delete statement that deletes a whole customer of a customer-keyed collection (DECISIONS
+/// 2026-11-07): a filter on the customer field alone, by equality (`{field: v}` or `{field: {$eq: v}}`, v not a
+/// document, array or regular expression), with no limit. Anything else is an ordinary delete.
+fn whole_customer(spec: &Bson, key: &crate::custkey::Ckey) -> Option<Bson> {
+    let spec = spec.as_document()?;
+    if int_arg(spec.get("limit")).unwrap_or(0) != 0 {
+        return None;
+    }
+    let q = spec.get_document("q").ok()?;
+    if q.len() != 1 {
+        return None;
+    }
+    let v = q.get(&key.field)?;
+    let v = match v {
+        Bson::Document(d) if d.len() == 1 && d.contains_key("$eq") => d.get("$eq")?,
+        v => v,
+    };
+    match v {
+        Bson::Document(_) | Bson::Array(_) | Bson::RegularExpression(_) => None,
+        v => Some(v.clone()),
+    }
+}
+
+/// The physical targets of erasing customer `v` of collection `coll`: the customer's range of the collection
+/// (`u/{customer}{collection}/`: documents and co-located index entries) and every key the statement deleted outside it
+/// (locators, other index entries, natural-order entries).
+fn erasure_targets(coll: &str, v: &Bson, ops: &[tenant_bench::lifecycle::Op]) -> (Vec<u8>, tenant_bench::fx::erase::Targets) {
+    let comp = crate::custkey::comp(v);
+    let mut lo = crate::custkey::U.to_vec();
+    lo.extend(&comp);
+    lo.extend(crate::layout::escape_collection(coll));
+    lo.push(b'/');
+    let hi = crate::keyenc::prefix_end(&lo).unwrap_or_else(|| crate::custkey::U_END.to_vec());
+    let mut t = tenant_bench::fx::erase::Targets::default();
+    t.ranges.push((lo, hi));
+    for o in ops {
+        if let tenant_bench::lifecycle::Op::Delete(k) = o {
+            t.add_key(crate::layout2::phys(k).into_owned());
+        }
+    }
+    (comp, t)
 }
 
 /// TTL filter argument for [`FindOpts`]: `None` when the collection has no TTL index.

@@ -41,3 +41,35 @@ pub async fn drop_rows(ctl: &Arc<Ctl>, db: &str, body: &Value) -> ApiResult<Valu
     drop(g);
     Ok(r?)
 }
+
+/// The test hook between two reads of one command (`dbs::interleave`, step 7b fix round, option (b)): publish a version
+/// of `db` with what SlateDB holds above X_d, then drop SlateDB's rows at or below its X_d, as `drop_rows` does.
+pub async fn publish_and_drop(db: &str) -> ApiResult<Value> {
+    let Some(ctl) = super::get() else { return Err(ApiError::new(404, "no_route", "no control layer")) };
+    if !enabled() || !tenant_bench::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) {
+        return Err(ApiError::new(404, "no_route", "test hooks or sealed runs are off"));
+    }
+    {
+        let mut g = ctl.dbs.lock(db).await;
+        g.fx_test_publish().await?;
+    }
+    drop_rows(ctl, db, &json!({})).await
+}
+
+/// `PUT /v1/test/interleave {"database": D, "at": K}`: before the K-th storage access of every command on D, a publish
+/// and a drop (`dbs::interleave`). `DELETE` clears it.
+pub fn set_interleave(body: Option<&Value>) -> ApiResult<Value> {
+    if !enabled() {
+        return Err(ApiError::new(404, "no_route", "test hooks are off"));
+    }
+    let v = match body {
+        Some(b) => {
+            let db = b["database"].as_str().ok_or_else(|| ApiError::bad("body needs database"))?.to_string();
+            let at = b["at"].as_u64().ok_or_else(|| ApiError::bad("body needs at"))? as u32;
+            Some((db, at))
+        }
+        None => None,
+    };
+    *crate::dbs::INTERLEAVE_SET.lock().unwrap() = v.clone();
+    Ok(json!({ "interleave": v.map(|(d, k)| json!({ "database": d, "at": k })), "interleaved": crate::dbs::INTERLEAVED.load(std::sync::atomic::Ordering::Relaxed) }))
+}

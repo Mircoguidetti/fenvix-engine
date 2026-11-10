@@ -65,6 +65,8 @@ async fn dispatch(ctl: &Arc<Ctl>, req: &Request) -> ApiResult<Response> {
             Ok(Response::json(200, &json!({ "checkpoints": super::purge::checkpoints(&ctl.store, db).await? })))
         }
         ("DELETE", ["v1", "databases", db]) => Ok(Response::json(200, &super::erase::erase(ctl, db).await?)),
+        ("GET", ["v1", "databases", db, "erasures"]) => Ok(Response::json(200, &super::erase::status(ctl, db).await?)),
+        ("POST", ["v1", "databases", db, "erasures", "run"]) => Ok(Response::json(200, &super::erase::run_now(ctl, db).await?)),
         ("PUT", ["v1", "databases", db, "keep-awake"]) => Ok(Response::json(200, &super::pin::set(ctl, db).await?)),
         ("DELETE", ["v1", "databases", db, "keep-awake"]) => Ok(Response::json(200, &super::pin::unset(ctl, db).await?)),
         ("POST", ["v1", "databases", db, "exports"]) => Ok(Response::json(201, &super::export::create(ctl, db).await?)),
@@ -123,6 +125,9 @@ async fn dispatch(ctl: &Arc<Ctl>, req: &Request) -> ApiResult<Response> {
             Ok(Response::json(200, &super::purge::manifest_summary(&ctl.store, db, id).await?.unwrap_or(Value::Null)))
         }
         ("POST", ["v1", "test", "databases", db, "drop"]) if super::testhooks::enabled() => Ok(Response::json(200, &super::testhooks::drop_rows(ctl, db, &body_json(req)?).await?)),
+        ("POST", ["v1", "test", "databases", db, "publish-drop"]) if super::testhooks::enabled() => Ok(Response::json(200, &super::testhooks::publish_and_drop(db).await?)),
+        ("PUT", ["v1", "test", "interleave"]) if super::testhooks::enabled() => Ok(Response::json(200, &super::testhooks::set_interleave(Some(&body_json(req)?))?)),
+        ("DELETE", ["v1", "test", "interleave"]) if super::testhooks::enabled() => Ok(Response::json(200, &super::testhooks::set_interleave(None)?)),
         (_, ["v1", ..]) => Err(ApiError::new(404, "no_route", format!("no route for {} {}", req.method, req.path))),
         _ => Err(ApiError::new(404, "no_route", "not found")),
     }

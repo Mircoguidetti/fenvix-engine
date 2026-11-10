@@ -478,6 +478,16 @@ struct Args {
     /// set it lower). FENVIX_SEALED_E1_WAIT_MS does the same.
     #[arg(long)]
     sealed_e1_wait_ms: Option<u64>,
+    /// Tests only: accept `--sealed-e1-wait-ms` below T_pin (rule 26 needs at least T_pin in production; the check at
+    /// startup refuses a shorter wait without this flag). FENVIX_SEALED_TEST_SHORT_E1_WAIT=1 does the same.
+    #[arg(long)]
+    sealed_test_short_e1_wait: bool,
+    /// Erasure (compaction 2 step 7b): how long after a whole-customer delete its rows must have left our live runs, L0
+    /// and SlateDB (24 hours, DECISIONS 2026-11-07), and how often the erasure agent looks for erasures not done.
+    #[arg(long, default_value_t = 24 * 3600 * 1000)]
+    sealed_erasure_deadline_ms: u64,
+    #[arg(long, default_value_t = 60_000)]
+    sealed_erasure_poll_ms: u64,
     /// Timing of our manifest (fx; review round 2 of step 0, F6), in milliseconds, checked at startup: a manifest PUT
     /// with no answer within the PUT timeout counts as timed out (a fence follows); it must be shorter than the lease
     /// minus its margin, and the remote lease and the GC grace must each exceed the hold life plus it.
@@ -769,7 +779,15 @@ async fn run() -> Result<()> {
         tenant_bench::fx::GROUP_BYTES.store(args.sealed_group_mb.max(1) << 20, Relaxed);
         tenant_bench::fx::view::CACHE_BYTES.store(args.sealed_cache_mb << 20, Relaxed);
         tenant_bench::fx::RESEAL_EVERY.store(args.sealed_reseal_every.max(1), Relaxed);
+        tenant_bench::fx::erase::DEADLINE_MS.store(args.sealed_erasure_deadline_ms, Relaxed);
+        ctl::erase::POLL_MS.store(args.sealed_erasure_poll_ms, Relaxed);
     }
+    // negative controls of the step 7b fix round, tests only
+    let ctl_env = |k: &str| std::env::var(k).map(|v| v == "1").unwrap_or(false);
+    tenant_bench::fx::hold::CONTROL_KEEP_VIEW.store(ctl_env("FENVIX_CONTROL_KEEP_VIEW"), std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::fx::hold::CONTROL_OP_HOLDS.store(ctl_env("FENVIX_CONTROL_OP_HOLDS"), std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::fx::erase::CONTROL_NO_OWNERSHIP.store(ctl_env("FENVIX_CONTROL_NO_OWNERSHIP"), std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::fx::read::CONTROL_FULL_WALK.store(ctl_env("FENVIX_CONTROL_FULL_WALK"), std::sync::atomic::Ordering::Relaxed);
     if sealed_runs.is_some() || tenant_bench::envelope::START.load(std::sync::atomic::Ordering::Relaxed) {
         // T_pin and E1's wait (rules 6 and 26) apply to release E1 with or without sealed runs (`--envelopes write`)
         use std::sync::atomic::Ordering::Relaxed;
@@ -778,6 +796,8 @@ async fn run() -> Result<()> {
         if let Some(w) = args.sealed_e1_wait_ms.or_else(|| std::env::var("FENVIX_SEALED_E1_WAIT_MS").ok().and_then(|v| v.parse().ok())) {
             tenant_bench::fx::E1_WAIT_MS.store(w, Relaxed);
         }
+        let short = args.sealed_test_short_e1_wait || std::env::var("FENVIX_SEALED_TEST_SHORT_E1_WAIT").map(|v| v == "1").unwrap_or(false);
+        tenant_bench::fx::E1_WAIT_TEST.store(short, Relaxed);
         tenant_bench::fx::PUT_TIMEOUT_MS.store(args.sealed_put_timeout_ms, Relaxed);
         tenant_bench::fx::LEASE_MS.store(args.sealed_lease_ms, Relaxed);
         tenant_bench::fx::LEASE_MARGIN_MS.store(args.sealed_lease_margin_ms, Relaxed);
