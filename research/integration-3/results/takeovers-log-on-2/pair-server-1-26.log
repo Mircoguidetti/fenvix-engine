@@ -1,0 +1,98 @@
+quaderno: writes are acknowledged by the replicated log at 172.18.0.2:7200,172.18.0.4:7200,172.18.0.5:7200
+quaderno: restart read 847 records of 1 databases from the log
+LEASE process_lease tenant=- holder=tk-server-1-26 unix_ms=1794352758784 inc=8de8d5e5fae69d1f gen=1
+local log: replay of database tk_app failed (tenant tk_app is owned by server process tk-spare-26 (lease valid for another 3473 ms); retry); its 847 records are kept, the database is refused until they are applied
+local log: 1 databases kept their records; retried in the background
+quaderno: restart applied 0 records to 0 databases in 0.9 s
+mongo-server listening on 0.0.0.0:27018 (idle close after 60 s, holder tk-server-1-26, lease ttl 4 s)
+local log: retry of database tk_app failed (tenant tk_app is owned by server process tk-spare-26 (lease valid for another 3000 ms); retry); retried later
+local log: retry of database tk_app failed (tenant tk_app is owned by server process tk-spare-26 (lease valid for another 3794 ms); retry); retried later
+local log: retry of database tk_app failed (tenant tk_app is owned by server process tk-spare-26 (lease valid for another 3983 ms); retry); retried later
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+local log: retry of database tk_app failed (tenant tk_app is owned by server process tk-spare-26 (lease valid for another 2975 ms); retry); retried later
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+local log: retry of database tk_app failed (tenant tk_app is owned by server process tk-spare-26 (lease valid for another 3767 ms); retry); retried later
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10001 ok=true
+local log: retry of database tk_app failed (tenant tk_app is owned by server process tk-spare-26 (lease valid for another 3156 ms); retry); retried later
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE acquired tenant=tk_app holder=tk-server-1-26 unix_ms=1794352850717 takeover_from=-
+local log: database tk_app: kept records applied by the retry; the database is open again
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE release_begin tenant=tk_app holder=tk-server-1-26 unix_ms=1794352911078 
+LEASE release tenant=tk_app holder=tk-server-1-26 unix_ms=1794352911083 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+LEASE acquired tenant=admin holder=tk-server-1-26 unix_ms=1794352989863 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+LEASE acquired tenant=tk_app holder=tk-server-1-26 unix_ms=1794353013946 takeover_from=-
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW find db=tk_app ms=30053 ok=false
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE release_begin tenant=admin holder=tk-server-1-26 unix_ms=1794353073948 
+LEASE release tenant=admin holder=tk-server-1-26 unix_ms=1794353073953 ok=true
+SLOW find db=tk_app ms=30031 ok=false
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE release_begin tenant=tk_app holder=tk-server-1-26 unix_ms=1794353104010 
+LEASE release tenant=tk_app holder=tk-server-1-26 unix_ms=1794353104015 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10002 ok=true
+shutting down: closing tenants cleanly
+tenants closed; stopping maintenance
+maintenance stopped
