@@ -1,0 +1,8 @@
+
+running 1 test
+test fx::tests_8::an_erasure_during_the_build_is_done_after_the_publish ... control false: during the build the writer served None, erasure "pending" (live_done false); after the publish: erasure "scrubbed" live_done true, newest version 3 runs holding the customer [], wrong reads 0
+control true: during the build the writer served Some(1), erasure "scrubbed" (live_done true); after the publish: erasure "scrubbed" live_done true, newest version 3 runs holding the customer ["tenants/fx-m8-erase-ctl/fx/run/g0/00000000000000000081-m1-10fea5aa"], wrong reads 0
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 130 filtered out; finished in 0.46s
+
