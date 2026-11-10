@@ -1,0 +1,325 @@
+{
+ "n": 50,
+ "writers": 8,
+ "lease_ttl_s": 4,
+ "log": "on",
+ "takeovers": [
+  {
+   "i": 1,
+   "killed": "B",
+   "takeover_s": 5.573,
+   "acked_before": 4815
+  },
+  {
+   "i": 2,
+   "killed": "A",
+   "takeover_s": 11.606,
+   "acked_before": 16241
+  },
+  {
+   "i": 3,
+   "killed": "B",
+   "takeover_s": 11.61,
+   "acked_before": 25125
+  },
+  {
+   "i": 4,
+   "killed": "A",
+   "takeover_s": 11.607,
+   "acked_before": 35887
+  },
+  {
+   "i": 5,
+   "killed": "B",
+   "takeover_s": 12.101,
+   "acked_before": 45110
+  },
+  {
+   "i": 6,
+   "killed": "A",
+   "takeover_s": 12.096,
+   "acked_before": 55287
+  },
+  {
+   "i": 7,
+   "killed": "B",
+   "takeover_s": 11.777,
+   "acked_before": 64823
+  },
+  {
+   "i": 8,
+   "killed": "A",
+   "takeover_s": 12.1,
+   "acked_before": 75812
+  },
+  {
+   "i": 9,
+   "killed": "B",
+   "takeover_s": 11.612,
+   "acked_before": 85142
+  },
+  {
+   "i": 10,
+   "killed": "A",
+   "takeover_s": 12.096,
+   "acked_before": 96665
+  },
+  {
+   "i": 11,
+   "killed": "B",
+   "takeover_s": 12.099,
+   "acked_before": 108316
+  },
+  {
+   "i": 12,
+   "killed": "A",
+   "takeover_s": 11.653,
+   "acked_before": 118474
+  },
+  {
+   "i": 13,
+   "killed": "B",
+   "takeover_s": 11.613,
+   "acked_before": 127416
+  },
+  {
+   "i": 14,
+   "killed": "A",
+   "takeover_s": 11.608,
+   "acked_before": 137179
+  },
+  {
+   "i": 15,
+   "killed": "B",
+   "takeover_s": 12.117,
+   "acked_before": 145565
+  },
+  {
+   "i": 16,
+   "killed": "A",
+   "takeover_s": 11.621,
+   "acked_before": 156518
+  },
+  {
+   "i": 17,
+   "killed": "B",
+   "takeover_s": 12.119,
+   "acked_before": 165687
+  },
+  {
+   "i": 18,
+   "killed": "A",
+   "takeover_s": 12.113,
+   "acked_before": 178743
+  },
+  {
+   "i": 19,
+   "killed": "B",
+   "takeover_s": 11.635,
+   "acked_before": 189552
+  },
+  {
+   "i": 20,
+   "killed": "A",
+   "takeover_s": 12.136,
+   "acked_before": 203700
+  },
+  {
+   "i": 21,
+   "killed": "B",
+   "takeover_s": 11.642,
+   "acked_before": 213713
+  },
+  {
+   "i": 22,
+   "killed": "A",
+   "takeover_s": 12.112,
+   "acked_before": 225534
+  },
+  {
+   "i": 23,
+   "killed": "B",
+   "takeover_s": 11.61,
+   "acked_before": 234471
+  },
+  {
+   "i": 24,
+   "killed": "A",
+   "takeover_s": 12.116,
+   "acked_before": 246471
+  },
+  {
+   "i": 25,
+   "killed": "B",
+   "takeover_s": 11.615,
+   "acked_before": 257754
+  },
+  {
+   "i": 26,
+   "killed": "A",
+   "takeover_s": 12.129,
+   "acked_before": 269373
+  },
+  {
+   "i": 27,
+   "killed": "B",
+   "takeover_s": 11.63,
+   "acked_before": 278447
+  },
+  {
+   "i": 28,
+   "killed": "A",
+   "takeover_s": 12.137,
+   "acked_before": 291340
+  },
+  {
+   "i": 29,
+   "killed": "B",
+   "takeover_s": 11.676,
+   "acked_before": 302634
+  },
+  {
+   "i": 30,
+   "killed": "A",
+   "takeover_s": 11.639,
+   "acked_before": 312972
+  },
+  {
+   "i": 31,
+   "killed": "B",
+   "takeover_s": 12.157,
+   "acked_before": 322298
+  },
+  {
+   "i": 32,
+   "killed": "A",
+   "takeover_s": 11.639,
+   "acked_before": 331890
+  },
+  {
+   "i": 33,
+   "killed": "B",
+   "takeover_s": 11.617,
+   "acked_before": 342078
+  },
+  {
+   "i": 34,
+   "killed": "A",
+   "takeover_s": 11.612,
+   "acked_before": 354993
+  },
+  {
+   "i": 35,
+   "killed": "B",
+   "takeover_s": 11.636,
+   "acked_before": 365603
+  },
+  {
+   "i": 36,
+   "killed": "A",
+   "takeover_s": 11.637,
+   "acked_before": 377725
+  },
+  {
+   "i": 37,
+   "killed": "B",
+   "takeover_s": 11.642,
+   "acked_before": 387700
+  },
+  {
+   "i": 38,
+   "killed": "A",
+   "takeover_s": 11.641,
+   "acked_before": 397952
+  },
+  {
+   "i": 39,
+   "killed": "B",
+   "takeover_s": 11.649,
+   "acked_before": 406621
+  },
+  {
+   "i": 40,
+   "killed": "A",
+   "takeover_s": 11.679,
+   "acked_before": 418836
+  },
+  {
+   "i": 41,
+   "killed": "B",
+   "takeover_s": 11.661,
+   "acked_before": 426707
+  },
+  {
+   "i": 42,
+   "killed": "A",
+   "takeover_s": 11.651,
+   "acked_before": 439285
+  },
+  {
+   "i": 43,
+   "killed": "B",
+   "takeover_s": 11.733,
+   "acked_before": 449408
+  },
+  {
+   "i": 44,
+   "killed": "A",
+   "takeover_s": 11.638,
+   "acked_before": 458535
+  },
+  {
+   "i": 45,
+   "killed": "B",
+   "takeover_s": 11.681,
+   "acked_before": 468310
+  },
+  {
+   "i": 46,
+   "killed": "A",
+   "takeover_s": 11.664,
+   "acked_before": 477538
+  },
+  {
+   "i": 47,
+   "killed": "B",
+   "takeover_s": 11.694,
+   "acked_before": 487493
+  },
+  {
+   "i": 48,
+   "killed": "A",
+   "takeover_s": 11.694,
+   "acked_before": 498412
+  },
+  {
+   "i": 49,
+   "killed": "B",
+   "takeover_s": 11.663,
+   "acked_before": 507773
+  },
+  {
+   "i": 50,
+   "killed": "A",
+   "takeover_s": 11.708,
+   "acked_before": 517557
+  }
+ ],
+ "verify_error": null,
+ "missing_by_read": {
+  "at_once": 0,
+  "after_settle": 0,
+  "after_clean_restart": 0
+ },
+ "done": 50,
+ "acknowledged": 521626,
+ "lost": 0,
+ "lost_ids_first": [],
+ "confirmed_after_kill": 0,
+ "failed_writes": 2776,
+ "survivor": "B",
+ "takeover_s_p50": 11.653,
+ "takeover_s_p99": 12.157,
+ "takeover_s_max": 12.157,
+ "verdict": "PASS"
+}
