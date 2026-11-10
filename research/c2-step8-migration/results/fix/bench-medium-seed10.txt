@@ -1,0 +1,12 @@
+D 1024 MiB, writes during the migration 0.4 MB/s, groups 1024 KiB, seed 10
+loaded 1024 MiB raw (2516200 rows) in 106.7 s
+today's passes that compacted during the migration: 0 ()
+published version Some(1): begin 1.05 s (E1's wait included), build 5.60 s, rounds 0.04 s, publish under the lock 0.018 s; total 6.71 s
+build: 2530100 rows, 451550 rows/s, 5.6 s per GB of D, SlateDB SST bytes read during the whole migration 2343 MiB (2.29 x D)
+round: seq 17508 -> 18832, 2 new SSTs, 2.3 MiB of SSTs read, 5295 rows
+the migration's own requests: GET 604 HEAD 269 PUT-class 4130 (runs and state objects); per GB of D: GET 604, HEAD 269, PUT-class 4130; plus the checkpoints and SlateDB manifest reads (in the LIST and GET counts below)
+requests during the build: GET 147 plus range GETs 3829, HEAD 267, LIST 91, PUT 2595, multipart parts 1030 (creates 1030, completes 1030), DELETE 0; per GB of D: GET (all) 3976, HEAD 267, LIST 91, PUT-class 5685
+requests during the whole migration (the load's own writes included): GET 178 plus range GETs 3854, HEAD 270, LIST 106, PUT 2619, multipart parts 1032 (creates 1032, completes 1032), DELETE 0; per GB of D: GET (all) 4032, HEAD 270, LIST 106, PUT-class 5715
+write latency ms, before: p50 0.13 p99 0.29 max 7.16 (4688 batches); during: p50 0.10 p99 0.21 max 15.67 (2745 batches)
+read latency ms, before: p50 0.121 p99 0.299 max 3.805 (9376 reads); during: p50 0.163 p99 2.489 max 36.529 (5490 reads)
+check after the publish: 2537157 keys in the model, 2537157 read, 0 wrong, 0 missing; served version Some((2, 18838, 1030, 2))

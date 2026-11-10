@@ -123,9 +123,15 @@ async fn load(t: Arc<RwLock<Tenant>>, model: Model, keys: Arc<Mutex<Vec<Vec<u8>>
     }
 }
 
+/// Today's passes that compacted something: (start, end, L0 before, L0 after).
+static PASSES: Mutex<Vec<(Instant, Instant, usize, usize)>> = Mutex::new(Vec::new());
+
 async fn passes(store: Arc<dyn ObjectStore>, id: String, stop: Arc<AtomicBool>) {
     while !stop.load(Relaxed) {
-        let _ = lifecycle::compact_tenant(&store, &store, &id).await;
+        let t0 = Instant::now();
+        if let Ok(Some(r)) = lifecycle::compact_tenant(&store, &store, &id).await {
+            PASSES.lock().unwrap().push((t0, Instant::now(), r.l0_before, r.l0_after));
+        }
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
 }
@@ -257,6 +263,12 @@ async fn main() -> Result<()> {
     stop_p.store(true, Relaxed);
     pass_task.await?;
     let gb = (d_mib as f64) / 1024.0;
+    {
+        // the catch-up reads every SST created since the cut: today's passes that ran during the migration decide it
+        let ps = PASSES.lock().unwrap();
+        let during: Vec<_> = ps.iter().filter(|(a, b, _, _)| *b > m0 && *a < m0 + total).collect();
+        println!("today's passes that compacted during the migration: {} ({})", during.len(), during.iter().map(|(a, b, x, y)| format!("at {:.1}-{:.1} s, L0 {x}->{y}", a.saturating_duration_since(m0).as_secs_f64(), b.saturating_duration_since(m0).as_secs_f64())).collect::<Vec<_>>().join("; "));
+    }
     println!("published version {v:?}: begin {:.2} s (E1's wait included), build {:.2} s, rounds {:.2} s, publish under the lock {:.3} s; total {:.2} s",
         t_begin.as_secs_f64(), (t_build - t_begin).as_secs_f64(), (t_rounds - t_build).as_secs_f64(), lock.as_secs_f64(), total.as_secs_f64());
     let build_s = (t_build - t_begin).as_secs_f64();
