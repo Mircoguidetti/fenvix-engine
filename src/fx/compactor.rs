@@ -105,9 +105,16 @@ pub fn server_knobs() -> Knobs {
         k.min_seal_bytes = 64 << 10;
         k.local_max_bytes = 0;
         k.gc_every = Duration::from_secs(5);
-        k.sealed = RunOptions::unchecked(16 << 10, 1 << 20, runfmt::CustomerKind::V2);
-        k.delta = RunOptions::unchecked(16 << 10, 1 << 20, runfmt::CustomerKind::V2);
+        // integration-3: parts of 16 MiB as in production. With 1 MiB parts, a run over 1 MiB was a multipart upload
+        // with parts under S3's (and MinIO's) 5 MiB minimum: every absorption failed (EntityTooSmall), the gated
+        // SlateDB compaction never ran, L0 reached its limit and the database's writes stopped for good (ctl test_28).
+        k.sealed = RunOptions::unchecked(16 << 10, runfmt::DEFAULT_PART, runfmt::CustomerKind::V2K);
+        k.delta = RunOptions::unchecked(16 << 10, runfmt::DEFAULT_PART, runfmt::CustomerKind::V2K);
     }
+    // integration-3: the server's keys are layout v2 as step 6 framed them (`CustomerKind::V2K`, as step 3's builder
+    // writes since step 6); `Knobs::default` keeps V2 for the tests' synthetic keys
+    k.sealed.customers = runfmt::CustomerKind::V2K;
+    k.delta.customers = runfmt::CustomerKind::V2K;
     if SEALED_CODEC.load(Relaxed) == 1 {
         k.sealed.codec = runfmt::BlockCodec::Zstd;
     }
