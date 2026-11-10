@@ -39,7 +39,7 @@ DB = "agentck"
 OUT = os.path.join(ROOT, "research/c2-delta-log/results/server-check.json")
 LOG = os.path.join(ROOT, "research/c2-delta-log/results/server-check-server.log")
 ENV = dict(os.environ, AWS_ACCESS_KEY_ID="minioadmin", AWS_SECRET_ACCESS_KEY="minioadmin", AWS_REGION="us-east-1",
-           AWS_ENDPOINT="http://127.0.0.1:9000", AWS_ALLOW_HTTP="true", FENVIX_SEALED_TPIN_MS="1000", FENVIX_SEALED_E1_WAIT_MS="0")
+           AWS_ENDPOINT="http://127.0.0.1:9000", AWS_ALLOW_HTTP="true", FENVIX_SEALED_TPIN_MS="1000", FENVIX_SEALED_E1_WAIT_MS="0", FENVIX_SEALED_TEST_SHORT_E1_WAIT="1")
 ARGS = ["--listen", f"127.0.0.1:{PORT}", "--idle-secs", "600", "--holder", "c2delta", "--bucket", BUCKET,
         "--sealed-runs", "2", "--sealed-compactor", "--sealed-drop", "--sealed-derive", "--sealed-codec", "zstd",
         "--customer-key", "checkpoints=thread_id,checkpoint_writes=thread_id"]
@@ -179,6 +179,28 @@ def main():
     wrong += left
     wrong += compare_views(vk, saver_view(saver, graph, keep), "saver reads of the other threads after delete_thread and reseal", res)
     res["derived_before_restart"] = derived(c)
+    # fix round, FIX 3: another app's collection named like the saver's, customer-keyed by user_id, holding documents of
+    # the saver's shape and of other shapes, is never rewritten (the encoded counter does not move, bytes unchanged)
+    from bson import Binary
+    other = c["otherapp"]
+    other.create_collection("checkpoints", customerKey="user_id")
+    big = bytes([0x93]) + b"".join(bytes([0xd9, 120]) + bytes([97 + i]) * 120 for i in range(3))
+    docs = []
+    for u in range(20):
+        docs.append({"user_id": f"u{u}", "thread_id": f"t{u}", "checkpoint_ns": "", "checkpoint_id": f"c{u}", "type": "msgpack", "checkpoint": Binary(big)})
+        docs.append({"user_id": f"u{u}", "kind": "game-save", "state": Binary(big)})
+    for d in docs:
+        other.checkpoints.insert_one(d)
+    other.checkpoints.insert_one({"user_id": "u0", "kind": "tick"})
+    col = other.get_collection("checkpoints", codec_options=other.codec_options.with_options(document_class=RawBSONDocument))
+    before_o = [d.raw for d in col.find({}).sort("_id", 1).batch_size(8)]
+    enc0 = derived(c)["encoded"]
+    r = c.admin.command("fenvixReseal", "otherapp")
+    after_o = [d.raw for d in col.find({}).sort("_id", 1).batch_size(8)]
+    moved = derived(c)["encoded"] - enc0
+    res["near_miss_collection"] = {"documents": len(before_o), "resealed": r.get("resealed"), "encoded": moved, "different": sum(1 for x, y in zip(before_o, after_o) if x != y) + abs(len(before_o) - len(after_o))}
+    print("near-miss collection (checkpoints keyed by user_id)", res["near_miss_collection"], flush=True)
+    wrong += moved + res["near_miss_collection"]["different"]
     # restart on the same bucket: cold reads of the derived runs
     c.close()
     stop(p)

@@ -18,7 +18,7 @@
   "--customer-key",
   "checkpoints=thread_id,checkpoint_writes=thread_id"
  ],
- "write_s": 38.08699107170105,
+ "write_s": 21.406578302383423,
  "reseal_1": {
   "resealed": 1,
   "encoded": 6185
@@ -27,9 +27,9 @@
   "write": true,
   "encoded": 6185,
   "plain": 2220,
-  "messageRows": 3617,
+  "messageRows": 3442,
   "fallbacks": 0,
-  "rebuilds": 38912,
+  "rebuilds": 14917,
   "resealRebuilds": 2897,
   "rebuildErrors": 0
  },
@@ -49,7 +49,7 @@
  },
  "reseal_2": {
   "resealed": 1,
-  "encoded": 13938
+  "encoded": 13940
  },
  "raw documents before / after the second reseal (young rows on derived ones)": {
   "docs": {
@@ -85,13 +85,19 @@
  },
  "derived_before_restart": {
   "write": true,
-  "encoded": 17218,
-  "plain": 6126,
-  "messageRows": 10011,
+  "encoded": 17220,
+  "plain": 6127,
+  "messageRows": 9567,
   "fallbacks": 0,
-  "rebuilds": 237216,
-  "resealRebuilds": 13282,
+  "rebuilds": 213766,
+  "resealRebuilds": 13284,
   "rebuildErrors": 0
+ },
+ "near_miss_collection": {
+  "documents": 41,
+  "resealed": 1,
+  "encoded": 0,
+  "different": 0
  },
  "raw documents after a restart (cold)": {
   "docs": {
@@ -113,7 +119,7 @@
   "plain": 0,
   "messageRows": 0,
   "fallbacks": 0,
-  "rebuilds": 47244,
+  "rebuilds": 35865,
   "resealRebuilds": 0,
   "rebuildErrors": 0
  },
