@@ -1,0 +1,508 @@
+warning: value assigned to `w0` is never read
+   --> proto/quaderno/src/node.rs:975:18
+    |
+975 |             let (mut w0, mut c0) = (Instant::now(), 0);
+    |                  ^^^^^^ this value is reassigned later and never used
+...
+979 |                     (w0, c0) = (Instant::now(), thread_cpu_us());
+    |                      -- `w0` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `c0` is never read
+   --> proto/quaderno/src/node.rs:975:26
+    |
+975 |             let (mut w0, mut c0) = (Instant::now(), 0);
+    |                          ^^^^^^ this value is reassigned later and never used
+...
+979 |                     (w0, c0) = (Instant::now(), thread_cpu_us());
+    |                          -- `c0` is overwritten here before the previous value is read
+
+warning: value assigned to `cur_end` is never read
+   --> proto/quaderno/src/store.rs:223:33
+    |
+223 | ...                       cur_end = 0;
+    |                           ^^^^^^^^^^^ this value is reassigned later and never used
+...
+230 | ...                   cur_end = off + buf.len() as u64;
+    |                       -------------------------------- `cur_end` is overwritten here before the previous value is read
+
+   Compiling tenant-bench v0.1.0 (/home/user/fenvix-engine)
+warning: `quaderno` (lib) generated 3 warnings
+warning: unused import: `std::sync::atomic::Ordering::Relaxed`
+    --> src/lifecycle.rs:1424:13
+     |
+1424 |         use std::sync::atomic::Ordering::Relaxed;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tenant-bench` (lib) generated 1 warning (run `cargo fix --lib -p tenant-bench` to apply 1 suggestion)
+   Compiling mongo-server v0.1.0 (/home/user/fenvix-engine/mongo-server)
+warning: unused import: `path_values`
+ --> mongo-server/src/agg.rs:6:85
+  |
+6 | use crate::query::{self, compare, is_number, matches, parse_projection, parse_sort, path_values, project, sort_docs};
+  |                                                                                     ^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `base64::engine::general_purpose::STANDARD as B64`
+ --> mongo-server/src/auth.rs:9:5
+  |
+9 | use base64::engine::general_purpose::STANDARD as B64;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `base64::Engine`
+  --> mongo-server/src/auth.rs:10:5
+   |
+10 | use base64::Engine;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `crate::agg::run_pipeline`
+ --> mongo-server/src/cmd.rs:3:5
+  |
+3 | use crate::agg::run_pipeline;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `doc_prefix`, `encode_sortable`, and `index_key`
+ --> mongo-server/src/cmd.rs:6:21
+  |
+6 | use crate::layout::{doc_prefix, encode_sortable, index_key};
+  |                     ^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused imports: `id_equality`, `parse_projection`, `parse_sort`, `path_values`, `project`, `self`, and `sort_docs`
+ --> mongo-server/src/cmd.rs:7:20
+  |
+7 | use crate::query::{self, id_equality, matches, parse_projection, parse_sort, path_values, project, sort_docs};
+  |                    ^^^^  ^^^^^^^^^^^           ^^^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^
+
+warning: unused imports: `apply_update`, `fmt_doc`, and `upsert_document`
+ --> mongo-server/src/cmd.rs:8:21
+  |
+8 | use crate::update::{apply_update, fmt_doc, upsert_document};
+  |                     ^^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^^
+
+warning: unused imports: `parse_projection` and `project`
+  --> mongo-server/src/cmd_data.rs:12:26
+   |
+12 | use crate::query::{self, parse_projection, parse_sort, path_values, project, sort_docs};
+   |                          ^^^^^^^^^^^^^^^^                           ^^^^^^^
+
+warning: unused import: `Hint`
+ --> mongo-server/src/cmd_index.rs:5:72
+  |
+5 | use crate::coll::{decode, find_docs, plan_for, resolve_hint, FindOpts, Hint};
+  |                                                                        ^^^^
+
+warning: unused import: `valid_db_name`
+ --> mongo-server/src/cmd_index.rs:7:18
+  |
+7 | use crate::dbs::{valid_db_name, Dbs, Entry};
+  |                  ^^^^^^^^^^^^^
+
+warning: unused import: `encode_sortable`
+  --> mongo-server/src/cmd_index.rs:11:33
+   |
+11 | use crate::layout::{doc_prefix, encode_sortable, idx_collection_prefix, index_key};
+   |                                 ^^^^^^^^^^^^^^^
+
+warning: unused import: `path_values`
+  --> mongo-server/src/cmd_index.rs:12:32
+   |
+12 | use crate::query::{parse_sort, path_values};
+   |                                ^^^^^^^^^^^
+
+warning: unused import: `is_number`
+ --> mongo-server/src/expr.rs:8:44
+  |
+8 | use crate::query::{as_f64, compare, equal, is_number};
+  |                                            ^^^^^^^^^
+
+warning: unnecessary parentheses around match arm expression
+   --> mongo-server/src/expr/dates.rs:142:28
+    |
+142 |                 "$week" => ((l.ordinal0() as i32 + 7 - wd_sun) / 7),
+    |                            ^                                      ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+142 -                 "$week" => ((l.ordinal0() as i32 + 7 - wd_sun) / 7),
+142 +                 "$week" => (l.ordinal0() as i32 + 7 - wd_sun) / 7,
+    |
+
+warning: unused import: `BTreeSet`
+  --> mongo-server/src/index.rs:16:34
+   |
+16 | use std::collections::{BTreeMap, BTreeSet, HashMap};
+   |                                  ^^^^^^^^
+
+warning: unused import: `doc`
+  --> mongo-server/src/wild.rs:14:12
+   |
+14 | use bson::{doc, Bson, Document};
+   |            ^^^
+
+warning: variable does not need to be mutable
+   --> mongo-server/src/cmd_index.rs:816:21
+    |
+816 |                 let mut r = run_builds(&self.dbs, db, coll).await;
+    |                     ----^
+    |                     |
+    |                     help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `ObjectStoreExt`
+  --> mongo-server/src/ttl.rs:12:33
+   |
+12 | use object_store::{ObjectStore, ObjectStoreExt};
+   |                                 ^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> mongo-server/src/agg_more.rs:764:13
+    |
+764 |         let mut emit_grid_upto = |limit: Option<&Bson>, out: &mut Vec<Document>, gi: &mut usize, inclusive_skip: Option<&Bson>| {
+    |             ----^^^^^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> mongo-server/src/changes.rs:383:9
+    |
+383 |     let mut note = |p: &str, updated: &mut Document, removed: &mut Vec<Bson>| {
+    |         ----^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: unused variable: `detail`
+   --> mongo-server/src/ctl/pitr.rs:333:74
+    |
+333 | ...te::dbs::Entry, db: &str, detail: &Value, target: i64, opid: &str, pid: uuid::Uuid, apply: bool) -> ApiResult<Value> {
+    |                              ^^^^^^ help: if this is intentional, prefix it with an underscore: `_detail`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `batch_bytes` is never read
+   --> mongo-server/src/ctl/pitr.rs:465:17
+    |
+465 |                 batch_bytes = 0;
+    |                 ^^^^^^^^^^^^^^^
+...
+515 |     flush!();
+    |     -------- in this macro invocation
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+    = note: this warning originates in the macro `flush` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: value assigned to `applying` is never read
+   --> mongo-server/src/ctl/pitr.rs:462:21
+    |
+462 |                     applying = true;
+    |                     ^^^^^^^^^^^^^^^
+...
+515 |     flush!();
+    |     -------- in this macro invocation
+    |
+    = help: maybe it is overwritten before being read?
+    = note: this warning originates in the macro `flush` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unused variable: `asc`
+   --> mongo-server/src/index.rs:380:16
+    |
+380 |     for (path, asc) in t.prefix.iter().chain(t.suffix.iter()) {
+    |                ^^^ help: if this is intentional, prefix it with an underscore: `_asc`
+
+warning: variable does not need to be mutable
+   --> mongo-server/src/text.rs:418:9
+    |
+418 |     let mut uniq = |ts: Vec<String>| -> Vec<String> {
+    |         ----^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> mongo-server/src/update.rs:162:9
+    |
+162 |     let mut add = |path: &str, seen: &mut Vec<Vec<String>>| -> R<()> {
+    |         ----^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: function `add_numbers` is never used
+  --> mongo-server/src/agg.rs:12:4
+   |
+12 | fn add_numbers(a: &Bson, b: &Bson) -> Bson {
+   |    ^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `int` is never used
+  --> mongo-server/src/agg.rs:26:4
+   |
+26 | fn int(v: &Bson) -> i64 {
+   |    ^^^
+
+warning: function `loc_key_of_suffix` is never used
+   --> mongo-server/src/custkey.rs:238:8
+    |
+238 | pub fn loc_key_of_suffix(coll: &str, timed: bool, suf: &[u8]) -> Option<Vec<u8>> {
+    |        ^^^^^^^^^^^^^^^^^
+
+warning: function `to_logical` is never used
+   --> mongo-server/src/custkey.rs:405:8
+    |
+405 | pub fn to_logical(p: &[u8]) -> Option<Vec<u8>> {
+    |        ^^^^^^^^^^
+
+warning: variant `Reader` is never constructed
+  --> mongo-server/src/layout2.rs:27:5
+   |
+20 | pub enum Raw<'a> {
+   |          --- variant in this enum
+...
+27 |     Reader(&'a slatedb::DbReader, Option<u64>),
+   |     ^^^^^^
+
+warning: function `reader_env` is never used
+  --> mongo-server/src/layout2.rs:34:14
+   |
+34 | pub async fn reader_env(r: &slatedb::DbReader) -> Result<Option<u64>> {
+   |              ^^^^^^^^^^
+
+warning: methods `bytes` and `entries` are never used
+   --> mongo-server/src/opening.rs:174:12
+    |
+169 | impl Opening {
+    | ------------ methods in this implementation
+...
+174 |     pub fn bytes(&self) -> usize {
+    |            ^^^^^
+...
+178 |     pub fn entries(&self) -> usize {
+    |            ^^^^^^^
+
+warning: field `coll` is never read
+  --> mongo-server/src/prefetch.rs:52:5
+   |
+45 | struct Window {
+   |        ------ field in this struct
+...
+52 |     coll: String,
+   |     ^^^^
+
+warning: function `counts` is never used
+   --> mongo-server/src/capped.rs:146:14
+    |
+146 | pub async fn counts(g: &mut Entry, coll: &str) -> anyhow::Result<(i64, i64)> {
+    |              ^^^^^^
+
+warning: field `closed` is never read
+  --> mongo-server/src/cmd_changes.rs:38:9
+   |
+26 | pub struct ChangeCursor {
+   |            ------------ field in this struct
+...
+38 |     pub closed: bool,
+   |         ^^^^^^
+
+warning: field `stored` is never read
+   --> mongo-server/src/collation.rs:319:5
+    |
+316 | struct Parsed {
+    |        ------ field in this struct
+...
+319 |     stored: Document,
+    |     ^^^^^^
+
+warning: struct `Plan` is never constructed
+   --> mongo-server/src/ctl/pitr.rs:225:12
+    |
+225 | pub struct Plan {
+    |            ^^^^
+
+warning: field `marks` is never read
+   --> mongo-server/src/ctl/usage.rs:116:5
+    |
+111 | struct Inner {
+    |        ----- field in this struct
+...
+116 |     marks: HashMap<String, Counts>,
+    |     ^^^^^
+
+warning: method `mark` is never used
+   --> mongo-server/src/ctl/usage.rs:245:12
+    |
+146 | impl Usage {
+    | ---------- method in this implementation
+...
+245 |     pub fn mark(&self, db: &str) {
+    |            ^^^^
+
+warning: method `opts_cached` is never used
+    --> mongo-server/src/dbs.rs:1253:12
+     |
+ 469 | impl Entry {
+     | ---------- method in this implementation
+...
+1253 |     pub fn opts_cached(&self, coll: &str) -> Option<Arc<crate::collopts::CollOpts>> {
+     |            ^^^^^^^^^^^
+
+warning: associated function `duplicate_key` is never used
+  --> mongo-server/src/error.rs:48:12
+   |
+13 | impl MongoError {
+   | --------------- associated function in this implementation
+...
+48 |     pub fn duplicate_key(ns: &str, index: &str, pattern: &Document, value: &Document) -> Self {
+   |            ^^^^^^^^^^^^^
+
+warning: function `next_waiter` is never used
+   --> mongo-server/src/fair.rs:551:4
+    |
+551 | fn next_waiter(g: &mut Gate) -> Option<GateWaiter> {
+    |    ^^^^^^^^^^^
+
+warning: function `date_to_string` is never used
+   --> mongo-server/src/expr.rs:941:4
+    |
+941 | fn date_to_string(arg: &Bson, sc: &Scope) -> R<Option<Bson>> {
+    |    ^^^^^^^^^^^^^^
+
+warning: method `key_value` is never used
+   --> mongo-server/src/index.rs:335:12
+    |
+ 83 | impl IndexDef {
+    | ------------- method in this implementation
+...
+335 |     pub fn key_value(&self, d: &Document) -> Document {
+    |            ^^^^^^^^^
+
+warning: function `id_enc` is never used
+    --> mongo-server/src/index.rs:1316:8
+     |
+1316 | pub fn id_enc(id: &Bson) -> Vec<u8> {
+     |        ^^^^^^
+
+warning: function `index_summary` is never used
+    --> mongo-server/src/index.rs:1367:8
+     |
+1367 | pub fn index_summary(idx: &IndexDef) -> Document {
+     |        ^^^^^^^^^^^^^
+
+warning: function `drop_prefixes` is never used
+  --> mongo-server/src/natural.rs:69:8
+   |
+69 | pub fn drop_prefixes(coll: &str) -> Vec<Vec<u8>> {
+   |        ^^^^^^^^^^^^^
+
+warning: method `db_connections` is never used
+   --> mongo-server/src/netguard.rs:616:12
+    |
+421 | impl NetGuard {
+    | ------------- method in this implementation
+...
+616 |     pub fn db_connections(&self, db: &str) -> u32 {
+    |            ^^^^^^^^^^^^^^
+
+warning: method `push_at` is never used
+   --> mongo-server/src/query.rs:972:12
+    |
+959 | impl<'a> TopK<'a> {
+    | ----------------- method in this implementation
+...
+972 |     pub fn push_at(&mut self, seq: u64, doc: Document) {
+    |            ^^^^^^^
+
+warning: methods `needs_geo_near` and `needs_text_score` are never used
+    --> mongo-server/src/query.rs:1229:12
+     |
+1228 | impl Projection {
+     | --------------- methods in this implementation
+1229 |     pub fn needs_geo_near(&self) -> bool {
+     |            ^^^^^^^^^^^^^^
+...
+1233 |     pub fn needs_text_score(&self) -> bool {
+     |            ^^^^^^^^^^^^^^^^
+
+warning: method `is_point_like` is never used
+   --> mongo-server/src/geo.rs:451:12
+    |
+435 | impl Shape {
+    | ---------- method in this implementation
+...
+451 |     pub fn is_point_like(&self) -> bool {
+    |            ^^^^^^^^^^^^^
+
+warning: function `point_doc` is never used
+   --> mongo-server/src/geo.rs:931:8
+    |
+931 | pub fn point_doc(v: &V) -> Bson {
+    |        ^^^^^^^^^
+
+warning: field `lang` is never read
+   --> mongo-server/src/text.rs:362:9
+    |
+355 | pub struct TextQuery {
+    |            --------- field in this struct
+...
+362 |     pub lang: Option<Lang>,
+    |         ^^^^
+    |
+    = note: `TextQuery` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: function `as_f64` is never used
+  --> mongo-server/src/wild.rs:23:4
+   |
+23 | fn as_f64(v: &Bson) -> Option<f64> {
+   |    ^^^^^^
+
+warning: function `put_str` is never used
+  --> mongo-server/src/wild.rs:33:4
+   |
+33 | fn put_str(out: &mut Vec<u8>, s: &str) {
+   |    ^^^^^^^
+
+warning: constant `NO_CTX` is never used
+   --> mongo-server/src/update.rs:194:7
+    |
+194 | const NO_CTX: PosCtx<'static> = PosCtx { filter: None, array_filters: &[] };
+    |       ^^^^^^
+
+warning: function `apply_update` is never used
+   --> mongo-server/src/update.rs:880:8
+    |
+880 | pub fn apply_update(old: &Document, update: &Document) -> R<Document> {
+    |        ^^^^^^^^^^^^
+
+warning: function `upsert_document` is never used
+   --> mongo-server/src/update.rs:941:8
+    |
+941 | pub fn upsert_document(filter: &Document, update: &Document) -> R<Document> {
+    |        ^^^^^^^^^^^^^^^
+
+warning: function `read_request` is never used
+  --> mongo-server/src/wire.rs:57:14
+   |
+57 | pub async fn read_request<R: AsyncRead + Unpin>(r: &mut R) -> Result<Option<Request>> {
+   |              ^^^^^^^^^^^^
+
+warning: field `on_given` is never read
+   --> mongo-server/src/xdb.rs:224:9
+    |
+218 | pub struct MergeSpec {
+    |            --------- field in this struct
+...
+224 |     pub on_given: bool,
+    |         ^^^^^^^^
+
+warning: function `ok_doc` is never used
+   --> mongo-server/src/xdb.rs:339:8
+    |
+339 | pub fn ok_doc() -> Document {
+    |        ^^^^^^
+
+warning: `mongo-server` (bin "mongo-server") generated 62 warnings (run `cargo fix --bin "mongo-server" -p mongo-server` to apply 23 suggestions)
+    Finished `release` profile [optimized] target(s) in 1m 51s

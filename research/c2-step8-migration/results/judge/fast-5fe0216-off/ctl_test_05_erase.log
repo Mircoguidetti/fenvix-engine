@@ -1,0 +1,14 @@
+........F..........                                                      [100%]
+=================================== FAILURES ===================================
+________________ test_concurrent_erase_and_fork_are_serialised _________________
+test_05_erase.py:156: in test_concurrent_erase_and_fork_are_serialised
+    assert objects_of(bucket, src) == [] and objects_of(bucket, f"{src}_k") == []
+E   AssertionError: assert ([] == []
+E     
+E     Use -v to get more diff and [('control/us...3.json', 322)] == []
+E     
+E     Left contains one more item: ('control/usage/ef3_k/2026-11-10/erase-25771-85bde313.json', 322)
+E     Use -v to get more diff)
+=========================== short test summary info ============================
+FAILED test_05_erase.py::test_concurrent_erase_and_fork_are_serialised - Asse...
+1 failed, 18 passed in 48.31s
