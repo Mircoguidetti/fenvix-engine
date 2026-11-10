@@ -20,7 +20,9 @@ from pymongo.errors import OperationFailure
 
 from lib import Server, make_bucket
 
-SEALED = ["--sealed-runs", "1000000", "--sealed-reseal-every", "1000000", "--sealed-t-pin-ms", "1000", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait"]
+# integration-3: the compactor is on by default in the server; this test's hook publishes with step 3's builder and drops
+# with step 7a's stand-in, which a running compactor forbids (it is then the only publisher), so the compactor is off here
+SEALED = ["--no-sealed-compactor", "--sealed-runs", "1000000", "--sealed-reseal-every", "1000000", "--sealed-t-pin-ms", "1000", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait"]
 KEEP_VIEW = os.environ.get("FENVIX_CONTROL_KEEP_VIEW") == "1"
 OP_HOLDS = os.environ.get("FENVIX_CONTROL_OP_HOLDS") == "1"
 KS = [2, 3, 4, 5, 6]
@@ -119,7 +121,7 @@ def test_create_index_with_a_publish_and_a_drop_between_its_build_steps(srv):
 @pytest.fixture()
 def short_hold():
     # hold life 500 ms (120 s in production) and T_pin 10 s: every single read step of these commands fits, their total does not
-    extra = ["--sealed-runs", "50", "--sealed-reseal-every", "1000000", "--sealed-t-pin-ms", "10000", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait", "--sealed-hold-life-ms", "500"]
+    extra = ["--no-sealed-compactor", "--sealed-runs", "50", "--sealed-reseal-every", "1000000", "--sealed-t-pin-ms", "10000", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait", "--sealed-hold-life-ms", "500"]
     s = Server(make_bucket("c2fixlong"), "c2fixlong", idle=300, extra=extra, env={"FENVIX_TEST_DROP": "1"}).start()
     yield s
     s.term()

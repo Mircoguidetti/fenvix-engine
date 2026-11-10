@@ -1,0 +1,46 @@
+FFFFFFF.                                                                 [100%]
+=================================== FAILURES ===================================
+_ test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing[lookup] _
+test_50_c2_step7b_fix_long_commands.py:97: in test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing
+    assert fired > 0, "the hook never ran inside the command"
+E   AssertionError: the hook never ran inside the command
+E   assert 0 > 0
+_ test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing[unionWith] _
+test_50_c2_step7b_fix_long_commands.py:97: in test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing
+    assert fired > 0, "the hook never ran inside the command"
+E   AssertionError: the hook never ran inside the command
+E   assert 0 > 0
+_ test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing[graphLookup] _
+test_50_c2_step7b_fix_long_commands.py:97: in test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing
+    assert fired > 0, "the hook never ran inside the command"
+E   AssertionError: the hook never ran inside the command
+E   assert 0 > 0
+_ test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing[facet_lookup] _
+test_50_c2_step7b_fix_long_commands.py:97: in test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing
+    assert fired > 0, "the hook never ran inside the command"
+E   AssertionError: the hook never ran inside the command
+E   assert 0 > 0
+_ test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing[view_find] _
+test_50_c2_step7b_fix_long_commands.py:97: in test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing
+    assert fired > 0, "the hook never ran inside the command"
+E   AssertionError: the hook never ran inside the command
+E   assert 0 > 0
+_ test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing[merge] _
+test_50_c2_step7b_fix_long_commands.py:97: in test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing
+    assert fired > 0, "the hook never ran inside the command"
+E   AssertionError: the hook never ran inside the command
+E   assert 0 > 0
+_____ test_create_index_with_a_publish_and_a_drop_between_its_build_steps ______
+test_50_c2_step7b_fix_long_commands.py:114: in test_create_index_with_a_publish_and_a_drop_between_its_build_steps
+    assert n1 > n0, "the hook never ran inside createIndexes"
+E   AssertionError: the hook never ran inside createIndexes
+E   assert 0 > 0
+=========================== short test summary info ============================
+FAILED test_50_c2_step7b_fix_long_commands.py::test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing[lookup]
+FAILED test_50_c2_step7b_fix_long_commands.py::test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing[unionWith]
+FAILED test_50_c2_step7b_fix_long_commands.py::test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing[graphLookup]
+FAILED test_50_c2_step7b_fix_long_commands.py::test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing[facet_lookup]
+FAILED test_50_c2_step7b_fix_long_commands.py::test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing[view_find]
+FAILED test_50_c2_step7b_fix_long_commands.py::test_a_publish_and_a_drop_between_two_reads_of_one_command_change_nothing[merge]
+FAILED test_50_c2_step7b_fix_long_commands.py::test_create_index_with_a_publish_and_a_drop_between_its_build_steps
+7 failed, 1 passed in 58.39s

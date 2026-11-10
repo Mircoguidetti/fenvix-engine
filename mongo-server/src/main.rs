@@ -830,10 +830,13 @@ async fn run() -> Result<()> {
     // JUDGE_SEALED_RUNS)
     // Default since integration-3: on, first publish after 2 write batches; off only when asked
     let env_sr = std::env::var("FENVIX_SEALED_RUNS").ok();
-    let sealed_runs = if args.no_sealed_runs || env_sr.as_deref() == Some("off") {
+    // the command line wins over the environment (a test that passes --sealed-runs N gets it under FENVIX_SEALED_RUNS=off)
+    let sealed_runs = if let Some(n) = args.sealed_runs {
+        Some(n)
+    } else if args.no_sealed_runs || env_sr.as_deref() == Some("off") {
         None
     } else {
-        args.sealed_runs.or_else(|| env_sr.as_deref().and_then(|v| v.parse().ok())).or(Some(DEFAULT_SEALED_RUNS))
+        Some(env_sr.as_deref().and_then(|v| v.parse().ok()).unwrap_or(DEFAULT_SEALED_RUNS))
     };
     if let Some(n) = sealed_runs {
         use std::sync::atomic::Ordering::Relaxed;
