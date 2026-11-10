@@ -24,7 +24,13 @@ if [ -n "${JUDGE_SEALED_RUNS:-}" ]; then
   # keeps step 3's offline publishes only
   export FENVIX_SEALED_COMPACTOR=${JUDGE_SEALED_COMPACTOR:-small}
   SUFFIX="-sealed$JUDGE_SEALED_RUNS"
-else unset FENVIX_SEALED_RUNS FENVIX_SEALED_TPIN_MS FENVIX_SEALED_E1_WAIT_MS FENVIX_SEALED_COMPACTOR; fi
+  # agent checkpoints (`fx/derive.rs`): JUDGE_SEALED_DERIVE=1 also turns on derived documents (release flag E1) and zstd
+  # sealed runs (run format v2) in every server; its verdict goes to judge/out/<commit>-sealed<N>-derive/
+  if [ "${JUDGE_SEALED_DERIVE:-0}" = 1 ]; then
+    export FENVIX_SEALED_DERIVE=1 FENVIX_SEALED_CODEC=zstd
+    SUFFIX="$SUFFIX-derive"
+  else unset FENVIX_SEALED_DERIVE FENVIX_SEALED_CODEC; fi
+else unset FENVIX_SEALED_RUNS FENVIX_SEALED_TPIN_MS FENVIX_SEALED_E1_WAIT_MS FENVIX_SEALED_COMPACTOR FENVIX_SEALED_DERIVE FENVIX_SEALED_CODEC; fi
 OUT="$ROOT/judge/out/$SHA$SUFFIX"; mkdir -p "$OUT"; V="$OUT/VERDICT.md"
 PHASES=${*:-readers build unit diff-py diff-node ctl kill}
 FAST=0; if [ "$PHASES" = fast ]; then FAST=1; PHASES="readers build unit diff-py diff-node ctl kill"; fi
