@@ -299,6 +299,23 @@ pub enum Follow {
     PairOf(uuid::Uuid),
 }
 
+/// Whether a checkpoint without a pair holds the whole database in SlateDB alone: its database has a migration state,
+/// and the checkpoint was created before the migration's commit (or the migration is not committed). A database with
+/// versions and no migration state (step 3's and 4's own publishes) keeps the rule of step 7a: refused.
+pub async fn unpaired_is_complete(store: &Arc<dyn ObjectStore>, id: &str, cp: &uuid::Uuid) -> Result<bool> {
+    if super::migrate::control(&super::migrate::CONTROL_PITR_REFUSE_UNPAIRED, "pitr_refuse") {
+        return Ok(false);
+    }
+    let Some(m) = super::migrate::load(store, id).await? else { return Ok(false) };
+    if m.phase != super::migrate::Phase::Committed {
+        return Ok(true);
+    }
+    let admin = slatedb::admin::Admin::builder(crate::lifecycle::tenant_path(id), Arc::clone(store)).build();
+    let Some(man) = admin.read_manifest(None).await? else { return Ok(false) };
+    let Some(c) = man.checkpoints().iter().find(|c| &c.id == cp) else { return Ok(false) };
+    Ok((c.create_time.timestamp_millis().max(0) as u64) < m.committed_ms)
+}
+
 /// A control-layer reader (export, PITR's diff): SlateDB's reader and the version paired with it, read through the
 /// merged rule (rule 1: the same pair for every page). Every page takes a hold on the version in the database's holds
 /// and checks it before its rows are returned (rules 4 and 5).
@@ -341,7 +358,12 @@ impl PairedReader {
                 None => {
                     // a checkpoint taken without pairing (before step 7a, or with --sealed-runs off): right only while no
                     // version exists, since then nothing can have dropped a row
-                    ensure!(manifest::list_versions(store, id).await?.is_empty(), "database {id}: checkpoint {cp} has no pair with our manifest, and the database has sealed runs; its SlateDB rows alone may be incomplete");
+                    if !manifest::list_versions(store, id).await?.is_empty() {
+                        // fix round of step 8, review FIX 4: a checkpoint taken before the database's migration was
+                        // committed (today's engine before the migration, E0 after a rollback) pins SSTs from before any
+                        // drop could run (the drop starts only after the commit): SlateDB alone holds it all
+                        ensure!(unpaired_is_complete(store, id, &cp).await?, "database {id}: checkpoint {cp} has no pair with our manifest, and the database has sealed runs; its SlateDB rows alone may be incomplete");
+                    }
                     None
                 }
             },

@@ -1,0 +1,8 @@
+test fx::compactor_tests::gc_keeps_the_runs_a_fork_reference_names ... fork reference and GC (control false): 0 of 2 runs of v1 deleted; GC deleted 2 runs in all
+test fx::review8_tests::an_erasure_during_the_build_leaves_the_migrated_runs_clean ... erasure after the publish: erasure state "scrubbed", live_done true, scrubbed version Some(4); migration Published version Some(1); wrong reads 0; runs of the newest version holding the erased customer: []
+test fx::review8_tests::an_erasure_during_the_build_then_todays_pass_then_the_compactor ... erasure during the build: false; writer served version None while building; today's passes skipped 0; acknowledged rows missing or different while building: 0 of 1390
+test fx::review8_tests::e0_open_racing_a_commit_is_refused ... no race: open allowed ; state after: RolledBack
+test fx::review8_tests::read_ahead_memory_is_bounded ... read-ahead: 160 SSTs of 64 MiB read end to end; RSS before 24 MiB, peak 159 MiB, after 159 MiB (held by one merge until it ends)
+test fx::review8_tests::restore_points_across_the_migration_read_their_state ... restore point today's engine, before the migration: sealed runs false, paired with version None
+thread 'fx::review8_tests::restore_points_across_the_migration_read_their_state' (977) panicked at src/fx/review8_tests.rs:603:5:
+test result: FAILED. 5 passed; 1 failed; 0 ignored; 0 measured; 125 filtered out; finished in 33.67s

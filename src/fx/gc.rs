@@ -50,7 +50,10 @@ pub async fn references(store: &Arc<dyn ObjectStore>, id: &str) -> Result<(HashS
     let mut runs = HashSet::new();
     let root = manifest::root(id);
     let mut objs = Vec::new();
-    for d in ["pairs", "refs"] {
+    // fix round, review FIX 1 (the integration-3 joint): a `clone` fork's reference (step 7b, `pair::seed_fork`) names
+    // the source's runs its first version lists; they stay until the fork is erased, dropped or rolled back
+    let dirs: &[&str] = if super::migrate::control(&super::migrate::CONTROL_GC_NO_FORK_REFS, "gc_no_fork_refs") { &["pairs", "refs"] } else { &["pairs", "refs", "forks"] };
+    for d in dirs {
         let metas: Vec<_> = store.list(Some(&Path::from(format!("{root}/{d}")))).try_collect().await?;
         objs.extend(metas.into_iter().map(|m| m.location));
     }
@@ -66,6 +69,13 @@ pub async fn references(store: &Arc<dyn ObjectStore>, id: &str) -> Result<(HashS
         }
         if let Some(a) = v.get("runs").and_then(|x| x.as_array()) {
             runs.extend(a.iter().filter_map(|x| x.as_str().map(String::from)));
+        }
+    }
+    // fix round, review FIX 2: the runs a building migration has recorded (its groups and catch-up runs) are listed by
+    // no version until the migration publishes
+    if let Some(m) = super::migrate::load(store, id).await? {
+        if m.phase == super::migrate::Phase::Building {
+            runs.extend(m.groups.iter().filter_map(|g| g.sealed.as_ref().map(|r| r.path.clone())).chain(m.catchup.iter().map(|r| r.path.clone())));
         }
     }
     Ok((versions, runs))

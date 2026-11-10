@@ -73,6 +73,11 @@ pub static WINDOW_MS: AtomicU64 = AtomicU64::new(7 * 24 * 3600 * 1000);
 pub static GROUP_BYTES: AtomicU64 = AtomicU64::new(1 << 30);
 /// Bytes fetched per GET when the migration reads SlateDB's SSTs (one GET per block otherwise: 4 KiB blocks).
 pub static READ_AHEAD: AtomicU64 = AtomicU64::new(8 << 20);
+/// What one merge's read-ahead may hold in all (fix round, review FIX 5): 128 MiB. Why: a merge has one source per L0
+/// SST and per sorted run (about 8 to 20 at once), and needs one chunk per source; an 8 GiB node (the Atlas M30 size
+/// step 9 matches, DECLARED) gives the migration this plus the 64 MiB index cache, beside the block cache, the memtables
+/// and the counter. With more sources than the budget fits at 8 MiB, chunks get smaller (`Merge::open`), never more.
+pub static READ_AHEAD_BUDGET: AtomicU64 = AtomicU64::new(128 << 20);
 /// The last round runs under the lock only when the previous round read at most this many SST bytes; otherwise another
 /// round runs outside it first (at most `MAX_ROUNDS_BEFORE_FINISH`).
 pub static FINISH_ROUND_BYTES: AtomicU64 = AtomicU64::new(256 << 20);
@@ -84,6 +89,28 @@ pub static E0_GUARD_OFF: AtomicBool = AtomicBool::new(false);
 /// the previous round), and today's pass that does not skip a database read through a version.
 pub static CONTROL_CATCHUP_L0_ONLY: AtomicBool = AtomicBool::new(false);
 pub static CONTROL_NO_PASS_SKIP: AtomicBool = AtomicBool::new(false);
+/// Negative controls of the fix round: E0's open treats a lost rollback slot as success (FIX 3, the code before); GC
+/// ignores fork references (FIX 1); the erasure pass publishes during a building migration (FIX 2); PITR refuses every
+/// restore point without a pair once versions exist (FIX 4).
+pub static CONTROL_RACED_IS_OK: AtomicBool = AtomicBool::new(false);
+pub static CONTROL_RA_UNBOUNDED: AtomicBool = AtomicBool::new(false);
+pub static CONTROL_GC_NO_FORK_REFS: AtomicBool = AtomicBool::new(false);
+pub static CONTROL_PUBLISH_WHILE_BUILDING: AtomicBool = AtomicBool::new(false);
+pub static CONTROL_PITR_REFUSE_UNPAIRED: AtomicBool = AtomicBool::new(false);
+
+/// A fix-round control is on: its switch, or (tests only) `FX_FIX8_CONTROL=<name>`, so the review's tests run unchanged
+/// with one fix switched off.
+pub fn control(flag: &AtomicBool, name: &str) -> bool {
+    if flag.load(Relaxed) {
+        return true;
+    }
+    #[cfg(test)]
+    {
+        return std::env::var("FX_FIX8_CONTROL").is_ok_and(|v| v == name);
+    }
+    #[allow(unreachable_code)]
+    false
+}
 
 /// The planted bug of step 8's tests: a group is recorded as built before its run is complete in the store.
 pub static CONTROL_MARK_EARLY: AtomicBool = AtomicBool::new(false);
@@ -102,6 +129,8 @@ pub static PUBLISHED: AtomicU64 = AtomicU64::new(0);
 pub static ROLLBACKS: AtomicU64 = AtomicU64::new(0);
 pub static REFUSED: AtomicU64 = AtomicU64::new(0);
 pub static PASSES_SKIPPED: AtomicU64 = AtomicU64::new(0);
+/// Publishes refused while a migration builds or is rolled back (fix round, FIX 2).
+pub static PUBLISHES_DEFERRED: AtomicU64 = AtomicU64::new(0);
 /// The longest a publish held the database's lock, in microseconds.
 pub static LOCK_US: AtomicU64 = AtomicU64::new(0);
 
@@ -328,10 +357,19 @@ pub async fn begin(store: &Arc<dyn ObjectStore>, id: &str, db: &slatedb::Db, e_e
 pub struct ReadAhead {
     inner: Arc<dyn ObjectStore>,
     chunk: u64,
-    /// A few chunks per object: SlateDB's raw reader reads the SST's index (at its end) again before every block.
-    cache: Mutex<std::collections::HashMap<Path, Vec<(u64, Bytes, object_store::ObjectMeta)>>>,
-    order: Mutex<std::collections::VecDeque<Path>>,
-    sizes: Mutex<std::collections::HashMap<Path, object_store::ObjectMeta>>,
+    /// The chunks kept, by object, and their order of arrival: at most `budget` bytes in all, the oldest go first. A merge
+    /// reads each source front to back, so a chunk older than every source's current one is never read again (fix round,
+    /// review FIX 5: before, 3 chunks of each of the last 128 SSTs, up to 3 GiB).
+    cache: Mutex<Chunks>,
+    budget: u64,
+}
+
+#[derive(Default)]
+struct Chunks {
+    by_path: std::collections::HashMap<Path, Vec<(u64, Bytes, object_store::ObjectMeta)>>,
+    order: std::collections::VecDeque<(Path, u64)>,
+    bytes: u64,
+    sizes: std::collections::HashMap<Path, object_store::ObjectMeta>,
 }
 
 impl std::fmt::Debug for ReadAhead {
@@ -348,19 +386,26 @@ impl std::fmt::Display for ReadAhead {
 
 impl ReadAhead {
     pub fn new(inner: Arc<dyn ObjectStore>) -> Arc<ReadAhead> {
-        Arc::new(ReadAhead { inner, chunk: READ_AHEAD.load(Relaxed).max(64 << 10), cache: Default::default(), order: Default::default(), sizes: Default::default() })
+        Self::with_chunk(inner, READ_AHEAD.load(Relaxed))
     }
 
-    /// Chunks kept at most (one per SST being read; the oldest goes first).
-    const KEEP: usize = 128;
+    /// A read-ahead with chunks of `chunk` bytes (at least 64 KiB) and the process's budget (`READ_AHEAD_BUDGET`).
+    pub fn with_chunk(inner: Arc<dyn ObjectStore>, chunk: u64) -> Arc<ReadAhead> {
+        Arc::new(ReadAhead { inner, chunk: chunk.max(64 << 10), cache: Default::default(), budget: if control(&CONTROL_RA_UNBOUNDED, "ra_unbounded") { u64::MAX } else { READ_AHEAD_BUDGET.load(Relaxed).max(1 << 20) } })
+    }
+
+    /// Bytes held now (tests, diagnostics).
+    pub fn held(&self) -> u64 {
+        self.cache.lock().unwrap().bytes
+    }
 
     async fn meta(&self, p: &Path) -> object_store::Result<object_store::ObjectMeta> {
-        if let Some(m) = self.sizes.lock().unwrap().get(p) {
+        if let Some(m) = self.cache.lock().unwrap().sizes.get(p) {
             return Ok(m.clone());
         }
         REQ_HEADS.fetch_add(1, Relaxed);
         let m = self.inner.head(p).await?;
-        self.sizes.lock().unwrap().insert(p.clone(), m.clone());
+        self.cache.lock().unwrap().sizes.insert(p.clone(), m.clone());
         Ok(m)
     }
 
@@ -385,7 +430,7 @@ impl ObjectStore for ReadAhead {
             REQ_GETS.fetch_add(1, Relaxed);
             return self.inner.get_opts(location, options).await;
         };
-        if let Some(chunks) = self.cache.lock().unwrap().get(location) {
+        if let Some(chunks) = self.cache.lock().unwrap().by_path.get(location) {
             for (start, b, meta) in chunks {
                 if r.start >= *start && r.end <= start + b.len() as u64 {
                     let s = (r.start - start) as usize;
@@ -407,20 +452,25 @@ impl ObjectStore for ReadAhead {
         let e = (r.end - r.start) as usize;
         let out = Self::result(meta.clone(), r.clone(), b.slice(s..e));
         let mut c = self.cache.lock().unwrap();
-        let mut o = self.order.lock().unwrap();
-        let chunks = c.entry(location.clone()).or_default();
-        let fresh = chunks.is_empty();
-        chunks.push((r.start, b, meta));
-        if chunks.len() > 3 {
-            chunks.remove(0);
-        }
-        if fresh {
-            o.push_back(location.clone());
-            while o.len() > Self::KEEP {
-                if let Some(old) = o.pop_front() {
-                    c.remove(&old);
-                    self.sizes.lock().unwrap().remove(&old);
+        c.bytes += b.len() as u64;
+        c.order.push_back((location.clone(), r.start));
+        c.by_path.entry(location.clone()).or_default().push((r.start, b, meta));
+        while c.bytes > self.budget && c.order.len() > 1 {
+            let (p, start) = c.order.pop_front().unwrap();
+            let mut gone = 0;
+            let empty = match c.by_path.get_mut(&p) {
+                Some(v) => {
+                    if let Some(i) = v.iter().position(|(s0, _, _)| *s0 == start) {
+                        gone = v.remove(i).1.len() as u64;
+                    }
+                    v.is_empty()
                 }
+                None => false,
+            };
+            c.bytes -= gone;
+            if empty {
+                c.by_path.remove(&p);
+                c.sizes.remove(&p);
             }
         }
         Ok(out)
@@ -536,7 +586,9 @@ pub struct Merge {
 
 impl Merge {
     pub async fn open(store: &Arc<dyn ObjectStore>, id: &str, views: Vec<slatedb::manifest::SsTableView>, sorted_runs: Vec<Vec<slatedb::manifest::SsTableView>>, lo: &[u8], seq_lo: u64, seq_hi: u64) -> Result<Merge> {
-        let ra = ReadAhead::new(Arc::clone(store));
+        let n_src = (views.len() + sorted_runs.len()).max(1) as u64;
+        let chunk = (READ_AHEAD_BUDGET.load(Relaxed) / (n_src + 1)).clamp(256 << 10, READ_AHEAD.load(Relaxed).max(256 << 10));
+        let ra = ReadAhead::with_chunk(Arc::clone(store), chunk);
         let ra_store: Arc<dyn ObjectStore> = ra.clone();
         // SlateDB's raw reader decodes the SST's index again for every block unless a metadata cache holds it: a small one
         // of its own (no data blocks: each is read once)
@@ -921,17 +973,26 @@ pub async fn rollback(store: &Arc<dyn ObjectStore>, id: &str, note: &str) -> Res
 /// is building or inside its window is rolled back first (writers only), so the next release with sealed runs does not
 /// resume from a version this release's writes went around. Returns the refusal, if any.
 pub async fn refuse_without_sealed_runs(store: &Arc<dyn ObjectStore>, id: &str, writer: bool) -> Result<()> {
-    let Some(s) = load(store, id).await? else { return Ok(()) };
-    match s.phase {
-        Phase::Committed => {
-            REFUSED.fetch_add(1, Relaxed);
-            bail!("database {id} was migrated to compaction 2 and committed at {} ms: this release reads SlateDB alone and SlateDB no longer holds every row; run a release with --sealed-runs", s.committed_ms)
+    // fix round, review FIX 3: commit and rollback each write the next state slot with a conditional create, so exactly
+    // one of them wins. A rollback that lost its slot reads the state again and decides again: if the winner was a
+    // commit, the open is refused.
+    for _ in 0..16 {
+        let Some(s) = load(store, id).await? else { return Ok(()) };
+        match s.phase {
+            Phase::Committed => {
+                REFUSED.fetch_add(1, Relaxed);
+                bail!("database {id} was migrated to compaction 2 and committed at {} ms: this release reads SlateDB alone and SlateDB no longer holds every row; run a release with --sealed-runs", s.committed_ms)
+            }
+            Phase::Published | Phase::Building if writer => match rollback(store, id, "opened by a release with sealed runs off (E0)").await {
+                Ok(_) => return Ok(()),
+                Err(e) if e.downcast_ref::<Raced>().is_some() && !control(&CONTROL_RACED_IS_OK, "raced_ok") => continue,
+                Err(e) if e.downcast_ref::<Raced>().is_some() => return Ok(()),
+                Err(e) => return Err(e),
+            },
+            _ => return Ok(()),
         }
-        Phase::Published | Phase::Building if writer => {
-            rollback(store, id, "opened by a release with sealed runs off (E0)").await.map(|_| ()).or_else(|e| if e.downcast_ref::<Raced>().is_some() { Ok(()) } else { Err(e) })
-        }
-        _ => Ok(()),
     }
+    bail!("database {id}: its migration state kept changing while this release opened it; open again")
 }
 
 /// Whether today's compaction pass must leave the database alone: a published or committed migration (its compactor
@@ -940,6 +1001,11 @@ pub async fn refuse_without_sealed_runs(store: &Arc<dyn ObjectStore>, id: &str, 
 pub async fn pass_must_skip(store: &Arc<dyn ObjectStore>, id: &str) -> Result<bool> {
     if CONTROL_NO_PASS_SKIP.load(Relaxed) {
         return Ok(false);
+    }
+    // fix round, review FIX 2: whenever this process's writer serves a version, whatever the migration's phase, unless
+    // the server runs step 3's offline publishes without compactors (no absorption then: today's pass is the only one)
+    if !control(&CONTROL_PUBLISH_WHILE_BUILDING, "publish_while_building") && crate::lifecycle::fx_serving(id) && (super::compactor::SERVER_ON.load(Relaxed) || load(store, id).await?.is_some()) {
+        return Ok(true);
     }
     let versions = manifest::list_versions(store, id).await?;
     let Some(&newest) = versions.last() else { return Ok(false) };

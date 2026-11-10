@@ -1,0 +1,23 @@
+test fx::compactor_tests::gc_keeps_the_runs_a_fork_reference_names ... fork reference and GC (control false): 0 of 2 runs of v1 deleted; GC deleted 2 runs in all
+fork reference and GC (control true): 2 of 2 runs of v1 deleted; GC deleted 4 runs in all
+test fx::review8_tests::an_erasure_during_the_build_leaves_the_migrated_runs_clean ... erasure after the publish: erasure state "scrubbed", live_done true, scrubbed version Some(4); migration Published version Some(1); wrong reads 0; runs of the newest version holding the erased customer: []
+erasure during the build, before the publish: erasure state "pending", live_done false, scrubbed version None; migration Published version Some(1); wrong reads 0; runs of the newest version holding the erased customer: ["tenants/rv8-erase/fx/run/g0/00000000000000000081-m1-86f0e4c7"]
+test fx::review8_tests::an_erasure_during_the_build_then_todays_pass_then_the_compactor ... erasure during the build: false; writer served version None while building; today's passes skipped 0; acknowledged rows missing or different while building: 0 of 1390
+erasure during the build: true; writer served version None while building; today's passes skipped 0; acknowledged rows missing or different while building: 0 of 1350
+test fx::review8_tests::e0_open_racing_a_commit_is_refused ... no race: open allowed ; state after: RolledBack
+committed before: open refused ; state after: Committed
+commit races the rollback: open refused ; state after: Committed
+test fx::review8_tests::read_ahead_memory_is_bounded ... read-ahead: 160 SSTs of 64 MiB read end to end; RSS before 24 MiB, peak 159 MiB, after 159 MiB (held by one merge until it ends)
+test fx::review8_tests::restore_points_across_the_migration_read_their_state ... restore point today's engine, before the migration: sealed runs false, paired with version None
+restore point building: sealed runs true, paired with version None
+restore point in the window: sealed runs true, paired with version Some(6)
+restore point E0 after the rollback: sealed runs false, paired with version None
+restore point generation 2 building: sealed runs true, paired with version Some(10)
+restore point today's engine, before the migration: read through version None: 458 rows, 0 wrong
+restore point building: read through version None: 591 rows, 0 wrong
+restore point in the window: read through version Some(6): 779 rows, 0 wrong
+restore point E0 after the rollback: read through version None: 980 rows, 0 wrong
+restore point generation 2 building: read through version Some(10): 1028 rows, 0 wrong
+test fx::tests_8::an_erasure_during_the_build_is_done_after_the_publish ... control false: during the build the writer served None, erasure "pending" (live_done false); after the publish: erasure "scrubbed" live_done true, newest version 3 runs holding the customer [], wrong reads 0
+control true: during the build the writer served Some(1), erasure "scrubbed" (live_done true); after the publish: erasure "scrubbed" live_done true, newest version 3 runs holding the customer ["tenants/fx-m8-erase-ctl/fx/run/g0/00000000000000000081-m1-42291e69"], wrong reads 0
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 124 filtered out; finished in 34.04s

@@ -1201,7 +1201,9 @@ impl Tenant {
             let f: std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + Send>> = Box::pin(async move { crate::fx::migrate::refuse_without_sealed_runs(&store, &id, w).await });
             f.await?;
         }
-        self.load_fx_from(Instant::now()).await
+        let r = self.load_fx_from(Instant::now()).await;
+        self.fx_note_serving();
+        r
     }
 
     /// [`Tenant::load_fx`] for a refresh that started at `t0`: review of step 7a, note 5 (the F6 shape), the T_pin
@@ -1389,7 +1391,9 @@ impl Tenant {
         anyhow::ensure!(self.fx_shared.is_none(), "database {}: stop the compactor before the rollback", self.id);
         let s = crate::fx::migrate::rollback(&store, &self.id, note).await?;
         self.fx_mig = Some(s.clone());
-        if let Some(old) = self.fx.take() {
+        let had = self.fx.take();
+        self.fx_note_serving();
+        if let Some(old) = had {
             crate::fx::counter::forget_runs(&old.delta.iter().chain(old.groups.iter().filter_map(|g| g.sealed.as_ref())).map(|h| h.id).collect::<std::collections::HashSet<_>>());
         }
         Ok(s)
@@ -1414,6 +1418,18 @@ impl Tenant {
             crate::fx::counter::forget_runs(&crate::fx::counter::retired(old, &view));
         }
         self.fx = Some(Arc::new(view));
+    }
+
+    /// Fix round, review FIX 2: record whether this process's writer of the database serves a version (today's pass then
+    /// leaves the database alone until its compactor runs: `fx::migrate::pass_must_skip`).
+    fn fx_note_serving(&self) {
+        let w = matches!(self.mode, Some(Mode::Writer(_)));
+        let mut s = FX_SERVING.lock().unwrap();
+        if w && self.fx.is_some() {
+            s.insert(self.id.clone());
+        } else if w {
+            s.remove(&self.id);
+        }
     }
 
     /// Start envelopes if the database has none (a version needs E_env <= X_d, `fx/manifest.rs`), in two steps (rule
@@ -1486,6 +1502,13 @@ impl Tenant {
         anyhow::ensure!(crate::fx::ENABLED.load(Relaxed), "--sealed-runs is off");
         anyhow::ensure!(self.fx_shared.is_none(), "database {}: a compactor publishes this database's versions", self.id);
         self.upgrade().await?;
+        // fix round, review FIX 2: while a migration builds (or after its rollback) the only publish is the migration's;
+        // another one (an erasure's, step 3's) would make this writer serve a version the migration does not know. The
+        // caller sees "nothing published" and retries later (an erasure stays pending until the migration publishes).
+        if self.fx_mig.as_ref().is_some_and(|m| matches!(m.phase, crate::fx::migrate::Phase::Building | crate::fx::migrate::Phase::RolledBack)) && !crate::fx::migrate::control(&crate::fx::migrate::CONTROL_PUBLISH_WHILE_BUILDING, "publish_while_building") {
+            crate::fx::migrate::PUBLISHES_DEFERRED.fetch_add(1, Relaxed);
+            return Ok(None);
+        }
         // no publish starts while a fence is pending (rule 25)
         self.fx_settle_fence().await?;
         if !self.ensure_marker().await? {
@@ -1506,6 +1529,7 @@ impl Tenant {
         }
         self.fx_install(crate::fx::view::View::new(store, v, self.fx.as_deref())?);
         self.fx_loaded = Instant::now();
+        self.fx_note_serving();
         crate::fx::PUBLISHES.fetch_add(1, Relaxed);
         Ok(Some(rep))
     }
@@ -2683,6 +2707,14 @@ static STORED_MANIFEST: std::sync::LazyLock<Mutex<HashMap<String, (u64, Arc<slat
 /// Hot WAL passes skipped because this process no longer held the tenant.
 pub static WAL_GC_NOT_OWNER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// Local-log writes not acknowledged because ownership was lost by the time their record was on disk.
+/// Databases whose writer in this process serves a version of our manifest (fix round of step 8, FIX 2).
+pub static FX_SERVING: std::sync::LazyLock<Mutex<std::collections::HashSet<String>>> = std::sync::LazyLock::new(Default::default);
+
+/// Whether this process's writer of `id` serves a version.
+pub fn fx_serving(id: &str) -> bool {
+    FX_SERVING.lock().unwrap().contains(id)
+}
+
 pub static LOCAL_ACK_REFUSED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// Set by the server: whether this process still owns a tenant (its lease is valid). Unset (tests of this crate): always.
 pub static OWNER_VALID: std::sync::OnceLock<Box<dyn Fn(&str) -> bool + Send + Sync>> = std::sync::OnceLock::new();

@@ -549,3 +549,77 @@ async fn planted_bug_mark_early_is_caught() {
     assert!(caught[1], "the planted bug was not caught");
     assert!(published.is_err() || read_errors > 0, "the planted bug left no trace in the reads");
 }
+
+/// Fix round, review FIX 2: a customer erased while its database migrates. The erasure waits (no publish of its own while
+/// the migration builds); once the migration publishes, the erasure pass scrubs the migrated runs. Done means: the
+/// erasure is `live_done` only when no run of the newest version holds the customer, and every read is right.
+/// Control `CONTROL_PUBLISH_WHILE_BUILDING` (the code before): the erasure publishes its own version mid-build and is
+/// recorded done while the migration's runs still hold the customer.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn an_erasure_during_the_build_is_done_after_the_publish() {
+    use super::erase::{ScrubOpts, Targets};
+    let _s = SERIAL.lock().await;
+    let mut out = Vec::new();
+    for control in [false, true] {
+        setup();
+        migrate::CONTROL_PUBLISH_WHILE_BUILDING.store(control, Relaxed);
+        let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let id = if control { "fx-m8-erase-ctl" } else { "fx-m8-erase" };
+        let key = |c: &str, i: usize| format!("u/{c}/c/d/{i:04}").into_bytes();
+        let mut t = lc(&store).create(id).await.unwrap();
+        for i in 0..40 {
+            t.apply(vec![crate::lifecycle::Op::Put(key("CUSTA", i), format!("ERASEDMARK-{i}-{}", "x".repeat(60)).into_bytes())]).await.unwrap();
+            t.apply(vec![crate::lifecycle::Op::Put(key("CUSTB", i), format!("b-{i}-{}", "y".repeat(60)).into_bytes())]).await.unwrap();
+        }
+        t.abandon().await;
+        ENABLED.store(true, Relaxed);
+        let mut t = lc(&store).wake(id).await.unwrap();
+        t.upgrade().await.unwrap();
+        for _ in 0..100 {
+            if t.fx_migrate_begin().await.unwrap().is_some() {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(TEST_T_PIN_MS / 4)).await;
+        }
+        migrate::build_step(&store, id, 1, &run_opts(), None).await.unwrap();
+        // the erasure, during the build
+        t.apply((0..40).map(|i| crate::lifecycle::Op::Delete(key("CUSTA", i))).collect()).await.unwrap();
+        let mut tg = Targets::default();
+        tg.ranges.push((b"u/CUSTA/".to_vec(), b"u/CUSTA0".to_vec()));
+        t.fx_erasure_register("c", b"CUSTA", &tg).await.unwrap().expect("recorded");
+        let o = ScrubOpts { sealed: run_opts(), delta: run_opts() };
+        let during = t.fx_erase_pass(&o).await.unwrap()[0].clone();
+        let served_during = t.fx_view().map(|v| v.version);
+        // the migration publishes, then the erasure pass runs (the server runs it right after the publish)
+        while !migrate::load(&store, id).await.unwrap().unwrap().built {
+            migrate::build_step(&store, id, 0, &run_opts(), None).await.unwrap();
+        }
+        assert!(t.fx_migrate_finish(&run_opts(), None).await.unwrap().is_some());
+        let e = t.fx_erase_pass(&o).await.unwrap()[0].clone();
+        let v = manifest::load_newest(&store, id).await.unwrap().unwrap();
+        let mut holders = Vec::new();
+        for l in v.groups.iter().filter_map(|g| g.sealed.as_ref()).chain(v.delta.iter()) {
+            let rows = compactor::run_rows(&store, l).await.unwrap();
+            if rows.iter().any(|r| r.key.starts_with(b"u/CUSTA/") && r.env.first() != Some(&crate::runfmt::DELETED)) {
+                holders.push(l.path.clone());
+            }
+        }
+        let mut wrong = 0;
+        for i in 0..40 {
+            if t.get(&key("CUSTA", i)).await.unwrap().is_some() || t.get(&key("CUSTB", i)).await.unwrap().is_none() {
+                wrong += 1;
+            }
+        }
+        eprintln!("control {control}: during the build the writer served {served_during:?}, erasure {:?} (live_done {}); after the publish: erasure {:?} live_done {}, newest version {} runs holding the customer {holders:?}, wrong reads {wrong}", during.state, during.live_done_ms.is_some(), e.state, e.live_done_ms.is_some(), v.version);
+        t.abandon().await;
+        migrate::CONTROL_PUBLISH_WHILE_BUILDING.store(false, Relaxed);
+        teardown();
+        out.push((control, served_during, during.live_done_ms.is_some(), e.live_done_ms.is_some(), holders.len(), wrong));
+    }
+    let (_, served, done_during, done, holders, wrong) = out[0];
+    assert_eq!(served, None, "the writer served a version while the migration built");
+    assert!(!done_during, "the erasure was done before the migration published");
+    assert!(done && holders == 0 && wrong == 0, "after the publish: done {done}, runs holding the customer {holders}, wrong reads {wrong}");
+    let (_, served_c, done_c, _, holders_c, _) = out[1];
+    assert!(served_c.is_some() && done_c && holders_c > 0, "the control should reproduce the defect: {:?}", out[1]);
+}

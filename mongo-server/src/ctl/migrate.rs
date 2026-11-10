@@ -116,6 +116,11 @@ pub async fn drive(ctl: &Arc<Ctl>, db: &str, budget: std::time::Duration, groups
                     if let Some(v) = v {
                         eprintln!("migration of {db}: version {v} published; the lock was held {:?}", t.elapsed());
                         migrate::LOCK_US.fetch_max(t.elapsed().as_micros() as u64, Relaxed);
+                        // fix round, FIX 2: an erasure recorded while the migration built waited for this version; scrub
+                        // it now rather than at the erasure agent's next poll
+                        if let Err(e) = super::erase::run_pass(ctl, db).await {
+                            eprintln!("migration of {db}: the erasure pass after the publish: {}", e.message);
+                        }
                     }
                 }
             }
