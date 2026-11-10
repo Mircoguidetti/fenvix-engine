@@ -83,6 +83,26 @@ pub fn prefetch_span(run: &runfmt::Run, key: &[u8]) -> Option<(usize, usize)> {
     (last >= first && last - first < PREFETCH_MAX_BLOCKS).then_some((first, last))
 }
 
+/// Negative controls of the fix round (review of c2-delta-log), tests only: 1, the one-wave point read takes the
+/// sealed row as it is (FIX 1); 2, the erasure's scrub copies a derived thread row by row (FIX 2); 3, no shape check:
+/// every msgpack array of any binary field of a registered collection is cut (FIX 3).
+pub static FIX_CONTROL: AtomicUsize = AtomicUsize::new(0);
+
+pub fn fix_control(n: usize) -> bool {
+    FIX_CONTROL.load(Relaxed) == n || env_control() == n
+}
+
+/// Tests: `FX_FIX_CONTROL=n` (also for tests that do not call a setup).
+fn env_control() -> usize {
+    #[cfg(test)]
+    {
+        static C: std::sync::OnceLock<usize> = std::sync::OnceLock::new();
+        *C.get_or_init(|| std::env::var("FX_FIX_CONTROL").ok().and_then(|s| s.parse().ok()).unwrap_or(0))
+    }
+    #[cfg(not(test))]
+    0
+}
+
 /// Counters (diagnostics, serverStatus).
 pub static ENCODED_DOCS: AtomicU64 = AtomicU64::new(0);
 pub static PLAIN_DOCS: AtomicU64 = AtomicU64::new(0);
@@ -187,24 +207,21 @@ fn get_var(d: &[u8], p: &mut usize) -> Result<u64> {
 /// A byte range of a document: `(start, end, is a message)`.
 type Cut = (usize, usize, bool);
 
-/// The message ranges of a BSON document: every element of every msgpack array inside a top-level binary field whose
-/// payload is exactly one msgpack value, when it is at least [`MIN_PART`] bytes. Sorted, disjoint. A document that is
-/// not well-formed BSON gives no ranges (it stays literal).
+/// The message ranges of a BSON document: when the document has the LangGraph MongoDB saver's shape
+/// ([`saver_payload`]), every element of every msgpack array of its payload (`checkpoint` or `value`), when it is at
+/// least [`MIN_PART`] bytes and the payload is exactly one msgpack value. Sorted, disjoint. Any other document, or one
+/// that is not well-formed BSON, gives no ranges (it stays as written).
 pub fn message_ranges(doc: &[u8]) -> Vec<(usize, usize)> {
-    let mut out = Vec::new();
-    if bson_binaries(doc, &mut |a, b| {
-        let payload = &doc[a..b];
-        let mut arr = Vec::new();
-        if let Ok(end) = mp_value(payload, 0, 0, &mut arr) {
-            if end == payload.len() {
-                out.extend(arr.into_iter().filter(|(x, y)| y - x >= MIN_PART).map(|(x, y)| (a + x, a + y)));
-            }
-        }
-    })
-    .is_err()
-    {
-        return Vec::new();
+    if fix_control(3) {
+        return any_binary_ranges(doc);
     }
+    let Some((a, b)) = saver_payload(doc) else { return Vec::new() };
+    let payload = &doc[a..b];
+    let mut arr = Vec::new();
+    let mut out: Vec<(usize, usize)> = match mp_value(payload, 0, 0, &mut arr) {
+        Ok(end) if end == payload.len() => arr.into_iter().filter(|(x, y)| y - x >= MIN_PART).map(|(x, y)| (a + x, a + y)).collect(),
+        _ => return Vec::new(),
+    };
     out.sort();
     // elements of one array never overlap and nested arrays are not entered once an element is taken (mp_value takes
     // the outermost arrays' elements only), so the ranges are disjoint; check anyway
@@ -214,9 +231,54 @@ pub fn message_ranges(doc: &[u8]) -> Vec<(usize, usize)> {
     out
 }
 
-/// Calls `f(start, end)` with the payload range of every top-level binary field of a BSON document. The stored value
-/// may carry bytes after the document (the server's natural-order trailer, `natural.rs`): they stay literal.
-fn bson_binaries(d: &[u8], f: &mut dyn FnMut(usize, usize)) -> Result<()> {
+/// Control 3: the cut before the fix round (every top-level binary field).
+fn any_binary_ranges(doc: &[u8]) -> Vec<(usize, usize)> {
+    let mut out = Vec::new();
+    let _ = bson_fields(doc, &mut |_, t, a, b| {
+        if t == 0x05 {
+            let payload = &doc[a + 5..b];
+            let mut arr = Vec::new();
+            if let Ok(end) = mp_value(payload, 0, 0, &mut arr) {
+                if end == payload.len() {
+                    out.extend(arr.into_iter().filter(|(x, y)| y - x >= MIN_PART).map(|(x, y)| (a + 5 + x, a + 5 + y)));
+                }
+            }
+        }
+    });
+    out.sort();
+    out
+}
+
+/// The payload range of a LangGraph MongoDB-saver document (review of c2-delta-log, FIX 3): top-level strings
+/// `thread_id`, `checkpoint_ns` and `checkpoint_id`, `type` equal to `"msgpack"`, and exactly one binary payload,
+/// `checkpoint` (the checkpoints collection) or `value` (the writes collection). Anything else is not a saver document
+/// (another app's document in a collection named like the saver's, the JS saver's JSON, a missing field): None.
+pub fn saver_payload(doc: &[u8]) -> Option<(usize, usize)> {
+    let mut strs = [false; 3];
+    let mut ty_msgpack = false;
+    let mut payload: Option<(usize, usize)> = None;
+    let mut payloads = 0;
+    bson_fields(doc, &mut |name, t, a, b| match (name, t) {
+        (b"thread_id", 0x02) => strs[0] = true,
+        (b"checkpoint_ns", 0x02) => strs[1] = true,
+        (b"checkpoint_id", 0x02) => strs[2] = true,
+        // a string value: i32 length, the bytes, a 0
+        (b"type", 0x02) => ty_msgpack = &doc[a..b] == b"\x08\0\0\0msgpack\0",
+        (b"checkpoint", 0x05) | (b"value", 0x05) => {
+            payloads += 1;
+            payload = Some((a + 5, b));
+        }
+        (b"checkpoint", _) | (b"value", _) => payloads += 2,
+        _ => {}
+    })
+    .ok()?;
+    (strs.iter().all(|&x| x) && ty_msgpack && payloads == 1).then_some(payload).flatten()
+}
+
+/// Calls `f(name, type, start, end)` with the value range of every top-level field of a BSON document (a binary's
+/// range starts at its length). The stored value may carry bytes after the document (the server's natural-order
+/// trailer, `natural.rs`): they are not looked at.
+fn bson_fields(d: &[u8], f: &mut dyn FnMut(&[u8], u8, usize, usize)) -> Result<()> {
     ensure!(d.len() >= 5, "short");
     let n = i32::from_le_bytes(d[..4].try_into()?) as usize;
     ensure!(n >= 5 && n <= d.len() && d[n - 1] == 0, "length");
@@ -226,6 +288,7 @@ fn bson_binaries(d: &[u8], f: &mut dyn FnMut(usize, usize)) -> Result<()> {
         let t = d[p];
         p += 1;
         let z = d[p..].iter().position(|&b| b == 0).ok_or_else(|| anyhow!("name"))?;
+        let name = &d[p..p + z];
         p += z + 1;
         let i32_at = |p: usize| -> Result<usize> {
             ensure!(p + 4 <= n, "short");
@@ -234,17 +297,12 @@ fn bson_binaries(d: &[u8], f: &mut dyn FnMut(usize, usize)) -> Result<()> {
             Ok(v as usize)
         };
         let cstr = |p: usize| -> Result<usize> { Ok(p + d[p..].iter().position(|&b| b == 0).ok_or_else(|| anyhow!("cstring"))? + 1) };
+        let start = p;
         p = match t {
             0x01 | 0x09 | 0x11 | 0x12 => p + 8,
             0x02 | 0x0D | 0x0E => p + 4 + i32_at(p)?,
             0x03 | 0x04 | 0x0F => p + i32_at(p)?,
-            0x05 => {
-                let len = i32_at(p)?;
-                let a = p + 5;
-                ensure!(a + len <= n - 1, "binary");
-                f(a, a + len);
-                a + len
-            }
+            0x05 => p + 5 + i32_at(p)?,
             0x06 | 0x0A | 0xFF | 0x7F => p,
             0x07 => p + 12,
             0x08 => p + 1,
@@ -255,6 +313,7 @@ fn bson_binaries(d: &[u8], f: &mut dyn FnMut(usize, usize)) -> Result<()> {
             _ => bail!("type {t}"),
         };
         ensure!(p < n, "element past the end");
+        f(name, t, start, p);
     }
     ensure!(p == n - 1, "trailing");
     Ok(())
@@ -682,6 +741,64 @@ pub fn encode_customer(spec: &dyn Spec, prefix: &[u8], rows: Vec<OutRow>, st: &m
     Ok(Out { rows: out, atomic: true, prefix: Some(prefix.to_vec()) })
 }
 
+// ---- the erasure's scrub (step 7b, `erase.rs`; review of c2-delta-log, FIX 2)
+
+/// The spec of one thread's unit inside a run being scrubbed: its documents that were derived are the checkpoint
+/// documents (no registration is needed to rewrite what is already derived).
+struct UnitSpec {
+    plen: usize,
+    prefix: Vec<u8>,
+    derived: std::collections::HashSet<Vec<u8>>,
+}
+
+impl Spec for UnitSpec {
+    fn customer_prefix(&self, key: &[u8]) -> Option<usize> {
+        key.starts_with(&self.prefix).then_some(self.plen)
+    }
+    fn is_checkpoint_doc(&self, key: &[u8]) -> bool {
+        self.derived.contains(key)
+    }
+}
+
+/// One thread's rows of a sealed run (its message rows first, then every other row of the customer, key order),
+/// without the rows `erased(key, seq)` names: derived documents are rebuilt, the erased rows dropped, and what is left
+/// re-encoded, so a message row that no remaining document uses goes too. Returns the rows to write and the number of
+/// rows erased (documents and others; message rows are not counted). `None`: nothing in the unit is erased.
+pub fn scrub_unit(prefix: &[u8], rows: Vec<OutRow>, erased: &dyn Fn(&[u8], u64) -> bool) -> Result<Option<(Vec<OutRow>, u64)>> {
+    if !rows.iter().any(|(k, s, e)| e.first() != Some(&PART) && erased(k, *s)) {
+        return Ok(None);
+    }
+    let mut msgs: HashMap<u32, Vec<u8>> = HashMap::new();
+    let mut keep: Vec<OutRow> = Vec::with_capacity(rows.len());
+    let mut derived = std::collections::HashSet::new();
+    let mut n = 0u64;
+    for (k, seq, env) in rows {
+        match env.first() {
+            Some(&PART) => {
+                let (p, i) = parse_msg_key(&k)?;
+                ensure!(p == prefix, "corrupt derived document: a message row of another customer in a unit");
+                msgs.insert(i, env[1..].to_vec());
+            }
+            _ if erased(&k, seq) => n += 1,
+            Some(&DERIVED) => {
+                let sk = parse_skeleton(&env)?;
+                ensure!(sk.plen == prefix.len() && k.starts_with(prefix), "corrupt derived document: its prefix is not its unit's");
+                let doc = assemble(&sk, &|i| msgs.get(&i).cloned())?;
+                let mut e = Vec::with_capacity(doc.len() + 1);
+                e.push(LIVE);
+                e.extend(doc);
+                derived.insert(k.clone());
+                keep.push((k, seq, e));
+            }
+            _ => keep.push((k, seq, env)),
+        }
+    }
+    let spec = UnitSpec { plen: prefix.len(), prefix: prefix.to_vec(), derived };
+    let mut st = EncStats::default();
+    let out = encode_customer(&spec, prefix, keep, &mut st)?;
+    Ok(Some((out.rows, n)))
+}
+
 // ---- the read side
 
 /// Whether a run row needs this module (a derived document or a message row).
@@ -768,6 +885,11 @@ mod tests {
         d
     }
 
+    /// A saver-shaped document with `payload` as its binary field `field` (`checkpoint` or `value`).
+    fn saver_doc(field: &str, payload: Vec<u8>) -> Vec<u8> {
+        bson_doc(&[("thread_id", 0x02, b"t1".to_vec()), ("checkpoint_ns", 0x02, vec![]), ("checkpoint_id", 0x02, b"1f0".to_vec()), ("type", 0x02, b"msgpack".to_vec()), (field, 0x05, payload)])
+    }
+
     fn mp_str(s: &[u8]) -> Vec<u8> {
         let mut v = vec![0xd9, s.len() as u8];
         v.extend(s);
@@ -784,14 +906,22 @@ mod tests {
         payload.extend(&m1);
         payload.extend(&m2);
         payload.push(0x05); // a small element stays literal
-        let doc = bson_doc(&[("thread_id", 0x02, b"t1".to_vec()), ("checkpoint", 0x05, payload.clone())]);
+        let doc = saver_doc("checkpoint", payload.clone());
         let r = message_ranges(&doc);
         assert_eq!(r.len(), 2, "{r:?}");
         assert_eq!(&doc[r[0].0..r[0].1], &m1[..]);
         assert_eq!(&doc[r[1].0..r[1].1], &m2[..]);
         // not msgpack: no ranges
-        let bad = bson_doc(&[("checkpoint", 0x05, vec![0xc1, 1, 2])]);
+        let bad = saver_doc("checkpoint", vec![0xc1, 1, 2]);
         assert!(message_ranges(&bad).is_empty());
+        // not the saver's shape (no thread_id, or type json, or two payloads): no ranges
+        assert!(message_ranges(&bson_doc(&[("checkpoint", 0x05, payload.clone())])).is_empty());
+        let mut json = bson_doc(&[("thread_id", 0x02, b"t1".to_vec()), ("checkpoint_ns", 0x02, vec![]), ("checkpoint_id", 0x02, b"c".to_vec()), ("type", 0x02, b"json".to_vec()), ("checkpoint", 0x05, payload.clone())]);
+        assert!(message_ranges(&json).is_empty());
+        json = bson_doc(&[("thread_id", 0x02, b"t1".to_vec()), ("checkpoint_ns", 0x02, vec![]), ("checkpoint_id", 0x02, b"c".to_vec()), ("type", 0x02, b"msgpack".to_vec()), ("checkpoint", 0x05, payload.clone()), ("value", 0x05, payload.clone())]);
+        assert!(message_ranges(&json).is_empty());
+        // the writes collection's payload is `value`
+        assert_eq!(message_ranges(&saver_doc("value", payload.clone())).len(), 2);
         // the server's natural-order trailer after the document: the same ranges
         let mut with_trailer = doc.clone();
         with_trailer.extend([0xff, 0, 0, 0, 0, 0, 0, 0, 7]);
@@ -799,7 +929,7 @@ mod tests {
         // trailing bytes after the msgpack value: no ranges
         let mut p2 = payload.clone();
         p2.push(0);
-        assert!(message_ranges(&bson_doc(&[("checkpoint", 0x05, p2)])).is_empty());
+        assert!(message_ranges(&saver_doc("checkpoint", p2)).is_empty());
     }
 
     #[test]
@@ -812,7 +942,7 @@ mod tests {
         let mut payload = vec![0x92];
         payload.extend(&m1);
         payload.extend(&m1);
-        let doc = bson_doc(&[("checkpoint", 0x05, payload)]);
+        let doc = saver_doc("checkpoint", payload);
         let mut env = vec![LIVE];
         env.extend(&doc);
         let mut st = EncStats::default();

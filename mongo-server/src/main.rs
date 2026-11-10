@@ -519,6 +519,10 @@ struct Args {
     /// Agent checkpoint collections (`agentck.rs`): comma separated `[db.]collection`, customer key `thread_id`.
     #[arg(long, default_value = "checkpoints,checkpoint_writes")]
     agent_checkpoints: String,
+    /// Compaction 2, step 5: the one-wave reader (`fx/view.rs` `WAVE`): a read through our runs asks SlateDB and every
+    /// candidate run at once. On by default (`--sealed-wave false` or FENVIX_SEALED_WAVE=0 turns it off).
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    sealed_wave: bool,
     /// Block codec of the sealed runs the compactor writes: `lz4` (run format v1, as before) or `zstd` (run format v2,
     /// which a release before this one cannot read). FENVIX_SEALED_CODEC does the same.
     #[arg(long, default_value = "lz4")]
@@ -815,6 +819,8 @@ async fn run() -> Result<()> {
             tenant_bench::fx::compactor::set_sealed_codec(&codec)?;
         }
         agentck::configure(&args.agent_checkpoints)?;
+        let wave = args.sealed_wave && std::env::var("FENVIX_SEALED_WAVE").as_deref() != Ok("0");
+        tenant_bench::fx::view::WAVE.store(wave, Relaxed);
         tenant_bench::fx::check_config()?;
     }
     tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);

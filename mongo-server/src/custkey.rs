@@ -301,6 +301,13 @@ pub async fn of(g: &mut impl crate::coll::Rd, coll: &str) -> anyhow::Result<Opti
 /// `--customer-key` that has no customer key and no documents takes it now (stored with its options before the first
 /// document or index is written).
 pub async fn for_write(g: &mut crate::dbs::Entry, ns: &str, coll: &str) -> anyhow::Result<Option<Ckey>> {
+    let r = for_write_inner(g, ns, coll).await?;
+    // agent checkpoints (`agentck.rs`): a registered collection is rewritten only when its customer key is `thread_id`
+    crate::agentck::note_key(ns.split('.').next().unwrap_or(""), coll, r.as_ref().map(|k| k.field.as_str()));
+    Ok(r)
+}
+
+async fn for_write_inner(g: &mut crate::dbs::Entry, ns: &str, coll: &str) -> anyhow::Result<Option<Ckey>> {
     let opts = g.coll_opts(coll).await?;
     if let Some(f) = of_opts(opts.as_ref()) {
         return Ok(Some(f));

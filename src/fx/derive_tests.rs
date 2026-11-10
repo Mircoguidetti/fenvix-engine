@@ -312,11 +312,15 @@ fn setup() {
     local::set_store(Some(Arc::new(InMemory::new())));
     view::clear_cache();
     derive::WRITE.store(true, Relaxed);
+    // FX_WAVE=1: the tests of this file with the one-wave reader (step 5), as the server runs by default
+    view::WAVE.store(std::env::var("FX_WAVE").is_ok(), Relaxed);
     // review: FX_D_PLANT=n runs a test with planted bug n, FX_D_NOCRC=1 without the reader's CRC check
     derive::CHECK_CRC.store(std::env::var("FX_D_NOCRC").is_err(), Relaxed);
     derive::PLANT.store(std::env::var("FX_D_PLANT").ok().and_then(|s| s.parse().ok()).unwrap_or(0), Relaxed);
     derive::REVIEW_PREV.lock().unwrap().clear();
     derive::FAIL_AT_UNIT.store(0, Relaxed);
+    // fix round: FX_FIX_CONTROL=1|2|3 removes one fix (its review test must then fail)
+    derive::FIX_CONTROL.store(std::env::var("FX_FIX_CONTROL").ok().and_then(|s| s.parse().ok()).unwrap_or(0), Relaxed);
 }
 
 fn teardown() {
@@ -327,6 +331,7 @@ fn teardown() {
     T_PIN_MS.store(TEST_T_PIN_MS, Relaxed);
     local::set_store(None);
     derive::WRITE.store(false, Relaxed);
+    view::WAVE.store(false, Relaxed);
     derive::CHECK_CRC.store(true, Relaxed);
     derive::PLANT.store(0, Relaxed);
     derive::FAIL_AT_UNIT.store(0, Relaxed);
@@ -1179,4 +1184,67 @@ async fn review_erasure_of_a_derived_thread() {
     for (o, ok, left, bad) in res {
         assert!(ok && left == 0 && bad == 0, "derived opts {o}: pass ok {ok}, rows left {left}, bad reads {bad}");
     }
+}
+
+/// Fix round, FIX 2: step 7b's erasure of one collection of a derived thread. Erasing only `ck` (the checkpoints) drops
+/// its documents and the messages only they used; the messages `cw` (the pending writes) still uses stay, and every `cw`
+/// document and every other thread reads back exactly. Then erasing `cw` too leaves 0 rows under the thread's prefix.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn fix2_erasure_of_one_collection_keeps_the_messages_still_used() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let k = knobs(BlockCodec::Zstd);
+    let id = "fx-fix2-erase-one";
+    let (t0, c, mut m) = derived_db(&store, id, 8, 12, &k).await;
+    c.stop().await;
+    t0.abandon().await;
+    let mut t = lc(&store).wake(id).await.unwrap();
+    t.upgrade().await.unwrap();
+    t.fx_refresh().await.unwrap();
+    let name = "th001";
+    let mut comp = vec![name.len() as u8];
+    comp.extend(name.as_bytes());
+    let (tlo, thi) = trange(name);
+    let mut left_after = Vec::new();
+    for coll in ["ck", "cw"] {
+        let mut lo = b"u/".to_vec();
+        lo.extend(&comp);
+        lo.extend(coll.as_bytes());
+        lo.push(b'/');
+        let hi = runfmt::prefix_successor(&lo).unwrap();
+        let gone: Vec<Vec<u8>> = m.range(lo.clone()..hi.clone()).map(|(k, _)| k.clone()).collect();
+        assert!(!gone.is_empty());
+        t.apply(gone.iter().map(|k| Op::Delete(k.clone())).collect()).await.unwrap();
+        for key in &gone {
+            m.remove(key);
+        }
+        let mut tg = erase::Targets::default();
+        tg.ranges.push((lo, hi));
+        for key in &gone {
+            tg.add_key(key.clone());
+        }
+        let e = t.fx_erasure_register(coll, &comp, &tg).await.unwrap().expect("recorded");
+        let all = t.fx_erase_pass(&erase::ScrubOpts::default()).await.unwrap();
+        let state = all.iter().find(|x| x.id == e.id).map(|x| x.state.clone());
+        t.fx_refresh().await.unwrap();
+        let v = t.fx_view().unwrap().meta.clone();
+        let rows = all_run_rows(&store, &v).await;
+        let left: Vec<&compactor::Row> = rows.iter().filter(|r| r.key >= tlo && r.key < thi).collect();
+        let msgs = left.iter().filter(|r| r.env[0] == runfmt::PART).count();
+        let skel = left.iter().filter(|r| r.env[0] == runfmt::DERIVED).count();
+        let of_coll = left.iter().filter(|r| r.key.starts_with(&[&tlo[..], coll.as_bytes()].concat())).count();
+        view::clear_cache();
+        let (wrong, errors, first) = count_wrong(&t, &m).await;
+        let scan_ok = as_vec(t.scan_range(b"u/", Some(b"u0"), false, None, 1 << 20).await.unwrap()) == model_range(&m, b"u/", Some(b"u0"), false, None);
+        eprintln!("fix2 erasure of {coll}: state {state:?}; rows of the thread left: {} ({msgs} message rows, {skel} skeletons), of the erased collection {of_coll}; reads wrong {wrong}, errors {errors} {first}; full scan equal {scan_ok}", left.len());
+        assert_eq!(state.as_deref(), Some("scrubbed"));
+        assert_eq!(of_coll, 0, "rows of the erased collection left");
+        assert_eq!((wrong, errors, scan_ok), (0, 0, true));
+        left_after.push((left.len(), msgs));
+    }
+    assert!(left_after[0].1 > 0, "the messages the writes still use stay after erasing the checkpoints only");
+    assert_eq!(left_after[1].0, 0, "nothing of the thread is left once both collections are erased");
+    t.abandon().await;
+    teardown();
 }

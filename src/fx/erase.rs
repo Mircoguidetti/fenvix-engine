@@ -329,27 +329,68 @@ pub struct Scrub {
 /// every row was a target (the run leaves the version).
 async fn rewrite_run(store: &Arc<dyn ObjectStore>, h: &RunH, path: String, opts: &RunOptions, t: &Targets, s_e: u64, dropped: &mut u64) -> Result<Option<Option<RunLine>>> {
     let n = view::block_count(store, h).await?;
+    // the new run keeps the codec and the derived flag of the run it replaces (review of c2-delta-log, FIX 2): a run of
+    // derived documents is rewritten as one
+    let run = h.open(store).await?.clone();
+    let mut opts = opts.clone();
+    if !super::derive::fix_control(2) {
+        opts.codec = run.codec;
+        opts.derived = run.derived;
+    }
     let mut w: Option<RunWriter> = None;
     let mut erased = 0u64;
     let any_seq = ctl(&CONTROL_NO_SEQ_BOUND);
+    let hit = |k: &[u8], seq: u64| (seq <= s_e || any_seq) && t.hit(k);
+    // a derived thread (`derive.rs`): its message rows, then the rest of its customer's rows, scrubbed as one unit
+    let mut unit: Option<(Vec<u8>, Vec<super::derive::OutRow>)> = None;
+    async fn put(w: &mut Option<RunWriter>, store: &Arc<dyn ObjectStore>, path: &str, opts: &RunOptions, k: &[u8], seq: u64, env: &[u8]) -> Result<()> {
+        if w.is_none() {
+            *w = Some(RunWriter::new(store, Path::from(path), opts.clone()).await?);
+        }
+        w.as_mut().unwrap().add(k, seq, env).await
+    }
+    macro_rules! flush_unit {
+        () => {
+            if let Some((p, rows)) = unit.take() {
+                let rows = match super::derive::scrub_unit(&p, rows.clone(), &hit)? {
+                    Some((out, e)) => {
+                        erased += e;
+                        out
+                    }
+                    None => rows,
+                };
+                for (k, seq, env) in rows {
+                    put(&mut w, store, &path, &opts, &k, seq, &env).await?;
+                }
+            }
+        };
+    }
     let mut b = 0;
     while b < n {
         let z = (b + 63).min(n - 1);
         for blk in view::blocks(store, h, b, z).await? {
             for i in 0..blk.len() {
                 let k = blk.key(i);
-                if (blk.seq(i) <= s_e || any_seq) && t.hit(k) {
+                if unit.as_ref().is_some_and(|(p, _)| !k.starts_with(p)) {
+                    flush_unit!();
+                }
+                if unit.is_none() && blk.env(i).first() == Some(&crate::runfmt::PART) && !super::derive::fix_control(2) {
+                    unit = Some((super::derive::parse_msg_key(k)?.0.to_vec(), Vec::new()));
+                }
+                if let Some((_, rows)) = unit.as_mut() {
+                    rows.push((k.to_vec(), blk.seq(i), blk.env(i).to_vec()));
+                    continue;
+                }
+                if hit(k, blk.seq(i)) {
                     erased += 1;
                     continue;
                 }
-                if w.is_none() {
-                    w = Some(RunWriter::new(store, Path::from(path.as_str()), opts.clone()).await?);
-                }
-                w.as_mut().unwrap().add(k, blk.seq(i), blk.env(i)).await?;
+                put(&mut w, store, &path, &opts, k, blk.seq(i), blk.env(i)).await?;
             }
         }
         b = z + 1;
     }
+    flush_unit!();
     if erased == 0 {
         if let Some(w) = w {
             w.abort().await?;

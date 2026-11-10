@@ -348,6 +348,17 @@ async fn prefetch_thread(store: &Arc<dyn ObjectStore>, h: &RunH, key: &[u8]) -> 
     Ok(())
 }
 
+/// The point read of a group's sealed run, shared by both point-read paths (`View::get` and the one-wave
+/// `View::get_wave`, review of c2-delta-log FIX 1): the thread's message blocks prefetched with the document's block,
+/// then a derived document rebuilt and a message row never returned. Every point read of a sealed run goes here.
+async fn sealed_point(store: &Arc<dyn ObjectStore>, s: &RunH, key: &[u8]) -> Result<Option<RRow>> {
+    prefetch_thread(store, s, key).await?;
+    match run_get(store, s, key).await? {
+        Some(r) if super::derive::is_derived(&r.env) => derived_row(store, s, key, r).await,
+        r => Ok(r),
+    }
+}
+
 /// A sealed row that is a derived document (rebuilt, as a live row) or a message row (None: never a document). The one
 /// place where the reader meets `derive.rs`.
 async fn derived_row(store: &Arc<dyn ObjectStore>, h: &RunH, key: &[u8], r: RRow) -> Result<Option<RRow>> {
@@ -444,11 +455,7 @@ impl View {
         }
         if best.is_none() {
             if let Some(s) = &g.sealed {
-                prefetch_thread(&self.store, s, key).await?;
-                best = run_get(&self.store, s, key).await?;
-                if best.as_ref().is_some_and(|r| super::derive::is_derived(&r.env)) {
-                    best = derived_row(&self.store, s, key, best.unwrap()).await?;
-                }
+                best = sealed_point(&self.store, s, key).await?;
             }
         }
         if best.is_some() {
@@ -464,7 +471,8 @@ impl View {
         let delta_f = futures::future::try_join_all(cands.iter().map(|d| run_get_counted(&self.store, d, key)));
         let sealed_f = async {
             match &g.sealed {
-                Some(s) => run_get(&self.store, s, key).await,
+                Some(s) if super::derive::fix_control(1) => run_get(&self.store, s, key).await,
+                Some(s) => sealed_point(&self.store, s, key).await,
                 None => Ok(None),
             }
         };
