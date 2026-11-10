@@ -3,24 +3,16 @@
  "control": false,
  "trials": [
   {
-   "secs": 30.0,
-   "acked_ids": 45344,
-   "acked_writes_before_kill": 90659,
+   "secs": 15.0,
+   "acked_ids": 23660,
+   "acked_writes_before_kill": 47273,
    "lost_inserts": 0,
    "lost_updates": 0,
-   "wal_puts_per_write": 0.097
-  },
-  {
-   "secs": 30.0,
-   "acked_ids": 46229,
-   "acked_writes_before_kill": 92418,
-   "lost_inserts": 0,
-   "lost_updates": 0,
-   "wal_puts_per_write": 0.071
+   "wal_puts_per_write": 0.107
   }
  ],
  "total": {
-  "acked_ids": 91573,
+  "acked_ids": 23660,
   "lost_inserts": 0,
   "lost_updates": 0
  }
