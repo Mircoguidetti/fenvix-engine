@@ -208,11 +208,13 @@ pub fn message_ranges(doc: &[u8]) -> Vec<(usize, usize)> {
     out
 }
 
-/// Calls `f(start, end)` with the payload range of every top-level binary field of a BSON document.
+/// Calls `f(start, end)` with the payload range of every top-level binary field of a BSON document. The stored value
+/// may carry bytes after the document (the server's natural-order trailer, `natural.rs`): they stay literal.
 fn bson_binaries(d: &[u8], f: &mut dyn FnMut(usize, usize)) -> Result<()> {
     ensure!(d.len() >= 5, "short");
     let n = i32::from_le_bytes(d[..4].try_into()?) as usize;
-    ensure!(n == d.len() && d[n - 1] == 0, "length");
+    ensure!(n >= 5 && n <= d.len() && d[n - 1] == 0, "length");
+    let d = &d[..n];
     let mut p = 4;
     while p < n - 1 {
         let t = d[p];
@@ -771,6 +773,10 @@ mod tests {
         // not msgpack: no ranges
         let bad = bson_doc(&[("checkpoint", 0x05, vec![0xc1, 1, 2])]);
         assert!(message_ranges(&bad).is_empty());
+        // the server's natural-order trailer after the document: the same ranges
+        let mut with_trailer = doc.clone();
+        with_trailer.extend([0xff, 0, 0, 0, 0, 0, 0, 0, 7]);
+        assert_eq!(message_ranges(&with_trailer), r);
         // trailing bytes after the msgpack value: no ranges
         let mut p2 = payload.clone();
         p2.push(0);
