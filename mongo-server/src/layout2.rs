@@ -230,7 +230,7 @@ async fn plain<R: RawScan>(raw: &R, lo: &[u8], hi: Option<&[u8]>, reverse: bool,
 async fn area<R: RawScan>(raw: &R, s: &Seg, lo: &[u8], hi: &[u8], reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
     use std::sync::atomic::Ordering::Relaxed;
     let plo = s.phys_bound(lo);
-    let phi = s.phys_bound(hi);
+    let phi = s.phys_upper_within(lo, hi);
     let mut out: Vec<(Bytes, Bytes)> = Vec::new();
     let full = |out: &Vec<(Bytes, Bytes)>| limit.map(|l| out.len() >= l).unwrap_or(false);
     if !reverse {
@@ -356,6 +356,20 @@ mod tests {
                 }
             }
         }
+        // number customers too: the end of one number's component (prefix_end) is itself a whole component, the case
+        // `Seg::phys_upper` tightens
+        for u in [1, 2, 3, 7] {
+            for coll in ["m", "m2"] {
+                for id in 0..3 {
+                    n += 1;
+                    logical.insert(doc_key(coll, Some(&key), &doc! { "_id": id, "u": u }), n.to_be_bytes().to_vec());
+                    let mut ik = Seg::index(coll.as_bytes(), b"u_1").lp;
+                    ik.extend(comp(&Bson::Int32(u)));
+                    ik.extend(crate::custkey::dsuf(Some(&key), &doc! { "_id": id, "u": u }));
+                    logical.insert(ik, n.to_be_bytes().to_vec());
+                }
+            }
+        }
         logical.insert(b"meta/collections".to_vec(), vec![1]);
         logical.insert(b"doc/plain/\x03abc".to_vec(), vec![2]);
         logical.insert(b"idx/m/k_1/\x03abc".to_vec(), vec![2]);
@@ -371,6 +385,20 @@ mod tests {
             let mut partial = s.lp.clone();
             partial.extend(&comp(&Bson::String("ab".into()))[..2]);
             bounds.push(partial);
+            // bounds that are exactly one customer component, and the end of one (a find of one customer reads
+            // [lp + c, lp + prefix_end(c)): `Seg::phys_upper` tightens such an upper bound)
+            let custs: Vec<Bson> = ["", "a", "ab", "abc", "b", "zz", "aa", "c"].iter().map(|u| Bson::String(u.to_string())).chain([1, 2, 3, 5, 7].map(Bson::Int32)).collect();
+            for u in &custs {
+                let c = comp(u);
+                let mut b = s.lp.clone();
+                b.extend(&c);
+                bounds.push(b.clone());
+                if let Some(e) = crate::keyenc::prefix_end(&c) {
+                    let mut b2 = s.lp.clone();
+                    b2.extend(e);
+                    bounds.push(b2);
+                }
+            }
         }
         let mut checked = 0;
         for (i, lo) in bounds.iter().enumerate() {

@@ -1,0 +1,699 @@
+warning: unused import: `std::sync::atomic::Ordering::Relaxed`
+    --> src/lifecycle.rs:1082:13
+     |
+1082 |         use std::sync::atomic::Ordering::Relaxed;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tenant-bench` (lib) generated 1 warning (run `cargo fix --lib -p tenant-bench` to apply 1 suggestion)
+warning: value assigned to `w0` is never read
+   --> proto/quaderno/src/node.rs:975:18
+    |
+975 |             let (mut w0, mut c0) = (Instant::now(), 0);
+    |                  ^^^^^^ this value is reassigned later and never used
+...
+979 |                     (w0, c0) = (Instant::now(), thread_cpu_us());
+    |                      -- `w0` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `c0` is never read
+   --> proto/quaderno/src/node.rs:975:26
+    |
+975 |             let (mut w0, mut c0) = (Instant::now(), 0);
+    |                          ^^^^^^ this value is reassigned later and never used
+...
+979 |                     (w0, c0) = (Instant::now(), thread_cpu_us());
+    |                          -- `c0` is overwritten here before the previous value is read
+
+warning: value assigned to `cur_end` is never read
+   --> proto/quaderno/src/store.rs:223:33
+    |
+223 | ...                       cur_end = 0;
+    |                           ^^^^^^^^^^^ this value is reassigned later and never used
+...
+230 | ...                   cur_end = off + buf.len() as u64;
+    |                       -------------------------------- `cur_end` is overwritten here before the previous value is read
+
+warning: `quaderno` (lib) generated 3 warnings
+warning: unused import: `path_values`
+ --> mongo-server/src/agg.rs:6:85
+  |
+6 | use crate::query::{self, compare, is_number, matches, parse_projection, parse_sort, path_values, project, sort_docs};
+  |                                                                                     ^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `base64::engine::general_purpose::STANDARD as B64`
+ --> mongo-server/src/auth.rs:9:5
+  |
+9 | use base64::engine::general_purpose::STANDARD as B64;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `base64::Engine`
+  --> mongo-server/src/auth.rs:10:5
+   |
+10 | use base64::Engine;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `crate::agg::run_pipeline`
+ --> mongo-server/src/cmd.rs:3:5
+  |
+3 | use crate::agg::run_pipeline;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `doc_prefix`, `encode_sortable`, and `index_key`
+ --> mongo-server/src/cmd.rs:6:21
+  |
+6 | use crate::layout::{doc_prefix, encode_sortable, index_key};
+  |                     ^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused imports: `id_equality`, `parse_projection`, `parse_sort`, `path_values`, `project`, `self`, and `sort_docs`
+ --> mongo-server/src/cmd.rs:7:20
+  |
+7 | use crate::query::{self, id_equality, matches, parse_projection, parse_sort, path_values, project, sort_docs};
+  |                    ^^^^  ^^^^^^^^^^^           ^^^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^
+
+warning: unused imports: `apply_update`, `fmt_doc`, and `upsert_document`
+ --> mongo-server/src/cmd.rs:8:21
+  |
+8 | use crate::update::{apply_update, fmt_doc, upsert_document};
+  |                     ^^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^^
+
+warning: unused imports: `parse_projection` and `project`
+  --> mongo-server/src/cmd_data.rs:12:26
+   |
+12 | use crate::query::{self, parse_projection, parse_sort, path_values, project, sort_docs};
+   |                          ^^^^^^^^^^^^^^^^                           ^^^^^^^
+
+warning: unused import: `Hint`
+ --> mongo-server/src/cmd_index.rs:5:72
+  |
+5 | use crate::coll::{decode, find_docs, plan_for, resolve_hint, FindOpts, Hint};
+  |                                                                        ^^^^
+
+warning: unused import: `valid_db_name`
+ --> mongo-server/src/cmd_index.rs:7:18
+  |
+7 | use crate::dbs::{valid_db_name, Dbs, Entry};
+  |                  ^^^^^^^^^^^^^
+
+warning: unused import: `encode_sortable`
+  --> mongo-server/src/cmd_index.rs:11:33
+   |
+11 | use crate::layout::{doc_prefix, encode_sortable, idx_collection_prefix, index_key};
+   |                                 ^^^^^^^^^^^^^^^
+
+warning: unused import: `path_values`
+  --> mongo-server/src/cmd_index.rs:12:32
+   |
+12 | use crate::query::{parse_sort, path_values};
+   |                                ^^^^^^^^^^^
+
+warning: unused import: `is_number`
+ --> mongo-server/src/expr.rs:8:44
+  |
+8 | use crate::query::{as_f64, compare, equal, is_number};
+  |                                            ^^^^^^^^^
+
+warning: unnecessary parentheses around match arm expression
+   --> mongo-server/src/expr/dates.rs:142:28
+    |
+142 |                 "$week" => ((l.ordinal0() as i32 + 7 - wd_sun) / 7),
+    |                            ^                                      ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+142 -                 "$week" => ((l.ordinal0() as i32 + 7 - wd_sun) / 7),
+142 +                 "$week" => (l.ordinal0() as i32 + 7 - wd_sun) / 7,
+    |
+
+warning: unused import: `BTreeSet`
+  --> mongo-server/src/index.rs:16:34
+   |
+16 | use std::collections::{BTreeMap, BTreeSet, HashMap};
+   |                                  ^^^^^^^^
+
+warning: unused import: `doc`
+  --> mongo-server/src/wild.rs:14:12
+   |
+14 | use bson::{doc, Bson, Document};
+   |            ^^^
+
+warning: variable does not need to be mutable
+   --> mongo-server/src/cmd_index.rs:816:21
+    |
+816 |                 let mut r = run_builds(&self.dbs, db, coll).await;
+    |                     ----^
+    |                     |
+    |                     help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `ObjectStoreExt`
+  --> mongo-server/src/ttl.rs:12:33
+   |
+12 | use object_store::{ObjectStore, ObjectStoreExt};
+   |                                 ^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+    --> mongo-server/src/opening.rs:1363:26
+     |
+1363 |         let (mut served, mut evicted_pending) = (0u64, STATS.evicted_pending.load(Relaxed));
+     |                          ----^^^^^^^^^^^^^^^
+     |                          |
+     |                          help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> mongo-server/src/agg_more.rs:764:13
+    |
+764 |         let mut emit_grid_upto = |limit: Option<&Bson>, out: &mut Vec<Document>, gi: &mut usize, inclusive_skip: Option<&Bson>| {
+    |             ----^^^^^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> mongo-server/src/changes.rs:347:9
+    |
+347 |     let mut note = |p: &str, updated: &mut Document, removed: &mut Vec<Bson>| {
+    |         ----^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: unused variable: `detail`
+   --> mongo-server/src/ctl/pitr.rs:330:74
+    |
+330 | ...te::dbs::Entry, db: &str, detail: &Value, target: i64, opid: &str, pid: uuid::Uuid, apply: bool) -> ApiResult<Value> {
+    |                              ^^^^^^ help: if this is intentional, prefix it with an underscore: `_detail`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `batch_bytes` is never read
+   --> mongo-server/src/ctl/pitr.rs:440:17
+    |
+440 |                 batch_bytes = 0;
+    |                 ^^^^^^^^^^^^^^^
+...
+490 |     flush!();
+    |     -------- in this macro invocation
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+    = note: this warning originates in the macro `flush` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: value assigned to `applying` is never read
+   --> mongo-server/src/ctl/pitr.rs:437:21
+    |
+437 |                     applying = true;
+    |                     ^^^^^^^^^^^^^^^
+...
+490 |     flush!();
+    |     -------- in this macro invocation
+    |
+    = help: maybe it is overwritten before being read?
+    = note: this warning originates in the macro `flush` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unused variable: `asc`
+   --> mongo-server/src/index.rs:380:16
+    |
+380 |     for (path, asc) in t.prefix.iter().chain(t.suffix.iter()) {
+    |                ^^^ help: if this is intentional, prefix it with an underscore: `_asc`
+
+warning: variable does not need to be mutable
+   --> mongo-server/src/text.rs:418:9
+    |
+418 |     let mut uniq = |ts: Vec<String>| -> Vec<String> {
+    |         ----^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> mongo-server/src/update.rs:162:9
+    |
+162 |     let mut add = |path: &str, seen: &mut Vec<Vec<String>>| -> R<()> {
+    |         ----^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: function `add_numbers` is never used
+  --> mongo-server/src/agg.rs:12:4
+   |
+12 | fn add_numbers(a: &Bson, b: &Bson) -> Bson {
+   |    ^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `int` is never used
+  --> mongo-server/src/agg.rs:26:4
+   |
+26 | fn int(v: &Bson) -> i64 {
+   |    ^^^
+
+warning: function `loc_key_of_suffix` is never used
+   --> mongo-server/src/custkey.rs:238:8
+    |
+238 | pub fn loc_key_of_suffix(coll: &str, timed: bool, suf: &[u8]) -> Option<Vec<u8>> {
+    |        ^^^^^^^^^^^^^^^^^
+
+warning: methods `bytes` and `entries` are never used
+   --> mongo-server/src/opening.rs:174:12
+    |
+169 | impl Opening {
+    | ------------ methods in this implementation
+...
+174 |     pub fn bytes(&self) -> usize {
+    |            ^^^^^
+...
+178 |     pub fn entries(&self) -> usize {
+    |            ^^^^^^^
+
+warning: field `coll` is never read
+  --> mongo-server/src/prefetch.rs:52:5
+   |
+45 | struct Window {
+   |        ------ field in this struct
+...
+52 |     coll: String,
+   |     ^^^^
+
+warning: function `counts` is never used
+   --> mongo-server/src/capped.rs:146:14
+    |
+146 | pub async fn counts(g: &mut Entry, coll: &str) -> anyhow::Result<(i64, i64)> {
+    |              ^^^^^^
+
+warning: field `closed` is never read
+  --> mongo-server/src/cmd_changes.rs:38:9
+   |
+26 | pub struct ChangeCursor {
+   |            ------------ field in this struct
+...
+38 |     pub closed: bool,
+   |         ^^^^^^
+
+warning: field `stored` is never read
+   --> mongo-server/src/collation.rs:319:5
+    |
+316 | struct Parsed {
+    |        ------ field in this struct
+...
+319 |     stored: Document,
+    |     ^^^^^^
+
+warning: struct `Plan` is never constructed
+   --> mongo-server/src/ctl/pitr.rs:222:12
+    |
+222 | pub struct Plan {
+    |            ^^^^
+
+warning: field `marks` is never read
+   --> mongo-server/src/ctl/usage.rs:116:5
+    |
+111 | struct Inner {
+    |        ----- field in this struct
+...
+116 |     marks: HashMap<String, Counts>,
+    |     ^^^^^
+
+warning: method `mark` is never used
+   --> mongo-server/src/ctl/usage.rs:245:12
+    |
+146 | impl Usage {
+    | ---------- method in this implementation
+...
+245 |     pub fn mark(&self, db: &str) {
+    |            ^^^^
+
+warning: method `opts_cached` is never used
+    --> mongo-server/src/dbs.rs:1102:12
+     |
+ 458 | impl Entry {
+     | ---------- method in this implementation
+...
+1102 |     pub fn opts_cached(&self, coll: &str) -> Option<Arc<crate::collopts::CollOpts>> {
+     |            ^^^^^^^^^^^
+
+warning: associated function `duplicate_key` is never used
+  --> mongo-server/src/error.rs:48:12
+   |
+13 | impl MongoError {
+   | --------------- associated function in this implementation
+...
+48 |     pub fn duplicate_key(ns: &str, index: &str, pattern: &Document, value: &Document) -> Self {
+   |            ^^^^^^^^^^^^^
+
+warning: function `date_to_string` is never used
+   --> mongo-server/src/expr.rs:941:4
+    |
+941 | fn date_to_string(arg: &Bson, sc: &Scope) -> R<Option<Bson>> {
+    |    ^^^^^^^^^^^^^^
+
+warning: method `key_value` is never used
+   --> mongo-server/src/index.rs:335:12
+    |
+ 83 | impl IndexDef {
+    | ------------- method in this implementation
+...
+335 |     pub fn key_value(&self, d: &Document) -> Document {
+    |            ^^^^^^^^^
+
+warning: function `id_enc` is never used
+    --> mongo-server/src/index.rs:1316:8
+     |
+1316 | pub fn id_enc(id: &Bson) -> Vec<u8> {
+     |        ^^^^^^
+
+warning: function `index_summary` is never used
+    --> mongo-server/src/index.rs:1367:8
+     |
+1367 | pub fn index_summary(idx: &IndexDef) -> Document {
+     |        ^^^^^^^^^^^^^
+
+warning: function `drop_prefixes` is never used
+  --> mongo-server/src/natural.rs:69:8
+   |
+69 | pub fn drop_prefixes(coll: &str) -> Vec<Vec<u8>> {
+   |        ^^^^^^^^^^^^^
+
+warning: methods `needs_geo_near` and `needs_text_score` are never used
+    --> mongo-server/src/query.rs:1229:12
+     |
+1228 | impl Projection {
+     | --------------- methods in this implementation
+1229 |     pub fn needs_geo_near(&self) -> bool {
+     |            ^^^^^^^^^^^^^^
+...
+1233 |     pub fn needs_text_score(&self) -> bool {
+     |            ^^^^^^^^^^^^^^^^
+
+warning: method `is_point_like` is never used
+   --> mongo-server/src/geo.rs:451:12
+    |
+435 | impl Shape {
+    | ---------- method in this implementation
+...
+451 |     pub fn is_point_like(&self) -> bool {
+    |            ^^^^^^^^^^^^^
+
+warning: function `point_doc` is never used
+   --> mongo-server/src/geo.rs:931:8
+    |
+931 | pub fn point_doc(v: &V) -> Bson {
+    |        ^^^^^^^^^
+
+warning: field `lang` is never read
+   --> mongo-server/src/text.rs:362:9
+    |
+355 | pub struct TextQuery {
+    |            --------- field in this struct
+...
+362 |     pub lang: Option<Lang>,
+    |         ^^^^
+    |
+    = note: `TextQuery` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: function `as_f64` is never used
+  --> mongo-server/src/wild.rs:23:4
+   |
+23 | fn as_f64(v: &Bson) -> Option<f64> {
+   |    ^^^^^^
+
+warning: function `put_str` is never used
+  --> mongo-server/src/wild.rs:33:4
+   |
+33 | fn put_str(out: &mut Vec<u8>, s: &str) {
+   |    ^^^^^^^
+
+warning: function `read_request` is never used
+  --> mongo-server/src/wire.rs:57:14
+   |
+57 | pub async fn read_request<R: AsyncRead + Unpin>(r: &mut R) -> Result<Option<Request>> {
+   |              ^^^^^^^^^^^^
+
+warning: field `on_given` is never read
+   --> mongo-server/src/xdb.rs:224:9
+    |
+218 | pub struct MergeSpec {
+    |            --------- field in this struct
+...
+224 |     pub on_given: bool,
+    |         ^^^^^^^^
+
+warning: function `ok_doc` is never used
+   --> mongo-server/src/xdb.rs:339:8
+    |
+339 | pub fn ok_doc() -> Document {
+    |        ^^^^^^
+
+warning: value assigned to `last_ci` is never read
+   --> loadgen/src/main.rs:555:27
+    |
+555 |         let mut last_ci = 0usize;
+    |                           ^^^^^^ this value is reassigned later and never used
+...
+569 |             last_ci = rng.gen_range(0..self.clients.len());
+    |             ---------------------------------------------- `last_ci` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `mongo-server` (bin "mongo-server" test) generated 54 warnings (run `cargo fix --bin "mongo-server" -p mongo-server --tests` to apply 24 suggestions)
+warning: `loadgen` (bin "loadgen" test) generated 1 warning
+warning: unnecessary parentheses around closure body
+    --> src/warm.rs:1211:42
+     |
+1211 |                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+     |                                          ^                                ^
+     |
+     = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+     |
+1211 -                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+1211 +                     (0..40).flat_map(|c| c * (n / 40)..c * (n / 40) + per).collect()
+     |
+
+warning: `tenant-bench` (lib test) generated 2 warnings (1 duplicate) (run `cargo fix --lib -p tenant-bench --tests` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 0.33s
+     Running unittests src/main.rs (target/release/deps/loadgen-825ed057cb04cc59)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/porta.rs (target/release/deps/porta-3629c864d8f20ede)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/release/deps/mongo_server-caba93c1c54fc579)
+
+running 96 tests
+test agg::tests::group_accumulators ... ok
+test agg::tests::count_via_match_group ... ok
+test collstat::tests::round_trip_and_apply ... ok
+test custkey::tests::areas_from_bounds ... ok
+test custkey::tests::bounds_between_customers_keep_order ... ok
+test authz::grantable_tests::grantable_values ... ok
+test custkey::tests::config_matches_db_and_collection ... ok
+test collstat::tests::key_escapes_the_name ... ok
+test custkey::tests::missing_is_null_and_the_time_field_sits_before_the_id ... ok
+test custkey::tests::run_format_finds_the_customer_component_of_server_keys ... ok
+test custkey::tests::one_customer_shares_a_prefix_whatever_the_number_type ... ok
+test expr::tests::arithmetic_types ... ok
+test expr::tests::dates ... ok
+test agg::tests::project_add_fields_unwind_lookup ... ok
+test fair::tests::bucket_refills_up_to_burst ... ok
+test expr::tests::cond_ifnull_and_paths ... ok
+test custkey::tests::keys_map_both_ways_and_keep_order ... ok
+test fair::tests::least_used_database_goes_first ... ok
+test fair::tests::usage_decays_by_half_life ... ok
+test fair::tests::weights_parse ... ok
+test geo_query::tests::square_contains ... ok
+test geo_query::tests::covering_contains_point_cell ... ok
+test geo_query::tests::match_points ... ok
+test hostinfo::tests::counts_physical_cores_and_sockets ... ok
+test hostinfo::tests::host_info_is_this_machine ... ok
+test hostinfo::tests::parses_meminfo_and_cgroup ... ok
+test index::tests::entry_id_roundtrip ... ok
+test index::tests::equality_prefix_then_range ... ok
+test index::tests::multikey_entries_dedupe_and_flag ... ok
+test index::tests::parallel_arrays_rejected ... ok
+test index::tests::sparse_and_partial_skip_documents ... ok
+test js::tests::function_returns_bson ... ok
+test js::tests::key_order_is_kept ... ok
+test js::tests::errors_and_limits ... ok
+test keyenc::tests::bytes_follow_mongodb_order ... ok
+test keyenc::tests::components_are_prefix_free ... ok
+test keyenc::tests::compound_keys_sort_component_by_component ... ok
+test keyenc::tests::equal_numbers_encode_identically ... ok
+test keyenc::tests::prefix_end_bounds_a_prefix ... ok
+test keyenc::tests::skip_finds_the_end_of_every_component ... ok
+test js::tests::where_expression_and_function ... ok
+test js::tests::map_reduce_groups ... ok
+test layout::tests::large_int64_ids_stay_distinct ... ok
+test layout::tests::collection_prefixes_do_not_overlap ... ok
+test layout::tests::numbers_equal_across_types_and_sorted ... ok
+test layout::tests::types_group_in_bson_order ... ok
+test netguard::tests::blocks_per_address_and_per_database ... ok
+test netguard::tests::connection_slots ... ok
+test netguard::tests::defaults_of_the_flags ... ok
+test netguard::tests::ipv6_is_counted_by_its_prefix_and_trusted_is_never_blocked ... ok
+test netguard::tests::matches_boundaries ... ok
+test netguard::tests::parses_and_canonicalizes ... ok
+test netguard::tests::per_database_limit ... ok
+test netguard::tests::many_authenticated_connections_from_one_address ... ok
+test netguard::tests::progressive_blocks ... ok
+test netguard::tests::refuses_bad_entries ... ok
+test netguard::tests::total_limit_of_the_process ... ok
+test netguard::tests::total_per_address_limit_when_set ... ok
+test opening::tests::a_trim_keeps_consecutive_scans_of_one_query_together ... ok
+test netguard::tests::total_limit_default_follows_the_open_files ... ok
+test opening::tests::apply_keeps_the_byte_count_exact ... ok
+test js::tests::command_budget_spans_calls ... ok
+test opening::tests::a_visit_of_three_queries_is_kept_and_follows_writes ... ok
+test opening::tests::fix_eviction_takes_the_least_recently_visited_first ... ok
+test opening::tests::reads_outside_the_users_regions_make_the_opening_unkeepable ... ok
+test opening::tests::newest_first_page_is_served_after_new_messages_and_misses_after_a_delete ... ok
+test opening::tests::regions_of_different_users_never_overlap ... ok
+test opening::tests::review_a_pending_opening_obeys_the_size_cap ... ok
+test opening::tests::review_pending_openings_stay_inside_the_memory_budget ... ok
+test query::tests::arrays_and_paths ... ok
+test query::tests::logic ... ok
+test query::tests::mixed_type_order ... ok
+test query::tests::null_and_exists ... ok
+test query::tests::numbers_compare_across_types ... ok
+test query::tests::projection_slice ... ok
+test query::tests::regex_and_array_operators ... ok
+test query::tests::sort_and_projection ... ok
+test query::tests::top_k_equals_sort_then_truncate ... ok
+test query::tests::type_bracketing ... ok
+test regex::tests::errors_have_mongodb_codes ... ok
+test regex::tests::options_and_lookaround ... ok
+test search::tests::analyzer ... ok
+test search::tests::fuzzy_and_phrase ... ok
+test text::tests::query_parsing ... ok
+test text::tests::scores_match_mongodb ... ok
+test text::tests::stems_before_stripping_diacritics ... ok
+test update::tests::array_operators ... ok
+test update::tests::formatting ... ok
+test update::tests::inc_types ... ok
+test update::tests::modifiers_apply_in_path_order ... ok
+test update::tests::replacement_keeps_id_and_rejects_change ... ok
+test update::tests::set_unset_inc ... ok
+test update::tests::upsert_builds_from_filter ... ok
+test opening::tests::served_answers_equal_storage_under_random_writes_and_trims ... ok
+test opening::tests::fix_random_visits_and_writes_keep_cap_budget_and_exactness ... ok
+test layout2::tests::mapped_reads_equal_logical_reads ... ok
+
+test result: ok. 96 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.95s
+
+     Running unittests src/lib.rs (target/release/deps/tenant_bench-7e9b295a73d4ec28)
+
+running 73 tests
+test counter::tests::rev_bookkeeping_sizes ... ok
+test counter::tests::canon_ignores_the_scope ... ok
+test counter::tests::exit_rule_protects_what_comes_back ... ok
+test counter::tests::two_floors_end_to_end ... ok
+test envelope::tests::rows_above_the_marker_are_envelopes ... ok
+test fx::counter_bench::counter_ram ... ignored
+test fx::counter_bench::counter_reseal ... ignored
+test counter::tests::rev_passing_wave_read_twice ... ok
+test counter::tests::rev_passing_wave_read_once ... ok
+test fx::counter_tests::absent_customers_cost_no_gets ... ok
+test counter::tests::rev_maps_leave_room_for_active_data ... FAILED
+test fx::counter_tests::slices_are_exact_under_writes_and_reseals ... ok
+test fx::counter_tests::slices_keep_only_the_read_area_and_answer_exactly ... ok
+test fx::counter_tests::staged_publish_keeps_hot_customers_warm_across_a_reseal ... ok
+test fx::counter_tests::staged_publish_past_its_deadline_publishes_anyway ... ok
+test fx::tests::a_late_put_of_a_dead_process_is_refused_by_the_fence ... ok
+test fx::tests::a_reader_refuses_past_t_pin_and_refreshes ... ok
+test fx::tests::hot_get_p50 ... ignored
+test fx::tests::a_run_replaced_at_its_path_is_an_error ... ok
+test fx::tests::envelopes_start_one_t_pin_after_the_announcement ... ok
+test fx::tests::holds_floor_revocation_and_snapshots_across_publishes ... ok
+test fx::tests::version_check_refuses_broken_versions ... ok
+test lifecycle::tests::abandon_does_not_wait_for_a_full_l0 ... ok
+test lifecycle::tests::abandon_reports_an_unfinished_close ... ok
+test lifecycle::tests::always_failing_compaction_is_not_retried_every_round ... ok
+test lifecycle::tests::compaction_pass_ends_when_stop_hangs ... ok
+test lifecycle::tests::compaction_pass_ends_when_stopped_while_starting ... ok
+test lifecycle::tests::compaction_pass_longer_than_its_stall_window_finishes ... ok
+test lifecycle::tests::compaction_pass_stops_when_preempted ... ok
+test lifecycle::tests::failed_compaction_backs_off ... ok
+test lifecycle::tests::maintenance_log_keeps_the_last_errors ... ok
+test meter::tests::background_work_is_charged_to_no_command ... ok
+test meter::tests::cache_reports_usage ... ok
+test meter::tests::op_meter_counts_only_inside_its_scope ... ok
+test meter::tests::spawned_reads_go_to_the_commands_of_their_database ... ok
+test runfmt::tests::a_customer_inside_one_block_costs_one_get_and_an_absent_one_none ... ok
+test runfmt::tests::block_size_knob_is_checked ... ok
+test runfmt::tests::customer_components_are_found_in_both_layouts ... ok
+test runfmt::tests::customer_filter_has_no_false_negatives_and_few_false_positives ... ok
+test runfmt::tests::default_and_64k_blocks_round_trip ... ok
+test runfmt::tests::envelopes_and_successors ... ok
+test runfmt::tests::every_flipped_bit_of_a_small_run_is_an_error ... ok
+test runfmt::tests::multipart_parts_and_visibility ... ok
+test runfmt::tests::newest_reads_match_an_exact_model_across_block_and_run_boundaries ... ok
+test runfmt::tests::opening_costs_one_get_for_a_footer_under_the_open_tail ... ok
+test runfmt::tests::overlapping_runs_are_refused ... ok
+test runfmt::tests::random_flipped_bits_of_a_large_run_are_errors ... ok
+test runfmt::tests::random_reads_match_an_exact_model ... ok
+test runfmt::tests::review_blocks_of_one_run_with_the_footer_of_another_are_an_error ... ok
+test fx::tests::model_publish_every_100_ops_with_crashes has been running for over 60 seconds
+test fx::tests::read_no_cut_trace has been running for over 60 seconds
+test fx::tests::rows_at_or_below_xd_come_from_the_runs has been running for over 60 seconds
+test runfmt::tests::review_fuzz_odd_keys_match_an_exact_model ... ok
+test runfmt::tests::runs_get_distinct_ids_and_open_expecting_checks_them ... ok
+test runfmt::tests::writer_checks_order_and_envelopes ... ok
+test simstore::tests::split_get_returns_the_same_bytes ... ok
+test simstore::tests::trips_count_waves_not_requests ... ok
+test tiered::tests::check_accepts_and_refuses ... ok
+test tiered::tests::tiered_keeps_runs_few_and_newest_versions ... ok
+test tiered::tests::with_validate_the_wrong_job_is_refused ... ok
+test tiered::tests::without_validate_a_read_returns_an_old_version ... ok
+test warm::probe_cost::probe_cost ... ignored
+test warm::tests::big_db_slow_store ... ignored
+test warm::tests::cache_key_round_trip ... ok
+test fx::tests::model_publish_every_100_ops_with_crashes ... ok
+test warm::tests::rev_c9::key_memory_cap ... ignored
+test warm::tests::rev_c9::l0_watch_stops_a_running_warm_up ... ignored
+test warm::tests::rev_c9::limits_and_faults ... ignored
+test warm::tests::rev_c9::many_dbs_at_once ... ignored
+test warm::tests::rev_c9::variants ... ignored
+test warm::tests::rev_c9::writes_during_slow_warm ... ignored
+test warm::tests::runs_of_blocks ... ok
+test fx::tests::read_no_cut_trace ... ok
+test fx::tests::rows_at_or_below_xd_come_from_the_runs ... ok
+test warm::tests::writes_and_reads_during_the_switch ... ok
+test warm::tests::hot_reads_stay_in_cache_after_compaction ... ok
+
+failures:
+
+---- counter::tests::rev_maps_leave_room_for_active_data stdout ----
+REV wave 1: maps 480120 B, data 3144 B, protected 0 B, promoted 0
+REV maps crowd out data: hot hits 0 misses 78
+
+thread 'counter::tests::rev_maps_leave_room_for_active_data' (17220) panicked at src/counter.rs:1019:9:
+pinned maps left no RAM for the active clients: 0 hits, 78 misses
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: tenant_bench::counter::tests::rev_maps_leave_room_for_active_data::{closure#0}
+   3: <tokio::runtime::scheduler::current_thread::Context>::enter::<core::task::poll::Poll<()>, <tokio::runtime::scheduler::current_thread::CoreGuard>::block_on<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>::{closure#0}::{closure#0}>
+   4: <tokio::runtime::context::scoped::Scoped<tokio::runtime::scheduler::Context>>::set::<<tokio::runtime::scheduler::current_thread::CoreGuard>::enter<<tokio::runtime::scheduler::current_thread::CoreGuard>::block_on<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>::{closure#0}, core::option::Option<()>>::{closure#0}, (alloc::boxed::Box<tokio::runtime::scheduler::current_thread::Core>, core::option::Option<()>)>
+   5: <tokio::runtime::scheduler::current_thread::CoreGuard>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   6: tokio::runtime::context::runtime::enter_runtime::<<tokio::runtime::scheduler::current_thread::CurrentThread>::block_on<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>::{closure#0}, ()>
+   7: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   8: tenant_bench::counter::tests::rev_maps_leave_room_for_active_data
+   9: <tenant_bench::counter::tests::rev_maps_leave_room_for_active_data::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+
+failures:
+    counter::tests::rev_maps_leave_room_for_active_data
+
+test result: FAILED. 61 passed; 1 failed; 11 ignored; 0 measured; 0 filtered out; finished in 153.80s
+
+error: test failed, to rerun pass `-p tenant-bench --lib`

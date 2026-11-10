@@ -1,0 +1,1 @@
+FX_MODEL control="" slices="Area trim_ms=2 trims=1068 trim_drops=1 refetches=7" seed=20261108 ops=30000 wrong=0 writes=11419 gets=7768 scans=8802 snapshot_reads=1326 reader_mode_reads=1225 publishes=268 crashes=47 fail_after_runs=16 fail_after_publish=6 refreshes=2 slatedb_compactions=7 final_version=335 groups=10 delta_runs=13 rows_from_runs=1396604 versions_in_store=335

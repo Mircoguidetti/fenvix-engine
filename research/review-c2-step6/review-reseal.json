@@ -1,0 +1,45 @@
+{
+  "block_kb": 256,
+  "results": [
+    {
+      "hot": 400,
+      "next_visit_gets": 1,
+      "pattern": "newest20",
+      "per_hot_after_next_visit_trimmed": 50251.1975,
+      "per_hot_after_stage": 53649.5025,
+      "per_hot_before": 11739.345,
+      "stage": {
+        "gets": 347,
+        "held": 816,
+        "millis": 97,
+        "missed": 0,
+        "retired_runs": 2,
+        "timed_out": false,
+        "wanted": 878,
+        "warmed": 878
+      },
+      "stage_gets": 347
+    },
+    {
+      "hot": 400,
+      "next_visit_gets": 9,
+      "pattern": "newest20+oldest20",
+      "per_hot_after_next_visit_trimmed": 1730023.1775,
+      "per_hot_after_stage": 1935829.915,
+      "per_hot_before": 74889.9375,
+      "stage": {
+        "gets": 248,
+        "held": 1211,
+        "millis": 912,
+        "missed": 0,
+        "retired_runs": 2,
+        "timed_out": false,
+        "wanted": 3708,
+        "warmed": 3708
+      },
+      "stage_gets": 248
+    }
+  ],
+  "test": "review_reseal_patterns",
+  "users": 2000
+}

@@ -59,8 +59,11 @@ pub const DEFAULT_PART: usize = 16 << 20;
 /// Bytes read from the end of a run when it is opened: the trailer and, for runs up to about 1.5 GB at 256 KiB blocks,
 /// the whole footer, so opening costs one GET (two when the footer is larger).
 pub const OPEN_TAIL: u64 = 256 << 10;
-/// Customer filter: bits per customer (about 0.8% false positives with 7 hashes, ESTIMATED from the Bloom formula).
-pub const FILTER_BITS_PER_CUSTOMER: u64 = 10;
+/// Bits per customer of a new run's customer filter (`--sealed-filter-bits`). The footer stores the filter's size, so a
+/// reader reads runs written with any value. Step 1 wrote 10 (about 0.8% false positives per run); step 6 raised the
+/// default to 16 (about 0.07% per run, MEASURED in `fx::counter_tests`), because an absent customer is checked against
+/// every run that can hold it (the sealed run and each delta run) and the plan asks for at most 1% per read.
+pub static FILTER_BITS_PER_CUSTOMER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(16);
 const FILTER_SEED: u64 = 0x4658_5231_6669_6c74; // "FXR1filt"
 
 /// The CRC of a stored block: over the run id, the block index and the lz4 bytes.
@@ -129,8 +132,12 @@ pub enum CustomerKind {
     /// Today's customer-keyed document keys (`custkey.rs` on branch `compaction`):
     /// `doc/{escaped collection}/{component}{_id}`, component = length byte + `encode_sortable` of the customer value.
     DocV1 = 1,
-    /// Key layout v2 of the plan (build step 2): `u/{component}/...`.
+    /// Key layout v2 of the plan (build step 2): `u/{component}/...`, the component read as a length byte and its bytes.
+    /// The server's real components are not framed that way (see V2K); kept so runs written with it read the same.
     V2 = 2,
+    /// Key layout v2 as the server writes it (`custkey.rs`, compaction 2 step 6): `u/{component}{collection}/...`, the
+    /// component a `keyenc` encoding of the customer value, self-delimiting (its type byte and its body).
+    V2K = 3,
 }
 
 impl CustomerKind {
@@ -139,6 +146,7 @@ impl CustomerKind {
             0 => CustomerKind::None,
             1 => CustomerKind::DocV1,
             2 => CustomerKind::V2,
+            3 => CustomerKind::V2K,
             _ => anyhow::bail!("corrupt run: customer kind {b}"),
         })
     }
@@ -146,8 +154,14 @@ impl CustomerKind {
     /// Where the customer component (length byte included) sits in `key`, or None if the key has no customer
     /// (the shared keyspace: collections without a customer key, `loc/`, global indexes).
     pub fn customer_of(self, key: &[u8]) -> Option<Range<usize>> {
+        if self == CustomerKind::V2K {
+            let t = key.strip_prefix(b"u/")?;
+            let n = keyenc_skip(t)?;
+            return (n > 0).then_some(2..2 + n);
+        }
         let start = match self {
             CustomerKind::None => return None,
+            CustomerKind::V2K => unreachable!(),
             CustomerKind::V2 => {
                 if !key.starts_with(b"u/") {
                     return None;
@@ -170,6 +184,87 @@ impl CustomerKind {
     }
 }
 
+/// The length of the one `keyenc` component at the start of `b` (a copy of `mongo-server/src/keyenc.rs` `skip`, which
+/// this crate cannot import; a test in `custkey.rs` checks the two agree on the server's keys).
+pub fn keyenc_skip(b: &[u8]) -> Option<usize> {
+    fn take(b: &[u8], i: &mut usize, n: usize) -> Option<()> {
+        if *i + n > b.len() {
+            return None;
+        }
+        *i += n;
+        Some(())
+    }
+    fn escaped(b: &[u8], i: &mut usize) -> Option<()> {
+        loop {
+            let x = *b.get(*i)?;
+            *i += 1;
+            if x == 0 {
+                let y = *b.get(*i)?;
+                *i += 1;
+                match y {
+                    1 => return Some(()),
+                    0xFF => continue,
+                    _ => return None,
+                }
+            }
+        }
+    }
+    fn val(b: &[u8], i: &mut usize) -> Option<()> {
+        let rank = *b.get(*i)?;
+        *i += 1;
+        body(rank, b, i)
+    }
+    fn body(rank: u8, b: &[u8], i: &mut usize) -> Option<()> {
+        match rank {
+            1 | 20 => Some(()),
+            2 => take(b, i, 1),
+            3 => {
+                let x = *b.get(*i)?;
+                *i += 1;
+                if x == 1 {
+                    take(b, i, 16)
+                } else {
+                    Some(())
+                }
+            }
+            4 | 12 | 13 | 14 | 15 => {
+                escaped(b, i)?;
+                if rank == 12 {
+                    escaped(b, i)?;
+                }
+                Some(())
+            }
+            5 => loop {
+                let r = *b.get(*i)?;
+                *i += 1;
+                if r == 0 {
+                    return Some(());
+                }
+                escaped(b, i)?;
+                body(r, b, i)?;
+            },
+            6 => loop {
+                if *b.get(*i)? == 0 {
+                    *i += 1;
+                    return Some(());
+                }
+                val(b, i)?;
+            },
+            7 => {
+                let n = u32::from_be_bytes(b.get(*i..*i + 4)?.try_into().ok()?) as usize;
+                take(b, i, 4 + 1 + n)
+            }
+            8 => take(b, i, 12),
+            9 => take(b, i, 1),
+            10 | 11 => take(b, i, 8),
+            _ => None,
+        }
+    }
+    let mut i = 0;
+    val(b, &mut i)?;
+    Some(i)
+}
+
 fn customer_hash(comp: &[u8]) -> u64 {
     twox_hash::XxHash64::oneshot(FILTER_SEED, comp)
 }
@@ -187,7 +282,7 @@ impl CustomerFilter {
         if hs.is_empty() {
             return CustomerFilter { hashes: 0, bits: 0, data: Box::new([]) };
         }
-        let bits = (hs.len() as u64 * FILTER_BITS_PER_CUSTOMER).max(64).div_ceil(8) * 8;
+        let bits = (hs.len() as u64 * FILTER_BITS_PER_CUSTOMER.load(std::sync::atomic::Ordering::Relaxed).max(1)).max(64).div_ceil(8) * 8;
         let hashes = 7u8;
         let mut data = vec![0u8; (bits / 8) as usize];
         for &h in hs {
@@ -904,7 +999,7 @@ impl Run {
 
     /// Whether keys in [lo, hi) can be in this run by its key bounds and, when the range lies inside one customer, by
     /// its customer filter.
-    fn may_hold(&self, lo: &[u8], hi: Option<&[u8]>) -> bool {
+    pub fn may_hold(&self, lo: &[u8], hi: Option<&[u8]>) -> bool {
         if !below(&self.first_key, hi) || &self.last_key[..] < lo {
             return false;
         }
@@ -1017,6 +1112,20 @@ impl Block {
 
     pub fn mem_bytes(&self) -> usize {
         self.raw.capacity() + self.starts.capacity() * 4
+    }
+
+    /// Entries i..j as a block of their own, with only their bytes (compaction 2 step 6, physical slices: the waiter
+    /// keeps a customer's rows of a block, not the block). May be empty: an exact "no row here".
+    pub fn slice(&self, i: usize, j: usize) -> Block {
+        let j = j.min(self.len());
+        if i >= j {
+            return Block { raw: Vec::new(), starts: Vec::new() };
+        }
+        let a = self.starts[i] as usize;
+        let z = if j < self.len() { self.starts[j] as usize } else { self.raw.len() };
+        let raw = self.raw[a..z].to_vec();
+        let starts = self.starts[i..j].iter().map(|s| s - a as u32).collect();
+        Block { raw, starts }
     }
 }
 

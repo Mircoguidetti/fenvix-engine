@@ -1,0 +1,16 @@
+copied 623 objects into fc-fc-short-area
+counter_after_visit1: {'bytes': 39879955, 'blocks': 0, 'blockBytes': 0, 'slices': 2156, 'sliceBytes': 39879955, 'emptySlices': 0, 'ram_per_hot_customer_mean': 39879.955, 'customers_charged': 1000, 'charged_p50': 46041, 'charged_p95': 50805}
+counter_after_visit1_trimmed: {'bytes': 39404947, 'blocks': 0, 'blockBytes': 0, 'slices': 2156, 'sliceBytes': 39404947, 'emptySlices': 0, 'ram_per_hot_customer_mean': 39404.947, 'customers_charged': 1000, 'charged_p50': 46030, 'charged_p95': 50753}
+visit 1: 1000 users in 115 s; openings {'n': 1000, 'bytes_median': 45169.5, 'bytes_p95': 49168, 'bytes_max': 50839, 'entries_median': 160.0, 'bytes_total': 38541672}
+gap day 1/1: 168748 messages, compaction passes so far 1
+  publish (all): version 3 in 54709 ms, stage {'retired_runs': 4, 'held': 2157, 'wanted': 4232, 'warmed': 4232, 'missed': 0, 'gets': 783, 'millis': 7214, 'timed_out': False}
+settled after 20 s
+gap: {'profile': 'medium', 'days': 1, 'messages': 168797, 'test_users_written': 291, 'test_messages': 1628, 'write_secs': 74.25898003578186, 'gap_secs': 94.3433768749237, 'compaction_passes': 2, 'compaction': {'compactRuns': 2, 'compactPuts': 110, 'compactGets': 2377}, 'server_cpu_secs': 79.67000000000002, 'first_course_writes_applied': 3256, 'first_course_write_hook_ms': 216.685617, 'trimmed': 0, 'dropped_too_big': 0}
+counter_after_visit2: {'bytes': 549421933, 'blocks': 63, 'blockBytes': 17552935, 'slices': 4792, 'sliceBytes': 531868998, 'emptySlices': 1, 'ram_per_hot_customer_mean': 549421.933, 'customers_charged': 1300, 'charged_p50': 21797, 'charged_p95': 941776}
+counter_after_visit2_trimmed: {'bytes': 548747824, 'blocks': 63, 'blockBytes': 17552935, 'slices': 4792, 'sliceBytes': 531194889, 'emptySlices': 1, 'ram_per_hot_customer_mean': 548747.824, 'customers_charged': 1300, 'charged_p50': 21732, 'charged_p95': 941776}
+visit 2: zero-GET exact answers 1000/1000 (100.0%), active 100.0%, uniform 100.0%, written 100.0%, not written 100.0%; wrong answers 0
+Q1 visit 1: GETs mean 6.94, ms p50 20.0; visit 2: GETs mean 0.00, ms p50 0.67, p99 1.08
+later queries ms: visit 1 p50 2.99 p99 288.09; visit 2 p50 0.67 p99 1.20
+opening sizes: after visit 1 {'n': 1000, 'bytes_median': 45169.5, 'bytes_p95': 49168, 'bytes_max': 50839, 'entries_median': 160.0, 'bytes_total': 38541672}; after gap {'n': 1000, 'bytes_median': 46120.5, 'bytes_p95': 51005, 'bytes_max': 231739, 'entries_median': 165.0, 'bytes_total': 39593043}; after visit 2 {'n': 1000, 'bytes_median': 45297.5, 'bytes_p95': 49168, 'bytes_max': 51090, 'entries_median': 162.0, 'bytes_total': 38789152}
+deleted fc-fc-short-area
+EXIT 0

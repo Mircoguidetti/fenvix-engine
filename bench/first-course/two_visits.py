@@ -42,6 +42,8 @@ from pymongo import MongoClient
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "compaction"))
 from cold_customer import vocab, zipf_weights  # noqa: E402  (same generator as the load)
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "c2-step6"))
+import sealed  # noqa: E402  (compaction 2 step 6: publishes through the server, the counter's contents)
 
 DB, COLL = "chat", "messages"
 PER_DAY = {"medium": 1000 * 86400 // 512, "busy": 5000 * 86400 // 512}
@@ -216,6 +218,9 @@ def visits(a):
 
     res = {"gap": a.gap, "users": a.users, "seed": a.seed, "dataset": {k: v for k, v in state.items() if k != "counts"}}
     res["warmup1_secs"] = warm(a.warm)
+    if a.sealed:
+        # compaction 2 step 6: measure the counter of our runs from here (the visit-1 reads of the test users only)
+        sealed.counter(admin, clear=True)
     test = [(pick(True), "active") for _ in range(a.users // 2)] + [(pick(False), "uniform") for _ in range(a.users - a.users // 2)]
     test_set = {u for u, _ in test}
     rw = random.Random(a.seed + 1)
@@ -231,6 +236,18 @@ def visits(a):
         v1[u] = {"group": grp, "q1": {"gets": g, "ms": ms}, "answer": [(d["ts"].isoformat(), str(d["_id"])) for d in docs], "later": later(u, docs)}
     res["visit1_secs"] = time.time() - t
     res["sizes_after_visit1"] = size_summary(admin)
+    if a.sealed:
+        # right after the visit (slices still whole), then trimmed to what the visit relied on (the server does it
+        # --sealed-trim-ms after a slice is made)
+        for name, trim in (("counter_after_visit1", False), ("counter_after_visit1_trimmed", True)):
+            cnt = sealed.counter(admin, trim=trim)
+            per = sorted(cnt.get("perCustomer", []))
+            res[name] = {k: v for k, v in cnt.items() if k not in ("perCustomer", "ok")}
+            res[name]["ram_per_hot_customer_mean"] = cnt["bytes"] / max(1, len(v1))
+            res[name]["customers_charged"] = len(per)
+            res[name]["charged_p50"] = per[len(per) // 2] if per else 0
+            res[name]["charged_p95"] = per[int(len(per) * 0.95)] if per else 0
+            print(f"{name}: {res[name]}", flush=True)
     fc1 = fen(admin).get("firstCourse", {})
     print(f"visit 1: {len(v1)} users in {res['visit1_secs']:.0f} s; openings {res['sizes_after_visit1']}", flush=True)
 
@@ -246,6 +263,15 @@ def visits(a):
         for u, v in m.items():
             new_msgs.setdefault(u, []).extend(v)
         print(f"gap day {day + 1}/{days}: {written} messages, compaction passes so far {fen(admin)['compaction']['passes'] - p0}", flush=True)
+        if a.sealed:
+            # our runs follow the gap: a delta run every day, a reseal of every group every third day and on the last day
+            # (the stub of step 4's triggers), so visit 2 reads right after a reseal
+            rs = "all" if (day + 1) % 3 == 0 or day == days - 1 else "none"
+            rep = sealed.publish(admin, DB, rs)
+            if os.environ.get("SEALED_BUCKET"):
+                rep["bench_gc"] = sealed.gc(os.environ["SEALED_BUCKET"], DB)
+            res.setdefault("publishes", []).append(rep)
+            print(f"  publish ({rs}): version {rep['version']} in {rep['millis']} ms, stage {rep.get('stage')}", flush=True)
     # every test user chosen for new messages gets at least one
     extra = [u for u in written_test if u not in new_msgs]
     for i, u in enumerate(sorted(extra)):
@@ -302,6 +328,17 @@ def visits(a):
                      "exact_vs_normal": ok_normal, "exact_vs_model": ok_model, "later": lat})
     fc4 = fen(admin).get("firstCourse", {})
     res["sizes_after_visit2"] = size_summary(admin)
+    if a.sealed:
+        # reviewer (review-c2-step6): the counter after visit 2, which follows a staged reseal
+        for name, trim in (("counter_after_visit2", False), ("counter_after_visit2_trimmed", True)):
+            cnt = sealed.counter(admin, trim=trim)
+            per = sorted(cnt.get("perCustomer", []))
+            res[name] = {k: v for k, v in cnt.items() if k not in ("perCustomer", "ok")}
+            res[name]["ram_per_hot_customer_mean"] = cnt["bytes"] / max(1, len(v1))
+            res[name]["customers_charged"] = len(per)
+            res[name]["charged_p50"] = per[len(per) // 2] if per else 0
+            res[name]["charged_p95"] = per[int(len(per) * 0.95)] if per else 0
+            print(f"{name}: {res[name]}", flush=True)
     res["first_course_counters"] = {"visit1": {k: fc1.get(k, 0) - fc0.get(k, 0) for k in fc1 if isinstance(fc1.get(k), int)},
                                     "visit2": {k: fc4.get(k, 0) - fc3.get(k, 0) for k in fc4 if isinstance(fc4.get(k), int)}, "end": fc4}
     res["wrong"] = wrong
@@ -338,6 +375,7 @@ def visits(a):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("cmd", choices=["settle", "visits"])
+    ap.add_argument("--sealed", action="store_true", help="compaction 2 step 6: publish our runs during the gap, measure the counter")
     ap.add_argument("--uri", default="mongodb://127.0.0.1:27051/?directConnection=true")
     ap.add_argument("--state")
     ap.add_argument("--gap", choices=list(GAPS), default="short")

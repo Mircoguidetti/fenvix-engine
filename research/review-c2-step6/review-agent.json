@@ -1,0 +1,140 @@
+{
+  "block_kb": 256,
+  "raw_mb": 643,
+  "results": [
+    {
+      "allocator_freed_bytes": 67498608,
+      "allocator_over_counted": 1.0010519122117207,
+      "blocks": 260,
+      "by_length": {
+        "10": {
+          "mean": 137499.72291666665,
+          "p50": 87438.33333333333,
+          "threads": 200
+        },
+        "100": {
+          "mean": 487919.0166666666,
+          "p50": 501279.0,
+          "threads": 20
+        },
+        "300": {
+          "mean": 1020316.3958333335,
+          "p50": 1049540.3333333335,
+          "threads": 4
+        },
+        "40": {
+          "mean": 326101.11875000014,
+          "p50": 258449.5,
+          "threads": 80
+        }
+      },
+      "counted_bytes": 67427680,
+      "gets_two_visits": 260,
+      "mix_mean_per_hot_thread": 317734.90385416674,
+      "mode": "Off",
+      "pattern": "resume",
+      "slices": 0
+    },
+    {
+      "allocator_freed_bytes": 16291008,
+      "allocator_over_counted": 1.0301970716515592,
+      "blocks": 0,
+      "by_length": {
+        "10": {
+          "mean": 19148.015,
+          "p50": 17213.0,
+          "threads": 200
+        },
+        "100": {
+          "mean": 184072.85,
+          "p50": 175925.0,
+          "threads": 20
+        },
+        "300": {
+          "mean": 565399.25,
+          "p50": 582248.0,
+          "threads": 4
+        },
+        "40": {
+          "mean": 75510.375,
+          "p50": 71677.0,
+          "threads": 80
+        }
+      },
+      "counted_bytes": 15813487,
+      "gets_two_visits": 487,
+      "mix_mean_per_hot_thread": 99172.36974999998,
+      "mode": "Area",
+      "pattern": "resume",
+      "slices": 912
+    },
+    {
+      "allocator_freed_bytes": 80234224,
+      "allocator_over_counted": 1.0009937299646487,
+      "blocks": 313,
+      "by_length": {
+        "10": {
+          "mean": 137499.72291666665,
+          "p50": 87438.33333333333,
+          "threads": 200
+        },
+        "100": {
+          "mean": 726806.1166666666,
+          "p50": 729321.0,
+          "threads": 20
+        },
+        "300": {
+          "mean": 1423382.6458333335,
+          "p50": 1483022.3333333333,
+          "threads": 4
+        },
+        "40": {
+          "mean": 405312.1812500002,
+          "p50": 461521.0,
+          "threads": 80
+        }
+      },
+      "counted_bytes": 80154572,
+      "gets_two_visits": 313,
+      "mix_mean_per_hot_thread": 413389.50822916673,
+      "mode": "Off",
+      "pattern": "resume+old-step",
+      "slices": 0
+    },
+    {
+      "allocator_freed_bytes": 35757776,
+      "allocator_over_counted": 1.0156368667869355,
+      "blocks": 0,
+      "by_length": {
+        "10": {
+          "mean": 77049.425,
+          "p50": 69575.0,
+          "threads": 200
+        },
+        "100": {
+          "mean": 273532.3,
+          "p50": 240184.0,
+          "threads": 20
+        },
+        "300": {
+          "mean": 709332.75,
+          "p50": 754203.0,
+          "threads": 4
+        },
+        "40": {
+          "mean": 143617.2875,
+          "p50": 137965.0,
+          "threads": 80
+        }
+      },
+      "counted_bytes": 35207245,
+      "gets_two_visits": 595,
+      "mix_mean_per_hot_thread": 171258.918125,
+      "mode": "Area",
+      "pattern": "resume+old-step",
+      "slices": 1145
+    }
+  ],
+  "test": "review_agent_ram",
+  "threads": 304
+}

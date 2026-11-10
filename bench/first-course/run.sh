@@ -34,10 +34,13 @@ case $MODE in
     "$PY" -c "$S3PY
 try: s3.create_bucket(Bucket='${BASE:-fc-base}')
 except Exception as e: print('bucket:', e)"
-    start ${BASE:-fc-base} --customer-key chat.messages=userId
+    # shellcheck disable=SC2086
+    start ${BASE:-fc-base} --customer-key chat.messages=userId ${LOAD_EXTRA:-}
     t=$(date +%s)
     "$PY" bench/compaction/cold_customer.py load --uri "$URI" --gb "${GB:-2}" --state "$OUT/state.json" --customer-key | tee "$OUT/load.txt"
     "$PY" bench/first-course/two_visits.py settle --uri "$URI" | tee -a "$OUT/load.txt"
+    # compaction 2 step 6 (SEALED=1, with LOAD_EXTRA="--sealed-runs 0 ..."): seal the loaded database into our runs
+    if [ -n "${SEALED:-}" ]; then "$PY" bench/c2-step6/sealed.py publish --uri "$URI" --db chat --reseal all | tee -a "$OUT/load.txt"; fi
     echo "load + settle $(( $(date +%s) - t )) s" | tee -a "$OUT/load.txt"
     stop ;;
   visits)
@@ -58,8 +61,9 @@ for page in s3.get_paginator('list_objects_v2').paginate(Bucket='${BASE:-fc-base
 print(f'copied {n} objects into {b}')" "$B" | tee "$OUT/copy.txt"
     # shellcheck disable=SC2086
     FENVIX_SIM_S3=${SIM:-5,0,100000} start "$B" --block-cache-mb 1 $EXTRA
+    export SEALED_BUCKET=$B  # two_visits.py --sealed: bench-only cleanup of retired runs after each publish
     "$PY" bench/first-course/two_visits.py visits --uri "$URI" --state "${STATE:-$ROOT/bench/first-course/results/load/state.json}" --gap "$GAP" \
-      --users "${USERS:-1000}" --scale "${SCALE:-1}" --warm "${WARM:-300}" --pid "$(cat "$OUT/server.pid")" --out "$OUT/result.json" | tee "$OUT/visits.txt"
+      --users "${USERS:-1000}" --scale "${SCALE:-1}" --warm "${WARM:-300}" --pid "$(cat "$OUT/server.pid")" --out "$OUT/result.json" ${SEALED:+--sealed} | tee "$OUT/visits.txt"
     stop
     "$PY" -c "$S3PY
 import sys

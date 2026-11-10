@@ -631,7 +631,8 @@ fn customer_value(field: &str, filter: &bson::Document) -> Option<bson::Bson> {
 /// The regions of a user: its documents and its entries in every index that starts with the customer field.
 fn regions_of(coll: &str, field: &str, v: &bson::Bson, indexes: &[crate::index::IndexDef]) -> Vec<(Vec<u8>, Vec<u8>)> {
     let mut out = Vec::new();
-    // layout v2 (custkey.rs): a customer-keyed document suffix starts with the mark, then the customer component
+    // layout v2 (custkey.rs): a customer-keyed document key is the collection's prefix, the mark, then the customer
+    // component (compaction 2 step 6: without the mark every find read outside the user's region and was not kept)
     let mut d = crate::layout::doc_prefix(coll);
     d.push(crate::custkey::MARK);
     d.extend(crate::custkey::comp(v));
