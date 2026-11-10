@@ -1,0 +1,9 @@
+mongod: 936 passed, 0 failed, 197 skipped
+ours:   935 passed, 1 failed, 197 skipped
+pass on mongod, not on ours: 1
+- src/storage/domains/notifications/index.test.ts::NotificationsMongoDB > bulk status update accepts more ids than one statement can bind and returns each record once [failed]
+    Test timed out in 30000ms. If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+    
+    Error: Test timed out in 30000ms.
+    If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+     ❯ src/storage/domains/notifications/index.test.ts:267:3

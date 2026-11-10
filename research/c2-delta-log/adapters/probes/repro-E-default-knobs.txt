@@ -1,0 +1,2 @@
+# E-default-knobs: 0 EntityTooSmall lines; first compactor error:
+langgraph: 10 users x 60 turns in 15 s

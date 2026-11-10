@@ -1,0 +1,22 @@
+== langgraph 10:50:07
+langgraph: 50 users x 80 turns in 108 s
+{"db": "e2e_langgraph", "dbStats": {"collections": 3, "objects": 28050, "dataSize": 274489924, "storageSize": 274489924, "indexSize": 5524700, "totalSize": 280014624}, "s3_at_stop": {"total": 1361211183, "objects": 409, "by_kind": {"_clean": 5, "_lease": 50, "compacted": 1298128078, "compactions": 123788, "fx": 58072484, "manifest": 344908, "wal": 4541870}, "count_by_kind": {"_clean": 1, "_lease": 1, "compacted": 96, "compactions": 82, "fx": 27, "manifest": 78, "wal": 124}}, "s3_settled": {"total": 1700833612, "objects": 320, "by_kind": {"_clean": 5, "_lease": 50, "compacted": 1641168506, "compactions": 142226, "fx": 59152203, "manifest": 369244, "wal": 1378}, "count_by_kind": {"_clean": 1, "_lease": 1, "compacted": 105, "compactions": 93, "fx": 30, "manifest": 86, "wal": 4}}}
+derived_check exit 0
+re-read 50 threads; differences from the e2e answers of the same run: 0 []
+derived after re-read: {"write": true, "encoded": 20000, "plain": 4000, "messageRows": 12549, "fallbacks": 0, "rebuilds": 147536, "resealRebuilds": 19839, "rebuildErrors": 0}
+re-read 50 threads; differences from the e2e answers of the same run: 0 []
+cold restart e2e_langgraph.checkpoints: 12000 docs, identical to before the reseal: True
+cold restart e2e_langgraph.checkpoint_writes: 12000 docs, identical to before the reseal: True
+cold restart scans repeated after SealedRunsRetry: 0
+derived after cold re-read: {"write": true, "encoded": 0, "plain": 0, "messageRows": 0, "fallbacks": 0, "rebuilds": 84050, "resealRebuilds": 0, "rebuildErrors": 0}
+== langgraph-js 10:55:15
+langgraph-js: 50 users x 80 turns in 109.8 s
+{"db": "e2e_langgraph_js", "dbStats": {"collections": 2, "objects": 24000, "dataSize": 291348250, "storageSize": 291348250, "indexSize": 4536000, "totalSize": 295884250}, "s3_at_stop": {"total": 1766570762, "objects": 392, "by_kind": {"_clean": 5, "_lease": 50, "compacted": 1691998959, "compactions": 134152, "fx": 66363031, "manifest": 285980, "wal": 7788585}, "count_by_kind": {"_clean": 1, "_lease": 1, "compacted": 105, "compactions": 88, "fx": 27, "manifest": 66, "wal": 104}}, "s3_settled": {"total": 1760559816, "objects": 302, "by_kind": {"_clean": 5, "_lease": 50, "compacted": 1691999817, "compactions": 136540, "fx": 68124702, "manifest": 297492, "wal": 1210}, "count_by_kind": {"_clean": 1, "_lease": 1, "compacted": 106, "compactions": 90, "fx": 30, "manifest": 70, "wal": 4}}}
+derived_check exit 0
+re-read 50 threads; differences from the e2e answers of the same run: 0 
+derived after re-read: {"write": true, "encoded": 0, "plain": 24000, "messageRows": 0, "fallbacks": 0, "rebuilds": 0, "resealRebuilds": 0, "rebuildErrors": 0}
+re-read 50 threads; differences from the e2e answers of the same run: 0 
+cold restart e2e_langgraph_js.checkpoints: 12000 docs, identical to before the reseal: True
+cold restart e2e_langgraph_js.checkpoint_writes: 12000 docs, identical to before the reseal: True
+cold restart scans repeated after SealedRunsRetry: 0
+derived after cold re-read: {"write": true, "encoded": 0, "plain": 0, "messageRows": 0, "fallbacks": 0, "rebuilds": 0, "resealRebuilds": 0, "rebuildErrors": 0}

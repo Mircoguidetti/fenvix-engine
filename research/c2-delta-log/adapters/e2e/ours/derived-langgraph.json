@@ -1,0 +1,69 @@
+{
+ "databases": {
+  "e2e_langgraph": {
+   "reseal": {
+    "resealed": 1,
+    "encoded": 20000,
+    "ok": 1.0,
+    "operationTime": "Timestamp(1794308006, 2)"
+   },
+   "derived_after_reseal": {
+    "write": true,
+    "encoded": 20000,
+    "plain": 4000,
+    "messageRows": 12549,
+    "fallbacks": 0,
+    "rebuilds": 63486,
+    "resealRebuilds": 19839,
+    "rebuildErrors": 0
+   },
+   "checkpoints": {
+    "docs_before": 12000,
+    "docs_after": 12000,
+    "bytes": 268179600,
+    "byte_differences": 0,
+    "sha256_before": "b292c11cd7b3e98620e3002236f5b07a7d14901b2513f2e3107d4d25ab7a3af4",
+    "sha256_after": "b292c11cd7b3e98620e3002236f5b07a7d14901b2513f2e3107d4d25ab7a3af4"
+   },
+   "checkpoint_writes": {
+    "docs_before": 12000,
+    "docs_after": 12000,
+    "bytes": 5321274,
+    "byte_differences": 0,
+    "sha256_before": "f5367b3d0056efe8429f4a6354c8462b41bffb2b02449013ed5abe919fe82b7a",
+    "sha256_after": "f5367b3d0056efe8429f4a6354c8462b41bffb2b02449013ed5abe919fe82b7a"
+   }
+  }
+ },
+ "derived_start": {
+  "write": true,
+  "encoded": 0,
+  "plain": 0,
+  "messageRows": 0,
+  "fallbacks": 0,
+  "rebuilds": 0,
+  "resealRebuilds": 0,
+  "rebuildErrors": 0
+ },
+ "derived_end": {
+  "write": true,
+  "encoded": 20000,
+  "plain": 4000,
+  "messageRows": 12549,
+  "fallbacks": 0,
+  "rebuilds": 127486,
+  "resealRebuilds": 19839,
+  "rebuildErrors": 0
+ },
+ "scan_retries_SealedRunsRetry": [],
+ "compactor": {
+  "enabled": true,
+  "started": 1,
+  "running": 1,
+  "publishes": 2,
+  "absorbs": 1,
+  "merges": 0,
+  "reseals": 1,
+  "errors": 0
+ }
+}

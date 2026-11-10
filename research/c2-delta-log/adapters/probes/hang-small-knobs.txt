@@ -1,0 +1,19 @@
+# e2e langgraph 50x200 on ours with FENVIX_SEALED_COMPACTOR=small: 558 EntityTooSmall lines, 186 failed absorb jobs; every line that is not one of those:
+mongo-server listening on 127.0.0.1:27017 (idle close after 60 s, holder adapters-27017, lease ttl 30 s)
+LEASE process_lease tenant=- holder=adapters-27017 unix_ms=1794303595812 inc=046a48294a85917c gen=1
+LEASE acquired tenant=admin holder=adapters-27017 unix_ms=1794303595816 takeover_from=-
+LEASE acquired tenant=admin holder=adapters-27017 unix_ms=1794303595825 takeover_from=-
+LEASE acquired tenant=admin holder=adapters-27017 unix_ms=1794303595833 takeover_from=- new=true
+LEASE writer_open tenant=admin holder=adapters-27017 unix_ms=1794303595851 
+LEASE acquired tenant=e2e_langgraph holder=adapters-27017 unix_ms=1794303597039 takeover_from=-
+LEASE acquired tenant=e2e_langgraph holder=adapters-27017 unix_ms=1794303597047 takeover_from=-
+LEASE acquired tenant=e2e_langgraph holder=adapters-27017 unix_ms=1794303597084 takeover_from=-
+LEASE acquired tenant=e2e_langgraph holder=adapters-27017 unix_ms=1794303597094 takeover_from=-
+LEASE acquired tenant=e2e_langgraph holder=adapters-27017 unix_ms=1794303597102 takeover_from=- new=true
+LEASE writer_open tenant=e2e_langgraph holder=adapters-27017 unix_ms=1794303597119 
+LEASE writer_close tenant=admin holder=adapters-27017 unix_ms=1794303656171 
+LEASE release_begin tenant=admin holder=adapters-27017 unix_ms=1794303656172 
+LEASE release tenant=admin holder=adapters-27017 unix_ms=1794303656180 ok=true
+shutting down: closing tenants cleanly
+# first failed absorb:
+fx compactor e2e_langgraph: Absorb job: Generic S3 error: Error performing POST http://127.0.0.1:9000/adapters/tenants/e2e_langgraph/fx/run/delta/00000000000000001892-1-44113c97?uploadId=YzJhY2Y3MGEtNDUyYS00MTY5LTg3OTQtMWNkNGJmZjI4MjkwLjFjOWIyNDhjLWNiODktNDVlMy05ZGQ5LWU2MTY2MWMxNzlkNngxNzk0MzAzNjAzNzk4MTM1OTY0 in 952.341µs - Server returned non-2xx status code: 400 Bad Request: <?xml version="1.0" encoding="UTF-8"?>

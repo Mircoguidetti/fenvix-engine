@@ -1,0 +1,25 @@
+
+ RUN  v3.2.7 /home/user/adapters/js-lg
+
+ ✓ |int| src/tests/checkpoints.int.test.ts (9 tests) 886ms
+   ✓ MongoDBSaver > should save and retrieve checkpoints correctly  706ms
+ ✓ |int| src/tests/store.int.test.ts (43 tests | 7 skipped) 1144ms
+
+ Test Files  2 passed (2)
+      Tests  41 passed | 7 skipped (52)
+   Start at  09:18:34
+   Duration  2.23s (transform 173ms, setup 0ms, collect 1.33s, tests 2.03s, environment 1ms, prepare 251ms)
+
+JUNIT report written to /tmp/claude-0/-home-user/9129b5ca-4194-55a1-8a84-bd2fce2b2dd9/scratchpad/run/bench/agent-adapters/results/mongod/lg-js.xml.int
+
+ RUN  v3.2.7 /home/user/adapters/js-lg
+
+ ✓ |unit| src/tests/checkpoints.test.ts (32 tests) 20ms
+ ✓ |unit| src/tests/store.test.ts (46 tests) 46ms
+
+ Test Files  2 passed (2)
+      Tests  78 passed (78)
+   Start at  09:18:37
+   Duration  1.73s (transform 387ms, setup 0ms, collect 1.80s, tests 66ms, environment 0ms, prepare 468ms)
+
+JUNIT report written to /tmp/claude-0/-home-user/9129b5ca-4194-55a1-8a84-bd2fce2b2dd9/scratchpad/run/bench/agent-adapters/results/mongod/lg-js.xml.unit

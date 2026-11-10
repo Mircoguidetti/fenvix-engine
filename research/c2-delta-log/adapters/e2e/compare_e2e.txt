@@ -1,0 +1,18 @@
+ours/e2e-langgraph.json vs mongod/e2e-langgraph.json:
+langgraph: 50 users x 80 turns; differences: 0 (mongod 76.9 s, ours 107.5 s)
+ours/reread-langgraph-after-reseal.json vs mongod/e2e-langgraph.json:
+langgraph: 50 users x 80 turns; differences: 0 (mongod 76.9 s, ours 0 s)
+ours/reread-langgraph-cold.json vs mongod/e2e-langgraph.json:
+langgraph: 50 users x 80 turns; differences: 0 (mongod 76.9 s, ours 0 s)
+ours/e2e-langgraph-js.json vs mongod/e2e-langgraph-js.json:
+langgraph-js: 50 users x 80 turns; differences: 0 (mongod 58.2 s, ours 109.8 s)
+ours/reread-langgraph-js-after-reseal.json vs mongod/e2e-langgraph-js.json:
+langgraph-js: 50 users x 80 turns; differences: 0 (mongod 58.2 s, ours 0 s)
+ours/reread-langgraph-js-cold.json vs mongod/e2e-langgraph-js.json:
+langgraph-js: 50 users x 80 turns; differences: 0 (mongod 58.2 s, ours 0 s)
+ours/e2e-mastra.json vs mongod/e2e-mastra.json:
+mastra: 50 users x 200 turns; differences: 0 (mongod 36.3 s, ours 87.1 s)
+run 1 (same sizes, derived check failed on T_pin):
+langgraph: 50 users x 80 turns; differences: 0 (mongod 76.9 s, ours 113.8 s)
+langgraph-js: 50 users x 80 turns; differences: 0 (mongod 58.2 s, ours 106.2 s)
+mastra: 50 users x 200 turns; differences: 0 (mongod 36.3 s, ours 87.1 s)
