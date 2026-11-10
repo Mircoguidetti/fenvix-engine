@@ -1,0 +1,1 @@
+FX_MODEL control="skipdelta" seed=20261108 ops=10000 wrong=383 writes=3811 gets=2632 scans=2891 snapshot_reads=453 reader_mode_reads=353 publishes=48 crashes=14 fail_after_runs=1 fail_after_publish=1 refreshes=0 slatedb_compactions=0 final_version=55 groups=17 delta_runs=0 rows_from_runs=219793 versions_in_store=55

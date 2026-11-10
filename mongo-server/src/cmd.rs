@@ -282,8 +282,10 @@ impl Server {
     /// durable after its locks were released, and the reply waits for that. The scopes are task-locals, so they are opened here,
     /// in the task that runs the command (JavaScript commands run on a thread of their own, see `run_command`).
     async fn dispatch_durable(&self, db: &str, name: &str, cmd: &Document, conn_id: i64) -> R<Document> {
+        // one scope of holds per command: every read of the command, through any number of `Dbs::read` calls, keeps the
+        // version of our manifest it read with in the drop floor until the command ends (compaction 2, `fx/hold.rs`)
         crate::dbs::TOKENS
-            .scope(Default::default(), async {
+            .scope(Default::default(), tenant_bench::fx::hold::op_scope(async {
                 let (mut r, commits, relax) = crate::dbs::RELAX
                     .scope(std::cell::Cell::new(false), crate::dbs::PENDING.scope(Default::default(), async {
                         let r = crate::js::scoped(db, self.dispatch(db, name, cmd, conn_id)).await;
@@ -292,9 +294,11 @@ impl Server {
                     .await;
                 // Later commits of a database flush after its earlier ones, so waiting for the last one of each database
                 // covers all of them (a command can write to more than one database: $out, renameCollection).
+                // Per lane: a later batch on the agent lane covers earlier batches of both lanes (one WAL object holds
+                // them all), but a later batch on the log does not cover an earlier agent-lane one (agentlane.rs).
                 let mut last: Vec<tenant_bench::lifecycle::Commit> = Vec::new();
                 for c in commits.into_iter().rev() {
-                    if !last.iter().any(|l| l.tenant() == c.tenant()) {
+                    if !last.iter().any(|l| l.tenant() == c.tenant() && l.is_agent() == c.is_agent()) {
                         last.push(c);
                     }
                 }
@@ -307,7 +311,7 @@ impl Server {
                     }
                 }
                 r
-            })
+            }))
             .await
     }
 
@@ -449,6 +453,17 @@ impl Server {
             "connectionStatus" => return Box::pin(self.connection_status(conn_id, cmd)).await,
             "listDatabases" => return Box::pin(self.list_databases(db, cmd, conn_id)).await,
             "tenantStats" => return Ok(self.tenant_stats()),
+            "fenvixSstInfo" => return self.sst_info(cmd).await,
+            "fenvixFirstCourse" => {
+                // first course (opening.rs): the size of every opening of a database, for measurements
+                let db = cmd.get_str("fenvixFirstCourse").map_err(|_| MongoError::bad_value("fenvixFirstCourse needs a database name".into()))?;
+                let sizes = crate::opening::sizes(db);
+                return Ok(doc! {
+                    "bytes": sizes.iter().map(|(b, _)| Bson::Int64(*b as i64)).collect::<Vec<_>>(),
+                    "entries": sizes.iter().map(|(_, e)| Bson::Int64(*e as i64)).collect::<Vec<_>>(),
+                    "ok": 1.0,
+                });
+            }
             "renameCollection" => return Box::pin(self.rename_collection(db, cmd)).await,
             "ttlPass" => {
                 let gap = int_arg(cmd.get("minGapSecs")).unwrap_or(0) as u64;
@@ -647,7 +662,9 @@ impl Server {
         let mut uuids: HashMap<String, Vec<u8>> = HashMap::new();
         for n in &names {
             if let Some(o) = g.coll_opts(n).await? {
-                options_of.insert(n.clone(), o.raw.clone());
+                let mut raw = o.raw.clone();
+                crate::custkey::strip(&mut raw);
+                options_of.insert(n.clone(), raw);
             }
             if !name_only {
                 uuids.insert(n.clone(), g.collection_uuid(n).await?);
@@ -722,6 +739,9 @@ impl Server {
             raw.insert("encryptedFields", crate::special_colls::encrypted_fields(coll, v, self.is_rs())?);
         }
         raw.extend(crate::collopts::plain_options("create", cmd)?);
+        if crate::collopts::agent_lane_option("create", cmd)? == Some(true) {
+            raw.insert(crate::agentlane::OPTION, true);
+        }
         raw.extend(crate::collopts::validation_options("create", cmd)?);
         if let Some(i) = crate::collopts::images_option("create", cmd)? {
             // (a disabled option is not kept)
@@ -729,12 +749,28 @@ impl Server {
                 raw.extend(i);
             }
         }
-        let raw = crate::collopts::canonical(&raw);
+        let mut raw = crate::collopts::canonical(&raw);
+        // the customer key (custkey.rs): the `customerKey` option, or `--customer-key` for this collection
+        let explicit_ckey = match cmd.get("customerKey") {
+            None => None,
+            Some(v) => Some(crate::custkey::parse_option(v).map_err(|e| MongoError::new(2, "BadValue", e))?),
+        };
+        if explicit_ckey.is_some() && !crate::custkey::allowed(coll, &raw) {
+            return Err(MongoError::new(72, "InvalidOptions", "customerKey is not supported on capped, time-series, clustered or system collections".into()));
+        }
+        if let Some(f) = explicit_ckey.clone().or_else(|| crate::custkey::configured(db, coll).filter(|_| crate::custkey::allowed(coll, &raw))) {
+            crate::custkey::store(&mut raw, &f);
+        }
         let mut g = self.dbs.lock(db).await;
         let mut names = g.collections().await?;
         if names.iter().any(|n| n == coll) {
             // MongoDB 7.0: creating an existing collection with the same options succeeds.
-            let existing = g.coll_opts(coll).await?.map(|o| o.raw.clone()).unwrap_or_default();
+            let mut existing = g.coll_opts(coll).await?.map(|o| o.raw.clone()).unwrap_or_default();
+            if explicit_ckey.is_none() {
+                // (a customer key the server added on its own is not an option the client gave)
+                crate::custkey::strip(&mut existing);
+                crate::custkey::strip(&mut raw);
+            }
             let has_options = cmd.iter().any(|(k, v)| {
                 !matches!(k.as_str(), "create" | "$db" | "lsid" | "$clusterTime" | "writeConcern" | "readConcern" | "comment" | "txnNumber" | "$readPreference" | "collation" | "capped" | "size" | "max" | "validator" | "validationLevel" | "validationAction" | "storageEngine" | "indexOptionDefaults")
                     && !(k == "capped" && matches!(v, Bson::Boolean(false)))
@@ -752,7 +788,8 @@ impl Server {
         }
         names.push(coll.to_string());
         let mut ops = vec![Entry::collections_op(&names)?];
-        let options = raw.clone();
+        let mut options = raw.clone();
+        crate::custkey::strip(&mut options);
         {
             let mut initial: Vec<crate::index::IndexDef> = Vec::new();
             if let Some(t) = special.options.get_document("timeseries").ok() {
@@ -787,6 +824,19 @@ impl Server {
     }
 
     /// Process-wide gauges and counters for the load tests: open tenants and every object-store request.
+    /// `{fenvixSstInfo: "<db>"}`: the SSTs of a database's latest manifest, with their compression and block count
+    /// (tests and measurements of the compaction, `tiered.rs`). Root only, like `tenantStats`.
+    async fn sst_info(&self, cmd: &Document) -> R<Document> {
+        let db = cmd.get_str("fenvixSstInfo").map_err(|_| MongoError::bad_value("fenvixSstInfo needs a database name".into()))?;
+        let (l0, runs) = tenant_bench::tiered::sst_info(self.dbs.store(), db).await?;
+        let one = |s: &tenant_bench::tiered::SstSummary| doc! { "id": s.id.clone(), "codec": s.codec, "dataBytes": s.data_bytes as i64, "blocks": s.blocks as i64 };
+        Ok(doc! {
+            "l0": l0.iter().map(|s| Bson::Document(one(s))).collect::<Vec<_>>(),
+            "runs": runs.iter().map(|(id, ssts)| Bson::Document(doc! { "id": *id as i64, "ssts": ssts.iter().map(|s| Bson::Document(one(s))).collect::<Vec<_>>() })).collect::<Vec<_>>(),
+            "ok": 1.0,
+        })
+    }
+
     fn tenant_stats(&self) -> Document {
         use std::sync::atomic::Ordering::Relaxed;
         let s = self.dbs.global.counters.snapshot();
@@ -813,6 +863,7 @@ impl Server {
                 "putBytes": self.dbs.global.counters.put_bytes.load(Relaxed) as i64, "getBytes": self.dbs.global.counters.get_bytes.load(Relaxed) as i64,
             },
             "groupCommit": { "commits": tenant_bench::lifecycle::GROUP_COMMITS.load(Relaxed) as i64, "flushes": tenant_bench::lifecycle::GROUP_FLUSHES.load(Relaxed) as i64, "windowUs": tenant_bench::lifecycle::GROUP_WINDOW_US.load(Relaxed) as i64, "adaptiveWaits": tenant_bench::lifecycle::ADAPTIVE_WAITS.load(Relaxed) as i64, "adaptiveWaitUs": tenant_bench::lifecycle::ADAPTIVE_WAIT_US.load(Relaxed) as i64, "relaxedAcks": tenant_bench::lifecycle::RELAXED_ACKS.load(Relaxed) as i64 },
+            "agentLane": { "batches": crate::agentlane::AGENT_BATCHES.load(Relaxed) as i64, "mixedBatches": crate::agentlane::MIXED_BATCHES.load(Relaxed) as i64, "commits": tenant_bench::lifecycle::AGENT_COMMITS.load(Relaxed) as i64, "flushes": tenant_bench::lifecycle::AGENT_FLUSHES.load(Relaxed) as i64, "txnFlushes": tenant_bench::lifecycle::AGENT_TXN_FLUSHES.load(Relaxed) as i64, "ackRefused": tenant_bench::lifecycle::AGENT_ACK_REFUSED.load(Relaxed) as i64, "windowUs": tenant_bench::lifecycle::AGENT_WINDOW_US.load(Relaxed) as i64, "followed": crate::agentlane::FOLLOWED.load(Relaxed) as i64, "memtableFlushes": crate::agentlane::MEMTABLE_FLUSHES.load(Relaxed) as i64, "followHits": crate::agentlane::FOLLOW_HITS.load(Relaxed) as i64 },
             "localLog": { "records": crate::locallog::RECORDS.load(Relaxed) as i64, "fsyncs": crate::locallog::FSYNCS.load(Relaxed) as i64, "uploads": crate::locallog::UPLOADS.load(Relaxed) as i64, "replayed": crate::locallog::REPLAYED.load(Relaxed) as i64 },
             "quaderno": { "sent": crate::qlog::SENT.load(Relaxed) as i64, "batches": crate::qlog::BATCHES.load(Relaxed) as i64, "failed": crate::qlog::FAILED.load(Relaxed) as i64, "confirmedFlush": crate::qlog::CONFIRMED_FLUSH.load(Relaxed) as i64 },
             "walGc": { "passes": tenant_bench::lifecycle::WAL_GC_PASSES.load(Relaxed) as i64, "deleted": tenant_bench::lifecycle::WAL_GC_DELETED.load(Relaxed) as i64, "listUs": tenant_bench::lifecycle::WAL_GC_LIST_US.load(Relaxed) as i64, "deleteUs": tenant_bench::lifecycle::WAL_GC_DELETE_US.load(Relaxed) as i64, "totalUs": tenant_bench::lifecycle::WAL_GC_TOTAL_US.load(Relaxed) as i64, "noop": tenant_bench::lifecycle::WAL_GC_NOOP.load(Relaxed) as i64 },

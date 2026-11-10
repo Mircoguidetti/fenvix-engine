@@ -1,0 +1,3 @@
+spare agentLane before the takeover: {'batches': 0, 'mixedBatches': 0, 'commits': 0, 'flushes': 0, 'txnFlushes': 0, 'ackRefused': 0, 'windowUs': 20000, 'followed': 0, 'memtableFlushes': 0, 'followHits': 0}
+spare after the takeover serves: ['new0', 'new1', 'new2', 'new3', 'new4']
+RESULT r3_spare_cache_after_drop dropped_documents_back=0 acknowledged_missing=0 -> PASS

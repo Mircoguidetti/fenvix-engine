@@ -1,0 +1,31 @@
+== FX_7A_CONTROL=e1now
+test fx::tests_7a::envelopes_write_waits_one_t_pin_after_its_announcement ... FAILED
+test fx::tests_7a::an_operation_keeps_the_floor_across_its_reads ... ok
+test fx::tests_7a::a_reloaded_version_above_slatedb_is_refused_at_open ... ok
+
+thread 'fx::tests_7a::envelopes_write_waits_one_t_pin_after_its_announcement' (16350) panicked at src/fx/tests_7a.rs:87:5:
+the first write of release E1 must announce it first (rule 26)
+stack backtrace:
+test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 67 filtered out; finished in 0.87s
+
+== FX_7A_CONTROL=xdloop
+test fx::tests_7a::envelopes_write_waits_one_t_pin_after_its_announcement ... ok
+test fx::tests_7a::an_operation_keeps_the_floor_across_its_reads ... ok
+test fx::tests_7a::a_reloaded_version_above_slatedb_is_refused_at_open ... FAILED
+
+thread 'fx::tests_7a::a_reloaded_version_above_slatedb_is_refused_at_open' (16368) panicked at src/fx/tests_7a.rs:138:13:
+the writer opened reading with X_d Some(1000041), above its SlateDB's last seq: rows at or below X_d would be hidden
+stack backtrace:
+test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 67 filtered out; finished in 1.48s
+
+== FX_7A_CONTROL=opholds
+test fx::tests_7a::envelopes_write_waits_one_t_pin_after_its_announcement ... ok
+test fx::tests_7a::a_reloaded_version_above_slatedb_is_refused_at_open ... ok
+test fx::tests_7a::an_operation_keeps_the_floor_across_its_reads ... FAILED
+
+thread 'fx::tests_7a::an_operation_keeps_the_floor_across_its_reads' (16388) panicked at src/fx/tests_7a.rs:187:5:
+assertion `left == right` failed: between two reads of one operation the floor must keep the version it read with
+  left: None
+ right: Some(41)
+test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 67 filtered out; finished in 1.48s
+

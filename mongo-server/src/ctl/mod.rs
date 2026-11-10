@@ -25,6 +25,7 @@ pub mod pin;
 pub mod pitr;
 pub mod purge;
 pub mod rec;
+pub mod testhooks;
 pub mod usage;
 
 use crate::dbs::Dbs;

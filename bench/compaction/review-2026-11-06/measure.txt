@@ -1,0 +1,5 @@
+at measure: L0 0, sorted runs 3: run 31: 4 SSTs 12 MiB, run 30: 4 SSTs 50 MiB, run 0: 8 SSTs 1370 MiB
+  codecs ['lz4'], sorted-run data 1433 MiB in 48030 blocks (30.5 KiB stored per block)
+warmup 300 finds in 2 s
+active (customers drawn by activity): GETs mean 2.46, p50 2, p95 4, max 5; ms p50 6.1
+any (customers drawn uniformly): GETs mean 2.27, p50 2, p95 4, max 5; ms p50 5.7

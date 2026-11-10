@@ -3,8 +3,7 @@
 //! * every document value is the BSON document followed by `TRAIL` and its 8-byte big-endian sequence number
 //!   (readers that decode with `Document::from_reader` ignore the trailer);
 //! * `nat/{collection}/{seq}` -> the encoded `_id` lists the documents in insertion order;
-//! * `meta/nat/{collection}` holds a reserved upper bound of the sequence numbers handed out (the numbers are
-//!   allocated in blocks of `BLOCK`, a restart skips the unused rest of a block).
+//! * `meta/nat/{collection}` holds the next free sequence number, written in the same batch as every insert (see `alloc`).
 //!
 //! A collection written before this existed has no marker: it keeps its `_id` order until the first insert,
 //! which numbers the existing documents in `_id` order (`migrate`) and then enables the marker.
@@ -15,7 +14,6 @@ use crate::keyenc::prefix_end;
 use tenant_bench::lifecycle::Op;
 
 pub const TRAIL: u8 = 0xFE;
-const BLOCK: u64 = 1000;
 const MIGRATE_CHUNK: usize = 2000;
 
 pub fn prefix(coll: &str) -> Vec<u8> {
@@ -70,23 +68,33 @@ pub fn drop_prefixes(coll: &str) -> Vec<Vec<u8>> {
     vec![prefix(coll)]
 }
 
-/// The next sequence number of a collection (enabling insertion order on the first insert).
-pub async fn alloc(g: &mut Entry, coll: &str) -> anyhow::Result<u64> {
+/// The next sequence number of a collection (enabling insertion order on the first insert). `ops` is the write set of
+/// the insert: the collection's next free number (`meta/nat/{collection}`) goes into the same atomic batch as the
+/// document that takes this one.
+///
+/// Before, the next block of 1000 numbers was reserved by a batch of its own, applied before the insert. With the
+/// replicated log (and the agent lane) batches can become durable out of order: a crash could keep the inserts and lose
+/// the reservation, and the next process handed the same numbers out again (overwriting the `nat/` entries, so documents
+/// vanished from collection scans) or, when it was the collection's first reservation, numbered the collection again
+/// from 1 (found by the log-path fix's kill test). Now a durable insert always comes with its counter. The counter can
+/// still go back when a transaction that took a number earlier commits after a later insert, so loading it also starts
+/// above the highest number in use (one reverse seek, once per opening).
+pub async fn alloc(g: &mut Entry, coll: &str, ops: &mut Vec<Op>) -> anyhow::Result<u64> {
     if !g.nat.contains_key(coll) {
         let next = match g.get_live(&meta_key(coll)).await? {
-            Some(v) => u64::from_be_bytes(v[..8].try_into()?),
+            Some(v) => {
+                let stored = u64::from_be_bytes(v[..8].try_into()?);
+                let np = prefix(coll);
+                let end = prefix_end(&np);
+                let top = g.scan_range(&np, end.as_deref(), true, Some(1), 4096).await?.first().and_then(|(k, _)| k.get(np.len()..).and_then(|s| s.try_into().ok()).map(u64::from_be_bytes));
+                stored.max(top.map_or(0, |t| t + 1))
+            }
             None => migrate(g, coll).await?,
         };
-        g.nat.insert(coll.to_string(), (next, next));
+        g.nat.insert(coll.to_string(), (next, u64::MAX));
     }
     let (next, limit) = g.nat[coll];
-    let limit = if next >= limit {
-        let l = next + BLOCK;
-        g.apply(vec![Op::Put(meta_key(coll), l.to_be_bytes().to_vec())]).await?;
-        l
-    } else {
-        limit
-    };
+    ops.push(Op::Put(meta_key(coll), (next + 1).to_be_bytes().to_vec()));
     g.nat.insert(coll.to_string(), (next + 1, limit));
     Ok(next)
 }

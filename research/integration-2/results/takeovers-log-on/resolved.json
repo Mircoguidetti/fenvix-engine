@@ -1,0 +1,58 @@
+{
+ "data": "atlas",
+ "phases": [
+  "load",
+  "measure",
+  "extras"
+ ],
+ "pantry": "new",
+ "ballast_slice": null,
+ "engine": "integration",
+ "atlas_states": "501c8fd",
+ "cook": "m7i.large",
+ "spare": "m7i.large",
+ "log": "m7i.large",
+ "compactor": null,
+ "compactor_options": "",
+ "loader": "c7i.xlarge",
+ "loader_options": "",
+ "client": "c7i.xlarge",
+ "filler": null,
+ "extras_client": "c7i.large",
+ "log_colocate": true,
+ "server_options": "",
+ "prepare": false,
+ "programs": [
+  "takeovers"
+ ],
+ "takeovers_args": "--n 50 --writers 8 --between-s 3 --lease-ttl 4 --log on",
+ "log_ack_args": "--n 300 --conc 8 --secs 10",
+ "s3_first_byte_args": "--objects 4 --reads 30 --sizes-kib 1,64,1024 --range-kib 64,256 --big-mib 16",
+ "sealed_run_args": "--run-mib 64 --block-kib 256 --reads 60",
+ "ballast_rounds_args": "--n-q2 6 --n-q3 6 --n-q1 6 --n-q1d 6 --n-q4 4 --dorm-q2 3 --dorm-q3 3 --dorm-q1 3 --dorm-q1d 3 --dorm-q4 3 --pausa-s 2 --min-secondi-fase 2",
+ "spend_cap": 5,
+ "cap_approved": "",
+ "ceiling_min": 150,
+ "keep_days": 7,
+ "kept_max_days": 5,
+ "s3_fallback_dollars": 1.5,
+ "mode": "run",
+ "pantry_mode": "new",
+ "pantry_name": "fenvix-coldread-s9d-142120",
+ "atlas_load": true,
+ "ballast": {
+  "parallel": 2,
+  "lines": []
+ },
+ "data_gb_upper": 1,
+ "vcpu_peaks": {
+  "load": 8,
+  "measure (m30)": 6,
+  "extras": 10
+ },
+ "vcpu_peak": 10,
+ "arches": [
+  "x86_64"
+ ],
+ "loader_uses_log": false
+}

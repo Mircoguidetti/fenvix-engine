@@ -1,0 +1,5 @@
+caught (DbReader::open)
+caught (Db::open)
+caught (Db::builder)
+caught (DbReader::builder (control: must be caught))
+raw-reader check: every case caught

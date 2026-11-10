@@ -32,7 +32,7 @@ use object_store::ObjectStoreExt;
 use serde_json::{json, Value};
 use slatedb::admin::Admin;
 use slatedb::config::{CheckpointOptions, DbReaderOptions};
-use slatedb::{DbReader, DbReaderMode};
+use tenant_bench::fx::pair::PairedReader;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
@@ -143,7 +143,9 @@ pub async fn make_point(ctl: &Ctl, db: &str, window_secs: u64, tag: &str) -> any
     let admin = Admin::builder(purge::tenant_path(db), Arc::clone(&ctl.store)).build();
     let now = now_ms();
     let name = if tag.is_empty() { format!("ret:{now}") } else { format!("ret:{now}:{tag}") };
-    let cp = admin.create_detached_checkpoint(&CheckpointOptions { lifetime: Some(Duration::from_secs(window_secs.max(1))), source: None, name: Some(name) }).await?;
+    let opts = CheckpointOptions { lifetime: Some(Duration::from_secs(window_secs.max(1))), source: None, name: Some(name) };
+    // paired with a version of our manifest under the drop lease (rule 18; nothing without --sealed-runs)
+    let (cp, _pair) = tenant_bench::fx::pair::checkpoint_paired(&ctl.store, db, || async { Ok(admin.create_detached_checkpoint(&opts).await?) }).await?;
     Ok(Point { id: cp.id, at_ms: now, manifest_id: cp.manifest_id, expires_ms: Some(now + window_secs as i64 * 1000) })
 }
 
@@ -155,6 +157,7 @@ pub async fn prune(ctl: &Ctl, db: &str, all: bool) -> anyhow::Result<usize> {
     for p in points(ctl, db).await? {
         if all || p.expires_ms.map_or(false, |e| e < now) {
             admin.delete_checkpoint(p.id).await?;
+            tenant_bench::fx::pair::delete_pair(&ctl.store, db, &p.id).await?;
             n += 1;
         }
     }
@@ -348,7 +351,7 @@ async fn run_locked(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, db: &str, detail:
     let wal_copied = copy_wal_forward(ctl, db, &staging, replay_after, latest_next_wal, target).await?;
     super::failpoint("restore.after_staging").await;
     // ---- diff ----
-    let diff = diff_and_apply(ctl, g, db, &staging, apply, opid).await?;
+    let diff = diff_and_apply(ctl, g, db, &staging, pid, apply, opid).await?;
     Ok(json!({
         "database": db, "restored_to": rec::rfc3339(target), "restored_to_ms": target, "applied": apply,
         "from_point": { "id": pid.to_string(), "at": rec::rfc3339(point.at_ms), "wal_objects_replayed_after_it": wal_copied },
@@ -391,25 +394,66 @@ async fn copy_wal_forward(ctl: &Ctl, db: &str, staging: &str, replay_after: u64,
     Ok(copied)
 }
 
-async fn open_reader(ctl: &Ctl, path: &str, skip_replay: bool) -> anyhow::Result<DbReader> {
+/// A reader of PITR's diff: the SlateDB database at `path` (the staging clone, or the live database) read through the
+/// version of our manifest `follow` names (`fx/pair.rs`): the staging clone with the version paired with its restore
+/// point (rule 20), the live database, quiesced, with its newest version. Rows a drop removed from SlateDB come from our
+/// runs on both sides.
+async fn open_reader(ctl: &Ctl, db: &str, path: &str, skip_replay: bool, follow: tenant_bench::fx::pair::Follow) -> anyhow::Result<PairedReader> {
     let mut o = DbReaderOptions::default();
     o.skip_wal_replay = skip_replay;
     o.manifest_poll_interval = Duration::from_secs(3600);
-    Ok(DbReader::builder(path.to_string(), Arc::clone(&ctl.store)).with_reader_mode(DbReaderMode::FollowLatest).with_options(o).build().await?)
+    PairedReader::open_follow(&ctl.store, db, path.to_string(), follow, o).await
 }
 
-async fn diff_and_apply(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, db: &str, staging: &str, apply: bool, _opid: &str) -> ApiResult<Diff> {
-    let past = open_reader(ctl, staging, false).await?;
-    let live = open_reader(ctl, &purge::tenant_path(db), true).await?;
-    let opts = slatedb::config::ScanOptions { read_ahead_bytes: 4 << 20, max_fetch_tasks: 4, cache_blocks: false, ..Default::default() };
-    let range = (std::ops::Bound::<Vec<u8>>::Unbounded, std::ops::Bound::<Vec<u8>>::Unbounded);
-    let mut pi = past.scan_with_options(range.clone(), &opts).await.map_err(anyhow::Error::from)?;
-    let mut li = live.scan_with_options(range, &opts).await.map_err(anyhow::Error::from)?;
+/// The rows of a paired reader in key order, a page at a time (each page holds the version and checks it, rules 4, 5),
+/// envelopes decoded with the reader's own E_env; deleted rows and the marker itself are not data (the diff never writes
+/// or deletes the marker: the live database keeps its own E_env).
+struct Rows<'a> {
+    r: &'a PairedReader,
+    next: Vec<u8>,
+    page: std::collections::VecDeque<(Bytes, Bytes)>,
+    done: bool,
+}
+
+impl<'a> Rows<'a> {
+    fn new(r: &'a PairedReader) -> Self {
+        Rows { r, next: Vec::new(), page: Default::default(), done: false }
+    }
+
+    async fn next(&mut self) -> anyhow::Result<Option<(Bytes, Bytes)>> {
+        loop {
+            if let Some(kv) = self.page.pop_front() {
+                if kv.0.as_ref() == tenant_bench::envelope::MARKER {
+                    continue;
+                }
+                return Ok(Some(kv));
+            }
+            if self.done {
+                return Ok(None);
+            }
+            let rows = self.r.scan(&self.next, None, false, Some(1000), 4 << 20).await?;
+            self.done = rows.len() < 1000;
+            if let Some((k, _)) = rows.last() {
+                self.next = k.to_vec();
+                self.next.push(0);
+            }
+            self.page.extend(rows);
+        }
+    }
+}
+
+async fn diff_and_apply(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, db: &str, staging: &str, pid: uuid::Uuid, apply: bool, _opid: &str) -> ApiResult<Diff> {
+    use tenant_bench::fx::pair::Follow;
+    let past = open_reader(ctl, db, staging, false, Follow::PairOf(pid)).await?;
+    let live = open_reader(ctl, db, &purge::tenant_path(db), true, Follow::Newest).await?;
+    // Keys are compared physically (layout v2 keys under `u/` are written back as they are: the mapping leaves them
+    // unchanged).
+    let (mut pi, mut li) = (Rows::new(&past), Rows::new(&live));
     let mut d = Diff::default();
     let mut batch: Vec<Op> = Vec::new();
     let mut batch_bytes = 0usize;
     let mut applying = false;
-    let (mut p, mut l) = (pi.next().await.map_err(anyhow::Error::from)?, li.next().await.map_err(anyhow::Error::from)?);
+    let (mut p, mut l) = (pi.next().await?, li.next().await?);
     macro_rules! flush {
         () => {
             if apply && !batch.is_empty() {
@@ -429,35 +473,35 @@ async fn diff_and_apply(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, db: &str, sta
             (None, None) => break,
             (Some(_), None) => Less,
             (None, Some(_)) => Greater,
-            (Some(a), Some(b)) => a.key.cmp(&b.key),
+            (Some(a), Some(b)) => a.0.cmp(&b.0),
         };
         match ord {
             Less => {
-                let kv = p.take().unwrap();
+                let (key, value) = p.take().unwrap();
                 d.puts += 1;
-                d.bytes_put += kv.value.len() as u64;
-                batch_bytes += kv.key.len() + kv.value.len();
-                batch.push(Op::Put(kv.key.to_vec(), kv.value.to_vec()));
-                p = pi.next().await.map_err(anyhow::Error::from)?;
+                d.bytes_put += value.len() as u64;
+                batch_bytes += key.len() + value.len();
+                batch.push(Op::Put(key.to_vec(), value.to_vec()));
+                p = pi.next().await?;
             }
             Greater => {
-                let kv = l.take().unwrap();
+                let (key, _) = l.take().unwrap();
                 d.deletes += 1;
-                batch.push(Op::Delete(kv.key.to_vec()));
-                l = li.next().await.map_err(anyhow::Error::from)?;
+                batch.push(Op::Delete(key.to_vec()));
+                l = li.next().await?;
             }
             Equal => {
                 let (a, b) = (p.take().unwrap(), l.take().unwrap());
-                if a.value == b.value {
+                if a.1 == b.1 {
                     d.same += 1;
                 } else {
                     d.puts += 1;
-                    d.bytes_put += a.value.len() as u64;
-                    batch_bytes += a.key.len() + a.value.len();
-                    batch.push(Op::Put(a.key.to_vec(), a.value.to_vec()));
+                    d.bytes_put += a.1.len() as u64;
+                    batch_bytes += a.0.len() + a.1.len();
+                    batch.push(Op::Put(a.0.to_vec(), a.1.to_vec()));
                 }
-                p = pi.next().await.map_err(anyhow::Error::from)?;
-                l = li.next().await.map_err(anyhow::Error::from)?;
+                p = pi.next().await?;
+                l = li.next().await?;
             }
         }
         if batch.len() >= 1000 || batch_bytes >= 4 << 20 {

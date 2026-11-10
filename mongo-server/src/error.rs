@@ -128,6 +128,13 @@ impl From<anyhow::Error> for MongoError {
             m.extra = Some(doc! { "errorLabels": ["RetryableWriteError"] });
             return m;
         }
+        if let Some(r) = e.downcast_ref::<tenant_bench::fx::Retry>() {
+            // a revoked hold or a stale version of our manifest (fx/hold.rs, rule 5 and 6): retryable, and inside a
+            // transaction the driver runs the whole transaction again
+            let mut m = MongoError::new(134, "SealedRunsRetry", r.to_string());
+            m.extra = Some(doc! { "errorLabels": ["TransientTransactionError", "RetryableWriteError"] });
+            return m;
+        }
         MongoError::internal(format!("{e:#}"))
     }
 }

@@ -39,7 +39,13 @@ pub async fn build_step(dbs: &Arc<Dbs>, db: &str, coll: &str) -> R<Step> {
     let prefix = indexes[pos].prefix(coll);
     if indexes[pos].state == State::Dropping {
         let end = prefix_end(&prefix);
-        let rows = g.scan_range(&prefix, end.as_deref(), false, Some(n), 1 << 20).await?;
+        let mut rows = g.scan_range(&prefix, end.as_deref(), false, Some(n), 1 << 20).await?;
+        if rows.len() < n {
+            // then the values a failed unique build still had to re-check
+            let sp = indexes[pos].suspect_prefix(coll);
+            let send = prefix_end(&sp);
+            rows.extend(g.scan_range(&sp, send.as_deref(), false, Some(n - rows.len()), 1 << 20).await?);
+        }
         let mut ops: Vec<Op> = rows.iter().map(|(k, _)| Op::Delete(k.to_vec())).collect();
         let last = rows.len() < n;
         if last {
@@ -103,15 +109,50 @@ pub async fn build_step(dbs: &Arc<Dbs>, db: &str, coll: &str) -> R<Step> {
         g.apply(vec![Entry::indexes_op(coll, &indexes)?]).await?;
         return Ok(Step::Failed(e));
     }
-    let done = rows.len() < n;
+    let mut done = rows.len() < n;
+    if done && idx.unique {
+        // Every document is scanned. Before the index is ready, re-check the values that concurrent writes found already
+        // held (`IndexDef::suspect_prefix`): a write behind the cursor is not seen by the scan, so a value written twice
+        // there, or written once and held by a scanned document, is only caught here. As on mongod, the build then
+        // fails with 11000, unless a later write removed the duplicate. A step checks at most `n` values; the index stays
+        // `Building` (and new writes keep recording values) until a step finds none left, under the same lock.
+        let sp = idx.suspect_prefix(coll);
+        let send = prefix_end(&sp);
+        let sus = g.scan_range(&sp, send.as_deref(), false, Some(n), 1 << 20).await?;
+        for (sk, kv) in &sus {
+            let c = &sk[sp.len()..];
+            let mut p = prefix.clone();
+            p.extend(c);
+            let end = prefix_end(&p);
+            let mut owners: HashSet<Vec<u8>> = g.scan_range(&p, end.as_deref(), false, Some(8), 4096).await?.iter().filter_map(|(ek, _)| entry_id(ek).map(|o| o.to_vec())).collect();
+            if let Some(o) = seen.get(c) {
+                owners.insert(o.clone());
+            }
+            if owners.len() > 1 {
+                let kv = decode(&kv[..]).unwrap_or_default();
+                let mut e = MongoError::duplicate_key_c(&ns, &idx.name, &idx.key_pattern(), &kv, idx.collation.as_deref());
+                e.msg = format!("Index build failed: {}: Collection {ns} ( {} ) :: caused by :: {}", fake_uuid(), fake_uuid(), e.msg);
+                for i in indexes.iter_mut().filter(|i| i.state == State::Building) {
+                    i.state = State::Dropping;
+                    i.cursor = None;
+                }
+                g.apply(vec![Entry::indexes_op(coll, &indexes)?]).await?;
+                return Ok(Step::Failed(e));
+            }
+            ops.push(Op::Delete(sk.to_vec()));
+        }
+        if sus.len() >= n {
+            done = false;
+        }
+    }
     if multikey {
         indexes[pos].multikey = true;
     }
     if done {
         indexes[pos].state = State::Ready;
         indexes[pos].cursor = None;
-    } else {
-        let mut c = rows.last().unwrap().0.to_vec();
+    } else if let Some((last, _)) = rows.last() {
+        let mut c = last.to_vec();
         c.push(0);
         indexes[pos].cursor = Some(c);
     }
@@ -351,7 +392,7 @@ impl Server {
         let n_indexes = 1 + g.indexes(coll).await?.iter().filter(|i| i.state == State::Ready).count() as i32;
         let uuid = g.collection_uuid(coll).await?;
         let mut ops: Vec<Op> = Vec::new();
-        for prefix in [doc_prefix(coll), idx_collection_prefix(coll), crate::natural::prefix(coll), crate::collopts::idc_prefix(coll)] {
+        for prefix in [doc_prefix(coll), idx_collection_prefix(coll), crate::natural::prefix(coll), crate::collopts::idc_prefix(coll), crate::custkey::loc_prefix(coll)] {
             for (k, _) in g.scan(&prefix).await? {
                 ops.push(Op::Delete(k.to_vec()));
             }
@@ -400,7 +441,7 @@ impl Server {
         let dropped_uuid = if target_exists { Some(g.collection_uuid(&to).await?) } else { None };
         let mut ops: Vec<Op> = Vec::new();
         if target_exists {
-            for prefix in [doc_prefix(&to), idx_collection_prefix(&to), crate::natural::prefix(&to), crate::collopts::idc_prefix(&to)] {
+            for prefix in [doc_prefix(&to), idx_collection_prefix(&to), crate::natural::prefix(&to), crate::collopts::idc_prefix(&to), crate::custkey::loc_prefix(&to)] {
                 for (k, _) in g.scan(&prefix).await? {
                     ops.push(Op::Delete(k.to_vec()));
                 }
@@ -412,7 +453,7 @@ impl Server {
             ops.push(Op::Delete(crate::capped::stat_key(&to)));
             ops.push(Op::Delete(crate::collstat::key(&to)));
         }
-        for (old_prefix, new_prefix) in [(doc_prefix(&from), doc_prefix(&to)), (idx_collection_prefix(&from), idx_collection_prefix(&to)), (crate::natural::prefix(&from), crate::natural::prefix(&to)), (crate::collopts::idc_prefix(&from), crate::collopts::idc_prefix(&to))] {
+        for (old_prefix, new_prefix) in [(doc_prefix(&from), doc_prefix(&to)), (idx_collection_prefix(&from), idx_collection_prefix(&to)), (crate::natural::prefix(&from), crate::natural::prefix(&to)), (crate::collopts::idc_prefix(&from), crate::collopts::idc_prefix(&to)), (crate::custkey::loc_prefix(&from), crate::custkey::loc_prefix(&to))] {
             for (k, v) in g.scan(&old_prefix).await? {
                 let mut nk = new_prefix.clone();
                 nk.extend_from_slice(&k[old_prefix.len()..]);
@@ -548,6 +589,9 @@ impl Server {
             g = self.dbs.lock(db).await;
             indexes = g.indexes(coll).await?;
         }
+        // layout v2: an index led by the customer field is stored with the customer's documents (`custkey.rs`); a collection
+        // that `--customer-key` names takes its key now if it is still empty
+        let ckey = crate::custkey::for_write(&mut g, &ns, coll).await?;
         let default_collation = g.coll_opts(coll).await?.and_then(|o| o.collation.clone());
         let series_base = if g.coll_opts(coll).await?.map(|k| k.series.is_some()).unwrap_or(false) { 0 } else { 1 };
         let before = series_base + indexes.iter().filter(|i| !crate::special_colls::is_internal(i)).count() as i32;
@@ -738,6 +782,9 @@ impl Server {
                 return Err(MongoError::new(85, "IndexOptionsConflict", format!("An equivalent index already exists with a different name and options. Requested index: {}, existing index: {}", fmt_doc(&idx), fmt_doc(&ex.spec))));
             }
             let mut def = wanted;
+            if let Some(k) = &ckey {
+                def.colocated = !def.name.contains('\0') && crate::custkey::colocates(k, &def.key_pattern(), !def.special && matches!(def.kind, crate::index::Kind::Regular), def.collation.is_some());
+            }
             if has_docs && !def.special {
                 def.state = State::Building;
                 building = true;
@@ -834,7 +881,7 @@ impl Server {
             if g.collections().await?.iter().any(|n| n == coll) {
                 let mut opts = doc! { "uuid": Bson::Binary(bson::Binary { subtype: bson::spec::BinarySubtype::Uuid, bytes: g.collection_uuid(coll).await? }) };
                 if let Some(o) = g.coll_opts(coll).await? {
-                    opts.extend(o.raw.iter().filter(|(k, _)| !matches!(k.as_str(), "capped" | "size" | "max" | "collation" | "storageEngine" | "indexOptionDefaults")).map(|(k, v)| (k.clone(), v.clone())));
+                    opts.extend(o.raw.iter().filter(|(k, _)| !matches!(k.as_str(), "capped" | "size" | "max" | "collation" | "storageEngine" | "indexOptionDefaults" | crate::custkey::RAW_KEY | crate::custkey::RAW_ORDER)).map(|(k, v)| (k.clone(), v.clone())));
                 }
                 let uuid = match opts.get("uuid") { Some(Bson::Binary(b)) => b.bytes.clone(), _ => Vec::new() };
                 Some((opts, uuid))
@@ -903,6 +950,18 @@ impl Server {
                 raw.extend(images);
             } else {
                 raw.remove("changeStreamPreAndPostImages");
+            }
+            let raw = crate::collopts::canonical(&raw);
+            g.apply(vec![Op::Put(crate::collopts::meta_key(coll), raw.to_vec()?)]).await?;
+            g.set_coll_opts(coll, Some(crate::collopts::CollOpts::parse(raw)));
+        }
+        if let Some(on) = crate::collopts::agent_lane_option("collMod", cmd)? {
+            let opts = g.coll_opts(coll).await?;
+            let mut raw = opts.as_ref().map(|o| o.raw.clone()).unwrap_or_default();
+            if on {
+                raw.insert(crate::agentlane::OPTION, true);
+            } else {
+                raw.remove(crate::agentlane::OPTION);
             }
             let raw = crate::collopts::canonical(&raw);
             g.apply(vec![Op::Put(crate::collopts::meta_key(coll), raw.to_vec()?)]).await?;
@@ -1187,6 +1246,21 @@ impl Server {
             let prefix = idx.prefix(coll);
             let stored = g.scan(&prefix).await?;
             keys_per_index.insert(idx.name.clone(), stored.len() as i32);
+            if idx.unique && idx.state == State::Ready {
+                // a unique index never holds one value for two documents (entries are sorted: equal values are adjacent)
+                let mut last: Option<&[u8]> = None;
+                for (k, _) in &stored {
+                    let Some(value) = crate::index::entry_comps(k, &prefix) else { continue };
+                    if last == Some(value) {
+                        extra_total += 1;
+                        bad_indexes.insert(idx.name.clone());
+                        if errors.len() < 20 {
+                            errors.push(Bson::String(format!("unique index {} holds the same value for two documents", idx.name)));
+                        }
+                    }
+                    last = Some(value);
+                }
+            }
             let mut have: HashSet<Vec<u8>> = stored.iter().map(|(k, _)| k.to_vec()).collect();
             // Documents behind the build cursor must be fully indexed; a building index only covers the part before its cursor
             // plus whatever concurrent writes added, so only check completeness for ready indexes.

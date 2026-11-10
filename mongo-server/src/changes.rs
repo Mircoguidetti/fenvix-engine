@@ -21,7 +21,8 @@ pub static MAX_BYTES: std::sync::atomic::AtomicUsize = std::sync::atomic::Atomic
 fn est_size(s: &EvSpec) -> usize {
     let doc = |d: &Option<Document>| d.as_ref().map_or(0, |d| d.to_vec().map(|v| v.len()).unwrap_or(256));
     let key = s.doc_key.as_ref().map_or(0, |k| bson::doc! { "k": k.clone() }.to_vec().map(|v| v.len()).unwrap_or(64));
-    384 + 3 * (doc(&s.full) + doc(&s.desc) + doc(&s.pre) + doc(&s.post) + doc(&s.op_desc) + doc(&s.state_before) + key)
+    let cust = s.cust.as_ref().map_or(0, |(f, v)| f.to_vec().map(|x| x.len()).unwrap_or(64) + bson::doc! { "k": v.clone() }.to_vec().map(|x| x.len()).unwrap_or(64));
+    384 + 3 * (doc(&s.full) + doc(&s.desc) + doc(&s.pre) + doc(&s.post) + doc(&s.op_desc) + doc(&s.state_before) + key + cust)
 }
 
 /// Set once a stream with `showExpandedEvents` was opened: data events then carry the UUID of their collection from the start.
@@ -39,6 +40,9 @@ pub struct EvSpec {
     pub coll: Option<String>,
     pub op: &'static str,
     pub doc_key: Option<Bson>,
+    /// A customer-keyed collection (`custkey.rs`): the customer fields of `documentKey` (before `_id`, as mongod
+    /// writes a shard key) and the customer value, which with `_id` names one document (`_id` is unique per customer).
+    pub cust: Option<(Document, Bson)>,
     pub full: Option<Document>,
     pub desc: Option<Document>,
     /// Transaction number and session id, for events of a committed transaction.
@@ -69,6 +73,10 @@ impl EvSpec {
 
 #[derive(Debug)]
 pub struct Ev {
+    /// With the log on: the batch the event comes from, until its log record is confirmed (see
+    /// `lifecycle::TRACK_VISIBLE`). Readers stop at the first event whose batch is not confirmed yet, and skip one whose
+    /// batch can no longer be confirmed (ownership lost: like a rollback, the change may never have happened).
+    pub gate: Option<tenant_bench::lifecycle::VisGate>,
     pub seq: u64,
     pub time: Timestamp,
     pub wall: bson::DateTime,
@@ -142,7 +150,8 @@ impl ChangeLog {
                 let seq = g.next_seq;
                 g.next_seq += 1;
                 let size = est_size(&s);
-                g.events.push_back(Arc::new(Ev { seq, time: Timestamp { time: ts, increment: inc }, wall: now, spec: s }));
+                let gate = tenant_bench::lifecycle::visibility_gate(&s.db);
+                g.events.push_back(Arc::new(Ev { gate, seq, time: Timestamp { time: ts, increment: inc }, wall: now, spec: s }));
                 g.sizes.push_back(size);
                 g.bytes += size;
                 let max = MAX_BYTES.load(std::sync::atomic::Ordering::Relaxed);
@@ -297,8 +306,16 @@ impl ChangeLog {
             if out.len() >= limit {
                 break;
             }
+            // change streams report only confirmed changes, in order (MongoDB: majority-committed only)
+            let lost = match e.gate.as_ref().map(|g| g.state()) {
+                // a pending event of another database or collection does not hold this stream back
+                Some(tenant_bench::lifecycle::VisState::Pending) if scope.sees(&e.spec) => break,
+                Some(tenant_bench::lifecycle::VisState::Pending) => true,
+                Some(tenant_bench::lifecycle::VisState::Lost) => true,
+                _ => false,
+            };
             last = e.seq;
-            if scope.sees(&e.spec) {
+            if !lost && scope.sees(&e.spec) {
                 out.push(Arc::clone(e));
             }
         }

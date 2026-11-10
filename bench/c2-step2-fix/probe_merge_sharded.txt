@@ -1,0 +1,7 @@
+default ERR 11000 PlanExecutor error during aggregation :: caused by :: $merge failed due to a DuplicateKey error :: caused by :: E11000 duplicate key error collection: t.tg inde
+on_id ERR 61 PlanExecutor error during aggregation :: caused by :: Failed to target upsert by query :: could not extract exact shard key, full error: {'ok': 0.0, 'errmsg': '
+on_u_id ERR 51190 Cannot find index to verify that join fields will be unique, full error: {'ok': 0.0, 'errmsg': 'Cannot find index to verify that join fields will be unique', 'c
+on_id_u ERR 51190 Cannot find index to verify that join fields will be unique, full error: {'ok': 0.0, 'errmsg': 'Cannot find index to verify that join fields will be unique', 'c
+missing ERR 51132 PlanExecutor error during aggregation :: caused by :: $merge write error: 'on' field 'u' cannot be missing, null, undefined or an array, full error: {'ok': 0.0,
+twofield OK [{'_id': 1, 'ts': 5, 'u': 'B', 'y': 2}]
+twofield-partial ERR 51190 Cannot find index to verify that join fields will be unique, full error: {'ok': 0.0, 'errmsg': 'Cannot find index to verify that join fields will be unique', 'code': 51190, 'codeName': 'Location51190'

@@ -47,6 +47,9 @@ impl fmt::Display for LocalCas {
 impl ObjectStore for LocalCas {
     async fn put_opts(&self, location: &Path, payload: PutPayload, mut opts: PutOptions) -> OsResult<PutResult> {
         let _g = self.write_lock.lock().await;
+        // LocalFileSystem cannot keep object attributes and refuses a PUT that has any; slatedb then sends the same PUT
+        // again without them. Dropping them here makes it one PUT, as on S3 (the agent-lane latency tests count PUTs).
+        opts.attributes = Default::default();
         if let PutMode::Update(want) = &opts.mode {
             let stale = |why: &str| object_store::Error::Precondition { path: location.to_string(), source: why.to_string().into() };
             let head = match self.inner.get_opts(location, GetOptions { head: true, ..Default::default() }).await {

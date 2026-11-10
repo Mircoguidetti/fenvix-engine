@@ -122,6 +122,7 @@ async fn dispatch(ctl: &Arc<Ctl>, req: &Request) -> ApiResult<Response> {
             let id = req.query.get("id").and_then(|v| v.parse().ok());
             Ok(Response::json(200, &super::purge::manifest_summary(&ctl.store, db, id).await?.unwrap_or(Value::Null)))
         }
+        ("POST", ["v1", "test", "databases", db, "drop"]) if super::testhooks::enabled() => Ok(Response::json(200, &super::testhooks::drop_rows(ctl, db, &body_json(req)?).await?)),
         (_, ["v1", ..]) => Err(ApiError::new(404, "no_route", format!("no route for {} {}", req.method, req.path))),
         _ => Err(ApiError::new(404, "no_route", "not found")),
     }

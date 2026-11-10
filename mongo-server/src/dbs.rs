@@ -3,7 +3,7 @@
 
 use crate::layout;
 use crate::lease::{self, Leases};
-use anyhow::{bail, Result};
+use anyhow::Result;
 use bson::{doc, Bson, Document};
 use bytes::Bytes;
 use futures::{StreamExt, TryStreamExt};
@@ -106,7 +106,15 @@ pub(crate) struct MetaCache {
 
 /// Reads of a database with relaxed durability see the writes acknowledged before they were durable (read-your-writes).
 fn durable_reads(db: &str) -> bool {
-    DURABLE_READS.load(Relaxed) && crate::ctl::durability::relaxed_ms(db) == 0
+    // With the local or replicated log (`locallog.rs`, Q8d) a write is acknowledged when its record is in the log, long
+    // before its WAL object is in object storage (every --local-log-upload-secs): a read of the object-storage state would
+    // not see it (a point read right after an acknowledged insert answered nothing: read-your-writes broken), and the
+    // agent lane (agentlane.rs) makes object storage hold some later batches and not earlier ones. Reads then see the
+    // latest state, as on a MongoDB primary, where a write is visible to local reads before it is majority-acknowledged.
+    // With the log, reads see the confirmed state instead (`lifecycle::TRACK_VISIBLE`): every write whose log record is
+    // confirmed (or that is in object storage), nothing staged and still waiting for its record. The 8fbdd8d fix read the
+    // latest state, which also returned writes the log had not confirmed (dirty reads, review R5).
+    DURABLE_READS.load(Relaxed) && crate::ctl::durability::relaxed_ms(db) == 0 && crate::locallog::get().is_none()
 }
 
 pub fn set_wake_limit(n: usize) {
@@ -152,7 +160,7 @@ pub struct Entry {
     /// When each collection's expired documents were last swept by a write command.
     pub(crate) swept: HashMap<String, Instant>,
     /// Snapshot that this command's reads go through (a transaction's), set after taking the lock.
-    pub(crate) snap: Option<Arc<slatedb::DbSnapshot>>,
+    pub(crate) snap: Option<Arc<tenant_bench::fx::read::Snap>>,
     /// Write counter and, while transactions are open, the last write of each document key (conflict detection).
     pub(crate) seq: u64,
     pub(crate) modified: HashMap<Vec<u8>, u64>,
@@ -165,6 +173,8 @@ pub struct Entry {
     pub(crate) nat: HashMap<String, (u64, u64)>,
     /// Collection options (default collation) by collection; cleared with `nat`.
     pub(crate) copts: HashMap<String, Option<Arc<crate::collopts::CollOpts>>>,
+    /// Collections whose customer key (`custkey.rs`) was decided since the options were loaded; cleared with `copts`.
+    pub(crate) ckey_decided: std::collections::HashSet<String>,
     /// Storage counters of the collections (`collstat.rs`), by stored key, as the latest state has them (`None`: none
     /// stored); follows every write of the keys (`apply_mode`); cleared with `copts`.
     pub(crate) sstat: HashMap<Vec<u8>, Option<crate::collstat::CollStat>>,
@@ -249,6 +259,7 @@ impl Dbs {
                     inflight: self.inflight_counter(name),
                     nat: HashMap::new(),
                     copts: HashMap::new(),
+                    ckey_decided: Default::default(),
                     sstat: HashMap::new(),
                     meta: Default::default(),
                 }))
@@ -326,6 +337,7 @@ impl Dbs {
                         inflight: self.inflight_counter(name),
                     nat: HashMap::new(),
                     copts: HashMap::new(),
+                    ckey_decided: Default::default(),
                     sstat: HashMap::new(),
                     meta: Default::default(),
                     }))
@@ -361,23 +373,23 @@ impl Dbs {
             let mut w = Arc::clone(&e).write_owned().await;
             w.absent = false;
             if !w.ensure_open().await? {
-                return Ok(ReadView { g: None, copts: Default::default() });
+                return Ok(ReadView { g: None, copts: Default::default(), fc: Default::default() });
             }
-            return Ok(ReadView { g: Some(Guard::Write(w)), copts: Default::default() });
+            return Ok(ReadView { g: Some(Guard::Write(w)), copts: Default::default(), fc: Default::default() });
         }
         loop {
             {
                 let g = Arc::clone(&e).read_owned().await;
-                if g.tenant.is_some() && g.leases.valid(&g.name) {
+                if g.tenant.as_ref().is_some_and(|t| !t.fx_refresh_due()) && g.leases.valid(&g.name) {
                     crate::locallog::check_open(&g.name)?;
                     g.touch();
-                    return Ok(ReadView { g: Some(Guard::Read(g)), copts: Default::default() });
+                    return Ok(ReadView { g: Some(Guard::Read(g)), copts: Default::default(), fc: Default::default() });
                 }
             }
             let mut w = Arc::clone(&e).write_owned().await;
             w.absent = false;
             if !w.ensure_open().await? {
-                return Ok(ReadView { g: None, copts: Default::default() });
+                return Ok(ReadView { g: None, copts: Default::default(), fc: Default::default() });
             }
         }
     }
@@ -472,7 +484,8 @@ impl Entry {
 
     /// Read a metadata key from the open tenant `t`: the durable state when `durable`, the latest state otherwise. The
     /// value is cached only if the two states agree (no write of the key is staged and still on its way to durability).
-    async fn meta_read(&self, t: &Tenant, key: &[u8], durable: bool) -> Result<Option<Bytes>> {
+    /// `reader`: a read command (not a write deciding on the latest state): with the log on it gets the confirmed state.
+    async fn meta_read(&self, t: &Tenant, key: &[u8], durable: bool, reader: bool) -> Result<Option<Bytes>> {
         let latest = t.get(key).await?;
         // A reader's data is all durable; a writer's latest state may hold staged writes.
         let durable_v = if t.is_writer() { t.get_durable(key).await? } else { latest.clone() };
@@ -487,7 +500,14 @@ impl Entry {
                 m.vals.insert(key.to_vec(), latest.as_ref().map(|v| Bytes::copy_from_slice(v)));
             }
         }
-        Ok(if durable { durable_v } else { latest })
+        Ok(if durable {
+            durable_v
+        } else if let Some(snap) = reader.then(|| t.visible_snapshot_for(key)).flatten() {
+            // the log path: an in-flight batch writes this key (see `lifecycle::TRACK_VISIBLE`)
+            snap.get(key).await?
+        } else {
+            latest
+        })
     }
 
     pub fn touch(&self) {
@@ -554,6 +574,7 @@ impl Entry {
     pub async fn abandon(&mut self) -> bool {
         self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
         if let Some(l) = crate::locallog::get() {
@@ -570,6 +591,7 @@ impl Entry {
             }
         }
         let mut closed = true;
+        crate::opening::forget_db(&self.name);
         if let Some(t) = self.tenant.take() {
             closed = t.abandon().await;
             self.closes += 1;
@@ -590,6 +612,10 @@ impl Entry {
         }
         if self.tenant.is_some() {
             if self.leases.valid(&self.name) {
+                // a reader refreshes its version of our manifest before T_pin (fx, rule 6)
+                if self.tenant.as_ref().unwrap().fx_refresh_due() {
+                    self.tenant.as_mut().unwrap().fx_refresh().await?;
+                }
                 return Ok(true);
             }
             // The lease lapsed (not renewed in time) or was lost: stop acting as the owner.
@@ -620,13 +646,24 @@ impl Entry {
                 }
                 self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
+                crate::opening::forget_db(&self.name);
+                let unclean = t.unclean;
                 self.tenant = Some(t);
                 self.wakes += 1;
                 self.sync_gauges();
                 crate::fair::register(&self.name);
                 tenant_bench::counting::set_phase(0);
+                if unclean || took.is_some() {
+                    // the replicated log may hold acknowledged writes object storage does not have yet (review R4)
+                    if let Err(e) = Box::pin(crate::locallog::replay_on_wake(self)).await {
+                        // not served without them: the next command retries the open
+                        self.abandon().await;
+                        return Err(e.context(format!("database {} was taken over but its records in the log could not be read back; retry", self.name)));
+                    }
+                }
                 Ok(true)
             }
             Err(e) => {
@@ -647,8 +684,10 @@ impl Entry {
         let had = self.tenant.is_some();
         self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
+        crate::opening::forget_db(&self.name);
         if let Some(t) = self.tenant.take() {
             crate::fair::note_written(&self.name, 0, true);
             let r = t.close().await;
@@ -679,15 +718,42 @@ impl Entry {
             return Ok(None);
         }
         if let Some(s) = &self.snap {
-            return Ok(s.get(key).await?);
+            return crate::layout2::get(&crate::layout2::Raw::Snap(s), key).await;
         }
         if META_CACHE.load(Relaxed) && is_meta_key(key) {
             if let Some(v) = self.meta_lookup(key) {
                 return Ok(v);
             }
-            return self.meta_read(self.tenant.as_ref().unwrap(), key, false).await;
+            return self.meta_read(self.tenant.as_ref().unwrap(), key, false, false).await;
         }
-        self.tenant.as_ref().unwrap().get(key).await
+        self.tenant.as_ref().unwrap().get(crate::layout2::phys(key)).await
+    }
+
+    /// The mapped areas of layout v2 (`custkey.rs`) a logical range read may cross: from its bounds when they tell,
+    /// otherwise from the catalog (the collections with a customer key and their co-located indexes).
+    async fn segs_for(&mut self, lo: &[u8], hi: Option<&[u8]>) -> Result<Vec<crate::custkey::Seg>> {
+        match crate::custkey::area_of(lo, hi) {
+            Some(Some(s)) => return Ok(vec![s]),
+            Some(None) => return Ok(vec![]),
+            None => {}
+        }
+        let only = crate::custkey::coll_of_range(lo, hi).map(|(_, esc)| esc);
+        let mut segs = Vec::new();
+        for n in self.collections().await? {
+            let esc = layout::escape_collection(&n);
+            if only.as_ref().map_or(false, |o| *o != esc) {
+                continue;
+            }
+            if crate::custkey::of_opts(self.coll_opts(&n).await?.as_ref()).is_some() {
+                segs.push(crate::custkey::Seg::docs(&esc));
+            }
+            for i in self.indexes(&n).await? {
+                if i.colocated {
+                    segs.push(crate::custkey::Seg::index(&esc, &layout::escape_collection(&i.name)));
+                }
+            }
+        }
+        Ok(segs)
     }
 
     /// Like [`Entry::get`] but always reads the latest committed state, not the command's snapshot.
@@ -703,7 +769,7 @@ impl Entry {
         if !self.ensure_open().await? {
             return Ok(None);
         }
-        self.tenant.as_ref().unwrap().get(key).await
+        self.tenant.as_ref().unwrap().get(crate::layout2::phys(key)).await
     }
 
     pub async fn scan(&mut self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
@@ -718,30 +784,85 @@ impl Entry {
         if !self.ensure_open().await? {
             return Ok(vec![]);
         }
-        if self.snap.is_some() {
-            let end = crate::keyenc::prefix_end(prefix);
-            return self.scan_range_uncounted(prefix, end.as_deref(), false, None, 4 << 20).await;
-        }
-        self.tenant.as_ref().unwrap().scan_prefix(prefix).await
+        let end = crate::keyenc::prefix_end(prefix);
+        self.scan_range_uncounted(prefix, end.as_deref(), false, None, 4 << 20).await
     }
 
     /// Apply writes atomically and durably, creating the database on its first write.
     pub async fn apply(&mut self, ops: Vec<Op>) -> Result<()> {
-        self.apply_mode(ops, true).await
+        self.apply_mode(ops, true, false).await
+    }
+
+    /// [`Entry::apply`] for a transaction's commit: on the agent lane its batch is flushed at once (one PUT at the
+    /// commit) instead of waiting for the lane's batch window.
+    pub async fn apply_txn(&mut self, ops: Vec<Op>) -> Result<()> {
+        self.apply_mode(ops, true, true).await
+    }
+
+    /// Agent lane (`agentlane.rs`): whether this batch goes on it. Only batches whose collection keys all belong to
+    /// agent-lane collections and that touch no catalog key; a batch with a key of an agent-lane collection and anything
+    /// else (another collection, the catalog) takes the default path as a whole, so it stays one atomic record.
+    async fn agent_lane_batch(&mut self, ops: &[Op]) -> Result<bool> {
+        use crate::agentlane::{classify, KeyClass};
+        if !crate::agentlane::active() {
+            return Ok(false);
+        }
+        let mut colls: Vec<Vec<u8>> = Vec::new();
+        let mut other = false;
+        for op in ops {
+            let k = match op {
+                Op::Put(k, _) | Op::Delete(k) => k,
+            };
+            match classify(k) {
+                KeyClass::Coll(c) => {
+                    if !colls.contains(&c) {
+                        colls.push(c);
+                    }
+                }
+                KeyClass::Neutral => {}
+                KeyClass::Other => {
+                    if std::env::var("FENVIX_DEBUG_LANE").is_ok() {
+                        eprintln!("agent lane: other key {:?}", String::from_utf8_lossy(k));
+                    }
+                    other = true
+                }
+            }
+        }
+        if colls.is_empty() {
+            return Ok(false);
+        }
+        let (mut any, mut all) = (false, true);
+        for c in colls {
+            let name = crate::agentlane::unescape(&c);
+            let on = crate::agentlane::flag_matches(&self.name, &name) || (!other && self.coll_opts(&name).await?.map_or(false, |o| o.agent));
+            any |= on;
+            all &= on;
+        }
+        if (any && !all) || (any && other) {
+            crate::agentlane::MIXED_BATCHES.fetch_add(1, Relaxed);
+        }
+        Ok(all && !other)
     }
 
     /// Like [`Entry::apply`] but always durable in object storage before it returns, also with the local log on (the
     /// restart of the local log applies its records this way).
     pub async fn apply_durable(&mut self, ops: Vec<Op>) -> Result<()> {
-        self.apply_mode(ops, false).await
+        self.apply_mode(ops, false, false).await
     }
 
-    async fn apply_mode(&mut self, mut ops: Vec<Op>, use_local_log: bool) -> Result<()> {
+    async fn apply_mode(&mut self, mut ops: Vec<Op>, use_local_log: bool, at_commit: bool) -> Result<()> {
         if ops.is_empty() {
             return Ok(());
         }
+        // Agent lane (prototype): the batch skips the local and replicated log and is durable once its WAL object is in
+        // object storage.
+        let agent = use_local_log && self.agent_lane_batch(&ops).await?;
+        if agent {
+            crate::agentlane::AGENT_BATCHES.fetch_add(1, Relaxed);
+            crate::agentlane::note_write(&self.name);
+        }
         // Local log (prototype): the batch carries its record's marker, and is durable once the record is on the local disk.
-        let local = if use_local_log { crate::locallog::get() } else { None };
+        let local = if use_local_log && !agent { crate::locallog::get() } else { None };
         let local_seq = local.map(|l| {
             let seq = l.next_seq();
             ops.push(l.marker_op(seq));
@@ -756,21 +877,35 @@ impl Entry {
             lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
             self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
+            crate::opening::forget_db(&self.name);
             self.tenant = Some(self.lc.create(&self.name).await?);
             self.absent = false;
             self.wakes += 1;
             self.sync_gauges();
         }
         self.touch();
+        // --sealed-runs N: a publish of our manifest every N write batches (fx/build.rs), under this exclusive lock
+        if self.tenant.as_mut().unwrap().fx_note_write() {
+            let t = self.tenant.as_mut().unwrap();
+            let opts = t.fx_auto_opts();
+            // a failed publish leaves orphan runs only; fx_publish reloads or fences as the failure needs (rules 24, 25)
+            if let Err(e) = t.fx_publish(&opts, None).await {
+                eprintln!("sealed runs: publish of database {} failed: {e:#}", self.name);
+            }
+        }
         self.seq += 1;
         if self.active_txns > 0 {
             for op in &ops {
                 let k = match op {
                     Op::Put(k, _) | Op::Delete(k) => k,
                 };
-                if k.starts_with(b"doc/") {
+                // documents, the locators of customer-keyed collections (their unique `_id` index, custkey.rs), and the
+                // index definitions of a collection (an open transaction that wrote to a collection whose indexes changed
+                // since its snapshot did not maintain the new ones: it conflicts at commit, see `txn.rs`)
+                if k.starts_with(b"doc/") || k.starts_with(b"loc/") || k.starts_with(b"meta/indexes/") {
                     self.modified.insert(k.clone(), self.seq);
                 }
             }
@@ -788,7 +923,11 @@ impl Entry {
                 _ => None,
             })
             .collect();
-        let staged = self.tenant.as_mut().unwrap().stage(ops).await;
+        // first course (opening.rs): writes to a user's kept opening follow it (logical keys)
+        let fc = crate::opening::write_hook(&self.name, &ops);
+        // layout v2: customer-keyed documents and co-located index entries are stored under `u/` (custkey.rs)
+        let staged = self.tenant.as_mut().unwrap().stage(crate::layout2::phys_ops(ops)).await;
+        crate::opening::after_stage(&self.name, fc, staged.is_ok());
         if staged.is_ok() {
             // the counters in memory follow the latest state (`collstat.rs`)
             self.sstat.extend(sstat_ops);
@@ -801,12 +940,17 @@ impl Entry {
             t.bind_inflight(Arc::clone(&self.inflight));
         }
         let Some(mut commit) = staged? else { return Ok(()) };
+        if agent {
+            commit = commit.with_agent(at_commit);
+        }
         if let (Some((log, rec_ops)), Some(seq)) = (record, local_seq) {
             let epoch = self.tenant.as_ref().and_then(|t| t.writer_epoch()).unwrap_or(0);
             commit = commit.with_local(log.append(seq, &self.name, &rec_ops, epoch));
         }
         let mut slot = Some(commit);
-        if GROUP_COMMIT.load(Relaxed) {
+        // `apply_durable` (the log's replays) waits here, also inside a command: the takeover replay runs inside the
+        // command that opened the database, and its reads must see the replayed records
+        if GROUP_COMMIT.load(Relaxed) && use_local_log {
             let _ = PENDING.try_with(|p| p.borrow_mut().push(slot.take().unwrap()));
         }
         match slot {
@@ -840,8 +984,10 @@ impl Entry {
         }
         self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
+        crate::opening::forget_db(&self.name);
         if let Some(t) = self.tenant.take() {
             t.close().await?;
             self.closes += 1;
@@ -880,6 +1026,10 @@ impl Entry {
 
     pub(crate) fn name(&self) -> &str {
         &self.name
+    }
+
+    pub(crate) fn raw_store(&self) -> Arc<dyn ObjectStore> {
+        Arc::clone(&self.raw)
     }
 
     /// Earliest instant (ms) at which any document of this tenant expires, from the first date entry of each TTL index.
@@ -1009,6 +1159,7 @@ impl Entry {
     /// Forget the cached options of a collection (they changed behind the cache's back).
     pub fn forget_coll_opts(&mut self, coll: &str) {
         self.copts.remove(coll);
+        self.ckey_decided.remove(coll);
     }
 
     /// The UUID of a collection: made (and stored) the first time it is asked for.
@@ -1050,7 +1201,18 @@ impl Entry {
     }
 
     pub fn set_coll_opts(&mut self, coll: &str, o: Option<Arc<crate::collopts::CollOpts>>) {
+        if o.is_none() {
+            self.ckey_decided.remove(coll);
+        }
         self.copts.insert(coll.to_string(), o);
+    }
+
+    pub fn ckey_decided(&self, coll: &str) -> bool {
+        self.ckey_decided.contains(coll)
+    }
+
+    pub fn note_ckey_decided(&mut self, coll: &str) {
+        self.ckey_decided.insert(coll.to_string());
     }
 
     pub fn indexes_op(coll: &str, idx: &[crate::index::IndexDef]) -> Result<Op> {
@@ -1075,29 +1237,12 @@ impl Entry {
         if !self.ensure_open().await? {
             return Ok(vec![]);
         }
-        if let Some(s) = &self.snap {
-            let opts = slatedb::config::ScanOptions {
-                read_ahead_bytes: read_ahead,
-                max_fetch_tasks: 4,
-                cache_blocks: true,
-                order: if reverse { slatedb::IterationOrder::Descending } else { slatedb::IterationOrder::Ascending },
-                ..Default::default()
-            };
-            let range = match end {
-                Some(e) => (std::ops::Bound::Included(start.to_vec()), std::ops::Bound::Excluded(e.to_vec())),
-                None => (std::ops::Bound::Included(start.to_vec()), std::ops::Bound::Unbounded),
-            };
-            let mut it = s.scan_with_options(range, &opts).await?;
-            let mut out = Vec::new();
-            while let Some(kv) = it.next().await? {
-                out.push((kv.key, kv.value));
-                if limit.map(|l| out.len() >= l).unwrap_or(false) {
-                    break;
-                }
-            }
-            return Ok(out);
+        let segs = self.segs_for(start, end).await?;
+        let t = self.tenant.as_ref().unwrap();
+        match &self.snap {
+            Some(s) => crate::layout2::scan(&crate::layout2::Raw::Snap(s), &segs, start, end, reverse, limit, read_ahead).await,
+            None => crate::layout2::scan(&crate::layout2::Raw::Tenant(t, false), &segs, start, end, reverse, limit, read_ahead).await,
         }
-        self.tenant.as_ref().unwrap().scan_range(start, end, reverse, limit, read_ahead).await
     }
 
     /// [`Entry::scan_range`] on the latest committed state.
@@ -1113,24 +1258,35 @@ impl Entry {
         if !self.ensure_open().await? {
             return Ok(vec![]);
         }
-        self.tenant.as_ref().unwrap().scan_range(start, end, false, limit, 4096).await
+        // (the catalog as the latest state has it, not the snapshot's)
+        let snap = self.snap.take();
+        let segs = self.segs_for(start, end).await;
+        self.snap = snap;
+        let segs = segs?;
+        crate::layout2::scan(&crate::layout2::Raw::Tenant(self.tenant.as_ref().unwrap(), false), &segs, start, end, false, limit, 4096).await
     }
 
     /// Take a snapshot for a transaction (opens the tenant as a writer) and remember the write counter.
-    pub async fn begin_snapshot(&mut self) -> Result<(Arc<slatedb::DbSnapshot>, u64)> {
+    pub async fn begin_snapshot(&mut self) -> Result<(Arc<tenant_bench::fx::read::Snap>, u64)> {
         if !self.ensure_open().await? {
             // The database does not exist yet: create it so the transaction has something to snapshot.
             self.leases.acquire(&self.name).await?;
             self.nat.clear();
         self.copts.clear();
+        self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
+            crate::opening::forget_db(&self.name);
             self.tenant = Some(self.lc.create(&self.name).await?);
             self.absent = false;
             self.wakes += 1;
             self.sync_gauges();
         }
-        let snap = self.tenant.as_mut().unwrap().snapshot().await?;
+        // With the log on, a transaction reads a confirmed snapshot (no write its log has not confirmed yet): it waits,
+        // holding the database's exclusive lock (nothing new is staged meanwhile), until the batches staged so far are
+        // confirmed, usually one log round trip.
+        self.tenant.as_ref().unwrap().wait_all_visible(tenant_bench::lifecycle::VISIBLE_WAIT).await?;
+        let snap = self.tenant.as_mut().unwrap().txn_snapshot().await?;
         self.sync_gauges();
         self.active_txns += 1;
         Ok((snap, self.seq))
@@ -1155,6 +1311,17 @@ impl Entry {
         }
     }
 
+    /// Record that the batch just applied wrote these unique values (see `Writes::uniq`), so that an open transaction that
+    /// writes one of them conflicts. Only needed while transactions are open, like the document keys in `apply`.
+    pub(crate) fn mark_unique<'a>(&mut self, keys: impl IntoIterator<Item = &'a Vec<u8>>) {
+        if self.active_txns == 0 {
+            return;
+        }
+        for k in keys {
+            self.modified.insert(k.clone(), self.seq);
+        }
+    }
+
     /// Was the document key written after write counter `seq`?
     pub(crate) fn modified_after(&self, key: &[u8], seq: u64) -> bool {
         self.modified.get(key).map(|s| *s > seq).unwrap_or(false)
@@ -1174,12 +1341,11 @@ impl Entry {
             return Ok(vec![None; keys.len()]);
         }
         let t = self.tenant.as_ref().unwrap();
-        if let Some(s) = &self.snap {
-            let futs: Vec<_> = keys.iter().map(|k| s.get(k.clone())).collect();
-            return Ok(futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect::<Vec<_>>().await?);
+        let par = GET_MANY_PARALLEL.load(Relaxed);
+        match &self.snap {
+            Some(s) => crate::layout2::get_many(&crate::layout2::Raw::Snap(s), keys, par).await,
+            None => crate::layout2::get_many(&crate::layout2::Raw::Tenant(t, false), keys, par).await,
         }
-        let futs: Vec<_> = keys.iter().map(|k| t.get(k.clone())).collect();
-        futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect().await
     }
 
     pub async fn scan_collection(&mut self, coll: &str) -> Result<Vec<Document>> {
@@ -1188,23 +1354,54 @@ impl Entry {
     }
 
     pub async fn get_doc(&mut self, coll: &str, id: &Bson) -> Result<Option<Document>> {
-        match self.get(&layout::doc_key(coll, id)).await? {
-            Some(v) => Ok(Some(Document::from_reader(&v[..])?)),
-            None => Ok(None),
+        let ckey = crate::custkey::of_opts(self.coll_opts(coll).await?.as_ref());
+        // customer-keyed documents: the locators hold the document's suffix under every customer holding the `_id` (the
+        // first one is taken; read again if the document moved meanwhile)
+        let lp = crate::custkey::loc_id_prefix(coll, &layout::encode_sortable(id));
+        let lend = crate::keyenc::prefix_end(&lp);
+        for _ in 0..3 {
+            let key = match &ckey {
+                Some(_) => match self.scan_range(&lp, lend.as_deref(), false, Some(1), 4096).await?.into_iter().next() {
+                    Some((_, suf)) => [layout::doc_prefix(coll), suf.to_vec()].concat(),
+                    None => return Ok(None),
+                },
+                None => layout::doc_key(coll, id),
+            };
+            // (a customer-keyed document is read like its locator, with a range-read kind of read: a `ReadView` with
+            // durable reads answers point reads from durable data only, range reads and `get_many` from the latest
+            // state, and the two must agree on where the document is)
+            let v = if ckey.is_some() { self.get_many(std::slice::from_ref(&key)).await?.pop().flatten() } else { self.get(&key).await? };
+            if let Some(v) = v {
+                return Ok(Some(Document::from_reader(&v[..])?));
+            }
+            if ckey.is_none() {
+                break;
+            }
         }
+        Ok(None)
     }
 
-    pub fn put_doc_op(coll: &str, d: &Document) -> Result<Op> {
-        let id = match d.get("_id") {
-            Some(id) => id,
-            None => bail!("document without _id"),
-        };
-        Ok(Op::Put(layout::doc_key(coll, id), d.to_vec()?))
+    /// The document of `_id` under the customer value `cust` (a change event's document key). In a collection that
+    /// is not customer-keyed (any more), the document of `_id`.
+    pub async fn get_doc_of(&mut self, coll: &str, id: &Bson, cust: &Bson) -> Result<Option<Document>> {
+        if crate::custkey::of_opts(self.coll_opts(coll).await?.as_ref()).is_none() {
+            return self.get_doc(coll, id).await;
+        }
+        // the locator of (`_id`, customer) holds the document's suffix; read again if the document moved meanwhile
+        // (its time changed), with the same kinds of read as [`Entry::get_doc`]
+        let lk = crate::custkey::loc_key_of_value(coll, &layout::encode_sortable(id), cust);
+        let mut lend = lk.clone();
+        lend.push(0);
+        for _ in 0..3 {
+            let Some((_, suf)) = self.scan_range(&lk, Some(&lend), false, Some(1), 4096).await?.into_iter().next() else { return Ok(None) };
+            let key = [layout::doc_prefix(coll), suf.to_vec()].concat();
+            if let Some(v) = self.get_many(std::slice::from_ref(&key)).await?.pop().flatten() {
+                return Ok(Some(Document::from_reader(&v[..])?));
+            }
+        }
+        Ok(None)
     }
 
-    pub fn delete_doc_op(coll: &str, id: &Bson) -> Op {
-        Op::Delete(layout::doc_key(coll, id))
-    }
 }
 
 /// A shared (read) hold on a database. Every read re-checks that this process still owns the tenant before
@@ -1216,6 +1413,8 @@ pub static GET_MANY_PARALLEL: std::sync::atomic::AtomicUsize = std::sync::atomic
 pub struct ReadView {
     g: Option<Guard>,
     copts: std::sync::Mutex<HashMap<String, Option<Arc<crate::collopts::CollOpts>>>>,
+    /// First course (opening.rs): the session of this view's query, when it is a user's first query of a visit.
+    fc: std::sync::Mutex<Option<crate::opening::Session>>,
 }
 
 enum Guard {
@@ -1259,9 +1458,43 @@ impl ReadView {
 
     async fn scan_uncounted(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
+        let end = crate::keyenc::prefix_end(prefix);
+        let segs = self.segs_for(prefix, end.as_deref()).await?;
         let t = g.tenant.as_ref().unwrap();
-        let r = if durable_reads(&g.name) { t.scan_prefix_durable(prefix).await? } else { t.scan_prefix(prefix).await? };
+        if let Some(r) = self.fc_with(|s| s.scan(prefix, end.as_deref(), false, None)).flatten() {
+            self.fc_with(|s| s.note_scan(prefix, end.as_deref(), false, None, &r));
+            return self.done(r);
+        }
+        let raw = if durable_reads(&g.name) { crate::layout2::Raw::Tenant(t, true) } else { crate::layout2::Raw::Visible(t) };
+        let r = crate::layout2::scan(&raw, &segs, prefix, end.as_deref(), false, None, 4 << 20).await?;
+        self.fc_with(|s| s.note_scan(prefix, end.as_deref(), false, None, &r));
         self.done(r)
+    }
+
+    /// See [`Entry::segs_for`].
+    async fn segs_for(&self, lo: &[u8], hi: Option<&[u8]>) -> Result<Vec<crate::custkey::Seg>> {
+        match crate::custkey::area_of(lo, hi) {
+            Some(Some(s)) => return Ok(vec![s]),
+            Some(None) => return Ok(vec![]),
+            None => {}
+        }
+        let only = crate::custkey::coll_of_range(lo, hi).map(|(_, esc)| esc);
+        let mut segs = Vec::new();
+        for n in self.collections().await? {
+            let esc = layout::escape_collection(&n);
+            if only.as_ref().map_or(false, |o| *o != esc) {
+                continue;
+            }
+            if crate::custkey::of_opts(self.coll_opts(&n).await?.as_ref()).is_some() {
+                segs.push(crate::custkey::Seg::docs(&esc));
+            }
+            for i in self.indexes(&n).await? {
+                if i.colocated {
+                    segs.push(crate::custkey::Seg::index(&esc, &layout::escape_collection(&i.name)));
+                }
+            }
+        }
+        Ok(segs)
     }
 
     pub async fn get(&self, key: &[u8]) -> Result<Option<Bytes>> {
@@ -1278,12 +1511,43 @@ impl ReadView {
         if META_CACHE.load(Relaxed) && is_meta_key(key) {
             let r = match g.meta_lookup(key) {
                 Some(v) => v,
-                None => g.meta_read(t, key, durable_reads(&g.name)).await?,
+                None => g.meta_read(t, key, durable_reads(&g.name), true).await?,
             };
             return self.done(r);
         }
-        let r = if durable_reads(&g.name) { t.get_durable(key).await? } else { t.get(key).await? };
+        if let Some(v) = self.fc_with(|s| s.get(key)).flatten() {
+            return self.done(v);
+        }
+        let raw = if durable_reads(&g.name) { crate::layout2::Raw::Tenant(t, true) } else { crate::layout2::Raw::Visible(t) };
+        let r = crate::layout2::get(&raw, key).await?;
+        self.fc_with(|s| s.note_get(key, &r));
         self.done(r)
+    }
+
+    fn fc_with<T>(&self, f: impl FnOnce(&mut crate::opening::Session) -> T) -> Option<T> {
+        self.fc.lock().unwrap().as_mut().map(f)
+    }
+
+    /// First course: start a session if this find is a user's first query of a visit (opening.rs).
+    pub async fn first_course_begin(&self, coll: &str, filter: &Document) {
+        if !crate::opening::ENABLED.load(Relaxed) {
+            return;
+        }
+        let Some(g) = &self.g else { return };
+        let Ok(opts) = self.coll_opts(coll).await else { return };
+        let Some(field) = crate::custkey::of_opts(opts.as_ref()) else { return };
+        let Ok(indexes) = self.indexes(coll).await else { return };
+        // with the log on (`lifecycle::TRACK_VISIBLE`) an opening holds staged writes at once, but a read sees a write only
+        // once its record is confirmed: serve or record only while nothing is in flight
+        let all_durable = g.tenant.as_ref().map_or(false, |t| (!durable_reads(&g.name) || t.all_durable()) && t.reads_see_latest());
+        *self.fc.lock().unwrap() = crate::opening::begin(&g.name, coll, &field.field, filter, &indexes, all_durable);
+    }
+
+    /// First course: end of the query (keeps the opening when `ok`).
+    pub fn first_course_end(&self, ok: bool) {
+        if let Some(s) = self.fc.lock().unwrap().take() {
+            crate::opening::finish(s, ok);
+        }
     }
 
     pub async fn get_many(&self, keys: &[Vec<u8>]) -> Result<Vec<Option<Bytes>>> {
@@ -1300,8 +1564,24 @@ impl ReadView {
             return Ok(vec![]);
         }
         let t = g.tenant.as_ref().unwrap();
-        let futs: Vec<_> = keys.iter().map(|k| t.get(k.clone())).collect();
-        let r = futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect::<Vec<_>>().await?;
+        // first course: the keys the opening answers exactly, the others from storage (the visible value of each key on
+        // the log path, see `lifecycle::TRACK_VISIBLE`; the latest one otherwise)
+        let mut out: Vec<Option<Option<Bytes>>> = match self.fc_with(|s| keys.iter().map(|k| s.get(k)).collect::<Vec<_>>()) {
+            Some(v) => v,
+            None => vec![None; keys.len()],
+        };
+        let miss: Vec<usize> = (0..keys.len()).filter(|i| out[*i].is_none()).collect();
+        let miss_keys: Vec<Vec<u8>> = miss.iter().map(|i| keys[*i].clone()).collect();
+        let fetched = crate::layout2::get_many(&crate::layout2::Raw::Visible(t), &miss_keys, GET_MANY_PARALLEL.load(Relaxed)).await?;
+        for (i, v) in miss.into_iter().zip(fetched) {
+            out[i] = Some(v);
+        }
+        let r: Vec<Option<Bytes>> = out.into_iter().map(|v| v.unwrap()).collect();
+        self.fc_with(|s| {
+            for (k, v) in keys.iter().zip(r.iter()) {
+                s.note_get(k, v);
+            }
+        });
         self.done(r)
     }
 
@@ -1315,7 +1595,13 @@ impl ReadView {
 
     async fn scan_range_uncounted(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
-        let r = g.tenant.as_ref().unwrap().scan_range(start, end, reverse, limit, read_ahead).await?;
+        if let Some(r) = self.fc_with(|s| s.scan(start, end, reverse, limit)).flatten() {
+            self.fc_with(|s| s.note_scan(start, end, reverse, limit, &r));
+            return self.done(r);
+        }
+        let segs = self.segs_for(start, end).await?;
+        let r = crate::layout2::scan(&crate::layout2::Raw::Visible(g.tenant.as_ref().unwrap()), &segs, start, end, reverse, limit, read_ahead).await?;
+        self.fc_with(|s| s.note_scan(start, end, reverse, limit, &r));
         self.done(r)
     }
 
@@ -1361,9 +1647,30 @@ impl ReadView {
     }
 
     pub async fn get_doc(&self, coll: &str, id: &Bson) -> Result<Option<Document>> {
-        match self.get(&layout::doc_key(coll, id)).await? {
-            Some(v) => Ok(Some(Document::from_reader(&v[..])?)),
-            None => Ok(None),
+        let ckey = crate::custkey::of_opts(self.coll_opts(coll).await?.as_ref());
+        // customer-keyed documents: the locators hold the document's suffix under every customer holding the `_id` (the
+        // first one is taken; read again if the document moved meanwhile)
+        let lp = crate::custkey::loc_id_prefix(coll, &layout::encode_sortable(id));
+        let lend = crate::keyenc::prefix_end(&lp);
+        for _ in 0..3 {
+            let key = match &ckey {
+                Some(_) => match self.scan_range(&lp, lend.as_deref(), false, Some(1), 4096).await?.into_iter().next() {
+                    Some((_, suf)) => [layout::doc_prefix(coll), suf.to_vec()].concat(),
+                    None => return Ok(None),
+                },
+                None => layout::doc_key(coll, id),
+            };
+            // (a customer-keyed document is read like its locator, with a range-read kind of read: a `ReadView` with
+            // durable reads answers point reads from durable data only, range reads and `get_many` from the latest
+            // state, and the two must agree on where the document is)
+            let v = if ckey.is_some() { self.get_many(std::slice::from_ref(&key)).await?.pop().flatten() } else { self.get(&key).await? };
+            if let Some(v) = v {
+                return Ok(Some(Document::from_reader(&v[..])?));
+            }
+            if ckey.is_none() {
+                break;
+            }
         }
+        Ok(None)
     }
 }

@@ -1,0 +1,7 @@
+binary /home/user/fenvix-engine/target/release/mongo-server
+alone      clients= 1: write p50    1.53 ms p99    2.82 ms (n=7198); read after ack p50   0.48 ms p99   0.76 ms; misses 0
+lane-same  clients= 1: write p50    1.54 ms p99    3.35 ms (n=7052); read after ack p50   0.48 ms p99   1.68 ms; misses 0
+lane-other clients= 1: write p50    1.59 ms p99    3.38 ms (n=6805); read after ack p50   0.50 ms p99   1.75 ms; misses 0
+alone      clients=16: write p50    7.32 ms p99   25.77 ms (n=15287); read after ack p50   5.81 ms p99  24.50 ms; misses 0
+lane-same  clients=16: write p50    7.33 ms p99   27.65 ms (n=14950); read after ack p50   6.06 ms p99  25.61 ms; misses 0
+lane-other clients=16: write p50    7.55 ms p99   27.52 ms (n=14533); read after ack p50   6.30 ms p99  26.84 ms; misses 0

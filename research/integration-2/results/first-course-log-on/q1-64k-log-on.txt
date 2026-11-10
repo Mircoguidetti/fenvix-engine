@@ -1,0 +1,4 @@
+binary mongo-server, server flags: --first-course-max-kb 64 --local-log-dir /tmp/claude-0/-home-user/3cf4561b-abdb-5f63-90d8-a484ae36730d/scratchpad/fclog-a --local-log-upload-secs 60, stress flags: --rounds 60 --users 40
+checks 2652, wrong 0; served queries 1173, partial 403, missed 3, no opening 107, kept 1555, unkeepable 131, trimmed 2, dropped 0, writes applied 14713, forgotten 1; reads served from openings 139619, missed 24608
+STRESS PASS
+firstCourse at the end: {'enabled': True, 'openings': 39, 'bytes': 1703505, 'pending': 0, 'evictedPending': 0, 'droppedPendingTooBig': 0, 'firstQueries': 1686, 'servedQueries': 1173, 'partialQueries': 403, 'missedQueries': 3, 'noOpening': 107, 'notDurable': 0, 'servedReads': 139619, 'missedReads': 24608, 'kept': 1555, 'unkeepable': 131, 'trimmed': 2, 'droppedTooBig': 0, 'evicted': 0, 'expired': 0, 'forgotten': 1, 'writesApplied': 14713, 'writeHookNs': 46132943, 'recordNs': 47760618}

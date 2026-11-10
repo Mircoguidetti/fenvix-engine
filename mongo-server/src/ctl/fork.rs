@@ -276,7 +276,11 @@ async fn copy_objects(ctl: &Arc<Ctl>, src: &str, target: &str) -> anyhow::Result
     let metas: Vec<object_store::ObjectMeta> = ctl.store.list(Some(&from)).try_collect().await?;
     let pre_from = format!("{}/", purge::tenant_path(src));
     let pre_to = format!("{}/", purge::tenant_path(target));
-    let copies = metas.into_iter().filter(|m| !matches!(m.location.filename(), Some("_lease") | Some("_clean") | Some(".deleting"))).map(|m| {
+    // compaction 2 (`fx/`, step 3): a fork reads SlateDB only, which still holds every row (nothing drops them yet). Our
+    // manifest is not copied: a copy would read with the parent's newest version, not one paired with the fork's
+    // state (RULES-FOR-THE-CODE rule 20, ForkNewestCut); pairing is step 7. The fork publishes versions of its own.
+    let fx = format!("{pre_from}fx/");
+    let copies = metas.into_iter().filter(|m| !matches!(m.location.filename(), Some("_lease") | Some("_clean") | Some(".deleting")) && !m.location.as_ref().starts_with(&fx)).map(|m| {
         let to = Path::from(format!("{pre_to}{}", m.location.as_ref().strip_prefix(&pre_from).unwrap_or(m.location.as_ref())));
         let store = Arc::clone(&ctl.store);
         async move { store.copy(&m.location, &to).await }

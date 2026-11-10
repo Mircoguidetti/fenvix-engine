@@ -1,0 +1,10 @@
+START 2026-11-07 19:51:13 writes=100000 txns=100000 threads=64
+write-then-read: {'done': 100000, 'miss': 0, 'err': 0} in 230 s (434/s)
+transaction-then-read: {'done': 100000, 'miss': 0, 'err': 0} in 254 s (393/s)
+default path (the log) write-then-read: {'done': 20000, 'miss': 0, 'err': 0} in 24 s (837/s)
+primary agentLane: {'batches': 200302, 'mixedBatches': 2, 'commits': 200202, 'flushes': 8881, 'txnFlushes': 7310, 'ackRefused': 0, 'windowUs': 100000, 'followed': 0, 'memtableFlushes': 99, 'followHits': 0}
+spare agentLane before takeover: {'batches': 0, 'mixedBatches': 0, 'commits': 0, 'flushes': 0, 'txnFlushes': 0, 'ackRefused': 0, 'windowUs': 100000, 'followed': 9030, 'memtableFlushes': 0, 'followHits': 0}
+spare served its first read 4.20 s after the kill (lease ttl 4 s)
+spare after takeover: 320000 acknowledged documents checked, missing 0
+spare agentLane after takeover: {'batches': 0, 'mixedBatches': 0, 'commits': 0, 'flushes': 0, 'txnFlushes': 0, 'ackRefused': 0, 'windowUs': 100000, 'followed': 9031, 'memtableFlushes': 0, 'followHits': 7}
+RESULT write_misses=0 txn_misses=0 default_path_misses=0 spare_missing=0 -> PASS

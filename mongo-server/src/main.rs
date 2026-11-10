@@ -16,6 +16,10 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 pub static malloc_conf: &[u8] = b"background_thread:true\0";
 
 mod agg;
+mod agentlane;
+mod custkey;
+mod opening;
+mod layout2;
 mod prefetch;
 mod hostinfo;
 mod auth;
@@ -301,6 +305,20 @@ struct Args {
     /// Name of the log in the markers stored with the data (the same for every engine that uses this log).
     #[arg(long, default_value = "cell1")]
     quaderno_id: String,
+    /// PROTOTYPE, off by default: collections on the agent lane, comma-separated `database.collection` patterns (`*` matches
+    /// any run of characters), e.g. `*.checkpoints,*.checkpoint_writes`. Their writes skip the local and replicated log and
+    /// are acknowledged once the WAL object holding them is in object storage. A collection can also be put on the lane
+    /// with `collMod` / `create` and the option `fenvixAgentLane: true`. See agentlane.rs.
+    #[arg(long, default_value = "")]
+    agent_lane: String,
+    /// Agent lane: the batch window (ms). The first write of a batch waits this long for others to share its PUT;
+    /// a transaction's commit does not wait.
+    #[arg(long, default_value_t = 100)]
+    agent_lane_window_ms: u64,
+    /// Agent lane: follow these databases' WAL objects in object storage (comma-separated names), as a warm spare does,
+    /// so that a takeover replays the last batches from memory instead of reading them one by one. See agentlane.rs.
+    #[arg(long, default_value = "")]
+    agent_lane_follow: String,
     /// Local log: the restart gives up on replaying one database after this long (its records are kept for the next
     /// restart) so that one stuck database (its S3 requests hanging or retried) does not keep the whole server down.
     #[arg(long, default_value_t = 120)]
@@ -442,6 +460,87 @@ struct Args {
     /// nothing kept) or off.
     #[arg(long, default_value = "cache")]
     tls_session_resumption: String,
+    /// Customer keys and layout v2 (custkey.rs): comma separated `[db.]collection=field[:timefield]`; a named collection
+    /// takes the customer key when it is created, first indexed or first written while empty. Off when empty (default).
+    #[arg(long, default_value = "")]
+    customer_key: String,
+    /// First course (opening.rs, measurement prototype, off by default): keep the key-value pairs of each user's first
+    /// query of a visit and answer the next visit's first query from them when the answer is exact.
+    #[arg(long, default_value_t = false)]
+    first_course: bool,
+    /// First course: a query of a user idle for this long starts a visit.
+    #[arg(long, default_value_t = 1800)]
+    first_course_idle_secs: u64,
+    /// First course: an opening not refreshed by a visit for this many days is not used (T).
+    #[arg(long, default_value_t = 14)]
+    first_course_days: u64,
+    /// First course: all openings together, in MiB.
+    #[arg(long, default_value_t = 1024)]
+    first_course_mb: u64,
+    /// First course: one opening at most, in KiB (trimmed above it, then dropped).
+    #[arg(long, default_value_t = 256)]
+    first_course_max_kb: u64,
+    /// First course: the opening keeps what this many queries of a visit read (1: the first query only).
+    #[arg(long, default_value_t = 1)]
+    first_course_queries: u64,
+    /// Envelope values (envelope.rs): `read` (release E0: read envelopes, write them only in a database that already has
+    /// them) or `write` (release E1: also start them in a database that has none). Default `read`. Rolling back from
+    /// `write` is safe only to a release that has `read`.
+    #[arg(long, default_value = "read")]
+    envelopes: String,
+    /// Compaction 2, step 3 (`fx`): read through our manifest and sealed runs. The value is how many write batches of a
+    /// database between two offline publishes of runs (`fx/build.rs`; 0: none by the server itself). Off by default.
+    /// A database that published a version has every SlateDB row too in this step (nothing drops them yet), so turning
+    /// it off again reads the same data. The environment variable FENVIX_SEALED_RUNS=N does the same.
+    #[arg(long)]
+    sealed_runs: Option<u64>,
+    /// Raw MB per group when a database's first version cuts its groups (the plan's 1 GB).
+    #[arg(long, default_value_t = 1024)]
+    sealed_group_mb: u64,
+    /// RAM for decoded blocks of our runs, shared by every database (MB).
+    #[arg(long, default_value_t = 256)]
+    sealed_cache_mb: u64,
+    /// Every how many publishes every group is resealed (the others write a delta run only).
+    #[arg(long, default_value_t = 3)]
+    sealed_reseal_every: u64,
+    /// T_pin in milliseconds (fx, rules 6 and 26): a reader refreshes its version of our manifest (and release E1's
+    /// announcement) at least this often, and envelopes start this long after release E1 is announced, with sealed runs
+    /// or with `--envelopes write`. FENVIX_SEALED_TPIN_MS does the same.
+    #[arg(long, default_value_t = 30_000)]
+    sealed_t_pin_ms: u64,
+    /// How long after release E1 is announced envelopes start, in milliseconds (default: T_pin, as rule 26 asks; tests
+    /// set it lower). FENVIX_SEALED_E1_WAIT_MS does the same.
+    #[arg(long)]
+    sealed_e1_wait_ms: Option<u64>,
+    /// Timing of our manifest (fx; review round 2 of step 0, F6), in milliseconds, checked at startup: a manifest PUT
+    /// with no answer within the PUT timeout counts as timed out (a fence follows); it must be shorter than the lease
+    /// minus its margin, and the remote lease and the GC grace must each exceed the hold life plus it.
+    #[arg(long, default_value_t = 20_000)]
+    sealed_put_timeout_ms: u64,
+    #[arg(long, default_value_t = 60_000)]
+    sealed_lease_ms: u64,
+    #[arg(long, default_value_t = 30_000)]
+    sealed_lease_margin_ms: u64,
+    #[arg(long, default_value_t = 180_000)]
+    sealed_remote_lease_ms: u64,
+    #[arg(long, default_value_t = 600_000)]
+    sealed_gc_grace_ms: u64,
+    #[arg(long, default_value_t = 120_000)]
+    sealed_hold_life_ms: u64,
+    /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
+    /// releases before); M29 measured 64.
+    #[arg(long, default_value_t = 4)]
+    sst_block_kb: u32,
+    /// SST block compression: none (default: the release before cannot read lz4, so turning it on is a one-way change),
+    /// lz4 (M29: 2.41x on chat-like documents) or zstd.
+    #[arg(long, default_value = "none")]
+    sst_compression: String,
+    /// T of the tiered-levels compaction scheduler (M26-M31: 4); 0 = SlateDB's size-tiered scheduler.
+    #[arg(long, default_value_t = 4)]
+    compaction_tiers: u32,
+    /// Fetch tasks of a scan that reads ahead at most 64 KiB (index scans, a find's documents); M29: 1.
+    #[arg(long, default_value_t = 1)]
+    small_scan_fetch_tasks: usize,
 }
 
 async fn handle_connection(server: Arc<Server>, tls: Arc<tls::TlsConfig>, tcp: TcpStream, conn_id: i64) {
@@ -663,11 +762,56 @@ async fn run() -> Result<()> {
     let s3 = tenant_bench::simstore::wrap_sim(s3);
     let s3 = faults::wrap(s3);
     let s3 = tenant_bench::simstore::wrap_split(s3);
+    // agent lane: the warm spare keeps the followed databases' new WAL objects in memory (agentlane.rs)
+    let s3 = agentlane::wrap_follow(s3, &args.agent_lane_follow);
     tenant_bench::lifecycle::FLUSH_INTERVAL_MS.store(args.wal_flush_ms, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::ACK_BEFORE_DURABLE.store(args.ack_before_durable, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::EXPLICIT_FLUSH.store(args.wal_flush_ms == 0, std::sync::atomic::Ordering::Relaxed);
     dbs::set_wake_limit(args.max_concurrent_wakes);
     tenant_bench::lifecycle::MEMTABLE_MAX_BYTES.store(args.memtable_max_mb << 20, std::sync::atomic::Ordering::Relaxed);
+    custkey::configure(&args.customer_key)?;
+    opening::ENABLED.store(args.first_course, std::sync::atomic::Ordering::Relaxed);
+    opening::IDLE_SECS.store(args.first_course_idle_secs, std::sync::atomic::Ordering::Relaxed);
+    opening::MAX_AGE_SECS.store(args.first_course_days * 86_400, std::sync::atomic::Ordering::Relaxed);
+    opening::BUDGET_BYTES.store(args.first_course_mb << 20, std::sync::atomic::Ordering::Relaxed);
+    opening::QUERIES.store(args.first_course_queries.max(1), std::sync::atomic::Ordering::Relaxed);
+    opening::MAX_BYTES.store(args.first_course_max_kb << 10, std::sync::atomic::Ordering::Relaxed);
+    match args.envelopes.as_str() {
+        "read" => {}
+        "write" => tenant_bench::envelope::START.store(true, std::sync::atomic::Ordering::Relaxed),
+        other => anyhow::bail!("--envelopes must be read or write, not {other}"),
+    }
+    // FENVIX_SEALED_RUNS=N: the same as --sealed-runs N, for every server a test harness starts (`judge/run.sh` with
+    // JUDGE_SEALED_RUNS)
+    let sealed_runs = args.sealed_runs.or_else(|| std::env::var("FENVIX_SEALED_RUNS").ok().and_then(|v| v.parse().ok()));
+    if let Some(n) = sealed_runs {
+        use std::sync::atomic::Ordering::Relaxed;
+        tenant_bench::fx::ENABLED.store(true, Relaxed);
+        tenant_bench::fx::PUBLISH_EVERY.store(n, Relaxed);
+        tenant_bench::fx::GROUP_BYTES.store(args.sealed_group_mb.max(1) << 20, Relaxed);
+        tenant_bench::fx::view::CACHE_BYTES.store(args.sealed_cache_mb << 20, Relaxed);
+        tenant_bench::fx::RESEAL_EVERY.store(args.sealed_reseal_every.max(1), Relaxed);
+    }
+    if sealed_runs.is_some() || tenant_bench::envelope::START.load(std::sync::atomic::Ordering::Relaxed) {
+        // T_pin and E1's wait (rules 6 and 26) apply to release E1 with or without sealed runs (`--envelopes write`)
+        use std::sync::atomic::Ordering::Relaxed;
+        let t_pin = std::env::var("FENVIX_SEALED_TPIN_MS").ok().and_then(|v| v.parse().ok()).unwrap_or(args.sealed_t_pin_ms);
+        tenant_bench::fx::T_PIN_MS.store(t_pin.max(1), Relaxed);
+        if let Some(w) = args.sealed_e1_wait_ms.or_else(|| std::env::var("FENVIX_SEALED_E1_WAIT_MS").ok().and_then(|v| v.parse().ok())) {
+            tenant_bench::fx::E1_WAIT_MS.store(w, Relaxed);
+        }
+        tenant_bench::fx::PUT_TIMEOUT_MS.store(args.sealed_put_timeout_ms, Relaxed);
+        tenant_bench::fx::LEASE_MS.store(args.sealed_lease_ms, Relaxed);
+        tenant_bench::fx::LEASE_MARGIN_MS.store(args.sealed_lease_margin_ms, Relaxed);
+        tenant_bench::fx::REMOTE_LEASE_MS.store(args.sealed_remote_lease_ms, Relaxed);
+        tenant_bench::fx::GC_GRACE_MS.store(args.sealed_gc_grace_ms, Relaxed);
+        tenant_bench::fx::hold::HOLD_LIFE_MS.store(args.sealed_hold_life_ms, Relaxed);
+        tenant_bench::fx::check_config()?;
+    }
+    tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::tiered::set_compression(&args.sst_compression)?;
+    tenant_bench::tiered::TIERS.store(args.compaction_tiers, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::tiered::SMALL_SCAN_FETCH_TASKS.store(args.small_scan_fetch_tasks, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::FILTER_BITS.store(args.filter_bits_per_key.clamp(1, 64), std::sync::atomic::Ordering::Relaxed);
     if args.waiter_tools {
         let ram = if args.counter_ram_mb > 0 { args.counter_ram_mb << 20 } else { tenant_bench::counter::machine_ram_bytes() / 100 * args.counter_ram_pct.min(90) };
@@ -705,6 +849,7 @@ async fn run() -> Result<()> {
     ctl::durability::install(args.relaxed_flush_ms)?;
     fair::install(args.fair_lag_ms, args.db_max_inflight, args.db_max_rate, args.fair_max_inflight, args.fair_max_flushing, args.db_quota_pts, args.db_burst_pts, args.db_quota_queue, &args.unit_weights).map_err(|e| anyhow::anyhow!(e))?;
     js::COMMAND_MAX_MS.store(args.js_command_max_ms, std::sync::atomic::Ordering::Relaxed);
+    agentlane::configure(&args.agent_lane, args.agent_lane_window_ms)?;
     let local_log_old = if !args.quaderno.is_empty() {
         let dir = if args.local_log_dir.is_empty() { "fenvix-quaderno-kept" } else { args.local_log_dir.as_str() };
         locallog::install_quaderno(&args.quaderno, &args.quaderno_id, dir, args.local_log_upload_secs).await?;
@@ -715,6 +860,9 @@ async fn run() -> Result<()> {
     } else {
         Some(locallog::install(&args.local_log_dir, args.local_log_upload_secs)?)
     };
+    // With the log, reads, acknowledgements and change streams follow the confirmed state (lifecycle::TRACK_VISIBLE).
+    tenant_bench::lifecycle::TRACK_VISIBLE.store(locallog::get().is_some(), std::sync::atomic::Ordering::Relaxed);
+    let _ = tenant_bench::lifecycle::VIS_IGNORE_KEY.set(locallog::MARKER_KEY.to_vec());
     tenant_bench::lifecycle::ADAPTIVE.store(args.adaptive_group_commit, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::ADAPTIVE_MAX_US.store(args.adaptive_group_commit_max_us, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::WRITER_POLL_SECS.store(args.writer_poll_secs, std::sync::atomic::Ordering::Relaxed);
@@ -767,6 +915,11 @@ async fn run() -> Result<()> {
     let lc_for_ctl = Arc::clone(&lc);
     let dbs = Dbs::new(lc, Arc::clone(&s3), Duration::from_secs(args.idle_secs), Arc::clone(&leases), global);
     dbs.spawn_reaper();
+    {
+        // a change-stream reader waiting on an event whose batch was not confirmed yet wakes when it is
+        let changes = Arc::clone(&dbs.changes);
+        let _ = tenant_bench::lifecycle::ON_VISIBLE.set(Box::new(move || changes.notify.notify_waiters()));
+    }
     let (lost_tx, lost_rx) = tokio::sync::mpsc::unbounded_channel();
     leases.spawn_renewer(lost_tx);
     dbs.spawn_lost_handler(lost_rx);

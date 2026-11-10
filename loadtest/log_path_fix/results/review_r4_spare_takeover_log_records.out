@@ -1,0 +1,2 @@
+200 acknowledged default-path writes, the spare serves 200 after the takeover
+RESULT r4_spare_takeover_log_records acked=200 missing_on_spare=0 -> PASS

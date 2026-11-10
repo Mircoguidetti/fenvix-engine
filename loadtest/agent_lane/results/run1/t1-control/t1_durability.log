@@ -1,0 +1,4 @@
+START 2026-11-07 18:45:34 rounds 20 control
+round 0 random point_hit=True disk_wiped=False acked_total=2263 txns_tried=597 lost=1387 torn=0 t=9s
+agentLane counters (last run of the engine): {'batches': 0, 'mixedBatches': 0, 'commits': 0, 'flushes': 0, 'txnFlushes': 0, 'ackRefused': 0, 'windowUs': 100000, 'followed': 0, 'followHits': 0}
+RESULT control: lost=1387 -> LOSS SEEN (the check works)

@@ -1,0 +1,5 @@
+loaded 4569112 messages, 20000 customers, 2.01 GiB of BSON in 899 s
+settled after 20 s
+load + settle 933 s
+after load: fenvixSstInfo not available (no such command: 'fenvixSstInfo', full error: {'ok': 0.0, 'errmsg': "no such com)
+bucket: 441 compacted objects, 7.64 GiB

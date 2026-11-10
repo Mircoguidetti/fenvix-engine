@@ -774,6 +774,56 @@ impl Server {
             },
             // compaction passes (lifecycle.rs): running now, of which long merges without a maintenance slot; ended without
             // progress; stopped on request; GC rounds that skipped a tenant busy with a pass
+            "firstCourse": {
+                "enabled": crate::opening::ENABLED.load(Relaxed),
+                "openings": crate::opening::STATS.openings.load(Relaxed) as i64,
+                "bytes": crate::opening::STATS.bytes.load(Relaxed) as i64,
+                "pending": crate::opening::STATS.pending.load(Relaxed) as i64,
+                "evictedPending": crate::opening::STATS.evicted_pending.load(Relaxed) as i64,
+                "droppedPendingTooBig": crate::opening::STATS.dropped_pending_too_big.load(Relaxed) as i64,
+                "firstQueries": crate::opening::STATS.first_queries.load(Relaxed) as i64,
+                "servedQueries": crate::opening::STATS.served_queries.load(Relaxed) as i64,
+                "partialQueries": crate::opening::STATS.partial_queries.load(Relaxed) as i64,
+                "missedQueries": crate::opening::STATS.missed_queries.load(Relaxed) as i64,
+                "noOpening": crate::opening::STATS.no_opening.load(Relaxed) as i64,
+                "notDurable": crate::opening::STATS.not_durable.load(Relaxed) as i64,
+                "servedReads": crate::opening::STATS.served_reads.load(Relaxed) as i64,
+                "missedReads": crate::opening::STATS.missed_reads.load(Relaxed) as i64,
+                "kept": crate::opening::STATS.kept.load(Relaxed) as i64,
+                "unkeepable": crate::opening::STATS.unkeepable.load(Relaxed) as i64,
+                "trimmed": crate::opening::STATS.trimmed.load(Relaxed) as i64,
+                "droppedTooBig": crate::opening::STATS.dropped_too_big.load(Relaxed) as i64,
+                "evicted": crate::opening::STATS.evicted.load(Relaxed) as i64,
+                "expired": crate::opening::STATS.expired.load(Relaxed) as i64,
+                "forgotten": crate::opening::STATS.forgotten.load(Relaxed) as i64,
+                "writesApplied": crate::opening::STATS.writes_applied.load(Relaxed) as i64,
+                "writeHookNs": crate::opening::STATS.write_hook_ns.load(Relaxed) as i64,
+                "recordNs": crate::opening::STATS.record_ns.load(Relaxed) as i64,
+            },
+            "customerKeys": {
+                "docsWritten": crate::custkey::DOCS_WRITTEN.load(Relaxed) as i64,
+                "locatorLookups": crate::custkey::LOCATOR_LOOKUPS.load(Relaxed) as i64,
+                // layout v2 (layout2.rs): seeks of range reads across customers
+                "layoutSeeks": crate::layout2::SEEKS.load(Relaxed) as i64,
+            },
+            // envelope values (envelope.rs): rows read as live and as deleted envelopes; whether this process starts them
+            "envelopes": {
+                "liveRead": tenant_bench::envelope::READ_LIVE.load(Relaxed) as i64,
+                "deadRead": tenant_bench::envelope::READ_DEAD.load(Relaxed) as i64,
+                "start": tenant_bench::envelope::START.load(Relaxed),
+            },
+            // compaction 2, step 3 (fx): versions published and installed, failed builds, fence versions written at
+            // open, rows answered by our runs, GETs of run blocks, runs opened
+            "sealedRuns": {
+                "enabled": tenant_bench::fx::ENABLED.load(Relaxed),
+                "publishes": tenant_bench::fx::PUBLISHES.load(Relaxed) as i64,
+                "publishErrors": tenant_bench::fx::PUBLISH_ERRORS.load(Relaxed) as i64,
+                "fences": tenant_bench::fx::FENCES.load(Relaxed) as i64,
+                "rowsFromRuns": tenant_bench::fx::view::ROWS_FROM_RUNS.load(Relaxed) as i64,
+                "runGets": tenant_bench::fx::view::RUN_GETS.load(Relaxed) as i64,
+                "runOpens": tenant_bench::fx::view::RUN_OPENS.load(Relaxed) as i64,
+                "blockHits": tenant_bench::fx::view::BLOCK_HITS.load(Relaxed) as i64,
+            },
             "compaction": {
                 "passes": tenant_bench::lifecycle::MAINT.compact_runs.load(Relaxed) as i64,
                 "running": tenant_bench::lifecycle::PASSES_RUNNING.load(Relaxed) as i64,

@@ -1,0 +1,14 @@
+START 2026-11-07 19:49:51 rounds 20 control
+  STALE hot document dur_1.agent hot-1: version 4, last acknowledged 5, highest tried 5
+  STALE hot document dur_1.agent hot-3: version 4, last acknowledged 5, highest tried 5
+  STALE hot document dur_2.agent hot-3: version 2, last acknowledged 3, highest tried 3
+  STALE hot document dur_0.agent hot-0: version 4, last acknowledged 5, highest tried 5
+  STALE hot document dur_2.agent hot-2: version 2, last acknowledged 3, highest tried 3
+  STALE hot document dur_1.agent hot-0: version 2, last acknowledged 3, highest tried 3
+  STALE hot document dur_1.agent hot-6: version 2, last acknowledged 3, highest tried 3
+  STALE hot document dur_0.agent hot-5: version 4, last acknowledged 5, highest tried 5
+  STALE hot document dur_2.agent hot-1: version 2, last acknowledged 3, highest tried 3
+  STALE hot document dur_0.agent hot-6: version 4, last acknowledged 5, highest tried 5
+round 0 random point_hit=True disk_wiped=False acked_total=305 txns_tried=80 hot_updates_acked=85 lost=156 torn_or_stale=10 t=6s
+agentLane counters (last run of the engine): {'batches': 0, 'mixedBatches': 0, 'commits': 0, 'flushes': 0, 'txnFlushes': 0, 'ackRefused': 0, 'windowUs': 100000, 'followed': 0, 'memtableFlushes': 0, 'followHits': 0}
+RESULT control: lost=156 -> LOSS SEEN (the check works)

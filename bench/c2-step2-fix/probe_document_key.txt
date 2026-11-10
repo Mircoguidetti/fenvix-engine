@@ -1,0 +1,25 @@
+one {'u': 1}
+   ('insert', {'u': 'bob', '_id': 1}, {'_id': 1, 'x': 0, 'u': 'bob'})
+   ('update', {'u': 'bob', '_id': 1}, None)
+   ('replace', {'u': 'bob', '_id': 1}, {'_id': 1, 'u': 'bob', 'r': 1})
+   ('delete', {'u': 'bob', '_id': 1}, None)
+   ('insert', {'_id': 2}, {'_id': 2})
+   ('update', {'_id': 2}, None)
+   ('delete', {'_id': 2}, None)
+two {'u': 1, 'ts': 1}
+   ('insert', {'u': 'bob', 'ts': 5, '_id': 1}, {'_id': 1, 'ts': 5, 'u': 'bob'})
+   ('update', {'u': 'bob', 'ts': 5, '_id': 1}, None)
+   ('delete', {'u': 'bob', 'ts': 5, '_id': 1}, None)
+   ('insert', {'u': 'x', '_id': 3}, {'_id': 3, 'u': 'x'})
+   ('delete', {'u': 'x', '_id': 3}, None)
+hashid {'u': 'hashed'}
+   ('insert', {'u': 'bob', '_id': 1}, {'_id': 1, 'u': 'bob'})
+dot {'a.b': 1}
+   ('insert', {'a.b': 7, '_id': 1}, {'_id': 1, 'a': {'b': 7, 'c': 1}})
+   ('delete', {'a.b': 7, '_id': 1}, None)
+withid {'u': 1, '_id': 1}
+   ('insert', {'u': 'bob', '_id': 1}, {'_id': 1, 'u': 'bob'})
+   ('delete', {'u': 'bob', '_id': 1}, None)
+move {'u': 1}
+   ('insert', {'u': 'alice', '_id': 1}, {'_id': 1, 'u': 'alice'})
+move: [('update', {'u': 'alice', '_id': 1})]

@@ -25,7 +25,7 @@ use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use slatedb::admin::Admin;
 use slatedb::config::{CheckpointOptions, DbReaderOptions};
-use slatedb::{DbReader, DbReaderMode};
+use tenant_bench::fx::pair::PairedReader;
 use std::sync::Arc;
 use std::time::Duration;
 use tenant_bench::lifecycle::maint_lock;
@@ -50,12 +50,14 @@ pub fn escape_name(name: &str) -> String {
     out
 }
 
-async fn open_snapshot(ctl: &Ctl, db: &str, checkpoint: &str) -> anyhow::Result<DbReader> {
+/// The snapshot's reader: its checkpoint read through the version of our manifest paired with it (`fx/pair.rs`, rules
+/// 1 and 18), so rows that a drop removed from SlateDB come from our runs; every page holds the version (rules 4, 5).
+async fn open_snapshot(ctl: &Ctl, db: &str, checkpoint: &str) -> anyhow::Result<PairedReader> {
     let id = uuid::Uuid::parse_str(checkpoint)?;
     let mut o = DbReaderOptions::default();
     o.skip_wal_replay = true; // the snapshot was taken after a clean close: nothing is left in the WAL
     o.manifest_poll_interval = Duration::from_secs(3600);
-    Ok(DbReader::builder(purge::tenant_path(db), Arc::clone(&ctl.store)).with_reader_mode(DbReaderMode::Checkpoint(id)).with_options(o).build().await?)
+    PairedReader::open_checkpoint(&ctl.store, db, id, o).await
 }
 
 fn index_specs(idx: &[crate::index::IndexDef]) -> Vec<Bson> {
@@ -96,15 +98,18 @@ pub async fn create(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
     let r = async {
         let admin = Admin::builder(purge::tenant_path(db), Arc::clone(&ctl.store)).build();
         let ttl = Duration::from_secs(ctl.args.export_ttl_secs.max(60));
-        let cp = admin.create_detached_checkpoint(&CheckpointOptions { lifetime: Some(ttl), source: None, name: Some(format!("export:{id}")) }).await.map_err(anyhow::Error::from)?;
+        let opts = CheckpointOptions { lifetime: Some(ttl), source: None, name: Some(format!("export:{id}")) };
+        // paired with the newest version of our manifest under the drop lease (rule 18; nothing without --sealed-runs)
+        let (cp, pair) = tenant_bench::fx::pair::checkpoint_paired(&ctl.store, db, || async { Ok(admin.create_detached_checkpoint(&opts).await?) }).await?;
         super::failpoint("export.after_checkpoint").await;
         let reader = open_snapshot(ctl, db, &cp.id.to_string()).await?;
-        let Some(raw) = reader.get(crate::layout::META_COLLECTIONS).await.map_err(anyhow::Error::from)? else { anyhow::bail!("database {db} has no collection list") };
+        let rr = crate::layout2::Raw::Paired(&reader);
+        let Some(raw) = crate::layout2::get(&rr, crate::layout::META_COLLECTIONS).await? else { anyhow::bail!("database {db} has no collection list") };
         let names: Vec<String> = Document::from_reader(&raw[..])?.get_array("names")?.iter().filter_map(|b| b.as_str().map(str::to_string)).collect();
         let mut files = Vec::new();
         for n in &names {
             let esc = escape_name(n);
-            let idx = match reader.get(&crate::layout::index_key(n)).await.map_err(anyhow::Error::from)? {
+            let idx = match crate::layout2::get(&rr, &crate::layout::index_key(n)).await? {
                 Some(v) => {
                     let d = Document::from_reader(&v[..])?;
                     d.get_array("indexes")?.iter().filter_map(|b| b.as_document().and_then(crate::index::IndexDef::from_stored)).collect::<Vec<_>>()
@@ -117,7 +122,7 @@ pub async fn create(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
         }
         reader.close().await.map_err(anyhow::Error::from)?;
         let record = json!({
-            "id": id, "database": db, "checkpoint_id": cp.id.to_string(), "manifest_id": cp.manifest_id,
+            "id": id, "database": db, "checkpoint_id": cp.id.to_string(), "manifest_id": cp.manifest_id, "fx_version": pair.and_then(|p| p.version),
             "created_at_ms": now_ms(), "expires_at_ms": now_ms() + ttl.as_millis() as i64, "files": files,
         });
         rec::put(&ctl.store, &record_path(db, &id), &record).await?;
@@ -175,6 +180,7 @@ async fn release(ctl: &Arc<Ctl>, db: &str, r: &Value) -> anyhow::Result<()> {
         if admin.read_manifest(None).await?.is_some() {
             admin.delete_checkpoint(cp).await?;
         }
+        tenant_bench::fx::pair::delete_pair(&ctl.store, db, &cp).await?;
     }
     rec::delete(&ctl.store, &record_path(db, r["id"].as_str().unwrap_or(""))).await
 }
@@ -196,7 +202,7 @@ pub async fn download(ctl: &Arc<Ctl>, id: &str, file: &str, headers: &std::colle
     let coll = entry["collection"].as_str().unwrap_or("").to_string();
     if entry["kind"] == "metadata" {
         let reader = open_snapshot(ctl, db, rec_v["checkpoint_id"].as_str().unwrap_or("")).await?;
-        let idx = match reader.get(&crate::layout::index_key(&coll)).await.map_err(anyhow::Error::from)? {
+        let idx = match crate::layout2::get(&crate::layout2::Raw::Paired(&reader), &crate::layout::index_key(&coll)).await? {
             Some(v) => Document::from_reader(&v[..]).map_err(anyhow::Error::from)?.get_array("indexes").map_err(anyhow::Error::from)?.iter().filter_map(|b| b.as_document().and_then(crate::index::IndexDef::from_stored)).collect::<Vec<_>>(),
             None => vec![],
         };
@@ -227,13 +233,41 @@ pub async fn download(ctl: &Arc<Ctl>, id: &str, file: &str, headers: &std::colle
     Ok(Response { status, headers, body: Body::Stream(rx) })
 }
 
-async fn stream_collection(ctl: &Arc<Ctl>, reader: DbReader, db: &str, id: &str, coll: &str, start: u64, tx: tokio::sync::mpsc::Sender<std::io::Result<Bytes>>) -> anyhow::Result<()> {
-    let opts = slatedb::config::ScanOptions { read_ahead_bytes: 4 << 20, max_fetch_tasks: 4, cache_blocks: false, ..Default::default() };
-    let mut it = reader.scan_prefix_with_options(crate::layout::doc_prefix(coll), .., &opts).await?;
+/// One document row of the export stream.
+struct KvRow {
+    value: Bytes,
+}
+
+async fn stream_collection(ctl: &Arc<Ctl>, reader: PairedReader, db: &str, id: &str, coll: &str, start: u64, tx: tokio::sync::mpsc::Sender<std::io::Result<Bytes>>) -> anyhow::Result<()> {
+    // layout v2 and envelopes (custkey.rs, envelope.rs): the documents are read through the same mapping as the server's,
+    // a chunk (one page, one hold on the paired version) at a time
+    let rr = crate::layout2::Raw::Paired(&reader);
+    let opts_raw = crate::layout2::get(&rr, &crate::collopts::meta_key(coll)).await?;
+    let keyed = match opts_raw {
+        Some(v) => crate::custkey::from_raw(&Document::from_reader(&v[..])?).is_some(),
+        None => false,
+    };
+    let prefix = crate::layout::doc_prefix(coll);
+    let end = crate::keyenc::prefix_end(&prefix);
+    let segs = if keyed { vec![crate::custkey::Seg::docs(&crate::layout::escape_collection(coll))] } else { vec![] };
+    let mut cursor = prefix.clone();
+    let mut pending: std::collections::VecDeque<(Bytes, Bytes)> = Default::default();
+    let mut exhausted = false;
     let (mut offset, mut docs) = (0u64, 0u64);
     let mut hasher = Sha256::new();
     let mut buf: Vec<u8> = Vec::with_capacity(512 * 1024);
-    while let Some(kv) = it.next().await? {
+    loop {
+        if pending.is_empty() && !exhausted {
+            let rows = crate::layout2::scan(&rr, &segs, &cursor, end.as_deref(), false, Some(1000), 4 << 20).await?;
+            exhausted = rows.len() < 1000;
+            if let Some((k, _)) = rows.last() {
+                cursor = k.to_vec();
+                cursor.push(0);
+            }
+            pending.extend(rows);
+        }
+        let Some((_, value)) = pending.pop_front() else { break };
+        let kv = KvRow { value };
         // the stored value carries the insertion-order trailer of natural.rs; the dump holds the BSON document only
         let v = crate::natural::bson_part(&kv.value[..]);
         hasher.update(v);

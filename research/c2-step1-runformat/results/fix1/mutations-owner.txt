@@ -1,0 +1,14 @@
+mutation 1 (stop after the first fetch): caught by 3 test(s): newest_reads_match_an_exact_model_across_block_and_run_boundaries, review_fuzz_odd_keys_match_an_exact_model, random_reads_match_an_exact_model
+mutation 2 (ignore a run that starts with the customer): caught by 6 test(s): every_flipped_bit_of_a_small_run_is_an_error, newest_reads_match_an_exact_model_across_block_and_run_boundaries, review_blocks_of_one_run_with_the_footer_of_another_are_an_error, default_and_64k_blocks_round_trip, review_fuzz_odd_keys_match_an_exact_model, random_reads_match_an_exact_model
+mutation 3 (read blocks oldest-first): caught by 3 test(s): newest_reads_match_an_exact_model_across_block_and_run_boundaries, review_fuzz_odd_keys_match_an_exact_model, random_reads_match_an_exact_model
+mutation 4 (drop the upper bound (the next customer leaks in)): caught by 3 test(s): newest_reads_match_an_exact_model_across_block_and_run_boundaries, review_fuzz_odd_keys_match_an_exact_model, random_reads_match_an_exact_model
+mutation 5 (drop the lower bound (the previous customer leaks in)): caught by 3 test(s): newest_reads_match_an_exact_model_across_block_and_run_boundaries, review_fuzz_odd_keys_match_an_exact_model, random_reads_match_an_exact_model
+mutation 6 (skip the first block): caught as a hang (the tests did not finish in 300 s)
+mutation 7 (fetch only the last missing block): caught by 5 test(s): every_flipped_bit_of_a_small_run_is_an_error, newest_reads_match_an_exact_model_across_block_and_run_boundaries, review_fuzz_odd_keys_match_an_exact_model, default_and_64k_blocks_round_trip, random_reads_match_an_exact_model
+mutation 8 (no block checksum check): caught by 3 test(s): every_flipped_bit_of_a_small_run_is_an_error, review_blocks_of_one_run_with_the_footer_of_another_are_an_error, random_flipped_bits_of_a_large_run_are_errors
+mutation 9 (no footer checksum check): caught by 2 test(s): every_flipped_bit_of_a_small_run_is_an_error, random_flipped_bits_of_a_large_run_are_errors
+mutation 10 (customer filter answers no for everyone): caught by 6 test(s): a_customer_inside_one_block_costs_one_get_and_an_absent_one_none, customer_filter_has_no_false_negatives_and_few_false_positives, newest_reads_match_an_exact_model_across_block_and_run_boundaries, default_and_64k_blocks_round_trip, review_fuzz_odd_keys_match_an_exact_model, random_reads_match_an_exact_model
+mutation 11 (fence lookup skips the block holding the lower bound): caught by 4 test(s): newest_reads_match_an_exact_model_across_block_and_run_boundaries, default_and_64k_blocks_round_trip, review_fuzz_odd_keys_match_an_exact_model, random_reads_match_an_exact_model
+mutation 12 (block CRC without the run id (FIX 1)): caught by 1 test(s): review_blocks_of_one_run_with_the_footer_of_another_are_an_error
+mutation 13 (point read looks one block too far): caught by 2 test(s): review_fuzz_odd_keys_match_an_exact_model, random_reads_match_an_exact_model
+MUTATIONS: 13 of 13 caught

@@ -1,0 +1,24 @@
+
+ RUN  v3.2.7 /home/user/adapters/js-lg
+
+ ✓ |int| src/tests/checkpoints.int.test.ts (9 tests) 162ms
+ ✓ |int| src/tests/store.int.test.ts (43 tests | 7 skipped) 239ms
+
+ Test Files  2 passed (2)
+      Tests  41 passed | 7 skipped (52)
+   Start at  17:54:57
+   Duration  898ms (transform 205ms, setup 0ms, collect 880ms, tests 402ms, environment 1ms, prepare 142ms)
+
+JUNIT report written to /home/user/fenvix-engine/bench/agent-adapters/results/mongod/lg-js.xml.int
+
+ RUN  v3.2.7 /home/user/adapters/js-lg
+
+ ✓ |unit| src/tests/checkpoints.test.ts (32 tests) 18ms
+ ✓ |unit| src/tests/store.test.ts (46 tests) 27ms
+
+ Test Files  2 passed (2)
+      Tests  78 passed (78)
+   Start at  17:54:59
+   Duration  602ms (transform 125ms, setup 0ms, collect 701ms, tests 45ms, environment 1ms, prepare 128ms)
+
+JUNIT report written to /home/user/fenvix-engine/bench/agent-adapters/results/mongod/lg-js.xml.unit

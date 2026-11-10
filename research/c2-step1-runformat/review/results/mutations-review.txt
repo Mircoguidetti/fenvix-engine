@@ -1,0 +1,15 @@
+mutation R1 (the block cache ignores the run (block b of run 0 served for run 1)): caught by 2 test(s): newest_reads_match_an_exact_model_across_block_and_run_boundaries, random_reads_match_an_exact_model
+mutation R2 (the customer filter is used for ranges that cross customers): caught by 1 test(s): random_reads_match_an_exact_model
+mutation R3 (the writer adds a customer to the filter only when it starts a block): caught by 3 test(s): a_customer_inside_one_block_costs_one_get_and_an_absent_one_none, default_and_64k_blocks_round_trip, random_reads_match_an_exact_model
+mutation R4 (newest returns one row too many): caught by 3 test(s): a_customer_inside_one_block_costs_one_get_and_an_absent_one_none, newest_reads_match_an_exact_model_across_block_and_run_boundaries, random_reads_match_an_exact_model
+mutation R5 (the writer's separator is the previous key): caught by 7 test(s): every_flipped_bit_of_a_small_run_is_an_error, multipart_parts_and_visibility, newest_reads_match_an_exact_model_across_block_and_run_boundaries, default_and_64k_blocks_round_trip, opening_costs_one_get_for_a_footer_under_the_open_tail, random_flipped_bits_of_a_large_run_are_errors, random_reads_match_an_exact_model
+mutation R6 (a point read returns the next row for an absent key): caught by 1 test(s): random_reads_match_an_exact_model
+mutation R7 (a point read hashes the wrong bytes for the filter): caught by 1 test(s): random_reads_match_an_exact_model
+mutation R8 (a range drops its lower bound inside the first block): caught by 2 test(s): default_and_64k_blocks_round_trip, random_reads_match_an_exact_model
+mutation R9 (the front-coded fence forgets the shared bytes): caught by 7 test(s): every_flipped_bit_of_a_small_run_is_an_error, multipart_parts_and_visibility, newest_reads_match_an_exact_model_across_block_and_run_boundaries, opening_costs_one_get_for_a_footer_under_the_open_tail, default_and_64k_blocks_round_trip, random_flipped_bits_of_a_large_run_are_errors, random_reads_match_an_exact_model
+mutation R10 (the group search starts one group late): caught by 3 test(s): newest_reads_match_an_exact_model_across_block_and_run_boundaries, default_and_64k_blocks_round_trip, random_reads_match_an_exact_model
+mutation R11 (the streaming reader drops a chunk's last block): caught by 2 test(s): every_flipped_bit_of_a_small_run_is_an_error, multipart_parts_and_visibility
+mutation R12 (no fence check of decoded blocks (defence in depth; the CRC also catches)): NOT CAUGHT
+mutation R13 (no end-of-run count check in the stream (defence in depth)): NOT CAUGHT
+mutation R14 (the block CRC no longer covers the block index (writer and reader)): NOT CAUGHT
+MUTATIONS: 11 of 14 caught

@@ -1,0 +1,6 @@
+START 2026-11-07 18:44:30 writes=100000 txns=100000 threads=64
+write-then-read: {'done': 100000, 'miss': 0, 'err': 0} in 231 s (434/s)
+transaction-then-read: {'done': 100000, 'miss': 0, 'err': 0} in 292 s (342/s)
+primary agentLane: {'batches': 200302, 'mixedBatches': 2, 'commits': 200202, 'flushes': 9740, 'txnFlushes': 8157, 'ackRefused': 0, 'windowUs': 100000, 'followed': 0, 'followHits': 0}
+spare agentLane before takeover: {'batches': 0, 'mixedBatches': 0, 'commits': 0, 'flushes': 0, 'txnFlushes': 0, 'ackRefused': 0, 'windowUs': 100000, 'followed': 9813, 'followHits': 0}
+spare served its first read 5.38 s after the kill (lease ttl 4 s)

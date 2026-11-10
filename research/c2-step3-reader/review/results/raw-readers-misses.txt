@@ -1,0 +1,5 @@
+MISSED (DbReader::open): the check passes with a direct SlateDB reader in mongo-server/src/stray_reader.rs
+MISSED (Db::open): the check passes with a direct SlateDB reader in mongo-server/src/stray_reader.rs
+MISSED (Db::builder): the check passes with a direct SlateDB reader in mongo-server/src/stray_reader.rs
+caught (DbReader::builder (control: must be caught))
+raw-reader check: FAIL (3 direct readers missed)

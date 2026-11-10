@@ -16,7 +16,7 @@ use object_store::path::Path;
 use object_store::{ObjectStore, ObjectStoreExt, PutPayload};
 use slatedb::admin::Admin;
 use slatedb::config::{
-    CompactionWorkerOptions, CompactorOptions, DbReaderOptions, GarbageCollectorDirectoryOptions,
+    CompactorOptions, DbReaderOptions, GarbageCollectorDirectoryOptions,
     GarbageCollectorOptions, Settings,
 };
 use slatedb::{CompactorBuilder, Db, DbReader, DbReaderMode, WriteHandle};
@@ -429,7 +429,26 @@ pub async fn flush_writer(id: &str) -> Result<bool> {
     let db = WRITER_DBS.lock().unwrap().get(id).cloned();
     match db {
         Some(db) => {
+            // every batch staged before the flush is in object storage after it
+            let group = VIS_GROUPS.lock().unwrap().get(id).cloned();
+            let upto = group.as_ref().map(|g| g.staged_seq.load(std::sync::atomic::Ordering::Acquire));
             db.flush().await?;
+            if let (Some(g), Some(upto)) = (group, upto) {
+                g.vis.confirm_upto(upto);
+            }
+            Ok(true)
+        }
+        None => Ok(false),
+    }
+}
+
+/// Flush the memtable of the open writer of `id` into an L0 SST. Ok(false): no writer is open. The agent lane does this
+/// at every upload of the local log, so a takeover replays at most one upload interval of small WAL objects.
+pub async fn flush_writer_memtable(id: &str) -> Result<bool> {
+    let db = WRITER_DBS.lock().unwrap().get(id).cloned();
+    match db {
+        Some(db) => {
+            db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await?;
             Ok(true)
         }
         None => Ok(false),
@@ -458,7 +477,7 @@ pub(crate) fn writer_builder_in(id: &str, store: &Arc<dyn ObjectStore>, scope: O
         // Durable writes flush explicitly; the periodic flush only has to bound the relaxed ones.
         settings.flush_interval = Some(relaxed);
     }
-    let b = Db::builder(tenant_path(id), crate::counting::owned(store, id)).with_settings(settings).with_block_cache_policy(flush_cache_policy());
+    let b = Db::builder(tenant_path(id), crate::counting::owned(store, id)).with_settings(settings).with_block_cache_policy(flush_cache_policy()).with_sst_block_size(crate::tiered::block_size());
     let b = match filter_policies() {
         Some(p) => b.with_filter_policies(p),
         None => b,
@@ -493,6 +512,7 @@ pub fn writer_settings() -> Settings {
     if l0_bytes > 0 {
         s.l0_sst_size_bytes = l0_bytes as usize;
     }
+    s.compression_codec = crate::tiered::codec();
     s.garbage_collector_options = None;
     s.compactor_options = None;
     s.manifest_poll_interval = Duration::from_secs(WRITER_POLL_SECS.load(std::sync::atomic::Ordering::Relaxed));
@@ -612,10 +632,15 @@ impl Lifecycle {
     pub async fn create(self: &Arc<Self>, id: impl std::fmt::Display) -> Result<Tenant> {
         let id = id.to_string();
         let db = writer_builder(&id, &self.store).build().await?;
+        let epoch = opened_epoch(&self.store, &id).await?;
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
         let scope = writer_scope(&id);
-        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope })
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, epoch: epoch };
+        t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
+        t.load_env().await?;
+        t.load_fx().await?;
+        Ok(t)
     }
 
     pub fn new(counting: Arc<CountingStore>, queue: Option<Arc<CompactionQueue>>) -> Arc<Self> {
@@ -660,7 +685,11 @@ impl Lifecycle {
         let l0_at_wake = reader.manifest().l0().len();
         let reader = Arc::new(reader);
         READER_DBS.lock().unwrap().insert(id.clone(), Arc::downgrade(&reader));
-        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope })
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, epoch: 0 };
+        t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
+        t.load_env().await?;
+        t.load_fx().await?;
+        Ok(t)
     }
 }
 
@@ -675,6 +704,298 @@ enum Mode {
     Reader(Arc<DbReader>),
     Writer(Db),
 }
+
+/// Read-your-writes without dirty reads on the log path (`--local-log-dir` / `--quaderno`, set by the server; off
+/// otherwise, where reads use slatedb's durable filter as before).
+///
+/// With the log a write is durable when its log record is confirmed (on the local disk, or on 2 of the 3 copies), long
+/// before its WAL object reaches object storage; an agent-lane batch is durable when its WAL object is. Readers must see
+/// every durable write (a writer reads its own acknowledged writes) and nothing that is not durable yet (a write staged in
+/// the memtable while its record or its WAL object is still on its way can be lost by a crash: a majority read or a
+/// change stream must never return it).
+///
+/// The rule, per key. Every batch is staged under the database's exclusive lock; with tracking on, a snapshot of the state
+/// just before the batch is taken at the same moment (a slatedb snapshot is a sequence number, no copy) and the batch is
+/// "in flight" with the keys it writes. A read of key `k` returns the value of the snapshot before the oldest in-flight
+/// batch that writes `k`, or the latest value when none does: either way the value of a batch that is durable, and every
+/// earlier write of `k` is durable too. A batch leaves (becomes visible) once it is durable and no earlier in-flight batch
+/// writes one of its keys; its acknowledgement and its change-stream events wait for that, so a writer never gets an ok
+/// for a write a read could still miss. Batches on other keys do not wait for each other: a default-path write is not
+/// held back by an agent-lane batch waiting for its PUT on other documents. (The log's marker key, written by every log
+/// batch, is not counted: only the log's replay reads it.)
+pub static TRACK_VISIBLE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// A key every log batch writes and no read uses (the log's marker, set by the server): not counted as a batch's key.
+pub static VIS_IGNORE_KEY: std::sync::OnceLock<Vec<u8>> = std::sync::OnceLock::new();
+/// Called whenever a database's visible state moves forward (the server wakes change-stream readers with it).
+pub static ON_VISIBLE: std::sync::OnceLock<Box<dyn Fn() + Send + Sync>> = std::sync::OnceLock::new();
+/// Batches whose log record was refused or not confirmed in time, then made durable by a WAL flush to object storage.
+pub static VISIBLE_FALLBACK_FLUSHES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Key reads served from the snapshot before an in-flight batch (a durable value older than the latest one).
+pub static VISIBLE_SNAPSHOT_READS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+struct VisBatch {
+    before: Arc<slatedb::DbSnapshot>,
+    keys: Vec<Vec<u8>>,
+    durable: bool,
+}
+
+#[derive(Default)]
+struct VisInner {
+    /// In-flight batches by sequence number.
+    batches: std::collections::BTreeMap<u64, VisBatch>,
+    /// Key -> in-flight batches that write it.
+    by_key: std::collections::BTreeMap<Vec<u8>, std::collections::BTreeSet<u64>>,
+    /// Every batch up to this sequence number is in object storage.
+    durable_upto: u64,
+    /// Ownership was lost: the in-flight batches will never be confirmed by this writer.
+    dead: bool,
+}
+
+impl VisInner {
+    /// Remove every batch of `cands` (and the batches they unblock) that is durable and first in line on all its keys.
+    /// Returns whether any left.
+    fn settle(&mut self, cands: impl IntoIterator<Item = u64>) -> bool {
+        let mut work: std::collections::BTreeSet<u64> = cands.into_iter().collect();
+        let mut moved = false;
+        while let Some(seq) = work.pop_first() {
+            let ready = match self.batches.get(&seq) {
+                Some(b) => b.durable && b.keys.iter().all(|k| self.by_key.get(k).and_then(|s| s.first()) == Some(&seq)),
+                None => false,
+            };
+            if !ready {
+                continue;
+            }
+            let b = self.batches.remove(&seq).unwrap();
+            moved = true;
+            for k in b.keys {
+                if let Some(set) = self.by_key.get_mut(&k) {
+                    set.remove(&seq);
+                    match set.first() {
+                        Some(next) => {
+                            work.insert(*next);
+                        }
+                        None => {
+                            self.by_key.remove(&k);
+                        }
+                    }
+                }
+            }
+        }
+        moved
+    }
+}
+
+/// The durable (visible) state of one opening of a database as a writer. See [`TRACK_VISIBLE`].
+#[derive(Default)]
+pub struct Visible {
+    inner: Mutex<VisInner>,
+    changed: tokio::sync::Notify,
+}
+
+/// Where a batch stands for readers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum VisState {
+    Visible,
+    Pending,
+    /// Never confirmed and never will be by this writer (ownership lost): its outcome is unknown.
+    Lost,
+}
+
+impl Visible {
+    fn moved(&self) {
+        self.changed.notify_waiters();
+        if let Some(f) = ON_VISIBLE.get() {
+            f();
+        }
+    }
+
+    fn add(&self, seq: u64, before: Arc<slatedb::DbSnapshot>, mut keys: Vec<Vec<u8>>) {
+        if let Some(ignore) = VIS_IGNORE_KEY.get() {
+            keys.retain(|k| k != ignore);
+        }
+        keys.sort();
+        keys.dedup();
+        let moved = {
+            let mut g = self.inner.lock().unwrap();
+            for k in &keys {
+                g.by_key.entry(k.clone()).or_default().insert(seq);
+            }
+            let durable = seq <= g.durable_upto;
+            g.batches.insert(seq, VisBatch { before, keys, durable });
+            durable && g.settle([seq])
+        };
+        if moved {
+            self.moved();
+        }
+    }
+
+    /// The record of batch `seq` is confirmed by the log.
+    pub fn confirm(&self, seq: u64) {
+        let moved = {
+            let mut g = self.inner.lock().unwrap();
+            match g.batches.get_mut(&seq) {
+                Some(b) if !b.durable => {
+                    b.durable = true;
+                    g.settle([seq])
+                }
+                _ => false,
+            }
+        };
+        if moved {
+            self.moved();
+        }
+    }
+
+    /// Every batch up to `seq` is durable in object storage.
+    pub fn confirm_upto(&self, seq: u64) {
+        let moved = {
+            let mut g = self.inner.lock().unwrap();
+            g.durable_upto = g.durable_upto.max(seq);
+            let mut cands = Vec::new();
+            for (s, b) in g.batches.range_mut(..=seq) {
+                b.durable = true;
+                cands.push(*s);
+            }
+            g.settle(cands)
+        };
+        if moved {
+            self.moved();
+        }
+    }
+
+    /// Everything staged is durable (a clean close flushed it).
+    pub fn confirm_all(&self) {
+        self.confirm_upto(u64::MAX - 1);
+    }
+
+    /// Ownership was lost: nothing in flight will be confirmed here.
+    pub fn kill(&self) {
+        self.inner.lock().unwrap().dead = true;
+        self.moved();
+    }
+
+    /// Whether any batch is in flight (reads may then need an older value for some keys).
+    pub fn any(&self) -> bool {
+        !self.inner.lock().unwrap().batches.is_empty()
+    }
+
+    /// The snapshot a read of `key` must use, `None` when its latest value is visible.
+    pub fn snapshot_for(&self, key: &[u8]) -> Option<Arc<slatedb::DbSnapshot>> {
+        let g = self.inner.lock().unwrap();
+        let seq = g.by_key.get(key)?.first()?;
+        g.batches.get(seq).map(|b| Arc::clone(&b.before))
+    }
+
+    /// Keys in `[start, end)` written by an in-flight batch, in key order, each with the snapshot its read must use.
+    pub fn in_range(&self, start: &[u8], end: Option<&[u8]>) -> Vec<(Vec<u8>, Arc<slatedb::DbSnapshot>)> {
+        let g = self.inner.lock().unwrap();
+        if g.batches.is_empty() {
+            return Vec::new();
+        }
+        let range = (std::ops::Bound::Included(start.to_vec()), end.map_or(std::ops::Bound::Unbounded, |e| std::ops::Bound::Excluded(e.to_vec())));
+        g.by_key
+            .range::<Vec<u8>, _>(range)
+            .filter_map(|(k, set)| set.first().and_then(|s| g.batches.get(s)).map(|b| (k.clone(), Arc::clone(&b.before))))
+            .collect()
+    }
+
+    pub fn state(&self, seq: u64) -> VisState {
+        let g = self.inner.lock().unwrap();
+        if !g.batches.contains_key(&seq) {
+            VisState::Visible
+        } else if g.dead {
+            VisState::Lost
+        } else {
+            VisState::Pending
+        }
+    }
+
+    async fn wait_until(&self, done: impl Fn(&VisInner) -> bool, limit: Duration, what: &str) -> Result<()> {
+        let deadline = tokio::time::Instant::now() + limit;
+        loop {
+            let n = self.changed.notified();
+            tokio::pin!(n);
+            n.as_mut().enable();
+            {
+                let g = self.inner.lock().unwrap();
+                if done(&g) {
+                    return Ok(());
+                }
+                if g.dead {
+                    return Err(anyhow!("ownership of the database was lost before {what} was confirmed; the outcome is unknown, retry"));
+                }
+            }
+            if tokio::time::timeout_at(deadline, n).await.is_err() {
+                return Err(anyhow!("{what} of the database was not confirmed in {} s; the outcome is unknown, retry", limit.as_secs()));
+            }
+        }
+    }
+
+    /// Wait until batch `seq` is visible: durable, and no earlier in-flight batch writes one of its keys (at most `limit`).
+    pub async fn wait_visible(&self, seq: u64, limit: Duration) -> Result<()> {
+        self.wait_until(|g| !g.batches.contains_key(&seq), limit, "a write (or an earlier write of the same keys)").await
+    }
+
+    /// Wait until nothing is in flight (at most `limit`).
+    pub async fn wait_all(&self, limit: Duration) -> Result<()> {
+        self.wait_until(|g| g.batches.is_empty(), limit, "every staged write").await
+    }
+}
+
+/// A change-stream event waits for the batch that produced it: (the database's visible state, its sequence number).
+#[derive(Clone)]
+pub struct VisGate(Arc<GroupFlush>, u64);
+
+impl VisGate {
+    pub fn state(&self) -> VisState {
+        self.0.vis.state(self.1)
+    }
+}
+
+impl std::fmt::Debug for VisGate {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "VisGate({})", self.1)
+    }
+}
+
+/// The open writer of each database (its group-commit state) while tracking is on.
+static VIS_GROUPS: std::sync::LazyLock<Mutex<HashMap<String, Arc<GroupFlush>>>> = std::sync::LazyLock::new(Default::default);
+
+/// The gate for an event of `db` published now: it waits for the last batch staged in `db` (None: nothing to wait for).
+pub fn visibility_gate(db: &str) -> Option<VisGate> {
+    if !TRACK_VISIBLE.load(std::sync::atomic::Ordering::Relaxed) {
+        return None;
+    }
+    let g = VIS_GROUPS.lock().unwrap().get(db).cloned()?;
+    let seq = g.staged_seq.load(std::sync::atomic::Ordering::Acquire);
+    if g.vis.state(seq) == VisState::Visible {
+        return None;
+    }
+    Some(VisGate(g, seq))
+}
+
+/// The smallest key above every key starting with `p` (None: no such key).
+fn prefix_end(p: &[u8]) -> Option<Vec<u8>> {
+    let mut e = p.to_vec();
+    while let Some(last) = e.pop() {
+        if last < 0xff {
+            e.push(last + 1);
+            return Some(e);
+        }
+    }
+    None
+}
+
+fn forget_vis(id: &str, group: &Arc<GroupFlush>) {
+    let mut m = VIS_GROUPS.lock().unwrap();
+    if m.get(id).map_or(false, |g| Arc::ptr_eq(g, group)) {
+        m.remove(id);
+    }
+}
+
+/// How long an acknowledgement waits for earlier batches of its database to be confirmed (the log's own deadline is 10 s,
+/// then the fallback flush to object storage).
+pub const VISIBLE_WAIT: Duration = Duration::from_secs(60);
 
 /// Per-writer state of group commit: one flush at a time, led by whichever waiting write gets the lock first; a write
 /// whose sequence number an earlier flush already covered just returns.
@@ -694,7 +1015,24 @@ pub struct GroupFlush {
     last_arrival_us: std::sync::atomic::AtomicU64,
     gap_ewma_us: std::sync::atomic::AtomicU64,
     flush_ewma_us: std::sync::atomic::AtomicU64,
+    /// Agent lane: when the current batch window opened (microseconds of [`mono_us`], 0 = no window open).
+    agent_open_us: std::sync::atomic::AtomicU64,
+    /// The confirmed state readers see (see [`TRACK_VISIBLE`]).
+    pub vis: Visible,
 }
+
+/// Agent lane (PROTOTYPE, off unless a collection is on the lane, see the server's `agentlane.rs`): a batch of the lane is
+/// acknowledged only once the WAL object holding it is in object storage. The first write of a batch opens a window of
+/// this many microseconds; at its end one WAL flush (one PUT) covers every write staged meanwhile, of both lanes.
+pub static AGENT_WINDOW_US: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(100_000);
+/// Agent-lane writes waited for, WAL flushes issued for them, of which flushes at a transaction's commit (no window).
+pub static AGENT_COMMITS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static AGENT_FLUSHES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static AGENT_TXN_FLUSHES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Agent-lane writes not acknowledged: the WAL write failed (fenced by another writer, store error) or ownership was lost.
+pub static AGENT_ACK_REFUSED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// TEST ONLY (negative control, `MONGO_TEST_AGENT_ACK_EARLY`): acknowledge agent-lane writes without waiting for the PUT.
+pub static AGENT_ACK_EARLY: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// Adaptive group commit (`--adaptive-group-commit`): the leader of a flush waits a short window, only when more writes of
 /// the same database are expected within it (their average gap is at most twice the window) or already on their way.
@@ -740,14 +1078,120 @@ pub struct Commit {
     tenant: String,
     /// Local log (prototype): the batch is durable once this resolves (its record is on the local disk).
     local: Option<futures::future::Shared<futures::future::BoxFuture<'static, std::result::Result<(), String>>>>,
+    /// Agent lane: `Some(at_commit)` when the batch is durable only in a WAL object in object storage, never in the local
+    /// or replicated log. `at_commit` (a transaction's commit) flushes at once instead of waiting for the batch window.
+    agent: Option<bool>,
 }
 
 impl Commit {
     /// Make the batch's durability the local log's fsync instead of the WAL flush to object storage.
     pub fn with_local(mut self, rx: oneshot::Receiver<std::result::Result<(), String>>) -> Self {
         use futures::FutureExt;
-        self.local = Some(rx.map(|r| r.unwrap_or_else(|_| Err("local log stopped".to_string()))).boxed().shared());
+        let fut = rx.map(|r| r.unwrap_or_else(|_| Err("local log stopped".to_string()))).boxed().shared();
+        if TRACK_VISIBLE.load(std::sync::atomic::Ordering::Relaxed) {
+            // The batch becomes visible when its record is confirmed, whether or not anyone waits for it: a command that
+            // staged several batches waits only for its last one, and the earlier ones must not stay in flight.
+            let (fut2, group, db, handle, seq, tenant) = (fut.clone(), Arc::clone(&self.group), self.db.clone(), self.handle.clone(), self.handle.seqnum(), self.tenant.clone());
+            tokio::spawn(async move {
+                match fut2.await {
+                    Ok(()) => group.vis.confirm(seq),
+                    Err(e) => {
+                        if let Err(f) = Commit::fallback_flush(&group, &db, &handle, seq, &tenant, &e).await {
+                            eprintln!("log: {f:#}");
+                        }
+                    }
+                }
+            });
+        }
+        self.local = Some(fut);
         self
+    }
+
+    /// The log refused the record of batch `seq` or did not confirm it in time, but the batch is in the memtable: it would
+    /// stay in flight (invisible) and hold back later writes of its keys. Make it durable in object storage instead (one
+    /// WAL flush, fenced like any WAL write); then it counts as confirmed. If that fails too, the write is not acknowledged.
+    async fn fallback_flush(group: &Arc<GroupFlush>, db: &Db, handle: &WriteHandle, seq: u64, tenant: &str, e: &str) -> Result<()> {
+        use std::sync::atomic::Ordering::{Acquire, Relaxed};
+        eprintln!("log: record of {tenant} not confirmed ({e}); flushing its WAL to object storage instead");
+        let wal = slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::Wal };
+        let target = group.staged_seq.load(Acquire);
+        db.flush_with_options(wal).await.map_err(|f| anyhow!("{e}; the WAL flush to object storage failed too: {f}"))?;
+        handle.await_durable().await?;
+        VISIBLE_FALLBACK_FLUSHES.fetch_add(1, Relaxed);
+        group.vis.confirm_upto(target.max(seq));
+        Ok(())
+    }
+
+    /// Put the batch on the agent lane: durable once its WAL object is in object storage (see [`AGENT_WINDOW_US`]).
+    pub fn with_agent(mut self, at_commit: bool) -> Self {
+        self.local = None;
+        self.agent = Some(at_commit);
+        self
+    }
+
+    /// Whether the batch is on the agent lane.
+    pub fn is_agent(&self) -> bool {
+        self.agent.is_some()
+    }
+
+    /// Agent lane: wait for the batch window (not at a transaction's commit), flush the WAL once for every write staged
+    /// so far, then wait until the WAL object holding this batch is durable. The WAL objects are numbered and written with
+    /// create-if-absent (S3 `If-None-Match: *`, slatedb's WAL fencing): a writer fenced by a newer one gets an error from
+    /// its next WAL write and never acknowledges, and the newer writer replays every WAL object before its fence.
+    async fn wait_agent(self, at_commit: bool) -> Result<()> {
+        use std::sync::atomic::Ordering::{AcqRel, Acquire, Relaxed, Release};
+        GROUP_COMMITS.fetch_add(1, Relaxed);
+        AGENT_COMMITS.fetch_add(1, Relaxed);
+        if AGENT_ACK_EARLY.load(Relaxed) {
+            return Ok(());
+        }
+        let seq = self.handle.seqnum();
+        let r: Result<()> = async {
+            if self.group.flushed_seq.load(Acquire) < seq {
+                if !at_commit {
+                    let now = mono_us();
+                    let opened = match self.group.agent_open_us.compare_exchange(0, now, AcqRel, Acquire) {
+                        Ok(_) => now,
+                        Err(t) => t,
+                    };
+                    let left = (opened + AGENT_WINDOW_US.load(Relaxed)).saturating_sub(now);
+                    if left > 0 {
+                        tokio::time::sleep(Duration::from_micros(left)).await;
+                    }
+                }
+                let _lead = self.group.lock.lock().await;
+                if self.group.flushed_seq.load(Acquire) < seq {
+                    // writes that arrive from now on open the next window
+                    self.group.agent_open_us.store(0, Release);
+                    let target = self.group.staged_seq.load(Acquire);
+                    let wal = slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::Wal };
+                    self.db.flush_with_options(wal).await?;
+                    AGENT_FLUSHES.fetch_add(1, Relaxed);
+                    if at_commit {
+                        AGENT_TXN_FLUSHES.fetch_add(1, Relaxed);
+                    }
+                    GROUP_FLUSHES.fetch_add(1, Relaxed);
+                    self.group.flushed_seq.fetch_max(target, Release);
+                }
+            }
+            self.handle.await_durable().await?;
+            // the WAL object holds this batch and every earlier one: all of them are durable
+            self.group.vis.confirm_upto(seq);
+            if TRACK_VISIBLE.load(Relaxed) {
+                self.group.vis.wait_visible(seq, VISIBLE_WAIT).await?;
+            }
+            Ok(())
+        }
+        .await;
+        if r.is_err() {
+            AGENT_ACK_REFUSED.fetch_add(1, Relaxed);
+            return r;
+        }
+        if !owner_valid(&self.tenant) {
+            AGENT_ACK_REFUSED.fetch_add(1, Relaxed);
+            return Err(anyhow!("ownership of database {} was lost before the write was acknowledged; its outcome is unknown, retry", self.tenant));
+        }
+        Ok(())
     }
 
     /// Sequence number of the batch in its database's writer.
@@ -772,9 +1216,21 @@ impl Commit {
     /// together by the next one.
     pub async fn wait(mut self) -> Result<()> {
         use std::sync::atomic::Ordering::{Acquire, Relaxed, Release};
+        if let Some(at_commit) = self.agent {
+            return self.wait_agent(at_commit).await;
+        }
         if let Some(rx) = self.local.take() {
             GROUP_COMMITS.fetch_add(1, Relaxed);
-            rx.await.map_err(|e| anyhow!(e))?;
+            let seq = self.handle.seqnum();
+            match rx.await {
+                Ok(()) => self.group.vis.confirm(seq),
+                Err(e) if TRACK_VISIBLE.load(Relaxed) => Commit::fallback_flush(&self.group, &self.db, &self.handle, seq, &self.tenant, &e).await?,
+                Err(e) => return Err(anyhow!(e)),
+            }
+            if TRACK_VISIBLE.load(Relaxed) {
+                // acknowledged only once every earlier batch is confirmed too: a read right after the ok sees the write
+                self.group.vis.wait_visible(seq, VISIBLE_WAIT).await?;
+            }
             // The record is on the local disk, but this process may have lost the database meanwhile (frozen between the
             // ownership check and the fsync, its lease lapsed, another process took over): then the write is not acknowledged.
             if !owner_valid(&self.tenant) {
@@ -848,6 +1304,11 @@ impl Commit {
         }
         if !ACK_BEFORE_DURABLE.load(Relaxed) {
             self.handle.await_durable().await?;
+            // in a durable WAL object, with every earlier batch
+            self.group.vis.confirm_upto(seq);
+            if TRACK_VISIBLE.load(Relaxed) {
+                self.group.vis.wait_visible(seq, VISIBLE_WAIT).await?;
+            }
         }
         Ok(())
     }
@@ -863,13 +1324,61 @@ pub struct Tenant {
     pub l0_at_wake: usize,
     /// Cache scope of the reader or writer (kept by the upgrade to a writer, see [`writer_builder_in`]).
     scope: Option<u64>,
+    /// E_env, the sequence number of the envelope marker (`envelope.rs`); `None`: no marker, every row is plain.
+    env: Option<u64>,
+    /// Compaction 2 (`fx`): the version of our manifest this tenant reads with (None: no version, or `--sealed-runs` off).
+    /// It changes only through `&mut self` (open, publish, refresh), so under the database's exclusive lock, and every
+    /// operation, which runs under the shared or the exclusive lock, reads one version from its first step to its last.
+    fx: Option<Arc<crate::fx::view::View>>,
+    /// Holds on versions taken by this tenant's reads and transactions (`fx/hold.rs`).
+    holds: Arc<crate::fx::hold::Holds>,
+    /// When the version was last loaded from the store (a reader's T_pin, rule 6).
+    fx_loaded: Instant,
+    /// Write batches since the last publish, and publishes made (`--sealed-runs N`).
+    fx_writes: u64,
+    fx_builds: u64,
+    /// Release E1 was announced in the store (`fx/manifest.rs`, rule 26): while this tenant knows no E_env, a reader reads
+    /// the marker before decoding each step's rows.
+    fx_announced: bool,
+    /// When this process first saw the announcement (the writer starts envelopes one T_pin later, rule 26).
+    fx_announce_seen: Option<Instant>,
+    /// Rule 25 (review of step 3, defect 2): a publish or a fence whose outcome is unknown (an error, a timeout) left a
+    /// version in the store this tenant may not know. Until a fence succeeds, no read takes a hold (it fails with the
+    /// retryable error, and the next exclusive step retries the fence) and no publish starts.
+    fx_fence_pending: bool,
+    /// The version of a publish whose outcome is unknown, until a fence covers its slot. When the store is still empty
+    /// (a first publish), the fence is this version itself, created at its own slot (review round 2 of step 3).
+    fx_unknown: Option<Box<crate::fx::manifest::Version>>,
+    /// With the log on: the writer epoch this writer fenced with, read from object storage when it opened (0: not read).
+    epoch: u64,
+}
+
+/// The writer epoch a writer just opened on `id` fenced with, read from the stored manifest (with the log on only: the log
+/// stamps every record with it, see `writer_epoch`). 0 when the log is off.
+async fn opened_epoch(store: &Arc<dyn ObjectStore>, id: &str) -> Result<u64> {
+    if LOCAL_LOG_FLUSH_SECS.load(std::sync::atomic::Ordering::Relaxed) == 0 {
+        return Ok(0);
+    }
+    Ok(stored_writer_epoch(store, id).await?.unwrap_or(0))
 }
 
 impl Tenant {
+    /// Every staged write is in a durable WAL object (explicit flush mode; otherwise unknown here, so false). A read of
+    /// durable data then sees exactly what a read of the memtable sees.
+    pub fn all_durable(&self) -> bool {
+        use std::sync::atomic::Ordering::Acquire;
+        EXPLICIT_FLUSH.load(std::sync::atomic::Ordering::Relaxed) && self.group.flushed_seq.load(Acquire) >= self.group.staged_seq.load(Acquire)
+    }
+
     /// slatedb writer epoch of this writer (None for a reader).
+    ///
+    /// With the log on, the epoch read from object storage when the writer opened: `Db::manifest()` is the writer's cached
+    /// view of the manifest, which can still show the previous writer's epoch after this one fenced (MEASURED: most
+    /// records of a writer opened at epoch 3 were stamped 2), and a restart then took that writer's acknowledged records
+    /// for an older writer's ("opened by another writer after these records": not applied).
     pub fn writer_epoch(&self) -> Option<u64> {
         match &self.mode {
-            Some(Mode::Writer(db)) => Some(db.manifest().writer_epoch()),
+            Some(Mode::Writer(db)) => Some(if self.epoch > 0 { self.epoch } else { db.manifest().writer_epoch() }),
             _ => None,
         }
     }
@@ -892,20 +1401,500 @@ impl Tenant {
     }
 
     pub async fn get<K: AsRef<[u8]> + Send>(&self, key: K) -> Result<Option<Bytes>> {
-        Ok(match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
-            Mode::Reader(r) => r.get(key).await?,
-            Mode::Writer(db) => db.get(key).await?,
-        })
+        self.fx_no_fence_pending()?;
+        if let Some(v) = &self.fx {
+            return self.fx_get(v, key.as_ref(), false).await;
+        }
+        self.e1_fresh()?;
+        if self.env.is_none() && !self.fx_announced {
+            return Ok(match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
+                Mode::Reader(r) => r.get(key).await?,
+                Mode::Writer(db) => db.get(key).await?,
+            });
+        }
+        let kv = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
+            Mode::Reader(r) => r.get_key_value(key).await?,
+            Mode::Writer(db) => db.get_key_value(key).await?,
+        };
+        let env = self.step_env().await?;
+        match kv {
+            Some(kv) => crate::envelope::decode(env, &kv.key, kv.seq, kv.value),
+            None => Ok(None),
+        }
+    }
+
+    /// E_env of this database (`envelope.rs`): `None` when it has no envelope marker.
+    pub fn envelope_seq(&self) -> Option<u64> {
+        self.env
+    }
+
+    /// The version of our manifest this tenant reads with (None: none, or `--sealed-runs` off).
+    pub fn fx_view(&self) -> Option<&Arc<crate::fx::view::View>> {
+        self.fx.as_ref()
+    }
+
+    /// The holds of this tenant (the drop floor of step 4, tests).
+    pub fn fx_holds(&self) -> &Arc<crate::fx::hold::Holds> {
+        &self.holds
+    }
+
+    /// A reader in reader mode refuses to read with a version older than T_pin (rule 6): before every step that reads
+    /// SlateDB. The writer is the only publisher of its database, so its version is always the newest.
+    fn fx_fresh(&self) -> Result<()> {
+        if matches!(self.mode, Some(Mode::Reader(_))) {
+            let t_pin = Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed));
+            if self.fx_loaded.elapsed() > t_pin {
+                return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: our manifest was last read {:?} ago, more than T_pin; retry", self.id, self.fx_loaded.elapsed()))));
+            }
+        }
+        Ok(())
+    }
+
+    /// Due for a refresh of the version (a reader at half its T_pin, or a fence pending); the caller refreshes under the
+    /// exclusive lock.
+    pub fn fx_refresh_due(&self) -> bool {
+        self.fx_fence_pending
+            || (crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) || self.e1_tracked())
+                && matches!(self.mode, Some(Mode::Reader(_)))
+                && self.fx_loaded.elapsed() > Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed) / 2)
+    }
+
+    /// Whether a fence is pending (rule 25; diagnostics and tests).
+    pub fn fx_fence_pending(&self) -> bool {
+        self.fx_fence_pending
+    }
+
+    /// Rule 25: no read takes a hold while a fence is pending. The read fails with the retryable error; the server's next
+    /// exclusive step (`Entry::ensure_open`, `Dbs::read`) retries the fence through `fx_refresh`.
+    fn fx_no_fence_pending(&self) -> Result<()> {
+        #[cfg(test)]
+        if crate::fx::CONTROL_NO_FENCE_PENDING.load(std::sync::atomic::Ordering::Relaxed) {
+            return Ok(());
+        }
+        if self.fx_fence_pending {
+            return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: a publish of our manifest has an unknown outcome and its fence has not succeeded yet; retry", self.id))));
+        }
+        Ok(())
+    }
+
+    /// A reader that must follow release E1's start (rules 6 and 26): it knows no E_env yet, and this process runs with
+    /// sealed runs or `--envelopes write`. Once it knows E_env, every row decides itself by its seq.
+    fn e1_tracked(&self) -> bool {
+        use std::sync::atomic::Ordering::Relaxed;
+        self.env.is_none() && matches!(self.mode, Some(Mode::Reader(_))) && (crate::fx::ENABLED.load(Relaxed) || crate::envelope::START.load(Relaxed))
+    }
+
+    /// Rule 6 for a reader that has no version of ours (`fx_fresh` covers one that has): while it follows E1's start, it
+    /// refuses to read with an announcement state older than T_pin (step 3 review note: "no T_pin refusal without a
+    /// version"). Before every step that reads SlateDB.
+    fn e1_fresh(&self) -> Result<()> {
+        if self.fx.is_none() && self.e1_tracked() {
+            let t_pin = Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed));
+            if self.fx_loaded.elapsed() > t_pin {
+                return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: release E1's announcement was last read {:?} ago, more than T_pin; retry", self.id, self.fx_loaded.elapsed()))));
+            }
+        }
+        Ok(())
+    }
+
+    /// Load the newest version again (a reader's refresh, or the retry of a pending fence), with E_env and E1's
+    /// announcement (rule 6). A fence that fails again is a retryable error.
+    pub async fn fx_refresh(&mut self) -> Result<()> {
+        self.load_env().await?;
+        let r = self.load_fx().await;
+        if self.fx_fence_pending {
+            if let Err(e) = r {
+                return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: the fence of our manifest failed again: {e:#}; retry", self.id))));
+            }
+        }
+        r
+    }
+
+    /// Before a hold that `&mut self` can take (a transaction, a publish): retry a pending fence first (rule 25).
+    async fn fx_settle_fence(&mut self) -> Result<()> {
+        if self.fx_fence_pending {
+            self.fx_refresh().await?;
+        }
+        Ok(())
+    }
+
+    /// The E_env to decode one step's rows with, read after the step's SlateDB view is open: the known one, or, once E1
+    /// was announced and this tenant knows no E_env yet, the marker read now (rule 26). Without an announcement, no read.
+    async fn step_env(&self) -> Result<Option<u64>> {
+        if self.env.is_some() || !self.fx_announced {
+            return Ok(self.env);
+        }
+        let kv = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
+            Mode::Reader(r) => r.get_key_value(crate::envelope::MARKER).await?,
+            Mode::Writer(db) => db.get_key_value(crate::envelope::MARKER).await?,
+        };
+        Ok(kv.map(|kv| kv.seq))
+    }
+
+    async fn fx_get(&self, v: &Arc<crate::fx::view::View>, key: &[u8], durable: bool) -> Result<Option<Bytes>> {
+        self.fx_fresh()?;
+        let hold = self.holds.take(Arc::clone(v));
+        crate::fx::hold::op_note(&self.holds, v);
+        let opts = slatedb::config::ReadOptions {
+            durability_filter: if durable { slatedb::config::DurabilityLevel::Remote } else { slatedb::config::DurabilityLevel::Memory },
+            ..Default::default()
+        };
+        let r = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
+            Mode::Reader(r) => crate::fx::read::get(&**r, &slatedb::config::ReadOptions::default(), Some(v), self.env, key).await?,
+            Mode::Writer(db) => crate::fx::read::get(db, &opts, Some(v), self.env, key).await?,
+        };
+        hold.check()?;
+        crate::fx::hold::op_check()?;
+        Ok(r)
+    }
+
+    async fn fx_scan(&self, v: &Arc<crate::fx::view::View>, opts: &slatedb::config::ScanOptions, lo: &[u8], hi: Option<&[u8]>, reverse: bool, limit: Option<usize>) -> Result<Vec<(Bytes, Bytes)>> {
+        self.fx_fresh()?;
+        let hold = self.holds.take(Arc::clone(v));
+        crate::fx::hold::op_note(&self.holds, v);
+        let r = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
+            Mode::Reader(r) => crate::fx::read::scan(&**r, opts, Some(v), self.env, lo, hi, reverse, limit).await?,
+            Mode::Writer(db) => crate::fx::read::scan(db, opts, Some(v), self.env, lo, hi, reverse, limit).await?,
+        };
+        hold.check()?;
+        crate::fx::hold::op_check()?;
+        Ok(r)
+    }
+
+    /// Load the newest version of our manifest (at open, after an upgrade, on a reader's refresh). A writer checks that
+    /// SlateDB has every row up to X_d and publishes a fence version, a copy of the newest under the next number (review
+    /// of step 0, F1): a late PUT of a dead process then cannot land a version this writer does not know.
+    async fn load_fx(&mut self) -> Result<()> {
+        use crate::fx::manifest;
+        use std::sync::atomic::Ordering::Relaxed;
+        if !crate::fx::ENABLED.load(Relaxed) {
+            self.fx = None;
+            if self.env.is_none() && crate::envelope::START.load(Relaxed) {
+                // release E1 without sealed runs: a reader still takes the announcement with every refresh (rules 6, 26)
+                self.fx_announced = manifest::announced(&self.lc.store, &self.id).await?;
+                self.fx_loaded = Instant::now();
+            }
+            return Ok(());
+        }
+        let store = Arc::clone(&self.lc.store);
+        if self.env.is_none() {
+            self.fx_announced = manifest::announced(&store, &self.id).await?;
+        }
+        let newest = manifest::load_newest(&store, &self.id).await?;
+        let newest = match (newest, self.fx_unknown.take()) {
+            (Some(v), _) => Some(v),
+            // a publish with an unknown outcome and an empty store (a first publish whose PUT may still land): fence its
+            // slot with the version it tried, so a late PUT finds the slot taken; only then is the fence settled
+            #[cfg(test)]
+            (None, Some(_)) if crate::fx::CONTROL_NO_FIRST_FENCE.load(Relaxed) => None,
+            (None, Some(u)) if matches!(self.mode, Some(Mode::Writer(_))) => {
+                let mut f = (*u).clone();
+                f.kind = "fence".into();
+                f.published_ms = manifest::now_ms();
+                match manifest::create(&store, &self.id, &f).await {
+                    Ok(true) => {
+                        crate::fx::FENCES.fetch_add(1, Relaxed);
+                        self.fx = Some(Arc::new(crate::fx::view::View::new(Arc::clone(&store), f, self.fx.as_deref())?));
+                        self.fx_fence_pending = false;
+                        self.fx_loaded = Instant::now();
+                        return Ok(());
+                    }
+                    // the late PUT landed meanwhile: fence above it as usual
+                    Ok(false) => manifest::load_newest(&store, &self.id).await?,
+                    Err(e) => {
+                        self.fx_unknown = Some(u);
+                        self.fx_fence_pending = true;
+                        return Err(e);
+                    }
+                }
+            }
+            (None, u) => {
+                self.fx_unknown = u;
+                None
+            }
+        };
+        let Some(mut v) = newest else {
+            // no version in the store and no publish of unknown outcome: nothing landed, nothing to fence
+            self.fx = None;
+            if self.fx_unknown.is_none() {
+                self.fx_fence_pending = false;
+            }
+            self.fx_loaded = Instant::now();
+            return Ok(());
+        };
+        if let Some(Mode::Writer(db)) = &self.mode {
+            // a fence is pending from here until one is published (a create that errors or times out leaves it so)
+            self.fx_fence_pending = true;
+            #[cfg(test)]
+            let first = v.version;
+            let seq = db.snapshot().await?.seq();
+            let epoch = Some(db.manifest().writer_epoch());
+            let mut fenced = false;
+            for _ in 0..8 {
+                // on every version this loop reads, not only the first (review of step 3, note 1)
+                #[cfg(test)]
+                let check = !crate::fx::CONTROL_NO_XD_LOOP_CHECK.load(std::sync::atomic::Ordering::Relaxed) || v.version == first;
+                #[cfg(not(test))]
+                let check = true;
+                if check {
+                    anyhow::ensure!(v.x_d <= seq, "database {}: our manifest {} has X_d {} but SlateDB's last seq is {seq}: rows at or below X_d are missing from SlateDB", self.id, v.version, v.x_d);
+                }
+                let f = v.fence(epoch);
+                if manifest::create(&store, &self.id, &f).await? {
+                    v = f;
+                    fenced = true;
+                    crate::fx::FENCES.fetch_add(1, Relaxed);
+                    break;
+                }
+                v = manifest::load_newest(&store, &self.id).await?.ok_or_else(|| anyhow!("database {}: our manifest vanished", self.id))?;
+            }
+            anyhow::ensure!(fenced, "database {}: could not publish a fence version of our manifest", self.id);
+            self.fx_fence_pending = false;
+        }
+        anyhow::ensure!(v.e_env == self.env, "database {}: our manifest {} has E_env {:?}, the database's marker {:?}", self.id, v.version, v.e_env, self.env);
+        self.fx = Some(Arc::new(crate::fx::view::View::new(store, v, self.fx.as_deref())?));
+        self.fx_loaded = Instant::now();
+        Ok(())
+    }
+
+    /// Start envelopes if the database has none (a version needs E_env <= X_d, `fx/manifest.rs`), in two steps (rule
+    /// 26): announce release E1 in the store; write the marker (E_env) only once this process saw the announcement at
+    /// least T_pin ago, so every follower has taken the announcement with a refresh and reads the marker before each
+    /// step. Returns whether E_env is set.
+    async fn ensure_marker(&mut self) -> Result<bool> {
+        use std::sync::atomic::Ordering::Relaxed;
+        if self.env.is_some() {
+            return Ok(true);
+        }
+        self.upgrade().await?;
+        #[cfg(test)]
+        let at_once = crate::fx::CONTROL_E1_AT_ONCE.load(Relaxed);
+        #[cfg(not(test))]
+        let at_once = false;
+        if !at_once {
+            if !self.fx_announced || self.fx_announce_seen.is_none() {
+                // the announcement may be known from the open (`load_fx`); confirm it in the store once, write it if missing
+                let store = Arc::clone(&self.lc.store);
+                if !crate::fx::manifest::announced(&store, &self.id).await? {
+                    crate::fx::manifest::announce(&store, &self.id).await?;
+                }
+                self.fx_announced = true;
+            }
+            let seen = *self.fx_announce_seen.get_or_insert_with(Instant::now);
+            if seen.elapsed() < crate::fx::e1_wait() {
+                return Ok(false);
+            }
+        }
+        let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
+        let mut m = slatedb::WriteBatch::new();
+        m.put(crate::envelope::MARKER, b"E1");
+        let h = db.write(m).await?;
+        self.env = Some(h.seqnum());
+        Ok(true)
+    }
+
+    /// Count a write batch for `--sealed-runs N`; true when a publish is due.
+    pub fn fx_note_write(&mut self) -> bool {
+        use std::sync::atomic::Ordering::Relaxed;
+        let every = crate::fx::PUBLISH_EVERY.load(Relaxed);
+        if every == 0 || !crate::fx::ENABLED.load(Relaxed) {
+            return false;
+        }
+        self.fx_writes += 1;
+        if self.fx_writes >= every {
+            self.fx_writes = 0;
+            return true;
+        }
+        false
+    }
+
+    /// The build options of the server's own publishes: every `RESEAL_EVERY`-th reseals every group, the others write a
+    /// delta run.
+    pub fn fx_auto_opts(&mut self) -> crate::fx::build::BuildOpts {
+        use std::sync::atomic::Ordering::Relaxed;
+        self.fx_builds += 1;
+        let every = crate::fx::RESEAL_EVERY.load(Relaxed).max(1);
+        let reseal = if self.fx.is_none() || self.fx_builds % every == 0 { crate::fx::build::Reseal::All } else { crate::fx::build::Reseal::None };
+        crate::fx::build::BuildOpts { reseal, group_bytes: crate::fx::GROUP_BYTES.load(Relaxed), ..Default::default() }
+    }
+
+    /// Build runs offline from this database and publish the next version, then read with it (`fx/build.rs`). Needs
+    /// `&mut self`: under the database's exclusive lock. `fail` names fail points for tests ("after_runs" before the
+    /// publish, "after_publish" before the tenant reads with the new version): an error there leaves orphan runs or a
+    /// published version this tenant does not read with yet, as a crash would.
+    pub async fn fx_publish(&mut self, opts: &crate::fx::build::BuildOpts, fail: Option<&(dyn Fn(&str) -> Result<()> + Sync)>) -> Result<Option<crate::fx::build::BuildReport>> {
+        use std::sync::atomic::Ordering::Relaxed;
+        anyhow::ensure!(crate::fx::ENABLED.load(Relaxed), "--sealed-runs is off");
+        self.upgrade().await?;
+        // no publish starts while a fence is pending (rule 25)
+        self.fx_settle_fence().await?;
+        if !self.ensure_marker().await? {
+            return Ok(None); // E1 announced, envelopes start one T_pin later (rule 26)
+        }
+        let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
+        let epoch = Some(db.manifest().writer_epoch());
+        let env = self.env.expect("marker written");
+        let store = Arc::clone(&self.lc.store);
+        let r = crate::fx::build::build_and_publish(db, &store, &self.id, self.fx.as_deref(), env, epoch, opts, fail).await;
+        let (v, rep) = match r {
+            Ok(Some(x)) => x,
+            Ok(None) => return Ok(None),
+            Err(e) => {
+                crate::fx::PUBLISH_ERRORS.fetch_add(1, Relaxed);
+                if e.downcast_ref::<crate::fx::LostRace>().is_some() {
+                    // the outcome is known: another publisher holds the slot; read with the newest version (rule 24)
+                    if let Some(v) = crate::fx::manifest::load_newest(&store, &self.id).await? {
+                        self.fx = Some(Arc::new(crate::fx::view::View::new(Arc::clone(&store), v, self.fx.as_deref())?));
+                    }
+                } else if !crate::fx::is_fenced(&e) {
+                    // the outcome of the publish's PUT may be unknown (an error, a timeout: the PUT may have landed):
+                    // publish a fence version before another hold or publish (rule 25). If the fence fails too, the fence
+                    // stays pending: reads refuse and every exclusive step retries it. A fenced writer publishes nothing
+                    // (rule 28).
+                    self.fx_fence_pending = true;
+                    if let Some(u) = e.downcast_ref::<crate::fx::UnknownPublish>() {
+                        self.fx_unknown = Some(u.version.clone());
+                    }
+                    if let Err(e2) = self.load_fx().await {
+                        eprintln!("sealed runs: fence of database {} after a failed publish: {e2:#}; the fence stays pending", self.id);
+                    }
+                }
+                return Err(e);
+            }
+        };
+        if let Some(f) = fail {
+            f("after_publish")?;
+        }
+        self.fx = Some(Arc::new(crate::fx::view::View::new(store, v, self.fx.as_deref())?));
+        self.fx_loaded = Instant::now();
+        crate::fx::PUBLISHES.fetch_add(1, Relaxed);
+        Ok(Some(rep))
+    }
+
+    /// Read the envelope marker (at open and after an upgrade).
+    async fn load_env(&mut self) -> Result<()> {
+        let kv = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
+            Mode::Reader(r) => r.get_key_value(crate::envelope::MARKER).await?,
+            Mode::Writer(db) => db.get_key_value(crate::envelope::MARKER).await?,
+        };
+        self.env = kv.map(|kv| kv.seq);
+        Ok(())
+    }
+
+    /// With tracking on (the log path, [`TRACK_VISIBLE`]) and a batch in flight: reads must use the visible state.
+    fn tracking(&self) -> bool {
+        TRACK_VISIBLE.load(std::sync::atomic::Ordering::Relaxed) && self.is_writer() && self.group.vis.any()
+    }
+
+    /// The value of `key` in `snap`, a snapshot taken before an in-flight batch (see [`TRACK_VISIBLE`]), read the way every
+    /// other read is: through the merged reader with this tenant's version of our manifest (compaction 2, `fx`) and its
+    /// envelopes. A version's X_d is a durable cut (`fx/build.rs` flushes the WAL first), so its runs hold no write the
+    /// log could still lose.
+    async fn snapshot_get(&self, snap: &Arc<slatedb::DbSnapshot>, key: &[u8]) -> Result<Option<Bytes>> {
+        self.fx_no_fence_pending()?;
+        let opts = slatedb::config::ReadOptions::default();
+        match &self.fx {
+            Some(v) => {
+                self.fx_fresh()?;
+                let hold = self.holds.take(Arc::clone(v));
+                let r = crate::fx::read::get(&**snap, &opts, Some(v), self.env, key).await?;
+                hold.check()?;
+                Ok(r)
+            }
+            None => {
+                self.e1_fresh()?;
+                let env = self.step_env().await?;
+                crate::fx::read::get(&**snap, &opts, None, env, key).await
+            }
+        }
+    }
+
+    /// Whether a read sees the latest staged state: no batch is in flight on the log path (see [`TRACK_VISIBLE`]). A cache
+    /// that follows staged writes (the first course, `opening.rs` in the server) may answer only then.
+    pub fn reads_see_latest(&self) -> bool {
+        !self.tracking()
+    }
+
+    /// The snapshot a read of `key` must use (see [`TRACK_VISIBLE`]), `None` when its latest value is visible.
+    pub fn visible_snapshot_for(&self, key: &[u8]) -> Option<Arc<slatedb::DbSnapshot>> {
+        if !self.tracking() {
+            return None;
+        }
+        let s = self.group.vis.snapshot_for(key);
+        if s.is_some() {
+            VISIBLE_SNAPSHOT_READS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        }
+        s
+    }
+
+    /// Wait until every batch staged so far is visible (a transaction starts on a snapshot with nothing in flight).
+    pub async fn wait_all_visible(&self, limit: Duration) -> Result<()> {
+        if !TRACK_VISIBLE.load(std::sync::atomic::Ordering::Relaxed) {
+            return Ok(());
+        }
+        self.group.vis.wait_all(limit).await
+    }
+
+    /// The visible value of `key` (see [`TRACK_VISIBLE`]): what a read may return.
+    pub async fn get_visible<K: AsRef<[u8]> + Send>(&self, key: K) -> Result<Option<Bytes>> {
+        match self.visible_snapshot_for(key.as_ref()) {
+            Some(s) => self.snapshot_get(&s, key.as_ref()).await,
+            None => self.get(key).await,
+        }
+    }
+
+    /// Replace, in `rows` (key order, ascending or descending), the values of the keys an in-flight batch writes by their
+    /// visible values; `overlay` is from [`Visible::in_range`].
+    async fn overlay(&self, rows: Vec<(Bytes, Bytes)>, overlay: Vec<(Vec<u8>, Arc<slatedb::DbSnapshot>)>, reverse: bool) -> Result<Vec<(Bytes, Bytes)>> {
+        VISIBLE_SNAPSHOT_READS.fetch_add(overlay.len() as u64, std::sync::atomic::Ordering::Relaxed);
+        let mut m: std::collections::BTreeMap<Bytes, Bytes> = rows.into_iter().collect();
+        for (k, snap) in overlay {
+            let k = Bytes::from(k);
+            match self.snapshot_get(&snap, &k).await? {
+                Some(v) => {
+                    m.insert(k, v);
+                }
+                None => {
+                    m.remove(&k);
+                }
+            }
+        }
+        Ok(if reverse { m.into_iter().rev().collect() } else { m.into_iter().collect() })
+    }
+
+    /// [`Tenant::scan_prefix`] of the visible state.
+    pub async fn scan_prefix_visible(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
+        if !self.tracking() {
+            return self.scan_prefix(prefix).await;
+        }
+        let end = prefix_end(prefix);
+        let over = self.group.vis.in_range(prefix, end.as_deref());
+        let rows = self.scan_prefix(prefix).await?;
+        if over.is_empty() {
+            return Ok(rows);
+        }
+        self.overlay(rows, over, false).await
     }
 
     /// Like [`Tenant::get`], but a writer only returns data that is already in a durable WAL object or SST, not
     /// writes that are staged and waiting for their flush (a reader's data is always durable).
     pub async fn get_durable<K: AsRef<[u8]> + Send>(&self, key: K) -> Result<Option<Bytes>> {
+        self.fx_no_fence_pending()?;
+        if let Some(v) = &self.fx {
+            return self.fx_get(v, key.as_ref(), true).await;
+        }
+        self.e1_fresh()?;
         Ok(match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
-            Mode::Reader(r) => r.get(key).await?,
+            Mode::Reader(r) => match r.get_key_value(key).await? {
+                Some(kv) => crate::envelope::decode(self.step_env().await?, &kv.key, kv.seq, kv.value)?,
+                None => None,
+            },
             Mode::Writer(db) => {
                 let opts = slatedb::config::ReadOptions { durability_filter: slatedb::config::DurabilityLevel::Remote, ..Default::default() };
-                db.get_with_options(key, &opts).await?
+                match db.get_key_value_with_options(key, &opts).await? {
+                    Some(kv) => crate::envelope::decode(self.env, &kv.key, kv.seq, kv.value)?,
+                    None => None,
+                }
             }
         })
     }
@@ -956,8 +1945,11 @@ impl Tenant {
             Err(e) => return Err(e.into()),
         }
         let db = db?;
+        self.epoch = opened_epoch(store, &self.id).await?;
         writer_opened(&self.id, &db);
         self.mode = Some(Mode::Writer(db));
+        self.load_env().await?;
+        self.load_fx().await?;
         self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
         Ok(())
     }
@@ -973,6 +1965,14 @@ impl Tenant {
     }
 
     async fn scan_prefix_at(&self, prefix: &[u8], durable: bool) -> Result<Vec<(Bytes, Bytes)>> {
+        self.fx_no_fence_pending()?;
+        if let Some(v) = &self.fx {
+            let hi = crate::runfmt::prefix_successor(prefix);
+            let mut opts = crate::fx::read::scan_options(4 << 20, false, durable);
+            opts.max_fetch_tasks = 4;
+            return self.fx_scan(v, &opts, prefix, hi.as_deref(), false, None).await;
+        }
+        self.e1_fresh()?;
         // slatedb's scan defaults fetch one 4 KiB block per request, one at a time, and do not cache
         // the blocks: a 1 MB scan costs ~250 sequential GETs every time. Read ahead in large
         // requests, fetch in parallel, and keep the blocks.
@@ -987,18 +1987,25 @@ impl Tenant {
             Mode::Reader(r) => r.scan_prefix_with_options(prefix, .., &opts).await?,
             Mode::Writer(db) => db.scan_prefix_with_options(prefix, .., &opts).await?,
         };
+        let env = self.step_env().await?;
         let mut out = Vec::new();
         while let Some(kv) = it.next().await? {
-            out.push((kv.key, kv.value));
+            if let Some(v) = crate::envelope::decode(env, &kv.key, kv.seq, kv.value)? {
+                out.push((kv.key, v));
+            }
         }
         Ok(out)
     }
 
     /// A consistent snapshot of the database as of now (upgrades to a writer first: snapshots exist on writers only).
-    pub async fn snapshot(&mut self) -> Result<Arc<slatedb::DbSnapshot>> {
+    /// With a version of ours, the snapshot holds it, taken first (so its X_d <= the snapshot's seq) and kept for the
+    /// transaction's whole life: the pair of rule 1.
+    pub async fn txn_snapshot(&mut self) -> Result<Arc<crate::fx::read::Snap>> {
         self.upgrade().await?;
+        self.fx_settle_fence().await?;
+        let hold = self.fx.as_ref().map(|v| self.holds.take(Arc::clone(v)));
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
-        Ok(db.snapshot().await?)
+        Ok(Arc::new(crate::fx::read::Snap { slate: db.snapshot().await?, hold, env: self.env }))
     }
 
     /// Rough size in bytes of the data in the tenant's SSTs (from the manifest: no request). Unflushed writes are not
@@ -1015,11 +2022,40 @@ impl Tenant {
     /// Key/value pairs with `start <= key < end` (`end == None`: to the end of the keyspace), at most `limit`,
     /// ascending or descending. `read_ahead` is the bytes fetched per request (small for short index scans).
     pub async fn scan_range(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
+        self.scan_range_at(start, end, reverse, limit, read_ahead, false).await
+    }
+
+    /// [`Tenant::scan_range`] of the visible state (see [`TRACK_VISIBLE`]).
+    pub async fn scan_range_visible(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
+        if !self.tracking() {
+            return self.scan_range_at(start, end, reverse, limit, read_ahead, false).await;
+        }
+        if let Some(e) = end {
+            if start >= e {
+                return Ok(Vec::new());
+            }
+        }
+        let over = self.group.vis.in_range(start, end);
+        if over.is_empty() {
+            return self.scan_range_at(start, end, reverse, limit, read_ahead, false).await;
+        }
+        // the overlay removes at most one row per key in flight: read that many more, then cut
+        let rows = self.scan_range_at(start, end, reverse, limit.map(|l| l + over.len()), read_ahead, false).await?;
+        let mut rows = self.overlay(rows, over, reverse).await?;
+        if let Some(l) = limit {
+            rows.truncate(l);
+        }
+        Ok(rows)
+    }
+
+    /// [`Tenant::scan_range`]; `durable`: a writer returns only durable data (see [`Tenant::get_durable`]).
+    pub async fn scan_range_at(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize, durable: bool) -> Result<Vec<(Bytes, Bytes)>> {
         let opts = slatedb::config::ScanOptions {
             read_ahead_bytes: read_ahead,
-            max_fetch_tasks: 4,
+            max_fetch_tasks: crate::tiered::scan_fetch_tasks(read_ahead),
             cache_blocks: true,
             order: if reverse { slatedb::IterationOrder::Descending } else { slatedb::IterationOrder::Ascending },
+            durability_filter: if durable { slatedb::config::DurabilityLevel::Remote } else { slatedb::config::DurabilityLevel::Memory },
             ..Default::default()
         };
         if let Some(e) = end {
@@ -1027,6 +2063,11 @@ impl Tenant {
                 return Ok(Vec::new()); // an empty range would panic the store
             }
         }
+        self.fx_no_fence_pending()?;
+        if let Some(v) = &self.fx {
+            return self.fx_scan(v, &opts, start, end, reverse, limit).await;
+        }
+        self.e1_fresh()?;
         let s = start.to_vec();
         let range = match end {
             Some(e) => (std::ops::Bound::Included(s), std::ops::Bound::Excluded(e.to_vec())),
@@ -1036,9 +2077,11 @@ impl Tenant {
             Mode::Reader(r) => r.scan_with_options(range, &opts).await?,
             Mode::Writer(db) => db.scan_with_options(range, &opts).await?,
         };
+        let env = self.step_env().await?;
         let mut out = Vec::new();
         while let Some(kv) = it.next().await? {
-            out.push((kv.key, kv.value));
+            let Some(v) = crate::envelope::decode(env, &kv.key, kv.seq, kv.value)? else { continue };
+            out.push((kv.key, v));
             if limit.map(|l| out.len() >= l).unwrap_or(false) {
                 break;
             }
@@ -1062,23 +2105,50 @@ impl Tenant {
             return Ok(None);
         }
         self.upgrade().await?;
+        let track = TRACK_VISIBLE.load(std::sync::atomic::Ordering::Relaxed);
+        let keys: Vec<Vec<u8>> = if track { ops.iter().map(|o| match o { Op::Put(k, _) | Op::Delete(k) => k.clone() }).collect() } else { Vec::new() };
+        if self.env.is_none() && crate::envelope::START.load(std::sync::atomic::Ordering::Relaxed) {
+            // release E1 (rule 26): the first write announces it in the store; envelopes start (the marker alone in its own
+            // batch, whose sequence number is E_env, `envelope.rs`) only once this process saw the announcement at least
+            // one T_pin ago. Until then the writes stay plain, as release E0 writes them.
+            self.ensure_marker().await?;
+        }
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
         let mut batch = slatedb::WriteBatch::new();
+        let enveloped = self.env.is_some();
         for op in ops {
             match op {
+                Op::Put(k, v) if enveloped && k != crate::envelope::MARKER => batch.put(k, crate::envelope::live(v)),
+                Op::Delete(k) if enveloped && k != crate::envelope::MARKER => batch.put(k, crate::envelope::dead()),
                 Op::Put(k, v) => batch.put(k, v),
                 Op::Delete(k) => batch.delete(k),
             }
         }
+        // the state just before this batch, for readers while the batch is not confirmed (see `TRACK_VISIBLE`); the
+        // caller holds the database's exclusive lock, so nothing is staged between the snapshot and the write
+        let before = if track { Some(db.snapshot().await?) } else { None };
         let handle = db.write(batch).await?;
         note_unflushed(&self.id, handle.seqnum());
+        if let Some(b) = before {
+            self.group.vis.add(handle.seqnum(), b, keys);
+            let mut m = VIS_GROUPS.lock().unwrap();
+            if !m.get(&self.id).map_or(false, |g| Arc::ptr_eq(g, &self.group)) {
+                m.insert(self.id.clone(), Arc::clone(&self.group));
+            }
+        }
         self.group.staged_seq.fetch_max(handle.seqnum(), std::sync::atomic::Ordering::Release);
-        Ok(Some(Commit { db: db.clone(), handle, group: Arc::clone(&self.group), tenant: self.id.clone(), local: None }))
+        Ok(Some(Commit { db: db.clone(), handle, group: Arc::clone(&self.group), tenant: self.id.clone(), local: None, agent: None }))
     }
 
     pub async fn put(&mut self, key: &str, value: &[u8]) -> Result<WriteHandle> {
         self.upgrade().await?;
+        if self.env.is_none() && crate::envelope::START.load(std::sync::atomic::Ordering::Relaxed) {
+            self.ensure_marker().await?; // release E1, as in `stage`
+        }
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
+        if self.env.is_some() {
+            return Ok(db.put(key, crate::envelope::live(value.to_vec())).await?);
+        }
         Ok(db.put(key, value).await?)
     }
 
@@ -1099,6 +2169,8 @@ impl Tenant {
     /// The lost-lease callers can ignore that (the next owner fences them); a caller about to delete the tenant's objects
     /// (erase) must not.
     pub async fn abandon(mut self) -> bool {
+        self.group.vis.kill();
+        forget_vis(&self.id, &self.group);
         let close = match self.mode.take() {
             Some(Mode::Reader(r)) => tokio::spawn(pending_close(&self.id, async move {
                 let _ = r.close().await;
@@ -1148,10 +2220,17 @@ impl Tenant {
                         // The memtable flush is stalled (L0 full, waiting for a compaction). Everything acknowledged is in
                         // durable WAL objects: close without the flush and leave no marker, so the next wake replays them.
                         eprintln!("close of tenant {}: final flush did not finish in {:?}; closing without it (unclean)", self.id, CLOSE_FLUSH_TIMEOUT);
+                        // with the log on, the last writes may be only in the log: the next wake replays them from it
+                        // (unclean wake, `dbs.rs`); nothing pending here is confirmed by this writer any more
+                        self.group.vis.kill();
+                        forget_vis(&self.id, &self.group);
                         let _ = db.close_with_options(slatedb::config::CloseOptions { flush_type: None }).await;
                         return Err(anyhow!("final flush timed out"));
                     }
                 }
+                // the close flushed the memtable: everything staged is in object storage
+                self.group.vis.confirm_all();
+                forget_vis(&self.id, &self.group);
                 let l0 = db.manifest().l0().len();
                 self.lc
                     .store
@@ -1367,19 +2446,28 @@ pub(crate) async fn compact_tenant_pass_with(
     };
     let mut opts = CompactorOptions::default();
     opts.poll_interval = Duration::from_millis(50);
-    let mut worker = CompactionWorkerOptions::default();
-    worker.compactions_poll_interval = Duration::from_millis(50);
-    opts.worker = Some(worker);
+    // No embedded worker: it would write 4 KiB blocks without compression (M29); the separate worker writes the
+    // configured format (`tiered::worker_builder`).
+    opts.worker = None;
     let started = Instant::now();
     let cb = CompactorBuilder::new(tenant_path(id), crate::counting::owned_background(&store, id)).with_options(opts);
     let cb = match filter_policies() {
         Some(p) => cb.with_filter_policies(p),
         None => cb,
     };
+    let cb = match crate::tiered::scheduler() {
+        Some(s) => cb.with_scheduler_supplier(s),
+        None => cb,
+    };
     let compactor = Arc::new(cb.build());
+    let worker = Arc::new(crate::tiered::worker_builder(tenant_path(id).into(), crate::counting::owned_background(&store, id), filter_policies()).build().await?);
     let mut runner = {
         let c = Arc::clone(&compactor);
-        tokio::spawn(async move { c.run().await })
+        let w = Arc::clone(&worker);
+        tokio::spawn(async move {
+            let (c, w) = tokio::join!(c.run(), w.run());
+            c.and(w)
+        })
     };
     let mut l0_after = l0_before;
     let mut hooks = hooks;
@@ -1510,9 +2598,11 @@ pub(crate) async fn compact_tenant_pass_with(
     // after the deadline is at most `stop_limit` (`COMPACTOR_STOP_LIMIT`, plus at most 2 s for the round in progress). A `stop` that hits
     // its bound is not an error: the next round stops again, and `run` returning is what ends the wait.
     let stop_once = || async {
-        match tokio::time::timeout(Duration::from_secs(1), compactor.stop()).await {
-            Ok(r) => r.map_err(anyhow::Error::from),
-            Err(_) => Ok(()),
+        let w = tokio::time::timeout(Duration::from_secs(1), worker.stop()).await;
+        match (tokio::time::timeout(Duration::from_secs(1), compactor.stop()).await, w) {
+            (Ok(r), Ok(w)) => r.and(w).map_err(anyhow::Error::from),
+            (Ok(r), Err(_)) => r.map_err(anyhow::Error::from),
+            (Err(_), _) => Ok(()),
         }
     };
     let stop_until = Instant::now() + stop_limit;
@@ -2349,6 +3439,75 @@ mod tests {
     use super::*;
     use object_store::memory::InMemory;
     use std::sync::atomic::Ordering::Relaxed;
+
+    /// The visible state (log path), per key: a read of a key returns the value of the latest durable batch that wrote it
+    /// with every earlier write of the key durable; a batch on other keys does not wait for an earlier one still in flight.
+    #[tokio::test]
+    async fn visible_state_per_key() {
+        let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let db = Db::builder("vis", store).build().await.unwrap();
+        let vis = Visible::default();
+        let put = |k: &'static str, v: &'static str| {
+            let db = db.clone();
+            async move {
+                let before = db.snapshot().await.unwrap();
+                let h = db.put_with_options(k, v, &Default::default(), &slatedb::config::WriteOptions::default()).await.unwrap();
+                (h.seqnum(), before)
+            }
+        };
+        let read = |k: &'static str| {
+            let s = vis.snapshot_for(k.as_bytes());
+            let db = db.clone();
+            async move {
+                match s {
+                    Some(s) => s.get(k).await.unwrap(),
+                    None => db.get(k).await.unwrap(),
+                }
+                .map(|b| String::from_utf8(b.to_vec()).unwrap())
+            }
+        };
+        // a (key x), b (key y), c (key x again)
+        let (a, sa) = put("x", "1").await;
+        vis.add(a, sa, vec![b"x".to_vec()]);
+        let (b, sb) = put("y", "1").await;
+        vis.add(b, sb, vec![b"y".to_vec()]);
+        let (c, sc) = put("x", "2").await;
+        vis.add(c, sc, vec![b"x".to_vec()]);
+        assert_eq!(read("x").await, None, "nothing is durable yet");
+        assert_eq!(read("y").await, None);
+        // b is on another key: visible as soon as it is confirmed, although a (earlier) is not
+        vis.confirm(b);
+        assert_eq!(vis.state(b), VisState::Visible);
+        assert_eq!(read("y").await.as_deref(), Some("1"));
+        // c is confirmed before a, on the same key: it waits for a, and reads of x still see the value before a
+        vis.confirm(c);
+        assert_eq!(vis.state(c), VisState::Pending);
+        assert_eq!(read("x").await, None);
+        let waiter = tokio::time::timeout(Duration::from_millis(50), vis.wait_visible(c, Duration::from_secs(5))).await;
+        assert!(waiter.is_err(), "c's acknowledgement waits for a");
+        vis.confirm(a);
+        assert_eq!(vis.state(a), VisState::Visible);
+        assert_eq!(vis.state(c), VisState::Visible);
+        assert_eq!(read("x").await.as_deref(), Some("2"));
+        vis.wait_visible(c, Duration::from_secs(1)).await.unwrap();
+        assert!(!vis.any());
+        // a scan's overlay: the in-flight key takes its value from before the batch
+        let (d, sd) = put("x", "3").await;
+        vis.add(d, sd, vec![b"x".to_vec()]);
+        let over = vis.in_range(b"a", Some(b"z"));
+        assert_eq!(over.len(), 1);
+        assert_eq!(over[0].1.get("x").await.unwrap().as_deref(), Some(&b"2"[..]));
+        // durable in object storage: confirmed by the watermark, also for a batch added after it
+        vis.confirm_upto(d);
+        assert!(!vis.any());
+        // a lost owner: what was in flight is never confirmed
+        let (e, se) = put("z", "1").await;
+        vis.add(e, se, vec![b"z".to_vec()]);
+        vis.kill();
+        assert_eq!(vis.state(e), VisState::Lost);
+        assert!(vis.wait_visible(e, Duration::from_secs(1)).await.is_err());
+        db.close().await.unwrap();
+    }
 
     /// One minute of L0 watch rounds (one per second) over a tenant whose compaction fails every time: the pause after each
     /// failure (1, 2, 4, 8, 16, 32 s) leaves only a handful of passes, and a pass that succeeds clears the pause.

@@ -1,0 +1,11 @@
+== --sealed-put-timeout-ms 40000
+Error: sealed runs: the manifest PUT timeout (40000 ms) must be shorter than the lease minus its margin (60000 - 30000 ms) (F6)
+exit 1 (124 = still running after 5 s: accepted)
+== --sealed-gc-grace-ms 100000
+Error: sealed runs: the GC grace (100000 ms) must exceed the hold life plus the PUT timeout (120000 + 20000 ms) (rule 23, F6)
+exit 1 (124 = still running after 5 s: accepted)
+== --sealed-remote-lease-ms 130000
+Error: sealed runs: the remote lease (130000 ms) must exceed the hold life plus the PUT timeout (120000 + 20000 ms) (rule 10, F6)
+exit 1 (124 = still running after 5 s: accepted)
+== 
+exit 124 (124 = still running after 5 s: accepted)

@@ -120,6 +120,9 @@ impl SimModel {
 pub struct SimS3Store {
     inner: Arc<dyn ObjectStore>,
     model: Option<SimModel>,
+    /// `FENVIX_SIM_S3_PUT=median_ms,sigma,mbps` (measurement only): every PUT waits like this before it is sent, so the
+    /// object appears in the store only at the end of the modelled time.
+    put_model: Option<SimModel>,
 }
 
 impl fmt::Debug for SimS3Store {
@@ -143,7 +146,14 @@ pub fn wrap_sim(inner: Arc<dyn ObjectStore>) -> Arc<dyn ObjectStore> {
     if let Some(m) = &model {
         eprintln!("SIMULATED S3 LATENCY ON ({m:?}): measurement only, never in production");
     }
-    Arc::new(SimS3Store { inner, model })
+    let put_model = std::env::var("FENVIX_SIM_S3_PUT").ok().filter(|s| !s.is_empty()).map(|s| match SimModel::parse(&s) {
+        Some(m) => m,
+        None => panic!("FENVIX_SIM_S3_PUT must be median_ms,sigma,mbps (for example 30,0.4,90), got {s:?}"),
+    });
+    if let Some(m) = &put_model {
+        eprintln!("SIMULATED S3 PUT LATENCY ON ({m:?}): measurement only, never in production");
+    }
+    Arc::new(SimS3Store { inner, model, put_model })
 }
 
 fn range_len(r: &Option<GetRange>) -> Option<u64> {
@@ -156,6 +166,9 @@ fn range_len(r: &Option<GetRange>) -> Option<u64> {
 #[async_trait]
 impl ObjectStore for SimS3Store {
     async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult> {
+        if let Some(m) = self.put_model {
+            tokio::time::sleep(m.delay(payload.content_length() as u64)).await;
+        }
         self.inner.put_opts(location, payload, opts).await
     }
 
@@ -468,7 +481,7 @@ mod tests {
     async fn trips_count_waves_not_requests() {
         let mem: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
         mem.put(&Path::from("x"), PutPayload::from(vec![1u8; 100])).await.unwrap();
-        let s = Arc::new(SimS3Store { inner: mem, model: Some(SimModel { median_ms: 20.0, sigma: 0.0, mbps: 1000.0 }) });
+        let s = Arc::new(SimS3Store { inner: mem, model: Some(SimModel { median_ms: 20.0, sigma: 0.0, mbps: 1000.0 }), put_model: None });
         let t0 = TRIPS.trips.load(Relaxed);
         // one wave of 10 parallel GETs, then one more GET after it: 2 trips
         let p = Path::from("x");

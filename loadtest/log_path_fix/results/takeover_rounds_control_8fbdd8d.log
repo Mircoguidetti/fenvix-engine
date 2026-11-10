@@ -1,0 +1,6 @@
+seed 1794122517, 3 rounds, upload every 30 s, lease 4 s
+round 0: primary A killed after 623 acknowledged writes this round; spare B answered 5.22 s after the kill; acknowledged so far fast=382 agent=94 hot=147 (spare has 147); missing=0 hot_short=0
+round 1: primary B killed after 1054 acknowledged writes this round; spare A answered 6.43 s after the kill; acknowledged so far fast=1024 agent=252 hot=401 (spare has 398); missing=8 hot_short=3
+round 2: primary A killed after 2773 acknowledged writes this round; spare B answered 13.49 s after the kill; acknowledged so far fast=2716 agent=675 hot=1059 (spare has 1051); missing=24 hot_short=8
+first read after the kill: p50 6.43 s, max 13.49 s
+RESULT takeover_rounds rounds=3 acked_fast=2716 acked_agent=675 acked_hot_incs=1059 missing=43 -> FAIL

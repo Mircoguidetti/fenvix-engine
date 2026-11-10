@@ -207,8 +207,10 @@ impl Server {
         crate::capped::enforce(&mut g, db, &mut w, &[], &to).await?;
         let mut ops = vec![Entry::collections_op(&names)?, Op::Put(crate::collopts::meta_key(&to), raw.to_vec()?), Op::Delete(crate::collstat::key(&to))];
         w.stat.clear();
+        let uniq = std::mem::take(&mut w.uniq);
         ops.extend(w.final_ops()?);
         g.apply(ops).await?;
+        g.mark_unique(&uniq);
         Ok(ok())
     }
 }

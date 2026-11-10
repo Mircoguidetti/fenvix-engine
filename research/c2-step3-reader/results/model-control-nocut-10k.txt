@@ -1,0 +1,1 @@
+FX_MODEL control="nocut" seed=20261108 ops=10000 wrong=0 writes=3812 gets=2592 scans=2891 snapshot_reads=470 reader_mode_reads=310 publishes=46 crashes=12 fail_after_runs=1 fail_after_publish=1 refreshes=0 slatedb_compactions=0 final_version=52 groups=18 delta_runs=3 rows_from_runs=233484 versions_in_store=52

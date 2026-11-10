@@ -1,0 +1,1 @@
+FX_MODEL control="" seed=7 ops=100000 wrong=0 writes=38801 gets=25610 scans=28760 snapshot_reads=4693 reader_mode_reads=2967 publishes=945 crashes=111 fail_after_runs=30 fail_after_publish=10 refreshes=7 slatedb_compactions=28 final_version=1094 groups=13 delta_runs=1 rows_from_runs=4803334 versions_in_store=1094

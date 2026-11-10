@@ -1,0 +1,10 @@
+{
+ "docs": 4569112,
+ "customers": 20000,
+ "zipf": 1.0,
+ "seed": 7,
+ "customer_key": false,
+ "load_secs": 540.9562540054321,
+ "data_bytes": 2158613075,
+ "storage_bytes": 2158613075
+}
