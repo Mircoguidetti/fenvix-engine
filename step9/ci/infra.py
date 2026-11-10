@@ -120,14 +120,14 @@ class AwsPlatform(Buckets):
                 Name=f"/aws/service/canonical/ubuntu/server/24.04/stable/current/{ssm_arch}/hvm/ebs-gp3/ami-id")["Parameter"]["Value"]
         return {"subnets": self.subnet, "groups": self.group}
 
-    def launch(self, name, role, mtype, az, user_data, arch):
+    def launch(self, name, role, mtype, az, user_data, arch, disk_gb=None):
         group = self.group["client" if role in ("client", "filler", "extras") else "kitchen"]   # pgbox: kitchen (5432 from clients)
         r = self.ec2.run_instances(
             ImageId=self.ami[arch], InstanceType=mtype, MinCount=1, MaxCount=1,
             NetworkInterfaces=[{"DeviceIndex": 0, "SubnetId": self.subnet[az], "Groups": [group], "AssociatePublicIpAddress": True}],
             IamInstanceProfile={"Name": self.machine_role}, InstanceInitiatedShutdownBehavior="terminate",
             MetadataOptions={"HttpTokens": "required", "HttpEndpoint": "enabled"},
-            BlockDeviceMappings=[{"DeviceName": "/dev/sda1", "Ebs": {"VolumeSize": self.disk_gb, "VolumeType": "gp3", "DeleteOnTermination": True}}],
+            BlockDeviceMappings=[{"DeviceName": "/dev/sda1", "Ebs": {"VolumeSize": disk_gb or self.disk_gb, "VolumeType": "gp3", "DeleteOnTermination": True}}],
             TagSpecifications=self._tags("instance", f"{PREFIX}s9-{name}") + self._tags("volume"),
             UserData=user_data)
         i = r["Instances"][0]
@@ -217,7 +217,7 @@ class LocalPlatform(Buckets):
         self.machine_endpoint = f"http://{gw}:{port}"
         return {"network": self.network, "machine_s3_endpoint": self.machine_endpoint}
 
-    def launch(self, name, role, mtype, az, user_data, arch):
+    def launch(self, name, role, mtype, az, user_data, arch, disk_gb=None):
         from machine_types import TYPES
         vcpu, gib = TYPES[mtype][0], TYPES[mtype][1]
         cname = f"{PREFIX}s9-{self.network.rsplit('-', 1)[1]}-{name}"

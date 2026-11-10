@@ -18,8 +18,46 @@ Nothing here has run on AWS. Every script is meant to be read by the reviewer be
   (Graviton, $0.0910/h) / `m8g.large` ($0.1000/h), prices DECLARED (AWS Price List eu-west-1 2026-11-04). The 3-zone
   log on three `m7g.medium` ($0.0455/h), one per zone.
 - Data size is a parameter: `atlas` (about 27 GB of BSON, the size measured on Atlas), `100gb`, `1tb`. The bigger
-  sizes keep the five Atlas databases exactly and add ballast databases of the same shape, loaded by the founder's
-  script (`carica`, own seeds) on a filler machine; the ballast rounds read two of them with the same phases.
+  sizes keep the five Atlas databases exactly (loaded through the founder's script, unchanged) and add ballast
+  databases of the same shape (3 or 40 of 24.3 GiB), GENERATED straight into the pantry in our stored format by the
+  ballast generator (below; `"ballast_mode": "script"` keeps the old path through the script on a filler machine); the
+  ballast rounds read two of them with the same phases.
+
+## The ballast generator (aws-ready, 2026-11-10)
+
+`mongo-server <the round's server options> --ballast PLAN.json` (`mongo-server/src/ballast.rs`): the server process
+itself, started with the cook's options, writes each ballast database as sealed runs plus one published version of our
+manifest (compaction 2's format, keys of layout v2 with `--customer-key`), with no client, no wire, no WAL and no
+compaction rewrite. Every row comes from the server's own code: the catalog through its command handler in the same
+process (`createIndexes` as the script sends it), every document through `Writes::put` (the `insert` command's path:
+document, index entries, locator, insertion order, counters), the storage counters through `collstat::ops_for`, the
+layout through `layout2::phys_ops`. The rows of the customer space (`u/`) stream into sealed runs as they come (customer
+after customer); the shared keyspace (locators, the `stato_ts` index, insertion order, counters) is sorted on local disk
+(zstd chunks) and merged with SlateDB's catalog rows at the end (`fx/build.rs`, `publish_generated`). The documents
+have the script's shapes, vocabulary, mix, timeline and customers (`machine/ballast_plan.py` imports the frozen script
+and calls its own `prepara_clienti`); `machine/ballast_states.py` writes a state file in the script's format per
+database, so the ballast rounds run the script's read phases unchanged.
+On AWS: `machine/generator.sh` on one machine (`generator`, c7i.2xlarge for 1 TB, c7i.xlarge up to 4 databases,
+60 GB gp3 for the spill), alone in its job, one database per vCPU. Needs `--sealed-runs` and `--customer-key` in
+`server_options` (decide.py refuses otherwise). Local proof at 10 GB and the measured rate: the session report.
+
+## Aurora PostgreSQL in the agent benchmark
+
+`"aurora": true` (with the agent benchmark): `ci/aurora.py` creates an Aurora PostgreSQL cluster (Aurora Standard, one
+writer db.r7g.large, Single-AZ eu-west-1a, default VPC and its default security group, tag project=fenvix-coldread,
+names `fenvix-coldread-s9-<run>-aurora*`) while the Postgres machine boots, waits for it under the SPESA line, gives its
+address to the agent client (the same benchmark as the Postgres machine, target "aurora"), and deletes it right after
+(no final snapshot, no automated backups kept). BLOCCO starts its deletion; the teardown step deletes it; the final check
+lists any cluster, instance, subnet group or snapshot left (RIMASTO / ALLARME). The RDS policy the founder adds:
+`python3 step9/ci/aurora.py policy`; `{"mode": "permissions", "aurora": true}` checks it at $0 (no cluster is created).
+
+## The engine ref and the gate
+
+`"engine"` has no default: a run names the final merged ref (branch or tag). The decide job resolves it to a commit, the
+build checks out exactly that commit, and `ci/gate.py` stays CLOSED unless `step9/local/benchmark-report-<commit>.json`
+exists for that commit (written by `local/benchmark_report.py` from the local takeover test and the local agent
+benchmark made on it) and passes (0 acknowledged writes lost; our server not worse than PostgreSQL and mongod on any
+operation or on stored bytes).
 
 ## The kitchen of the round: never more than 8 vCPU at once (founder, 2026-11-09)
 
@@ -61,10 +99,12 @@ against Atlas's c7i.2xlarge with 5); `somma_massimo.py` says when the client was
 - Atlas size, two jobs (a GitHub job lasts at most 6 hours; load about 2.8 h + measure about 4.5 h, ESTIMATED):
   `{"mode": "run", "data": "atlas", "phases": ["load"], "pantry": "keep"}` then
   `{"mode": "run", "data": "atlas", "phases": ["measure", "extras"], "pantry": "fenvix-kitchen-pantry-<run>"}`.
-- 100 GB and 1 TB: `{"mode": "run", "data": "1tb", "phases": ["load"], "pantry": "keep", "ballast_slice": [0, 0]}`
-  (the Atlas databases), then `{"mode": "run", "data": "1tb", "phases": ["load"], "pantry": "<kept>", "ballast_slice":
-  [a, b]}` per ballast job (3 databases per job), then the measure job; `{"mode": "drop-pantry", "pantry": "..."}` at
-  the end. The first job stores the round password in the kept pantry; later jobs read it (the root user lives there).
+- 100 GB and 1 TB (every run command also names `"engine"` and, for the generator, `"server_options"` with
+  `--sealed-runs` and `--customer-key`): `{"mode": "run", "data": "1tb", "phases": ["load"], "pantry": "keep",
+  "ballast_slice": [0, 0]}` (the Atlas databases), then `{"mode": "run", "data": "1tb", "phases": ["load"], "pantry":
+  "<kept>"}` (the generator: all 40 ballast databases in one job, about 3.7 h ESTIMATED), then the measure job;
+  `{"mode": "drop-pantry", "pantry": "..."}` at the end. The first job stores the round password in the kept pantry;
+  later jobs read it (the root user lives there).
 - `"spend_cap"` above 5 needs `"cap_approved"`: the date and words of the founder's yes.
 
 ## What depends on compaction 2 steps 4-8

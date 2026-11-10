@@ -122,6 +122,78 @@ def paper_direct(name, bson_gb, gen_mb_s=100.0, cook="m7i.large", log="c7g.mediu
     return tot
 
 
+# MEASURED on the 10 GB local proof (2026-11-10, fenvix-engine branch aws-ready, 4-vCPU sandbox, MinIO on the same
+# machine): mongo-server --ballast wrote 3 databases of 3.4 GiB (10.95e9 bytes of BSON) in 327 s, 11.2 MB/s per database,
+# each database using about one vCPU (292% CPU for 3), RSS 1.2 GB for 3; stored on S3 0.74 byte per BSON byte (8.1 GB:
+# documents and every index entry, lz4 blocks); sorted spill on local disk 0.104 byte per BSON byte (zstd), deleted at
+# the end of each database; the publish of each database 16-17 s (5% of its time).
+GEN_MB_S_PER_DB = 11.2
+GEN_STORED_PER_BSON = 0.74
+GEN_SPILL_PER_BSON = 0.104
+GEN_PUBLISH_FRACTION = 0.05
+# Aurora PostgreSQL (DECLARED, AWS Price List AmazonRDS eu-west-1, publication 2026-10-29T07:06:35Z): db.r7g.large
+# Single-AZ $0.304/h, storage $0.11 per GB-month, $0.22 per million I/O requests (Aurora Standard)
+AURORA_H, AURORA_GBM, AURORA_IO_M = 0.304, 0.11, 0.22
+BALLAST_DB_GIB = 24.3
+GIB = 1.073741824   # GB per GiB: the script's --gb is GiB
+
+
+def gen_hour(t, disk_gb):
+    return TYPES[t][3] + disk_gb * EBS_GB_MONTH / 730 + IPV4_HOUR
+
+
+def generated(name, ballast_dbs, aurora=True, cook="m7i.large", log="c7g.medium", loader="c7i.xlarge", client="c7i.xlarge",
+              extras_client="c7i.large", m30_h=3.0, extras_h=1.6, agent_h=1.0, aurora_h=0.5, disk_gb=60):
+    """The plan with the ballast generator BUILT (mongo-server --ballast, step9 ballast_mode "generate"): job 1 loads the
+    five Atlas-shaped databases through the frozen script (unchanged), job 2 generates the ballast alone on its machine,
+    job 3 measures. Generator rate MEASURED locally per database; the machine runs one database per vCPU (ESTIMATED:
+    the local run used about one vCPU per database and S3 PUTs are asynchronous multipart uploads)."""
+    gen = "c7i.2xlarge" if ballast_dbs > 4 else "c7i.xlarge"
+    par = min(TYPES[gen][0], ballast_dbs)
+    bson_gb = ballast_dbs * BALLAST_DB_GIB * GIB
+    print(f"\n== BUILT, data {name}: {ballast_dbs} ballast databases of {BALLAST_DB_GIB} GiB = {bson_gb:.0f} GB of BSON generated "
+          f"on one {gen} ({par} at a time), plus the five Atlas databases (26.6 GB) through the frozen script")
+    waves = -(-ballast_dbs // par) if ballast_dbs else 0
+    per_db_h = BALLAST_DB_GIB * GIB * 1000 / GEN_MB_S_PER_DB / 3600 * (1 + GEN_PUBLISH_FRACTION)
+    gen_h = waves * per_db_h + 0.3 if ballast_dbs else 0.0
+    atlas_h = 2.8
+    tot = 0.0
+    tot += line("job 1: loader + m30 client, the 5 Atlas databases", (hour(loader) + hour(client)) * atlas_h,
+                f"{atlas_h} h (MEASURED rate on Atlas) x ({hour(loader):.4f} + {hour(client):.4f}) $/h")
+    tot += line("job 1: S3 PUTs of that load (WAL)", 26.6e9 / DOC_B / BATCH * PUT, "78 M documents / 1,000 per batch x $0.005 per 1,000")
+    stored = bson_gb * GEN_STORED_PER_BSON
+    if ballast_dbs:
+        tot += line(f"job 2: generator {gen} ({disk_gb} GB gp3)", gen_hour(gen, disk_gb) * gen_h,
+                    f"{waves} waves x {per_db_h:.2f} h ({BALLAST_DB_GIB} GiB at {GEN_MB_S_PER_DB} MB/s MEASURED, +5% publish) + 0.3 h boot "
+                    f"= {gen_h:.2f} h x {gen_hour(gen, disk_gb):.4f} $/h")
+        tot += line("job 2: S3 PUTs of the generated runs", stored * 1000 / PART_MB * PUT,
+                    f"{stored:.0f} GB stored ({GEN_STORED_PER_BSON} per BSON byte, MEASURED) / {PART_MB} MB parts x $0.005 per 1,000")
+    mh = m30_h + 0.5
+    tot += line("job 3, m30: cook+log-0, 2 log nodes, client", (hour(cook) + 2 * hour(log) + hour(client)) * mh,
+                f"{mh} h x ({hour(cook):.4f} + 2 x {hour(log):.4f} + {hour(client):.4f})")
+    tot += line("job 3, extras: cook, logs, spare, client", (2 * hour(cook) + 2 * hour(log) + hour(extras_client)) * extras_h,
+                f"{extras_h} h x (2 x {hour(cook):.4f} + 2 x {hour(log):.4f} + {hour(extras_client):.4f})")
+    ah = agent_h + (aurora_h + 0.3 if aurora else 0)
+    tot += line("job 3, agent benchmark: cook, logs, Postgres, client", (2 * hour(cook) + 2 * hour(log) + hour(extras_client)) * ah,
+                f"{ah:.1f} h (+0.5 h Aurora target, +0.3 h waiting for the cluster) x (2 x {hour(cook):.4f} + 2 x {hour(log):.4f} + {hour(extras_client):.4f})"
+                if aurora else f"{ah:.1f} h x (2 x {hour(cook):.4f} + 2 x {hour(log):.4f} + {hour(extras_client):.4f})")
+    if aurora:
+        au_h = 0.3 + aurora_h + 0.2
+        io = 0.58 * 3 * AURORA_IO_M
+        tot += line("job 3, Aurora db.r7g.large (Standard)", AURORA_H * max(1.0, au_h) + io + 2 * AURORA_GBM / 730 * au_h,
+                    f"{max(1.0, au_h):.1f} h (create 0.3 + bench {aurora_h} + delete 0.2; 1 h billed as an upper bound) x {AURORA_H} "
+                    f"+ I/O 0.58 M x 3 x {AURORA_IO_M} $/M + 2 GB storage")
+    days = (atlas_h + gen_h + mh + extras_h + ah) / 24 + 0.5
+    pantry_gb = stored + 26.6 * 1.6
+    tot += line("S3 storage while the pantry lives", pantry_gb * GBM / 30 * days,
+                f"{pantry_gb:.0f} GB ({stored:.0f} generated + 26.6 x 1.6 Atlas databases) x {GBM} x {days:.2f} days / 30")
+    tot += line("S3 GETs (reads, programs) and cross-zone log copies", 0.10 + 0.20 + 0.02, "0.10 reads + 0.20 cross-zone + 0.02 S3 programs")
+    print(f"  TOTAL ESTIMATED: {tot:.2f} $, {3 if ballast_dbs else 2} jobs, about {atlas_h + gen_h + mh + extras_h + ah:.1f} h of jobs one after the other "
+          f"(job 2 alone {gen_h:.2f} h); spill disk needed {par * BALLAST_DB_GIB * GIB * GEN_SPILL_PER_BSON:.0f} GB of {disk_gb} GB; "
+          f"never more than 8 vCPU of EC2 at once (Aurora is RDS)")
+    return tot
+
+
 if __name__ == "__main__":
     print("Step 9 cost estimate, 8-vCPU plan (ESTIMATED; prices DECLARED, sources in the docstring)")
     pilot()
@@ -130,4 +202,8 @@ if __name__ == "__main__":
     size("1tb", 1000)
     paper_direct("100gb", 100)
     paper_direct("1tb", 1000)
+    print("\n######## with the generator BUILT (aws-ready, 2026-11-10): the numbers to use ########")
+    generated("atlas", 0)
+    generated("100gb", 3)
+    generated("1tb", 40)
     # no Atlas rerun (founder, 2026-11-09): the comparison uses the Atlas numbers measured in Ireland on 2026-11-05

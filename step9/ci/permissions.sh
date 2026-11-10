@@ -46,13 +46,15 @@ AMI[aarch64]=$(aws ssm get-parameter --name /aws/service/canonical/ubuntu/server
 [ -n "${AMI[x86_64]}" ] && [ -n "${AMI[aarch64]}" ] && echo "OK    ssm:GetParameter (Ubuntu 24.04 amd64 and arm64)" || { echo "MANCA ssm:GetParameter"; missing+=("ssm:GetParameter"); }
 # every machine of this round, in its zone: dry launch with tag, role and disk (iam:PassRole included)
 for pair in "cook eu-west-1a" "spare eu-west-1b" "log eu-west-1a" "log eu-west-1b" "log eu-west-1c" "compactor eu-west-1c" \
-            "loader eu-west-1a" "client eu-west-1a" "filler eu-west-1a" "extras_client eu-west-1a" "pgbox eu-west-1a"; do
+            "loader eu-west-1a" "client eu-west-1a" "filler eu-west-1a" "extras_client eu-west-1a" "pgbox eu-west-1a" \
+            "generator eu-west-1a"; do
   read -r role z <<<"$pair"; t=$(r "$role"); [ -n "$t" ] || continue
   a=$(python3 "$HERE/machine_types.py" arch "$t")
+  disk=${DISK_GB:-20}; [ "$role" = generator ] && disk=$(r generator_disk_gb)   # the generator's spill disk
   try "ec2:RunInstances $role $t ($a) in $z" aws ec2 run-instances --dry-run --image-id "${AMI[$a]}" --instance-type "$t" \
     --network-interfaces "DeviceIndex=0,SubnetId=${SUB[$z]},AssociatePublicIpAddress=true${DEFAULT_SG:+,Groups=$DEFAULT_SG}" \
     --iam-instance-profile Name="$MACHINE_ROLE" --instance-initiated-shutdown-behavior terminate \
-    --metadata-options HttpTokens=required,HttpEndpoint=enabled --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=${DISK_GB:-20},VolumeType=gp3,DeleteOnTermination=true}" \
+    --metadata-options HttpTokens=required,HttpEndpoint=enabled --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$disk,VolumeType=gp3,DeleteOnTermination=true}" \
     --tag-specifications "ResourceType=instance,Tags=[{Key=project,Value=fenvix-coldread},{Key=Name,Value=fenvix-coldread-s9-perm}]" "ResourceType=volume,Tags=[{Key=project,Value=fenvix-coldread}]"
 done
 if q=$(aws service-quotas get-service-quota --service-code ec2 --quota-code L-1216C47A --query Quota.Value --output text 2>&1); then

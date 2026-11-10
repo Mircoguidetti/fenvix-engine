@@ -10,7 +10,11 @@ that would need more, and the phases below never overlap their machines.
   compactor             only if the command gives one (compaction 2, step 4), zone c
   client                the m30 client (zone a): kitchen/client.sh UNCHANGED, the founder's script unchanged, the Atlas
                         program m30-corto, the Atlas state files (PLANS: SAME before any measurement)
-  filler                only for data 100gb and 1tb: the ballast, at the same time as the client's load
+  filler                only for data 100gb and 1tb with ballast_mode "script": the ballast through the founder's
+                        script, at the same time as the client's load
+  generator             only for data 100gb and 1tb with ballast_mode "generate" (the default): `mongo-server
+                        <server_options> --ballast`, the ballast written straight into the pantry as sealed runs and
+                        our manifest (mongo-server/src/ballast.rs), alone on its machine after the Atlas databases
   extras                after the m30 client: the separate programs (S3 first byte, sealed run, log ack, ballast
                         rounds, takeovers)
 Order: buckets -> packages, CA, password -> network -> load: cook 0 + the m30 client (Atlas databases) OR cook 0 + the
@@ -36,6 +40,8 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import infra  # noqa: E402
 from machine_types import TYPES, minute_cost  # noqa: E402
+if os.environ.get("S9_MODE", "aws") == "aws":
+    import aurora  # noqa: E402  (boto3 RDS; local mode has no Aurora)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 cmd = json.load(open(sys.argv[1]))
@@ -125,6 +131,7 @@ def last_line(key):
 
 # ---------- spend ----------
 machines = {}   # id -> {"name", "type", "start", "end"}
+au = {"start": None, "end": None}   # the Aurora cluster of the agent benchmark (aurora.py), if any
 S3_PRICES = {"storage_gb_month": 0.023}     # DECLARED, S3 Standard eu-west-1 (fact check 2026-11-08)
 S3_MARGIN = float(os.environ.get("S3_MARGIN", "0.10"))
 spend_now = 0.0
@@ -135,7 +142,7 @@ def s3_dollars():
     plus the storage of the data for the hours so far, plus a margin for the client's files and the counters' delay."""
     tot = 0.0
     for m in machines.values():
-        if m["role"] in ("loader", "cook", "spare", "compactor"):
+        if m["role"] in ("loader", "cook", "spare", "compactor", "generator"):
             c = get(f"results/{m['name']}/s3-counters.json") or {}
             if c.get("available"):
                 tot += float(c.get("dollars", 0))
@@ -156,12 +163,19 @@ def spend():
         if m["end"] is None and i not in alive_ids and now - m["start"] > 120:
             m["end"] = now
         end = m["end"] or now
-        mach += minute_cost(DISK_GB, [m["type"]]) * max(1.0, (end - m["start"]) / 60)
+        mach += minute_cost(m.get("disk", DISK_GB), [m["type"]]) * max(1.0, (end - m["start"]) / 60)
     s3d = s3_dollars()
-    spend_now = mach + s3d
+    aud = 0.0
+    if au["start"]:
+        # DECLARED instance price for every started hour (RDS bills by the second after the first 10 minutes; the hour
+        # is an upper bound), plus the I/O and storage allowance
+        hours = ((au["end"] or now) - au["start"]) / 3600
+        aud = aurora.PRICE_HOUR[aurora.CLASS] * max(1.0, hours) + aurora.IO_ALLOWANCE
+    spend_now = mach + s3d + aud
     alive = sorted(m["type"] for i, m in machines.items() if m["end"] is None)
     say(f"SPESA: {spend_now:.2f} $ so far at {int((now - T0) / 60)} minutes (upper bound; machines {mach:.2f} $, alive: "
-        f"{', '.join(alive) or 'none'}; S3 {s3d:.2f} $ from the servers' counters, storage and margin), cap {CAP:.2f} $")
+        f"{', '.join(alive) or 'none'}; S3 {s3d:.2f} $ from the servers' counters, storage and margin"
+        + (f"; Aurora {aud:.2f} $ ({'deleted' if au['end'] else 'on'})" if au["start"] else "") + f"), cap {CAP:.2f} $")
     return spend_now
 
 
@@ -178,6 +192,8 @@ def minute(watch=None):
         plat.terminate([i for i, _ in plat.alive()])
         for m in machines.values():
             m["end"] = m["end"] or time.time()
+        if au["start"] and not au["end"]:
+            aurora_off(wait=False)
         raise Stop("BLOCCO_SPESA")
     if (time.time() - T0) / 60 >= CEILING_MIN:
         say(f"TIME CEILING: {CEILING_MIN:.0f} minutes")
@@ -216,15 +232,34 @@ nohup bash ./node.sh {role} {name} {BUCKET} > node.log 2>&1 &
 """
 
 
-def launch(name, role, mtype, zone):
+def launch(name, role, mtype, zone, disk_gb=None):
     renew()
     arch = TYPES[mtype][2]
     package = "client.tar.gz" if role in ("client", "filler", "extras") else f"node-{arch}.tar.gz"
     left = CEILING_MIN - (time.time() - T0) / 60 + 5
-    mid, ip = plat.launch(name, role, mtype, zone, user_data(name, role, package, left), arch)
-    machines[mid] = {"name": name, "role": role, "type": mtype, "zone": zone, "ip": ip, "start": time.time(), "end": None}
+    mid, ip = plat.launch(name, role, mtype, zone, user_data(name, role, package, left), arch, disk_gb=disk_gb)
+    machines[mid] = {"name": name, "role": role, "type": mtype, "zone": zone, "ip": ip, "start": time.time(), "end": None,
+                     "disk": disk_gb or DISK_GB}
     say(f"{name}: {role} {mtype} in {zone}, {mid}, private IP {ip}")
     return mid, ip
+
+
+def aurora_off(wait=True):
+    """Delete the Aurora cluster (no final snapshot). wait=False (BLOCCO): start the writer's deletion only; the
+    teardown step finishes it and the final check looks."""
+    try:
+        if wait:
+            # a SPESA line on every poll; never BLOCCO in the middle of a deletion
+            gone = aurora.delete(RUN, say=say, wait=lambda: (time.sleep(min(20, MINUTE_S)), spend()))
+            say(f"aurora: {'deleted' if gone else 'NOT deleted yet (the teardown step retries)'}")
+        else:
+            au["blocked"] = True
+            n = aurora.names(RUN)
+            aurora.clients()[0].delete_db_instance(DBInstanceIdentifier=n["instance"], SkipFinalSnapshot=True, DeleteAutomatedBackups=True)
+            say("aurora: writer deletion started (BLOCCO); the teardown step deletes the cluster")
+    except Exception as e:
+        say(f"aurora: delete: {type(e).__name__}: {str(e)[:200]} (the teardown step retries)")
+    au["end"] = au["end"] or time.time()
 
 
 def cert_for(name, ip):
@@ -248,7 +283,7 @@ def stop(name, mid, wait_s=180, terminate=True):
 
 
 def server_config(name, role, logs):
-    opts = cmd["server_options"] if role in ("cook", "spare") else (cmd["compactor_options"] if role == "compactor" else cmd.get("loader_options", ""))
+    opts = cmd["server_options"] if role in ("cook", "spare", "generator") else (cmd["compactor_options"] if role == "compactor" else cmd.get("loader_options", ""))
     put(f"{name}/config.json", {"pantry": PANTRY, "server_options": opts, "logs": logs, "log_id": "cell1", "takeover_bucket": TK_BUCKET})
 
 
@@ -290,13 +325,26 @@ try:
         plat.new_bucket(TK_BUCKET, 1)
     if cmd.get("filler"):
         put("filler/plan.json", {"pantry": PANTRY, **cmd["ballast"]})
+    if cmd.get("generator") and "load" in PHASES:
+        # the generator's plan, made here from the founder's script itself (imported unchanged, md5 checked): its
+        # customers, sizes, dormant ones, vocabulary and timeline (step9/machine/ballast_plan.py)
+        lines_f, plan_f = os.path.join(OUT, "ballast-lines.json"), os.path.join(OUT, "ballast-plan.json")
+        json.dump(cmd["ballast"]["lines"], open(lines_f, "w"))
+        r = subprocess.run([sys.executable, os.path.join(HERE, "..", "machine", "ballast_plan.py"),
+                            os.path.join(HERE, "..", "..", "kitchen", "irlanda"), lines_f, plan_f, "--spill-dir", "work/spill",
+                            "--out", "out/ballast-gen", "--parallel", str(cmd["ballast"]["parallel"])],
+                           capture_output=True, text=True)
+        say(f"ballast plan: {(r.stdout or r.stderr).strip()[-300:]}")
+        if r.returncode != 0:
+            raise Stop("NO_BALLAST_PLAN")
+        s3.upload_file(plan_f, BUCKET, "generator/plan.json")
     say("3/8 network")
     say(f"network: {json.dumps(plat.setup(RUN, cmd['network']))}")
 
     logs, LOGS = {}, ""
     say("4/8 the load runs without the log (the loader writes straight to S3; nothing is measured while loading)")
 
-    if "load" in PHASES:
+    if "load" in PHASES and (cmd["atlas_load"] or cmd.get("filler")):
         who = (["the m30 client (the Atlas databases)"] if cmd["atlas_load"] else []) + (["the filler (ballast)"] if cmd.get("filler") else [])
         say(f"5/8 the load through cook 0 (the loader): {', '.join(who)}")
         server_config("server-0", "loader", LOGS if cmd["loader_uses_log"] else "")
@@ -318,7 +366,21 @@ try:
         stop("server-0", mid0)
         if outcomes.get("load", "LOADED") != "LOADED" or outcomes.get("ballast", "BALLAST_LOADED") != "BALLAST_LOADED":
             raise Stop("LOAD_FAILED")
-    else:
+    if "load" in PHASES and cmd.get("generator"):
+        # alone on its machine (8 vCPU), after cook 0 is off: no cook, no client, no wire
+        say(f"5/8 the ballast generator: {len(cmd['ballast']['lines'])} databases in our stored format, "
+            f"{cmd['ballast']['parallel']} at a time, on {cmd['generator']}")
+        server_config("generator", "generator", "")
+        gen_id, _ = launch("generator", "generator", cmd["generator"], infra.ZONES[0], disk_gb=int(cmd["generator_disk_gb"]))
+        while not exists("generator/end.json"):
+            minute("generator")
+        outcomes["ballast"] = (get("generator/end.json") or {}).get("outcome", "NOT DONE")
+        plat.terminate([gen_id])
+        machines[gen_id]["end"] = machines[gen_id]["end"] or time.time()
+        say(f"ballast generator: {outcomes['ballast']}")
+        if outcomes["ballast"] != "BALLAST_GENERATED":
+            raise Stop("BALLAST_GENERATION_FAILED")
+    if "load" not in PHASES:
         say("5/8 no load in this round: the pantry was loaded by an earlier round")
 
     mid1 = ip1 = sp = comp = None
@@ -387,9 +449,27 @@ try:
         if sp:
             stop("spare", sp[0], wait_s=120)
             sp = None
-        say("7/8 the agent benchmark: the Postgres machine (zone a) and the agent client")
+        say("7/8 the agent benchmark: the Postgres machine (zone a)" + (", the Aurora cluster" if cmd.get("aurora") else "")
+            + " and the agent client")
+        if cmd.get("aurora"):
+            if MODE != "aws":
+                raise Stop("AURORA_ONLY_ON_AWS")
+            aurora.create(RUN, os.environ["CM_PW"], say=say)
+            au["start"] = time.time()
         pg = launch("pgbox", "pgbox", cmd["pgbox"], infra.ZONES[0])
         wait_for("pgbox/ready.json", watch="pgbox", limit_min=20, what="pgbox")
+        if cmd.get("aurora"):
+            t_au = time.time()
+            while True:
+                cs, ins, ep = aurora.status(RUN)
+                say(f"aurora: cluster {cs}, writer {ins}")
+                if cs == "available" and ins == "available" and ep:
+                    break
+                if (time.time() - t_au) / 60 > 40:
+                    raise Stop("AURORA_NOT_READY")
+                minute(None)
+            put("secret/aurora-uri", aurora.uri(ep, os.environ["CM_PW"]))
+            say(f"aurora: ready after {(time.time() - au['start']) / 60:.1f} minutes")
         put("agent/config.json", {"programs": ["agent-bench"], "pantry": PANTRY, "logs": LOGS,
                                   "cook": {"ip": ip1, "port": 27017}, "pgbox": {"ip": pg[1]},
                                   "agent_bench_args": cmd["agent_bench_args"]})
@@ -398,6 +478,9 @@ try:
         outcomes["agent"] = (get("agent/end.json") or {}).get("programs", "")
         plat.terminate([ag_id])
         machines[ag_id]["end"] = time.time()
+        if au["start"] and not au["end"]:
+            say("aurora: the agent benchmark is done: deleting the cluster now")
+            aurora_off()
     say("8/8 everything off")
     # the cook first (on its machine log-0 keeps running until its own stop), log-0 last: it powers that machine off
     if mid1:
@@ -420,6 +503,9 @@ finally:
         plat.terminate([i for i, m in machines.items() if m["end"] is None])
         for m in machines.values():
             m["end"] = m["end"] or time.time()
+        if au["start"] and not au["end"]:
+            au["blocked"] = True   # no BLOCCO loop from here: plain waits
+            aurora_off()
         spend()
         say("copying the results from the run bucket")
         for page in s3.get_paginator("list_objects_v2").paginate(Bucket=BUCKET, Prefix="results/"):

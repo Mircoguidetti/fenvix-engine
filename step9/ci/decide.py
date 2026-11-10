@@ -10,7 +10,18 @@ Fields of step9/command.json (defaults in brackets):
   pantry        "new" (deleted at the end) | "keep" (kept for later rounds as fenvix-kitchen-pantry-<run>) | the name
                 of a kept pantry ["new"]
   ballast_slice [FROM, TO]: the ballast databases this round loads (0-based, TO excluded) [all of them]
-  engine        branch, tag or commit of fenvix-engine the servers are built from ["integration"]
+  ballast_mode  "generate": the ballast written straight into the pantry in our stored format by the ballast generator
+                (`mongo-server <server_options> --ballast`, mongo-server/src/ballast.rs; sealed runs, our manifest, the
+                keys of the round's layout), on its own machine, no cook 0 and no client; needs "--sealed-runs" and
+                "--customer-key" in server_options (the round reads it through compaction 2's reader) | "script": loaded
+                through cook 0 by the founder's script on the filler machine (the slow path, 1.55 MB/s per process)
+                ["generate"]
+  generator     the generator machine [c7i.2xlarge (8 vCPU) when the round generates more than 4 databases, else
+                c7i.xlarge (4 vCPU): one database per vCPU at a time]; generator_disk_gb its
+                disk (the sorted spill of the shared keyspace) [60]; generator_parallel databases at once [its vCPU]
+  engine        REQUIRED for mode run: the name of the fenvix-engine ref (branch or tag) the servers and the generator are
+                built from: the final merged ref of compaction 2 (no default: a round never runs on a ref chosen by
+                accident). The gate (gate.py) stays closed unless the local benchmark report was made on that ref's commit.
   atlas_states  code-irlanda commit with the Atlas state files the Atlas round started from ["501c8fd"]
   cook, spare   type of the measured cook and of the warm spare; spare null = no spare (not like for like) ["m7i.large"]
   log           type of the three log nodes ["c7g.medium"]
@@ -22,6 +33,10 @@ Fields of step9/command.json (defaults in brackets):
   extras_client the client of the extra programs ["c7i.large"]
   log_colocate  log-0 on the cook's machine (true) or on its own machine [true]
   pgbox         the Postgres machine of the agent benchmark (Supabase stand-in) ["m7i.large"]
+  aurora        true: an Aurora PostgreSQL cluster (Standard, db.r7g.large, default VPC, tag project=fenvix-coldread) is
+                created for the agent benchmark, runs the same benchmark as the Postgres machine, and is deleted with no
+                final snapshot (ci/aurora.py; RDS, not in the EC2 vCPU quota; needs the RDS policy of `aurora.py
+                policy` and "network": "default-sg") [false]
   network       "default-sg": every machine in the default VPC's security group (its members talk to each other, no
                 port from the internet; needs no security-group permission) | "own-groups": two new tagged groups
                 ["default-sg"]
@@ -50,10 +65,11 @@ DATA = {  # BSON GB of the five Atlas databases: 4 x 3.1 + 10.74 (MEASURED, Atla
 BALLAST_DB_GB = 24.3
 DEFAULTS = {
     "data": "atlas", "phases": ["load", "measure", "extras"], "pantry": "new", "ballast_slice": None,
-    "engine": "integration", "atlas_states": "501c8fd",
+    "ballast_mode": "generate", "generator": None, "generator_disk_gb": 60, "generator_parallel": None,
+    "engine": None, "engine_commit": None, "atlas_states": "501c8fd",
     "cook": "m7i.large", "spare": "m7i.large", "log": "c7g.medium", "compactor": None, "compactor_options": "",
     "loader": "c7i.xlarge", "loader_options": "", "client": "c7i.xlarge", "filler": "c7i.xlarge",
-    "extras_client": "c7i.large", "log_colocate": True, "pgbox": "m7i.large", "network": "default-sg",
+    "extras_client": "c7i.large", "log_colocate": True, "pgbox": "m7i.large", "aurora": False, "network": "default-sg",
     "server_options": "", "prepare": False, "programs": PROGRAMS,
     "takeovers_args": "--n 50 --writers 8 --between-s 3 --lease-ttl 4 --log on",
     "takeovers_off_args": "--n 50 --writers 8 --between-s 3 --lease-ttl 4 --log off --label logoff",
@@ -69,7 +85,7 @@ DEFAULTS = {
 # The founder's limit (2026-11-09): the on-demand standard vCPU quota stays 8; no job may run more at the same time.
 # S9_VCPU_LIMIT overrides it for the LOCAL mode only (x86 containers replace the 1-vCPU Graviton log nodes).
 VCPU_LIMIT = int(os.environ.get("S9_VCPU_LIMIT", "8"))
-SAFE_ARGS = re.compile(r"^[A-Za-z0-9 ,._:-]{0,400}$")
+SAFE_ARGS = re.compile(r"^[A-Za-z0-9 ,._:=-]{0,400}$")
 RESERVED = {"--listen", "--store", "--bucket", "--region", "--endpoint", "--local-dir", "--replica-set", "--advertise",
             "--auth", "--tls-mode", "--tls-certificate-key-file", "--tls-ca-file", "--holder", "--no-leases",
             "--unsafe-skip-ownership-checks", "--quaderno", "--quaderno-id", "--log-commands"}
@@ -95,7 +111,10 @@ def resolve(raw, quota=None):
         refuse("phases: a non-empty list of load, measure, extras")
     if not set(c["programs"]) <= set(PROGRAMS):
         refuse(f"programs: any of {PROGRAMS}")
-    for role in ("cook", "spare", "log", "compactor", "loader", "client", "filler", "extras_client", "pgbox"):
+    if c["generator"] is None:   # the default, by the number of databases the round generates
+        lo_, hi_ = c["ballast_slice"] or [0, DATA.get(c["data"], {}).get("ballast_dbs", 0)]
+        c["generator"] = "c7i.2xlarge" if hi_ - lo_ > 4 else "c7i.xlarge"
+    for role in ("cook", "spare", "log", "compactor", "loader", "client", "filler", "extras_client", "pgbox", "generator"):
         t = c[role]
         if t is None and role in ("spare", "compactor"):
             continue
@@ -105,13 +124,20 @@ def resolve(raw, quota=None):
         refuse("spare: must be the same type as the cook (the fair-comparison rule of 2026-11-06)")
     if c["compactor"] and not c["compactor_options"]:
         refuse("compactor: give its command line in compactor_options (compaction 2 step 4 decides it)")
-    if not re.match(r"^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$", c["engine"]):
-        refuse("engine: a branch, tag or commit")
+    if c["mode"] == "run" and not c["engine"]:
+        refuse('engine: give the name of the final merged engine ref (branch or tag), e.g. "engine": "integration-3"; '
+               'there is no default (step 9 runs on the ref holding compaction 2 steps 3-8, never on one chosen by accident)')
+    if c["engine"] is not None and not re.match(r"^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$", str(c["engine"])):
+        refuse("engine: a branch or tag name")
+    # the commit the ref names, resolved by the workflow before decide.py runs (ENGINE_COMMIT); the build checks it out
+    c["engine_commit"] = os.environ.get("ENGINE_COMMIT") or None
+    if c["ballast_mode"] not in ("generate", "script"):
+        refuse("ballast_mode: generate or script")
     if not re.match(r"^[0-9a-f]{7,40}$", c["atlas_states"]):
         refuse("atlas_states: a commit")
     for k in [k for k in c if k.endswith("_args") or k.endswith("_options")]:
         if not SAFE_ARGS.match(c[k] or ""):
-            refuse(f"{k}: only letters, digits, spaces and , . _ : -")
+            refuse(f"{k}: only letters, digits, spaces and , . _ : = -")
     for tok in (c["server_options"] + " " + c["loader_options"]).split():
         if tok.startswith("--") and tok.split("=")[0] in RESERVED:
             refuse(f"server_options: {tok} is set by the machine scripts")
@@ -133,6 +159,12 @@ def resolve(raw, quota=None):
         refuse("a new pantry is empty: the round must load")
     if c["network"] not in ("default-sg", "own-groups"):
         refuse("network: default-sg (the default VPC's group: no security-group permission needed) or own-groups")
+    if c["aurora"] not in (True, False):
+        refuse("aurora: true or false")
+    if c["aurora"] and c["network"] != "default-sg":
+        refuse("aurora: only with network default-sg (the cluster joins the default VPC's security group, like every machine)")
+    if c["aurora"] and c["mode"] == "run" and not ("extras" in c["phases"] and "agent-bench" in c["programs"]):
+        refuse("aurora: the cluster exists only for the agent benchmark: phases must include extras and programs agent-bench")
     if c["mode"] == "drop-pantry" and c["pantry_mode"] != "existing":
         refuse("drop-pantry: give the name of the kept pantry")
     # the data: the Atlas databases are loaded by the m30 client when the pantry is new or kept; ballast by the filler
@@ -147,8 +179,23 @@ def resolve(raw, quota=None):
     if "load" not in c["phases"]:
         lines = []
     c["ballast"] = {"parallel": max(1, TYPES[c["filler"]][0] - 1), "lines": lines}
+    if lines and c["ballast_mode"] == "generate":
+        # the generator: one database per vCPU at a time (MEASURED locally: the server's insert code takes one core per
+        # database); no filler, no cook 0 for the ballast
+        c["ballast"]["parallel"] = int(c["generator_parallel"] or TYPES[c["generator"]][0])
+        c["filler"] = None
+        opts = c["server_options"].split()
+        if "--sealed-runs" not in [o.split("=")[0] for o in opts]:
+            refuse('ballast_mode generate: server_options must turn on compaction 2\'s reader ("--sealed-runs 0" or N): '
+                   "the generated ballast is sealed runs and our manifest, which the server reads only with it on")
+        if "--customer-key" not in [o.split("=")[0] for o in opts]:
+            refuse('ballast_mode generate: server_options must give the customer key of layout v2 (e.g. "--customer-key '
+                   'messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts"); the generator writes the keys the round reads')
+    else:
+        c["generator"] = None
     if not lines:
         c["filler"] = None
+        c["generator"] = None
     c["data_gb_upper"] = round(d["target_gb"] * 1.6, 1)   # BSON plus indexes and not yet compacted SSTs, upper bound
     # money and time
     cap = float(c["spend_cap"])
@@ -165,7 +212,10 @@ def resolve(raw, quota=None):
     log_machines = 2 if c["log_colocate"] else 3            # log-0 on the cook's machine, or on its own
     peaks = {}
     if "load" in c["phases"]:
-        peaks["load"] = v(c["loader"]) + (v(c["client"]) if c["atlas_load"] else 0) + v(c["filler"])
+        if c["atlas_load"] or c["filler"]:
+            peaks["load"] = v(c["loader"]) + (v(c["client"]) if c["atlas_load"] else 0) + v(c["filler"])
+        if c["generator"]:   # after the Atlas databases, alone (run.py)
+            peaks["load (ballast generator)"] = v(c["generator"])
     if "measure" in c["phases"]:
         peaks["measure (m30)"] = v(c["cook"]) + log_machines * v(c["log"]) + v(c["compactor"]) + \
             (v(c["client"]) if "m30" in c["programs"] else 0)
@@ -187,10 +237,11 @@ def resolve(raw, quota=None):
         # RULES.md 8-9 (founder, 2026-11-09): no AWS run while a local result loses a write or is worse than the competitors
         import subprocess
         g = subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "gate.py")],
-                           capture_output=True, text=True)
+                           capture_output=True, text=True, env={**os.environ, "ENGINE_REF": str(c["engine"]),
+                                                                "ENGINE_COMMIT": c["engine_commit"] or ""})
         if g.returncode != 0:
             refuse("the gate before any AWS run is closed:\n" + g.stdout.strip())
-    c["arches"] = sorted({TYPES[c[r]][2] for r in ("cook", "spare", "log", "compactor", "loader") if c[r]} | {"x86_64"})
+    c["arches"] = sorted({TYPES[c[r]][2] for r in ("cook", "spare", "log", "compactor", "loader", "generator") if c[r]} | {"x86_64"})
     c["loader_uses_log"] = False
     return c
 
@@ -200,10 +251,11 @@ def main():
     quota = float(sys.argv[3]) if len(sys.argv) > 3 and sys.argv[3] else None
     c = resolve(raw, quota)
     json.dump(c, open(sys.argv[2], "w"), indent=1)
-    for k in ("mode", "engine", "data", "pantry_mode", "vcpu_peak", "vcpu_peaks"):
+    for k in ("mode", "engine", "engine_commit", "data", "pantry_mode", "vcpu_peak", "vcpu_peaks"):
         print(f"{k}={c[k]}")
     print(f"x86={'1' if 'x86_64' in c['arches'] else '0'}")
     print(f"arm={'1' if 'aarch64' in c['arches'] else '0'}")
+    print(f"aurora={'1' if c['aurora'] else '0'}")
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@
 #                        the step 9 machine scripts and programs for the roles client, filler and extras, and pq (x86_64)
 #                        for the raw log-ack measure. client.env gets WAIT_COOK_MIN (a 1 TB ballast load takes hours).
 #   node-ARCH.tar.gz     one per CPU: mongo-server and pq built from the engine ref, the kitchen server helpers, the
-#                        step 9 machine scripts; for the roles log, loader, cook, spare, compactor.
+#                        step 9 machine scripts; for the roles log, loader, cook, spare, compactor, generator.
 # Variables: S9 (step9 folder), K (kitchen folder), PACKAGES, CA_DIR, BIN (mongo-server-ARCH/ and pq-ARCH/ folders),
 # ATLAS_TGZ, PANTRY (the resolved pantry name), LOAD (1 = the client loads the Atlas databases), WAIT_COOK_MIN.
 set -euo pipefail
@@ -39,7 +39,7 @@ for cpu in x86_64 aarch64; do
   vendor "$d" "$cpu" 'pymongo>=4.6,<5' boto3
   cp "$BIN/mongo-server-$cpu"/mongo-server "$BIN/mongo-server-$cpu"/motore-commit.txt "$BIN/pq-$cpu"/pq "$d"/
   cp "$K"/s3io.py "$K"/create_user.py "$K"/s3_counters.py "$K"/sst_count.py "$K"/irlanda/cpu_macchina.py "$d"/
-  cp "$S9"/machine/{node.sh,common.sh,cfg.py,log.sh,cook.sh,takeover_agent.py,pgbox.sh} "$d"/
+  cp "$S9"/machine/{node.sh,common.sh,cfg.py,log.sh,cook.sh,takeover_agent.py,pgbox.sh,generator.sh,ballast_states.py} "$d"/
   chmod +x "$d"/mongo-server "$d"/pq "$d"/*.sh
   tar czf "$PACKAGES/node-$cpu.tar.gz" -C "$d" .
   echo "node $cpu: engine $(cat "$d"/motore-commit.txt), mongo-server sha256 $(sha256sum "$d"/mongo-server | cut -c1-16), pq sha256 $(sha256sum "$d"/pq | cut -c1-16)"

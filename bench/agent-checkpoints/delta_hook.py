@@ -73,9 +73,14 @@ def fenvix_thread_stored(uri: str, thread_id: str) -> int | None:
     try:
         total = 0
         for coll in ("checkpoints", "checkpoint_writes"):
-            total += int(db.command({"fenvixSstInfo": coll, "prefix": {"thread_id": thread_id}})["bytes"])
+            r = db.command({"fenvixSstInfo": coll, "prefix": {"thread_id": thread_id}})
+            if "bytes" not in r:
+                # integration-2 has a diagnostic fenvixSstInfo with another reply (l0, runs) and no per-prefix bytes:
+                # not the interface above yet (found by aws-ready's local run, 2026-11-10: it crashed the benchmark)
+                return None
+            total += int(r["bytes"])
         return total
-    except OperationFailure:  # CommandNotFound today
+    except OperationFailure:  # CommandNotFound on engines without it
         return None
 
 

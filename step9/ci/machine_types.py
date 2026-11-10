@@ -45,6 +45,7 @@ ROLES = {
     "extras_client": ["c7i.large", "c7i.xlarge"],
     "pgbox": ["m7i.large", "m7g.large"],                       # the Postgres machine of the agent benchmark
     "filler": ["c7i.xlarge", "c7i.2xlarge", "c7i.4xlarge", "c7i.8xlarge"],  # loads the ballast for 100 GB / 1 TB
+    "generator": ["c7i.xlarge", "c7i.2xlarge"],               # generates the ballast in our format (alone: 8 vCPU)
 }
 EBS_GB_MONTH = 0.088
 IPV4_HOUR = 0.005
