@@ -20,6 +20,7 @@ pub mod export;
 pub mod fork;
 pub mod http;
 pub mod meta;
+pub mod migrate;
 pub mod ops;
 pub mod pin;
 pub mod pitr;
@@ -185,6 +186,8 @@ pub async fn start(dbs: Arc<Dbs>, server: Arc<crate::cmd::Server>, lc: Arc<Lifec
     // compaction 2 step 7b: erasures recorded by a whole-customer delete are processed with or without the admin API
     if tenant_bench::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) {
         erase::spawn_agent(&ctl);
+        // step 8: migrations to compaction 2 are driven by the process that holds the database
+        migrate::spawn_agent(&ctl);
     }
     if args.admin_listen.is_none() {
         return Ok(ctl);

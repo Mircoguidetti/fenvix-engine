@@ -823,6 +823,18 @@ impl Server {
                 "runGets": tenant_bench::fx::view::RUN_GETS.load(Relaxed) as i64,
                 "runOpens": tenant_bench::fx::view::RUN_OPENS.load(Relaxed) as i64,
                 "blockHits": tenant_bench::fx::view::BLOCK_HITS.load(Relaxed) as i64,
+                // step 8 (fx/migrate.rs): migrations to compaction 2
+                "migration": {
+                    "groupsBuilt": tenant_bench::fx::migrate::GROUPS_BUILT.load(Relaxed) as i64,
+                    "rounds": tenant_bench::fx::migrate::ROUNDS.load(Relaxed) as i64,
+                    "rowsRead": tenant_bench::fx::migrate::ROWS_READ.load(Relaxed) as i64,
+                    "sstBytesRead": tenant_bench::fx::migrate::SST_BYTES_READ.load(Relaxed) as i64,
+                    "published": tenant_bench::fx::migrate::PUBLISHED.load(Relaxed) as i64,
+                    "rollbacks": tenant_bench::fx::migrate::ROLLBACKS.load(Relaxed) as i64,
+                    "refused": tenant_bench::fx::migrate::REFUSED.load(Relaxed) as i64,
+                    "passesSkipped": tenant_bench::fx::migrate::PASSES_SKIPPED.load(Relaxed) as i64,
+                    "lockMaxUs": tenant_bench::fx::migrate::LOCK_US.load(Relaxed) as i64,
+                },
                 // step 6 (fx/counter.rs): slices, the new-user filter, the staged publish
                 "counter": {
                     "bytes": tenant_bench::fx::counter::stats().bytes as i64,

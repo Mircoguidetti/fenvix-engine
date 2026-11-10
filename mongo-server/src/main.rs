@@ -1,3 +1,4 @@
+#![recursion_limit = "256"]
 //! A MongoDB wire-protocol server whose databases are slatedb tenants on object storage.
 //!
 //! Each MongoDB database is one tenant at `tenants/{dbname}` managed by the results3 lifecycle
@@ -488,6 +489,15 @@ struct Args {
     sealed_erasure_deadline_ms: u64,
     #[arg(long, default_value_t = 60_000)]
     sealed_erasure_poll_ms: u64,
+    /// Migration to compaction 2 (step 8): the rollback window after a database's migration is published (7 days,
+    /// DECISIONS 2026-11-07), and how often the migration agent looks for migrations to drive.
+    #[arg(long, default_value_t = 7 * 24 * 3600 * 1000)]
+    sealed_migration_window_ms: u64,
+    #[arg(long, default_value_t = 10_000)]
+    sealed_migration_poll_ms: u64,
+    /// Tests only: the migration agent begins a migration of every database this process holds.
+    #[arg(long)]
+    sealed_test_migrate_all: bool,
     /// What the counter keeps of a run block fetched by a one-customer read (fx/counter.rs, step 6): `off` (the whole
     /// block), `customer` (the customer's rows) or `area` (the rows of the read's collection documents or index).
     #[arg(long, default_value = "area")]
@@ -804,6 +814,16 @@ async fn run() -> Result<()> {
         tenant_bench::fx::RESEAL_EVERY.store(args.sealed_reseal_every.max(1), Relaxed);
         tenant_bench::fx::erase::DEADLINE_MS.store(args.sealed_erasure_deadline_ms, Relaxed);
         ctl::erase::POLL_MS.store(args.sealed_erasure_poll_ms, Relaxed);
+        tenant_bench::fx::migrate::WINDOW_MS.store(args.sealed_migration_window_ms, Relaxed);
+        ctl::migrate::POLL_MS.store(args.sealed_migration_poll_ms, Relaxed);
+        if let Some(d) = std::env::var("FENVIX_SEALED_TEST_MIGRATION_DELAY_MS").ok().and_then(|v| v.parse().ok()) {
+            ctl::migrate::TEST_STEP_DELAY_MS.store(d, Relaxed);
+        }
+        if let Some(g) = std::env::var("FENVIX_SEALED_TEST_MIGRATION_GROUPS").ok().and_then(|v| v.parse().ok()) {
+            ctl::migrate::GROUPS_PER_STEP.store(g, Relaxed);
+        }
+        ctl::migrate::MIGRATE_ALL.store(args.sealed_test_migrate_all || std::env::var("FENVIX_SEALED_TEST_MIGRATE_ALL").is_ok_and(|v| v == "1"), Relaxed);
+        tenant_bench::fx::migrate::GROUP_BYTES.store(tenant_bench::fx::GROUP_BYTES.load(Relaxed), Relaxed);
     }
     // negative controls of the step 7b fix round, tests only
     let ctl_env = |k: &str| std::env::var(k).map(|v| v == "1").unwrap_or(false);

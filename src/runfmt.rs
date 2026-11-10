@@ -446,6 +446,11 @@ impl RunWriter {
         })
     }
 
+    /// The run id (16 random bytes) this run's blocks and footer carry.
+    pub fn run_id(&self) -> &[u8; RUN_ID_LEN] {
+        &self.run_id
+    }
+
     /// Adds one row; keys must come in strictly increasing order, `env` must be an envelope.
     pub async fn add(&mut self, key: &[u8], seq: u64, env: &[u8]) -> anyhow::Result<()> {
         anyhow::ensure!(self.first_key.is_none() || key > &self.last_key[..], "keys out of order");

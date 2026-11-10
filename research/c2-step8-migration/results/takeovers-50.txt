@@ -1,0 +1,4 @@
+takeovers: 50; phase at the kill: building 50
+published version 1 after 50 takeovers while building; 40169 acknowledged documents all read back; writer errors 91; migration counters {'groupsBuilt': 6, 'rounds': 2, 'rowsRead': 61019, 'sstBytesRead': 24389756, 'published': 1, 'rollbacks': 0, 'refused': 0, 'passesSkipped': 0, 'lockMaxUs': 456855}
+.
+1 passed in 87.97s (0:01:27)

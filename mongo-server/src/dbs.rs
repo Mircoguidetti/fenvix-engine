@@ -468,6 +468,29 @@ impl Dbs {
 
 impl Entry {
     /// Stop this database's compactor (before its tenant closes, is abandoned or dropped).
+    /// Start this database's compactor (`--sealed-compactor`) on a writer that serves a version, unless one runs. A
+    /// migrated database (step 8) runs it with the drop off until the migration is committed (the rollback window).
+    async fn start_fxc(&mut self) {
+        if self.fxc.is_some() || !tenant_bench::fx::compactor::SERVER_ON.load(Relaxed) {
+            return;
+        }
+        let Some(t) = self.tenant.as_mut() else { return };
+        if !(t.is_writer() && t.fx_view().is_some()) {
+            return;
+        }
+        let mut k = tenant_bench::fx::compactor::server_knobs();
+        if let Some(m) = t.fx_migration() {
+            k.drop = m.drop_allowed();
+        }
+        match tenant_bench::fx::compactor::Compactor::start(t, Arc::clone(&self.raw), k, tenant_bench::fx::pool::global(), tokio::runtime::Handle::current()).await {
+            Ok(c) => {
+                c.run();
+                self.fxc = Some(c);
+            }
+            Err(e) => eprintln!("sealed runs: compactor of database {} did not start: {e:#}", self.name),
+        }
+    }
+
     async fn stop_fxc(&mut self) {
         if let Some(c) = self.fxc.take() {
             c.stop().await;
@@ -816,6 +839,73 @@ impl Entry {
         Ok(())
     }
 
+    /// Step 8: begin the migration of this database (`fx/migrate.rs`). None while E1's announcement waits its T_pin, or
+    /// when the database does not exist.
+    pub async fn fx_migrate_begin(&mut self) -> Result<Option<tenant_bench::fx::migrate::State>> {
+        if !self.ensure_open().await? {
+            return Ok(None);
+        }
+        self.touch();
+        self.tenant.as_mut().unwrap().fx_migrate_begin().await
+    }
+
+    /// Step 8: this database's SlateDB writer, for a catch-up round outside the lock (a fenced writer fails it).
+    pub async fn fx_migrate_writer(&mut self) -> Result<Option<slatedb::Db>> {
+        if !self.ensure_open().await? {
+            return Ok(None);
+        }
+        let t = self.tenant.as_mut().unwrap();
+        t.upgrade().await?;
+        Ok(t.fx_writer_handle())
+    }
+
+    /// Step 8: the publish of a built migration, under this lock, and the compactor started before it is released.
+    pub async fn fx_migrate_finish(&mut self) -> Result<Option<u64>> {
+        if !self.ensure_open().await? {
+            return Ok(None);
+        }
+        self.touch();
+        let opts = tenant_bench::fx::migrate::delta_opts();
+        let r = self.tenant.as_mut().unwrap().fx_migrate_finish(&opts, None).await?;
+        if r.is_some() {
+            self.start_fxc().await;
+        }
+        Ok(r)
+    }
+
+    /// Step 8: roll the migration back (refused once committed): stop the compactor, then the database is served from
+    /// SlateDB alone.
+    pub async fn fx_migrate_rollback(&mut self, note: &str) -> Result<tenant_bench::fx::migrate::State> {
+        if !self.ensure_open().await? {
+            anyhow::bail!("database {} does not exist", self.name);
+        }
+        let t = self.tenant.as_mut().unwrap();
+        t.upgrade().await?;
+        if let Some(m) = tenant_bench::fx::migrate::load(&self.raw, &self.name).await? {
+            if let Some(r) = tenant_bench::fx::migrate::rollback_refusal(&m) {
+                tenant_bench::fx::migrate::REFUSED.fetch_add(1, Relaxed);
+                anyhow::bail!("database {}: rollback refused: {r}", self.name);
+            }
+        }
+        self.stop_fxc().await;
+        let t = self.tenant.as_mut().unwrap();
+        t.fx_detach();
+        t.fx_migrate_rollback(note).await
+    }
+
+    /// Step 8: after the commit: the compactor restarts with the drop on.
+    pub async fn fx_migrate_committed(&mut self) -> Result<()> {
+        if !self.ensure_open().await? {
+            return Ok(());
+        }
+        self.stop_fxc().await;
+        let t = self.tenant.as_mut().unwrap();
+        t.fx_detach();
+        t.fx_migration_reload().await?;
+        self.start_fxc().await;
+        Ok(())
+    }
+
     /// The erasure pass of this database (`fx/erase.rs`). Empty when the database does not exist.
     pub async fn fx_erase_pass(&mut self) -> Result<Vec<tenant_bench::fx::erase::Erasure>> {
         if !self.ensure_open().await? {
@@ -877,19 +967,7 @@ impl Entry {
                 eprintln!("sealed runs: publish of database {} failed: {e:#}", self.name);
             }
         }
-        if self.fxc.is_none() && tenant_bench::fx::compactor::SERVER_ON.load(Relaxed) {
-            let t = self.tenant.as_mut().unwrap();
-            if t.is_writer() && t.fx_view().is_some() {
-                let k = tenant_bench::fx::compactor::server_knobs();
-                match tenant_bench::fx::compactor::Compactor::start(t, Arc::clone(&self.raw), k, tenant_bench::fx::pool::global(), tokio::runtime::Handle::current()).await {
-                    Ok(c) => {
-                        c.run();
-                        self.fxc = Some(c);
-                    }
-                    Err(e) => eprintln!("sealed runs: compactor of database {} did not start: {e:#}", self.name),
-                }
-            }
-        }
+        self.start_fxc().await;
         self.seq += 1;
         if self.active_txns > 0 {
             for op in &ops {

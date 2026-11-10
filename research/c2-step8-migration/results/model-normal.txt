@@ -1,0 +1,16 @@
+seed 0: St { ops: 7800, wrong: 0, writes: 3446, reads: 1933, ranges: 831, retries: 0, crashes: 25, fail_points: 13, takeovers: 30, zombie_rounds_refused: 0, groups: 34, rounds: 3, publishes: 2, invariant: 0, passes: 356, e0_refused: 1 }
+  published version 1 at op 1243
+  after E0 open: migration Some(RolledBack)
+  published version 95 at op 4633
+seed 1: St { ops: 7800, wrong: 0, writes: 3475, reads: 1927, ranges: 773, retries: 0, crashes: 33, fail_points: 23, takeovers: 31, zombie_rounds_refused: 0, groups: 32, rounds: 2, publishes: 2, invariant: 0, passes: 280, e0_refused: 1 }
+  published version 1 at op 1342
+  after E0 open: migration Some(RolledBack)
+  published version 100 at op 4621
+seed 2: St { ops: 7800, wrong: 0, writes: 3522, reads: 1945, ranges: 810, retries: 0, crashes: 38, fail_points: 25, takeovers: 35, zombie_rounds_refused: 0, groups: 34, rounds: 0, publishes: 1, invariant: 0, passes: 322, e0_refused: 1 }
+  after E0 open: migration Some(RolledBack)
+  published version 106 at op 4757
+seed 3: St { ops: 7800, wrong: 0, writes: 3510, reads: 1882, ranges: 808, retries: 0, crashes: 32, fail_points: 26, takeovers: 37, zombie_rounds_refused: 0, groups: 36, rounds: 1, publishes: 1, invariant: 0, passes: 326, e0_refused: 1 }
+  published version 1 at op 1386
+  after E0 open: migration Some(RolledBack)
+control "": total: 31200 ops, 128 crashes, 133 takeovers, 87 fail points, 0 wrong, 0 invariant violations
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 123 filtered out; finished in 331.76s

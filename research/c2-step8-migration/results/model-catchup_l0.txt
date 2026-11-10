@@ -1,0 +1,52 @@
+WRONG range at op 1271
+WRONG range at op 1285
+WRONG range at op 1307
+WRONG range at op 1316
+WRONG range at op 1317
+FULL CHECK published: 41 acknowledged rows missing or different, 26 extra
+FULL CHECK in the window: 27 acknowledged rows missing or different, 14 extra
+FULL CHECK generation 2 published: 141 acknowledged rows missing or different, 119 extra
+FULL CHECK committed: 49 acknowledged rows missing or different, 43 extra
+FULL CHECK end: 49 acknowledged rows missing or different, 43 extra
+seed 0: St { ops: 7800, wrong: 796, writes: 3446, reads: 1933, ranges: 831, retries: 0, crashes: 25, fail_points: 13, takeovers: 30, zombie_rounds_refused: 0, groups: 34, rounds: 3, publishes: 2, invariant: 0, passes: 356, e0_refused: 1 }
+  published version 1 at op 1243
+  after E0 open: migration Some(RolledBack)
+  published version 89 at op 4633
+WRONG range at op 1362
+WRONG range at op 1365
+WRONG range at op 1387
+FULL CHECK published: 58 acknowledged rows missing or different, 32 extra
+FULL CHECK in the window: 32 acknowledged rows missing or different, 14 extra
+FULL CHECK generation 2 published: 41 acknowledged rows missing or different, 29 extra
+FULL CHECK committed: 19 acknowledged rows missing or different, 13 extra
+FULL CHECK end: 19 acknowledged rows missing or different, 13 extra
+seed 1: St { ops: 7800, wrong: 554, writes: 3475, reads: 1927, ranges: 773, retries: 0, crashes: 33, fail_points: 23, takeovers: 31, zombie_rounds_refused: 0, groups: 32, rounds: 2, publishes: 2, invariant: 0, passes: 280, e0_refused: 1 }
+  published version 1 at op 1342
+  after E0 open: migration Some(RolledBack)
+  published version 91 at op 4621
+WRONG range at op 1445
+WRONG get "idx/x/00156" at op 1466 (version Some((2, 1603)), migration Some(Published))
+WRONG range at op 1470
+WRONG range at op 1496
+WRONG range at op 1502
+FULL CHECK published: 80 acknowledged rows missing or different, 59 extra
+FULL CHECK in the window: 37 acknowledged rows missing or different, 27 extra
+seed 2: St { ops: 7800, wrong: 320, writes: 3522, reads: 1945, ranges: 810, retries: 0, crashes: 38, fail_points: 25, takeovers: 35, zombie_rounds_refused: 0, groups: 34, rounds: 0, publishes: 1, invariant: 0, passes: 322, e0_refused: 1 }
+  after E0 open: migration Some(RolledBack)
+  published version 95 at op 4757
+WRONG get "u/\u{3}c15msgs/d/00005" at op 1477 (version Some((2, 1572)), migration Some(Published))
+WRONG range at op 1489
+WRONG range at op 1507
+WRONG range at op 1508
+WRONG get "idx/x/00187" at op 1535 (version Some((2, 1572)), migration Some(Published))
+FULL CHECK published: 87 acknowledged rows missing or different, 53 extra
+FULL CHECK in the window: 41 acknowledged rows missing or different, 29 extra
+FULL CHECK generation 2 published: 45 acknowledged rows missing or different, 38 extra
+FULL CHECK committed: 15 acknowledged rows missing or different, 10 extra
+FULL CHECK end: 15 acknowledged rows missing or different, 10 extra
+seed 3: St { ops: 8000, wrong: 620, writes: 3607, reads: 1923, ranges: 820, retries: 0, crashes: 33, fail_points: 23, takeovers: 33, zombie_rounds_refused: 1, groups: 33, rounds: 0, publishes: 2, invariant: 0, passes: 326, e0_refused: 1 }
+  published version 1 at op 1441
+  after E0 open: migration Some(RolledBack)
+  published version 90 at op 4828
+control "catchup_l0": total: 31400 ops, 129 crashes, 129 takeovers, 84 fail points, 2290 wrong, 0 invariant violations
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 123 filtered out; finished in 280.63s

@@ -30,6 +30,7 @@ pub mod hold;
 pub mod local;
 pub mod pool;
 pub mod manifest;
+pub mod migrate;
 pub mod pair;
 pub mod read;
 pub mod view;
@@ -57,6 +58,8 @@ mod fix4_tests;
 mod tests_7a;
 #[cfg(test)]
 mod tests_7b;
+#[cfg(test)]
+mod tests_8;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 

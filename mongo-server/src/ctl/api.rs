@@ -67,6 +67,14 @@ async fn dispatch(ctl: &Arc<Ctl>, req: &Request) -> ApiResult<Response> {
         ("DELETE", ["v1", "databases", db]) => Ok(Response::json(200, &super::erase::erase(ctl, db).await?)),
         ("GET", ["v1", "databases", db, "erasures"]) => Ok(Response::json(200, &super::erase::status(ctl, db).await?)),
         ("POST", ["v1", "databases", db, "erasures", "run"]) => Ok(Response::json(200, &super::erase::run_now(ctl, db).await?)),
+        ("POST", ["v1", "databases", db, "migration"]) => Ok(Response::json(200, &super::migrate::begin(ctl, db).await?)),
+        ("GET", ["v1", "databases", db, "migration"]) => Ok(Response::json(200, &super::migrate::status(ctl, db).await?)),
+        ("POST", ["v1", "databases", db, "migration", "run"]) => Ok(Response::json(200, &super::migrate::run_now(ctl, db, &body_json(req)?).await?)),
+        ("POST", ["v1", "databases", db, "migration", "rollback"]) => Ok(Response::json(200, &super::migrate::rollback(ctl, db).await?)),
+        ("POST", ["v1", "databases", db, "migration", "commit"]) => {
+            let b = body_json(req)?;
+            Ok(Response::json(200, &super::migrate::commit(ctl, db, b["force"].as_bool().unwrap_or(false), "commit requested through the control API").await?))
+        }
         ("PUT", ["v1", "databases", db, "keep-awake"]) => Ok(Response::json(200, &super::pin::set(ctl, db).await?)),
         ("DELETE", ["v1", "databases", db, "keep-awake"]) => Ok(Response::json(200, &super::pin::unset(ctl, db).await?)),
         ("POST", ["v1", "databases", db, "exports"]) => Ok(Response::json(201, &super::export::create(ctl, db).await?)),

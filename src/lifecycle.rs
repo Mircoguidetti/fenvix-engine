@@ -617,7 +617,7 @@ impl Lifecycle {
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
         let scope = writer_scope(&id);
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: Default::default() };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: Default::default(), fx_mig: None };
         t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
@@ -666,7 +666,7 @@ impl Lifecycle {
         let l0_at_wake = reader.manifest().l0().len();
         let reader = Arc::new(reader);
         READER_DBS.lock().unwrap().insert(id.clone(), Arc::downgrade(&reader));
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: Default::default() };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: Default::default(), fx_mig: None };
         t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
@@ -904,6 +904,8 @@ pub struct Tenant {
     /// tenant begins no hold (no new read, no new transaction): a waiter that was cut off rather than dead must not
     /// start reads after the new waiter's drop window opened (RULES-FOR-THE-CODE rules 27, 28 with F7).
     serving_until: std::sync::Mutex<Option<Instant>>,
+    /// Step 8: the database's migration state as this writer last read it (`fx/migrate.rs`); None: no migration.
+    fx_mig: Option<crate::fx::migrate::State>,
 }
 
 impl Tenant {
@@ -1190,6 +1192,15 @@ impl Tenant {
     /// SlateDB has every row up to X_d and publishes a fence version, a copy of the newest under the next number (review
     /// of step 0, F1): a late PUT of a dead process then cannot land a version this writer does not know.
     async fn load_fx(&mut self) -> Result<()> {
+        // step 8: a release with sealed runs off (E0) refuses a database whose migration was committed, and rolls back one
+        // that is building or inside its window (writers), before it reads anything (`fx/migrate.rs`)
+        if !crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) && !crate::fx::migrate::E0_GUARD_OFF.load(std::sync::atomic::Ordering::Relaxed) {
+            let store = Arc::clone(&self.lc.store);
+            let w = self.is_writer();
+            let id = self.id.clone();
+            let f: std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + Send>> = Box::pin(async move { crate::fx::migrate::refuse_without_sealed_runs(&store, &id, w).await });
+            f.await?;
+        }
         self.load_fx_from(Instant::now()).await
     }
 
@@ -1213,7 +1224,20 @@ impl Tenant {
         if self.env.is_none() {
             self.fx_announced = manifest::announced(&store, &self.id).await?;
         }
-        let newest = manifest::load_newest(&store, &self.id).await?;
+        let mut newest = manifest::load_newest(&store, &self.id).await?;
+        if matches!(self.mode, Some(Mode::Writer(_))) {
+            // step 8: a writer serves only versions of a migration that is published or committed (or of a database never
+            // migrated); a database still building, or rolled back, is read from SlateDB alone (`fx/migrate.rs`)
+            let (s2, id2) = (Arc::clone(&store), self.id.clone());
+            let f: std::pin::Pin<Box<dyn std::future::Future<Output = Result<Option<crate::fx::migrate::State>>> + Send>> = Box::pin(async move { crate::fx::migrate::load(&s2, &id2).await });
+            self.fx_mig = f.await?;
+            if let (Some(m), Some(v)) = (&self.fx_mig, &newest) {
+                if !m.writer_uses(v.version) {
+                    newest = None;
+                    self.fx_unknown = None;
+                }
+            }
+        }
         let newest = match (newest, self.fx_unknown.take()) {
             (Some(v), _) => Some(v),
             // a publish with an unknown outcome and an empty store (a first publish whose PUT may still land): fence its
@@ -1287,6 +1311,99 @@ impl Tenant {
         anyhow::ensure!(v.e_env == self.env, "database {}: our manifest {} has E_env {:?}, the database's marker {:?}", self.id, v.version, v.e_env, self.env);
         self.fx_install(crate::fx::view::View::new(store, v, self.fx.as_deref())?);
         self.fx_loaded = crate::fx::loaded_at(t0);
+        Ok(())
+    }
+
+    /// Step 8: the migration state this writer last read (None: no migration, or not a writer).
+    pub fn fx_migration(&self) -> Option<&crate::fx::migrate::State> {
+        self.fx_mig.as_ref()
+    }
+
+    /// Step 8: a handle on this writer's SlateDB writer, for the migration's catch-up rounds outside the lock (a fenced
+    /// writer fails them).
+    pub fn fx_writer_handle(&self) -> Option<Db> {
+        match &self.mode {
+            Some(Mode::Writer(db)) => Some(db.clone()),
+            _ => None,
+        }
+    }
+
+    /// Step 8: begin the migration of this database (envelopes first: E1's two steps, rule 26). Ok(None) while E1's
+    /// announcement waits its T_pin; call again.
+    pub async fn fx_migrate_begin(&mut self) -> Result<Option<crate::fx::migrate::State>> {
+        anyhow::ensure!(crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed), "--sealed-runs is off");
+        self.upgrade().await?;
+        let store = Arc::clone(&self.lc.store);
+        let prev = crate::fx::migrate::load(&store, &self.id).await?;
+        if let Some(p) = &prev {
+            if p.phase != crate::fx::migrate::Phase::RolledBack {
+                return Ok(Some(p.clone())); // under way, or done: nothing to begin
+            }
+        }
+        if !self.ensure_marker().await? {
+            return Ok(None);
+        }
+        let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
+        let s = crate::fx::migrate::begin(&store, &self.id, db, self.env.expect("marker"), prev).await?;
+        self.fx_mig = Some(s.clone());
+        Ok(Some(s))
+    }
+
+    /// Step 8: the publish of a built migration, under the exclusive lock (`&mut self`): no write lands during its last
+    /// catch-up round. Then the tenant reads with the new version (a fence follows, rule 25); the caller starts the
+    /// compactor before it releases the lock. Returns the version published, None when the build is not finished.
+    pub async fn fx_migrate_finish(&mut self, opts: &crate::runfmt::RunOptions, fail: crate::fx::migrate::Fail<'_>) -> Result<Option<u64>> {
+        use crate::fx::migrate;
+        self.upgrade().await?;
+        let store = Arc::clone(&self.lc.store);
+        let Some(s0) = migrate::load(&store, &self.id).await? else { return Ok(None) };
+        if s0.phase != migrate::Phase::Building || !s0.built {
+            self.fx_mig = Some(s0);
+            return Ok(None);
+        }
+        let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
+        let db = db.clone();
+        migrate::round(&store, &self.id, &db, opts, fail).await?;
+        let mut s = migrate::load(&store, &self.id).await?.ok_or_else(|| anyhow!("database {}: the migration vanished", self.id))?;
+        let epoch = Some(db.manifest().writer_epoch());
+        // the next slot above every version in the store (earlier generations, orphans of a crashed publish)
+        let next = crate::fx::manifest::list_versions(&store, &self.id).await?.last().copied().unwrap_or(0).max(s.ignore_upto) + 1;
+        let v = migrate::compose(&s, next, epoch)?;
+        anyhow::ensure!(crate::fx::manifest::create(&store, &self.id, &v).await?, "database {}: version {next} was taken meanwhile; publish again", self.id);
+        if let Some(f) = fail {
+            f("after_version")?;
+        }
+        migrate::published(&store, &self.id, &mut s, next).await?;
+        if let Some(f) = fail {
+            f("after_published")?;
+        }
+        self.load_fx().await?;
+        anyhow::ensure!(self.fx.as_ref().is_some_and(|f| f.version >= next), "database {}: the migrated version {next} is not served after the publish", self.id);
+        Ok(Some(next))
+    }
+
+    /// Step 8: roll the migration back (refused once committed): the caller stopped the compactor. From here the tenant
+    /// reads SlateDB alone, as release E0 does.
+    pub async fn fx_migrate_rollback(&mut self, note: &str) -> Result<crate::fx::migrate::State> {
+        let store = Arc::clone(&self.lc.store);
+        anyhow::ensure!(self.fx_shared.is_none(), "database {}: stop the compactor before the rollback", self.id);
+        let s = crate::fx::migrate::rollback(&store, &self.id, note).await?;
+        self.fx_mig = Some(s.clone());
+        if let Some(old) = self.fx.take() {
+            crate::fx::counter::forget_runs(&old.delta.iter().chain(old.groups.iter().filter_map(|g| g.sealed.as_ref())).map(|h| h.id).collect::<std::collections::HashSet<_>>());
+        }
+        Ok(s)
+    }
+
+    /// Step 8: detach the compactor (it was stopped): the tenant keeps its version but no longer installs new ones.
+    pub fn fx_detach(&mut self) {
+        self.fx_shared = None;
+    }
+
+    /// Step 8: read the migration state again (after a commit by the control layer).
+    pub async fn fx_migration_reload(&mut self) -> Result<()> {
+        let store = Arc::clone(&self.lc.store);
+        self.fx_mig = crate::fx::migrate::load(&store, &self.id).await?;
         Ok(())
     }
 
@@ -2007,6 +2124,17 @@ pub(crate) async fn compact_tenant_pass_with(
     if crate::fx::compactor::is_active(id) {
         // compaction 2, step 4: this database's compactor runs SlateDB's compaction (the fold, or the gated tiered
         // compaction with the drop off); two compactors on one database would fence each other
+        return Ok(None);
+    }
+    if crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) && {
+        let (r2, id2) = (Arc::clone(raw), id.to_string());
+        let f: std::pin::Pin<Box<dyn std::future::Future<Output = Result<bool>> + Send>> = Box::pin(async move { crate::fx::migrate::pass_must_skip(&r2, &id2).await });
+        f.await?
+    } {
+        // step 8: a database read through a version whose compactor has not started yet (a takeover, a restart, the
+        // instant between a migration's publish and its compactor): its L0 SSTs above X_d wait for the absorption. Moving
+        // one into a sorted run first would hide its rows from every read once X_d passes them (`fx/migrate.rs`).
+        crate::fx::migrate::PASSES_SKIPPED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         return Ok(None);
     }
     let l0_before = l0_count(raw, id).await?;
