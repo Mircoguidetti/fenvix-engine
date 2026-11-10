@@ -1,0 +1,27 @@
+
+running 1 test
+r5b every SST: published
+r5b every SST: compactor started
+r5b every SST: round 0 op 0, L0 Some(1)
+r5b every SST: round 0 op 300, L0 Some(1)
+r5b every SST: round 0 op 600, L0 Some(1)
+r5b every SST: round 0 op 900, L0 Some(1)
+r5b every SST: round 0 op 1200, L0 Some(1)
+r5b every SST: round 0 written, L0 Some(1)
+r5b every SST: round 1 op 0, L0 Some(32)
+r5b every SST: round 1 op 300, L0 Some(32)
+r5b every SST: round 1 op 600, L0 Some(32)
+r5b every SST: round 1 op 900, L0 Some(32)
+r5b every SST: round 1 op 1200, L0 Some(32)
+r5b every SST: round 1 written, L0 Some(32)
+r5b every SST: round 2 op 0, L0 Some(0)
+r5b every SST: round 2 op 300, L0 Some(16)
+r5b every SST: round 2 op 600, L0 Some(13)
+r5b every SST: round 2 op 900, L0 Some(21)
+r5b every SST: round 2 op 1200, L0 Some(27)
+r5b every SST: round 2 written, L0 Some(23)
+r5b every SST: 4 SSTs in the manifest (2 sorted runs, rows dropped by the drop 6243), seq filter asked 4 by one full scan; customer filter asked 78; wrong 0
+test fx::review5b_tests::r5b_every_sst_has_the_filters ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 102 filtered out; finished in 6.52s
+

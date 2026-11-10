@@ -22,7 +22,7 @@ use std::time::{Duration, Instant};
 
 const HOLD_MS: u64 = 3000;
 
-fn test_knobs(drop: bool) -> Knobs {
+pub(super) fn test_knobs(drop: bool) -> Knobs {
     Knobs {
         theta: 0.25,
         r3: true,
@@ -125,6 +125,14 @@ async fn compactor_model_drop_on() {
     // tests must catch: the reader skips with a cut n above the X_d its runs hold, so rows only SlateDB holds are lost.
     let plant: u64 = std::env::var("FX_SKIP_PLANT").ok().and_then(|s| s.parse().ok()).unwrap_or(0);
     super::seqfilter::CONTROL_EXTRA.store(plant, Relaxed);
+    // review of step 5b: FX_SKIP_PLANT_NEWEST skips with the newest version's X_d (not the held one); FX_SKIP_PLANT_MIN skips
+    // an SST by its lowest seq (an SST spanning the cut is skipped)
+    let plant_newest = std::env::var("FX_SKIP_PLANT_NEWEST").is_ok();
+    let plant_min = std::env::var("FX_SKIP_PLANT_MIN").is_ok();
+    super::seqfilter::NEWEST_XD.store(0, Relaxed);
+    super::seqfilter::PLANT_NEWEST.store(plant_newest, Relaxed);
+    super::seqfilter::PLANT_MIN.store(plant_min, Relaxed);
+    let plant = if plant_newest || plant_min { plant.max(1) } else { plant };
     let (skip_asked0, skip_skipped0) = (super::seqfilter::ASKED.load(Relaxed), super::seqfilter::SKIPPED.load(Relaxed));
     let mut rng = StdRng::seed_from_u64(seed);
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
@@ -414,6 +422,9 @@ async fn compactor_model_drop_on() {
     eprintln!("compactor model: SlateDB SSTs asked by the seq filter {asked}, skipped {skipped}, planted extra {plant}");
     eprintln!("compactor model: SlateDB SSTs asked by the customer filter {}, skipped {}", super::seqfilter::CUST_ASKED.load(Relaxed), super::seqfilter::CUST_SKIPPED.load(Relaxed));
     super::seqfilter::CONTROL_EXTRA.store(0, Relaxed);
+    super::seqfilter::PLANT_NEWEST.store(false, Relaxed);
+    super::seqfilter::PLANT_MIN.store(false, Relaxed);
+    eprintln!("compactor model: wrong {} (follower {f_wrong}), plants: newest {plant_newest}, min {plant_min}", st.wrong);
     if plant > 0 {
         assert!(st.wrong + f_wrong > 0, "the planted skip must give wrong answers");
         return;

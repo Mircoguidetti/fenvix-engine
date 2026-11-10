@@ -363,6 +363,7 @@ impl View {
         }
         let delta = v.delta.iter().map(&mut handle).collect::<Result<Vec<_>>>()?;
         let r3 = prev.and_then(|p| p.r3.clone());
+        super::seqfilter::NEWEST_XD.fetch_max(v.x_d, Relaxed);
         Ok(View { store, version: v.version, x_d: v.x_d, e_env: v.e_env, groups, delta, meta: v, r3 })
     }
 

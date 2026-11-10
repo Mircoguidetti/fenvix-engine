@@ -1,0 +1,22 @@
+
+running 1 test
+range diff: rev true limit None got 77 rows want 77; first diff at 61: got Some("doc/plain/00376") want Some("doc/plain/00376"); version Some((1, 701, 4, 0))
+WRONG at op 7: range
+WRONG at op 51: txn get (age 3.432155ms)
+range diff: rev true limit None got 31 rows want 31; first diff at 29: got Some("doc/plain/00376") want Some("doc/plain/00376"); version Some((1, 701, 4, 0))
+WRONG at op 60: range
+WRONG at op 383: txn get (age 37.137602ms)
+WRONG at op 390: txn get (age 43.30772ms)
+WRONG at op 4372: follower answer for "u/\u{3}c22msgs/d/00006" changed under its version 129
+WRONG at op 5795: follower answer for "u/\u{3}c36msgs/d/00003" changed under its version 211
+WRONG at op 6233: follower answer for "u/\u{3}c27msgs/d/00040" changed under its version 211
+compactor model: St { ops: 20000, wrong: 601, writes: 9085, reads: 4992, ranges: 1924, txn_reads: 1872, retries: 0, crashes: 21, erasures: 61, max_l0: 32 }
+compactor model: follower versions 38, follower reads 641, follower answers that changed 32
+compactor model: absorbs 420, merges 136, reseals 367 (splits 22, group merges 17), rows dropped from SlateDB 7176, runs deleted by GC 1533, erasure leftovers 0, erasures pending 0, groups 10, delta runs 4
+compactor model: SlateDB SSTs asked by the seq filter 65442, skipped 62191, planted extra 1
+compactor model: SlateDB SSTs asked by the customer filter 40, skipped 17
+compactor model: wrong 601 (follower 32), plants: newest false, min true
+test fx::compactor_tests::compactor_model_drop_on ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 102 filtered out; finished in 10.16s
+

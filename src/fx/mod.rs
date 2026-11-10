@@ -31,6 +31,8 @@ pub mod read;
 pub mod seqfilter;
 pub mod view;
 #[cfg(test)]
+mod review5b_tests;
+#[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod review_tests;

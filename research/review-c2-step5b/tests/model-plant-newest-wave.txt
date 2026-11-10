@@ -1,0 +1,19 @@
+
+running 1 test
+WRONG at op 188: follower answer for "doc/plain/00376" changed under its version 1
+WRONG at op 189: txn get (age 19.251609ms)
+WRONG at op 208: txn get (age 21.850931ms)
+WRONG at op 214: txn get (age 30.909817ms)
+WRONG at op 224: txn get (age 33.135446ms)
+WRONG at op 5247: follower answer for "u/\u{3}c17msgs/d/00037" changed under its version 171
+WRONG at op 7054: follower answer for "u/\u{3}c30msgs/d/00003" changed under its version 243
+compactor model: St { ops: 20000, wrong: 855, writes: 9062, reads: 5029, ranges: 1962, txn_reads: 1876, retries: 0, crashes: 17, erasures: 63, max_l0: 31 }
+compactor model: follower versions 37, follower reads 398, follower answers that changed 6
+compactor model: absorbs 397, merges 126, reseals 358 (splits 17, group merges 13), rows dropped from SlateDB 7485, runs deleted by GC 1452, erasure leftovers 0, erasures pending 0, groups 9, delta runs 4
+compactor model: SlateDB SSTs asked by the seq filter 66158, skipped 64109, planted extra 1
+compactor model: SlateDB SSTs asked by the customer filter 41, skipped 14
+compactor model: wrong 855 (follower 6), plants: newest true, min false
+test fx::compactor_tests::compactor_model_drop_on ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 102 filtered out; finished in 10.16s
+

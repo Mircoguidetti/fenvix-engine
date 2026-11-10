@@ -34,13 +34,24 @@ pub static ASKED: AtomicU64 = AtomicU64::new(0);
 /// Negative control (tests and benches only): the reader passes X_d plus this, as a reader that trusted a cut newer
 /// than the one its runs hold would. Rows in (X_d, X_d + extra] that only SlateDB holds are then lost. 0: off.
 pub static CONTROL_EXTRA: AtomicU64 = AtomicU64::new(0);
+/// Review of step 5b, planted bug 2 (tests only): the reader skips with the X_d of the newest version this process has
+/// seen (the compactor's), not the one it holds: a transaction or a follower on an older version loses the rows in
+/// (its X_d, newest X_d] that only SlateDB holds, because the drop has not run yet.
+pub static PLANT_NEWEST: AtomicBool = AtomicBool::new(false);
+pub static NEWEST_XD: AtomicU64 = AtomicU64::new(0);
+/// Review of step 5b, planted bug 3 (tests only): the filter skips an SST by its lowest seq instead of its highest, so
+/// an SST that spans the cut (rows on both sides) is skipped.
+pub static PLANT_MIN: AtomicBool = AtomicBool::new(false);
 
 /// The filter context of a read that holds a version with this X_d (None when skipping is off).
 pub fn context(x_d: u64) -> Option<FilterContext> {
     if !SKIP_BELOW_XD.load(Relaxed) {
         return None;
     }
-    let cut = x_d.saturating_add(CONTROL_EXTRA.load(Relaxed));
+    let mut cut = x_d.saturating_add(CONTROL_EXTRA.load(Relaxed));
+    if PLANT_NEWEST.load(Relaxed) {
+        cut = cut.max(NEWEST_XD.load(Relaxed));
+    }
     let mut b = [0u8; 64];
     b[..8].copy_from_slice(&MAGIC);
     b[8..16].copy_from_slice(&cut.to_le_bytes());
@@ -116,7 +127,7 @@ impl Filter for SeqRange {
     fn might_match(&self, query: &FilterQuery) -> bool {
         let Some(cut) = cut_of(query) else { return true };
         ASKED.fetch_add(1, Relaxed);
-        let m = self.max > cut;
+        let m = if PLANT_MIN.load(Relaxed) { self.min > cut } else { self.max > cut };
         if !m {
             SKIPPED.fetch_add(1, Relaxed);
         }

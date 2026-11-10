@@ -1,0 +1,18 @@
+
+running 1 test
+range diff: rev true limit None got 77 rows want 77; first diff at 61: got Some("doc/plain/00376") want Some("doc/plain/00376"); version Some((1, 701, 4, 0))
+WRONG at op 7: range
+WRONG at op 51: txn get (age 4.312442ms)
+range diff: rev true limit None got 31 rows want 31; first diff at 29: got Some("doc/plain/00376") want Some("doc/plain/00376"); version Some((1, 701, 4, 0))
+WRONG at op 60: range
+WRONG at op 18616: range
+compactor model: St { ops: 20000, wrong: 4, writes: 9058, reads: 5017, ranges: 1960, txn_reads: 1847, retries: 0, crashes: 21, erasures: 68, max_l0: 32 }
+compactor model: follower versions 40, follower reads 735, follower answers that changed 0
+compactor model: absorbs 417, merges 136, reseals 383 (splits 16, group merges 12), rows dropped from SlateDB 6510, runs deleted by GC 1669, erasure leftovers 0, erasures pending 0, groups 9, delta runs 3
+compactor model: SlateDB SSTs asked by the seq filter 64813, skipped 60246, planted extra 5
+compactor model: SlateDB SSTs asked by the customer filter 25, skipped 12
+compactor model: wrong 4 (follower 0), plants: newest false, min false
+test fx::compactor_tests::compactor_model_drop_on ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 102 filtered out; finished in 10.29s
+

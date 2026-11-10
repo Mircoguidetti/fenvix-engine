@@ -368,8 +368,15 @@ pub static FILTER_BITS: std::sync::atomic::AtomicU32 = std::sync::atomic::Atomic
 /// Keys an SST needs before slatedb writes its filters (writers and compaction workers alike).
 pub const MIN_FILTER_KEYS: u32 = 1;
 
+/// Review of step 5b (tests only): behave as the release before step 5b (SlateDB's default Bloom filter only, no filter on
+/// SSTs under 1,000 keys), to write SSTs as an old binary did and to read as a rolled-back binary would.
+pub static LEGACY_FILTERS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
 pub(crate) fn filter_policies() -> Option<Vec<Arc<dyn slatedb::FilterPolicy>>> {
     let bits = FILTER_BITS.load(std::sync::atomic::Ordering::Relaxed);
+    if LEGACY_FILTERS.load(std::sync::atomic::Ordering::Relaxed) {
+        return (bits != 10).then(|| vec![Arc::new(slatedb::BloomFilterPolicy::new(bits)) as Arc<dyn slatedb::FilterPolicy>]);
+    }
     Some(vec![Arc::new(slatedb::BloomFilterPolicy::new(bits)) as Arc<dyn slatedb::FilterPolicy>, crate::fx::seqfilter::policy(), crate::fx::seqfilter::cust_policy()])
 }
 
@@ -502,7 +509,9 @@ pub fn writer_settings() -> Settings {
     }
     // step 5b: filters on every SST, however small (slatedb's default is 1,000 keys): the seq-range filter is what lets
     // the merged reader skip an SST at or below its X_d, and an SST without filters is always read
-    s.min_filter_keys = MIN_FILTER_KEYS;
+    if !LEGACY_FILTERS.load(std::sync::atomic::Ordering::Relaxed) {
+        s.min_filter_keys = MIN_FILTER_KEYS;
+    }
     s.compression_codec = crate::tiered::codec();
     s.garbage_collector_options = None;
     s.compactor_options = None;
@@ -942,6 +951,17 @@ impl Tenant {
         match &self.mode {
             Some(Mode::Writer(db)) => db.manifest().l0().iter().map(|v| format!("{:?}", v.sst.id)).collect(),
             _ => Vec::new(),
+        }
+    }
+
+    /// Review of step 5b: the writer's SSTs in its local manifest view, L0 and every sorted run's (None for a reader).
+    pub fn writer_sst_count(&self) -> Option<usize> {
+        match &self.mode {
+            Some(Mode::Writer(db)) => {
+                let m = db.manifest();
+                Some(m.l0().len() + m.compacted().iter().map(|sr| sr.sst_views().len()).sum::<usize>())
+            }
+            _ => None,
         }
     }
 

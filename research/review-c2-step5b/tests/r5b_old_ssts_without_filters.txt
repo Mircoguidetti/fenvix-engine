@@ -1,0 +1,11 @@
+
+running 1 test
+r5b legacy: 4 old SSTs; new binary after the restart: wrong 0, seq filter asked 0, skipped 0, SSTs now Some(4)
+r5b legacy: control on old SSTs only (plus the replayed memtable's flush, if any): wrong 0, skipped 0
+r5b legacy: mixed old and new SSTs (Some(6)): wrong 0, asked 1700, skipped 899
+r5b legacy: control, cut far above X_d on the mixed database: wrong 711
+r5b legacy: rollback reader: wrong 0, seq filter asked 0, skipped 0
+test fx::review5b_tests::r5b_old_ssts_without_filters ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 102 filtered out; finished in 2.31s
+
