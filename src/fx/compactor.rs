@@ -368,6 +368,8 @@ pub struct Compactor {
     /// Drop jobs done when the writer last refreshed its SlateDB manifest (its L0 count, and its stalls, are by its view).
     refreshed_jobs: AtomicU64,
     absorb_lock: tokio::sync::Mutex<()>,
+    /// Benches: the planner starts no job while set (jobs called directly still run).
+    pub paused: AtomicBool,
 }
 
 /// One row of a run or of an absorption.
@@ -410,6 +412,7 @@ impl Compactor {
             running: Mutex::new(Running::default()),
             due_since: Mutex::new(HashMap::new()),
             stopped: AtomicBool::new(false),
+            paused: AtomicBool::new(false),
             drop,
             slate: Mutex::new(None),
             slate_stop: Mutex::new(None),
@@ -1121,7 +1124,7 @@ impl Compactor {
 
     /// Look for work once and start every job that may start (each in its own task, through the pool).
     pub fn tick(self: &Arc<Self>) {
-        if self.stopped.load(Relaxed) {
+        if self.stopped.load(Relaxed) || self.paused.load(Relaxed) {
             return;
         }
         let v = match self.cur.try_lock() {

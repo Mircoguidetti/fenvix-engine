@@ -281,10 +281,15 @@ async fn main() -> Result<()> {
     let lc = Lifecycle::new(Arc::new(tenant_bench::counting::CountingStore::new(Arc::clone(&mem))), None);
     let id = "agent";
     let mut t = lc.create(id).await?;
-    // writes: one saver document per batch, as the server writes it
+    // writes: one saver document per batch, as the server writes it. The first version is built after the first
+    // documents, then the compactor runs (drop on) while the rest is written, as in the server
     let mut model: BTreeMap<Vec<u8>, Vec<u8>> = BTreeMap::new();
     let (mut doc_bytes, mut logical) = (0u64, 0u64);
     let tw = Instant::now();
+    let bo = fx::build::BuildOpts { reseal: fx::build::Reseal::All, group_bytes: 64 << 20, sealed: RunOptions::sealed(CustomerKind::V2), delta: RunOptions::new(64 << 10, 16 << 20, CustomerKind::V2)? };
+    let k = knobs(codec, on);
+    let mut c: Option<Arc<compactor::Compactor>> = None;
+    let first = (recs.len() / 100).clamp(20, 500);
     for (n, r) in recs.iter().enumerate() {
         let (_, rows) = rows_of(r, n as u32)?;
         doc_bytes += r.doc.len() as u64;
@@ -295,23 +300,34 @@ async fn main() -> Result<()> {
         for (k, v) in rows {
             model.insert(k, v);
         }
+        if n + 1 == first {
+            flush(&t).await?;
+            loop {
+                if t.fx_publish(&bo, None).await?.is_some() {
+                    break;
+                }
+                tokio::time::sleep(Duration::from_millis(60)).await;
+            }
+            let cc = compactor::Compactor::start(&mut t, Arc::clone(&mem), k.clone(), fx::pool::Pool::new(2), tokio::runtime::Handle::current()).await?;
+            cc.run();
+            c = Some(cc);
+        }
+        if n % 64 == 0 {
+            t.fx_sync();
+        }
     }
     flush(&t).await?;
     let write_s = tw.elapsed().as_secs_f64();
-    // the first version (step 3's builder), then the compactor: absorb everything, reseal every group
-    let bo = fx::build::BuildOpts { reseal: fx::build::Reseal::All, group_bytes: 64 << 20, sealed: RunOptions::sealed(CustomerKind::V2), delta: RunOptions::new(64 << 10, 16 << 20, CustomerKind::V2)? };
-    loop {
-        if t.fx_publish(&bo, None).await?.is_some() {
-            break;
-        }
-        tokio::time::sleep(Duration::from_millis(60)).await;
-    }
-    let k = knobs(codec, on);
-    let c = compactor::Compactor::start(&mut t, Arc::clone(&mem), k.clone(), fx::pool::Pool::new(2), tokio::runtime::Handle::current()).await?;
+    let c = c.ok_or_else(|| anyhow!("fewer documents than the first version needs"))?;
     // a last write after the publish, so absorption has an L0 SST to take
     t.apply(vec![Op::Put(b"zz/tick".to_vec(), b"1".to_vec())]).await?;
     model.insert(b"zz/tick".to_vec(), b"1".to_vec());
     flush(&t).await?;
+    // the background planner stops starting jobs; wait for the running ones, then every job runs here, in order
+    c.paused.store(true, Relaxed);
+    while !c.idle() {
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
     while c.absorb_once().await? > 0 {}
     while c.merge_once().await? {}
     // reseal passes: the first version's groups cut threads anywhere, so a reseal also takes the neighbour of a
