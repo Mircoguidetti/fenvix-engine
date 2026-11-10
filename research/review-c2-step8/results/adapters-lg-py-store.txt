@@ -1,0 +1,6 @@
+before lg-py-store: 29 passed, 3 failed, 7 skipped
+during lg-py-store: 29 passed, 3 failed, 7 skipped
+  states during:       1 published 
+after-warmup lg-py-store: 29 passed, 3 failed, 7 skipped
+  states before the reported run:       1 committed 
+after lg-py-store: 29 passed, 3 failed, 7 skipped

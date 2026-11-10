@@ -1,0 +1,3 @@
+test fx::compactor_tests::gc_keeps_the_runs_a_fork_reference_names ... fork reference and GC (control false): 0 of 2 runs of v1 deleted; GC deleted 2 runs in all
+fork reference and GC (control true): 2 of 2 runs of v1 deleted; GC deleted 4 runs in all
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 129 filtered out; finished in 8.78s

@@ -4,3 +4,6 @@ test fx::review8_tests::read_ahead_memory_is_bounded ... read-ahead: 64 SSTs of 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 128 filtered out; finished in 2.31s
 test fx::review8_tests::read_ahead_memory_is_bounded ... read-ahead: 160 SSTs of 64 MiB read end to end; RSS before 5 MiB, peak 3096 MiB, after 3096 MiB (held by one merge until it ends)
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 128 filtered out; finished in 8.85s
+test fx::review8_tests::read_ahead_memory_is_bounded ... read-ahead: 160 SSTs of 64 MiB read end to end; RSS before 6 MiB, peak 3096 MiB, after 3096 MiB (held by one merge until it ends)
+the read-ahead holds 3090 MiB after reading 160 SSTs: chunks of SSTs the merge has finished are kept (up to 128 SSTs x 3 chunks)
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 129 filtered out; finished in 7.30s

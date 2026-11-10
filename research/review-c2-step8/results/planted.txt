@@ -1,0 +1,10 @@
+
+running 1 test
+test fx::tests_8::planted_bug_mark_early_is_caught ... control false: 0 problems; None
+control true: 1 problems; Some("run tenants/fx-m8-plant/fx/run/g4/00000000000000002801-m1-b88aa202 listed by migration state 8: corrupt run: 0 bytes")
+planted bug: publish Ok(Some(1)), wrong or failed reads 357 of 2800
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 129 filtered out; finished in 0.80s
+
+rc=0

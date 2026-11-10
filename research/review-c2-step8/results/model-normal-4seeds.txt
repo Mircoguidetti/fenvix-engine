@@ -1,0 +1,23 @@
+
+running 1 test
+test fx::tests_8::migration_model_with_crashes_and_takeovers ... seed 0: St { ops: 8200, wrong: 0, writes: 3611, reads: 2187, ranges: 973, retries: 0, crashes: 33, fail_points: 21, takeovers: 37, zombie_rounds_refused: 1, groups: 34, rounds: 3, publishes: 2, invariant: 0, passes: 524, e0_refused: 1 }
+  published version 1 at op 1691
+  after E0 open: migration Some(RolledBack)
+  published version 93 at op 5017
+seed 1: St { ops: 8000, wrong: 0, writes: 3560, reads: 2093, ranges: 845, retries: 0, crashes: 32, fail_points: 25, takeovers: 36, zombie_rounds_refused: 1, groups: 36, rounds: 4, publishes: 2, invariant: 0, passes: 421, e0_refused: 1 }
+  published version 1 at op 1452
+  after E0 open: migration Some(RolledBack)
+  published version 90 at op 4864
+seed 2: St { ops: 8000, wrong: 0, writes: 3677, reads: 2055, ranges: 878, retries: 0, crashes: 38, fail_points: 33, takeovers: 44, zombie_rounds_refused: 0, groups: 32, rounds: 2, publishes: 1, invariant: 0, passes: 503, e0_refused: 1 }
+  published version 1 at op 1430
+  after E0 open: migration Some(RolledBack)
+seed 3: St { ops: 8000, wrong: 0, writes: 3608, reads: 2038, ranges: 872, retries: 0, crashes: 33, fail_points: 23, takeovers: 39, zombie_rounds_refused: 0, groups: 34, rounds: 1, publishes: 2, invariant: 0, passes: 470, e0_refused: 1 }
+  published version 1 at op 1452
+  after E0 open: migration Some(RolledBack)
+  published version 101 at op 4887
+control "": total: 32200 ops, 136 crashes, 156 takeovers, 102 fail points, 0 wrong, 0 invariant violations
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 129 filtered out; finished in 338.30s
+
+rc=0

@@ -1,0 +1,938 @@
+ Downloading crates ...
+  Downloaded adler2 v2.0.1
+  Downloaded bit-vec v0.8.0
+  Downloaded tikv-jemallocator v0.6.0
+  Downloaded asn1-rs-derive v0.6.0
+  Downloaded cmov v0.5.4
+  Downloaded asn1-rs v0.7.2
+  Downloaded byteorder v1.5.0
+  Downloaded ahash v0.8.12
+  Downloaded funty v2.0.0
+  Downloaded bit-set v0.8.0
+  Downloaded icu_locale_fallback_data v2.4.0
+  Downloaded foldhash v0.1.5
+  Downloaded write16 v1.0.0
+  Downloaded const-oid v0.10.2
+  Downloaded hex v0.4.3
+  Downloaded ctutils v0.4.6
+  Downloaded hmac v0.13.0
+  Downloaded icu_locale_fallback v2.4.0
+  Downloaded lazy_static v1.5.1
+  Downloaded rusticata-macros v4.1.0
+  Downloaded wyz v0.5.1
+  Downloaded serde_bytes v0.11.19
+  Downloaded radium v0.7.0
+  Downloaded relative-path v2.0.3
+  Downloaded snap v1.1.2
+  Downloaded aho-corasick v1.1.5
+  Downloaded data-encoding v2.11.1
+  Downloaded md-5 v0.10.6
+  Downloaded phf v0.12.1
+  Downloaded phf_shared v0.12.1
+  Downloaded rquickjs-core v0.14.0
+  Downloaded sha1 v0.11.0
+  Downloaded simdutf8 v0.1.5
+  Downloaded tap v1.0.1
+  Downloaded asn1-rs-impl v0.2.0
+  Downloaded block-buffer v0.10.4
+  Downloaded minimal-lexical v0.2.1
+  Downloaded sha2 v0.11.1
+  Downloaded simd-adler32 v0.3.10
+  Downloaded utf16_iter v1.0.5
+  Downloaded oid-registry v0.8.1
+  Downloaded time-macros v0.2.32
+  Downloaded num-integer v0.1.47
+  Downloaded pbkdf2 v0.13.0
+  Downloaded rquickjs v0.14.0
+  Downloaded synstructure v0.13.2
+  Downloaded tikv-jemalloc-ctl v0.6.0
+  Downloaded icu_locale v2.4.0
+  Downloaded libm v0.2.16
+  Downloaded nom v7.1.3
+  Downloaded nom v8.0.0
+  Downloaded snafu v0.8.9
+  Downloaded snafu-derive v0.8.9
+  Downloaded flate2 v1.1.10
+  Downloaded base64 v0.22.1
+  Downloaded der-parser v10.0.0
+  Downloaded miniz_oxide v0.9.1
+  Downloaded x509-parser v0.17.0
+  Downloaded crossbeam-channel v0.5.17
+  Downloaded bson v3.1.0
+  Downloaded num-bigint v0.4.8
+  Downloaded bigdecimal v0.4.11
+  Downloaded itertools v0.13.0
+  Downloaded reqwest v0.12.28
+  Downloaded unicode-normalization v0.1.26
+  Downloaded s2 v0.2.0
+  Downloaded quick-xml v0.37.5
+  Downloaded zlib-rs v0.6.8
+  Downloaded fancy-regex v0.20.0
+  Downloaded bitvec v1.1.1
+  Downloaded object_store v0.11.2
+  Downloaded regex-syntax v0.8.11
+  Downloaded hdrhistogram v7.6.0
+  Downloaded icu_collator_data v2.4.0
+  Downloaded regex-automata v0.4.18
+  Downloaded chrono-tz v0.10.4
+  Downloaded tikv-jemalloc-sys v0.6.1+5.3.0-1-ge13ca993e8ccb9ba9847cc330696e02839f328f7
+  Downloaded icu_collator v2.4.0
+  Downloaded icu_locale_data v2.4.0
+  Downloaded rquickjs-sys v0.14.0
+  Downloaded rust-stemmers v1.2.0
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling libc v0.2.191
+   Compiling cfg-if v1.0.5
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+   Compiling syn v3.0.9
+   Compiling jobserver v0.1.35
+   Compiling find-msvc-tools v0.1.15
+   Compiling shlex v2.0.1
+   Compiling memchr v2.8.3
+   Compiling cc v1.10.0
+   Compiling syn v2.0.119
+   Compiling smallvec v1.16.4
+   Compiling pin-project-lite v0.2.17
+   Compiling autocfg v1.5.1
+   Compiling version_check v0.9.5
+   Compiling parking_lot_core v0.9.12
+   Compiling pkg-config v0.3.34
+   Compiling equivalent v1.0.3
+   Compiling allocator-api2 v0.2.21
+   Compiling synstructure v0.14.0
+   Compiling scopeguard v1.2.0
+   Compiling lock_api v0.4.14
+   Compiling errno v0.3.14
+   Compiling parking_lot v0.12.5
+   Compiling foldhash v0.2.0
+   Compiling stable_deref_trait v1.2.1
+   Compiling futures-core v0.3.34
+   Compiling hashbrown v0.17.1
+   Compiling serde_derive v1.0.229
+   Compiling displaydoc v0.2.7
+   Compiling zerofrom-derive v0.1.8
+   Compiling yoke-derive v0.8.4
+   Compiling tokio-macros v2.7.2
+   Compiling zerofrom v0.1.8
+   Compiling signal-hook-registry v1.4.8
+   Compiling yoke v0.8.4
+   Compiling mio v1.2.4
+   Compiling socket2 v0.6.5
+   Compiling zerovec-derive v0.11.7
+   Compiling once_cell v1.21.4
+   Compiling futures-sink v0.3.34
+   Compiling futures-channel v0.3.34
+   Compiling zerovec v0.11.9
+   Compiling futures-macro v0.3.34
+   Compiling num-traits v0.2.19
+   Compiling futures-task v0.3.34
+   Compiling writeable v0.6.4
+   Compiling slab v0.4.12
+   Compiling futures-io v0.3.34
+   Compiling itoa v1.0.18
+   Compiling bytes v1.12.1
+   Compiling typenum v1.20.1
+   Compiling futures-util v0.3.34
+   Compiling tokio v1.54.1
+   Compiling tinystr v0.8.5
+   Compiling cmake v0.1.58
+   Compiling litemap v0.8.3
+   Compiling fs_extra v1.3.0
+   Compiling dunce v1.0.5
+   Compiling icu_locale_core v2.4.0
+   Compiling aws-lc-sys v0.46.0
+   Compiling potential_utf v0.1.6
+   Compiling zerotrie v0.2.5
+   Compiling log v0.4.34
+   Compiling icu_provider v2.4.0
+   Compiling indexmap v2.14.2
+   Compiling getrandom v0.2.17
+   Compiling utf8_iter v1.0.4
+   Compiling bitflags v2.13.2
+   Compiling icu_collections v2.4.0
+   Compiling tracing-core v0.1.36
+   Compiling tracing-attributes v0.1.31
+   Compiling ring v0.17.14
+   Compiling aws-lc-rs v1.18.2
+   Compiling zeroize v1.9.1
+   Compiling zerocopy v0.8.63
+   Compiling icu_normalizer_data v2.4.0
+   Compiling icu_properties_data v2.4.0
+   Compiling tracing v0.1.44
+   Compiling http v1.5.0
+   Compiling rand_core v0.10.1
+   Compiling getrandom v0.4.3
+   Compiling rustls-pki-types v1.15.1
+   Compiling cpufeatures v0.3.1
+   Compiling percent-encoding v2.3.2
+   Compiling write16 v1.0.0
+   Compiling foldhash v0.1.5
+   Compiling untrusted v0.9.0
+   Compiling utf16_iter v1.0.5
+   Compiling icu_normalizer v2.4.0
+   Compiling hashbrown v0.15.5
+   Compiling icu_properties v2.4.0
+   Compiling http-body v1.1.0
+   Compiling generic-array v0.14.7
+   Compiling getrandom v0.3.4
+   Compiling httparse v1.10.1
+   Compiling rustls v0.23.46
+   Compiling either v1.19.0
+   Compiling tokio-util v0.7.20
+   Compiling ppv-lite86 v0.2.21
+   Compiling hybrid-array v0.4.15
+   Compiling try-lock v0.2.5
+   Compiling atomic-waker v1.1.2
+   Compiling tower-service v0.3.3
+   Compiling subtle v2.6.1
+   Compiling thiserror v2.0.21
+   Compiling fnv v1.0.7
+   Compiling zmij v1.0.23
+   Compiling h2 v0.4.20
+   Compiling want v0.3.2
+   Compiling idna_adapter v1.2.2
+   Compiling form_urlencoded v1.2.2
+   Compiling chacha20 v0.10.2
+   Compiling thiserror-impl v2.0.21
+   Compiling cmov v0.5.4
+   Compiling serde_json v1.0.154
+   Compiling openssl-probe v0.2.1
+   Compiling rustls-native-certs v0.8.5
+   Compiling ctutils v0.4.6
+   Compiling rand v0.10.3
+   Compiling idna v1.1.0
+   Compiling crypto-common v0.2.2
+   Compiling hyper v1.12.0
+   Compiling block-buffer v0.12.1
+   Compiling sync_wrapper v1.0.2
+   Compiling crossbeam-utils v0.8.23
+   Compiling const-oid v0.10.2
+   Compiling base64 v0.23.1
+   Compiling ipnet v2.12.2
+   Compiling ryu v1.0.23
+   Compiling tower-layer v0.3.3
+   Compiling tower v0.5.3
+   Compiling hyper-util v0.1.21
+   Compiling digest v0.11.3
+   Compiling url v2.5.8
+   Compiling rand_core v0.9.5
+   Compiling block-buffer v0.10.4
+   Compiling crypto-common v0.1.7
+   Compiling itertools v0.15.0
+   Compiling zstd-sys v2.1.2+zstd.1.5.7
+   Compiling num-conv v0.2.2
+   Compiling time-core v0.1.9
+   Compiling time-macros v0.2.32
+   Compiling digest v0.10.7
+   Compiling tower-http v0.6.11
+   Compiling http-body-util v0.1.5
+   Compiling proc-macro2-diagnostics v0.10.1
+   Compiling deranged v0.5.9
+   Compiling anyhow v1.0.104
+   Compiling semver v1.0.28
+   Compiling iana-time-zone v0.1.65
+   Compiling powerfmt v0.2.1
+   Compiling time v0.3.55
+   Compiling chrono v0.4.45
+   Compiling rustc_version v0.4.1
+   Compiling rand_chacha v0.9.0
+   Compiling serde_urlencoded v0.7.1
+   Compiling memoffset v0.9.1
+   Compiling cfg_aliases v0.2.2
+   Compiling yansi v1.0.1
+   Compiling zstd-safe v7.3.0
+   Compiling paste v1.0.15
+   Compiling same-file v1.0.6
+   Compiling walkdir v2.5.0
+   Compiling nix v0.31.3
+   Compiling rand v0.9.5
+   Compiling twox-hash v2.1.5
+   Compiling pin-project-internal v1.1.13
+   Compiling async-trait v0.1.92
+   Compiling lz4-sys v1.11.1+lz4-1.10.0
+   Compiling heck v0.5.0
+   Compiling rustix v1.1.5
+   Compiling crc32fast v1.5.3
+   Compiling humantime v2.4.0
+   Compiling pin-project v1.1.13
+   Compiling mixtrics v0.2.6
+   Compiling foyer-tokio v0.22.6
+   Compiling futures-executor v0.3.34
+   Compiling bincode v1.3.3
+   Compiling spin v0.10.1
+   Compiling io-uring v0.7.15
+   Compiling linux-raw-sys v0.12.1
+   Compiling minimal-lexical v0.2.1
+   Compiling nom v7.1.3
+   Compiling crc-fast v1.10.0
+   Compiling foyer-common v0.22.6
+   Compiling futures v0.3.34
+   Compiling foyer-intrusive-collections v0.10.0-dev
+   Compiling md-5 v0.11.0
+   Compiling rand_core v0.6.4
+   Compiling num-integer v0.1.47
+   Compiling toml_datetime v0.6.11
+   Compiling quick-xml v0.41.0
+   Compiling serde_spanned v0.6.9
+   Compiling synstructure v0.13.2
+   Compiling tikv-jemalloc-sys v0.6.1+5.3.0-1-ge13ca993e8ccb9ba9847cc330696e02839f328f7
+   Compiling uncased v0.9.10
+   Compiling num_cpus v1.17.0
+   Compiling datasketches v0.3.0
+   Compiling rust_decimal v1.43.0
+   Compiling base64 v0.22.1
+   Compiling icu_locale_fallback_data v2.4.0
+   Compiling utf8parse v0.2.2
+   Compiling small_ctor v0.1.2
+   Compiling toml_write v0.1.2
+   Compiling siphasher v1.0.4
+   Compiling thiserror v1.0.69
+   Compiling crossbeam-epoch v0.9.21
+   Compiling parking v2.2.1
+   Compiling web-time v1.1.0
+   Compiling winnow v0.7.15
+   Compiling asyncband v0.7.4
+   Compiling foyer-memory v0.22.6
+   Compiling toml_edit v0.22.27
+   Compiling event-listener v5.4.2
+   Compiling rustls-webpki v0.103.16
+   Compiling fastant v0.1.11
+   Compiling anstyle-parse v1.0.0
+   Compiling core_affinity v0.8.3
+   Compiling tokio-rustls v0.26.6
+   Compiling hyper-rustls v0.27.10
+   Compiling rustls-platform-verifier v0.7.1
+   Compiling reqwest v0.13.5
+   Compiling zstd v0.13.3
+   Compiling asn1-rs-derive v0.6.0
+   Compiling num-bigint v0.4.8
+   Compiling object_store v0.14.2
+   Compiling rand_chacha v0.3.1
+   Compiling lz4 v1.28.1
+   Compiling fs4 v0.13.1
+   Compiling rusticata-macros v4.1.0
+   Compiling pear_codegen v0.2.9
+   Compiling flatbuffers v25.12.19
+   Compiling rand_xoshiro v0.7.0
+   Compiling asn1-rs-impl v0.2.0
+   Compiling thiserror-impl v1.0.69
+   Compiling rquickjs-sys v0.14.0
+   Compiling figment v0.10.19
+   Compiling thread_local v1.1.10
+   Compiling libm v0.2.16
+   Compiling adler2 v2.0.1
+   Compiling colorchoice v1.0.5
+   Compiling radium v0.7.0
+   Compiling foyer v0.22.6
+   Compiling inlinable_string v0.1.15
+   Compiling anstyle v1.0.14
+   Compiling arrayvec v0.7.8
+   Compiling simd-adler32 v0.3.10
+   Compiling heck v0.4.1
+   Compiling unsafe-libyaml v0.2.11
+   Compiling anstyle-query v1.1.5
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling anstream v1.0.0
+   Compiling serde_yaml v0.9.34+deprecated
+   Compiling ouroboros_macro v0.18.5
+   Compiling miniz_oxide v0.9.1
+   Compiling pear v0.2.9
+   Compiling slatedb-common v0.17.0
+   Compiling asn1-rs v0.7.2
+   Compiling foyer-storage v0.22.6
+   Compiling rand v0.8.8
+   Compiling toml v0.8.23
+   Compiling event-listener-strategy v0.5.4
+   Compiling snafu-derive v0.8.9
+   Compiling crc32c v0.6.9
+   Compiling concurrent-queue v2.5.0
+   Compiling uuid v1.29.0
+   Compiling ahash v0.8.12
+   Compiling bigdecimal v0.4.11
+   Compiling tap v1.0.1
+   Compiling strsim v0.11.1
+   Compiling oid-registry v0.8.1
+   Compiling icu_collator_data v2.4.0
+   Compiling fastrand v2.5.0
+   Compiling icu_locale_data v2.4.0
+   Compiling static_assertions v1.1.0
+   Compiling bytemuck v1.25.2
+   Compiling clap_lex v1.1.1
+   Compiling winnow v0.6.26
+   Compiling aliasable v0.1.3
+   Compiling ouroboros v0.18.5
+   Compiling clap_builder v4.6.7
+   Compiling duration-str v0.11.3
+   Compiling atomic v0.6.1
+   Compiling backon v1.6.0
+   Compiling wyz v0.5.1
+   Compiling async-channel v2.5.0
+   Compiling snafu v0.8.9
+   Compiling crossbeam-skiplist v0.1.3
+   Compiling icu_locale_fallback v2.4.0
+   Compiling slatedb-txn-obj v0.17.0
+   Compiling flate2 v1.1.10
+   Compiling reqwest v0.12.28
+   Compiling phf_shared v0.12.1
+   Compiling clap_derive v4.6.7
+   Compiling lz4_flex v0.11.6
+   Compiling ulid v1.2.1
+   Compiling fail-parallel v0.6.0
+   Compiling crossbeam-channel v0.5.17
+   Compiling md-5 v0.10.6
+   Compiling itertools v0.13.0
+   Compiling quick-xml v0.37.5
+   Compiling lru v0.18.5
+   Compiling sysinfo v0.35.2
+   Compiling nom v8.0.0
+   Compiling aho-corasick v1.1.5
+   Compiling byteorder v1.5.0
+   Compiling dotenvy v0.15.7
+   Compiling chrono-tz v0.10.4
+   Compiling snap v1.1.2
+   Compiling funty v2.0.0
+   Compiling bit-vec v0.8.0
+   Compiling regex-syntax v0.8.11
+   Compiling regex-automata v0.4.18
+   Compiling bit-set v0.8.0
+   Compiling bitvec v1.1.1
+   Compiling slatedb v0.17.0
+   Compiling hdrhistogram v7.6.0
+   Compiling object_store v0.11.2
+   Compiling rquickjs-core v0.14.0
+   Compiling clap v4.6.7
+   Compiling phf v0.12.1
+   Compiling tikv-jemallocator v0.6.0
+   Compiling der-parser v10.0.0
+   Compiling hmac v0.13.0
+   Compiling serde_bytes v0.11.19
+   Compiling tinyvec v1.13.3
+   Compiling hex v0.4.3
+   Compiling data-encoding v2.11.1
+   Compiling simdutf8 v0.1.5
+   Compiling lazy_static v1.5.1
+   Compiling x509-parser v0.17.0
+   Compiling bson v3.1.0
+   Compiling tenant-bench v0.1.0 (/home/user/judge-5fe0216)
+warning: unused import: `std::sync::atomic::Ordering::Relaxed`
+    --> src/lifecycle.rs:1424:13
+     |
+1424 |         use std::sync::atomic::Ordering::Relaxed;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling unicode-normalization v0.1.26
+   Compiling pbkdf2 v0.13.0
+   Compiling icu_locale v2.4.0
+   Compiling icu_collator v2.4.0
+   Compiling quaderno v0.1.0 (/home/user/judge-5fe0216/proto/quaderno)
+warning: value assigned to `w0` is never read
+   --> proto/quaderno/src/node.rs:975:18
+    |
+975 |             let (mut w0, mut c0) = (Instant::now(), 0);
+    |                  ^^^^^^ this value is reassigned later and never used
+...
+979 |                     (w0, c0) = (Instant::now(), thread_cpu_us());
+    |                      -- `w0` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `c0` is never read
+   --> proto/quaderno/src/node.rs:975:26
+    |
+975 |             let (mut w0, mut c0) = (Instant::now(), 0);
+    |                          ^^^^^^ this value is reassigned later and never used
+...
+979 |                     (w0, c0) = (Instant::now(), thread_cpu_us());
+    |                          -- `c0` is overwritten here before the previous value is read
+
+warning: value assigned to `cur_end` is never read
+   --> proto/quaderno/src/store.rs:223:33
+    |
+223 | ...                       cur_end = 0;
+    |                           ^^^^^^^^^^^ this value is reassigned later and never used
+...
+230 | ...                   cur_end = off + buf.len() as u64;
+    |                       -------------------------------- `cur_end` is overwritten here before the previous value is read
+
+   Compiling tikv-jemalloc-ctl v0.6.0
+   Compiling s2 v0.2.0
+   Compiling rquickjs v0.14.0
+   Compiling fancy-regex v0.20.0
+   Compiling sha2 v0.11.1
+   Compiling sha1 v0.11.0
+   Compiling rust-stemmers v1.2.0
+warning: `quaderno` (lib) generated 3 warnings
+warning: `tenant-bench` (lib) generated 1 warning (run `cargo fix --lib -p tenant-bench` to apply 1 suggestion)
+   Compiling mongo-server v0.1.0 (/home/user/judge-5fe0216/mongo-server)
+warning: unused import: `path_values`
+ --> mongo-server/src/agg.rs:6:85
+  |
+6 | use crate::query::{self, compare, is_number, matches, parse_projection, parse_sort, path_values, project, sort_docs};
+  |                                                                                     ^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `base64::engine::general_purpose::STANDARD as B64`
+ --> mongo-server/src/auth.rs:9:5
+  |
+9 | use base64::engine::general_purpose::STANDARD as B64;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `base64::Engine`
+  --> mongo-server/src/auth.rs:10:5
+   |
+10 | use base64::Engine;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `crate::agg::run_pipeline`
+ --> mongo-server/src/cmd.rs:3:5
+  |
+3 | use crate::agg::run_pipeline;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `doc_prefix`, `encode_sortable`, and `index_key`
+ --> mongo-server/src/cmd.rs:6:21
+  |
+6 | use crate::layout::{doc_prefix, encode_sortable, index_key};
+  |                     ^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused imports: `id_equality`, `parse_projection`, `parse_sort`, `path_values`, `project`, `self`, and `sort_docs`
+ --> mongo-server/src/cmd.rs:7:20
+  |
+7 | use crate::query::{self, id_equality, matches, parse_projection, parse_sort, path_values, project, sort_docs};
+  |                    ^^^^  ^^^^^^^^^^^           ^^^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^
+
+warning: unused imports: `apply_update`, `fmt_doc`, and `upsert_document`
+ --> mongo-server/src/cmd.rs:8:21
+  |
+8 | use crate::update::{apply_update, fmt_doc, upsert_document};
+  |                     ^^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^^
+
+warning: unused imports: `parse_projection` and `project`
+  --> mongo-server/src/cmd_data.rs:12:26
+   |
+12 | use crate::query::{self, parse_projection, parse_sort, path_values, project, sort_docs};
+   |                          ^^^^^^^^^^^^^^^^                           ^^^^^^^
+
+warning: unused import: `Hint`
+ --> mongo-server/src/cmd_index.rs:5:72
+  |
+5 | use crate::coll::{decode, find_docs, plan_for, resolve_hint, FindOpts, Hint};
+  |                                                                        ^^^^
+
+warning: unused import: `valid_db_name`
+ --> mongo-server/src/cmd_index.rs:7:18
+  |
+7 | use crate::dbs::{valid_db_name, Dbs, Entry};
+  |                  ^^^^^^^^^^^^^
+
+warning: unused import: `encode_sortable`
+  --> mongo-server/src/cmd_index.rs:11:33
+   |
+11 | use crate::layout::{doc_prefix, encode_sortable, idx_collection_prefix, index_key};
+   |                                 ^^^^^^^^^^^^^^^
+
+warning: unused import: `path_values`
+  --> mongo-server/src/cmd_index.rs:12:32
+   |
+12 | use crate::query::{parse_sort, path_values};
+   |                                ^^^^^^^^^^^
+
+warning: unused import: `is_number`
+ --> mongo-server/src/expr.rs:8:44
+  |
+8 | use crate::query::{as_f64, compare, equal, is_number};
+  |                                            ^^^^^^^^^
+
+warning: unnecessary parentheses around match arm expression
+   --> mongo-server/src/expr/dates.rs:142:28
+    |
+142 |                 "$week" => ((l.ordinal0() as i32 + 7 - wd_sun) / 7),
+    |                            ^                                      ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+142 -                 "$week" => ((l.ordinal0() as i32 + 7 - wd_sun) / 7),
+142 +                 "$week" => (l.ordinal0() as i32 + 7 - wd_sun) / 7,
+    |
+
+warning: unused import: `BTreeSet`
+  --> mongo-server/src/index.rs:16:34
+   |
+16 | use std::collections::{BTreeMap, BTreeSet, HashMap};
+   |                                  ^^^^^^^^
+
+warning: unused import: `doc`
+  --> mongo-server/src/wild.rs:14:12
+   |
+14 | use bson::{doc, Bson, Document};
+   |            ^^^
+
+warning: variable does not need to be mutable
+   --> mongo-server/src/cmd_index.rs:816:21
+    |
+816 |                 let mut r = run_builds(&self.dbs, db, coll).await;
+    |                     ----^
+    |                     |
+    |                     help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `ObjectStoreExt`
+  --> mongo-server/src/ttl.rs:12:33
+   |
+12 | use object_store::{ObjectStore, ObjectStoreExt};
+   |                                 ^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> mongo-server/src/agg_more.rs:764:13
+    |
+764 |         let mut emit_grid_upto = |limit: Option<&Bson>, out: &mut Vec<Document>, gi: &mut usize, inclusive_skip: Option<&Bson>| {
+    |             ----^^^^^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> mongo-server/src/changes.rs:383:9
+    |
+383 |     let mut note = |p: &str, updated: &mut Document, removed: &mut Vec<Bson>| {
+    |         ----^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: unused variable: `detail`
+   --> mongo-server/src/ctl/pitr.rs:333:74
+    |
+333 | ...te::dbs::Entry, db: &str, detail: &Value, target: i64, opid: &str, pid: uuid::Uuid, apply: bool) -> ApiResult<Value> {
+    |                              ^^^^^^ help: if this is intentional, prefix it with an underscore: `_detail`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `batch_bytes` is never read
+   --> mongo-server/src/ctl/pitr.rs:465:17
+    |
+465 |                 batch_bytes = 0;
+    |                 ^^^^^^^^^^^^^^^
+...
+515 |     flush!();
+    |     -------- in this macro invocation
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+    = note: this warning originates in the macro `flush` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: value assigned to `applying` is never read
+   --> mongo-server/src/ctl/pitr.rs:462:21
+    |
+462 |                     applying = true;
+    |                     ^^^^^^^^^^^^^^^
+...
+515 |     flush!();
+    |     -------- in this macro invocation
+    |
+    = help: maybe it is overwritten before being read?
+    = note: this warning originates in the macro `flush` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unused variable: `asc`
+   --> mongo-server/src/index.rs:380:16
+    |
+380 |     for (path, asc) in t.prefix.iter().chain(t.suffix.iter()) {
+    |                ^^^ help: if this is intentional, prefix it with an underscore: `_asc`
+
+warning: variable does not need to be mutable
+   --> mongo-server/src/text.rs:418:9
+    |
+418 |     let mut uniq = |ts: Vec<String>| -> Vec<String> {
+    |         ----^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> mongo-server/src/update.rs:162:9
+    |
+162 |     let mut add = |path: &str, seen: &mut Vec<Vec<String>>| -> R<()> {
+    |         ----^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: function `add_numbers` is never used
+  --> mongo-server/src/agg.rs:12:4
+   |
+12 | fn add_numbers(a: &Bson, b: &Bson) -> Bson {
+   |    ^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `int` is never used
+  --> mongo-server/src/agg.rs:26:4
+   |
+26 | fn int(v: &Bson) -> i64 {
+   |    ^^^
+
+warning: function `loc_key_of_suffix` is never used
+   --> mongo-server/src/custkey.rs:238:8
+    |
+238 | pub fn loc_key_of_suffix(coll: &str, timed: bool, suf: &[u8]) -> Option<Vec<u8>> {
+    |        ^^^^^^^^^^^^^^^^^
+
+warning: function `to_logical` is never used
+   --> mongo-server/src/custkey.rs:405:8
+    |
+405 | pub fn to_logical(p: &[u8]) -> Option<Vec<u8>> {
+    |        ^^^^^^^^^^
+
+warning: variant `Reader` is never constructed
+  --> mongo-server/src/layout2.rs:27:5
+   |
+20 | pub enum Raw<'a> {
+   |          --- variant in this enum
+...
+27 |     Reader(&'a slatedb::DbReader, Option<u64>),
+   |     ^^^^^^
+
+warning: function `reader_env` is never used
+  --> mongo-server/src/layout2.rs:34:14
+   |
+34 | pub async fn reader_env(r: &slatedb::DbReader) -> Result<Option<u64>> {
+   |              ^^^^^^^^^^
+
+warning: methods `bytes` and `entries` are never used
+   --> mongo-server/src/opening.rs:174:12
+    |
+169 | impl Opening {
+    | ------------ methods in this implementation
+...
+174 |     pub fn bytes(&self) -> usize {
+    |            ^^^^^
+...
+178 |     pub fn entries(&self) -> usize {
+    |            ^^^^^^^
+
+warning: field `coll` is never read
+  --> mongo-server/src/prefetch.rs:52:5
+   |
+45 | struct Window {
+   |        ------ field in this struct
+...
+52 |     coll: String,
+   |     ^^^^
+
+warning: function `counts` is never used
+   --> mongo-server/src/capped.rs:146:14
+    |
+146 | pub async fn counts(g: &mut Entry, coll: &str) -> anyhow::Result<(i64, i64)> {
+    |              ^^^^^^
+
+warning: field `closed` is never read
+  --> mongo-server/src/cmd_changes.rs:38:9
+   |
+26 | pub struct ChangeCursor {
+   |            ------------ field in this struct
+...
+38 |     pub closed: bool,
+   |         ^^^^^^
+
+warning: field `stored` is never read
+   --> mongo-server/src/collation.rs:319:5
+    |
+316 | struct Parsed {
+    |        ------ field in this struct
+...
+319 |     stored: Document,
+    |     ^^^^^^
+
+warning: struct `Plan` is never constructed
+   --> mongo-server/src/ctl/pitr.rs:225:12
+    |
+225 | pub struct Plan {
+    |            ^^^^
+
+warning: field `marks` is never read
+   --> mongo-server/src/ctl/usage.rs:116:5
+    |
+111 | struct Inner {
+    |        ----- field in this struct
+...
+116 |     marks: HashMap<String, Counts>,
+    |     ^^^^^
+
+warning: method `mark` is never used
+   --> mongo-server/src/ctl/usage.rs:245:12
+    |
+146 | impl Usage {
+    | ---------- method in this implementation
+...
+245 |     pub fn mark(&self, db: &str) {
+    |            ^^^^
+
+warning: method `opts_cached` is never used
+    --> mongo-server/src/dbs.rs:1253:12
+     |
+ 469 | impl Entry {
+     | ---------- method in this implementation
+...
+1253 |     pub fn opts_cached(&self, coll: &str) -> Option<Arc<crate::collopts::CollOpts>> {
+     |            ^^^^^^^^^^^
+
+warning: associated function `duplicate_key` is never used
+  --> mongo-server/src/error.rs:48:12
+   |
+13 | impl MongoError {
+   | --------------- associated function in this implementation
+...
+48 |     pub fn duplicate_key(ns: &str, index: &str, pattern: &Document, value: &Document) -> Self {
+   |            ^^^^^^^^^^^^^
+
+warning: function `next_waiter` is never used
+   --> mongo-server/src/fair.rs:551:4
+    |
+551 | fn next_waiter(g: &mut Gate) -> Option<GateWaiter> {
+    |    ^^^^^^^^^^^
+
+warning: function `date_to_string` is never used
+   --> mongo-server/src/expr.rs:941:4
+    |
+941 | fn date_to_string(arg: &Bson, sc: &Scope) -> R<Option<Bson>> {
+    |    ^^^^^^^^^^^^^^
+
+warning: method `key_value` is never used
+   --> mongo-server/src/index.rs:335:12
+    |
+ 83 | impl IndexDef {
+    | ------------- method in this implementation
+...
+335 |     pub fn key_value(&self, d: &Document) -> Document {
+    |            ^^^^^^^^^
+
+warning: function `id_enc` is never used
+    --> mongo-server/src/index.rs:1316:8
+     |
+1316 | pub fn id_enc(id: &Bson) -> Vec<u8> {
+     |        ^^^^^^
+
+warning: function `index_summary` is never used
+    --> mongo-server/src/index.rs:1367:8
+     |
+1367 | pub fn index_summary(idx: &IndexDef) -> Document {
+     |        ^^^^^^^^^^^^^
+
+warning: function `drop_prefixes` is never used
+  --> mongo-server/src/natural.rs:69:8
+   |
+69 | pub fn drop_prefixes(coll: &str) -> Vec<Vec<u8>> {
+   |        ^^^^^^^^^^^^^
+
+warning: method `db_connections` is never used
+   --> mongo-server/src/netguard.rs:616:12
+    |
+421 | impl NetGuard {
+    | ------------- method in this implementation
+...
+616 |     pub fn db_connections(&self, db: &str) -> u32 {
+    |            ^^^^^^^^^^^^^^
+
+warning: method `push_at` is never used
+   --> mongo-server/src/query.rs:972:12
+    |
+959 | impl<'a> TopK<'a> {
+    | ----------------- method in this implementation
+...
+972 |     pub fn push_at(&mut self, seq: u64, doc: Document) {
+    |            ^^^^^^^
+
+warning: methods `needs_geo_near` and `needs_text_score` are never used
+    --> mongo-server/src/query.rs:1229:12
+     |
+1228 | impl Projection {
+     | --------------- methods in this implementation
+1229 |     pub fn needs_geo_near(&self) -> bool {
+     |            ^^^^^^^^^^^^^^
+...
+1233 |     pub fn needs_text_score(&self) -> bool {
+     |            ^^^^^^^^^^^^^^^^
+
+warning: method `is_point_like` is never used
+   --> mongo-server/src/geo.rs:451:12
+    |
+435 | impl Shape {
+    | ---------- method in this implementation
+...
+451 |     pub fn is_point_like(&self) -> bool {
+    |            ^^^^^^^^^^^^^
+
+warning: function `point_doc` is never used
+   --> mongo-server/src/geo.rs:931:8
+    |
+931 | pub fn point_doc(v: &V) -> Bson {
+    |        ^^^^^^^^^
+
+warning: field `lang` is never read
+   --> mongo-server/src/text.rs:362:9
+    |
+355 | pub struct TextQuery {
+    |            --------- field in this struct
+...
+362 |     pub lang: Option<Lang>,
+    |         ^^^^
+    |
+    = note: `TextQuery` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: function `as_f64` is never used
+  --> mongo-server/src/wild.rs:23:4
+   |
+23 | fn as_f64(v: &Bson) -> Option<f64> {
+   |    ^^^^^^
+
+warning: function `put_str` is never used
+  --> mongo-server/src/wild.rs:33:4
+   |
+33 | fn put_str(out: &mut Vec<u8>, s: &str) {
+   |    ^^^^^^^
+
+warning: constant `NO_CTX` is never used
+   --> mongo-server/src/update.rs:194:7
+    |
+194 | const NO_CTX: PosCtx<'static> = PosCtx { filter: None, array_filters: &[] };
+    |       ^^^^^^
+
+warning: function `apply_update` is never used
+   --> mongo-server/src/update.rs:880:8
+    |
+880 | pub fn apply_update(old: &Document, update: &Document) -> R<Document> {
+    |        ^^^^^^^^^^^^
+
+warning: function `upsert_document` is never used
+   --> mongo-server/src/update.rs:941:8
+    |
+941 | pub fn upsert_document(filter: &Document, update: &Document) -> R<Document> {
+    |        ^^^^^^^^^^^^^^^
+
+warning: function `read_request` is never used
+  --> mongo-server/src/wire.rs:57:14
+   |
+57 | pub async fn read_request<R: AsyncRead + Unpin>(r: &mut R) -> Result<Option<Request>> {
+   |              ^^^^^^^^^^^^
+
+warning: field `on_given` is never read
+   --> mongo-server/src/xdb.rs:224:9
+    |
+218 | pub struct MergeSpec {
+    |            --------- field in this struct
+...
+224 |     pub on_given: bool,
+    |         ^^^^^^^^
+
+warning: function `ok_doc` is never used
+   --> mongo-server/src/xdb.rs:339:8
+    |
+339 | pub fn ok_doc() -> Document {
+    |        ^^^^^^
+
+warning: `mongo-server` (bin "mongo-server") generated 62 warnings (run `cargo fix --bin "mongo-server" -p mongo-server` to apply 23 suggestions)
+    Finished `release` profile [optimized] target(s) in 5m 49s
