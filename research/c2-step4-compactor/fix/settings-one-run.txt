@@ -1,0 +1,14 @@
+replay: mode ours, ratio 1tb, D 1024 MiB, L0 8192 bytes, measured 0.2 D after a warm-up of 0.1 D, seed 42
+loaded 1024 MiB in 22.6 s
+first version built: 45 groups
+  20 s: 1109 MiB written, L0 max 69, groups 45, delta runs 9, reseals 1, merges 224, absorbs 681, drop jobs 660
+measured window starts at 1126 MiB written
+  40 s: 1174 MiB written, L0 max 69, groups 45, delta runs 12, reseals 5, merges 487, absorbs 1473, drop jobs 1522
+  60 s: 1248 MiB written, L0 max 69, groups 46, delta runs 10, reseals 36, merges 802, absorbs 2416, drop jobs 2406
+  80 s: 1315 MiB written, L0 max 69, groups 46, delta runs 10, reseals 41, merges 1099, absorbs 3307, drop jobs 3228
+RESULT mode ours ratio 1tb D 1024 MiB L0 8192 B: inserted 204.8 MiB raw in the window (5.34 compressed days), L0 flushes 156.1 MiB, SlateDB compaction 2619.1 MiB, our runs 1298.2 MiB, WAL 134.5 MiB, our manifests 91.6 MiB
+RESULT SlateDB side: 16.77 bytes written per flushed byte; mean L0 54.33, mean sorted runs 1.00 (fold_at_l0 6, max runs 6, one run true)
+RESULT amplification 26.09 (stored bytes written per stored byte flushed to L0); L0 max 69; longest write 3146 ms; window 63 s, process CPU 140 s
+RESULT ours, raw rows: amplification 10.77 = 1 (L0) + delta 5.87 (absorb + merges) + reseals 3.90; reseals 43, splits 2, group merges 0, merges 1225, absorbs 3685, groups 47, delta runs 10 holding 239.5 MiB raw; job CPU 30.2 s, 14.4 s per GiB written by our jobs
+RESULT formula for these parameters: 1 + 7.00 delta writes + 5.00 reseal = 13.00 (the plan's formula at full size: 13 at 1 TB, 15 at 10 TB)
+RESULT drop: jobs 3549, rows dropped 2460459, rows kept 14689684, GC runs deleted 4689, versions deleted 4747

@@ -69,7 +69,7 @@ pub struct BuildReport {
 }
 
 fn line(m: &runfmt::RunMeta) -> RunLine {
-    RunLine { path: m.path.clone(), size: m.size, id: hex(&m.run_id), min_seq: m.min_seq, max_seq: m.max_seq, first: hex(&m.first_key), last: hex(&m.last_key), entries: m.entries }
+    RunLine { path: m.path.clone(), size: m.size, id: hex(&m.run_id), min_seq: m.min_seq, max_seq: m.max_seq, first: hex(&m.first_key), last: hex(&m.last_key), entries: m.entries, raw: m.raw_bytes, local: false }
 }
 
 /// A run writer opened on its first row (a run with no row is not written).
@@ -150,7 +150,7 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
     let mut gi = 0usize;
     let mut g_bytes = 0u64;
     if cur.is_none() {
-        groups.push(GroupLine { id: next_group_id, lo: String::new(), x_g: x, sealed: None });
+        groups.push(GroupLine { id: next_group_id, lo: String::new(), x_g: x, sealed: None, unsealed: 0, unsealed_since_ms: 0, sealed_ms: 0 });
         next_group_id += 1;
     }
     let path_of = |gid: u32| manifest::run_path(id, &format!("g{gid}"), x, epoch);
@@ -165,7 +165,7 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
             Some(_) => bounds.partition_point(|lo| &lo[..] <= &kv.key[..]).saturating_sub(1),
             None => {
                 if g_bytes >= opts.group_bytes {
-                    groups.push(GroupLine { id: next_group_id, lo: hex(&kv.key), x_g: x, sealed: None });
+                    groups.push(GroupLine { id: next_group_id, lo: hex(&kv.key), x_g: x, sealed: None, unsealed: 0, unsealed_since_ms: 0, sealed_ms: 0 });
                     next_group_id += 1;
                     g_bytes = 0;
                     groups.len() - 1
@@ -217,6 +217,9 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
         rep.resealed += 1;
         groups[g].x_g = x;
         groups[g].sealed = l;
+        groups[g].unsealed = 0;
+        groups[g].unsealed_since_ms = 0;
+        groups[g].sealed_ms = manifest::now_ms();
     }
     rep.runs_written += delta_line.is_some() as u64;
     if let Some(f) = fail {

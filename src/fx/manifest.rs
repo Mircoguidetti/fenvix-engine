@@ -40,6 +40,13 @@ pub struct RunLine {
     pub first: String,
     pub last: String,
     pub entries: u64,
+    /// Uncompressed bytes of the run's blocks (the compactor's size measure; 0 in versions of step 3).
+    #[serde(default)]
+    pub raw: u64,
+    /// Step 4, R1: a small delta run with a copy on the waiter's NVMe (`fx/local.rs`); readers that have the copy read it
+    /// with 0 GETs. The object in the store stays the durable copy.
+    #[serde(default)]
+    pub local: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -50,6 +57,15 @@ pub struct GroupLine {
     pub lo: String,
     pub x_g: u64,
     pub sealed: Option<RunLine>,
+    /// Step 4: raw bytes of the group's rows absorbed above X_g since its last reseal (the theta trigger).
+    #[serde(default)]
+    pub unsealed: u64,
+    /// Step 4: wall-clock ms of the oldest absorption above X_g (R2, the age cap), 0 when nothing is unsealed.
+    #[serde(default)]
+    pub unsealed_since_ms: u64,
+    /// Step 4: wall-clock ms of the group's last reseal (0: never, or a version of step 3).
+    #[serde(default)]
+    pub sealed_ms: u64,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -170,6 +186,18 @@ pub async fn announce(store: &Arc<dyn ObjectStore>, id: &str) -> Result<()> {
 pub async fn list_versions(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Vec<u64>> {
     let metas: Vec<_> = store.list(Some(&manifest_dir(id))).try_collect().await?;
     let mut out: Vec<u64> = metas.iter().filter_map(|m| m.location.filename().and_then(|f| f.parse::<u64>().ok())).collect();
+    out.sort_unstable();
+    Ok(out)
+}
+
+/// Version numbers above `after`, ascending (one LIST page from the offset; `after` 0: every version). Review of step 4,
+/// FIX 4: the drop floor and GC page from the newest version already seen instead of listing every retained version.
+pub async fn list_versions_after(store: &Arc<dyn ObjectStore>, id: &str, after: u64) -> Result<Vec<u64>> {
+    if after == 0 {
+        return list_versions(store, id).await;
+    }
+    let metas: Vec<_> = store.list_with_offset(Some(&manifest_dir(id)), &manifest_path(id, after)).try_collect().await?;
+    let mut out: Vec<u64> = metas.iter().filter_map(|m| m.location.filename().and_then(|f| f.parse::<u64>().ok())).filter(|n| *n > after).collect();
     out.sort_unstable();
     Ok(out)
 }

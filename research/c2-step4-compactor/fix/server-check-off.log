@@ -1,0 +1,23 @@
+mongo-server listening on 127.0.0.1:28077 (idle close after 100000 s, holder K, lease ttl 30 s)
+LEASE process_lease tenant=- holder=K unix_ms=1794260378685 inc=60deedc65f8483b1 gen=1
+LEASE acquired tenant=chk_0834dc9b holder=K unix_ms=1794260378688 takeover_from=-
+LEASE acquired tenant=chk_0834dc9b holder=K unix_ms=1794260378697 takeover_from=-
+LEASE acquired tenant=chk_0834dc9b holder=K unix_ms=1794260378704 takeover_from=- new=true
+LEASE writer_open tenant=chk_0834dc9b holder=K unix_ms=1794260378716 
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+shutting down: closing tenants cleanly
+LEASE writer_close tenant=chk_0834dc9b holder=K unix_ms=1794260406345 
+LEASE release_begin tenant=chk_0834dc9b holder=K unix_ms=1794260406345 
+LEASE release tenant=chk_0834dc9b holder=K unix_ms=1794260406348 ok=true
+tenants closed; stopping maintenance
+maintenance stopped

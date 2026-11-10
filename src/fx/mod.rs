@@ -17,8 +17,14 @@
 //! `judge/raw_readers.sh` (plan round 2, fix 3, and its review).
 
 pub mod build;
+pub mod codec;
+pub mod compactor;
+pub mod drop;
+pub mod gc;
 pub mod droptest;
 pub mod hold;
+pub mod local;
+pub mod pool;
 pub mod manifest;
 pub mod pair;
 pub mod read;
@@ -29,6 +35,12 @@ mod tests;
 mod review_tests;
 #[cfg(test)]
 mod fix_tests;
+#[cfg(test)]
+mod compactor_tests;
+#[cfg(test)]
+mod review4_tests;
+#[cfg(test)]
+mod fix4_tests;
 #[cfg(test)]
 mod tests_7a;
 

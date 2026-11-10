@@ -180,6 +180,8 @@ pub struct Entry {
     pub(crate) sstat: HashMap<Vec<u8>, Option<crate::collstat::CollStat>>,
     /// Stored metadata values of the open tenant (see [`META_CACHE`]); cleared with `copts`.
     meta: Mutex<MetaCache>,
+    /// Compaction 2, step 4 (`--sealed-compactor`): the compactor of this database while its writer is open.
+    fxc: Option<Arc<tenant_bench::fx::compactor::Compactor>>,
 }
 
 /// Bytes (keys and values) a read returned: the "KiB read" of the unit of cost (fair.rs).
@@ -262,6 +264,7 @@ impl Dbs {
                     ckey_decided: Default::default(),
                     sstat: HashMap::new(),
                     meta: Default::default(),
+                    fxc: None,
                 }))
             })
             .clone()
@@ -340,6 +343,7 @@ impl Dbs {
                     ckey_decided: Default::default(),
                     sstat: HashMap::new(),
                     meta: Default::default(),
+                    fxc: None,
                     }))
                 })
                 .clone()
@@ -382,6 +386,8 @@ impl Dbs {
                 let g = Arc::clone(&e).read_owned().await;
                 if g.tenant.as_ref().is_some_and(|t| !t.fx_refresh_due()) && g.leases.valid(&g.name) {
                     crate::locallog::check_open(&g.name)?;
+                    // F7: the tenant begins no hold past the end of this process's serving lease
+                    g.tenant.as_ref().unwrap().set_serving_until(g.leases.serving_until(&g.name));
                     g.touch();
                     return Ok(ReadView { g: Some(Guard::Read(g)), copts: Default::default(), fc: Default::default() });
                 }
@@ -464,6 +470,13 @@ impl Dbs {
 }
 
 impl Entry {
+    /// Stop this database's compactor (before its tenant closes, is abandoned or dropped).
+    async fn stop_fxc(&mut self) {
+        if let Some(c) = self.fxc.take() {
+            c.stop().await;
+        }
+    }
+
     /// Empty the metadata cache (and free its memory).
     fn meta_clear(&self) {
         let mut m = self.meta.lock().unwrap();
@@ -592,6 +605,7 @@ impl Entry {
         }
         let mut closed = true;
         crate::opening::forget_db(&self.name);
+        self.stop_fxc().await;
         if let Some(t) = self.tenant.take() {
             closed = t.abandon().await;
             self.closes += 1;
@@ -612,6 +626,9 @@ impl Entry {
         }
         if self.tenant.is_some() {
             if self.leases.valid(&self.name) {
+                // F7 (compaction 2, step 4): the tenant begins no hold past the end of this process's serving lease
+                let until = self.leases.serving_until(&self.name);
+                self.tenant.as_ref().unwrap().set_serving_until(until);
                 // a reader refreshes its version of our manifest before T_pin (fx, rule 6)
                 if self.tenant.as_ref().unwrap().fx_refresh_due() {
                     self.tenant.as_mut().unwrap().fx_refresh().await?;
@@ -688,6 +705,7 @@ impl Entry {
         self.sstat.clear();
         self.meta_clear();
         crate::opening::forget_db(&self.name);
+        self.stop_fxc().await;
         if let Some(t) = self.tenant.take() {
             crate::fair::note_written(&self.name, 0, true);
             let r = t.close().await;
@@ -887,13 +905,27 @@ impl Entry {
             self.sync_gauges();
         }
         self.touch();
-        // --sealed-runs N: a publish of our manifest every N write batches (fx/build.rs), under this exclusive lock
-        if self.tenant.as_mut().unwrap().fx_note_write() {
+        // --sealed-runs N: a publish of our manifest every N write batches (fx/build.rs), under this exclusive lock; with
+        // --sealed-compactor only the first one, then this database's compactor publishes (fx/compactor.rs)
+        if self.fxc.is_none() && self.tenant.as_mut().unwrap().fx_note_write() {
             let t = self.tenant.as_mut().unwrap();
             let opts = t.fx_auto_opts();
             // a failed publish leaves orphan runs only; fx_publish reloads or fences as the failure needs (rules 24, 25)
             if let Err(e) = t.fx_publish(&opts, None).await {
                 eprintln!("sealed runs: publish of database {} failed: {e:#}", self.name);
+            }
+        }
+        if self.fxc.is_none() && tenant_bench::fx::compactor::SERVER_ON.load(Relaxed) {
+            let t = self.tenant.as_mut().unwrap();
+            if t.is_writer() && t.fx_view().is_some() {
+                let k = tenant_bench::fx::compactor::server_knobs();
+                match tenant_bench::fx::compactor::Compactor::start(t, Arc::clone(&self.raw), k, tenant_bench::fx::pool::global(), tokio::runtime::Handle::current()).await {
+                    Ok(c) => {
+                        c.run();
+                        self.fxc = Some(c);
+                    }
+                    Err(e) => eprintln!("sealed runs: compactor of database {} did not start: {e:#}", self.name),
+                }
             }
         }
         self.seq += 1;
@@ -988,6 +1020,7 @@ impl Entry {
         self.sstat.clear();
         self.meta_clear();
         crate::opening::forget_db(&self.name);
+        self.stop_fxc().await;
         if let Some(t) = self.tenant.take() {
             t.close().await?;
             self.closes += 1;

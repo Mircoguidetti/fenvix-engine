@@ -1,0 +1,18 @@
+replay: mode ours, ratio 1tb, D 1024 MiB, L0 8192 bytes, measured 0.5 D after a warm-up of 0.25 D, seed 42
+loaded 1024 MiB in 21.0 s
+first version built: 45 groups
+  20 s: 1132 MiB written, L0 max 69, groups 45, delta runs 6, reseals 3, merges 276, absorbs 834, drop jobs 2234
+  40 s: 1232 MiB written, L0 max 69, groups 45, delta runs 13, reseals 15, merges 642, absorbs 1939, drop jobs 4896
+measured window starts at 1280 MiB written
+  60 s: 1323 MiB written, L0 max 69, groups 46, delta runs 11, reseals 41, merges 1007, absorbs 3032, drop jobs 7264
+  80 s: 1410 MiB written, L0 max 69, groups 48, delta runs 16, reseals 51, merges 1360, absorbs 4096, drop jobs 9408
+  103 s: 1485 MiB written, L0 max 69, groups 48, delta runs 12, reseals 80, merges 1715, absorbs 5157, drop jobs 11348
+  123 s: 1555 MiB written, L0 max 69, groups 49, delta runs 13, reseals 85, merges 2022, absorbs 6079, drop jobs 13093
+  143 s: 1598 MiB written, L0 max 69, groups 51, delta runs 11, reseals 90, merges 2236, absorbs 6719, drop jobs 14199
+  163 s: 1673 MiB written, L0 max 69, groups 51, delta runs 15, reseals 102, merges 2586, absorbs 7772, drop jobs 16264
+  183 s: 1745 MiB written, L0 max 69, groups 53, delta runs 13, reseals 127, merges 2894, absorbs 8695, drop jobs 18094
+RESULT mode ours ratio 1tb D 1024 MiB L0 8192 B: inserted 512.0 MiB raw in the window (13.35 compressed days), L0 flushes 382.4 MiB, SlateDB compaction 1217.9 MiB, our runs 3317.5 MiB, WAL 336.2 MiB, our manifests 254.4 MiB
+RESULT amplification 12.86 (stored bytes written per stored byte flushed to L0); L0 max 69; longest write 4716 ms; window 151 s, process CPU 399 s
+RESULT ours, raw rows: amplification 11.21 = 1 (L0) + delta 6.12 (absorb + merges) + reseals 4.09; reseals 135, splits 9, group merges 0, merges 3206, absorbs 9630, groups 54, delta runs 12 holding 279.0 MiB raw; job CPU 189.0 s, 35.2 s per GiB written by our jobs
+RESULT formula for these parameters: 1 + 7.00 delta writes + 5.00 reseal = 13.00 (the plan's formula at full size: 13 at 1 TB, 15 at 10 TB)
+RESULT drop: jobs 19703, rows dropped 3639739, rows kept 8775760, GC runs deleted 12592, versions deleted 12680

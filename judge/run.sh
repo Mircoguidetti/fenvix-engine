@@ -20,8 +20,11 @@ SHA=$(git rev-parse --short HEAD); DIRTY=$(git status --porcelain -- mongo-serve
 SUFFIX=""
 if [ -n "${JUDGE_SEALED_RUNS:-}" ]; then
   export FENVIX_SEALED_RUNS=$JUDGE_SEALED_RUNS FENVIX_SEALED_TPIN_MS=${JUDGE_SEALED_TPIN_MS:-1000} FENVIX_SEALED_E1_WAIT_MS=${JUDGE_SEALED_E1_WAIT_MS:-0}
+  # compaction 2, step 4: the servers run the compactor (small knobs for the suites' tiny databases); JUDGE_SEALED_COMPACTOR=0
+  # keeps step 3's offline publishes only
+  export FENVIX_SEALED_COMPACTOR=${JUDGE_SEALED_COMPACTOR:-small}
   SUFFIX="-sealed$JUDGE_SEALED_RUNS"
-else unset FENVIX_SEALED_RUNS FENVIX_SEALED_TPIN_MS FENVIX_SEALED_E1_WAIT_MS; fi
+else unset FENVIX_SEALED_RUNS FENVIX_SEALED_TPIN_MS FENVIX_SEALED_E1_WAIT_MS FENVIX_SEALED_COMPACTOR; fi
 OUT="$ROOT/judge/out/$SHA$SUFFIX"; mkdir -p "$OUT"; V="$OUT/VERDICT.md"
 PHASES=${*:-readers build unit diff-py diff-node ctl kill}
 FAST=0; if [ "$PHASES" = fast ]; then FAST=1; PHASES="readers build unit diff-py diff-node ctl kill"; fi

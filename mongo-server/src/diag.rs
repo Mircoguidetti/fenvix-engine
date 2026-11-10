@@ -824,6 +824,18 @@ impl Server {
                 "runOpens": tenant_bench::fx::view::RUN_OPENS.load(Relaxed) as i64,
                 "blockHits": tenant_bench::fx::view::BLOCK_HITS.load(Relaxed) as i64,
             },
+            // compaction 2, step 4 (`--sealed-compactor`): compactors started and running, their versions, absorptions,
+            // tier merges, reseals and job errors
+            "compactor": {
+                "enabled": tenant_bench::fx::compactor::SERVER_ON.load(Relaxed),
+                "started": tenant_bench::fx::compactor::G_STARTED.load(Relaxed) as i64,
+                "running": tenant_bench::fx::compactor::active_count() as i64,
+                "publishes": tenant_bench::fx::compactor::G_PUBLISHES.load(Relaxed) as i64,
+                "absorbs": tenant_bench::fx::compactor::G_ABSORBS.load(Relaxed) as i64,
+                "merges": tenant_bench::fx::compactor::G_MERGES.load(Relaxed) as i64,
+                "reseals": tenant_bench::fx::compactor::G_RESEALS.load(Relaxed) as i64,
+                "errors": tenant_bench::fx::compactor::G_ERRORS.load(Relaxed) as i64,
+            },
             "compaction": {
                 "passes": tenant_bench::lifecycle::MAINT.compact_runs.load(Relaxed) as i64,
                 "running": tenant_bench::lifecycle::PASSES_RUNNING.load(Relaxed) as i64,

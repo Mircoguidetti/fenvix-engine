@@ -21,6 +21,26 @@ pub static RUN_GETS: AtomicU64 = AtomicU64::new(0);
 pub static RUN_OPENS: AtomicU64 = AtomicU64::new(0);
 pub static BLOCK_HITS: AtomicU64 = AtomicU64::new(0);
 pub static ROWS_FROM_RUNS: AtomicU64 = AtomicU64::new(0);
+/// Step 4, R1: block reads served by a run's copy on the waiter's NVMe (no GET), and runs opened from it.
+pub static LOCAL_READS: AtomicU64 = AtomicU64::new(0);
+pub static LOCAL_OPENS: AtomicU64 = AtomicU64::new(0);
+
+/// Step 4, R3: GETs that point reads paid in delta runs since a group's last reseal, by group id. The compactor reseals a
+/// group early once these GETs cost more than the reseal (`compactor.rs`).
+#[derive(Default)]
+pub struct R3Gets(pub Mutex<HashMap<u32, u64>>);
+
+impl R3Gets {
+    pub fn note(&self, group: u32) {
+        *self.0.lock().unwrap().entry(group).or_default() += 1;
+    }
+    pub fn get(&self, group: u32) -> u64 {
+        self.0.lock().unwrap().get(&group).copied().unwrap_or(0)
+    }
+    pub fn reset(&self, group: u32) {
+        self.0.lock().unwrap().remove(&group);
+    }
+}
 
 /// Negative control of rule 2 [ReadNoCut], tests only: delta rows count whatever their seq (no X_g bound).
 #[cfg(test)]
@@ -109,19 +129,45 @@ pub struct RunH {
     pub first: Vec<u8>,
     pub last: Vec<u8>,
     run: tokio::sync::OnceCell<Arc<Run>>,
+    /// R1: the store holding the run's NVMe copy, when the line says it has one and this process has an NVMe store.
+    local: Option<Arc<dyn ObjectStore>>,
+    /// Whether the run was opened from the NVMe copy (then every block read goes there).
+    from_local: std::sync::atomic::AtomicBool,
 }
 
 impl RunH {
     pub fn new(line: RunLine) -> Result<RunH> {
         let id: [u8; RUN_ID_LEN] = unhex(&line.id)?.try_into().map_err(|_| anyhow::anyhow!("run id of {} is not 16 bytes", line.path))?;
-        Ok(RunH { first: unhex(&line.first)?, last: unhex(&line.last)?, id, line, run: tokio::sync::OnceCell::new() })
+        let local = if line.local { super::local::store() } else { None };
+        Ok(RunH { first: unhex(&line.first)?, last: unhex(&line.last)?, id, line, run: tokio::sync::OnceCell::new(), local, from_local: Default::default() })
+    }
+
+    /// The store block reads of this run go to: the NVMe copy once the run was opened from it, else `store`.
+    pub fn read_store<'a>(&'a self, store: &'a Arc<dyn ObjectStore>) -> &'a Arc<dyn ObjectStore> {
+        match &self.local {
+            Some(l) if self.from_local.load(Relaxed) => l,
+            _ => store,
+        }
     }
 
     /// The run, opened on first use with the id the manifest recorded (another object at the path is an error).
     pub async fn open(&self, store: &Arc<dyn ObjectStore>) -> Result<&Arc<Run>> {
         self.run
             .get_or_try_init(|| async {
-                let (run, _) = Run::open_expecting(store, Path::from(self.line.path.as_str()), self.line.size, &self.id).await?;
+                let path = Path::from(self.line.path.as_str());
+                let mut opened = None;
+                if let Some(l) = &self.local {
+                    // R1: the NVMe copy, same path and the same run id; a missing or damaged copy falls back to the store
+                    if let Ok((run, _)) = Run::open_expecting(l, path.clone(), self.line.size, &self.id).await {
+                        self.from_local.store(true, Relaxed);
+                        LOCAL_OPENS.fetch_add(1, Relaxed);
+                        opened = Some(run);
+                    }
+                }
+                let run = match opened {
+                    Some(r) => r,
+                    None => Run::open_expecting(store, path, self.line.size, &self.id).await?.0,
+                };
                 ensure!(run.min_seq == self.line.min_seq && run.max_seq == self.line.max_seq && run.entries == self.line.entries, "run {} differs from its manifest line", self.line.path);
                 RUN_OPENS.fetch_add(1, Relaxed);
                 Ok(Arc::new(run))
@@ -139,6 +185,10 @@ impl RunH {
     }
 }
 
+fn is_local(store: &Arc<dyn ObjectStore>) -> bool {
+    super::local::store().is_some_and(|l| Arc::ptr_eq(&l, store))
+}
+
 /// Blocks first..=last of a run: cached ones from the cache, the others in one range GET.
 async fn fetch(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, last: usize) -> Result<Vec<Arc<Block>>> {
     let mut out: Vec<Option<Arc<Block>>> = (first..=last).map(|b| cache_get(&(run.run_id, b as u32))).collect();
@@ -148,7 +198,11 @@ async fn fetch(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, last: usiz
     if let (Some(&a), Some(&z)) = (miss.first(), miss.last()) {
         let (lo, hi) = run.fence.range(a, z);
         let data = runfmt::get_range(store, &run.path, lo, hi).await?;
-        RUN_GETS.fetch_add(1, Relaxed);
+        if is_local(store) {
+            LOCAL_READS.fetch_add(1, Relaxed);
+        } else {
+            RUN_GETS.fetch_add(1, Relaxed);
+        }
         for b in a..=z {
             if out[b - first].is_some() {
                 continue;
@@ -160,6 +214,22 @@ async fn fetch(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, last: usiz
         }
     }
     Ok(out.into_iter().map(|b| b.expect("block fetched")).collect())
+}
+
+/// [`fetch`] from a run's NVMe copy when it was opened there, falling back to the store when the copy is gone (it is a
+/// cache: GC may remove it).
+async fn fetch_h(primary: &Arc<dyn ObjectStore>, h: &RunH, run: &Run, first: usize, last: usize) -> Result<Vec<Arc<Block>>> {
+    let s = h.read_store(primary);
+    if Arc::ptr_eq(s, primary) {
+        return fetch(primary, run, first, last).await;
+    }
+    match fetch(s, run, first, last).await {
+        Ok(b) => Ok(b),
+        Err(_) => {
+            h.from_local.store(false, Relaxed);
+            fetch(primary, run, first, last).await
+        }
+    }
 }
 
 /// A row from our runs: seq and envelope (first byte 0 live, 1 deleted). A point read leaves `key` empty (the caller
@@ -186,29 +256,40 @@ impl RRow {
 
 /// The row of `key` in one run, if it holds one.
 async fn run_get(store: &Arc<dyn ObjectStore>, h: &RunH, key: &[u8]) -> Result<Option<RRow>> {
+    Ok(run_get_counted(store, h, key).await?.0)
+}
+
+/// [`run_get`], and whether it paid a GET in the store (not the cache, not the NVMe copy): R3's count.
+async fn run_get_counted(store: &Arc<dyn ObjectStore>, h: &RunH, key: &[u8]) -> Result<(Option<RRow>, bool)> {
     if !h.holds_key(key) {
-        return Ok(None);
+        return Ok((None, false));
     }
     let run = h.open(store).await?;
+    let primary = store;
+    let store = h.read_store(store);
     if let Some(r) = run.customers.customer_of(key) {
         if !run.filter.may_contain(&key[r]) {
-            return Ok(None);
+            return Ok((None, false));
         }
     }
     let i = run.fence.count_below(key, true);
     if i == 0 {
-        return Ok(None);
+        return Ok((None, false));
     }
+    let mut paid = false;
     // a point read needs one block: probe the cache directly before the general fetch
     let b = match cache_get(&(run.run_id, (i - 1) as u32)) {
         Some(b) => {
             BLOCK_HITS.fetch_add(1, Relaxed);
             b
         }
-        None => fetch(store, run, i - 1, i - 1).await?.pop().unwrap(),
+        None => {
+            paid = !is_local(store);
+            fetch_h(primary, h, run, i - 1, i - 1).await?.pop().unwrap()
+        }
     };
     let j = b.lower_bound(key);
-    Ok((j < b.len() && b.key(j) == key).then(|| RRow { key: Vec::new(), seq: b.seq(j), env: b.env(j).to_vec() }))
+    Ok(((j < b.len() && b.key(j) == key).then(|| RRow { key: Vec::new(), seq: b.seq(j), env: b.env(j).to_vec() }), paid))
 }
 
 pub struct Group {
@@ -228,6 +309,8 @@ pub struct View {
     /// Newest first.
     pub delta: Vec<Arc<RunH>>,
     pub meta: Version,
+    /// Step 4, R3: where point reads count the delta-run GETs they paid, by group (None: not counted).
+    pub r3: Option<Arc<R3Gets>>,
 }
 
 impl View {
@@ -249,11 +332,12 @@ impl View {
         };
         let mut groups = Vec::with_capacity(v.groups.len());
         for g in &v.groups {
-            let GroupLine { id, lo, x_g, sealed } = g;
+            let GroupLine { id, lo, x_g, sealed, .. } = g;
             groups.push(Group { id: *id, lo: unhex(lo)?, x_g: *x_g, sealed: sealed.as_ref().map(&mut handle).transpose()? });
         }
         let delta = v.delta.iter().map(&mut handle).collect::<Result<Vec<_>>>()?;
-        Ok(View { store, version: v.version, x_d: v.x_d, e_env: v.e_env, groups, delta, meta: v })
+        let r3 = prev.and_then(|p| p.r3.clone());
+        Ok(View { store, version: v.version, x_d: v.x_d, e_env: v.e_env, groups, delta, meta: v, r3 })
     }
 
     /// Index of the group holding `key`.
@@ -277,7 +361,13 @@ impl View {
             if best.as_ref().is_some_and(|b| d.line.max_seq <= b.seq) {
                 continue;
             }
-            if let Some(r) = run_get(&self.store, d, key).await? {
+            let (r, paid) = run_get_counted(&self.store, d, key).await?;
+            if paid {
+                if let Some(c) = &self.r3 {
+                    c.note(g.id);
+                }
+            }
+            if let Some(r) = r {
                 if above_cut(r.seq, g.x_g) && r.seq <= self.x_d && best.as_ref().is_none_or(|b| r.seq > b.seq) {
                     best = Some(r);
                 }
@@ -376,7 +466,7 @@ impl RunCur {
                 (next, z, if z < end { Some((z + 1, end)) } else { None })
             };
             self.blocks = rest;
-            let got = fetch(store, &run, a, z).await?;
+            let got = fetch_h(store, &self.h, &run, a, z).await?;
             let mut parts: Vec<(Arc<Block>, usize, usize)> = got
                 .into_iter()
                 .map(|b| {

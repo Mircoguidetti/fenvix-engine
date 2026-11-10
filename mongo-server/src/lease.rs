@@ -197,6 +197,28 @@ impl Leases {
         self.held.lock().unwrap().len()
     }
 
+    /// The instant this process stops acting as the tenant's owner if the lease is not renewed (`valid` turns false then),
+    /// for the tenant's F7 guard (compaction 2, step 4: no hold begins after it). None: no lease guard (tests).
+    pub fn serving_until(&self, id: &str) -> Option<std::time::Instant> {
+        if self.unsafe_skip.load(std::sync::atomic::Ordering::Relaxed) {
+            return None;
+        }
+        // the lease clock (CLOCK_BOOTTIME) turned into the tenant's monotonic clock: now plus what is left
+        let now = Instant::now();
+        let left = |until: Instant| until.0.saturating_sub(self.ttl / 6).saturating_sub(now.0);
+        let left = if self.process_mode.load(std::sync::atomic::Ordering::Relaxed) {
+            let p = self.proc.lock().unwrap();
+            let held = self.held.lock().unwrap();
+            match (held.get(id), p.as_ref()) {
+                (Some(h), Some(p)) if h.gen == p.gen => left(p.valid_until),
+                _ => Duration::ZERO,
+            }
+        } else {
+            self.held.lock().unwrap().get(id).map_or(Duration::ZERO, |h| left(h.valid_until))
+        };
+        Some(std::time::Instant::now() + left)
+    }
+
     /// True while this process may act as the tenant's owner (it holds the lease and has renewed it recently enough).
     pub fn valid(&self, id: &str) -> bool {
         if self.unsafe_skip.load(std::sync::atomic::Ordering::Relaxed) {

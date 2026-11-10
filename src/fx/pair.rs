@@ -34,7 +34,7 @@ use super::view::View;
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use bytes::Bytes;
 use object_store::path::Path;
-use object_store::{ObjectStore, ObjectStoreExt, PutMode, PutOptions, PutPayload};
+use object_store::{ObjectStore, ObjectStoreExt, PutMode, PutOptions, PutPayload, UpdateVersion};
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
 use std::sync::Arc;
@@ -45,6 +45,10 @@ use std::time::Duration;
 pub static LEASE_LIFE_MS: AtomicU64 = AtomicU64::new(60_000);
 /// Margin for clock skew between the control layer and the drop jobs (rule 18).
 pub static SKEW_MARGIN_MS: AtomicU64 = AtomicU64::new(5_000);
+
+/// Negative control of FIX 2, tests only: an expired lease is deleted and then created again (the code before the fix).
+#[cfg(test)]
+pub static CONTROL_DELETE_CREATE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// Negative control of the tests (`ctl-tests/test_47_c2_step7a_paths.py`): `FENVIX_CONTROL_RAW_PATHS=1` makes the
 /// control layer's readers read SlateDB alone, as before step 7a.
@@ -65,12 +69,32 @@ pub fn pair_path(id: &str, checkpoint: &uuid::Uuid) -> Path {
     Path::from(format!("{}/pairs/{checkpoint}", root(id)))
 }
 
+/// The drop lease (`{db}/fx/drop-lease`): the one format, read by the drop job (`drop.rs`), GC (`gc.rs`) and the
+/// pairing here (review of step 4, FIX 1: step 4 read `until_ms` and took a lease without it as held forever).
 #[derive(Clone, Debug, Serialize, Deserialize)]
-struct Lease {
-    holder: String,
-    nonce: u64,
-    taken_ms: u64,
-    expires_ms: u64,
+pub struct Lease {
+    pub holder: String,
+    pub nonce: u64,
+    pub taken_ms: u64,
+    pub expires_ms: u64,
+}
+
+/// The lease in the store with its object version (for a conditional overwrite). A lease object that cannot be read as
+/// a lease (another format, a torn write) counts as expired: no lease is held forever (FIX 1).
+pub async fn read_lease(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<(Option<Lease>, UpdateVersion)>> {
+    match store.get(&lease_path(id)).await {
+        Ok(g) => {
+            let v = UpdateVersion { e_tag: g.meta.e_tag.clone(), version: g.meta.version.clone() };
+            let b = g.bytes().await?;
+            Ok(Some((serde_json::from_slice::<Lease>(&b).ok(), v)))
+        }
+        Err(object_store::Error::NotFound { .. }) => Ok(None),
+        Err(e) => Err(e.into()),
+    }
+}
+
+fn held(l: &Option<Lease>) -> bool {
+    l.as_ref().is_some_and(|l| now_ms() < l.expires_ms.saturating_add(SKEW_MARGIN_MS.load(Relaxed)))
 }
 
 /// The pair of a checkpoint.
@@ -90,19 +114,15 @@ pub struct Pair {
 /// Whether a checkpoint holds the drop lease of database `id` now (a drop job must wait, rule 11). An expired lease is
 /// held until its expiry plus the skew margin has passed, by this clock.
 pub async fn lease_held(store: &Arc<dyn ObjectStore>, id: &str) -> Result<bool> {
-    match store.get(&lease_path(id)).await {
-        Ok(g) => {
-            let l: Lease = serde_json::from_slice(&g.bytes().await?)?;
-            Ok(now_ms() < l.expires_ms + SKEW_MARGIN_MS.load(Relaxed))
-        }
-        Err(object_store::Error::NotFound { .. }) => Ok(false),
-        Err(e) => Err(e.into()),
-    }
+    Ok(read_lease(store, id).await?.is_some_and(|(l, _)| held(&l)))
 }
 
 /// Take the drop lease: a conditional create. A lease left by a process that died is taken over once it is past its
-/// expiry plus the skew margin. Waits up to 30 s for a lease held by someone else.
-async fn take_lease(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Lease> {
+/// expiry plus the skew margin, by a conditional overwrite of exactly the expired object (`PutMode::Update` with its
+/// entity tag), never a delete and a create: of two takers of one expired lease only one overwrite succeeds, and the
+/// store never holds no lease meanwhile (review of step 4, FIX 2; step 7a review note 2). Waits up to 30 s for a lease
+/// held by someone else.
+pub async fn take_lease(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Lease> {
     let path = lease_path(id);
     for _ in 0..300 {
         let now = now_ms();
@@ -111,15 +131,32 @@ async fn take_lease(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Lease> {
         match store.put_opts(&path, PutPayload::from(serde_json::to_vec(&l)?), opts).await {
             Ok(_) => return Ok(l),
             Err(object_store::Error::AlreadyExists { .. }) | Err(object_store::Error::Precondition { .. }) => {
-                if !lease_held(store, id).await? {
-                    // a dead holder's lease: remove it and race for the slot again
-                    match store.delete(&path).await {
-                        Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
-                        Err(e) => return Err(e.into()),
+                #[cfg(test)]
+                if CONTROL_DELETE_CREATE.load(Relaxed) {
+                    // the code before FIX 2: delete the expired lease, then race to create
+                    if !lease_held(store, id).await? {
+                        match store.delete(&path).await {
+                            Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
+                            Err(e) => return Err(e.into()),
+                        }
+                        continue;
                     }
+                    tokio::time::sleep(Duration::from_millis(100)).await;
                     continue;
                 }
-                tokio::time::sleep(Duration::from_millis(100)).await;
+                match read_lease(store, id).await? {
+                    None => continue, // released meanwhile: create again
+                    Some((cur, version)) if !held(&cur) => {
+                        // a dead holder's lease: overwrite exactly that object; another taker that got there first wins
+                        let opts = PutOptions { mode: PutMode::Update(version), ..Default::default() };
+                        match store.put_opts(&path, PutPayload::from(serde_json::to_vec(&l)?), opts).await {
+                            Ok(_) => return Ok(l),
+                            Err(object_store::Error::Precondition { .. }) | Err(object_store::Error::AlreadyExists { .. }) | Err(object_store::Error::NotFound { .. }) => continue,
+                            Err(e) => return Err(e.into()),
+                        }
+                    }
+                    Some(_) => tokio::time::sleep(Duration::from_millis(100)).await,
+                }
             }
             Err(e) => return Err(e.into()),
         }
