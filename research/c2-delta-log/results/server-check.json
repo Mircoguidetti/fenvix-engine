@@ -18,7 +18,7 @@
   "--customer-key",
   "checkpoints=thread_id,checkpoint_writes=thread_id"
  ],
- "write_s": 21.406578302383423,
+ "write_s": 21.62843132019043,
  "reseal_1": {
   "resealed": 1,
   "encoded": 6185
@@ -27,7 +27,7 @@
   "write": true,
   "encoded": 6185,
   "plain": 2220,
-  "messageRows": 3442,
+  "messageRows": 3417,
   "fallbacks": 0,
   "rebuilds": 14917,
   "resealRebuilds": 2897,
@@ -87,9 +87,9 @@
   "write": true,
   "encoded": 17220,
   "plain": 6127,
-  "messageRows": 9567,
+  "messageRows": 9508,
   "fallbacks": 0,
-  "rebuilds": 213766,
+  "rebuilds": 213784,
   "resealRebuilds": 13284,
   "rebuildErrors": 0
  },
@@ -123,14 +123,32 @@
   "resealRebuilds": 0,
   "rebuildErrors": 0
  },
+ "reseal_after_restart": {
+  "resealed": 1,
+  "encoded": 3280
+ },
+ "raw documents after the reseal that followed the restart": {
+  "docs": {
+   "checkpoints": 1800,
+   "checkpoint_writes": 2640
+  },
+  "different": {
+   "checkpoints": 0,
+   "checkpoint_writes": 0
+  }
+ },
+ "saver reads after the reseal that followed the restart": {
+  "threads": 30,
+  "different": 0
+ },
  "compactor": {
   "enabled": true,
-  "started": 0,
-  "running": 0,
-  "publishes": 0,
-  "absorbs": 0,
+  "started": 1,
+  "running": 1,
+  "publishes": 2,
+  "absorbs": 1,
   "merges": 0,
-  "reseals": 0,
+  "reseals": 1,
   "errors": 0
  },
  "wrong": 0

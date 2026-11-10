@@ -1,26 +1,27 @@
 mongo-server listening on 127.0.0.1:27041 (idle close after 600 s, holder c2delta, lease ttl 30 s)
-LEASE process_lease tenant=- holder=c2delta unix_ms=1794320013060 inc=e13e49762e3a0aeb gen=1
-LEASE acquired tenant=agentck holder=c2delta unix_ms=1794320013064 takeover_from=-
-LEASE acquired tenant=agentck holder=c2delta unix_ms=1794320013073 takeover_from=-
-LEASE acquired tenant=agentck holder=c2delta unix_ms=1794320013084 takeover_from=-
-LEASE acquired tenant=agentck holder=c2delta unix_ms=1794320013093 takeover_from=-
-LEASE acquired tenant=agentck holder=c2delta unix_ms=1794320013103 takeover_from=- new=true
-LEASE writer_open tenant=agentck holder=c2delta unix_ms=1794320013122 
+LEASE process_lease tenant=- holder=c2delta unix_ms=1794322535935 inc=29f5a8d339e2427a gen=1
+LEASE acquired tenant=agentck holder=c2delta unix_ms=1794322535939 takeover_from=-
+LEASE acquired tenant=agentck holder=c2delta unix_ms=1794322535945 takeover_from=-
+LEASE acquired tenant=agentck holder=c2delta unix_ms=1794322535953 takeover_from=-
+LEASE acquired tenant=agentck holder=c2delta unix_ms=1794322535960 takeover_from=-
+LEASE acquired tenant=agentck holder=c2delta unix_ms=1794322535966 takeover_from=- new=true
+LEASE writer_open tenant=agentck holder=c2delta unix_ms=1794322535980 
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
 SLOW hello db=admin ms=10001 ok=true
 SLOW hello db=admin ms=10000 ok=true
+SLOW find db=agentck ms=562 ok=true
 SLOW hello db=admin ms=10001 ok=true
-SLOW hello db=admin ms=10001 ok=true
-SLOW hello db=admin ms=10001 ok=true
-SLOW fenvixReseal db=admin ms=1246 ok=true
+SLOW fenvixReseal db=admin ms=1344 ok=true
 SLOW hello db=admin ms=10000 ok=true
-SLOW find db=agentck ms=579 ok=true
+SLOW find db=agentck ms=582 ok=true
+SLOW hello db=admin ms=10001 ok=true
 SLOW hello db=admin ms=10000 ok=true
+SSTGC begin tenant=agentck unix_ms=1794322596034
+SSTGC end tenant=agentck unix_ms=1794322596047 deleted_ssts=0 deleted_manifests=0 referenced=17 waiting=58
+SLOW fenvixReseal db=admin ms=596 ok=true
+SLOW find db=agentck ms=582 ok=true
 SLOW hello db=admin ms=10001 ok=true
-SLOW fenvixReseal db=admin ms=569 ok=true
-SLOW find db=agentck ms=564 ok=true
-SSTGC begin tenant=agentck unix_ms=1794320074991
-SSTGC end tenant=agentck unix_ms=1794320075003 deleted_ssts=0 deleted_manifests=0 referenced=18 waiting=59
-SLOW hello db=admin ms=10001 ok=true
 erasure pass of agentck: database agentck: a compactor publishes this database's versions
 erasure pass of agentck: database agentck: a compactor publishes this database's versions
 erasure pass of agentck: database agentck: a compactor publishes this database's versions
@@ -34,29 +35,32 @@ erasure pass of agentck: database agentck: a compactor publishes this database's
 erasure pass of agentck: database agentck: a compactor publishes this database's versions
 erasure pass of agentck: database agentck: a compactor publishes this database's versions
 SLOW hello db=admin ms=10001 ok=true
-LEASE acquired tenant=otherapp holder=c2delta unix_ms=1794320099780 takeover_from=-
-LEASE acquired tenant=otherapp holder=c2delta unix_ms=1794320099787 takeover_from=-
-LEASE acquired tenant=otherapp holder=c2delta unix_ms=1794320099793 takeover_from=-
-LEASE acquired tenant=otherapp holder=c2delta unix_ms=1794320099799 takeover_from=-
-LEASE acquired tenant=otherapp holder=c2delta unix_ms=1794320099805 takeover_from=- new=true
-LEASE writer_open tenant=otherapp holder=c2delta unix_ms=1794320099816 
+LEASE acquired tenant=otherapp holder=c2delta unix_ms=1794322625220 takeover_from=-
+LEASE acquired tenant=otherapp holder=c2delta unix_ms=1794322625226 takeover_from=-
+LEASE acquired tenant=otherapp holder=c2delta unix_ms=1794322625232 takeover_from=-
+LEASE acquired tenant=otherapp holder=c2delta unix_ms=1794322625238 takeover_from=-
+LEASE acquired tenant=otherapp holder=c2delta unix_ms=1794322625243 takeover_from=- new=true
+LEASE writer_open tenant=otherapp holder=c2delta unix_ms=1794322625255 
 shutting down: closing tenants cleanly
-LEASE writer_close tenant=agentck holder=c2delta unix_ms=1794320100111 
-LEASE release_begin tenant=agentck holder=c2delta unix_ms=1794320100111 
-LEASE writer_close tenant=otherapp holder=c2delta unix_ms=1794320100113 
-LEASE release_begin tenant=otherapp holder=c2delta unix_ms=1794320100113 
-LEASE release tenant=agentck holder=c2delta unix_ms=1794320100115 ok=true
-LEASE release tenant=otherapp holder=c2delta unix_ms=1794320100118 ok=true
+LEASE writer_close tenant=agentck holder=c2delta unix_ms=1794322625556 
+LEASE release_begin tenant=agentck holder=c2delta unix_ms=1794322625556 
+LEASE writer_close tenant=otherapp holder=c2delta unix_ms=1794322625558 
+LEASE release_begin tenant=otherapp holder=c2delta unix_ms=1794322625558 
+LEASE release tenant=agentck holder=c2delta unix_ms=1794322625560 ok=true
+LEASE release tenant=otherapp holder=c2delta unix_ms=1794322625563 ok=true
 tenants closed; stopping maintenance
 maintenance stopped
 mongo-server listening on 127.0.0.1:27041 (idle close after 600 s, holder c2delta, lease ttl 30 s)
-LEASE process_lease tenant=- holder=c2delta unix_ms=1794320102037 inc=4c82c7de961e83f2 gen=1
-LEASE acquired tenant=agentck holder=c2delta unix_ms=1794320102043 takeover_from=-
-SLOW hello db=admin ms=10000 ok=true
-SLOW hello db=admin ms=10000 ok=true
+LEASE process_lease tenant=- holder=c2delta unix_ms=1794322627231 inc=9aef79f6ff4d38b5 gen=1
+LEASE acquired tenant=agentck holder=c2delta unix_ms=1794322627235 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE writer_open tenant=agentck holder=c2delta unix_ms=1794322639161 
 SLOW hello db=admin ms=10001 ok=true
 shutting down: closing tenants cleanly
-LEASE release_begin tenant=agentck holder=c2delta unix_ms=1794320113198 
-LEASE release tenant=agentck holder=c2delta unix_ms=1794320113203 ok=true
+LEASE writer_close tenant=agentck holder=c2delta unix_ms=1794322651028 
+LEASE release_begin tenant=agentck holder=c2delta unix_ms=1794322651028 
+LEASE release tenant=agentck holder=c2delta unix_ms=1794322651033 ok=true
 tenants closed; stopping maintenance
 maintenance stopped
