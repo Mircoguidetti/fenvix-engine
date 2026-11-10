@@ -32,7 +32,8 @@ async fn put(t: &mut Tenant, i: usize, v: &str) {
     t.apply(vec![Op::Put(key(i), v.as_bytes().to_vec())]).await.unwrap();
 }
 
-/// Negative controls: `FX_7A_CONTROL=e1now|xdloop|opholds` removes one fix (the test must then fail).
+/// Negative controls: `FX_7A_CONTROL=e1now|xdloop|opholds` removes one fix (the test must then fail; `opholds` brings
+/// back step 7a's operation holds, which option (b) replaced).
 fn control(name: &str, flag: &std::sync::atomic::AtomicBool) {
     flag.store(std::env::var("FX_7A_CONTROL").ok().as_deref() == Some(name), Relaxed);
 }
@@ -141,14 +142,16 @@ async fn a_reloaded_version_above_slatedb_is_refused_at_open() {
     }
 }
 
-/// One operation that reads several times (an aggregation with `$lookup` takes `Dbs::read` once per collection) keeps
-/// the version of its first read in the drop floor until it ends, also when a publish lands between its reads; and it
-/// fails with the retryable error once it outlives the hold life (rules 4, 5, 7, 8).
+/// One operation that reads several times (an aggregation with `$lookup` takes `Dbs::read` once per collection). Option
+/// (b) of the founder (DECISIONS 2026-11-09, step 7b fix round): only reads in flight are in the drop floor, so between
+/// two reads of one operation the floor is empty; the second read reads the newest version (a publish landed between);
+/// and an operation longer than the hold life goes on (step 7a failed it). Control `FX_7A_CONTROL=opholds`: step 7a's
+/// operation holds again.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn an_operation_keeps_the_floor_across_its_reads() {
+async fn an_operation_keeps_only_its_reads_in_flight_in_the_floor() {
     let _s = super::tests::SERIAL.lock().await;
     settings(true);
-    control("opholds", &CONTROL_NO_OP_HOLDS);
+    control("opholds", &hold::CONTROL_OP_HOLDS);
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
     let id = "op-holds";
     let mut t = lc(&store).create(id).await.unwrap();
@@ -158,7 +161,7 @@ async fn an_operation_keeps_the_floor_across_its_reads() {
     publish(&mut t).await;
     let x1 = t.fx_view().unwrap().x_d;
     let holds = Arc::clone(t.fx_holds());
-    let (gap_floor, end_floor, t) = hold::op_scope(async move {
+    let (gap_floor, read2, t) = hold::op_scope(async move {
         let mut t = t;
         assert_eq!(t.get(key(1)).await.unwrap().as_deref(), Some(&b"a"[..]));
         // between two reads of the operation: more writes and a publish
@@ -168,12 +171,12 @@ async fn an_operation_keeps_the_floor_across_its_reads() {
         publish(&mut t).await;
         assert!(t.fx_view().unwrap().x_d > x1);
         let gap = holds.floor();
-        assert_eq!(t.get(key(50)).await.unwrap().as_deref(), Some(&b"b"[..]));
-        (gap, holds.floor(), t)
+        let r = t.get(key(50)).await.unwrap();
+        (gap, r, t)
     })
     .await;
     let after = t.fx_holds().floor();
-    // an operation longer than the hold life fails at its next read
+    // an operation longer than the hold life goes on
     hold::HOLD_LIFE_MS.store(300, Relaxed);
     let (second, t) = hold::op_scope(async move {
         t.get(key(1)).await.unwrap();
@@ -183,12 +186,13 @@ async fn an_operation_keeps_the_floor_across_its_reads() {
     })
     .await;
     hold::HOLD_LIFE_MS.store(120_000, Relaxed);
+    hold::CONTROL_OP_HOLDS.store(false, Relaxed);
     t.abandon().await;
-    assert_eq!(gap_floor, Some(x1), "between two reads of one operation the floor must keep the version it read with");
-    assert_eq!(end_floor, Some(x1));
-    assert_eq!(after, None, "the operation's holds end with it");
-    let e = second.expect_err("an operation past the hold life must fail at its next read (rule 5)");
-    assert!(e.chain().any(|c| c.downcast_ref::<Retry>().is_some()), "{e:#}");
+    assert_eq!(gap_floor, None, "between two reads of one operation only reads in flight count in the floor (option b)");
+    assert_eq!(read2.as_deref(), Some(&b"b"[..]), "the second read reads the newest version");
+    assert_eq!(after, None, "no hold outlives its read");
+    let r = second.expect("an operation longer than the hold life must go on (option b): only a single read step that long fails");
+    assert_eq!(r.as_deref(), Some(&b"a"[..]));
 }
 
 /// Pairing (rule 18): the checkpoint is paired with the newest version at or below its `last_l0_seq`; a checkpoint whose

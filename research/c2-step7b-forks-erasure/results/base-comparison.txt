@@ -1,0 +1,10 @@
+Base binary b7af98f (no step 7b), same tests (MEASURED, 2026-11-09):
+test_48 (unknown new flags removed): 3 failed
+  fork (clone) after a drop: a 540 missing of 540, b 6 missing of 6
+  fork (copy) after a drop: a 540 missing of 540, b 6 missing of 6
+  erasure: no route for GET /v1/databases/er/erasures
+test_02b_fork_crash (sealed off), 2 runs: 1 failed (test_random_kill_loop, leftover _lease), 1 passed
+test_43_review_compaction (sealed off), 3 runs: 3 failed (test_a_refused_fork_leaves_no_object_of_its_target, usage records)
+test_02_fork::test_clone_copies_no_data (sealed on): failed, copy differs from source by 2,563,393 bytes (ours: 1,801,835)
+test_45::test_without_the_option_nothing_is_enveloped (sealed on): failed, liveRead 1102 (same as ours)
+New binary, controls: FENVIX_CONTROL_RAW_PATHS=1 test_48 forks: both modes 540 missing of 540, 6 missing of 6

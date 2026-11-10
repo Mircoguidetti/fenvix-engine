@@ -94,7 +94,7 @@ def test_reading_release_reads_what_the_writing_release_wrote():
     bucket = make_bucket("envrb")
     r = random.Random(3)
     model = {}
-    e1 = Server(bucket, "envrb-e1", idle=600, extra=CK + ["--envelopes", "write", "--sealed-e1-wait-ms", "0"]).start()
+    e1 = Server(bucket, "envrb-e1", idle=600, extra=CK + ["--envelopes", "write", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait"]).start()
     try:
         c = e1.client()
         c.rb.create_collection("keyed", customerKey="u")
@@ -118,7 +118,7 @@ def test_reading_release_reads_what_the_writing_release_wrote():
         assert _check(c, model) == []
     finally:
         e0.term()
-    e1 = Server(bucket, "envrb-e1b", idle=600, extra=CK + ["--envelopes", "write", "--sealed-e1-wait-ms", "0"]).start()
+    e1 = Server(bucket, "envrb-e1b", idle=600, extra=CK + ["--envelopes", "write", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait"]).start()
     try:
         assert _check(e1.client(), model) == [], "E1 again (forward after the rollback) reads what E0 wrote"
     finally:
@@ -182,7 +182,7 @@ def test_reading_release_reads_the_per_customer_collation_id_index():
     not to read it, so E0 had to take the fix."""
     bucket = make_bucket("envci")
     coll_opts = dict(customerKey="u", collation={"locale": "en", "strength": 2})
-    e1 = Server(bucket, "envci-e1", idle=600, extra=["--memtable-max-mb", "1", "--envelopes", "write", "--sealed-e1-wait-ms", "0"]).start()
+    e1 = Server(bucket, "envci-e1", idle=600, extra=["--memtable-max-mb", "1", "--envelopes", "write", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait"]).start()
     try:
         c = e1.client()
         c.rb.create_collection("ci", **coll_opts)
@@ -224,7 +224,7 @@ def test_reading_release_reads_the_per_customer_collation_id_index():
         _flush(c)
     finally:
         e0.term()
-    e1 = Server(bucket, "envci-e1b", idle=600, extra=["--memtable-max-mb", "1", "--envelopes", "write", "--sealed-e1-wait-ms", "0"]).start()
+    e1 = Server(bucket, "envci-e1b", idle=600, extra=["--memtable-max-mb", "1", "--envelopes", "write", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait"]).start()
     try:
         c = e1.client()
         got = sorted(d["u"] for d in c.rb.ci.find({"_id": "DOC-1"}))

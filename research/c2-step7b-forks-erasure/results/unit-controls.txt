@@ -1,0 +1,39 @@
+== forkraw
+test fx::tests_7b::a_fork_after_a_drop_has_every_row ... FAILED
+thread 'fx::tests_7b::a_fork_after_a_drop_has_every_row' (16194) panicked at src/fx/tests_7b.rs:168:5:
+the fork misses rows of its source after a drop: 79 wrong of 80 ([0, 1, 2, 4, 5]...)
+== noscrub
+test fx::tests_7b::a_short_e1_wait_is_refused_without_the_test_flag ... FAILED
+test fx::tests_7b::a_restore_point_keeps_erased_runs_until_it_goes ... FAILED
+test fx::tests_7b::an_erasure_leaves_every_run_and_slatedb ... FAILED
+thread 'fx::tests_7b::a_short_e1_wait_is_refused_without_the_test_flag' (16226) panicked at src/fx/tests_7b.rs:431:5:
+sealed runs: the GC grace (0 ms) must exceed the hold life plus the PUT timeout (120000 + 20000 ms) (rule 23, F6)
+thread 'fx::tests_7b::a_restore_point_keeps_erased_runs_until_it_goes' (16225) panicked at src/fx/tests_7b.rs:339:5:
+thread 'fx::tests_7b::an_erasure_leaves_every_run_and_slatedb' (16233) panicked at src/fx/tests_7b.rs:291:5:
+the newest version still lists runs holding the erased customer: ["tenants/erase-a/fx/run/delta/00000000000000000151-1-829d1ed8", "tenants/erase-a/fx/run/g0/00000000000000000121-1-3f5e0623"]
+== nodelta
+test fx::tests_7b::a_restore_point_keeps_erased_runs_until_it_goes ... FAILED
+test fx::tests_7b::an_erasure_leaves_every_run_and_slatedb ... FAILED
+thread 'fx::tests_7b::a_restore_point_keeps_erased_runs_until_it_goes' (16255) panicked at src/fx/tests_7b.rs:339:5:
+thread 'fx::tests_7b::an_erasure_leaves_every_run_and_slatedb' (16257) panicked at src/fx/tests_7b.rs:291:5:
+the newest version still lists runs holding the erased customer: ["tenants/erase-a/fx/run/delta/00000000000000000151-1-7ea62678"]
+== noseqbound
+test fx::tests_7b::an_erasure_leaves_every_run_and_slatedb ... FAILED
+thread 'fx::tests_7b::an_erasure_leaves_every_run_and_slatedb' (16296) panicked at src/fx/tests_7b.rs:289:5:
+== noretire
+test fx::tests_7b::a_restore_point_keeps_erased_runs_until_it_goes ... FAILED
+test fx::tests_7b::a_short_e1_wait_is_refused_without_the_test_flag ... FAILED
+test fx::tests_7b::an_erasure_leaves_every_run_and_slatedb ... FAILED
+thread 'fx::tests_7b::a_restore_point_keeps_erased_runs_until_it_goes' (16319) panicked at src/fx/tests_7b.rs:350:5:
+thread 'fx::tests_7b::a_short_e1_wait_is_refused_without_the_test_flag' (16320) panicked at src/fx/tests_7b.rs:431:5:
+sealed runs: the GC grace (0 ms) must exceed the hold life plus the PUT timeout (120000 + 20000 ms) (rule 23, F6)
+thread 'fx::tests_7b::an_erasure_leaves_every_run_and_slatedb' (16327) panicked at src/fx/tests_7b.rs:292:5:
+objects of ours still hold the erased customer after the pass (grace 0): ["tenants/erase-a/fx/run/delta/00000000000000000151-1-8ad4db7e", "tenants/erase-a/fx/run/g0/00000000000000000121-1-fc79eab7"]
+== keepcp
+test fx::tests_7b::a_failed_pairing_deletes_its_checkpoint ... FAILED
+thread 'fx::tests_7b::a_failed_pairing_deletes_its_checkpoint' (16348) panicked at src/fx/tests_7b.rs:408:5:
+assertion `left == right` failed: a pairing that failed after make() left its checkpoint: [Checkpoint { id: 8d5d71ab-e46a-40f3-b452-8c3e40de08b6, manifest_id: 5, expire_time: None, create_time: 2026-11-09T15:53:56Z, name: None }]
+== afteranswer
+test fx::tests_7b::the_follower_window_starts_before_its_head_request ... FAILED
+thread 'fx::tests_7b::the_follower_window_starts_before_its_head_request' (16399) panicked at src/fx/tests_7b.rs:525:15:
+past T_pin from its HEAD request the follower must refuse (its answer may predate the announcement): Some(b"a")

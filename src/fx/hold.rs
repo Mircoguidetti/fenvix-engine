@@ -139,35 +139,68 @@ pub fn for_db(id: &str) -> Arc<Holds> {
 }
 
 tokio::task_local! {
-    /// The holds of the operation running on this task (`op_scope`): one per database and version it read with.
-    static OP: std::cell::RefCell<Vec<Hold>>;
+    /// The views the operation running on this task read with, per database: kept only by the negative control
+    /// [`CONTROL_KEEP_VIEW`] (and, with [`CONTROL_OP_HOLDS`], the holds of step 7a).
+    static OP: std::cell::RefCell<Vec<(Arc<Holds>, Arc<View>, Option<Hold>)>>;
 }
 
-/// Run one operation (one server command) as one scope of holds: every read of the operation, through any number of
-/// `Dbs::read` calls, keeps the version it read with in the drop floor until the operation ends (rules 4, 7 and 8; the
-/// step 3 review's note on `$lookup`, whose foreign collections are read under new `Dbs::read` calls, between which a
-/// publish can land). A read outside any scope keeps only its own short hold.
+/// Negative control of the founder's option (b) (DECISIONS 2026-11-09, "Long commands keep working"), tests only
+/// (`FENVIX_CONTROL_KEEP_VIEW=1`): every read of a command reads with the first version the command read with, as code
+/// that kept a view across steps would. With a publish and a drop between two reads it must lose rows.
+pub static CONTROL_KEEP_VIEW: AtomicBool = AtomicBool::new(false);
+/// Negative control, tests only (`FENVIX_CONTROL_OP_HOLDS=1`): step 7a's behaviour, a command keeps every version it
+/// read in the floor until it ends and fails once that is older than the hold life.
+pub static CONTROL_OP_HOLDS: AtomicBool = AtomicBool::new(false);
+
+/// Run one operation (one server command) as one scope. Option (b) of the founder (DECISIONS 2026-11-09): only the
+/// reads in flight are in the drop floor, each with its own short hold (`Tenant::fx_get`, `fx_scan`); a command's
+/// older reads leave the floor as they end, and a command is never failed for its total length. This is safe because
+/// no read reuses a version after its own step: every step takes the tenant's current version and collects its rows
+/// before it returns (no iterator, snapshot or view survives a step; resume keys are logical keys). The tests that
+/// prove it put a publish and a drop between two reads of one command (`ctl-tests/test_50_c2_step7b_fix_long_commands.py`),
+/// and [`CONTROL_KEEP_VIEW`] breaks them. A single read step longer than the hold life still fails (a known limit).
 pub async fn op_scope<F: std::future::Future>(f: F) -> F::Output {
     OP.scope(std::cell::RefCell::new(Vec::new()), f).await
 }
 
-/// A read of the current operation is about to read `view` of the database whose holds are `holds`: the operation
-/// keeps a hold on that version until it ends (one per database and version).
+fn controlled() -> bool {
+    CONTROL_KEEP_VIEW.load(Relaxed) || CONTROL_OP_HOLDS.load(Relaxed)
+}
+
+/// A read of the current operation is about to read `view` of the database whose holds are `holds`. Nothing to keep
+/// (option (b)), except under the negative controls.
 pub fn op_note(holds: &Arc<Holds>, view: &Arc<View>) {
-    #[cfg(test)]
-    if super::CONTROL_NO_OP_HOLDS.load(Relaxed) {
+    if !controlled() {
         return;
     }
     let _ = OP.try_with(|op| {
         let mut op = op.borrow_mut();
-        if !op.iter().any(|h| Arc::ptr_eq(&h.holds, holds) && h.view.version == view.version) {
-            op.push(holds.take(Arc::clone(view)));
+        if CONTROL_KEEP_VIEW.load(Relaxed) {
+            if !op.iter().any(|(h, _, _)| Arc::ptr_eq(h, holds)) {
+                op.push((Arc::clone(holds), Arc::clone(view), None));
+            }
+        } else if !op.iter().any(|(h, v, _)| Arc::ptr_eq(h, holds) && v.version == view.version) {
+            op.push((Arc::clone(holds), Arc::clone(view), Some(holds.take(Arc::clone(view)))));
         }
     });
 }
 
-/// After every step of a read: the operation's holds are still alive (rule 5: an operation that outlived the hold life
-/// fails with the retryable error).
+/// The view a read of the current operation reads with: the tenant's current one (`current`), except under
+/// [`CONTROL_KEEP_VIEW`], where it is the first one the operation read with.
+pub fn op_view(holds: &Arc<Holds>, current: &Arc<View>) -> Arc<View> {
+    if CONTROL_KEEP_VIEW.load(Relaxed) {
+        if let Ok(Some(v)) = OP.try_with(|op| op.borrow().iter().find(|(h, _, _)| Arc::ptr_eq(h, holds)).map(|(_, v, _)| Arc::clone(v))) {
+            return v;
+        }
+    }
+    Arc::clone(current)
+}
+
+/// After every step of a read: nothing to check for the operation as a whole (option (b)); under
+/// [`CONTROL_OP_HOLDS`], step 7a's check (an operation older than the hold life fails).
 pub fn op_check() -> anyhow::Result<()> {
-    OP.try_with(|op| op.borrow().iter().try_for_each(|h| h.check())).unwrap_or(Ok(()))
+    if !CONTROL_OP_HOLDS.load(Relaxed) {
+        return Ok(());
+    }
+    OP.try_with(|op| op.borrow().iter().filter_map(|(_, _, h)| h.as_ref()).try_for_each(|h| h.check())).unwrap_or(Ok(()))
 }

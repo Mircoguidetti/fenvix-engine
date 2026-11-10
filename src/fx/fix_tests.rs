@@ -254,6 +254,8 @@ async fn f6_a_late_put_finds_its_slot_taken_by_the_fence() {
 #[tokio::test]
 async fn f6_config_check_refuses_bad_timings() {
     let _s = super::tests::SERIAL.lock().await;
+    // E1's wait as in production (other tests leave it at 0; step 7b's check refuses that below T_pin)
+    E1_WAIT_MS.store(u64::MAX, Relaxed);
     let saved = [PUT_TIMEOUT_MS.load(Relaxed), LEASE_MS.load(Relaxed), LEASE_MARGIN_MS.load(Relaxed), REMOTE_LEASE_MS.load(Relaxed), GC_GRACE_MS.load(Relaxed), hold::HOLD_LIFE_MS.load(Relaxed), T_PIN_MS.load(Relaxed)];
     let set = |p: u64, l: u64, m: u64, r: u64, g: u64, h: u64, tp: u64| {
         PUT_TIMEOUT_MS.store(p, Relaxed);
