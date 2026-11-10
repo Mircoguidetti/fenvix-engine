@@ -4,15 +4,15 @@
  "trials": [
   {
    "secs": 15.0,
-   "acked_ids": 23660,
-   "acked_writes_before_kill": 47273,
+   "acked_ids": 21966,
+   "acked_writes_before_kill": 43915,
    "lost_inserts": 0,
    "lost_updates": 0,
-   "wal_puts_per_write": 0.107
+   "wal_puts_per_write": 0.109
   }
  ],
  "total": {
-  "acked_ids": 23660,
+  "acked_ids": 21966,
   "lost_inserts": 0,
   "lost_updates": 0
  }
