@@ -497,6 +497,20 @@ impl Entry {
         Ok(Some((n, c.sh.stats.derive_encoded.load(Relaxed))))
     }
 
+    /// Before a close: flush the memtable while this database's compactor still runs, then stop it (c2-fix-clone-uploads).
+    /// A flush waits for room in L0, and with a compactor only the compactor makes that room (the old compaction pass
+    /// no longer runs on its databases, `lifecycle::compact_tenant_pass_with`); stopped first, a close with L0 full timed
+    /// out (unclean close, MEASURED in ctl test_51). A flush that fails or times out here is left to the close's own.
+    async fn flush_then_stop_fxc(&mut self) {
+        if self.fxc.is_some() && self.tenant.as_ref().is_some_and(|t| t.is_writer()) {
+            let r = tokio::time::timeout(tenant_bench::lifecycle::CLOSE_FLUSH_TIMEOUT, tenant_bench::lifecycle::flush_writer_memtable(&self.name)).await;
+            if !matches!(r, Ok(Ok(_))) {
+                eprintln!("close of {}: memtable flush with the compactor running did not finish; the close flushes", self.name);
+            }
+        }
+        self.stop_fxc().await;
+    }
+
     /// Stop this database's compactor (before its tenant closes, is abandoned or dropped).
     async fn stop_fxc(&mut self) {
         if let Some(c) = self.fxc.take() {
@@ -737,7 +751,7 @@ impl Entry {
         self.sstat.clear();
         self.meta_clear();
         crate::opening::forget_db(&self.name);
-        self.stop_fxc().await;
+        self.flush_then_stop_fxc().await;
         if let Some(t) = self.tenant.take() {
             crate::fair::note_written(&self.name, 0, true);
             let r = t.close().await;
@@ -1096,7 +1110,7 @@ impl Entry {
         self.sstat.clear();
         self.meta_clear();
         crate::opening::forget_db(&self.name);
-        self.stop_fxc().await;
+        self.flush_then_stop_fxc().await;
         if let Some(t) = self.tenant.take() {
             t.close().await?;
             self.closes += 1;

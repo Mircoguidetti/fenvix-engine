@@ -32,6 +32,22 @@ def passes(c):
     return c.admin.command("serverStatus")["fenvix"]["compaction"]["passes"]
 
 
+def compactor_jobs(c):
+    """Jobs of the compactors (compaction 2, step 4): with sealed runs on they compact the database, and the old
+    compaction pass does not run on it (c2-fix-clone-uploads)."""
+    x = c.admin.command("serverStatus")["fenvix"]["compactor"]
+    return x["absorbs"] + x["merges"] + x["reseals"]
+
+
+def with_compactor(c):
+    return c.admin.command("serverStatus")["fenvix"]["compactor"]["started"] > 0
+
+
+def uploads_open(bucket, prefix):
+    from lib import s3
+    return [u["Key"] for u in s3().list_multipart_uploads(Bucket=bucket).get("Uploads", []) if u["Key"].startswith(prefix)]
+
+
 def running(c):
     return c.admin.command("serverStatus")["fenvix"]["compaction"]["running"]
 
@@ -141,7 +157,7 @@ def test_index_matches_documents_during_compaction():
                         errors.append(f"read: {e!r}"[:300])
                 stats["reads"] += 1
 
-        p0 = passes(c)
+        p0, j0 = passes(c), compactor_jobs(c)
         ts = [threading.Thread(target=writer, args=(s,)) for s in range(4)] + [threading.Thread(target=reader, args=(100 + s,)) for s in range(2)]
         for t in ts:
             t.start()
@@ -151,9 +167,13 @@ def test_index_matches_documents_during_compaction():
         stop.set()
         for t in ts:
             t.join(120)
-        during = passes(c) - p0
+        during, jobs = passes(c) - p0, compactor_jobs(c) - j0
         assert not errors, errors[:5]
-        assert during >= 3, f"only {during} compaction passes ran during the reads (reads {stats['reads']}, writes {stats['writes']})"
+        if with_compactor(c):
+            # c2-fix-clone-uploads: the compactor compacts; its absorptions, tier merges and reseals rewrite what the reads see
+            assert jobs >= 3, f"only {jobs} compactor jobs ran during the reads (reads {stats['reads']}, writes {stats['writes']})"
+        else:
+            assert during >= 3, f"only {during} compaction passes ran during the reads (reads {stats['reads']}, writes {stats['writes']})"
         assert stats["moves"] > 0 and stats["reads"] > 50, stats
         # after the compaction settles: every customer once more, and the compacted output is lz4
         wait_until(lambda: running(c) == 0, timeout=120, what="compaction settles")
@@ -167,23 +187,28 @@ def test_index_matches_documents_during_compaction():
         assert all(s["codec"] == "lz4" for s in run_ssts), [s["codec"] for s in run_ssts]
         assert all(s["codec"] == "lz4" for s in info["l0"]), [s["codec"] for s in info["l0"]]
         print(f"reads {stats['reads']}, writes {stats['writes']}, moves {stats['moves']}, compaction passes during the reads {during}, "
-              f"runs now {len(info['runs'])}, documents {sum(len(v) for v in model.values())}")
+              f"compactor jobs {jobs}, runs now {len(info['runs'])}, documents {sum(len(v) for v in model.values())}")
     finally:
         srv.term()
 
 
 def test_sigkill_mid_compaction():
+    """With a compactor (sealed runs on) the kill comes while one of its jobs writes a run (an upload open under the
+    database) or SlateDB's compaction under it writes an SST outside the manifest; without, while an old pass runs.
+    After the restart: every acknowledged insert is there, the indexes match the documents, and nothing the killed
+    compaction left is kept for ever (SSTs outside the manifest deleted; open uploads aborted by the startup sweep)."""
     bucket = make_bucket("custkill")
-    srv = Server(bucket, "custkill", idle=600, extra=FLAGS).start()
+    srv = Server(bucket, "custkill", idle=600, extra=FLAGS + ["--abandoned-upload-secs", "2"]).start()
     acked = {}
     try:
         c = srv.client()
         c.cc.m.create_index([("u", ASCENDING), ("k", ASCENDING)])
+        c.cc.m.create_index([("k", ASCENDING)])
         r = random.Random(5)
-        next_id, killed_in_pass = 0, False
+        next_id, killed_in_pass, how = 0, False, None
         t0 = time.time()
-        # write until a pass is running (and at least 6 MB are in), then SIGKILL right away
-        while time.time() - t0 < 180:
+        # write until a compaction is in flight (and at least 8,000 documents are in), then SIGKILL right away
+        while time.time() - t0 < 240:
             docs = []
             for _ in range(200):
                 next_id += 1
@@ -191,55 +216,73 @@ def test_sigkill_mid_compaction():
             c.cc.m.insert_many(docs)
             for d in docs:
                 acked[d["_id"]] = d
-            if next_id > 8000 and running(c) > 0:
-                # the moment that matters: an SST is in the bucket and not in the manifest (a pass's output not yet
-                # published, or a flush)
-                for _ in range(200):
-                    _, live = sst_ids(c, "cc")
-                    names = {k.rsplit("/", 1)[1][:-4] for k, _ in list_prefix(bucket, "tenants/cc/compacted/") if k.endswith(".sst")}
-                    if names - live:
-                        break
-                    if running(c) == 0:
-                        break
-                if names - live:
-                    srv.kill9()
-                    killed_in_pass = True
+            if next_id <= 8000:
+                continue
+            compactor = with_compactor(c)
+            if not compactor and running(c) == 0:
+                continue
+            # the moment that matters: a run being uploaded, or an SST in the bucket and not in the manifest (a
+            # compaction's output not yet published, or a flush)
+            for _ in range(200):
+                if compactor and uploads_open(bucket, "tenants/cc/"):
+                    how = "a run upload open"
                     break
-        assert killed_in_pass, "never saw an SST outside the manifest while a pass was running"
+                _, live = sst_ids(c, "cc")
+                names = {k.rsplit("/", 1)[1][:-4] for k, _ in list_prefix(bucket, "tenants/cc/compacted/") if k.endswith(".sst")}
+                if names - live:
+                    how = "an SST outside the manifest"
+                    break
+                if not compactor and running(c) == 0:
+                    break
+            if how:
+                srv.kill9()
+                killed_in_pass = True
+                break
+        assert killed_in_pass, "never saw a compaction in flight"
         left = {k for k, _ in list_prefix(bucket, "tenants/cc/compacted/") if k.endswith(".sst")}
+        uploads_left = uploads_open(bucket, "tenants/cc/")
+        time.sleep(3)
         srv.start()
         c = srv.client()
         col = c.cc.m
-        # every acknowledged insert is there: by _id (the locator), through the customer index, and by a collection scan
+        # every acknowledged insert is there: by _id (the locator), through both indexes, and by a collection scan
         ids = sorted(acked)
         found = set()
         for i in range(0, len(ids), 500):
             found |= {d["_id"] for d in col.find({"_id": {"$in": ids[i:i + 500]}}, {"_id": 1})}
         assert found == set(ids), f"lost {len(set(ids) - found)} acknowledged inserts, e.g. {sorted(set(ids) - found)[:5]}"
+        via_k = {d["_id"]: d["k"] for d in col.find({"k": {"$gte": 0}}, {"k": 1}).hint([("k", 1)])}
+        assert via_k == {i: d["k"] for i, d in acked.items()}, "the {k} index does not match the documents"
         for u in range(CUSTOMERS):
             want = {i for i, d in acked.items() if d["u"] == u}
             via_ix = {d["_id"] for d in col.find({"u": u}, {"_id": 1}).hint([("u", 1), ("k", 1)])}
             via_scan = {d["_id"] for d in col.find({"u": u}, {"_id": 1}).hint({"$natural": 1})}
-            assert want <= via_ix and via_ix == via_scan, f"customer {u}: acked {len(want)}, index {len(via_ix)}, scan {len(via_scan)}"
+            assert want == via_ix == via_scan, f"customer {u}: acked {len(want)}, index {len(via_ix)}, scan {len(via_scan)}"
         for i in r.sample(ids, 50):
             assert col.find_one({"_id": i}) == acked[i]
         _, live0 = sst_ids(c, "cc")
         orphans_at_restart = {k.rsplit("/", 1)[1][:-4] for k in left} - live0
-        # a write opens the writer again (its compaction passes and SST cleanup run while it is open)
+        # a write opens the writer again (its compaction and SST cleanup run while it is open)
         col.insert_one({"_id": -1, "u": 0, "k": 0, "pad": PAD})
-        # no orphan forever: what the killed pass left outside the manifest is deleted by the cleanup
+        # no orphan forever: what the killed compaction left outside the manifest is deleted by the cleanup. The cleanup
+        # of an open writer runs once its manifest moved on (`SST_GC_MANIFEST_STEP` versions, or a pass): keep writing.
+        extra = [0]
+
         def no_orphans():
+            extra[0] += 1
+            col.insert_many([{"_id": -1 - extra[0] * 10_000 - i, "u": 0, "k": 0, "pad": PAD} for i in range(1500)])
             if running(c) > 0:
                 return False
             _, live = sst_ids(c, "cc")
             now = {k for k, _ in list_prefix(bucket, "tenants/cc/compacted/") if k.endswith(".sst")}
             names = {k.rsplit("/", 1)[1][:-4] for k in now}
-            orphans_now = {n for n in names if n not in live}
             left_orphans = {k.rsplit("/", 1)[1][:-4] for k in left} - live
-            return not orphans_now and not (left_orphans & names)
-        wait_until(no_orphans, timeout=150, every=2, what="the SSTs outside the manifest are deleted")
-        print(f"acked {len(acked)} inserts, all there after SIGKILL in a pass; {len(left)} SSTs in the bucket at the kill, "
-              f"{len(orphans_at_restart)} of them outside the manifest after the restart, all deleted since")
+            return not (left_orphans & names)
+        wait_until(no_orphans, timeout=150, every=2, what="the SSTs outside the manifest at the kill are deleted")
+        # the uploads the kill left open are aborted by the restart's sweep (`--abandoned-upload-secs 2`)
+        wait_until(lambda: not (set(uploads_left) & set(uploads_open(bucket, "tenants/cc/"))), timeout=30, what="the kill's open uploads aborted")
+        print(f"killed with {how}; acked {len(acked)} inserts, all there; {len(left)} SSTs in the bucket at the kill, "
+              f"{len(orphans_at_restart)} of them outside the manifest after the restart, all deleted since; {len(uploads_left)} uploads open at the kill, aborted")
     finally:
         srv.term()
 

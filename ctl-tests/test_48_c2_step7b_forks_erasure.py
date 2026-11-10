@@ -137,8 +137,17 @@ def test_a_whole_customer_delete_is_an_erasure(srv):
     assert e["deadline_ms"] - e["requested_ms"] == 24 * 3600 * 1000, e
     # the customer writes again after the erasure: new data, kept
     c[db]["msgs"].insert_one({"_id": "u1-new", "userId": "u1", "t": 999, "email": "new@x", "body": "after"})
-    e = wait_until(lambda: (x := erasures(srv, db)[0])["state"] == "scrubbed" and x, timeout=30, what="the erasure agent's scrub")
-    assert e["rows_erased"] > 0 and e["live_done_ms"] is not None and not e["overdue"], e
+    # the record is saved "scrubbed" by the scrub and saved again with `live_done_ms` by the retire step of the same pass
+    # (fx/erase.rs `record_scrub`, then `retire`): a read between the two saw it without (c2-fix-clone-uploads)
+    e = wait_until(lambda: (x := erasures(srv, db)[0])["state"] == "scrubbed" and x["live_done_ms"] is not None and x, timeout=30, what="the erasure agent's scrub")
+    assert not e["overdue"], e
+    # c2-fix-clone-uploads: with a compactor the erasure is its job (every group the customer meets is resealed without
+    # the rows, every delta run it meets rewritten, compactor.rs "Erasures"), so the agent's scrub finds no row of ours
+    # left to rewrite and `rows_erased` stays 0. The erasure is checked by its effects: the documents gone (`check`
+    # below, before and after the drop of SlateDB's rows) and, for the whole database, the proof at 0 objects.
+    compactor = c.admin.command("serverStatus")["fenvix"]["compactor"]["started"] > 0
+    if not compactor:
+        assert e["rows_erased"] > 0, e
     assert list_prefix(srv.bucket_name, f"tenants/{db}/fx/erasures/{e['id']}.keys") == [], "the customer's keys must go with the scrub"
     # reads, before and after the drop of SlateDB's rows at or below X_d (>= S_e)
     def check():

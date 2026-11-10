@@ -367,6 +367,8 @@ pub struct Compactor {
     /// When each group's reseal became due (the lag measure).
     due_since: Mutex<HashMap<u32, Instant>>,
     pub stopped: AtomicBool,
+    /// Woken by `stop`: the jobs running then are cancelled at their next await (c2-fix-clone-uploads).
+    stop_signal: tokio::sync::Notify,
     pub drop: Arc<super::drop::DropCtl>,
     slate: Mutex<Option<tokio::task::JoinHandle<()>>>,
     slate_stop: Mutex<Option<(Arc<slatedb::compactor::Compactor>, Arc<slatedb::CompactionWorker>)>>,
@@ -422,6 +424,7 @@ impl Compactor {
             running: Mutex::new(Running::default()),
             due_since: Mutex::new(HashMap::new()),
             stopped: AtomicBool::new(false),
+            stop_signal: tokio::sync::Notify::new(),
             paused: AtomicBool::new(false),
             drop,
             slate: Mutex::new(None),
@@ -464,9 +467,16 @@ impl Compactor {
         self.sh.erasures.lock().unwrap().push(Erasure { lo, hi, seq, asked: Instant::now(), done: None });
     }
 
-    /// Stop: no new job, SlateDB's side stopped. Jobs already running finish or abandon.
+    /// Stop: no new job, SlateDB's side stopped, jobs running now cancelled.
+    ///
+    /// c2-fix-clone-uploads: jobs used to run on after the stop and abandon at their commit. An absorption in flight when
+    /// a database closed read every L0 SST it had planned (MEASURED: 4.5-6 MB over several seconds at 100,000 documents,
+    /// read during the next fork of that database) and then threw it away. A cancelled job publishes nothing of its own:
+    /// a version create already sent runs in a task of its own (`create`) and lands or not as any PUT in flight; runs
+    /// written and not listed are orphans for GC (rule 17); a run writer dropped unfinished aborts its upload.
     pub async fn stop(&self) {
         self.stopped.store(true, Relaxed);
+        self.stop_signal.notify_waiters();
         ACTIVE.lock().unwrap().remove(self.id());
         let s = self.slate_stop.lock().unwrap().take();
         if let Some((c, w)) = s {
@@ -1213,7 +1223,10 @@ impl Compactor {
             if trace {
                 eprintln!("fx trace {}: {prio:?} starts", c.id());
             }
-            let r = f(Arc::clone(&c)).await;
+            let r = tokio::select! {
+                r = f(Arc::clone(&c)) => r,
+                _ = c.stopped_wait() => Err(anyhow!("compactor of {} stopped: job cancelled", c.id())),
+            };
             if trace {
                 eprintln!("fx trace {}: {prio:?} ends after {:?}: {:?}", c.id(), w0.elapsed(), r.as_ref().err().map(|e| format!("{e:#}")));
             }
@@ -1226,6 +1239,19 @@ impl Compactor {
             }
             c.sh.stats.job_cpu_us.fetch_add(thread_cpu_us().saturating_sub(t0), Relaxed);
         });
+    }
+
+    /// Resolves once `stop` has been called.
+    async fn stopped_wait(&self) {
+        loop {
+            let n = self.stop_signal.notified();
+            tokio::pin!(n);
+            n.as_mut().enable();
+            if self.stopped.load(Relaxed) {
+                return;
+            }
+            n.await;
+        }
     }
 
     /// Run the planner every `tick` until stopped.

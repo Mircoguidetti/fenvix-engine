@@ -2662,6 +2662,15 @@ pub(crate) async fn compact_tenant_pass_with(
         // compaction with the drop off); two compactors on one database would fence each other
         return Ok(None);
     }
+    if crate::fx::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed) && !crate::fx::manifest::list_versions(raw, id).await?.is_empty() {
+        // c2-fix-clone-uploads: with compactors on, a database with a version of our manifest is compacted by its own
+        // compactor only, also while it is closed or open without one (it starts at the first write). This pass's
+        // scheduler is not gated on absorption: at a close it folded the last memtable flush (never absorbed: the
+        // compactor stops before that flush) into a sorted run; after the next open the absorptions moved X_d past those
+        // rows, and the merged reader, which ignores SlateDB rows at or below X_d, returned their older values
+        // (acknowledged updates lost to reads, MEASURED). It also made a clone of a closed source read whole SSTs.
+        return Ok(None);
+    }
     let l0_before = l0_count(raw, id).await?;
     if l0_before < L0_COMPACT_THRESHOLD {
         // The L0 watch queued this pass from the writer's own view. When the stored manifest has fewer L0 SSTs, the writer

@@ -490,11 +490,19 @@ pub struct RunMeta {
     pub derived_rows: u64,
 }
 
+/// Uploads aborted because their writer was dropped unfinished (an error, a cancelled job), process-wide.
+pub static DROPPED_UPLOADS_ABORTED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 /// Writes one run as a multipart upload. The object becomes visible only when `finish` completes the upload.
+///
+/// A writer dropped before `finish` or `abort` completed (an error on a part, a job that gave up or was cancelled)
+/// aborts its upload in a task of its own (c2-fix-clone-uploads): S3 keeps, and bills, the parts of an upload that is
+/// neither completed nor aborted for ever (integration-3: 9.4 GB of them filled MinIO).
 pub struct RunWriter {
     path: Path,
     run_id: [u8; RUN_ID_LEN],
-    upload: Box<dyn MultipartUpload>,
+    /// None once the upload is completed or aborted.
+    upload: Option<Box<dyn MultipartUpload>>,
     opts: RunOptions,
     out: Vec<u8>,
     written: u64,
@@ -520,7 +528,7 @@ impl RunWriter {
         Ok(RunWriter {
             path,
             run_id: rand::random(),
-            upload,
+            upload: Some(upload),
             out: Vec::with_capacity(opts.part_bytes.min(64 << 20)),
             raw: Vec::with_capacity(opts.block_bytes + 4096),
             opts,
@@ -622,13 +630,15 @@ impl RunWriter {
         let data = std::mem::replace(&mut self.out, Vec::with_capacity(self.opts.part_bytes.min(64 << 20)));
         self.written += data.len() as u64;
         self.parts += 1;
-        self.upload.put_part(PutPayload::from(data)).await?;
+        self.upload.as_mut().ok_or_else(|| anyhow::anyhow!("run writer used after its end"))?.put_part(PutPayload::from(data)).await?;
         Ok(())
     }
 
     /// Drops the upload: nothing becomes visible.
     pub async fn abort(mut self) -> anyhow::Result<()> {
-        self.upload.abort().await?;
+        if let Some(mut u) = self.upload.take() {
+            u.abort().await?;
+        }
         Ok(())
     }
 
@@ -688,7 +698,13 @@ impl RunWriter {
         f.extend(t);
         self.push_out(&f).await?;
         self.flush_part().await?;
-        self.upload.complete().await?;
+        let mut u = self.upload.take().ok_or_else(|| anyhow::anyhow!("run writer used after its end"))?;
+        if let Err(e) = u.complete().await {
+            // the outcome is unknown (a timeout) or a failure: abort; an abort after a completion that did land fails
+            // with NoSuchUpload and leaves the object, which nothing references (GC removes it)
+            abort_in_background(u);
+            return Err(e.into());
+        }
         Ok(RunMeta {
             path: self.path.to_string(),
             run_id: self.run_id,
@@ -709,6 +725,26 @@ impl RunWriter {
             version,
             derived_rows: self.derived_rows,
         })
+    }
+}
+
+impl Drop for RunWriter {
+    fn drop(&mut self) {
+        if let Some(u) = self.upload.take() {
+            abort_in_background(u);
+        }
+    }
+}
+
+/// Abort an upload in a task of its own (a drop cannot wait). Without a runtime (a process ending) nothing is sent: the
+/// startup sweep of the next process aborts what is left (`mongo-server/src/uploads.rs`).
+fn abort_in_background(mut u: Box<dyn MultipartUpload>) {
+    if let Ok(h) = tokio::runtime::Handle::try_current() {
+        h.spawn(async move {
+            if u.abort().await.is_ok() {
+                DROPPED_UPLOADS_ABORTED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            }
+        });
     }
 }
 
