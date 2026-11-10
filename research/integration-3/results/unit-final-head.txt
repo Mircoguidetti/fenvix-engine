@@ -1,0 +1,322 @@
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 98 tests
+test agentlane::tests::glob_and_classify ... ok
+test agg::tests::group_accumulators ... ok
+test agg::tests::count_via_match_group ... ok
+test agg::tests::project_add_fields_unwind_lookup ... ok
+test collstat::tests::key_escapes_the_name ... ok
+test custkey::tests::areas_from_bounds ... ok
+test collstat::tests::round_trip_and_apply ... ok
+test custkey::tests::bounds_between_customers_keep_order ... ok
+test custkey::tests::config_matches_db_and_collection ... ok
+test custkey::tests::counter_finds_the_area_of_a_collection_named_with_a_slash ... ok
+test custkey::tests::missing_is_null_and_the_time_field_sits_before_the_id ... ok
+test custkey::tests::keys_map_both_ways_and_keep_order ... ok
+test authz::grantable_tests::grantable_values ... ok
+test custkey::tests::one_customer_shares_a_prefix_whatever_the_number_type ... ok
+test expr::tests::arithmetic_types ... ok
+test custkey::tests::run_format_finds_the_customer_component_of_server_keys ... ok
+test expr::tests::dates ... ok
+test fair::tests::bucket_refills_up_to_burst ... ok
+test expr::tests::cond_ifnull_and_paths ... ok
+test fair::tests::usage_decays_by_half_life ... ok
+test fair::tests::least_used_database_goes_first ... ok
+test fair::tests::weights_parse ... ok
+test geo_query::tests::match_points ... ok
+test geo_query::tests::square_contains ... ok
+test hostinfo::tests::counts_physical_cores_and_sockets ... ok
+test geo_query::tests::covering_contains_point_cell ... ok
+test hostinfo::tests::parses_meminfo_and_cgroup ... ok
+test index::tests::entry_id_roundtrip ... ok
+test hostinfo::tests::host_info_is_this_machine ... ok
+test index::tests::multikey_entries_dedupe_and_flag ... ok
+test index::tests::equality_prefix_then_range ... ok
+test index::tests::parallel_arrays_rejected ... ok
+test index::tests::sparse_and_partial_skip_documents ... ok
+test js::tests::function_returns_bson ... ok
+test js::tests::errors_and_limits ... ok
+test js::tests::key_order_is_kept ... ok
+test keyenc::tests::bytes_follow_mongodb_order ... ok
+test keyenc::tests::components_are_prefix_free ... ok
+test keyenc::tests::compound_keys_sort_component_by_component ... ok
+test keyenc::tests::equal_numbers_encode_identically ... ok
+test keyenc::tests::prefix_end_bounds_a_prefix ... ok
+test keyenc::tests::skip_finds_the_end_of_every_component ... ok
+test js::tests::map_reduce_groups ... ok
+test layout::tests::collection_prefixes_do_not_overlap ... ok
+test js::tests::where_expression_and_function ... ok
+test layout::tests::large_int64_ids_stay_distinct ... ok
+test layout::tests::numbers_equal_across_types_and_sorted ... ok
+test layout::tests::types_group_in_bson_order ... ok
+test netguard::tests::blocks_per_address_and_per_database ... ok
+test netguard::tests::defaults_of_the_flags ... ok
+test netguard::tests::ipv6_is_counted_by_its_prefix_and_trusted_is_never_blocked ... ok
+test netguard::tests::connection_slots ... ok
+test netguard::tests::matches_boundaries ... ok
+test netguard::tests::parses_and_canonicalizes ... ok
+test netguard::tests::many_authenticated_connections_from_one_address ... ok
+test netguard::tests::progressive_blocks ... ok
+test netguard::tests::refuses_bad_entries ... ok
+test netguard::tests::total_limit_default_follows_the_open_files ... ok
+test netguard::tests::total_limit_of_the_process ... ok
+test netguard::tests::total_per_address_limit_when_set ... ok
+test opening::tests::a_trim_keeps_consecutive_scans_of_one_query_together ... ok
+test netguard::tests::per_database_limit ... ok
+test opening::tests::apply_keeps_the_byte_count_exact ... ok
+test js::tests::command_budget_spans_calls ... ok
+test opening::tests::a_visit_of_three_queries_is_kept_and_follows_writes ... ok
+test opening::tests::fix_eviction_takes_the_least_recently_visited_first ... ok
+test opening::tests::newest_first_page_is_served_after_new_messages_and_misses_after_a_delete ... ok
+test opening::tests::reads_outside_the_users_regions_make_the_opening_unkeepable ... ok
+test opening::tests::regions_of_different_users_never_overlap ... ok
+test opening::tests::fix_random_visits_and_writes_keep_cap_budget_and_exactness ... ok
+test opening::tests::review_a_pending_opening_obeys_the_size_cap ... ok
+test query::tests::arrays_and_paths ... ok
+test query::tests::logic ... ok
+test query::tests::mixed_type_order ... ok
+test query::tests::null_and_exists ... ok
+test query::tests::numbers_compare_across_types ... ok
+test query::tests::projection_slice ... ok
+test query::tests::regex_and_array_operators ... ok
+test query::tests::sort_and_projection ... ok
+test query::tests::top_k_equals_sort_then_truncate ... ok
+test query::tests::type_bracketing ... ok
+test regex::tests::errors_have_mongodb_codes ... ok
+test regex::tests::options_and_lookaround ... ok
+test search::tests::analyzer ... ok
+test search::tests::fuzzy_and_phrase ... ok
+test text::tests::query_parsing ... ok
+test opening::tests::review_pending_openings_stay_inside_the_memory_budget ... ok
+test text::tests::scores_match_mongodb ... ok
+test text::tests::stems_before_stripping_diacritics ... ok
+test update::tests::array_operators ... ok
+test update::tests::formatting ... ok
+test update::tests::inc_types ... ok
+test update::tests::modifiers_apply_in_path_order ... ok
+test update::tests::replacement_keeps_id_and_rejects_change ... ok
+test update::tests::set_unset_inc ... ok
+test update::tests::upsert_builds_from_filter ... ok
+test opening::tests::served_answers_equal_storage_under_random_writes_and_trims ... ok
+test layout2::tests::mapped_reads_equal_logical_reads ... ok
+
+test result: ok. 98 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.66s
+
+
+running 142 tests
+test counter::tests::rev_bookkeeping_sizes ... ok
+test counter::tests::canon_ignores_the_scope ... ok
+test counter::tests::exit_rule_protects_what_comes_back ... ok
+test counter::tests::two_floors_end_to_end ... ok
+test envelope::tests::rows_above_the_marker_are_envelopes ... ok
+test counter::tests::rev_passing_wave_read_once ... ok
+test counter::tests::rev_passing_wave_read_twice ... ok
+test counter::tests::rev_maps_leave_room_for_active_data ... FAILED
+test fx::compactor_tests::compactor_model_drop_on ... ok
+test fx::compactor_tests::floor_respects_holds_and_control_breaks ... ok
+test fx::compactor_tests::gc_keeps_the_runs_a_fork_reference_names ... ok
+test fx::compactor_tests::held_reads_across_drop_and_gc ... ok
+test fx::compactor_tests::late_put_answer_is_a_timeout_then_a_fence ... ok
+test fx::compactor_tests::r3_reseals_a_group_whose_reads_pay ... ok
+test fx::counter_bench::counter_ram ... ignored
+test fx::counter_bench::counter_reseal ... ignored
+test fx::compactor_tests::skip_below_xd_and_control_breaks ... ok
+test fx::compactor_tests::small_delta_runs_read_from_nvme ... ok
+test fx::compactor_tests::takeover_with_an_open_transaction ... ok
+test fx::counter_tests::absent_customers_cost_no_gets ... ok
+test fx::counter_tests::slices_are_exact_under_writes_and_reseals ... ok
+test fx::derive::tests::cuts_and_rebuilds_exactly ... ok
+test fx::derive::tests::skeleton_round_trip_and_crc ... ok
+test fx::counter_tests::slices_keep_only_the_read_area_and_answer_exactly ... ok
+test fx::counter_tests::staged_publish_keeps_hot_customers_warm_across_a_reseal ... ok
+test fx::counter_tests::staged_publish_past_its_deadline_publishes_anyway ... ok
+test fx::derive_tests::derived_model_with_crashes_and_erasures ... ok
+test fx::derive_tests::fix2_erasure_of_one_collection_keeps_the_messages_still_used ... ok
+test fx::derive_tests::fix_derived_threads_stay_derived_when_the_spec_does_not_know_them ... ok
+test fx::derive_tests::paired_checkpoint_reads_exact_documents ... ok
+test fx::derive_tests::planted_wrong_reference_is_caught ... ok
+test fx::derive_tests::review_near_miss_shapes_are_left_untouched ... ok
+test fx::derive_tests::review_erasure_of_a_derived_thread ... ok
+test fx::derive_tests::review_follower_reads_derived_documents_exactly ... ok
+test fx::derive_tests::review_more_planted_bugs_are_caught ... ok
+test fx::derive_tests::review_rollback_leaves_derived_rows_in_quiet_groups ... ok
+test fx::derive_tests::review_wave_reader_rebuilds_derived_documents ... ok
+test fx::derive_tests::takeover_while_threads_are_reencoded ... ok
+test fx::derive_tests::v1_reader_refuses_v2_and_rollback_writes_plain ... ok
+test fx::droptest::tests::the_stand_in_drops_rows_at_or_below_the_floor ... ok
+test fx::fix4_tests::fix1_lease_format_with_control ... ok
+test fx::fix4_tests::fix2_control_delete_then_create_gives_two_holders ... ok
+test fx::fix6_tests::control_sibling_slice_with_unparsed_area_fails_without_the_fix ... ok
+test fx::fix6_tests::fix6_agent_reseal_ram ... ignored
+test fx::fix6_tests::control_staged_publish_hull_fails_without_the_fix ... ok
+test fx::fix4_tests::fix3_jobs_fall_back_from_a_damaged_nvme_copy_with_control ... ok
+test fx::fix4_tests::fix4_paging_with_control ... ok
+test fx::fix_tests::f6_a_late_put_finds_its_slot_taken_by_the_fence ... ok
+test fx::fix_tests::f6_config_check_refuses_bad_timings ... ok
+test fx::fix_tests::f6_a_put_whose_answer_is_late_is_a_timeout_and_the_next_hold_fences_first ... ok
+test fx::fix_tests::first_publish_control_without_the_fix_lands_unfenced ... ok
+test fx::fix_tests::first_publish_timeout_is_fenced_at_its_own_slot ... ok
+test fx::pool::tests::priorities_and_absorption_never_waits ... ok
+test fx::fix_tests::review_r2_a_late_first_publish_put_lands_unfenced ... ok
+test fx::fix_tests::rule25_control_without_the_pending_state_breaks ... ok
+test fx::fix_tests::rule25_no_hold_while_a_fence_is_pending ... ok
+test fx::review4_tests::r4_expired_lease_in_step7a_format_must_not_stop_the_drop ... ok
+test fx::review4_tests::r4_q1_lease_taken_during_a_running_drop ... ok
+test fx::review6_tests::review_agent_ram ... ignored
+test fx::review4_tests::r4_q5_nvme_copies_half_written_or_damaged ... ok
+test fx::review6_tests::review_hot_p50 ... ignored
+test fx::review6_tests::review_ram_alloc_and_patterns ... ignored
+test fx::review6_tests::review_reseal_patterns ... ignored
+test fx::review4_tests::r4_q6_manifest_size_and_restart_reads ... ok
+test fx::review4_tests::r4_q4_two_takers_of_an_expired_lease ... ok
+test fx::review6_tests::review_filter_false_positives_8_runs ... ok
+test fx::seqfilter::cust_tests::customer_filter_answers_ranges_inside_one_customer ... ok
+test fx::seqfilter::tests::skips_only_at_or_below_the_cut ... ok
+test fx::review6_tests::review_sibling_slice_with_unparsed_area ... ok
+test fx::review6_tests::review_staged_publish_warms_only_what_was_held ... ok
+test fx::review_tests::review_no_hold_after_an_unknown_publish_whose_fence_failed ... ok
+test fx::tests::a_late_put_of_a_dead_process_is_refused_by_the_fence ... ok
+test fx::tests::a_reader_refuses_past_t_pin_and_refreshes ... ok
+test fx::tests::hot_get_p50 ... ignored
+test fx::tests::a_run_replaced_at_its_path_is_an_error ... ok
+test fx::tests::envelopes_start_one_t_pin_after_the_announcement ... ok
+test fx::tests::holds_floor_revocation_and_snapshots_across_publishes ... ok
+test fx::tests::version_check_refuses_broken_versions ... ok
+test fx::tests::model_publish_every_100_ops_with_crashes ... ok
+test fx::tests::read_no_cut_trace ... ok
+test fx::tests::rows_at_or_below_xd_come_from_the_runs ... ok
+test fx::tests_7a::a_checkpoint_is_paired_under_the_drop_lease has been running for over 60 seconds
+test fx::tests_7a::a_checkpoint_is_paired_under_the_drop_lease ... ok
+test fx::tests_7a::a_reloaded_version_above_slatedb_is_refused_at_open ... ok
+test fx::tests_7a::an_operation_keeps_only_its_reads_in_flight_in_the_floor ... ok
+test fx::tests_7a::envelopes_write_waits_one_t_pin_after_its_announcement ... ok
+test fx::tests_7b::a_failed_pairing_deletes_its_checkpoint ... ok
+test fx::tests_7b::a_fork_after_a_drop_has_every_row ... ok
+test fx::tests_7b::a_short_e1_wait_is_refused_without_the_test_flag ... ok
+test fx::tests_7b::a_restore_point_keeps_erased_runs_until_it_goes ... ok
+test fx::tests_7b::an_erasure_in_a_fork_never_deletes_a_run_of_its_source ... ok
+test lifecycle::tests::abandon_does_not_wait_for_a_full_l0 ... ok
+test fx::tests_7b::an_erasure_leaves_every_run_and_slatedb ... ok
+test fx::tests_7b::an_erasure_reports_its_deadline ... ok
+test fx::tests_7b::the_follower_window_starts_before_its_head_request ... ok
+test lifecycle::tests::abandon_reports_an_unfinished_close ... ok
+test lifecycle::tests::compaction_pass_ends_when_stopped_while_starting ... ok
+test lifecycle::tests::compaction_pass_ends_when_stop_hangs ... ok
+test lifecycle::tests::failed_compaction_backs_off ... ok
+test lifecycle::tests::maintenance_log_keeps_the_last_errors ... ok
+test lifecycle::tests::visible_state_per_key ... ok
+test meter::tests::background_work_is_charged_to_no_command ... ok
+test meter::tests::cache_reports_usage ... ok
+test meter::tests::op_meter_counts_only_inside_its_scope ... ok
+test meter::tests::spawned_reads_go_to_the_commands_of_their_database ... ok
+test runfmt::tests::a_customer_inside_one_block_costs_one_get_and_an_absent_one_none ... ok
+test runfmt::tests::block_size_knob_is_checked ... ok
+test runfmt::tests::customer_components_are_found_in_both_layouts ... ok
+test runfmt::tests::customer_filter_has_no_false_negatives_and_few_false_positives ... ok
+test runfmt::tests::default_and_64k_blocks_round_trip ... ok
+test runfmt::tests::envelopes_and_successors ... ok
+test runfmt::tests::every_flipped_bit_of_a_small_run_is_an_error ... ok
+test runfmt::tests::multipart_parts_and_visibility ... ok
+test runfmt::tests::newest_reads_match_an_exact_model_across_block_and_run_boundaries ... ok
+test runfmt::tests::opening_costs_one_get_for_a_footer_under_the_open_tail ... ok
+test runfmt::tests::overlapping_runs_are_refused ... ok
+test runfmt::tests::random_flipped_bits_of_a_large_run_are_errors ... ok
+test lifecycle::tests::compaction_pass_longer_than_its_stall_window_finishes ... ok
+test runfmt::tests::review_blocks_of_one_run_with_the_footer_of_another_are_an_error ... ok
+test lifecycle::tests::always_failing_compaction_is_not_retried_every_round ... ok
+test runfmt::tests::runs_get_distinct_ids_and_open_expecting_checks_them ... ok
+test runfmt::tests::writer_checks_order_and_envelopes ... ok
+test simstore::tests::split_get_returns_the_same_bytes ... ok
+test simstore::tests::trips_count_waves_not_requests ... ok
+test tiered::tests::check_accepts_and_refuses ... ok
+test lifecycle::tests::compaction_pass_stops_when_preempted ... ok
+test runfmt::tests::review_fuzz_odd_keys_match_an_exact_model ... ok
+test runfmt::tests::random_reads_match_an_exact_model ... ok
+test warm::probe_cost::probe_cost ... ignored
+test warm::tests::big_db_slow_store ... ignored
+test warm::tests::cache_key_round_trip ... ok
+test tiered::tests::without_validate_a_read_returns_an_old_version ... ok
+test warm::tests::rev_c9::key_memory_cap ... ignored
+test warm::tests::rev_c9::l0_watch_stops_a_running_warm_up ... ignored
+test warm::tests::rev_c9::limits_and_faults ... ignored
+test warm::tests::rev_c9::many_dbs_at_once ... ignored
+test warm::tests::rev_c9::variants ... ignored
+test warm::tests::rev_c9::writes_during_slow_warm ... ignored
+test warm::tests::runs_of_blocks ... ok
+test tiered::tests::with_validate_the_wrong_job_is_refused ... ok
+test warm::tests::writes_and_reads_during_the_switch ... ok
+test warm::tests::hot_reads_stay_in_cache_after_compaction ... ok
+test tiered::tests::tiered_keeps_runs_few_and_newest_versions ... ok
+
+failures:
+
+---- counter::tests::rev_maps_leave_room_for_active_data stdout ----
+REV wave 1: maps 480120 B, data 3144 B, protected 0 B, promoted 0
+REV maps crowd out data: hot hits 0 misses 78
+
+thread 'counter::tests::rev_maps_leave_room_for_active_data' (6646) panicked at src/counter.rs:1019:9:
+pinned maps left no RAM for the active clients: 0 hits, 78 misses
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: tenant_bench::counter::tests::rev_maps_leave_room_for_active_data::{closure#0}
+   3: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   4: tenant_bench::counter::tests::rev_maps_leave_room_for_active_data
+   5: <tenant_bench::counter::tests::rev_maps_leave_room_for_active_data::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+
+failures:
+    counter::tests::rev_maps_leave_room_for_active_data
+
+test result: FAILED. 125 passed; 1 failed; 16 ignored; 0 measured; 0 filtered out; finished in 249.66s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
