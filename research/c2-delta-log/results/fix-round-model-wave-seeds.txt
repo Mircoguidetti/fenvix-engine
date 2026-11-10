@@ -1,0 +1,17 @@
+== wave seed 20261110 zstd 4000
+derived model (Zstd): St { ops: 4000, steps: 2928, gets: 1666, ranges: 496, txn_reads: 310, wrong: 0, retries: 1, crashes: 21, mid_reseal_crashes: 5, erasures: 32, forced_reseals: 2767 }
+derived model: reseals 3585, checkpoint docs seen by reseals 432144, encoded 432144, message rows written 496845, derived rebuilt by reseals 426056, fallbacks 0, reader rebuilds 61506; newest version: 5018 derived rows, 5805 message rows; erasure leftovers 0, erasures pending 0
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 121 filtered out; finished in 24.41s
+== wave seed 21 zstd 8000
+derived model (Zstd): St { ops: 8000, steps: 6041, gets: 3190, ranges: 1023, txn_reads: 612, wrong: 0, retries: 21, crashes: 34, mid_reseal_crashes: 9, erasures: 54, forced_reseals: 10106 }
+derived model: reseals 12168, checkpoint docs seen by reseals 1606032, encoded 1606032, message rows written 1816661, derived rebuilt by reseals 1593647, fallbacks 0, reader rebuilds 164939; newest version: 10322 derived rows, 11646 message rows; erasure leftovers 0, erasures pending 0
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 121 filtered out; finished in 100.65s
+== wave seed 22 lz4 8000
+derived model (Lz4): St { ops: 8000, steps: 6323, gets: 3062, ranges: 986, txn_reads: 600, wrong: 0, retries: 8, crashes: 35, mid_reseal_crashes: 10, erasures: 64, forced_reseals: 11411 }
+derived model: reseals 13654, checkpoint docs seen by reseals 1630446, encoded 1630446, message rows written 1887752, derived rebuilt by reseals 1617514, fallbacks 0, reader rebuilds 143927; newest version: 10504 derived rows, 12137 message rows; erasure leftovers 0, erasures pending 0
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 121 filtered out; finished in 76.03s
+== wave seed 23 zstd 8000
+derived model (Zstd): St { ops: 8000, steps: 6006, gets: 3350, ranges: 935, txn_reads: 638, wrong: 0, retries: 9, crashes: 36, mid_reseal_crashes: 11, erasures: 73, forced_reseals: 9828 }
+derived model: reseals 12116, checkpoint docs seen by reseals 1577706, encoded 1577706, message rows written 1786962, derived rebuilt by reseals 1565413, fallbacks 0, reader rebuilds 140614; newest version: 9322 derived rows, 10541 message rows; erasure leftovers 0, erasures pending 0
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 121 filtered out; finished in 77.39s
+EXIT
