@@ -1,0 +1,10 @@
+named: mongo-server/src/prefetch.rs: read-ahead: warms the counter's prefetch cache, never answers a query; it must warm our runs (plan round 2, fix 3, item 7)
+named: src/bin/review_sr_bench.rs: the review of step 4's bench of SlateDB's own read cost by layout (a research binary on its own in-memory store), not a server path
+named: src/counter.rs: its tests only (a reader built inside #[cfg(test)] mod tests)
+named: src/experiment.rs: a research experiment of the tenant-bench binary, not a server path
+named: src/lifecycle_exp.rs: a research experiment of the tenant-bench binary, not a server path
+named: src/main.rs: the tenant-bench research binary (wake and request-count experiments), not a server path
+named: src/maps.rs: T1's maps on the counter: warms the index and map blocks of SlateDB's SSTs, never answers a query; under way (b) it must warm our runs too (review of plan round 2, fix 3)
+named: src/tiered.rs: sst_info, a diagnostic, and compaction-1's tiered scheduler, which stays during the rollback window (review of plan round 2, fix 3)
+named: src/warm.rs: the warm spare: a FollowLatest reader and SstReader that only warm caches; it must warm our runs (plan round 2, fix 3, item 7; step 6)
+raw readers: PASS (24 matches, all in named files)
