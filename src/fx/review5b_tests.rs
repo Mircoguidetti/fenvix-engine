@@ -20,7 +20,7 @@ use std::sync::atomic::Ordering::Relaxed;
 use std::sync::Arc;
 use std::time::Duration;
 
-static SERIAL: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+// the suite's lock (super::tests::SERIAL): these tests change the same globals (the NVMe store, the L0 knobs)
 
 fn setup() {
     enable();
