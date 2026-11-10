@@ -1,0 +1,10 @@
+control false: 0 problems; None
+control true: 1 problems; Some("run tenants/fx-m8-plant/fx/run/g4/00000000000000002801-m1-5296b5a4 listed by migration state 8: corrupt run: 0 bytes")
+planted bug: publish Ok(Some(1)), wrong or failed reads 357 of 2800
+test fx::tests_8::planted_bug_mark_early_is_caught ... ok
+seed 0: St { ops: 7600, wrong: 0, writes: 3379, reads: 1959, ranges: 878, retries: 0, crashes: 28, fail_points: 13, takeovers: 29, zombie_rounds_refused: 0, groups: 35, rounds: 1, publishes: 2, invariant: 0, passes: 463, e0_refused: 1 }
+seed 1: St { ops: 8000, wrong: 0, writes: 3560, reads: 2093, ranges: 845, retries: 0, crashes: 32, fail_points: 25, takeovers: 36, zombie_rounds_refused: 1, groups: 36, rounds: 4, publishes: 2, invariant: 0, passes: 421, e0_refused: 1 }
+seed 2: St { ops: 8000, wrong: 0, writes: 3677, reads: 2055, ranges: 878, retries: 0, crashes: 38, fail_points: 33, takeovers: 44, zombie_rounds_refused: 0, groups: 32, rounds: 2, publishes: 1, invariant: 0, passes: 503, e0_refused: 1 }
+seed 3: St { ops: 8000, wrong: 0, writes: 3608, reads: 2038, ranges: 872, retries: 0, crashes: 33, fail_points: 23, takeovers: 39, zombie_rounds_refused: 0, groups: 34, rounds: 1, publishes: 2, invariant: 0, passes: 470, e0_refused: 1 }
+control "": total: 31600 ops, 131 crashes, 148 takeovers, 94 fail points, 0 wrong, 0 invariant violations
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 129 filtered out; finished in 338.62s
