@@ -732,6 +732,13 @@ async fn main() -> Result<()> {
     let seed: u64 = a.get(6).and_then(|s| s.parse().ok()).unwrap_or(5);
     let wave = std::env::var("FX_WAVE").is_ok();
     let no_settle = std::env::var("FX_NO_SETTLE").is_ok();
+    // step 5b: FX_NO_SKIP=1 reads every SlateDB SST (the reader before 5b); FX_FOLD_CAP=n sets the aged-runs cap and the
+    // L0 count at which a fold writes (the fallback is 3; the default 6)
+    let no_skip = std::env::var("FX_NO_SKIP").is_ok();
+    if no_skip {
+        fx::seqfilter::SKIP_BELOW_XD.store(false, Relaxed);
+    }
+    let fold_cap: Option<usize> = std::env::var("FX_FOLD_CAP").ok().and_then(|x| x.parse().ok());
     let as_built = std::env::var("FX_NO_RANGE_FILTER").is_ok();
     if as_built {
         fx::view::RANGE_FILTER.store(false, Relaxed);
@@ -750,7 +757,7 @@ async fn main() -> Result<()> {
     let day = d as f64 / pr.days_per_d; // bytes of inserts per compressed day
     let horizon = (pr.warm + pr.window) * pr.days_per_d;
     let bg_reads_per_day = pr.cold_per_s * 86_400.0 / pr.db_gb * (d as f64 / (1u64 << 30) as f64);
-    let tag = format!("{pname} r1 {} r3 {}{}", if r1 { "on" } else { "off" }, if r3 { "on" } else { "off" }, format!("{}{}", if wave { " wave" } else { "" }, if no_settle { " unsettled" } else { "" }) + if as_built { " no-range-filter" } else { "" } + if std::env::var("FX_MINIO").is_ok() { " minio" } else { "" } + &realtime.map(|r| format!(" realtime {r} MB/s")).unwrap_or_default());
+    let tag = format!("{pname} r1 {} r3 {}{}", if r1 { "on" } else { "off" }, if r3 { "on" } else { "off" }, format!("{}{}", if wave { " wave" } else { "" }, if no_settle { " unsettled" } else { "" }) + if as_built { " no-range-filter" } else { "" } + if no_skip { " no-skip" } else { "" } + &fold_cap.map(|c| format!(" fold-cap {c}")).unwrap_or_default() + if std::env::var("FX_MINIO").is_ok() { " minio" } else { "" } + &realtime.map(|r| format!(" realtime {r} MB/s")).unwrap_or_default());
     println!("fx_cold: {tag}, D {d_mib} MiB, L0 {l0} B, day {:.1} MiB of inserts, warm-up {:.1} days, window {:.1} days, background cold reads {bg_reads_per_day:.0} per day, S3 latency {} us, seed {seed}", day / 1048576.0, pr.warm * pr.days_per_d, pr.window * pr.days_per_d, S3_LAT_US.load(Relaxed));
     let mut out = std::fs::File::create(&out_path)?;
 
@@ -901,6 +908,8 @@ async fn main() -> Result<()> {
         version_retention: Duration::ZERO,
         gc_every: Duration::from_secs(2),
         tick: Duration::from_millis(5),
+        fold_max_runs: fold_cap.unwrap_or(6),
+        fold_at_l0: fold_cap.unwrap_or(6),
         ..Default::default()
     };
     let comp = fx::compactor::Compactor::start(&mut t, Arc::clone(&c_store), k, pool, rt.handle().clone()).await?;

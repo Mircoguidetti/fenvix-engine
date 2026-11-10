@@ -496,6 +496,7 @@ pub(crate) async fn start_slate(c: &Arc<Compactor>) -> anyhow::Result<()> {
     };
     let compactor = Arc::new(cb.build());
     let mut wo = slatedb::config::CompactionWorkerOptions::default();
+    wo.min_filter_keys = crate::lifecycle::MIN_FILTER_KEYS;
     wo.compactions_poll_interval = Duration::from_millis(10);
     wo.compression_codec = crate::tiered::codec();
     let wb = slatedb::CompactionWorkerBuilder::<object_store::path::Path>::new(path.into(), store).with_options(wo).with_sst_block_size(crate::tiered::block_size()).with_compaction_filter_supplier(Arc::new(sched));

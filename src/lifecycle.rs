@@ -362,9 +362,15 @@ fn flush_old_memtables() {
 /// read in a row (about 1% per SST level at 10 bits; about 0.01% at 20).
 pub static FILTER_BITS: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(10);
 
+/// The filter policies of every SST written and read: the Bloom filter (slatedb's default at 10 bits), and since step 5b
+/// the seq-range filter that lets the merged reader skip SSTs whose rows are all at or below its X_d (`fx/seqfilter.rs`).
+/// An SST written without the seq-range filter is read as before; a binary without it ignores the filter by name.
+/// Keys an SST needs before slatedb writes its filters (writers and compaction workers alike).
+pub const MIN_FILTER_KEYS: u32 = 1;
+
 pub(crate) fn filter_policies() -> Option<Vec<Arc<dyn slatedb::FilterPolicy>>> {
     let bits = FILTER_BITS.load(std::sync::atomic::Ordering::Relaxed);
-    (bits != 10).then(|| vec![Arc::new(slatedb::BloomFilterPolicy::new(bits)) as Arc<dyn slatedb::FilterPolicy>])
+    Some(vec![Arc::new(slatedb::BloomFilterPolicy::new(bits)) as Arc<dyn slatedb::FilterPolicy>, crate::fx::seqfilter::policy()])
 }
 
 /// The open writers (T1: the maps loop looks at their manifests).
@@ -494,6 +500,9 @@ pub fn writer_settings() -> Settings {
     if l0_bytes > 0 {
         s.l0_sst_size_bytes = l0_bytes as usize;
     }
+    // step 5b: filters on every SST, however small (slatedb's default is 1,000 keys): the seq-range filter is what lets
+    // the merged reader skip an SST at or below its X_d, and an SST without filters is always read
+    s.min_filter_keys = MIN_FILTER_KEYS;
     s.compression_codec = crate::tiered::codec();
     s.garbage_collector_options = None;
     s.compactor_options = None;
@@ -511,6 +520,10 @@ fn reader_options(skip_wal_replay: bool) -> DbReaderOptions {
 /// Open a reader in the cache scope `scope` (`None`: a fresh one); also returns the scope used.
 async fn open_reader(store: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, skip_wal_replay: bool, scope: Option<u64>) -> Result<(DbReader, Option<u64>)> {
     let b = DbReader::builder(tenant_path(&id), crate::counting::owned(store, &id.to_string())).with_reader_mode(DbReaderMode::FollowLatest).with_options(reader_options(skip_wal_replay));
+    let b = match filter_policies() {
+        Some(p) => b.with_filter_policies(p),
+        None => b,
+    };
     let (b, used) = match cache_scope_in(scope) {
         Some((c, scope)) => (b.with_db_cache(c, scope), Some(scope)),
         None => (b, None),
