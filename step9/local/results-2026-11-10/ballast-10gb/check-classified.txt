@@ -1,0 +1,4 @@
+# the differences of databases 1 and 2 (first version of ballast_check.py counted every group-sum difference as wrong): classified
+{"db": "app_data_b01", "group_sums": 175, "sum_last_digit": 6, "other_differences": 0}
+{"db": "app_data_b02", "group_sums": 175, "sum_last_digit": 4, "other_differences": 0}
+{"db": "app_data_b03", "group_sums": 175, "sum_last_digit": 5, "other_differences": 0}
