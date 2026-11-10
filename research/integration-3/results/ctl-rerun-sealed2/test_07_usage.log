@@ -1,0 +1,52 @@
+.F...F....                                                               [100%]
+=================================== FAILURES ===================================
+_____________ test_object_store_counts_match_an_independent_proxy ______________
+test_07_usage.py:81: in test_object_store_counts_match_an_independent_proxy
+    assert ours["get"] == kinds.get("GET", 0)
+E   AssertionError: assert 407 == 408
+E    +  where 408 = <built-in method get of dict object at 0x7fd59d7e84c0>('GET', 0)
+E    +    where <built-in method get of dict object at 0x7fd59d7e84c0> = {'GET': 408, 'PUT': 36, 'HEAD': 26, 'LIST': 26, ...}.get
+----------------------------- Captured stdout call -----------------------------
+ours {'copy': 0, 'delete': 3, 'get': 407, 'get_bytes': 2758256, 'get_range': 33, 'get_tier_requests': 466, 'head': 26, 'list': 26, 'put': 39, 'put_bytes': 2181317, 'put_tier_requests': 65} proxy {'GET': 408, 'PUT': 36, 'HEAD': 26, 'LIST': 26, 'MP_CREATE': 1, 'PUT_PART': 1, 'MP_COMPLETE': 1, 'GET_RANGE': 33}
+___________________ test_counters_survive_restart_and_kill9 ____________________
+test_07_usage.py:179: in test_counters_survive_restart_and_kill9
+    c["u6"].command({"insert": "c", "documents": [{"_id": 99}]})
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/database.py:946: in command
+    return self._client._retryable_read(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/database.py:934: in inner
+    return self._command(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/database.py:773: in _command
+    return conn.command(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: database u6: our manifest 3 has X_d 23 but SlateDB's last seq is 22: rows at or below X_d are missing from SlateDB, full error: {'ok': 0.0, 'errmsg': "database u6: our manifest 3 has X_d 23 but SlateDB's last seq is 22: rows at or below X_d are missing from SlateDB", 'code': 1, 'codeName': 'InternalError'}
+=========================== short test summary info ============================
+FAILED test_07_usage.py::test_object_store_counts_match_an_independent_proxy
+FAILED test_07_usage.py::test_counters_survive_restart_and_kill9 - pymongo.er...
+2 failed, 8 passed in 127.27s (0:02:07)

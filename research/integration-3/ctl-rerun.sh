@@ -2,7 +2,7 @@
 # integration-3: rerun ctl test files one by one, in the judge's environment (sealed2: JUDGE_SEALED_RUNS=2's exports;
 # off: FENVIX_SEALED_RUNS=off), deleting the MinIO buckets each file leaves (the ctl tests do not delete theirs: 571
 # buckets, 15 GB, filled this sandbox's disk during the full sealed2 judge). Usage: ctl-rerun.sh MODE OUTDIR FILE...
-MODE=$1; OUT=$2; shift 2; mkdir -p "$OUT"
+MODE=$1; OUT=$(mkdir -p "$2" && cd "$2" && pwd); shift 2
 JH=/root/.fenvix-judge; export PATH="$JH/env/bin:$PATH"
 if [ "$MODE" = sealed2 ]; then
   export FENVIX_SEALED_RUNS=2 FENVIX_SEALED_TPIN_MS=1000 FENVIX_SEALED_E1_WAIT_MS=0 FENVIX_SEALED_TEST_SHORT_E1_WAIT=1 FENVIX_SEALED_COMPACTOR=${JUDGE_SEALED_COMPACTOR:-small}
