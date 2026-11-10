@@ -43,7 +43,7 @@ mod review6_tests;
 #[cfg(test)]
 mod counter_tests;
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
 #[cfg(test)]
 mod review_tests;
 #[cfg(test)]

@@ -3395,6 +3395,8 @@ mod tests {
     /// compacted again: its L0 stayed full and its writes stopped.
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn compaction_pass_longer_than_its_stall_window_finishes() {
+        // the fx tests change process-wide SlateDB settings (L0 SST size): not while this test builds its tenant
+        let _s = crate::fx::tests::SERIAL.lock().await;
         let id = "test-compact-long";
         let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
         tenant_with_l0(&raw, id, 8, 4).await;
@@ -3410,6 +3412,8 @@ mod tests {
     /// L1: a pass is stopped at once by `preempt_compaction` (drop, erase, fork, export, restore) and that is not a failure.
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn compaction_pass_stops_when_preempted() {
+        // the fx tests change process-wide SlateDB settings (L0 SST size): not while this test builds its tenant
+        let _s = crate::fx::tests::SERIAL.lock().await;
         let id = "test-compact-preempt";
         let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
         tenant_with_l0(&raw, id, 6, 2).await;
@@ -3432,6 +3436,8 @@ mod tests {
     /// started its tasks after the stop and waited for them forever, and the maintenance worker never came back.
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn compaction_pass_ends_when_stopped_while_starting() {
+        // the fx tests change process-wide SlateDB settings (L0 SST size): not while this test builds its tenant
+        let _s = crate::fx::tests::SERIAL.lock().await;
         let id = "test-compact-stop-while-starting";
         let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
         let db = Db::builder(tenant_path(id), Arc::clone(&raw)).with_settings(writer_settings()).build().await.unwrap();
@@ -3457,6 +3463,8 @@ mod tests {
     /// its stop limit, with the store still down. Before, every `stop` was awaited without a bound.
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn compaction_pass_ends_when_stop_hangs() {
+        // the fx tests change process-wide SlateDB settings (L0 SST size): not while this test builds its tenant
+        let _s = crate::fx::tests::SERIAL.lock().await;
         let id = "test-compact-stop-hangs";
         let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
         let db = Db::builder(tenant_path(id), Arc::clone(&raw)).with_settings(writer_settings()).build().await.unwrap();
