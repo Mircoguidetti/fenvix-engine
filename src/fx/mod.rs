@@ -60,6 +60,8 @@ mod tests_7a;
 mod tests_7b;
 #[cfg(test)]
 mod tests_8;
+#[cfg(test)]
+mod review8_tests;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 

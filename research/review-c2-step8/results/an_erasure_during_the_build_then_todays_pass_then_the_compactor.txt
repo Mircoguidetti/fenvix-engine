@@ -1,0 +1,30 @@
+
+running 1 test
+test fx::review8_tests::an_erasure_during_the_build_then_todays_pass_then_the_compactor ... erasure during the build: false; writer served version None while building; today's passes skipped 0; acknowledged rows missing or different while building: 0 of 1390
+erasure during the build: true; writer served version Some(1) while building; today's passes skipped 0; acknowledged rows missing or different while building: 317 of 1350
+
+thread 'fx::review8_tests::an_erasure_during_the_build_then_todays_pass_then_the_compactor' (7792) panicked at src/fx/review8_tests.rs:485:5:
+assertion `left == right` failed: an erasure during the build: acknowledged rows missing or wrong
+  left: 317
+ right: 0
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: core::panicking::assert_failed_inner
+   3: core::panicking::assert_failed::<usize, usize>
+   4: tenant_bench::fx::review8_tests::an_erasure_during_the_build_then_todays_pass_then_the_compactor::{closure#0}
+   5: <tokio::runtime::park::CachedParkThread>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   6: tokio::runtime::context::runtime::enter_runtime::<<tokio::runtime::scheduler::multi_thread::MultiThread>::block_on<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>::{closure#0}, ()>
+   7: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   8: tenant_bench::fx::review8_tests::an_erasure_during_the_build_then_todays_pass_then_the_compactor
+   9: <tenant_bench::fx::review8_tests::an_erasure_during_the_build_then_todays_pass_then_the_compactor::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+FAILED
+
+failures:
+
+failures:
+    fx::review8_tests::an_erasure_during_the_build_then_todays_pass_then_the_compactor
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 128 filtered out; finished in 21.82s
+

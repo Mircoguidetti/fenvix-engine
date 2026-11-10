@@ -1,0 +1,34 @@
+
+running 1 test
+test fx::review8_tests::restore_points_across_the_migration_read_their_state ... restore point today's engine, before the migration: sealed runs false, paired with version None
+restore point building: sealed runs true, paired with version None
+restore point in the window: sealed runs true, paired with version Some(3)
+restore point E0 after the rollback: sealed runs false, paired with version None
+restore point generation 2 building: sealed runs true, paired with version Some(6)
+restore point today's engine, before the migration: REFUSED: database rv8-pitr: checkpoint a68a92cb-2dfc-4e74-8bf9-757234da0679 has no pair with our manifest, and the database has sealed runs; its SlateDB rows alone may be incomplete
+restore point building: read through version None: 591 rows, 0 wrong
+restore point in the window: read through version Some(3): 779 rows, 0 wrong
+restore point E0 after the rollback: REFUSED: database rv8-pitr: checkpoint 5aa90570-c6e6-41a7-8b47-59a063a12351 has no pair with our manifest, and the database has sealed runs; its SlateDB rows alone may be incomplete
+restore point generation 2 building: read through version Some(6): 1028 rows, 0 wrong
+
+thread 'fx::review8_tests::restore_points_across_the_migration_read_their_state' (20201) panicked at src/fx/review8_tests.rs:603:5:
+restore points the migration broke: ["today's engine, before the migration: refused", "E0 after the rollback: refused"]
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: tenant_bench::fx::review8_tests::restore_points_across_the_migration_read_their_state::{closure#0}
+   3: <tokio::runtime::park::CachedParkThread>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   4: tokio::runtime::context::runtime::enter_runtime::<<tokio::runtime::scheduler::multi_thread::MultiThread>::block_on<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>::{closure#0}, ()>
+   5: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   6: tenant_bench::fx::review8_tests::restore_points_across_the_migration_read_their_state
+   7: <tenant_bench::fx::review8_tests::restore_points_across_the_migration_read_their_state::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+FAILED
+
+failures:
+
+failures:
+    fx::review8_tests::restore_points_across_the_migration_read_their_state
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 129 filtered out; finished in 0.44s
+

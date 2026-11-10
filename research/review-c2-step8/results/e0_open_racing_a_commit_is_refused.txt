@@ -1,0 +1,27 @@
+
+running 1 test
+test fx::review8_tests::e0_open_racing_a_commit_is_refused ... no race: open allowed ; state after: RolledBack
+committed before: open refused ; state after: Committed
+commit races the rollback: open allowed ; state after: Committed
+
+thread 'fx::review8_tests::e0_open_racing_a_commit_is_refused' (7540) panicked at src/fx/review8_tests.rs:281:5:
+E0 opened a database whose migration is committed (the commit raced its rollback)
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: tenant_bench::fx::review8_tests::e0_open_racing_a_commit_is_refused::{closure#0}
+   3: <tokio::runtime::park::CachedParkThread>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   4: tokio::runtime::context::runtime::enter_runtime::<<tokio::runtime::scheduler::multi_thread::MultiThread>::block_on<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>::{closure#0}, ()>
+   5: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   6: tenant_bench::fx::review8_tests::e0_open_racing_a_commit_is_refused
+   7: <tenant_bench::fx::review8_tests::e0_open_racing_a_commit_is_refused::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+FAILED
+
+failures:
+
+failures:
+    fx::review8_tests::e0_open_racing_a_commit_is_refused
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 127 filtered out; finished in 0.06s
+

@@ -1,0 +1,26 @@
+
+running 1 test
+test fx::review8_tests::an_erasure_during_the_build_leaves_the_migrated_runs_clean ... erasure after the publish: erasure state "scrubbed", live_done true, scrubbed version Some(4); migration Published version Some(1); wrong reads 0; runs of the newest version holding the erased customer: []
+erasure during the build, before the publish: erasure state "scrubbed", live_done true, scrubbed version Some(1); migration Published version Some(2); wrong reads 0; runs of the newest version holding the erased customer: ["tenants/rv8-erase/fx/run/g0/00000000000000000081-m1-310663bf"]
+
+thread 'fx::review8_tests::an_erasure_during_the_build_leaves_the_migrated_runs_clean' (7547) panicked at src/fx/review8_tests.rs:170:9:
+erasure during the build, before the publish: recorded live_done, yet the newest version's runs hold the erased customer: ["tenants/rv8-erase/fx/run/g0/00000000000000000081-m1-310663bf"]
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: tenant_bench::fx::review8_tests::an_erasure_during_the_build_leaves_the_migrated_runs_clean::{closure#0}
+   3: <tokio::runtime::park::CachedParkThread>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   4: tokio::runtime::context::runtime::enter_runtime::<<tokio::runtime::scheduler::multi_thread::MultiThread>::block_on<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>::{closure#0}, ()>
+   5: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   6: tenant_bench::fx::review8_tests::an_erasure_during_the_build_leaves_the_migrated_runs_clean
+   7: <tenant_bench::fx::review8_tests::an_erasure_during_the_build_leaves_the_migrated_runs_clean::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+FAILED
+
+failures:
+
+failures:
+    fx::review8_tests::an_erasure_during_the_build_leaves_the_migrated_runs_clean
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 127 filtered out; finished in 0.52s
+

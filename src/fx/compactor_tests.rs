@@ -835,3 +835,65 @@ async fn r3_reseals_a_group_whose_reads_pay() {
     t.abandon().await;
     teardown();
 }
+
+/// Integration-3 (step 4 with step 7b): step 7b writes a `clone` fork's reference at `{source}/fx/forks/{fork}` naming
+/// the source's version and runs the fork's first version lists. Step 4's GC must keep those runs although no newer
+/// version of the source lists them; it read only `fx/pairs` and `fx/refs`, so the fork lost every run it shares (a
+/// read of the fork then fails: data loss for the fork). The control writes no reference: GC deletes the same runs in
+/// the same window, so the test can see a deletion.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn gc_keeps_the_runs_a_fork_reference_names() {
+    let _s = SERIAL.lock().await;
+    setup();
+    for control in [false, true] {
+        let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let id = if control { "fx-forkgc-ctl" } else { "fx-forkgc" };
+        let mut t = lc(&store).create(id).await.unwrap();
+        let mut m = BTreeMap::new();
+        for i in 0..400 {
+            apply(&mut t, &mut m, vec![(ckey(i % 9, i), Some(vec![b'a'; 60]))]).await;
+        }
+        publish(&mut t, &small_opts(build::Reseal::All)).await;
+        let v1 = t.fx_view().unwrap().meta.clone();
+        let runs: Vec<String> = v1.groups.iter().filter_map(|g| g.sealed.as_ref().map(|s| s.path.clone())).chain(v1.delta.iter().map(|d| d.path.clone())).collect();
+        assert!(!runs.is_empty());
+        if !control {
+            let r = pair::ForkRef { fork: "kid".into(), source: id.into(), version: v1.version, runs: runs.clone(), created_ms: manifest::now_ms() };
+            object_store::ObjectStoreExt::put(&*store, &pair::fork_ref_path(id, "kid"), serde_json::to_vec(&r).unwrap().into()).await.unwrap();
+        }
+        let c = Compactor::start(&mut t, Arc::clone(&store), test_knobs(false), pool::Pool::new(2), tokio::runtime::Handle::current()).await.unwrap();
+        // a rewrite round, absorbed, then every group resealed and the delta runs merged: no newer version lists v1's runs
+        for i in 0..400 {
+            apply(&mut t, &mut m, vec![(ckey(i % 9, i), Some(vec![b'b'; 60]))]).await;
+        }
+        flush(&t).await;
+        while c.absorb_once().await.unwrap() > 0 {}
+        let v = c.current().await;
+        for gi in 0..v.groups.len() {
+            c.reseal_once(Some(gi)).await.unwrap();
+        }
+        while c.merge_once().await.unwrap() {}
+        t.fx_sync();
+        let newest = c.current().await;
+        let still_listed = runs.iter().filter(|p| newest.groups.iter().any(|g| g.sealed.as_ref().is_some_and(|s| &s.path == *p)) || newest.delta.iter().any(|d| &d.path == *p)).count();
+        assert_eq!(still_listed, 0, "the newest version should list none of v1's runs");
+        gc::gc_once(&c).await.unwrap();
+        tokio::time::sleep(test_knobs(false).gc_grace + Duration::from_millis(300)).await;
+        gc::gc_once(&c).await.unwrap();
+        let mut missing = 0;
+        for p in &runs {
+            if object_store::ObjectStoreExt::head(&*store, &object_store::path::Path::from(p.as_str())).await.is_err() {
+                missing += 1;
+            }
+        }
+        eprintln!("fork reference and GC (control {control}): {missing} of {} runs of v1 deleted; GC deleted {} runs in all", runs.len(), c.gc.runs_deleted.load(Relaxed));
+        if control {
+            assert!(missing > 0, "the control should see GC delete v1's runs");
+        } else {
+            assert_eq!(missing, 0, "GC deleted runs a fork's reference names");
+        }
+        c.stop().await;
+        t.abandon().await;
+    }
+    teardown();
+}
