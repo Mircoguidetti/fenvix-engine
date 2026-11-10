@@ -16,6 +16,9 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 pub static malloc_conf: &[u8] = b"background_thread:true\0";
 
 mod agg;
+
+/// `--sealed-runs` when neither the flag nor FENVIX_SEALED_RUNS says otherwise (integration-3: sealed runs on).
+const DEFAULT_SEALED_RUNS: u64 = 2;
 mod agentlane;
 mod custkey;
 mod layout2;
@@ -470,11 +473,16 @@ struct Args {
     #[arg(long, default_value = "read")]
     envelopes: String,
     /// Compaction 2, step 3 (`fx`): read through our manifest and sealed runs. The value is how many write batches of a
-    /// database between two offline publishes of runs (`fx/build.rs`; 0: none by the server itself). Off by default.
-    /// A database that published a version has every SlateDB row too in this step (nothing drops them yet), so turning
-    /// it off again reads the same data. The environment variable FENVIX_SEALED_RUNS=N does the same.
+    /// database before its first publish of runs (`fx/build.rs`); with the compactor off, between two publishes (0: none
+    /// by the server itself). On by default since integration-3, with 2 (the judge's tested setting); `--no-sealed-runs`
+    /// or FENVIX_SEALED_RUNS=off turns it off. A database that published a version has every SlateDB row too while the
+    /// drop is off, so turning it off again reads the same data. The environment variable FENVIX_SEALED_RUNS=N does the
+    /// same as `--sealed-runs N`.
     #[arg(long)]
     sealed_runs: Option<u64>,
+    /// Turn sealed runs (and with them the compactor) off.
+    #[arg(long)]
+    no_sealed_runs: bool,
     /// Raw MB per group when a database's first version cuts its groups (the plan's 1 GB).
     #[arg(long, default_value_t = 1024)]
     sealed_group_mb: u64,
@@ -533,10 +541,13 @@ struct Args {
     #[arg(long, default_value_t = 120_000)]
     sealed_hold_life_ms: u64,
     /// Compaction 2, step 4: with sealed runs on, one compactor per open writer (absorption, delta tiers, reseals, GC)
-    /// instead of the offline publishes and today's compaction pass. FENVIX_SEALED_COMPACTOR=1 does the same; =small also
-    /// uses small knobs, for tests on tiny databases.
+    /// instead of the offline publishes and today's compaction pass. On by default since integration-3 (with sealed runs
+    /// on); `--no-sealed-compactor` or FENVIX_SEALED_COMPACTOR=0 keeps step 3's offline publishes. FENVIX_SEALED_COMPACTOR=small
+    /// uses small knobs, for tests on tiny databases. (`--sealed-compactor` is kept and does nothing more.)
     #[arg(long)]
     sealed_compactor: bool,
+    #[arg(long)]
+    no_sealed_compactor: bool,
     /// With `--sealed-compactor`: the drop of absorbed SlateDB rows (off by default until step 7b pairs forks).
     #[arg(long)]
     sealed_drop: bool,
@@ -817,7 +828,13 @@ async fn run() -> Result<()> {
     }
     // FENVIX_SEALED_RUNS=N: the same as --sealed-runs N, for every server a test harness starts (`judge/run.sh` with
     // JUDGE_SEALED_RUNS)
-    let sealed_runs = args.sealed_runs.or_else(|| std::env::var("FENVIX_SEALED_RUNS").ok().and_then(|v| v.parse().ok()));
+    // Default since integration-3: on, first publish after 2 write batches; off only when asked
+    let env_sr = std::env::var("FENVIX_SEALED_RUNS").ok();
+    let sealed_runs = if args.no_sealed_runs || env_sr.as_deref() == Some("off") {
+        None
+    } else {
+        args.sealed_runs.or_else(|| env_sr.as_deref().and_then(|v| v.parse().ok())).or(Some(DEFAULT_SEALED_RUNS))
+    };
     if let Some(n) = sealed_runs {
         use std::sync::atomic::Ordering::Relaxed;
         tenant_bench::fx::ENABLED.store(true, Relaxed);
@@ -863,7 +880,9 @@ async fn run() -> Result<()> {
         tenant_bench::fx::GC_GRACE_MS.store(args.sealed_gc_grace_ms, Relaxed);
         tenant_bench::fx::hold::HOLD_LIFE_MS.store(args.sealed_hold_life_ms, Relaxed);
         let env_c = std::env::var("FENVIX_SEALED_COMPACTOR").unwrap_or_default();
-        if args.sealed_compactor || env_c == "1" || env_c == "small" {
+        // default since integration-3: on; off with --no-sealed-compactor or FENVIX_SEALED_COMPACTOR=0
+        let _ = args.sealed_compactor;
+        if !args.no_sealed_compactor && env_c != "0" {
             tenant_bench::fx::compactor::SERVER_ON.store(true, Relaxed);
             tenant_bench::fx::compactor::SERVER_SMALL.store(env_c == "small", Relaxed);
             tenant_bench::fx::compactor::DROP_DEFAULT.store(args.sealed_drop, Relaxed);

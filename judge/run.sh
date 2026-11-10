@@ -24,7 +24,9 @@ if [ -n "${JUDGE_SEALED_RUNS:-}" ]; then
   # keeps step 3's offline publishes only
   export FENVIX_SEALED_COMPACTOR=${JUDGE_SEALED_COMPACTOR:-small}
   SUFFIX="-sealed$JUDGE_SEALED_RUNS"
-else unset FENVIX_SEALED_RUNS FENVIX_SEALED_TPIN_MS FENVIX_SEALED_E1_WAIT_MS FENVIX_SEALED_TEST_SHORT_E1_WAIT FENVIX_SEALED_COMPACTOR; fi
+else unset FENVIX_SEALED_RUNS FENVIX_SEALED_TPIN_MS FENVIX_SEALED_E1_WAIT_MS FENVIX_SEALED_TEST_SHORT_E1_WAIT FENVIX_SEALED_COMPACTOR
+  # integration-3: sealed runs are on by default in the server, so "off" is said explicitly
+  export FENVIX_SEALED_RUNS=off; fi
 OUT="$ROOT/judge/out/$SHA$SUFFIX"; mkdir -p "$OUT"; V="$OUT/VERDICT.md"
 PHASES=${*:-readers build unit diff-py diff-node ctl kill}
 FAST=0; if [ "$PHASES" = fast ]; then FAST=1; PHASES="readers build unit diff-py diff-node ctl kill"; fi
