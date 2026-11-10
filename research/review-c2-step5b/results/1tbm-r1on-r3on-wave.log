@@ -1,0 +1,13 @@
+fx_cold: 1tb-medium r1 on r3 on wave, D 512 MiB, L0 4096 B, day 19.2 MiB of inserts, warm-up 6.7 days, window 13.3 days, background cold reads 864 per day, S3 latency 5000 us, seed 5
+112 pattern customers, 40 agent threads (20 young)
+loaded 513 MiB in 9.2 s
+first version built: 46 groups
+measured window starts at 128 MiB written (6.7 days)
+  24 s: day 7.19, groups 47, delta runs 9, reseals 269 (r3 260), L0 max 64, reads 108, wrong 0
+  44 s: day 9.76, groups 48, delta runs 5, reseals 461 (r3 452), L0 max 64, reads 648, wrong 0
+  66 s: day 12.32, groups 49, delta runs 5, reseals 665 (r3 656), L0 max 64, reads 1188, wrong 0
+  86 s: day 14.64, groups 51, delta runs 11, reseals 838 (r3 825), L0 max 64, reads 1620, wrong 0
+  106 s: day 16.66, groups 52, delta runs 13, reseals 1001 (r3 987), L0 max 64, reads 2052, wrong 0
+  128 s: day 18.49, groups 53, delta runs 8, reseals 1162 (r3 1146), L0 max 64, reads 2484, wrong 0
+RESULT 1tb-medium r1 on r3 on wave: reads 2808, wrong 0, retried 0; background point reads 17301; L0 max 64; wall 144 s
+RESULT 1tb-medium r1 on r3 on wave: in the window: reseals 1069 (r3 1059, theta 10), stored amplification 47.23 (L0 191.5 MiB, SlateDB 612.2 MiB, our runs 8240.7 MiB), raw: absorbed 266.8 MiB, merges 840.8 MiB, reseals 12647.9 MiB (47.40 per absorbed byte)
