@@ -1,0 +1,244 @@
+{
+ "edge_base_100x8": {
+  "checkpoints": 4,
+  "checkpoint_writes": 2
+ },
+ "edge_base_40x3": {
+  "checkpoints": 2,
+  "checkpoint_writes": 2
+ },
+ "edge_edit_100x8": {
+  "checkpoints": 4,
+  "checkpoint_writes": 2
+ },
+ "edge_edit_40x3": {
+  "checkpoints": 4,
+  "checkpoint_writes": 2
+ },
+ "edge_remove_100x8": {
+  "checkpoints": 4,
+  "checkpoint_writes": 3
+ },
+ "edge_remove_40x3": {
+  "checkpoints": 4,
+  "checkpoint_writes": 3
+ },
+ "edge_summarize_100x8": {
+  "checkpoints": 4,
+  "checkpoint_writes": 3
+ },
+ "edge_summarize_40x3": {
+  "checkpoints": 3,
+  "checkpoint_writes": 3
+ },
+ "real_swe35": {
+  "checkpoints": 4,
+  "checkpoint_writes": 6
+ },
+ "real_swe4": {
+  "checkpoints": 4,
+  "checkpoint_writes": 7
+ },
+ "real_tau_gpt_4o_airline": {
+  "checkpoints": 4,
+  "checkpoint_writes": 7
+ },
+ "real_tau_sonnet_35_new_retail": {
+  "checkpoints": 4,
+  "checkpoint_writes": 8
+ },
+ "scripted_100x40": {
+  "checkpoints": 4,
+  "checkpoint_writes": 6
+ },
+ "scripted_10x400": {
+  "checkpoints": 4,
+  "checkpoint_writes": 7
+ },
+ "scripted_300x8": {
+  "checkpoints": 4,
+  "checkpoint_writes": 7
+ },
+ "scripted_40x150": {
+  "checkpoints": 4,
+  "checkpoint_writes": 6
+ },
+ "all_dumps": {
+  "checkpoints": [
+   {
+    "docs": 16906,
+    "order": [
+     "_id",
+     "checkpoint_ns",
+     "thread_id",
+     "checkpoint_id",
+     "checkpoint",
+     "metadata",
+     "parent_checkpoint_id",
+     "type"
+    ]
+   },
+   {
+    "docs": 14353,
+    "order": [
+     "_id",
+     "checkpoint_ns",
+     "checkpoint_id",
+     "thread_id",
+     "checkpoint",
+     "metadata",
+     "parent_checkpoint_id",
+     "type"
+    ]
+   },
+   {
+    "docs": 11027,
+    "order": [
+     "_id",
+     "checkpoint_id",
+     "checkpoint_ns",
+     "thread_id",
+     "checkpoint",
+     "metadata",
+     "parent_checkpoint_id",
+     "type"
+    ]
+   },
+   {
+    "docs": 9465,
+    "order": [
+     "_id",
+     "checkpoint_id",
+     "thread_id",
+     "checkpoint_ns",
+     "checkpoint",
+     "metadata",
+     "parent_checkpoint_id",
+     "type"
+    ]
+   }
+  ],
+  "checkpoint_writes": [
+   {
+    "docs": 16527,
+    "order": [
+     "_id",
+     "idx",
+     "task_id",
+     "task_path",
+     "thread_id",
+     "checkpoint_ns",
+     "checkpoint_id",
+     "channel",
+     "type",
+     "value"
+    ]
+   },
+   {
+    "docs": 13655,
+    "order": [
+     "_id",
+     "checkpoint_ns",
+     "task_path",
+     "thread_id",
+     "task_id",
+     "idx",
+     "checkpoint_id",
+     "channel",
+     "type",
+     "value"
+    ]
+   },
+   {
+    "docs": 12437,
+    "order": [
+     "_id",
+     "idx",
+     "checkpoint_id",
+     "task_id",
+     "checkpoint_ns",
+     "task_path",
+     "thread_id",
+     "channel",
+     "type",
+     "value"
+    ]
+   },
+   {
+    "docs": 10719,
+    "order": [
+     "_id",
+     "checkpoint_id",
+     "task_id",
+     "thread_id",
+     "task_path",
+     "checkpoint_ns",
+     "idx",
+     "channel",
+     "type",
+     "value"
+    ]
+   },
+   {
+    "docs": 9893,
+    "order": [
+     "_id",
+     "task_path",
+     "task_id",
+     "thread_id",
+     "checkpoint_id",
+     "idx",
+     "checkpoint_ns",
+     "channel",
+     "type",
+     "value"
+    ]
+   },
+   {
+    "docs": 7701,
+    "order": [
+     "_id",
+     "task_path",
+     "checkpoint_ns",
+     "idx",
+     "checkpoint_id",
+     "thread_id",
+     "task_id",
+     "channel",
+     "type",
+     "value"
+    ]
+   },
+   {
+    "docs": 6503,
+    "order": [
+     "_id",
+     "checkpoint_ns",
+     "checkpoint_id",
+     "idx",
+     "task_id",
+     "thread_id",
+     "task_path",
+     "channel",
+     "type",
+     "value"
+    ]
+   },
+   {
+    "docs": 5430,
+    "order": [
+     "_id",
+     "checkpoint_id",
+     "idx",
+     "checkpoint_ns",
+     "thread_id",
+     "task_path",
+     "task_id",
+     "channel",
+     "type",
+     "value"
+    ]
+   }
+  ]
+ }
+}

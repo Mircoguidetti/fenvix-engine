@@ -1,0 +1,3 @@
+judge/out/7858d1c2/kill.log:TOTAL s3 durable {'acked_ids': 18804, 'lost_inserts': 0, 'lost_updates': 0}
+judge/out/b931b602-sealed2-derive/kill.log:TOTAL s3 durable {'acked_ids': 10730, 'lost_inserts': 0, 'lost_updates': 0}
+judge/out/b931b602-sealed2/kill.log:TOTAL s3 durable {'acked_ids': 18308, 'lost_inserts': 0, 'lost_updates': 0}

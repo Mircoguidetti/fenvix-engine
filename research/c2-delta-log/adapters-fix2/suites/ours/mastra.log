@@ -1,0 +1,235 @@
+
+ RUN  v5.1.0 /home/user/adapters/mastra/stores/mongodb
+
+stdout | src/storage/index.test.ts > MongoDBStore
+Initializing storage...
+
+stdout | src/storage/index.test.ts > MongoDBStore
+Storage initialized in 1045ms
+
+stdout | src/storage/index.test.ts > MongoDBStore
+Clearing memory domain data before tests
+
+stdout | src/storage/index.test.ts > MongoDBStore
+Memory domain cleared in 10ms
+
+ ✓ |e2e:stores/mongodb| src/storage/domains/memory/om-lifecycle-concurrency.test.ts (25 tests) 42432ms
+   ✓ MongoDB (two clients) observational memory lifecycle concurrency (8)
+     ✓ rollover vs append: the appended chunk lands on the head 4258ms
+     ✓ rollover vs swap: activated observations reach the head; unactivated chunks move to it 4592ms
+     ✓ swap vs append: a chunk appended after the caller read the record is never dropped 4329ms
+     ✓ duplicate append: the same cycle is stored once 2062ms
+     ✓ rollover vs rollover: exactly one reflection applies 3678ms
+     ✓ rollover vs active-observation commit: an applied commit reaches the head 3961ms
+     ✓ rollover vs pending-token and buffering-flag writes: the values reach the head 3963ms
+     ✓ concurrent initialize: one live record 922ms
+   ✓ MongoDB observational memory supersededBy, rollover recovery, and appends (17)
+     ✓ a backfill racing a rollover always leaves exactly one live record 4821ms
+     ✓ concurrent roll-forwards from two stores create one successor 2173ms
+     ✓ simultaneous identical appends from two stores store the chunk once 1282ms
+     ✓ warns when the unique id index is missing (skipDefaultIndexes) 883ms
+stdout | src/storage/index.test.ts > MongoDBStore > Agents Storage
+Clearing agents domain data before tests
+
+stdout | src/storage/index.test.ts > MongoDBStore > Agents Storage
+Agents domain cleared in 11ms
+
+ ✓ |e2e:stores/mongodb| src/storage/run-fencing.test.ts (28 tests | 1 skipped) 12122ms
+   ✓ MongoDB run fencing (28)
+     ✓ Run fencing: workflows (13)
+       ✓ ownership (8)
+         ✓ claims a run whose lease expired without force 642ms
+         ✓ renews only while the claim is current, even after the lease expired 676ms
+       ✓ fenced writes (5)
+         ✓ accepts writes from the current claim and rejects writes from a superseded one 339ms
+     ✓ Run fencing: memory (11)
+       ✓ fences observational memory content writes made inside a run fence scope 381ms
+     ✓ Run fencing: prune (3)
+       ✓ deletes claims idle longer than maxAge and keeps recently active ones 2102ms
+       ✓ claims above a surviving fence after the claim was pruned 2082ms
+       ✓ deletes fences retired longer than maxAge and never deletes a fence that is not retired 2325ms
+ ✓ |e2e:stores/mongodb| src/storage/domains/knowledge/index.test.ts (69 tests) 62093ms
+   ✓ knowledge page store contract (schema 4) (64)
+     ✓ scopes (6)
+       ✓ materializes a scope once, with its template children and keyed pages 1946ms
+       ✓ lists root scopes and child scopes by position, paged 343ms
+       ✓ lists and counts only the child scopes a reader can see, filtered before the limit 377ms
+     ✓ scope declaration keys (5)
+       ✓ renames a key and its template children, after the check sees every affected scope 308ms
+       ✓ changes nothing when the check throws, and renames nothing for an unused key 469ms
+       ✓ matches the key literally, so _ and % in it are not wildcards 506ms
+     ✓ key paths (8)
+       ✓ resolves a key path by walking the tree, and an old path stops resolving after a move 427ms
+       ✓ merges a child into its parent when the child's own child has the child's key 315ms
+       ✓ materializes concurrently without throwing or duplicating a template page 503ms
+     ✓ read scope filtering (4)
+       ✓ treats a page in an unreadable scope exactly like a missing one 356ms
+       ✓ filters before paging, and handles a read scope of 1,000 addresses 901ms
+     ✓ read filters agree across methods (2)
+       ✓ lists and finds a page exactly when getPage returns it, for every read scope shape 2865ms
+       ✓ reaches addresses whose next character sorts below a space by prefix 604ms
+     ✓ pages (13)
+       ✓ creates pages in their home scope, ordered by position, with name order for listPages 309ms
+       ✓ refuses a duplicate key in one scope, depth past the cap, and an over-long description 792ms
+       ✓ refuses moving a scope page, into its own subtree, or past the depth cap 466ms
+       ✓ refuses moving more than 500 pages at once 15121ms
+       ✓ refuses a move that would duplicate a key among the new parent's children, changing nothing 650ms
+       ✓ counts only live pages toward move depth and carries deleted descendants along 760ms
+       ✓ merges notes, child pages, pins and mentions into the target 592ms
+       ✓ refuses a merge whose source children's keys clash with the target's children; the source's own key never does 529ms
+       ✓ refuses a merge past the depth cap or carrying too many pages, changing nothing 16257ms
+       ✓ deletes only a page without live children, dropping its pin; scope pages never 656ms
+     ✓ notes (4)
+       ✓ shows a note when its page is readable and any stamp scope is readable 454ms
+     ✓ search and activity (9)
+       ✓ matches any query word, ranking phrase-in-name, then words matched, then weight name > description > body, then notes 356ms
+       ✓ ranks the page that has every query word above newer pages that match one word in their name 392ms
+       ✓ moves merged source history to the target scope, without retaining source-scope visibility 305ms
+     ✓ pins (6)
+       ✓ keeps one pin per page and lists by audience on readable live pages 388ms
+       ✓ keeps a page pin and a list pin per page apart, with the list depth, through listing, merge and delete 552ms
+       ✓ lists pins with page names, newest first, filtered by body and excluded pages, with a total 755ms
+       ✓ counts the notes a reader can see on each page in one call 371ms
+       ✓ counts the child pages a reader can see under each parent in one call 317ms
+     ✓ links (7)
+       ✓ replaces a page body links and lists them out and in, one edge per page pair 310ms
+       ✓ never counts or lists a link whose other end the reader cannot see 325ms
+       ✓ counts note mentions as note links, only through notes the reader can see 385ms
+       ✓ finds the source pages of unresolved refs and of links to given pages 301ms
+       ✓ caps listed edges at limit, in from, to, kind order 413ms
+   ✓ knowledge legacy table upgrade contract (5)
+     ✓ drops a published layout with empty tables on init 1010ms
+     ✓ drops a published layout holding rows on init 757ms
+     ✓ drops old tables an older process recreated on a schema-4 database, keeping every page 1141ms
+     ✓ lets several processes init over a published layout at once 1137ms
+ ✓ |e2e:stores/mongodb| src/storage/dataset-fidelity.test.ts (33 tests) 6496ms
+   ✓ MongoDB dataset field fidelity (33)
+     ✓ preserves authored JSON value 9007199254740991 across writes and historical reads 314ms
+     ✓ preserves authored JSON value { 'a.b': 1, '$field': 2, …(1) } across writes and historical reads 332ms
+     ✓ preserves authored JSON value { '__proto__': { authored: true } } across writes and historical reads 303ms
+stderr | src/storage/index.test.ts > MemoryStorageMongoDB error propagation (no empty-on-error) > listThreads re-throws backend failures instead of returning empty
+{"message":"simulated backend outage","domain":"STORAGE","category":"THIRD_PARTY","code":"MASTRA_STORAGE_MONGODB_LIST_THREADS_FAILED","details":{"hasMetadataFilter":false},"cause":{"message":"simulated backend outage","name":"Error"}}
+
+stderr | src/storage/index.test.ts > MemoryStorageMongoDB error propagation (no empty-on-error) > listMessages re-throws backend failures instead of returning empty
+{"message":"simulated backend outage","domain":"STORAGE","category":"THIRD_PARTY","code":"MASTRA_STORAGE_MONGODB_LIST_MESSAGES_FAILED","details":{"threadId":"thread-err","resourceId":""},"cause":{"message":"simulated backend outage","name":"Error"}}
+
+stderr | src/storage/index.test.ts > MemoryStorageMongoDB error propagation (no empty-on-error) > listMessagesByResourceId re-throws backend failures instead of returning empty
+{"message":"simulated backend outage","domain":"STORAGE","category":"THIRD_PARTY","code":"MASTRA_STORAGE_MONGODB_LIST_MESSAGES_BY_RESOURCE_ID_FAILED","details":{"resourceId":"res-err"},"cause":{"message":"simulated backend outage","name":"Error"}}
+
+stdout | src/storage/index.test.ts > MongoDB Specific Tests > MongoDB Schemaless Collection Behavior > should create collections on-demand when using connector directly
+Skipping schemaless test - connector not accessible
+
+ ✓ |e2e:stores/mongodb| src/storage/index.test.ts (854 tests | 194 skipped) 75387ms
+   ✓ MongoDBStore (806)
+     ✓ listThreads with filtering (12)
+       ✓ should return consistent timestamps from getThreadById and listThreads 417ms
+     ✓ listMessages (55)
+       ✓ perPage and page parameters (14)
+         ✓ should use perPage to restrict number of messages returned 320ms
+         ✓ should return ALL messages when perPage is false 378ms
+       ✓ high-volume include correctness (1)
+         ✓ should return correct messages from a large thread with scattered includes (perPage=0) 308ms
+       ✓ listMessagesByResourceId (resource-scoped queries) (8)
+         ✓ should filter by dateRange.start across multiple threads for the same resource 312ms
+     ✓ listMessages (19)
+       ✓ should return paginated messages with total count 800ms
+       ✓ should upsert messages: duplicate id+threadId results in update, not duplicate row 585ms
+       ✓ should filter correctly with endExclusive when new messages are added 549ms
+       ✓ should accept ISO string dates in dateRange 322ms
+       ✓ should correctly paginate within dateRange filtered results 501ms
+     ✓ listMessagesById (6)
+       ✓ should return messages from multiple resources 301ms
+     ✓ Observational Memory (99)
+       ✓ getObservationalMemoryHistory (29)
+         ✓ finds existing groups before paging in thread scope 301ms
+         ✓ should filter by from and to date combined 393ms
+         ✓ should preserve reverse chronological order when filtering by from 314ms
+         ✓ should combine from + to + limit correctly 440ms
+         ✓ should combine from + to + offset correctly 461ms
+         ✓ should combine from + to + offset + limit for full pagination 527ms
+         ✓ should paginate correctly using offset + limit across multiple pages 628ms
+       ✓ lifecycle safety (18)
+         ✓ C5/C11: buffered reflection swap moves chunks, counts appended tokens, and tolerates a retired record 309ms
+         ✓ C12: writes aimed at a retired record never change it 320ms
+         ✓ C16: writes aimed at a record several rollovers old land on the head 452ms
+     ✓ Agents Storage (29)
+       ✓ list (6)
+         ✓ should paginate results correctly 814ms
+         ✓ should return all agents when perPage is false 314ms
+     ✓ Datasets Storage (91)
+       ✓ Item CRUD (15)
+         ✓ getItemById returns the item row visible in the requested dataset snapshot 318ms
+       ✓ Version Query Semantics (7)
+         ✓ getItemsByVersion returns correct snapshot 334ms
+         ✓ listItems applies search alongside version 527ms
+         ✓ listItems applies pagination alongside version 419ms
+     ✓ Skills Storage (9)
+       ✓ listResolved resolves published skills with their active version in one batch 351ms
+     ✓ Run fencing: prune (3)
+       ✓ deletes claims idle longer than maxAge and keeps recently active ones 2211ms
+       ✓ claims above a surviving fence after the claim was pruned 2139ms
+       ✓ deletes fences retired longer than maxAge and never deletes a fence that is not retired 2159ms
+   ✓ MongoDBStore Index Configuration (5)
+     ✓ should create default indexes by default 719ms
+     ✓ should skip default indexes when skipDefaultIndexes is true 404ms
+     ✓ should create custom indexes when specified 380ms
+     ✓ should handle invalid table name gracefully (not crash) 356ms
+ ✓ |e2e:stores/mongodb| src/storage/migration.test.ts (12 tests) 5238ms
+   ✓ MongoDB Duplicate Spans Handling (5)
+     ✓ should fail to create unique index when duplicates exist 546ms
+     ✓ should handle unique index creation when no duplicates exist 447ms
+     ✓ should deduplicate spans and create unique index after init() 472ms
+     ✓ should keep span with most recent updatedAt when both are completed 325ms
+     ✓ should keep span with most recent createdAt as final tiebreaker 343ms
+   ✓ MongoDB Migration Required Error (3)
+     ✓ should throw MastraError when init() finds duplicate spans without unique index 583ms
+     ✓ should NOT throw when no duplicates exist (auto-migration succeeds) 1068ms
+     ✓ should NOT throw when unique index already exists (fresh install) 972ms
+ ✓ |e2e:stores/mongodb| src/storage/domains/notifications/index.test.ts (9 tests) 24449ms
+   ✓ NotificationsMongoDB (9)
+     ✓ bulk status update accepts more ids than one statement can bind and returns each record once 22194ms
+     ✓ updates the status of many notifications in one write, scoped to the thread 569ms
+     ✓ lists due pending notifications sorted by earliest due time with agent/resource filters and limit 313ms
+     ✓ exposes notifications through MongoDBStore 736ms
+ ✓ |e2e:stores/mongodb| src/storage/domains/knowledge/pages.test.ts (14 tests) 9687ms
+   ✓ MongoKnowledgePages (schema 4) (14)
+     ✓ filters reads by scope before ordering and cursors 645ms
+     ✓ hides notes unless a stamp and every mentioned page scope are readable 566ms
+     ✓ refuses depth overflow, oversize moves and deleting a page with children 406ms
+     ✓ refuses moving or merging into a scope that already has the page key; deleted descendants do not count toward the cap 495ms
+     ✓ keeps pins from before pin kinds as page pins and then takes a list pin on the same page 888ms
+     ✓ refuses an unknown schema version until reset 372ms
+ ✓ |e2e:stores/mongodb| src/storage/transactions.test.ts (11 tests) 2420ms
+   ✓ MongoDB storage — topology-aware transactions (11)
+     ✓ identity-aware dataset item writes fail before mutation on standalone MongoDB 413ms
+     ✓ experiment-result writes coordinate on their item instead of the shared dataset 618ms
+ ✓ |e2e:stores/mongodb| src/storage/retention.test.ts (28 tests) 7675ms
+   ✓ MongoDB retention (28)
+     ✓ prune() (8)
+       ✓ is bounded and resumable via maxRows 335ms
+     ✓ composite prune() (2)
+       ✓ routes per-table policies to the memory domain via retention config 320ms
+     ✓ backgroundTasks (ISO-string anchor) (2)
+       ✓ deletes completed tasks older than maxAge using string comparison 387ms
+     ✓ run ownership (6)
+       ✓ routes workflows.runOwnership and memory.runFences through the composite prune() 354ms
+     ✓ lazy anchor indexes (4)
+       ✓ creates the anchor index on first prune, not at init 380ms
+       ✓ creates retention indexes even with skipDefaultIndexes: true (out-of-band of the default set) 438ms
+       ✓ creates the experiments anchor index lazily via its whole-unit prune path 476ms
+       ✓ creates the runOwnership and runFences anchor indexes on first prune 498ms
+ ✓ |e2e:stores/mongodb| src/storage/domains/memory/memory-data-modeling.test.ts (8 tests | 2 todo) 1114ms
+   ✓ MemoryStorageMongoDB — index definitions and metadata storage (8)
+     ✓ memory collections have the expected index set after init 620ms
+ ✓ |e2e:stores/mongodb| src/storage/domains/memory/include-tied-timestamps.test.ts (4 tests) 830ms
+ ✓ |e2e:stores/mongodb| src/storage/domains/memory/om-history-search.test.ts (1 test) 753ms
+ ✓ |e2e:stores/mongodb| src/vector/filter.test.ts (36 tests) 55ms
+ ✓ |e2e:stores/mongodb| src/vector/query-initial-sync-retry.test.ts (3 tests) 41ms
+ ✓ |e2e:stores/mongodb| src/storage/connectors/MongoDBConnector.test.ts (3 tests) 19ms
+
+ Test Files  16 passed (16)
+      Tests  941 passed | 195 skipped | 2 todo (1138)
+   Start at  15:04:52
+   Duration  96.62s (tests 88%, import 11%, transform 1%)
+
+JUNIT report written to /tmp/claude-0/-home-user/9129b5ca-4194-55a1-8a84-bd2fce2b2dd9/scratchpad/fix2/bench/agent-adapters/results/ours/mastra.xml

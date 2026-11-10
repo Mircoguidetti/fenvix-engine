@@ -1,0 +1,22 @@
+fx_cold: 1tb-medium r1 on r3 on, D 512 MiB, L0 4096 B, day 19.2 MiB of inserts, warm-up 6.7 days, window 13.3 days, background cold reads 864 per day, S3 latency 5000 us, seed 5
+112 pattern customers, 40 agent threads (20 young)
+loaded 513 MiB in 12.1 s
+first version built: 46 groups
+  20 s: day 2.60, groups 46, delta runs 9, reseals 161 (r3 160), L0 max 64, reads 0, wrong 0
+  40 s: day 5.21, groups 47, delta runs 7, reseals 372 (r3 369), L0 max 64, reads 0, wrong 0
+measured window starts at 128 MiB written (6.7 days)
+  62 s: day 7.19, groups 47, delta runs 4, reseals 545 (r3 536), L0 max 64, reads 108, wrong 0
+  82 s: day 8.34, groups 48, delta runs 13, reseals 642 (r3 633), L0 max 64, reads 324, wrong 0
+  103 s: day 9.24, groups 48, delta runs 11, reseals 725 (r3 716), L0 max 64, reads 540, wrong 0
+  128 s: day 10.27, groups 48, delta runs 7, reseals 817 (r3 808), L0 max 64, reads 756, wrong 0
+  152 s: day 11.30, groups 49, delta runs 8, reseals 909 (r3 900), L0 max 64, reads 972, wrong 0
+  177 s: day 12.32, groups 49, delta runs 11, reseals 1000 (r3 991), L0 max 64, reads 1188, wrong 0
+  198 s: day 13.35, groups 51, delta runs 5, reseals 1095 (r3 1085), L0 max 64, reads 1404, wrong 0
+  219 s: day 14.38, groups 51, delta runs 6, reseals 1187 (r3 1175), L0 max 64, reads 1620, wrong 0
+  240 s: day 15.41, groups 51, delta runs 7, reseals 1280 (r3 1267), L0 max 64, reads 1836, wrong 0
+  266 s: day 16.43, groups 52, delta runs 9, reseals 1373 (r3 1360), L0 max 64, reads 2052, wrong 0
+  286 s: day 17.64, groups 53, delta runs 10, reseals 1488 (r3 1474), L0 max 64, reads 2268, wrong 0
+  318 s: day 18.49, groups 53, delta runs 6, reseals 1571 (r3 1556), L0 max 64, reads 2484, wrong 0
+  341 s: day 19.00, groups 53, delta runs 10, reseals 1618 (r3 1602), L0 max 64, reads 2592, wrong 0
+RESULT 1tb-medium r1 on r3 on: reads 2808, wrong 0, retried 0; background point reads 17301; L0 max 64; wall 359 s
+RESULT 1tb-medium r1 on r3 on: in the window: reseals 1234 (r3 1224, theta 10), stored amplification 54.58 (L0 184.9 MiB, SlateDB 393.0 MiB, our runs 9512.2 MiB), raw: absorbed 261.5 MiB, merges 975.0 MiB, reseals 14624.1 MiB (55.92 per absorbed byte)

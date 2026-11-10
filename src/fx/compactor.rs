@@ -79,6 +79,21 @@ pub fn is_active(id: &str) -> bool {
     ACTIVE.lock().unwrap().contains(id)
 }
 
+/// Block codec of the sealed runs of the server's compactors (`--sealed-codec`): 0 lz4 (format v1), 1 zstd (format v2).
+pub static SEALED_CODEC: AtomicU64 = AtomicU64::new(0);
+
+pub fn set_sealed_codec(s: &str) -> Result<()> {
+    SEALED_CODEC.store(
+        match s {
+            "lz4" | "" => 0,
+            "zstd" => 1,
+            _ => bail!("--sealed-codec: lz4 or zstd, not '{s}'"),
+        },
+        Relaxed,
+    );
+    Ok(())
+}
+
 /// The knobs of the server's compactors.
 pub fn server_knobs() -> Knobs {
     let mut k = Knobs::default();
@@ -90,8 +105,18 @@ pub fn server_knobs() -> Knobs {
         k.min_seal_bytes = 64 << 10;
         k.local_max_bytes = 0;
         k.gc_every = Duration::from_secs(5);
-        k.sealed = RunOptions::unchecked(16 << 10, 1 << 20, runfmt::CustomerKind::V2);
-        k.delta = RunOptions::unchecked(16 << 10, 1 << 20, runfmt::CustomerKind::V2);
+        // integration-3: parts of 16 MiB as in production. With 1 MiB parts, a run over 1 MiB was a multipart upload
+        // with parts under S3's (and MinIO's) 5 MiB minimum: every absorption failed (EntityTooSmall), the gated
+        // SlateDB compaction never ran, L0 reached its limit and the database's writes stopped for good (ctl test_28).
+        k.sealed = RunOptions::unchecked(16 << 10, runfmt::DEFAULT_PART, runfmt::CustomerKind::V2K);
+        k.delta = RunOptions::unchecked(16 << 10, runfmt::DEFAULT_PART, runfmt::CustomerKind::V2K);
+    }
+    // integration-3: the server's keys are layout v2 as step 6 framed them (`CustomerKind::V2K`, as step 3's builder
+    // writes since step 6); `Knobs::default` keeps V2 for the tests' synthetic keys
+    k.sealed.customers = runfmt::CustomerKind::V2K;
+    k.delta.customers = runfmt::CustomerKind::V2K;
+    if SEALED_CODEC.load(Relaxed) == 1 {
+        k.sealed.codec = runfmt::BlockCodec::Zstd;
     }
     k
 }
@@ -145,6 +170,9 @@ pub struct Knobs {
     pub reseal_parallel: usize,
     /// Rows per GET when a job reads a run (bytes).
     pub read_ahead: usize,
+    /// Agent checkpoint collections of this database (`derive.rs`): with `derive::WRITE` on, a reseal stores their
+    /// threads as message rows plus derived documents. None: no collection is registered.
+    pub derive: Option<super::derive::SpecRef>,
 }
 
 impl Default for Knobs {
@@ -163,7 +191,7 @@ impl Default for Knobs {
             merge_bytes: 512 << 20,
             min_seal_bytes: 256 << 20,
             sealed: RunOptions::sealed(runfmt::CustomerKind::V2),
-            delta: RunOptions { block_bytes: runfmt::MIN_BLOCK, part_bytes: runfmt::DEFAULT_PART, customers: runfmt::CustomerKind::V2 },
+            delta: RunOptions { block_bytes: runfmt::MIN_BLOCK, part_bytes: runfmt::DEFAULT_PART, customers: runfmt::CustomerKind::V2, codec: runfmt::BlockCodec::Lz4, derived: false },
             drop: DROP_DEFAULT.load(Relaxed),
             fold_one_run: false,
             fold_max_runs: 6,
@@ -180,6 +208,7 @@ impl Default for Knobs {
             tick: Duration::from_millis(50),
             reseal_parallel: 1,
             read_ahead: 4 << 20,
+            derive: None,
         }
     }
 }
@@ -244,6 +273,30 @@ pub struct Stats {
     pub job_cpu_us: AtomicU64,
     /// L0 SSTs that spanned X_d when absorbed (a cut inside a memtable).
     pub spanning_l0: AtomicU64,
+    /// Derived documents (`derive.rs`): checkpoint documents seen and encoded by reseals, message rows written,
+    /// references, fallbacks to plain, derived documents rebuilt by reseals, raw bytes of the documents and of what
+    /// replaced them (skeletons and message rows).
+    pub derive_docs: AtomicU64,
+    pub derive_encoded: AtomicU64,
+    pub derive_messages: AtomicU64,
+    pub derive_refs: AtomicU64,
+    pub derive_fallbacks: AtomicU64,
+    pub derive_rebuilt: AtomicU64,
+    pub derive_doc_bytes: AtomicU64,
+    pub derive_out_bytes: AtomicU64,
+}
+
+impl Stats {
+    pub fn add_derive(&self, e: &super::derive::EncStats) {
+        self.derive_docs.fetch_add(e.docs_in, Relaxed);
+        self.derive_encoded.fetch_add(e.encoded, Relaxed);
+        self.derive_messages.fetch_add(e.messages, Relaxed);
+        self.derive_refs.fetch_add(e.refs, Relaxed);
+        self.derive_fallbacks.fetch_add(e.fallbacks, Relaxed);
+        self.derive_rebuilt.fetch_add(e.rebuilt, Relaxed);
+        self.derive_doc_bytes.fetch_add(e.doc_bytes, Relaxed);
+        self.derive_out_bytes.fetch_add(e.out_bytes, Relaxed);
+    }
 }
 
 /// State shared by the serving `Tenant` and its compactor (and the drop job).
@@ -325,6 +378,8 @@ pub struct Compactor {
     /// Drop jobs done when the writer last refreshed its SlateDB manifest (its L0 count, and its stalls, are by its view).
     refreshed_jobs: AtomicU64,
     absorb_lock: tokio::sync::Mutex<()>,
+    /// Benches: the planner starts no job while set (jobs called directly still run).
+    pub paused: AtomicBool,
 }
 
 /// One row of a run or of an absorption.
@@ -367,6 +422,7 @@ impl Compactor {
             running: Mutex::new(Running::default()),
             due_since: Mutex::new(HashMap::new()),
             stopped: AtomicBool::new(false),
+            paused: AtomicBool::new(false),
             drop,
             slate: Mutex::new(None),
             slate_stop: Mutex::new(None),
@@ -814,10 +870,44 @@ impl Compactor {
         let mut m = Merger::open(&self.store, &delta_src, &sealed_src, Some(&lo), hi.as_deref(), self.knobs.read_ahead, &self.sh.stats).await?;
         let mut parts: Vec<(Vec<u8>, Option<RunLine>)> = Vec::new();
         let mut cur_lo = lo.clone();
-        let mut w = self.writer(manifest::run_path(self.id(), &format!("g{}", groups[0].id), x_cut, self.epoch), &self.knobs.sealed, false).await?;
+        // derived documents (`derive.rs`): old ones are rebuilt; with the release flag, registered threads re-encoded
+        let mut enc = super::derive::Encoder::new(self.knobs.derive.as_ref().map(|s| s.0.clone()), &lo, hi.as_deref());
+        let mut sealed_opts = self.knobs.sealed.clone();
+        sealed_opts.derived = enc.writes();
+        let mut w = self.writer(manifest::run_path(self.id(), &format!("g{}", groups[0].id), x_cut, self.epoch), &sealed_opts, false).await?;
         let mut prev_customer: Option<Vec<u8>> = None;
         let mut next_part = 1u32;
-        while let Some(rows) = m.next_key().await? {
+        let mut pending: Vec<super::derive::Out> = Vec::new();
+        let mut done = false;
+        loop {
+            // write what the encoder released, splitting only between customers and never inside an atomic unit
+            for out in pending.drain(..) {
+                let mut first = true;
+                for (key, seq, env) in out.rows {
+                    if first || !out.atomic {
+                        let cust = self.knobs.sealed.customers.customer_of(&key).map(|r| key[r].to_vec());
+                        let boundary = cust.is_none() || cust != prev_customer || (!out.atomic && w.raw >= 2 * target);
+                        if w.raw >= target && (boundary || out.atomic) {
+                            parts.push((cur_lo.clone(), w.finish(&self.sh.stats, 2).await?));
+                            cur_lo = out.prefix.clone().unwrap_or_else(|| key.clone());
+                            w = self.writer(manifest::run_path(self.id(), &format!("g{}s{next_part}", groups[0].id), x_cut, self.epoch), &sealed_opts, false).await?;
+                            next_part += 1;
+                        }
+                        prev_customer = cust;
+                    }
+                    first = false;
+                    let (k, env) = self.codec.encode(&key, &env);
+                    w.add(&k, seq, &env).await?;
+                }
+            }
+            if done {
+                break;
+            }
+            let Some(rows) = m.next_key().await? else {
+                pending = enc.finish()?;
+                done = true;
+                continue;
+            };
             let key = rows[0].row.key.clone();
             let gx = xg.of(&key);
             // the winner: the newest delta row in (X_g, X_cut], else the sealed row
@@ -834,17 +924,10 @@ impl Compactor {
             if b.dead() {
                 continue; // rule 14: a reseal drops every envelope
             }
-            let cust = self.knobs.sealed.customers.customer_of(&key).map(|r| key[r].to_vec());
-            if w.raw >= target && (cust.is_none() || cust != prev_customer || w.raw >= 2 * target) {
-                parts.push((cur_lo.clone(), w.finish(&self.sh.stats, 2).await?));
-                cur_lo = key.clone();
-                w = self.writer(manifest::run_path(self.id(), &format!("g{}s{next_part}", groups[0].id), x_cut, self.epoch), &self.knobs.sealed, false).await?;
-                next_part += 1;
-            }
-            prev_customer = cust;
-            let (k, env) = self.codec.encode(&key, &b.env);
-            w.add(&k, b.seq, &env).await?;
+            let (seq, env) = (b.seq, b.env.clone());
+            pending = enc.push(&key, seq, env)?;
         }
+        self.sh.stats.add_derive(&enc.stats);
         parts.push((cur_lo, w.finish(&self.sh.stats, 2).await?));
         // an erasure also rewrites the delta runs meeting the range, without rows at or below their (new) X_g
         let mut rewritten: Vec<(String, Option<RunLine>)> = Vec::new();
@@ -947,7 +1030,19 @@ impl Compactor {
             }
         };
         let Some((i, why)) = pick else { return Ok(false) };
-        let (first, last) = self.with_neighbour(&v0, i);
+        let (mut first, mut last) = self.with_neighbour(&v0, i);
+        // derived documents: a boundary that cuts a customer's range keeps that customer plain, so the neighbour is
+        // resealed along (rule 15: both groups at X_d), and the split puts the new boundary at a customer's prefix
+        if let Some(spec) = self.knobs.derive.as_ref().filter(|_| super::derive::WRITE.load(Relaxed)) {
+            let cap = 2 * self.knobs.split_bytes;
+            let sum = |a: usize, b: usize| v0.groups[a..=b].iter().map(Self::est).sum::<u64>();
+            if first > 0 && super::derive::Encoder::cuts_customer(&*spec.0, &unhex(&v0.groups[first].lo)?) && sum(first - 1, last) <= cap {
+                first -= 1;
+            }
+            if last + 1 < v0.groups.len() && super::derive::Encoder::cuts_customer(&*spec.0, &unhex(&v0.groups[last + 1].lo)?) && sum(first, last + 1) <= cap {
+                last += 1;
+            }
+        }
         let ids: Vec<u32> = v0.groups[first..=last].iter().map(|g| g.id).collect();
         {
             let mut r = self.running.lock().unwrap();
@@ -1039,7 +1134,7 @@ impl Compactor {
 
     /// Look for work once and start every job that may start (each in its own task, through the pool).
     pub fn tick(self: &Arc<Self>) {
-        if self.stopped.load(Relaxed) {
+        if self.stopped.load(Relaxed) || self.paused.load(Relaxed) {
             return;
         }
         let v = match self.cur.try_lock() {

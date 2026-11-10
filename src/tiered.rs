@@ -215,6 +215,7 @@ pub fn worker_builder(path: slatedb::object_store::path::Path, store: Arc<dyn sl
     let mut o = slatedb::config::CompactionWorkerOptions::default();
     o.compactions_poll_interval = std::time::Duration::from_millis(50);
     o.compression_codec = codec();
+    o.min_filter_keys = crate::lifecycle::MIN_FILTER_KEYS;
     let b = slatedb::CompactionWorkerBuilder::new(path, store).with_options(o).with_sst_block_size(block_size());
     match filters {
         Some(f) => b.with_filter_policies(f),

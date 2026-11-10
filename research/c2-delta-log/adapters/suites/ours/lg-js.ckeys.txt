@@ -1,0 +1,7 @@
+{'docsWritten': 10, 'locatorLookups': 0, 'layoutSeeks': 2} {'liveRead': 4046, 'deadRead': 1065, 'start': False}
+derived {'write': True, 'encoded': 0, 'plain': 0, 'messageRows': 0, 'fallbacks': 0, 'rebuilds': 0, 'resealRebuilds': 0, 'rebuildErrors': 0}
+compactor {'enabled': True, 'started': 3, 'running': 3, 'publishes': 0, 'absorbs': 0, 'merges': 0, 'reseals': 0, 'errors': 0}
+./target/release/mongo-server --listen 127.0.0.1:27017 --idle-secs 60 --holder adapters-27017 --bucket adapters --ttl-sweep-secs 1 --replica-set rs0 --advertise localhost:27017 --sealed-runs 2 --sealed-compactor --sealed-derive --sealed-codec zstd --customer-key checkpoints=thread_id,checkpoint_writes=thread_id
+FENVIX_SEALED_COMPACTOR=small
+FENVIX_SEALED_E1_WAIT_MS=0
+FENVIX_SEALED_TPIN_MS=1000

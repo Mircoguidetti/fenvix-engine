@@ -1,0 +1,19 @@
+fx_cold: 1tb-medium r1 off r3 on, D 512 MiB, L0 4096 B, day 19.2 MiB of inserts, warm-up 6.7 days, window 13.3 days, background cold reads 864 per day, S3 latency 5000 us, seed 5
+112 pattern customers, 40 agent threads (20 young)
+loaded 513 MiB in 13.1 s
+first version built: 46 groups
+  20 s: day 3.12, groups 46, delta runs 10, reseals 247 (r3 246), L0 max 64, reads 0, wrong 0
+  40 s: day 5.97, groups 47, delta runs 10, reseals 519 (r3 513), L0 max 64, reads 0, wrong 0
+measured window starts at 128 MiB written (6.7 days)
+  66 s: day 7.70, groups 47, delta runs 8, reseals 722 (r3 713), L0 max 64, reads 216, wrong 0
+  91 s: day 9.24, groups 48, delta runs 6, reseals 915 (r3 906), L0 max 64, reads 540, wrong 0
+  111 s: day 10.52, groups 48, delta runs 9, reseals 1062 (r3 1053), L0 max 64, reads 756, wrong 0
+  132 s: day 11.81, groups 49, delta runs 6, reseals 1238 (r3 1229), L0 max 64, reads 1080, wrong 0
+  152 s: day 12.84, groups 51, delta runs 10, reseals 1369 (r3 1359), L0 max 64, reads 1296, wrong 0
+  172 s: day 14.30, groups 51, delta runs 12, reseals 1541 (r3 1529), L0 max 64, reads 1512, wrong 0
+  193 s: day 15.41, groups 51, delta runs 5, reseals 1709 (r3 1697), L0 max 64, reads 1836, wrong 0
+  222 s: day 16.94, groups 53, delta runs 8, reseals 1913 (r3 1900), L0 max 64, reads 2160, wrong 0
+  242 s: day 18.32, groups 53, delta runs 10, reseals 2070 (r3 2057), L0 max 64, reads 2376, wrong 0
+  264 s: day 19.00, groups 54, delta runs 8, reseals 2181 (r3 2167), L0 max 64, reads 2592, wrong 0
+RESULT 1tb-medium r1 off r3 on: reads 2808, wrong 0, retried 0; background point reads 17301; L0 max 64; wall 281 s
+RESULT 1tb-medium r1 off r3 on: in the window: reseals 1731 (r3 1723, theta 8), stored amplification 73.07 (L0 184.9 MiB, SlateDB 411.4 MiB, our runs 12913.4 MiB), raw: absorbed 261.5 MiB, merges 913.6 MiB, reseals 20375.1 MiB (77.92 per absorbed byte)

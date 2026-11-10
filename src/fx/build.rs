@@ -51,7 +51,7 @@ impl Default for BuildOpts {
             group_bytes: 1 << 30,
             // the server's keys (layout v2 with keyenc components, step 6; runs written with V2 keep reading as V2)
             sealed: RunOptions::sealed(CustomerKind::V2K),
-            delta: RunOptions { block_bytes: runfmt::MIN_BLOCK, part_bytes: runfmt::DEFAULT_PART, customers: CustomerKind::V2K },
+            delta: RunOptions { block_bytes: runfmt::MIN_BLOCK, part_bytes: runfmt::DEFAULT_PART, customers: CustomerKind::V2K, codec: runfmt::BlockCodec::Lz4, derived: false },
         }
     }
 }

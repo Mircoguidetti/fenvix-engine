@@ -1,0 +1,20 @@
+== FX_WAVE=
+derived model: reseals 3867, checkpoint docs seen by reseals 510590, encoded 510590, message rows written 577941, derived rebuilt by reseals 504290, fallbacks 0, reader rebuilds 58373; newest version: 5524 derived rows, 6277 message rows; erasure leftovers 0, erasures pending 0
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 108 filtered out; finished in 54.88s
+== FX_WAVE=1
+derived model: reseals 3713, checkpoint docs seen by reseals 423732, encoded 423732, message rows written 481124, derived rebuilt by reseals 417681, fallbacks 0, reader rebuilds 61101; newest version: 5024 derived rows, 5712 message rows; erasure leftovers 0, erasures pending 0
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 108 filtered out; finished in 51.73s
+== control 1
+thread 'fx::derive_tests::review_wave_reader_rebuilds_derived_documents' (6514) panicked at src/fx/derive_tests.rs:1111:9:
+test result: FAILED. 14 passed; 1 failed; 0 ignored; 0 measured; 108 filtered out; finished in 52.40s
+== control 2
+thread 'fx::derive_tests::fix2_erasure_of_one_collection_keeps_the_messages_still_used' (6548) panicked at src/fx/derive_tests.rs:1228:71:
+thread 'fx::derive_tests::review_erasure_of_a_derived_thread' (6569) panicked at src/fx/derive_tests.rs:1185:9:
+test result: FAILED. 13 passed; 2 failed; 0 ignored; 0 measured; 108 filtered out; finished in 53.02s
+== control 3
+thread 'fx::derive::tests::cuts_and_rebuilds_exactly' (6608) panicked at src/fx/derive.rs:948:9:
+thread 'fx::derive_tests::review_near_miss_shapes_are_left_untouched' (6659) panicked at src/fx/derive_tests.rs:1041:5:
+test result: FAILED. 13 passed; 2 failed; 0 ignored; 0 measured; 108 filtered out; finished in 53.92s
+== control 4
+thread 'fx::derive_tests::fix_derived_threads_stay_derived_when_the_spec_does_not_know_them' (6701) panicked at src/fx/derive_tests.rs:1287:5:
+test result: FAILED. 14 passed; 1 failed; 0 ignored; 0 measured; 108 filtered out; finished in 52.78s

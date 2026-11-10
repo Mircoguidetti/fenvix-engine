@@ -1,0 +1,28 @@
+
+running 1 test
+compactor model: St { ops: 20000, wrong: 0, writes: 9059, reads: 5029, ranges: 1976, txn_reads: 1849, retries: 0, crashes: 19, erasures: 70, max_l0: 30 }
+compactor model: follower versions 55, follower reads 857, follower answers that changed 0
+compactor model: absorbs 520, merges 169, reseals 395 (splits 22, group merges 18), rows dropped from SlateDB 6418, runs deleted by GC 1800, erasure leftovers 0, erasures pending 0, groups 10, delta runs 1
+compactor model: SlateDB SSTs asked by the seq filter 50482, skipped 46250, planted extra 1
+
+thread 'fx::compactor_tests::compactor_model_drop_on' (1949) panicked at src/fx/compactor_tests.rs:417:9:
+the planted skip must give wrong answers
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: tenant_bench::fx::compactor_tests::compactor_model_drop_on::{closure#0}
+   3: <tokio::runtime::park::CachedParkThread>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   4: tokio::runtime::context::runtime::enter_runtime::<<tokio::runtime::scheduler::multi_thread::MultiThread>::block_on<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>::{closure#0}, ()>
+   5: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   6: tenant_bench::fx::compactor_tests::compactor_model_drop_on
+   7: <tenant_bench::fx::compactor_tests::compactor_model_drop_on::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+test fx::compactor_tests::compactor_model_drop_on ... FAILED
+
+failures:
+
+failures:
+    fx::compactor_tests::compactor_model_drop_on
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 98 filtered out; finished in 12.01s
+

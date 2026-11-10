@@ -24,6 +24,17 @@ pub static ROWS_FROM_RUNS: AtomicU64 = AtomicU64::new(0);
 /// Step 4, R1: block reads served by a run's copy on the waiter's NVMe (no GET), and runs opened from it.
 pub static LOCAL_READS: AtomicU64 = AtomicU64::new(0);
 pub static LOCAL_OPENS: AtomicU64 = AtomicU64::new(0);
+/// Step 5: the "one wave" reader of the plan (section 2), off by default. A point read asks every run that may hold the
+/// key at once (the delta runs above the group's cut and the sealed run) instead of one after the other, and a range read
+/// fetches the first block of every run of a group at once; `read.rs` also starts SlateDB's read beside ours. Fewer trips,
+/// sometimes more GETs (the sealed run is read even when a delta run answers).
+pub static WAVE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Step 5: a range read inside one customer skips the runs whose customer filter says the customer is not there, as a
+/// point read does (on by default; a filter has no false negatives, so the answer cannot change). Step 3's cursor read a
+/// block of every delta run above the group's cut, whoever wrote it. Off: the reader as step 3 built it.
+pub static RANGE_FILTER: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+/// Runs a range read skipped by their customer filter (diagnostics).
+pub static RANGE_FILTER_SKIPS: AtomicU64 = AtomicU64::new(0);
 
 /// Step 4, R3: GETs that point reads paid in delta runs since a group's last reseal, by group id. The compactor reseals a
 /// group early once these GETs cost more than the reseal (`compactor.rs`).
@@ -130,6 +141,21 @@ impl RunH {
         &self.first[..] <= k && k <= &self.last[..]
     }
 
+    /// Whether the run certainly holds no row in [lo, hi): both ends are keys of one customer and the run's customer filter
+    /// says that customer is not in the run. Only for a run already opened (its filter in RAM); an unopened run is kept.
+    fn filter_excludes(&self, lo: &[u8], hi: Option<&[u8]>) -> bool {
+        let (Some(run), Some(hi)) = (self.run.get(), hi) else { return false };
+        if run.customers == runfmt::CustomerKind::V2 {
+            // step 5b: also a whole customer, [prefix, successor of the prefix)
+            return super::seqfilter::one_customer(lo, (hi, false)).is_some_and(|c| !run.filter.may_contain(c));
+        }
+        let (Some(a), Some(b)) = (run.customers.customer_of(lo), run.customers.customer_of(hi)) else { return false };
+        if lo[a.clone()] != hi[b] {
+            return false;
+        }
+        !run.filter.may_contain(&lo[a])
+    }
+
     /// Whether [lo, hi) meets the run's key range.
     fn meets(&self, lo: &[u8], hi: Option<&[u8]>) -> bool {
         hi.map_or(true, |h| &self.first[..] < h) && &self.last[..] >= lo
@@ -154,6 +180,13 @@ async fn fetch_h<'n>(primary: &Arc<dyn ObjectStore>, h: &RunH, run: &Run, first:
             super::counter::fetch(primary, run, first, last, prefix, need).await
         }
     }
+}
+
+/// Whole blocks first..=last of a run of `h` (its NVMe copy when it has one), through the counter, for the
+/// derived-document rebuild (`derive.rs`). Integration-3: step 6's counter replaced the block cache this used; a
+/// thread's prefetch (`prefetch_thread`) keeps the same whole blocks there, so the rebuild still needs no second trip.
+pub(super) async fn fetch_blocks(store: &Arc<dyn ObjectStore>, h: &RunH, run: &Run, first: usize, last: usize) -> Result<Vec<Arc<super::counter::Piece>>> {
+    fetch_h(store, h, run, first, last, None, &|_| super::counter::Need::Key(&[])).await
 }
 
 /// The number of blocks of a run, and blocks first..=last of it (the erasure's rewrite reads a run whole, a chunk of
@@ -236,6 +269,41 @@ async fn run_get_counted(store: &Arc<dyn ObjectStore>, h: &RunH, key: &[u8]) -> 
     Ok(((j < b.len() && b.key(j) == key).then(|| RRow { key: Vec::new(), seq: b.seq(j), env: b.env(j).to_vec() }), paid))
 }
 
+/// Derived documents (`derive.rs`): before a point read of a checkpoint document in a run with derived rows, fetch the
+/// thread's message blocks with the document's block in one GET (into the block cache), so the rebuild needs no second
+/// trip. Answers never depend on it.
+async fn prefetch_thread(store: &Arc<dyn ObjectStore>, h: &RunH, key: &[u8]) -> Result<()> {
+    if !h.holds_key(key) {
+        return Ok(());
+    }
+    let run = h.open(store).await?.clone();
+    if let Some((a, z)) = super::derive::prefetch_span(&run, key) {
+        fetch_h(store, h, &run, a, z, None, &|_| super::counter::Need::Key(&[])).await?;
+    }
+    Ok(())
+}
+
+/// The point read of a group's sealed run, shared by both point-read paths (`View::get` and the one-wave
+/// `View::get_wave`, review of c2-delta-log FIX 1): the thread's message blocks prefetched with the document's block,
+/// then a derived document rebuilt and a message row never returned. Every point read of a sealed run goes here.
+async fn sealed_point(store: &Arc<dyn ObjectStore>, s: &RunH, key: &[u8]) -> Result<Option<RRow>> {
+    prefetch_thread(store, s, key).await?;
+    match run_get(store, s, key).await? {
+        Some(r) if super::derive::is_derived(&r.env) => derived_row(store, s, key, r).await,
+        r => Ok(r),
+    }
+}
+
+/// A sealed row that is a derived document (rebuilt, as a live row) or a message row (None: never a document). The one
+/// place where the reader meets `derive.rs`.
+async fn derived_row(store: &Arc<dyn ObjectStore>, h: &RunH, key: &[u8], r: RRow) -> Result<Option<RRow>> {
+    if r.env.first() == Some(&runfmt::PART) {
+        return Ok(None);
+    }
+    let env = super::derive::rebuild(store, h, key, &r.env).await?;
+    Ok(Some(RRow { key: r.key, seq: r.seq, env }))
+}
+
 pub struct Group {
     pub id: u32,
     pub lo: Vec<u8>,
@@ -296,6 +364,9 @@ impl View {
     /// The runs' answer for `key` (rows at or below X_d): `None` when no run holds a valid row (the key is absent at
     /// X_d), else the winning row, a delete envelope included.
     pub async fn get(&self, key: &[u8]) -> Result<Option<RRow>> {
+        if WAVE.load(Relaxed) {
+            return self.get_wave(key).await;
+        }
         let g = &self.groups[self.group_of(key)];
         let mut best: Option<RRow> = None;
         for d in self.delta.iter().filter(|_| !skip_delta()) {
@@ -319,8 +390,43 @@ impl View {
         }
         if best.is_none() {
             if let Some(s) = &g.sealed {
-                best = run_get(&self.store, s, key).await?;
+                best = sealed_point(&self.store, s, key).await?;
             }
+        }
+        if best.is_some() {
+            ROWS_FROM_RUNS.fetch_add(1, Relaxed);
+        }
+        Ok(best)
+    }
+
+    /// [`View::get`] in one wave: every candidate run at once, the same answer.
+    async fn get_wave(&self, key: &[u8]) -> Result<Option<RRow>> {
+        let g = &self.groups[self.group_of(key)];
+        let cands: Vec<&Arc<RunH>> = self.delta.iter().filter(|d| !skip_delta() && above_cut(d.line.max_seq, g.x_g)).collect();
+        let delta_f = futures::future::try_join_all(cands.iter().map(|d| run_get_counted(&self.store, d, key)));
+        let sealed_f = async {
+            match &g.sealed {
+                Some(s) if super::derive::fix_control(1) => run_get(&self.store, s, key).await,
+                Some(s) => sealed_point(&self.store, s, key).await,
+                None => Ok(None),
+            }
+        };
+        let (ds, sealed) = futures::future::try_join(delta_f, sealed_f).await?;
+        let mut best: Option<RRow> = None;
+        for (r, paid) in ds {
+            if paid {
+                if let Some(c) = &self.r3 {
+                    c.note(g.id);
+                }
+            }
+            if let Some(r) = r {
+                if above_cut(r.seq, g.x_g) && r.seq <= self.x_d && best.as_ref().is_none_or(|b| r.seq > b.seq) {
+                    best = Some(r);
+                }
+            }
+        }
+        if best.is_none() {
+            best = sealed;
         }
         if best.is_some() {
             ROWS_FROM_RUNS.fetch_add(1, Relaxed);
@@ -587,6 +693,8 @@ impl RunCur {
 /// The runs of one group restricted to [lo, hi) ∩ the group: its sealed run and the delta runs that can hold rows
 /// above its X_g.
 struct Seg {
+    /// Wave mode: the first block of every run was asked for at once.
+    primed: bool,
     x_g: u64,
     sealed: Option<RunCur>,
     delta: Vec<RunCur>,
@@ -613,14 +721,22 @@ impl RunsCursor {
             (None, Some(b)) => Some(b.to_vec()),
             (None, None) => None,
         };
-        let sealed = g.sealed.as_ref().filter(|s| s.meets(&lo, hi.as_deref())).map(|s| RunCur::new(s.clone(), &lo, hi.as_deref(), self.reverse, self.read_ahead));
+        let rf = RANGE_FILTER.load(Relaxed);
+        let skip = |h: &RunH| {
+            let x = rf && h.filter_excludes(&self.lo, self.hi.as_deref());
+            if x {
+                RANGE_FILTER_SKIPS.fetch_add(1, Relaxed);
+            }
+            x
+        };
+        let sealed = g.sealed.as_ref().filter(|s| s.meets(&lo, hi.as_deref()) && !skip(s)).map(|s| RunCur::new(s.clone(), &lo, hi.as_deref(), self.reverse, self.read_ahead));
         let delta = v
             .delta
             .iter()
-            .filter(|d| !skip_delta() && above_cut(d.line.max_seq, g.x_g) && d.meets(&lo, hi.as_deref()))
+            .filter(|d| !skip_delta() && above_cut(d.line.max_seq, g.x_g) && d.meets(&lo, hi.as_deref()) && !skip(d))
             .map(|d| RunCur::new(d.clone(), &lo, hi.as_deref(), self.reverse, self.read_ahead))
             .collect();
-        Seg { x_g: g.x_g, sealed, delta }
+        Seg { primed: false, x_g: g.x_g, sealed, delta }
     }
 
     /// The next row by the read rule (delete envelopes included), in the cursor's order.
@@ -633,6 +749,11 @@ impl RunsCursor {
                 self.seg = Some(self.open_seg(gi));
             }
             let seg = self.seg.as_mut().unwrap();
+            if !seg.primed && WAVE.load(Relaxed) {
+                seg.primed = true;
+                let peeks = seg.sealed.iter_mut().chain(seg.delta.iter_mut()).map(|c| c.peek(&store));
+                futures::future::try_join_all(peeks).await?;
+            }
             // the next key among every source of the segment
             let mut key: Option<Vec<u8>> = None;
             let rev = self.reverse;
@@ -676,7 +797,7 @@ impl RunsCursor {
                 if s.peek(&store).await?.is_some_and(|r| r.key == key) {
                     let r = s.take().unwrap();
                     if best.is_none() {
-                        best = Some(r);
+                        best = if super::derive::is_derived(&r.env) { derived_row(&store, &s.h, &key, r).await? } else { Some(r) };
                     }
                 }
             }

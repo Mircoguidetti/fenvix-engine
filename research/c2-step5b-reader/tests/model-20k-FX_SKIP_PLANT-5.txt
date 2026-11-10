@@ -1,0 +1,12 @@
+
+running 1 test
+range diff: rev false limit None got 751 rows want 752; first diff at 18: got Some("u/\u{3}c08msgs/d/00010") want Some("u/\u{3}c08msgs/d/00010"); version Some((838, 7451, 10, 4))
+WRONG at op 14779: range
+compactor model: St { ops: 20000, wrong: 1, writes: 9053, reads: 5055, ranges: 1963, txn_reads: 1861, retries: 0, crashes: 18, erasures: 60, max_l0: 30 }
+compactor model: follower versions 56, follower reads 860, follower answers that changed 0
+compactor model: absorbs 522, merges 171, reseals 395 (splits 22, group merges 16), rows dropped from SlateDB 6711, runs deleted by GC 1713, erasure leftovers 0, erasures pending 0, groups 11, delta runs 2
+compactor model: SlateDB SSTs asked by the seq filter 50998, skipped 46772, planted extra 5
+test fx::compactor_tests::compactor_model_drop_on ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 98 filtered out; finished in 12.16s
+

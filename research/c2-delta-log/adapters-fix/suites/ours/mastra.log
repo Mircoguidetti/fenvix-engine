@@ -1,0 +1,156 @@
+
+ RUN  v5.1.0 /home/user/adapters/mastra/stores/mongodb
+
+stdout | src/storage/index.test.ts > MongoDBStore
+Initializing storage...
+
+stdout | src/storage/index.test.ts > MongoDBStore
+Storage initialized in 346ms
+
+stdout | src/storage/index.test.ts > MongoDBStore
+Clearing memory domain data before tests
+
+stdout | src/storage/index.test.ts > MongoDBStore
+Memory domain cleared in 9ms
+
+ ✓ |e2e:stores/mongodb| src/storage/domains/memory/om-lifecycle-concurrency.test.ts (25 tests) 16160ms
+   ✓ MongoDB (two clients) observational memory lifecycle concurrency (8)
+     ✓ rollover vs append: the appended chunk lands on the head 2596ms
+     ✓ rollover vs swap: activated observations reach the head; unactivated chunks move to it 2268ms
+     ✓ swap vs append: a chunk appended after the caller read the record is never dropped 1488ms
+     ✓ duplicate append: the same cycle is stored once 656ms
+     ✓ rollover vs rollover: exactly one reflection applies 1115ms
+     ✓ rollover vs active-observation commit: an applied commit reaches the head 1203ms
+     ✓ rollover vs pending-token and buffering-flag writes: the values reach the head 1200ms
+   ✓ MongoDB observational memory supersededBy, rollover recovery, and appends (17)
+     ✓ a backfill racing a rollover always leaves exactly one live record 1946ms
+     ✓ concurrent roll-forwards from two stores create one successor 655ms
+     ✓ simultaneous identical appends from two stores store the chunk once 340ms
+stdout | src/storage/index.test.ts > MongoDBStore > Agents Storage
+Clearing agents domain data before tests
+
+stdout | src/storage/index.test.ts > MongoDBStore > Agents Storage
+Agents domain cleared in 4ms
+
+ ✓ |e2e:stores/mongodb| src/storage/retention.test.ts (28 tests) 3360ms
+   ✓ MongoDB retention (28)
+     ✓ lazy anchor indexes (4)
+       ✓ creates the runOwnership and runFences anchor indexes on first prune 372ms
+ ✓ |e2e:stores/mongodb| src/storage/domains/knowledge/index.test.ts (69 tests) 29776ms
+   ✓ knowledge page store contract (schema 4) (64)
+     ✓ scopes (6)
+       ✓ materializes a scope once, with its template children and keyed pages 1009ms
+       ✓ links an unplaced scope once and never replaces its first non-null parent 316ms
+       ✓ keeps the first belongsTo parent and reports a later conflict 304ms
+     ✓ scope declaration keys (5)
+       ✓ changes nothing when the check throws, and renames nothing for an unused key 329ms
+     ✓ key paths (8)
+       ✓ resolves a key path by walking the tree, and an old path stops resolving after a move 364ms
+     ✓ read scope filtering (4)
+       ✓ filters before paging, and handles a read scope of 1,000 addresses 399ms
+     ✓ read filters agree across methods (2)
+       ✓ lists and finds a page exactly when getPage returns it, for every read scope shape 2406ms
+     ✓ pages (13)
+       ✓ refuses moving more than 500 pages at once 5439ms
+       ✓ refuses a merge past the depth cap or carrying too many pages, changing nothing 6514ms
+       ✓ deletes only a page without live children, dropping its pin; scope pages never 327ms
+     ✓ pins (6)
+       ✓ lists pins with page names, newest first, filtered by body and excluded pages, with a total 365ms
+   ✓ knowledge legacy table upgrade contract (5)
+     ✓ drops a published layout with empty tables on init 338ms
+     ✓ drops a published layout holding rows on init 510ms
+     ✓ drops old tables an older process recreated on a schema-4 database, keeping every page 611ms
+     ✓ lets several processes init over a published layout at once 532ms
+ ✓ |e2e:stores/mongodb| src/storage/domains/notifications/index.test.ts (9 tests) 10023ms
+   ✓ NotificationsMongoDB (9)
+     ✓ bulk status update accepts more ids than one statement can bind and returns each record once 8881ms
+     ✓ exposes notifications through MongoDBStore 305ms
+stderr | src/storage/index.test.ts > MemoryStorageMongoDB error propagation (no empty-on-error) > listThreads re-throws backend failures instead of returning empty
+{"message":"simulated backend outage","domain":"STORAGE","category":"THIRD_PARTY","code":"MASTRA_STORAGE_MONGODB_LIST_THREADS_FAILED","details":{"hasMetadataFilter":false},"cause":{"message":"simulated backend outage","name":"Error"}}
+
+stderr | src/storage/index.test.ts > MemoryStorageMongoDB error propagation (no empty-on-error) > listMessages re-throws backend failures instead of returning empty
+{"message":"simulated backend outage","domain":"STORAGE","category":"THIRD_PARTY","code":"MASTRA_STORAGE_MONGODB_LIST_MESSAGES_FAILED","details":{"threadId":"thread-err","resourceId":""},"cause":{"message":"simulated backend outage","name":"Error"}}
+
+stderr | src/storage/index.test.ts > MemoryStorageMongoDB error propagation (no empty-on-error) > listMessagesByResourceId re-throws backend failures instead of returning empty
+{"message":"simulated backend outage","domain":"STORAGE","category":"THIRD_PARTY","code":"MASTRA_STORAGE_MONGODB_LIST_MESSAGES_BY_RESOURCE_ID_FAILED","details":{"resourceId":"res-err"},"cause":{"message":"simulated backend outage","name":"Error"}}
+
+stdout | src/storage/index.test.ts > MongoDB Specific Tests > MongoDB Schemaless Collection Behavior > should create collections on-demand when using connector directly
+Skipping schemaless test - connector not accessible
+
+ ✓ |e2e:stores/mongodb| src/storage/domains/knowledge/pages.test.ts (14 tests) 5523ms
+   ✓ MongoKnowledgePages (schema 4) (14)
+     ✓ refuses depth overflow, oversize moves and deleting a page with children 624ms
+     ✓ merges pages: notes, mentions, children and pins move to the target 353ms
+     ✓ refuses moving or merging into a scope that already has the page key; deleted descendants do not count toward the cap 518ms
+     ✓ keeps pins from before pin kinds as page pins and then takes a list pin on the same page 1038ms
+     ✓ refuses an unknown schema version until reset 385ms
+     ✓ lists pages across every scope a prefix read reaches, in name order, and nothing else 300ms
+ ✓ |e2e:stores/mongodb| src/storage/index.test.ts (854 tests | 194 skipped) 38322ms
+   ✓ MongoDBStore (806)
+     ✓ listMessages (19)
+       ✓ should upsert messages: duplicate id+threadId results in update, not duplicate row 533ms
+     ✓ Observational Memory (99)
+       ✓ getObservationalMemoryHistory (29)
+         ✓ should combine from + to + limit correctly 310ms
+         ✓ should combine from + to + offset correctly 303ms
+         ✓ should combine from + to + offset + limit for full pagination 325ms
+     ✓ Run fencing: prune (3)
+       ✓ deletes claims idle longer than maxAge and keeps recently active ones 2097ms
+       ✓ claims above a surviving fence after the claim was pruned 2159ms
+       ✓ deletes fences retired longer than maxAge and never deletes a fence that is not retired 2204ms
+   ✓ MongoDBStore Index Configuration (5)
+     ✓ should create default indexes by default 643ms
+     ✓ should skip default indexes when skipDefaultIndexes is true 335ms
+     ✓ should create custom indexes when specified 358ms
+     ✓ should handle invalid table name gracefully (not crash) 398ms
+   ✓ MemoryStorageMongoDB Index Configuration (5)
+     ✓ should skip default indexes when skipDefaultIndexes is true 325ms
+     ✓ should create custom indexes when specified 421ms
+     ✓ should handle invalid table/collection name gracefully (not crash) 306ms
+ ✓ |e2e:stores/mongodb| src/storage/transactions.test.ts (11 tests) 2952ms
+   ✓ MongoDB storage — topology-aware transactions (11)
+     ✓ identity-aware dataset item writes fail before mutation on standalone MongoDB 495ms
+     ✓ experiment-result writes coordinate on their item instead of the shared dataset 1058ms
+     ✓ deleteThread cascades best-effort (no rollback) and recovers via idempotent retry (replica set) 360ms
+ ✓ |e2e:stores/mongodb| src/storage/run-fencing.test.ts (28 tests | 1 skipped) 11342ms
+   ✓ MongoDB run fencing (28)
+     ✓ Run fencing: workflows (13)
+       ✓ ownership (8)
+         ✓ claims a run whose lease expired without force 627ms
+         ✓ renews only while the claim is current, even after the lease expired 660ms
+     ✓ Run fencing: memory (11)
+       ✓ accepts writes from the current fence and rejects writes from an older one 338ms
+     ✓ Run fencing: prune (3)
+       ✓ deletes claims idle longer than maxAge and keeps recently active ones 2118ms
+       ✓ claims above a surviving fence after the claim was pruned 2133ms
+       ✓ deletes fences retired longer than maxAge and never deletes a fence that is not retired 2189ms
+ ✓ |e2e:stores/mongodb| src/storage/dataset-fidelity.test.ts (33 tests) 7430ms
+   ✓ MongoDB dataset field fidelity (33)
+     ✓ preserves authored JSON value null across writes and historical reads 353ms
+     ✓ preserves authored JSON value { nested: [ null, false, 0, '' ] } across writes and historical reads 327ms
+ ✓ |e2e:stores/mongodb| src/storage/domains/memory/om-history-search.test.ts (1 test) 729ms
+ ✓ |e2e:stores/mongodb| src/storage/domains/memory/memory-data-modeling.test.ts (8 tests | 2 todo) 1209ms
+   ✓ MemoryStorageMongoDB — index definitions and metadata storage (8)
+     ✓ memory collections have the expected index set after init 578ms
+ ✓ |e2e:stores/mongodb| src/vector/filter.test.ts (36 tests) 24ms
+ ✓ |e2e:stores/mongodb| src/storage/migration.test.ts (12 tests) 6553ms
+   ✓ MongoDB Duplicate Spans Handling (5)
+     ✓ should fail to create unique index when duplicates exist 577ms
+     ✓ should handle unique index creation when no duplicates exist 593ms
+     ✓ should deduplicate spans and create unique index after init() 831ms
+     ✓ should keep span with most recent updatedAt when both are completed 708ms
+     ✓ should keep span with most recent createdAt as final tiebreaker 511ms
+   ✓ MongoDB Migration Required Error (3)
+     ✓ should throw MastraError when init() finds duplicate spans without unique index 441ms
+     ✓ should NOT throw when no duplicates exist (auto-migration succeeds) 1450ms
+     ✓ should NOT throw when unique index already exists (fresh install) 868ms
+ ✓ |e2e:stores/mongodb| src/vector/query-initial-sync-retry.test.ts (3 tests) 47ms
+ ✓ |e2e:stores/mongodb| src/storage/domains/memory/include-tied-timestamps.test.ts (4 tests) 958ms
+ ✓ |e2e:stores/mongodb| src/storage/connectors/MongoDBConnector.test.ts (3 tests) 6ms
+
+ Test Files  16 passed (16)
+      Tests  941 passed | 195 skipped | 2 todo (1138)
+   Start at  14:17:33
+   Duration  61.23s (tests 75%, import 17%, transform 8%)
+
+JUNIT report written to /tmp/claude-0/-home-user/9129b5ca-4194-55a1-8a84-bd2fce2b2dd9/scratchpad/fix/bench/agent-adapters/results/ours/mastra.xml

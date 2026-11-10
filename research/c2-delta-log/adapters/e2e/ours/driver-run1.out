@@ -1,0 +1,26 @@
+== langgraph 10:30:27
+langgraph: 50 users x 80 turns in 114 s
+{"db": "e2e_langgraph", "dbStats": {"collections": 3, "objects": 28050, "dataSize": 274487408, "storageSize": 274487408, "indexSize": 5524700, "totalSize": 280012108}, "s3_at_stop": {"total": 1361111555, "objects": 437, "by_kind": {"_clean": 5, "_lease": 50, "compacted": 1298146170, "compactions": 126458, "fx": 58055001, "manifest": 336820, "wal": 4447051}, "count_by_kind": {"_clean": 1, "_lease": 1, "compacted": 96, "compactions": 85, "fx": 27, "manifest": 78, "wal": 149}}, "s3_settled": {"total": 1700797553, "objects": 323, "by_kind": {"_clean": 5, "_lease": 50, "compacted": 1641162628, "compactions": 143528, "fx": 59130736, "manifest": 359228, "wal": 1378}, "count_by_kind": {"_clean": 1, "_lease": 1, "compacted": 105, "compactions": 96, "fx": 30, "manifest": 86, "wal": 4}}}
+derived_check exit 1
+re-read 50 threads; differences from the e2e answers of the same run: 0 []
+derived after re-read: {"write": true, "encoded": 0, "plain": 0, "messageRows": 0, "fallbacks": 0, "rebuilds": 54898, "resealRebuilds": 0, "rebuildErrors": 0}
+re-read 50 threads; differences from the e2e answers of the same run: 0 []
+cold restart e2e_langgraph.checkpoints: 12000 docs, identical to before the reseal: False
+cold restart e2e_langgraph.checkpoint_writes: 12000 docs, identical to before the reseal: False
+derived after cold re-read: {"write": true, "encoded": 0, "plain": 0, "messageRows": 0, "fallbacks": 0, "rebuilds": 110330, "resealRebuilds": 0, "rebuildErrors": 0}
+== langgraph-js 10:35:16
+langgraph-js: 50 users x 80 turns in 106.2 s
+{"db": "e2e_langgraph_js", "dbStats": {"collections": 2, "objects": 24000, "dataSize": 291348250, "storageSize": 291348250, "indexSize": 4536000, "totalSize": 295884250}, "s3_at_stop": {"total": 1766857766, "objects": 385, "by_kind": {"_clean": 5, "_lease": 50, "compacted": 1691814725, "compactions": 130936, "fx": 66278740, "manifest": 268872, "wal": 8364438}, "count_by_kind": {"_clean": 1, "_lease": 1, "compacted": 105, "compactions": 88, "fx": 27, "manifest": 64, "wal": 99}}, "s3_settled": {"total": 1760285637, "objects": 300, "by_kind": {"_clean": 5, "_lease": 50, "compacted": 1691815583, "compactions": 133324, "fx": 68055081, "manifest": 280384, "wal": 1210}, "count_by_kind": {"_clean": 1, "_lease": 1, "compacted": 106, "compactions": 90, "fx": 30, "manifest": 68, "wal": 4}}}
+derived_check exit 1
+re-read 50 threads; differences from the e2e answers of the same run: 0 
+derived after re-read: {"write": true, "encoded": 0, "plain": 0, "messageRows": 0, "fallbacks": 0, "rebuilds": 0, "resealRebuilds": 0, "rebuildErrors": 0}
+re-read 50 threads; differences from the e2e answers of the same run: 0 
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user/9129b5ca-4194-55a1-8a84-bd2fce2b2dd9/scratchpad/run/raw_dump.py", line 17, in <module>
+    h = hashlib.sha256(b"".join(docs)).hexdigest()
+                                ^^^^
+NameError: name 'docs' is not defined
+derived after cold re-read: {"write": true, "encoded": 0, "plain": 0, "messageRows": 0, "fallbacks": 0, "rebuilds": 0, "resealRebuilds": 0, "rebuildErrors": 0}
+== mastra 10:41:06
+mastra: 50 users x 200 turns in 87.1 s
+{"db": "e2e_mastra", "dbStats": {"collections": 32, "objects": 20100, "dataSize": 7658750, "storageSize": 7658750, "indexSize": 5236350, "totalSize": 12895100}, "s3_at_stop": {"total": 30490986, "objects": 1478, "by_kind": {"_clean": 5, "_lease": 50, "compacted": 26040856, "compactions": 3556, "fx": 1011, "manifest": 10808, "wal": 4434700}, "count_by_kind": {"_clean": 1, "_lease": 1, "compacted": 8, "compactions": 10, "fx": 3, "manifest": 12, "wal": 1443}}, "s3_settled": {"total": 28856220, "objects": 49, "by_kind": {"_clean": 5, "_lease": 50, "compacted": 26042608, "compactions": 6056, "fx": 2785829, "manifest": 17104, "wal": 4568}, "count_by_kind": {"_clean": 1, "_lease": 1, "compacted": 9, "compactions": 12, "fx": 6, "manifest": 16, "wal": 4}}}

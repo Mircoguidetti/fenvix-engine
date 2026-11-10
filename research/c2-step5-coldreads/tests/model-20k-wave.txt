@@ -1,0 +1,33 @@
+   Compiling tenant-bench v0.1.0 (/home/user/fenvix-engine)
+warning: unused import: `std::sync::atomic::Ordering::Relaxed`
+    --> src/lifecycle.rs:1250:13
+     |
+1250 |         use std::sync::atomic::Ordering::Relaxed;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary parentheses around closure body
+    --> src/warm.rs:1211:42
+     |
+1211 |                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+     |                                          ^                                ^
+     |
+     = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+     |
+1211 -                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+1211 +                     (0..40).flat_map(|c| c * (n / 40)..c * (n / 40) + per).collect()
+     |
+
+warning: `tenant-bench` (lib test) generated 2 warnings (run `cargo fix --lib -p tenant-bench --tests` to apply 2 suggestions)
+    Finished `release` profile [optimized] target(s) in 1m 17s
+     Running unittests src/lib.rs (target/release/deps/tenant_bench-b0e7ff32e036352f)
+
+running 1 test
+test fx::compactor_tests::compactor_model_drop_on ... compactor model: St { ops: 20000, wrong: 0, writes: 8876, reads: 5011, ranges: 3103, txn_reads: 869, retries: 0, crashes: 21, erasures: 65, max_l0: 25 }
+compactor model: absorbs 641, merges 212, reseals 662 (splits 38, group merges 40), rows dropped from SlateDB 9925, runs deleted by GC 2848, erasure leftovers 0, erasures pending 0, groups 10, delta runs 1
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 82 filtered out; finished in 27.30s
+

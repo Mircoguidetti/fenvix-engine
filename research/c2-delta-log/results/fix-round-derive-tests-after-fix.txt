@@ -1,0 +1,32 @@
+test fx::derive::tests::cuts_and_rebuilds_exactly ... ok
+test fx::derive::tests::skeleton_round_trip_and_crc ... ok
+test fx::derive_tests::derived_model_with_crashes_and_erasures ... fx compactor fx-derive-model: Reseal job: planted crash in the middle of a reseal
+derived model (Zstd): St { ops: 4000, steps: 3085, gets: 1588, ranges: 489, txn_reads: 357, wrong: 0, retries: 1, crashes: 17, mid_reseal_crashes: 4, erasures: 40, forced_reseals: 2626 }
+derived model: reseals 3523, checkpoint docs seen by reseals 430150, encoded 430150, message rows written 488196, derived rebuilt by reseals 423777, fallbacks 0, reader rebuilds 50352; newest version: 4728 derived rows, 5362 message rows; erasure leftovers 0, 
+test fx::derive_tests::paired_checkpoint_reads_exact_documents ... paired checkpoint: 120 rows scanned, 120 gets, wrong 0; live database wrong 0, errors 0
+test fx::derive_tests::planted_wrong_reference_is_caught ... plant 0 crc check true: wrong 0, errors 0 (); full scan equal: Ok(true); encoded 600
+plant 1 crc check true: wrong 0, errors 82 (corrupt derived document: rebuilt 626 bytes, the skeleton says 778); full scan equal: Err(corrupt derived document: rebuilt 626 bytes, the skeleton says 778
+plant 1 crc check false: wrong 165, errors 0 (); full scan equal: Ok(false); encoded 255
+test fx::derive_tests::review_erasure_of_a_derived_thread ... review erasure (scrub opens sealed runs for derived rows: false): pass ok, states ["scrubbed", "scrubbed"]; rows of the erased thread left in the newest version: 0 message rows, 0 skeletons, 0 other
+review erasure (scrub opens sealed runs for derived rows: true): pass ok, states ["scrubbed", "scrubbed"]; rows of the erased thread left in the newest version: 0 message rows, 0 skeletons, 0 other; reads of the other threads: wrong 0, errors 0 
+test fx::derive_tests::review_follower_reads_derived_documents_exactly ... review follower: 412 reads, wrong 0, follower rebuilds 1372, writer rebuilt by reseals 600
+test fx::derive_tests::review_more_planted_bugs_are_caught ... review plant 2 crc check true: 192 docs, wrong 0, errors 96 (corrupt derived document: rebuilt 777 bytes, the skeleton says 778); full scan equal: Err(corrupt derived document: rebuilt 777 bytes, t
+review plant 2 crc check false: 192 docs, wrong 192, errors 0 (); full scan equal: Ok(false); encoded 192
+review plant 3 crc check true: 192 docs, wrong 0, errors 68 (corrupt derived document: rebuilt 778 bytes, the skeleton says 7651); full scan equal: Err(corrupt derived document: rebuilt 778 bytes, the skeleton says 7651
+review plant 3 crc check false: 192 docs, wrong 145, errors 0 (); full scan equal: Ok(false); encoded 326
+review plant 4 crc check true: 192 docs, wrong 0, errors 7 (corrupt derived document: message 24 is missing); full scan equal: Err(corrupt derived document: message 24 is missing
+review plant 4 crc check false: 192 docs, wrong 0, errors 7 (corrupt derived document: message 24 is missing); full scan equal: Err(corrupt derived document: message 24 is missing
+test fx::derive_tests::review_near_miss_shapes_are_left_untouched ... review near-miss: LangGraph saver checkpoint (control): encoded true (message rows 6), expected true
+review near-miss: LangGraph saver write (control): encoded true (message rows 1), expected true
+review near-miss: the same saver document in a collection that is not registered: encoded false (message rows 0), expected false
+review near-miss: LangGraph JS saver (type json): encoded false (message rows 0), expected false
+review near-miss: a saver version with the checkpoint as a BSON subdocument: encoded false (message rows 0), expected false
+review near-miss: msgpack followed by a stray byte: encoded false (message rows 0), expected false
+review near-miss: another app's document in a collection named like the saver's: encoded false (message rows 0), expected false
+review near-miss: a saver-like document without its type field: encoded false (message rows 0), expected false
+test fx::derive_tests::review_rollback_leaves_derived_rows_in_quiet_groups ... review rollback: flag off, compactor idle for 3 s: reseals 0, derived rows still in runs 416, v2 sealed runs 2 (a v1 reader refuses 2), wrong 0, errors 0
+test fx::derive_tests::review_wave_reader_rebuilds_derived_documents ... review wave false: 192 point reads, wrong 0, errors 0 (); range scan equal Ok(true); encoded 600
+review wave true: 192 point reads, wrong 0, errors 0 (); range scan equal Ok(true); encoded 600
+test fx::derive_tests::takeover_while_threads_are_reencoded ... takeover: A's transaction wrong 0, errors 96 of 96; B wrong 0, errors 0 (); B encoded 52740, rebuilt 51780
+test fx::derive_tests::v1_reader_refuses_v2_and_rollback_writes_plain ... v2 runs 1, refused by a v1 reader 1; after the rollback: derived rows 0, sealed run versions [1], wrong 0, errors 0, rebuilt by the reseal 120
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 108 filtered out; finished in 48.02s

@@ -3826,6 +3826,7 @@ dependencies = [
  "twox-hash",
  "ulid",
  "uuid",
+ "zstd",
 ]
 
 [[package]]

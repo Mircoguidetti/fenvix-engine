@@ -20,6 +20,7 @@ mod agg;
 /// `--sealed-runs` when neither the flag nor FENVIX_SEALED_RUNS says otherwise (integration-3: sealed runs on).
 const DEFAULT_SEALED_RUNS: u64 = 2;
 mod agentlane;
+mod agentck;
 mod custkey;
 mod layout2;
 mod opening;
@@ -572,6 +573,24 @@ struct Args {
     /// cold read instead).
     #[arg(long, default_value_t = 4)]
     first_course_queries: u64,
+    /// With `--sealed-compactor`: the release flag E1 of derived documents (`fx/derive.rs`): reseals store the threads of
+    /// the agent checkpoint collections as a message log plus derived documents. Reads understand them always (E0).
+    /// On by default since integration-3 for the agent checkpoint collections below (the LangGraph saver's);
+    /// `--sealed-derive false` or FENVIX_SEALED_DERIVE=0 turns it off. A release before the delta log cannot read a
+    /// database once its reseals wrote derived documents.
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    sealed_derive: bool,
+    /// Agent checkpoint collections (`agentck.rs`): comma separated `[db.]collection`, customer key `thread_id`.
+    #[arg(long, default_value = "checkpoints,checkpoint_writes")]
+    agent_checkpoints: String,
+    /// Compaction 2, step 5: the one-wave reader (`fx/view.rs` `WAVE`): a read through our runs asks SlateDB and every
+    /// candidate run at once. On by default (`--sealed-wave false` or FENVIX_SEALED_WAVE=0 turns it off).
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    sealed_wave: bool,
+    /// Block codec of the sealed runs the compactor writes: `lz4` (run format v1, as before) or `zstd` (run format v2,
+    /// which a release before this one cannot read). FENVIX_SEALED_CODEC does the same.
+    #[arg(long, default_value = "lz4")]
+    sealed_codec: String,
     /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
     /// releases before); M29 measured 64.
     #[arg(long, default_value_t = 4)]
@@ -889,7 +908,18 @@ async fn run() -> Result<()> {
             tenant_bench::fx::compactor::SERVER_ON.store(true, Relaxed);
             tenant_bench::fx::compactor::SERVER_SMALL.store(env_c == "small", Relaxed);
             tenant_bench::fx::compactor::DROP_DEFAULT.store(args.sealed_drop, Relaxed);
+            let derive = match std::env::var("FENVIX_SEALED_DERIVE").as_deref() {
+                Ok("1") => true,
+                Ok("0") => false,
+                _ => args.sealed_derive,
+            };
+            tenant_bench::fx::derive::WRITE.store(derive, Relaxed);
+            let codec = std::env::var("FENVIX_SEALED_CODEC").unwrap_or_else(|_| args.sealed_codec.clone());
+            tenant_bench::fx::compactor::set_sealed_codec(&codec)?;
         }
+        agentck::configure(&args.agent_checkpoints)?;
+        let wave = args.sealed_wave && std::env::var("FENVIX_SEALED_WAVE").as_deref() != Ok("0");
+        tenant_bench::fx::view::WAVE.store(wave, Relaxed);
         tenant_bench::fx::check_config()?;
     }
     tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);

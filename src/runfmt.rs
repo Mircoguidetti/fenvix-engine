@@ -1,4 +1,4 @@
-//! Sealed-run format v1 (compaction 2, build step 1).
+//! Sealed-run format v1 (compaction 2, build step 1) and v2 (agent checkpoints, `c2-delta-log`).
 //!
 //! A run is one immutable object holding rows in strictly increasing key order. Under way (b) of the compaction 2 plan
 //! (fenvix-brain `sessions/2026-11-07-compaction-2-plan/REPORT.md`, section 1) SlateDB keeps the write path and our
@@ -25,6 +25,14 @@
 //!           trailer bytes),
 //!           magic u32 "FXR1"
 //! ```
+//! Format v2 (written only when a writer asks for zstd blocks or for derived documents; otherwise the writer still writes
+//! v1, byte for byte as before): the footer gains, right after `customer kind u8`, `codec u8` (0 lz4, 1 zstd: a block is
+//! then `raw length u32` + one zstd frame, its CRC unchanged), `flags u8` (bit 0: the run may hold derived documents) and
+//! `derived rows u64` (rows with envelope 2 or 3); the trailer's version is 2. Envelopes 2 (a derived document: a skeleton
+//! with references, `fx/derive.rs`) and 3 (a message row such a skeleton references) are valid only in a v2 run. A v1
+//! reader refuses a v2 run at its trailer (an unknown version), so readers learn v2 first (E0 rule) and writers write it
+//! only behind a release flag.
+//!
 //! Every byte of the object is covered by a check: block bytes by their block CRC, footer bytes by the footer CRC, the
 //! trailer's offset and length by `offset + length + 40 == size` and the CRC, its version and magic by equality. So a
 //! flipped bit anywhere is an error when the reader touches that byte, never different data.
@@ -47,6 +55,15 @@ use std::ops::Range;
 use std::sync::{Arc, Mutex};
 
 pub const FORMAT_VERSION: u32 = 1;
+/// Format v2: a block codec field (zstd) and the derived-document envelopes.
+pub const FORMAT_V2: u32 = 2;
+/// The newest format this reader knows.
+pub const READ_VERSION: u32 = FORMAT_V2;
+/// zstd level of v2 blocks.
+pub const ZSTD_LEVEL: i32 = 3;
+/// The largest raw block a reader accepts (a block is at most `MAX_BLOCK` plus one entry; entries are bounded by the
+/// u32 envelope length, but a document is at most 16 MiB in MongoDB).
+pub const MAX_RAW_BLOCK: usize = 64 << 20;
 pub const MAGIC: u32 = u32::from_le_bytes(*b"FXR1");
 pub const TRAILER: u64 = 40;
 pub const RUN_ID_LEN: usize = 16;
@@ -73,6 +90,54 @@ fn block_crc(run_id: &[u8; RUN_ID_LEN], idx: u32, c: &[u8]) -> u32 {
 
 pub const LIVE: u8 = 0;
 pub const DELETED: u8 = 1;
+/// Format v2: a derived document (a skeleton whose references point at message rows of the same customer, in the same
+/// run; `fx/derive.rs` rebuilds the exact document).
+pub const DERIVED: u8 = 2;
+/// Format v2: a message row, referenced by derived documents; never a document itself.
+pub const PART: u8 = 3;
+
+/// How the blocks of a run are compressed (format v2 footer; a v1 run is lz4).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BlockCodec {
+    Lz4 = 0,
+    Zstd = 1,
+}
+
+impl BlockCodec {
+    fn from_u8(b: u8) -> anyhow::Result<Self> {
+        Ok(match b {
+            0 => BlockCodec::Lz4,
+            1 => BlockCodec::Zstd,
+            _ => anyhow::bail!("corrupt run: unknown block codec {b}"),
+        })
+    }
+
+    pub fn compress(self, raw: &[u8]) -> Vec<u8> {
+        match self {
+            BlockCodec::Lz4 => lz4_flex::compress_prepend_size(raw),
+            BlockCodec::Zstd => {
+                let mut out = Vec::with_capacity(raw.len() / 2 + 16);
+                out.extend((raw.len() as u32).to_le_bytes());
+                out.extend(zstd::bulk::compress(raw, ZSTD_LEVEL).expect("zstd compress of an in-memory block"));
+                out
+            }
+        }
+    }
+
+    pub fn decompress(self, c: &[u8], idx: u32) -> anyhow::Result<Vec<u8>> {
+        match self {
+            BlockCodec::Lz4 => lz4_flex::decompress_size_prepended(c).map_err(|e| anyhow::anyhow!("corrupt run: block {idx}: {e}")),
+            BlockCodec::Zstd => {
+                anyhow::ensure!(c.len() >= 4, "corrupt run: block {idx}: short zstd block");
+                let n = u32::from_le_bytes(c[..4].try_into()?) as usize;
+                anyhow::ensure!(n <= MAX_RAW_BLOCK, "corrupt run: block {idx}: {n} raw bytes");
+                let raw = zstd::bulk::decompress(&c[4..], n).map_err(|e| anyhow::anyhow!("corrupt run: block {idx}: {e}"))?;
+                anyhow::ensure!(raw.len() == n, "corrupt run: block {idx}: {} raw bytes, the block says {n}", raw.len());
+                Ok(raw)
+            }
+        }
+    }
+}
 
 // ---- envelopes and rows
 
@@ -89,9 +154,16 @@ pub fn deleted() -> Vec<u8> {
     vec![DELETED]
 }
 
+#[allow(dead_code)]
 fn check_envelope(env: &[u8]) -> anyhow::Result<()> {
+    check_envelope_v(env, FORMAT_VERSION)
+}
+
+/// The envelope check of a run of format `version`: v1 knows 0 and 1; v2 also 2 (derived) and 3 (message row).
+fn check_envelope_v(env: &[u8], version: u32) -> anyhow::Result<()> {
     match env.first() {
         Some(&LIVE) => Ok(()),
+        Some(&DERIVED) | Some(&PART) if version >= FORMAT_V2 => Ok(()),
         Some(&DELETED) if env.len() == 1 => Ok(()),
         Some(&DELETED) => anyhow::bail!("corrupt run: delete envelope with {} bytes", env.len()),
         Some(b) => anyhow::bail!("corrupt run: envelope byte {b}"),
@@ -110,6 +182,11 @@ pub struct Row {
 impl Row {
     pub fn is_deleted(&self) -> bool {
         self.env.first() == Some(&DELETED)
+    }
+
+    /// A derived document or a message row (format v2): not a plain live value.
+    pub fn is_derived(&self) -> bool {
+        matches!(self.env.first(), Some(&DERIVED) | Some(&PART))
     }
 
     /// The document bytes of a live row.
@@ -352,24 +429,37 @@ pub struct RunOptions {
     /// Multipart part size.
     pub part_bytes: usize,
     pub customers: CustomerKind,
+    /// Block codec; anything but lz4 writes format v2.
+    pub codec: BlockCodec,
+    /// Whether the run may hold derived documents and message rows (envelopes 2 and 3); writes format v2.
+    pub derived: bool,
 }
 
 impl RunOptions {
+    /// The format version these options write: v1 (as before this release) unless zstd or derived rows are asked for.
+    pub fn version(&self) -> u32 {
+        if self.codec == BlockCodec::Lz4 && !self.derived {
+            FORMAT_VERSION
+        } else {
+            FORMAT_V2
+        }
+    }
+
     /// Checked settings: blocks 64 KiB to 1 MiB, parts at least 5 MiB (S3's minimum).
     pub fn new(block_bytes: usize, part_bytes: usize, customers: CustomerKind) -> anyhow::Result<Self> {
         anyhow::ensure!((MIN_BLOCK..=MAX_BLOCK).contains(&block_bytes), "block size {block_bytes} outside 64 KiB..1 MiB");
         anyhow::ensure!(part_bytes >= MIN_PART, "part size {part_bytes} under 5 MiB");
-        Ok(RunOptions { block_bytes, part_bytes, customers })
+        Ok(RunOptions { block_bytes, part_bytes, customers, codec: BlockCodec::Lz4, derived: false })
     }
 
     /// The sealed-run default: 256 KiB blocks, 16 MiB parts.
     pub fn sealed(customers: CustomerKind) -> Self {
-        RunOptions { block_bytes: DEFAULT_BLOCK, part_bytes: DEFAULT_PART, customers }
+        RunOptions { block_bytes: DEFAULT_BLOCK, part_bytes: DEFAULT_PART, customers, codec: BlockCodec::Lz4, derived: false }
     }
 
     /// Any sizes, for tests that need many blocks from little data (stores without the 5 MiB rule).
     pub fn unchecked(block_bytes: usize, part_bytes: usize, customers: CustomerKind) -> Self {
-        RunOptions { block_bytes: block_bytes.max(1), part_bytes: part_bytes.max(1), customers }
+        RunOptions { block_bytes: block_bytes.max(1), part_bytes: part_bytes.max(1), customers, codec: BlockCodec::Lz4, derived: false }
     }
 }
 
@@ -395,6 +485,9 @@ pub struct RunMeta {
     /// PUT-class requests: CreateMultipartUpload + UploadPart x parts + CompleteMultipartUpload.
     pub puts: u64,
     pub parts: u64,
+    /// Format version written (1 or 2) and rows with envelope 2 or 3.
+    pub version: u32,
+    pub derived_rows: u64,
 }
 
 /// Writes one run as a multipart upload. The object becomes visible only when `finish` completes the upload.
@@ -418,6 +511,7 @@ pub struct RunWriter {
     parts: u64,
     cust_hashes: Vec<u64>,
     last_cust: Vec<u8>,
+    derived_rows: u64,
 }
 
 impl RunWriter {
@@ -443,6 +537,7 @@ impl RunWriter {
             parts: 0,
             cust_hashes: Vec::new(),
             last_cust: Vec::new(),
+            derived_rows: 0,
         })
     }
 
@@ -450,7 +545,11 @@ impl RunWriter {
     pub async fn add(&mut self, key: &[u8], seq: u64, env: &[u8]) -> anyhow::Result<()> {
         anyhow::ensure!(self.first_key.is_none() || key > &self.last_key[..], "keys out of order");
         anyhow::ensure!(key.len() <= u16::MAX as usize && env.len() <= u32::MAX as usize, "entry too large");
-        check_envelope(env)?;
+        check_envelope_v(env, self.opts.version())?;
+        anyhow::ensure!(self.opts.derived || !matches!(env[0], DERIVED | PART), "a derived row in a run not opened for derived rows");
+        if matches!(env[0], DERIVED | PART) {
+            self.derived_rows += 1;
+        }
         let len = 14 + key.len() + env.len();
         if !self.raw.is_empty() && self.raw.len() + len > self.opts.block_bytes {
             self.end_block().await?;
@@ -495,7 +594,7 @@ impl RunWriter {
             return Ok(());
         }
         let idx = (self.seps.len() - 1) as u32;
-        let mut c = lz4_flex::compress_prepend_size(&self.raw);
+        let mut c = self.opts.codec.compress(&self.raw);
         let crc = block_crc(&self.run_id, idx, &c);
         c.extend_from_slice(&crc.to_le_bytes());
         self.raw_bytes += self.raw.len() as u64;
@@ -540,11 +639,17 @@ impl RunWriter {
         let data_end = self.written + self.out.len() as u64;
         let prefix_len = lcp(&first_key, &self.last_key);
         let filter = CustomerFilter::build(&self.cust_hashes);
+        let version = self.opts.version();
         let mut f = Vec::with_capacity(64 + self.seps.len() * 40 + filter.data.len());
-        f.extend(FORMAT_VERSION.to_le_bytes());
+        f.extend(version.to_le_bytes());
         f.extend(self.run_id);
         f.extend((self.opts.block_bytes as u32).to_le_bytes());
         f.push(self.opts.customers as u8);
+        if version >= FORMAT_V2 {
+            f.push(self.opts.codec as u8);
+            f.push(self.opts.derived as u8);
+            f.extend(self.derived_rows.to_le_bytes());
+        }
         f.extend(self.entries.to_le_bytes());
         f.extend(self.deleted.to_le_bytes());
         f.extend(self.raw_bytes.to_le_bytes());
@@ -575,7 +680,7 @@ impl RunWriter {
         let mut t = Vec::with_capacity(TRAILER as usize);
         t.extend(data_end.to_le_bytes());
         t.extend(footer_len.to_le_bytes());
-        t.extend(FORMAT_VERSION.to_le_bytes());
+        t.extend(version.to_le_bytes());
         t.extend(self.run_id);
         let crc = crc32c::crc32c_append(crc32c::crc32c(&f), &t);
         t.extend(crc.to_le_bytes());
@@ -601,6 +706,8 @@ impl RunWriter {
             raw_bytes: self.raw_bytes,
             puts: self.parts + 2,
             parts: self.parts,
+            version,
+            derived_rows: self.derived_rows,
         })
     }
 }
@@ -853,6 +960,11 @@ pub struct Run {
     pub customer_count: u64,
     pub filter: CustomerFilter,
     pub fence: Fence,
+    /// Format version (1 or 2), block codec, and whether derived rows may be present (v2) and how many.
+    pub version: u32,
+    pub codec: BlockCodec,
+    pub derived: bool,
+    pub derived_rows: u64,
 }
 
 struct Cursor<'a> {
@@ -886,13 +998,18 @@ impl<'a> Cursor<'a> {
 
 /// Checks the trailer (the last 40 bytes of a run of `size` bytes): returns (footer offset, footer length).
 pub fn parse_trailer(t: &[u8], size: u64) -> anyhow::Result<(u64, u32)> {
+    parse_trailer_known(t, size, READ_VERSION)
+}
+
+/// [`parse_trailer`] of a reader that knows formats up to `known` (a v1 reader: 1). A newer run is refused.
+pub fn parse_trailer_known(t: &[u8], size: u64, known: u32) -> anyhow::Result<(u64, u32)> {
     anyhow::ensure!(t.len() == TRAILER as usize, "corrupt run: trailer of {} bytes", t.len());
     let foff = u64::from_le_bytes(t[0..8].try_into()?);
     let flen = u32::from_le_bytes(t[8..12].try_into()?);
     let ver = u32::from_le_bytes(t[12..16].try_into()?);
     let magic = u32::from_le_bytes(t[36..40].try_into()?);
     anyhow::ensure!(magic == MAGIC, "not a run (magic {magic:#x})");
-    anyhow::ensure!(ver == FORMAT_VERSION, "run format version {ver}, this reader knows {FORMAT_VERSION}");
+    anyhow::ensure!((FORMAT_VERSION..=known).contains(&ver), "run format version {ver}, this reader knows up to {known}");
     anyhow::ensure!(foff.checked_add(flen as u64).and_then(|x| x.checked_add(TRAILER)) == Some(size), "corrupt run: footer at {foff}+{flen} in {size} bytes");
     Ok((foff, flen))
 }
@@ -909,11 +1026,22 @@ impl Run {
         anyhow::ensure!(want == got, "corrupt run: footer checksum");
         let mut c = Cursor { r: f };
         let ver = c.u32()?;
-        anyhow::ensure!(ver == FORMAT_VERSION, "corrupt run: footer version {ver}");
+        anyhow::ensure!(ver.to_le_bytes() == t[12..16], "corrupt run: footer version {ver}, trailer version differs");
+        anyhow::ensure!((FORMAT_VERSION..=READ_VERSION).contains(&ver), "corrupt run: footer version {ver}");
         let run_id: [u8; RUN_ID_LEN] = c.take(RUN_ID_LEN)?.try_into()?;
         anyhow::ensure!(run_id[..] == t[16..32], "corrupt run: the footer's and the trailer's run ids differ");
         let block_bytes = c.u32()?;
         let customers = CustomerKind::from_u8(c.u8()?)?;
+        let (codec, derived, derived_rows) = if ver >= FORMAT_V2 {
+            let codec = BlockCodec::from_u8(c.u8()?)?;
+            let flags = c.u8()?;
+            anyhow::ensure!(flags <= 1, "corrupt run: footer flags {flags}");
+            let n = c.u64()?;
+            anyhow::ensure!(flags == 1 || n == 0, "corrupt run: derived rows in a run without the flag");
+            (codec, flags == 1, n)
+        } else {
+            (BlockCodec::Lz4, false, 0)
+        };
         let entries = c.u64()?;
         let deleted = c.u64()?;
         let raw_bytes = c.u64()?;
@@ -961,6 +1089,10 @@ impl Run {
             customer_count,
             filter: CustomerFilter { hashes, bits, data },
             fence,
+            version: ver,
+            codec,
+            derived,
+            derived_rows,
         })
     }
 
@@ -1029,12 +1161,18 @@ pub struct Block {
 impl Block {
     /// Checks the CRC of stored block `idx` of the run with id `run_id`, decompresses it and checks every entry. Errors, never panics, on bad bytes.
     pub fn decode(stored: &[u8], run_id: &[u8; RUN_ID_LEN], idx: u32) -> anyhow::Result<Block> {
+        Self::decode_v(stored, run_id, idx, FORMAT_VERSION, BlockCodec::Lz4, false)
+    }
+
+    /// [`Block::decode`] for a run of format `version` with block codec `codec` (`derived`: the run's footer allows
+    /// envelopes 2 and 3).
+    pub fn decode_v(stored: &[u8], run_id: &[u8; RUN_ID_LEN], idx: u32, version: u32, codec: BlockCodec, derived: bool) -> anyhow::Result<Block> {
         anyhow::ensure!(stored.len() > 4, "corrupt run: block {idx} of {} bytes", stored.len());
         let (c, crc) = stored.split_at(stored.len() - 4);
         let want = u32::from_le_bytes(crc.try_into()?);
         let got = block_crc(run_id, idx, c);
         anyhow::ensure!(want == got, "corrupt run: block {idx} checksum");
-        let raw = lz4_flex::decompress_size_prepended(c).map_err(|e| anyhow::anyhow!("corrupt run: block {idx}: {e}"))?;
+        let raw = codec.decompress(c, idx)?;
         let mut starts = Vec::new();
         let mut p = 0usize;
         let mut prev: Option<&[u8]> = None;
@@ -1046,7 +1184,9 @@ impl Block {
             let key = &raw[p + 2..p + 2 + kl];
             let vl = u32::from_le_bytes(raw[p + 10 + kl..p + 14 + kl].try_into()?) as usize;
             anyhow::ensure!(p + 14 + kl + vl <= raw.len(), "corrupt run: block {idx} entry");
-            check_envelope(&raw[p + 14 + kl..p + 14 + kl + vl])?;
+            let env = &raw[p + 14 + kl..p + 14 + kl + vl];
+            check_envelope_v(env, version)?;
+            anyhow::ensure!(derived || !matches!(env[0], DERIVED | PART), "corrupt run: block {idx}: a derived row in a run without the flag");
             anyhow::ensure!(prev.is_none_or(|q| q < key), "corrupt run: block {idx} keys out of order");
             prev = Some(key);
             p += 14 + kl + vl;
@@ -1131,7 +1271,7 @@ impl Block {
 
 /// Decodes block `i` of `run` and checks it against the fence: every key at or above its separator and below the next.
 pub fn decode_checked(run: &Run, i: usize, stored: &[u8]) -> anyhow::Result<Block> {
-    let b = Block::decode(stored, &run.run_id, i as u32)?;
+    let b = Block::decode_v(stored, &run.run_id, i as u32, run.version, run.codec, run.derived)?;
     anyhow::ensure!(run.fence.cmp(i, b.key(0)) != Ordering::Greater, "corrupt run: block {i} starts below its separator");
     if i + 1 < run.fence.blocks() {
         anyhow::ensure!(run.fence.cmp(i + 1, b.key(b.len() - 1)) == Ordering::Greater, "corrupt run: block {i} reaches the next separator");
