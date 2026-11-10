@@ -246,3 +246,199 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
     }
     Ok(Some((v, rep)))
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Generated data (the step 9 ballast generator, `mongo-server --ballast`): rows that never went through SlateDB.
+//
+// The generator runs the server's own insert code (documents, index entries, locators, insertion order, counters) in the
+// server's process, but instead of committing the batches it keeps their rows: the rows of the customer space (`u/`,
+// layout v2) come out of it in key order, customer after customer, and are written straight into sealed runs while it
+// runs ([`GroupWriter`]); every other row (the shared keyspace: locators, indexes not led by the customer, insertion
+// order, counters) is sorted on local disk and handed over at the end ([`SortedRows`]). [`publish_generated`] then merges
+// those with SlateDB's own rows (the catalog the server wrote through its normal commands: collections, index
+// definitions, the envelope marker) into the groups before and after the customer space, and publishes one version with
+// X_d at SlateDB's durable cut. Every generated row carries the seq of the cut taken before the generation started
+// (`x0`), at or below X_d: it reads exactly like a row SlateDB held at X_d, absorbed into a sealed run.
+
+/// Writes sealed runs of consecutive groups from rows given in strictly increasing key order, cutting a new group every
+/// `group_bytes` raw bytes. Groups get ids from `first_id` up.
+pub struct GroupWriter {
+    store: Arc<dyn ObjectStore>,
+    id: String,
+    x: u64,
+    epoch: Option<u64>,
+    opts: BuildOpts,
+    next_id: u32,
+    groups: Vec<GroupLine>,
+    cur: Option<Lazy>,
+    g_bytes: u64,
+    last: Option<Vec<u8>>,
+    /// The first group starts at the empty key (the version's first group).
+    first_at_empty: bool,
+    pub rows: u64,
+    pub bytes: u64,
+}
+
+impl GroupWriter {
+    pub fn new(store: &Arc<dyn ObjectStore>, id: &str, x: u64, epoch: Option<u64>, opts: &BuildOpts, first_id: u32, first_at_empty: bool) -> GroupWriter {
+        GroupWriter { store: Arc::clone(store), id: id.to_string(), x, epoch, opts: opts.clone(), next_id: first_id, groups: Vec::new(), cur: None, g_bytes: 0, last: None, first_at_empty, rows: 0, bytes: 0 }
+    }
+
+    pub async fn add(&mut self, key: &[u8], seq: u64, env: &[u8]) -> Result<()> {
+        if let Some(l) = &self.last {
+            ensure!(&l[..] < key, "generated rows out of order: {} after {}", hex(key), hex(l));
+        }
+        ensure!(seq <= self.x, "a generated row at seq {seq} above the cut {}", self.x);
+        if self.cur.is_none() || self.g_bytes >= self.opts.group_bytes {
+            if let Some(s) = self.cur.take() {
+                let l = s.finish().await?;
+                self.groups.last_mut().unwrap().sealed = l;
+            }
+            let lo = if self.groups.is_empty() && self.first_at_empty { String::new() } else { hex(key) };
+            self.groups.push(GroupLine { id: self.next_id, lo, x_g: self.x, sealed: None });
+            self.cur = Some(Lazy::new(&self.store, manifest::run_path(&self.id, &format!("g{}", self.next_id), self.x, self.epoch), &self.opts.sealed));
+            self.next_id += 1;
+            self.g_bytes = 0;
+        }
+        self.g_bytes += (key.len() + env.len()) as u64;
+        self.bytes += (key.len() + env.len()) as u64;
+        self.rows += 1;
+        self.last = Some(key.to_vec());
+        self.cur.as_mut().unwrap().add(key, seq, env).await
+    }
+
+    /// The last key added, if any.
+    pub fn last_key(&self) -> Option<&[u8]> {
+        self.last.as_deref()
+    }
+
+    pub async fn finish(mut self) -> Result<Vec<GroupLine>> {
+        if let Some(s) = self.cur.take() {
+            let l = s.finish().await?;
+            self.groups.last_mut().unwrap().sealed = l;
+        }
+        if self.groups.is_empty() && self.first_at_empty {
+            // a version always has a group at the empty key
+            self.groups.push(GroupLine { id: self.next_id, lo: String::new(), x_g: self.x, sealed: None });
+        }
+        Ok(self.groups)
+    }
+}
+
+/// Generated rows sorted by key, one row per key (the newest write of each key), as (key, stored envelope).
+pub trait SortedRows: Send {
+    fn next_row(&mut self) -> Result<Option<(Vec<u8>, Vec<u8>)>>;
+}
+
+/// What the generator hands to [`publish_generated`].
+pub struct Generated {
+    /// The cut taken before the generation (every generated row carries it as its seq).
+    pub x0: u64,
+    /// The groups of the customer space, already written in key order, and the last key written in them.
+    pub direct: Vec<GroupLine>,
+    pub direct_last: Option<Vec<u8>>,
+    /// Every other generated row; a key SlateDB also holds takes the generated value (it is the newer write).
+    pub sorted: Box<dyn SortedRows>,
+}
+
+/// Merge SlateDB's rows at a durable cut with the generated rows and publish the database's first version with runs.
+/// The database must have no run yet (a ballast database is generated whole, once). `next_version` is the slot to create
+/// (the newest version in the store plus one: fence versions written at open come before it).
+#[allow(clippy::too_many_arguments)]
+pub async fn publish_generated(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, id: &str, cur: Option<&View>, e_env: u64, epoch: Option<u64>, opts: &BuildOpts, mut gen: Generated) -> Result<(Version, BuildReport)> {
+    if let Some(v) = cur {
+        ensure!(v.meta.delta.is_empty() && v.meta.groups.iter().all(|g| g.sealed.is_none()), "database {id} already has runs: a ballast database is generated whole, into an empty database");
+    }
+    db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::Wal }).await?;
+    let snap = db.snapshot().await?;
+    let x = snap.seq();
+    ensure!(x >= gen.x0, "the cut {x} is below the cut {} taken before the generation (SlateDB lost rows?)", gen.x0);
+    ensure!(e_env <= gen.x0, "E_env {e_env} above the generation's cut {}", gen.x0);
+    let direct_lo: Option<Vec<u8>> = match gen.direct.first() {
+        Some(g) => Some(manifest::unhex(&g.lo)?),
+        None => None,
+    };
+    let direct_n = gen.direct.len() as u32;
+    let mut pre = GroupWriter::new(store, id, x, epoch, opts, 0, true);
+    let mut post = GroupWriter::new(store, id, x, epoch, opts, 1 + direct_n + (1 << 20), false);
+    let mut rep = BuildReport { x_d: x, ..Default::default() };
+    let scan_opts = slatedb::config::ScanOptions { read_ahead_bytes: 4 << 20, max_fetch_tasks: 4, cache_blocks: false, ..Default::default() };
+    let mut it = snap.scan_with_options::<std::ops::RangeFull>(.., &scan_opts).await?;
+    let mut s_row: Option<(Vec<u8>, u64, Vec<u8>)> = None;
+    let mut g_row = gen.sorted.next_row()?;
+    let mut s_done = false;
+    loop {
+        if s_row.is_none() && !s_done {
+            match it.next().await? {
+                Some(kv) => {
+                    rep.rows_scanned += 1;
+                    let env = envelope_of(e_env, &kv.key, kv.seq, &kv.value)?;
+                    s_row = Some((kv.key.to_vec(), kv.seq, env));
+                }
+                None => s_done = true,
+            }
+        }
+        // the smaller key first; on equal keys the generated row wins and SlateDB's is skipped
+        let (take_gen, same) = match (&s_row, &g_row) {
+            (None, None) => break,
+            (None, Some(_)) => (true, false),
+            (Some(_), None) => (false, false),
+            (Some(s), Some(g)) => (g.0 <= s.0, g.0 == s.0),
+        };
+        if same {
+            s_row = None;
+        }
+        let (k, seq, env) = if take_gen {
+            let (k, v) = g_row.take().unwrap();
+            g_row = gen.sorted.next_row()?;
+            (k, gen.x0, v)
+        } else {
+            s_row.take().unwrap()
+        };
+        if env.first() == Some(&runfmt::DELETED) {
+            continue; // a sealed run drops delete envelopes (rule 14)
+        }
+        let below = direct_lo.as_ref().map_or(true, |lo| &k < lo);
+        if below {
+            pre.add(&k, seq, &env).await?;
+        } else {
+            let last = gen.direct_last.as_deref().unwrap_or(&[]);
+            ensure!(&k[..] > last, "row {} falls inside the generated customer space", hex(&k));
+            post.add(&k, seq, &env).await?;
+        }
+        rep.sealed_rows += 1;
+    }
+    drop(it);
+    drop(snap);
+    rep.sealed_rows += gen.direct.iter().filter_map(|g| g.sealed.as_ref()).map(|r| r.entries).sum::<u64>();
+    let mut groups = pre.finish().await?;
+    // the customer-space groups follow, renumbered after the first ones; then the groups after the customer space
+    let mut next_id = groups.iter().map(|g| g.id).max().map_or(0, |m| m + 1);
+    for mut g in std::mem::take(&mut gen.direct) {
+        g.id = next_id;
+        next_id += 1;
+        groups.push(g);
+    }
+    groups.extend(post.finish().await?);
+    for w in groups.windows(2) {
+        ensure!(manifest::unhex(&w[0].lo)? < manifest::unhex(&w[1].lo)?, "groups out of order");
+    }
+    for g in &groups {
+        ensure!(g.x_g <= x, "group {} at X_g {} above X_d {x}", g.id, g.x_g);
+    }
+    let next_group_id = groups.iter().map(|g| g.id).max().map_or(0, |m| m + 1);
+    rep.runs_written = groups.iter().filter(|g| g.sealed.is_some()).count() as u64;
+    rep.groups = groups.len();
+    rep.resealed = groups.len();
+    let version = manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1);
+    let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: Vec::new(), next_group_id };
+    rep.version = version;
+    let created = match manifest::create(store, id, &v).await {
+        Ok(c) => c,
+        Err(e) => return Err(anyhow::Error::new(super::UnknownPublish { version: Box::new(v), msg: format!("{e:#}") })),
+    };
+    if !created {
+        return Err(anyhow::Error::new(super::LostRace(format!("publish of version {version} of {id} lost the race: another publisher wrote it; the generated runs are orphans"))));
+    }
+    Ok((v, rep))
+}

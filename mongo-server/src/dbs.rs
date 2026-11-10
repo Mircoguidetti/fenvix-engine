@@ -788,6 +788,23 @@ impl Entry {
         self.scan_range_uncounted(prefix, end.as_deref(), false, None, 4 << 20).await
     }
 
+    /// The step 9 ballast generator (`ballast.rs`): the cut before it generates (`None` while E1's wait runs).
+    pub async fn ballast_begin(&mut self) -> Result<Option<u64>> {
+        anyhow::ensure!(self.ensure_open().await?, "database {} does not exist: create its collections first", self.name);
+        self.tenant.as_mut().unwrap().fx_ballast_begin().await
+    }
+
+    /// Where the ballast generator writes its runs: the store, the database's id, the writer epoch.
+    pub fn ballast_target(&self) -> Result<(Arc<dyn object_store::ObjectStore>, String, Option<u64>)> {
+        self.tenant.as_ref().ok_or_else(|| anyhow::anyhow!("database {} is not open", self.name))?.fx_ballast_target()
+    }
+
+    /// Publish the generated runs with SlateDB's rows (`fx/build.rs`).
+    pub async fn ballast_publish(&mut self, opts: &tenant_bench::fx::build::BuildOpts, gen: tenant_bench::fx::build::Generated) -> Result<tenant_bench::fx::build::BuildReport> {
+        let t = self.tenant.as_mut().ok_or_else(|| anyhow::anyhow!("database {} is not open", self.name))?;
+        t.fx_publish_generated(opts, gen).await
+    }
+
     /// Apply writes atomically and durably, creating the database on its first write.
     pub async fn apply(&mut self, ops: Vec<Op>) -> Result<()> {
         self.apply_mode(ops, true, false).await
