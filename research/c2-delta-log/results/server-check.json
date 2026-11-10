@@ -1,0 +1,131 @@
+{
+ "args": [
+  "--listen",
+  "127.0.0.1:27041",
+  "--idle-secs",
+  "600",
+  "--holder",
+  "c2delta",
+  "--bucket",
+  "c2delta",
+  "--sealed-runs",
+  "2",
+  "--sealed-compactor",
+  "--sealed-drop",
+  "--sealed-derive",
+  "--sealed-codec",
+  "zstd",
+  "--customer-key",
+  "checkpoints=thread_id,checkpoint_writes=thread_id"
+ ],
+ "write_s": 38.08699107170105,
+ "reseal_1": {
+  "resealed": 1,
+  "encoded": 6185
+ },
+ "derived_after_reseal_1": {
+  "write": true,
+  "encoded": 6185,
+  "plain": 2220,
+  "messageRows": 3617,
+  "fallbacks": 0,
+  "rebuilds": 38912,
+  "resealRebuilds": 2897,
+  "rebuildErrors": 0
+ },
+ "raw documents before / after the first reseal": {
+  "docs": {
+   "checkpoints": 1800,
+   "checkpoint_writes": 2664
+  },
+  "different": {
+   "checkpoints": 0,
+   "checkpoint_writes": 0
+  }
+ },
+ "saver reads before / after the first reseal": {
+  "threads": 36,
+  "different": 0
+ },
+ "reseal_2": {
+  "resealed": 1,
+  "encoded": 13938
+ },
+ "raw documents before / after the second reseal (young rows on derived ones)": {
+  "docs": {
+   "checkpoints": 2160,
+   "checkpoint_writes": 3168
+  },
+  "different": {
+   "checkpoints": 0,
+   "checkpoint_writes": 0
+  }
+ },
+ "saver reads before / after the second reseal": {
+  "threads": 36,
+  "different": 0
+ },
+ "raw documents after delete_thread, before / after the reseal": {
+  "docs": {
+   "checkpoints": 1800,
+   "checkpoint_writes": 2640
+  },
+  "different": {
+   "checkpoints": 0,
+   "checkpoint_writes": 0
+  }
+ },
+ "deleted_threads": {
+  "threads": 6,
+  "documents_left": 0
+ },
+ "saver reads of the other threads after delete_thread and reseal": {
+  "threads": 30,
+  "different": 0
+ },
+ "derived_before_restart": {
+  "write": true,
+  "encoded": 17218,
+  "plain": 6126,
+  "messageRows": 10011,
+  "fallbacks": 0,
+  "rebuilds": 237216,
+  "resealRebuilds": 13282,
+  "rebuildErrors": 0
+ },
+ "raw documents after a restart (cold)": {
+  "docs": {
+   "checkpoints": 1800,
+   "checkpoint_writes": 2640
+  },
+  "different": {
+   "checkpoints": 0,
+   "checkpoint_writes": 0
+  }
+ },
+ "saver reads after a restart (cold)": {
+  "threads": 30,
+  "different": 0
+ },
+ "derived_after_restart_reads": {
+  "write": true,
+  "encoded": 0,
+  "plain": 0,
+  "messageRows": 0,
+  "fallbacks": 0,
+  "rebuilds": 47244,
+  "resealRebuilds": 0,
+  "rebuildErrors": 0
+ },
+ "compactor": {
+  "enabled": true,
+  "started": 0,
+  "running": 0,
+  "publishes": 0,
+  "absorbs": 0,
+  "merges": 0,
+  "reseals": 0,
+  "errors": 0
+ },
+ "wrong": 0
+}

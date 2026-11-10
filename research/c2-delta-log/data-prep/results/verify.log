@@ -1,0 +1,16 @@
+scripted_10x400 OK {'checkpoints': (4000, 35489698), 'checkpoint_writes': (5600, 8413227)}
+scripted_40x150 OK {'checkpoints': (6000, 228736482), 'checkpoint_writes': (8796, 13448408)}
+scripted_100x40 OK {'checkpoints': (4000, 391781304), 'checkpoint_writes': (5960, 9331638)}
+scripted_300x8 OK {'checkpoints': (2400, 700210222), 'checkpoint_writes': (3606, 5696626)}
+real_tau_gpt_4o_airline OK {'checkpoints': (6351, 64836158), 'checkpoint_writes': (8679, 5543121)}
+real_tau_sonnet_35_new_retail OK {'checkpoints': (9686, 128844475), 'checkpoint_writes': (14068, 11190368)}
+real_swe4 OK {'checkpoints': (10218, 1154489025), 'checkpoint_writes': (20196, 22686660)}
+real_swe35 OK {'checkpoints': (5400, 539377680), 'checkpoint_writes': (10560, 14778850)}
+edge_base_40x3 OK {'checkpoints': (120, 3554455), 'checkpoint_writes': (180, 241058)}
+edge_summarize_40x3 OK {'checkpoints': (120, 3554610), 'checkpoint_writes': (180, 241058)}
+edge_edit_40x3 OK {'checkpoints': (120, 2613437), 'checkpoint_writes': (180, 248690)}
+edge_remove_40x3 OK {'checkpoints': (120, 1894589), 'checkpoint_writes': (180, 251378)}
+edge_base_100x8 OK {'checkpoints': (800, 71247452), 'checkpoint_writes': (1162, 1669223)}
+edge_summarize_100x8 OK {'checkpoints': (816, 33531791), 'checkpoint_writes': (1194, 1812382)}
+edge_edit_100x8 OK {'checkpoints': (800, 36524345), 'checkpoint_writes': (1162, 1723220)}
+edge_remove_100x8 OK {'checkpoints': (800, 27549285), 'checkpoint_writes': (1162, 1747893)}

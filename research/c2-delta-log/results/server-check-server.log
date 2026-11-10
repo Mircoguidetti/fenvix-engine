@@ -1,0 +1,58 @@
+mongo-server listening on 127.0.0.1:27041 (idle close after 600 s, holder c2delta, lease ttl 30 s)
+LEASE process_lease tenant=- holder=c2delta unix_ms=1794302223080 inc=b529c0ba62e4106b gen=1
+LEASE acquired tenant=agentck holder=c2delta unix_ms=1794302223084 takeover_from=-
+LEASE acquired tenant=agentck holder=c2delta unix_ms=1794302223092 takeover_from=-
+LEASE acquired tenant=agentck holder=c2delta unix_ms=1794302223100 takeover_from=-
+LEASE acquired tenant=agentck holder=c2delta unix_ms=1794302223107 takeover_from=-
+LEASE acquired tenant=agentck holder=c2delta unix_ms=1794302223113 takeover_from=- new=true
+LEASE writer_open tenant=agentck holder=c2delta unix_ms=1794302223129 
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10003 ok=true
+SLOW find db=agentck ms=1331 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW fenvixReseal db=admin ms=518 ok=true
+SLOW find db=agentck ms=969 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SSTGC begin tenant=agentck unix_ms=1794302284798
+SSTGC end tenant=agentck unix_ms=1794302284821 deleted_ssts=0 deleted_manifests=0 referenced=13 waiting=45
+SLOW update db=agentck ms=553 ok=true
+SLOW update db=agentck ms=563 ok=true
+SLOW update db=agentck ms=559 ok=true
+SLOW update db=agentck ms=555 ok=true
+SLOW update db=agentck ms=552 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=agentck ms=1081 ok=true
+SLOW find db=agentck ms=542 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW fenvixReseal db=admin ms=872 ok=true
+SLOW find db=agentck ms=1460 ok=true
+SLOW find db=agentck ms=505 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=agentck ms=859 ok=true
+SLOW fenvixReseal db=admin ms=687 ok=true
+SLOW find db=agentck ms=1115 ok=true
+SLOW hello db=admin ms=10000 ok=true
+shutting down: closing tenants cleanly
+LEASE writer_close tenant=agentck holder=c2delta unix_ms=1794302349297 
+LEASE release_begin tenant=agentck holder=c2delta unix_ms=1794302349297 
+LEASE release tenant=agentck holder=c2delta unix_ms=1794302349300 ok=true
+tenants closed; stopping maintenance
+maintenance stopped
+mongo-server listening on 127.0.0.1:27041 (idle close after 600 s, holder c2delta, lease ttl 30 s)
+LEASE process_lease tenant=- holder=c2delta unix_ms=1794302352040 inc=cc608fa9d56b62ec gen=1
+LEASE acquired tenant=agentck holder=c2delta unix_ms=1794302352046 takeover_from=-
+SLOW find db=agentck ms=986 ok=false
+SLOW find db=agentck ms=895 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+shutting down: closing tenants cleanly
+LEASE release_begin tenant=agentck holder=c2delta unix_ms=1794302366361 
+LEASE release tenant=agentck holder=c2delta unix_ms=1794302366367 ok=true
+tenants closed; stopping maintenance
+maintenance stopped
