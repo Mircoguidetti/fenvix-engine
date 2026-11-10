@@ -1,0 +1,1 @@
+--sealed-runs 0 --envelopes write --sealed-e1-wait-ms 0 --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts

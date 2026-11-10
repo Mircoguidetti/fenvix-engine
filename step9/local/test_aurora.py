@@ -76,18 +76,19 @@ def test_permission_probes_are_refused_after_the_check(aws, monkeypatch):
     assert left() == []
 
 
-def test_policy_is_least_privilege():
-    p = aurora.policy("123456789012")
-    json.dumps(p)
+def test_policy_is_least_privilege_and_names_fit_it():
+    p = aurora.policy()
+    text = json.dumps(p)
+    assert "<ACCOUNT_ID>" in text and not any(ch.isdigit() and len(x) == 12 for x in text.split(":") for ch in x[:1])
     allow = [s for s in p["Statement"] if s["Effect"] == "Allow"]
     for s in allow:
         acts = s["Action"] if isinstance(s["Action"], list) else [s["Action"]]
         assert not any(a.endswith("*") for a in acts), s["Sid"]
         if any(a.startswith("rds:Create") or a.startswith("rds:Delete") for a in acts):
-            for r in s["Resource"]:
-                assert ":fenvix-coldread-s9-*" in r or ":default" in r, r
-            assert "Condition" in s
-    create = [s for s in allow if "rds:CreateDBCluster" in s["Action"]][0]
-    assert create["Condition"]["StringEquals"]["aws:RequestTag/project"] == "fenvix-coldread"
-    delete = [s for s in allow if "rds:DeleteDBCluster" in s["Action"]][0]
-    assert delete["Condition"]["StringEquals"]["aws:ResourceTag/project"] == "fenvix-coldread"
+            assert all(":fenvix-coldread-*" in r for r in s["Resource"]), s["Resource"]
+        if s["Resource"] == "*":
+            assert all(a.startswith("rds:Describe") or a.startswith("rds:List") for a in acts), acts
+    for run in ("42792335572", "7", "perm-42792335572"):
+        for kind, name in aurora.names(run).items():
+            assert aurora.name_ok(name, kind), name
+    assert not aurora.name_ok("app-demo", "cluster") and not aurora.name_ok("fenvix-coldread-x-", "cluster")

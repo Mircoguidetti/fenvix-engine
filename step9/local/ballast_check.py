@@ -142,7 +142,24 @@ for d in plan["databases"]:
             same(f"{name} stato_ts {cli} {st}", raw(od["ordini"].find(q).hint("stato_ts").sort([("ts", -1), ("_id", 1)])),
                  raw(rd["ordini"].find(q).hint("stato_ts").sort([("ts", -1), ("_id", 1)])))
         p = [{"$match": {"cliente": cli}}, {"$group": {"_id": "$stato", "n": {"$sum": 1}, "t": {"$sum": "$totale"}}}, {"$sort": {"_id": 1}}]
-        same(f"{name} group {cli}", list(do["ordini"].aggregate(p)), list(dr["ordini"].aggregate(p)))
+        go, gr = list(do["ordini"].aggregate(p)), list(dr["ordini"].aggregate(p))
+        # the counts must be equal; a sum of doubles is compared exactly, and a difference is classified: mongod 7.0
+        # returns the exactly rounded sum (compensated summation), integration-2's $sum adds the doubles plainly
+        # (aws-ready 2026-11-10: the same values inserted through the wire give the same last-digit difference), so a
+        # sum that differs from mongod's by less than 1e-9 relative while the exact sum (math.fsum of the reference's
+        # values) equals mongod's is the engine's $sum precision, counted apart, never a wrong datum
+        same(f"{name} group counts {cli}", [(x["_id"], x["n"]) for x in go], [(x["_id"], x["n"]) for x in gr])
+        for x, y in zip(go, gr):
+            res["reads"] += 1
+            if x["t"] == y["t"]:
+                continue
+            import math
+            exact = math.fsum(d["totale"] for d in dr["ordini"].find({"cliente": cli, "stato": y["_id"]}, {"totale": 1}))
+            if exact == y["t"] and abs(x["t"] - y["t"]) <= 1e-9 * abs(y["t"]):
+                res["engine_sum_precision"] = res.get("engine_sum_precision", 0) + 1
+            else:
+                res["wrong"] += 1
+                res["examples"].append({"read": f"{name} group sum {cli} {y['_id']}", "ours": x["t"], "ref": y["t"]})
     # 3. every customer's Q2 order, by _id alone, belongs to it (the generator's record)
     q2_ok = q2_n = 0
     for i, q2 in enumerate(g["q2_id"]):
@@ -158,5 +175,6 @@ for d in plan["databases"]:
                               "seconds": round(time.time() - t0, 1)}
     print(f"{name}: {res['databases'][name]}", flush=True)
 json.dump(res, open(a.out, "w"), indent=1, default=str)
-print(f"BALLAST CHECK: {res['reads']} reads compared, WRONG: {res['wrong']}")
+print(f"BALLAST CHECK: {res['reads']} reads compared, WRONG: {res['wrong']}; engine $sum last-digit differences "
+      f"(not data): {res.get('engine_sum_precision', 0)}")
 sys.exit(0 if res["wrong"] == 0 else 1)

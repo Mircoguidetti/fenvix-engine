@@ -1,0 +1,257 @@
+{
+  "note": "LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+  "target": "postgres",
+  "label": "Aurora PostgreSQL, eu-west-1",
+  "profile": "small",
+  "seed": 42,
+  "workers": 1,
+  "plan": {
+    "threads": 41,
+    "turns": 599,
+    "digest": "1618df2b0b847193"
+  },
+  "client": {
+    "python": "3.12.15",
+    "host": "vm"
+  },
+  "write": {
+    "seconds": 12.551,
+    "errors": [],
+    "steps_per_second": 203.25
+  },
+  "read": {
+    "threads_read": 30,
+    "inconsistencies": 0
+  },
+  "erase": {
+    "users_erased": 2,
+    "threads_erased": 3,
+    "threads_left_readable": 0
+  },
+  "latency_ms": {
+    "delete_thread": {
+      "n": 3,
+      "p50": 1.975,
+      "p90": 3.473,
+      "p99": 3.473,
+      "max": 3.473,
+      "mean": 2.303
+    },
+    "erase_user": {
+      "n": 2,
+      "p50": 5.036,
+      "p90": 5.036,
+      "p99": 5.036,
+      "max": 5.036,
+      "mean": 3.513
+    },
+    "list": {
+      "n": 30,
+      "p50": 12.593,
+      "p90": 206.931,
+      "p99": 740.724,
+      "max": 740.724,
+      "mean": 73.01
+    },
+    "list_limit10": {
+      "n": 30,
+      "p50": 5.132,
+      "p90": 24.901,
+      "p99": 73.126,
+      "max": 73.126,
+      "mean": 9.384
+    },
+    "put": {
+      "n": 2551,
+      "p50": 1.813,
+      "p90": 5.807,
+      "p99": 11.853,
+      "max": 24.367,
+      "mean": 2.774
+    },
+    "put[chat]": {
+      "n": 2290,
+      "p50": 1.716,
+      "p90": 5.783,
+      "p99": 11.853,
+      "max": 24.367,
+      "mean": 2.675
+    },
+    "put[coding]": {
+      "n": 261,
+      "p50": 2.962,
+      "p90": 6.73,
+      "p99": 12.236,
+      "max": 21.267,
+      "mean": 3.644
+    },
+    "put_writes": {
+      "n": 1952,
+      "p50": 1.009,
+      "p90": 3.613,
+      "p99": 9.559,
+      "max": 17.973,
+      "mean": 1.621
+    },
+    "resume[erase_verify]": {
+      "n": 3,
+      "p50": 0.415,
+      "p90": 1.195,
+      "p99": 1.195,
+      "max": 1.195,
+      "mean": 0.616
+    },
+    "resume[read]": {
+      "n": 30,
+      "p50": 0.866,
+      "p90": 2.645,
+      "p99": 8.616,
+      "max": 8.616,
+      "mean": 1.32
+    },
+    "resume[write/first]": {
+      "n": 41,
+      "p50": 0.343,
+      "p90": 0.547,
+      "p99": 3.094,
+      "max": 3.094,
+      "mean": 0.474
+    },
+    "resume[write/long]": {
+      "n": 8,
+      "p50": 0.785,
+      "p90": 4.338,
+      "p99": 4.338,
+      "max": 4.338,
+      "mean": 1.14
+    },
+    "resume[write/none]": {
+      "n": 536,
+      "p50": 1.159,
+      "p90": 3.262,
+      "p99": 7.062,
+      "max": 31.76,
+      "mean": 1.678
+    },
+    "resume[write/short]": {
+      "n": 14,
+      "p50": 0.625,
+      "p90": 1.273,
+      "p99": 1.965,
+      "max": 1.965,
+      "mean": 0.79
+    },
+    "save_step": {
+      "n": 2551,
+      "p50": 2.734,
+      "p90": 8.468,
+      "p99": 18.127,
+      "max": 36.65,
+      "mean": 4.015
+    },
+    "save_step[chat]": {
+      "n": 2290,
+      "p50": 2.603,
+      "p90": 8.45,
+      "p99": 18.127,
+      "max": 36.65,
+      "mean": 3.914
+    },
+    "save_step[coding]": {
+      "n": 261,
+      "p50": 3.78,
+      "p90": 9.037,
+      "p99": 18.374,
+      "max": 23.904,
+      "mean": 4.902
+    },
+    "time_travel": {
+      "n": 90,
+      "p50": 0.668,
+      "p90": 1.456,
+      "p99": 3.528,
+      "max": 3.528,
+      "mean": 0.807
+    }
+  },
+  "bytes": {
+    "checkpoints": 2551,
+    "put_writes_calls": 1952,
+    "checkpoint_bytes": 140610128,
+    "writes_bytes": 2335852,
+    "message_payload_bytes_all_checkpoints": 138599529,
+    "unique_message_bytes": 2359166,
+    "logical_total": 142945980,
+    "stored": 55181312,
+    "stored_from": "sum of pg_total_relation_size of the 4 saver tables (heap + TOAST + indexes)",
+    "stored_per_logical": 0.386,
+    "stored_per_checkpoint": 21631.2
+  },
+  "sizes": {
+    "tables": {
+      "checkpoints": {
+        "total": 3055616,
+        "heap": 2637824,
+        "rows": 2551
+      },
+      "checkpoint_blobs": {
+        "total": 48824320,
+        "heap": 696320,
+        "rows": 2551
+      },
+      "checkpoint_writes": {
+        "total": 3276800,
+        "heap": 2146304,
+        "rows": 3305
+      },
+      "checkpoint_migrations": {
+        "total": 24576,
+        "heap": 8192,
+        "rows": 10
+      }
+    },
+    "pg_database_size": 63044631,
+    "stored_bytes": 55181312,
+    "stored_from": "sum of pg_total_relation_size of the 4 saver tables (heap + TOAST + indexes)"
+  },
+  "sizes_after_erase": {
+    "tables": {
+      "checkpoints": {
+        "total": 3055616,
+        "heap": 2637824,
+        "rows": 2284
+      },
+      "checkpoint_blobs": {
+        "total": 48824320,
+        "heap": 696320,
+        "rows": 2284
+      },
+      "checkpoint_writes": {
+        "total": 3276800,
+        "heap": 2146304,
+        "rows": 2924
+      },
+      "checkpoint_migrations": {
+        "total": 24576,
+        "heap": 8192,
+        "rows": 10
+      }
+    },
+    "pg_database_size": 63044631,
+    "stored_bytes": 55181312,
+    "stored_from": "sum of pg_total_relation_size of the 4 saver tables (heap + TOAST + indexes)"
+  },
+  "s3_put_requests_during_write": null,
+  "delta_test": {
+    "test": "agent checkpoint delta test",
+    "target": "postgres",
+    "stored_bytes_source": "MEASURED pg_column_size (compressed rows, no index/page overhead)",
+    "threads": 41,
+    "logical_bytes": 142945980,
+    "unique_bytes": 2359166,
+    "stored_bytes": 50618216,
+    "ratio_stored_per_logical": 0.3541,
+    "ratio_unique_per_logical": 0.0165
+  },
+  "ok": true
+}

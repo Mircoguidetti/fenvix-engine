@@ -16,7 +16,8 @@ million requests.
 
 Library for run.py, teardown.py and final_check.py; and the $0 permission check:
   aurora.py permissions RUN_ID    -> OK / MANCA lines, exit 1 if anything is missing (no cluster is ever created)
-  aurora.py policy                -> the IAM policy JSON the founder adds (least privilege, tag- and name-limited)"""
+  aurora.py policy                -> the IAM policy JSON the founder adds (least privilege, limited by name to
+                                     fenvix-coldread-*, as the founder chose on 2026-11-10; the account id a placeholder)"""
 import json
 import os
 import sys
@@ -119,7 +120,7 @@ def delete(run, say=print, wait=None):
     n = names(run)
     wait = wait or (lambda: time.sleep(20))
     try:
-        rds.delete_db_instance(DBInstanceIdentifier=n["instance"], SkipFinalSnapshot=True, DeleteAutomatedBackups=True)
+        rds.delete_db_instance(DBInstanceIdentifier=n["instance"])   # an Aurora writer has no snapshot or backup of its own
         say(f"aurora: deleting {n['instance']}")
     except rds.exceptions.DBInstanceNotFoundFault:
         pass
@@ -130,6 +131,7 @@ def delete(run, say=print, wait=None):
             break
         wait()
     try:
+        # no final snapshot; automated backups go with the cluster (AWS's default, DeleteAutomatedBackups, also said here)
         rds.delete_db_cluster(DBClusterIdentifier=n["cluster"], SkipFinalSnapshot=True, DeleteAutomatedBackups=True)
         say(f"aurora: deleting {n['cluster']} (no final snapshot)")
     except rds.exceptions.DBClusterNotFoundFault:
@@ -192,47 +194,53 @@ def teardown(say=print):
     return sorted(runs)
 
 
-def policy(account="*"):
-    """The IAM policy for the role fenvix-gha-tests (least privilege): read-only Describe calls on every RDS resource
-    (RDS has no resource-level limit for them); create only resources named fenvix-coldread-s9-* and only with the tag
-    project=fenvix-coldread in the request, with the default parameter and option groups of Aurora PostgreSQL;
-    delete only resources named fenvix-coldread-s9-* that carry the tag; the RDS service-linked role (created once by AWS
-    the first time an account uses RDS)."""
+def policy(account="<ACCOUNT_ID>"):
+    """The IAM policy for the role fenvix-gha-tests, as the founder adds it (coordinator, 2026-11-10: inline policy
+    fenvix-bench-aurora, scoped by NAME, not by tag): create, tag and delete only RDS resources named fenvix-coldread-*
+    (this workflow's are fenvix-coldread-s9-<run>-aurora*); read-only Describe calls on every RDS resource (RDS has no
+    resource-level limit for them); the RDS service-linked role, once per account. Two lines beyond the founder's first
+    version, both read-only: rds:DescribeDBClusterSnapshots (the final check must see that no snapshot is left) and
+    rds:ListTagsForResource. The account id is a placeholder: the repository never holds it."""
     a = account
-    ours = [f"arn:aws:rds:{REGION}:{a}:cluster:{PREFIX}*", f"arn:aws:rds:{REGION}:{a}:db:{PREFIX}*",
-            f"arn:aws:rds:{REGION}:{a}:subgrp:{PREFIX}*"]
-    defaults = [f"arn:aws:rds:{REGION}:{a}:cluster-pg:default.aurora-postgresql*", f"arn:aws:rds:{REGION}:{a}:pg:default.aurora-postgresql*",
-                f"arn:aws:rds:{REGION}:{a}:og:default:aurora-postgresql-*"]
+    ours = [f"arn:aws:rds:{REGION}:{a}:cluster:fenvix-coldread-*", f"arn:aws:rds:{REGION}:{a}:db:fenvix-coldread-*",
+            f"arn:aws:rds:{REGION}:{a}:subgrp:fenvix-coldread-*"]
     return {
         "Version": "2012-10-17",
         "Statement": [
-            {"Sid": "Step9AuroraRead", "Effect": "Allow",
+            {"Sid": "AuroraBenchOwnResources", "Effect": "Allow",
+             "Action": ["rds:CreateDBCluster", "rds:CreateDBInstance", "rds:DeleteDBCluster", "rds:DeleteDBInstance",
+                        "rds:CreateDBSubnetGroup", "rds:DeleteDBSubnetGroup", "rds:AddTagsToResource"],
+             "Resource": ours},
+            {"Sid": "AuroraBenchRead", "Effect": "Allow",
              "Action": ["rds:DescribeDBClusters", "rds:DescribeDBInstances", "rds:DescribeDBSubnetGroups",
-                        "rds:DescribeDBEngineVersions", "rds:DescribeDBClusterSnapshots", "rds:ListTagsForResource"],
+                        "rds:DescribeDBEngineVersions", "rds:DescribeOrderableDBInstanceOptions",
+                        "rds:DescribeDBClusterSnapshots", "rds:ListTagsForResource"],
              "Resource": "*"},
-            {"Sid": "Step9AuroraCreateTagged", "Effect": "Allow",
-             "Action": ["rds:CreateDBCluster", "rds:CreateDBInstance", "rds:CreateDBSubnetGroup", "rds:AddTagsToResource"],
-             "Resource": ours + defaults,
-             "Condition": {"StringEquals": {"aws:RequestTag/project": TAG},
-                           "ForAllValues:StringEquals": {"aws:TagKeys": ["project", "Name"]}}},
-            {"Sid": "Step9AuroraDeleteOurs", "Effect": "Allow",
-             "Action": ["rds:DeleteDBInstance", "rds:DeleteDBCluster", "rds:DeleteDBSubnetGroup"],
-             "Resource": ours,
-             "Condition": {"StringEquals": {"aws:ResourceTag/project": TAG}}},
-            {"Sid": "Step9RdsServiceLinkedRole", "Effect": "Allow", "Action": "iam:CreateServiceLinkedRole",
+            {"Sid": "RdsServiceLinkedRole", "Effect": "Allow", "Action": "iam:CreateServiceLinkedRole",
              "Resource": f"arn:aws:iam::{a}:role/aws-service-role/rds.amazonaws.com/AWSServiceRoleForRDS",
              "Condition": {"StringLike": {"iam:AWSServiceName": "rds.amazonaws.com"}}},
         ],
     }
 
 
+def name_ok(name, kind):
+    """RDS identifier rules (DECLARED, RDS API reference): 1-63 letters, digits or hyphens, a letter first, no hyphen at
+    the end, no two hyphens in a row (subnet group names up to 255); and the policy's prefix fenvix-coldread-."""
+    import re
+    limit = 255 if kind == "subnets" else 63
+    return (name.startswith("fenvix-coldread-") and len(name) <= limit and re.match(r"^[a-z][a-z0-9-]*$", name) is not None
+            and not name.endswith("-") and "--" not in name)
+
+
 def permissions(run):
-    """$0: every call the Aurora phase makes, without creating a cluster. Describe calls for real; the subnet group
-    created and deleted for real (free, tagged); CreateDBCluster and CreateDBInstance sent so that RDS must refuse them
-    after the permission check: they name a DB subnet group and a cluster that do not exist (checked first), so the
-    answer "not found" proves the permission, "AccessDenied" its absence; DeleteDBCluster / DeleteDBInstance on names of
-    ours that do not exist, the same way (UNKNOWN until the first check: whether RDS answers "not found" before it
-    evaluates the tag condition of a missing resource; if it answers AccessDenied there, the line says so)."""
+    """$0: every call the Aurora phase makes, without creating a cluster. A dry check of the names the round would use
+    (RDS identifier rules and the policy's prefix fenvix-coldread-); the Describe calls for real, including that
+    db.r7g.large is offered for the engine version in eu-west-1a; the DB subnet group created and deleted for real (free,
+    tagged); CreateDBCluster and CreateDBInstance sent so that RDS must refuse them after the permission check: they name
+    a DB subnet group and a cluster that do not exist (checked first), so "not found" proves the permission and
+    "AccessDenied" its absence (an AccessDenied naming a default parameter or option group means the policy needs that
+    ARN too); DeleteDBCluster / DeleteDBInstance on names of ours that do not exist, the same way. If a probe ever made a
+    cluster (AWS refuses it; moto, the offline imitation, does not), it is deleted at once and reported."""
     from botocore.exceptions import ClientError
     rds, ec2 = clients()
     missing, lines = [], []
@@ -250,6 +258,14 @@ def permissions(run):
                 missing.append(name)
 
     n = names(f"perm-{run}")
+    # a dry check of the names this round would use (the policy allows fenvix-coldread-* only)
+    real = names(run)
+    for kind, name in sorted(real.items()):
+        if name_ok(name, kind):
+            lines.append(f"OK    name {name} ({kind}: RDS rules and the policy's prefix)")
+        else:
+            lines.append(f"MANCA name {name} ({kind}) breaks the RDS identifier rules or the policy's prefix")
+            missing.append(f"name {kind}")
     ok("rds:DescribeDBClusters", lambda: rds.describe_db_clusters(MaxRecords=20))
     ok("rds:DescribeDBInstances", lambda: rds.describe_db_instances(MaxRecords=20))
     ok("rds:DescribeDBSubnetGroups", lambda: rds.describe_db_subnet_groups(MaxRecords=20))
@@ -261,6 +277,18 @@ def permissions(run):
     except Exception as e:
         lines.append(f"MANCA rds:DescribeDBEngineVersions: {str(e)[:200]}")
         missing.append("rds:DescribeDBEngineVersions")
+    if ver:
+        try:
+            zones = sorted({z["Name"] for o in rds.describe_orderable_db_instance_options(Engine=ENGINE, EngineVersion=ver, DBInstanceClass=CLASS)["OrderableDBInstanceOptions"]
+                            for z in o.get("AvailabilityZones", [])})
+            if f"{REGION}a" in zones or not zones:
+                lines.append(f"OK    rds:DescribeOrderableDBInstanceOptions ({CLASS} for Aurora PostgreSQL {ver}: {', '.join(zones) or 'zones not listed'})")
+            else:
+                lines.append(f"MANCA {CLASS} is not offered in {REGION}a for Aurora PostgreSQL {ver} (zones: {zones})")
+                missing.append("instance class")
+        except ClientError as e:
+            lines.append(f"MANCA rds:DescribeOrderableDBInstanceOptions: {e.response.get('Error', {}).get('Code', '')}")
+            missing.append("rds:DescribeOrderableDBInstanceOptions")
     try:
         _vpc, subnets, sg = default_network(ec2)
     except Exception as e:
@@ -303,7 +331,7 @@ def permissions(run):
             DBInstanceIdentifier=n["instance"], DBClusterIdentifier=n["cluster"], Engine=ENGINE, DBInstanceClass=CLASS,
             AvailabilityZone=f"{REGION}a", PubliclyAccessible=False, Tags=tags(n["instance"])),
             good=("DBClusterNotFoundFault", "DBClusterNotFound"))
-    ok("rds:DeleteDBInstance (ours)", lambda: rds.delete_db_instance(DBInstanceIdentifier=n["instance"], SkipFinalSnapshot=True, DeleteAutomatedBackups=True),
+    ok("rds:DeleteDBInstance (ours)", lambda: rds.delete_db_instance(DBInstanceIdentifier=n["instance"]),
        good=("DBInstanceNotFound", "DBInstanceNotFoundFault"))
     ok("rds:DeleteDBCluster (ours, no final snapshot)", lambda: rds.delete_db_cluster(DBClusterIdentifier=n["cluster"], SkipFinalSnapshot=True, DeleteAutomatedBackups=True),
        good=("DBClusterNotFoundFault", "DBClusterNotFound"))

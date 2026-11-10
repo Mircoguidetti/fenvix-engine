@@ -1,0 +1,6 @@
+# gate.py on a scratch tree: a passing report for the commit, the same for another commit, a failing takeover
+GATE: OPEN (local benchmark report step9/local/benchmark-report-111111111111.json for r at 1111111111111111111111111111111111111111: takeovers 0 lost; our agent benchmark not worse than PostgreSQL and mongod on any operation)
+GATE: CLOSED (3 blockers; RULES.md 8-9: no AWS run, not even a pilot)
+  - no local benchmark report for engine r at commit 2222222 (step9/local/benchmark-report-<commit>.json, made by step9/local/benchmark_report.py on that commit)
+GATE: CLOSED (1 blockers; RULES.md 8-9: no AWS run, not even a pilot)
+  - takeovers (step9/local/res/tk.json): verdict FAIL, 5/5 done, lost 3 of 1000 acknowledged writes (rule 8: must be 0)
