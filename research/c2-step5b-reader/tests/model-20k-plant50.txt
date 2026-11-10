@@ -1,0 +1,17 @@
+
+running 1 test
+WRONG at op 33: txn get (age 3.055778ms)
+range diff: rev true limit None got 134 rows want 138; first diff at 31: got Some("u/\u{3}c25msgs/d/00038") want Some("u/\u{3}c25msgs/d/00041"); version Some((1, 701, 4, 0))
+WRONG at op 37: range
+range diff: rev false limit Some(53) got 53 rows want 53; first diff at 12: got Some("idx/x/00236") want Some("idx/x/00236"); version Some((1, 701, 4, 0))
+WRONG at op 43: range
+WRONG at op 51: txn get (age 4.977384ms)
+WRONG at op 60: range
+compactor model: St { ops: 20000, wrong: 1111, writes: 9076, reads: 5035, ranges: 1941, txn_reads: 1873, retries: 0, crashes: 19, erasures: 68, max_l0: 30 }
+compactor model: follower versions 52, follower reads 832, follower answers that changed 0
+compactor model: absorbs 506, merges 162, reseals 391 (splits 23, group merges 21), rows dropped from SlateDB 6444, runs deleted by GC 1687, erasure leftovers 0, erasures pending 0, groups 9, delta runs 6
+compactor model: SlateDB SSTs asked by the seq filter 51266, skipped 49091, planted extra 50
+test fx::compactor_tests::compactor_model_drop_on ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 98 filtered out; finished in 11.53s
+

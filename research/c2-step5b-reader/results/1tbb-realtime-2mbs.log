@@ -1,0 +1,21 @@
+fx_cold: 1tb-busy r1 on r3 on unsettled realtime 2 MB/s, D 256 MiB, L0 8388608 B, day 47.9 MiB of inserts, warm-up 3.2 days, window 8.0 days, background cold reads 1728 per day, S3 latency 5000 us, seed 5
+112 pattern customers, 40 agent threads (20 young)
+loaded 258 MiB in 5.9 s
+first version built: 47 groups
+  20 s: day 0.80, groups 47, delta runs 1, reseals 4 (r3 0), L0 max 18, reads 0, wrong 0
+  40 s: day 1.59, groups 48, delta runs 2, reseals 26 (r3 0), L0 max 18, reads 0, wrong 0
+  60 s: day 2.39, groups 50, delta runs 1, reseals 41 (r3 0), L0 max 18, reads 0, wrong 0
+  80 s: day 3.18, groups 54, delta runs 3, reseals 72 (r3 0), L0 max 18, reads 0, wrong 0
+measured window starts at 154 MiB written (3.2 days)
+  100 s: day 3.98, groups 57, delta runs 2, reseals 82 (r3 0), L0 max 18, reads 216, wrong 0
+  120 s: day 4.74, groups 81, delta runs 1, reseals 116 (r3 0), L0 max 18, reads 540, wrong 0
+  140 s: day 5.57, groups 83, delta runs 2, reseals 130 (r3 0), L0 max 18, reads 756, wrong 0
+  160 s: day 6.37, groups 88, delta runs 1, reseals 181 (r3 0), L0 max 18, reads 1080, wrong 0
+  180 s: day 7.17, groups 89, delta runs 2, reseals 186 (r3 0), L0 max 18, reads 1296, wrong 0
+  200 s: day 7.96, groups 92, delta runs 1, reseals 198 (r3 0), L0 max 18, reads 1620, wrong 0
+  221 s: day 8.75, groups 96, delta runs 3, reseals 246 (r3 0), L0 max 18, reads 1944, wrong 0
+  241 s: day 9.60, groups 100, delta runs 2, reseals 263 (r3 0), L0 max 18, reads 2160, wrong 0
+  261 s: day 10.39, groups 103, delta runs 1, reseals 275 (r3 0), L0 max 18, reads 2484, wrong 0
+  281 s: day 11.19, groups 107, delta runs 2, reseals 318 (r3 0), L0 max 18, reads 2700, wrong 0
+RESULT 1tb-busy r1 on r3 on unsettled realtime 2 MB/s: reads 2808, wrong 0, retried 0; background point reads 19377; L0 max 18; wall 283 s
+RESULT 1tb-busy r1 on r3 on unsettled realtime 2 MB/s: in the window: reseals 257 (r3 0, theta 257), stored amplification 7.07 (L0 269.5 MiB, SlateDB 278.0 MiB, our runs 1358.1 MiB), raw: absorbed 408.0 MiB, merges 350.3 MiB, reseals 1497.1 MiB (3.67 per absorbed byte)

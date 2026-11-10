@@ -32,6 +32,7 @@ pub mod pool;
 pub mod manifest;
 pub mod pair;
 pub mod read;
+pub mod seqfilter;
 pub mod view;
 #[cfg(test)]
 mod counter_bench;

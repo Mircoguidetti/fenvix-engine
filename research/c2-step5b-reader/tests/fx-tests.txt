@@ -1,0 +1,48 @@
+
+running 43 tests
+test fx::compactor_tests::compactor_model_drop_on ... ok
+test fx::compactor_tests::floor_respects_holds_and_control_breaks ... ok
+test fx::compactor_tests::held_reads_across_drop_and_gc ... ok
+test fx::compactor_tests::late_put_answer_is_a_timeout_then_a_fence ... ok
+test fx::compactor_tests::r3_reseals_a_group_whose_reads_pay ... ok
+test fx::compactor_tests::skip_below_xd_and_control_breaks ... ok
+test fx::compactor_tests::small_delta_runs_read_from_nvme ... ok
+test fx::compactor_tests::takeover_with_an_open_transaction ... ok
+test fx::droptest::tests::the_stand_in_drops_rows_at_or_below_the_floor ... ok
+test fx::fix4_tests::fix1_lease_format_with_control ... ok
+test fx::fix4_tests::fix2_control_delete_then_create_gives_two_holders ... ok
+test fx::fix4_tests::fix3_jobs_fall_back_from_a_damaged_nvme_copy_with_control ... ok
+test fx::fix4_tests::fix4_paging_with_control ... ok
+test fx::fix_tests::f6_a_late_put_finds_its_slot_taken_by_the_fence ... ok
+test fx::fix_tests::f6_a_put_whose_answer_is_late_is_a_timeout_and_the_next_hold_fences_first ... ok
+test fx::fix_tests::f6_config_check_refuses_bad_timings ... ok
+test fx::fix_tests::first_publish_control_without_the_fix_lands_unfenced ... ok
+test fx::fix_tests::first_publish_timeout_is_fenced_at_its_own_slot ... ok
+test fx::fix_tests::review_r2_a_late_first_publish_put_lands_unfenced ... ok
+test fx::fix_tests::rule25_control_without_the_pending_state_breaks ... ok
+test fx::fix_tests::rule25_no_hold_while_a_fence_is_pending ... ok
+test fx::pool::tests::priorities_and_absorption_never_waits ... ok
+test fx::review4_tests::r4_expired_lease_in_step7a_format_must_not_stop_the_drop ... ok
+test fx::review4_tests::r4_q1_lease_taken_during_a_running_drop ... ok
+test fx::review4_tests::r4_q4_two_takers_of_an_expired_lease ... ok
+test fx::review4_tests::r4_q5_nvme_copies_half_written_or_damaged ... ok
+test fx::review4_tests::r4_q6_manifest_size_and_restart_reads ... ok
+test fx::review_tests::review_no_hold_after_an_unknown_publish_whose_fence_failed ... ok
+test fx::seqfilter::tests::skips_only_at_or_below_the_cut ... ok
+test fx::tests::a_late_put_of_a_dead_process_is_refused_by_the_fence ... ok
+test fx::tests::a_reader_refuses_past_t_pin_and_refreshes ... ok
+test fx::tests::a_run_replaced_at_its_path_is_an_error ... ok
+test fx::tests::envelopes_start_one_t_pin_after_the_announcement ... ok
+test fx::tests::holds_floor_revocation_and_snapshots_across_publishes ... ok
+test fx::tests::hot_get_p50 ... ignored
+test fx::tests::model_publish_every_100_ops_with_crashes ... ok
+test fx::tests::read_no_cut_trace ... ok
+test fx::tests::rows_at_or_below_xd_come_from_the_runs ... ok
+test fx::tests::version_check_refuses_broken_versions ... ok
+test fx::tests_7a::a_checkpoint_is_paired_under_the_drop_lease ... ok
+test fx::tests_7a::a_reloaded_version_above_slatedb_is_refused_at_open ... ok
+test fx::tests_7a::an_operation_keeps_the_floor_across_its_reads ... ok
+test fx::tests_7a::envelopes_write_waits_one_t_pin_after_its_announcement ... ok
+
+test result: ok. 42 passed; 0 failed; 1 ignored; 0 measured; 56 filtered out; finished in 196.12s
+
