@@ -1,0 +1,10 @@
+thread 'tokio-rt-worker' (26048) panicked at src/fx/tests_8.rs:422:18:
+seed 0: the scenario failed under control e0_guard_off: task 5 panicked with message "a release without sealed runs opened a committed database"
+thread 'tokio-rt-worker' (26049) panicked at src/fx/tests_8.rs:386:5:
+seed 1: the scenario failed under control e0_guard_off: task 27677 panicked with message "a writer serves a version of a rolled-back generation"
+thread 'tokio-rt-worker' (26049) panicked at src/fx/tests_8.rs:422:18:
+seed 2: the scenario failed under control e0_guard_off: task 41604 panicked with message "a release without sealed runs opened a committed database"
+thread 'tokio-rt-worker' (26048) panicked at src/fx/tests_8.rs:386:5:
+seed 3: the scenario failed under control e0_guard_off: task 72028 panicked with message "a writer serves a version of a rolled-back generation"
+control "e0_guard_off": total: 0 ops, 0 crashes, 0 takeovers, 0 fail points, 4 wrong, 0 invariant violations
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 123 filtered out; finished in 275.36s

@@ -1,0 +1,13 @@
+adapters adapters_test committed gen 1 groups 1 version 1
+adapters idx_d_11616_c committed gen 1 groups 1 version 1
+adapters idx_d_11616_d committed gen 1 groups 1 version 1
+adapters idx_d_11616_i committed gen 1 groups 1 version 1
+adapters idx_s_11615_c committed gen 1 groups 1 version 1
+adapters idx_s_11615_d committed gen 1 groups 1 version 1
+adapters idx_s_11615_i committed gen 1 groups 1 version 1
+adapters mastra-transactions-test committed gen 1 groups 1 version 1
+adapters mig_err_throw_mwamtzv4 committed gen 1 groups 1 version 1
+adapters-27019 knowledge_contract_test committed gen 1 groups 1 version 1
+adapters-27019 knowledge_legacy_test committed gen 1 groups 1 version 1
+adapters-27019 knowledge_pages_test committed gen 1 groups 1 version 1
+adapters-27019 mastra-transactions-test committed gen 1 groups 1 version 1

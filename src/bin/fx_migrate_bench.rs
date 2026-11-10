@@ -132,9 +132,9 @@ async fn passes(store: Arc<dyn ObjectStore>, id: String, stop: Arc<AtomicBool>) 
 
 fn snap_line(s: &tenant_bench::counting::Snapshot, gb: f64) -> String {
     format!(
-        "GET {} (range GETs among them {}), HEAD {}, LIST {}, PUT {}, multipart parts {} (creates {}, completes {}), DELETE {}; per GB of D: GET {:.0}, HEAD {:.0}, LIST {:.0}, PUT-class {:.0}",
+        "GET {} plus range GETs {}, HEAD {}, LIST {}, PUT {}, multipart parts {} (creates {}, completes {}), DELETE {}; per GB of D: GET (all) {:.0}, HEAD {:.0}, LIST {:.0}, PUT-class {:.0}",
         s.get, s.get_range, s.head, s.list, s.put, s.multipart_part, s.multipart_create, s.multipart_complete, s.delete,
-        s.get as f64 / gb, s.head as f64 / gb, s.list as f64 / gb, (s.put + s.multipart_part + s.multipart_create + s.multipart_complete) as f64 / gb
+        (s.get + s.get_range) as f64 / gb, s.head as f64 / gb, s.list as f64 / gb, (s.put + s.multipart_part + s.multipart_create + s.multipart_complete) as f64 / gb
     )
 }
 
@@ -210,6 +210,7 @@ async fn main() -> Result<()> {
     let l1 = Arc::new(Load { stop: AtomicBool::new(false), w_lat: Default::default(), r_lat: Default::default() });
     let lt = tokio::spawn(load(Arc::clone(&t), Arc::clone(&model), Arc::clone(&keys), rate, Arc::clone(&l1), seed + 2));
     let c0 = cs.counters.snapshot();
+    let q0 = (migrate::REQ_GETS.load(Relaxed), migrate::REQ_HEADS.load(Relaxed), migrate::REQ_PUTS.load(Relaxed));
     let b0 = migrate::SST_BYTES_READ.load(Relaxed);
     let m0 = Instant::now();
     loop {
@@ -263,6 +264,8 @@ async fn main() -> Result<()> {
     for r in &rounds {
         println!("round: seq {} -> {}, {} new SSTs, {:.1} MiB of SSTs read, {} rows", r.x_from, r.x_to, r.new_ssts, r.sst_bytes as f64 / 1048576.0, r.rows);
     }
+    let q = (migrate::REQ_GETS.load(Relaxed) - q0.0, migrate::REQ_HEADS.load(Relaxed) - q0.1, migrate::REQ_PUTS.load(Relaxed) - q0.2);
+    println!("the migration's own requests: GET {} HEAD {} PUT-class {} (runs and state objects); per GB of D: GET {:.0}, HEAD {:.0}, PUT-class {:.0}; plus the checkpoints and SlateDB manifest reads (in the LIST and GET counts below)", q.0, q.1, q.2, q.0 as f64 / gb, q.1 as f64 / gb, q.2 as f64 / gb);
     println!("requests during the build: {}", snap_line(&c_build.since(&c0), gb));
     println!("requests during the whole migration (the load's own writes included): {}", snap_line(&c1, gb));
     let mut dw = l1.w_lat.lock().unwrap().clone();

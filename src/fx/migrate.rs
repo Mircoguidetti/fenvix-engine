@@ -92,6 +92,11 @@ pub static CONTROL_MARK_EARLY: AtomicBool = AtomicBool::new(false);
 pub static GROUPS_BUILT: AtomicU64 = AtomicU64::new(0);
 pub static ROUNDS: AtomicU64 = AtomicU64::new(0);
 pub static ROWS_READ: AtomicU64 = AtomicU64::new(0);
+/// The migration's own requests: GETs and HEADs of SlateDB's SSTs (through the read-ahead), and PUT-class requests of its
+/// runs (multipart create, parts, complete) and state objects.
+pub static REQ_GETS: AtomicU64 = AtomicU64::new(0);
+pub static REQ_HEADS: AtomicU64 = AtomicU64::new(0);
+pub static REQ_PUTS: AtomicU64 = AtomicU64::new(0);
 pub static SST_BYTES_READ: AtomicU64 = AtomicU64::new(0);
 pub static PUBLISHED: AtomicU64 = AtomicU64::new(0);
 pub static ROLLBACKS: AtomicU64 = AtomicU64::new(0);
@@ -220,6 +225,7 @@ pub async fn save(store: &Arc<dyn ObjectStore>, id: &str, s: &mut State) -> Resu
     s.n += 1;
     let body = serde_json::to_vec(s)?;
     let opts = PutOptions { mode: PutMode::Create, ..Default::default() };
+    REQ_PUTS.fetch_add(1, Relaxed);
     match store.put_opts(&slot(id, s.n), PutPayload::from(body), opts).await {
         Ok(_) => Ok(()),
         Err(object_store::Error::AlreadyExists { .. }) | Err(object_store::Error::Precondition { .. }) => Err(anyhow::Error::new(Raced(format!("migration state {} of {id} was written by another process", s.n)))),
@@ -322,7 +328,8 @@ pub async fn begin(store: &Arc<dyn ObjectStore>, id: &str, db: &slatedb::Db, e_e
 pub struct ReadAhead {
     inner: Arc<dyn ObjectStore>,
     chunk: u64,
-    cache: Mutex<std::collections::HashMap<Path, (u64, Bytes, object_store::ObjectMeta)>>,
+    /// A few chunks per object: SlateDB's raw reader reads the SST's index (at its end) again before every block.
+    cache: Mutex<std::collections::HashMap<Path, Vec<(u64, Bytes, object_store::ObjectMeta)>>>,
     order: Mutex<std::collections::VecDeque<Path>>,
     sizes: Mutex<std::collections::HashMap<Path, object_store::ObjectMeta>>,
 }
@@ -351,6 +358,7 @@ impl ReadAhead {
         if let Some(m) = self.sizes.lock().unwrap().get(p) {
             return Ok(m.clone());
         }
+        REQ_HEADS.fetch_add(1, Relaxed);
         let m = self.inner.head(p).await?;
         self.sizes.lock().unwrap().insert(p.clone(), m.clone());
         Ok(m)
@@ -373,16 +381,22 @@ impl ObjectStore for ReadAhead {
 
     async fn get_opts(&self, location: &Path, options: GetOptions) -> object_store::Result<GetResult> {
         let plain = options.if_match.is_none() && options.if_none_match.is_none() && options.if_modified_since.is_none() && options.if_unmodified_since.is_none() && options.version.is_none() && !options.head;
-        let Some(GetRange::Bounded(r)) = options.range.clone().filter(|_| plain) else { return self.inner.get_opts(location, options).await };
-        if let Some((start, b, meta)) = self.cache.lock().unwrap().get(location) {
-            if r.start >= *start && r.end <= start + b.len() as u64 {
-                let s = (r.start - start) as usize;
-                let e = (r.end - start) as usize;
-                return Ok(Self::result(meta.clone(), r.clone(), b.slice(s..e)));
+        let Some(GetRange::Bounded(r)) = options.range.clone().filter(|_| plain) else {
+            REQ_GETS.fetch_add(1, Relaxed);
+            return self.inner.get_opts(location, options).await;
+        };
+        if let Some(chunks) = self.cache.lock().unwrap().get(location) {
+            for (start, b, meta) in chunks {
+                if r.start >= *start && r.end <= start + b.len() as u64 {
+                    let s = (r.start - start) as usize;
+                    let e = (r.end - start) as usize;
+                    return Ok(Self::result(meta.clone(), r.clone(), b.slice(s..e)));
+                }
             }
         }
         let meta = self.meta(location).await?;
         let end = r.end.max(r.start + self.chunk).min(meta.size);
+        REQ_GETS.fetch_add(1, Relaxed);
         if end < r.end {
             return self.inner.get_opts(location, options).await;
         }
@@ -394,7 +408,13 @@ impl ObjectStore for ReadAhead {
         let out = Self::result(meta.clone(), r.clone(), b.slice(s..e));
         let mut c = self.cache.lock().unwrap();
         let mut o = self.order.lock().unwrap();
-        if c.insert(location.clone(), (r.start, b, meta)).is_none() {
+        let chunks = c.entry(location.clone()).or_default();
+        let fresh = chunks.is_empty();
+        chunks.push((r.start, b, meta));
+        if chunks.len() > 3 {
+            chunks.remove(0);
+        }
+        if fresh {
             o.push_back(location.clone());
             while o.len() > Self::KEEP {
                 if let Some(old) = o.pop_front() {
@@ -518,7 +538,11 @@ impl Merge {
     pub async fn open(store: &Arc<dyn ObjectStore>, id: &str, views: Vec<slatedb::manifest::SsTableView>, sorted_runs: Vec<Vec<slatedb::manifest::SsTableView>>, lo: &[u8], seq_lo: u64, seq_hi: u64) -> Result<Merge> {
         let ra = ReadAhead::new(Arc::clone(store));
         let ra_store: Arc<dyn ObjectStore> = ra.clone();
-        let reader = slatedb::SstReader::new(crate::lifecycle::tenant_path(id), ra_store, None, None);
+        // SlateDB's raw reader decodes the SST's index again for every block unless a metadata cache holds it: a small one
+        // of its own (no data blocks: each is read once)
+        let meta: Arc<dyn slatedb::db_cache::DbCache> = Arc::new(crate::meter::MeteredCache::new(64 << 20));
+        let cache: Arc<dyn slatedb::db_cache::DbCache> = Arc::new(slatedb::db_cache::SplitCache::new().with_block_cache(None).with_meta_cache(Some(meta)).build());
+        let reader = slatedb::SstReader::new(crate::lifecycle::tenant_path(id), ra_store, Some(cache), None);
         let mut srcs: Vec<Src> = views.into_iter().map(|v| Src { ssts: vec![v], i: 0, file: None, rows: Default::default(), lo: lo.to_vec() }).collect();
         for mut sr in sorted_runs {
             // skip the SSTs of a sorted run that end before lo (the next one starts at or before lo)
@@ -662,7 +686,11 @@ pub async fn build_step(store: &Arc<dyn ObjectStore>, id: &str, max_groups: usiz
                 f("before_finish")?;
             }
             let line = match w.take() {
-                Some(wr) => Some(line_of(wr.finish().await?)),
+                Some(wr) => {
+                    let m = wr.finish().await?;
+                    REQ_PUTS.fetch_add(m.puts, Relaxed);
+                    Some(line_of(m))
+                }
                 None => None,
             };
             if let Some(f) = fail {
@@ -747,7 +775,11 @@ pub async fn round(store: &Arc<dyn ObjectStore>, id: &str, db: &slatedb::Db, opt
             w.as_mut().unwrap().add(&r.key, r.seq, &env).await?;
         }
         let line = match w {
-            Some(w) => Some(super::build::line(&w.finish().await?)),
+            Some(w) => {
+                let m = w.finish().await?;
+                REQ_PUTS.fetch_add(m.puts, Relaxed);
+                Some(super::build::line(&m))
+            }
             None => None,
         };
         rep.sst_bytes = SST_BYTES_READ.load(Relaxed) - b0;

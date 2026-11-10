@@ -154,6 +154,14 @@ impl World {
         } else {
             self.st.crashes += 1;
         }
+        // as in the server: the compactor starts at the first write; reads, and today's pass on the L0 the dead process
+        // left, may come first
+        if self.rng.gen_bool(0.7) {
+            for _ in 0..3 {
+                self.pass().await;
+                self.read().await;
+            }
+        }
         self.c = start_compactor(self.t.as_mut().unwrap(), &self.store).await;
         self.check_invariant().await;
     }

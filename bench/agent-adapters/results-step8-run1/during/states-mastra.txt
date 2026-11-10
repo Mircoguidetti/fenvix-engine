@@ -1,0 +1,11 @@
+adapters adapters_test committed gen 1 groups 1 version 1
+adapters idx_d_10319_c committed gen 1 groups 1 version 1
+adapters idx_d_10319_d committed gen 1 groups 1 version 1
+adapters idx_d_10319_i committed gen 1 groups 1 version 1
+adapters idx_s_10318_c committed gen 1 groups 1 version 1
+adapters idx_s_10318_d committed gen 1 groups 1 version 1
+adapters idx_s_10318_i committed gen 1 groups 1 version 1
+adapters-27019 knowledge_contract_test committed gen 1 groups 1 version 1
+adapters-27019 knowledge_legacy_test committed gen 1 groups 1 version 1
+adapters-27019 knowledge_pages_test published gen 1 groups 1 version 1
+adapters-27019 mastra-transactions-test published gen 1 groups 1 version 1

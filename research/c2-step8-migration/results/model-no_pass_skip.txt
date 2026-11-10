@@ -1,0 +1,38 @@
+WRONG range at op 2168
+WRONG range at op 2169
+WRONG range at op 2203
+WRONG range at op 2220
+WRONG range at op 2260
+FULL CHECK in the window: 34 acknowledged rows missing or different, 24 extra
+FULL CHECK committed: 101 acknowledged rows missing or different, 96 extra
+FULL CHECK end: 101 acknowledged rows missing or different, 96 extra
+seed 0: St { ops: 8200, wrong: 562, writes: 3611, reads: 2187, ranges: 973, retries: 0, crashes: 33, fail_points: 21, takeovers: 37, zombie_rounds_refused: 1, groups: 34, rounds: 3, publishes: 2, invariant: 0, passes: 524, e0_refused: 1 }
+WRONG range at op 2723
+WRONG range at op 2726
+WRONG range at op 2746
+WRONG range at op 2751
+WRONG range at op 2767
+FULL CHECK in the window: 35 acknowledged rows missing or different, 27 extra
+FULL CHECK committed: 45 acknowledged rows missing or different, 45 extra
+FULL CHECK end: 45 acknowledged rows missing or different, 45 extra
+seed 1: St { ops: 8000, wrong: 332, writes: 3560, reads: 2093, ranges: 845, retries: 0, crashes: 32, fail_points: 25, takeovers: 36, zombie_rounds_refused: 1, groups: 36, rounds: 4, publishes: 2, invariant: 0, passes: 421, e0_refused: 1 }
+WRONG range at op 2102
+WRONG get "doc/plain/00298" at op 2106 (version Some((29, 1908)), migration Some(Published))
+WRONG range at op 2114
+WRONG get "u/\u{3}c13msgs/d/00012" at op 2117 (version Some((29, 1908)), migration Some(Published))
+WRONG range at op 2134
+FULL CHECK in the window: 50 acknowledged rows missing or different, 43 extra
+FULL CHECK committed: 141 acknowledged rows missing or different, 128 extra
+FULL CHECK end: 141 acknowledged rows missing or different, 128 extra
+seed 2: St { ops: 8000, wrong: 738, writes: 3677, reads: 2055, ranges: 878, retries: 0, crashes: 38, fail_points: 33, takeovers: 44, zombie_rounds_refused: 0, groups: 32, rounds: 2, publishes: 1, invariant: 0, passes: 503, e0_refused: 1 }
+WRONG range at op 1633
+WRONG range at op 1654
+WRONG range at op 1657
+WRONG range at op 1658
+WRONG range at op 1671
+FULL CHECK in the window: 57 acknowledged rows missing or different, 35 extra
+FULL CHECK committed: 36 acknowledged rows missing or different, 38 extra
+FULL CHECK end: 36 acknowledged rows missing or different, 38 extra
+seed 3: St { ops: 8000, wrong: 473, writes: 3608, reads: 2038, ranges: 872, retries: 0, crashes: 33, fail_points: 23, takeovers: 39, zombie_rounds_refused: 0, groups: 34, rounds: 1, publishes: 2, invariant: 0, passes: 470, e0_refused: 1 }
+control "no_pass_skip": total: 32200 ops, 136 crashes, 156 takeovers, 102 fail points, 2105 wrong, 0 invariant violations
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 123 filtered out; finished in 505.24s
