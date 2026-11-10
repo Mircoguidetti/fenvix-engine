@@ -194,6 +194,10 @@ impl RunH {
     /// says that customer is not in the run. Only for a run already opened (its filter in RAM); an unopened run is kept.
     fn filter_excludes(&self, lo: &[u8], hi: Option<&[u8]>) -> bool {
         let (Some(run), Some(hi)) = (self.run.get(), hi) else { return false };
+        if run.customers == runfmt::CustomerKind::V2 {
+            // step 5b: also a whole customer, [prefix, successor of the prefix)
+            return super::seqfilter::one_customer(lo, (hi, false)).is_some_and(|c| !run.filter.may_contain(c));
+        }
         let (Some(a), Some(b)) = (run.customers.customer_of(lo), run.customers.customer_of(hi)) else { return false };
         if lo[a.clone()] != hi[b] {
             return false;

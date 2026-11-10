@@ -370,7 +370,7 @@ pub const MIN_FILTER_KEYS: u32 = 1;
 
 pub(crate) fn filter_policies() -> Option<Vec<Arc<dyn slatedb::FilterPolicy>>> {
     let bits = FILTER_BITS.load(std::sync::atomic::Ordering::Relaxed);
-    Some(vec![Arc::new(slatedb::BloomFilterPolicy::new(bits)) as Arc<dyn slatedb::FilterPolicy>, crate::fx::seqfilter::policy()])
+    Some(vec![Arc::new(slatedb::BloomFilterPolicy::new(bits)) as Arc<dyn slatedb::FilterPolicy>, crate::fx::seqfilter::policy(), crate::fx::seqfilter::cust_policy()])
 }
 
 /// The open writers (T1: the maps loop looks at their manifests).

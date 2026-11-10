@@ -412,6 +412,7 @@ async fn compactor_model_drop_on() {
     eprintln!("compactor model: absorbs {stats_absorbs}, merges {stats_merges}, reseals {stats_reseals} (splits {splits}, group merges {gmerges}), rows dropped from SlateDB {drops}, runs deleted by GC {gcs}, erasure leftovers {leftovers}, erasures pending {pending}, groups {}, delta runs {}", v.groups.len(), v.delta.len());
     let (asked, skipped) = (super::seqfilter::ASKED.load(Relaxed) - skip_asked0, super::seqfilter::SKIPPED.load(Relaxed) - skip_skipped0);
     eprintln!("compactor model: SlateDB SSTs asked by the seq filter {asked}, skipped {skipped}, planted extra {plant}");
+    eprintln!("compactor model: SlateDB SSTs asked by the customer filter {}, skipped {}", super::seqfilter::CUST_ASKED.load(Relaxed), super::seqfilter::CUST_SKIPPED.load(Relaxed));
     super::seqfilter::CONTROL_EXTRA.store(0, Relaxed);
     if plant > 0 {
         assert!(st.wrong + f_wrong > 0, "the planted skip must give wrong answers");
@@ -914,6 +915,17 @@ async fn skip_below_xd_and_control_breaks() {
     assert_eq!(below.as_deref(), Some(&b"newest"[..]), "a cut below the row's seq keeps its SST");
     assert_ne!(at.as_deref(), Some(&b"newest"[..]), "a cut at the row's seq skips its SST (the control)");
     m.insert(key.as_bytes().to_vec(), b"newest".to_vec());
+    // the customer filter: range reads inside one customer skip L0 SSTs without it (the rows above X_d); control: a
+    // filter that says "not here" for every customer loses those rows
+    let (a0, s0) = (super::seqfilter::CUST_ASKED.load(Relaxed), super::seqfilter::CUST_SKIPPED.load(Relaxed));
+    let wrong = skip_read_all(&t, &m, &keys).await;
+    eprintln!("customer filter: wrong {wrong}, asked {}, skipped {}", super::seqfilter::CUST_ASKED.load(Relaxed) - a0, super::seqfilter::CUST_SKIPPED.load(Relaxed) - s0);
+    assert_eq!(wrong, 0);
+    super::seqfilter::CONTROL_CUST_NONE.store(true, Relaxed);
+    let wrong = skip_read_all(&t, &m, &keys).await;
+    super::seqfilter::CONTROL_CUST_NONE.store(false, Relaxed);
+    eprintln!("customer filter, control (always 'not here'): wrong {wrong}");
+    assert!(wrong > 0, "the customer-filter control must lose rows");
     // off: the same answers
     super::seqfilter::SKIP_BELOW_XD.store(false, Relaxed);
     let wrong = skip_read_all(&t, &m, &keys).await;
