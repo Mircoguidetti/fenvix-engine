@@ -1,0 +1,33 @@
+Traceback (most recent call last):
+  File "/opt/step9/takeovers.py", line 141, in <module>
+    colls["A"].insert_one({"_id": "seed", "ts": time.time()})   # A owns tk_app before B starts
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/step9/vendor/pymongo/synchronous/collection.py", line 875, in insert_one
+    self._insert_one(
+  File "/opt/step9/vendor/pymongo/synchronous/collection.py", line 815, in _insert_one
+    self._database.client._retryable_write(
+  File "/opt/step9/vendor/pymongo/synchronous/mongo_client.py", line 2154, in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/step9/vendor/pymongo/synchronous/mongo_client.py", line 2024, in _retry_with_session
+    return self._retry_internal(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/step9/vendor/pymongo/_csot.py", line 126, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/step9/vendor/pymongo/synchronous/mongo_client.py", line 2077, in _retry_internal
+    ).run()
+      ^^^^^
+  File "/opt/step9/vendor/pymongo/synchronous/mongo_client.py", line 2947, in run
+    res = self._read() if self._is_read else self._write()
+                                             ^^^^^^^^^^^^^
+  File "/opt/step9/vendor/pymongo/synchronous/mongo_client.py", line 3160, in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/step9/vendor/pymongo/synchronous/collection.py", line 813, in _insert_command
+    _check_write_command_response(result)
+  File "/opt/step9/vendor/pymongo/helpers_shared.py", line 365, in _check_write_command_response
+    _raise_last_write_error(write_errors)
+  File "/opt/step9/vendor/pymongo/helpers_shared.py", line 335, in _raise_last_write_error
+    raise DuplicateKeyError(error.get("errmsg"), 11000, error)
+pymongo.errors.DuplicateKeyError: E11000 duplicate key error collection: tk_app.w index: _id_ dup key: { _id: "seed" }, full error: {'index': 0, 'code': 11000, 'errmsg': 'E11000 duplicate key error collection: tk_app.w index: _id_ dup key: { _id: "seed" }', 'keyPattern': {'_id': 1}, 'keyValue': {'_id': 'seed'}}
