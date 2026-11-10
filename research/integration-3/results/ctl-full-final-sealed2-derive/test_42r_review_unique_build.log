@@ -1,0 +1,9 @@
+F.                                                                       [100%]
+=================================== FAILURES ===================================
+_______ test_unique_build_with_duplicate_written_behind_the_cursor[ours] _______
+test_42r_review_unique_build.py:80: in test_unique_build_with_duplicate_written_behind_the_cursor
+    pytest.fail("the build finished before the writes: the test did not exercise the window (raise DOCS)")
+E   Failed: the build finished before the writes: the test did not exercise the window (raise DOCS)
+=========================== short test summary info ============================
+FAILED test_42r_review_unique_build.py::test_unique_build_with_duplicate_written_behind_the_cursor[ours]
+1 failed, 1 passed in 4.25s
