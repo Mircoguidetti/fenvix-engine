@@ -16,14 +16,14 @@ from bson.raw_bson import RawBSONDocument
 from bson.son import SON
 from pymongo import MongoClient
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+ROOT = os.environ.get("ROOT") or os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 PORT = int(os.environ.get("PORT", "27051"))
 MPORT = int(os.environ.get("MONGOD_PORT", "27052"))
 BUCKET = "rvreads"
 DB = "agentdb"
 OUT = os.environ.get("OUT", os.path.join(ROOT, "research/c2-delta-log/review/results/read-paths.json"))
 ENV = dict(os.environ, AWS_ACCESS_KEY_ID="minioadmin", AWS_SECRET_ACCESS_KEY="minioadmin", AWS_REGION="us-east-1",
-           AWS_ENDPOINT="http://127.0.0.1:9000", AWS_ALLOW_HTTP="true", FENVIX_SEALED_TPIN_MS="30000", FENVIX_SEALED_E1_WAIT_MS="0")
+           AWS_ENDPOINT="http://127.0.0.1:9000", AWS_ALLOW_HTTP="true", FENVIX_SEALED_TPIN_MS="30000", FENVIX_SEALED_E1_WAIT_MS="0", FENVIX_SEALED_TEST_SHORT_E1_WAIT="1")
 ARGS = ["--listen", f"127.0.0.1:{PORT}", "--idle-secs", "600", "--holder", "rvreads", "--bucket", BUCKET,
         "--sealed-runs", "2", "--sealed-compactor", "--sealed-drop", "--sealed-derive", "--sealed-codec", "zstd",
         "--customer-key", "checkpoints=thread_id,checkpoint_writes=thread_id", "--replica-set", "rs0", "--advertise", f"127.0.0.1:{PORT}"]
@@ -220,13 +220,23 @@ def main():
     us = MongoClient(f"mongodb://127.0.0.1:{PORT}/?directConnection=true")
     got = reads(us, threads, 2)
     res["cold_restart"] = compare(want, got)
+    # fix check: a cold restart, a write to another collection, a reseal before any saver write: still derived
+    stop(p)
+    p = start()
+    us = MongoClient(f"mongodb://127.0.0.1:{PORT}/?directConnection=true")
+    us[DB].other.insert_one({"x": 1})
+    m[DB].other.insert_one({"x": 1})
+    r = us.admin.command({"fenvixReseal": DB})
+    res["restart_reseal"] = {"reseal": {k: v for k, v in r.items() if k in ("resealed", "encoded")}, "derived": derived(us)}
+    got = reads(us, threads, 2)
+    res["restart_reseal_reads"] = compare(want, got)
     res["derived_end"] = derived(us)
     stop(p)
     res["docs"] = {"checkpoints": len(ck), "checkpoint_writes": len(wr), "threads": len(threads)}
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     json.dump(res, open(OUT, "w"), indent=1, default=str)
     print(json.dumps(res, default=str))
-    bad = [k for k in ("warm", "after_update_and_reseal", "cold_restart") if res[k][1]] + ([] if res["change_stream"]["equal"] else ["change_stream"])
+    bad = [k for k in ("warm", "after_update_and_reseal", "cold_restart", "restart_reseal_reads") if res[k][1]] + ([] if res["change_stream"]["equal"] else ["change_stream"])
     sys.exit(1 if bad else 0)
 
 
