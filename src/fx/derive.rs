@@ -41,6 +41,12 @@ pub static CHECK_CRC: AtomicBool = AtomicBool::new(true);
 /// Planted bug for the tests (0: none). 1: every skeleton with two or more references points its second reference at
 /// the message after the right one (after the encoder's own check, as a bug in the serialisation would).
 pub static PLANT: AtomicUsize = AtomicUsize::new(0);
+// Review (fenvix-brain prompts/R-review-c2-delta-log.md) adds three more plants, also after the encoder's own check:
+// 2: the first literal range of a skeleton is one byte short; 3: a thread's message rows hold the messages of the thread
+// encoded before it (its references resolve to another thread's messages); 4: a thread's last message row is not
+// written (a skeleton refers to a message row that is gone).
+/// Review plant 3: the message table of the thread encoded last.
+pub static REVIEW_PREV: std::sync::Mutex<Vec<Vec<u8>>> = std::sync::Mutex::new(Vec::new());
 /// Tests: the reseal fails (as a crash would) when it is about to write its N-th encoded customer (0: never). The run
 /// being written is then never completed, so nothing of it becomes visible.
 pub static FAIL_AT_UNIT: AtomicU64 = AtomicU64::new(0);
@@ -609,7 +615,12 @@ pub fn encode_customer(spec: &dyn Spec, prefix: &[u8], rows: Vec<OutRow>, st: &m
         cuts_of.push(Some(cuts));
     }
     let mut out: Vec<OutRow> = Vec::with_capacity(msgs.len() + rows.len());
+    let prev = if plant == 3 { std::mem::replace(&mut *REVIEW_PREV.lock().unwrap(), msgs.iter().map(|m| m.0.clone()).collect()) } else { Vec::new() };
     for (i, (m, seq)) in msgs.iter().enumerate() {
+        if plant == 4 && i + 1 == msgs.len() {
+            continue; // review plant 4: the last message row is missing
+        }
+        let m = if plant == 3 && i < prev.len() { &prev[i] } else { m }; // review plant 3
         let mut e = Vec::with_capacity(m.len() + 1);
         e.push(PART);
         e.extend_from_slice(m);
@@ -651,6 +662,14 @@ pub fn encode_customer(spec: &dyn Spec, prefix: &[u8], rows: Vec<OutRow>, st: &m
                     i
                 }
             });
+        }
+        if plant == 2 {
+            // review plant 2: the first literal range of at least 2 bytes ends one byte early
+            if let Some(j) = cuts.iter().position(|c| !c.2 && c.1 - c.0 >= 2) {
+                let mut c2 = cuts.clone();
+                c2[j].1 -= 1;
+                sk = skeleton(prefix.len(), doc, &c2, &index_of);
+            }
         }
         st.encoded += 1;
         st.refs += nrefs as u64;
