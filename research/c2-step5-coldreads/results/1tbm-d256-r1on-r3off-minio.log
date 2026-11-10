@@ -1,0 +1,30 @@
+fx_cold: 1tb-medium r1 on r3 off minio, D 256 MiB, L0 2048 B, day 9.6 MiB of inserts, warm-up 6.7 days, window 13.3 days, background cold reads 432 per day, S3 latency 5000 us, seed 5
+112 pattern customers, 40 agent threads (20 young)
+loaded 258 MiB in 14.0 s
+first version built: 47 groups
+  20 s: day 1.13, groups 47, delta runs 5, reseals 1 (r3 0), L0 max 64, reads 0, wrong 0
+  40 s: day 2.06, groups 47, delta runs 8, reseals 3 (r3 0), L0 max 64, reads 0, wrong 0
+  60 s: day 2.97, groups 47, delta runs 11, reseals 5 (r3 0), L0 max 64, reads 0, wrong 0
+  80 s: day 3.99, groups 47, delta runs 10, reseals 8 (r3 0), L0 max 64, reads 0, wrong 0
+  100 s: day 4.81, groups 47, delta runs 14, reseals 27 (r3 0), L0 max 64, reads 0, wrong 0
+  120 s: day 5.86, groups 48, delta runs 8, reseals 38 (r3 0), L0 max 64, reads 0, wrong 0
+measured window starts at 64 MiB written (6.7 days)
+  140 s: day 6.79, groups 48, delta runs 10, reseals 40 (r3 0), L0 max 64, reads 0, wrong 0
+  162 s: day 7.70, groups 49, delta runs 4, reseals 45 (r3 0), L0 max 64, reads 216, wrong 0
+  182 s: day 8.53, groups 49, delta runs 8, reseals 48 (r3 0), L0 max 64, reads 324, wrong 0
+  203 s: day 9.28, groups 49, delta runs 10, reseals 49 (r3 0), L0 max 64, reads 540, wrong 0
+  226 s: day 10.27, groups 50, delta runs 9, reseals 55 (r3 0), L0 max 64, reads 756, wrong 0
+  246 s: day 11.11, groups 51, delta runs 12, reseals 69 (r3 0), L0 max 64, reads 864, wrong 0
+  268 s: day 11.96, groups 51, delta runs 9, reseals 82 (r3 0), L0 max 64, reads 1080, wrong 0
+  288 s: day 12.80, groups 51, delta runs 7, reseals 85 (r3 0), L0 max 64, reads 1188, wrong 0
+  308 s: day 13.41, groups 51, delta runs 11, reseals 85 (r3 0), L0 max 64, reads 1404, wrong 0
+  328 s: day 14.26, groups 53, delta runs 8, reseals 88 (r3 0), L0 max 64, reads 1512, wrong 0
+  351 s: day 14.89, groups 53, delta runs 14, reseals 91 (r3 0), L0 max 64, reads 1728, wrong 0
+  371 s: day 15.62, groups 54, delta runs 12, reseals 94 (r3 0), L0 max 64, reads 1836, wrong 0
+  391 s: day 16.41, groups 54, delta runs 13, reseals 100 (r3 0), L0 max 64, reads 1944, wrong 0
+  413 s: day 16.95, groups 54, delta runs 9, reseals 106 (r3 0), L0 max 64, reads 2160, wrong 0
+  433 s: day 17.78, groups 55, delta runs 9, reseals 117 (r3 0), L0 max 64, reads 2268, wrong 0
+  456 s: day 18.49, groups 55, delta runs 7, reseals 127 (r3 0), L0 max 64, reads 2484, wrong 0
+  476 s: day 19.37, groups 55, delta runs 7, reseals 131 (r3 0), L0 max 64, reads 2592, wrong 0
+RESULT 1tb-medium r1 on r3 off minio: reads 2808, wrong 0, retried 0; background point reads 8650; L0 max 64; wall 499 s
+RESULT 1tb-medium r1 on r3 off minio: in the window: reseals 93 (r3 0, theta 93), stored amplification 10.66 (L0 91.9 MiB, SlateDB 132.7 MiB, our runs 755.4 MiB), raw: absorbed 130.7 MiB, merges 561.2 MiB, reseals 554.8 MiB (4.24 per absorbed byte)

@@ -20,6 +20,28 @@ use std::sync::Arc;
 
 /// A point read. `view` None: the plain SlateDB read of the releases before.
 pub async fn get<R: DbReadOps + Sync>(src: &R, opts: &ReadOptions, view: Option<&View>, env: Option<u64>, key: &[u8]) -> Result<Option<Bytes>> {
+    // step 5b: SlateDB skips the SSTs whose rows are all at or below the held version's X_d
+    let skip_opts;
+    let opts = match view.and_then(|v| super::seqfilter::context(v.x_d)) {
+        Some(c) => {
+            skip_opts = ReadOptions { filter_context: Some(c), ..opts.clone() };
+            &skip_opts
+        }
+        None => opts,
+    };
+    if let Some(v) = view.filter(|_| super::view::WAVE.load(std::sync::atomic::Ordering::Relaxed)) {
+        // one wave: SlateDB's read and the runs' read at once
+        let (kv, r) = futures::future::try_join(async { Ok::<_, anyhow::Error>(src.get_key_value_with_options(key, opts).await?) }, v.get(key)).await?;
+        if let Some(kv) = kv {
+            if kv.seq > v.x_d {
+                return crate::envelope::decode(env, &kv.key, kv.seq, kv.value);
+            }
+        }
+        return Ok(match r {
+            Some(r) if !r.is_dead() => Some(r.into_doc()),
+            _ => None,
+        });
+    }
     let kv = src.get_key_value_with_options(key, opts).await?;
     let Some(v) = view else {
         return match kv {
@@ -54,6 +76,15 @@ pub async fn scan<R: DbReadOps + Sync>(src: &R, opts: &ScanOptions, view: Option
         Some(e) => (std::ops::Bound::Included(lo.to_vec()), std::ops::Bound::Excluded(e.to_vec())),
         None => (std::ops::Bound::Included(lo.to_vec()), std::ops::Bound::Unbounded),
     };
+    // step 5b: SlateDB skips the SSTs whose rows are all at or below the held version's X_d
+    let skip_opts;
+    let opts = match view.and_then(|v| super::seqfilter::context(v.x_d)) {
+        Some(c) => {
+            skip_opts = ScanOptions { filter_context: Some(c), ..opts.clone() };
+            &skip_opts
+        }
+        None => opts,
+    };
     let mut it = src.scan_with_options(range, opts).await?;
     let full = |out: &Vec<(Bytes, Bytes)>| limit.is_some_and(|l| out.len() >= l);
     let Some(v) = view else {
@@ -73,6 +104,17 @@ pub async fn scan<R: DbReadOps + Sync>(src: &R, opts: &ScanOptions, view: Option
     let mut s_done = false;
     let mut r_head: Option<super::view::RRow> = None;
     let mut r_done = false;
+    if super::view::WAVE.load(std::sync::atomic::Ordering::Relaxed) {
+        // one wave: SlateDB's first row and the runs' first rows at once
+        let (s1, r1) = futures::future::try_join(async { Ok::<_, anyhow::Error>(it.next().await?) }, runs.next()).await?;
+        match s1 {
+            Some(kv) if kv.seq > x_d => s_head = Some(kv),
+            Some(_) => {}
+            None => s_done = true,
+        }
+        r_done = r1.is_none();
+        r_head = r1;
+    }
     loop {
         if s_head.is_none() && !s_done {
             loop {
@@ -170,12 +212,22 @@ impl Snap {
 /// opened here so that the judge's raw-reader check (`judge/raw_readers.sh`) keeps every SlateDB reader in this module or
 /// in `lifecycle.rs`.
 pub async fn open_checkpoint_reader(path: String, store: Arc<dyn object_store::ObjectStore>, checkpoint: uuid::Uuid, opts: slatedb::config::DbReaderOptions) -> Result<slatedb::DbReader> {
-    Ok(slatedb::DbReader::builder(path, store).with_reader_mode(slatedb::DbReaderMode::Checkpoint(checkpoint)).with_options(opts).build().await?)
+    let b = slatedb::DbReader::builder(path, store).with_reader_mode(slatedb::DbReaderMode::Checkpoint(checkpoint)).with_options(opts);
+    let b = match crate::lifecycle::filter_policies() {
+        Some(p) => b.with_filter_policies(p),
+        None => b,
+    };
+    Ok(b.build().await?)
 }
 
 /// A reader that follows the latest state of a database (PITR's diff: the staging clone and the live database).
 pub async fn open_follow_reader(path: String, store: Arc<dyn object_store::ObjectStore>, opts: slatedb::config::DbReaderOptions) -> Result<slatedb::DbReader> {
-    Ok(slatedb::DbReader::builder(path, store).with_reader_mode(slatedb::DbReaderMode::FollowLatest).with_options(opts).build().await?)
+    let b = slatedb::DbReader::builder(path, store).with_reader_mode(slatedb::DbReaderMode::FollowLatest).with_options(opts);
+    let b = match crate::lifecycle::filter_policies() {
+        Some(p) => b.with_filter_policies(p),
+        None => b,
+    };
+    Ok(b.build().await?)
 }
 
 /// The scan options of the server's range reads.

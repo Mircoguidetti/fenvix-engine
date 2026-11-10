@@ -119,6 +119,14 @@ async fn compactor_model_drop_on() {
     let n_ops: u64 = std::env::var("FX_C_OPS").ok().and_then(|s| s.parse().ok()).unwrap_or(20_000);
     let seed: u64 = std::env::var("FX_C_SEED").ok().and_then(|s| s.parse().ok()).unwrap_or(20261109);
     compactor::REVIEW_PLANT.store(std::env::var("FX_REVIEW_PLANT").ok().and_then(|s| s.parse().ok()).unwrap_or(0), Relaxed);
+    // step 5: FX_WAVE=1 runs the same model test with the one-wave reader
+    let wave = std::env::var("FX_WAVE").is_ok();
+    crate::fx::view::WAVE.store(wave, std::sync::atomic::Ordering::Relaxed);
+    // step 5b: the reader skips SlateDB SSTs at or below its X_d (on by default). FX_SKIP_PLANT=n plants the bug the
+    // tests must catch: the reader skips with a cut n above the X_d its runs hold, so rows only SlateDB holds are lost.
+    let plant: u64 = std::env::var("FX_SKIP_PLANT").ok().and_then(|s| s.parse().ok()).unwrap_or(0);
+    super::seqfilter::CONTROL_EXTRA.store(plant, Relaxed);
+    let (skip_asked0, skip_skipped0) = (super::seqfilter::ASKED.load(Relaxed), super::seqfilter::SKIPPED.load(Relaxed));
     let mut rng = StdRng::seed_from_u64(seed);
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
     let id = "fx-cmodel";
@@ -403,6 +411,15 @@ async fn compactor_model_drop_on() {
     eprintln!("compactor model: {st:?}");
     eprintln!("compactor model: follower versions {f_opens}, follower reads {f_reads}, follower answers that changed {f_wrong}");
     eprintln!("compactor model: absorbs {stats_absorbs}, merges {stats_merges}, reseals {stats_reseals} (splits {splits}, group merges {gmerges}), rows dropped from SlateDB {drops}, runs deleted by GC {gcs}, erasure leftovers {leftovers}, erasures pending {pending}, groups {}, delta runs {}", v.groups.len(), v.delta.len());
+    let (asked, skipped) = (super::seqfilter::ASKED.load(Relaxed) - skip_asked0, super::seqfilter::SKIPPED.load(Relaxed) - skip_skipped0);
+    eprintln!("compactor model: SlateDB SSTs asked by the seq filter {asked}, skipped {skipped}, planted extra {plant}");
+    eprintln!("compactor model: SlateDB SSTs asked by the customer filter {}, skipped {}", super::seqfilter::CUST_ASKED.load(Relaxed), super::seqfilter::CUST_SKIPPED.load(Relaxed));
+    super::seqfilter::CONTROL_EXTRA.store(0, Relaxed);
+    if plant > 0 {
+        assert!(st.wrong + f_wrong > 0, "the planted skip must give wrong answers");
+        return;
+    }
+    assert!(skipped > 0, "the reader skipped SlateDB SSTs");
     assert_eq!(st.wrong, 0, "wrong answers");
     assert_eq!(leftovers, 0, "erased rows left in live runs");
     assert_eq!(pending, 0, "erasures not done");
@@ -835,4 +852,105 @@ async fn r3_reseals_a_group_whose_reads_pay() {
     c.stop().await;
     t.abandon().await;
     teardown();
+}
+
+/// Step 5b: the merged reader asks SlateDB to skip the SSTs whose rows are all at or below the held version's X_d. A
+/// version is published over the first writes, newer writes go to L0 SSTs above X_d (no compactor, so SlateDB still
+/// holds every row): every key and range reads as the model, the old SSTs are skipped, the new ones are read. Control: a
+/// reader that skips with a cut above its X_d (a cut whose runs it does not hold) loses the newer rows only SlateDB holds.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn skip_below_xd_and_control_breaks() {
+    let _s = SERIAL.lock().await;
+    setup();
+    // no compactor here: L0 SSTs come only from the explicit flushes, so SlateDB never stalls on a full L0
+    crate::lifecycle::L0_SST_BYTES_OVERRIDE.store(4 << 20, Relaxed);
+    let mut rng = StdRng::seed_from_u64(55);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = "fx-skip";
+    let keys = universe();
+    let l = lc(&store);
+    let mut t = l.create(id).await.unwrap();
+    let mut m: BTreeMap<Vec<u8>, Vec<u8>> = BTreeMap::new();
+    for k in keys.iter().step_by(2) {
+        let v: Vec<u8> = (0..rng.gen_range(1..80)).map(|_| rng.gen()).collect();
+        apply(&mut t, &mut m, vec![(k.clone(), Some(v))]).await;
+    }
+    flush(&t).await;
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    m.insert(crate::envelope::MARKER.to_vec(), b"E1".to_vec());
+    // newer rows, above X_d: rewrites, new keys and deletes, flushed to L0 SSTs
+    for _ in 0..3 {
+        for k in keys.iter().skip(rng.gen_range(0..3)).step_by(3) {
+            let v = if rng.gen_bool(0.2) { None } else { Some((0..rng.gen_range(1..80)).map(|_| rng.gen()).collect::<Vec<u8>>()) };
+            apply(&mut t, &mut m, vec![(k.clone(), v)]).await;
+        }
+        flush(&t).await;
+    }
+    let s0 = super::seqfilter::SKIPPED.load(Relaxed);
+    let wrong = skip_read_all(&t, &m, &keys).await;
+    let skipped = super::seqfilter::SKIPPED.load(Relaxed) - s0;
+    eprintln!("skip below X_d: wrong {wrong}, SlateDB SSTs skipped {skipped}");
+    assert_eq!(wrong, 0);
+    assert!(skipped > 0, "the SSTs at or below X_d are skipped");
+    // control: a cut far above X_d
+    super::seqfilter::CONTROL_EXTRA.store(1 << 40, Relaxed);
+    let s1 = super::seqfilter::SKIPPED.load(Relaxed);
+    let wrong = skip_read_all(&t, &m, &keys).await;
+    eprintln!("control: L0 {:?}, runs {:?}, skipped {}", t.writer_l0(), t.writer_sorted_runs(), super::seqfilter::SKIPPED.load(Relaxed) - s1);
+    super::seqfilter::CONTROL_EXTRA.store(0, Relaxed);
+    eprintln!("skip below X_d, control (cut above X_d): wrong {wrong}");
+    assert!(wrong > 0, "the control must lose the rows above X_d");
+    // the boundary, exactly: one row written alone, in an SST of its own, at seq S. A cut at S - 1 reads it (the SST
+    // holds a row above the cut); a cut at S skips it, and the read returns the older value.
+    let key = "doc/plain/00007";
+    let h = t.put(key, b"newest").await.unwrap();
+    let seq = h.seqnum();
+    flush(&t).await;
+    let x_d = t.fx_view().unwrap().x_d;
+    super::seqfilter::CONTROL_EXTRA.store(seq - 1 - x_d, Relaxed);
+    let below = t.get(key.as_bytes()).await.unwrap().map(|b| b.to_vec());
+    super::seqfilter::CONTROL_EXTRA.store(seq - x_d, Relaxed);
+    let at = t.get(key.as_bytes()).await.unwrap().map(|b| b.to_vec());
+    super::seqfilter::CONTROL_EXTRA.store(0, Relaxed);
+    eprintln!("boundary: seq {seq}, X_d {x_d}, cut S-1 reads {:?}, cut S reads {:?}", below.as_deref().map(String::from_utf8_lossy), at.as_deref().map(String::from_utf8_lossy));
+    assert_eq!(below.as_deref(), Some(&b"newest"[..]), "a cut below the row's seq keeps its SST");
+    assert_ne!(at.as_deref(), Some(&b"newest"[..]), "a cut at the row's seq skips its SST (the control)");
+    m.insert(key.as_bytes().to_vec(), b"newest".to_vec());
+    // the customer filter: range reads inside one customer skip L0 SSTs without it (the rows above X_d); control: a
+    // filter that says "not here" for every customer loses those rows
+    let (a0, s0) = (super::seqfilter::CUST_ASKED.load(Relaxed), super::seqfilter::CUST_SKIPPED.load(Relaxed));
+    let wrong = skip_read_all(&t, &m, &keys).await;
+    eprintln!("customer filter: wrong {wrong}, asked {}, skipped {}", super::seqfilter::CUST_ASKED.load(Relaxed) - a0, super::seqfilter::CUST_SKIPPED.load(Relaxed) - s0);
+    assert_eq!(wrong, 0);
+    super::seqfilter::CONTROL_CUST_NONE.store(true, Relaxed);
+    let wrong = skip_read_all(&t, &m, &keys).await;
+    super::seqfilter::CONTROL_CUST_NONE.store(false, Relaxed);
+    eprintln!("customer filter, control (always 'not here'): wrong {wrong}");
+    assert!(wrong > 0, "the customer-filter control must lose rows");
+    // off: the same answers
+    super::seqfilter::SKIP_BELOW_XD.store(false, Relaxed);
+    let wrong = skip_read_all(&t, &m, &keys).await;
+    super::seqfilter::SKIP_BELOW_XD.store(true, Relaxed);
+    assert_eq!(wrong, 0);
+    t.abandon().await;
+    teardown();
+}
+
+async fn skip_read_all(t: &Tenant, m: &BTreeMap<Vec<u8>, Vec<u8>>, keys: &[Vec<u8>]) -> u64 {
+    let mut wrong = 0;
+    for k in keys {
+        if t.get(k).await.unwrap().map(|b| b.to_vec()) != m.get(k).cloned() {
+            wrong += 1;
+        }
+    }
+    for c in 0..8 {
+        let (lo, hi) = crange(c);
+        for rev in [false, true] {
+            let got = as_vec(t.scan_range(&lo, Some(&hi), rev, None, 1 << 20).await.unwrap());
+            if got != model_range(m, &lo, Some(&hi), rev, None) {
+                wrong += 1;
+            }
+        }
+    }
+    wrong
 }
