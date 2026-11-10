@@ -1,0 +1,5449 @@
+{
+ "versione": "p1-1.6.2",
+ "scritto": "2026-11-10T11:08:36.924432Z",
+ "analisi": {
+  "nota": "STIMATO: numeri derivati dai dati grezzi; le misure dell'API sono medie al minuto",
+  "origini_api": [],
+  "fasi": [
+   {
+    "fase": "inizio",
+    "inizio": "2026-11-10T10:41:36.979146Z",
+    "fine": "2026-11-10T10:41:37.141210Z",
+    "cpu_serverStatus": {
+     "nodo": "vm:27119",
+     "secondi": 10.256,
+     "cpu_us": 8801774,
+     "operazioni": {
+      "query": 5,
+      "getmore": 2,
+      "insert": 0,
+      "update": 0,
+      "delete": 0,
+      "command": 292
+     },
+     "documenti": {
+      "returned": 6571,
+      "inserted": 0,
+      "updated": 0,
+      "deleted": 0
+     },
+     "pagine_lette_nel_bancone": 17046,
+     "byte_letti_nel_bancone": 1982316490,
+     "byte_scritti_dal_bancone": 630,
+     "bancone_byte_dopo": 3092,
+     "cpu_us_per_lettura": 1257396.29,
+     "cpu_us_per_scrittura": null,
+     "cpu_us_per_documento": 1339.49,
+     "cpu_percento_di_un_core": 85.8,
+     "pagine_lette_per_lettura": 2435.143,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "127.0.0.1:27119"
+    }
+   },
+   {
+    "fase": "Q2",
+    "inizio": "2026-11-10T10:43:55.170861Z",
+    "fine": "2026-11-10T10:47:38.575815Z",
+    "cpu_serverStatus": {
+     "nodo": "vm:27119",
+     "secondi": 241.356,
+     "cpu_us": 204065526,
+     "operazioni": {
+      "query": 981,
+      "getmore": 54,
+      "insert": 0,
+      "update": 0,
+      "delete": 0,
+      "command": 705
+     },
+     "documenti": {
+      "returned": 58787,
+      "inserted": 0,
+      "updated": 0,
+      "deleted": 0
+     },
+     "pagine_lette_nel_bancone": 396886,
+     "byte_letti_nel_bancone": 44790516879,
+     "byte_scritti_dal_bancone": 1410938,
+     "bancone_byte_dopo": 3092,
+     "cpu_us_per_lettura": 197164.76,
+     "cpu_us_per_scrittura": null,
+     "cpu_us_per_documento": 3471.27,
+     "cpu_percento_di_un_core": 84.5,
+     "pagine_lette_per_lettura": 383.465,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "127.0.0.1:27119"
+    },
+    "letture": {
+     "find_fredde": 160,
+     "find_al_secondo": 2.152,
+     "profiler_byte_letti_storage_per_find_fredda": {
+      "n": 160,
+      "p50": 376689.0,
+      "p95": 415000.9,
+      "p99": 415547.72,
+      "media": 334515.05,
+      "min": 0,
+      "max": 415828
+     },
+     "profiler_us_di_lettura_storage_per_find_fredda": {
+      "n": 160,
+      "p50": 5087.5,
+      "p95": 6525.55,
+      "p99": 16315.6,
+      "media": 4989.438,
+      "min": 0,
+      "max": 20413
+     },
+     "find_a_0_byte": 2,
+     "su": 160,
+     "api_byte_per_lettura_storage": null,
+     "pagine_per_find_fredda_profiler": null,
+     "us_per_pagina": null,
+     "api_letture_disco_nella_fase": null,
+     "pagine_per_find_api_controllo": null,
+     "nota_controllo_api": "letture del disco della fase (somma al minuto) / find fredde; comprende istantanee, count di controllo e minuti di confine"
+    }
+   },
+   {
+    "fase": "Q3",
+    "inizio": "2026-11-10T10:49:50.234719Z",
+    "fine": "2026-11-10T10:55:00.966789Z",
+    "cpu_serverStatus": {
+     "nodo": "vm:27119",
+     "secondi": 313.332,
+     "cpu_us": 227161046,
+     "operazioni": {
+      "query": 2478,
+      "getmore": 49,
+      "insert": 0,
+      "update": 0,
+      "delete": 0,
+      "command": 1067
+     },
+     "documenti": {
+      "returned": 97393,
+      "inserted": 0,
+      "updated": 0,
+      "deleted": 0
+     },
+     "pagine_lette_nel_bancone": 246008,
+     "byte_letti_nel_bancone": 49897027328,
+     "byte_scritti_dal_bancone": 4683251,
+     "bancone_byte_dopo": 648023,
+     "cpu_us_per_lettura": 89893.57,
+     "cpu_us_per_scrittura": null,
+     "cpu_us_per_documento": 2332.42,
+     "cpu_percento_di_un_core": 72.5,
+     "pagine_lette_per_lettura": 97.352,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "127.0.0.1:27119"
+    },
+    "letture": {
+     "find_fredde": 160,
+     "find_al_secondo": 1.548,
+     "profiler_byte_letti_storage_per_find_fredda": {
+      "n": 160,
+      "p50": 356155.0,
+      "p95": 6322841.2,
+      "p99": 7727691.48,
+      "media": 1718928.8,
+      "min": 0,
+      "max": 9565484
+     },
+     "profiler_us_di_lettura_storage_per_find_fredda": {
+      "n": 160,
+      "p50": 5678.0,
+      "p95": 621255.15,
+      "p99": 702453.77,
+      "media": 130597.481,
+      "min": 0,
+      "max": 756041
+     },
+     "find_a_0_byte": 3,
+     "su": 160,
+     "api_byte_per_lettura_storage": null,
+     "pagine_per_find_fredda_profiler": null,
+     "us_per_pagina": null,
+     "api_letture_disco_nella_fase": null,
+     "pagine_per_find_api_controllo": null,
+     "nota_controllo_api": "letture del disco della fase (somma al minuto) / find fredde; comprende istantanee, count di controllo e minuti di confine"
+    }
+   },
+   {
+    "fase": "Q1",
+    "inizio": "2026-11-10T10:57:01.923378Z",
+    "fine": "2026-11-10T10:59:31.923599Z",
+    "cpu_serverStatus": {
+     "nodo": "vm:27119",
+     "secondi": 150.223,
+     "cpu_us": 98627712,
+     "operazioni": {
+      "query": 487,
+      "getmore": 6,
+      "insert": 0,
+      "update": 0,
+      "delete": 0,
+      "command": 1972
+     },
+     "documenti": {
+      "returned": 11464,
+      "inserted": 0,
+      "updated": 0,
+      "deleted": 0
+     },
+     "pagine_lette_nel_bancone": 157238,
+     "byte_letti_nel_bancone": 18152147103,
+     "byte_scritti_dal_bancone": 1334748,
+     "bancone_byte_dopo": 673870,
+     "cpu_us_per_lettura": 200056.21,
+     "cpu_us_per_scrittura": null,
+     "cpu_us_per_documento": 8603.25,
+     "cpu_percento_di_un_core": 65.7,
+     "pagine_lette_per_lettura": 318.941,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "127.0.0.1:27119"
+    },
+    "letture": {
+     "find_fredde": 160,
+     "find_al_secondo": 3.2,
+     "profiler_byte_letti_storage_per_find_fredda": {
+      "n": 160,
+      "p50": 188953.0,
+      "p95": 363080.2,
+      "p99": 388324.26,
+      "media": 197166.013,
+      "min": 130740,
+      "max": 411550
+     },
+     "profiler_us_di_lettura_storage_per_find_fredda": {
+      "n": 160,
+      "p50": 5761.0,
+      "p95": 30485.15,
+      "p99": 56752.45,
+      "media": 10004.038,
+      "min": 1899,
+      "max": 61190
+     },
+     "find_a_0_byte": 0,
+     "su": 160,
+     "api_byte_per_lettura_storage": null,
+     "pagine_per_find_fredda_profiler": null,
+     "us_per_pagina": null,
+     "api_letture_disco_nella_fase": null,
+     "pagine_per_find_api_controllo": null,
+     "nota_controllo_api": "letture del disco della fase (somma al minuto) / find fredde; comprende istantanee, count di controllo e minuti di confine"
+    }
+   },
+   {
+    "fase": "Q1d",
+    "inizio": "2026-11-10T11:01:32.533554Z",
+    "fine": "2026-11-10T11:04:02.533784Z",
+    "cpu_serverStatus": {
+     "nodo": "vm:27119",
+     "secondi": 150.263,
+     "cpu_us": 109874293,
+     "operazioni": {
+      "query": 607,
+      "getmore": 18,
+      "insert": 0,
+      "update": 0,
+      "delete": 0,
+      "command": 2678
+     },
+     "documenti": {
+      "returned": 31948,
+      "inserted": 0,
+      "updated": 0,
+      "deleted": 0
+     },
+     "pagine_lette_nel_bancone": 194827,
+     "byte_letti_nel_bancone": 21869479648,
+     "byte_scritti_dal_bancone": 1259299,
+     "bancone_byte_dopo": 1183287,
+     "cpu_us_per_lettura": 175798.87,
+     "cpu_us_per_scrittura": null,
+     "cpu_us_per_documento": 3439.16,
+     "cpu_percento_di_un_core": 73.1,
+     "pagine_lette_per_lettura": 311.723,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "127.0.0.1:27119"
+    },
+    "letture": {
+     "find_fredde": 160,
+     "find_al_secondo": 3.2,
+     "profiler_byte_letti_storage_per_find_fredda": {
+      "n": 160,
+      "p50": 388523.0,
+      "p95": 637977.3,
+      "p99": 940702.82,
+      "media": 406728.55,
+      "min": 179714,
+      "max": 959738
+     },
+     "profiler_us_di_lettura_storage_per_find_fredda": {
+      "n": 160,
+      "p50": 11011.5,
+      "p95": 38494.25,
+      "p99": 58332.88,
+      "media": 14269.138,
+      "min": 2268,
+      "max": 76077
+     },
+     "find_a_0_byte": 0,
+     "su": 160,
+     "api_byte_per_lettura_storage": null,
+     "pagine_per_find_fredda_profiler": null,
+     "us_per_pagina": null,
+     "api_letture_disco_nella_fase": null,
+     "pagine_per_find_api_controllo": null,
+     "nota_controllo_api": "letture del disco della fase (somma al minuto) / find fredde; comprende istantanee, count di controllo e minuti di confine"
+    }
+   },
+   {
+    "fase": "Q4",
+    "inizio": "2026-11-10T11:06:03.136430Z",
+    "fine": "2026-11-10T11:08:33.136647Z",
+    "cpu_serverStatus": {
+     "nodo": "vm:27119",
+     "secondi": 150.296,
+     "cpu_us": 112313318,
+     "operazioni": {
+      "query": 737,
+      "getmore": 30,
+      "insert": 0,
+      "update": 0,
+      "delete": 0,
+      "command": 943
+     },
+     "documenti": {
+      "returned": 239154,
+      "inserted": 0,
+      "updated": 0,
+      "deleted": 0
+     },
+     "pagine_lette_nel_bancone": 196629,
+     "byte_letti_nel_bancone": 22327307309,
+     "byte_scritti_dal_bancone": 1268556,
+     "bancone_byte_dopo": 3178681,
+     "cpu_us_per_lettura": 146431.97,
+     "cpu_us_per_scrittura": null,
+     "cpu_us_per_documento": 469.63,
+     "cpu_percento_di_un_core": 74.7,
+     "pagine_lette_per_lettura": 256.361,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "127.0.0.1:27119"
+    },
+    "letture": {
+     "find_fredde": 160,
+     "find_al_secondo": 3.2,
+     "profiler_byte_letti_storage_per_find_fredda": {
+      "n": 160,
+      "p50": 593994.0,
+      "p95": 849346.9,
+      "p99": 1129361.72,
+      "media": 554471.0,
+      "min": 358098,
+      "max": 1144076
+     },
+     "profiler_us_di_lettura_storage_per_find_fredda": {
+      "n": 160,
+      "p50": 13833.0,
+      "p95": 42509.9,
+      "p99": 80537.46,
+      "media": 18560.544,
+      "min": 4456,
+      "max": 193310
+     },
+     "find_a_0_byte": 0,
+     "su": 160,
+     "api_byte_per_lettura_storage": null,
+     "pagine_per_find_fredda_profiler": null,
+     "us_per_pagina": null,
+     "api_letture_disco_nella_fase": null,
+     "pagine_per_find_api_controllo": null,
+     "nota_controllo_api": "letture del disco della fase (somma al minuto) / find fredde; comprende istantanee, count di controllo e minuti di confine"
+    }
+   }
+  ]
+ },
+ "fasi": [
+  {
+   "fase": "inizio",
+   "inizio": "2026-11-10T10:41:36.979146Z",
+   "fine": "2026-11-10T10:41:37.141210Z",
+   "riassunto": null,
+   "esito": null,
+   "accettata": null
+  },
+  {
+   "fase": "Q2",
+   "inizio": "2026-11-10T10:43:55.170861Z",
+   "fine": "2026-11-10T10:47:38.575815Z",
+   "n": 160,
+   "con_freddo": 160,
+   "errori": 0,
+   "controlli_ok": 160,
+   "controlli_falliti": 0,
+   "freddo_ms": {
+    "n": 160,
+    "p50": 6.885,
+    "p95": 98.899,
+    "p99": 6487.095,
+    "media": 267.583,
+    "min": 3.424,
+    "max": 6623.967
+   },
+   "caldo_ms": {
+    "n": 160,
+    "p50": 3.096,
+    "p95": 443.903,
+    "p99": 6486.934,
+    "media": 326.419,
+    "min": 2.075,
+    "max": 6591.224
+   },
+   "freddo_meno_hello_accoppiato": {
+    "n": 160,
+    "p50": 6.418,
+    "p95": 97.639,
+    "p99": 6485.695,
+    "media": 266.997,
+    "min": 3.081,
+    "max": 6623.358
+   },
+   "caldo_meno_hello_accoppiato": {
+    "n": 160,
+    "p50": 2.696,
+    "p95": 443.471,
+    "p99": 6486.522,
+    "media": 325.919,
+    "min": 0.899,
+    "max": 6590.547
+   },
+   "freddo_meno_caldo_stessa_ricerca": {
+    "n": 160,
+    "p50": 3.393,
+    "p95": 67.283,
+    "p99": 2799.897,
+    "media": -58.836,
+    "min": -6489.458,
+    "max": 6475.756
+   },
+   "p50_freddo_meno_p50_caldo": 3.789,
+   "documenti_freddo": {
+    "n": 160,
+    "p50": 1.0,
+    "p95": 1.0,
+    "p99": 1.0,
+    "media": 1.0,
+    "min": 1,
+    "max": 1
+   },
+   "documenti_caldo": {
+    "n": 160,
+    "p50": 1.0,
+    "p95": 1.0,
+    "p99": 1.0,
+    "media": 1.0,
+    "min": 1,
+    "max": 1
+   },
+   "byte_freddo": {
+    "n": 160,
+    "p50": 585.0,
+    "p95": 757.5,
+    "p99": 809.1,
+    "media": 588.788,
+    "min": 340,
+    "max": 817
+   },
+   "getmore_freddo_totale": 0,
+   "blocchi_25": [
+    {
+     "da": 0,
+     "a": 25,
+     "freddo_meno_caldo_p50": 3.2388999999999997,
+     "freddo_meno_hello_p50": 7.048
+    },
+    {
+     "da": 25,
+     "a": 50,
+     "freddo_meno_caldo_p50": 3.2068000000000003,
+     "freddo_meno_hello_p50": 5.8804
+    },
+    {
+     "da": 50,
+     "a": 75,
+     "freddo_meno_caldo_p50": 3.3600000000000003,
+     "freddo_meno_hello_p50": 6.8621
+    },
+    {
+     "da": 75,
+     "a": 100,
+     "freddo_meno_caldo_p50": 4.114000000000001,
+     "freddo_meno_hello_p50": 7.1516
+    },
+    {
+     "da": 100,
+     "a": 125,
+     "freddo_meno_caldo_p50": 3.4569000000000005,
+     "freddo_meno_hello_p50": 6.658899999999999
+    },
+    {
+     "da": 125,
+     "a": 150,
+     "freddo_meno_caldo_p50": 3.0642000000000005,
+     "freddo_meno_hello_p50": 5.7676
+    },
+    {
+     "da": 150,
+     "a": 160,
+     "freddo_meno_caldo_p50": 4.2447,
+     "freddo_meno_hello_p50": 6.41795
+    }
+   ],
+   "profiler_freddo": {
+    "ricerche_trovate_nel_profiler": 160,
+    "ricerche": 160,
+    "millis": {
+     "n": 160,
+     "p50": 6.0,
+     "p95": 96.3,
+     "p99": 6485.2,
+     "media": 266.156,
+     "min": 2,
+     "max": 6622
+    },
+    "storage_byte_letti": {
+     "n": 160,
+     "p50": 376689.0,
+     "p95": 415000.9,
+     "p99": 415547.72,
+     "media": 334515.05,
+     "min": 0,
+     "max": 415828
+    },
+    "storage_ms_di_lettura": {
+     "n": 160,
+     "p50": 5.088,
+     "p95": 6.526,
+     "p99": 16.316,
+     "media": 4.989,
+     "min": 0.0,
+     "max": 20.413
+    },
+    "find_a_0_byte": 2,
+    "su": 160,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 158,
+     "p50": 376835.0,
+     "p95": 415010.7,
+     "p99": 415549.56,
+     "media": 338749.418,
+     "min": 169200,
+     "max": 415828
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 158,
+     "p50": 5.106,
+     "p95": 6.555,
+     "p99": 16.361,
+     "media": 5.053,
+     "min": 2.064,
+     "max": 20.413
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 158,
+     "p50": 6.0,
+     "p95": 98.9,
+     "p99": 6485.6,
+     "media": 269.494,
+     "min": 3,
+     "max": 6622
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 160,
+     "p50": 1.0,
+     "p95": 1.0,
+     "p99": 1.0,
+     "media": 1.0,
+     "min": 1,
+     "max": 1
+    },
+    "keysExamined": {
+     "n": 160,
+     "p50": 1.0,
+     "p95": 1.0,
+     "p99": 1.0,
+     "media": 1.0,
+     "min": 1,
+     "max": 1
+    },
+    "piani": [
+     "IDHACK"
+    ]
+   },
+   "profiler_caldo": {
+    "ricerche_trovate_nel_profiler": 160,
+    "ricerche": 160,
+    "millis": {
+     "n": 160,
+     "p50": 2.0,
+     "p95": 442.15,
+     "p99": 6485.51,
+     "media": 324.481,
+     "min": 0,
+     "max": 6590
+    },
+    "storage_byte_letti": {
+     "n": 160,
+     "p50": 0.0,
+     "p95": 8520.6,
+     "p99": 414349.46,
+     "media": 17793.638,
+     "min": 0,
+     "max": 416244
+    },
+    "storage_ms_di_lettura": {
+     "n": 160,
+     "p50": 0.0,
+     "p95": 0.141,
+     "p99": 6.685,
+     "media": 0.299,
+     "min": 0.0,
+     "max": 8.072
+    },
+    "find_a_0_byte": 152,
+    "su": 160,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 8,
+     "p50": 383447.0,
+     "p95": 416098.4,
+     "p99": 416214.88,
+     "media": 355872.75,
+     "min": 170412,
+     "max": 416244
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 8,
+     "p50": 6.441,
+     "p95": 7.669,
+     "p99": 7.991,
+     "media": 5.974,
+     "min": 2.821,
+     "max": 8.072
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 8,
+     "p50": 6410.0,
+     "p95": 6555.7,
+     "p99": 6583.14,
+     "media": 6388.625,
+     "min": 6107,
+     "max": 6590
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 160,
+     "p50": 1.0,
+     "p95": 1.0,
+     "p99": 1.0,
+     "media": 1.0,
+     "min": 1,
+     "max": 1
+    },
+    "keysExamined": {
+     "n": 160,
+     "p50": 1.0,
+     "p95": 1.0,
+     "p99": 1.0,
+     "media": 1.0,
+     "min": 1,
+     "max": 1
+    },
+    "piani": [
+     "IDHACK"
+    ]
+   },
+   "per_gruppo": {
+    "attivi": {
+     "n": 100,
+     "con_freddo": 100,
+     "errori": 0,
+     "controlli_ok": 100,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 100,
+      "p50": 6.779,
+      "p95": 2438.493,
+      "p99": 6499.985,
+      "media": 354.948,
+      "min": 3.424,
+      "max": 6623.967
+     },
+     "caldo_ms": {
+      "n": 100,
+      "p50": 3.075,
+      "p95": 6118.683,
+      "p99": 6494.553,
+      "media": 387.474,
+      "min": 2.075,
+      "max": 6591.224
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 100,
+      "p50": 6.321,
+      "p95": 2437.376,
+      "p99": 6499.37,
+      "media": 354.388,
+      "min": 3.081,
+      "max": 6623.358
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 100,
+      "p50": 2.696,
+      "p95": 6118.082,
+      "p99": 6494.13,
+      "media": 387.004,
+      "min": 1.285,
+      "max": 6590.547
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 100,
+      "p50": 3.443,
+      "p95": 66.332,
+      "p99": 356.528,
+      "media": -32.526,
+      "min": -6489.458,
+      "max": 6403.865
+     },
+     "p50_freddo_meno_p50_caldo": 3.704,
+     "documenti_freddo": {
+      "n": 100,
+      "p50": 1.0,
+      "p95": 1.0,
+      "p99": 1.0,
+      "media": 1.0,
+      "min": 1,
+      "max": 1
+     },
+     "documenti_caldo": {
+      "n": 100,
+      "p50": 1.0,
+      "p95": 1.0,
+      "p99": 1.0,
+      "media": 1.0,
+      "min": 1,
+      "max": 1
+     },
+     "byte_freddo": {
+      "n": 100,
+      "p50": 583.0,
+      "p95": 757.5,
+      "p99": 815.02,
+      "media": 588.69,
+      "min": 366,
+      "max": 817
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 3.2068000000000003,
+       "freddo_meno_hello_p50": 5.8751
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 3.3898999999999995,
+       "freddo_meno_hello_p50": 6.1197
+      },
+      {
+       "da": 50,
+       "a": 75,
+       "freddo_meno_caldo_p50": 4.1932,
+       "freddo_meno_hello_p50": 6.658899999999999
+      },
+      {
+       "da": 75,
+       "a": 100,
+       "freddo_meno_caldo_p50": 3.5011999999999994,
+       "freddo_meno_hello_p50": 6.1928
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 100,
+      "ricerche": 100,
+      "millis": {
+       "n": 100,
+       "p50": 6.0,
+       "p95": 2436.75,
+       "p99": 6498.25,
+       "media": 353.51,
+       "min": 2,
+       "max": 6622
+      },
+      "storage_byte_letti": {
+       "n": 100,
+       "p50": 388671.0,
+       "p95": 414828.8,
+       "p99": 415510.92,
+       "media": 345450.82,
+       "min": 0,
+       "max": 415602
+      },
+      "storage_ms_di_lettura": {
+       "n": 100,
+       "p50": 5.137,
+       "p95": 6.202,
+       "p99": 8.122,
+       "media": 4.878,
+       "min": 0.0,
+       "max": 17.649
+      },
+      "find_a_0_byte": 2,
+      "su": 100,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 98,
+       "p50": 392352.0,
+       "p95": 414846.4,
+       "p99": 415512.76,
+       "media": 352500.837,
+       "min": 169200,
+       "max": 415602
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 98,
+       "p50": 5.152,
+       "p95": 6.235,
+       "p99": 8.315,
+       "media": 4.978,
+       "min": 2.129,
+       "max": 17.649
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 98,
+       "p50": 6.0,
+       "p95": 2854.25,
+       "p99": 6500.75,
+       "media": 360.673,
+       "min": 3,
+       "max": 6622
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 100,
+       "p50": 1.0,
+       "p95": 1.0,
+       "p99": 1.0,
+       "media": 1.0,
+       "min": 1,
+       "max": 1
+      },
+      "keysExamined": {
+       "n": 100,
+       "p50": 1.0,
+       "p95": 1.0,
+       "p99": 1.0,
+       "media": 1.0,
+       "min": 1,
+       "max": 1
+      },
+      "piani": [
+       "IDHACK"
+      ]
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 100,
+      "ricerche": 100,
+      "millis": {
+       "n": 100,
+       "p50": 2.0,
+       "p95": 6116.55,
+       "p99": 6492.98,
+       "media": 386.19,
+       "min": 0,
+       "max": 6590
+      },
+      "storage_byte_letti": {
+       "n": 100,
+       "p50": 0.0,
+       "p95": 179746.7,
+       "p99": 413351.22,
+       "media": 21239.78,
+       "min": 0,
+       "max": 416244
+      },
+      "storage_ms_di_lettura": {
+       "n": 100,
+       "p50": 0.0,
+       "p95": 2.953,
+       "p99": 6.933,
+       "media": 0.362,
+       "min": 0.0,
+       "max": 8.072
+      },
+      "find_a_0_byte": 94,
+      "su": 100,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 6,
+       "p50": 383447.0,
+       "p95": 415513.5,
+       "p99": 416097.9,
+       "media": 353996.333,
+       "min": 170412,
+       "max": 416244
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 6,
+       "p50": 6.441,
+       "p95": 7.784,
+       "p99": 8.014,
+       "media": 6.027,
+       "min": 2.821,
+       "max": 8.072
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 6,
+       "p50": 6410.0,
+       "p95": 6565.5,
+       "p99": 6585.1,
+       "media": 6384.5,
+       "min": 6107,
+       "max": 6590
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 100,
+       "p50": 1.0,
+       "p95": 1.0,
+       "p99": 1.0,
+       "media": 1.0,
+       "min": 1,
+       "max": 1
+      },
+      "keysExamined": {
+       "n": 100,
+       "p50": 1.0,
+       "p95": 1.0,
+       "p99": 1.0,
+       "media": 1.0,
+       "min": 1,
+       "max": 1
+      },
+      "piani": [
+       "IDHACK"
+      ]
+     }
+    },
+    "dormienti": {
+     "n": 60,
+     "con_freddo": 60,
+     "errori": 0,
+     "controlli_ok": 60,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 60,
+      "p50": 7.031,
+      "p95": 70.058,
+      "p99": 2729.008,
+      "media": 121.975,
+      "min": 3.922,
+      "max": 6479.008
+     },
+     "caldo_ms": {
+      "n": 60,
+      "p50": 3.119,
+      "p95": 118.865,
+      "p99": 6388.32,
+      "media": 224.66,
+      "min": 2.092,
+      "max": 6482.318
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 60,
+      "p50": 6.514,
+      "p95": 69.572,
+      "p99": 2727.972,
+      "media": 121.344,
+      "min": 3.377,
+      "max": 6477.063
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 60,
+      "p50": 2.709,
+      "p95": 118.411,
+      "p99": 6387.892,
+      "media": 224.11,
+      "min": 0.899,
+      "max": 6481.912
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 60,
+      "p50": 3.285,
+      "p95": 67.283,
+      "p99": 2725.94,
+      "media": -102.685,
+      "min": -6474.269,
+      "max": 6475.756
+     },
+     "p50_freddo_meno_p50_caldo": 3.911,
+     "documenti_freddo": {
+      "n": 60,
+      "p50": 1.0,
+      "p95": 1.0,
+      "p99": 1.0,
+      "media": 1.0,
+      "min": 1,
+      "max": 1
+     },
+     "documenti_caldo": {
+      "n": 60,
+      "p50": 1.0,
+      "p95": 1.0,
+      "p99": 1.0,
+      "media": 1.0,
+      "min": 1,
+      "max": 1
+     },
+     "byte_freddo": {
+      "n": 60,
+      "p50": 591.5,
+      "p95": 750.9,
+      "p99": 780.25,
+      "media": 588.95,
+      "min": 340,
+      "max": 795
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 3.2228999999999997,
+       "freddo_meno_hello_p50": 7.5983
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 3.5441000000000003,
+       "freddo_meno_hello_p50": 6.8732
+      },
+      {
+       "da": 50,
+       "a": 60,
+       "freddo_meno_caldo_p50": 3.32505,
+       "freddo_meno_hello_p50": 5.44675
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 60,
+      "ricerche": 60,
+      "millis": {
+       "n": 60,
+       "p50": 6.0,
+       "p95": 68.65,
+       "p99": 2726.96,
+       "media": 120.567,
+       "min": 3,
+       "max": 6477
+      },
+      "storage_byte_letti": {
+       "n": 60,
+       "p50": 363542.0,
+       "p95": 415100.0,
+       "p99": 415528.28,
+       "media": 316288.767,
+       "min": 170308,
+       "max": 415828
+      },
+      "storage_ms_di_lettura": {
+       "n": 60,
+       "p50": 4.905,
+       "p95": 7.221,
+       "p99": 17.449,
+       "media": 5.175,
+       "min": 2.064,
+       "max": 20.413
+      },
+      "find_a_0_byte": 0,
+      "su": 60,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 60,
+       "p50": 363542.0,
+       "p95": 415100.0,
+       "p99": 415528.28,
+       "media": 316288.767,
+       "min": 170308,
+       "max": 415828
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 60,
+       "p50": 4.905,
+       "p95": 7.221,
+       "p99": 17.449,
+       "media": 5.175,
+       "min": 2.064,
+       "max": 20.413
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 60,
+       "p50": 6.0,
+       "p95": 68.65,
+       "p99": 2726.96,
+       "media": 120.567,
+       "min": 3,
+       "max": 6477
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 60,
+       "p50": 1.0,
+       "p95": 1.0,
+       "p99": 1.0,
+       "media": 1.0,
+       "min": 1,
+       "max": 1
+      },
+      "keysExamined": {
+       "n": 60,
+       "p50": 1.0,
+       "p95": 1.0,
+       "p99": 1.0,
+       "media": 1.0,
+       "min": 1,
+       "max": 1
+      },
+      "piani": [
+       "IDHACK"
+      ]
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 60,
+      "ricerche": 60,
+      "millis": {
+       "n": 60,
+       "p50": 2.0,
+       "p95": 117.4,
+       "p99": 6386.6,
+       "media": 221.633,
+       "min": 0,
+       "max": 6481
+      },
+      "storage_byte_letti": {
+       "n": 60,
+       "p50": 0.0,
+       "p95": 0.0,
+       "p99": 351723.32,
+       "media": 12050.067,
+       "min": 0,
+       "max": 415828
+      },
+      "storage_ms_di_lettura": {
+       "n": 60,
+       "p50": 0.0,
+       "p95": 0.0,
+       "p99": 5.685,
+       "media": 0.194,
+       "min": 0.0,
+       "max": 6.521
+      },
+      "find_a_0_byte": 58,
+      "su": 60,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 2,
+       "p50": 361502.0,
+       "p95": 410395.4,
+       "p99": 414741.48,
+       "media": 361502.0,
+       "min": 307176,
+       "max": 415828
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 2,
+       "p50": 5.812,
+       "p95": 6.45,
+       "p99": 6.507,
+       "media": 5.812,
+       "min": 5.104,
+       "max": 6.521
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 2,
+       "p50": 6401.0,
+       "p95": 6473.0,
+       "p99": 6479.4,
+       "media": 6401.0,
+       "min": 6321,
+       "max": 6481
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 60,
+       "p50": 1.0,
+       "p95": 1.0,
+       "p99": 1.0,
+       "media": 1.0,
+       "min": 1,
+       "max": 1
+      },
+      "keysExamined": {
+       "n": 60,
+       "p50": 1.0,
+       "p95": 1.0,
+       "p99": 1.0,
+       "media": 1.0,
+       "min": 1,
+       "max": 1
+      },
+      "piani": [
+       "IDHACK"
+      ]
+     }
+    }
+   },
+   "clienti": [
+    "cli-001110",
+    "cli-000987",
+    "cli-001029",
+    "cli-001256",
+    "cli-000512",
+    "cli-001477",
+    "cli-001022",
+    "cli-000713",
+    "cli-000593",
+    "cli-000457",
+    "cli-001203",
+    "cli-001680",
+    "cli-001072",
+    "cli-001289",
+    "cli-001254",
+    "cli-001138",
+    "cli-001368",
+    "cli-001628",
+    "cli-000446",
+    "cli-001103",
+    "cli-001366",
+    "cli-001410",
+    "cli-000887",
+    "cli-000341",
+    "cli-000491",
+    "cli-001688",
+    "cli-000140",
+    "cli-001012",
+    "cli-000524",
+    "cli-001720",
+    "cli-000079",
+    "cli-001629",
+    "cli-000386",
+    "cli-001093",
+    "cli-000025",
+    "cli-001450",
+    "cli-000451",
+    "cli-000921",
+    "cli-000132",
+    "cli-001229",
+    "cli-001511",
+    "cli-000061",
+    "cli-000615",
+    "cli-000672",
+    "cli-000017",
+    "cli-000673",
+    "cli-000378",
+    "cli-000880",
+    "cli-001191",
+    "cli-000011",
+    "cli-000116",
+    "cli-001451",
+    "cli-001562",
+    "cli-000174",
+    "cli-001522",
+    "cli-000257",
+    "cli-000831",
+    "cli-000438",
+    "cli-000601",
+    "cli-001224",
+    "cli-001358",
+    "cli-000515",
+    "cli-001590",
+    "cli-001146",
+    "cli-001541",
+    "cli-000862",
+    "cli-001417",
+    "cli-000478",
+    "cli-001330",
+    "cli-000614",
+    "cli-000596",
+    "cli-001306",
+    "cli-001553",
+    "cli-001118",
+    "cli-000082",
+    "cli-000186",
+    "cli-001277",
+    "cli-000999",
+    "cli-001640",
+    "cli-001230",
+    "cli-000095",
+    "cli-000792",
+    "cli-001324",
+    "cli-000360",
+    "cli-000551",
+    "cli-000719",
+    "cli-001448",
+    "cli-000369",
+    "cli-001214",
+    "cli-000089",
+    "cli-000113",
+    "cli-001679",
+    "cli-000361",
+    "cli-001253",
+    "cli-000910",
+    "cli-001479",
+    "cli-001294",
+    "cli-000828",
+    "cli-001223",
+    "cli-000276",
+    "cli-000811",
+    "cli-000315",
+    "cli-000573",
+    "cli-001528",
+    "cli-001134",
+    "cli-001406",
+    "cli-000142",
+    "cli-000996",
+    "cli-001465",
+    "cli-000643",
+    "cli-000949",
+    "cli-001276",
+    "cli-001563",
+    "cli-000032",
+    "cli-001178",
+    "cli-000310",
+    "cli-000485",
+    "cli-000722",
+    "cli-000704",
+    "cli-001594",
+    "cli-001121",
+    "cli-000114",
+    "cli-000289",
+    "cli-000680",
+    "cli-001158",
+    "cli-001428",
+    "cli-001738",
+    "cli-001219",
+    "cli-000371",
+    "cli-000042",
+    "cli-000389",
+    "cli-001068",
+    "cli-001137",
+    "cli-000461",
+    "cli-000151",
+    "cli-001242",
+    "cli-000965",
+    "cli-001052",
+    "cli-000293",
+    "cli-001639",
+    "cli-000532",
+    "cli-001661",
+    "cli-001429",
+    "cli-001379",
+    "cli-000074",
+    "cli-001518",
+    "cli-000813",
+    "cli-000855",
+    "cli-000059",
+    "cli-000301",
+    "cli-000349",
+    "cli-000131",
+    "cli-000023",
+    "cli-001332",
+    "cli-001566",
+    "cli-001716",
+    "cli-000808",
+    "cli-000700",
+    "cli-000038",
+    "cli-001535"
+   ]
+  },
+  {
+   "fase": "Q3",
+   "inizio": "2026-11-10T10:49:50.234719Z",
+   "fine": "2026-11-10T10:55:00.966789Z",
+   "n": 160,
+   "con_freddo": 160,
+   "errori": 0,
+   "controlli_ok": 160,
+   "controlli_falliti": 0,
+   "freddo_ms": {
+    "n": 160,
+    "p50": 10.29,
+    "p95": 39.001,
+    "p99": 13957.745,
+    "media": 289.874,
+    "min": 3.887,
+    "max": 14310.921
+   },
+   "caldo_ms": {
+    "n": 160,
+    "p50": 4.544,
+    "p95": 41.283,
+    "p99": 13892.673,
+    "media": 400.23,
+    "min": 1.778,
+    "max": 14345.837
+   },
+   "freddo_meno_hello_accoppiato": {
+    "n": 160,
+    "p50": 9.825,
+    "p95": 38.573,
+    "p99": 13957.114,
+    "media": 289.242,
+    "min": 3.466,
+    "max": 14310.253
+   },
+   "caldo_meno_hello_accoppiato": {
+    "n": 160,
+    "p50": 3.904,
+    "p95": 40.571,
+    "p99": 13892.086,
+    "media": 399.624,
+    "min": 0.043,
+    "max": 14345.252
+   },
+   "freddo_meno_caldo_stessa_ricerca": {
+    "n": 160,
+    "p50": 5.748,
+    "p95": 24.606,
+    "p99": 99.382,
+    "media": -110.356,
+    "min": -6559.093,
+    "max": 158.453
+   },
+   "p50_freddo_meno_p50_caldo": 5.747,
+   "documenti_freddo": {
+    "n": 160,
+    "p50": 85.5,
+    "p95": 100.0,
+    "p99": 100.0,
+    "media": 76.544,
+    "min": 14,
+    "max": 100
+   },
+   "documenti_caldo": {
+    "n": 160,
+    "p50": 85.5,
+    "p95": 100.0,
+    "p99": 100.0,
+    "media": 76.544,
+    "min": 14,
+    "max": 100
+   },
+   "byte_freddo": {
+    "n": 160,
+    "p50": 19908.0,
+    "p95": 23708.05,
+    "p99": 23940.63,
+    "media": 17879.562,
+    "min": 2987,
+    "max": 24141
+   },
+   "getmore_freddo_totale": 0,
+   "blocchi_25": [
+    {
+     "da": 0,
+     "a": 25,
+     "freddo_meno_caldo_p50": 16.9935,
+     "freddo_meno_hello_p50": 24.759900000000002
+    },
+    {
+     "da": 25,
+     "a": 50,
+     "freddo_meno_caldo_p50": 6.2454,
+     "freddo_meno_hello_p50": 18.1115
+    },
+    {
+     "da": 50,
+     "a": 75,
+     "freddo_meno_caldo_p50": 4.4761999999999995,
+     "freddo_meno_hello_p50": 8.7528
+    },
+    {
+     "da": 75,
+     "a": 100,
+     "freddo_meno_caldo_p50": 6.1030999999999995,
+     "freddo_meno_hello_p50": 8.7936
+    },
+    {
+     "da": 100,
+     "a": 125,
+     "freddo_meno_caldo_p50": 4.417299999999999,
+     "freddo_meno_hello_p50": 8.5983
+    },
+    {
+     "da": 125,
+     "a": 150,
+     "freddo_meno_caldo_p50": 4.746500000000001,
+     "freddo_meno_hello_p50": 8.499
+    },
+    {
+     "da": 150,
+     "a": 160,
+     "freddo_meno_caldo_p50": 6.89095,
+     "freddo_meno_hello_p50": 10.1253
+    }
+   ],
+   "profiler_freddo": {
+    "ricerche_trovate_nel_profiler": 160,
+    "ricerche": 160,
+    "millis": {
+     "n": 160,
+     "p50": 8.5,
+     "p95": 37.1,
+     "p99": 13955.62,
+     "media": 288.094,
+     "min": 2,
+     "max": 14309
+    },
+    "storage_byte_letti": {
+     "n": 160,
+     "p50": 356155.0,
+     "p95": 6322841.2,
+     "p99": 7727691.48,
+     "media": 1718928.8,
+     "min": 0,
+     "max": 9565484
+    },
+    "storage_ms_di_lettura": {
+     "n": 160,
+     "p50": 5.678,
+     "p95": 621.255,
+     "p99": 702.454,
+     "media": 130.597,
+     "min": 0.0,
+     "max": 756.041
+    },
+    "find_a_0_byte": 3,
+    "su": 160,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 157,
+     "p50": 356932.0,
+     "p95": 6323180.8,
+     "p99": 7802200.32,
+     "media": 1751774.573,
+     "min": 151192,
+     "max": 9565484
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 157,
+     "p50": 5.802,
+     "p95": 622.522,
+     "p99": 704.374,
+     "media": 133.093,
+     "min": 2.082,
+     "max": 756.041
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 157,
+     "p50": 9.0,
+     "p95": 37.4,
+     "p99": 13967.08,
+     "media": 293.529,
+     "min": 2,
+     "max": 14309
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 160,
+     "p50": 85.5,
+     "p95": 100.0,
+     "p99": 100.0,
+     "media": 76.544,
+     "min": 14,
+     "max": 100
+    },
+    "keysExamined": {
+     "n": 160,
+     "p50": 85.5,
+     "p95": 100.0,
+     "p99": 100.0,
+     "media": 76.544,
+     "min": 14,
+     "max": 100
+    },
+    "piani": [
+     "IXSCAN { cliente: 1, ts: -1 }"
+    ]
+   },
+   "profiler_caldo": {
+    "ricerche_trovate_nel_profiler": 160,
+    "ricerche": 160,
+    "millis": {
+     "n": 160,
+     "p50": 3.0,
+     "p95": 39.3,
+     "p99": 13890.43,
+     "media": 398.619,
+     "min": 0,
+     "max": 14344
+    },
+    "storage_byte_letti": {
+     "n": 160,
+     "p50": 0.0,
+     "p95": 0.0,
+     "p99": 6271732.46,
+     "media": 161021.0,
+     "min": 0,
+     "max": 6322728
+    },
+    "storage_ms_di_lettura": {
+     "n": 160,
+     "p50": 0.0,
+     "p95": 0.0,
+     "p99": 517.618,
+     "media": 12.912,
+     "min": 0.0,
+     "max": 539.416
+    },
+    "find_a_0_byte": 153,
+    "su": 160,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 7,
+     "p50": 5891542.0,
+     "p95": 6311501.4,
+     "p99": 6320482.68,
+     "media": 3680480.0,
+     "min": 326594,
+     "max": 6322728
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 7,
+     "p50": 473.371,
+     "p95": 534.242,
+     "p99": 538.381,
+     "media": 295.121,
+     "min": 5.24,
+     "max": 539.416
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 7,
+     "p50": 6585.0,
+     "p95": 14247.4,
+     "p99": 14324.68,
+     "media": 9002.571,
+     "min": 2210,
+     "max": 14344
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 160,
+     "p50": 85.5,
+     "p95": 100.0,
+     "p99": 100.0,
+     "media": 76.544,
+     "min": 14,
+     "max": 100
+    },
+    "keysExamined": {
+     "n": 160,
+     "p50": 85.5,
+     "p95": 100.0,
+     "p99": 100.0,
+     "media": 76.544,
+     "min": 14,
+     "max": 100
+    },
+    "piani": [
+     "IXSCAN { cliente: 1, ts: -1 }"
+    ]
+   },
+   "per_gruppo": {
+    "attivi": {
+     "n": 100,
+     "con_freddo": 100,
+     "errori": 0,
+     "controlli_ok": 100,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 100,
+      "p50": 10.365,
+      "p95": 42.304,
+      "p99": 14184.649,
+      "media": 436.911,
+      "min": 3.887,
+      "max": 14310.921
+     },
+     "caldo_ms": {
+      "n": 100,
+      "p50": 4.415,
+      "p95": 37.156,
+      "p99": 14028.13,
+      "media": 493.886,
+      "min": 1.778,
+      "max": 14345.837
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 100,
+      "p50": 9.846,
+      "p95": 41.746,
+      "p99": 14184.052,
+      "media": 436.298,
+      "min": 3.466,
+      "max": 14310.253
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 100,
+      "p50": 3.769,
+      "p95": 36.555,
+      "p99": 14027.473,
+      "media": 493.305,
+      "min": 0.043,
+      "max": 14345.252
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 100,
+      "p50": 5.939,
+      "p95": 25.97,
+      "p99": 107.936,
+      "media": -56.975,
+      "min": -6559.093,
+      "max": 158.453
+     },
+     "p50_freddo_meno_p50_caldo": 5.949,
+     "documenti_freddo": {
+      "n": 100,
+      "p50": 79.0,
+      "p95": 100.0,
+      "p99": 100.0,
+      "media": 72.6,
+      "min": 14,
+      "max": 100
+     },
+     "documenti_caldo": {
+      "n": 100,
+      "p50": 79.0,
+      "p95": 100.0,
+      "p99": 100.0,
+      "media": 72.6,
+      "min": 14,
+      "max": 100
+     },
+     "byte_freddo": {
+      "n": 100,
+      "p50": 18290.5,
+      "p95": 23662.25,
+      "p99": 23883.43,
+      "media": 16917.55,
+      "min": 2987,
+      "max": 24025
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 16.1911,
+       "freddo_meno_hello_p50": 21.485200000000003
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 5.2341,
+       "freddo_meno_hello_p50": 8.6202
+      },
+      {
+       "da": 50,
+       "a": 75,
+       "freddo_meno_caldo_p50": 5.627800000000001,
+       "freddo_meno_hello_p50": 9.662700000000001
+      },
+      {
+       "da": 75,
+       "a": 100,
+       "freddo_meno_caldo_p50": 5.131,
+       "freddo_meno_hello_p50": 9.0608
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 100,
+      "ricerche": 100,
+      "millis": {
+       "n": 100,
+       "p50": 9.0,
+       "p95": 40.85,
+       "p99": 14182.28,
+       "media": 435.17,
+       "min": 2,
+       "max": 14309
+      },
+      "storage_byte_letti": {
+       "n": 100,
+       "p50": 357099.0,
+       "p95": 6294900.1,
+       "p99": 6737964.8,
+       "media": 1694035.12,
+       "min": 0,
+       "max": 9565484
+      },
+      "storage_ms_di_lettura": {
+       "n": 100,
+       "p50": 6.056,
+       "p95": 615.365,
+       "p99": 677.013,
+       "media": 125.432,
+       "min": 0.0,
+       "max": 756.041
+      },
+      "find_a_0_byte": 3,
+      "su": 100,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 97,
+       "p50": 362460.0,
+       "p95": 6295026.4,
+       "p99": 6823647.2,
+       "media": 1746427.959,
+       "min": 163156,
+       "max": 9565484
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 97,
+       "p50": 6.225,
+       "p95": 617.652,
+       "p99": 679.408,
+       "media": 129.311,
+       "min": 2.228,
+       "max": 756.041
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 97,
+       "p50": 9.0,
+       "p95": 46.4,
+       "p99": 14186.12,
+       "media": 448.515,
+       "min": 2,
+       "max": 14309
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 100,
+       "p50": 79.0,
+       "p95": 100.0,
+       "p99": 100.0,
+       "media": 72.6,
+       "min": 14,
+       "max": 100
+      },
+      "keysExamined": {
+       "n": 100,
+       "p50": 79.0,
+       "p95": 100.0,
+       "p99": 100.0,
+       "media": 72.6,
+       "min": 14,
+       "max": 100
+      },
+      "piani": [
+       "IXSCAN { cliente: 1, ts: -1 }"
+      ]
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 100,
+      "ricerche": 100,
+      "millis": {
+       "n": 100,
+       "p50": 3.0,
+       "p95": 35.5,
+       "p99": 14025.22,
+       "media": 492.28,
+       "min": 0,
+       "max": 14344
+      },
+      "storage_byte_letti": {
+       "n": 100,
+       "p50": 0.0,
+       "p95": 0.0,
+       "p99": 399864.52,
+       "media": 72637.84,
+       "min": 0,
+       "max": 6262300
+      },
+      "storage_ms_di_lettura": {
+       "n": 100,
+       "p50": 0.0,
+       "p95": 0.0,
+       "p99": 10.781,
+       "media": 5.309,
+       "min": 0.0,
+       "max": 514.454
+      },
+      "find_a_0_byte": 96,
+      "su": 100,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 4,
+       "p50": 337445.0,
+       "p95": 5374052.2,
+       "p99": 6084650.44,
+       "media": 1815946.0,
+       "min": 326594,
+       "max": 6262300
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 4,
+       "p50": 5.599,
+       "p95": 438.14,
+       "p99": 499.191,
+       "media": 132.723,
+       "min": 5.24,
+       "max": 514.454
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 4,
+       "p50": 13910.5,
+       "p95": 14295.7,
+       "p99": 14334.34,
+       "media": 12187.5,
+       "min": 6585,
+       "max": 14344
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 100,
+       "p50": 79.0,
+       "p95": 100.0,
+       "p99": 100.0,
+       "media": 72.6,
+       "min": 14,
+       "max": 100
+      },
+      "keysExamined": {
+       "n": 100,
+       "p50": 79.0,
+       "p95": 100.0,
+       "p99": 100.0,
+       "media": 72.6,
+       "min": 14,
+       "max": 100
+      },
+      "piani": [
+       "IXSCAN { cliente: 1, ts: -1 }"
+      ]
+     }
+    },
+    "dormienti": {
+     "n": 60,
+     "con_freddo": 60,
+     "errori": 0,
+     "controlli_ok": 60,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 60,
+      "p50": 9.896,
+      "p95": 34.562,
+      "p99": 794.228,
+      "media": 44.811,
+      "min": 4.872,
+      "max": 1746.055
+     },
+     "caldo_ms": {
+      "n": 60,
+      "p50": 4.737,
+      "p95": 147.651,
+      "p99": 5966.859,
+      "media": 244.135,
+      "min": 2.349,
+      "max": 6386.246
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 60,
+      "p50": 9.423,
+      "p95": 33.755,
+      "p99": 792.796,
+      "media": 44.149,
+      "min": 4.351,
+      "max": 1745.552
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 60,
+      "p50": 3.996,
+      "p95": 146.939,
+      "p99": 5966.246,
+      "media": 243.489,
+      "min": 1.087,
+      "max": 6385.825
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 60,
+      "p50": 5.465,
+      "p95": 24.001,
+      "p99": 55.339,
+      "media": -199.325,
+      "min": -6362.282,
+      "max": 93.792
+     },
+     "p50_freddo_meno_p50_caldo": 5.158,
+     "documenti_freddo": {
+      "n": 60,
+      "p50": 91.5,
+      "p95": 100.0,
+      "p99": 100.0,
+      "media": 83.117,
+      "min": 23,
+      "max": 100
+     },
+     "documenti_caldo": {
+      "n": 60,
+      "p50": 91.5,
+      "p95": 100.0,
+      "p99": 100.0,
+      "media": 83.117,
+      "min": 23,
+      "max": 100
+     },
+     "byte_freddo": {
+      "n": 60,
+      "p50": 21629.5,
+      "p95": 23797.15,
+      "p99": 23969.9,
+      "media": 19482.917,
+      "min": 5208,
+      "max": 24141
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 10.4806,
+       "freddo_meno_hello_p50": 23.551399999999997
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 4.9033999999999995,
+       "freddo_meno_hello_p50": 8.1601
+      },
+      {
+       "da": 50,
+       "a": 60,
+       "freddo_meno_caldo_p50": 4.5722,
+       "freddo_meno_hello_p50": 9.3265
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 60,
+      "ricerche": 60,
+      "millis": {
+       "n": 60,
+       "p50": 8.0,
+       "p95": 32.25,
+       "p99": 792.33,
+       "media": 42.967,
+       "min": 3,
+       "max": 1744
+      },
+      "storage_byte_letti": {
+       "n": 60,
+       "p50": 353075.0,
+       "p95": 6329969.9,
+       "p99": 7626307.06,
+       "media": 1760418.267,
+       "min": 151192,
+       "max": 9193032
+      },
+      "storage_ms_di_lettura": {
+       "n": 60,
+       "p50": 5.594,
+       "p95": 621.255,
+       "p99": 681.929,
+       "media": 139.207,
+       "min": 2.082,
+       "max": 740.212
+      },
+      "find_a_0_byte": 0,
+      "su": 60,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 60,
+       "p50": 353075.0,
+       "p95": 6329969.9,
+       "p99": 7626307.06,
+       "media": 1760418.267,
+       "min": 151192,
+       "max": 9193032
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 60,
+       "p50": 5.594,
+       "p95": 621.255,
+       "p99": 681.929,
+       "media": 139.207,
+       "min": 2.082,
+       "max": 740.212
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 60,
+       "p50": 8.0,
+       "p95": 32.25,
+       "p99": 792.33,
+       "media": 42.967,
+       "min": 3,
+       "max": 1744
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 60,
+       "p50": 91.5,
+       "p95": 100.0,
+       "p99": 100.0,
+       "media": 83.117,
+       "min": 23,
+       "max": 100
+      },
+      "keysExamined": {
+       "n": 60,
+       "p50": 91.5,
+       "p95": 100.0,
+       "p99": 100.0,
+       "media": 83.117,
+       "min": 23,
+       "max": 100
+      },
+      "piani": [
+       "IXSCAN { cliente: 1, ts: -1 }"
+      ]
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 60,
+      "ricerche": 60,
+      "millis": {
+       "n": 60,
+       "p50": 3.0,
+       "p95": 145.65,
+       "p99": 5964.92,
+       "media": 242.517,
+       "min": 1,
+       "max": 6385
+      },
+      "storage_byte_letti": {
+       "n": 60,
+       "p50": 0.0,
+       "p95": 294577.1,
+       "p99": 6300649.02,
+       "media": 308326.267,
+       "min": 0,
+       "max": 6322728
+      },
+      "storage_ms_di_lettura": {
+       "n": 60,
+       "p50": 0.0,
+       "p95": 23.669,
+       "p99": 529.241,
+       "media": 25.583,
+       "min": 0.0,
+       "max": 539.416
+      },
+      "find_a_0_byte": 57,
+      "su": 60,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 3,
+       "p50": 6285306.0,
+       "p95": 6318985.8,
+       "p99": 6321979.56,
+       "media": 6166525.333,
+       "min": 5891542,
+       "max": 6322728
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 3,
+       "p50": 522.17,
+       "p95": 537.691,
+       "p99": 539.071,
+       "media": 511.652,
+       "min": 473.371,
+       "max": 539.416
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 3,
+       "p50": 5673.0,
+       "p95": 6313.8,
+       "p99": 6370.76,
+       "media": 4756.0,
+       "min": 2210,
+       "max": 6385
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 60,
+       "p50": 91.5,
+       "p95": 100.0,
+       "p99": 100.0,
+       "media": 83.117,
+       "min": 23,
+       "max": 100
+      },
+      "keysExamined": {
+       "n": 60,
+       "p50": 91.5,
+       "p95": 100.0,
+       "p99": 100.0,
+       "media": 83.117,
+       "min": 23,
+       "max": 100
+      },
+      "piani": [
+       "IXSCAN { cliente: 1, ts: -1 }"
+      ]
+     }
+    }
+   },
+   "primi_50_freddo_vero": {
+    "n": 50,
+    "con_freddo": 50,
+    "errori": 0,
+    "controlli_ok": 50,
+    "controlli_falliti": 0,
+    "freddo_ms": {
+     "n": 50,
+     "p50": 22.272,
+     "p95": 123.615,
+     "p99": 8089.088,
+     "media": 343.272,
+     "min": 4.151,
+     "max": 14183.374
+    },
+    "caldo_ms": {
+     "n": 50,
+     "p50": 5.057,
+     "p95": 6066.375,
+     "p99": 10380.102,
+     "media": 705.842,
+     "min": 1.778,
+     "max": 14024.921
+    },
+    "freddo_meno_hello_accoppiato": {
+     "n": 50,
+     "p50": 21.75,
+     "p95": 122.208,
+     "p99": 8088.537,
+     "media": 342.584,
+     "min": 3.518,
+     "max": 14182.777
+    },
+    "caldo_meno_hello_accoppiato": {
+     "n": 50,
+     "p50": 4.591,
+     "p95": 6065.807,
+     "p99": 10379.325,
+     "media": 705.213,
+     "min": 0.043,
+     "max": 14024.263
+    },
+    "freddo_meno_caldo_stessa_ricerca": {
+     "n": 50,
+     "p50": 15.168,
+     "p95": 76.66,
+     "p99": 133.449,
+     "media": -362.57,
+     "min": -6559.093,
+     "max": 158.453
+    },
+    "p50_freddo_meno_p50_caldo": 17.215,
+    "documenti_freddo": {
+     "n": 50,
+     "p50": 90.5,
+     "p95": 100.0,
+     "p99": 100.0,
+     "media": 79.26,
+     "min": 19,
+     "max": 100
+    },
+    "documenti_caldo": {
+     "n": 50,
+     "p50": 90.5,
+     "p95": 100.0,
+     "p99": 100.0,
+     "media": 79.26,
+     "min": 19,
+     "max": 100
+    },
+    "byte_freddo": {
+     "n": 50,
+     "p50": 21151.0,
+     "p95": 23840.6,
+     "p99": 24084.16,
+     "media": 18597.66,
+     "min": 4552,
+     "max": 24141
+    },
+    "getmore_freddo_totale": 0,
+    "blocchi_25": [
+     {
+      "da": 0,
+      "a": 25,
+      "freddo_meno_caldo_p50": 16.9935,
+      "freddo_meno_hello_p50": 24.759900000000002
+     },
+     {
+      "da": 25,
+      "a": 50,
+      "freddo_meno_caldo_p50": 6.2454,
+      "freddo_meno_hello_p50": 18.1115
+     }
+    ],
+    "profiler_freddo": {
+     "ricerche_trovate_nel_profiler": 50,
+     "ricerche": 50,
+     "millis": {
+      "n": 50,
+      "p50": 21.0,
+      "p95": 122.0,
+      "p99": 8086.87,
+      "media": 341.5,
+      "min": 2,
+      "max": 14181
+     },
+     "storage_byte_letti": {
+      "n": 50,
+      "p50": 6188107.0,
+      "p95": 6632076.9,
+      "p99": 9382982.52,
+      "media": 4770845.92,
+      "min": 160794,
+      "max": 9565484
+     },
+     "storage_ms_di_lettura": {
+      "n": 50,
+      "p50": 499.107,
+      "p95": 672.641,
+      "p99": 748.285,
+      "media": 405.906,
+      "min": 2.444,
+      "max": 756.041
+     },
+     "find_a_0_byte": 0,
+     "su": 50,
+     "storage_byte_letti_solo_maggiori_di_0": {
+      "n": 50,
+      "p50": 6188107.0,
+      "p95": 6632076.9,
+      "p99": 9382982.52,
+      "media": 4770845.92,
+      "min": 160794,
+      "max": 9565484
+     },
+     "storage_ms_di_lettura_solo_maggiori_di_0": {
+      "n": 50,
+      "p50": 499.107,
+      "p95": 672.641,
+      "p99": 748.285,
+      "media": 405.906,
+      "min": 2.444,
+      "max": 756.041
+     },
+     "millis_solo_maggiori_di_0": {
+      "n": 50,
+      "p50": 21.0,
+      "p95": 122.0,
+      "p99": 8086.87,
+      "media": 341.5,
+      "min": 2,
+      "max": 14181
+     },
+     "storage_non_riportato_da_atlas": 0,
+     "docsExamined": {
+      "n": 50,
+      "p50": 90.5,
+      "p95": 100.0,
+      "p99": 100.0,
+      "media": 79.26,
+      "min": 19,
+      "max": 100
+     },
+     "keysExamined": {
+      "n": 50,
+      "p50": 90.5,
+      "p95": 100.0,
+      "p99": 100.0,
+      "media": 79.26,
+      "min": 19,
+      "max": 100
+     },
+     "piani": [
+      "IXSCAN { cliente: 1, ts: -1 }"
+     ]
+    },
+    "profiler_caldo": {
+     "ricerche_trovate_nel_profiler": 50,
+     "ricerche": 50,
+     "millis": {
+      "n": 50,
+      "p50": 3.5,
+      "p95": 6064.6,
+      "p99": 10377.87,
+      "media": 704.12,
+      "min": 0,
+      "max": 14022
+     },
+     "storage_byte_letti": {
+      "n": 50,
+      "p50": 0.0,
+      "p95": 6095458.9,
+      "p99": 6304391.22,
+      "media": 501769.4,
+      "min": 0,
+      "max": 6322728
+     },
+     "storage_ms_di_lettura": {
+      "n": 50,
+      "p50": 0.0,
+      "p95": 495.967,
+      "p99": 530.965,
+      "media": 41.098,
+      "min": 0.0,
+      "max": 539.416
+     },
+     "find_a_0_byte": 45,
+     "su": 50,
+     "storage_byte_letti_solo_maggiori_di_0": {
+      "n": 5,
+      "p50": 6262300.0,
+      "p95": 6315243.6,
+      "p99": 6321231.12,
+      "media": 5017694.0,
+      "min": 326594,
+      "max": 6322728
+     },
+     "storage_ms_di_lettura_solo_maggiori_di_0": {
+      "n": 5,
+      "p50": 514.454,
+      "p95": 535.967,
+      "p99": 538.726,
+      "media": 410.983,
+      "min": 5.505,
+      "max": 539.416
+     },
+     "millis_solo_maggiori_di_0": {
+      "n": 5,
+      "p50": 6385.0,
+      "p95": 12534.6,
+      "p99": 13724.52,
+      "media": 6975.0,
+      "min": 2210,
+      "max": 14022
+     },
+     "storage_non_riportato_da_atlas": 0,
+     "docsExamined": {
+      "n": 50,
+      "p50": 90.5,
+      "p95": 100.0,
+      "p99": 100.0,
+      "media": 79.26,
+      "min": 19,
+      "max": 100
+     },
+     "keysExamined": {
+      "n": 50,
+      "p50": 90.5,
+      "p95": 100.0,
+      "p99": 100.0,
+      "media": 79.26,
+      "min": 19,
+      "max": 100
+     },
+     "piani": [
+      "IXSCAN { cliente: 1, ts: -1 }"
+     ]
+    }
+   },
+   "clienti": [
+    "cli-000474",
+    "cli-001211",
+    "cli-001717",
+    "cli-001711",
+    "cli-000548",
+    "cli-001532",
+    "cli-001083",
+    "cli-000479",
+    "cli-000791",
+    "cli-001527",
+    "cli-000065",
+    "cli-001606",
+    "cli-000255",
+    "cli-000227",
+    "cli-000802",
+    "cli-000642",
+    "cli-000889",
+    "cli-000388",
+    "cli-001101",
+    "cli-000119",
+    "cli-000809",
+    "cli-000866",
+    "cli-000420",
+    "cli-001699",
+    "cli-001021",
+    "cli-000805",
+    "cli-000001",
+    "cli-000304",
+    "cli-001045",
+    "cli-001031",
+    "cli-001145",
+    "cli-001048",
+    "cli-000727",
+    "cli-001035",
+    "cli-001383",
+    "cli-000471",
+    "cli-000296",
+    "cli-001039",
+    "cli-000034",
+    "cli-001638",
+    "cli-001359",
+    "cli-001310",
+    "cli-000869",
+    "cli-000397",
+    "cli-001622",
+    "cli-001100",
+    "cli-001537",
+    "cli-000904",
+    "cli-001615",
+    "cli-001038",
+    "cli-001610",
+    "cli-000090",
+    "cli-000144",
+    "cli-001577",
+    "cli-000683",
+    "cli-001302",
+    "cli-001710",
+    "cli-001008",
+    "cli-000970",
+    "cli-000834",
+    "cli-000581",
+    "cli-001380",
+    "cli-001213",
+    "cli-000875",
+    "cli-001436",
+    "cli-001054",
+    "cli-000946",
+    "cli-001074",
+    "cli-000363",
+    "cli-000359",
+    "cli-001657",
+    "cli-001681",
+    "cli-000196",
+    "cli-001581",
+    "cli-000088",
+    "cli-001617",
+    "cli-000893",
+    "cli-000456",
+    "cli-000751",
+    "cli-001709",
+    "cli-001130",
+    "cli-000763",
+    "cli-001475",
+    "cli-000721",
+    "cli-000049",
+    "cli-000624",
+    "cli-000365",
+    "cli-001092",
+    "cli-000305",
+    "cli-001186",
+    "cli-001560",
+    "cli-001313",
+    "cli-001116",
+    "cli-000035",
+    "cli-000422",
+    "cli-001079",
+    "cli-001414",
+    "cli-000807",
+    "cli-001248",
+    "cli-000715",
+    "cli-000953",
+    "cli-000499",
+    "cli-000756",
+    "cli-001597",
+    "cli-000652",
+    "cli-000564",
+    "cli-001403",
+    "cli-001530",
+    "cli-001371",
+    "cli-000983",
+    "cli-001550",
+    "cli-000178",
+    "cli-000702",
+    "cli-000238",
+    "cli-001422",
+    "cli-000303",
+    "cli-000419",
+    "cli-000709",
+    "cli-000859",
+    "cli-000679",
+    "cli-001499",
+    "cli-001357",
+    "cli-000935",
+    "cli-000243",
+    "cli-001329",
+    "cli-000210",
+    "cli-000183",
+    "cli-000091",
+    "cli-001014",
+    "cli-000732",
+    "cli-000503",
+    "cli-001303",
+    "cli-001087",
+    "cli-000925",
+    "cli-001513",
+    "cli-000007",
+    "cli-000504",
+    "cli-001026",
+    "cli-000777",
+    "cli-000125",
+    "cli-000947",
+    "cli-000686",
+    "cli-001231",
+    "cli-001320",
+    "cli-000026",
+    "cli-000075",
+    "cli-000539",
+    "cli-000628",
+    "cli-001278",
+    "cli-001421",
+    "cli-000693",
+    "cli-000597",
+    "cli-001571",
+    "cli-001107",
+    "cli-001060",
+    "cli-000391",
+    "cli-000260",
+    "cli-001703",
+    "cli-000677",
+    "cli-001171"
+   ]
+  },
+  {
+   "fase": "Q1",
+   "inizio": "2026-11-10T10:57:01.923378Z",
+   "fine": "2026-11-10T10:59:31.923599Z",
+   "n": 160,
+   "con_freddo": 160,
+   "errori": 0,
+   "controlli_ok": 160,
+   "controlli_falliti": 0,
+   "freddo_ms": {
+    "n": 160,
+    "p50": 6.469,
+    "p95": 21.857,
+    "p99": 37.258,
+    "media": 8.962,
+    "min": 2.722,
+    "max": 51.651
+   },
+   "caldo_ms": {
+    "n": 160,
+    "p50": 7.545,
+    "p95": 32.634,
+    "p99": 51.667,
+    "media": 11.391,
+    "min": 1.126,
+    "max": 94.639
+   },
+   "freddo_meno_hello_accoppiato": {
+    "n": 160,
+    "p50": 5.018,
+    "p95": 20.805,
+    "p99": 36.526,
+    "media": 6.601,
+    "min": -25.48,
+    "max": 45.523
+   },
+   "caldo_meno_hello_accoppiato": {
+    "n": 160,
+    "p50": 6.2,
+    "p95": 31.947,
+    "p99": 50.623,
+    "media": 9.904,
+    "min": -32.308,
+    "max": 93.793
+   },
+   "freddo_meno_caldo_stessa_ricerca": {
+    "n": 160,
+    "p50": 0.039,
+    "p95": 12.841,
+    "p99": 23.215,
+    "media": -2.429,
+    "min": -77.542,
+    "max": 27.924
+   },
+   "p50_freddo_meno_p50_caldo": -1.076,
+   "documenti_freddo": {
+    "n": 160,
+    "p50": 20.0,
+    "p95": 20.0,
+    "p99": 20.0,
+    "media": 20.0,
+    "min": 20,
+    "max": 20
+   },
+   "documenti_caldo": {
+    "n": 160,
+    "p50": 20.0,
+    "p95": 20.0,
+    "p99": 20.0,
+    "media": 20.0,
+    "min": 20,
+    "max": 20
+   },
+   "byte_freddo": {
+    "n": 160,
+    "p50": 6773.5,
+    "p95": 7349.0,
+    "p99": 7517.88,
+    "media": 6784.731,
+    "min": 5798,
+    "max": 7778
+   },
+   "getmore_freddo_totale": 0,
+   "blocchi_25": [
+    {
+     "da": 0,
+     "a": 25,
+     "freddo_meno_caldo_p50": 0.2974999999999999,
+     "freddo_meno_hello_p50": 3.3983999999999996
+    },
+    {
+     "da": 25,
+     "a": 50,
+     "freddo_meno_caldo_p50": -0.15880000000000027,
+     "freddo_meno_hello_p50": 3.8057
+    },
+    {
+     "da": 50,
+     "a": 75,
+     "freddo_meno_caldo_p50": 1.0081000000000024,
+     "freddo_meno_hello_p50": 8.752600000000001
+    },
+    {
+     "da": 75,
+     "a": 100,
+     "freddo_meno_caldo_p50": -5.1058,
+     "freddo_meno_hello_p50": 5.0569999999999995
+    },
+    {
+     "da": 100,
+     "a": 125,
+     "freddo_meno_caldo_p50": 0.17379999999999995,
+     "freddo_meno_hello_p50": 8.401900000000001
+    },
+    {
+     "da": 125,
+     "a": 150,
+     "freddo_meno_caldo_p50": 1.6486,
+     "freddo_meno_hello_p50": 4.944699999999999
+    },
+    {
+     "da": 150,
+     "a": 160,
+     "freddo_meno_caldo_p50": -0.9644000000000004,
+     "freddo_meno_hello_p50": 3.7798999999999996
+    }
+   ],
+   "profiler_freddo": {
+    "ricerche_trovate_nel_profiler": 160,
+    "ricerche": 160,
+    "millis": {
+     "n": 160,
+     "p50": 3.5,
+     "p95": 18.05,
+     "p99": 28.82,
+     "media": 5.806,
+     "min": 1,
+     "max": 31
+    },
+    "storage_byte_letti": {
+     "n": 160,
+     "p50": 188953.0,
+     "p95": 363080.2,
+     "p99": 388324.26,
+     "media": 197166.013,
+     "min": 130740,
+     "max": 411550
+    },
+    "storage_ms_di_lettura": {
+     "n": 160,
+     "p50": 5.761,
+     "p95": 30.485,
+     "p99": 56.752,
+     "media": 10.004,
+     "min": 1.899,
+     "max": 61.19
+    },
+    "find_a_0_byte": 0,
+    "su": 160,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 160,
+     "p50": 188953.0,
+     "p95": 363080.2,
+     "p99": 388324.26,
+     "media": 197166.013,
+     "min": 130740,
+     "max": 411550
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 160,
+     "p50": 5.761,
+     "p95": 30.485,
+     "p99": 56.752,
+     "media": 10.004,
+     "min": 1.899,
+     "max": 61.19
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 160,
+     "p50": 3.5,
+     "p95": 18.05,
+     "p99": 28.82,
+     "media": 5.806,
+     "min": 1,
+     "max": 31
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 160,
+     "p50": 20.0,
+     "p95": 20.0,
+     "p99": 20.0,
+     "media": 20.0,
+     "min": 20,
+     "max": 20
+    },
+    "keysExamined": {
+     "n": 160,
+     "p50": 20.0,
+     "p95": 20.0,
+     "p99": 20.0,
+     "media": 20.0,
+     "min": 20,
+     "max": 20
+    },
+    "piani": [
+     "IXSCAN { cliente: 1, ts: -1 }"
+    ]
+   },
+   "profiler_caldo": {
+    "ricerche_trovate_nel_profiler": 160,
+    "ricerche": 160,
+    "millis": {
+     "n": 160,
+     "p50": 4.5,
+     "p95": 29.0,
+     "p99": 50.23,
+     "media": 8.55,
+     "min": 0,
+     "max": 92
+    },
+    "storage_byte_letti": {
+     "n": 160,
+     "p50": 0.0,
+     "p95": 0.0,
+     "p99": 0.0,
+     "media": 0.0,
+     "min": 0,
+     "max": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 160,
+     "p50": 0.0,
+     "p95": 0.0,
+     "p99": 0.0,
+     "media": 0.0,
+     "min": 0.0,
+     "max": 0.0
+    },
+    "find_a_0_byte": 160,
+    "su": 160,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 160,
+     "p50": 20.0,
+     "p95": 20.0,
+     "p99": 20.0,
+     "media": 20.0,
+     "min": 20,
+     "max": 20
+    },
+    "keysExamined": {
+     "n": 160,
+     "p50": 20.0,
+     "p95": 20.0,
+     "p99": 20.0,
+     "media": 20.0,
+     "min": 20,
+     "max": 20
+    },
+    "piani": [
+     "IXSCAN { cliente: 1, ts: -1 }"
+    ]
+   },
+   "per_gruppo": {
+    "attivi": {
+     "n": 100,
+     "con_freddo": 100,
+     "errori": 0,
+     "controlli_ok": 100,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 100,
+      "p50": 6.044,
+      "p95": 21.79,
+      "p99": 25.481,
+      "media": 8.073,
+      "min": 2.722,
+      "max": 31.812
+     },
+     "caldo_ms": {
+      "n": 100,
+      "p50": 7.545,
+      "p95": 34.462,
+      "p99": 53.671,
+      "media": 12.189,
+      "min": 1.208,
+      "max": 94.639
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 100,
+      "p50": 4.419,
+      "p95": 17.893,
+      "p99": 22.793,
+      "media": 5.829,
+      "min": -16.028,
+      "max": 31.052
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 100,
+      "p50": 6.027,
+      "p95": 32.083,
+      "p99": 53.195,
+      "media": 10.956,
+      "min": -6.47,
+      "max": 93.793
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 100,
+      "p50": -0.808,
+      "p95": 13.003,
+      "p99": 19.774,
+      "media": -4.117,
+      "min": -77.542,
+      "max": 27.924
+     },
+     "p50_freddo_meno_p50_caldo": -1.501,
+     "documenti_freddo": {
+      "n": 100,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "documenti_caldo": {
+      "n": 100,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "byte_freddo": {
+      "n": 100,
+      "p50": 6745.0,
+      "p95": 7349.0,
+      "p99": 7490.68,
+      "media": 6786.65,
+      "min": 6160,
+      "max": 7558
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 0.2974999999999999,
+       "freddo_meno_hello_p50": 3.2639000000000005
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": -1.6080999999999985,
+       "freddo_meno_hello_p50": 5.6236
+      },
+      {
+       "da": 50,
+       "a": 75,
+       "freddo_meno_caldo_p50": -6.269699999999999,
+       "freddo_meno_hello_p50": 4.8462000000000005
+      },
+      {
+       "da": 75,
+       "a": 100,
+       "freddo_meno_caldo_p50": -0.045399999999999885,
+       "freddo_meno_hello_p50": 4.471299999999999
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 100,
+      "ricerche": 100,
+      "millis": {
+       "n": 100,
+       "p50": 3.0,
+       "p95": 15.2,
+       "p99": 22.06,
+       "media": 5.23,
+       "min": 1,
+       "max": 28
+      },
+      "storage_byte_letti": {
+       "n": 100,
+       "p50": 193011.0,
+       "p95": 362323.9,
+       "p99": 365310.54,
+       "media": 200090.0,
+       "min": 130740,
+       "max": 382194
+      },
+      "storage_ms_di_lettura": {
+       "n": 100,
+       "p50": 4.824,
+       "p95": 25.254,
+       "p99": 42.253,
+       "media": 8.763,
+       "min": 1.899,
+       "max": 54.479
+      },
+      "find_a_0_byte": 0,
+      "su": 100,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 100,
+       "p50": 193011.0,
+       "p95": 362323.9,
+       "p99": 365310.54,
+       "media": 200090.0,
+       "min": 130740,
+       "max": 382194
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 100,
+       "p50": 4.824,
+       "p95": 25.254,
+       "p99": 42.253,
+       "media": 8.763,
+       "min": 1.899,
+       "max": 54.479
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 100,
+       "p50": 3.0,
+       "p95": 15.2,
+       "p99": 22.06,
+       "media": 5.23,
+       "min": 1,
+       "max": 28
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 100,
+       "p50": 20.0,
+       "p95": 20.0,
+       "p99": 20.0,
+       "media": 20.0,
+       "min": 20,
+       "max": 20
+      },
+      "keysExamined": {
+       "n": 100,
+       "p50": 20.0,
+       "p95": 20.0,
+       "p99": 20.0,
+       "media": 20.0,
+       "min": 20,
+       "max": 20
+      },
+      "piani": [
+       "IXSCAN { cliente: 1, ts: -1 }"
+      ]
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 100,
+      "ricerche": 100,
+      "millis": {
+       "n": 100,
+       "p50": 4.5,
+       "p95": 29.1,
+       "p99": 52.4,
+       "media": 9.36,
+       "min": 0,
+       "max": 92
+      },
+      "storage_byte_letti": {
+       "n": 100,
+       "p50": 0.0,
+       "p95": 0.0,
+       "p99": 0.0,
+       "media": 0.0,
+       "min": 0,
+       "max": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 100,
+       "p50": 0.0,
+       "p95": 0.0,
+       "p99": 0.0,
+       "media": 0.0,
+       "min": 0.0,
+       "max": 0.0
+      },
+      "find_a_0_byte": 100,
+      "su": 100,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 100,
+       "p50": 20.0,
+       "p95": 20.0,
+       "p99": 20.0,
+       "media": 20.0,
+       "min": 20,
+       "max": 20
+      },
+      "keysExamined": {
+       "n": 100,
+       "p50": 20.0,
+       "p95": 20.0,
+       "p99": 20.0,
+       "media": 20.0,
+       "min": 20,
+       "max": 20
+      },
+      "piani": [
+       "IXSCAN { cliente: 1, ts: -1 }"
+      ]
+     }
+    },
+    "dormienti": {
+     "n": 60,
+     "con_freddo": 60,
+     "errori": 0,
+     "controlli_ok": 60,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 60,
+      "p50": 7.588,
+      "p95": 23.731,
+      "p99": 44.622,
+      "media": 10.444,
+      "min": 3.196,
+      "max": 51.651
+     },
+     "caldo_ms": {
+      "n": 60,
+      "p50": 7.544,
+      "p95": 24.483,
+      "p99": 48.719,
+      "media": 10.06,
+      "min": 1.126,
+      "max": 50.562
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 60,
+      "p50": 6.01,
+      "p95": 22.934,
+      "p99": 41.622,
+      "media": 7.888,
+      "min": -25.48,
+      "max": 45.523
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 60,
+      "p50": 6.392,
+      "p95": 23.653,
+      "p99": 47.791,
+      "media": 8.151,
+      "min": -32.308,
+      "max": 49.121
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 60,
+      "p50": 1.071,
+      "p95": 12.572,
+      "p99": 23.215,
+      "media": 0.384,
+      "min": -45.574,
+      "max": 25.006
+     },
+     "p50_freddo_meno_p50_caldo": 0.044,
+     "documenti_freddo": {
+      "n": 60,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "documenti_caldo": {
+      "n": 60,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "byte_freddo": {
+      "n": 60,
+      "p50": 6796.0,
+      "p95": 7327.65,
+      "p99": 7593.33,
+      "media": 6781.533,
+      "min": 5798,
+      "max": 7778
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 0.8216000000000001,
+       "freddo_meno_hello_p50": 4.4196
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 1.0503999999999998,
+       "freddo_meno_hello_p50": 8.401900000000001
+      },
+      {
+       "da": 50,
+       "a": 60,
+       "freddo_meno_caldo_p50": 1.8311500000000005,
+       "freddo_meno_hello_p50": 4.855550000000001
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 60,
+      "ricerche": 60,
+      "millis": {
+       "n": 60,
+       "p50": 4.5,
+       "p95": 18.15,
+       "p99": 30.41,
+       "media": 6.767,
+       "min": 1,
+       "max": 31
+      },
+      "storage_byte_letti": {
+       "n": 60,
+       "p50": 182169.0,
+       "p95": 365338.6,
+       "p99": 401253.32,
+       "media": 192292.7,
+       "min": 131108,
+       "max": 411550
+      },
+      "storage_ms_di_lettura": {
+       "n": 60,
+       "p50": 6.558,
+       "p95": 35.335,
+       "p99": 60.502,
+       "media": 12.072,
+       "min": 2.354,
+       "max": 61.19
+      },
+      "find_a_0_byte": 0,
+      "su": 60,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 60,
+       "p50": 182169.0,
+       "p95": 365338.6,
+       "p99": 401253.32,
+       "media": 192292.7,
+       "min": 131108,
+       "max": 411550
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 60,
+       "p50": 6.558,
+       "p95": 35.335,
+       "p99": 60.502,
+       "media": 12.072,
+       "min": 2.354,
+       "max": 61.19
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 60,
+       "p50": 4.5,
+       "p95": 18.15,
+       "p99": 30.41,
+       "media": 6.767,
+       "min": 1,
+       "max": 31
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 60,
+       "p50": 20.0,
+       "p95": 20.0,
+       "p99": 20.0,
+       "media": 20.0,
+       "min": 20,
+       "max": 20
+      },
+      "keysExamined": {
+       "n": 60,
+       "p50": 20.0,
+       "p95": 20.0,
+       "p99": 20.0,
+       "media": 20.0,
+       "min": 20,
+       "max": 20
+      },
+      "piani": [
+       "IXSCAN { cliente: 1, ts: -1 }"
+      ]
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 60,
+      "ricerche": 60,
+      "millis": {
+       "n": 60,
+       "p50": 4.5,
+       "p95": 21.4,
+       "p99": 46.64,
+       "media": 7.2,
+       "min": 0,
+       "max": 49
+      },
+      "storage_byte_letti": {
+       "n": 60,
+       "p50": 0.0,
+       "p95": 0.0,
+       "p99": 0.0,
+       "media": 0.0,
+       "min": 0,
+       "max": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 60,
+       "p50": 0.0,
+       "p95": 0.0,
+       "p99": 0.0,
+       "media": 0.0,
+       "min": 0.0,
+       "max": 0.0
+      },
+      "find_a_0_byte": 60,
+      "su": 60,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 60,
+       "p50": 20.0,
+       "p95": 20.0,
+       "p99": 20.0,
+       "media": 20.0,
+       "min": 20,
+       "max": 20
+      },
+      "keysExamined": {
+       "n": 60,
+       "p50": 20.0,
+       "p95": 20.0,
+       "p99": 20.0,
+       "media": 20.0,
+       "min": 20,
+       "max": 20
+      },
+      "piani": [
+       "IXSCAN { cliente: 1, ts: -1 }"
+      ]
+     }
+    }
+   },
+   "clienti": [
+    "cli-001452",
+    "cli-000767",
+    "cli-001464",
+    "cli-000804",
+    "cli-001385",
+    "cli-000135",
+    "cli-000364",
+    "cli-001411",
+    "cli-000105",
+    "cli-001483",
+    "cli-000857",
+    "cli-000508",
+    "cli-001196",
+    "cli-001719",
+    "cli-001260",
+    "cli-000972",
+    "cli-000939",
+    "cli-000442",
+    "cli-001488",
+    "cli-001701",
+    "cli-001706",
+    "cli-000149",
+    "cli-001122",
+    "cli-000188",
+    "cli-001372",
+    "cli-000302",
+    "cli-001309",
+    "cli-001259",
+    "cli-000868",
+    "cli-000986",
+    "cli-001015",
+    "cli-001458",
+    "cli-001049",
+    "cli-001050",
+    "cli-000392",
+    "cli-001245",
+    "cli-000703",
+    "cli-000845",
+    "cli-000568",
+    "cli-001409",
+    "cli-001645",
+    "cli-001166",
+    "cli-000309",
+    "cli-001705",
+    "cli-001723",
+    "cli-000014",
+    "cli-000444",
+    "cli-001165",
+    "cli-001258",
+    "cli-000757",
+    "cli-000003",
+    "cli-001098",
+    "cli-001570",
+    "cli-001502",
+    "cli-000179",
+    "cli-000077",
+    "cli-000207",
+    "cli-001105",
+    "cli-001016",
+    "cli-001729",
+    "cli-001288",
+    "cli-000449",
+    "cli-001692",
+    "cli-000669",
+    "cli-001656",
+    "cli-000817",
+    "cli-001227",
+    "cli-000909",
+    "cli-000268",
+    "cli-000377",
+    "cli-001736",
+    "cli-001734",
+    "cli-000319",
+    "cli-000249",
+    "cli-000847",
+    "cli-000920",
+    "cli-000367",
+    "cli-000317",
+    "cli-001089",
+    "cli-001308",
+    "cli-000497",
+    "cli-000282",
+    "cli-000123",
+    "cli-000681",
+    "cli-000688",
+    "cli-000161",
+    "cli-000676",
+    "cli-001431",
+    "cli-000565",
+    "cli-001252",
+    "cli-001620",
+    "cli-001081",
+    "cli-000409",
+    "cli-000068",
+    "cli-000803",
+    "cli-000213",
+    "cli-000343",
+    "cli-000347",
+    "cli-000248",
+    "cli-001322",
+    "cli-001340",
+    "cli-000306",
+    "cli-000950",
+    "cli-000297",
+    "cli-000944",
+    "cli-001390",
+    "cli-000918",
+    "cli-001707",
+    "cli-001374",
+    "cli-000201",
+    "cli-000240",
+    "cli-000916",
+    "cli-000579",
+    "cli-001616",
+    "cli-000470",
+    "cli-000798",
+    "cli-000915",
+    "cli-000783",
+    "cli-000775",
+    "cli-001509",
+    "cli-000661",
+    "cli-000408",
+    "cli-000164",
+    "cli-001633",
+    "cli-000326",
+    "cli-001217",
+    "cli-001508",
+    "cli-000740",
+    "cli-000906",
+    "cli-000728",
+    "cli-000833",
+    "cli-000710",
+    "cli-000231",
+    "cli-000544",
+    "cli-000494",
+    "cli-001299",
+    "cli-001061",
+    "cli-000954",
+    "cli-000155",
+    "cli-000417",
+    "cli-000793",
+    "cli-001215",
+    "cli-001002",
+    "cli-000968",
+    "cli-000445",
+    "cli-000649",
+    "cli-000651",
+    "cli-001664",
+    "cli-000951",
+    "cli-000772",
+    "cli-000768",
+    "cli-000514",
+    "cli-000073",
+    "cli-000274",
+    "cli-000890",
+    "cli-001413",
+    "cli-001051",
+    "cli-000472",
+    "cli-000111",
+    "cli-001648"
+   ]
+  },
+  {
+   "fase": "Q1d",
+   "inizio": "2026-11-10T11:01:32.533554Z",
+   "fine": "2026-11-10T11:04:02.533784Z",
+   "n": 160,
+   "con_freddo": 160,
+   "errori": 0,
+   "controlli_ok": 160,
+   "controlli_falliti": 0,
+   "freddo_ms": {
+    "n": 160,
+    "p50": 9.3,
+    "p95": 23.412,
+    "p99": 34.819,
+    "media": 10.976,
+    "min": 3.263,
+    "max": 41.387
+   },
+   "caldo_ms": {
+    "n": 160,
+    "p50": 6.424,
+    "p95": 21.857,
+    "p99": 34.406,
+    "media": 9.954,
+    "min": 1.195,
+    "max": 253.904
+   },
+   "freddo_meno_hello_accoppiato": {
+    "n": 160,
+    "p50": 7.483,
+    "p95": 21.728,
+    "p99": 30.634,
+    "media": 9.103,
+    "min": -6.154,
+    "max": 40.705
+   },
+   "caldo_meno_hello_accoppiato": {
+    "n": 160,
+    "p50": 5.156,
+    "p95": 20.306,
+    "p99": 32.445,
+    "media": 8.588,
+    "min": -12.461,
+    "max": 252.945
+   },
+   "freddo_meno_caldo_stessa_ricerca": {
+    "n": 160,
+    "p50": 2.007,
+    "p95": 15.574,
+    "p99": 23.039,
+    "media": 1.022,
+    "min": -245.689,
+    "max": 27.525
+   },
+   "p50_freddo_meno_p50_caldo": 2.875,
+   "documenti_freddo": {
+    "n": 160,
+    "p50": 20.0,
+    "p95": 20.0,
+    "p99": 20.0,
+    "media": 20.0,
+    "min": 20,
+    "max": 20
+   },
+   "documenti_caldo": {
+    "n": 160,
+    "p50": 20.0,
+    "p95": 20.0,
+    "p99": 20.0,
+    "media": 20.0,
+    "min": 20,
+    "max": 20
+   },
+   "byte_freddo": {
+    "n": 160,
+    "p50": 6829.5,
+    "p95": 7441.3,
+    "p99": 7632.55,
+    "media": 6824.9,
+    "min": 5812,
+    "max": 7777
+   },
+   "getmore_freddo_totale": 0,
+   "blocchi_25": [
+    {
+     "da": 0,
+     "a": 25,
+     "freddo_meno_caldo_p50": 2.0268999999999995,
+     "freddo_meno_hello_p50": 8.1099
+    },
+    {
+     "da": 25,
+     "a": 50,
+     "freddo_meno_caldo_p50": 6.942500000000001,
+     "freddo_meno_hello_p50": 10.958400000000001
+    },
+    {
+     "da": 50,
+     "a": 75,
+     "freddo_meno_caldo_p50": 2.394,
+     "freddo_meno_hello_p50": 6.2372000000000005
+    },
+    {
+     "da": 75,
+     "a": 100,
+     "freddo_meno_caldo_p50": 1.4954999999999998,
+     "freddo_meno_hello_p50": 6.6064
+    },
+    {
+     "da": 100,
+     "a": 125,
+     "freddo_meno_caldo_p50": 2.344099999999999,
+     "freddo_meno_hello_p50": 6.9072
+    },
+    {
+     "da": 125,
+     "a": 150,
+     "freddo_meno_caldo_p50": 0.8393000000000006,
+     "freddo_meno_hello_p50": 7.574599999999999
+    },
+    {
+     "da": 150,
+     "a": 160,
+     "freddo_meno_caldo_p50": 1.950000000000001,
+     "freddo_meno_hello_p50": 8.692699999999999
+    }
+   ],
+   "profiler_freddo": {
+    "ricerche_trovate_nel_profiler": 160,
+    "ricerche": 160,
+    "millis": {
+     "n": 160,
+     "p50": 7.0,
+     "p95": 20.0,
+     "p99": 29.87,
+     "media": 8.25,
+     "min": 2,
+     "max": 39
+    },
+    "storage_byte_letti": {
+     "n": 160,
+     "p50": 388523.0,
+     "p95": 637977.3,
+     "p99": 940702.82,
+     "media": 406728.55,
+     "min": 179714,
+     "max": 959738
+    },
+    "storage_ms_di_lettura": {
+     "n": 160,
+     "p50": 11.011,
+     "p95": 38.494,
+     "p99": 58.333,
+     "media": 14.269,
+     "min": 2.268,
+     "max": 76.077
+    },
+    "find_a_0_byte": 0,
+    "su": 160,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 160,
+     "p50": 388523.0,
+     "p95": 637977.3,
+     "p99": 940702.82,
+     "media": 406728.55,
+     "min": 179714,
+     "max": 959738
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 160,
+     "p50": 11.011,
+     "p95": 38.494,
+     "p99": 58.333,
+     "media": 14.269,
+     "min": 2.268,
+     "max": 76.077
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 160,
+     "p50": 7.0,
+     "p95": 20.0,
+     "p99": 29.87,
+     "media": 8.25,
+     "min": 2,
+     "max": 39
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 160,
+     "p50": 20.0,
+     "p95": 20.0,
+     "p99": 20.0,
+     "media": 20.0,
+     "min": 20,
+     "max": 20
+    },
+    "keysExamined": {
+     "n": 160,
+     "p50": 20.0,
+     "p95": 20.0,
+     "p99": 20.0,
+     "media": 20.0,
+     "min": 20,
+     "max": 20
+    },
+    "piani": [
+     "IXSCAN { cliente: 1, ts: -1 }"
+    ]
+   },
+   "profiler_caldo": {
+    "ricerche_trovate_nel_profiler": 160,
+    "ricerche": 160,
+    "millis": {
+     "n": 160,
+     "p50": 4.0,
+     "p95": 19.1,
+     "p99": 32.64,
+     "media": 7.531,
+     "min": 0,
+     "max": 252
+    },
+    "storage_byte_letti": {
+     "n": 160,
+     "p50": 0.0,
+     "p95": 0.0,
+     "p99": 0.0,
+     "media": 0.0,
+     "min": 0,
+     "max": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 160,
+     "p50": 0.0,
+     "p95": 0.0,
+     "p99": 0.0,
+     "media": 0.0,
+     "min": 0.0,
+     "max": 0.0
+    },
+    "find_a_0_byte": 160,
+    "su": 160,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 160,
+     "p50": 20.0,
+     "p95": 20.0,
+     "p99": 20.0,
+     "media": 20.0,
+     "min": 20,
+     "max": 20
+    },
+    "keysExamined": {
+     "n": 160,
+     "p50": 20.0,
+     "p95": 20.0,
+     "p99": 20.0,
+     "media": 20.0,
+     "min": 20,
+     "max": 20
+    },
+    "piani": [
+     "IXSCAN { cliente: 1, ts: -1 }"
+    ]
+   },
+   "per_gruppo": {
+    "attivi": {
+     "n": 100,
+     "con_freddo": 100,
+     "errori": 0,
+     "controlli_ok": 100,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 100,
+      "p50": 8.828,
+      "p95": 26.169,
+      "p99": 33.873,
+      "media": 11.114,
+      "min": 3.734,
+      "max": 41.387
+     },
+     "caldo_ms": {
+      "n": 100,
+      "p50": 5.999,
+      "p95": 21.857,
+      "p99": 34.696,
+      "media": 10.942,
+      "min": 1.195,
+      "max": 253.904
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 100,
+      "p50": 7.264,
+      "p95": 20.809,
+      "p99": 25.919,
+      "media": 9.102,
+      "min": -6.154,
+      "max": 40.705
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 100,
+      "p50": 5.078,
+      "p95": 19.628,
+      "p99": 32.338,
+      "media": 9.557,
+      "min": -12.461,
+      "max": 252.945
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 100,
+      "p50": 2.007,
+      "p95": 15.629,
+      "p99": 22.413,
+      "media": 0.173,
+      "min": -245.689,
+      "max": 23.962
+     },
+     "p50_freddo_meno_p50_caldo": 2.829,
+     "documenti_freddo": {
+      "n": 100,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "documenti_caldo": {
+      "n": 100,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "byte_freddo": {
+      "n": 100,
+      "p50": 6818.5,
+      "p95": 7413.35,
+      "p99": 7610.55,
+      "media": 6835.3,
+      "min": 5812,
+      "max": 7665
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 1.4495999999999993,
+       "freddo_meno_hello_p50": 5.283899999999999
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 4.1924,
+       "freddo_meno_hello_p50": 9.463
+      },
+      {
+       "da": 50,
+       "a": 75,
+       "freddo_meno_caldo_p50": 1.4954999999999998,
+       "freddo_meno_hello_p50": 6.4808
+      },
+      {
+       "da": 75,
+       "a": 100,
+       "freddo_meno_caldo_p50": 0.9612999999999996,
+       "freddo_meno_hello_p50": 8.1797
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 100,
+      "ricerche": 100,
+      "millis": {
+       "n": 100,
+       "p50": 6.0,
+       "p95": 20.05,
+       "p99": 25.14,
+       "media": 8.23,
+       "min": 2,
+       "max": 39
+      },
+      "storage_byte_letti": {
+       "n": 100,
+       "p50": 380308.0,
+       "p95": 642981.8,
+       "p99": 939102.02,
+       "media": 408641.52,
+       "min": 179714,
+       "max": 943064
+      },
+      "storage_ms_di_lettura": {
+       "n": 100,
+       "p50": 10.743,
+       "p95": 38.83,
+       "p99": 48.293,
+       "media": 14.23,
+       "min": 2.999,
+       "max": 76.077
+      },
+      "find_a_0_byte": 0,
+      "su": 100,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 100,
+       "p50": 380308.0,
+       "p95": 642981.8,
+       "p99": 939102.02,
+       "media": 408641.52,
+       "min": 179714,
+       "max": 943064
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 100,
+       "p50": 10.743,
+       "p95": 38.83,
+       "p99": 48.293,
+       "media": 14.23,
+       "min": 2.999,
+       "max": 76.077
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 100,
+       "p50": 6.0,
+       "p95": 20.05,
+       "p99": 25.14,
+       "media": 8.23,
+       "min": 2,
+       "max": 39
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 100,
+       "p50": 20.0,
+       "p95": 20.0,
+       "p99": 20.0,
+       "media": 20.0,
+       "min": 20,
+       "max": 20
+      },
+      "keysExamined": {
+       "n": 100,
+       "p50": 20.0,
+       "p95": 20.0,
+       "p99": 20.0,
+       "media": 20.0,
+       "min": 20,
+       "max": 20
+      },
+      "piani": [
+       "IXSCAN { cliente: 1, ts: -1 }"
+      ]
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 100,
+      "ricerche": 100,
+      "millis": {
+       "n": 100,
+       "p50": 4.0,
+       "p95": 18.15,
+       "p99": 33.21,
+       "media": 8.44,
+       "min": 0,
+       "max": 252
+      },
+      "storage_byte_letti": {
+       "n": 100,
+       "p50": 0.0,
+       "p95": 0.0,
+       "p99": 0.0,
+       "media": 0.0,
+       "min": 0,
+       "max": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 100,
+       "p50": 0.0,
+       "p95": 0.0,
+       "p99": 0.0,
+       "media": 0.0,
+       "min": 0.0,
+       "max": 0.0
+      },
+      "find_a_0_byte": 100,
+      "su": 100,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 100,
+       "p50": 20.0,
+       "p95": 20.0,
+       "p99": 20.0,
+       "media": 20.0,
+       "min": 20,
+       "max": 20
+      },
+      "keysExamined": {
+       "n": 100,
+       "p50": 20.0,
+       "p95": 20.0,
+       "p99": 20.0,
+       "media": 20.0,
+       "min": 20,
+       "max": 20
+      },
+      "piani": [
+       "IXSCAN { cliente: 1, ts: -1 }"
+      ]
+     }
+    },
+    "dormienti": {
+     "n": 60,
+     "con_freddo": 60,
+     "errori": 0,
+     "controlli_ok": 60,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 60,
+      "p50": 9.694,
+      "p95": 22.979,
+      "p99": 32.917,
+      "media": 10.746,
+      "min": 3.263,
+      "max": 36.29
+     },
+     "caldo_ms": {
+      "n": 60,
+      "p50": 6.495,
+      "p95": 20.983,
+      "p99": 31.265,
+      "media": 8.307,
+      "min": 2.548,
+      "max": 37.175
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 60,
+      "p50": 7.92,
+      "p95": 22.088,
+      "p99": 30.634,
+      "media": 9.104,
+      "min": 0.124,
+      "max": 34.567
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 60,
+      "p50": 5.306,
+      "p95": 20.379,
+      "p99": 30.32,
+      "media": 6.972,
+      "min": -8.215,
+      "max": 35.807
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 60,
+      "p50": 1.999,
+      "p95": 14.829,
+      "p99": 23.259,
+      "media": 2.439,
+      "min": -30.321,
+      "max": 27.525
+     },
+     "p50_freddo_meno_p50_caldo": 3.199,
+     "documenti_freddo": {
+      "n": 60,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "documenti_caldo": {
+      "n": 60,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "byte_freddo": {
+      "n": 60,
+      "p50": 6841.0,
+      "p95": 7485.95,
+      "p99": 7650.15,
+      "media": 6807.567,
+      "min": 6073,
+      "max": 7777
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 2.0426,
+       "freddo_meno_hello_p50": 8.1099
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 2.344099999999999,
+       "freddo_meno_hello_p50": 9.1472
+      },
+      {
+       "da": 50,
+       "a": 60,
+       "freddo_meno_caldo_p50": 0.49579999999999935,
+       "freddo_meno_hello_p50": 5.6948
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 60,
+      "ricerche": 60,
+      "millis": {
+       "n": 60,
+       "p50": 7.5,
+       "p95": 19.05,
+       "p99": 29.87,
+       "media": 8.283,
+       "min": 2,
+       "max": 34
+      },
+      "storage_byte_letti": {
+       "n": 60,
+       "p50": 397691.0,
+       "p95": 610995.8,
+       "p99": 925083.76,
+       "media": 403540.267,
+       "min": 191428,
+       "max": 959738
+      },
+      "storage_ms_di_lettura": {
+       "n": 60,
+       "p50": 12.046,
+       "p95": 31.642,
+       "p99": 58.333,
+       "media": 14.335,
+       "min": 2.268,
+       "max": 66.456
+      },
+      "find_a_0_byte": 0,
+      "su": 60,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 60,
+       "p50": 397691.0,
+       "p95": 610995.8,
+       "p99": 925083.76,
+       "media": 403540.267,
+       "min": 191428,
+       "max": 959738
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 60,
+       "p50": 12.046,
+       "p95": 31.642,
+       "p99": 58.333,
+       "media": 14.335,
+       "min": 2.268,
+       "max": 66.456
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 60,
+       "p50": 7.5,
+       "p95": 19.05,
+       "p99": 29.87,
+       "media": 8.283,
+       "min": 2,
+       "max": 34
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 60,
+       "p50": 20.0,
+       "p95": 20.0,
+       "p99": 20.0,
+       "media": 20.0,
+       "min": 20,
+       "max": 20
+      },
+      "keysExamined": {
+       "n": 60,
+       "p50": 20.0,
+       "p95": 20.0,
+       "p99": 20.0,
+       "media": 20.0,
+       "min": 20,
+       "max": 20
+      },
+      "piani": [
+       "IXSCAN { cliente: 1, ts: -1 }"
+      ]
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 60,
+      "ricerche": 60,
+      "millis": {
+       "n": 60,
+       "p50": 4.0,
+       "p95": 19.25,
+       "p99": 29.1,
+       "media": 6.017,
+       "min": 0,
+       "max": 35
+      },
+      "storage_byte_letti": {
+       "n": 60,
+       "p50": 0.0,
+       "p95": 0.0,
+       "p99": 0.0,
+       "media": 0.0,
+       "min": 0,
+       "max": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 60,
+       "p50": 0.0,
+       "p95": 0.0,
+       "p99": 0.0,
+       "media": 0.0,
+       "min": 0.0,
+       "max": 0.0
+      },
+      "find_a_0_byte": 60,
+      "su": 60,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 60,
+       "p50": 20.0,
+       "p95": 20.0,
+       "p99": 20.0,
+       "media": 20.0,
+       "min": 20,
+       "max": 20
+      },
+      "keysExamined": {
+       "n": 60,
+       "p50": 20.0,
+       "p95": 20.0,
+       "p99": 20.0,
+       "media": 20.0,
+       "min": 20,
+       "max": 20
+      },
+      "piani": [
+       "IXSCAN { cliente: 1, ts: -1 }"
+      ]
+     }
+    }
+   },
+   "clienti": [
+    "cli-000588",
+    "cli-001392",
+    "cli-001350",
+    "cli-000755",
+    "cli-000443",
+    "cli-001274",
+    "cli-001675",
+    "cli-001361",
+    "cli-001605",
+    "cli-001468",
+    "cli-000166",
+    "cli-000608",
+    "cli-000617",
+    "cli-000486",
+    "cli-001626",
+    "cli-000714",
+    "cli-001143",
+    "cli-000621",
+    "cli-001673",
+    "cli-000473",
+    "cli-001693",
+    "cli-000295",
+    "cli-001304",
+    "cli-000362",
+    "cli-000697",
+    "cli-001564",
+    "cli-001228",
+    "cli-000081",
+    "cli-000666",
+    "cli-001344",
+    "cli-000943",
+    "cli-000952",
+    "cli-000216",
+    "cli-000840",
+    "cli-000396",
+    "cli-001424",
+    "cli-001300",
+    "cli-000192",
+    "cli-001547",
+    "cli-001430",
+    "cli-001028",
+    "cli-000698",
+    "cli-001558",
+    "cli-001568",
+    "cli-001625",
+    "cli-000423",
+    "cli-001384",
+    "cli-000930",
+    "cli-000053",
+    "cli-001524",
+    "cli-000426",
+    "cli-000510",
+    "cli-000244",
+    "cli-001124",
+    "cli-000955",
+    "cli-000969",
+    "cli-000462",
+    "cli-001504",
+    "cli-000484",
+    "cli-001490",
+    "cli-001515",
+    "cli-000405",
+    "cli-001440",
+    "cli-000790",
+    "cli-000057",
+    "cli-000650",
+    "cli-000242",
+    "cli-001516",
+    "cli-000699",
+    "cli-001435",
+    "cli-001549",
+    "cli-000576",
+    "cli-000209",
+    "cli-000352",
+    "cli-001492",
+    "cli-001412",
+    "cli-000229",
+    "cli-000567",
+    "cli-000662",
+    "cli-000189",
+    "cli-000002",
+    "cli-001724",
+    "cli-001216",
+    "cli-001441",
+    "cli-000098",
+    "cli-001078",
+    "cli-001249",
+    "cli-001653",
+    "cli-001128",
+    "cli-000537",
+    "cli-000336",
+    "cli-000458",
+    "cli-001162",
+    "cli-000121",
+    "cli-000465",
+    "cli-001142",
+    "cli-001042",
+    "cli-000992",
+    "cli-001425",
+    "cli-001548",
+    "cli-000550",
+    "cli-000959",
+    "cli-001652",
+    "cli-000882",
+    "cli-000010",
+    "cli-000281",
+    "cli-000460",
+    "cli-000933",
+    "cli-000750",
+    "cli-000761",
+    "cli-000534",
+    "cli-000277",
+    "cli-001237",
+    "cli-001164",
+    "cli-000385",
+    "cli-001733",
+    "cli-000083",
+    "cli-000016",
+    "cli-000546",
+    "cli-001064",
+    "cli-000165",
+    "cli-001731",
+    "cli-000340",
+    "cli-000376",
+    "cli-001311",
+    "cli-000150",
+    "cli-001684",
+    "cli-001604",
+    "cli-001244",
+    "cli-000675",
+    "cli-000797",
+    "cli-001466",
+    "cli-000206",
+    "cli-000578",
+    "cli-000900",
+    "cli-001481",
+    "cli-001172",
+    "cli-000552",
+    "cli-001654",
+    "cli-000806",
+    "cli-000914",
+    "cli-000664",
+    "cli-001573",
+    "cli-001507",
+    "cli-000455",
+    "cli-001094",
+    "cli-001480",
+    "cli-000625",
+    "cli-001152",
+    "cli-000873",
+    "cli-000753",
+    "cli-001139",
+    "cli-001662",
+    "cli-000836",
+    "cli-001336",
+    "cli-000924",
+    "cli-000629",
+    "cli-001000",
+    "cli-000535",
+    "cli-001080"
+   ]
+  },
+  {
+   "fase": "Q4",
+   "inizio": "2026-11-10T11:06:03.136430Z",
+   "fine": "2026-11-10T11:08:33.136647Z",
+   "n": 160,
+   "con_freddo": 160,
+   "errori": 0,
+   "controlli_ok": 160,
+   "controlli_falliti": 0,
+   "freddo_ms": {
+    "n": 160,
+    "p50": 17.423,
+    "p95": 38.317,
+    "p99": 57.491,
+    "media": 19.825,
+    "min": 7.355,
+    "max": 104.422
+   },
+   "caldo_ms": {
+    "n": 160,
+    "p50": 12.34,
+    "p95": 23.65,
+    "p99": 48.782,
+    "media": 14.382,
+    "min": 3.442,
+    "max": 141.751
+   },
+   "freddo_meno_hello_accoppiato": {
+    "n": 160,
+    "p50": 15.767,
+    "p95": 37.5,
+    "p99": 56.602,
+    "media": 17.647,
+    "min": -7.294,
+    "max": 103.532
+   },
+   "caldo_meno_hello_accoppiato": {
+    "n": 160,
+    "p50": 10.532,
+    "p95": 21.789,
+    "p99": 46.888,
+    "media": 12.455,
+    "min": -4.182,
+    "max": 140.344
+   },
+   "freddo_meno_caldo_stessa_ricerca": {
+    "n": 160,
+    "p50": 4.427,
+    "p95": 28.461,
+    "p99": 41.147,
+    "media": 5.443,
+    "min": -122.304,
+    "max": 97.328
+   },
+   "p50_freddo_meno_p50_caldo": 5.083,
+   "documenti_freddo": {
+    "n": 160,
+    "p50": 500.0,
+    "p95": 500.0,
+    "p99": 500.0,
+    "media": 434.281,
+    "min": 114,
+    "max": 500
+   },
+   "documenti_caldo": {
+    "n": 160,
+    "p50": 500.0,
+    "p95": 500.0,
+    "p99": 500.0,
+    "media": 434.281,
+    "min": 114,
+    "max": 500
+   },
+   "byte_freddo": {
+    "n": 160,
+    "p50": 167364.0,
+    "p95": 172617.5,
+    "p99": 173350.61,
+    "media": 147629.812,
+    "min": 38880,
+    "max": 174943
+   },
+   "getmore_freddo_totale": 0,
+   "blocchi_25": [
+    {
+     "da": 0,
+     "a": 25,
+     "freddo_meno_caldo_p50": 7.3733,
+     "freddo_meno_hello_p50": 16.9649
+    },
+    {
+     "da": 25,
+     "a": 50,
+     "freddo_meno_caldo_p50": 8.1651,
+     "freddo_meno_hello_p50": 15.1091
+    },
+    {
+     "da": 50,
+     "a": 75,
+     "freddo_meno_caldo_p50": 4.131399999999999,
+     "freddo_meno_hello_p50": 15.311099999999998
+    },
+    {
+     "da": 75,
+     "a": 100,
+     "freddo_meno_caldo_p50": 3.9120999999999997,
+     "freddo_meno_hello_p50": 13.5347
+    },
+    {
+     "da": 100,
+     "a": 125,
+     "freddo_meno_caldo_p50": 1.8346000000000018,
+     "freddo_meno_hello_p50": 15.814000000000002
+    },
+    {
+     "da": 125,
+     "a": 150,
+     "freddo_meno_caldo_p50": 1.8865999999999996,
+     "freddo_meno_hello_p50": 16.2478
+    },
+    {
+     "da": 150,
+     "a": 160,
+     "freddo_meno_caldo_p50": 3.45305,
+     "freddo_meno_hello_p50": 17.80355
+    }
+   ],
+   "profiler_freddo": {
+    "ricerche_trovate_nel_profiler": 160,
+    "ricerche": 160,
+    "millis": {
+     "n": 160,
+     "p50": 12.0,
+     "p95": 29.1,
+     "p99": 48.64,
+     "media": 14.581,
+     "min": 5,
+     "max": 101
+    },
+    "storage_byte_letti": {
+     "n": 160,
+     "p50": 593994.0,
+     "p95": 849346.9,
+     "p99": 1129361.72,
+     "media": 554471.0,
+     "min": 358098,
+     "max": 1144076
+    },
+    "storage_ms_di_lettura": {
+     "n": 160,
+     "p50": 13.833,
+     "p95": 42.51,
+     "p99": 80.537,
+     "media": 18.561,
+     "min": 4.456,
+     "max": 193.31
+    },
+    "find_a_0_byte": 0,
+    "su": 160,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 160,
+     "p50": 593994.0,
+     "p95": 849346.9,
+     "p99": 1129361.72,
+     "media": 554471.0,
+     "min": 358098,
+     "max": 1144076
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 160,
+     "p50": 13.833,
+     "p95": 42.51,
+     "p99": 80.537,
+     "media": 18.561,
+     "min": 4.456,
+     "max": 193.31
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 160,
+     "p50": 12.0,
+     "p95": 29.1,
+     "p99": 48.64,
+     "media": 14.581,
+     "min": 5,
+     "max": 101
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 160,
+     "p50": 500.0,
+     "p95": 500.0,
+     "p99": 500.0,
+     "media": 434.281,
+     "min": 114,
+     "max": 500
+    },
+    "keysExamined": {
+     "n": 160,
+     "p50": 500.0,
+     "p95": 500.0,
+     "p99": 500.0,
+     "media": 434.281,
+     "min": 114,
+     "max": 500
+    },
+    "piani": [
+     "IXSCAN { cliente: 1, ts: -1 }"
+    ]
+   },
+   "profiler_caldo": {
+    "ricerche_trovate_nel_profiler": 160,
+    "ricerche": 160,
+    "millis": {
+     "n": 160,
+     "p50": 8.0,
+     "p95": 18.0,
+     "p99": 26.05,
+     "media": 8.887,
+     "min": 1,
+     "max": 64
+    },
+    "storage_byte_letti": {
+     "n": 160,
+     "p50": 0.0,
+     "p95": 0.0,
+     "p99": 0.0,
+     "media": 0.0,
+     "min": 0,
+     "max": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 160,
+     "p50": 0.0,
+     "p95": 0.0,
+     "p99": 0.0,
+     "media": 0.0,
+     "min": 0.0,
+     "max": 0.0
+    },
+    "find_a_0_byte": 160,
+    "su": 160,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 160,
+     "p50": 500.0,
+     "p95": 500.0,
+     "p99": 500.0,
+     "media": 434.281,
+     "min": 114,
+     "max": 500
+    },
+    "keysExamined": {
+     "n": 160,
+     "p50": 500.0,
+     "p95": 500.0,
+     "p99": 500.0,
+     "media": 434.281,
+     "min": 114,
+     "max": 500
+    },
+    "piani": [
+     "IXSCAN { cliente: 1, ts: -1 }"
+    ]
+   },
+   "per_gruppo": {
+    "attivi": {
+     "n": 100,
+     "con_freddo": 100,
+     "errori": 0,
+     "controlli_ok": 100,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 100,
+      "p50": 16.734,
+      "p95": 34.972,
+      "p99": 55.84,
+      "media": 19.183,
+      "min": 7.637,
+      "max": 104.422
+     },
+     "caldo_ms": {
+      "n": 100,
+      "p50": 12.684,
+      "p95": 22.569,
+      "p99": 35.608,
+      "media": 14.533,
+      "min": 3.691,
+      "max": 141.751
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 100,
+      "p50": 15.391,
+      "p95": 34.186,
+      "p99": 54.938,
+      "media": 17.391,
+      "min": 2.725,
+      "max": 103.532
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 100,
+      "p50": 10.819,
+      "p95": 21.449,
+      "p99": 30.935,
+      "media": 12.526,
+      "min": -4.182,
+      "max": 140.344
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 100,
+      "p50": 3.684,
+      "p95": 28.461,
+      "p99": 40.548,
+      "media": 4.651,
+      "min": -122.304,
+      "max": 97.328
+     },
+     "p50_freddo_meno_p50_caldo": 4.05,
+     "documenti_freddo": {
+      "n": 100,
+      "p50": 500.0,
+      "p95": 500.0,
+      "p99": 500.0,
+      "media": 420.13,
+      "min": 114,
+      "max": 500
+     },
+     "documenti_caldo": {
+      "n": 100,
+      "p50": 500.0,
+      "p95": 500.0,
+      "p99": 500.0,
+      "media": 420.13,
+      "min": 114,
+      "max": 500
+     },
+     "byte_freddo": {
+      "n": 100,
+      "p50": 166885.0,
+      "p95": 172140.05,
+      "p99": 172881.86,
+      "media": 142585.48,
+      "min": 38880,
+      "max": 173363
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 6.861899999999999,
+       "freddo_meno_hello_p50": 16.007
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 3.5382000000000007,
+       "freddo_meno_hello_p50": 14.8381
+      },
+      {
+       "da": 50,
+       "a": 75,
+       "freddo_meno_caldo_p50": 1.8622999999999976,
+       "freddo_meno_hello_p50": 15.814000000000002
+      },
+      {
+       "da": 75,
+       "a": 100,
+       "freddo_meno_caldo_p50": 1.8865999999999996,
+       "freddo_meno_hello_p50": 16.1226
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 100,
+      "ricerche": 100,
+      "millis": {
+       "n": 100,
+       "p50": 12.0,
+       "p95": 26.15,
+       "p99": 47.54,
+       "media": 14.33,
+       "min": 5,
+       "max": 101
+      },
+      "storage_byte_letti": {
+       "n": 100,
+       "p50": 593728.0,
+       "p95": 812921.5,
+       "p99": 1136454.98,
+       "media": 548179.46,
+       "min": 358722,
+       "max": 1144076
+      },
+      "storage_ms_di_lettura": {
+       "n": 100,
+       "p50": 13.63,
+       "p95": 40.773,
+       "p99": 72.855,
+       "media": 18.026,
+       "min": 5.04,
+       "max": 193.31
+      },
+      "find_a_0_byte": 0,
+      "su": 100,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 100,
+       "p50": 593728.0,
+       "p95": 812921.5,
+       "p99": 1136454.98,
+       "media": 548179.46,
+       "min": 358722,
+       "max": 1144076
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 100,
+       "p50": 13.63,
+       "p95": 40.773,
+       "p99": 72.855,
+       "media": 18.026,
+       "min": 5.04,
+       "max": 193.31
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 100,
+       "p50": 12.0,
+       "p95": 26.15,
+       "p99": 47.54,
+       "media": 14.33,
+       "min": 5,
+       "max": 101
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 100,
+       "p50": 500.0,
+       "p95": 500.0,
+       "p99": 500.0,
+       "media": 420.13,
+       "min": 114,
+       "max": 500
+      },
+      "keysExamined": {
+       "n": 100,
+       "p50": 500.0,
+       "p95": 500.0,
+       "p99": 500.0,
+       "media": 420.13,
+       "min": 114,
+       "max": 500
+      },
+      "piani": [
+       "IXSCAN { cliente: 1, ts: -1 }"
+      ]
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 100,
+      "ricerche": 100,
+      "millis": {
+       "n": 100,
+       "p50": 8.0,
+       "p95": 18.0,
+       "p99": 22.07,
+       "media": 8.72,
+       "min": 1,
+       "max": 29
+      },
+      "storage_byte_letti": {
+       "n": 100,
+       "p50": 0.0,
+       "p95": 0.0,
+       "p99": 0.0,
+       "media": 0.0,
+       "min": 0,
+       "max": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 100,
+       "p50": 0.0,
+       "p95": 0.0,
+       "p99": 0.0,
+       "media": 0.0,
+       "min": 0.0,
+       "max": 0.0
+      },
+      "find_a_0_byte": 100,
+      "su": 100,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 100,
+       "p50": 500.0,
+       "p95": 500.0,
+       "p99": 500.0,
+       "media": 420.13,
+       "min": 114,
+       "max": 500
+      },
+      "keysExamined": {
+       "n": 100,
+       "p50": 500.0,
+       "p95": 500.0,
+       "p99": 500.0,
+       "media": 420.13,
+       "min": 114,
+       "max": 500
+      },
+      "piani": [
+       "IXSCAN { cliente: 1, ts: -1 }"
+      ]
+     }
+    },
+    "dormienti": {
+     "n": 60,
+     "con_freddo": 60,
+     "errori": 0,
+     "controlli_ok": 60,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 60,
+      "p50": 19.433,
+      "p95": 42.526,
+      "p99": 57.202,
+      "media": 20.894,
+      "min": 7.355,
+      "max": 60.574
+     },
+     "caldo_ms": {
+      "n": 60,
+      "p50": 11.777,
+      "p95": 26.567,
+      "p99": 47.612,
+      "media": 14.13,
+      "min": 3.442,
+      "max": 69.283
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 60,
+      "p50": 16.767,
+      "p95": 41.626,
+      "p99": 56.365,
+      "media": 18.072,
+      "min": -7.294,
+      "max": 59.703
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 60,
+      "p50": 9.685,
+      "p95": 22.823,
+      "p99": 46.888,
+      "media": 12.336,
+      "min": 1.279,
+      "max": 68.306
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 60,
+      "p50": 6.364,
+      "p95": 22.75,
+      "p99": 36.429,
+      "media": 6.764,
+      "min": -49.222,
+      "max": 42.833
+     },
+     "p50_freddo_meno_p50_caldo": 7.656,
+     "documenti_freddo": {
+      "n": 60,
+      "p50": 500.0,
+      "p95": 500.0,
+      "p99": 500.0,
+      "media": 457.867,
+      "min": 215,
+      "max": 500
+     },
+     "documenti_caldo": {
+      "n": 60,
+      "p50": 500.0,
+      "p95": 500.0,
+      "p99": 500.0,
+      "media": 457.867,
+      "min": 215,
+      "max": 500
+     },
+     "byte_freddo": {
+      "n": 60,
+      "p50": 168631.0,
+      "p95": 172962.0,
+      "p99": 173998.41,
+      "media": 156037.033,
+      "min": 74657,
+      "max": 174943
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 7.056699999999999,
+       "freddo_meno_hello_p50": 15.426499999999999
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 7.7964,
+       "freddo_meno_hello_p50": 18.0745
+      },
+      {
+       "da": 50,
+       "a": 60,
+       "freddo_meno_caldo_p50": 2.4452000000000016,
+       "freddo_meno_hello_p50": 18.08085
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 60,
+      "ricerche": 60,
+      "millis": {
+       "n": 60,
+       "p50": 12.0,
+       "p95": 34.2,
+       "p99": 48.05,
+       "media": 15.0,
+       "min": 5,
+       "max": 51
+      },
+      "storage_byte_letti": {
+       "n": 60,
+       "p50": 596714.0,
+       "p95": 851505.7,
+       "p99": 1118773.62,
+       "media": 564956.9,
+       "min": 358098,
+       "max": 1124486
+      },
+      "storage_ms_di_lettura": {
+       "n": 60,
+       "p50": 14.318,
+       "p95": 43.091,
+       "p99": 78.18,
+       "media": 19.451,
+       "min": 4.456,
+       "max": 93.344
+      },
+      "find_a_0_byte": 0,
+      "su": 60,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 60,
+       "p50": 596714.0,
+       "p95": 851505.7,
+       "p99": 1118773.62,
+       "media": 564956.9,
+       "min": 358098,
+       "max": 1124486
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 60,
+       "p50": 14.318,
+       "p95": 43.091,
+       "p99": 78.18,
+       "media": 19.451,
+       "min": 4.456,
+       "max": 93.344
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 60,
+       "p50": 12.0,
+       "p95": 34.2,
+       "p99": 48.05,
+       "media": 15.0,
+       "min": 5,
+       "max": 51
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 60,
+       "p50": 500.0,
+       "p95": 500.0,
+       "p99": 500.0,
+       "media": 457.867,
+       "min": 215,
+       "max": 500
+      },
+      "keysExamined": {
+       "n": 60,
+       "p50": 500.0,
+       "p95": 500.0,
+       "p99": 500.0,
+       "media": 457.867,
+       "min": 215,
+       "max": 500
+      },
+      "piani": [
+       "IXSCAN { cliente: 1, ts: -1 }"
+      ]
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 60,
+      "ricerche": 60,
+      "millis": {
+       "n": 60,
+       "p50": 8.0,
+       "p95": 19.1,
+       "p99": 40.4,
+       "media": 9.167,
+       "min": 1,
+       "max": 64
+      },
+      "storage_byte_letti": {
+       "n": 60,
+       "p50": 0.0,
+       "p95": 0.0,
+       "p99": 0.0,
+       "media": 0.0,
+       "min": 0,
+       "max": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 60,
+       "p50": 0.0,
+       "p95": 0.0,
+       "p99": 0.0,
+       "media": 0.0,
+       "min": 0.0,
+       "max": 0.0
+      },
+      "find_a_0_byte": 60,
+      "su": 60,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 60,
+       "p50": 500.0,
+       "p95": 500.0,
+       "p99": 500.0,
+       "media": 457.867,
+       "min": 215,
+       "max": 500
+      },
+      "keysExamined": {
+       "n": 60,
+       "p50": 500.0,
+       "p95": 500.0,
+       "p99": 500.0,
+       "media": 457.867,
+       "min": 215,
+       "max": 500
+      },
+      "piani": [
+       "IXSCAN { cliente: 1, ts: -1 }"
+      ]
+     }
+    }
+   },
+   "clienti": [
+    "cli-000029",
+    "cli-000280",
+    "cli-000549",
+    "cli-001457",
+    "cli-000899",
+    "cli-001613",
+    "cli-000871",
+    "cli-001388",
+    "cli-000583",
+    "cli-001418",
+    "cli-001342",
+    "cli-001070",
+    "cli-000167",
+    "cli-001238",
+    "cli-000819",
+    "cli-000320",
+    "cli-001575",
+    "cli-000500",
+    "cli-000169",
+    "cli-000594",
+    "cli-001432",
+    "cli-000253",
+    "cli-000736",
+    "cli-001232",
+    "cli-000318",
+    "cli-000126",
+    "cli-000981",
+    "cli-000997",
+    "cli-001044",
+    "cli-000912",
+    "cli-000742",
+    "cli-000143",
+    "cli-001319",
+    "cli-001255",
+    "cli-000852",
+    "cli-000407",
+    "cli-000476",
+    "cli-000355",
+    "cli-001269",
+    "cli-000076",
+    "cli-000381",
+    "cli-001058",
+    "cli-000193",
+    "cli-001572",
+    "cli-000466",
+    "cli-000522",
+    "cli-001221",
+    "cli-001484",
+    "cli-000886",
+    "cli-001290",
+    "cli-000716",
+    "cli-000957",
+    "cli-001173",
+    "cli-000273",
+    "cli-001265",
+    "cli-001454",
+    "cli-001120",
+    "cli-001690",
+    "cli-001285",
+    "cli-000344",
+    "cli-001307",
+    "cli-000033",
+    "cli-000267",
+    "cli-000879",
+    "cli-000960",
+    "cli-001321",
+    "cli-000993",
+    "cli-000896",
+    "cli-000241",
+    "cli-001033",
+    "cli-000127",
+    "cli-000822",
+    "cli-000058",
+    "cli-001565",
+    "cli-000480",
+    "cli-001205",
+    "cli-000036",
+    "cli-000754",
+    "cli-000101",
+    "cli-000172",
+    "cli-000558",
+    "cli-001695",
+    "cli-000185",
+    "cli-001057",
+    "cli-000942",
+    "cli-001433",
+    "cli-001521",
+    "cli-000644",
+    "cli-001127",
+    "cli-001691",
+    "cli-001351",
+    "cli-001712",
+    "cli-001426",
+    "cli-000877",
+    "cli-000765",
+    "cli-001404",
+    "cli-000005",
+    "cli-000766",
+    "cli-001579",
+    "cli-000934",
+    "cli-000163",
+    "cli-000270",
+    "cli-001698",
+    "cli-000346",
+    "cli-001520",
+    "cli-000634",
+    "cli-001459",
+    "cli-000530",
+    "cli-001462",
+    "cli-001702",
+    "cli-000988",
+    "cli-001449",
+    "cli-000208",
+    "cli-001027",
+    "cli-000903",
+    "cli-001091",
+    "cli-000559",
+    "cli-000556",
+    "cli-000735",
+    "cli-000271",
+    "cli-001400",
+    "cli-001204",
+    "cli-000104",
+    "cli-001114",
+    "cli-001317",
+    "cli-001398",
+    "cli-000971",
+    "cli-000618",
+    "cli-001346",
+    "cli-000747",
+    "cli-000841",
+    "cli-000383",
+    "cli-000393",
+    "cli-000200",
+    "cli-000707",
+    "cli-001596",
+    "cli-001556",
+    "cli-000138",
+    "cli-000726",
+    "cli-000314",
+    "cli-001275",
+    "cli-000592",
+    "cli-001697",
+    "cli-000610",
+    "cli-000812",
+    "cli-000370",
+    "cli-000932",
+    "cli-000637",
+    "cli-000291",
+    "cli-001415",
+    "cli-001469",
+    "cli-000009",
+    "cli-000072",
+    "cli-000395",
+    "cli-000894",
+    "cli-000591",
+    "cli-001140",
+    "cli-000956",
+    "cli-000632",
+    "cli-000366"
+   ]
+  }
+ ]
+}

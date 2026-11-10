@@ -1,0 +1,2 @@
+giro app_data_b01 --db app_data_b01 --nuova-cartella --giro s9_ballast --solo-fasi inizio,Q2,Q3,Q1,Q1d,Q4 --n-q2 100 --n-q3 100 --n-q1 100 --n-q1d 100 --n-q4 100 --dorm-q2 60 --dorm-q3 60 --dorm-q1 60 --dorm-q1d 60 --dorm-q4 60
+giro app_data_b02 --db app_data_b02 --nuova-cartella --giro s9_ballast --solo-fasi inizio,Q2,Q3,Q1,Q1d,Q4 --n-q2 100 --n-q3 100 --n-q1 100 --n-q1d 100 --n-q4 100 --dorm-q2 60 --dorm-q3 60 --dorm-q1 60 --dorm-q1d 60 --dorm-q4 60

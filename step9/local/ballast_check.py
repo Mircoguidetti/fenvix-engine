@@ -36,6 +36,7 @@ ap.add_argument("--out", required=True)
 ap.add_argument("--seed", type=int, default=7)
 ap.add_argument("--q2-per-customer", type=int, default=40)
 ap.add_argument("--full-scan", action="store_true", help="also stream the first database's orders whole")
+ap.add_argument("--only", default="", help="comma-separated databases of the plan to check (default: all)")
 a = ap.parse_args()
 
 RAW = CodecOptions(document_class=RawBSONDocument)
@@ -70,6 +71,8 @@ def raw(cur):
 
 for d in plan["databases"]:
     name = d["db"]
+    if a.only and name not in a.only.split(","):
+        continue
     g = json.load(open(os.path.join(a.gen_dir, f"{name}.gen.json")))
     t0 = time.time()
     r0, w0 = res["reads"], res["wrong"]

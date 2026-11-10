@@ -1,0 +1,6 @@
+2026-11-10T10:41:26Z passo 1 giro app_data_b01: nessun giro di prima; --db app_data_b01 --nuova-cartella --giro s9_ballast --solo-fasi inizio,Q2,Q3,Q1,Q1d,Q4 --n-q2 100 --n-q3 100 --n-q1 100 --n-q1d 100 --n-q4 100 --dorm-q2 60 --dorm-q3 60 --dorm-q1 60 --dorm-q1d 60 --dorm-q4 60
+2026-11-10T11:08:37Z passo 1 giro app_data_b01: codice 0; fasi non 'fatta': nessuna
+2026-11-10T11:08:37Z passo 2 giro app_data_b02: nessun giro di prima; --db app_data_b02 --nuova-cartella --giro s9_ballast --solo-fasi inizio,Q2,Q3,Q1,Q1d,Q4 --n-q2 100 --n-q3 100 --n-q1 100 --n-q1d 100 --n-q4 100 --dorm-q2 60 --dorm-q3 60 --dorm-q1 60 --dorm-q1d 60 --dorm-q4 60
+2026-11-10T11:46:35Z passo 2 giro app_data_b02: codice 0; fasi non 'fatta': nessuna
+2026-11-10T11:46:35Z programma finito: errori 0; macchina mai il limite
+EXIT 0
