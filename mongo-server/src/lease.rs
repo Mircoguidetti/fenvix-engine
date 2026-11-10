@@ -183,6 +183,15 @@ fn far() -> Instant {
     Instant::now() + Duration::from_secs(86400 * 365)
 }
 
+/// The holder named in the lease object of tenant `id` (None: no lease object).
+pub async fn holder_of(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<String>> {
+    match store.get(&Path::from(format!("tenants/{id}/_lease"))).await {
+        Ok(g) => Ok(Some(parse_inc(&g.bytes().await?)?.0)),
+        Err(object_store::Error::NotFound { .. }) => Ok(None),
+        Err(e) => Err(e.into()),
+    }
+}
+
 /// Log line parsed by the S4 checker: `LEASE <event> tenant=<t> holder=<h> unix_ms=<ms> ...`.
 pub fn log(event: &str, tenant: &str, holder: &str, extra: &str) {
     eprintln!("LEASE {event} tenant={tenant} holder={holder} unix_ms={} {extra}", now_ms());

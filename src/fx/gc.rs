@@ -2,7 +2,7 @@
 //!
 //! What a database keeps, decided from the store, never from what a publisher believes (rule 17):
 //! - versions: the newest; every version published within the retention window (restore points, 7 days by default);
-//!   every version a checkpoint pair (`fx/pairs/*`) or a reference (`fx/refs/*`) names (and nothing at all is deleted
+//!   every version a checkpoint pair (`fx/pairs/*`), a reference (`fx/refs/*`) or a fork's reference (`fx/forks/*`, step 7b) names (and nothing at all is deleted
 //!   while a checkpoint holds the drop lease: the lease names no version); and every version from the oldest one this process holds or serves. Other versions are deleted;
 //! - runs: every run listed by a kept version, plus the runs a reference lists by path (a fork's first manifest lists
 //!   its parent's runs; the parent keeps them through the fork's reference object, rule 30).
@@ -50,7 +50,8 @@ pub async fn references(store: &Arc<dyn ObjectStore>, id: &str) -> Result<(HashS
     let mut runs = HashSet::new();
     let root = manifest::root(id);
     let mut objs = Vec::new();
-    for d in ["pairs", "refs"] {
+    // integration-3: step 7b writes a fork's reference at `fx/forks/{fork}` (`pair::ForkRef`: "version" and "runs")
+    for d in ["pairs", "refs", "forks"] {
         let metas: Vec<_> = store.list(Some(&Path::from(format!("{root}/{d}")))).try_collect().await?;
         objs.extend(metas.into_iter().map(|m| m.location));
     }

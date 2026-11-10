@@ -50,6 +50,9 @@ impl Drop for InflightToken {
 }
 
 tokio::task_local! {
+    /// Storage accesses (`Dbs::read`, `Dbs::lock`) of the command being handled on this task, counted for the test hook
+    /// [`interleave_at`].
+    pub static STEPS: std::cell::Cell<u32>;
     /// In-flight tokens of the command being handled on this task.
     pub static TOKENS: std::cell::RefCell<Vec<InflightToken>>;
     /// Commits staged by the command being handled on this task, awaited before its reply is sent.
@@ -357,6 +360,7 @@ impl Dbs {
     /// Lock a database's entry exclusively (every command that writes, and tenant state changes). Counts the command
     /// as in flight for its tenant until the end of `Server::handle`.
     pub async fn lock(&self, name: &str) -> OwnedRwLockWriteGuard<Entry> {
+        interleave(name).await;
         let counter = self.inflight_counter(name);
         counter.fetch_add(1, Relaxed);
         let token = InflightToken(counter);
@@ -372,6 +376,7 @@ impl Dbs {
     /// each other and exclude only writes and state changes. The tenant is opened (and its lease taken) under the
     /// exclusive lock first when needed. `ReadView` re-checks ownership after every read.
     pub async fn read(&self, name: &str) -> Result<ReadView> {
+        interleave(name).await;
         let e = self.entry(name);
         if !SHARED_READS.load(Relaxed) {
             let mut w = Arc::clone(&e).write_owned().await;
@@ -809,6 +814,41 @@ impl Entry {
         }
         let end = crate::keyenc::prefix_end(prefix);
         self.scan_range_uncounted(prefix, end.as_deref(), false, None, 4 << 20).await
+    }
+
+    /// Record an erasure whose deletes this entry just committed (`fx/erase.rs`; the caller holds the exclusive lock).
+    pub async fn fx_erasure_register(&mut self, coll: &str, customer: &[u8], t: &tenant_bench::fx::erase::Targets) -> Result<Option<tenant_bench::fx::erase::Erasure>> {
+        if !self.ensure_open().await? {
+            return Ok(None);
+        }
+        self.tenant.as_mut().unwrap().fx_erasure_register(coll, customer, t).await
+    }
+
+    /// Tests only (`ctl/testhooks.rs`): publish a version now, with a delta run of what SlateDB holds above X_d.
+    pub async fn fx_test_publish(&mut self) -> Result<()> {
+        if !self.ensure_open().await? {
+            return Ok(());
+        }
+        let t = self.tenant.as_mut().unwrap();
+        let mut o = t.fx_auto_opts();
+        o.reseal = tenant_bench::fx::build::Reseal::None;
+        for _ in 0..100 {
+            if t.fx_publish(&o, None).await?.is_some() || t.fx_view().is_some() {
+                return Ok(());
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        }
+        Ok(())
+    }
+
+    /// The erasure pass of this database (`fx/erase.rs`). Empty when the database does not exist.
+    pub async fn fx_erase_pass(&mut self) -> Result<Vec<tenant_bench::fx::erase::Erasure>> {
+        if !self.ensure_open().await? {
+            return Ok(Vec::new());
+        }
+        self.touch();
+        let opts = tenant_bench::fx::erase::ScrubOpts::default();
+        self.tenant.as_mut().unwrap().fx_erase_pass(&opts).await
     }
 
     /// Apply writes atomically and durably, creating the database on its first write.
@@ -1710,5 +1750,61 @@ impl ReadView {
             }
         }
         Ok(None)
+    }
+}
+
+
+/// Test hook of the step 7b fix round (option (b) of note 1), off unless `FENVIX_TEST_INTERLEAVE=K` (and
+/// `FENVIX_TEST_DROP=1`): before the K-th storage access of a command, a publish of our manifest and a drop of the
+/// database's SlateDB rows at or below the new X_d (the step 7a stand-in) run, so they land between two reads of one
+/// command. A command never holds a guard of the database across two accesses (each is a scoped block), so this cannot
+/// deadlock; it runs in a task of its own, outside the command's scopes.
+pub fn interleave_at() -> Option<u32> {
+    static K: std::sync::OnceLock<Option<u32>> = std::sync::OnceLock::new();
+    *K.get_or_init(|| std::env::var("FENVIX_TEST_INTERLEAVE").ok().and_then(|v| v.parse().ok()))
+}
+
+/// The same hook set at run time (`PUT /v1/test/interleave {"database", "at"}`; `DELETE` clears it): only commands on
+/// that database count.
+pub static INTERLEAVE_SET: std::sync::Mutex<Option<(String, u32)>> = std::sync::Mutex::new(None);
+
+/// Interleavings run (tests read it through serverStatus is not needed: the log says it).
+pub static INTERLEAVED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Boxed as a `Send` future: the hook takes `Dbs::lock` itself, which awaits this function (a type cycle otherwise).
+fn interleave(name: &str) -> std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + '_>> {
+    Box::pin(interleave_inner(name))
+}
+
+async fn interleave_inner(name: &str) {
+    let set = INTERLEAVE_SET.lock().unwrap().clone();
+    let k = match set {
+        Some((db, k)) if db == name => k,
+        Some(_) => return,
+        None => match interleave_at() {
+            Some(k) => k,
+            None => return,
+        },
+    };
+    let Ok(n) = STEPS.try_with(|c| {
+        let n = c.get() + 1;
+        c.set(n);
+        n
+    }) else {
+        return;
+    };
+    if n != k || name == "admin" || name == "config" || name == "local" {
+        return;
+    }
+    let db = name.to_string();
+    // in a task of its own: outside the command's scopes, so its own `Dbs::lock` does not count or recurse
+    let r = tokio::spawn(async move { crate::ctl::testhooks::publish_and_drop(&db).await }).await;
+    match r {
+        Ok(Ok(v)) => {
+            INTERLEAVED.fetch_add(1, Relaxed);
+            eprintln!("INTERLEAVE {name} before access {k}: {v}");
+        }
+        Ok(Err(e)) => eprintln!("INTERLEAVE {name} before access {k} skipped: {}", e.message),
+        Err(e) => eprintln!("INTERLEAVE {name}: {e}"),
     }
 }

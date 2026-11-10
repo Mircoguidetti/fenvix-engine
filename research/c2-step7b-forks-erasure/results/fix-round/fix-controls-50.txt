@@ -1,0 +1,16 @@
+== FENVIX_CONTROL_OP_HOLDS
+E   AssertionError: long commands failed past the hold life: ["createIndexes: 134 fx hold revoked: the read held version 3 for more than 500ms; retry, full error: {'ok': 0.0, 'errmsg': 'fx hold revoked:", "$lookup: 134 fx hold rev
+/home/user/fenvix-engine/ctl-tests/test_50_c2_step7b_fix_long_commands.py:149: AssertionError: long commands failed past the hold life: ["createIndexes: 134 fx hold revoked: the read held version 3 for more than 500ms; retry, full
+1 failed, 7 passed in 174.46s (0:02:54)
+== FENVIX_CONTROL_FULL_WALK
+E   AssertionError: long commands failed past the hold life: ["createIndexes: 134 fx hold revoked: the read held version 3 for more than 500ms; retry, full error: {'ok': 0.0, 'errmsg': 'fx hold revoked:"]; indexes ['_id_']
+/home/user/fenvix-engine/ctl-tests/test_50_c2_step7b_fix_long_commands.py:149: AssertionError: long commands failed past the hold life: ["createIndexes: 134 fx hold revoked: the read held version 3 for more than 500ms; retry, full
+1 failed, 7 passed in 184.53s (0:03:04)
+== FENVIX_CONTROL_KEEP_VIEW
+/home/user/fenvix-engine/ctl-tests/test_50_c2_step7b_fix_long_commands.py:92: AssertionError: control KEEP_VIEW: a command that keeps its first view across the drop must lose rows
+/home/user/fenvix-engine/ctl-tests/test_50_c2_step7b_fix_long_commands.py:92: AssertionError: control KEEP_VIEW: a command that keeps its first view across the drop must lose rows
+/home/user/fenvix-engine/ctl-tests/test_50_c2_step7b_fix_long_commands.py:92: AssertionError: control KEEP_VIEW: a command that keeps its first view across the drop must lose rows
+/home/user/fenvix-engine/ctl-tests/test_50_c2_step7b_fix_long_commands.py:92: AssertionError: control KEEP_VIEW: a command that keeps its first view across the drop must lose rows
+/home/user/fenvix-engine/ctl-tests/test_50_c2_step7b_fix_long_commands.py:92: AssertionError: control KEEP_VIEW: a command that keeps its first view across the drop must lose rows
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db is closed', 'code': 1, 'codeName'
+7 failed, 1 passed in 156.46s (0:02:36)

@@ -156,6 +156,27 @@ async fn fetch_h<'n>(primary: &Arc<dyn ObjectStore>, h: &RunH, run: &Run, first:
     }
 }
 
+/// The number of blocks of a run, and blocks first..=last of it (the erasure's rewrite reads a run whole, a chunk of
+/// blocks per range GET, `erase.rs`).
+pub async fn block_count(store: &Arc<dyn ObjectStore>, h: &RunH) -> Result<usize> {
+    Ok(h.open(store).await?.fence.blocks())
+}
+
+pub async fn blocks(store: &Arc<dyn ObjectStore>, h: &RunH, first: usize, last: usize) -> Result<Vec<Arc<runfmt::Block>>> {
+    // integration-3: one range GET, decoded and checked, not kept in the counter (step 6 replaced the block cache this
+    // used): a scrub reads whole runs once
+    let run = h.open(store).await?;
+    let (lo, hi) = run.fence.range(first, last);
+    let data = runfmt::get_range(store, &run.path, lo, hi).await?;
+    RUN_GETS.fetch_add(1, Relaxed);
+    (first..=last)
+        .map(|b| {
+            let (x, y) = run.fence.range(b, b);
+            Ok(Arc::new(runfmt::decode_checked(run, b, &data[(x - lo) as usize..(y - lo) as usize])?))
+        })
+        .collect()
+}
+
 /// A row from our runs: seq and envelope (first byte 0 live, 1 deleted). A point read leaves `key` empty (the caller
 /// knows it).
 #[derive(Clone, Debug, PartialEq, Eq)]

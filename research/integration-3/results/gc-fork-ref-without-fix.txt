@@ -1,0 +1,3 @@
+fork reference and GC (control false): 2 of 2 runs of v1 deleted; GC deleted 4 runs in all
+thread 'fx::compactor_tests::gc_keeps_the_runs_a_fork_reference_names' (15026) panicked at src/fx/compactor_tests.rs:893:13:
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 123 filtered out; finished in 4.50s

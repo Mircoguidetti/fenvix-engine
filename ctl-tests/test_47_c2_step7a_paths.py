@@ -21,7 +21,7 @@ from lib import Server, make_bucket, dump_db, TOKEN
 GAP = 1.15  # states are separated by more than the 1 s resolution of the object store's timestamps
 # After the first version every publish writes a delta run only: step 3's offline builder reseals a group from SlateDB's
 # rows, which a drop removed (`fx/build.rs`: it assumes SlateDB keeps every row; step 4's reseal reads the runs instead).
-SEALED = ["--sealed-runs", "2", "--sealed-reseal-every", "1000000", "--sealed-t-pin-ms", "1000", "--sealed-e1-wait-ms", "0",
+SEALED = ["--sealed-runs", "2", "--sealed-reseal-every", "1000000", "--sealed-t-pin-ms", "1000", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait",
           "--retention-interval-secs", "2", "--retention-prune-secs", "3600"]
 CONTROL = os.environ.get("FENVIX_CONTROL_RAW_PATHS") == "1"
 

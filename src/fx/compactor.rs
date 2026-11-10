@@ -264,11 +264,14 @@ pub struct Shared {
     pub opened: Instant,
     pub stats: Stats,
     pub erasures: Mutex<Vec<Erasure>>,
+    /// Integration-3: absorb until X_d reaches this seq (step 7b's erasure pass asks for its S_e here, since with a
+    /// compactor it may not publish itself). 0: nothing asked.
+    pub absorb_upto: AtomicU64,
 }
 
 impl Shared {
     pub fn new(id: &str, holds: Arc<Holds>) -> Arc<Shared> {
-        Arc::new(Shared { id: id.to_string(), holds, serving: AtomicU64::new(u64::MAX), serving_version: AtomicU64::new(u64::MAX), pending: Mutex::new(None), r3: Arc::new(R3Gets::default()), opened: Instant::now(), stats: Stats::default(), erasures: Mutex::new(Vec::new()) })
+        Arc::new(Shared { id: id.to_string(), holds, serving: AtomicU64::new(u64::MAX), serving_version: AtomicU64::new(u64::MAX), pending: Mutex::new(None), r3: Arc::new(R3Gets::default()), opened: Instant::now(), stats: Stats::default(), erasures: Mutex::new(Vec::new()), absorb_upto: AtomicU64::new(0) })
     }
 
     pub fn pending_version(&self) -> Option<u64> {
@@ -1046,7 +1049,7 @@ impl Compactor {
         let unabs = self.unabsorbed().len();
         let mut r = self.running.lock().unwrap();
         // absorption: L0 at the threshold, or an erasure waiting for its deletes, or L0 close to the stall
-        if !r.absorb && unabs > 0 && (unabs >= self.knobs.absorb_min_l0 || self.erasure_waits_for_absorb(v.x_d) || self.l0_count() >= 6) {
+        if !r.absorb && unabs > 0 && (unabs >= self.knobs.absorb_min_l0 || self.erasure_waits_for_absorb(v.x_d) || self.sh.absorb_upto.load(Relaxed) > v.x_d || self.l0_count() >= 6) {
             r.absorb = true;
             self.spawn(Prio::Absorb, |c| async move {
                 let n = c.absorb_once().await;

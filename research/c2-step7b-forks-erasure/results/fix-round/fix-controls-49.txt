@@ -1,0 +1,13 @@
+== FENVIX_CONTROL_NO_OWNERSHIP
+/home/user/fenvix-engine/ctl-tests/test_49_review_c2_step7b.py:76: AssertionError: the fork's erasure deleted 2 runs of its source ['tenants/esrc/fx/run/delta/00000000000000000006-1-f0aecd41', 'tenants/esrc/fx/run/delta/00000000000000000008-1-9fe20bf7']; the s
+1 failed, 4 deselected in 10.31s
+== FENVIX_CONTROL_NO_LEASE_RECOVERY
+/home/user/fenvix-engine/ctl-tests/test_02b_fork_crash.py:24: AssertionError: ('tenants/kid/', [('tenants/kid/_lease', 86)])
+1 failed, 4 deselected, 1 warning in 2.70s
+== FENVIX_CONTROL_NO_PAIRING_CLEANUP
+/home/user/fenvix-engine/ctl-tests/test_49_review_c2_step7b.py:143: AssertionError: left in the source: checkpoints ['670dccdf-8941-4ad0-bda0-d1b639d2a2b5'], pairs [('tenants/src/fx/pairs/670dccdf-8941-4ad0-bda0-d1b639d2a2b5', 139)]
+/home/user/fenvix-engine/ctl-tests/test_49_review_c2_step7b.py:143: AssertionError: left in the source: checkpoints ['57c8f0a4-e53c-447b-9dc2-11f7473e71f5'], pairs [('tenants/src/fx/pairs/57c8f0a4-e53c-447b-9dc2-11f7473e71f5', 139)]
+2 failed, 3 deselected, 2 warnings in 5.31s
+== FENVIX_CONTROL_KEEP_CHANGES
+/home/user/fenvix-engine/ctl-tests/test_49_review_c2_step7b.py:170: AssertionError: 20 documents of the erased customer still readable through a change stream after the scrub: ['u1-0', 'u1-1', 'u1-2']
+1 failed, 4 deselected in 2.22s
