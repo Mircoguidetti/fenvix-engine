@@ -71,11 +71,23 @@ check(bool(m) and m.group(2).startswith("FINITO"), f"client: m30 program on cook
 reads = read("client/size-1/reads.txt").strip().splitlines()
 check(bool(reads) and "ONE TO ONE" in reads[-1].upper(), f"client: reads against the plan: {reads[-1] if reads else 'none'}")
 ex = read("extras/steps.log")
-for prog in ("s3-first-byte", "sealed-run", "log-ack", "ballast-rounds", "takeovers"):
+for prog in ("s3-first-byte", "sealed-run", "log-ack", "ballast-rounds", "takeovers", "takeovers-logoff"):
     line = [l for l in ex.splitlines() if f"program {prog}:" in l]
     check(bool(line) and "code 0" in line[-1], f"extras {prog}: {line[-1][21:200] if line else 'not run'}")
 s = read("extras/sealed-run/sealed-run-summary.json")
 check(bool(s) and json.loads(s).get("wrong") == 0, f"sealed run: wrong rows {json.loads(s).get('wrong') if s else None}")
+# every program the extras client ran, whatever its name, ended with code 0 (aws-ready 2026-11-10: the log-off takeover
+# run failed with code 1 and no check looked at it)
+bad = [l[21:200] for l in ex.splitlines() if re.search(r"program \S+: code [1-9]", l)]
+check(not bad, f"extras: every program code 0{(': ' + '; '.join(bad)) if bad else ''}")
+for lbl in ("", "-logoff"):
+    f = read(f"extras/takeovers/takeovers{lbl}-summary.json")
+    if lbl and not f:
+        check(False, "takeovers with the log off: no summary")
+        continue
+    if lbl:
+        j = json.loads(f)
+        check(j.get("verdict") == "PASS", f"takeovers with the log off: {j.get('verdict')}, {j.get('done')}/{j.get('n')} done, lost {j.get('lost')}")
 t = read("extras/takeovers/takeovers-summary.json")
 tj = json.loads(t) if t else {}
 check(tj.get("verdict") == "PASS", f"takeovers: {tj.get('verdict')}, {tj.get('done')}/{tj.get('n')} done, acknowledged "

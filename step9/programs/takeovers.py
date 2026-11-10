@@ -44,6 +44,9 @@ ap.add_argument("--settle-s", type=float, default=90.0, help="wait before the se
 a = ap.parse_args()
 os.makedirs(a.out, exist_ok=True)
 tag = f"takeovers{('-' + a.label) if a.label else ''}"
+# each labelled run gets its own database: the log-off run follows the log-on run on the same bucket, and the same seed
+# and writer _ids in tk_app made it fail at once with a duplicate key (aws-ready's local run, 2026-11-10)
+DB = "tk_app" + (f"_{a.label}" if a.label else "")
 raw = open(os.path.join(a.out, f"{tag}.jsonl"), "a")
 s3 = boto3.client("s3", region_name="eu-west-1")
 pw = urllib.parse.quote(os.environ["CM_PW"], safe="")
@@ -107,7 +110,7 @@ def wait_ping(node, wait_s=120):
     raise RuntimeError(f"{node} does not answer on 27018 after {wait_s} s")
 
 
-colls = {k: client(k)["tk_app"].get_collection("w", write_concern=WriteConcern(w="majority", j=True)) for k in NODES}
+colls = {k: client(k)[DB].get_collection("w", write_concern=WriteConcern(w="majority", j=True)) for k in NODES}
 acked = {}            # _id -> (node, time)
 state = {"serving": "A", "killed_at": {"A": None, "B": None}, "stop": False, "failed": 0, "after_kill": 0}
 
@@ -138,7 +141,7 @@ def writer(t):
 
 summary = {"n": a.n, "writers": a.writers, "lease_ttl_s": a.lease_ttl, "log": a.log, "takeovers": []}
 command("A", "start"); wait_ping("A")
-colls["A"].insert_one({"_id": "seed", "ts": time.time()})   # A owns tk_app before B starts
+colls["A"].insert_one({"_id": "seed", "ts": time.time()})   # A owns the database before B starts
 command("B", "start"); wait_ping("B")
 ths = [threading.Thread(target=writer, args=(t,), daemon=True) for t in range(a.writers)]
 for t in ths:
@@ -196,7 +199,7 @@ def read_back(wait_s=180):
             try:
                 vc = MongoClient(f"mongodb://root:{pw}@{ip}:27018/?directConnection=true&tls=true&tlsCAFile={a.ca}&authSource=admin",
                                  appname="app-demo", serverSelectionTimeoutMS=10000, socketTimeoutMS=0)
-                got = {d["_id"] for d in vc["tk_app"]["w"].find({}, {"_id": 1}, batch_size=20000)}
+                got = {d["_id"] for d in vc[DB]["w"].find({}, {"_id": 1}, batch_size=20000)}
                 vc.close()
                 note(kind="read_back", node=node, found=len(got))
                 return set(acked) - got
