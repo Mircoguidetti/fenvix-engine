@@ -1,0 +1,12 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______________________ test_bulk_insert_does_not_stall ________________________
+test_28_bulk_insert_stall.py:76: in test_bulk_insert_does_not_stall
+    assert not errors, f"writes stalled: {errors[:3]} ({report})"
+E   AssertionError: writes stalled: ["batch 34 after 60.0 s: NetworkTimeout('127.0.0.1:31342: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeoutMS: 20000.0ms)')", "batch 49 after 60.0 s: NetworkTimeout('127.0.0.1:31342: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeoutMS: 20000.0ms)')", "batch 50 after 60.0 s: NetworkTimeout('127.0.0.1:31342: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeoutMS: 20000.0ms)')"] (48 batches of 500 in 62.1 s, max batch 1.32 s, compactions 0, L0 watch requests 62)
+E   assert not ["batch 34 after 60.0 s: NetworkTimeout('127.0.0.1:31342: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, ...out('127.0.0.1:31342: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeoutMS: 20000.0ms)')", ...]
+----------------------------- Captured stdout call -----------------------------
+48 batches of 500 in 62.1 s, max batch 1.32 s, compactions 0, L0 watch requests 62
+=========================== short test summary info ============================
+FAILED test_28_bulk_insert_stall.py::test_bulk_insert_does_not_stall - Assert...
+1 failed in 122.49s (0:02:02)
