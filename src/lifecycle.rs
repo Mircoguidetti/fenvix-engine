@@ -1087,7 +1087,7 @@ impl Tenant {
     }
 
     /// The SlateDB writer, for this database's compactor (`fx/compactor.rs`): it reads the L0 list and the raw L0 SSTs.
-    pub(crate) fn fx_writer_db(&self) -> Option<&Db> {
+    pub fn fx_writer_db(&self) -> Option<&Db> {
         match &self.mode {
             Some(Mode::Writer(db)) => Some(db),
             _ => None,

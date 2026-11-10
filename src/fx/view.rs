@@ -232,6 +232,11 @@ async fn fetch_h(primary: &Arc<dyn ObjectStore>, h: &RunH, run: &Run, first: usi
     }
 }
 
+/// Blocks first..=last of a run of `h` (its NVMe copy when it has one), for the derived-document rebuild (`derive.rs`).
+pub(super) async fn fetch_blocks(store: &Arc<dyn ObjectStore>, h: &RunH, run: &Run, first: usize, last: usize) -> Result<Vec<Arc<Block>>> {
+    fetch_h(store, h, run, first, last).await
+}
+
 /// A row from our runs: seq and envelope (first byte 0 live, 1 deleted). A point read leaves `key` empty (the caller
 /// knows it).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -290,6 +295,30 @@ async fn run_get_counted(store: &Arc<dyn ObjectStore>, h: &RunH, key: &[u8]) -> 
     };
     let j = b.lower_bound(key);
     Ok(((j < b.len() && b.key(j) == key).then(|| RRow { key: Vec::new(), seq: b.seq(j), env: b.env(j).to_vec() }), paid))
+}
+
+/// Derived documents (`derive.rs`): before a point read of a checkpoint document in a run with derived rows, fetch the
+/// thread's message blocks with the document's block in one GET (into the block cache), so the rebuild needs no second
+/// trip. Answers never depend on it.
+async fn prefetch_thread(store: &Arc<dyn ObjectStore>, h: &RunH, key: &[u8]) -> Result<()> {
+    if !h.holds_key(key) {
+        return Ok(());
+    }
+    let run = h.open(store).await?.clone();
+    if let Some((a, z)) = super::derive::prefetch_span(&run, key) {
+        fetch_h(store, h, &run, a, z).await?;
+    }
+    Ok(())
+}
+
+/// A sealed row that is a derived document (rebuilt, as a live row) or a message row (None: never a document). The one
+/// place where the reader meets `derive.rs`.
+async fn derived_row(store: &Arc<dyn ObjectStore>, h: &RunH, key: &[u8], r: RRow) -> Result<Option<RRow>> {
+    if r.env.first() == Some(&runfmt::PART) {
+        return Ok(None);
+    }
+    let env = super::derive::rebuild(store, h, key, &r.env).await?;
+    Ok(Some(RRow { key: r.key, seq: r.seq, env }))
 }
 
 pub struct Group {
@@ -375,7 +404,11 @@ impl View {
         }
         if best.is_none() {
             if let Some(s) = &g.sealed {
+                prefetch_thread(&self.store, s, key).await?;
                 best = run_get(&self.store, s, key).await?;
+                if best.as_ref().is_some_and(|r| super::derive::is_derived(&r.env)) {
+                    best = derived_row(&self.store, s, key, best.unwrap()).await?;
+                }
             }
         }
         if best.is_some() {
@@ -578,7 +611,7 @@ impl RunsCursor {
                 if s.peek(&store).await?.is_some_and(|r| r.key == key) {
                     let r = s.take().unwrap();
                     if best.is_none() {
-                        best = Some(r);
+                        best = if super::derive::is_derived(&r.env) { derived_row(&store, &s.h, &key, r).await? } else { Some(r) };
                     }
                 }
             }

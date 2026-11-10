@@ -810,6 +810,19 @@ impl Server {
                 "reseals": tenant_bench::fx::compactor::G_RESEALS.load(Relaxed) as i64,
                 "errors": tenant_bench::fx::compactor::G_ERRORS.load(Relaxed) as i64,
             },
+            // agent checkpoints as a thread message log (`fx/derive.rs`, `--sealed-derive`): documents encoded and kept
+            // plain by reseals, message rows written, rebuilds by reads and by reseals, rebuild errors (a wrong reference
+            // or a damaged row: an error, never a wrong document)
+            "derived": {
+                "write": tenant_bench::fx::derive::WRITE.load(Relaxed),
+                "encoded": tenant_bench::fx::derive::ENCODED_DOCS.load(Relaxed) as i64,
+                "plain": tenant_bench::fx::derive::PLAIN_DOCS.load(Relaxed) as i64,
+                "messageRows": tenant_bench::fx::derive::MESSAGE_ROWS.load(Relaxed) as i64,
+                "fallbacks": tenant_bench::fx::derive::FALLBACKS.load(Relaxed) as i64,
+                "rebuilds": tenant_bench::fx::derive::REBUILDS.load(Relaxed) as i64,
+                "resealRebuilds": tenant_bench::fx::derive::RESEAL_REBUILDS.load(Relaxed) as i64,
+                "rebuildErrors": tenant_bench::fx::derive::REBUILD_ERRORS.load(Relaxed) as i64,
+            },
             "compaction": {
                 "passes": tenant_bench::lifecycle::MAINT.compact_runs.load(Relaxed) as i64,
                 "running": tenant_bench::lifecycle::PASSES_RUNNING.load(Relaxed) as i64,

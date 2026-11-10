@@ -50,7 +50,7 @@ impl Default for BuildOpts {
             reseal: Reseal::All,
             group_bytes: 1 << 30,
             sealed: RunOptions::sealed(CustomerKind::V2),
-            delta: RunOptions { block_bytes: runfmt::MIN_BLOCK, part_bytes: runfmt::DEFAULT_PART, customers: CustomerKind::V2 },
+            delta: RunOptions { block_bytes: runfmt::MIN_BLOCK, part_bytes: runfmt::DEFAULT_PART, customers: CustomerKind::V2, codec: runfmt::BlockCodec::Lz4, derived: false },
         }
     }
 }

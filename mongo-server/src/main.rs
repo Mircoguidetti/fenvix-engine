@@ -16,6 +16,7 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 pub static malloc_conf: &[u8] = b"background_thread:true\0";
 
 mod agg;
+mod agentck;
 mod custkey;
 mod layout2;
 mod prefetch;
@@ -500,6 +501,18 @@ struct Args {
     /// With `--sealed-compactor`: the drop of absorbed SlateDB rows (off by default until step 7b pairs forks).
     #[arg(long)]
     sealed_drop: bool,
+    /// With `--sealed-compactor`: the release flag E1 of derived documents (`fx/derive.rs`): reseals store the threads of
+    /// the agent checkpoint collections as a message log plus derived documents. Reads understand them always (E0).
+    /// FENVIX_SEALED_DERIVE=1 does the same.
+    #[arg(long)]
+    sealed_derive: bool,
+    /// Agent checkpoint collections (`agentck.rs`): comma separated `[db.]collection`, customer key `thread_id`.
+    #[arg(long, default_value = "checkpoints,checkpoint_writes")]
+    agent_checkpoints: String,
+    /// Block codec of the sealed runs the compactor writes: `lz4` (run format v1, as before) or `zstd` (run format v2,
+    /// which a release before this one cannot read). FENVIX_SEALED_CODEC does the same.
+    #[arg(long, default_value = "lz4")]
+    sealed_codec: String,
     /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
     /// releases before); M29 measured 64.
     #[arg(long, default_value_t = 4)]
@@ -776,7 +789,12 @@ async fn run() -> Result<()> {
             tenant_bench::fx::compactor::SERVER_ON.store(true, Relaxed);
             tenant_bench::fx::compactor::SERVER_SMALL.store(env_c == "small", Relaxed);
             tenant_bench::fx::compactor::DROP_DEFAULT.store(args.sealed_drop, Relaxed);
+            let derive = args.sealed_derive || std::env::var("FENVIX_SEALED_DERIVE").as_deref() == Ok("1");
+            tenant_bench::fx::derive::WRITE.store(derive, Relaxed);
+            let codec = std::env::var("FENVIX_SEALED_CODEC").unwrap_or_else(|_| args.sealed_codec.clone());
+            tenant_bench::fx::compactor::set_sealed_codec(&codec)?;
         }
+        agentck::configure(&args.agent_checkpoints)?;
         tenant_bench::fx::check_config()?;
     }
     tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);

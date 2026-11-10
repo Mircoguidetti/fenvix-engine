@@ -406,7 +406,7 @@ impl Server {
         let missing: Vec<&Need> = needs.iter().filter(|(r, a)| !authz::allows(&privs, r, a)).collect();
         if missing.is_empty() {
             // tenantStats shows the S3 requests of the whole process (every tenant): root only
-            if (name == "tenantStats" || name == "fenvixSstInfo") && !holds_admin_role(&self.conn_roles(conn_id).await?, "root") {
+            if (name == "tenantStats" || name == "fenvixSstInfo" || name == "fenvixReseal") && !holds_admin_role(&self.conn_roles(conn_id).await?, "root") {
                 return Err(not_authorized(db, name, cmd));
             }
             if !self.may_grant(&privs, conn_id, db, name, cmd).await? {

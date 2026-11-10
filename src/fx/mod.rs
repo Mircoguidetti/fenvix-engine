@@ -19,6 +19,7 @@
 pub mod build;
 pub mod codec;
 pub mod compactor;
+pub mod derive;
 pub mod drop;
 pub mod gc;
 pub mod droptest;
@@ -43,6 +44,8 @@ mod review4_tests;
 mod fix4_tests;
 #[cfg(test)]
 mod tests_7a;
+#[cfg(test)]
+mod derive_tests;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 
