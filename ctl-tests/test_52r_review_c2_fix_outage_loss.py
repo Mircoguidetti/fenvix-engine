@@ -318,3 +318,263 @@ def check(c, acked, incs, when):
         out.append(f"{when}: {len(bad)} counters differ from their acknowledged increments (stored, acknowledged), e.g. {list(bad.items())[:5]}")
     print("\n".join(out) or f"{when}: OK")
     return out
+
+
+def lease_rounds(ff, holder, rounds, stop=None):
+    for r in range(rounds):
+        if stop is not None and stop.is_set():
+            return
+        time.sleep(1.5)
+        with open(ff, "w") as fh:
+            fh.write(f"delay_put processes/{holder}/_lease {TTL * 1000 + 1500}\n")
+        time.sleep(TTL + 1.0)
+        with open(ff, "w") as fh:
+            fh.write("")
+        time.sleep(TTL + 2)
+
+
+def test_index_build_spanning_lease_losses():
+    """createIndexes on a collection with documents builds in chunks (`cmd_index::build_step`, one lock per chunk) while
+    inserts continue and the lease is lost several times. Whatever createIndexes answers, every acknowledged insert must be
+    in the collection scan, and in the new index if the build answered ok; a refused build must leave no index behind."""
+    bucket = make_bucket("rvidx")
+    ff = faults_file()
+    port = free_port()
+    srv = Server(bucket, "rvidx", idle=600, holder="I1", port=port, env={"MONGO_TEST_FAULTS_FILE": ff, "MONGO_BUILD_CHUNK": "500"},
+                 extra=["--lease-ttl-secs", str(TTL)]).start()
+    acked, outcomes, stop = set(), [], threading.Event()
+    lock = threading.Lock()
+    try:
+        c = client(srv)
+        for b in range(30):
+            c.d.t.insert_many([{"_id": b * 5000 + i, "k": i % 977, "u": b * 5000 + i} for i in range(5000)])
+            acked.update(range(b * 5000, b * 5000 + 5000))
+
+        def writer():
+            cl = client(srv)
+            n = 1_000_000
+            while not stop.is_set():
+                ids = list(range(n, n + 200))
+                n += 200
+                try:
+                    cl.d.t.insert_many([{"_id": i, "k": i % 977, "u": i} for i in ids])
+                    with lock:
+                        acked.update(ids)
+                except PyMongoError:
+                    pass
+                time.sleep(0.05)
+        wt = threading.Thread(target=writer)
+        wt.start()
+        lt = threading.Thread(target=lease_rounds, args=(ff, "I1", 4, stop))
+        lt.start()
+        built = {}
+        ci = MongoClient(srv.uri, serverSelectionTimeoutMS=5000, socketTimeoutMS=90000, retryWrites=False, retryReads=False)
+        hung = []
+        for name, spec, opts in (("k_1", [("k", 1)], {}), ("u_1", [("u", 1)], {"unique": True}), ("k_-1_u_1", [("k", -1), ("u", 1)], {})):
+            for attempt in range(3):
+                t0 = time.time()
+                try:
+                    ci.d.t.create_index(spec, name=name, **opts)
+                    built[name] = spec
+                    outcomes.append(f"{name} attempt {attempt}: ok in {time.time() - t0:.1f} s")
+                    break
+                except PyMongoError as e:
+                    outcomes.append(f"{name} attempt {attempt}: after {time.time() - t0:.1f} s {type(e).__name__} {getattr(e, 'code', None)} {str(e)[:100]}")
+                    if time.time() - t0 > 85:
+                        hung.append(f"{name} attempt {attempt}")
+                    time.sleep(1)
+            print(outcomes[-1], flush=True)
+        lt.join()
+        stop.set()
+        wt.join(60)
+        losses = srv.log_text().count("LEASE lost")
+        print(f"lease losses {losses}; reopenedWritesRefused {c.admin.command('tenantStats')['maintenance'].get('reopenedWritesRefused')}")
+        print("\n".join(outcomes))
+        time.sleep(TTL + 3)
+        problems = retry_until_ok(lambda: index_check(c, acked, built), "the final checks", 120)
+        if hung:
+            problems.append(f"createIndexes did not answer within 90 s: {hung}")
+        print(f"background build failures in the log: {srv.log_text().count('background index build')}")
+        assert losses > 0, "no lease loss: the test did not reach the case"
+        assert not problems, "\n".join(problems)
+    finally:
+        stop.set()
+        srv.term()
+        os.unlink(ff)
+
+
+def test_split_insert_many_with_driver_retries():
+    """insertMany calls larger than one command (the driver splits 120,000 documents into two insert commands) with the
+    driver's retryable writes on, while the lease is lost several times. What the client is told must match what is stored:
+    an acknowledged call has every document once; a failed ordered call has exactly the first nInserted documents; no
+    document is stored twice (scan) and none of a failed batch is stored."""
+    bucket = make_bucket("rvsplit")
+    ff = faults_file()
+    srv = rs_server(bucket, "rvsplit", "S1", ff)
+    stop = threading.Event()
+    calls = []
+    try:
+        c = MongoClient(srv.uri, serverSelectionTimeoutMS=5000, socketTimeoutMS=120000, retryWrites=True)
+        lt = threading.Thread(target=lease_rounds, args=(ff, "S1", 5, stop))
+        lt.start()
+        b = 0
+        while lt.is_alive():
+            ids = list(range(b * 120_000, (b + 1) * 120_000))
+            b += 1
+            try:
+                r = c.d.t.insert_many([{"_id": i, "f": "x" * 20} for i in ids], ordered=True)
+                calls.append(("ok", ids, len(r.inserted_ids)))
+            except BulkWriteError as e:
+                calls.append(("partial", ids, e.details.get("nInserted")))
+            except PyMongoError as e:
+                calls.append((f"error {getattr(e, 'code', None)} {str(e)[:80]}", ids, None))
+        lt.join()
+        losses = srv.log_text().count("LEASE lost")
+        st = c.admin.command("tenantStats")["maintenance"]
+        scanned = scan_ids(c.d.t)
+        sset = set(scanned)
+        problems = []
+        if len(scanned) != len(sset):
+            problems.append(f"{len(scanned) - len(sset)} documents scanned twice")
+        for kind, ids, n in calls:
+            have = [i for i in ids if i in sset]
+            if kind == "ok" and len(have) != len(ids):
+                problems.append(f"acknowledged call {ids[0]}: {len(ids) - len(have)} documents missing")
+            elif kind == "partial" and have != ids[:n]:
+                problems.append(f"partial call {ids[0]}: told nInserted={n}, stored {len(have)} (first missing {next((i for i in ids[:n] if i not in sset), None)})")
+            elif kind.startswith("error") and have:
+                problems.append(f"failed call {ids[0]} ({kind}): {len(have)} documents stored")
+        print(f"lease losses {losses}; reopenedWritesRefused {st.get('reopenedWritesRefused')}; calls {[(k, n) for k, _, n in calls]}")
+        print("\n".join(problems) or "OK")
+        assert losses > 0, "no lease loss: the test did not reach the case"
+        assert not problems, "\n".join(problems)
+    finally:
+        stop.set()
+        srv.term()
+        os.unlink(ff)
+
+
+def index_check(c, acked, built):
+    problems = []
+    names = [i["name"] for i in c.d.t.list_indexes()]
+    scanned = set(scan_ids(c.d.t))
+    if acked - scanned:
+        problems.append(f"{len(acked - scanned)} acknowledged inserts missing from the scan")
+    for name, spec in built.items():
+        got = set(d["_id"] for d in c.d.t.find({spec[0][0]: {"$gte": -1}}, {"_id": 1}).hint(name))
+        if acked - got:
+            problems.append(f"index {name}: {len(acked - got)} acknowledged documents missing, e.g. {sorted(acked - got)[:5]}")
+        if got - scanned:
+            problems.append(f"index {name}: {len(got - scanned)} entries for documents not in the scan")
+    for name in ("k_1", "u_1", "k_-1_u_1"):
+        if name not in built and name in names:
+            problems.append(f"index {name}: createIndexes failed but the index is listed")
+    v = c.d.command("validate", "t", full=True)
+    print(f"acknowledged {len(acked)}, scanned {len(scanned)}, indexes {names}, validate valid={v.get('valid')} errors={v.get('errors')[:3]}")
+    if not v.get("valid"):
+        problems.append(f"validate: {v.get('errors')[:3]}")
+    return problems
+
+
+import pytest
+
+
+@pytest.mark.skipif(not os.environ.get("R52_OLD_BIN"), reason="needs R52_OLD_BIN, a binary that writes duplicate natural-order numbers (integration-3)")
+def test_damaged_database_is_found_and_does_not_spread():
+    """Task 3 (repair). R52_OLD_BIN (integration-3) writes a database with two documents sharing one natural-order number
+    (the transaction case above: "B" is stored but missing from scans). Then this branch's binary opens it. Fails when
+    `validate {full: true}` calls the collection valid while an acknowledged document is missing from its scan, and when a
+    later delete of the hidden document also removes the other document from scans (the delete removes `nat/{n}`, which
+    names the other document): the damage spreads to a document that was fine."""
+    old = os.environ["R52_OLD_BIN"]
+    bucket = make_bucket("rvdamage")
+    ff = faults_file()
+    port = free_port()
+    srv = Server(bucket, "rvdamage", idle=600, holder="T1", port=port, env={"MONGO_TEST_FAULTS_FILE": ff}, binary=old,
+                 extra=["--lease-ttl-secs", str(TTL), "--replica-set", "rs0", "--advertise", f"127.0.0.1:{port}"]).start()
+    try:
+        c = client(srv)
+        col = c.d.t
+        col.insert_many([{"_id": f"pre{i}"} for i in range(10)])
+        s = c.start_session()
+        s.start_transaction()
+        col.insert_one({"_id": "A"}, session=s)
+        lose_lease(srv, ff, "T1")
+        time.sleep(TTL + 1)
+        retry_until_ok(lambda: col.insert_one({"_id": "B"}), "the insert of B")
+        s.commit_transaction()
+        s.end_session()
+        before = scan_ids(col)
+        print(f"written by the old binary, scan: {before}")
+    finally:
+        srv.term()
+        os.unlink(ff)
+    assert "B" not in before, "the old binary did not damage the collection: the test did not reach the case"
+    new = Server(bucket, "rvdamage2", idle=600).start()
+    try:
+        c = new.client()
+        col = c.d.t
+        v = c.d.command("validate", "t", full=True)
+        print(f"validate on this branch: valid={v.get('valid')} nrecords={v.get('nrecords')} errors={v.get('errors')} warnings={v.get('warnings')}")
+        assert col.find_one({"_id": "B"}) is not None and col.find_one({"_id": "A"}) is not None
+        col.delete_one({"_id": "B"})
+        after = scan_ids(col)
+        a_by_id = col.find_one({"_id": "A"}) is not None
+        print(f"after deleting B (hidden): scan {after}; A found by _id {a_by_id}")
+        problems = []
+        if v.get("valid") and "B" not in before:
+            problems.append("validate calls the collection valid while acknowledged document B is missing from its scan")
+        if "A" not in after:
+            problems.append("deleting the hidden document B also removed A from collection scans (A is still stored)")
+        assert not problems, "; ".join(problems)
+    finally:
+        new.term()
+
+
+def test_index_commands_keep_answering_across_lease_losses():
+    """createIndexes and dropIndexes on a collection with documents, in a loop, while the lease is lost again and again.
+    A build step refused after a reopen (`dbs::Reopened`) fails the build; createIndexes then marks the new indexes
+    Dropping under a new lock, and returns early with `?` if that fails (the lease is not settled yet), leaving the
+    collection's key in `Server::builds`: no one runs its build steps any more, and every later createIndexes on the
+    collection waits in `wait_builds` forever. Fails when an index command does not answer within 60 s."""
+    bucket = make_bucket("rvidxhang")
+    ff = faults_file()
+    port = free_port()
+    srv = Server(bucket, "rvidxhang", idle=600, holder="H1", port=port, env={"MONGO_TEST_FAULTS_FILE": ff, "MONGO_BUILD_CHUNK": "200"},
+                 extra=["--lease-ttl-secs", str(TTL)]).start()
+    stop = threading.Event()
+    outcomes, hung = [], []
+    try:
+        c = client(srv)
+        for b in range(10):
+            c.d.t.insert_many([{"_id": b * 5000 + i, "k": i % 977} for i in range(5000)])
+        lt = threading.Thread(target=lease_rounds, args=(ff, "H1", int(os.environ.get("T52R_IDX_ROUNDS", "12")), stop))
+        lt.start()
+        ci = MongoClient(srv.uri, serverSelectionTimeoutMS=5000, socketTimeoutMS=60000, retryWrites=False, retryReads=False)
+        n = 0
+        while lt.is_alive() and not hung:
+            n += 1
+            for what, fn in (("create", lambda: ci.d.t.create_index([("k", 1)], name="k_1")), ("drop", lambda: ci.d.t.drop_index("k_1"))):
+                t0 = time.time()
+                try:
+                    fn()
+                    outcomes.append(f"{n} {what} ok {time.time() - t0:.1f} s")
+                except PyMongoError as e:
+                    outcomes.append(f"{n} {what} {type(e).__name__} {getattr(e, 'code', None)} after {time.time() - t0:.1f} s: {str(e)[:90]}")
+                    if time.time() - t0 > 55:
+                        hung.append(outcomes[-1])
+                        break
+        stop.set()
+        lt.join()
+        losses = srv.log_text().count("LEASE lost")
+        refused = [o for o in outcomes if " ok " not in o]
+        print(f"cycles {n}; lease losses {losses}; commands that failed {len(refused)}: {refused[:6]}")
+        print(f"hung: {hung}")
+        if hung:
+            print("server log, index commands: " + " | ".join(l for l in srv.log_text().splitlines() if "Indexes" in l or "index build" in l)[-1500:])
+        assert losses > 0, "no lease loss: the test did not reach the case"
+        assert not hung, f"an index command did not answer within 60 s: {hung}"
+    finally:
+        stop.set()
+        srv.term()
+        os.unlink(ff)

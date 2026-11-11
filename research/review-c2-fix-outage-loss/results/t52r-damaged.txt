@@ -1,0 +1,6 @@
+written by the old binary, scan: ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'A']
+validate on this branch: valid=True nrecords=12 errors=[] warnings=['Could not complete validation of table:collection-433-1331817336171457388. This is a transient issue as the collection was actively in use by other operations.', 'Could not complete validation of table:index-434-1331817336171457388. This is a transient issue as the collection was actively in use by other operations.']
+after deleting B (hidden): scan ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9']; A found by _id True
+E           AssertionError: validate calls the collection valid while acknowledged document B is missing from its scan; deleting the hidden document B also removed A from collection scans (A is still stored)
+E           assert not ['validate calls the collection valid while acknowledged document B is missing from its scan', 'deleting the hidden document B also removed A from collection scans (A is still stored)']
+1 failed, 5 deselected in 12.44s

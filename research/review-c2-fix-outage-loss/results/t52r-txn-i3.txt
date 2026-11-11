@@ -1,0 +1,29 @@
+== i3
+reopened True; commit committed; reopenedWritesRefused None
+scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'A']
+after a restart: scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'A']; found by _id 12 of 12
+            print(f"after a restart: scanned {scanned2}; found by _id {len(by_id2)} of {len(acked)}")
+E       AssertionError: acknowledged documents missing from a collection scan: ['B'] (commit committed)
+1 failed, 2 deselected in 12.46s
+== i3
+reopened True; commit committed; reopenedWritesRefused None
+scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'A']
+after a restart: scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'A']; found by _id 12 of 12
+            print(f"after a restart: scanned {scanned2}; found by _id {len(by_id2)} of {len(acked)}")
+E       AssertionError: acknowledged documents missing from a collection scan: ['B'] (commit committed)
+1 failed, 2 deselected in 12.41s
+== i3
+reopened True; commit committed; reopenedWritesRefused None
+scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'A']
+after a restart: scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'A']; found by _id 12 of 12
+            print(f"after a restart: scanned {scanned2}; found by _id {len(by_id2)} of {len(acked)}")
+E       AssertionError: acknowledged documents missing from a collection scan: ['B'] (commit committed)
+1 failed, 2 deselected in 12.49s
+== i3
+P2 saw n=1 after its increment; commit on P1: committed; final n=1; acknowledged increments 2
+E           AssertionError: final counter 1, acknowledged increments 2 (commit committed)
+1 failed, 2 deselected in 12.45s
+== i3
+P2 saw n=1 after its increment; commit on P1: committed; final n=1; acknowledged increments 2
+E           AssertionError: final counter 1, acknowledged increments 2 (commit committed)
+1 failed, 2 deselected in 12.54s

@@ -1,0 +1,44 @@
+== fix sealed=default
+batches 180, acknowledged 870001 documents, refused 6 batches ['database d was reopened during the command (its lease was lost); nothing of the command\'s write was applied, retry, full error: {\'ok\'
+reopenedWritesRefused 6
+acknowledged 870001, scanned 870001, missing from the scan 0
+1 passed, 1 deselected in 70.71s (0:01:10)
+== fix sealed=off
+batches 209, acknowledged 1025001 documents, refused 4 batches ['database d was reopened during the command (its lease was lost); nothing of the command\'s write was applied, retry, full error: {\'ok\
+reopenedWritesRefused 4
+acknowledged 1025001, scanned 1025001, missing from the scan 0
+1 passed, 1 deselected in 72.72s (0:01:12)
+== fix sealed=default
+batches 188, acknowledged 920001 documents, refused 4 batches ['database d was reopened during the command (its lease was lost); nothing of the command\'s write was applied, retry, full error: {\'ok\'
+reopenedWritesRefused 4
+acknowledged 920001, scanned 920001, missing from the scan 0
+1 passed, 1 deselected in 70.84s (0:01:10)
+== fix sealed=off
+batches 215, acknowledged 1055001 documents, refused 4 batches ['database d was reopened during the command (its lease was lost); nothing of the command\'s write was applied, retry, full error: {\'ok\
+reopenedWritesRefused 4
+acknowledged 1055001, scanned 1055001, missing from the scan 0
+1 passed, 1 deselected in 72.63s (0:01:12)
+== i3 sealed=default
+batches 184, acknowledged 920001 documents, refused 0 batches []; lease losses 10
+reopenedWritesRefused None
+acknowledged 920001, scanned 913845, missing from the scan 6156
+E           AssertionError: 6156 acknowledged documents missing from a collection scan, e.g. [120000, 120001, 120002, 120003, 120004]
+1 failed, 1 deselected in 78.52s (0:01:18)
+== i3 sealed=off
+batches 211, acknowledged 1055001 documents, refused 0 batches []; lease losses 11
+reopenedWritesRefused None
+acknowledged 1055001, scanned 1051403, missing from the scan 3598
+E           AssertionError: 3598 acknowledged documents missing from a collection scan, e.g. [140000, 140001, 140002, 140003, 140004]
+1 failed, 1 deselected in 62.56s (0:01:02)
+== i3 sealed=default
+batches 187, acknowledged 935001 documents, refused 0 batches []; lease losses 12
+reopenedWritesRefused None
+acknowledged 935001, scanned 927962, missing from the scan 7039
+E           AssertionError: 7039 acknowledged documents missing from a collection scan, e.g. [115000, 115001, 115002, 115003, 115004]
+1 failed, 1 deselected in 60.71s (0:01:00)
+== i3 sealed=off
+batches 211, acknowledged 1055001 documents, refused 0 batches []; lease losses 9
+reopenedWritesRefused None
+acknowledged 1055001, scanned 1044020, missing from the scan 10981
+E           AssertionError: 10981 acknowledged documents missing from a collection scan, e.g. [135000, 135001, 135002, 135003, 135004]
+1 failed, 1 deselected in 62.51s (0:01:02)

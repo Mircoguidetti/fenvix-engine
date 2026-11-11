@@ -1,0 +1,36 @@
+== fix
+cycles 2; lease losses 12; commands that failed 2: ["1 drop OperationFailure 1 after 2.6 s: Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db is closed'", '2 create NetworkTimeout None after 60.0 s: 127.0.0.1:35346: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeou']
+hung: ['2 create NetworkTimeout None after 60.0 s: 127.0.0.1:35346: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeou']
+server log, index commands: SLOW dropIndexes db=d ms=2625 ok=false | background index build on d.t failed: DatabaseReopened (134): database d was reopened during the command (its lease was lost); nothing of the command's write was applied, retry
+            print(f"cycles {n}; lease losses {losses}; commands that failed {len(refused)}: {refused[:6]}")
+E           AssertionError: an index command did not answer within 60 s: ['2 create NetworkTimeout None after 60.0 s: 127.0.0.1:35346: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeou']
+E           assert not ['2 create NetworkTimeout None after 60.0 s: 127.0.0.1:35346: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeou']
+1 failed, 6 deselected in 72.50s (0:01:12)
+== i3
+cycles 5; lease losses 17; commands that failed 0: []
+hung: []
+1 passed, 6 deselected in 118.73s (0:01:58)
+== fix
+cycles 2; lease losses 12; commands that failed 2: ["1 drop OperationFailure 1 after 2.6 s: Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db is closed'", '2 create NetworkTimeout None after 60.0 s: 127.0.0.1:23545: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeou']
+hung: ['2 create NetworkTimeout None after 60.0 s: 127.0.0.1:23545: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeou']
+server log, index commands: SLOW dropIndexes db=d ms=2644 ok=false | background index build on d.t failed: DatabaseReopened (134): database d was reopened during the command (its lease was lost); nothing of the command's write was applied, retry
+            print(f"cycles {n}; lease losses {losses}; commands that failed {len(refused)}: {refused[:6]}")
+E           AssertionError: an index command did not answer within 60 s: ['2 create NetworkTimeout None after 60.0 s: 127.0.0.1:23545: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeou']
+E           assert not ['2 create NetworkTimeout None after 60.0 s: 127.0.0.1:23545: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeou']
+1 failed, 6 deselected in 70.65s (0:01:10)
+== i3
+cycles 5; lease losses 19; commands that failed 0: []
+hung: []
+1 passed, 6 deselected in 116.80s (0:01:56)
+== fix
+cycles 2; lease losses 15; commands that failed 2: ["1 drop OperationFailure 1 after 2.9 s: Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db is closed'", '2 create NetworkTimeout None after 60.0 s: 127.0.0.1:24147: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeou']
+hung: ['2 create NetworkTimeout None after 60.0 s: 127.0.0.1:24147: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeou']
+server log, index commands: SLOW dropIndexes db=d ms=2854 ok=false | background index build on d.t failed: DatabaseReopened (134): database d was reopened during the command (its lease was lost); nothing of the command's write was applied, retry
+            print(f"cycles {n}; lease losses {losses}; commands that failed {len(refused)}: {refused[:6]}")
+E           AssertionError: an index command did not answer within 60 s: ['2 create NetworkTimeout None after 60.0 s: 127.0.0.1:24147: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeou']
+E           assert not ['2 create NetworkTimeout None after 60.0 s: 127.0.0.1:24147: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeou']
+1 failed, 6 deselected in 70.50s (0:01:10)
+== i3
+cycles 5; lease losses 17; commands that failed 0: []
+hung: []
+1 passed, 6 deselected in 118.80s (0:01:58)

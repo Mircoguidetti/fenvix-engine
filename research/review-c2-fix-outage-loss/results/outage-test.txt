@@ -1,0 +1,9 @@
+fix on run 1: acknowledged 31002 documents; abandonCloseTimeouts 0 outage run 0: every acknowledged insert there  => 1 passed
+fix on run 2: acknowledged 24002 documents; abandonCloseTimeouts 0 outage run 0: every acknowledged insert there  => 1 passed
+fix on run 3: acknowledged 31002 documents; abandonCloseTimeouts 0 outage run 0: every acknowledged insert there  => 1 passed
+fix on run 4: acknowledged 24002 documents; abandonCloseTimeouts 0 outage run 0: every acknowledged insert there  => 1 passed
+fix off0 run 1: acknowledged 59502 documents; abandonCloseTimeouts 0 outage run 0: every acknowledged insert there  => 1 passed
+fix off0 run 2: acknowledged 60502 documents; abandonCloseTimeouts 0 outage run 0: every acknowledged insert there  => 1 passed
+fix sealedoff run 1: acknowledged 104502 documents; abandonCloseTimeouts 0 outage run 0: every acknowledged insert there  => 1 passed
+fix sealedoff run 2: acknowledged 111002 documents; abandonCloseTimeouts 0 outage run 0: every acknowledged insert there  => 1 passed
+DONE
