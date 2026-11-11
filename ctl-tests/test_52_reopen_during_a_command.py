@@ -21,7 +21,7 @@ import time
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 
-from lib import Server, make_bucket
+from lib import Server, make_bucket, free_port
 
 TTL = 2
 BATCH = 5000
@@ -93,3 +93,61 @@ def test_insert_spanning_a_lease_loss():
         assert not missing, f"after a restart: {len(missing)} acknowledged documents missing from a collection scan, e.g. {missing[:5]}"
     finally:
         srv2.term()
+
+
+def test_transaction_spanning_a_lease_loss():
+    """A transaction inserts, the lease is lost and taken back (the database is abandoned and opened again), the same
+    transaction inserts again and commits, or is refused and run again. A guard, not a reproduction: integration-3 already
+    refuses the statement after the reopen (it reads through the old opening's snapshot: "db is closed"), so its natural-
+    order numbers never come from two openings. Fails when a committed document is missing from a collection scan, when
+    the transaction never commits, or when the lease was not lost between the two statements."""
+    from pymongo.errors import PyMongoError as E
+    bucket = make_bucket("reopentx")
+    f = tempfile.NamedTemporaryFile("w", delete=False, suffix=".faults")
+    f.close()
+    ff = f.name
+    port = free_port()
+    srv = Server(bucket, "reopentx", idle=600, holder="T1", port=port, env={"MONGO_TEST_FAULTS_FILE": ff},
+                 extra=["--lease-ttl-secs", str(TTL), "--replica-set", "rs0", "--advertise", f"127.0.0.1:{port}"]).start()
+    try:
+        c = srv.client()
+        col = c.d.t
+        col.insert_many([{"_id": f"pre{i}"} for i in range(10)])
+        committed = [f"pre{i}" for i in range(10)]
+        outcomes = []
+        for attempt in range(3):
+            with c.start_session() as s:
+                try:
+                    s.start_transaction()
+                    col.insert_one({"_id": "a"}, session=s)
+                    if attempt == 0:
+                        lost0 = srv.log_text().count("LEASE lost")
+                        with open(ff, "w") as fh:
+                            fh.write(f"delay_put processes/T1/_lease {TTL * 1000 + 1500}\n")
+                        deadline = time.time() + 30
+                        while srv.log_text().count("LEASE lost") == lost0 and time.time() < deadline:
+                            time.sleep(0.1)
+                        with open(ff, "w") as fh:
+                            fh.write("")
+                        assert srv.log_text().count("LEASE lost") > lost0, "the lease was not lost: the test did not reach the case"
+                        time.sleep(TTL + 1)
+                    col.insert_one({"_id": "b"}, session=s)
+                    s.commit_transaction()
+                    outcomes.append(f"attempt {attempt}: committed")
+                    committed += ["a", "b"]
+                    break
+                except E as e:
+                    outcomes.append(f"attempt {attempt}: {type(e).__name__} {getattr(e, 'code', None)} {str(e)[:120]}")
+                    try:
+                        s.abort_transaction()
+                    except E:
+                        pass
+        print("\n".join(outcomes))
+        scanned = [d["_id"] for d in col.find({}, {"_id": 1}).hint([("$natural", 1)])]
+        missing = sorted(set(committed) - set(scanned))
+        print(f"scanned {scanned}")
+        assert "a" in committed, f"the transaction never committed: {outcomes}"
+        assert not missing, f"committed documents missing from a collection scan: {missing} ({outcomes})"
+        assert len(scanned) == len(set(scanned)) == len(committed), (scanned, committed)
+    finally:
+        srv.term()
