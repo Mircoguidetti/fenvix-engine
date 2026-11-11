@@ -266,6 +266,17 @@ def aurora_off(wait=True):
     au["end"] = au["end"] or time.time()
 
 
+def quota_free(ids):
+    """aws-fixes: wait until machines just terminated are gone before launching the next ones of the 8-vCPU plan (on
+    AWS a machine shutting down can still count against the vCPU quota for a short while). Never longer than 10 min."""
+    w = getattr(plat, "wait_terminated", None)
+    if w and ids:
+        try:
+            w([i for i in ids if i])
+        except Exception as e:  # noqa: BLE001 - the launch that follows says it if the quota is still taken
+            say(f"waiting for termination: {type(e).__name__}: {str(e)[:120]}")
+
+
 def cert_for(name, ip):
     pem = os.path.join(OUT, f".{name}.pem")
     subprocess.run(["bash", os.path.join(HERE, "..", "..", "kitchen", "ci", "certs.sh"), "server", os.environ["CA_DIR"], ip, pem], check=True)
@@ -459,7 +470,9 @@ try:
         # 16 threads each); 8 vCPU: the spare goes, a client of the m30 client's type comes
         if sp:
             stop("spare", sp[0], wait_s=120)
+            quota_free([sp[0]])
             sp = None
+        quota_free([i for i, m in machines.items() if m["name"] == "extras"])
         say(f"7/8 write-peak: {cmd['write_peak_args']} through the measured cook, client {cmd['client']} in {CLIENT_ZONE}")
         put("peak/config.json", {"programs": ["write-peak"], "pantry": PANTRY, "logs": LOGS,
                                  "cook": {"ip": ip1, "port": 27017}, "write_peak_args": cmd["write_peak_args"]})
@@ -473,7 +486,9 @@ try:
         # 8 vCPU: the spare goes, the Postgres machine (the Supabase stand-in) comes, then the agent client
         if sp:
             stop("spare", sp[0], wait_s=120)
+            quota_free([sp[0]])
             sp = None
+        quota_free([i for i, m in machines.items() if m["name"] in ("extras", "peak")])
         say("7/8 the agent benchmark: the Postgres machine (zone a; single node, no copy: NOT equal durability)"
             + (", the Aurora cluster (the equal-durability line: 4 of 6 copies in 3 zones, DECLARED by AWS)" if cmd.get("aurora") else "")
             + f" and the agent client ({CLIENT_ZONE})")

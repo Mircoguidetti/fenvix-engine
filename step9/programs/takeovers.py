@@ -143,7 +143,9 @@ def writer(t):
                 time.sleep(0.05)
 
 
-summary = {"n": a.n, "writers": a.writers, "lease_ttl_s": a.lease_ttl, "log": a.log, "takeovers": []}
+summary = {"n": a.n, "writers": a.writers, "lease_ttl_s": a.lease_ttl, "log": a.log, "takeovers": [],
+           "note": "the pair runs with the round's server_options; its lease is lease_ttl_s, not the product's 30 s, so "
+                   "takeover_s is not the product's takeover time (total review, question 1 point 5)"}
 command("A", "start"); wait_ping("A")
 colls["A"].insert_one({"_id": "seed", "ts": time.time()})   # A owns the database before B starts
 command("B", "start"); wait_ping("B")
