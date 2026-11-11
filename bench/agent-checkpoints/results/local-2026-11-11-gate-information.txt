@@ -1,0 +1,49 @@
+GATE: CLOSED (48 blockers; RULES.md 8-9: no AWS run, not even a pilot)
+  - no local benchmark report for engine claude/clone-uploads-fix-hkuyhx at commit f6b6db1845220d4eaed299235262030c74706fe6 (step9/local/benchmark-report-<commit>.json, made by step9/local/benchmark_report.py on that commit)
+  - (newest local results, another commit) agent benchmark fenvix: whether compaction 2 published is not recorded (a summary older than the fix round): the bytes are not shown to be after compaction 2
+  - (newest local results, another commit) agent benchmark fenvix: no server status at the end of the run (quaderno.failed unknown)
+  - (newest local results, another commit) agent benchmark put p50: ours 3.97 ms > postgres 3.53 ms
+  - (newest local results, another commit) agent benchmark put p99: ours 135.50 ms > postgres 12.65 ms
+  - (newest local results, another commit) agent benchmark put_writes p50: ours 4.38 ms > postgres 2.91 ms
+  - (newest local results, another commit) agent benchmark put_writes p99: ours 136.62 ms > postgres 9.35 ms
+  - (newest local results, another commit) agent benchmark save_step p50: ours 7.81 ms > postgres 6.01 ms
+  - (newest local results, another commit) agent benchmark save_step p99: ours 244.81 ms > postgres 20.45 ms
+  - (newest local results, another commit) agent benchmark resume[read] p50: ours 12.36 ms > postgres 3.11 ms
+  - (newest local results, another commit) agent benchmark resume[read] p99: ours 163.52 ms > postgres 66.96 ms
+  - (newest local results, another commit) agent benchmark resume[write/first] p50: ours 1.33 ms > postgres 0.84 ms
+  - (newest local results, another commit) agent benchmark resume[write/first] p99: ours 97.61 ms > postgres 1.57 ms
+  - (newest local results, another commit) agent benchmark resume[write/none] p50: ours 2.97 ms > postgres 1.60 ms
+  - (newest local results, another commit) agent benchmark resume[write/none] p99: ours 119.12 ms > postgres 5.35 ms
+  - (newest local results, another commit) agent benchmark resume[write/short] p50: ours 3.22 ms > postgres 1.38 ms
+  - (newest local results, another commit) agent benchmark resume[write/short] p99: ours 139.77 ms > postgres 4.52 ms
+  - (newest local results, another commit) agent benchmark resume[write/long] p50: ours 13.42 ms > postgres 1.41 ms
+  - (newest local results, another commit) agent benchmark resume[write/long] p99: ours 204.55 ms > postgres 12.03 ms
+  - (newest local results, another commit) agent benchmark time_travel p50: ours 2.65 ms > postgres 0.98 ms
+  - (newest local results, another commit) agent benchmark time_travel p99: ours 111.22 ms > postgres 5.05 ms
+  - (newest local results, another commit) agent benchmark list p50: ours 87.53 ms > postgres 49.17 ms
+  - (newest local results, another commit) agent benchmark list_limit10 p50: ours 20.32 ms > postgres 7.51 ms
+  - (newest local results, another commit) agent benchmark list_limit10 p99: ours 363.81 ms > postgres 160.29 ms
+  - (newest local results, another commit) agent benchmark erase_user p50: ours 414.61 ms > postgres 69.72 ms
+  - (newest local results, another commit) agent benchmark erase_user p99: ours 223333.11 ms > postgres 580.92 ms
+  - (newest local results, another commit) agent benchmark stored bytes per logical byte: ours 2.466 > postgres 0.389
+  - (newest local results, another commit) agent benchmark put p99: ours 135.50 ms > mongo 15.73 ms
+  - (newest local results, another commit) agent benchmark put_writes p99: ours 136.62 ms > mongo 16.92 ms
+  - (newest local results, another commit) agent benchmark save_step p99: ours 244.81 ms > mongo 34.05 ms
+  - (newest local results, another commit) agent benchmark resume[read] p50: ours 12.36 ms > mongo 2.89 ms
+  - (newest local results, another commit) agent benchmark resume[read] p99: ours 163.52 ms > mongo 18.83 ms
+  - (newest local results, another commit) agent benchmark resume[write/first] p50: ours 1.33 ms > mongo 0.90 ms
+  - (newest local results, another commit) agent benchmark resume[write/first] p99: ours 97.61 ms > mongo 1.77 ms
+  - (newest local results, another commit) agent benchmark resume[write/none] p50: ours 2.97 ms > mongo 2.22 ms
+  - (newest local results, another commit) agent benchmark resume[write/none] p99: ours 119.12 ms > mongo 5.31 ms
+  - (newest local results, another commit) agent benchmark resume[write/short] p50: ours 3.22 ms > mongo 2.05 ms
+  - (newest local results, another commit) agent benchmark resume[write/short] p99: ours 139.77 ms > mongo 4.79 ms
+  - (newest local results, another commit) agent benchmark resume[write/long] p50: ours 13.42 ms > mongo 2.37 ms
+  - (newest local results, another commit) agent benchmark resume[write/long] p99: ours 204.55 ms > mongo 11.22 ms
+  - (newest local results, another commit) agent benchmark time_travel p50: ours 2.65 ms > mongo 2.00 ms
+  - (newest local results, another commit) agent benchmark time_travel p99: ours 111.22 ms > mongo 5.12 ms
+  - (newest local results, another commit) agent benchmark list p50: ours 87.53 ms > mongo 71.82 ms
+  - (newest local results, another commit) agent benchmark list_limit10 p50: ours 20.32 ms > mongo 15.30 ms
+  - (newest local results, another commit) agent benchmark list_limit10 p99: ours 363.81 ms > mongo 153.08 ms
+  - (newest local results, another commit) agent benchmark erase_user p50: ours 414.61 ms > mongo 104.91 ms
+  - (newest local results, another commit) agent benchmark erase_user p99: ours 223333.11 ms > mongo 1624.29 ms
+  - (newest local results, another commit) agent benchmark stored bytes per logical byte: ours 2.466 > mongo 0.450

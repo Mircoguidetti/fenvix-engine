@@ -243,6 +243,13 @@ def test_no_compaction2_publish_closes():
     closed(tree(ours, clean_summary(2), clean_summary(2)), "compaction 2 never published")
 
 
+def test_publish_flag_not_recorded_closes_and_says_so():
+    ours = clean_summary()
+    del ours["settle"]["compaction2_published"]
+    out = closed(tree(ours, clean_summary(2), clean_summary(2)), "whether compaction 2 published is not recorded")
+    assert "never published" not in out, out
+
+
 def test_no_settle_record_closes():
     ours = clean_summary()
     del ours["settle"]

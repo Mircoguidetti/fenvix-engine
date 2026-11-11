@@ -133,7 +133,10 @@ def check_ours(d, label):
     else:
         if st.get("capped") or not st.get("idle"):
             out.append(f"{label} fenvix: the settle hit its cap after {st.get('seconds')} s: bytes not settled")
-        if not st.get("compaction2_published"):
+        if "compaction2_published" not in st:
+            out.append(f"{label} fenvix: whether compaction 2 published is not recorded (a summary older than the fix "
+                       f"round): the bytes are not shown to be after compaction 2")
+        elif not st["compaction2_published"]:
             out.append(f"{label} fenvix: compaction 2 never published (compactor.publishes 0): the bytes are not after compaction 2")
     for k in ("server_status_after_write", "server_status_end"):
         q = ((d.get(k) or {}).get("quaderno") or {})
