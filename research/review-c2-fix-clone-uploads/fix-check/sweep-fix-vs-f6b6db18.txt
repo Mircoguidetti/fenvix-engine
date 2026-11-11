@@ -1,0 +1,8 @@
+== fix 1: live run uploads aborted by the other process's sweep: 5 of 5 seen; wrong 0;  after a restart: wrong 0; versions 20, runs listed and missing 0;  
+== branch 1: live run uploads aborted by the other process's sweep: 5 of 5 seen; wrong 0;  after a restart: wrong 0; versions 22, runs listed and missing 0;  
+== fix 2: live run uploads aborted by the other process's sweep: 5 of 5 seen; wrong 0;  after a restart: wrong 0; versions 18, runs listed and missing 0;  
+== branch 2: live run uploads aborted by the other process's sweep: 6 of 6 seen; wrong 253;  after a restart: wrong 253; versions 16, runs listed and missing 0;  
+== fix 3: live run uploads aborted by the other process's sweep: 5 of 5 seen; wrong 0;  after a restart: wrong 0; versions 21, runs listed and missing 0;  
+== branch 3: live run uploads aborted by the other process's sweep: 5 of 5 seen; wrong 112;  after a restart: wrong 112; versions 19, runs listed and missing 0;  
+
+[exited with code 0]

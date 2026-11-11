@@ -395,7 +395,7 @@ def test_a_sweep_that_aborts_live_uploads_loses_nothing():
             try:
                 live.extend(u)
                 time.sleep(1.5)
-                p2 = Server(b, "r51-sweep2", idle=600, extra=["--abandoned-upload-secs", "1"], env=env).start()
+                p2 = Server(b, "r51-sweep2", idle=600, extra=["--abandoned-upload-secs", os.environ.get("R51_SWEEP_SECS", "1")], env=env).start()
                 try:
                     wait_until(lambda: "unfinished multipart uploads under" in p2.log_text(), 20, what="the sweep")
                     gone = [x for x in u if x not in runs_open()]
@@ -433,7 +433,15 @@ def test_a_sweep_that_aborts_live_uploads_loses_nothing():
                 if p not in runs:
                     missing.append((k, p))
         print(f"after a restart: wrong {len(w2)}; versions {len(keys)}, runs listed and missing {len(missing)}; aborted keys {[k for k, _ in aborted][:3]}")
-        assert aborted, "no live upload was aborted: the test did not exercise the window"
+        if w2:
+            p1.term()
+            p3 = Server(b, "r51-sweep3", idle=600, env={"FENVIX_SEALED_RUNS": "off"}).start()
+            try:
+                w3 = wrong(p3.client()["g"]["c"], expect)
+                print(f"read with sealed runs off (SlateDB only): wrong {len(w3)} {w3[:3]}")
+            finally:
+                p3.term()
+        assert aborted or os.environ.get("R51_SWEEP_SECS"), "no live upload was aborted: the test did not exercise the window"
         assert not w and not w2, f"stale or missing answers: {(w + w2)[:5]}"
         assert not missing, f"versions list runs that do not exist: {missing[:3]}"
     finally:
@@ -465,3 +473,55 @@ def test_store_outage_past_the_lease_loses_no_acknowledged_insert():
             print(f"outage run {i}: {str(e)[:200]}")
             failures.append(str(e)[:200])
     assert not failures, f"acknowledged inserts lost after a store outage past the lease in {len(failures)} runs: {failures}"
+
+
+@pytest.mark.skipif(not os.environ.get("R51_OLD_BIN"), reason="needs R51_OLD_BIN, a binary without the fix round's marks (integration-3)")
+def test_caught_up_then_an_older_binary_then_back():
+    """Fix check of FIX 1. The fix catches up once per database (`fx/caught-up`) and again only after a pass marked
+    `fx/ungated`. A binary without the marks (R51_OLD_BIN, integration-3 here; any release before the fix round in a
+    rollback) runs its ungated pass without marking. Sequence: this binary with the compactor on (the database is
+    caught up), the old binary with the compactor off (ungated passes, no mark), this binary again."""
+    b = bucket("rollback")
+    on = dict(ENV)
+    off = dict(ENV, FENVIX_SEALED_COMPACTOR="0")
+    expect, bad = {}, []
+    srv = Server(b, "r51-rollback", idle=600, extra=SMALL_L0, env=on).start()
+    try:
+        c = srv.client()
+        for rnd in range(2):
+            write_round(c["g"]["c"], rnd, 2000, expect)
+            c["g"].command("tenantAdmin", close=True)
+        assert fenvix(c)["compactor"]["started"] > 0
+        print("first start, catch-ups:", fenvix(c)["compactor"].get("catchUps"))
+        srv.term()
+        # the older binary, compactor off
+        srv.binary, srv.env, srv.proc = os.environ["R51_OLD_BIN"], off, None
+        srv.start()
+        c = srv.client()
+        for rnd in range(2, 5):
+            p0 = fenvix(c)["compaction"]["passes"]
+            write_round(c["g"]["c"], rnd, 2000, expect)
+            c["g"].command("tenantAdmin", close=True)
+            wait_until(lambda: fenvix(c)["compaction"]["passes"] > p0 and fenvix(c)["compaction"]["running"] == 0, 30, what="a pass on the closed database")
+        w = wrong(c["g"]["c"], expect)
+        print(f"older binary, compactor off: wrong {len(w)}")
+        bad += w
+        srv.term()
+        # this binary again, compactor on
+        from lib import BIN
+        srv.binary, srv.env, srv.proc = os.environ.get("MONGO_SERVER_BIN", BIN), on, None
+        srv.start()
+        c = srv.client()
+        for rnd in range(5, 8):
+            write_round(c["g"]["c"], rnd, 2000, expect)
+            c["g"].command("tenantAdmin", close=True)
+            time.sleep(2)
+            w = wrong(c["g"]["c"], expect)
+            print(f"back on this binary, round {rnd}: wrong {len(w)} {w[:3]}")
+            bad += w
+        st = fenvix(c)["compactor"]
+        print("compactor", st)
+        assert st["absorbs"] > 0
+        assert not bad, f"{len(bad)} stale or missing answers after a rollback to a binary without the marks, e.g. {bad[:5]}"
+    finally:
+        srv.term()

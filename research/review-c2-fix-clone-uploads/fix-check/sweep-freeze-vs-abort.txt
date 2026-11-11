@@ -1,0 +1,10 @@
+== fix sweep-bound 1 run 1: live run uploads aborted by the other process's sweep: 5 of 5 seen; wrong 0;  after a restart: wrong 0; versions 21, runs listed and missing 0;  
+== fix sweep-bound 3600 run 1: live run uploads aborted by the other process's sweep: 2 of 109 seen; wrong 0;  after a restart: wrong 0; versions 234, runs listed and missing 0;  
+== fix sweep-bound 1 run 2: live run uploads aborted by the other process's sweep: 5 of 5 seen; wrong 0;  after a restart: wrong 0; versions 20, runs listed and missing 0;  
+== fix sweep-bound 3600 run 2: live run uploads aborted by the other process's sweep: 1 of 120 seen; wrong 0;  after a restart: wrong 0; versions 234, runs listed and missing 0;  
+== fix sweep-bound 1 run 3: live run uploads aborted by the other process's sweep: 5 of 5 seen; wrong 0;  after a restart: wrong 0; versions 21, runs listed and missing 0;  
+== fix sweep-bound 3600 run 3: live run uploads aborted by the other process's sweep: 5 of 13 seen; wrong 0;  after a restart: wrong 0; versions 35, runs listed and missing 0;  
+== fix sweep-bound 1 run 4: live run uploads aborted by the other process's sweep: 5 of 5 seen; wrong 130;  after a restart: wrong 130; versions 20, runs listed and missing 0;  read with sealed runs off (SlateDB only): wrong 130 [(3002, 107, None), (3005, 107, None), (3008, 107, None)] 
+== fix sweep-bound 3600 run 4: live run uploads aborted by the other process's sweep: 3 of 32 seen; wrong 639;  after a restart: wrong 639; versions 237, runs listed and missing 0;  read with sealed runs off (SlateDB only): wrong 639 [(6001, 205, None), (6004, 205, None), (6007, 205, None)] 
+
+[exited with code 0]

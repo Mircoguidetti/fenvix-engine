@@ -1,0 +1,102 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.15, pytest-9.2.0, pluggy-1.7.0 -- /root/.fenvix-judge/env/bin/python
+rootdir: /home/user/fenvix-engine/ctl-tests
+collecting ... collected 13 items / 1 deselected / 12 selected
+
+test_51r_review_c2_fix_clone_uploads.py::test_kill_during_a_close_then_no_stale_answer round 0: wrong 0 []
+round 1: wrong 0 []
+round 2: wrong 0 []
+round 3: wrong 0 []
+round 4: wrong 0 []
+round 5: wrong 0 []
+round 6: wrong 0 []
+round 7: wrong 0 []
+PASSED
+test_51r_review_c2_fix_clone_uploads.py::test_reopen_while_the_old_pass_runs round 0: pass running at the reopen 1, wrong 0 []
+round 1: pass running at the reopen 1, wrong 0 []
+round 2: pass running at the reopen 1, wrong 0 []
+round 3: pass running at the reopen 1, wrong 0 []
+round 4: pass running at the reopen 2, wrong 0 []
+round 5: pass running at the reopen 3, wrong 0 []
+round 6: pass running at the reopen 3, wrong 0 []
+round 7: pass running at the reopen 3, wrong 0 []
+after the last close: wrong 0
+after a restart: wrong 0
+rounds with a pass running at the reopen: 3
+PASSED
+test_51r_review_c2_fix_clone_uploads.py::test_a_close_that_hits_the_absorb_bound round 0: absorption bound hit 0, flush bound hit 0
+round 0: wrong 0 []
+round 1: absorption bound hit 0, flush bound hit 0
+round 1: wrong 0 []
+round 2: absorption bound hit 0, flush bound hit 0
+round 2: wrong 0 []
+round 3: absorption bound hit 0, flush bound hit 0
+round 3: wrong 0 []
+round 4: absorption bound hit 0, flush bound hit 0
+round 4: wrong 0 []
+round 5: absorption bound hit 0, flush bound hit 0
+round 5: wrong 0 []
+round 6: absorption bound hit 1, flush bound hit 0
+round 6: wrong 0 []
+round 7: absorption bound hit 1, flush bound hit 0
+round 7: wrong 0 []
+after a restart: wrong 0
+PASSED
+test_51r_review_c2_fix_clone_uploads.py::test_takeover_in_the_middle_of_a_close round 0: wrong 0 []
+round 1: wrong 0 []
+round 2: wrong 0 []
+round 3: wrong 0 []
+round 4: wrong 0 []
+round 5: wrong 0 []
+after the last close: wrong 0
+PASSED
+test_51r_review_c2_fix_clone_uploads.py::test_compactor_off_then_on_again compactor off: wrong 0
+compactor on again, round 4: wrong 0 []
+compactor on again, round 5: wrong 0 []
+compactor on again, round 6: wrong 0 []
+compactor {'enabled': True, 'started': 3, 'running': 0, 'publishes': 24, 'absorbs': 12, 'merges': 2, 'reseals': 10, 'errors': 0, 'catchUps': 1}
+PASSED
+test_51r_review_c2_fix_clone_uploads.py::test_the_compactors_erasure_removes_the_rows_from_the_runs erasure {'boundaries_on_targets': 0, 'collection': 'msgs', 'customer_hash': 'd2d2a960232d6ea5', 'deadline_ms': 1794499453105, 'done_ms': 1794413113190, 'drop_floor_needed': 16, 'id': '00000000000000000016-a2a90652', 'keys': 7200, 'kind': 'customer', 'live_done_ms': 1794413113190, 'overdue': False, 'ranges': 1, 'requested_ms': 1794413053105, 'retired': [], 'rows_erased': 0, 'runs_rewritten': 0, 's_e': 16, 'scrubbed_ms': 1794413113185, 'scrubbed_version': 27, 'state': 'scrubbed', 'versions_deleted': 0, 'versions_kept': []} compactor {'enabled': True, 'started': 1, 'running': 1, 'publishes': 25, 'absorbs': 15, 'merges': 1, 'reseals': 9, 'errors': 0, 'catchUps': 1}
+newest version 27: 3 runs, 0 still hold the erased customer's rows
+PASSED
+test_51r_review_c2_fix_clone_uploads.py::test_a_sweep_that_aborts_live_uploads_loses_nothing live run uploads aborted by the other process's sweep: 5 of 5 seen; wrong 130; compactor {'enabled': True, 'started': 3, 'running': 1, 'publishes': 16, 'absorbs': 9, 'merges': 0, 'reseals': 7, 'errors': 5, 'catchUps': 1}
+after a restart: wrong 130; versions 20, runs listed and missing 0; aborted keys ['tenants/g/fx/run/g0/00000000000000000009-1-04f4178a', 'tenants/g/fx/run/delta/00000000000000000011-2-3636b35c', 'tenants/g/fx/run/g0/00000000000000000010-3-5cf2434d']
+FAILED
+test_51r_review_c2_fix_clone_uploads.py::test_caught_up_then_an_older_binary_then_back first start, catch-ups: 1
+older binary, compactor off: wrong 0
+back on this binary, round 5: wrong 1334 [(8001, 406, 403), (8004, 406, 403), (8007, 406, 403)]
+back on this binary, round 6: wrong 1334 [(8001, 406, 403), (8004, 406, 403), (8007, 406, 403)]
+back on this binary, round 7: wrong 1334 [(8001, 406, 403), (8004, 406, 403), (8007, 406, 403)]
+compactor {'enabled': True, 'started': 3, 'running': 0, 'publishes': 25, 'absorbs': 12, 'merges': 3, 'reseals': 10, 'errors': 0, 'catchUps': 0}
+FAILED
+test_51_c2_fix_clone_uploads.py::test_no_stale_answer_after_a_close round 0: wrong 0 []
+round 1: wrong 0 []
+round 2: wrong 0 []
+round 3: wrong 0 []
+round 4: wrong 0 []
+round 5: wrong 0 []
+round 6: wrong 0 []
+round 7: wrong 0 []
+compactor {'enabled': True, 'started': 8, 'running': 0, 'publishes': 54, 'absorbs': 29, 'merges': 2, 'reseals': 23, 'errors': 0, 'catchUps': 1} rounds with a pass on the closed database 3
+PASSED
+test_51_c2_fix_clone_uploads.py::test_a_closed_database_reads_nothing reads of the closed database in 6 s: {} bytes 0
+PASSED
+test_51_c2_fix_clone_uploads.py::test_kill_mid_upload_then_none_left open uploads after kill -9: 1 (seen [('tenants/k/fx/run/g0/00000000000000000007-1-baf57517', 'NjY5YzYyMjYtZmZkNi00NGY2LTlhMDQtOTlkYjUwY2FiY2NjLjQ1ODY4ZTdiLWZlZDctNDE1NS1iY2RmLTQ3NmU1NTdlMDliM3gxNzk0NDEzMzEyMjU4MjM1NTU5')]), rounds 1
+PASSED
+test_51_c2_fix_clone_uploads.py::test_a_young_upload_is_left_alone PASSED
+
+=================================== FAILURES ===================================
+_____________ test_a_sweep_that_aborts_live_uploads_loses_nothing ______________
+test_51r_review_c2_fix_clone_uploads.py:437: in test_a_sweep_that_aborts_live_uploads_loses_nothing
+    assert not w and not w2, f"stale or missing answers: {(w + w2)[:5]}"
+E   AssertionError: stale or missing answers: [(3002, 107, None), (3005, 107, None), (3008, 107, None), (3011, 107, None), (3014, 107, None)]
+E   assert (not [(3002, 107, None), (3005, 107, None), (3008, 107, None), (3011, 107, None), (3014, 107, None), (3017, 107, None), ...])
+________________ test_caught_up_then_an_older_binary_then_back _________________
+test_51r_review_c2_fix_clone_uploads.py:517: in test_caught_up_then_an_older_binary_then_back
+    assert not bad, f"{len(bad)} stale or missing answers after a rollback to a binary without the marks, e.g. {bad[:5]}"
+E   AssertionError: 4002 stale or missing answers after a rollback to a binary without the marks, e.g. [(8001, 406, 403), (8004, 406, 403), (8007, 406, 403), (8010, 406, 403), (8013, 406, 403)]
+E   assert not [(8001, 406, 403), (8004, 406, 403), (8007, 406, 403), (8010, 406, 403), (8013, 406, 403), (8016, 406, 403), ...]
+=========================== short test summary info ============================
+FAILED test_51r_review_c2_fix_clone_uploads.py::test_a_sweep_that_aborts_live_uploads_loses_nothing
+FAILED test_51r_review_c2_fix_clone_uploads.py::test_caught_up_then_an_older_binary_then_back
+============ 2 failed, 10 passed, 1 deselected in 709.12s (0:11:49) ============
