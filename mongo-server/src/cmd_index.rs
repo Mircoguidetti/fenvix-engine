@@ -164,8 +164,20 @@ pub async fn build_step(dbs: &Arc<Dbs>, db: &str, coll: &str) -> R<Step> {
 /// Run steps until nothing is left to build or drop on `coll`. Returns the error of a failed build.
 pub async fn run_builds(dbs: &Arc<Dbs>, db: &str, coll: &str) -> R<()> {
     let mut first_err = None;
+    let mut refused = 0u32;
     loop {
-        match build_step(dbs, db, coll).await? {
+        let step = match build_step(dbs, db, coll).await {
+            // a step refused because the database was reopened during it (`dbs::Reopened`) applied nothing: run it again
+            // on the new opening (c2-fix-outage-loss review, defect 3: the build stopped there and index commands waited
+            // for it forever)
+            Err(e) if e.name == "DatabaseReopened" && refused < REOPENED_STEP_RETRIES => {
+                refused += 1;
+                tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                continue;
+            }
+            r => r?,
+        };
+        match step {
             Step::More => {}
             Step::Failed(e) => first_err = first_err.or(Some(e)),
             Step::Done => break,
@@ -175,6 +187,22 @@ pub async fn run_builds(dbs: &Arc<Dbs>, db: &str, coll: &str) -> R<()> {
     match first_err {
         Some(e) => Err(e),
         None => Ok(()),
+    }
+}
+
+/// How many times in one run a build step refused after a reopen is run again before the run gives up (the next index
+/// command or `wait_builds` starts it again).
+const REOPENED_STEP_RETRIES: u32 = 100;
+
+/// Removes a collection's key from `Server::builds` when dropped, on every path (an early `?` included).
+struct BuildMark {
+    builds: Arc<std::sync::Mutex<std::collections::HashSet<String>>>,
+    key: String,
+}
+
+impl Drop for BuildMark {
+    fn drop(&mut self) {
+        self.builds.lock().unwrap().remove(&self.key);
     }
 }
 
@@ -368,7 +396,9 @@ impl Server {
         });
     }
 
-    /// Wait until no build / drop is unfinished on `coll` (the one running in the background finishes it).
+    /// Wait until no build / drop is unfinished on `coll`. The one running in the background finishes it; when none runs
+    /// (it failed, for instance on a lease lost during a step), this starts it again, so the wait cannot be endless while
+    /// the database answers.
     async fn wait_builds(&self, db: &str, coll: &str) -> R<()> {
         loop {
             {
@@ -377,6 +407,7 @@ impl Server {
                     return Ok(());
                 }
             }
+            self.resume_builds(db, coll);
             tokio::time::sleep(std::time::Duration::from_millis(20)).await;
         }
     }
@@ -813,20 +844,34 @@ impl Server {
             // Backfill in chunks, releasing the database between chunks; a build already running in the background is joined.
             let key = format!("{db}\0{coll}");
             if self.builds.lock().unwrap().insert(key.clone()) {
-                let mut r = run_builds(&self.dbs, db, coll).await;
+                // the key leaves `builds` on every path below, an early `?` included: a key left behind stopped every
+                // later build of the collection and made its index commands wait forever (review defect 3)
+                let _mark = BuildMark { builds: Arc::clone(&self.builds), key };
+                let r = run_builds(&self.dbs, db, coll).await;
                 if r.is_err() {
-                    // all or nothing: the indexes of this request that finished before the failing one go too
-                    let mut g = self.dbs.lock(db).await;
-                    let mut ix = g.indexes(coll).await?;
-                    for i in ix.iter_mut().filter(|i| new_names.contains(&i.name)) {
-                        i.state = State::Dropping;
-                        i.cursor = None;
+                    // all or nothing: the indexes of this request that finished before the failing one go too. The rollback
+                    // is retried for a while (it can meet the same lost lease that failed the build).
+                    let mut rolled = Err(MongoError::internal("not tried".into()));
+                    for _ in 0..50 {
+                        rolled = async {
+                            let mut g = self.dbs.lock(db).await;
+                            let mut ix = g.indexes(coll).await?;
+                            for i in ix.iter_mut().filter(|i| new_names.contains(&i.name)) {
+                                i.state = State::Dropping;
+                                i.cursor = None;
+                            }
+                            g.apply(vec![Entry::indexes_op(coll, &ix)?]).await?;
+                            Ok::<(), MongoError>(())
+                        }
+                        .await;
+                        if rolled.is_ok() {
+                            break;
+                        }
+                        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
                     }
-                    g.apply(vec![Entry::indexes_op(coll, &ix)?]).await?;
-                    drop(g);
+                    rolled?;
                     let _ = run_builds(&self.dbs, db, coll).await;
                 }
-                self.builds.lock().unwrap().remove(&key);
                 r.map_err(|mut e| {
                     if e.code == 11000 && !e.msg.starts_with("Index build failed") {
                         e.msg = format!("Index build failed: {}: Collection {ns} ( {} ) :: caused by :: {}", fake_uuid(), fake_uuid(), e.msg);
@@ -1046,9 +1091,8 @@ impl Server {
         if !ttl_none {
             let key = format!("{db}\0{coll}");
             if self.builds.lock().unwrap().insert(key.clone()) {
-                let r = run_builds(&self.dbs, db, coll).await;
-                self.builds.lock().unwrap().remove(&key);
-                let _ = r;
+                let _mark = BuildMark { builds: Arc::clone(&self.builds), key };
+                let _ = run_builds(&self.dbs, db, coll).await;
             } else {
                 self.wait_builds(db, coll).await?;
             }
