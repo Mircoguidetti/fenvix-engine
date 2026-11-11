@@ -308,7 +308,8 @@ impl GroupWriter {
                 self.groups.last_mut().unwrap().sealed = l;
             }
             let lo = if self.groups.is_empty() && self.first_at_empty { String::new() } else { hex(key) };
-            self.groups.push(GroupLine { id: self.next_id, lo, x_g: self.x, sealed: None });
+            // sealed now, nothing absorbed above X_g yet (step 4's compactor reads these fields)
+            self.groups.push(GroupLine { id: self.next_id, lo, x_g: self.x, sealed: None, unsealed: 0, unsealed_since_ms: 0, sealed_ms: manifest::now_ms() });
             self.cur = Some(Lazy::new(&self.store, manifest::run_path(&self.id, &format!("g{}", self.next_id), self.x, self.epoch), &self.opts.sealed));
             self.next_id += 1;
             self.g_bytes = 0;
@@ -332,7 +333,7 @@ impl GroupWriter {
         }
         if self.groups.is_empty() && self.first_at_empty {
             // a version always has a group at the empty key
-            self.groups.push(GroupLine { id: self.next_id, lo: String::new(), x_g: self.x, sealed: None });
+            self.groups.push(GroupLine { id: self.next_id, lo: String::new(), x_g: self.x, sealed: None, unsealed: 0, unsealed_since_ms: 0, sealed_ms: manifest::now_ms() });
         }
         Ok(self.groups)
     }
