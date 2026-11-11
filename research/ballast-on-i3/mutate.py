@@ -30,6 +30,8 @@ ap.add_argument("--counts-out", required=True)
 ap.add_argument("--insert-mb", type=float, default=300)
 ap.add_argument("--first-group-customers", type=int, default=300, help="sampled customers numbered below this get the inserts")
 ap.add_argument("--seed", type=int, default=11)
+ap.add_argument("--skip-inserts", default="", help="comma-separated databases whose inserts already ran (a resumed run)")
+ap.add_argument("--only", default="", help="comma-separated databases to mutate (default: all)")
 a = ap.parse_args()
 
 ours = pymongo.MongoClient(a.ours, directConnection=True)
@@ -49,6 +51,8 @@ def both(fn):
 
 for d in plan["databases"]:
     name = d["db"]
+    if a.only and name not in a.only.split(","):
+        continue
     g = json.load(open(os.path.join(a.gen_dir, f"{name}.gen.json")))
     sampled = g["sample_customers"]
     q2 = {x for x in g["q2_id"] if x}
@@ -57,7 +61,9 @@ for d in plan["databases"]:
     rdb = ref[name]
     # 1. inserts into the first group's sampled customers
     targets = [i for i in sampled if i < a.first_group_customers] or sampled[:1]
-    per = a.insert_mb * 1e6 / len(targets)
+    if name in a.skip_inserts.split(","):
+        targets = []
+    per = a.insert_mb * 1e6 / max(1, len(targets))
     for i in targets:
         cli = f"cli-{i:06d}"
         done = 0
@@ -83,17 +89,17 @@ for d in plan["databases"]:
         oids = [x["_id"] for x in rdb["ordini"].find({"cliente": cli}, {"_id": 1}) if str(x["_id"]) not in q2]
         for oid in rng.sample(oids, len(oids) // 10):
             s = rng.choice(STATES)
-            r1, r2 = both(lambda c: c[name]["ordini"].update_one({"_id": oid}, {"$set": {"stato": s}, "$inc": {"totale": 1.5}}))
+            r1, r2 = both(lambda c: c[name]["ordini"].update_one({"cliente": cli, "_id": oid}, {"$set": {"stato": s}, "$inc": {"totale": 1.5}}))
             assert r1.matched_count == r2.matched_count == 1, (name, oid, r1.raw_result, r2.raw_result)
             st["updated"]["ordini"] += 1
         eids = [x["_id"] for x in rdb["eventi"].find({"cliente": cli}, {"_id": 1})]
         rng.shuffle(eids)
         k = len(eids) // 10
         upd, dele = eids[:k], eids[k:2 * k]
-        r1, r2 = both(lambda c: c[name]["eventi"].update_many({"_id": {"$in": upd}}, {"$inc": {"valori.batt": 1}}))
+        r1, r2 = both(lambda c: c[name]["eventi"].update_many({"cliente": cli, "_id": {"$in": upd}}, {"$inc": {"valori.batt": 1}}))
         assert r1.modified_count == r2.modified_count == len(upd), (name, cli, r1.raw_result, r2.raw_result)
         st["updated"]["eventi"] += len(upd)
-        r1, r2 = both(lambda c: c[name]["eventi"].delete_many({"_id": {"$in": dele}}))
+        r1, r2 = both(lambda c: c[name]["eventi"].delete_many({"cliente": cli, "_id": {"$in": dele}}))
         assert r1.deleted_count == r2.deleted_count == len(dele), (name, cli, r1.raw_result, r2.raw_result)
         st["deleted"]["eventi"] += len(dele)
         mids = [x["_id"] for x in rdb["messaggi"].find({"cliente": cli}, {"_id": 1})]
@@ -101,16 +107,20 @@ for d in plan["databases"]:
         k3, k5 = len(mids) * 3 // 100, len(mids) * 5 // 100
         upd, dele = mids[:k3], mids[k3:k3 + k5]
         testo = "riscritto " + " ".join(rng.choice(WORDS) for _ in range(20))
-        r1, r2 = both(lambda c: c[name]["messaggi"].update_many({"_id": {"$in": upd}}, {"$set": {"testo": testo}}))
+        r1, r2 = both(lambda c: c[name]["messaggi"].update_many({"cliente": cli, "_id": {"$in": upd}}, {"$set": {"testo": testo}}))
         assert r1.modified_count == r2.modified_count == len(upd), (name, cli, r1.raw_result, r2.raw_result)
         st["updated"]["messaggi"] += len(upd)
-        r1, r2 = both(lambda c: c[name]["messaggi"].delete_many({"_id": {"$in": dele}}))
+        r1, r2 = both(lambda c: c[name]["messaggi"].delete_many({"cliente": cli, "_id": {"$in": dele}}))
         assert r1.deleted_count == r2.deleted_count == len(dele), (name, cli, r1.raw_result, r2.raw_result)
         st["deleted"]["messaggi"] += len(dele)
-    pc = dict(g["per_collezione"])
-    pc["messaggi"] += st["inserted"]["messaggi"] - st["deleted"]["messaggi"]
-    pc["eventi"] -= st["deleted"]["eventi"]
+    # expected counts: generator counts + (reference now - reference as loaded from the sample file); right also
+    # for a resumed run, since every write went to both servers and the reference holds only sampled customers
+    loaded = {c: 0 for c in g["per_collezione"]}
+    with open(g["sample_file"], "rb") as f:
+        for doc in bson.decode_file_iter(f):
+            loaded[doc["c"]] += 1
+    pc = {c: n + rdb[c].count_documents({}) - loaded[c] for c, n in g["per_collezione"].items()}
     out[name] = {"per_collezione": pc, "documenti": sum(pc.values()), "writes": st, "seconds": round(time.time() - t0, 1)}
     print(name, out[name], flush=True)
-json.dump(out, open(a.counts_out, "w"), indent=1)
+    json.dump(out, open(a.counts_out, "w"), indent=1)
 print("MUTATE: DONE")
