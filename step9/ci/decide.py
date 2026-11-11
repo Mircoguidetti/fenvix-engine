@@ -41,11 +41,27 @@ Fields of step9/command.json (defaults in brackets):
                 port from the internet; needs no security-group permission) | "own-groups": two new tagged groups
                 ["default-sg"]
   server_options extra options of mongo-server on the cook and the spare, one string [""]
-  prepare       open every database and settle before the m30 program (kitchen K5) [false]
-  programs      any of "m30", "s3-first-byte", "sealed-run", "log-ack", "ballast-rounds", "takeovers", "agent-bench" [all]
+  prepare       open every database and settle before the m30 program (kitchen K5) [true: aws-fixes B5, the measured
+                cook waits for compaction 2 to finish, on the server's own counters and the fx/ objects, and the
+                program does not run if it never does: NOT_SETTLED]
+  settle_max_min the cap of that wait, and of the loader's after the load [30]; reaching it stops (never silent)
+  programs      any of "m30", "s3-first-byte", "sealed-run", "log-ack", "ballast-rounds", "takeovers", "write-peak",
+                "agent-bench" [all]. "write-peak" (aws-fixes B4): the founder's script's own load (the Atlas load's
+                shape: 6 databases at once, 16 threads each, batches of 1,000) for 25 minutes through the MEASURED cook
+                (log on, the round's server_options), from a client of the m30 client's type, after the extra programs
+                (the spare is off by then); write_peak_args
+  client_zone   "other": every client (m30, extras, write-peak, agent) in eu-west-1b while the cook, the Postgres machine
+                and Aurora are in eu-west-1a, as on Atlas (client in eu-west-1a, primary in another zone: euw1-az2,
+                MEASURED from the hello tags) | "same": clients in the cook's zone ["other"]. Every machine records its
+                zone name and zone id (IMDS) in results/<name>/zone.json; run.json lists them.
   takeovers_args, log_ack_args, s3_first_byte_args, sealed_run_args, ballast_rounds_args: extra arguments [see DEFAULTS]
   spend_cap     dollars; the round blocks itself there [5]. Above 5 only with "cap_approved": "<date, the founder's yes>"
   ceiling_min   minutes after which the round stops and every machine powers off [330, at most 340]
+                aws-fixes (B2): decide.py estimates the job's duration from the phases and programs (JOB_HOURS below,
+                ESTIMATED) and REFUSES a job whose estimate is above 90% of ceiling_min: the measure is split into three
+                jobs on the kept pantry (m30 alone; the extra programs with write-peak; the agent benchmark), see
+                step9/commands/. A command that would do nothing (e.g. "phases": ["extras"] alone: no cook, no program)
+                is refused too.
 Usage: decide.py COMMAND_JSON RESOLVED_OUT [VCPU_QUOTA]   (RUN_ID in the environment: the GitHub run id)
 Prints key=value lines (for GITHUB_OUTPUT) and exits 1 with "REFUSED: reason" if the command is not allowed."""
 import json
@@ -55,7 +71,18 @@ import sys
 
 from machine_types import ROLES, TYPES
 
-PROGRAMS = ["m30", "s3-first-byte", "sealed-run", "log-ack", "ballast-rounds", "takeovers", "agent-bench"]
+PROGRAMS = ["m30", "s3-first-byte", "sealed-run", "log-ack", "ballast-rounds", "takeovers", "write-peak", "agent-bench"]
+EXTRA_PROGRAMS = ["s3-first-byte", "sealed-run", "log-ack", "ballast-rounds", "takeovers"]   # the extras client's
+# How long each part of a job takes, in hours (ESTIMATED; aws-fixes B2). Sources: the Atlas load 2.8 h (MEASURED rate on
+# Atlas M30, 2026-11-05; OUR load rate on real S3 is UNKNOWN until the load job runs: the job's own 4.3 h script limit
+# and the ceiling stop it, and the settle cap is added); m30-corto about 3.0 h (kitchen README, the Atlas round's
+# length); the extra programs 1.6 h with 50 + 50 takeovers (step9-prep and aws-ready estimates); write-peak 25 minutes
+# plus 10 to start and drop its databases; the agent benchmark at the standard profile per target: UNKNOWN (never
+# measured at the standard profile, the total review's question 2 point 6), 0.6 h each until the local bench-local run
+# measures it; Aurora's creation about 0.3 h (DECLARED order of magnitude by AWS; measured on the first run).
+JOB_HOURS = {"boot": 0.3, "atlas_load": 2.8, "m30": 3.0, "spare_boot": 0.2, "extras": 1.6, "write_peak": 0.6,
+             "agent_per_target": 0.6, "aurora_create": 0.3, "pgbox_boot": 0.2}
+CEILING_USE = 0.9   # a job is refused when its estimate is above 90% of ceiling_min (teardown, results, margin)
 DATA = {  # BSON GB of the five Atlas databases: 4 x 3.1 + 10.74 (MEASURED, Atlas state files of code-irlanda) + the 2 KB
           # collections (2 x 1.22 GiB + about 1 GiB): about 26.6 GB; ballast databases of 24.3 GB to reach the size
     "atlas": {"target_gb": 26.6, "ballast_dbs": 0},
@@ -70,12 +97,14 @@ DEFAULTS = {
     "cook": "m7i.large", "spare": "m7i.large", "log": "c7g.medium", "compactor": None, "compactor_options": "",
     "loader": "c7i.xlarge", "loader_options": "", "client": "c7i.xlarge", "filler": "c7i.xlarge",
     "extras_client": "c7i.large", "log_colocate": True, "pgbox": "m7i.large", "aurora": False, "network": "default-sg",
-    "server_options": "", "prepare": False, "programs": PROGRAMS,
+    "server_options": "", "prepare": True, "settle_max_min": 30, "programs": PROGRAMS, "client_zone": "other",
+    "write_peak_args": "--dbs 6 --threads 16 --minutes 25 --gb 10",
     "takeovers_args": "--n 50 --writers 8 --between-s 3 --lease-ttl 4 --log on",
     "takeovers_off_args": "--n 50 --writers 8 --between-s 3 --lease-ttl 4 --log off --label logoff",
     "log_ack_args": "--n 1000 --conc 8,64 --secs 20",
     "s3_first_byte_args": "--objects 40 --reads 300",
-    "agent_bench_args": "--profile standard --workers 1",
+    # read sample and erased users as the local run (bench-local review, item 8): p99 of 300 reads, not of 30
+    "agent_bench_args": "--profile standard --workers 1 --read-sample 300 --erase-users 100",
     "sealed_run_args": "--run-mib 1024 --block-kib 256 --reads 300",
     "ballast_rounds_args": "--n-q2 300 --n-q3 300 --n-q1 300 --n-q1d 300 --n-q4 300 --dorm-q2 300 --dorm-q3 300 "
                            "--dorm-q1 300 --dorm-q1d 300 --dorm-q4 300",
@@ -94,6 +123,40 @@ RESERVED = {"--listen", "--store", "--bucket", "--region", "--endpoint", "--loca
 def refuse(msg):
     print(f"REFUSED: {msg}")
     sys.exit(1)
+
+
+def job_hours(c):
+    """The job's expected duration, part by part (hours, ESTIMATED from JOB_HOURS and, for the generator, from the
+    measured rate in estimate.py)."""
+    h = {"boot": JOB_HOURS["boot"]}
+    if "load" in c["phases"]:
+        if c.get("atlas_load"):
+            h["atlas_load"] = JOB_HOURS["atlas_load"]
+            h["load_settle_cap"] = float(c["settle_max_min"]) / 60
+        if c.get("filler"):
+            # through the script: 3 processes at 1.55 MB/s each (MEASURED on Atlas)
+            gb = len(c["ballast"]["lines"]) * BALLAST_DB_GB * 1.073741824
+            h["ballast_script"] = gb * 1000 / (c["ballast"]["parallel"] * 1.55) / 3600
+        if c.get("generator"):
+            import estimate
+            n = len(c["ballast"]["lines"])
+            per_db = BALLAST_DB_GB * 1.073741824 * 1000 / estimate.GEN_MB_S_PER_DB / 3600 * (1 + estimate.GEN_PUBLISH_FRACTION)
+            h["generator"] = -(-n // max(1, int(c["ballast"]["parallel"]))) * per_db
+    if "measure" in c["phases"]:
+        if "m30" in c["programs"]:
+            if c.get("prepare"):
+                h["measured_settle_cap"] = float(c["settle_max_min"]) / 60
+            h["m30"] = JOB_HOURS["m30"]
+    if "extras" in c["phases"] and "measure" in c["phases"]:
+        if any(p in EXTRA_PROGRAMS for p in c["programs"]):
+            h["extras"] = JOB_HOURS["spare_boot"] + JOB_HOURS["extras"]
+        if "write-peak" in c["programs"]:
+            h["write_peak"] = JOB_HOURS["write_peak"]
+        if "agent-bench" in c["programs"]:
+            targets = 2 + (1 if c.get("aurora") else 0)
+            h["agent_bench"] = JOB_HOURS["pgbox_boot"] + targets * JOB_HOURS["agent_per_target"] + \
+                (JOB_HOURS["aurora_create"] if c.get("aurora") else 0)
+    return {k: round(v, 2) for k, v in h.items()}
 
 
 def resolve(raw, quota=None):
@@ -147,7 +210,10 @@ def resolve(raw, quota=None):
         c["pantry_mode"] = p
     elif re.match(r"^fenvix-kitchen-pantry-[0-9]+$", str(p)):
         c["pantry_mode"] = "existing"
-        if "load" in c["phases"] and c["data"] == "atlas":
+        # (mode run only: aws-fixes found that the documented {"mode": "drop-pantry", "pantry": ...} was refused here
+        # through the default phases, so a kept pantry could not be dropped by the workflow; the local run dropped it
+        # without decide.py and never showed it)
+        if c["mode"] == "run" and "load" in c["phases"] and c["data"] == "atlas":
             refuse("an existing pantry already has the Atlas databases: phase load only adds ballast (data 100gb or 1tb)")
     else:
         refuse("pantry: new, keep, or fenvix-kitchen-pantry-<digits>")
@@ -210,6 +276,21 @@ def resolve(raw, quota=None):
         refuse("ceiling_min: 10 to 340 (a GitHub job lasts at most 360 minutes)")
     if "ballast-rounds" in c["programs"] and c["data"] == "atlas":
         c["programs"] = [x for x in c["programs"] if x != "ballast-rounds"]
+    if c["client_zone"] not in ("other", "same"):
+        refuse("client_zone: other (clients in another zone than the cook, as on Atlas) or same")
+    if not 5 <= float(c["settle_max_min"]) <= 90:
+        refuse("settle_max_min: 5 to 90 minutes")
+    # aws-fixes (B2): a command that does nothing is refused (run.py starts the measured cook only in phase "measure";
+    # the m30 program runs in "measure", every other program in "extras")
+    if c["mode"] == "run":
+        extra_work = [p for p in c["programs"] if p != "m30"]
+        if "extras" in c["phases"] and "measure" not in c["phases"]:
+            refuse('phases: "extras" needs "measure" (the extra programs run against the measured cook, which only the '
+                   'measure phase starts): this command would start nothing and measure nothing')
+        if "measure" in c["phases"] and "m30" not in c["programs"] and not ("extras" in c["phases"] and extra_work):
+            refuse('phases: "measure" without the program m30 and without extra programs measures nothing')
+        if "extras" in c["phases"] and not extra_work:
+            refuse(f'phases: "extras" with no extra program to run (programs {c["programs"]})')
     # the vCPU on at the same time, phase by phase (the phases never overlap their machines; run.py)
     v = lambda t: TYPES[t][0] if t else 0
     log_machines = 2 if c["log_colocate"] else 3            # log-0 on the cook's machine, or on its own
@@ -223,7 +304,10 @@ def resolve(raw, quota=None):
         peaks["measure (m30)"] = v(c["cook"]) + log_machines * v(c["log"]) + v(c["compactor"]) + \
             (v(c["client"]) if "m30" in c["programs"] else 0)
     if "extras" in c["phases"]:
-        peaks["extras"] = v(c["cook"]) + log_machines * v(c["log"]) + v(c["compactor"]) + v(c["spare"]) + v(c["extras_client"])
+        if any(p in EXTRA_PROGRAMS for p in c["programs"]):
+            peaks["extras"] = v(c["cook"]) + log_machines * v(c["log"]) + v(c["compactor"]) + v(c["spare"]) + v(c["extras_client"])
+        if "write-peak" in c["programs"]:   # the spare is off by then; a client of the m30 client's type
+            peaks["write-peak"] = v(c["cook"]) + log_machines * v(c["log"]) + v(c["compactor"]) + v(c["client"])
         if "agent-bench" in c["programs"]:   # the spare is off by then; the Postgres machine is on
             peaks["agent-bench"] = v(c["cook"]) + log_machines * v(c["log"]) + v(c["compactor"]) + v(c["pgbox"]) + v(c["extras_client"])
     c["vcpu_peaks"] = peaks
@@ -236,6 +320,17 @@ def resolve(raw, quota=None):
         refuse(f"{c['vcpu_peak']} vCPU at once ({peaks}); the limit is {VCPU_LIMIT} (on-demand quota).{hint}")
     if quota is not None and c["mode"] == "run" and c["vcpu_peak"] > quota:
         refuse(f"{c['vcpu_peak']} vCPU at once, the quota is {quota}")
+    c["job_hours"] = job_hours(c)
+    c["job_hours_total"] = round(sum(c["job_hours"].values()), 2)
+    limit_h = CEILING_USE * float(c["ceiling_min"]) / 60
+    if os.environ.get("S9_MODE", "aws") == "local":
+        # LOCAL mode only (shrunk programs, like S9_VCPU_LIMIT): the estimate is scaled; on AWS never
+        limit_h /= float(os.environ.get("S9_DURATION_SCALE", "1"))
+    if c["mode"] == "run" and c["job_hours_total"] > limit_h:
+        refuse(f"the job would last about {c['job_hours_total']:.1f} h (ESTIMATED: {c['job_hours']}), above "
+               f"{CEILING_USE:.0%} of ceiling_min {float(c['ceiling_min']):.0f} = {limit_h:.1f} h: it would be cut before its "
+               f"end. Split it into jobs on the kept pantry (step9/commands/: m30 alone; the extra programs and "
+               f"write-peak; the agent benchmark)")
     if c["mode"] == "run" and os.environ.get("S9_MODE", "aws") == "aws":
         # RULES.md 8-9 (founder, 2026-11-09): no AWS run while a local result loses a write or is worse than the competitors
         import subprocess
@@ -254,7 +349,7 @@ def main():
     quota = float(sys.argv[3]) if len(sys.argv) > 3 and sys.argv[3] else None
     c = resolve(raw, quota)
     json.dump(c, open(sys.argv[2], "w"), indent=1)
-    for k in ("mode", "engine", "engine_commit", "data", "pantry_mode", "vcpu_peak", "vcpu_peaks"):
+    for k in ("mode", "engine", "engine_commit", "data", "pantry_mode", "vcpu_peak", "vcpu_peaks", "job_hours_total", "job_hours"):
         print(f"{k}={c[k]}")
     print(f"x86={'1' if 'x86_64' in c['arches'] else '0'}")
     print(f"arm={'1' if 'aarch64' in c['arches'] else '0'}")

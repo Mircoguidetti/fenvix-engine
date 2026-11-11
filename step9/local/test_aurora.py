@@ -92,3 +92,16 @@ def test_policy_is_least_privilege_and_names_fit_it():
         for kind, name in aurora.names(run).items():
             assert aurora.name_ok(name, kind), name
     assert not aurora.name_ok("app-demo", "cluster") and not aurora.name_ok("fenvix-coldread-x-", "cluster")
+
+
+def test_describe_is_saved_without_secrets(aws, monkeypatch):
+    """aws-fixes B10: the cluster's and the writer's settings as RDS describes them, with only the Describe calls the
+    founder's policy allows; no endpoint, ARN or secret in what is saved with the results."""
+    monkeypatch.setattr(aurora, "engine_version", lambda rds: "16.6")
+    aurora.create("102", "d" * 48, say=lambda m: None)
+    d = aurora.describe("102")
+    blob = json.dumps(d, default=str)
+    assert d["cluster"]["Engine"] == "aurora-postgresql" and d["writer"]["DBInstanceClass"] == "db.r7g.large"
+    assert "4 of 6" in d["durability"]
+    assert "Endpoint" not in d["cluster"] and "Endpoint" not in d["writer"] and "arn:aws" not in blob and "d" * 48 not in blob
+    aurora.delete("102", say=lambda m: None, wait=lambda: None)

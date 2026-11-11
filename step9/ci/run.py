@@ -56,6 +56,10 @@ DISK_GB = int(os.environ.get("DISK_GB", "20"))
 BUCKET = f"fenvix-coldread-s9-{RUN}"
 TK_BUCKET = f"fenvix-coldread-s9t-{RUN}"
 PANTRY = cmd["pantry_name"]   # decided by decide.py (new, kept, or an existing kept pantry)
+# aws-fixes (total review, question 1 point 4): on Atlas the client was in eu-west-1a and the primary in another zone
+# (euw1-az2, MEASURED from the hello tags): every client goes to another zone than the cook (eu-west-1b) unless the
+# command says "client_zone": "same". The cook, the Postgres machine and Aurora stay in eu-west-1a.
+CLIENT_ZONE = infra.ZONES[1] if cmd.get("client_zone", "other") == "other" else infra.ZONES[0]
 T0 = time.time()
 plat = infra.make(MODE)
 s3 = plat.s3
@@ -262,6 +266,17 @@ def aurora_off(wait=True):
     au["end"] = au["end"] or time.time()
 
 
+def quota_free(ids):
+    """aws-fixes: wait until machines just terminated are gone before launching the next ones of the 8-vCPU plan (on
+    AWS a machine shutting down can still count against the vCPU quota for a short while). Never longer than 10 min."""
+    w = getattr(plat, "wait_terminated", None)
+    if w and ids:
+        try:
+            w([i for i in ids if i])
+        except Exception as e:  # noqa: BLE001 - the launch that follows says it if the quota is still taken
+            say(f"waiting for termination: {type(e).__name__}: {str(e)[:120]}")
+
+
 def cert_for(name, ip):
     pem = os.path.join(OUT, f".{name}.pem")
     subprocess.run(["bash", os.path.join(HERE, "..", "..", "kitchen", "ci", "certs.sh"), "server", os.environ["CA_DIR"], ip, pem], check=True)
@@ -350,9 +365,10 @@ try:
         server_config("server-0", "loader", LOGS if cmd["loader_uses_log"] else "")
         mid0, ip0 = launch("server-0", "loader", cmd["loader"], infra.ZONES[0])
         cert_for("server-0", ip0)
-        put("server-0/go.json", {"type": cmd["loader"], "k": 0, "pantry": PANTRY, "prepare": False})
+        put("server-0/go.json", {"type": cmd["loader"], "k": 0, "pantry": PANTRY, "prepare": False,
+                                 "settle_max_min": cmd.get("settle_max_min", 30)})
         if cmd["atlas_load"]:
-            client_id, _ = launch("client", "client", cmd["client"], infra.ZONES[0])
+            client_id, _ = launch("client", "client", cmd["client"], CLIENT_ZONE)
         filler_id = launch("filler", "filler", cmd["filler"], infra.ZONES[0])[0] if cmd.get("filler") else None
         while (client_id and not exists("client/done-0.json") and not exists("client/end.json")) or (filler_id and not exists("filler/end.json")):
             minute("filler" if filler_id and not client_id else "client")
@@ -364,6 +380,10 @@ try:
             machines[filler_id]["end"] = machines[filler_id]["end"] or time.time()
         say(f"load: {json.dumps(outcomes)}")
         stop("server-0", mid0)
+        if outcomes.get("load") == "LOADED_NOT_SETTLED":
+            # aws-fixes (B5): the data are in the pantry, but its compaction did not finish within settle_max_min
+            # (client/settle.json says why): stop and say so; nothing is measured on it without reading that first
+            raise Stop("LOADED_NOT_SETTLED")
         if outcomes.get("load", "LOADED") != "LOADED" or outcomes.get("ballast", "BALLAST_LOADED") != "BALLAST_LOADED":
             raise Stop("LOAD_FAILED")
     if "load" in PHASES and cmd.get("generator"):
@@ -406,8 +426,9 @@ try:
             cert_for("compactor", comp[1])
         if "m30" in cmd["programs"]:
             if not client_id:
-                client_id, _ = launch("client", "client", cmd["client"], infra.ZONES[0])
-            put("server-1/go.json", {"type": cmd["cook"], "k": 1, "pantry": PANTRY, "prepare": bool(cmd.get("prepare"))})
+                client_id, _ = launch("client", "client", cmd["client"], CLIENT_ZONE)
+            put("server-1/go.json", {"type": cmd["cook"], "k": 1, "pantry": PANTRY, "prepare": bool(cmd.get("prepare")),
+                                     "settle_max_min": cmd.get("settle_max_min", 30)})
             while not exists("client/done-1.json") and not exists("client/end.json"):
                 minute("client")
             outcomes["m30"] = (get("client/done-1.json") or {}).get("outcome", "NOT DONE")
@@ -424,7 +445,7 @@ try:
         plat.terminate([client_id])
         machines[client_id]["end"] = time.time()
 
-    extras = [p for p in cmd["programs"] if p not in ("m30", "agent-bench")]
+    extras = [p for p in cmd["programs"] if p not in ("m30", "agent-bench", "write-peak")]
     if "extras" in PHASES and extras and mid1:
         if cmd.get("spare"):
             say("7/8 the warm spare (zone b), now that the m30 client is off")
@@ -436,21 +457,41 @@ try:
         put("extras/config.json", {"programs": extras, "pantry": PANTRY, "logs": LOGS, "bench_logs": LOGS.replace(":7200", ":7201"),
                                    "cook": {"ip": ip1, "port": 27017}, "spare": {"ip": sp[1]} if sp else {},
                                    **{k: v for k, v in cmd.items() if k.endswith("_args")}})
-        ex_id, _ = launch("extras", "extras", cmd["extras_client"], infra.ZONES[0])
+        ex_id, _ = launch("extras", "extras", cmd["extras_client"], CLIENT_ZONE)
         wait_for("extras/end.json", watch="extras")
         outcomes["extras"] = (get("extras/end.json") or {}).get("programs", "")
         plat.terminate([ex_id])
         machines[ex_id]["end"] = time.time()
     else:
         say("7/8 no extra program in this round")
+    if "extras" in PHASES and "write-peak" in cmd["programs"] and mid1:
+        # aws-fixes (B4): peak writes with the real indexes through the MEASURED cook (log on, the round's options): the
+        # founder's script's own load, the shape of the Atlas load that gave 25,800 documents per second (6 databases,
+        # 16 threads each); 8 vCPU: the spare goes, a client of the m30 client's type comes
+        if sp:
+            stop("spare", sp[0], wait_s=120)
+            quota_free([sp[0]])
+            sp = None
+        quota_free([i for i, m in machines.items() if m["name"] == "extras"])
+        say(f"7/8 write-peak: {cmd['write_peak_args']} through the measured cook, client {cmd['client']} in {CLIENT_ZONE}")
+        put("peak/config.json", {"programs": ["write-peak"], "pantry": PANTRY, "logs": LOGS,
+                                 "cook": {"ip": ip1, "port": 27017}, "write_peak_args": cmd["write_peak_args"]})
+        pk_id, _ = launch("peak", "extras", cmd["client"], CLIENT_ZONE)
+        wait_for("peak/end.json", watch="peak")
+        outcomes["write-peak"] = (get("peak/end.json") or {}).get("programs", "")
+        plat.terminate([pk_id])
+        machines[pk_id]["end"] = time.time()
     pg = None
     if "extras" in PHASES and "agent-bench" in cmd["programs"] and mid1:
         # 8 vCPU: the spare goes, the Postgres machine (the Supabase stand-in) comes, then the agent client
         if sp:
             stop("spare", sp[0], wait_s=120)
+            quota_free([sp[0]])
             sp = None
-        say("7/8 the agent benchmark: the Postgres machine (zone a)" + (", the Aurora cluster" if cmd.get("aurora") else "")
-            + " and the agent client")
+        quota_free([i for i, m in machines.items() if m["name"] in ("extras", "peak")])
+        say("7/8 the agent benchmark: the Postgres machine (zone a; single node, no copy: NOT equal durability)"
+            + (", the Aurora cluster (the equal-durability line: 4 of 6 copies in 3 zones, DECLARED by AWS)" if cmd.get("aurora") else "")
+            + f" and the agent client ({CLIENT_ZONE})")
         if cmd.get("aurora"):
             if MODE != "aws":
                 raise Stop("AURORA_ONLY_ON_AWS")
@@ -470,11 +511,21 @@ try:
                 minute(None)
             put("secret/aurora-uri", aurora.uri(ep, os.environ["CM_PW"]))
             say(f"aurora: ready after {(time.time() - au['start']) / 60:.1f} minutes")
+            try:   # B10: the cluster's and the writer's settings as AWS describes them, kept with the results
+                json.dump(aurora.describe(RUN), open(os.path.join(OUT, "aurora-describe.json"), "w"), indent=1, default=str)
+            except Exception as e:  # noqa: BLE001 - never stops the round; the SQL side (pg_settings) is saved anyway
+                say(f"aurora: describe: {type(e).__name__}: {str(e)[:160]}")
         put("agent/config.json", {"programs": ["agent-bench"], "pantry": PANTRY, "logs": LOGS,
                                   "cook": {"ip": ip1, "port": 27017}, "pgbox": {"ip": pg[1]},
                                   "agent_bench_args": cmd["agent_bench_args"]})
-        ag_id, _ = launch("agent", "extras", cmd["extras_client"], infra.ZONES[0])
-        wait_for("agent/end.json", watch="agent")
+        ag_id, _ = launch("agent", "extras", cmd["extras_client"], CLIENT_ZONE)
+        # B10: Aurora runs FIRST (agent_bench.py's order), and is deleted as soon as its target is done
+        # (agent/aurora-done), not after the other targets: it is not paid while idle
+        while not exists("agent/end.json"):
+            if au["start"] and not au["end"] and exists("agent/aurora-done"):
+                say("aurora: its target is done: deleting the cluster now, while the other targets run")
+                aurora_off()
+            minute("agent")
         outcomes["agent"] = (get("agent/end.json") or {}).get("programs", "")
         plat.terminate([ag_id])
         machines[ag_id]["end"] = time.time()
@@ -515,7 +566,19 @@ finally:
                 s3.download_file(BUCKET, o["Key"], dest)
     except Exception as e:
         say(f"after the round: {type(e).__name__}: {e} (the teardown step runs anyway)")
-    json.dump({"outcome": outcome, "outcomes": outcomes, "minutes": round((time.time() - T0) / 60, 1),
+    zones = {}
+    for m in machines.values():
+        z = None
+        try:
+            z = json.load(open(os.path.join(OUT, m["name"], "zone.json")))
+        except Exception:  # noqa: BLE001
+            z = get(f"results/{m['name']}/zone.json")
+        if z:
+            zones[m["name"]] = z
+            m["zone_id"] = z.get("zone_id")
+    if zones:
+        say("zones (name, id): " + "; ".join(f"{k} {v.get('zone')} {v.get('zone_id')}" for k, v in sorted(zones.items())))
+    json.dump({"outcome": outcome, "outcomes": outcomes, "client_zone": CLIENT_ZONE, "zones": zones, "minutes": round((time.time() - T0) / 60, 1),
                "estimated_spend_upper_bound": round(spend_now, 4), "cap": CAP, "command": cmd,
                "machines": [{k: v for k, v in m.items() if k != "ip"} | {"id": i} for i, m in machines.items()]},
               open(os.path.join(OUT, "run.json"), "w"), indent=1)

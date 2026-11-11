@@ -157,3 +157,25 @@ What changed in the benchmark for this run (all before the first measured run):
 - Postgres sizes after `CHECKPOINT`; our server's status (serverStatus().fenvix and tenantStats) before and after the
   write phase, so `quaderno.sent` shows the 3-zone log took the writes.
 - `step9/ci/gate.py` also checks `save_step`, `time_travel` and `resume[cold]`.
+
+### Fix round after the review (2026-11-11, fenvix-brain `sessions/2026-11-11-review-bench-local`)
+
+Joined with aws-fixes (`claude/dazzling-bohr-z5zcqd`, its gate B1/B9 kept), then F1-F10, each with the reviewer's
+failing case as a test (`tests/`, `step9/local/tests/test_gate.py`):
+- F1 the gate compares `resume[write/none]` and `resume[write/short]` (minimums 1,000 and 300); F4 `resume[cold]` must be
+  present with 200 samples but is not compared (DECISIONS 2026-11-11).
+- F3 `bench_local.sh` skips a line only when its runner said exit 0 and its summary says ok; an exit 3 writes
+  `results/local-<tag>-STOP` and every later step refuses while it exists; `ENGINE_REF` has no default.
+- F5 our run is not ok if `tenantStats.quaderno.failed` is above 0 after the write, before the cold restart or at the end
+  (those writes were acknowledged by the S3-WAL fallback, not by 2 of 3 log copies).
+- F6 lists are checked for order (ids strictly descending), duplicates, whole-list completeness and "last N" = the N
+  newest; an erased thread's every written checkpoint id must read back as None.
+- F7 `--workers N` runs N processes (not threads); the client's CPU is sampled (`client_cpu.jsonl`, `cpu_mem.jsonl`
+  "client_cores"); `client_limited` (a client process at 0.9 core on average, or the host 95% busy in more than 10% of
+  samples) makes the gate refuse the line.
+- F8 MinIO `--memory 3g` (CPU uncapped); Postgres `shared_buffers=768MB` (25% of its 3 GiB) on every member, as on AWS.
+- F9 the summary gives our WAL, `fx/` and `compacted/` shares; the gate refuses our bytes without a settle record, after a
+  capped settle, or when compaction 2 never published.
+- F10 `lines.py health LINE` (members running, never OOM-killed, durability check) runs after the write phase and at the
+  end; a failure makes the run not ok; `line_result.json` keeps every member's state.
+- AWS: `agent_bench.py` passes `--settle` to our target; `--read-sample 300 --erase-users 100` as locally.

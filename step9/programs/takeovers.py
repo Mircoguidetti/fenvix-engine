@@ -12,9 +12,13 @@ process three times (at once, after --settle-s, after a clean restart that repla
 missing at the third read (must be 0); the first two counts are kept to tell loss from late visibility. Also counted: confirmations from a process after its kill (must
 be 0) and writes that failed (an unknown outcome, not counted as acknowledged).
 Raw lines in OUT/takeovers.jsonl, summary OUT/takeovers-summary.json; final line "TAKEOVERS: PASS" or "FAIL".
+Kept for diagnosis (aws-fixes, total review question 2 point 2): OUT/takeovers-acked.jsonl.gz, EVERY acknowledged _id
+with the time of its acknowledgement and the server (agent name and IP) that confirmed it; OUT/takeovers-missing.json,
+EVERY acknowledged _id missing at each of the three reads, with its time and server (not only the first 50).
 Usage: takeovers.py BUCKET OUT --a IP --b IP --ca CA_FILE [--n 50] [--writers 8] [--between-s 3] [--log on|off]
   (password from CM_PW in the environment; A = the cook's machine, B = the spare's machine)"""
 import argparse
+import gzip
 import json
 import os
 import threading
@@ -139,7 +143,9 @@ def writer(t):
                 time.sleep(0.05)
 
 
-summary = {"n": a.n, "writers": a.writers, "lease_ttl_s": a.lease_ttl, "log": a.log, "takeovers": []}
+summary = {"n": a.n, "writers": a.writers, "lease_ttl_s": a.lease_ttl, "log": a.log, "takeovers": [],
+           "note": "the pair runs with the round's server_options; its lease is lease_ttl_s, not the product's 30 s, so "
+                   "takeover_s is not the product's takeover time (total review, question 1 point 5)"}
 command("A", "start"); wait_ping("A")
 colls["A"].insert_one({"_id": "seed", "ts": time.time()})   # A owns the database before B starts
 command("B", "start"); wait_ping("B")
@@ -210,21 +216,41 @@ def read_back(wait_s=180):
         time.sleep(2)
 
 
-missing = {}
+def who(_id):
+    node, t = acked[_id]
+    return {"_id": _id, "t": t, "server": NODES[node][1], "ip": NODES[node][0]}
+
+
+# every acknowledged write, written before the read-back (a read-back that fails still leaves the full list)
+with gzip.open(os.path.join(a.out, f"{tag}-acked.jsonl.gz"), "wt") as f:
+    for _id in sorted(acked, key=lambda k: acked[k][1]):
+        f.write(json.dumps(who(_id)) + "\n")
+missing, missing_ids = {}, {}
+
+
+def keep_missing():
+    json.dump({"survivor": NODES[survivor][1], "acknowledged": len(acked), "missing": missing_ids},
+              open(os.path.join(a.out, f"{tag}-missing.json"), "w"))
+
+
 try:
-    missing["at_once"] = len(read_back())
-    time.sleep(a.settle_s)
-    missing["after_settle"] = len(read_back())
-    command(other, "stop", wait_s=120)
-    command(survivor, "stop", wait_s=120)
-    command(survivor, "start")
-    wait_ping(survivor, wait_s=300)
-    lost_set = read_back()
-    missing["after_clean_restart"] = len(lost_set)
-    lost = sorted(lost_set)
+    for label in ("at_once", "after_settle", "after_clean_restart"):
+        if label == "after_settle":
+            time.sleep(a.settle_s)
+        if label == "after_clean_restart":
+            command(other, "stop", wait_s=120)
+            command(survivor, "stop", wait_s=120)
+            command(survivor, "start")
+            wait_ping(survivor, wait_s=300)
+        got = read_back()
+        missing[label] = len(got)
+        missing_ids[label] = [who(x) for x in sorted(got, key=lambda k: acked[k][1])]
+        keep_missing()
+    lost = sorted(got)
 except Exception as e:
     verify_error = f"{type(e).__name__}: {e}"[:300]
     lost = []
+    keep_missing()
 print(f"missing acknowledged writes: {missing}", flush=True)
 times = sorted(r["takeover_s"] for r in summary["takeovers"] if r["takeover_s"] is not None)
 pct = lambda p: times[min(len(times) - 1, int(round(p / 100 * (len(times) - 1))))] if times else None

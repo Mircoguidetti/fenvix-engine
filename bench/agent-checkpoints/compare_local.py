@@ -58,7 +58,17 @@ def bytes_line(s):
     r = have.get("fenvix") / min(others) if "fenvix" in have and others else None
     return (f"stored bytes per logical byte: ours {fmt(v['fenvix']) if v['fenvix'] else 'n/a'}, Postgres "
             f"{fmt(v['postgres']) if v['postgres'] else 'n/a'}, mongod {fmt(v['mongo']) if v['mongo'] else 'n/a'}; winner "
-            f"{dict(SYS_NAME)[win]}" + (f", ours/best other {r:.2f}" if r else ""))
+            f"{dict(SYS_NAME)[win]}" + (f", ours/best other {r:.2f}" if r else "") + ours_split(s))
+
+
+def ours_split(s):
+    """Our bytes split (review F9): the WAL share, compaction 2's fx/ share, SlateDB's compacted/ share, the settle."""
+    b = s.get("fenvix", {}).get("bytes", {})
+    st = s.get("fenvix", {}).get("settle") or {}
+    if "wal_share" not in b:
+        return ""
+    return (f"; ours: WAL {b['wal_share']:.1%}, fx/ {b['fx_share']:.1%}, compacted/ {b['compacted_share']:.1%}; settle "
+            f"{st.get('seconds')} s, capped {st.get('capped')}, compaction 2 published {st.get('compaction2_published')}")
 
 
 def worst(runs):

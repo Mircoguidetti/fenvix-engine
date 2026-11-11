@@ -56,6 +56,10 @@ def start(c):
         cmd += ["--endpoint", os.environ["AWS_ENDPOINT_URL"]]
     if c.get("log", True) and cfg.get("logs"):
         cmd += ["--quaderno", cfg["logs"], "--quaderno-id", "tk"]
+    # aws-fixes (total review question 1 point 5): the pair runs with the round's own server_options (the product's
+    # options: sealed runs, envelopes, customer key), not with the engine's bare defaults; the short lease stays the
+    # program's choice (--lease-ttl, 4 s by default: the takeover TIME measured is not the product's 30 s lease)
+    cmd += (cfg.get("server_options") or "").split()
     cmd += c.get("extra", [])
     out = open(f"out/takeover-pair-{n_start}.log", "w")
     proc = subprocess.Popen(cmd, stdout=out, stderr=subprocess.STDOUT)
