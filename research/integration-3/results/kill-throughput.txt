@@ -1,1 +1,12 @@
 off trial 1: s3 durable 0 {'secs': 15.0, 'acked_ids': 22402, 'acked_writes_before_kill': 44774, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.113}
+off trial 2: s3 durable 0 {'secs': 15.0, 'acked_ids': 24076, 'acked_writes_before_kill': 48128, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.108}
+off trial 3: s3 durable 0 {'secs': 15.0, 'acked_ids': 22394, 'acked_writes_before_kill': 44746, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.113}
+default trial 1: s3 durable 0 {'secs': 15.0, 'acked_ids': 18727, 'acked_writes_before_kill': 37420, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.121}
+default trial 2: s3 durable 0 {'secs': 15.0, 'acked_ids': 17947, 'acked_writes_before_kill': 35860, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.123}
+default trial 3: s3 durable 0 {'secs': 15.0, 'acked_ids': 21669, 'acked_writes_before_kill': 43299, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.114}
+small trial 1: s3 durable 0 {'secs': 15.0, 'acked_ids': 22833, 'acked_writes_before_kill': 45628, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.109}
+small trial 2: s3 durable 0 {'secs': 15.0, 'acked_ids': 22336, 'acked_writes_before_kill': 44638, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.108}
+small trial 3: s3 durable 0 {'secs': 15.0, 'acked_ids': 21507, 'acked_writes_before_kill': 42977, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.111}
+step3 trial 1: s3 durable 0 {'secs': 15.0, 'acked_ids': 880, 'acked_writes_before_kill': 1747, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.997}
+step3 trial 2: s3 durable 0 {'secs': 15.0, 'acked_ids': 805, 'acked_writes_before_kill': 1593, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.999}
+step3 trial 3: s3 durable 0 {'secs': 15.0, 'acked_ids': 856, 'acked_writes_before_kill': 1693, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.995}
