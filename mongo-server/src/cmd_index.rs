@@ -1337,6 +1337,77 @@ impl Server {
             }
         }
         ids.clear();
+        // Natural order (`natural.rs`): every document's stored number has a `nat/` entry naming it, no number is held by
+        // two documents, no entry names a missing document. A database that lost a lease during a write before
+        // c2-fix-outage-loss can hold documents missing from collection scans (review defect 4); `repair: true` gives each
+        // of them a new number at the end (healthy documents keep their place) and removes the stale entries.
+        let mut nat_repaired = 0_i64;
+        if crate::natural::enabled(&mut *g, coll).await? {
+            let np = crate::natural::prefix(coll);
+            let entries: HashMap<u64, Vec<u8>> = g
+                .scan(&np)
+                .await?
+                .into_iter()
+                .filter_map(|(k, v)| Some((u64::from_be_bytes(k.get(np.len()..)?.try_into().ok()?), v.to_vec())))
+                .collect();
+            let mut holders: HashMap<u64, usize> = HashMap::new();
+            for (_, v) in &rows {
+                if let Some(s) = crate::natural::seq_of(v) {
+                    *holders.entry(s).or_default() += 1;
+                }
+            }
+            // documents whose number has no entry naming them, and entries that name no document holding their number
+            let mut damaged: Vec<usize> = Vec::new();
+            let mut named: HashSet<u64> = HashSet::new();
+            for (i, (k, v)) in rows.iter().enumerate() {
+                let id = &k[dp.len()..];
+                match crate::natural::seq_of(v) {
+                    Some(s) if entries.get(&s).is_some_and(|e| e[..] == id[..]) => {
+                        named.insert(s);
+                    }
+                    s => {
+                        damaged.push(i);
+                        if errors.len() < 20 {
+                            let what = match s {
+                                Some(s) if holders.get(&s).copied().unwrap_or(0) > 1 => "shares its natural-order number with another document",
+                                Some(_) => "has no natural-order entry",
+                                None => "has no natural-order number",
+                            };
+                            errors.push(Bson::String(format!("document {} {what}: collection scans do not return it", fmt_doc(&doc! {"_id": docs[i].1.get("_id").cloned().unwrap_or(Bson::Null)}))));
+                        }
+                    }
+                }
+            }
+            let stale: Vec<u64> = entries.keys().filter(|s| !named.contains(s)).copied().collect();
+            if !stale.is_empty() && errors.len() < 20 {
+                errors.push(Bson::String(format!("{} natural-order entries name no document that holds their number", stale.len())));
+            }
+            if truthy("repair") && (!damaged.is_empty() || !stale.is_empty()) {
+                let mut ops: Vec<Op> = stale.iter().map(|s| Op::Delete(crate::natural::key(coll, *s))).collect();
+                for (n, i) in damaged.iter().enumerate() {
+                    let (k, v) = &rows[*i];
+                    let id = k[dp.len()..].to_vec();
+                    let s = crate::natural::alloc(&mut g, coll, &mut ops).await?;
+                    ops.push(Op::Put(crate::natural::key(coll, s), id.clone()));
+                    ops.push(Op::Put(k.to_vec(), crate::natural::with_seq(crate::natural::bson_part(v).to_vec(), s)));
+                    // index entries carry the number too (equal keys are returned in insertion order)
+                    for idx in indexes.iter().filter(|x| x.has_entries() && x.state != State::Dropping) {
+                        let prefix = idx.prefix(coll);
+                        for c in idx.entries(&docs[*i].1)?.0.into_keys() {
+                            ops.push(Op::Put(entry_key(&prefix, &c, &id), crate::natural::entry_value(Some(s))));
+                        }
+                    }
+                    if ops.len() >= 4000 || n + 1 == damaged.len() {
+                        g.apply(std::mem::take(&mut ops)).await?;
+                    }
+                }
+                if !ops.is_empty() {
+                    g.apply(ops).await?;
+                }
+                nat_repaired = (damaged.len() + stale.len()) as i64;
+                errors.retain(|e| !matches!(e, Bson::String(t) if t.contains("collection scans do not return it") || t.contains("natural-order entries name no document")));
+            }
+        }
         let mut details = doc! { "_id_": { "valid": true } };
         for idx in indexes.iter().filter(|i| i.has_entries() && i.state != State::Dropping) {
             details.insert(idx.name.clone(), doc! { "valid": !bad_indexes.contains(&idx.name) });
@@ -1381,7 +1452,8 @@ impl Server {
             "keysPerIndex": keys_per_index,
             "indexDetails": details,
             "valid": errors.is_empty(),
-            "repaired": false,
+            "repaired": nat_repaired > 0,
+            "naturalOrderRepaired": nat_repaired,
             "warnings": warnings,
             "errors": errors,
             "extraIndexEntries": [],

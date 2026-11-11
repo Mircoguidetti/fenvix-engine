@@ -1962,7 +1962,14 @@ impl Writes {
             e.index(&n, b);
         }
         if let Some(s) = seq {
-            self.ops.push(Op::Delete(crate::natural::key(coll, s)));
+            // Only the entry that names this document: in a collection damaged before c2-fix-outage-loss two documents can
+            // share a number, and the entry then names the other one, which would vanish from scans with it (review
+            // defect 4). An entry not stored yet (put earlier in this write set) is deleted as before.
+            let nk = crate::natural::key(coll, s);
+            let names_other = g.get_live(&nk).await?.is_some_and(|v| v[..] != id_enc[..]);
+            if !names_other {
+                self.ops.push(Op::Delete(nk));
+            }
         }
         self.ops.push(Op::Delete(k.clone()));
         self.ov.insert(k, None);

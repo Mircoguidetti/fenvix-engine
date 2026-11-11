@@ -151,3 +151,82 @@ def test_transaction_spanning_a_lease_loss():
         assert len(scanned) == len(set(scanned)) == len(committed), (scanned, committed)
     finally:
         srv.term()
+
+
+import pytest  # noqa: E402
+
+
+@pytest.mark.skipif(not os.environ.get("R52_OLD_BIN"), reason="needs R52_OLD_BIN, a binary that writes duplicate natural-order numbers (integration-3)")
+def test_validate_repair_renumbers_a_damaged_collection():
+    """Fix round, review defect 4. R52_OLD_BIN (integration-3) damages a collection the way the review found (a transaction
+    commits after a reopen; a plain insert in between took its natural-order number again), with a secondary index. This
+    binary's `validate` must report it, and `validate {repair: true}` must bring every document back into collection
+    scans, keep the healthy documents in their insertion order, renumber the index entries of the repaired ones, and leave
+    `validate {full: true}` clean, also after a restart."""
+    old = os.environ["R52_OLD_BIN"]
+    bucket = make_bucket("repairnat")
+    f = tempfile.NamedTemporaryFile("w", delete=False, suffix=".faults")
+    f.close()
+    ff = f.name
+    port = free_port()
+    srv = Server(bucket, "repairnat", idle=600, holder="T1", port=port, env={"MONGO_TEST_FAULTS_FILE": ff}, binary=old,
+                 extra=["--lease-ttl-secs", str(TTL), "--replica-set", "rs0", "--advertise", f"127.0.0.1:{port}"]).start()
+    try:
+        c = srv.client()
+        col = c.d.t
+        col.create_index([("k", 1)])
+        col.insert_many([{"_id": f"pre{i}", "k": 1} for i in range(10)])
+        s = c.start_session()
+        s.start_transaction()
+        col.insert_one({"_id": "A", "k": 1}, session=s)
+        lost0 = srv.log_text().count("LEASE lost")
+        with open(ff, "w") as fh:
+            fh.write(f"delay_put processes/T1/_lease {TTL * 1000 + 1500}\n")
+        deadline = time.time() + 30
+        while srv.log_text().count("LEASE lost") == lost0 and time.time() < deadline:
+            time.sleep(0.1)
+        with open(ff, "w") as fh:
+            fh.write("")
+        time.sleep(TTL + 1)
+        deadline = time.time() + 40
+        while True:
+            try:
+                col.insert_one({"_id": "B", "k": 1})
+                break
+            except PyMongoError:
+                assert time.time() < deadline, "the insert of B never succeeded"
+                time.sleep(0.2)
+        s.commit_transaction()
+        s.end_session()
+        col.insert_many([{"_id": f"post{i}", "k": 1} for i in range(5)])
+        before = [d["_id"] for d in col.find({}, {"_id": 1}).hint([("$natural", 1)])]
+    finally:
+        srv.term()
+        os.unlink(ff)
+    assert "B" not in before, f"the old binary did not damage the collection: the test did not reach the case ({before})"
+    every = [f"pre{i}" for i in range(10)] + ["A", "B"] + [f"post{i}" for i in range(5)]
+    new = Server(bucket, "repairnat2", idle=600).start()
+    try:
+        c = new.client()
+        v = c.d.command("validate", "t", full=True)
+        print(f"before the repair: valid={v['valid']} errors={v['errors']}")
+        assert not v["valid"], "validate did not find the damage"
+        r = c.d.command("validate", "t", repair=True)
+        print(f"repair: valid={r['valid']} repaired={r['repaired']} naturalOrderRepaired={r.get('naturalOrderRepaired')} errors={r['errors']}")
+        scan = [d["_id"] for d in c.d.t.find({}, {"_id": 1}).hint([("$natural", 1)])]
+        by_k = [d["_id"] for d in c.d.t.find({"k": 1}, {"_id": 1}).hint([("k", 1)])]
+        v2 = c.d.command("validate", "t", full=True)
+        print(f"after the repair: scan {scan}\nindex k order {by_k}\nvalidate valid={v2['valid']} errors={v2['errors']}")
+        assert sorted(scan, key=str) == sorted(every, key=str) and len(scan) == len(every), f"scan after the repair: {scan}"
+        healthy = [i for i in before]
+        assert [i for i in scan if i in healthy] == healthy, "the repair changed the order of healthy documents"
+        assert sorted(by_k, key=str) == sorted(every, key=str), f"index k after the repair: {by_k}"
+        assert v2["valid"], f"validate after the repair: {v2['errors']}"
+    finally:
+        new.term()
+    again = Server(bucket, "repairnat3", idle=600).start()
+    try:
+        scan = [d["_id"] for d in again.client().d.t.find({}, {"_id": 1}).hint([("$natural", 1)])]
+        assert len(scan) == len(every) and set(scan) == set(every), f"after a restart: {scan}"
+    finally:
+        again.term()
