@@ -20,9 +20,9 @@ const DEFAULT_FIRST_BATCH: usize = 101;
 /// mongod's byte limit of one batch of a cursor (16 MiB, `BSONObjMaxUserSize`). A batch takes the next document only if
 /// the documents already in it, each with its array element header (type, index digits, NUL), plus that document and
 /// the reply's fixed part fit; the first document of a batch always goes in. The fixed part is 53 bytes for the first
-/// batch of `find` and `aggregate` and 57 for `getMore` (MEASURED on mongod 7.0.34, for any namespace length: the
-/// boundaries of `research/fix-query-limits/batch_probe.py` match mongod's byte for byte). So a reply stays below 32 MiB
-/// plus its header, under the 48 MB message limit, even with a first document near 16 MiB.
+/// batch of `find` and `aggregate` and 57 for `getMore` (MEASURED on mongod 7.0.34, for any namespace length, with
+/// `research/fix-query-limits/batch_probe.py`; `batch_diff.py` finds mongod's batches and reply sizes). So a reply
+/// stays at about 16 MiB (a single document is at most 16 MiB), well under the 48 MB message limit.
 pub(crate) const BATCH_BYTES: usize = 16 * 1024 * 1024;
 const FIRST_BATCH_FIXED: usize = 53;
 const NEXT_BATCH_FIXED: usize = 57;
