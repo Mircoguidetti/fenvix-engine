@@ -695,6 +695,16 @@ impl Entry {
         }
     }
 
+    /// A transaction's commit: the command writes into the opening the transaction began on (`Txn::opened`).
+    pub(crate) fn pin_transaction(&mut self, opened: u64) {
+        self.pinned_abandons = Some(opened);
+    }
+
+    /// How many times the tenant was abandoned (lease lost) since this entry was made.
+    pub(crate) fn abandons(&self) -> u64 {
+        self.abandons
+    }
+
     async fn ensure_open_inner(&mut self) -> Result<bool> {
         self.touch();
         // local log: a database whose kept records are not applied yet is refused (its last acknowledged writes are missing)
