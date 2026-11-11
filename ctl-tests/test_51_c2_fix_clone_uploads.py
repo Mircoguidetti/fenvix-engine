@@ -81,7 +81,9 @@ def test_no_stale_answer_after_a_close():
 def test_a_closed_database_reads_nothing():
     bucket = make_bucket("c2fix-idle")
     proxy = CountingProxy()
-    srv = Server(bucket, "c2fix-idle", idle=600, endpoint=proxy.endpoint, extra=SMALL_L0, env=ENV).start()
+    # no compaction pass (`--compaction-tiers 0`: the pass does not run on a database with a compactor without the tiered
+    # scheduler; the compactor has its own): what is measured is the compactor stopped by the close, alone
+    srv = Server(bucket, "c2fix-idle", idle=600, endpoint=proxy.endpoint, extra=SMALL_L0 + ["--compaction-tiers", "0"], env=ENV).start()
     try:
         c = srv.client()
         col = c["d"]["c"]
@@ -101,10 +103,8 @@ def test_a_closed_database_reads_nothing():
         data = {k: v for k, v in snap["bytes_by_prefix"].items() if k.startswith("tenants/d")}
         got = sum(v.get("GET:out", 0) + v.get("GET_RANGE:out", 0) for v in data.values())
         print("reads of the closed database in 6 s:", reads, "bytes", got)
-        # the compaction pass may still compact the closed database over what its compactor absorbed (manifests, and
-        # SSTs when there is L0 to fold); what must not happen is a stopped compactor's job reading its L0 SSTs block by
-        # block (integration-3: 1.9 MB in GET_RANGEs here)
-        assert not any("GET_RANGE" in v for v in reads.values()) and got < 100_000, f"a closed database was read: {reads}, {got} bytes"
+        # integration-3: 1.9 MB in GET_RANGEs here, a stopped compactor's absorption reading its L0 SSTs block by block
+        assert not reads, f"a closed database was read: {reads}, {got} bytes"
     finally:
         srv.term()
         proxy.stop()
