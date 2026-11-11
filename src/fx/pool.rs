@@ -186,6 +186,68 @@ pub static BG_NICE: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32:
 
 static BG: std::sync::OnceLock<tokio::runtime::Runtime> = std::sync::OnceLock::new();
 
+/// Share of the cores the process may use (`available_parallelism`, which follows a container's CPU quota) that the
+/// background threads may take, in percent (`--compaction-cpu-pct`, default 50). Perf-latency: in a container with a CPU
+/// quota, the kernel freezes every thread of the container once the quota of its period (100 ms) is used up, whatever the
+/// threads' priority: compaction that used it up froze the command threads for the rest of the period (MEASURED: the
+/// server was throttled in 626 of 3,162 periods, 36 s in all, on the medium profile with one core). The jobs pace
+/// themselves (`pace`) so the background stays under this share on average, and the commands keep the rest.
+pub static BG_CPU_PCT: AtomicU64 = AtomicU64::new(50);
+/// CPU the background may run ahead of its share before a job pauses (microseconds).
+const BG_BURST_US: f64 = 10_000.0;
+
+thread_local! {
+    static BG_THREAD: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+    static LAST_CPU: std::cell::Cell<u64> = const { std::cell::Cell::new(0) };
+}
+
+/// The CPU the background used beyond its share (microseconds), and when that was last computed.
+static DEBT: Mutex<(f64, Option<Instant>)> = Mutex::new((0.0, None));
+/// Pauses taken by `pace`, and their total time (serverStatus-free counters, for measurements).
+pub static PACE_PAUSES: AtomicU64 = AtomicU64::new(0);
+pub static PACE_PAUSE_US: AtomicU64 = AtomicU64::new(0);
+
+tokio::task_local! {
+    /// The job is urgent (absorption with L0 close to the writer's stop): `pace` accounts its CPU but never pauses it.
+    pub static PACE_EXEMPT: Arc<dyn Fn() -> bool + Send + Sync>;
+}
+
+fn bg_rate_us_per_s() -> f64 {
+    let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1) as f64;
+    cores * 1e6 * BG_CPU_PCT.load(Relaxed) as f64 / 100.0
+}
+
+/// A pace point of background work (between two blocks of a run being written or read, between two L0 blocks): on a
+/// background thread, account the CPU this thread used since its last pace point, and when the background as a whole is
+/// more than `BG_BURST_US` ahead of its share, sleep until it is back within it. Elsewhere (a command, a test): nothing.
+/// Answers never depend on it; only when the work runs.
+pub async fn pace() {
+    if !BG_THREAD.with(|b| b.get()) {
+        return;
+    }
+    let cpu = super::compactor::thread_cpu_us();
+    let used = cpu.saturating_sub(LAST_CPU.with(|c| c.replace(cpu))) as f64;
+    let rate = bg_rate_us_per_s();
+    let excess = {
+        let mut d = DEBT.lock().unwrap();
+        let now = Instant::now();
+        let dt = d.1.map_or(0.0, |t| now.duration_since(t).as_secs_f64());
+        d.0 = (d.0 + used - dt * rate).max(0.0);
+        d.1 = Some(now);
+        d.0 - BG_BURST_US
+    };
+    if excess <= 0.0 || PACE_EXEMPT.try_with(|f| f()).unwrap_or(false) {
+        tokio::task::yield_now().await;
+        return;
+    }
+    let wait = Duration::from_secs_f64(excess / rate);
+    PACE_PAUSES.fetch_add(1, Relaxed);
+    PACE_PAUSE_US.fetch_add(wait.as_micros() as u64, Relaxed);
+    tokio::time::sleep(wait).await;
+    // the thread that resumes the job starts a new interval (its CPU before is accounted at its own pace points)
+    LAST_CPU.with(|c| c.set(super::compactor::thread_cpu_us()));
+}
+
 /// The runtime the server's compaction work runs on (perf-latency, 2026-11-11): the jobs of every database's compactor
 /// (absorption, erasures, merges, reseals, GC) and SlateDB's own compactor and worker (the fold). Before, they ran on the
 /// server's runtime, and in a machine or container with one core that runtime has one worker thread: a reseal that
@@ -202,6 +264,8 @@ pub fn bg_runtime() -> tokio::runtime::Handle {
             .thread_name("fx-bg")
             .thread_stack_size(16 << 20)
             .on_thread_start(|| {
+                BG_THREAD.with(|b| b.set(true));
+                LAST_CPU.with(|c| c.set(super::compactor::thread_cpu_us()));
                 let nice = BG_NICE.load(std::sync::atomic::Ordering::Relaxed);
                 if nice != 0 {
                     // a thread id with PRIO_PROCESS sets that thread's nice value only (Linux)

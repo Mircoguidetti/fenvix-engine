@@ -593,6 +593,8 @@ impl RunWriter {
         if self.raw.is_empty() {
             return Ok(());
         }
+        // a pace point of background work (fx::pool::pace): one block written
+        crate::fx::pool::pace().await;
         let idx = (self.seps.len() - 1) as u32;
         let mut c = self.opts.codec.compress(&self.raw);
         let crc = block_crc(&self.run_id, idx, &c);
@@ -1634,6 +1636,7 @@ impl RunStream {
                 self.pos = 0;
                 continue;
             }
+            crate::fx::pool::pace().await;
             if !self.fill().await? {
                 anyhow::ensure!(self.seen == self.run.entries && self.seen_deleted == self.run.deleted, "corrupt run: entry count");
                 anyhow::ensure!(self.last.as_deref() == Some(&self.run.last_key[..]), "corrupt run: last key");

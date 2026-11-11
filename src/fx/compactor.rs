@@ -83,6 +83,9 @@ pub fn is_active(id: &str) -> bool {
 /// (perf-latency; tests keep the old order unless they set it).
 pub static DEFER_RECOGNISE: AtomicBool = AtomicBool::new(false);
 
+/// An absorption is never paused by the background's CPU share once the writer has this many L0 SSTs (it stops at 8).
+const ABSORB_URGENT_L0: usize = 6;
+
 /// Block codec of the sealed runs of the server's compactors (`--sealed-codec`): 0 lz4 (format v1), 1 zstd (format v2).
 pub static SEALED_CODEC: AtomicU64 = AtomicU64::new(0);
 
@@ -1232,7 +1235,14 @@ impl Compactor {
             Prio::Reseal => "reseal",
             Prio::Gc => "gc",
         };
-        self.runtime.spawn(crate::waits::polled(what, who, async move {
+        // absorption is not paused by the CPU share while the writer's L0 is close to its stop (8): the writes wait for it
+        let exempt: Arc<dyn Fn() -> bool + Send + Sync> = if prio == Prio::Absorb {
+            let w = Arc::downgrade(self);
+            Arc::new(move || w.upgrade().is_some_and(|c| c.l0_count() >= ABSORB_URGENT_L0))
+        } else {
+            Arc::new(|| false)
+        };
+        self.runtime.spawn(crate::waits::polled(what, who, super::pool::PACE_EXEMPT.scope(exempt, async move {
             let _permit: Permit = c.pool.acquire(prio).await;
             let t0 = thread_cpu_us();
             let w0 = Instant::now();
@@ -1252,7 +1262,7 @@ impl Compactor {
                 }
             }
             c.sh.stats.job_cpu_us.fetch_add(thread_cpu_us().saturating_sub(t0), Relaxed);
-        }));
+        })));
     }
 
     /// Run the planner every `tick` until stopped.
@@ -1360,6 +1370,7 @@ async fn read_l0(reader: &slatedb::SstReader, view: &slatedb::manifest::SsTableV
     let n = f.index().await?.len();
     let mut out = Vec::new();
     for b in 0..n {
+        super::pool::pace().await;
         for r in f.read_block(b).await? {
             let (env, tomb) = match &r.value {
                 slatedb::ValueDeletable::Value(v) => (v.to_vec(), false),

@@ -553,6 +553,10 @@ struct Args {
     /// +10 (`tenant_bench::fx::pool::bg_runtime`); `shared`: the server's runtime, as before (measurements only).
     #[arg(long, default_value = "own")]
     compaction_threads: String,
+    /// perf-latency: with `--compaction-threads own`, the share of the cores (percent) the background threads may use on
+    /// average; the jobs pause when ahead of it (absorption excepted near the writer's L0 stop). 100 = no pause.
+    #[arg(long, default_value_t = 50)]
+    compaction_cpu_pct: u64,
     /// With `--sealed-compactor`: the drop of absorbed SlateDB rows (off by default until step 7b pairs forks).
     #[arg(long)]
     sealed_drop: bool,
@@ -668,6 +672,8 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
         first = false;
         match wire::read_request_bounded(&mut r, max_len, first_by, rest_within).await {
             Ok(Some(mut req)) => {
+                let t_msg = std::time::Instant::now();
+                let msg_cmd = if tenant_bench::waits::ON.load(std::sync::atomic::Ordering::Relaxed) { req.command.keys().next().cloned().unwrap_or_default() } else { String::new() };
                 let probe = ctl::usage::before(&req.db, &req.command).await;
                 server.diag.note_seq(conn_id, &req.seq_keys);
                 // the command document is handed over (not copied): the reply needs only `reply_to`
@@ -677,7 +683,9 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
                 let exhaust = (req.exhaust_allowed && cmd::awaitable_hello(&command)).then(|| command.clone());
                 // boxed: the command's future is large (about 22 KB); kept inline it would be part of every connection's
                 // task, idle or not
+                let t_h = std::time::Instant::now();
                 let reply = Box::pin(server.handle(&req.db, command, conn_id)).await;
+                let handle_ms = t_h.elapsed().as_secs_f64() * 1000.0;
                 ctl::usage::after(probe).await;
                 if reply.contains_key("$shutdown") {
                     // `shutdown`: no reply; the connection closes and the process stops
@@ -690,10 +698,14 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
                 response_id += 1;
                 let streaming = exhaust.is_some() && matches!(reply.get("ok"), Some(Bson::Double(x)) if *x == 1.0);
                 reply_to.more_to_come = streaming;
+                let t_w = std::time::Instant::now();
                 if let Err(e) = wire::write_reply(&mut w, &reply_to, &reply, response_id).await {
                     eprintln!("conn {conn_id}: write failed: {e:#}");
                     break;
                 }
+                let total = t_msg.elapsed().as_secs_f64() * 1000.0;
+                let write_ms = t_w.elapsed().as_secs_f64() * 1000.0;
+                tenant_bench::waits::report_message(&msg_cmd, handle_ms, write_ms, total - handle_ms - write_ms, total);
                 if streaming {
                     // exhaust, as mongod: every maxAwaitTimeMS (or at a topology change) another reply flagged moreToCome,
                     // each answering the previous reply, with no request in between; it ends when the driver closes the
@@ -780,6 +792,16 @@ fn main() -> Result<()> {
     if let Some(n) = std::env::var("ISO_EVENT_INTERVAL").ok().and_then(|v| v.parse::<u32>().ok()) {
         b.event_interval(n);
     }
+    // perf-latency: at least MIN_WORKERS worker threads, whatever the CPU quota. tokio sizes its workers to the cores it
+    // may use: one in a one-core container, where a command that spends 20-60 ms of CPU on a multi-MB document (parse,
+    // copy, re-encode) kept every other command and every log acknowledgement waiting (MEASURED, medium profile: 175 of 673
+    // operations over 30 ms waited for a stall outside their own command). With more threads than cores the kernel
+    // time-slices them, as it does mongod's threads, and a short command runs beside a long one. FENVIX_WORKER_THREADS
+    // overrides (measurements).
+    const MIN_WORKERS: usize = 4;
+    let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1);
+    let workers = std::env::var("FENVIX_WORKER_THREADS").ok().and_then(|v| v.parse::<usize>().ok()).filter(|n| *n > 0).unwrap_or(cores.max(MIN_WORKERS));
+    b.worker_threads(workers);
     b.enable_all().thread_stack_size(64 << 20).build()?.block_on(run())
 }
 
@@ -922,6 +944,10 @@ async fn run() -> Result<()> {
             tenant_bench::fx::compactor::DROP_DEFAULT.store(args.sealed_drop, Relaxed);
             anyhow::ensure!(matches!(args.compaction_threads.as_str(), "own" | "shared"), "--compaction-threads is own or shared");
             tenant_bench::fx::pool::BG_ON.store(args.compaction_threads == "own", Relaxed);
+            anyhow::ensure!((1..=100).contains(&args.compaction_cpu_pct), "--compaction-cpu-pct is 1 to 100");
+            // FENVIX_COMPACTION_CPU_PCT overrides the flag (measurements)
+            let pct = std::env::var("FENVIX_COMPACTION_CPU_PCT").ok().and_then(|v| v.parse::<u64>().ok()).filter(|p| (1..=100).contains(p)).unwrap_or(args.compaction_cpu_pct);
+            tenant_bench::fx::pool::BG_CPU_PCT.store(if pct >= 100 { 100_000 } else { pct }, Relaxed);
             tenant_bench::fx::compactor::DEFER_RECOGNISE.store(args.compaction_threads == "own", Relaxed);
             let derive = match std::env::var("FENVIX_SEALED_DERIVE").as_deref() {
                 Ok("1") => true,

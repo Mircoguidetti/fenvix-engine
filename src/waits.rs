@@ -111,13 +111,18 @@ pub fn now_ms() -> f64 {
     START.get_or_init(Instant::now).elapsed().as_secs_f64() * 1000.0
 }
 
+/// Unix time in milliseconds (to match a line with a client's timestamps).
+pub fn unix_ms() -> f64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs_f64() * 1000.0).unwrap_or(0.0)
+}
+
 /// One command's line, when it was slow. `start_ms` is [`now_ms`] at its start.
 pub fn report(cmd: &str, coll: &str, start_ms: f64, total: Duration, x: &Waits, meter: (u64, u64, u64)) {
     let ms = total.as_secs_f64() * 1000.0;
     if !ON.load(Relaxed) || ms < SLOW_MS.load(Relaxed) as f64 {
         return;
     }
-    let mut s = format!("WAITS t={start_ms:.1} ms={ms:.1} cmd={cmd} coll={coll}");
+    let mut s = format!("WAITS t={start_ms:.1} u={:.1} ms={ms:.1} cmd={cmd} coll={coll}", unix_ms() - ms);
     let mut sum = 0u64;
     for i in 0..N {
         let ns = x.ns[i].load(Relaxed);
@@ -144,7 +149,7 @@ pub fn spawn_probe() {
             tokio::time::sleep(Duration::from_millis(1)).await;
             let late = t.elapsed().as_secs_f64() * 1000.0 - 1.0;
             if late >= 10.0 {
-                eprintln!("WAITS_STALL t={:.1} ms={late:.1}", now_ms() - late - 1.0);
+                eprintln!("WAITS_STALL t={:.1} u={:.1} ms={late:.1}", now_ms() - late - 1.0, unix_ms() - late - 1.0);
             }
         }
     });
@@ -191,4 +196,13 @@ impl<F: Future> Future for Polled<F> {
         }
         r
     }
+}
+
+/// One message of a connection, from its request read to its reply written (the command's own time is in its `WAITS`
+/// line): printed when it took `SLOW_MS` or more.
+pub fn report_message(cmd: &str, handle_ms: f64, write_ms: f64, usage_ms: f64, total_ms: f64) {
+    if !ON.load(Relaxed) || total_ms < SLOW_MS.load(Relaxed) as f64 {
+        return;
+    }
+    eprintln!("WAITS_MSG u={:.1} ms={total_ms:.1} cmd={cmd} handle={handle_ms:.1} write_reply={write_ms:.1} usage={usage_ms:.1}", unix_ms() - total_ms);
 }
