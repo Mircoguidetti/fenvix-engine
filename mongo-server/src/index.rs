@@ -638,6 +638,9 @@ pub enum Plan {
     Id(Bson),
     Ix(IxScan),
     Or(Vec<Plan>),
+    /// `_id: {$in: [...]}`: one point read per value, as mongod's `_id` index scan with one point interval per value.
+    /// The values are in `_id` index order (the order of the document keys), without duplicates.
+    IdIn(Vec<Bson>),
 }
 
 impl Plan {
@@ -1045,6 +1048,11 @@ pub fn plan(inp: &PlanInput) -> Plan {
     if let Some(scan) = geo_scan(inp.indexes, inp.filter, &cs, inp.hint) {
         return Plan::Ix(scan);
     }
+    if inp.hint.is_none() && crate::text::find_operand_any(inp.filter).is_none() {
+        if let Some(vals) = id_in_values(inp.filter) {
+            return Plan::IdIn(vals);
+        }
+    }
     // an index serves a query only under the collation of its strings: the query's own, or its collection's default
     let query_collation = crate::collation::current();
     let usable = |i: usize, idx: &IndexDef| idx.state == State::Ready && !idx.special && matches!(idx.kind, Kind::Regular | Kind::Hashed(_)) && inp.hint.map(|h| h == i).unwrap_or(true) && crate::collation::same(&idx.collation, &query_collation);
@@ -1110,6 +1118,45 @@ pub fn plan(inp: &PlanInput) -> Plan {
         }
     }
     Plan::Coll { reverse: false }
+}
+
+/// The values of an `_id: {$in: [...]}` condition at the AND level of `filter` (top level or inside `$and`), in `_id`
+/// index order and without duplicates, when every value can be read by its key: not undefined, a regex or an array
+/// (null is: every document has an `_id`, so null matches only an `_id` that is null), and no string under a collation (the collation, not the key, decides which
+/// `_id`s are equal). `None` otherwise: the caller plans the query as before. The full filter is applied to every
+/// document read, so other conditions on `_id` or on other fields only narrow the answer.
+fn id_in_values(filter: &Document) -> Option<Vec<Bson>> {
+    fn find(filter: &Document) -> Option<&Vec<Bson>> {
+        for (k, v) in filter {
+            match (k.as_str(), v) {
+                ("_id", Bson::Document(d)) if is_op_doc(d) => {
+                    if let Some(Bson::Array(a)) = d.get("$in") {
+                        return Some(a);
+                    }
+                }
+                ("$and", Bson::Array(a)) => {
+                    for s in a {
+                        if let Bson::Document(sd) = s {
+                            if let Some(x) = find(sd) {
+                                return Some(x);
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        None
+    }
+    let vals = find(filter)?;
+    let collated = crate::collation::current().is_some();
+    if vals.iter().any(|v| matches!(v, Bson::Undefined | Bson::RegularExpression(_) | Bson::Array(_)) || (collated && crate::collopts::has_string(v))) {
+        return None;
+    }
+    let mut keyed: Vec<(Vec<u8>, &Bson)> = vals.iter().map(|v| (crate::layout::encode_sortable(v), v)).collect();
+    keyed.sort_by(|a, b| a.0.cmp(&b.0));
+    keyed.dedup_by(|a, b| a.0 == b.0);
+    Some(keyed.into_iter().map(|(_, v)| v.clone()).collect())
 }
 
 /// The first field of `filter` (top level or inside `$and`) that carries geo conditions.
@@ -1379,6 +1426,41 @@ mod tests {
             s.insert(k, v);
         }
         IndexDef::from_stored(&s).unwrap()
+    }
+
+    fn id_in(filter: Document) -> Option<Vec<Bson>> {
+        match plan(&PlanInput { indexes: &[], filter: &filter, sort: &[], has_limit: false, hint: None, natural: None }) {
+            Plan::IdIn(v) => Some(v),
+            _ => None,
+        }
+    }
+
+    #[test]
+    fn id_in_is_point_reads_in_id_order_without_duplicates() {
+        // `_id` order (numbers before strings), equal numbers of different types once
+        let v = id_in(doc! { "_id": { "$in": ["b", 3, 1, 3_i64, 1.0, "a", Bson::Null] } }).unwrap();
+        assert_eq!(v, vec![Bson::Null, Bson::Int32(1), Bson::Int32(3), Bson::String("a".into()), Bson::String("b".into())]);
+        // other conditions and `$and`: still point reads (the filter is applied to each document)
+        assert!(id_in(doc! { "_id": { "$in": [1, 2], "$gte": 2 }, "x": 1 }).is_some());
+        assert!(id_in(doc! { "$and": [{ "x": 1 }, { "_id": { "$in": [1] } }] }).is_some());
+        // an empty list: no reads at all
+        assert_eq!(id_in(doc! { "_id": { "$in": [] } }), Some(vec![]));
+        // not by key: a regex, an array or undefined in the list
+        assert!(id_in(doc! { "_id": { "$in": [1, bson::Regex { pattern: "^a".to_string().try_into().unwrap(), options: String::new().try_into().unwrap() }] } }).is_none());
+        assert!(id_in(doc! { "_id": { "$in": [1, [1, 2]] } }).is_none());
+        assert!(id_in(doc! { "_id": { "$in": [1, Bson::Undefined] } }).is_none());
+        // an `$in` on another field is not this plan
+        assert!(id_in(doc! { "a": { "$in": [1, 2] } }).is_none());
+    }
+
+    #[test]
+    fn id_in_with_strings_under_a_collation_is_not_point_reads() {
+        let c = crate::collation::of_create(&Bson::Document(doc! { "locale": "en", "strength": 2 })).unwrap();
+        crate::collation::sync_scope(c, || {
+            assert!(id_in(doc! { "_id": { "$in": ["a", "B"] } }).is_none());
+            // numbers are equal under any collation as they are by key
+            assert!(id_in(doc! { "_id": { "$in": [1, 2] } }).is_some());
+        });
     }
 
     #[test]

@@ -223,7 +223,7 @@ impl Server {
                 }
                 _ => None,
             };
-            let by_id = matches!(plan, Plan::Id(_));
+            let by_id = matches!(plan, Plan::Id(_) | Plan::IdIn(_));
             docs = docs
                 .into_iter()
                 .map(|d| match (&idx_for_keys, by_id) {

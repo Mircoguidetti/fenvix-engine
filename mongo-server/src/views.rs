@@ -308,7 +308,7 @@ impl Server {
             Some(v) => Some(crate::collation::of_create(v)?),
             None => None,
         };
-        let out = crate::collation::scope(col, Box::pin(self.aggregate(db, &c, tx))).await?;
+        let out = crate::cmd::WHOLE_BATCH.scope((), crate::collation::scope(col, Box::pin(self.aggregate(db, &c, tx)))).await?;
         Ok(out.get_document("cursor").ok().and_then(|c| c.get_array("firstBatch").ok()).map(|a| a.iter().filter_map(|d| d.as_document().cloned()).collect()).unwrap_or_default())
     }
 
