@@ -1,0 +1,13 @@
+.F........                                                               [100%]
+=================================== FAILURES ===================================
+_____________ test_object_store_counts_match_an_independent_proxy ______________
+test_07_usage.py:81: in test_object_store_counts_match_an_independent_proxy
+    assert ours["get"] == kinds.get("GET", 0)
+E   AssertionError: assert 643 == 644
+E    +  where 644 = <built-in method get of dict object at 0x7f3e9475c100>('GET', 0)
+E    +    where <built-in method get of dict object at 0x7f3e9475c100> = {'GET': 644, 'PUT': 45, 'HEAD': 32, 'LIST': 32, ...}.get
+----------------------------- Captured stdout call -----------------------------
+ours {'copy': 0, 'delete': 8, 'get': 643, 'get_bytes': 2792699, 'get_range': 31, 'get_tier_requests': 706, 'head': 32, 'list': 32, 'put': 57, 'put_bytes': 2254583, 'put_tier_requests': 89} proxy {'GET': 644, 'PUT': 45, 'HEAD': 32, 'LIST': 32, 'MP_CREATE': 4, 'PUT_PART': 4, 'MP_COMPLETE': 4, 'GET_RANGE': 31}
+=========================== short test summary info ============================
+FAILED test_07_usage.py::test_object_store_counts_match_an_independent_proxy
+1 failed, 9 passed in 126.81s (0:02:06)
