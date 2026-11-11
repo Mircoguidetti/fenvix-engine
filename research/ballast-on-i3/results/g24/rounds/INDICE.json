@@ -1,0 +1,62 @@
+{
+ "scritto": "2026-11-11T19:30:33.902676Z",
+ "versione": "p1-1.6.2",
+ "file": [
+  {
+   "file": "RIASSUNTO.json",
+   "byte": 170570,
+   "sha256": "9873f9ade214a6e92bdafaa8146facf252a9a72af891bc23fb62013fa832ed68"
+  },
+  {
+   "file": "fase_02_inizio.json",
+   "byte": 639451,
+   "sha256": "de285f838d1c4f2799da864bf9b0f89f79fb4a13239dd6737084b92d09d401fd"
+  },
+  {
+   "file": "fase_03_Q2.json",
+   "byte": 9155754,
+   "sha256": "fd238bcdb13e74a8496c917894546a90f55e22c21ad1b408e46f87ccc7144475"
+  },
+  {
+   "file": "fase_04_Q3.json",
+   "byte": 12909524,
+   "sha256": "00f2ffb56285c46693eadc1aab847adecb1033dc94c1e61baf063671e1bb9cef"
+  },
+  {
+   "file": "fase_05_Q1.json",
+   "byte": 12357244,
+   "sha256": "8ea74dc53095c058388e5721597a04a8b02ac591a92d34fbe351652de031b768"
+  },
+  {
+   "file": "fase_06_Q1d.json",
+   "byte": 12664205,
+   "sha256": "f83a8114e75562b56e68fc0671d8a077d3fe4027b1ff27eb613e140f6b0e22cc"
+  },
+  {
+   "file": "fase_07_Q4.json",
+   "byte": 12934308,
+   "sha256": "077d66598cdf5ffc366bfd520f2248716dade2b36344a2dc09f9631e0853e030"
+  },
+  {
+   "file": "sessione_20261111T190456Z_eventi_driver.json",
+   "byte": 31558124,
+   "sha256": "a5892899d254d1edc196edf284d1c8268b8364d6a00820033359eb4a64f114a4"
+  },
+  {
+   "file": "sessione_20261111T190456Z_serverStatus_ogni_30s.json",
+   "byte": 3961062,
+   "sha256": "e8090e4c368d0d005a882c5194df3680f0279d1ea53d9bf375cb9a770fd9b6e4"
+  },
+  {
+   "file": "stato_delle_fasi.json",
+   "byte": 2185,
+   "sha256": "8dd1e203e6ce93b7a2cdf4c3a3064ea2bf5129803ca4de7446b6a6704c9a2fd0"
+  },
+  {
+   "file": "tutto.json.gz",
+   "byte": 2956840,
+   "sha256": "5fa73f9bb99bc87b6b608ff15ef45f186e551da6386081c269d04cfec8ae2c37"
+  }
+ ],
+ "totale_byte": 99309267
+}

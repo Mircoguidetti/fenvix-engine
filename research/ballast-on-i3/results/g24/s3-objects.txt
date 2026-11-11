@@ -1,0 +1,13 @@
+S3 objects 64 bytes 20646713247 (19.23 GiB) per BSON byte 0.791
+  fx/run 48 19.229 GiB
+  processes 1 0.0 GiB
+  _clean 1 0.0 GiB
+  _lease 1 0.0 GiB
+  compacted/01M75XNK8QZB6RZMJ6EDRV7E9C.sst 1 0.0 GiB
+  fx/e1-announced 1 0.0 GiB
+  fx/manifest 1 0.0 GiB
+  manifest/00000000000000000001.manifest 1 0.0 GiB
+  manifest/00000000000000000002.manifest 1 0.0 GiB
+  manifest/00000000000000000003.manifest 1 0.0 GiB
+  manifest/00000000000000000004.manifest 1 0.0 GiB
+  wal/00000000000000000001.sst 1 0.0 GiB

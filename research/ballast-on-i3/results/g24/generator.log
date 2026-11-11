@@ -1,0 +1,112 @@
+LEASE process_lease tenant=- holder=23590-9446b82a unix_ms=1794421016332 inc=7fd29e0653ee78e2 gen=1
+LEASE acquired tenant=app_data_b01 holder=23590-9446b82a unix_ms=1794421016334 takeover_from=-
+LEASE acquired tenant=app_data_b01 holder=23590-9446b82a unix_ms=1794421016343 takeover_from=-
+LEASE acquired tenant=app_data_b01 holder=23590-9446b82a unix_ms=1794421016349 takeover_from=-
+LEASE acquired tenant=app_data_b01 holder=23590-9446b82a unix_ms=1794421016355 takeover_from=- new=true
+LEASE writer_open tenant=app_data_b01 holder=23590-9446b82a unix_ms=1794421016367 
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: 155 of 12441 customers, 0.29 of 24.30 GiB of BSON, 939514 documents, 10.5 MB/s
+ballast app_data_b01: 299 of 12441 customers, 0.58 of 24.30 GiB of BSON, 1874732 documents, 10.4 MB/s
+ballast app_data_b01: 454 of 12441 customers, 0.88 of 24.30 GiB of BSON, 2829134 documents, 10.5 MB/s
+ballast app_data_b01: 581 of 12441 customers, 1.16 of 24.30 GiB of BSON, 3709123 documents, 10.3 MB/s
+ballast app_data_b01: 731 of 12441 customers, 1.44 of 24.30 GiB of BSON, 4633458 documents, 10.3 MB/s
+ballast app_data_b01: 890 of 12441 customers, 1.74 of 24.30 GiB of BSON, 5575839 documents, 10.3 MB/s
+ballast app_data_b01: 1031 of 12441 customers, 2.02 of 24.30 GiB of BSON, 6486202 documents, 10.3 MB/s
+ballast app_data_b01: 1157 of 12441 customers, 2.27 of 24.30 GiB of BSON, 7301540 documents, 10.2 MB/s
+ballast app_data_b01: 1314 of 12441 customers, 2.56 of 24.30 GiB of BSON, 8232568 documents, 10.2 MB/s
+ballast app_data_b01: 1463 of 12441 customers, 2.85 of 24.30 GiB of BSON, 9159622 documents, 10.2 MB/s
+ballast app_data_b01: 1630 of 12441 customers, 3.15 of 24.30 GiB of BSON, 10096664 documents, 10.2 MB/s
+ballast app_data_b01: 1774 of 12441 customers, 3.44 of 24.30 GiB of BSON, 11056002 documents, 10.2 MB/s
+ballast app_data_b01: 1930 of 12441 customers, 3.74 of 24.30 GiB of BSON, 11997913 documents, 10.3 MB/s
+ballast app_data_b01: 2078 of 12441 customers, 4.03 of 24.30 GiB of BSON, 12926333 documents, 10.3 MB/s
+ballast app_data_b01: 2215 of 12441 customers, 4.30 of 24.30 GiB of BSON, 13796607 documents, 10.2 MB/s
+ballast app_data_b01: 2364 of 12441 customers, 4.58 of 24.30 GiB of BSON, 14711949 documents, 10.2 MB/s
+ballast app_data_b01: 2513 of 12441 customers, 4.87 of 24.30 GiB of BSON, 15644493 documents, 10.2 MB/s
+ballast app_data_b01: 2653 of 12441 customers, 5.16 of 24.30 GiB of BSON, 16556913 documents, 10.2 MB/s
+ballast app_data_b01: 2799 of 12441 customers, 5.44 of 24.30 GiB of BSON, 17464136 documents, 10.2 MB/s
+ballast app_data_b01: 2944 of 12441 customers, 5.74 of 24.30 GiB of BSON, 18427369 documents, 10.2 MB/s
+ballast app_data_b01: 3106 of 12441 customers, 6.04 of 24.30 GiB of BSON, 19403226 documents, 10.3 MB/s
+ballast app_data_b01: 3259 of 12441 customers, 6.32 of 24.30 GiB of BSON, 20291452 documents, 10.3 MB/s
+ballast app_data_b01: 3419 of 12441 customers, 6.62 of 24.30 GiB of BSON, 21246464 documents, 10.3 MB/s
+ballast app_data_b01: 3574 of 12441 customers, 6.91 of 24.30 GiB of BSON, 22188904 documents, 10.3 MB/s
+ballast app_data_b01: 3716 of 12441 customers, 7.20 of 24.30 GiB of BSON, 23100688 documents, 10.3 MB/s
+ballast app_data_b01: 3863 of 12441 customers, 7.50 of 24.30 GiB of BSON, 24060811 documents, 10.3 MB/s
+ballast app_data_b01: 4010 of 12441 customers, 7.79 of 24.30 GiB of BSON, 25011107 documents, 10.3 MB/s
+ballast app_data_b01: 4162 of 12441 customers, 8.09 of 24.30 GiB of BSON, 25959059 documents, 10.3 MB/s
+ballast app_data_b01: 4295 of 12441 customers, 8.36 of 24.30 GiB of BSON, 26828783 documents, 10.3 MB/s
+ballast app_data_b01: 4433 of 12441 customers, 8.64 of 24.30 GiB of BSON, 27734466 documents, 10.3 MB/s
+ballast app_data_b01: 4574 of 12441 customers, 8.93 of 24.30 GiB of BSON, 28651846 documents, 10.3 MB/s
+ballast app_data_b01: 4726 of 12441 customers, 9.21 of 24.30 GiB of BSON, 29566348 documents, 10.3 MB/s
+ballast app_data_b01: 4881 of 12441 customers, 9.50 of 24.30 GiB of BSON, 30503517 documents, 10.3 MB/s
+ballast app_data_b01: 5023 of 12441 customers, 9.79 of 24.30 GiB of BSON, 31421967 documents, 10.3 MB/s
+ballast app_data_b01: 5165 of 12441 customers, 10.07 of 24.30 GiB of BSON, 32333930 documents, 10.3 MB/s
+ballast app_data_b01: 5298 of 12441 customers, 10.33 of 24.30 GiB of BSON, 33171623 documents, 10.2 MB/s
+ballast app_data_b01: 5440 of 12441 customers, 10.61 of 24.30 GiB of BSON, 34068016 documents, 10.2 MB/s
+ballast app_data_b01: 5582 of 12441 customers, 10.89 of 24.30 GiB of BSON, 34972886 documents, 10.2 MB/s
+ballast app_data_b01: 5726 of 12441 customers, 11.18 of 24.30 GiB of BSON, 35875329 documents, 10.2 MB/s
+ballast app_data_b01: 5864 of 12441 customers, 11.45 of 24.30 GiB of BSON, 36770686 documents, 10.2 MB/s
+ballast app_data_b01: 5991 of 12441 customers, 11.71 of 24.30 GiB of BSON, 37583796 documents, 10.2 MB/s
+ballast app_data_b01: 6134 of 12441 customers, 11.98 of 24.30 GiB of BSON, 38466133 documents, 10.2 MB/s
+ballast app_data_b01: 6277 of 12441 customers, 12.25 of 24.30 GiB of BSON, 39307994 documents, 10.1 MB/s
+ballast app_data_b01: 6413 of 12441 customers, 12.51 of 24.30 GiB of BSON, 40146334 documents, 10.1 MB/s
+ballast app_data_b01: 6547 of 12441 customers, 12.78 of 24.30 GiB of BSON, 41009622 documents, 10.1 MB/s
+ballast app_data_b01: 6667 of 12441 customers, 13.03 of 24.30 GiB of BSON, 41840620 documents, 10.1 MB/s
+ballast app_data_b01: 6817 of 12441 customers, 13.32 of 24.30 GiB of BSON, 42771616 documents, 10.1 MB/s
+ballast app_data_b01: 6964 of 12441 customers, 13.61 of 24.30 GiB of BSON, 43692547 documents, 10.1 MB/s
+ballast app_data_b01: 7120 of 12441 customers, 13.90 of 24.30 GiB of BSON, 44627123 documents, 10.1 MB/s
+ballast app_data_b01: 7257 of 12441 customers, 14.17 of 24.30 GiB of BSON, 45495901 documents, 10.1 MB/s
+ballast app_data_b01: 7380 of 12441 customers, 14.44 of 24.30 GiB of BSON, 46368350 documents, 10.1 MB/s
+ballast app_data_b01: 7516 of 12441 customers, 14.72 of 24.30 GiB of BSON, 47236174 documents, 10.1 MB/s
+ballast app_data_b01: 7658 of 12441 customers, 15.00 of 24.30 GiB of BSON, 48143461 documents, 10.1 MB/s
+ballast app_data_b01: 7805 of 12441 customers, 15.28 of 24.30 GiB of BSON, 49040042 documents, 10.1 MB/s
+ballast app_data_b01: 7958 of 12441 customers, 15.56 of 24.30 GiB of BSON, 49950908 documents, 10.1 MB/s
+ballast app_data_b01: 8087 of 12441 customers, 15.83 of 24.30 GiB of BSON, 50816572 documents, 10.1 MB/s
+ballast app_data_b01: 8239 of 12441 customers, 16.12 of 24.30 GiB of BSON, 51748539 documents, 10.1 MB/s
+ballast app_data_b01: 8382 of 12441 customers, 16.40 of 24.30 GiB of BSON, 52640476 documents, 10.1 MB/s
+ballast app_data_b01: 8529 of 12441 customers, 16.68 of 24.30 GiB of BSON, 53545773 documents, 10.1 MB/s
+ballast app_data_b01: 8683 of 12441 customers, 16.97 of 24.30 GiB of BSON, 54465758 documents, 10.1 MB/s
+ballast app_data_b01: 8817 of 12441 customers, 17.25 of 24.30 GiB of BSON, 55366107 documents, 10.1 MB/s
+ballast app_data_b01: 8967 of 12441 customers, 17.53 of 24.30 GiB of BSON, 56254455 documents, 10.1 MB/s
+ballast app_data_b01: 9113 of 12441 customers, 17.81 of 24.30 GiB of BSON, 57171625 documents, 10.1 MB/s
+ballast app_data_b01: 9262 of 12441 customers, 18.11 of 24.30 GiB of BSON, 58119642 documents, 10.1 MB/s
+ballast app_data_b01: 9410 of 12441 customers, 18.40 of 24.30 GiB of BSON, 59049321 documents, 10.1 MB/s
+ballast app_data_b01: 9546 of 12441 customers, 18.66 of 24.30 GiB of BSON, 59907578 documents, 10.1 MB/s
+ballast app_data_b01: 9697 of 12441 customers, 18.95 of 24.30 GiB of BSON, 60820123 documents, 10.1 MB/s
+ballast app_data_b01: 9852 of 12441 customers, 19.24 of 24.30 GiB of BSON, 61769874 documents, 10.1 MB/s
+ballast app_data_b01: 10008 of 12441 customers, 19.53 of 24.30 GiB of BSON, 62702911 documents, 10.1 MB/s
+ballast app_data_b01: 10139 of 12441 customers, 19.80 of 24.30 GiB of BSON, 63558313 documents, 10.1 MB/s
+ballast app_data_b01: 10296 of 12441 customers, 20.10 of 24.30 GiB of BSON, 64513906 documents, 10.1 MB/s
+ballast app_data_b01: 10442 of 12441 customers, 20.38 of 24.30 GiB of BSON, 65420108 documents, 10.1 MB/s
+ballast app_data_b01: 10602 of 12441 customers, 20.67 of 24.30 GiB of BSON, 66348479 documents, 10.1 MB/s
+ballast app_data_b01: 10756 of 12441 customers, 20.96 of 24.30 GiB of BSON, 67281294 documents, 10.1 MB/s
+ballast app_data_b01: 10902 of 12441 customers, 21.25 of 24.30 GiB of BSON, 68220226 documents, 10.1 MB/s
+ballast app_data_b01: 11044 of 12441 customers, 21.54 of 24.30 GiB of BSON, 69138887 documents, 10.1 MB/s
+ballast app_data_b01: 11175 of 12441 customers, 21.80 of 24.30 GiB of BSON, 69976060 documents, 10.1 MB/s
+ballast app_data_b01: 11319 of 12441 customers, 22.09 of 24.30 GiB of BSON, 70896983 documents, 10.1 MB/s
+ballast app_data_b01: 11453 of 12441 customers, 22.36 of 24.30 GiB of BSON, 71785188 documents, 10.1 MB/s
+ballast app_data_b01: 11599 of 12441 customers, 22.65 of 24.30 GiB of BSON, 72706866 documents, 10.1 MB/s
+ballast app_data_b01: 11734 of 12441 customers, 22.91 of 24.30 GiB of BSON, 73555391 documents, 10.1 MB/s
+ballast app_data_b01: 11869 of 12441 customers, 23.20 of 24.30 GiB of BSON, 74473038 documents, 10.1 MB/s
+ballast app_data_b01: 12011 of 12441 customers, 23.48 of 24.30 GiB of BSON, 75376719 documents, 10.1 MB/s
+ballast app_data_b01: 12151 of 12441 customers, 23.76 of 24.30 GiB of BSON, 76272178 documents, 10.1 MB/s
+ballast app_data_b01: 12303 of 12441 customers, 24.04 of 24.30 GiB of BSON, 77162255 documents, 10.1 MB/s
+BALLAST-DB app_data_b01: 24.30 GiB of BSON, 78010058 documents in 2747 s (9.5 MB/s); version 1 with 48 groups
+BALLAST: DONE: 1 databases, 24.30 GiB of BSON in 2747 s (9.5 MB/s together)
+LEASE writer_close tenant=app_data_b01 holder=23590-9446b82a unix_ms=1794423763174 
+LEASE release_begin tenant=app_data_b01 holder=23590-9446b82a unix_ms=1794423763174 
+LEASE release tenant=app_data_b01 holder=23590-9446b82a unix_ms=1794423763176 ok=true
+EXIT 0 WALL 2747 s
