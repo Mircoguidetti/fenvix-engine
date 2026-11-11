@@ -1,0 +1,21 @@
+test_31 on run 1: acknowledged 32002 documents; abandonCloseTimeouts 0 SIGTERM stopped the server in 3.6 s  => 1 failed, 1 passed in 234.25s (0:03:54)
+E       TimeoutError: timed out
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/network_layer.py:443: TimeoutError
+            assert st == 200, r
+test_31 on run 2: acknowledged 31002 documents; abandonCloseTimeouts 0 SIGTERM stopped the server in 3.3 s  => 1 failed, 1 passed in 254.44s (0:04:14)
+E       TimeoutError: timed out
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/network_layer.py:443: TimeoutError
+            assert st == 200, r
+test_31 off0 run 1: acknowledged 60502 documents; abandonCloseTimeouts 0 SIGTERM stopped the server in 2.3 s  => 1 failed, 1 passed in 197.82s (0:03:17)
+E       TimeoutError: timed out
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/network_layer.py:443: TimeoutError
+            assert st == 200, r
+test_31 off0 run 2: acknowledged 64002 documents; abandonCloseTimeouts 0 SIGTERM stopped the server in 2.8 s  => 1 failed, 1 passed in 197.85s (0:03:17)
+E       TimeoutError: timed out
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/network_layer.py:443: TimeoutError
+            assert st == 200, r
+test_31 sealedoff run 1: acknowledged 103002 documents; abandonCloseTimeouts 0 SIGTERM stopped the server in 1.9 s .erase with the store frozen: 503 close_pending in 10.4 s (1 PUTs held)  => 2 passed in 97.71s (0:01:37)
+test_31 sealedoff run 2: acknowledged 108502 documents; abandonCloseTimeouts 0 SIGTERM stopped the server in 7.3 s .erase with the store frozen: 503 close_pending in 10.4 s (1 PUTs held)  => 2 passed in 101.49s (0:01:41)
+DONE
+merge(fix+hangs) test_31 on run 1: acknowledged 32002 documents; abandonCloseTimeouts 0 SIGTERM stopped the server in 3.8 s .erase with the store frozen: 503 close_pending in 20.5 s (2 PUTs held)  => 2 passed in 169.13s (0:02:49)
+merge(fix+hangs) test_31 on run 2: acknowledged 24002 documents; abandonCloseTimeouts 0 SIGTERM stopped the server in 5.7 s .erase with the store frozen: 503 close_pending in 20.6 s (2 PUTs held)  => 2 passed in 195.04s (0:03:15)
