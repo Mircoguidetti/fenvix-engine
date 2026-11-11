@@ -489,7 +489,9 @@ pub(crate) async fn start_slate(c: &Arc<Compactor>) -> anyhow::Result<()> {
     opts.worker = None;
     let path = crate::lifecycle::tenant_path(&id);
     let store = crate::counting::owned_background(&c.store, &id);
-    let cb = slatedb::CompactorBuilder::new(path.clone(), Arc::clone(&store)).with_options(opts).with_scheduler_supplier(Arc::new(sched.clone()));
+    // perf-latency: SlateDB's compactor and worker run their jobs on the runtime given here (default: the one `build` runs
+    // on, which is the server's, inside the first write after an opening): the compactor's runtime instead
+    let cb = slatedb::CompactorBuilder::new(path.clone(), Arc::clone(&store)).with_options(opts).with_scheduler_supplier(Arc::new(sched.clone())).with_runtime(c.runtime.clone());
     let cb = match crate::lifecycle::filter_policies() {
         Some(p) => cb.with_filter_policies(p),
         None => cb,
@@ -499,14 +501,16 @@ pub(crate) async fn start_slate(c: &Arc<Compactor>) -> anyhow::Result<()> {
     wo.min_filter_keys = crate::lifecycle::MIN_FILTER_KEYS;
     wo.compactions_poll_interval = Duration::from_millis(10);
     wo.compression_codec = crate::tiered::codec();
-    let wb = slatedb::CompactionWorkerBuilder::<object_store::path::Path>::new(path.into(), store).with_options(wo).with_sst_block_size(crate::tiered::block_size()).with_compaction_filter_supplier(Arc::new(sched));
+    let wb = slatedb::CompactionWorkerBuilder::<object_store::path::Path>::new(path.into(), store).with_options(wo).with_sst_block_size(crate::tiered::block_size()).with_compaction_filter_supplier(Arc::new(sched)).with_runtime(c.runtime.clone());
     let wb = match crate::lifecycle::filter_policies() {
         Some(f) => wb.with_filter_policies(f),
         None => wb,
     };
     let worker = Arc::new(wb.build().await?);
     let (cc, ww) = (Arc::clone(&compactor), Arc::clone(&worker));
-    let h = tokio::spawn(async move {
+    // on the compactor's runtime (the background one in the server, `pool::bg_runtime`): SlateDB's fold decodes and
+    // encodes SSTs, CPU work that must not run on the threads serving commands
+    let h = c.runtime.spawn(async move {
         let (a, b) = tokio::join!(cc.run(), ww.run());
         if let Err(e) = a.and(b) {
             eprintln!("fx drop: SlateDB compactor of {id}: {e:#}");

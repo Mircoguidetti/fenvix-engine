@@ -375,6 +375,7 @@ impl ObjectStore for CountingStore {
         let res = self.inner.put_opts(location, payload, opts).await;
         self.counters.put_cat[category(location.as_ref())].fetch_add(1, Relaxed);
         self.counters.lat_put.record(t0.elapsed());
+        crate::waits::add(crate::waits::W::Put, t0.elapsed());
         self.trace.end(token, bytes);
         res
     }
@@ -445,6 +446,10 @@ impl ObjectStore for CountingStore {
         self.counters.get_bytes.fetch_add(bytes, Relaxed);
         if !is_head {
             crate::meter::note_get(bytes, t0.elapsed());
+            crate::waits::add(crate::waits::W::Get, t0.elapsed());
+            crate::waits::add_get_bytes(bytes);
+        } else {
+            crate::waits::add(crate::waits::W::Other, t0.elapsed());
         }
         self.trace.end(token, bytes);
         res

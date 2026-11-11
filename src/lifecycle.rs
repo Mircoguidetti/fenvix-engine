@@ -465,6 +465,21 @@ pub fn relaxed_window(id: &str) -> Duration {
     RELAXED_WINDOW.get().map(|f| f(id)).unwrap_or_default()
 }
 
+/// Build a writer (perf-latency, with `--compaction-threads own`): SlateDB starts its background tasks on the runtime its
+/// `build` runs on, and its memtable flusher encodes and compresses a whole L0 SST (`l0_sst_size_bytes`) without
+/// yielding: on the server's runtime (one worker thread in a one-core container) every command and every log
+/// acknowledgement waited for it (MEASURED: the request thread ran for up to 2.4 s at a time, stack in
+/// `memtable_flusher::uploader` / `compress_and_transform`). So the build runs on the background runtime
+/// (`fx::pool::bg_runtime`), and only SlateDB's batch writer (each write's own path) stays on the caller's runtime
+/// (`with_write_runtime`).
+pub(crate) async fn build_writer(b: slatedb::DbBuilder<String>) -> Result<Db> {
+    if !crate::fx::pool::BG_ON.load(std::sync::atomic::Ordering::Relaxed) || !crate::fx::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed) {
+        return Ok(b.build().await?);
+    }
+    let b = b.with_write_runtime(tokio::runtime::Handle::current());
+    Ok(crate::fx::pool::bg_runtime().spawn(async move { b.build().await }).await.map_err(|e| anyhow!("writer build task: {e}"))??)
+}
+
 pub(crate) fn writer_builder(id: &str, store: &Arc<dyn ObjectStore>) -> slatedb::DbBuilder<String> {
     writer_builder_in(id, store, None)
 }
@@ -645,7 +660,7 @@ impl Lifecycle {
     /// There is no marker to delete: a tenant without a database has never been written.
     pub async fn create(self: &Arc<Self>, id: impl std::fmt::Display) -> Result<Tenant> {
         let id = id.to_string();
-        let db = writer_builder(&id, &self.store).build().await?;
+        let db = build_writer(writer_builder(&id, &self.store)).await?;
         let epoch = opened_epoch(&self.store, &id).await?;
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
@@ -1236,14 +1251,14 @@ impl Commit {
         if let Some(rx) = self.local.take() {
             GROUP_COMMITS.fetch_add(1, Relaxed);
             let seq = self.handle.seqnum();
-            match rx.await {
+            match crate::waits::timed(crate::waits::W::LogAck, rx).await {
                 Ok(()) => self.group.vis.confirm(seq),
-                Err(e) if TRACK_VISIBLE.load(Relaxed) => Commit::fallback_flush(&self.group, &self.db, &self.handle, seq, &self.tenant, &e).await?,
+                Err(e) if TRACK_VISIBLE.load(Relaxed) => crate::waits::timed(crate::waits::W::Fallback, Commit::fallback_flush(&self.group, &self.db, &self.handle, seq, &self.tenant, &e)).await?,
                 Err(e) => return Err(anyhow!(e)),
             }
             if TRACK_VISIBLE.load(Relaxed) {
                 // acknowledged only once every earlier batch is confirmed too: a read right after the ok sees the write
-                self.group.vis.wait_visible(seq, VISIBLE_WAIT).await?;
+                crate::waits::timed(crate::waits::W::Visible, self.group.vis.wait_visible(seq, VISIBLE_WAIT)).await?;
             }
             // The record is on the local disk, but this process may have lost the database meanwhile (frozen between the
             // ownership check and the fsync, its lease lapsed, another process took over): then the write is not acknowledged.
@@ -1273,6 +1288,7 @@ impl Commit {
             }
         }
         // Flush now: waiting for the periodic flush (100 ms) would add up to that much to every write.
+        let t_wal = Instant::now();
         if EXPLICIT_FLUSH.load(Relaxed) && self.group.flushed_seq.load(Acquire) < seq {
             let _lead = self.group.lock.lock().await;
             if self.group.flushed_seq.load(Acquire) < seq {
@@ -1318,6 +1334,7 @@ impl Commit {
         }
         if !ACK_BEFORE_DURABLE.load(Relaxed) {
             self.handle.await_durable().await?;
+            crate::waits::add(crate::waits::W::WalFlush, t_wal.elapsed());
             // in a durable WAL object, with every earlier batch
             self.group.vis.confirm_upto(seq);
             if TRACK_VISIBLE.load(Relaxed) {
@@ -1438,6 +1455,10 @@ impl Tenant {
     }
 
     pub async fn get<K: AsRef<[u8]> + Send>(&self, key: K) -> Result<Option<Bytes>> {
+        crate::waits::timed(crate::waits::W::SlateRead, self.get_inner(key)).await
+    }
+
+    async fn get_inner<K: AsRef<[u8]> + Send>(&self, key: K) -> Result<Option<Bytes>> {
         self.fx_no_fence_pending()?;
         if let Some(v) = &self.fx {
             return self.fx_get(v, key.as_ref(), false).await;
@@ -2180,7 +2201,7 @@ impl Tenant {
         let marker = marker_path(&self.id);
         let (del, db) = tokio::join!(
             store.delete(&marker),
-            writer_builder_in(&self.id, store, self.scope).build()
+            build_writer(writer_builder_in(&self.id, store, self.scope))
         );
         match del {
             Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
@@ -2296,6 +2317,10 @@ impl Tenant {
 
     /// [`Tenant::scan_range`]; `durable`: a writer returns only durable data (see [`Tenant::get_durable`]).
     pub async fn scan_range_at(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize, durable: bool) -> Result<Vec<(Bytes, Bytes)>> {
+        crate::waits::timed(crate::waits::W::FxRead, self.scan_range_at_inner(start, end, reverse, limit, read_ahead, durable)).await
+    }
+
+    async fn scan_range_at_inner(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize, durable: bool) -> Result<Vec<(Bytes, Bytes)>> {
         let opts = slatedb::config::ScanOptions {
             read_ahead_bytes: read_ahead,
             max_fetch_tasks: crate::tiered::scan_fetch_tasks(read_ahead),
@@ -2372,8 +2397,8 @@ impl Tenant {
         }
         // the state just before this batch, for readers while the batch is not confirmed (see `TRACK_VISIBLE`); the
         // caller holds the database's exclusive lock, so nothing is staged between the snapshot and the write
-        let before = if track { Some(db.snapshot().await?) } else { None };
-        let handle = db.write(batch).await?;
+        let before = if track { Some(crate::waits::timed(crate::waits::W::StageSnap, db.snapshot()).await?) } else { None };
+        let handle = crate::waits::timed(crate::waits::W::Stage, db.write(batch)).await?;
         note_unflushed(&self.id, handle.seqnum());
         if let Some(b) = before {
             self.group.vis.add(handle.seqnum(), b, keys);

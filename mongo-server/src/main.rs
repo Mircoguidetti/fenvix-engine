@@ -549,6 +549,10 @@ struct Args {
     sealed_compactor: bool,
     #[arg(long)]
     no_sealed_compactor: bool,
+    /// perf-latency: where the compactors' jobs and SlateDB's fold run. `own` (default): a runtime of their own, at nice
+    /// +10 (`tenant_bench::fx::pool::bg_runtime`); `shared`: the server's runtime, as before (measurements only).
+    #[arg(long, default_value = "own")]
+    compaction_threads: String,
     /// With `--sealed-compactor`: the drop of absorbed SlateDB rows (off by default until step 7b pairs forks).
     #[arg(long)]
     sealed_drop: bool,
@@ -781,6 +785,14 @@ fn main() -> Result<()> {
 
 async fn run() -> Result<()> {
     let args = Args::parse();
+    // perf-latency: per-command wait breakdown and the runtime stall probe (tenant_bench::waits), off unless FX_WAITS is set
+    if let Ok(v) = std::env::var("FX_WAITS") {
+        tenant_bench::waits::ON.store(true, std::sync::atomic::Ordering::Relaxed);
+        if let Ok(ms) = v.parse::<u64>() {
+            tenant_bench::waits::SLOW_MS.store(ms, std::sync::atomic::Ordering::Relaxed);
+        }
+        tenant_bench::waits::spawn_probe();
+    }
     // The SST cleanup deletes an SST this long after it left the manifest; a reader that polls the manifest less often
     // would read SSTs that are already gone.
     anyhow::ensure!(args.writer_poll_secs < args.sst_gc_min_unref_secs, "--writer-poll-secs ({}) must be below --sst-gc-min-unref-secs ({})", args.writer_poll_secs, args.sst_gc_min_unref_secs);
@@ -908,6 +920,9 @@ async fn run() -> Result<()> {
             tenant_bench::fx::compactor::SERVER_ON.store(true, Relaxed);
             tenant_bench::fx::compactor::SERVER_SMALL.store(env_c == "small", Relaxed);
             tenant_bench::fx::compactor::DROP_DEFAULT.store(args.sealed_drop, Relaxed);
+            anyhow::ensure!(matches!(args.compaction_threads.as_str(), "own" | "shared"), "--compaction-threads is own or shared");
+            tenant_bench::fx::pool::BG_ON.store(args.compaction_threads == "own", Relaxed);
+            tenant_bench::fx::compactor::DEFER_RECOGNISE.store(args.compaction_threads == "own", Relaxed);
             let derive = match std::env::var("FENVIX_SEALED_DERIVE").as_deref() {
                 Ok("1") => true,
                 Ok("0") => false,

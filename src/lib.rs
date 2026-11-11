@@ -11,4 +11,5 @@ pub mod meter;
 pub mod runfmt;
 pub mod simstore;
 pub mod tiered;
+pub mod waits;
 pub mod warm;

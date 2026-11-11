@@ -79,6 +79,10 @@ pub fn is_active(id: &str) -> bool {
     ACTIVE.lock().unwrap().contains(id)
 }
 
+/// The server's compactors recognise the L0 SSTs already absorbed in their first absorption instead of in `start`
+/// (perf-latency; tests keep the old order unless they set it).
+pub static DEFER_RECOGNISE: AtomicBool = AtomicBool::new(false);
+
 /// Block codec of the sealed runs of the server's compactors (`--sealed-codec`): 0 lz4 (format v1), 1 zstd (format v2).
 pub static SEALED_CODEC: AtomicU64 = AtomicU64::new(0);
 
@@ -370,7 +374,7 @@ pub struct Compactor {
     pub drop: Arc<super::drop::DropCtl>,
     slate: Mutex<Option<tokio::task::JoinHandle<()>>>,
     slate_stop: Mutex<Option<(Arc<slatedb::compactor::Compactor>, Arc<slatedb::CompactionWorker>)>>,
-    runtime: tokio::runtime::Handle,
+    pub(crate) runtime: tokio::runtime::Handle,
     codec: Arc<dyn RowCodec>,
     /// GC's state (first sights of unreferenced objects).
     pub gc: super::gc::GcState,
@@ -378,6 +382,9 @@ pub struct Compactor {
     /// Drop jobs done when the writer last refreshed its SlateDB manifest (its L0 count, and its stalls, are by its view).
     refreshed_jobs: AtomicU64,
     absorb_lock: tokio::sync::Mutex<()>,
+    /// The L0 SSTs already at or below X_d were recognised (`recognise_absorbed`). The server's compactor does it in its
+    /// first absorption, not in `start`, which runs under the database's exclusive lock (perf-latency).
+    recognised: AtomicBool,
     /// Benches: the planner starts no job while set (jobs called directly still run).
     pub paused: AtomicBool,
 }
@@ -432,12 +439,20 @@ impl Compactor {
             last_gc: Mutex::new(Instant::now()),
             refreshed_jobs: AtomicU64::new(0),
             absorb_lock: tokio::sync::Mutex::new(()),
+            recognised: AtomicBool::new(false),
         });
         t.fx_attach(Arc::clone(&sh));
         ACTIVE.lock().unwrap().insert(c.id().to_string());
         G_STARTED.fetch_add(1, Relaxed);
-        // L0 SSTs already at or below X_d (a restart) count as absorbed
-        c.recognise_absorbed().await?;
+        // L0 SSTs already at or below X_d (a restart) count as absorbed. This reads every L0 SST in full (up to 8 of
+        // `l0_sst_size_bytes`: 4.3 s and 200 MB on the medium profile, MEASURED), and `start` runs under the database's
+        // exclusive lock, inside the first write after an opening: the server defers it to the first absorption (on the
+        // compactor's own runtime), which no absorption can pass (`absorb_once`). Until then SlateDB's fold sees nothing
+        // foldable, as before any absorption.
+        if !DEFER_RECOGNISE.load(Relaxed) {
+            c.recognise_absorbed().await?;
+            c.recognised.store(true, Relaxed);
+        }
         super::drop::start_slate(&c).await?;
         Ok(c)
     }
@@ -618,6 +633,10 @@ impl Compactor {
     /// absorption at a time (rule 16: no gap).
     pub async fn absorb_once(&self) -> Result<usize> {
         let _one = self.absorb_lock.lock().await;
+        if !self.recognised.load(Relaxed) {
+            self.recognise_absorbed().await?;
+            self.recognised.store(true, Relaxed);
+        }
         let views: Vec<_> = self.unabsorbed().into_iter().take(self.knobs.absorb_max_l0).collect();
         if views.is_empty() {
             return Ok(0);
@@ -1193,9 +1212,9 @@ impl Compactor {
         let done = self.drop.jobs_done.load(Relaxed);
         if done > self.refreshed_jobs.swap(done, Relaxed) {
             let db = self.db.clone();
-            self.runtime.spawn(async move {
+            self.runtime.spawn(crate::waits::polled("refresh_manifest", self.id().to_string(), async move {
                 let _ = db.refresh_manifest().await;
-            });
+            }));
         }
     }
 
@@ -1205,7 +1224,15 @@ impl Compactor {
         Fut: std::future::Future<Output = Result<()>> + Send + 'static,
     {
         let c = Arc::clone(self);
-        self.runtime.spawn(async move {
+        let who = self.id().to_string();
+        let what: &'static str = match prio {
+            Prio::Absorb => "absorb",
+            Prio::Erase => "erase",
+            Prio::Merge => "merge",
+            Prio::Reseal => "reseal",
+            Prio::Gc => "gc",
+        };
+        self.runtime.spawn(crate::waits::polled(what, who, async move {
             let _permit: Permit = c.pool.acquire(prio).await;
             let t0 = thread_cpu_us();
             let w0 = Instant::now();
@@ -1225,19 +1252,19 @@ impl Compactor {
                 }
             }
             c.sh.stats.job_cpu_us.fetch_add(thread_cpu_us().saturating_sub(t0), Relaxed);
-        });
+        }));
     }
 
     /// Run the planner every `tick` until stopped.
     pub fn run(self: &Arc<Self>) -> tokio::task::JoinHandle<()> {
         let c = Arc::clone(self);
         let h = self.runtime.clone();
-        h.spawn(async move {
+        h.spawn(crate::waits::polled("tick", self.id().to_string(), async move {
             while !c.stopped.load(Relaxed) {
                 c.tick();
                 tokio::time::sleep(c.knobs.tick).await;
             }
-        })
+        }))
     }
 
     /// Run jobs inline until nothing is due (tests and the offline replay): absorb, erasures, merges, reseals.

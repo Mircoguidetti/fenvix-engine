@@ -168,6 +168,57 @@ pub fn global() -> Arc<Pool> {
     Arc::clone(GLOBAL.get_or_init(|| Pool::new(Pool::default_slots())))
 }
 
+/// How much lower than the server's threads the background threads run (`setpriority`, nice +10: when a customer's
+/// command and a compaction job both want the CPU, the kernel runs the command first).
+/// Whether the server's compactors use [`bg_runtime`] (`--compaction-threads own`, the default) or the server's runtime.
+pub static BG_ON: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
+/// The runtime a compactor started from the server runs its jobs on (see [`bg_runtime`]).
+pub fn compaction_runtime() -> tokio::runtime::Handle {
+    if BG_ON.load(std::sync::atomic::Ordering::Relaxed) {
+        bg_runtime()
+    } else {
+        tokio::runtime::Handle::current()
+    }
+}
+
+pub static BG_NICE: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(10);
+
+static BG: std::sync::OnceLock<tokio::runtime::Runtime> = std::sync::OnceLock::new();
+
+/// The runtime the server's compaction work runs on (perf-latency, 2026-11-11): the jobs of every database's compactor
+/// (absorption, erasures, merges, reseals, GC) and SlateDB's own compactor and worker (the fold). Before, they ran on the
+/// server's runtime, and in a machine or container with one core that runtime has one worker thread: a reseal that
+/// encoded a run kept that thread for up to 165 ms in one poll, and every command and every log acknowledgement waited
+/// behind it (MEASURED, medium profile). Its own threads (the pool's slots plus two), at a lower priority: the
+/// kernel time-slices them with the server's thread instead of the runtime running them to their next await.
+pub fn bg_runtime() -> tokio::runtime::Handle {
+    BG.get_or_init(|| {
+        tokio::runtime::Builder::new_multi_thread()
+            // the pool's slots, plus two: absorption never waits for a slot, and SlateDB's fold (on this runtime too) must
+            // run while every slot is in a long reseal, or L0 fills and the writer stops (MEASURED: writes stopped for
+            // 1.7-3.4 s with one thread). The kernel shares the CPU between them; the pool still bounds how many jobs run.
+            .worker_threads(global().slots() + 2)
+            .thread_name("fx-bg")
+            .thread_stack_size(16 << 20)
+            .on_thread_start(|| {
+                let nice = BG_NICE.load(std::sync::atomic::Ordering::Relaxed);
+                if nice != 0 {
+                    // a thread id with PRIO_PROCESS sets that thread's nice value only (Linux)
+                    unsafe {
+                        let tid = libc::syscall(libc::SYS_gettid) as libc::id_t;
+                        libc::setpriority(libc::PRIO_PROCESS, tid, nice);
+                    }
+                }
+            })
+            .enable_all()
+            .build()
+            .expect("background runtime")
+    })
+    .handle()
+    .clone()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

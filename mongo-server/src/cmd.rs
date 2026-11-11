@@ -183,6 +183,23 @@ impl Server {
     }
 
     pub async fn handle(self: &Arc<Self>, db: &str, cmd: Document, conn_id: i64) -> Document {
+        use tenant_bench::waits;
+        if !waits::ON.load(Relaxed) {
+            return self.handle_inner(db, cmd, conn_id).await;
+        }
+        // perf-latency: where the command's time went (src/waits.rs), printed when it was slow
+        let name = cmd.keys().next().cloned().unwrap_or_default();
+        let coll = cmd.iter().next().and_then(|(_, v)| v.as_str()).unwrap_or("").to_string();
+        let w = Arc::new(waits::Waits::default());
+        let start = waits::now_ms();
+        let t0 = std::time::Instant::now();
+        let r = waits::WAITS.scope(Arc::clone(&w), self.handle_inner(db, cmd, conn_id)).await;
+        let meter = (w.meter[0].load(Relaxed), w.meter[1].load(Relaxed), w.meter[2].load(Relaxed));
+        waits::report(&name, &coll, start, t0.elapsed(), &w, meter);
+        r
+    }
+
+    async fn handle_inner(self: &Arc<Self>, db: &str, cmd: Document, conn_id: i64) -> Document {
         // shared with the operation record of `currentOp` (diag.rs) instead of copied there
         let cmd = Arc::new(cmd);
         let Some(name) = cmd.keys().next().cloned() else {
@@ -197,7 +214,7 @@ impl Server {
         let mut permit = if crate::fair::exempt(&name) || (name == "getMore" && self.get_more_waits_on_purpose(&cmd)) || self.authorize_if_on(conn_id, db, &name, &cmd).await.is_err() {
             None
         } else {
-            match crate::fair::admit(db, !self.dbs.is_open_hint(db)).await {
+            match tenant_bench::waits::timed(tenant_bench::waits::W::Admit, crate::fair::admit(db, !self.dbs.is_open_hint(db))).await {
                 Ok(p) => Some(p),
                 Err(reply) => return reply,
             }
@@ -225,6 +242,12 @@ impl Server {
             }))
             .await;
         let r: R<Document> = r;
+        let _ = tenant_bench::waits::WAITS.try_with(|w| {
+            let (g, b, us) = meter.read();
+            w.meter[0].store(g, Relaxed);
+            w.meter[1].store(b, Relaxed);
+            w.meter[2].store(us, Relaxed);
+        });
         let micros = t0.elapsed().as_micros() as i64;
         self.diag.end(opid, db, &name, &cmd, &r, micros);
         drop(_registered);
@@ -302,7 +325,7 @@ impl Server {
                         last.push(c);
                     }
                 }
-                let _flushing = if last.is_empty() { None } else { crate::fair::io_wait().await };
+                let _flushing = if last.is_empty() { None } else { tenant_bench::waits::timed(tenant_bench::waits::W::IoWait, crate::fair::io_wait()).await };
                 for c in last {
                     if relax && crate::ctl::durability::relaxed_ms(c.tenant()) > 0 && crate::locallog::get().is_none() {
                         c.relax();
