@@ -1,24 +1,24 @@
 
  RUN  v3.2.7 /home/user/adapters/js-lg
 
- ✓ |int| src/tests/checkpoints.int.test.ts (9 tests) 332ms
- ✓ |int| src/tests/store.int.test.ts (43 tests | 7 skipped) 471ms
+ ✓ |int| src/tests/checkpoints.int.test.ts (9 tests) 240ms
+ ✓ |int| src/tests/store.int.test.ts (43 tests | 7 skipped) 332ms
 
  Test Files  2 passed (2)
       Tests  41 passed | 7 skipped (52)
-   Start at  17:33:04
-   Duration  1.26s (transform 161ms, setup 0ms, collect 1.12s, tests 803ms, environment 0ms, prepare 179ms)
+   Start at  00:05:25
+   Duration  856ms (transform 129ms, setup 0ms, collect 703ms, tests 572ms, environment 0ms, prepare 114ms)
 
 JUNIT report written to /home/user/fenvix-engine/bench/agent-adapters/results/ours/lg-js.xml.int
 
  RUN  v3.2.7 /home/user/adapters/js-lg
 
+ ✓ |unit| src/tests/checkpoints.test.ts (32 tests) 20ms
  ✓ |unit| src/tests/store.test.ts (46 tests) 27ms
- ✓ |unit| src/tests/checkpoints.test.ts (32 tests) 32ms
 
  Test Files  2 passed (2)
       Tests  78 passed (78)
-   Start at  17:33:06
-   Duration  889ms (transform 265ms, setup 0ms, collect 1.09s, tests 59ms, environment 0ms, prepare 171ms)
+   Start at  00:05:26
+   Duration  582ms (transform 146ms, setup 0ms, collect 695ms, tests 47ms, environment 0ms, prepare 123ms)
 
 JUNIT report written to /home/user/fenvix-engine/bench/agent-adapters/results/ours/lg-js.xml.unit
