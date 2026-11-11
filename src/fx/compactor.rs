@@ -353,6 +353,10 @@ struct Running {
 /// holds and the served version).
 pub static REVIEW_PLANT: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
 
+/// Negative control of perf-erase (tests only): a reseal planned before a scrub still commits, and a scrub commits over
+/// runs it did not read. With it the test of a reseal racing a scrub must find an erased document readable again.
+pub static SCRUB_GUARD_OFF: AtomicBool = AtomicBool::new(false);
+
 pub struct Compactor {
     pub sh: Arc<Shared>,
     pub store: Arc<dyn ObjectStore>,
@@ -380,6 +384,10 @@ pub struct Compactor {
     absorb_lock: tokio::sync::Mutex<()>,
     /// Benches: the planner starts no job while set (jobs called directly still run).
     pub paused: AtomicBool,
+    /// perf-erase: the newest version published by an erasure scrub (`commit_scrub`). A reseal planned on an older
+    /// version abandons: it may have read rows of an erased customer (live before the erasure's deletes were absorbed)
+    /// and would put them back into a sealed run after the scrub removed their delete envelopes.
+    last_scrub: AtomicU64,
 }
 
 /// One row of a run or of an absorption.
@@ -432,6 +440,7 @@ impl Compactor {
             last_gc: Mutex::new(Instant::now()),
             refreshed_jobs: AtomicU64::new(0),
             absorb_lock: tokio::sync::Mutex::new(()),
+            last_scrub: AtomicU64::new(0),
         });
         t.fx_attach(Arc::clone(&sh));
         ACTIVE.lock().unwrap().insert(c.id().to_string());
@@ -493,6 +502,15 @@ impl Compactor {
     where
         F: FnOnce(&Version) -> Result<Option<Version>>,
     {
+        self.commit_as("publish", f).await
+    }
+
+    /// [`Compactor::commit`] with the version's kind ("erase" for a scrub: it also sets `last_scrub`, under the commit
+    /// lock, before any later commit can look at it).
+    async fn commit_as<F>(&self, kind: &str, f: F) -> Result<Option<Version>>
+    where
+        F: FnOnce(&Version) -> Result<Option<Version>>,
+    {
         let mut c = self.cur.lock().await;
         if self.stopped.load(Relaxed) {
             bail!("compactor of {} stopped", self.id());
@@ -505,13 +523,16 @@ impl Compactor {
             return Ok(None);
         };
         next.version = c.v.version + 1;
-        next.kind = "publish".into();
+        next.kind = kind.into();
         next.writer_epoch = self.epoch;
         next.published_ms = manifest::now_ms();
         next.e_env = c.v.e_env;
         next.check()?;
         match tokio::time::timeout(self.knobs.put_timeout, self.create(&next)).await {
             Ok(Ok(true)) => {
+                if kind == "erase" {
+                    self.last_scrub.fetch_max(next.version, Relaxed);
+                }
                 c.v = next.clone();
                 self.drop.known_xd.fetch_max(next.x_d, Relaxed);
                 *self.sh.pending.lock().unwrap() = Some(next.clone());
@@ -957,8 +978,13 @@ impl Compactor {
         let sealed_paths: Vec<Option<String>> = groups.iter().map(|g| g.sealed.as_ref().map(|s| s.path.clone())).collect();
         let unsealed0: Vec<u64> = groups.iter().map(|g| g.unsealed).collect();
         let now = manifest::now_ms();
+        let v0_version = v0.version;
         let r = self
             .commit(|cur| {
+                // perf-erase: an erasure scrub published since the plan (it removed rows this reseal may have read live)
+                if self.last_scrub.load(Relaxed) > v0_version && !SCRUB_GUARD_OFF.load(Relaxed) {
+                    return Ok(None);
+                }
                 // the groups must be unchanged (same ids in a row, same sealed runs): else abandon
                 let Some(i0) = cur.groups.iter().position(|g| g.id == ids[0]) else { return Ok(None) };
                 if i0 + ids.len() > cur.groups.len() {
@@ -1084,6 +1110,59 @@ impl Compactor {
 
     // ------------------------------------------------------------------------------------------------------------
     // Erasures
+
+    /// Tests only: a reseal of group `gi` planned on version `v0` (an older version than the newest: a reseal that was
+    /// already running when something else committed).
+    #[cfg(test)]
+    pub(crate) async fn reseal_planned_on(&self, v0: &Version, gi: usize) -> Result<bool> {
+        self.reseal(v0, gi, gi, None).await
+    }
+
+    /// perf-erase: publish an erasure scrub (`erase.rs`, a batch of erasures) made on version `base`, on the newest
+    /// version: the runs it rewrote are replaced if they are all still listed, else it abandons (None; its runs are
+    /// orphans the caller deletes). After it no run of the new version may hold a target row at or below `max_s_e`: a run
+    /// listed now that the scrub did not read (a reseal or a merge committed since `base`) and that may hold rows at or
+    /// below `max_s_e` abandons it too, and the next pass scrubs again on the newer version. Runs absorbed since `base`
+    /// hold rows above its X_d only (>= `max_s_e`, checked by the caller), so they never abandon it.
+    pub async fn commit_scrub(&self, base: &Version, s: &super::erase::Scrub, max_s_e: u64) -> Result<Option<Version>> {
+        ensure!(base.x_d >= max_s_e, "database {}: a scrub at {max_s_e} on version {} with X_d {}", self.id(), base.version, base.x_d);
+        let ours: HashSet<String> = s.sealed.iter().filter_map(|(_, _, n)| n.as_ref().map(|l| l.path.clone())).chain(s.delta.iter().filter_map(|(_, n)| n.as_ref().map(|l| l.path.clone()))).collect();
+        let r = self
+            .commit_as("erase", |cur| {
+                let mut next = cur.clone();
+                for (gid, old, new) in &s.sealed {
+                    let Some(g) = next.groups.iter_mut().find(|g| g.id == *gid) else { return Ok(None) };
+                    if g.sealed.as_ref().map(|l| &l.path) != Some(old) {
+                        return Ok(None);
+                    }
+                    g.sealed = new.clone();
+                }
+                for (old, new) in &s.delta {
+                    let Some(i) = next.delta.iter().position(|d| &d.path == old) else { return Ok(None) };
+                    match new {
+                        Some(l) => next.delta[i] = l.clone(),
+                        None => {
+                            next.delta.remove(i);
+                        }
+                    }
+                }
+                next.delta.sort_by(|a, b| b.max_seq.cmp(&a.max_seq));
+                if !SCRUB_GUARD_OFF.load(Relaxed) {
+                    for l in next.groups.iter().filter_map(|g| g.sealed.as_ref()).chain(next.delta.iter()) {
+                        if !ours.contains(&l.path) && !s.examined.contains(&l.path) && l.min_seq <= max_s_e {
+                            return Ok(None);
+                        }
+                    }
+                }
+                Ok(Some(next))
+            })
+            .await?;
+        if let Some(v) = &r {
+            self.sh.stats.erasures_done.fetch_add(1, Relaxed);
+            let _ = v;
+        }
+        Ok(r)
+    }
 
     /// Run the oldest pending erasure whose deletes are absorbed. Returns whether one finished.
     pub async fn erase_once(&self) -> Result<bool> {

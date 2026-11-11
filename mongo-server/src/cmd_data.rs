@@ -1053,7 +1053,9 @@ impl Server {
         let specs = cmd.get_array("deletes").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'delete.deletes' is missing but a required field".into()))?;
         let cols = specs.iter().map(|s| match s.as_document() { Some(d) => crate::collation::of_statement("delete", d), None => Ok(Ok(None)) }).collect::<R<Vec<_>>>()?;
         let mut rr = self.retry_begin(db, cmd, specs.len(), "delete").await?;
+        let t_0 = std::time::Instant::now();
         let mut g = self.dbs.lock(db).await;
+        let t_lock = t_0.elapsed();
         attach(&mut g, tx);
         let indexes = self.load_indexes(&mut g, db, coll).await?;
         self.presweep(&mut g, coll, &indexes).await?;
@@ -1113,7 +1115,9 @@ impl Server {
             b.run.stage(&mut w, &b.key);
             w.extra.extend(self.session_sweep_ops(&mut g, db, &b.key).await);
         }
+        let t_stmt = t_0.elapsed();
         self.commit(&mut g, coll, w, &indexes, None, tx).await?;
+        let t_commit = t_0.elapsed();
         // the deletes are committed and the exclusive lock is still held: S_e is the database's last seq now
         for (value, cust, t) in &erasures {
             if let Some(e) = g.fx_erasure_register(coll, cust, t).await? {
@@ -1124,6 +1128,7 @@ impl Server {
                 crate::ctl::erase::note_erasure(db, &e.id).await;
             }
         }
+        tenant_bench::fx::erase::trace(serde_json::json!({"ev": "delete", "db": db, "coll": coll, "n": n, "erasures": erasures.len(), "lock_wait_ms": t_lock.as_secs_f64() * 1e3, "stmt_ms": (t_stmt - t_lock).as_secs_f64() * 1e3, "commit_ms": (t_commit - t_stmt).as_secs_f64() * 1e3, "register_ms": (t_0.elapsed() - t_commit).as_secs_f64() * 1e3, "total_ms": t_0.elapsed().as_secs_f64() * 1e3}));
         if let Some(b) = rr.as_mut() {
             b.run.apply();
         }

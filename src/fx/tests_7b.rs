@@ -247,7 +247,7 @@ async fn erase_a(t: &mut Tenant) -> erase::Erasure {
     let mut ops: Vec<Op> = (0..30).map(|i| Op::Delete(a_key(i))).collect();
     ops.extend((0..30).map(|i| Op::Delete(loc_key(i))));
     t.apply(ops).await.unwrap();
-    t.fx_erasure_register("c", b"CUSTA", &a_targets()).await.unwrap().expect("sealed runs are on: the erasure is recorded")
+    t.fx_erasure_register("c", b"CUSTA", &a_targets(), None).await.unwrap().expect("sealed runs are on: the erasure is recorded")
 }
 
 /// An erasure (DECISIONS 2026-11-07, plan fix 5): customer A, aged into a sealed run and a delta run, is erased; B gets
@@ -276,7 +276,8 @@ async fn an_erasure_leaves_every_run_and_slatedb() {
     let e = erase_a(&mut t).await;
     assert_eq!((e.state.as_str(), e.ranges, e.keys), ("pending", 1, 30));
     assert!(e.deadline_ms > e.requested_ms);
-    assert!(store.head(&erase::keys_path(id, &e.id)).await.is_ok());
+    // the targets are durable before the scrub: in the record (perf-erase), or in `{id}.keys` (earlier records)
+    assert!(e.targets.is_some() || store.head(&erase::keys_path(id, &e.id)).await.is_ok());
     put(&mut t, &a_key(5), b"NEWDATA after the erasure").await;
     let all = t.fx_erase_pass(&scrub_opts()).await.unwrap();
     let e = all.into_iter().find(|x| x.id == e.id).unwrap();
@@ -314,6 +315,7 @@ async fn an_erasure_leaves_every_run_and_slatedb() {
     assert!(e.live_done_ms.is_some() && e.done_ms.is_some(), "{e:?}");
     assert!(!e.overdue(manifest::now_ms()));
     assert!(store.head(&erase::keys_path(id, &e.id)).await.is_err(), "the targets object (the customer's own keys) must go with the scrub");
+    assert!(e.targets.is_none(), "the targets in the record (the customer's own keys) must go with the scrub");
     assert!(!ordinary_kept.is_empty(), "an ordinary delete is not an erasure: its older row stays until the group's next reseal");
     assert!(ordinary_after_reseal.is_empty(), "the reseal must take the ordinary delete's older row out: {ordinary_after_reseal:?}");
     // SlateDB: the drop at X_d >= S_e, then GC with windows at 0
@@ -391,7 +393,7 @@ async fn an_erasure_reports_its_deadline() {
         t.apply(ops).await.unwrap();
         let mut tb = Targets::default();
         tb.ranges.push((b"u/CUSTB/".to_vec(), b"u/CUSTB0".to_vec()));
-        t.fx_erasure_register("c", b"CUSTB", &tb).await.unwrap().unwrap()
+        t.fx_erasure_register("c", b"CUSTB", &tb, None).await.unwrap().unwrap()
     };
     let all = t.fx_erase_pass(&scrub_opts()).await.unwrap();
     t.close().await.unwrap();

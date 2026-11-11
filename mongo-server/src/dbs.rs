@@ -474,6 +474,14 @@ impl Dbs {
     }
 }
 
+/// perf-erase: what the first step of an erasure batch hands to the rest of the pass (`ctl/erase.rs`): every erasure of
+/// the database, the version its tenant serves, and its compactor.
+pub struct ErasePrep {
+    pub all: Vec<tenant_bench::fx::erase::Erasure>,
+    pub base: Option<tenant_bench::fx::manifest::Version>,
+    pub fxc: Option<Arc<tenant_bench::fx::compactor::Compactor>>,
+}
+
 impl Entry {
     /// `fenvixReseal` (tests and measurements of derived documents, `fx/derive.rs`): flush the memtable, absorb every
     /// L0 SST, merge, and reseal every group of this database's compactor now. Returns (groups resealed, documents
@@ -839,11 +847,52 @@ impl Entry {
     }
 
     /// Record an erasure whose deletes this entry just committed (`fx/erase.rs`; the caller holds the exclusive lock).
+    /// perf-erase: one PUT, the record with its targets, and the agent's index object written at the same time.
     pub async fn fx_erasure_register(&mut self, coll: &str, customer: &[u8], t: &tenant_bench::fx::erase::Targets) -> Result<Option<tenant_bench::fx::erase::Erasure>> {
         if !self.ensure_open().await? {
             return Ok(None);
         }
-        self.tenant.as_mut().unwrap().fx_erasure_register(coll, customer, t).await
+        let name = self.name.clone();
+        let idx = crate::ctl::erase::index_of(&name);
+        self.tenant.as_mut().unwrap().fx_erasure_register(coll, customer, t, Some(&idx)).await
+    }
+
+    /// perf-erase: the short first step of an erasure batch (`ctl/erase.rs`), under this exclusive lock. None when the
+    /// database does not exist.
+    pub async fn fx_erase_prepare(&mut self) -> Result<Option<ErasePrep>> {
+        if !self.ensure_open().await? {
+            return Ok(None);
+        }
+        self.touch();
+        let (all, base) = self.tenant.as_mut().unwrap().fx_erase_prepare().await?;
+        Ok(Some(ErasePrep { all, base, fxc: self.fxc.clone() }))
+    }
+
+    /// perf-erase: install the compactor's newest version in the tenant now (after a scrub, so reads use it at once and
+    /// the scrub's replaced runs stop being read).
+    pub fn fx_sync(&mut self) {
+        if let Some(t) = self.tenant.as_mut() {
+            t.fx_sync();
+        }
+    }
+
+    /// perf-erase, without a compactor: publish a scrub made on version `base` (false: the version changed meanwhile).
+    pub async fn fx_erase_publish(&mut self, base: u64, v: &tenant_bench::fx::manifest::Version) -> Result<bool> {
+        if !self.ensure_open().await? {
+            return Ok(false);
+        }
+        self.tenant.as_mut().unwrap().fx_erase_publish(base, v).await
+    }
+
+    /// The newest version of our manifest this process knows for the database (its compactor's, else the served one)
+    /// and the one its tenant serves; None without an open tenant.
+    pub fn fx_versions(&self) -> (Option<u64>, Option<u64>) {
+        let served = self.tenant.as_ref().and_then(|t| t.fx_served_version());
+        let newest = match &self.fxc {
+            Some(c) => c.sh.pending_version().or(served),
+            None => served,
+        };
+        (newest.map(|n| n.max(served.unwrap_or(0))), served)
     }
 
     /// Tests only (`ctl/testhooks.rs`): publish a version now, with a delta run of what SlateDB holds above X_d.

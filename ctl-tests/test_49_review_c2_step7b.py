@@ -19,6 +19,8 @@ from lib import Server, make_bucket, dump_db, list_prefix, wait_until, s3
 
 # short hold life and GC grace so the retire step runs within the test (check_config: grace > hold + put, remote > hold + put)
 SEALED = ["--sealed-runs", "2", "--sealed-reseal-every", "1000000", "--sealed-t-pin-ms", "1000", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait",
+          # perf-erase: these tests check what the scrub does, so a batch is due at the agent's next poll
+          "--sealed-erasure-batch-ms", "0",
           "--sealed-erasure-poll-ms", "200", "--sealed-hold-life-ms", "1500", "--sealed-put-timeout-ms", "500", "--sealed-gc-grace-ms", "2500",
           "--sealed-remote-lease-ms", "3000"]
 
