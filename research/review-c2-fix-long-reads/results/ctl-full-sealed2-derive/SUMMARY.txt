@@ -1,0 +1,74 @@
+test_01_databases: 10 passed in 12.34s
+test_02_fork: 1 failed, 12 passed in 61.01s (0:01:01)
+test_02b_fork_crash: 12 passed, 11 warnings in 161.54s (0:02:41)
+test_03_restore: 11 passed in 157.20s (0:02:37)
+test_03b_restore_gc_crash: 11 passed in 235.98s (0:03:55)
+test_03c_retention_cost: 1 passed in 605.34s (0:10:05)
+test_04_export: 9 passed, 1 skipped in 144.75s (0:02:24)
+test_04b_export_vs_real_mongo: 2 skipped in 0.29s
+test_05_erase: 19 passed in 138.44s (0:02:18)
+test_06_keepawake: 13 passed in 157.81s (0:02:37)
+test_07_usage: 1 failed, 9 passed in 129.75s (0:02:09)
+test_08_costs: 2 failed, 1 passed in 370.48s (0:06:10)
+test_08b_pin_cost: 1 passed in 66.77s (0:01:06)
+test_09_security: 30 passed in 4.34s
+test_09b_users_restore: 1 passed in 10.33s
+test_09c_tls_rotate: 3 passed in 6.62s
+test_09d_s3_env: 6 passed in 32.81s
+test_09e_local_store: 4 passed in 26.56s
+test_09f_wal_retention_guard: 4 passed in 153.28s (0:02:33)
+test_09g_export_natural_order: 2 passed in 24.42s
+test_10_end_to_end: 1 passed in 14.45s
+test_11_tls_modes: 4 passed in 48.75s
+test_12_shutdown: 2 passed in 8.50s
+test_13_ip_allowlist: 84 passed in 36.50s
+test_14_auth_limits: 10 passed in 56.46s
+test_15_admin_cmd_privileges: 54 passed in 6.35s
+test_16_block_defaults: 5 passed in 16.37s
+test_17_grantable_roles: 94 passed in 24.41s
+test_18_unblock_per_database: 4 passed in 2.38s
+test_19_imds_credential_refresh: 4 passed in 190.45s (0:03:10)
+test_20_process_lease: 9 passed in 106.14s (0:01:46)
+test_21_fair_limits_metrics: 4 passed in 16.63s
+test_22_wal_gc_stored_manifest: 1 passed in 9.85s
+test_23_process_lease_late: 6 passed in 125.30s (0:02:05)
+test_24_local_log: 8 passed in 96.26s (0:01:36)
+test_25_review_fixes: 8 passed in 54.61s
+test_26_drop_forgets: 3 passed in 78.71s (0:01:18)
+test_27_memory_per_write: 2 passed in 264.83s (0:04:24)
+test_28_bulk_insert_stall: 1 passed in 90.56s (0:01:30)
+test_29_compat_data_bugs: 10 passed in 2.34s
+test_30_fork_limits_txn_collation: 14 passed in 14.41s
+test_31_lease_lost_store_down: 1 failed, 1 passed in 218.37s (0:03:38)
+test_32_sort_top1: 10 passed in 4.33s
+test_33_metadata_cache: 10 passed in 50.37s
+test_34_change_stream_token_db: 9 passed in 14.32s
+test_35_fix_piccoli: 19 passed, 5 warnings in 183.32s (0:03:03)
+test_36_isolation_quotas: .
+test_36b_review_fixes: 
+test_37_conn_limits_per_db: 4 passed in 20.52s
+test_38_front_door_review: 5 passed in 80.74s (0:01:20)
+test_40_hello_exhaust: 5 passed in 11.65s
+test_41_commit_retry: 6 passed in 48.61s
+test_41b_commit_durable: 5 passed in 31.71s
+test_41c_review_commit_durable: 11 passed in 172.81s (0:02:52)
+test_41d_review_commit_cost: 2 passed in 55.70s
+test_41e_outcomes: 4 passed in 17.79s
+test_42_customer_compaction: 2 failed, 1 passed in 302.38s (0:05:02)
+test_42_unique_txn: 17 passed, 16 skipped in 22.36s
+test_42b_tolong_date: 6 passed, 6 skipped in 36.35s
+test_42r_review_unique_build: 1 failed, 1 passed in 4.33s
+test_42s_index_build_writes: 28 passed in 137.16s (0:02:17)
+test_42t_kill_index_build: 1 passed in 956.38s (0:15:56)
+test_43_review_compaction: 1 failed, 5 passed in 26.38s
+test_44_layout_v2: 5 passed in 51.02s
+test_45_envelope_rollback: 1 passed, 2 skipped in 12.25s
+test_46_review_c2_step2: 12 passed in 50.55s
+test_47_c2_step2_fix: 7 passed in 2.32s
+test_47_c2_step7a_paths: 2 passed in 26.35s
+test_48_c2_step7b_forks_erasure: 1 failed, 2 passed in 16.42s
+test_49_review_c2_step7b: 5 passed, 3 warnings in 32.13s
+test_50_c2_step7b_fix_long_commands: 8 passed in 178.63s (0:02:58)
+test_51_c2_fix_long_reads: 1 passed in 14.29s
+/dev/vda        252G   22G   17G  57% /
+test_42_unique_txn and test_42b_tolong_date skipped tests in the first pass (the reference mongod died with a worker restart); rerun with mongod up: 33 passed, 12 passed. The run was resumed after test_41b for the same reason.

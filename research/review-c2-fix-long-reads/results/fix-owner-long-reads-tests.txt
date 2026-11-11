@@ -1,0 +1,156 @@
+warning: unused import: `std::sync::atomic::Ordering::Relaxed`
+    --> src/lifecycle.rs:1941:13
+     |
+1941 |         use std::sync::atomic::Ordering::Relaxed;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary parentheses around closure body
+    --> src/warm.rs:1211:42
+     |
+1211 |                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+     |                                          ^                                ^
+     |
+     = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+     |
+1211 -                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+1211 +                     (0..40).flat_map(|c| c * (n / 40)..c * (n / 40) + per).collect()
+     |
+
+warning: variable does not need to be mutable
+   --> src/fx/review_long_reads_tests.rs:884:10
+    |
+884 |     let (mut w, want) = stable_db(&store, id, ckey, &small_opts(build::Reseal::All)).await;
+    |          ----^
+    |          |
+    |          help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tenant-bench` (lib) generated 1 warning (run `cargo fix --lib -p tenant-bench` to apply 1 suggestion)
+warning: `tenant-bench` (lib test) generated 2 warnings (run `cargo fix --lib -p tenant-bench --tests` to apply 2 suggestions)
+warning: field `erasures` is never read
+   --> src/bin/fx_pool.rs:125:5
+    |
+121 | struct DbOut {
+    |        ----- field in this struct
+...
+125 |     erasures: Mutex<Vec<Duration>>,
+    |     ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tenant-bench` (bin "fx_pool" test) generated 1 warning
+warning: constant `SRC` is never used
+  --> src/bin/fx_cold.rs:79:7
+   |
+79 | const SRC: [&str; 5] = ["sealed", "delta_s3", "l0", "slate_runs", "nvme"];
+   |       ^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/bin/review_sr_bench.rs:279:13
+    |
+279 |         let mut scan_cost = |list: Vec<u32>| {
+    |             ----^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tenant-bench` (bin "fx_cold" test) generated 1 warning
+warning: `tenant-bench` (bin "review_sr_bench" test) generated 1 warning (run `cargo fix --bin "review_sr_bench" -p tenant-bench --tests` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 0.27s
+     Running unittests src/lib.rs (target/release/deps/tenant_bench-8ad66b7b77dbaadc)
+
+running 10 tests
+test fx::long_reads_tests::long_reader_scan_following_e1 ... long reader scan following E1 (control false): 8.0 s = 26.6 T_pin, 302 steps, 2 passes, 4800 rows, 4800 stable rows compared, wrong 0, refused 0, other errors 0 (), renewals 50; writer published 0 versions; reader's exclusive state at the end: E_env None, version None
+long reader scan following E1 (control true): 18.0 s = 60.1 T_pin, 687 steps, 0 passes, 176 rows, 176 stable rows compared, wrong 0, refused 676, other errors 0 (database fx-long-e1-ctl: release E1's announcement was last read 300.567077ms ago, more than T_pin; retry), renewals 0; writer published 0 versions; reader's exclusive state at the end: E_env None, version None
+ok
+test fx::long_reads_tests::long_reader_scan_with_compactor_and_gc ... long reader scan (control false): 8.1 s = 26.9 T_pin, 306 steps, 2 passes, 4880 rows, 4800 stable rows compared, wrong 0, refused 0 (0 after GC deleted a run of the reader's first state), other errors 0 (), renewals 50; writer: 3160 churn writes, 1264 reseals, GC deleted 8 of the 8 runs of the reader's first version, 941 runs in all
+long reader scan (control true): 18.0 s = 60.1 T_pin, 688 steps, 0 passes, 192 rows, 192 stable rows compared, wrong 0, refused 676 (598 after GC deleted a run of the reader's first state), other errors 0 (database fx-long-ctl: our manifest was last read 317.45354ms ago, more than T_pin; retry), renewals 0; writer: 7080 churn writes, 2832 reseals, GC deleted 8 of the 8 runs of the reader's first version, 2597 runs in all
+ok
+test fx::review_long_reads_tests::review_lr_failed_renewal_keeps_the_guard ... sealed runs: database fx-rlr-fail-version-list-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest
+sealed runs: database fx-rlr-fail-version-list-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest
+sealed runs: database fx-rlr-fail-version-list-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest
+sealed runs: database fx-rlr-fail-version-list-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest
+sealed runs: database fx-rlr-fail-version-list-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest
+sealed runs: database fx-rlr-fail-version-list-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest
+sealed runs: database fx-rlr-fail-version-list-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest
+sealed runs: database fx-rlr-fail-version-list-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest
+sealed runs: database fx-rlr-fail-version-list-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest
+sealed runs: database fx-rlr-fail-version-list-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest
+sealed runs: database fx-rlr-fail-version-list-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest
+sealed runs: database fx-rlr-fail-version-list-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest: injected failure on tenants/fx-rlr-fail-version-list-fails/fx/manifest
+review failed renewal (version-list-fails): served 26 (after T_pin 0), refused 27 (first at Some(301) ms, T_pin 300), other errors 0, wrong 0, renewals while failing 0; store back: pass wrong 0 refused 0 errors 0 (), renewals 1
+sealed runs: database fx-rlr-fail-e1-announcement-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced
+sealed runs: database fx-rlr-fail-e1-announcement-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced
+sealed runs: database fx-rlr-fail-e1-announcement-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced
+sealed runs: database fx-rlr-fail-e1-announcement-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced
+sealed runs: database fx-rlr-fail-e1-announcement-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced
+sealed runs: database fx-rlr-fail-e1-announcement-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced
+sealed runs: database fx-rlr-fail-e1-announcement-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced
+sealed runs: database fx-rlr-fail-e1-announcement-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced
+sealed runs: database fx-rlr-fail-e1-announcement-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced
+sealed runs: database fx-rlr-fail-e1-announcement-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced
+sealed runs: database fx-rlr-fail-e1-announcement-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced
+sealed runs: database fx-rlr-fail-e1-announcement-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced
+sealed runs: database fx-rlr-fail-e1-announcement-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced: injected failure on tenants/fx-rlr-fail-e1-announcement-fails/fx/e1-announced
+review failed renewal (e1-announcement-fails): served 26 (after T_pin 0), refused 26 (first at Some(306) ms, T_pin 300), other errors 0, wrong 0, renewals while failing 0; store back: pass wrong 0 refused 0 errors 0 (), renewals 1
+ok
+test fx::review_long_reads_tests::review_lr_one_renewal_for_many_steps ... review storm: 32 concurrent steps -> 1 renewal(s), 0 errors; requests: 1 LIST of the manifest dir (31 versions), 1 manifest GET, 0 announcement HEAD, 9 other GETs (SlateDB, includes the 32 reads)
+review storm: idle 5 T_pin -> 0 renewals; long scan 11.1 T_pin, 4 pagers, 2040 steps -> 22 renewals (1.98 per T_pin), 22 LISTs, wrong 0, refused/errors 0
+ok
+test fx::review_long_reads_tests::review_lr_pages_across_v2_to_v2k_reseals ... review V2 -> V2K: 244 steps, 2 passes, 3200 stable rows, wrong 0, refused 0, errors 0 (); 198 reseals; GC deleted 6 of 6 runs of version 1; newest version 214
+ok
+test fx::review_long_reads_tests::review_lr_renewal_window_starts_before_its_request ... review note 5 on the renewal path (control false): first step Ok(true), answer after 201.2021ms; at request + T_pin + 30 ms: refused: database fx-rlr-note5-false: the reader's state is older than T_pin and its renewal failed: Generic review error: injected failure on tenants/fx-rlr-note5-false
+review note 5 on the renewal path (control true): first step Ok(true), answer after 201.730725ms; at request + T_pin + 30 ms: served (plain)
+ok
+test fx::review_long_reads_tests::review_lr_shortest_legal_grace ... review shortest grace (renewing): T_pin 300 ms, hold 1200 ms, PUT timeout 200 ms, grace 1401 ms; version 2 at L+2 ms retires 5 of 5 runs of version 1; step from L+275 to L+1437 ms (1162 ms, hold life 1200), 33 run GETs held, 0 run GETs NotFound; GC deleted 5 of version 1's runs; the step: answered 1601 rows; wrong 0
+sealed runs: database fx-rlr-grace-renewal-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-grace-renewal-fails/fx/manifest: injected failure on tenants/fx-rlr-grace-renewal-fails/fx/manifest
+sealed runs: database fx-rlr-grace-renewal-fails: renewal of the reader's state failed: Generic review error: injected failure on tenants/fx-rlr-grace-renewal-fails/fx/manifest: injected failure on tenants/fx-rlr-grace-renewal-fails/fx/manifest
+review shortest grace (renewal-fails): T_pin 300 ms, hold 1200 ms, PUT timeout 200 ms, grace 1401 ms; version 2 at L+4 ms retires 5 of 5 runs of version 1; step from L+275 to L+1437 ms (1162 ms, hold life 1200), 1 run GETs held, 1 run GETs NotFound; GC deleted 5 of version 1's runs; the step: error (NOT retryable): Object at location tenants/fx-rlr-grace-renewal-fails/fx/run/g0/00000000000000001601-1-66cd0fc4 not found: No data in memory found. Location: tenants/fx-rlr-grace-renewal-fails/fx/run/g0/00000000000000001601-1-66cd0fc4: No data in memory fo; wrong 0
+
+thread 'fx::review_long_reads_tests::review_lr_shortest_legal_grace' (9573) panicked at src/fx/review_long_reads_tests.rs:603:9:
+renewal-fails: a step younger than the hold life, with a state younger than T_pin, read with a state that lists a deleted run: review shortest grace (renewal-fails): T_pin 300 ms, hold 1200 ms, PUT timeout 200 ms, grace 1401 ms; version 2 at L+4 ms retires 5 of 5 runs of version 1; step from L+275 to L+1437 ms (1162 ms, hold life 1200), 1 run GETs held, 1 run GETs NotFound; GC deleted 5 of version 1's runs; the step: error (NOT retryable): Object at location tenants/fx-rlr-grace-renewal-fails/fx/run/g0/00000000000000001601-1-66cd0fc4 not found: No data in memory found. Location: tenants/fx-rlr-grace-renewal-fails/fx/run/g0/00000000000000001601-1-66cd0fc4: No data in memory fo; wrong 0
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: tenant_bench::fx::review_long_reads_tests::review_lr_shortest_legal_grace::{closure#0}
+   3: tokio::runtime::context::runtime::enter_runtime::<<tokio::runtime::scheduler::multi_thread::MultiThread>::block_on<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>::{closure#0}, ()>
+   4: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   5: tenant_bench::fx::review_long_reads_tests::review_lr_shortest_legal_grace
+   6: <tenant_bench::fx::review_long_reads_tests::review_lr_shortest_legal_grace::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+FAILED
+test fx::review_long_reads_tests::review_lr_single_step_past_hold_life_still_fails ... review single step past the hold life: short steps 202 over 13.4 T_pin, wrong 0, refused 0; the long step (1705 ms, hold life 1500 ms): retryable error: fx hold revoked: the read held version 1 for more than 1.5s; retry; its retry: 1600 rows
+ok
+test fx::review_long_reads_tests::review_lr_upgrade_mid_scan_and_old_writer_returns ... review upgrade mid-scan: first version 1, at the upgrade (step, renewals so far, writer's version) Some((45, Some(7), Some(20))); old writer after the takeover: write ok Some(false), publish Some("Err(\"database fx-rlr-upgrade: a compactor publishes this database's versions\")"); newest in the store Some(20), new writer reads with Some(20); 203 steps, 2 passes, wrong 0, errors 0 ()
+ok
+test fx::review_long_reads_tests::review_lr_writer_returns_with_envelopes ... sealed runs: database fx-rlr-e1-back: renewal of the reader's state failed: database fx-rlr-e1-back: our manifest 1 has E_env Some(1661), the database's marker None
+sealed runs: database fx-rlr-e1-back: renewal of the reader's state failed: database fx-rlr-e1-back: our manifest 2 has E_env Some(1661), the database's marker None
+sealed runs: database fx-rlr-e1-back: renewal of the reader's state failed: database fx-rlr-e1-back: our manifest 2 has E_env Some(1661), the database's marker None
+sealed runs: database fx-rlr-e1-back: renewal of the reader's state failed: database fx-rlr-e1-back: our manifest 2 has E_env Some(1661), the database's marker None
+sealed runs: database fx-rlr-e1-back: renewal of the reader's state failed: database fx-rlr-e1-back: our manifest 2 has E_env Some(1661), the database's marker None
+sealed runs: database fx-rlr-e1-back: renewal of the reader's state failed: database fx-rlr-e1-back: our manifest 2 has E_env Some(1661), the database's marker None
+sealed runs: database fx-rlr-e1-back: renewal of the reader's state failed: database fx-rlr-e1-back: our manifest 2 has E_env Some(1661), the database's marker None
+sealed runs: database fx-rlr-e1-back: renewal of the reader's state failed: database fx-rlr-e1-back: our manifest 3 has E_env Some(1661), the database's marker None
+sealed runs: database fx-rlr-e1-back: renewal of the reader's state failed: database fx-rlr-e1-back: our manifest 3 has E_env Some(1661), the database's marker None
+sealed runs: database fx-rlr-e1-back: renewal of the reader's state failed: database fx-rlr-e1-back: our manifest 3 has E_env Some(1661), the database's marker None
+sealed runs: database fx-rlr-e1-back: renewal of the reader's state failed: database fx-rlr-e1-back: our manifest 3 has E_env Some(1661), the database's marker None
+sealed runs: database fx-rlr-e1-back: renewal of the reader's state failed: database fx-rlr-e1-back: our manifest 3 has E_env Some(1661), the database's marker None
+sealed runs: database fx-rlr-e1-back: renewal of the reader's state failed: database fx-rlr-e1-back: our manifest 3 has E_env Some(1661), the database's marker None
+review E1 writer returns: 708 steps, 1 passes, 1664 stable rows, 0 rows written after E1 seen, wrong 0, refused 603, other errors 0 (database fx-rlr-e1-back: the reader's state is older than T_pin and its renewal failed: database fx-rlr-e1-back: our manifest 3 has E_env Some(1661), the database's marker None; retry); writer: 502 rows, 45 versions, E_env Some(1661); renewals 188
+ok
+
+failures:
+
+failures:
+    fx::review_long_reads_tests::review_lr_shortest_legal_grace
+
+test result: FAILED. 9 passed; 1 failed; 0 ignored; 0 measured; 143 filtered out; finished in 93.26s
+
+error: test failed, to rerun pass `-p tenant-bench --lib`

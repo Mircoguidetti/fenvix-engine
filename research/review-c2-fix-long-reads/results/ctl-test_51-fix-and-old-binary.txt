@@ -1,0 +1,6 @@
+three finds of 100000 ids on a reader: 0.85 s, 0.54 s, 0.54 s (T_pin 200 ms)
+1 passed in 14.29s
+--- old binary (3e4fdcc):
+E   pymongo.errors.OperationFailure: database d: our manifest was last read 214.330702ms ago, more than T_pin; retry, full error: {'ok': 0.0, 'errmsg': 'database d: our manifest was last read 214.330702ms ago, more than T_pin; retry', 'code': 134, 'codeName': 'SealedRunsRetry', 'errorLabels': ['TransientTransactionError', 'RetryableWriteError']}
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: database d: our manifest was last read 214.330702ms ago, more than T_pin; retry, full error: {'ok': 0.0, 'errmsg': 'database d: our manifest was last read 214.330702ms ago, more than T_pin; retry', 'code': 134, 'codeName': 'SealedRunsRetry', 'errorLabels': ['TransientTransactionError', 'RetryableWriteError']}
+1 failed in 16.30s

@@ -1,0 +1,16 @@
+.FF                                                                      [100%]
+=================================== FAILURES ===================================
+______________________________ test_costs[100000] ______________________________
+test_08_costs.py:143: in test_costs
+    assert R["fork_clone"]["get_bytes"] < 100_000 and R["fork_clone"]["put_bytes"] < 100_000, R["fork_clone"]
+E   AssertionError: {'get_tier': 166, 'put_tier': 33, 'lists': 13, 'copies': 0, ...}
+E   assert (5000250 < 100000)
+_________________ test_clone_cost_does_not_grow_with_the_data __________________
+test_08_costs.py:151: in test_clone_cost_does_not_grow_with_the_data
+    assert b["get_tier"] <= a["get_tier"] * 1.5 + 5 and b["put_tier"] <= a["put_tier"] * 1.5 + 5, (a, b)
+E   AssertionError: ({'get_tier': 99, 'put_tier': 33, 'lists': 13, 'copies': 0, ...}, {'get_tier': 166, 'put_tier': 33, 'lists': 13, 'copies': 0, ...})
+E   assert (166 <= ((99 * 1.5) + 5))
+=========================== short test summary info ============================
+FAILED test_08_costs.py::test_costs[100000] - AssertionError: {'get_tier': 16...
+FAILED test_08_costs.py::test_clone_cost_does_not_grow_with_the_data - Assert...
+2 failed, 1 passed in 370.48s (0:06:10)

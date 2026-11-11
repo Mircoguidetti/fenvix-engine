@@ -1,0 +1,96 @@
+.F                                                                       [100%]
+=================================== FAILURES ===================================
+___________ test_erase_does_not_delete_while_the_close_is_unfinished ___________
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/pool.py:455: in receive_message
+    return receive_message(self, request_id, self.max_message_size)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/network_layer.py:748: in receive_message
+    length, _, response_to, op_code = _UNPACK_HEADER(receive_data(conn, 16, deadline))
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/network_layer.py:331: in receive_data
+    chunk_length = conn.conn.recv_into(mv[bytes_read:])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/network_layer.py:443: in recv_into
+    return self.conn.recv_into(buffer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+test_31_lease_lost_store_down.py:135: in test_erase_does_not_delete_while_the_close_is_unfinished
+    relaxed.insert_many([{"_id": i, "f": "y" * 100} for i in range(200, 400)])   # acknowledged from memory
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/collection.py:959: in insert_many
+    blk.execute(write_concern, session, _Op.INSERT)
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/bulk.py:449: in execute
+    return self.execute_command(generator, write_concern, session, operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/bulk.py:310: in execute_command
+    _ = client._retryable_write(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2154: in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2024: in _retry_with_session
+    return self._retry_internal(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+                                             ^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:3160: in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/bulk.py:300: in retryable_bulk
+    self._execute_command(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/bulk.py:244: in _execute_command
+    result, to_send = self._execute_batch(bwc, cmd, ops, client)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/bulk.py:168: in _execute_batch
+    result = self.write_command(bwc, cmd, request_id, msg, to_send, client)  # type: ignore[arg-type]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/bulk.py:86: in write_command
+    result_docs, _, _ = run_bulk_write_command(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:269: in run_bulk_write_command
+    return _run_command(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:192: in _run_command
+    reply = conn.receive_message(request_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/pool.py:458: in receive_message
+    self._raise_connection_failure(error)
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/pool.py:574: in _raise_connection_failure
+    _raise_connection_failure(self.address, error, timeout_details=details)
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/pool_shared.py:167: in _raise_connection_failure
+    raise NetworkTimeout(msg) from error
+E   pymongo.errors.NetworkTimeout: 127.0.0.1:31957: timed out (configured timeouts: socketTimeoutMS: 120000.0ms, connectTimeoutMS: 20000.0ms)
+----------------------------- Captured stderr call -----------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 56832)
+Traceback (most recent call last):
+  File "/root/.fenvix-judge/env/lib/python3.12/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/root/.fenvix-judge/env/lib/python3.12/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/root/.fenvix-judge/env/lib/python3.12/socketserver.py", line 766, in __init__
+    self.handle()
+  File "/root/.fenvix-judge/env/lib/python3.12/http/server.py", line 442, in handle
+    self.handle_one_request()
+  File "/root/.fenvix-judge/env/lib/python3.12/http/server.py", line 408, in handle_one_request
+    self.raw_requestline = self.rfile.readline(65537)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+----------------------------------------
+=========================== short test summary info ============================
+FAILED test_31_lease_lost_store_down.py::test_erase_does_not_delete_while_the_close_is_unfinished
+1 failed, 1 passed in 218.37s (0:03:38)
