@@ -1,5 +1,6 @@
 """Operation 2: fork (instant copy as a new database)."""
 import threading
+import os
 import time
 
 import pytest
@@ -215,11 +216,22 @@ def test_fork_then_compaction_and_gc_keep_the_fork_readable(env):
     c["cg"].command("tenantAdmin", close=True)
     assert srv.admin.post("/v1/databases/cg/fork", {"target": "cg_f"})[0] == 201
     base = c.admin.command("tenantStats")["maintenance"]
+
+    def jobs():
+        # c2-fix-clone-uploads: with sealed runs and a compactor, the source is compacted by its compactor (absorptions,
+        # tier merges, reseals and SlateDB's gated compaction under it); the old pass does not run on it any more
+        x = c.admin.command("serverStatus")["fenvix"]["compactor"]
+        return x["absorbs"] + x["merges"] + x["reseals"]
+    j0 = jobs()
+    compactor = c.admin.command("serverStatus")["fenvix"]["compactor"]["enabled"] and os.environ.get("FENVIX_SEALED_RUNS", "off") != "off"
     for s in range(7):
         fill(c, "cg", "c", 200, start=10000 + s * 200)
+        if compactor:
+            # the compactor works while the database is open (it absorbs the L0 SSTs of the earlier sessions' closes)
+            time.sleep(2)
         c["cg"].command("tenantAdmin", close=True)
         time.sleep(0.3)
-    wait_until(lambda: c.admin.command("tenantStats")["maintenance"]["compactRuns"] > base["compactRuns"], 60, what="compaction of the source")
+    wait_until(lambda: c.admin.command("tenantStats")["maintenance"]["compactRuns"] > base["compactRuns"] or jobs() > j0, 60, what="compaction of the source")
     objs_after_compaction = {k for k, _ in list_prefix(bucket, "tenants/cg/")}
     # the GC pass of this database runs 30 s after its last write session (other databases' passes do not count)
     wait_until(lambda: objs_after_compaction - {k for k, _ in list_prefix(bucket, "tenants/cg/")}, 150, every=2, what="garbage collection of the source")

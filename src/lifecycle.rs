@@ -2154,7 +2154,15 @@ impl Tenant {
     }
 
     async fn upgrade_inner(&mut self) -> Result<()> {
-        if self.lc.l0_guard && self.l0_at_wake >= L0_GUARD {
+        // c2-fix-clone-uploads: the old compaction pass does not run on a database that has a compactor (one with a
+        // version of our manifest, compactors on): waiting for it waited for nothing, and under a caller holding the
+        // maintenance lock (a restore) until the 30 s timeout failed the wake. Its compactor, started at the first
+        // write, compacts L0.
+        let pass_runs = !(self.lc.l0_guard
+            && self.l0_at_wake >= L0_GUARD
+            && crate::fx::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed)
+            && !crate::fx::manifest::list_versions(&self.lc.store, &self.id).await?.is_empty());
+        if self.lc.l0_guard && self.l0_at_wake >= L0_GUARD && pass_runs {
             if let Some(q) = &self.lc.queue {
                 let started = Instant::now();
                 for _ in 0..3 {
@@ -2662,14 +2670,24 @@ pub(crate) async fn compact_tenant_pass_with(
         // compaction with the drop off); two compactors on one database would fence each other
         return Ok(None);
     }
-    if crate::fx::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed) && !crate::fx::manifest::list_versions(raw, id).await?.is_empty() {
-        // c2-fix-clone-uploads: with compactors on, a database with a version of our manifest is compacted by its own
-        // compactor only, also while it is closed or open without one (it starts at the first write). This pass's
-        // scheduler is not gated on absorption: at a close it folded the last memtable flush (never absorbed: the
-        // compactor stops before that flush) into a sorted run; after the next open the absorptions moved X_d past those
-        // rows, and the merged reader, which ignores SlateDB rows at or below X_d, returned their older values
-        // (acknowledged updates lost to reads, MEASURED). It also made a clone of a closed source read whole SSTs.
-        return Ok(None);
+    // c2-fix-clone-uploads: with compactors on, a database with a version of our manifest is compacted by its own
+    // compactor while it is open, and by this pass only over what is absorbed. Ungated, this pass folded a close's last
+    // memtable flush (never absorbed: the compactor had stopped) into a sorted run; after the next open the absorptions
+    // moved X_d past those rows, and the merged reader, which ignores SlateDB rows at or below X_d, returned their older
+    // values (acknowledged updates lost to reads: 37,333 in ctl test_51 on integration-3). So: the pass runs only when
+    // every L0 row is at or below X_d (SlateDB's last L0 seq), and takes only the L0 SSTs present now
+    // (`tiered::OnlyAbsorbed`). Not running at all left closed databases uncompacted, and their scans paid every L0 SST
+    // (a restore read 648 MB at 100,000 documents, MEASURED).
+    let mut gate: Option<Arc<std::collections::HashSet<ulid::Ulid>>> = None;
+    if crate::fx::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed) {
+        if let Some(v) = crate::fx::manifest::load_newest(raw, id).await? {
+            let admin = Admin::builder(tenant_path(id), Arc::clone(raw)).build();
+            let Some(m) = admin.read_manifest(None).await? else { return Ok(None) };
+            if m.last_l0_seq() > v.x_d || crate::tiered::scheduler().is_none() {
+                return Ok(None);
+            }
+            gate = Some(Arc::new(m.l0().iter().map(|s| s.id).collect()));
+        }
     }
     let l0_before = l0_count(raw, id).await?;
     if l0_before < L0_COMPACT_THRESHOLD {
@@ -2715,9 +2733,10 @@ pub(crate) async fn compact_tenant_pass_with(
         Some(p) => cb.with_filter_policies(p),
         None => cb,
     };
-    let cb = match crate::tiered::scheduler() {
-        Some(s) => cb.with_scheduler_supplier(s),
-        None => cb,
+    let cb = match (crate::tiered::scheduler(), gate) {
+        (Some(s), Some(allowed)) => cb.with_scheduler_supplier(Arc::new(crate::tiered::OnlyAbsorbed { inner: s, allowed })),
+        (Some(s), None) => cb.with_scheduler_supplier(s),
+        (None, _) => cb,
     };
     let compactor = Arc::new(cb.build());
     let worker = Arc::new(crate::tiered::worker_builder(tenant_path(id).into(), crate::counting::owned_background(&store, id), filter_policies()).build().await?);

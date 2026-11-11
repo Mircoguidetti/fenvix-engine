@@ -451,3 +451,46 @@ mod tests {
         db.close().await.unwrap();
     }
 }
+
+/// c2-fix-clone-uploads: the scheduler of a compaction pass on a database that has a compactor. It proposes (and
+/// accepts) only compactions whose L0 sources are in `allowed`: the L0 SSTs the pass found when every row in L0 was at or
+/// below X_d (absorbed into our runs). Merges of sorted runs are always allowed: a sorted run only holds rows that left
+/// L0 absorbed. An L0 SST flushed after the pass started (a writer opened meanwhile) is never taken: absorption must find
+/// it in L0, or the merged reader, which ignores SlateDB's rows at or below X_d once X_d passes them, loses them.
+pub struct OnlyAbsorbed {
+    pub inner: Arc<dyn CompactionSchedulerSupplier>,
+    pub allowed: Arc<HashSet<ulid::Ulid>>,
+}
+
+impl CompactionSchedulerSupplier for OnlyAbsorbed {
+    fn compaction_scheduler(&self, o: &CompactorOptions) -> Box<dyn CompactionScheduler + Send + Sync> {
+        Box::new(OnlyAbsorbedSched { inner: self.inner.compaction_scheduler(o), allowed: Arc::clone(&self.allowed) })
+    }
+}
+
+struct OnlyAbsorbedSched {
+    inner: Box<dyn CompactionScheduler + Send + Sync>,
+    allowed: Arc<HashSet<ulid::Ulid>>,
+}
+
+impl OnlyAbsorbedSched {
+    fn ok(&self, spec: &CompactionSpec) -> bool {
+        spec.sources().iter().all(|s| match s {
+            SourceId::SstView(id) => self.allowed.contains(id),
+            SourceId::SortedRun(_) => true,
+        })
+    }
+}
+
+impl CompactionScheduler for OnlyAbsorbedSched {
+    fn propose(&self, state: &CompactorStateView) -> Vec<CompactionSpec> {
+        self.inner.propose(state).into_iter().filter(|s| self.ok(s)).collect()
+    }
+
+    fn validate(&self, state: &CompactorStateView, spec: &CompactionSpec) -> Result<(), Error> {
+        if !self.ok(spec) {
+            return Err(Error::invalid("an L0 SST that was not absorbed when the pass started".to_string()));
+        }
+        self.inner.validate(state, spec)
+    }
+}
