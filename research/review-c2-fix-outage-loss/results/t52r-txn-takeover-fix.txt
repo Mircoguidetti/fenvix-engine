@@ -1,0 +1,6 @@
+P2 saw n=1 after its increment; commit on P1: committed; final n=1; acknowledged increments 2
+E           AssertionError: final counter 1, acknowledged increments 2 (commit committed)
+1 failed, 2 deselected in 12.53s
+P2 saw n=1 after its increment; commit on P1: committed; final n=1; acknowledged increments 2
+E           AssertionError: final counter 1, acknowledged increments 2 (commit committed)
+1 failed, 2 deselected in 12.45s

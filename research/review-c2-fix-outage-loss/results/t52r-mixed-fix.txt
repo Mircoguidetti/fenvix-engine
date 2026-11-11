@@ -1,0 +1,6 @@
+lease losses 5; reopenedWritesRefused 3; errors {'OperationFailure 1': 14, 'OperationFailure 251': 2, 'OperationFailure 134': 1}; samples ["OperationFailure 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db is closed', 'code': 1, 'codeName': 'Inte", "OperationFailure 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db is closed', 'code': 1, 'codeName': 'Inte", "OperationFailure 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db is closed', 'code': 1, 'codeName': 'Inte"]
+now: acknowledged inserts 168321, scanned 168321, by _id index 168321, by k index 168321
+now: OK
+after a restart: acknowledged inserts 168321, scanned 168321, by _id index 168321, by k index 168321
+after a restart: OK
+1 passed, 2 deselected in 85.77s (0:01:25)
