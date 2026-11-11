@@ -388,6 +388,18 @@ pub struct Compactor {
     /// version abandons: it may have read rows of an erased customer (live before the erasure's deletes were absorbed)
     /// and would put them back into a sealed run after the scrub removed their delete envelopes.
     last_scrub: AtomicU64,
+    /// perf-erase: scrubs running now; while above 0 the planner starts no merge, reseal or erasure job (they would make
+    /// the scrub abandon at its commit, again and again on a busy database). Absorptions and GC go on.
+    scrubs: AtomicU64,
+}
+
+/// While alive, the compactor starts no rewrite of runs (`Compactor::pause_rewrites`).
+pub struct RewritePause(Arc<Compactor>);
+
+impl Drop for RewritePause {
+    fn drop(&mut self) {
+        self.0.scrubs.fetch_sub(1, Relaxed);
+    }
 }
 
 /// One row of a run or of an absorption.
@@ -441,6 +453,7 @@ impl Compactor {
             refreshed_jobs: AtomicU64::new(0),
             absorb_lock: tokio::sync::Mutex::new(()),
             last_scrub: AtomicU64::new(0),
+            scrubs: AtomicU64::new(0),
         });
         t.fx_attach(Arc::clone(&sh));
         ACTIVE.lock().unwrap().insert(c.id().to_string());
@@ -1111,6 +1124,12 @@ impl Compactor {
     // ------------------------------------------------------------------------------------------------------------
     // Erasures
 
+    /// perf-erase: no merge, reseal or erasure job starts while the returned guard lives (a scrub runs).
+    pub fn pause_rewrites(self: &Arc<Self>) -> RewritePause {
+        self.scrubs.fetch_add(1, Relaxed);
+        RewritePause(Arc::clone(self))
+    }
+
     /// Tests only: a reseal of group `gi` planned on version `v0` (an older version than the newest: a reseal that was
     /// already running when something else committed).
     #[cfg(test)]
@@ -1231,7 +1250,8 @@ impl Compactor {
                 n.map(|_| ())
             });
         }
-        if !r.erase && self.sh.erasures.lock().unwrap().iter().any(|e| e.done.is_none() && e.seq <= v.x_d) {
+        let scrubbing = self.scrubs.load(Relaxed) > 0;
+        if !r.erase && !scrubbing && self.sh.erasures.lock().unwrap().iter().any(|e| e.done.is_none() && e.seq <= v.x_d) {
             r.erase = true;
             self.spawn(Prio::Erase, |c| async move {
                 let x = c.erase_once().await;
@@ -1239,7 +1259,7 @@ impl Compactor {
                 x.map(|_| ())
             });
         }
-        if !r.merge && self.plan_merge(&v).is_some() {
+        if !r.merge && !scrubbing && self.plan_merge(&v).is_some() {
             r.merge = true;
             self.spawn(Prio::Merge, |c| async move {
                 let x = c.merge_once().await;
@@ -1249,7 +1269,7 @@ impl Compactor {
         }
         let due = self.plan_reseals(&v);
         let free = due.iter().filter(|(i, _)| !r.groups.contains(&v.groups[*i].id)).count();
-        if r.reseals < self.knobs.reseal_parallel && free > 0 {
+        if r.reseals < self.knobs.reseal_parallel && free > 0 && !scrubbing {
             r.reseals += 1;
             self.spawn(Prio::Reseal, |c| async move {
                 let x = c.reseal_once(None).await;

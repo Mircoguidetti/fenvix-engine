@@ -219,3 +219,71 @@ async fn a_reseal_planned_before_a_scrub_cannot_bring_erased_rows_back() {
     assert!(scrubbed && resealed && got.is_some(), "control (reseal first, no guard): the test must see the erased document come back");
     hold::HOLD_LIFE_MS.store(120_000, Relaxed);
 }
+
+/// A scrub in parts (a budget that stops it after each run) ends like a whole one: every part is committed, the next
+/// starts from the version just published, and at the end no run of the newest version holds the erased customers,
+/// while their neighbours and the document written after its own erasure are all there.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_scrub_in_parts_ends_like_a_whole_one() {
+    let _s = SERIAL.lock().await;
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = "fx-pe-parts";
+    let (mut t, c) = setup(&store, id).await;
+    // two customers in different groups, in sealed runs and in delta runs
+    let erased = [7usize, 30];
+    let mut ops = Vec::new();
+    for cu in erased {
+        for i in 20..30 {
+            ops.push(Op::Put(ckey(cu, i), vec![b'n'; 60]));
+        }
+    }
+    t.apply(ops).await.unwrap();
+    flush_absorb(&mut t, &c).await;
+    let mut items = Vec::new();
+    for cu in erased {
+        t.apply((0..30).map(|i| Op::Delete(ckey(cu, i))).collect()).await.unwrap();
+        let e = t.fx_erasure_register("msgs", format!("c{cu:02}").as_bytes(), &targets(cu), None).await.unwrap().unwrap();
+        items.push((targets(cu), e.s_e));
+    }
+    t.apply(vec![Op::Put(ckey(7, 99), b"after".to_vec())]).await.unwrap();
+    flush_absorb(&mut t, &c).await;
+    let refs: Vec<(&Targets, u64)> = items.iter().map(|(t, s)| (t, *s)).collect();
+    let batch = Batch::new(&refs);
+    let mut opts = erase::ScrubOpts::default();
+    opts.budget = Some(Duration::from_nanos(1));
+    let mut parts = 0;
+    loop {
+        let base = c.current().await;
+        let v = view::View::new(Arc::clone(&store), base.clone(), None).unwrap();
+        let s = erase::scrub_version(&store, id, &v, base.version + 1, base.writer_epoch, &batch, &opts).await.unwrap();
+        if s.version.is_some() {
+            assert!(c.commit_scrub(&base, &s, batch.max_s_e).await.unwrap().is_some(), "a part was refused with nothing else running");
+        }
+        parts += 1;
+        if s.complete {
+            break;
+        }
+        assert!(parts < 200);
+    }
+    assert!(parts >= 3, "the budget should have cut the scrub into parts ({parts})");
+    t.fx_sync();
+    let newest = c.current().await;
+    for l in newest.groups.iter().filter_map(|g| g.sealed.as_ref()).chain(newest.delta.iter()) {
+        for r in compactor::run_rows(&store, l).await.unwrap() {
+            assert!(!(batch.hit(&r.key, r.seq)), "a row of an erased customer is left in run {}", l.path);
+        }
+    }
+    for cu in erased {
+        for i in 0..30 {
+            assert!(t.get(ckey(cu, i)).await.unwrap().is_none());
+        }
+    }
+    assert_eq!(t.get(ckey(7, 99)).await.unwrap().as_deref(), Some(&b"after"[..]));
+    for cu in [5usize, 6, 8, 29, 31, 39] {
+        for i in 0..20 {
+            assert!(t.get(ckey(cu, i)).await.unwrap().is_some(), "a neighbour's document is gone");
+        }
+    }
+    c.stop().await;
+    hold::HOLD_LIFE_MS.store(120_000, Relaxed);
+}

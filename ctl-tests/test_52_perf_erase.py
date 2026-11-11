@@ -7,6 +7,7 @@ later, in batches (one scrub serves many erasures), and still ends with no objec
 - With `--sealed-erasure-batch-max 3`, the third erasure makes the batch due at once: the three are scrubbed together.
 - The erasure records never show the customer's keys (the targets travel in the record until the scrub).
 """
+import os
 import time
 
 import pytest
@@ -97,5 +98,39 @@ def test_a_full_batch_runs_without_waiting_for_the_window():
         for u in ("u1", "u2", "u3"):
             unreadable(c, db, u)
         assert c[db]["msgs"].count_documents({}) == 120
+    finally:
+        s.term()
+
+
+def test_an_erasure_recorded_while_a_pass_runs_is_not_forgotten():
+    """The pass pauses after it listed the records; a second erasure is recorded meanwhile. The agent must still run
+    it, without waiting for an unrelated pass (here the retire pass, one GC grace of 60 s later). Control:
+    FENVIX_CONTROL_FORGET_NOTED=1 (the agent's count reset to the pass's listing) leaves it pending for the grace."""
+    control = os.environ.get("FENVIX_CONTROL_FORGET_NOTED") == "1"
+    bucket = make_bucket("perfer3")
+    env = {"CTL_FAILPOINT": "erase.after_prepare", "CTL_FAILPOINT_PAUSE_MS": "4000"}
+    if control:
+        env["FENVIX_CONTROL_FORGET_NOTED"] = "1"
+    extra = [x for x in BASE]
+    k = extra.index("--sealed-gc-grace-ms")
+    extra[k + 1] = "60000"
+    s = Server(bucket, "perfer3", idle=300, extra=extra + ["--sealed-erasure-batch-ms", "0"], env=env).start()
+    try:
+        c = s.client()
+        db = "pe3"
+        fill(c, db, ("u1", "u2"))
+        c[db]["msgs"].delete_many({"userId": "u1"})
+        wait_until(lambda: "FAILPOINT erase.after_prepare reached" in s.log_text(), 20, what="the pass of u1's erasure")
+        c[db]["msgs"].delete_many({"userId": "u2"})
+        unreadable(c, db, "u2")
+        try:
+            wait_until(lambda: (x := erasures(s, db)) and len(x) == 2 and all(e["state"] == "scrubbed" for e in x) and x, timeout=40, what="both erasures scrubbed")
+            ok = True
+        except AssertionError:
+            ok = False
+        if control:
+            assert not ok, "control: the erasure recorded during the pass should have stayed pending until the retire pass"
+        else:
+            assert ok, "the erasure recorded while a pass ran stayed pending"
     finally:
         s.term()

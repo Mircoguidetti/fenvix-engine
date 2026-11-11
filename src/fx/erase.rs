@@ -445,12 +445,16 @@ pub async fn load_targets(store: &Arc<dyn ObjectStore>, id: &str, eid: &str) -> 
 pub struct ScrubOpts {
     pub sealed: RunOptions,
     pub delta: RunOptions,
+    /// perf-erase: start no new run rewrite once this much time has passed (the scrub is then partial: `complete`
+    /// false, and the caller commits what it did and scrubs again). The runs it wrote must be published well within the
+    /// GC grace, which counts from their write (`gc.rs`). None: no limit.
+    pub budget: Option<std::time::Duration>,
 }
 
 impl Default for ScrubOpts {
     fn default() -> Self {
         let b = super::build::BuildOpts::default();
-        ScrubOpts { sealed: b.sealed, delta: b.delta }
+        ScrubOpts { sealed: b.sealed, delta: b.delta, budget: None }
     }
 }
 
@@ -465,8 +469,11 @@ pub struct Scrub {
     /// and (old delta run, new one); None when every row was a target.
     pub sealed: Vec<(u32, String, Option<RunLine>)>,
     pub delta: Vec<(String, Option<RunLine>)>,
-    /// Every run of the version the scrub read (rewritten or found clean).
+    /// Every run of the version the scrub started from (rewritten, found clean, or left for the next scrub when it
+    /// stopped at its budget): a commit on a newer version checks the runs that are not in it.
     pub examined: BTreeSet<String>,
+    /// Whether every run that may hold a target was rewritten or found clean (false: stopped at the budget).
+    pub complete: bool,
 }
 
 /// Whether the blocks of run `h` that may hold a target of the batch hold one (a row `hit` names that is not a message
@@ -601,9 +608,23 @@ pub async fn scrub_version(store: &Arc<dyn ObjectStore>, id: &str, cur: &View, n
     }
     let mut v = cur.meta.clone();
     let tag = format!("{next:010}");
+    let t_start = std::time::Instant::now();
+    // a part stops only after it rewrote a run (runs found clean by the probe are cheap and do not count), so every
+    // part moves on, however short the budget
+    let over = |out: &mut Scrub| {
+        let o = !out.retired.is_empty() && opts.budget.is_some_and(|b| t_start.elapsed() >= b);
+        if o {
+            out.complete = false;
+        }
+        o
+    };
+    out.complete = true;
     for (gi, g) in cur.groups.iter().enumerate() {
         let Some(h) = &g.sealed else { continue };
         if h.line.min_seq > s_e || !t.meets(&h.first, &h.last) {
+            continue;
+        }
+        if over(&mut out) {
             continue;
         }
         let path = manifest::run_path(id, &format!("g{}e{tag}", g.id), g.x_g, epoch);
@@ -621,7 +642,7 @@ pub async fn scrub_version(store: &Arc<dyn ObjectStore>, id: &str, cur: &View, n
     if !ctl(&CONTROL_NO_DELTA_SCRUB) {
         let mut delta = Vec::with_capacity(cur.delta.len());
         for h in &cur.delta {
-            if h.line.min_seq > s_e || !t.meets(&h.first, &h.last) {
+            if h.line.min_seq > s_e || !t.meets(&h.first, &h.last) || over(&mut out) {
                 delta.push(h.line.clone());
                 continue;
             }
@@ -927,14 +948,24 @@ pub fn boundaries_on(v: &Version, t: &Targets) -> u64 {
     v.groups.iter().filter_map(|g| manifest::unhex(&g.lo).ok()).filter(|k| !k.is_empty() && t.hit(k)).count() as u64
 }
 
+/// perf-erase: add what a scrub (a partial one, or the last of several) replaced to the erasure's record: its runs
+/// are retired like a whole scrub's. The caller saves the record before anything else can lose track of them.
+pub fn record_partial(e: &mut Erasure, s: &Scrub) {
+    e.rows_erased += s.rows;
+    e.runs_rewritten += s.runs;
+    for p in &s.retired {
+        if !e.retired.iter().any(|r| &r.path == p) {
+            e.retired.push(Retired { path: p.clone(), deleted_ms: None, released_ms: None, kept_by: vec!["grace".into()] });
+        }
+    }
+}
+
 /// After the scrub: the record of what it did (the targets object goes, its keys are the customer's data).
 pub async fn record_scrub(store: &Arc<dyn ObjectStore>, id: &str, e: &mut Erasure, s: &Scrub, version: u64, t: &Targets, newest: &Version) -> Result<()> {
     e.state = "scrubbed".into();
     e.scrubbed_version = Some(version);
     e.scrubbed_ms = Some(now_ms());
-    e.rows_erased = s.rows;
-    e.runs_rewritten = s.runs;
-    e.retired = s.retired.iter().map(|p| Retired { path: p.clone(), deleted_ms: None, released_ms: None, kept_by: vec!["grace".into()] }).collect();
+    record_partial(e, s);
     e.boundaries_on_targets = boundaries_on(newest, t);
     let inline = e.targets.take().is_some();
     save(store, id, e).await?;
