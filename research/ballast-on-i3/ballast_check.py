@@ -70,7 +70,9 @@ def same(what, x, y):
 
 
 def raw(cur):
-    return [bytes(d.raw) for d in cur]
+    # an explicit batch size: our server's getMore batches are not capped at 16 MB like mongod's, and one over
+    # 48 MB breaks the wire (engine finding, ballast-on-i3 report); the bytes compared are the same
+    return [bytes(d.raw) for d in cur.batch_size(1000)]
 
 
 for d in plan["databases"]:

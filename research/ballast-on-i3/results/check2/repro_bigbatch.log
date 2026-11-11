@@ -1,0 +1,3 @@
+customer cli-000100 messages 29875
+mongodb://127.0.0.1:27018 read 29875 documents
+mongodb://127.0.0.1:27017 ERROR ProtocolError Message length (48845472) is larger than server max message size (48000000)
