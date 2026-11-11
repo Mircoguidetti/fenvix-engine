@@ -89,6 +89,8 @@ echo "scan: no key, token, private key or internal name found"
   echo "built_utc: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "run_modes: $MODE"
   echo "rustc: $(rustc --version)"
+  echo "cargo: $(cargo --version)"
+  echo "build: cargo build --release -p mongo-server (repository root); cargo build --release --bin pq (proto/quaderno); then strip both"
   echo "os: $(. /etc/os-release && echo "$PRETTY_NAME"), glibc $(ldd --version | head -1 | awk '{print $NF}')"
   echo "tarball:"
   (cd "$WORK" && sha256sum bundle.tar.gz)
