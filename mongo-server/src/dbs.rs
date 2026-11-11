@@ -474,10 +474,9 @@ impl Dbs {
     }
 }
 
-/// perf-erase: what the first step of an erasure batch hands to the rest of the pass (`ctl/erase.rs`): every erasure of
-/// the database, the version its tenant serves, and its compactor.
+/// perf-erase: what the first step of an erasure batch hands to the rest of the pass (`ctl/erase.rs`): the version the
+/// database's tenant serves, and its compactor.
 pub struct ErasePrep {
-    pub all: Vec<tenant_bench::fx::erase::Erasure>,
     pub base: Option<tenant_bench::fx::manifest::Version>,
     pub fxc: Option<Arc<tenant_bench::fx::compactor::Compactor>>,
 }
@@ -859,13 +858,13 @@ impl Entry {
 
     /// perf-erase: the short first step of an erasure batch (`ctl/erase.rs`), under this exclusive lock. None when the
     /// database does not exist.
-    pub async fn fx_erase_prepare(&mut self) -> Result<Option<ErasePrep>> {
+    pub async fn fx_erase_prepare(&mut self, need: u64) -> Result<Option<ErasePrep>> {
         if !self.ensure_open().await? {
             return Ok(None);
         }
         self.touch();
-        let (all, base) = self.tenant.as_mut().unwrap().fx_erase_prepare().await?;
-        Ok(Some(ErasePrep { all, base, fxc: self.fxc.clone() }))
+        let base = self.tenant.as_mut().unwrap().fx_erase_prepare(need).await?;
+        Ok(Some(ErasePrep { base, fxc: self.fxc.clone() }))
     }
 
     /// perf-erase: install the compactor's newest version in the tenant now (after a scrub, so reads use it at once and

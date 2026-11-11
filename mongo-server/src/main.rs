@@ -534,6 +534,10 @@ struct Args {
     /// perf-erase: ... or when this many erasures of the database are pending.
     #[arg(long, default_value_t = 1_000)]
     sealed_erasure_batch_max: u64,
+    /// perf-erase: how long the compactor keeps old versions of our manifest (restore points) and their runs, in seconds
+    /// (7 days, as before). An erasure is done once the versions older than its scrub are gone.
+    #[arg(long, default_value_t = 7 * 86400)]
+    sealed_version_retention_secs: u64,
     /// Timing of our manifest (fx; review round 2 of step 0, F6), in milliseconds, checked at startup: a manifest PUT
     /// with no answer within the PUT timeout counts as timed out (a fence follows); it must be shorter than the lease
     /// minus its margin, and the remote lease and the GC grace must each exceed the hold life plus it.
@@ -876,6 +880,7 @@ async fn run() -> Result<()> {
         ctl::erase::POLL_MS.store(args.sealed_erasure_poll_ms, Relaxed);
         ctl::erase::BATCH_MS.store(args.sealed_erasure_batch_ms, Relaxed);
         ctl::erase::BATCH_MAX.store(args.sealed_erasure_batch_max.max(1), Relaxed);
+        tenant_bench::fx::compactor::VERSION_RETENTION_SECS.store(args.sealed_version_retention_secs, Relaxed);
     }
     // negative controls of the step 7b fix round, tests only
     let ctl_env = |k: &str| std::env::var(k).map(|v| v == "1").unwrap_or(false);

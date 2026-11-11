@@ -281,8 +281,10 @@ fn remember(db: &str, all: &[tenant_bench::fx::erase::Erasure], waiting: bool, n
         .filter(|e| e.done_ms.is_none() && e.state != "pending")
         .map(|e| {
             let g = e.scrubbed_ms.unwrap_or(now) + grace;
-            // kept by something else than the grace (a restore point, the served version): look again later
-            if g <= now { now + grace.max(POLL_MS.load(ord())) } else { g }
+            // kept by something else than the grace (the restore window, a restore point, the served version): look
+            // again later, at most hourly
+            let window = tenant_bench::fx::compactor::VERSION_RETENTION_SECS.load(ord()) * 1000 / 4;
+            if g <= now { now + grace.max(window.min(3_600_000)) } else { g }
         })
         .min();
     let mut m = DUE.lock().unwrap();
@@ -332,22 +334,20 @@ pub async fn run_pass(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Vec<tenant_bench::f
     // partial scrub (it stopped at its time budget) is committed and the next part follows at once
     let (mut abandons, mut parts) = (0u32, 0u32);
     for attempt in 0..1_000u32 {
-        let t_l = std::time::Instant::now();
-        let prep = {
-            let mut g = ctl.dbs.lock(db).await;
-            g.fx_erase_prepare().await?
-        };
-        lock_ms += t_l.elapsed().as_millis() as u64;
-        let Some(p) = prep else { return Ok(Vec::new()) };
-        super::failpoint("erase.after_prepare").await;
-        all = p.all;
-        if all.iter().all(|e| e.done_ms.is_some()) {
-            break;
-        }
+        // the records, read without the database's lock (one GET each, in parallel)
+        all = erase::list(&ctl.store, db).await?;
         let need = all.iter().filter(|e| e.state == "pending").map(|e| e.s_e).max().unwrap_or(0);
         if need == 0 {
             break;
         }
+        let t_l = std::time::Instant::now();
+        let prep = {
+            let mut g = ctl.dbs.lock(db).await;
+            g.fx_erase_prepare(need).await?
+        };
+        lock_ms += t_l.elapsed().as_millis() as u64;
+        let Some(p) = prep else { return Ok(Vec::new()) };
+        super::failpoint("erase.after_prepare").await;
         // the base version: the compactor's newest once its X_d reaches the pending erasures (waited without the lock)
         let base = match &p.fxc {
             Some(fxc) => {
@@ -457,7 +457,9 @@ pub async fn run_pass(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Vec<tenant_bench::f
             }
         }
     }
+    // done: the record goes to the archive (passes no longer read it) and its index entry goes
     for e in all.iter().filter(|e| e.done_ms.is_some()) {
+        erase::archive(&ctl.store, db, e).await?;
         rec::delete(&ctl.store, &index_path(db, &e.id)).await?;
     }
     remember(db, &all, waiting, noted0, since_ms);
@@ -470,7 +472,7 @@ pub async fn run_pass(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Vec<tenant_bench::f
 /// `GET /v1/databases/{db}/erasures`: every erasure of the database with its state, deadline and whether it is late.
 pub async fn status(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
     meta::check_name(db)?;
-    let all = tenant_bench::fx::erase::list(&ctl.store, db).await?;
+    let all = tenant_bench::fx::erase::list_all(&ctl.store, db).await?;
     let now = now_ms() as u64;
     Ok(json!({ "database": db, "erasures": all.iter().map(|e| e.to_json()).collect::<Vec<_>>(), "overdue": all.iter().filter(|e| e.overdue(now)).count() }))
 }

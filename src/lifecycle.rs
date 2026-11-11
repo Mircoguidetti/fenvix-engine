@@ -2020,22 +2020,18 @@ impl Tenant {
         Ok(all)
     }
 
-    /// perf-erase: the short first step of an erasure batch, under the exclusive lock. Lists the database's erasures and,
-    /// when some are pending above X_d, makes X_d move up to them: with a compactor, flushes the memtable and asks it to
-    /// absorb up to the highest S_e (the batch waits for it without the lock); without one, publishes a delta run now.
-    /// Returns every erasure, and the version this tenant serves (the no-compactor batch scrubs it).
-    pub async fn fx_erase_prepare(&mut self) -> Result<(Vec<crate::fx::erase::Erasure>, Option<crate::fx::manifest::Version>)> {
-        use crate::fx::erase;
+    /// perf-erase: the short first step of an erasure batch, under the exclusive lock (the caller lists the records
+    /// before, without it). When X_d is below `need` (the highest S_e of the pending erasures), makes it move up: with a
+    /// compactor, flushes the memtable and asks it to absorb up to `need` (the batch waits for it without the lock);
+    /// without one, publishes a delta run now. Returns the version this tenant serves (the no-compactor batch scrubs it).
+    pub async fn fx_erase_prepare(&mut self, need: u64) -> Result<Option<crate::fx::manifest::Version>> {
         use std::sync::atomic::Ordering::Relaxed;
-        let store = Arc::clone(&self.lc.store);
-        let all = erase::list(&store, &self.id).await?;
-        if !crate::fx::ENABLED.load(Relaxed) || all.iter().all(|e| e.done_ms.is_some()) {
-            return Ok((all, self.fx.as_ref().map(|v| v.meta.clone())));
+        if !crate::fx::ENABLED.load(Relaxed) || need == 0 {
+            return Ok(self.fx.as_ref().map(|v| v.meta.clone()));
         }
         self.upgrade().await?;
         self.fx_settle_fence().await?;
-        let need = all.iter().filter(|e| e.state == "pending").map(|e| e.s_e).max().unwrap_or(0);
-        if need > 0 && self.fx.as_ref().is_none_or(|v| v.x_d < need) {
+        if self.fx.as_ref().is_none_or(|v| v.x_d < need) {
             if let Some(sh) = self.fx_shared.clone() {
                 sh.absorb_upto.fetch_max(need, Relaxed);
                 if let Some(Mode::Writer(db)) = self.mode.as_ref() {
@@ -2049,7 +2045,7 @@ impl Tenant {
                 self.fx_publish(&o, None).await?;
             }
         }
-        Ok((all, self.fx.as_ref().map(|v| v.meta.clone())))
+        Ok(self.fx.as_ref().map(|v| v.meta.clone()))
     }
 
     /// perf-erase, without a compactor: publish an erasure scrub made on version `base` (the batch scrubbed it without

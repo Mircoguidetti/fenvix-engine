@@ -16,7 +16,24 @@ from lib import Server, make_bucket, list_prefix, wait_until
 
 BASE = ["--sealed-runs", "2", "--sealed-reseal-every", "1000000", "--sealed-t-pin-ms", "1000", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait",
         "--sealed-erasure-poll-ms", "200", "--sealed-hold-life-ms", "1500", "--sealed-put-timeout-ms", "500", "--sealed-gc-grace-ms", "2500",
-        "--sealed-remote-lease-ms", "3000"]
+        "--sealed-remote-lease-ms", "3000",
+        # restore points (old versions and their runs) kept 5 s instead of 7 days, so "done" is reached within the test
+        "--sealed-version-retention-secs", "5"]
+PROOF = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "target", "release", "fx_erase_proof")
+
+
+def proof(srv, db, ids):
+    """Every object of the database, runs decoded (`src/bin/fx_erase_proof.rs`): how many of ours hold an erased id."""
+    import json
+    import subprocess
+    import tempfile
+    from lib import MINIO
+    with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as f:
+        f.write("\n".join(ids) + "\n")
+    env = dict(os.environ, AWS_ACCESS_KEY_ID="minioadmin", AWS_SECRET_ACCESS_KEY="minioadmin", AWS_REGION="us-east-1")
+    r = subprocess.run([PROOF, MINIO, srv.bucket_name, db, f.name], capture_output=True, text=True, env=env, timeout=300)
+    assert r.returncode == 0, r.stderr[-2000:]
+    return json.loads(r.stdout)
 
 
 def erasures(srv, db):
@@ -73,11 +90,22 @@ def test_the_delete_returns_before_the_physical_erasure_and_a_batch_serves_them_
     def done():
         st, r = srv.admin.post(f"/v1/databases/{db}/erasures/run", {})
         return all(e["done_ms"] is not None for e in r["erasures"]) and r
-    r = wait_until(done, timeout=60, what="the retire step after the grace")
+    # before the restore window ends the erasures are not done: older versions may still list the customer's rows
+    st, r0 = srv.admin.post(f"/v1/databases/{db}/erasures/run", {})
+    assert all(e["done_ms"] is None for e in r0["erasures"]), r0
+    # GC deletes the old versions and their runs once the window (5 s here) and the grace end; a write starts nothing
+    # new, it only keeps the compactor running
+    def done_after_writes():
+        c[db]["other"].insert_one({"t": time.time()})
+        return done()
+    r = wait_until(done_after_writes, timeout=240, every=3, what="the retire step after the grace and the restore window (GC runs every 60 s)")
     assert all(not e["overdue"] for e in r["erasures"])
     assert list_prefix(srv.bucket_name, f"control/erasures/{db}/") == []
     for u in ("u1", "u2"):
         unreadable(c, db, u)
+    # the proof: none of our objects (runs decoded, manifests, records) holds an erased customer's id
+    p = proof(srv, db, [f"{u}-{r}-" for u in ("u1", "u2") for r in range(3)])
+    assert p["our_objects_holding"] == 0, p
 
 
 def test_a_full_batch_runs_without_waiting_for_the_window():

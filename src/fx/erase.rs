@@ -406,17 +406,60 @@ pub async fn save(store: &Arc<dyn ObjectStore>, id: &str, e: &Erasure) -> Result
     Ok(())
 }
 
-/// Every erasure of a database, oldest first.
-pub async fn list(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Vec<Erasure>> {
-    let metas: Vec<_> = store.list(Some(&dir(id))).try_collect().await?;
+/// perf-erase: where the records of erasures that are done go (`archive`), so a pass reads only the open ones.
+pub fn done_dir(id: &str) -> Path {
+    Path::from(format!("{}/erasures-done", root(id)))
+}
+
+async fn read_records(store: &Arc<dyn ObjectStore>, dir: &Path) -> Result<Vec<Erasure>> {
+    use futures::StreamExt;
+    let metas: Vec<_> = store.list(Some(dir)).try_collect().await?;
     let mut paths: Vec<Path> = metas.into_iter().map(|m| m.location).filter(|p| p.as_ref().ends_with(".json")).collect();
     paths.sort_by(|a, b| a.as_ref().cmp(b.as_ref()));
+    // perf-erase: the GETs in parallel (in order), not one after the other
+    let got: Vec<Result<Option<Erasure>>> = futures::stream::iter(paths)
+        .map(|p| async move {
+            match store.get(&p).await {
+                Ok(g) => Ok(Some(serde_json::from_slice(&g.bytes().await?).with_context(|| format!("erasure record {p}"))?)),
+                // moved to the archive meanwhile
+                Err(object_store::Error::NotFound { .. }) => Ok(None),
+                Err(e) => Err(e.into()),
+            }
+        })
+        .buffered(32)
+        .collect()
+        .await;
     let mut out = Vec::new();
-    for p in paths {
-        let b = store.get(&p).await?.bytes().await?;
-        out.push(serde_json::from_slice(&b).with_context(|| format!("erasure record {p}"))?);
+    for r in got {
+        out.extend(r?);
     }
     Ok(out)
+}
+
+/// The erasures of a database not archived yet (every open one, and done ones the last pass did not move yet), oldest
+/// first.
+pub async fn list(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Vec<Erasure>> {
+    read_records(store, &dir(id)).await
+}
+
+/// Every erasure of a database, archived ones included (the status API), oldest first.
+pub async fn list_all(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Vec<Erasure>> {
+    let mut out = read_records(store, &done_dir(id)).await?;
+    let open = list(store, id).await?;
+    out.retain(|d| !open.iter().any(|o| o.id == d.id));
+    out.extend(open);
+    out.sort_by(|a, b| a.id.cmp(&b.id));
+    Ok(out)
+}
+
+/// Move the record of an erasure that is done to the archive (written there first: a crash between the two leaves it
+/// in both places, and the next pass moves it again).
+pub async fn archive(store: &Arc<dyn ObjectStore>, id: &str, e: &Erasure) -> Result<()> {
+    store.put(&Path::from(format!("{}/{}.json", done_dir(id), e.id)), PutPayload::from(serde_json::to_vec(e)?)).await?;
+    match store.delete(&rec_path(id, &e.id)).await {
+        Ok(()) | Err(object_store::Error::NotFound { .. }) => Ok(()),
+        Err(x) => Err(x.into()),
+    }
 }
 
 /// Whether a database has an erasure not yet done (cheap: one LIST).
@@ -878,6 +921,7 @@ pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &str, es: &mut [&mut E
     }
     let no_retire = ctl(&CONTROL_NO_RETIRE);
     let mut deleted_versions: BTreeSet<u64> = BTreeSet::new();
+    let mut stray: Option<Vec<String>> = None;
     for e in es {
         let scrubbed = e.scrubbed_version.unwrap();
         let in_grace = e.scrubbed_ms.map_or(true, |s| now < s + grace_ms);
@@ -932,15 +976,44 @@ pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &str, es: &mut [&mut E
                 versions_kept.push(format!("version {n}: {}", by.join(", ")));
             }
         }
+        // perf-erase: the versions older than the scrub that GC keeps for the restore window (the compactor's version
+        // retention, 7 days by default; DECISIONS 2026-11-07 allows restore points 30 days) still list runs written
+        // before the scrub, which may hold the erased rows: the erasure is not done while one is left
+        let older = old.iter().filter(|(n, _)| *n < scrubbed && !deleted_versions.contains(n)).count();
+        if older > 0 {
+            versions_kept.push(format!("{older} older versions in the restore window (GC deletes them and their runs when it ends)"));
+        }
         e.versions_kept = versions_kept;
         if e.live_done_ms.is_none() && served >= scrubbed {
             e.live_done_ms = Some(now);
         }
         if e.retired.iter().all(|r| r.deleted_ms.is_some() || r.released_ms.is_some()) && e.versions_kept.is_empty() && e.live_done_ms.is_some() {
-            e.done_ms.get_or_insert(now);
+            // GC deletes an old version first and its runs at a later pass: a run object that no version from the
+            // scrub on lists (nor a pair or a fork) may still hold the rows
+            if stray.is_none() {
+                stray = Some(stray_runs(store, id, scrubbed, &kept).await?);
+            }
+            let n = stray.as_ref().unwrap().len();
+            if n > 0 {
+                e.versions_kept.push(format!("{n} runs of older versions not deleted by GC yet"));
+            } else {
+                e.done_ms.get_or_insert(now);
+            }
         }
     }
     Ok(())
+}
+
+/// Run objects of the database that no version from `from` on lists, nor a pair or a fork (`kept`).
+async fn stray_runs(store: &Arc<dyn ObjectStore>, id: &str, from: u64, kept: &[(String, Vec<String>)]) -> Result<Vec<String>> {
+    let mut listed: BTreeSet<String> = kept.iter().flat_map(|(_, l)| l.iter().cloned()).collect();
+    for n in manifest::list_versions(store, id).await?.into_iter().filter(|n| *n >= from) {
+        if let Ok(v) = manifest::load(store, id, n).await {
+            listed.extend(names(&v).0.into_iter().map(|s| s.to_string()));
+        }
+    }
+    let metas: Vec<_> = store.list(Some(&Path::from(format!("{}/run", root(id))))).try_collect().await?;
+    Ok(metas.into_iter().map(|m| m.location.to_string()).filter(|p| !listed.contains(p)).collect())
 }
 
 /// Group boundaries of a version that are target keys.
