@@ -3680,6 +3680,18 @@ impl Maintenance {
                                     Ok(rec) => log.lock().unwrap().gcs.push(rec),
                                     Err(e) => log.lock().unwrap().error(format!("gc {id}: {e:#}")),
                                 }
+                                // P-perf-bytes: our runs of the closed database (its compactor, and so its live GC, stopped
+                                // with the close); when some wait for their grace, the tenant is due again then
+                                if crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) {
+                                    match crate::fx::gc::gc_closed(&s3, &id).await {
+                                        Ok(Some(wait)) => {
+                                            let at = (Instant::now() + wait).checked_sub(gc_after).unwrap_or_else(Instant::now);
+                                            touched.lock().unwrap().entry(id.clone()).or_insert(at);
+                                        }
+                                        Ok(None) => {}
+                                        Err(e) => log.lock().unwrap().error(format!("fx gc {id}: {e:#}")),
+                                    }
+                                }
                             }
                         })
                         .await;
