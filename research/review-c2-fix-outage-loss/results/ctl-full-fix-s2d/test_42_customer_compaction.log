@@ -1,0 +1,16 @@
+FF.                                                                      [100%]
+=================================== FAILURES ===================================
+________________ test_index_matches_documents_during_compaction ________________
+test_42_customer_compaction.py:156: in test_index_matches_documents_during_compaction
+    assert during >= 3, f"only {during} compaction passes ran during the reads (reads {stats['reads']}, writes {stats['writes']})"
+E   AssertionError: only 0 compaction passes ran during the reads (reads 805, writes 4192)
+E   assert 0 >= 3
+_________________________ test_sigkill_mid_compaction __________________________
+test_42_customer_compaction.py:208: in test_sigkill_mid_compaction
+    assert killed_in_pass, "never saw an SST outside the manifest while a pass was running"
+E   AssertionError: never saw an SST outside the manifest while a pass was running
+E   assert False
+=========================== short test summary info ============================
+FAILED test_42_customer_compaction.py::test_index_matches_documents_during_compaction
+FAILED test_42_customer_compaction.py::test_sigkill_mid_compaction - Assertio...
+2 failed, 1 passed in 298.94s (0:04:58)

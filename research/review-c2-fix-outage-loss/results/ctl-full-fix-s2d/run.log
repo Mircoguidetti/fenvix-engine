@@ -1,0 +1,107 @@
+test_01_databases: 10 passed in 12.37s
+test_02_fork: 1 failed, 12 passed in 58.84s
+test_02b_fork_crash: 12 passed, 11 warnings in 141.61s (0:02:21)
+Traceback (most recent call last):
+  File "<stdin>", line 5, in <module>
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/boto3/resources/factory.py", line 581, in do_action
+    response = action(self, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/boto3/resources/action.py", line 88, in __call__
+    response = getattr(parent.meta.client, operation_name)(*args, **params)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/botocore/client.py", line 606, in _api_call
+    return self._make_api_call(operation_name, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/botocore/context.py", line 123, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/botocore/client.py", line 1094, in _make_api_call
+    raise error_class(parsed_response, operation_name)
+botocore.exceptions.ClientError: An error occurred (BucketNotEmpty) when calling the DeleteBucket operation: The bucket you tried to delete is not empty
+test_03_restore: 11 passed in 137.13s (0:02:17)
+Traceback (most recent call last):
+  File "<stdin>", line 5, in <module>
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/boto3/resources/factory.py", line 581, in do_action
+    response = action(self, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/boto3/resources/action.py", line 88, in __call__
+    response = getattr(parent.meta.client, operation_name)(*args, **params)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/botocore/client.py", line 606, in _api_call
+    return self._make_api_call(operation_name, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/botocore/context.py", line 123, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/botocore/client.py", line 1094, in _make_api_call
+    raise error_class(parsed_response, operation_name)
+botocore.exceptions.ClientError: An error occurred (BucketNotEmpty) when calling the DeleteBucket operation: The bucket you tried to delete is not empty
+test_03b_restore_gc_crash: 11 passed in 220.71s (0:03:40)
+test_03c_retention_cost: 1 passed in 593.37s (0:09:53)
+test_04_export: 9 passed, 1 skipped in 146.96s (0:02:26)
+test_04b_export_vs_real_mongo: 2 skipped in 0.20s
+test_05_erase: 19 passed in 360.18s (0:06:00)
+test_06_keepawake: 13 passed in 157.71s (0:02:37)
+test_07_usage: 1 failed, 9 passed in 131.21s (0:02:11)
+test_08_costs: 2 failed, 1 passed in 376.75s (0:06:16)
+test_08b_pin_cost: 1 passed in 66.74s (0:01:06)
+test_09_security: 30 passed in 4.35s
+test_09b_users_restore: 1 passed in 10.33s
+test_09c_tls_rotate: 3 passed in 6.58s
+test_09d_s3_env: 6 passed in 33.00s
+test_09e_local_store: 4 passed in 26.63s
+test_09f_wal_retention_guard: 4 passed in 191.25s (0:03:11)
+test_09g_export_natural_order: 2 passed in 24.48s
+test_10_end_to_end: 1 passed in 14.48s
+test_11_tls_modes: 4 passed in 48.80s
+test_12_shutdown: 2 passed in 8.56s
+test_13_ip_allowlist: 84 passed in 36.47s
+test_14_auth_limits: 10 passed in 58.46s
+test_15_admin_cmd_privileges: 54 passed in 6.32s
+test_16_block_defaults: 5 passed in 16.42s
+test_17_grantable_roles: 94 passed in 24.40s
+test_18_unblock_per_database: 4 passed in 2.37s
+test_19_imds_credential_refresh: 4 passed in 189.90s (0:03:09)
+test_20_process_lease: 9 passed in 112.23s (0:01:52)
+test_21_fair_limits_metrics: 4 passed in 12.56s
+test_22_wal_gc_stored_manifest: 1 passed in 13.13s
+test_23_process_lease_late: 6 passed in 125.38s (0:02:05)
+test_24_local_log: 8 passed in 96.58s (0:01:36)
+test_25_review_fixes: 8 passed in 56.60s
+test_26_drop_forgets: 3 passed in 78.70s (0:01:18)
+test_27_memory_per_write: 2 passed in 270.28s (0:04:30)
+test_28_bulk_insert_stall: 1 passed in 142.72s (0:02:22)
+test_29_compat_data_bugs: 10 passed in 2.35s
+test_30_fork_limits_txn_collation: 14 passed in 28.65s
+test_31_lease_lost_store_down: 1 failed, 1 passed in 262.30s (0:04:22)
+test_32_sort_top1: 10 passed in 4.34s
+test_33_metadata_cache: 10 passed in 52.54s
+test_34_change_stream_token_db: 9 passed in 16.36s
+test_35_fix_piccoli: 19 passed, 5 warnings in 207.38s (0:03:27)
+test_36_isolation_quotas: .
+test_36b_review_fixes: 
+test_37_conn_limits_per_db: 4 passed in 20.64s
+test_38_front_door_review: 5 passed in 80.79s (0:01:20)
+test_40_hello_exhaust: 5 passed in 12.02s
+test_41_commit_retry: 6 passed in 48.87s
+test_41b_commit_durable: 5 passed in 32.46s
+test_41c_review_commit_durable: 11 passed in 167.83s (0:02:47)
+test_41d_review_commit_cost: 2 passed in 56.39s
+test_41e_outcomes: 4 passed in 17.99s
+test_42_customer_compaction: 2 failed, 1 passed in 298.94s (0:04:58)
+test_42_unique_txn: 33 passed in 32.45s
+test_42b_tolong_date: 12 passed in 4.36s
+test_42r_review_unique_build: 1 failed, 1 passed in 4.38s
+test_42s_index_build_writes: 28 passed in 188.06s (0:03:08)
+test_42t_kill_index_build: 1 passed in 1402.69s (0:23:22)
+test_43_review_compaction: 1 failed, 5 passed in 26.38s
+test_44_layout_v2: 5 passed in 69.39s (0:01:09)
+test_45_envelope_rollback: 1 passed, 2 skipped in 12.25s
+test_46_review_c2_step2: 12 passed in 66.70s (0:01:06)
+test_47_c2_step2_fix: 7 passed in 2.35s
+test_47_c2_step7a_paths: 2 passed in 26.39s
+test_48_c2_step7b_forks_erasure: 1 failed, 2 passed in 20.41s
+test_49_review_c2_step7b: 5 passed, 3 warnings in 32.21s
+test_50_c2_step7b_fix_long_commands: 8 passed in 188.79s (0:03:08)
+test_52_reopen_during_a_command: 2 passed in 92.61s (0:01:32)
+/dev/vda        252G   35G  4.4G  89% /

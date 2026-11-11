@@ -1,0 +1,3 @@
+DIFFERENT test_03c_retention_cost: branch PASS: 1 passed in 593.37s (0:09:53) | integration-3 FAIL: 1 failed in 614.76s (0:10:14)
+DIFFERENT test_52_reopen_during_a_command: branch PASS: 2 passed in 92.61s (0:01:32) | integration-3 absent
+branch: 62 of 72 files pass; integration-3: 60 pass (of the same files; it has 71 files)

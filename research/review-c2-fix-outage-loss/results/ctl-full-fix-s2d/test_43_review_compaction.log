@@ -1,0 +1,13 @@
+.....F                                                                   [100%]
+=================================== FAILURES ===================================
+______________ test_a_refused_fork_leaves_no_object_of_its_target ______________
+test_43_review_compaction.py:145: in test_a_refused_fork_leaves_no_object_of_its_target
+    assert left == [], f"a fork refused with 404 left {left}"
+E   AssertionError: a fork refused with 404 left ['control/usage/never_was/2026-11-11/revfork-36423-ccd6cf9d.json', 'control/usage/nf_k/2026-11-11/revfork-36423-ccd6cf9d.json']
+E   assert ['control/usa...cd6cf9d.json'] == []
+E     
+E     Left contains 2 more items, first extra item: 'control/usage/never_was/2026-11-11/revfork-36423-ccd6cf9d.json'
+E     Use -v to get more diff
+=========================== short test summary info ============================
+FAILED test_43_review_compaction.py::test_a_refused_fork_leaves_no_object_of_its_target
+1 failed, 5 passed in 26.38s

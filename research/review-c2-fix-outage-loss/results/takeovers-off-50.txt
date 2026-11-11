@@ -1,0 +1,5 @@
+missing acknowledged writes: {'at_once': 0, 'at_once_by_id': 0, 'after_settle': 0, 'after_settle_by_id': 0, 'after_clean_restart': 0, 'after_clean_restart_by_id': 0}
+{"n": 50, "writers": 8, "lease_ttl_s": 4, "log": "off", "verify_error": null, "missing_by_read": {"at_once": 0, "at_once_by_id": 0, "after_settle": 0, "after_settle_by_id": 0, "after_clean_restart": 0, "after_clean_restart_by_id": 0}, "done": 50, "acknowledged": 195913, "lost": 0, "lost_ids_first": [], "confirmed_after_kill": 0, "failed_writes": 2800, "survivor": "A", "takeover_s_p50": 14.374, "takeover_s_p99": 17.434, "takeover_s_max": 17.434, "verdict": "PASS"}
+TAKEOVERS: PASS (50/50 takeovers, 195913 acknowledged, 0 lost (missing by read {'at_once': 0, 'at_once_by_id': 0, 'after_settle': 0, 'after_settle_by_id': 0, 'after_clean_restart': 0, 'after_clean_restart_by_id': 0}), 0 confirmed after a kill)
+run.py: code 0 in 1694 s; outcome: FINITO; {"load": "LOADED", "client": "LOADED_ONLY", "extras": "takeovers:rc=0 takeovers-logoff:rc=1"}
+total time: 1833 s

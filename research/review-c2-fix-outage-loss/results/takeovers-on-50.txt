@@ -1,0 +1,5 @@
+missing acknowledged writes: {'at_once': 0, 'at_once_by_id': 0}
+{"n": 50, "writers": 8, "lease_ttl_s": 4, "log": "on", "verify_error": "RuntimeError: no pair process answered the read-back", "missing_by_read": {"at_once": 0, "at_once_by_id": 0}, "done": 50, "acknowledged": 290397, "lost": "UNKNOWN", "lost_ids_first": [], "confirmed_after_kill": 3, "failed_writes": 2809, "survivor": "B", "takeover_s_p50": 11.668, "takeover_s_p99": 16.88, "takeover_s_max": 16.88, "verdict": "FAIL"}
+TAKEOVERS: FAIL (50/50 takeovers, 290397 acknowledged, UNKNOWN lost (missing by read {'at_once': 0, 'at_once_by_id': 0}), 3 confirmed after a kill)
+run.py: code 0 in 1746 s; outcome: FINITO; {"load": "LOADED", "client": "LOADED_ONLY", "extras": "takeovers:rc=0 takeovers-logoff:rc=1"}
+total time: 1856 s
