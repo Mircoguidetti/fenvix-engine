@@ -1,0 +1,5 @@
+engine f6b6db1845220d4eaed299235262030c74706fe6 (/home/user/wE)
+1a6c9b1f94eadbb200171fe5cff0cb82374bdbc64d95371138fc3be513a0dc9c  /home/user/wE/target/release/mongo-server
+1a6c9b1f94eadbb200171fe5cff0cb82374bdbc64d95371138fc3be513a0dc9c  /home/user/wH/target/release/mongo-server
+fb3e780bd8ee05124acbe2965f13359b43fcd559d621d9a3d8c793d37e22d25c  /home/user/wE/proto/quaderno/target/release/pq
+fb3e780bd8ee05124acbe2965f13359b43fcd559d621d9a3d8c793d37e22d25c  /home/user/wH/proto/quaderno/target/release/pq
