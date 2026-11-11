@@ -245,3 +245,59 @@ pub async fn create(store: &Arc<dyn ObjectStore>, id: &str, v: &Version) -> Resu
         Ok(Err(e)) => Err(e.into()),
     }
 }
+
+// ---- c2-fix-clone-uploads, review FIX 1: the absorption invariant is per database
+//
+// A compactor absorbs from L0 only: every SlateDB row above X_d must still be in L0 when it starts. A compaction pass
+// that is not gated on absorption (`lifecycle::compact_tenant_pass_with` in a process with compactors off, or a release
+// before this one) folds such rows into a sorted run; the compactor's next absorption then moves X_d past them and the
+// merged reader returns their older values (review: 1,333 acknowledged updates, compactor off then on again). So:
+// - an ungated pass on a database with a version of our manifest writes `fx/ungated` before it compacts;
+// - a compactor starts only on a database marked `fx/caught-up` and not `fx/ungated`; otherwise the builder publishes
+//   first (`fx/build.rs` scans all of SlateDB, sorted runs included, so X_d then covers every row) and the marks are
+//   set. A database last served by a release without the marks has no `fx/caught-up`: it is caught up once.
+
+pub fn ungated_path(id: &str) -> Path {
+    Path::from(format!("{}/ungated", root(id)))
+}
+
+pub fn caught_up_path(id: &str) -> Path {
+    Path::from(format!("{}/caught-up", root(id)))
+}
+
+/// Before an ungated pass compacts database `id`: the mark, with the time the pass started.
+pub async fn note_ungated(store: &Arc<dyn ObjectStore>, id: &str) -> Result<()> {
+    store.put(&ungated_path(id), PutPayload::from(serde_json::to_vec(&serde_json::json!({ "at_ms": now_ms() }))?)).await?;
+    Ok(())
+}
+
+/// Whether a compactor must let the builder publish first (two HEADs).
+pub async fn needs_catch_up(store: &Arc<dyn ObjectStore>, id: &str) -> Result<bool> {
+    let exists = |r: object_store::Result<object_store::ObjectMeta>| match r {
+        Ok(_) => Ok(true),
+        Err(object_store::Error::NotFound { .. }) => Ok(false),
+        Err(e) => Err(anyhow::Error::from(e)),
+    };
+    Ok(!exists(store.head(&caught_up_path(id)).await)? || exists(store.head(&ungated_path(id)).await)?)
+}
+
+/// After a builder publish whose scan started at `scan_ms`: `fx/caught-up` set, and `fx/ungated` removed unless a pass
+/// marked it after the scan started (that pass may have folded rows the scan did not see: the next start catches up).
+pub async fn note_caught_up(store: &Arc<dyn ObjectStore>, id: &str, scan_ms: u64) -> Result<()> {
+    match store.get(&ungated_path(id)).await {
+        Ok(r) => {
+            let v: serde_json::Value = serde_json::from_slice(&r.bytes().await?).unwrap_or_default();
+            if v.get("at_ms").and_then(|x| x.as_u64()).unwrap_or(u64::MAX) >= scan_ms {
+                return Ok(());
+            }
+            match store.delete(&ungated_path(id)).await {
+                Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
+                Err(e) => return Err(e.into()),
+            }
+        }
+        Err(object_store::Error::NotFound { .. }) => {}
+        Err(e) => return Err(e.into()),
+    }
+    store.put(&caught_up_path(id), PutPayload::from(serde_json::to_vec(&serde_json::json!({ "at_ms": now_ms() }))?)).await?;
+    Ok(())
+}

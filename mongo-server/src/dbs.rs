@@ -126,6 +126,8 @@ pub fn set_wake_limit(n: usize) {
 
 /// Idle and shutdown closes that may run at once.
 const CLOSE_CONCURRENCY: usize = 64;
+/// Builder publishes made before a compactor started, to catch up rows an ungated pass folded (review FIX 1).
+pub static CATCH_UPS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// How long a close waits for the compactor to absorb its last memtable flush (c2-fix-clone-uploads).
 const CLOSE_ABSORB_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
 
@@ -509,6 +511,36 @@ impl Entry {
                 if let Ok(o) = self.coll_opts(&coll).await {
                     let key = crate::custkey::of_opts(o.as_ref());
                     crate::agentck::note_key(&self.name, &coll, key.as_ref().map(|k| k.field.as_str()));
+                }
+            }
+            // review FIX 1: rows an ungated pass may have folded out of L0 (this process with compactors off, or a release
+            // before the marks) are caught up by a builder publish, whose scan reads the sorted runs too, before the
+            // compactor's first absorption moves X_d (`fx::manifest::needs_catch_up`)
+            match tenant_bench::fx::manifest::needs_catch_up(&self.raw, &self.name).await {
+                Ok(false) => {}
+                Ok(true) => {
+                    let scan_ms = tenant_bench::fx::manifest::now_ms();
+                    let t = self.tenant.as_mut().unwrap();
+                    let mut o = t.fx_auto_opts();
+                    o.reseal = tenant_bench::fx::build::Reseal::None;
+                    match t.fx_publish(&o, None).await {
+                        Ok(Some(_)) => {
+                            CATCH_UPS.fetch_add(1, Relaxed);
+                            if let Err(e) = tenant_bench::fx::manifest::note_caught_up(&self.raw, &self.name, scan_ms).await {
+                                eprintln!("sealed runs: database {}: caught up, but the mark was not written ({e:#}); the next start catches up again", self.name);
+                            }
+                        }
+                        // nothing published yet (release E1's wait): no compactor until a publish has caught up
+                        Ok(None) => return,
+                        Err(e) => {
+                            eprintln!("sealed runs: database {}: the catch-up publish before the compactor failed ({e:#}); no compactor yet", self.name);
+                            return;
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("sealed runs: database {}: the absorption marks could not be read ({e:#}); no compactor yet", self.name);
+                    return;
                 }
             }
             let t = self.tenant.as_mut().unwrap();

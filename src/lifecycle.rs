@@ -2678,15 +2678,22 @@ pub(crate) async fn compact_tenant_pass_with(
     // every L0 row is at or below X_d (SlateDB's last L0 seq), and takes only the L0 SSTs present now
     // (`tiered::OnlyAbsorbed`). Not running at all left closed databases uncompacted, and their scans paid every L0 SST
     // (a restore read 648 MB at 100,000 documents, MEASURED).
+    //
+    // Review FIX 1: with compactors off in this process the pass stays ungated (the builder's publishes scan sorted runs
+    // too), but it marks the database first (`fx::manifest::note_ungated`): a compactor that starts on it later lets the
+    // builder catch up before its first absorption.
     let mut gate: Option<Arc<std::collections::HashSet<ulid::Ulid>>> = None;
-    if crate::fx::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed) {
-        if let Some(v) = crate::fx::manifest::load_newest(raw, id).await? {
+    let mut mark_ungated = false;
+    if let Some(v) = crate::fx::manifest::load_newest(raw, id).await? {
+        if crate::fx::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed) {
             let admin = Admin::builder(tenant_path(id), Arc::clone(raw)).build();
             let Some(m) = admin.read_manifest(None).await? else { return Ok(None) };
             if m.last_l0_seq() > v.x_d || crate::tiered::scheduler().is_none() {
                 return Ok(None);
             }
             gate = Some(Arc::new(m.l0().iter().map(|s| s.id).collect()));
+        } else {
+            mark_ungated = true;
         }
     }
     let l0_before = l0_count(raw, id).await?;
@@ -2702,6 +2709,9 @@ pub(crate) async fn compact_tenant_pass_with(
             }
         }
         return Ok(None);
+    }
+    if mark_ungated {
+        crate::fx::manifest::note_ungated(raw, id).await?;
     }
     let counting = Arc::new(CountingStore::new(Arc::clone(s3)));
     let store: Arc<dyn ObjectStore> = counting.clone();
