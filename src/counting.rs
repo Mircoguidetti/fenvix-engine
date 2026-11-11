@@ -166,6 +166,31 @@ fn on_request(path: &str, put: bool) {
     }
 }
 
+tokio::task_local! {
+    /// Set while a `CountingStore` that already reported the request to [`ON_REQUEST`] passes it down.
+    static REPORTED: ();
+}
+
+/// Report one request to [`ON_REQUEST`], once however many `CountingStore`s are stacked (the server puts the lifecycle's
+/// store, and the maintenance passes theirs, on top of the process-wide one): only the outermost reports. Returns true
+/// when this layer reported, so it passes the call down with [`passed_down`]. c2-fix-hangs, fix round 2: every request
+/// of a database was charged twice to its points (MEASURED: 772 GETs counted for 386 at an independent proxy).
+fn report_request(path: &str, put: bool) -> bool {
+    if REPORTED.try_with(|_| ()).is_ok() {
+        return false;
+    }
+    on_request(path, put);
+    true
+}
+
+async fn passed_down<F: std::future::Future>(reported: bool, f: F) -> F::Output {
+    if reported {
+        REPORTED.scope((), f).await
+    } else {
+        f.await
+    }
+}
+
 /// Tests only: every PUT waits this long before it is sent (`MONGO_TEST_PUT_DELAY_MS`, honoured only with
 /// `MONGO_ALLOW_UNSAFE_TEST_FLAGS=1`), to play S3's latency on a store that has none (review of S4, test D).
 fn test_put_delay() -> Option<std::time::Duration> {
@@ -359,7 +384,7 @@ pub static TEST_GET_DELAY_MS: AtomicU64 = AtomicU64::new(0);
 impl ObjectStore for CountingStore {
     async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult> {
         self.counters.put.fetch_add(1, Relaxed);
-        on_request(location.as_ref(), true);
+        let reported = report_request(location.as_ref(), true);
         if let Some(d) = test_put_delay() {
             tokio::time::sleep(d).await;
         }
@@ -372,7 +397,7 @@ impl ObjectStore for CountingStore {
         let bytes = payload.content_length() as u64;
         self.counters.put_bytes.fetch_add(bytes, Relaxed);
         let t0 = Instant::now();
-        let res = self.inner.put_opts(location, payload, opts).await;
+        let res = passed_down(reported, self.inner.put_opts(location, payload, opts)).await;
         self.counters.put_cat[category(location.as_ref())].fetch_add(1, Relaxed);
         self.counters.lat_put.record(t0.elapsed());
         self.trace.end(token, bytes);
@@ -408,7 +433,7 @@ impl ObjectStore for CountingStore {
             &self.counters.get
         };
         counter.fetch_add(1, Relaxed);
-        on_request(location.as_ref(), false);
+        let reported = report_request(location.as_ref(), false);
         self.counters.get_cat[category(location.as_ref())].fetch_add(1, Relaxed);
         let op = if options.head {
             "HEAD"
@@ -419,7 +444,7 @@ impl ObjectStore for CountingStore {
         };
         let token = self.trace.begin(op, location.as_ref());
         let t0 = Instant::now();
-        let mut res = self.inner.get_opts(location, options).await;
+        let mut res = passed_down(reported, self.inner.get_opts(location, options)).await;
         self.counters.lat_get.record(t0.elapsed());
         if token.is_some() {
             // Read the body inside the timed window so the duration covers the
@@ -474,31 +499,39 @@ impl ObjectStore for CountingStore {
     }
 
     fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>> {
-        on_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true);
-        let stream = self.count_list(self.inner.list(prefix));
+        let inner = if report_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true) {
+            REPORTED.sync_scope((), || self.inner.list(prefix))
+        } else {
+            self.inner.list(prefix)
+        };
+        let stream = self.count_list(inner);
         self.trace_list("LIST", prefix, stream)
     }
 
     fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, Result<ObjectMeta>> {
-        on_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true);
-        let stream = self.count_list(self.inner.list_with_offset(prefix, offset));
+        let inner = if report_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true) {
+            REPORTED.sync_scope((), || self.inner.list_with_offset(prefix, offset))
+        } else {
+            self.inner.list_with_offset(prefix, offset)
+        };
+        let stream = self.count_list(inner);
         self.trace_list("LIST", prefix, stream)
     }
 
     async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult> {
         self.counters.list.fetch_add(1, Relaxed);
-        on_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true);
+        let reported = report_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true);
         let token = self.trace.begin("LIST", &prefix.map(|p| p.to_string()).unwrap_or_default());
-        let res = self.inner.list_with_delimiter(prefix).await;
+        let res = passed_down(reported, self.inner.list_with_delimiter(prefix)).await;
         self.trace.end(token, 0);
         res
     }
 
     async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> Result<()> {
         self.counters.copy.fetch_add(1, Relaxed);
-        on_request(to.as_ref(), true);
+        let reported = report_request(to.as_ref(), true);
         let token = self.trace.begin("COPY", to.as_ref());
-        let res = self.inner.copy_opts(from, to, options).await;
+        let res = passed_down(reported, self.inner.copy_opts(from, to, options)).await;
         self.trace.end(token, 0);
         res
     }

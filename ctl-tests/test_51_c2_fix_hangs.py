@@ -112,3 +112,49 @@ def test_publish_cut_is_bounded_when_wal_puts_hang():
         print(f"after a restart: {len(ids)} documents")
     finally:
         srv2.term()
+
+
+def test_each_request_is_charged_once():
+    """Fix round 2: every S3 request of a database was charged twice to its points, because the server stacks counting
+    stores (the lifecycle's on the process-wide one) and each reported the request. An independent counting proxy in
+    front of MinIO is the ground truth: over a cold scan (sealed runs on, the first scan after a publish reads the runs
+    from the store) and over a series of durable inserts, the database's GET-class and PUT-class counts must grow by what
+    the proxy saw for its objects, multipart pieces apart (a request or two of background work in flight at a snapshot may fall on either side).
+    Failed on 9fa25cd: 772 GETs counted for 386 at the proxy."""
+    import proxy as counting_proxy
+    env = dict(SEALED, FENVIX_SEALED_COMPACTOR="0")     # no compactor: no store polling during the windows
+    px = counting_proxy.CountingProxy()
+    srv = Server(make_bucket("c2once"), "c2once", idle=600, endpoint=px.endpoint, env=env).start()
+    try:
+        c = MongoClient(srv.uri, serverSelectionTimeoutMS=5000, retryWrites=False)
+        c.q.t.insert_many([{"_id": i, "pad": "x" * 1000} for i in range(3000)])
+        time.sleep(3)
+
+        def server_counts():
+            d = srv.admin.get("/v1/metrics/databases")[1]["databases"]["q"]
+            return d["s3Get"], d["s3Put"]
+
+        def proxy_counts():
+            n = px.snapshot()["by_prefix"].get("tenants/q", {})
+            gets = sum(v for k, v in n.items() if k in ("GET", "GET_RANGE", "HEAD"))
+            # multipart pieces (create, part, complete: the sealed runs a publish writes) are not charged to the points
+            # at all, a separate gap (c2-fix-hangs report, fix round 2): compared apart
+            puts = sum(v for k, v in n.items() if k in ("PUT", "COPY", "LIST"))
+            multipart = sum(v for k, v in n.items() if k in ("PUT_PART", "MP_CREATE", "MP_COMPLETE"))
+            return gets, puts, multipart
+
+        g0, p0 = server_counts()
+        px.reset()
+        assert len(list(c.q.t.find({}))) == 3000
+        for i in range(20):
+            c.q.t.insert_one({"_id": f"w{i}"})            # durable: one WAL PUT each, or a few shared
+        g1, p1 = server_counts()
+        pg, pp, pm = proxy_counts()
+        print(f"GET-class: server {g1 - g0}, proxy {pg}; PUT, COPY and LIST: server {p1 - p0}, proxy {pp}; multipart pieces at the proxy {pm}")
+        assert pg >= 50, f"the scan made only {pg} GETs at the proxy: the test did not reach a cold read"
+        assert pp >= 5, f"the inserts made only {pp} PUTs at the proxy"
+        assert abs((g1 - g0) - pg) <= 3, f"GET-class charged {g1 - g0} times for {pg} requests at the proxy"
+        assert abs((p1 - p0) - pp) <= 3, f"PUT-class charged {p1 - p0} times for {pp} requests at the proxy"
+    finally:
+        srv.kill9()
+        px.stop()
