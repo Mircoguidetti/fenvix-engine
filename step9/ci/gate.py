@@ -6,7 +6,13 @@ names exists and passes:
      for that commit, or no commit at all: CLOSED. A report made on another commit does not count (the engine changed).
   1. the takeover test the report names shows no acknowledged write missing and finished (rule 8: zero loss is absolute);
   2. in the agent benchmark the report names, our server ("fenvix") is not worse than the PostgreSQL or the mongod saver
-     on any operation: p50 or p99 latency, or stored bytes per logical byte (rule 9).
+     on any operation: p50 or p99 latency, or stored bytes per logical byte (rule 9);
+  3. (aws-fixes, B1 of the total review, 2026-11-11) that benchmark is complete and correct on every side: the summary's
+     own "ok" is true for ours, PostgreSQL and mongod (no write error, no wrong read, no erased thread readable); every
+     operation of OPS is present on every side with at least MIN_SAMPLES[op] samples; stored bytes per logical byte is
+     known on every side; the three sides ran the same plan (digest). A missing operation, a missing number or a failed
+     run is a blocker, never skipped;
+  4. the same for the --workers 8 line, when the report names one ("agent_bench_w8").
 The report and the result files it names must be committed on the branch the workflow runs from; the gate reads this
 checkout. With no report for the commit, the gate also lists what the newest local results show (information only).
 Usage: gate.py [REPO_ROOT]   (ENGINE_REF and ENGINE_COMMIT in the environment)
@@ -17,7 +23,16 @@ import os
 import sys
 
 ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
-OPS = ["put", "put_writes", "resume[read]", "resume[write/first]", "resume[write/long]", "list", "list_limit10", "erase_user"]
+OPS = ["put", "put_writes", "save_step", "resume[read]", "resume[write/first]", "resume[write/long]", "resume[cold]",
+       "time_travel", "list", "list_limit10", "erase_user"]
+# The written minimum of samples per operation (B1). Fixed BEFORE any result is read: the counts bench.py gives with
+# the standard profile (seed 42: 2,453 threads, 25,398 turns, 1,000 users), --read-sample 30 (30 threads read, 3 time
+# travels each), --erase-users 0 (10% of users = 100) and the cold phase of P-bench-local (200 threads). The small
+# profile (41 threads, 8 long resumes, 2 erased users) does not pass: a p99 of 8 samples is the slowest of 8.
+MIN_SAMPLES = {"put": 1000, "put_writes": 1000, "save_step": 1000, "resume[write/first]": 300, "resume[write/long]": 300,
+               "resume[read]": 30, "resume[cold]": 200, "time_travel": 90, "list": 30, "list_limit10": 30,
+               "erase_user": 20}
+SIDES = ("fenvix", "postgres", "mongo")
 
 
 def rel(p):
@@ -36,29 +51,57 @@ def check_takeovers(path):
     return []
 
 
-def check_agent(fenvix_summary):
-    """Blockers of one local agent benchmark (bench/agent-checkpoints/results/local-*/{fenvix,postgres,mongo}/)."""
+def check_agent(fenvix_summary, label="agent benchmark"):
+    """Blockers of one local agent benchmark (bench/agent-checkpoints/results/local-*/{fenvix,postgres,mongo}/).
+    Nothing is skipped: a side, an operation, a sample count or a byte figure that is missing is a blocker."""
     if not fenvix_summary or not os.path.exists(fenvix_summary):
-        return [f"agent benchmark: no result ({fenvix_summary})"]
+        return [f"{label}: no result ({fenvix_summary})"]
     out = []
     base = os.path.dirname(os.path.dirname(fenvix_summary))
-    ours = json.load(open(fenvix_summary))
-    for other in ("postgres", "mongo"):
-        f = os.path.join(base, other, "summary.json")
+    sums = {}
+    for side in SIDES:
+        f = os.path.join(base, side, "summary.json")
         if not os.path.exists(f):
-            out.append(f"agent benchmark: no {other} result next to ours ({rel(base)})")
+            out.append(f"{label}: no {side} result ({rel(f)})")
             continue
-        them = json.load(open(f))
+        try:
+            sums[side] = json.load(open(f))
+        except Exception as e:  # noqa: BLE001 - an unreadable summary is a blocker
+            out.append(f"{label}: {side} summary unreadable ({type(e).__name__})")
+    for side, d in sums.items():
+        if d.get("ok") is not True:
+            w, r, e = d.get("write") or {}, d.get("read") or {}, d.get("erase") or {}
+            out.append(f"{label} {side}: ok is {d.get('ok')} (write errors {len(w.get('errors') or [])}, wrong reads "
+                       f"{r.get('inconsistencies')}, wrong_reads {r.get('wrong_reads')}, erased threads still readable "
+                       f"{e.get('threads_left_readable')})")
+        lat = d.get("latency_ms") or {}
         for op in OPS:
-            a, b = ours["latency_ms"].get(op), them["latency_ms"].get(op)
-            if not a or not b:
+            a = lat.get(op)
+            if not a or a.get("p50") is None or a.get("p99") is None:
+                out.append(f"{label} {side}: operation {op} missing")
+            elif (a.get("n") or 0) < MIN_SAMPLES[op]:
+                out.append(f"{label} {side}: operation {op} has {a.get('n') if a.get('n') is not None else 'no count of'} samples, fewer than the written minimum {MIN_SAMPLES[op]}")
+        if not (d.get("bytes") or {}).get("stored_per_logical"):
+            out.append(f"{label} {side}: stored bytes per logical byte unknown")
+    digests = {side: (d.get("plan") or {}).get("digest") for side, d in sums.items()}
+    if len(set(digests.values())) > 1 or None in digests.values():
+        out.append(f"{label}: the sides did not run the same plan (digests {digests})")
+    ours = sums.get("fenvix")
+    if ours:
+        for other in ("postgres", "mongo"):
+            them = sums.get(other)
+            if not them:
                 continue
-            for q in ("p50", "p99"):
-                if a[q] > b[q]:
-                    out.append(f"agent benchmark {op} {q}: ours {a[q]:.2f} ms > {other} {b[q]:.2f} ms")
-        sa, sb = ours["bytes"].get("stored_per_logical"), them["bytes"].get("stored_per_logical")
-        if sa and sb and sa > sb:
-            out.append(f"agent benchmark stored bytes per logical byte: ours {sa:.3f} > {other} {sb:.3f}")
+            for op in OPS:
+                a, b = (ours.get("latency_ms") or {}).get(op), (them.get("latency_ms") or {}).get(op)
+                if not a or not b:
+                    continue   # already a blocker above
+                for q in ("p50", "p99"):
+                    if a.get(q) is not None and b.get(q) is not None and a[q] > b[q]:
+                        out.append(f"{label} {op} {q}: ours {a[q]:.2f} ms > {other} {b[q]:.2f} ms")
+            sa, sb = (ours.get("bytes") or {}).get("stored_per_logical"), (them.get("bytes") or {}).get("stored_per_logical")
+            if sa and sb and sa > sb:
+                out.append(f"{label} stored bytes per logical byte: ours {sa:.3f} > {other} {sb:.3f}")
     return out
 
 
@@ -101,13 +144,16 @@ def main():
             blockers.append(f"{rel(f)}: verdict {r.get('verdict')}")
         blockers += check_takeovers(os.path.join(ROOT, r.get("takeovers") or "-"))
         blockers += check_agent(os.path.join(ROOT, r.get("agent_bench") or "-"))
+        if r.get("agent_bench_w8"):
+            blockers += check_agent(os.path.join(ROOT, r["agent_bench_w8"]), label="agent benchmark --workers 8")
     if blockers:
         print(f"GATE: CLOSED ({len(blockers)} blockers; RULES.md 8-9: no AWS run, not even a pilot)")
         for b in blockers:
             print(f"  - {b}")
         sys.exit(1)
     print(f"GATE: OPEN (local benchmark report {rel(found[0])} for {ref} at {commit}: takeovers 0 lost; our agent benchmark "
-          f"not worse than PostgreSQL and mongod on any operation)")
+          f"ok, complete ({len(OPS)} operations, written minimum samples) and not worse than PostgreSQL and mongod on any "
+          f"operation" + (", also with --workers 8" if found[1].get("agent_bench_w8") else "") + ")")
 
 
 if __name__ == "__main__":
