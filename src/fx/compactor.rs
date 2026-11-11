@@ -619,11 +619,23 @@ impl Compactor {
     async fn recognise_absorbed(&self) -> Result<()> {
         let x_d = self.cur.lock().await.v.x_d;
         let reader = slatedb::SstReader::new(crate::lifecycle::tenant_path(self.id()), Arc::clone(&self.store), None, None);
-        for view in self.db.manifest().l0().iter() {
-            let rows = read_l0(&reader, view).await?;
-            let max = rows.iter().map(|r| r.row.seq).max().unwrap_or(0);
+        // perf-latency round 2: the L0 SSTs are read at once, not one after the other (`start` runs under the database's
+        // exclusive lock, inside the first write after an opening: 8 SSTs of 64 MiB one by one took 3.4 s, MEASURED)
+        let views: Vec<_> = self.db.manifest().l0().iter().cloned().collect();
+        // at most 4 at a time, and only each SST's highest seq is kept (not its rows)
+        use futures::{StreamExt, TryStreamExt};
+        let reader = Arc::new(reader);
+        let jobs: Vec<_> = views
+            .into_iter()
+            .map(|view| {
+                let reader = Arc::clone(&reader);
+                Box::pin(async move { Ok::<_, anyhow::Error>((view.id, l0_max_seq(&reader, &view).await?)) }) as std::pin::Pin<Box<dyn std::future::Future<Output = Result<_>> + Send>>
+            })
+            .collect();
+        let maxes: Vec<_> = futures::stream::iter(jobs).buffer_unordered(4).try_collect().await?;
+        for (id, max) in maxes {
             if max <= x_d {
-                self.absorbed.lock().unwrap().insert(view.id, max);
+                self.absorbed.lock().unwrap().insert(id, max);
             }
         }
         self.drop.set_foldable(&self.absorbed.lock().unwrap());
@@ -1377,6 +1389,19 @@ struct L0Row {
 }
 
 /// Every row of one L0 SST, raw (SlateDB tombstones included; a merge operand is an error, I4).
+/// The highest seq of an L0 SST's rows (0: none), read block by block without keeping the rows.
+async fn l0_max_seq(reader: &slatedb::SstReader, view: &slatedb::manifest::SsTableView) -> Result<u64> {
+    let f = reader.open_with_handle(view.sst.clone())?;
+    let n = f.index().await?.len();
+    let mut max = 0;
+    for b in 0..n {
+        for r in f.read_block(b).await? {
+            max = max.max(r.seq);
+        }
+    }
+    Ok(max)
+}
+
 async fn read_l0(reader: &slatedb::SstReader, view: &slatedb::manifest::SsTableView) -> Result<Vec<L0Row>> {
     let f = reader.open_with_handle(view.sst.clone())?;
     let n = f.index().await?.len();

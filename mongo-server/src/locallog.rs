@@ -943,6 +943,40 @@ async fn replay_db(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str, mut recs:
     Ok(Outcome::Applied(todo.len() as u64))
 }
 
+/// The local-log marker of `db` as object storage holds it, read without opening the database (no lease): None when it
+/// cannot be read or there is none. A marker is written in the same durable batch as the records it names, so the records
+/// of its log up to its sequence number are in object storage.
+async fn stored_marker(dbs: &Arc<crate::dbs::Dbs>, db: &str) -> Option<(String, u64)> {
+    let store = dbs.store();
+    let r = slatedb::DbReader::builder(tenant_bench::lifecycle::tenant_path(db), tenant_bench::counting::owned(&store, db))
+        .with_options(slatedb::config::DbReaderOptions::default())
+        .build()
+        .await
+        .ok()?;
+    let env = crate::layout2::reader_env(&r).await.ok();
+    let v = match env {
+        Some(env) => crate::layout2::Raw::Reader(&r, env).get(MARKER_KEY).await.ok().flatten(),
+        None => None,
+    };
+    let _ = r.close().await;
+    v.as_deref().and_then(parse_marker)
+}
+
+/// perf-latency round 2: before a background retry opens a database to apply its kept records, drop the records object
+/// storage already has (the stored marker of this log covers them), without taking the database's lease. A warm spare
+/// that started while the cook's last records of `admin` were still only in the log kept them, and when the cook closed
+/// `admin` (after uploading them) the spare's retry took the lease to apply nothing and held it: the cook's next
+/// connection failed to authenticate ("tenant admin is owned by server process ..."; a standard benchmark run died).
+/// Returns true when nothing is left to apply. A marker that cannot be read leaves the records as they are.
+async fn drop_stored(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str, recs: &mut Vec<Record>) -> bool {
+    if let Some((id, done)) = stored_marker(dbs, db).await {
+        if id == log_id {
+            recs.retain(|r| r.orig > done);
+        }
+    }
+    recs.is_empty()
+}
+
 /// Retry the replay of the kept databases (1 s, then doubling up to 30 s) until none is left.
 fn spawn_retry(dbs: Arc<crate::dbs::Dbs>, timeout: Duration) {
     tokio::spawn(async move {
@@ -955,10 +989,11 @@ fn spawn_retry(dbs: Arc<crate::dbs::Dbs>, timeout: Duration) {
             if todo.is_empty() {
                 return;
             }
-            for (db, recs) in todo {
+            for (db, mut recs) in todo {
                 let mut seen = None;
                 let rec_epoch = recs.iter().map(|r| r.epoch).max().unwrap_or(0);
-                match replay_with_timeout(&dbs, &log_id, &db, recs, true, &mut seen, timeout).await {
+                let r = if drop_stored(&dbs, &log_id, &db, &mut recs).await { Ok(Outcome::Nothing) } else { replay_with_timeout(&dbs, &log_id, &db, recs, true, &mut seen, timeout).await };
+                match r {
                     Ok(Outcome::Applied(_)) | Ok(Outcome::Nothing) => {
                         // Applied durably; nothing else was written meanwhile (the database was refused): all is uploaded.
                         if let Some(e) = log.tenants.lock().unwrap().get_mut(&db) {

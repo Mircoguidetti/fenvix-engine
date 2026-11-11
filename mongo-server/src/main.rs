@@ -813,6 +813,7 @@ async fn run() -> Result<()> {
         if let Ok(ms) = v.parse::<u64>() {
             tenant_bench::waits::SLOW_MS.store(ms, std::sync::atomic::Ordering::Relaxed);
         }
+        tenant_bench::waits::GETS.store(std::env::var("FX_WAITS_GETS").is_ok(), std::sync::atomic::Ordering::Relaxed);
         tenant_bench::waits::spawn_probe();
     }
     // The SST cleanup deletes an SST this long after it left the manifest; a reader that polls the manifest less often
@@ -960,6 +961,7 @@ async fn run() -> Result<()> {
         agentck::configure(&args.agent_checkpoints)?;
         let wave = args.sealed_wave && std::env::var("FENVIX_SEALED_WAVE").as_deref() != Ok("0");
         tenant_bench::fx::view::WAVE.store(wave, Relaxed);
+        tenant_bench::fx::view::WARM_THREAD.store(std::env::var("FENVIX_WARM_THREAD").as_deref() != Ok("0"), Relaxed);
         tenant_bench::fx::check_config()?;
     }
     tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);

@@ -61,6 +61,15 @@ pub const NAMES: [&str; N] = [
 
 pub static ON: AtomicBool = AtomicBool::new(false);
 pub static SLOW_MS: AtomicU64 = AtomicU64::new(50);
+/// Every object-store GET prints a `WAITS_GET` line (path, range, bytes, time; `FX_WAITS_GETS`, measurements only).
+pub static GETS: AtomicBool = AtomicBool::new(false);
+
+/// One GET, when `GETS` is on.
+pub fn note_get(path: &str, range: &str, bytes: u64, d: Duration) {
+    if GETS.load(Relaxed) {
+        eprintln!("WAITS_GET u={:.1} ms={:.2} bytes={bytes} range={range} path={path} in_cmd={}", unix_ms() - d.as_secs_f64() * 1000.0, d.as_secs_f64() * 1000.0, WAITS.try_with(|_| ()).is_ok());
+    }
+}
 
 #[derive(Default)]
 pub struct Waits {

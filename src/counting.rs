@@ -419,6 +419,7 @@ impl ObjectStore for CountingStore {
             "GET"
         };
         let token = self.trace.begin(op, location.as_ref());
+        let range_s = if crate::waits::GETS.load(Relaxed) { format!("{:?}", options.range) } else { String::new() };
         let t0 = Instant::now();
         let mut res = self.inner.get_opts(location, options).await;
         self.counters.lat_get.record(t0.elapsed());
@@ -448,6 +449,7 @@ impl ObjectStore for CountingStore {
             crate::meter::note_get(bytes, t0.elapsed());
             crate::waits::add(crate::waits::W::Get, t0.elapsed());
             crate::waits::add_get_bytes(bytes);
+            crate::waits::note_get(location.as_ref(), &range_s, bytes, t0.elapsed());
         } else {
             crate::waits::add(crate::waits::W::Other, t0.elapsed());
         }
