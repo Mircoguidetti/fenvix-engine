@@ -1,0 +1,16 @@
+{
+ "mode": "run",
+ "engine": "integration-3",
+ "loader_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts",
+ "server_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts",
+ "data": "atlas",
+ "phases": [
+  "measure",
+  "extras"
+ ],
+ "programs": [
+  "agent-bench"
+ ],
+ "aurora": true,
+ "pantry": "fenvix-kitchen-pantry-1000000001"
+}

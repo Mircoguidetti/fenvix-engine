@@ -11,6 +11,13 @@ cd "$(dirname "$0")" || exit 1
 ROLE=$1; NAME=$2; BUCKET=$3
 export AWS_DEFAULT_REGION=eu-west-1 AWS_REGION=eu-west-1
 export PYTHONPATH="$PWD/vendor" PYTHONUNBUFFERED=1
+# aws-fixes (total review, question 1 point 4): every machine records its zone name and zone ID (the ID names the same
+# physical zone in every account: Atlas's primary was in euw1-az2) in results/<NAME>/zone.json, before anything else
+zq() { local t; t=$(curl -fsS -m 5 -X PUT http://169.254.169.254/latest/api/token -H "X-aws-ec2-metadata-token-ttl-seconds: 600" 2>/dev/null) &&
+  curl -fsS -m 5 -H "X-aws-ec2-metadata-token: $t" "http://169.254.169.254/latest/meta-data/placement/$1" 2>/dev/null; }
+if [ -n "${LOCAL_TEST:-}" ]; then Z=${FAKE_AZ:-?}; ZID="local-${FAKE_AZ:-?}"; else Z=$(zq availability-zone || echo "?"); ZID=$(zq availability-zone-id || echo "?"); fi
+printf '{"name": "%s", "role": "%s", "zone": "%s", "zone_id": "%s"}\n' "$NAME" "$ROLE" "$Z" "$ZID" > zone.json
+python3 s3io.py put "$BUCKET" "results/$NAME/zone.json" zone.json > /dev/null 2>&1 || true
 case "$ROLE" in
   log)                         exec bash ./log.sh "$NAME" "$BUCKET" ;;
   cooklog)   # the measured cook and log-0 on one machine (8-vCPU plan): the cook never powers the machine off,

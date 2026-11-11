@@ -8,6 +8,8 @@
 #   ballast-rounds  the same cold read phases as m30-corto (Q2, Q3, Q1, Q1d, Q4), on two ballast databases, through
 #                   code-irlanda's programma.py and the founder's script unchanged (100 GB and 1 TB only)
 #   takeovers       programs/takeovers.py       N takeovers cook <-> spare, 0 acknowledged writes lost
+#   write-peak      programs/write_peak.py      peak writes with the real indexes through the measured cook (the
+#                   founder's script's own load, 6 databases x 16 threads, 25 minutes); run by a client named "peak"
 # Then <NAME>/end.json and power off. Settings from the runner in <NAME>/config.json (no secrets).
 #   agent-bench     programs/agent_bench.py     the agent checkpoint benchmark against our cook, the Postgres machine (and
 #                   Aurora if given); run by a second client named "agent", after the spare is off (8 vCPU)
@@ -81,7 +83,12 @@ fi
 if has agent-bench; then
   PG=$(cfg pgbox.ip); AU=$($PY s3io.py text "$BUCKET" secret/aurora-uri 2>/dev/null || true)
   # shellcheck disable=SC2046
-  run_prog agent-bench $PY agent_bench.py out/agent-bench --fenvix-uri "$URI" --pg-host "$PG" --aurora-uri "$AU" --s3-bucket "$PANTRY" $(cfg agent_bench_args)
+  run_prog agent-bench $PY agent_bench.py out/agent-bench --fenvix-uri "$URI" --pg-host "$PG" --aurora-uri "$AU" --s3-bucket "$PANTRY" \
+    --done-bucket "$BUCKET" --done-prefix "$P" $(cfg agent_bench_args)
+fi
+if has write-peak; then
+  # shellcheck disable=SC2046
+  run_prog write-peak $PY write_peak.py out/write-peak --uri "$URI" $(cfg write_peak_args)
 fi
 step "programs done: ${outcomes[*]:-none}"
 finish EXTRAS_DONE

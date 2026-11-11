@@ -1,0 +1,256 @@
+{
+  "note": "AWS round result",
+  "target": "fenvix",
+  "label": "our kitchen: cook m7i.large with the 3-zone log, eu-west-1a: equal durability: 3-zone log, a write acknowledged at 2 of 3 copies",
+  "durability": "equal durability: 3-zone log, a write acknowledged at 2 of 3 copies",
+  "profile": "tiny",
+  "seed": 42,
+  "workers": 1,
+  "plan": {
+    "threads": 12,
+    "turns": 99,
+    "digest": "0a6aead217d1a66e"
+  },
+  "client": {
+    "python": "3.13.18",
+    "host": "vm"
+  },
+  "write": {
+    "seconds": 1.986,
+    "errors": [],
+    "steps_per_second": 317.72
+  },
+  "read": {
+    "threads_read": 12,
+    "inconsistencies": 0
+  },
+  "erase": {
+    "users_erased": 2,
+    "threads_erased": 6,
+    "threads_left_readable": 0
+  },
+  "latency_ms": {
+    "delete_thread": {
+      "n": 6,
+      "p50": 3.848,
+      "p90": 6.789,
+      "p99": 6.789,
+      "max": 6.789,
+      "mean": 3.727
+    },
+    "erase_user": {
+      "n": 2,
+      "p50": 14.223,
+      "p90": 14.223,
+      "p99": 14.223,
+      "max": 14.223,
+      "mean": 11.258
+    },
+    "list": {
+      "n": 12,
+      "p50": 27.473,
+      "p90": 161.167,
+      "p99": 399.287,
+      "max": 399.287,
+      "mean": 79.169
+    },
+    "list_limit10": {
+      "n": 12,
+      "p50": 11.033,
+      "p90": 25.247,
+      "p99": 31.545,
+      "max": 31.545,
+      "mean": 14.357
+    },
+    "put": {
+      "n": 631,
+      "p50": 1.266,
+      "p90": 2.101,
+      "p99": 4.5,
+      "max": 8.365,
+      "mean": 1.419
+    },
+    "put[chat]": {
+      "n": 222,
+      "p50": 0.99,
+      "p90": 1.438,
+      "p99": 2.027,
+      "max": 4.768,
+      "mean": 1.073
+    },
+    "put[coding]": {
+      "n": 409,
+      "p50": 1.5,
+      "p90": 2.352,
+      "p99": 4.652,
+      "max": 8.365,
+      "mean": 1.606
+    },
+    "put_writes": {
+      "n": 532,
+      "p50": 1.158,
+      "p90": 2.647,
+      "p99": 4.689,
+      "max": 7.903,
+      "mean": 1.505
+    },
+    "resume[erase_verify]": {
+      "n": 6,
+      "p50": 0.601,
+      "p90": 0.653,
+      "p99": 0.653,
+      "max": 0.653,
+      "mean": 0.536
+    },
+    "resume[read]": {
+      "n": 12,
+      "p50": 1.779,
+      "p90": 2.774,
+      "p99": 3.633,
+      "max": 3.633,
+      "mean": 1.995
+    },
+    "resume[write/first]": {
+      "n": 12,
+      "p50": 0.694,
+      "p90": 0.785,
+      "p99": 0.927,
+      "max": 0.927,
+      "mean": 0.7
+    },
+    "resume[write/long]": {
+      "n": 2,
+      "p50": 1.836,
+      "p90": 1.836,
+      "p99": 1.836,
+      "max": 1.836,
+      "mean": 1.677
+    },
+    "resume[write/none]": {
+      "n": 79,
+      "p50": 1.831,
+      "p90": 2.955,
+      "p99": 5.931,
+      "max": 5.931,
+      "mean": 2.036
+    },
+    "resume[write/short]": {
+      "n": 6,
+      "p50": 1.813,
+      "p90": 2.567,
+      "p99": 2.567,
+      "max": 2.567,
+      "mean": 1.806
+    },
+    "save_step": {
+      "n": 631,
+      "p50": 2.436,
+      "p90": 4.45,
+      "p99": 8.537,
+      "max": 15.477,
+      "mean": 2.686
+    },
+    "save_step[chat]": {
+      "n": 222,
+      "p50": 1.947,
+      "p90": 3.344,
+      "p99": 8.003,
+      "max": 9.958,
+      "mean": 2.11
+    },
+    "save_step[coding]": {
+      "n": 409,
+      "p50": 2.709,
+      "p90": 4.881,
+      "p99": 9.61,
+      "max": 15.477,
+      "mean": 2.999
+    },
+    "time_travel": {
+      "n": 36,
+      "p50": 1.434,
+      "p90": 2.478,
+      "p99": 2.975,
+      "max": 2.975,
+      "mean": 1.693
+    }
+  },
+  "bytes": {
+    "checkpoints": 631,
+    "put_writes_calls": 532,
+    "checkpoint_bytes": 44960473,
+    "writes_bytes": 943057,
+    "message_payload_bytes_all_checkpoints": 44695195,
+    "unique_message_bytes": 946412,
+    "logical_total": 45903530,
+    "stored": null,
+    "stored_from": "UNKNOWN (no S3 access given)",
+    "stored_per_logical": null,
+    "stored_per_checkpoint": null
+  },
+  "sizes": {
+    "dbStats": {
+      "objects": 1596,
+      "dataSize": 46359903.0,
+      "storageSize": 18288640.0,
+      "indexSize": 155648.0,
+      "totalSize": 18444288.0
+    },
+    "collStats": {
+      "checkpoints": {
+        "count": 631,
+        "size": 45149912,
+        "storageSize": 17793024,
+        "totalIndexSize": 65536
+      },
+      "checkpoint_writes": {
+        "count": 965,
+        "size": 1209991,
+        "storageSize": 495616,
+        "totalIndexSize": 90112
+      }
+    },
+    "s3": null,
+    "stored_bytes": null,
+    "stored_from": "UNKNOWN (no S3 access given)",
+    "serverStatus_s3": {}
+  },
+  "sizes_after_erase": {
+    "dbStats": {
+      "objects": 414,
+      "dataSize": 4021510.0,
+      "storageSize": 19619840.0,
+      "indexSize": 233472.0,
+      "totalSize": 19853312.0
+    },
+    "collStats": {
+      "checkpoints": {
+        "count": 173,
+        "size": 3763780,
+        "storageSize": 18997248,
+        "totalIndexSize": 102400
+      },
+      "checkpoint_writes": {
+        "count": 241,
+        "size": 257730,
+        "storageSize": 622592,
+        "totalIndexSize": 131072
+      }
+    },
+    "s3": null,
+    "stored_bytes": null,
+    "stored_from": "UNKNOWN (no S3 access given)",
+    "serverStatus_s3": {}
+  },
+  "s3_put_requests_during_write": null,
+  "delta_test": {
+    "test": "agent checkpoint delta test",
+    "target": "fenvix",
+    "stored_bytes_source": "UNKNOWN until fenvixSstInfo exists (compaction 2 steps 4-8)",
+    "threads": 12,
+    "logical_bytes": 45903530,
+    "unique_bytes": 946412,
+    "stored_bytes": null
+  },
+  "ok": true
+}

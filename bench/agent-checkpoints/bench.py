@@ -186,6 +186,8 @@ def main() -> None:
     ap.add_argument("--target", required=True, choices=["fenvix", "mongo", "postgres"])
     ap.add_argument("--uri", default=os.environ.get("BENCH_URI"), help="connection string (or env BENCH_URI)")
     ap.add_argument("--label", default="", help="free text describing the target, stored in the summary")
+    ap.add_argument("--durability", default="", help="what an acknowledged write means on this target (e.g. 'single node, "
+                    "no copy'); stored in the summary and printed on the last line")
     ap.add_argument("--profile", default="small", choices=sorted(generator.PROFILES))
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--workers", type=int, default=1)
@@ -231,7 +233,7 @@ def main() -> None:
         s3_puts = s3_after["put"] - s3_before["put"]
     summary = {
         "note": VALIDATION_NOTE if a.local else "AWS round result",
-        "target": a.target, "label": a.label, "profile": a.profile, "seed": a.seed, "workers": a.workers,
+        "target": a.target, "label": a.label, "durability": a.durability or "not stated", "profile": a.profile, "seed": a.seed, "workers": a.workers,
         "plan": {"threads": len(threads), "turns": len(events), "digest": generator.plan_digest(events)},
         "client": {"python": platform.python_version(), "host": platform.node()},
         "write": w | {"steps_per_second": round(lb["checkpoints"] / w["seconds"], 2) if w["seconds"] else None},
@@ -248,7 +250,7 @@ def main() -> None:
     with open(os.path.join(a.out, "summary.json"), "w") as f:
         json.dump(summary, f, indent=2)
     lat = summary["latency_ms"]
-    print(f"[{a.target}] {'VALIDATION, NOT RESULTS: ' if a.local else ''}ok={summary['ok']} "
+    print(f"[{a.target}{' | ' + a.durability if a.durability else ''}] {'VALIDATION, NOT RESULTS: ' if a.local else ''}ok={summary['ok']} "
           f"checkpoints={lb['checkpoints']} write={w['seconds']}s "
           f"save_step p50/p99={lat['save_step']['p50']}/{lat['save_step']['p99']} ms "
           f"stored/logical={summary['bytes']['stored_per_logical']} -> {a.out}/summary.json")

@@ -66,6 +66,8 @@ wait_cook() { # wait_cook K: wait for "go" and then "ready" of cook K; sets TYPE
   TYPE=$($PY -c "import json,sys; print(json.loads(sys.argv[1])['type'])" "$go")
   COOK_PANTRY=$($PY -c "import json,sys; print(json.loads(sys.argv[1]).get('pantry') or sys.argv[2])" "$go" "$PANTRY")
   COOK_PREP=$($PY -c "import json,sys; print('1' if json.loads(sys.argv[1]).get('prepare') else '0')" "$go")
+  # aws-fixes (B5): the settle cap comes with the cook's go (the round's "settle_max_min"); SETTLE_MAX_MIN (local tests) wins
+  COOK_SETTLE_MAX=${SETTLE_MAX_MIN:-$($PY -c "import json,sys; print(json.loads(sys.argv[1]).get('settle_max_min') or 20)" "$go")}
   t0=$(date +%s); ready=""
   while :; do
     ready=$($PY s3io.py text "$BUCKET" "server-$k/ready.json" 2>/dev/null) && [ -n "$ready" ] && break
@@ -108,11 +110,16 @@ if [ "$LOAD" = 1 ]; then
   for s in work/load/*/; do n=$(basename "$s"); mkdir -p "loaded/$n"; cp "$s"risultati_p1.json "loaded/$n/" 2>/dev/null; done
   echo "$(( $(date +%s) - t0 ))" > out/load-seconds.txt
   if [ "$rc" != 0 ]; then done_k 0 '{"outcome": "LOAD_FAILED"}'; finish LOAD_FAILED; fi
-  # the loader's compaction calms down before the loader is switched off (risk 1 of the reviewer, C6)
-  $PY settle.py "$PANTRY" "${SETTLE_MAX_MIN:-20}" "${SETTLE_STEP_S:-60}" out/settle.json "${SETTLE_MIN_S:-150}" > out/settle.txt 2>&1
+  # the loader's compaction calms down before the loader is switched off (risk 1 of the reviewer, C6). aws-fixes (B5):
+  # settle.py watches the server's compaction counters and the fx/ objects, and never gives up silently: if the cap
+  # is hit, the data are kept (state files pushed: the load itself is complete) and the round stops with
+  # LOADED_NOT_SETTLED, so nobody measures on it without reading out/settle.json first
+  $PY settle.py "$PANTRY" "$COOK_SETTLE_MAX" "${SETTLE_STEP_S:-60}" out/settle.json "${SETTLE_MIN_S:-150}" > out/settle.txt 2>&1
+  src=$?
   step "$(tail -1 out/settle.txt)"
   $PY s3io.py push "$PANTRY" loaded kitchen-states/ 2>> out/push-errors.log
   cp -r loaded out/loaded-states
+  if [ "$src" != 0 ]; then done_k 0 '{"outcome": "LOADED_NOT_SETTLED"}'; finish LOADED_NOT_SETTLED; fi
   done_k 0 '{"outcome": "LOADED"}'
 else
   $PY s3io.py get-dir "$PANTRY" kitchen-states/ loaded > /dev/null 2>&1 || { step "ERROR: no state files of a load in the pantry $PANTRY"; finish NO_LOADED_STATES; }
@@ -148,9 +155,17 @@ while :; do
     t0=$(date +%s)
     $PY open_all.py "$((${SETTLE_MAX_MIN:-20} * 60 + 120))" "out/size-$K/open-all.json" > "out/size-$K/open-all.txt" 2>&1 & OPEN_PID=$!
     sleep 5
-    $PY settle.py "$COOK_PANTRY" "${SETTLE_MAX_MIN:-20}" "${SETTLE_STEP_S:-60}" "out/size-$K/settle.json" "${SETTLE_MIN_S:-150}" > "out/size-$K/settle.txt" 2>&1
+    $PY settle.py "$COOK_PANTRY" "$COOK_SETTLE_MAX" "${SETTLE_STEP_S:-60}" "out/size-$K/settle.json" "${SETTLE_MIN_S:-150}" > "out/size-$K/settle.txt" 2>&1
+    src=$?
     kill "$OPEN_PID" 2>/dev/null; wait "$OPEN_PID" 2>/dev/null
     step "size $K ($TYPE): prepared in $(( $(date +%s) - t0 )) s: $(head -1 "out/size-$K/open-all.txt"); $(tail -1 "out/size-$K/settle.txt")"
+    if [ "$src" != 0 ]; then
+      # aws-fixes (B5): no measure on a pantry whose compaction is not finished (or cannot be seen): stop and say so
+      kill "$SIZE_CPU" 2>/dev/null
+      step "size $K ($TYPE): NOT_SETTLED: the program does not run (out/size-$K/settle.json says why)"
+      outcomes+=("$K:NOT_SETTLED"); done_k "$K" "{\"outcome\": \"NOT_SETTLED\", \"type\": \"$TYPE\"}"
+      continue
+    fi
   fi
   URI_GIRO="${FENVIX_P1_URI}&maxConnecting=${MAX_CONNECTING:-200}"
   step "size $K ($TYPE): program $PROGRAM starts (maxConnecting in the round's string, like from Ireland)"

@@ -108,6 +108,23 @@ def status(run):
     return cs, ins, ep
 
 
+def describe(run):
+    """The cluster and its writer as RDS describes them (engine version, storage type, parameter group names and status,
+    zone, class, encryption, backup), saved with the results (aws-fixes B10). Only the Describe calls the founder's
+    policy already allows; the parameter VALUES are read by the agent client through SQL (pg_settings: Aurora's
+    pg_settings shows the values its parameter groups set), so no new permission is needed."""
+    rds, _ = clients()
+    n = names(run)
+    c = rds.describe_db_clusters(DBClusterIdentifier=n["cluster"])["DBClusters"][0]
+    i = rds.describe_db_instances(DBInstanceIdentifier=n["instance"])["DBInstances"][0]
+    drop = ("MasterUserSecret", "Endpoint", "ReaderEndpoint", "CustomEndpoints", "HostedZoneId", "DbClusterResourceId",
+            "DBClusterArn", "DBInstanceArn", "DbiResourceId", "AssociatedRoles")
+    clean = lambda d: {k: v for k, v in d.items() if k not in drop and not k.endswith("Arn")}
+    return {"cluster": clean(c), "writer": {k: v for k, v in clean(i).items() if k != "Endpoint"},
+            "durability": "Aurora: 6 copies of the storage in 3 zones, a write acknowledged at 4 of 6 (DECLARED by AWS): "
+                          "the equal-durability line of the agent benchmark on AWS (coordinator, 2026-11-11, B10)"}
+
+
 def uri(endpoint, password):
     import urllib.parse
     return f"postgresql://app_user:{urllib.parse.quote(password, safe='')}@{endpoint}:5432/app_demo?sslmode=require"

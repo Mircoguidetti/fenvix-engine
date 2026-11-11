@@ -224,7 +224,7 @@ class LocalPlatform(Buckets):
         env = {"LOCAL_TEST": "1", "FAKE_TYPE": mtype, "FAKE_AZ": az, "AWS_ENDPOINT_URL": self.machine_endpoint,
                "AWS_ACCESS_KEY_ID": os.environ["AWS_ACCESS_KEY_ID"], "AWS_SECRET_ACCESS_KEY": os.environ["AWS_SECRET_ACCESS_KEY"],
                "AWS_REGION": REGION, "PUSH_S": os.environ.get("PUSH_S", "10"), "SST_EVERY_S": os.environ.get("SST_EVERY_S", "20"),
-               "SETTLE_STEP_S": "5", "SETTLE_MAX_MIN": "3", "DOWNLOAD_RETRY_S": "1", "NO_PROXY": "*", "no_proxy": "*",
+               "SETTLE_STEP_S": "5", "SETTLE_MAX_MIN": os.environ.get("LOCAL_SETTLE_MAX_MIN", "10"), "DOWNLOAD_RETRY_S": "1", "NO_PROXY": "*", "no_proxy": "*",
                **{k: v for k, v in os.environ.items() if k.startswith("S9_MACHINE_")}}
         args = ["run", "-d", "--name", cname, "--hostname", name, "--network", self.network,
                 "--label", f"project={TAG}", "--label", f"step9.type={mtype}", "--label", f"step9.role={role}",
