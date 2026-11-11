@@ -80,6 +80,8 @@ pub fn drop_prefixes(coll: &str) -> Vec<Vec<u8>> {
 /// still go back when a transaction that took a number earlier commits after a later insert, so loading it also starts
 /// above the highest number in use (one reverse seek, once per opening).
 pub async fn alloc(g: &mut Entry, coll: &str, ops: &mut Vec<Op>) -> anyhow::Result<u64> {
+    // the numbers taken from here on belong to this opening (`Entry::pin_opening`, `dbs::Reopened`)
+    g.pin_opening();
     if !g.nat.contains_key(coll) {
         let next = match g.get_live(&meta_key(coll)).await? {
             Some(v) => {
