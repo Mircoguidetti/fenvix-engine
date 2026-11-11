@@ -55,9 +55,13 @@ fn class(key: &[u8]) -> String {
     if key.windows(5).any(|w| w == b"\0fxm/") {
         return "message-row".into();
     }
-    let mut s = String::new();
+    // customer space: `u/`, the customer component (a type byte, the value, a 0 byte), 0x01, then `{collection}/{kind}/`
+    let (mut s, body) = match key.strip_prefix(b"u/").and_then(|r| r.windows(2).position(|w| w == [0u8, 1u8]).map(|p| &r[p + 2..])) {
+        Some(rest) => ("u/".to_string(), rest),
+        None => (String::new(), key),
+    };
     let mut slashes = 0;
-    for &b in key.iter().take(48) {
+    for &b in body.iter().take(48) {
         if b == b'/' {
             slashes += 1;
             s.push('/');
