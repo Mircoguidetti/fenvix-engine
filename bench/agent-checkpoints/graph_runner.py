@@ -16,7 +16,11 @@ done outside the timed region).
 """
 from __future__ import annotations
 
+import copy
+import hashlib
+import threading
 import time
+from collections import Counter
 from typing import Any, Iterator, Sequence
 
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
@@ -26,14 +30,153 @@ from langgraph.graph import END, START, MessagesState, StateGraph
 import generator
 
 
-class TimedSaver(BaseCheckpointSaver):
-    """Delegates every call to the real saver and times it. `sink(record)` receives one dict per call."""
+def _digest(typed: tuple[str, bytes]) -> bytes:
+    return hashlib.blake2b(typed[0].encode() + b"\0" + bytes(typed[1]), digest_size=16).digest()
 
-    def __init__(self, inner: BaseCheckpointSaver, sink, step_sink=None):
+
+def canonical(obj):
+    """Plain dicts with their keys in sorted order, recursively (lists and tuples walked, every other object as is).
+    The Postgres saver gives back a checkpoint whose dict keys come in another order than LangGraph wrote them (it
+    rebuilds the dict from columns and blobs); the content is the same. Hashing the canonical form compares the values
+    byte for byte through the saver's own serializer, and ignores only the order of dict keys."""
+    if type(obj) is dict:
+        return {k: canonical(obj[k]) for k in sorted(obj, key=str)}
+    if type(obj) is list:
+        return [canonical(x) for x in obj]
+    if type(obj) is tuple:
+        return tuple(canonical(x) for x in obj)
+    return obj
+
+
+def hash_of(serde, obj) -> bytes:
+    """Hash of an object read back from a saver: its canonical form, serialized with the saver's own serializer."""
+    return _digest(serde.dumps_typed(canonical(obj)))
+
+
+def hash_written(serde, typed: tuple[str, bytes]) -> bytes:
+    """Hash of what the saver was given, from the bytes of its own serializer, decoded once and hashed like a read.
+    Why the decode: a message object rebuilt from bytes serializes a few bytes longer than the object LangGraph built
+    (pydantic's set fields), though the two compare equal; a perfect store returns exactly the decoded bytes, so this is
+    the answer every read must match."""
+    return hash_of(serde, serde.loads_typed(typed))
+
+
+class Expected:
+    """The correctness check (P-bench-local 2.4): at write time a hash of every checkpoint and every pending write the
+    saver was given, serialized with the saver's own serializer (`serde.dumps_typed`); every read in every phase is
+    compared with it, outside the timed region. Shared by all workers (one lock). A "wrong read" is one read call or one
+    list item whose answer differs from what was written, plus one per written checkpoint a whole-history list leaves
+    out. Reads of erased threads are checked by bench.py's erase phase (`threads_left_readable`), not here.
+      ck[(thread, ns, checkpoint_id)]          = hash of the checkpoint
+      writes[(thread, ns, checkpoint_id)]      = {(task_id, idx): (channel, hash of the value)}
+      latest[(thread, ns)]                     = id of the newest checkpoint written
+      ids[(thread, ns)]                        = every checkpoint id written"""
+
+    SPECIAL = None  # filled lazily: LangGraph's WRITES_IDX_MAP (special channels overwrite, regular ones keep the first)
+
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.ck: dict = {}
+        self.writes: dict = {}
+        self.latest: dict = {}
+        self.ids: dict = {}
+        self.reads_checked = 0
+        self.wrong = Counter()  # kind -> count
+        self.examples: list[dict] = []
+
+    # -- write side -------------------------------------------------------------------------------------------------
+    def on_put(self, thread: str, ns: str, cid: str, h: bytes) -> None:
+        with self.lock:
+            self.ck[(thread, ns, cid)] = h
+            self.latest[(thread, ns)] = cid
+            self.ids.setdefault((thread, ns), set()).add(cid)
+
+    def on_put_writes(self, thread: str, ns: str, cid: str, task_id: str, items: list[tuple[str, int, bytes]]) -> None:
+        if Expected.SPECIAL is None:
+            from langgraph.checkpoint.base import WRITES_IDX_MAP
+            Expected.SPECIAL = dict(WRITES_IDX_MAP)
+        with self.lock:
+            w = self.writes.setdefault((thread, ns, cid), {})
+            for channel, i, h in items:
+                idx = Expected.SPECIAL.get(channel, i)
+                if (task_id, idx) in w and channel not in Expected.SPECIAL:
+                    continue  # the savers keep the first regular write of a (task, idx)
+                w[(task_id, idx)] = (channel, h)
+
+    def forget_thread(self, thread: str) -> None:
+        with self.lock:
+            for d in (self.ck, self.writes):
+                for k in [k for k in d if k[0] == thread]:
+                    del d[k]
+            for d in (self.latest, self.ids):
+                for k in [k for k in d if k[0] == thread]:
+                    del d[k]
+
+    # -- read side --------------------------------------------------------------------------------------------------
+    def _bad(self, kind: str, **info) -> None:
+        with self.lock:
+            self.wrong[kind] += 1
+            if len(self.examples) < 20:
+                self.examples.append({"kind": kind} | info)
+
+    def check_tuple(self, serde, tup, thread: str, ns: str, want_id: str | None, latest: bool, op: str) -> None:
+        """One CheckpointTuple read back (or None). want_id: the id asked for (time travel); latest: a resume, which
+        must return the newest checkpoint written for the thread."""
+        with self.lock:
+            self.reads_checked += 1
+            newest = self.latest.get((thread, ns))
+        if tup is None:
+            if want_id is not None or (latest and newest is not None):
+                self._bad("missing", op=op, thread=thread, want=want_id or newest)
+            return
+        cid = tup.config["configurable"]["checkpoint_id"]
+        if want_id is not None and cid != want_id:
+            self._bad("wrong_id", op=op, thread=thread, want=want_id, got=cid)
+            return
+        if latest and cid != newest:
+            self._bad("not_latest", op=op, thread=thread, want=newest, got=cid)
+            return
+        with self.lock:
+            h = self.ck.get((thread, ns, cid))
+            exp_w = dict(self.writes.get((thread, ns, cid), {}))
+        if h is None:
+            self._bad("unknown_checkpoint", op=op, thread=thread, got=cid)
+            return
+        if tup.checkpoint.get("id") != cid or hash_of(serde, tup.checkpoint) != h:
+            self._bad("checkpoint_differs", op=op, thread=thread, checkpoint_id=cid)
+            return
+        got_w = Counter((t, ch, hash_of(serde, v)) for t, ch, v in (tup.pending_writes or []))
+        want_w = Counter((t, ch, hh) for (t, _i), (ch, hh) in exp_w.items())
+        if got_w != want_w:
+            self._bad("pending_writes_differ", op=op, thread=thread, checkpoint_id=cid,
+                      want=sum(want_w.values()), got=sum(got_w.values()))
+
+    def check_list(self, serde, items: list, thread: str, ns: str, whole: bool, op: str) -> None:
+        for t in items:
+            self.check_tuple(serde, t, thread, ns, t.config["configurable"]["checkpoint_id"], False, op)
+        if whole:
+            with self.lock:
+                want = set(self.ids.get((thread, ns), ()))
+            got = {t.config["configurable"]["checkpoint_id"] for t in items}
+            for cid in sorted(want - got):
+                self._bad("left_out_of_list", op=op, thread=thread, checkpoint_id=cid)
+
+    def report(self) -> dict:
+        with self.lock:
+            return {"wrong_reads": sum(self.wrong.values()), "by_kind": dict(self.wrong), "reads_checked": self.reads_checked,
+                    "checkpoints_written": len(self.ck), "examples": list(self.examples)}
+
+
+class TimedSaver(BaseCheckpointSaver):
+    """Delegates every call to the real saver and times it. `sink(record)` receives one dict per call.
+    With `expected` (an Expected), every write is recorded and every read is checked against it."""
+
+    def __init__(self, inner: BaseCheckpointSaver, sink, step_sink=None, expected: Expected | None = None):
         super().__init__(serde=inner.serde)
         self.inner = inner
         self.sink = sink
         self.step_sink = step_sink
+        self.expected = expected
         self.context: dict = {}  # set by the runner: phase, gap kind of the current turn, etc.
         self._pending_writes_s = 0.0  # put_writes time since the last put: part of "save one step"
         self._pending_writes_n = 0
@@ -44,19 +187,43 @@ class TimedSaver(BaseCheckpointSaver):
         self.sink(r)
 
     def _size(self, obj) -> int:
+        return self._size_hash(obj)[0]
+
+    def _size_hash(self, obj) -> tuple[int, bytes | None]:
+        """Logical bytes (the payload as handed to the saver, serialized as before) and, with a check, the hash of its
+        canonical form (outside the timed region)."""
         try:
-            return len(self.serde.dumps_typed(obj)[1])
+            typed = self.serde.dumps_typed(obj)
         except Exception:  # noqa: BLE001 - a value the serializer cannot type: count nothing rather than fail the run
-            return 0
+            return 0, None
+        return len(typed[1]), (hash_written(self.serde, typed) if self.expected is not None else None)
+
+    @staticmethod
+    def _ns(config) -> str:
+        return config["configurable"].get("checkpoint_ns", "")
+
+    def _check_read(self, tup, config, op: str) -> None:
+        if self.expected is None or self.context.get("phase") == "erase_verify":
+            return
+        c = config["configurable"]
+        want = c.get("checkpoint_id")
+        self.expected.check_tuple(self.serde, tup, c["thread_id"], self._ns(config), want, want is None, op)
 
     # -- write path -------------------------------------------------------------------------------------------------
     def put(self, config, checkpoint, metadata, new_versions):
         thread = config["configurable"]["thread_id"]
-        logical = self._size(checkpoint) + self._size(metadata)
+        if self.expected is not None:
+            # a frozen copy (outside the timed region): LangGraph's add_messages gives ids in place to message objects
+            # that a background put may still be serializing, so without it the stored bytes depend on thread timing
+            checkpoint = copy.deepcopy(checkpoint)
+        ck_size, ck_hash = self._size_hash(checkpoint)
+        logical = ck_size + self._size(metadata)
         msgs = self._size(checkpoint.get("channel_values", {}).get("messages", []))
         t0 = time.perf_counter()
         out = self.inner.put(config, checkpoint, metadata, new_versions)
         dt = time.perf_counter() - t0
+        if self.expected is not None:
+            self.expected.on_put(thread, self._ns(config), checkpoint["id"], ck_hash)
         self._rec("put", thread, dt, logical_bytes=logical, message_bytes=msgs)
         # "save one step" = the put_writes of the superstep + its put
         self._rec("save_step", thread, dt + self._pending_writes_s, logical_bytes=logical, writes_calls=self._pending_writes_n)
@@ -65,10 +232,16 @@ class TimedSaver(BaseCheckpointSaver):
 
     def put_writes(self, config, writes: Sequence[tuple[str, Any]], task_id: str, task_path: str = ""):
         thread = config["configurable"]["thread_id"]
-        logical = sum(self._size(v) for _, v in writes)
+        if self.expected is not None:
+            writes = [(ch, copy.deepcopy(v)) for ch, v in writes]  # frozen copy, as in put
+        sized = [self._size_hash(v) for _, v in writes]
+        logical = sum(n for n, _ in sized)
         t0 = time.perf_counter()
         out = self.inner.put_writes(config, writes, task_id, task_path)
         dt = time.perf_counter() - t0
+        if self.expected is not None:
+            self.expected.on_put_writes(thread, self._ns(config), config["configurable"]["checkpoint_id"], task_id,
+                                        [(ch, i, h) for i, ((ch, _v), (_n, h)) in enumerate(zip(writes, sized))])
         self._pending_writes_s += dt
         self._pending_writes_n += 1
         self._rec("put_writes", thread, dt, logical_bytes=logical, n_writes=len(writes))
@@ -82,6 +255,7 @@ class TimedSaver(BaseCheckpointSaver):
         dt = time.perf_counter() - t0
         op = "time_travel" if config["configurable"].get("checkpoint_id") else "resume"
         self._rec(op, thread, dt, found=out is not None)
+        self._check_read(out, config, op)
         return out
 
     def list(self, config, *, filter=None, before=None, limit=None) -> Iterator:  # noqa: A002 - LangGraph's signature
@@ -89,13 +263,19 @@ class TimedSaver(BaseCheckpointSaver):
         t0 = time.perf_counter()
         items = list(self.inner.list(config, filter=filter, before=before, limit=limit))  # materialize: time the whole read
         dt = time.perf_counter() - t0
-        self._rec("list" if limit is None else f"list_limit{limit}", thread, dt, n=len(items))
+        op = "list" if limit is None else f"list_limit{limit}"
+        self._rec(op, thread, dt, n=len(items))
+        if self.expected is not None and thread and self.context.get("phase") != "erase_verify":
+            whole = limit is None and before is None and not filter
+            self.expected.check_list(self.serde, items, thread, self._ns(config), whole, op)
         return iter(items)
 
     def delete_thread(self, thread_id: str) -> None:
         t0 = time.perf_counter()
         self.inner.delete_thread(thread_id)
         self._rec("delete_thread", thread_id, time.perf_counter() - t0)
+        if self.expected is not None:
+            self.expected.forget_thread(thread_id)
 
     # -- everything else LangGraph needs, unchanged -----------------------------------------------------------------
     def get_next_version(self, current, channel):

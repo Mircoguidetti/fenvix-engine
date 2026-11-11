@@ -17,7 +17,9 @@ import os
 import sys
 
 ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
-OPS = ["put", "put_writes", "resume[read]", "resume[write/first]", "resume[write/long]", "list", "list_limit10", "erase_user"]
+OPS = ["put", "put_writes", "resume[read]", "resume[write/first]", "resume[write/long]", "list", "list_limit10", "erase_user",
+       # P-bench-local (2026-11-11): added, nothing removed or loosened
+       "save_step", "time_travel", "resume[cold]"]
 
 
 def rel(p):

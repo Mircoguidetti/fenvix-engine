@@ -135,3 +135,25 @@ harness works; `results/local-2026-11-09/REPORT.txt` has all of them.
   travel does not apply (no per-step checkpoints for agent memory).
 - TTL: the Python `langgraph-checkpoint-mongodb` 0.5.1 used here already takes a `ttl` argument; the "1.4.0" version
   cited for TTL was not checked (it may be the JS package). Not used: the benchmark keeps everything.
+
+## Local equal-durability run (P-bench-local, 2026-11-11)
+
+`bench_local.sh` runs the whole local comparison of `equal-durability.md` on one machine, one line at a time, and can
+be rerun on any engine head unchanged (its header lists the steps and the environment it needs). `lines.py` starts one
+line in Docker (`postgres:16`, `mongo:7.0`, and `step9/local/Dockerfile` for our log copies, cook, spare and MinIO),
+checks its durability, runs `bench.py` from the host, records settings, logs, CPU and memory, and removes the line.
+
+What changed in the benchmark for this run (all before the first measured run):
+- `graph_runner.Expected`: every checkpoint and pending write the saver is given is hashed (the saver's own
+  serializer, dict keys in sorted order, after one decode); every read of every phase is compared with it.
+  `wrong_reads` must be 0 and is part of `ok`; bench.py exits 3 on a wrong read (a STOP, RULES.md 8). The saver is
+  handed a frozen copy of each checkpoint and write (outside the timed region): LangGraph's `add_messages` gives ids
+  in place to message objects a background `put` may still be serializing, so without the copy what is stored depends
+  on thread timing (seen on Postgres, mongod and ours alike).
+- `--settle`: before the sizes, wait until our server's compactor, passes and GC are idle and the S3 listing under
+  `tenants/app_demo/` stops changing (`targets.wait_compaction_idle`, cap 45 minutes, recorded in `summary["settle"]`).
+- `--cold-cmd`: after the erase phase, restart every container of the line (MinIO included), drop the host's page
+  cache, then resume 200 threads (fixed seed; threads neither read in the read phase nor erased) once each: `resume[cold]`.
+- Postgres sizes after `CHECKPOINT`; our server's status (serverStatus().fenvix and tenantStats) before and after the
+  write phase, so `quaderno.sent` shows the 3-zone log took the writes.
+- `step9/ci/gate.py` also checks `save_step`, `time_travel` and `resume[cold]`.

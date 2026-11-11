@@ -11,6 +11,13 @@ Phases (in this order, all recorded in ops.jsonl with timestamps):
               "agent checkpoint delta test" (delta_hook.py -> delta_test.json).
   4. erase  - "erase all of one end user's data": delete_thread for each thread of a sampled user, timed as a whole,
               then checks that nothing of those threads can be read back. Sizes again afterwards.
+  5. cold   - only with --cold-cmd: the command restarts every container of the line and drops the host's page cache
+              (bench/agent-checkpoints/lines.py restart); then a resume of --cold-threads threads (fixed seed, the same
+              for every target: threads neither read in phase 2 nor erased in phase 4, so none was read since its last
+              write), each read once, the first read after the restart. Op "resume[cold]".
+Every read of every phase is compared with a hash of what was written (graph_runner.Expected): "wrong_reads" in the
+summary must be 0, and it is part of "ok". Before the sizes, --settle waits until our server's compactor is idle
+(targets.wait_compaction_idle); the wait is recorded in summary["settle"].
 
 Output in --out: ops.jsonl (one line per operation), summary.json (percentiles, bytes, throughput), plan digest.
 All latencies include the client (Python, pymongo/psycopg) and the network between client and database.
@@ -66,7 +73,8 @@ class Recorder:
         self.f.close()
 
 
-def write_phase(target: targets.Target, seed: int, threads: dict, events: list[dict], rec: Recorder, workers: int) -> dict:
+def write_phase(target: targets.Target, seed: int, threads: dict, events: list[dict], rec: Recorder, workers: int,
+                expected: graph_runner.Expected) -> dict:
     """Replay the plan. With workers > 1 the users are split across workers (one saver/connection each); every thread
     stays on one worker, so each thread's turns keep their order."""
     shards = defaultdict(list)
@@ -76,7 +84,7 @@ def write_phase(target: targets.Target, seed: int, threads: dict, events: list[d
 
     def run(shard: list[dict]):
         saver, handle = target.make_saver()
-        ts = graph_runner.TimedSaver(saver, rec)
+        ts = graph_runner.TimedSaver(saver, rec, expected=expected)
         script = graph_runner.Script()
         graph = graph_runner.build_graph(ts, script)
         try:
@@ -97,9 +105,10 @@ def write_phase(target: targets.Target, seed: int, threads: dict, events: list[d
     return {"seconds": round(time.time() - t0, 3), "errors": errors}
 
 
-def read_phase(target: targets.Target, threads: dict, rec: Recorder, sample: int, seed: int) -> dict:
+def read_phase(target: targets.Target, threads: dict, rec: Recorder, sample: int, seed: int,
+               expected: graph_runner.Expected) -> dict:
     saver, handle = target.make_saver()
-    ts = graph_runner.TimedSaver(saver, rec)
+    ts = graph_runner.TimedSaver(saver, rec, expected=expected)
     ids = sorted(threads)
     longest = sorted(ids, key=lambda t: -threads[t].turns)[: max(1, sample // 5)]
     rest = [t for t in ids if t not in longest]
@@ -120,12 +129,13 @@ def read_phase(target: targets.Target, threads: dict, rec: Recorder, sample: int
             if got is None or got.checkpoint["id"] != c["configurable"]["checkpoint_id"]:
                 bad += 1
     handle.close()
-    return {"threads_read": len(chosen), "inconsistencies": bad}
+    return {"threads_read": len(chosen), "inconsistencies": bad, "chosen": chosen}
 
 
-def erase_phase(target: targets.Target, threads: dict, rec: Recorder, n_users: int, seed: int) -> dict:
+def erase_phase(target: targets.Target, threads: dict, rec: Recorder, n_users: int, seed: int,
+                expected: graph_runner.Expected) -> dict:
     saver, handle = target.make_saver()
-    ts = graph_runner.TimedSaver(saver, rec)
+    ts = graph_runner.TimedSaver(saver, rec, expected=expected)
     by_user = defaultdict(list)
     for t in threads.values():
         by_user[t.user].append(t.thread_id)
@@ -144,7 +154,34 @@ def erase_phase(target: targets.Target, threads: dict, rec: Recorder, n_users: i
             if ts.get_tuple(cfg) is not None or list(ts.inner.list(cfg, limit=1)):
                 leftovers += 1
     handle.close()
-    return {"users_erased": len(users), "threads_erased": sum(len(by_user[u]) for u in users), "threads_left_readable": leftovers}
+    return {"users_erased": len(users), "threads_erased": sum(len(by_user[u]) for u in users), "threads_left_readable": leftovers,
+            "erased": sorted(t for u in users for t in by_user[u])}
+
+
+def cold_phase(target: targets.Target, threads: dict, rec: Recorder, n: int, seed: int, cmd: str, not_these: set,
+               expected: graph_runner.Expected) -> dict:
+    """Restart the line (cmd), then resume n threads once each: the first reads after the restart."""
+    import subprocess
+
+    eligible = sorted(t for t in threads if t not in not_these)
+    chosen = random.Random(seed + 2).sample(eligible, min(n, len(eligible)))
+    t0 = time.time()
+    r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    restart = {"cmd": cmd, "rc": r.returncode, "seconds": round(time.time() - t0, 1), "output": (r.stdout + r.stderr)[-4000:]}
+    if r.returncode != 0:
+        return {"restart": restart, "threads": 0, "error": "restart failed"}
+    saver, handle = target.make_saver()
+    ts = graph_runner.TimedSaver(saver, rec, expected=expected)
+    errors = []
+    for tid in chosen:
+        ts.context = {"phase": "cold", "kind": threads[tid].kind, "turns": threads[tid].turns}
+        try:
+            ts.get_tuple({"configurable": {"thread_id": tid, "checkpoint_ns": ""}})
+        except Exception as ex:  # noqa: BLE001 - reported, the run is then marked failed
+            errors.append(f"{tid}: {ex!r}")
+    handle.close()
+    return {"restart": restart, "threads": len(chosen), "eligible": len(eligible), "errors": errors[:10],
+            "n_errors": len(errors), "first_thread": chosen[0] if chosen else None}
 
 
 def summarize(rows: list[dict]) -> dict:
@@ -193,6 +230,10 @@ def main() -> None:
     ap.add_argument("--erase-users", type=int, default=0, help="0 = 10%% of users, at least 2")
     ap.add_argument("--no-reset", action="store_true", help="do not drop the app_demo database first")
     ap.add_argument("--local", action="store_true", help="mark every output as local validation")
+    ap.add_argument("--settle", action="store_true", help="fenvix: before the sizes, wait until the compactor is idle")
+    ap.add_argument("--settle-cap-s", type=int, default=2700, help="cap of the --settle wait (default 45 minutes)")
+    ap.add_argument("--cold-cmd", default="", help="shell command that restarts the line; then the cold phase runs")
+    ap.add_argument("--cold-threads", type=int, default=200)
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
     if not a.uri:
@@ -205,11 +246,16 @@ def main() -> None:
     if not a.no_reset:
         target.reset()
     rec = Recorder(os.path.join(a.out, "ops.jsonl"))
+    expected = graph_runner.Expected()
     s3_before = targets.fenvix_s3_counters(a.uri) if a.target == "fenvix" else None
+    status_before = targets.fenvix_status(a.uri) if a.target == "fenvix" else None
 
-    w = write_phase(target, a.seed, threads, events, rec, a.workers)
+    w = write_phase(target, a.seed, threads, events, rec, a.workers, expected)
     s3_after = targets.fenvix_s3_counters(a.uri) if a.target == "fenvix" else None
-    rd = read_phase(target, threads, rec, a.read_sample, a.seed)
+    status_after_write = targets.fenvix_status(a.uri) if a.target == "fenvix" else None
+    rd = read_phase(target, threads, rec, a.read_sample, a.seed, expected)
+    read_chosen = rd.pop("chosen")
+    settle = targets.wait_compaction_idle(target, a.settle_cap_s) if a.settle else None
     targets.wait_settled(target)
     sizes = target.sizes()
     # per-thread logical vs stored ("agent checkpoint delta test"), before the erase removes threads
@@ -217,10 +263,15 @@ def main() -> None:
         json.dump(logical_bytes(rec.rows)["per_thread"], f)
     delta = delta_hook.run(a.target, a.uri, a.out)
     n_erase = a.erase_users or max(2, generator.PROFILES[a.profile].users // 10)
-    er = erase_phase(target, threads, rec, n_erase, a.seed)
+    er = erase_phase(target, threads, rec, n_erase, a.seed, expected)
+    erased = er.pop("erased")
     targets.wait_settled(target)
     sizes_after_erase = target.sizes()
+    cold = None
+    if a.cold_cmd:
+        cold = cold_phase(target, threads, rec, a.cold_threads, a.seed, a.cold_cmd, set(read_chosen) | set(erased), expected)
     rec.close()
+    check = expected.report()
 
     lb = logical_bytes(rec.rows)
     logical_total = lb["checkpoint_bytes"] + lb["writes_bytes"]
@@ -242,8 +293,13 @@ def main() -> None:
                        "stored_per_checkpoint": round(stored / lb["checkpoints"], 1) if stored and lb["checkpoints"] else None},
         "sizes": sizes, "sizes_after_erase": sizes_after_erase,
         "s3_put_requests_during_write": s3_puts,
+        "server_status_before": status_before, "server_status_after_write": status_after_write,
+        "settle": settle, "cold": cold,
+        "read_sample": a.read_sample, "erase_users": n_erase,
+        "correctness": check, "wrong_reads": check["wrong_reads"],
         "delta_test": {k: v for k, v in delta.items() if k != "rows"},
-        "ok": not w["errors"] and rd["inconsistencies"] == 0 and er["threads_left_readable"] == 0,
+        "ok": (not w["errors"] and rd["inconsistencies"] == 0 and er["threads_left_readable"] == 0 and check["wrong_reads"] == 0
+               and (cold is None or (cold["restart"]["rc"] == 0 and not cold.get("n_errors") and cold.get("threads", 0) > 0))),
     }
     with open(os.path.join(a.out, "summary.json"), "w") as f:
         json.dump(summary, f, indent=2)
@@ -251,10 +307,16 @@ def main() -> None:
     print(f"[{a.target}] {'VALIDATION, NOT RESULTS: ' if a.local else ''}ok={summary['ok']} "
           f"checkpoints={lb['checkpoints']} write={w['seconds']}s "
           f"save_step p50/p99={lat['save_step']['p50']}/{lat['save_step']['p99']} ms "
-          f"stored/logical={summary['bytes']['stored_per_logical']} -> {a.out}/summary.json")
+          f"stored/logical={summary['bytes']['stored_per_logical']} wrong_reads={check['wrong_reads']} -> {a.out}/summary.json")
+    if check["wrong_reads"]:
+        # RULES.md 8 / P-bench-local 0: a read that returns a checkpoint different from the one written is a STOP
+        print(f"STOP: {check['wrong_reads']} wrong reads {check['by_kind']}: {check['examples'][:3]}", file=sys.stderr)
+        sys.exit(3)
     if w["errors"]:
         print("errors:", w["errors"][:3], file=sys.stderr)
         sys.exit(1)
+    if not summary["ok"]:
+        sys.exit(2)
 
 
 if __name__ == "__main__":
