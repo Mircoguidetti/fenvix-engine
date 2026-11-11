@@ -585,3 +585,79 @@ def test_index_commands_keep_answering_across_lease_losses():
         stop.set()
         srv.term()
         os.unlink(ff)
+
+
+def test_validate_calls_healthy_collections_of_every_kind_valid():
+    """Fix check of defect 4: the new natural-order check in `validate` must not call a healthy collection damaged, and
+    `repair: true` must change nothing in one (it renumbers what it calls damaged). Collections of every kind, written with
+    inserts, deletes, re-inserts of deleted ids, growing updates, replacements, a customer value that changes (the document
+    moves), capped rollover. Fails when validate reports a natural-order error, when repair renumbers anything, or when the
+    scan order changes."""
+    from datetime import datetime, timedelta
+    bucket = make_bucket("rvvalid")
+    srv = Server(bucket, "rvvalid", idle=600).start()
+    problems = []
+    try:
+        c = client(srv)
+        d = c.v
+        d.plain.insert_many([{"_id": i, "k": i % 7, "u": i, "p": "x"} for i in range(3000)])
+        d.plain.create_index("k")
+        d.plain.create_index("u", unique=True)
+        d.plain.delete_many({"_id": {"$mod": [5, 0]}})
+        d.plain.insert_many([{"_id": i, "k": 1, "u": i, "p": "re"} for i in range(0, 3000, 10)])
+        d.plain.update_many({"_id": {"$mod": [3, 0]}}, {"$set": {"p": "y" * 500}})
+        d.plain.replace_one({"_id": 7}, {"k": 9, "u": 7, "p": "replaced"})
+        d.plain.find_one_and_delete({"_id": 11})
+        d.create_collection("ck", customerKey="c")
+        d.ck.create_index([("c", 1), ("k", 1)])
+        d.ck.insert_many([{"_id": i, "c": f"cust{i % 13}", "k": i} for i in range(2000)])
+        d.ck.update_many({"_id": {"$lt": 200}}, {"$set": {"c": "moved"}})
+        d.ck.delete_many({"_id": {"$mod": [9, 0]}})
+        d.ck.insert_many([{"_id": i, "c": "back", "k": i} for i in range(0, 2000, 18)])
+        d.create_collection("cko", customerKey={"field": "c", "order": "ts"})
+        t0 = datetime(2026, 1, 1)
+        d.cko.insert_many([{"_id": i, "c": f"t{i % 5}", "ts": t0 + timedelta(seconds=i)} for i in range(1000)])
+        d.cko.delete_many({"_id": {"$lt": 100}})
+        d.create_collection("cap", capped=True, size=64 * 1024)
+        for b in range(10):
+            d.cap.insert_many([{"_id": b * 300 + i, "p": "z" * 100} for i in range(300)])
+        d.create_collection("ts", timeseries={"timeField": "t", "metaField": "m"})
+        d.ts.insert_many([{"t": t0 + timedelta(minutes=i), "m": i % 4, "v": i} for i in range(1000)])
+        d.create_collection("cl", clusteredIndex={"key": {"_id": 1}, "unique": True})
+        d.cl.insert_many([{"_id": i, "v": i} for i in range(1000)])
+        d.cl.delete_many({"_id": {"$mod": [4, 0]}})
+        with c.start_session() as s:
+            pass
+        names = sorted(d.list_collection_names())
+        print(f"collections {names}")
+
+        def check(cl, when):
+            for n in sorted(cl.v.list_collection_names()):
+                if n.startswith("system."):
+                    continue
+                try:
+                    v = cl.v.command("validate", n, full=True)
+                except PyMongoError as e:
+                    print(f"{when} {n}: validate error {e}")
+                    continue
+                nat = [e for e in v.get("errors", []) if "natural-order" in e or "collection scans" in e]
+                print(f"{when} {n}: valid={v.get('valid')} errors={v.get('errors')[:3]} repaired={v.get('naturalOrderRepaired')}")
+                if nat:
+                    problems.append(f"{when} {n}: {len(nat)} natural-order errors, e.g. {nat[:2]}")
+                before = [x["_id"] for x in cl.v[n].find({}, {"_id": 1}).hint([("$natural", 1)])] if n != "ts" else None
+                r = cl.v.command("validate", n, full=True, repair=True)
+                if r.get("naturalOrderRepaired"):
+                    problems.append(f"{when} {n}: repair renumbered {r.get('naturalOrderRepaired')} in a healthy collection")
+                if before is not None:
+                    after = [x["_id"] for x in cl.v[n].find({}, {"_id": 1}).hint([("$natural", 1)])]
+                    if after != before:
+                        problems.append(f"{when} {n}: the scan order changed after repair")
+        check(c, "now")
+    finally:
+        srv.term()
+    srv2 = Server(bucket, "rvvalid2", idle=600).start()
+    try:
+        check(srv2.client(), "after a restart")
+    finally:
+        srv2.term()
+    assert not problems, "\n".join(problems)

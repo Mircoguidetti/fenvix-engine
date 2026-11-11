@@ -230,3 +230,72 @@ def test_validate_repair_renumbers_a_damaged_collection():
         assert len(scan) == len(every) and set(scan) == set(every), f"after a restart: {scan}"
     finally:
         again.term()
+
+
+def _damage_with_old_binary(old, bucket, pre):
+    """R52_OLD_BIN (integration-3) writes `pre` documents, then "A" in a transaction that commits after a reopen while a
+    plain insert of "B" took A's natural-order number again: B is stored but missing from scans. Returns the scan."""
+    f = tempfile.NamedTemporaryFile("w", delete=False, suffix=".faults")
+    f.close()
+    ff = f.name
+    port = free_port()
+    srv = Server(bucket, "damage", idle=600, holder="T1", port=port, env={"MONGO_TEST_FAULTS_FILE": ff}, binary=old,
+                 extra=["--lease-ttl-secs", str(TTL), "--replica-set", "rs0", "--advertise", f"127.0.0.1:{port}"]).start()
+    try:
+        c = srv.client()
+        col = c.d.t
+        col.insert_many([{"_id": f"pre{i}"} for i in range(pre)])
+        s = c.start_session()
+        s.start_transaction()
+        col.insert_one({"_id": "A"}, session=s)
+        lost0 = srv.log_text().count("LEASE lost")
+        with open(ff, "w") as fh:
+            fh.write(f"delay_put processes/T1/_lease {TTL * 1000 + 1500}\n")
+        deadline = time.time() + 30
+        while srv.log_text().count("LEASE lost") == lost0 and time.time() < deadline:
+            time.sleep(0.1)
+        with open(ff, "w") as fh:
+            fh.write("")
+        time.sleep(TTL + 1)
+        deadline = time.time() + 40
+        while True:
+            try:
+                col.insert_one({"_id": "B"})
+                break
+            except PyMongoError:
+                assert time.time() < deadline, "the insert of B never succeeded"
+                time.sleep(0.2)
+        s.commit_transaction()
+        s.end_session()
+        return [d["_id"] for d in col.find({}, {"_id": 1}).hint([("$natural", 1)])]
+    finally:
+        srv.term()
+        os.unlink(ff)
+
+
+@pytest.mark.skipif(not os.environ.get("R52_OLD_BIN"), reason="needs R52_OLD_BIN, a binary that writes duplicate natural-order numbers (integration-3)")
+def test_delete_many_in_a_damaged_collection_keeps_the_healthy_document():
+    """Fix round 2: the delete guard reads the natural-order entries of a whole write set at once (range reads over dense
+    clusters of numbers). One transaction deletes 200 documents and the hidden B (B's number is A's, and its entry names
+    A), so B's entry is checked inside a range-read cluster at the commit. (A plain deleteMany walks natural order and
+    never reaches a hidden document.) Fails when A vanishes from collection scans, or when a deleted document stays."""
+    bucket = make_bucket("delmany")
+    before = _damage_with_old_binary(os.environ["R52_OLD_BIN"], bucket, 200)
+    assert "B" not in before and "A" in before, f"the old binary did not damage the collection: the test did not reach the case ({before[-3:]})"
+    port = free_port()
+    new = Server(bucket, "delmany2", idle=600, port=port, extra=["--replica-set", "rs0", "--advertise", f"127.0.0.1:{port}"]).start()
+    try:
+        c = new.client()
+        col = c.d.t
+        assert col.find_one({"_id": "B"}) is not None, "B is not stored: the test did not reach the case"
+        with c.start_session() as s:
+            s.start_transaction()
+            n = col.delete_many({"_id": {"$in": [f"pre{i}" for i in range(200)]}}, session=s).deleted_count
+            n += col.delete_one({"_id": "B"}, session=s).deleted_count
+            s.commit_transaction()
+        scan = [d["_id"] for d in col.find({}, {"_id": 1}).hint([("$natural", 1)])]
+        print(f"deleted {n} in one transaction; scan after: {scan}; A by _id {col.find_one({'_id': 'A'}) is not None}; B by _id {col.find_one({'_id': 'B'}) is not None}")
+        assert n == 201, n
+        assert scan == ["A"], f"scan after the deletes: {scan}"
+    finally:
+        new.term()

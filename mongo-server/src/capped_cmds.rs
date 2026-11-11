@@ -155,6 +155,7 @@ impl Server {
             n -= 1;
             bytes -= len;
         }
+        w.settle_nat_deletes(&mut g).await?;
         ops.extend(w.final_ops()?);
         ops.push(Op::Put(crate::collopts::meta_key(coll), new.to_vec()?));
         ops.push(Op::Put(crate::capped::stat_key(coll), doc! { "docs": n, "bytes": bytes }.to_vec()?));
@@ -208,6 +209,7 @@ impl Server {
         let mut ops = vec![Entry::collections_op(&names)?, Op::Put(crate::collopts::meta_key(&to), raw.to_vec()?), Op::Delete(crate::collstat::key(&to))];
         w.stat.clear();
         let uniq = std::mem::take(&mut w.uniq);
+        w.settle_nat_deletes(&mut g).await?;
         ops.extend(w.final_ops()?);
         g.apply(ops).await?;
         g.mark_unique(&uniq);

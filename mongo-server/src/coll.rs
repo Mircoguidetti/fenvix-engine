@@ -1511,11 +1511,71 @@ pub struct Writes {
     quiet: bool,
     /// `bypassDocumentValidation` of the command that writes.
     pub bypass_validation: bool,
+    /// Deletes of natural-order entries (`nat/{n}`) staged by deletes, to be dropped when the stored entry names another
+    /// document (a collection damaged before c2-fix-outage-loss, review defect 4): (position in `ops`, key, the deleted
+    /// document's `_id` encoding). Checked for the whole write set at once by [`Writes::settle_nat_deletes`].
+    pub nat_dels: Vec<(usize, Vec<u8>, Vec<u8>)>,
+}
+
+/// The stored values of the natural-order entries `cands` names (same order). The keys of one collection are
+/// `nat/{collection}/{number}`, ordered by number, and a large delete's numbers are mostly contiguous: each dense cluster
+/// of numbers is read with one range scan, the scattered ones with one batched point read.
+async fn read_nat_entries(g: &mut Entry, cands: &[(usize, Vec<u8>, Vec<u8>)]) -> anyhow::Result<Vec<Option<Bytes>>> {
+    const GAP: u64 = 64; // numbers closer than this belong to one cluster
+    const MIN_CLUSTER: usize = 32; // smaller clusters are read with point reads
+    let parse = |k: &[u8]| -> Option<(Vec<u8>, u64)> {
+        let n = k.len().checked_sub(8)?;
+        Some((k[..n].to_vec(), u64::from_be_bytes(k[n..].try_into().ok()?)))
+    };
+    let mut order: Vec<usize> = (0..cands.len()).collect();
+    order.sort_by(|a, b| cands[*a].1.cmp(&cands[*b].1));
+    let mut out: Vec<Option<Bytes>> = vec![None; cands.len()];
+    let mut points: Vec<usize> = Vec::new();
+    let mut i = 0;
+    while i < order.len() {
+        let Some((prefix, first)) = parse(&cands[order[i]].1) else {
+            points.push(order[i]);
+            i += 1;
+            continue;
+        };
+        let mut j = i + 1;
+        let mut last = first;
+        while j < order.len() {
+            match parse(&cands[order[j]].1) {
+                Some((p, n)) if p == prefix && n.saturating_sub(last) <= GAP => {
+                    last = n;
+                    j += 1;
+                }
+                _ => break,
+            }
+        }
+        if j - i >= MIN_CLUSTER {
+            let mut lo = prefix.clone();
+            lo.extend(first.to_be_bytes());
+            let mut hi = prefix.clone();
+            hi.extend((last + 1).to_be_bytes());
+            let rows = g.scan_range(&lo, Some(&hi), false, None, 4 << 20).await?;
+            let found: HashMap<Vec<u8>, Bytes> = rows.into_iter().map(|(k, v)| (k.to_vec(), v)).collect();
+            for &c in &order[i..j] {
+                out[c] = found.get(&cands[c].1).cloned();
+            }
+        } else {
+            points.extend_from_slice(&order[i..j]);
+        }
+        i = j;
+    }
+    if !points.is_empty() {
+        let keys: Vec<Vec<u8>> = points.iter().map(|c| cands[*c].1.clone()).collect();
+        for (c, v) in points.iter().zip(g.get_many(&keys).await?) {
+            out[*c] = v;
+        }
+    }
+    Ok(out)
 }
 
 impl Writes {
     pub fn new() -> Self {
-        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), uniq: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None, seqs: HashMap::new(), extra: Vec::new(), cap_delta: HashMap::new(), stat: HashMap::new(), quiet: false, bypass_validation: false }
+        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), uniq: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None, seqs: HashMap::new(), extra: Vec::new(), cap_delta: HashMap::new(), stat: HashMap::new(), quiet: false, bypass_validation: false, nat_dels: Vec::new() }
     }
 
     /// The collection validator on a document that is written: `old` is what an update started from.
@@ -1577,6 +1637,33 @@ impl Writes {
     }
 
     /// All ops to apply at commit: the document and index writes, changed index definitions, the collection list.
+    /// Drop the staged deletes of natural-order entries whose stored entry names another document (see `nat_dels`): one
+    /// batched read of all of them. Call before the write set's ops are applied. An entry put earlier in this write set
+    /// (a document inserted and deleted in one write set) is deleted as staged.
+    pub async fn settle_nat_deletes(&mut self, g: &mut Entry) -> anyhow::Result<()> {
+        if self.nat_dels.is_empty() {
+            return Ok(());
+        }
+        let cands = std::mem::take(&mut self.nat_dels);
+        let stored = read_nat_entries(g, &cands).await?;
+        let mut skip: HashSet<usize> = HashSet::new();
+        for ((i, k, id), v) in cands.iter().zip(stored) {
+            let Some(v) = v else { continue };
+            if v[..] != id[..] && !self.ops[..*i].iter().any(|o| matches!(o, Op::Put(pk, _) if pk == k)) {
+                skip.insert(*i);
+            }
+        }
+        if !skip.is_empty() {
+            let mut j = 0;
+            self.ops.retain(|_| {
+                let keep = !skip.contains(&j);
+                j += 1;
+                keep
+            });
+        }
+        Ok(())
+    }
+
     pub fn final_ops(mut self) -> R<Vec<Op>> {
         let mut ops = std::mem::take(&mut self.ops);
         for (coll, idx) in &self.meta {
@@ -1964,12 +2051,11 @@ impl Writes {
         if let Some(s) = seq {
             // Only the entry that names this document: in a collection damaged before c2-fix-outage-loss two documents can
             // share a number, and the entry then names the other one, which would vanish from scans with it (review
-            // defect 4). An entry not stored yet (put earlier in this write set) is deleted as before.
+            // defect 4). Checked for the whole write set in one batched read (`settle_nat_deletes`), not here: one read
+            // per deleted document made a large deleteMany 1.8 times slower (fix round 2).
             let nk = crate::natural::key(coll, s);
-            let names_other = g.get_live(&nk).await?.is_some_and(|v| v[..] != id_enc[..]);
-            if !names_other {
-                self.ops.push(Op::Delete(nk));
-            }
+            self.nat_dels.push((self.ops.len(), nk.clone(), id_enc.clone()));
+            self.ops.push(Op::Delete(nk));
         }
         self.ops.push(Op::Delete(k.clone()));
         self.ov.insert(k, None);

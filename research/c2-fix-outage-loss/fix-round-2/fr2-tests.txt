@@ -1,0 +1,4 @@
+test_52r_review_c2_fix_outage_loss.py [damaged or healthy or txn_commit] run 1 => 4 passed, 4 deselected in 44.89s
+test_52r_review_c2_fix_outage_loss.py [damaged or healthy or txn_commit] run 2 => 4 passed, 4 deselected in 44.85s
+test_52_reopen_during_a_command.py [repair or transaction_spanning or insert_spanning] run 1 => 3 passed in 92.84s (0:01:32)
+test_52_reopen_during_a_command.py [repair or transaction_spanning or insert_spanning] run 2 => 3 passed in 94.81s (0:01:34)
