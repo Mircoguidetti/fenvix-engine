@@ -1,0 +1,8 @@
+write-peak: 2 script processes x 4 threads started for 2.5 minutes
+WRITE-PEAK: NOT VALID (the client machine reached 80% CPU): p50 49515 documents/s (mean 49346, min 49176, max 49515) over 2 steady minutes, cook CPU p50 66.4% of its 2 vCPU, client CPU max 95.5%; Atlas M30: 25800 (p50 26000) at 90.5%
+{'per_minute': [{'minute': 1, 'docs_per_s': 48321, 'cook_cpu_pct': 38.7, 't_from_start_s': 58}, {'minute': 2, 'docs_per_s': 49515, 'cook_cpu_pct': 55.8, 't_from_start_s': 118}, {'minute': 3, 'docs_per_s': 49176, 'cook_cpu_pct': 66.4, 't_from_start_s': 150}], 'steady_docs_per_s': {'p50': 49515, 'mean': 49346, 'min': 49176, 'max': 49515}, 'client_cpu_pct': {'p50': 79.2, 'max': 95.5}, 'documents_per_db': {'app_peak_1': 3724000, 'app_peak_2': 3740000}, 'dropped': ['app_peak_1', 'app_peak_2'], 'script_exit_codes': [0, 0], 'killed_after_sigterm': [], 'valid': False}
+[08:55:41] dbStats: dati 0.965 GB + indici 0.155 GB = 1.12 GB logici (tetto di sicurezza 60 GB)
+[08:56:08] Fermata richiesta: chiudo e salvo (ci vuole qualche secondo)...
+[08:56:09] Caricamento finito (fermato a mano): 1.18 GB, 3,724,000 documenti, 0.04 ore, 7.994 MB/s.
+
+[exited with code 0]

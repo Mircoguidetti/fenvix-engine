@@ -222,11 +222,11 @@ def wait_compaction_idle(t: Target, cap_s: int = 2700, poll_s: int = 30, stable_
         last = snap
         running = watch.get("compaction.running") or 0
         if same >= stable_polls - 1 and not running:
-            return {"idle": True, "capped": False, "seconds": round(time.time() - t0, 1), "watched": [f"{a}.{b}" for a, b in IDLE_WATCH]
+            return {"idle": True, "capped": False, "compaction2_published": bool(watch.get("compactor.publishes")), "seconds": round(time.time() - t0, 1), "watched": [f"{a}.{b}" for a, b in IDLE_WATCH]
                     + ["S3 objects and bytes under tenants/app_demo/ by kind"], "poll_s": poll_s, "stable_polls": stable_polls,
                     "polls": polls}
         if time.time() - t0 >= cap_s:
-            return {"idle": False, "capped": True, "seconds": round(time.time() - t0, 1), "watched": [f"{a}.{b}" for a, b in IDLE_WATCH],
+            return {"idle": False, "capped": True, "compaction2_published": bool(watch.get("compactor.publishes")), "seconds": round(time.time() - t0, 1), "watched": [f"{a}.{b}" for a, b in IDLE_WATCH],
                     "poll_s": poll_s, "stable_polls": stable_polls, "polls": polls}
         time.sleep(poll_s)
 

@@ -20,3 +20,21 @@ power_off() { # power_off REASON: on EC2 the power-off is the termination (set a
 }
 # S3 endpoint for our programs (only in local mode: MinIO)
 s3_endpoint_args() { [ -n "${LOCAL_TEST:-}" ] && [ -n "${AWS_ENDPOINT_URL:-}" ] && echo "--endpoint $AWS_ENDPOINT_URL"; }
+# The cold phase of the agent benchmark on AWS (total review B9, P-bench-local 2.5): a client writes $P/restart-request
+# holding an id; this machine stops its server, drops the page cache, starts the server again and answers
+# $P/restarted-<id> once it serves. Called from the machine's main loop. DROP_CACHES_CMD is for tests only.
+COLD_DONE=""
+serve_cold_restart() { # serve_cold_restart STOP_FUNCTION START_FUNCTION (START returns 0 once the server answers)
+  exists "$P/restart-request" || return 0
+  local id; id=$(text "$P/restart-request" | tr -cd 'a-zA-Z0-9-')
+  { [ -z "$id" ] || [ "$id" = "$COLD_DONE" ]; } && return 0
+  local t0 dc=done ok=true; t0=$(date +%s)
+  step "cold restart $id: stopping the server"
+  "$1"
+  sync; bash -c "${DROP_CACHES_CMD:-echo 3 > /proc/sys/vm/drop_caches}" 2>/dev/null || dc="not allowed"
+  step "cold restart $id: page cache dropped: $dc; starting the server"
+  "$2" || ok=false
+  put_json "$P/restarted-$id" "{\"ok\": $ok, \"drop_caches\": \"$dc\", \"seconds\": $(( $(date +%s) - t0 ))}"
+  step "cold restart $id: ok=$ok in $(( $(date +%s) - t0 )) s"
+  COLD_DONE=$id
+}

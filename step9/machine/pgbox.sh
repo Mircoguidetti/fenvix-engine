@@ -24,8 +24,14 @@ $PY cpu_macchina.py out/cpu-machine.log 5 & CPU_PID=$!
 export DEBIAN_FRONTEND=noninteractive
 ( apt-get update -qq && apt-get install -y -qq postgresql-16 ) > out/apt.log 2>&1 || { tail -5 out/apt.log >> out/steps.log; finish NO_POSTGRES; }
 CONF=/etc/postgresql/16/main
-echo "listen_addresses = '*'" >> $CONF/postgresql.conf
-echo "host all app_user 0.0.0.0/0 scram-sha-256" >> $CONF/pg_hba.conf   # the security group limits who can connect
+# aws-fixes (B10): what managed Postgres services do, not Ubuntu's stock 128 MB: shared_buffers = 25% of the machine's
+# memory; TLS on and REQUIRED for the benchmark's user (ssl = on with the package's own certificate; hostssl only), as
+# ours and Aurora's connections use TLS. Nothing else is tuned. The settings are saved (pg_settings) with the results.
+MEM_KB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
+SB_MB=$(( MEM_KB / 4 / 1024 ))
+{ echo "listen_addresses = '*'"; echo "ssl = on"; echo "shared_buffers = ${SB_MB}MB"; } >> $CONF/postgresql.conf
+echo "hostssl all app_user 0.0.0.0/0 scram-sha-256" >> $CONF/pg_hba.conf   # the security group limits who can connect
+step "postgres settings: shared_buffers ${SB_MB}MB (25% of $(( MEM_KB / 1024 )) MiB), ssl on, hostssl only for app_user"
 service postgresql restart >> out/steps.log 2>&1 || finish POSTGRES_DID_NOT_START
 CM_PW=$(text secret/pw) && [ -n "$CM_PW" ] || finish NO_PASSWORD
 su postgres -c "psql -q" <<SQL >> out/steps.log 2>&1 || finish NO_USER
@@ -33,7 +39,13 @@ CREATE USER app_user PASSWORD '$CM_PW';
 CREATE DATABASE app_demo OWNER app_user;
 SQL
 su postgres -c "psql -tAc 'select version()'" > out/version.txt 2>&1
-printf '{"ip": "%s", "port": 5432, "type": "%s", "az": "%s"}\n' "$IP" "$TYPE" "$AZ" > out/ready.json
+su postgres -c "psql -tAc \"copy (select name, setting, unit, source from pg_settings order by name) to stdout with csv header\"" > out/pg_settings.csv 2>&1
+grep -E "^(shared_buffers|ssl|synchronous_commit|fsync|wal_level|max_connections)," out/pg_settings.csv >> out/steps.log
+[ "$(su postgres -c "psql -tAc 'show ssl'")" = on ] || finish NO_TLS
+printf '{"ip": "%s", "port": 5432, "type": "%s", "az": "%s", "durability": "single node, no copy", "tls": "required", "shared_buffers_mb": %s}\n' "$IP" "$TYPE" "$AZ" "$SB_MB" > out/ready.json
 $PY s3io.py put "$BUCKET" "$P/ready.json" out/ready.json || finish NO_BUCKET
 step "ready: $(cat out/version.txt | cut -c1-60) on $IP:5432"
-while :; do sleep "$PUSH_S"; push; exists "$P/stop" && finish STOPPED; done
+pg_stop() { service postgresql stop >> out/steps.log 2>&1; }
+pg_start() { service postgresql start >> out/steps.log 2>&1 || return 1
+  for _ in $(seq 1 120); do pg_isready -q -h "$IP" && return 0; sleep 1; done; return 1; }
+while :; do sleep "$PUSH_S"; serve_cold_restart pg_stop pg_start; push; exists "$P/stop" && finish STOPPED; done

@@ -29,3 +29,20 @@ Model (coordinator's decision, 2026-11-09): Claude Sonnet 5.5, the typical agent
 Local validation (MEASURED, 2026-11-09, fake model, validation not results): 40 conversations recorded, 10.3 model
 calls, 24.1 checkpoints and 0.18 MB of checkpoints per conversation (mean); replayed twice against local mongod 7.0:
 1,924 puts p50 1.1 ms p99 3.1 ms, resume p50 1.8 ms, list p50 24 ms, time travel p50 1.8 ms.
+
+## aws-fixes (2026-11-11, B11 of the total review)
+
+- A failing conversation is recorded as `failed` with the dollars it spent; its partial file is
+  `<task_id>.failed.incomplete.gz` (never `.jsonl.gz`), so the replay cannot take it for a complete one. The run goes
+  on and stops after `--max-consecutive-failures` (2) failures in a row.
+- `summary.json` is written after every conversation and at the end, whatever happens, with `spent_dollars`.
+- Resume: run the same command again; conversations already recorded are skipped and never paid again; failed ones only
+  with `--retry-failed`; the earlier runs' spend counts toward `--max-dollars`.
+- The cap is checked at every model call (after it, and before it with the most expensive call so far as the margin),
+  so a run ends within one call of the cap; the cut conversation is `stopped_by_cap`.
+- The replay renumbers channel versions with the target saver's own `get_next_version` (the Postgres saver's 51-byte
+  versions instead of the recorder's integers) and replays only recordings whose last event is
+  `{"ev": "end", "status": "done"}`.
+- Tests: `python -m pytest -q bench/agent-checkpoints/recorder/test_recorder.py` (set `RECORDER_TEST_PG_URI` for the
+  Postgres comparison). Local result: row bytes replayed 484,467 against 485,478 run directly (0.2% apart), against
+  439,795 with the recorded versions (9.4% less); `step9/local/results-2026-11-11-aws-fixes/recorder/`.

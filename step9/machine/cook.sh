@@ -92,11 +92,21 @@ fi
 if [ "$ROLE" = cook ] || [ "$ROLE" = spare ]; then
   $PY takeover_agent.py "$BUCKET" "$NAME" "$IP" > out/takeover-agent.log 2>&1 & AGENT_PID=$!
 fi
-printf '{"ip": "%s", "port": %s, "type": "%s", "az": "%s", "role": "%s", "k": "%s"}\n' "$IP" "$PORT" "$TYPE" "$AZ" "$ROLE" "${NAME#server-}" > out/ready.json
+# the binary this machine runs, by its hash: every result of the round carries it (the gate checks it against the commit)
+SHA=$(sha256sum mongo-server | cut -d' ' -f1)
+printf '{"ip": "%s", "port": %s, "type": "%s", "az": "%s", "role": "%s", "k": "%s", "mongo_server_sha256": "%s"}\n' "$IP" "$PORT" "$TYPE" "$AZ" "$ROLE" "${NAME#server-}" "$SHA" > out/ready.json
 $PY s3io.py put "$BUCKET" "$P/ready.json" out/ready.json || finish NO_BUCKET
 step "ready: $ROLE on $IP:$PORT"
+# the cold phase's restart (common.sh serve_cold_restart): the same command, the same log, a new process
+cold_stop() { kill -TERM "$SRV" 2>/dev/null; for _ in $(seq 1 120); do kill -0 "$SRV" 2>/dev/null || break; sleep 1; done
+  kill -0 "$SRV" 2>/dev/null && kill -KILL "$SRV"; wait "$SRV" 2>/dev/null; }
+cold_start() { local n; n=$(grep -c "listening on" out/mongo-server.log)
+  "${CMD[@]}" >> out/mongo-server.log 2>&1 & SRV=$!
+  for _ in $(seq 1 300); do [ "$(grep -c "listening on" out/mongo-server.log)" -gt "$n" ] && return 0; kill -0 "$SRV" 2>/dev/null || return 1; sleep 1; done
+  return 1; }
 while :; do
   sleep "$PUSH_S"
+  { [ "$ROLE" = cook ] || [ "$ROLE" = loader ]; } && serve_cold_restart cold_stop cold_start
   if ! kill -0 "$SRV" 2>/dev/null; then wait "$SRV"; step "WARNING: mongo-server exited by itself (code $?)"; tail -30 out/mongo-server.log >> out/steps.log; SRV=""; finish SERVER_DIED; fi
   push
   exists "$P/stop" && finish STOPPED

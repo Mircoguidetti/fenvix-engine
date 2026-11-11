@@ -1,0 +1,67 @@
+{
+ "dbs": 2,
+ "threads": 4,
+ "minutes": 2.5,
+ "gb_per_db": 10,
+ "burst_min": 0.5,
+ "per_minute": [
+  {
+   "minute": 1,
+   "docs_per_s": 48321,
+   "cook_cpu_pct": 38.7,
+   "t_from_start_s": 58
+  },
+  {
+   "minute": 2,
+   "docs_per_s": 49515,
+   "cook_cpu_pct": 55.8,
+   "t_from_start_s": 118
+  },
+  {
+   "minute": 3,
+   "docs_per_s": 49176,
+   "cook_cpu_pct": 66.4,
+   "t_from_start_s": 150
+  }
+ ],
+ "steady_minutes": 2,
+ "steady_docs_per_s": {
+  "p50": 49515,
+  "mean": 49346,
+  "min": 49176,
+  "max": 49515
+ },
+ "steady_cook_cpu_pct_of_machine": {
+  "p50": 66.4,
+  "max": 66.4
+ },
+ "client_cpu_pct": {
+  "p50": 79.2,
+  "max": 95.5
+ },
+ "valid": false,
+ "documents_per_db": {
+  "app_peak_1": 3724000,
+  "app_peak_2": 3740000
+ },
+ "dropped": [
+  "app_peak_1",
+  "app_peak_2"
+ ],
+ "ended_before_time": [],
+ "killed_after_sigterm": [],
+ "sample_errors": 0,
+ "first_sample_errors": [],
+ "script_exit_codes": [
+  0,
+  0
+ ],
+ "atlas": {
+  "docs_per_s": 25800,
+  "p50": 26000,
+  "max": 30800,
+  "minutes": 24,
+  "cook_cpu_pct_of_machine": 90.5,
+  "source": "Atlas M30 Ireland load, run 42053678455, 2026-11-05 (MEASURED, Admin API metrics)"
+ }
+}

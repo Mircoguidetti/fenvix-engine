@@ -151,15 +151,46 @@ class Expected:
             self._bad("pending_writes_differ", op=op, thread=thread, checkpoint_id=cid,
                       want=sum(want_w.values()), got=sum(got_w.values()))
 
-    def check_list(self, serde, items: list, thread: str, ns: str, whole: bool, op: str) -> None:
+    def check_list(self, serde, items: list, thread: str, ns: str, whole: bool, op: str, limit: int | None = None) -> None:
+        """Every item checked for content; then the list itself (bench-local review F6): ids strictly descending (the
+        savers' order, newest first) and unique; a whole list holds exactly the written ids; a list with limit=N holds
+        exactly the N newest written ids (min(N, written))."""
         for t in items:
             self.check_tuple(serde, t, thread, ns, t.config["configurable"]["checkpoint_id"], False, op)
+        got = [t.config["configurable"]["checkpoint_id"] for t in items]
+        if len(set(got)) != len(got):
+            self._bad("list_duplicates", op=op, thread=thread, items=len(got), unique=len(set(got)))
+        elif any(a <= b for a, b in zip(got, got[1:])):
+            self._bad("list_order", op=op, thread=thread)
+        with self.lock:
+            want = sorted(self.ids.get((thread, ns), ()), reverse=True)
         if whole:
-            with self.lock:
-                want = set(self.ids.get((thread, ns), ()))
-            got = {t.config["configurable"]["checkpoint_id"] for t in items}
-            for cid in sorted(want - got):
+            for cid in sorted(set(want) - set(got)):
                 self._bad("left_out_of_list", op=op, thread=thread, checkpoint_id=cid)
+        elif limit is not None and got != want[:limit]:
+            self._bad("not_the_newest_n", op=op, thread=thread, limit=limit, got=len(got), want=min(limit, len(want)))
+
+    def written_ids(self, thread: str) -> list[tuple[str, str]]:
+        """(ns, checkpoint_id) of every checkpoint written for a thread (kept before an erase forgets them)."""
+        with self.lock:
+            return sorted((ns, cid) for (t, ns), ids in self.ids.items() if t == thread for cid in ids)
+
+    def export_state(self) -> dict:
+        """Everything but the lock: a worker process hands its write-side state to the parent (bench.py, --workers N)."""
+        with self.lock:
+            return {"ck": self.ck, "writes": self.writes, "latest": self.latest, "ids": self.ids,
+                    "reads_checked": self.reads_checked, "wrong": dict(self.wrong), "examples": self.examples}
+
+    def merge_state(self, st: dict) -> None:
+        with self.lock:
+            self.ck.update(st["ck"])
+            self.writes.update(st["writes"])
+            self.latest.update(st["latest"])
+            for k, v in st["ids"].items():
+                self.ids.setdefault(k, set()).update(v)
+            self.reads_checked += st["reads_checked"]
+            self.wrong.update(st["wrong"])
+            self.examples.extend(st["examples"][: max(0, 20 - len(self.examples))])
 
     def report(self) -> dict:
         with self.lock:
@@ -267,7 +298,8 @@ class TimedSaver(BaseCheckpointSaver):
         self._rec(op, thread, dt, n=len(items))
         if self.expected is not None and thread and self.context.get("phase") != "erase_verify":
             whole = limit is None and before is None and not filter
-            self.expected.check_list(self.serde, items, thread, self._ns(config), whole, op)
+            self.expected.check_list(self.serde, items, thread, self._ns(config), whole, op,
+                                     limit if (before is None and not filter) else None)
         return iter(items)
 
     def delete_thread(self, thread_id: str) -> None:

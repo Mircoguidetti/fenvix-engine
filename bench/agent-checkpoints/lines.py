@@ -134,11 +134,12 @@ def down() -> None:
         sh(["docker", "volume", "rm", "-f"] + vols, check=False)
 
 
-def run_container(name: str, image: str, args: list[str], cmd: list[str], capped=True, secret_env=None, env=None) -> None:
+def run_container(name: str, image: str, args: list[str], cmd: list[str], capped=True, secret_env=None, env=None,
+                  limits: list[str] | None = None) -> None:
     # --init (tini as PID 1, for every container of every system): a process that is PID 1 and installs no SIGTERM
     # handler ignores SIGTERM (the log copies did: each restart waited the full RESTART_T, then SIGKILL)
     c = ["docker", "run", "-d", "--init", "--name", name, "--hostname", name, "--network", NET, "--ip", IP[name]] + LABEL
-    c += LIMITS if capped else []
+    c += (LIMITS if capped else []) if limits is None else limits
     for k in (secret_env or {}):   # value handed through docker's environment, never on the command line
         c += ["-e", k]
     for k, v in (env or {}).items():
@@ -160,7 +161,7 @@ if [ ! -s "$D/PG_VERSION" ]; then
   mkdir -p "$D"; chown -R postgres "$D"; chmod 700 "$D"
   gosu postgres pg_basebackup -D "$D" -R -X stream -d "host=pg-primary port=5432 user=app_user application_name=$APP"
 fi
-exec gosu postgres postgres -D "$D" -c hot_standby=on
+exec gosu postgres postgres -D "$D" -c hot_standby=on -c shared_buffers=768MB
 """
 
 
@@ -174,6 +175,11 @@ def pg_ready(host: str, db="postgres") -> bool:
         return c.execute("SELECT 1").fetchone()[0] == 1
 
 
+# bench-local review F8: shared_buffers 25% of the member's 3 GiB, as aws-fixes sets it on AWS (B10, pgbox.sh: 25% of
+# RAM); the stock 128 MB left Postgres's data in the page cache of its 3 GiB cgroup only. Every Postgres member.
+PG_MEM_FLAGS = ["-c", "shared_buffers=768MB"]
+
+
 def up_pg(name: str, primary_flags: list[str]) -> None:
     work = os.path.join(os.environ.get("FXBENCH_WORK", "/tmp/fxbench"), "pg-init")
     os.makedirs(work, exist_ok=True)
@@ -181,7 +187,7 @@ def up_pg(name: str, primary_flags: list[str]) -> None:
     open(init, "w").write(PG_HBA_INIT)
     os.chmod(init, 0o755)
     run_container(name, "postgres:16", ["-v", f"{init}:/docker-entrypoint-initdb.d/10-replication-hba.sh:ro"],
-                  primary_flags, secret_env={"POSTGRES_PASSWORD": pw()}, env={"POSTGRES_USER": "app_user", "POSTGRES_DB": "app_demo"})
+                  primary_flags + PG_MEM_FLAGS, secret_env={"POSTGRES_PASSWORD": pw()}, env={"POSTGRES_USER": "app_user", "POSTGRES_DB": "app_demo"})
     # the image's first start runs initdb on a socket-only temporary server, then restarts on TCP: wait for TCP
     wait_until(f"{name} accepting TCP", lambda: pg_ready(IP[name], "app_demo"), 180)
 
@@ -279,7 +285,10 @@ def bin_sha() -> dict:
 
 def up_minio() -> None:
     run_container("minio", MACHINE_IMAGE, ["-v", f"{MINIO_BIN}:/opt/minio:ro"],
-                  ["/opt/minio", "server", "/data", "--address", ":9000", "--console-address", ":9001"], capped=False,
+                  ["/opt/minio", "server", "/data", "--address", ":9000", "--console-address", ":9001"],
+                  # bench-local review F8: MinIO's memory (and so its page cache, which held all of our data) is capped
+                  # at 3 GiB like every database member; its CPU stays uncapped, as the prompt allows
+                  limits=["--memory", "3g"],
                   env={"MINIO_ROOT_USER": S3["key"], "MINIO_ROOT_PASSWORD": S3["secret"],
                        # deleted objects go to MinIO's trash (.minio.sys/tmp) and are purged every 5 minutes by default;
                        # with our server's WAL and compaction churn that held 8 GB at once on this small disk (the
@@ -422,6 +431,33 @@ def check_line(line: str) -> dict:
     return out
 
 
+def members_state(line: str) -> dict:
+    """docker inspect of every container of the line: running, OOM-killed, restarts, exit code (review F10)."""
+    out = {}
+    for n in all_containers(line):
+        r = sh(["docker", "inspect", "-f", "{{json .State}}|{{.RestartCount}}", n], check=False)
+        if r.returncode != 0:
+            out[n] = {"present": False}
+            continue
+        st, rc = r.stdout.strip().rsplit("|", 1)
+        st = json.loads(st)
+        out[n] = {"present": True, "running": st.get("Running"), "oom_killed": st.get("OOMKilled"),
+                  "exit_code": st.get("ExitCode"), "restart_count": int(rc), "status": st.get("Status")}
+    return out
+
+
+def health(line: str) -> dict:
+    """bench-local review F10: every member up and never OOM-killed, and the line's durability check still holds. Run by
+    bench.py after the write phase and at the end (--health-cmd)."""
+    ms = members_state(line)
+    bad = [n for n, m in ms.items() if not m.get("present") or not m.get("running") or m.get("oom_killed")]
+    try:
+        chk = check_line(line)
+    except Exception as e:  # noqa: BLE001 - a check that cannot run is a failed check
+        chk = {"ok": False, "error": repr(e)}
+    return {"ok": not bad and bool(chk.get("ok")), "members": ms, "not_healthy": bad, "check": chk}
+
+
 def restart(line: str) -> None:
     """The cold phase's restart: every container of the line (MinIO included), then the host's page cache, then wait
     until the line is up again WITHOUT reading the benchmark's database."""
@@ -467,6 +503,27 @@ class Sampler(threading.Thread):
         super().__init__(daemon=True)
         self.line, self.path, self.every, self.stop = line, path, every, threading.Event()
         self.min_free_gib, self.disk_low, self.disk_min_free_gib = min_free_gib, threading.Event(), None
+        self.client_pid = None   # bench.py's pid once started: its CPU and its children's go in "client" (review F7)
+        self.tick = os.sysconf("SC_CLK_TCK")
+
+    def _client_cpu_s(self):
+        """CPU seconds of bench.py and every process below it (worker processes, children)."""
+        if not self.client_pid:
+            return None
+        todo, seen, total = [self.client_pid], set(), 0.0
+        while todo:
+            p = todo.pop()
+            if p in seen:
+                continue
+            seen.add(p)
+            try:
+                f = open(f"/proc/{p}/stat").read().rsplit(")", 1)[1].split()
+                total += (int(f[11]) + int(f[12])) / self.tick
+                for t in os.listdir(f"/proc/{p}/task"):
+                    todo += [int(x) for x in open(f"/proc/{p}/task/{t}/children").read().split()]
+            except (OSError, ValueError, IndexError):
+                continue
+        return total
 
     @staticmethod
     def _cpu():
@@ -478,6 +535,7 @@ class Sampler(threading.Thread):
         ids = {n: i for n, i in ids.items() if i}
         prev_t, prev_c = time.time(), {}
         tot, idle = self._cpu()
+        prev_client = None
         with open(self.path, "w") as f:
             while not self.stop.wait(self.every):
                 now = time.time()
@@ -491,12 +549,17 @@ class Sampler(threading.Thread):
                     self.disk_low.set()
                 row = {"t": round(now, 1), "host_cpu_busy": round(busy, 3), "host_cores": os.cpu_count(),
                        "host_mem_used_gib": round((mi["MemTotal"] - mi["MemAvailable"]) / 2**20, 2),
-                       "disk_free_gib": round(free, 2), "c": {}}
+                       "disk_free_gib": round(free, 2), "c": {}, "gone": []}
+                cl = self._client_cpu_s()
+                if cl is not None and prev_client is not None and cl >= prev_client:
+                    row["client_cores"] = round((cl - prev_client) / (now - prev_t), 3)
+                prev_client = cl
                 for n, cid in ids.items():
                     try:
                         u = int(open(f"/sys/fs/cgroup/cpuacct/docker/{cid}/cpuacct.usage").read())
                         m = int(open(f"/sys/fs/cgroup/memory/docker/{cid}/memory.usage_in_bytes").read())
                     except OSError:
+                        row["gone"].append(n)   # its cgroup is gone: the container is not running (review F10)
                         continue
                     if n in prev_c and u >= prev_c[n]:  # the counter starts again at 0 when a container restarts
                         row["c"][n] = {"cores": round((u - prev_c[n]) / 1e9 / (now - prev_t), 3), "mem_mib": round(m / 2**20)}
@@ -520,6 +583,12 @@ def summarize_samples(path: str) -> dict:
         ms = [r["c"][n]["mem_mib"] for r in rows if n in r["c"]]
         out["containers"][n] = {"cores_mean": round(sum(cs) / len(cs), 3), "cores_max": max(cs),
                                 "at_cap_share": round(sum(x >= 0.95 for x in cs) / len(cs), 3), "mem_mib_max": max(ms)}
+    cc = [r["client_cores"] for r in rows if "client_cores" in r]
+    if cc:
+        out["client_cores_mean"] = round(sum(cc) / len(cc), 3)
+        out["client_cores_max"] = max(cc)
+    gone = sorted({n for r in rows for n in r.get("gone", [])})
+    out["containers_gone_in_some_sample"] = gone   # expected only around the cold restart
     return out
 
 
@@ -574,13 +643,17 @@ def run_line(a) -> int:
                "--label", f"local {line}: {LINES[line]['durability']}", "--profile", a.profile, "--seed", str(a.seed),
                "--workers", str(a.workers), "--read-sample", str(a.read_sample), "--erase-users", str(a.erase_users),
                "--out", out, "--settle", "--cold-cmd", f"{PY} {os.path.abspath(__file__)} restart {line}",
-               "--cold-threads", str(a.cold_threads)]
+               "--cold-threads", str(a.cold_threads),
+               "--health-cmd", f"{PY} {os.path.abspath(__file__)} health {line}"]
+        if LINES[line]["target"] == "fenvix":
+            cmd += ["--engine-sha256", settings["binaries_sha256"][SRV]]
         settings["bench_command"] = " ".join(cmd)
         json.dump(settings, open(os.path.join(out, "settings.json"), "w"), indent=1, default=str)
         log(f"{line}: bench.py starts")
         disk_stop = False
         with open(os.path.join(out, "terminal.txt"), "w") as t:
             proc = subprocess.Popen(cmd, env=env, stdout=t, stderr=subprocess.STDOUT, cwd=HERE)
+            sampler.client_pid = proc.pid
             while proc.poll() is None:
                 if sampler.disk_low.wait(5):
                     disk_stop = True
@@ -614,6 +687,19 @@ def run_line(a) -> int:
                     res["quaderno_check"] = "ok: quaderno.sent grew during the write phase"
             except Exception as e:  # noqa: BLE001
                 res["quaderno_check"] = f"no summary: {e!r}"
+        res["members_end"] = members_state(line)
+        if any(m.get("oom_killed") or not m.get("running") for m in res["members_end"].values()):
+            res["members_check"] = "FAILED: a member is not running or was OOM-killed"
+            rc = rc or 7
+        if LINES[line]["target"] == "fenvix":
+            try:
+                lf = json.load(open(os.path.join(out, "summary.json"))).get("log_failed") or {}
+                res["log_failed"] = lf
+                if any(lf.values()):
+                    res["quaderno_failed_check"] = "FAILED: the 3-zone log refused batches (S3-WAL fallback acknowledged them)"
+                    rc = rc or 5
+            except Exception as e:  # noqa: BLE001
+                res["quaderno_failed_check"] = f"no summary: {e!r}"
         res["disk_end"] = disk()
         json.dump(res, open(os.path.join(out, "line_result.json"), "w"), indent=1)
         return rc
@@ -643,7 +729,7 @@ def main() -> None:
     r.add_argument("--cold-threads", type=int, default=200)
     r.add_argument("--min-free-gib", type=float, default=12)
     r.add_argument("--keep", action="store_true", help="leave the containers up (debugging only)")
-    for c in ("up", "restart", "check"):
+    for c in ("up", "restart", "check", "health"):
         p = sub.add_parser(c)
         p.add_argument("line", choices=sorted(LINES))
     sub.add_parser("down")
@@ -656,6 +742,10 @@ def main() -> None:
         up(a.line)
     elif a.cmd == "restart":
         restart(a.line)
+    elif a.cmd == "health":
+        h = health(a.line)
+        print(json.dumps(h, indent=1, default=str))
+        sys.exit(0 if h["ok"] else 1)
     elif a.cmd == "check":
         print(json.dumps(check_line(a.line), indent=1, default=str))
     elif a.cmd == "down":

@@ -75,7 +75,11 @@ def size(name, bson_gb, per_proc_mb_s=1.55, cook="m7i.large", log="c7g.medium", 
 def pilot():
     print("\n== pilot: Atlas-size load job, then 1 h of the measured kitchen with the extra programs (5 takeovers), no m30 program")
     t = (hour("c7i.xlarge") * 2) * 2.8 + (2 * hour("m7i.large") + 2 * hour("c7g.medium") + hour("c7i.large")) * 1.3 + 0.39 + 0.15
-    print(f"  about {t:.2f} $ ESTIMATED")
+    # total review B4: 5 minutes of write-peak in the pilot (its first run through our cook): 0.27 h of the kitchen and a
+    # c7i.xlarge client, 2.6 GB at 25,800 documents/s crossing a zone 3 times, its batch PUTs
+    wp_gb = 25800 * 341 * 5 * 60 / 1e9
+    wp = (hour("m7i.large") + 2 * hour("c7g.medium") + hour("c7i.xlarge")) * 0.27 + wp_gb * XZ * 3 + wp_gb * 1e9 / 341 / BATCH * PUT
+    print(f"  about {t:.2f} $ ESTIMATED, plus write-peak 5 minutes {wp:.2f} $ = {t + wp:.2f} $")
 
 
 def atlas_1tb(price_h, days_load):
@@ -194,6 +198,85 @@ def generated(name, ballast_dbs, aurora=True, cook="m7i.large", log="c7g.medium"
     return tot
 
 
+def split_plan(name, ballast_dbs, aurora=True, cook="m7i.large", log="c7g.medium", loader="c7i.xlarge", client="c7i.xlarge",
+               extras_client="c7i.large", pgbox="m7i.large", disk_gb=60, peak_docs_s=25800, agent_h_per_target=0.6):
+    """aws-fixes (B2, B4, B10; 2026-11-11): the job plan that fits the job ceiling. One kept pantry for every size (the
+    total review: the 100 GB and 1 TB jobs only add ballast to it, so the Atlas databases are loaded once). The measure
+    is THREE jobs, each checked by decide.py against 90% of the 330-minute ceiling:
+      M1 m30 alone (the measured cook settles first: prepare, settle cap 30 min);
+      M2 the extra programs (spare + extras client), then write-peak (spare off, a c7i.xlarge client);
+      M3 the agent benchmark: Aurora FIRST and deleted right after its target, then ours, then the Postgres machine.
+    Clients in eu-west-1b, the cook, the Postgres machine and Aurora in eu-west-1a (as on Atlas): the client's traffic
+    crosses a zone. Durations from decide.JOB_HOURS (ESTIMATED; the agent benchmark per target UNKNOWN until bench-local
+    measures it at the standard profile)."""
+    print(f"\n== THE JOB PLAN (aws-fixes), data {name}: one kept pantry, three measure jobs")
+    tot = 0.0
+    jobs = []
+    # L: the five Atlas databases through the frozen script (2.8 h at Atlas's rate; ours UNKNOWN) + boot + the settle
+    lh = 0.3 + 2.8 + 0.25
+    c = (hour(loader) + hour(client)) * lh + 26.6e9 / DOC_B / BATCH * PUT
+    jobs.append(("L, load the five Atlas databases (loader + m30 client)", lh, c,
+                 f"{lh:.2f} h (boot 0.3 + 2.8 at Atlas's rate + settle 0.25 expected, cap 1.0) x ({hour(loader):.4f} + "
+                 f"{hour(client):.4f}) + WAL PUTs 78 M documents / 1,000 x $0.005 per 1,000; client in the cook's zone "
+                 f"(client_zone same, total review N5): no cross-zone traffic (in another zone it would add up to 0.53 $)"))
+    if ballast_dbs:
+        gen = "c7i.2xlarge" if ballast_dbs > 4 else "c7i.xlarge"
+        par = min(TYPES[gen][0], ballast_dbs)
+        per_db_h = BALLAST_DB_GIB * GIB * 1000 / GEN_MB_S_PER_DB / 3600 * (1 + GEN_PUBLISH_FRACTION)
+        gh = -(-ballast_dbs // par) * per_db_h + 0.3
+        stored = ballast_dbs * BALLAST_DB_GIB * GIB * GEN_STORED_PER_BSON
+        c = gen_hour(gen, disk_gb) * gh + stored * 1000 / PART_MB * PUT
+        jobs.append((f"G, generate {ballast_dbs} ballast databases on {gen}", gh, c,
+                     f"{gh:.2f} h x {gen_hour(gen, disk_gb):.4f} + PUTs {stored:.0f} GB / {PART_MB} MB parts"))
+    kitchen = hour(cook) + 2 * hour(log)
+    m1 = 0.3 + 0.25 + 3.0
+    c = (kitchen + hour(client)) * m1 + 0.05 + 0.10
+    jobs.append(("M1, m30 program alone (cook + log-0, 2 log nodes, m30 client)", m1, c,
+                 f"{m1:.2f} h (boot 0.3 + settle 0.25 expected, cap 0.5 + m30 3.0) x ({kitchen:.4f} + {hour(client):.4f})"
+                 f" + cross-zone client traffic and log copies about $0.05 + reads $0.10"))
+    ex = 0.3 + 0.2 + 1.6
+    peak_h = 0.6
+    peak_gb = peak_docs_s * 341 * 25 * 60 / 1e9
+    xz_peak = peak_gb * XZ * 3        # client -> cook across a zone, and the cook's log copies to two other zones
+    c = (kitchen + hour(cook) + hour(extras_client)) * ex + (kitchen + hour(client)) * peak_h + 0.02 + 0.20 + \
+        xz_peak + peak_gb * 1e9 / 341 / BATCH * PUT
+    jobs.append(("M2, extra programs (spare, extras client) then write-peak (c7i.xlarge client)", ex + peak_h, c,
+                 f"{ex:.1f} h x ({kitchen:.4f} + spare {hour(cook):.4f} + {hour(extras_client):.4f}) + write-peak {peak_h} h x "
+                 f"({kitchen:.4f} + {hour(client):.4f}) + S3 programs 0.02 + log-ack and takeovers cross-zone 0.20 + "
+                 f"write-peak at {peak_docs_s:,} documents/s: {peak_gb:.1f} GB x 0.02 $/GB x 3 crossings = {xz_peak:.2f} "
+                 f"+ its batch PUTs {peak_gb * 1e9 / 341 / BATCH * PUT:.2f} (upper bound)"))
+    targets = 2 + (1 if aurora else 0)
+    m3 = 0.3 + 0.2 + targets * agent_h_per_target + (0.3 if aurora else 0)
+    c = (kitchen + hour(pgbox) + hour(extras_client)) * m3 + 0.10
+    how = (f"{m3:.1f} h (boot 0.5 + Aurora's creation 0.3 + {targets} targets x {agent_h_per_target} h) x ({kitchen:.4f} + "
+           f"Postgres {hour(pgbox):.4f} + {hour(extras_client):.4f}) + cross-zone 0.10")
+    if aurora:
+        au_h = 0.3 + agent_h_per_target + 0.2
+        au = AURORA_H * max(1.0, au_h) + 0.58 * 3 * AURORA_IO_M + 5 * AURORA_GBM / 730 * au_h
+        c += au
+        how += (f" + Aurora {max(1.0, au_h):.1f} h billed (create 0.3 + its own target {agent_h_per_target} + delete 0.2; "
+                f"run first, deleted at once) x {AURORA_H} + I/O 1.74 M x {AURORA_IO_M} $/M = {au:.2f}")
+    jobs.append(("M3, agent benchmark (Aurora first, ours, the Postgres machine)", m3, c, how))
+    if ballast_dbs:
+        # total review N5: job B, the ballast rounds on the measured kitchen, was in the commands but not in the total
+        bh = 2.1   # decide.py's estimate of step9/commands/06-B-ballast-rounds-100gb.json (boot 0.3 + rounds 1.8)
+        c = (kitchen + hour(client)) * bh + 0.05
+        jobs.append(("B, ballast rounds on the measured kitchen", bh, c,
+                     f"{bh} h (decide.py's estimate) x ({kitchen:.4f} + {hour(client):.4f}) + cross-zone 0.05 (upper bound)"))
+    hours = sum(j[1] for j in jobs)
+    days = hours / 24 + 0.5
+    pantry_gb = 26.6 * 1.6 + (ballast_dbs * BALLAST_DB_GIB * GIB * GEN_STORED_PER_BSON if ballast_dbs else 0)
+    storage = pantry_gb * GBM / 30 * days
+    for label, h, c, how in jobs:
+        tot += line(f"{label[:44]}", c, f"{h:.2f} h; {how}")
+    tot += line("S3 storage of the kept pantry", storage, f"{pantry_gb:.0f} GB x {GBM} x {days:.2f} days / 30")
+    print(f"  TOTAL ESTIMATED: {tot:.2f} $, {len(jobs)} jobs, about {hours:.1f} h of jobs one after the other; each job "
+          f"under the default $5 cap; the largest job {max(j[2] for j in jobs):.2f} $")
+    print("  (the SPESA line of run.py now adds each job's cross-zone allowance, ci/outcomes.py XZ_ALLOWANCE: before, it "
+          "printed about $1 less than the real figure in job M2)")
+    return tot
+
+
 if __name__ == "__main__":
     print("Step 9 cost estimate, 8-vCPU plan (ESTIMATED; prices DECLARED, sources in the docstring)")
     pilot()
@@ -206,4 +289,9 @@ if __name__ == "__main__":
     generated("atlas", 0)
     generated("100gb", 3)
     generated("1tb", 40)
+    print("\n######## aws-fixes (2026-11-11): the job plan that fits the ceiling: THE NUMBERS TO USE ########")
+    print("(the BUILT plan above has ONE measure job of about 7 h: refused by decide.py, total review B2)")
+    split_plan("atlas", 0)
+    split_plan("100gb", 3)
+    split_plan("atlas, write-peak at 10,000 documents/s", 0, peak_docs_s=10000)
     # no Atlas rerun (founder, 2026-11-09): the comparison uses the Atlas numbers measured in Ireland on 2026-11-05

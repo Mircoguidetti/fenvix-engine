@@ -12,11 +12,16 @@ process three times (at once, after --settle-s, after a clean restart that repla
 missing at the third read (must be 0); the first two counts are kept to tell loss from late visibility. Also counted: confirmations from a process after its kill (must
 be 0) and writes that failed (an unknown outcome, not counted as acknowledged).
 Raw lines in OUT/takeovers.jsonl, summary OUT/takeovers-summary.json; final line "TAKEOVERS: PASS" or "FAIL".
+Kept for diagnosis (aws-fixes, total review question 2 point 2): OUT/takeovers-acked.jsonl.gz, EVERY acknowledged _id
+with the time of its acknowledgement and the server (agent name and IP) that confirmed it; OUT/takeovers-missing.json,
+EVERY acknowledged _id missing at each of the three reads, with its time and server (not only the first 50).
 Usage: takeovers.py BUCKET OUT --a IP --b IP --ca CA_FILE [--n 50] [--writers 8] [--between-s 3] [--log on|off]
   (password from CM_PW in the environment; A = the cook's machine, B = the spare's machine)"""
 import argparse
+import gzip
 import json
 import os
+import sys
 import threading
 import time
 import urllib.parse
@@ -24,6 +29,9 @@ import urllib.parse
 import boto3
 from botocore.exceptions import ClientError
 from pymongo import MongoClient, WriteConcern
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import fenvix_status  # noqa: E402  total review N4: the log's fallback counter of each process before it is killed
 
 ap = argparse.ArgumentParser()
 ap.add_argument("bucket")
@@ -139,7 +147,9 @@ def writer(t):
                 time.sleep(0.05)
 
 
-summary = {"n": a.n, "writers": a.writers, "lease_ttl_s": a.lease_ttl, "log": a.log, "takeovers": []}
+summary = {"n": a.n, "writers": a.writers, "lease_ttl_s": a.lease_ttl, "log": a.log, "takeovers": [],
+           "note": "the pair runs with the round's server_options; its lease is lease_ttl_s, not the product's 30 s, so "
+                   "takeover_s is not the product's takeover time (total review, question 1 point 5)"}
 command("A", "start"); wait_ping("A")
 colls["A"].insert_one({"_id": "seed", "ts": time.time()})   # A owns the database before B starts
 command("B", "start"); wait_ping("B")
@@ -152,6 +162,7 @@ for i in range(a.n):
     victim = state["serving"]
     other = "B" if victim == "A" else "A"
     n_before = len(acked)
+    victim_failed = fenvix_status.failed(fenvix_status.snapshot(client(victim)))   # its counter dies with it
     ack = command(victim, "kill9")
     with lock:
         state["killed_at"][victim] = ack["t"]
@@ -165,7 +176,8 @@ for i in range(a.n):
             first = min(firsts)
             break
         time.sleep(0.05)
-    row = {"i": i + 1, "killed": victim, "takeover_s": round(first - t_kill, 3) if first else None, "acked_before": n_before}
+    row = {"i": i + 1, "killed": victim, "takeover_s": round(first - t_kill, 3) if first else None, "acked_before": n_before,
+           "victim_quaderno_failed": victim_failed}
     summary["takeovers"].append(row)
     note(kind="takeover", **row)
     print(f"takeover {i + 1}/{a.n}: {victim} killed, {other} confirmed after "
@@ -186,6 +198,7 @@ for t in ths:
 #   restart replays the log's records that S3 does not have yet). LOST = missing at read 3.
 survivor = state["serving"]
 other = "B" if survivor == "A" else "A"
+surv_failed = fenvix_status.failed(fenvix_status.snapshot(client(survivor)))   # N4, before the clean restart resets it
 verify_error = None
 
 
@@ -210,27 +223,56 @@ def read_back(wait_s=180):
         time.sleep(2)
 
 
-missing = {}
+def who(_id):
+    node, t = acked[_id]
+    return {"_id": _id, "t": t, "server": NODES[node][1], "ip": NODES[node][0]}
+
+
+# every acknowledged write, written before the read-back (a read-back that fails still leaves the full list)
+with gzip.open(os.path.join(a.out, f"{tag}-acked.jsonl.gz"), "wt") as f:
+    for _id in sorted(acked, key=lambda k: acked[k][1]):
+        f.write(json.dumps(who(_id)) + "\n")
+missing, missing_ids = {}, {}
+
+
+def keep_missing():
+    json.dump({"survivor": NODES[survivor][1], "acknowledged": len(acked), "missing": missing_ids},
+              open(os.path.join(a.out, f"{tag}-missing.json"), "w"))
+
+
 try:
-    missing["at_once"] = len(read_back())
-    time.sleep(a.settle_s)
-    missing["after_settle"] = len(read_back())
-    command(other, "stop", wait_s=120)
-    command(survivor, "stop", wait_s=120)
-    command(survivor, "start")
-    wait_ping(survivor, wait_s=300)
-    lost_set = read_back()
-    missing["after_clean_restart"] = len(lost_set)
-    lost = sorted(lost_set)
+    for label in ("at_once", "after_settle", "after_clean_restart"):
+        if label == "after_settle":
+            time.sleep(a.settle_s)
+        if label == "after_clean_restart":
+            command(other, "stop", wait_s=120)
+            command(survivor, "stop", wait_s=120)
+            command(survivor, "start")
+            wait_ping(survivor, wait_s=300)
+        got = read_back()
+        missing[label] = len(got)
+        missing_ids[label] = [who(x) for x in sorted(got, key=lambda k: acked[k][1])]
+        keep_missing()
+    lost = sorted(got)
 except Exception as e:
     verify_error = f"{type(e).__name__}: {e}"[:300]
     lost = []
+    keep_missing()
 print(f"missing acknowledged writes: {missing}", flush=True)
 times = sorted(r["takeover_s"] for r in summary["takeovers"] if r["takeover_s"] is not None)
 pct = lambda p: times[min(len(times) - 1, int(round(p / 100 * (len(times) - 1))))] if times else None
 summary.update({"verify_error": verify_error, "missing_by_read": missing, "done": len(times), "acknowledged": len(acked), "lost": len(lost) if verify_error is None else "UNKNOWN", "lost_ids_first": lost[:50],
                 "confirmed_after_kill": state["after_kill"], "failed_writes": state["failed"], "survivor": survivor,
                 "takeover_s_p50": pct(50), "takeover_s_p99": pct(99), "takeover_s_max": times[-1] if times else None})
+# N4: batches the log did not confirm, acknowledged through the S3-WAL fallback: every killed process just before its
+# kill, plus the survivor at the end (a counter that could not be read makes the total UNKNOWN, never 0)
+parts = [r["victim_quaderno_failed"] for r in summary["takeovers"]] + [surv_failed]
+fb = None if any(x is None for x in parts) else sum(parts)
+summary["log_fallback"] = {"batches": fb, "survivor_quaderno_failed": surv_failed,
+                           "label": ("UNKNOWN: a process's quaderno.failed could not be read" if fb is None else
+                                     "every write acknowledged by the log" if fb == 0 else
+                                     f"{fb} write batches took the S3-WAL fallback")}
+print(f"FENVIX-STATUS takeovers: {summary['log_fallback']['label']}", flush=True)
 for k in ("A", "B"):
     try:
         command(k, "stop", wait_s=60)  # (already stopped ones answer at once)

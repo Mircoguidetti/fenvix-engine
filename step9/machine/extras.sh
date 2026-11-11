@@ -8,6 +8,8 @@
 #   ballast-rounds  the same cold read phases as m30-corto (Q2, Q3, Q1, Q1d, Q4), on two ballast databases, through
 #                   code-irlanda's programma.py and the founder's script unchanged (100 GB and 1 TB only)
 #   takeovers       programs/takeovers.py       N takeovers cook <-> spare, 0 acknowledged writes lost
+#   write-peak      programs/write_peak.py      peak writes with the real indexes through the measured cook (the
+#                   founder's script's own load, 6 databases x 16 threads, 25 minutes); run by a client named "peak"
 # Then <NAME>/end.json and power off. Settings from the runner in <NAME>/config.json (no secrets).
 #   agent-bench     programs/agent_bench.py     the agent checkpoint benchmark against our cook, the Postgres machine (and
 #                   Aurora if given); run by a second client named "agent", after the spare is off (8 vCPU)
@@ -45,11 +47,22 @@ run_prog() { # run_prog NAME COMMAND...: one program, its terminal in out/NAME.t
   step "program $name: code $rc in $(( $(date +%s) - t0 )) s: $(tail -1 "out/$name.txt" | cut -c1-200)"
   push
 }
+# total review N4 (DECISIONS 2026-11-11, the S3-WAL fallback): our server's status before and after a program that
+# writes through the cook, and its result labelled with the batches that took the fallback (fenvix_status.py)
+with_status() { # with_status NAME RESULT_JSON COMMAND...
+  local name=$1 res=$2; shift 2
+  $PY fenvix_status.py snapshot "$URI" "out/$name-fenvix-before.json" >> out/steps.log 2>&1
+  run_prog "$name" "$@"
+  $PY fenvix_status.py snapshot "$URI" "out/$name-fenvix-after.json" >> out/steps.log 2>&1
+  step "$($PY fenvix_status.py label "$name" "out/$name-fenvix-before.json" "out/$name-fenvix-after.json" "out/$name-fenvix-label.json" "$res" 2>&1 | tail -1)"
+  $PY fenvix_status.py stamp "$res" "$ENGINE_SHA256"
+}
+ENGINE_SHA256=$(cfg engine_sha256)
 step "programs: $PROGRAMS; cook $COOK_IP:$COOK_PORT; spare ${SPARE_IP:-none}; log ${LOGS:-none}"
 FENVIX_P1_URI=$URI $PY wait_db.py 15 >> out/steps.log 2>&1 || finish COOK_UNREACHABLE
 has s3-first-byte && run_prog s3-first-byte $PY s3_first_byte.py "$BUCKET" out/s3-first-byte $(cfg s3_first_byte_args)
 has sealed-run && run_prog sealed-run $PY sealed_run_read.py "$BUCKET" out/sealed-run $(cfg sealed_run_args)
-has log-ack && run_prog log-ack $PY log_ack.py out/log-ack --uri "$URI" --logs "$(cfg bench_logs)" --pq ./pq $(cfg log_ack_args)
+has log-ack && with_status log-ack out/log-ack/log-ack-summary.json $PY log_ack.py out/log-ack --uri "$URI" --logs "$(cfg bench_logs)" --pq ./pq $(cfg log_ack_args)
 if has ballast-rounds; then
   # two ballast databases, their state files from the pantry, the read phases of m30-corto through programma.py
   mkdir -p ballast/lavoro/stati
@@ -74,14 +87,21 @@ if has takeovers; then
   [ -n "$SPARE_IP" ] || { step "takeovers: no spare in this round: skipped"; outcomes+=("takeovers:SKIPPED"); }
   # shellcheck disable=SC2046
   [ -n "$SPARE_IP" ] && run_prog takeovers $PY takeovers.py "$BUCKET" out/takeovers --a "$COOK_IP" --b "$SPARE_IP" --ca "$PWD/ca.pem" $(cfg takeovers_args)
+  $PY fenvix_status.py stamp out/takeovers/takeovers-summary.json "$ENGINE_SHA256"
   # coordinator's decision 2026-11-09: also N takeovers with the log off (S3 WAL path only), to separate the two paths
   # shellcheck disable=SC2046
   [ -n "$SPARE_IP" ] && [ -n "$(cfg takeovers_off_args)" ] && run_prog takeovers-logoff $PY takeovers.py "$BUCKET" out/takeovers --a "$COOK_IP" --b "$SPARE_IP" --ca "$PWD/ca.pem" $(cfg takeovers_off_args)
+  for f in out/takeovers/takeovers-*-summary.json; do [ -e "$f" ] && $PY fenvix_status.py stamp "$f" "$ENGINE_SHA256"; done
 fi
 if has agent-bench; then
   PG=$(cfg pgbox.ip); AU=$($PY s3io.py text "$BUCKET" secret/aurora-uri 2>/dev/null || true)
   # shellcheck disable=SC2046
-  run_prog agent-bench $PY agent_bench.py out/agent-bench --fenvix-uri "$URI" --pg-host "$PG" --aurora-uri "$AU" --s3-bucket "$PANTRY" $(cfg agent_bench_args)
+  with_status agent-bench out/agent-bench/fenvix/summary.json $PY agent_bench.py out/agent-bench --fenvix-uri "$URI" --pg-host "$PG" --aurora-uri "$AU" --s3-bucket "$PANTRY" \
+    --done-bucket "$BUCKET" --done-prefix "$P" --engine-sha256 "$ENGINE_SHA256" $(cfg agent_bench_args)
+fi
+if has write-peak; then
+  # shellcheck disable=SC2046
+  with_status write-peak out/write-peak/write-peak-summary.json $PY write_peak.py out/write-peak --uri "$URI" $(cfg write_peak_args)
 fi
 step "programs done: ${outcomes[*]:-none}"
 finish EXTRAS_DONE
