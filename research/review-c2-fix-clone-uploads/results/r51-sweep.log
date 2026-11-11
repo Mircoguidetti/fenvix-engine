@@ -1,0 +1,4 @@
+live run uploads aborted by the other process's sweep: 5 of 5 seen; wrong 0; compactor {'enabled': True, 'started': 2, 'running': 1, 'publishes': 20, 'absorbs': 11, 'merges': 0, 'reseals': 9, 'errors': 3}
+after a restart: wrong 0; versions 22, runs listed and missing 0; aborted keys ['tenants/g/fx/run/g0/00000000000000000008-1-42516e1f', 'tenants/g/fx/run/delta/00000000000000000009-1-97d56ced', 'tenants/g/fx/run/g0/00000000000000000010-1-9b5478a3']
+.
+1 passed, 6 deselected in 46.98s

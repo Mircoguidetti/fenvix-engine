@@ -1,0 +1,73 @@
+test_01_databases: 10 passed in 12.35s
+test_02_fork: 1 failed, 12 passed in 105.09s (0:01:45)
+test_02b_fork_crash: 12 passed, 11 warnings in 44.76s
+test_03_restore: 11 passed in 99.33s (0:01:39)
+test_03b_restore_gc_crash: 10 passed, 1 error in 185.74s (0:03:05)
+test_03c_retention_cost: 1 passed in 116.76s (0:01:56)
+test_04_export: 9 passed, 1 skipped in 76.81s (0:01:16)
+test_04b_export_vs_real_mongo: 2 skipped in 0.20s
+test_05_erase: 19 passed in 60.49s (0:01:00)
+test_06_keepawake: 13 passed in 137.71s (0:02:17)
+test_07_usage: 1 failed, 9 passed in 116.52s (0:01:56)
+test_08_costs: 3 passed in 400.87s (0:06:40)
+test_08b_pin_cost: 1 passed in 66.73s (0:01:06)
+test_09_security: 30 passed in 4.46s
+test_09b_users_restore: 1 passed in 10.37s
+test_09c_tls_rotate: 3 passed in 6.78s
+test_09d_s3_env: 6 passed in 12.75s
+test_09e_local_store: 4 passed in 34.48s
+test_09f_wal_retention_guard: 4 passed in 137.17s (0:02:17)
+test_09g_export_natural_order: 2 passed in 4.41s
+test_10_end_to_end: 1 passed in 14.53s
+test_11_tls_modes: 4 passed in 48.98s
+test_12_shutdown: 2 passed in 8.66s
+test_13_ip_allowlist: 84 passed in 34.57s
+test_14_auth_limits: 10 passed in 46.39s
+test_15_admin_cmd_privileges: 54 passed in 6.43s
+test_16_block_defaults: 5 passed in 6.39s
+test_17_grantable_roles: 94 passed in 22.46s
+test_18_unblock_per_database: 4 passed in 2.33s
+test_19_imds_credential_refresh: 4 failed in 190.53s (0:03:10)
+test_20_process_lease: 9 passed in 126.13s (0:02:06)
+test_21_fair_limits_metrics: 4 passed in 16.63s
+test_22_wal_gc_stored_manifest: 1 passed in 8.98s
+test_23_process_lease_late: 6 passed in 135.46s (0:02:15)
+test_24_local_log: 8 passed in 93.27s (0:01:33)
+test_25_review_fixes: 8 passed in 42.13s
+test_26_drop_forgets: 3 passed in 70.83s (0:01:10)
+test_27_memory_per_write: 2 passed in 264.60s (0:04:24)
+test_28_bulk_insert_stall: 1 passed in 16.47s
+test_29_compat_data_bugs: 10 passed in 2.42s
+test_30_fork_limits_txn_collation: 14 passed in 14.53s
+test_31_lease_lost_store_down: 2 failed in 200.32s (0:03:20)
+test_32_sort_top1: 10 passed in 4.35s
+test_33_metadata_cache: 10 passed in 30.43s
+test_34_change_stream_token_db: 9 passed in 4.32s
+test_35_fix_piccoli: 19 passed, 5 warnings in 176.90s (0:02:56)
+test_36_isolation_quotas: .
+test_36b_review_fixes: 
+test_37_conn_limits_per_db: 4 passed in 20.49s
+test_38_front_door_review: 5 passed in 80.67s (0:01:20)
+test_40_hello_exhaust: 5 passed in 11.78s
+test_41_commit_retry: 6 passed in 48.68s
+test_41b_commit_durable: 5 passed in 31.57s
+test_41c_review_commit_durable: 11 passed in 167.44s (0:02:47)
+test_41d_review_commit_cost: 2 passed in 55.94s
+test_41e_outcomes: 4 passed in 17.86s
+test_42_customer_compaction: 3 passed in 162.72s (0:02:42)
+test_42_unique_txn: 33 passed in 26.47s
+test_42b_tolong_date: 12 passed in 4.50s
+test_42r_review_unique_build: 1 failed, 1 passed in 4.41s
+test_42s_index_build_writes: 28 passed in 179.98s (0:02:59)
+test_42t_kill_index_build: 1 passed in 975.06s (0:16:15)
+test_43_review_compaction: 1 failed, 5 passed in 10.38s
+test_44_layout_v2: 5 passed in 48.65s
+test_45_envelope_rollback: 1 passed, 2 skipped in 2.27s
+test_46_review_c2_step2: 12 passed in 70.54s (0:01:10)
+test_47_c2_step2_fix: 7 passed in 2.39s
+test_47_c2_step7a_paths: 2 passed in 28.38s
+test_48_c2_step7b_forks_erasure: 3 passed in 24.50s
+test_49_review_c2_step7b: 5 passed, 3 warnings in 22.29s
+test_50_c2_step7b_fix_long_commands: 8 passed in 176.65s (0:02:56)
+test_51_c2_fix_clone_uploads: 4 passed in 103.54s (0:01:43)
+/dev/vda        252G   16G   23G  41% /

@@ -1,0 +1,27 @@
+round 0: wrong 0 []
+round 1: wrong 1333 [(0, 6, 3), (3, 6, 3), (6, 6, 3)]
+round 2: wrong 2667 [(0, 6, 3), (3, 6, 3), (6, 6, 3)]
+round 3: wrong 4000 [(0, 6, 3), (3, 6, 3), (6, 6, 3)]
+round 4: wrong 5333 [(0, 6, 3), (3, 6, 3), (6, 6, 3)]
+round 5: wrong 6667 [(0, 6, 3), (3, 6, 3), (6, 6, 3)]
+round 6: wrong 8000 [(0, 6, 3), (3, 6, 3), (6, 6, 3)]
+round 7: wrong 9333 [(0, 6, 3), (3, 6, 3), (6, 6, 3)]
+Fround 0: pass running at the reopen 1, wrong 0 []
+round 1: pass running at the reopen 1, wrong 0 []
+round 2: pass running at the reopen 1, wrong 0 []
+round 3: pass running at the reopen 1, wrong 0 []
+round 4: pass running at the reopen 2, wrong 0 []
+round 5: pass running at the reopen 2, wrong 0 []
+round 6: pass running at the reopen 2, wrong 0 []
+round 7: pass running at the reopen 2, wrong 0 []
+after the last close: wrong 0
+after a restart: wrong 0
+rounds with a pass running at the reopen: 2
+.
+=================================== FAILURES ===================================
+E   AssertionError: 37333 stale or missing answers after kill -9 during a close, e.g. [(0, 6, 3), (3, 6, 3), (6, 6, 3), (9, 6, 3), (12, 6, 3)]
+    assert not [(0, 6, 3), (3, 6, 3), (6, 6, 3), (9, 6, 3), (12, 6, 3), (15, 6, 3), ...]
+/home/user/fenvix-engine/ctl-tests/test_51r_review_c2_fix_clone_uploads.py:90: AssertionError: 37333 stale or missing answers after kill -9 during a close, e.g. [(0, 6, 3), (3, 6, 3), (6, 6, 3), (9, 6, 3), (12, 6, 3)]
+=========================== short test summary info ============================
+FAILED test_51r_review_c2_fix_clone_uploads.py::test_kill_during_a_close_then_no_stale_answer
+1 failed, 1 passed, 2 deselected in 142.76s (0:02:22)

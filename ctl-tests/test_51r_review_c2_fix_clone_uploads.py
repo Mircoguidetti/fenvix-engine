@@ -444,3 +444,24 @@ def test_a_sweep_that_aborts_live_uploads_loses_nothing():
             pass
         p1.term()
         relay.stop()
+
+
+def test_store_outage_past_the_lease_loses_no_acknowledged_insert():
+    """Found by this review while rerunning ctl test_31 (not caused by c2-fix-clone-uploads: integration-3 lost one
+    document too). test_31's `test_engine_recovers_after_lease_lost_to_store_outage` (16 writers, the store frozen 40 s, past
+    the 6 s lease, then back), with sealed runs on, run R51_OUTAGE_RUNS times with T_pin 30 s so the final read is not
+    refused; every acknowledged insert must be there after the restart. MEASURED on this sandbox: acknowledged inserts were
+    missing (from SlateDB too, not only from the merged reader) in 6 of 11 runs on f6b6db18 with its compactor, 3 of 9
+    with the compactor off, and 1 of 11 on integration-3 with the compactor off."""
+    import importlib
+    os.environ["FENVIX_SEALED_TPIN_MS"] = "30000"
+    t31 = importlib.import_module("test_31_lease_lost_store_down")
+    failures = []
+    for i in range(int(os.environ.get("R51_OUTAGE_RUNS", "3"))):
+        try:
+            t31.test_engine_recovers_after_lease_lost_to_store_outage()
+            print(f"outage run {i}: every acknowledged insert there")
+        except AssertionError as e:
+            print(f"outage run {i}: {str(e)[:200]}")
+            failures.append(str(e)[:200])
+    assert not failures, f"acknowledged inserts lost after a store outage past the lease in {len(failures)} runs: {failures}"

@@ -1,0 +1,15 @@
+compactor off: wrong 0
+compactor on again, round 4: wrong 1333 [(6000, 306, 303), (6003, 306, 303), (6006, 306, 303)]
+compactor on again, round 5: wrong 1333 [(6000, 306, 303), (6003, 306, 303), (6006, 306, 303)]
+compactor on again, round 6: wrong 1333 [(6000, 306, 303), (6003, 306, 303), (6006, 306, 303)]
+compactor {'enabled': True, 'started': 3, 'running': 0, 'publishes': 23, 'absorbs': 12, 'merges': 1, 'reseals': 10, 'errors': 0}
+F
+=================================== FAILURES ===================================
+_______________________ test_compactor_off_then_on_again _______________________
+test_51r_review_c2_fix_clone_uploads.py:283: in test_compactor_off_then_on_again
+    assert not bad, f"{len(bad)} stale or missing answers after the compactor was switched off and on, e.g. {bad[:5]}"
+E   AssertionError: 3999 stale or missing answers after the compactor was switched off and on, e.g. [(6000, 306, 303), (6003, 306, 303), (6006, 306, 303), (6009, 306, 303), (6012, 306, 303)]
+E   assert not [(6000, 306, 303), (6003, 306, 303), (6006, 306, 303), (6009, 306, 303), (6012, 306, 303), (6015, 306, 303), ...]
+=========================== short test summary info ============================
+FAILED test_51r_review_c2_fix_clone_uploads.py::test_compactor_off_then_on_again
+1 failed, 4 deselected in 62.74s (0:01:02)

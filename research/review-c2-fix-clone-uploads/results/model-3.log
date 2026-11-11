@@ -1,0 +1,11 @@
+
+running 1 test
+compactor model: St { ops: 40000, wrong: 0, writes: 18094, reads: 9968, ranges: 3970, txn_reads: 3711, retries: 0, crashes: 37, erasures: 124, max_l0: 31 }
+compactor model: follower versions 132, follower reads 1930, follower answers that changed 0
+compactor model: absorbs 1119, merges 366, reseals 972 (splits 34, group merges 35), rows dropped from SlateDB 12033, runs deleted by GC 4663, erasure leftovers 0, erasures pending 0, groups 10, delta runs 5
+compactor model: SlateDB SSTs asked by the seq filter 95885, skipped 87602, planted extra 0
+compactor model: SlateDB SSTs asked by the customer filter 68, skipped 16
+test fx::compactor_tests::compactor_model_drop_on ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 142 filtered out; finished in 32.42s
+

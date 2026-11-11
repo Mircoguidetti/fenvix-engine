@@ -1,0 +1,11 @@
+round 0: wrong 0 []
+round 1: wrong 0 []
+round 2: wrong 0 []
+round 3: wrong 0 []
+round 4: wrong 0 []
+round 5: wrong 0 []
+round 6: wrong 0 []
+round 7: wrong 0 []
+compactor {'enabled': True, 'started': 8, 'running': 0, 'publishes': 56, 'absorbs': 30, 'merges': 2, 'reseals': 24, 'errors': 0} rounds with a pass on the closed database 4
+.
+1 passed, 3 deselected in 66.52s (0:01:06)

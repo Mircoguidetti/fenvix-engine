@@ -1,0 +1,14 @@
+.......E...                                                              [100%]
+==================================== ERRORS ====================================
+__________ ERROR at setup of test_two_restores_at_once_are_serialised __________
+test_03b_restore_gc_crash.py:187: in env
+    srv = Server(bucket, "rco", idle=300, extra=["--retention-interval-secs", "2", "--retention-prune-secs", "3"]).start()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib.py:99: in start
+    self.wait_ready()
+lib.py:120: in wait_ready
+    raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
+E   RuntimeError: server exited with 1; see /home/user/fenvix-engine/ctl-tests/out/rco-34286.log
+=========================== short test summary info ============================
+ERROR test_03b_restore_gc_crash.py::test_two_restores_at_once_are_serialised
+10 passed, 1 error in 185.74s (0:03:05)

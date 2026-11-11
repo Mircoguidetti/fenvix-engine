@@ -1,0 +1,112 @@
+== branch run 1
+acknowledged 89002 documents; abandonCloseTimeouts 0
+PROBE merged reader: 0 acknowledged documents missing, e.g. []
+PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing, e.g. []
+1 passed, 1 deselected in 80.82s (0:01:20)
+== branch run 2
+acknowledged 174002 documents; abandonCloseTimeouts 0
+PROBE merged reader: 150 acknowledged documents missing, e.g. [32000, 32001, 32002, 32003, 32004]
+PROBE SlateDB only (sealed runs off): 150 acknowledged documents missing, e.g. [32000, 32001, 32002, 32003, 32004]
+1 failed, 1 deselected in 78.85s (0:01:18)
+== branch run 3
+acknowledged 89502 documents; abandonCloseTimeouts 0
+PROBE merged reader: 363 acknowledged documents missing, e.g. [29500, 29501, 29502, 29503, 29504]
+PROBE SlateDB only (sealed runs off): 363 acknowledged documents missing, e.g. [29500, 29501, 29502, 29503, 29504]
+1 failed, 1 deselected in 78.77s (0:01:18)
+== branch compactor off run 1
+acknowledged 61502 documents; abandonCloseTimeouts 0
+PROBE merged reader: 121 acknowledged documents missing, e.g. [18000, 18001, 18002, 18003, 18004]
+PROBE SlateDB only (sealed runs off): 121 acknowledged documents missing, e.g. [18000, 18001, 18002, 18003, 18004]
+1 failed, 1 deselected in 78.76s (0:01:18)
+== branch compactor off run 2
+acknowledged 60502 documents; abandonCloseTimeouts 0
+PROBE merged reader: 0 acknowledged documents missing, e.g. []
+PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing, e.g. []
+1 passed, 1 deselected in 76.63s (0:01:16)
+
+[exited with code 0]
+== i3 compactor off run 1
+acknowledged 62502 documents; abandonCloseTimeouts 0
+PROBE merged reader: 0 acknowledged documents missing, e.g. []
+PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing, e.g. []
+1 passed, 1 deselected in 76.87s (0:01:16)
+== i3 compactor off run 2
+acknowledged 63002 documents; abandonCloseTimeouts 0
+PROBE merged reader: 0 acknowledged documents missing, e.g. []
+PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing, e.g. []
+1 passed, 1 deselected in 76.81s (0:01:16)
+== i3 compactor off run 3
+acknowledged 58502 documents; abandonCloseTimeouts 0
+PROBE merged reader: 0 acknowledged documents missing, e.g. []
+PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing, e.g. []
+1 passed, 1 deselected in 76.66s (0:01:16)
+== i3 sealed runs off
+acknowledged 117002 documents; abandonCloseTimeouts 0
+PROBE merged reader: 0 acknowledged documents missing, e.g. []
+PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing, e.g. []
+1 passed, 1 deselected in 84.89s (0:01:24)
+== branch sealed runs off
+acknowledged 103002 documents; abandonCloseTimeouts 0
+PROBE merged reader: 0 acknowledged documents missing, e.g. []
+PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing, e.g. []
+1 passed, 1 deselected in 82.62s (0:01:22)
+== i3 sealed runs off
+acknowledged 108002 documents; abandonCloseTimeouts 0
+PROBE merged reader: 0 acknowledged documents missing, e.g. []
+PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing, e.g. []
+1 passed, 1 deselected in 84.81s (0:01:24)
+== branch sealed runs off
+acknowledged 100002 documents; abandonCloseTimeouts 0
+PROBE merged reader: 0 acknowledged documents missing, e.g. []
+PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing, e.g. []
+1 passed, 1 deselected in 81.10s (0:01:21)
+
+[exited with code 0]
+== i3 compactor off run 1: acknowledged 60502 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing, e.g. [] PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing, e.g. [] 
+== branch compactor off run 1: acknowledged 60502 documents; abandonCloseTimeouts 0 PROBE merged reader: 18 acknowledged documents missing, e.g. [19500, 19501, 19502, 19503, 19504] PROBE SlateDB only (sealed runs off): 18 acknowledged documents missing, e.g. [19500, 19501, 19502, 19503, 19504] 
+== i3 compactor off run 2: acknowledged 60502 documents; abandonCloseTimeouts 0 PROBE merged reader: 1 acknowledged documents missing, e.g. [15500] PROBE SlateDB only (sealed runs off): 1 acknowledged documents missing, e.g. [15500] 
+== branch compactor off run 2: acknowledged 60502 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing, e.g. [] PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing, e.g. [] 
+== i3 compactor off run 3: acknowledged 61002 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing, e.g. [] PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing, e.g. [] 
+== branch compactor off run 3: 
+== i3 compactor off run 4: 
+== branch compactor off run 4: 
+
+[exited with code 0]
+== i3 compactor=0 run 1 (disk 24G): acknowledged 61502 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing 
+== branch compactor=0 run 1 (disk 24G): acknowledged 63002 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing 
+== i3 compactor=small run 1 (disk 24G): acknowledged 31502 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing 
+== branch compactor=small run 1 (disk 24G): acknowledged 177002 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing 
+== i3 compactor=0 run 2 (disk 24G): acknowledged 63002 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing 
+== branch compactor=0 run 2 (disk 24G): acknowledged 61002 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing 
+== i3 compactor=small run 2 (disk 24G): acknowledged 32002 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing 
+== branch compactor=small run 2 (disk 24G): acknowledged 151502 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing 
+== i3 compactor=0 run 3 (disk 24G): acknowledged 61502 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing 
+== branch compactor=0 run 3 (disk 24G): acknowledged 64002 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing 
+== i3 compactor=small run 3 (disk 24G): acknowledged 32002 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing 
+== branch compactor=small run 3 (disk 24G): acknowledged 151002 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing 
+== i3 compactor=0 run 4 (disk 24G): acknowledged 60502 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing 
+== branch compactor=0 run 4 (disk 24G): acknowledged 62502 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing 
+== i3 compactor=small run 4 (disk 24G): acknowledged 31502 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing 
+== branch compactor=small run 4 (disk 24G): acknowledged 150502 documents; abandonCloseTimeouts 0 PROBE merged reader: 1 acknowledged documents missing PROBE SlateDB only (sealed runs off): 1 acknowledged documents missing 
+== i3 compactor=0 run 5 (disk 24G): acknowledged 60502 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing 
+== branch compactor=0 run 5 (disk 24G): acknowledged 61502 documents; abandonCloseTimeouts 0 PROBE merged reader: 243 acknowledged documents missing PROBE SlateDB only (sealed runs off): 243 acknowledged documents missing 
+== i3 compactor=small run 5 (disk 24G): acknowledged 32002 documents; abandonCloseTimeouts 0 PROBE merged reader: 0 acknowledged documents missing PROBE SlateDB only (sealed runs off): 0 acknowledged documents missing 
+== branch compactor=small run 5 (disk 24G): acknowledged 82002 documents; abandonCloseTimeouts 0 PROBE merged reader: 33 acknowledged documents missing PROBE SlateDB only (sealed runs off): 33 acknowledged documents missing 
+
+[exited with code 0]
+== i3
+acknowledged 32002 documents; abandonCloseTimeouts 0
+1 passed, 1 deselected in 114.71s (0:01:54)
+== branch
+acknowledged 181002 documents; abandonCloseTimeouts 0
+1 passed, 1 deselected in 74.85s (0:01:14)
+== i3
+acknowledged 31002 documents; abandonCloseTimeouts 0
+1 passed, 1 deselected in 118.57s (0:01:58)
+== branch
+acknowledged 148002 documents; abandonCloseTimeouts 0
+E   AssertionError: 151 acknowledged documents missing, e.g. [32000, 32001, 32002, 32003, 32004]
+/home/user/fenvix-engine/ctl-tests/test_31_lease_lost_store_down.py:108: AssertionError: 151 acknowledged documents missing, e.g. [32000, 32001, 32002, 32003, 32004]
+1 failed, 1 deselected in 74.66s (0:01:14)
+
+[exited with code 0]

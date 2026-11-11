@@ -1,0 +1,7 @@
+outage run 0: every acknowledged insert there
+outage run 1: SIGTERM did not stop the server in 30 s (see /home/user/fenvix-engine/ctl-tests/out/lstall-37252.log)
+outage run 2: 486 acknowledged documents missing, e.g. [33500, 33501, 33502, 33503, 33504]
+outage run 3: 1 acknowledged documents missing, e.g. [41000]
+1 failed, 7 deselected in 318.75s (0:05:18)
+
+[exited with code 0]

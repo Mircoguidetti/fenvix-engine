@@ -1,0 +1,69 @@
+round 0: closes that hit the bound so far 0
+round 0: wrong 0 []
+round 1: closes that hit the bound so far 0
+round 1: wrong 0 []
+round 2: closes that hit the bound so far 0
+Fround 0: wrong 0 []
+round 1: wrong 0 []
+round 2: wrong 0 []
+round 3: wrong 0 []
+round 4: wrong 0 []
+round 5: wrong 0 []
+after the last close: wrong 0
+.
+=================================== FAILURES ===================================
+___________________ test_a_close_that_hits_the_absorb_bound ____________________
+test_51r_review_c2_fix_clone_uploads.py:168: in test_a_close_that_hits_the_absorb_bound
+    w = wrong(srv.client()["g"]["c"], expect)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_51r_review_c2_fix_clone_uploads.py:51: in wrong
+    got = {d["_id"]: d.get("v") for d in col.find({}, {"v": 1})}
+                                         ^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py:404: in __next__
+    return self.next()
+           ^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py:383: in next
+    if len(self._data) or self._refresh():
+                          ^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py:334: in _refresh
+    self._send_message(q)
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py:237: in _send_message
+    response = client._run_operation(operation, self._run_with_conn, address=self._address)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:1994: in _run_operation
+    return self._retryable_read(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:1992: in _cmd
+    return run_with_conn(conn, operation, read_preference)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor_base.py:120: in _run_with_conn
+    docs, reply, duration = run_cursor_command(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:329: in run_cursor_command
+    docs, reply, duration_s = _run_command(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: database g: our manifest was last read 1.075035093s ago, more than T_pin; retry, full error: {'ok': 0.0, 'errmsg': 'database g: our manifest was last read 1.075035093s ago, more than T_pin; retry', 'code': 134, 'codeName': 'SealedRunsRetry', 'errorLabels': ['TransientTransactionError', 'RetryableWriteError']}
+=========================== short test summary info ============================
+FAILED test_51r_review_c2_fix_clone_uploads.py::test_a_close_that_hits_the_absorb_bound
+1 failed, 1 passed, 3 deselected in 264.23s (0:04:24)
