@@ -1,0 +1,14 @@
+[pass 1: first read since start (cold)] n=300
+  ping         p50=    0.45 p90=    0.59 p99=    0.89
+  find_latest  p50=    8.59 p90=   11.74 p99=   18.57
+  find_writes  p50=    0.80 p90=    0.99 p99=    3.30
+  decode       p50=    0.42 p90=    1.26 p99=    2.86
+  total_resume p50=   10.00 p90=   13.37 p99=   21.72
+  doc_kb       p50=   25.85 p90=  155.51 p99=  267.95
+[pass 2: same threads again (hot)] n=300
+  ping         p50=    0.41 p90=    0.54 p99=    0.73
+  find_latest  p50=    0.99 p90=    1.29 p99=    1.93
+  find_writes  p50=    0.70 p90=    0.89 p99=    1.23
+  decode       p50=    0.36 p90=    1.20 p99=    1.91
+  total_resume p50=    2.11 p90=    3.17 p99=    4.33
+  doc_kb       p50=   25.85 p90=  155.51 p99=  267.95
