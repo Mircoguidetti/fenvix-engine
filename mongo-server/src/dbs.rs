@@ -205,7 +205,7 @@ pub struct Reopened(pub String);
 
 impl std::fmt::Display for Reopened {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "database {} was reopened during the command (its lease was lost); nothing of the command's write was applied, retry", self.0)
+        write!(f, "database {} was reopened during the command (its lease was lost); this write was not applied (an earlier step of the same command, such as an index definition, may have been undone or kept), retry", self.0)
     }
 }
 
