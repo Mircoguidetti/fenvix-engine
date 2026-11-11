@@ -205,7 +205,7 @@ def test_review_case_c_cold_only_slower_is_not_a_blocker():
     now a blocker of its own (F9); every other blocker must be absent, and no cold comparison."""
     c = _gate_skips_cases()["C"]
     assert "resume[cold] p50" not in c and "resume[cold] p99" not in c, c
-    lines = [l for l in c.splitlines() if l.strip().startswith("- ") and "settle record" not in l and "server status at the end" not in l and "verdict FAIL" not in l
+    lines = [l for l in c.splitlines() if l.strip().startswith("- ") and "settle record" not in l and "server status at the end" not in l and "quaderno.failed UNKNOWN" not in l and "verdict FAIL" not in l
              and "takeovers log off" not in l and "names no engine binary" not in l and "made by binary" not in l]
     assert not lines, c
 
@@ -261,6 +261,14 @@ def test_log_fallback_closes():
     ours = clean_summary()
     ours["server_status_end"]["quaderno"]["failed"] = 3
     closed(tree(ours, clean_summary(2), clean_summary(2)), "the 3-zone log refused 3 batches")
+
+
+def test_log_failed_unknown_closes():
+    """Fix check F5: an unreadable server status left quaderno.failed None, which counted as 0."""
+    for k in ("server_status_after_write", "server_status_before_cold", "server_status_end"):
+        ours = clean_summary()
+        ours[k] = {"error": "ServerSelectionTimeoutError"}
+        closed(tree(ours, clean_summary(2), clean_summary(2)), f"quaderno.failed UNKNOWN ({k}")
 
 
 def test_client_limited_closes():

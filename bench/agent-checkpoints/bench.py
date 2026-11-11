@@ -80,9 +80,15 @@ class ClientCpu(threading.Thread):
     core or more on average, or a host at 95% busy or more in more than 10% of the samples, makes the line
     `client_limited` (RULES: the sender must not be the limit). Written before any w8 result was read."""
 
-    def __init__(self, path: str, pids, every: float = 2.0):
+    # DECISIONS 2026-11-11 "Client limit": a line with several workers is a throughput line, client-limited when a
+    # client process averages 0.8 core or more (RULES' 80%); the --workers 1 line times one call at a time, client time
+    # included equally for every target: exempt, its client CPU is reported
+    LIMIT_CORES = 0.8
+
+    def __init__(self, path: str, pids, every: float = 2.0, workers: int = 1):
         super().__init__(daemon=True)
         self.path, self.pids, self.every, self.stop = path, pids, every, threading.Event()
+        self.workers = workers
         self.rows: list[dict] = []
         self.tick = os.sysconf("SC_CLK_TCK")
 
@@ -128,10 +134,18 @@ class ClientCpu(threading.Thread):
         means = {p: round(sum(v) / len(v), 3) for p, v in per.items() if v}
         hb = [r["host_busy"] for r in self.rows]
         hot = round(sum(x >= 0.95 for x in hb) / len(hb), 3)
-        limited = any(m >= 0.9 for m in means.values()) or hot > 0.10
-        return {"samples": len(self.rows), "process_cores_mean": means, "process_cores_max_mean": max(means.values()) if means else None,
-                "host_busy_mean": round(sum(hb) / len(hb), 3), "host_busy_ge_95pct_share": hot, "client_limited": limited,
-                "rule": "limited if a client process averages >= 0.9 core or the host is >= 95% busy in > 10% of samples"}
+        top = max(means.values()) if means else None
+        out = {"samples": len(self.rows), "workers": self.workers, "process_cores_mean": means, "process_cores_max_mean": top,
+               "host_busy_mean": round(sum(hb) / len(hb), 3), "host_busy_ge_95pct_share": hot}
+        if self.workers > 1:
+            out["client_limited"] = (top is not None and top >= self.LIMIT_CORES) or hot > 0.10
+            out["rule"] = (f"--workers {self.workers}, a throughput line: limited if a client process averages >= "
+                           f"{self.LIMIT_CORES} core or the host is >= 95% busy in > 10% of samples (DECISIONS 2026-11-11)")
+        else:
+            out["client_limited"] = False
+            out["rule"] = (f"--workers 1: exempt from the 80% rule (one call timed at a time, client time included equally "
+                           f"for every target; DECISIONS 2026-11-11); measured client CPU {top} core")
+        return out
 
 
 def _worker(target, seed, threads, shard, out_path, w):
@@ -171,7 +185,7 @@ def write_phase(target: targets.Target, seed: int, threads: dict, events: list[d
     errors = []
     procs = []
     cpu = ClientCpu(os.path.join(out_dir, "client_cpu.jsonl") if out_dir else os.devnull,
-                    lambda: [os.getpid()] + [p.pid for p in procs if p.pid])
+                    lambda: [os.getpid()] + [p.pid for p in procs if p.pid], workers=workers)
     out_dir = out_dir or tempfile.mkdtemp()
     if workers > 1:
         import multiprocessing as mp
@@ -348,11 +362,12 @@ def logical_bytes(rows: list[dict]) -> dict:
 
 def run_ok(w: dict, rd: dict, er: dict, check: dict, log_failed: dict, health: list, cold: dict | None) -> bool:
     """A run is ok only if: no write error; no read inconsistency and no wrong read; no erased thread readable, also by
-    checkpoint id (F6); our 3-zone log refused nothing (F5: quaderno.failed 0 after write, before the cold restart and
-    at the end); every member healthy after write and at the end (F10); the cold restart and every cold read worked."""
+    checkpoint id (F6); our 3-zone log refused nothing (F5: quaderno.failed exactly 0 after write, before the cold
+    restart and at the end; an unreadable counter is UNKNOWN and not ok); every member healthy after write, before the
+    cold restart and at the end (F10); the cold restart and every cold read worked."""
     return bool(not w["errors"] and rd["inconsistencies"] == 0 and er["threads_left_readable"] == 0
                 and check["wrong_reads"] == 0 and er.get("checkpoints_left_readable_by_id", 0) == 0
-                and all(not v for v in (log_failed or {}).values()) and all(h["rc"] == 0 for h in health)
+                and all(v == 0 for v in (log_failed or {}).values()) and all(h["rc"] == 0 for h in health)
                 and (cold is None or (cold["restart"]["rc"] == 0 and not cold.get("n_errors") and cold.get("threads", 0) > 0)))
 
 
@@ -432,6 +447,10 @@ def main() -> None:
     # the cook's counters start again at 0 after the cold restart: read them before it too (F5)
     status_before_cold = targets.fenvix_status(a.uri) if a.target == "fenvix" else None
     cold = None
+    if a.health_cmd:
+        # review fix check, F10: a member lost after the write phase must not be hidden by the cold restart (docker
+        # restart starts it again): check every member right before it
+        health.append(run_health(a.health_cmd, "before cold"))
     if a.cold_cmd:
         cold = cold_phase(target, threads, rec, a.cold_threads, a.seed, a.cold_cmd, set(read_chosen) | set(erased), expected)
     status_end = targets.fenvix_status(a.uri) if a.target == "fenvix" else None
@@ -443,6 +462,8 @@ def main() -> None:
     log_failed = {k: ((s or {}).get("quaderno") or {}).get("failed") for k, s in
                   (("after_write", status_after_write), ("before_cold", status_before_cold), ("end", status_end))} \
         if a.target == "fenvix" else {}
+    # review fix check, F5: a status that could not be read leaves quaderno.failed UNKNOWN (None), never 0: not ok
+    log_failed_unknown = sorted(k for k, v in log_failed.items() if v is None)
 
     lb = logical_bytes(rec.rows)
     logical_total = lb["checkpoint_bytes"] + lb["writes_bytes"]
@@ -468,6 +489,7 @@ def main() -> None:
         "s3_put_requests_during_write": s3_puts,
         "server_status_before": status_before, "server_status_after_write": status_after_write,
         "server_status_before_cold": status_before_cold, "server_status_end": status_end, "log_failed": log_failed,
+        "log_failed_unknown": log_failed_unknown,
         "health": health, "client_cpu": w.get("client_cpu"), "client_limited": bool((w.get("client_cpu") or {}).get("client_limited")),
         "settle": settle, "cold": cold,
         "read_sample": a.read_sample, "erase_users": n_erase,

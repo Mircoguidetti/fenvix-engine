@@ -138,10 +138,17 @@ def check_ours(d, label):
                        f"round): the bytes are not shown to be after compaction 2")
         elif not st["compaction2_published"]:
             out.append(f"{label} fenvix: compaction 2 never published (compactor.publishes 0): the bytes are not after compaction 2")
-    for k in ("server_status_after_write", "server_status_end"):
+    for k in ("server_status_after_write", "server_status_before_cold", "server_status_end"):
+        if k == "server_status_before_cold" and k not in d:
+            continue   # summaries older than the fix round
+        if k == "server_status_end" and not d.get(k):
+            continue   # its own blocker below
         q = ((d.get(k) or {}).get("quaderno") or {})
-        if (q.get("failed") or 0) > 0:
-            out.append(f"{label} fenvix: the 3-zone log refused {q['failed']} batches ({k}): writes acknowledged by the "
+        f = q.get("failed")
+        if not isinstance(f, int):
+            out.append(f"{label} fenvix: quaderno.failed UNKNOWN ({k} could not be read): equal durability not shown")
+        elif f > 0:
+            out.append(f"{label} fenvix: the 3-zone log refused {f} batches ({k}): writes acknowledged by the "
                        f"S3-WAL fallback, not at equal durability")
     if not d.get("server_status_end"):
         out.append(f"{label} fenvix: no server status at the end of the run (quaderno.failed unknown)")

@@ -201,6 +201,16 @@ IDLE_WATCH = [("compactor", "publishes"), ("compactor", "absorbs"), ("compactor"
               ("sstGc", "deletedSsts"), ("derived", "encoded")]
 
 
+def published_here(t: Target) -> dict:
+    """review fix check, F9: compaction 2 published for the benchmark's own database when sealed runs exist under
+    tenants/app_demo/fx/run/ (bytes > 0). compactor.publishes is process-wide (a publish for admin would count), and
+    fx/ alone always holds a 20-byte E1 marker."""
+    s3 = s3_prefix_bytes(t.s3, f"tenants/{DB_NAME}/", levels=2) if t.s3 else {}
+    by = s3.get("by_kind") or {}
+    return {"fx_run_bytes": by.get("fx/run", 0), "fx_run_objects": (s3.get("count_by_kind") or {}).get("fx/run", 0),
+            "compaction2_published": by.get("fx/run", 0) > 0}
+
+
 def wait_compaction_idle(t: Target, cap_s: int = 2700, poll_s: int = 30, stable_polls: int = 25) -> dict | None:
     """P-bench-local 2.6: after the write (and read) phase, wait until our server's compactor, reseals, passes and GC
     are idle, then the caller measures the bytes. Idle = the IDLE_WATCH counters of serverStatus.fenvix, no running
@@ -222,11 +232,13 @@ def wait_compaction_idle(t: Target, cap_s: int = 2700, poll_s: int = 30, stable_
         last = snap
         running = watch.get("compaction.running") or 0
         if same >= stable_polls - 1 and not running:
-            return {"idle": True, "capped": False, "compaction2_published": bool(watch.get("compactor.publishes")), "seconds": round(time.time() - t0, 1), "watched": [f"{a}.{b}" for a, b in IDLE_WATCH]
+            return {"idle": True, "capped": False, **published_here(t),
+                    "process_publishes": watch.get("compactor.publishes"), "seconds": round(time.time() - t0, 1), "watched": [f"{a}.{b}" for a, b in IDLE_WATCH]
                     + ["S3 objects and bytes under tenants/app_demo/ by kind"], "poll_s": poll_s, "stable_polls": stable_polls,
                     "polls": polls}
         if time.time() - t0 >= cap_s:
-            return {"idle": False, "capped": True, "compaction2_published": bool(watch.get("compactor.publishes")), "seconds": round(time.time() - t0, 1), "watched": [f"{a}.{b}" for a, b in IDLE_WATCH],
+            return {"idle": False, "capped": True, **published_here(t),
+                    "process_publishes": watch.get("compactor.publishes"), "seconds": round(time.time() - t0, 1), "watched": [f"{a}.{b}" for a, b in IDLE_WATCH],
                     "poll_s": poll_s, "stable_polls": stable_polls, "polls": polls}
         time.sleep(poll_s)
 

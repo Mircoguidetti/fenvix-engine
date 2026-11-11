@@ -179,3 +179,15 @@ failing case as a test (`tests/`, `step9/local/tests/test_gate.py`):
 - F10 `lines.py health LINE` (members running, never OOM-killed, durability check) runs after the write phase and at the
   end; a failure makes the run not ok; `line_result.json` keeps every member's state.
 - AWS: `agent_bench.py` passes `--settle` to our target; `--read-sample 300 --erase-users 100` as locally.
+
+### Small fix round after the reviewer's fix check (2026-11-11)
+
+- F10: the member health check also runs right before the cold restart (a member lost after the write phase was
+  started again by `docker restart` and went unnoticed).
+- Client limit (DECISIONS 2026-11-11): `--workers N>1` is client-limited at 0.8 core; `--workers 1` is exempt and its
+  summary reports the measured client CPU.
+- F9: `compaction2_published` means sealed runs exist under `tenants/app_demo/fx/run/` (bytes > 0); the process-wide
+  `compactor.publishes` is kept as `process_publishes`, information only.
+- F5: an unreadable server status leaves `quaderno.failed` UNKNOWN (`log_failed_unknown`); the run is not ok and the
+  gate refuses it.
+Tests: `tests/test_fix_check.py`, `step9/local/tests/test_gate.py::test_log_failed_unknown_closes`.

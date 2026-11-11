@@ -695,8 +695,8 @@ def run_line(a) -> int:
             try:
                 lf = json.load(open(os.path.join(out, "summary.json"))).get("log_failed") or {}
                 res["log_failed"] = lf
-                if any(lf.values()):
-                    res["quaderno_failed_check"] = "FAILED: the 3-zone log refused batches (S3-WAL fallback acknowledged them)"
+                if any(v != 0 for v in lf.values()):   # None (UNKNOWN) fails too (review fix check, F5)
+                    res["quaderno_failed_check"] = "FAILED: the 3-zone log refused batches (S3-WAL fallback acknowledged them), or quaderno.failed is UNKNOWN"
                     rc = rc or 5
             except Exception as e:  # noqa: BLE001
                 res["quaderno_failed_check"] = f"no summary: {e!r}"
