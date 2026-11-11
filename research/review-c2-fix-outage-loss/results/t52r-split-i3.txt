@@ -1,0 +1,18 @@
+lease losses 5; reopenedWritesRefused None; calls [('ok', 120000), ('ok', 120000), ('ok', 120000), ('ok', 120000), ('ok', 120000)]
+acknowledged call 0: 3 documents missing
+acknowledged call 120000: 30918 documents missing
+acknowledged call 240000: 38042 documents missing
+                problems.append(f"{len(scanned) - len(sset)} documents scanned twice")
+1 failed, 6 deselected in 58.97s
+lease losses 6; reopenedWritesRefused None; calls [('ok', 120000), ('ok', 120000), ('ok', 120000), ('ok', 120000), ('ok', 120000), ('ok', 120000), ('ok', 120000)]
+acknowledged call 240000: 49654 documents missing
+acknowledged call 360000: 41866 documents missing
+acknowledged call 600000: 7491 documents missing
+                problems.append(f"{len(scanned) - len(sset)} documents scanned twice")
+1 failed, 6 deselected in 56.69s
+lease losses 6; reopenedWritesRefused None; calls [('ok', 120000), ('ok', 120000), ('ok', 120000), ('ok', 120000), ('ok', 120000), ('ok', 120000)]
+acknowledged call 240000: 48856 documents missing
+acknowledged call 360000: 43990 documents missing
+acknowledged call 480000: 236 documents missing
+                problems.append(f"{len(scanned) - len(sset)} documents scanned twice")
+1 failed, 6 deselected in 54.55s

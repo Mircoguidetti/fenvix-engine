@@ -1,0 +1,12 @@
+lease losses 5; reopenedWritesRefused 1; calls [('ok', 120000), ('ok', 120000), ('ok', 120000), ('ok', 120000), ('ok', 120000)]
+OK
+1 passed, 6 deselected in 58.77s
+lease losses 5; reopenedWritesRefused 4; calls [("error 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db ", None), ('ok', 120000), ('error 134 database d was reopened during the command (its lease was lost); nothing of the ', None), ('ok', 120000), ('ok', 120000)]
+failed call 0 (error 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db ): 100000 documents stored
+        an acknowledged call has every document once; a failed ordered call has exactly the first nInserted documents; no
+        document is stored twice (scan) and none of a failed batch is stored."""
+                problems.append(f"{len(scanned) - len(sset)} documents scanned twice")
+                    problems.append(f"failed call {ids[0]} ({kind}): {len(have)} documents stored")
+E           AssertionError: failed call 0 (error 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db ): 100000 documents stored
+E           assert not ["failed call 0 (error 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db ): 100000 documents stored"]
+1 failed, 6 deselected in 61.03s (0:01:01)

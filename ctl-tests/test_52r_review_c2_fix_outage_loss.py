@@ -164,12 +164,19 @@ def test_txn_commit_after_a_takeover_loses_no_acknowledged_update():
         s.end_session()
         final = retry_until_ok(lambda: c1.d.c.find_one({"_id": 1})["n"], "P1's read")
         print(f"P2 saw n={p2_saw} after its increment; commit on P1: {commit}; final n={final}; acknowledged increments {acked_incs}")
-        assert p2_saw == 1, f"P2's increment did not land on the stored counter (n={p2_saw})"
-        assert final == acked_incs, f"final counter {final}, acknowledged increments {acked_incs} (commit {commit})"
     finally:
         p1.term()
         p2.term()
         os.unlink(ff)
+    p3 = Server(bucket, "rvtxnlu3", idle=600).start()
+    try:
+        fresh = p3.client().d.c.find_one({"_id": 1})["n"]
+        print(f"a fresh process after both stopped reads n={fresh}")
+    finally:
+        p3.term()
+    assert p2_saw == 1, f"P2's increment did not land on the stored counter (n={p2_saw})"
+    assert final == acked_incs, f"final counter {final}, acknowledged increments {acked_incs} (commit {commit})"
+    assert fresh == acked_incs, f"a fresh process reads {fresh}, acknowledged increments {acked_incs}"
 
 
 ROUNDS = int(os.environ.get("T52R_ROUNDS", "5"))

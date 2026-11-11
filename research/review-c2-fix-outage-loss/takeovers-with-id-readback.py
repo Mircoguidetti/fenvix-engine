@@ -198,10 +198,8 @@ def read_back(wait_s=180):
                                  appname="app-demo", serverSelectionTimeoutMS=10000, socketTimeoutMS=0)
                 got = {d["_id"] for d in vc["tk_app"]["w"].find({}, {"_id": 1}, batch_size=20000)}
                 # review of c2-fix-outage-loss: also by _id (the _id index), not only by a collection scan
-                ids = sorted(acked)
-                by_id = set()
-                for i in range(0, len(ids), 5000):
-                    by_id |= {d["_id"] for d in vc["tk_app"]["w"].find({"_id": {"$in": ids[i:i + 5000]}}, {"_id": 1}).hint([("_id", 1)])}
+                # one cursor over the _id index (independent of the natural-order entries a collection scan walks)
+                by_id = {d["_id"] for d in vc["tk_app"]["w"].find({}, {"_id": 1}, batch_size=20000).hint([("_id", 1)])}
                 vc.close()
                 note(kind="read_back", node=node, found=len(got), found_by_id=len(by_id))
                 missing_by_id[0] = len(set(acked) - by_id)

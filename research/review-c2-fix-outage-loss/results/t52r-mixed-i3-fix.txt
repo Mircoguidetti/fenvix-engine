@@ -1,0 +1,14 @@
+== i3
+lease losses 8; reopenedWritesRefused None; errors {'OperationFailure 1': 16}; samples ["OperationFailure 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db is closed', 'code': 1, 'codeName': 'Inte", "OperationFailure 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db is closed', 'code': 1, 'codeName': 'Inte", "OperationFailure 1 Closed error: db is closed, full error: {'ok': 0.0, 'err
+now: acknowledged inserts 152241, scanned 152241, by _id index 152241, by k index 152241
+now: OK
+after a restart: acknowledged inserts 152241, scanned 152241, by _id index 152241, by k index 152241
+after a restart: OK
+1 passed, 6 deselected in 81.88s (0:01:21)
+== fix
+lease losses 8; reopenedWritesRefused 6; errors {'OperationFailure 251': 6, 'OperationFailure 1': 22}; samples ["OperationFailure 251 Transaction with { txnNumber: 5 } has been aborted., full error: {'ok': 0.0, 'errmsg': 'Transaction with { txnNumber: 5 ", "OperationFailure 251 Transaction with { txnNumber: 5 } has been aborted., full error: {'ok': 0.0, 'errmsg': 'Transaction with { txnNumber: 5 ", "OperationFailure 1 Closed error: db is closed, 
+now: acknowledged inserts 156201, scanned 156201, by _id index 156201, by k index 156201
+now: OK
+after a restart: acknowledged inserts 156201, scanned 156201, by _id index 156201, by k index 156201
+after a restart: OK
+1 passed, 6 deselected in 82.04s (0:01:22)

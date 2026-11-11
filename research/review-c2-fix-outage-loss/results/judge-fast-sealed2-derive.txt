@@ -1,0 +1,9 @@
+JUDGE readers: PASS (raw readers: PASS (24 matches, all in named files))
+JUDGE build: PASS
+JUDGE unit: FAIL (223 passed, 2 failed, see unit.log)
+JUDGE diff-py: FAIL (412/413 same answers as mongod 7.0, see diff-py.log)
+JUDGE diff-node: FAIL (412/413 same answers as mongod 7.0, see diff-node.log)
+JUDGE kill: PASS (see kill.log for counts)
+unit: the second failure r3_reseals_a_group_whose_reads_pay passed 2 of 2 when run alone (cargo test --release --lib r3_reseals_a_group_whose_reads_pay)
+ctl: the fast judge's 3 files (test_01, test_05, test_09) are taken from the full ctl set run in the same mode (research/review-c2-fix-outage-loss/results/ctl-full-fix-s2d/)
+TOTAL s3 durable {'acked_ids': 18834, 'lost_inserts': 0, 'lost_updates': 0}
