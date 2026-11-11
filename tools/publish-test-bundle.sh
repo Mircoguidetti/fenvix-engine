@@ -115,5 +115,5 @@ git -C "$R" add MANIFEST.txt bundle.tar.gz .github/workflows/ctl.yml
 git -C "$R" -c user.name="fenvix test bundle" -c user.email="bundle@users.noreply.github.com" commit -q -m "bundle $NAME: engine $FULL"
 git -C "$R" push $([ $FORCE = 1 ] && echo --force) "$TESTS_REPO" "bundle/$NAME:refs/heads/bundle/$NAME"
 echo "pushed bundle/$NAME; the workflow starts on its own (mode $MODE). Result: ci/result.sh $NAME in fenvix-tests"
-if [ $WAIT = 1 ]; then bash "$WORK/main/ci/result.sh" "$NAME" --wait; exit $?; fi
+if [ $WAIT = 1 ]; then bash "$WORK/main/ci/result.sh" "$NAME" --mode "$([ $MODE = off ] && echo off || echo sealed2-derive)" --wait; exit $?; fi
 exit 0
