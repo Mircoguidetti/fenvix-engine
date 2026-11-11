@@ -197,9 +197,7 @@ impl Server {
         }
         let tail = crate::capped::Tail { db: db.to_string(), coll: coll.to_string(), filter: filter.clone(), await_data, last_seq: 0 };
         let first_n = batch.unwrap_or(DEFAULT_FIRST_BATCH_TAIL).min(if limit > 0 { limit as usize } else { usize::MAX });
-        let (mut docs, last) = crate::capped::fetch_after(&mut g, &tail, first_n.saturating_add(skip)).await?;
-        docs.drain(..skip.min(docs.len()));
-        docs.truncate(first_n);
+        let (mut docs, last) = crate::capped::fetch_after(&mut g, &tail, first_n, skip, crate::cmd::FIRST_BATCH_FIXED).await?;
         drop(g);
         if let Some(p) = projection {
             for d in docs.iter_mut() {

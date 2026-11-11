@@ -24,13 +24,25 @@ const DEFAULT_FIRST_BATCH: usize = 101;
 /// `research/fix-query-limits/batch_probe.py`; `batch_diff.py` finds mongod's batches and reply sizes). So a reply
 /// stays at about 16 MiB (a single document is at most 16 MiB), well under the 48 MB message limit.
 pub(crate) const BATCH_BYTES: usize = 16 * 1024 * 1024;
-const FIRST_BATCH_FIXED: usize = 53;
-const NEXT_BATCH_FIXED: usize = 57;
+pub(crate) const FIRST_BATCH_FIXED: usize = 53;
+pub(crate) const NEXT_BATCH_FIXED: usize = 57;
 
 tokio::task_local! {
     /// Set around the server's own aggregations that read a whole answer from `firstBatch` (views, mapReduce): their
     /// batches are not cut at [`BATCH_BYTES`], since nothing would read the rest of the cursor.
     pub(crate) static WHOLE_BATCH: ();
+}
+
+/// Does a document of `size` bytes go into a batch that holds `count` documents of `used` bytes (as [`batch_add`]
+/// counts them)? The first one always does.
+pub(crate) fn batch_fits(used: usize, count: usize, size: usize, fixed: usize) -> bool {
+    count == 0 || used + size + fixed <= BATCH_BYTES
+}
+
+/// Count a document of `size` bytes put into a batch that held `count` documents: the document and its array element
+/// header (type byte, its index in decimal, NUL).
+pub(crate) fn batch_add(used: &mut usize, count: usize, size: usize) {
+    *used += size + 2 + count.to_string().len();
 }
 
 /// The next batch of a cursor: at most `max` documents and at most [`BATCH_BYTES`] as mongod counts them.
@@ -41,11 +53,10 @@ fn take_batch(docs: &mut VecDeque<Document>, max: usize, fixed: usize) -> Vec<Bs
     while out.len() < max {
         let Some(d) = docs.front() else { break };
         let size = crate::query::bson_size(d);
-        if !whole && !out.is_empty() && used + size + fixed > BATCH_BYTES {
+        if !whole && !batch_fits(used, out.len(), size, fixed) {
             break;
         }
-        // the element header of this document in the batch array: type byte, its index in decimal, NUL
-        used += size + 2 + out.len().to_string().len();
+        batch_add(&mut used, out.len(), size);
         out.push(Bson::Document(docs.pop_front().unwrap()));
     }
     out
@@ -1137,7 +1148,7 @@ impl Server {
         loop {
             let r = {
                 let mut g = self.dbs.read(&cur.db).await?;
-                crate::capped::fetch_after(&mut g, &cur, limit).await
+                crate::capped::fetch_after(&mut g, &cur, limit, 0, NEXT_BATCH_FIXED).await
             };
             let (docs, last) = match r {
                 Ok(x) => x,

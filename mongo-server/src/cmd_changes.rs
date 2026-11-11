@@ -255,8 +255,17 @@ impl Server {
             cur.last = cur.last.max(last);
             let _ = tokio::time::timeout(deadline.saturating_duration_since(Instant::now()), notified).await;
         };
-        let mut docs = Vec::new();
+        let mut out: Vec<Document> = Vec::new();
+        let mut used = 0;
         let mut closing = false;
+        // the events wholly in the batch so far: the next getMore starts after them
+        let mut consumed = cur.last;
+        let mut full = false;
+        // mongod's getMore of a change stream also keeps room for the batch's resume token: the token document's
+        // content (MEASURED on mongod 7.0.34 with research/fix-query-limits/cs_edge.py: two events fit up to 16 MiB - 238
+        // bytes, 57 + 178 + 3, with a token document of 183 bytes)
+        let token_room = crate::query::bson_size(&doc! { "_data": log.token(cur.last, cur.scope.db.as_deref()) }).saturating_sub(5);
+        let fixed = crate::cmd::NEXT_BATCH_FIXED + token_room;
         for e in &events {
             let lookup = if cur.full == FullDoc::UpdateLookup && e.spec.op == "update" {
                 let mut g = self.dbs.lock(&e.spec.db).await;
@@ -282,7 +291,7 @@ impl Server {
             } else {
                 None
             };
-            docs.push(self.event_doc(e, &cur, lookup, uuid)?);
+            let mut docs = vec![self.event_doc(e, &cur, lookup, uuid)?];
             let same_coll = cur.scope.coll.is_some() && cur.scope.coll == e.spec.coll;
             let invalidates = (matches!(e.spec.op, "drop" | "rename") && same_coll)
                 || (e.spec.op == "dropDatabase" && cur.scope.db.as_deref() == Some(e.spec.db.as_str()));
@@ -290,15 +299,35 @@ impl Server {
                 let inv = doc! { "_id": { "_data": log.token(e.seq, Some(&e.spec.db)) }, "operationType": "invalidate", "clusterTime": Bson::Timestamp(e.time), "wallTime": e.wall };
                 docs.push(inv);
                 closing = true;
+            }
+            // (the stages after `$changeStream` take one document at a time, so the event's own documents are its output)
+            let docs = if cur.rest.is_empty() { docs } else { crate::agg::run_pipeline(docs, &cur.rest, &crate::agg::Foreign::new())? };
+            // a batch stops at 16 MiB as mongod's getMore (`crate::cmd::BATCH_BYTES`): an event whose output does not fit
+            // waits for the next getMore, which starts with it; the first event of a batch always goes in
+            let (mut u, mut n) = (used, out.len());
+            let mut fits = true;
+            for d in &docs {
+                let size = crate::query::bson_size(d);
+                if !out.is_empty() && !crate::cmd::batch_fits(u, n, size, fixed) {
+                    fits = false;
+                    break;
+                }
+                crate::cmd::batch_add(&mut u, n, size);
+                n += 1;
+            }
+            if !fits {
+                closing = false;
+                full = true;
+                break;
+            }
+            used = u;
+            out.extend(docs);
+            consumed = e.seq;
+            if closing {
                 break;
             }
         }
-        let n_scanned = if closing { events.last().map(|e| e.seq).unwrap_or(last) } else { last };
-        let out = if cur.rest.is_empty() {
-            docs
-        } else {
-            crate::agg::run_pipeline(docs, &cur.rest, &crate::agg::Foreign::new())?
-        };
+        let n_scanned = if closing || full { consumed } else { last };
         cur.last = n_scanned;
         let token = log.token(n_scanned, cur.scope.db.as_deref());
         let ns = cur.ns.clone();
