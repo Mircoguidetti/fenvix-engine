@@ -1,0 +1,83 @@
+warning: unused import: `std::sync::atomic::Ordering::Relaxed`
+    --> src/lifecycle.rs:1807:13
+     |
+1807 |         use std::sync::atomic::Ordering::Relaxed;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary parentheses around closure body
+    --> src/warm.rs:1211:42
+     |
+1211 |                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+     |                                          ^                                ^
+     |
+     = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+     |
+1211 -                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+1211 +                     (0..40).flat_map(|c| c * (n / 40)..c * (n / 40) + per).collect()
+     |
+
+warning: `tenant-bench` (lib) generated 1 warning (run `cargo fix --lib -p tenant-bench` to apply 1 suggestion)
+warning: `tenant-bench` (lib test) generated 1 warning (run `cargo fix --lib -p tenant-bench --tests` to apply 1 suggestion)
+warning: constant `SRC` is never used
+  --> src/bin/fx_cold.rs:79:7
+   |
+79 | const SRC: [&str; 5] = ["sealed", "delta_s3", "l0", "slate_runs", "nvme"];
+   |       ^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/bin/review_sr_bench.rs:279:13
+    |
+279 |         let mut scan_cost = |list: Vec<u32>| {
+    |             ----^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tenant-bench` (bin "fx_cold" test) generated 1 warning
+warning: `tenant-bench` (bin "review_sr_bench" test) generated 1 warning (run `cargo fix --bin "review_sr_bench" -p tenant-bench --tests` to apply 1 suggestion)
+warning: field `erasures` is never read
+   --> src/bin/fx_pool.rs:125:5
+    |
+121 | struct DbOut {
+    |        ----- field in this struct
+...
+125 |     erasures: Mutex<Vec<Duration>>,
+    |     ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tenant-bench` (bin "fx_pool" test) generated 1 warning
+    Finished `release` profile [optimized] target(s) in 0.25s
+     Running unittests src/lib.rs (target/release/deps/tenant_bench-8ad66b7b77dbaadc)
+
+running 1 test
+test fx::review_long_reads_tests::review_lr_pages_across_v2_to_v2k_reseals ... review V2 -> V2K: 215 steps, 0 passes, 224 stable rows, wrong 0, refused 201, errors 0 (database fx-rlr-v2k: our manifest was last read 304.082979ms ago, more than T_pin; retry); 198 reseals; GC deleted 6 of 6 runs of version 1; newest version 214
+
+thread 'fx::review_long_reads_tests::review_lr_pages_across_v2_to_v2k_reseals' (1748) panicked at src/fx/review_long_reads_tests.rs:855:5:
+assertion failed: p.passes >= 2
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: core::panicking::panic
+   3: tenant_bench::fx::review_long_reads_tests::review_lr_pages_across_v2_to_v2k_reseals::{closure#0}
+   4: <tokio::runtime::park::CachedParkThread>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   5: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   6: tenant_bench::fx::review_long_reads_tests::review_lr_pages_across_v2_to_v2k_reseals
+   7: <tenant_bench::fx::review_long_reads_tests::review_lr_pages_across_v2_to_v2k_reseals::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+FAILED
+
+failures:
+
+failures:
+    fx::review_long_reads_tests::review_lr_pages_across_v2_to_v2k_reseals
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 149 filtered out; finished in 5.28s
+
+error: test failed, to rerun pass `-p tenant-bench --lib`

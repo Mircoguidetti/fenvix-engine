@@ -63,6 +63,8 @@ mod derive_tests;
 mod tests_7b;
 #[cfg(test)]
 mod long_reads_tests;
+#[cfg(test)]
+mod review_long_reads_tests;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 

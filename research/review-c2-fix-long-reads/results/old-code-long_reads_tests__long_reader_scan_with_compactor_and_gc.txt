@@ -1,0 +1,86 @@
+warning: unused import: `std::sync::atomic::Ordering::Relaxed`
+    --> src/lifecycle.rs:1807:13
+     |
+1807 |         use std::sync::atomic::Ordering::Relaxed;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary parentheses around closure body
+    --> src/warm.rs:1211:42
+     |
+1211 |                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+     |                                          ^                                ^
+     |
+     = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+     |
+1211 -                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+1211 +                     (0..40).flat_map(|c| c * (n / 40)..c * (n / 40) + per).collect()
+     |
+
+warning: `tenant-bench` (lib) generated 1 warning (run `cargo fix --lib -p tenant-bench` to apply 1 suggestion)
+warning: `tenant-bench` (lib test) generated 1 warning (run `cargo fix --lib -p tenant-bench --tests` to apply 1 suggestion)
+warning: constant `SRC` is never used
+  --> src/bin/fx_cold.rs:79:7
+   |
+79 | const SRC: [&str; 5] = ["sealed", "delta_s3", "l0", "slate_runs", "nvme"];
+   |       ^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/bin/review_sr_bench.rs:279:13
+    |
+279 |         let mut scan_cost = |list: Vec<u32>| {
+    |             ----^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tenant-bench` (bin "fx_cold" test) generated 1 warning
+warning: `tenant-bench` (bin "review_sr_bench" test) generated 1 warning (run `cargo fix --bin "review_sr_bench" -p tenant-bench --tests` to apply 1 suggestion)
+warning: field `erasures` is never read
+   --> src/bin/fx_pool.rs:125:5
+    |
+121 | struct DbOut {
+    |        ----- field in this struct
+...
+125 |     erasures: Mutex<Vec<Duration>>,
+    |     ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tenant-bench` (bin "fx_pool" test) generated 1 warning
+    Finished `release` profile [optimized] target(s) in 0.21s
+     Running unittests src/lib.rs (target/release/deps/tenant_bench-8ad66b7b77dbaadc)
+
+running 1 test
+test fx::long_reads_tests::long_reader_scan_with_compactor_and_gc ... long reader scan (control false): 18.0 s = 60.0 T_pin, 688 steps, 0 passes, 192 rows, 192 stable rows compared, wrong 0, refused 676 (599 after GC deleted a run of the reader's first state), other errors 0 (database fx-long: our manifest was last read 317.347116ms ago, more than T_pin; retry), renewals 0; writer: 7200 churn writes, 2880 reseals, GC deleted 8 of the 8 runs of the reader's first version, 2638 runs in all
+
+thread 'fx::long_reads_tests::long_reader_scan_with_compactor_and_gc' (1678) panicked at src/fx/long_reads_tests.rs:296:17:
+assertion `left == right` failed: a long read was refused because of T_pin
+  left: 676
+ right: 0
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: core::panicking::assert_failed_inner
+   3: core::panicking::assert_failed::<u64, u64>
+   4: tenant_bench::fx::long_reads_tests::long_reader_scan_with_compactor_and_gc::{closure#0}
+   5: <tokio::runtime::park::CachedParkThread>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   6: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   7: tenant_bench::fx::long_reads_tests::long_reader_scan_with_compactor_and_gc
+   8: <tenant_bench::fx::long_reads_tests::long_reader_scan_with_compactor_and_gc::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+FAILED
+
+failures:
+
+failures:
+    fx::long_reads_tests::long_reader_scan_with_compactor_and_gc
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 149 filtered out; finished in 18.90s
+
+error: test failed, to rerun pass `-p tenant-bench --lib`

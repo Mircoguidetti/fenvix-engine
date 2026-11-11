@@ -1,0 +1,83 @@
+warning: unused import: `std::sync::atomic::Ordering::Relaxed`
+    --> src/lifecycle.rs:1807:13
+     |
+1807 |         use std::sync::atomic::Ordering::Relaxed;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary parentheses around closure body
+    --> src/warm.rs:1211:42
+     |
+1211 |                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+     |                                          ^                                ^
+     |
+     = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+     |
+1211 -                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+1211 +                     (0..40).flat_map(|c| c * (n / 40)..c * (n / 40) + per).collect()
+     |
+
+warning: `tenant-bench` (lib) generated 1 warning (run `cargo fix --lib -p tenant-bench` to apply 1 suggestion)
+warning: `tenant-bench` (lib test) generated 1 warning (run `cargo fix --lib -p tenant-bench --tests` to apply 1 suggestion)
+warning: field `erasures` is never read
+   --> src/bin/fx_pool.rs:125:5
+    |
+121 | struct DbOut {
+    |        ----- field in this struct
+...
+125 |     erasures: Mutex<Vec<Duration>>,
+    |     ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tenant-bench` (bin "fx_pool" test) generated 1 warning
+warning: variable does not need to be mutable
+   --> src/bin/review_sr_bench.rs:279:13
+    |
+279 |         let mut scan_cost = |list: Vec<u32>| {
+    |             ----^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `SRC` is never used
+  --> src/bin/fx_cold.rs:79:7
+   |
+79 | const SRC: [&str; 5] = ["sealed", "delta_s3", "l0", "slate_runs", "nvme"];
+   |       ^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tenant-bench` (bin "review_sr_bench" test) generated 1 warning (run `cargo fix --bin "review_sr_bench" -p tenant-bench --tests` to apply 1 suggestion)
+warning: `tenant-bench` (bin "fx_cold" test) generated 1 warning
+    Finished `release` profile [optimized] target(s) in 0.20s
+     Running unittests src/lib.rs (target/release/deps/tenant_bench-8ad66b7b77dbaadc)
+
+running 1 test
+test fx::review_long_reads_tests::review_lr_shortest_legal_grace ... review shortest grace (renewing): T_pin 300 ms, hold 1200 ms, PUT timeout 200 ms, grace 1401 ms; version 2 at L+2 ms retires 5 of 5 runs of version 1; step from L+275 to L+1436 ms (1161 ms, hold life 1200), 1 run GETs held, 1 run GETs NotFound; GC deleted 5 of version 1's runs; the step: error (NOT retryable): Object at location tenants/fx-rlr-grace-renewing/fx/run/g0/00000000000000001601-1-eb26c1fc not found: No data in memory found. Location: tenants/fx-rlr-grace-renewing/fx/run/g0/00000000000000001601-1-eb26c1fc: No data in memory found. Locat; wrong 0
+review shortest grace (renewal-fails): T_pin 300 ms, hold 1200 ms, PUT timeout 200 ms, grace 1401 ms; version 2 at L+5 ms retires 5 of 5 runs of version 1; step from L+275 to L+1437 ms (1162 ms, hold life 1200), 1 run GETs held, 1 run GETs NotFound; GC deleted 5 of version 1's runs; the step: error (NOT retryable): Object at location tenants/fx-rlr-grace-renewal-fails/fx/run/g0/00000000000000001601-1-d9ef29b2 not found: No data in memory found. Location: tenants/fx-rlr-grace-renewal-fails/fx/run/g0/00000000000000001601-1-d9ef29b2: No data in memory fo; wrong 0
+
+thread 'fx::review_long_reads_tests::review_lr_shortest_legal_grace' (1726) panicked at src/fx/review_long_reads_tests.rs:593:9:
+renewing: a step younger than the hold life, with a state younger than T_pin, read with a state that lists a deleted run: review shortest grace (renewing): T_pin 300 ms, hold 1200 ms, PUT timeout 200 ms, grace 1401 ms; version 2 at L+2 ms retires 5 of 5 runs of version 1; step from L+275 to L+1436 ms (1161 ms, hold life 1200), 1 run GETs held, 1 run GETs NotFound; GC deleted 5 of version 1's runs; the step: error (NOT retryable): Object at location tenants/fx-rlr-grace-renewing/fx/run/g0/00000000000000001601-1-eb26c1fc not found: No data in memory found. Location: tenants/fx-rlr-grace-renewing/fx/run/g0/00000000000000001601-1-eb26c1fc: No data in memory found. Locat; wrong 0
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: tenant_bench::fx::review_long_reads_tests::review_lr_shortest_legal_grace::{closure#0}
+   3: <tokio::runtime::park::CachedParkThread>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   4: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   5: tenant_bench::fx::review_long_reads_tests::review_lr_shortest_legal_grace
+   6: <tenant_bench::fx::review_long_reads_tests::review_lr_shortest_legal_grace::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+FAILED
+
+failures:
+
+failures:
+    fx::review_long_reads_tests::review_lr_shortest_legal_grace
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 149 filtered out; finished in 4.20s
+
+error: test failed, to rerun pass `-p tenant-bench --lib`

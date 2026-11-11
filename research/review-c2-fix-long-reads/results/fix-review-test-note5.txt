@@ -1,0 +1,124 @@
+warning: unused import: `std::sync::atomic::Ordering::Relaxed`
+    --> src/lifecycle.rs:1941:13
+     |
+1941 |         use std::sync::atomic::Ordering::Relaxed;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling tenant-bench v0.1.0 (/home/user/fenvix-engine)
+warning: `tenant-bench` (lib) generated 1 warning (run `cargo fix --lib -p tenant-bench` to apply 1 suggestion)
+warning: constant `SRC` is never used
+  --> src/bin/fx_cold.rs:79:7
+   |
+79 | const SRC: [&str; 5] = ["sealed", "delta_s3", "l0", "slate_runs", "nvme"];
+   |       ^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tenant-bench` (bin "fx_cold" test) generated 1 warning
+warning: field `erasures` is never read
+   --> src/bin/fx_pool.rs:125:5
+    |
+121 | struct DbOut {
+    |        ----- field in this struct
+...
+125 |     erasures: Mutex<Vec<Duration>>,
+    |     ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/bin/review_sr_bench.rs:279:13
+    |
+279 |         let mut scan_cost = |list: Vec<u32>| {
+    |             ----^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tenant-bench` (bin "fx_pool" test) generated 1 warning
+warning: `tenant-bench` (bin "review_sr_bench" test) generated 1 warning (run `cargo fix --bin "review_sr_bench" -p tenant-bench --tests` to apply 1 suggestion)
+warning: unnecessary parentheses around closure body
+    --> src/warm.rs:1211:42
+     |
+1211 |                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+     |                                          ^                                ^
+     |
+     = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+     |
+1211 -                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+1211 +                     (0..40).flat_map(|c| c * (n / 40)..c * (n / 40) + per).collect()
+     |
+
+warning: variable does not need to be mutable
+   --> src/fx/review_long_reads_tests.rs:884:10
+    |
+884 |     let (mut w, want) = stable_db(&store, id, ckey, &small_opts(build::Reseal::All)).await;
+    |          ----^
+    |          |
+    |          help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tenant-bench` (lib test) generated 2 warnings (run `cargo fix --lib -p tenant-bench --tests` to apply 2 suggestions)
+    Finished `release` profile [optimized] target(s) in 1m 29s
+     Running unittests src/lib.rs (target/release/deps/tenant_bench-8ad66b7b77dbaadc)
+
+running 1 test
+test fx::review_long_reads_tests::review_lr_renewal_window_starts_before_its_request ... review note 5 on the renewal path (control false): first step Ok(true), answer after 201.767039ms; at request + T_pin + 30 ms: refused: database fx-rlr-note5-false: the reader's state is older than T_pin and its renewal failed: Generic review error: injected failure on tenants/fx-rlr-note5-false
+review note 5 on the renewal path (control true): first step Ok(true), answer after 201.729848ms; at request + T_pin + 30 ms: served (plain)
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 152 filtered out; finished in 1.01s
+
+     Running unittests src/bin/fx_cold.rs (target/release/deps/fx_cold-10bd2e33248e347f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/fx_derive.rs (target/release/deps/fx_derive-64daaf61b444be2b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/fx_pool.rs (target/release/deps/fx_pool-d4cb24f30dc3ef58)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/fx_replay.rs (target/release/deps/fx_replay-4fd087ce0c43ebdf)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/review_sr_bench.rs (target/release/deps/review_sr_bench-4b58673ed7659a46)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/runfmt_bench.rs (target/release/deps/runfmt_bench-ecf9d11f9b3f870d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/release/deps/tenant_bench-7536a55217440b99)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests tenant_bench
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

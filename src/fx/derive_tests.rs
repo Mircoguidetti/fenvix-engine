@@ -1289,3 +1289,116 @@ async fn fix_derived_threads_stay_derived_when_the_spec_does_not_know_them() {
     t.abandon().await;
     teardown();
 }
+
+/// Review of c2-fix-long-reads: a follower pages through every thread (3 rows per step, resume after the last key) for
+/// many T_pin, renewing its state between steps (`Tenant::step_state`), while the writer adds steps to every thread,
+/// absorbs them and reseals every group again and again (threads re-encoded, derived documents rebuilt) and GC runs.
+/// Two steps of one pass read different versions. Every document read equals the one written, byte for byte; every
+/// document that existed when the pass began is seen.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn review_lr_follower_pages_across_reencoding_reseals() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let k = knobs(BlockCodec::Zstd);
+    let id = "fx-review-lr-derive";
+    let (mut t, c, m) = derived_db(&store, id, 8, 12, &k).await;
+    let mut f = lc(&store).wake(id).await.unwrap();
+    f.fx_own_holds();
+    f.fx_refresh().await.unwrap();
+    let first: Vec<String> = {
+        let v = &f.fx_view().unwrap().meta;
+        v.groups.iter().filter_map(|g| g.sealed.as_ref().map(|s| s.path.clone())).chain(v.delta.iter().map(|d| d.path.clone())).collect()
+    };
+    let f = Arc::new(f);
+    let stable = Arc::new(m);
+    let extra: Arc<std::sync::Mutex<BTreeMap<Vec<u8>, Vec<u8>>>> = Default::default();
+    let done = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let r0 = RENEWALS.load(Relaxed);
+    let pager = {
+        let (f, stable, extra, done) = (Arc::clone(&f), Arc::clone(&stable), Arc::clone(&extra), Arc::clone(&done));
+        tokio::spawn(async move {
+            let (mut steps, mut passes, mut wrong, mut errors, mut docs, mut first_err) = (0u64, 0u64, 0u64, 0u64, 0u64, String::new());
+            while !done.load(Relaxed) || passes < 2 {
+                let mut start = b"u/".to_vec();
+                let mut seen = std::collections::HashSet::new();
+                loop {
+                    steps += 1;
+                    match f.scan_range(&start, Some(b"u0"), false, Some(3), 64 << 10).await {
+                        Ok(rows) => {
+                            for (key, v) in &rows {
+                                docs += 1;
+                                let want = stable.get(&key[..]).cloned().or_else(|| extra.lock().unwrap().get(&key[..]).cloned());
+                                wrong += (want.as_deref() != Some(&v[..])) as u64;
+                                seen.insert(key.to_vec());
+                            }
+                            let end = rows.len() < 3;
+                            if let Some((key, _)) = rows.last() {
+                                start = key.to_vec();
+                                start.push(0);
+                            }
+                            if end {
+                                wrong += stable.keys().filter(|key| !seen.contains(*key)).count() as u64;
+                                passes += 1;
+                                break;
+                            }
+                        }
+                        Err(e) => {
+                            errors += 1;
+                            if first_err.is_empty() {
+                                first_err = format!("{e:#}");
+                            }
+                            if errors > 100 {
+                                return (steps, passes, wrong, errors, docs, first_err);
+                            }
+                        }
+                    }
+                    tokio::time::sleep(Duration::from_millis(5)).await;
+                }
+            }
+            (steps, passes, wrong, errors, docs, first_err)
+        })
+    };
+    let mut rng = StdRng::seed_from_u64(4242);
+    let mut ths: Vec<Thread> = (0..8).map(|i| Thread { step: 300, ..new_thread(i) }).collect();
+    let mut oid = 1u64 << 44;
+    let t0 = Instant::now();
+    let mut rounds = 0;
+    while t0.elapsed() < Duration::from_millis(30 * TEST_T_PIN_MS) {
+        for th in ths.iter_mut() {
+            let rows = step(&mut rng, th, &mut oid);
+            for (key, v) in &rows {
+                extra.lock().unwrap().insert(key.clone(), v.clone());
+            }
+            let mut mm = BTreeMap::new();
+            apply(&mut t, &mut mm, rows.into_iter().map(|(k, v)| (k, Some(v))).collect()).await;
+        }
+        absorb_all(&mut t, &c).await;
+        reseal_all(&c).await;
+        t.fx_sync();
+        let _ = gc::gc_once(&c).await;
+        rounds += 1;
+    }
+    done.store(true, Relaxed);
+    let (steps, passes, wrong, errors, docs, first_err) = pager.await.unwrap();
+    let mut gone = 0;
+    for p in &first {
+        gone += matches!(object_store::ObjectStoreExt::head(&*store, &object_store::path::Path::from(p.as_str())).await, Err(object_store::Error::NotFound { .. })) as u64;
+    }
+    eprintln!(
+        "review follower pages across re-encoding reseals: {:.1} T_pin, {steps} steps, {passes} passes, {docs} documents compared, wrong {wrong}, errors {errors} ({first_err}); writer: {rounds} rounds, rebuilt by reseals {}, encoded {}; follower renewals {}; GC deleted {gone} of {} runs of the follower's first version",
+        t0.elapsed().as_millis() as f64 / TEST_T_PIN_MS as f64,
+        c.sh.stats.derive_rebuilt.load(Relaxed),
+        c.sh.stats.derive_encoded.load(Relaxed),
+        RENEWALS.load(Relaxed) - r0,
+        first.len()
+    );
+    assert_eq!(wrong, 0);
+    assert_eq!(errors, 0, "{first_err}");
+    assert!(passes >= 2);
+    assert!(RENEWALS.load(Relaxed) > r0);
+    c.stop().await;
+    drop(f);
+    t.abandon().await;
+    teardown();
+}

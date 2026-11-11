@@ -1,0 +1,181 @@
+warning: unused import: `std::sync::atomic::Ordering::Relaxed`
+    --> src/lifecycle.rs:1807:13
+     |
+1807 |         use std::sync::atomic::Ordering::Relaxed;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary parentheses around closure body
+    --> src/warm.rs:1211:42
+     |
+1211 |                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+     |                                          ^                                ^
+     |
+     = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+     |
+1211 -                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+1211 +                     (0..40).flat_map(|c| c * (n / 40)..c * (n / 40) + per).collect()
+     |
+
+warning: `tenant-bench` (lib) generated 1 warning (run `cargo fix --lib -p tenant-bench` to apply 1 suggestion)
+warning: `tenant-bench` (lib test) generated 1 warning (run `cargo fix --lib -p tenant-bench --tests` to apply 1 suggestion)
+warning: field `erasures` is never read
+   --> src/bin/fx_pool.rs:125:5
+    |
+121 | struct DbOut {
+    |        ----- field in this struct
+...
+125 |     erasures: Mutex<Vec<Duration>>,
+    |     ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tenant-bench` (bin "fx_pool" test) generated 1 warning
+warning: variable does not need to be mutable
+   --> src/bin/review_sr_bench.rs:279:13
+    |
+279 |         let mut scan_cost = |list: Vec<u32>| {
+    |             ----^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tenant-bench` (bin "review_sr_bench" test) generated 1 warning (run `cargo fix --bin "review_sr_bench" -p tenant-bench --tests` to apply 1 suggestion)
+warning: constant `SRC` is never used
+  --> src/bin/fx_cold.rs:79:7
+   |
+79 | const SRC: [&str; 5] = ["sealed", "delta_s3", "l0", "slate_runs", "nvme"];
+   |       ^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tenant-bench` (bin "fx_cold" test) generated 1 warning
+    Finished `release` profile [optimized] target(s) in 0.21s
+     Running unittests src/lib.rs (target/release/deps/tenant_bench-8ad66b7b77dbaadc)
+
+running 8 tests
+test fx::long_reads_tests::long_reader_scan_following_e1 ... long reader scan following E1 (control false): 18.0 s = 60.0 T_pin, 687 steps, 0 passes, 176 rows, 176 stable rows compared, wrong 0, refused 676, other errors 0 (database fx-long-e1: release E1's announcement was last read 300.430303ms ago, more than T_pin; retry), renewals 0; writer published 0 versions; reader's exclusive state at the end: E_env None, version None
+
+thread 'fx::long_reads_tests::long_reader_scan_following_e1' (1588) panicked at src/fx/long_reads_tests.rs:374:13:
+assertion `left == right` failed: a long read was refused because of T_pin
+  left: 676
+ right: 0
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: core::panicking::assert_failed_inner
+   3: core::panicking::assert_failed::<u64, u64>
+   4: tenant_bench::fx::long_reads_tests::long_reader_scan_following_e1::{closure#0}
+   5: <tokio::runtime::park::CachedParkThread>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   6: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   7: tenant_bench::fx::long_reads_tests::long_reader_scan_following_e1
+   8: <tenant_bench::fx::long_reads_tests::long_reader_scan_following_e1::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+FAILED
+test fx::long_reads_tests::long_reader_scan_with_compactor_and_gc ... 
+thread 'fx::long_reads_tests::long_reader_scan_with_compactor_and_gc' (1596) panicked at src/fx/tests.rs:121:5:
+no publish
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: tenant_bench::fx::long_reads_tests::long_reader_scan_with_compactor_and_gc::{closure#0}
+   3: <tokio::runtime::park::CachedParkThread>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   4: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   5: tenant_bench::fx::long_reads_tests::long_reader_scan_with_compactor_and_gc
+   6: <tenant_bench::fx::long_reads_tests::long_reader_scan_with_compactor_and_gc::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+FAILED
+test fx::review_long_reads_tests::review_lr_failed_renewal_keeps_the_guard ... 
+thread 'fx::review_long_reads_tests::review_lr_failed_renewal_keeps_the_guard' (1601) panicked at src/fx/tests.rs:121:5:
+no publish
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: tenant_bench::fx::tests::publish::{closure#0}
+   3: tenant_bench::fx::review_long_reads_tests::review_lr_failed_renewal_keeps_the_guard::{closure#0}
+   4: <tokio::runtime::park::CachedParkThread>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   5: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   6: tenant_bench::fx::review_long_reads_tests::review_lr_failed_renewal_keeps_the_guard
+   7: <tenant_bench::fx::review_long_reads_tests::review_lr_failed_renewal_keeps_the_guard::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+FAILED
+test fx::review_long_reads_tests::review_lr_one_renewal_for_many_steps ... 
+thread 'fx::review_long_reads_tests::review_lr_one_renewal_for_many_steps' (1606) panicked at src/fx/tests.rs:121:5:
+no publish
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: tenant_bench::fx::tests::publish::{closure#0}
+   3: tenant_bench::fx::review_long_reads_tests::stable_db::{closure#0}
+   4: tenant_bench::fx::review_long_reads_tests::review_lr_one_renewal_for_many_steps::{closure#0}
+   5: <tokio::runtime::park::CachedParkThread>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   6: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   7: tenant_bench::fx::review_long_reads_tests::review_lr_one_renewal_for_many_steps
+   8: <tenant_bench::fx::review_long_reads_tests::review_lr_one_renewal_for_many_steps::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+FAILED
+test fx::review_long_reads_tests::review_lr_pages_across_v2_to_v2k_reseals ... 
+thread 'fx::review_long_reads_tests::review_lr_pages_across_v2_to_v2k_reseals' (1611) panicked at src/fx/tests.rs:121:5:
+no publish
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: tenant_bench::fx::tests::publish::{closure#0}
+   3: tenant_bench::fx::review_long_reads_tests::stable_db::{closure#0}
+   4: tenant_bench::fx::review_long_reads_tests::review_lr_pages_across_v2_to_v2k_reseals::{closure#0}
+   5: <tokio::runtime::park::CachedParkThread>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   6: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   7: tenant_bench::fx::review_long_reads_tests::review_lr_pages_across_v2_to_v2k_reseals
+   8: <tenant_bench::fx::review_long_reads_tests::review_lr_pages_across_v2_to_v2k_reseals::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+FAILED
+test fx::review_long_reads_tests::review_lr_shortest_legal_grace ... 
+thread 'fx::review_long_reads_tests::review_lr_shortest_legal_grace' (1616) panicked at src/fx/tests.rs:121:5:
+no publish
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: tenant_bench::fx::tests::publish::{closure#0}
+   3: tenant_bench::fx::review_long_reads_tests::stable_db::{closure#0}
+   4: tenant_bench::fx::review_long_reads_tests::review_lr_shortest_legal_grace::{closure#0}
+   5: <tokio::runtime::park::CachedParkThread>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   6: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   7: tenant_bench::fx::review_long_reads_tests::review_lr_shortest_legal_grace
+   8: <tenant_bench::fx::review_long_reads_tests::review_lr_shortest_legal_grace::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+FAILED
+test fx::review_long_reads_tests::review_lr_upgrade_mid_scan_and_old_writer_returns ... 
+thread 'fx::review_long_reads_tests::review_lr_upgrade_mid_scan_and_old_writer_returns' (1621) panicked at src/fx/tests.rs:121:5:
+no publish
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: tenant_bench::fx::tests::publish::{closure#0}
+   3: tenant_bench::fx::review_long_reads_tests::stable_db::{closure#0}
+   4: tenant_bench::fx::review_long_reads_tests::review_lr_upgrade_mid_scan_and_old_writer_returns::{closure#0}
+   5: <tokio::runtime::park::CachedParkThread>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   6: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   7: tenant_bench::fx::review_long_reads_tests::review_lr_upgrade_mid_scan_and_old_writer_returns
+   8: <tenant_bench::fx::review_long_reads_tests::review_lr_upgrade_mid_scan_and_old_writer_returns::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+FAILED
+test fx::review_long_reads_tests::review_lr_writer_returns_with_envelopes ... review E1 writer returns: 628 steps, 0 passes, 400 stable rows, 0 rows written after E1 seen, wrong 0, refused 603, other errors 0 (database fx-rlr-e1-back: release E1's announcement was last read 300.45622ms ago, more than T_pin; retry); writer: 518 rows, 46 versions, E_env Some(1661); renewals 0
+ok
+
+failures:
+
+failures:
+    fx::long_reads_tests::long_reader_scan_following_e1
+    fx::long_reads_tests::long_reader_scan_with_compactor_and_gc
+    fx::review_long_reads_tests::review_lr_failed_renewal_keeps_the_guard
+    fx::review_long_reads_tests::review_lr_one_renewal_for_many_steps
+    fx::review_long_reads_tests::review_lr_pages_across_v2_to_v2k_reseals
+    fx::review_long_reads_tests::review_lr_shortest_legal_grace
+    fx::review_long_reads_tests::review_lr_upgrade_mid_scan_and_old_writer_returns
+
+test result: FAILED. 1 passed; 7 failed; 0 ignored; 0 measured; 142 filtered out; finished in 42.96s
+
+error: test failed, to rerun pass `-p tenant-bench --lib`
