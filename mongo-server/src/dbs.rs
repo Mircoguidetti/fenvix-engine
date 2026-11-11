@@ -534,6 +534,9 @@ impl Entry {
     /// Then the compactor absorbs that last flush (bounded): with every L0 row absorbed, the compaction pass may compact
     /// the closed database (`lifecycle::compact_tenant_pass_with` runs only then).
     async fn flush_then_stop_fxc(&mut self) {
+        // a session whose writes never started the compactor (with the log on, a write's commit is waited for by the
+        // command after this entry's lock is released) starts it now: its last flush is then absorbed like any other
+        self.maybe_start_fxc().await;
         if let (Some(c), true) = (self.fxc.clone(), self.tenant.as_ref().is_some_and(|t| t.is_writer())) {
             let r = tokio::time::timeout(tenant_bench::lifecycle::CLOSE_FLUSH_TIMEOUT, tenant_bench::lifecycle::flush_writer_memtable(&self.name)).await;
             if !matches!(r, Ok(Ok(_))) {
