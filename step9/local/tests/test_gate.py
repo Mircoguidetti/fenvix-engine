@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.join(REPO, "step9", "ci"))
 import gate  # noqa: E402
 
 COMMIT = "b" * 40
+SHA = "a" * 64   # the binary built from COMMIT
 BASE = "bench/agent-checkpoints/results/local-t"
 
 
@@ -33,10 +34,11 @@ def clean_summary(scale=1.0):
             # our side's settle and log counters (bench-local fix round, F5 and F9); ignored on the other sides
             "settle": {"idle": True, "capped": False, "seconds": 750.0, "compaction2_published": True},
             "server_status_after_write": {"quaderno": {"sent": 1000, "failed": 0}},
-            "server_status_end": {"quaderno": {"sent": 1200, "failed": 0}}}
+            "server_status_end": {"quaderno": {"sent": 1200, "failed": 0}},
+            "engine_binary_sha256": SHA}
 
 
-def tree(ours, pg, mongo, takeovers=None, w8=None, verdict=None):
+def tree(ours, pg, mongo, takeovers=None, w8=None, verdict=None, takeovers_off=None, report_extra=None):
     d = tempfile.mkdtemp()
     os.makedirs(os.path.join(d, "step9", "ci"))
     os.makedirs(os.path.join(d, "step9", "local", "results-t"))
@@ -48,10 +50,13 @@ def tree(ours, pg, mongo, takeovers=None, w8=None, verdict=None):
             os.makedirs(os.path.join(d, base, side))
             json.dump(s, open(os.path.join(d, base, side, "summary.json"), "w"))
     tk = "step9/local/results-t/takeovers-summary-on.json"
-    json.dump(takeovers or {"verdict": "PASS", "lost": 0, "done": 50, "n": 50, "acknowledged": 500000},
-              open(os.path.join(d, tk), "w"))
-    rep = {"engine_ref": "final", "engine_commit": COMMIT, "takeovers": tk, "agent_bench": BASE + "/fenvix/summary.json",
-           "verdict": verdict or "PASS", "blockers": []}
+    tk_off = "step9/local/results-t/takeovers-summary-off.json"
+    clean_tk = {"verdict": "PASS", "lost": 0, "done": 50, "n": 50, "acknowledged": 500000, "engine_binary_sha256": SHA}
+    json.dump(takeovers or clean_tk, open(os.path.join(d, tk), "w"))
+    json.dump(takeovers_off or clean_tk, open(os.path.join(d, tk_off), "w"))
+    rep = {"engine_ref": "final", "engine_commit": COMMIT, "engine_sha256": SHA, "takeovers": tk, "takeovers_off": tk_off,
+           "agent_bench": BASE + "/fenvix/summary.json", "verdict": verdict or "PASS", "blockers": []}
+    rep.update(report_extra or {})
     if w8:
         rep["agent_bench_w8"] = BASE + "-w8/fenvix/summary.json"
     json.dump(rep, open(os.path.join(d, "step9", "local", f"benchmark-report-{COMMIT[:12]}.json"), "w"))
@@ -165,7 +170,8 @@ def test_benchmark_report_says_fail_on_failed_results():
     os.makedirs(os.path.join(d, "step9", "local"), exist_ok=True)
     shutil.copy(os.path.join(REPO, "step9", "local", "benchmark_report.py"), os.path.join(d, "step9", "local"))
     r = subprocess.run([sys.executable, os.path.join(d, "step9", "local", "benchmark_report.py"), "final", COMMIT,
-                        "step9/local/results-t/takeovers-summary-on.json", BASE + "/fenvix/summary.json"],
+                        "step9/local/results-t/takeovers-summary-on.json", BASE + "/fenvix/summary.json",
+                        "--takeovers-off", "step9/local/results-t/takeovers-summary-off.json", "--engine-sha256", SHA],
                        capture_output=True, text=True)
     shutil.rmtree(d, ignore_errors=True)
     assert r.returncode == 1 and ": FAIL" in r.stdout and "erased threads still readable 5" in r.stdout, r.stdout + r.stderr
@@ -199,7 +205,8 @@ def test_review_case_c_cold_only_slower_is_not_a_blocker():
     now a blocker of its own (F9); every other blocker must be absent, and no cold comparison."""
     c = _gate_skips_cases()["C"]
     assert "resume[cold] p50" not in c and "resume[cold] p99" not in c, c
-    lines = [l for l in c.splitlines() if l.strip().startswith("- ") and "settle record" not in l and "server status at the end" not in l and "verdict FAIL" not in l]
+    lines = [l for l in c.splitlines() if l.strip().startswith("- ") and "settle record" not in l and "server status at the end" not in l and "verdict FAIL" not in l
+             and "takeovers log off" not in l and "names no engine binary" not in l and "made by binary" not in l]
     assert not lines, c
 
 
@@ -255,6 +262,50 @@ def test_client_limited_closes():
     w8["client_limited"] = True
     closed(tree(clean_summary(), clean_summary(2), clean_summary(2), w8=(clean_summary(), w8, clean_summary(2))),
            "the client was the limit")
+
+
+# ---- total review intermediate 2: N3 and the binary every result names ----
+
+def test_review_n3_log_off_loss_closes():
+    """N3: 37 acknowledged writes lost in the log-off takeovers, everything else clean: the old gate said OPEN."""
+    closed(tree(clean_summary(), clean_summary(2), clean_summary(2),
+                takeovers_off={"verdict": "FAIL", "lost": 37, "done": 50, "n": 50, "acknowledged": 250000,
+                               "engine_binary_sha256": SHA}), "takeovers log off")
+
+
+def test_report_without_log_off_closes():
+    closed(tree(clean_summary(), clean_summary(2), clean_summary(2), report_extra={"takeovers_off": None}),
+           "takeovers log off: no result named")
+
+
+def test_report_without_binary_closes():
+    closed(tree(clean_summary(), clean_summary(2), clean_summary(2), report_extra={"engine_sha256": None}),
+           "names no engine binary")
+
+
+def test_summary_from_another_binary_closes():
+    ours = clean_summary()
+    ours["engine_binary_sha256"] = "c" * 64
+    closed(tree(ours, clean_summary(2), clean_summary(2)), "made by binary cccccccccccccccc")
+
+
+def test_takeovers_from_another_binary_closes():
+    closed(tree(clean_summary(), clean_summary(2), clean_summary(2),
+                takeovers={"verdict": "PASS", "lost": 0, "done": 50, "n": 50, "acknowledged": 500000,
+                           "engine_binary_sha256": "d" * 64}), "takeovers log on: made by binary dddd")
+
+
+def test_takeovers_binary_from_sidecar():
+    d = tree(clean_summary(), clean_summary(2), clean_summary(2))
+    for m in ("on", "off"):
+        f = os.path.join(d, f"step9/local/results-t/takeovers-summary-{m}.json")
+        s = json.load(open(f))
+        del s["engine_binary_sha256"]
+        json.dump(s, open(f, "w"))
+        open(f + ".binary-sha256", "w").write(SHA + "  mongo-server\n")
+    rc, out = ask(d)
+    assert rc == 0 and out.startswith("GATE: OPEN"), out
+
 
 if __name__ == "__main__":
     fails = 0

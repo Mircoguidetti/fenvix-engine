@@ -94,6 +94,8 @@ for step in $STEPS; do
       say "takeovers log $mode: exit $?; $(grep -E "outcome|verdict|lost" "$TD/takeovers-$mode.txt" | tail -3 | tr '\n' ' ' | cut -c1-400)"
       f=$(find "$W" -name 'takeovers-summary.json' -newer "$W.sh" 2>/dev/null | head -1)
       if [ -n "$f" ]; then cp "$f" "$TD/takeovers-summary-$mode.json"; say "takeovers $mode summary: ${f#$W/}"
+        # the binary that made it, next to it (the gate checks it against the report's commit)
+        sha256sum "$ENGINE_DIR/target/release/mongo-server" | cut -d' ' -f1 > "$TD/takeovers-summary-$mode.json.binary-sha256"
       else say "takeovers $mode: no takeovers-summary.json under $W"; fi
       for x in "$W"/out-*/takeovers*; do [ -e "$x" ] && cp -r "$x" "$TD/out-$mode-$(basename "$x")"; done
     done
@@ -115,9 +117,11 @@ for step in $STEPS; do
     # the --workers 8 line goes to the report too (fifth argument): the gate checks it like repeat 1 and refuses it
     # when its client was the limit (review F7)
     W8=bench/agent-checkpoints/results/local-$TAG-equal-w8/fenvix/summary.json
-    { echo "\$ python step9/local/benchmark_report.py $ENGINE_REF $ENGINE_COMMIT step9/local/results-$TAG/takeovers-summary-on.json bench/agent-checkpoints/results/local-$TAG-equal-r1/fenvix/summary.json $W8"
+    SHA=$(sha256sum "$ENGINE_DIR/target/release/mongo-server" | cut -d' ' -f1)
+    OFF=step9/local/results-$TAG/takeovers-summary-off.json
+    { echo "\$ python step9/local/benchmark_report.py $ENGINE_REF $ENGINE_COMMIT step9/local/results-$TAG/takeovers-summary-on.json bench/agent-checkpoints/results/local-$TAG-equal-r1/fenvix/summary.json $W8 --takeovers-off $OFF --engine-sha256 $SHA"
       "$JPY" step9/local/benchmark_report.py "$ENGINE_REF" "$ENGINE_COMMIT" "step9/local/results-$TAG/takeovers-summary-on.json" \
-        "bench/agent-checkpoints/results/local-$TAG-equal-r1/fenvix/summary.json" "$W8"; echo "(exit $?)"
+        "bench/agent-checkpoints/results/local-$TAG-equal-r1/fenvix/summary.json" "$W8" --takeovers-off "$OFF" --engine-sha256 "$SHA"; echo "(exit $?)"
       echo "\$ ENGINE_REF=$ENGINE_REF ENGINE_COMMIT=$ENGINE_COMMIT python step9/ci/gate.py"
       ENGINE_REF=$ENGINE_REF ENGINE_COMMIT=$ENGINE_COMMIT "$JPY" step9/ci/gate.py; echo "(exit $?)"
       echo "binaries after the last run:"

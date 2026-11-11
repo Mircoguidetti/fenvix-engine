@@ -7,5 +7,7 @@
  "phases": [
   "load"
  ],
- "pantry": "keep"
+ "pantry": "keep",
+ "client_zone": "same",
+ "settle_max_min": 60
 }

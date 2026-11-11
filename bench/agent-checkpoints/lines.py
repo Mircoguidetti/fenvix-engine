@@ -645,6 +645,8 @@ def run_line(a) -> int:
                "--out", out, "--settle", "--cold-cmd", f"{PY} {os.path.abspath(__file__)} restart {line}",
                "--cold-threads", str(a.cold_threads),
                "--health-cmd", f"{PY} {os.path.abspath(__file__)} health {line}"]
+        if LINES[line]["target"] == "fenvix":
+            cmd += ["--engine-sha256", settings["binaries_sha256"][SRV]]
         settings["bench_command"] = " ".join(cmd)
         json.dump(settings, open(os.path.join(out, "settings.json"), "w"), indent=1, default=str)
         log(f"{line}: bench.py starts")

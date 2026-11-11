@@ -151,7 +151,11 @@ def job_hours(c):
         if any(p in EXTRA_PROGRAMS for p in c["programs"]):
             h["extras"] = JOB_HOURS["spare_boot"] + JOB_HOURS["extras"]
         if "write-peak" in c["programs"]:
-            h["write_peak"] = JOB_HOURS["write_peak"]
+            # its own --minutes plus the fixed part of JOB_HOURS["write_peak"] (0.6 h for the 25 minutes of the full
+            # program: about 11 minutes of setup and the load's end); the pilot runs 5 minutes (total review B4)
+            a = (c.get("write_peak_args") or "").split()
+            mins = float(a[a.index("--minutes") + 1]) if "--minutes" in a else 25.0
+            h["write_peak"] = JOB_HOURS["write_peak"] - 25 / 60 + mins / 60
         if "agent-bench" in c["programs"]:
             targets = 2 + (1 if c.get("aurora") else 0)
             h["agent_bench"] = JOB_HOURS["pgbox_boot"] + targets * JOB_HOURS["agent_per_target"] + \

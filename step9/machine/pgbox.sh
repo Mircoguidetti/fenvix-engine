@@ -45,4 +45,7 @@ grep -E "^(shared_buffers|ssl|synchronous_commit|fsync|wal_level|max_connections
 printf '{"ip": "%s", "port": 5432, "type": "%s", "az": "%s", "durability": "single node, no copy", "tls": "required", "shared_buffers_mb": %s}\n' "$IP" "$TYPE" "$AZ" "$SB_MB" > out/ready.json
 $PY s3io.py put "$BUCKET" "$P/ready.json" out/ready.json || finish NO_BUCKET
 step "ready: $(cat out/version.txt | cut -c1-60) on $IP:5432"
-while :; do sleep "$PUSH_S"; push; exists "$P/stop" && finish STOPPED; done
+pg_stop() { service postgresql stop >> out/steps.log 2>&1; }
+pg_start() { service postgresql start >> out/steps.log 2>&1 || return 1
+  for _ in $(seq 1 120); do pg_isready -q -h "$IP" && return 0; sleep 1; done; return 1; }
+while :; do sleep "$PUSH_S"; serve_cold_restart pg_stop pg_start; push; exists "$P/stop" && finish STOPPED; done

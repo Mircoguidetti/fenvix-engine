@@ -159,3 +159,26 @@ program measures the physical one-trip read; its hook `--engine-reader` runs the
 `src/runfmt.rs` is in the engine ref (step 3). The warm spare is today a second server on the same pantry and log that
 takes the databases over when the cook's lease lapses. The takeover program reads the acknowledged writes back three
 times (at once, after 90 s, after a clean restart that replays the log) to tell a loss from late visibility.
+
+## bench-local fix round, part 2 (total review intermediate 2, 2026-11-11)
+
+- N3: `local/benchmark_report.py` takes `--takeovers-off` and `--engine-sha256`; the gate checks the takeovers with the
+  log on AND off, and refuses a report without either.
+- The binary: every result names the mongo-server it was made by (`engine_binary_sha256` in bench.py's summary; a
+  `<summary>.binary-sha256` sidecar for local takeovers; on AWS the cook writes its hash in `ready.json`, run.py passes
+  it to every program, and `programs/fenvix_status.py stamp` writes it into each result). The gate refuses a result made
+  by another binary than the report's.
+- N4 (DECISIONS 2026-11-11, the S3-WAL fallback): `machine/extras.sh` saves our server's status before and after
+  log-ack, write-peak and the agent benchmark (`programs/fenvix_status.py`) and labels each result with the batches that
+  took the fallback; `programs/takeovers.py` reads each process's `quaderno.failed` before killing it and the survivor's
+  before the clean restart (`log_fallback` in its summary).
+- B9 on AWS: the agent benchmark passes `--settle` to our target, uses `--read-sample 300 --erase-users 100`, and runs the
+  cold phase: `programs/cold_restart.py` asks the cook or the Postgres machine, through the run bucket, to stop its
+  server, drop its page cache and start again (`machine/common.sh serve_cold_restart`, in `cook.sh` and `pgbox.sh`).
+  Aurora has no cold phase (a reboot needs an IAM permission the workflow does not have).
+- Commands: job L runs with `client_zone` "same" and `settle_max_min` 60; the pilot adds 5 minutes of write-peak (the
+  write-peak estimate now follows its `--minutes`); job L or any job turns red when `client/end.json` says the plans
+  differ (`ci/outcomes.py`).
+- N5: the 100 GB plan counts job B; the SPESA line adds each job's cross-zone allowance (`ci/outcomes.py`).
+Tests: `local/tests/test_gate.py`, `test_cold_restart.py`, `test_fenvix_status.py`, `test_outcomes.py`,
+`test_takeover_ids.py`.

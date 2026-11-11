@@ -38,6 +38,7 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import outcomes as outcomes_rules  # noqa: E402
 import infra  # noqa: E402
 from machine_types import TYPES, minute_cost  # noqa: E402
 if os.environ.get("S9_MODE", "aws") == "aws":
@@ -175,11 +176,13 @@ def spend():
         # is an upper bound), plus the I/O and storage allowance
         hours = ((au["end"] or now) - au["start"]) / 3600
         aud = aurora.PRICE_HOUR[aurora.CLASS] * max(1.0, hours) + aurora.IO_ALLOWANCE
-    spend_now = mach + s3d + aud
+    xz = outcomes_rules.cross_zone_allowance(cmd, (now - T0) / 3600)   # total review N5
+    spend_now = mach + s3d + aud + xz
     alive = sorted(m["type"] for i, m in machines.items() if m["end"] is None)
     say(f"SPESA: {spend_now:.2f} $ so far at {int((now - T0) / 60)} minutes (upper bound; machines {mach:.2f} $, alive: "
         f"{', '.join(alive) or 'none'}; S3 {s3d:.2f} $ from the servers' counters, storage and margin"
-        + (f"; Aurora {aud:.2f} $ ({'deleted' if au['end'] else 'on'})" if au["start"] else "") + f"), cap {CAP:.2f} $")
+        + (f"; Aurora {aud:.2f} $ ({'deleted' if au['end'] else 'on'})" if au["start"] else "")
+        + f"; cross-zone allowance {xz:.2f} $ ESTIMATED), cap {CAP:.2f} $")
     return spend_now
 
 
@@ -295,6 +298,14 @@ def stop(name, mid, wait_s=180, terminate=True):
     if terminate:
         plat.terminate([mid])
         machines[mid]["end"] = time.time()
+
+
+def cook_sha():
+    """sha256 of the measured cook's mongo-server, from its ready.json (cook.sh): every program result carries it."""
+    try:
+        return (get("server-1/ready.json") or {}).get("mongo_server_sha256", "")
+    except Exception:  # noqa: BLE001 - an empty hash makes the results fail the gate's binary check, never pass it
+        return ""
 
 
 def server_config(name, role, logs):
@@ -441,9 +452,14 @@ try:
             if exists("client/end.json"):
                 break
             time.sleep(min(15, MINUTE_S))
-        outcomes["client"] = (get("client/end.json") or {}).get("outcome", "NO END")
+        end_client = get("client/end.json") or {}
+        outcomes["client"] = end_client.get("outcome", "NO END")
         plat.terminate([client_id])
         machines[client_id]["end"] = time.time()
+        # total review intermediate 2: a client that found PLANS: DIFFERENT turns the job red (it ended green before)
+        red = outcomes_rules.client_end_blocker(end_client)
+        if red:
+            raise Stop(red)
 
     extras = [p for p in cmd["programs"] if p not in ("m30", "agent-bench", "write-peak")]
     if "extras" in PHASES and extras and mid1:
@@ -454,7 +470,7 @@ try:
             cert_for("spare", sp[1])
             wait_for("spare/ready.json", watch="spare", limit_min=20, what="spare")
         say(f"7/8 the extras client: {extras}")
-        put("extras/config.json", {"programs": extras, "pantry": PANTRY, "logs": LOGS, "bench_logs": LOGS.replace(":7200", ":7201"),
+        put("extras/config.json", {"engine_sha256": cook_sha(), "programs": extras, "pantry": PANTRY, "logs": LOGS, "bench_logs": LOGS.replace(":7200", ":7201"),
                                    "cook": {"ip": ip1, "port": 27017}, "spare": {"ip": sp[1]} if sp else {},
                                    **{k: v for k, v in cmd.items() if k.endswith("_args")}})
         ex_id, _ = launch("extras", "extras", cmd["extras_client"], CLIENT_ZONE)
@@ -474,7 +490,7 @@ try:
             sp = None
         quota_free([i for i, m in machines.items() if m["name"] == "extras"])
         say(f"7/8 write-peak: {cmd['write_peak_args']} through the measured cook, client {cmd['client']} in {CLIENT_ZONE}")
-        put("peak/config.json", {"programs": ["write-peak"], "pantry": PANTRY, "logs": LOGS,
+        put("peak/config.json", {"engine_sha256": cook_sha(), "programs": ["write-peak"], "pantry": PANTRY, "logs": LOGS,
                                  "cook": {"ip": ip1, "port": 27017}, "write_peak_args": cmd["write_peak_args"]})
         pk_id, _ = launch("peak", "extras", cmd["client"], CLIENT_ZONE)
         wait_for("peak/end.json", watch="peak")
@@ -515,7 +531,7 @@ try:
                 json.dump(aurora.describe(RUN), open(os.path.join(OUT, "aurora-describe.json"), "w"), indent=1, default=str)
             except Exception as e:  # noqa: BLE001 - never stops the round; the SQL side (pg_settings) is saved anyway
                 say(f"aurora: describe: {type(e).__name__}: {str(e)[:160]}")
-        put("agent/config.json", {"programs": ["agent-bench"], "pantry": PANTRY, "logs": LOGS,
+        put("agent/config.json", {"engine_sha256": cook_sha(), "programs": ["agent-bench"], "pantry": PANTRY, "logs": LOGS,
                                   "cook": {"ip": ip1, "port": 27017}, "pgbox": {"ip": pg[1]},
                                   "agent_bench_args": cmd["agent_bench_args"]})
         ag_id, _ = launch("agent", "extras", cmd["extras_client"], CLIENT_ZONE)

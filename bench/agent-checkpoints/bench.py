@@ -391,6 +391,8 @@ def main() -> None:
     ap.add_argument("--settle-cap-s", type=int, default=2700, help="cap of the --settle wait (default 45 minutes)")
     ap.add_argument("--cold-cmd", default="", help="shell command that restarts the line; then the cold phase runs")
     ap.add_argument("--cold-threads", type=int, default=200)
+    ap.add_argument("--engine-sha256", default=os.environ.get("BENCH_ENGINE_SHA256", ""),
+                    help="sha256 of the mongo-server binary under test (our target); the gate checks it against the commit")
     ap.add_argument("--health-cmd", default="", help="shell command that checks every member of the line (bench-local "
                     "review F10); run after the write phase and at the end, a non-zero exit makes ok false")
     ap.add_argument("--out", required=True)
@@ -452,6 +454,7 @@ def main() -> None:
     summary = {
         "note": VALIDATION_NOTE if a.local else "AWS round result",
         "target": a.target, "label": a.label, "durability": a.durability or "not stated", "profile": a.profile, "seed": a.seed, "workers": a.workers,
+        "engine_binary_sha256": a.engine_sha256 or None,
         "plan": {"threads": len(threads), "turns": len(events), "digest": generator.plan_digest(events)},
         "client": {"python": platform.python_version(), "host": platform.node()},
         "write": w | {"steps_per_second": round(lb["checkpoints"] / w["seconds"], 2) if w["seconds"] else None},

@@ -145,6 +145,47 @@ def check_ours(d, label):
     return out
 
 
+def binary_of(path):
+    """The sha256 of the mongo-server binary a result names: the summary's own "engine_binary_sha256", or a sidecar
+    file <summary>.binary-sha256 written next to it by the run that made it."""
+    try:
+        v = json.load(open(path)).get("engine_binary_sha256")
+    except Exception:  # noqa: BLE001
+        v = None
+    side = path + ".binary-sha256"
+    if not v and os.path.exists(side):
+        v = open(side).read().split()[0]
+    return v
+
+
+def check_report_results(r):
+    """Every result a report names (total review N3: the takeovers with the log on AND off; and the risk under N5: every
+    result made by the binary of the report's commit)."""
+    out = []
+    want = r.get("engine_sha256")
+    if not want:
+        out.append("the report names no engine binary (sha256 of mongo-server built from the commit): its results cannot "
+                   "be tied to the commit")
+    for key, label in (("takeovers", "takeovers log on"), ("takeovers_off", "takeovers log off")):
+        if not r.get(key):
+            out.append(f"{label}: no result named in the report (RULES 8: every takeover test counts)")
+            continue
+        p = os.path.join(ROOT, r[key])
+        out += [f"{label}: {b}" for b in check_takeovers(p)]
+        got = binary_of(p) if os.path.exists(p) else None
+        if want and got != want:
+            out.append(f"{label}: made by binary {str(got)[:16]}, not the report's {want[:16]}")
+    for key, label in (("agent_bench", "agent benchmark"), ("agent_bench_w8", "agent benchmark --workers 8")):
+        if key == "agent_bench_w8" and not r.get(key):
+            continue
+        p = os.path.join(ROOT, r.get(key) or "-")
+        out += check_agent(p, label=label)
+        got = binary_of(p) if os.path.exists(p) else None
+        if want and got != want:
+            out.append(f"{label}: our summary was made by binary {str(got)[:16]}, not the report's {want[:16]}")
+    return out
+
+
 def newest(pattern):
     files = sorted(glob.glob(os.path.join(ROOT, pattern)), key=os.path.getmtime)
     return files[-1] if files else None
@@ -182,10 +223,7 @@ def main():
         f, r = found
         if r.get("verdict") != "PASS":
             blockers.append(f"{rel(f)}: verdict {r.get('verdict')}")
-        blockers += check_takeovers(os.path.join(ROOT, r.get("takeovers") or "-"))
-        blockers += check_agent(os.path.join(ROOT, r.get("agent_bench") or "-"))
-        if r.get("agent_bench_w8"):
-            blockers += check_agent(os.path.join(ROOT, r["agent_bench_w8"]), label="agent benchmark --workers 8")
+        blockers += check_report_results(r)
     if blockers:
         print(f"GATE: CLOSED ({len(blockers)} blockers; RULES.md 8-9: no AWS run, not even a pilot)")
         for b in blockers:

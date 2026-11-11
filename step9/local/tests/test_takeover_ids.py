@@ -92,7 +92,9 @@ class FakeColl:
 class FakeClient:
     def __init__(self, uri, **kw):
         self.name = IP[uri.split("@")[1].split(":")[0]]
-        self.admin = types.SimpleNamespace(command=lambda *_: {"ok": 1})
+        # tenantStats answers like our server: each process's quaderno.failed is 1 (total review N4)
+        self.admin = types.SimpleNamespace(command=lambda name, *_: {"quaderno": {"sent": 10, "failed": 1}}
+                                           if name == "tenantStats" else {"ok": 1})
 
     def __getitem__(self, db):
         return _Db(self.name)
@@ -140,6 +142,10 @@ def test_every_acknowledged_and_missing_id_is_saved():
     acked = [json.loads(x) for x in gzip.open(os.path.join(out, "takeovers-acked.jsonl.gz"), "rt")]
     miss = json.load(open(os.path.join(out, "takeovers-missing.json")))
     assert len(acked) == s["acknowledged"] > 0
+    # N4: 3 killed processes read just before their kill + the survivor: 4 batches took the fallback, and it is said
+    assert s["log_fallback"]["batches"] == 4, s["log_fallback"]
+    assert all(r["victim_quaderno_failed"] == 1 for r in s["takeovers"])
+    assert "4 write batches took the S3-WAL fallback" in s["log_fallback"]["label"]
     assert all({"_id", "t", "server", "ip"} <= set(r) for r in acked)
     assert {r["server"] for r in acked} == {"server-1", "spare"}
     assert [r["t"] for r in acked] == sorted(r["t"] for r in acked)

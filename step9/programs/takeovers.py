@@ -21,6 +21,7 @@ import argparse
 import gzip
 import json
 import os
+import sys
 import threading
 import time
 import urllib.parse
@@ -28,6 +29,9 @@ import urllib.parse
 import boto3
 from botocore.exceptions import ClientError
 from pymongo import MongoClient, WriteConcern
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import fenvix_status  # noqa: E402  total review N4: the log's fallback counter of each process before it is killed
 
 ap = argparse.ArgumentParser()
 ap.add_argument("bucket")
@@ -158,6 +162,7 @@ for i in range(a.n):
     victim = state["serving"]
     other = "B" if victim == "A" else "A"
     n_before = len(acked)
+    victim_failed = fenvix_status.failed(fenvix_status.snapshot(client(victim)))   # its counter dies with it
     ack = command(victim, "kill9")
     with lock:
         state["killed_at"][victim] = ack["t"]
@@ -171,7 +176,8 @@ for i in range(a.n):
             first = min(firsts)
             break
         time.sleep(0.05)
-    row = {"i": i + 1, "killed": victim, "takeover_s": round(first - t_kill, 3) if first else None, "acked_before": n_before}
+    row = {"i": i + 1, "killed": victim, "takeover_s": round(first - t_kill, 3) if first else None, "acked_before": n_before,
+           "victim_quaderno_failed": victim_failed}
     summary["takeovers"].append(row)
     note(kind="takeover", **row)
     print(f"takeover {i + 1}/{a.n}: {victim} killed, {other} confirmed after "
@@ -192,6 +198,7 @@ for t in ths:
 #   restart replays the log's records that S3 does not have yet). LOST = missing at read 3.
 survivor = state["serving"]
 other = "B" if survivor == "A" else "A"
+surv_failed = fenvix_status.failed(fenvix_status.snapshot(client(survivor)))   # N4, before the clean restart resets it
 verify_error = None
 
 
@@ -257,6 +264,15 @@ pct = lambda p: times[min(len(times) - 1, int(round(p / 100 * (len(times) - 1)))
 summary.update({"verify_error": verify_error, "missing_by_read": missing, "done": len(times), "acknowledged": len(acked), "lost": len(lost) if verify_error is None else "UNKNOWN", "lost_ids_first": lost[:50],
                 "confirmed_after_kill": state["after_kill"], "failed_writes": state["failed"], "survivor": survivor,
                 "takeover_s_p50": pct(50), "takeover_s_p99": pct(99), "takeover_s_max": times[-1] if times else None})
+# N4: batches the log did not confirm, acknowledged through the S3-WAL fallback: every killed process just before its
+# kill, plus the survivor at the end (a counter that could not be read makes the total UNKNOWN, never 0)
+parts = [r["victim_quaderno_failed"] for r in summary["takeovers"]] + [surv_failed]
+fb = None if any(x is None for x in parts) else sum(parts)
+summary["log_fallback"] = {"batches": fb, "survivor_quaderno_failed": surv_failed,
+                           "label": ("UNKNOWN: a process's quaderno.failed could not be read" if fb is None else
+                                     "every write acknowledged by the log" if fb == 0 else
+                                     f"{fb} write batches took the S3-WAL fallback")}
+print(f"FENVIX-STATUS takeovers: {summary['log_fallback']['label']}", flush=True)
 for k in ("A", "B"):
     try:
         command(k, "stop", wait_s=60)  # (already stopped ones answer at once)

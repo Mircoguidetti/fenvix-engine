@@ -33,6 +33,10 @@ ap.add_argument("--profile", default="standard")
 ap.add_argument("--workers", type=int, default=1)
 ap.add_argument("--done-bucket", default="", help="the run bucket: agent/aurora-done is written there after Aurora's target")
 ap.add_argument("--done-prefix", default="agent")
+ap.add_argument("--cold-threads", type=int, default=200, help="the cold phase (P-bench-local 2.5): threads resumed once "
+                "each after the target's machine restarted its server and dropped its page cache; 0: none")
+ap.add_argument("--cook-name", default="server-1", help="our cook's folder in the run bucket (its restart is asked there)")
+ap.add_argument("--engine-sha256", default="", help="sha256 of our mongo-server binary, into our summary (the gate checks it)")
 a, extra = ap.parse_known_args()
 here = os.path.dirname(os.path.abspath(__file__))
 ab = os.path.join(here, "agentbench")
@@ -93,6 +97,16 @@ for name, kind, uri, label in targets:
            "--durability", DUR[name], "--workers", str(a.workers), "--out", out] + extra
     if name == "fenvix":
         cmd.append("--settle")   # bytes after compaction 2 has gone idle, as locally (bench-local review, item 8)
+        if a.engine_sha256:
+            cmd += ["--engine-sha256", a.engine_sha256]
+    # the cold phase (total review B9): our cook and the Postgres machine restart on request (cold_restart.py, through
+    # the run bucket); Aurora cannot (no reboot permission), so its summary has no resume[cold], said in its line
+    machine = {"fenvix": a.cook_name, "postgres": "pgbox"}.get(name)
+    if a.cold_threads and machine and a.done_bucket:
+        cmd += ["--cold-cmd", f"{sys.executable} {os.path.join(here, 'cold_restart.py')} {a.done_bucket} {machine}",
+                "--cold-threads", str(a.cold_threads)]
+    elif name == "aurora":
+        print("target aurora: no cold phase (a reboot needs an IAM permission the workflow does not have)", flush=True)
     with open(os.path.join(out, "terminal.txt"), "w") as t:
         e = dict(env, BENCH_URI=uri)
         if name == "fenvix" and a.s3_bucket:
