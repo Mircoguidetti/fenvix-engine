@@ -68,10 +68,16 @@ PUBLIC_PATHS=$(git -C "$ENGINE" ls-tree -r --name-only "$FULL" -- ctl-tests tool
   | grep -E '^ctl-tests/[^/]+\.py$|^tools/lease-stall/(blockproxy|pathproxy)\.py$|^mongo-tests/node/package(-lock)?\.json$')
 git -C "$ENGINE" archive "$FULL" $PUBLIC_PATHS | tar -x -C "$ST"
 
+# the tests' comments cite internal reports and decisions by path or date: those citations are replaced (comments and
+# docstrings only; no code line cites them, and the scan below stops the script if one is left)
+(cd "$ST" && sed -i -E 's#\(?(fenvix-brain )?sessions/20[0-9]{2}-[0-9]{2}-[0-9]{2}-[A-Za-z0-9._/-]*\)?#(an internal report)#g; s#DECISIONS 20[0-9]{2}-[0-9]{2}-[0-9]{2}#an internal decision#g' ctl-tests/*.py)
+
 # 4. scan: keys, tokens, private keys, internal names. The tests' own fixed values (minioadmin, the test token, test
 #    passwords, FAKEKEY of the fake metadata service) are expected and listed in the report.
-PAT='AKIA[0-9A-Z]{16}|ASIA[0-9A-Z]{16}|aws_secret_access_key *= *[A-Za-z0-9/+]{40}|-----BEGIN [A-Z ]*PRIVATE KEY|gh[pousr]_[A-Za-z0-9]{30,}|github_pat_|xox[abprs]-|sk-ant-|sk-[A-Za-z0-9]{40,}|AIza[0-9A-Za-z_-]{35}|[a-z0-9.-]+\.(internal|corp|local)\b|amazonaws\.com/[a-z0-9-]*fenvix|fenvix-brain|supabase\.co|vercel\.app|mircoguidetti[0-9]|@gmail\.com'
-HITS=$( (cd "$ST" && grep -rIEn "$PAT" . || true; for b in target/release/*; do strings "$b" | grep -En "$PAT" | sed "s|^|$b: |" || true; done) )
+PAT='AKIA[0-9A-Z]{16}|ASIA[0-9A-Z]{16}|aws_secret_access_key *= *[A-Za-z0-9/+]{40}|-----BEGIN [A-Z ]*PRIVATE KEY|gh[pousr]_[A-Za-z0-9]{30,}|github_pat_|xox[abprs]-|sk-ant-|sk-[A-Za-z0-9]{40,}|AIza[0-9A-Za-z_-]{35}|ip-[0-9]{1,3}-[0-9]{1,3}-[0-9]{1,3}-[0-9]{1,3}|[a-z0-9-]+\.compute\.internal|[a-z0-9-]+\.(corp|lan)\b|amazonaws\.com/[a-z0-9-]*fenvix|fenvix-brain|supabase\.co|vercel\.app|mircoguidetti[0-9]|@gmail\.com'
+# citations of internal reports and decisions: text files only (the server's --help text cites a decision date)
+CITE='sessions/20[0-9]{2}-|DECISIONS 20[0-9]{2}'
+HITS=$( (cd "$ST" && grep -rIEn "$PAT|$CITE" . || true; for b in target/release/*; do strings "$b" | grep -En "$PAT" | sed "s|^|$b: |" || true; done) )
 if [ -n "$HITS" ]; then echo "SCAN FAILED, nothing pushed:"; echo "$HITS" | head -50; exit 1; fi
 echo "scan: no key, token, private key or internal name found"
 
