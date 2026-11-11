@@ -355,6 +355,8 @@ async fn a_reader_refuses_past_t_pin_and_refreshes() {
     }
     publish(&mut t, &small_opts(Reseal::All)).await;
     t.close().await.unwrap();
+    // c2-fix-long-reads: a read step renews a stale state before it reads; this test checks the guard behind the renewal
+    CONTROL_NO_RENEW.store(true, Relaxed);
     let mut r = lc(&store).wake(id).await.unwrap();
     assert!(!r.is_writer() && r.fx_view().is_some());
     assert_eq!(r.get(ckey(8, 3)).await.unwrap().as_deref(), Some(&b"v"[..]));
@@ -366,6 +368,7 @@ async fn a_reader_refuses_past_t_pin_and_refreshes() {
     r.fx_refresh().await.unwrap();
     assert_eq!(r.get(ckey(8, 3)).await.unwrap().as_deref(), Some(&b"v"[..]));
     T_PIN_MS.store(TEST_T_PIN_MS, Relaxed);
+    CONTROL_NO_RENEW.store(false, Relaxed);
     r.abandon().await;
 }
 
