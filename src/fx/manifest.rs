@@ -212,9 +212,16 @@ pub async fn load(store: &Arc<dyn ObjectStore>, id: &str, version: u64) -> Resul
 
 /// The newest version, or None when the database has never published one.
 pub async fn load_newest(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<Version>> {
-    match list_versions(store, id).await?.last() {
-        Some(&n) => Ok(Some(load(store, id, n).await?)),
-        None => Ok(None),
+    // P-perf-bytes: GC keeps only the versions in use (retention 0 by default), so the newest version listed can be
+    // deleted before it is read when a newer one was published meanwhile: list again (the newer one is then listed)
+    let mut tries = 0;
+    loop {
+        let Some(&n) = list_versions(store, id).await?.last() else { return Ok(None) };
+        match load(store, id, n).await {
+            Ok(v) => return Ok(Some(v)),
+            Err(e) if tries < 8 && e.downcast_ref::<object_store::Error>().is_some_and(|e| matches!(e, object_store::Error::NotFound { .. })) => tries += 1,
+            Err(e) => return Err(e),
+        }
     }
 }
 

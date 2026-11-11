@@ -235,6 +235,22 @@ static GC_HOT: std::sync::LazyLock<Mutex<HashMap<String, HotGc>>> = std::sync::L
 /// Seconds between WAL garbage-collection passes over an open writer that is being written (0 = never).
 pub static HOT_GC_EVERY_SECS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(20);
 
+/// A compaction of SlateDB's own compactor ran on tenant `id` (the compactor in the server, `fx/drop.rs`): the SSTs it
+/// replaced are garbage once old enough, so the SST cleanup is due for it (P-perf-bytes: before, only today's
+/// compaction pass marked it, and an open writer that stopped writing left the hot list, so the SSTs replaced by the
+/// compactor in the server stayed in the store until the database closed).
+pub fn note_compacted(id: &str) {
+    COMPACTED.lock().unwrap().insert(id.to_string());
+    COMPACTED_SINCE_FULL.lock().unwrap().insert(id.to_string());
+    let now = Instant::now();
+    let mut hot = GC_HOT.lock().unwrap();
+    if !hot.contains_key(id) {
+        let m = writer_manifest_id(id).unwrap_or(0);
+        // last_write now: the entry stays in the hot list for the passes that follow (3 x HOT_GC_EVERY_SECS)
+        hot.insert(id.to_string(), HotGc { last_write: now, last_gc: now, last_sst_gc: now, sst_manifest: m, sst_retry_at: None });
+    }
+}
+
 /// Record that a writer of tenant `id` just wrote.
 pub fn note_write(id: &str) {
     let now = Instant::now();
@@ -3573,7 +3589,9 @@ impl Maintenance {
                         Vec::new()
                     } else {
                         let mut m = GC_HOT.lock().unwrap();
-                        m.retain(|_, h| h.last_write.elapsed() < every * 3);
+                        // P-perf-bytes: an entry whose SST cleanup left objects waiting for their minimum age stays
+                        // until that pass ran (an idle writer kept its replaced SSTs until it closed)
+                        m.retain(|_, h| h.last_write.elapsed() < every * 3 || h.sst_retry_at.is_some());
                         let now = Instant::now();
                         m.iter_mut().filter(|(_, h)| h.last_gc.elapsed() >= every).map(|(id, h)| { h.last_gc = now; id.clone() }).collect()
                     };

@@ -50,8 +50,9 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-/// The switch of the fold drop (`--sealed-drop`): off until export, PITR and `--envelopes write` go through the merged
-/// reader. Tests and benches turn it on per compactor (`Knobs::drop`).
+/// The switch of the fold drop (`--sealed-drop`): on in the server since P-perf-bytes (export and PITR read through the
+/// paired merged reader since step 7a; the reviewer's tests of DECISIONS 2026-11-09 pass with the real drop,
+/// `ctl-tests/test_53_real_drop_between_reads.py`). Off in tests unless a test turns it on (`Knobs::drop`).
 pub static DROP_DEFAULT: AtomicBool = AtomicBool::new(false);
 
 /// The server runs one compactor per open writer (`--sealed-compactor`, FENVIX_SEALED_COMPACTOR=1), with sealed runs on.
@@ -203,7 +204,7 @@ impl Default for Knobs {
             serving_lease: Duration::from_secs(30),
             put_timeout: Duration::from_millis(super::PUT_TIMEOUT_MS.load(Relaxed)),
             gc_grace: Duration::from_millis(super::GC_GRACE_MS.load(Relaxed)),
-            version_retention: Duration::from_secs(7 * 86400),
+            version_retention: Duration::from_millis(super::VERSION_RETENTION_MS.load(Relaxed)),
             gc_every: Duration::from_secs(60),
             tick: Duration::from_millis(50),
             reseal_parallel: 1,
@@ -1256,6 +1257,27 @@ impl Compactor {
     }
 
     /// Every job's tasks are idle.
+    /// Tests of the real drop (P-perf-bytes): wait until the drop job has removed SlateDB's rows at or below `x_d`, that
+    /// is the floor reached `x_d` and no absorbed L0 SST or sorted run made only of such rows is left in the writer's
+    /// manifest. Returns the rows the drop jobs dropped meanwhile and the floor; an error after `timeout`.
+    pub async fn drop_through(self: &Arc<Self>, x_d: u64, timeout: Duration) -> Result<(u64, u64)> {
+        let t0 = Instant::now();
+        let d0 = self.drop.rows_dropped.load(Relaxed);
+        loop {
+            self.drop.maybe_refold();
+            let m = self.db.manifest();
+            let left = self.drop.waiting_through(m.l0(), &m.compacted().iter().map(|r| r.id).collect::<Vec<_>>(), x_d);
+            let floor = self.drop.applied_floor.load(Relaxed).max(self.drop.observed_floor());
+            if left == 0 && self.drop.observed_floor() >= x_d {
+                return Ok((self.drop.rows_dropped.load(Relaxed) - d0, floor));
+            }
+            if t0.elapsed() > timeout {
+                bail!("the drop did not reach X_d {x_d} in {timeout:?}: floor {floor}, {left} SSTs or runs at or below it left");
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+    }
+
     pub fn idle(&self) -> bool {
         let r = self.running.lock().unwrap();
         !r.absorb && !r.merge && !r.erase && !r.gc && r.reseals == 0

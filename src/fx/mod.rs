@@ -101,6 +101,11 @@ pub static LEASE_MARGIN_MS: AtomicU64 = AtomicU64::new(30_000);
 pub static REMOTE_LEASE_MS: AtomicU64 = AtomicU64::new(180_000);
 /// GC's grace before it deletes a retired or orphaned run (rule 23; the plan's 10 minutes).
 pub static GC_GRACE_MS: AtomicU64 = AtomicU64::new(600_000);
+/// How long GC keeps a version of our manifest that nothing holds, serves or names (`--sealed-version-retention-secs`).
+/// P-perf-bytes: 0 by default (was 7 days). Such a version cannot be read once the drop is on (SlateDB no longer holds
+/// the rows between its X_d and the newest one), and restore points, exports and forks keep their versions through
+/// their pairs and references; a retired run still waits the GC grace for reads in flight.
+pub static VERSION_RETENTION_MS: AtomicU64 = AtomicU64::new(0);
 
 /// The timing rules the drop floor (step 4) relies on, checked at startup: a bad combination is refused.
 /// - the PUT timeout is shorter than the lease minus its margin (F6), and the margin is shorter than the lease;
