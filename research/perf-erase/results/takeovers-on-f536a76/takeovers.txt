@@ -1,0 +1,54 @@
+takeover 1/50: B killed, A confirmed after 5.549 s; acknowledged so far 3795
+takeover 2/50: A killed, B confirmed after 11.602 s; acknowledged so far 12058
+takeover 3/50: B killed, A confirmed after 11.601 s; acknowledged so far 20702
+takeover 4/50: A killed, B confirmed after 11.61 s; acknowledged so far 30562
+takeover 5/50: B killed, A confirmed after 11.599 s; acknowledged so far 38608
+takeover 6/50: A killed, B confirmed after 11.608 s; acknowledged so far 48132
+takeover 7/50: B killed, A confirmed after 11.602 s; acknowledged so far 57877
+takeover 8/50: A killed, B confirmed after 11.624 s; acknowledged so far 66764
+takeover 9/50: B killed, A confirmed after 11.631 s; acknowledged so far 76247
+takeover 10/50: A killed, B confirmed after 11.611 s; acknowledged so far 84444
+takeover 11/50: B killed, A confirmed after 11.62 s; acknowledged so far 93218
+takeover 12/50: A killed, B confirmed after 11.604 s; acknowledged so far 101785
+takeover 13/50: B killed, A confirmed after 11.604 s; acknowledged so far 110161
+takeover 14/50: A killed, B confirmed after 11.626 s; acknowledged so far 118746
+takeover 15/50: B killed, A confirmed after 11.627 s; acknowledged so far 127328
+takeover 16/50: A killed, B confirmed after 11.643 s; acknowledged so far 136808
+takeover 17/50: B killed, A confirmed after 11.624 s; acknowledged so far 144238
+takeover 18/50: A killed, B confirmed after 11.628 s; acknowledged so far 152568
+takeover 19/50: B killed, A confirmed after 11.618 s; acknowledged so far 160351
+takeover 20/50: A killed, B confirmed after 11.616 s; acknowledged so far 168192
+takeover 21/50: B killed, A confirmed after 11.623 s; acknowledged so far 177105
+takeover 22/50: A killed, B confirmed after 11.708 s; acknowledged so far 185660
+takeover 23/50: B killed, A confirmed after 11.681 s; acknowledged so far 192855
+takeover 24/50: A killed, B confirmed after 11.675 s; acknowledged so far 199762
+takeover 25/50: B killed, A confirmed after 12.141 s; acknowledged so far 206172
+takeover 26/50: A killed, B confirmed after 11.63 s; acknowledged so far 214540
+takeover 27/50: B killed, A confirmed after 12.149 s; acknowledged so far 221543
+takeover 28/50: A killed, B confirmed after 11.626 s; acknowledged so far 229291
+takeover 29/50: B killed, A confirmed after 12.141 s; acknowledged so far 237955
+takeover 30/50: A killed, B confirmed after 12.126 s; acknowledged so far 244436
+takeover 31/50: B killed, A confirmed after 11.674 s; acknowledged so far 250543
+takeover 32/50: A killed, B confirmed after 11.648 s; acknowledged so far 257914
+takeover 33/50: B killed, A confirmed after 12.166 s; acknowledged so far 265601
+takeover 34/50: A killed, B confirmed after 12.178 s; acknowledged so far 272680
+takeover 35/50: B killed, A confirmed after 11.679 s; acknowledged so far 279498
+takeover 36/50: A killed, B confirmed after 11.702 s; acknowledged so far 286882
+takeover 37/50: B killed, A confirmed after 11.685 s; acknowledged so far 293727
+takeover 38/50: A killed, B confirmed after 11.757 s; acknowledged so far 301687
+takeover 39/50: B killed, A confirmed after 11.647 s; acknowledged so far 308305
+takeover 40/50: A killed, B confirmed after 11.756 s; acknowledged so far 316677
+takeover 41/50: B killed, A confirmed after 11.646 s; acknowledged so far 324209
+takeover 42/50: A killed, B confirmed after 11.651 s; acknowledged so far 331490
+takeover 43/50: B killed, A confirmed after 11.652 s; acknowledged so far 339097
+takeover 44/50: A killed, B confirmed after 11.645 s; acknowledged so far 346458
+takeover 45/50: B killed, A confirmed after 11.642 s; acknowledged so far 353662
+takeover 46/50: A killed, B confirmed after 12.158 s; acknowledged so far 362077
+takeover 47/50: B killed, A confirmed after 11.646 s; acknowledged so far 369548
+takeover 48/50: A killed, B confirmed after 12.165 s; acknowledged so far 377975
+takeover 49/50: B killed, A confirmed after 11.668 s; acknowledged so far 385695
+takeover 50/50: A killed, B confirmed after 12.181 s; acknowledged so far 393606
+missing acknowledged writes: {'at_once': 0}
+FENVIX-STATUS takeovers: every write acknowledged by the log
+{"n": 50, "writers": 8, "lease_ttl_s": 4, "log": "on", "note": "the pair runs with the round's server_options; its lease is lease_ttl_s, not the product's 30 s, so takeover_s is not the product's takeover time (total review, question 1 point 5)", "verify_error": "RuntimeError: no pair process answered the read-back", "missing_by_read": {"at_once": 0}, "done": 50, "acknowledged": 396554, "lost": "UNKNOWN", "lost_ids_first": [], "confirmed_after_kill": 0, "failed_writes": 2776, "survivor": "B", "takeover_s_p50": 11.645, "takeover_s_p99": 12.181, "takeover_s_max": 12.181, "log_fallback": {"batches": 0, "survivor_quaderno_failed": 0, "label": "every write acknowledged by the log"}, "verdict": "FAIL"}
+TAKEOVERS: FAIL (50/50 takeovers, 396554 acknowledged, UNKNOWN lost (missing by read {'at_once': 0}), 0 confirmed after a kill)

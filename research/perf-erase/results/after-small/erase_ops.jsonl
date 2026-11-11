@@ -1,0 +1,17 @@
+{"ts": 1794413372.3435876, "op": "delete_thread", "thread_id": "u000001-t000", "ms": 32.515, "phase": "erase", "user": "user000001", "threads": 2}
+{"ts": 1794413372.3704717, "op": "delete_thread", "thread_id": "u000001-t001", "ms": 26.323, "phase": "erase", "user": "user000001", "threads": 2}
+{"ts": 1794413372.370803, "op": "erase_user", "user": "user000001", "threads": 2, "ms": 59.735, "phase": "erase"}
+{"ts": 1794413372.4954658, "op": "delete_thread", "thread_id": "u000009-t000", "ms": 37.065, "phase": "erase", "user": "user000009", "threads": 1}
+{"ts": 1794413372.4958534, "op": "erase_user", "user": "user000009", "threads": 1, "ms": 37.457, "phase": "erase"}
+{"ts": 1794413372.5940812, "op": "delete_thread", "thread_id": "u000004-t000", "ms": 28.888, "phase": "erase", "user": "user000004", "threads": 1}
+{"ts": 1794413372.5945885, "op": "erase_user", "user": "user000004", "threads": 1, "ms": 29.399, "phase": "erase"}
+{"ts": 1794413372.6833982, "op": "delete_thread", "thread_id": "u000014-t000", "ms": 20.569, "phase": "erase", "user": "user000014", "threads": 1}
+{"ts": 1794413372.683684, "op": "erase_user", "user": "user000014", "threads": 1, "ms": 21.138, "phase": "erase"}
+{"ts": 1794413372.7220266, "op": "delete_thread", "thread_id": "u000011-t000", "ms": 17.505, "phase": "erase", "user": "user000011", "threads": 3}
+{"ts": 1794413372.7403681, "op": "delete_thread", "thread_id": "u000011-t001", "ms": 18.019, "phase": "erase", "user": "user000011", "threads": 3}
+{"ts": 1794413372.771373, "op": "delete_thread", "thread_id": "u000011-t002", "ms": 30.671, "phase": "erase", "user": "user000011", "threads": 3}
+{"ts": 1794413372.7719429, "op": "erase_user", "user": "user000011", "threads": 3, "ms": 67.426, "phase": "erase"}
+{"ts": 1794413372.8560352, "op": "delete_thread", "thread_id": "u000010-t000", "ms": 30.583, "phase": "erase", "user": "user000010", "threads": 3}
+{"ts": 1794413372.882774, "op": "delete_thread", "thread_id": "u000010-t001", "ms": 26.155, "phase": "erase", "user": "user000010", "threads": 3}
+{"ts": 1794413372.9440281, "op": "delete_thread", "thread_id": "u000010-t002", "ms": 60.722, "phase": "erase", "user": "user000010", "threads": 3}
+{"ts": 1794413372.9444408, "op": "erase_user", "user": "user000010", "threads": 3, "ms": 118.992, "phase": "erase"}

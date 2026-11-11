@@ -1,0 +1,116 @@
+{
+ "erased_threads": 241,
+ "erased_users": 100,
+ "records_before": {
+  "n": 482,
+  "pending": 482
+ },
+ "batch": {
+  "seconds": 13.95,
+  "gets": 9455,
+  "get_bytes": 437127421,
+  "puts": 1644,
+  "gets_per_user": 94.5,
+  "mb_per_user": 4.37,
+  "states": {
+   "pending": 0,
+   "scrubbed": 482
+  },
+  "batch_ids": [
+   "00000000000000218916-7f841bf6"
+  ],
+  "rows_erased": 226704
+ },
+ "after_batch_readable": {
+  "threads_readable": 0,
+  "documents_found": 0
+ },
+ "before_batch": {
+  "resume": {
+   "n": 4045,
+   "p50": 3.23,
+   "p99": 22.08,
+   "max": 58.69423300100607
+  },
+  "list10": {
+   "n": 4044,
+   "p50": 16.54,
+   "p99": 74.5,
+   "max": 108.84787199938728
+  },
+  "save": {
+   "n": 4044,
+   "p50": 3.65,
+   "p99": 12.35,
+   "max": 48.08176900041872
+  }
+ },
+ "during_batch": {
+  "resume": {
+   "n": 636,
+   "p50": 5.8,
+   "p99": 33.57,
+   "max": 138.63111499995284
+  },
+  "list10": {
+   "n": 637,
+   "p50": 21.36,
+   "p99": 95.01,
+   "max": 607.831958001043
+  },
+  "save": {
+   "n": 636,
+   "p50": 6.03,
+   "p99": 66.07,
+   "max": 107.13063500043063
+  }
+ },
+ "after_batch": {
+  "resume": {
+   "n": 3639,
+   "p50": 3.89,
+   "p99": 33.07,
+   "max": 101.45277500123484
+  },
+  "list10": {
+   "n": 3639,
+   "p50": 17.38,
+   "p99": 76.14,
+   "max": 110.95677800039994
+  },
+  "save": {
+   "n": 3640,
+   "p50": 3.88,
+   "p99": 40.18,
+   "max": 184.7409260008135
+  }
+ },
+ "retire": {
+  "seconds_after_batch": 541.9,
+  "done": 482,
+  "of": 482,
+  "overdue": 0,
+  "kept_by": []
+ },
+ "after_retire_readable": {
+  "threads_readable": 0,
+  "documents_found": 0
+ },
+ "proof": {
+  "error": ""
+ },
+ "delete_compare": {
+  "erasure": {
+   "n": 20,
+   "p50": 12.12,
+   "p99": 26.49,
+   "max": 26.49
+  },
+  "ordinary": {
+   "n": 20,
+   "p50": 4.43,
+   "p99": 12.41,
+   "max": 12.41
+  }
+ }
+}
