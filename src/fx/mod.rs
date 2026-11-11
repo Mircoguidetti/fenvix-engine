@@ -61,6 +61,8 @@ mod tests_7a;
 mod derive_tests;
 #[cfg(test)]
 mod tests_7b;
+#[cfg(test)]
+mod long_reads_tests;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 
@@ -130,6 +132,13 @@ pub fn check_config() -> anyhow::Result<()> {
 /// Negative control of rule 25's fence-pending state, tests only: reads take holds while a fence is pending.
 #[cfg(test)]
 pub static CONTROL_NO_FENCE_PENDING: AtomicBool = AtomicBool::new(false);
+
+/// c2-fix-long-reads: renewals of a reader's state made by a read step under the shared lock (diagnostics, tests).
+pub static RENEWALS: AtomicU64 = AtomicU64::new(0);
+/// Negative control of c2-fix-long-reads, tests only: a read step never renews its state (the code before the fix),
+/// so a reader's state ages with the command and the T_pin guard refuses its steps.
+#[cfg(test)]
+pub static CONTROL_NO_RENEW: AtomicBool = AtomicBool::new(false);
 
 /// Versions published and installed, builds that failed, fence versions written at open (diagnostics).
 pub static PUBLISHES: AtomicU64 = AtomicU64::new(0);

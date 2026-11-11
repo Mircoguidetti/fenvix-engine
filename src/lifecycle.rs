@@ -650,7 +650,7 @@ impl Lifecycle {
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
         let scope = writer_scope(&id);
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: Default::default(), epoch: epoch };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: Default::default(), epoch: epoch, renewed: Default::default(), renewing: Default::default() };
         t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
@@ -699,7 +699,7 @@ impl Lifecycle {
         let l0_at_wake = reader.manifest().l0().len();
         let reader = Arc::new(reader);
         READER_DBS.lock().unwrap().insert(id.clone(), Arc::downgrade(&reader));
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: Default::default(), epoch: 0 };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: Default::default(), epoch: 0, renewed: Default::default(), renewing: Default::default() };
         t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
@@ -1371,6 +1371,28 @@ pub struct Tenant {
     serving_until: std::sync::Mutex<Option<Instant>>,
     /// With the log on: the writer epoch this writer fenced with, read from object storage when it opened (0: not read).
     epoch: u64,
+    /// c2-fix-long-reads: a reader's state (version, E_env, E1's announcement) renewed between two steps of a read under
+    /// the shared lock ([`Tenant::step_state`]). A reader read only with the state of its last exclusive refresh, so a
+    /// command longer than T_pin (one find of a large collection: many steps under one shared lock) was refused.
+    renewed: std::sync::Mutex<Option<StepState>>,
+    /// One renewal at a time per tenant: concurrent steps wait for it instead of each reading the store.
+    renewing: tokio::sync::Mutex<()>,
+}
+
+/// A reader renews its state once it is older than half its T_pin (as `fx_refresh_due` asks of the exclusive refresh).
+fn renewal_due(st: &StepState) -> bool {
+    st.loaded.elapsed() > Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed) / 2)
+}
+
+/// The state one read step reads with (c2-fix-long-reads): the version of our manifest, E_env, whether release E1 was
+/// announced, and when the refresh that learnt them started (rule 6 with note 5 of the step 7a review). It is taken once,
+/// at the start of the step, and the whole step reads with it.
+#[derive(Clone)]
+struct StepState {
+    fx: Option<Arc<crate::fx::view::View>>,
+    env: Option<u64>,
+    announced: bool,
+    loaded: Instant,
 }
 
 /// The writer epoch a writer just opened on `id` fenced with, read from the stored manifest (with the log on only: the log
@@ -1439,11 +1461,12 @@ impl Tenant {
 
     pub async fn get<K: AsRef<[u8]> + Send>(&self, key: K) -> Result<Option<Bytes>> {
         self.fx_no_fence_pending()?;
-        if let Some(v) = &self.fx {
-            return self.fx_get(v, key.as_ref(), false).await;
+        let st = self.step_state().await?;
+        if let Some(v) = &st.fx {
+            return self.fx_get(&st, v, key.as_ref(), false).await;
         }
-        self.e1_fresh()?;
-        if self.env.is_none() && !self.fx_announced {
+        self.e1_fresh(&st)?;
+        if st.env.is_none() && !st.announced {
             return Ok(match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
                 Mode::Reader(r) => r.get(key).await?,
                 Mode::Writer(db) => db.get(key).await?,
@@ -1453,7 +1476,7 @@ impl Tenant {
             Mode::Reader(r) => r.get_key_value(key).await?,
             Mode::Writer(db) => db.get_key_value(key).await?,
         };
-        let env = self.step_env().await?;
+        let env = self.step_env(&st).await?;
         match kv {
             Some(kv) => crate::envelope::decode(env, &kv.key, kv.seq, kv.value),
             None => Ok(None),
@@ -1477,14 +1500,125 @@ impl Tenant {
 
     /// A reader in reader mode refuses to read with a version older than T_pin (rule 6): before every step that reads
     /// SlateDB. The writer is the only publisher of its database, so its version is always the newest.
-    fn fx_fresh(&self) -> Result<()> {
+    fn fx_fresh(&self, st: &StepState) -> Result<()> {
         if matches!(self.mode, Some(Mode::Reader(_))) {
             let t_pin = Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed));
-            if self.fx_loaded.elapsed() > t_pin {
-                return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: our manifest was last read {:?} ago, more than T_pin; retry", self.id, self.fx_loaded.elapsed()))));
+            if st.loaded.elapsed() > t_pin {
+                return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: our manifest was last read {:?} ago, more than T_pin; retry", self.id, st.loaded.elapsed()))));
             }
         }
         Ok(())
+    }
+
+    /// The state the exclusive steps left (`fx`, `env`, `fx_announced`, `fx_loaded`), or, for a reader, the newer state a
+    /// read step renewed since (c2-fix-long-reads). A writer is the only publisher of its database: its state is its own.
+    fn current_state(&self) -> StepState {
+        let base = StepState { fx: self.fx.clone(), env: self.env, announced: self.fx_announced, loaded: self.fx_loaded };
+        if matches!(self.mode, Some(Mode::Reader(_))) {
+            if let Some(r) = self.renewed.lock().unwrap().as_ref() {
+                if r.loaded > base.loaded {
+                    return r.clone();
+                }
+            }
+        }
+        base
+    }
+
+    /// A reader that follows the store (rule 6): with sealed runs, or while it follows release E1's start.
+    fn follows_store(&self, st: &StepState) -> bool {
+        matches!(self.mode, Some(Mode::Reader(_))) && (crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) || self.e1_tracked_with(st.env))
+    }
+
+    /// The state a read step reads with, taken once at its start (c2-fix-long-reads). A reader whose state is older than
+    /// half its T_pin renews it first, exactly as the exclusive refresh does (`fx_refresh`: E_env, then E1's
+    /// announcement and the newest version), but under the shared lock, so a command made of many steps (a find of a
+    /// whole collection) keeps reading while it runs instead of being refused once its first state is T_pin old.
+    ///
+    /// Why this is safe (rules 5, 6, 8, 23, F6, F7): each step still starts with a state younger than T_pin (`fx_fresh`,
+    /// `e1_fresh` still refuse otherwise), still takes its own hold and fails past the hold life (`Hold::check`), and still
+    /// checks the serving lease before its hold (`fx_serving`). So every step obeys the same bounds as a step of a short
+    /// command that started right after an exclusive refresh; the timing rules that keep its runs and its SlateDB rows
+    /// alive are per step and do not change. What changes is that two steps of one command may read different versions:
+    /// option (b) of DECISIONS 2026-11-09 already requires every step to take the tenant's current version and to collect
+    /// its rows before it returns (resume keys are logical keys), and a version changes between two steps of a command
+    /// on a writer too (`fx_sync` at the exclusive step of another command does not wait for it, see `test_50`).
+    async fn step_state(&self) -> Result<StepState> {
+        let st = self.current_state();
+        if !self.follows_store(&st) || !renewal_due(&st) {
+            return Ok(st);
+        }
+        #[cfg(test)]
+        if crate::fx::CONTROL_NO_RENEW.load(std::sync::atomic::Ordering::Relaxed) {
+            return Ok(st);
+        }
+        let _one = self.renewing.lock().await;
+        let st = self.current_state();
+        if !renewal_due(&st) {
+            return Ok(st); // another step renewed it meanwhile
+        }
+        match self.renew(&st).await {
+            Ok(new) => {
+                *self.renewed.lock().unwrap() = Some(new.clone());
+                crate::fx::RENEWALS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                Ok(new)
+            }
+            // a state still younger than T_pin may serve this step; the next step tries again
+            Err(e) if st.loaded.elapsed() <= Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed)) => {
+                eprintln!("sealed runs: database {}: renewal of the reader's state failed: {e:#}", self.id);
+                Ok(st)
+            }
+            Err(e) => Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: the reader's state is older than T_pin and its renewal failed: {e:#}; retry", self.id)))),
+        }
+    }
+
+    /// Read the state a reader's refresh reads, in the same order (`fx_refresh`: `load_env`, then `load_fx_from`), into a
+    /// new [`StepState`]; nothing of the tenant changes. A reader never publishes or fences (rule 25 is a writer's).
+    async fn renew(&self, cur: &StepState) -> Result<StepState> {
+        use crate::fx::manifest;
+        use std::sync::atomic::Ordering::Relaxed;
+        let t0 = Instant::now();
+        let Some(Mode::Reader(r)) = self.mode.as_ref() else { anyhow::bail!("database {}: only a reader renews its state", self.id) };
+        let env = r.get_key_value(crate::envelope::MARKER).await?.map(|kv| kv.seq);
+        let store = &self.lc.store;
+        if !crate::fx::ENABLED.load(Relaxed) {
+            if env.is_none() && crate::envelope::START.load(Relaxed) {
+                let announced = manifest::announced(store, &self.id).await?;
+                return Ok(StepState { fx: None, env, announced, loaded: crate::fx::loaded_at(t0) });
+            }
+            // nothing to follow any more: E_env is known (every row decides itself by its seq)
+            return Ok(StepState { fx: None, env, announced: cur.announced, loaded: crate::fx::loaded_at(t0) });
+        }
+        let announced = if env.is_none() { manifest::announced(store, &self.id).await? } else { cur.announced };
+        let fx = match manifest::load_newest(store, &self.id).await? {
+            None => None,
+            Some(v) => {
+                anyhow::ensure!(v.e_env == env, "database {}: our manifest {} has E_env {:?}, the database's marker {:?}", self.id, v.version, v.e_env, env);
+                match &cur.fx {
+                    // versions never change: the same number is the same version
+                    Some(old) if old.version == v.version => Some(Arc::clone(old)),
+                    old => {
+                        let nv = crate::fx::view::View::new(Arc::clone(store), v, old.as_deref())?;
+                        if let Some(old) = old.as_deref() {
+                            crate::fx::counter::forget_runs(&crate::fx::counter::retired(old, &nv));
+                        }
+                        Some(Arc::new(nv))
+                    }
+                }
+            }
+        };
+        Ok(StepState { fx, env, announced, loaded: crate::fx::loaded_at(t0) })
+    }
+
+    /// Before an exclusive refresh or an upgrade: take the state a read step renewed, if newer, as the tenant's own.
+    fn absorb_renewal(&mut self) {
+        if let Some(r) = self.renewed.get_mut().unwrap().take() {
+            if matches!(self.mode, Some(Mode::Reader(_))) && r.loaded > self.fx_loaded {
+                self.fx = r.fx;
+                self.env = r.env;
+                self.fx_announced = r.announced;
+                self.fx_loaded = r.loaded;
+            }
+        }
     }
 
     /// Due for a refresh of the version (a reader at half its T_pin, a fence pending, or a writer whose compactor
@@ -1496,9 +1630,8 @@ impl Tenant {
         if let (Some(sh), Some(v)) = (&self.fx_shared, &self.fx) {
             return sh.pending_version().is_some_and(|p| p > v.version);
         }
-        (crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) || self.e1_tracked())
-            && matches!(self.mode, Some(Mode::Reader(_)))
-            && self.fx_loaded.elapsed() > Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed) / 2)
+        let st = self.current_state();
+        self.follows_store(&st) && renewal_due(&st)
     }
     /// Whether a fence is pending (rule 25; diagnostics and tests).
     pub fn fx_fence_pending(&self) -> bool {
@@ -1520,19 +1653,19 @@ impl Tenant {
 
     /// A reader that must follow release E1's start (rules 6 and 26): it knows no E_env yet, and this process runs with
     /// sealed runs or `--envelopes write`. Once it knows E_env, every row decides itself by its seq.
-    fn e1_tracked(&self) -> bool {
+    fn e1_tracked_with(&self, env: Option<u64>) -> bool {
         use std::sync::atomic::Ordering::Relaxed;
-        self.env.is_none() && matches!(self.mode, Some(Mode::Reader(_))) && (crate::fx::ENABLED.load(Relaxed) || crate::envelope::START.load(Relaxed))
+        env.is_none() && matches!(self.mode, Some(Mode::Reader(_))) && (crate::fx::ENABLED.load(Relaxed) || crate::envelope::START.load(Relaxed))
     }
 
     /// Rule 6 for a reader that has no version of ours (`fx_fresh` covers one that has): while it follows E1's start, it
     /// refuses to read with an announcement state older than T_pin (step 3 review note: "no T_pin refusal without a
-    /// version"). Before every step that reads SlateDB.
-    fn e1_fresh(&self) -> Result<()> {
-        if self.fx.is_none() && self.e1_tracked() {
+    /// version"). Before every step that reads SlateDB, with the state the step reads with.
+    fn e1_fresh(&self, st: &StepState) -> Result<()> {
+        if st.fx.is_none() && self.e1_tracked_with(st.env) {
             let t_pin = Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed));
-            if self.fx_loaded.elapsed() > t_pin {
-                return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: release E1's announcement was last read {:?} ago, more than T_pin; retry", self.id, self.fx_loaded.elapsed()))));
+            if st.loaded.elapsed() > t_pin {
+                return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: release E1's announcement was last read {:?} ago, more than T_pin; retry", self.id, st.loaded.elapsed()))));
             }
         }
         Ok(())
@@ -1542,6 +1675,7 @@ impl Tenant {
     /// announcement (rule 6). A fence that fails again is a retryable error. A writer with a compactor installs the
     /// compactor's newest version instead (the compactor is then the only publisher).
     pub async fn fx_refresh(&mut self) -> Result<()> {
+        self.absorb_renewal();
         let t0 = Instant::now();
         if self.fx_shared.is_some() && !self.fx_fence_pending {
             self.fx_sync();
@@ -1641,9 +1775,9 @@ impl Tenant {
 
     /// The E_env to decode one step's rows with, read after the step's SlateDB view is open: the known one, or, once E1
     /// was announced and this tenant knows no E_env yet, the marker read now (rule 26). Without an announcement, no read.
-    async fn step_env(&self) -> Result<Option<u64>> {
-        if self.env.is_some() || !self.fx_announced {
-            return Ok(self.env);
+    async fn step_env(&self, st: &StepState) -> Result<Option<u64>> {
+        if st.env.is_some() || !st.announced {
+            return Ok(st.env);
         }
         let kv = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
             Mode::Reader(r) => r.get_key_value(crate::envelope::MARKER).await?,
@@ -1652,8 +1786,8 @@ impl Tenant {
         Ok(kv.map(|kv| kv.seq))
     }
 
-    async fn fx_get(&self, v: &Arc<crate::fx::view::View>, key: &[u8], durable: bool) -> Result<Option<Bytes>> {
-        self.fx_fresh()?;
+    async fn fx_get(&self, st: &StepState, v: &Arc<crate::fx::view::View>, key: &[u8], durable: bool) -> Result<Option<Bytes>> {
+        self.fx_fresh(st)?;
         self.fx_serving()?;
         crate::fx::hold::op_note(&self.holds, v);
         let v = &crate::fx::hold::op_view(&self.holds, v);
@@ -1663,23 +1797,23 @@ impl Tenant {
             ..Default::default()
         };
         let r = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
-            Mode::Reader(r) => crate::fx::read::get(&**r, &slatedb::config::ReadOptions::default(), Some(v), self.env, key).await?,
-            Mode::Writer(db) => crate::fx::read::get(db, &opts, Some(v), self.env, key).await?,
+            Mode::Reader(r) => crate::fx::read::get(&**r, &slatedb::config::ReadOptions::default(), Some(v), st.env, key).await?,
+            Mode::Writer(db) => crate::fx::read::get(db, &opts, Some(v), st.env, key).await?,
         };
         hold.check()?;
         crate::fx::hold::op_check()?;
         Ok(r)
     }
 
-    async fn fx_scan(&self, v: &Arc<crate::fx::view::View>, opts: &slatedb::config::ScanOptions, lo: &[u8], hi: Option<&[u8]>, reverse: bool, limit: Option<usize>) -> Result<Vec<(Bytes, Bytes)>> {
-        self.fx_fresh()?;
+    async fn fx_scan(&self, st: &StepState, v: &Arc<crate::fx::view::View>, opts: &slatedb::config::ScanOptions, lo: &[u8], hi: Option<&[u8]>, reverse: bool, limit: Option<usize>) -> Result<Vec<(Bytes, Bytes)>> {
+        self.fx_fresh(st)?;
         self.fx_serving()?;
         crate::fx::hold::op_note(&self.holds, v);
         let v = &crate::fx::hold::op_view(&self.holds, v);
         let hold = self.holds.take(Arc::clone(v));
         let r = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
-            Mode::Reader(r) => crate::fx::read::scan(&**r, opts, Some(v), self.env, lo, hi, reverse, limit).await?,
-            Mode::Writer(db) => crate::fx::read::scan(db, opts, Some(v), self.env, lo, hi, reverse, limit).await?,
+            Mode::Reader(r) => crate::fx::read::scan(&**r, opts, Some(v), st.env, lo, hi, reverse, limit).await?,
+            Mode::Writer(db) => crate::fx::read::scan(db, opts, Some(v), st.env, lo, hi, reverse, limit).await?,
         };
         hold.check()?;
         crate::fx::hold::op_check()?;
@@ -2035,17 +2169,18 @@ impl Tenant {
     async fn snapshot_get(&self, snap: &Arc<slatedb::DbSnapshot>, key: &[u8]) -> Result<Option<Bytes>> {
         self.fx_no_fence_pending()?;
         let opts = slatedb::config::ReadOptions::default();
-        match &self.fx {
+        let st = self.step_state().await?;
+        match &st.fx {
             Some(v) => {
-                self.fx_fresh()?;
+                self.fx_fresh(&st)?;
                 let hold = self.holds.take(Arc::clone(v));
-                let r = crate::fx::read::get(&**snap, &opts, Some(v), self.env, key).await?;
+                let r = crate::fx::read::get(&**snap, &opts, Some(v), st.env, key).await?;
                 hold.check()?;
                 Ok(r)
             }
             None => {
-                self.e1_fresh()?;
-                let env = self.step_env().await?;
+                self.e1_fresh(&st)?;
+                let env = self.step_env(&st).await?;
                 crate::fx::read::get(&**snap, &opts, None, env, key).await
             }
         }
@@ -2122,19 +2257,20 @@ impl Tenant {
     /// writes that are staged and waiting for their flush (a reader's data is always durable).
     pub async fn get_durable<K: AsRef<[u8]> + Send>(&self, key: K) -> Result<Option<Bytes>> {
         self.fx_no_fence_pending()?;
-        if let Some(v) = &self.fx {
-            return self.fx_get(v, key.as_ref(), true).await;
+        let st = self.step_state().await?;
+        if let Some(v) = &st.fx {
+            return self.fx_get(&st, v, key.as_ref(), true).await;
         }
-        self.e1_fresh()?;
+        self.e1_fresh(&st)?;
         Ok(match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
             Mode::Reader(r) => match r.get_key_value(key).await? {
-                Some(kv) => crate::envelope::decode(self.step_env().await?, &kv.key, kv.seq, kv.value)?,
+                Some(kv) => crate::envelope::decode(self.step_env(&st).await?, &kv.key, kv.seq, kv.value)?,
                 None => None,
             },
             Mode::Writer(db) => {
                 let opts = slatedb::config::ReadOptions { durability_filter: slatedb::config::DurabilityLevel::Remote, ..Default::default() };
                 match db.get_key_value_with_options(key, &opts).await? {
-                    Some(kv) => crate::envelope::decode(self.env, &kv.key, kv.seq, kv.value)?,
+                    Some(kv) => crate::envelope::decode(st.env, &kv.key, kv.seq, kv.value)?,
                     None => None,
                 }
             }
@@ -2154,6 +2290,8 @@ impl Tenant {
     }
 
     async fn upgrade_inner(&mut self) -> Result<()> {
+        // a writer reads with its own state (it reloads it below); a renewal a read step made as a reader is dropped
+        self.absorb_renewal();
         if self.lc.l0_guard && self.l0_at_wake >= L0_GUARD {
             if let Some(q) = &self.lc.queue {
                 let started = Instant::now();
@@ -2208,13 +2346,14 @@ impl Tenant {
 
     async fn scan_prefix_at(&self, prefix: &[u8], durable: bool) -> Result<Vec<(Bytes, Bytes)>> {
         self.fx_no_fence_pending()?;
-        if let Some(v) = &self.fx {
+        let st = self.step_state().await?;
+        if let Some(v) = &st.fx {
             let hi = crate::runfmt::prefix_successor(prefix);
             let mut opts = crate::fx::read::scan_options(4 << 20, false, durable);
             opts.max_fetch_tasks = 4;
-            return self.fx_scan(v, &opts, prefix, hi.as_deref(), false, None).await;
+            return self.fx_scan(&st, v, &opts, prefix, hi.as_deref(), false, None).await;
         }
-        self.e1_fresh()?;
+        self.e1_fresh(&st)?;
         // slatedb's scan defaults fetch one 4 KiB block per request, one at a time, and do not cache
         // the blocks: a 1 MB scan costs ~250 sequential GETs every time. Read ahead in large
         // requests, fetch in parallel, and keep the blocks.
@@ -2229,7 +2368,7 @@ impl Tenant {
             Mode::Reader(r) => r.scan_prefix_with_options(prefix, .., &opts).await?,
             Mode::Writer(db) => db.scan_prefix_with_options(prefix, .., &opts).await?,
         };
-        let env = self.step_env().await?;
+        let env = self.step_env(&st).await?;
         let mut out = Vec::new();
         while let Some(kv) = it.next().await? {
             if let Some(v) = crate::envelope::decode(env, &kv.key, kv.seq, kv.value)? {
@@ -2310,10 +2449,11 @@ impl Tenant {
             }
         }
         self.fx_no_fence_pending()?;
-        if let Some(v) = &self.fx {
-            return self.fx_scan(v, &opts, start, end, reverse, limit).await;
+        let st = self.step_state().await?;
+        if let Some(v) = &st.fx {
+            return self.fx_scan(&st, v, &opts, start, end, reverse, limit).await;
         }
-        self.e1_fresh()?;
+        self.e1_fresh(&st)?;
         let s = start.to_vec();
         let range = match end {
             Some(e) => (std::ops::Bound::Included(s), std::ops::Bound::Excluded(e.to_vec())),
@@ -2323,7 +2463,7 @@ impl Tenant {
             Mode::Reader(r) => r.scan_with_options(range, &opts).await?,
             Mode::Writer(db) => db.scan_with_options(range, &opts).await?,
         };
-        let env = self.step_env().await?;
+        let env = self.step_env(&st).await?;
         let mut out = Vec::new();
         while let Some(kv) = it.next().await? {
             let Some(v) = crate::envelope::decode(env, &kv.key, kv.seq, kv.value)? else { continue };
