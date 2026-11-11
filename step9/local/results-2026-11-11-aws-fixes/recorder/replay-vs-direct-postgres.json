@@ -1,0 +1,32 @@
+{
+ "direct": {
+  "rows": {
+   "checkpoints": 134,
+   "checkpoint_blobs": 134,
+   "checkpoint_writes": 208
+  },
+  "row_bytes": 485478,
+  "total_bytes": 868352,
+  "mean_version_length": 51.30597014925373
+ },
+ "replay_new": {
+  "rows": {
+   "checkpoints": 134,
+   "checkpoint_blobs": 134,
+   "checkpoint_writes": 208
+  },
+  "row_bytes": 484467,
+  "total_bytes": 835584,
+  "mean_version_length": 51.201492537313435
+ },
+ "replay_old": {
+  "rows": {
+   "checkpoints": 134,
+   "checkpoint_blobs": 134,
+   "checkpoint_writes": 208
+  },
+  "row_bytes": 439795,
+  "total_bytes": 753664,
+  "mean_version_length": 1.5970149253731343
+ }
+}
