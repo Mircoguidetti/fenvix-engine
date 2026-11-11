@@ -1,0 +1,8 @@
+revsmall run 1: {"bucket": "ctl-otl-9247fbbc", "mode": "small", "binary": "/home/user/bins/rev", "freeze_s": 40, "after": "ok", "sigterm_s": 6.8, "acked": 131002, "n_missing_merged": 1, "n_missing_slatedb": 1}
+revsmall run 2: {"bucket": "ctl-otl-a36f6481", "mode": "small", "binary": "/home/user/bins/rev", "freeze_s": 40, "after": "ok", "sigterm_s": 6.5, "acked": 135502, "n_missing_merged": 229, "n_missing_slatedb": 229}
+revsmall run 3: {"bucket": "ctl-otl-3bd20c77", "mode": "small", "binary": "/home/user/bins/rev", "freeze_s": 40, "after": "ok", "sigterm_s": 6.9, "acked": 133002, "n_missing_merged": 28, "n_missing_slatedb": 28}
+revsmall run 4: {"bucket": "ctl-otl-92ecce0b", "mode": "small", "binary": "/home/user/bins/rev", "freeze_s": 40, "after": "ok", "sigterm_s": 6.5, "acked": 131002, "n_missing_merged": 44, "n_missing_slatedb": 44}
+revsmall run 5: {"bucket": "ctl-otl-65c69d95", "mode": "small", "binary": "/home/user/bins/rev", "freeze_s": 40, "after": "ok", "sigterm_s": 4.8, "acked": 71002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+revsmall run 6: {"bucket": "ctl-otl-33303a17", "mode": "small", "binary": "/home/user/bins/rev", "freeze_s": 40, "after": "ok", "sigterm_s": 6.5, "acked": 115502, "n_missing_merged": 0, "n_missing_slatedb": 0}
+revsmall run 7: {"bucket": "ctl-otl-92d8cd9f", "mode": "small", "binary": "/home/user/bins/rev", "freeze_s": 40, "after": "ok", "sigterm_s": 8.5, "acked": 156502, "n_missing_merged": 0, "n_missing_slatedb": 0}
+revsmall run 8: {"bucket": "ctl-otl-7977d254", "mode": "small", "binary": "/home/user/bins/rev", "freeze_s": 40, "after": "ok", "sigterm_s": 3.6, "acked": 129002, "n_missing_merged": 0, "n_missing_slatedb": 0}

@@ -1,0 +1,10 @@
+i3off run 1: {"bucket": "ctl-otl-33845887", "mode": "off0", "binary": "/home/user/bins/i3", "freeze_s": 40, "after": "ok", "sigterm_s": 1.0, "acked": 55002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+i3off run 2: {"bucket": "ctl-otl-4bc88007", "mode": "off0", "binary": "/home/user/bins/i3", "freeze_s": 40, "after": "ok", "sigterm_s": 1.3, "acked": 55002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+i3off run 3: {"bucket": "ctl-otl-32daa2a0", "mode": "off0", "binary": "/home/user/bins/i3", "freeze_s": 40, "after": "ok", "sigterm_s": 0.8, "acked": 55002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+i3off run 4: {"bucket": "ctl-otl-ae8c99d9", "mode": "off0", "binary": "/home/user/bins/i3", "freeze_s": 40, "after": "ok", "sigterm_s": 2.6, "acked": 53002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+i3off run 5: {"bucket": "ctl-otl-302312d1", "mode": "off0", "binary": "/home/user/bins/i3", "freeze_s": 40, "after": "ok", "sigterm_s": 0.7, "acked": 54002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+i3off run 6: {"bucket": "ctl-otl-d89d8ef0", "mode": "off0", "binary": "/home/user/bins/i3", "freeze_s": 40, "after": "ok", "sigterm_s": 1.3, "acked": 55002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+i3off run 1: {"bucket": "ctl-otl-422c5b4c", "mode": "off0", "binary": "/home/user/bins/i3", "freeze_s": 40, "after": "ok", "sigterm_s": 3.9, "acked": 54002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+i3off run 2: {"bucket": "ctl-otl-f4cc5590", "mode": "off0", "binary": "/home/user/bins/i3", "freeze_s": 40, "after": "ok", "sigterm_s": 1.4, "acked": 54002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+i3off run 3: {"bucket": "ctl-otl-57b06fa7", "mode": "off0", "binary": "/home/user/bins/i3", "freeze_s": 40, "after": "ok", "sigterm_s": 3.2, "acked": 56002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+i3off run 4: {"bucket": "ctl-otl-3b2baf40", "mode": "off0", "binary": "/home/user/bins/i3", "freeze_s": 40, "after": "ok", "sigterm_s": 1.9, "acked": 55502, "n_missing_merged": 0, "n_missing_slatedb": 0}

@@ -1,0 +1,4 @@
+hangs sealed-on run 1: 2 failed | refused 0 batches lease losses 10 missing from the scan 3923 
+hangs sealed-on run 2: 1 passed | refused 0 batches lease losses 7 missing from the scan 4081 
+long sealed-on run 1: 1 passed | refused 0 batches lease losses 11 missing from the scan 7930 
+long sealed-on run 2: 1 passed | refused 0 batches lease losses 11 missing from the scan 3558 

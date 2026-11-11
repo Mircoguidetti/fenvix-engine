@@ -1,0 +1,6 @@
+i3 sealed-on run 1: 1 failed | refused 0 batches lease losses 8 missing from the scan 6187  AssertionError: 6187 acknowledged documents missing from a collection scan
+i3 sealed-on run 2: 1 failed | refused 0 batches lease losses 9 missing from the scan 3599  AssertionError: 3599 acknowledged documents missing from a collection scan
+i3 sealed-on run 3: 1 failed | refused 0 batches lease losses 9 missing from the scan 4614  AssertionError: 4614 acknowledged documents missing from a collection scan
+fix1 sealed-on run 1: 1 passed | refused 4 batches lease losses 9 missing from the scan 0  
+fix1 sealed-on run 2: 1 passed | refused 5 batches lease losses 10 missing from the scan 0  
+fix1 sealed-on run 3: 1 passed | refused 6 batches lease losses 9 missing from the scan 0  

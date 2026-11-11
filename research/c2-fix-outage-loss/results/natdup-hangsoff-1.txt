@@ -1,0 +1,2 @@
+batch 30: lost 222, of which share their number with another doc of the batch: 222; distinct numbers in batch 278
+TOTAL lost 222, sharing a number 222

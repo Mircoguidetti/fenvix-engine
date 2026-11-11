@@ -1,0 +1,2 @@
+fixsealedoff run 1: {"bucket": "ctl-otl-8832504f", "mode": "sealedoff", "binary": "/home/user/bins/fix3", "freeze_s": 40, "after": "ok", "sigterm_s": 5.7, "acked": 100502, "n_missing_merged": 0, "n_missing_slatedb": 0}
+fixsealedoff run 2: {"bucket": "ctl-otl-0cb4b2c7", "mode": "sealedoff", "binary": "/home/user/bins/fix3", "freeze_s": 40, "after": "ok", "sigterm_s": 6.4, "acked": 100502, "n_missing_merged": 0, "n_missing_slatedb": 0}

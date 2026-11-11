@@ -1,0 +1,1 @@
+{"bucket": "ctl-otl-9247fbbc", "mode": "small", "binary": "/home/user/bins/rev", "freeze_s": 40, "after": "ok", "sigterm_s": 6.8, "acked": 131002, "missing_merged": [32000], "missing_slatedb": [32000], "n_missing_merged": 1, "n_missing_slatedb": 1}

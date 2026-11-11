@@ -1,0 +1,8 @@
+i3 run 1: 1 failed | refused 0 batches lease losses 12 missing from the scan 5489  AssertionError: 5489 acknowledged documents missing from a collection scan
+i3 run 2: 1 failed | refused 0 batches lease losses 10 missing from the scan 2921  AssertionError: 2921 acknowledged documents missing from a collection scan
+i3 run 3: 1 failed | refused 0 batches lease losses 10 missing from the scan 5907  AssertionError: 5907 acknowledged documents missing from a collection scan
+i3 run 4: 1 failed | refused 0 batches lease losses 10 missing from the scan 7301  AssertionError: 7301 acknowledged documents missing from a collection scan
+fix1 run 1: 1 passed | refused 4 batches lease losses 9 missing from the scan 0  
+fix1 run 2: 1 passed | refused 4 batches lease losses 12 missing from the scan 0  
+fix1 run 3: 1 passed | refused 4 batches lease losses 10 missing from the scan 0  
+fix1 run 4: 1 passed | refused 6 batches lease losses 10 missing from the scan 0  
