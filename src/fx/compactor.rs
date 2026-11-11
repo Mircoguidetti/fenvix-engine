@@ -79,10 +79,6 @@ pub fn is_active(id: &str) -> bool {
     ACTIVE.lock().unwrap().contains(id)
 }
 
-/// The server's compactors recognise the L0 SSTs already absorbed in their first absorption instead of in `start`
-/// (perf-latency; tests keep the old order unless they set it).
-pub static DEFER_RECOGNISE: AtomicBool = AtomicBool::new(false);
-
 /// An absorption is never paused by the background's CPU share once the writer has this many L0 SSTs (it stops at 8).
 const ABSORB_URGENT_L0: usize = 6;
 
@@ -385,9 +381,10 @@ pub struct Compactor {
     /// Drop jobs done when the writer last refreshed its SlateDB manifest (its L0 count, and its stalls, are by its view).
     refreshed_jobs: AtomicU64,
     absorb_lock: tokio::sync::Mutex<()>,
-    /// The L0 SSTs already at or below X_d were recognised (`recognise_absorbed`). The server's compactor does it in its
-    /// first absorption, not in `start`, which runs under the database's exclusive lock (perf-latency).
-    recognised: AtomicBool,
+    /// The jobs spawned and maybe still running: `stop` aborts them and waits for them, so no job writes a run after the
+    /// compactor stopped (a drop or an erasure deletes the database's objects right after: a run written later would be
+    /// left behind; found by ctl test_05_erase once jobs could pause, perf-latency).
+    jobs: Mutex<Vec<tokio::task::JoinHandle<()>>>,
     /// Benches: the planner starts no job while set (jobs called directly still run).
     pub paused: AtomicBool,
 }
@@ -442,20 +439,13 @@ impl Compactor {
             last_gc: Mutex::new(Instant::now()),
             refreshed_jobs: AtomicU64::new(0),
             absorb_lock: tokio::sync::Mutex::new(()),
-            recognised: AtomicBool::new(false),
+            jobs: Mutex::new(Vec::new()),
         });
         t.fx_attach(Arc::clone(&sh));
         ACTIVE.lock().unwrap().insert(c.id().to_string());
         G_STARTED.fetch_add(1, Relaxed);
-        // L0 SSTs already at or below X_d (a restart) count as absorbed. This reads every L0 SST in full (up to 8 of
-        // `l0_sst_size_bytes`: 4.3 s and 200 MB on the medium profile, MEASURED), and `start` runs under the database's
-        // exclusive lock, inside the first write after an opening: the server defers it to the first absorption (on the
-        // compactor's own runtime), which no absorption can pass (`absorb_once`). Until then SlateDB's fold sees nothing
-        // foldable, as before any absorption.
-        if !DEFER_RECOGNISE.load(Relaxed) {
-            c.recognise_absorbed().await?;
-            c.recognised.store(true, Relaxed);
-        }
+        // L0 SSTs already at or below X_d (a restart) count as absorbed
+        c.recognise_absorbed().await?;
         super::drop::start_slate(&c).await?;
         Ok(c)
     }
@@ -484,6 +474,7 @@ impl Compactor {
 
     /// Stop: no new job, SlateDB's side stopped. Jobs already running finish or abandon.
     pub async fn stop(&self) {
+        let t_stop = Instant::now();
         self.stopped.store(true, Relaxed);
         ACTIVE.lock().unwrap().remove(self.id());
         let s = self.slate_stop.lock().unwrap().take();
@@ -492,8 +483,28 @@ impl Compactor {
             let _ = w.stop().await;
         }
         let h = self.slate.lock().unwrap().take();
-        if let Some(h) = h {
-            let _ = tokio::time::timeout(Duration::from_secs(10), h).await;
+        if let Some(mut h) = h {
+            // SlateDB's compactor and worker were stopped above (claims released, jobs cancelled): what is left is their
+            // join. It sometimes did not return (seen while this branch deferred the L0 recognition, now reverted: closes
+            // waited the whole 10 s), so it is aborted after a short grace instead of holding the close or erasure
+            if tokio::time::timeout(Duration::from_millis(500), &mut h).await.is_err() {
+                h.abort();
+                let _ = h.await;
+            }
+        }
+        // every job still running is aborted at its next await and waited for: none writes after this returns (a job
+        // aborted after a run's PUT and before its publish leaves the run, which the caller's deletion then lists)
+        let t_jobs = Instant::now();
+        let jobs: Vec<_> = std::mem::take(&mut *self.jobs.lock().unwrap());
+        let n = jobs.len();
+        for j in &jobs {
+            j.abort();
+        }
+        for j in jobs {
+            let _ = j.await;
+        }
+        if t_stop.elapsed() > Duration::from_secs(1) {
+            eprintln!("fx compactor {}: stop took {:?} (jobs {n}: {:?})", self.id(), t_stop.elapsed(), t_jobs.elapsed());
         }
     }
 
@@ -636,10 +647,6 @@ impl Compactor {
     /// absorption at a time (rule 16: no gap).
     pub async fn absorb_once(&self) -> Result<usize> {
         let _one = self.absorb_lock.lock().await;
-        if !self.recognised.load(Relaxed) {
-            self.recognise_absorbed().await?;
-            self.recognised.store(true, Relaxed);
-        }
         let views: Vec<_> = self.unabsorbed().into_iter().take(self.knobs.absorb_max_l0).collect();
         if views.is_empty() {
             return Ok(0);
@@ -1242,7 +1249,12 @@ impl Compactor {
         } else {
             Arc::new(|| false)
         };
-        self.runtime.spawn(crate::waits::polled(what, who, super::pool::PACE_EXEMPT.scope(exempt, async move {
+        let mut jobs = self.jobs.lock().unwrap();
+        if self.stopped.load(Relaxed) {
+            return; // `stop` drains `jobs` after setting `stopped`, under this lock: nothing is spawned after it
+        }
+        jobs.retain(|j| !j.is_finished());
+        jobs.push(self.runtime.spawn(crate::waits::polled(what, who, super::pool::PACE_EXEMPT.scope(exempt, async move {
             let _permit: Permit = c.pool.acquire(prio).await;
             let t0 = thread_cpu_us();
             let w0 = Instant::now();
@@ -1262,7 +1274,7 @@ impl Compactor {
                 }
             }
             c.sh.stats.job_cpu_us.fetch_add(thread_cpu_us().saturating_sub(t0), Relaxed);
-        })));
+        }))));
     }
 
     /// Run the planner every `tick` until stopped.

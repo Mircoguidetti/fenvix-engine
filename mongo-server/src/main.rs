@@ -948,7 +948,6 @@ async fn run() -> Result<()> {
             // FENVIX_COMPACTION_CPU_PCT overrides the flag (measurements)
             let pct = std::env::var("FENVIX_COMPACTION_CPU_PCT").ok().and_then(|v| v.parse::<u64>().ok()).filter(|p| (1..=100).contains(p)).unwrap_or(args.compaction_cpu_pct);
             tenant_bench::fx::pool::BG_CPU_PCT.store(if pct >= 100 { 100_000 } else { pct }, Relaxed);
-            tenant_bench::fx::compactor::DEFER_RECOGNISE.store(args.compaction_threads == "own", Relaxed);
             let derive = match std::env::var("FENVIX_SEALED_DERIVE").as_deref() {
                 Ok("1") => true,
                 Ok("0") => false,

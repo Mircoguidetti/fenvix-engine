@@ -508,9 +508,12 @@ pub(crate) async fn start_slate(c: &Arc<Compactor>) -> anyhow::Result<()> {
     };
     let worker = Arc::new(wb.build().await?);
     let (cc, ww) = (Arc::clone(&compactor), Arc::clone(&worker));
-    // on the compactor's runtime (the background one in the server, `pool::bg_runtime`): SlateDB's fold decodes and
-    // encodes SSTs, CPU work that must not run on the threads serving commands
-    let h = c.runtime.spawn(async move {
+    // SlateDB's compactor and worker register their event loops when `run` starts, on the runtime that polls it: spawned
+    // here, on the caller's runtime, as before. A `stop` that came before the registration (a close right after the start)
+    // found nothing to stop and the loop then ran on, fencing the next compactor of the database ("detected newer DB
+    // client"; an erasure waited 30 s for the maintenance lock, ctl erase loop, perf-latency). The CPU of the fold is in
+    // the worker's compaction jobs, which run on the runtime given to `with_runtime` above (the background one).
+    let h = tokio::spawn(async move {
         let (a, b) = tokio::join!(cc.run(), ww.run());
         if let Err(e) = a.and(b) {
             eprintln!("fx drop: SlateDB compactor of {id}: {e:#}");
