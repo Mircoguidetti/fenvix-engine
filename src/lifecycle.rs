@@ -3674,18 +3674,25 @@ impl Maintenance {
     /// Stop accepting work and wait for in-flight compactions and the GC loop.
     pub async fn shutdown(self) -> Arc<Mutex<MaintenanceLog>> {
         use std::sync::atomic::Ordering::Relaxed;
+        // one line per step: a shutdown that does not return shows the step it waits in
+        let step = |s: &str| eprintln!("maintenance shutdown: {s} unix_ms={}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis()).unwrap_or(0));
         self.watch_stop.store(true, Relaxed);
+        step("waiting for the L0 watch");
         let _ = self.l0_watch.await;
         self.queue.stop();
+        step("waiting for the dispatcher");
         let _ = self.dispatcher.await;
         // Running passes stop now (a merge of sorted runs can last hours); each ends within its compactor's stop limit.
         self.stopping.store(true, Relaxed);
+        step(&format!("waiting for the running passes ({} running)", self.passes.load(Relaxed)));
         let _ = self.sem.acquire_many(self.workers as u32).await;
         while self.passes.load(Relaxed) > 0 {
             tokio::time::sleep(Duration::from_millis(50)).await;
         }
         self.gc_stop.store(true, std::sync::atomic::Ordering::Relaxed);
+        step("waiting for the GC task");
         let _ = self.gc_task.await;
+        step("done");
         self.log
     }
 }
