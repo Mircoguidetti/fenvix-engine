@@ -1,0 +1,1811 @@
+{
+ "test": "agent checkpoint delta test",
+ "target": "fenvix",
+ "stored_bytes_source": "UNKNOWN until fenvixSstInfo exists (compaction 2 steps 4-8)",
+ "threads": 200,
+ "logical_bytes": 3498477001,
+ "unique_bytes": 43754324,
+ "stored_bytes": null,
+ "rows": [
+  {
+   "thread_id": "u000549-t000",
+   "checkpoints": 334,
+   "logical_bytes": 46100345,
+   "unique_bytes": 279754,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000334-t000",
+   "checkpoints": 316,
+   "logical_bytes": 44664263,
+   "unique_bytes": 281461,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000885-t004",
+   "checkpoints": 338,
+   "logical_bytes": 44031918,
+   "unique_bytes": 256182,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000107-t002",
+   "checkpoints": 320,
+   "logical_bytes": 43150460,
+   "unique_bytes": 264160,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000565-t001",
+   "checkpoints": 320,
+   "logical_bytes": 41854064,
+   "unique_bytes": 253508,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000219-t000",
+   "checkpoints": 314,
+   "logical_bytes": 41768393,
+   "unique_bytes": 263881,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000601-t002",
+   "checkpoints": 312,
+   "logical_bytes": 41199240,
+   "unique_bytes": 249758,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000578-t000",
+   "checkpoints": 310,
+   "logical_bytes": 38651875,
+   "unique_bytes": 253727,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000583-t000",
+   "checkpoints": 304,
+   "logical_bytes": 35517663,
+   "unique_bytes": 234520,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000390-t000",
+   "checkpoints": 293,
+   "logical_bytes": 34473510,
+   "unique_bytes": 240393,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000015-t001",
+   "checkpoints": 289,
+   "logical_bytes": 33887751,
+   "unique_bytes": 232792,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000508-t000",
+   "checkpoints": 180,
+   "logical_bytes": 33767041,
+   "unique_bytes": 353138,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000099-t005",
+   "checkpoints": 182,
+   "logical_bytes": 33635746,
+   "unique_bytes": 364959,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000337-t003",
+   "checkpoints": 278,
+   "logical_bytes": 32975357,
+   "unique_bytes": 227791,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000857-t000",
+   "checkpoints": 186,
+   "logical_bytes": 32459605,
+   "unique_bytes": 311839,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000260-t000",
+   "checkpoints": 178,
+   "logical_bytes": 31033000,
+   "unique_bytes": 324687,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000380-t002",
+   "checkpoints": 184,
+   "logical_bytes": 29290036,
+   "unique_bytes": 294190,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000116-t000",
+   "checkpoints": 178,
+   "logical_bytes": 29260201,
+   "unique_bytes": 326804,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000981-t000",
+   "checkpoints": 184,
+   "logical_bytes": 29239657,
+   "unique_bytes": 317461,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000067-t003",
+   "checkpoints": 175,
+   "logical_bytes": 29142993,
+   "unique_bytes": 321298,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000065-t000",
+   "checkpoints": 267,
+   "logical_bytes": 28913134,
+   "unique_bytes": 213153,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000093-t000",
+   "checkpoints": 168,
+   "logical_bytes": 28121557,
+   "unique_bytes": 287756,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000509-t002",
+   "checkpoints": 175,
+   "logical_bytes": 27825004,
+   "unique_bytes": 309634,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000866-t000",
+   "checkpoints": 188,
+   "logical_bytes": 27605674,
+   "unique_bytes": 321410,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000277-t001",
+   "checkpoints": 177,
+   "logical_bytes": 27185749,
+   "unique_bytes": 340231,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000312-t000",
+   "checkpoints": 153,
+   "logical_bytes": 27020945,
+   "unique_bytes": 324355,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000000-t004",
+   "checkpoints": 262,
+   "logical_bytes": 26855215,
+   "unique_bytes": 212100,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000987-t001",
+   "checkpoints": 170,
+   "logical_bytes": 25785616,
+   "unique_bytes": 296800,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000309-t002",
+   "checkpoints": 167,
+   "logical_bytes": 25277875,
+   "unique_bytes": 297323,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000611-t000",
+   "checkpoints": 165,
+   "logical_bytes": 24524347,
+   "unique_bytes": 278969,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000038-t000",
+   "checkpoints": 154,
+   "logical_bytes": 24398118,
+   "unique_bytes": 306663,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000158-t000",
+   "checkpoints": 168,
+   "logical_bytes": 24298367,
+   "unique_bytes": 299399,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000597-t004",
+   "checkpoints": 159,
+   "logical_bytes": 24269571,
+   "unique_bytes": 286679,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000476-t003",
+   "checkpoints": 243,
+   "logical_bytes": 23872181,
+   "unique_bytes": 199233,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000966-t003",
+   "checkpoints": 232,
+   "logical_bytes": 23711713,
+   "unique_bytes": 199646,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000532-t000",
+   "checkpoints": 155,
+   "logical_bytes": 23679631,
+   "unique_bytes": 319539,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000656-t001",
+   "checkpoints": 236,
+   "logical_bytes": 23654972,
+   "unique_bytes": 194584,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000411-t002",
+   "checkpoints": 152,
+   "logical_bytes": 23602349,
+   "unique_bytes": 309365,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000482-t002",
+   "checkpoints": 229,
+   "logical_bytes": 23425397,
+   "unique_bytes": 190909,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000167-t004",
+   "checkpoints": 238,
+   "logical_bytes": 23377227,
+   "unique_bytes": 195172,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000453-t003",
+   "checkpoints": 155,
+   "logical_bytes": 22920746,
+   "unique_bytes": 273344,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000442-t001",
+   "checkpoints": 158,
+   "logical_bytes": 22633459,
+   "unique_bytes": 313442,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000354-t000",
+   "checkpoints": 148,
+   "logical_bytes": 22123704,
+   "unique_bytes": 292765,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000917-t000",
+   "checkpoints": 225,
+   "logical_bytes": 21215249,
+   "unique_bytes": 187166,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000378-t002",
+   "checkpoints": 223,
+   "logical_bytes": 20635307,
+   "unique_bytes": 186739,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000051-t000",
+   "checkpoints": 124,
+   "logical_bytes": 20503416,
+   "unique_bytes": 288852,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000167-t008",
+   "checkpoints": 137,
+   "logical_bytes": 20431569,
+   "unique_bytes": 277711,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000142-t001",
+   "checkpoints": 216,
+   "logical_bytes": 20370543,
+   "unique_bytes": 187726,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000849-t000",
+   "checkpoints": 142,
+   "logical_bytes": 20048156,
+   "unique_bytes": 256679,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000919-t000",
+   "checkpoints": 149,
+   "logical_bytes": 20042935,
+   "unique_bytes": 274067,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000234-t000",
+   "checkpoints": 226,
+   "logical_bytes": 19952818,
+   "unique_bytes": 186974,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000400-t001",
+   "checkpoints": 219,
+   "logical_bytes": 19834784,
+   "unique_bytes": 178559,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000277-t004",
+   "checkpoints": 154,
+   "logical_bytes": 19417712,
+   "unique_bytes": 245066,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000547-t000",
+   "checkpoints": 140,
+   "logical_bytes": 19241023,
+   "unique_bytes": 290169,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000398-t003",
+   "checkpoints": 132,
+   "logical_bytes": 19228748,
+   "unique_bytes": 250773,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000718-t007",
+   "checkpoints": 142,
+   "logical_bytes": 19092369,
+   "unique_bytes": 267083,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000181-t000",
+   "checkpoints": 213,
+   "logical_bytes": 19079911,
+   "unique_bytes": 185274,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000335-t001",
+   "checkpoints": 208,
+   "logical_bytes": 18948991,
+   "unique_bytes": 169349,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000915-t001",
+   "checkpoints": 141,
+   "logical_bytes": 18861881,
+   "unique_bytes": 271499,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000286-t002",
+   "checkpoints": 140,
+   "logical_bytes": 18647041,
+   "unique_bytes": 256478,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000244-t000",
+   "checkpoints": 139,
+   "logical_bytes": 18493800,
+   "unique_bytes": 259381,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000901-t000",
+   "checkpoints": 209,
+   "logical_bytes": 18350808,
+   "unique_bytes": 162922,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000219-t004",
+   "checkpoints": 213,
+   "logical_bytes": 18283788,
+   "unique_bytes": 168850,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000952-t003",
+   "checkpoints": 213,
+   "logical_bytes": 17875883,
+   "unique_bytes": 163022,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000722-t000",
+   "checkpoints": 136,
+   "logical_bytes": 17737273,
+   "unique_bytes": 261184,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000802-t000",
+   "checkpoints": 147,
+   "logical_bytes": 17277175,
+   "unique_bytes": 233010,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000715-t002",
+   "checkpoints": 202,
+   "logical_bytes": 17263154,
+   "unique_bytes": 165931,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000538-t001",
+   "checkpoints": 203,
+   "logical_bytes": 17009865,
+   "unique_bytes": 168852,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000612-t003",
+   "checkpoints": 146,
+   "logical_bytes": 16975650,
+   "unique_bytes": 232742,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000449-t003",
+   "checkpoints": 130,
+   "logical_bytes": 16959549,
+   "unique_bytes": 266652,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000251-t002",
+   "checkpoints": 201,
+   "logical_bytes": 16949506,
+   "unique_bytes": 161875,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000129-t004",
+   "checkpoints": 137,
+   "logical_bytes": 16947322,
+   "unique_bytes": 262250,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000553-t003",
+   "checkpoints": 139,
+   "logical_bytes": 16899271,
+   "unique_bytes": 243981,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000826-t000",
+   "checkpoints": 142,
+   "logical_bytes": 16885622,
+   "unique_bytes": 231204,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000673-t002",
+   "checkpoints": 202,
+   "logical_bytes": 16703102,
+   "unique_bytes": 161661,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000090-t001",
+   "checkpoints": 129,
+   "logical_bytes": 16698076,
+   "unique_bytes": 245291,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000878-t001",
+   "checkpoints": 133,
+   "logical_bytes": 16455856,
+   "unique_bytes": 249933,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000148-t001",
+   "checkpoints": 136,
+   "logical_bytes": 16412258,
+   "unique_bytes": 236026,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000787-t002",
+   "checkpoints": 194,
+   "logical_bytes": 16378227,
+   "unique_bytes": 158194,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000010-t002",
+   "checkpoints": 186,
+   "logical_bytes": 16342289,
+   "unique_bytes": 165914,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000330-t001",
+   "checkpoints": 123,
+   "logical_bytes": 16301330,
+   "unique_bytes": 241588,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000947-t000",
+   "checkpoints": 135,
+   "logical_bytes": 16178276,
+   "unique_bytes": 278684,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000177-t002",
+   "checkpoints": 136,
+   "logical_bytes": 16145484,
+   "unique_bytes": 237439,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000536-t000",
+   "checkpoints": 137,
+   "logical_bytes": 16046753,
+   "unique_bytes": 254311,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000229-t000",
+   "checkpoints": 134,
+   "logical_bytes": 16017147,
+   "unique_bytes": 240238,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000515-t004",
+   "checkpoints": 129,
+   "logical_bytes": 16005492,
+   "unique_bytes": 249097,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000326-t001",
+   "checkpoints": 130,
+   "logical_bytes": 15948640,
+   "unique_bytes": 227168,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000551-t000",
+   "checkpoints": 193,
+   "logical_bytes": 15849758,
+   "unique_bytes": 167126,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000615-t000",
+   "checkpoints": 132,
+   "logical_bytes": 15670126,
+   "unique_bytes": 242625,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000888-t000",
+   "checkpoints": 185,
+   "logical_bytes": 15545042,
+   "unique_bytes": 164808,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000187-t000",
+   "checkpoints": 130,
+   "logical_bytes": 15290618,
+   "unique_bytes": 256215,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000082-t001",
+   "checkpoints": 125,
+   "logical_bytes": 15289283,
+   "unique_bytes": 239837,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000079-t004",
+   "checkpoints": 194,
+   "logical_bytes": 15143942,
+   "unique_bytes": 154413,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000404-t003",
+   "checkpoints": 205,
+   "logical_bytes": 15052864,
+   "unique_bytes": 147084,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000538-t005",
+   "checkpoints": 142,
+   "logical_bytes": 15021107,
+   "unique_bytes": 223606,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000718-t008",
+   "checkpoints": 126,
+   "logical_bytes": 14998104,
+   "unique_bytes": 224397,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000217-t000",
+   "checkpoints": 197,
+   "logical_bytes": 14931188,
+   "unique_bytes": 155550,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000735-t000",
+   "checkpoints": 124,
+   "logical_bytes": 14886723,
+   "unique_bytes": 249885,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000778-t003",
+   "checkpoints": 119,
+   "logical_bytes": 14847498,
+   "unique_bytes": 245543,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000656-t002",
+   "checkpoints": 186,
+   "logical_bytes": 14813489,
+   "unique_bytes": 151157,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000659-t000",
+   "checkpoints": 127,
+   "logical_bytes": 14807538,
+   "unique_bytes": 254720,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000966-t000",
+   "checkpoints": 192,
+   "logical_bytes": 14753077,
+   "unique_bytes": 153692,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000786-t001",
+   "checkpoints": 135,
+   "logical_bytes": 14728685,
+   "unique_bytes": 225135,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000030-t000",
+   "checkpoints": 125,
+   "logical_bytes": 14496445,
+   "unique_bytes": 236334,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000277-t002",
+   "checkpoints": 116,
+   "logical_bytes": 14467546,
+   "unique_bytes": 232107,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000604-t002",
+   "checkpoints": 125,
+   "logical_bytes": 14335045,
+   "unique_bytes": 225685,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000736-t000",
+   "checkpoints": 184,
+   "logical_bytes": 14318322,
+   "unique_bytes": 157528,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000140-t000",
+   "checkpoints": 126,
+   "logical_bytes": 14300487,
+   "unique_bytes": 224216,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000350-t001",
+   "checkpoints": 126,
+   "logical_bytes": 14293878,
+   "unique_bytes": 226238,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000770-t000",
+   "checkpoints": 139,
+   "logical_bytes": 14243239,
+   "unique_bytes": 212513,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000525-t000",
+   "checkpoints": 115,
+   "logical_bytes": 14240933,
+   "unique_bytes": 231808,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000650-t000",
+   "checkpoints": 186,
+   "logical_bytes": 14236634,
+   "unique_bytes": 159058,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000358-t002",
+   "checkpoints": 123,
+   "logical_bytes": 14199570,
+   "unique_bytes": 234199,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000827-t006",
+   "checkpoints": 188,
+   "logical_bytes": 14134389,
+   "unique_bytes": 148164,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000581-t000",
+   "checkpoints": 114,
+   "logical_bytes": 14038060,
+   "unique_bytes": 254027,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000434-t001",
+   "checkpoints": 113,
+   "logical_bytes": 13835148,
+   "unique_bytes": 227435,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000047-t002",
+   "checkpoints": 122,
+   "logical_bytes": 13796026,
+   "unique_bytes": 214869,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000740-t001",
+   "checkpoints": 118,
+   "logical_bytes": 13750723,
+   "unique_bytes": 210102,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000285-t002",
+   "checkpoints": 121,
+   "logical_bytes": 13728446,
+   "unique_bytes": 230885,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000605-t001",
+   "checkpoints": 189,
+   "logical_bytes": 13700544,
+   "unique_bytes": 142083,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000628-t000",
+   "checkpoints": 184,
+   "logical_bytes": 13672578,
+   "unique_bytes": 154881,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000958-t000",
+   "checkpoints": 187,
+   "logical_bytes": 13602649,
+   "unique_bytes": 141228,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000589-t001",
+   "checkpoints": 135,
+   "logical_bytes": 13589669,
+   "unique_bytes": 197764,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000392-t001",
+   "checkpoints": 119,
+   "logical_bytes": 13531002,
+   "unique_bytes": 231694,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000491-t002",
+   "checkpoints": 105,
+   "logical_bytes": 13448364,
+   "unique_bytes": 245157,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000626-t000",
+   "checkpoints": 112,
+   "logical_bytes": 13437412,
+   "unique_bytes": 223894,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000622-t004",
+   "checkpoints": 104,
+   "logical_bytes": 13147564,
+   "unique_bytes": 231628,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000548-t001",
+   "checkpoints": 114,
+   "logical_bytes": 13134269,
+   "unique_bytes": 226972,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000473-t002",
+   "checkpoints": 128,
+   "logical_bytes": 13114026,
+   "unique_bytes": 212886,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000946-t002",
+   "checkpoints": 116,
+   "logical_bytes": 13084871,
+   "unique_bytes": 245409,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000441-t001",
+   "checkpoints": 174,
+   "logical_bytes": 13027425,
+   "unique_bytes": 148883,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000524-t000",
+   "checkpoints": 129,
+   "logical_bytes": 12980747,
+   "unique_bytes": 194440,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000610-t000",
+   "checkpoints": 119,
+   "logical_bytes": 12943737,
+   "unique_bytes": 226038,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000370-t000",
+   "checkpoints": 175,
+   "logical_bytes": 12918104,
+   "unique_bytes": 147785,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000107-t000",
+   "checkpoints": 102,
+   "logical_bytes": 12860101,
+   "unique_bytes": 228234,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000977-t000",
+   "checkpoints": 111,
+   "logical_bytes": 12807237,
+   "unique_bytes": 217203,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000356-t000",
+   "checkpoints": 108,
+   "logical_bytes": 12796020,
+   "unique_bytes": 223588,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000352-t002",
+   "checkpoints": 106,
+   "logical_bytes": 12662238,
+   "unique_bytes": 217213,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000845-t000",
+   "checkpoints": 176,
+   "logical_bytes": 12529283,
+   "unique_bytes": 144161,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000780-t001",
+   "checkpoints": 175,
+   "logical_bytes": 12519816,
+   "unique_bytes": 143825,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000465-t000",
+   "checkpoints": 119,
+   "logical_bytes": 12516628,
+   "unique_bytes": 214586,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000031-t001",
+   "checkpoints": 108,
+   "logical_bytes": 12480980,
+   "unique_bytes": 233056,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000396-t000",
+   "checkpoints": 121,
+   "logical_bytes": 12432522,
+   "unique_bytes": 211532,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000498-t002",
+   "checkpoints": 173,
+   "logical_bytes": 12354533,
+   "unique_bytes": 139617,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000032-t000",
+   "checkpoints": 122,
+   "logical_bytes": 12177846,
+   "unique_bytes": 214748,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000998-t001",
+   "checkpoints": 124,
+   "logical_bytes": 12177763,
+   "unique_bytes": 192145,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000925-t001",
+   "checkpoints": 117,
+   "logical_bytes": 12135524,
+   "unique_bytes": 212918,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000876-t002",
+   "checkpoints": 122,
+   "logical_bytes": 12108483,
+   "unique_bytes": 199970,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000009-t000",
+   "checkpoints": 113,
+   "logical_bytes": 12102968,
+   "unique_bytes": 212124,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000441-t004",
+   "checkpoints": 161,
+   "logical_bytes": 12025085,
+   "unique_bytes": 138956,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000272-t000",
+   "checkpoints": 115,
+   "logical_bytes": 11938123,
+   "unique_bytes": 193428,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000949-t000",
+   "checkpoints": 173,
+   "logical_bytes": 11876319,
+   "unique_bytes": 138025,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000070-t005",
+   "checkpoints": 173,
+   "logical_bytes": 11875762,
+   "unique_bytes": 142893,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000557-t003",
+   "checkpoints": 119,
+   "logical_bytes": 11857889,
+   "unique_bytes": 208615,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000449-t001",
+   "checkpoints": 120,
+   "logical_bytes": 11828988,
+   "unique_bytes": 214956,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000621-t001",
+   "checkpoints": 102,
+   "logical_bytes": 11691358,
+   "unique_bytes": 228309,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000693-t005",
+   "checkpoints": 162,
+   "logical_bytes": 11665084,
+   "unique_bytes": 134222,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000631-t000",
+   "checkpoints": 104,
+   "logical_bytes": 11663157,
+   "unique_bytes": 204926,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000083-t000",
+   "checkpoints": 166,
+   "logical_bytes": 11554911,
+   "unique_bytes": 147561,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000203-t001",
+   "checkpoints": 105,
+   "logical_bytes": 11476395,
+   "unique_bytes": 206147,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000070-t003",
+   "checkpoints": 104,
+   "logical_bytes": 11476238,
+   "unique_bytes": 213635,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000764-t000",
+   "checkpoints": 174,
+   "logical_bytes": 11474297,
+   "unique_bytes": 129994,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000470-t003",
+   "checkpoints": 124,
+   "logical_bytes": 11416087,
+   "unique_bytes": 183864,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000818-t000",
+   "checkpoints": 113,
+   "logical_bytes": 11353609,
+   "unique_bytes": 207088,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000748-t003",
+   "checkpoints": 97,
+   "logical_bytes": 11112212,
+   "unique_bytes": 193654,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000723-t001",
+   "checkpoints": 106,
+   "logical_bytes": 11102788,
+   "unique_bytes": 214308,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000872-t000",
+   "checkpoints": 109,
+   "logical_bytes": 11068281,
+   "unique_bytes": 176830,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000971-t004",
+   "checkpoints": 107,
+   "logical_bytes": 10997378,
+   "unique_bytes": 202598,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000200-t001",
+   "checkpoints": 104,
+   "logical_bytes": 10920360,
+   "unique_bytes": 198275,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000867-t000",
+   "checkpoints": 116,
+   "logical_bytes": 10913763,
+   "unique_bytes": 178624,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000585-t000",
+   "checkpoints": 106,
+   "logical_bytes": 10892671,
+   "unique_bytes": 201839,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000983-t006",
+   "checkpoints": 99,
+   "logical_bytes": 10864468,
+   "unique_bytes": 208249,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000221-t000",
+   "checkpoints": 111,
+   "logical_bytes": 10854058,
+   "unique_bytes": 188601,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000642-t006",
+   "checkpoints": 167,
+   "logical_bytes": 10840987,
+   "unique_bytes": 127494,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000431-t000",
+   "checkpoints": 171,
+   "logical_bytes": 10839277,
+   "unique_bytes": 135333,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000430-t002",
+   "checkpoints": 103,
+   "logical_bytes": 10791249,
+   "unique_bytes": 205764,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000915-t000",
+   "checkpoints": 129,
+   "logical_bytes": 10781241,
+   "unique_bytes": 163038,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000622-t005",
+   "checkpoints": 99,
+   "logical_bytes": 10753780,
+   "unique_bytes": 206156,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000165-t002",
+   "checkpoints": 107,
+   "logical_bytes": 10682365,
+   "unique_bytes": 205336,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000694-t003",
+   "checkpoints": 108,
+   "logical_bytes": 10678893,
+   "unique_bytes": 182628,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000945-t001",
+   "checkpoints": 160,
+   "logical_bytes": 10650370,
+   "unique_bytes": 131579,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000559-t000",
+   "checkpoints": 112,
+   "logical_bytes": 10648855,
+   "unique_bytes": 194910,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000609-t004",
+   "checkpoints": 106,
+   "logical_bytes": 10607772,
+   "unique_bytes": 192199,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000817-t000",
+   "checkpoints": 166,
+   "logical_bytes": 10560155,
+   "unique_bytes": 131586,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000458-t004",
+   "checkpoints": 105,
+   "logical_bytes": 10423383,
+   "unique_bytes": 193574,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000380-t000",
+   "checkpoints": 159,
+   "logical_bytes": 10386560,
+   "unique_bytes": 135482,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000570-t000",
+   "checkpoints": 103,
+   "logical_bytes": 10331399,
+   "unique_bytes": 217139,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000709-t003",
+   "checkpoints": 104,
+   "logical_bytes": 10205218,
+   "unique_bytes": 212335,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000242-t001",
+   "checkpoints": 102,
+   "logical_bytes": 10156595,
+   "unique_bytes": 183216,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000944-t000",
+   "checkpoints": 156,
+   "logical_bytes": 10125670,
+   "unique_bytes": 128238,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000501-t002",
+   "checkpoints": 119,
+   "logical_bytes": 10121087,
+   "unique_bytes": 172528,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000499-t002",
+   "checkpoints": 102,
+   "logical_bytes": 10048964,
+   "unique_bytes": 200996,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000711-t001",
+   "checkpoints": 99,
+   "logical_bytes": 10026821,
+   "unique_bytes": 200844,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000208-t000",
+   "checkpoints": 108,
+   "logical_bytes": 9996962,
+   "unique_bytes": 175659,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000553-t001",
+   "checkpoints": 99,
+   "logical_bytes": 9961557,
+   "unique_bytes": 190393,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000142-t000",
+   "checkpoints": 99,
+   "logical_bytes": 9807124,
+   "unique_bytes": 197143,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000788-t003",
+   "checkpoints": 102,
+   "logical_bytes": 9725732,
+   "unique_bytes": 192725,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000437-t000",
+   "checkpoints": 113,
+   "logical_bytes": 9712409,
+   "unique_bytes": 177742,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000269-t000",
+   "checkpoints": 102,
+   "logical_bytes": 9704565,
+   "unique_bytes": 190590,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  },
+  {
+   "thread_id": "u000353-t004",
+   "checkpoints": 100,
+   "logical_bytes": 9690176,
+   "unique_bytes": 195139,
+   "stored_bytes": null,
+   "ratio": null,
+   "delta_capture": null
+  }
+ ]
+}

@@ -1,0 +1,1 @@
+[fenvix] VALIDATION, NOT RESULTS: ok=True checkpoints=122152 write=1961.488s save_step p50/p99=7.814/244.812 ms stored/logical=2.4656 wrong_reads=0 -> /home/user/wH/bench/agent-checkpoints/results/local-2026-11-11-equal-r1/fenvix/summary.json

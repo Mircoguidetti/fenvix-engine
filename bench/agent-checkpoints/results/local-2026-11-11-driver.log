@@ -1,0 +1,14 @@
+2026-11-11T10:15:28Z binaries: engine f6b6db184 1a6c9b1f94eadbb2 1a6c9b1f94eadbb2 fb3e780bd8ee0512 fb3e780bd8ee0512 
+2026-11-11T10:15:28Z takeovers log on: 50, /home/user/wE/research/integration-3/takeover-run.sh
+2026-11-11T10:45:16Z takeovers log on: exit 0; run.py: code 0 in 1684 s; outcome: FINITO; {"load": "LOADED", "client": "LOADED_ONLY", "extras": "takeovers:rc=0 takeovers-logoff:rc=1"} 
+2026-11-11T10:45:16Z takeovers on summary: out-takeovers-on/extras/takeovers/takeovers-summary.json
+2026-11-11T10:45:16Z takeovers log off: 50, /home/user/wE/research/integration-3/takeover-run.sh
+2026-11-11T11:11:10Z takeovers log off: exit 0; run.py: code 0 in 1451 s; outcome: FINITO; {"load": "LOADED", "client": "LOADED_ONLY", "extras": "takeovers:rc=0 takeovers-logoff:rc=1"} 
+2026-11-11T11:11:10Z takeovers off summary: out-takeovers-off/extras/takeovers/takeovers-summary.json
+2026-11-11T11:11:10Z postgres-sync -> bench/agent-checkpoints/results/local-2026-11-11-equal-r1/postgres 
+2026-11-11T11:32:08Z postgres-sync: exit 0; [postgres] VALIDATION, NOT RESULTS: ok=True checkpoints=122152 write=1135.036s save_step p50/p99=6.012/20.447 ms stored/logical=0.3888 wrong_reads=0 -> /home/user/wH/bench/agent-checkpoints/results/local-2026-11-11-equal-r1/postgres/summary.json
+2026-11-11T11:32:08Z mongo-rs3 -> bench/agent-checkpoints/results/local-2026-11-11-equal-r1/mongo 
+2026-11-11T11:58:58Z mongo-rs3: exit 0; [mongo] VALIDATION, NOT RESULTS: ok=True checkpoints=122152 write=1407.698s save_step p50/p99=10.464/34.053 ms stored/logical=0.4503 wrong_reads=0 -> /home/user/wH/bench/agent-checkpoints/results/local-2026-11-11-equal-r1/mongo/summary.json
+2026-11-11T11:58:58Z fenvix-log -> bench/agent-checkpoints/results/local-2026-11-11-equal-r1/fenvix 
+2026-11-11T12:49:09Z driver stopped by hand after the founder's change of plan: repeat 1 of fenvix-log continues alone; no equal23, single, w8 on this head
+2026-11-11T12:59:47Z fenvix-log r1 attempt 1 killed at about 12:57:12 UTC in its erase phase by a test of the fix round (its stub ran the real lines.py, whose down() removed the line's containers); kept as fenvix.failed-attempt1-killed-by-my-test; attempt 2 starts with the same harness (fd6710b)

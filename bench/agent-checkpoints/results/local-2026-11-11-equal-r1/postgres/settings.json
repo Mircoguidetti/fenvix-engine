@@ -1,0 +1,86 @@
+{
+ "line": {
+  "name": "postgres-sync",
+  "target": "postgres",
+  "durability": "primary + 2 synchronous standbys, ANY 1 (2 of 3 copies)",
+  "containers": [
+   "pg-primary",
+   "pg-standby1",
+   "pg-standby2"
+  ],
+  "primary_conf": {
+   "wal_level": "replica",
+   "synchronous_commit": "on",
+   "synchronous_standby_names": "'ANY 1 (standby1, standby2)'",
+   "max_wal_senders": 10
+  },
+  "uri": "postgresql://app_user:${BENCH_PW}@pg-primary:5432/app_demo"
+ },
+ "limits": [
+  "--cpus",
+  "1",
+  "--memory",
+  "3g"
+ ],
+ "minio": "own container, not capped (our lines only)",
+ "network": "docker network fxbench 172.31.77.0/24; client on the host",
+ "disk_before": {
+  "free_gib": 17.6,
+  "used_gib": 20.8
+ },
+ "binaries_sha256": null,
+ "check_before": {
+  "line": "postgres-sync",
+  "durability": "primary + 2 synchronous standbys, ANY 1 (2 of 3 copies)",
+  "pg_stat_replication": [
+   {
+    "application_name": "standby1",
+    "state": "streaming",
+    "sync_state": "quorum",
+    "sync_priority": 1
+   },
+   {
+    "application_name": "standby2",
+    "state": "streaming",
+    "sync_state": "quorum",
+    "sync_priority": 1
+   }
+  ],
+  "ok": true,
+  "settings_primary": {
+   "server_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+   "wal_level": "replica",
+   "synchronous_commit": "on",
+   "synchronous_standby_names": "ANY 1 (standby1, standby2)",
+   "max_wal_senders": "10",
+   "shared_buffers": "128MB",
+   "effective_cache_size": "4GB",
+   "work_mem": "4MB",
+   "fsync": "on",
+   "full_page_writes": "on",
+   "wal_compression": "off",
+   "default_toast_compression": "pglz",
+   "max_connections": "100",
+   "data_checksums": "off",
+   "hot_standby": "on"
+  },
+  "settings_standby1": {
+   "server_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+   "wal_level": "replica",
+   "synchronous_commit": "on",
+   "synchronous_standby_names": "",
+   "max_wal_senders": "10",
+   "shared_buffers": "128MB",
+   "effective_cache_size": "4GB",
+   "work_mem": "4MB",
+   "fsync": "on",
+   "full_page_writes": "on",
+   "wal_compression": "off",
+   "default_toast_compression": "pglz",
+   "max_connections": "100",
+   "data_checksums": "off",
+   "hot_standby": "on"
+  }
+ },
+ "bench_command": "/root/.fenvix-agentbench-venv/bin/python /home/user/wH/bench/agent-checkpoints/bench.py --local --target postgres --label local postgres-sync: primary + 2 synchronous standbys, ANY 1 (2 of 3 copies) --profile standard --seed 42 --workers 1 --read-sample 300 --erase-users 100 --out /home/user/wH/bench/agent-checkpoints/results/local-2026-11-11-equal-r1/postgres --settle --cold-cmd /root/.fenvix-agentbench-venv/bin/python /home/user/wH/bench/agent-checkpoints/lines.py restart postgres-sync --cold-threads 200"
+}

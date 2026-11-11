@@ -1,0 +1,65 @@
+{
+ "bench_rc": 0,
+ "seconds": 6957.9,
+ "disk_stop": false,
+ "disk_min_free_gib": 5.04,
+ "cpu_mem": {
+  "samples": 1389,
+  "host_cpu_busy_mean": 0.411,
+  "host_cpu_busy_max": 0.941,
+  "host_cpu_busy_ge_95pct_share": 0.0,
+  "host_mem_used_gib_max": 4.44,
+  "containers": {
+   "cook": {
+    "cores_mean": 0.439,
+    "cores_max": 0.966,
+    "at_cap_share": 0.003,
+    "mem_mib_max": 848
+   },
+   "log-0": {
+    "cores_mean": 0.083,
+    "cores_max": 0.195,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 1129
+   },
+   "log-1": {
+    "cores_mean": 0.083,
+    "cores_max": 0.2,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 1131
+   },
+   "log-2": {
+    "cores_mean": 0.095,
+    "cores_max": 0.258,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 1105
+   },
+   "minio": {
+    "cores_mean": 0.771,
+    "cores_max": 2.106,
+    "at_cap_share": 0.401,
+    "mem_mib_max": 13429
+   },
+   "spare": {
+    "cores_mean": 0.004,
+    "cores_max": 0.007,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 6
+   }
+  }
+ },
+ "binaries_sha256_after": {
+  "/home/user/wH/target/release/mongo-server": "1a6c9b1f94eadbb200171fe5cff0cb82374bdbc64d95371138fc3be513a0dc9c",
+  "/home/user/wH/proto/quaderno/target/release/pq": "fb3e780bd8ee05124acbe2965f13359b43fcd559d621d9a3d8c793d37e22d25c"
+ },
+ "binaries_unchanged": true,
+ "quaderno_sent_before_after_write": [
+  3,
+  218915
+ ],
+ "quaderno_check": "ok: quaderno.sent grew during the write phase",
+ "disk_end": {
+  "free_gib": 5.0,
+  "used_gib": 33.4
+ }
+}

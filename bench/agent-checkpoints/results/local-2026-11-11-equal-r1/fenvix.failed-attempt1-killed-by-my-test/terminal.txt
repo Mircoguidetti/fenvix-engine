@@ -1,0 +1,77 @@
+Traceback (most recent call last):
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/pool.py", line 455, in receive_message
+    return receive_message(self, request_id, self.max_message_size)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/network_layer.py", line 748, in receive_message
+    length, _, response_to, op_code = _UNPACK_HEADER(receive_data(conn, 16, deadline))
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/network_layer.py", line 353, in receive_data
+    raise OSError("connection closed")
+OSError: connection closed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/user/wH/bench/agent-checkpoints/bench.py", line 323, in <module>
+    main()
+  File "/home/user/wH/bench/agent-checkpoints/bench.py", line 266, in main
+    er = erase_phase(target, threads, rec, n_erase, a.seed, expected)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/wH/bench/agent-checkpoints/bench.py", line 148, in erase_phase
+    ts.delete_thread(tid)
+  File "/home/user/wH/bench/agent-checkpoints/graph_runner.py", line 275, in delete_thread
+    self.inner.delete_thread(thread_id)
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/langgraph/checkpoint/mongodb/saver.py", line 547, in delete_thread
+    self.checkpoint_collection.delete_many({"thread_id": thread_id})
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/collection.py", line 1684, in delete_many
+    self._delete_retryable(
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/collection.py", line 1560, in _delete_retryable
+    return self._database.client._retryable_write(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2154, in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2024, in _retry_with_session
+    return self._retry_internal(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/_csot.py", line 126, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2077, in _retry_internal
+    ).run()
+      ^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2947, in run
+    res = self._read() if self._is_read else self._write()
+                                             ^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 3160, in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/collection.py", line 1545, in _delete
+    return self._delete(
+           ^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/collection.py", line 1515, in _delete
+    result = conn.command(
+             ^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/helpers.py", line 50, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/pool.py", line 430, in command
+    self._raise_connection_failure(error)
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/pool.py", line 576, in _raise_connection_failure
+    raise error
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/pool.py", line 405, in command
+    return run_command(
+           ^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py", line 440, in run_command
+    docs, _, _ = _run_command(
+                 ^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py", line 192, in _run_command
+    reply = conn.receive_message(request_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/pool.py", line 458, in receive_message
+    self._raise_connection_failure(error)
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/pool.py", line 574, in _raise_connection_failure
+    _raise_connection_failure(self.address, error, timeout_details=details)
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/pool_shared.py", line 169, in _raise_connection_failure
+    raise AutoReconnect(msg) from error
+pymongo.errors.AutoReconnect: cook:27017: connection closed (configured timeouts: connectTimeoutMS: 20000.0ms)

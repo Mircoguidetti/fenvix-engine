@@ -1,0 +1,293 @@
+{
+  "note": "LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+  "target": "postgres",
+  "label": "local postgres-sync: primary + 2 synchronous standbys, ANY 1 (2 of 3 copies)",
+  "profile": "standard",
+  "seed": 42,
+  "workers": 1,
+  "plan": {
+    "threads": 2453,
+    "turns": 25398,
+    "digest": "cc5dfd2ec7d93f21"
+  },
+  "client": {
+    "python": "3.12.15",
+    "host": "vm"
+  },
+  "write": {
+    "seconds": 1135.036,
+    "errors": [],
+    "steps_per_second": 107.62
+  },
+  "read": {
+    "threads_read": 300,
+    "inconsistencies": 0
+  },
+  "erase": {
+    "users_erased": 100,
+    "threads_erased": 241,
+    "threads_left_readable": 0
+  },
+  "latency_ms": {
+    "delete_thread": {
+      "n": 241,
+      "p50": 10.928,
+      "p90": 76.91,
+      "p99": 174.524,
+      "max": 263.19,
+      "mean": 29.165
+    },
+    "erase_user": {
+      "n": 100,
+      "p50": 69.717,
+      "p90": 310.994,
+      "p99": 580.921,
+      "max": 580.921,
+      "mean": 116.945
+    },
+    "list": {
+      "n": 300,
+      "p50": 49.172,
+      "p90": 647.932,
+      "p99": 1761.122,
+      "max": 2079.579,
+      "mean": 202.323
+    },
+    "list_limit10": {
+      "n": 300,
+      "p50": 7.507,
+      "p90": 32.228,
+      "p99": 160.295,
+      "max": 193.976,
+      "mean": 17.558
+    },
+    "put": {
+      "n": 122152,
+      "p50": 3.533,
+      "p90": 6.992,
+      "p99": 12.649,
+      "max": 439.988,
+      "mean": 4.365
+    },
+    "put[chat]": {
+      "n": 85022,
+      "p50": 3.172,
+      "p90": 5.446,
+      "p99": 10.304,
+      "max": 423.718,
+      "mean": 3.756
+    },
+    "put[coding]": {
+      "n": 37130,
+      "p50": 4.945,
+      "p90": 8.893,
+      "p99": 15.351,
+      "max": 439.988,
+      "mean": 5.761
+    },
+    "put_writes": {
+      "n": 96754,
+      "p50": 2.911,
+      "p90": 5.345,
+      "p99": 9.351,
+      "max": 372.52,
+      "mean": 3.531
+    },
+    "resume[cold]": {
+      "n": 200,
+      "p50": 4.209,
+      "p90": 11.681,
+      "p99": 52.859,
+      "max": 122.275,
+      "mean": 6.366
+    },
+    "resume[erase_verify]": {
+      "n": 241,
+      "p50": 0.662,
+      "p90": 2.904,
+      "p99": 22.933,
+      "max": 72.279,
+      "mean": 2.109
+    },
+    "resume[read]": {
+      "n": 300,
+      "p50": 3.114,
+      "p90": 10.708,
+      "p99": 66.96,
+      "max": 718.936,
+      "mean": 7.653
+    },
+    "resume[write/first]": {
+      "n": 2453,
+      "p50": 0.844,
+      "p90": 1.062,
+      "p99": 1.575,
+      "max": 23.323,
+      "mean": 0.882
+    },
+    "resume[write/long]": {
+      "n": 689,
+      "p50": 1.409,
+      "p90": 3.009,
+      "p99": 12.025,
+      "max": 18.716,
+      "mean": 1.96
+    },
+    "resume[write/none]": {
+      "n": 21173,
+      "p50": 1.599,
+      "p90": 3.061,
+      "p99": 5.352,
+      "max": 105.944,
+      "mean": 1.915
+    },
+    "resume[write/short]": {
+      "n": 1083,
+      "p50": 1.379,
+      "p90": 2.379,
+      "p99": 4.519,
+      "max": 6.297,
+      "mean": 1.58
+    },
+    "save_step": {
+      "n": 122152,
+      "p50": 6.012,
+      "p90": 11.529,
+      "p99": 20.447,
+      "max": 792.227,
+      "mean": 7.162
+    },
+    "save_step[chat]": {
+      "n": 85022,
+      "p50": 5.416,
+      "p90": 9.829,
+      "p99": 17.962,
+      "max": 792.227,
+      "mean": 6.301
+    },
+    "save_step[coding]": {
+      "n": 37130,
+      "p50": 7.899,
+      "p90": 13.956,
+      "p99": 25.185,
+      "max": 760.79,
+      "mean": 9.133
+    },
+    "time_travel": {
+      "n": 900,
+      "p50": 0.979,
+      "p90": 2.693,
+      "p99": 5.046,
+      "max": 6.725,
+      "mean": 1.339
+    }
+  },
+  "bytes": {
+    "checkpoints": 122152,
+    "put_writes_calls": 96754,
+    "checkpoint_bytes": 6583592708,
+    "writes_bytes": 136556194,
+    "message_payload_bytes_all_checkpoints": 6488687295,
+    "unique_message_bytes": 137424218,
+    "logical_total": 6720148902,
+    "stored": 2612576256,
+    "stored_from": "sum of pg_total_relation_size of the 4 saver tables (heap + TOAST + indexes)",
+    "stored_per_logical": 0.3888,
+    "stored_per_checkpoint": 21387.9
+  },
+  "sizes": {
+    "tables": {
+      "checkpoints": {
+        "total": 143212544,
+        "heap": 127754240,
+        "rows": 122152
+      },
+      "checkpoint_blobs": {
+        "total": 2307031040,
+        "heap": 33882112,
+        "rows": 122152
+      },
+      "checkpoint_writes": {
+        "total": 162308096,
+        "heap": 102277120,
+        "rows": 168110
+      },
+      "checkpoint_migrations": {
+        "total": 24576,
+        "heap": 8192,
+        "rows": 10
+      }
+    },
+    "pg_database_size": 2620570647,
+    "checkpoint_before": true,
+    "stored_bytes": 2612576256,
+    "stored_from": "sum of pg_total_relation_size of the 4 saver tables (heap + TOAST + indexes)"
+  },
+  "sizes_after_erase": {
+    "tables": {
+      "checkpoints": {
+        "total": 143212544,
+        "heap": 127754240,
+        "rows": 110211
+      },
+      "checkpoint_blobs": {
+        "total": 2307031040,
+        "heap": 33882112,
+        "rows": 110211
+      },
+      "checkpoint_writes": {
+        "total": 162308096,
+        "heap": 102277120,
+        "rows": 151713
+      },
+      "checkpoint_migrations": {
+        "total": 24576,
+        "heap": 8192,
+        "rows": 10
+      }
+    },
+    "pg_database_size": 2620570647,
+    "checkpoint_before": true,
+    "stored_bytes": 2612576256,
+    "stored_from": "sum of pg_total_relation_size of the 4 saver tables (heap + TOAST + indexes)"
+  },
+  "s3_put_requests_during_write": null,
+  "server_status_before": null,
+  "server_status_after_write": null,
+  "settle": null,
+  "cold": {
+    "restart": {
+      "cmd": "/root/.fenvix-agentbench-venv/bin/python /home/user/wH/bench/agent-checkpoints/lines.py restart postgres-sync",
+      "rc": 0,
+      "seconds": 5.2,
+      "output": "11:31:54 restart: docker restart pg-primary pg-standby1 pg-standby2 in 3.4 s\n11:31:55 drop_caches: done\n11:31:56 restart: line up again in 5.1 s, check ok=True\n"
+    },
+    "threads": 200,
+    "eligible": 1944,
+    "errors": [],
+    "n_errors": 0,
+    "first_thread": "u000445-t000"
+  },
+  "read_sample": 300,
+  "erase_users": 100,
+  "correctness": {
+    "wrong_reads": 0,
+    "by_kind": {},
+    "reads_checked": 53934,
+    "checkpoints_written": 110211,
+    "examples": []
+  },
+  "wrong_reads": 0,
+  "delta_test": {
+    "test": "agent checkpoint delta test",
+    "target": "postgres",
+    "stored_bytes_source": "MEASURED pg_column_size (compressed rows, no index/page overhead)",
+    "threads": 200,
+    "logical_bytes": 3509843748,
+    "unique_bytes": 43754324,
+    "stored_bytes": 1186182408,
+    "ratio_stored_per_logical": 0.338,
+    "ratio_unique_per_logical": 0.0125
+  },
+  "ok": true
+}

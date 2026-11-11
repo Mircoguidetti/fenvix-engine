@@ -1,0 +1,1 @@
+[mongo] VALIDATION, NOT RESULTS: ok=True checkpoints=122152 write=1407.698s save_step p50/p99=10.464/34.053 ms stored/logical=0.4503 wrong_reads=0 -> /home/user/wH/bench/agent-checkpoints/results/local-2026-11-11-equal-r1/mongo/summary.json

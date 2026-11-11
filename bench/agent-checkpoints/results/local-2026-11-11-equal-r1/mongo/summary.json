@@ -1,0 +1,287 @@
+{
+  "note": "LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+  "target": "mongo",
+  "label": "local mongo-rs3: 3-member replica set, w:majority, j:true",
+  "profile": "standard",
+  "seed": 42,
+  "workers": 1,
+  "plan": {
+    "threads": 2453,
+    "turns": 25398,
+    "digest": "cc5dfd2ec7d93f21"
+  },
+  "client": {
+    "python": "3.12.15",
+    "host": "vm"
+  },
+  "write": {
+    "seconds": 1407.698,
+    "errors": [],
+    "steps_per_second": 86.77
+  },
+  "read": {
+    "threads_read": 300,
+    "inconsistencies": 0
+  },
+  "erase": {
+    "users_erased": 100,
+    "threads_erased": 241,
+    "threads_left_readable": 0
+  },
+  "latency_ms": {
+    "delete_thread": {
+      "n": 241,
+      "p50": 29.53,
+      "p90": 116.198,
+      "p99": 466.002,
+      "max": 806.629,
+      "mean": 59.234
+    },
+    "erase_user": {
+      "n": 100,
+      "p50": 104.91,
+      "p90": 473.946,
+      "p99": 1624.294,
+      "max": 1624.294,
+      "mean": 182.987
+    },
+    "list": {
+      "n": 300,
+      "p50": 71.822,
+      "p90": 712.967,
+      "p99": 1984.437,
+      "max": 2104.85,
+      "mean": 235.774
+    },
+    "list_limit10": {
+      "n": 300,
+      "p50": 15.304,
+      "p90": 40.83,
+      "p99": 153.08,
+      "max": 180.52,
+      "mean": 24.527
+    },
+    "put": {
+      "n": 122152,
+      "p50": 5.278,
+      "p90": 7.322,
+      "p99": 15.729,
+      "max": 397.663,
+      "mean": 5.924
+    },
+    "put[chat]": {
+      "n": 85022,
+      "p50": 5.069,
+      "p90": 6.973,
+      "p99": 13.223,
+      "max": 397.663,
+      "mean": 5.645
+    },
+    "put[coding]": {
+      "n": 37130,
+      "p50": 5.775,
+      "p90": 7.894,
+      "p99": 22.822,
+      "max": 309.446,
+      "mean": 6.563
+    },
+    "put_writes": {
+      "n": 96754,
+      "p50": 5.788,
+      "p90": 8.221,
+      "p99": 16.92,
+      "max": 362.691,
+      "mean": 6.483
+    },
+    "resume[cold]": {
+      "n": 200,
+      "p50": 2.922,
+      "p90": 5.401,
+      "p99": 8.351,
+      "max": 19.024,
+      "mean": 3.426
+    },
+    "resume[erase_verify]": {
+      "n": 241,
+      "p50": 0.873,
+      "p90": 1.39,
+      "p99": 2.33,
+      "max": 31.961,
+      "mean": 1.055
+    },
+    "resume[read]": {
+      "n": 300,
+      "p50": 2.891,
+      "p90": 5.784,
+      "p99": 18.833,
+      "max": 36.819,
+      "mean": 3.793
+    },
+    "resume[write/first]": {
+      "n": 2453,
+      "p50": 0.897,
+      "p90": 1.096,
+      "p99": 1.775,
+      "max": 37.451,
+      "mean": 0.95
+    },
+    "resume[write/long]": {
+      "n": 689,
+      "p50": 2.369,
+      "p90": 4.046,
+      "p99": 11.221,
+      "max": 32.059,
+      "mean": 2.869
+    },
+    "resume[write/none]": {
+      "n": 21173,
+      "p50": 2.216,
+      "p90": 3.281,
+      "p99": 5.31,
+      "max": 163.287,
+      "mean": 2.48
+    },
+    "resume[write/short]": {
+      "n": 1083,
+      "p50": 2.05,
+      "p90": 2.898,
+      "p99": 4.79,
+      "max": 32.342,
+      "mean": 2.243
+    },
+    "save_step": {
+      "n": 122152,
+      "p50": 10.464,
+      "p90": 14.856,
+      "p99": 34.053,
+      "max": 771.966,
+      "mean": 11.056
+    },
+    "save_step[chat]": {
+      "n": 85022,
+      "p50": 9.955,
+      "p90": 14.209,
+      "p99": 27.972,
+      "max": 771.966,
+      "mean": 10.378
+    },
+    "save_step[coding]": {
+      "n": 37130,
+      "p50": 11.509,
+      "p90": 16.016,
+      "p99": 50.223,
+      "max": 623.016,
+      "mean": 12.608
+    },
+    "time_travel": {
+      "n": 900,
+      "p50": 1.997,
+      "p90": 3.373,
+      "p99": 5.123,
+      "max": 96.081,
+      "mean": 2.361
+    }
+  },
+  "bytes": {
+    "checkpoints": 122152,
+    "put_writes_calls": 96754,
+    "checkpoint_bytes": 6540802548,
+    "writes_bytes": 136528517,
+    "message_payload_bytes_all_checkpoints": 6488687295,
+    "unique_message_bytes": 137424218,
+    "logical_total": 6677331065,
+    "stored": 3006955520.0,
+    "stored_from": "dbStats storageSize + indexSize",
+    "stored_per_logical": 0.4503,
+    "stored_per_checkpoint": 24616.5
+  },
+  "sizes": {
+    "dbStats": {
+      "objects": 290262,
+      "dataSize": 6760548992.0,
+      "storageSize": 2970083328.0,
+      "indexSize": 36872192.0,
+      "totalSize": 3006955520.0
+    },
+    "collStats": {
+      "checkpoint_writes": {
+        "count": 168110,
+        "size": 183079265,
+        "storageSize": 84230144,
+        "totalIndexSize": 22462464
+      },
+      "checkpoints": {
+        "count": 122152,
+        "size": 6577469727,
+        "storageSize": 2885853184,
+        "totalIndexSize": 14409728
+      }
+    },
+    "stored_bytes": 3006955520.0,
+    "stored_from": "dbStats storageSize + indexSize"
+  },
+  "sizes_after_erase": {
+    "dbStats": {
+      "objects": 261924,
+      "dataSize": 6145460847.0,
+      "storageSize": 3277172736.0,
+      "indexSize": 41578496.0,
+      "totalSize": 3318751232.0
+    },
+    "collStats": {
+      "checkpoint_writes": {
+        "count": 151713,
+        "size": 165374451,
+        "storageSize": 106582016,
+        "totalIndexSize": 25161728
+      },
+      "checkpoints": {
+        "count": 110211,
+        "size": 5980086396,
+        "storageSize": 3170590720,
+        "totalIndexSize": 16416768
+      }
+    },
+    "stored_bytes": 3318751232.0,
+    "stored_from": "dbStats storageSize + indexSize"
+  },
+  "s3_put_requests_during_write": null,
+  "server_status_before": null,
+  "server_status_after_write": null,
+  "settle": null,
+  "cold": {
+    "restart": {
+      "cmd": "/root/.fenvix-agentbench-venv/bin/python /home/user/wH/bench/agent-checkpoints/lines.py restart mongo-rs3",
+      "rc": 0,
+      "seconds": 51.2,
+      "output": "11:58:44 restart: docker restart mongo-a mongo-b mongo-c in 47.7 s\n11:58:45 drop_caches: done\n11:58:47 restart: line up again in 50.6 s, check ok=True\n"
+    },
+    "threads": 200,
+    "eligible": 1944,
+    "errors": [],
+    "n_errors": 0,
+    "first_thread": "u000445-t000"
+  },
+  "read_sample": 300,
+  "erase_users": 100,
+  "correctness": {
+    "wrong_reads": 0,
+    "by_kind": {},
+    "reads_checked": 53934,
+    "checkpoints_written": 110211,
+    "examples": []
+  },
+  "wrong_reads": 0,
+  "delta_test": {
+    "test": "agent checkpoint delta test",
+    "target": "mongo",
+    "stored_bytes_source": "MEASURED $bsonSize (UNCOMPRESSED documents; WiredTiger compresses blocks)",
+    "threads": 200,
+    "logical_bytes": 3498489729,
+    "unique_bytes": 43754324,
+    "stored_bytes": 3520875937,
+    "ratio_stored_per_logical": 1.0064,
+    "ratio_unique_per_logical": 0.0125
+  },
+  "ok": true
+}

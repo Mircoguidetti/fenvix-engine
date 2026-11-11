@@ -1,0 +1,61 @@
+{
+ "bench_rc": 1,
+ "seconds": 3498.2,
+ "disk_stop": false,
+ "disk_min_free_gib": 13.65,
+ "cpu_mem": {
+  "samples": 697,
+  "host_cpu_busy_mean": 0.393,
+  "host_cpu_busy_max": 0.929,
+  "host_cpu_busy_ge_95pct_share": 0.0,
+  "host_mem_used_gib_max": 3.62,
+  "containers": {
+   "cook": {
+    "cores_mean": 0.433,
+    "cores_max": 0.954,
+    "at_cap_share": 0.006,
+    "mem_mib_max": 849
+   },
+   "log-0": {
+    "cores_mean": 0.102,
+    "cores_max": 0.242,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 1289
+   },
+   "log-1": {
+    "cores_mean": 0.124,
+    "cores_max": 0.283,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 1252
+   },
+   "log-2": {
+    "cores_mean": 0.101,
+    "cores_max": 0.245,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 1286
+   },
+   "minio": {
+    "cores_mean": 0.494,
+    "cores_max": 2.079,
+    "at_cap_share": 0.164,
+    "mem_mib_max": 9672
+   },
+   "spare": {
+    "cores_mean": 0.004,
+    "cores_max": 0.009,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 5
+   }
+  }
+ },
+ "binaries_sha256_after": {
+  "/home/user/wH/target/release/mongo-server": "1a6c9b1f94eadbb200171fe5cff0cb82374bdbc64d95371138fc3be513a0dc9c",
+  "/home/user/wH/proto/quaderno/target/release/pq": "fb3e780bd8ee05124acbe2965f13359b43fcd559d621d9a3d8c793d37e22d25c"
+ },
+ "binaries_unchanged": true,
+ "quaderno_check": "no summary: FileNotFoundError(2, 'No such file or directory')",
+ "disk_end": {
+  "free_gib": 15.2,
+  "used_gib": 23.2
+ }
+}

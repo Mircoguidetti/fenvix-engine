@@ -1,0 +1,1 @@
+[postgres] VALIDATION, NOT RESULTS: ok=True checkpoints=122152 write=1135.036s save_step p50/p99=6.012/20.447 ms stored/logical=0.3888 wrong_reads=0 -> /home/user/wH/bench/agent-checkpoints/results/local-2026-11-11-equal-r1/postgres/summary.json

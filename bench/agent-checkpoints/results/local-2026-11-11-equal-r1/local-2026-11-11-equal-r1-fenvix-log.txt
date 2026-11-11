@@ -1,0 +1,22 @@
+11:58:58 fenvix-log: disk before {'free_gib': 22.8, 'used_gib': 15.6}
+11:59:05 cook root user created
+11:59:06 fenvix-log: up (log-0, log-1, log-2, cook, spare, minio)
+11:59:06 fenvix-log: durability check ok=True
+11:59:06 fenvix-log: bench.py starts
+12:57:17 fenvix-log: bench.py exit 1 after 3498 s
+Traceback (most recent call last):
+  File "/home/user/wH/bench/agent-checkpoints/lines.py", line 668, in <module>
+    main()
+  File "/home/user/wH/bench/agent-checkpoints/lines.py", line 653, in main
+    sys.exit(run_line(a))
+             ^^^^^^^^^^^
+  File "/home/user/wH/bench/agent-checkpoints/lines.py", line 628, in run_line
+    down()
+  File "/home/user/wH/bench/agent-checkpoints/lines.py", line 131, in down
+    sh(["docker", "rm", "-f", "-v"] + ids)
+  File "/home/user/wH/bench/agent-checkpoints/lines.py", line 74, in sh
+    raise RuntimeError(f"{' '.join(cmd)} -> {r.returncode}: {(r.stderr or '')[-2000:]}")
+RuntimeError: docker rm -f -v aeba4c989c33 d361bd95908a 799ef39ea06f -> 1: Error response from daemon: removal of container aeba4c989c33 is already in progress
+Error response from daemon: removal of container d361bd95908a is already in progress
+Error response from daemon: removal of container 799ef39ea06f is already in progress
+
