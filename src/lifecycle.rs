@@ -650,7 +650,7 @@ impl Lifecycle {
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
         let scope = writer_scope(&id);
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: Default::default(), epoch: epoch, renewed: Default::default(), renewing: Default::default() };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: Default::default(), serving_src: Default::default(), epoch: epoch, renewed: Default::default(), renewing: Default::default() };
         t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
@@ -699,7 +699,7 @@ impl Lifecycle {
         let l0_at_wake = reader.manifest().l0().len();
         let reader = Arc::new(reader);
         READER_DBS.lock().unwrap().insert(id.clone(), Arc::downgrade(&reader));
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: Default::default(), epoch: 0, renewed: Default::default(), renewing: Default::default() };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: Default::default(), serving_src: Default::default(), epoch: 0, renewed: Default::default(), renewing: Default::default() };
         t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
@@ -1328,6 +1328,9 @@ impl Commit {
     }
 }
 
+/// The current end of this process's serving lease of a database (F7), asked at every check.
+pub type ServingSource = Arc<dyn Fn() -> Option<Instant> + Send + Sync>;
+
 pub struct Tenant {
     group: Arc<GroupFlush>,
     lc: Arc<Lifecycle>,
@@ -1369,6 +1372,10 @@ pub struct Tenant {
     /// tenant begins no hold (no new read, no new transaction): a waiter that was cut off rather than dead must not
     /// start reads after the new waiter's drop window opened (RULES-FOR-THE-CODE rules 27, 28 with F7).
     serving_until: std::sync::Mutex<Option<Instant>>,
+    /// Where the F7 deadline comes from now (the server's lease, asked at every check). Before, the deadline was set when a
+    /// command opened the database and kept for the whole command, so a command longer than the window failed at every
+    /// attempt, however often the lease was renewed meanwhile (fix-long-commands).
+    serving_src: std::sync::Mutex<Option<ServingSource>>,
     /// With the log on: the writer epoch this writer fenced with, read from object storage when it opened (0: not read).
     epoch: u64,
     /// c2-fix-long-reads: a reader's state (version, E_env, E1's announcement) renewed between two steps of a read under
@@ -1711,9 +1718,16 @@ impl Tenant {
         &self.id
     }
 
-    /// F7: refuse to begin a hold once the serving lease has expired (retryable).
+    /// F7: refuse to begin a hold once the serving lease has expired (retryable). The deadline is the lease's as it is now
+    /// (`serving_src`), so a long command goes on while this process keeps renewing its lease, and stops at once when the
+    /// lease lapses or is lost (another generation, a takeover).
     fn fx_serving(&self) -> Result<()> {
-        if let Some(t) = *self.serving_until.lock().unwrap() {
+        let src = self.serving_src.lock().unwrap().clone();
+        let until = match src {
+            Some(f) => f(),
+            None => *self.serving_until.lock().unwrap(),
+        };
+        if let Some(t) = until {
             if Instant::now() >= t {
                 return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: this process's serving lease expired; it begins no new read (F7); retry", self.id))));
             }
@@ -1721,9 +1735,14 @@ impl Tenant {
         Ok(())
     }
 
-    /// Set the end of this process's serving lease of the database (the server, at each renewal; tests).
+    /// Set the end of this process's serving lease of the database (tests; the server gives a source instead).
     pub fn set_serving_until(&self, t: Option<Instant>) {
         *self.serving_until.lock().unwrap() = t;
+    }
+
+    /// Where the F7 deadline is read from at each check: the server's lease of this database (`None` from it: no guard).
+    pub fn set_serving_source(&self, f: ServingSource) {
+        *self.serving_src.lock().unwrap() = Some(f);
     }
 
     /// The SlateDB writer, for this database's compactor (`fx/compactor.rs`): it reads the L0 list and the raw L0 SSTs.
