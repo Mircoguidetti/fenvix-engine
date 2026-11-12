@@ -348,7 +348,9 @@ def test_the_compactors_erasure_removes_the_rows_from_the_runs():
     run there). Here they are in runs first (lz4 runs: the mark is visible in their bytes), then the customer is erased."""
     b = bucket("erase")
     env = dict(ENV, FENVIX_SEALED_RUNS="2", FENVIX_SEALED_CODEC="lz4", FENVIX_SEALED_DERIVE="0", FENVIX_TEST_DROP="1")
-    srv = Server(b, "r51-erase", idle=600, extra=SMALL_L0, env=env).start()
+    # integration-4 part 2 (perf-erase): an erasure waits for its batch (--sealed-erasure-batch-ms, 1 hour by default) and
+    # the agent's poll (60 s): batch 0 and a 200 ms poll make it due at once, as test_49 and test_69 run it
+    srv = Server(b, "r51-erase", idle=600, extra=SMALL_L0 + ["--sealed-erasure-batch-ms", "0", "--sealed-erasure-poll-ms", "200"], env=env).start()
     try:
         c = srv.client()
         db = "er"
