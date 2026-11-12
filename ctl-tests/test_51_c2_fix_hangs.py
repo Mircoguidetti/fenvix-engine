@@ -37,7 +37,11 @@ def test_compactor_upkeep_does_not_starve_the_quota():
     srv = Server(make_bucket("c2q"), "c2q", idle=600, extra=["--db-quota-queue", "4"], env=env).start()
     try:
         c = MongoClient(srv.uri, serverSelectionTimeoutMS=5000, socketTimeoutMS=15000, retryReads=False, retryWrites=False)
-        c.q.t.insert_many([{"_id": i, "pad": "x" * 1000} for i in range(200)])
+        c.q.t.insert_many([{"_id": i, "pad": "x" * 1000} for i in range(199)])
+        # integration-4: with the clone-uploads fix (review FIX 1) a new database's compactor starts after a catch-up
+        # publish, which needs a committed write: at the second write batch (or at the close), not after the first.
+        # This test is about the compactor's upkeep and the quota, not about when it starts.
+        c.q.t.insert_one({"_id": 199, "pad": "x" * 1000})
         t0 = time.time()
         while c.admin.command("serverStatus")["fenvix"]["compactor"]["running"] < 1:
             assert time.time() - t0 < 30, "the compactor of the database did not start"

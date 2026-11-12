@@ -1,0 +1,21 @@
+F.                                                                       [100%]
+=================================== FAILURES ===================================
+____________ test_engine_recovers_after_lease_lost_to_store_outage _____________
+test_31_lease_lost_store_down.py:96: in test_engine_recovers_after_lease_lost_to_store_outage
+    srv.proc.wait(SHUTDOWN_S)
+/root/.fenvix-judge/env/lib/python3.12/subprocess.py:1264: in wait
+    return self._wait(timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/subprocess.py:2045: in _wait
+    raise TimeoutExpired(self.args, timeout)
+E   subprocess.TimeoutExpired: Command '['/home/user/wI/target/release/mongo-server', '--listen', '127.0.0.1:30260', '--admin-listen', '127.0.0.1:34363', '--idle-secs', '600', '--bucket', 'ctl-lstall-6955ae0b', '--endpoint', 'http://127.0.0.1:35987', '--holder', 'lstall-30260', '--no-ttl', '--lease-ttl-secs', '6', '--memtable-max-mb', '1']' timed out after 30 seconds
+
+During handling of the above exception, another exception occurred:
+test_31_lease_lost_store_down.py:98: in test_engine_recovers_after_lease_lost_to_store_outage
+    raise AssertionError(f"SIGTERM did not stop the server in {SHUTDOWN_S} s (see {srv.log_path})")
+E   AssertionError: SIGTERM did not stop the server in 30 s (see /home/user/wI/ctl-tests/out/lstall-30260.log)
+----------------------------- Captured stdout call -----------------------------
+acknowledged 119002 documents; abandonCloseTimeouts 0
+=========================== short test summary info ============================
+FAILED test_31_lease_lost_store_down.py::test_engine_recovers_after_lease_lost_to_store_outage
+1 failed, 1 passed in 158.12s (0:02:38)

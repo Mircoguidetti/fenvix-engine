@@ -1,0 +1,3 @@
+compactor on the maintenance store: 12 L0 SSTs absorbed, 22 requests, 12 GETs of L0 SSTs, 0 without the maintenance mark (first: None)
+compactor on the plain store: 12 L0 SSTs absorbed, 22 requests, 12 GETs of L0 SSTs, 22 without the maintenance mark (first: Some(("get", "tenants/fx-i4-maint-ctl/compacted/01M76NEC072AXSKP9WB9W3QX0H.sst", false)))
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 143 filtered out; finished in 0.57s

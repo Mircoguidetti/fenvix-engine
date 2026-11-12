@@ -1,0 +1,12 @@
+F..                                                                      [100%]
+=================================== FAILURES ===================================
+_______________ test_compactor_upkeep_does_not_starve_the_quota ________________
+test_51_c2_fix_hangs.py:43: in test_compactor_upkeep_does_not_starve_the_quota
+    assert time.time() - t0 < 30, "the compactor of the database did not start"
+E   AssertionError: the compactor of the database did not start
+E   assert (1794445608.0614524 - 1794445577.8913767) < 30
+E    +  where 1794445608.0614524 = <built-in function time>()
+E    +    where <built-in function time> = time.time
+=========================== short test summary info ============================
+FAILED test_51_c2_fix_hangs.py::test_compactor_upkeep_does_not_starve_the_quota
+1 failed, 2 passed in 58.86s
