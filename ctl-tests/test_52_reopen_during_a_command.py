@@ -115,7 +115,8 @@ def _insert_spanning(throttled):
         st = c.admin.command("tenantStats")["maintenance"]
         print(f"reopenedWritesRefused {st.get('reopenedWritesRefused')}")
         assert losses > 0, "no lease loss happened while an insert ran: the test did not reach the case"
-        scanned = _scan_ids(col, mandatory=throttled)
+        # integration-4 part 2: with fix-long-commands merged the in-process scan is mandatory again, throttled or not
+        scanned = _scan_ids(col, mandatory=True)
         if scanned is not None:
             dup = len(scanned) - len(set(scanned))
             missing = sorted(set(acked) - set(scanned))

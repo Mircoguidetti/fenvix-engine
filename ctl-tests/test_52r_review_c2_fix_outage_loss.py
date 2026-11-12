@@ -80,7 +80,8 @@ def not_verified_f7(e):
     serving window (about 1-1.7 s with this 2 s lease) is refused at every try (code 134; the serving deadline is set
     when a command enters and never renewed inside it: product defect, its own fix task). The unthrottled loaders of the
     merged engine store several times more documents than c2-fix-outage-loss alone, so their in-process read-back is
-    such a command: refused, it is recorded and the read-back after a restart decides."""
+    such a command: refused, it is recorded and the read-back after a restart decides. With fix-long-commands merged
+    (part 2) the serving deadline is renewed inside a command, so this should no longer happen; it is printed if it does."""
     print(f"not verified in-process (F7, long command): {str(e)[:160]}")
 
 
@@ -320,13 +321,8 @@ def _mixed_writes(throttled):
         print(f"one error of each kind: {list(first.values())}")
         print(f"lease losses {losses}; reopenedWritesRefused {st.get('reopenedWritesRefused')}; errors {kinds}; samples {errors[:3]}")
         assert losses > 0, "no lease loss: the test did not reach the case"
-        try:
-            problems = retry_until_ok(lambda: check(c, acked, incs, "now", 300 if throttled else 30), "the read now", 300 if throttled else 60)
-        except AssertionError as e:
-            if throttled or "134" not in str(e):
-                raise
-            not_verified_f7(e)
-            problems = []
+        # integration-4 part 2: with fix-long-commands merged the in-process read is mandatory again, throttled or not
+        problems = retry_until_ok(lambda: check(c, acked, incs, "now", 300), "the read now", 300)
     finally:
         stop.set()
         srv.term()

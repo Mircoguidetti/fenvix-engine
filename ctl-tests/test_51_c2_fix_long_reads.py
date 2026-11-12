@@ -13,9 +13,9 @@ import time
 from lib import Server, make_bucket
 
 T_PIN_MS = 200
-# integration-4: 200,000 (was 100,000). With the clone-uploads fix a closed database is fully absorbed into sealed runs,
-# so the cold find got faster (0.54-0.59 s against 1.10 s on the branch) and fell under the 3 T_pin this test needs.
-N = 200_000
+# 300,000 (fix-long-commands: at 100,000 the find took 0.44 s on GitHub runners, under 3 T_pin, CI on 3cb6b38; integration-4
+# had raised it to 200,000 for the same reason locally, the clone-uploads fix making the cold find faster)
+N = 300_000
 
 
 def test_long_find_on_a_reader_is_not_refused():
@@ -31,9 +31,11 @@ def test_long_find_on_a_reader_is_not_refused():
         rounds = []
         for _ in range(3):
             t0 = time.time()
-            got = [d["_id"] for d in c.d.w.find({}, {"_id": 1}, batch_size=20000)]
+            # sorted by _id: one command reads every id (a plain find is now read page by page, one short command per
+            # getMore, fix-long-commands), so this stays the long single command the test is about
+            got = [d["_id"] for d in c.d.w.find({}, {"_id": 1}, batch_size=20000).sort("_id", 1)]
             rounds.append(time.time() - t0)
-            assert sorted(got) == list(range(N)), f"{len(got)} ids of {N}"
+            assert got == list(range(N)), f"{len(got)} ids of {N}"
         print(f"three finds of {N} ids on a reader: {', '.join(f'{r:.2f} s' for r in rounds)} (T_pin {T_PIN_MS} ms)")
         # the first find is the cold one; it must last several T_pin, or this test proves nothing
         assert rounds[0] * 1000 >= 3 * T_PIN_MS, f"the find lasted {rounds[0]:.2f} s, under 3 T_pin: make N larger"

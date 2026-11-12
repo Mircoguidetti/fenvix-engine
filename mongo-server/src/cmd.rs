@@ -108,7 +108,28 @@ struct Cursor {
     docs: VecDeque<Document>,
     /// A tailable cursor: where it stands in its capped collection.
     tail: Option<crate::capped::Tail>,
+    /// A find read page by page in natural order (fix-long-commands): where it stands.
+    stream: Option<StreamCur>,
 }
+
+/// A find answered page by page in natural order (`coll::natural_page`): each getMore reads on from the last
+/// natural-order number read, under its own lock and lease check, instead of the find reading everything first.
+pub(crate) struct StreamCur {
+    pub db: String,
+    pub coll: String,
+    pub filter: Document,
+    pub proj: Option<Document>,
+    /// The last natural-order number read, and whether the scan reached the end.
+    pub last: Option<u64>,
+    pub done: bool,
+    /// With a limit: how many more documents it allows.
+    pub left: Option<usize>,
+    /// Documents read (projected) and not returned yet.
+    pub buf: VecDeque<Document>,
+}
+
+/// Bytes of documents in one getMore batch of a page-by-page find (mongod: 16 MiB per reply).
+const STREAM_BATCH_BYTES: usize = (16 << 20) - (16 << 10);
 
 pub(crate) fn ok() -> Document {
     doc! { "ok": 1.0 }
@@ -1087,7 +1108,7 @@ impl Server {
                 break id;
             }
         };
-        c.insert(id, Cursor { used: std::time::Instant::now(), no_timeout: false, ns: ns.clone(), docs: VecDeque::new(), tail: Some(tail) });
+        c.insert(id, Cursor { used: std::time::Instant::now(), no_timeout: false, ns: ns.clone(), docs: VecDeque::new(), tail: Some(tail), stream: None });
         doc! { "cursor": { "firstBatch": first.into_iter().map(Bson::Document).collect::<Vec<_>>(), "id": id, "ns": ns }, "ok": 1.0 }
     }
 
@@ -1096,7 +1117,7 @@ impl Server {
         loop {
             let id = (rand::random::<i64>() & i64::MAX) | (1 << 40);
             if !c.contains_key(&id) {
-                c.insert(id, Cursor { used: std::time::Instant::now(), no_timeout: false, ns, docs, tail: None });
+                c.insert(id, Cursor { used: std::time::Instant::now(), no_timeout: false, ns, docs, tail: None, stream: None });
                 return id;
             }
         }
@@ -1114,6 +1135,10 @@ impl Server {
         };
         if let Some(Some(tail)) = tail {
             return self.tail_get_more(id, tail, batch, cmd).await;
+        }
+        let stream = self.cursors.lock().unwrap().get_mut(&id).and_then(|c| c.stream.take());
+        if let Some(st) = stream {
+            return self.stream_get_more(id, st, batch).await;
         }
         if let Some(v) = cmd.get("maxTimeMS") {
             let m = match v {
@@ -1141,6 +1166,92 @@ impl Server {
         }
         let _ = db;
         Ok(doc! { "cursor": { "nextBatch": next, "id": if done { 0 } else { id }, "ns": ns }, "ok": 1.0 })
+    }
+
+    /// Open a page-by-page find's cursor (`StreamCur`) and answer with its first batch.
+    pub(crate) fn stream_reply(&self, ns: String, first: Vec<Document>, st: StreamCur, open: bool) -> Document {
+        let id = if open {
+            let mut c = self.cursors.lock().unwrap();
+            loop {
+                let id = (rand::random::<i64>() & i64::MAX) | (1 << 40);
+                if !c.contains_key(&id) {
+                    c.insert(id, Cursor { used: std::time::Instant::now(), no_timeout: false, ns: ns.clone(), docs: VecDeque::new(), tail: None, stream: Some(st) });
+                    break id;
+                }
+            }
+        } else {
+            0
+        };
+        doc! { "cursor": { "firstBatch": first.into_iter().map(Bson::Document).collect::<Vec<_>>(), "id": id, "ns": ns }, "ok": 1.0 }
+    }
+
+    /// `getMore` of a page-by-page find: the buffered documents, then the next pages, each under its own read lock and
+    /// lease check, until the batch is full (count or 16 MiB) or the scan ends.
+    async fn stream_get_more(&self, id: i64, mut st: StreamCur, batch: Option<usize>) -> R<Document> {
+        let want = batch.filter(|b| *b > 0).unwrap_or(usize::MAX).min(st.left.unwrap_or(usize::MAX));
+        let fill = want.min(1 << 20);
+        let bytes = |b: &VecDeque<Document>| b.iter().map(crate::query::bson_size).sum::<usize>();
+        while st.buf.len() < fill && !st.done && bytes(&st.buf) < STREAM_BATCH_BYTES {
+            let r = async {
+                let mut g = self.dbs.read(&st.db).await?;
+                let indexes = self.load_indexes(&mut g, &st.db, &st.coll).await?;
+                let page = crate::coll::natural_page(&mut g, &st.coll, &indexes, &st.filter, st.last, fill - st.buf.len(), STREAM_BATCH_BYTES).await?;
+                Ok::<_, MongoError>(page)
+            }
+            .await;
+            let page = match r {
+                Ok(p) => p,
+                Err(e) => {
+                    // the cursor stays where it was: a retry of this getMore reads the same page again
+                    if let Some(c) = self.cursors.lock().unwrap().get_mut(&id) {
+                        c.stream = Some(st);
+                    }
+                    return Err(e);
+                }
+            };
+            let proj = match &st.proj {
+                Some(p) => crate::projfind::parse(p, &st.filter)?,
+                None => None,
+            };
+            for mut d in page.docs {
+                if let Some(p) = &proj {
+                    d = p.apply(&d)?;
+                }
+                crate::text::strip_hidden(&mut d);
+                st.buf.push_back(d);
+            }
+            st.last = page.last;
+            st.done = page.done;
+        }
+        let mut next: Vec<Bson> = Vec::new();
+        let mut used = 0usize;
+        while next.len() < want {
+            let Some(d) = st.buf.front() else { break };
+            let sz = crate::query::bson_size(d);
+            if !next.is_empty() && used + sz > STREAM_BATCH_BYTES {
+                break;
+            }
+            used += sz;
+            next.push(Bson::Document(st.buf.pop_front().unwrap()));
+        }
+        if let Some(l) = st.left.as_mut() {
+            *l -= next.len().min(*l);
+        }
+        let ns = format!("{}.{}", st.db, st.coll);
+        let finished = (st.done && st.buf.is_empty()) || st.left == Some(0);
+        let mut cursors = self.cursors.lock().unwrap();
+        if finished {
+            cursors.remove(&id);
+        } else {
+            match cursors.get_mut(&id) {
+                Some(c) => {
+                    c.used = std::time::Instant::now();
+                    c.stream = Some(st);
+                }
+                None => return Err(MongoError::cursor_not_found(id)),
+            }
+        }
+        Ok(doc! { "cursor": { "nextBatch": next, "id": if finished { 0 } else { id }, "ns": ns }, "ok": 1.0 })
     }
 
     /// `getMore` of a tailable cursor: the documents after the last one it looked at; an `awaitData` cursor waits for some.

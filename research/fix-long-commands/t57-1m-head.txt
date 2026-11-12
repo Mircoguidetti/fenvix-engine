@@ -1,0 +1,2 @@
+1000000 documents, 2 rounds of scan + count + aggregate (last: scan 10.8 s, 200 getMores; count 17.1 s; aggregate 35.0 s); 2 getMores refused and sent again; lease lost or invalid 1420 times
+1 passed, 2 deselected in 184.69s (0:03:04)
