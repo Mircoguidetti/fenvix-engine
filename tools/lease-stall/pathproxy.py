@@ -44,7 +44,7 @@ class PathProxy:
                 if self.headers.get("Transfer-Encoding", "").lower() == "chunked":
                     body = self._chunked()
                 f = proxy.refusal
-                if f and f[2] in (0, "reset") and self.command in f[0] and f[1] in self.path.split("?")[0]:
+                if f and f[2] in (0, "reset") and self.command in f[0] and f[1] in self.path.split("?")[0] and not (len(f) > 3 and f[3] and f[3] in self.path):
                     with proxy.lock:
                         proxy.refused += 1
                     self.close_connection = True   # no answer: the connection is closed (a reset to the client)
@@ -53,9 +53,9 @@ class PathProxy:
                     except OSError:
                         pass
                     return
-                if f and f[2] == "short" and self.command in f[0] and f[1] in self.path.split("?")[0]:
+                if f and f[2] == "short" and self.command in f[0] and f[1] in self.path.split("?")[0] and not (len(f) > 3 and f[3] and f[3] in self.path):
                     proxy.short = True  # forwarded below, then answered 200 with half the body (a lying store)
-                elif f and self.command in f[0] and f[1] in self.path.split("?")[0]:
+                elif f and self.command in f[0] and f[1] in self.path.split("?")[0] and not (len(f) > 3 and f[3] and f[3] in self.path):
                     with proxy.lock:
                         proxy.refused += 1
                         if proxy.journal is not None:
@@ -105,7 +105,7 @@ class PathProxy:
                             import re as _re
                             for k in _re.findall(rb"<Key>([^<]+)</Key>", body):
                                 proxy.journal.append((time.time(), "DELETE*", "/" + self.path.split("?")[0].strip("/") + "/" + k.decode(), resp.status))
-                if f and f[2] == "short" and self.command in f[0] and f[1] in self.path.split("?")[0] and resp.status == 200 and len(data) > 1:
+                if f and f[2] == "short" and self.command in f[0] and f[1] in self.path.split("?")[0] and not (len(f) > 3 and f[3] and f[3] in self.path) and resp.status == 200 and len(data) > 1:
                     with proxy.lock:
                         proxy.refused += 1
                     data = data[: len(data) // 2]
@@ -153,8 +153,10 @@ class PathProxy:
     def hold(self, method, path_part):
         self.rule = (method, path_part)
 
-    def refuse(self, methods, path_part, status=507):
-        self.refusal = (tuple(methods), path_part, status)
+    def refuse(self, methods, path_part, status=507, unless=None):
+        """`unless`: requests whose path contains it are forwarded (e.g. "_lease": a store that refuses the data but not
+        the lease renewals, so no lease lapses)."""
+        self.refusal = (tuple(methods), path_part, status, unless)
 
     def slow(self, methods, path_part, delay_s):
         """Every matching request waits `delay_s` before it is forwarded (a slow store), until `release`."""

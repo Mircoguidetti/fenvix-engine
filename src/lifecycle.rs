@@ -2351,6 +2351,8 @@ impl Tenant {
     }
 
     async fn upgrade_inner(&mut self) -> Result<()> {
+        let t0 = Instant::now();
+        let mut phases: Vec<(&str, u128)> = Vec::new();
         // a writer reads with its own state (it reloads it below); a renewal a read step made as a reader is dropped
         // (c2-fix-long-reads; integration-4: before the clone-uploads fix's guard below, as on each branch)
         self.absorb_renewal();
@@ -2381,9 +2383,11 @@ impl Tenant {
                 st.guard_wait_secs.push(started.elapsed().as_secs_f64());
             }
         }
+        phases.push(("l0_guard", t0.elapsed().as_millis()));
         if let Some(Mode::Reader(r)) = self.mode.take() {
             r.close().await?;
         }
+        phases.push(("reader_close", t0.elapsed().as_millis()));
         let store = &self.lc.store;
         let marker = marker_path(&self.id);
         let (del, db) = tokio::join!(
@@ -2395,12 +2399,19 @@ impl Tenant {
             Err(e) => return Err(e.into()),
         }
         let db = db?;
+        phases.push(("writer_build", t0.elapsed().as_millis()));
         self.epoch = opened_epoch(store, &self.id).await?;
         writer_opened(&self.id, &db);
         self.mode = Some(Mode::Writer(db));
         self.load_env().await?;
+        phases.push(("load_env", t0.elapsed().as_millis()));
         self.load_fx().await?;
+        phases.push(("load_fx", t0.elapsed().as_millis()));
         self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
+        if t0.elapsed() >= Duration::from_secs(5) {
+            // fix-store-errors: which step of a slow writer open waited (milliseconds since the start, cumulative)
+            eprintln!("TIMING upgrade db={} {}", self.id, phases.iter().map(|(k, v)| format!("{k}={v}")).collect::<Vec<_>>().join(" "));
+        }
         Ok(())
     }
 

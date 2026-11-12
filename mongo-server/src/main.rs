@@ -135,6 +135,12 @@ struct Args {
     /// process's tenants can be taken over once it has passed.
     #[arg(long, default_value_t = 30)]
     lease_ttl_secs: u64,
+    /// SIGTERM: the clean close of every database (memtable flush, lease release) gets at most this long; then the
+    /// process exits without it (fix-store-errors: a store that refuses or does not answer writes kept the close waiting
+    /// for minutes). Nothing acknowledged is lost: an acknowledged write is in a WAL object already, and the next owner
+    /// replays it once the leases run out.
+    #[arg(long, default_value_t = 25)]
+    shutdown_timeout_secs: u64,
     /// Lease holder id (default: a unique id per process start).
     #[arg(long)]
     holder: Option<String>,
@@ -1134,14 +1140,26 @@ async fn run() -> Result<()> {
         }
     }
     eprintln!("shutting down: closing tenants cleanly");
-    ctl::stop_agents().await;
-    dbs.close_all().await;
-    ctl::shutdown().await;
-    leases.release_process().await;
-    eprintln!("tenants closed; stopping maintenance");
-    if let Some(m) = maintenance {
-        m.shutdown().await;
+    let bound = Duration::from_secs(args.shutdown_timeout_secs.max(1));
+    let t0 = std::time::Instant::now();
+    let clean = tokio::time::timeout(bound, async {
+        ctl::stop_agents().await;
+        dbs.close_all().await;
+        ctl::shutdown().await;
+        leases.release_process().await;
+        eprintln!("tenants closed; stopping maintenance");
+        if let Some(m) = maintenance {
+            m.shutdown().await;
+        }
+    })
+    .await;
+    if clean.is_err() {
+        // A close waiting on the store (or on a command stuck on it) would hold SIGTERM for as long as the store refuses.
+        // Exit now: the acknowledged writes are in WAL objects; the databases still open are taken over (replayed) by
+        // their next owner when their leases run out, as after a crash.
+        eprintln!("shutting down: the clean close did not finish in {} s (the store does not answer or refuses writes); exiting without it, acknowledged writes are in the WAL", bound.as_secs());
+        std::process::exit(0);
     }
-    eprintln!("maintenance stopped");
+    eprintln!("maintenance stopped ({} ms)", t0.elapsed().as_millis());
     Ok(())
 }
