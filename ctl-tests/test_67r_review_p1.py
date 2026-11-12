@@ -91,6 +91,9 @@ def test_streams_at_different_speeds():
         s.term()
 
 
+@pytest.mark.skipif(os.environ.get("FENVIX_SEALED_RUNS", "off") in ("off", "0", ""),
+                    reason="customer erasure exists only with sealed runs (fx/erase.rs); with them off delete_many is plain deletes "
+                           "and the stream delivers them (integration-4)")
 def test_a_customer_erasure_between_writes_and_reads():
     s = server("rp1erase", extra=["--sealed-erasure-batch-ms", "0"] if os.environ.get("FQ_ERASE_FLAG") else [])
     try:

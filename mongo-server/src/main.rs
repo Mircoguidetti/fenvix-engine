@@ -1,3 +1,4 @@
+#![recursion_limit = "256"] // integration-4: the serverStatus doc! macro grew past the default 128 when both merged counters were kept
 //! A MongoDB wire-protocol server whose databases are slatedb tenants on object storage.
 //!
 //! Each MongoDB database is one tenant at `tenants/{dbname}` managed by the results3 lifecycle
