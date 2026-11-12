@@ -50,6 +50,9 @@ fn cmp_numbers(a: &Bson, b: &Bson) -> Ordering {
         (Bson::Int64(x), Bson::Int64(y)) => x.cmp(y),
         (Bson::Int32(_) | Bson::Int64(_), Bson::Double(f)) => cmp_int_f64(int_of(a), *f),
         (Bson::Double(f), Bson::Int32(_) | Bson::Int64(_)) => cmp_int_f64(int_of(b), *f).reverse(),
+        // a Decimal128 against any number: exactly, as mongod (a double 0.1 is not the decimal 0.1, and 1E+400 is a finite
+        // number, not infinity: fix-query-defects P8). Through f64 both were equal.
+        (Bson::Decimal128(_), _) | (_, Bson::Decimal128(_)) => exact_num(a).cmp(&exact_num(b)),
         _ => {
             let (x, y) = (as_f64(a), as_f64(b));
             // NaN sorts before every other number.
@@ -60,6 +63,43 @@ fn cmp_numbers(a: &Bson, b: &Bson) -> Ordering {
                 _ => x.partial_cmp(&y).unwrap(),
             }
         }
+    }
+}
+
+/// A number as an exact value, for comparisons with a Decimal128. NaN sorts first, as everywhere else.
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+enum ExactNum {
+    NaN,
+    NegInf,
+    Fin(bigdecimal::BigDecimal),
+    PosInf,
+}
+
+fn exact_num(v: &Bson) -> ExactNum {
+    use std::str::FromStr;
+    let of_f64 = |f: f64| {
+        if f.is_nan() {
+            ExactNum::NaN
+        } else if f.is_infinite() {
+            if f > 0.0 { ExactNum::PosInf } else { ExactNum::NegInf }
+        } else {
+            bigdecimal::BigDecimal::try_from(f).map(ExactNum::Fin).unwrap_or(ExactNum::NaN)
+        }
+    };
+    match v {
+        Bson::Int32(x) => ExactNum::Fin(bigdecimal::BigDecimal::from(*x)),
+        Bson::Int64(x) => ExactNum::Fin(bigdecimal::BigDecimal::from(*x)),
+        Bson::Double(f) => of_f64(*f),
+        Bson::Decimal128(d) => {
+            let t = d.to_string();
+            match t.as_str() {
+                "Infinity" | "+Infinity" => ExactNum::PosInf,
+                "-Infinity" => ExactNum::NegInf,
+                _ if t.ends_with("NaN") => ExactNum::NaN,
+                _ => bigdecimal::BigDecimal::from_str(&t).map(ExactNum::Fin).unwrap_or(ExactNum::NaN),
+            }
+        }
+        _ => ExactNum::NaN,
     }
 }
 

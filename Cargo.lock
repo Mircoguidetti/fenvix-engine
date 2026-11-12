@@ -2199,6 +2199,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "base64 0.22.1",
+ "bigdecimal",
  "bson 3.1.0",
  "bytes",
  "chrono",
