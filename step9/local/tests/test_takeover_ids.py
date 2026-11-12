@@ -130,8 +130,11 @@ def test_every_acknowledged_and_missing_id_is_saved():
     os.environ["CM_PW"] = "x"
     sys.argv = ["takeovers.py", "bucket", out, "--a", "10.0.0.1", "--b", "10.0.0.2", "--ca", "/dev/null", "--n", "3",
                 "--writers", "2", "--between-s", "0.3", "--settle-s", "0.1"]
+    code = 0
     try:
         runpy.run_path(PROG, run_name="__main__")
+    except SystemExit as e:
+        code = e.code
     finally:
         for k, v in saved.items():
             if v is None:
@@ -155,6 +158,7 @@ def test_every_acknowledged_and_missing_id_is_saved():
         assert got == planted, (label, len(got), len(planted))
         assert all(r["server"] == STATE.by[r["_id"]] for r in miss["missing"][label])
     assert s["lost"] == len(planted) > 0 and s["verdict"] == "FAIL"
+    assert code == 1, code   # total review R6: a verdict that is not PASS exits 1, so the job turns red
     assert len(planted) > 50 and len(s["lost_ids_first"]) == 50   # the summary keeps 50; the file keeps every one
 
 

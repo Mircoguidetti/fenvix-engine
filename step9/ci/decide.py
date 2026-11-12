@@ -19,9 +19,11 @@ Fields of step9/command.json (defaults in brackets):
   generator     the generator machine [c7i.2xlarge (8 vCPU) when the round generates more than 4 databases, else
                 c7i.xlarge (4 vCPU): one database per vCPU at a time]; generator_disk_gb its
                 disk (the sorted spill of the shared keyspace) [60]; generator_parallel databases at once [its vCPU]
-  engine        REQUIRED for mode run: the name of the fenvix-engine ref (branch or tag) the servers and the generator are
-                built from: the final merged ref of compaction 2 (no default: a round never runs on a ref chosen by
-                accident). The gate (gate.py) stays closed unless the local benchmark report was made on that ref's commit.
+  engine        REQUIRED for mode run: the FULL 40-character fenvix-engine commit id the servers and the generator are
+                built from, the final merged head of compaction 2 (no default: a round never runs on a commit chosen by
+                accident). Never a branch or tag name (total review R5, 2026-11-12): a branch moves, so two jobs of one
+                round could run two engines, and a commit added after the local report would close the gate between
+                jobs. The gate (gate.py) stays closed unless the local benchmark report was made on that commit.
   atlas_states  code-irlanda commit with the Atlas state files the Atlas round started from ["501c8fd"]
   cook, spare   type of the measured cook and of the warm spare; spare null = no spare (not like for like) ["m7i.large"]
   log           type of the three log nodes ["c7g.medium"]
@@ -192,12 +194,17 @@ def resolve(raw, quota=None):
     if c["compactor"] and not c["compactor_options"]:
         refuse("compactor: give its command line in compactor_options (compaction 2 step 4 decides it)")
     if c["mode"] == "run" and not c["engine"]:
-        refuse('engine: give the name of the final merged engine ref (branch or tag), e.g. "engine": "integration-3"; '
-               'there is no default (step 9 runs on the ref holding compaction 2 steps 3-8, never on one chosen by accident)')
-    if c["engine"] is not None and not re.match(r"^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$", str(c["engine"])):
-        refuse("engine: a branch or tag name")
-    # the commit the ref names, resolved by the workflow before decide.py runs (ENGINE_COMMIT); the build checks it out
-    c["engine_commit"] = os.environ.get("ENGINE_COMMIT") or None
+        refuse('engine: give the full 40-character commit id of the final merged engine, e.g. "engine": '
+               '"27014ff2e3e3e4ff223aa778746f3dce433c6549"; there is no default (step 9 runs on the commit holding '
+               'compaction 2 steps 3-8, never on one chosen by accident)')
+    if c["engine"] is not None and not re.match(r"^[0-9a-f]{40}$", str(c["engine"])):
+        refuse(f"engine: the full 40-character commit id, never a branch or tag name (total review R5: a branch moves "
+               f"between the jobs of one round); got {c['engine']!r}")
+    # the build checks out exactly this commit; the workflow passes it as ENGINE_COMMIT too, and the two must agree
+    env_commit = os.environ.get("ENGINE_COMMIT") or None
+    if c["engine"] and env_commit and env_commit != c["engine"]:
+        refuse(f"engine: the command names {c['engine']} but the workflow resolved {env_commit}")
+    c["engine_commit"] = c["engine"] or env_commit
     if c["ballast_mode"] not in ("generate", "script"):
         refuse("ballast_mode: generate or script")
     if not re.match(r"^[0-9a-f]{7,40}$", c["atlas_states"]):
