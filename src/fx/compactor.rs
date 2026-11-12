@@ -52,7 +52,7 @@ use std::time::{Duration, Instant};
 
 /// The switch of the fold drop (`--sealed-drop`): on in the server since P-perf-bytes (export and PITR read through the
 /// paired merged reader since step 7a; the reviewer's tests of DECISIONS 2026-11-09 pass with the real drop,
-/// `ctl-tests/test_53_real_drop_between_reads.py`). Off in tests unless a test turns it on (`Knobs::drop`).
+/// `ctl-tests/test_56_real_drop_between_reads.py`). Off in tests unless a test turns it on (`Knobs::drop`).
 pub static DROP_DEFAULT: AtomicBool = AtomicBool::new(false);
 
 /// The server runs one compactor per open writer (`--sealed-compactor`, FENVIX_SEALED_COMPACTOR=1), with sealed runs on.
