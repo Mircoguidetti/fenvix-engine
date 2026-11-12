@@ -1,0 +1,64 @@
+batches 126, acknowledged 600001 documents, refused 6 batches ['database d: this process\'s serving lease expired; it begins no new read (F7); retry, full error: {\'ok\': 0.0, \'errmsg\': "database d: this process\'s serving lease expired; it begins no new read (F7); re', 'database d: this process\'s serving lease expired; it begins no new read (F7); retry, full error: {\'ok\': 0.0, \'errmsg\': "database d: this process\'s serving lease expired; it begins no new read (F7); re']; lease losses 11
+reopenedWritesRefused 0
+acknowledged 600001, scanned in-process 600001, missing from the scan 0
+after a restart: acknowledged 600001, scanned 600001, missing 0, twice 0, refused but stored 0
+.batches 32, acknowledged 150001 documents, refused 2 batches ['database d: this process\'s serving lease expired; it begins no new read (F7); retry, full error: {\'ok\': 0.0, \'errmsg\': "database d: this process\'s serving lease expired; it begins no new read (F7); re', 'database d: this process\'s serving lease expired; it begins no new read (F7); retry, full error: {\'ok\': 0.0, \'errmsg\': "database d: this process\'s serving lease expired; it begins no new read (F7); re']; lease losses 10
+reopenedWritesRefused 0
+acknowledged 150001, scanned in-process 150001, missing from the scan 0
+after a restart: acknowledged 150001, scanned 150001, missing 0, twice 0, refused but stored 0
+.attempt 0: OperationFailure 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db is closed', 'code': 1, 'codeName': 'Inte
+attempt 1: committed
+scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'a', 'b']
+.ssreopened True; commit refused: OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again, full error: {'ok': 0.0, 'errmsg': 'data; reopenedWritesRefused 1
+acknowledged ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']
+scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']
+found by _id 11 of 11
+after a restart: scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']; found by _id 11 of 11
+.P2 saw n=1 after its increment; commit on P1: refused: OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again, full error: {'ok': 0.0, 'errmsg': 'data; final n=1; acknowledged increments 1
+a fresh process after both stopped reads n=1
+.one error of each kind: ['OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again,', 'OperationFailure 134 database d: this process\'s serving lease expired; it begins no new read (F7); retry, full error: {\'ok\': 0.0, \'errmsg\': "', "OperationFailure 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db is closed', 'code': 1, 'codeName': 'Inte"]
+lease losses 8; reopenedWritesRefused 6; errors {'OperationFailure 251': 6, 'OperationFailure 134': 29, 'OperationFailure 1': 9}; samples ['OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again,', 'OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again,', 'OperationFailure 134 database d: this process\'s serving lease expired; it begins no new read (F7); retry, full error: {\'ok\': 0.0, \'errmsg\': "']
+now: acknowledged inserts 114761, scanned 114761, by _id index 114761, by k index 114761
+now: OK
+after a restart: acknowledged inserts 114761, scanned 114761, by _id index 114761, by k index 114761
+after a restart: OK
+.one error of each kind: ['OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again,', 'OperationFailure 134 database d: this process\'s serving lease expired; it begins no new read (F7); retry, full error: {\'ok\': 0.0, \'errmsg\': "', "OperationFailure 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db is closed', 'code': 1, 'codeName': 'Inte"]
+lease losses 6; reopenedWritesRefused 10; errors {'OperationFailure 251': 10, 'OperationFailure 134': 14, 'OperationFailure 1': 7}; samples ['OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again,', 'OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again,', 'OperationFailure 134 database d: this process\'s serving lease expired; it begins no new read (F7); retry, full error: {\'ok\': 0.0, \'errmsg\': "']
+now: acknowledged inserts 36841, scanned 36841, by _id index 36841, by k index 36841
+now: OK
+after a restart: acknowledged inserts 36841, scanned 36841, by _id index 36841, by k index 36841
+after a restart: OK
+.k_1 attempt 0: ok in 0.8 s
+u_1 attempt 2: ok in 13.5 s
+k_-1_u_1 attempt 0: ok in 1.8 s
+lease losses 7; reopenedWritesRefused 0
+k_1 attempt 0: ok in 0.8 s
+u_1 attempt 0: after 9.2 s OperationFailure 134 database d: this process's serving lease expired; it begins no new read (F7); retry, full error: {'o
+u_1 attempt 1: after 17.0 s OperationFailure 134 database d: this process's serving lease expired; it begins no new read (F7); retry, full error: {'o
+u_1 attempt 2: ok in 13.5 s
+k_-1_u_1 attempt 0: ok in 1.8 s
+acknowledged 212400, scanned 212400, indexes ['_id_', 'k_1', 'u_1', 'k_-1_u_1'], validate valid=True errors=[]
+background build failures in the log: 0
+.lease losses 7; reopenedWritesRefused 0; read by this process; scanned 720000; calls [('ok', 120000), ('ok', 120000), ('ok', 120000), ('ok', 120000), ('ok', 120000), ('ok', 120000)]
+OK
+.failed call 0 (error 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db ): its first 1 command(s) applied, as on mongod
+KNOWN DEFECT: call 0 failed with a non-retryable code 1 during a lease loss: error 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db 
+lease losses 2; reopenedWritesRefused 2; read by this process; scanned 201000; calls [("error 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db ", None), ('ok', 101000)]
+OK
+.scycles 13; lease losses 19; commands that failed 18: ["1 drop OperationFailure 1 after 2.8 s: Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db is closed'", "2 create OperationFailure 134 after 8.5 s: database d: this process's serving lease expired; it begins no new read (F7); retry, full ", "2 drop OperationFailure 27 after 2.5 s: index not found with name [k_1], full error: {'ok': 0.0, 'errmsg': 'index not found with n", "3 drop OperationFailure 1 after 1.9 s: Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db is closed'", "4 create OperationFailure 134 after 8.6 s: database d: this process's serving lease expired; it begins no new read (F7); retry, full ", "4 drop OperationFailure 27 after 2.5 s: index not found with name [k_1], full error: {'ok': 0.0, 'errmsg': 'index not found with n"]
+hung: []
+.collections ['cap', 'ck', 'cko', 'cl', 'plain', 'system.buckets.ts', 'ts']
+now cap: valid=True errors=[] repaired=0
+now ck: valid=True errors=[] repaired=0
+now cko: valid=True errors=[] repaired=0
+now cl: valid=True errors=[] repaired=0
+now plain: valid=True errors=[] repaired=0
+now ts: valid=True errors=[] repaired=0
+after a restart cap: valid=True errors=[] repaired=0
+after a restart ck: valid=True errors=[] repaired=0
+after a restart cko: valid=True errors=[] repaired=0
+after a restart cl: valid=True errors=[] repaired=0
+after a restart plain: valid=True errors=[] repaired=0
+after a restart ts: valid=True errors=[] repaired=0
+.s
+12 passed, 4 skipped in 544.69s (0:09:04)
