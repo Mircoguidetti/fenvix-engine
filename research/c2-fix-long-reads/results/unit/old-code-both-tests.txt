@@ -1,0 +1,327 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling libc v0.2.191
+   Compiling cfg-if v1.0.5
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+   Compiling syn v3.0.9
+   Compiling jobserver v0.1.35
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling cc v1.10.0
+   Compiling pin-project-lite v0.2.17
+   Compiling smallvec v1.16.4
+   Compiling syn v2.0.119
+   Compiling parking_lot_core v0.9.12
+   Compiling scopeguard v1.2.0
+   Compiling pkg-config v0.3.34
+   Compiling lock_api v0.4.14
+   Compiling version_check v0.9.5
+   Compiling parking_lot v0.12.5
+   Compiling errno v0.3.14
+   Compiling futures-core v0.3.34
+   Compiling memchr v2.8.3
+   Compiling synstructure v0.14.0
+   Compiling signal-hook-registry v1.4.8
+   Compiling socket2 v0.6.5
+   Compiling mio v1.2.4
+   Compiling serde_derive v1.0.229
+   Compiling tokio-macros v2.7.2
+   Compiling zerofrom-derive v0.1.8
+   Compiling yoke-derive v0.8.4
+   Compiling futures-sink v0.3.34
+   Compiling equivalent v1.0.3
+   Compiling allocator-api2 v0.2.21
+   Compiling zerofrom v0.1.8
+   Compiling foldhash v0.2.0
+   Compiling stable_deref_trait v1.2.1
+   Compiling futures-channel v0.3.34
+   Compiling yoke v0.8.4
+   Compiling hashbrown v0.17.1
+   Compiling futures-macro v0.3.34
+   Compiling slab v0.4.12
+   Compiling once_cell v1.21.4
+   Compiling futures-io v0.3.34
+   Compiling futures-task v0.3.34
+   Compiling zerovec-derive v0.11.7
+   Compiling futures-util v0.3.34
+   Compiling autocfg v1.5.1
+   Compiling itoa v1.0.18
+   Compiling displaydoc v0.2.7
+   Compiling bytes v1.12.1
+   Compiling zerovec v0.11.9
+   Compiling cmake v0.1.58
+   Compiling fs_extra v1.3.0
+   Compiling tokio v1.54.1
+   Compiling dunce v1.0.5
+   Compiling aws-lc-sys v0.46.0
+   Compiling log v0.4.34
+   Compiling bitflags v2.13.2
+   Compiling rand_core v0.10.1
+   Compiling getrandom v0.4.3
+   Compiling tinystr v0.8.5
+   Compiling indexmap v2.14.2
+   Compiling tracing-core v0.1.36
+   Compiling tracing-attributes v0.1.31
+   Compiling litemap v0.8.3
+   Compiling typenum v1.20.1
+   Compiling writeable v0.6.4
+   Compiling aws-lc-rs v1.18.2
+   Compiling zeroize v1.9.1
+   Compiling icu_locale_core v2.4.0
+   Compiling tracing v0.1.44
+   Compiling potential_utf v0.1.6
+   Compiling http v1.5.0
+   Compiling zerotrie v0.2.5
+   Compiling utf8_iter v1.0.4
+   Compiling zerocopy v0.8.63
+   Compiling icu_properties_data v2.4.0
+   Compiling cpufeatures v0.3.1
+   Compiling icu_normalizer_data v2.4.0
+   Compiling chacha20 v0.10.2
+   Compiling icu_provider v2.4.0
+   Compiling icu_collections v2.4.0
+   Compiling rustls-pki-types v1.15.1
+   Compiling percent-encoding v2.3.2
+   Compiling getrandom v0.3.4
+   Compiling rand v0.10.3
+   Compiling http-body v1.1.0
+   Compiling rustls v0.23.46
+   Compiling httparse v1.10.1
+   Compiling untrusted v0.9.0
+   Compiling either v1.19.0
+   Compiling hashbrown v0.15.5
+   Compiling tokio-util v0.7.20
+   Compiling ppv-lite86 v0.2.21
+   Compiling itertools v0.15.0
+   Compiling icu_normalizer v2.4.0
+   Compiling icu_properties v2.4.0
+   Compiling num-traits v0.2.19
+   Compiling generic-array v0.14.7
+   Compiling tower-service v0.3.3
+   Compiling atomic-waker v1.1.2
+   Compiling fnv v1.0.7
+   Compiling subtle v2.6.1
+   Compiling try-lock v0.2.5
+   Compiling want v0.3.2
+   Compiling h2 v0.4.20
+   Compiling rand_core v0.9.5
+   Compiling idna_adapter v1.2.2
+   Compiling form_urlencoded v1.2.2
+   Compiling hybrid-array v0.4.15
+   Compiling proc-macro2-diagnostics v0.10.1
+   Compiling zstd-sys v2.1.2+zstd.1.5.7
+   Compiling semver v1.0.28
+   Compiling zmij v1.0.23
+   Compiling rustc_version v0.4.1
+   Compiling idna v1.1.0
+   Compiling hyper v1.12.0
+   Compiling memoffset v0.9.1
+   Compiling sync_wrapper v1.0.2
+   Compiling tower-layer v0.3.3
+   Compiling base64 v0.23.1
+   Compiling crossbeam-utils v0.8.23
+   Compiling serde_json v1.0.154
+   Compiling openssl-probe v0.2.1
+   Compiling yansi v1.0.1
+   Compiling anyhow v1.0.104
+   Compiling ipnet v2.12.2
+   Compiling ryu v1.0.23
+   Compiling cfg_aliases v0.2.2
+   Compiling thiserror v2.0.21
+   Compiling nix v0.31.3
+   Compiling hyper-util v0.1.21
+   Compiling rustls-native-certs v0.8.5
+   Compiling tower v0.5.3
+   Compiling crypto-common v0.1.7
+   Compiling url v2.5.8
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling rand_chacha v0.9.0
+   Compiling twox-hash v2.1.5
+   Compiling pin-project-internal v1.1.13
+   Compiling thiserror-impl v2.0.21
+   Compiling lz4-sys v1.11.1+lz4-1.10.0
+   Compiling zstd-safe v7.3.0
+   Compiling rustix v1.1.5
+   Compiling paste v1.0.15
+   Compiling pin-project v1.1.13
+   Compiling rand v0.9.5
+   Compiling digest v0.11.3
+   Compiling tower-http v0.6.11
+   Compiling digest v0.10.7
+   Compiling mixtrics v0.2.6
+   Compiling http-body-util v0.1.5
+   Compiling foyer-tokio v0.22.6
+   Compiling bincode v1.3.3
+   Compiling io-uring v0.7.15
+   Compiling linux-raw-sys v0.12.1
+   Compiling same-file v1.0.6
+   Compiling spin v0.10.1
+   Compiling iana-time-zone v0.1.65
+   Compiling chrono v0.4.45
+   Compiling crc-fast v1.10.0
+   Compiling walkdir v2.5.0
+   Compiling foyer-common v0.22.6
+   Compiling foyer-intrusive-collections v0.10.0-dev
+   Compiling md-5 v0.11.0
+   Compiling serde_urlencoded v0.7.1
+   Compiling quick-xml v0.41.0
+   Compiling serde_spanned v0.6.9
+   Compiling toml_datetime v0.6.11
+   Compiling async-trait v0.1.92
+   Compiling uncased v0.9.10
+   Compiling num_cpus v1.17.0
+   Compiling datasketches v0.3.0
+   Compiling thiserror v1.0.69
+   Compiling web-time v1.1.0
+   Compiling toml_write v0.1.2
+   Compiling crossbeam-epoch v0.9.21
+   Compiling rust_decimal v1.43.0
+   Compiling small_ctor v0.1.2
+   Compiling asyncband v0.7.4
+   Compiling winnow v0.7.15
+   Compiling utf8parse v0.2.2
+   Compiling humantime v2.4.0
+   Compiling parking v2.2.1
+   Compiling event-listener v5.4.2
+   Compiling anstyle-parse v1.0.0
+   Compiling zstd v0.13.3
+   Compiling foyer-memory v0.22.6
+   Compiling fastant v0.1.11
+   Compiling core_affinity v0.8.3
+   Compiling toml_edit v0.22.27
+   Compiling fs4 v0.13.1
+   Compiling lz4 v1.28.1
+   Compiling pear_codegen v0.2.9
+   Compiling flatbuffers v25.12.19
+   Compiling rand_xoshiro v0.7.0
+   Compiling futures-executor v0.3.34
+   Compiling thiserror-impl v1.0.69
+   Compiling figment v0.10.19
+   Compiling getrandom v0.2.17
+   Compiling thread_local v1.1.10
+   Compiling deranged v0.5.9
+   Compiling time-core v0.1.9
+   Compiling inlinable_string v0.1.15
+   Compiling anstyle-query v1.1.5
+   Compiling num-conv v0.2.2
+   Compiling arrayvec v0.7.8
+   Compiling rustls-webpki v0.103.16
+   Compiling heck v0.4.1
+   Compiling powerfmt v0.2.1
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling foyer v0.22.6
+   Compiling crc32fast v1.5.3
+   Compiling colorchoice v1.0.5
+   Compiling anstyle v1.0.14
+   Compiling unsafe-libyaml v0.2.11
+   Compiling anstream v1.0.0
+   Compiling pear v0.2.9
+   Compiling serde_yaml v0.9.34+deprecated
+   Compiling time v0.3.55
+   Compiling tokio-rustls v0.26.6
+   Compiling hyper-rustls v0.27.10
+   Compiling rustls-platform-verifier v0.7.1
+   Compiling reqwest v0.13.5
+   Compiling ouroboros_macro v0.18.5
+   Compiling object_store v0.14.2
+   Compiling rand_core v0.6.4
+   Compiling toml v0.8.23
+   Compiling futures v0.3.34
+   Compiling foyer-storage v0.22.6
+   Compiling slatedb-common v0.17.0
+   Compiling event-listener-strategy v0.5.4
+   Compiling concurrent-queue v2.5.0
+   Compiling crc32c v0.6.9
+   Compiling aliasable v0.1.3
+   Compiling winnow v0.6.26
+   Compiling clap_lex v1.1.1
+   Compiling bytemuck v1.25.2
+   Compiling heck v0.5.0
+   Compiling fastrand v2.5.0
+   Compiling static_assertions v1.1.0
+   Compiling strsim v0.11.1
+   Compiling duration-str v0.11.3
+   Compiling clap_builder v4.6.7
+   Compiling ouroboros v0.18.5
+   Compiling backon v1.6.0
+   Compiling clap_derive v4.6.7
+   Compiling atomic v0.6.1
+   Compiling async-channel v2.5.0
+   Compiling crossbeam-skiplist v0.1.3
+   Compiling slatedb-txn-obj v0.17.0
+   Compiling rand_chacha v0.3.1
+   Compiling fail-parallel v0.6.0
+   Compiling ulid v1.2.1
+   Compiling lz4_flex v0.11.6
+   Compiling uuid v1.29.0
+   Compiling lru v0.18.5
+   Compiling sysinfo v0.35.2
+   Compiling dotenvy v0.15.7
+   Compiling siphasher v1.0.4
+   Compiling slatedb v0.17.0
+   Compiling rand v0.8.8
+   Compiling clap v4.6.7
+   Compiling tenant-bench v0.1.0 (/home/user/old-i3)
+warning: unnecessary parentheses around closure body
+    --> src/warm.rs:1211:42
+     |
+1211 |                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+     |                                          ^                                ^
+     |
+     = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+     |
+1211 -                     (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+1211 +                     (0..40).flat_map(|c| c * (n / 40)..c * (n / 40) + per).collect()
+     |
+
+warning: `tenant-bench` (lib test) generated 1 warning (run `cargo fix --lib -p tenant-bench --tests` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 5m 59s
+     Running unittests src/lib.rs (target/release/deps/tenant_bench-8ad66b7b77dbaadc)
+
+running 2 tests
+test fx::long_reads_tests::long_reader_scan_following_e1 ... long reader scan following E1 (control false): 18.0 s = 60.1 T_pin, 685 steps, 0 passes, 176 rows, 176 stable rows compared, wrong 0, refused 674, other errors 0 (database fx-long-e1: release E1's announcement was last read 303.804967ms ago, more than T_pin; retry), renewals 0; writer published 0 versions; reader's exclusive state at the end: E_env None, version None
+
+thread 'fx::long_reads_tests::long_reader_scan_following_e1' (30229) panicked at src/fx/long_reads_tests.rs:374:13:
+assertion `left == right` failed: a long read was refused because of T_pin
+  left: 674
+ right: 0
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: core::panicking::assert_failed_inner
+   3: core::panicking::assert_failed::<u64, u64>
+   4: tenant_bench::fx::long_reads_tests::long_reader_scan_following_e1::{closure#0}
+   5: <tokio::runtime::park::CachedParkThread>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   6: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   7: tenant_bench::fx::long_reads_tests::long_reader_scan_following_e1
+   8: <tenant_bench::fx::long_reads_tests::long_reader_scan_following_e1::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+FAILED
+test fx::long_reads_tests::long_reader_scan_with_compactor_and_gc ... 
+thread 'fx::long_reads_tests::long_reader_scan_with_compactor_and_gc' (30237) panicked at src/fx/tests.rs:121:5:
+no publish
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: tenant_bench::fx::long_reads_tests::long_reader_scan_with_compactor_and_gc::{closure#0}
+   3: <tokio::runtime::park::CachedParkThread>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   4: <tokio::runtime::runtime::Runtime>::block_on::<core::pin::Pin<&mut dyn core::future::future::Future<Output = ()>>>
+   5: tenant_bench::fx::long_reads_tests::long_reader_scan_with_compactor_and_gc
+   6: <tenant_bench::fx::long_reads_tests::long_reader_scan_with_compactor_and_gc::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+FAILED
+
+failures:
+
+failures:
+    fx::long_reads_tests::long_reader_scan_following_e1
+    fx::long_reads_tests::long_reader_scan_with_compactor_and_gc
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 142 filtered out; finished in 21.33s
+
+error: test failed, to rerun pass `--lib`
+EXIT 101

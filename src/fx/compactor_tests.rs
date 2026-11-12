@@ -469,6 +469,8 @@ async fn held_reads_across_drop_and_gc() {
         // a follower in another process: its own lifecycle, reader mode, the newest version
         let mut follower = lc(&store).wake(id).await.unwrap();
         follower.fx_refresh().await.unwrap();
+        // c2-fix-long-reads: the follower keeps the version it loaded (a read step would renew it past half T_pin)
+        CONTROL_NO_RENEW.store(true, Relaxed);
         let loaded = Instant::now();
         let fm = m.clone();
         // the writer retires every run of that version: every group resealed, merges, then GC
@@ -536,6 +538,7 @@ async fn held_reads_across_drop_and_gc() {
             assert_eq!(f_errors, 0);
         }
         drop(snap);
+        CONTROL_NO_RENEW.store(false, Relaxed);
         follower.abandon().await;
         c.stop().await;
         t.abandon().await;
