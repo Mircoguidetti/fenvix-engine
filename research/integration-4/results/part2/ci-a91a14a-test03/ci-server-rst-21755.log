@@ -1,0 +1,60 @@
+admin interface listening on 127.0.0.1:38543 (bearer token required)
+mongo-server listening on 127.0.0.1:21755 (idle close after 300 s, holder rst-21755, lease ttl 6 s)
+uploads: 0 unfinished multipart uploads under tenants/, 0 older than 3600s aborted
+ADMIN GET /v1/health -> 200 0 ms peer=127.0.0.1:44270
+LEASE process_lease tenant=- holder=rst-21755 unix_ms=1794512699921 inc=0bbde9b4c118c17d gen=1
+LEASE acquired tenant=by1 holder=rst-21755 unix_ms=1794512699923 takeover_from=-
+LEASE acquired tenant=by1 holder=rst-21755 unix_ms=1794512699929 takeover_from=-
+LEASE acquired tenant=by1 holder=rst-21755 unix_ms=1794512699937 takeover_from=- new=true
+LEASE writer_open tenant=by1 holder=rst-21755 unix_ms=1794512699948 
+LEASE writer_close tenant=by1 holder=rst-21755 unix_ms=1794512700120 
+LEASE release_begin tenant=by1 holder=rst-21755 unix_ms=1794512700120 
+LEASE release tenant=by1 holder=rst-21755 unix_ms=1794512700122 ok=true
+LEASE acquired tenant=by2 holder=rst-21755 unix_ms=1794512700126 takeover_from=-
+LEASE acquired tenant=by2 holder=rst-21755 unix_ms=1794512700131 takeover_from=-
+LEASE acquired tenant=by2 holder=rst-21755 unix_ms=1794512700141 takeover_from=- new=true
+LEASE writer_open tenant=by2 holder=rst-21755 unix_ms=1794512700151 
+SLOW hello db=admin ms=10001 ok=true
+TIMING stop_fxc db=by2 ms=10003
+LEASE writer_close tenant=by2 holder=rst-21755 unix_ms=1794512710200 
+LEASE release_begin tenant=by2 holder=rst-21755 unix_ms=1794512710200 
+LEASE release tenant=by2 holder=rst-21755 unix_ms=1794512710202 ok=true
+SLOW tenantAdmin db=by2 ms=10034 ok=true
+LEASE acquired tenant=main holder=rst-21755 unix_ms=1794512710205 takeover_from=-
+LEASE acquired tenant=main holder=rst-21755 unix_ms=1794512710210 takeover_from=-
+LEASE acquired tenant=main holder=rst-21755 unix_ms=1794512710216 takeover_from=- new=true
+LEASE writer_open tenant=main holder=rst-21755 unix_ms=1794512710226 
+SLOW hello db=admin ms=10001 ok=true
+TIMING stop_fxc db=main ms=10001
+LEASE writer_close tenant=main holder=rst-21755 unix_ms=1794512720269 
+LEASE release_begin tenant=main holder=rst-21755 unix_ms=1794512720269 
+LEASE release tenant=main holder=rst-21755 unix_ms=1794512720271 ok=true
+ADMIN PUT /v1/databases/main/retention -> 200 10044 ms peer=127.0.0.1:56312
+ADMIN PUT /v1/databases/by2/retention -> 200 23 ms peer=127.0.0.1:43672
+LEASE acquired tenant=main holder=rst-21755 unix_ms=1794512722662 takeover_from=-
+LEASE writer_open tenant=main holder=rst-21755 unix_ms=1794512722684 
+ADMIN GET /v1/databases/by2/checkpoints -> 200 4 ms peer=127.0.0.1:43682
+fx drop: SlateDB compactor of main: Closed error: detected newer DB client
+SLOW hello db=admin ms=10000 ok=true
+TIMING stop_fxc db=main ms=10001
+LEASE writer_close tenant=main holder=rst-21755 unix_ms=1794512732758 
+LEASE release_begin tenant=main holder=rst-21755 unix_ms=1794512732758 
+LEASE release tenant=main holder=rst-21755 unix_ms=1794512732760 ok=true
+LEASE acquired tenant=main holder=rst-21755 unix_ms=1794512732815 takeover_from=-
+LEASE writer_open tenant=main holder=rst-21755 unix_ms=1794512732834 
+fx drop: SlateDB compactor of main: Closed error: detected newer DB client
+LEASE writer_close tenant=main holder=rst-21755 unix_ms=1794512732871 
+LEASE release_begin tenant=main holder=rst-21755 unix_ms=1794512732871 
+LEASE release tenant=main holder=rst-21755 unix_ms=1794512732873 ok=true
+ADMIN POST /v1/databases/main/restore -> 200 10139 ms peer=127.0.0.1:43684
+LEASE acquired tenant=main holder=rst-21755 unix_ms=1794512732876 takeover_from=-
+shutting down: closing tenants cleanly
+LEASE release_begin tenant=main holder=rst-21755 unix_ms=1794512733959 
+LEASE release tenant=main holder=rst-21755 unix_ms=1794512733961 ok=true
+tenants closed; stopping maintenance
+maintenance shutdown: waiting for the L0 watch unix_ms=1794512733979
+maintenance shutdown: waiting for the dispatcher unix_ms=1794512734877
+maintenance shutdown: waiting for the running passes (0 running) unix_ms=1794512734877
+maintenance shutdown: waiting for the GC task unix_ms=1794512734877
+maintenance shutdown: done unix_ms=1794512735892
+maintenance stopped (1933 ms)
