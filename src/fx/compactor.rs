@@ -880,7 +880,6 @@ impl Compactor {
     /// offline builder).
     async fn recognise_absorbed(&self) -> Result<()> {
         let x_d = self.cur.lock().await.v.x_d;
-        let reader = slatedb::SstReader::new(crate::lifecycle::tenant_path(self.id()), Arc::clone(&self.store), None, None);
         // perf-latency round 2: the L0 SSTs are read at once, not one after the other (`start` runs under the database's
         // exclusive lock, inside the first write after an opening: 8 SSTs of 64 MiB one by one took 3.4 s, MEASURED)
         // round 3: the SSTs the version lists as absorbed (with their highest seq) are not read again
@@ -898,11 +897,11 @@ impl Compactor {
         L0_RECOGNISED_BY_READ.fetch_add(views.len() as u64, Relaxed);
         // at most 4 at a time, and only each SST's highest seq is kept (not its rows)
         use futures::{StreamExt, TryStreamExt};
-        let reader = Arc::new(reader);
+        // fix-write-stalls, cause 3: each SST with one GET (`WholeObjects`), not one GET per 4 KiB block
         let jobs: Vec<_> = views
             .into_iter()
             .map(|view| {
-                let reader = Arc::clone(&reader);
+                let reader = slatedb::SstReader::new(crate::lifecycle::tenant_path(self.id()), Arc::new(WholeObjects { inner: Arc::clone(&self.store), got: tokio::sync::Mutex::new(HashMap::new()) }), None, None);
                 Box::pin(async move { Ok::<_, anyhow::Error>((view.id, l0_max_seq(&reader, &view).await?)) }) as std::pin::Pin<Box<dyn std::future::Future<Output = Result<_>> + Send>>
             })
             .collect();
@@ -941,13 +940,13 @@ impl Compactor {
             return Ok(0);
         }
         let v0 = self.current().await;
-        let reader = slatedb::SstReader::new(crate::lifecycle::tenant_path(self.id()), Arc::clone(&self.store), None, None);
         let e_env = v0.e_env.unwrap_or(0);
         let mut rows: BTreeMap<Vec<u8>, (u64, Vec<u8>)> = BTreeMap::new();
         let mut ids = Vec::new();
         let mut x_new = v0.x_d;
-        for view in &views {
-            let rs = read_l0(&reader, view).await?;
+        type ReadL0<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Vec<L0Row>>> + Send + 'a>>;
+        let reads = futures::future::try_join_all(views.iter().map(|view| Box::pin(read_l0_whole(&self.store, self.id(), view)) as ReadL0<'_>)).await?;
+        for (view, rs) in views.iter().zip(reads) {
             let (mut lo, mut hi) = (u64::MAX, 0u64);
             for r in &rs {
                 lo = lo.min(r.row.seq);
@@ -1737,6 +1736,88 @@ pub(crate) async fn l0_max_seq(reader: &slatedb::SstReader, view: &slatedb::mani
         }
     }
     Ok(max)
+}
+
+/// fix-write-stalls, cause 3: an absorption read its L0 SSTs one block per GET (4 KiB blocks: about 2,000 GETs per
+/// 8 MiB SST, one after another; 4-5 s for 4 SSTs on MinIO, MEASURED), and L0 filled behind it. Each SST is now read
+/// with one GET (`WholeObjects`, from integration-4's c2-fix-clone-uploads), the SSTs of one absorption at the same time.
+async fn read_l0_whole(store: &Arc<dyn ObjectStore>, id: &str, view: &slatedb::manifest::SsTableView) -> Result<Vec<L0Row>> {
+    let whole: Arc<dyn ObjectStore> = Arc::new(WholeObjects { inner: Arc::clone(store), got: tokio::sync::Mutex::new(HashMap::new()) });
+    let reader = slatedb::SstReader::new(crate::lifecycle::tenant_path(id), whole, None, None);
+    read_l0(&reader, view).await
+}
+
+/// A store that reads each object it is asked for once, whole, and answers every range of it from memory.
+#[derive(Debug)]
+struct WholeObjects {
+    inner: Arc<dyn ObjectStore>,
+    got: tokio::sync::Mutex<HashMap<Path, (bytes::Bytes, object_store::ObjectMeta)>>,
+}
+
+impl std::fmt::Display for WholeObjects {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "WholeObjects({})", self.inner)
+    }
+}
+
+#[async_trait::async_trait]
+impl ObjectStore for WholeObjects {
+    async fn put_opts(&self, l: &Path, p: object_store::PutPayload, o: object_store::PutOptions) -> object_store::Result<object_store::PutResult> {
+        self.inner.put_opts(l, p, o).await
+    }
+    async fn put_multipart_opts(&self, l: &Path, o: object_store::PutMultipartOptions) -> object_store::Result<Box<dyn object_store::MultipartUpload>> {
+        self.inner.put_multipart_opts(l, o).await
+    }
+    async fn get_opts(&self, l: &Path, o: object_store::GetOptions) -> object_store::Result<object_store::GetResult> {
+        use futures::StreamExt;
+        let (body, meta) = {
+            let mut g = self.got.lock().await;
+            match g.get(l) {
+                Some(x) => x.clone(),
+                None => {
+                    let r = object_store::ObjectStoreExt::get(&self.inner, l).await?;
+                    let meta = r.meta.clone();
+                    let b = r.bytes().await?;
+                    g.insert(l.clone(), (b.clone(), meta.clone()));
+                    (b, meta)
+                }
+            }
+        };
+        let len = body.len() as u64;
+        let range = if o.head {
+            0..0
+        } else {
+            match &o.range {
+                None => 0..len,
+                Some(object_store::GetRange::Bounded(r)) => r.start.min(len)..r.end.min(len),
+                Some(object_store::GetRange::Offset(x)) => (*x).min(len)..len,
+                Some(object_store::GetRange::Suffix(n)) => len.saturating_sub(*n)..len,
+            }
+        };
+        let part = body.slice(range.start as usize..range.end as usize);
+        Ok(object_store::GetResult {
+            payload: object_store::GetResultPayload::Stream(futures::stream::once(async move { Ok(part) }).boxed()),
+            meta,
+            range,
+            attributes: Default::default(),
+            extensions: Default::default(),
+        })
+    }
+    fn delete_stream(&self, l: futures::stream::BoxStream<'static, object_store::Result<Path>>) -> futures::stream::BoxStream<'static, object_store::Result<Path>> {
+        self.inner.delete_stream(l)
+    }
+    fn list(&self, p: Option<&Path>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.inner.list(p)
+    }
+    async fn list_with_delimiter(&self, p: Option<&Path>) -> object_store::Result<object_store::ListResult> {
+        self.inner.list_with_delimiter(p).await
+    }
+    async fn copy_opts(&self, f: &Path, t: &Path, o: object_store::CopyOptions) -> object_store::Result<()> {
+        self.inner.copy_opts(f, t, o).await
+    }
+    async fn rename_opts(&self, f: &Path, t: &Path, o: object_store::RenameOptions) -> object_store::Result<()> {
+        self.inner.rename_opts(f, t, o).await
+    }
 }
 
 async fn read_l0(reader: &slatedb::SstReader, view: &slatedb::manifest::SsTableView) -> Result<Vec<L0Row>> {
