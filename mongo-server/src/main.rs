@@ -15,6 +15,7 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 #[export_name = "_rjem_malloc_conf"]
 pub static malloc_conf: &[u8] = b"background_thread:true\0";
 
+mod uploads;
 mod agg;
 
 /// `--sealed-runs` when neither the flag nor FENVIX_SEALED_RUNS says otherwise (integration-3: sealed runs on).
@@ -856,7 +857,10 @@ async fn run() -> Result<()> {
             }
             // S3 lists keys in order: the WAL cleanup finds the oldest WAL object with one LIST.
             tenant_bench::lifecycle::LIST_SORTED.store(true, std::sync::atomic::Ordering::Relaxed);
-            Arc::new(b.build()?)
+            let s3 = Arc::new(b.build()?);
+            // the erase and the drop list and abort a database's incomplete multipart uploads (uploads.rs)
+            uploads::install(Arc::clone(&s3), &args.bucket, &args.region.clone().or_else(|| std::env::var("AWS_REGION").ok().filter(|v| !v.is_empty())).or_else(|| std::env::var("AWS_DEFAULT_REGION").ok()).unwrap_or_default(), &args.endpoint)?;
+            s3
         }
         "local" => {
             std::fs::create_dir_all(&args.local_dir)?;
@@ -1167,6 +1171,10 @@ async fn run() -> Result<()> {
     eprintln!("shutting down: closing tenants cleanly");
     ctl::stop_agents().await;
     dbs.close_all().await;
+    // the closes stopped the compactors, whose cut jobs abort their run uploads in the background (review D1)
+    if !tenant_bench::runfmt::wait_dropped_aborts(Duration::from_secs(10)).await {
+        eprintln!("shutdown: run upload aborts still in flight after 10 s (the erase or drop of the database finds them)");
+    }
     ctl::shutdown().await;
     leases.release_process().await;
     eprintln!("tenants closed; stopping maintenance");

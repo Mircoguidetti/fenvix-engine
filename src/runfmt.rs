@@ -494,7 +494,8 @@ pub struct RunMeta {
 pub struct RunWriter {
     path: Path,
     run_id: [u8; RUN_ID_LEN],
-    upload: Box<dyn MultipartUpload>,
+    /// `None` once the upload was completed or aborted; a writer dropped before that aborts it (`Drop`).
+    upload: Option<Box<dyn MultipartUpload>>,
     opts: RunOptions,
     out: Vec<u8>,
     written: u64,
@@ -514,13 +515,66 @@ pub struct RunWriter {
     derived_rows: u64,
 }
 
+/// Run uploads a dropped writer aborted (perf-latency round 3, review D1) and aborts that failed.
+pub static DROPPED_UPLOADS_ABORTED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static DROPPED_UPLOAD_ABORT_ERRORS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Aborts spawned by dropped writers and not finished yet (a clean shutdown waits for them: `wait_dropped_aborts`).
+static ABORTS_PENDING: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Wait, at most `limit`, until the aborts spawned by dropped run writers are done (a clean shutdown: the process exits
+/// right after, and an abort still in flight would leave the upload incomplete). True when none is pending.
+pub async fn wait_dropped_aborts(limit: std::time::Duration) -> bool {
+    let t = std::time::Instant::now();
+    while ABORTS_PENDING.load(std::sync::atomic::Ordering::Relaxed) > 0 {
+        if t.elapsed() >= limit {
+            return false;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+    }
+    true
+}
+
+fn spawn_abort(mut u: Box<dyn MultipartUpload>, path: &Path) {
+    let Ok(h) = tokio::runtime::Handle::try_current() else {
+        // no runtime (a process exit): the erase's and the drop's sweep of incomplete uploads finds it (ctl/purge.rs)
+        DROPPED_UPLOAD_ABORT_ERRORS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        return;
+    };
+    let path = path.to_string();
+    ABORTS_PENDING.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    h.spawn(async move {
+        let r = u.abort().await;
+        ABORTS_PENDING.fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
+        match r {
+            Ok(()) => {
+                DROPPED_UPLOADS_ABORTED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            }
+            Err(e) => {
+                DROPPED_UPLOAD_ABORT_ERRORS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                eprintln!("run upload {path}: abort after the writer was dropped failed: {e}");
+            }
+        }
+    });
+}
+
+/// A writer dropped without `finish` or `abort` (its job was cancelled: `Compactor::stop` aborts running jobs at their
+/// next await, perf-latency) aborts its multipart upload. Its parts held the database's rows, invisible to LIST and so to
+/// an erase's proof (review of d9dbc7c, D1: 789 MB left after `remaining_objects: 0`).
+impl Drop for RunWriter {
+    fn drop(&mut self) {
+        if let Some(u) = self.upload.take() {
+            spawn_abort(u, &self.path);
+        }
+    }
+}
+
 impl RunWriter {
     pub async fn new(store: &Arc<dyn ObjectStore>, path: Path, opts: RunOptions) -> anyhow::Result<Self> {
         let upload = store.put_multipart_opts(&path, Default::default()).await?;
         Ok(RunWriter {
             path,
             run_id: rand::random(),
-            upload,
+            upload: Some(upload),
             out: Vec::with_capacity(opts.part_bytes.min(64 << 20)),
             raw: Vec::with_capacity(opts.block_bytes + 4096),
             opts,
@@ -624,13 +678,15 @@ impl RunWriter {
         let data = std::mem::replace(&mut self.out, Vec::with_capacity(self.opts.part_bytes.min(64 << 20)));
         self.written += data.len() as u64;
         self.parts += 1;
-        self.upload.put_part(PutPayload::from(data)).await?;
+        self.upload.as_mut().ok_or_else(|| anyhow::anyhow!("run upload already closed"))?.put_part(PutPayload::from(data)).await?;
         Ok(())
     }
 
     /// Drops the upload: nothing becomes visible.
     pub async fn abort(mut self) -> anyhow::Result<()> {
-        self.upload.abort().await?;
+        if let Some(mut u) = self.upload.take() {
+            u.abort().await?;
+        }
         Ok(())
     }
 
@@ -690,7 +746,12 @@ impl RunWriter {
         f.extend(t);
         self.push_out(&f).await?;
         self.flush_part().await?;
-        self.upload.complete().await?;
+        let mut u = self.upload.take().ok_or_else(|| anyhow::anyhow!("run upload already closed"))?;
+        if let Err(e) = u.complete().await {
+            // the parts are not a run: abort them (in the background, the error is the caller's)
+            spawn_abort(u, &self.path);
+            return Err(e.into());
+        }
         Ok(RunMeta {
             path: self.path.to_string(),
             run_id: self.run_id,

@@ -3031,6 +3031,52 @@ pub static SLOW_STAGES: std::sync::atomic::AtomicU64 = std::sync::atomic::Atomic
 /// Closes that queued a compaction pass for the jobs a stopped compactor left pending (round 3, diagnostics).
 pub static CLOSE_PASSES_FOR_PENDING: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
+/// The `compacted/` SSTs of a tenant that its latest manifest does not reference and no active compaction recorded as its
+/// output: garbage a later GC pass will delete once old enough (perf-latency round 3).
+pub async fn unreferenced_compacted(s3: &Arc<dyn ObjectStore>, id: &str) -> Result<u64> {
+    let admin = Admin::builder(tenant_path(id), Arc::clone(s3)).build();
+    let Some(m) = admin.read_manifest(None).await? else { return Ok(0) };
+    let mut referenced = std::collections::HashSet::new();
+    for v in m.l0() {
+        referenced.insert(v.sst.id.value().to_string());
+    }
+    for run in m.compacted() {
+        for v in run.sst_views() {
+            referenced.insert(v.sst.id.value().to_string());
+        }
+    }
+    if let Some(c) = admin.read_compactions(None).await? {
+        for x in c.recent_compactions().filter(|x| x.active()) {
+            for h in x.output_ssts() {
+                referenced.insert(h.id.value().to_string());
+            }
+            for sub in x.ctx().map(|ctx| ctx.subcompactions().as_slice()).unwrap_or_default() {
+                for h in sub.output_ssts() {
+                    referenced.insert(h.id.value().to_string());
+                }
+            }
+        }
+    }
+    let prefix = Path::from(format!("{}/compacted", tenant_path(id)));
+    let mut it = s3.list(Some(&prefix));
+    let mut n = 0;
+    while let Some(meta) = it.next().await {
+        let meta = meta?;
+        let Some(f) = meta.location.filename() else { continue };
+        let Some(stem) = f.strip_suffix(".sst") else { continue };
+        if !referenced.contains(stem) {
+            n += 1;
+        }
+    }
+    Ok(n)
+}
+
+/// Closed-tenant GC passes queued again because garbage SSTs younger than the GC's minimum age were left (round 3).
+pub static CLOSE_GC_REQUEUED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Per tenant: closed-tenant passes queued again in a row (at most `CLOSE_GC_MAX_REQUEUES`).
+static CLOSE_GC_RETRIES: std::sync::LazyLock<Mutex<HashMap<String, u32>>> = std::sync::LazyLock::new(Default::default);
+const CLOSE_GC_MAX_REQUEUES: u32 = 6;
+
 pub async fn gc_tenant_closed(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, min_age: Duration) -> Result<GcRecord> {
     use std::sync::atomic::Ordering::Relaxed;
     let id = id.to_string();
@@ -3710,6 +3756,28 @@ impl Maintenance {
                                 match gc_tenant_closed(&s3, &id, gc_min_age).await {
                                     Ok(rec) => log.lock().unwrap().gcs.push(rec),
                                     Err(e) => log.lock().unwrap().error(format!("gc {id}: {e:#}")),
+                                }
+                                // perf-latency round 3 (review D3): SSTs that became garbage less than the minimum age before
+                                // this pass outlived it, and nothing queued another one while the database stayed closed, so
+                                // the stored bytes after a run depended on timing (MEASURED medium: 14 to 21 compacted SSTs,
+                                // 1.60 to 1.69 stored per logical byte). Another full pass once they are old enough, a few times
+                                // at most; the deletion stays SlateDB's GC with its rules (minimum age, checkpoints, active
+                                // compactions). A database opened again as a writer is collected by its own passes.
+                                if !OPEN_WRITERS.lock().unwrap().contains(&id) {
+                                    let left = unreferenced_compacted(&s3, &id).await.unwrap_or(0);
+                                    let mut r = CLOSE_GC_RETRIES.lock().unwrap();
+                                    let n = r.entry(id.clone()).or_insert(0);
+                                    if left > 0 && *n < CLOSE_GC_MAX_REQUEUES {
+                                        *n += 1;
+                                        CLOSE_GC_REQUEUED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                                        COMPACTED_SINCE_FULL.lock().unwrap().insert(id.clone());
+                                        let wait = gc_min_age + Duration::from_secs(5);
+                                        let at = Instant::now().checked_sub(gc_after.saturating_sub(wait)).unwrap_or_else(Instant::now);
+                                        touched.lock().unwrap().entry(id.clone()).or_insert(at);
+                                        eprintln!("SSTGC closed tenant={id} left_unreferenced={left}: another pass in {}s", wait.as_secs());
+                                    } else {
+                                        r.remove(&id);
+                                    }
                                 }
                             }
                         })
