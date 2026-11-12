@@ -1,0 +1,8 @@
+fix: deleted 200000 in 13.2 s (15181 per s)
+fr2: deleted 200000 in 13.2 s (15184 per s)
+fix: deleted 200000 in 12.9 s (15484 per s)
+fr2: deleted 200000 in 13.4 s (14976 per s)
+fix: 5000 delete_one in 18.7 s (3.74 ms each)
+fr2: 5000 delete_one in 19.9 s (3.98 ms each)
+fix: 5000 delete_one in 19.1 s (3.81 ms each)
+fr2: 5000 delete_one in 19.7 s (3.94 ms each)

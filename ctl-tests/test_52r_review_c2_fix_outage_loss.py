@@ -661,3 +661,86 @@ def test_validate_calls_healthy_collections_of_every_kind_valid():
     finally:
         srv2.term()
     assert not problems, "\n".join(problems)
+
+
+@pytest.mark.skipif(not os.environ.get("R52_OLD_BIN"), reason="needs R52_OLD_BIN, a binary that writes duplicate natural-order numbers (integration-3)")
+def test_every_delete_path_keeps_the_healthy_twin():
+    """Fix check of fix round 2 (the delete guard checks a write set's natural-order entries in one batched read,
+    `Writes::settle_nat_deletes`). R52_OLD_BIN damages five collections at once (one transaction inserts A into each, the
+    lease is lost, a plain insert puts B into each, the transaction commits: A and B share a number, `nat/` names A). Then
+    this branch deletes B through each path that applies deletes: a deleteMany of 101 documents (a dense run of numbers,
+    read with one range scan), findOneAndDelete, a delete inside a transaction, a TTL expiry, and deleteOne. Fails when A,
+    still stored, is missing from a collection scan afterwards, or when B is still found."""
+    old = os.environ["R52_OLD_BIN"]
+    bucket = make_bucket("rvdelpaths")
+    ff = faults_file()
+    port = free_port()
+    colls = ["many", "fam", "txn", "ttl", "one"]
+    srv = Server(bucket, "rvdelpaths", idle=600, holder="T1", port=port, env={"MONGO_TEST_FAULTS_FILE": ff}, binary=old,
+                 extra=["--lease-ttl-secs", str(TTL), "--replica-set", "rs0", "--advertise", f"127.0.0.1:{port}"]).start()
+    from datetime import datetime, timedelta
+    past = datetime.utcnow() - timedelta(days=1)
+    future = datetime.utcnow() + timedelta(days=30)
+    try:
+        c = client(srv)
+        for n in colls:
+            c.d[n].insert_many([{"_id": f"pre{i}", "exp": future} for i in range(100)])
+        s = c.start_session()
+        s.start_transaction()
+        for n in colls:
+            c.d[n].insert_one({"_id": "A", "exp": future}, session=s)
+        lose_lease(srv, ff, "T1")
+        time.sleep(TTL + 1)
+        for n in colls:
+            retry_until_ok(lambda n=n: c.d[n].insert_one({"_id": "B", "exp": past}), f"the insert of B into {n}")
+        s.commit_transaction()
+        s.end_session()
+        damaged = [n for n in colls if "B" not in scan_ids(c.d[n])]
+        print(f"damaged by the old binary: {damaged}")
+    finally:
+        srv.term()
+        os.unlink(ff)
+    assert damaged == colls, f"the old binary did not damage every collection: {damaged}"
+    port = free_port()
+    new = Server(bucket, "rvdelpaths2", idle=600, port=port, extra=["--replica-set", "rs0", "--advertise", f"127.0.0.1:{port}"]).start()
+    problems = []
+    try:
+        c = new.client()
+        d = c.d
+        # by the _id index: a hidden document is invisible to a collection scan, so a filter that scans would never see B
+        # an $in on _id matches through the natural-order scan here too (B is not seen), so match through a secondary
+        # index built on this branch from the stored documents (it holds B), with a hint
+        d.many.create_index("exp")
+        r = d.many.delete_many({"_id": {"$ne": "A"}, "exp": {"$gte": datetime(2000, 1, 1)}}, hint="exp_1")
+        print(f"deleteMany removed {r.deleted_count}")
+        r_in = d.fam.count_documents({"_id": {"$in": [f"pre{i}" for i in range(100)] + ["B"]}})
+        print(f"an $in on _id over 100 pre documents and B counts {r_in} in a damaged collection")
+        hidden_by_scan = d.fam.count_documents({"_id": {"$ne": "zz"}, "exp": {"$exists": True}})
+        print(f"a scan-based count in a damaged collection sees {hidden_by_scan} of 102 stored documents")
+        d.fam.find_one_and_delete({"_id": "B"})
+        with c.start_session() as s:
+            s.start_transaction()
+            d.txn.delete_one({"_id": "B"}, session=s)
+            s.commit_transaction()
+        d.ttl.create_index("exp", expireAfterSeconds=0)
+        deadline = time.time() + 30
+        # reads hide an expired document at once: wait until validate no longer names B (it is removed)
+        while time.time() < deadline and any('"B"' in e for e in d.command("validate", "ttl", full=True).get("errors", [])):
+            d.ttl.insert_one({"_id": f"poke{time.time()}", "exp": future})   # a write runs the TTL presweep
+            time.sleep(1.2)
+        d.one.delete_one({"_id": "B"})
+        for n in colls:
+            scanned = scan_ids(d[n])
+            a_stored = d[n].find_one({"_id": "A"}) is not None
+            b_left = d[n].find_one({"_id": "B"}) is not None
+            print(f"{n}: A in the scan {'A' in scanned}, A stored {a_stored}, B still found {b_left}, scan size {len(scanned)}")
+            if a_stored and "A" not in scanned:
+                problems.append(f"{n}: A is stored but missing from the scan after B was deleted")
+            if b_left:
+                problems.append(f"{n}: B was not deleted")
+            v = d.command("validate", n, full=True)
+            if not v.get("valid"):
+                problems.append(f"{n}: validate after the delete: {v.get('errors')[:2]}")
+    finally:
+        new.term()
+    assert not problems, "\n".join(problems)

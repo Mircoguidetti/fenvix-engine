@@ -1,0 +1,33 @@
+== fr2
+damaged by the old binary: ['many', 'fam', 'txn', 'ttl', 'one']
+deleteMany removed 101
+an $in on _id over 100 pre documents and B counts 100 in a damaged collection
+a scan-based count in a damaged collection sees 101 of 102 stored documents
+many: A in the scan True, A stored True, B still found False, scan size 1
+fam: A in the scan True, A stored True, B still found False, scan size 101
+txn: A in the scan True, A stored True, B still found False, scan size 101
+ttl: A in the scan True, A stored True, B still found False, scan size 102
+one: A in the scan True, A stored True, B still found False, scan size 101
+1 passed, 8 deselected, 2 warnings in 14.43s
+== fr2
+damaged by the old binary: ['many', 'fam', 'txn', 'ttl', 'one']
+deleteMany removed 101
+an $in on _id over 100 pre documents and B counts 100 in a damaged collection
+a scan-based count in a damaged collection sees 101 of 102 stored documents
+many: A in the scan True, A stored True, B still found False, scan size 1
+fam: A in the scan True, A stored True, B still found False, scan size 101
+txn: A in the scan True, A stored True, B still found False, scan size 101
+ttl: A in the scan True, A stored True, B still found False, scan size 102
+one: A in the scan True, A stored True, B still found False, scan size 101
+1 passed, 8 deselected, 2 warnings in 14.39s
+== fr
+damaged by the old binary: ['many', 'fam', 'txn', 'ttl', 'one']
+deleteMany removed 101
+an $in on _id over 100 pre documents and B counts 100 in a damaged collection
+a scan-based count in a damaged collection sees 101 of 102 stored documents
+many: A in the scan True, A stored True, B still found False, scan size 1
+fam: A in the scan True, A stored True, B still found False, scan size 101
+txn: A in the scan True, A stored True, B still found False, scan size 101
+ttl: A in the scan True, A stored True, B still found False, scan size 102
+one: A in the scan True, A stored True, B still found False, scan size 101
+1 passed, 8 deselected, 2 warnings in 14.41s

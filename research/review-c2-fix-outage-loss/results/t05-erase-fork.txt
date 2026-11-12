@@ -1,0 +1,18 @@
+fr2 run 1: 1 passed, 18 deselected in 4.34s
+fr2 run 2: 1 passed, 18 deselected in 4.24s
+fr2 run 3: 1 passed, 18 deselected in 4.23s
+fr2 run 4: 1 passed, 18 deselected in 4.23s
+fix run 1: 1 passed, 18 deselected in 4.28s
+fix run 2: 1 passed, 18 deselected in 4.23s
+fix run 3: 1 passed, 18 deselected in 4.25s
+fix run 4: 1 passed, 18 deselected in 4.28s
+fr run 1: 1 passed, 18 deselected in 4.25s
+fr run 2: 1 passed, 18 deselected in 4.26s
+fr run 3: 1 passed, 18 deselected in 4.26s
+fr run 4: 1 passed, 18 deselected in 4.27s
+i3 run 1: 1 passed, 18 deselected in 4.25s
+i3 run 2: 1 passed, 18 deselected in 4.23s
+fr2 whole file: 19 passed in 82.40s (0:01:22) 
+fix whole file: FAILED test_05_erase.py::test_concurrent_erase_and_fork_are_serialised - Asse... 1 failed, 18 passed in 114.39s (0:01:54) 
+fr2 whole file: 19 passed in 122.39s (0:02:02) 
+fix whole file: 19 passed in 104.35s (0:01:44) 
