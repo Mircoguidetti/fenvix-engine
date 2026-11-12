@@ -135,6 +135,25 @@ GEN_MB_S_PER_DB = 11.2
 GEN_STORED_PER_BSON = 0.74
 GEN_SPILL_PER_BSON = 0.104
 GEN_PUBLISH_FRACTION = 0.05
+# generator-1tb (2026-11-12, fenvix-engine branch generator-1tb, MEASURED in a 4-vCPU sandbox, Intel Xeon @ 2.1 GHz,
+# MinIO on the same machine): ONE database on several writers. One writer alone 10.16 MB/s of BSON (1 GiB); four
+# writers on the four vCPU 9.17 MB/s each while all are busy (3 GiB; MinIO's CPU included). The partition files of the
+# shared rows are kept in the pantry until the publish (0.105 byte per BSON byte, MEASURED), the publish merges them in
+# parallel. On AWS the vCPU of a c7i are hyperthreads, two per core (DECLARED by AWS); what 8 busy threads give against
+# this sandbox's 4 is NOT measured: GEN_VCPU_YIELD is the ESTIMATED share of a sandbox vCPU one AWS vCPU gives when
+# all are busy (c7i: 4 cores x 1.25 for 8 threads = 0.625, the cautious end; 1.0 if a thread were worth a sandbox vCPU).
+GEN_MB_S_PER_WRITER = 9.17
+GEN_VCPU_YIELD = {"c7i": 0.625}
+GEN_PARTS_PER_BSON = 0.105
+
+
+def generator_hours(gib, gen_type, writers=None):
+    """Hours to generate and publish one ballast database of `gib` GiB of BSON on `gen_type` with `writers` writers
+    (default: its vCPU). ESTIMATED from the MEASURED rate per busy writer and the ESTIMATED yield of the type's vCPU."""
+    vcpu = TYPES[gen_type][0]
+    w = min(int(writers or vcpu), vcpu)
+    eff = w * GEN_VCPU_YIELD.get(gen_type.split(".")[0], 1.0)
+    return gib * GIB * 1000 / (eff * GEN_MB_S_PER_WRITER) / 3600 * (1 + GEN_PUBLISH_FRACTION)
 # Aurora PostgreSQL (DECLARED, AWS Price List AmazonRDS eu-west-1, publication 2026-10-29T07:06:35Z): db.r7g.large
 # Single-AZ $0.304/h, storage $0.11 per GB-month, $0.22 per million I/O requests (Aurora Standard)
 AURORA_H, AURORA_GBM, AURORA_IO_M = 0.304, 0.11, 0.22

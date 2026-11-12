@@ -4,21 +4,27 @@ that run.py, packages.sh and the cost estimate use. Nothing here touches AWS.
 Fields of step9/command.json (defaults in brackets):
   mode          "permissions" ($0 check) | "run" | "teardown" | "drop-pantry" | anything else: nothing happens ["none"]
   data          "atlas" (the five m30-corto databases, about 27 GB of BSON, as loaded on Atlas M30) | "100gb" | "1tb"
-                (the same five databases plus ballast databases of the same shape) ["atlas"]
+                (the same five databases plus ONE ballast database of the same shape, app_data_b01, of ballast_gib)
+                ["atlas"]
+  ballast_gib   GiB of BSON of the one ballast database (generator-1tb, 2026-11-12: one database of the chosen size,
+                not several of a fixed size) [100gb: 93.2 (100 GB), 1tb: 931.4 (1,000 GB)]; any size from 1 to 1100
   phases        any of "load", "measure", "extras", in this order [all three]. A 1 TB load does not fit in one GitHub
                 job (6 hours): load in several rounds into a kept pantry, then measure in a last round.
   pantry        "new" (deleted at the end) | "keep" (kept for later rounds as fenvix-kitchen-pantry-<run>) | the name
                 of a kept pantry ["new"]
-  ballast_slice [FROM, TO]: the ballast databases this round loads (0-based, TO excluded) [all of them]
+  ballast_slice [FROM, TO]: [0, 0] loads no ballast (the Atlas databases only), [0, 1] the ballast database [0, 1]
   ballast_mode  "generate": the ballast written straight into the pantry in our stored format by the ballast generator
                 (`mongo-server <server_options> --ballast`, mongo-server/src/ballast.rs; sealed runs, our manifest, the
                 keys of the round's layout), on its own machine, no cook 0 and no client; needs "--sealed-runs" and
                 "--customer-key" in server_options (the round reads it through compaction 2's reader) | "script": loaded
                 through cook 0 by the founder's script on the filler machine (the slow path, 1.55 MB/s per process)
                 ["generate"]
-  generator     the generator machine [c7i.2xlarge (8 vCPU) when the round generates more than 4 databases, else
-                c7i.xlarge (4 vCPU): one database per vCPU at a time]; generator_disk_gb its
-                disk (the sorted spill of the shared keyspace) [60]; generator_parallel databases at once [its vCPU]
+  generator     the generator machine [c7i.2xlarge (8 vCPU)]; generator_disk_gb its disk (each writer's sorted
+                spill of one slice, then one key partition at a time at the publish: a few GB) [60];
+                generator_parallel the writers of the one database [its vCPU]. The generator commits its work slice by
+                slice in the pantry (generator/app_data_b01/), so a job cut by its ceiling loses at most the slices in
+                flight: the same command again on the kept pantry resumes it. A generation estimated above one job is
+                accepted only with a kept pantry ("pantry": "keep" or its name), and decide.py says how many jobs.
   engine        REQUIRED for mode run: the FULL 40-character fenvix-engine commit id the servers and the generator are
                 built from, the final merged head of compaction 2 (no default: a round never runs on a commit chosen by
                 accident). Never a branch or tag name (total review R5, 2026-11-12): a branch moves, so two jobs of one
@@ -86,14 +92,15 @@ JOB_HOURS = {"boot": 0.3, "atlas_load": 2.8, "m30": 3.0, "spare_boot": 0.2, "ext
              "agent_per_target": 0.6, "aurora_create": 0.3, "pgbox_boot": 0.2}
 CEILING_USE = 0.9   # a job is refused when its estimate is above 90% of ceiling_min (teardown, results, margin)
 DATA = {  # BSON GB of the five Atlas databases: 4 x 3.1 + 10.74 (MEASURED, Atlas state files of code-irlanda) + the 2 KB
-          # collections (2 x 1.22 GiB + about 1 GiB): about 26.6 GB; ballast databases of 24.3 GB to reach the size
-    "atlas": {"target_gb": 26.6, "ballast_dbs": 0},
-    "100gb": {"target_gb": 100.0, "ballast_dbs": 3},
-    "1tb": {"target_gb": 1000.0, "ballast_dbs": 40},
+          # collections (2 x 1.22 GiB + about 1 GiB): about 26.6 GB. generator-1tb (2026-11-12): the size is ONE ballast
+          # database of ballast_gib GiB of BSON (the founder's goal: one database of 1 TB), not 3 or 40 of 24.3 GiB
+    "atlas": {"target_gb": 26.6, "ballast_dbs": 0, "ballast_gib": 0.0},
+    "100gb": {"target_gb": 126.6, "ballast_dbs": 1, "ballast_gib": 93.2},
+    "1tb": {"target_gb": 1026.6, "ballast_dbs": 1, "ballast_gib": 931.4},
 }
-BALLAST_DB_GB = 24.3
+BALLAST_GIB_MAX = 1100.0
 DEFAULTS = {
-    "data": "atlas", "phases": ["load", "measure", "extras"], "pantry": "new", "ballast_slice": None,
+    "data": "atlas", "phases": ["load", "measure", "extras"], "pantry": "new", "ballast_slice": None, "ballast_gib": None,
     "ballast_mode": "generate", "generator": None, "generator_disk_gb": 60, "generator_parallel": None,
     "engine": None, "engine_commit": None, "atlas_states": "501c8fd",
     "cook": "m7i.large", "spare": "m7i.large", "log": "c7g.medium", "compactor": None, "compactor_options": "",
@@ -137,13 +144,16 @@ def job_hours(c):
             h["load_settle_cap"] = float(c["settle_max_min"]) / 60
         if c.get("filler"):
             # through the script: 3 processes at 1.55 MB/s each (MEASURED on Atlas)
-            gb = len(c["ballast"]["lines"]) * BALLAST_DB_GB * 1.073741824
+            gb = len(c["ballast"]["lines"]) * c["ballast_gib"] * 1.073741824
             h["ballast_script"] = gb * 1000 / (c["ballast"]["parallel"] * 1.55) / 3600
         if c.get("generator"):
             import estimate
-            n = len(c["ballast"]["lines"])
-            per_db = BALLAST_DB_GB * 1.073741824 * 1000 / estimate.GEN_MB_S_PER_DB / 3600 * (1 + estimate.GEN_PUBLISH_FRACTION)
-            h["generator"] = -(-n // max(1, int(c["ballast"]["parallel"]))) * per_db
+            gen_h = estimate.generator_hours(c["ballast_gib"], c["generator"], int(c["ballast"]["parallel"]))
+            c["generator_hours_estimated"] = round(gen_h, 2)
+            # a resumable generation longer than one job runs until the ceiling; the next job resumes it (kept pantry)
+            cap_h = CEILING_USE * float(c["ceiling_min"]) / 60 - sum(h.values())
+            c["generator_jobs_estimated"] = max(1, -(-int(gen_h * 100) // max(1, int(cap_h * 100))))
+            h["generator"] = min(gen_h, max(0.0, cap_h))
     if "measure" in c["phases"]:
         if "m30" in c["programs"]:
             if c.get("prepare"):
@@ -180,9 +190,16 @@ def resolve(raw, quota=None):
         refuse("phases: a non-empty list of load, measure, extras")
     if not set(c["programs"]) <= set(PROGRAMS):
         refuse(f"programs: any of {PROGRAMS}")
-    if c["generator"] is None:   # the default, by the number of databases the round generates
-        lo_, hi_ = c["ballast_slice"] or [0, DATA.get(c["data"], {}).get("ballast_dbs", 0)]
-        c["generator"] = "c7i.2xlarge" if hi_ - lo_ > 4 else "c7i.xlarge"
+    if c["ballast_gib"] is None:
+        c["ballast_gib"] = DATA[c["data"]]["ballast_gib"]
+    try:
+        c["ballast_gib"] = float(c["ballast_gib"])
+    except (TypeError, ValueError):
+        refuse("ballast_gib: a number of GiB")
+    if DATA[c["data"]]["ballast_dbs"] and not 1.0 <= c["ballast_gib"] <= BALLAST_GIB_MAX:
+        refuse(f"ballast_gib: from 1 to {BALLAST_GIB_MAX} GiB of BSON")
+    if c["generator"] is None:   # the default: one database on all 8 vCPU of the quota
+        c["generator"] = "c7i.2xlarge"
     for role in ("cook", "spare", "log", "compactor", "loader", "client", "filler", "extras_client", "pgbox", "generator"):
         t = c[role]
         if t is None and role in ("spare", "compactor"):
@@ -251,8 +268,13 @@ def resolve(raw, quota=None):
     lo, hi = (c["ballast_slice"] or [0, n])
     if not (0 <= lo <= hi <= n):
         refuse(f"ballast_slice: within [0, {n}]")
-    lines = [[f"app_data_b{i + 1:02d}", "--gb", f"{BALLAST_DB_GB}", "--seme", f"{2001 + i}", "--thread", "16",
-              "--quota-riservati", "0.4", "--tetto-logico-gb", "60", "--max-ore-carico", "48"] for i in range(lo, hi)]
+    # the one ballast database; --tetto-logico-gb only reaches the founder's script on the "script" path, where it is
+    # its logical ceiling: above the database
+    lines = [[f"app_data_b{i + 1:02d}", "--gb", f"{c['ballast_gib']:g}", "--seme", f"{2001 + i}", "--thread", "16",
+              "--quota-riservati", "0.4", "--tetto-logico-gb", f"{max(60, int(c['ballast_gib'] * 1.2) + 1)}",
+              "--max-ore-carico", "48"] for i in range(lo, hi)]
+    # the one ballast database, also in the jobs that only measure it on a kept pantry
+    c["ballast_db"] = "app_data_b01" if n else None
     if "load" not in c["phases"]:
         lines = []
     c["ballast"] = {"parallel": max(1, TYPES[c["filler"]][0] - 1), "lines": lines}
@@ -337,6 +359,10 @@ def resolve(raw, quota=None):
     if os.environ.get("S9_MODE", "aws") == "local":
         # LOCAL mode only (shrunk programs, like S9_VCPU_LIMIT): the estimate is scaled; on AWS never
         limit_h /= float(os.environ.get("S9_DURATION_SCALE", "1"))
+    if c.get("generator") and c.get("generator_jobs_estimated", 1) > 1 and c["pantry_mode"] == "new":
+        refuse(f"the generation of {c['ballast_gib']:g} GiB takes about {c['generator_hours_estimated']} h on "
+               f"{c['generator']} (ESTIMATED), about {c['generator_jobs_estimated']} jobs: it resumes across jobs only "
+               f'from a kept pantry: "pantry": "keep" (then its name in the next jobs)')
     if c["mode"] == "run" and c["job_hours_total"] > limit_h:
         refuse(f"the job would last about {c['job_hours_total']:.1f} h (ESTIMATED: {c['job_hours']}), above "
                f"{CEILING_USE:.0%} of ceiling_min {float(c['ceiling_min']):.0f} = {limit_h:.1f} h: it would be cut before its "

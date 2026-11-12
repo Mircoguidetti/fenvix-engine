@@ -47,10 +47,11 @@ Nothing here has run on AWS. Every script is meant to be read by the reviewer be
   (Graviton, $0.0910/h) / `m8g.large` ($0.1000/h), prices DECLARED (AWS Price List eu-west-1 2026-11-04). The 3-zone
   log on three copies, one per zone: log-0 on the cook's own machine, log-1 and log-2 on `c7g.medium` ($0.0388/h).
 - Data size is a parameter: `atlas` (about 27 GB of BSON, the size measured on Atlas), `100gb`, `1tb`. The bigger
-  sizes keep the five Atlas databases exactly (loaded through the founder's script, unchanged) and add ballast
-  databases of the same shape (3 or 40 of 24.3 GiB), GENERATED straight into the pantry in our stored format by the
-  ballast generator (below; `"ballast_mode": "script"` keeps the old path through the script on a filler machine); the
-  ballast rounds read two of them with the same phases.
+  sizes keep the five Atlas databases exactly (loaded through the founder's script, unchanged) and add ONE ballast
+  database of the same shape, `app_data_b01`, of `ballast_gib` GiB of BSON (generator-1tb, 2026-11-12; defaults 93.2
+  for `100gb`, 931.4 for `1tb`, any size from 1 to 1100), GENERATED straight into the pantry in our stored format by
+  the ballast generator on several writers (below; `"ballast_mode": "script"` keeps the old path through the script on
+  a filler machine); the ballast rounds read that database with the same phases.
 
 ## The ballast generator (aws-ready, 2026-11-10)
 
@@ -144,8 +145,9 @@ against Atlas's c7i.2xlarge with 5); `somma_massimo.py` says when the client was
 - 100 GB and 1 TB (every run command also names `"engine"` and, for the generator, `"server_options"` with
   `--sealed-runs` and `--customer-key`): `{"mode": "run", "data": "1tb", "phases": ["load"], "pantry": "keep",
   "ballast_slice": [0, 0]}` (the Atlas databases), then `{"mode": "run", "data": "1tb", "phases": ["load"], "pantry":
-  "<kept>"}` (the generator: all 40 ballast databases in one job, about 3.7 h ESTIMATED), then the measure jobs (1 TB as
-  built is 40 databases of 24.3 GiB, not one 1 TB database: total review question 1; not in `commands/`);
+  "<kept>"}` (the generator: the one ballast database; at 1 TB about 6-7 h on c7i.2xlarge ESTIMATED, so 2 jobs: the
+  generator commits slice by slice in the pantry, stops 20 minutes before the job's ceiling with BALLAST_PARTIAL, and
+  the same command again resumes it; generator-1tb), then the measure jobs (not in `commands/`);
   `{"mode": "drop-pantry", "pantry": "..."}` at the end. The first job stores the round password in the kept pantry;
   later jobs read it (the root user lives there).
 - `"spend_cap"` above 5 needs `"cap_approved"`: the date and words of the founder's yes.

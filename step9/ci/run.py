@@ -404,9 +404,13 @@ try:
             raise Stop("LOAD_FAILED")
     if "load" in PHASES and cmd.get("generator"):
         # alone on its machine (8 vCPU), after cook 0 is off: no cook, no client, no wire
-        say(f"5/8 the ballast generator: {len(cmd['ballast']['lines'])} databases in our stored format, "
-            f"{cmd['ballast']['parallel']} at a time, on {cmd['generator']}")
+        say(f"5/8 the ballast generator: one database of {cmd['ballast_gib']:g} GiB of BSON in our stored format, "
+            f"{cmd['ballast']['parallel']} writers, on {cmd['generator']} (about {cmd.get('generator_hours_estimated')} h, "
+            f"{cmd.get('generator_jobs_estimated')} job(s), ESTIMATED; it resumes from the pantry)")
         server_config("generator", "generator", "")
+        # generator-1tb: it commits slice by slice in the pantry; it stops itself 20 minutes before this job's ceiling
+        # (results and teardown) and the next job, the same command on the kept pantry, resumes it
+        put("generator/stop.json", {"stop_at_unix": int(T0 + (CEILING_MIN - 20) * 60)})
         gen_id, _ = launch("generator", "generator", cmd["generator"], infra.ZONES[0], disk_gb=int(cmd["generator_disk_gb"]))
         while not exists("generator/end.json"):
             minute("generator")
@@ -414,6 +418,10 @@ try:
         plat.terminate([gen_id])
         machines[gen_id]["end"] = machines[gen_id]["end"] or time.time()
         say(f"ballast generator: {outcomes['ballast']}")
+        if outcomes["ballast"] == "BALLAST_PARTIAL":
+            say("the generation goes on in the next job: the same command on the kept pantry resumes it from its last "
+                "committed slice")
+            raise Stop("BALLAST_PARTIAL_RESUME_NEXT_JOB")
         if outcomes["ballast"] != "BALLAST_GENERATED":
             raise Stop("BALLAST_GENERATION_FAILED")
     if "load" not in PHASES:
@@ -478,6 +486,7 @@ try:
         say(f"7/8 the extras client: {extras}")
         put("extras/config.json", {"engine_sha256": cook_sha(), "programs": extras, "pantry": PANTRY, "logs": LOGS, "bench_logs": LOGS.replace(":7200", ":7201"),
                                    "cook": {"ip": ip1, "port": 27017}, "spare": {"ip": sp[1]} if sp else {},
+                                   "ballast_db": cmd.get("ballast_db"), "ballast_gib": cmd.get("ballast_gib"),
                                    **{k: v for k, v in cmd.items() if k.endswith("_args")}})
         ex_id, _ = launch("extras", "extras", cmd["extras_client"], CLIENT_ZONE)
         wait_for("extras/end.json", watch="extras")

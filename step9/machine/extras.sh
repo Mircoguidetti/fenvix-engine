@@ -64,17 +64,27 @@ has s3-first-byte && run_prog s3-first-byte $PY s3_first_byte.py "$BUCKET" out/s
 has sealed-run && run_prog sealed-run $PY sealed_run_read.py "$BUCKET" out/sealed-run $(cfg sealed_run_args)
 has log-ack && with_status log-ack out/log-ack/log-ack-summary.json $PY log_ack.py out/log-ack --uri "$URI" --logs "$(cfg bench_logs)" --pq ./pq $(cfg log_ack_args)
 if has ballast-rounds; then
-  # two ballast databases, their state files from the pantry, the read phases of m30-corto through programma.py
+  # generator-1tb (2026-11-12): THE ballast database of the command (ballast_db, ballast_gib GiB of BSON: one database
+  # of the chosen size, not the first two of several of 24.3 GiB), its state file from the pantry, the read phases of
+  # m30-corto through programma.py
+  BDB=$(cfg ballast_db); BGIB=$(cfg ballast_gib)
+  step "ballast-rounds: database ${BDB:-none} of ${BGIB:-?} GiB of BSON"
   mkdir -p ballast/lavoro/stati
   cp programma.py prova_infinite.py somma_massimo.py controlla_parallelo.py ballast/
   $PY s3io.py get-dir "$PANTRY" step9-ballast-states/ ballast/lavoro/stati > /dev/null 2>&1
-  $PY - "$(cfg ballast_rounds_args)" > ballast/passi.txt <<'PY'
-import os, sys
-extra = sys.argv[1]
-names = sorted(os.listdir("ballast/lavoro/stati"))[:2]
-for n in names:
-    print(f"giro {n} --db {n} --nuova-cartella --giro s9_ballast --solo-fasi inizio,Q2,Q3,Q1,Q1d,Q4 {extra}")
+  $PY - "$(cfg ballast_rounds_args)" "$BDB" "$BGIB" > ballast/passi.txt <<'PY'
+import json, os, sys
+extra, name, gib = sys.argv[1], sys.argv[2], sys.argv[3]
+f = os.path.join("ballast/lavoro/stati", name, "risultati_p1.json")
+if name and os.path.exists(f):
+    st = json.load(open(f))
+    got = st.get("config", {}).get("gb")
+    # the state file must be the database of this size: a kept pantry from another size is not read as this one
+    if got is None or abs(float(got) - float(gib)) > 1e-6:
+        sys.exit(f"ballast-rounds: {name} in the pantry is {got} GiB, the command says {gib} GiB")
+    print(f"giro {name} --db {name} --nuova-cartella --giro s9_ballast --solo-fasi inizio,Q2,Q3,Q1,Q1d,Q4 {extra}")
 PY
+  [ $? = 0 ] || { step "ballast-rounds: the pantry's ballast database is not the command's size"; : > ballast/passi.txt; }
   ln -sfn "$PWD/out/ballast-rounds" ballast/out; mkdir -p out/ballast-rounds
   if [ -s ballast/passi.txt ]; then
     run_prog ballast-rounds bash -c "cd ballast && URI_GIRO='${URI}&maxConnecting=200' FENVIX_P1_URI='$URI' $PY programma.py passi.txt"
