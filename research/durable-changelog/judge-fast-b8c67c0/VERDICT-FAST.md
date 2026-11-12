@@ -1,0 +1,9 @@
+# Judge verdict (fast), commit b8c67c0, with --sealed-runs 2
+
+- readers: PASS (raw readers: PASS (24 matches, all in named files))
+- build: PASS
+- unit: FAIL (257 passed, 1 failed, see unit.log)
+- diff-py: FAIL (409/413 same answers as mongod 7.0, see diff-py.log)
+- diff-node: FAIL (409/413 same answers as mongod 7.0, see diff-node.log)
+- ctl: PASS (3 files)
+- kill: PASS (see kill.log for counts)
