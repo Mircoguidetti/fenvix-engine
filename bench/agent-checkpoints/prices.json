@@ -153,7 +153,7 @@
         "value": 0.0,
         "label": "DECLARED",
         "url": "https://aws.amazon.com/documentdb/pricing/",
-        "note": "I/O-Optimized: no I/O charge"
+        "note": "I/O-Optimized: no I/O charge. DECLARED by the fact check of 2026-11-08 (fenvix-brain sessions/2026-11-08-chat-fact-check/REPORT.md, page opened there); added 2026-11-12 for DECISIONS 2026-11-11 'Amazon DocumentDB joins the comparison'"
       },
       "instance_hour": {
         "value": null,

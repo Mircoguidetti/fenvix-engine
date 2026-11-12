@@ -27,3 +27,16 @@ def test_no_1tb_command():
 def test_cold_is_never_compared_in_the_gate():
     src = open(os.path.join(REPO, "step9", "ci", "gate.py")).read()
     assert 'NOT_COMPARED = {"resume[cold]"}' in src
+
+
+def test_documentdb_is_a_priced_competitor_with_declared_source_and_date():
+    # DECISIONS 2026-11-11 point 2: DocumentDB in cost.py and prices.json, prices DECLARED with source and date
+    prices = json.load(open(os.path.join(REPO, "bench", "agent-checkpoints", "prices.json")))["options"]
+    cost_src = open(os.path.join(REPO, "bench", "agent-checkpoints", "cost.py")).read()
+    for name in ("documentdb_standard", "documentdb_io_optimized"):
+        o = prices[name]
+        for k in ("storage_gb_month", "io_per_million"):
+            assert o[k]["label"] == "DECLARED", (name, k)
+            assert o[k]["url"].startswith("https://aws.amazon.com/documentdb/pricing"), (name, k)
+            assert re.search(r"20\d\d-\d\d-\d\d", o[k]["note"]), (name, k, "no date")
+        assert name in cost_src or "documentdb" in cost_src, name

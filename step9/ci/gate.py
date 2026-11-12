@@ -6,8 +6,12 @@ names exists and passes:
      for that commit, or no commit at all: CLOSED. A report made on another commit does not count (the engine changed).
   1. the takeover test the report names shows no acknowledged write missing and finished (rule 8: zero loss is absolute);
   2. in the agent benchmark the report names, on every operation our server's ("fenvix") p50 and our p99 are each at
-     most SPEED_TOLERANCE_MS (20 ms) above the best of the PostgreSQL and the mongod saver for that percentile
-     (DECISIONS 2026-11-12, "Speed tolerance for the AWS round", which replaces rule 9's "not worse" for latency); stored
+     most the speed tolerance above the best of the PostgreSQL and the mongod saver for that percentile: by default
+     SPEED_TOLERANCE_MS (20 ms) at p50 and p99 for every operation (DECISIONS 2026-11-12, "Speed tolerance for the AWS
+     round", which replaces rule 9's "not worse" for latency). The tolerance is configurable per operation and per
+     percentile in step9/ci/speed_tolerance.json (`ms` above the best and/or `ratio` of the best; with both, the larger
+     allowance); a missing file means the DECISIONS default, an invalid one closes the gate. Changing it is the
+     founder's decision, written in DECISIONS.md like the default; stored
      bytes per logical byte stays not worse than either (rule 9);
   3. (aws-fixes, B1 of the total review, 2026-11-11) that benchmark is complete and correct on every side: the summary's
      own "ok" is true for ours, PostgreSQL and mongod (no write error, no wrong read, no erased thread readable); every
@@ -50,10 +54,74 @@ SIDES = ("fenvix", "postgres", "mongo")
 # DECISIONS 2026-11-12 (founder): on every operation, our p50 and our p99 may each be at most this much above the best
 # of PostgreSQL and mongod (the same percentile). Exactly 20 ms above passes; more fails.
 SPEED_TOLERANCE_MS = 20.0
+SPEED_DEFAULT_SOURCE = "DECISIONS 2026-11-12"
+TOLERANCE_FILE = "step9/ci/speed_tolerance.json"
 
 
-def speed_blockers(label, op, ours, others):
-    """Blockers of one operation under the 20 ms tolerance. `ours`/`others[side]` are latency dicts with p50 and p99."""
+def speed_tolerance():
+    """(tolerance, problems): tolerance[op or "default"][q] = {"ms": float|None, "ratio": float|None, "source": str},
+    from TOLERANCE_FILE when present; without it the DECISIONS default (20 ms at p50 and p99, no ratio)."""
+    dflt = {q: {"ms": SPEED_TOLERANCE_MS, "ratio": None, "source": SPEED_DEFAULT_SOURCE} for q in ("p50", "p99")}
+    tol, problems = {"default": dflt}, []
+    path = os.path.join(ROOT, TOLERANCE_FILE)
+    if not os.path.exists(path):
+        return tol, problems
+    try:
+        cfg = json.load(open(path))
+    except Exception as e:
+        return tol, [f"{TOLERANCE_FILE}: not readable JSON ({e})"]
+    source = cfg.get("source") or "?"
+
+    def entry(where, d):
+        out = {}
+        for q in ("p50", "p99"):
+            e = (d or {}).get(q)
+            if e is None:
+                continue
+            ms, ratio = e.get("ms"), e.get("ratio")
+            if ms is None and ratio is None:
+                problems.append(f"{TOLERANCE_FILE}: {where} {q} has neither ms nor ratio")
+                continue
+            if (ms is not None and (not isinstance(ms, (int, float)) or ms < 0)) or \
+               (ratio is not None and (not isinstance(ratio, (int, float)) or ratio < 1)):
+                problems.append(f"{TOLERANCE_FILE}: {where} {q}: ms must be >= 0 and ratio >= 1 (got ms {ms}, ratio {ratio})")
+                continue
+            out[q] = {"ms": None if ms is None else float(ms), "ratio": None if ratio is None else float(ratio),
+                      "source": e.get("source") or source}
+        return out
+
+    tol["default"].update(entry("default", cfg.get("default")))
+    for op, d in (cfg.get("ops") or {}).items():
+        if op not in OPS:
+            problems.append(f"{TOLERANCE_FILE}: unknown operation {op!r}")
+            continue
+        got = entry(op, d)
+        if got:
+            tol[op] = got
+    return tol, problems
+
+
+def tolerance_for(tol, op, q):
+    return (tol.get(op) or {}).get(q) or tol["default"][q]
+
+
+def describe(t):
+    """'20 ms', 'x1.10' or '20 ms or x1.10 (the larger)'."""
+    parts = ([f"{t['ms']:g} ms"] if t["ms"] is not None else []) + ([f"x{t['ratio']:g}"] if t["ratio"] is not None else [])
+    return " or ".join(parts) + (" (the larger)" if len(parts) == 2 else "")
+
+
+def allowed_above(t, best):
+    """How far above the best ours may be under tolerance t (the larger of the two allowances when both are set)."""
+    a = [t["ms"]] if t["ms"] is not None else []
+    if t["ratio"] is not None:
+        a.append((t["ratio"] - 1.0) * best)
+    return max(a) if a else 0.0
+
+
+def speed_blockers(label, op, ours, others, tol=None):
+    """Blockers of one operation under the speed tolerance. `ours`/`others[side]` are latency dicts with p50 and p99."""
+    tol = tol or speed_tolerance()[0]
     out = []
     for q in ("p50", "p99"):
         if ours.get(q) is None:
@@ -63,10 +131,14 @@ def speed_blockers(label, op, ours, others):
             continue
         best_side = min(theirs, key=theirs.get)
         best = theirs[best_side]
-        if ours[q] - best > SPEED_TOLERANCE_MS:
+        t = tolerance_for(tol, op, q)
+        if ours[q] - best > allowed_above(t, best) + 1e-9:
             out.append(f"{label} {op} {q}: ours {ours[q]:.2f} ms is {ours[q] - best:.2f} ms above the best ({best_side} "
-                       f"{best:.2f} ms), more than the tolerance of {SPEED_TOLERANCE_MS:.0f} ms (DECISIONS 2026-11-12)")
+                       f"{best:.2f} ms), more than the tolerance of {describe(t)} ({t['source']})")
     return out
+
+
+TOL, TOL_PROBLEMS = speed_tolerance()
 
 
 def rel(p):
@@ -134,7 +206,7 @@ def check_agent(fenvix_summary, label="agent benchmark"):
             others = {o: (sums[o].get("latency_ms") or {}).get(op) for o in ("postgres", "mongo") if o in sums}
             if not a or not all(others.values()):
                 continue   # already a blocker above
-            out += speed_blockers(label, op, a, others)
+            out += speed_blockers(label, op, a, others, TOL)
         for other in ("postgres", "mongo"):
             them = sums.get(other)
             if not them:
@@ -237,10 +309,18 @@ def find_report(commit):
     return None
 
 
+def tolerance_text(tol):
+    d = tol["default"]
+    txt = (f"{describe(d['p50'])} ({d['p50']['source']})" if d["p50"] == d["p99"]
+           else f"p50 {describe(d['p50'])}, p99 {describe(d['p99'])} ({d['p50']['source']})")
+    extra = [f"{op} {q} {describe(t)}" for op in OPS if op in tol for q, t in tol[op].items()]
+    return txt + (f"; per operation: {', '.join(extra)}" if extra else "")
+
+
 def main():
     ref = os.environ.get("ENGINE_REF", "")
     commit = os.environ.get("ENGINE_COMMIT", "")
-    blockers = []
+    blockers = list(TOL_PROBLEMS)
     found = find_report(commit)
     if not commit:
         blockers.append(f"the engine ref {ref or '(none)'} names no commit the workflow could resolve: no local benchmark report can match it")
@@ -262,7 +342,7 @@ def main():
         sys.exit(1)
     print(f"GATE: OPEN (local benchmark report {rel(found[0])} for {ref} at {commit}: takeovers 0 lost; our agent benchmark "
           f"ok, complete ({len(OPS)} operations, written minimum samples); on every operation our p50 and p99 within the "
-          f"speed tolerance of {SPEED_TOLERANCE_MS:.0f} ms above the best of PostgreSQL and mongod (DECISIONS 2026-11-12), "
+          f"speed tolerance of {tolerance_text(TOL)} above the best of PostgreSQL and mongod, "
           f"stored bytes per logical byte not worse" + (", also with --workers 8" if found[1].get("agent_bench_w8") else "") + ")")
 
 

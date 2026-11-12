@@ -38,9 +38,12 @@ def clean_summary(scale=1.0):
             "engine_binary_sha256": SHA}
 
 
-def tree(ours, pg, mongo, takeovers=None, w8=None, verdict=None, takeovers_off=None, report_extra=None):
+def tree(ours, pg, mongo, takeovers=None, w8=None, verdict=None, takeovers_off=None, report_extra=None, tolerance=None):
     d = tempfile.mkdtemp()
     os.makedirs(os.path.join(d, "step9", "ci"))
+    if tolerance is not None:
+        with open(os.path.join(d, "step9", "ci", "speed_tolerance.json"), "w") as f:
+            f.write(tolerance if isinstance(tolerance, str) else json.dumps(tolerance))
     os.makedirs(os.path.join(d, "step9", "local", "results-t"))
     shutil.copy(os.path.join(REPO, "step9", "ci", "gate.py"), os.path.join(d, "step9", "ci"))
     for base, sums in ((BASE, (ours, pg, mongo)),) + (((BASE + "-w8", w8),) if w8 else ()):
@@ -338,10 +341,10 @@ if __name__ == "__main__":
 
 # DECISIONS 2026-11-12, the speed tolerance for the AWS round: on every operation our p50 and our p99 may each be at most
 # 20 ms above the best of PostgreSQL and mongod (the same percentile); stored bytes per logical byte stays not worse.
-def _with(op, q, ours_ms, pg_ms, mongo_ms):
+def _with(op, q, ours_ms, pg_ms, mongo_ms, tolerance=None):
     ours, pg, mongo = clean_summary(), clean_summary(), clean_summary()
     ours["latency_ms"][op][q], pg["latency_ms"][op][q], mongo["latency_ms"][op][q] = ours_ms, pg_ms, mongo_ms
-    return tree(ours, pg, mongo)
+    return tree(ours, pg, mongo, tolerance=tolerance)
 
 
 def test_speed_tolerance_19_9_ms_above_passes_on_either_percentile():
@@ -378,3 +381,88 @@ def test_bytes_stay_not_worse_under_the_speed_tolerance():
     ours = clean_summary()
     ours["bytes"]["stored_per_logical"] = 0.301
     closed(tree(ours, clean_summary(), clean_summary()), "stored bytes per logical byte: ours 0.301 > postgres 0.300")
+
+
+# Output 2 (coordinator, 2026-11-12): the speed tolerance is configurable per operation and percentile
+# (step9/ci/speed_tolerance.json: ms above the best and/or ratio of the best, the larger allowance with both); the
+# committed file and a missing file both mean the DECISIONS 2026-11-12 value.
+def test_committed_tolerance_file_is_the_decisions_default():
+    cfg = json.load(open(os.path.join(REPO, "step9", "ci", "speed_tolerance.json")))
+    assert cfg["default"] == {"p50": {"ms": 20.0, "ratio": None}, "p99": {"ms": 20.0, "ratio": None}}, cfg["default"]
+    assert cfg["ops"] == {}, cfg["ops"]
+    assert "DECISIONS 2026-11-12" in cfg["source"]
+
+
+def test_committed_tolerance_file_behaves_as_no_file():
+    committed = open(os.path.join(REPO, "step9", "ci", "speed_tolerance.json")).read()
+    for q in ("p50", "p99"):
+        rc, out = ask(_with("save_step", q, 30.0 + 19.9, 30.0, 45.0, tolerance=committed))
+        assert rc == 0 and "speed tolerance of 20 ms" in out, (q, out)
+        closed(_with("save_step", q, 30.0 + 20.1, 30.0, 45.0, tolerance=committed), f"save_step {q}: ours 50.10 ms is 20.10 ms above")
+
+
+def _tol(ops=None, default=None):
+    return {"source": "test", "default": default or {"p50": {"ms": 20.0, "ratio": None}, "p99": {"ms": 20.0, "ratio": None}},
+            "ops": ops or {}}
+
+
+def test_per_operation_ms_tolerance_only_for_that_operation_and_percentile():
+    t = _tol({"list": {"p99": {"ms": 30.0, "ratio": None}}})
+    rc, out = ask(_with("list", "p99", 30.0 + 29.9, 30.0, 40.0, tolerance=t))
+    assert rc == 0 and "per operation: list p99 30 ms" in out, out
+    closed(_with("list", "p99", 30.0 + 30.1, 30.0, 40.0, tolerance=t), "list p99: ours 60.10 ms is 30.10 ms above the best (postgres 30.00 ms), more than the tolerance of 30 ms (test)")
+    closed(_with("list", "p50", 30.0 + 20.1, 30.0, 40.0, tolerance=t), "list p50: ours 50.10 ms is 20.10 ms above the best (postgres 30.00 ms), more than the tolerance of 20 ms (test)")
+    closed(_with("save_step", "p99", 30.0 + 20.1, 30.0, 40.0, tolerance=t), "save_step p99: ours 50.10 ms")
+
+
+def test_ratio_tolerance():
+    t = _tol({"time_travel": {"p50": {"ms": None, "ratio": 1.5}}})
+    rc, out = ask(_with("time_travel", "p50", 149.9, 100.0, 120.0, tolerance=t))
+    assert rc == 0 and out.startswith("GATE: OPEN"), out
+    closed(_with("time_travel", "p50", 150.1, 100.0, 120.0, tolerance=t), "time_travel p50: ours 150.10 ms is 50.10 ms above the best (postgres 100.00 ms), more than the tolerance of x1.5 (test)")
+
+
+def test_ms_and_ratio_take_the_larger_allowance():
+    t = _tol({"erase_user": {"p99": {"ms": 20.0, "ratio": 1.1}}})
+    # best 300 ms: x1.1 allows 30 ms, more than 20
+    rc, out = ask(_with("erase_user", "p99", 329.9, 300.0, 310.0, tolerance=t))
+    assert rc == 0, out
+    closed(_with("erase_user", "p99", 330.1, 300.0, 310.0, tolerance=t), "more than the tolerance of 20 ms or x1.1 (the larger) (test)")
+    # best 50 ms: x1.1 allows 5 ms, the 20 ms holds
+    rc, out = ask(_with("erase_user", "p99", 69.9, 50.0, 60.0, tolerance=t))
+    assert rc == 0, out
+    closed(_with("erase_user", "p99", 70.1, 50.0, 60.0, tolerance=t), "erase_user p99: ours 70.10 ms is 20.10 ms above")
+
+
+def test_changed_default_applies_to_every_operation():
+    t = _tol(default={"p50": {"ms": 5.0, "ratio": None}, "p99": {"ms": 40.0, "ratio": None}})
+    closed(_with("put", "p50", 2.0 + 5.1, 2.0, 3.0, tolerance=t), "put p50: ours 7.10 ms is 5.10 ms above the best")
+    rc, out = ask(_with("put", "p99", 2.0 + 39.9, 2.0, 3.0, tolerance=t))
+    assert rc == 0 and "p50 5 ms, p99 40 ms" in out, out
+
+
+def test_invalid_tolerance_file_closes_the_gate():
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), tolerance="{not json"), "speed_tolerance.json: not readable JSON")
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), tolerance=_tol({"list": {"p50": {"ms": -1, "ratio": None}}})),
+           "list p50: ms must be >= 0 and ratio >= 1")
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), tolerance=_tol({"list": {"p50": {"ms": None, "ratio": 0.9}}})),
+           "ratio >= 1")
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), tolerance=_tol({"list": {"p50": {"ms": None, "ratio": None}}})),
+           "list p50 has neither ms nor ratio")
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), tolerance=_tol({"lsit": {"p50": {"ms": 30, "ratio": None}}})),
+           "unknown operation 'lsit'")
+
+
+def test_resume_cold_is_never_compared_even_with_a_tolerance():
+    ours = clean_summary()
+    ours["latency_ms"]["resume[cold]"]["p99"] = 5000.0
+    t = _tol({"resume[cold]": {"p99": {"ms": 0.0, "ratio": None}}})
+    rc, out = ask(tree(ours, clean_summary(), clean_summary(), tolerance=t))
+    assert rc == 0 and out.startswith("GATE: OPEN"), out
+
+
+def test_cold_below_its_written_minimum_closes():
+    # DECISIONS 2026-11-11 (F4): resume[cold] is not compared, but it must be present with its minimum of samples (200)
+    ours = clean_summary()
+    ours["latency_ms"]["resume[cold]"]["n"] = 199
+    closed(tree(ours, clean_summary(), clean_summary()), "fenvix: operation resume[cold] has 199 samples, fewer than the written minimum 200")
