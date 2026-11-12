@@ -798,7 +798,8 @@ pub async fn after(p: Option<Probe>) {
     // a command that found its database absent (a read of an erased or never created database) creates nothing: its
     // requests are held back and the command is not counted, or a usage record would exist for no database
     if let Some(ap) = p.absent_probe.take() {
-        let absent = ctl.dbs.absent_hint(&p.db);
+        // (waits for a busy entry: several commands on an erased name at once must each see it absent)
+        let absent = ctl.dbs.absent_wait(&p.db, Duration::from_millis(200)).await;
         ctl.usage.end_probe(ap, !absent);
         if absent {
             return;

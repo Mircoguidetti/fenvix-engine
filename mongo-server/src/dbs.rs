@@ -309,6 +309,18 @@ impl Dbs {
         }
     }
 
+    /// Did the last open of this database find that it does not exist? Waits up to `wait` for a busy entry (several
+    /// commands on the name at once); a decision is needed for usage: `absent_hint` counts a busy entry as present.
+    pub async fn absent_wait(&self, name: &str, wait: std::time::Duration) -> bool {
+        let e = self.entries.lock().unwrap().get(name).cloned();
+        let Some(e) = e else { return false };
+        let r = match tokio::time::timeout(wait, e.read()).await {
+            Ok(g) => g.tenant.is_none() && g.absent,
+            Err(_) => false,
+        };
+        r
+    }
+
     /// Without waiting: is the database open in this process (a busy entry counts as open)?
     pub fn is_open_hint(&self, name: &str) -> bool {
         let e = self.entries.lock().unwrap().get(name).cloned();
