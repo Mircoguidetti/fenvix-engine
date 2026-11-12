@@ -1,0 +1,26 @@
+== no delay (ours round A against the others' round A)
+resume (write task)  FIRST [resume[long]] n=1000: p50 ours 6.4 best 1.9 (postgres) x3.36 SLOWER gap +4.5 ms | p99 ours 32.1 best 9.1 (postgres) x3.52 SLOWER gap +23.0 ms
+resume (write task)  NEXT  [resume[none]] n=1000: p50 ours 2.2 best 1.2 (postgres) x1.87 SLOWER gap +1.0 ms | p99 ours 9.5 best 5.2 (mongo) x1.84 SLOWER gap +4.4 ms
+resume (read task)   FIRST [resume[read]] n=300: p50 ours 6.4 best 2.0 (postgres) x3.28 SLOWER gap +4.5 ms | p99 ours 43.6 best 13.2 (postgres) x3.29 SLOWER gap +30.4 ms
+resume (read task)   NEXT  [resume[read]:next] n=1200: p50 ours 2.2 best 1.2 (postgres) x1.80 SLOWER gap +1.0 ms | p99 ours 7.1 best 6.2 (postgres) x1.14 SLOWER gap +0.9 ms
+list whole history   FIRST [list] n=300: p50 ours 46.4 best 16.8 (postgres) x2.76 SLOWER gap +29.6 ms | p99 ours 801.9 best 578.6 (postgres) x1.39 SLOWER gap +223.3 ms
+list whole history   NEXT  [list:next] n=1200: p50 ours 41.5 best 15.1 (postgres) x2.74 SLOWER gap +26.4 ms | p99 ours 924.0 best 699.1 (postgres) x1.32 SLOWER gap +224.9 ms
+list last 10         FIRST [list_limit10] n=300: p50 ours 18.4 best 7.9 (postgres) x2.34 SLOWER gap +10.5 ms | p99 ours 179.0 best 145.0 (mongo) x1.23 SLOWER gap +34.0 ms
+list last 10         NEXT  [list_limit10:next] n=1200: p50 ours 14.2 best 5.3 (postgres) x2.68 SLOWER gap +8.9 ms | p99 ours 155.1 best 143.9 (mongo) x1.08 EQUAL gap +11.2 ms
+time travel          FIRST [time_travel] n=300: p50 ours 6.2 best 1.6 (postgres) x3.93 SLOWER gap +4.6 ms | p99 ours 17.9 best 8.0 (postgres) x2.24 SLOWER gap +9.9 ms
+time travel          NEXT  [time_travel:next] n=1200: p50 ours 2.0 best 0.9 (postgres) x2.30 SLOWER gap +1.1 ms | p99 ours 6.4 best 3.8 (mongo) x1.70 SLOWER gap +2.6 ms
+save one step        FIRST [save_step[old]] n=4750: p50 ours 7.7 best 6.1 (postgres) x1.26 SLOWER gap +1.6 ms | p99 ours 39.9 best 24.6 (postgres) x1.62 SLOWER gap +15.3 ms
+save one step        NEXT  [save_step[none]] n=4730: p50 ours 7.7 best 5.9 (postgres) x1.31 SLOWER gap +1.8 ms | p99 ours 32.2 best 22.5 (mongo) x1.43 SLOWER gap +9.7 ms
+== 20 ms delay (ours round B against the others' round B)
+resume (write task)  FIRST [resume[long]] n=1000: p50 ours 27.5 best 2.2 (postgres) x12.56 SLOWER gap +25.3 ms | p99 ours 66.2 best 17.9 (mongo) x3.70 SLOWER gap +48.3 ms
+resume (write task)  NEXT  [resume[none]] n=1000: p50 ours 2.2 best 1.2 (postgres) x1.80 SLOWER gap +1.0 ms | p99 ours 26.0 best 5.0 (mongo) x5.20 SLOWER gap +21.0 ms
+resume (read task)   FIRST [resume[read]] n=300: p50 ours 27.4 best 2.1 (postgres) x12.84 SLOWER gap +25.3 ms | p99 ours 57.3 best 30.4 (postgres) x1.89 SLOWER gap +27.0 ms
+resume (read task)   NEXT  [resume[read]:next] n=1200: p50 ours 2.1 best 1.2 (postgres) x1.72 SLOWER gap +0.9 ms | p99 ours 9.8 best 6.4 (mongo) x1.53 SLOWER gap +3.4 ms
+list whole history   FIRST [list] n=300: p50 ours 64.8 best 21.2 (postgres) x3.05 SLOWER gap +43.6 ms | p99 ours 845.3 best 1127.2 (mongo) x0.75 FASTER gap -281.9 ms
+list whole history   NEXT  [list:next] n=1200: p50 ours 44.1 best 17.1 (postgres) x2.58 SLOWER gap +27.0 ms | p99 ours 941.0 best 808.3 (postgres) x1.16 SLOWER gap +132.7 ms
+list last 10         FIRST [list_limit10] n=300: p50 ours 39.3 best 9.2 (postgres) x4.27 SLOWER gap +30.1 ms | p99 ours 75.7 best 145.6 (mongo) x0.52 FASTER gap -69.9 ms
+list last 10         NEXT  [list_limit10:next] n=1200: p50 ours 13.7 best 5.3 (postgres) x2.58 SLOWER gap +8.4 ms | p99 ours 77.1 best 161.1 (mongo) x0.48 FASTER gap -84.0 ms
+time travel          FIRST [time_travel] n=300: p50 ours 27.2 best 2.0 (postgres) x13.60 SLOWER gap +25.2 ms | p99 ours 97.3 best 14.3 (mongo) x6.81 SLOWER gap +83.0 ms
+time travel          NEXT  [time_travel:next] n=1200: p50 ours 1.9 best 0.9 (postgres) x2.21 SLOWER gap +1.0 ms | p99 ours 7.9 best 3.7 (mongo) x2.16 SLOWER gap +4.3 ms
+save one step        FIRST [save_step[old]] n=4788: p50 ours 7.6 best 6.3 (postgres) x1.21 SLOWER gap +1.3 ms | p99 ours 77.3 best 25.4 (postgres) x3.04 SLOWER gap +51.9 ms
+save one step        NEXT  [save_step[none]] n=4770: p50 ours 7.5 best 5.8 (postgres) x1.29 SLOWER gap +1.7 ms | p99 ours 71.7 best 22.1 (postgres) x3.24 SLOWER gap +49.6 ms

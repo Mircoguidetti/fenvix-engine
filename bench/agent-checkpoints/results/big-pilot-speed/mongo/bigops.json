@@ -1,0 +1,39 @@
+{
+ "line": "mongo-rs3",
+ "source": {
+  "primary": "mongo-a",
+  "dataSize": 160948504.0,
+  "storageSize": 77049856.0,
+  "indexSize": 1249280.0
+ },
+ "secondaries_removed": [
+  "mongo-b",
+  "mongo-c"
+ ],
+ "copy": {
+  "rc": 0,
+  "seconds": 4.29,
+  "tail": "ask_id\", Value:1}, bson.E{Key:\"idx\", Value:1}}, PartialFilterExpression:(*bson.D)(nil)}\n2026-11-12T16:06:23.366+0000\trestoring indexes for collection `app_copy.checkpoints` from metadata\n2026-11-12T16:06:23.367+0000\tindex: &idx.IndexDocument{Options:bson.M{\"name\":\"thread_id_1_checkpoint_ns_1_checkpoint_id_-1\", \"unique\":true, \"v\":2}, Key:bson.D{bson.E{Key:\"thread_id\", Value:1}, bson.E{Key:\"checkpoint_ns\", Value:1}, bson.E{Key:\"checkpoint_id\", Value:-1}}, PartialFilterExpression:(*bson.D)(nil)}\n2026-11-12T16:06:23.662+0000\t6318 document(s) restored successfully. 0 document(s) failed to restore.\n",
+  "answers_like_source": true
+ },
+ "restore": {
+  "dump": {
+   "rc": 0,
+   "seconds": 3.02,
+   "tail": "2026-11-12T16:06:24.171+0000\twriting `app_demo.checkpoint_writes` to \"archive `/dump/app_demo.archive.gz`\"\n2026-11-12T16:06:24.172+0000\twriting `app_demo.checkpoints` to \"archive `/dump/app_demo.archive.gz`\"\n2026-11-12T16:06:24.244+0000\tdone dumping `app_demo.checkpoint_writes` (3573 documents)\n2026-11-12T16:06:26.774+0000\tdone dumping `app_demo.checkpoints` (2745 documents)\n"
+  },
+  "restore": {
+   "rc": 0,
+   "seconds": 4.33,
+   "tail": "ask_id\", Value:1}, bson.E{Key:\"idx\", Value:1}}, PartialFilterExpression:(*bson.D)(nil)}\n2026-11-12T16:06:32.163+0000\trestoring indexes for collection `app_demo.checkpoints` from metadata\n2026-11-12T16:06:32.163+0000\tindex: &idx.IndexDocument{Options:bson.M{\"name\":\"thread_id_1_checkpoint_ns_1_checkpoint_id_-1\", \"unique\":true, \"v\":2}, Key:bson.D{bson.E{Key:\"thread_id\", Value:1}, bson.E{Key:\"checkpoint_ns\", Value:1}, bson.E{Key:\"checkpoint_id\", Value:-1}}, PartialFilterExpression:(*bson.D)(nil)}\n2026-11-12T16:06:32.389+0000\t6318 document(s) restored successfully. 0 document(s) failed to restore.\n"
+  },
+  "seconds": 4.33,
+  "restored_like_target": true,
+  "changed_since_target": true
+ },
+ "second_server": {
+  "seconds_to_answer": 3.28,
+  "answered": true,
+  "how": "new replica set member, initial sync"
+ }
+}

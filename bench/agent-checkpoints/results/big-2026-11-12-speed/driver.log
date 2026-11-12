@@ -1,0 +1,12 @@
+2026-11-12T16:11:23Z postgres-sync -> /home/user/harness/bench/agent-checkpoints/results/big-2026-11-12-speed/postgres
+2026-11-12T16:39:40Z postgres-sync: exit 0; [postgres] VALIDATION, NOT RESULTS: ok=True checkpoints=250314 load=1002.763s stored=5404041216 stored/logical=0.3879 wrong_reads=0 -> /home/user/harness/bench/agent-checkpoints/results/big-2026-11-12-speed/postgres/summary.json
+2026-11-12T16:39:40Z mongo-rs3 -> /home/user/harness/bench/agent-checkpoints/results/big-2026-11-12-speed/mongo
+2026-11-12T17:19:25Z mongo-rs3: exit 0; [mongo] VALIDATION, NOT RESULTS: ok=True checkpoints=250314 load=1458.85s stored=6449291264.0 stored/logical=0.4659 wrong_reads=0 -> /home/user/harness/bench/agent-checkpoints/results/big-2026-11-12-speed/mongo/summary.json
+2026-11-12T17:19:25Z mongo-rs3: data-size operations
+2026-11-12T17:38:11Z mongo-rs3: bigops exit 0; copy {'rc': 0, 'seconds': 368.0, 'tail': 'l)}\n2026-11-12T17:25:01.111+0000\trestoring indexes for collection `app_copy.checkpoint_writes` from metadata\n2026-11-12T17:25:01.111+0000\tindex: &idx.IndexDocument{Options:bson.M{"name":"thread_id_1_checkpoint_ns_1_checkpoint_id_-1_task_id_1_idx_1", "unique":true, "v":2}, Key:bson.D{bson.E{Key:"thread_id", Value:1}, bson.E{Key:"checkpoint_ns", Value:1}
+2026-11-12T17:38:20Z fenvix-log -> /home/user/harness/bench/agent-checkpoints/results/big-2026-11-12-speed/fenvix
+2026-11-12T18:57:46Z fenvix-log -> /home/user/harness/bench/agent-checkpoints/results/big-2026-11-12-speed/fenvix
+2026-11-12T20:09:01Z fenvix-log: exit 0; [fenvix] VALIDATION, NOT RESULTS: ok=True checkpoints=250314 load=2008.998s stored=23247360089 stored/logical=1.6793 wrong_reads=0 -> /home/user/harness/bench/agent-checkpoints/results/big-2026-11-12-speed/fenvix/summary.json
+2026-11-12T20:09:01Z fenvix-log: data-size operations
+2026-11-12T20:09:36Z fenvix-log: bigops exit 1;   File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/helpers_shared.py", line 327, in _check_command_response     raise OperationFailure(errmsg, code, response, max_wire_version) pymongo.errors.OperationFailure: database app_demo: this process's serving lease expired; it begins no new read (F7); retry, full error: {'ok': 0.0, 'errmsg': "database app_demo: this process's servi
+2026-11-12T20:09:40Z verdict: /home/user/harness/bench/agent-checkpoints/results/big-2026-11-12-speed/verdict.txt

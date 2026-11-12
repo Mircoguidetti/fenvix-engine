@@ -1,0 +1,3 @@
+round A: 41 tasks in 11.8 s, errors 0
+round B: 0 tasks in 0.0 s, errors 0
+[fenvix] VALIDATION, NOT RESULTS: ok=True checkpoints=2551 load=18.06s stored=151536465 stored/logical=1.0668 wrong_reads=0 -> /home/user/harness/bench/agent-checkpoints/results/big-pilot-speed/fenvix/summary.json

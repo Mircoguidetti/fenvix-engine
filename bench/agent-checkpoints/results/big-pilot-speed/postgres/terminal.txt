@@ -1,0 +1,3 @@
+round A: 41 tasks in 7.8 s, errors 0
+round B: 0 tasks in 0.0 s, errors 0
+[postgres] VALIDATION, NOT RESULTS: ok=True checkpoints=2551 load=14.04s stored=55123968 stored/logical=0.3856 wrong_reads=0 -> /home/user/harness/bench/agent-checkpoints/results/big-pilot-speed/postgres/summary.json

@@ -1,0 +1,11 @@
+2026-11-12T16:02:43Z postgres-sync -> /home/user/harness/bench/agent-checkpoints/results/big-pilot-speed/postgres
+2026-11-12T16:03:17Z postgres-sync: exit 0; [postgres] VALIDATION, NOT RESULTS: ok=True checkpoints=2551 load=14.04s stored=55123968 stored/logical=0.3856 wrong_reads=0 -> /home/user/harness/bench/agent-checkpoints/results/big-pilot-speed/postgres/summary.json
+2026-11-12T16:03:17Z mongo-rs3 -> /home/user/harness/bench/agent-checkpoints/results/big-pilot-speed/mongo
+2026-11-12T16:06:18Z mongo-rs3: exit 0; [mongo] VALIDATION, NOT RESULTS: ok=True checkpoints=2551 load=19.15s stored=70291456.0 stored/logical=0.4949 wrong_reads=0 -> /home/user/harness/bench/agent-checkpoints/results/big-pilot-speed/mongo/summary.json
+2026-11-12T16:06:18Z mongo-rs3: data-size operations
+2026-11-12T16:06:36Z mongo-rs3: bigops exit 0; copy {'rc': 0, 'seconds': 4.29, 'tail': 'ask_id", Value:1}, bson.E{Key:"idx", Value:1}}, PartialFilterExpression:(*bson.D)(nil)}\n2026-11-12T16:06:23.366+0000\trestoring indexes for collection `app_copy.checkpoints` from metadata\n2026-11-12T16:06:23.367+0000\tindex: &idx.IndexDocument{Options:bson.M{"name":"thread_id_1_checkpoint_ns_1_checkpoint_id_-1", "unique":true, "v":2}, Key:bson.D{bson.E{Ke
+2026-11-12T16:06:37Z fenvix-log -> /home/user/harness/bench/agent-checkpoints/results/big-pilot-speed/fenvix
+2026-11-12T16:09:11Z fenvix-log: exit 0; [fenvix] VALIDATION, NOT RESULTS: ok=True checkpoints=2551 load=18.06s stored=151536465 stored/logical=1.0668 wrong_reads=0 -> /home/user/harness/bench/agent-checkpoints/results/big-pilot-speed/fenvix/summary.json
+2026-11-12T16:09:11Z fenvix-log: data-size operations
+2026-11-12T16:09:43Z fenvix-log: bigops exit 0; copy {'api': [201, {'created_at': '2026-11-12T16:09:17.519Z', 'created_at_ms': 1794499757519, 'created_via': 'fork', 'fork': {'cost': {'copy': 1, 'delete': 3, 'get': 20, 'get_bytes': 23910, 'get_range': 0, 'get_tier_requests': 22, 'head': 2, 'list': 8, 'put': 16, 'put_bytes': 18542, 'put_tier_requests': 25}, 'elapsed_ms': 1353, 'mode': 'clone', 'source': 'app_demo', 'source_manifest_id': 58}, 'for
+2026-11-12T16:09:44Z verdict: /home/user/harness/bench/agent-checkpoints/results/big-pilot-speed/verdict.txt

@@ -1,0 +1,66 @@
+{
+ "bench_rc": 0,
+ "seconds": 180.6,
+ "disk_stop": false,
+ "disk_min_free_gib": 19.95,
+ "cpu_mem": {
+  "samples": 32,
+  "host_cpu_busy_mean": 0.143,
+  "host_cpu_busy_max": 0.719,
+  "host_cpu_busy_ge_95pct_share": 0.0,
+  "host_mem_used_gib_max": 2.41,
+  "containers": {
+   "mongo-a": {
+    "cores_mean": 0.104,
+    "cores_max": 0.754,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 571
+   },
+   "mongo-b": {
+    "cores_mean": 0.082,
+    "cores_max": 0.507,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 560
+   },
+   "mongo-c": {
+    "cores_mean": 0.071,
+    "cores_max": 0.487,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 487
+   }
+  },
+  "client_cores_mean": 0.132,
+  "client_cores_max": 1.025,
+  "containers_gone_in_some_sample": []
+ },
+ "members_end": {
+  "mongo-a": {
+   "present": true,
+   "running": true,
+   "oom_killed": false,
+   "exit_code": 0,
+   "restart_count": 0,
+   "status": "running"
+  },
+  "mongo-b": {
+   "present": true,
+   "running": true,
+   "oom_killed": false,
+   "exit_code": 0,
+   "restart_count": 0,
+   "status": "running"
+  },
+  "mongo-c": {
+   "present": true,
+   "running": true,
+   "oom_killed": false,
+   "exit_code": 0,
+   "restart_count": 0,
+   "status": "running"
+  }
+ },
+ "disk_end": {
+  "free_gib": 20.0,
+  "used_gib": 18.4
+ }
+}

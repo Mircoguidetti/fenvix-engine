@@ -1,0 +1,154 @@
+{
+ "line": {
+  "name": "mongo-rs3",
+  "target": "mongo",
+  "durability": "3-member replica set, w:majority, j:true",
+  "containers": [
+   "mongo-a",
+   "mongo-b",
+   "mongo-c"
+  ],
+  "uri": "mongodb://mongo-a:27017,mongo-b:27017,mongo-c:27017/?replicaSet=rs0&w=majority&journal=true"
+ },
+ "limits": [
+  "--cpus",
+  "1",
+  "--memory",
+  "1g"
+ ],
+ "minio": "own container, not capped (our lines only)",
+ "network": "docker network fxbench 172.31.77.0/24; client on the host",
+ "disk_before": {
+  "free_gib": 21.2,
+  "used_gib": 17.2
+ },
+ "binaries_sha256": null,
+ "big": {
+  "mem": "1g",
+  "minio": "not capped (CPU and memory)",
+  "postgres_shared_buffers": "default",
+  "mongod_wiredTigerCacheSizeGB": 0.25,
+  "delay_ms_round_B": 20,
+  "s3delay_sha256": "136b37875e71f7b96f469ba319d6a590a3afae8becdb9258de6db336cb00b1e1"
+ },
+ "check_before": {
+  "line": "mongo-rs3",
+  "durability": "3-member replica set, w:majority, j:true",
+  "ok": true,
+  "settings": {
+   "version": "7.0.48",
+   "cmdline": [
+    "mongod",
+    "--replSet",
+    "rs0",
+    "--bind_ip_all",
+    "--wiredTigerCacheSizeGB",
+    "0.25"
+   ],
+   "wiredTiger_cache_max_bytes": 268435456,
+   "storageEngine": "wiredTiger",
+   "hostInfo_memLimitMB": 1024,
+   "rs_conf": {
+    "_id": "rs0",
+    "version": 1,
+    "term": 1,
+    "members": [
+     {
+      "_id": 0,
+      "host": "mongo-a:27017",
+      "arbiterOnly": false,
+      "buildIndexes": true,
+      "hidden": false,
+      "priority": 1.0,
+      "tags": {},
+      "secondaryDelaySecs": 0,
+      "votes": 1
+     },
+     {
+      "_id": 1,
+      "host": "mongo-b:27017",
+      "arbiterOnly": false,
+      "buildIndexes": true,
+      "hidden": false,
+      "priority": 1.0,
+      "tags": {},
+      "secondaryDelaySecs": 0,
+      "votes": 1
+     },
+     {
+      "_id": 2,
+      "host": "mongo-c:27017",
+      "arbiterOnly": false,
+      "buildIndexes": true,
+      "hidden": false,
+      "priority": 1.0,
+      "tags": {},
+      "secondaryDelaySecs": 0,
+      "votes": 1
+     }
+    ],
+    "protocolVersion": 1,
+    "writeConcernMajorityJournalDefault": true,
+    "settings": {
+     "chainingAllowed": true,
+     "heartbeatIntervalMillis": 2000,
+     "heartbeatTimeoutSecs": 10,
+     "electionTimeoutMillis": 10000,
+     "catchUpTimeoutMillis": -1,
+     "catchUpTakeoverDelayMillis": 30000,
+     "getLastErrorModes": {},
+     "getLastErrorDefaults": {
+      "w": 1,
+      "wtimeout": 0
+     },
+     "replicaSetId": "6af5e34a96098789807b438c"
+    }
+   },
+   "rs_status": [
+    {
+     "name": "mongo-a:27017",
+     "stateStr": "PRIMARY",
+     "health": 1.0
+    },
+    {
+     "name": "mongo-b:27017",
+     "stateStr": "SECONDARY",
+     "health": 1.0
+    },
+    {
+     "name": "mongo-c:27017",
+     "stateStr": "SECONDARY",
+     "health": 1.0
+    }
+   ],
+   "defaultRWConcern": {
+    "defaultReadConcern": {
+     "level": "local"
+    },
+    "defaultWriteConcern": {
+     "w": "majority",
+     "wtimeout": 0
+    },
+    "defaultWriteConcernSource": "implicit",
+    "defaultReadConcernSource": "implicit",
+    "localUpdateWallClockTime": "2026-11-12 16:03:33.416000",
+    "ok": 1.0,
+    "$clusterTime": {
+     "clusterTime": "Timestamp(1794499413, 6)",
+     "signature": {
+      "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+      "keyId": 0
+     }
+    },
+    "operationTime": "Timestamp(1794499413, 6)"
+   }
+  },
+  "uri_write_concern": "w=majority&journal=true (connection string of equal-durability.json)"
+ },
+ "probe_containers": {
+  "mongo-a": "4bd583c5cf9c072bb2e0ef8fa6ed4919c4309389b24b82fe28f1781515c8d1b5",
+  "mongo-b": "c529487ac21e90a087038e3ae4dc4c5a46e75281894f0f551dba64426f220ab4",
+  "mongo-c": "88036cc4627b277470ea4e3b58836836272faaa6344c0de4e07ccbd7f1cda8a1"
+ },
+ "bench_command": "/root/.fenvix-agentbench-venv/bin/python /home/user/harness/bench/agent-checkpoints/bench.py --local --target mongo --label local mongo-rs3: 3-member replica set, w:majority, j:true --profile small --seed 42 --workers 3 --out /home/user/harness/bench/agent-checkpoints/results/big-pilot-speed/mongo --settle --health-cmd /root/.fenvix-agentbench-venv/bin/python /home/user/harness/bench/agent-checkpoints/lines.py health mongo-rs3 --mix-round A=/root/.fenvix-agentbench-venv/bin/python /home/user/harness/bench/agent-checkpoints/lines.py restart mongo-rs3 --mix-round B=/root/.fenvix-agentbench-venv/bin/python /home/user/harness/bench/agent-checkpoints/lines.py restart mongo-rs3 --mix-write 20 --mix-read 24"
+}

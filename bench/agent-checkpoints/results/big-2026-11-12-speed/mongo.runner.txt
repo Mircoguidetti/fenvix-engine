@@ -1,0 +1,5 @@
+16:39:40 mongo-rs3: disk before {'free_gib': 24.2, 'used_gib': 14.2}
+16:39:54 mongo-rs3: up (mongo-a, mongo-b, mongo-c)
+16:39:54 mongo-rs3: durability check ok=True
+16:39:54 mongo-rs3: bench.py starts
+17:19:24 mongo-rs3: bench.py exit 0 after 2384 s

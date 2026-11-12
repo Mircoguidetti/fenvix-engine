@@ -1,0 +1,5 @@
+engine 357348b510b0d7da55fc0cc40aa89cd949f216f9 (/home/user/fenvix-engine)
+harness 8d1177d14d1735172381ae16ec3bb98279b1b9ae
+250eea74532667c938c7750d7c57fbb976761063e0ea30a05d216e2539bc4cef  /home/user/harness/target/release/mongo-server
+7075075a4ac3367c938c269f0b88660519202d666068bcf6e448e7a6fb8aff52  /home/user/harness/proto/quaderno/target/release/pq
+136b37875e71f7b96f469ba319d6a590a3afae8becdb9258de6db336cb00b1e1  /home/user/harness/target/release/s3delay

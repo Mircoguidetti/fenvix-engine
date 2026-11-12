@@ -1,0 +1,66 @@
+{
+ "bench_rc": 0,
+ "seconds": 33.1,
+ "disk_stop": false,
+ "disk_min_free_gib": 20.67,
+ "cpu_mem": {
+  "samples": 6,
+  "host_cpu_busy_mean": 0.352,
+  "host_cpu_busy_max": 0.561,
+  "host_cpu_busy_ge_95pct_share": 0.0,
+  "host_mem_used_gib_max": 1.95,
+  "containers": {
+   "pg-primary": {
+    "cores_mean": 0.282,
+    "cores_max": 0.394,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 281
+   },
+   "pg-standby1": {
+    "cores_mean": 0.048,
+    "cores_max": 0.072,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 274
+   },
+   "pg-standby2": {
+    "cores_mean": 0.048,
+    "cores_max": 0.071,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 256
+   }
+  },
+  "client_cores_mean": 0.678,
+  "client_cores_max": 1.046,
+  "containers_gone_in_some_sample": []
+ },
+ "members_end": {
+  "pg-primary": {
+   "present": true,
+   "running": true,
+   "oom_killed": false,
+   "exit_code": 0,
+   "restart_count": 0,
+   "status": "running"
+  },
+  "pg-standby1": {
+   "present": true,
+   "running": true,
+   "oom_killed": false,
+   "exit_code": 0,
+   "restart_count": 0,
+   "status": "running"
+  },
+  "pg-standby2": {
+   "present": true,
+   "running": true,
+   "oom_killed": false,
+   "exit_code": 0,
+   "restart_count": 0,
+   "status": "running"
+  }
+ },
+ "disk_end": {
+  "free_gib": 20.8,
+  "used_gib": 17.6
+ }
+}

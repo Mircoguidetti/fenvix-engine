@@ -1,0 +1,3 @@
+round A: 2200 tasks in 313.6 s, errors 0
+round B: 2200 tasks in 347.4 s, errors 0
+[postgres] VALIDATION, NOT RESULTS: ok=True checkpoints=250314 load=1002.763s stored=5404041216 stored/logical=0.3879 wrong_reads=0 -> /home/user/harness/bench/agent-checkpoints/results/big-2026-11-12-speed/postgres/summary.json

@@ -1,0 +1,1182 @@
+{
+ "rule": "ratio = ours / best of mongod and Postgres; FASTER < 0.9 <= EQUAL <= 1.1 < SLOWER",
+ "ok": {
+  "postgres": true,
+  "mongo": true,
+  "fenvix": true
+ },
+ "wrong_reads": {
+  "postgres": 0,
+  "mongo": 0,
+  "fenvix": 0
+ },
+ "sizes": {
+  "postgres": {
+   "logical": 142947664,
+   "stored": 55123968,
+   "stored_from": "sum of pg_total_relation_size of the 4 saver tables (heap + TOAST + indexes)",
+   "stored_per_logical": 0.3856
+  },
+  "mongo": {
+   "logical": 142043532,
+   "stored": 70291456.0,
+   "stored_from": "dbStats storageSize + indexSize",
+   "stored_per_logical": 0.4949
+  },
+  "fenvix": {
+   "logical": 142044089,
+   "stored": 151536465,
+   "stored_from": "S3 objects under tenants/app_demo/",
+   "stored_per_logical": 1.0668
+  }
+ },
+ "comparisons": {
+  "no delay": {
+   "resume[long]": {
+    "n": {
+     "postgres": 20,
+     "mongo": 20,
+     "fenvix": 20
+    },
+    "p50": {
+     "ours": 8.687,
+     "postgres": 2.125,
+     "mongo": 2.327,
+     "best": "postgres",
+     "ratio": 4.09,
+     "gap_ms": 6.56,
+     "verdict": "SLOWER"
+    },
+    "p99": {
+     "ours": 34.421,
+     "postgres": 72.8,
+     "mongo": 5.614,
+     "best": "mongo",
+     "ratio": 6.13,
+     "gap_ms": 28.81,
+     "verdict": "SLOWER"
+    }
+   },
+   "resume[none]": {
+    "n": {
+     "postgres": 20,
+     "mongo": 20,
+     "fenvix": 20
+    },
+    "p50": {
+     "ours": 2.51,
+     "postgres": 1.626,
+     "mongo": 1.997,
+     "best": "postgres",
+     "ratio": 1.54,
+     "gap_ms": 0.88,
+     "verdict": "SLOWER"
+    },
+    "p99": {
+     "ours": 4.621,
+     "postgres": 4.905,
+     "mongo": 3.216,
+     "best": "mongo",
+     "ratio": 1.44,
+     "gap_ms": 1.41,
+     "verdict": "SLOWER"
+    }
+   },
+   "resume[read]": {
+    "n": {
+     "postgres": 6,
+     "mongo": 6,
+     "fenvix": 6
+    },
+    "p50": {
+     "ours": 6.633,
+     "postgres": 1.517,
+     "mongo": 2.097,
+     "best": "postgres",
+     "ratio": 4.37,
+     "gap_ms": 5.12,
+     "verdict": "SLOWER"
+    },
+    "p99": {
+     "ours": 63.881,
+     "postgres": 6.336,
+     "mongo": 5.764,
+     "best": "mongo",
+     "ratio": 11.08,
+     "gap_ms": 58.12,
+     "verdict": "SLOWER"
+    }
+   },
+   "resume[read]:next": {
+    "n": {
+     "postgres": 21,
+     "mongo": 21,
+     "fenvix": 21
+    },
+    "p50": {
+     "ours": 2.256,
+     "postgres": 1.368,
+     "mongo": 1.72,
+     "best": "postgres",
+     "ratio": 1.65,
+     "gap_ms": 0.89,
+     "verdict": "SLOWER"
+    },
+    "p99": {
+     "ours": 6.126,
+     "postgres": 8.631,
+     "mongo": 4.988,
+     "best": "mongo",
+     "ratio": 1.23,
+     "gap_ms": 1.14,
+     "verdict": "SLOWER"
+    }
+   },
+   "list": {
+    "n": {
+     "postgres": 5,
+     "mongo": 5,
+     "fenvix": 5
+    },
+    "p50": {
+     "ours": 115.416,
+     "postgres": 39.216,
+     "mongo": 89.027,
+     "best": "postgres",
+     "ratio": 2.94,
+     "gap_ms": 76.2,
+     "verdict": "SLOWER"
+    },
+    "p99": {
+     "ours": 1150.621,
+     "postgres": 1008.358,
+     "mongo": 1113.402,
+     "best": "postgres",
+     "ratio": 1.14,
+     "gap_ms": 142.26,
+     "verdict": "SLOWER"
+    }
+   },
+   "list:next": {
+    "n": {
+     "postgres": 21,
+     "mongo": 21,
+     "fenvix": 21
+    },
+    "p50": {
+     "ours": 42.684,
+     "postgres": 15.517,
+     "mongo": 39.097,
+     "best": "postgres",
+     "ratio": 2.75,
+     "gap_ms": 27.17,
+     "verdict": "SLOWER"
+    },
+    "p99": {
+     "ours": 1003.896,
+     "postgres": 800.946,
+     "mongo": 898.122,
+     "best": "postgres",
+     "ratio": 1.25,
+     "gap_ms": 202.95,
+     "verdict": "SLOWER"
+    }
+   },
+   "list_limit10": {
+    "n": {
+     "postgres": 5,
+     "mongo": 5,
+     "fenvix": 5
+    },
+    "p50": {
+     "ours": 18.33,
+     "postgres": 9.395,
+     "mongo": 11.738,
+     "best": "postgres",
+     "ratio": 1.95,
+     "gap_ms": 8.93,
+     "verdict": "SLOWER"
+    },
+    "p99": {
+     "ours": 26.722,
+     "postgres": 10.903,
+     "mongo": 17.144,
+     "best": "postgres",
+     "ratio": 2.45,
+     "gap_ms": 15.82,
+     "verdict": "SLOWER"
+    }
+   },
+   "list_limit10:next": {
+    "n": {
+     "postgres": 21,
+     "mongo": 21,
+     "fenvix": 21
+    },
+    "p50": {
+     "ours": 15.074,
+     "postgres": 6.134,
+     "mongo": 11.485,
+     "best": "postgres",
+     "ratio": 2.46,
+     "gap_ms": 8.94,
+     "verdict": "SLOWER"
+    },
+    "p99": {
+     "ours": 91.263,
+     "postgres": 54.447,
+     "mongo": 42.657,
+     "best": "mongo",
+     "ratio": 2.14,
+     "gap_ms": 48.61,
+     "verdict": "SLOWER"
+    }
+   },
+   "time_travel": {
+    "n": {
+     "postgres": 5,
+     "mongo": 5,
+     "fenvix": 5
+    },
+    "p50": {
+     "ours": 5.663,
+     "postgres": 1.392,
+     "mongo": 2.865,
+     "best": "postgres",
+     "ratio": 4.07,
+     "gap_ms": 4.27,
+     "verdict": "SLOWER"
+    },
+    "p99": {
+     "ours": 22.479,
+     "postgres": 13.471,
+     "mongo": 14.405,
+     "best": "postgres",
+     "ratio": 1.67,
+     "gap_ms": 9.01,
+     "verdict": "SLOWER"
+    }
+   },
+   "time_travel:next": {
+    "n": {
+     "postgres": 21,
+     "mongo": 21,
+     "fenvix": 21
+    },
+    "p50": {
+     "ours": 2.085,
+     "postgres": 0.942,
+     "mongo": 1.566,
+     "best": "postgres",
+     "ratio": 2.21,
+     "gap_ms": 1.14,
+     "verdict": "SLOWER"
+    },
+    "p99": {
+     "ours": 4.645,
+     "postgres": 5.052,
+     "mongo": 5.888,
+     "best": "postgres",
+     "ratio": 0.92,
+     "gap_ms": -0.41,
+     "verdict": "EQUAL"
+    }
+   },
+   "save_step[old]": {
+    "n": {
+     "postgres": 94,
+     "mongo": 94,
+     "fenvix": 94
+    },
+    "p50": {
+     "ours": 8.443,
+     "postgres": 6.422,
+     "mongo": 10.424,
+     "best": "postgres",
+     "ratio": 1.31,
+     "gap_ms": 2.02,
+     "verdict": "SLOWER"
+    },
+    "p99": {
+     "ours": 110.234,
+     "postgres": 24.297,
+     "mongo": 37.642,
+     "best": "postgres",
+     "ratio": 4.54,
+     "gap_ms": 85.94,
+     "verdict": "SLOWER"
+    }
+   },
+   "save_step[none]": {
+    "n": {
+     "postgres": 100,
+     "mongo": 100,
+     "fenvix": 100
+    },
+    "p50": {
+     "ours": 8.707,
+     "postgres": 7.412,
+     "mongo": 10.278,
+     "best": "postgres",
+     "ratio": 1.17,
+     "gap_ms": 1.3,
+     "verdict": "SLOWER"
+    },
+    "p99": {
+     "ours": 59.91,
+     "postgres": 132.44,
+     "mongo": 33.744,
+     "best": "mongo",
+     "ratio": 1.78,
+     "gap_ms": 26.17,
+     "verdict": "SLOWER"
+    }
+   },
+   "save_step": {
+    "n": {
+     "postgres": 194,
+     "mongo": 194,
+     "fenvix": 194
+    },
+    "p50": {
+     "ours": 8.524,
+     "postgres": 6.734,
+     "mongo": 10.297,
+     "best": "postgres",
+     "ratio": 1.27,
+     "gap_ms": 1.79,
+     "verdict": "SLOWER"
+    },
+    "p99": {
+     "ours": 59.91,
+     "postgres": 26.108,
+     "mongo": 33.744,
+     "best": "postgres",
+     "ratio": 2.29,
+     "gap_ms": 33.8,
+     "verdict": "SLOWER"
+    }
+   }
+  },
+  "20 ms delay on our MinIO": {
+   "resume[long]": {
+    "missing": [
+     "postgres",
+     "mongo",
+     "fenvix"
+    ]
+   },
+   "resume[none]": {
+    "missing": [
+     "postgres",
+     "mongo",
+     "fenvix"
+    ]
+   },
+   "resume[read]": {
+    "missing": [
+     "postgres",
+     "mongo",
+     "fenvix"
+    ]
+   },
+   "resume[read]:next": {
+    "missing": [
+     "postgres",
+     "mongo",
+     "fenvix"
+    ]
+   },
+   "list": {
+    "missing": [
+     "postgres",
+     "mongo",
+     "fenvix"
+    ]
+   },
+   "list:next": {
+    "missing": [
+     "postgres",
+     "mongo",
+     "fenvix"
+    ]
+   },
+   "list_limit10": {
+    "missing": [
+     "postgres",
+     "mongo",
+     "fenvix"
+    ]
+   },
+   "list_limit10:next": {
+    "missing": [
+     "postgres",
+     "mongo",
+     "fenvix"
+    ]
+   },
+   "time_travel": {
+    "missing": [
+     "postgres",
+     "mongo",
+     "fenvix"
+    ]
+   },
+   "time_travel:next": {
+    "missing": [
+     "postgres",
+     "mongo",
+     "fenvix"
+    ]
+   },
+   "save_step[old]": {
+    "missing": [
+     "postgres",
+     "mongo",
+     "fenvix"
+    ]
+   },
+   "save_step[none]": {
+    "missing": [
+     "postgres",
+     "mongo",
+     "fenvix"
+    ]
+   },
+   "save_step": {
+    "missing": [
+     "postgres",
+     "mongo",
+     "fenvix"
+    ]
+   }
+  }
+ },
+ "resources": {
+  "postgres": {
+   "A": {
+    "list": {
+     "cpu_ms_all_members": 46.63,
+     "cpu_ms.pg-primary": 46.539,
+     "cpu_ms.pg-standby1": 0.052,
+     "cpu_ms.pg-standby2": 0.04,
+     "rd_bytes.pg-primary": 3894476.8,
+     "n": 5
+    },
+    "list:next": {
+     "cpu_ms_all_members": 22.577,
+     "cpu_ms.pg-primary": 22.531,
+     "cpu_ms.pg-standby1": 0.019,
+     "cpu_ms.pg-standby2": 0.028,
+     "rd_bytes.pg-primary": 893513.143,
+     "n": 21
+    },
+    "list_limit10": {
+     "cpu_ms_all_members": 3.149,
+     "cpu_ms.pg-primary": 3.144,
+     "cpu_ms.pg-standby1": 0.005,
+     "rd_bytes.pg-primary": 176128.0,
+     "n": 5
+    },
+    "list_limit10:next": {
+     "cpu_ms_all_members": 3.265,
+     "cpu_ms.pg-primary": 3.262,
+     "cpu_ms.pg-standby1": 0.003,
+     "n": 21
+    },
+    "resume[long]": {
+     "cpu_ms_all_members": 1.067,
+     "cpu_ms.pg-primary": 1.063,
+     "cpu_ms.pg-standby1": 0.004,
+     "rd_bytes.pg-primary": 84992.0,
+     "n": 20
+    },
+    "resume[none]": {
+     "cpu_ms_all_members": 0.763,
+     "cpu_ms.pg-primary": 0.763,
+     "n": 20
+    },
+    "resume[read]": {
+     "cpu_ms_all_members": 0.989,
+     "cpu_ms.pg-primary": 0.989,
+     "rd_bytes.pg-primary": 137216.0,
+     "n": 6
+    },
+    "resume[read]:next": {
+     "cpu_ms_all_members": 0.843,
+     "cpu_ms.pg-primary": 0.843,
+     "rd_bytes.pg-primary": 13653.333,
+     "n": 21
+    },
+    "save_step": {
+     "cpu_ms_all_members": 5.963,
+     "cpu_ms.pg-primary": 4.229,
+     "cpu_ms.pg-standby1": 0.86,
+     "cpu_ms.pg-standby2": 0.873,
+     "rd_bytes.pg-primary": 4518.268,
+     "rd_bytes.pg-standby1": 22232.412,
+     "rd_bytes.pg-standby2": 23647.01,
+     "n": 194
+    },
+    "save_step[none]": {
+     "cpu_ms_all_members": 6.367,
+     "cpu_ms.pg-primary": 4.635,
+     "cpu_ms.pg-standby1": 0.87,
+     "cpu_ms.pg-standby2": 0.862,
+     "rd_bytes.pg-primary": 2457.6,
+     "rd_bytes.pg-standby1": 17776.64,
+     "rd_bytes.pg-standby2": 17080.32,
+     "n": 100
+    },
+    "save_step[old]": {
+     "cpu_ms_all_members": 5.532,
+     "cpu_ms.pg-primary": 3.798,
+     "cpu_ms.pg-standby1": 0.849,
+     "cpu_ms.pg-standby2": 0.886,
+     "rd_bytes.pg-primary": 6710.468,
+     "rd_bytes.pg-standby1": 26972.596,
+     "rd_bytes.pg-standby2": 30632.851,
+     "n": 94
+    },
+    "time_travel": {
+     "cpu_ms_all_members": 1.466,
+     "cpu_ms.pg-primary": 1.466,
+     "rd_bytes.pg-primary": 137625.6,
+     "n": 5
+    },
+    "time_travel:next": {
+     "cpu_ms_all_members": 0.698,
+     "cpu_ms.pg-primary": 0.696,
+     "cpu_ms.pg-standby1": 0.002,
+     "n": 21
+    }
+   },
+   "B": {}
+  },
+  "mongo": {
+   "A": {
+    "list": {
+     "cpu_ms_all_members": 66.247,
+     "cpu_ms.mongo-a": 59.934,
+     "cpu_ms.mongo-b": 2.964,
+     "cpu_ms.mongo-c": 3.349,
+     "rd_bytes.mongo-a": 3774054.4,
+     "n": 5
+    },
+    "list:next": {
+     "cpu_ms_all_members": 36.329,
+     "cpu_ms.mongo-a": 31.442,
+     "cpu_ms.mongo-b": 3.039,
+     "cpu_ms.mongo-c": 1.847,
+     "rd_bytes.mongo-a": 1118403.048,
+     "rd_bytes.mongo-c": 87966.476,
+     "n": 21
+    },
+    "list_limit10": {
+     "cpu_ms_all_members": 5.472,
+     "cpu_ms.mongo-a": 4.981,
+     "cpu_ms.mongo-b": 0.244,
+     "cpu_ms.mongo-c": 0.246,
+     "rd_bytes.mongo-a": 205619.2,
+     "n": 5
+    },
+    "list_limit10:next": {
+     "cpu_ms_all_members": 4.982,
+     "cpu_ms.mongo-a": 4.344,
+     "cpu_ms.mongo-b": 0.458,
+     "cpu_ms.mongo-c": 0.18,
+     "n": 21
+    },
+    "resume[long]": {
+     "cpu_ms_all_members": 1.862,
+     "cpu_ms.mongo-a": 1.017,
+     "cpu_ms.mongo-b": 0.448,
+     "cpu_ms.mongo-c": 0.398,
+     "rd_bytes.mongo-a": 28467.2,
+     "rd_bytes.mongo-c": 4300.8,
+     "n": 20
+    },
+    "resume[none]": {
+     "cpu_ms_all_members": 1.088,
+     "cpu_ms.mongo-a": 0.82,
+     "cpu_ms.mongo-b": 0.102,
+     "cpu_ms.mongo-c": 0.166,
+     "n": 20
+    },
+    "resume[read]": {
+     "cpu_ms_all_members": 1.499,
+     "cpu_ms.mongo-a": 1.03,
+     "cpu_ms.mongo-b": 0.303,
+     "cpu_ms.mongo-c": 0.166,
+     "rd_bytes.mongo-a": 27989.333,
+     "n": 6
+    },
+    "resume[read]:next": {
+     "cpu_ms_all_members": 1.305,
+     "cpu_ms.mongo-a": 1.147,
+     "cpu_ms.mongo-b": 0.128,
+     "cpu_ms.mongo-c": 0.03,
+     "rd_bytes.mongo-a": 5266.286,
+     "rd_bytes.mongo-b": 1170.286,
+     "n": 21
+    },
+    "save_step": {
+     "cpu_ms_all_members": 22.796,
+     "cpu_ms.mongo-a": 7.878,
+     "cpu_ms.mongo-b": 9.751,
+     "cpu_ms.mongo-c": 5.167,
+     "rd_bytes.mongo-a": 4476.041,
+     "rd_bytes.mongo-b": 23055.835,
+     "rd_bytes.mongo-c": 907.876,
+     "n": 194
+    },
+    "save_step[none]": {
+     "cpu_ms_all_members": 22.503,
+     "cpu_ms.mongo-a": 7.684,
+     "cpu_ms.mongo-b": 9.786,
+     "cpu_ms.mongo-c": 5.033,
+     "rd_bytes.mongo-a": 327.68,
+     "n": 100
+    },
+    "save_step[old]": {
+     "cpu_ms_all_members": 23.107,
+     "cpu_ms.mongo-a": 8.084,
+     "cpu_ms.mongo-b": 9.713,
+     "cpu_ms.mongo-c": 5.309,
+     "rd_bytes.mongo-a": 8889.191,
+     "rd_bytes.mongo-b": 47583.319,
+     "rd_bytes.mongo-c": 1873.702,
+     "n": 94
+    },
+    "time_travel": {
+     "cpu_ms_all_members": 3.453,
+     "cpu_ms.mongo-a": 2.965,
+     "cpu_ms.mongo-b": 0.267,
+     "cpu_ms.mongo-c": 0.221,
+     "rd_bytes.mongo-a": 502169.6,
+     "n": 5
+    },
+    "time_travel:next": {
+     "cpu_ms_all_members": 0.973,
+     "cpu_ms.mongo-a": 0.729,
+     "cpu_ms.mongo-b": 0.221,
+     "cpu_ms.mongo-c": 0.023,
+     "n": 21
+    }
+   },
+   "B": {}
+  },
+  "fenvix": {
+   "A": {
+    "list": {
+     "cpu_ms_all_members": 194.598,
+     "cpu_ms.cook": 104.154,
+     "cpu_ms.log-0": 19.511,
+     "cpu_ms.log-1": 18.263,
+     "cpu_ms.log-2": 18.406,
+     "cpu_ms.minio": 33.411,
+     "cpu_ms.spare": 0.853,
+     "rd_bytes.minio": 275251.2,
+     "s3_gets": 2.4,
+     "s3_get_bytes": 7869546.6,
+     "s3_puts": 0.6,
+     "block_cache_hits": 2481.4,
+     "block_cache_misses": 135.0,
+     "sealed_block_hits": 0,
+     "sealed_run_gets": 0,
+     "background_gets": 0,
+     "s3_gets_p50": 1,
+     "n": 5
+    },
+    "list:next": {
+     "cpu_ms_all_members": 87.018,
+     "cpu_ms.cook": 55.795,
+     "cpu_ms.log-0": 10.126,
+     "cpu_ms.log-1": 9.852,
+     "cpu_ms.log-2": 9.764,
+     "cpu_ms.minio": 0.996,
+     "cpu_ms.spare": 0.484,
+     "rd_bytes.log-0": 7021.714,
+     "s3_gets": 0.952,
+     "s3_get_bytes": 408.667,
+     "s3_puts": 0.143,
+     "block_cache_hits": 2116.619,
+     "block_cache_misses": 0,
+     "sealed_block_hits": 0,
+     "sealed_run_gets": 0,
+     "background_gets": 0,
+     "s3_gets_p50": 0,
+     "n": 21
+    },
+    "list_limit10": {
+     "cpu_ms_all_members": 17.953,
+     "cpu_ms.cook": 8.969,
+     "cpu_ms.log-0": 1.21,
+     "cpu_ms.log-1": 1.136,
+     "cpu_ms.log-2": 1.13,
+     "cpu_ms.minio": 5.439,
+     "cpu_ms.spare": 0.069,
+     "rd_bytes.minio": 133529.6,
+     "s3_gets": 1.8,
+     "s3_get_bytes": 1058927.0,
+     "s3_puts": 0.2,
+     "block_cache_hits": 374.2,
+     "block_cache_misses": 60.2,
+     "sealed_block_hits": 0,
+     "sealed_run_gets": 0,
+     "background_gets": 0,
+     "s3_gets_p50": 1,
+     "n": 5
+    },
+    "list_limit10:next": {
+     "cpu_ms_all_members": 14.8,
+     "cpu_ms.cook": 8.21,
+     "cpu_ms.log-0": 1.443,
+     "cpu_ms.log-1": 1.361,
+     "cpu_ms.log-2": 1.389,
+     "cpu_ms.minio": 2.336,
+     "cpu_ms.spare": 0.061,
+     "s3_gets": 1.572,
+     "s3_get_bytes": 467413.286,
+     "s3_puts": 0,
+     "block_cache_hits": 407.286,
+     "block_cache_misses": 41.381,
+     "sealed_block_hits": 0,
+     "sealed_run_gets": 0,
+     "background_gets": 0,
+     "s3_gets_p50": 0,
+     "n": 21
+    },
+    "resume[long]": {
+     "cpu_ms_all_members": 19.39,
+     "cpu_ms.cook": 6.27,
+     "cpu_ms.log-0": 0.744,
+     "cpu_ms.log-1": 0.692,
+     "cpu_ms.log-2": 0.758,
+     "cpu_ms.minio": 10.893,
+     "cpu_ms.spare": 0.033,
+     "rd_bytes.minio": 114073.6,
+     "s3_gets": 2.9,
+     "s3_get_bytes": 3011339.6,
+     "s3_puts": 0,
+     "block_cache_hits": 43.3,
+     "block_cache_misses": 84.75,
+     "sealed_block_hits": 0,
+     "sealed_run_gets": 0,
+     "background_gets": 0,
+     "s3_gets_p50": 1,
+     "n": 20
+    },
+    "resume[none]": {
+     "cpu_ms_all_members": 1.852,
+     "cpu_ms.cook": 1.145,
+     "cpu_ms.log-0": 0.174,
+     "cpu_ms.log-1": 0.191,
+     "cpu_ms.log-2": 0.19,
+     "cpu_ms.minio": 0.14,
+     "cpu_ms.spare": 0.013,
+     "s3_gets": 0.1,
+     "s3_get_bytes": 148.1,
+     "s3_puts": 0,
+     "block_cache_hits": 31.75,
+     "block_cache_misses": 0,
+     "sealed_block_hits": 0,
+     "sealed_run_gets": 0,
+     "background_gets": 0,
+     "s3_gets_p50": 0,
+     "n": 20
+    },
+    "resume[read]": {
+     "cpu_ms_all_members": 25.071,
+     "cpu_ms.cook": 10.414,
+     "cpu_ms.log-0": 1.092,
+     "cpu_ms.log-1": 1.01,
+     "cpu_ms.log-2": 1.125,
+     "cpu_ms.minio": 11.381,
+     "cpu_ms.spare": 0.049,
+     "rd_bytes.minio": 328362.667,
+     "s3_gets": 2.333,
+     "s3_get_bytes": 4801844.333,
+     "s3_puts": 0,
+     "block_cache_hits": 49.5,
+     "block_cache_misses": 89.5,
+     "sealed_block_hits": 0,
+     "sealed_run_gets": 0,
+     "background_gets": 0,
+     "s3_gets_p50": 2,
+     "n": 6
+    },
+    "resume[read]:next": {
+     "cpu_ms_all_members": 2.02,
+     "cpu_ms.cook": 1.274,
+     "cpu_ms.log-0": 0.204,
+     "cpu_ms.log-1": 0.203,
+     "cpu_ms.log-2": 0.197,
+     "cpu_ms.minio": 0.132,
+     "cpu_ms.spare": 0.01,
+     "s3_gets": 0.095,
+     "s3_get_bytes": 141.143,
+     "s3_puts": 0,
+     "block_cache_hits": 36.714,
+     "block_cache_misses": 0,
+     "sealed_block_hits": 0,
+     "sealed_run_gets": 0,
+     "background_gets": 0,
+     "s3_gets_p50": 0,
+     "n": 21
+    },
+    "save_step": {
+     "cpu_ms_all_members": 13.717,
+     "cpu_ms.cook": 6.196,
+     "cpu_ms.log-0": 2.515,
+     "cpu_ms.log-1": 1.714,
+     "cpu_ms.log-2": 1.68,
+     "cpu_ms.minio": 1.583,
+     "cpu_ms.spare": 0.029,
+     "rd_bytes.cook": 2449.155,
+     "rd_bytes.log-0": 10430.021,
+     "rd_bytes.log-1": 10007.753,
+     "rd_bytes.log-2": 9838.845,
+     "rd_bytes.minio": 1435.711,
+     "s3_gets": 0.712,
+     "s3_get_bytes": 59703.567,
+     "s3_puts": 0.077,
+     "block_cache_hits": 182.531,
+     "block_cache_misses": 0.351,
+     "sealed_block_hits": 0,
+     "sealed_run_gets": 0,
+     "background_gets": 0.186,
+     "s3_gets_p50": 0,
+     "n": 194
+    },
+    "save_step[none]": {
+     "cpu_ms_all_members": 12.107,
+     "cpu_ms.cook": 5.831,
+     "cpu_ms.log-0": 2.514,
+     "cpu_ms.log-1": 1.731,
+     "cpu_ms.log-2": 1.672,
+     "cpu_ms.minio": 0.333,
+     "cpu_ms.spare": 0.025,
+     "rd_bytes.log-0": 10403.84,
+     "rd_bytes.log-1": 10158.08,
+     "rd_bytes.log-2": 9830.4,
+     "rd_bytes.minio": 81.92,
+     "s3_gets": 0.41,
+     "s3_get_bytes": 228.08,
+     "s3_puts": 0.08,
+     "block_cache_hits": 183.09,
+     "block_cache_misses": 0,
+     "sealed_block_hits": 0,
+     "sealed_run_gets": 0,
+     "background_gets": 0,
+     "s3_gets_p50": 0,
+     "n": 100
+    },
+    "save_step[old]": {
+     "cpu_ms_all_members": 15.43,
+     "cpu_ms.cook": 6.583,
+     "cpu_ms.log-0": 2.516,
+     "cpu_ms.log-1": 1.695,
+     "cpu_ms.log-2": 1.688,
+     "cpu_ms.minio": 2.913,
+     "cpu_ms.spare": 0.033,
+     "rd_bytes.cook": 5054.638,
+     "rd_bytes.log-0": 10457.872,
+     "rd_bytes.log-1": 9847.83,
+     "rd_bytes.log-2": 9847.83,
+     "rd_bytes.minio": 2875.915,
+     "s3_gets": 1.032,
+     "s3_get_bytes": 122975.362,
+     "s3_puts": 0.074,
+     "block_cache_hits": 181.936,
+     "block_cache_misses": 0.723,
+     "sealed_block_hits": 0,
+     "sealed_run_gets": 0,
+     "background_gets": 0.383,
+     "s3_gets_p50": 0,
+     "n": 94
+    },
+    "time_travel": {
+     "cpu_ms_all_members": 15.014,
+     "cpu_ms.cook": 6.251,
+     "cpu_ms.log-0": 0.817,
+     "cpu_ms.log-1": 0.871,
+     "cpu_ms.log-2": 0.816,
+     "cpu_ms.minio": 6.194,
+     "cpu_ms.spare": 0.065,
+     "rd_bytes.minio": 170393.6,
+     "s3_gets": 1.6,
+     "s3_get_bytes": 2487926.0,
+     "s3_puts": 0,
+     "block_cache_hits": 44.4,
+     "block_cache_misses": 84.8,
+     "sealed_block_hits": 0,
+     "sealed_run_gets": 0,
+     "background_gets": 0,
+     "s3_gets_p50": 1,
+     "n": 5
+    },
+    "time_travel:next": {
+     "cpu_ms_all_members": 1.9,
+     "cpu_ms.cook": 1.255,
+     "cpu_ms.log-0": 0.191,
+     "cpu_ms.log-1": 0.178,
+     "cpu_ms.log-2": 0.184,
+     "cpu_ms.minio": 0.082,
+     "cpu_ms.spare": 0.01,
+     "s3_gets": 0.143,
+     "s3_get_bytes": 386.19,
+     "s3_puts": 0,
+     "block_cache_hits": 47.333,
+     "block_cache_misses": 0,
+     "sealed_block_hits": 0,
+     "sealed_run_gets": 0,
+     "background_gets": 0,
+     "s3_gets_p50": 0,
+     "n": 21
+    }
+   },
+   "B": {}
+  }
+ },
+ "cache": {
+  "postgres": {
+   "A": {
+    "shared_buffers_hits": 75336,
+    "shared_buffers_reads": 4298,
+    "shared_buffers_hit_rate": 0.946,
+    "by_kind": {
+     "heap_read": 490,
+     "heap_hit": 36700,
+     "idx_read": 168,
+     "idx_hit": 18611,
+     "toast_read": 3578,
+     "toast_hit": 9879,
+     "tidx_read": 62,
+     "tidx_hit": 10146
+    },
+    "note": "a shared-buffers read may still be served by the page cache of the member's cgroup; rd_bytes (/proc/<pid>/io) is the disk"
+   },
+   "B": {
+    "shared_buffers_hits": 0,
+    "shared_buffers_reads": 3,
+    "shared_buffers_hit_rate": 0.0,
+    "by_kind": {
+     "heap_read": 1,
+     "heap_hit": 0,
+     "idx_read": 2,
+     "idx_hit": 0,
+     "toast_read": 0,
+     "toast_hit": 0,
+     "tidx_read": 0,
+     "tidx_hit": 0
+    },
+    "note": "a shared-buffers read may still be served by the page cache of the member's cgroup; rd_bytes (/proc/<pid>/io) is the disk"
+   }
+  },
+  "mongo": {
+   "A": {
+    "wt_pages_requested": 20652,
+    "wt_pages_read_into_cache": 1280,
+    "wt_hit_rate": 0.938,
+    "wt_bytes_read_into_cache": 106496546
+   },
+   "B": {
+    "wt_pages_requested": 0,
+    "wt_pages_read_into_cache": 0,
+    "wt_hit_rate": null,
+    "wt_bytes_read_into_cache": 0
+   }
+  },
+  "fenvix": {
+   "A": {
+    "block_cache_hits": 90147,
+    "block_cache_misses": 4545,
+    "block_cache_hit_rate": 0.952,
+    "sealed_block_hits": 0,
+    "sealed_run_gets": 0,
+    "s3_gets": 313,
+    "s3_get_bytes": 178706039,
+    "background_gets": 42,
+    "delta": {
+     "s3.get": 142,
+     "s3.getRange": 171,
+     "s3.head": 13,
+     "s3.list": 27,
+     "s3.put": 24,
+     "s3.multipartPart": 0,
+     "s3.copy": 0,
+     "s3.delete": 1,
+     "s3.getBytes": 178706039,
+     "s3.putBytes": 56380951,
+     "cache.blockBytes": 120762247,
+     "cache.blockCapacity": 0,
+     "cache.blockEntries": 3155,
+     "cache.metaBytes": 330404,
+     "cache.metaCapacity": 0,
+     "cache.hits": 90147,
+     "cache.misses": 4545,
+     "cache.bytesLoadedByFetch": 601783,
+     "cache.bytesInserted": 154508800,
+     "sealedRuns.publishes": 0,
+     "sealedRuns.publishErrors": 0,
+     "sealedRuns.fences": 0,
+     "sealedRuns.rowsFromRuns": 0,
+     "sealedRuns.runGets": 0,
+     "sealedRuns.runOpens": 0,
+     "sealedRuns.blockHits": 0,
+     "sealedRuns.counter.bytes": 0,
+     "sealedRuns.counter.slicesMade": 0,
+     "sealedRuns.counter.sliceHits": 0,
+     "sealedRuns.counter.wholeHits": 0,
+     "sealedRuns.counter.filterChecks": 0,
+     "sealedRuns.counter.filterSkips": 0,
+     "sealedRuns.counter.stages": 0,
+     "sealedRuns.counter.stageWarmed": 0,
+     "sealedRuns.counter.stageMissed": 0,
+     "sealedRuns.counter.stageGets": 0,
+     "sealedRuns.counter.stageTimeouts": 0,
+     "sealedRuns.counter.trims": 0,
+     "sealedRuns.counter.trimDrops": 0,
+     "sealedRuns.counter.refetches": 0,
+     "backgroundReads.gets": 42,
+     "backgroundReads.bytes": 59948,
+     "backgroundReads.micros": 54406,
+     "firstCourse.openings": 0,
+     "firstCourse.bytes": 0,
+     "firstCourse.pending": 0,
+     "firstCourse.evictedPending": 0,
+     "firstCourse.droppedPendingTooBig": 0,
+     "firstCourse.firstQueries": 0,
+     "firstCourse.servedQueries": 0,
+     "firstCourse.partialQueries": 0,
+     "firstCourse.missedQueries": 0,
+     "firstCourse.noOpening": 0,
+     "firstCourse.notDurable": 0,
+     "firstCourse.servedReads": 0,
+     "firstCourse.missedReads": 0,
+     "firstCourse.kept": 0,
+     "firstCourse.unkeepable": 0,
+     "firstCourse.trimmed": 0,
+     "firstCourse.droppedTooBig": 0,
+     "firstCourse.evicted": 0,
+     "firstCourse.expired": 0,
+     "firstCourse.forgotten": 0,
+     "firstCourse.writesApplied": 0,
+     "firstCourse.writeHookNs": 0,
+     "firstCourse.recordNs": 0,
+     "waiter.trips": 174,
+     "waiter.reads": 326,
+     "waiter.chains": 58,
+     "waiter.lastChainDepth": -11,
+     "waiter.readsInFlight": 0,
+     "waiter.maxReadsInFlight": 3,
+     "waiter.splitGets": 0,
+     "waiter.splitPieces": 0,
+     "waiter.hedges": 0,
+     "waiter.hedgeWins": 0,
+     "waiter.nextBlockHits": 0,
+     "waiter.readAhead.first": 0,
+     "waiter.readAhead.next": 0,
+     "waiter.readAhead.docs": 0,
+     "waiter.readAhead.fails": 0,
+     "waiter.readAhead.busy": 0
+    }
+   },
+   "B": {
+    "block_cache_hits": 78,
+    "block_cache_misses": 7,
+    "block_cache_hit_rate": 0.9176,
+    "sealed_block_hits": 0,
+    "sealed_run_gets": 0,
+    "s3_gets": 15,
+    "s3_get_bytes": 94187,
+    "background_gets": 20,
+    "delta": {
+     "s3.get": 8,
+     "s3.getRange": 7,
+     "s3.head": 2,
+     "s3.list": 2,
+     "s3.put": 1,
+     "s3.multipartPart": 0,
+     "s3.copy": 0,
+     "s3.delete": 0,
+     "s3.getBytes": 94187,
+     "s3.putBytes": 86,
+     "cache.blockBytes": 7991,
+     "cache.blockCapacity": 0,
+     "cache.blockEntries": 2,
+     "cache.metaBytes": 82577,
+     "cache.metaCapacity": 0,
+     "cache.hits": 78,
+     "cache.misses": 7,
+     "cache.bytesLoadedByFetch": 90568,
+     "cache.bytesInserted": 0,
+     "sealedRuns.publishes": 0,
+     "sealedRuns.publishErrors": 0,
+     "sealedRuns.fences": 0,
+     "sealedRuns.rowsFromRuns": 0,
+     "sealedRuns.runGets": 0,
+     "sealedRuns.runOpens": 0,
+     "sealedRuns.blockHits": 0,
+     "sealedRuns.counter.bytes": 0,
+     "sealedRuns.counter.slicesMade": 0,
+     "sealedRuns.counter.sliceHits": 0,
+     "sealedRuns.counter.wholeHits": 0,
+     "sealedRuns.counter.filterChecks": 0,
+     "sealedRuns.counter.filterSkips": 0,
+     "sealedRuns.counter.stages": 0,
+     "sealedRuns.counter.stageWarmed": 0,
+     "sealedRuns.counter.stageMissed": 0,
+     "sealedRuns.counter.stageGets": 0,
+     "sealedRuns.counter.stageTimeouts": 0,
+     "sealedRuns.counter.trims": 0,
+     "sealedRuns.counter.trimDrops": 0,
+     "sealedRuns.counter.refetches": 0,
+     "backgroundReads.gets": 20,
+     "backgroundReads.bytes": 50522,
+     "backgroundReads.micros": 467654,
+     "firstCourse.openings": 0,
+     "firstCourse.bytes": 0,
+     "firstCourse.pending": 0,
+     "firstCourse.evictedPending": 0,
+     "firstCourse.droppedPendingTooBig": 0,
+     "firstCourse.firstQueries": 0,
+     "firstCourse.servedQueries": 0,
+     "firstCourse.partialQueries": 0,
+     "firstCourse.missedQueries": 0,
+     "firstCourse.noOpening": 0,
+     "firstCourse.notDurable": 0,
+     "firstCourse.servedReads": 0,
+     "firstCourse.missedReads": 0,
+     "firstCourse.kept": 0,
+     "firstCourse.unkeepable": 0,
+     "firstCourse.trimmed": 0,
+     "firstCourse.droppedTooBig": 0,
+     "firstCourse.evicted": 0,
+     "firstCourse.expired": 0,
+     "firstCourse.forgotten": 0,
+     "firstCourse.writesApplied": 0,
+     "firstCourse.writeHookNs": 0,
+     "firstCourse.recordNs": 0,
+     "waiter.trips": 12,
+     "waiter.reads": 17,
+     "waiter.chains": 3,
+     "waiter.lastChainDepth": 1,
+     "waiter.readsInFlight": 0,
+     "waiter.maxReadsInFlight": 2,
+     "waiter.splitGets": 0,
+     "waiter.splitPieces": 0,
+     "waiter.hedges": 0,
+     "waiter.hedgeWins": 0,
+     "waiter.nextBlockHits": 0,
+     "waiter.readAhead.first": 0,
+     "waiter.readAhead.next": 0,
+     "waiter.readAhead.docs": 0,
+     "waiter.readAhead.fails": 0,
+     "waiter.readAhead.busy": 0
+    }
+   }
+  }
+ }
+}

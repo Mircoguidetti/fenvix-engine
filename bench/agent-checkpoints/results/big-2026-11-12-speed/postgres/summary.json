@@ -1,0 +1,795 @@
+{
+  "note": "LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+  "mode": "P-bench-big: load, settle, sizes, measured mix rounds (bigmix.py)",
+  "target": "postgres",
+  "label": "local postgres-sync: primary + 2 synchronous standbys, ANY 1 (2 of 3 copies)",
+  "profile": "big",
+  "seed": 42,
+  "load_workers": 3,
+  "engine_binary_sha256": null,
+  "plan": {
+    "threads": 4956,
+    "turns": 52436,
+    "digest": "f90efcee6bdfc47c"
+  },
+  "client": {
+    "python": "3.12.3",
+    "host": "vm"
+  },
+  "load": {
+    "seconds": 1002.763,
+    "errors": [],
+    "processes": 3,
+    "client_cpu": {
+      "samples": 501,
+      "workers": 3,
+      "process_cores_mean": {
+        "23352": 0.0,
+        "23356": 0.503,
+        "23357": 0.491,
+        "23359": 0.502
+      },
+      "process_cores_max_mean": 0.503,
+      "host_busy_mean": 0.633,
+      "host_busy_ge_95pct_share": 0.0,
+      "client_limited": false,
+      "rule": "--workers 3, a throughput line: limited if a client process averages >= 0.8 core or the host is >= 95% busy in > 10% of samples (DECISIONS 2026-11-11)"
+    },
+    "steps_per_second": 249.62,
+    "note": "the load's latencies are in ops.jsonl (phase write) and are not results"
+  },
+  "mix": {
+    "write_tasks": 1000,
+    "read_tasks": 1200,
+    "rounds": [
+      {
+        "round": "A",
+        "seed": 1042,
+        "write_threads": 1000,
+        "read_threads": 1200,
+        "tasks": 2200,
+        "seconds": 313.6,
+        "errors": [],
+        "n_errors": 0,
+        "pre": {
+          "cmd": "/root/.fenvix-agentbench-venv/bin/python /home/user/harness/bench/agent-checkpoints/lines.py restart postgres-sync",
+          "rc": 0,
+          "seconds": 3.7,
+          "output": "16:28:24 restart: docker restart pg-primary pg-standby1 pg-standby2 in 2.6 s\n16:28:25 drop_caches: done\n16:28:25 restart: line up again in 3.6 s, check ok=True\n"
+        },
+        "cache": {
+          "shared_buffers_hits": 2428638,
+          "shared_buffers_reads": 271207,
+          "shared_buffers_hit_rate": 0.8995,
+          "by_kind": {
+            "heap_read": 100833,
+            "heap_hit": 775225,
+            "idx_read": 11493,
+            "idx_hit": 869941,
+            "toast_read": 151028,
+            "toast_hit": 366146,
+            "tidx_read": 7853,
+            "tidx_hit": 417326
+          },
+          "note": "a shared-buffers read may still be served by the page cache of the member's cgroup; rd_bytes (/proc/<pid>/io) is the disk"
+        },
+        "counters_before": {
+          "heap_read": 413755,
+          "heap_hit": 2284198,
+          "idx_read": 25467,
+          "idx_hit": 7239732,
+          "toast_read": 469101,
+          "toast_hit": 4345886,
+          "tidx_read": 1529,
+          "tidx_hit": 3293721,
+          "db_blks_read": 912130,
+          "db_blks_hit": 17196721
+        },
+        "counters_after": {
+          "heap_read": 514588,
+          "heap_hit": 3059423,
+          "idx_read": 36960,
+          "idx_hit": 8109673,
+          "toast_read": 620129,
+          "toast_hit": 4712032,
+          "tidx_read": 9382,
+          "tidx_hit": 3711047,
+          "db_blks_read": 1183741,
+          "db_blks_hit": 19628002
+        }
+      },
+      {
+        "round": "B",
+        "seed": 2042,
+        "write_threads": 1000,
+        "read_threads": 1200,
+        "tasks": 2200,
+        "seconds": 347.4,
+        "errors": [],
+        "n_errors": 0,
+        "pre": {
+          "cmd": "/root/.fenvix-agentbench-venv/bin/python /home/user/harness/bench/agent-checkpoints/lines.py restart postgres-sync",
+          "rc": 0,
+          "seconds": 2.4,
+          "output": "16:33:41 restart: docker restart pg-primary pg-standby1 pg-standby2 in 1.9 s\n16:33:41 drop_caches: done\n16:33:42 restart: line up again in 2.3 s, check ok=True\n"
+        },
+        "cache": {
+          "shared_buffers_hits": 2444179,
+          "shared_buffers_reads": 219034,
+          "shared_buffers_hit_rate": 0.9178,
+          "by_kind": {
+            "heap_read": 39212,
+            "heap_hit": 774482,
+            "idx_read": 11804,
+            "idx_hit": 871407,
+            "toast_read": 160016,
+            "toast_hit": 373443,
+            "tidx_read": 8002,
+            "tidx_hit": 424847
+          },
+          "note": "a shared-buffers read may still be served by the page cache of the member's cgroup; rd_bytes (/proc/<pid>/io) is the disk"
+        },
+        "counters_before": {
+          "heap_read": 514588,
+          "heap_hit": 3059423,
+          "idx_read": 36960,
+          "idx_hit": 8109673,
+          "toast_read": 620129,
+          "toast_hit": 4712032,
+          "tidx_read": 9382,
+          "tidx_hit": 3711047,
+          "db_blks_read": 1183931,
+          "db_blks_hit": 19629995
+        },
+        "counters_after": {
+          "heap_read": 553800,
+          "heap_hit": 3833905,
+          "idx_read": 48764,
+          "idx_hit": 8981080,
+          "toast_read": 780145,
+          "toast_hit": 5085475,
+          "tidx_read": 17384,
+          "tidx_hit": 4135894,
+          "db_blks_read": 1403288,
+          "db_blks_hit": 22075864
+        }
+      }
+    ]
+  },
+  "latency_ms": {
+    "A": {
+      "list": {
+        "n": 300,
+        "p50": 16.828,
+        "p90": 211.254,
+        "p99": 578.65,
+        "max": 1467.292,
+        "mean": 69.735,
+        "res_mean": {
+          "cpu_ns.pg-primary": 18889530.183,
+          "cpu_ns.pg-standby1": 62841.577,
+          "cpu_ns.pg-standby2": 63335.923,
+          "rd_bytes.pg-primary": 2179222.187,
+          "rd_bytes.pg-standby1": 136.533,
+          "rd_bytes.pg-standby2": 122.88
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 5838154,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-primary": 475136,
+          "rd_bytes.pg-standby1": 0,
+          "rd_bytes.pg-standby2": 0
+        }
+      },
+      "list:next": {
+        "n": 1200,
+        "p50": 15.131,
+        "p90": 237.054,
+        "p99": 699.115,
+        "max": 1316.569,
+        "mean": 72.838,
+        "res_mean": {
+          "cpu_ns.pg-primary": 15758037.401,
+          "cpu_ns.pg-standby1": 63476.792,
+          "cpu_ns.pg-standby2": 59844.628,
+          "rd_bytes.pg-primary": 1301077.333,
+          "rd_bytes.pg-standby1": 157.013,
+          "rd_bytes.pg-standby2": 262.827
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 5148871,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-primary": 172032,
+          "rd_bytes.pg-standby1": 0,
+          "rd_bytes.pg-standby2": 0
+        }
+      },
+      "list_limit10": {
+        "n": 300,
+        "p50": 7.878,
+        "p90": 31.728,
+        "p99": 155.748,
+        "max": 166.221,
+        "mean": 14.685,
+        "res_mean": {
+          "cpu_ns.pg-primary": 3864030.773,
+          "cpu_ns.pg-standby1": 10353.163,
+          "cpu_ns.pg-standby2": 12611.15,
+          "rd_bytes.pg-primary": 428045.653
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 2514505,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-primary": 229376
+        }
+      },
+      "list_limit10:next": {
+        "n": 1200,
+        "p50": 5.285,
+        "p90": 21.469,
+        "p99": 146.773,
+        "max": 213.068,
+        "mean": 11.511,
+        "res_mean": {
+          "cpu_ns.pg-primary": 2783465.454,
+          "cpu_ns.pg-standby1": 11360.59,
+          "cpu_ns.pg-standby2": 10314.421,
+          "rd_bytes.pg-primary": 7540.053
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 1669474,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-primary": 0
+        }
+      },
+      "resume[long]": {
+        "n": 1000,
+        "p50": 1.9,
+        "p90": 4.172,
+        "p99": 9.115,
+        "max": 285.882,
+        "mean": 2.696,
+        "res_mean": {
+          "cpu_ns.pg-primary": 894726.85,
+          "cpu_ns.pg-standby1": 2185.845,
+          "cpu_ns.pg-standby2": 2320.686,
+          "rd_bytes.pg-primary": 114479.104
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 697373,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-primary": 81920
+        }
+      },
+      "resume[none]": {
+        "n": 1000,
+        "p50": 1.184,
+        "p90": 3.334,
+        "p99": 5.963,
+        "max": 14.62,
+        "mean": 1.667,
+        "res_mean": {
+          "cpu_ns.pg-primary": 638036.791,
+          "cpu_ns.pg-standby1": 1224.676,
+          "cpu_ns.pg-standby2": 3401.657,
+          "rd_bytes.pg-primary": 1556.48
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 416507,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-primary": 0
+        }
+      },
+      "resume[read]": {
+        "n": 300,
+        "p50": 1.957,
+        "p90": 4.503,
+        "p99": 13.239,
+        "max": 104.955,
+        "mean": 2.848,
+        "res_mean": {
+          "cpu_ns.pg-primary": 922525.383,
+          "cpu_ns.pg-standby1": 4353.4,
+          "cpu_ns.pg-standby2": 6556.577,
+          "rd_bytes.pg-primary": 121091.413
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 718705,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-primary": 90112
+        }
+      },
+      "resume[read]:next": {
+        "n": 1200,
+        "p50": 1.208,
+        "p90": 3.147,
+        "p99": 6.189,
+        "max": 8.227,
+        "mean": 1.616,
+        "res_mean": {
+          "cpu_ns.pg-primary": 614555.345,
+          "cpu_ns.pg-standby1": 1477.477,
+          "cpu_ns.pg-standby2": 1559.084,
+          "rd_bytes.pg-primary": 19404.8
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 414928,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-primary": 0
+        }
+      },
+      "save_step": {
+        "n": 9480,
+        "p50": 5.97,
+        "p90": 13.35,
+        "p99": 23.91,
+        "max": 174.997,
+        "mean": 7.345,
+        "res_mean": {
+          "cpu_ns.pg-primary": 4029842.033,
+          "cpu_ns.pg-standby1": 835178.589,
+          "cpu_ns.pg-standby2": 849513.92,
+          "rd_bytes.pg-primary": 13197.934,
+          "rd_bytes.pg-standby1": 20397.475,
+          "rd_bytes.pg-standby2": 20555.18
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 2825278,
+          "cpu_ns.pg-standby1": 850482,
+          "cpu_ns.pg-standby2": 858430,
+          "rd_bytes.pg-primary": 0,
+          "rd_bytes.pg-standby1": 20480,
+          "rd_bytes.pg-standby2": 20480
+        }
+      },
+      "save_step[none]": {
+        "n": 4730,
+        "p50": 5.866,
+        "p90": 13.455,
+        "p99": 23.424,
+        "max": 174.997,
+        "mean": 7.248,
+        "res_mean": {
+          "cpu_ns.pg-primary": 4134689.526,
+          "cpu_ns.pg-standby1": 810100.331,
+          "cpu_ns.pg-standby2": 827661.566,
+          "rd_bytes.pg-primary": 8925.47,
+          "rd_bytes.pg-standby1": 17210.128,
+          "rd_bytes.pg-standby2": 17298.456
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 2837685,
+          "cpu_ns.pg-standby1": 824965,
+          "cpu_ns.pg-standby2": 832587,
+          "rd_bytes.pg-primary": 0,
+          "rd_bytes.pg-standby1": 16384,
+          "rd_bytes.pg-standby2": 16384
+        }
+      },
+      "save_step[old]": {
+        "n": 4750,
+        "p50": 6.058,
+        "p90": 13.229,
+        "p99": 24.62,
+        "max": 143.812,
+        "mean": 7.442,
+        "res_mean": {
+          "cpu_ns.pg-primary": 3925436.003,
+          "cpu_ns.pg-standby1": 860151.255,
+          "cpu_ns.pg-standby2": 871274.264,
+          "rd_bytes.pg-primary": 17452.409,
+          "rd_bytes.pg-standby1": 23571.402,
+          "rd_bytes.pg-standby2": 23798.191
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 2814225,
+          "cpu_ns.pg-standby1": 880960,
+          "cpu_ns.pg-standby2": 889301,
+          "rd_bytes.pg-primary": 0,
+          "rd_bytes.pg-standby1": 20480,
+          "rd_bytes.pg-standby2": 20480
+        }
+      },
+      "time_travel": {
+        "n": 300,
+        "p50": 1.581,
+        "p90": 3.289,
+        "p99": 8.028,
+        "max": 58.294,
+        "mean": 2.217,
+        "res_mean": {
+          "cpu_ns.pg-primary": 736785.913,
+          "cpu_ns.pg-standby1": 4214.743,
+          "cpu_ns.pg-standby2": 4943.61,
+          "rd_bytes.pg-primary": 94180.693,
+          "rd_bytes.pg-standby2": 54.613
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 611996,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-primary": 73728,
+          "rd_bytes.pg-standby2": 0
+        }
+      },
+      "time_travel:next": {
+        "n": 1200,
+        "p50": 0.875,
+        "p90": 1.92,
+        "p99": 3.89,
+        "max": 10.611,
+        "mean": 1.105,
+        "res_mean": {
+          "cpu_ns.pg-primary": 433222.293,
+          "cpu_ns.pg-standby1": 2078.378,
+          "cpu_ns.pg-standby2": 1128.272,
+          "rd_bytes.pg-primary": 1338.027
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 340917,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-primary": 0
+        }
+      }
+    },
+    "B": {
+      "list": {
+        "n": 300,
+        "p50": 21.242,
+        "p90": 268.979,
+        "p99": 1189.483,
+        "max": 1483.316,
+        "mean": 87.58,
+        "res_mean": {
+          "cpu_ns.pg-primary": 14201322.153,
+          "cpu_ns.pg-standby1": 69900.327,
+          "cpu_ns.pg-standby2": 71606.803,
+          "rd_bytes.pg-primary": 1434624.0
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 5890448,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-primary": 499712
+        }
+      },
+      "list:next": {
+        "n": 1200,
+        "p50": 17.098,
+        "p90": 296.195,
+        "p99": 808.327,
+        "max": 2008.16,
+        "mean": 90.857,
+        "res_mean": {
+          "cpu_ns.pg-primary": 16736635.392,
+          "cpu_ns.pg-standby1": 77877.063,
+          "cpu_ns.pg-standby2": 76167.818,
+          "rd_bytes.pg-primary": 1369873.067
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 5182587,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-primary": 172032
+        }
+      },
+      "list_limit10": {
+        "n": 300,
+        "p50": 9.185,
+        "p90": 43.917,
+        "p99": 184.045,
+        "max": 209.365,
+        "mean": 18.169,
+        "res_mean": {
+          "cpu_ns.pg-primary": 3978614.363,
+          "cpu_ns.pg-standby1": 15672.24,
+          "cpu_ns.pg-standby2": 12007.537,
+          "rd_bytes.pg-primary": 459776.0
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 2467476,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-primary": 229376
+        }
+      },
+      "list_limit10:next": {
+        "n": 1200,
+        "p50": 5.302,
+        "p90": 21.412,
+        "p99": 179.293,
+        "max": 225.433,
+        "mean": 10.598,
+        "res_mean": {
+          "cpu_ns.pg-primary": 2760798.683,
+          "cpu_ns.pg-standby1": 11009.736,
+          "cpu_ns.pg-standby2": 8679.631,
+          "rd_bytes.pg-standby1": 3.413
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 1614929,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-standby1": 0
+        }
+      },
+      "resume[long]": {
+        "n": 1000,
+        "p50": 2.187,
+        "p90": 7.092,
+        "p99": 39.124,
+        "max": 411.382,
+        "mean": 4.824,
+        "res_mean": {
+          "cpu_ns.pg-primary": 924433.748,
+          "cpu_ns.pg-standby1": 3768.435,
+          "cpu_ns.pg-standby2": 6070.428,
+          "rd_bytes.pg-primary": 118845.44
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 714360,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-primary": 90112
+        }
+      },
+      "resume[none]": {
+        "n": 1000,
+        "p50": 1.208,
+        "p90": 3.341,
+        "p99": 6.239,
+        "max": 160.138,
+        "mean": 1.848,
+        "res_mean": {
+          "cpu_ns.pg-primary": 637547.913,
+          "cpu_ns.pg-standby1": 2340.229,
+          "cpu_ns.pg-standby2": 1260.476,
+          "rd_bytes.pg-standby1": 16.384
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 429450,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-standby1": 0
+        }
+      },
+      "resume[read]": {
+        "n": 300,
+        "p50": 2.136,
+        "p90": 6.282,
+        "p99": 30.351,
+        "max": 526.44,
+        "mean": 5.063,
+        "res_mean": {
+          "cpu_ns.pg-primary": 928030.323,
+          "cpu_ns.pg-standby1": 2868.083,
+          "cpu_ns.pg-standby2": 6603.203,
+          "rd_bytes.pg-primary": 119070.72
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 693591,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-primary": 90112
+        }
+      },
+      "resume[read]:next": {
+        "n": 1200,
+        "p50": 1.204,
+        "p90": 3.556,
+        "p99": 8.7,
+        "max": 103.451,
+        "mean": 1.919,
+        "res_mean": {
+          "cpu_ns.pg-primary": 602375.132,
+          "cpu_ns.pg-standby1": 1881.938,
+          "cpu_ns.pg-standby2": 1767.008,
+          "rd_bytes.pg-primary": 17838.08
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 418998,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-primary": 0
+        }
+      },
+      "save_step": {
+        "n": 9558,
+        "p50": 6.067,
+        "p90": 13.171,
+        "p99": 23.821,
+        "max": 218.592,
+        "mean": 7.414,
+        "res_mean": {
+          "cpu_ns.pg-primary": 3977383.909,
+          "cpu_ns.pg-standby1": 823444.986,
+          "cpu_ns.pg-standby2": 832455.317,
+          "rd_bytes.pg-primary": 5658.891,
+          "rd_bytes.pg-standby1": 20272.586,
+          "rd_bytes.pg-standby2": 20410.148
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 2853737,
+          "cpu_ns.pg-standby1": 848367,
+          "cpu_ns.pg-standby2": 853486,
+          "rd_bytes.pg-primary": 0,
+          "rd_bytes.pg-standby1": 20480,
+          "rd_bytes.pg-standby2": 20480
+        }
+      },
+      "save_step[none]": {
+        "n": 4770,
+        "p50": 5.818,
+        "p90": 13.197,
+        "p99": 22.118,
+        "max": 128.969,
+        "mean": 7.12,
+        "res_mean": {
+          "cpu_ns.pg-primary": 4019766.645,
+          "cpu_ns.pg-standby1": 794972.276,
+          "cpu_ns.pg-standby2": 803801.018,
+          "rd_bytes.pg-primary": 1381.649,
+          "rd_bytes.pg-standby1": 16991.101,
+          "rd_bytes.pg-standby2": 17093.286
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 2844866,
+          "cpu_ns.pg-standby1": 817008,
+          "cpu_ns.pg-standby2": 819005,
+          "rd_bytes.pg-primary": 0,
+          "rd_bytes.pg-standby1": 16384,
+          "rd_bytes.pg-standby2": 16384
+        }
+      },
+      "save_step[old]": {
+        "n": 4788,
+        "p50": 6.323,
+        "p90": 13.155,
+        "p99": 25.402,
+        "max": 218.592,
+        "mean": 7.706,
+        "res_mean": {
+          "cpu_ns.pg-primary": 3935160.507,
+          "cpu_ns.pg-standby1": 851810.655,
+          "cpu_ns.pg-standby2": 861001.893,
+          "rd_bytes.pg-primary": 9920.053,
+          "rd_bytes.pg-standby1": 23541.734,
+          "rd_bytes.pg-standby2": 23714.54
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 2857359,
+          "cpu_ns.pg-standby1": 887874,
+          "cpu_ns.pg-standby2": 891657,
+          "rd_bytes.pg-primary": 0,
+          "rd_bytes.pg-standby1": 20480,
+          "rd_bytes.pg-standby2": 20480
+        }
+      },
+      "time_travel": {
+        "n": 300,
+        "p50": 1.998,
+        "p90": 5.981,
+        "p99": 17.24,
+        "max": 67.287,
+        "mean": 3.174,
+        "res_mean": {
+          "cpu_ns.pg-primary": 772711.947,
+          "cpu_ns.pg-standby1": 3929.513,
+          "cpu_ns.pg-standby2": 6889.537,
+          "rd_bytes.pg-primary": 103724.373
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 676422,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0,
+          "rd_bytes.pg-primary": 81920
+        }
+      },
+      "time_travel:next": {
+        "n": 1200,
+        "p50": 0.851,
+        "p90": 1.935,
+        "p99": 4.298,
+        "max": 7.899,
+        "mean": 1.117,
+        "res_mean": {
+          "cpu_ns.pg-primary": 426303.143,
+          "cpu_ns.pg-standby1": 2378.343,
+          "cpu_ns.pg-standby2": 1739.449
+        },
+        "res_p50": {
+          "cpu_ns.pg-primary": 330203,
+          "cpu_ns.pg-standby1": 0,
+          "cpu_ns.pg-standby2": 0
+        }
+      }
+    }
+  },
+  "bytes": {
+    "checkpoints": 250314,
+    "put_writes_calls": 197878,
+    "checkpoint_bytes": 13655026992,
+    "writes_bytes": 276598522,
+    "message_payload_bytes_all_checkpoints": 13460371455,
+    "unique_message_bytes": 278845564,
+    "logical_total": 13931625514,
+    "stored": 5404041216,
+    "stored_from": "sum of pg_total_relation_size of the 4 saver tables (heap + TOAST + indexes)",
+    "stored_per_logical": 0.3879
+  },
+  "sizes": {
+    "tables": {
+      "checkpoints": {
+        "total": 292372480,
+        "heap": 261054464,
+        "rows": 250314
+      },
+      "checkpoint_blobs": {
+        "total": 4780924928,
+        "heap": 69271552,
+        "rows": 250314
+      },
+      "checkpoint_writes": {
+        "total": 330719232,
+        "heap": 209166336,
+        "rows": 343320
+      },
+      "checkpoint_migrations": {
+        "total": 24576,
+        "heap": 8192,
+        "rows": 10
+      }
+    },
+    "pg_database_size": 5412076567,
+    "checkpoint_before": true,
+    "stored_bytes": 5404041216,
+    "stored_from": "sum of pg_total_relation_size of the 4 saver tables (heap + TOAST + indexes)"
+  },
+  "s3_put_requests_during_load": null,
+  "server_status_before": null,
+  "server_status_after_load": null,
+  "server_status_after_rounds": {},
+  "server_status_end": null,
+  "log_failed": {},
+  "health": [
+    {
+      "when": "after load",
+      "rc": 0,
+      "output": "{\n \"ok\": true,\n \"members\": {\n  \"pg-primary\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"pg-standby1\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"pg-standby2\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  }\n },\n \"not_healthy\": [],\n \"check\": {\n  \"line\": \"postgres-sync\",\n  \"durability\": \"primary + 2 synchronous standbys, ANY 1 (2 of 3 copies)\",\n  \"pg_stat_replication\": [\n   {\n    \"application_name\": \"standby1\",\n    \"state\": \"streaming\",\n    \"sync_state\": \"quorum\",\n    \"sync_priority\": 1\n   },\n   {\n    \"application_name\": \"standby2\",\n    \"state\": \"streaming\",\n    \"sync_state\": \"quorum\",\n    \"sync_priority\": 1\n   }\n  ],\n  \"ok\": true,\n  \"settings_primary\": {\n   \"server_version\": \"16.15 (Debian 16.15-1.pgdg13+2)\",\n   \"wal_level\": \"replica\",\n   \"synchronous_commit\": \"on\",\n   \"synchronous_standby_names\": \"ANY 1 (standby1, standby2)\",\n   \"max_wal_senders\": \"10\",\n   \"shared_buffers\": \"128MB\",\n   \"effective_cache_size\": \"4GB\",\n   \"work_mem\": \"4MB\",\n   \"fsync\": \"on\",\n   \"full_page_writes\": \"on\",\n   \"wal_compression\": \"off\",\n   \"default_toast_compression\": \"pglz\",\n   \"max_connections\": \"100\",\n   \"data_checksums\": \"off\",\n   \"hot_standby\": \"on\"\n  },\n  \"settings_standby1\": {\n   \"server_version\": \"16.15 (Debian 16.15-1.pgdg13+2)\",\n   \"wal_level\": \"replica\",\n   \"synchronous_commit\": \"on\",\n   \"synchronous_standby_names\": \"\",\n   \"max_wal_senders\": \"10\",\n   \"shared_buffers\": \"128MB\",\n   \"effective_cache_size\": \"4GB\",\n   \"work_mem\": \"4MB\",\n   \"fsync\": \"on\",\n   \"full_page_writes\": \"on\",\n   \"wal_compression\": \"off\",\n   \"default_toast_compression\": \"pglz\",\n   \"max_connections\": \"100\",\n   \"data_checksums\": \"off\",\n   \"hot_standby\": \"on\"\n  }\n }\n}\n"
+    },
+    {
+      "when": "before round A",
+      "rc": 0,
+      "output": "{\n \"ok\": true,\n \"members\": {\n  \"pg-primary\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"pg-standby1\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"pg-standby2\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  }\n },\n \"not_healthy\": [],\n \"check\": {\n  \"line\": \"postgres-sync\",\n  \"durability\": \"primary + 2 synchronous standbys, ANY 1 (2 of 3 copies)\",\n  \"pg_stat_replication\": [\n   {\n    \"application_name\": \"standby1\",\n    \"state\": \"streaming\",\n    \"sync_state\": \"quorum\",\n    \"sync_priority\": 1\n   },\n   {\n    \"application_name\": \"standby2\",\n    \"state\": \"streaming\",\n    \"sync_state\": \"quorum\",\n    \"sync_priority\": 1\n   }\n  ],\n  \"ok\": true,\n  \"settings_primary\": {\n   \"server_version\": \"16.15 (Debian 16.15-1.pgdg13+2)\",\n   \"wal_level\": \"replica\",\n   \"synchronous_commit\": \"on\",\n   \"synchronous_standby_names\": \"ANY 1 (standby1, standby2)\",\n   \"max_wal_senders\": \"10\",\n   \"shared_buffers\": \"128MB\",\n   \"effective_cache_size\": \"4GB\",\n   \"work_mem\": \"4MB\",\n   \"fsync\": \"on\",\n   \"full_page_writes\": \"on\",\n   \"wal_compression\": \"off\",\n   \"default_toast_compression\": \"pglz\",\n   \"max_connections\": \"100\",\n   \"data_checksums\": \"off\",\n   \"hot_standby\": \"on\"\n  },\n  \"settings_standby1\": {\n   \"server_version\": \"16.15 (Debian 16.15-1.pgdg13+2)\",\n   \"wal_level\": \"replica\",\n   \"synchronous_commit\": \"on\",\n   \"synchronous_standby_names\": \"\",\n   \"max_wal_senders\": \"10\",\n   \"shared_buffers\": \"128MB\",\n   \"effective_cache_size\": \"4GB\",\n   \"work_mem\": \"4MB\",\n   \"fsync\": \"on\",\n   \"full_page_writes\": \"on\",\n   \"wal_compression\": \"off\",\n   \"default_toast_compression\": \"pglz\",\n   \"max_connections\": \"100\",\n   \"data_checksums\": \"off\",\n   \"hot_standby\": \"on\"\n  }\n }\n}\n"
+    },
+    {
+      "when": "before round B",
+      "rc": 0,
+      "output": "{\n \"ok\": true,\n \"members\": {\n  \"pg-primary\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"pg-standby1\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"pg-standby2\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  }\n },\n \"not_healthy\": [],\n \"check\": {\n  \"line\": \"postgres-sync\",\n  \"durability\": \"primary + 2 synchronous standbys, ANY 1 (2 of 3 copies)\",\n  \"pg_stat_replication\": [\n   {\n    \"application_name\": \"standby1\",\n    \"state\": \"streaming\",\n    \"sync_state\": \"quorum\",\n    \"sync_priority\": 1\n   },\n   {\n    \"application_name\": \"standby2\",\n    \"state\": \"streaming\",\n    \"sync_state\": \"quorum\",\n    \"sync_priority\": 1\n   }\n  ],\n  \"ok\": true,\n  \"settings_primary\": {\n   \"server_version\": \"16.15 (Debian 16.15-1.pgdg13+2)\",\n   \"wal_level\": \"replica\",\n   \"synchronous_commit\": \"on\",\n   \"synchronous_standby_names\": \"ANY 1 (standby1, standby2)\",\n   \"max_wal_senders\": \"10\",\n   \"shared_buffers\": \"128MB\",\n   \"effective_cache_size\": \"4GB\",\n   \"work_mem\": \"4MB\",\n   \"fsync\": \"on\",\n   \"full_page_writes\": \"on\",\n   \"wal_compression\": \"off\",\n   \"default_toast_compression\": \"pglz\",\n   \"max_connections\": \"100\",\n   \"data_checksums\": \"off\",\n   \"hot_standby\": \"on\"\n  },\n  \"settings_standby1\": {\n   \"server_version\": \"16.15 (Debian 16.15-1.pgdg13+2)\",\n   \"wal_level\": \"replica\",\n   \"synchronous_commit\": \"on\",\n   \"synchronous_standby_names\": \"\",\n   \"max_wal_senders\": \"10\",\n   \"shared_buffers\": \"128MB\",\n   \"effective_cache_size\": \"4GB\",\n   \"work_mem\": \"4MB\",\n   \"fsync\": \"on\",\n   \"full_page_writes\": \"on\",\n   \"wal_compression\": \"off\",\n   \"default_toast_compression\": \"pglz\",\n   \"max_connections\": \"100\",\n   \"data_checksums\": \"off\",\n   \"hot_standby\": \"on\"\n  }\n }\n}\n"
+    },
+    {
+      "when": "end",
+      "rc": 0,
+      "output": "{\n \"ok\": true,\n \"members\": {\n  \"pg-primary\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"pg-standby1\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"pg-standby2\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  }\n },\n \"not_healthy\": [],\n \"check\": {\n  \"line\": \"postgres-sync\",\n  \"durability\": \"primary + 2 synchronous standbys, ANY 1 (2 of 3 copies)\",\n  \"pg_stat_replication\": [\n   {\n    \"application_name\": \"standby1\",\n    \"state\": \"streaming\",\n    \"sync_state\": \"quorum\",\n    \"sync_priority\": 1\n   },\n   {\n    \"application_name\": \"standby2\",\n    \"state\": \"streaming\",\n    \"sync_state\": \"quorum\",\n    \"sync_priority\": 1\n   }\n  ],\n  \"ok\": true,\n  \"settings_primary\": {\n   \"server_version\": \"16.15 (Debian 16.15-1.pgdg13+2)\",\n   \"wal_level\": \"replica\",\n   \"synchronous_commit\": \"on\",\n   \"synchronous_standby_names\": \"ANY 1 (standby1, standby2)\",\n   \"max_wal_senders\": \"10\",\n   \"shared_buffers\": \"128MB\",\n   \"effective_cache_size\": \"4GB\",\n   \"work_mem\": \"4MB\",\n   \"fsync\": \"on\",\n   \"full_page_writes\": \"on\",\n   \"wal_compression\": \"off\",\n   \"default_toast_compression\": \"pglz\",\n   \"max_connections\": \"100\",\n   \"data_checksums\": \"off\",\n   \"hot_standby\": \"on\"\n  },\n  \"settings_standby1\": {\n   \"server_version\": \"16.15 (Debian 16.15-1.pgdg13+2)\",\n   \"wal_level\": \"replica\",\n   \"synchronous_commit\": \"on\",\n   \"synchronous_standby_names\": \"\",\n   \"max_wal_senders\": \"10\",\n   \"shared_buffers\": \"128MB\",\n   \"effective_cache_size\": \"4GB\",\n   \"work_mem\": \"4MB\",\n   \"fsync\": \"on\",\n   \"full_page_writes\": \"on\",\n   \"wal_compression\": \"off\",\n   \"default_toast_compression\": \"pglz\",\n   \"max_connections\": \"100\",\n   \"data_checksums\": \"off\",\n   \"hot_standby\": \"on\"\n  }\n }\n}\n"
+    }
+  ],
+  "settle": null,
+  "correctness": {
+    "wrong_reads": 0,
+    "by_kind": {},
+    "reads_checked": 240792,
+    "checkpoints_written": 269352,
+    "examples": []
+  },
+  "wrong_reads": 0,
+  "ok": true
+}

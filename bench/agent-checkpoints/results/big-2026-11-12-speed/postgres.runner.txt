@@ -1,0 +1,6 @@
+16:11:23 postgres-sync: disk before {'free_gib': 24.4, 'used_gib': 14.1}
+16:11:28 postgres-sync: up (pg-primary, pg-standby1, pg-standby2)
+16:11:28 postgres-sync: durability check ok=True
+16:11:28 postgres-sync: bench.py starts
+16:39:33 postgres-sync: bench.py exit 0 after 1690 s
+16:39:40 postgres-sync: containers and data removed; disk {'free_gib': 24.2, 'used_gib': 14.2}

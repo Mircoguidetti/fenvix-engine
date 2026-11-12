@@ -1,0 +1,6 @@
+{"t": 1794499371.6, "host_cpu_busy": 0.561, "host_cores": 4, "host_mem_used_gib": 1.9, "disk_free_gib": 20.85, "c": {}, "gone": []}
+{"t": 1794499376.6, "host_cpu_busy": 0.436, "host_cores": 4, "host_mem_used_gib": 1.92, "disk_free_gib": 20.74, "c": {"pg-primary": {"cores": 0.394, "mem_mib": 244}, "pg-standby1": {"cores": 0.072, "mem_mib": 236}, "pg-standby2": {"cores": 0.071, "mem_mib": 218}}, "gone": [], "client_cores": 1.046}
+{"t": 1794499381.6, "host_cpu_busy": 0.329, "host_cores": 4, "host_mem_used_gib": 1.95, "disk_free_gib": 20.67, "c": {"pg-primary": {"cores": 0.273, "mem_mib": 281}, "pg-standby1": {"cores": 0.058, "mem_mib": 274}, "pg-standby2": {"cores": 0.06, "mem_mib": 256}}, "gone": []}
+{"t": 1794499386.6, "host_cpu_busy": 0.258, "host_cores": 4, "host_mem_used_gib": 1.75, "disk_free_gib": 20.84, "c": {}, "gone": [], "client_cores": 0.208}
+{"t": 1794499391.6, "host_cpu_busy": 0.309, "host_cores": 4, "host_mem_used_gib": 1.93, "disk_free_gib": 20.83, "c": {"pg-primary": {"cores": 0.178, "mem_mib": 113}, "pg-standby1": {"cores": 0.014, "mem_mib": 30}, "pg-standby2": {"cores": 0.014, "mem_mib": 27}}, "gone": [], "client_cores": 0.78}
+{"t": 1794499396.6, "host_cpu_busy": 0.221, "host_cores": 4, "host_mem_used_gib": 1.59, "disk_free_gib": 20.82, "c": {}, "gone": []}

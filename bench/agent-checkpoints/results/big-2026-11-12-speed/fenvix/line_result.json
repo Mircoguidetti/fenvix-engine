@@ -1,0 +1,124 @@
+{
+ "bench_rc": 0,
+ "seconds": 4273.0,
+ "disk_stop": false,
+ "disk_min_free_gib": 16.63,
+ "cpu_mem": {
+  "samples": 852,
+  "host_cpu_busy_mean": 0.499,
+  "host_cpu_busy_max": 1.0,
+  "host_cpu_busy_ge_95pct_share": 0.059,
+  "host_mem_used_gib_max": 7.68,
+  "containers": {
+   "cook": {
+    "cores_mean": 0.546,
+    "cores_max": 0.998,
+    "at_cap_share": 0.024,
+    "mem_mib_max": 1011
+   },
+   "log-0": {
+    "cores_mean": 0.085,
+    "cores_max": 0.159,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 1024
+   },
+   "log-1": {
+    "cores_mean": 0.086,
+    "cores_max": 0.159,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 1024
+   },
+   "log-2": {
+    "cores_mean": 0.108,
+    "cores_max": 0.231,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 1024
+   },
+   "minio": {
+    "cores_mean": 0.525,
+    "cores_max": 2.448,
+    "at_cap_share": 0.168,
+    "mem_mib_max": 5988
+   },
+   "spare": {
+    "cores_mean": 0.003,
+    "cores_max": 0.008,
+    "at_cap_share": 0.0,
+    "mem_mib_max": 8
+   }
+  },
+  "client_cores_mean": 0.485,
+  "client_cores_max": 1.061,
+  "containers_gone_in_some_sample": []
+ },
+ "binaries_sha256_after": {
+  "/home/user/harness/target/release/mongo-server": "68cdea400dd5c9d395323cc2fcad5e166e32f37ccdd4049259556003559b0a04",
+  "/home/user/harness/proto/quaderno/target/release/pq": "7075075a4ac3367c938c269f0b88660519202d666068bcf6e448e7a6fb8aff52"
+ },
+ "binaries_unchanged": true,
+ "quaderno_sent_before_after_write": [
+  3,
+  448201
+ ],
+ "quaderno_check": "ok: quaderno.sent grew during the write phase",
+ "members_end": {
+  "log-0": {
+   "present": true,
+   "running": true,
+   "oom_killed": false,
+   "exit_code": 0,
+   "restart_count": 0,
+   "status": "running"
+  },
+  "log-1": {
+   "present": true,
+   "running": true,
+   "oom_killed": false,
+   "exit_code": 0,
+   "restart_count": 0,
+   "status": "running"
+  },
+  "log-2": {
+   "present": true,
+   "running": true,
+   "oom_killed": false,
+   "exit_code": 0,
+   "restart_count": 0,
+   "status": "running"
+  },
+  "cook": {
+   "present": true,
+   "running": true,
+   "oom_killed": false,
+   "exit_code": 0,
+   "restart_count": 0,
+   "status": "running"
+  },
+  "spare": {
+   "present": true,
+   "running": true,
+   "oom_killed": false,
+   "exit_code": 0,
+   "restart_count": 0,
+   "status": "running"
+  },
+  "minio": {
+   "present": true,
+   "running": true,
+   "oom_killed": false,
+   "exit_code": 0,
+   "restart_count": 0,
+   "status": "running"
+  }
+ },
+ "log_failed": {
+  "after_load": 0,
+  "after_round_A": 0,
+  "after_round_B": 0,
+  "end": 0
+ },
+ "disk_end": {
+  "free_gib": 17.5,
+  "used_gib": 20.9
+ }
+}
