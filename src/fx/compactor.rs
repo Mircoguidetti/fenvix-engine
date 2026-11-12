@@ -130,6 +130,12 @@ impl Compactor {
         self.cur.lock().await.v.fence(self.epoch).version
     }
 
+    /// Tests: the L0 SSTs this compactor knows as absorbed.
+    #[cfg(test)]
+    pub(crate) fn absorbed_count(&self) -> usize {
+        self.absorbed.lock().unwrap().len()
+    }
+
     /// Tests: a job running from now until the returned value is dropped.
     #[cfg(test)]
     pub(crate) fn begin_job_for_test(self: &Arc<Self>) -> JobStart {

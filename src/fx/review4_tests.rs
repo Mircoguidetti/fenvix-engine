@@ -804,3 +804,59 @@ async fn r3_no_version_lands_after_stop() {
     teardown();
     assert!(present_at_stop, "the cut job's version landed after stop returned");
 }
+
+// ------------------------------------------------------------------------------------------------------------------
+// perf-latency round 3, item 4: the L0 read of a starting compactor, out of the exclusive lock
+
+/// An absorption records the L0 SSTs it absorbed (with their highest seq) in the version (`absorbed_l0`); a compactor
+/// starting on that version takes them from it and reads none of them (before: every L0 SST was read, under the
+/// database's exclusive lock, inside the first write after an opening). The fold is off here, so the absorbed SSTs stay
+/// in L0 across the restart. Every key reads its model value afterwards, and the second compactor absorbs nothing again.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn r3_restart_takes_absorbed_l0_from_the_version() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = "r3-absorbed-l0";
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..200 {
+        apply(&mut t, &mut m, vec![(ckey(1, i % 40), Some(vec![b'v'; 50]))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let k = knobs(false);
+    let c1 = start(&mut t, &store, &k).await;
+    for round in 0..4 {
+        for i in 0..150 {
+            apply(&mut t, &mut m, vec![(ckey(2 + round, i % 60), Some(format!("r{round}-{i}").into_bytes()))]).await;
+        }
+        flush(&t).await;
+    }
+    c1.drain(false).await.unwrap();
+    let l0_absorbed = c1.absorbed_count();
+    c1.stop().await;
+    t.fx_sync();
+    let (from_v, by_read) = (compactor::L0_RECOGNISED_FROM_VERSION.load(SeqCst), compactor::L0_RECOGNISED_BY_READ.load(SeqCst));
+    let c2 = start(&mut t, &store, &k).await;
+    let (from_v2, by_read2) = (compactor::L0_RECOGNISED_FROM_VERSION.load(SeqCst) - from_v, compactor::L0_RECOGNISED_BY_READ.load(SeqCst) - by_read);
+    let absorbs_before = c2.absorbed_count();
+    let l0_at_restart = c2.l0_count();
+    c2.drain(false).await.unwrap();
+    t.fx_sync();
+    let mut wrong = 0;
+    for (key, want) in &m {
+        if t.get(key).await.unwrap().as_deref() != Some(&want[..]) {
+            wrong += 1;
+        }
+    }
+    eprintln!("item 4: {l0_absorbed} L0 SSTs absorbed before the restart, {l0_at_restart} in L0 at the restart: {from_v2} taken from the version, {by_read2} read; wrong reads {wrong}");
+    c2.stop().await;
+    t.abandon().await;
+    teardown();
+    assert!(l0_absorbed >= 2, "setup: the first compactor must absorb L0 SSTs");
+    assert!(l0_at_restart >= 2, "setup: absorbed SSTs must still be in L0 at the restart");
+    assert_eq!(from_v2 as usize, l0_at_restart, "every absorbed L0 SST still in L0 must come from the version");
+    assert_eq!(by_read2, 0, "no absorbed L0 SST may be read again at the start");
+    assert_eq!(absorbs_before, l0_at_restart, "the restarted compactor knows every L0 SST as absorbed");
+    assert_eq!(wrong, 0);
+}
