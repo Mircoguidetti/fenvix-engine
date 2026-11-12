@@ -1,0 +1,5 @@
+2026-11-12T06:05:34Z 1. generate (options: --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts)
+2026-11-12T06:18:05Z generator exit 0 in 751 s; LEASE release_begin tenant=app_data_b02 holder=25077-196d2e11 unix_ms=1794464285346  LEASE release tenant=app_data_b02 holder=25077-196d2e11 unix_ms=1794464285356 ok=true 
+2026-11-12T06:18:05Z 2. our server (product defaults + layout) and the reference mongod
+2026-11-12T06:45:50Z check 1 (before compaction): exit 1 in 1665 s; 
+2026-11-12T06:45:50Z 3. the same writes on both servers

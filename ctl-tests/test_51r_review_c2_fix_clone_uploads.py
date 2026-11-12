@@ -189,9 +189,17 @@ def test_a_close_that_hits_the_absorb_bound():
             cc = MongoClient(srv.uri, serverSelectionTimeoutMS=3000, socketTimeoutMS=90000)
             cc.admin.command("ping")
             th = threading.Thread(target=lambda: cc["g"].command("tenantAdmin", close=True), daemon=True)
-            th.start()
-            time.sleep(rng.uniform(0.0, 0.06))
-            relay.p.send_signal(signal.SIGSTOP)
+            # integration-4: on GitHub runners the close often finished inside the 0-60 ms before the freeze, so no round
+            # reached a bound (7 of 8 CI runs, 292f526). Even rounds now freeze the store first and then close (the flush
+            # meets the frozen store and waits past its 20 s bound); odd rounds keep the random moment inside the close.
+            if rnd % 2 == 0:
+                relay.p.send_signal(signal.SIGSTOP)
+                time.sleep(0.2)
+                th.start()
+            else:
+                th.start()
+                time.sleep(rng.uniform(0.0, 0.06))
+                relay.p.send_signal(signal.SIGSTOP)
             time.sleep(25)
             relay.p.send_signal(signal.SIGCONT)
             th.join(120)
@@ -471,7 +479,7 @@ def test_store_outage_past_the_lease_loses_no_acknowledged_insert():
         try:
             t31.test_engine_recovers_after_lease_lost_to_store_outage()
             print(f"outage run {i}: every acknowledged insert there")
-        except AssertionError as e:
-            print(f"outage run {i}: {str(e)[:200]}")
-            failures.append(str(e)[:200])
+        except Exception as e:  # noqa: BLE001 - one run's error is recorded and the next run goes on
+            print(f"outage run {i}: {type(e).__name__}: {str(e)[:200]}")
+            failures.append(f"{type(e).__name__}: {str(e)[:200]}")
     assert not failures, f"acknowledged inserts lost after a store outage past the lease in {len(failures)} runs: {failures}"

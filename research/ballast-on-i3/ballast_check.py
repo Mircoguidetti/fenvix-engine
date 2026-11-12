@@ -72,7 +72,19 @@ def same(what, x, y):
 def raw(cur):
     # an explicit batch size: our server's getMore batches are not capped at 16 MB like mongod's, and one over
     # 48 MB breaks the wire (engine finding, ballast-on-i3 report); the bytes compared are the same
-    return [bytes(d.raw) for d in cur.batch_size(1000)]
+    # integration-4: a read refused with the retryable code 134 (SealedRunsRetry: F7, "this process's serving lease
+    # expired; it begins no new read", for one command longer than what was left of the serving lease at its start)
+    # is read again from the start, as a client retries it; the retries are counted in the result
+    for attempt in range(20):
+        try:
+            return [bytes(d.raw) for d in cur.clone().batch_size(1000)]
+        except pymongo.errors.OperationFailure as e:
+            if e.code != 134 or attempt == 19:
+                raise
+            res["retries_134"] = res.get("retries_134", 0) + 1
+            if len(res.setdefault("retry_examples", [])) < 10:
+                res["retry_examples"].append(str(e)[:160])
+            time.sleep(1)
 
 
 for d in plan["databases"]:
@@ -190,5 +202,5 @@ for d in plan["databases"]:
     print(f"{name}: {res['databases'][name]}", flush=True)
 json.dump(res, open(a.out, "w"), indent=1, default=str)
 print(f"BALLAST CHECK: {res['reads']} reads compared, WRONG: {res['wrong']}; engine $sum last-digit differences "
-      f"(not data): {res.get('engine_sum_precision', 0)}")
+      f"(not data): {res.get('engine_sum_precision', 0)}; reads retried after code 134 (F7): {res.get('retries_134', 0)}")
 sys.exit(0 if res["wrong"] == 0 else 1)

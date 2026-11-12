@@ -26,6 +26,7 @@ import threading
 import time
 
 from pymongo import MongoClient, WriteConcern
+from pymongo.errors import OperationFailure
 
 from lib import Server, make_bucket, list_prefix, wait_until, MINIO
 
@@ -79,35 +80,53 @@ def test_engine_recovers_after_lease_lost_to_store_outage():
         for t in threads:
             t.join(70)
 
+        # integration-4 (coordinator, rule 8: we must know): a failed probe insert or a slow SIGTERM is recorded, and
+        # the restart count below always runs; the failures are raised after it
+        late = []
         probe = MongoClient(srv.uri, serverSelectionTimeoutMS=5000, socketTimeoutMS=30000, retryWrites=False)
         t0 = time.time()
         try:
             probe.lst.t.insert_one({"_id": "after"})
             acked.append("after")
         except Exception as e:
-            raise AssertionError(f"insert after the store came back failed after {time.time() - t0:.1f} s: {e!r}"[:400])
-        st = probe.admin.command("tenantStats")
+            late.append(f"insert after the store came back failed after {time.time() - t0:.1f} s: {e!r}"[:400])
+        try:
+            st = probe.admin.command("tenantStats")
+            print(f"acknowledged {len(acked)} documents; abandonCloseTimeouts {st['maintenance'].get('abandonCloseTimeouts')}")
+        except Exception as e:
+            late.append(f"tenantStats after the outage failed: {e!r}"[:200])
         probe.close()
-        print(f"acknowledged {len(acked)} documents; abandonCloseTimeouts {st['maintenance'].get('abandonCloseTimeouts')}")
 
         srv.proc.send_signal(signal.SIGTERM)
         t0 = time.time()
         try:
             srv.proc.wait(SHUTDOWN_S)
+            print(f"SIGTERM stopped the server in {time.time() - t0:.1f} s")
         except subprocess.TimeoutExpired:
-            raise AssertionError(f"SIGTERM did not stop the server in {SHUTDOWN_S} s (see {srv.log_path})")
-        print(f"SIGTERM stopped the server in {time.time() - t0:.1f} s")
+            late.append(f"SIGTERM did not stop the server in {SHUTDOWN_S} s (see {srv.log_path})")
     finally:
         srv.kill9()
 
     srv2 = Server(bucket, "lstall2", idle=600).start()
     try:
         c = srv2.client()
-        present = set(d["_id"] for d in c.lst.t.find({}, {"_id": 1}))
+        # the count always runs (rule 8): a database still leased by the stopped process (its release did not land, e.g.
+        # a store that refused the PUT) is refused with "retry" until that lease runs out, so the read is retried for 60 s
+        deadline = time.time() + 60
+        while True:
+            try:
+                present = set(d["_id"] for d in c.lst.t.find({}, {"_id": 1}))
+                break
+            except OperationFailure as e:
+                if "retry" not in str(e) or time.time() > deadline:
+                    raise
+                time.sleep(1)
         missing = [i for i in acked if i not in present]
+        print(f"after a restart: {len(acked)} acknowledged, {len(missing)} missing")
         assert not missing, f"{len(missing)} acknowledged documents missing, e.g. {missing[:5]}"
     finally:
         srv2.term()
+    assert not late, f"every acknowledged insert there ({len(acked)}), but: " + "; ".join(late)
 
 
 def test_erase_does_not_delete_while_the_close_is_unfinished():

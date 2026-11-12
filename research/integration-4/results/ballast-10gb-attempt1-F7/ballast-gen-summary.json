@@ -1,0 +1,29 @@
+{
+  "bson_bytes": 10953186569,
+  "databases": [
+    {
+      "bson_bytes": 3651063595,
+      "db": "app_data_b01",
+      "documents": 10914445,
+      "ok": true,
+      "seconds": 750.709923069
+    },
+    {
+      "bson_bytes": 3651062911,
+      "db": "app_data_b02",
+      "documents": 10914534,
+      "ok": true,
+      "seconds": 744.280636425
+    },
+    {
+      "bson_bytes": 3651060063,
+      "db": "app_data_b03",
+      "documents": 10914284,
+      "ok": true,
+      "seconds": 749.822758205
+    }
+  ],
+  "mb_s_total": 14.590410083220405,
+  "ok": true,
+  "seconds": 750.711358113
+}

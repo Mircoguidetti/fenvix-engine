@@ -19,9 +19,17 @@ C. The ballast generator's runs (V2K keys, today's run format) against the curre
    on the final head (ballast_check.py, 0 wrong answers against mongod, before and after compaction) and the unit tests
    of `fx::tests_gen`; not repeated here.
 """
+import os
 import time
 
+import pytest
+
 from lib import Server, make_bucket
+
+# The joint is between two sealed-runs paths (the compactor's start and the reader's renewal): without sealed runs there
+# is no compactor and no upgrade to cross (GitHub CI 292f526, off mode: the find saw no compactor start).
+pytestmark = pytest.mark.skipif(os.environ.get("FENVIX_SEALED_RUNS", "off") in ("off", "0", ""),
+                                reason="sealed runs are off: no compactor, no joint to cross")
 
 T_PIN_MS = 200
 N = 60_000

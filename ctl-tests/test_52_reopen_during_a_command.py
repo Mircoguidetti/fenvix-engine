@@ -28,7 +28,40 @@ BATCH = 5000
 ROUNDS = int(os.environ.get("T52_ROUNDS", "6"))
 
 
+# integration-4 (coordinator's decision, 2026-11-12): with sealed runs on, one read command longer than the F7 serving
+# window (about 1-1.7 s with this 2 s lease) is refused at every try: the serving deadline is set when a command enters
+# and never renewed inside it (product defect, its own fix task). Unthrottled, the merged engine acknowledges 4-5 times
+# more documents than c2-fix-outage-loss alone (635,000-755,000 against about 150,000), so the in-process scan is such a
+# command: when refused it is recorded "not verified in-process (F7, long command)" and the restart read-back decides.
+# The throttled variant holds the loader near the branch's count (THROTTLED_DOCS_PER_S over the 51 s of the rounds,
+# about 150,000 documents) and its in-process read-back is mandatory.
+THROTTLED_DOCS_PER_S = 3000
+
+
+def _scan_ids(col, mandatory, secs=60):
+    """A collection scan's _ids. Refused with code 134 for `secs`: None when not mandatory (F7, long command)."""
+    deadline = time.time() + secs
+    while True:
+        try:
+            return [d["_id"] for d in col.find({}, {"_id": 1}).hint([("$natural", 1)])]
+        except PyMongoError as e:
+            if getattr(e, "code", None) != 134 or time.time() > deadline:
+                if mandatory or getattr(e, "code", None) != 134:
+                    raise
+                print(f"not verified in-process (F7, long command): {str(e)[:160]}")
+                return None
+            time.sleep(0.5)
+
+
 def test_insert_spanning_a_lease_loss():
+    _insert_spanning(throttled=False)
+
+
+def test_insert_spanning_a_lease_loss_throttled():
+    _insert_spanning(throttled=True)
+
+
+def _insert_spanning(throttled):
     bucket = make_bucket("reopen")
     f = tempfile.NamedTemporaryFile("w", delete=False, suffix=".faults")
     f.close()
@@ -44,7 +77,13 @@ def test_insert_spanning_a_lease_loss():
 
         def loader():
             cl = MongoClient(srv.uri, serverSelectionTimeoutMS=5000, socketTimeoutMS=120000, retryWrites=False)
+            t0, sent = time.time(), 0
             while not stop.is_set():
+                if throttled:
+                    wait = t0 + sent / THROTTLED_DOCS_PER_S - time.time()
+                    if wait > 0:
+                        time.sleep(wait)
+                    sent += BATCH
                 with lock:
                     b = nxt[0]
                     nxt[0] += 1
@@ -75,22 +114,28 @@ def test_insert_spanning_a_lease_loss():
         print(f"batches {nxt[0]}, acknowledged {len(acked)} documents, refused {len(refused)} batches {refused[:2]}; lease losses {losses}")
         st = c.admin.command("tenantStats")["maintenance"]
         print(f"reopenedWritesRefused {st.get('reopenedWritesRefused')}")
-        scanned = [d["_id"] for d in col.find({}, {"_id": 1}).hint([("$natural", 1)])]
-        dup = len(scanned) - len(set(scanned))
-        missing = sorted(set(acked) - set(scanned))
-        print(f"acknowledged {len(acked)}, scanned {len(scanned)}, missing from the scan {len(missing)}")
         assert losses > 0, "no lease loss happened while an insert ran: the test did not reach the case"
-        assert dup == 0, f"{dup} documents scanned twice"
-        assert not missing, f"{len(missing)} acknowledged documents missing from a collection scan, e.g. {missing[:5]}"
-        extra = set(scanned) - set(acked)
-        assert not extra, f"{len(extra)} documents of refused inserts were applied, e.g. {sorted(extra)[:5]}"
+        scanned = _scan_ids(col, mandatory=throttled)
+        if scanned is not None:
+            dup = len(scanned) - len(set(scanned))
+            missing = sorted(set(acked) - set(scanned))
+            print(f"acknowledged {len(acked)}, scanned in-process {len(scanned)}, missing from the scan {len(missing)}")
+            assert dup == 0, f"{dup} documents scanned twice"
+            assert not missing, f"{len(missing)} acknowledged documents missing from a collection scan, e.g. {missing[:5]}"
+            extra = set(scanned) - set(acked)
+            assert not extra, f"{len(extra)} documents of refused inserts were applied, e.g. {sorted(extra)[:5]}"
     finally:
         srv.term()
     srv2 = Server(bucket, "reopen2", idle=600).start()
     try:
-        scanned = set(d["_id"] for d in srv2.client().d.t.find({}, {"_id": 1}).hint([("$natural", 1)]))
-        missing = sorted(set(acked) - scanned)
+        scanned = [d["_id"] for d in srv2.client().d.t.find({}, {"_id": 1}).hint([("$natural", 1)])]
+        missing = sorted(set(acked) - set(scanned))
+        extra = set(scanned) - set(acked)
+        print(f"after a restart: acknowledged {len(acked)}, scanned {len(scanned)}, missing {len(missing)}, "
+              f"twice {len(scanned) - len(set(scanned))}, refused but stored {len(extra)}")
         assert not missing, f"after a restart: {len(missing)} acknowledged documents missing from a collection scan, e.g. {missing[:5]}"
+        assert len(scanned) == len(set(scanned)), "after a restart: documents scanned twice"
+        assert not extra, f"after a restart: {len(extra)} documents of refused inserts were applied, e.g. {sorted(extra)[:5]}"
     finally:
         srv2.term()
 
