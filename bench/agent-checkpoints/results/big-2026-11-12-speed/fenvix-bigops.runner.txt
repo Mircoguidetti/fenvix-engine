@@ -1,0 +1,6 @@
+20:10:20 fenvix-log: disk before {'free_gib': 23.6, 'used_gib': 14.8}
+20:10:26 cook root user created
+20:10:28 fenvix-log: up (log-0, log-1, log-2, cook, spare, minio)
+20:10:28 fenvix-log: durability check ok=True
+20:10:28 fenvix-log: bench.py starts
+21:02:54 fenvix-log: bench.py exit 0 after 3154 s

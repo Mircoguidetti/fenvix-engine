@@ -1,0 +1,3 @@
+round A: 22 tasks in 19.0 s, errors 0
+round B: 22 tasks in 35.3 s, errors 0
+[fenvix] VALIDATION, NOT RESULTS: ok=True checkpoints=250314 load=1993.902s stored=25736128427 stored/logical=1.859 wrong_reads=0 -> /home/user/harness/bench/agent-checkpoints/results/big-2026-11-12-speed/fenvix-bigops/summary.json
