@@ -625,6 +625,25 @@ impl Entry {
         self.stop_fxc().await;
     }
 
+    /// Tests of the real drop (`ctl/testhooks.rs`, P-perf-bytes): flush the memtable, absorb every L0 SST into our runs,
+    /// publish, and install the new version (the tenant serves it, so the floor may pass the old X_d). Returns the
+    /// compactor and the X_d now served; None without a compactor.
+    pub async fn fx_publish_now(&mut self) -> Result<Option<(Arc<tenant_bench::fx::compactor::Compactor>, u64)>> {
+        if !self.ensure_open().await? {
+            return Ok(None);
+        }
+        let Some(c) = self.fxc.clone() else { return Ok(None) };
+        if let Some(db) = self.tenant.as_ref().and_then(|t| t.fx_writer_db()) {
+            db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await?;
+        }
+        while c.absorb_once().await? > 0 {}
+        if let Some(t) = self.tenant.as_mut() {
+            t.fx_sync();
+        }
+        let x_d = c.current().await.x_d;
+        Ok(Some((c, x_d)))
+    }
+
     /// Stop this database's compactor (before its tenant closes, is abandoned or dropped).
     async fn stop_fxc(&mut self) {
         if let Some(c) = self.fxc.take() {

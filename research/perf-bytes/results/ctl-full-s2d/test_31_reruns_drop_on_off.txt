@@ -1,0 +1,6 @@
+drop on: 1 passed, 1 deselected in 158.57s (0:02:38)
+drop off: 1 failed, 1 deselected in 152.99s (0:02:32)
+drop on: 1 failed, 1 deselected in 153.01s (0:02:33)
+drop off: 1 failed, 1 deselected in 153.44s (0:02:33)
+drop on: 1 passed, 1 deselected in 156.83s (0:02:36)
+drop off: 1 failed, 1 deselected in 153.60s (0:02:33)

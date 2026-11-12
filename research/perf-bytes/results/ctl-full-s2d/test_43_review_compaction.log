@@ -1,0 +1,22 @@
+....FF                                                                   [100%]
+=================================== FAILURES ===================================
+________ test_with_customer_keys_off_the_stored_format_does_not_change _________
+test_43_review_compaction.py:127: in test_with_customer_keys_off_the_stored_format_does_not_change
+    assert codecs == ["none"], f"with no customer key and no compaction flag, the SSTs are written {codecs}: the previous release cannot read them"
+E   AssertionError: with no customer key and no compaction flag, the SSTs are written ['lz4']: the previous release cannot read them
+E   assert ['lz4'] == ['none']
+E     
+E     At index 0 diff: 'lz4' != 'none'
+E     Use -v to get more diff
+______________ test_a_refused_fork_leaves_no_object_of_its_target ______________
+test_43_review_compaction.py:145: in test_a_refused_fork_leaves_no_object_of_its_target
+    assert left == [], f"a fork refused with 404 left {left}"
+E   AssertionError: a fork refused with 404 left ['control/usage/never_was/2026-11-11/revfork-33622-542b20b6.json', 'control/usage/nf_k/2026-11-11/revfork-33622-542b20b6.json']
+E   assert ['control/usa...42b20b6.json'] == []
+E     
+E     Left contains 2 more items, first extra item: 'control/usage/never_was/2026-11-11/revfork-33622-542b20b6.json'
+E     Use -v to get more diff
+=========================== short test summary info ============================
+FAILED test_43_review_compaction.py::test_with_customer_keys_off_the_stored_format_does_not_change
+FAILED test_43_review_compaction.py::test_a_refused_fork_leaves_no_object_of_its_target
+2 failed, 4 passed in 24.34s

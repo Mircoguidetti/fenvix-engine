@@ -1019,3 +1019,79 @@ async fn skip_read_all(t: &Tenant, m: &BTreeMap<Vec<u8>, Vec<u8>>, keys: &[Vec<u
     }
     wrong
 }
+
+/// P-perf-bytes, DECISIONS 2026-11-09 (option (b)), the reader-mode case of the reviewer's list with the REAL drop: a
+/// follower (another process: its own lifecycle, reader mode) runs one command of two reads (one customer's range, then
+/// another's); between them the writer absorbs, publishes, installs and its real drop job removes SlateDB's rows at or
+/// below the new X_d. The follower refreshes between the reads as `Dbs::read` does (`fx_refresh_due`), so its second
+/// read takes the new version and loses nothing. Control (`CONTROL_KEEP_VIEW`): the follower's command keeps the view of
+/// its first read, as code that kept a view across steps would; the real drop must make it miss rows.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn perf_bytes_follower_reads_across_a_real_drop() {
+    let _s = SERIAL.lock().await;
+    setup();
+    for control in [false, true] {
+        let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let id = if control { "fx-pb-follow-ctl" } else { "fx-pb-follow" };
+        let mut t = lc(&store).create(id).await.unwrap();
+        let mut m = BTreeMap::new();
+        for i in 0..360 {
+            apply(&mut t, &mut m, vec![(ckey(i % 9, i), Some(vec![b'a'; 60]))]).await;
+        }
+        publish(&mut t, &small_opts(build::Reseal::All)).await;
+        T_PIN_MS.store(350, Relaxed); // under the lease (400 ms)
+        let c = start(&mut t, &store, &test_knobs(true)).await;
+        let mut f = lc(&store).wake(id).await.unwrap();
+        f.fx_refresh().await.unwrap();
+        let (mut wrong, mut reads, mut dropped, mut errors) = (0u64, 0u64, 0u64, 0u64);
+        for round in 0..6usize {
+            let (a, b) = (round % 9, (round + 4) % 9);
+            let res = hold::op_scope(async {
+                hold::CONTROL_KEEP_VIEW.store(control, Relaxed);
+                let (lo, hi) = crange(a);
+                let first = f.scan_range(&lo, Some(&hi), false, None, 64 << 10).await;
+                // the writer moves on: new rows of every customer, only in SlateDB until the absorption
+                let mut mm = m.clone();
+                for i in 0..90 {
+                    apply(&mut t, &mut mm, vec![(ckey(i % 9, 1000 * (round + 1) + i), Some(vec![b'b' + round as u8; 60]))]).await;
+                }
+                flush(&t).await;
+                while c.absorb_once().await.unwrap() > 0 {}
+                t.fx_sync();
+                let x_d = c.current().await.x_d;
+                let (d, _) = c.drop_through(x_d, Duration::from_secs(20)).await.unwrap();
+                // between the reads, as the server's `Dbs::read` does
+                if f.fx_refresh_due() {
+                    f.fx_refresh().await.unwrap();
+                }
+                let (lo, hi) = crange(b);
+                let second = f.scan_range(&lo, Some(&hi), false, None, 64 << 10).await;
+                hold::CONTROL_KEEP_VIEW.store(false, Relaxed);
+                (first, second, mm, d)
+            })
+            .await;
+            let (first, second, mm, d) = res;
+            dropped += d;
+            for (r, cust, model) in [(first, a, &m), (second, b, &mm)] {
+                reads += 1;
+                let (lo, hi) = crange(cust);
+                match r {
+                    Ok(got) => wrong += (as_vec(got) != model_range(model, &lo, Some(&hi), false, None)) as u64,
+                    Err(_) => errors += 1,
+                }
+            }
+            m = mm;
+        }
+        eprintln!("perf-bytes follower (control {control}): {reads} reads, {wrong} wrong, {errors} errors, {dropped} rows dropped by the real drop");
+        assert!(dropped > 0, "the real drop removed nothing: the test proves nothing");
+        if control {
+            assert!(wrong > 0, "control: a follower that kept its first view across a real drop must miss rows");
+        } else {
+            assert_eq!((wrong, errors), (0, 0));
+        }
+        c.stop().await;
+        let _ = f.abandon().await;
+        t.abandon().await;
+    }
+    teardown();
+}

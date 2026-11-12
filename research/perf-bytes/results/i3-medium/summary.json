@@ -1,0 +1,2752 @@
+{
+  "note": "LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+  "target": "fenvix",
+  "label": "local fenvix-log: 3-zone log, acknowledged at 2 of 3 copies",
+  "durability": "not stated",
+  "profile": "medium",
+  "seed": 42,
+  "workers": 1,
+  "engine_binary_sha256": "f1773381ff6da06d3cb458458ee4209fde42dc3cfa6ac263f290e1d99c1398ff",
+  "plan": {
+    "threads": 354,
+    "turns": 3856,
+    "digest": "5cb6c32970cc7a18"
+  },
+  "client": {
+    "python": "3.12.3",
+    "host": "vm"
+  },
+  "write": {
+    "seconds": 292.04,
+    "errors": [],
+    "processes": 1,
+    "client_cpu": {
+      "samples": 145,
+      "process_cores_mean": {
+        "30694": 0.483
+      },
+      "process_cores_max_mean": 0.483,
+      "host_busy_mean": 0.6,
+      "host_busy_ge_95pct_share": 0.0,
+      "client_limited": false,
+      "rule": "limited if a client process averages >= 0.9 core or the host is >= 95% busy in > 10% of samples"
+    },
+    "steps_per_second": 63.77
+  },
+  "read": {
+    "threads_read": 100,
+    "inconsistencies": 0
+  },
+  "erase": {
+    "users_erased": 15,
+    "threads_erased": 32,
+    "threads_left_readable": 0,
+    "checkpoints_left_readable_by_id": 0
+  },
+  "latency_ms": {
+    "delete_thread": {
+      "n": 32,
+      "p50": 3177.791,
+      "p90": 18033.104,
+      "p99": 24162.202,
+      "max": 24162.202,
+      "mean": 6310.297
+    },
+    "erase_user": {
+      "n": 15,
+      "p50": 3949.168,
+      "p90": 44490.744,
+      "p99": 68641.129,
+      "max": 68641.129,
+      "mean": 13469.326
+    },
+    "list": {
+      "n": 100,
+      "p50": 65.017,
+      "p90": 576.882,
+      "p99": 3648.18,
+      "max": 3648.18,
+      "mean": 219.927
+    },
+    "list_limit10": {
+      "n": 100,
+      "p50": 18.708,
+      "p90": 48.299,
+      "p99": 229.583,
+      "max": 229.583,
+      "mean": 28.776
+    },
+    "put": {
+      "n": 18624,
+      "p50": 4.433,
+      "p90": 8.777,
+      "p99": 57.247,
+      "max": 7190.792,
+      "mean": 7.515
+    },
+    "put[chat]": {
+      "n": 13023,
+      "p50": 4.201,
+      "p90": 7.932,
+      "p99": 45.024,
+      "max": 859.519,
+      "mean": 6.355
+    },
+    "put[coding]": {
+      "n": 5601,
+      "p50": 5.017,
+      "p90": 11.736,
+      "p99": 90.438,
+      "max": 7190.792,
+      "mean": 10.211
+    },
+    "put_writes": {
+      "n": 14768,
+      "p50": 5.226,
+      "p90": 10.583,
+      "p99": 59.996,
+      "max": 7188.586,
+      "mean": 8.354
+    },
+    "resume[cold]": {
+      "n": 100,
+      "p50": 14.071,
+      "p90": 23.347,
+      "p99": 56.465,
+      "max": 56.465,
+      "mean": 14.235
+    },
+    "resume[erase_verify]": {
+      "n": 32,
+      "p50": 5.222,
+      "p90": 5202.919,
+      "p99": 12150.604,
+      "max": 12150.604,
+      "mean": 1753.824
+    },
+    "resume[read]": {
+      "n": 100,
+      "p50": 11.331,
+      "p90": 17.322,
+      "p99": 28.35,
+      "max": 28.35,
+      "mean": 10.565
+    },
+    "resume[write/first]": {
+      "n": 354,
+      "p50": 3.189,
+      "p90": 6.897,
+      "p99": 42.988,
+      "max": 54.667,
+      "mean": 4.215
+    },
+    "resume[write/long]": {
+      "n": 90,
+      "p50": 14.873,
+      "p90": 32.638,
+      "p99": 178.394,
+      "max": 178.394,
+      "mean": 20.145
+    },
+    "resume[write/none]": {
+      "n": 3269,
+      "p50": 3.349,
+      "p90": 6.749,
+      "p99": 39.67,
+      "max": 271.905,
+      "mean": 5.201
+    },
+    "resume[write/short]": {
+      "n": 143,
+      "p50": 2.945,
+      "p90": 6.851,
+      "p99": 24.896,
+      "max": 74.657,
+      "mean": 4.79
+    },
+    "save_step": {
+      "n": 18624,
+      "p50": 8.837,
+      "p90": 18.431,
+      "p99": 106.605,
+      "max": 14379.378,
+      "mean": 14.138
+    },
+    "save_step[chat]": {
+      "n": 13023,
+      "p50": 8.276,
+      "p90": 16.537,
+      "p99": 82.01,
+      "max": 1531.788,
+      "mean": 11.805
+    },
+    "save_step[coding]": {
+      "n": 5601,
+      "p50": 10.259,
+      "p90": 24.903,
+      "p99": 161.835,
+      "max": 14379.378,
+      "mean": 19.564
+    },
+    "time_travel": {
+      "n": 300,
+      "p50": 2.483,
+      "p90": 4.173,
+      "p99": 7.694,
+      "max": 9.116,
+      "mean": 2.802
+    }
+  },
+  "bytes": {
+    "checkpoints": 18624,
+    "put_writes_calls": 14768,
+    "checkpoint_bytes": 1046453094,
+    "writes_bytes": 20939538,
+    "message_payload_bytes_all_checkpoints": 1038496994,
+    "unique_message_bytes": 21089993,
+    "logical_total": 1067392632,
+    "stored": 1727113058,
+    "stored_from": "S3 objects under tenants/app_demo/",
+    "wal_bytes": 2270817,
+    "fx_bytes": 597704083,
+    "compacted_bytes": 1127125958,
+    "wal_share": 0.0013,
+    "fx_share": 0.3461,
+    "compacted_share": 0.6526,
+    "stored_per_logical": 1.6181,
+    "stored_per_checkpoint": 92735.9
+  },
+  "sizes": {
+    "dbStats": {
+      "objects": 44304,
+      "dataSize": 1080094758,
+      "storageSize": 1080094758,
+      "indexSize": 10313568,
+      "totalSize": 1090408326
+    },
+    "collStats": {
+      "checkpoint_writes": {
+        "count": 25680,
+        "size": 28050354,
+        "storageSize": 28050354,
+        "totalIndexSize": 6830880
+      },
+      "checkpoints": {
+        "count": 18624,
+        "size": 1052044404,
+        "storageSize": 1052044404,
+        "totalIndexSize": 3482688
+      }
+    },
+    "s3": {
+      "total": 1727113058,
+      "objects": 127,
+      "by_kind": {
+        "_lease": 86,
+        "compacted": 1127125958,
+        "compactions": 3798,
+        "fx": 597704083,
+        "gc": 6,
+        "manifest": 8310,
+        "wal": 2270817
+      },
+      "count_by_kind": {
+        "_lease": 1,
+        "compacted": 13,
+        "compactions": 3,
+        "fx": 102,
+        "gc": 2,
+        "manifest": 3,
+        "wal": 3
+      }
+    },
+    "stored_bytes": 1727113058,
+    "stored_from": "S3 objects under tenants/app_demo/",
+    "serverStatus_s3": {
+      "get": 117264,
+      "getRange": 64465,
+      "head": 88,
+      "list": 715,
+      "put": 1415,
+      "multipartPart": 759,
+      "copy": 0,
+      "delete": 1351,
+      "getBytes": 11181342098,
+      "putBytes": 10411915650
+    },
+    "s3_two_levels": {
+      "total": 1727113058,
+      "objects": 127,
+      "by_kind": {
+        "_lease": 86,
+        "compacted/01M75N7C0NHV7D55G7NE4EB5A7.sst": 240665184,
+        "compacted/01M75N7C1S0QK86YBR7RQR92ZM.sst": 243347777,
+        "compacted/01M75N7C1YGSXFXP3ECZEMFWVW.sst": 247819119,
+        "compacted/01M75N7C22QPCWM31BNQESATTV.sst": 245377293,
+        "compacted/01M75NAW5BJV6ENJ9JRE7ZESB5.sst": 3305484,
+        "compacted/01M75NAWDKT0YATPBV4SBSG00T.sst": 8353478,
+        "compacted/01M75NAWEENZ48WJ18F44Y3M87.sst": 3075938,
+        "compacted/01M75NAWEP5ZWWDZCP6VYJ6ZCT.sst": 8165878,
+        "compacted/01M75NAWF3WF04W84T9DCFME14.sst": 8228930,
+        "compacted/01M75NAWQZ9Z3NQ3DBWS3SR2WX.sst": 29552135,
+        "compacted/01M75NAWS6373H0F7X42DJHRZH.sst": 29528213,
+        "compacted/01M75NAWSX9BFCZ28TF07BYDYD.sst": 29826971,
+        "compacted/01M75NAWTA931WWRA0X3N5VJ7Z.sst": 29879558,
+        "compactions/00000000000000000406.compactions": 1266,
+        "compactions/00000000000000000407.compactions": 1266,
+        "compactions/00000000000000000408.compactions": 1266,
+        "fx/e1-announced": 20,
+        "fx/manifest": 95860,
+        "fx/run": 597608203,
+        "gc/compactions.boundary": 3,
+        "gc/manifest.boundary": 3,
+        "manifest/00000000000000000377.manifest": 2770,
+        "manifest/00000000000000000378.manifest": 2770,
+        "manifest/00000000000000000379.manifest": 2770,
+        "wal/00000000000000000146.sst": 2270418,
+        "wal/00000000000000000147.sst": 0,
+        "wal/00000000000000000148.sst": 399
+      },
+      "count_by_kind": {
+        "_lease": 1,
+        "compacted/01M75N7C0NHV7D55G7NE4EB5A7.sst": 1,
+        "compacted/01M75N7C1S0QK86YBR7RQR92ZM.sst": 1,
+        "compacted/01M75N7C1YGSXFXP3ECZEMFWVW.sst": 1,
+        "compacted/01M75N7C22QPCWM31BNQESATTV.sst": 1,
+        "compacted/01M75NAW5BJV6ENJ9JRE7ZESB5.sst": 1,
+        "compacted/01M75NAWDKT0YATPBV4SBSG00T.sst": 1,
+        "compacted/01M75NAWEENZ48WJ18F44Y3M87.sst": 1,
+        "compacted/01M75NAWEP5ZWWDZCP6VYJ6ZCT.sst": 1,
+        "compacted/01M75NAWF3WF04W84T9DCFME14.sst": 1,
+        "compacted/01M75NAWQZ9Z3NQ3DBWS3SR2WX.sst": 1,
+        "compacted/01M75NAWS6373H0F7X42DJHRZH.sst": 1,
+        "compacted/01M75NAWSX9BFCZ28TF07BYDYD.sst": 1,
+        "compacted/01M75NAWTA931WWRA0X3N5VJ7Z.sst": 1,
+        "compactions/00000000000000000406.compactions": 1,
+        "compactions/00000000000000000407.compactions": 1,
+        "compactions/00000000000000000408.compactions": 1,
+        "fx/e1-announced": 1,
+        "fx/manifest": 51,
+        "fx/run": 50,
+        "gc/compactions.boundary": 1,
+        "gc/manifest.boundary": 1,
+        "manifest/00000000000000000377.manifest": 1,
+        "manifest/00000000000000000378.manifest": 1,
+        "manifest/00000000000000000379.manifest": 1,
+        "wal/00000000000000000146.sst": 1,
+        "wal/00000000000000000147.sst": 1,
+        "wal/00000000000000000148.sst": 1
+      }
+    },
+    "status": {
+      "s3": {
+        "get": 117279,
+        "getRange": 64465,
+        "head": 88,
+        "list": 715,
+        "put": 1415,
+        "multipartPart": 759,
+        "copy": 0,
+        "delete": 1351,
+        "getBytes": 11181342098,
+        "putBytes": 10411915650
+      },
+      "compactor": {
+        "enabled": true,
+        "started": 2,
+        "running": 1,
+        "publishes": 48,
+        "absorbs": 36,
+        "merges": 0,
+        "reseals": 12,
+        "errors": 0
+      },
+      "compaction": {
+        "passes": 5,
+        "running": 0,
+        "longMerges": 0,
+        "stalled": 0,
+        "preempted": 0,
+        "gcSkippedBusy": 4
+      },
+      "derived": {
+        "write": true,
+        "encoded": 240729,
+        "plain": 78457,
+        "messageRows": 137861,
+        "fallbacks": 0,
+        "rebuilds": 369287,
+        "resealRebuilds": 207480,
+        "rebuildErrors": 0
+      },
+      "backgroundReads": {
+        "gets": 56,
+        "bytes": 1359996,
+        "micros": 63200
+      },
+      "quaderno": {
+        "sent": 33403,
+        "batches": 33320,
+        "failed": 0,
+        "confirmedFlush": 12
+      },
+      "walGc": {
+        "passes": 16,
+        "deleted": 147,
+        "listUs": 5885,
+        "deleteUs": 277630,
+        "totalUs": 336759,
+        "noop": 3
+      },
+      "sstGc": {
+        "passes": 4,
+        "deletedSsts": 232,
+        "deletedManifests": 378,
+        "noop": 0,
+        "closeLight": 0
+      },
+      "requests": {
+        "put": 2582,
+        "copy": 0,
+        "list": 715,
+        "get": 181776,
+        "head": 88,
+        "delete": 1351,
+        "billedPutTier": 3297,
+        "billedGetTier": 181864,
+        "putBytes": 10411915650,
+        "getBytes": 11181342098
+      },
+      "groupCommit": {
+        "commits": 33396,
+        "flushes": 0,
+        "windowUs": 0,
+        "adaptiveWaits": 0,
+        "adaptiveWaitUs": 0,
+        "relaxedAcks": 0
+      },
+      "localLog": {
+        "records": 33402,
+        "fsyncs": 0,
+        "uploads": 11,
+        "replayed": 0
+      },
+      "agentLane": {
+        "batches": 0,
+        "mixedBatches": 0,
+        "commits": 0,
+        "flushes": 0,
+        "txnFlushes": 0,
+        "ackRefused": 0,
+        "windowUs": 100000,
+        "followed": 0,
+        "memtableFlushes": 0,
+        "followHits": 0
+      },
+      "leases": {
+        "acquired": 15,
+        "takeovers": 0,
+        "refused": 0,
+        "renewals": 117,
+        "renewFailures": 0,
+        "lost": 0
+      },
+      "maintenance": {
+        "compactRuns": 5,
+        "compactPuts": 209,
+        "compactGets": 3213,
+        "gcRuns": 18,
+        "gcDeletes": 727,
+        "gcLists": 16,
+        "gcGets": 56,
+        "l0WatchRequests": 205,
+        "abandonCloseTimeouts": 0,
+        "abandonClosesPending": 0,
+        "l0WatchDeferred": 0,
+        "compactionWarm": {
+          "runs": 4,
+          "hotBlocks": 495,
+          "ranges": 207,
+          "fails": 0,
+          "timeouts": 0,
+          "truncated": 0,
+          "readersOpen": 0,
+          "l0Stops": 0,
+          "throttled": 0
+        }
+      },
+      "putByCategory": {
+        "wal": 150,
+        "manifest": 450,
+        "compacted_sst": 266,
+        "lease": 134,
+        "clean_marker": 2,
+        "other": 413
+      },
+      "getByCategory": {
+        "wal": 27,
+        "manifest": 16377,
+        "compacted_sst": 63452,
+        "lease": 15,
+        "clean_marker": 11,
+        "other": 101982
+      },
+      "openReaders": 1,
+      "openWriters": 1
+    }
+  },
+  "sizes_after_erase": {
+    "dbStats": {
+      "objects": 40350,
+      "dataSize": 981307205,
+      "storageSize": 981307205,
+      "indexSize": 9390969,
+      "totalSize": 990698174
+    },
+    "collStats": {
+      "checkpoint_writes": {
+        "count": 23361,
+        "size": 25429045,
+        "storageSize": 25429045,
+        "totalIndexSize": 6214026
+      },
+      "checkpoints": {
+        "count": 16989,
+        "size": 955878160,
+        "storageSize": 955878160,
+        "totalIndexSize": 3176943
+      }
+    },
+    "s3": {
+      "total": 2889496248,
+      "objects": 697,
+      "by_kind": {
+        "_lease": 86,
+        "compacted": 1098185298,
+        "compactions": 69980,
+        "fx": 1790877127,
+        "gc": 6,
+        "manifest": 355546,
+        "wal": 8205
+      },
+      "count_by_kind": {
+        "_lease": 1,
+        "compacted": 51,
+        "compactions": 46,
+        "fx": 542,
+        "gc": 2,
+        "manifest": 53,
+        "wal": 2
+      }
+    },
+    "stored_bytes": 2889496248,
+    "stored_from": "S3 objects under tenants/app_demo/",
+    "serverStatus_s3": {
+      "get": 425025,
+      "getRange": 67956,
+      "head": 91,
+      "list": 7411,
+      "put": 4296,
+      "multipartPart": 1068,
+      "copy": 0,
+      "delete": 1635,
+      "getBytes": 13002671427,
+      "putBytes": 11613199981
+    },
+    "s3_two_levels": {
+      "total": 2889496248,
+      "objects": 697,
+      "by_kind": {
+        "_lease": 86,
+        "compacted/01M75N7C0NHV7D55G7NE4EB5A7.sst": 240665184,
+        "compacted/01M75N7C1S0QK86YBR7RQR92ZM.sst": 243347777,
+        "compacted/01M75N7C1YGSXFXP3ECZEMFWVW.sst": 247819119,
+        "compacted/01M75N7C22QPCWM31BNQESATTV.sst": 245377293,
+        "compacted/01M75NAWQZ9Z3NQ3DBWS3SR2WX.sst": 29552135,
+        "compacted/01M75NAWS6373H0F7X42DJHRZH.sst": 29528213,
+        "compacted/01M75NAWSX9BFCZ28TF07BYDYD.sst": 29826971,
+        "compacted/01M75NAWTA931WWRA0X3N5VJ7Z.sst": 29879558,
+        "compacted/01M75P69Q69CJ93AVC88EC3E17.sst": 145895,
+        "compacted/01M75P69Q7FQW4Z78QTQCANGGW.sst": 153314,
+        "compacted/01M75P69QB40AGPY4J7SBEGHT5.sst": 152444,
+        "compacted/01M75P69QHP4NM5VQ3VT0ZP68F.sst": 130550,
+        "compacted/01M75P6DQ4T7XTECPKNJ5F75QV.sst": 5677,
+        "compacted/01M75P6S027N292BV3H53CNZKN.sst": 16042,
+        "compacted/01M75P6XHXE2RKZT49MG89JWPH.sst": 12422,
+        "compacted/01M75P7434B3THB5KHXMY8YZX4.sst": 24178,
+        "compacted/01M75P755BE4NQVGFWPGNX15BD.sst": 38195,
+        "compacted/01M75P755J94PCJD57MP4N70Q1.sst": 18303,
+        "compacted/01M75P7AGQ5GHBPBZQ76ACVJX6.sst": 4349,
+        "compacted/01M75P7H9JGVTAXV4FFFNE5P55.sst": 6433,
+        "compacted/01M75P7R7EM6FMPP94E8876VVG.sst": 8121,
+        "compacted/01M75P7YZC7H7B0NAH640V6JJH.sst": 12315,
+        "compacted/01M75P801EQWNH15C8ZVSFGD9Y.sst": 29033,
+        "compacted/01M75P805HC5ET59RZAPAQ227R.sst": 32736,
+        "compacted/01M75P805N2HFF26TRAE16SNA0.sst": 51584,
+        "compacted/01M75P8D6R5VQGYZG43HA970XS.sst": 70700,
+        "compacted/01M75P8KT0EKGX8K4WRJ3NZ2VB.sst": 13080,
+        "compacted/01M75P8WDK8RTAZAW8RWG2PXWC.sst": 20144,
+        "compacted/01M75P94QVEKW2SDHVHMYRS3K0.sst": 7473,
+        "compacted/01M75P95R4538GWFBMGCZ4YWG8.sst": 85450,
+        "compacted/01M75P95R9HW9W2820Z2YDZAN0.sst": 23860,
+        "compacted/01M75P95V8AK5C3812V18STWGP.sst": 91574,
+        "compacted/01M75P95VEXKBZMSP89ZSQKKBT.sst": 99262,
+        "compacted/01M75P95ZGYMS1ZKWPC1FQ5CT9.sst": 185325,
+        "compacted/01M75P95ZK0AB36N4HEBQE08XH.sst": 195400,
+        "compacted/01M75P95ZNWPQ23D5GQEY5H0H8.sst": 196540,
+        "compacted/01M75P95ZXR4W7S6NEGSXEC3GF.sst": 194313,
+        "compacted/01M75P9DCHY1FWXVTPTFMJ0HQ5.sst": 10714,
+        "compacted/01M75P9PAP16QYPCSPK0CZ7M6T.sst": 3567,
+        "compacted/01M75P9YYYCAQDSSAQ5A9FDBY3.sst": 5685,
+        "compacted/01M75PA8K0WFFNB44T49Q98BK9.sst": 5513,
+        "compacted/01M75PABTWAEKTKVXVAY951QVE.sst": 23139,
+        "compacted/01M75PAMTYZMS9QSKCFYTG84JH.sst": 8105,
+        "compacted/01M75PB7HP2HR1XD5YNP275DSK.sst": 13688,
+        "compacted/01M75PBHE4NM02Q6M65JZ386X2.sst": 3303,
+        "compacted/01M75PBXATK4EWMN4J5ATW0W5Q.sst": 4688,
+        "compacted/01M75PBYJEN6PG7XHET0B6DZCV.sst": 26849,
+        "compacted/01M75PBYPVVKYJFSFKY8691XW1.sst": 10970,
+        "compacted/01M75PBYQ3NQ120GTH55PCDD8X.sst": 38649,
+        "compacted/01M75PC9RZS98GHNT50WK6MS1K.sst": 3798,
+        "compacted/01M75PCN27D9C8F4M2YH9ERH3C.sst": 5668,
+        "compactions/00000000000000000473.compactions": 1882,
+        "compactions/00000000000000000474.compactions": 2098,
+        "compactions/00000000000000000475.compactions": 2098,
+        "compactions/00000000000000000476.compactions": 2138,
+        "compactions/00000000000000000477.compactions": 3154,
+        "compactions/00000000000000000478.compactions": 1418,
+        "compactions/00000000000000000479.compactions": 1618,
+        "compactions/00000000000000000480.compactions": 1618,
+        "compactions/00000000000000000481.compactions": 1658,
+        "compactions/00000000000000000482.compactions": 2002,
+        "compactions/00000000000000000483.compactions": 706,
+        "compactions/00000000000000000484.compactions": 818,
+        "compactions/00000000000000000485.compactions": 818,
+        "compactions/00000000000000000486.compactions": 858,
+        "compactions/00000000000000000487.compactions": 1922,
+        "compactions/00000000000000000488.compactions": 1306,
+        "compactions/00000000000000000489.compactions": 1530,
+        "compactions/00000000000000000490.compactions": 1530,
+        "compactions/00000000000000000491.compactions": 1570,
+        "compactions/00000000000000000492.compactions": 2522,
+        "compactions/00000000000000000493.compactions": 1338,
+        "compactions/00000000000000000494.compactions": 1450,
+        "compactions/00000000000000000495.compactions": 1450,
+        "compactions/00000000000000000496.compactions": 1490,
+        "compactions/00000000000000000497.compactions": 2522,
+        "compactions/00000000000000000498.compactions": 1306,
+        "compactions/00000000000000000499.compactions": 1402,
+        "compactions/00000000000000000500.compactions": 1402,
+        "compactions/00000000000000000501.compactions": 1442,
+        "compactions/00000000000000000502.compactions": 2642,
+        "compactions/00000000000000000503.compactions": 1498,
+        "compactions/00000000000000000504.compactions": 1714,
+        "compactions/00000000000000000505.compactions": 1714,
+        "compactions/00000000000000000506.compactions": 1754,
+        "compactions/00000000000000000507.compactions": 2090,
+        "compactions/00000000000000000508.compactions": 706,
+        "compactions/00000000000000000509.compactions": 906,
+        "compactions/00000000000000000510.compactions": 906,
+        "compactions/00000000000000000511.compactions": 946,
+        "compactions/00000000000000000512.compactions": 1370,
+        "compactions/00000000000000000513.compactions": 786,
+        "compactions/00000000000000000514.compactions": 898,
+        "compactions/00000000000000000515.compactions": 898,
+        "compactions/00000000000000000516.compactions": 938,
+        "compactions/00000000000000000517.compactions": 1922,
+        "compactions/00000000000000000518.compactions": 1226,
+        "fx/e1-announced": 20,
+        "fx/erasures": 48163,
+        "fx/manifest": 381556,
+        "fx/run": 1790447388,
+        "gc/compactions.boundary": 3,
+        "gc/manifest.boundary": 3,
+        "manifest/00000000000000000384.manifest": 4498,
+        "manifest/00000000000000000390.manifest": 5466,
+        "manifest/00000000000000000392.manifest": 4946,
+        "manifest/00000000000000000398.manifest": 5322,
+        "manifest/00000000000000000400.manifest": 4650,
+        "manifest/00000000000000000406.manifest": 6506,
+        "manifest/00000000000000000408.manifest": 5986,
+        "manifest/00000000000000000414.manifest": 6666,
+        "manifest/00000000000000000420.manifest": 7218,
+        "manifest/00000000000000000422.manifest": 6042,
+        "manifest/00000000000000000428.manifest": 7738,
+        "manifest/00000000000000000430.manifest": 7066,
+        "manifest/00000000000000000432.manifest": 6202,
+        "manifest/00000000000000000434.manifest": 5770,
+        "manifest/00000000000000000435.manifest": 6170,
+        "manifest/00000000000000000436.manifest": 6546,
+        "manifest/00000000000000000437.manifest": 7026,
+        "manifest/00000000000000000438.manifest": 7082,
+        "manifest/00000000000000000439.manifest": 6514,
+        "manifest/00000000000000000440.manifest": 6898,
+        "manifest/00000000000000000441.manifest": 7378,
+        "manifest/00000000000000000442.manifest": 7754,
+        "manifest/00000000000000000443.manifest": 8234,
+        "manifest/00000000000000000444.manifest": 8282,
+        "manifest/00000000000000000445.manifest": 6978,
+        "manifest/00000000000000000446.manifest": 7034,
+        "manifest/00000000000000000447.manifest": 6618,
+        "manifest/00000000000000000448.manifest": 7010,
+        "manifest/00000000000000000449.manifest": 7402,
+        "manifest/00000000000000000450.manifest": 7866,
+        "manifest/00000000000000000451.manifest": 8258,
+        "manifest/00000000000000000452.manifest": 8314,
+        "manifest/00000000000000000453.manifest": 7746,
+        "manifest/00000000000000000454.manifest": 7794,
+        "manifest/00000000000000000455.manifest": 6722,
+        "manifest/00000000000000000456.manifest": 6778,
+        "manifest/00000000000000000457.manifest": 5234,
+        "manifest/00000000000000000458.manifest": 5706,
+        "manifest/00000000000000000459.manifest": 6098,
+        "manifest/00000000000000000460.manifest": 6562,
+        "manifest/00000000000000000461.manifest": 6954,
+        "manifest/00000000000000000462.manifest": 7002,
+        "manifest/00000000000000000463.manifest": 5706,
+        "manifest/00000000000000000464.manifest": 6178,
+        "manifest/00000000000000000465.manifest": 6570,
+        "manifest/00000000000000000466.manifest": 6954,
+        "manifest/00000000000000000467.manifest": 7426,
+        "manifest/00000000000000000468.manifest": 7482,
+        "manifest/00000000000000000469.manifest": 6250,
+        "manifest/00000000000000000470.manifest": 6298,
+        "manifest/00000000000000000471.manifest": 6466,
+        "manifest/00000000000000000472.manifest": 6850,
+        "manifest/00000000000000000473.manifest": 7330,
+        "wal/00000000000000000197.sst": 3312,
+        "wal/00000000000000000198.sst": 4893
+      },
+      "count_by_kind": {
+        "_lease": 1,
+        "compacted/01M75N7C0NHV7D55G7NE4EB5A7.sst": 1,
+        "compacted/01M75N7C1S0QK86YBR7RQR92ZM.sst": 1,
+        "compacted/01M75N7C1YGSXFXP3ECZEMFWVW.sst": 1,
+        "compacted/01M75N7C22QPCWM31BNQESATTV.sst": 1,
+        "compacted/01M75NAWQZ9Z3NQ3DBWS3SR2WX.sst": 1,
+        "compacted/01M75NAWS6373H0F7X42DJHRZH.sst": 1,
+        "compacted/01M75NAWSX9BFCZ28TF07BYDYD.sst": 1,
+        "compacted/01M75NAWTA931WWRA0X3N5VJ7Z.sst": 1,
+        "compacted/01M75P69Q69CJ93AVC88EC3E17.sst": 1,
+        "compacted/01M75P69Q7FQW4Z78QTQCANGGW.sst": 1,
+        "compacted/01M75P69QB40AGPY4J7SBEGHT5.sst": 1,
+        "compacted/01M75P69QHP4NM5VQ3VT0ZP68F.sst": 1,
+        "compacted/01M75P6DQ4T7XTECPKNJ5F75QV.sst": 1,
+        "compacted/01M75P6S027N292BV3H53CNZKN.sst": 1,
+        "compacted/01M75P6XHXE2RKZT49MG89JWPH.sst": 1,
+        "compacted/01M75P7434B3THB5KHXMY8YZX4.sst": 1,
+        "compacted/01M75P755BE4NQVGFWPGNX15BD.sst": 1,
+        "compacted/01M75P755J94PCJD57MP4N70Q1.sst": 1,
+        "compacted/01M75P7AGQ5GHBPBZQ76ACVJX6.sst": 1,
+        "compacted/01M75P7H9JGVTAXV4FFFNE5P55.sst": 1,
+        "compacted/01M75P7R7EM6FMPP94E8876VVG.sst": 1,
+        "compacted/01M75P7YZC7H7B0NAH640V6JJH.sst": 1,
+        "compacted/01M75P801EQWNH15C8ZVSFGD9Y.sst": 1,
+        "compacted/01M75P805HC5ET59RZAPAQ227R.sst": 1,
+        "compacted/01M75P805N2HFF26TRAE16SNA0.sst": 1,
+        "compacted/01M75P8D6R5VQGYZG43HA970XS.sst": 1,
+        "compacted/01M75P8KT0EKGX8K4WRJ3NZ2VB.sst": 1,
+        "compacted/01M75P8WDK8RTAZAW8RWG2PXWC.sst": 1,
+        "compacted/01M75P94QVEKW2SDHVHMYRS3K0.sst": 1,
+        "compacted/01M75P95R4538GWFBMGCZ4YWG8.sst": 1,
+        "compacted/01M75P95R9HW9W2820Z2YDZAN0.sst": 1,
+        "compacted/01M75P95V8AK5C3812V18STWGP.sst": 1,
+        "compacted/01M75P95VEXKBZMSP89ZSQKKBT.sst": 1,
+        "compacted/01M75P95ZGYMS1ZKWPC1FQ5CT9.sst": 1,
+        "compacted/01M75P95ZK0AB36N4HEBQE08XH.sst": 1,
+        "compacted/01M75P95ZNWPQ23D5GQEY5H0H8.sst": 1,
+        "compacted/01M75P95ZXR4W7S6NEGSXEC3GF.sst": 1,
+        "compacted/01M75P9DCHY1FWXVTPTFMJ0HQ5.sst": 1,
+        "compacted/01M75P9PAP16QYPCSPK0CZ7M6T.sst": 1,
+        "compacted/01M75P9YYYCAQDSSAQ5A9FDBY3.sst": 1,
+        "compacted/01M75PA8K0WFFNB44T49Q98BK9.sst": 1,
+        "compacted/01M75PABTWAEKTKVXVAY951QVE.sst": 1,
+        "compacted/01M75PAMTYZMS9QSKCFYTG84JH.sst": 1,
+        "compacted/01M75PB7HP2HR1XD5YNP275DSK.sst": 1,
+        "compacted/01M75PBHE4NM02Q6M65JZ386X2.sst": 1,
+        "compacted/01M75PBXATK4EWMN4J5ATW0W5Q.sst": 1,
+        "compacted/01M75PBYJEN6PG7XHET0B6DZCV.sst": 1,
+        "compacted/01M75PBYPVVKYJFSFKY8691XW1.sst": 1,
+        "compacted/01M75PBYQ3NQ120GTH55PCDD8X.sst": 1,
+        "compacted/01M75PC9RZS98GHNT50WK6MS1K.sst": 1,
+        "compacted/01M75PCN27D9C8F4M2YH9ERH3C.sst": 1,
+        "compactions/00000000000000000473.compactions": 1,
+        "compactions/00000000000000000474.compactions": 1,
+        "compactions/00000000000000000475.compactions": 1,
+        "compactions/00000000000000000476.compactions": 1,
+        "compactions/00000000000000000477.compactions": 1,
+        "compactions/00000000000000000478.compactions": 1,
+        "compactions/00000000000000000479.compactions": 1,
+        "compactions/00000000000000000480.compactions": 1,
+        "compactions/00000000000000000481.compactions": 1,
+        "compactions/00000000000000000482.compactions": 1,
+        "compactions/00000000000000000483.compactions": 1,
+        "compactions/00000000000000000484.compactions": 1,
+        "compactions/00000000000000000485.compactions": 1,
+        "compactions/00000000000000000486.compactions": 1,
+        "compactions/00000000000000000487.compactions": 1,
+        "compactions/00000000000000000488.compactions": 1,
+        "compactions/00000000000000000489.compactions": 1,
+        "compactions/00000000000000000490.compactions": 1,
+        "compactions/00000000000000000491.compactions": 1,
+        "compactions/00000000000000000492.compactions": 1,
+        "compactions/00000000000000000493.compactions": 1,
+        "compactions/00000000000000000494.compactions": 1,
+        "compactions/00000000000000000495.compactions": 1,
+        "compactions/00000000000000000496.compactions": 1,
+        "compactions/00000000000000000497.compactions": 1,
+        "compactions/00000000000000000498.compactions": 1,
+        "compactions/00000000000000000499.compactions": 1,
+        "compactions/00000000000000000500.compactions": 1,
+        "compactions/00000000000000000501.compactions": 1,
+        "compactions/00000000000000000502.compactions": 1,
+        "compactions/00000000000000000503.compactions": 1,
+        "compactions/00000000000000000504.compactions": 1,
+        "compactions/00000000000000000505.compactions": 1,
+        "compactions/00000000000000000506.compactions": 1,
+        "compactions/00000000000000000507.compactions": 1,
+        "compactions/00000000000000000508.compactions": 1,
+        "compactions/00000000000000000509.compactions": 1,
+        "compactions/00000000000000000510.compactions": 1,
+        "compactions/00000000000000000511.compactions": 1,
+        "compactions/00000000000000000512.compactions": 1,
+        "compactions/00000000000000000513.compactions": 1,
+        "compactions/00000000000000000514.compactions": 1,
+        "compactions/00000000000000000515.compactions": 1,
+        "compactions/00000000000000000516.compactions": 1,
+        "compactions/00000000000000000517.compactions": 1,
+        "compactions/00000000000000000518.compactions": 1,
+        "fx/e1-announced": 1,
+        "fx/erasures": 64,
+        "fx/manifest": 183,
+        "fx/run": 294,
+        "gc/compactions.boundary": 1,
+        "gc/manifest.boundary": 1,
+        "manifest/00000000000000000384.manifest": 1,
+        "manifest/00000000000000000390.manifest": 1,
+        "manifest/00000000000000000392.manifest": 1,
+        "manifest/00000000000000000398.manifest": 1,
+        "manifest/00000000000000000400.manifest": 1,
+        "manifest/00000000000000000406.manifest": 1,
+        "manifest/00000000000000000408.manifest": 1,
+        "manifest/00000000000000000414.manifest": 1,
+        "manifest/00000000000000000420.manifest": 1,
+        "manifest/00000000000000000422.manifest": 1,
+        "manifest/00000000000000000428.manifest": 1,
+        "manifest/00000000000000000430.manifest": 1,
+        "manifest/00000000000000000432.manifest": 1,
+        "manifest/00000000000000000434.manifest": 1,
+        "manifest/00000000000000000435.manifest": 1,
+        "manifest/00000000000000000436.manifest": 1,
+        "manifest/00000000000000000437.manifest": 1,
+        "manifest/00000000000000000438.manifest": 1,
+        "manifest/00000000000000000439.manifest": 1,
+        "manifest/00000000000000000440.manifest": 1,
+        "manifest/00000000000000000441.manifest": 1,
+        "manifest/00000000000000000442.manifest": 1,
+        "manifest/00000000000000000443.manifest": 1,
+        "manifest/00000000000000000444.manifest": 1,
+        "manifest/00000000000000000445.manifest": 1,
+        "manifest/00000000000000000446.manifest": 1,
+        "manifest/00000000000000000447.manifest": 1,
+        "manifest/00000000000000000448.manifest": 1,
+        "manifest/00000000000000000449.manifest": 1,
+        "manifest/00000000000000000450.manifest": 1,
+        "manifest/00000000000000000451.manifest": 1,
+        "manifest/00000000000000000452.manifest": 1,
+        "manifest/00000000000000000453.manifest": 1,
+        "manifest/00000000000000000454.manifest": 1,
+        "manifest/00000000000000000455.manifest": 1,
+        "manifest/00000000000000000456.manifest": 1,
+        "manifest/00000000000000000457.manifest": 1,
+        "manifest/00000000000000000458.manifest": 1,
+        "manifest/00000000000000000459.manifest": 1,
+        "manifest/00000000000000000460.manifest": 1,
+        "manifest/00000000000000000461.manifest": 1,
+        "manifest/00000000000000000462.manifest": 1,
+        "manifest/00000000000000000463.manifest": 1,
+        "manifest/00000000000000000464.manifest": 1,
+        "manifest/00000000000000000465.manifest": 1,
+        "manifest/00000000000000000466.manifest": 1,
+        "manifest/00000000000000000467.manifest": 1,
+        "manifest/00000000000000000468.manifest": 1,
+        "manifest/00000000000000000469.manifest": 1,
+        "manifest/00000000000000000470.manifest": 1,
+        "manifest/00000000000000000471.manifest": 1,
+        "manifest/00000000000000000472.manifest": 1,
+        "manifest/00000000000000000473.manifest": 1,
+        "wal/00000000000000000197.sst": 1,
+        "wal/00000000000000000198.sst": 1
+      }
+    },
+    "status": {
+      "s3": {
+        "get": 425080,
+        "getRange": 67956,
+        "head": 91,
+        "list": 7411,
+        "put": 4296,
+        "multipartPart": 1068,
+        "copy": 0,
+        "delete": 1635,
+        "getBytes": 13002671427,
+        "putBytes": 11613199981
+      },
+      "compactor": {
+        "enabled": true,
+        "started": 2,
+        "running": 1,
+        "publishes": 116,
+        "absorbs": 86,
+        "merges": 17,
+        "reseals": 13,
+        "errors": 0
+      },
+      "compaction": {
+        "passes": 5,
+        "running": 0,
+        "longMerges": 0,
+        "stalled": 0,
+        "preempted": 0,
+        "gcSkippedBusy": 5
+      },
+      "derived": {
+        "write": true,
+        "encoded": 272624,
+        "plain": 88410,
+        "messageRows": 156771,
+        "fallbacks": 0,
+        "rebuilds": 375147,
+        "resealRebuilds": 237914,
+        "rebuildErrors": 0
+      },
+      "backgroundReads": {
+        "gets": 66,
+        "bytes": 1361138,
+        "micros": 70440
+      },
+      "quaderno": {
+        "sent": 33467,
+        "batches": 33384,
+        "failed": 0,
+        "confirmedFlush": 23
+      },
+      "walGc": {
+        "passes": 31,
+        "deleted": 198,
+        "listUs": 5885,
+        "deleteUs": 366885,
+        "totalUs": 464018,
+        "noop": 3
+      },
+      "sstGc": {
+        "passes": 7,
+        "deletedSsts": 290,
+        "deletedManifests": 489,
+        "noop": 2,
+        "closeLight": 0
+      },
+      "requests": {
+        "put": 6329,
+        "copy": 0,
+        "list": 7411,
+        "get": 493038,
+        "head": 91,
+        "delete": 1635,
+        "billedPutTier": 13740,
+        "billedGetTier": 493129,
+        "putBytes": 11613199981,
+        "getBytes": 13002671427
+      },
+      "groupCommit": {
+        "commits": 33460,
+        "flushes": 0,
+        "windowUs": 0,
+        "adaptiveWaits": 0,
+        "adaptiveWaitUs": 0,
+        "relaxedAcks": 0
+      },
+      "localLog": {
+        "records": 33466,
+        "fsyncs": 0,
+        "uploads": 22,
+        "replayed": 0
+      },
+      "agentLane": {
+        "batches": 0,
+        "mixedBatches": 0,
+        "commits": 0,
+        "flushes": 0,
+        "txnFlushes": 0,
+        "ackRefused": 0,
+        "windowUs": 100000,
+        "followed": 0,
+        "memtableFlushes": 0,
+        "followHits": 0
+      },
+      "leases": {
+        "acquired": 16,
+        "takeovers": 0,
+        "refused": 0,
+        "renewals": 149,
+        "renewFailures": 0,
+        "lost": 0
+      },
+      "maintenance": {
+        "compactRuns": 5,
+        "compactPuts": 209,
+        "compactGets": 3213,
+        "gcRuns": 33,
+        "gcDeletes": 778,
+        "gcLists": 16,
+        "gcGets": 71,
+        "l0WatchRequests": 222,
+        "abandonCloseTimeouts": 0,
+        "abandonClosesPending": 0,
+        "l0WatchDeferred": 0,
+        "compactionWarm": {
+          "runs": 4,
+          "hotBlocks": 495,
+          "ranges": 207,
+          "fails": 0,
+          "timeouts": 0,
+          "truncated": 0,
+          "readersOpen": 0,
+          "l0Stops": 0,
+          "throttled": 0
+        }
+      },
+      "putByCategory": {
+        "wal": 200,
+        "manifest": 724,
+        "compacted_sst": 362,
+        "lease": 168,
+        "clean_marker": 2,
+        "other": 2840
+      },
+      "getByCategory": {
+        "wal": 27,
+        "manifest": 224259,
+        "compacted_sst": 64960,
+        "lease": 16,
+        "clean_marker": 12,
+        "other": 203855
+      },
+      "openReaders": 1,
+      "openWriters": 1
+    }
+  },
+  "s3_put_requests_during_write": 1204,
+  "server_status_before": {
+    "s3": {
+      "get": 18,
+      "getRange": 0,
+      "head": 16,
+      "list": 25,
+      "put": 12,
+      "multipartPart": 0,
+      "copy": 0,
+      "delete": 9,
+      "getBytes": 138,
+      "putBytes": 976
+    },
+    "compactor": {
+      "enabled": true,
+      "started": 0,
+      "running": 0,
+      "publishes": 0,
+      "absorbs": 0,
+      "merges": 0,
+      "reseals": 0,
+      "errors": 0
+    },
+    "compaction": {
+      "passes": 0,
+      "running": 0,
+      "longMerges": 0,
+      "stalled": 0,
+      "preempted": 0,
+      "gcSkippedBusy": 0
+    },
+    "derived": {
+      "write": true,
+      "encoded": 0,
+      "plain": 0,
+      "messageRows": 0,
+      "fallbacks": 0,
+      "rebuilds": 0,
+      "resealRebuilds": 0,
+      "rebuildErrors": 0
+    },
+    "backgroundReads": {
+      "gets": 0,
+      "bytes": 0,
+      "micros": 0
+    },
+    "quaderno": {
+      "sent": 3,
+      "batches": 3,
+      "failed": 0,
+      "confirmedFlush": 1
+    },
+    "walGc": {
+      "passes": 0,
+      "deleted": 0,
+      "listUs": 0,
+      "deleteUs": 0,
+      "totalUs": 0,
+      "noop": 0
+    },
+    "sstGc": {
+      "passes": 0,
+      "deletedSsts": 0,
+      "deletedManifests": 0,
+      "noop": 0,
+      "closeLight": 0
+    },
+    "requests": {
+      "put": 12,
+      "copy": 0,
+      "list": 25,
+      "get": 18,
+      "head": 16,
+      "delete": 9,
+      "billedPutTier": 37,
+      "billedGetTier": 34,
+      "putBytes": 976,
+      "getBytes": 138
+    },
+    "groupCommit": {
+      "commits": 1,
+      "flushes": 0,
+      "windowUs": 0,
+      "adaptiveWaits": 0,
+      "adaptiveWaitUs": 0,
+      "relaxedAcks": 0
+    },
+    "localLog": {
+      "records": 2,
+      "fsyncs": 0,
+      "uploads": 0,
+      "replayed": 0
+    },
+    "agentLane": {
+      "batches": 0,
+      "mixedBatches": 0,
+      "commits": 0,
+      "flushes": 0,
+      "txnFlushes": 0,
+      "ackRefused": 0,
+      "windowUs": 100000,
+      "followed": 0,
+      "memtableFlushes": 0,
+      "followHits": 0
+    },
+    "leases": {
+      "acquired": 8,
+      "takeovers": 0,
+      "refused": 0,
+      "renewals": 0,
+      "renewFailures": 0,
+      "lost": 0
+    },
+    "maintenance": {
+      "compactRuns": 0,
+      "compactPuts": 0,
+      "compactGets": 0,
+      "gcRuns": 0,
+      "gcDeletes": 0,
+      "gcLists": 0,
+      "gcGets": 0,
+      "l0WatchRequests": 0,
+      "abandonCloseTimeouts": 0,
+      "abandonClosesPending": 0,
+      "l0WatchDeferred": 0,
+      "compactionWarm": {
+        "runs": 0,
+        "hotBlocks": 0,
+        "ranges": 0,
+        "fails": 0,
+        "timeouts": 0,
+        "truncated": 0,
+        "readersOpen": 0,
+        "l0Stops": 0,
+        "throttled": 0
+      }
+    },
+    "putByCategory": {
+      "wal": 1,
+      "manifest": 2,
+      "compacted_sst": 0,
+      "lease": 8,
+      "clean_marker": 0,
+      "other": 1
+    },
+    "getByCategory": {
+      "wal": 9,
+      "manifest": 4,
+      "compacted_sst": 0,
+      "lease": 8,
+      "clean_marker": 5,
+      "other": 8
+    },
+    "openReaders": 0,
+    "openWriters": 1
+  },
+  "server_status_after_write": {
+    "s3": {
+      "get": 83272,
+      "getRange": 62291,
+      "head": 49,
+      "list": 522,
+      "put": 1216,
+      "multipartPart": 743,
+      "copy": 0,
+      "delete": 330,
+      "getBytes": 9813064710,
+      "putBytes": 10228665412
+    },
+    "compactor": {
+      "enabled": true,
+      "started": 1,
+      "running": 1,
+      "publishes": 46,
+      "absorbs": 35,
+      "merges": 0,
+      "reseals": 11,
+      "errors": 0
+    },
+    "compaction": {
+      "passes": 4,
+      "running": 0,
+      "longMerges": 0,
+      "stalled": 0,
+      "preempted": 0,
+      "gcSkippedBusy": 4
+    },
+    "derived": {
+      "write": true,
+      "encoded": 207480,
+      "plain": 67581,
+      "messageRows": 118748,
+      "fallbacks": 0,
+      "rebuilds": 74,
+      "resealRebuilds": 175556,
+      "rebuildErrors": 0
+    },
+    "backgroundReads": {
+      "gets": 14,
+      "bytes": 1142,
+      "micros": 19088
+    },
+    "quaderno": {
+      "sent": 33401,
+      "batches": 33318,
+      "failed": 0,
+      "confirmedFlush": 11
+    },
+    "walGc": {
+      "passes": 13,
+      "deleted": 141,
+      "listUs": 5885,
+      "deleteUs": 266885,
+      "totalUs": 332701,
+      "noop": 1
+    },
+    "sstGc": {
+      "passes": 3,
+      "deletedSsts": 54,
+      "deletedManifests": 119,
+      "noop": 0,
+      "closeLight": 0
+    },
+    "requests": {
+      "put": 2353,
+      "copy": 0,
+      "list": 522,
+      "get": 145565,
+      "head": 49,
+      "delete": 330,
+      "billedPutTier": 2875,
+      "billedGetTier": 145614,
+      "putBytes": 10228665412,
+      "getBytes": 9813093719
+    },
+    "groupCommit": {
+      "commits": 33395,
+      "flushes": 0,
+      "windowUs": 0,
+      "adaptiveWaits": 0,
+      "adaptiveWaitUs": 0,
+      "relaxedAcks": 0
+    },
+    "localLog": {
+      "records": 33400,
+      "fsyncs": 0,
+      "uploads": 10,
+      "replayed": 0
+    },
+    "agentLane": {
+      "batches": 0,
+      "mixedBatches": 0,
+      "commits": 0,
+      "flushes": 0,
+      "txnFlushes": 0,
+      "ackRefused": 0,
+      "windowUs": 100000,
+      "followed": 0,
+      "memtableFlushes": 0,
+      "followHits": 0
+    },
+    "leases": {
+      "acquired": 14,
+      "takeovers": 0,
+      "refused": 0,
+      "renewals": 29,
+      "renewFailures": 0,
+      "lost": 0
+    },
+    "maintenance": {
+      "compactRuns": 4,
+      "compactPuts": 109,
+      "compactGets": 2330,
+      "gcRuns": 14,
+      "gcDeletes": 144,
+      "gcLists": 9,
+      "gcGets": 32,
+      "l0WatchRequests": 205,
+      "abandonCloseTimeouts": 0,
+      "abandonClosesPending": 0,
+      "l0WatchDeferred": 0,
+      "compactionWarm": {
+        "runs": 4,
+        "hotBlocks": 495,
+        "ranges": 207,
+        "fails": 0,
+        "timeouts": 0,
+        "truncated": 0,
+        "readersOpen": 0,
+        "l0Stops": 0,
+        "throttled": 0
+      }
+    },
+    "putByCategory": {
+      "wal": 147,
+      "manifest": 366,
+      "compacted_sst": 261,
+      "lease": 44,
+      "clean_marker": 1,
+      "other": 397
+    },
+    "getByCategory": {
+      "wal": 18,
+      "manifest": 11870,
+      "compacted_sst": 61631,
+      "lease": 14,
+      "clean_marker": 10,
+      "other": 72071
+    },
+    "openReaders": 1,
+    "openWriters": 1
+  },
+  "server_status_before_cold": {
+    "s3": {
+      "get": 425085,
+      "getRange": 67956,
+      "head": 91,
+      "list": 7411,
+      "put": 4296,
+      "multipartPart": 1068,
+      "copy": 0,
+      "delete": 1635,
+      "getBytes": 13002671427,
+      "putBytes": 11613199981
+    },
+    "compactor": {
+      "enabled": true,
+      "started": 2,
+      "running": 1,
+      "publishes": 116,
+      "absorbs": 86,
+      "merges": 17,
+      "reseals": 13,
+      "errors": 0
+    },
+    "compaction": {
+      "passes": 5,
+      "running": 0,
+      "longMerges": 0,
+      "stalled": 0,
+      "preempted": 0,
+      "gcSkippedBusy": 5
+    },
+    "derived": {
+      "write": true,
+      "encoded": 272624,
+      "plain": 88410,
+      "messageRows": 156771,
+      "fallbacks": 0,
+      "rebuilds": 375147,
+      "resealRebuilds": 237914,
+      "rebuildErrors": 0
+    },
+    "backgroundReads": {
+      "gets": 66,
+      "bytes": 1361138,
+      "micros": 70440
+    },
+    "quaderno": {
+      "sent": 33467,
+      "batches": 33384,
+      "failed": 0,
+      "confirmedFlush": 23
+    },
+    "walGc": {
+      "passes": 31,
+      "deleted": 198,
+      "listUs": 5885,
+      "deleteUs": 366885,
+      "totalUs": 464018,
+      "noop": 3
+    },
+    "sstGc": {
+      "passes": 7,
+      "deletedSsts": 290,
+      "deletedManifests": 489,
+      "noop": 2,
+      "closeLight": 0
+    },
+    "requests": {
+      "put": 6329,
+      "copy": 0,
+      "list": 7411,
+      "get": 493044,
+      "head": 91,
+      "delete": 1635,
+      "billedPutTier": 13740,
+      "billedGetTier": 493135,
+      "putBytes": 11613199981,
+      "getBytes": 13002671427
+    },
+    "groupCommit": {
+      "commits": 33460,
+      "flushes": 0,
+      "windowUs": 0,
+      "adaptiveWaits": 0,
+      "adaptiveWaitUs": 0,
+      "relaxedAcks": 0
+    },
+    "localLog": {
+      "records": 33466,
+      "fsyncs": 0,
+      "uploads": 22,
+      "replayed": 0
+    },
+    "agentLane": {
+      "batches": 0,
+      "mixedBatches": 0,
+      "commits": 0,
+      "flushes": 0,
+      "txnFlushes": 0,
+      "ackRefused": 0,
+      "windowUs": 100000,
+      "followed": 0,
+      "memtableFlushes": 0,
+      "followHits": 0
+    },
+    "leases": {
+      "acquired": 16,
+      "takeovers": 0,
+      "refused": 0,
+      "renewals": 149,
+      "renewFailures": 0,
+      "lost": 0
+    },
+    "maintenance": {
+      "compactRuns": 5,
+      "compactPuts": 209,
+      "compactGets": 3213,
+      "gcRuns": 33,
+      "gcDeletes": 778,
+      "gcLists": 16,
+      "gcGets": 71,
+      "l0WatchRequests": 222,
+      "abandonCloseTimeouts": 0,
+      "abandonClosesPending": 0,
+      "l0WatchDeferred": 0,
+      "compactionWarm": {
+        "runs": 4,
+        "hotBlocks": 495,
+        "ranges": 207,
+        "fails": 0,
+        "timeouts": 0,
+        "truncated": 0,
+        "readersOpen": 0,
+        "l0Stops": 0,
+        "throttled": 0
+      }
+    },
+    "putByCategory": {
+      "wal": 200,
+      "manifest": 724,
+      "compacted_sst": 362,
+      "lease": 168,
+      "clean_marker": 2,
+      "other": 2840
+    },
+    "getByCategory": {
+      "wal": 27,
+      "manifest": 224260,
+      "compacted_sst": 64960,
+      "lease": 16,
+      "clean_marker": 12,
+      "other": 203860
+    },
+    "openReaders": 1,
+    "openWriters": 1
+  },
+  "server_status_end": {
+    "s3": {
+      "get": 16,
+      "getRange": 173,
+      "head": 3,
+      "list": 4,
+      "put": 3,
+      "multipartPart": 0,
+      "copy": 0,
+      "delete": 0,
+      "getBytes": 15426095,
+      "putBytes": 258
+    },
+    "compactor": {
+      "enabled": true,
+      "started": 0,
+      "running": 0,
+      "publishes": 0,
+      "absorbs": 0,
+      "merges": 0,
+      "reseals": 0,
+      "errors": 0
+    },
+    "compaction": {
+      "passes": 0,
+      "running": 0,
+      "longMerges": 0,
+      "stalled": 0,
+      "preempted": 0,
+      "gcSkippedBusy": 0
+    },
+    "derived": {
+      "write": true,
+      "encoded": 0,
+      "plain": 0,
+      "messageRows": 0,
+      "fallbacks": 0,
+      "rebuilds": 100,
+      "resealRebuilds": 0,
+      "rebuildErrors": 0
+    },
+    "backgroundReads": {
+      "gets": 44,
+      "bytes": 1370394,
+      "micros": 135862
+    },
+    "quaderno": {
+      "sent": 0,
+      "batches": 0,
+      "failed": 0,
+      "confirmedFlush": 0
+    },
+    "walGc": {
+      "passes": 0,
+      "deleted": 0,
+      "listUs": 0,
+      "deleteUs": 0,
+      "totalUs": 0,
+      "noop": 0
+    },
+    "sstGc": {
+      "passes": 0,
+      "deletedSsts": 0,
+      "deletedManifests": 0,
+      "noop": 0,
+      "closeLight": 0
+    },
+    "requests": {
+      "put": 3,
+      "copy": 0,
+      "list": 4,
+      "get": 189,
+      "head": 3,
+      "delete": 0,
+      "billedPutTier": 7,
+      "billedGetTier": 192,
+      "putBytes": 258,
+      "getBytes": 15426095
+    },
+    "groupCommit": {
+      "commits": 0,
+      "flushes": 0,
+      "windowUs": 0,
+      "adaptiveWaits": 0,
+      "adaptiveWaitUs": 0,
+      "relaxedAcks": 0
+    },
+    "localLog": {
+      "records": 0,
+      "fsyncs": 0,
+      "uploads": 0,
+      "replayed": 0
+    },
+    "agentLane": {
+      "batches": 0,
+      "mixedBatches": 0,
+      "commits": 0,
+      "flushes": 0,
+      "txnFlushes": 0,
+      "ackRefused": 0,
+      "windowUs": 100000,
+      "followed": 0,
+      "memtableFlushes": 0,
+      "followHits": 0
+    },
+    "leases": {
+      "acquired": 3,
+      "takeovers": 0,
+      "refused": 0,
+      "renewals": 0,
+      "renewFailures": 0,
+      "lost": 0
+    },
+    "maintenance": {
+      "compactRuns": 0,
+      "compactPuts": 0,
+      "compactGets": 0,
+      "gcRuns": 0,
+      "gcDeletes": 0,
+      "gcLists": 0,
+      "gcGets": 0,
+      "l0WatchRequests": 0,
+      "abandonCloseTimeouts": 0,
+      "abandonClosesPending": 0,
+      "l0WatchDeferred": 0,
+      "compactionWarm": {
+        "runs": 0,
+        "hotBlocks": 0,
+        "ranges": 0,
+        "fails": 0,
+        "timeouts": 0,
+        "truncated": 0,
+        "readersOpen": 0,
+        "l0Stops": 0,
+        "throttled": 0
+      }
+    },
+    "putByCategory": {
+      "wal": 0,
+      "manifest": 0,
+      "compacted_sst": 0,
+      "lease": 3,
+      "clean_marker": 0,
+      "other": 0
+    },
+    "getByCategory": {
+      "wal": 0,
+      "manifest": 7,
+      "compacted_sst": 20,
+      "lease": 3,
+      "clean_marker": 2,
+      "other": 160
+    },
+    "openReaders": 2,
+    "openWriters": 0
+  },
+  "log_failed": {
+    "after_write": 0,
+    "before_cold": 0,
+    "end": 0
+  },
+  "health": [
+    {
+      "when": "after write",
+      "rc": 0,
+      "output": "{\n \"ok\": true,\n \"members\": {\n  \"log-0\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"log-1\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"log-2\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"cook\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"spare\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"minio\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  }\n },\n \"not_healthy\": [],\n \"check\": {\n  \"line\": \"fenvix-log\",\n  \"durability\": \"3-zone log, acknowledged at 2 of 3 copies\",\n  \"quaderno\": {\n   \"sent\": 33401,\n   \"batches\": 33318,\n   \"failed\": 0,\n   \"confirmedFlush\": 11\n  },\n  \"ok\": true\n }\n}\n"
+    },
+    {
+      "when": "end",
+      "rc": 0,
+      "output": "{\n \"ok\": true,\n \"members\": {\n  \"log-0\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"log-1\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"log-2\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"cook\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"spare\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"minio\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  }\n },\n \"not_healthy\": [],\n \"check\": {\n  \"line\": \"fenvix-log\",\n  \"durability\": \"3-zone log, acknowledged at 2 of 3 copies\",\n  \"quaderno\": {\n   \"sent\": 0,\n   \"batches\": 0,\n   \"failed\": 0,\n   \"confirmedFlush\": 0\n  },\n  \"ok\": true\n }\n}\n"
+    }
+  ],
+  "client_cpu": {
+    "samples": 145,
+    "process_cores_mean": {
+      "30694": 0.483
+    },
+    "process_cores_max_mean": 0.483,
+    "host_busy_mean": 0.6,
+    "host_busy_ge_95pct_share": 0.0,
+    "client_limited": false,
+    "rule": "limited if a client process averages >= 0.9 core or the host is >= 95% busy in > 10% of samples"
+  },
+  "client_limited": false,
+  "settle": {
+    "idle": true,
+    "capped": false,
+    "compaction2_published": true,
+    "seconds": 842.4,
+    "watched": [
+      "compactor.publishes",
+      "compactor.absorbs",
+      "compactor.merges",
+      "compactor.reseals",
+      "compactor.errors",
+      "compaction.passes",
+      "compaction.running",
+      "walGc.deleted",
+      "sstGc.deletedSsts",
+      "derived.encoded",
+      "S3 objects and bytes under tenants/app_demo/ by kind"
+    ],
+    "poll_s": 30,
+    "stable_polls": 25,
+    "polls": [
+      {
+        "t": 0.3,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 145,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_lease": 1,
+          "compacted": 178,
+          "compactions": 163,
+          "fx": 99,
+          "manifest": 152,
+          "wal": 3
+        },
+        "s3_bytes": {
+          "_lease": 86,
+          "compacted": 4586763643,
+          "compactions": 254126,
+          "fx": 596248865,
+          "manifest": 1107664,
+          "wal": 19005826
+        }
+      },
+      {
+        "t": 30.6,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 145,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_lease": 1,
+          "compacted": 178,
+          "compactions": 163,
+          "fx": 99,
+          "manifest": 152,
+          "wal": 3
+        },
+        "s3_bytes": {
+          "_lease": 86,
+          "compacted": 4586763643,
+          "compactions": 254126,
+          "fx": 596248865,
+          "manifest": 1107664,
+          "wal": 19005826
+        }
+      },
+      {
+        "t": 60.8,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 1,
+          "walGc.deleted": 145,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 183,
+          "compactions": 170,
+          "fx": 99,
+          "manifest": 157,
+          "wal": 3
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 4617893351,
+          "compactions": 264980,
+          "fx": 596248865,
+          "manifest": 1147170,
+          "wal": 19005826
+        }
+      },
+      {
+        "t": 90.9,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 145,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 187,
+          "compactions": 175,
+          "fx": 99,
+          "manifest": 230,
+          "wal": 3
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 4736680228,
+          "compactions": 273198,
+          "fx": 596248865,
+          "manifest": 1488764,
+          "wal": 19005826
+        }
+      },
+      {
+        "t": 121.0,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 151.0,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 181.1,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 211.1,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 241.2,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 271.2,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 301.3,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 331.4,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 361.4,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 391.5,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 421.5,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 451.6,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 481.6,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 511.7,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 541.7,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 571.8,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 601.8,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 631.9,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 662.0,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 692.1,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 722.2,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 752.3,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 782.4,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 812.4,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      },
+      {
+        "t": 842.4,
+        "watch": {
+          "compactor.publishes": 48,
+          "compactor.absorbs": 36,
+          "compactor.merges": 0,
+          "compactor.reseals": 12,
+          "compactor.errors": 0,
+          "compaction.passes": 5,
+          "compaction.running": 0,
+          "walGc.deleted": 147,
+          "sstGc.deletedSsts": 232,
+          "derived.encoded": 240729
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 99,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1127125958,
+          "compactions": 1266,
+          "fx": 596248865,
+          "gc": 6,
+          "manifest": 2770,
+          "wal": 2270418
+        }
+      }
+    ]
+  },
+  "cold": {
+    "restart": {
+      "cmd": "/root/.fenvix-agentbench-venv/bin/python /home/user/bench-h/bench/agent-checkpoints/lines.py restart fenvix-log",
+      "rc": 0,
+      "seconds": 5.4,
+      "output": "16:17:44 restart: docker restart minio log-0 log-1 log-2 cook spare in 4.0 s\n16:17:45 drop_caches: done\n16:17:45 restart: line up again in 4.8 s, check ok=True\n"
+    },
+    "threads": 100,
+    "eligible": 228,
+    "errors": [],
+    "n_errors": 0,
+    "first_thread": "u000070-t000"
+  },
+  "read_sample": 100,
+  "erase_users": 15,
+  "correctness": {
+    "wrong_reads": 0,
+    "by_kind": {},
+    "reads_checked": 12086,
+    "checkpoints_written": 16989,
+    "examples": []
+  },
+  "wrong_reads": 0,
+  "delta_test": {
+    "test": "agent checkpoint delta test",
+    "target": "fenvix",
+    "stored_bytes_source": "UNKNOWN until fenvixSstInfo exists (compaction 2 steps 4-8)",
+    "threads": 200,
+    "logical_bytes": 1044060263,
+    "unique_bytes": 18974556,
+    "stored_bytes": null
+  },
+  "ok": true
+}

@@ -573,9 +573,15 @@ struct Args {
     sealed_compactor: bool,
     #[arg(long)]
     no_sealed_compactor: bool,
-    /// With `--sealed-compactor`: the drop of absorbed SlateDB rows (off by default until step 7b pairs forks).
-    #[arg(long)]
+    /// With the compactor: the drop of SlateDB rows our sealed runs already hold (the fold's filter, `fx/drop.rs`). On by
+    /// default since P-perf-bytes (before, SlateDB kept a full uncompressed copy of every row: 56% of the stored bytes of
+    /// the local benchmark). `--sealed-drop false` or FENVIX_SEALED_DROP=0 keeps SlateDB a full copy.
+    #[arg(long, default_value_t = true, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
     sealed_drop: bool,
+    /// How long GC keeps a version of our manifest that nothing holds, serves or names (pairs, references, forks keep
+    /// theirs). 0 by default since P-perf-bytes (was 7 days): with the drop on such a version cannot be read.
+    #[arg(long, default_value_t = 0)]
+    sealed_version_retention_secs: u64,
     /// First course (opening.rs, measurement prototype, off by default): keep the key-value pairs of each user's first
     /// query of a visit and answer the next visit's first query from them when the answer is exact.
     #[arg(long, default_value_t = false)]
@@ -611,17 +617,17 @@ struct Args {
     /// candidate run at once. On by default (`--sealed-wave false` or FENVIX_SEALED_WAVE=0 turns it off).
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
     sealed_wave: bool,
-    /// Block codec of the sealed runs the compactor writes: `lz4` (run format v1, as before) or `zstd` (run format v2,
-    /// which a release before this one cannot read). FENVIX_SEALED_CODEC does the same.
-    #[arg(long, default_value = "lz4")]
+    /// Block codec of the sealed runs the compactor writes: `zstd` (run format v2; the default since P-perf-bytes: before
+    /// launch no older release reads these databases) or `lz4` (run format v1). FENVIX_SEALED_CODEC does the same.
+    #[arg(long, default_value = "zstd")]
     sealed_codec: String,
     /// SST block size in KiB, for the writers' flushes and the compaction's output. Default 4 (the stored format of the
     /// releases before); M29 measured 64.
     #[arg(long, default_value_t = 4)]
     sst_block_kb: u32,
-    /// SST block compression: none (default: the release before cannot read lz4, so turning it on is a one-way change),
-    /// lz4 (M29: 2.41x on chat-like documents) or zstd.
-    #[arg(long, default_value = "none")]
+    /// SST block compression: lz4 (the default since P-perf-bytes: before launch no older release has to read these
+    /// databases; M29: 2.41x on chat-like documents), zstd, or none (the stored format of the releases before).
+    #[arg(long, default_value = "lz4")]
     sst_compression: String,
     /// T of the tiered-levels compaction scheduler (M26-M31: 4); 0 = SlateDB's size-tiered scheduler.
     #[arg(long, default_value_t = 4)]
@@ -932,6 +938,7 @@ async fn run() -> Result<()> {
         tenant_bench::fx::LEASE_MARGIN_MS.store(args.sealed_lease_margin_ms, Relaxed);
         tenant_bench::fx::REMOTE_LEASE_MS.store(args.sealed_remote_lease_ms, Relaxed);
         tenant_bench::fx::GC_GRACE_MS.store(args.sealed_gc_grace_ms, Relaxed);
+        tenant_bench::fx::VERSION_RETENTION_MS.store(args.sealed_version_retention_secs.saturating_mul(1000), Relaxed);
         tenant_bench::fx::hold::HOLD_LIFE_MS.store(args.sealed_hold_life_ms, Relaxed);
         let env_c = std::env::var("FENVIX_SEALED_COMPACTOR").unwrap_or_default();
         // default since integration-3: on; off with --no-sealed-compactor or FENVIX_SEALED_COMPACTOR=0
@@ -939,7 +946,12 @@ async fn run() -> Result<()> {
         if !args.no_sealed_compactor && env_c != "0" {
             tenant_bench::fx::compactor::SERVER_ON.store(true, Relaxed);
             tenant_bench::fx::compactor::SERVER_SMALL.store(env_c == "small", Relaxed);
-            tenant_bench::fx::compactor::DROP_DEFAULT.store(args.sealed_drop, Relaxed);
+            let drop = match std::env::var("FENVIX_SEALED_DROP").as_deref() {
+                Ok("1") => true,
+                Ok("0") => false,
+                _ => args.sealed_drop,
+            };
+            tenant_bench::fx::compactor::DROP_DEFAULT.store(drop, Relaxed);
             let derive = match std::env::var("FENVIX_SEALED_DERIVE").as_deref() {
                 Ok("1") => true,
                 Ok("0") => false,

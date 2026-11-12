@@ -1,0 +1,2695 @@
+{
+  "note": "LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+  "target": "fenvix",
+  "label": "local fenvix-log: 3-zone log, acknowledged at 2 of 3 copies",
+  "durability": "not stated",
+  "profile": "medium",
+  "seed": 42,
+  "workers": 1,
+  "engine_binary_sha256": "a0f09b48cf8459a48fe95e8d524c95404e7b538b44d30a23b9c278a9e101151f",
+  "plan": {
+    "threads": 354,
+    "turns": 3856,
+    "digest": "5cb6c32970cc7a18"
+  },
+  "client": {
+    "python": "3.12.3",
+    "host": "vm"
+  },
+  "write": {
+    "seconds": 362.922,
+    "errors": [],
+    "processes": 1,
+    "client_cpu": {
+      "samples": 181,
+      "process_cores_mean": {
+        "4624": 0.403
+      },
+      "process_cores_max_mean": 0.403,
+      "host_busy_mean": 0.726,
+      "host_busy_ge_95pct_share": 0.0,
+      "client_limited": false,
+      "rule": "limited if a client process averages >= 0.9 core or the host is >= 95% busy in > 10% of samples"
+    },
+    "steps_per_second": 51.32
+  },
+  "read": {
+    "threads_read": 100,
+    "inconsistencies": 0
+  },
+  "erase": {
+    "users_erased": 3,
+    "threads_erased": 3,
+    "threads_left_readable": 0,
+    "checkpoints_left_readable_by_id": 0
+  },
+  "latency_ms": {
+    "delete_thread": {
+      "n": 3,
+      "p50": 145.175,
+      "p90": 218.369,
+      "p99": 218.369,
+      "max": 218.369,
+      "mean": 159.14
+    },
+    "erase_user": {
+      "n": 3,
+      "p50": 147.02,
+      "p90": 220.481,
+      "p99": 220.481,
+      "max": 220.481,
+      "mean": 161.167
+    },
+    "list": {
+      "n": 100,
+      "p50": 61.332,
+      "p90": 586.329,
+      "p99": 2505.892,
+      "max": 2505.892,
+      "mean": 227.288
+    },
+    "list_limit10": {
+      "n": 100,
+      "p50": 21.433,
+      "p90": 45.699,
+      "p99": 270.307,
+      "max": 270.307,
+      "mean": 32.661
+    },
+    "put": {
+      "n": 18624,
+      "p50": 5.471,
+      "p90": 14.329,
+      "p99": 70.455,
+      "max": 7989.582,
+      "mean": 9.474
+    },
+    "put[chat]": {
+      "n": 13023,
+      "p50": 5.178,
+      "p90": 14.007,
+      "p99": 68.833,
+      "max": 7989.582,
+      "mean": 9.34
+    },
+    "put[coding]": {
+      "n": 5601,
+      "p50": 6.14,
+      "p90": 15.238,
+      "p99": 77.903,
+      "max": 343.225,
+      "mean": 9.787
+    },
+    "put_writes": {
+      "n": 14768,
+      "p50": 6.557,
+      "p90": 16.469,
+      "p99": 69.776,
+      "max": 375.059,
+      "mean": 9.963
+    },
+    "resume[cold]": {
+      "n": 50,
+      "p50": 12.816,
+      "p90": 19.015,
+      "p99": 27.655,
+      "max": 27.655,
+      "mean": 12.867
+    },
+    "resume[erase_verify]": {
+      "n": 3,
+      "p50": 1268.396,
+      "p90": 2423.703,
+      "p99": 2423.703,
+      "max": 2423.703,
+      "mean": 1452.293
+    },
+    "resume[read]": {
+      "n": 100,
+      "p50": 13.844,
+      "p90": 19.67,
+      "p99": 110.351,
+      "max": 110.351,
+      "mean": 14.284
+    },
+    "resume[write/first]": {
+      "n": 354,
+      "p50": 3.552,
+      "p90": 9.629,
+      "p99": 37.459,
+      "max": 58.011,
+      "mean": 5.119
+    },
+    "resume[write/long]": {
+      "n": 90,
+      "p50": 15.066,
+      "p90": 62.351,
+      "p99": 270.319,
+      "max": 270.319,
+      "mean": 29.709
+    },
+    "resume[write/none]": {
+      "n": 3269,
+      "p50": 3.924,
+      "p90": 10.664,
+      "p99": 48.818,
+      "max": 279.917,
+      "mean": 6.733
+    },
+    "resume[write/short]": {
+      "n": 143,
+      "p50": 3.384,
+      "p90": 10.017,
+      "p99": 51.92,
+      "max": 127.639,
+      "mean": 6.062
+    },
+    "save_step": {
+      "n": 18624,
+      "p50": 11.017,
+      "p90": 28.892,
+      "p99": 125.501,
+      "max": 7993.097,
+      "mean": 17.373
+    },
+    "save_step[chat]": {
+      "n": 13023,
+      "p50": 10.22,
+      "p90": 27.441,
+      "p99": 119.414,
+      "max": 7993.097,
+      "mean": 16.681
+    },
+    "save_step[coding]": {
+      "n": 5601,
+      "p50": 12.731,
+      "p90": 30.888,
+      "p99": 137.848,
+      "max": 698.712,
+      "mean": 18.981
+    },
+    "time_travel": {
+      "n": 300,
+      "p50": 2.826,
+      "p90": 4.549,
+      "p99": 7.162,
+      "max": 82.543,
+      "mean": 3.339
+    }
+  },
+  "bytes": {
+    "checkpoints": 18624,
+    "put_writes_calls": 14768,
+    "checkpoint_bytes": 1046453094,
+    "writes_bytes": 20923334,
+    "message_payload_bytes_all_checkpoints": 1038496994,
+    "unique_message_bytes": 21089993,
+    "logical_total": 1067376428,
+    "stored": 1716597765,
+    "stored_from": "S3 objects under tenants/app_demo/",
+    "wal_bytes": 2572810,
+    "fx_bytes": 618022521,
+    "compacted_bytes": 1095986468,
+    "wal_share": 0.0015,
+    "fx_share": 0.36,
+    "compacted_share": 0.6385,
+    "stored_per_logical": 1.6082,
+    "stored_per_checkpoint": 92171.3
+  },
+  "sizes": {
+    "dbStats": {
+      "objects": 44304,
+      "dataSize": 1080078554,
+      "storageSize": 1080078554,
+      "indexSize": 10313568,
+      "totalSize": 1090392122
+    },
+    "collStats": {
+      "checkpoint_writes": {
+        "count": 25680,
+        "size": 28034150,
+        "storageSize": 28034150,
+        "totalIndexSize": 6830880
+      },
+      "checkpoints": {
+        "count": 18624,
+        "size": 1052044404,
+        "storageSize": 1052044404,
+        "totalIndexSize": 3482688
+      }
+    },
+    "s3": {
+      "total": 1716597765,
+      "objects": 129,
+      "by_kind": {
+        "_lease": 86,
+        "compacted": 1095986468,
+        "compactions": 2740,
+        "fx": 618022521,
+        "gc": 6,
+        "manifest": 13134,
+        "wal": 2572810
+      },
+      "count_by_kind": {
+        "_lease": 1,
+        "compacted": 12,
+        "compactions": 2,
+        "fx": 106,
+        "gc": 2,
+        "manifest": 3,
+        "wal": 3
+      }
+    },
+    "stored_bytes": 1716597765,
+    "stored_from": "S3 objects under tenants/app_demo/",
+    "serverStatus_s3": {
+      "get": 133169,
+      "getRange": 62995,
+      "head": 89,
+      "list": 677,
+      "put": 1450,
+      "multipartPart": 714,
+      "copy": 0,
+      "delete": 1366,
+      "getBytes": 10679328594,
+      "putBytes": 9943842979
+    },
+    "s3_two_levels": {
+      "total": 1716599135,
+      "objects": 130,
+      "by_kind": {
+        "_lease": 86,
+        "compacted/01M75V35WBV6VRNNY6FQQCM8N3.sst": 227210778,
+        "compacted/01M75V35WG1GEMKP420FTHSHDM.sst": 226821850,
+        "compacted/01M75V35XMRDSEY383FGQ7DSP4.sst": 223472658,
+        "compacted/01M75V35XWJFZARR8D1PK75FFK.sst": 225624592,
+        "compacted/01M75V4HQ62VZR2X5ZZGKPKT6Y.sst": 41392257,
+        "compacted/01M75V4HQZ3AGAF6791GD1D63G.sst": 40832307,
+        "compacted/01M75V4HRS4GMD1WKMAPPGQ056.sst": 40584919,
+        "compacted/01M75V4HSTM0SPF3S28G9AN3QB.sst": 42223084,
+        "compacted/01M75V7FM6V2CCPFHHTQQFQP8N.sst": 2811030,
+        "compacted/01M75V7FMXD0F7EVV5WYKV8YK5.sst": 8394081,
+        "compacted/01M75V7FMY91W45AKH7BRY4TRG.sst": 8344927,
+        "compacted/01M75V7FNBEQAZ0CXSTWQEEYQP.sst": 8273985,
+        "compactions/00000000000000000416.compactions": 1370,
+        "compactions/00000000000000000417.compactions": 1370,
+        "compactions/00000000000000000418.compactions": 1370,
+        "fx/e1-announced": 20,
+        "fx/manifest": 97698,
+        "fx/run": 617924803,
+        "gc/compactions.boundary": 3,
+        "gc/manifest.boundary": 3,
+        "manifest/00000000000000000379.manifest": 4378,
+        "manifest/00000000000000000380.manifest": 4378,
+        "manifest/00000000000000000381.manifest": 4378,
+        "wal/00000000000000000148.sst": 2572411,
+        "wal/00000000000000000149.sst": 0,
+        "wal/00000000000000000150.sst": 399
+      },
+      "count_by_kind": {
+        "_lease": 1,
+        "compacted/01M75V35WBV6VRNNY6FQQCM8N3.sst": 1,
+        "compacted/01M75V35WG1GEMKP420FTHSHDM.sst": 1,
+        "compacted/01M75V35XMRDSEY383FGQ7DSP4.sst": 1,
+        "compacted/01M75V35XWJFZARR8D1PK75FFK.sst": 1,
+        "compacted/01M75V4HQ62VZR2X5ZZGKPKT6Y.sst": 1,
+        "compacted/01M75V4HQZ3AGAF6791GD1D63G.sst": 1,
+        "compacted/01M75V4HRS4GMD1WKMAPPGQ056.sst": 1,
+        "compacted/01M75V4HSTM0SPF3S28G9AN3QB.sst": 1,
+        "compacted/01M75V7FM6V2CCPFHHTQQFQP8N.sst": 1,
+        "compacted/01M75V7FMXD0F7EVV5WYKV8YK5.sst": 1,
+        "compacted/01M75V7FMY91W45AKH7BRY4TRG.sst": 1,
+        "compacted/01M75V7FNBEQAZ0CXSTWQEEYQP.sst": 1,
+        "compactions/00000000000000000416.compactions": 1,
+        "compactions/00000000000000000417.compactions": 1,
+        "compactions/00000000000000000418.compactions": 1,
+        "fx/e1-announced": 1,
+        "fx/manifest": 53,
+        "fx/run": 52,
+        "gc/compactions.boundary": 1,
+        "gc/manifest.boundary": 1,
+        "manifest/00000000000000000379.manifest": 1,
+        "manifest/00000000000000000380.manifest": 1,
+        "manifest/00000000000000000381.manifest": 1,
+        "wal/00000000000000000148.sst": 1,
+        "wal/00000000000000000149.sst": 1,
+        "wal/00000000000000000150.sst": 1
+      }
+    },
+    "status": {
+      "s3": {
+        "get": 133182,
+        "getRange": 62995,
+        "head": 89,
+        "list": 677,
+        "put": 1450,
+        "multipartPart": 714,
+        "copy": 0,
+        "delete": 1366,
+        "getBytes": 10679328594,
+        "putBytes": 9943842979
+      },
+      "compactor": {
+        "enabled": true,
+        "started": 2,
+        "running": 1,
+        "publishes": 50,
+        "absorbs": 37,
+        "merges": 0,
+        "reseals": 13,
+        "errors": 0
+      },
+      "compaction": {
+        "passes": 4,
+        "running": 0,
+        "longMerges": 0,
+        "stalled": 0,
+        "preempted": 0,
+        "gcSkippedBusy": 3
+      },
+      "derived": {
+        "write": true,
+        "encoded": 265052,
+        "plain": 86393,
+        "messageRows": 156527,
+        "fallbacks": 0,
+        "rebuilds": 366682,
+        "resealRebuilds": 232029,
+        "rebuildErrors": 0
+      },
+      "backgroundReads": {
+        "gets": 58,
+        "bytes": 1261964,
+        "micros": 86648
+      },
+      "quaderno": {
+        "sent": 33403,
+        "batches": 33319,
+        "failed": 0,
+        "confirmedFlush": 15
+      },
+      "walGc": {
+        "passes": 32,
+        "deleted": 149,
+        "listUs": 4235,
+        "deleteUs": 238421,
+        "totalUs": 311415,
+        "noop": 5
+      },
+      "sstGc": {
+        "passes": 8,
+        "deletedSsts": 404,
+        "deletedManifests": 632,
+        "noop": 3,
+        "closeLight": 0
+      },
+      "requests": {
+        "put": 2574,
+        "copy": 0,
+        "list": 677,
+        "get": 196178,
+        "head": 89,
+        "delete": 1366,
+        "billedPutTier": 3251,
+        "billedGetTier": 196267,
+        "putBytes": 9943842979,
+        "getBytes": 10679328594
+      },
+      "groupCommit": {
+        "commits": 33396,
+        "flushes": 0,
+        "windowUs": 0,
+        "adaptiveWaits": 0,
+        "adaptiveWaitUs": 0,
+        "relaxedAcks": 0
+      },
+      "localLog": {
+        "records": 33402,
+        "fsyncs": 0,
+        "uploads": 14,
+        "replayed": 0
+      },
+      "agentLane": {
+        "batches": 0,
+        "mixedBatches": 0,
+        "commits": 0,
+        "flushes": 0,
+        "txnFlushes": 0,
+        "ackRefused": 0,
+        "windowUs": 100000,
+        "followed": 0,
+        "memtableFlushes": 0,
+        "followHits": 0
+      },
+      "leases": {
+        "acquired": 15,
+        "takeovers": 0,
+        "refused": 0,
+        "renewals": 139,
+        "renewFailures": 0,
+        "lost": 0
+      },
+      "maintenance": {
+        "compactRuns": 4,
+        "compactPuts": 153,
+        "compactGets": 1374,
+        "gcRuns": 34,
+        "gcDeletes": 316,
+        "gcLists": 16,
+        "gcGets": 59,
+        "l0WatchRequests": 260,
+        "abandonCloseTimeouts": 0,
+        "abandonClosesPending": 0,
+        "l0WatchDeferred": 0,
+        "compactionWarm": {
+          "runs": 3,
+          "hotBlocks": 129,
+          "ranges": 89,
+          "fails": 0,
+          "timeouts": 0,
+          "truncated": 0,
+          "readersOpen": 0,
+          "l0Stops": 0,
+          "throttled": 0
+        }
+      },
+      "putByCategory": {
+        "wal": 152,
+        "manifest": 448,
+        "compacted_sst": 267,
+        "lease": 156,
+        "clean_marker": 2,
+        "other": 425
+      },
+      "getByCategory": {
+        "wal": 27,
+        "manifest": 18484,
+        "compacted_sst": 61972,
+        "lease": 15,
+        "clean_marker": 11,
+        "other": 115758
+      },
+      "openReaders": 1,
+      "openWriters": 1
+    }
+  },
+  "sizes_after_erase": {
+    "dbStats": {
+      "objects": 43950,
+      "dataSize": 1067707763,
+      "storageSize": 1067707763,
+      "indexSize": 10230306,
+      "totalSize": 1077938069
+    },
+    "collStats": {
+      "checkpoint_writes": {
+        "count": 25464,
+        "size": 27742078,
+        "storageSize": 27742078,
+        "totalIndexSize": 6773424
+      },
+      "checkpoints": {
+        "count": 18486,
+        "size": 1039965685,
+        "storageSize": 1039965685,
+        "totalIndexSize": 3456882
+      }
+    },
+    "s3": {
+      "total": 1890624490,
+      "objects": 186,
+      "by_kind": {
+        "_lease": 86,
+        "compacted": 1096140310,
+        "compactions": 12424,
+        "fx": 794412816,
+        "gc": 6,
+        "manifest": 46290,
+        "wal": 12558
+      },
+      "count_by_kind": {
+        "_lease": 1,
+        "compacted": 18,
+        "compactions": 8,
+        "fx": 146,
+        "gc": 2,
+        "manifest": 9,
+        "wal": 2
+      }
+    },
+    "stored_bytes": 1890624490,
+    "stored_from": "S3 objects under tenants/app_demo/",
+    "serverStatus_s3": {
+      "get": 138492,
+      "getRange": 63281,
+      "head": 91,
+      "list": 948,
+      "put": 1526,
+      "multipartPart": 746,
+      "copy": 0,
+      "delete": 1377,
+      "getBytes": 10886454819,
+      "putBytes": 10120555177
+    },
+    "s3_two_levels": {
+      "total": 1890624490,
+      "objects": 186,
+      "by_kind": {
+        "_lease": 86,
+        "compacted/01M75V35WBV6VRNNY6FQQCM8N3.sst": 227210778,
+        "compacted/01M75V35WG1GEMKP420FTHSHDM.sst": 226821850,
+        "compacted/01M75V35XMRDSEY383FGQ7DSP4.sst": 223472658,
+        "compacted/01M75V35XWJFZARR8D1PK75FFK.sst": 225624592,
+        "compacted/01M75V4HQ62VZR2X5ZZGKPKT6Y.sst": 41392257,
+        "compacted/01M75V4HQZ3AGAF6791GD1D63G.sst": 40832307,
+        "compacted/01M75V4HRS4GMD1WKMAPPGQ056.sst": 40584919,
+        "compacted/01M75V4HSTM0SPF3S28G9AN3QB.sst": 42223084,
+        "compacted/01M75V7FM6V2CCPFHHTQQFQP8N.sst": 2811030,
+        "compacted/01M75V7FMXD0F7EVV5WYKV8YK5.sst": 8394081,
+        "compacted/01M75V7FMY91W45AKH7BRY4TRG.sst": 8344927,
+        "compacted/01M75V7FNBEQAZ0CXSTWQEEYQP.sst": 8273985,
+        "compacted/01M75W4D6FR69TXR133WGCEVA0.sst": 22370,
+        "compacted/01M75W4D81A1QF1Y0511CPJ2BD.sst": 41974,
+        "compacted/01M75W4EMJXYG2Y50X277GG4E1.sst": 8825,
+        "compacted/01M75W4MPBZ4R5BJRTWZYTP34C.sst": 5109,
+        "compacted/01M75W4MY3YTPEM7Q22ZAHVARE.sst": 17314,
+        "compacted/01M75W4MY8EMMNVGF96W0DF0GH.sst": 58250,
+        "compactions/00000000000000000416.compactions": 1370,
+        "compactions/00000000000000000417.compactions": 1370,
+        "compactions/00000000000000000418.compactions": 1370,
+        "compactions/00000000000000000419.compactions": 1570,
+        "compactions/00000000000000000420.compactions": 1570,
+        "compactions/00000000000000000421.compactions": 1610,
+        "compactions/00000000000000000422.compactions": 2386,
+        "compactions/00000000000000000423.compactions": 1178,
+        "fx/e1-announced": 20,
+        "fx/erasures": 4479,
+        "fx/manifest": 119693,
+        "fx/run": 794288624,
+        "gc/compactions.boundary": 3,
+        "gc/manifest.boundary": 3,
+        "manifest/00000000000000000379.manifest": 4378,
+        "manifest/00000000000000000380.manifest": 4378,
+        "manifest/00000000000000000381.manifest": 4378,
+        "manifest/00000000000000000382.manifest": 4770,
+        "manifest/00000000000000000383.manifest": 5250,
+        "manifest/00000000000000000384.manifest": 5634,
+        "manifest/00000000000000000385.manifest": 6034,
+        "manifest/00000000000000000386.manifest": 6098,
+        "manifest/00000000000000000387.manifest": 5370,
+        "wal/00000000000000000153.sst": 8081,
+        "wal/00000000000000000154.sst": 4477
+      },
+      "count_by_kind": {
+        "_lease": 1,
+        "compacted/01M75V35WBV6VRNNY6FQQCM8N3.sst": 1,
+        "compacted/01M75V35WG1GEMKP420FTHSHDM.sst": 1,
+        "compacted/01M75V35XMRDSEY383FGQ7DSP4.sst": 1,
+        "compacted/01M75V35XWJFZARR8D1PK75FFK.sst": 1,
+        "compacted/01M75V4HQ62VZR2X5ZZGKPKT6Y.sst": 1,
+        "compacted/01M75V4HQZ3AGAF6791GD1D63G.sst": 1,
+        "compacted/01M75V4HRS4GMD1WKMAPPGQ056.sst": 1,
+        "compacted/01M75V4HSTM0SPF3S28G9AN3QB.sst": 1,
+        "compacted/01M75V7FM6V2CCPFHHTQQFQP8N.sst": 1,
+        "compacted/01M75V7FMXD0F7EVV5WYKV8YK5.sst": 1,
+        "compacted/01M75V7FMY91W45AKH7BRY4TRG.sst": 1,
+        "compacted/01M75V7FNBEQAZ0CXSTWQEEYQP.sst": 1,
+        "compacted/01M75W4D6FR69TXR133WGCEVA0.sst": 1,
+        "compacted/01M75W4D81A1QF1Y0511CPJ2BD.sst": 1,
+        "compacted/01M75W4EMJXYG2Y50X277GG4E1.sst": 1,
+        "compacted/01M75W4MPBZ4R5BJRTWZYTP34C.sst": 1,
+        "compacted/01M75W4MY3YTPEM7Q22ZAHVARE.sst": 1,
+        "compacted/01M75W4MY8EMMNVGF96W0DF0GH.sst": 1,
+        "compactions/00000000000000000416.compactions": 1,
+        "compactions/00000000000000000417.compactions": 1,
+        "compactions/00000000000000000418.compactions": 1,
+        "compactions/00000000000000000419.compactions": 1,
+        "compactions/00000000000000000420.compactions": 1,
+        "compactions/00000000000000000421.compactions": 1,
+        "compactions/00000000000000000422.compactions": 1,
+        "compactions/00000000000000000423.compactions": 1,
+        "fx/e1-announced": 1,
+        "fx/erasures": 6,
+        "fx/manifest": 64,
+        "fx/run": 75,
+        "gc/compactions.boundary": 1,
+        "gc/manifest.boundary": 1,
+        "manifest/00000000000000000379.manifest": 1,
+        "manifest/00000000000000000380.manifest": 1,
+        "manifest/00000000000000000381.manifest": 1,
+        "manifest/00000000000000000382.manifest": 1,
+        "manifest/00000000000000000383.manifest": 1,
+        "manifest/00000000000000000384.manifest": 1,
+        "manifest/00000000000000000385.manifest": 1,
+        "manifest/00000000000000000386.manifest": 1,
+        "manifest/00000000000000000387.manifest": 1,
+        "wal/00000000000000000153.sst": 1,
+        "wal/00000000000000000154.sst": 1
+      }
+    },
+    "status": {
+      "s3": {
+        "get": 138542,
+        "getRange": 63281,
+        "head": 91,
+        "list": 948,
+        "put": 1526,
+        "multipartPart": 746,
+        "copy": 0,
+        "delete": 1377,
+        "getBytes": 10886454819,
+        "putBytes": 10120555177
+      },
+      "compactor": {
+        "enabled": true,
+        "started": 2,
+        "running": 1,
+        "publishes": 55,
+        "absorbs": 41,
+        "merges": 0,
+        "reseals": 14,
+        "errors": 0
+      },
+      "compaction": {
+        "passes": 4,
+        "running": 0,
+        "longMerges": 0,
+        "stalled": 0,
+        "preempted": 0,
+        "gcSkippedBusy": 3
+      },
+      "derived": {
+        "write": true,
+        "encoded": 331536,
+        "plain": 108043,
+        "messageRows": 195691,
+        "fallbacks": 0,
+        "rebuilds": 367174,
+        "resealRebuilds": 297649,
+        "rebuildErrors": 0
+      },
+      "backgroundReads": {
+        "gets": 58,
+        "bytes": 1261964,
+        "micros": 86648
+      },
+      "quaderno": {
+        "sent": 33409,
+        "batches": 33325,
+        "failed": 0,
+        "confirmedFlush": 16
+      },
+      "walGc": {
+        "passes": 33,
+        "deleted": 154,
+        "listUs": 4235,
+        "deleteUs": 242517,
+        "totalUs": 317148,
+        "noop": 5
+      },
+      "sstGc": {
+        "passes": 8,
+        "deletedSsts": 404,
+        "deletedManifests": 632,
+        "noop": 3,
+        "closeLight": 0
+      },
+      "requests": {
+        "put": 2735,
+        "copy": 0,
+        "list": 948,
+        "get": 201825,
+        "head": 91,
+        "delete": 1377,
+        "billedPutTier": 3683,
+        "billedGetTier": 201916,
+        "putBytes": 10120555177,
+        "getBytes": 10886454819
+      },
+      "groupCommit": {
+        "commits": 33402,
+        "flushes": 0,
+        "windowUs": 0,
+        "adaptiveWaits": 0,
+        "adaptiveWaitUs": 0,
+        "relaxedAcks": 0
+      },
+      "localLog": {
+        "records": 33408,
+        "fsyncs": 0,
+        "uploads": 15,
+        "replayed": 0
+      },
+      "agentLane": {
+        "batches": 0,
+        "mixedBatches": 0,
+        "commits": 0,
+        "flushes": 0,
+        "txnFlushes": 0,
+        "ackRefused": 0,
+        "windowUs": 100000,
+        "followed": 0,
+        "memtableFlushes": 0,
+        "followHits": 0
+      },
+      "leases": {
+        "acquired": 15,
+        "takeovers": 0,
+        "refused": 0,
+        "renewals": 140,
+        "renewFailures": 0,
+        "lost": 0
+      },
+      "maintenance": {
+        "compactRuns": 4,
+        "compactPuts": 153,
+        "compactGets": 1374,
+        "gcRuns": 35,
+        "gcDeletes": 321,
+        "gcLists": 16,
+        "gcGets": 60,
+        "l0WatchRequests": 260,
+        "abandonCloseTimeouts": 0,
+        "abandonClosesPending": 0,
+        "l0WatchDeferred": 0,
+        "compactionWarm": {
+          "runs": 3,
+          "hotBlocks": 129,
+          "ranges": 89,
+          "fails": 0,
+          "timeouts": 0,
+          "truncated": 0,
+          "readersOpen": 0,
+          "l0Stops": 0,
+          "throttled": 0
+        }
+      },
+      "putByCategory": {
+        "wal": 156,
+        "manifest": 469,
+        "compacted_sst": 273,
+        "lease": 157,
+        "clean_marker": 2,
+        "other": 469
+      },
+      "getByCategory": {
+        "wal": 27,
+        "manifest": 19943,
+        "compacted_sst": 62071,
+        "lease": 15,
+        "clean_marker": 11,
+        "other": 119849
+      },
+      "openReaders": 1,
+      "openWriters": 1
+    }
+  },
+  "s3_put_requests_during_write": 1227,
+  "server_status_before": {
+    "s3": {
+      "get": 18,
+      "getRange": 0,
+      "head": 16,
+      "list": 25,
+      "put": 12,
+      "multipartPart": 0,
+      "copy": 0,
+      "delete": 9,
+      "getBytes": 138,
+      "putBytes": 976
+    },
+    "compactor": {
+      "enabled": true,
+      "started": 0,
+      "running": 0,
+      "publishes": 0,
+      "absorbs": 0,
+      "merges": 0,
+      "reseals": 0,
+      "errors": 0
+    },
+    "compaction": {
+      "passes": 0,
+      "running": 0,
+      "longMerges": 0,
+      "stalled": 0,
+      "preempted": 0,
+      "gcSkippedBusy": 0
+    },
+    "derived": {
+      "write": true,
+      "encoded": 0,
+      "plain": 0,
+      "messageRows": 0,
+      "fallbacks": 0,
+      "rebuilds": 0,
+      "resealRebuilds": 0,
+      "rebuildErrors": 0
+    },
+    "backgroundReads": {
+      "gets": 0,
+      "bytes": 0,
+      "micros": 0
+    },
+    "quaderno": {
+      "sent": 3,
+      "batches": 3,
+      "failed": 0,
+      "confirmedFlush": 1
+    },
+    "walGc": {
+      "passes": 0,
+      "deleted": 0,
+      "listUs": 0,
+      "deleteUs": 0,
+      "totalUs": 0,
+      "noop": 0
+    },
+    "sstGc": {
+      "passes": 0,
+      "deletedSsts": 0,
+      "deletedManifests": 0,
+      "noop": 0,
+      "closeLight": 0
+    },
+    "requests": {
+      "put": 12,
+      "copy": 0,
+      "list": 25,
+      "get": 18,
+      "head": 16,
+      "delete": 9,
+      "billedPutTier": 37,
+      "billedGetTier": 34,
+      "putBytes": 976,
+      "getBytes": 138
+    },
+    "groupCommit": {
+      "commits": 1,
+      "flushes": 0,
+      "windowUs": 0,
+      "adaptiveWaits": 0,
+      "adaptiveWaitUs": 0,
+      "relaxedAcks": 0
+    },
+    "localLog": {
+      "records": 2,
+      "fsyncs": 0,
+      "uploads": 0,
+      "replayed": 0
+    },
+    "agentLane": {
+      "batches": 0,
+      "mixedBatches": 0,
+      "commits": 0,
+      "flushes": 0,
+      "txnFlushes": 0,
+      "ackRefused": 0,
+      "windowUs": 100000,
+      "followed": 0,
+      "memtableFlushes": 0,
+      "followHits": 0
+    },
+    "leases": {
+      "acquired": 8,
+      "takeovers": 0,
+      "refused": 0,
+      "renewals": 0,
+      "renewFailures": 0,
+      "lost": 0
+    },
+    "maintenance": {
+      "compactRuns": 0,
+      "compactPuts": 0,
+      "compactGets": 0,
+      "gcRuns": 0,
+      "gcDeletes": 0,
+      "gcLists": 0,
+      "gcGets": 0,
+      "l0WatchRequests": 0,
+      "abandonCloseTimeouts": 0,
+      "abandonClosesPending": 0,
+      "l0WatchDeferred": 0,
+      "compactionWarm": {
+        "runs": 0,
+        "hotBlocks": 0,
+        "ranges": 0,
+        "fails": 0,
+        "timeouts": 0,
+        "truncated": 0,
+        "readersOpen": 0,
+        "l0Stops": 0,
+        "throttled": 0
+      }
+    },
+    "putByCategory": {
+      "wal": 1,
+      "manifest": 2,
+      "compacted_sst": 0,
+      "lease": 8,
+      "clean_marker": 0,
+      "other": 1
+    },
+    "getByCategory": {
+      "wal": 9,
+      "manifest": 4,
+      "compacted_sst": 0,
+      "lease": 8,
+      "clean_marker": 5,
+      "other": 8
+    },
+    "openReaders": 0,
+    "openWriters": 1
+  },
+  "server_status_after_write": {
+    "s3": {
+      "get": 98896,
+      "getRange": 61395,
+      "head": 45,
+      "list": 494,
+      "put": 1239,
+      "multipartPart": 710,
+      "copy": 0,
+      "delete": 621,
+      "getBytes": 9444277340,
+      "putBytes": 9878499809
+    },
+    "compactor": {
+      "enabled": true,
+      "started": 1,
+      "running": 1,
+      "publishes": 48,
+      "absorbs": 36,
+      "merges": 0,
+      "reseals": 12,
+      "errors": 0
+    },
+    "compaction": {
+      "passes": 3,
+      "running": 0,
+      "longMerges": 0,
+      "stalled": 0,
+      "preempted": 0,
+      "gcSkippedBusy": 3
+    },
+    "derived": {
+      "write": true,
+      "encoded": 232029,
+      "plain": 75586,
+      "messageRows": 137098,
+      "fallbacks": 0,
+      "rebuilds": 71,
+      "resealRebuilds": 199600,
+      "rebuildErrors": 0
+    },
+    "backgroundReads": {
+      "gets": 14,
+      "bytes": 1142,
+      "micros": 24134
+    },
+    "quaderno": {
+      "sent": 33401,
+      "batches": 33317,
+      "failed": 0,
+      "confirmedFlush": 14
+    },
+    "walGc": {
+      "passes": 16,
+      "deleted": 138,
+      "listUs": 4235,
+      "deleteUs": 226842,
+      "totalUs": 300467,
+      "noop": 1
+    },
+    "sstGc": {
+      "passes": 5,
+      "deletedSsts": 176,
+      "deletedManifests": 291,
+      "noop": 0,
+      "closeLight": 0
+    },
+    "requests": {
+      "put": 2353,
+      "copy": 0,
+      "list": 494,
+      "get": 160294,
+      "head": 45,
+      "delete": 621,
+      "billedPutTier": 2847,
+      "billedGetTier": 160339,
+      "putBytes": 9878499809,
+      "getBytes": 9444305984
+    },
+    "groupCommit": {
+      "commits": 33395,
+      "flushes": 0,
+      "windowUs": 0,
+      "adaptiveWaits": 0,
+      "adaptiveWaitUs": 0,
+      "relaxedAcks": 0
+    },
+    "localLog": {
+      "records": 33400,
+      "fsyncs": 0,
+      "uploads": 13,
+      "replayed": 0
+    },
+    "agentLane": {
+      "batches": 0,
+      "mixedBatches": 0,
+      "commits": 0,
+      "flushes": 0,
+      "txnFlushes": 0,
+      "ackRefused": 0,
+      "windowUs": 100000,
+      "followed": 0,
+      "memtableFlushes": 0,
+      "followHits": 0
+    },
+    "leases": {
+      "acquired": 14,
+      "takeovers": 0,
+      "refused": 0,
+      "renewals": 36,
+      "renewFailures": 0,
+      "lost": 0
+    },
+    "maintenance": {
+      "compactRuns": 3,
+      "compactPuts": 64,
+      "compactGets": 1015,
+      "gcRuns": 17,
+      "gcDeletes": 141,
+      "gcLists": 9,
+      "gcGets": 35,
+      "l0WatchRequests": 260,
+      "abandonCloseTimeouts": 0,
+      "abandonClosesPending": 0,
+      "l0WatchDeferred": 0,
+      "compactionWarm": {
+        "runs": 3,
+        "hotBlocks": 129,
+        "ranges": 89,
+        "fails": 0,
+        "timeouts": 0,
+        "truncated": 0,
+        "readersOpen": 0,
+        "l0Stops": 0,
+        "throttled": 0
+      }
+    },
+    "putByCategory": {
+      "wal": 149,
+      "manifest": 362,
+      "compacted_sst": 262,
+      "lease": 51,
+      "clean_marker": 1,
+      "other": 414
+    },
+    "getByCategory": {
+      "wal": 18,
+      "manifest": 13979,
+      "compacted_sst": 60719,
+      "lease": 14,
+      "clean_marker": 10,
+      "other": 85599
+    },
+    "openReaders": 1,
+    "openWriters": 1
+  },
+  "server_status_before_cold": {
+    "s3": {
+      "get": 138544,
+      "getRange": 63281,
+      "head": 91,
+      "list": 948,
+      "put": 1526,
+      "multipartPart": 746,
+      "copy": 0,
+      "delete": 1377,
+      "getBytes": 10886454819,
+      "putBytes": 10120555177
+    },
+    "compactor": {
+      "enabled": true,
+      "started": 2,
+      "running": 1,
+      "publishes": 55,
+      "absorbs": 41,
+      "merges": 0,
+      "reseals": 14,
+      "errors": 0
+    },
+    "compaction": {
+      "passes": 4,
+      "running": 0,
+      "longMerges": 0,
+      "stalled": 0,
+      "preempted": 0,
+      "gcSkippedBusy": 3
+    },
+    "derived": {
+      "write": true,
+      "encoded": 331536,
+      "plain": 108043,
+      "messageRows": 195691,
+      "fallbacks": 0,
+      "rebuilds": 367174,
+      "resealRebuilds": 297649,
+      "rebuildErrors": 0
+    },
+    "backgroundReads": {
+      "gets": 58,
+      "bytes": 1261964,
+      "micros": 86648
+    },
+    "quaderno": {
+      "sent": 33409,
+      "batches": 33325,
+      "failed": 0,
+      "confirmedFlush": 16
+    },
+    "walGc": {
+      "passes": 33,
+      "deleted": 154,
+      "listUs": 4235,
+      "deleteUs": 242517,
+      "totalUs": 317148,
+      "noop": 5
+    },
+    "sstGc": {
+      "passes": 8,
+      "deletedSsts": 404,
+      "deletedManifests": 632,
+      "noop": 3,
+      "closeLight": 0
+    },
+    "requests": {
+      "put": 2735,
+      "copy": 0,
+      "list": 948,
+      "get": 201827,
+      "head": 91,
+      "delete": 1377,
+      "billedPutTier": 3683,
+      "billedGetTier": 201918,
+      "putBytes": 10120555177,
+      "getBytes": 10886454819
+    },
+    "groupCommit": {
+      "commits": 33402,
+      "flushes": 0,
+      "windowUs": 0,
+      "adaptiveWaits": 0,
+      "adaptiveWaitUs": 0,
+      "relaxedAcks": 0
+    },
+    "localLog": {
+      "records": 33408,
+      "fsyncs": 0,
+      "uploads": 15,
+      "replayed": 0
+    },
+    "agentLane": {
+      "batches": 0,
+      "mixedBatches": 0,
+      "commits": 0,
+      "flushes": 0,
+      "txnFlushes": 0,
+      "ackRefused": 0,
+      "windowUs": 100000,
+      "followed": 0,
+      "memtableFlushes": 0,
+      "followHits": 0
+    },
+    "leases": {
+      "acquired": 15,
+      "takeovers": 0,
+      "refused": 0,
+      "renewals": 140,
+      "renewFailures": 0,
+      "lost": 0
+    },
+    "maintenance": {
+      "compactRuns": 4,
+      "compactPuts": 153,
+      "compactGets": 1374,
+      "gcRuns": 35,
+      "gcDeletes": 321,
+      "gcLists": 16,
+      "gcGets": 60,
+      "l0WatchRequests": 260,
+      "abandonCloseTimeouts": 0,
+      "abandonClosesPending": 0,
+      "l0WatchDeferred": 0,
+      "compactionWarm": {
+        "runs": 3,
+        "hotBlocks": 129,
+        "ranges": 89,
+        "fails": 0,
+        "timeouts": 0,
+        "truncated": 0,
+        "readersOpen": 0,
+        "l0Stops": 0,
+        "throttled": 0
+      }
+    },
+    "putByCategory": {
+      "wal": 156,
+      "manifest": 469,
+      "compacted_sst": 273,
+      "lease": 157,
+      "clean_marker": 2,
+      "other": 469
+    },
+    "getByCategory": {
+      "wal": 27,
+      "manifest": 19943,
+      "compacted_sst": 62071,
+      "lease": 15,
+      "clean_marker": 11,
+      "other": 119851
+    },
+    "openReaders": 1,
+    "openWriters": 1
+  },
+  "server_status_end": {
+    "s3": {
+      "get": 16,
+      "getRange": 109,
+      "head": 3,
+      "list": 4,
+      "put": 3,
+      "multipartPart": 0,
+      "copy": 0,
+      "delete": 0,
+      "getBytes": 10256509,
+      "putBytes": 258
+    },
+    "compactor": {
+      "enabled": true,
+      "started": 0,
+      "running": 0,
+      "publishes": 0,
+      "absorbs": 0,
+      "merges": 0,
+      "reseals": 0,
+      "errors": 0
+    },
+    "compaction": {
+      "passes": 0,
+      "running": 0,
+      "longMerges": 0,
+      "stalled": 0,
+      "preempted": 0,
+      "gcSkippedBusy": 0
+    },
+    "derived": {
+      "write": true,
+      "encoded": 0,
+      "plain": 0,
+      "messageRows": 0,
+      "fallbacks": 0,
+      "rebuilds": 50,
+      "resealRebuilds": 0,
+      "rebuildErrors": 0
+    },
+    "backgroundReads": {
+      "gets": 40,
+      "bytes": 1249110,
+      "micros": 136051
+    },
+    "quaderno": {
+      "sent": 0,
+      "batches": 0,
+      "failed": 0,
+      "confirmedFlush": 0
+    },
+    "walGc": {
+      "passes": 0,
+      "deleted": 0,
+      "listUs": 0,
+      "deleteUs": 0,
+      "totalUs": 0,
+      "noop": 0
+    },
+    "sstGc": {
+      "passes": 0,
+      "deletedSsts": 0,
+      "deletedManifests": 0,
+      "noop": 0,
+      "closeLight": 0
+    },
+    "requests": {
+      "put": 3,
+      "copy": 0,
+      "list": 4,
+      "get": 125,
+      "head": 3,
+      "delete": 0,
+      "billedPutTier": 7,
+      "billedGetTier": 128,
+      "putBytes": 258,
+      "getBytes": 10256509
+    },
+    "groupCommit": {
+      "commits": 0,
+      "flushes": 0,
+      "windowUs": 0,
+      "adaptiveWaits": 0,
+      "adaptiveWaitUs": 0,
+      "relaxedAcks": 0
+    },
+    "localLog": {
+      "records": 0,
+      "fsyncs": 0,
+      "uploads": 0,
+      "replayed": 0
+    },
+    "agentLane": {
+      "batches": 0,
+      "mixedBatches": 0,
+      "commits": 0,
+      "flushes": 0,
+      "txnFlushes": 0,
+      "ackRefused": 0,
+      "windowUs": 100000,
+      "followed": 0,
+      "memtableFlushes": 0,
+      "followHits": 0
+    },
+    "leases": {
+      "acquired": 3,
+      "takeovers": 0,
+      "refused": 0,
+      "renewals": 0,
+      "renewFailures": 0,
+      "lost": 0
+    },
+    "maintenance": {
+      "compactRuns": 0,
+      "compactPuts": 0,
+      "compactGets": 0,
+      "gcRuns": 0,
+      "gcDeletes": 0,
+      "gcLists": 0,
+      "gcGets": 0,
+      "l0WatchRequests": 0,
+      "abandonCloseTimeouts": 0,
+      "abandonClosesPending": 0,
+      "l0WatchDeferred": 0,
+      "compactionWarm": {
+        "runs": 0,
+        "hotBlocks": 0,
+        "ranges": 0,
+        "fails": 0,
+        "timeouts": 0,
+        "truncated": 0,
+        "readersOpen": 0,
+        "l0Stops": 0,
+        "throttled": 0
+      }
+    },
+    "putByCategory": {
+      "wal": 0,
+      "manifest": 0,
+      "compacted_sst": 0,
+      "lease": 3,
+      "clean_marker": 0,
+      "other": 0
+    },
+    "getByCategory": {
+      "wal": 0,
+      "manifest": 7,
+      "compacted_sst": 19,
+      "lease": 3,
+      "clean_marker": 2,
+      "other": 97
+    },
+    "openReaders": 2,
+    "openWriters": 0
+  },
+  "log_failed": {
+    "after_write": 0,
+    "before_cold": 0,
+    "end": 0
+  },
+  "health": [
+    {
+      "when": "after write",
+      "rc": 0,
+      "output": "{\n \"ok\": true,\n \"members\": {\n  \"log-0\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"log-1\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"log-2\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"cook\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"spare\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"minio\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  }\n },\n \"not_healthy\": [],\n \"check\": {\n  \"line\": \"fenvix-log\",\n  \"durability\": \"3-zone log, acknowledged at 2 of 3 copies\",\n  \"quaderno\": {\n   \"sent\": 33401,\n   \"batches\": 33317,\n   \"failed\": 0,\n   \"confirmedFlush\": 14\n  },\n  \"ok\": true\n }\n}\n"
+    },
+    {
+      "when": "end",
+      "rc": 0,
+      "output": "{\n \"ok\": true,\n \"members\": {\n  \"log-0\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"log-1\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"log-2\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"cook\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"spare\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"minio\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  }\n },\n \"not_healthy\": [],\n \"check\": {\n  \"line\": \"fenvix-log\",\n  \"durability\": \"3-zone log, acknowledged at 2 of 3 copies\",\n  \"quaderno\": {\n   \"sent\": 0,\n   \"batches\": 0,\n   \"failed\": 0,\n   \"confirmedFlush\": 0\n  },\n  \"ok\": true\n }\n}\n"
+    }
+  ],
+  "client_cpu": {
+    "samples": 181,
+    "process_cores_mean": {
+      "4624": 0.403
+    },
+    "process_cores_max_mean": 0.403,
+    "host_busy_mean": 0.726,
+    "host_busy_ge_95pct_share": 0.0,
+    "client_limited": false,
+    "rule": "limited if a client process averages >= 0.9 core or the host is >= 95% busy in > 10% of samples"
+  },
+  "client_limited": false,
+  "settle": {
+    "idle": true,
+    "capped": false,
+    "compaction2_published": true,
+    "seconds": 992.3,
+    "watched": [
+      "compactor.publishes",
+      "compactor.absorbs",
+      "compactor.merges",
+      "compactor.reseals",
+      "compactor.errors",
+      "compaction.passes",
+      "compaction.running",
+      "walGc.deleted",
+      "sstGc.deletedSsts",
+      "derived.encoded",
+      "S3 objects and bytes under tenants/app_demo/ by kind"
+    ],
+    "poll_s": 30,
+    "stable_polls": 25,
+    "polls": [
+      {
+        "t": 0.3,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 3,
+          "compaction.running": 0,
+          "walGc.deleted": 146,
+          "sstGc.deletedSsts": 239,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_lease": 1,
+          "compacted": 175,
+          "compactions": 162,
+          "fx": 103,
+          "manifest": 155,
+          "wal": 4
+        },
+        "s3_bytes": {
+          "_lease": 86,
+          "compacted": 4455164010,
+          "compactions": 258628,
+          "fx": 612642131,
+          "manifest": 1186342,
+          "wal": 14323268
+        }
+      },
+      {
+        "t": 30.5,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 3,
+          "compaction.running": 0,
+          "walGc.deleted": 146,
+          "sstGc.deletedSsts": 239,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_lease": 1,
+          "compacted": 175,
+          "compactions": 162,
+          "fx": 103,
+          "manifest": 155,
+          "wal": 4
+        },
+        "s3_bytes": {
+          "_lease": 86,
+          "compacted": 4455164010,
+          "compactions": 258628,
+          "fx": 612642131,
+          "manifest": 1186342,
+          "wal": 14323268
+        }
+      },
+      {
+        "t": 60.6,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 3,
+          "compaction.running": 1,
+          "walGc.deleted": 146,
+          "sstGc.deletedSsts": 239,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 180,
+          "compactions": 169,
+          "fx": 103,
+          "manifest": 161,
+          "wal": 4
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 4486293600,
+          "compactions": 269482,
+          "fx": 612642131,
+          "manifest": 1237410,
+          "wal": 14323268
+        }
+      },
+      {
+        "t": 90.7,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 146,
+          "sstGc.deletedSsts": 403,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 16,
+          "compactions": 8,
+          "fx": 103,
+          "manifest": 155,
+          "wal": 4
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1123931738,
+          "compactions": 12120,
+          "fx": 612642131,
+          "manifest": 1048534,
+          "wal": 14323268
+        }
+      },
+      {
+        "t": 120.8,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 403,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1099292035,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 150.8,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 403,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1099292035,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 180.9,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 403,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1099292035,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 210.9,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 403,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1099292035,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 241.0,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 403,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 13,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1099292035,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 271.1,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 301.1,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 331.2,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 361.2,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 391.3,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 421.4,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 451.4,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 481.5,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 511.5,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 541.6,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 571.6,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 601.7,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 631.7,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 661.7,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 691.8,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 721.8,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 751.9,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 781.9,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 812.0,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 842.0,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 872.1,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 902.1,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 932.2,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 962.2,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      },
+      {
+        "t": 992.3,
+        "watch": {
+          "compactor.publishes": 50,
+          "compactor.absorbs": 37,
+          "compactor.merges": 0,
+          "compactor.reseals": 13,
+          "compactor.errors": 0,
+          "compaction.passes": 4,
+          "compaction.running": 0,
+          "walGc.deleted": 149,
+          "sstGc.deletedSsts": 404,
+          "derived.encoded": 265052
+        },
+        "s3_objects": {
+          "_clean": 1,
+          "_lease": 1,
+          "compacted": 12,
+          "compactions": 1,
+          "fx": 103,
+          "gc": 2,
+          "manifest": 1,
+          "wal": 1
+        },
+        "s3_bytes": {
+          "_clean": 5,
+          "_lease": 50,
+          "compacted": 1095986468,
+          "compactions": 1370,
+          "fx": 612642131,
+          "gc": 6,
+          "manifest": 4378,
+          "wal": 2572411
+        }
+      }
+    ]
+  },
+  "cold": {
+    "restart": {
+      "cmd": "/root/.fenvix-agentbench-venv/bin/python /home/user/bench-h/bench/agent-checkpoints/lines.py restart fenvix-log",
+      "rc": 0,
+      "seconds": 5.7,
+      "output": "17:58:03 restart: docker restart minio log-0 log-1 log-2 cook spare in 4.4 s\n17:58:04 drop_caches: done\n17:58:04 restart: line up again in 5.1 s, check ok=True\n"
+    },
+    "threads": 50,
+    "eligible": 251,
+    "errors": [],
+    "n_errors": 0,
+    "first_thread": "u000069-t001"
+  },
+  "read_sample": 100,
+  "erase_users": 3,
+  "correctness": {
+    "wrong_reads": 0,
+    "by_kind": {},
+    "reads_checked": 12036,
+    "checkpoints_written": 18486,
+    "examples": []
+  },
+  "wrong_reads": 0,
+  "delta_test": {
+    "test": "agent checkpoint delta test",
+    "target": "fenvix",
+    "stored_bytes_source": "UNKNOWN until fenvixSstInfo exists (compaction 2 steps 4-8)",
+    "threads": 200,
+    "logical_bytes": 1044044244,
+    "unique_bytes": 18974556,
+    "stored_bytes": null
+  },
+  "ok": true
+}

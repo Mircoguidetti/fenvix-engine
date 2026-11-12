@@ -259,6 +259,24 @@ impl DropCtl {
         });
     }
 
+    /// The floor the observer last computed.
+    pub fn observed_floor(&self) -> u64 {
+        self.observed.load(Relaxed)
+    }
+
+    /// Tests of the real drop (P-perf-bytes): absorbed L0 SSTs and sorted runs that hold only rows at or below `x_d` and
+    /// are still in the manifest `l0` / `srs` (the drop removes them once the floor passed `x_d`).
+    pub fn waiting_through(&self, l0: &std::collections::VecDeque<slatedb::manifest::SsTableView>, srs: &[u32], x_d: u64) -> usize {
+        // one lock at a time: `propose_aged` (SlateDB's scheduler thread) takes `sr_max` and then `foldable`; holding
+        // `foldable` while taking `sr_max` here deadlocked it (fix round 1: the unit test hung 3 runs in 10)
+        let l0_left = {
+            let f = self.foldable.lock().unwrap();
+            l0.iter().filter(|v| f.get(&v.id).is_some_and(|hi| *hi <= x_d)).count()
+        };
+        let sr = self.sr_max.lock().unwrap();
+        l0_left + srs.iter().filter(|id| sr.get(id).is_some_and(|hi| *hi > 0 && *hi <= x_d)).count()
+    }
+
     /// Ask for a re-fold now (tests).
     pub fn request_refold(&self) {
         self.refold.store(true, Relaxed);
@@ -463,6 +481,8 @@ impl CompactionFilter for Filter {
         self.ctl.rows_kept.fetch_add(self.kept, Relaxed);
         self.ctl.jobs_done.fetch_add(1, Relaxed);
         self.ctl.applied_floor.fetch_max(self.floor, Relaxed);
+        // P-perf-bytes: the SSTs this job replaced are garbage once the SST cleanup's minimum age has passed
+        crate::lifecycle::note_compacted(&self.ctl.sh.id);
         Ok(())
     }
 }

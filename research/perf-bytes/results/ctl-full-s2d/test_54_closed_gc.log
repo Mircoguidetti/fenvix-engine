@@ -1,0 +1,10 @@
+F.                                                                       [100%]
+=================================== FAILURES ===================================
+__________ test_closed_database_drops_retired_runs_and_keeps_its_data __________
+test_54_closed_gc.py:54: in test_closed_database_drops_retired_runs_and_keeps_its_data
+    assert st["runsDeleted"] > 0 and st["versionsDeleted"] > 0, st
+E   AssertionError: {'passes': 1, 'runsDeleted': 11, 'versionsDeleted': 0}
+E   assert (11 > 0 and 0 > 0)
+=========================== short test summary info ============================
+FAILED test_54_closed_gc.py::test_closed_database_drops_retired_runs_and_keeps_its_data
+1 failed, 1 passed in 128.68s (0:02:08)

@@ -1,0 +1,906 @@
+{
+  "by_kind": {
+    "_clean": {
+      "bytes": 5,
+      "objects": 1
+    },
+    "_lease": {
+      "bytes": 50,
+      "objects": 1
+    },
+    "compacted": {
+      "bytes": 1127125958,
+      "objects": 13
+    },
+    "compactions": {
+      "bytes": 1266,
+      "objects": 1
+    },
+    "fx": {
+      "bytes": 596248865,
+      "objects": 99
+    },
+    "gc": {
+      "bytes": 6,
+      "objects": 2
+    },
+    "manifest": {
+      "bytes": 2770,
+      "objects": 1
+    },
+    "wal": {
+      "bytes": 2270418,
+      "objects": 1
+    }
+  },
+  "db": "app_demo",
+  "fx": {
+    "delta_runs": 0,
+    "groups": 1,
+    "live_classes": {
+      "loc/checkpoint_writes/#": {
+        "by_envelope": {
+          "live": {
+            "bytes": 2149056,
+            "rows": 25584
+          }
+        },
+        "key_bytes": 1381536,
+        "rows": 25584,
+        "value_bytes": 767520
+      },
+      "loc/checkpoints/#": {
+        "by_envelope": {
+          "live": {
+            "bytes": 1446198,
+            "rows": 18541
+          }
+        },
+        "key_bytes": 889968,
+        "rows": 18541,
+        "value_bytes": 556230
+      },
+      "message-row": {
+        "by_envelope": {
+          "message": {
+            "bytes": 24819049,
+            "rows": 19113
+          }
+        },
+        "key_bytes": 496938,
+        "rows": 19113,
+        "value_bytes": 24322111
+      },
+      "meta/collections": {
+        "by_envelope": {
+          "live": {
+            "bytes": 78,
+            "rows": 1
+          }
+        },
+        "key_bytes": 16,
+        "rows": 1,
+        "value_bytes": 62
+      },
+      "meta/copt/checkpoint_writes": {
+        "by_envelope": {
+          "live": {
+            "bytes": 66,
+            "rows": 1
+          }
+        },
+        "key_bytes": 27,
+        "rows": 1,
+        "value_bytes": 39
+      },
+      "meta/copt/checkpoints": {
+        "by_envelope": {
+          "live": {
+            "bytes": 60,
+            "rows": 1
+          }
+        },
+        "key_bytes": 21,
+        "rows": 1,
+        "value_bytes": 39
+      },
+      "meta/cuuid/checkpoint_writes": {
+        "by_envelope": {
+          "live": {
+            "bytes": 45,
+            "rows": 1
+          }
+        },
+        "key_bytes": 28,
+        "rows": 1,
+        "value_bytes": 17
+      },
+      "meta/cuuid/checkpoints": {
+        "by_envelope": {
+          "live": {
+            "bytes": 39,
+            "rows": 1
+          }
+        },
+        "key_bytes": 22,
+        "rows": 1,
+        "value_bytes": 17
+      },
+      "meta/indexes/checkpoint_writes": {
+        "by_envelope": {
+          "live": {
+            "bytes": 248,
+            "rows": 1
+          }
+        },
+        "key_bytes": 30,
+        "rows": 1,
+        "value_bytes": 218
+      },
+      "meta/indexes/checkpoints": {
+        "by_envelope": {
+          "live": {
+            "bytes": 204,
+            "rows": 1
+          }
+        },
+        "key_bytes": 24,
+        "rows": 1,
+        "value_bytes": 180
+      },
+      "meta/nat/checkpoint_writes": {
+        "by_envelope": {
+          "live": {
+            "bytes": 35,
+            "rows": 1
+          }
+        },
+        "key_bytes": 26,
+        "rows": 1,
+        "value_bytes": 9
+      },
+      "meta/nat/checkpoints": {
+        "by_envelope": {
+          "live": {
+            "bytes": 29,
+            "rows": 1
+          }
+        },
+        "key_bytes": 20,
+        "rows": 1,
+        "value_bytes": 9
+      },
+      "meta/rw/bf#": {
+        "by_envelope": {
+          "live": {
+            "bytes": 200,
+            "rows": 1
+          }
+        },
+        "key_bytes": 40,
+        "rows": 1,
+        "value_bytes": 160
+      },
+      "meta/rw/c#": {
+        "by_envelope": {
+          "live": {
+            "bytes": 200,
+            "rows": 1
+          }
+        },
+        "key_bytes": 40,
+        "rows": 1,
+        "value_bytes": 160
+      },
+      "meta/rw/d#": {
+        "by_envelope": {
+          "live": {
+            "bytes": 152,
+            "rows": 1
+          }
+        },
+        "key_bytes": 40,
+        "rows": 1,
+        "value_bytes": 112
+      },
+      "meta/sstat/checkpoint_writes": {
+        "by_envelope": {
+          "live": {
+            "bytes": 85,
+            "rows": 1
+          }
+        },
+        "key_bytes": 28,
+        "rows": 1,
+        "value_bytes": 57
+      },
+      "meta/sstat/checkpoints": {
+        "by_envelope": {
+          "live": {
+            "bytes": 79,
+            "rows": 1
+          }
+        },
+        "key_bytes": 22,
+        "rows": 1,
+        "value_bytes": 57
+      },
+      "nat/checkpoint_writes/#": {
+        "by_envelope": {
+          "live": {
+            "bytes": 1535040,
+            "rows": 25584
+          }
+        },
+        "key_bytes": 767520,
+        "rows": 25584,
+        "value_bytes": 767520
+      },
+      "nat/checkpoints/#": {
+        "by_envelope": {
+          "live": {
+            "bytes": 1001214,
+            "rows": 18541
+          }
+        },
+        "key_bytes": 444984,
+        "rows": 18541,
+        "value_bytes": 556230
+      },
+      "sys/fx-envelopes": {
+        "by_envelope": {
+          "live": {
+            "bytes": 19,
+            "rows": 1
+          }
+        },
+        "key_bytes": 16,
+        "rows": 1,
+        "value_bytes": 3
+      },
+      "sys/local-log": {
+        "by_envelope": {
+          "live": {
+            "bytes": 56,
+            "rows": 1
+          }
+        },
+        "key_bytes": 13,
+        "rows": 1,
+        "value_bytes": 43
+      },
+      "u/#": {
+        "by_envelope": {
+          "derived": {
+            "bytes": 19445186,
+            "rows": 33249
+          },
+          "live": {
+            "bytes": 13346181,
+            "rows": 55001
+          }
+        },
+        "key_bytes": 11352640,
+        "rows": 88250,
+        "value_bytes": 21438727
+      }
+    },
+    "live_delta": {
+      "bytes": 0,
+      "raw": 0
+    },
+    "live_run_list": [
+      {
+        "block_bytes": 262144,
+        "classes": {
+          "loc/checkpoint_writes/#": {
+            "by_envelope": {
+              "live": {
+                "bytes": 2149056,
+                "rows": 25584
+              }
+            },
+            "key_bytes": 1381536,
+            "rows": 25584,
+            "value_bytes": 767520
+          },
+          "loc/checkpoints/#": {
+            "by_envelope": {
+              "live": {
+                "bytes": 1446198,
+                "rows": 18541
+              }
+            },
+            "key_bytes": 889968,
+            "rows": 18541,
+            "value_bytes": 556230
+          },
+          "message-row": {
+            "by_envelope": {
+              "message": {
+                "bytes": 24819049,
+                "rows": 19113
+              }
+            },
+            "key_bytes": 496938,
+            "rows": 19113,
+            "value_bytes": 24322111
+          },
+          "meta/collections": {
+            "by_envelope": {
+              "live": {
+                "bytes": 78,
+                "rows": 1
+              }
+            },
+            "key_bytes": 16,
+            "rows": 1,
+            "value_bytes": 62
+          },
+          "meta/copt/checkpoint_writes": {
+            "by_envelope": {
+              "live": {
+                "bytes": 66,
+                "rows": 1
+              }
+            },
+            "key_bytes": 27,
+            "rows": 1,
+            "value_bytes": 39
+          },
+          "meta/copt/checkpoints": {
+            "by_envelope": {
+              "live": {
+                "bytes": 60,
+                "rows": 1
+              }
+            },
+            "key_bytes": 21,
+            "rows": 1,
+            "value_bytes": 39
+          },
+          "meta/cuuid/checkpoint_writes": {
+            "by_envelope": {
+              "live": {
+                "bytes": 45,
+                "rows": 1
+              }
+            },
+            "key_bytes": 28,
+            "rows": 1,
+            "value_bytes": 17
+          },
+          "meta/cuuid/checkpoints": {
+            "by_envelope": {
+              "live": {
+                "bytes": 39,
+                "rows": 1
+              }
+            },
+            "key_bytes": 22,
+            "rows": 1,
+            "value_bytes": 17
+          },
+          "meta/indexes/checkpoint_writes": {
+            "by_envelope": {
+              "live": {
+                "bytes": 248,
+                "rows": 1
+              }
+            },
+            "key_bytes": 30,
+            "rows": 1,
+            "value_bytes": 218
+          },
+          "meta/indexes/checkpoints": {
+            "by_envelope": {
+              "live": {
+                "bytes": 204,
+                "rows": 1
+              }
+            },
+            "key_bytes": 24,
+            "rows": 1,
+            "value_bytes": 180
+          },
+          "meta/nat/checkpoint_writes": {
+            "by_envelope": {
+              "live": {
+                "bytes": 35,
+                "rows": 1
+              }
+            },
+            "key_bytes": 26,
+            "rows": 1,
+            "value_bytes": 9
+          },
+          "meta/nat/checkpoints": {
+            "by_envelope": {
+              "live": {
+                "bytes": 29,
+                "rows": 1
+              }
+            },
+            "key_bytes": 20,
+            "rows": 1,
+            "value_bytes": 9
+          },
+          "meta/rw/bf#": {
+            "by_envelope": {
+              "live": {
+                "bytes": 200,
+                "rows": 1
+              }
+            },
+            "key_bytes": 40,
+            "rows": 1,
+            "value_bytes": 160
+          },
+          "meta/rw/c#": {
+            "by_envelope": {
+              "live": {
+                "bytes": 200,
+                "rows": 1
+              }
+            },
+            "key_bytes": 40,
+            "rows": 1,
+            "value_bytes": 160
+          },
+          "meta/rw/d#": {
+            "by_envelope": {
+              "live": {
+                "bytes": 152,
+                "rows": 1
+              }
+            },
+            "key_bytes": 40,
+            "rows": 1,
+            "value_bytes": 112
+          },
+          "meta/sstat/checkpoint_writes": {
+            "by_envelope": {
+              "live": {
+                "bytes": 85,
+                "rows": 1
+              }
+            },
+            "key_bytes": 28,
+            "rows": 1,
+            "value_bytes": 57
+          },
+          "meta/sstat/checkpoints": {
+            "by_envelope": {
+              "live": {
+                "bytes": 79,
+                "rows": 1
+              }
+            },
+            "key_bytes": 22,
+            "rows": 1,
+            "value_bytes": 57
+          },
+          "nat/checkpoint_writes/#": {
+            "by_envelope": {
+              "live": {
+                "bytes": 1535040,
+                "rows": 25584
+              }
+            },
+            "key_bytes": 767520,
+            "rows": 25584,
+            "value_bytes": 767520
+          },
+          "nat/checkpoints/#": {
+            "by_envelope": {
+              "live": {
+                "bytes": 1001214,
+                "rows": 18541
+              }
+            },
+            "key_bytes": 444984,
+            "rows": 18541,
+            "value_bytes": 556230
+          },
+          "sys/fx-envelopes": {
+            "by_envelope": {
+              "live": {
+                "bytes": 19,
+                "rows": 1
+              }
+            },
+            "key_bytes": 16,
+            "rows": 1,
+            "value_bytes": 3
+          },
+          "sys/local-log": {
+            "by_envelope": {
+              "live": {
+                "bytes": 56,
+                "rows": 1
+              }
+            },
+            "key_bytes": 13,
+            "rows": 1,
+            "value_bytes": 43
+          },
+          "u/#": {
+            "by_envelope": {
+              "derived": {
+                "bytes": 19445186,
+                "rows": 33249
+              },
+              "live": {
+                "bytes": 13346181,
+                "rows": 55001
+              }
+            },
+            "key_bytes": 11352640,
+            "rows": 88250,
+            "value_bytes": 21438727
+          }
+        },
+        "codec": "Lz4",
+        "deleted": 0,
+        "derived": true,
+        "derived_rows": 52362,
+        "entries": 195629,
+        "kind": "sealed",
+        "max_seq": 33256,
+        "min_seq": 1,
+        "path": "tenants/app_demo/fx/run/g0/00000000000000033256-1-8c625643",
+        "raw": 66482325,
+        "size": 18630271,
+        "version": 2
+      }
+    ],
+    "live_runs": {
+      "bytes": 18630271,
+      "objects": 1
+    },
+    "live_sealed": {
+      "bytes": 18630271,
+      "raw": 66482325
+    },
+    "manifests": 93386,
+    "newest": 49,
+    "oldest_version_age_s": 1069,
+    "other": 20,
+    "retained_runs_older_versions_only": {
+      "bytes": 577525188,
+      "objects": 48
+    },
+    "unreferenced_runs_grace": {
+      "bytes": 0,
+      "objects": 0
+    },
+    "versions": 49,
+    "x_d": 33256
+  },
+  "slate": {
+    "checkpoints": [],
+    "compacted_listed_bytes": 1095996250,
+    "compacted_unlisted_bytes": 31129708,
+    "l0": 0,
+    "l0_estimate": 0,
+    "manifest_id": 377,
+    "sorted_runs": [
+      {
+        "estimate": 118755157,
+        "id": 1,
+        "ssts": 4
+      },
+      {
+        "estimate": 976895573,
+        "id": 0,
+        "ssts": 4
+      }
+    ]
+  },
+  "slate_rows": {
+    "above_x_d": {
+      "loc/checkpoint_writes/#": {
+        "by_envelope": {
+          "row": {
+            "bytes": 8064,
+            "rows": 96
+          }
+        },
+        "key_bytes": 5184,
+        "rows": 96,
+        "value_bytes": 2880
+      },
+      "loc/checkpoints/#": {
+        "by_envelope": {
+          "row": {
+            "bytes": 6474,
+            "rows": 83
+          }
+        },
+        "key_bytes": 3984,
+        "rows": 83,
+        "value_bytes": 2490
+      },
+      "meta/nat/checkpoint_writes": {
+        "by_envelope": {
+          "row": {
+            "bytes": 35,
+            "rows": 1
+          }
+        },
+        "key_bytes": 26,
+        "rows": 1,
+        "value_bytes": 9
+      },
+      "meta/nat/checkpoints": {
+        "by_envelope": {
+          "row": {
+            "bytes": 29,
+            "rows": 1
+          }
+        },
+        "key_bytes": 20,
+        "rows": 1,
+        "value_bytes": 9
+      },
+      "meta/rw/bf#": {
+        "by_envelope": {
+          "row": {
+            "bytes": 152,
+            "rows": 1
+          }
+        },
+        "key_bytes": 40,
+        "rows": 1,
+        "value_bytes": 112
+      },
+      "meta/rw/d#": {
+        "by_envelope": {
+          "row": {
+            "bytes": 152,
+            "rows": 1
+          }
+        },
+        "key_bytes": 40,
+        "rows": 1,
+        "value_bytes": 112
+      },
+      "meta/sstat/checkpoint_writes": {
+        "by_envelope": {
+          "row": {
+            "bytes": 85,
+            "rows": 1
+          }
+        },
+        "key_bytes": 28,
+        "rows": 1,
+        "value_bytes": 57
+      },
+      "meta/sstat/checkpoints": {
+        "by_envelope": {
+          "row": {
+            "bytes": 79,
+            "rows": 1
+          }
+        },
+        "key_bytes": 22,
+        "rows": 1,
+        "value_bytes": 57
+      },
+      "nat/checkpoint_writes/#": {
+        "by_envelope": {
+          "row": {
+            "bytes": 5760,
+            "rows": 96
+          }
+        },
+        "key_bytes": 2880,
+        "rows": 96,
+        "value_bytes": 2880
+      },
+      "nat/checkpoints/#": {
+        "by_envelope": {
+          "row": {
+            "bytes": 4482,
+            "rows": 83
+          }
+        },
+        "key_bytes": 1992,
+        "rows": 83,
+        "value_bytes": 2490
+      },
+      "sys/local-log": {
+        "by_envelope": {
+          "row": {
+            "bytes": 56,
+            "rows": 1
+          }
+        },
+        "key_bytes": 13,
+        "rows": 1,
+        "value_bytes": 43
+      },
+      "u/#": {
+        "by_envelope": {
+          "row": {
+            "bytes": 3286933,
+            "rows": 358
+          }
+        },
+        "key_bytes": 45392,
+        "rows": 358,
+        "value_bytes": 3241541
+      }
+    },
+    "at_or_below_x_d": {
+      "loc/checkpoint_writes/#": {
+        "by_envelope": {
+          "row": {
+            "bytes": 2145570,
+            "rows": 25584
+          }
+        },
+        "key_bytes": 1381536,
+        "rows": 25584,
+        "value_bytes": 764034
+      },
+      "loc/checkpoints/#": {
+        "by_envelope": {
+          "row": {
+            "bytes": 1443737,
+            "rows": 18541
+          }
+        },
+        "key_bytes": 889968,
+        "rows": 18541,
+        "value_bytes": 553769
+      },
+      "meta/collections": {
+        "by_envelope": {
+          "row": {
+            "bytes": 77,
+            "rows": 1
+          }
+        },
+        "key_bytes": 16,
+        "rows": 1,
+        "value_bytes": 61
+      },
+      "meta/copt/checkpoint_writes": {
+        "by_envelope": {
+          "row": {
+            "bytes": 65,
+            "rows": 1
+          }
+        },
+        "key_bytes": 27,
+        "rows": 1,
+        "value_bytes": 38
+      },
+      "meta/copt/checkpoints": {
+        "by_envelope": {
+          "row": {
+            "bytes": 59,
+            "rows": 1
+          }
+        },
+        "key_bytes": 21,
+        "rows": 1,
+        "value_bytes": 38
+      },
+      "meta/cuuid/checkpoint_writes": {
+        "by_envelope": {
+          "row": {
+            "bytes": 44,
+            "rows": 1
+          }
+        },
+        "key_bytes": 28,
+        "rows": 1,
+        "value_bytes": 16
+      },
+      "meta/cuuid/checkpoints": {
+        "by_envelope": {
+          "row": {
+            "bytes": 38,
+            "rows": 1
+          }
+        },
+        "key_bytes": 22,
+        "rows": 1,
+        "value_bytes": 16
+      },
+      "meta/indexes/checkpoint_writes": {
+        "by_envelope": {
+          "row": {
+            "bytes": 247,
+            "rows": 1
+          }
+        },
+        "key_bytes": 30,
+        "rows": 1,
+        "value_bytes": 217
+      },
+      "meta/indexes/checkpoints": {
+        "by_envelope": {
+          "row": {
+            "bytes": 203,
+            "rows": 1
+          }
+        },
+        "key_bytes": 24,
+        "rows": 1,
+        "value_bytes": 179
+      },
+      "meta/rw/c#": {
+        "by_envelope": {
+          "row": {
+            "bytes": 200,
+            "rows": 1
+          }
+        },
+        "key_bytes": 40,
+        "rows": 1,
+        "value_bytes": 160
+      },
+      "nat/checkpoint_writes/#": {
+        "by_envelope": {
+          "row": {
+            "bytes": 1531554,
+            "rows": 25584
+          }
+        },
+        "key_bytes": 767520,
+        "rows": 25584,
+        "value_bytes": 764034
+      },
+      "nat/checkpoints/#": {
+        "by_envelope": {
+          "row": {
+            "bytes": 998753,
+            "rows": 18541
+          }
+        },
+        "key_bytes": 444984,
+        "rows": 18541,
+        "value_bytes": 553769
+      },
+      "sys/fx-envelopes": {
+        "by_envelope": {
+          "row": {
+            "bytes": 18,
+            "rows": 1
+          }
+        },
+        "key_bytes": 16,
+        "rows": 1,
+        "value_bytes": 2
+      },
+      "u/#": {
+        "by_envelope": {
+          "row": {
+            "bytes": 1089035739,
+            "rows": 88250
+          }
+        },
+        "key_bytes": 11352640,
+        "rows": 88250,
+        "value_bytes": 1077683099
+      }
+    },
+    "compress_above": {
+      "block": 4096,
+      "lz4": 1737427,
+      "raw": 3312301,
+      "zstd3": 1140755
+    },
+    "compress_at_or_below": {
+      "block": 4096,
+      "lz4": 517991979,
+      "raw": 1095156304,
+      "zstd3": 335788450
+    },
+    "x_d": 33256
+  },
+  "total": 1725649338
+}

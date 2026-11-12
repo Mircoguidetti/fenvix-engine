@@ -235,6 +235,22 @@ static GC_HOT: std::sync::LazyLock<Mutex<HashMap<String, HotGc>>> = std::sync::L
 /// Seconds between WAL garbage-collection passes over an open writer that is being written (0 = never).
 pub static HOT_GC_EVERY_SECS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(20);
 
+/// A compaction of SlateDB's own compactor ran on tenant `id` (the compactor in the server, `fx/drop.rs`): the SSTs it
+/// replaced are garbage once old enough, so the SST cleanup is due for it (P-perf-bytes: before, only today's
+/// compaction pass marked it, and an open writer that stopped writing left the hot list, so the SSTs replaced by the
+/// compactor in the server stayed in the store until the database closed).
+pub fn note_compacted(id: &str) {
+    COMPACTED.lock().unwrap().insert(id.to_string());
+    COMPACTED_SINCE_FULL.lock().unwrap().insert(id.to_string());
+    let now = Instant::now();
+    let mut hot = GC_HOT.lock().unwrap();
+    if !hot.contains_key(id) {
+        let m = writer_manifest_id(id).unwrap_or(0);
+        // last_write now: the entry stays in the hot list for the passes that follow (3 x HOT_GC_EVERY_SECS)
+        hot.insert(id.to_string(), HotGc { last_write: now, last_gc: now, last_sst_gc: now, sst_manifest: m, sst_retry_at: None });
+    }
+}
+
 /// Record that a writer of tenant `id` just wrote.
 pub fn note_write(id: &str) {
     let now = Instant::now();
@@ -2704,7 +2720,15 @@ impl Tenant {
     /// queued for compaction if it now holds enough L0 SSTs. A reader just closes.
     pub async fn close(mut self) -> Result<()> {
         match self.mode.take() {
-            Some(Mode::Reader(r)) => r.close().await?,
+            Some(Mode::Reader(r)) => {
+                r.close().await?;
+                // P-perf-bytes: a database with our runs that this process only read (after a restart, say) gets the
+                // maintenance pass of a closed database too, so runs retired before the restart do not wait for the next
+                // write session (`fx::gc::gc_closed`)
+                if self.fx.is_some() {
+                    self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
+                }
+            }
             Some(Mode::Writer(db)) => {
                 // Flush the memtable while the writer is still open and registered, then close it. A flush that waits for
                 // room in L0 (slatedb's `l0_max_ssts`) needs the L0 watch of the maintenance loop to start a compaction
@@ -3872,7 +3896,9 @@ impl Maintenance {
                         Vec::new()
                     } else {
                         let mut m = GC_HOT.lock().unwrap();
-                        m.retain(|_, h| h.last_write.elapsed() < every * 3);
+                        // P-perf-bytes: an entry whose SST cleanup left objects waiting for their minimum age stays
+                        // until that pass ran (an idle writer kept its replaced SSTs until it closed)
+                        m.retain(|_, h| h.last_write.elapsed() < every * 3 || h.sst_retry_at.is_some());
                         let now = Instant::now();
                         m.iter_mut().filter(|(_, h)| h.last_gc.elapsed() >= every).map(|(id, h)| { h.last_gc = now; id.clone() }).collect()
                     };
@@ -3960,6 +3986,18 @@ impl Maintenance {
                                 match gc_tenant_closed(&s3, &id, gc_min_age).await {
                                     Ok(rec) => log.lock().unwrap().gcs.push(rec),
                                     Err(e) => log.lock().unwrap().error(format!("gc {id}: {e:#}")),
+                                }
+                                // P-perf-bytes: our runs of the closed database (its compactor, and so its live GC, stopped
+                                // with the close); when some wait for their grace, the tenant is due again then
+                                if crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) {
+                                    match crate::fx::gc::gc_closed(&s3, &id).await {
+                                        Ok(Some(wait)) => {
+                                            let at = (Instant::now() + wait).checked_sub(gc_after).unwrap_or_else(Instant::now);
+                                            touched.lock().unwrap().entry(id.clone()).or_insert(at);
+                                        }
+                                        Ok(None) => {}
+                                        Err(e) => log.lock().unwrap().error(format!("fx gc {id}: {e:#}")),
+                                    }
                                 }
                             }
                         })

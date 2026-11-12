@@ -99,16 +99,18 @@ def test_insert_outside_a_transaction_cannot_duplicate_an_id_a_transaction_holds
     assert ok <= 1 and len(scan) <= 1, f"both writes of _id 8 were acknowledged; a collection scan finds {scan}"
 
 
-def test_with_customer_keys_off_the_stored_format_does_not_change():
-    """Contract: "with the option off nothing changes". A server started without any compaction or customer-key flag
-    writes its SSTs lz4-compressed with 64 KiB blocks (the new defaults of --sst-compression / --sst-block-kb); the
-    engine of today (integration) cannot read them: MEASURED on 91414a6, a database written with no customer key, then
-    read by the integration binary: "Data error: invalid composite filter block". So deploying this commit makes every
-    database it flushes or compacts unreadable by the previous release: no rollback (guarantee 10), whatever the option.
-    Set INTEGRATION_BIN to a binary built from integration to also run the rollback read itself."""
+@pytest.mark.parametrize("flags,want", [([], ["lz4"]), (["--sst-compression", "none"], ["none"])])
+def test_with_customer_keys_off_the_stored_format_does_not_change(flags, want):
+    """Contract of compaction-1's review: "with the option off nothing changes". A server started without any compaction or
+    customer-key flag wrote its SSTs lz4-compressed, which the engine of that day could not read: MEASURED on 91414a6, "Data
+    error: invalid composite filter block". So the default was kept uncompressed, for a rollback (guarantee 10).
+    P-perf-bytes (2026-11-11): before launch no older release reads these databases, so lz4 is the default again (SlateDB's
+    copy was 56% of the stored bytes of the local benchmark, uncompressed); `--sst-compression none` still writes the old
+    format, for a rollback when one exists. Set INTEGRATION_BIN to a binary built from integration to also run the
+    rollback read itself (the `none` case)."""
     import os
     b = make_bucket("revformat")
-    s = Server(b, "revformat", idle=600, extra=["--memtable-max-mb", "1"]).start()
+    s = Server(b, "revformat", idle=600, extra=["--memtable-max-mb", "1"] + flags).start()
     try:
         c = s.client()
         c.app.t.insert_many([{"_id": i, "pad": "x" * 1000} for i in range(5000)])
@@ -118,13 +120,13 @@ def test_with_customer_keys_off_the_stored_format_does_not_change():
     finally:
         s.term()
     old = os.environ.get("INTEGRATION_BIN")
-    if old:
+    if old and want == ["none"]:
         s2 = Server(b, "revformat-old", idle=600, binary=old).start()
         try:
             assert s2.client().app.t.count_documents({}) == 5000, "the integration binary cannot read what this commit wrote"
         finally:
             s2.term()
-    assert codecs == ["none"], f"with no customer key and no compaction flag, the SSTs are written {codecs}: the previous release cannot read them"
+    assert codecs == want, f"flags {flags}: the SSTs are written {codecs}, expected {want}"
 
 
 def test_a_refused_fork_leaves_no_object_of_its_target():

@@ -203,3 +203,85 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
     Ok(())
 }
 
+
+/// GC of the runs of a database this process closed (P-perf-bytes). The live GC above runs in the compactor, which stops
+/// when the database closes (60 s idle by default): runs retired within the grace before the close stayed in the store
+/// until the next open, for an idle customer for good (MEASURED: the medium bench kept 0.58 GB of retired runs for
+/// 1.07 GB logical after its database closed). Called by the maintenance pass of a closed tenant, under its lock.
+///
+/// The same rules as [`gc_once`], decided from the store only (rule 17): it keeps the newest version, every version a
+/// pair, a reference or a fork names, and every version inside the retention window, and deletes nothing while a
+/// checkpoint holds the drop lease (rule 19). A run that no kept version or reference lists is deleted only once the
+/// newest version was published at least the GC grace ago (every retired run was retired by that publish or an earlier
+/// one, so it has been unreferenced at least that long: the grace of rule 23, F6) and the object itself is that old. A
+/// process that opened the database meanwhile reads the newest version or a newer one, whose runs are all kept. Returns
+/// how long to wait before calling again when something is left for later.
+pub async fn gc_closed(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<std::time::Duration>> {
+    use std::time::Duration;
+    let versions = manifest::list_versions(store, id).await?;
+    let Some(&newest_n) = versions.last() else { return Ok(None) };
+    if super::pair::lease_held(store, id).await? {
+        return Ok(Some(Duration::from_secs(60)));
+    }
+    let newest = match manifest::load(store, id, newest_n).await {
+        Ok(v) => v,
+        Err(_) => return Ok(Some(Duration::from_secs(60))), // a newer one was published meanwhile: next time
+    };
+    let (ref_versions, ref_runs) = references(store, id).await?;
+    let retention = super::VERSION_RETENTION_MS.load(Relaxed);
+    let grace = super::GC_GRACE_MS.load(Relaxed);
+    let now_ms = manifest::now_ms();
+    let mut referenced: HashSet<String> = ref_runs;
+    referenced.extend(runs_of(&newest));
+    for &n in &versions {
+        if n == newest_n {
+            continue;
+        }
+        let named = ref_versions.contains(&n);
+        if named || retention > 0 {
+            match manifest::load(store, id, n).await {
+                Ok(v) if named || now_ms.saturating_sub(v.published_ms) < retention => {
+                    referenced.extend(runs_of(&v));
+                    continue;
+                }
+                Ok(_) => {}
+                Err(_) => continue, // deleted meanwhile
+            }
+        }
+        match store.delete(&manifest::manifest_path(id, n)).await {
+            Ok(_) | Err(object_store::Error::NotFound { .. }) => {
+                CLOSED_VERSIONS_DELETED.fetch_add(1, Relaxed);
+            }
+            Err(e) => return Err(e.into()),
+        }
+    }
+    let run_dir = Path::from(format!("{}/run", manifest::root(id)));
+    let metas: Vec<_> = store.list(Some(&run_dir)).try_collect().await?;
+    let since_publish = now_ms.saturating_sub(newest.published_ms);
+    let mut wait = 0u64;
+    for m in metas {
+        let p = m.location.to_string();
+        if referenced.contains(&p) {
+            continue;
+        }
+        let age = (now_ms as i64 - m.last_modified.timestamp_millis()).max(0) as u64;
+        let left = grace.saturating_sub(since_publish.min(age));
+        if left > 0 {
+            wait = wait.max(left);
+            continue;
+        }
+        match store.delete(&m.location).await {
+            Ok(_) | Err(object_store::Error::NotFound { .. }) => {
+                CLOSED_RUNS_DELETED.fetch_add(1, Relaxed);
+            }
+            Err(e) => return Err(e.into()),
+        }
+    }
+    CLOSED_PASSES.fetch_add(1, Relaxed);
+    Ok((wait > 0).then(|| Duration::from_millis(wait + 1000)))
+}
+
+/// Passes of [`gc_closed`], runs and versions it deleted (diagnostics, serverStatus `fenvix.fxGcClosed`).
+pub static CLOSED_PASSES: AtomicU64 = AtomicU64::new(0);
+pub static CLOSED_RUNS_DELETED: AtomicU64 = AtomicU64::new(0);
+pub static CLOSED_VERSIONS_DELETED: AtomicU64 = AtomicU64::new(0);

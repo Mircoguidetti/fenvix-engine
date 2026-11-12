@@ -1,0 +1,112 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________________________ test_retention_cost ______________________________
+test_03c_retention_cost.py:105: in test_retention_cost
+    assert b["restore_points"] >= 3
+E   assert 2 >= 3
+----------------------------- Captured stdout call -----------------------------
+{
+ "without_retention": {
+  "bucket_bytes": 2441992,
+  "objects": 21,
+  "by_directory": {
+   "_clean": {
+    "objects": 1,
+    "bytes": 5
+   },
+   "_lease": {
+    "objects": 1,
+    "bytes": 50
+   },
+   "compacted": {
+    "objects": 4,
+    "bytes": 1400203
+   },
+   "compactions": {
+    "objects": 1,
+    "bytes": 522
+   },
+   "fx": {
+    "objects": 10,
+    "bytes": 1039290
+   },
+   "gc": {
+    "objects": 2,
+    "bytes": 4
+   },
+   "manifest": {
+    "objects": 1,
+    "bytes": 1218
+   },
+   "wal": {
+    "objects": 1,
+    "bytes": 700
+   }
+  },
+  "restore_points": 0,
+  "requests": {
+   "LIST": 139,
+   "GET": 9935,
+   "PUT": 164,
+   "HEAD": 74,
+   "MP_CREATE": 8,
+   "PUT_PART": 8,
+   "MP_COMPLETE": 8,
+   "GET_RANGE": 10368
+  }
+ },
+ "with_retention": {
+  "bucket_bytes": 3950685,
+  "objects": 74,
+  "by_directory": {
+   "_clean": {
+    "objects": 1,
+    "bytes": 5
+   },
+   "_lease": {
+    "objects": 1,
+    "bytes": 50
+   },
+   "compacted": {
+    "objects": 5,
+    "bytes": 2693556
+   },
+   "compactions": {
+    "objects": 1,
+    "bytes": 522
+   },
+   "fx": {
+    "objects": 13,
+    "bytes": 1040093
+   },
+   "gc": {
+    "objects": 2,
+    "bytes": 4
+   },
+   "manifest": {
+    "objects": 2,
+    "bytes": 2012
+   },
+   "wal": {
+    "objects": 49,
+    "bytes": 214443
+   }
+  },
+  "restore_points": 2,
+  "requests": {
+   "LIST": 147,
+   "GET": 8709,
+   "PUT": 174,
+   "HEAD": 75,
+   "MP_CREATE": 8,
+   "PUT_PART": 8,
+   "MP_COMPLETE": 8,
+   "GET_RANGE": 10368
+  }
+ },
+ "extra_bytes": 1508693,
+ "extra_objects": 53
+}
+=========================== short test summary info ============================
+FAILED test_03c_retention_cost.py::test_retention_cost - assert 2 >= 3
+1 failed in 597.59s (0:09:57)

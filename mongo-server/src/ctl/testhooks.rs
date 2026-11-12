@@ -49,6 +49,11 @@ pub async fn publish_and_drop(db: &str) -> ApiResult<Value> {
     if !enabled() || !tenant_bench::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) {
         return Err(ApiError::new(404, "no_route", "test hooks or sealed runs are off"));
     }
+    // P-perf-bytes: with the compactor on (the product default), the real publish and the real drop job, never the
+    // stand-in (the compactor is then the only publisher)
+    if tenant_bench::fx::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed) {
+        return publish_and_real_drop(ctl, db).await;
+    }
     {
         let mut g = ctl.dbs.lock(db).await;
         g.fx_test_publish().await?;
@@ -73,3 +78,22 @@ pub fn set_interleave(body: Option<&Value>) -> ApiResult<Value> {
     *crate::dbs::INTERLEAVE_SET.lock().unwrap() = v.clone();
     Ok(json!({ "interleave": v.map(|(d, k)| json!({ "database": d, "at": k })), "interleaved": crate::dbs::INTERLEAVED.load(std::sync::atomic::Ordering::Relaxed) }))
 }
+
+/// The real path of [`publish_and_drop`] (P-perf-bytes, DECISIONS 2026-11-09 "Long commands keep working"): the
+/// database's compactor absorbs everything and publishes, the tenant installs that version under the exclusive lock (as
+/// the server does at its next exclusive step), then the hook waits until the real drop job (`fx/drop.rs`, SlateDB's
+/// compaction filter in the live waiter) has removed SlateDB's rows at or below the new X_d. The floor passes the old
+/// X_d only once no read in flight holds it, so a read that kept the old version across this hook would miss rows.
+async fn publish_and_real_drop(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
+    if !tenant_bench::fx::compactor::DROP_DEFAULT.load(std::sync::atomic::Ordering::Relaxed) {
+        return Err(ApiError::new(409, "drop_off", "the real drop is off (--sealed-drop false): nothing to interleave"));
+    }
+    let r = {
+        let mut g = ctl.dbs.lock(db).await;
+        g.fx_publish_now().await?
+    };
+    let Some((c, x_d)) = r else { return Err(ApiError::new(409, "no_compactor", format!("database {db} has no compactor running"))) };
+    let (dropped, floor) = c.drop_through(x_d, std::time::Duration::from_secs(60)).await?;
+    Ok(json!({ "database": db, "real": true, "x_d": x_d, "floor": floor, "dropped": dropped }))
+}
+
