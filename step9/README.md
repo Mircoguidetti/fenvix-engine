@@ -80,13 +80,34 @@ address to the agent client (the same benchmark as the Postgres machine, target 
 lists any cluster, instance, subnet group or snapshot left (RIMASTO / ALLARME). The RDS policy the founder adds:
 `python3 step9/ci/aurora.py policy`; `{"mode": "permissions", "aurora": true}` checks it at $0 (no cluster is created).
 
-## The engine ref and the gate
+## The engine commit and the gate
 
-`"engine"` has no default: a run names the final merged ref (branch or tag). The decide job resolves it to a commit, the
-build checks out exactly that commit, and `ci/gate.py` stays CLOSED unless `step9/local/benchmark-report-<commit>.json`
-exists for that commit (written by `local/benchmark_report.py` from the local takeover test and the local agent
-benchmark made on it) and passes (0 acknowledged writes lost; our server not worse than PostgreSQL and mongod on any
-operation or on stored bytes).
+`"engine"` has no default: a run names the FULL 40-character commit id of the final merged head, never a branch or tag
+(total review R5, 2026-11-12: a branch moves between the jobs of one round; `ci/decide.py` refuses anything else). The
+build checks out exactly that commit and builds it with `ci/build-engine.sh` (one fixed folder + path remapping, so the
+same commit gives the same bytes as the local build: `local/builds/`). `ci/gate.py` stays CLOSED unless
+`step9/local/benchmark-report-<commit>.json` exists for that commit (written by `local/benchmark_report.py` from the local
+takeover tests, log on and off, and the local agent benchmark with its `--workers 8` line, all made on it) and passes:
+0 acknowledged writes lost in at least 50 takeovers per log mode, no write batch on the S3-WAL fallback with the log on,
+and our p50 and p99 within the speed tolerance of `ci/speed_tolerance.json` (DECISIONS 2026-11-12: 20 ms above the best of
+PostgreSQL and mongod) on every operation, stored bytes per logical byte not worse.
+
+## How the round is started (total review R8, 2026-11-12)
+
+The workflow listens only to `step9-prep` and `aws-*`, and the AWS role trusts `aws-*` only: `step9-final` (the harness
+branch) can never start it. The round therefore runs from a branch made for it:
+
+1. The final engine head is chosen (coordinator, founder) and its full commit id written as `"engine"` in every run
+   command of `commands/` (and `commands/dry_run.sh`'s default); `bash commands/dry_run.sh` must accept them all.
+2. On that head, the local round and the local benchmark are made and the report written:
+   `local/benchmark_report.py ... > local/benchmark-report-<commit>.json` with every result file it names; the gate run
+   locally (`ENGINE_REF=<commit> ENGINE_COMMIT=<commit> python3 ci/gate.py`) must print `GATE: OPEN`.
+3. A branch `aws-<name>` (e.g. `aws-round-1`) is made from `step9-final` with the report and its result files committed.
+   Nothing on `aws-*` is merged anywhere; `main` is never touched.
+4. Each job starts with one commit on `aws-<name>` that changes `step9/command.json` to that job's command (from
+   `commands/`, the pantry of job L filled in after L). Only the founder's go starts the first paid job (RULES).
+5. Every job pushes its results back to that same `aws-<name>` branch; the next job's command is committed after reading
+   them. A red job (a program failed, the gate closed, BLOCCO) stops the round there.
 
 ## The kitchen of the round: never more than 8 vCPU at once (founder, 2026-11-09)
 
@@ -136,10 +157,11 @@ against Atlas's c7i.2xlarge with 5); `somma_massimo.py` says when the client was
 - The exact commands of the round are the files in `commands/` (aws-fixes, B6): 00 permissions, 01 L load the Atlas
   databases into a kept pantry, 02 M1 m30, 03 M2 extra programs and write-peak, 04 M3 agent benchmark with Aurora,
   05 G the 100 GB ballast generated into the same pantry, 06 B the ballast rounds, 07 drop the pantry; pilot-P a small
-  pilot (5 + 5 takeovers, agent benchmark at the small profile). Every run command names the engine ref and the same
+  pilot (5 + 5 takeovers, agent benchmark at the small profile). Every run command names the engine commit and the same
   `loader_options` and `server_options` (`--sealed-runs 2 --envelopes write --customer-key ...`), so the Atlas databases
-  and the ballast share one layout. Before a command is committed to `command.json`: replace the engine ref with the
-  final merged ref and the pantry with the real one of job L, then `bash commands/dry_run.sh`.
+  and the ballast share one layout. Before a command is committed to `command.json`: the engine is the full commit
+  id of the final head and the pantry the real one of job L, then `bash commands/dry_run.sh` (see "How the round is
+  started").
 - "measure" and "extras" with every program in one job (about 7 h) is REFUSED by decide.py (B2).
 - 100 GB and 1 TB (every run command also names `"engine"` and, for the generator, `"server_options"` with
   `--sealed-runs` and `--customer-key`): `{"mode": "run", "data": "1tb", "phases": ["load"], "pantry": "keep",
