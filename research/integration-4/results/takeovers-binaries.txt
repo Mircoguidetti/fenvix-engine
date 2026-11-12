@@ -1,0 +1,2 @@
+3890fc919170184cbc2e2397cb84e75b3070c660c6c5253168cff9f74310d436  target/release/mongo-server
+23955355d530ea891f118d46592ca0e88dfff7bb28ea7f57ca9b65e01181e9c6  proto/quaderno/target/release/pq
