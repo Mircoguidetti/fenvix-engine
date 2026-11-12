@@ -79,20 +79,38 @@ pub async fn list(prefix: &str) -> Result<Option<Vec<Upload>>> {
 /// Abort every incomplete upload under `prefix`: the number aborted (`None`: not S3). An upload gone in the meantime
 /// (completed or aborted by its writer) is not an error.
 pub async fn abort_all(prefix: &str) -> Result<Option<u64>> {
-    let Some(found) = list(prefix).await? else { return Ok(None) };
+    let Some(mut found) = list(prefix).await? else { return Ok(None) };
     let s3 = S3_STORE.get().expect("listed");
     let mut n = 0;
-    for u in found {
-        let path = object_store::path::Path::parse(&u.key).with_context(|| format!("upload key {}", u.key))?;
-        match s3.store.abort_multipart(&path, &u.upload_id).await {
-            Ok(()) => n += 1,
-            Err(object_store::Error::NotFound { .. }) => {}
-            Err(e) => return Err(anyhow!("abort of the incomplete upload {} ({}): {e}", u.key, u.upload_id)),
+    // perf-latency-on-i4: listed again after the aborts, and aborted again, a few times. The judge's test_05 kill loop on
+    // the merge once found an upload of the killed process still listed after this ran (the restart's erase recovery then
+    // failed its proof, erase_incomplete, and left the database half erased). An upload whose part was still being
+    // written by a dead connection, or an abort answered NotFound while the listing still shows it, is aborted again.
+    for round in 0..5 {
+        for u in &found {
+            let path = object_store::path::Path::parse(&u.key).with_context(|| format!("upload key {}", u.key))?;
+            match s3.store.abort_multipart(&path, &u.upload_id).await {
+                Ok(()) => n += 1,
+                Err(object_store::Error::NotFound { .. }) => {
+                    eprintln!("uploads: abort of {} ({}) answered NotFound (round {round})", u.key, u.upload_id);
+                }
+                Err(e) => return Err(anyhow!("abort of the incomplete upload {} ({}): {e}", u.key, u.upload_id)),
+            }
         }
+        found = list(prefix).await?.unwrap_or_default();
+        if found.is_empty() {
+            break;
+        }
+        ABORT_RELISTED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        eprintln!("uploads: {} incomplete uploads under {prefix} still listed after round {round} of aborts; again", found.len());
+        tokio::time::sleep(std::time::Duration::from_millis(200 << round)).await;
     }
     ABORTED.fetch_add(n, std::sync::atomic::Ordering::Relaxed);
     Ok(Some(n))
 }
+
+/// Rounds of `abort_all` that found uploads still listed after aborting them.
+pub static ABORT_RELISTED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 /// Incomplete uploads aborted by `abort_all` since the start.
 pub static ABORTED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);

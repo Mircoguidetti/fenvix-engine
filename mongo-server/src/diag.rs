@@ -855,6 +855,7 @@ impl Server {
                 "runUploadsAbortedOnDrop": tenant_bench::runfmt::DROPPED_UPLOADS_ABORTED.load(Relaxed) as i64,
                 "runUploadAbortErrors": tenant_bench::runfmt::DROPPED_UPLOAD_ABORT_ERRORS.load(Relaxed) as i64,
                 "incompleteUploadsAborted": crate::uploads::ABORTED.load(Relaxed) as i64,
+                "incompleteUploadsRelisted": crate::uploads::ABORT_RELISTED.load(Relaxed) as i64,
                 "slowStages": tenant_bench::lifecycle::SLOW_STAGES.load(Relaxed) as i64,
                 "closeGcRequeued": tenant_bench::lifecycle::CLOSE_GC_REQUEUED.load(Relaxed) as i64,
                 "closePassesForPending": tenant_bench::lifecycle::CLOSE_PASSES_FOR_PENDING.load(Relaxed) as i64,
