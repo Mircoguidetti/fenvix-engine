@@ -25,6 +25,7 @@ class PathProxy:
         self.held = 0
         self.refusal = None   # (methods, path_part, status)
         self.refused = 0
+        self.journal = None   # a list to record (unix time, method, path, status) of every request, or None
         self.lock = threading.Lock()
         proxy = self
 
@@ -43,6 +44,8 @@ class PathProxy:
                 if f and self.command in f[0] and f[1] in self.path.split("?")[0]:
                     with proxy.lock:
                         proxy.refused += 1
+                        if proxy.journal is not None:
+                            proxy.journal.append((time.time(), self.command, self.path.split("?")[0], f[2]))
                     code, msg = ("XMinioStorageFull", "Storage backend has reached its minimum free drive threshold.") if f[2] == 507 else \
                         ("SlowDown", "Please reduce your request rate.") if f[2] == 503 else ("InternalError", "We encountered an internal error.")
                     data = f'<?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>{code}</Code><Message>{msg}</Message></Error>'.encode()
@@ -77,6 +80,14 @@ class PathProxy:
                     return
                 finally:
                     c.close()
+                if proxy.journal is not None:
+                    with proxy.lock:
+                        proxy.journal.append((time.time(), self.command, self.path.split("?")[0], resp.status))
+                        if self.command == "POST" and "delete" in self.path.split("?", 1)[-1]:
+                            # a multi-object delete: one entry per key of its body
+                            import re as _re
+                            for k in _re.findall(rb"<Key>([^<]+)</Key>", body):
+                                proxy.journal.append((time.time(), "DELETE*", "/" + self.path.split("?")[0].strip("/") + "/" + k.decode(), resp.status))
                 try:
                     self.send_response_only(resp.status, resp.reason)
                     for k, v in resp.getheaders():
