@@ -1,0 +1,10 @@
+== /home/user/runs/whole-standard
+  single writes 218906; longest 1.86 s (put_writes at ts 1794510613.4); over 1 s: 6; over 500 ms: 9
+  top writes (s since start, s): 1055:1.86, 1055:1.86, 653:1.82, 653:1.82, 839:1.31, 839:1.31, 85:0.55, 85:0.55
+  saves 122152; longest 3.72 s; over 1 s: 4
+  p50/p99 ms: save_step 6.8/52.4 (n=122152); put 3.5/27.1 (n=122152); put_writes 3.8/29.1 (n=96754); resume[write/none] 2.4/17.9 (n=21173); resume[write/short] 2.9/69.6 (n=1083); resume[write/long] 8.3/64.2 (n=689); resume[write/first] 1.2/29.7 (n=2453); resume[read] 6.5/14.5 (n=300); resume[cold] 6.1/14.3 (n=200); time_travel 2.0/6.7 (n=900); list 62.1/1240.3 (n=300); list_limit10 16.6/135.9 (n=300); erase_user 48.5/19852.6 (n=2)
+  ok True wrong_reads 0 stored/logical 2.0927 stored 13973094019
+  SlateDB held writes >= 1 s: 3; ms/l0 at the end[/largest l0 while held]: 1838/1/8, 1812/2/8, 1301/2/8
+    FIRST_PUBLISH u=1794509590006 db=app_demo version=1 x_d=7311 rows=38924 build_ms=1215 off_lock=1
+    L0_RECOGNISE db=app_demo read=1 absorbed=1 ms=763 off_lock=1
+    L0_RECOGNISE db=app_demo read=2 absorbed=2 ms=838 off_lock=1

@@ -434,8 +434,8 @@ impl CompactionScheduler for Sched {
             }
         }
         self.0.jobs.fetch_add(out.len() as u64, Relaxed);
-        if let Some(spec) = out.first() {
-            // diagnostics (cause 3): what the job reads, so a long one can be seen holding L0 work back
+        for spec in &out {
+            // diagnostics (cause 3): what each job reads, so a long one can be seen holding L0 work back
             let m = state.manifest();
             let (mut l0n, mut l0b, mut srs) = (0usize, 0u64, Vec::new());
             for s in spec.sources() {
