@@ -1,0 +1,174 @@
+{
+ "erased_threads": 11,
+ "erased_users": 6,
+ "records_before": {
+  "n": 22,
+  "pending": 22
+ },
+ "batch": {
+  "seconds": 2.96,
+  "gets": 2749,
+  "get_bytes": 101836629,
+  "puts": 217,
+  "gets_per_user": 458.2,
+  "mb_per_user": 16.97,
+  "states": {
+   "pending": 0,
+   "scrubbed": 22
+  },
+  "batch_ids": [
+   "00000000000000004513-2196628f"
+  ],
+  "rows_erased": 14976
+ },
+ "before_batch": {
+  "resume": {
+   "n": 1035,
+   "p50": 2.93,
+   "p99": 9.45,
+   "max": 30.24061200039796
+  },
+  "list10": {
+   "n": 1034,
+   "p50": 17.88,
+   "p99": 59.77,
+   "max": 81.0066460003327
+  },
+  "save": {
+   "n": 1033,
+   "p50": 4.15,
+   "p99": 8.46,
+   "max": 28.998652000154834
+  }
+ },
+ "during_batch": {
+  "resume": {
+   "n": 165,
+   "p50": 3.24,
+   "p99": 29.33,
+   "max": 86.39156500021272
+  },
+  "list10": {
+   "n": 164,
+   "p50": 20.09,
+   "p99": 82.04,
+   "max": 100.90489999993224
+  },
+  "save": {
+   "n": 165,
+   "p50": 6.19,
+   "p99": 48.33,
+   "max": 64.09767500008456
+  }
+ },
+ "after_batch": {
+  "resume": {
+   "n": 928,
+   "p50": 3.04,
+   "p99": 21.75,
+   "max": 45.944270000291
+  },
+  "list10": {
+   "n": 930,
+   "p50": 19.47,
+   "p99": 70.68,
+   "max": 84.8529539998708
+  },
+  "save": {
+   "n": 930,
+   "p50": 4.37,
+   "p99": 15.12,
+   "max": 103.89762800014068
+  }
+ },
+ "retire": {
+  "seconds_after_batch": 60.2,
+  "done": 22,
+  "of": 22,
+  "overdue": 0,
+  "kept_by": []
+ },
+ "proof": {
+  "db": "app_demo",
+  "examples": [
+   "tenants/app_demo/compacted/01M75NWZEM19QK30FZGV5W0AWD.sst",
+   "tenants/app_demo/compacted/01M75NX0H7XRF7XRF7WYWAKPK4.sst",
+   "tenants/app_demo/compacted/01M75NX1MGABCRYAGJF78P548T.sst",
+   "tenants/app_demo/compacted/01M75NX34KH4S4X38KAG2XPZ3Q.sst",
+   "tenants/app_demo/compacted/01M75NX3DJBHKB2SPRPX4JF05G.sst",
+   "tenants/app_demo/compacted/01M75NX3DJFAHE466APMNXKW07.sst",
+   "tenants/app_demo/compacted/01M75NX3DJTHNYTC3BS6DC94T6.sst",
+   "tenants/app_demo/compacted/01M75NX3DN3WBE4MPDX8X85NTK.sst",
+   "tenants/app_demo/compacted/01M75NX8FAZWKDFAMH2GWFV0YM.sst",
+   "tenants/app_demo/compacted/01M75NX8FNQSG1CKFMB8QAA6Y6.sst",
+   "tenants/app_demo/compacted/01M75NXA6X80178AGXC4WWYCVB.sst",
+   "tenants/app_demo/compacted/01M75NXBT50D4V2NYXXGK27GG9.sst",
+   "tenants/app_demo/compacted/01M75NXF4HBB602W6KVJTYBP2Q.sst",
+   "tenants/app_demo/compacted/01M75NXF4MJVG2FANY9J6A4HJH.sst",
+   "tenants/app_demo/compacted/01M75NXF4Q16DHAAKMR00TFW7F.sst",
+   "tenants/app_demo/compacted/01M75NXFAST97BNXJPY5P7K9KX.sst",
+   "tenants/app_demo/compacted/01M75NXFAZHJ5TBGQAXRES3X2X.sst",
+   "tenants/app_demo/compacted/01M75NXFB4CVRYJ1VBAWJWCWH1.sst",
+   "tenants/app_demo/compacted/01M75NXFRFACX5DCGZZMGYXCK0.sst",
+   "tenants/app_demo/compacted/01M75NXJEXH4HX5H6921DPGM32.sst"
+  ],
+  "ids": 11,
+  "our_objects_holding": 0,
+  "per_prefix": {
+   "_lease": {
+    "bytes": 86,
+    "objects": 1,
+    "objects_holding": 0,
+    "rows_holding": 0
+   },
+   "compacted": {
+    "bytes": 578502350,
+    "objects": 46,
+    "objects_holding": 30,
+    "rows_holding": 30
+   },
+   "compactions": {
+    "bytes": 63884,
+    "objects": 46,
+    "objects_holding": 36,
+    "rows_holding": 36
+   },
+   "fx": {
+    "bytes": 20,
+    "objects": 1,
+    "objects_holding": 0,
+    "rows_holding": 0
+   },
+   "fx/erasures": {
+    "bytes": 16932,
+    "objects": 22,
+    "objects_holding": 0,
+    "rows_holding": 0
+   },
+   "fx/manifest": {
+    "bytes": 1543,
+    "objects": 1,
+    "objects_holding": 0,
+    "rows_holding": 0
+   },
+   "fx/run": {
+    "bytes": 34857608,
+    "objects": 2,
+    "objects_holding": 0,
+    "rows_holding": 0
+   },
+   "manifest": {
+    "bytes": 104164,
+    "objects": 46,
+    "objects_holding": 43,
+    "rows_holding": 43
+   },
+   "wal": {
+    "bytes": 1760315,
+    "objects": 1095,
+    "objects_holding": 0,
+    "rows_holding": 0
+   }
+  }
+ }
+}

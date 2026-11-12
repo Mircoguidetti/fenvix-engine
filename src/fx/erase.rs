@@ -59,6 +59,14 @@ pub static REGISTERED: AtomicU64 = AtomicU64::new(0);
 pub static SCRUBS: AtomicU64 = AtomicU64::new(0);
 pub static ROWS_ERASED: AtomicU64 = AtomicU64::new(0);
 pub static RUNS_RETIRED: AtomicU64 = AtomicU64::new(0);
+/// perf-erase: runs whose key span met a batch but whose probed blocks held no target (not read whole, not rewritten);
+/// batches scrubbed and the erasures they served; scrubs abandoned because the version changed under them.
+pub static PROBE_SKIPS: AtomicU64 = AtomicU64::new(0);
+pub static BATCHES: AtomicU64 = AtomicU64::new(0);
+pub static BATCHED_ERASURES: AtomicU64 = AtomicU64::new(0);
+pub static SCRUB_ABANDONS: AtomicU64 = AtomicU64::new(0);
+/// Negative control of perf-erase: no probe, every run that meets a batch is read whole (the code before).
+pub static CONTROL_NO_PROBE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// Negative controls of the tests (`fx/tests_7b.rs`, `FX_7B_CONTROL`): no scrub at all; delta runs not scrubbed; target
 /// rows erased whatever their seq (a document written again after the erasure is lost); retired runs never deleted.
@@ -69,6 +77,19 @@ pub static CONTROL_NO_SEQ_BOUND: std::sync::atomic::AtomicBool = std::sync::atom
 pub static CONTROL_NO_RETIRE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 /// Negative control of the step 7b fix round (FIX 1): the retire step deletes a run whatever database owns it.
 pub static CONTROL_NO_OWNERSHIP: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Trace of the erasure path (perf-erase): one `fx-erase-trace {json}` line per step on stderr when the environment
+/// variable FX_ERASE_TRACE is set. Diagnostics only: it changes nothing else.
+pub fn trace_on() -> bool {
+    static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ON.get_or_init(|| std::env::var_os("FX_ERASE_TRACE").is_some())
+}
+
+pub fn trace(v: serde_json::Value) {
+    if trace_on() {
+        eprintln!("fx-erase-trace {v}");
+    }
+}
 
 #[inline]
 fn ctl(f: &std::sync::atomic::AtomicBool) -> bool {
@@ -157,6 +178,91 @@ impl Targets {
     }
 }
 
+/// Several erasures scrubbed together (perf-erase): one rewrite of each run serves every erasure of the batch. A row is
+/// a target of the batch when it is a target of one of its erasures at or below that erasure's S_e (a document written
+/// again after its own erasure is new data and stays, whatever the other erasures' S_e).
+#[derive(Clone, Debug, Default)]
+pub struct Batch {
+    /// Disjoint key segments [lo, hi), in key order, each with the highest S_e of the erasure ranges covering it.
+    segs: Vec<(Vec<u8>, Vec<u8>, u64)>,
+    /// Single keys, with the highest S_e of the erasures naming them.
+    keys: std::collections::BTreeMap<Vec<u8>, u64>,
+    /// The highest S_e of the batch (X_d must reach it before the scrub).
+    pub max_s_e: u64,
+    pub erasures: usize,
+}
+
+impl Batch {
+    pub fn new(items: &[(&Targets, u64)]) -> Batch {
+        let mut b = Batch { erasures: items.len(), ..Default::default() };
+        let mut bounds: Vec<&[u8]> = Vec::new();
+        for (t, s_e) in items {
+            b.max_s_e = b.max_s_e.max(*s_e);
+            for (lo, hi) in &t.ranges {
+                if lo < hi {
+                    bounds.push(lo);
+                    bounds.push(hi);
+                }
+            }
+            for k in &t.keys {
+                let e = b.keys.entry(k.clone()).or_insert(*s_e);
+                *e = (*e).max(*s_e);
+            }
+        }
+        bounds.sort();
+        bounds.dedup();
+        for w in bounds.windows(2) {
+            let (lo, hi) = (w[0], w[1]);
+            // the highest S_e of the ranges that cover [lo, hi) (bounds are every range's ends: a range covers the
+            // whole segment or none of it)
+            let s = items.iter().flat_map(|(t, s_e)| t.ranges.iter().filter(|(a, z)| &a[..] <= lo && hi <= &z[..]).map(move |_| *s_e)).max();
+            if let Some(s) = s {
+                b.segs.push((lo.to_vec(), hi.to_vec(), s));
+            }
+        }
+        b
+    }
+
+    pub fn single(t: &Targets, s_e: u64) -> Batch {
+        Batch::new(&[(t, s_e)])
+    }
+
+    /// The highest S_e at or below which a row of key `k` is erased, if `k` is a target.
+    pub fn bound(&self, k: &[u8]) -> Option<u64> {
+        let i = self.segs.partition_point(|(lo, _, _)| &lo[..] <= k);
+        let r = i.checked_sub(1).map(|i| &self.segs[i]).filter(|(_, hi, _)| k < &hi[..]).map(|s| s.2);
+        match (r, self.keys.get(k)) {
+            (Some(a), Some(b)) => Some(a.max(*b)),
+            (a, b) => a.or(b.copied()),
+        }
+    }
+
+    pub fn hit(&self, k: &[u8], seq: u64) -> bool {
+        self.bound(k).is_some_and(|s| seq <= s)
+    }
+
+    /// Whether a run whose keys are within [first, last] may hold a target.
+    pub fn meets(&self, first: &[u8], last: &[u8]) -> bool {
+        let i = self.segs.partition_point(|(_, hi, _)| &hi[..] <= first);
+        (i < self.segs.len() && &self.segs[i].0[..] <= last) || self.keys.range(first.to_vec()..=last.to_vec()).next().is_some()
+    }
+
+    /// The key spans of the batch that meet [first, last]: segments and single keys (as [k, k + 0x00)).
+    fn spans_in(&self, first: &[u8], last: &[u8]) -> Vec<(Vec<u8>, Vec<u8>)> {
+        let mut out = Vec::new();
+        let i = self.segs.partition_point(|(_, hi, _)| &hi[..] <= first);
+        for (lo, hi, _) in self.segs[i..].iter().take_while(|(lo, _, _)| &lo[..] <= last) {
+            out.push((lo.clone(), hi.clone()));
+        }
+        for k in self.keys.range(first.to_vec()..=last.to_vec()).map(|(k, _)| k) {
+            let mut hi = k.clone();
+            hi.push(0);
+            out.push((k.clone(), hi));
+        }
+        out
+    }
+}
+
 /// A run the scrub replaced, and why it still exists (empty once deleted).
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Retired {
@@ -200,6 +306,16 @@ pub struct Erasure {
     /// Live runs clean (the 24-hour target, with step 4's drop at or above S_e) and nothing of ours left (30 days).
     pub live_done_ms: Option<u64>,
     pub done_ms: Option<u64>,
+    /// perf-erase: the targets (hex of [`Targets::encode`]) in the record itself until the scrub, so registering is one
+    /// PUT; records of earlier releases keep them in `{id}.keys`. They are the customer's data: never shown (`to_json`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub targets: Option<String>,
+    /// perf-erase: the batch that scrubbed it (its first erasure's id) and how many erasures that batch served; the rows
+    /// and runs above are the batch's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub batch: Option<String>,
+    #[serde(default)]
+    pub batch_erasures: u64,
 }
 
 impl Erasure {
@@ -209,6 +325,9 @@ impl Erasure {
 
     pub fn to_json(&self) -> serde_json::Value {
         let mut v = serde_json::to_value(self).unwrap_or_default();
+        if let Some(o) = v.as_object_mut() {
+            o.remove("targets");
+        }
         v["overdue"] = serde_json::json!(self.overdue(now_ms()));
         v["drop_floor_needed"] = serde_json::json!(self.s_e);
         v
@@ -237,13 +356,13 @@ fn customer_hash(c: &[u8]) -> String {
 }
 
 /// Record an erasure whose deletes committed at or below `s_e` (the caller holds the database's exclusive lock, so no
-/// other write of these keys lies between the deletes and S_e). The targets first, then the record: a crash between
-/// the two leaves an orphan targets object, which the next pass deletes.
-pub async fn register(store: &Arc<dyn ObjectStore>, id: &str, collection: &str, customer: &[u8], targets: &Targets, s_e: u64) -> Result<Erasure> {
+/// other write of these keys lies between the deletes and S_e). perf-erase: one PUT, the record with its targets in it;
+/// `also`, the path of an index object of the erasure (the server's `control/erasures/{db}/{id}`), is written at the same
+/// time: a crash that lands only the index leaves an index with no record, which only makes the agent look once more.
+pub async fn register(store: &Arc<dyn ObjectStore>, id: &str, collection: &str, customer: &[u8], targets: &Targets, s_e: u64, also: Option<&(dyn Fn(&str) -> Path + Sync)>) -> Result<Erasure> {
     let now = now_ms();
     let r: u32 = rand::random();
     let eid = format!("{s_e:020}-{r:08x}");
-    store.put(&keys_path(id, &eid), PutPayload::from(targets.encode())).await?;
     let e = Erasure {
         id: eid,
         kind: "customer".into(),
@@ -265,8 +384,19 @@ pub async fn register(store: &Arc<dyn ObjectStore>, id: &str, collection: &str, 
         boundaries_on_targets: 0,
         live_done_ms: None,
         done_ms: None,
+        targets: Some(hex(&targets.encode())),
+        batch: None,
+        batch_erasures: 0,
     };
-    save(store, id, &e).await?;
+    let rec = async { save(store, id, &e).await };
+    match also {
+        Some(f) => {
+            let p = f(&e.id);
+            let idx = async { store.put(&p, PutPayload::from_static(b"{}")).await.map(|_| ()).map_err(anyhow::Error::from) };
+            futures::try_join!(rec, idx)?;
+        }
+        None => rec.await?,
+    }
     REGISTERED.fetch_add(1, Relaxed);
     Ok(e)
 }
@@ -276,22 +406,73 @@ pub async fn save(store: &Arc<dyn ObjectStore>, id: &str, e: &Erasure) -> Result
     Ok(())
 }
 
-/// Every erasure of a database, oldest first.
-pub async fn list(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Vec<Erasure>> {
-    let metas: Vec<_> = store.list(Some(&dir(id))).try_collect().await?;
+/// perf-erase: where the records of erasures that are done go (`archive`), so a pass reads only the open ones.
+pub fn done_dir(id: &str) -> Path {
+    Path::from(format!("{}/erasures-done", root(id)))
+}
+
+async fn read_records(store: &Arc<dyn ObjectStore>, dir: &Path) -> Result<Vec<Erasure>> {
+    use futures::StreamExt;
+    let metas: Vec<_> = store.list(Some(dir)).try_collect().await?;
     let mut paths: Vec<Path> = metas.into_iter().map(|m| m.location).filter(|p| p.as_ref().ends_with(".json")).collect();
     paths.sort_by(|a, b| a.as_ref().cmp(b.as_ref()));
+    // perf-erase: the GETs in parallel (in order), not one after the other
+    let got: Vec<Result<Option<Erasure>>> = futures::stream::iter(paths)
+        .map(|p| async move {
+            match store.get(&p).await {
+                Ok(g) => Ok(Some(serde_json::from_slice(&g.bytes().await?).with_context(|| format!("erasure record {p}"))?)),
+                // moved to the archive meanwhile
+                Err(object_store::Error::NotFound { .. }) => Ok(None),
+                Err(e) => Err(e.into()),
+            }
+        })
+        .buffered(32)
+        .collect()
+        .await;
     let mut out = Vec::new();
-    for p in paths {
-        let b = store.get(&p).await?.bytes().await?;
-        out.push(serde_json::from_slice(&b).with_context(|| format!("erasure record {p}"))?);
+    for r in got {
+        out.extend(r?);
     }
     Ok(out)
+}
+
+/// The erasures of a database not archived yet (every open one, and done ones the last pass did not move yet), oldest
+/// first.
+pub async fn list(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Vec<Erasure>> {
+    read_records(store, &dir(id)).await
+}
+
+/// Every erasure of a database, archived ones included (the status API), oldest first.
+pub async fn list_all(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Vec<Erasure>> {
+    let mut out = read_records(store, &done_dir(id)).await?;
+    let open = list(store, id).await?;
+    out.retain(|d| !open.iter().any(|o| o.id == d.id));
+    out.extend(open);
+    out.sort_by(|a, b| a.id.cmp(&b.id));
+    Ok(out)
+}
+
+/// Move the record of an erasure that is done to the archive (written there first: a crash between the two leaves it
+/// in both places, and the next pass moves it again).
+pub async fn archive(store: &Arc<dyn ObjectStore>, id: &str, e: &Erasure) -> Result<()> {
+    store.put(&Path::from(format!("{}/{}.json", done_dir(id), e.id)), PutPayload::from(serde_json::to_vec(e)?)).await?;
+    match store.delete(&rec_path(id, &e.id)).await {
+        Ok(()) | Err(object_store::Error::NotFound { .. }) => Ok(()),
+        Err(x) => Err(x.into()),
+    }
 }
 
 /// Whether a database has an erasure not yet done (cheap: one LIST).
 pub async fn any_open(store: &Arc<dyn ObjectStore>, id: &str) -> Result<bool> {
     Ok(list(store, id).await?.iter().any(|e| e.done_ms.is_none()))
+}
+
+/// The targets of an erasure: in its record (perf-erase), else in `{id}.keys` (records of earlier releases).
+pub async fn targets_of(store: &Arc<dyn ObjectStore>, id: &str, e: &Erasure) -> Result<Option<Targets>> {
+    if let Some(h) = &e.targets {
+        return Ok(Some(Targets::decode(&manifest::unhex(h)?)?));
+    }
+    load_targets(store, id, &e.id).await
 }
 
 pub async fn load_targets(store: &Arc<dyn ObjectStore>, id: &str, eid: &str) -> Result<Option<Targets>> {
@@ -307,12 +488,16 @@ pub async fn load_targets(store: &Arc<dyn ObjectStore>, id: &str, eid: &str) -> 
 pub struct ScrubOpts {
     pub sealed: RunOptions,
     pub delta: RunOptions,
+    /// perf-erase: start no new run rewrite once this much time has passed (the scrub is then partial: `complete`
+    /// false, and the caller commits what it did and scrubs again). The runs it wrote must be published well within the
+    /// GC grace, which counts from their write (`gc.rs`). None: no limit.
+    pub budget: Option<std::time::Duration>,
 }
 
 impl Default for ScrubOpts {
     fn default() -> Self {
         let b = super::build::BuildOpts::default();
-        ScrubOpts { sealed: b.sealed, delta: b.delta }
+        ScrubOpts { sealed: b.sealed, delta: b.delta, budget: None }
     }
 }
 
@@ -323,12 +508,59 @@ pub struct Scrub {
     pub retired: Vec<String>,
     pub rows: u64,
     pub runs: u64,
+    /// What changed, for a commit on a newer version (`Compactor::commit_scrub`): (group id, old sealed run, new one),
+    /// and (old delta run, new one); None when every row was a target.
+    pub sealed: Vec<(u32, String, Option<RunLine>)>,
+    pub delta: Vec<(String, Option<RunLine>)>,
+    /// Every run of the version the scrub started from (rewritten, found clean, or left for the next scrub when it
+    /// stopped at its budget): a commit on a newer version checks the runs that are not in it.
+    pub examined: BTreeSet<String>,
+    /// Whether every run that may hold a target was rewritten or found clean (false: stopped at the budget).
+    pub complete: bool,
 }
 
-/// Rewrite one run without the target rows at or below `s_e`. None: the run holds none (nothing written). Some(None):
-/// every row was a target (the run leaves the version).
-async fn rewrite_run(store: &Arc<dyn ObjectStore>, h: &RunH, path: String, opts: &RunOptions, t: &Targets, s_e: u64, dropped: &mut u64) -> Result<Option<Option<RunLine>>> {
+/// Whether the blocks of run `h` that may hold a target of the batch hold one (a row `hit` names that is not a message
+/// row of a derived thread: those go only with the documents that use them, `derive::scrub_unit`).
+async fn probe_hits(store: &Arc<dyn ObjectStore>, h: &RunH, t: &Batch, hit: &(dyn Fn(&[u8], u64) -> bool + Sync)) -> Result<bool> {
+    let run = h.open(store).await?;
+    let mut want: BTreeSet<usize> = BTreeSet::new();
+    for (lo, hi) in t.spans_in(&h.first, &h.last) {
+        if let Some((a, z)) = run.fence.blocks_for(&lo, Some(&hi)) {
+            want.extend(a..=z);
+        }
+    }
+    let want: Vec<usize> = want.into_iter().collect();
+    let mut i = 0;
+    while i < want.len() {
+        // consecutive blocks in one range GET, at most 64 at a time (as the rewrite reads)
+        let mut z = i;
+        while z + 1 < want.len() && want[z + 1] == want[z] + 1 && z + 1 - i < 64 {
+            z += 1;
+        }
+        for blk in view::blocks(store, h, want[i], want[z]).await? {
+            for r in 0..blk.len() {
+                if blk.env(r).first() != Some(&crate::runfmt::PART) && hit(blk.key(r), blk.seq(r)) {
+                    return Ok(true);
+                }
+            }
+        }
+        i = z + 1;
+    }
+    Ok(false)
+}
+
+/// Rewrite one run without the batch's target rows. None: the run holds none (nothing written). Some(None): every row
+/// was a target (the run leaves the version).
+async fn rewrite_run(store: &Arc<dyn ObjectStore>, h: &RunH, path: String, opts: &RunOptions, t: &Batch, dropped: &mut u64) -> Result<Option<Option<RunLine>>> {
     let n = view::block_count(store, h).await?;
+    let any_seq = ctl(&CONTROL_NO_SEQ_BOUND);
+    let hit = |k: &[u8], seq: u64| if any_seq { t.bound(k).is_some() } else { t.hit(k, seq) };
+    // perf-erase: read first only the blocks that may hold a target (the run's fence); a run that holds none is not
+    // read whole nor rewritten (its key span only met the batch's)
+    if !ctl(&CONTROL_NO_PROBE) && !probe_hits(store, h, t, &hit).await? {
+        PROBE_SKIPS.fetch_add(1, Relaxed);
+        return Ok(None);
+    }
     // the new run keeps the codec and the derived flag of the run it replaces (review of c2-delta-log, FIX 2): a run of
     // derived documents is rewritten as one
     let run = h.open(store).await?.clone();
@@ -339,8 +571,6 @@ async fn rewrite_run(store: &Arc<dyn ObjectStore>, h: &RunH, path: String, opts:
     }
     let mut w: Option<RunWriter> = None;
     let mut erased = 0u64;
-    let any_seq = ctl(&CONTROL_NO_SEQ_BOUND);
-    let hit = |k: &[u8], seq: u64| (seq <= s_e || any_seq) && t.hit(k);
     // a derived thread (`derive.rs`): its message rows, then the rest of its customer's rows, scrubbed as one unit
     let mut unit: Option<(Vec<u8>, Vec<super::derive::OutRow>)> = None;
     async fn put(w: &mut Option<RunWriter>, store: &Arc<dyn ObjectStore>, path: &str, opts: &RunOptions, k: &[u8], seq: u64, env: &[u8]) -> Result<()> {
@@ -406,39 +636,70 @@ async fn rewrite_run(store: &Arc<dyn ObjectStore>, h: &RunH, path: String, opts:
 
 /// The scrub of version `cur`: rewrite every run that may hold a target row at or below `s_e`, and build the version
 /// that lists the new runs (number `next`, kind `erase`; same X_d, groups and X_g). `version` None: no run held one.
-pub async fn scrub_version(store: &Arc<dyn ObjectStore>, id: &str, cur: &View, next: u64, epoch: Option<u64>, t: &Targets, s_e: u64, opts: &ScrubOpts) -> Result<Scrub> {
+pub async fn scrub_version(store: &Arc<dyn ObjectStore>, id: &str, cur: &View, next: u64, epoch: Option<u64>, t: &Batch, opts: &ScrubOpts) -> Result<Scrub> {
+    let s_e = t.max_s_e;
     ensure!(cur.x_d >= s_e, "database {id}: an erasure at {s_e} needs X_d at or above it (X_d {})", cur.x_d);
     let mut out = Scrub::default();
     if ctl(&CONTROL_NO_SCRUB) {
         return Ok(out);
     }
+    out.examined = cur.groups.iter().filter_map(|g| g.sealed.as_ref().map(|h| h.line.path.clone())).chain(cur.delta.iter().map(|h| h.line.path.clone())).collect();
+    if ctl(&CONTROL_NO_DELTA_SCRUB) {
+        for h in &cur.delta {
+            out.examined.remove(&h.line.path);
+        }
+    }
     let mut v = cur.meta.clone();
     let tag = format!("{next:010}");
+    let t_start = std::time::Instant::now();
+    // a part stops only after it rewrote a run (runs found clean by the probe are cheap and do not count), so every
+    // part moves on, however short the budget
+    let over = |out: &mut Scrub| {
+        let o = !out.retired.is_empty() && opts.budget.is_some_and(|b| t_start.elapsed() >= b);
+        if o {
+            out.complete = false;
+        }
+        o
+    };
+    out.complete = true;
     for (gi, g) in cur.groups.iter().enumerate() {
         let Some(h) = &g.sealed else { continue };
         if h.line.min_seq > s_e || !t.meets(&h.first, &h.last) {
             continue;
         }
+        if over(&mut out) {
+            continue;
+        }
         let path = manifest::run_path(id, &format!("g{}e{tag}", g.id), g.x_g, epoch);
-        if let Some(new) = rewrite_run(store, h, path, &opts.sealed, t, s_e, &mut out.rows).await? {
+        let t0 = std::time::Instant::now();
+        let rows0 = out.rows;
+        let rw = rewrite_run(store, h, path, &opts.sealed, t, &mut out.rows).await?;
+        trace(serde_json::json!({"ev": "scrub_run", "db": id, "kind": "sealed", "group": g.id, "size": h.line.size, "raw": h.line.raw, "rows_erased": out.rows - rows0, "rewritten": rw.is_some(), "ms": t0.elapsed().as_millis() as u64}));
+        if let Some(new) = rw {
             out.retired.push(h.line.path.clone());
             out.runs += new.is_some() as u64;
+            out.sealed.push((g.id, h.line.path.clone(), new.clone()));
             v.groups[gi].sealed = new;
         }
     }
     if !ctl(&CONTROL_NO_DELTA_SCRUB) {
         let mut delta = Vec::with_capacity(cur.delta.len());
         for h in &cur.delta {
-            if h.line.min_seq > s_e || !t.meets(&h.first, &h.last) {
+            if h.line.min_seq > s_e || !t.meets(&h.first, &h.last) || over(&mut out) {
                 delta.push(h.line.clone());
                 continue;
             }
             let path = manifest::run_path(id, &format!("delta-e{tag}"), h.line.max_seq, epoch);
-            match rewrite_run(store, h, path, &opts.delta, t, s_e, &mut out.rows).await? {
+            let t0 = std::time::Instant::now();
+            let rows0 = out.rows;
+            let rw = rewrite_run(store, h, path, &opts.delta, t, &mut out.rows).await?;
+            trace(serde_json::json!({"ev": "scrub_run", "db": id, "kind": "delta", "size": h.line.size, "raw": h.line.raw, "rows_erased": out.rows - rows0, "rewritten": rw.is_some(), "ms": t0.elapsed().as_millis() as u64}));
+            match rw {
                 None => delta.push(h.line.clone()),
                 Some(new) => {
                     out.retired.push(h.line.path.clone());
                     out.runs += new.is_some() as u64;
+                    out.delta.push((h.line.path.clone(), new.clone()));
                     delta.extend(new);
                 }
             }
@@ -625,9 +886,151 @@ pub async fn retire(store: &Arc<dyn ObjectStore>, id: &str, e: &mut Erasure, new
     Ok(())
 }
 
+/// perf-erase: the retire step of every erasure in `es` at once: the references (pairs, forks) and the old versions are
+/// read once for all of them (the old step read them again for each erasure). `served`: the version the database's
+/// writer serves; a run of an erasure scrubbed in a newer version is kept until the writer installed it.
+pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &str, es: &mut [&mut Erasure], newest: u64, served: u64, grace_ms: u64) -> Result<()> {
+    let es: Vec<&mut &mut Erasure> = es.iter_mut().filter(|e| e.scrubbed_version.is_some() && e.done_ms.is_none()).collect();
+    if es.is_empty() {
+        return Ok(());
+    }
+    let now = now_ms();
+    let refs = referenced_versions(store, id).await?;
+    let mut kept: Vec<(String, Vec<String>)> = Vec::new();
+    for (n, why, runs) in &refs {
+        let listed: Vec<String> = if !runs.is_empty() {
+            runs.clone()
+        } else {
+            match manifest::load(store, id, *n).await {
+                Ok(v) => names(&v).0.into_iter().map(|s| s.to_string()).collect(),
+                Err(_) => Vec::new(),
+            }
+        };
+        kept.push((why.clone(), listed));
+    }
+    // the old versions and the runs they list, read once (only those older than the newest scrub of the batch)
+    let top = es.iter().filter_map(|e| e.scrubbed_version).max().unwrap_or(0);
+    let mut old: Vec<(u64, Vec<String>)> = Vec::new();
+    for n in manifest::list_versions(store, id).await? {
+        if n >= top || n >= newest {
+            continue;
+        }
+        if let Ok(v) = manifest::load(store, id, n).await {
+            old.push((n, names(&v).0.into_iter().map(|s| s.to_string()).collect()));
+        }
+    }
+    let no_retire = ctl(&CONTROL_NO_RETIRE);
+    let mut deleted_versions: BTreeSet<u64> = BTreeSet::new();
+    let mut stray: Option<Vec<String>> = None;
+    for e in es {
+        let scrubbed = e.scrubbed_version.unwrap();
+        let in_grace = e.scrubbed_ms.map_or(true, |s| now < s + grace_ms);
+        for r in e.retired.iter_mut().filter(|r| r.deleted_ms.is_none() && r.released_ms.is_none()) {
+            let mut by: Vec<String> = kept.iter().filter(|(_, l)| l.iter().any(|p| *p == r.path)).map(|(w, _)| w.clone()).collect();
+            if in_grace {
+                by.push("grace".into());
+            }
+            if served < scrubbed {
+                by.push(format!("served version {served}"));
+            }
+            if no_retire {
+                by.push("control".into());
+            }
+            if by.is_empty() {
+                if owns(id, &r.path) || ctl(&CONTROL_NO_OWNERSHIP) {
+                    delete_run(store, id, &r.path).await?;
+                    r.deleted_ms = Some(now);
+                    RUNS_RETIRED.fetch_add(1, Relaxed);
+                } else {
+                    release_ref(store, id, &r.path).await?;
+                    r.released_ms = Some(now);
+                    by.push(format!("owned by database {}: released by reference, not deleted", r.path.strip_prefix("tenants/").and_then(|x| x.split('/').next()).unwrap_or("?")));
+                }
+            }
+            r.kept_by = by;
+        }
+        let retired: BTreeSet<&str> = e.retired.iter().map(|r| r.path.as_str()).collect();
+        let mut versions_kept = Vec::new();
+        for (n, runs) in old.iter().filter(|(n, _)| *n < scrubbed) {
+            if !runs.iter().any(|p| retired.contains(p.as_str())) {
+                continue;
+            }
+            if deleted_versions.contains(n) {
+                continue;
+            }
+            let mut by: Vec<String> = refs.iter().filter(|(m, _, _)| m == n).map(|(_, w, _)| w.clone()).collect();
+            if in_grace {
+                by.push("grace".into());
+            }
+            if served <= *n {
+                by.push("served".into());
+            }
+            if by.is_empty() && !no_retire {
+                match store.delete(&manifest::manifest_path(id, *n)).await {
+                    Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
+                    Err(x) => return Err(x.into()),
+                }
+                deleted_versions.insert(*n);
+                e.versions_deleted += 1;
+            } else {
+                versions_kept.push(format!("version {n}: {}", by.join(", ")));
+            }
+        }
+        // perf-erase: the versions older than the scrub that GC keeps for the restore window (the compactor's version
+        // retention, 7 days by default; DECISIONS 2026-11-07 allows restore points 30 days) still list runs written
+        // before the scrub, which may hold the erased rows: the erasure is not done while one is left
+        let older = old.iter().filter(|(n, _)| *n < scrubbed && !deleted_versions.contains(n)).count();
+        if older > 0 {
+            versions_kept.push(format!("{older} older versions in the restore window (GC deletes them and their runs when it ends)"));
+        }
+        e.versions_kept = versions_kept;
+        if e.live_done_ms.is_none() && served >= scrubbed {
+            e.live_done_ms = Some(now);
+        }
+        if e.retired.iter().all(|r| r.deleted_ms.is_some() || r.released_ms.is_some()) && e.versions_kept.is_empty() && e.live_done_ms.is_some() {
+            // GC deletes an old version first and its runs at a later pass: a run object that no version from the
+            // scrub on lists (nor a pair or a fork) may still hold the rows
+            if stray.is_none() {
+                stray = Some(stray_runs(store, id, scrubbed, &kept).await?);
+            }
+            let n = stray.as_ref().unwrap().len();
+            if n > 0 {
+                e.versions_kept.push(format!("{n} runs of older versions not deleted by GC yet"));
+            } else {
+                e.done_ms.get_or_insert(now);
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Run objects of the database that no version from `from` on lists, nor a pair or a fork (`kept`).
+async fn stray_runs(store: &Arc<dyn ObjectStore>, id: &str, from: u64, kept: &[(String, Vec<String>)]) -> Result<Vec<String>> {
+    let mut listed: BTreeSet<String> = kept.iter().flat_map(|(_, l)| l.iter().cloned()).collect();
+    for n in manifest::list_versions(store, id).await?.into_iter().filter(|n| *n >= from) {
+        if let Ok(v) = manifest::load(store, id, n).await {
+            listed.extend(names(&v).0.into_iter().map(|s| s.to_string()));
+        }
+    }
+    let metas: Vec<_> = store.list(Some(&Path::from(format!("{}/run", root(id))))).try_collect().await?;
+    Ok(metas.into_iter().map(|m| m.location.to_string()).filter(|p| !listed.contains(p)).collect())
+}
+
 /// Group boundaries of a version that are target keys.
 pub fn boundaries_on(v: &Version, t: &Targets) -> u64 {
     v.groups.iter().filter_map(|g| manifest::unhex(&g.lo).ok()).filter(|k| !k.is_empty() && t.hit(k)).count() as u64
+}
+
+/// perf-erase: add what a scrub (a partial one, or the last of several) replaced to the erasure's record: its runs
+/// are retired like a whole scrub's. The caller saves the record before anything else can lose track of them.
+pub fn record_partial(e: &mut Erasure, s: &Scrub) {
+    e.rows_erased += s.rows;
+    e.runs_rewritten += s.runs;
+    for p in &s.retired {
+        if !e.retired.iter().any(|r| &r.path == p) {
+            e.retired.push(Retired { path: p.clone(), deleted_ms: None, released_ms: None, kept_by: vec!["grace".into()] });
+        }
+    }
 }
 
 /// After the scrub: the record of what it did (the targets object goes, its keys are the customer's data).
@@ -635,14 +1038,15 @@ pub async fn record_scrub(store: &Arc<dyn ObjectStore>, id: &str, e: &mut Erasur
     e.state = "scrubbed".into();
     e.scrubbed_version = Some(version);
     e.scrubbed_ms = Some(now_ms());
-    e.rows_erased = s.rows;
-    e.runs_rewritten = s.runs;
-    e.retired = s.retired.iter().map(|p| Retired { path: p.clone(), deleted_ms: None, released_ms: None, kept_by: vec!["grace".into()] }).collect();
+    record_partial(e, s);
     e.boundaries_on_targets = boundaries_on(newest, t);
+    let inline = e.targets.take().is_some();
     save(store, id, e).await?;
-    match store.delete(&keys_path(id, &e.id)).await {
-        Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
-        Err(x) => return Err(x.into()),
+    if !inline {
+        match store.delete(&keys_path(id, &e.id)).await {
+            Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
+            Err(x) => return Err(x.into()),
+        }
     }
     ROWS_ERASED.fetch_add(s.rows, Relaxed);
     SCRUBS.fetch_add(s.version.is_some() as u64, Relaxed);

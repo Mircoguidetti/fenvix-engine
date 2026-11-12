@@ -1155,9 +1155,9 @@ async fn review_erasure_of_a_derived_thread() {
             for key in &gone {
                 tg.add_key(key.clone());
             }
-            ids.push(t.fx_erasure_register(coll, &comp, &tg).await.unwrap().expect("recorded").id);
+            ids.push(t.fx_erasure_register(coll, &comp, &tg, None).await.unwrap().expect("recorded").id);
         }
-        let mut opts = erase::ScrubOpts { sealed: k.sealed.clone(), delta: k.delta.clone() };
+        let mut opts = erase::ScrubOpts { sealed: k.sealed.clone(), delta: k.delta.clone(), budget: None };
         opts.sealed.derived = true;
         if !derived_opts {
             opts = erase::ScrubOpts::default();
@@ -1224,7 +1224,7 @@ async fn fix2_erasure_of_one_collection_keeps_the_messages_still_used() {
         for key in &gone {
             tg.add_key(key.clone());
         }
-        let e = t.fx_erasure_register(coll, &comp, &tg).await.unwrap().expect("recorded");
+        let e = t.fx_erasure_register(coll, &comp, &tg, None).await.unwrap().expect("recorded");
         let all = t.fx_erase_pass(&erase::ScrubOpts::default()).await.unwrap();
         let state = all.iter().find(|x| x.id == e.id).map(|x| x.state.clone());
         t.fx_refresh().await.unwrap();

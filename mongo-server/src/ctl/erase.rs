@@ -72,6 +72,7 @@ pub async fn erase(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
 /// the retention window, the relaxed durability setting and the cached IP allow list. Erase and dropDatabase both forget
 /// it, so a database created again with the same name starts with none of it.
 pub fn forget_in_memory(db: &str) {
+    forget_due(db);
     tenant_bench::lifecycle::forget_wal_state(db);
     crate::fair::forget(db);
     super::pitr::forget(db);
@@ -189,43 +190,289 @@ pub async fn resume(ctl: &Arc<Ctl>, db: &str, op: &Value) -> ApiResult<()> {
 }
 
 // ---- customer erasures (compaction 2, step 7b; `tenant_bench::fx::erase`) -------------------------------------------
+//
+// perf-erase (2026-11-11): the delete that records an erasure returns once its deletes are committed and its record is
+// written (one PUT, with the index beside it); nothing more waits on it. The physical erasure runs later, in batches:
+// a database's pending erasures are scrubbed together when the oldest one has waited `BATCH_MS` (default 1 hour, and
+// never more than an eighth of the 24-hour deadline), or `BATCH_MAX` are pending, so one rewrite of each run serves
+// every erasure of the batch. The scrub reads and writes runs without the database's lock; only the short first step
+// (list, flush, ask the compactor to absorb) takes it. With a compactor the scrub is published through it
+// (`Compactor::commit_scrub`), so it never races the compactor's own publishes.
 
-/// Wakes the erasure agent at once after an erasure is recorded.
+/// Wakes the erasure agent at once (a batch is full, or a test asks).
 static WAKE: tokio::sync::Notify = tokio::sync::Notify::const_new();
-/// How often the agent looks for erasures not done (`--sealed-erasure-poll-ms`).
+/// How often the agent looks at the databases with erasures not done (`--sealed-erasure-poll-ms`).
 pub static POLL_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(60_000);
+/// A batch is due when its oldest pending erasure has waited this long (`--sealed-erasure-batch-ms`, default 1 hour).
+pub static BATCH_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(3_600_000);
+/// ... or when this many erasures of the database are pending (`--sealed-erasure-batch-max`).
+pub static BATCH_MAX: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1_000);
+
+/// What the agent knows of a database's erasures without reading the store: pending ones (count, oldest request) and
+/// when the retire step of scrubbed ones is next worth trying. A database not in the map (after a restart) is looked at
+/// once from its records.
+#[derive(Clone, Debug, Default)]
+struct Due {
+    pending: u64,
+    oldest_ms: Option<u64>,
+    retire_at_ms: Option<u64>,
+    /// a pending erasure waits for its deletes to be absorbed: look again at the next poll
+    retry_soon: bool,
+    /// erasures noted so far (never decreases): a pass counts those noted after it listed the records
+    noted: u64,
+}
+
+static DUE: std::sync::LazyLock<std::sync::Mutex<std::collections::HashMap<String, Due>>> = std::sync::LazyLock::new(Default::default);
+
+fn ord() -> std::sync::atomic::Ordering {
+    std::sync::atomic::Ordering::Relaxed
+}
+
+/// The batch window in effect: `BATCH_MS`, but never more than an eighth of the deadline (the pass, its retries and the
+/// GC grace must fit in the deadline).
+fn window_ms() -> u64 {
+    BATCH_MS.load(ord()).min(tenant_bench::fx::erase::DEADLINE_MS.load(ord()) / 8)
+}
 
 fn index_path(db: &str, eid: &str) -> object_store::path::Path {
     rec::path(&["control", "erasures", db, eid])
 }
 
-/// An erasure of `db` was recorded: index it under `control/erasures/` (so the agent finds it after a crash without
-/// listing every database) and wake the agent. A failure here only delays the pass to the agent's next start.
-pub async fn note_erasure(db: &str, eid: &str) {
-    if let Some(ctl) = super::get() {
-        if let Err(e) = object_store::ObjectStoreExt::put(&ctl.store, &index_path(db, eid), object_store::PutPayload::from_static(b"{}")).await {
-            eprintln!("erasure {eid} of {db}: index not written ({e}); the pass runs at the database's next erasure or the agent's start");
-        }
-    }
-    WAKE.notify_one();
+/// The index object of an erasure (`control/erasures/{db}/{id}`), written beside its record by `register`.
+pub fn index_of(db: &str) -> impl Fn(&str) -> object_store::path::Path + Sync + '_ {
+    move |eid: &str| index_path(db, eid)
 }
 
-/// Run the erasure pass of `db` now, under its entry lock; the index entries of erasures that are done go.
-pub async fn run_pass(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Vec<tenant_bench::fx::erase::Erasure>> {
-    let all = {
-        let mut g = ctl.dbs.lock(db).await;
-        g.fx_erase_pass().await?
+/// An erasure of `db` was recorded (its record and index are written): count it for the batch; wake the agent when
+/// the batch is full.
+pub async fn note_erasure(db: &str, _eid: &str) {
+    let full = {
+        let mut m = DUE.lock().unwrap();
+        let d = m.entry(db.to_string()).or_default();
+        d.pending += 1;
+        d.noted += 1;
+        d.oldest_ms.get_or_insert(now_ms() as u64);
+        d.pending >= BATCH_MAX.load(ord())
     };
+    if full {
+        WAKE.notify_one();
+    }
+}
+
+/// Whether the agent should run the pass of `db` now.
+fn due(db: &str, now: u64) -> bool {
+    let m = DUE.lock().unwrap();
+    let Some(d) = m.get(db) else { return true };
+    (d.pending > 0 && (d.retry_soon || d.pending >= BATCH_MAX.load(ord()) || d.oldest_ms.is_some_and(|o| now >= o + window_ms()))) || d.retire_at_ms.is_some_and(|t| now >= t)
+}
+
+fn noted(db: &str) -> u64 {
+    DUE.lock().unwrap().get(db).map_or(0, |d| d.noted)
+}
+
+/// After a pass: what is left to do, from the records as the pass read them, plus the erasures noted since `noted0`
+/// (recorded while the pass ran: not in its listing; their request is at or after `since_ms`).
+fn remember(db: &str, all: &[tenant_bench::fx::erase::Erasure], waiting: bool, noted0: u64, since_ms: u64) {
+    let grace = tenant_bench::fx::GC_GRACE_MS.load(ord());
+    let now = now_ms() as u64;
+    let pending: Vec<&tenant_bench::fx::erase::Erasure> = all.iter().filter(|e| e.done_ms.is_none() && e.state == "pending").collect();
+    let retire_at = all
+        .iter()
+        .filter(|e| e.done_ms.is_none() && e.state != "pending")
+        .map(|e| {
+            let g = e.scrubbed_ms.unwrap_or(now) + grace;
+            // kept by something else than the grace (the restore window, a restore point, the served version): look
+            // again later, at most hourly
+            let window = tenant_bench::fx::compactor::VERSION_RETENTION_SECS.load(ord()) * 1000 / 4;
+            if g <= now { now + grace.max(window.min(3_600_000)) } else { g }
+        })
+        .min();
+    let mut m = DUE.lock().unwrap();
+    let d = m.entry(db.to_string()).or_default();
+    let late = if crate::ctl::fork::control("FENVIX_CONTROL_FORGET_NOTED") { 0 } else { d.noted.saturating_sub(noted0) };
+    d.pending = pending.len() as u64 + late;
+    d.oldest_ms = pending.iter().map(|e| e.requested_ms).chain((late > 0).then_some(since_ms)).min();
+    d.retire_at_ms = retire_at;
+    d.retry_soon = waiting && !pending.is_empty();
+}
+
+/// The newest version of `db` and the one its writer serves (a compactor's served version is an atomic; without one the
+/// tenant installs a scrub at once). Without an open writer, the newest version of the store for both.
+async fn served_versions(ctl: &Arc<Ctl>, db: &str, all: &[tenant_bench::fx::erase::Erasure]) -> (u64, u64) {
+    let g = ctl.dbs.lock(db).await;
+    let (n, s) = g.fx_versions();
+    drop(g);
+    let top = all.iter().filter_map(|e| e.scrubbed_version).max().unwrap_or(0);
+    match (n, s) {
+        (Some(n), Some(s)) => (n.max(top), s),
+        _ => {
+            let n = tenant_bench::fx::manifest::list_versions(&ctl.store, db).await.ok().and_then(|v| v.last().copied()).unwrap_or(top);
+            (n, n)
+        }
+    }
+}
+
+/// Forget a database (erased or dropped).
+pub fn forget_due(db: &str) {
+    DUE.lock().unwrap().remove(db);
+}
+
+/// One erasure pass of `db` (the agent's when a batch is due, or `POST .../erasures/run`): every pending erasure whose
+/// deletes are absorbed is scrubbed in one batch, then the retire step of every scrubbed erasure runs. Only the first,
+/// short step holds the database's lock. The index entries of erasures that are done go.
+pub async fn run_pass(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Vec<tenant_bench::fx::erase::Erasure>> {
+    use tenant_bench::fx::erase;
+    let t0 = std::time::Instant::now();
+    let (noted0, since_ms) = (noted(db), now_ms() as u64);
+    let c = &ctl.dbs.global.counters;
+    let (g0, r0, b0) = (c.get.load(ord()), c.get_range.load(ord()), c.get_bytes.load(ord()));
+    let mut waiting = false;
+    let mut lock_ms = 0u64;
+    let mut batch_n = 0usize;
+    let mut all = Vec::new();
+    // a scrub that its commit refused (the version changed under it) is tried again at most twice in this pass; a
+    // partial scrub (it stopped at its time budget) is committed and the next part follows at once
+    let (mut abandons, mut parts) = (0u32, 0u32);
+    for attempt in 0..1_000u32 {
+        // the records, read without the database's lock (one GET each, in parallel)
+        all = erase::list(&ctl.store, db).await?;
+        let need = all.iter().filter(|e| e.state == "pending").map(|e| e.s_e).max().unwrap_or(0);
+        if need == 0 {
+            break;
+        }
+        let t_l = std::time::Instant::now();
+        let prep = {
+            let mut g = ctl.dbs.lock(db).await;
+            g.fx_erase_prepare(need).await?
+        };
+        lock_ms += t_l.elapsed().as_millis() as u64;
+        let Some(p) = prep else { return Ok(Vec::new()) };
+        super::failpoint("erase.after_prepare").await;
+        // the base version: the compactor's newest once its X_d reaches the pending erasures (waited without the lock)
+        let base = match &p.fxc {
+            Some(fxc) => {
+                let t_w = std::time::Instant::now();
+                loop {
+                    let v = fxc.current().await;
+                    if v.x_d >= need || t_w.elapsed() > std::time::Duration::from_secs(30) || fxc.stopped.load(ord()) {
+                        break Some(v);
+                    }
+                    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                }
+            }
+            None => p.base.clone(),
+        };
+        let Some(base) = base else { break };
+        let ready: Vec<usize> = all.iter().enumerate().filter(|(_, e)| e.state == "pending" && e.s_e <= base.x_d).map(|(i, _)| i).collect();
+        waiting = ready.len() < all.iter().filter(|e| e.state == "pending").count();
+        if ready.is_empty() {
+            break;
+        }
+        let mut targets = Vec::with_capacity(ready.len());
+        for &i in &ready {
+            match erase::targets_of(&ctl.store, db, &all[i]).await? {
+                Some(t) => targets.push((i, t)),
+                None => return Err(ApiError::new(500, "erasure_targets_lost", format!("database {db}: erasure {} lost its targets before its scrub", all[i].id))),
+            }
+        }
+        let items: Vec<(&erase::Targets, u64)> = targets.iter().map(|(i, t)| (t, all[*i].s_e)).collect();
+        let batch = erase::Batch::new(&items);
+        let view = tenant_bench::fx::view::View::new(Arc::clone(&ctl.store), base.clone(), None)?;
+        let t_s = std::time::Instant::now();
+        let mut opts = erase::ScrubOpts::default();
+        // the runs a part writes are published well within the GC grace, which counts from their write (`gc.rs`)
+        opts.budget = Some(std::time::Duration::from_millis((tenant_bench::fx::GC_GRACE_MS.load(ord()) / 4).max(1_000)));
+        // no merge or reseal of the compactor starts meanwhile: they would make the commit refuse the scrub
+        let _pause = p.fxc.as_ref().map(|c| c.pause_rewrites());
+        let s = erase::scrub_version(&ctl.store, db, &view, base.version + 1, base.writer_epoch, &batch, &opts).await?;
+        let published = match &s.version {
+            None => Some(base.clone()),
+            Some(v) => match &p.fxc {
+                Some(fxc) => fxc.commit_scrub(&base, &s, batch.max_s_e).await?,
+                None => {
+                    let mut g = ctl.dbs.lock(db).await;
+                    g.fx_erase_publish(base.version, v).await?.then(|| v.clone())
+                }
+            },
+        };
+        drop(_pause);
+        erase::trace(json!({"ev": "batch", "db": db, "attempt": attempt, "erasures": ready.len(), "base_version": base.version, "groups": base.groups.len(), "delta_runs": base.delta.len(),
+            "runs_rewritten": s.runs, "runs_retired": s.retired.len(), "rows": s.rows, "complete": s.complete, "published": published.as_ref().map(|v| v.version), "scrub_ms": t_s.elapsed().as_millis() as u64}));
+        let Some(newv) = published else {
+            // the version changed under the scrub: its runs were never listed, they go now; try again on the newer one
+            erase::SCRUB_ABANDONS.fetch_add(1, ord());
+            for (_, _, n) in &s.sealed {
+                if let Some(l) = n {
+                    erase::delete_run(&ctl.store, db, &l.path).await?;
+                }
+            }
+            for (_, n) in &s.delta {
+                if let Some(l) = n {
+                    erase::delete_run(&ctl.store, db, &l.path).await?;
+                }
+            }
+            abandons += 1;
+            if abandons >= 3 {
+                break;
+            }
+            continue;
+        };
+        if p.fxc.is_some() {
+            // the writer serves the scrub's version from now on (a short step: the version is installed in memory)
+            let mut g = ctl.dbs.lock(db).await;
+            g.fx_sync();
+        }
+        if !s.complete {
+            // a part: its replaced runs are recorded in every erasure of the batch (they stay pending) before the next
+            // part, so a crash leaves nothing untracked; the next part starts from the version just published
+            for (i, _) in &targets {
+                erase::record_partial(&mut all[*i], &s);
+                erase::save(&ctl.store, db, &all[*i]).await?;
+            }
+            parts += 1;
+            erase::trace(json!({"ev": "batch_part", "db": db, "part": parts, "runs_rewritten": s.runs}));
+            continue;
+        }
+        let bid = all[ready[0]].id.clone();
+        for (i, t) in &targets {
+            let e = &mut all[*i];
+            e.batch = Some(bid.clone());
+            e.batch_erasures = ready.len() as u64;
+            erase::record_scrub(&ctl.store, db, e, &s, newv.version, t, &newv).await?;
+        }
+        erase::BATCHES.fetch_add(1, ord());
+        erase::BATCHED_ERASURES.fetch_add(ready.len() as u64, ord());
+        batch_n = ready.len();
+        break;
+    }
+    // retire, without the lock: the runs scrubbed out once the grace passed and the writer serves the scrub's version
+    let (newest, served) = served_versions(ctl, db, &all).await;
+    {
+        let mut open: Vec<&mut erase::Erasure> = all.iter_mut().filter(|e| e.done_ms.is_none() && e.scrubbed_version.is_some()).collect();
+        let before: Vec<String> = open.iter().map(|e| serde_json::to_string(&**e).unwrap_or_default()).collect();
+        erase::retire_all(&ctl.store, db, &mut open, newest, served, tenant_bench::fx::GC_GRACE_MS.load(ord())).await?;
+        for (e, b) in open.iter().zip(before) {
+            if serde_json::to_string(&**e).unwrap_or_default() != b {
+                erase::save(&ctl.store, db, e).await?;
+            }
+        }
+    }
+    // done: the record goes to the archive (passes no longer read it) and its index entry goes
     for e in all.iter().filter(|e| e.done_ms.is_some()) {
+        erase::archive(&ctl.store, db, e).await?;
         rec::delete(&ctl.store, &index_path(db, &e.id)).await?;
     }
+    remember(db, &all, waiting, noted0, since_ms);
+    erase::trace(json!({"ev": "pass", "db": db, "lock_ms": lock_ms, "ms": t0.elapsed().as_millis() as u64, "batch": batch_n,
+        "gets_process": c.get.load(ord()) - g0 + c.get_range.load(ord()) - r0, "get_bytes_process": c.get_bytes.load(ord()) - b0,
+        "open": all.iter().filter(|e| e.done_ms.is_none()).count(), "pending": all.iter().filter(|e| e.state == "pending").count()}));
     Ok(all)
 }
 
 /// `GET /v1/databases/{db}/erasures`: every erasure of the database with its state, deadline and whether it is late.
 pub async fn status(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
     meta::check_name(db)?;
-    let all = tenant_bench::fx::erase::list(&ctl.store, db).await?;
+    let all = tenant_bench::fx::erase::list_all(&ctl.store, db).await?;
     let now = now_ms() as u64;
     Ok(json!({ "database": db, "erasures": all.iter().map(|e| e.to_json()).collect::<Vec<_>>(), "overdue": all.iter().filter(|e| e.overdue(now)).count() }))
 }
@@ -238,16 +485,17 @@ pub async fn run_now(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
     Ok(json!({ "database": db, "erasures": all.iter().map(|e| e.to_json()).collect::<Vec<_>>() }))
 }
 
-/// The erasure agent: every `POLL_MS`, and at once when an erasure is recorded, runs the pass of every database with an
-/// erasure not done. Priority and the CPU cap across databases are step 4's pool (plan round 2: erasures come after
-/// absorption and drops, before tier merges and reseals).
+/// The erasure agent: every `POLL_MS` (and at once when a batch is full) it runs the pass of every database with
+/// erasures not done whose batch is due (`due`) or whose scrubbed erasures may be retired now. Priority and the CPU cap
+/// across databases are step 4's pool (plan round 2: erasures come after absorption and drops, before tier merges and
+/// reseals).
 pub fn spawn_agent(ctl: &Arc<Ctl>) {
     let ctl = Arc::clone(ctl);
     tokio::spawn(async move {
         loop {
-            let poll = std::time::Duration::from_millis(POLL_MS.load(std::sync::atomic::Ordering::Relaxed).max(10));
+            let poll = std::time::Duration::from_millis(POLL_MS.load(ord()).max(10));
             let _ = tokio::time::timeout(poll, WAKE.notified()).await;
-            if !tenant_bench::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) {
+            if !tenant_bench::fx::ENABLED.load(ord()) {
                 continue;
             }
             let Some(_gate) = super::agent_gate().await else { return };
@@ -255,10 +503,16 @@ pub fn spawn_agent(ctl: &Arc<Ctl>) {
             let listed: Vec<object_store::path::Path> = ctl.store.list(Some(&rec::path(&["control", "erasures"]))).filter_map(|m| async { m.ok().map(|m| m.location) }).collect().await;
             let mut dbs: Vec<String> = listed.iter().filter_map(|p| p.parts().nth(2).map(|x| x.as_ref().to_string())).collect();
             dbs.dedup();
+            let now = now_ms() as u64;
             for db in dbs {
+                if !due(&db, now) {
+                    continue;
+                }
                 let Ok(_op) = ctl.ops.lock(&db).await else { continue };
                 if let Err(e) = run_pass(&ctl, &db).await {
                     eprintln!("erasure pass of {db}: {}", e.message);
+                    // look again at the next poll
+                    DUE.lock().unwrap().entry(db.clone()).or_default().retry_soon = true;
                 }
             }
         }

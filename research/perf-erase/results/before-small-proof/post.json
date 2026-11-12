@@ -1,0 +1,186 @@
+{
+ "erased_threads": 11,
+ "erased_users": 6,
+ "records_before": {
+  "n": 22,
+  "pending": 0
+ },
+ "batch": {
+  "seconds": 0.6,
+  "gets": 691,
+  "get_bytes": 971630,
+  "puts": 22,
+  "gets_per_user": 115.2,
+  "mb_per_user": 0.16,
+  "states": {
+   "pending": 0,
+   "scrubbed": 22
+  },
+  "batch_ids": [],
+  "rows_erased": 1824
+ },
+ "before_batch": {
+  "resume": {
+   "n": 688,
+   "p50": 3.0,
+   "p99": 13.46,
+   "max": 33.30368000024464
+  },
+  "list10": {
+   "n": 687,
+   "p50": 17.99,
+   "p99": 61.46,
+   "max": 71.31052500062651
+  },
+  "save": {
+   "n": 686,
+   "p50": 3.97,
+   "p99": 10.33,
+   "max": 32.53434299949731
+  }
+ },
+ "during_batch": {
+  "resume": {
+   "n": 1,
+   "p50": 597.32,
+   "p99": 597.32,
+   "max": 597.3174689997904
+  },
+  "list10": {
+   "n": 0,
+   "p50": null,
+   "p99": null,
+   "max": null
+  },
+  "save": {
+   "n": 1,
+   "p50": 4.02,
+   "p99": 4.02,
+   "max": 4.024875000141037
+  }
+ },
+ "after_batch": {
+  "resume": {
+   "n": 691,
+   "p50": 2.94,
+   "p99": 14.75,
+   "max": 32.77065800011769
+  },
+  "list10": {
+   "n": 693,
+   "p50": 18.03,
+   "p99": 66.89,
+   "max": 614.2052229997716
+  },
+  "save": {
+   "n": 693,
+   "p50": 3.83,
+   "p99": 10.41,
+   "max": 30.252978000135045
+  }
+ },
+ "retire": {
+  "seconds_after_batch": 41.0,
+  "done": 22,
+  "of": 22,
+  "overdue": 0,
+  "kept_by": []
+ },
+ "proof": {
+  "db": "app_demo",
+  "examples": [
+   "tenants/app_demo/compacted/01M75T7T6PEDRAM9Z7XADCTVKM.sst",
+   "tenants/app_demo/compacted/01M75T7V71A4H4RNSBAF34XX34.sst",
+   "tenants/app_demo/compacted/01M75T7W3V8T0Q8HJ7940FCPVA.sst",
+   "tenants/app_demo/compacted/01M75T7XCDP22A8STMXDK9M3P9.sst",
+   "tenants/app_demo/compacted/01M75T7Y8PXHZN8QCCBDDW4QAC.sst",
+   "tenants/app_demo/compacted/01M75T7Y8QHV0CZWFGB3H0SEYP.sst",
+   "tenants/app_demo/compacted/01M75T7Y8Y79MXCN4VVWGAZ44G.sst",
+   "tenants/app_demo/compacted/01M75T7Y949TKHGPBZ15QW0ZSB.sst",
+   "tenants/app_demo/compacted/01M75T82EDFEFJZ0PNGGS6J7ZJ.sst",
+   "tenants/app_demo/compacted/01M75T82F3GNGR0SGBNSM2DHVA.sst",
+   "tenants/app_demo/compacted/01M75T83XPBKQS4Q466G4NW6BK.sst",
+   "tenants/app_demo/compacted/01M75T85KRWR3MS8V4Q96Q6M9E.sst",
+   "tenants/app_demo/compacted/01M75T880KNMZ92DJDQAY822PA.sst",
+   "tenants/app_demo/compacted/01M75T880MSH7G6B3XG8DDDVM9.sst",
+   "tenants/app_demo/compacted/01M75T880PFZ2YSHPSX703XKA2.sst",
+   "tenants/app_demo/compacted/01M75T885FTJQ8M7FN7AF0Z99W.sst",
+   "tenants/app_demo/compacted/01M75T8867R1133QYVQ48Z4STW.sst",
+   "tenants/app_demo/compacted/01M75T886A88TC595RYZ9K5Q3K.sst",
+   "tenants/app_demo/compacted/01M75T896J29BXMFDN9Q7DDX4J.sst",
+   "tenants/app_demo/compacted/01M75T8BNQ3GF8SND4RK6X9XZE.sst"
+  ],
+  "ids": 11,
+  "our_objects_holding": 16,
+  "per_prefix": {
+   "_lease": {
+    "bytes": 86,
+    "objects": 1,
+    "objects_holding": 0,
+    "rows_holding": 0
+   },
+   "compacted": {
+    "bytes": 605006316,
+    "objects": 86,
+    "objects_holding": 68,
+    "rows_holding": 68
+   },
+   "compactions": {
+    "bytes": 137640,
+    "objects": 96,
+    "objects_holding": 72,
+    "rows_holding": 72
+   },
+   "fx": {
+    "bytes": 20,
+    "objects": 1,
+    "objects_holding": 0,
+    "rows_holding": 0
+   },
+   "fx/erasures": {
+    "bytes": 15915,
+    "objects": 22,
+    "objects_holding": 0,
+    "rows_holding": 0
+   },
+   "fx/manifest": {
+    "bytes": 1588,
+    "objects": 1,
+    "objects_holding": 0,
+    "rows_holding": 0
+   },
+   "fx/run": {
+    "bytes": 86190235,
+    "objects": 33,
+    "objects_holding": 16,
+    "rows_holding": 11395
+   },
+   "manifest": {
+    "bytes": 309218,
+    "objects": 85,
+    "objects_holding": 82,
+    "rows_holding": 82
+   },
+   "wal": {
+    "bytes": 2265786,
+    "objects": 1381,
+    "objects_holding": 1,
+    "rows_holding": 1
+   }
+  }
+ },
+ "delete_compare": {
+  "erasure": {
+   "n": 20,
+   "p50": 115.35,
+   "p99": 147.95,
+   "max": 147.95
+  },
+  "ordinary": {
+   "n": 20,
+   "p50": 186.81,
+   "p99": 16391.76,
+   "max": 16391.76
+  }
+ }
+}

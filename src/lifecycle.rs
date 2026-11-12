@@ -2066,7 +2066,7 @@ impl Tenant {
     /// Record an erasure of the customer whose deletes this writer just committed (`fx/erase.rs`): S_e is the database's
     /// last seq now. The caller holds the database's exclusive lock from before the deletes until after this call.
     /// None with `--sealed-runs` off (nothing of ours holds the rows; SlateDB's compaction removes them as before).
-    pub async fn fx_erasure_register(&mut self, collection: &str, customer: &[u8], targets: &crate::fx::erase::Targets) -> Result<Option<crate::fx::erase::Erasure>> {
+    pub async fn fx_erasure_register(&mut self, collection: &str, customer: &[u8], targets: &crate::fx::erase::Targets, also: Option<&(dyn Fn(&str) -> object_store::path::Path + Sync)>) -> Result<Option<crate::fx::erase::Erasure>> {
         if !crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) || targets.is_empty() {
             return Ok(None);
         }
@@ -2074,7 +2074,7 @@ impl Tenant {
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
         let s_e = db.snapshot().await?.seq();
         let store = Arc::clone(&self.lc.store);
-        Ok(Some(crate::fx::erase::register(&store, &self.id, collection, customer, targets, s_e).await?))
+        Ok(Some(crate::fx::erase::register(&store, &self.id, collection, customer, targets, s_e, also).await?))
     }
 
     /// The erasure pass of this database (`fx/erase.rs`): for each erasure not done, make X_d reach S_e (a publish),
@@ -2091,6 +2091,8 @@ impl Tenant {
         self.upgrade().await?;
         self.fx_settle_fence().await?;
         for e in all.iter_mut().filter(|e| e.done_ms.is_none()) {
+            let t_e = Instant::now();
+            erase::trace(serde_json::json!({"ev": "erasure_step", "db": self.id, "erasure": e.id, "state": e.state, "s_e": e.s_e, "x_d": self.fx.as_ref().map(|v| v.x_d), "pending_version": self.fx_shared.as_ref().and_then(|s| s.pending_version()), "served_version": self.fx.as_ref().map(|v| v.version)}));
             if e.state == "pending" {
                 // 1. our runs hold every row at or below S_e
                 if let (Some(sh), true) = (self.fx_shared.clone(), self.fx.as_ref().is_none_or(|v| v.x_d < e.s_e)) {
@@ -2103,6 +2105,7 @@ impl Tenant {
                     }
                     self.fx_sync();
                     if self.fx.as_ref().is_none_or(|v| v.x_d < e.s_e) {
+                        erase::trace(serde_json::json!({"ev": "erasure_wait_absorb", "db": self.id, "erasure": e.id, "ms": t_e.elapsed().as_millis() as u64}));
                         continue;
                     }
                 }
@@ -2117,13 +2120,15 @@ impl Tenant {
                 }
                 let cur = Arc::clone(self.fx.as_ref().expect("a version"));
                 // 2. scrub
-                let Some(t) = erase::load_targets(&store, &self.id, &e.id).await? else {
+                let Some(t) = erase::targets_of(&store, &self.id, e).await? else {
                     anyhow::bail!("database {}: erasure {} lost its targets before its scrub", self.id, e.id);
                 };
                 let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
                 let epoch = Some(db.manifest().writer_epoch());
                 let next = manifest_next(&store, &self.id, cur.version).await?;
-                let s = erase::scrub_version(&store, &self.id, &cur, next, epoch, &t, e.s_e, opts).await?;
+                let t_s = Instant::now();
+                let s = erase::scrub_version(&store, &self.id, &cur, next, epoch, &erase::Batch::single(&t, e.s_e), opts).await?;
+                erase::trace(serde_json::json!({"ev": "erasure_scrub", "db": self.id, "erasure": e.id, "base_version": cur.version, "next": next, "pending_version": self.fx_shared.as_ref().and_then(|s| s.pending_version()), "groups": cur.groups.len(), "delta_runs": cur.delta.len(), "ranges": t.ranges.len(), "keys": t.keys.len(), "runs_retired": s.retired.len(), "rows": s.rows, "ms": t_s.elapsed().as_millis() as u64}));
                 let version = match &s.version {
                     Some(v) => {
                         match crate::fx::manifest::create(&store, &self.id, v).await {
@@ -2143,8 +2148,10 @@ impl Tenant {
             }
             // 4. retire
             let newest = self.fx.as_ref().map_or(0, |v| v.version);
+            let t_r = Instant::now();
             erase::retire(&store, &self.id, e, newest, crate::fx::GC_GRACE_MS.load(Relaxed)).await?;
             erase::save(&store, &self.id, e).await?;
+            erase::trace(serde_json::json!({"ev": "erasure_retire", "db": self.id, "erasure": e.id, "state": e.state, "retire_ms": t_r.elapsed().as_millis() as u64, "ms": t_e.elapsed().as_millis() as u64, "done": e.done_ms.is_some()}));
         }
         Ok(all)
     }
@@ -2187,6 +2194,69 @@ impl Tenant {
         self.fx_loaded = Instant::now();
         crate::fx::PUBLISHES.fetch_add(1, Relaxed);
         Ok(rep)
+    }
+
+    /// perf-erase: the short first step of an erasure batch, under the exclusive lock (the caller lists the records
+    /// before, without it). When X_d is below `need` (the highest S_e of the pending erasures), makes it move up: with a
+    /// compactor, flushes the memtable and asks it to absorb up to `need` (the batch waits for it without the lock);
+    /// without one, publishes a delta run now. Returns the version this tenant serves (the no-compactor batch scrubs it).
+    pub async fn fx_erase_prepare(&mut self, need: u64) -> Result<Option<crate::fx::manifest::Version>> {
+        use std::sync::atomic::Ordering::Relaxed;
+        if !crate::fx::ENABLED.load(Relaxed) || need == 0 {
+            return Ok(self.fx.as_ref().map(|v| v.meta.clone()));
+        }
+        self.upgrade().await?;
+        self.fx_settle_fence().await?;
+        if self.fx.as_ref().is_none_or(|v| v.x_d < need) {
+            if let Some(sh) = self.fx_shared.clone() {
+                sh.absorb_upto.fetch_max(need, Relaxed);
+                if let Some(Mode::Writer(db)) = self.mode.as_ref() {
+                    db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await?;
+                }
+                self.fx_sync();
+            } else {
+                let mut o = crate::fx::build::BuildOpts { group_bytes: crate::fx::GROUP_BYTES.load(Relaxed), ..Default::default() };
+                o.reseal = if self.fx.is_none() { crate::fx::build::Reseal::All } else { crate::fx::build::Reseal::None };
+                // None: release E1 announced, envelopes start one T_pin later (the next pass)
+                self.fx_publish(&o, None).await?;
+            }
+        }
+        Ok(self.fx.as_ref().map(|v| v.meta.clone()))
+    }
+
+    /// perf-erase, without a compactor: publish an erasure scrub made on version `base` (the batch scrubbed it without
+    /// the lock). Under the exclusive lock: refused (false) when this tenant serves another version now, or another
+    /// publisher took the slot (rule 24); then the caller deletes the scrub's runs and the next pass scrubs again.
+    pub async fn fx_erase_publish(&mut self, base: u64, v: &crate::fx::manifest::Version) -> Result<bool> {
+        use std::sync::atomic::Ordering::Relaxed;
+        anyhow::ensure!(self.fx_shared.is_none(), "database {}: a compactor publishes this database's versions", self.id);
+        self.fx_settle_fence().await?;
+        if self.fx.as_ref().map(|x| x.version) != Some(base) {
+            return Ok(false);
+        }
+        let store = Arc::clone(&self.lc.store);
+        let mut v = v.clone();
+        v.version = manifest_next(&store, &self.id, base).await?;
+        if v.version != base + 1 {
+            return Ok(false);
+        }
+        if let Some(Mode::Writer(db)) = self.mode.as_ref() {
+            v.writer_epoch = Some(db.manifest().writer_epoch());
+        }
+        match crate::fx::manifest::create(&store, &self.id, &v).await {
+            Ok(true) => {}
+            Ok(false) => return Err(self.fx_publish_failed(anyhow::Error::new(crate::fx::LostRace(format!("erasure version {} of {} lost the race", v.version, self.id)))).await),
+            Err(x) => return Err(self.fx_publish_failed(anyhow::Error::new(crate::fx::UnknownPublish { version: Box::new(v.clone()), msg: format!("{x:#}") })).await),
+        }
+        self.fx_install(crate::fx::view::View::new(Arc::clone(&store), v, self.fx.as_deref())?);
+        self.fx_loaded = Instant::now();
+        crate::fx::PUBLISHES.fetch_add(1, Relaxed);
+        Ok(true)
+    }
+
+    /// The version this tenant serves (perf-erase: the retire step deletes no run it may still read).
+    pub fn fx_served_version(&self) -> Option<u64> {
+        self.fx.as_ref().map(|v| v.version)
     }
 
     /// Read the envelope marker (at open and after an upgrade).
