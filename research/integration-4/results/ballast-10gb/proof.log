@@ -1,0 +1,2 @@
+2026-11-12T07:28:00Z 1. generate: skipped (SKIP_GEN=1), the data set of the earlier attempt is reused: app_data_b01.gen.json app_data_b01.sample.bson app_data_b02.gen.json app_data_b02.sample.bson app_data_b03.gen.json app_data_b03.sample.bson ballast-gen-summary.json 
+2026-11-12T07:28:00Z 2. our server (product defaults + layout) and the reference mongod
