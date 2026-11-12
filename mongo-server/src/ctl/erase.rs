@@ -79,6 +79,9 @@ pub fn forget_in_memory(db: &str) {
     super::pitr::forget(db);
     super::durability::forget(db);
     crate::netguard::get().forget_cached(db);
+    // P-big-speed fix 3: the customer boxes' marks and the runs' blocks on the local disk floor (zeroed)
+    crate::custbox::forget_db(db);
+    tenant_bench::fx::floor::forget_db(db);
 }
 
 /// dropDatabase: the settings records erase also deletes (the metadata record, which holds the retention window and the IP

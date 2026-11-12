@@ -27,6 +27,7 @@ pub mod drop;
 pub mod gc;
 pub mod droptest;
 pub mod erase;
+pub mod floor;
 pub mod hold;
 pub mod local;
 pub mod pool;

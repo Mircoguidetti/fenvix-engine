@@ -641,6 +641,16 @@ struct Args {
     /// document key (inside the customer's box) instead of the shared locator (false: the locator, as before).
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
     id_check_in_box: bool,
+    /// P-big-speed fix 3: the local-disk floor under the runs' block cache (the customer's box kept in memory, then on
+    /// local disk): its directory (emptied at start; default: `<temp dir>/fenvix-box-floor-<port>`).
+    #[arg(long, default_value = "")]
+    box_disk_dir: String,
+    /// Size of the disk floor in MiB (0 = a quarter of the free space of its file system, at most 4096; with
+    /// `--box-disk false` no floor).
+    #[arg(long, default_value_t = 0)]
+    box_disk_mb: u64,
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    box_disk: bool,
     /// A customer's box is warmed again after this many seconds.
     #[arg(long, default_value_t = 600)]
     customer_box_ttl_secs: u64,
@@ -951,6 +961,14 @@ async fn run() -> Result<()> {
     opening::ENABLED.store(args.first_course, std::sync::atomic::Ordering::Relaxed);
     custbox::ENABLED.store(args.customer_box, std::sync::atomic::Ordering::Relaxed);
     coll::ID_CHECK_IN_BOX.store(args.id_check_in_box, std::sync::atomic::Ordering::Relaxed);
+    if args.box_disk {
+        let port = args.listen.rsplit(':').next().unwrap_or("0").to_string();
+        let dir = if args.box_disk_dir.is_empty() { std::env::temp_dir().join(format!("fenvix-box-floor-{port}")) } else { std::path::PathBuf::from(&args.box_disk_dir) };
+        std::fs::create_dir_all(&dir)?;
+        let mb = if args.box_disk_mb > 0 { args.box_disk_mb } else { (tenant_bench::counter::free_disk_bytes(&dir).unwrap_or(0) / 4 >> 20).min(4096) };
+        tenant_bench::fx::floor::install(dir.clone(), mb << 20)?;
+        eprintln!("box disk floor: {} MiB in {}", mb, dir.display());
+    }
     custbox::TTL_SECS.store(args.customer_box_ttl_secs, std::sync::atomic::Ordering::Relaxed);
     opening::IDLE_SECS.store(args.first_course_idle_secs, std::sync::atomic::Ordering::Relaxed);
     opening::MAX_AGE_SECS.store(args.first_course_days * 86_400, std::sync::atomic::Ordering::Relaxed);

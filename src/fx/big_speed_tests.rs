@@ -279,3 +279,37 @@ async fn runs_open_when_a_version_loads() {
         assert_eq!(as_vec(t.scan_range(&lo, Some(&hi), false, None, 64 << 10).await.unwrap()), model_range(&m, &lo, Some(&hi), false, None));
     }
 }
+
+/// Fix 3, "in memory, then on local disk": after the warm-up, the runs' RAM cache is emptied (the box left the RAM);
+/// the customer's visit is then served from the disk floor with no GET, exactly. A dropped database leaves no byte of
+/// its blocks in the floor's files.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn box_comes_back_from_the_disk_floor() {
+    let _s = SERIAL.lock().await;
+    enable();
+    let dir = std::env::temp_dir().join(format!("bs-floor-{}", std::process::id()));
+    super::floor::install(dir.clone(), 256 << 20).unwrap();
+    let ws = WaveStore::new();
+    let store: Arc<dyn ObjectStore> = ws.clone();
+    let (t, m) = build(&store, "bs-floor").await;
+    for c in [4usize, 12, 50] {
+        view::clear_cache();
+        let (lo, hi) = range(c, "");
+        t.warm_range(&lo, &hi, 8 << 20).await.unwrap();
+        view::clear_cache();
+        let h0 = super::floor::HITS.load(Relaxed);
+        ws.start();
+        visit(&t, &m, c).await;
+        let (waves, gets) = ws.stop();
+        assert_eq!((waves, gets), (0, 0), "customer {c}: the visit from the disk floor needs no GET");
+        assert!(super::floor::HITS.load(Relaxed) > h0, "customer {c}: served by the floor");
+    }
+    super::floor::forget_db("bs-floor");
+    assert_eq!(super::floor::usage().1, 0, "every block of the dropped database forgotten");
+    let filler = vec![9u8; 300];
+    let on_disk: Vec<u8> = std::fs::read_dir(&dir).unwrap().flat_map(|e| std::fs::read(e.unwrap().path()).unwrap()).collect();
+    assert!(on_disk.iter().all(|b| *b == 0) || !on_disk.windows(filler.len()).any(|w| w == &filler[..]), "zeroed");
+    assert!(on_disk.iter().all(|b| *b == 0), "a dropped database's run blocks are still in the floor's files");
+    super::floor::install(dir.clone(), 0).unwrap();
+    let _ = std::fs::remove_dir_all(&dir);
+}
