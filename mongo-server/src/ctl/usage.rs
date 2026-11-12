@@ -294,24 +294,38 @@ impl Usage {
             self.confirm(&p.db);
             return;
         }
+        // Only the storage requests counted since the first probe began are taken out (and held back); commands and
+        // activity counted meanwhile stay (they come from commands that found the database, review of
+        // fix-erase-fork-usage, U6). A day record left with nothing in it is dropped, so nothing is written for the name.
         let key = (p.db.clone(), st.day);
-        let cur = g.days.get(&key).map(|d| d.counts.clone()).unwrap_or_default();
         let base_counts = st.base.as_ref().map(|d| d.counts.clone()).unwrap_or_default();
-        let delta = cur.minus(&base_counts);
-        match st.base {
-            Some(d) => {
-                g.days.insert(key.clone(), d);
-            }
-            None => {
+        let mut delta = Counts::default();
+        if let Some(d) = g.days.get_mut(&key) {
+            delta = d.counts.minus(&base_counts);
+            d.counts = d.counts.minus(&delta);
+            // dirty again only if something other than these storage requests changed meanwhile (a record already written
+            // before, maybe since erased by another process, is not written again for nothing: review U4)
+            let changed = match &st.base {
+                Some(b) => d.commands != b.commands || d.last_active_ms != b.last_active_ms || d.wakes.len() != b.wakes.len() || d.storage != b.storage,
+                None => d.commands != 0 || d.last_active_ms != 0 || !d.wakes.is_empty() || d.storage.is_some(),
+            };
+            d.dirty = changed || st.base.as_ref().is_some_and(|b| b.dirty);
+            if st.base.is_none() && !changed {
                 g.days.remove(&key);
             }
         }
         g.held.entry(key).or_default().add(&delta);
         let today = day_now();
         if today != st.day {
-            // a day that began during the probe holds only the probe's requests
-            if let Some(d) = g.days.remove(&(p.db.clone(), today)) {
-                g.held.entry((p.db.clone(), today)).or_default().add(&d.counts);
+            // a day that began during the probe holds only requests made since the probe began
+            let tkey = (p.db.clone(), today);
+            if let Some(d) = g.days.get_mut(&tkey) {
+                let c = std::mem::take(&mut d.counts);
+                let empty = d.commands == 0 && d.last_active_ms == 0 && d.storage.is_none() && d.wakes.is_empty();
+                if empty {
+                    g.days.remove(&tkey);
+                }
+                g.held.entry(tkey).or_default().add(&c);
             }
         }
     }
