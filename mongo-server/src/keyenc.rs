@@ -33,16 +33,35 @@ fn escaped(bytes: &[u8], out: &mut Vec<u8>) {
 }
 
 fn number(v: &Bson, out: &mut Vec<u8>) {
+    let int_of = |f: f64| if f.is_finite() && f.fract() == 0.0 && f.abs() < 9.2e18 { Some(f as i64) } else { None };
+    let mut tail = None;
     let (f, exact): (f64, Option<i64>) = match v {
         Bson::Int32(i) => (*i as f64, Some(*i as i64)),
         Bson::Int64(i) => (*i as f64, Some(*i)),
-        Bson::Double(f) => (*f, if f.is_finite() && f.fract() == 0.0 && f.abs() < 9.2e18 { Some(*f as i64) } else { None }),
+        Bson::Double(f) => (*f, int_of(*f)),
         Bson::Decimal128(d) => {
             let f: f64 = d.to_string().parse().unwrap_or(f64::NAN);
-            (f, None)
+            // A decimal equal to a double or to a 64-bit integer encodes as that number (one key, as on mongod); any
+            // other decimal (0.1, 1E+400) is a different key (review of 62b8619, P8): see below.
+            match crate::query::decimal_key_tail(v, f) {
+                (Some(i), None) => (f, Some(i)),
+                (_, t) => {
+                    tail = t;
+                    (f, int_of(f))
+                }
+            }
         }
         _ => (f64::NAN, None),
     };
+    if let Some(t) = tail {
+        // its nearest double, then a mark where a number has its integer or zeros (`decimal_mark`: no number with that
+        // nearest double has it, so no number's key is a prefix of this one), then its exact value (escaped, terminated)
+        out.push(1);
+        out.extend(sortable_f64(f));
+        out.extend(decimal_mark(f));
+        escaped(t.as_bytes(), out);
+        return;
+    }
     if f.is_nan() {
         out.push(0); // NaN sorts below every other number
         return;
@@ -53,6 +72,28 @@ fn number(v: &Bson, out: &mut Vec<u8>) {
         Some(i) => out.extend(sortable_i64(i)),
         None => out.extend([0u8; 8]),
     }
+}
+
+/// The 8 bytes after the nearest double `f` that mark a Decimal128 with an exact-value tail. A number's own 8 bytes are
+/// its integer (when `f` is a whole number below 9.2e18 in size) or zeros: the integers with nearest double `f` are near
+/// `f`, so 0xFF x 8 (Int64::MAX) cannot be one of them below 9.2e18, and 0x80 00.. (the integer 0) cannot be one at or
+/// above it.
+fn decimal_mark(f: f64) -> [u8; 8] {
+    if f.abs() < 9.2e18 { [0xFF; 8] } else { sortable_i64(0) }
+}
+
+/// The nearest double of a number key's 8 double bytes (inverse of `sortable_f64`).
+fn f64_of_sortable(b: &[u8]) -> f64 {
+    let t = u64::from_be_bytes(b.try_into().unwrap());
+    let bits = if t >> 63 == 1 { t & !(1 << 63) } else { !t };
+    f64::from_bits(bits)
+}
+
+/// The first bytes of every key of a number whose nearest double is that of `v` (an index range widened to them reads
+/// every number equal to or within one double step of a bound; documents are matched against the filter after).
+pub fn number_group(v: &Bson) -> Option<Vec<u8>> {
+    let e = encode(v);
+    (e.len() >= 10 && e[1] == 1).then(|| e[..10].to_vec())
 }
 
 fn body(v: &Bson, out: &mut Vec<u8>) {
@@ -175,7 +216,12 @@ fn skip_body(rank: u8, b: &[u8], i: &mut usize) -> Option<()> {
             let x = *b.get(*i)?;
             *i += 1;
             if x == 1 {
-                take(b, i, 16)
+                take(b, i, 16)?;
+                let f = f64_of_sortable(&b[*i - 16..*i - 8]);
+                if b[*i - 8..*i] == decimal_mark(f) {
+                    skip_escaped(b, i)?; // a decimal's exact value
+                }
+                Some(())
             } else {
                 Some(())
             }
@@ -284,6 +330,13 @@ mod tests {
         vals.push(Bson::RegularExpression(bson::Regex { pattern: "ab".try_into().unwrap(), options: "i".try_into().unwrap() }));
         vals.push(Bson::Document(doc! { "a": [1, { "b\0": Bson::Null }], "c": "x\0y" }));
         vals.push(Bson::Decimal128("1.5".parse().unwrap()));
+        // decimals with an exact-value tail (review of 62b8619, P8), next to the numbers sharing their nearest double
+        for d in ["0.1", "10.0000000000000000001", "1E+400", "-1E+400", "9223372036854775807.5", "-9223372036854775808.5"] {
+            vals.push(Bson::Decimal128(d.parse().unwrap()));
+        }
+        vals.push(Bson::Int64(i64::MAX));
+        vals.push(Bson::Int64(i64::MIN));
+        vals.push(Bson::Double(0.1));
         for v in &vals {
             let e = encode(v);
             assert_eq!(skip(&e), Some(e.len()), "{v:?}");
@@ -293,6 +346,20 @@ mod tests {
             if e.len() > 1 {
                 assert_eq!(skip(&e[..e.len() - 1]).filter(|n| *n == e.len()), None, "{v:?} cut");
             }
+        }
+    }
+
+    #[test]
+    fn decimals_are_one_key_only_with_equal_numbers() {
+        let dec = |s: &str| Bson::Decimal128(s.parse().unwrap());
+        let pairs_distinct = [(dec("0.1"), Bson::Double(0.1)), (dec("10.0000000000000000001"), Bson::Int32(10)), (dec("1E+400"), Bson::Double(f64::INFINITY)), (dec("9223372036854775807.5"), Bson::Int64(i64::MAX)), (dec("0.1"), dec("0.10000000000000001"))];
+        for (a, b) in &pairs_distinct {
+            let (ea, eb) = (encode(a), encode(b));
+            assert_ne!(ea, eb, "{a:?} {b:?}");
+            assert!(!ea.starts_with(&eb) && !eb.starts_with(&ea), "prefix: {a:?} {b:?}");
+        }
+        for (a, b) in [(dec("9007199254740993"), Bson::Int64(9007199254740993)), (dec("10.00"), Bson::Int32(10)), (dec("0.5"), Bson::Double(0.5)), (dec("Infinity"), Bson::Double(f64::INFINITY))] {
+            assert_eq!(encode(&a), encode(&b), "{a:?} {b:?}");
         }
     }
 

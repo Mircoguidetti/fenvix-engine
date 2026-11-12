@@ -129,10 +129,24 @@ pub fn encode_sortable_with(v: &Bson, c: Option<&crate::collation::Collation>) -
         Bson::Decimal128(_) => {
             let f = crate::query::as_f64(v);
             out.extend(sortable_f64(f));
-            if f.is_finite() && f.fract() == 0.0 && f.abs() < 9.2e18 {
-                out.extend(sortable_i64(f as i64));
-            } else {
-                out.extend([0u8; 8]);
+            // A decimal equal to a double, or to a 64-bit integer, encodes as that number does (they are one key, as on
+            // mongod). Any other decimal (0.1, 10.0000000000000000001, 1E+400) gets its exact value after: two numbers
+            // that compare different are never one key (P8). The tail does not sort with the number: a decimal within
+            // one double step of a double sorts after it whatever its side (the order of `_id` keys only; answers are
+            // compared exactly).
+            match crate::query::decimal_key_tail(v, f) {
+                (Some(i), None) => out.extend(sortable_i64(i)),
+                (_, tail) => {
+                    if f.is_finite() && f.fract() == 0.0 && f.abs() < 9.2e18 {
+                        out.extend(sortable_i64(f as i64));
+                    } else {
+                        out.extend([0u8; 8]);
+                    }
+                    if let Some(t) = tail {
+                        out.push(0xD1);
+                        out.extend(t.into_bytes());
+                    }
+                }
             }
         }
         Bson::String(s) | Bson::Symbol(s) => match c {
@@ -191,6 +205,25 @@ mod tests {
         let mut by_bytes = enc.clone();
         by_bytes.sort();
         assert_eq!(by_bytes, enc_sorted);
+    }
+
+    #[test]
+    fn decimals_are_one_key_only_with_equal_numbers() {
+        let dec = |s: &str| Bson::Decimal128(s.parse().unwrap());
+        // different values, one key before (review of 62b8619, P8): now distinct
+        assert_ne!(encode_sortable(&dec("0.1")), encode_sortable(&Bson::Double(0.1)));
+        assert_ne!(encode_sortable(&dec("10.0000000000000000001")), encode_sortable(&Bson::Int32(10)));
+        assert_ne!(encode_sortable(&dec("1E+400")), encode_sortable(&Bson::Double(f64::INFINITY)));
+        assert_ne!(encode_sortable(&dec("0.1")), encode_sortable(&dec("0.10000000000000001")));
+        // equal values, one key (as on mongod)
+        assert_eq!(encode_sortable(&dec("9007199254740993")), encode_sortable(&Bson::Int64(9007199254740993)));
+        assert_ne!(encode_sortable(&dec("9007199254740993")), encode_sortable(&Bson::Double(9007199254740992.0)));
+        assert_eq!(encode_sortable(&dec("10")), encode_sortable(&Bson::Int32(10)));
+        assert_eq!(encode_sortable(&dec("10.00")), encode_sortable(&Bson::Double(10.0)));
+        assert_eq!(encode_sortable(&dec("0.5")), encode_sortable(&Bson::Double(0.5)));
+        assert_eq!(encode_sortable(&dec("0.10")), encode_sortable(&dec("0.1")));
+        assert_eq!(encode_sortable(&dec("Infinity")), encode_sortable(&Bson::Double(f64::INFINITY)));
+        assert_eq!(encode_sortable(&dec("-0")), encode_sortable(&Bson::Int32(0)));
     }
 
     #[test]

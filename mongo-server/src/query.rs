@@ -103,6 +103,29 @@ fn exact_num(v: &Bson) -> ExactNum {
     }
 }
 
+/// How a Decimal128 differs from its nearest double `f`, for its key (`layout::encode_sortable`): `(Some(i), None)` when
+/// it is exactly the 64-bit integer `i` but not the double (its key is the integer's); `(None, None)` when it is exactly
+/// `f` (or NaN or an infinity); `(None, Some(text))` otherwise, with its exact value, normalized (1.0 and 1.00 are one).
+pub fn decimal_key_tail(v: &Bson, f: f64) -> (Option<i64>, Option<String>) {
+    // NaN and the infinities are the double ones
+    let ExactNum::Fin(d) = exact_num(v) else { return (None, None) };
+    if f.is_infinite() {
+        // a finite decimal past the double range (its nearest double is an infinity)
+        return (None, Some(d.normalized().to_string()));
+    }
+    if let Ok(fd) = bigdecimal::BigDecimal::try_from(f) {
+        if fd == d {
+            return (None, None);
+        }
+    }
+    if d.is_integer() {
+        if let Some(i) = bigdecimal::ToPrimitive::to_i64(&d) {
+            return (Some(i), None);
+        }
+    }
+    (None, Some(d.normalized().to_string()))
+}
+
 fn int_of(v: &Bson) -> i64 {
     match v {
         Bson::Int32(x) => *x as i64,
