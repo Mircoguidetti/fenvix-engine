@@ -168,7 +168,7 @@ pub fn resolve_hint(indexes: &[IndexDef], hint: Option<&Bson>) -> R<Hint> {
             if d.len() == 1 && d.contains_key("_id") {
                 return Ok(Hint::None);
             }
-            indexes.iter().position(|i| i.state == State::Ready && !i.hidden && i.key_pattern() == *d).map(Hint::Index).ok_or_else(bad)
+            indexes.iter().position(|i| i.state == State::Ready && !i.hidden && crate::index::same_key_order(&i.key_pattern(), d)).map(Hint::Index).ok_or_else(bad)
         }
         Some(_) => Err(MongoError::new(2, "BadValue", "hint must be either a string or a document".into())),
     }

@@ -751,7 +751,7 @@ impl Server {
             let wanted = IndexDef::from_stored(&idx).ok_or_else(|| MongoError::new(67, "CannotCreateIndex", "bad index specification".into()))?;
             if let Some(ex) = indexes.iter().find(|i| i.name == name) {
                 let no_hidden = |d: &Document| { let mut d = d.clone(); d.remove("hidden"); d };
-                if ex.spec.get_document("key").map(|k| k == key).unwrap_or(false) && same_options(&no_hidden(&ex.spec), &no_hidden(&idx)) {
+                if ex.spec.get_document("key").map(|k| crate::index::same_key_order(k, key)).unwrap_or(false) && same_options(&no_hidden(&ex.spec), &no_hidden(&idx)) {
                     if new_names.contains(&name) {
                         return Err(MongoError::new(96, "OperationFailed", format!("Index build failed: {}: Collection {ns} ( {} ) :: caused by :: Cannot build two identical indexes. Try again without duplicate indexes.", fake_uuid(), fake_uuid())));
                     }
@@ -759,7 +759,7 @@ impl Server {
                     continue;
                 }
                 let without_ttl = |d: &Document| { let mut d = d.clone(); for f in ["expireAfterSeconds", "weights", "default_language", "language_override", "textIndexVersion", "textKey"] { d.remove(f); } d };
-                if ex.spec.get_document("key").map(|k| k == key).unwrap_or(false) && same_options(&without_ttl(&ex.spec), &without_ttl(&idx)) {
+                if ex.spec.get_document("key").map(|k| crate::index::same_key_order(k, key)).unwrap_or(false) && same_options(&without_ttl(&ex.spec), &without_ttl(&idx)) {
                     return Err(MongoError::new(85, "IndexOptionsConflict", format!("An equivalent index already exists with the same name but different options. Requested index: {}, existing index: {}", fmt_doc(&idx), fmt_doc(&ex.spec))));
                 }
                 return Err(MongoError::new(86, "IndexKeySpecsConflict", format!("An existing index has the same name as the requested index. When index names are not specified, they are auto generated and can cause conflicts. Please refer to our documentation. Requested index: {}, existing index: {}", fmt_doc(&idx), fmt_doc(&ex.spec))));
@@ -774,7 +774,7 @@ impl Server {
                     .map(|(f, v)| (f, crate::update::fmt_bson(&v)))
                     .collect()
             };
-            if let Some(ex) = indexes.iter().find(|i| i.spec.get_document("key").map(|k| k == key).unwrap_or(false) && crate::collation::same(&i.collation, &index_collation) && identity(&i.spec) == identity(&idx)) {
+            if let Some(ex) = indexes.iter().find(|i| i.spec.get_document("key").map(|k| crate::index::same_key_order(k, key)).unwrap_or(false) && crate::collation::same(&i.collation, &index_collation) && identity(&i.spec) == identity(&idx)) {
                 let drop_hidden = |d: &Document| { let mut d = d.clone(); d.remove("hidden"); d };
                 if same_options(&drop_hidden(&ex.spec), &drop_hidden(&idx)) {
                     return Err(MongoError::new(85, "IndexOptionsConflict", format!("Index already exists with a different name: {}", ex.name)));
@@ -1009,7 +1009,7 @@ impl Server {
                 if k.len() == 1 && k.contains_key("_id") {
                     return Err(MongoError::new(72, "InvalidOptions", "cannot drop _id index".into()));
                 }
-                match indexes.iter().position(|i| i.state == State::Ready && i.spec.get_document("key").map(|x| x == k).unwrap_or(false)) {
+                match indexes.iter().position(|i| i.state == State::Ready && i.spec.get_document("key").map(|x| crate::index::same_key_order(x, k)).unwrap_or(false)) {
                     Some(p) => vec![p],
                     None => return Err(MongoError::new(27, "IndexNotFound", format!("can't find index with key: {}", fmt_doc(k)))),
                 }
