@@ -1,0 +1,24 @@
+{
+ "databases": {
+  "app_data_b01": {
+   "reads": 4236,
+   "wrong": 0,
+   "reference_documents": 316966,
+   "sampled_customers": 35,
+   "q2_tickets_found": "1740/1740",
+   "seconds": 2169.6
+  },
+  "app_data_b02": {
+   "reads": 4236,
+   "wrong": 0,
+   "reference_documents": 366217,
+   "sampled_customers": 35,
+   "q2_tickets_found": "1740/1740",
+   "seconds": 2184.0
+  }
+ },
+ "reads": 8472,
+ "wrong": 0,
+ "examples": [],
+ "engine_sum_precision": 10
+}
