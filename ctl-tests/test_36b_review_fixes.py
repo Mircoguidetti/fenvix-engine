@@ -32,6 +32,10 @@ def test_A_getmore_pays_quota():
     try:
         c = client(srv)
         c.q.t.insert_many([{"_id": i, "pad": "x" * 1000} for i in range(3000)])
+        # c2-fix-hangs, fix round 2: the first scan before the quota. With sealed runs on, the first scan after a publish
+        # reads the runs from the store (about 390 GETs, 78 000 points): at 50 points a second the getMores would wait
+        # 26 minutes behind it. This test is about getMore paying the quota, not about the cost of a cold scan.
+        assert len(list(c.q.t.find({}))) == 3000
         assert srv.admin.call("PUT", "/v1/databases/q/quota", {"pts_per_sec": 50, "burst_pts": 50})[0] == 200
         time.sleep(1.5)
         b0, _ = dbm(srv, "q")

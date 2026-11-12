@@ -181,6 +181,19 @@ impl std::fmt::Display for LostRace {
 
 impl std::error::Error for LostRace {}
 
+/// A publish that stopped at its cut: the WAL flush did not end within the F6 timeout (the store does not answer the
+/// writer's WAL PUTs). Nothing of the publish was written yet, so the outcome is known: no fence (c2-fix-hangs).
+#[derive(Debug)]
+pub struct CutNotDurable(pub String);
+
+impl std::fmt::Display for CutNotDurable {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+impl std::error::Error for CutNotDurable {}
+
 /// A publish whose conditional create failed with an unknown outcome (an error or the F6 timeout): the PUT may still
 /// land. It carries the version it tried, so the fence can take that same slot even when the store is still empty.
 #[derive(Debug)]

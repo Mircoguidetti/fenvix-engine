@@ -1,0 +1,30 @@
+...............F...                                                      [100%]
+=================================== FAILURES ===================================
+___ test_kill9_at_each_step_finishes_after_restart[erase.after_tenant-True] ____
+test_05_erase.py:224: in test_kill9_at_each_step_finishes_after_restart
+    assert f"ctl recovery: erase of {target} was interrupted" in log and f"ctl recovery: erase of {target} finished" in log, log[-1500:]
+E   AssertionError: 6819074 takeover_from=-
+E     LEASE acquired tenant=victim holder=ec-25200 unix_ms=1794356819095 takeover_from=- new=true
+E     LEASE writer_open tenant=victim holder=ec-25200 unix_ms=1794356819111 
+E     LEASE writer_close tenant=victim holder=ec-25200 unix_ms=1794356819295 
+E     LEASE release_begin tenant=victim holder=ec-25200 unix_ms=1794356819295 
+E     LEASE release tenant=victim holder=ec-25200 unix_ms=1794356819297 ok=true
+E     LEASE acquired tenant=bystander holder=ec-25200 unix_ms=1794356819301 takeover_from=-
+E     LEASE acquired tenant=bystander holder=ec-25200 unix_ms=1794356819308 takeover_from=-
+E     LEASE acquired tenant=bystander holder=ec-25200 unix_ms=1794356819316 takeover_from=- new=true
+E     LEASE writer_open tenant=bystander holder=ec-25200 unix_ms=1794356819330 
+E     LEASE acquired tenant=admin holder=ec-25200 unix_ms=1794356819360 takeover_from=-
+E     LEASE acquired tenant=admin holder=ec-25200 unix_ms=1794356819366 takeover_from=-
+E     LEASE release_begin tenant=victim holder=ec-25200 unix_ms=1794356819430 
+E     LEASE release tenant=victim holder=ec-25200 unix_ms=1794356819432 ok=true
+E     LEASE release_begin tenant=victim2 holder=ec-25200 unix_ms=1794356819438 
+E     LEASE release tenant=victim2 holder=ec-25200 unix_ms=1794356819440 ok=true
+E     ADMIN POST /v1/databases/victim/fork -> 201 85 ms peer=127.0.0.1:45406
+E     admin interface listening on 127.0.0.1:35424 (bearer token required)
+E     mongo-server listening on 127.0.0.1:25200 (idle close after 300 s, holder ec-25200, lease ttl 6 s)
+E     ADMIN GET /v1/health -> 200 0 ms peer=127.0.0.1:45436
+E     
+E   assert ('ctl recovery: erase of victim2 was interrupted' in 'admin interface listening on 127.0.0.1:32248 (bearer token required)\nmongo-server listening on 127.0.0.1:25200 (idle...5200 (idle close after 300 s, holder ec-25200, lease ttl 6 s)\nADMIN GET /v1/health -> 200 0 ms peer=127.0.0.1:45436\n')
+=========================== short test summary info ============================
+FAILED test_05_erase.py::test_kill9_at_each_step_finishes_after_restart[erase.after_tenant-True]
+1 failed, 18 passed in 78.39s (0:01:18)

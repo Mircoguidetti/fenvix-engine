@@ -1900,7 +1900,9 @@ impl Tenant {
         let store = Arc::clone(&self.lc.store);
         let r: Result<()> = async {
                 crate::fx::PUBLISH_ERRORS.fetch_add(1, Relaxed);
-                if e.downcast_ref::<crate::fx::LostRace>().is_some() {
+                if e.downcast_ref::<crate::fx::CutNotDurable>().is_some() {
+                    // stopped before anything was written: the outcome is known, nothing to reload or fence (c2-fix-hangs)
+                } else if e.downcast_ref::<crate::fx::LostRace>().is_some() {
                     // the outcome is known: another publisher holds the slot; read with the newest version (rule 24)
                     if let Some(v) = crate::fx::manifest::load_newest(&store, &self.id).await? {
                         self.fx_install(crate::fx::view::View::new(Arc::clone(&store), v, self.fx.as_deref())?);
