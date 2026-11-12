@@ -166,6 +166,31 @@ fn on_request(path: &str, put: bool) {
     }
 }
 
+tokio::task_local! {
+    /// Set while a `CountingStore` that already reported the request to [`ON_REQUEST`] passes it down.
+    static REPORTED: ();
+}
+
+/// Report one request to [`ON_REQUEST`], once however many `CountingStore`s are stacked (the server puts the lifecycle's
+/// store, and the maintenance passes theirs, on top of the process-wide one): only the outermost reports. Returns true
+/// when this layer reported, so it passes the call down with [`passed_down`]. c2-fix-hangs, fix round 2: every request
+/// of a database was charged twice to its points (MEASURED: 772 GETs counted for 386 at an independent proxy).
+fn report_request(path: &str, put: bool) -> bool {
+    if REPORTED.try_with(|_| ()).is_ok() {
+        return false;
+    }
+    on_request(path, put);
+    true
+}
+
+async fn passed_down<F: std::future::Future>(reported: bool, f: F) -> F::Output {
+    if reported {
+        REPORTED.scope((), f).await
+    } else {
+        f.await
+    }
+}
+
 /// Tests only: every PUT waits this long before it is sent (`MONGO_TEST_PUT_DELAY_MS`, honoured only with
 /// `MONGO_ALLOW_UNSAFE_TEST_FLAGS=1`), to play S3's latency on a store that has none (review of S4, test D).
 fn test_put_delay() -> Option<std::time::Duration> {
@@ -359,7 +384,7 @@ pub static TEST_GET_DELAY_MS: AtomicU64 = AtomicU64::new(0);
 impl ObjectStore for CountingStore {
     async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult> {
         self.counters.put.fetch_add(1, Relaxed);
-        on_request(location.as_ref(), true);
+        let reported = report_request(location.as_ref(), true);
         if let Some(d) = test_put_delay() {
             tokio::time::sleep(d).await;
         }
@@ -372,7 +397,7 @@ impl ObjectStore for CountingStore {
         let bytes = payload.content_length() as u64;
         self.counters.put_bytes.fetch_add(bytes, Relaxed);
         let t0 = Instant::now();
-        let res = self.inner.put_opts(location, payload, opts).await;
+        let res = passed_down(reported, self.inner.put_opts(location, payload, opts)).await;
         self.counters.put_cat[category(location.as_ref())].fetch_add(1, Relaxed);
         self.counters.lat_put.record(t0.elapsed());
         self.trace.end(token, bytes);
@@ -408,7 +433,7 @@ impl ObjectStore for CountingStore {
             &self.counters.get
         };
         counter.fetch_add(1, Relaxed);
-        on_request(location.as_ref(), false);
+        let reported = report_request(location.as_ref(), false);
         self.counters.get_cat[category(location.as_ref())].fetch_add(1, Relaxed);
         let op = if options.head {
             "HEAD"
@@ -419,7 +444,7 @@ impl ObjectStore for CountingStore {
         };
         let token = self.trace.begin(op, location.as_ref());
         let t0 = Instant::now();
-        let mut res = self.inner.get_opts(location, options).await;
+        let mut res = passed_down(reported, self.inner.get_opts(location, options)).await;
         self.counters.lat_get.record(t0.elapsed());
         if token.is_some() {
             // Read the body inside the timed window so the duration covers the
@@ -474,31 +499,39 @@ impl ObjectStore for CountingStore {
     }
 
     fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>> {
-        on_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true);
-        let stream = self.count_list(self.inner.list(prefix));
+        let inner = if report_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true) {
+            REPORTED.sync_scope((), || self.inner.list(prefix))
+        } else {
+            self.inner.list(prefix)
+        };
+        let stream = self.count_list(inner);
         self.trace_list("LIST", prefix, stream)
     }
 
     fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, Result<ObjectMeta>> {
-        on_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true);
-        let stream = self.count_list(self.inner.list_with_offset(prefix, offset));
+        let inner = if report_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true) {
+            REPORTED.sync_scope((), || self.inner.list_with_offset(prefix, offset))
+        } else {
+            self.inner.list_with_offset(prefix, offset)
+        };
+        let stream = self.count_list(inner);
         self.trace_list("LIST", prefix, stream)
     }
 
     async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult> {
         self.counters.list.fetch_add(1, Relaxed);
-        on_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true);
+        let reported = report_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true);
         let token = self.trace.begin("LIST", &prefix.map(|p| p.to_string()).unwrap_or_default());
-        let res = self.inner.list_with_delimiter(prefix).await;
+        let res = passed_down(reported, self.inner.list_with_delimiter(prefix)).await;
         self.trace.end(token, 0);
         res
     }
 
     async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> Result<()> {
         self.counters.copy.fetch_add(1, Relaxed);
-        on_request(to.as_ref(), true);
+        let reported = report_request(to.as_ref(), true);
         let token = self.trace.begin("COPY", to.as_ref());
-        let res = self.inner.copy_opts(from, to, options).await;
+        let res = passed_down(reported, self.inner.copy_opts(from, to, options)).await;
         self.trace.end(token, 0);
         res
     }
@@ -604,6 +637,84 @@ impl ObjectStore for OwnedStore {
 
     async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> Result<()> {
         REQUEST_OWNER.scope(Arc::clone(&self.owner), self.inner.rename_opts(from, to, options)).await
+    }
+}
+
+tokio::task_local! {
+    /// Set while a database's maintenance store (see [`maintenance`]) makes a request.
+    static MAINTENANCE: ();
+}
+
+/// The request being made is maintenance work of a database: its sealed-run compactor (`fx/compactor.rs`: absorptions,
+/// merges, GC, and the SlateDB compactor and worker it keeps running, which poll the store). The server still counts it
+/// in the database's points, but it does not draw the database's quota: no waiting command can slow it, so charging it
+/// to the quota only starved the database's commands (c2-fix-hangs: on an idle database the server counted about 370 GETs
+/// a second, 74 000 points against a quota of 2 000, and its reads waited forever; every request is counted twice, see
+/// the c2-fix-hangs report, so about 185 real GETs a second).
+pub fn is_maintenance_request() -> bool {
+    MAINTENANCE.try_with(|_| ()).is_ok()
+}
+
+/// Run `f` as maintenance work (see [`is_maintenance_request`]): for a database's compactor calling into a store that is
+/// not its own maintenance store (the writer's manifest refresh after a SlateDB compaction job).
+pub async fn as_maintenance<F: std::future::Future>(f: F) -> F::Output {
+    MAINTENANCE.scope((), f).await
+}
+
+/// A store whose every request is made as maintenance work (see [`is_maintenance_request`]). Owner and path attribution
+/// are left to the layers around it.
+#[derive(Debug)]
+pub struct MaintenanceStore {
+    inner: Arc<dyn ObjectStore>,
+}
+
+pub fn maintenance(store: &Arc<dyn ObjectStore>) -> Arc<dyn ObjectStore> {
+    Arc::new(MaintenanceStore { inner: Arc::clone(store) })
+}
+
+impl fmt::Display for MaintenanceStore {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "MaintenanceStore({})", self.inner)
+    }
+}
+
+#[async_trait]
+impl ObjectStore for MaintenanceStore {
+    async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult> {
+        MAINTENANCE.scope((), self.inner.put_opts(location, payload, opts)).await
+    }
+
+    async fn put_multipart_opts(&self, location: &Path, opts: PutMultipartOptions) -> Result<Box<dyn MultipartUpload>> {
+        MAINTENANCE.scope((), self.inner.put_multipart_opts(location, opts)).await
+    }
+
+    async fn get_opts(&self, location: &Path, options: GetOptions) -> Result<GetResult> {
+        MAINTENANCE.scope((), self.inner.get_opts(location, options)).await
+    }
+
+    fn delete_stream(&self, locations: BoxStream<'static, Result<Path>>) -> BoxStream<'static, Result<Path>> {
+        self.inner.delete_stream(locations)
+    }
+
+    // a LIST is charged when the stream is made (`CountingStore::list`), so the scope of the call covers it
+    fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>> {
+        MAINTENANCE.sync_scope((), || self.inner.list(prefix))
+    }
+
+    fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, Result<ObjectMeta>> {
+        MAINTENANCE.sync_scope((), || self.inner.list_with_offset(prefix, offset))
+    }
+
+    async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult> {
+        MAINTENANCE.scope((), self.inner.list_with_delimiter(prefix)).await
+    }
+
+    async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> Result<()> {
+        MAINTENANCE.scope((), self.inner.copy_opts(from, to, options)).await
+    }
+
+    async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> Result<()> {
+        MAINTENANCE.scope((), self.inner.rename_opts(from, to, options)).await
     }
 }
 

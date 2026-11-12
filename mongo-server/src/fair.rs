@@ -18,6 +18,8 @@
 //! and corrected with the real cost at the end). Over the quota the command waits in its database's own queue until the
 //! bucket refills; beyond `--db-quota-queue` waiting commands a new one gets the retryable error 462 at once. Quota 0 =
 //! no quota (the default for databases without their own value when `--db-quota-pts` is 0).
+//! Maintenance work outside a command (the sealed-run compactor of a database, `counting::maintenance`) is counted in
+//! the database's points but does not draw its quota: no waiting command can slow it (c2-fix-hangs).
 //!
 //! **Fair queue, only under saturation.** A ticker measures how late the runtime runs a 10 ms timer (scheduling lag, a
 //! direct measure of CPU saturation of the worker threads). While the lag is below `--fair-lag-ms` (2 ms) every command
@@ -283,10 +285,15 @@ impl DbStat {
     }
 
     fn charge(&mut self, pts: f64) {
+        self.charge_as(pts, true);
+    }
+
+    /// `quota`: the points also come out of the database's quota bucket (false: counted only, see [`on_s3_request`]).
+    fn charge_as(&mut self, pts: f64, quota: bool) {
         self.pts += pts;
         let i = self.slot(now_sec());
         self.ring_pts[i] += pts as f32;
-        if self.rate > 0.0 {
+        if quota && self.rate > 0.0 {
             self.refill();
             self.balance -= pts;
         }
@@ -389,12 +396,12 @@ fn note_usage(db: &str, pts: f64, rate: f64) {
     u.weight = weight_of(rate);
 }
 
-/// Charge `pts` to a database (accounting and quota). Returns its quota rate for [`note_usage`].
-fn charge(db: &str, pts: f64, part: impl FnOnce(&mut DbStat)) -> Option<f64> {
+/// Charge `pts` to a database (accounting and, with `quota`, its quota). Returns its quota rate for [`note_usage`].
+fn charge(db: &str, pts: f64, quota: bool, part: impl FnOnce(&mut DbStat)) -> Option<f64> {
     let mut st = STATS.lock().unwrap();
     let s = st.get_mut(db)?;
     part(s);
-    s.charge(pts);
+    s.charge_as(pts, quota);
     Some(s.rate)
 }
 
@@ -424,8 +431,14 @@ fn on_s3_request(path: &str, put: bool) {
     // (counting::owned: SlateDB makes most of its reads in tasks of its own)
     let by_command = OP.try_with(|c| c.db.clone()).ok();
     let by_store = tenant_bench::counting::request_owner();
+    // c2-fix-hangs: upkeep outside a command is counted in the database's points but does not draw its quota: the work of
+    // its sealed-run compactor (its jobs, its GC, and the SlateDB compactor and worker that poll the store all the time,
+    // `counting::maintenance`), and the writer's own reads of SlateDB's manifest (every 2 s while the compactor runs,
+    // main.rs). No waiting command can slow that work, so drawing it only kept the bucket empty: on an idle database the
+    // server counted about 370 GETs a second (74 000 points against a quota of 2 000), and its commands waited forever.
+    let quota = by_command.is_some() || !(tenant_bench::counting::is_maintenance_request() || is_manifest_poll(path, put));
     for db in [by_command.as_deref(), by_store.as_deref(), by_path].into_iter().flatten() {
-        if let Some(rate) = charge(db, pts, part) {
+        if let Some(rate) = charge(db, pts, quota, part) {
             note_usage(db, pts, rate);
             return;
         }
@@ -454,10 +467,16 @@ fn on_s3_request(path: &str, put: bool) {
         let mut st = STATS.lock().unwrap();
         let s = st.entry(db.to_string()).or_insert_with(|| DbStat::new(db));
         part(s);
-        s.charge(pts);
+        s.charge_as(pts, quota);
         s.rate
     };
     note_usage(db, pts, rate);
+}
+
+/// A read of a database's SlateDB manifest (`tenants/{db}/manifest/*.manifest`, `tenants/{db}/gc/manifest.boundary`):
+/// outside a command, the writer's or a reader's poll of it (see [`on_s3_request`]).
+fn is_manifest_poll(path: &str, put: bool) -> bool {
+    !put && path.starts_with("tenants/") && ((path.contains("/manifest/") && path.ends_with(".manifest")) || path.ends_with("/gc/manifest.boundary"))
 }
 
 #[allow(clippy::too_many_arguments)]

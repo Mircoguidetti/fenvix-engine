@@ -119,8 +119,15 @@ fn envelope_of(e_env: u64, key: &[u8], seq: u64, value: &[u8]) -> Result<Vec<u8>
 /// build). Returns the published version, or None when there is nothing new to publish. An error leaves only orphan
 /// runs (GC's business in step 4), never a half-published version.
 pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, id: &str, cur: Option<&View>, e_env: u64, epoch: Option<u64>, opts: &BuildOpts, fail: Option<&(dyn Fn(&str) -> Result<()> + Sync)>) -> Result<Option<(Version, BuildReport)>> {
-    // the cut: a WAL flush, then a snapshot at the last committed seq (all durable)
-    db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::Wal }).await?;
+    // the cut: a WAL flush, then a snapshot at the last committed seq (all durable). c2-fix-hangs: the flush waits for the
+    // WAL PUT, which SlateDB retries without end while the store does not answer; the server's publish runs inside a
+    // write, under the database's exclusive lock, so the write and every later command on the database waited forever
+    // (ctl test_31). Bounded by the F6 timeout; nothing of ours is written before this point, so the publish just fails.
+    let limit = std::time::Duration::from_millis(super::PUT_TIMEOUT_MS.load(std::sync::atomic::Ordering::Relaxed));
+    match tokio::time::timeout(limit, db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::Wal })).await {
+        Ok(r) => r?,
+        Err(_) => return Err(anyhow::Error::new(super::CutNotDurable(format!("database {id}: the WAL flush of the cut did not end in {limit:?}; nothing published")))),
+    }
     let snap = db.snapshot().await?;
     let x = snap.seq();
     ensure!(e_env <= x, "E_env {e_env} above the cut {x}");

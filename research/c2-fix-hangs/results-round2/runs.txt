@@ -1,0 +1,12 @@
+test_31_lease_lost_store_down: 2 passed in 195.17s (0:03:15)
+test_36_isolation_quotas: 4 passed in 12.74s
+test_36b_review_fixes: 4 passed in 68.66s (0:01:08)
+test_51_c2_fix_hangs: 3 passed in 31.69s
+/dev/vda        252G   23G   16G  59% /
+test_31_lease_lost_store_down: 2 passed in 97.74s (0:01:37)
+test_36_isolation_quotas: 4 passed in 10.60s
+test_36b_review_fixes: 4 passed in 58.62s
+test_51_c2_fix_hangs: 3 passed in 31.84s
+/dev/vda        252G   23G   17G  59% /
+CTLDONE
+ALLDONE
