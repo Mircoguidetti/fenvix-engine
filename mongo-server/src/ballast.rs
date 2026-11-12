@@ -1008,9 +1008,20 @@ async fn one_db(server: Arc<Server>, plan: Arc<Plan>, words: Arc<Words>, p: DbPl
     let cx = Ctx { db: db.clone(), plan: Arc::clone(&plan), words: Arc::clone(&words), p: p.clone(), t: t.clone() };
 
     // the real database, and the state of an earlier run if any (generator/<db>/ in the pantry, outside tenants/)
-    let mut g = server.dbs.lock(&db).await;
-    let exists = !g.collections().await?.is_empty();
-    drop(g);
+    // a run killed a moment ago still holds the database's lease until it expires: wait for it (bounded)
+    let t_lease = std::time::Instant::now();
+    let exists = loop {
+        let mut g = server.dbs.lock(&db).await;
+        match g.collections().await {
+            Ok(c) => break !c.is_empty(),
+            Err(e) if e.downcast_ref::<crate::lease::LeaseHeld>().is_some() && t_lease.elapsed().as_secs() < 300 => {
+                drop(g);
+                eprintln!("ballast {db}: {e}: waiting for that lease to expire");
+                tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+            }
+            Err(e) => return Err(e),
+        }
+    };
     let raw_store = server.dbs.raw_store();
     if let Some(done) = get_opt(&raw_store, &object_store::path::Path::from(format!("{}/done.json", gen_prefix(&db)))).await? {
         eprintln!("ballast {db}: already generated and published (generator/{db}/done.json): nothing to do");
