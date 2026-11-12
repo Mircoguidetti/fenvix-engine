@@ -25,6 +25,7 @@ class PathProxy:
         self.held = 0
         self.refusal = None   # (methods, path_part, status)
         self.refused = 0
+        self.slowness = None  # (methods, path_part, delay in seconds)
         self.journal = None   # a list to record (unix time, method, path, status) of every request, or None
         self.lock = threading.Lock()
         proxy = self
@@ -58,6 +59,9 @@ class PathProxy:
                     except OSError:
                         self.close_connection = True
                     return
+                sl = proxy.slowness
+                if sl and self.command in sl[0] and sl[1] in self.path.split("?")[0]:
+                    time.sleep(sl[2])
                 counted = False
                 while True:
                     r = proxy.rule
@@ -135,9 +139,14 @@ class PathProxy:
     def refuse(self, methods, path_part, status=507):
         self.refusal = (tuple(methods), path_part, status)
 
+    def slow(self, methods, path_part, delay_s):
+        """Every matching request waits `delay_s` before it is forwarded (a slow store), until `release`."""
+        self.slowness = (tuple(methods), path_part, delay_s)
+
     def release(self):
         self.rule = None
         self.refusal = None
+        self.slowness = None
 
     def close(self):
         self.srv.shutdown()
