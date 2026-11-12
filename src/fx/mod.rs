@@ -40,6 +40,8 @@ mod counter_bench;
 #[cfg(test)]
 mod fix6_tests;
 #[cfg(test)]
+mod close_pass_gate_tests;
+#[cfg(test)]
 mod review6_tests;
 #[cfg(test)]
 mod counter_tests;
