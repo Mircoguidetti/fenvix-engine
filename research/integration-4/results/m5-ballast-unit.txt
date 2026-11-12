@@ -1,0 +1,5 @@
+test fx::tests_gen::generated_rows_read_back_exactly_with_slatedb_rows_and_later_writes ... ok
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 147 filtered out; finished in 0.24s
+test ballast::tests::object_ids_are_unique_and_carry_the_time ... ok
+test ballast::tests::spill_merges_in_order_and_last_write_wins ... ok
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 99 filtered out; finished in 0.27s

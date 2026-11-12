@@ -1,0 +1,4 @@
+test custkey::default_key_tests::no_agent_collections_no_default ... ok
+test custkey::default_key_tests::saver_collections_are_keyed_by_thread_id_by_default ... ok
+test custkey::default_key_tests::the_command_line_wins ... ok
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 101 filtered out; finished in 0.00s

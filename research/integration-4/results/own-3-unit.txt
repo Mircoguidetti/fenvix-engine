@@ -1,0 +1,22 @@
+test fx::review_long_reads_tests::review_lr_renewal_window_starts_before_its_request ... ok
+test fx::review_long_reads_tests::review_lr_pages_across_v2_to_v2k_reseals ... ok
+test fx::review_long_reads_tests::review_lr_failed_renewal_keeps_the_guard ... ok
+test fx::review_long_reads_tests::review_lr_one_renewal_for_many_steps ... ok
+test fx::review_long_reads_tests::review_lr_shortest_legal_grace ... ok
+test fx::review_long_reads_tests::review_lr_single_step_past_hold_life_still_fails ... ok
+test fx::review_long_reads_tests::review_lr_upgrade_mid_scan_and_old_writer_returns ... ok
+test fx::review_long_reads_tests::review_lr_writer_returns_with_envelopes ... ok
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 148 filtered out; finished in 36.80s
+test fx::fix_tests::f6_config_check_refuses_bad_timings ... ok
+test fx::fix_tests::f6_a_late_put_finds_its_slot_taken_by_the_fence ... ok
+test fx::fix_tests::f6_a_put_whose_answer_is_late_is_a_timeout_and_the_next_hold_fences_first ... ok
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 153 filtered out; finished in 1.54s
+test fx::tests_7b::a_short_e1_wait_is_refused_without_the_test_flag ... ok
+test fx::tests_7b::a_failed_pairing_deletes_its_checkpoint ... ok
+test fx::tests_7b::a_restore_point_keeps_erased_runs_until_it_goes ... ok
+test fx::tests_7b::a_fork_after_a_drop_has_every_row ... ok
+test fx::tests_7b::an_erasure_in_a_fork_never_deletes_a_run_of_its_source ... ok
+test fx::tests_7b::an_erasure_leaves_every_run_and_slatedb ... ok
+test fx::tests_7b::an_erasure_reports_its_deadline ... ok
+test fx::tests_7b::the_follower_window_starts_before_its_head_request ... ok
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 148 filtered out; finished in 9.95s

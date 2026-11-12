@@ -97,6 +97,28 @@ pub fn configure(spec: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// integration-4: the default customer keys. Every agent checkpoint collection of `--agent-checkpoints` (by default the
+/// LangGraph saver's `checkpoints` and `checkpoint_writes`) is customer-keyed by `thread_id` unless `--customer-key`
+/// names that same `[db.]collection` itself: the command line wins. Derived documents (`agentck.rs`) apply only to a
+/// collection keyed by `thread_id`, and the default `--customer-key` list is empty, so without this they never applied
+/// with the product defaults (sessions/2026-11-11-bench-local/REPORT.md, section 5). A collection takes its key only
+/// when it is created, first indexed or first written while empty: existing data never changes layout.
+/// Returns the spec to give to [`configure`]: the command line's entries first, then the defaults it does not name.
+pub fn with_agent_defaults(spec: &str, agent_checkpoints: &str) -> String {
+    let named: Vec<String> = spec.split(',').map(str::trim).filter(|p| !p.is_empty())
+        .filter_map(|p| p.split_once('=').map(|(ns, _)| ns.trim().to_string())).collect();
+    let mut out: Vec<String> = spec.split(',').map(str::trim).filter(|p| !p.is_empty()).map(String::from).collect();
+    for ns in agent_checkpoints.split(',').map(str::trim).filter(|p| !p.is_empty()) {
+        let coll = ns.split_once('.').map_or(ns, |(_, c)| c);
+        // named for this collection in any form (`coll`, `db.coll`, or the same `db.coll`): the command line decides
+        if named.iter().any(|n| n == ns || n == coll || n.split_once('.').is_some_and(|(_, c)| c == coll)) {
+            continue;
+        }
+        out.push(format!("{ns}=thread_id"));
+    }
+    out.join(",")
+}
+
 /// The customer key `--customer-key` asks for `db.coll`, if any.
 pub fn configured(db: &str, coll: &str) -> Option<Ckey> {
     CONFIG.get()?.iter().find(|(d, c, _)| c == coll && d.as_deref().map_or(true, |d| d == db)).map(|(_, _, k)| k.clone())
@@ -827,5 +849,29 @@ mod tests {
         assert_eq!(area_of(b"nat/m/", Some(b"nat/m0")), Some(None));
         assert_eq!(area_of(b"doc/m/", Some(b"doc/m0")), None);
         assert_eq!(area_of(b"", None), None);
+    }
+}
+
+
+#[cfg(test)]
+mod default_key_tests {
+    use super::with_agent_defaults;
+
+    #[test]
+    fn saver_collections_are_keyed_by_thread_id_by_default() {
+        assert_eq!(with_agent_defaults("", "checkpoints,checkpoint_writes"), "checkpoints=thread_id,checkpoint_writes=thread_id");
+    }
+
+    #[test]
+    fn the_command_line_wins() {
+        assert_eq!(with_agent_defaults("checkpoints=user_id", "checkpoints,checkpoint_writes"), "checkpoints=user_id,checkpoint_writes=thread_id");
+        assert_eq!(with_agent_defaults("app.checkpoints=user_id:ts", "checkpoints,checkpoint_writes"), "app.checkpoints=user_id:ts,checkpoint_writes=thread_id");
+        assert_eq!(with_agent_defaults("messaggi=cliente:ts", "checkpoints,checkpoint_writes"), "messaggi=cliente:ts,checkpoints=thread_id,checkpoint_writes=thread_id");
+    }
+
+    #[test]
+    fn no_agent_collections_no_default() {
+        assert_eq!(with_agent_defaults("a=b", ""), "a=b");
+        assert_eq!(with_agent_defaults("", "app.checkpoints"), "app.checkpoints=thread_id");
     }
 }

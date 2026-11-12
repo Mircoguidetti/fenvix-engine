@@ -67,6 +67,8 @@ mod i4_joint_tests;
 mod long_reads_tests;
 #[cfg(test)]
 mod tests_gen;
+#[cfg(test)]
+mod review_long_reads_tests;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 
@@ -111,7 +113,10 @@ pub static GC_GRACE_MS: AtomicU64 = AtomicU64::new(600_000);
 /// The timing rules the drop floor (step 4) relies on, checked at startup: a bad combination is refused.
 /// - the PUT timeout is shorter than the lease minus its margin (F6), and the margin is shorter than the lease;
 /// - the lease is longer than T_pin (rule 8: T_pin plus a margin);
-/// - the remote lease (rule 10) and the GC grace (rule 23) each exceed the hold life plus the PUT timeout (F6).
+/// - the remote lease (rule 10) exceeds the hold life plus the PUT timeout (F6);
+/// - the GC grace (rule 23) exceeds T_pin plus the hold life plus the PUT timeout (integration-4: a reader may hold a
+///   version up to T_pin old when its read step starts, and the step may last the hold life, so a run that version lists
+///   must outlive both; review of c2-fix-long-reads, `review_lr_shortest_legal_grace`).
 pub fn check_config() -> anyhow::Result<()> {
     use std::sync::atomic::Ordering::Relaxed;
     let put = PUT_TIMEOUT_MS.load(Relaxed);
@@ -126,7 +131,7 @@ pub fn check_config() -> anyhow::Result<()> {
     anyhow::ensure!(put < lease - margin, "sealed runs: the manifest PUT timeout ({put} ms) must be shorter than the lease minus its margin ({lease} - {margin} ms) (F6)");
     anyhow::ensure!(lease > t_pin, "sealed runs: the lease ({lease} ms) must be longer than T_pin ({t_pin} ms) (rule 8)");
     anyhow::ensure!(remote > hold + put, "sealed runs: the remote lease ({remote} ms) must exceed the hold life plus the PUT timeout ({hold} + {put} ms) (rule 10, F6)");
-    anyhow::ensure!(grace > hold + put, "sealed runs: the GC grace ({grace} ms) must exceed the hold life plus the PUT timeout ({hold} + {put} ms) (rule 23, F6)");
+    anyhow::ensure!(grace > t_pin + hold + put, "sealed runs: the GC grace ({grace} ms) must exceed T_pin plus the hold life plus the PUT timeout ({t_pin} + {hold} + {put} ms) (rule 23, F6, integration-4)");
     // review of step 7a, note 4: envelopes must not start before every follower has taken E1's announcement (rule 26)
     let wait = E1_WAIT_MS.load(Relaxed);
     anyhow::ensure!(wait == u64::MAX || wait >= t_pin || E1_WAIT_TEST.load(Relaxed), "sealed runs: E1's wait ({wait} ms) must be at least T_pin ({t_pin} ms) (rule 26); a shorter one is for tests only (--sealed-test-short-e1-wait)");

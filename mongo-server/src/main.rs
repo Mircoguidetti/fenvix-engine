@@ -467,7 +467,8 @@ struct Args {
     #[arg(long, default_value = "cache")]
     tls_session_resumption: String,
     /// Customer keys and layout v2 (custkey.rs): comma separated `[db.]collection=field[:timefield]`; a named collection
-    /// takes the customer key when it is created, first indexed or first written while empty. Off when empty (default).
+    /// takes the customer key when it is created, first indexed or first written while empty. Besides these, every
+    /// `--agent-checkpoints` collection is keyed by `thread_id` unless named here (since integration-4).
     #[arg(long, default_value = "")]
     customer_key: String,
     /// Envelope values (envelope.rs): `read` (release E0: read envelopes, write them only in a database that already has
@@ -847,7 +848,8 @@ async fn run() -> Result<()> {
     tenant_bench::lifecycle::EXPLICIT_FLUSH.store(args.wal_flush_ms == 0, std::sync::atomic::Ordering::Relaxed);
     dbs::set_wake_limit(args.max_concurrent_wakes);
     tenant_bench::lifecycle::MEMTABLE_MAX_BYTES.store(args.memtable_max_mb << 20, std::sync::atomic::Ordering::Relaxed);
-    custkey::configure(&args.customer_key)?;
+    // integration-4: the LangGraph saver's collections are customer-keyed by thread_id by default (the command line wins)
+    custkey::configure(&custkey::with_agent_defaults(&args.customer_key, &args.agent_checkpoints))?;
     opening::ENABLED.store(args.first_course, std::sync::atomic::Ordering::Relaxed);
     opening::IDLE_SECS.store(args.first_course_idle_secs, std::sync::atomic::Ordering::Relaxed);
     opening::MAX_AGE_SECS.store(args.first_course_days * 86_400, std::sync::atomic::Ordering::Relaxed);

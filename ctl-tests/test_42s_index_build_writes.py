@@ -143,11 +143,14 @@ def test_unique_build_with_concurrent_writes(client, case):
     writes, expected = UNIQUE_CASES[case]
     build, out, running = build_with_writes(client, co, True, writes(co))
     finished_unique = assert_no_finished_duplicate(co)
-    assert all(w == "ok" for w in out), out        # as on mongod, the writes themselves are accepted
+    # integration-4 (sessions/2026-11-11-ci-public-tests, section 2): the window is checked BEFORE the writes' outcome.
+    # A build that finished before the writes arrived enforces the unique index on them (11000), which is right, but the
+    # test then did not exercise the window: reported as such, not as a failure.
     if not running:
         if not is_mongod(client):
-            pytest.fail("the build finished before the writes: the test did not exercise the window")
+            pytest.skip("window not exercised: the build finished before the writes")
         return
+    assert all(w == "ok" for w in out), out        # as on mongod, the writes themselves are accepted
     assert build == expected, {"build": build, "writes": out}
     assert finished_unique == (expected == "ok")
     if finished_unique:
