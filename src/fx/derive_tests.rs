@@ -1157,7 +1157,7 @@ async fn review_erasure_of_a_derived_thread() {
             }
             ids.push(t.fx_erasure_register(coll, &comp, &tg, None).await.unwrap().expect("recorded").id);
         }
-        let mut opts = erase::ScrubOpts { sealed: k.sealed.clone(), delta: k.delta.clone(), budget: None };
+        let mut opts = erase::ScrubOpts { sealed: k.sealed.clone(), delta: k.delta.clone(), budget: None, keep_envelopes: false };
         opts.sealed.derived = true;
         if !derived_opts {
             opts = erase::ScrubOpts::default();

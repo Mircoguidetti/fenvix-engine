@@ -1,0 +1,376 @@
+{
+ "customers": [
+  "cli-000037",
+  "cli-001237",
+  "cli-002437",
+  "cli-003637",
+  "cli-004837",
+  "cli-006037",
+  "cli-007237",
+  "cli-008437",
+  "cli-009637",
+  "cli-010837"
+ ],
+ "deletes": [
+  {
+   "customer": "cli-000037",
+   "coll": "messaggi",
+   "deleted": 1084,
+   "ms": 77.2
+  },
+  {
+   "customer": "cli-000037",
+   "coll": "eventi",
+   "deleted": 814,
+   "ms": 62.9
+  },
+  {
+   "customer": "cli-000037",
+   "coll": "ordini",
+   "deleted": 345,
+   "ms": 40.6
+  },
+  {
+   "customer": "cli-001237",
+   "coll": "messaggi",
+   "deleted": 340,
+   "ms": 34.6
+  },
+  {
+   "customer": "cli-001237",
+   "coll": "eventi",
+   "deleted": 233,
+   "ms": 23.5
+  },
+  {
+   "customer": "cli-001237",
+   "coll": "ordini",
+   "deleted": 119,
+   "ms": 22.8
+  },
+  {
+   "customer": "cli-002437",
+   "coll": "messaggi",
+   "deleted": 1479,
+   "ms": 89.9
+  },
+  {
+   "customer": "cli-002437",
+   "coll": "eventi",
+   "deleted": 1029,
+   "ms": 72.5
+  },
+  {
+   "customer": "cli-002437",
+   "coll": "ordini",
+   "deleted": 465,
+   "ms": 46.7
+  },
+  {
+   "customer": "cli-003637",
+   "coll": "messaggi",
+   "deleted": 1485,
+   "ms": 87.5
+  },
+  {
+   "customer": "cli-003637",
+   "coll": "eventi",
+   "deleted": 1046,
+   "ms": 69.7
+  },
+  {
+   "customer": "cli-003637",
+   "coll": "ordini",
+   "deleted": 433,
+   "ms": 48.9
+  },
+  {
+   "customer": "cli-004837",
+   "coll": "messaggi",
+   "deleted": 1480,
+   "ms": 95.4
+  },
+  {
+   "customer": "cli-004837",
+   "coll": "eventi",
+   "deleted": 1034,
+   "ms": 71.1
+  },
+  {
+   "customer": "cli-004837",
+   "coll": "ordini",
+   "deleted": 379,
+   "ms": 40.8
+  },
+  {
+   "customer": "cli-006037",
+   "coll": "messaggi",
+   "deleted": 941,
+   "ms": 50.4
+  },
+  {
+   "customer": "cli-006037",
+   "coll": "eventi",
+   "deleted": 637,
+   "ms": 30.6
+  },
+  {
+   "customer": "cli-006037",
+   "coll": "ordini",
+   "deleted": 283,
+   "ms": 25.6
+  },
+  {
+   "customer": "cli-007237",
+   "coll": "messaggi",
+   "deleted": 1687,
+   "ms": 92.8
+  },
+  {
+   "customer": "cli-007237",
+   "coll": "eventi",
+   "deleted": 1270,
+   "ms": 82.5
+  },
+  {
+   "customer": "cli-007237",
+   "coll": "ordini",
+   "deleted": 516,
+   "ms": 46.6
+  },
+  {
+   "customer": "cli-008437",
+   "coll": "messaggi",
+   "deleted": 410,
+   "ms": 29.4
+  },
+  {
+   "customer": "cli-008437",
+   "coll": "eventi",
+   "deleted": 303,
+   "ms": 22.6
+  },
+  {
+   "customer": "cli-008437",
+   "coll": "ordini",
+   "deleted": 140,
+   "ms": 20.3
+  },
+  {
+   "customer": "cli-009637",
+   "coll": "messaggi",
+   "deleted": 1553,
+   "ms": 97.1
+  },
+  {
+   "customer": "cli-009637",
+   "coll": "eventi",
+   "deleted": 1120,
+   "ms": 54.8
+  },
+  {
+   "customer": "cli-009637",
+   "coll": "ordini",
+   "deleted": 496,
+   "ms": 34.0
+  },
+  {
+   "customer": "cli-010837",
+   "coll": "messaggi",
+   "deleted": 1965,
+   "ms": 98.8
+  },
+  {
+   "customer": "cli-010837",
+   "coll": "eventi",
+   "deleted": 1420,
+   "ms": 85.0
+  },
+  {
+   "customer": "cli-010837",
+   "coll": "ordini",
+   "deleted": 595,
+   "ms": 45.6
+  }
+ ],
+ "delete_phase": {
+  "s": 1.72,
+  "minio": {},
+  "server": {
+   "s3.get": 631,
+   "s3.getRange": 90,
+   "s3.list": 1,
+   "s3.put": 90,
+   "s3.getBytes": 12130015,
+   "s3.putBytes": 5762273
+  }
+ },
+ "run": {
+  "s": 282.76,
+  "minio": {
+   "req.completemultipartupload": 34.0,
+   "req.deletemultipleobjects": 19.0,
+   "req.getobject": 77488.0,
+   "req.listobjectsv2": 190.0,
+   "req.newmultipartupload": 34.0,
+   "req.putobject": 218.0,
+   "req.putobjectpart": 772.0,
+   "received_bytes": 12613972280.0,
+   "sent_bytes": 12702194556.0
+  },
+  "server": {
+   "s3.get": 74614,
+   "s3.getRange": 2151,
+   "s3.list": 189,
+   "s3.put": 128,
+   "s3.multipartPart": 772,
+   "s3.delete": 48,
+   "s3.getBytes": 12657270553,
+   "s3.putBytes": 12608136050,
+   "compactor.publishes": 3,
+   "compactor.absorbs": 1,
+   "compactor.merges": 1
+  },
+  "states": [
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed"
+  ],
+  "cleaned_by": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "rows_erased": [
+   24048,
+   24048,
+   24048,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350,
+   208350
+  ],
+  "runs_rewritten": [
+   9,
+   9,
+   9,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16,
+   16
+  ]
+ },
+ "unreadable_checked": true
+}

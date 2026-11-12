@@ -548,6 +548,18 @@ struct Args {
     /// perf-erase: ... or when this many erasures of the database are pending.
     #[arg(long, default_value_t = 1_000)]
     sealed_erasure_batch_max: u64,
+    /// erase-cost-1tb: the physical erasure rides the compactor's ordinary reseals and merges ("one reseal serves many");
+    /// only what they did not do by an erasure's force time is forced (a reseal of each group still owing, a cleanse of each
+    /// delta run still holding dead rows). false: the perf-erase batch scrub (above).
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    sealed_erasure_ride: bool,
+    /// erase-cost-1tb: an erasure's force time, this long after its request (never later than three quarters of its
+    /// deadline). Every erasure whose force time falls within the batch window is forced together.
+    #[arg(long, default_value_t = 18 * 3_600_000)]
+    sealed_erasure_force_after_ms: u64,
+    /// erase-cost-1tb: how often an open database with erasures pending is checked for what ordinary jobs did.
+    #[arg(long, default_value_t = 600_000)]
+    sealed_erasure_check_ms: u64,
     /// Timing of our manifest (fx; review round 2 of step 0, F6), in milliseconds, checked at startup: a manifest PUT
     /// with no answer within the PUT timeout counts as timed out (a fence follows); it must be shorter than the lease
     /// minus its margin, and the remote lease and the GC grace must each exceed the hold life plus it.
@@ -908,6 +920,9 @@ async fn run() -> Result<()> {
         ctl::erase::POLL_MS.store(args.sealed_erasure_poll_ms, Relaxed);
         ctl::erase::BATCH_MS.store(args.sealed_erasure_batch_ms, Relaxed);
         ctl::erase::BATCH_MAX.store(args.sealed_erasure_batch_max.max(1), Relaxed);
+        ctl::erase::RIDE.store(args.sealed_erasure_ride, Relaxed);
+        ctl::erase::FORCE_AFTER_MS.store(args.sealed_erasure_force_after_ms, Relaxed);
+        ctl::erase::CHECK_MS.store(args.sealed_erasure_check_ms.max(10), Relaxed);
         tenant_bench::fx::compactor::VERSION_RETENTION_SECS.store(args.sealed_version_retention_secs, Relaxed);
     }
     // negative controls of the step 7b fix round, tests only

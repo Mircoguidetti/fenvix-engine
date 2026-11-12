@@ -375,6 +375,30 @@ impl Dbs {
     }
 
     /// Lock a database's entry. Commands on one database run one at a time.
+    /// erase-cost-1tb: whether the database's tenant is open in this process now, without opening it or creating an entry
+    /// (an entry busy right now counts as open).
+    pub fn is_open(&self, name: &str) -> bool {
+        let e = self.entries.lock().unwrap().get(name).cloned();
+        match e {
+            None => false,
+            Some(e) => match e.try_read() {
+                Ok(g) => g.tenant.is_some(),
+                Err(_) => true,
+            },
+        }
+    }
+
+    /// erase-cost-1tb: keep an open database from the idle close while the erasure scheduler works on it (it does not
+    /// wait for the entry's lock: a busy entry is in use anyway).
+    pub fn touch(&self, name: &str) {
+        let e = self.entries.lock().unwrap().get(name).cloned();
+        if let Some(e) = e {
+            if let Ok(g) = e.try_read() {
+                g.touch();
+            }
+        }
+    }
+
     fn entry(&self, name: &str) -> Arc<AsyncMutex<Entry>> {
         {
             let mut m = self.entries.lock().unwrap();

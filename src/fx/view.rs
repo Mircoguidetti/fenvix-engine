@@ -202,6 +202,7 @@ pub async fn blocks(store: &Arc<dyn ObjectStore>, h: &RunH, first: usize, last: 
     let (lo, hi) = run.fence.range(first, last);
     let data = runfmt::get_range(store, &run.path, lo, hi).await?;
     RUN_GETS.fetch_add(1, Relaxed);
+    super::erase::SCRUB_READ_BYTES.fetch_add(data.len() as u64, Relaxed);
     (first..=last)
         .map(|b| {
             let (x, y) = run.fence.range(b, b);

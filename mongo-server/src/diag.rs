@@ -854,6 +854,27 @@ impl Server {
                 "merges": tenant_bench::fx::compactor::G_MERGES.load(Relaxed) as i64,
                 "reseals": tenant_bench::fx::compactor::G_RESEALS.load(Relaxed) as i64,
                 "errors": tenant_bench::fx::compactor::G_ERRORS.load(Relaxed) as i64,
+                // erase-cost-1tb: reseals forced by the erasure deadline scheduler, delta runs cleansed of dead rows, and
+                // the stored bytes the compactors wrote by job kind and read
+                "forcedReseals": tenant_bench::fx::compactor::G_FORCED_RESEALS.load(Relaxed) as i64,
+                "cleanses": tenant_bench::fx::compactor::G_CLEANSES.load(Relaxed) as i64,
+                "runBytes": {
+                    "absorb": tenant_bench::fx::compactor::G_RUN_BYTES[0].load(Relaxed) as i64,
+                    "merge": tenant_bench::fx::compactor::G_RUN_BYTES[1].load(Relaxed) as i64,
+                    "reseal": tenant_bench::fx::compactor::G_RUN_BYTES[2].load(Relaxed) as i64,
+                    "erase": tenant_bench::fx::compactor::G_RUN_BYTES[3].load(Relaxed) as i64,
+                    "cleanse": tenant_bench::fx::compactor::G_RUN_BYTES[4].load(Relaxed) as i64,
+                    "read": tenant_bench::fx::compactor::G_RUN_READ_BYTES.load(Relaxed) as i64,
+                },
+                "erasure": {
+                    "scrubBytes": tenant_bench::fx::erase::SCRUB_BYTES.load(Relaxed) as i64,
+                    "scrubReadBytes": tenant_bench::fx::erase::SCRUB_READ_BYTES.load(Relaxed) as i64,
+                    "scrubRuns": tenant_bench::fx::erase::SCRUB_RUNS.load(Relaxed) as i64,
+                    "probeSkips": tenant_bench::fx::erase::PROBE_SKIPS.load(Relaxed) as i64,
+                    "batches": tenant_bench::fx::erase::BATCHES.load(Relaxed) as i64,
+                    "rodeOrdinary": tenant_bench::fx::erase::RODE.load(Relaxed) as i64,
+                    "forced": tenant_bench::fx::erase::FORCED.load(Relaxed) as i64,
+                },
                 // builder publishes before a compactor started, catching up rows an ungated pass folded (review FIX 1)
                 "catchUps": crate::dbs::CATCH_UPS.load(Relaxed) as i64,
             },

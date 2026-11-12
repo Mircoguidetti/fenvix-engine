@@ -33,7 +33,7 @@ fn opts(reseal: Reseal) -> BuildOpts {
 
 fn scrub_opts() -> ScrubOpts {
     let o = opts(Reseal::None);
-    ScrubOpts { sealed: o.sealed, delta: o.delta, budget: None }
+    ScrubOpts { sealed: o.sealed, delta: o.delta, budget: None, keep_envelopes: false }
 }
 
 fn control_is(name: &str) -> bool {
