@@ -16,6 +16,9 @@ Per database:
 Usage: ballast_check.py --ours URI --ref URI --plan PLAN --gen-dir DIR --out JSON [--seed N]
 ballast-on-i3 copy (from aws-ready 9962689): --keep-ref reads the reference as it is (no reload: mutate.py wrote the
 same changes to both servers), --counts JSON takes the expected counts per collection from mutate.py's output.
+generator-1tb copy: --count-threads N runs the per-customer counts N at a time (the same reads); --stato-window W sets the
+stato_ts reads' window (default 0.1 of the year, as before): that read walks the window across every customer of the
+database, so on 20 GiB it took about 110 s each (MEASURED); 0.015 keeps about the rows of 0.1 on 3.4 GiB.
 Exit 0 when every read gave the same answer ("WRONG: 0")."""
 import argparse
 import json
@@ -41,6 +44,9 @@ ap.add_argument("--full-scan", action="store_true", help="also stream the first 
 ap.add_argument("--keep-ref", action="store_true")
 ap.add_argument("--counts", default="")
 ap.add_argument("--only", default="", help="comma-separated databases of the plan to check (default: all)")
+ap.add_argument("--count-threads", type=int, default=1, help="generator-1tb: the per-customer counts, this many at a time")
+ap.add_argument("--stato-window", type=float, default=0.1, help="generator-1tb: the stato_ts reads' time window (fraction of "
+                "the year); the hinted read walks the window across ALL customers, so 0.1 suits 3.4 GiB databases")
 a = ap.parse_args()
 
 RAW = CodecOptions(document_class=RawBSONDocument)
@@ -107,7 +113,10 @@ for d in plan["databases"]:
         same(f"{name}.{c} collStats count", do.command("collStats", c)["count"], g["per_collezione"][c])
         # every document counted, customer by customer through the cliente_ts index (one short read each: a single
         # count over millions of documents outlives the hold life of integration-2's reader, a known engine limit)
-        tot = sum(do[c].count_documents({"cliente": f"cli-{i:06d}"}) for i in range(g["customers"]))
+        # generator-1tb: the same counts, 8 at a time (each is still one short read of one customer)
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=a.count_threads) as ex:
+            tot = sum(ex.map(lambda i: do[c].count_documents({"cliente": f"cli-{i:06d}"}), range(g["customers"])))
         same(f"{name}.{c} documents counted per customer", tot, g["per_collezione"][c])
     if a.full_scan and name == plan["databases"][0]["db"]:
         # one whole collection streamed with a cursor (batches: short reads), every document decoded
@@ -163,8 +172,8 @@ for d in plan["databases"]:
         for oid in rng.sample(ids, min(len(ids), a.q2_per_customer)):
             same(f"{name} Q2 {oid}", raw(od["ordini"].find({"_id": oid})), raw(rd["ordini"].find({"_id": oid})))
         for st in ("nuovo", "pagato", "spedito", "consegnato", "reso"):
-            x = rng.uniform(0.02, end - 0.1)
-            q = {"stato": st, "cliente": cli, "ts": {"$gte": ts(x), "$lt": ts(x + 0.1)}}
+            x = rng.uniform(0.02, end - a.stato_window)
+            q = {"stato": st, "cliente": cli, "ts": {"$gte": ts(x), "$lt": ts(x + a.stato_window)}}
             same(f"{name} stato_ts {cli} {st}", raw(od["ordini"].find(q).hint("stato_ts").sort([("ts", -1), ("_id", 1)])),
                  raw(rd["ordini"].find(q).hint("stato_ts").sort([("ts", -1), ("_id", 1)])))
         p = [{"$match": {"cliente": cli}}, {"$group": {"_id": "$stato", "n": {"$sum": 1}, "t": {"$sum": "$totale"}}}, {"$sort": {"_id": 1}}]
