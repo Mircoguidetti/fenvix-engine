@@ -422,7 +422,7 @@ impl Dbs {
         loop {
             {
                 let g = Arc::clone(&e).read_owned().await;
-                if g.tenant.as_ref().is_some_and(|t| !t.fx_refresh_due()) && g.leases.valid(&g.name) {
+                if g.tenant.as_ref().is_some_and(|t| !t.fx_refresh_due()) && g.leases.valid(&g.name) && !tenant_bench::lifecycle::is_stale(&g.name) {
                     crate::locallog::check_open(&g.name)?;
                     // F7: the tenant begins no hold past the end of this process's serving lease
                     g.tenant.as_ref().unwrap().set_serving_until(g.leases.serving_until(&g.name));
@@ -799,6 +799,24 @@ impl Entry {
         closed
     }
 
+    /// Close a reader whose view went stale (sst-not-found), keeping the lease: the caller opens a new one.
+    async fn drop_stale_reader(&mut self) {
+        self.nat.clear();
+        self.copts.clear();
+        self.ckey_decided.clear();
+        self.sstat.clear();
+        self.meta_clear();
+        crate::opening::forget_db(&self.name);
+        self.stop_fxc().await;
+        if let Some(t) = self.tenant.take() {
+            if let Err(e) = t.close().await {
+                eprintln!("closing the stale reader of {}: {e:#}", self.name);
+            }
+            self.closes += 1;
+        }
+        self.sync_gauges();
+    }
+
     /// The open tenant, for the control commands (`fenvixSealedPublish`), under this exclusive lock.
     pub fn tenant_mut(&mut self) -> Option<&mut Tenant> {
         self.tenant.as_mut()
@@ -838,6 +856,11 @@ impl Entry {
         crate::locallog::check_open(&self.name)?;
         if self.tenant.is_none() && self.absent {
             return Ok(false);
+        }
+        // a reader whose view went stale (an SST it named was compacted and removed: sst-not-found) is replaced by a new one
+        // on the latest manifest; a writer follows the manifest itself
+        if tenant_bench::lifecycle::take_stale(&self.name) && self.tenant.as_ref().is_some_and(|t| !t.is_writer()) {
+            self.drop_stale_reader().await;
         }
         if self.tenant.is_some() {
             if self.leases.valid(&self.name) {

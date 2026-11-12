@@ -1,0 +1,13 @@
+i4 off run 1: answers 0, retried (134) 0, failures 74 ['1 Data error: object store error (Object at location tenants/d/compacted/01M773V5Y5B1YDR0HM8R0B92GH.sst not found: Error performing GET http://127.0.0.1:9000/rvw-', '1 Data error: object store error (Object at location
+i4 default run 1: answers 0, retried (134) 0, failures 74 ['1 Data error: object store error (Object at location tenants/d/compacted/01M773X3MH579QQBHZDWDC9V6S.sst not found: Error performing GET http://127.0.0.1:9000/rvw-', '1 Data error: object store error (Object at location
+i4 s2d run 1: answers 40, retried (134) 0, failures 0 []; staleReaderErrors None 1 passed in 60.52s (0:01:00) 
+sstfix off run 1: answers 25, retried (134) 1, failures 0 []; staleReaderErrors 1 1 passed in 62.49s (0:01:02) 
+sstfix off run 2: answers 24, retried (134) 1, failures 0 []; staleReaderErrors 1 1 passed in 58.52s 
+sstfix off run 3: answers 24, retried (134) 1, failures 0 []; staleReaderErrors 1 1 passed in 58.57s 
+sstfix default run 1: answers 24, retried (134) 1, failures 0 []; staleReaderErrors 1 1 passed in 58.45s 
+sstfix default run 2: answers 24, retried (134) 1, failures 0 []; staleReaderErrors 1 1 passed in 58.49s 
+sstfix default run 3: answers 25, retried (134) 1, failures 0 []; staleReaderErrors 1 1 passed in 58.45s 
+sstfix s2d run 1: answers 43, retried (134) 0, failures 0 []; staleReaderErrors 0 1 passed in 60.51s (0:01:00) 
+sstfix s2d run 2: answers 43, retried (134) 0, failures 0 []; staleReaderErrors 0 1 passed in 60.55s (0:01:00) 
+sstfix s2d run 3: answers 43, retried (134) 0, failures 0 []; staleReaderErrors 0 1 passed in 58.67s 
+DONE

@@ -141,6 +141,13 @@ impl From<anyhow::Error> for MongoError {
             m.extra = Some(doc! { "errorLabels": ["TransientTransactionError", "RetryableWriteError"] });
             return m;
         }
+        if let Some(db) = tenant_bench::lifecycle::note_missing_sst(&e) {
+            // a reader that kept a manifest whose SSTs a compaction replaced and a collector deleted (sst-not-found): the
+            // next command opens a new reader on the latest manifest, so the read is retried, not failed
+            let mut m = MongoError::new(134, "StaleReader", format!("database {db}: the reader's view of the database was out of date (an SST it named was compacted and removed); retry: {e:#}"));
+            m.extra = Some(doc! { "errorLabels": ["TransientTransactionError", "RetryableWriteError"] });
+            return m;
+        }
         MongoError::internal(format!("{e:#}"))
     }
 }
