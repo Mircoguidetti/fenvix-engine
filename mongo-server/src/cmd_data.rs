@@ -191,6 +191,14 @@ impl Server {
     /// (`cmd::StreamCur`). None when the find is not of that kind (the caller answers it as before).
     #[allow(clippy::too_many_arguments)]
     async fn find_streamed(&self, db: &str, coll: &str, cmd: &Document, filter: &Document, hint_arg: Option<&Bson>, skip: usize, limit: i64, batch: Option<usize>, single: bool) -> R<Option<Document>> {
+        // A getMore page is read by the getMore command, outside the find's own context: a find that carries a
+        // collation, `let` variables or a snapshot read concern is answered whole, as before streaming (review of
+        // 3cb6b38: each of them changed the answers of later pages). A collection's default collation is applied again
+        // on each page (load_indexes), so it streams.
+        let snapshot = cmd.get_document("readConcern").ok().is_some_and(|r| r.get_str("level").ok() == Some("snapshot") || r.contains_key("atClusterTime"));
+        if cmd.contains_key("collation") || cmd.contains_key("let") || snapshot {
+            return Ok(None);
+        }
         let mut g = self.dbs.read(db).await?;
         if !g.collections().await?.iter().any(|n| n == coll) {
             return Ok(None);
