@@ -44,6 +44,8 @@ mod review6_tests;
 #[cfg(test)]
 mod counter_tests;
 #[cfg(test)]
+mod big_speed_tests;
+#[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod review_tests;
