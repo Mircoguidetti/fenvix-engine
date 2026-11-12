@@ -367,7 +367,8 @@ impl PairedReader {
 
     pub async fn get(&self, key: &[u8]) -> Result<Option<Bytes>> {
         let hold = self.view.as_ref().map(|v| self.holds.take(Arc::clone(v)));
-        let r = super::read::get(&self.reader, &slatedb::config::ReadOptions::default(), self.view.as_deref(), self.env, key).await?;
+        // a one-pass control read: run blocks are not kept in the process-wide cache (counter::NO_CACHE_PUT)
+        let r = super::counter::without_cache_put(super::read::get(&self.reader, &slatedb::config::ReadOptions::default(), self.view.as_deref(), self.env, key)).await?;
         if let Some(h) = &hold {
             h.check()?;
         }
@@ -378,7 +379,7 @@ impl PairedReader {
     pub async fn scan(&self, lo: &[u8], hi: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
         let hold = self.view.as_ref().map(|v| self.holds.take(Arc::clone(v)));
         let opts = super::read::scan_options(read_ahead, reverse, false);
-        let r = super::read::scan(&self.reader, &opts, self.view.as_ref(), self.env, lo, hi, reverse, limit).await?;
+        let r = super::counter::without_cache_put(super::read::scan(&self.reader, &opts, self.view.as_ref(), self.env, lo, hi, reverse, limit)).await?;
         if let Some(h) = &hold {
             h.check()?;
         }
