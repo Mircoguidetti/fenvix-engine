@@ -193,6 +193,21 @@ pub fn compare(a: &Bson, b: &Bson) -> Ordering {
     }
 }
 
+/// Whether mongod answers `filter` from the `_id` index (and so, without a sort, in `_id` order): an `_id` condition at the
+/// top level or inside `$and` (any operator: `$nin`, `$ne`, `$not`, ranges, `$exists`, `$type`, `$regex`), or a `$nor`
+/// with one clause on `_id` alone, or an `$or` whose clauses are all on `_id` alone. MEASURED with explain on mongod 7.0.34 (fix-query-defects P5); a `$nor` of two
+/// clauses is a collection scan there.
+pub fn uses_id_index(filter: &Document) -> bool {
+    filter.iter().any(|(k, v)| match (k.as_str(), v) {
+        ("_id", _) => true,
+        ("$and", Bson::Array(a)) => a.iter().any(|s| matches!(s, Bson::Document(d) if uses_id_index(d))),
+        ("$nor", Bson::Array(a)) if a.len() == 1 => matches!(&a[0], Bson::Document(d) if !d.is_empty() && d.keys().all(|k| k == "_id")),
+        // an `$or` of clauses on `_id` alone: one `_id` index scan with the clauses' intervals merged
+        ("$or", Bson::Array(a)) => !a.is_empty() && a.iter().all(|c| matches!(c, Bson::Document(d) if !d.is_empty() && d.keys().all(|k| k == "_id"))),
+        _ => false,
+    })
+}
+
 pub fn equal(a: &Bson, b: &Bson) -> bool {
     compare(a, b) == Ordering::Equal
 }

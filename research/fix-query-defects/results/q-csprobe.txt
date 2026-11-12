@@ -1,0 +1,4 @@
+q1 cs_probe 12 x 2 MB: ERROR pymongo.errors.OperationFailure: the change stream fell behind: events after its position were dropped from the in-memory change log (--change-log-max-mb, now 32 MB); resume is not possible, full erro
+q1 cs_probe 40 x 1 MB: ERROR pymongo.errors.OperationFailure: the change stream fell behind: events after its position were dropped from the in-memory change log (--change-log-max-mb, now 32 MB); resume is not possible, full erro
+qold cs_probe 12 x 2 MB: documents in the collection: 12; events 5 of 12; getMores (seconds, batch, bytes): [(0.0, 5, 10487156)]; empty getMores 90
+qold cs_probe 40 x 1 MB: documents in the collection: 40; events 10 of 40; getMores (seconds, batch, bytes): [(0.0, 10, 10488386)]; empty getMores 90

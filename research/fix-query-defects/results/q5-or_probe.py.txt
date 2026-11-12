@@ -1,0 +1,92 @@
+same       two $in [find]  real=[1, 2, 5, 6] ours=[1, 2, 5, 6]
+same       two $in [find limit 2]  real=[1, 2] ours=[1, 2]
+same       two $in [count]  real={'n': 4} ours={'n': 4}
+same       two $in [agg]  real=[1, 2, 5, 6] ours=[1, 2, 5, 6]
+same       two $in [sort _id]  real=[1, 2, 5, 6] ours=[1, 2, 5, 6]
+same       two $in [updateOne]  real={'n': 1, 'nModified': 1} ours={'n': 1, 'nModified': 1}
+same       two $in [deleteOne]  real={'n': 1} ours={'n': 1}
+same       two $in [updateMany]  real={'n': 4, 'nModified': 4} ours={'n': 4, 'nModified': 4}
+same       two $in [deleteMany]  real={'n': 4} ours={'n': 4}
+same       two $in overlapping [find]  real=[1, 2, 5, 6] ours=[1, 2, 5, 6]
+same       two $in overlapping [find limit 2]  real=[1, 2] ours=[1, 2]
+same       two $in overlapping [count]  real={'n': 4} ours={'n': 4}
+same       two $in overlapping [agg]  real=[1, 2, 5, 6] ours=[1, 2, 5, 6]
+same       two $in overlapping [sort _id]  real=[1, 2, 5, 6] ours=[1, 2, 5, 6]
+same       two $in overlapping [updateOne]  real={'n': 1, 'nModified': 1} ours={'n': 1, 'nModified': 1}
+same       two $in overlapping [deleteOne]  real={'n': 1} ours={'n': 1}
+same       two $in overlapping [updateMany]  real={'n': 4, 'nModified': 4} ours={'n': 4, 'nModified': 4}
+same       two $in overlapping [deleteMany]  real={'n': 4} ours={'n': 4}
+same       $in and _id equality [find]  real=[1, 6, 8] ours=[1, 6, 8]
+same       $in and _id equality [find limit 2]  real=[1, 6] ours=[1, 6]
+same       $in and _id equality [count]  real={'n': 3} ours={'n': 3}
+same       $in and _id equality [agg]  real=[1, 6, 8] ours=[1, 6, 8]
+same       $in and _id equality [sort _id]  real=[1, 6, 8] ours=[1, 6, 8]
+same       $in and _id equality [updateOne]  real={'n': 1, 'nModified': 1} ours={'n': 1, 'nModified': 1}
+same       $in and _id equality [deleteOne]  real={'n': 1} ours={'n': 1}
+same       $in and _id equality [updateMany]  real={'n': 3, 'nModified': 3} ours={'n': 3, 'nModified': 3}
+same       $in and _id equality [deleteMany]  real={'n': 3} ours={'n': 3}
+same       $in and _id equality overlapping [find]  real=[6, 8] ours=[6, 8]
+same       $in and _id equality overlapping [find limit 2]  real=[6, 8] ours=[6, 8]
+same       $in and _id equality overlapping [count]  real={'n': 2} ours={'n': 2}
+same       $in and _id equality overlapping [agg]  real=[6, 8] ours=[6, 8]
+same       $in and _id equality overlapping [sort _id]  real=[6, 8] ours=[6, 8]
+same       $in and _id equality overlapping [updateOne]  real={'n': 1, 'nModified': 1} ours={'n': 1, 'nModified': 1}
+same       $in and _id equality overlapping [deleteOne]  real={'n': 1} ours={'n': 1}
+same       $in and _id equality overlapping [updateMany]  real={'n': 2, 'nModified': 2} ours={'n': 2, 'nModified': 2}
+same       $in and _id equality overlapping [deleteMany]  real={'n': 2} ours={'n': 2}
+same       $in and indexed k [find]  real=[6, 8, 7, 2] ours=[6, 8, 7, 2]
+same       $in and indexed k [find limit 2]  real=[6, 8] ours=[6, 8]
+same       $in and indexed k [count]  real={'n': 4} ours={'n': 4}
+same       $in and indexed k [agg]  real=[6, 8, 7, 2] ours=[6, 8, 7, 2]
+same       $in and indexed k [sort _id]  real=[2, 6, 7, 8] ours=[2, 6, 7, 8]
+same       $in and indexed k [updateOne]  real={'n': 1, 'nModified': 1} ours={'n': 1, 'nModified': 1}
+same       $in and indexed k [deleteOne]  real={'n': 1} ours={'n': 1}
+same       $in and indexed k [updateMany]  real={'n': 4, 'nModified': 4} ours={'n': 4, 'nModified': 4}
+same       $in and indexed k [deleteMany]  real={'n': 4} ours={'n': 4}
+same       $in and indexed k overlapping [find]  real=[6, 7, 2] ours=[6, 7, 2]
+same       $in and indexed k overlapping [find limit 2]  real=[6, 7] ours=[6, 7]
+same       $in and indexed k overlapping [count]  real={'n': 3} ours={'n': 3}
+same       $in and indexed k overlapping [agg]  real=[6, 7, 2] ours=[6, 7, 2]
+same       $in and indexed k overlapping [sort _id]  real=[2, 6, 7] ours=[2, 6, 7]
+same       $in and indexed k overlapping [updateOne]  real={'n': 1, 'nModified': 1} ours={'n': 1, 'nModified': 1}
+same       $in and indexed k overlapping [deleteOne]  real={'n': 1} ours={'n': 1}
+same       $in and indexed k overlapping [updateMany]  real={'n': 3, 'nModified': 3} ours={'n': 3, 'nModified': 3}
+same       $in and indexed k overlapping [deleteMany]  real={'n': 3} ours={'n': 3}
+same       $in and unindexed u [find]  real=[7, 1, 8, 6, 4] ours=[7, 1, 8, 6, 4]
+same       $in and unindexed u [find limit 2]  real=[7, 1] ours=[7, 1]
+same       $in and unindexed u [count]  real={'n': 5} ours={'n': 5}
+same       $in and unindexed u [agg]  real=[7, 1, 8, 6, 4] ours=[7, 1, 8, 6, 4]
+same       $in and unindexed u [sort _id]  real=[1, 4, 6, 7, 8] ours=[1, 4, 6, 7, 8]
+same       $in and unindexed u [updateOne]  real={'n': 1, 'nModified': 1} ours={'n': 1, 'nModified': 1}
+same       $in and unindexed u [deleteOne]  real={'n': 1} ours={'n': 1}
+same       $in and unindexed u [updateMany]  real={'n': 5, 'nModified': 5} ours={'n': 5, 'nModified': 5}
+same       $in and unindexed u [deleteMany]  real={'n': 5} ours={'n': 5}
+same       $in and _id range [find]  real=[0, 1, 6, 8] ours=[0, 1, 6, 8]
+same       $in and _id range [find limit 2]  real=[0, 1] ours=[0, 1]
+same       $in and _id range [count]  real={'n': 4} ours={'n': 4}
+same       $in and _id range [agg]  real=[0, 1, 6, 8] ours=[0, 1, 6, 8]
+same       $in and _id range [sort _id]  real=[0, 1, 6, 8] ours=[0, 1, 6, 8]
+same       $in and _id range [updateOne]  real={'n': 1, 'nModified': 1} ours={'n': 1, 'nModified': 1}
+same       $in and _id range [deleteOne]  real={'n': 1} ours={'n': 1}
+same       $in and _id range [updateMany]  real={'n': 4, 'nModified': 4} ours={'n': 4, 'nModified': 4}
+same       $in and _id range [deleteMany]  real={'n': 4} ours={'n': 4}
+same       three $in [find]  real=[0, 3, 4, 9] ours=[0, 3, 4, 9]
+same       three $in [find limit 2]  real=[0, 3] ours=[0, 3]
+same       three $in [count]  real={'n': 4} ours={'n': 4}
+same       three $in [agg]  real=[0, 3, 4, 9] ours=[0, 3, 4, 9]
+same       three $in [sort _id]  real=[0, 3, 4, 9] ours=[0, 3, 4, 9]
+same       three $in [updateOne]  real={'n': 1, 'nModified': 1} ours={'n': 1, 'nModified': 1}
+same       three $in [deleteOne]  real={'n': 1} ours={'n': 1}
+same       three $in [updateMany]  real={'n': 4, 'nModified': 4} ours={'n': 4, 'nModified': 4}
+same       three $in [deleteMany]  real={'n': 4} ours={'n': 4}
+DIFF-ORDER $in with extra predicate per clause [find]  real=[2, 9] ours=[9, 2]
+DIFF-ORDER $in with extra predicate per clause [find limit 2]  real=[2, 9] ours=[9, 2]
+same       $in with extra predicate per clause [count]  real={'n': 2} ours={'n': 2}
+DIFF-ORDER $in with extra predicate per clause [agg]  real=[2, 9] ours=[9, 2]
+same       $in with extra predicate per clause [sort _id]  real=[2, 9] ours=[2, 9]
+same       $in with extra predicate per clause [updateOne]  real={'n': 1, 'nModified': 1} ours={'n': 1, 'nModified': 1}
+same       $in with extra predicate per clause [deleteOne]  real={'n': 1} ours={'n': 1}
+same       $in with extra predicate per clause [updateMany]  real={'n': 2, 'nModified': 2} ours={'n': 2, 'nModified': 2}
+same       $in with extra predicate per clause [deleteMany]  real={'n': 2} ours={'n': 2}
+
+87 same, 3 different

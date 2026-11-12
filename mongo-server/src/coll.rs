@@ -1114,6 +1114,28 @@ pub fn order_by_near(mut docs: Vec<Document>, path: &str, n: &crate::geo_query::
 
 async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
     let plan = plan_for(indexes, o);
+    // No sort, and mongod would read the `_id` index (`_id` conditions, `$in` with the transaction's own writes, an
+    // `$or` of `_id` clauses): mongod answers in `_id` order, so a limit or a single write picks the same document as
+    // mongod. Before, a scan here answered in insertion order and a transaction's own writes came last
+    // (fix-query-defects P5). Not under a collation other than the collection's (mongod cannot use the `_id` index then).
+    let implied_id = o.sort.is_empty()
+        && matches!(o.hint, Hint::None)
+        && (matches!(plan, Plan::IdIn(_)) || (matches!(plan, Plan::Coll { reverse: false }) && crate::query::uses_id_index(o.filter)))
+        && match crate::collation::current() {
+            None => true,
+            Some(eff) => crate::collation::same(&Some(eff), &g.coll_opts(coll).await?.and_then(|c| c.collation.clone())),
+        };
+    if implied_id {
+        let by_id = [("_id".to_string(), true)];
+        if o.want.is_some() {
+            // the first `want` in `_id` order: the sort-with-a-limit path keeps only those
+            let o2 = FindOpts { filter: o.filter, sort: &by_id, want: o.want, hint: Hint::None, ttl: o.ttl, ov: o.ov };
+            return find_docs_with(g, coll, indexes, &o2, plan).await;
+        }
+        let (mut out, st, p) = find_docs_with(g, coll, indexes, o, plan).await?;
+        out.sort_by(|a, b| crate::query::compare(a.get("_id").unwrap_or(&Bson::Null), b.get("_id").unwrap_or(&Bson::Null)));
+        return Ok((out, st, p));
+    }
     let coll_plan = matches!(plan, Plan::Coll { .. });
     match find_docs_with(g, coll, indexes, o, plan).await {
         // Without a limit the planner prefers a scan and a sort to reading a whole index in order; when that sort is

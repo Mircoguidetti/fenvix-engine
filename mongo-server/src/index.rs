@@ -1113,6 +1113,23 @@ pub fn plan(inp: &PlanInput) -> Plan {
                 subs.push(p);
             }
             if !subs.is_empty() {
+                // every clause a point read of `_id`: mongod reads them as one `_id` index scan (its intervals merged), so
+                // the answer is in `_id` order, not clause by clause (fix-query-defects P5)
+                let id_only = clauses.iter().all(|c| matches!(c, Bson::Document(d) if !d.is_empty() && d.keys().all(|k| k == "_id")));
+                if id_only && subs.iter().all(|p| matches!(p, Plan::Id(_) | Plan::IdIn(_))) && crate::collation::current().is_none() {
+                    let mut keyed: Vec<(Vec<u8>, Bson)> = subs
+                        .iter()
+                        .flat_map(|p| match p {
+                            Plan::Id(v) => vec![v.clone()],
+                            Plan::IdIn(vs) => vs.clone(),
+                            _ => vec![],
+                        })
+                        .map(|v| (crate::layout::encode_sortable(&v), v))
+                        .collect();
+                    keyed.sort_by(|a, b| a.0.cmp(&b.0));
+                    keyed.dedup_by(|a, b| a.0 == b.0);
+                    return Plan::IdIn(keyed.into_iter().map(|(_, v)| v).collect());
+                }
                 return Plan::Or(subs);
             }
         }
