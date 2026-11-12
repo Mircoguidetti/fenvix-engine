@@ -862,7 +862,17 @@ pub fn plan_summary(plan: &Plan, indexes: &[IndexDef]) -> String {
 /// Documents matching `o.filter`, in plan order (sort not applied unless the index provides it). A `$text` condition
 /// needs a text index; the documents of such a query carry their text score in the hidden [`crate::text::SCORE_KEY`] field.
 pub async fn find_docs(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
-    let r = find_docs_any(g, coll, indexes, o).await;
+    // Long `$in`/`$nin` lists: sorted once for the whole query, so each document costs one search per value it holds,
+    // not one comparison per list value (fix-query-defects P2: 100,000 ids made every document read compare 100,000
+    // values). The lists are taken from this copy of the filter, which lives as long as the scope: see `query::InSets`.
+    let r = if crate::query::has_long_in(o.filter) && !crate::query::in_sets_active() {
+        let f = o.filter.clone();
+        let sets = crate::query::InSets::build(&f);
+        let o2 = FindOpts { filter: &f, sort: o.sort, want: o.want, hint: o.hint.clone(), ttl: o.ttl, ov: o.ov };
+        crate::query::IN_SETS.scope(std::cell::RefCell::new(sets), find_docs_any(g, coll, indexes, &o2)).await
+    } else {
+        find_docs_any(g, coll, indexes, o).await
+    };
     if let Ok((_, st, plan)) = &r {
         let _ = EXEC_NOTE.try_with(|c| {
             let mut n = c.borrow_mut();
@@ -1203,6 +1213,13 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
         // customer-first documents: key order is customer then `_id`, not `_id`
         id_order = None;
     }
+    // `_id` range conditions: only the keys between the bounds are read (fix-query-defects P3: a 1,000-document range read
+    // the whole collection). Documents are stored in `_id` key order; not for customer-first keys.
+    let id_range = if matches!(plan, Plan::Coll { reverse: false }) && matches!(o.hint, Hint::None) && ckey.is_none() {
+        crate::query::id_range(o.filter).and_then(|(lo, hi)| crate::layout::id_key_range(&prefix, lo.as_ref(), hi.as_ref(), crate::collation::current().is_some()))
+    } else {
+        None
+    };
     if id_order.is_some() {
         if let Some(eff) = crate::collation::current() {
             // `_id`s are unique under the collection's collation; under another one two `_id`s can be equal, and their
@@ -1269,7 +1286,10 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
             let t = topk.as_mut().unwrap();
             let collated = crate::collation::current().is_some();
             let mut chunk = (o.want.unwrap_or(1) * 2).max(256);
-            let (mut start, mut stop) = (prefix.clone(), prefix_end(&prefix));
+            let (mut start, mut stop) = match &id_range {
+                Some((s, e)) => (s.clone(), e.clone()),
+                None => (prefix.clone(), prefix_end(&prefix)),
+            };
             'ids: loop {
                 let rows = g.scan_range(&start, stop.as_deref(), !asc, Some(chunk), DOC_READ_AHEAD).await?;
                 let n = rows.len();
@@ -1304,6 +1324,36 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
                     stop = Some(last);
                 }
                 chunk = (chunk * 2).min(4096);
+            }
+            stats.keys = stats.docs;
+        }
+        Plan::Coll { reverse: false } if id_range.is_some() && topk.is_none() && !blocking => {
+            tenant_bench::counting::set_phase(3);
+            let (mut start, stop) = id_range.clone().unwrap();
+            let chunk = early.map(|w| (w * 2).max(256)).unwrap_or(4096);
+            'range: loop {
+                let rows = g.scan_range(&start, stop.as_deref(), false, Some(chunk), DOC_READ_AHEAD).await?;
+                let n = rows.len();
+                for (k, v) in &rows {
+                    stats.docs += 1;
+                    if ov_keys.contains(&k.to_vec()) {
+                        continue;
+                    }
+                    let d = decode(v)?;
+                    if visible(&d, o) && matches(&d, o.filter)? {
+                        charge(&mut sort_bytes, &d)?;
+                        out.push(d);
+                        if early.map(|w| out.len() >= w).unwrap_or(false) {
+                            break 'range;
+                        }
+                    }
+                }
+                if n < chunk {
+                    break;
+                }
+                let mut k = rows.last().unwrap().0.to_vec();
+                k.push(0);
+                start = k;
             }
             stats.keys = stats.docs;
         }

@@ -208,6 +208,47 @@ pub fn uses_id_index(filter: &Document) -> bool {
     })
 }
 
+/// The bounds of `_id` range conditions (`$gt`/`$gte` and `$lt`/`$lte`) at the top level or inside `$and`, when they
+/// can bound a scan of the documents in key order: one type bracket, and not null, MinKey, MaxKey, a regex, an array or
+/// a document. Every document read is still matched against the whole filter: these only shorten the scan.
+pub fn id_range(filter: &Document) -> Option<(Option<Bson>, Option<Bson>)> {
+    fn walk(filter: &Document, lo: &mut Option<Bson>, hi: &mut Option<Bson>) {
+        for (k, v) in filter {
+            match (k.as_str(), v) {
+                ("_id", Bson::Document(d)) if is_operator_doc(d) => {
+                    for (op, x) in d {
+                        match op.as_str() {
+                            "$gt" | "$gte" if lo.is_none() => *lo = Some(x.clone()),
+                            "$lt" | "$lte" if hi.is_none() => *hi = Some(x.clone()),
+                            _ => {}
+                        }
+                    }
+                }
+                ("$and", Bson::Array(a)) => {
+                    for s in a {
+                        if let Bson::Document(sd) = s {
+                            walk(sd, lo, hi);
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+    let (mut lo, mut hi) = (None, None);
+    walk(filter, &mut lo, &mut hi);
+    let usable = |v: &Bson| !matches!(v, Bson::Null | Bson::Undefined | Bson::MinKey | Bson::MaxKey | Bson::RegularExpression(_) | Bson::Array(_) | Bson::Document(_));
+    if lo.as_ref().is_some_and(|v| !usable(v)) || hi.as_ref().is_some_and(|v| !usable(v)) || (lo.is_none() && hi.is_none()) {
+        return None;
+    }
+    if let (Some(a), Some(b)) = (&lo, &hi) {
+        if type_rank(a) != type_rank(b) {
+            return None;
+        }
+    }
+    Some((lo, hi))
+}
+
 pub fn equal(a: &Bson, b: &Bson) -> bool {
     compare(a, b) == Ordering::Equal
 }
@@ -604,6 +645,95 @@ fn match_elem(e: &Bson, arg: &Document) -> R<bool> {
     }
 }
 
+/// Lists at least this long are searched in a sorted copy (`InSets`), shorter ones one value at a time.
+const IN_SET_MIN: usize = 32;
+
+tokio::task_local! {
+    /// The sorted `$in`/`$nin` lists of the filter a query matches with, by the address and length of the list. Built
+    /// from a copy of the filter that lives as long as the scope (`coll::find_docs`), so no other live list can have the
+    /// same address: a hit is always that list.
+    pub static IN_SETS: std::cell::RefCell<std::collections::HashMap<(usize, usize), std::sync::Arc<InSet>>>;
+}
+
+pub fn in_sets_active() -> bool {
+    IN_SETS.try_with(|_| ()).is_ok()
+}
+
+/// One long `$in`/`$nin` list: its ordinary values sorted by `compare` (equality there is `compare == Equal`, a total
+/// order, so a binary search finds a match exactly when one value-by-value comparison would), and the values with
+/// their own matching rules (regex, null, undefined) kept apart.
+pub struct InSet {
+    sorted: Vec<Bson>,
+    special: Vec<Bson>,
+}
+
+impl InSet {
+    fn matches(&self, vals: &[&Bson]) -> R<bool> {
+        for x in &self.special {
+            if eq_match(vals, x)? {
+                return Ok(true);
+            }
+        }
+        Ok(candidates(vals).iter().any(|c| self.sorted.binary_search_by(|x| compare(x, c)).is_ok()))
+    }
+}
+
+pub struct InSets;
+
+impl InSets {
+    /// The sorted lists of every long `$in`/`$nin` in `filter` (a list holding an operator document is left out: it
+    /// is an error, raised by the value-by-value path as before).
+    pub fn build(filter: &Document) -> std::collections::HashMap<(usize, usize), std::sync::Arc<InSet>> {
+        let mut out = std::collections::HashMap::new();
+        fn walk(v: &Bson, out: &mut std::collections::HashMap<(usize, usize), std::sync::Arc<InSet>>) {
+            match v {
+                Bson::Document(d) => {
+                    for (k, x) in d {
+                        if let ("$in" | "$nin", Bson::Array(list)) = (k.as_str(), x) {
+                            if list.len() >= IN_SET_MIN && !list.iter().any(|e| matches!(e, Bson::Document(od) if is_operator_doc(od))) {
+                                let (mut sorted, mut special) = (Vec::new(), Vec::new());
+                                for e in list {
+                                    if matches!(e, Bson::RegularExpression(_) | Bson::Null | Bson::Undefined) {
+                                        special.push(e.clone());
+                                    } else {
+                                        sorted.push(e.clone());
+                                    }
+                                }
+                                sorted.sort_by(compare);
+                                out.insert((list.as_ptr() as usize, list.len()), std::sync::Arc::new(InSet { sorted, special }));
+                                continue;
+                            }
+                        }
+                        walk(x, out);
+                    }
+                }
+                Bson::Array(a) => a.iter().for_each(|x| walk(x, out)),
+                _ => {}
+            }
+        }
+        // the values of `filter` itself (never a copy: the addresses must be those of the lists matched against)
+        for (k, x) in filter {
+            if let ("$in" | "$nin", Bson::Array(_)) = (k.as_str(), x) {
+                continue; // a top-level `$in` is not a query operator
+            }
+            walk(x, &mut out);
+        }
+        out
+    }
+}
+
+/// Whether `filter` holds an `$in`/`$nin` list long enough for `InSets`.
+pub fn has_long_in(filter: &Document) -> bool {
+    fn walk(v: &Bson) -> bool {
+        match v {
+            Bson::Document(d) => d.iter().any(|(k, x)| matches!((k.as_str(), x), ("$in" | "$nin", Bson::Array(l)) if l.len() >= IN_SET_MIN) || walk(x)),
+            Bson::Array(a) => a.iter().any(walk),
+            _ => false,
+        }
+    }
+    filter.iter().any(|(_, v)| walk(v))
+}
+
 pub fn int_arg(arg: &Bson) -> Option<i64> {
     match arg {
         Bson::Int32(i) => Some(*i as i64),
@@ -698,6 +828,12 @@ fn match_op(vals: &[&Bson], op: &str, arg: &Bson) -> R<bool> {
         }
         "$in" | "$nin" => {
             let list = arg.as_array().ok_or_else(|| bad(format!("${} needs an array", &op[1..])))?;
+            if list.len() >= IN_SET_MIN {
+                if let Some(set) = IN_SETS.try_with(|m| m.borrow().get(&(list.as_ptr() as usize, list.len())).cloned()).ok().flatten() {
+                    let any = set.matches(vals)?;
+                    return Ok(if op == "$in" { any } else { !any });
+                }
+            }
             let mut any = false;
             for x in list {
                 if let Bson::Document(d) = x {

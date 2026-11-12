@@ -62,6 +62,37 @@ fn sortable_f64(v: f64) -> [u8; 8] {
 
 /// Order-preserving, equality-preserving encoding of a BSON value: byte order follows MongoDB's
 /// comparison order for the types that can be `_id`s, and `1`, `1_i64` and `1.0` encode identically.
+/// The keys (after the document prefix `prefix`) a scan must read to find every `_id` between `lo` and `hi`
+/// (`query::id_range`), as [start, stop): a superset (both ends inclusive; a number by its double value only, so an
+/// Int64 or a Decimal128 next to a bound is never left out). None when the type's key order is not its sort order.
+pub fn id_key_range(prefix: &[u8], lo: Option<&Bson>, hi: Option<&Bson>, collated: bool) -> Option<(Vec<u8>, Option<Vec<u8>>)> {
+    let any = lo.or(hi)?;
+    let rank = crate::query::type_rank(any);
+    let numeric = crate::query::is_numeric(any);
+    let is_str = matches!(any, Bson::String(_) | Bson::Symbol(_));
+    if (is_str && collated) || !(numeric || is_str || matches!(any, Bson::ObjectId(_) | Bson::DateTime(_) | Bson::Timestamp(_) | Bson::Boolean(_) | Bson::Binary(_))) {
+        return None;
+    }
+    let edge = |v: &Bson| -> Vec<u8> {
+        let mut k = prefix.to_vec();
+        if numeric {
+            k.push(rank);
+            k.extend(sortable_f64(crate::query::as_f64(v)));
+        } else {
+            k.extend(encode_sortable(v));
+        }
+        k
+    };
+    let bracket = || {
+        let mut k = prefix.to_vec();
+        k.push(rank);
+        k
+    };
+    let start = lo.map(&edge).unwrap_or_else(bracket);
+    let stop = crate::keyenc::prefix_end(&hi.map(&edge).unwrap_or_else(bracket));
+    Some((start, stop))
+}
+
 pub fn encode_sortable(v: &Bson) -> Vec<u8> {
     encode_sortable_with(v, None)
 }

@@ -13,7 +13,10 @@ documents, and their order where mongod gives one).
 import os
 
 import pytest
-from bson import SON, Decimal128
+import datetime
+import random
+
+from bson import SON, Decimal128, Int64, ObjectId, Regex
 from pymongo import MongoClient
 
 from lib import Server, make_bucket, free_port
@@ -107,3 +110,63 @@ def test_p8_decimal_equality_is_exact(both):
                                        [str(x["_id"]) for x in d.c.find({"_id": {"$in": [Decimal128("1E+400")]}})],
                                        [str(x["_id"]) for x in d.c.find({"_id": Decimal128("7")})],
                                        [str(x["_id"]) for x in d.c.find({"_id": {"$in": [Decimal128("0.1")]}})]))
+
+
+MIXED = ([{"_id": i} for i in range(0, 40, 3)] + [{"_id": Int64(2**53 + 1)}, {"_id": float(2**53)},
+         {"_id": Decimal128("10.0000000000000000001")}, {"_id": 10.5}, {"_id": Decimal128("0.1")}, {"_id": 0.30000000000000004},
+         {"_id": float("inf")}, {"_id": float("-inf")}, {"_id": float("nan")}, {"_id": "a"}, {"_id": "ab"}, {"_id": "b"}, {"_id": ""},
+         {"_id": ObjectId("000000000000000000000001")}, {"_id": ObjectId("ffffffffffffffffffffffff")}, {"_id": datetime.datetime(2020, 1, 1)},
+         {"_id": None}, {"_id": True}, {"_id": {"x": 1}}])
+
+
+@pytest.mark.parametrize("name,flt", [
+    ("int_range", {"_id": {"$gte": 9, "$lt": 27}}),
+    ("gt_only", {"_id": {"$gt": 30}}),
+    ("lte_only", {"_id": {"$lte": 3}}),
+    ("decimal_edges", {"_id": {"$gt": Decimal128("10"), "$lte": Decimal128("10.5")}}),
+    ("big_int_edges", {"_id": {"$gte": float(2**53), "$lte": Int64(2**53 + 1)}}),
+    ("double_vs_decimal", {"_id": {"$gt": 0.1, "$lt": 1}}),
+    ("strings", {"_id": {"$gte": "a", "$lt": "b"}}),
+    ("objectids", {"_id": {"$gt": ObjectId("000000000000000000000000")}}),
+    ("dates", {"_id": {"$lt": datetime.datetime(2030, 1, 1)}}),
+    ("and_range", {"$and": [{"_id": {"$gt": 5}}, {"_id": {"$lt": 20}}]}),
+    ("range_plus_ne", {"_id": {"$gt": 5, "$lt": 30, "$ne": 12}}),
+])
+def test_p3_id_ranges_answer_as_mongod(both, name, flt):
+    same(both, f"p3_{name}", MIXED, lambda d: ([repr(x["_id"]) for x in d.c.find(flt)], [repr(x["_id"]) for x in d.c.find(flt).limit(2)],
+                                                [repr(x["_id"]) for x in d.c.find(flt).sort("_id", -1).limit(3)]))
+
+
+def test_p3_a_range_reads_only_its_keys(both):
+    _, ours = both
+    d = ours.p3keys
+    d.c.drop()
+    ids = list(range(10_000))
+    random.Random(5).shuffle(ids)
+    for s in range(0, 10_000, 2_000):
+        d.c.insert_many([{"_id": i, "pad": "x" * 50} for i in ids[s:s + 2_000]])
+    e = d.command("explain", {"find": "c", "filter": {"_id": {"$gte": 5_000, "$lt": 5_100}}}, verbosity="executionStats")
+    ex = e["executionStats"]
+    print(f"range of 100 in 10,000: returned {ex['nReturned']}, documents examined {ex['totalDocsExamined']}")
+    assert ex["nReturned"] == 100
+    assert ex["totalDocsExamined"] <= 200, f"the range read {ex['totalDocsExamined']} documents"
+
+
+P2_DOCS = ([{"_id": i, "v": i, "a": [i, i + 1000]} for i in range(200)] + [{"_id": "s1", "v": "abc"}, {"_id": "s2", "v": "xyz", "a": ["q", None]},
+           {"_id": "n1", "v": None}, {"_id": "m1"}, {"_id": "d1", "v": Decimal128("5")}, {"_id": "f1", "v": 7.0}, {"_id": "o1", "v": {"x": 1}},
+           {"_id": "arr", "v": [3, 4]}, {"_id": "nan", "v": float("nan")}])
+LONG = list(range(0, 400, 3)) + [Int64(150), 9.0, Decimal128("11"), "abc", {"x": 1}, [3, 4], float("nan")]
+
+
+@pytest.mark.parametrize("name,flt", [
+    ("in_long", {"v": {"$in": LONG}}),
+    ("in_long_null", {"v": {"$in": LONG + [None]}}),
+    ("in_long_regex", {"v": {"$in": LONG + [Regex("^x")]}}),
+    ("in_long_on_array", {"a": {"$in": LONG + ["q"]}}),
+    ("nin_long", {"v": {"$nin": LONG}}),
+    ("nin_long_null", {"a": {"$nin": LONG + [None]}}),
+    ("id_in_long", {"_id": {"$in": LONG + ["s1", "nan"]}}),
+    ("in_long_and_more", {"v": {"$in": LONG, "$gt": 100}}),
+])
+def test_p2_long_in_lists_answer_as_mongod(both, name, flt):
+    same(both, f"p2_{name}", P2_DOCS, lambda d: sorted(repr(x["_id"]) for x in d.c.find(flt)))
