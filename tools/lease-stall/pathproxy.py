@@ -105,7 +105,7 @@ class PathProxy:
                             import re as _re
                             for k in _re.findall(rb"<Key>([^<]+)</Key>", body):
                                 proxy.journal.append((time.time(), "DELETE*", "/" + self.path.split("?")[0].strip("/") + "/" + k.decode(), resp.status))
-                if f and f[2] == "short" and self.command in f[0] and f[1] in self.path.split("?")[0] and not (len(f) > 3 and f[3] and f[3] in self.path) and resp.status == 200 and len(data) > 1:
+                if f and f[2] == "short" and self.command in f[0] and f[1] in self.path.split("?")[0] and not (len(f) > 3 and f[3] and f[3] in self.path) and resp.status in (200, 206) and len(data) > 1:
                     with proxy.lock:
                         proxy.refused += 1
                     data = data[: len(data) // 2]
