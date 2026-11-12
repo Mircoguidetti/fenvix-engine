@@ -1,0 +1,6 @@
+run uploads aborted by dropped writers: 1, failed: 0
+caught mid-upload: ['tenants/mpvictim/fx/run/g0/00000000000000000085-2-fba96a27']; aborted by the erase: 0; phase 2 lasted 20 s
+incomplete uploads left by phase 1's clean shutdown: 0
+.
+1 passed, 1 deselected in 62.38s (0:01:02)
+exit 0

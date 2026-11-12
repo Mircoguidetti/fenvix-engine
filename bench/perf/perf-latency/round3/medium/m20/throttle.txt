@@ -1,0 +1,7 @@
+nr_periods 2558 nr_throttled 3 throttled_time 2037821 fx-wpath 37.39
+tokio-rt-worker 80.87
+mongo-server 0.02
+fx-flush 7.49
+fx-bg 20.72
+jemalloc_bg_thd 0.5
+Thu Nov 12 05:02:31 UTC 2026
