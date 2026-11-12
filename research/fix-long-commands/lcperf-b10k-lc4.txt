@@ -1,0 +1,6 @@
+new-b10k- trial 0 cold: first batch 126 ms, all 1000000 in 8.5 s
+new-b10k- trial 0 warm: first batch 57 ms, all 1000000 in 6.6 s
+new-b10k- trial 1 cold: first batch 94 ms, all 1000000 in 8.7 s
+new-b10k- trial 1 warm: first batch 65 ms, all 1000000 in 6.6 s
+new-b10k- trial 2 cold: first batch 113 ms, all 1000000 in 8.2 s
+new-b10k- trial 2 warm: first batch 52 ms, all 1000000 in 6.7 s

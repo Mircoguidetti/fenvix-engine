@@ -1,0 +1,7 @@
+# cagg.py, 1M documents, no lease churn: count_documents({}) and $group by k
+lc5 trial 0: count 1000000 in 6.5 s, group in 4.1 s
+lc5 trial 1: count 1000000 in 4.2 s, group in 4.4 s
+lc5 trial 2: count 1000000 in 4.4 s, group in 4.3 s
+lc4 trial 0: count 1000000 in 6.6 s, group in 4.3 s
+lc4 trial 1: count 1000000 in 4.4 s, group in 4.3 s
+lc4 trial 2: count 1000000 in 4.1 s, group in 4.0 s

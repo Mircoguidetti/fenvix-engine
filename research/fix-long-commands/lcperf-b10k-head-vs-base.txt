@@ -1,0 +1,19 @@
+# LCPERF_BATCH=10000, 1M documents, order lc5 (head code) / i4 (base) / lc5, run 2026-11-12 03:3x UTC
+lc5 trial 0 cold: first batch 83 ms, all 1000000 in 6.4 s
+lc5 trial 0 warm: first batch 40 ms, all 1000000 in 4.7 s
+lc5 trial 1 cold: first batch 77 ms, all 1000000 in 5.7 s
+lc5 trial 1 warm: first batch 34 ms, all 1000000 in 4.3 s
+lc5 trial 2 cold: first batch 80 ms, all 1000000 in 5.9 s
+lc5 trial 2 warm: first batch 51 ms, all 1000000 in 4.6 s
+i4 trial 0 cold: error after 9.4 s: database d: this process's serving lease expired; it begins no new read (F7)
+i4 trial 0 warm: first batch 4000 ms, all 1000000 in 4.7 s
+i4 trial 1 cold: error after 8.5 s: database d: this process's serving lease expired; it begins no new read (F7)
+i4 trial 1 warm: first batch 4098 ms, all 1000000 in 4.8 s
+i4 trial 2 cold: error after 7.8 s: database d: this process's serving lease expired; it begins no new read (F7)
+i4 trial 2 warm: first batch 8212 ms, all 1000000 in 8.9 s
+lc5 trial 0 cold: first batch 87 ms, all 1000000 in 6.6 s
+lc5 trial 0 warm: first batch 46 ms, all 1000000 in 4.9 s
+lc5 trial 1 cold: first batch 69 ms, all 1000000 in 5.9 s
+lc5 trial 1 warm: first batch 36 ms, all 1000000 in 4.9 s
+lc5 trial 2 cold: first batch 71 ms, all 1000000 in 6.6 s
+lc5 trial 2 warm: first batch 36 ms, all 1000000 in 4.9 s
