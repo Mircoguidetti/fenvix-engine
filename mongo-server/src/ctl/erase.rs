@@ -226,6 +226,10 @@ pub static FORCE_AFTER_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::Ato
 /// How often an open database with erasures pending is checked for what ordinary jobs did (`--sealed-erasure-check-ms`).
 /// A closed database is not opened for it: nothing is resealed while it is closed.
 pub static CHECK_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(600_000);
+/// The rewrite speed the scheduler counts on for a forced reseal (stored bytes a second; MEASURED on the 10 GiB
+/// ballast: about 20 MB/s for one reseal at a time, reads included). A database whose owing groups would take longer to
+/// reseal than the reserve the force time keeps (6 hours of 24 by default) is forced earlier, by the estimate.
+pub static RESEAL_BYTES_PER_S: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(20_000_000);
 
 /// What the agent knows of a database's erasures without reading the store: pending ones (count, oldest request) and
 /// when the retire step of scrubbed ones is next worth trying. A database not in the map (after a restart) is looked at
@@ -242,6 +246,8 @@ struct Due {
     /// erase-cost-1tb: the earliest force time of the pending erasures, and when the last ride check ran
     force_at_ms: Option<u64>,
     checked_ms: u64,
+    /// the forced work the last pass saw owing (ms at `RESEAL_BYTES_PER_S`): the force time moves this much earlier
+    work_ms: u64,
 }
 
 static DUE: std::sync::LazyLock<std::sync::Mutex<std::collections::HashMap<String, Due>>> = std::sync::LazyLock::new(Default::default);
@@ -289,7 +295,7 @@ fn due(db: &str, now: u64, open: bool) -> bool {
         // a forced pass when the earliest force time enters the window; a check of an open database every CHECK_MS (a
         // new erasure counts as nothing to check: its deletes are not even absorbed yet)
         let force = force_every(d.pending)
-            || d.force_at_ms.is_some_and(|f| now + window_ms() >= f)
+            || d.force_at_ms.is_some_and(|f| now + window_ms() + d.work_ms >= f)
             || (d.pending > 0 && d.oldest_ms.is_some_and(|o| now + window_ms() >= force_at(o, o + tenant_bench::fx::erase::DEADLINE_MS.load(ord()))));
         let check = open && d.pending > 0 && now >= d.checked_ms + CHECK_MS.load(ord());
         return (d.pending > 0 && (d.retry_soon || force || check)) || d.retire_at_ms.is_some_and(|t| now >= t);
@@ -315,7 +321,7 @@ fn noted(db: &str) -> u64 {
 
 /// After a pass: what is left to do, from the records as the pass read them, plus the erasures noted since `noted0`
 /// (recorded while the pass ran: not in its listing; their request is at or after `since_ms`).
-fn remember(db: &str, all: &[tenant_bench::fx::erase::Erasure], waiting: bool, noted0: u64, since_ms: u64) {
+fn remember(db: &str, all: &[tenant_bench::fx::erase::Erasure], waiting: bool, noted0: u64, since_ms: u64, work_ms: Option<u64>) {
     let grace = tenant_bench::fx::GC_GRACE_MS.load(ord());
     let now = now_ms() as u64;
     let pending: Vec<&tenant_bench::fx::erase::Erasure> = all.iter().filter(|e| e.done_ms.is_none() && e.state == "pending").collect();
@@ -343,6 +349,9 @@ fn remember(db: &str, all: &[tenant_bench::fx::erase::Erasure], waiting: bool, n
         d.force_at_ms = Some(d.force_at_ms.map_or(f, |x| x.min(f)));
     }
     d.checked_ms = now;
+    if let Some(w) = work_ms {
+        d.work_ms = w;
+    }
 }
 
 /// The newest version of `db` and the one its writer serves (a compactor's served version is an atomic; without one the
@@ -529,7 +538,7 @@ pub async fn run_pass_scrub(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Vec<tenant_be
         erase::archive(&ctl.store, db, e).await?;
         rec::delete(&ctl.store, &index_path(db, &e.id)).await?;
     }
-    remember(db, &all, waiting, noted0, since_ms);
+    remember(db, &all, waiting, noted0, since_ms, None);
     erase::trace(json!({"ev": "pass", "db": db, "lock_ms": lock_ms, "ms": t0.elapsed().as_millis() as u64, "batch": batch_n,
         "gets_process": c.get.load(ord()) - g0 + c.get_range.load(ord()) - r0, "get_bytes_process": c.get_bytes.load(ord()) - b0,
         "open": all.iter().filter(|e| e.done_ms.is_none()).count(), "pending": all.iter().filter(|e| e.state == "pending").count()}));
@@ -538,7 +547,7 @@ pub async fn run_pass_scrub(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Vec<tenant_be
 
 /// erase-cost-1tb: the retire step, the archive of erasures that are done and the agent's memory, after a pass (as the
 /// perf-erase pass ends).
-async fn finish_pass(ctl: &Arc<Ctl>, db: &str, all: &mut [tenant_bench::fx::erase::Erasure], waiting: bool, noted0: u64, since_ms: u64) -> ApiResult<()> {
+async fn finish_pass(ctl: &Arc<Ctl>, db: &str, all: &mut [tenant_bench::fx::erase::Erasure], waiting: bool, noted0: u64, since_ms: u64, work_ms: Option<u64>) -> ApiResult<()> {
     use tenant_bench::fx::erase;
     let (newest, served) = served_versions(ctl, db, all).await;
     {
@@ -555,7 +564,7 @@ async fn finish_pass(ctl: &Arc<Ctl>, db: &str, all: &mut [tenant_bench::fx::eras
         erase::archive(&ctl.store, db, e).await?;
         rec::delete(&ctl.store, &index_path(db, &e.id)).await?;
     }
-    remember(db, all, waiting, noted0, since_ms);
+    remember(db, all, waiting, noted0, since_ms, work_ms);
     Ok(())
 }
 
@@ -584,6 +593,7 @@ pub async fn run_pass_ride(ctl: &Arc<Ctl>, db: &str, force_all: bool) -> ApiResu
     let any_due = force_all || pending.iter().any(|&i| force_at(all[i].requested_ms, all[i].deadline_ms) <= horizon);
     let need = pending.iter().map(|&i| all[i].s_e).max().unwrap_or(0);
     let mut waiting = false;
+    let mut work_ms: Option<u64> = None;
     let (mut n_resealed, mut n_cleansed, mut n_clean) = (0u64, 0u64, 0usize);
     if need > 0 && (any_due || ctl.dbs.is_open(db)) {
         let t_l = std::time::Instant::now();
@@ -598,7 +608,7 @@ pub async fn run_pass_ride(ctl: &Arc<Ctl>, db: &str, force_all: bool) -> ApiResu
             if any_due {
                 return run_pass_scrub(ctl, db).await;
             }
-            finish_pass(ctl, db, &mut all, false, noted0, since_ms).await?;
+            finish_pass(ctl, db, &mut all, false, noted0, since_ms, None).await?;
             return Ok(all);
         };
         super::failpoint("erase.after_prepare").await;
@@ -622,8 +632,17 @@ pub async fn run_pass_ride(ctl: &Arc<Ctl>, db: &str, force_all: bool) -> ApiResu
                 None => return Err(ApiError::new(500, "erasure_targets_lost", format!("database {db}: erasure {} lost its targets before its physical erasure", all[i].id))),
             }
         }
-        let due: BTreeSet<usize> = ready.iter().copied().filter(|&i| force_all || force_at(all[i].requested_ms, all[i].deadline_ms) <= horizon).collect();
         let owing = |v: &tenant_bench::fx::manifest::Version, i: usize| -> ApiResult<Vec<u32>> { Ok(erase::owing_groups(v, &targets[&i], all[i].s_e)?) };
+        // the forced work owing now (every group owing a ready erasure, at the measured reseal speed): with it, the
+        // erasures are forced early enough to finish well before their deadline on a large database
+        let mut owing_all: BTreeSet<u32> = BTreeSet::new();
+        for &i in &ready {
+            owing_all.extend(owing(&v, i)?);
+        }
+        let owing_bytes: u64 = v.groups.iter().filter(|g| owing_all.contains(&g.id)).map(|g| g.sealed.as_ref().map_or(0, |l| l.size)).sum();
+        let work = owing_bytes.saturating_mul(1000) / RESEAL_BYTES_PER_S.load(ord()).max(1);
+        work_ms = Some(work);
+        let due: BTreeSet<usize> = ready.iter().copied().filter(|&i| force_all || force_at(all[i].requested_ms, all[i].deadline_ms) <= horizon + work).collect();
         // 1. forced reseals of the groups still owing a due erasure (a few rounds: a reseal can split or merge groups, or
         // lose its commit to another job; what is left is looked at again at the next poll)
         if !due.is_empty() {
@@ -769,9 +788,9 @@ pub async fn run_pass_ride(ctl: &Arc<Ctl>, db: &str, force_all: bool) -> ApiResu
             let mut g = ctl.dbs.lock(db).await;
             g.fx_sync();
         }
-        erase::trace(json!({"ev": "ride", "db": db, "lock_ms": lock_ms, "ready": ready.len(), "due": due.len(), "forced_reseals": n_resealed, "cleanses": n_cleansed, "clean": n_clean, "version": v.version}));
+        erase::trace(json!({"ev": "ride", "db": db, "lock_ms": lock_ms, "owing_bytes": owing_bytes, "work_ms": work, "ready": ready.len(), "due": due.len(), "forced_reseals": n_resealed, "cleanses": n_cleansed, "clean": n_clean, "version": v.version}));
     }
-    finish_pass(ctl, db, &mut all, waiting, noted0, since_ms).await?;
+    finish_pass(ctl, db, &mut all, waiting, noted0, since_ms, work_ms).await?;
     erase::trace(json!({"ev": "pass", "mode": "ride", "db": db, "ms": t0.elapsed().as_millis() as u64,
         "gets_process": c.get.load(ord()) - g0 + c.get_range.load(ord()) - r0, "get_bytes_process": c.get_bytes.load(ord()) - b0,
         "open": all.iter().filter(|e| e.done_ms.is_none()).count(), "pending": all.iter().filter(|e| e.state == "pending").count()}));

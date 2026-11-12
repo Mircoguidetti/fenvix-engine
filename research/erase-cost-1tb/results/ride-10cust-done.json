@@ -1,0 +1,233 @@
+[
+ {
+  "id": "00000000000000000045-0289ad62",
+  "cleaned_by": null,
+  "scrubbed_s": 309.744,
+  "done_s": 2113.403,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000046-98b85a83",
+  "cleaned_by": null,
+  "scrubbed_s": 309.669,
+  "done_s": 2113.324,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000047-60c08c48",
+  "cleaned_by": null,
+  "scrubbed_s": 309.638,
+  "done_s": 2113.29,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000050-c2fdaebf",
+  "cleaned_by": "forced",
+  "scrubbed_s": 282.811,
+  "done_s": 927.149,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000051-a8c60d29",
+  "cleaned_by": "forced",
+  "scrubbed_s": 282.703,
+  "done_s": 927.037,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000052-1ec1ada6",
+  "cleaned_by": "forced",
+  "scrubbed_s": 282.663,
+  "done_s": 926.994,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000053-deba0cb1",
+  "cleaned_by": "forced",
+  "scrubbed_s": 282.594,
+  "done_s": 926.92,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000054-371e4d45",
+  "cleaned_by": "forced",
+  "scrubbed_s": 282.516,
+  "done_s": 926.84,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000055-5f57d47c",
+  "cleaned_by": "forced",
+  "scrubbed_s": 282.498,
+  "done_s": 926.819,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000056-003ad86d",
+  "cleaned_by": "forced",
+  "scrubbed_s": 282.257,
+  "done_s": 926.575,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000057-8a3b5972",
+  "cleaned_by": "forced",
+  "scrubbed_s": 282.089,
+  "done_s": 926.405,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000058-8a3e9501",
+  "cleaned_by": "forced",
+  "scrubbed_s": 281.981,
+  "done_s": 926.294,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000059-cfe6e171",
+  "cleaned_by": "forced",
+  "scrubbed_s": 281.841,
+  "done_s": 926.152,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000060-001bb5e5",
+  "cleaned_by": "forced",
+  "scrubbed_s": 281.758,
+  "done_s": 926.067,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000061-b8de9ccc",
+  "cleaned_by": "forced",
+  "scrubbed_s": 281.726,
+  "done_s": 926.032,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000062-cadf9650",
+  "cleaned_by": "forced",
+  "scrubbed_s": 281.659,
+  "done_s": 925.962,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000063-673c8470",
+  "cleaned_by": "forced",
+  "scrubbed_s": 281.637,
+  "done_s": 925.937,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000064-18869afc",
+  "cleaned_by": "forced",
+  "scrubbed_s": 281.624,
+  "done_s": 925.922,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000065-2a6044e5",
+  "cleaned_by": "forced",
+  "scrubbed_s": 281.366,
+  "done_s": 925.662,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000066-df3cbeea",
+  "cleaned_by": "forced",
+  "scrubbed_s": 281.157,
+  "done_s": 925.451,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000067-c17dbd76",
+  "cleaned_by": "forced",
+  "scrubbed_s": 281.05,
+  "done_s": 925.342,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000068-9e80513a",
+  "cleaned_by": "forced",
+  "scrubbed_s": 280.912,
+  "done_s": 925.202,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000069-22b6aaa8",
+  "cleaned_by": "forced",
+  "scrubbed_s": 280.833,
+  "done_s": 925.121,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000070-5ecaa18e",
+  "cleaned_by": "forced",
+  "scrubbed_s": 280.796,
+  "done_s": 925.081,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000071-5c5e8baa",
+  "cleaned_by": "forced",
+  "scrubbed_s": 280.576,
+  "done_s": 924.857,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000072-9d3e39c3",
+  "cleaned_by": "forced",
+  "scrubbed_s": 280.427,
+  "done_s": 924.706,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000073-66e8866b",
+  "cleaned_by": "forced",
+  "scrubbed_s": 280.376,
+  "done_s": 924.653,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000074-5e27624b",
+  "cleaned_by": "forced",
+  "scrubbed_s": 280.306,
+  "done_s": 924.58,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000075-6b0621df",
+  "cleaned_by": "forced",
+  "scrubbed_s": 280.248,
+  "done_s": 924.52,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000076-73176e78",
+  "cleaned_by": "forced",
+  "scrubbed_s": 280.206,
+  "done_s": 924.476,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000077-8926c55c",
+  "cleaned_by": "forced",
+  "scrubbed_s": 280.029,
+  "done_s": 924.296,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000078-fb1cedd5",
+  "cleaned_by": "forced",
+  "scrubbed_s": 279.906,
+  "done_s": 924.17,
+  "overdue": false
+ },
+ {
+  "id": "00000000000000000079-e5d43bae",
+  "cleaned_by": "forced",
+  "scrubbed_s": 279.814,
+  "done_s": 924.076,
+  "overdue": false
+ }
+]

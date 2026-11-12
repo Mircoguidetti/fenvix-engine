@@ -1,0 +1,18 @@
+MEASURED (10 GiB ballast, 8.0 GB stored, 20 groups, 5 of them shared loc/nat = 1.86 GB, 23% of stored)
+  before, 1 customer, scrub: written 2.31 GB, read 2.33 GB, PUT-class 208, GET 14668
+  before, 10 customers, scrub (one abandon: 2 scrubs): written 12.61 GB, read 12.70 GB, PUT-class 1058, GET 77488
+  after, 1 customer, forced: written 2.41 GB, read 3.74 GB, PUT-class 197, GET 43604
+  after, 10 customers, forced: written 5.86 GB, read 8.23 GB, PUT-class 678, GET 95359
+
+ASSUMED for 1 TB: 1000000 customers, 1.0% erased a month = 13.9 an hour, 333 a day; layout as the ballast: shared 233 GB, 2252 groups of 0.44 GB (1689 customer groups)
+
+ESTIMATED rewrite bytes a day at 1 TB (delta runs not counted on either side):
+  before (hourly batch scrub): 5,742 GB a day (17.2 GB per erased customer)
+  after, no ordinary reseal helps (worst case): 554 GB a day (1.66 GB per erased customer), 10.4 times less
+  after, 50% of the erased customers' groups resealed by ordinary passes within the force cycle: 480 GB a day
+  after, 90% of the erased customers' groups resealed by ordinary passes within the force cycle: 421 GB a day
+  floor of this design (shared groups once per cycle, nothing else): 406 GB a day
+
+ESTIMATED longest forced pass at 1 TB (every shared group and one hour of customers' groups), one reseal at a time (22 s per group, MEASURED here): 3.2 h
+  with the adaptive force time the pass starts 3.2 h (+ the 1 h window) before 18 h; physically gone ESTIMATED within about 17.5 h of the request (+0.5 h: GC grace 10 min and the SlateDB drop, about 17 min MEASURED by the perf-bytes reviewer)
+ESTIMATED one hourly batch scrub before, at 1 TB: 3.2 h of rewriting per hour of erasures
