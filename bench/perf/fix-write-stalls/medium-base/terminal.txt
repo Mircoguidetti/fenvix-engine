@@ -1,0 +1,1 @@
+[fenvix] VALIDATION, NOT RESULTS: ok=True checkpoints=23995 write=305.583s save_step p50/p99=9.276/49.686 ms stored/logical=1.6001 wrong_reads=0 -> /home/user/runs/base-medium/summary.json
