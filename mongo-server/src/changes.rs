@@ -98,6 +98,11 @@ struct Inner {
     trimmed: u64,
     /// The cluster time of the event at `trimmed`.
     trimmed_time: (u32, u32),
+    /// Databases opened by this process with a history it cannot vouch for (the first open after the process started,
+    /// a takeover, a reopen after another process may have owned it): the log position of that open, and the cluster
+    /// second it happened in. Events written before it (by another process) are not in this log, so a stream on the
+    /// database positioned before it, or a start time at or before that second, fails with ChangeStreamHistoryLost.
+    opened: std::collections::HashMap<String, (u64, u32)>,
 }
 
 pub struct ChangeLog {
@@ -113,7 +118,7 @@ pub struct ChangeLog {
 
 impl Default for ChangeLog {
     fn default() -> Self {
-        ChangeLog { inner: Mutex::new(Inner { events: VecDeque::new(), sizes: VecDeque::new(), bytes: 0, next_seq: 1, last_time: (0, 0), trimmed: 0, trimmed_time: (0, 0) }), notify: Notify::new(), nonce: rand::random(), boot: (bson::DateTime::now().timestamp_millis() / 1000) as u32, born: Mutex::default() }
+        ChangeLog { inner: Mutex::new(Inner { events: VecDeque::new(), sizes: VecDeque::new(), bytes: 0, next_seq: 1, last_time: (0, 0), trimmed: 0, trimmed_time: (0, 0), opened: Default::default() }), notify: Notify::new(), nonce: rand::random(), boot: (bson::DateTime::now().timestamp_millis() / 1000) as u32, born: Mutex::default() }
     }
 }
 
@@ -280,6 +285,39 @@ impl ChangeLog {
         }
     }
 
+    /// This process just opened `db` with a history it cannot vouch for ([`Inner::opened`]). The open takes a log position
+    /// of its own (no event has it), so a stream positioned at or after it started after the open. The cluster clock is
+    /// moved past the current second, so every later event of this process has a later time than any event another
+    /// process wrote before the open (up to a clock skew of one second between processes).
+    pub fn mark_opened(&self, db: &str) {
+        let mut g = self.inner.lock().unwrap();
+        let secs = (bson::DateTime::now().timestamp_millis() / 1000) as u32;
+        let floor = secs.max(self.boot);
+        if g.last_time < (floor + 1, 0) {
+            g.last_time = (floor + 1, 0);
+        }
+        let at = g.next_seq;
+        g.next_seq += 1;
+        g.opened.insert(db.to_string(), (at, floor));
+    }
+
+    /// A stream of `scope` starting at cluster time `ts`: refused when the log cannot hold every event since then:
+    /// the time is from before this process started, or at or before an open of the database (or, for a stream of the
+    /// whole cluster, of any database) whose earlier history is not in this log.
+    pub fn check_start_time(&self, scope: &Scope, ts: Timestamp) -> Result<(), MongoError> {
+        let g = self.inner.lock().unwrap();
+        let floor = match &scope.db {
+            Some(d) => g.opened.get(d).map(|o| o.1),
+            None => g.opened.values().map(|o| o.1).max(),
+        };
+        let lost = ts.time < self.boot || floor.is_some_and(|f| ts.time <= f);
+        if lost {
+            HISTORY_LOST.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            return Err(MongoError::new(286, "ChangeStreamHistoryLost", format!("Resume of change stream was not possible: startAtOperationTime {{{}, {}}} is older than this server's change history for {} (events written before this process started or took the database over are not held here)", ts.time, ts.increment, scope.db.as_deref().unwrap_or("the cluster"))));
+        }
+        Ok(())
+    }
+
     /// A fork of another database was just made under this name.
     pub fn mark_born(&self, db: &str) {
         let at = self.head();
@@ -351,6 +389,16 @@ impl ChangeLog {
     /// open stream whose oplog position is gone the same way). Events an erasure removed do not count.
     pub fn read(&self, scope: &Scope, after: u64, limit: usize) -> Result<(Vec<Arc<Ev>>, u64), MongoError> {
         let g = self.inner.lock().unwrap();
+        // the database was opened (taken over, or reopened after another process may have owned it) after the stream's
+        // position: events another process wrote in between are not in this log
+        let reopened = match &scope.db {
+            Some(d) => g.opened.get(d).map(|o| o.0),
+            None => g.opened.values().map(|o| o.0).max(),
+        };
+        if reopened.is_some_and(|at| after < at) {
+            HISTORY_LOST.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            return Err(MongoError::new(286, "ChangeStreamHistoryLost", format!("the change stream's position is from before {} was opened by this process (a restart or a takeover): events written meanwhile are not in this process's change log; resume is not possible", scope.db.as_deref().unwrap_or("a database of the cluster"))));
+        }
         if g.trimmed > after {
             HISTORY_LOST.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             return Err(MongoError::new(286, "ChangeStreamHistoryLost", format!("the change stream fell behind: events after its position were dropped from the in-memory change log (--change-log-max-mb, now {} MB); resume is not possible", MAX_BYTES.load(std::sync::atomic::Ordering::Relaxed) >> 20)));

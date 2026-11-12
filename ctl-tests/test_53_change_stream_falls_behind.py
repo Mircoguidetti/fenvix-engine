@@ -88,3 +88,35 @@ def test_start_at_an_operation_time_no_longer_held_fails(srv):
     got, err = drain(d, r["cursor"]["id"], 7, secs=10)
     print(f"start at {ts}: delivered {got}, error {err}")
     assert err == 286, f"delivered {got} without ChangeStreamHistoryLost"
+
+
+def test_a_stream_survives_an_idle_close_and_reopen_by_the_same_process():
+    """Fix round (review of 62b8619): a database opened with a history this process cannot vouch for (restart, takeover)
+    fails older streams with 286. A database this process closed cleanly and opened again, with no other owner in
+    between (the lease record still holds the sequence of our own release), is not such an open: a stream on it, and a
+    start time from before the close, go on with every event."""
+    from lib import free_port
+    p = free_port()
+    s = Server(make_bucket("csidle"), "csidle", idle=2, port=p, extra=["--replica-set", "rs0", "--advertise", f"localhost:{p}"]).start()
+    try:
+        d = s.client().csi
+        d.cs.insert_one({"_id": 0})
+        ts = d.command("ping")["operationTime"]   # the cluster time of the first insert
+        r = d.command(SON([("aggregate", "cs"), ("pipeline", [{"$changeStream": {}}]), ("cursor", {})]))
+        cid = r["cursor"]["id"]
+        d.cs.insert_one({"_id": 1})
+        before = s.log_text().count("release_begin")
+        deadline = time.time() + 30
+        while s.log_text().count("release_begin") == before and time.time() < deadline:
+            time.sleep(0.5)   # idle 2 s: the database is closed and its lease released
+        assert s.log_text().count("release_begin") > before, "the database was not closed: the case was not reached"
+        d.cs.insert_one({"_id": 2})   # opened again by this process
+        got, err = drain(d, cid, 2)
+        print(f"open stream across the idle close: {got}, error {err}")
+        assert (got, err) == ([1, 2], None)
+        r = d.command(SON([("aggregate", "cs"), ("pipeline", [{"$changeStream": {"startAtOperationTime": ts}}]), ("cursor", {})]))
+        got, err = drain(d, r["cursor"]["id"], 3)
+        print(f"start time from before the close: {got}, error {err}")
+        assert (got, err) == ([0, 1, 2], None)   # the start time is the first insert's: it is included
+    finally:
+        s.term()
