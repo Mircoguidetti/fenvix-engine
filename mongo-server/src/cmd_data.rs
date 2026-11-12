@@ -95,6 +95,11 @@ impl Server {
         };
         let skip = int_arg(cmd.get("skip")).unwrap_or(0).max(0) as usize;
         let limit = int_arg(cmd.get("limit")).unwrap_or(0);
+        if limit < 0 {
+            // mongod's find command refuses a negative limit (tailable or not; review of 62b8619, P10): the legacy
+            // "negative limit means one batch" belongs to OP_QUERY, and drivers send `singleBatch` instead
+            return Err(MongoError::new(51024, "Location51024", format!("BSON field 'limit' value must be >= 0, actual value '{limit}'")));
+        }
         let batch = int_arg(cmd.get("batchSize")).map(|b| b.max(0) as usize);
         let single = bool_arg(cmd.get("singleBatch"), false);
         let want = if limit > 0 { Some(skip + limit as usize) } else { None };
