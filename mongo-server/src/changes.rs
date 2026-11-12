@@ -477,10 +477,10 @@ impl ChangeLog {
 
     /// A durable-history token ([`ChangeLog::token_db`]): (history id, position, name fingerprint); `None`: not one.
     pub fn parse_token_db(data: &str) -> Option<(u64, u64, u64)> {
-        if data.len() != 50 || !data.starts_with("83") || !data.is_ascii() || &data[34..36] != "01" {
+        if data.len() != 52 || !data.starts_with("83") || !data.is_ascii() || &data[34..36] != "01" {
             return None;
         }
-        Some((u64::from_str_radix(&data[2..18], 16).ok()?, u64::from_str_radix(&data[18..34], 16).ok()?, u64::from_str_radix(&data[36..50], 16).ok()?))
+        Some((u64::from_str_radix(&data[2..18], 16).ok()?, u64::from_str_radix(&data[18..34], 16).ok()?, u64::from_str_radix(&data[36..52], 16).ok()?))
     }
 
     /// A legacy token (`82`, a position of this process's log) given to a stream of `db` on its durable history: the

@@ -1,4 +1,6 @@
 """An open change stream that falls behind the in-memory change log (fix-query-defects P1).
+# (P-durable-changelog: these tests cover the in-memory log, so their servers run with --change-history off; the
+# durable history behind the same scenarios is test_75_durable_change_history.py.)
 
 Found by the review of fix-query-limits (`probes/cs_probe.py`): a change stream opened, then 12 inserts of 2 MB; the
 stream delivered 5 of 12 events, then empty getMores and no error. The change log (`changes.rs`) keeps at most
@@ -21,7 +23,7 @@ LOG_MB = 4
 
 @pytest.fixture(scope="module")
 def srv():
-    s = Server(make_bucket("csbehind"), "csbehind", idle=600, extra=["--change-log-max-mb", str(LOG_MB)]).start()
+    s = Server(make_bucket("csbehind"), "csbehind", idle=600, extra=["--change-history", "off", "--change-log-max-mb", str(LOG_MB)]).start()
     yield s
     s.term()
 

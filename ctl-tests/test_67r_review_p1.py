@@ -1,4 +1,6 @@
 """From the review of fix-query-defects 62b8619 (sessions/2026-11-12-review-fix-query-defects/evidence/test_r_p1.py). Review of fix-query-defects, P1: a change stream must deliver a gapless prefix of its events, then either all of them
+# (P-durable-changelog: these tests cover the in-memory log, so their servers run with --change-history off; the
+# durable history behind the same scenarios is test_75_durable_change_history.py.)
 or ChangeStreamHistoryLost (286); never a later event after a gap. Scenarios the coordinator asked for:
 - several streams on one collection reading at different speeds while the log trims;
 - a customer erasure between the writes and the reads (customer-keyed collection);
@@ -33,7 +35,7 @@ def rs(port):
 def server(tag, extra=(), holder=None):
     b = make_bucket(tag)
     p = next(PORTS)
-    return Server(b, tag, idle=600, port=p, extra=["--change-log-max-mb", str(LOG_MB)] + rs(p) + list(extra), binary=BIN, holder=holder).start()
+    return Server(b, tag, idle=600, port=p, extra=["--change-history", "off", "--change-log-max-mb", str(LOG_MB)] + rs(p) + list(extra), binary=BIN, holder=holder).start()
 
 
 def open_stream(d, coll, **opts):
@@ -192,7 +194,7 @@ def test_takeover():
     must fail with 286 there (the events are not in that process's log), never deliver the later events alone."""
     bucket = make_bucket("rp1take")
     pa, pb = next(PORTS), next(PORTS)
-    a = Server(bucket, "rp1takeA", idle=600, port=pa, extra=["--change-log-max-mb", str(LOG_MB)] + rs(pa), binary=BIN, holder="A").start()
+    a = Server(bucket, "rp1takeA", idle=600, port=pa, extra=["--change-history", "off", "--change-log-max-mb", str(LOG_MB)] + rs(pa), binary=BIN, holder="A").start()
     b = None
     try:
         c = a.client()
@@ -209,7 +211,7 @@ def test_takeover():
         for i in range(2, 6):
             d.cs.insert_one({"_id": i})
         a.kill9()
-        b = Server(bucket, "rp1takeB", idle=600, port=pb, extra=["--change-log-max-mb", str(LOG_MB)] + rs(pb), binary=BIN, holder="B").start()
+        b = Server(bucket, "rp1takeB", idle=600, port=pb, extra=["--change-history", "off", "--change-log-max-mb", str(LOG_MB)] + rs(pb), binary=BIN, holder="B").start()
         cb = b.client()
         db = cb.tk
         t_wait = time.time()

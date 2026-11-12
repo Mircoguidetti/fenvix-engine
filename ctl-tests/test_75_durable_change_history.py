@@ -95,9 +95,10 @@ def test_events_after_a_restart_match_mongod():
     rd.create_collection("cs")
     rcid, _, rtok = open_stream(rd, "cs")
     write_scenario(rd)
-    rcid2, _, _ = open_stream(rd, "cs", resumeAfter=rtok)
-    ref, err = drain(rd, "cs", rcid2, want=8, secs=10)
-    assert err is None and len(ref) == 8, (ref, err)
+    rcid2, rfirst, _ = open_stream(rd, "cs", resumeAfter=rtok)
+    ref, err = drain(rd, "cs", rcid2, want=9 - len(rfirst), secs=10) if len(rfirst) < 9 else ([], None)
+    ref = rfirst + ref
+    assert err is None and len(ref) == 9, (ref, err)
 
     b = make_bucket("chg75ref")
     s = server(b, "chg75ref").start()
@@ -111,7 +112,7 @@ def test_events_after_a_restart_match_mongod():
         s.start()
         d = s.client().chg_ref
         cid, first, _ = open_stream(d, "cs", resumeAfter=tok)
-        ours, err = drain(d, "cs", cid, want=8, secs=10)
+        ours, err = drain(d, "cs", cid, want=9 - len(first), secs=10)
         ours = first + ours
         assert err is None, err
         assert [shape(e) for e in ours] == [shape(e) for e in ref], f"ours {[shape(e) for e in ours]}\nmongod {[shape(e) for e in ref]}"
@@ -121,7 +122,7 @@ def test_events_after_a_restart_match_mongod():
         s.start()
         d = s.client().chg_ref
         cid, first, _ = open_stream(d, "cs", resumeAfter=mid)
-        rest, err = drain(d, "cs", cid, want=4, secs=10)
+        rest, err = drain(d, "cs", cid, want=5 - len(first), secs=10)
         assert [shape(e) for e in first + rest] == [shape(e) for e in ref[4:]], (first + rest, err)
     finally:
         s.term()
@@ -340,7 +341,8 @@ def test_kill_at_every_step_of_the_history(step):
     b = make_bucket("chg75kill")
     extra = ["--change-segment-mb", "1", "--change-segment-secs", "1"]
     if step.startswith("trim"):
-        extra += ["--change-retention-mb", "1"]
+        # (the test documents compress to almost nothing: trim by age; a token older than what is kept then fails 286)
+        extra += ["--change-retention-secs", "3"]
     s = server(b, "chg75kill", extra=extra, env={"FENVIX_CHG_CRASH": step}).start()
     try:
         d = s.client().kl
@@ -361,6 +363,22 @@ def test_kill_at_every_step_of_the_history(step):
         s.env = {}
         s.start()
         d = s.client().kl
+        if step.startswith("trim"):
+            # positions past retention are gone: the old token fails with 286, never a later event alone
+            with pytest.raises(OperationFailure) as e:
+                cid, first, _ = open_stream(d, "cs", resumeAfter=tok)
+                drain(d, "cs", cid, want=1, secs=5)
+                raise OperationFailure("no error", 0)
+            assert e.value.code == 286, e.value
+            # what is still kept reads in order with no gap, from the oldest segment left
+            segs = sorted(k for k, _ in list_prefix(b, "changes/"))
+            assert segs, "no segment left"
+            cid, first, _ = open_stream(d, "cs", startAtOperationTime=__import__("bson").Timestamp(int(segs[0].split("/")[-1].split("-")[3][:8], 16), int(segs[0].split("/")[-1].split("-")[3][8:], 16)))
+            got, err = drain(d, "cs", cid, secs=60, until=lambda g: g and g[-1]["documentKey"]["_id"] == acked[0][-1])
+            got = ids(first + got)
+            assert err is None and got == sorted(got) and got == list(range(got[0], got[0] + len(got))), (err, got[:5], got[-5:])
+            assert got[-1] >= acked[0][-1], (got[-1], acked[0][-1])
+            return
         cid, first, _ = open_stream(d, "cs", resumeAfter=tok)
         total = len(acked[0])
         got, err = drain(d, "cs", cid, secs=60, until=lambda g: len(g) >= total)
