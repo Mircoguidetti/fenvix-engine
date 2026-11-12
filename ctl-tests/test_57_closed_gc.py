@@ -65,6 +65,9 @@ def fill(s, db, rounds):
     for r in range(rounds):
         c[db].a.insert_many([{"_id": r * 10000 + i, "u": f"user{i % 20}", "s": "x" * 400} for i in range(2000)])
         want += 2000
+        # integration-4: since the clone-uploads fix the compactor starts at a database's second write batch (its
+        # catch-up start); a second write, which adds no document, starts it before the reseal
+        c[db].a.update_one({"_id": r * 10000}, {"$set": {"t": r}})
         res = c.admin.command("fenvixReseal", db)
         assert res.get("compactor", True) is not False, res
     return c, want

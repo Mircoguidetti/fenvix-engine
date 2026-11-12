@@ -97,7 +97,8 @@ pub fn set_sealed_codec(s: &str) -> Result<()> {
 
 /// The knobs of the server's compactors.
 /// perf-erase: how long the server's compactors keep old versions (restore points) with their runs
-/// (`--sealed-version-retention-secs`, 7 days by default as before).
+/// (`--sealed-version-retention-secs`). integration-4: the server sets it from the same flag as GC's
+/// `VERSION_RETENTION_MS` (P-perf-bytes, 0 by default); 7 days stays the value for code that does not set it.
 pub static VERSION_RETENTION_SECS: AtomicU64 = AtomicU64::new(7 * 86400);
 
 pub fn server_knobs() -> Knobs {

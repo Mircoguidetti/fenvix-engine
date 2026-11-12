@@ -1,0 +1,30 @@
+ssssssssssssssssss......F........s.                                      [100%]
+=================================== FAILURES ===================================
+______________ test_a_refused_fork_leaves_no_object_of_its_target ______________
+
+    def test_a_refused_fork_leaves_no_object_of_its_target():
+        """Guarantee 6, and the cause of the flaky test_05_erase.py::test_concurrent_erase_and_fork_are_serialised. A fork
+        whose source does not exist (in test_05: erased by the erase that won the race) takes the target's lease, then
+        returns 404 and deletes the lease; but those requests were charged to the target's usage counters, and the usage
+        flusher writes `control/usage/<target>/<day>/...` for a database that never existed, which nothing deletes. test_05
+        only sees it when a flush (every 1 s there) lands between the fork's answer and its listing. Same on integration
+        (this is not caused by compaction-1; see REVIEW.md)."""
+        from lib import list_prefix
+        b = make_bucket("revfork")
+        s = Server(b, "revfork", idle=300, extra=["--usage-flush-secs", "1"]).start()
+        try:
+            st, _ = s.admin.post("/v1/databases/never_was/fork", {"target": "nf_k"})
+            assert st == 404, st
+            time.sleep(3)  # three usage flushes
+            left = [k for k, _ in list_prefix(b, "") if "nf_k" in k or "never_was" in k]
+>           assert left == [], f"a fork refused with 404 left {left}"
+E           AssertionError: a fork refused with 404 left ['control/usage/never_was/2026-11-12/revfork-24137-65893e13.json', 'control/usage/nf_k/2026-11-12/revfork-24137-65893e13.json']
+E           assert ['control/usa...5893e13.json'] == []
+E             
+E             Left contains 2 more items, first extra item: 'control/usage/never_was/2026-11-12/revfork-24137-65893e13.json'
+E             Use -v to get more diff
+
+test_43_review_compaction.py:147: AssertionError
+=========================== short test summary info ============================
+FAILED test_43_review_compaction.py::test_a_refused_fork_leaves_no_object_of_its_target
+1 failed, 15 passed, 19 skipped in 62.79s (0:01:02)

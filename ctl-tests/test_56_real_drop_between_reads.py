@@ -30,10 +30,10 @@ pytestmark = pytest.mark.skipif(os.environ.get("FENVIX_SEALED_RUNS") == "off", r
 
 # short leases so a drop follows a publish within seconds (production: lease 60 s, remote lease 180 s); every rule of
 # check_config holds: margin < lease, PUT timeout < lease - margin, lease > T_pin, remote lease and GC grace > hold life
-# + PUT timeout
+# + PUT timeout; integration-4: GC grace > T_pin + hold life + PUT timeout (4000), so 4100
 FAST = ["--sealed-drop", "true", "--sealed-t-pin-ms", "500", "--sealed-lease-ms", "1500", "--sealed-lease-margin-ms", "400",
         "--sealed-put-timeout-ms", "1000", "--sealed-hold-life-ms", "2000", "--sealed-remote-lease-ms", "4000",
-        "--sealed-gc-grace-ms", "4000", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait"]
+        "--sealed-gc-grace-ms", "4100", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait"]
 KS = [2, 3, 4, 5, 6]
 
 

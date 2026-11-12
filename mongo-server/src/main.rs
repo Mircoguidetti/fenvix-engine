@@ -542,10 +542,6 @@ struct Args {
     /// perf-erase: ... or when this many erasures of the database are pending.
     #[arg(long, default_value_t = 1_000)]
     sealed_erasure_batch_max: u64,
-    /// perf-erase: how long the compactor keeps old versions of our manifest (restore points) and their runs, in seconds
-    /// (7 days, as before). An erasure is done once the versions older than its scrub are gone.
-    #[arg(long, default_value_t = 7 * 86400)]
-    sealed_version_retention_secs: u64,
     /// Timing of our manifest (fx; review round 2 of step 0, F6), in milliseconds, checked at startup: a manifest PUT
     /// with no answer within the PUT timeout counts as timed out (a fence follows); it must be shorter than the lease
     /// minus its margin, and the remote lease and the GC grace must each exceed the hold life plus it.
@@ -580,6 +576,9 @@ struct Args {
     sealed_drop: bool,
     /// How long GC keeps a version of our manifest that nothing holds, serves or names (pairs, references, forks keep
     /// theirs). 0 by default since P-perf-bytes (was 7 days): with the drop on such a version cannot be read.
+    /// integration-4: perf-erase added the same flag (7 days) for the compactors' old versions; one flag now sets both
+    /// (GC's `fx::VERSION_RETENTION_MS` and the compactors' `fx::compactor::VERSION_RETENTION_SECS`), with perf-bytes'
+    /// default. An erasure is done once the versions older than its scrub are gone, so it is done sooner.
     #[arg(long, default_value_t = 0)]
     sealed_version_retention_secs: u64,
     /// First course (opening.rs, measurement prototype, off by default): keep the key-value pairs of each user's first

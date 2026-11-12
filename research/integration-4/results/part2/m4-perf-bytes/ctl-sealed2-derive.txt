@@ -1,0 +1,600 @@
+EEEEEEEEEEEEEEEFFF......F....F...s..F.                                   [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_a_publish_and_a_real_drop_between_two_reads_change_nothing[lookup] _
+
+    @pytest.fixture(scope="module")
+    def srv():
+>       s = start("realdrop")
+            ^^^^^^^^^^^^^^^^^
+
+test_56_real_drop_between_reads.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_56_real_drop_between_reads.py:43: in start
+    return Server(bucket or make_bucket(tag), tag, idle=600, extra=FAST + list(extra), env=e, holder=holder).start()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib.py:99: in start
+    self.wait_ready()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <lib.Server object at 0x7efd1ae26f60>, timeout = 30
+
+    def wait_ready(self, timeout=30):
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            if self.proc.poll() is not None:
+>               raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
+E               RuntimeError: server exited with 1; see /home/user/wI/ctl-tests/out/realdrop-30832.log
+
+lib.py:120: RuntimeError
+_ ERROR at setup of test_a_publish_and_a_real_drop_between_two_reads_change_nothing[unionWith] _
+
+    @pytest.fixture(scope="module")
+    def srv():
+>       s = start("realdrop")
+            ^^^^^^^^^^^^^^^^^
+
+test_56_real_drop_between_reads.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_56_real_drop_between_reads.py:43: in start
+    return Server(bucket or make_bucket(tag), tag, idle=600, extra=FAST + list(extra), env=e, holder=holder).start()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib.py:99: in start
+    self.wait_ready()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <lib.Server object at 0x7efd1ae26f60>, timeout = 30
+
+    def wait_ready(self, timeout=30):
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            if self.proc.poll() is not None:
+>               raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
+E               RuntimeError: server exited with 1; see /home/user/wI/ctl-tests/out/realdrop-30832.log
+
+lib.py:120: RuntimeError
+_ ERROR at setup of test_a_publish_and_a_real_drop_between_two_reads_change_nothing[graphLookup] _
+
+    @pytest.fixture(scope="module")
+    def srv():
+>       s = start("realdrop")
+            ^^^^^^^^^^^^^^^^^
+
+test_56_real_drop_between_reads.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_56_real_drop_between_reads.py:43: in start
+    return Server(bucket or make_bucket(tag), tag, idle=600, extra=FAST + list(extra), env=e, holder=holder).start()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib.py:99: in start
+    self.wait_ready()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <lib.Server object at 0x7efd1ae26f60>, timeout = 30
+
+    def wait_ready(self, timeout=30):
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            if self.proc.poll() is not None:
+>               raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
+E               RuntimeError: server exited with 1; see /home/user/wI/ctl-tests/out/realdrop-30832.log
+
+lib.py:120: RuntimeError
+_ ERROR at setup of test_a_publish_and_a_real_drop_between_two_reads_change_nothing[facet_lookup] _
+
+    @pytest.fixture(scope="module")
+    def srv():
+>       s = start("realdrop")
+            ^^^^^^^^^^^^^^^^^
+
+test_56_real_drop_between_reads.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_56_real_drop_between_reads.py:43: in start
+    return Server(bucket or make_bucket(tag), tag, idle=600, extra=FAST + list(extra), env=e, holder=holder).start()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib.py:99: in start
+    self.wait_ready()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <lib.Server object at 0x7efd1ae26f60>, timeout = 30
+
+    def wait_ready(self, timeout=30):
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            if self.proc.poll() is not None:
+>               raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
+E               RuntimeError: server exited with 1; see /home/user/wI/ctl-tests/out/realdrop-30832.log
+
+lib.py:120: RuntimeError
+_ ERROR at setup of test_a_publish_and_a_real_drop_between_two_reads_change_nothing[view_find] _
+
+    @pytest.fixture(scope="module")
+    def srv():
+>       s = start("realdrop")
+            ^^^^^^^^^^^^^^^^^
+
+test_56_real_drop_between_reads.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_56_real_drop_between_reads.py:43: in start
+    return Server(bucket or make_bucket(tag), tag, idle=600, extra=FAST + list(extra), env=e, holder=holder).start()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib.py:99: in start
+    self.wait_ready()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <lib.Server object at 0x7efd1ae26f60>, timeout = 30
+
+    def wait_ready(self, timeout=30):
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            if self.proc.poll() is not None:
+>               raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
+E               RuntimeError: server exited with 1; see /home/user/wI/ctl-tests/out/realdrop-30832.log
+
+lib.py:120: RuntimeError
+_ ERROR at setup of test_a_publish_and_a_real_drop_between_two_reads_change_nothing[merge] _
+
+    @pytest.fixture(scope="module")
+    def srv():
+>       s = start("realdrop")
+            ^^^^^^^^^^^^^^^^^
+
+test_56_real_drop_between_reads.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_56_real_drop_between_reads.py:43: in start
+    return Server(bucket or make_bucket(tag), tag, idle=600, extra=FAST + list(extra), env=e, holder=holder).start()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib.py:99: in start
+    self.wait_ready()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <lib.Server object at 0x7efd1ae26f60>, timeout = 30
+
+    def wait_ready(self, timeout=30):
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            if self.proc.poll() is not None:
+>               raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
+E               RuntimeError: server exited with 1; see /home/user/wI/ctl-tests/out/realdrop-30832.log
+
+lib.py:120: RuntimeError
+_ ERROR at setup of test_a_publish_and_a_real_drop_between_two_reads_change_nothing[mapReduce] _
+
+    @pytest.fixture(scope="module")
+    def srv():
+>       s = start("realdrop")
+            ^^^^^^^^^^^^^^^^^
+
+test_56_real_drop_between_reads.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_56_real_drop_between_reads.py:43: in start
+    return Server(bucket or make_bucket(tag), tag, idle=600, extra=FAST + list(extra), env=e, holder=holder).start()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib.py:99: in start
+    self.wait_ready()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <lib.Server object at 0x7efd1ae26f60>, timeout = 30
+
+    def wait_ready(self, timeout=30):
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            if self.proc.poll() is not None:
+>               raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
+E               RuntimeError: server exited with 1; see /home/user/wI/ctl-tests/out/realdrop-30832.log
+
+lib.py:120: RuntimeError
+_ ERROR at setup of test_control_keep_view_loses_rows_with_the_real_drop[lookup] _
+
+    @pytest.fixture(scope="module")
+    def keepview():
+>       s = start("realdropkv", env={"FENVIX_CONTROL_KEEP_VIEW": "1"})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_56_real_drop_between_reads.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_56_real_drop_between_reads.py:43: in start
+    return Server(bucket or make_bucket(tag), tag, idle=600, extra=FAST + list(extra), env=e, holder=holder).start()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib.py:99: in start
+    self.wait_ready()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <lib.Server object at 0x7efd1b686300>, timeout = 30
+
+    def wait_ready(self, timeout=30):
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            if self.proc.poll() is not None:
+>               raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
+E               RuntimeError: server exited with 1; see /home/user/wI/ctl-tests/out/realdropkv-33041.log
+
+lib.py:120: RuntimeError
+_ ERROR at setup of test_control_keep_view_loses_rows_with_the_real_drop[unionWith] _
+
+    @pytest.fixture(scope="module")
+    def keepview():
+>       s = start("realdropkv", env={"FENVIX_CONTROL_KEEP_VIEW": "1"})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_56_real_drop_between_reads.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_56_real_drop_between_reads.py:43: in start
+    return Server(bucket or make_bucket(tag), tag, idle=600, extra=FAST + list(extra), env=e, holder=holder).start()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib.py:99: in start
+    self.wait_ready()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <lib.Server object at 0x7efd1b686300>, timeout = 30
+
+    def wait_ready(self, timeout=30):
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            if self.proc.poll() is not None:
+>               raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
+E               RuntimeError: server exited with 1; see /home/user/wI/ctl-tests/out/realdropkv-33041.log
+
+lib.py:120: RuntimeError
+_ ERROR at setup of test_control_keep_view_loses_rows_with_the_real_drop[graphLookup] _
+
+    @pytest.fixture(scope="module")
+    def keepview():
+>       s = start("realdropkv", env={"FENVIX_CONTROL_KEEP_VIEW": "1"})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_56_real_drop_between_reads.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_56_real_drop_between_reads.py:43: in start
+    return Server(bucket or make_bucket(tag), tag, idle=600, extra=FAST + list(extra), env=e, holder=holder).start()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib.py:99: in start
+    self.wait_ready()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <lib.Server object at 0x7efd1b686300>, timeout = 30
+
+    def wait_ready(self, timeout=30):
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            if self.proc.poll() is not None:
+>               raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
+E               RuntimeError: server exited with 1; see /home/user/wI/ctl-tests/out/realdropkv-33041.log
+
+lib.py:120: RuntimeError
+_ ERROR at setup of test_control_keep_view_loses_rows_with_the_real_drop[facet_lookup] _
+
+    @pytest.fixture(scope="module")
+    def keepview():
+>       s = start("realdropkv", env={"FENVIX_CONTROL_KEEP_VIEW": "1"})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_56_real_drop_between_reads.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_56_real_drop_between_reads.py:43: in start
+    return Server(bucket or make_bucket(tag), tag, idle=600, extra=FAST + list(extra), env=e, holder=holder).start()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib.py:99: in start
+    self.wait_ready()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <lib.Server object at 0x7efd1b686300>, timeout = 30
+
+    def wait_ready(self, timeout=30):
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            if self.proc.poll() is not None:
+>               raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
+E               RuntimeError: server exited with 1; see /home/user/wI/ctl-tests/out/realdropkv-33041.log
+
+lib.py:120: RuntimeError
+_ ERROR at setup of test_control_keep_view_loses_rows_with_the_real_drop[view_find] _
+
+    @pytest.fixture(scope="module")
+    def keepview():
+>       s = start("realdropkv", env={"FENVIX_CONTROL_KEEP_VIEW": "1"})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_56_real_drop_between_reads.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_56_real_drop_between_reads.py:43: in start
+    return Server(bucket or make_bucket(tag), tag, idle=600, extra=FAST + list(extra), env=e, holder=holder).start()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib.py:99: in start
+    self.wait_ready()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <lib.Server object at 0x7efd1b686300>, timeout = 30
+
+    def wait_ready(self, timeout=30):
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            if self.proc.poll() is not None:
+>               raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
+E               RuntimeError: server exited with 1; see /home/user/wI/ctl-tests/out/realdropkv-33041.log
+
+lib.py:120: RuntimeError
+_ ERROR at setup of test_create_index_with_a_publish_and_a_real_drop_between_its_build_steps _
+
+    @pytest.fixture(scope="module")
+    def srv():
+>       s = start("realdrop")
+            ^^^^^^^^^^^^^^^^^
+
+test_56_real_drop_between_reads.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_56_real_drop_between_reads.py:43: in start
+    return Server(bucket or make_bucket(tag), tag, idle=600, extra=FAST + list(extra), env=e, holder=holder).start()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib.py:99: in start
+    self.wait_ready()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <lib.Server object at 0x7efd1ae26f60>, timeout = 30
+
+    def wait_ready(self, timeout=30):
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            if self.proc.poll() is not None:
+>               raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
+E               RuntimeError: server exited with 1; see /home/user/wI/ctl-tests/out/realdrop-30832.log
+
+lib.py:120: RuntimeError
+___ ERROR at setup of test_tailable_cursor_across_a_publish_and_a_real_drop ____
+
+    @pytest.fixture(scope="module")
+    def srv():
+>       s = start("realdrop")
+            ^^^^^^^^^^^^^^^^^
+
+test_56_real_drop_between_reads.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_56_real_drop_between_reads.py:43: in start
+    return Server(bucket or make_bucket(tag), tag, idle=600, extra=FAST + list(extra), env=e, holder=holder).start()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib.py:99: in start
+    self.wait_ready()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <lib.Server object at 0x7efd1ae26f60>, timeout = 30
+
+    def wait_ready(self, timeout=30):
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            if self.proc.poll() is not None:
+>               raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
+E               RuntimeError: server exited with 1; see /home/user/wI/ctl-tests/out/realdrop-30832.log
+
+lib.py:120: RuntimeError
+_ ERROR at setup of test_single_guard_reads_while_real_drops_run_in_the_background _
+
+    @pytest.fixture(scope="module")
+    def srv():
+>       s = start("realdrop")
+            ^^^^^^^^^^^^^^^^^
+
+test_56_real_drop_between_reads.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_56_real_drop_between_reads.py:43: in start
+    return Server(bucket or make_bucket(tag), tag, idle=600, extra=FAST + list(extra), env=e, holder=holder).start()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib.py:99: in start
+    self.wait_ready()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <lib.Server object at 0x7efd1ae26f60>, timeout = 30
+
+    def wait_ready(self, timeout=30):
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            if self.proc.poll() is not None:
+>               raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
+E               RuntimeError: server exited with 1; see /home/user/wI/ctl-tests/out/realdrop-30832.log
+
+lib.py:120: RuntimeError
+=================================== FAILURES ===================================
+__________ test_closed_database_drops_retired_runs_and_keeps_its_data __________
+
+    def test_closed_database_drops_retired_runs_and_keeps_its_data():
+        b = make_bucket("closedgc")
+        # a grace longer than the 5 s before the close: the live GC cannot delete the retired runs before the close
+        s = Server(b, "closedgc", idle=5, extra=BASE + ["--sealed-gc-grace-ms", "15000"]).start()
+        try:
+>           c, want = fill(s, "cg", 5)
+                      ^^^^^^^^^^^^^^^^
+
+test_57_closed_gc.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+s = <lib.Server object at 0x7efd1ac65460>, db = 'cg', rounds = 5
+
+    def fill(s, db, rounds):
+        c = s.client()
+        want = 0
+        for r in range(rounds):
+            c[db].a.insert_many([{"_id": r * 10000 + i, "u": f"user{i % 20}", "s": "x" * 400} for i in range(2000)])
+            want += 2000
+            res = c.admin.command("fenvixReseal", db)
+>           assert res.get("compactor", True) is not False, res
+E           AssertionError: {'resealed': 0, 'compactor': False, 'ok': 1.0}
+E           assert False is not False
+E            +  where False = <built-in method get of dict object at 0x7efd19b1eb00>('compactor', True)
+E            +    where <built-in method get of dict object at 0x7efd19b1eb00> = {'resealed': 0, 'compactor': False, 'ok': 1.0}.get
+
+test_57_closed_gc.py:69: AssertionError
+______________________ test_closed_gc_waits_for_the_grace ______________________
+
+    def test_closed_gc_waits_for_the_grace():
+        b = make_bucket("closedgcwait")
+        grace = 75
+        s = Server(b, "closedgcwait", idle=5, extra=BASE + ["--sealed-gc-grace-ms", str(grace * 1000)]).start()
+        try:
+            t_pub = time.time()
+>           c, want = fill(s, "cw", 4)
+                      ^^^^^^^^^^^^^^^^
+
+test_57_closed_gc.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+s = <lib.Server object at 0x7efd19cb8a10>, db = 'cw', rounds = 4
+
+    def fill(s, db, rounds):
+        c = s.client()
+        want = 0
+        for r in range(rounds):
+            c[db].a.insert_many([{"_id": r * 10000 + i, "u": f"user{i % 20}", "s": "x" * 400} for i in range(2000)])
+            want += 2000
+            res = c.admin.command("fenvixReseal", db)
+>           assert res.get("compactor", True) is not False, res
+E           AssertionError: {'resealed': 0, 'compactor': False, 'ok': 1.0}
+E           assert False is not False
+E            +  where False = <built-in method get of dict object at 0x7efd19ad2b00>('compactor', True)
+E            +    where <built-in method get of dict object at 0x7efd19ad2b00> = {'resealed': 0, 'compactor': False, 'ok': 1.0}.get
+
+test_57_closed_gc.py:69: AssertionError
+_______ test_runs_retired_before_a_restart_go_after_a_read_only_session ________
+
+    def test_runs_retired_before_a_restart_go_after_a_read_only_session():
+        """The process that retired the runs stops before their grace ended (a restart, a deploy); the next process only
+        reads the database (it wakes as a reader and never writes). Before, only a write session marked the database for
+        the pass after close, so these runs waited for the next write; now a read-only session's close does too."""
+        b = make_bucket("closedgcrestart")
+        extra = BASE + ["--sealed-gc-grace-ms", "15000"]
+        s = Server(b, "closedgcrestart", idle=5, extra=extra).start()
+        try:
+>           c, want = fill(s, "cr", 5)
+                      ^^^^^^^^^^^^^^^^
+
+test_57_closed_gc.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+s = <lib.Server object at 0x7efd1aa9be60>, db = 'cr', rounds = 5
+
+    def fill(s, db, rounds):
+        c = s.client()
+        want = 0
+        for r in range(rounds):
+            c[db].a.insert_many([{"_id": r * 10000 + i, "u": f"user{i % 20}", "s": "x" * 400} for i in range(2000)])
+            want += 2000
+            res = c.admin.command("fenvixReseal", db)
+>           assert res.get("compactor", True) is not False, res
+E           AssertionError: {'resealed': 0, 'compactor': False, 'ok': 1.0}
+E           assert False is not False
+E            +  where False = <built-in method get of dict object at 0x7efd19aed780>('compactor', True)
+E            +    where <built-in method get of dict object at 0x7efd19aed780> = {'resealed': 0, 'compactor': False, 'ok': 1.0}.get
+
+test_57_closed_gc.py:69: AssertionError
+______________ test_a_refused_fork_leaves_no_object_of_its_target ______________
+
+    def test_a_refused_fork_leaves_no_object_of_its_target():
+        """Guarantee 6, and the cause of the flaky test_05_erase.py::test_concurrent_erase_and_fork_are_serialised. A fork
+        whose source does not exist (in test_05: erased by the erase that won the race) takes the target's lease, then
+        returns 404 and deletes the lease; but those requests were charged to the target's usage counters, and the usage
+        flusher writes `control/usage/<target>/<day>/...` for a database that never existed, which nothing deletes. test_05
+        only sees it when a flush (every 1 s there) lands between the fork's answer and its listing. Same on integration
+        (this is not caused by compaction-1; see REVIEW.md)."""
+        from lib import list_prefix
+        b = make_bucket("revfork")
+        s = Server(b, "revfork", idle=300, extra=["--usage-flush-secs", "1"]).start()
+        try:
+            st, _ = s.admin.post("/v1/databases/never_was/fork", {"target": "nf_k"})
+            assert st == 404, st
+            time.sleep(3)  # three usage flushes
+            left = [k for k, _ in list_prefix(b, "") if "nf_k" in k or "never_was" in k]
+>           assert left == [], f"a fork refused with 404 left {left}"
+E           AssertionError: a fork refused with 404 left ['control/usage/never_was/2026-11-12/revfork-39128-b9201556.json', 'control/usage/nf_k/2026-11-12/revfork-39128-b9201556.json']
+E           assert ['control/usa...9201556.json'] == []
+E             
+E             Left contains 2 more items, first extra item: 'control/usage/never_was/2026-11-12/revfork-39128-b9201556.json'
+E             Use -v to get more diff
+
+test_43_review_compaction.py:147: AssertionError
+______________________ test_streaming_uses_bounded_memory ______________________
+
+env = (<lib.Server object at 0x7efd19cbac90>, 'ctl-export-1354dee2')
+
+    def test_streaming_uses_bounded_memory(env):
+        """A 40 MB collection is exported while the server's resident memory grows by far less than that."""
+        srv, _ = env
+        c = srv.client()
+        big = [{"_id": i, "p": "q" * 380, "n": i} for i in range(100000)]
+        for i in range(0, 100000, 5000):
+            c["mem"]["c"].insert_many(big[i:i + 5000])
+        c["mem"].command("tenantAdmin", close=True)
+    
+        def hwm():
+            for line in open(f"/proc/{srv.proc.pid}/status"):
+                if line.startswith("VmHWM"):
+                    return int(line.split()[1]) // 1024
+        # peak RSS so far includes the loading above; read the live RSS around the download instead
+        def rss():
+            for line in open(f"/proc/{srv.proc.pid}/status"):
+                if line.startswith("VmRSS"):
+                    return int(line.split()[1]) // 1024
+        st, r = srv.admin.post("/v1/databases/mem/exports")
+        assert st == 201
+        dest = tempfile.mkdtemp(prefix="dump-")
+        base_rss = rss()
+        peak = [base_rss]
+        stop = threading.Event()
+    
+        def sampler():
+            while not stop.is_set():
+                peak[0] = max(peak[0], rss())
+                time.sleep(0.02)
+    
+        t = threading.Thread(target=sampler)
+        t.start()
+        ver = xc.download(base(srv), TOKEN, r["id"], dest)
+        stop.set(); t.join()
+        size = os.path.getsize(f"{dest}/mem/c.bson")
+        print("exported", size // 1_000_000, "MB; server RSS", base_rss, "->", peak[0], "MB")
+        assert size > 40_000_000 and ver["mem/c.bson"] == "ok"
+>       assert peak[0] - base_rss < size // 1_000_000 // 2, f"memory grew by {peak[0] - base_rss} MB for a {size // 1_000_000} MB export"
+E       AssertionError: memory grew by 24 MB for a 40 MB export
+E       assert (300 - 276) < ((40900000 // 1000000) // 2)
+
+test_04_export.py:230: AssertionError
+----------------------------- Captured stdout call -----------------------------
+exported 40 MB; server RSS 276 -> 300 MB
+____________ test_a_full_batch_runs_without_waiting_for_the_window _____________
+
+    def test_a_full_batch_runs_without_waiting_for_the_window():
+        bucket = make_bucket("perfer2")
+        s = Server(bucket, "perfer2", idle=300, extra=BASE + ["--sealed-erasure-batch-max", "3"]).start()
+        s.bucket_name = bucket
+        try:
+            c = s.client()
+            db = "pe2"
+            fill(c, db, ("u1", "u2", "u3"))
+            for u in ("u1", "u2"):
+                c[db]["msgs"].delete_many({"userId": u})
+            time.sleep(2)
+>           assert [e["state"] for e in erasures(s, db)] == ["pending", "pending"]
+E           AssertionError: assert ['scrubbed', 'pending'] == ['pending', 'pending']
+E             
+E             At index 0 diff: 'scrubbed' != 'pending'
+E             Use -v to get more diff
+
+test_69_perf_erase.py:122: AssertionError
+=========================== short test summary info ============================
+FAILED test_57_closed_gc.py::test_closed_database_drops_retired_runs_and_keeps_its_data
+FAILED test_57_closed_gc.py::test_closed_gc_waits_for_the_grace - AssertionEr...
+FAILED test_57_closed_gc.py::test_runs_retired_before_a_restart_go_after_a_read_only_session
+FAILED test_43_review_compaction.py::test_a_refused_fork_leaves_no_object_of_its_target
+FAILED test_04_export.py::test_streaming_uses_bounded_memory - AssertionError...
+FAILED test_69_perf_erase.py::test_a_full_batch_runs_without_waiting_for_the_window
+ERROR test_56_real_drop_between_reads.py::test_a_publish_and_a_real_drop_between_two_reads_change_nothing[lookup]
+ERROR test_56_real_drop_between_reads.py::test_a_publish_and_a_real_drop_between_two_reads_change_nothing[unionWith]
+ERROR test_56_real_drop_between_reads.py::test_a_publish_and_a_real_drop_between_two_reads_change_nothing[graphLookup]
+ERROR test_56_real_drop_between_reads.py::test_a_publish_and_a_real_drop_between_two_reads_change_nothing[facet_lookup]
+ERROR test_56_real_drop_between_reads.py::test_a_publish_and_a_real_drop_between_two_reads_change_nothing[view_find]
+ERROR test_56_real_drop_between_reads.py::test_a_publish_and_a_real_drop_between_two_reads_change_nothing[merge]
+ERROR test_56_real_drop_between_reads.py::test_a_publish_and_a_real_drop_between_two_reads_change_nothing[mapReduce]
+ERROR test_56_real_drop_between_reads.py::test_control_keep_view_loses_rows_with_the_real_drop[lookup]
+ERROR test_56_real_drop_between_reads.py::test_control_keep_view_loses_rows_with_the_real_drop[unionWith]
+ERROR test_56_real_drop_between_reads.py::test_control_keep_view_loses_rows_with_the_real_drop[graphLookup]
+ERROR test_56_real_drop_between_reads.py::test_control_keep_view_loses_rows_with_the_real_drop[facet_lookup]
+ERROR test_56_real_drop_between_reads.py::test_control_keep_view_loses_rows_with_the_real_drop[view_find]
+ERROR test_56_real_drop_between_reads.py::test_create_index_with_a_publish_and_a_real_drop_between_its_build_steps
+ERROR test_56_real_drop_between_reads.py::test_tailable_cursor_across_a_publish_and_a_real_drop
+ERROR test_56_real_drop_between_reads.py::test_single_guard_reads_while_real_drops_run_in_the_background
+6 failed, 16 passed, 1 skipped, 15 errors in 135.98s (0:02:15)
