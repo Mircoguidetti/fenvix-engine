@@ -79,6 +79,10 @@ pub fn is_active(id: &str) -> bool {
     ACTIVE.lock().unwrap().contains(id)
 }
 
+/// L0 SSTs a starting compactor knew as absorbed from its version, and L0 SSTs it had to read (round 3, diagnostics).
+pub static L0_RECOGNISED_FROM_VERSION: AtomicU64 = AtomicU64::new(0);
+pub static L0_RECOGNISED_BY_READ: AtomicU64 = AtomicU64::new(0);
+
 /// An absorption is never paused by the background's CPU share once the writer has this many L0 SSTs (it stops at 8); 4
 /// is where absorption starts (`absorb_min_l0`): absorption, which keeps the writer from stopping, is not paced (round 2).
 const ABSORB_URGENT_L0: usize = 4;
@@ -622,7 +626,19 @@ impl Compactor {
         let reader = slatedb::SstReader::new(crate::lifecycle::tenant_path(self.id()), Arc::clone(&self.store), None, None);
         // perf-latency round 2: the L0 SSTs are read at once, not one after the other (`start` runs under the database's
         // exclusive lock, inside the first write after an opening: 8 SSTs of 64 MiB one by one took 3.4 s, MEASURED)
-        let views: Vec<_> = self.db.manifest().l0().iter().cloned().collect();
+        // round 3: the SSTs the version lists as absorbed (with their highest seq) are not read again
+        let listed: HashMap<String, u64> = self.cur.lock().await.v.absorbed_l0.iter().cloned().collect();
+        let mut views: Vec<_> = Vec::new();
+        for view in self.db.manifest().l0().iter() {
+            match listed.get(&view.id.to_string()) {
+                Some(max) if *max <= x_d => {
+                    self.absorbed.lock().unwrap().insert(view.id, *max);
+                    L0_RECOGNISED_FROM_VERSION.fetch_add(1, Relaxed);
+                }
+                _ => views.push(view.clone()),
+            }
+        }
+        L0_RECOGNISED_BY_READ.fetch_add(views.len() as u64, Relaxed);
         // at most 4 at a time, and only each SST's highest seq is kept (not its rows)
         use futures::{StreamExt, TryStreamExt};
         let reader = Arc::new(reader);
@@ -730,6 +746,18 @@ impl Compactor {
                 }
                 let mut next = cur.clone();
                 next.x_d = x_new;
+                // round 3: the absorbed L0 SSTs still in the writer's view, with this absorption's
+                {
+                    let live: std::collections::HashSet<String> = self.db.manifest().l0().iter().map(|v| v.id.to_string()).collect();
+                    let mut l: Vec<(String, u64)> = next.absorbed_l0.iter().filter(|(id, _)| live.contains(id)).cloned().collect();
+                    for (id, hi) in &ids {
+                        let id = id.to_string();
+                        if !l.iter().any(|(x, _)| *x == id) {
+                            l.push((id, *hi));
+                        }
+                    }
+                    next.absorbed_l0 = l;
+                }
                 if let Some(l) = line.clone() {
                     next.delta.insert(0, l);
                     next.delta.sort_by(|a, b| b.max_seq.cmp(&a.max_seq));

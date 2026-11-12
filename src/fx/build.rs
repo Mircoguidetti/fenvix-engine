@@ -238,7 +238,7 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
         Some(v) => v.version + 1,
         None => manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1),
     };
-    let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: delta_runs, next_group_id };
+    let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: delta_runs, next_group_id, absorbed_l0: Vec::new() };
     rep.version = version;
     rep.groups = v.groups.len();
     // the staged publish (step 6, `counter.rs`): before the version that retires runs becomes current, warm the new runs'

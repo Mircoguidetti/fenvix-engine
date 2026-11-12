@@ -469,15 +469,15 @@ pub fn relaxed_window(id: &str) -> Duration {
 /// `build` runs on, and its memtable flusher encodes and compresses a whole L0 SST (`l0_sst_size_bytes`) without
 /// yielding: on the server's runtime (one worker thread in a one-core container) every command and every log
 /// acknowledgement waited for it (MEASURED: the request thread ran for up to 2.4 s at a time, stack in
-/// `memtable_flusher::uploader` / `compress_and_transform`). So the build runs on the background runtime
-/// (`fx::pool::bg_runtime`), and only SlateDB's batch writer (each write's own path) stays on the caller's runtime
-/// (`with_write_runtime`).
+/// `memtable_flusher::uploader` / `compress_and_transform`). So the build runs on a runtime of its own at normal priority
+/// (`fx::pool::flush_runtime`, round 3: on the background runtime, at nice +10, the flusher was starved and writes
+/// stopped), and only SlateDB's batch writer (each write's own path) stays on the caller's runtime (`with_write_runtime`).
 pub(crate) async fn build_writer(b: slatedb::DbBuilder<String>) -> Result<Db> {
     if !crate::fx::pool::BG_ON.load(std::sync::atomic::Ordering::Relaxed) || !crate::fx::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed) {
         return Ok(b.build().await?);
     }
     let b = b.with_write_runtime(tokio::runtime::Handle::current());
-    Ok(crate::fx::pool::bg_runtime().spawn(async move { b.build().await }).await.map_err(|e| anyhow!("writer build task: {e}"))??)
+    Ok(crate::fx::pool::flush_runtime().spawn(async move { b.build().await }).await.map_err(|e| anyhow!("writer build task: {e}"))??)
 }
 
 pub(crate) fn writer_builder(id: &str, store: &Arc<dyn ObjectStore>) -> slatedb::DbBuilder<String> {
@@ -2398,7 +2398,14 @@ impl Tenant {
         // the state just before this batch, for readers while the batch is not confirmed (see `TRACK_VISIBLE`); the
         // caller holds the database's exclusive lock, so nothing is staged between the snapshot and the write
         let before = if track { Some(crate::waits::timed(crate::waits::W::StageSnap, db.snapshot()).await?) } else { None };
+        let t_write = Instant::now();
         let handle = crate::waits::timed(crate::waits::W::Stage, db.write(batch)).await?;
+        if t_write.elapsed() >= Duration::from_secs(1) {
+            // SlateDB stopped the write (unflushed memtables and WAL at `max_unflushed_bytes`): the L0 count says whether the
+            // flusher waited for L0 room (at `l0_max_ssts`) or was slow itself
+            SLOW_STAGES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            eprintln!("SLOW_STAGE db={} ms={} l0={}", self.id, t_write.elapsed().as_millis(), db.manifest().l0().len());
+        }
         note_unflushed(&self.id, handle.seqnum());
         if let Some(b) = before {
             self.group.vis.add(handle.seqnum(), b, keys);
@@ -2508,7 +2515,16 @@ impl Tenant {
                     .put(&marker_path(&self.id), PutPayload::from_static(b"clean"))
                     .await?;
                 self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
-                if l0 >= L0_COMPACT_THRESHOLD {
+                // perf-latency round 3: also when compaction jobs are left pending (the compactor's fold, stopped by this
+                // close, puts its claimed jobs back as scheduled). SlateDB's GC deletes no SST newer than the oldest job
+                // still listed as active, so nothing after it was ever collected while the database stayed closed
+                // (MEASURED: about 5 GB of garbage `compacted/` SSTs per medium run, stored/logical 5.0 against 1.6).
+                // The pass runs those jobs (as it did when L0 was at the threshold at the close) and ends with the GC.
+                let pending = l0 < L0_COMPACT_THRESHOLD && compactions_active(&self.lc.store, &self.id).await.unwrap_or(false);
+                if l0 >= L0_COMPACT_THRESHOLD || pending {
+                    if pending {
+                        CLOSE_PASSES_FOR_PENDING.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    }
                     if let Some(q) = &self.lc.queue {
                         q.request(&self.id, None);
                     }
@@ -2688,7 +2704,9 @@ pub(crate) async fn compact_tenant_pass_with(
         return Ok(None);
     }
     let l0_before = l0_count(raw, id).await?;
-    if l0_before < L0_COMPACT_THRESHOLD {
+    // perf-latency round 3: a closed database whose compaction jobs were left pending is passed too (see `Tenant::close`)
+    let pending_jobs = l0_before < L0_COMPACT_THRESHOLD && !WRITER_DBS.lock().unwrap().contains_key(id) && compactions_active(raw, id).await.unwrap_or(false);
+    if l0_before < L0_COMPACT_THRESHOLD && !pending_jobs {
         // The L0 watch queued this pass from the writer's own view. When the stored manifest has fewer L0 SSTs, the writer
         // either has not stored its newest manifest yet (the watch asks again in a moment) or has not seen a compaction yet:
         // make it read the manifest now rather than at its next poll (`--writer-poll-secs`), its memtable flushes may be
@@ -3007,6 +3025,12 @@ pub static CLOSE_GC_LIGHT: std::sync::atomic::AtomicU64 = std::sync::atomic::Ato
 /// point: hundreds after a few days), so it runs only when something there can be garbage: after a compaction of this
 /// process, once the manifest moved `SST_GC_MANIFEST_STEP` versions since the last full pass, or the first time this
 /// process closes the tenant.
+/// Writes SlateDB held for a second or more (round 3, diagnostics).
+pub static SLOW_STAGES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Closes that queued a compaction pass for the jobs a stopped compactor left pending (round 3, diagnostics).
+pub static CLOSE_PASSES_FOR_PENDING: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 pub async fn gc_tenant_closed(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, min_age: Duration) -> Result<GcRecord> {
     use std::sync::atomic::Ordering::Relaxed;
     let id = id.to_string();

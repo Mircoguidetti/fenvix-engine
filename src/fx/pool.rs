@@ -205,6 +205,20 @@ pub fn pin_to_quota() -> Option<Vec<usize>> {
     }
 }
 
+static FLUSH: std::sync::OnceLock<tokio::runtime::Runtime> = std::sync::OnceLock::new();
+
+/// perf-latency round 3: the runtime of every writer's own background tasks (SlateDB's memtable flusher and WAL flusher).
+/// They are on the write path: a memtable not uploaded counts against `max_unflushed_bytes`, and at that limit every write
+/// stops. On the background runtime (nice +10, pinned to the same CPU as the commands) the flusher was starved exactly
+/// when writes were busiest. Two threads at normal priority: they take turns with the commands, and compaction (the
+/// background runtime) yields to both.
+pub fn flush_runtime() -> tokio::runtime::Handle {
+    FLUSH
+        .get_or_init(|| tokio::runtime::Builder::new_multi_thread().worker_threads(2).thread_name("fx-flush").thread_stack_size(16 << 20).enable_all().build().expect("flush runtime"))
+        .handle()
+        .clone()
+}
+
 /// Whether the server's compactors use [`bg_runtime`] (`--compaction-threads own`, the default) or the server's runtime.
 pub static BG_ON: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 
