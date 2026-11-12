@@ -3,3 +3,5 @@
 2026-11-12T10:01:05Z postgres-sync -> /home/user/H/bench/agent-checkpoints/results/big-2026-11-12/postgres
 2026-11-12T10:24:49Z postgres-sync: exit 0; [postgres] VALIDATION, NOT RESULTS: ok=True checkpoints=250314 load=965.987s stored=5404393472 stored/logical=0.3879 wrong_reads=0 -> /home/user/H/bench/agent-checkpoints/results/big-2026-11-12/postgres/summary.json
 2026-11-12T10:24:49Z fenvix-log -> /home/user/H/bench/agent-checkpoints/results/big-2026-11-12/fenvix
+2026-11-12T11:09:48Z fenvix-log: exit 3; STOP: 2 wrong reads {'unknown_checkpoint': 1, 'not_the_newest_n': 1}: [{'kind': 'unknown_checkpoint', 'op': 'list_limit10', 'thread': 'u001156-t000', 'got': '1f1de85c-6a49-649d-8000-1a96c3148b44'}, {'kind': 'not_the_newest_n', 'op': 'list_limit10', 'thread': 'u001156-t000', 'limit': 10, 'got': 2, 'w
+2026-11-12T11:09:48Z STOP (RULES.md 8)

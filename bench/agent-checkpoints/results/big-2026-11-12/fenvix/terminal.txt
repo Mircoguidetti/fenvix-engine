@@ -1,0 +1,4 @@
+round A: 2200 tasks in 280.3 s, errors 148
+round B: 2200 tasks in 361.7 s, errors 163
+[fenvix] VALIDATION, NOT RESULTS: ok=False checkpoints=101151 load=1116.324s stored=21702986922 stored/logical=4.0291 wrong_reads=2 -> /home/user/H/bench/agent-checkpoints/results/big-2026-11-12/fenvix/summary.json
+STOP: 2 wrong reads {'unknown_checkpoint': 1, 'not_the_newest_n': 1}: [{'kind': 'unknown_checkpoint', 'op': 'list_limit10', 'thread': 'u001156-t000', 'got': '1f1de85c-6a49-649d-8000-1a96c3148b44'}, {'kind': 'not_the_newest_n', 'op': 'list_limit10', 'thread': 'u001156-t000', 'limit': 10, 'got': 2, 'want': 1}]

@@ -1,0 +1,18 @@
+ours, only threads that the 40% load wrote (MEASURED); ms p50 / p99 (n); mean S3 GETs and KB per call
+A list             85.93 / 649.63 (n 147) gets mean 63.0 p50 53 KB 3131
+A list_limit10     37.36 / 434.07 (n 143) gets mean 28.7 p50 27 KB 2170
+A resume[long]     11.4 / 35.99 (n 434) gets mean 8.0 p50 8 KB 347
+A resume[none]     2.6 / 20.14 (n 434) gets mean 3.0 p50 2 KB 70
+A resume[read]     11.23 / 59.99 (n 156) gets mean 7.8 p50 8 KB 343
+A save_step[none]  9.03 / 126.52 (n 2016) gets mean 8.3 p50 7 KB 305
+A save_step[old]   9.23 / 125.41 (n 2008) gets mean 8.4 p50 7 KB 144
+A time_travel      11.27 / 237.39 (n 152) gets mean 7.9 p50 8 KB 215
+B list             131.13 / 1340.43 (n 122) gets mean 37.6 p50 39 KB 3167
+B list_limit10     88.84 / 328.7 (n 142) gets mean 19.3 p50 19 KB 2352
+B resume[long]     54.76 / 239.64 (n 435) gets mean 8.1 p50 8 KB 715
+B resume[none]     2.69 / 87.3 (n 435) gets mean 0.9 p50 0 KB 142
+B resume[read]     55.06 / 164.97 (n 130) gets mean 7.9 p50 8 KB 872
+B save_step[none]  9.46 / 214.28 (n 2059) gets mean 2.5 p50 2 KB 523
+B save_step[old]   9.57 / 168.95 (n 2073) gets mean 2.6 p50 2 KB 453
+B time_travel      54.45 / 240.67 (n 137) gets mean 7.7 p50 8 KB 853
+written threads 2249
