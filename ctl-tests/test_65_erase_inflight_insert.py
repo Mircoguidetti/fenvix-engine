@@ -118,8 +118,8 @@ def test_b_inserts_waiting_behind_the_erase_land_in_the_new_database():
 
 
 def test_c_insert_staged_into_an_opening_abandoned_by_a_lease_loss():
-    """An insert X stages its batch and waits for its WAL write (delayed 6 s); meanwhile the process lease lapses (its
-    renewal delayed 6 s, ttl 3 s) and the database is abandoned. X must never be acknowledged unless it is durable: after
+    """An insert X stages its batch and waits for its WAL write (delayed); meanwhile the process lease lapses (its
+    renewal delayed 4 s, ttl 3 s; its WAL write 12 s) and the database is abandoned. X must never be acknowledged unless it is durable: after
     the abandon either the client got an error, or X is there after a restart (kill -9, then a fresh read)."""
     ff = tempfile.NamedTemporaryFile("w", delete=False, suffix=".faults")
     ff.close()
@@ -130,7 +130,7 @@ def test_c_insert_staged_into_an_opening_abandoned_by_a_lease_loss():
         fill(c, "inflc", "c", 200)
         out = {}
         with open(ff.name, "w") as fh:
-            fh.write("delay_put tenants/inflc/wal/ 6000\ndelay_put processes/H65/_lease 6000\n")
+            fh.write("delay_put tenants/inflc/wal/ 12000\ndelay_put processes/H65/_lease 4000\n")
 
         def insert_x():
             cx = MongoClient(srv.uri, serverSelectionTimeoutMS=10000, socketTimeoutMS=60000, retryWrites=False)
@@ -167,4 +167,72 @@ def test_c_insert_staged_into_an_opening_abandoned_by_a_lease_loss():
             assert found is not None, "RULE 8: X was acknowledged but is missing after a restart"
     finally:
         srv.term()
+        os.unlink(ff.name)
+
+
+def test_c2_insert_staged_into_an_opening_taken_over_by_another_process():
+    """As C, but a second process P2 takes the database over while X waits, and writes to it. X (staged in P1's opening)
+    must be either refused, or durable and visible to P2 and after both restart; P2's acknowledged writes must all stay."""
+    ff = tempfile.NamedTemporaryFile("w", delete=False, suffix=".faults")
+    ff.close()
+    bucket = make_bucket("e65c2")
+    p1 = Server(bucket, "e65c2a", idle=300, holder="P65a", extra=["--lease-ttl-secs", "3"], env={"MONGO_TEST_FAULTS_FILE": ff.name}).start()
+    p2 = Server(bucket, "e65c2b", idle=300, holder="P65b", extra=["--lease-ttl-secs", "3"]).start()
+    try:
+        c1 = p1.client()
+        fill(c1, "inflc2", "c", 200)
+        out = {}
+        with open(ff.name, "w") as fh:
+            fh.write("delay_put tenants/inflc2/wal/ 15000\ndelay_put processes/P65a/_lease 4000\n")
+
+        def insert_x():
+            cx = MongoClient(p1.uri, serverSelectionTimeoutMS=10000, socketTimeoutMS=60000, retryWrites=False)
+            t0 = time.time()
+            try:
+                cx.inflc2.c.insert_one({"_id": "X"})
+                out["x"] = ("ok", time.time() - t0)
+            except PyMongoError as e:
+                out["x"] = (f"error {getattr(e, 'code', None)} {str(e)[:150]}", time.time() - t0)
+        th = threading.Thread(target=insert_x)
+        th.start()
+        c2 = MongoClient(p2.uri, serverSelectionTimeoutMS=10000, socketTimeoutMS=60000, retryWrites=False)
+        p2_acked, t0 = [], time.time()
+        while th.is_alive() and time.time() - t0 < 40:
+            k = len(p2_acked)
+            try:
+                c2.inflc2.c.insert_one({"_id": f"P2-{k}"})
+                p2_acked.append(f"P2-{k}")
+            except PyMongoError:
+                time.sleep(0.3)
+        th.join(timeout=60)
+        with open(ff.name, "w") as fh:
+            fh.write("")
+        kind, took = out["x"]
+        x_on_p2 = None
+        try:
+            x_on_p2 = c2.inflc2.c.find_one({"_id": "X"})
+        except PyMongoError as e:
+            x_on_p2 = f"read error {str(e)[:80]}"
+        p1.kill9()
+        p2.term()
+        p2.proc = None
+        p2.start()
+        ids = set()
+        for _ in range(60):
+            try:
+                ids = set(d["_id"] for d in p2.client().inflc2.c.find({}))
+                break
+            except PyMongoError:
+                time.sleep(0.5)
+        missing_p2 = [i for i in p2_acked if i not in ids]
+        print(f"X: {kind} after {took:.1f} s; P2 acknowledged {len(p2_acked)} writes during X's wait; X seen by P2: {x_on_p2}; "
+              f"after restarts X {'present' if 'X' in ids else 'absent'}, P2's acknowledged writes missing {missing_p2}; documents {len(ids)}")
+        assert p2_acked, "P2 never took the database over: the test did not reach the case"
+        assert not missing_p2, "RULE 8: acknowledged writes of the new owner are missing"
+        assert len([i for i in ids if isinstance(i, int)]) == 200, "acknowledged documents of the fill are missing"
+        if kind == "ok":
+            assert "X" in ids, "RULE 8: X was acknowledged but is missing after the takeover and the restarts"
+    finally:
+        p1.term()
+        p2.term()
         os.unlink(ff.name)
