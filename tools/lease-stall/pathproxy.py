@@ -93,7 +93,14 @@ class PathProxy:
                     for k, v in resp.getheaders():
                         if k.lower() not in HOP and k.lower() != "content-length":
                             self.send_header(k, v)
-                    self.send_header("Content-Length", str(len(data)))
+                    # A HEAD answer carries the object's own length (fix-store-errors: this forwarder sent 0, so every
+                    # object looked empty to a HEAD; SlateDB took the WAL objects of a writer it replaced for empty fences
+                    # and skipped them on replay: acknowledged writes looked lost, through this forwarder only. The same
+                    # defect was fixed in ctl-tests/proxy.py in integration-3.)
+                    if self.command == "HEAD" and resp.getheader("Content-Length") is not None:
+                        self.send_header("Content-Length", resp.getheader("Content-Length"))
+                    else:
+                        self.send_header("Content-Length", str(len(data)))
                     self.end_headers()
                     if self.command != "HEAD":
                         self.wfile.write(data)
