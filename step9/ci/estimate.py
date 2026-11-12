@@ -137,14 +137,15 @@ GEN_SPILL_PER_BSON = 0.104
 GEN_PUBLISH_FRACTION = 0.05
 # generator-1tb (2026-11-12, fenvix-engine branch generator-1tb, MEASURED in a 4-vCPU sandbox, Intel Xeon @ 2.1 GHz,
 # MinIO on the same machine): ONE database on several writers. One writer alone 10.16 MB/s of BSON (1 GiB); four
-# writers on the four vCPU 9.17 MB/s each while all are busy (3 GiB; MinIO's CPU included). The partition files of the
+# writers on the four vCPU 9.17 MB/s each while all are busy (3 GiB; MinIO's CPU included), 9.79 on the 20 GiB run. The partition files of the
 # shared rows are kept in the pantry until the publish (0.105 byte per BSON byte, MEASURED), the publish merges them in
 # parallel. On AWS the vCPU of a c7i are hyperthreads, two per core (DECLARED by AWS); what 8 busy threads give against
 # this sandbox's 4 is NOT measured: GEN_VCPU_YIELD is the ESTIMATED share of a sandbox vCPU one AWS vCPU gives when
 # all are busy (c7i: 4 cores x 1.25 for 8 threads = 0.625, the cautious end; 1.0 if a thread were worth a sandbox vCPU).
-GEN_MB_S_PER_WRITER = 9.17
+GEN_MB_S_PER_WRITER = 9.79   # the 20 GiB run (15 slices, 4 writers, killed and resumed): 21.48 GB in 2,193 writer-seconds
 GEN_VCPU_YIELD = {"c7i": 0.625}
-GEN_PARTS_PER_BSON = 0.105
+GEN_PARTS_PER_BSON = 0.107   # MEASURED on the 20 GiB run (2.30 GB of partition files)
+GEN_PUBLISH_SHARE = 0.06     # the publish against the generation's wall time, MEASURED on the 20 GiB run (33 s / 548 s)
 
 
 def generator_hours(gib, gen_type, writers=None):
@@ -153,7 +154,7 @@ def generator_hours(gib, gen_type, writers=None):
     vcpu = TYPES[gen_type][0]
     w = min(int(writers or vcpu), vcpu)
     eff = w * GEN_VCPU_YIELD.get(gen_type.split(".")[0], 1.0)
-    return gib * GIB * 1000 / (eff * GEN_MB_S_PER_WRITER) / 3600 * (1 + GEN_PUBLISH_FRACTION)
+    return gib * GIB * 1000 / (eff * GEN_MB_S_PER_WRITER) / 3600 * (1 + GEN_PUBLISH_SHARE)
 # Aurora PostgreSQL (DECLARED, AWS Price List AmazonRDS eu-west-1, publication 2026-10-29T07:06:35Z): db.r7g.large
 # Single-AZ $0.304/h, storage $0.11 per GB-month, $0.22 per million I/O requests (Aurora Standard)
 AURORA_H, AURORA_GBM, AURORA_IO_M = 0.304, 0.11, 0.22
