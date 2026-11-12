@@ -48,3 +48,6 @@ SLOW hello db=admin ms=10001 ok=true
 SLOW count db=app_data_b03 ms=19938 ok=false
 SLOW hello db=admin ms=10001 ok=true
 SLOW hello db=admin ms=10002 ok=true
+LEASE release_begin tenant=app_data_b03 holder=18750-23866f59 unix_ms=1794489734594 
+LEASE release tenant=app_data_b03 holder=18750-23866f59 unix_ms=1794489734608 ok=true
+SLOW hello db=admin ms=10001 ok=true
