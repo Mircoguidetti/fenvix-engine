@@ -346,6 +346,8 @@ impl Counter {
     }
 
     fn maps_put(&self, k: Ck, e: CachedEntry) {
+        // P-big-speed fix 1: copied out of the GET's receive buffer before it is kept (`meter::MeteredCache::insert`)
+        let e = e.clamp_allocated_size();
         let size = e.size() as u64 + 64;
         let block = self.is_map_block(&k);
         {
@@ -401,6 +403,8 @@ impl Counter {
     }
 
     fn data_put(&self, k: Ck, e: CachedEntry, ahead: bool) {
+        // P-big-speed fix 1: copied out of the GET's receive buffer before it is kept (`meter::MeteredCache::insert`)
+        let e = e.clamp_allocated_size();
         let q = if ahead || is_prefetch() {
             self.m.prefetched_in.fetch_add(1, Relaxed);
             Q::Prefetched
