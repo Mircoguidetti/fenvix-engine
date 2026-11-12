@@ -430,7 +430,7 @@ impl Dbs {
         let token = InflightToken(counter);
         // Outside `handle` there is no scope to hold the token: it is dropped (and the count decremented) at once.
         let _ = TOKENS.try_with(|t| t.borrow_mut().push(token));
-        let mut g = self.entry(name).write_owned().await;
+        let mut g = tenant_bench::waits::timed(tenant_bench::waits::W::LockW, self.entry(name).write_owned()).await;
         g.snap = None;
         g.absent = false;
         g.pinned_abandons = None;
@@ -453,7 +453,7 @@ impl Dbs {
         }
         loop {
             {
-                let g = Arc::clone(&e).read_owned().await;
+                let g = tenant_bench::waits::timed(tenant_bench::waits::W::LockR, Arc::clone(&e).read_owned()).await;
                 if g.tenant.as_ref().is_some_and(|t| !t.fx_refresh_due()) && g.leases.valid(&g.name) && !tenant_bench::lifecycle::is_stale(&g.name) {
                     crate::locallog::check_open(&g.name)?;
                     // F7: the tenant begins no hold past the end of this process's serving lease
@@ -462,9 +462,9 @@ impl Dbs {
                     return Ok(ReadView { g: Some(Guard::Read(g)), copts: Default::default(), fc: Default::default() });
                 }
             }
-            let mut w = Arc::clone(&e).write_owned().await;
+            let mut w = tenant_bench::waits::timed(tenant_bench::waits::W::LockW, Arc::clone(&e).write_owned()).await;
             w.absent = false;
-            if !w.ensure_open().await? {
+            if !tenant_bench::waits::timed(tenant_bench::waits::W::Refresh, w.ensure_open()).await? {
                 return Ok(ReadView { g: None, copts: Default::default(), fc: Default::default() });
             }
         }
@@ -617,7 +617,8 @@ impl Entry {
                 k.derive = crate::agentck::spec_for(&self.name);
                 // c2-fix-hangs: the compactor's requests are maintenance work, counted but not drawn from the quota
                 // (`counting::maintenance`); integration-4: applied here, where the clone-uploads fix moved the start
-                match tenant_bench::fx::compactor::Compactor::start(t, tenant_bench::counting::maintenance(&self.raw), k, tenant_bench::fx::pool::global(), tokio::runtime::Handle::current()).await {
+                // big-speed merge: perf-latency's compaction runtime and start timing, with c2-fix-hangs' maintenance counting
+                match tenant_bench::waits::timed(tenant_bench::waits::W::CompStart, tenant_bench::fx::compactor::Compactor::start(t, tenant_bench::counting::maintenance(&self.raw), k, tenant_bench::fx::pool::global(), tenant_bench::fx::pool::compaction_runtime())).await {
                     Ok(c) => {
                         c.run();
                         self.fxc = Some(c);
@@ -910,7 +911,7 @@ impl Entry {
                 self.tenant.as_ref().unwrap().set_serving_source(self.serving_source());
                 // a reader refreshes its version of our manifest before T_pin (fx, rule 6)
                 if self.tenant.as_ref().unwrap().fx_refresh_due() {
-                    self.tenant.as_mut().unwrap().fx_refresh().await?;
+                    tenant_bench::waits::timed(tenant_bench::waits::W::Refresh, self.tenant.as_mut().unwrap().fx_refresh()).await?;
                 }
                 return Ok(true);
             }
@@ -1359,7 +1360,7 @@ impl Entry {
         }
         let r = match slot {
             Some(commit) => {
-                let _flushing = crate::fair::io_wait().await;
+                let _flushing = tenant_bench::waits::timed(tenant_bench::waits::W::IoWait, crate::fair::io_wait()).await;
                 commit.wait().await
             }
             None => Ok(()),

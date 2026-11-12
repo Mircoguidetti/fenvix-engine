@@ -509,7 +509,10 @@ pub(crate) async fn start_slate(c: &Arc<Compactor>) -> anyhow::Result<()> {
     opts.worker = None;
     let path = crate::lifecycle::tenant_path(&id);
     let store = crate::counting::owned_background(&c.store, &id);
-    let cb = slatedb::CompactorBuilder::new(path.clone(), Arc::clone(&store)).with_options(opts).with_scheduler_supplier(Arc::new(sched.clone()));
+    // perf-latency: SlateDB's compactor and worker run their jobs on the runtime given here (default: the one `build` runs
+    // on, which is the server's, inside the first write after an opening): the compactor's write-path runtime
+    // instead (`pool::write_path_for`: the fold removes absorbed L0 SSTs, which the writes wait on)
+    let cb = slatedb::CompactorBuilder::new(path.clone(), Arc::clone(&store)).with_options(opts).with_scheduler_supplier(Arc::new(sched.clone())).with_runtime(c.write_path.clone());
     let cb = match crate::lifecycle::filter_policies() {
         Some(p) => cb.with_filter_policies(p),
         None => cb,
@@ -519,13 +522,18 @@ pub(crate) async fn start_slate(c: &Arc<Compactor>) -> anyhow::Result<()> {
     wo.min_filter_keys = crate::lifecycle::MIN_FILTER_KEYS;
     wo.compactions_poll_interval = Duration::from_millis(10);
     wo.compression_codec = crate::tiered::codec();
-    let wb = slatedb::CompactionWorkerBuilder::<object_store::path::Path>::new(path.into(), store).with_options(wo).with_sst_block_size(crate::tiered::block_size()).with_compaction_filter_supplier(Arc::new(sched));
+    let wb = slatedb::CompactionWorkerBuilder::<object_store::path::Path>::new(path.into(), store).with_options(wo).with_sst_block_size(crate::tiered::block_size()).with_compaction_filter_supplier(Arc::new(sched)).with_runtime(c.write_path.clone());
     let wb = match crate::lifecycle::filter_policies() {
         Some(f) => wb.with_filter_policies(f),
         None => wb,
     };
     let worker = Arc::new(wb.build().await?);
     let (cc, ww) = (Arc::clone(&compactor), Arc::clone(&worker));
+    // SlateDB's compactor and worker register their event loops when `run` starts, on the runtime that polls it: spawned
+    // here, on the caller's runtime, as before. A `stop` that came before the registration (a close right after the start)
+    // found nothing to stop and the loop then ran on, fencing the next compactor of the database ("detected newer DB
+    // client"; an erasure waited 30 s for the maintenance lock, ctl erase loop, perf-latency). The CPU of the fold is in
+    // the worker's compaction jobs, which run on the runtime given to `with_runtime` above (the write-path one).
     let h = tokio::spawn(async move {
         let (a, b) = tokio::join!(cc.run(), ww.run());
         if let Err(e) = a.and(b) {

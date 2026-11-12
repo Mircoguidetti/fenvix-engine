@@ -1,0 +1,31 @@
+diff --git a/bench/agent-checkpoints/generator.py b/bench/agent-checkpoints/generator.py
+index 5f8c18c..e72f0c2 100644
+--- a/bench/agent-checkpoints/generator.py
++++ b/bench/agent-checkpoints/generator.py
+@@ -80,6 +80,11 @@ PROFILES = {
+                      sessions_per_thread_mean=1.8, short_gap_share=0.6, short_gap_s=(300, 3600),
+                      long_gap_s=(86400, 30 * 86400), user_start_window_s=14 * 86400, think_s=(2.3, 8.0),
+                      read_type_s=(10, 120)),
++    # perf-latency iteration only (not a benchmark profile): standard's shape with a fifth of its users
++    "medium": Profile(users=200, threads_per_user_mean=2.5, threads_per_user_max=20, coding_share=0.15,
++                      sessions_per_thread_mean=1.8, short_gap_share=0.6, short_gap_s=(300, 3600),
++                      long_gap_s=(86400, 30 * 86400), user_start_window_s=30 * 86400, think_s=(2.3, 8.0),
++                      read_type_s=(10, 120)),
+     # AWS round: a few thousand threads, a few GB stored, one to two hours of writing per target
+     "standard": Profile(users=1000, threads_per_user_mean=2.5, threads_per_user_max=20, coding_share=0.15,
+                         sessions_per_thread_mean=1.8, short_gap_share=0.6, short_gap_s=(300, 3600),
+diff --git a/bench/agent-checkpoints/lines.py b/bench/agent-checkpoints/lines.py
+index ea88736..375ee37 100644
+--- a/bench/agent-checkpoints/lines.py
++++ b/bench/agent-checkpoints/lines.py
+@@ -324,7 +324,9 @@ def server_cmd(name: str, log_on: bool) -> list[str]:
+ 
+ def run_ours(name: str, cmd: list[str]) -> None:
+     run_container(name, MACHINE_IMAGE, ["-v", f"{SRV}:/opt/fx/mongo-server:ro", "-v", f"{PQ}:/opt/fx/pq:ro",
+-                                        "-v", f"{PYLIB}:/opt/pylib:ro"], cmd, env=S3_ENV | {"PYTHONPATH": "/opt/pylib"})
++                                        "-v", f"{PYLIB}:/opt/pylib:ro"], cmd, env=S3_ENV | {"PYTHONPATH": "/opt/pylib"}
++                  # perf-latency: the server's wait tracer (diagnostic output in its log only), when asked for
++                  | {k: os.environ[k] for k in ("FX_WAITS", "FENVIX_COMPACTION_CPU_PCT", "FX_WAITS_GETS", "FENVIX_WORKER_THREADS", "FENVIX_COMPACTION_WINDOW_PCT", "FENVIX_WARM_THREAD") if os.environ.get(k)})
+ 
+ 
+ def create_root(name: str) -> None:

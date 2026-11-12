@@ -481,6 +481,21 @@ pub fn relaxed_window(id: &str) -> Duration {
     RELAXED_WINDOW.get().map(|f| f(id)).unwrap_or_default()
 }
 
+/// Build a writer (perf-latency, with `--compaction-threads own`): SlateDB starts its background tasks on the runtime its
+/// `build` runs on, and its memtable flusher encodes and compresses a whole L0 SST (`l0_sst_size_bytes`) without
+/// yielding: on the server's runtime (one worker thread in a one-core container) every command and every log
+/// acknowledgement waited for it (MEASURED: the request thread ran for up to 2.4 s at a time, stack in
+/// `memtable_flusher::uploader` / `compress_and_transform`). So the build runs on a runtime of its own at normal priority
+/// (`fx::pool::flush_runtime`, round 3: on the background runtime, at nice +10, the flusher was starved and writes
+/// stopped), and only SlateDB's batch writer (each write's own path) stays on the caller's runtime (`with_write_runtime`).
+pub(crate) async fn build_writer(b: slatedb::DbBuilder<String>) -> Result<Db> {
+    if !crate::fx::pool::BG_ON.load(std::sync::atomic::Ordering::Relaxed) || !crate::fx::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed) {
+        return Ok(b.build().await?);
+    }
+    let b = b.with_write_runtime(tokio::runtime::Handle::current());
+    Ok(crate::fx::pool::flush_runtime().spawn(async move { b.build().await }).await.map_err(|e| anyhow!("writer build task: {e}"))??)
+}
+
 pub(crate) fn writer_builder(id: &str, store: &Arc<dyn ObjectStore>) -> slatedb::DbBuilder<String> {
     writer_builder_in(id, store, None)
 }
@@ -703,7 +718,7 @@ impl Lifecycle {
     /// There is no marker to delete: a tenant without a database has never been written.
     pub async fn create(self: &Arc<Self>, id: impl std::fmt::Display) -> Result<Tenant> {
         let id = id.to_string();
-        let db = writer_builder(&id, &self.store).build().await?;
+        let db = build_writer(writer_builder(&id, &self.store)).await?;
         let epoch = opened_epoch(&self.store, &id).await?;
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
@@ -1294,14 +1309,14 @@ impl Commit {
         if let Some(rx) = self.local.take() {
             GROUP_COMMITS.fetch_add(1, Relaxed);
             let seq = self.handle.seqnum();
-            match rx.await {
+            match crate::waits::timed(crate::waits::W::LogAck, rx).await {
                 Ok(()) => self.group.vis.confirm(seq),
-                Err(e) if TRACK_VISIBLE.load(Relaxed) => Commit::fallback_flush(&self.group, &self.db, &self.handle, seq, &self.tenant, &e).await?,
+                Err(e) if TRACK_VISIBLE.load(Relaxed) => crate::waits::timed(crate::waits::W::Fallback, Commit::fallback_flush(&self.group, &self.db, &self.handle, seq, &self.tenant, &e)).await?,
                 Err(e) => return Err(anyhow!(e)),
             }
             if TRACK_VISIBLE.load(Relaxed) {
                 // acknowledged only once every earlier batch is confirmed too: a read right after the ok sees the write
-                self.group.vis.wait_visible(seq, VISIBLE_WAIT).await?;
+                crate::waits::timed(crate::waits::W::Visible, self.group.vis.wait_visible(seq, VISIBLE_WAIT)).await?;
             }
             // The record is on the local disk, but this process may have lost the database meanwhile (frozen between the
             // ownership check and the fsync, its lease lapsed, another process took over): then the write is not acknowledged.
@@ -1331,6 +1346,7 @@ impl Commit {
             }
         }
         // Flush now: waiting for the periodic flush (100 ms) would add up to that much to every write.
+        let t_wal = Instant::now();
         if EXPLICIT_FLUSH.load(Relaxed) && self.group.flushed_seq.load(Acquire) < seq {
             let _lead = self.group.lock.lock().await;
             if self.group.flushed_seq.load(Acquire) < seq {
@@ -1376,6 +1392,7 @@ impl Commit {
         }
         if !ACK_BEFORE_DURABLE.load(Relaxed) {
             self.handle.await_durable().await?;
+            crate::waits::add(crate::waits::W::WalFlush, t_wal.elapsed());
             // in a durable WAL object, with every earlier batch
             self.group.vis.confirm_upto(seq);
             if TRACK_VISIBLE.load(Relaxed) {
@@ -1525,6 +1542,10 @@ impl Tenant {
     }
 
     pub async fn get<K: AsRef<[u8]> + Send>(&self, key: K) -> Result<Option<Bytes>> {
+        crate::waits::timed(crate::waits::W::SlateRead, self.get_inner(key)).await
+    }
+
+    async fn get_inner<K: AsRef<[u8]> + Send>(&self, key: K) -> Result<Option<Bytes>> {
         self.fx_no_fence_pending()?;
         let st = self.step_state().await?;
         if let Some(v) = &st.fx {
@@ -2520,7 +2541,7 @@ impl Tenant {
         let marker = marker_path(&self.id);
         let (del, db) = tokio::join!(
             store.delete(&marker),
-            writer_builder_in(&self.id, store, self.scope).build()
+            build_writer(writer_builder_in(&self.id, store, self.scope))
         );
         match del {
             Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
@@ -2644,6 +2665,10 @@ impl Tenant {
 
     /// [`Tenant::scan_range`]; `durable`: a writer returns only durable data (see [`Tenant::get_durable`]).
     pub async fn scan_range_at(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize, durable: bool) -> Result<Vec<(Bytes, Bytes)>> {
+        crate::waits::timed(crate::waits::W::FxRead, self.scan_range_at_inner(start, end, reverse, limit, read_ahead, durable)).await
+    }
+
+    async fn scan_range_at_inner(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize, durable: bool) -> Result<Vec<(Bytes, Bytes)>> {
         let opts = slatedb::config::ScanOptions {
             read_ahead_bytes: read_ahead,
             max_fetch_tasks: crate::tiered::scan_fetch_tasks(read_ahead),
@@ -2721,8 +2746,15 @@ impl Tenant {
         }
         // the state just before this batch, for readers while the batch is not confirmed (see `TRACK_VISIBLE`); the
         // caller holds the database's exclusive lock, so nothing is staged between the snapshot and the write
-        let before = if track { Some(db.snapshot().await?) } else { None };
-        let handle = db.write(batch).await?;
+        let before = if track { Some(crate::waits::timed(crate::waits::W::StageSnap, db.snapshot()).await?) } else { None };
+        let t_write = Instant::now();
+        let handle = crate::waits::timed(crate::waits::W::Stage, db.write(batch)).await?;
+        if t_write.elapsed() >= Duration::from_secs(1) {
+            // SlateDB stopped the write (unflushed memtables and WAL at `max_unflushed_bytes`): the L0 count says whether the
+            // flusher waited for L0 room (at `l0_max_ssts`) or was slow itself
+            SLOW_STAGES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            eprintln!("SLOW_STAGE u={:.0} db={} ms={} l0={}", crate::waits::unix_ms(), self.id, t_write.elapsed().as_millis(), db.manifest().l0().len());
+        }
         note_unflushed(&self.id, handle.seqnum());
         if let Some(b) = before {
             self.group.vis.add(handle.seqnum(), b, keys);
@@ -2840,7 +2872,16 @@ impl Tenant {
                     .put(&marker_path(&self.id), PutPayload::from_static(b"clean"))
                     .await?;
                 self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
-                if l0 >= L0_COMPACT_THRESHOLD {
+                // perf-latency round 3: also when compaction jobs are left pending (the compactor's fold, stopped by this
+                // close, puts its claimed jobs back as scheduled). SlateDB's GC deletes no SST newer than the oldest job
+                // still listed as active, so nothing after it was ever collected while the database stayed closed
+                // (MEASURED: about 5 GB of garbage `compacted/` SSTs per medium run, stored/logical 5.0 against 1.6).
+                // The pass runs those jobs (as it did when L0 was at the threshold at the close) and ends with the GC.
+                let pending = l0 < L0_COMPACT_THRESHOLD && compactions_active(&self.lc.store, &self.id).await.unwrap_or(false);
+                if l0 >= L0_COMPACT_THRESHOLD || pending {
+                    if pending {
+                        CLOSE_PASSES_FOR_PENDING.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    }
                     if let Some(q) = &self.lc.queue {
                         q.request(&self.id, None);
                     }
@@ -3046,7 +3087,9 @@ pub(crate) async fn compact_tenant_pass_with(
         }
     }
     let l0_before = l0_count(raw, id).await?;
-    if l0_before < L0_COMPACT_THRESHOLD {
+    // perf-latency round 3: a closed database whose compaction jobs were left pending is passed too (see `Tenant::close`)
+    let pending_jobs = l0_before < L0_COMPACT_THRESHOLD && !WRITER_DBS.lock().unwrap().contains_key(id) && compactions_active(raw, id).await.unwrap_or(false);
+    if l0_before < L0_COMPACT_THRESHOLD && !pending_jobs {
         // The L0 watch queued this pass from the writer's own view. When the stored manifest has fewer L0 SSTs, the writer
         // either has not stored its newest manifest yet (the watch asks again in a moment) or has not seen a compaction yet:
         // make it read the manifest now rather than at its next poll (`--writer-poll-secs`), its memtable flushes may be
@@ -3377,6 +3420,58 @@ pub static CLOSE_GC_LIGHT: std::sync::atomic::AtomicU64 = std::sync::atomic::Ato
 /// point: hundreds after a few days), so it runs only when something there can be garbage: after a compaction of this
 /// process, once the manifest moved `SST_GC_MANIFEST_STEP` versions since the last full pass, or the first time this
 /// process closes the tenant.
+/// Writes SlateDB held for a second or more (round 3, diagnostics).
+pub static SLOW_STAGES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Closes that queued a compaction pass for the jobs a stopped compactor left pending (round 3, diagnostics).
+pub static CLOSE_PASSES_FOR_PENDING: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// The `compacted/` SSTs of a tenant that its latest manifest does not reference and no active compaction recorded as its
+/// output: garbage a later GC pass will delete once old enough (perf-latency round 3).
+pub async fn unreferenced_compacted(s3: &Arc<dyn ObjectStore>, id: &str) -> Result<u64> {
+    let admin = Admin::builder(tenant_path(id), Arc::clone(s3)).build();
+    let Some(m) = admin.read_manifest(None).await? else { return Ok(0) };
+    let mut referenced = std::collections::HashSet::new();
+    for v in m.l0() {
+        referenced.insert(v.sst.id.value().to_string());
+    }
+    for run in m.compacted() {
+        for v in run.sst_views() {
+            referenced.insert(v.sst.id.value().to_string());
+        }
+    }
+    if let Some(c) = admin.read_compactions(None).await? {
+        for x in c.recent_compactions().filter(|x| x.active()) {
+            for h in x.output_ssts() {
+                referenced.insert(h.id.value().to_string());
+            }
+            for sub in x.ctx().map(|ctx| ctx.subcompactions().as_slice()).unwrap_or_default() {
+                for h in sub.output_ssts() {
+                    referenced.insert(h.id.value().to_string());
+                }
+            }
+        }
+    }
+    let prefix = Path::from(format!("{}/compacted", tenant_path(id)));
+    let mut it = s3.list(Some(&prefix));
+    let mut n = 0;
+    while let Some(meta) = it.next().await {
+        let meta = meta?;
+        let Some(f) = meta.location.filename() else { continue };
+        let Some(stem) = f.strip_suffix(".sst") else { continue };
+        if !referenced.contains(stem) {
+            n += 1;
+        }
+    }
+    Ok(n)
+}
+
+/// Closed-tenant GC passes queued again because garbage SSTs younger than the GC's minimum age were left (round 3).
+pub static CLOSE_GC_REQUEUED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Per tenant: closed-tenant passes queued again in a row (at most `CLOSE_GC_MAX_REQUEUES`).
+static CLOSE_GC_RETRIES: std::sync::LazyLock<Mutex<HashMap<String, u32>>> = std::sync::LazyLock::new(Default::default);
+const CLOSE_GC_MAX_REQUEUES: u32 = 6;
+
 pub async fn gc_tenant_closed(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, min_age: Duration) -> Result<GcRecord> {
     use std::sync::atomic::Ordering::Relaxed;
     let id = id.to_string();
@@ -3996,7 +4091,9 @@ impl Maintenance {
                                 SST_GC_NOOP.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                             }
                         }
-                        SST_UNREF.lock().unwrap().retain(|id, _| m.contains_key(id));
+                        // (a closed tenant with a closed-GC pass queued again keeps its first sights: `CLOSE_GC_RETRIES`)
+                        let requeued = CLOSE_GC_RETRIES.lock().unwrap();
+                        SST_UNREF.lock().unwrap().retain(|id, _| m.contains_key(id) || requeued.contains_key(id));
                         due
                     };
                     futures::stream::iter(sst_due)
@@ -4069,6 +4166,41 @@ impl Maintenance {
                                         }
                                         Ok(None) => {}
                                         Err(e) => log.lock().unwrap().error(format!("fx gc {id}: {e:#}")),
+                                    }
+                                }
+                                // perf-latency round 3 (review D3): SSTs that became garbage less than the minimum age before
+                                // this pass outlived it, and nothing queued another one while the database stayed closed, so
+                                // the stored bytes after a run depended on timing (MEASURED medium: 14 to 21 compacted SSTs,
+                                // 1.60 to 1.69 stored per logical byte). Another full pass once they are old enough, a few times
+                                // at most; the deletion stays SlateDB's GC with its rules (minimum age, checkpoints, active
+                                // compactions). A database opened again as a writer is collected by its own passes.
+                                if !OPEN_WRITERS.lock().unwrap().contains(&id) {
+                                    let mut left = unreferenced_compacted(&s3, &id).await.unwrap_or(0);
+                                    if left > 0 && CLOSE_GC_RETRIES.lock().unwrap().contains_key(&id) {
+                                        // SlateDB's pass deletes no SST newer than the oldest compaction its compactions
+                                        // file still records, and the finished ones stay recorded until the next compactor
+                                        // run trims them (MEASURED m19: 5 garbage SSTs left after 6 passes). The open
+                                        // writer's SST pass decides by the manifest and the active compactions' recorded
+                                        // outputs, after 120 s unreferenced, and stops at any fork, restore point or export
+                                        // checkpoint (rule 8): run here, under the same maintenance lock.
+                                        match gc_tenant_ssts(&s3, &id).await {
+                                            Ok(_) => left = unreferenced_compacted(&s3, &id).await.unwrap_or(left),
+                                            Err(e) => log.lock().unwrap().error(format!("sst gc {id} (closed): {e:#}")),
+                                        }
+                                    }
+                                    let mut r = CLOSE_GC_RETRIES.lock().unwrap();
+                                    let n = r.entry(id.clone()).or_insert(0);
+                                    if left > 0 && *n < CLOSE_GC_MAX_REQUEUES {
+                                        *n += 1;
+                                        CLOSE_GC_REQUEUED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                                        COMPACTED_SINCE_FULL.lock().unwrap().insert(id.clone());
+                                        // old enough for SlateDB's pass and for the SST pass's 120 s unreferenced
+                                        let wait = gc_min_age.max(Duration::from_secs(SST_GC_MIN_UNREF_SECS.load(std::sync::atomic::Ordering::Relaxed))) + Duration::from_secs(5);
+                                        let at = Instant::now().checked_sub(gc_after.saturating_sub(wait)).unwrap_or_else(Instant::now);
+                                        touched.lock().unwrap().entry(id.clone()).or_insert(at);
+                                        eprintln!("SSTGC closed tenant={id} left_unreferenced={left}: another pass in {}s", wait.as_secs());
+                                    } else {
+                                        r.remove(&id);
                                     }
                                 }
                             }

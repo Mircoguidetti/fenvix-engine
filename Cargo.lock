@@ -2209,6 +2209,7 @@ dependencies = [
  "flate2",
  "futures",
  "hmac",
+ "http",
  "icu_collator",
  "icu_locale",
  "libc",

@@ -400,6 +400,7 @@ impl ObjectStore for CountingStore {
         let res = passed_down(reported, self.inner.put_opts(location, payload, opts)).await;
         self.counters.put_cat[category(location.as_ref())].fetch_add(1, Relaxed);
         self.counters.lat_put.record(t0.elapsed());
+        crate::waits::add(crate::waits::W::Put, t0.elapsed());
         self.trace.end(token, bytes);
         res
     }
@@ -443,6 +444,7 @@ impl ObjectStore for CountingStore {
             "GET"
         };
         let token = self.trace.begin(op, location.as_ref());
+        let range_s = if crate::waits::GETS.load(Relaxed) { format!("{:?}", options.range) } else { String::new() };
         let t0 = Instant::now();
         let mut res = passed_down(reported, self.inner.get_opts(location, options)).await;
         self.counters.lat_get.record(t0.elapsed());
@@ -470,6 +472,11 @@ impl ObjectStore for CountingStore {
         self.counters.get_bytes.fetch_add(bytes, Relaxed);
         if !is_head {
             crate::meter::note_get(bytes, t0.elapsed());
+            crate::waits::add(crate::waits::W::Get, t0.elapsed());
+            crate::waits::add_get_bytes(bytes);
+            crate::waits::note_get(location.as_ref(), &range_s, bytes, t0.elapsed());
+        } else {
+            crate::waits::add(crate::waits::W::Other, t0.elapsed());
         }
         self.trace.end(token, bytes);
         res

@@ -80,6 +80,80 @@ pub fn is_active(id: &str) -> bool {
     ACTIVE.lock().unwrap().contains(id)
 }
 
+/// A running job's entry in `job_starts`, removed when the job ends or is aborted.
+pub(crate) struct JobStart {
+    c: std::sync::Weak<Compactor>,
+    n: u64,
+}
+
+impl Drop for JobStart {
+    fn drop(&mut self) {
+        if let Some(c) = self.c.upgrade() {
+            c.job_starts.lock().unwrap().remove(&self.n);
+        }
+    }
+}
+
+/// One version create in flight (`Compactor::create`).
+struct InFlight(Arc<AtomicU64>);
+
+impl InFlight {
+    fn new(n: Arc<AtomicU64>) -> Self {
+        n.fetch_add(1, Relaxed);
+        InFlight(n)
+    }
+}
+
+impl Drop for InFlight {
+    fn drop(&mut self) {
+        self.0.fetch_sub(1, Relaxed);
+    }
+}
+
+impl Compactor {
+    /// When the oldest job running now (GC aside) started, wall clock ms: its outputs were all written after it.
+    pub(crate) fn oldest_job_start_ms(&self) -> Option<u64> {
+        self.job_starts.lock().unwrap().values().min().copied()
+    }
+
+    /// Tests: create the next version (a fence of the current one) as a job's commit does; its version number.
+    #[cfg(test)]
+    pub(crate) async fn create_next_for_test(self: &Arc<Self>) -> Result<u64> {
+        let f = self.cur.lock().await.v.fence(self.epoch);
+        let n = f.version;
+        self.create(&f).await?;
+        Ok(n)
+    }
+
+    /// Tests: the version a create would write next.
+    #[cfg(test)]
+    pub(crate) async fn next_version_for_test(&self) -> u64 {
+        self.cur.lock().await.v.fence(self.epoch).version
+    }
+
+    /// Tests: the L0 SSTs this compactor knows as absorbed.
+    #[cfg(test)]
+    pub(crate) fn absorbed_count(&self) -> usize {
+        self.absorbed.lock().unwrap().len()
+    }
+
+    /// Tests: a job running from now until the returned value is dropped.
+    #[cfg(test)]
+    pub(crate) fn begin_job_for_test(self: &Arc<Self>) -> JobStart {
+        let n = self.next_job.fetch_add(1, Relaxed);
+        self.job_starts.lock().unwrap().insert(n, manifest::now_ms());
+        JobStart { c: Arc::downgrade(self), n }
+    }
+}
+
+/// L0 SSTs a starting compactor knew as absorbed from its version, and L0 SSTs it had to read (round 3, diagnostics).
+pub static L0_RECOGNISED_FROM_VERSION: AtomicU64 = AtomicU64::new(0);
+pub static L0_RECOGNISED_BY_READ: AtomicU64 = AtomicU64::new(0);
+
+/// An absorption is never paused by the background's CPU share once the writer has this many L0 SSTs (it stops at 8); 4
+/// is where absorption starts (`absorb_min_l0`): absorption, which keeps the writer from stopping, is not paced (round 2).
+const ABSORB_URGENT_L0: usize = 4;
+
 /// Block codec of the sealed runs of the server's compactors (`--sealed-codec`): 0 lz4 (format v1), 1 zstd (format v2).
 pub static SEALED_CODEC: AtomicU64 = AtomicU64::new(0);
 
@@ -383,7 +457,9 @@ pub struct Compactor {
     pub drop: Arc<super::drop::DropCtl>,
     slate: Mutex<Option<tokio::task::JoinHandle<()>>>,
     slate_stop: Mutex<Option<(Arc<slatedb::compactor::Compactor>, Arc<slatedb::CompactionWorker>)>>,
-    runtime: tokio::runtime::Handle,
+    pub(crate) runtime: tokio::runtime::Handle,
+    /// Absorption and SlateDB's fold: the work the writes wait on (`pool::write_path_for`).
+    pub(crate) write_path: tokio::runtime::Handle,
     codec: Arc<dyn RowCodec>,
     /// GC's state (first sights of unreferenced objects).
     pub gc: super::gc::GcState,
@@ -391,6 +467,16 @@ pub struct Compactor {
     /// Drop jobs done when the writer last refreshed its SlateDB manifest (its L0 count, and its stalls, are by its view).
     refreshed_jobs: AtomicU64,
     absorb_lock: tokio::sync::Mutex<()>,
+    /// The jobs spawned and maybe still running: `stop` aborts them and waits for them, so no job writes a run after the
+    /// compactor stopped (a drop or an erasure deletes the database's objects right after: a run written later would be
+    /// left behind; found by ctl test_05_erase once jobs could pause, perf-latency).
+    jobs: Mutex<Vec<tokio::task::JoinHandle<()>>>,
+    /// Wall-clock start (ms) of each job running now, but GC (review R1): GC keeps every unreferenced run written after the
+    /// oldest of them started, so a job slowed by the CPU share cannot lose an output it wrote before its commit.
+    job_starts: Mutex<HashMap<u64, u64>>,
+    next_job: AtomicU64,
+    /// Version creates still in flight in their own task (`create`): `stop` waits for them (review R2).
+    creates_in_flight: Arc<AtomicU64>,
     /// Benches: the planner starts no job while set (jobs called directly still run).
     pub paused: AtomicBool,
     /// perf-erase: the newest version published by an erasure scrub (`commit_scrub`). A reseal planned on an older
@@ -456,14 +542,19 @@ impl Compactor {
             drop,
             slate: Mutex::new(None),
             slate_stop: Mutex::new(None),
+            write_path: super::pool::write_path_for(&runtime),
             runtime,
             codec: codec::identity(),
             gc: Default::default(),
             last_gc: Mutex::new(Instant::now()),
             refreshed_jobs: AtomicU64::new(0),
+            job_starts: Mutex::new(HashMap::new()),
+            next_job: AtomicU64::new(0),
+            creates_in_flight: Arc::new(AtomicU64::new(0)),
             absorb_lock: tokio::sync::Mutex::new(()),
             last_scrub: AtomicU64::new(0),
             scrubs: AtomicU64::new(0),
+            jobs: Mutex::new(Vec::new()),
         });
         t.fx_attach(Arc::clone(&sh));
         ACTIVE.lock().unwrap().insert(c.id().to_string());
@@ -504,6 +595,7 @@ impl Compactor {
     /// a version create already sent runs in a task of its own (`create`) and lands or not as any PUT in flight; runs
     /// written and not listed are orphans for GC (rule 17); a run writer dropped unfinished aborts its upload.
     pub async fn stop(&self) {
+        let t_stop = Instant::now();
         self.stopped.store(true, Relaxed);
         self.stop_signal.notify_waiters();
         ACTIVE.lock().unwrap().remove(self.id());
@@ -513,8 +605,36 @@ impl Compactor {
             let _ = w.stop().await;
         }
         let h = self.slate.lock().unwrap().take();
-        if let Some(h) = h {
-            let _ = tokio::time::timeout(Duration::from_secs(10), h).await;
+        if let Some(mut h) = h {
+            // SlateDB's compactor and worker were stopped above (claims released, jobs cancelled): what is left is their
+            // join. It sometimes did not return (seen while this branch deferred the L0 recognition, now reverted: closes
+            // waited the whole 10 s), so it is aborted after a short grace instead of holding the close or erasure
+            if tokio::time::timeout(Duration::from_millis(500), &mut h).await.is_err() {
+                h.abort();
+                let _ = h.await;
+            }
+        }
+        // every job still running is aborted at its next await and waited for: none writes after this returns (a job
+        // aborted after a run's PUT and before its publish leaves the run, which the caller's deletion then lists)
+        let t_jobs = Instant::now();
+        let jobs: Vec<_> = std::mem::take(&mut *self.jobs.lock().unwrap());
+        let n = jobs.len();
+        for j in &jobs {
+            j.abort();
+        }
+        for j in jobs {
+            let _ = j.await;
+        }
+        // a version create a cut job left in its own task: waited for (it ends within the PUT timeout)
+        let t_creates = Instant::now();
+        while self.creates_in_flight.load(Relaxed) > 0 && t_creates.elapsed() < self.knobs.put_timeout + Duration::from_secs(5) {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+        if self.creates_in_flight.load(Relaxed) > 0 {
+            eprintln!("fx compactor {}: stop: a version create still in flight after the PUT timeout", self.id());
+        }
+        if t_stop.elapsed() > Duration::from_secs(1) {
+            eprintln!("fx compactor {}: stop took {:?} (jobs {n}: {:?})", self.id(), t_stop.elapsed(), t_jobs.elapsed());
         }
     }
 
@@ -591,7 +711,15 @@ impl Compactor {
     /// later (F6: its outcome is unknown), as a request in flight on the network would.
     async fn create(&self, v: &Version) -> Result<bool> {
         let (store, id, v) = (Arc::clone(&self.store), self.id().to_string(), v.clone());
-        tokio::spawn(async move { manifest::create(&store, &id, &v).await }).await.map_err(|e| anyhow!("manifest create task: {e}"))?
+        // its own task (a job aborted while waiting leaves it running): counted, and `stop` waits for it, so no version
+        // lands after `stop` returned (review R2)
+        let guard = InFlight::new(Arc::clone(&self.creates_in_flight));
+        tokio::spawn(async move {
+            let _g = guard;
+            manifest::create(&store, &id, &v).await
+        })
+        .await
+        .map_err(|e| anyhow!("manifest create task: {e}"))?
     }
 
     /// Take a version found in the store as the newest known one; a version by a newer writer stops this compactor (rule 28).
@@ -640,11 +768,36 @@ impl Compactor {
     /// offline builder).
     async fn recognise_absorbed(&self) -> Result<()> {
         let x_d = self.cur.lock().await.v.x_d;
+        // perf-latency round 2: the L0 SSTs are read at once, not one after the other (`start` runs under the database's
+        // exclusive lock, inside the first write after an opening: 8 SSTs of 64 MiB one by one took 3.4 s, MEASURED)
+        // round 3: the SSTs the version lists as absorbed (with their highest seq) are not read again
+        let listed: HashMap<String, u64> = self.cur.lock().await.v.absorbed_l0.iter().cloned().collect();
+        let mut views: Vec<_> = Vec::new();
         for view in self.db.manifest().l0().iter() {
-            let rows = read_l0_whole(&self.store, self.id(), view).await?;
-            let max = rows.iter().map(|r| r.row.seq).max().unwrap_or(0);
+            match listed.get(&view.id.to_string()) {
+                Some(max) if *max <= x_d => {
+                    self.absorbed.lock().unwrap().insert(view.id, *max);
+                    L0_RECOGNISED_FROM_VERSION.fetch_add(1, Relaxed);
+                }
+                _ => views.push(view.clone()),
+            }
+        }
+        L0_RECOGNISED_BY_READ.fetch_add(views.len() as u64, Relaxed);
+        // at most `l0_read_parallel()` at a time, and only each SST's highest seq is kept (not its rows)
+        use futures::{StreamExt, TryStreamExt};
+        // big-speed merge: each SST is fetched whole with one GET (c2-fix-clone-uploads' `WholeObjects`), so in flight at
+        // most `l0_read_parallel()` SSTs are in memory at once
+        let jobs: Vec<_> = views
+            .into_iter()
+            .map(|view| {
+                let reader = slatedb::SstReader::new(crate::lifecycle::tenant_path(self.id()), whole_objects(&self.store), None, None);
+                Box::pin(async move { Ok::<_, anyhow::Error>((view.id, l0_max_seq(&reader, &view).await?)) }) as std::pin::Pin<Box<dyn std::future::Future<Output = Result<_>> + Send>>
+            })
+            .collect();
+        let maxes: Vec<_> = futures::stream::iter(jobs).buffer_unordered(l0_read_parallel()).try_collect().await?;
+        for (id, max) in maxes {
             if max <= x_d {
-                self.absorbed.lock().unwrap().insert(view.id, max);
+                self.absorbed.lock().unwrap().insert(id, max);
             }
         }
         self.drop.set_foldable(&self.absorbed.lock().unwrap());
@@ -737,6 +890,18 @@ impl Compactor {
                 }
                 let mut next = cur.clone();
                 next.x_d = x_new;
+                // round 3: the absorbed L0 SSTs still in the writer's view, with this absorption's
+                {
+                    let live: std::collections::HashSet<String> = self.db.manifest().l0().iter().map(|v| v.id.to_string()).collect();
+                    let mut l: Vec<(String, u64)> = next.absorbed_l0.iter().filter(|(id, _)| live.contains(id)).cloned().collect();
+                    for (id, hi) in &ids {
+                        let id = id.to_string();
+                        if !l.iter().any(|(x, _)| *x == id) {
+                            l.push((id, *hi));
+                        }
+                    }
+                    next.absorbed_l0 = l;
+                }
                 if let Some(l) = line.clone() {
                     next.delta.insert(0, l);
                     next.delta.sort_by(|a, b| b.max_seq.cmp(&a.max_seq));
@@ -1308,9 +1473,9 @@ impl Compactor {
         if done > self.refreshed_jobs.swap(done, Relaxed) {
             let db = self.db.clone();
             // c2-fix-hangs: the compactor's work, not drawn from the database's quota (`counting::as_maintenance`)
-            self.runtime.spawn(crate::counting::as_maintenance(async move {
+            self.runtime.spawn(crate::counting::as_maintenance(crate::waits::polled("refresh_manifest", self.id().to_string(), async move {
                 let _ = db.refresh_manifest().await;
-            }));
+            })));
         }
     }
 
@@ -1320,7 +1485,36 @@ impl Compactor {
         Fut: std::future::Future<Output = Result<()>> + Send + 'static,
     {
         let c = Arc::clone(self);
-        self.runtime.spawn(async move {
+        let who = self.id().to_string();
+        let what: &'static str = match prio {
+            Prio::Absorb => "absorb",
+            Prio::Erase => "erase",
+            Prio::Merge => "merge",
+            Prio::Reseal => "reseal",
+            Prio::Gc => "gc",
+        };
+        // absorption is not paused by the CPU share while the writer's L0 is close to its stop (8): the writes wait for it
+        let exempt: Arc<dyn Fn() -> bool + Send + Sync> = if prio == Prio::Absorb {
+            let w = Arc::downgrade(self);
+            Arc::new(move || w.upgrade().is_some_and(|c| c.l0_count() >= ABSORB_URGENT_L0))
+        } else {
+            Arc::new(|| false)
+        };
+        let mut jobs = self.jobs.lock().unwrap();
+        if self.stopped.load(Relaxed) {
+            return; // `stop` drains `jobs` after setting `stopped`, under this lock: nothing is spawned after it
+        }
+        jobs.retain(|j| !j.is_finished());
+        let started = if prio == Prio::Gc {
+            None
+        } else {
+            let n = self.next_job.fetch_add(1, Relaxed);
+            self.job_starts.lock().unwrap().insert(n, manifest::now_ms());
+            Some(JobStart { c: Arc::downgrade(self), n })
+        };
+        let rt = if prio == Prio::Absorb { &self.write_path } else { &self.runtime };
+        jobs.push(rt.spawn(crate::waits::polled(what, who, super::pool::PACE_EXEMPT.scope(exempt, async move {
+            let _started = started;
             let _permit: Permit = c.pool.acquire(prio).await;
             let t0 = thread_cpu_us();
             let w0 = Instant::now();
@@ -1343,7 +1537,7 @@ impl Compactor {
                 }
             }
             c.sh.stats.job_cpu_us.fetch_add(thread_cpu_us().saturating_sub(t0), Relaxed);
-        });
+        }))));
     }
 
     /// Resolves once `stop` has been called.
@@ -1363,12 +1557,12 @@ impl Compactor {
     pub fn run(self: &Arc<Self>) -> tokio::task::JoinHandle<()> {
         let c = Arc::clone(self);
         let h = self.runtime.clone();
-        h.spawn(async move {
+        h.spawn(crate::waits::polled("tick", self.id().to_string(), async move {
             while !c.stopped.load(Relaxed) {
                 c.tick();
                 tokio::time::sleep(c.knobs.tick).await;
             }
-        })
+        }))
     }
 
     /// Run jobs inline until nothing is due (tests and the offline replay): absorb, erasures, merges, reseals.
@@ -1485,9 +1679,17 @@ struct L0Row {
 /// more than the close could wait for its absorption (MEASURED: a restore of the closed database then read 634 MB from
 /// its unabsorbed, so uncompacted, L0). One SST is in memory at a time (at most one memtable).
 async fn read_l0_whole(store: &Arc<dyn ObjectStore>, id: &str, view: &slatedb::manifest::SsTableView) -> Result<Vec<L0Row>> {
-    let whole: Arc<dyn ObjectStore> = Arc::new(WholeObjects { inner: Arc::clone(store), got: tokio::sync::Mutex::new(HashMap::new()) });
-    let reader = slatedb::SstReader::new(crate::lifecycle::tenant_path(id), whole, None, None);
+    let reader = slatedb::SstReader::new(crate::lifecycle::tenant_path(id), whole_objects(store), None, None);
     read_l0(&reader, view).await
+}
+
+fn whole_objects(store: &Arc<dyn ObjectStore>) -> Arc<dyn ObjectStore> {
+    Arc::new(WholeObjects { inner: Arc::clone(store), got: tokio::sync::Mutex::new(HashMap::new()) })
+}
+
+/// How many L0 SSTs a compactor's start reads at once (each whole in memory while it is read).
+pub fn l0_read_parallel() -> usize {
+    4
 }
 
 /// A store that reads each object it is asked for once, whole, and answers every range of it from memory.
@@ -1563,11 +1765,26 @@ impl ObjectStore for WholeObjects {
     }
 }
 
+/// The highest seq of an L0 SST's rows (0: none), read block by block without keeping the rows (big-speed merge: the
+/// reader is built on `WholeObjects`, so the SST is one GET, as c2-fix-clone-uploads made `read_l0_whole`).
+async fn l0_max_seq(reader: &slatedb::SstReader, view: &slatedb::manifest::SsTableView) -> Result<u64> {
+    let f = reader.open_with_handle(view.sst.clone())?;
+    let n = f.index().await?.len();
+    let mut max = 0;
+    for b in 0..n {
+        for r in f.read_block(b).await? {
+            max = max.max(r.seq);
+        }
+    }
+    Ok(max)
+}
+
 async fn read_l0(reader: &slatedb::SstReader, view: &slatedb::manifest::SsTableView) -> Result<Vec<L0Row>> {
     let f = reader.open_with_handle(view.sst.clone())?;
     let n = f.index().await?.len();
     let mut out = Vec::new();
     for b in 0..n {
+        super::pool::pace().await;
         for r in f.read_block(b).await? {
             let (env, tomb) = match &r.value {
                 slatedb::ValueDeletable::Value(v) => (v.to_vec(), false),
