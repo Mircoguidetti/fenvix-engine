@@ -621,7 +621,12 @@ impl Entry {
     /// Stop this database's compactor (before its tenant closes, is abandoned or dropped).
     async fn stop_fxc(&mut self) {
         if let Some(c) = self.fxc.take() {
+            let t0 = std::time::Instant::now();
             c.stop().await;
+            // integration-4 (timing only, no behaviour change): where a post-outage write may wait (CI 292f526, test_51r)
+            if t0.elapsed() >= std::time::Duration::from_secs(1) {
+                eprintln!("TIMING stop_fxc db={} ms={}", self.name, t0.elapsed().as_millis());
+            }
         }
     }
 
@@ -754,11 +759,15 @@ impl Entry {
         }
         let mut closed = true;
         crate::opening::forget_db(&self.name);
+        // integration-4 (timing only, no behaviour change): how long each step of an abandon holds the entry
+        let t0 = std::time::Instant::now();
         self.stop_fxc().await;
+        let stop_ms = t0.elapsed().as_millis();
         if let Some(t) = self.tenant.take() {
             closed = t.abandon().await;
             self.closes += 1;
         }
+        eprintln!("TIMING abandon db={} stop_fxc_ms={stop_ms} tenant_abandon_ms={} closed={closed}", self.name, t0.elapsed().as_millis() - stop_ms);
         self.leases.forget(&self.name);
         self.sync_gauges();
         closed
