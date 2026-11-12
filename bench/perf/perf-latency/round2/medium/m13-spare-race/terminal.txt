@@ -1,0 +1,63 @@
+Traceback (most recent call last):
+  File "/home/user/H/bench/agent-checkpoints/bench.py", line 497, in <module>
+    main()
+  File "/home/user/H/bench/agent-checkpoints/bench.py", line 436, in main
+    cold = cold_phase(target, threads, rec, a.cold_threads, a.seed, a.cold_cmd, set(read_chosen) | set(erased), expected)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/H/bench/agent-checkpoints/bench.py", line 301, in cold_phase
+    saver, handle = target.make_saver()
+                    ^^^^^^^^^^^^^^^^^^^
+  File "/home/user/H/bench/agent-checkpoints/targets.py", line 75, in make_saver
+    return fenvix_saver(self.uri)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/H/bench/agent-checkpoints/targets.py", line 44, in fenvix_saver
+    return mongodb_saver(uri, db_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/H/bench/agent-checkpoints/targets.py", line 35, in mongodb_saver
+    return MongoDBSaver(client, db_name=db_name), client
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/langgraph/checkpoint/mongodb/saver.py", line 151, in __init__
+    _create_saver_indexes(
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/langgraph/checkpoint/mongodb/saver.py", line 55, in _create_saver_indexes
+    indexes = list(collection.list_indexes())
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/collection.py", line 2522, in list_indexes
+    return self._list_indexes(session, comment)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/collection.py", line 2567, in _list_indexes
+    return self._database.client._retryable_read(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2116, in _retryable_read
+    return self._retry_internal(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/_csot.py", line 126, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2077, in _retry_internal
+    ).run()
+      ^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2947, in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 3187, in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/collection.py", line 2548, in _cmd
+    self._command(conn, cmd, read_preference, codec_options, session=session)
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/collection.py", line 600, in _command
+    return conn.command(
+           ^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/helpers.py", line 50, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/pool.py", line 405, in command
+    return run_command(
+           ^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py", line 440, in run_command
+    docs, _, _ = _run_command(
+                 ^^^^^^^^^^^^^
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py", line 214, in _run_command
+    helpers_shared._check_command_response(
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/pymongo/helpers_shared.py", line 327, in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+pymongo.errors.OperationFailure: tenant app_demo is owned by server process 7-0f7af0b9 (lease valid for another 29310 ms); retry, full error: SON([('ok', 0.0), ('errmsg', 'tenant app_demo is owned by server process 7-0f7af0b9 (lease valid for another 29310 ms); retry'), ('code', 134), ('codeName', 'TenantLeaseHeld'), ('errorLabels', ['RetryableWriteError']), ('$clusterTime', SON([('clusterTime', Timestamp(1794442638, 1)), ('signature', SON([('hash', b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'), ('keyId', 0)]))])), ('operationTime', Timestamp(1794442638, 1))])
