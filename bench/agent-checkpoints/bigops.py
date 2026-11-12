@@ -39,8 +39,18 @@ def now():
 
 
 def sample_threads(c, n=20, seed=5):
-    ids = sorted(c[DB].checkpoints.distinct("thread_id"))
-    return random.Random(seed).sample(ids, min(n, len(ids)))
+    """Threads of the data plan (not a `distinct` over the whole collection: on our server that long read outlived the
+    serving lease twice under load and failed, F7, MEASURED), kept when they hold a checkpoint."""
+    import generator
+    plan, _ = generator.plan(42, "big")
+    ids = sorted(t.thread_id for t in plan)
+    out = []
+    for t in random.Random(seed).sample(ids, 4 * n):
+        if newest(c, DB, t) is not None:
+            out.append(t)
+        if len(out) == n:
+            break
+    return out
 
 
 def newest(c, db, t):
