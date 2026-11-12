@@ -62,6 +62,13 @@ pub static SERVER_SMALL: AtomicBool = AtomicBool::new(false);
 
 /// Process-wide counters of every compactor (serverStatus `fenvix.compactor`).
 pub static G_STARTED: AtomicU64 = AtomicU64::new(0);
+/// perf-latency-on-i4 (serverStatus fenvix.compactor.stopMs): how long each `Compactor::stop` took, by bucket: under
+/// 100 ms, 500 ms, 1 s, 5 s, 10 s, then 10 s or more. On integration-4 alone the join of SlateDB's compaction task
+/// waited up to 10 s, and a close often waited all of it (CI a91a14a: 49 of 78 stops at exactly 10 s).
+pub const STOP_MS_BOUNDS: [u64; 5] = [100, 500, 1000, 5000, 10_000];
+pub static STOP_MS_BUCKETS: [AtomicU64; 6] = [const { AtomicU64::new(0) }; 6];
+/// Stops whose SlateDB compaction task had not ended 500 ms after its stop and was aborted (then awaited).
+pub static STOP_SLATE_ABORTED: AtomicU64 = AtomicU64::new(0);
 pub static G_PUBLISHES: AtomicU64 = AtomicU64::new(0);
 pub static G_ABSORBS: AtomicU64 = AtomicU64::new(0);
 pub static G_MERGES: AtomicU64 = AtomicU64::new(0);
@@ -610,6 +617,7 @@ impl Compactor {
             // join. It sometimes did not return (seen while this branch deferred the L0 recognition, now reverted: closes
             // waited the whole 10 s), so it is aborted after a short grace instead of holding the close or erasure
             if tokio::time::timeout(Duration::from_millis(500), &mut h).await.is_err() {
+                STOP_SLATE_ABORTED.fetch_add(1, Relaxed);
                 h.abort();
                 let _ = h.await;
             }
@@ -633,6 +641,8 @@ impl Compactor {
         if self.creates_in_flight.load(Relaxed) > 0 {
             eprintln!("fx compactor {}: stop: a version create still in flight after the PUT timeout", self.id());
         }
+        let ms = t_stop.elapsed().as_millis() as u64;
+        STOP_MS_BUCKETS[STOP_MS_BOUNDS.iter().position(|b| ms < *b).unwrap_or(STOP_MS_BOUNDS.len())].fetch_add(1, Relaxed);
         if t_stop.elapsed() > Duration::from_secs(1) {
             eprintln!("fx compactor {}: stop took {:?} (jobs {n}: {:?})", self.id(), t_stop.elapsed(), t_jobs.elapsed());
         }

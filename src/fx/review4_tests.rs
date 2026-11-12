@@ -860,3 +860,242 @@ async fn r3_restart_takes_absorbed_l0_from_the_version() {
     assert_eq!(absorbs_before, l0_at_restart, "the restarted compactor knows every L0 SST as absorbed");
     assert_eq!(wrong, 0);
 }
+
+// ------------------------------------------------------------------------------------------------------------------
+// perf-latency-on-i4 (review of d15510c, section 3): the two joints the merge's tests did not cover
+
+/// A store that records the compactor's requests while `recording`, and holds, while armed, the GETs of L0 SSTs
+/// (`hold_l0_gets`: an absorption in flight reads them) or the part uploads of our runs (`hold_run_parts`: a job in
+/// the middle of a run's upload). It also tracks multipart uploads: begun, completed, aborted.
+#[derive(Debug, Default)]
+struct JointStore {
+    inner: Option<Arc<dyn ObjectStore>>,
+    recording: std::sync::atomic::AtomicBool,
+    log: std::sync::Mutex<Vec<String>>,
+    hold_l0_gets: std::sync::atomic::AtomicBool,
+    hold_run_parts: std::sync::atomic::AtomicBool,
+    held: AtomicU64,
+    uploads: Arc<std::sync::Mutex<std::collections::HashMap<u64, String>>>,
+    next_upload: AtomicU64,
+}
+
+impl JointStore {
+    fn new(inner: Arc<dyn ObjectStore>) -> Arc<JointStore> {
+        Arc::new(JointStore { inner: Some(inner), ..Default::default() })
+    }
+    fn inner(&self) -> &Arc<dyn ObjectStore> {
+        self.inner.as_ref().unwrap()
+    }
+    /// The compactor's own paths: our runs and manifests (`/fx/`), and the L0 SSTs an absorption reads.
+    fn note(&self, what: &str, p: &Path) {
+        let s = p.as_ref();
+        if self.recording.load(SeqCst) && (s.contains("/fx/") || (s.ends_with(".sst") && !s.contains("/wal/"))) {
+            self.log.lock().unwrap().push(format!("{what} {s}"));
+        }
+    }
+    fn open_uploads(&self) -> Vec<String> {
+        self.uploads.lock().unwrap().values().cloned().collect()
+    }
+}
+
+impl std::fmt::Display for JointStore {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "JointStore")
+    }
+}
+
+/// Holds while `flag` is set (polled: the holder's task stays cancellable at each poll).
+async fn hold_while(flag: &std::sync::atomic::AtomicBool, held: &AtomicU64) {
+    if flag.load(SeqCst) {
+        held.fetch_add(1, SeqCst);
+        while flag.load(SeqCst) {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+    }
+}
+
+#[derive(Debug)]
+struct JointUpload {
+    inner: Box<dyn MultipartUpload>,
+    id: u64,
+    store: Arc<JointStore>,
+}
+
+#[async_trait]
+impl MultipartUpload for JointUpload {
+    fn put_part(&mut self, data: PutPayload) -> object_store::UploadPart {
+        let f = self.inner.put_part(data);
+        let s = Arc::clone(&self.store);
+        Box::pin(async move {
+            hold_while(&s.hold_run_parts, &s.held).await;
+            f.await
+        })
+    }
+    async fn complete(&mut self) -> object_store::Result<PutResult> {
+        let r = self.inner.complete().await;
+        if r.is_ok() {
+            self.store.uploads.lock().unwrap().remove(&self.id);
+        }
+        r
+    }
+    async fn abort(&mut self) -> object_store::Result<()> {
+        let r = self.inner.abort().await;
+        self.store.uploads.lock().unwrap().remove(&self.id);
+        r
+    }
+}
+
+/// `ObjectStore` for an `Arc<JointStore>` (the uploads need the Arc to report back).
+#[derive(Debug)]
+struct JointHandle(Arc<JointStore>);
+
+impl std::fmt::Display for JointHandle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "JointHandle")
+    }
+}
+
+#[async_trait]
+impl ObjectStore for JointHandle {
+    async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> object_store::Result<PutResult> {
+        self.0.note("PUT", location);
+        self.0.inner().put_opts(location, payload, opts).await
+    }
+    async fn put_multipart_opts(&self, location: &Path, opts: PutMultipartOptions) -> object_store::Result<Box<dyn MultipartUpload>> {
+        self.0.note("MPU", location);
+        let inner = self.0.inner().put_multipart_opts(location, opts).await?;
+        let id = self.0.next_upload.fetch_add(1, SeqCst);
+        if location.as_ref().contains("/fx/run/") {
+            self.0.uploads.lock().unwrap().insert(id, location.to_string());
+        }
+        Ok(Box::new(JointUpload { inner, id, store: Arc::clone(&self.0) }))
+    }
+    async fn get_opts(&self, location: &Path, options: GetOptions) -> object_store::Result<GetResult> {
+        let s = location.as_ref();
+        if s.ends_with(".sst") && !s.contains("/wal/") {
+            hold_while(&self.0.hold_l0_gets, &self.0.held).await;
+        }
+        self.0.note(if options.head { "HEAD" } else { "GET" }, location);
+        self.0.inner().get_opts(location, options).await
+    }
+    fn delete_stream(&self, locations: BoxStream<'static, object_store::Result<Path>>) -> BoxStream<'static, object_store::Result<Path>> {
+        self.0.inner().delete_stream(locations)
+    }
+    fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, object_store::Result<ObjectMeta>> {
+        if let Some(p) = prefix {
+            self.0.note("LIST", p);
+        }
+        self.0.inner().list(prefix)
+    }
+    fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, object_store::Result<ObjectMeta>> {
+        if let Some(p) = prefix {
+            self.0.note("LIST", p);
+        }
+        self.0.inner().list_with_offset(prefix, offset)
+    }
+    async fn list_with_delimiter(&self, prefix: Option<&Path>) -> object_store::Result<ListResult> {
+        if let Some(p) = prefix {
+            self.0.note("LIST", p);
+        }
+        self.0.inner().list_with_delimiter(prefix).await
+    }
+    async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> object_store::Result<()> {
+        self.0.note("COPY", to);
+        self.0.inner().copy_opts(from, to, options).await
+    }
+    async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> object_store::Result<()> {
+        self.0.inner().rename_opts(from, to, options).await
+    }
+}
+
+/// A database with a published version, a running compactor (absorption at the first L0 SST, GC out of the way) and
+/// rows in the writer's memtable for the next absorption.
+async fn joint_setup(id: &str, js: &Arc<JointStore>) -> (Tenant, Arc<Compactor>, tokio::task::JoinHandle<()>) {
+    let store: Arc<dyn ObjectStore> = Arc::new(JointHandle(Arc::clone(js)));
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(1, i % 20), Some(vec![b'v'; 50]))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let mut k = knobs(false);
+    k.gc_every = Duration::from_secs(3600);
+    k.local_max_bytes = 0; // every run goes to the store (the upload is the store's)
+    let c = Compactor::start(&mut t, Arc::clone(&store), k.clone(), pool::Pool::new(2), tokio::runtime::Handle::current()).await.unwrap();
+    let planner = c.run();
+    for i in 0..200 {
+        apply(&mut t, &mut m, vec![(ckey(2, i % 50), Some(format!("x{i}").into_bytes()))]).await;
+    }
+    (t, c, planner)
+}
+
+async fn wait_held(js: &JointStore, what: &str) {
+    let t0 = Instant::now();
+    while js.held.load(SeqCst) == 0 {
+        assert!(t0.elapsed() < Duration::from_secs(20), "no {what} was held: the test did not reach its case");
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+}
+
+/// Joint 2 (`Compactor::stop`, review of d15510c): with an absorption in flight (its read of an L0 SST held by the
+/// store), `stop` returns, the store answers again, and for 2 s the compactor makes no request at all, read or
+/// write. Both cancellations end the job: the stop signal (`stopped_wait`, clone-uploads) and the abort and await of the
+/// job list (perf-latency). Without them the job reads the SST, writes its run and publishes a version after `stop`.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn joint_no_store_request_after_stop() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let js = JointStore::new(Arc::new(InMemory::new()));
+    js.hold_l0_gets.store(true, SeqCst);
+    let (t, c, planner) = joint_setup("joint-stop", &js).await;
+    flush(&t).await; // an L0 SST: the absorption starts and its read is held
+    wait_held(&js, "L0 read of an absorption").await;
+    let aborted0 = compactor::STOP_SLATE_ABORTED.load(SeqCst);
+    let t0 = Instant::now();
+    c.stop().await;
+    let stop_ms = t0.elapsed().as_millis();
+    // the tasks ended for real: the planner's loop within a few ticks; SlateDB's compaction task within its grace,
+    // not aborted (on integration-4 alone its join waited up to 10 s and the task was left running)
+    let planner_ended = tokio::time::timeout(Duration::from_millis(500), planner).await.is_ok();
+    let slate_aborted = compactor::STOP_SLATE_ABORTED.load(SeqCst) - aborted0;
+    js.recording.store(true, SeqCst);
+    js.hold_l0_gets.store(false, SeqCst);
+    tokio::time::sleep(Duration::from_secs(2)).await;
+    js.recording.store(false, SeqCst);
+    let after: Vec<String> = js.log.lock().unwrap().clone();
+    eprintln!("joint stop: stop took {stop_ms} ms; planner ended {planner_ended}; SlateDB task aborted {slate_aborted}; requests in the 2 s after it: {} {:?}", after.len(), after.iter().take(5).collect::<Vec<_>>());
+    t.abandon().await;
+    teardown();
+    assert!(planner_ended, "the compactor's planner task did not end after stop");
+    assert_eq!(slate_aborted, 0, "SlateDB's compaction task did not end by itself after stop (aborted after 500 ms)");
+    assert!(stop_ms < 1000, "stop took {stop_ms} ms");
+    assert!(after.is_empty(), "the compactor made {} store requests after stop returned: {:?}", after.len(), &after[..after.len().min(5)]);
+}
+
+/// Joint 4 (`RunWriter` abort, review of d15510c): a job cut in the middle of a run's upload by `stop` (as a close
+/// does), with no erase and no restart after it. Within 3 s no multipart upload of our runs is left open: the dropped
+/// writer aborts its upload (`runfmt::spawn_abort`). Without it the upload stays open, its parts billed, until the next
+/// process's sweep of old uploads.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn joint_cut_upload_is_aborted_without_an_erase() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let js = JointStore::new(Arc::new(InMemory::new()));
+    js.hold_run_parts.store(true, SeqCst);
+    let (t, c, _planner) = joint_setup("joint-upload", &js).await;
+    flush(&t).await; // the absorption writes a delta run; its part upload is held
+    wait_held(&js, "part upload of a run").await;
+    let open_before = js.open_uploads();
+    c.stop().await;
+    let t0 = Instant::now();
+    while !js.open_uploads().is_empty() && t0.elapsed() < Duration::from_secs(3) {
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    let left = js.open_uploads();
+    js.hold_run_parts.store(false, SeqCst);
+    eprintln!("joint upload: open when the job was cut {open_before:?}; open 3 s after stop {left:?}");
+    t.abandon().await;
+    teardown();
+    assert!(!open_before.is_empty(), "no run upload was open when the job was cut: the test did not reach its case");
+    assert!(left.is_empty(), "run uploads left open after stop with no erase: {left:?}");
+}
