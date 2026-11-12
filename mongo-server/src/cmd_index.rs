@@ -1749,6 +1749,23 @@ fn winning_plan(plan: &Plan, indexes: &[IndexDef], filter: &Document, sort: &[(S
             f.insert("inputStage", ix);
             f
         }
+        Plan::IdIn(vals) => {
+            let bounds: Vec<Bson> = vals.iter().map(|v| { let b = crate::index::fmt_bound(v); Bson::String(format!("[{b}, {b}]")) }).collect();
+            let mut ix = doc! {
+                "stage": "IXSCAN", "keyPattern": { "_id": 1 }, "indexName": "_id_", "isMultiKey": false, "multiKeyPaths": { "_id": [] },
+                "isUnique": true, "isSparse": false, "isPartial": false, "indexVersion": 2, "direction": "forward", "indexBounds": { "_id": bounds },
+            };
+            counts(&mut ix, stats.keys, 0, stats.docs);
+            let mut f = doc! { "stage": "FETCH" };
+            // (the `_id: {$in}` condition is the scan's; anything else is the fetch's filter)
+            let residual: Document = filter.iter().filter(|(k, v)| !(k.as_str() == "_id" && matches!(v, Bson::Document(d) if d.len() == 1 && d.contains_key("$in")))).map(|(k, v)| (k.clone(), v.clone())).collect();
+            if !residual.is_empty() {
+                f.insert("filter", residual);
+            }
+            counts(&mut f, 0, stats.docs, nret);
+            f.insert("inputStage", ix);
+            f
+        }
         Plan::Or(subs) => {
             let inputs: Vec<Bson> = subs.iter().map(|p| Bson::Document(winning_plan(p, indexes, &Document::new(), &[], 0, 0, None, &None).get_document("inputStage").cloned().unwrap_or_else(|_| doc! { "stage": "IDHACK" }))).collect();
             let mut f = doc! { "stage": "FETCH" };

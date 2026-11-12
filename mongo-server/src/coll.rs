@@ -610,6 +610,8 @@ enum IdSource {
     Ix(IxCursor),
     /// The keys of every document, from `start` on (an `_id` equality the collation does not decide).
     Docs(Vec<u8>),
+    /// The `_id`s of an `_id: {$in: [...]}` still to look up, in `_id` order.
+    Ids(std::collections::VecDeque<Bson>),
 }
 
 impl<'p> PlanIds<'p> {
@@ -645,6 +647,21 @@ impl<'p> PlanIds<'p> {
                         _ => self.cur = None,
                     }
                 }
+                Some(IdSource::Ids(q)) => {
+                    let Some(id) = q.pop_front() else {
+                        self.cur = None;
+                        continue;
+                    };
+                    stats.keys += 1;
+                    match resolve_id(g, coll, &id, None).await? {
+                        IdRes::Direct => ids.push(encode_sortable(&id)),
+                        IdRes::Found(enc) => ids.push(enc),
+                        IdRes::Many(encs) => ids.extend(encs),
+                        IdRes::Absent => {}
+                        // (the planner leaves strings under a collation out of this plan; every document, as for `Plan::Id`)
+                        IdRes::Scan => self.cur = Some(IdSource::Docs(doc_prefix(coll))),
+                    }
+                }
                 None => {
                     let Some(p) = self.stack.pop() else { break };
                     match p {
@@ -657,6 +674,7 @@ impl<'p> PlanIds<'p> {
                         },
                         Plan::Ix(s) => self.cur = Some(IdSource::Ix(IxCursor::new(coll, &indexes[s.idx], s))),
                         Plan::Or(subs) => self.stack.extend(subs.iter().rev()),
+                        Plan::IdIn(vals) => self.cur = Some(IdSource::Ids(vals.iter().cloned().collect())),
                         Plan::Coll { .. } => {}
                     }
                 }
@@ -722,7 +740,7 @@ fn scan_equivalent(plan: &Plan, indexes: &[IndexDef], hint: &Hint) -> bool {
         match p {
             Plan::Ix(s) => indexes.get(s.idx).map(|i| matches!(i.kind, index::Kind::Regular) && !i.sparse && i.partial.is_none()).unwrap_or(false),
             Plan::Or(subs) => subs.iter().all(|p| ok(p, indexes)),
-            Plan::Id(_) | Plan::Coll { .. } => true,
+            Plan::Id(_) | Plan::IdIn(_) | Plan::Coll { .. } => true,
         }
     }
     matches!(hint, Hint::None) && ok(plan, indexes)
@@ -837,6 +855,7 @@ pub fn plan_summary(plan: &Plan, indexes: &[IndexDef]) -> String {
             None => "IXSCAN".to_string(),
         },
         Plan::Or(v) => v.iter().map(|p| plan_summary(p, indexes)).collect::<Vec<_>>().join(", "),
+        Plan::IdIn(_) => "IXSCAN { _id: 1 }".to_string(),
     }
 }
 

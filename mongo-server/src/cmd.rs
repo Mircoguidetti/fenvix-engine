@@ -17,6 +17,51 @@ pub(crate) type R<T> = Result<T, MongoError>;
 const MAX_WIRE_VERSION: i32 = 21;
 const DEFAULT_FIRST_BATCH: usize = 101;
 
+/// mongod's byte limit of one batch of a cursor (16 MiB, `BSONObjMaxUserSize`). A batch takes the next document only if
+/// the documents already in it, each with its array element header (type, index digits, NUL), plus that document and
+/// the reply's fixed part fit; the first document of a batch always goes in. The fixed part is 53 bytes for the first
+/// batch of `find` and `aggregate` and 57 for `getMore` (MEASURED on mongod 7.0.34, for any namespace length, with
+/// `research/fix-query-limits/batch_probe.py`; `batch_diff.py` finds mongod's batches and reply sizes). So a reply
+/// stays at about 16 MiB (a single document is at most 16 MiB), well under the 48 MB message limit.
+pub(crate) const BATCH_BYTES: usize = 16 * 1024 * 1024;
+pub(crate) const FIRST_BATCH_FIXED: usize = 53;
+pub(crate) const NEXT_BATCH_FIXED: usize = 57;
+
+tokio::task_local! {
+    /// Set around the server's own aggregations that read a whole answer from `firstBatch` (views, mapReduce): their
+    /// batches are not cut at [`BATCH_BYTES`], since nothing would read the rest of the cursor.
+    pub(crate) static WHOLE_BATCH: ();
+}
+
+/// Does a document of `size` bytes go into a batch that holds `count` documents of `used` bytes (as [`batch_add`]
+/// counts them)? The first one always does.
+pub(crate) fn batch_fits(used: usize, count: usize, size: usize, fixed: usize) -> bool {
+    count == 0 || used + size + fixed <= BATCH_BYTES
+}
+
+/// Count a document of `size` bytes put into a batch that held `count` documents: the document and its array element
+/// header (type byte, its index in decimal, NUL).
+pub(crate) fn batch_add(used: &mut usize, count: usize, size: usize) {
+    *used += size + 2 + count.to_string().len();
+}
+
+/// The next batch of a cursor: at most `max` documents and at most [`BATCH_BYTES`] as mongod counts them.
+fn take_batch(docs: &mut VecDeque<Document>, max: usize, fixed: usize) -> Vec<Bson> {
+    let whole = WHOLE_BATCH.try_with(|_| ()).is_ok();
+    let mut out: Vec<Bson> = Vec::new();
+    let mut used = 0usize;
+    while out.len() < max {
+        let Some(d) = docs.front() else { break };
+        let size = crate::query::bson_size(d);
+        if !whole && !batch_fits(used, out.len(), size, fixed) {
+            break;
+        }
+        batch_add(&mut used, out.len(), size);
+        out.push(Bson::Document(docs.pop_front().unwrap()));
+    }
+    out
+}
+
 pub struct Server {
     pub dbs: Arc<Dbs>,
     pub(crate) builds: Arc<Mutex<HashSet<String>>>,
@@ -1009,8 +1054,7 @@ impl Server {
     // ---- cursors ---------------------------------------------------------------------------
 
     pub(crate) fn cursor_reply(&self, ns: String, mut docs: VecDeque<Document>, batch: Option<usize>, single_batch: bool) -> Document {
-        let n = batch.unwrap_or(DEFAULT_FIRST_BATCH).min(docs.len());
-        let first: Vec<Bson> = docs.drain(..n).map(Bson::Document).collect();
+        let first = take_batch(&mut docs, batch.unwrap_or(DEFAULT_FIRST_BATCH), FIRST_BATCH_FIXED);
         let id = if docs.is_empty() || single_batch { 0 } else { self.store_cursor(ns.clone(), docs) };
         // (the list commands put the cursor id and namespace first)
         doc! { "cursor": { "id": id, "ns": ns, "firstBatch": first }, "ok": 1.0 }
@@ -1020,8 +1064,8 @@ impl Server {
     /// next `getMore` finds out that it is exhausted), unless a `limit` was reached.
     pub(crate) fn cursor_reply_open(&self, ns: String, mut docs: VecDeque<Document>, batch: Option<usize>, single_batch: bool, limited: bool) -> Document {
         let want = batch.unwrap_or(DEFAULT_FIRST_BATCH);
-        let n = want.min(docs.len());
-        let first: Vec<Bson> = docs.drain(..n).map(Bson::Document).collect();
+        let first = take_batch(&mut docs, want, FIRST_BATCH_FIXED);
+        let n = first.len();
         let open = !single_batch && (!docs.is_empty() || (!limited && n > 0 && n == want));
         let id = if open { self.store_cursor(ns.clone(), docs) } else { 0 };
         doc! { "cursor": { "firstBatch": first, "id": id, "ns": ns }, "ok": 1.0 }
@@ -1081,8 +1125,8 @@ impl Server {
         let mut cursors = self.cursors.lock().unwrap();
         let c = cursors.get_mut(&id).ok_or_else(|| MongoError::cursor_not_found(id))?;
         c.used = std::time::Instant::now();
-        let n = batch.unwrap_or(usize::MAX).min(c.docs.len());
-        let next: Vec<Bson> = c.docs.drain(..n).map(Bson::Document).collect();
+        let next = take_batch(&mut c.docs, batch.unwrap_or(usize::MAX), NEXT_BATCH_FIXED);
+        let n = next.len();
         let ns = c.ns.clone();
         let done = c.docs.is_empty() && !(batch.is_some() && n > 0 && n == batch.unwrap_or(0));
         if done {
@@ -1105,7 +1149,7 @@ impl Server {
         loop {
             let r = {
                 let mut g = self.dbs.read(&cur.db).await?;
-                crate::capped::fetch_after(&mut g, &cur, limit).await
+                crate::capped::fetch_after(&mut g, &cur, limit, 0, NEXT_BATCH_FIXED).await
             };
             let (docs, last) = match r {
                 Ok(x) => x,
@@ -1166,4 +1210,49 @@ fn build_info() -> Document {
     }
 }
 
+#[cfg(test)]
+mod batch_tests {
+    use super::*;
 
+    fn doc_of(i: i32, size: usize) -> Document {
+        let mut d = doc! { "_id": i, "p": "" };
+        let pad = size - crate::query::bson_size(&d);
+        d.insert("p", "x".repeat(pad));
+        assert_eq!(crate::query::bson_size(&d), size);
+        d
+    }
+
+    fn lens(docs: Vec<Document>, max: usize, fixed: usize) -> Vec<usize> {
+        let mut q: VecDeque<Document> = docs.into();
+        let mut out = Vec::new();
+        while !q.is_empty() {
+            out.push(take_batch(&mut q, max, fixed).len());
+        }
+        out
+    }
+
+    #[test]
+    fn batches_stop_at_16_mib_as_mongod_counts() {
+        // the edges measured on mongod 7.0.34 (research/fix-query-limits/batch_diff.py): one small document and one that
+        // brings the two to 16 MiB - 56 fit in a first batch, - 55 does not; for getMore, - 60 and - 59
+        let pair = |total: usize| vec![doc_of(0, 70), doc_of(1, total - 70), doc_of(2, 50)];
+        assert_eq!(lens(pair(BATCH_BYTES - 56), 1000, FIRST_BATCH_FIXED), vec![2, 1]);
+        assert_eq!(lens(pair(BATCH_BYTES - 55), 1000, FIRST_BATCH_FIXED), vec![1, 2]);
+        assert_eq!(lens(pair(BATCH_BYTES - 60), 1000, NEXT_BATCH_FIXED), vec![2, 1]);
+        assert_eq!(lens(pair(BATCH_BYTES - 59), 1000, NEXT_BATCH_FIXED), vec![1, 2]);
+        // a document of 16 MiB alone in each batch; 4 MB documents four at a time; the count limit still holds
+        assert_eq!(lens((0..3).map(|i| doc_of(i, BATCH_BYTES)).collect(), usize::MAX, NEXT_BATCH_FIXED), vec![1, 1, 1]);
+        assert_eq!(lens((0..6).map(|i| doc_of(i, 4_000_000)).collect(), usize::MAX, NEXT_BATCH_FIXED), vec![4, 2]);
+        assert_eq!(lens((0..6).map(|i| doc_of(i, 100)).collect(), 4, NEXT_BATCH_FIXED), vec![4, 2]);
+        let mut q: VecDeque<Document> = vec![doc_of(0, 100)].into();
+        assert!(take_batch(&mut q, 0, FIRST_BATCH_FIXED).is_empty(), "a batch of 0 documents takes none");
+        assert_eq!(q.len(), 1);
+    }
+
+    #[test]
+    fn the_servers_own_reads_get_every_document() {
+        let rt = tokio::runtime::Builder::new_current_thread().build().unwrap();
+        let n = rt.block_on(WHOLE_BATCH.scope((), async { lens((0..6).map(|i| doc_of(i, 4_000_000)).collect(), usize::MAX, FIRST_BATCH_FIXED) }));
+        assert_eq!(n, vec![6]);
+    }
+}

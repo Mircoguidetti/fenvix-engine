@@ -210,7 +210,7 @@ impl Server {
     /// All documents an aggregation over `coll` returns.
     async fn agg_docs(&self, db: &str, coll: &str, pipeline: Vec<Bson>, tx: &mut Option<Txn>) -> R<Vec<Document>> {
         let cmd = doc! { "aggregate": coll, "pipeline": pipeline, "cursor": { "batchSize": i32::MAX } };
-        let r = self.aggregate(db, &cmd, tx).await?;
+        let r = crate::cmd::WHOLE_BATCH.scope((), Box::pin(self.aggregate(db, &cmd, tx))).await?;
         let batch = r.get_document("cursor").ok().and_then(|c| c.get_array("firstBatch").ok()).cloned().unwrap_or_default();
         Ok(batch.into_iter().filter_map(|b| if let Bson::Document(d) = b { Some(d) } else { None }).collect())
     }

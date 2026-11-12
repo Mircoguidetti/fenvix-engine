@@ -218,7 +218,7 @@ pub struct Tail {
 }
 
 /// Documents after `after_seq` in natural order that match `filter`, at most `limit`; with the new position.
-pub async fn fetch_after(g: &mut impl Rd, tail: &Tail, limit: usize) -> R<(Vec<Document>, u64)> {
+pub async fn fetch_after(g: &mut impl Rd, tail: &Tail, limit: usize, skip: usize, fixed: usize) -> R<(Vec<Document>, u64)> {
     let np = crate::natural::prefix(&tail.coll);
     let end = crate::keyenc::prefix_end(&np);
     // the document last looked at must still be there
@@ -229,8 +229,13 @@ pub async fn fetch_after(g: &mut impl Rd, tail: &Tail, limit: usize) -> R<(Vec<D
     start.push(0);
     let mut out = Vec::new();
     let mut last = tail.last_seq;
+    let mut skipped = 0;
+    let mut used = 0;
     let prefix = doc_prefix(&tail.coll);
     'outer: loop {
+        if out.len() >= limit {
+            break;
+        }
         let rows = g.scan_range(&start, end.as_deref(), false, Some(256), 1 << 20).await?;
         let n = rows.len();
         for (k, id_enc) in &rows {
@@ -240,7 +245,18 @@ pub async fn fetch_after(g: &mut impl Rd, tail: &Tail, limit: usize) -> R<(Vec<D
             if let Some(v) = g.get(&dk).await? {
                 let d = Document::from_reader(crate::natural::bson_part(&v))?;
                 if crate::query::matches(&d, &tail.filter)? {
-                    out.push(d);
+                    if skipped < skip {
+                        skipped += 1;
+                    } else {
+                        // a batch stops at 16 MiB as mongod's: this document is not looked at yet, the next getMore
+                        // starts with it
+                        let size = crate::query::bson_size(&d);
+                        if !crate::cmd::batch_fits(used, out.len(), size, fixed) {
+                            break 'outer;
+                        }
+                        crate::cmd::batch_add(&mut used, out.len(), size);
+                        out.push(d);
+                    }
                 }
             }
             last = seq;
