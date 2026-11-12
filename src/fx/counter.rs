@@ -299,6 +299,25 @@ struct Cache {
 
 static CACHE: Mutex<Option<Cache>> = Mutex::new(None);
 
+tokio::task_local! {
+    /// integration-4 (joint of perf-bytes and the clone-uploads fix): inside a one-pass control read (an export, PITR's
+    /// diff: `pair::PairedReader`) run blocks are read and used but not kept. Since the clone-uploads fix a closed
+    /// database is absorbed into our runs, so an export reads mostly runs, and every block it read went into this
+    /// process-wide cache (up to `--sealed-cache-mb`, 256 MiB): the export's memory grew with its size, as perf-bytes
+    /// measured for SlateDB's reader cache (MEASURED here: +30 MB for a 40 MB export, sealed mode, 3 of 3 runs).
+    static NO_CACHE_PUT: bool;
+}
+
+/// Run `f` so that the run blocks it reads are not kept in the cache (see `NO_CACHE_PUT`).
+pub async fn without_cache_put<F: std::future::Future>(f: F) -> F::Output {
+    NO_CACHE_PUT.scope(true, f).await
+}
+
+/// Whether the current task keeps what it reads (false inside `without_cache_put`).
+pub fn cache_put_allowed() -> bool {
+    !NO_CACHE_PUT.try_with(|v| *v).unwrap_or(false)
+}
+
 pub fn cache_get(k: &CKey) -> Option<Arc<Piece>> {
     let mut g = CACHE.lock().unwrap();
     let c = g.as_mut()?;
@@ -335,7 +354,7 @@ fn put_locked(c: &mut Cache, k: CKey, b: Arc<Piece>, cap: usize) {
 
 fn cache_put(k: CKey, b: Arc<Piece>) {
     let cap = super::view::CACHE_BYTES.load(Relaxed) as usize;
-    if cap == 0 {
+    if cap == 0 || !cache_put_allowed() {
         return;
     }
     let mut g = CACHE.lock().unwrap();
@@ -982,4 +1001,24 @@ async fn warm_blocks(store: &Arc<dyn ObjectStore>, run: &Run, a: usize, z: usize
         }
     }
     Ok((n, bytes))
+}
+
+#[cfg(test)]
+mod no_cache_put_tests {
+    use super::*;
+
+    /// integration-4: inside `without_cache_put` (an export's paired reads) `cache_put` keeps nothing; outside it, and in
+    /// a task spawned from inside it (the background warm-up is never in the export's scope), puts are allowed again.
+    /// The memory effect itself is ctl test_04's `test_streaming_uses_bounded_memory` (sealed mode).
+    #[tokio::test]
+    async fn i4_paired_reads_keep_nothing_in_the_run_cache() {
+        assert!(cache_put_allowed());
+        without_cache_put(async {
+            assert!(!cache_put_allowed());
+            let inner = tokio::spawn(async { cache_put_allowed() }).await.unwrap();
+            assert!(inner, "a task spawned from the scope is not in it");
+        })
+        .await;
+        assert!(cache_put_allowed());
+    }
 }
