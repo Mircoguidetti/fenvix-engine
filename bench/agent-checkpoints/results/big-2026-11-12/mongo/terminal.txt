@@ -1,0 +1,3 @@
+round A: 2200 tasks in 224.9 s, errors 0
+round B: 2200 tasks in 221.8 s, errors 0
+[mongo] VALIDATION, NOT RESULTS: ok=True checkpoints=250314 load=1684.892s stored=6452162560.0 stored/logical=0.4661 wrong_reads=0 -> /home/user/H/bench/agent-checkpoints/results/big-2026-11-12/mongo/summary.json

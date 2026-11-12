@@ -1,0 +1,5 @@
+2026-11-12T09:22:50Z mongo-rs3 -> /home/user/H/bench/agent-checkpoints/results/big-2026-11-12/mongo
+2026-11-12T10:01:05Z mongo-rs3: exit 0; [mongo] VALIDATION, NOT RESULTS: ok=True checkpoints=250314 load=1684.892s stored=6452162560.0 stored/logical=0.4661 wrong_reads=0 -> /home/user/H/bench/agent-checkpoints/results/big-2026-11-12/mongo/summary.json
+2026-11-12T10:01:05Z postgres-sync -> /home/user/H/bench/agent-checkpoints/results/big-2026-11-12/postgres
+2026-11-12T10:24:49Z postgres-sync: exit 0; [postgres] VALIDATION, NOT RESULTS: ok=True checkpoints=250314 load=965.987s stored=5404393472 stored/logical=0.3879 wrong_reads=0 -> /home/user/H/bench/agent-checkpoints/results/big-2026-11-12/postgres/summary.json
+2026-11-12T10:24:49Z fenvix-log -> /home/user/H/bench/agent-checkpoints/results/big-2026-11-12/fenvix

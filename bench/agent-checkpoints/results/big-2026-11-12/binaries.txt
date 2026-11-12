@@ -1,0 +1,5 @@
+engine 4c7f8e7e89dbe11dc255bdbda734f89f14495a3c (/home/user/E)
+harness dbc307570171e72a2e14293059a89433b48a616e
+d0a994d0bf73abf00b5e37b74e4a09e396ac7904fbab5e1191c7bf706fd11491  /home/user/H/target/release/mongo-server
+2fcb72e457002f0345a3d4413ba5e6f7464dd2c5448006bfdd64c86dbe3d03aa  /home/user/H/proto/quaderno/target/release/pq
+136b37875e71f7b96f469ba319d6a590a3afae8becdb9258de6db336cb00b1e1  /home/user/H/target/release/s3delay

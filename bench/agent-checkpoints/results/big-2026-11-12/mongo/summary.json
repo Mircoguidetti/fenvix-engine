@@ -1,0 +1,634 @@
+{
+  "note": "LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+  "mode": "P-bench-big: load, settle, sizes, measured mix rounds (bigmix.py)",
+  "target": "mongo",
+  "label": "local mongo-rs3: 3-member replica set, w:majority, j:true",
+  "profile": "big",
+  "seed": 42,
+  "load_workers": 3,
+  "engine_binary_sha256": null,
+  "plan": {
+    "threads": 4956,
+    "turns": 52436,
+    "digest": "f90efcee6bdfc47c"
+  },
+  "client": {
+    "python": "3.12.3",
+    "host": "vm"
+  },
+  "load": {
+    "seconds": 1684.892,
+    "errors": [],
+    "processes": 3,
+    "client_cpu": {
+      "samples": 841,
+      "workers": 3,
+      "process_cores_mean": {
+        "22197": 0.0,
+        "22236": 0.294,
+        "22237": 0.286,
+        "22238": 0.294
+      },
+      "process_cores_max_mean": 0.294,
+      "host_busy_mean": 0.725,
+      "host_busy_ge_95pct_share": 0.0,
+      "client_limited": false,
+      "rule": "--workers 3, a throughput line: limited if a client process averages >= 0.8 core or the host is >= 95% busy in > 10% of samples (DECISIONS 2026-11-11)"
+    },
+    "steps_per_second": 148.56,
+    "note": "the load's latencies are in ops.jsonl (phase write) and are not results"
+  },
+  "mix": {
+    "write_tasks": 1000,
+    "read_tasks": 1200,
+    "rounds": [
+      {
+        "round": "A",
+        "seed": 1042,
+        "write_threads": 1000,
+        "read_threads": 1200,
+        "tasks": 2200,
+        "seconds": 224.9,
+        "errors": [],
+        "n_errors": 0,
+        "pre": {
+          "cmd": "/root/.fenvix-agentbench-venv/bin/python /home/user/H/bench/agent-checkpoints/lines.py restart mongo-rs3",
+          "rc": 0,
+          "seconds": 63.0,
+          "output": "09:52:03 restart: docker restart mongo-a mongo-b mongo-c in 46.6 s\n09:52:04 drop_caches: done\n09:52:19 restart: line up again in 62.4 s, check ok=True\n"
+        },
+        "cache": {
+          "wt_pages_requested": 1104637,
+          "wt_pages_read_into_cache": 26861,
+          "wt_hit_rate": 0.9757,
+          "wt_bytes_read_into_cache": 1724995358
+        },
+        "counters_before": {
+          "pages requested from the cache": 2381,
+          "pages read into cache": 1397,
+          "bytes read into cache": 91942756,
+          "bytes currently in the cache": 79616352,
+          "maximum bytes configured": 268435456,
+          "pages written from cache": 4,
+          "host": "mongo-b"
+        },
+        "counters_after": {
+          "pages requested from the cache": 1107018,
+          "pages read into cache": 28258,
+          "bytes read into cache": 1816938114,
+          "bytes currently in the cache": 215049288,
+          "maximum bytes configured": 268435456,
+          "pages written from cache": 18513,
+          "host": "mongo-b"
+        }
+      },
+      {
+        "round": "B",
+        "seed": 2042,
+        "write_threads": 1000,
+        "read_threads": 1200,
+        "tasks": 2200,
+        "seconds": 221.8,
+        "errors": [],
+        "n_errors": 0,
+        "pre": {
+          "cmd": "/root/.fenvix-agentbench-venv/bin/python /home/user/H/bench/agent-checkpoints/lines.py restart mongo-rs3",
+          "rc": 0,
+          "seconds": 64.5,
+          "output": "09:56:53 restart: docker restart mongo-a mongo-b mongo-c in 47.4 s\n09:56:53 drop_caches: done\n09:57:10 restart: line up again in 63.9 s, check ok=True\n"
+        },
+        "cache": {
+          "wt_pages_requested": 916434,
+          "wt_pages_read_into_cache": 26150,
+          "wt_hit_rate": 0.9715,
+          "wt_bytes_read_into_cache": 1607060037
+        },
+        "counters_before": {
+          "pages requested from the cache": 2454,
+          "pages read into cache": 1129,
+          "bytes read into cache": 79015680,
+          "bytes currently in the cache": 79053882,
+          "maximum bytes configured": 268435456,
+          "pages written from cache": 4,
+          "host": "mongo-a"
+        },
+        "counters_after": {
+          "pages requested from the cache": 918888,
+          "pages read into cache": 27279,
+          "bytes read into cache": 1686075717,
+          "bytes currently in the cache": 220713667,
+          "maximum bytes configured": 268435456,
+          "pages written from cache": 19610,
+          "host": "mongo-a"
+        }
+      }
+    ]
+  },
+  "latency_ms": {
+    "A": {
+      "list": {
+        "n": 300,
+        "p50": 86.543,
+        "p90": 536.034,
+        "p99": 903.64,
+        "max": 1563.162,
+        "mean": 180.711,
+        "res_mean": {
+          "cpu_ns.mongo-a": 6107313.35,
+          "cpu_ns.mongo-b": 37358357.56,
+          "cpu_ns.mongo-c": 5612020.197,
+          "rd_bytes.mongo-a": 18664.107,
+          "rd_bytes.mongo-b": 1849548.8,
+          "rd_bytes.mongo-c": 17093.973
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 2020647,
+          "cpu_ns.mongo-b": 22225058,
+          "cpu_ns.mongo-c": 1711729,
+          "rd_bytes.mongo-a": 0,
+          "rd_bytes.mongo-b": 1015808,
+          "rd_bytes.mongo-c": 0
+        }
+      },
+      "list_limit10": {
+        "n": 300,
+        "p50": 30.357,
+        "p90": 67.531,
+        "p99": 230.718,
+        "max": 487.74,
+        "mean": 38.789,
+        "res_mean": {
+          "cpu_ns.mongo-a": 1962073.557,
+          "cpu_ns.mongo-b": 8497418.987,
+          "cpu_ns.mongo-c": 1800729.293,
+          "rd_bytes.mongo-a": 4751.36,
+          "rd_bytes.mongo-b": 425410.56,
+          "rd_bytes.mongo-c": 3085.653
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 665289,
+          "cpu_ns.mongo-b": 6845218,
+          "cpu_ns.mongo-c": 537313,
+          "rd_bytes.mongo-a": 0,
+          "rd_bytes.mongo-b": 360448,
+          "rd_bytes.mongo-c": 0
+        }
+      },
+      "resume[long]": {
+        "n": 1000,
+        "p50": 4.852,
+        "p90": 8.483,
+        "p99": 38.306,
+        "max": 320.987,
+        "mean": 6.644,
+        "res_mean": {
+          "cpu_ns.mongo-a": 375111.114,
+          "cpu_ns.mongo-b": 1522513.288,
+          "cpu_ns.mongo-c": 288354.207,
+          "rd_bytes.mongo-a": 778.24,
+          "rd_bytes.mongo-b": 62898.176,
+          "rd_bytes.mongo-c": 430.08
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 122824,
+          "cpu_ns.mongo-b": 1285329,
+          "cpu_ns.mongo-c": 120891,
+          "rd_bytes.mongo-a": 0,
+          "rd_bytes.mongo-b": 57344,
+          "rd_bytes.mongo-c": 0
+        }
+      },
+      "resume[none]": {
+        "n": 1000,
+        "p50": 2.048,
+        "p90": 3.264,
+        "p99": 7.581,
+        "max": 202.106,
+        "mean": 2.556,
+        "res_mean": {
+          "cpu_ns.mongo-a": 223244.225,
+          "cpu_ns.mongo-b": 997453.64,
+          "cpu_ns.mongo-c": 244456.834,
+          "rd_bytes.mongo-a": 8.192
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 71102,
+          "cpu_ns.mongo-b": 856617,
+          "cpu_ns.mongo-c": 66473,
+          "rd_bytes.mongo-a": 0
+        }
+      },
+      "resume[read]": {
+        "n": 300,
+        "p50": 4.684,
+        "p90": 8.131,
+        "p99": 21.601,
+        "max": 33.792,
+        "mean": 5.375,
+        "res_mean": {
+          "cpu_ns.mongo-a": 429881.043,
+          "cpu_ns.mongo-b": 1464772.043,
+          "cpu_ns.mongo-c": 224716.77,
+          "rd_bytes.mongo-a": 122.88,
+          "rd_bytes.mongo-b": 62286.507,
+          "rd_bytes.mongo-c": 628.053
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 138569,
+          "cpu_ns.mongo-b": 1275016,
+          "cpu_ns.mongo-c": 111093,
+          "rd_bytes.mongo-a": 0,
+          "rd_bytes.mongo-b": 53248,
+          "rd_bytes.mongo-c": 0
+        }
+      },
+      "save_step": {
+        "n": 9480,
+        "p50": 10.74,
+        "p90": 17.189,
+        "p99": 32.75,
+        "max": 619.495,
+        "mean": 11.496,
+        "res_mean": {
+          "cpu_ns.mongo-a": 7300444.451,
+          "cpu_ns.mongo-b": 11353282.993,
+          "cpu_ns.mongo-c": 7304270.162,
+          "rd_bytes.mongo-a": 5068.584,
+          "rd_bytes.mongo-b": 881.85,
+          "rd_bytes.mongo-c": 5009.391
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 6844804,
+          "cpu_ns.mongo-b": 10950157,
+          "cpu_ns.mongo-c": 6917240,
+          "rd_bytes.mongo-a": 0,
+          "rd_bytes.mongo-b": 0,
+          "rd_bytes.mongo-c": 0
+        }
+      },
+      "save_step[none]": {
+        "n": 4730,
+        "p50": 10.603,
+        "p90": 16.802,
+        "p99": 29.627,
+        "max": 196.044,
+        "mean": 11.135,
+        "res_mean": {
+          "cpu_ns.mongo-a": 7222035.973,
+          "cpu_ns.mongo-b": 11402697.751,
+          "cpu_ns.mongo-c": 7278995.439,
+          "rd_bytes.mongo-a": 269.314,
+          "rd_bytes.mongo-b": 694.501,
+          "rd_bytes.mongo-c": 462.424
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 6780704,
+          "cpu_ns.mongo-b": 10938699,
+          "cpu_ns.mongo-c": 6844701,
+          "rd_bytes.mongo-a": 0,
+          "rd_bytes.mongo-b": 0,
+          "rd_bytes.mongo-c": 0
+        }
+      },
+      "save_step[old]": {
+        "n": 4750,
+        "p50": 10.898,
+        "p90": 17.526,
+        "p99": 37.632,
+        "max": 619.495,
+        "mean": 11.856,
+        "res_mean": {
+          "cpu_ns.mongo-a": 7378522.789,
+          "cpu_ns.mongo-b": 11304076.298,
+          "cpu_ns.mongo-c": 7329438.466,
+          "rd_bytes.mongo-a": 9847.646,
+          "rd_bytes.mongo-b": 1068.409,
+          "rd_bytes.mongo-c": 9537.213
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 6904254,
+          "cpu_ns.mongo-b": 10963041,
+          "cpu_ns.mongo-c": 6977130,
+          "rd_bytes.mongo-a": 0,
+          "rd_bytes.mongo-b": 0,
+          "rd_bytes.mongo-c": 0
+        }
+      },
+      "time_travel": {
+        "n": 300,
+        "p50": 5.409,
+        "p90": 10.23,
+        "p99": 103.521,
+        "max": 713.809,
+        "mean": 9.667,
+        "res_mean": {
+          "cpu_ns.mongo-a": 359976.517,
+          "cpu_ns.mongo-b": 1604349.74,
+          "cpu_ns.mongo-c": 540901.203,
+          "rd_bytes.mongo-a": 914.773,
+          "rd_bytes.mongo-b": 81210.027,
+          "rd_bytes.mongo-c": 40.96
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 127987,
+          "cpu_ns.mongo-b": 1423510,
+          "cpu_ns.mongo-c": 126984,
+          "rd_bytes.mongo-a": 0,
+          "rd_bytes.mongo-b": 77824,
+          "rd_bytes.mongo-c": 0
+        }
+      }
+    },
+    "B": {
+      "list": {
+        "n": 300,
+        "p50": 80.026,
+        "p90": 392.116,
+        "p99": 1450.394,
+        "max": 1923.278,
+        "mean": 154.862,
+        "res_mean": {
+          "cpu_ns.mongo-a": 34834242.973,
+          "cpu_ns.mongo-b": 6403375.79,
+          "cpu_ns.mongo-c": 5613789.517,
+          "rd_bytes.mongo-a": 1650865.493,
+          "rd_bytes.mongo-b": 15250.773,
+          "rd_bytes.mongo-c": 15837.867
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 22536105,
+          "cpu_ns.mongo-b": 1283298,
+          "cpu_ns.mongo-c": 1954980,
+          "rd_bytes.mongo-a": 950272,
+          "rd_bytes.mongo-b": 0,
+          "rd_bytes.mongo-c": 0
+        }
+      },
+      "list_limit10": {
+        "n": 300,
+        "p50": 31.003,
+        "p90": 59.603,
+        "p99": 265.35,
+        "max": 298.265,
+        "mean": 39.036,
+        "res_mean": {
+          "cpu_ns.mongo-a": 8528174.05,
+          "cpu_ns.mongo-b": 1580509.543,
+          "cpu_ns.mongo-c": 2341527.93,
+          "rd_bytes.mongo-a": 437780.48,
+          "rd_bytes.mongo-b": 3345.067,
+          "rd_bytes.mongo-c": 3467.947
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 7343964,
+          "cpu_ns.mongo-b": 405264,
+          "cpu_ns.mongo-c": 840391,
+          "rd_bytes.mongo-a": 364544,
+          "rd_bytes.mongo-b": 0,
+          "rd_bytes.mongo-c": 0
+        }
+      },
+      "resume[long]": {
+        "n": 1000,
+        "p50": 4.771,
+        "p90": 7.977,
+        "p99": 18.476,
+        "max": 207.574,
+        "mean": 5.49,
+        "res_mean": {
+          "cpu_ns.mongo-a": 1541116.553,
+          "cpu_ns.mongo-b": 207949.781,
+          "cpu_ns.mongo-c": 344592.408,
+          "rd_bytes.mongo-a": 65261.568,
+          "rd_bytes.mongo-b": 856.064,
+          "rd_bytes.mongo-c": 430.08
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 1315432,
+          "cpu_ns.mongo-b": 22368,
+          "cpu_ns.mongo-c": 121937,
+          "rd_bytes.mongo-a": 57344,
+          "rd_bytes.mongo-b": 0,
+          "rd_bytes.mongo-c": 0
+        }
+      },
+      "resume[none]": {
+        "n": 1000,
+        "p50": 2.065,
+        "p90": 3.418,
+        "p99": 5.666,
+        "max": 14.516,
+        "mean": 2.344,
+        "res_mean": {
+          "cpu_ns.mongo-a": 980669.019,
+          "cpu_ns.mongo-b": 174532.867,
+          "cpu_ns.mongo-c": 223058.438,
+          "rd_bytes.mongo-a": 270.336,
+          "rd_bytes.mongo-b": 40.96
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 869232,
+          "cpu_ns.mongo-b": 14118,
+          "cpu_ns.mongo-c": 75018,
+          "rd_bytes.mongo-a": 0,
+          "rd_bytes.mongo-b": 0
+        }
+      },
+      "resume[read]": {
+        "n": 300,
+        "p50": 5.106,
+        "p90": 8.282,
+        "p99": 39.421,
+        "max": 164.469,
+        "mean": 6.558,
+        "res_mean": {
+          "cpu_ns.mongo-a": 1635753.143,
+          "cpu_ns.mongo-b": 419115.313,
+          "cpu_ns.mongo-c": 439478.283,
+          "rd_bytes.mongo-a": 63761.067,
+          "rd_bytes.mongo-b": 914.773,
+          "rd_bytes.mongo-c": 518.827
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 1353244,
+          "cpu_ns.mongo-b": 31982,
+          "cpu_ns.mongo-c": 143627,
+          "rd_bytes.mongo-a": 57344,
+          "rd_bytes.mongo-b": 0,
+          "rd_bytes.mongo-c": 0
+        }
+      },
+      "save_step": {
+        "n": 9558,
+        "p50": 10.811,
+        "p90": 18.291,
+        "p99": 36.83,
+        "max": 271.621,
+        "mean": 11.791,
+        "res_mean": {
+          "cpu_ns.mongo-a": 8931408.564,
+          "cpu_ns.mongo-b": 10501719.329,
+          "cpu_ns.mongo-c": 5762146.576,
+          "rd_bytes.mongo-a": 825.8,
+          "rd_bytes.mongo-b": 5274.061,
+          "rd_bytes.mongo-c": 3835.875
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 8258731,
+          "cpu_ns.mongo-b": 9922822,
+          "cpu_ns.mongo-c": 5240483,
+          "rd_bytes.mongo-a": 0,
+          "rd_bytes.mongo-b": 0,
+          "rd_bytes.mongo-c": 0
+        }
+      },
+      "save_step[none]": {
+        "n": 4770,
+        "p50": 10.765,
+        "p90": 18.159,
+        "p99": 40.379,
+        "max": 271.621,
+        "mean": 11.89,
+        "res_mean": {
+          "cpu_ns.mongo-a": 8929201.396,
+          "cpu_ns.mongo-b": 10547391.675,
+          "cpu_ns.mongo-c": 5744697.046,
+          "rd_bytes.mongo-a": 696.406,
+          "rd_bytes.mongo-b": 807.178,
+          "rd_bytes.mongo-c": 284.23
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 8213211,
+          "cpu_ns.mongo-b": 9822548,
+          "cpu_ns.mongo-c": 5156247,
+          "rd_bytes.mongo-a": 0,
+          "rd_bytes.mongo-b": 0,
+          "rd_bytes.mongo-c": 0
+        }
+      },
+      "save_step[old]": {
+        "n": 4788,
+        "p50": 10.837,
+        "p90": 18.425,
+        "p99": 33.114,
+        "max": 217.492,
+        "mean": 11.693,
+        "res_mean": {
+          "cpu_ns.mongo-a": 8933607.434,
+          "cpu_ns.mongo-b": 10456218.684,
+          "cpu_ns.mongo-c": 5779530.506,
+          "rd_bytes.mongo-a": 954.707,
+          "rd_bytes.mongo-b": 9724.15,
+          "rd_bytes.mongo-c": 7374.169
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 8306950,
+          "cpu_ns.mongo-b": 10023016,
+          "cpu_ns.mongo-c": 5340337,
+          "rd_bytes.mongo-a": 0,
+          "rd_bytes.mongo-b": 0,
+          "rd_bytes.mongo-c": 0
+        }
+      },
+      "time_travel": {
+        "n": 300,
+        "p50": 5.444,
+        "p90": 9.111,
+        "p99": 47.19,
+        "max": 279.568,
+        "mean": 7.255,
+        "res_mean": {
+          "cpu_ns.mongo-a": 1781017.267,
+          "cpu_ns.mongo-b": 453612.763,
+          "cpu_ns.mongo-c": 293004.123,
+          "rd_bytes.mongo-a": 79394.133,
+          "rd_bytes.mongo-b": 914.773,
+          "rd_bytes.mongo-c": 546.133
+        },
+        "res_p50": {
+          "cpu_ns.mongo-a": 1466372,
+          "cpu_ns.mongo-b": 24424,
+          "cpu_ns.mongo-c": 145034,
+          "rd_bytes.mongo-a": 77824,
+          "rd_bytes.mongo-b": 0,
+          "rd_bytes.mongo-c": 0
+        }
+      }
+    }
+  },
+  "bytes": {
+    "checkpoints": 250314,
+    "put_writes_calls": 197878,
+    "checkpoint_bytes": 13567297672,
+    "writes_bytes": 276466492,
+    "message_payload_bytes_all_checkpoints": 13460371455,
+    "unique_message_bytes": 278845564,
+    "logical_total": 13843764164,
+    "stored": 6452162560.0,
+    "stored_from": "dbStats storageSize + indexSize",
+    "stored_per_logical": 0.4661
+  },
+  "sizes": {
+    "dbStats": {
+      "objects": 593634,
+      "dataSize": 14013976418.0,
+      "storageSize": 6377771008.0,
+      "indexSize": 74391552.0,
+      "totalSize": 6452162560.0
+    },
+    "collStats": {
+      "checkpoint_writes": {
+        "count": 343320,
+        "size": 371537428,
+        "storageSize": 176164864,
+        "totalIndexSize": 45817856
+      },
+      "checkpoints": {
+        "count": 250314,
+        "size": 13642438990,
+        "storageSize": 6201606144,
+        "totalIndexSize": 28573696
+      }
+    },
+    "stored_bytes": 6452162560.0,
+    "stored_from": "dbStats storageSize + indexSize"
+  },
+  "s3_put_requests_during_load": null,
+  "server_status_before": null,
+  "server_status_after_load": null,
+  "server_status_after_rounds": {},
+  "server_status_end": null,
+  "log_failed": {},
+  "health": [
+    {
+      "when": "after load",
+      "rc": 0,
+      "output": "{\n \"ok\": true,\n \"members\": {\n  \"mongo-a\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"mongo-b\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"mongo-c\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  }\n },\n \"not_healthy\": [],\n \"check\": {\n  \"line\": \"mongo-rs3\",\n  \"durability\": \"3-member replica set, w:majority, j:true\",\n  \"ok\": true,\n  \"settings\": {\n   \"version\": \"7.0.48\",\n   \"cmdline\": [\n    \"mongod\",\n    \"--replSet\",\n    \"rs0\",\n    \"--bind_ip_all\",\n    \"--wiredTigerCacheSizeGB\",\n    \"0.25\"\n   ],\n   \"wiredTiger_cache_max_bytes\": 268435456,\n   \"storageEngine\": \"wiredTiger\",\n   \"hostInfo_memLimitMB\": 1024,\n   \"rs_conf\": {\n    \"_id\": \"rs0\",\n    \"version\": 1,\n    \"term\": 1,\n    \"members\": [\n     {\n      \"_id\": 0,\n      \"host\": \"mongo-a:27017\",\n      \"arbiterOnly\": false,\n      \"buildIndexes\": true,\n      \"hidden\": false,\n      \"priority\": 1.0,\n      \"tags\": {},\n      \"secondaryDelaySecs\": 0,\n      \"votes\": 1\n     },\n     {\n      \"_id\": 1,\n      \"host\": \"mongo-b:27017\",\n      \"arbiterOnly\": false,\n      \"buildIndexes\": true,\n      \"hidden\": false,\n      \"priority\": 1.0,\n      \"tags\": {},\n      \"secondaryDelaySecs\": 0,\n      \"votes\": 1\n     },\n     {\n      \"_id\": 2,\n      \"host\": \"mongo-c:27017\",\n      \"arbiterOnly\": false,\n      \"buildIndexes\": true,\n      \"hidden\": false,\n      \"priority\": 1.0,\n      \"tags\": {},\n      \"secondaryDelaySecs\": 0,\n      \"votes\": 1\n     }\n    ],\n    \"protocolVersion\": 1,\n    \"writeConcernMajorityJournalDefault\": true,\n    \"settings\": {\n     \"chainingAllowed\": true,\n     \"heartbeatIntervalMillis\": 2000,\n     \"heartbeatTimeoutSecs\": 10,\n     \"electionTimeoutMillis\": 10000,\n     \"catchUpTimeoutMillis\": -1,\n     \"catchUpTakeoverDelayMillis\": 30000,\n     \"getLastErrorModes\": {},\n     \"getLastErrorDefaults\": {\n      \"w\": 1,\n      \"wtimeout\": 0\n     },\n     \"replicaSetId\": \"6af5856bc9397b45a221c846\"\n    }\n   },\n   \"rs_status\": [\n    {\n     \"name\": \"mongo-a:27017\",\n     \"stateStr\": \"PRIMARY\",\n     \"health\": 1.0\n    },\n    {\n     \"name\": \"mongo-b:27017\",\n     \"stateStr\": \"SECONDARY\",\n     \"health\": 1.0\n    },\n    {\n     \"name\": \"mongo-c:27017\",\n     \"stateStr\": \"SECONDARY\",\n     \"health\": 1.0\n    }\n   ],\n   \"defaultRWConcern\": {\n    \"defaultReadConcern\": {\n     \"level\": \"local\"\n    },\n    \"defaultWriteConcern\": {\n     \"w\": \"majority\",\n     \"wtimeout\": 0\n    },\n    \"defaultWriteConcernSource\": \"implicit\",\n    \"defaultReadConcernSource\": \"implicit\",\n    \"localUpdateWallClockTime\": \"2026-11-12 09:51:16.647000\",\n    \"ok\": 1.0,\n    \"$clusterTime\": {\n     \"clusterTime\": \"Timestamp(1794477068, 98)\",\n     \"signature\": {\n      \"hash\": \"b'\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00'\",\n      \"keyId\": 0\n     }\n    },\n    \"operationTime\": \"Timestamp(1794477068, 98)\"\n   }\n  },\n  \"uri_write_concern\": \"w=majority&journal=true (connection string of equal-durability.json)\"\n }\n}\n"
+    },
+    {
+      "when": "before round A",
+      "rc": 0,
+      "output": "{\n \"ok\": true,\n \"members\": {\n  \"mongo-a\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"mongo-b\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"mongo-c\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  }\n },\n \"not_healthy\": [],\n \"check\": {\n  \"line\": \"mongo-rs3\",\n  \"durability\": \"3-member replica set, w:majority, j:true\",\n  \"ok\": true,\n  \"settings\": {\n   \"version\": \"7.0.48\",\n   \"cmdline\": [\n    \"mongod\",\n    \"--replSet\",\n    \"rs0\",\n    \"--bind_ip_all\",\n    \"--wiredTigerCacheSizeGB\",\n    \"0.25\"\n   ],\n   \"wiredTiger_cache_max_bytes\": 268435456,\n   \"storageEngine\": \"wiredTiger\",\n   \"hostInfo_memLimitMB\": 1024,\n   \"rs_conf\": {\n    \"_id\": \"rs0\",\n    \"version\": 1,\n    \"term\": 6,\n    \"members\": [\n     {\n      \"_id\": 0,\n      \"host\": \"mongo-a:27017\",\n      \"arbiterOnly\": false,\n      \"buildIndexes\": true,\n      \"hidden\": false,\n      \"priority\": 1.0,\n      \"tags\": {},\n      \"secondaryDelaySecs\": 0,\n      \"votes\": 1\n     },\n     {\n      \"_id\": 1,\n      \"host\": \"mongo-b:27017\",\n      \"arbiterOnly\": false,\n      \"buildIndexes\": true,\n      \"hidden\": false,\n      \"priority\": 1.0,\n      \"tags\": {},\n      \"secondaryDelaySecs\": 0,\n      \"votes\": 1\n     },\n     {\n      \"_id\": 2,\n      \"host\": \"mongo-c:27017\",\n      \"arbiterOnly\": false,\n      \"buildIndexes\": true,\n      \"hidden\": false,\n      \"priority\": 1.0,\n      \"tags\": {},\n      \"secondaryDelaySecs\": 0,\n      \"votes\": 1\n     }\n    ],\n    \"protocolVersion\": 1,\n    \"writeConcernMajorityJournalDefault\": true,\n    \"settings\": {\n     \"chainingAllowed\": true,\n     \"heartbeatIntervalMillis\": 2000,\n     \"heartbeatTimeoutSecs\": 10,\n     \"electionTimeoutMillis\": 10000,\n     \"catchUpTimeoutMillis\": -1,\n     \"catchUpTakeoverDelayMillis\": 30000,\n     \"getLastErrorModes\": {},\n     \"getLastErrorDefaults\": {\n      \"w\": 1,\n      \"wtimeout\": 0\n     },\n     \"replicaSetId\": \"6af5856bc9397b45a221c846\"\n    }\n   },\n   \"rs_status\": [\n    {\n     \"name\": \"mongo-a:27017\",\n     \"stateStr\": \"SECONDARY\",\n     \"health\": 1.0\n    },\n    {\n     \"name\": \"mongo-b:27017\",\n     \"stateStr\": \"PRIMARY\",\n     \"health\": 1.0\n    },\n    {\n     \"name\": \"mongo-c:27017\",\n     \"stateStr\": \"SECONDARY\",\n     \"health\": 1.0\n    }\n   ],\n   \"defaultRWConcern\": {\n    \"defaultReadConcern\": {\n     \"level\": \"local\"\n    },\n    \"defaultWriteConcern\": {\n     \"w\": \"majority\",\n     \"wtimeout\": 0\n    },\n    \"defaultWriteConcernSource\": \"implicit\",\n    \"defaultReadConcernSource\": \"implicit\",\n    \"localUpdateWallClockTime\": \"2026-11-12 09:52:20.638000\",\n    \"ok\": 1.0,\n    \"$clusterTime\": {\n     \"clusterTime\": \"Timestamp(1794477139, 1)\",\n     \"signature\": {\n      \"hash\": \"b'\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00'\",\n      \"keyId\": 0\n     }\n    },\n    \"operationTime\": \"Timestamp(1794477139, 1)\"\n   }\n  },\n  \"uri_write_concern\": \"w=majority&journal=true (connection string of equal-durability.json)\"\n }\n}\n"
+    },
+    {
+      "when": "before round B",
+      "rc": 0,
+      "output": "{\n \"ok\": true,\n \"members\": {\n  \"mongo-a\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"mongo-b\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"mongo-c\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  }\n },\n \"not_healthy\": [],\n \"check\": {\n  \"line\": \"mongo-rs3\",\n  \"durability\": \"3-member replica set, w:majority, j:true\",\n  \"ok\": true,\n  \"settings\": {\n   \"version\": \"7.0.48\",\n   \"cmdline\": [\n    \"mongod\",\n    \"--replSet\",\n    \"rs0\",\n    \"--bind_ip_all\",\n    \"--wiredTigerCacheSizeGB\",\n    \"0.25\"\n   ],\n   \"wiredTiger_cache_max_bytes\": 268435456,\n   \"storageEngine\": \"wiredTiger\",\n   \"hostInfo_memLimitMB\": 1024,\n   \"rs_conf\": {\n    \"_id\": \"rs0\",\n    \"version\": 1,\n    \"term\": 8,\n    \"members\": [\n     {\n      \"_id\": 0,\n      \"host\": \"mongo-a:27017\",\n      \"arbiterOnly\": false,\n      \"buildIndexes\": true,\n      \"hidden\": false,\n      \"priority\": 1.0,\n      \"tags\": {},\n      \"secondaryDelaySecs\": 0,\n      \"votes\": 1\n     },\n     {\n      \"_id\": 1,\n      \"host\": \"mongo-b:27017\",\n      \"arbiterOnly\": false,\n      \"buildIndexes\": true,\n      \"hidden\": false,\n      \"priority\": 1.0,\n      \"tags\": {},\n      \"secondaryDelaySecs\": 0,\n      \"votes\": 1\n     },\n     {\n      \"_id\": 2,\n      \"host\": \"mongo-c:27017\",\n      \"arbiterOnly\": false,\n      \"buildIndexes\": true,\n      \"hidden\": false,\n      \"priority\": 1.0,\n      \"tags\": {},\n      \"secondaryDelaySecs\": 0,\n      \"votes\": 1\n     }\n    ],\n    \"protocolVersion\": 1,\n    \"writeConcernMajorityJournalDefault\": true,\n    \"settings\": {\n     \"chainingAllowed\": true,\n     \"heartbeatIntervalMillis\": 2000,\n     \"heartbeatTimeoutSecs\": 10,\n     \"electionTimeoutMillis\": 10000,\n     \"catchUpTimeoutMillis\": -1,\n     \"catchUpTakeoverDelayMillis\": 30000,\n     \"getLastErrorModes\": {},\n     \"getLastErrorDefaults\": {\n      \"w\": 1,\n      \"wtimeout\": 0\n     },\n     \"replicaSetId\": \"6af5856bc9397b45a221c846\"\n    }\n   },\n   \"rs_status\": [\n    {\n     \"name\": \"mongo-a:27017\",\n     \"stateStr\": \"PRIMARY\",\n     \"health\": 1.0\n    },\n    {\n     \"name\": \"mongo-b:27017\",\n     \"stateStr\": \"SECONDARY\",\n     \"health\": 1.0\n    },\n    {\n     \"name\": \"mongo-c:27017\",\n     \"stateStr\": \"SECONDARY\",\n     \"health\": 1.0\n    }\n   ],\n   \"defaultRWConcern\": {\n    \"defaultReadConcern\": {\n     \"level\": \"local\"\n    },\n    \"defaultWriteConcern\": {\n     \"w\": \"majority\",\n     \"wtimeout\": 0\n    },\n    \"defaultWriteConcernSource\": \"implicit\",\n    \"defaultReadConcernSource\": \"implicit\",\n    \"localUpdateWallClockTime\": \"2026-11-12 09:57:10.985000\",\n    \"ok\": 1.0,\n    \"$clusterTime\": {\n     \"clusterTime\": \"Timestamp(1794477423, 1)\",\n     \"signature\": {\n      \"hash\": \"b'\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00'\",\n      \"keyId\": 0\n     }\n    },\n    \"operationTime\": \"Timestamp(1794477423, 1)\"\n   }\n  },\n  \"uri_write_concern\": \"w=majority&journal=true (connection string of equal-durability.json)\"\n }\n}\n"
+    },
+    {
+      "when": "end",
+      "rc": 0,
+      "output": "{\n \"ok\": true,\n \"members\": {\n  \"mongo-a\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"mongo-b\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  },\n  \"mongo-c\": {\n   \"present\": true,\n   \"running\": true,\n   \"oom_killed\": false,\n   \"exit_code\": 0,\n   \"restart_count\": 0,\n   \"status\": \"running\"\n  }\n },\n \"not_healthy\": [],\n \"check\": {\n  \"line\": \"mongo-rs3\",\n  \"durability\": \"3-member replica set, w:majority, j:true\",\n  \"ok\": true,\n  \"settings\": {\n   \"version\": \"7.0.48\",\n   \"cmdline\": [\n    \"mongod\",\n    \"--replSet\",\n    \"rs0\",\n    \"--bind_ip_all\",\n    \"--wiredTigerCacheSizeGB\",\n    \"0.25\"\n   ],\n   \"wiredTiger_cache_max_bytes\": 268435456,\n   \"storageEngine\": \"wiredTiger\",\n   \"hostInfo_memLimitMB\": 1024,\n   \"rs_conf\": {\n    \"_id\": \"rs0\",\n    \"version\": 1,\n    \"term\": 8,\n    \"members\": [\n     {\n      \"_id\": 0,\n      \"host\": \"mongo-a:27017\",\n      \"arbiterOnly\": false,\n      \"buildIndexes\": true,\n      \"hidden\": false,\n      \"priority\": 1.0,\n      \"tags\": {},\n      \"secondaryDelaySecs\": 0,\n      \"votes\": 1\n     },\n     {\n      \"_id\": 1,\n      \"host\": \"mongo-b:27017\",\n      \"arbiterOnly\": false,\n      \"buildIndexes\": true,\n      \"hidden\": false,\n      \"priority\": 1.0,\n      \"tags\": {},\n      \"secondaryDelaySecs\": 0,\n      \"votes\": 1\n     },\n     {\n      \"_id\": 2,\n      \"host\": \"mongo-c:27017\",\n      \"arbiterOnly\": false,\n      \"buildIndexes\": true,\n      \"hidden\": false,\n      \"priority\": 1.0,\n      \"tags\": {},\n      \"secondaryDelaySecs\": 0,\n      \"votes\": 1\n     }\n    ],\n    \"protocolVersion\": 1,\n    \"writeConcernMajorityJournalDefault\": true,\n    \"settings\": {\n     \"chainingAllowed\": true,\n     \"heartbeatIntervalMillis\": 2000,\n     \"heartbeatTimeoutSecs\": 10,\n     \"electionTimeoutMillis\": 10000,\n     \"catchUpTimeoutMillis\": -1,\n     \"catchUpTakeoverDelayMillis\": 30000,\n     \"getLastErrorModes\": {},\n     \"getLastErrorDefaults\": {\n      \"w\": 1,\n      \"wtimeout\": 0\n     },\n     \"replicaSetId\": \"6af5856bc9397b45a221c846\"\n    }\n   },\n   \"rs_status\": [\n    {\n     \"name\": \"mongo-a:27017\",\n     \"stateStr\": \"PRIMARY\",\n     \"health\": 1.0\n    },\n    {\n     \"name\": \"mongo-b:27017\",\n     \"stateStr\": \"SECONDARY\",\n     \"health\": 1.0\n    },\n    {\n     \"name\": \"mongo-c:27017\",\n     \"stateStr\": \"SECONDARY\",\n     \"health\": 1.0\n    }\n   ],\n   \"defaultRWConcern\": {\n    \"defaultReadConcern\": {\n     \"level\": \"local\"\n    },\n    \"defaultWriteConcern\": {\n     \"w\": \"majority\",\n     \"wtimeout\": 0\n    },\n    \"defaultWriteConcernSource\": \"implicit\",\n    \"defaultReadConcernSource\": \"implicit\",\n    \"localUpdateWallClockTime\": \"2026-11-12 10:00:53.579000\",\n    \"ok\": 1.0,\n    \"$clusterTime\": {\n     \"clusterTime\": \"Timestamp(1794477653, 18)\",\n     \"signature\": {\n      \"hash\": \"b'\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00'\",\n      \"keyId\": 0\n     }\n    },\n    \"operationTime\": \"Timestamp(1794477653, 18)\"\n   }\n  },\n  \"uri_write_concern\": \"w=majority&journal=true (connection string of equal-durability.json)\"\n }\n}\n"
+    }
+  ],
+  "settle": null,
+  "correctness": {
+    "wrong_reads": 0,
+    "by_kind": {},
+    "reads_checked": 91537,
+    "checkpoints_written": 269352,
+    "examples": []
+  },
+  "wrong_reads": 0,
+  "ok": true
+}
