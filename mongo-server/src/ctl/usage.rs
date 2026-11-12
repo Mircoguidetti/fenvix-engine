@@ -121,6 +121,9 @@ struct Inner {
     /// Requests made under a name while it turned out not to be a database, per day: held back (never flushed) until the
     /// database is found present ([`Usage::confirm`]: they are counted then), dropped by an erase, forgotten after a day.
     held: HashMap<(String, i64), Counts>,
+    /// How many times each database was erased by this process ([`Usage::drop_db`]): a command that was in flight across
+    /// an erase counts nothing ([`after`]).
+    erase_gen: HashMap<String, u64>,
 }
 
 struct ProbeState {
@@ -246,9 +249,20 @@ impl Usage {
         let mut g = self.inner.lock().unwrap();
         g.days.retain(|(d, _), _| d != db);
         g.held.retain(|(d, _), _| d != db);
+        *g.erase_gen.entry(db.to_string()).or_default() += 1;
         g.erased.insert(db.to_string());
         g.last_active.remove(db);
         g.seen_wakes.remove(db);
+    }
+
+    /// How many times `db` was erased by this process.
+    pub fn erase_gen(&self, db: &str) -> u64 {
+        self.inner.lock().unwrap().erase_gen.get(db).copied().unwrap_or(0)
+    }
+
+    /// The name was erased and nothing has used it as a database since (a command or an operation would have).
+    pub fn is_erased(&self, db: &str) -> bool {
+        self.inner.lock().unwrap().erased.contains(db)
     }
 
     /// Begin an operation that may find `db` absent; end it with [`Usage::end_probe`].
@@ -694,6 +708,8 @@ pub struct Probe {
     t0: std::time::Instant,
     /// The database was not open when the command began: it may find it absent.
     absent_probe: Option<UsageProbe>,
+    /// The database's erase count when the command began.
+    erase_gen: u64,
 }
 
 /// Called before a command is handled (see `handle_connection`). Cheap: a map lookup and a try-lock.
@@ -708,7 +724,8 @@ pub async fn before(db: &str, command: &bson::Document) -> Option<Probe> {
         Err(_) => None,
     };
     let absent_probe = (!ctl.dbs.is_open_hint(db)).then(|| ctl.usage.begin_probe(db));
-    Some(Probe { db: db.to_string(), name, wakes, t0: std::time::Instant::now(), absent_probe })
+    let erase_gen = ctl.usage.erase_gen(db);
+    Some(Probe { db: db.to_string(), name, wakes, t0: std::time::Instant::now(), absent_probe, erase_gen })
 }
 
 pub async fn after(p: Option<Probe>) {
@@ -720,6 +737,22 @@ pub async fn after(p: Option<Probe>) {
         let absent = ctl.dbs.absent_hint(&p.db);
         ctl.usage.end_probe(ap, !absent);
         if absent {
+            return;
+        }
+    }
+    // A command in flight while its database was erased counts nothing: counted after the erase, it would make the name
+    // metered again and the flusher would write a usage record of the erased database (review of fix-erase-fork-usage,
+    // reads in flight during an erase). Nor does a command on an erased name that did not open it as a database again
+    // (a read that found it gone, also when the entry was busy and no absence probe was taken).
+    if ctl.usage.erase_gen(&p.db) != p.erase_gen {
+        return;
+    }
+    if ctl.usage.is_erased(&p.db) {
+        let open = match tokio::time::timeout(Duration::from_millis(100), ctl.dbs.lock_handle(&p.db).read()).await {
+            Ok(g) => g.is_open(),
+            Err(_) => false,
+        };
+        if !open {
             return;
         }
     }

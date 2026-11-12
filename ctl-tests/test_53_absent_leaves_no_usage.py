@@ -108,3 +108,45 @@ def test_reads_of_an_absent_database_leave_nothing_and_a_dropped_one_keeps_its_u
         assert before and kept == before, f"the dropped database's usage records changed: {before} -> {kept}"
     finally:
         srv.term()
+
+
+def test_reads_in_flight_during_an_erase_leave_nothing():
+    """Fix round (review of fix-erase-fork-usage, worker A's U1): clients that read a database while it is erased. A read
+    that began before the erase and ends after it was counted when it ended, and the count also made the name metered
+    again, so the flusher wrote control/usage/{db}/... after the erase had removed the folder. Six databases, three
+    clients reading each one throughout its erase; nothing may be left under any of them after the flush."""
+    import threading
+    bucket, srv = server("absinflight")
+    try:
+        c = srv.client()
+        names = [f"busy{i}" for i in range(6)]
+        for n in names:
+            fill(c, n, "c", 3000)
+        left = {}
+        for n in names:
+            stop = threading.Event()
+
+            def reader():
+                cl = srv.client()
+                while not stop.is_set():
+                    try:
+                        list(cl[n]["c"].find({"grp": 3}).limit(50))
+                        cl[n]["c"].count_documents({})
+                    except Exception:
+                        pass
+            ths = [threading.Thread(target=reader) for _ in range(3)]
+            for t in ths:
+                t.start()
+            time.sleep(0.5)
+            st, r = srv.admin.delete(f"/v1/databases/{n}")
+            assert st == 200, r
+            time.sleep(0.3)
+            stop.set()
+            for t in ths:
+                t.join()
+        time.sleep(3)
+        left = {n: objects_of(bucket, n) for n in names if objects_of(bucket, n)}
+        print(f"objects left after erases with reads in flight: {left}")
+        assert not left, left
+    finally:
+        srv.term()
