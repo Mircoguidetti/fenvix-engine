@@ -14,7 +14,7 @@ HERE=$(cd "$(dirname "$0")" && pwd); ROOT=$(cd "$HERE/../.." && pwd)
 : "${ENGINE_DIR:?}" "${ENGINE_COMMIT:?}" "${BENCH_PW:?}"
 TAG=${TAG:-$(date -u +%F)}
 PY=${BENCH_PY:-$HOME/.fenvix-agentbench-venv/bin/python}
-R=$HERE/results/big-$TAG
+R=$HERE/results/big-$TAG${RESULT_SUFFIX:-}
 mkdir -p "$R"
 export BENCH_PW
 say() { echo "$(date -u +%FT%TZ) $*" | tee -a "$R/driver.log"; }
@@ -29,7 +29,7 @@ for l in $LINES; do
   [ -e "$R/$o" ] && mv "$R/$o" "$R/$o.failed-$(date -u +%Y%m%dT%H%M%SZ)"
   say "$l -> $R/$o"
   "$PY" "$HERE/lines.py" run "$l" --big --mem 1g --profile big --seed 42 --workers 3 --mix-write 1000 --mix-read 1200 \
-    --delay-ms 20 --min-free-gib 8 --out "$R/$o" > "$R/$o.runner.txt" 2>&1
+    --delay-ms 20 --min-free-gib 8 ${SERVER_FLAGS:+--server-flags "$SERVER_FLAGS"} --out "$R/$o" > "$R/$o.runner.txt" 2>&1
   rc=$?
   say "$l: exit $rc; $(tail -1 "$R/$o/terminal.txt" 2>/dev/null | cut -c1-300)"
   if [ $rc -eq 3 ]; then echo "$(date -u +%FT%TZ) wrong reads on $l" > "$R/STOP"; say "STOP (RULES.md 8)"; exit 3; fi

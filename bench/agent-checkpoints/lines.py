@@ -368,6 +368,9 @@ def server_cmd(name: str, log_on: bool) -> list[str]:
            # collection gets derived documents only when its customer key is thread_id (agentck.rs), and the server's
            # default customer key list is empty (the c2-delta-log server check passed the same flag)
            "--customer-key", "checkpoints=thread_id,checkpoint_writes=thread_id"]
+    # P-bench-big: extra server flags (FXBENCH_SERVER_FLAGS, set by `run --server-flags`), e.g. smaller caches so our
+    # server fits the same 1 GiB as every other member (with its defaults it was OOM-killed at 40% of the load)
+    cmd += os.environ.get("FXBENCH_SERVER_FLAGS", "").split()
     if log_on:
         cmd += ["--quaderno", ",".join(f"{IP[f'log-{i}']}:7200" for i in range(3)), "--quaderno-id", "cell1"]
     return cmd
@@ -659,6 +662,8 @@ def run_line(a) -> int:
     line, out = a.line, os.path.abspath(a.out)
     if getattr(a, "big", False):
         set_big(a.mem)
+        if a.server_flags:
+            os.environ["FXBENCH_SERVER_FLAGS"] = a.server_flags
     os.makedirs(out, exist_ok=True)
     os.makedirs(os.path.join(out, "logs"), exist_ok=True)
     down()
@@ -805,6 +810,7 @@ def main() -> None:
     r.add_argument("--big", action="store_true", help="P-bench-big: --mem cap, MinIO uncapped, load then mix rounds A and B")
     r.add_argument("--mem", default="1g", help="memory cap of every member with --big")
     r.add_argument("--delay-ms", type=int, default=20, help="--big: the delay added by s3delay in our line's round B")
+    r.add_argument("--server-flags", default="", help="--big: extra flags for our server (e.g. smaller caches)")
     r.add_argument("--mix-write", type=int, default=1000)
     r.add_argument("--mix-read", type=int, default=1200)
     d = sub.add_parser("delay", help="P-bench-big: MinIO's S3-like delay from its next restart")
