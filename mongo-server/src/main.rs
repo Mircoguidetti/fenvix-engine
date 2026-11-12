@@ -952,6 +952,8 @@ async fn run() -> Result<()> {
         let env_c = std::env::var("FENVIX_SEALED_COMPACTOR").unwrap_or_default();
         // default since integration-3: on; off with --no-sealed-compactor or FENVIX_SEALED_COMPACTOR=0
         let _ = args.sealed_compactor;
+        // fix-write-stalls: the compaction pass's gate (only absorbed L0 SSTs leave L0) matters only where absorption exists
+        tenant_bench::lifecycle::PASS_GATE_ON.store(!args.no_sealed_compactor && env_c != "0", Relaxed);
         if !args.no_sealed_compactor && env_c != "0" {
             tenant_bench::fx::compactor::SERVER_ON.store(true, Relaxed);
             tenant_bench::fx::compactor::SERVER_SMALL.store(env_c == "small", Relaxed);

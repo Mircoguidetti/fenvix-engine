@@ -865,6 +865,7 @@ impl Server {
                 "firstInstallRefused": tenant_bench::lifecycle::FIRST_INSTALL_REFUSED.load(Relaxed) as i64,
                 "firstBuildMsMax": tenant_bench::lifecycle::FIRST_BUILD_MS_MAX.load(Relaxed) as i64,
                 "claimsDeferred": tenant_bench::lifecycle::CLAIMS_DEFERRED.load(Relaxed) as i64,
+                "passGateKeptL0": tenant_bench::lifecycle::PASS_GATE_KEPT.load(Relaxed) as i64,
                 "publishes": tenant_bench::fx::compactor::G_PUBLISHES.load(Relaxed) as i64,
                 "absorbs": tenant_bench::fx::compactor::G_ABSORBS.load(Relaxed) as i64,
                 "merges": tenant_bench::fx::compactor::G_MERGES.load(Relaxed) as i64,

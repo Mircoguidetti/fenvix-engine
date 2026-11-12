@@ -2890,6 +2890,9 @@ async fn compactions_active(raw: &Arc<dyn ObjectStore>, id: &str) -> Result<bool
 
 /// Negative control (tests): the compaction pass moves every L0 SST, absorbed or not (the code before fix-write-stalls).
 pub static CONTROL_NO_PASS_GATE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// The gate applies where compactors absorb L0 (the server sets it from `--sealed-compactor`; with the offline builder
+/// every publish reads SlateDB's whole state, so an L0 SST moved into a sorted run is still built into the next version).
+pub static PASS_GATE_ON: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 /// L0 SSTs the pass gate kept in L0 because their rows reach above X_d (serverStatus, tests).
 pub static PASS_GATE_KEPT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
@@ -2899,7 +2902,7 @@ pub static PASS_GATE_KEPT: std::sync::atomic::AtomicU64 = std::sync::atomic::Ato
 /// with rows above X_d stays for the compactor's absorption at the next opening, and every newer one with it.
 pub(crate) async fn fx_pass_gate(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<std::collections::HashSet<ulid::Ulid>>> {
     use std::sync::atomic::Ordering::Relaxed;
-    if !crate::fx::ENABLED.load(Relaxed) || CONTROL_NO_PASS_GATE.load(Relaxed) {
+    if !crate::fx::ENABLED.load(Relaxed) || CONTROL_NO_PASS_GATE.load(Relaxed) || !PASS_GATE_ON.load(Relaxed) {
         return Ok(None);
     }
     let Some(v) = crate::fx::manifest::load_newest(store, id).await? else { return Ok(None) };

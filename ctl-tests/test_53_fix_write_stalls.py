@@ -18,6 +18,12 @@ DB = "ws"
 SEALED = ["--sealed-t-pin-ms", "1000", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait"]
 
 
+def taken_over(client):
+    """The new process serves the database once the killed one's lease ran out (6 s in these tests): until then every
+    command is refused with TenantLeaseHeld (retryable)."""
+    wait_until(lambda: client[DB]["c"].find_one({}, {"_id": 1}) is not None, timeout=60, what="the takeover")
+
+
 def stats(client):
     return client.admin.command("serverStatus")["fenvix"]["compactor"]
 
@@ -28,9 +34,9 @@ class Acked:
     def __init__(self, coll):
         self.coll, self.want, self.longest, self.n = coll, {}, 0.0, 0
 
-    def insert(self, i, v):
+    def insert(self, i, v, pad=200):
         t0 = time.time()
-        self.coll.insert_one({"_id": i, "v": v, "thread_id": f"t{i % 7}", "pad": "p" * 200})
+        self.coll.insert_one({"_id": i, "v": v, "thread_id": f"t{i % 7}", "pad": os.urandom(pad // 2).hex()})
         self._done(t0)
         self.want[i] = v
 
@@ -95,6 +101,7 @@ def test_kill9_during_the_first_build_then_takeover(where):
     srv.kill9()
     srv2 = Server(bucket, f"ws9{where[:2]}b", idle=600, extra=SEALED).start()
     c2 = srv2.client()
+    taken_over(c2)
     n1 = a.check(c2[DB]["c"])
     a.coll = c2[DB]["c"]
     i = write_until_build(c2, a, i, "started")
@@ -125,6 +132,7 @@ def test_kill9_after_the_version_landed_before_its_install():
     srv.kill9()
     srv2 = Server(bucket, "ws9landb", idle=600, extra=SEALED).start()
     c2 = srv2.client()
+    taken_over(c2)
     n = a.check(c2[DB]["c"])
     a.coll = c2[DB]["c"]
     i = write_until_build(c2, a, i, "started")
@@ -141,32 +149,41 @@ def test_kill9_during_the_compactors_recognition():
     that job is held; a third process reads every acknowledged write back. Small memtables give many L0 SSTs."""
     bucket = make_bucket("ws9rec")
     small = SEALED + ["--memtable-max-mb", "1"]
-    srv = Server(bucket, "ws9reca", idle=600, extra=small).start()
+    srv = Server(bucket, "ws9reca", idle=600, extra=small, env={"FENVIX_TEST_ABSORB_MIN_L0": "100"}).start()
     c = srv.client()
     a = Acked(c[DB]["c"])
     i = write_until_build(c, a, 0, "started")
-    for _ in range(3000):
-        a.insert(i, f"one-{i}")
+    for _ in range(1500):
+        a.insert(i, f"one-{i}", pad=2000)       # about 3 MB: L0 SSTs of 1 MB that the first process never absorbs
         i += 1
     srv.kill9()
     srv2 = Server(bucket, "ws9recb", idle=600, extra=small, env={"FENVIX_TEST_RECOGNISE_PAUSE_MS": "30000"}).start()
     c2 = srv2.client()
+    taken_over(c2)
     a.coll = c2[DB]["c"]
+    # the writes after the opening start the compactor (a few writes after a takeover, as on the base): none waits for
+    # the L0 read, which its job does
+    a.longest = 0.0
     t0 = time.time()
-    a.insert(i, "opens-the-database")        # the first write after the opening starts the compactor
-    i += 1
-    first_write = time.time() - t0
+    while stats(c2)["started"] < 1:
+        a.insert(i, f"opening-{i}")
+        i += 1
+        assert time.time() - t0 < 60, "the compactor did not start"
+    first_write = a.longest
     wait_until(lambda: stats(c2)["recogniseJobs"] >= 1, timeout=30, what="the recognition job")
+    s2_jobs = stats(c2)["recogniseJobs"]
     i = write_during(a, i, 2.0)
     n1 = a.check(c2[DB]["c"])
     srv2.kill9()
     srv3 = Server(bucket, "ws9recc", idle=600, extra=small).start()
     c3 = srv3.client()
+    taken_over(c3)
     n2 = a.check(c3[DB]["c"])
     s3 = stats(c3)
     srv3.term()
-    print(f"recognition: first write after the opening {first_write:.3f} s; {n1} read back while the job was held, {n2} after the kill and restart; third process read {s3['l0RecognisedByRead']} SSTs")
-    assert first_write < 1.0, f"the first write after the opening waited {first_write:.2f} s"
+    assert s2_jobs >= 1
+    print(f"recognition: {s2_jobs} job(s), longest write after the opening {first_write:.3f} s; {n1} read back while the job was held, {n2} after the kill and restart; third process read {s3['l0RecognisedByRead']} SSTs")
+    assert first_write < 1.0, f"a write after the opening waited {first_write:.2f} s"
 
 
 def test_erasures_in_the_middle_of_the_first_build():
