@@ -170,6 +170,41 @@ pub fn global() -> Arc<Pool> {
 
 /// How much lower than the server's threads the background threads run (`setpriority`, nice +10: when a customer's
 /// command and a compaction job both want the CPU, the kernel runs the command first).
+/// perf-latency round 2: when the process may use fewer cores than the CPUs it may run on (a container's CPU quota, as
+/// `available_parallelism` reports it), pin the whole process to that many CPUs. A quota is counted per 100 ms period
+/// over every thread: threads running at once on several CPUs used a one-core quota in a fraction of the period, and then
+/// the kernel froze all of them, the commands too, to its end (MEASURED: throttled in 15-29% of the periods). On as many
+/// CPUs as the quota, the threads take turns, the quota is not overrun, and the background's lower priority works.
+/// Call before any thread is started (threads inherit the mask). Returns the CPUs chosen, None when nothing was changed.
+/// `FENVIX_PIN_CPUS=0` turns it off.
+pub fn pin_to_quota() -> Option<Vec<usize>> {
+    if std::env::var("FENVIX_PIN_CPUS").as_deref() == Ok("0") {
+        return None;
+    }
+    let quota = std::thread::available_parallelism().ok()?.get();
+    unsafe {
+        let mut set: libc::cpu_set_t = std::mem::zeroed();
+        if libc::sched_getaffinity(0, std::mem::size_of::<libc::cpu_set_t>(), &mut set) != 0 {
+            return None;
+        }
+        let allowed: Vec<usize> = (0..libc::CPU_SETSIZE as usize).filter(|c| libc::CPU_ISSET(*c, &set)).collect();
+        if allowed.len() <= quota {
+            return None;
+        }
+        // spread processes of one host over its CPUs at random (a pid is no help: in containers every server is pid 7)
+        let start = rand::random::<usize>() % allowed.len();
+        let chosen: Vec<usize> = (0..quota).map(|i| allowed[(start + i) % allowed.len()]).collect();
+        let mut pin: libc::cpu_set_t = std::mem::zeroed();
+        for c in &chosen {
+            libc::CPU_SET(*c, &mut pin);
+        }
+        if libc::sched_setaffinity(0, std::mem::size_of::<libc::cpu_set_t>(), &pin) != 0 {
+            return None;
+        }
+        Some(chosen)
+    }
+}
+
 /// Whether the server's compactors use [`bg_runtime`] (`--compaction-threads own`, the default) or the server's runtime.
 pub static BG_ON: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 
@@ -217,6 +252,34 @@ fn bg_rate_us_per_s() -> f64 {
     cores * 1e6 * BG_CPU_PCT.load(Relaxed) as f64 / 100.0
 }
 
+/// Share of what the cores allow in a 100 ms window (percent) that the whole process may have used before the background
+/// pauses to the end of the window (`--compaction-window-pct`, default 70; 100 = never).
+pub static WINDOW_PCT: AtomicU64 = AtomicU64::new(70);
+const WINDOW: Duration = Duration::from_millis(100);
+/// (start of the current window, the process's CPU at its start, microseconds)
+static WIN: Mutex<Option<(Instant, u64)>> = Mutex::new(None);
+
+/// The time to the end of the current window when the process already used its allowance in it (None: go on).
+fn window_full() -> Option<Duration> {
+    let pct = WINDOW_PCT.load(Relaxed);
+    if pct >= 100 {
+        return None;
+    }
+    let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1) as u64;
+    let now = Instant::now();
+    let cpu = super::compactor::process_cpu_us();
+    let mut w = WIN.lock().unwrap();
+    let (start, at) = match *w {
+        Some((s, c)) if now.duration_since(s) < WINDOW => (s, c),
+        _ => {
+            *w = Some((now, cpu));
+            (now, cpu)
+        }
+    };
+    let allowance = cores * WINDOW.as_micros() as u64 * pct / 100;
+    (cpu.saturating_sub(at) >= allowance).then(|| (start + WINDOW).saturating_duration_since(now).max(Duration::from_millis(1)))
+}
+
 /// A pace point of background work (between two blocks of a run being written or read, between two L0 blocks): on a
 /// background thread, account the CPU this thread used since its last pace point, and when the background as a whole is
 /// more than `BG_BURST_US` ahead of its share, sleep until it is back within it. Elsewhere (a command, a test): nothing.
@@ -236,7 +299,22 @@ pub async fn pace() {
         d.1 = Some(now);
         d.0 - BG_BURST_US
     };
-    if excess <= 0.0 || PACE_EXEMPT.try_with(|f| f()).unwrap_or(false) {
+    if PACE_EXEMPT.try_with(|f| f()).unwrap_or(false) {
+        tokio::task::yield_now().await;
+        return;
+    }
+    // perf-latency round 2: the whole process's CPU in the current 100 ms window. A CPU quota is enforced per period of
+    // 100 ms: once the container used it, the kernel freezes every thread to the end of the period (the commands too).
+    // The background stops for the rest of the window once the process used WINDOW_PCT of what its cores allow in it, so
+    // the commands keep the rest (standard profile: throttled in 29% of the periods with the average share alone).
+    if let Some(left) = window_full() {
+        PACE_PAUSES.fetch_add(1, Relaxed);
+        PACE_PAUSE_US.fetch_add(left.as_micros() as u64, Relaxed);
+        tokio::time::sleep(left).await;
+        LAST_CPU.with(|c| c.set(super::compactor::thread_cpu_us()));
+        return;
+    }
+    if excess <= 0.0 {
         tokio::task::yield_now().await;
         return;
     }

@@ -557,6 +557,10 @@ struct Args {
     /// average; the jobs pause when ahead of it (absorption excepted near the writer's L0 stop). 100 = no pause.
     #[arg(long, default_value_t = 50)]
     compaction_cpu_pct: u64,
+    /// perf-latency round 2: the background pauses to the end of a 100 ms window once the whole process used this share
+    /// (percent) of what its cores allow in it (a CPU quota freezes every thread once used up). 100 = never.
+    #[arg(long, default_value_t = 70)]
+    compaction_window_pct: u64,
     /// With `--sealed-compactor`: the drop of absorbed SlateDB rows (off by default until step 7b pairs forks).
     #[arg(long)]
     sealed_drop: bool,
@@ -788,6 +792,11 @@ fn main() -> Result<()> {
     heap_prof_thread();
     // The futures of the command handlers are large: the workers get stacks that are not the 2 MiB default.
     // ISO_EVENT_INTERVAL (test only, docs/isolamento.md): how many tasks a worker runs between two looks at the network.
+    // perf-latency round 2: on as many CPUs as the CPU quota allows (`fx::pool::pin_to_quota`), before any thread starts
+    let pinned = tenant_bench::fx::pool::pin_to_quota();
+    if let Some(c) = &pinned {
+        eprintln!("cpu: the process may use {} core(s) and runs on CPU(s) {c:?}", c.len());
+    }
     let mut b = tokio::runtime::Builder::new_multi_thread();
     if let Some(n) = std::env::var("ISO_EVENT_INTERVAL").ok().and_then(|v| v.parse::<u32>().ok()) {
         b.event_interval(n);
@@ -949,6 +958,8 @@ async fn run() -> Result<()> {
             // FENVIX_COMPACTION_CPU_PCT overrides the flag (measurements)
             let pct = std::env::var("FENVIX_COMPACTION_CPU_PCT").ok().and_then(|v| v.parse::<u64>().ok()).filter(|p| (1..=100).contains(p)).unwrap_or(args.compaction_cpu_pct);
             tenant_bench::fx::pool::BG_CPU_PCT.store(if pct >= 100 { 100_000 } else { pct }, Relaxed);
+            let wpct = std::env::var("FENVIX_COMPACTION_WINDOW_PCT").ok().and_then(|v| v.parse::<u64>().ok()).unwrap_or(args.compaction_window_pct);
+            tenant_bench::fx::pool::WINDOW_PCT.store(wpct.clamp(1, 100), Relaxed);
             let derive = match std::env::var("FENVIX_SEALED_DERIVE").as_deref() {
                 Ok("1") => true,
                 Ok("0") => false,

@@ -79,8 +79,9 @@ pub fn is_active(id: &str) -> bool {
     ACTIVE.lock().unwrap().contains(id)
 }
 
-/// An absorption is never paused by the background's CPU share once the writer has this many L0 SSTs (it stops at 8).
-const ABSORB_URGENT_L0: usize = 6;
+/// An absorption is never paused by the background's CPU share once the writer has this many L0 SSTs (it stops at 8); 4
+/// is where absorption starts (`absorb_min_l0`): absorption, which keeps the writer from stopping, is not paced (round 2).
+const ABSORB_URGENT_L0: usize = 4;
 
 /// Block codec of the sealed runs of the server's compactors (`--sealed-codec`): 0 lz4 (format v1), 1 zstd (format v2).
 pub static SEALED_CODEC: AtomicU64 = AtomicU64::new(0);

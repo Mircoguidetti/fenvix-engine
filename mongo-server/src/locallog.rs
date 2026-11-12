@@ -791,6 +791,13 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
             let dbs = Arc::clone(dbs);
             let log_id = log_id.clone();
             async move {
+                let mut recs = recs;
+                // perf-latency round 2: records object storage already has (a clean stop uploaded them) are dropped without
+                // opening the database: a warm spare restarted beside the cook took the cook's databases to apply nothing
+                // and held them (the cook's commands were refused, "tenant app_demo is owned by server process ...")
+                if get().map_or(false, |l| l.is_remote()) && drop_stored(&dbs, &log_id, &db, &mut recs).await {
+                    return (db, Ok(Outcome::Nothing), None, Vec::new());
+                }
                 let keep: Vec<Record> = recs.iter().map(copy_record).collect();
                 let mut seen = None;
                 let r = replay_with_timeout(&dbs, &log_id, &db, recs, false, &mut seen, timeout).await;
