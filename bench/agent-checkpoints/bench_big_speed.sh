@@ -24,7 +24,8 @@ for l in $LINES; do
   case $l in postgres-sync) o=postgres; keep="";; mongo-rs3) o=mongo; keep=--keep;; fenvix-log) o=fenvix; keep=--keep;; *) say "unknown line $l"; exit 1;; esac
   [ -e "$R/$o" ] && mv "$R/$o" "$R/$o.failed-$(date -u +%Y%m%dT%H%M%SZ)"
   say "$l -> $R/$o"
-  "$PY" "$HERE/lines.py" run "$l" --big --mem 1g --profile big --seed 42 --workers 3 --mix-write 1000 --mix-read 1200 \
+  # PROFILE / MIX_W / MIX_R: a pilot only (the measured run uses the defaults: big, 1000, 1200)
+  "$PY" "$HERE/lines.py" run "$l" --big --mem 1g --profile ${PROFILE:-big} --seed 42 --workers 3 --mix-write ${MIX_W:-1000} --mix-read ${MIX_R:-1200} \
     --delay-ms 20 --min-free-gib 6 $keep ${SERVER_FLAGS:+--server-flags "$SERVER_FLAGS"} --out "$R/$o" > "$R/$o.runner.txt" 2>&1
   rc=$?
   say "$l: exit $rc; $(tail -1 "$R/$o/terminal.txt" 2>/dev/null | cut -c1-300)"
