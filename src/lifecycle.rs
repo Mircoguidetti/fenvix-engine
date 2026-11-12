@@ -3694,7 +3694,9 @@ impl Maintenance {
                                 SST_GC_NOOP.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                             }
                         }
-                        SST_UNREF.lock().unwrap().retain(|id, _| m.contains_key(id));
+                        // (a closed tenant with a closed-GC pass queued again keeps its first sights: `CLOSE_GC_RETRIES`)
+                        let requeued = CLOSE_GC_RETRIES.lock().unwrap();
+                        SST_UNREF.lock().unwrap().retain(|id, _| m.contains_key(id) || requeued.contains_key(id));
                         due
                     };
                     futures::stream::iter(sst_due)
@@ -3764,14 +3766,27 @@ impl Maintenance {
                                 // at most; the deletion stays SlateDB's GC with its rules (minimum age, checkpoints, active
                                 // compactions). A database opened again as a writer is collected by its own passes.
                                 if !OPEN_WRITERS.lock().unwrap().contains(&id) {
-                                    let left = unreferenced_compacted(&s3, &id).await.unwrap_or(0);
+                                    let mut left = unreferenced_compacted(&s3, &id).await.unwrap_or(0);
+                                    if left > 0 && CLOSE_GC_RETRIES.lock().unwrap().contains_key(&id) {
+                                        // SlateDB's pass deletes no SST newer than the oldest compaction its compactions
+                                        // file still records, and the finished ones stay recorded until the next compactor
+                                        // run trims them (MEASURED m19: 5 garbage SSTs left after 6 passes). The open
+                                        // writer's SST pass decides by the manifest and the active compactions' recorded
+                                        // outputs, after 120 s unreferenced, and stops at any fork, restore point or export
+                                        // checkpoint (rule 8): run here, under the same maintenance lock.
+                                        match gc_tenant_ssts(&s3, &id).await {
+                                            Ok(_) => left = unreferenced_compacted(&s3, &id).await.unwrap_or(left),
+                                            Err(e) => log.lock().unwrap().error(format!("sst gc {id} (closed): {e:#}")),
+                                        }
+                                    }
                                     let mut r = CLOSE_GC_RETRIES.lock().unwrap();
                                     let n = r.entry(id.clone()).or_insert(0);
                                     if left > 0 && *n < CLOSE_GC_MAX_REQUEUES {
                                         *n += 1;
                                         CLOSE_GC_REQUEUED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                                         COMPACTED_SINCE_FULL.lock().unwrap().insert(id.clone());
-                                        let wait = gc_min_age + Duration::from_secs(5);
+                                        // old enough for SlateDB's pass and for the SST pass's 120 s unreferenced
+                                        let wait = gc_min_age.max(Duration::from_secs(SST_GC_MIN_UNREF_SECS.load(std::sync::atomic::Ordering::Relaxed))) + Duration::from_secs(5);
                                         let at = Instant::now().checked_sub(gc_after.saturating_sub(wait)).unwrap_or_else(Instant::now);
                                         touched.lock().unwrap().entry(id.clone()).or_insert(at);
                                         eprintln!("SSTGC closed tenant={id} left_unreferenced={left}: another pass in {}s", wait.as_secs());
