@@ -5,7 +5,7 @@
 # final engine ref has its passing local benchmark report). RUN_ID 1000000001 = the run of job L (its kept pantry
 # fenvix-kitchen-pantry-1000000001 is named in the later commands; replace it with the real run id of job L, and
 # "engine" with the full commit id of the final merged head, before committing a command to step9/command.json; the
-# dry run passes the commands' engine as ENGINE_COMMIT).$
+# dry run passes the commands' engine as ENGINE_COMMIT, which must be that same commit).
 # Usage: bash step9/commands/dry_run.sh > step9/commands/DRY-RUN.txt
 cd "$(dirname "$0")/../ci" || exit 1
 export RUN_ID=1000000001 ENGINE_COMMIT=${ENGINE_COMMIT:-27014ff2e3e3e4ff223aa778746f3dce433c6549}
