@@ -592,18 +592,33 @@ pub fn spawn(dbs: &Arc<crate::dbs::Dbs>) {
     let me = Arc::clone(dbs);
     tokio::spawn(async move {
         let sem = Arc::new(tokio::sync::Semaphore::new(2));
+        // one archive at a time per database; it goes on while the database's tail is due (a busy database's tail
+        // must not grow faster than it is archived)
+        let busy: Arc<Mutex<std::collections::HashSet<String>>> = Arc::default();
         let mut last_sweep = std::time::Instant::now();
         loop {
             tokio::time::sleep(std::time::Duration::from_millis(ARCHIVE_CHECK_MS.load(Relaxed))).await;
             for name in me.chg_due() {
+                if busy.lock().unwrap().contains(&name) {
+                    continue;
+                }
                 let Ok(p) = Arc::clone(&sem).try_acquire_owned() else { break };
-                let d = Arc::clone(&me);
+                busy.lock().unwrap().insert(name.clone());
+                let (d, busy) = (Arc::clone(&me), Arc::clone(&busy));
                 tokio::spawn(async move {
                     let _p = p;
-                    if let Err(e) = archive(&d, &name, false).await {
-                        ARCHIVE_ERRORS.fetch_add(1, Relaxed);
-                        eprintln!("change history: archive of {name} failed: {e:#}");
+                    loop {
+                        match archive(&d, &name, false).await {
+                            Ok(true) => continue,
+                            Ok(false) => break,
+                            Err(e) => {
+                                ARCHIVE_ERRORS.fetch_add(1, Relaxed);
+                                eprintln!("change history: archive of {name} failed: {e:#}");
+                                break;
+                            }
+                        }
                     }
+                    busy.lock().unwrap().remove(&name);
                 });
             }
             if last_sweep.elapsed().as_secs() >= SWEEP_SECS.load(Relaxed) {

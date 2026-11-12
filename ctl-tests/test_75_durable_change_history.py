@@ -137,7 +137,7 @@ def writers(d, coll, secs, threads=4, batch=50, tag="w"):
     def run(t):
         n = 0
         while time.time() < stop:
-            docs = [{"_id": f"{tag}{t}-{n + i:09d}", "t": t, "n": n + i, "p": "x" * 200} for i in range(batch)]
+            docs = [{"_id": f"{tag}{t}-{n + i:09d}", "t": t, "n": n + i, "p": os.urandom(100).hex()} for i in range(batch)]
             try:
                 d[coll].insert_many(docs, ordered=True)
             except PyMongoError:
@@ -165,7 +165,8 @@ def check_exactly_once(delivered, acked, maybe=()):
     extra = seen - set(all_acked) - set(maybe)
     assert not extra, f"events of writes never made: {sorted(extra)[:10]}"
     for t, v in acked.items():
-        mine = [x for x in delivered if x in set(v)]
+        sv = set(v)
+        mine = [x for x in delivered if x in sv]
         assert mine == v, f"writer {t}: events out of commit order"
 
 
@@ -188,14 +189,22 @@ def test_resume_after_ten_minutes_of_writes():
         print(f"wrote {n} events in {wrote:.0f} s ({n / wrote:.0f}/s); history {st}")
         cid, first, _ = open_stream(d, "cs", resumeAfter=tok)
         t1 = time.time()
-        got, err = drain(d, "cs", cid, want=n, secs=max(120, secs))
-        got = first + got
+        # (ids only: millions of whole events do not fit in the test's memory)
+        got, err = ids(first), None
+        while len(got) < n and time.time() - t1 < max(300, secs * 2):
+            try:
+                g = d.command(SON([("getMore", cid), ("collection", "cs"), ("maxTimeMS", 300)]))
+            except OperationFailure as e:
+                err = e.code
+                break
+            got += [e["documentKey"]["_id"] for e in g["cursor"]["nextBatch"] if e["operationType"] == "insert"]
         read = time.time() - t1
         st2 = tenant_stats(c)
         print(f"read {len(got)} events in {read:.1f} s; history {st2}")
         assert err is None, err
         assert st["segmentsPut"] > 0, "the run never wrote a segment: it did not test the segments"
-        check_exactly_once(ids(got), acked)
+        check_exactly_once(got, acked)
+        print(f"exactly once: {len(got)} events, {sum(len(v) for v in acked.values())} acknowledged writes")
     finally:
         s.term()
 
