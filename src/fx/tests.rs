@@ -20,7 +20,7 @@ use std::sync::atomic::Ordering::Relaxed;
 use std::sync::Arc;
 
 /// The fx tests change process-wide settings (ENABLED, hold life, T_pin): one at a time.
-pub(super) static SERIAL: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+pub(crate) static SERIAL: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
 pub(super) fn small_opts(reseal: Reseal) -> BuildOpts {
     BuildOpts {

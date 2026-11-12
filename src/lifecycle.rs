@@ -4102,6 +4102,14 @@ mod tests {
     use object_store::memory::InMemory;
     use std::sync::atomic::Ordering::Relaxed;
 
+    /// These tests build writers with `writer_settings()`, which reads `L0_SST_BYTES_OVERRIDE` and `L0_MAX_SSTS_OVERRIDE`.
+    /// The fx tests set those (3 KiB SSTs, 64 L0) under `fx::tests::SERIAL`; run beside one of them, `tenant_with_l0`
+    /// wrote 32 MB as 3 KiB L0 SSTs with no compactor and SlateDB held its writes for good (fix-write-stalls, judge
+    /// 7fb194f: both compaction_pass tests hung over 25 min). So they take the same lock.
+    async fn settings_lock() -> tokio::sync::MutexGuard<'static, ()> {
+        crate::fx::tests::SERIAL.lock().await
+    }
+
     /// The visible state (log path), per key: a read of a key returns the value of the latest durable batch that wrote it
     /// with every earlier write of the key durable; a batch on other keys does not wait for an earlier one still in flight.
     #[tokio::test]
@@ -4200,6 +4208,7 @@ mod tests {
     /// not one per round.
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn always_failing_compaction_is_not_retried_every_round() {
+        let _s = settings_lock().await;
         let id = "test-backoff-live";
         let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
         let db = Db::builder(tenant_path(id), Arc::clone(&store)).with_settings(writer_settings()).build().await.unwrap();
@@ -4305,6 +4314,7 @@ mod tests {
     /// once. Before, `Db::close` flushed the memtable and waited forever for room in L0, holding the tenant's lock.
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn abandon_does_not_wait_for_a_full_l0() {
+        let _s = settings_lock().await;
         let id = "test-abandon-full-l0";
         let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
         let lc = Lifecycle::new(Arc::new(CountingStore::new(Arc::clone(&store))), None);
@@ -4395,6 +4405,7 @@ mod tests {
     /// compacted again: its L0 stayed full and its writes stopped.
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn compaction_pass_longer_than_its_stall_window_finishes() {
+        let _s = settings_lock().await;
         let id = "test-compact-long";
         let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
         tenant_with_l0(&raw, id, 8, 4).await;
@@ -4410,6 +4421,7 @@ mod tests {
     /// L1: a pass is stopped at once by `preempt_compaction` (drop, erase, fork, export, restore) and that is not a failure.
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn compaction_pass_stops_when_preempted() {
+        let _s = settings_lock().await;
         let id = "test-compact-preempt";
         let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
         tenant_with_l0(&raw, id, 6, 2).await;
@@ -4432,6 +4444,7 @@ mod tests {
     /// started its tasks after the stop and waited for them forever, and the maintenance worker never came back.
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn compaction_pass_ends_when_stopped_while_starting() {
+        let _s = settings_lock().await;
         let id = "test-compact-stop-while-starting";
         let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
         let db = Db::builder(tenant_path(id), Arc::clone(&raw)).with_settings(writer_settings()).build().await.unwrap();
@@ -4457,6 +4470,7 @@ mod tests {
     /// its stop limit, with the store still down. Before, every `stop` was awaited without a bound.
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn compaction_pass_ends_when_stop_hangs() {
+        let _s = settings_lock().await;
         let id = "test-compact-stop-hangs";
         let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
         let db = Db::builder(tenant_path(id), Arc::clone(&raw)).with_settings(writer_settings()).build().await.unwrap();
@@ -4486,6 +4500,7 @@ mod tests {
     /// `close_pending` stays true (slatedb's tasks of the tenant are still alive) until the store answers and the close ends.
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn abandon_reports_an_unfinished_close() {
+        let _s = settings_lock().await;
         let id = "test-abandon-store-down";
         let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
         let frozen = Arc::new(std::sync::atomic::AtomicBool::new(false));
