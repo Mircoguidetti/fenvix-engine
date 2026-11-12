@@ -15,7 +15,7 @@ import pytest
 from lib import Server, make_bucket, list_prefix, wait_until
 
 BASE = ["--sealed-runs", "2", "--sealed-reseal-every", "1000000", "--sealed-t-pin-ms", "1000", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait",
-        "--sealed-erasure-poll-ms", "200", "--sealed-hold-life-ms", "1500", "--sealed-put-timeout-ms", "500", "--sealed-gc-grace-ms", "2500",
+        "--sealed-erasure-poll-ms", "200", "--sealed-hold-life-ms", "1500", "--sealed-put-timeout-ms", "500", "--sealed-gc-grace-ms", "3100",  # integration-4: check_config needs grace > T_pin + hold + put (3000)
         "--sealed-remote-lease-ms", "3000",
         # restore points (old versions and their runs) kept 5 s instead of 7 days, so "done" is reached within the test
         "--sealed-version-retention-secs", "5"]
