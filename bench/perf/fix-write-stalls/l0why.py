@@ -54,7 +54,16 @@ for u, h in holds:
             print(f"  {(v - u) / 1000:+7.1f}s {l[:230]}")
 
 # totals
-jobs = [kv(l) | {"_u": u} for u, k, l in events if k == "SLATE_JOB end"]
+# a job logs one end line per subcompaction (from bd3e8b9 on, with job=<its start>): keep its last one
+ends = {}
+for u, k, l in events:
+    if k == "SLATE_JOB end":
+        d = kv(l) | {"_u": u}
+        key = d.get("job", f"{u}")
+        if key not in ends or float(d["ms"]) > float(ends[key]["ms"]):
+            ends[key] = d
+jobs = list(ends.values())
+print("SlateDB L0 jobs started beside a merge:", sum(1 for u, k, l in events if k == "SLATE_JOB start" and "beside_merge=1" in l))
 l0_jobs = [j for j in jobs if j.get("l0_srcs", "0") != "0"]
 sr_jobs = [j for j in jobs if j.get("l0_srcs", "0") == "0"]
 

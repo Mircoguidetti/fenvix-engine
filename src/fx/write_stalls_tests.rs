@@ -498,3 +498,78 @@ async fn ws_close_time_pass_keeps_unabsorbed_l0() {
     assert!(pass_took < Duration::from_secs(10), "a gated pass ends once only kept L0 SSTs are left ({pass_took:?}; its stall timeout is 30 s)");
     assert_eq!(wrong, 0);
 }
+
+/// Cause 3: with the drop off, a merge of sorted runs no longer keeps absorbed L0 SSTs in L0. A merge is held at its
+/// first row (`drop::TEST_HOLD_MERGE`) while 12 more L0 SSTs are flushed and absorbed: an L0-only job runs beside it and
+/// L0 drains. The control (`drop::CONTROL_ONE_JOB`: no job proposed while one runs, the code before) keeps all of them
+/// in L0, the stop SlateDB then holds writes at (8 on the server). Every key reads its last value afterwards.
+async fn merge_hold_scenario(control: bool) -> (usize, usize, u64, usize) {
+    drop::CONTROL_ONE_JOB.store(control, Relaxed);
+    drop::TEST_HOLD_MERGE.store(true, Relaxed);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = if control { "ws-merge-control" } else { "ws-merge" };
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    let deleted = HashSet::new();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(vec![b'a'; 40]))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let k = knobs(false, true);
+    assert!(t.fx_claim());
+    let c = start(&mut t, &store, &k).await;
+    // write until SlateDB proposes a merge of sorted runs, which the hook holds
+    let t0 = Instant::now();
+    let mut r = 0usize;
+    while !drop::TEST_MERGE_HELD.load(Relaxed) {
+        assert!(t0.elapsed() < Duration::from_secs(90), "no merge of sorted runs was proposed");
+        for i in 0..60 {
+            apply(&mut t, &mut m, vec![(ckey(1 + r % 30, i), Some(format!("r{r}-{i}").into_bytes()))]).await;
+        }
+        flush(&t).await;
+        r += 1;
+        tokio::time::sleep(Duration::from_millis(100)).await;
+    }
+    let beside0 = drop::L0_JOBS_BESIDE_MERGE.load(Relaxed);
+    // 12 more L0 SSTs while the merge is held
+    for f in 0..12 {
+        for i in 0..60 {
+            apply(&mut t, &mut m, vec![(ckey(40 + f, i), Some(format!("held-{f}-{i}").into_bytes()))]).await;
+        }
+        flush(&t).await;
+    }
+    let l0_written = t.writer_l0().unwrap();
+    // give the compactor time to absorb them and SlateDB to compact what it may
+    let t1 = Instant::now();
+    while t1.elapsed() < Duration::from_secs(8) && t.writer_l0().unwrap() >= 4 {
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        let _ = t.fx_writer_db().unwrap().refresh_manifest().await;
+    }
+    let l0_during = t.writer_l0().unwrap();
+    let beside = drop::L0_JOBS_BESIDE_MERGE.load(Relaxed) - beside0;
+    drop::TEST_HOLD_MERGE.store(false, Relaxed);
+    c.drain(false).await.unwrap();
+    t.fx_sync();
+    let wrong = wrong_reads(&t, &m, &deleted).await;
+    eprintln!("ws merge hold (control {control}): L0 after the 12 flushes {l0_written}, after 8 s with the merge held {l0_during}; L0 jobs beside it {beside}; wrong {wrong}");
+    c.stop().await;
+    t.close().await.unwrap();
+    drop::CONTROL_ONE_JOB.store(false, Relaxed);
+    (l0_written, l0_during, beside, wrong)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_l0_drains_beside_a_held_merge() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (_, l0_ctl, beside_ctl, wrong_ctl) = merge_hold_scenario(true).await;
+    let (l0_written, l0, beside, wrong) = merge_hold_scenario(false).await;
+    drop::TEST_HOLD_MERGE.store(false, Relaxed);
+    teardown();
+    assert_eq!(beside_ctl, 0, "control: no job beside the merge");
+    assert!(l0_ctl >= 12, "control: the merge must keep the L0 SSTs in L0 ({l0_ctl}), or the test does not reach the case");
+    assert!(l0_written >= 4, "setup: L0 must have grown ({l0_written})");
+    assert!(beside >= 1, "an L0 job must run beside the held merge");
+    assert!(l0 < 4, "L0 must drain while the merge is held ({l0_written} -> {l0})");
+    assert_eq!(wrong + wrong_ctl, 0, "wrong reads");
+}
