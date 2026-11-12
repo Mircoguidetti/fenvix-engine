@@ -25,6 +25,7 @@ pub fn prefixes(db: &str) -> Vec<String> {
         format!("control/retention/{db}"),
         format!("control/ops/{db}.json"),
         format!("control/erasures/{db}/"),
+        crate::chglog::db_dir(db),
     ]
 }
 

@@ -437,9 +437,9 @@ impl Server {
         ops.push(Server::search_idx_delete_op(coll));
         names.remove(pos);
         ops.push(Entry::collections_op(&names)?);
-        g.apply(ops).await?;
+        // the `drop` event goes in the drop's own batch (a write after the drop gets a later position)
+        g.apply_events(ops, vec![Server::drop_event(db, coll, uuid)]).await?;
         g.set_coll_opts(coll, None);
-        self.publish_drop(db, coll, uuid);
         Ok(doc! { "nIndexesWas": n_indexes, "ns": format!("{db}.{coll}"), "ok": 1.0 })
     }
 
@@ -528,7 +528,7 @@ impl Server {
         ops.push(Entry::collections_op(&names)?);
         g.apply(ops).await?;
         drop(g);
-        self.publish_rename(db, &from, db, &to, src_uuid, dropped_uuid);
+        self.publish_rename(db, &from, db, &to, src_uuid, dropped_uuid).await?;
         Ok(ok())
     }
 
@@ -890,14 +890,14 @@ impl Server {
                 (g.collection_uuid(coll).await?, specs)
             };
             if !existed {
-                self.publish_create(db, coll, uuid.clone(), &Document::new(), false);
+                self.publish_create(db, coll, uuid.clone(), &Document::new(), false).await?;
             }
             if building {
-                self.publish_create_indexes(db, coll, uuid, &specs);
+                self.publish_create_indexes(db, coll, uuid, &specs).await?;
             } else {
                 // an index built on an empty collection is a build of its own
                 for s in &specs {
-                    self.publish_create_indexes(db, coll, uuid.clone(), std::slice::from_ref(s));
+                    self.publish_create_indexes(db, coll, uuid.clone(), std::slice::from_ref(s)).await?;
                 }
             }
         }
@@ -956,7 +956,7 @@ impl Server {
             if !index_opts.is_empty() {
                 state.insert("indexOptions", index_opts);
             }
-            self.publish_ddl(crate::changes::EvSpec { uuid: Some(uuid), op_desc: Some(desc), state_before: Some(state), ..crate::changes::EvSpec::on(db, coll, "modify") }, true);
+            self.publish_ddl(crate::changes::EvSpec { uuid: Some(uuid), op_desc: Some(desc), state_before: Some(state), ..crate::changes::EvSpec::on(db, coll, "modify") }, true).await?;
         }
         Ok(reply)
     }
@@ -1086,7 +1086,7 @@ impl Server {
         }
         drop(g);
         for spec in &dropped {
-            self.publish_drop_index(db, coll, uuid.clone(), spec);
+            self.publish_drop_index(db, coll, uuid.clone(), spec).await?;
         }
         if !ttl_none {
             let key = format!("{db}\0{coll}");

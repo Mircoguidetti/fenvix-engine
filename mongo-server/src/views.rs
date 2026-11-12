@@ -474,7 +474,7 @@ impl Server {
             options.insert("collation", c.clone());
         }
         self.insert(db, &doc! { "insert": VIEWS, "documents": [d] }, &mut None).await?;
-        self.publish_ddl(crate::changes::EvSpec { op_desc: Some(options), ..crate::changes::EvSpec::on(db, coll, "create") }, true);
+        self.publish_ddl(crate::changes::EvSpec { op_desc: Some(options), ..crate::changes::EvSpec::on(db, coll, "create") }, true).await?;
         Ok(Some(ok()))
     }
 

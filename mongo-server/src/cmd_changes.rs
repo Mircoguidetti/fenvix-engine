@@ -36,6 +36,23 @@ pub struct ChangeCursor {
     pub ns: String,
     /// An `invalidate` event is due after the batch that holds the event that invalidated the stream.
     pub closed: bool,
+    /// A stream of one database (or collection) on its durable history (`chglog.rs`): `last` is a position of that
+    /// history, `hist` its id (0: the database had no history when the stream opened; the first one seen is taken).
+    pub durable: bool,
+    pub hist: u64,
+    /// `startAtOperationTime`: events older than it, read on the way to the first one at or after it, are dropped.
+    pub min_time: Option<bson::Timestamp>,
+}
+
+impl ChangeCursor {
+    /// The stream's position of an event.
+    fn pos(&self, e: &Ev) -> u64 {
+        if self.durable {
+            e.dseq
+        } else {
+            e.seq
+        }
+    }
 }
 
 impl Server {
@@ -82,6 +99,7 @@ impl Server {
             }
         }
         let log = &self.dbs.changes;
+        let durable = scope.db.is_some() && crate::chglog::enabled();
         for f in ["resumeAfter", "startAfter"] {
             if let Some(v) = spec.get(f) {
                 if !matches!(v, Bson::Document(_)) {
@@ -89,7 +107,70 @@ impl Server {
                 }
             }
         }
-        let start = if let Some(Bson::Document(t)) = spec.get("resumeAfter").or_else(|| spec.get("startAfter")) {
+        let (mut hist, mut min_time) = (0u64, None);
+        let start = if durable {
+            let db = scope.db.clone().unwrap();
+            let head = crate::chglog::head_of(&self.dbs, &db).await?;
+            let (cur_hist, cur_next) = head.map(|h| (h.hist, h.next)).unwrap_or((0, 1));
+            let lost = |m: String| {
+                crate::changes::HISTORY_LOST.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                MongoError::new(286, "ChangeStreamHistoryLost", m)
+            };
+            if let Some(Bson::Document(t)) = spec.get("resumeAfter").or_else(|| spec.get("startAfter")) {
+                let d = match t.get("_data") {
+                    Some(Bson::String(d)) => d.clone(),
+                    _ => return Err(MongoError::new(40647, "Location40647", format!("Bad resume token: _data of missing or of wrong type. Expected string, got {}", crate::update::fmt_doc(t).replace("{ ", "{").replace(" }", "}")))),
+                };
+                match crate::changes::ChangeLog::parse_token_db(&d) {
+                    Some((th, pos, fp)) => {
+                        if fp != crate::changes::name_fingerprint(&db) {
+                            return Err(MongoError::new(280, "ChangeStreamFatalError", format!("cannot resume stream; the resume token was not found. {{_data: \"{d}\"}} (the token is from another database than '{db}')")));
+                        }
+                        if th == 0 {
+                            // a token given before the database had any history: the start of the current one
+                            hist = cur_hist;
+                            0
+                        } else if th != cur_hist {
+                            return Err(lost(format!("Resume of change stream was not possible: the change history of database '{db}' the token belongs to is gone (the database was dropped, recreated or forked since)")));
+                        } else {
+                            crate::chglog::check_position(&self.dbs, &db, th, pos).await?;
+                            hist = th;
+                            pos
+                        }
+                    }
+                    None => {
+                        // a token of this process's in-memory log (`82`)
+                        let (seq, who) = log.parse_token(&d)?;
+                        log.check_same_db(&db, who, &d)?;
+                        hist = cur_hist;
+                        match log.legacy_to_db(&db, cur_hist, seq) {
+                            Some(p) => p,
+                            None => return Err(lost(format!("Resume of change stream was not possible: the resume token is not a position of the change history of database '{db}' held here"))),
+                        }
+                    }
+                }
+            } else if let Some(Bson::Timestamp(ts)) = spec.get("startAtOperationTime") {
+                min_time = Some(*ts);
+                hist = cur_hist;
+                if cur_hist == 0 {
+                    0
+                } else {
+                    match log.mem_position_at(&db, cur_hist, *ts) {
+                        Some(p) => p,
+                        None => match crate::chglog::position_at(&self.dbs, &db, *ts).await? {
+                            Some((h, p)) => {
+                                hist = h;
+                                p
+                            }
+                            None => 0,
+                        },
+                    }
+                }
+            } else {
+                hist = cur_hist;
+                cur_next - 1
+            }
+        } else if let Some(Bson::Document(t)) = spec.get("resumeAfter").or_else(|| spec.get("startAfter")) {
             match t.get("_data") {
                 Some(Bson::String(d)) => {
                     let (seq, who) = log.parse_token(d)?;
@@ -126,8 +207,8 @@ impl Server {
             }
         }
         let scope_db = scope.db.as_deref();
-        let token = log.token(start, scope_db);
-        let cur = ChangeCursor { used: Instant::now(), scope, last: start, rest: rest_stages, full, before, expanded, ns: ns.clone(), closed: false };
+        let token = if durable { log.token_db(hist, start, scope_db.unwrap_or("")) } else { log.token(start, scope_db) };
+        let cur = ChangeCursor { used: Instant::now(), scope, last: start, rest: rest_stages, full, before, expanded, ns: ns.clone(), closed: false, durable, hist, min_time };
         let id = self.store_change_cursor(cur);
         let _ = batch;
         Ok(doc! { "cursor": { "firstBatch": Vec::<Bson>::new(), "postBatchResumeToken": { "_data": token }, "id": id, "ns": ns }, "ok": 1.0 })
@@ -176,7 +257,7 @@ impl Server {
             d.insert("txnNumber", Bson::Int64(*n));
             d.insert("lsid", lsid.clone());
         }
-        d.insert("_id", doc! { "_data": self.dbs.changes.token(e.seq, Some(&s.db)) });
+        d.insert("_id", doc! { "_data": self.tok(cur, cur.pos(e)) });
         d.insert("operationType", s.op);
         d.insert("clusterTime", Bson::Timestamp(e.time));
         if cur.expanded {
@@ -243,6 +324,58 @@ impl Server {
         Ok(d)
     }
 
+    /// The resume token of position `pos` of the stream.
+    fn tok(&self, cur: &ChangeCursor, pos: u64) -> String {
+        if cur.durable {
+            self.dbs.changes.token_db(cur.hist, pos, cur.scope.db.as_deref().unwrap_or(""))
+        } else {
+            self.dbs.changes.token(pos, cur.scope.db.as_deref())
+        }
+    }
+
+    /// Events of a stream on a durable history past its position: from memory when it holds the position, else from the
+    /// store (segments, then the tail). Returns them with the highest position examined.
+    async fn read_durable_stream(&self, cur: &mut ChangeCursor, batch: usize) -> R<(Vec<Arc<Ev>>, u64)> {
+        use crate::changes::DbRead;
+        let log = &self.dbs.changes;
+        let db = cur.scope.db.clone().unwrap_or_default();
+        let changed = || {
+            crate::changes::HISTORY_LOST.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            MongoError::new(286, "ChangeStreamHistoryLost", format!("the change history of database '{db}' this stream follows is gone (the database was dropped, recreated or forked); resume is not possible"))
+        };
+        if cur.hist == 0 {
+            // the database had no history when the stream opened: the first one is its start
+            match log.history_of(&db) {
+                Some((h, _)) => cur.hist = h,
+                None => match crate::chglog::head_of(&self.dbs, &db).await? {
+                    Some(h) => cur.hist = h.hist,
+                    None => return Ok((Vec::new(), cur.last)),
+                },
+            }
+            if cur.last != 0 {
+                return Err(changed());
+            }
+        }
+        match log.read_db(&cur.scope, cur.hist, cur.last, batch) {
+            DbRead::Mem(evs, last) => Ok((evs, last)),
+            DbRead::Changed => Err(changed()),
+            DbRead::Durable => match crate::chglog::read(&self.dbs, &db, cur.hist, cur.last, batch).await? {
+                crate::chglog::Durable::Absent => Ok((Vec::new(), cur.last)),
+                crate::chglog::Durable::Changed => Err(changed()),
+                crate::chglog::Durable::Rows(rows) => {
+                    let last = rows.last().map(|r| r.pos).unwrap_or(cur.last);
+                    let hist = cur.hist;
+                    let evs = rows
+                        .into_iter()
+                        .filter(|r| cur.scope.sees(&r.spec) && !log.erased(&db, r.pos, &r.spec))
+                        .map(|r| Arc::new(Ev { gate: None, seq: 0, time: r.time, wall: r.wall, spec: r.spec, dseq: r.pos, hist }))
+                        .collect();
+                    Ok((evs, last))
+                }
+            },
+        }
+    }
+
     /// `getMore` on a change-stream cursor: wait up to `maxTimeMS` for events.
     pub(crate) async fn change_get_more(&self, id: i64, cmd: &Document) -> R<Document> {
         let mut cur = self.change_cursors.lock().unwrap().remove(&id).ok_or_else(|| MongoError::cursor_not_found(id))?;
@@ -254,13 +387,18 @@ impl Server {
             let notified = log.notify.notified();
             tokio::pin!(notified);
             notified.as_mut().enable();
-            let (evs, last) = log.read(&cur.scope, cur.last, batch)?;
-            let evs: Vec<Arc<Ev>> = evs.into_iter().filter(|e| cur.expanded || !e.spec.expanded_only).collect();
+            let (evs, last) = if cur.durable { self.read_durable_stream(&mut cur, batch).await? } else { log.read(&cur.scope, cur.last, batch)? };
+            let min_time = cur.min_time;
+            let evs: Vec<Arc<Ev>> = evs.into_iter().filter(|e| (cur.expanded || !e.spec.expanded_only) && min_time.map_or(true, |t| (e.time.time, e.time.increment) >= (t.time, t.increment))).collect();
             if !evs.is_empty() || Instant::now() >= deadline {
                 break (evs, last);
             }
-            // (only events the stream cannot see were read: go on from there)
+            // (only events the stream cannot see were read: go on from there, at once when it moved)
+            let moved = last > cur.last;
             cur.last = cur.last.max(last);
+            if moved && cur.durable {
+                continue;
+            }
             let _ = tokio::time::timeout(deadline.saturating_duration_since(Instant::now()), notified).await;
         };
         let mut out: Vec<Document> = Vec::new();
@@ -272,7 +410,7 @@ impl Server {
         // mongod's getMore of a change stream also keeps room for the batch's resume token: the token document's
         // content (MEASURED on mongod 7.0.34 with research/fix-query-limits/cs_edge.py: two events fit up to 16 MiB - 238
         // bytes, 57 + 178 + 3, with a token document of 183 bytes)
-        let token_room = crate::query::bson_size(&doc! { "_data": log.token(cur.last, cur.scope.db.as_deref()) }).saturating_sub(5);
+        let token_room = crate::query::bson_size(&doc! { "_data": self.tok(&cur, cur.last) }).saturating_sub(5);
         let fixed = crate::cmd::NEXT_BATCH_FIXED + token_room;
         for e in &events {
             let lookup = if cur.full == FullDoc::UpdateLookup && e.spec.op == "update" {
@@ -304,7 +442,7 @@ impl Server {
             let invalidates = (matches!(e.spec.op, "drop" | "rename") && same_coll)
                 || (e.spec.op == "dropDatabase" && cur.scope.db.as_deref() == Some(e.spec.db.as_str()));
             if invalidates {
-                let inv = doc! { "_id": { "_data": log.token(e.seq, Some(&e.spec.db)) }, "operationType": "invalidate", "clusterTime": Bson::Timestamp(e.time), "wallTime": e.wall };
+                let inv = doc! { "_id": { "_data": self.tok(&cur, cur.pos(e)) }, "operationType": "invalidate", "clusterTime": Bson::Timestamp(e.time), "wallTime": e.wall };
                 docs.push(inv);
                 closing = true;
             }
@@ -330,14 +468,14 @@ impl Server {
             }
             used = u;
             out.extend(docs);
-            consumed = e.seq;
+            consumed = cur.pos(e);
             if closing {
                 break;
             }
         }
         let n_scanned = if closing || full { consumed } else { last };
         cur.last = n_scanned;
-        let token = log.token(n_scanned, cur.scope.db.as_deref());
+        let token = self.tok(&cur, n_scanned);
         let ns = cur.ns.clone();
         let next_id = if closing { 0 } else { id };
         if !closing {

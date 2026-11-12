@@ -922,13 +922,15 @@ impl Visible {
     pub fn confirm_upto(&self, seq: u64) {
         let moved = {
             let mut g = self.inner.lock().unwrap();
+            // (also when nothing is tracked: an event gated on the watermark, see [`VisGate`], becomes readable)
+            let advanced = seq > g.durable_upto;
             g.durable_upto = g.durable_upto.max(seq);
             let mut cands = Vec::new();
             for (s, b) in g.batches.range_mut(..=seq) {
                 b.durable = true;
                 cands.push(*s);
             }
-            g.settle(cands)
+            g.settle(cands) || advanced
         };
         if moved {
             self.moved();
@@ -969,6 +971,18 @@ impl Visible {
             .range::<Vec<u8>, _>(range)
             .filter_map(|(k, set)| set.first().and_then(|s| g.batches.get(s)).map(|b| (k.clone(), Arc::clone(&b.before))))
             .collect()
+    }
+
+    /// Where batch `seq` stands when batches are not tracked (no log): durable once the watermark reached it.
+    pub fn durable_state(&self, seq: u64) -> VisState {
+        let g = self.inner.lock().unwrap();
+        if seq <= g.durable_upto {
+            VisState::Visible
+        } else if g.dead {
+            VisState::Lost
+        } else {
+            VisState::Pending
+        }
     }
 
     pub fn state(&self, seq: u64) -> VisState {
@@ -1014,13 +1028,20 @@ impl Visible {
     }
 }
 
-/// A change-stream event waits for the batch that produced it: (the database's visible state, its sequence number).
+/// A change-stream event waits for the batch that produced it: (the database's visible state, its sequence number, and
+/// whether batches are tracked). Untracked (the default path, no log): the batch is visible once it is durable in object
+/// storage (the watermark `confirm_upto` moves when a write's flush is done, or a relaxed write's batch is durable); a
+/// stream never returns the event of a write that a crash could still lose (P-durable-changelog).
 #[derive(Clone)]
-pub struct VisGate(Arc<GroupFlush>, u64);
+pub struct VisGate(Arc<GroupFlush>, u64, bool);
 
 impl VisGate {
     pub fn state(&self) -> VisState {
-        self.0.vis.state(self.1)
+        if self.2 {
+            self.0.vis.state(self.1)
+        } else {
+            self.0.vis.durable_state(self.1)
+        }
     }
 }
 
@@ -1043,7 +1064,7 @@ pub fn visibility_gate(db: &str) -> Option<VisGate> {
     if g.vis.state(seq) == VisState::Visible {
         return None;
     }
-    Some(VisGate(g, seq))
+    Some(VisGate(g, seq, true))
 }
 
 /// The smallest key above every key starting with `p` (None: no such key).
@@ -1271,6 +1292,12 @@ impl Commit {
         self.handle.seqnum()
     }
 
+    /// The gate of a change event produced by this batch: it holds the event back until the batch is visible (log path)
+    /// or durable (default path).
+    pub fn gate(&self) -> VisGate {
+        VisGate(Arc::clone(&self.group), self.handle.seqnum(), TRACK_VISIBLE.load(std::sync::atomic::Ordering::Relaxed))
+    }
+
     /// The database the batch was written to.
     pub fn tenant(&self) -> &str {
         &self.tenant
@@ -1282,6 +1309,13 @@ impl Commit {
         use std::sync::atomic::Ordering::Relaxed;
         GROUP_COMMITS.fetch_add(1, Relaxed);
         RELAXED_ACKS.fetch_add(1, Relaxed);
+        // nobody waits for this batch: its change events become readable when the periodic flush made it durable
+        let (handle, group, seq) = (self.handle.clone(), Arc::clone(&self.group), self.handle.seqnum());
+        tokio::spawn(async move {
+            if handle.await_durable().await.is_ok() {
+                group.vis.confirm_upto(seq);
+            }
+        });
     }
 
     /// Wait until the batch is in a durable WAL object. Writes staged while a flush is in flight are flushed
@@ -1381,6 +1415,14 @@ impl Commit {
             if TRACK_VISIBLE.load(Relaxed) {
                 self.group.vis.wait_visible(seq, VISIBLE_WAIT).await?;
             }
+        } else {
+            // acknowledged early: its change events still wait for durability
+            let (handle, group) = (self.handle.clone(), Arc::clone(&self.group));
+            tokio::spawn(async move {
+                if handle.await_durable().await.is_ok() {
+                    group.vis.confirm_upto(seq);
+                }
+            });
         }
         Ok(())
     }

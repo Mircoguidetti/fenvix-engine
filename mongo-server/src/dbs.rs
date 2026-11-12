@@ -194,6 +194,10 @@ pub struct Entry {
     /// write into the next one: see [`Reopened`].
     abandons: u64,
     pinned_abandons: Option<u64>,
+    /// The durable change history's head (`chglog.rs`) as this opening has it: read from the store at the first write or
+    /// stream of the opening, then kept here (every batch with events moves it). Cleared whenever the tenant is opened
+    /// or closed.
+    chg: Option<crate::chglog::Head>,
 }
 
 /// A write of a command whose database was abandoned (lease lost) and opened again after the command had begun to use it.
@@ -253,6 +257,12 @@ impl Dbs {
         Arc::new(Self { lc, raw, entries: Mutex::new(HashMap::new()), idle, leases, global, readers: Arc::new(AtomicI64::new(0)), writers: Arc::new(AtomicI64::new(0)), ttl: Arc::new(Default::default()), changes: crate::changes::arc_default(), inflight: Mutex::new(HashMap::new()) })
     }
 
+    /// Databases open as writers here whose change-history tail is due for a segment (`chglog.rs`).
+    pub(crate) fn chg_due(&self) -> Vec<String> {
+        let entries: Vec<Arc<AsyncMutex<Entry>>> = self.entries.lock().unwrap().values().cloned().collect();
+        entries.iter().filter_map(|e| e.try_read().ok().and_then(|g| g.chg.as_ref().filter(|h| crate::chglog::due(h)).map(|_| g.name.clone()))).collect()
+    }
+
     /// Entries that currently exist (open or not).
     pub(crate) fn entries_snapshot(&self) -> Vec<Arc<AsyncMutex<Entry>>> {
         self.entries.lock().unwrap().values().cloned().collect()
@@ -298,6 +308,7 @@ impl Dbs {
                     fxc: None,
                     abandons: 0,
                     pinned_abandons: None,
+                    chg: None,
                 }))
             })
             .clone()
@@ -411,6 +422,7 @@ impl Dbs {
                     fxc: None,
                     abandons: 0,
                     pinned_abandons: None,
+                    chg: None,
                     }))
                 })
                 .clone()
@@ -798,6 +810,7 @@ impl Entry {
     pub async fn abandon(&mut self) -> bool {
         self.abandons += 1;
         self.nat.clear();
+        self.chg = None;
         self.copts.clear();
         self.ckey_decided.clear();
         self.sstat.clear();
@@ -834,6 +847,7 @@ impl Entry {
     /// Close a reader whose view went stale (sst-not-found), keeping the lease: the caller opens a new one.
     async fn drop_stale_reader(&mut self) {
         self.nat.clear();
+        self.chg = None;
         self.copts.clear();
         self.ckey_decided.clear();
         self.sstat.clear();
@@ -941,6 +955,7 @@ impl Entry {
                     lease::log("takeover_wake", &self.name, &self.leases.holder, &format!("unclean={} takeover_from={}", t.unclean, took.as_deref().unwrap_or("-")));
                 }
                 self.nat.clear();
+        self.chg = None;
         self.copts.clear();
         self.ckey_decided.clear();
         self.sstat.clear();
@@ -984,6 +999,7 @@ impl Entry {
         self.write_ttl_hint().await;
         let had = self.tenant.is_some();
         self.nat.clear();
+        self.chg = None;
         self.copts.clear();
         self.ckey_decided.clear();
         self.sstat.clear();
@@ -1185,13 +1201,133 @@ impl Entry {
 
     /// Apply writes atomically and durably, creating the database on its first write.
     pub async fn apply(&mut self, ops: Vec<Op>) -> Result<()> {
-        self.apply_mode(ops, true, false).await
+        self.apply_mode(ops, Vec::new(), true, false).await
     }
 
     /// [`Entry::apply`] for a transaction's commit: on the agent lane its batch is flushed at once (one PUT at the
     /// commit) instead of waiting for the lane's batch window.
     pub async fn apply_txn(&mut self, ops: Vec<Op>) -> Result<()> {
-        self.apply_mode(ops, true, true).await
+        self.apply_mode(ops, Vec::new(), true, true).await
+    }
+
+    /// [`Entry::apply`] with the change events of the writes: with the durable history on (`chglog.rs`) each event gets
+    /// its position and cluster time and goes into the same atomic batch; then the events are published to the
+    /// in-memory log, held back until the batch is durable.
+    pub async fn apply_events(&mut self, ops: Vec<Op>, events: Vec<crate::changes::EvSpec>) -> Result<()> {
+        self.apply_mode(ops, events, true, false).await
+    }
+
+    /// [`Entry::apply_txn`] with the change events of the transaction.
+    pub async fn apply_txn_events(&mut self, ops: Vec<Op>, events: Vec<crate::changes::EvSpec>) -> Result<()> {
+        self.apply_mode(ops, events, true, true).await
+    }
+
+    /// The opening of this entry (changes whenever the tenant is opened again or abandoned).
+    pub(crate) fn opening(&self) -> (u64, u64) {
+        (self.wakes, self.abandons)
+    }
+
+    /// Whether the tenant is open as a writer by this process, and the lease is still valid.
+    pub(crate) fn is_open_writer(&self) -> bool {
+        self.tenant.as_ref().is_some_and(|t| t.is_writer()) && self.leases.valid(&self.name)
+    }
+
+    /// The history head this opening holds (`None`: not read yet).
+    pub(crate) fn chg_cached(&self) -> Option<&crate::chglog::Head> {
+        self.chg.as_ref()
+    }
+
+    pub(crate) fn chg_set(&mut self, h: crate::chglog::Head) {
+        self.chg = Some(h);
+    }
+
+    /// Forget the head (read again from the store at its next use): after a batch that may not have been written.
+    pub(crate) fn chg_reset(&mut self) {
+        self.chg = None;
+    }
+
+    /// The history head of the open database, read from the store at the first use of this opening (`None`: the
+    /// database does not exist). A database without a head (never written with events) starts a new history, written
+    /// with its first events. A head that names another database (a fork made by copying the source's objects) is
+    /// not this database's history: a new one starts after the source's positions, and the copied tail rows (at or
+    /// below the new history's `archived` mark) are never read.
+    pub(crate) async fn chg_head(&mut self) -> Result<Option<&mut crate::chglog::Head>> {
+        if self.chg.is_none() {
+            if !self.ensure_open().await? {
+                return Ok(None);
+            }
+            let t = self.tenant.as_ref().unwrap();
+            let raw = crate::layout2::Raw::Tenant(t, false);
+            let head = match raw.get(crate::chglog::HEAD_KEY).await? {
+                Some(b) => {
+                    let h = crate::chglog::Head::from_bytes(&b)?;
+                    if h.db == self.name {
+                        h
+                    } else {
+                        let mut fresh = crate::chglog::Head::fresh(&self.name);
+                        fresh.next = h.next.max(1);
+                        fresh.archived = fresh.next - 1;
+                        fresh
+                    }
+                }
+                None => crate::chglog::Head::fresh(&self.name),
+            };
+            let erased = match raw.get(crate::chglog::ERASED_KEY).await? {
+                Some(b) if head.db == self.name => crate::chglog::erased_from_bytes(&b)?,
+                _ => Vec::new(),
+            };
+            self.changes.history_loaded(&self.name, head.hist, head.next, crate::chglog::unpack(head.last), erased);
+            self.chg = Some(head);
+        }
+        Ok(self.chg.as_mut())
+    }
+
+    /// Durable tail rows of the history from position `from` in order (on the log path, the visible ones: confirmed by
+    /// the log), at most `max_rows`, stopping after the row that reaches `max_bytes`.
+    pub(crate) async fn chg_scan(&mut self, from: u64, max_rows: usize, max_bytes: usize) -> Result<Vec<(u64, Bytes)>> {
+        use crate::layout2::RawScan;
+        if !self.ensure_open().await? {
+            return Ok(Vec::new());
+        }
+        let t = self.tenant.as_ref().unwrap();
+        let raw = if tenant_bench::lifecycle::TRACK_VISIBLE.load(Relaxed) { crate::layout2::Raw::Visible(t) } else { crate::layout2::Raw::Tenant(t, t.is_writer()) };
+        let mut out: Vec<(u64, Bytes)> = Vec::new();
+        let mut bytes = 0usize;
+        let mut next = crate::chglog::tail_key(from);
+        loop {
+            let want = 512.min(max_rows - out.len()).max(1);
+            let page = raw.scan(&next, Some(crate::chglog::TAIL_END), false, Some(want), 1 << 20).await?;
+            let n = page.len();
+            for (k, v) in page {
+                let Some(p) = crate::chglog::tail_pos(&k) else { continue };
+                bytes += v.len();
+                out.push((p, v));
+                if out.len() >= max_rows || bytes >= max_bytes {
+                    return Ok(out);
+                }
+            }
+            if n < want {
+                return Ok(out);
+            }
+            next = crate::chglog::tail_key(out.last().map_or(from, |r| r.0 + 1));
+        }
+    }
+
+    /// Record a customer erasure in the history (`sys/chg-erased`): no stream returns the customer's events up to the
+    /// newest position. Erasures older than the retention (plus an hour) are dropped from the record.
+    pub(crate) async fn chg_note_erasure(&mut self, coll: &str, field: &str, value: &Bson) -> Result<()> {
+        if !crate::chglog::enabled() {
+            return Ok(());
+        }
+        let Some(h) = self.chg_head().await? else { return Ok(()) };
+        let at = h.next.saturating_sub(1);
+        let now = bson::DateTime::now().timestamp_millis();
+        let e = crate::chglog::Erased { coll: coll.to_string(), field: field.to_string(), value: value.clone(), at, wall_ms: now };
+        let keep_ms = crate::chglog::RETENTION_SECS.load(Relaxed) as i64 * 1000 + 3_600_000;
+        let mut list: Vec<crate::chglog::Erased> = self.changes.erasures(&self.name).into_iter().filter(|x| now - x.wall_ms < keep_ms).collect();
+        list.push(e.clone());
+        self.changes.note_erased(&self.name, e);
+        self.apply(vec![Op::Put(crate::chglog::ERASED_KEY.to_vec(), crate::chglog::erased_to_bytes(&list))]).await
     }
 
     /// Agent lane (`agentlane.rs`): whether this batch goes on it. Only batches whose collection keys all belong to
@@ -1242,13 +1378,80 @@ impl Entry {
     /// Like [`Entry::apply`] but always durable in object storage before it returns, also with the local log on (the
     /// restart of the local log applies its records this way).
     pub async fn apply_durable(&mut self, ops: Vec<Op>) -> Result<()> {
-        self.apply_mode(ops, false, false).await
+        self.apply_mode(ops, Vec::new(), false, false).await
     }
 
-    async fn apply_mode(&mut self, mut ops: Vec<Op>, use_local_log: bool, at_commit: bool) -> Result<()> {
+    /// Open (or create) the tenant for a write.
+    async fn open_for_write(&mut self) -> Result<()> {
+        if !self.ensure_open().await? {
+            self.leases.acquire(&self.name).await?;
+            lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
+            self.nat.clear();
+            self.chg = None;
+            self.copts.clear();
+            self.ckey_decided.clear();
+            self.sstat.clear();
+            self.meta_clear();
+            crate::opening::forget_db(&self.name);
+            self.tenant = Some(self.lc.create(&self.name).await?);
+            self.absent = false;
+            self.wakes += 1;
+            self.sync_gauges();
+        }
+        Ok(())
+    }
+
+    /// Give `events` their positions and cluster times and add their rows and the head to `ops` (`chglog.rs`).
+    #[allow(clippy::type_complexity)]
+    async fn stamp_events(&mut self, ops: &mut Vec<Op>, events: Vec<crate::changes::EvSpec>) -> Result<Option<(u64, Vec<(crate::changes::EvSpec, u64, bson::Timestamp, bson::DateTime)>)>> {
+        if events.is_empty() {
+            return Ok(None);
+        }
+        self.open_for_write().await?;
+        let changes = Arc::clone(&self.changes);
+        let Some(h) = self.chg_head().await? else { anyhow::bail!("database {} is not open", self.name) };
+        let mut out = Vec::with_capacity(events.len());
+        let mut bytes = 0u64;
+        for e in events {
+            let (t, w) = changes.stamp();
+            let pos = h.next;
+            h.next += 1;
+            let row = crate::chglog::encode(pos, t, w, &e);
+            bytes += row.len() as u64;
+            if h.tail_first_ms == 0 {
+                h.tail_first_ms = w.timestamp_millis();
+            }
+            h.last = crate::chglog::pack(t);
+            ops.push(Op::Put(crate::chglog::tail_key(pos), row));
+            out.push((e, pos, t, w));
+        }
+        h.tail_bytes += bytes;
+        crate::chglog::ROWS.fetch_add(out.len() as u64, Relaxed);
+        crate::chglog::ROW_BYTES.fetch_add(bytes, Relaxed);
+        let hist = h.hist;
+        ops.push(Op::Put(crate::chglog::HEAD_KEY.to_vec(), h.to_bytes()));
+        Ok(Some((hist, out)))
+    }
+
+    async fn apply_mode(&mut self, mut ops: Vec<Op>, events: Vec<crate::changes::EvSpec>, use_local_log: bool, at_commit: bool) -> Result<()> {
+        // durable change history: the events' rows ride in this batch (before the log's copy of it is made below)
+        let mut events = events;
+        let stamped = if !events.is_empty() && crate::chglog::enabled() {
+            match self.stamp_events(&mut ops, std::mem::take(&mut events)).await {
+                Ok(s) => s,
+                Err(e) => {
+                    self.chg = None;
+                    return Err(e);
+                }
+            }
+        } else {
+            None
+        };
         if ops.is_empty() {
+            self.changes.publish(events);
             return Ok(());
         }
+
         // Agent lane (prototype): the batch skips the local and replicated log and is durable once its WAL object is in
         // object storage.
         let agent = use_local_log && self.agent_lane_batch(&ops).await?;
@@ -1267,24 +1470,19 @@ impl Entry {
             Op::Put(k, v) => Op::Put(k.clone(), v.clone()),
             Op::Delete(k) => Op::Delete(k.clone()),
         }).collect::<Vec<Op>>()));
-        if !self.ensure_open().await? {
-            self.leases.acquire(&self.name).await?;
-            lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
-            self.nat.clear();
-        self.copts.clear();
-        self.ckey_decided.clear();
-        self.sstat.clear();
-        self.meta_clear();
-            crate::opening::forget_db(&self.name);
-            self.tenant = Some(self.lc.create(&self.name).await?);
-            self.absent = false;
-            self.wakes += 1;
-            self.sync_gauges();
+        if let Err(e) = self.open_for_write().await {
+            if stamped.is_some() {
+                self.chg = None;
+            }
+            return Err(e);
         }
         // a command that began on an opening abandoned since then writes nothing (`Reopened`); the log's replays
         // (`apply_durable`) run inside the open itself and are not a command's write
         if use_local_log && self.pinned_abandons.is_some_and(|a| a != self.abandons) {
             REOPENED_REFUSED.fetch_add(1, Relaxed);
+            if stamped.is_some() {
+                self.chg = None;
+            }
             return Err(Reopened(self.name.clone()).into());
         }
         self.touch();
@@ -1342,7 +1540,19 @@ impl Entry {
         if let Some(t) = self.tenant.as_ref() {
             t.bind_inflight(Arc::clone(&self.inflight));
         }
-        let Some(mut commit) = staged? else { return Ok(()) };
+        if staged.is_err() && stamped.is_some() {
+            // nothing of the batch was written: the head this opening holds is read again
+            self.chg = None;
+        }
+        let staged = staged?;
+        if let Some((hist, evs)) = stamped {
+            // published now, under the lock (position order), each held back until its batch is durable
+            let gate = staged.as_ref().map(|c| c.gate());
+            self.changes.publish_db(&self.name, hist, evs, gate);
+        } else if !events.is_empty() {
+            self.changes.publish(events);
+        }
+        let Some(mut commit) = staged else { return Ok(()) };
         if agent {
             commit = commit.with_agent(at_commit);
         }
@@ -1396,6 +1606,7 @@ impl Entry {
             l.forget_pinned(&self.name);
         }
         self.nat.clear();
+        self.chg = None;
         self.copts.clear();
         self.ckey_decided.clear();
         self.sstat.clear();
@@ -1420,6 +1631,20 @@ impl Entry {
                 r?;
             }
         }
+        // the durable change history of the database goes with it (`chglog.rs`)
+        let prefix = Path::from(crate::chglog::db_dir(&self.name));
+        for _ in 0..5 {
+            let objs: Vec<Path> = self.raw.list(Some(&prefix)).map(|m| m.map(|m| m.location)).try_collect().await?;
+            if objs.is_empty() {
+                break;
+            }
+            let mut del = self.raw.delete_stream(futures::stream::iter(objs.into_iter().map(Ok)).boxed());
+            while let Some(r) = del.next().await {
+                r?;
+            }
+        }
+        crate::chglog::forget_db(&self.name);
+        self.chg = None;
         self.lc.touched.lock().unwrap().remove(&self.name);
         self.leases.forget(&self.name);
         // as erase: retention, relaxed durability, allow list, keep-awake pin and the counters go with the database
@@ -1686,6 +1911,7 @@ impl Entry {
             // The database does not exist yet: create it so the transaction has something to snapshot.
             self.leases.acquire(&self.name).await?;
             self.nat.clear();
+        self.chg = None;
         self.copts.clear();
         self.ckey_decided.clear();
         self.sstat.clear();

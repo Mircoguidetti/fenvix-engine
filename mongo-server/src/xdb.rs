@@ -143,7 +143,7 @@ impl Server {
         src.forget_coll_opts(&r.from);
         drop(g1);
         drop(g2);
-        self.publish_rename(&r.from_db, &r.from, &r.to_db, &r.to, src_uuid, dropped_uuid);
+        self.publish_rename(&r.from_db, &r.from, &r.to_db, &r.to, src_uuid, dropped_uuid).await?;
         Ok(ok())
     }
 }

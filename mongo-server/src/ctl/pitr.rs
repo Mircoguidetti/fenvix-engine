@@ -423,7 +423,8 @@ impl<'a> Rows<'a> {
     async fn next(&mut self) -> anyhow::Result<Option<(Bytes, Bytes)>> {
         loop {
             if let Some(kv) = self.page.pop_front() {
-                if kv.0.as_ref() == tenant_bench::envelope::MARKER {
+                // (the change history is not rewound by a restore: `chglog.rs`)
+                if kv.0.as_ref() == tenant_bench::envelope::MARKER || crate::chglog::is_history_key(&kv.0) {
                     continue;
                 }
                 return Ok(Some(kv));

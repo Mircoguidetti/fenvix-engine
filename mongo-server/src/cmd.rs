@@ -627,7 +627,8 @@ impl Server {
                 self.dbs.lock(db).await.drop_database().await?;
                 let mut evs: Vec<crate::changes::EvSpec> = colls.into_iter().map(|c| crate::changes::EvSpec { db: db.to_string(), coll: Some(c), op: "drop", doc_key: None, full: None, desc: None, txn: None, ..Default::default() }).collect();
                 evs.push(crate::changes::EvSpec { db: db.to_string(), coll: None, op: "dropDatabase", doc_key: None, full: None, desc: None, txn: None, ..Default::default() });
-                self.dbs.changes.publish(evs);
+                // the database and its history are gone: the events are in memory only, after its last position
+                self.dbs.changes.publish_dropped(db, evs);
                 Ok(doc! { "dropped": db, "\u{0}ncolls": n_colls as i32, "ok": 1.0 })
             })
             .await,
@@ -898,10 +899,10 @@ impl Server {
         }
         // a new collection: its storage counters start from zero (collstat.rs)
         ops.push(crate::collstat::CollStat::default().op(coll));
-        g.apply(ops).await?;
+        // the `create` event goes in the create's own batch (its UUID is taken first)
         let uuid = g.collection_uuid(coll).await?;
+        g.apply_events(ops, vec![Server::create_event(db, coll, uuid, &options, false)]).await?;
         drop(g);
-        self.publish_create(db, coll, uuid, &options, false);
         Ok(ok())
     }
 
@@ -1016,6 +1017,7 @@ impl Server {
                 "abandonCloseTimeouts": tenant_bench::lifecycle::ABANDON_CLOSE_TIMEOUTS.load(Relaxed) as i64,
                 "reopenedWritesRefused": crate::dbs::REOPENED_REFUSED.load(Relaxed) as i64,
                 "changeStreamsLost": crate::changes::HISTORY_LOST.load(Relaxed) as i64,
+                "changeHistory": { "rows": crate::chglog::ROWS.load(Relaxed) as i64, "rowBytes": crate::chglog::ROW_BYTES.load(Relaxed) as i64, "segmentsPut": crate::chglog::SEGMENTS_PUT.load(Relaxed) as i64, "segmentRawBytes": crate::chglog::SEGMENT_RAW_BYTES.load(Relaxed) as i64, "segmentStoredBytes": crate::chglog::SEGMENT_STORED_BYTES.load(Relaxed) as i64, "segmentsAdopted": crate::chglog::SEGMENTS_ADOPTED.load(Relaxed) as i64, "segmentGets": crate::chglog::SEGMENT_GETS.load(Relaxed) as i64, "segmentLists": crate::chglog::SEGMENT_LISTS.load(Relaxed) as i64, "segmentsDeleted": crate::chglog::SEGMENTS_DELETED.load(Relaxed) as i64, "tailDeletes": crate::chglog::TAIL_DELETES.load(Relaxed) as i64, "durableReads": crate::chglog::DURABLE_READS.load(Relaxed) as i64, "archiveErrors": crate::chglog::ARCHIVE_ERRORS.load(Relaxed) as i64 },
                 "abandonClosesPending": tenant_bench::lifecycle::pending_closes() as i64,
                 "l0WatchDeferred": tenant_bench::lifecycle::L0_WATCH_DEFERRED.load(Relaxed) as i64,
                 "compactionWarm": { "runs": tenant_bench::warm::WARM_RUNS.load(Relaxed) as i64, "hotBlocks": tenant_bench::warm::WARM_HOT_BLOCKS.load(Relaxed) as i64, "ranges": tenant_bench::warm::WARM_RANGES.load(Relaxed) as i64, "fails": tenant_bench::warm::WARM_FAILS.load(Relaxed) as i64, "timeouts": tenant_bench::warm::WARM_TIMEOUTS.load(Relaxed) as i64, "truncated": tenant_bench::warm::WARM_TRUNCATED.load(Relaxed) as i64, "readersOpen": tenant_bench::warm::WARM_READERS_OPEN.load(Relaxed) as i64, "l0Stops": tenant_bench::warm::WARM_L0_STOPS.load(Relaxed) as i64, "throttled": tenant_bench::warm::WARM_THROTTLED.load(Relaxed) as i64 },

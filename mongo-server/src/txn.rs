@@ -384,13 +384,10 @@ impl Server {
                         ops.push(crate::retry::txn_outcome_op(&tc.lsid, txn.number));
                         ops.extend(self.session_sweep_ops(&mut g, &db, &tc.lsid).await);
                     }
-                    g.apply_txn(ops).await.map_err(|e| match e.downcast_ref::<crate::dbs::Reopened>() {
+                    g.apply_txn_events(ops, events).await.map_err(|e| match e.downcast_ref::<crate::dbs::Reopened>() {
                         Some(r) => no_such(format!("{r}; the transaction was not applied, run it again")),
                         None => MongoError::from(e),
-                    }).map(|_| {
-                        g.mark_unique(&uniq);
-                        self.dbs.changes.publish(events)
-                    })
+                    }).map(|_| g.mark_unique(&uniq))
                 }
                 Err(e) => Err(e),
             }

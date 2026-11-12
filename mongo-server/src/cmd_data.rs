@@ -704,18 +704,18 @@ impl Server {
         w.settle_nat_deletes(g).await?;
         let mut ops = w.final_ops()?;
         ops.extend(stat_ops);
-        g.apply(ops).await?;
-        g.mark_unique(&uniq);
         if created {
-            // a collection made by a write: its `create` event comes first
-            let uuid = g.collection_uuid(coll).await?;
+            // a collection made by a write: its `create` event comes first (its UUID is taken before the batch, which
+            // carries the events: `chglog.rs`)
             let db = events.first().map(|e| e.db.clone());
             if let Some(db) = db {
+                let uuid = g.collection_uuid(coll).await?;
                 let id_index = doc! { "idIndex": { "v": 2, "key": { "_id": 1 }, "name": "_id_" } };
                 events.insert(0, crate::changes::EvSpec { uuid: Some(uuid), op_desc: Some(id_index), expanded_only: true, ..crate::changes::EvSpec::on(&db, coll, "create") });
             }
         }
-        self.dbs.changes.publish(events);
+        g.apply_events(ops, events).await?;
+        g.mark_unique(&uniq);
         Ok(())
     }
 
@@ -1195,6 +1195,8 @@ impl Server {
                 // the change log keeps whole documents in memory: the customer's events go too (review of 7b, FIX 3)
                 if let Some(k) = ckey.as_ref().filter(|_| !crate::ctl::fork::control("FENVIX_CONTROL_KEEP_CHANGES")) {
                     self.dbs.changes.forget_customer(db, coll, &k.field, value);
+                    // and from the durable history: a filter at once, the segments leave the store by age (`chglog.rs`)
+                    g.chg_note_erasure(coll, &k.field, value).await?;
                 }
                 crate::ctl::erase::note_erasure(db, &e.id).await;
             }

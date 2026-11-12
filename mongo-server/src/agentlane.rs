@@ -128,7 +128,8 @@ pub fn classify(key: &[u8]) -> KeyClass {
             return KeyClass::Coll(rest.to_vec());
         }
     }
-    if key.starts_with(b"meta/rw/") {
+    // (the change history's rows and head ride in any batch: `chglog.rs`)
+    if key.starts_with(b"meta/rw/") || crate::chglog::is_history_key(key) {
         return KeyClass::Neutral;
     }
     KeyClass::Other

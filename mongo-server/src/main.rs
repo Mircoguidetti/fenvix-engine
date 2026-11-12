@@ -38,6 +38,7 @@ mod json_schema;
 mod capped;
 mod capped_cmds;
 mod changes;
+mod chglog;
 mod cmd;
 mod cmd_changes;
 mod collation;
@@ -289,6 +290,27 @@ struct Args {
     /// write grew the process by ~4 KB until 100 000 events were held.
     #[arg(long, default_value_t = 32)]
     change_log_max_mb: usize,
+    /// Durable change history (`chglog.rs`): `on` (default) keeps every change event with its write and in segment objects
+    /// (`changes/{db}/`), so change streams resume across restarts and takeovers; `off` keeps only the in-memory log.
+    /// FENVIX_CHANGE_HISTORY=off has the same effect.
+    #[arg(long, default_value = "on")]
+    change_history: String,
+    /// How long change history is kept (seconds; at most 23 hours by default so erased customers' events leave the store
+    /// within 24 hours).
+    #[arg(long, default_value_t = 23 * 3600)]
+    change_retention_secs: u64,
+    /// Stored (compressed) bytes of change history kept per database, in MiB; the oldest segments go first.
+    #[arg(long, default_value_t = 50 * 1024)]
+    change_retention_mb: u64,
+    /// Raw bytes of events per history segment, in MiB.
+    #[arg(long, default_value_t = 32)]
+    change_segment_mb: u64,
+    /// A history tail whose oldest event is this old (seconds) is written as a segment even when small.
+    #[arg(long, default_value_t = 300)]
+    change_segment_secs: u64,
+    /// How often every database's history segments are checked for expiry (seconds).
+    #[arg(long, default_value_t = 900)]
+    change_sweep_secs: u64,
     /// Relaxed durability for databases without their own setting (`PUT /v1/databases/{db}/durability`), in milliseconds:
     /// 0 (default) = off, otherwise 1000 to 10000. A write with write concern `{w: 1, j: false}` to such a database is
     /// acknowledged before it is durable and becomes durable within this interval (lost if the process dies first);
@@ -1001,6 +1023,21 @@ async fn run() -> Result<()> {
         }
     }
     changes::MAX_BYTES.store(args.change_log_max_mb << 20, std::sync::atomic::Ordering::Relaxed);
+    {
+        use std::sync::atomic::Ordering::Relaxed;
+        let off = args.change_history == "off" || std::env::var("FENVIX_CHANGE_HISTORY").is_ok_and(|v| v == "off");
+        chglog::ENABLED.store(!off, Relaxed);
+        chglog::RETENTION_SECS.store(args.change_retention_secs, Relaxed);
+        chglog::RETENTION_BYTES.store(args.change_retention_mb << 20, Relaxed);
+        chglog::SEGMENT_BYTES.store((args.change_segment_mb << 20).max(1), Relaxed);
+        chglog::SEGMENT_AGE_SECS.store(args.change_segment_secs, Relaxed);
+        chglog::SWEEP_SECS.store(args.change_sweep_secs.max(1), Relaxed);
+        if let Ok(v) = std::env::var("FENVIX_CHANGE_SEGMENT_KB") {
+            if let Ok(kb) = v.parse::<u64>() {
+                chglog::SEGMENT_BYTES.store((kb << 10).max(1), Relaxed);
+            }
+        }
+    }
     tenant_bench::lifecycle::MEMTABLE_MAX_AGE_SECS.store(args.memtable_max_age_secs, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::CACHE_FLUSHED_BLOCKS.store(args.cache_flushed_blocks, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::warm::COMPACTION_WARM.store(args.compaction_warm, std::sync::atomic::Ordering::Relaxed);
@@ -1088,6 +1125,7 @@ async fn run() -> Result<()> {
         let changes = Arc::clone(&dbs.changes);
         let _ = tenant_bench::lifecycle::ON_VISIBLE.set(Box::new(move || changes.notify.notify_waiters()));
     }
+    chglog::spawn(&dbs);
     let (lost_tx, lost_rx) = tokio::sync::mpsc::unbounded_channel();
     leases.spawn_renewer(lost_tx);
     dbs.spawn_lost_handler(lost_rx);
