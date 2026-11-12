@@ -1,0 +1,1 @@
+app_data_b01 {'per_collezione': {'eventi': 3811956, 'messaggi': 5586656, 'ordini': 1637174}, 'documenti': 11035786, 'writes': {'inserted': {'messaggi': 140045}, 'deleted': {'messaggi': 11872, 'eventi': 6832}, 'updated': {'ordini': 2923, 'eventi': 6832, 'messaggi': 7117}}, 'seconds': 7356.9}

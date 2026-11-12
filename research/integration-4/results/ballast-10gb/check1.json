@@ -1,0 +1,32 @@
+{
+ "databases": {
+  "app_data_b01": {
+   "reads": 4236,
+   "wrong": 0,
+   "reference_documents": 195625,
+   "sampled_customers": 35,
+   "q2_tickets_found": "1740/1740",
+   "seconds": 2026.6
+  },
+  "app_data_b02": {
+   "reads": 4236,
+   "wrong": 0,
+   "reference_documents": 248055,
+   "sampled_customers": 35,
+   "q2_tickets_found": "1740/1740",
+   "seconds": 1844.7
+  },
+  "app_data_b03": {
+   "reads": 4236,
+   "wrong": 0,
+   "reference_documents": 208725,
+   "sampled_customers": 35,
+   "q2_tickets_found": "1740/1740",
+   "seconds": 1911.2
+  }
+ },
+ "reads": 12708,
+ "wrong": 0,
+ "examples": [],
+ "engine_sum_precision": 15
+}
