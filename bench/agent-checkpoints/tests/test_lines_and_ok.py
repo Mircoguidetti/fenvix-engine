@@ -71,7 +71,8 @@ def test_postgres_shared_buffers_25_percent_on_every_member():
         assert "shared_buffers=768MB" in c, (n, c)
     for n in ("pg-standby1", "pg-standby2"):
         c = docker_run(calls, n)
-        assert "shared_buffers=768MB" in c[-1], (n, c[-1])
+        # the standby's start script takes its memory flags from PGMEM (P-bench-big: empty there, the default)
+        assert "$PGMEM" in c[-1] and "PGMEM=-c shared_buffers=768MB" in c, (n, c)
 
 
 # ---- F10 ----

@@ -191,3 +191,15 @@ failing case as a test (`tests/`, `step9/local/tests/test_gate.py`):
 - F5: an unreadable server status leaves `quaderno.failed` UNKNOWN (`log_failed_unknown`); the run is not ok and the
   gate refuses it.
 Tests: `tests/test_fix_check.py`, `step9/local/tests/test_gate.py::test_log_failed_unknown_closes`.
+
+## P-bench-big (2026-11-12): data that does not fit in memory
+
+`bench_big.sh` runs the three equal-durability lines (`lines.py run LINE --big --mem 1g`) on profile `big` (2,000 users,
+4,956 threads, 52,436 turns: the standard shapes with twice the users), then `compare_big.py` writes the verdict.
+Per line: load (3 worker processes; the load's latencies are not results) -> our server's settle -> sizes -> round A
+(cold restart of every container and the host's page cache, then the mix of `bigmix.py`) -> round B (another cold
+restart and the same mix on other threads; on our line MinIO answers through `s3delay`, which adds 20 ms to the first
+byte of every response). Members: `--cpus 1 --memory 1g`; MinIO not capped; Postgres `shared_buffers` default; mongod
+`--wiredTigerCacheSizeGB 0.25`. Per call the probes record the CPU and block-device reads of every container (cgroup)
+and, for our server, S3 GETs and bytes and cache counters. `tc netem` is not available in the sandbox kernel, hence
+`s3delay/` (build with `cargo build --release` there and copy the binary to `target/release/s3delay`).

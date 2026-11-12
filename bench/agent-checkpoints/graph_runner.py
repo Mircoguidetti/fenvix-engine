@@ -211,6 +211,19 @@ class TimedSaver(BaseCheckpointSaver):
         self.context: dict = {}  # set by the runner: phase, gap kind of the current turn, etc.
         self._pending_writes_s = 0.0  # put_writes time since the last put: part of "save one step"
         self._pending_writes_n = 0
+        # P-bench-big: an optional bigmix.Probe; its counters are read before t0 and after t1 (outside the timed region)
+        # and the delta goes into the op's row as "res" (save_step: its put_writes and its put together)
+        self.probe = None
+        self._pending_res: dict = {}
+
+    def _pb(self):
+        return self.probe.before() if self.probe is not None else None
+
+    def _pa(self, before) -> dict | None:
+        if before is None:
+            return None
+        from bigmix import Probe
+        return Probe.delta(before, self.probe.after())
 
     # -- helpers ----------------------------------------------------------------------------------------------------
     def _rec(self, op: str, thread: str, dt: float, **kw):
@@ -250,15 +263,21 @@ class TimedSaver(BaseCheckpointSaver):
         ck_size, ck_hash = self._size_hash(checkpoint)
         logical = ck_size + self._size(metadata)
         msgs = self._size(checkpoint.get("channel_values", {}).get("messages", []))
+        pb = self._pb()
         t0 = time.perf_counter()
         out = self.inner.put(config, checkpoint, metadata, new_versions)
         dt = time.perf_counter() - t0
+        res = self._pa(pb)
         if self.expected is not None:
             self.expected.on_put(thread, self._ns(config), checkpoint["id"], ck_hash)
-        self._rec("put", thread, dt, logical_bytes=logical, message_bytes=msgs)
+        self._rec("put", thread, dt, logical_bytes=logical, message_bytes=msgs, **({"res": res} if res is not None else {}))
         # "save one step" = the put_writes of the superstep + its put
-        self._rec("save_step", thread, dt + self._pending_writes_s, logical_bytes=logical, writes_calls=self._pending_writes_n)
-        self._pending_writes_s, self._pending_writes_n = 0.0, 0
+        extra = {}
+        if res is not None:
+            from bigmix import add_res
+            extra = {"res": add_res(self._pending_res, res)}
+        self._rec("save_step", thread, dt + self._pending_writes_s, logical_bytes=logical, writes_calls=self._pending_writes_n, **extra)
+        self._pending_writes_s, self._pending_writes_n, self._pending_res = 0.0, 0, {}
         return out
 
     def put_writes(self, config, writes: Sequence[tuple[str, Any]], task_id: str, task_path: str = ""):
@@ -267,35 +286,44 @@ class TimedSaver(BaseCheckpointSaver):
             writes = [(ch, copy.deepcopy(v)) for ch, v in writes]  # frozen copy, as in put
         sized = [self._size_hash(v) for _, v in writes]
         logical = sum(n for n, _ in sized)
+        pb = self._pb()
         t0 = time.perf_counter()
         out = self.inner.put_writes(config, writes, task_id, task_path)
         dt = time.perf_counter() - t0
+        res = self._pa(pb)
+        if res is not None:
+            from bigmix import add_res
+            self._pending_res = add_res(self._pending_res, res)
         if self.expected is not None:
             self.expected.on_put_writes(thread, self._ns(config), config["configurable"]["checkpoint_id"], task_id,
                                         [(ch, i, h) for i, ((ch, _v), (_n, h)) in enumerate(zip(writes, sized))])
         self._pending_writes_s += dt
         self._pending_writes_n += 1
-        self._rec("put_writes", thread, dt, logical_bytes=logical, n_writes=len(writes))
+        self._rec("put_writes", thread, dt, logical_bytes=logical, n_writes=len(writes), **({"res": res} if res is not None else {}))
         return out
 
     # -- read path --------------------------------------------------------------------------------------------------
     def get_tuple(self, config):
         thread = config["configurable"]["thread_id"]
+        pb = self._pb()
         t0 = time.perf_counter()
         out = self.inner.get_tuple(config)
         dt = time.perf_counter() - t0
+        res = self._pa(pb)
         op = "time_travel" if config["configurable"].get("checkpoint_id") else "resume"
-        self._rec(op, thread, dt, found=out is not None)
+        self._rec(op, thread, dt, found=out is not None, **({"res": res} if res is not None else {}))
         self._check_read(out, config, op)
         return out
 
     def list(self, config, *, filter=None, before=None, limit=None) -> Iterator:  # noqa: A002 - LangGraph's signature
         thread = (config or {}).get("configurable", {}).get("thread_id")
+        pb = self._pb()
         t0 = time.perf_counter()
         items = list(self.inner.list(config, filter=filter, before=before, limit=limit))  # materialize: time the whole read
         dt = time.perf_counter() - t0
+        res = self._pa(pb)
         op = "list" if limit is None else f"list_limit{limit}"
-        self._rec(op, thread, dt, n=len(items))
+        self._rec(op, thread, dt, n=len(items), **({"res": res} if res is not None else {}))
         if self.expected is not None and thread and self.context.get("phase") != "erase_verify":
             whole = limit is None and before is None and not filter
             self.expected.check_list(self.serde, items, thread, self._ns(config), whole, op,

@@ -1,0 +1,13 @@
+[package]
+name = "s3delay"
+version = "0.1.0"
+edition = "2021"
+description = "bench-big (2026-11-12): a TCP proxy in front of MinIO that adds a fixed delay to the first byte of every HTTP response, an approximation of S3's first-byte latency (tc netem is not available in this sandbox's kernel)"
+
+[dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "net", "io-util", "time", "macros"] }
+
+[profile.release]
+opt-level = 3
+
+[workspace]

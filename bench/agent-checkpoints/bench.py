@@ -192,6 +192,10 @@ def write_phase(target: targets.Target, seed: int, threads: dict, events: list[d
         import pickle
 
         ctx = mp.get_context("fork")
+        # P-bench-big: the saver's setup (Postgres: CREATE TABLE IF NOT EXISTS and the migrations) once, before the
+        # workers start; N workers running it at once collide on Postgres's catalog (UniqueViolation on pg_type)
+        _s, _h = target.make_saver()
+        _h.close()
         t0 = time.time()
         paths = [os.path.join(out_dir, f".worker-{w}.state") for w in range(workers)]
         procs.extend(ctx.Process(target=_worker, args=(target, seed, threads, shards[w], paths[w], w)) for w in range(workers))
@@ -388,6 +392,100 @@ def ours_shares(sizes: dict, stored) -> dict:
             "compacted_share": round(by.get("compacted", 0) / stored, 4)}
 
 
+def big_run(a, target, threads, events, rec, expected, w, s3_before, status_before) -> None:
+    """P-bench-big: after the load, settle and sizes, the rounds of the measured mix (bigmix.py)."""
+    import subprocess
+
+    import bigmix
+
+    bigmix.SEED_OF_PLAN[0] = a.seed
+    s3_after = targets.fenvix_s3_counters(a.uri) if a.target == "fenvix" else None
+    status_after_write = targets.fenvix_status(a.uri) if a.target == "fenvix" else None
+    health = [run_health(a.health_cmd, "after load")] if a.health_cmd else []
+    # BENCH_SETTLE_STABLE_POLLS: pilots on tiny plans only (default 25 polls 30 s apart, longer than the GC grace)
+    settle = (targets.wait_compaction_idle(target, a.settle_cap_s, stable_polls=int(os.environ.get("BENCH_SETTLE_STABLE_POLLS", 25)))
+              if a.settle else None)
+    targets.wait_settled(target)
+    sizes = target.sizes()
+    load_rows = len(rec.rows)
+    containers = json.loads(a.probe_containers) if a.probe_containers else {}
+    rounds, used, extra = [], set(), {}
+    statuses = {}
+    for i, spec in enumerate(a.mix_round):
+        name, cmd = spec.split("=", 1)
+        t0 = time.time()
+        r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        pre = {"cmd": cmd, "rc": r.returncode, "seconds": round(time.time() - t0, 1), "output": (r.stdout + r.stderr)[-4000:]}
+        if r.returncode != 0:
+            rounds.append({"round": name, "pre": pre, "error": "the round's command failed", "n_errors": 1})
+            break
+        if a.health_cmd:
+            health.append(run_health(a.health_cmd, f"before round {name}"))
+        # container ids change only if a container is recreated; docker restart keeps them
+        probe = bigmix.Probe(containers, a.uri if a.target == "fenvix" else None)
+        c0 = bigmix.round_counters(a.target, a.uri)
+        res = bigmix.mix_round(target, threads, rec, expected, a.seed + 1000 * (i + 1), name, a.mix_write, a.mix_read,
+                               used, probe, extra)
+        c1 = bigmix.round_counters(a.target, a.uri)
+        res |= {"pre": pre, "cache": bigmix.cache_rates(a.target, c0, c1), "counters_before": c0, "counters_after": c1}
+        if a.target == "fenvix":
+            statuses[name] = targets.fenvix_status(a.uri)
+        rounds.append(res)
+        print(f"round {name}: {res['tasks']} tasks in {res['seconds']} s, errors {res['n_errors']}", flush=True)
+    status_end = targets.fenvix_status(a.uri) if a.target == "fenvix" else None
+    if a.health_cmd:
+        health.append(run_health(a.health_cmd, "end"))
+    rec.close()
+    check = expected.report()
+    log_failed = {}
+    if a.target == "fenvix":
+        log_failed = {"after_load": ((status_after_write or {}).get("quaderno") or {}).get("failed")}
+        for k, st in statuses.items():
+            log_failed[f"after_round_{k}"] = ((st or {}).get("quaderno") or {}).get("failed")
+        log_failed["end"] = ((status_end or {}).get("quaderno") or {}).get("failed")
+    lb = logical_bytes(rec.rows[:load_rows])
+    logical_total = lb["checkpoint_bytes"] + lb["writes_bytes"]
+    lb.pop("per_thread")
+    stored = sizes.get("stored_bytes")
+    s3_puts = (s3_after["put"] - s3_before["put"]) if (s3_before and s3_after and "put" in s3_after and "put" in s3_before) else None
+    ok = bool(not w["errors"] and check["wrong_reads"] == 0 and all(v == 0 for v in log_failed.values())
+              and all(h["rc"] == 0 for h in health) and len(rounds) == len(a.mix_round)
+              and all(not r.get("n_errors") for r in rounds))
+    summary = {
+        "note": VALIDATION_NOTE if a.local else "AWS round result",
+        "mode": "P-bench-big: load, settle, sizes, measured mix rounds (bigmix.py)",
+        "target": a.target, "label": a.label, "profile": a.profile, "seed": a.seed, "load_workers": a.workers,
+        "engine_binary_sha256": a.engine_sha256 or None,
+        "plan": {"threads": len(threads), "turns": len(events), "digest": generator.plan_digest(events)},
+        "client": {"python": platform.python_version(), "host": platform.node()},
+        "load": w | {"steps_per_second": round(lb["checkpoints"] / w["seconds"], 2) if w["seconds"] else None,
+                     "note": "the load's latencies are in ops.jsonl (phase write) and are not results"},
+        "mix": {"write_tasks": a.mix_write, "read_tasks": a.mix_read, "rounds": rounds},
+        "latency_ms": {r["round"]: bigmix.summarize_round(rec.rows, r["round"]) for r in rounds if "tasks" in r},
+        "bytes": lb | {"logical_total": logical_total, "stored": stored, "stored_from": sizes.get("stored_from"),
+                       **ours_shares(sizes, stored),
+                       "stored_per_logical": round(stored / logical_total, 4) if stored and logical_total else None},
+        "sizes": sizes, "s3_put_requests_during_load": s3_puts,
+        "server_status_before": status_before, "server_status_after_load": status_after_write,
+        "server_status_after_rounds": statuses, "server_status_end": status_end,
+        "log_failed": log_failed, "health": health, "settle": settle,
+        "correctness": check, "wrong_reads": check["wrong_reads"], "ok": ok,
+    }
+    with open(os.path.join(a.out, "summary.json"), "w") as f:
+        json.dump(summary, f, indent=2, default=str)
+    print(f"[{a.target}] {'VALIDATION, NOT RESULTS: ' if a.local else ''}ok={ok} checkpoints={lb['checkpoints']} "
+          f"load={w['seconds']}s stored={stored} stored/logical={summary['bytes']['stored_per_logical']} "
+          f"wrong_reads={check['wrong_reads']} -> {a.out}/summary.json")
+    if check["wrong_reads"]:
+        print(f"STOP: {check['wrong_reads']} wrong reads {check['by_kind']}: {check['examples'][:3]}", file=sys.stderr)
+        sys.exit(3)
+    if w["errors"]:
+        print("errors:", w["errors"][:3], file=sys.stderr)
+        sys.exit(1)
+    if not ok:
+        sys.exit(2)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--target", required=True, choices=["fenvix", "mongo", "postgres"])
@@ -410,6 +508,16 @@ def main() -> None:
                     help="sha256 of the mongo-server binary under test (our target); the gate checks it against the commit")
     ap.add_argument("--health-cmd", default="", help="shell command that checks every member of the line (bench-local "
                     "review F10); run after the write phase and at the end, a non-zero exit makes ok false")
+    # P-bench-big (2026-11-12): data larger than memory. With --mix-round the run is: load (the write phase, --workers N
+    # processes; its latencies are recorded but are not results), settle, sizes, then each round of the measured mix
+    # (bigmix.py) after its own command (a cold restart; for our line in round B also the S3-like delay). The read,
+    # delta, erase and cold phases of the standard run do not run.
+    ap.add_argument("--mix-round", action="append", default=[], metavar="NAME=CMD",
+                    help="a round of the measured mix, run after the shell command CMD (repeatable, in order)")
+    ap.add_argument("--mix-write", type=int, default=1000, help="write tasks per round (two turns on an old thread each)")
+    ap.add_argument("--mix-read", type=int, default=1200, help="read tasks per round (a quarter per read kind)")
+    ap.add_argument("--probe-containers", default=os.environ.get("BENCH_PROBE_CONTAINERS", ""),
+                    help="JSON {name: docker id} of the line's containers, for the per-op cgroup probes")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
     if not a.uri:
@@ -427,6 +535,9 @@ def main() -> None:
     status_before = targets.fenvix_status(a.uri) if a.target == "fenvix" else None
 
     w = write_phase(target, a.seed, threads, events, rec, a.workers, expected, a.out)
+    if a.mix_round:
+        big_run(a, target, threads, events, rec, expected, w, s3_before, status_before)
+        return
     s3_after = targets.fenvix_s3_counters(a.uri) if a.target == "fenvix" else None
     status_after_write = targets.fenvix_status(a.uri) if a.target == "fenvix" else None
     health = [run_health(a.health_cmd, "after write")] if a.health_cmd else []

@@ -47,6 +47,12 @@ IP = {"minio": "172.31.77.10",
       "log-0": "172.31.77.40", "log-1": "172.31.77.41", "log-2": "172.31.77.42", "cook": "172.31.77.43", "spare": "172.31.77.44",
       "cook-nolog": "172.31.77.45"}
 LIMITS = ["--cpus", "1", "--memory", "3g"]
+# P-bench-big (2026-11-12): `run --big --mem 1g` sets these before the line comes up (set_big): every member 1 CPU and a
+# small memory cap; MinIO not capped at all (it plays S3); Postgres shared_buffers at its default (128 MB); mongod's
+# WiredTiger cache at 0.25 GB (what mongod picks by itself under a 1 GiB cgroup: max(256 MB, 50% of (RAM - 1 GB))).
+BIG = {"on": False}
+S3DELAY = os.path.join(ROOT, "target/release/s3delay")
+CTL_DIR = os.path.join(os.environ.get("FXBENCH_WORK", "/tmp/fxbench"), "minio-ctl")
 LABEL = ["--label", "fxbench=1"]
 MACHINE_IMAGE = "fenvix-step9-machine"
 SRV = os.path.join(ROOT, "target/release/mongo-server")
@@ -161,7 +167,7 @@ if [ ! -s "$D/PG_VERSION" ]; then
   mkdir -p "$D"; chown -R postgres "$D"; chmod 700 "$D"
   gosu postgres pg_basebackup -D "$D" -R -X stream -d "host=pg-primary port=5432 user=app_user application_name=$APP"
 fi
-exec gosu postgres postgres -D "$D" -c hot_standby=on -c shared_buffers=768MB
+exec gosu postgres postgres -D "$D" -c hot_standby=on $PGMEM
 """
 
 
@@ -178,6 +184,14 @@ def pg_ready(host: str, db="postgres") -> bool:
 # bench-local review F8: shared_buffers 25% of the member's 3 GiB, as aws-fixes sets it on AWS (B10, pgbox.sh: 25% of
 # RAM); the stock 128 MB left Postgres's data in the page cache of its 3 GiB cgroup only. Every Postgres member.
 PG_MEM_FLAGS = ["-c", "shared_buffers=768MB"]
+
+
+def set_big(mem: str) -> None:
+    """P-bench-big: the limits and memory settings of a line whose data does not fit in memory (see BIG)."""
+    global PG_MEM_FLAGS
+    BIG["on"], BIG["mem"] = True, mem
+    LIMITS[:] = ["--cpus", "1", "--memory", mem]
+    PG_MEM_FLAGS = []
 
 
 def up_pg(name: str, primary_flags: list[str]) -> None:
@@ -201,7 +215,8 @@ def up_postgres_sync() -> None:
     up_pg("pg-primary", flags)
     for i in (1, 2):
         n = f"pg-standby{i}"
-        run_container(n, "postgres:16", ["--entrypoint", "bash"], ["-c", STANDBY_SH], env={"APP": f"standby{i}"})
+        run_container(n, "postgres:16", ["--entrypoint", "bash"], ["-c", STANDBY_SH],
+                      env={"APP": f"standby{i}", "PGMEM": " ".join(PG_MEM_FLAGS)})
     wait_until("both standbys streaming", lambda: len(pg_replication()) == 2 and all(r["state"] == "streaming" for r in pg_replication()), 300)
     with pg_conn(IP["pg-primary"]) as c:
         c.execute(f"ALTER SYSTEM SET synchronous_standby_names = {pc['synchronous_standby_names'].strip(chr(34))}")
@@ -234,12 +249,26 @@ def mongo_client(host: str, **kw):
 
 def up_mongo_rs3() -> None:
     for n in ("mongo-a", "mongo-b", "mongo-c"):
-        run_container(n, "mongo:7.0", [], ["mongod", "--replSet", "rs0", "--bind_ip_all"])
+        run_container(n, "mongo:7.0", [], ["mongod", "--replSet", "rs0", "--bind_ip_all"] + MONGO_CACHE())
     for n in ("mongo-a", "mongo-b", "mongo-c"):
         wait_until(f"{n} up", lambda n=n: mongo_client(n).admin.command("ping"), 120)
     mongo_client("mongo-a").admin.command("replSetInitiate", {"_id": "rs0", "members": [
         {"_id": i, "host": f"{n}:27017"} for i, n in enumerate(("mongo-a", "mongo-b", "mongo-c"))]})
     wait_until("rs0: 3 healthy members and a primary", mongo_rs_ok, 180)
+
+
+def MONGO_CACHE() -> list[str]:  # noqa: N802
+    return ["--wiredTigerCacheSizeGB", "0.25"] if BIG["on"] else []
+
+
+def stable(fn, polls: int, every: float = 1.0) -> bool:
+    """fn() true at `polls` polls in a row, `every` seconds apart."""
+    for i in range(polls):
+        if not fn():
+            return False
+        if i < polls - 1:
+            time.sleep(every)
+    return True
 
 
 def mongo_rs_ok() -> bool:
@@ -283,12 +312,34 @@ def bin_sha() -> dict:
     return {p: hashlib.sha256(open(p, "rb").read()).hexdigest() for p in (SRV, PQ)}
 
 
+MINIO_SH = """D=$(cat /fx/ctl/delay_ms 2>/dev/null || echo 0)
+if [ "$D" -gt 0 ]; then
+  echo "minio: s3delay in front, $D ms added to the first byte of every response"
+  /opt/s3delay 0.0.0.0:9000 127.0.0.1:9002 "$D" &
+  exec /opt/minio server /data --address 127.0.0.1:9002 --console-address :9001
+fi
+echo "minio: no delay"
+exec /opt/minio server /data --address :9000 --console-address :9001
+"""
+
+
+def set_delay(ms: int) -> None:
+    """P-bench-big: the S3-like delay MinIO's container applies from its next (re)start (MINIO_SH reads it)."""
+    os.makedirs(CTL_DIR, exist_ok=True)
+    open(os.path.join(CTL_DIR, "delay_ms"), "w").write(f"{int(ms)}\n")
+
+
 def up_minio() -> None:
-    run_container("minio", MACHINE_IMAGE, ["-v", f"{MINIO_BIN}:/opt/minio:ro"],
-                  ["/opt/minio", "server", "/data", "--address", ":9000", "--console-address", ":9001"],
+    if BIG["on"]:
+        set_delay(0)
+    run_container("minio", MACHINE_IMAGE, ["-v", f"{MINIO_BIN}:/opt/minio:ro"]
+                  + (["-v", f"{S3DELAY}:/opt/s3delay:ro", "-v", f"{CTL_DIR}:/fx/ctl:ro", "--entrypoint", "bash"] if BIG["on"] else []),
+                  (["-c", MINIO_SH] if BIG["on"] else
+                   ["/opt/minio", "server", "/data", "--address", ":9000", "--console-address", ":9001"]),
                   # bench-local review F8: MinIO's memory (and so its page cache, which held all of our data) is capped
-                  # at 3 GiB like every database member; its CPU stays uncapped, as the prompt allows
-                  limits=["--memory", "3g"],
+                  # at 3 GiB like every database member; its CPU stays uncapped, as the prompt allows. P-bench-big:
+                  # MinIO plays S3 and is not capped at all (the prompt).
+                  limits=([] if BIG["on"] else ["--memory", "3g"]),
                   env={"MINIO_ROOT_USER": S3["key"], "MINIO_ROOT_PASSWORD": S3["secret"],
                        # deleted objects go to MinIO's trash (.minio.sys/tmp) and are purged every 5 minutes by default;
                        # with our server's WAL and compaction churn that held 8 GB at once on this small disk (the
@@ -479,6 +530,9 @@ def restart(line: str) -> None:
                 r["state"] == "streaming" and r["sync_state"] == "quorum" for r in pg_replication()), 300)
     elif line == "mongo-rs3":
         wait_until("rs0 healthy", mongo_rs_ok, 300)
+        # P-bench-big pilot: right after all three restart, an election can still be settling (the health check that
+        # follows saw ok=false once); wait until rs0 has been healthy for 15 polls in a row
+        wait_until("rs0 healthy for 15 s", lambda: stable(mongo_rs_ok, 15), 300)
     elif line == "mongo-single":
         wait_until("mongo-single up", lambda: mongo_client("mongo-single").admin.command("ping"), 300)
     else:
@@ -603,6 +657,8 @@ def disk() -> dict:
 
 def run_line(a) -> int:
     line, out = a.line, os.path.abspath(a.out)
+    if getattr(a, "big", False):
+        set_big(a.mem)
     os.makedirs(out, exist_ok=True)
     os.makedirs(os.path.join(out, "logs"), exist_ok=True)
     down()
@@ -613,7 +669,11 @@ def run_line(a) -> int:
         return 4
     settings = {"line": LINES[line], "limits": LIMITS, "minio": "own container, not capped (our lines only)",
                 "network": f"docker network {NET} {SUBNET}; client on the host", "disk_before": d0,
-                "binaries_sha256": bin_sha() if LINES[line]["target"] == "fenvix" else None}
+                "binaries_sha256": bin_sha() if LINES[line]["target"] == "fenvix" else None,
+                "big": ({"mem": a.mem, "minio": "not capped (CPU and memory)", "postgres_shared_buffers": "default",
+                         "mongod_wiredTigerCacheSizeGB": 0.25, "delay_ms_round_B": a.delay_ms,
+                         "s3delay_sha256": hashlib.sha256(open(S3DELAY, "rb").read()).hexdigest() if os.path.exists(S3DELAY) else None}
+                        if getattr(a, "big", False) else None)}
     t0 = time.time()
     try:
         up(line)
@@ -639,12 +699,24 @@ def run_line(a) -> int:
                     "BENCH_S3_SECRET": S3["secret"], "BENCH_S3_REGION": S3["region"], "NO_PROXY": "*", "no_proxy": "*"}
         else:
             env |= {"NO_PROXY": "*", "no_proxy": "*"}
+        me = f"{PY} {os.path.abspath(__file__)}"
         cmd = [PY, os.path.join(HERE, "bench.py"), "--local", "--target", LINES[line]["target"],
                "--label", f"local {line}: {LINES[line]['durability']}", "--profile", a.profile, "--seed", str(a.seed),
-               "--workers", str(a.workers), "--read-sample", str(a.read_sample), "--erase-users", str(a.erase_users),
-               "--out", out, "--settle", "--cold-cmd", f"{PY} {os.path.abspath(__file__)} restart {line}",
-               "--cold-threads", str(a.cold_threads),
-               "--health-cmd", f"{PY} {os.path.abspath(__file__)} health {line}"]
+               "--workers", str(a.workers), "--out", out, "--settle",
+               "--health-cmd", f"{me} health {line}"]
+        if getattr(a, "big", False):
+            # P-bench-big: round A after a cold restart; round B the same on new threads after another cold restart, for
+            # our line with the S3-like delay on MinIO (for the others a second sample of the same mix)
+            ids = {n: sh(["docker", "inspect", "-f", "{{.Id}}", n]).stdout.strip() for n in all_containers(line)}
+            env["BENCH_PROBE_CONTAINERS"] = json.dumps(ids)
+            settings["probe_containers"] = ids
+            b_cmd = (f"{me} delay {a.delay_ms} && {me} restart {line}" if LINES[line]["target"] == "fenvix"
+                     else f"{me} restart {line}")
+            cmd += ["--mix-round", f"A={me} restart {line}", "--mix-round", f"B={b_cmd}",
+                    "--mix-write", str(a.mix_write), "--mix-read", str(a.mix_read)]
+        else:
+            cmd += ["--read-sample", str(a.read_sample), "--erase-users", str(a.erase_users),
+                    "--cold-cmd", f"{me} restart {line}", "--cold-threads", str(a.cold_threads)]
         if LINES[line]["target"] == "fenvix":
             cmd += ["--engine-sha256", settings["binaries_sha256"][SRV]]
         settings["bench_command"] = " ".join(cmd)
@@ -678,7 +750,8 @@ def run_line(a) -> int:
             try:
                 s = json.load(open(os.path.join(out, "summary.json")))
                 b = (s.get("server_status_before") or {}).get("quaderno") or {}
-                w = (s.get("server_status_after_write") or {}).get("quaderno") or {}
+                # P-bench-big: its summary calls the write phase "load"
+                w = (s.get("server_status_after_write") or s.get("server_status_after_load") or {}).get("quaderno") or {}
                 res["quaderno_sent_before_after_write"] = [b.get("sent"), w.get("sent")]
                 if line == "fenvix-log" and not ((w.get("sent") or 0) > (b.get("sent") or 0)):
                     res["quaderno_check"] = "FAILED: quaderno.sent did not grow during the write phase"
@@ -729,6 +802,13 @@ def main() -> None:
     r.add_argument("--cold-threads", type=int, default=200)
     r.add_argument("--min-free-gib", type=float, default=12)
     r.add_argument("--keep", action="store_true", help="leave the containers up (debugging only)")
+    r.add_argument("--big", action="store_true", help="P-bench-big: --mem cap, MinIO uncapped, load then mix rounds A and B")
+    r.add_argument("--mem", default="1g", help="memory cap of every member with --big")
+    r.add_argument("--delay-ms", type=int, default=20, help="--big: the delay added by s3delay in our line's round B")
+    r.add_argument("--mix-write", type=int, default=1000)
+    r.add_argument("--mix-read", type=int, default=1200)
+    d = sub.add_parser("delay", help="P-bench-big: MinIO's S3-like delay from its next restart")
+    d.add_argument("ms", type=int)
     for c in ("up", "restart", "check", "health"):
         p = sub.add_parser(c)
         p.add_argument("line", choices=sorted(LINES))
@@ -748,6 +828,9 @@ def main() -> None:
         sys.exit(0 if h["ok"] else 1)
     elif a.cmd == "check":
         print(json.dumps(check_line(a.line), indent=1, default=str))
+    elif a.cmd == "delay":
+        set_delay(a.ms)
+        log(f"delay: MinIO adds {a.ms} ms per response from its next start")
     elif a.cmd == "down":
         down()
     elif a.cmd == "hosts":

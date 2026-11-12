@@ -85,6 +85,15 @@ PROFILES = {
                         sessions_per_thread_mean=1.8, short_gap_share=0.6, short_gap_s=(300, 3600),
                         long_gap_s=(86400, 30 * 86400), user_start_window_s=30 * 86400, think_s=(2.3, 8.0),
                         read_type_s=(10, 120)),
+    # P-bench-big (2026-11-12): the standard shapes with twice the users (about 4,900 threads, about 13 GB logical,
+    # ESTIMATED from standard's 6.7 GB), the largest set whose three Postgres copies, three mongod copies and our MinIO
+    # objects each fit this sandbox's disk (about 25 GB free) one line at a time. Longer histories were not added: the
+    # bytes of a thread grow with the square of its length (every checkpoint holds the whole message list), so on this
+    # disk they would buy fewer threads, not more data that misses memory.
+    "big": Profile(users=2000, threads_per_user_mean=2.5, threads_per_user_max=20, coding_share=0.15,
+                   sessions_per_thread_mean=1.8, short_gap_share=0.6, short_gap_s=(300, 3600),
+                   long_gap_s=(86400, 30 * 86400), user_start_window_s=30 * 86400, think_s=(2.3, 8.0),
+                   read_type_s=(10, 120)),
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -184,6 +193,17 @@ def build_threads(seed: int, p: Profile) -> list[ThreadPlan]:
             rounds = [rt.randint(*k.tool_rounds) for _ in range(turns)]
             threads.append(ThreadPlan(f"user{u:06d}", thread_id(u, t), k.name, turns, rounds))
     return threads
+
+
+def extend_thread(seed: int, th: ThreadPlan, extra: int) -> ThreadPlan:
+    """P-bench-big: the same thread with `extra` more turns after its planned ones (the measured mix saves new steps on
+    old threads). The tool rounds of the new turns are drawn from (seed, "extra", thread, turn), so they never change the
+    planned turns and are the same for every target."""
+    k = CODING if th.kind == "coding" else CHAT
+    rounds = list(th.tool_rounds)
+    for turn in range(len(rounds), len(rounds) + extra):
+        rounds.append(rng_for(seed, "extra", th.thread_id, turn).randint(*k.tool_rounds))
+    return dataclasses.replace(th, turns=len(rounds), tool_rounds=rounds)
 
 
 def turn_messages(seed: int, th: ThreadPlan, turn: int) -> dict:
