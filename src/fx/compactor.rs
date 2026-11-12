@@ -251,7 +251,7 @@ pub fn server_knobs() -> Knobs {
         k.delta = RunOptions::unchecked(16 << 10, runfmt::DEFAULT_PART, runfmt::CustomerKind::V2K);
     }
     k.recognise_in_background = RECOGNISE_IN_BACKGROUND.load(Relaxed);
-    // tests (ctl test_53): absorb only at this many L0 SSTs (or near the stall), so a kill leaves L0 SSTs unabsorbed
+    // tests (ctl test_66): absorb only at this many L0 SSTs (or near the stall), so a kill leaves L0 SSTs unabsorbed
     if let Some(n) = std::env::var("FENVIX_TEST_ABSORB_MIN_L0").ok().and_then(|v| v.parse::<usize>().ok()) {
         k.absorb_min_l0 = n.max(1);
     }
