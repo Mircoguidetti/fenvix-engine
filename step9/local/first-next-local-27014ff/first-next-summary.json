@@ -1,0 +1,194 @@
+{
+ "program": "first-next",
+ "databases": [
+  "app_fn"
+ ],
+ "customers_per_db": 40,
+ "seed": 9,
+ "states_found": [
+  "app_fn"
+ ],
+ "requests": 200,
+ "all": {
+  "customers": 40,
+  "cold_customers": 40,
+  "not_cold_at_first": 0,
+  "errors": 0,
+  "first": {
+   "n": 40,
+   "p50_ms": 4.891,
+   "p99_ms": 36.556,
+   "gets_p50": 2,
+   "gets_max": 21,
+   "get_bytes_p50": 2951,
+   "get_bytes_max": 247118,
+   "maintenance_gets_total": 0
+  },
+  "next1": {
+   "n": 40,
+   "p50_ms": 5.085,
+   "p99_ms": 7.609,
+   "gets_p50": 2,
+   "gets_max": 3,
+   "get_bytes_p50": 6332,
+   "get_bytes_max": 6789,
+   "maintenance_gets_total": 0,
+   "against_hot": {
+    "p50_ms": {
+     "ratio_to_hot": 3.82,
+     "verdict": "SLOWER"
+    },
+    "p99_ms": {
+     "ratio_to_hot": 2.41,
+     "verdict": "SLOWER"
+    },
+    "gets_zero": false
+   }
+  },
+  "next2": {
+   "n": 40,
+   "p50_ms": 3.679,
+   "p99_ms": 4.519,
+   "gets_p50": 2,
+   "gets_max": 2,
+   "get_bytes_p50": 2627,
+   "get_bytes_max": 4346,
+   "maintenance_gets_total": 0,
+   "against_hot": {
+    "p50_ms": {
+     "ratio_to_hot": 2.77,
+     "verdict": "SLOWER"
+    },
+    "p99_ms": {
+     "ratio_to_hot": 1.43,
+     "verdict": "SLOWER"
+    },
+    "gets_zero": false
+   }
+  },
+  "next3": {
+   "n": 40,
+   "p50_ms": 3.128,
+   "p99_ms": 7.506,
+   "gets_p50": 1,
+   "gets_max": 1,
+   "get_bytes_p50": 629,
+   "get_bytes_max": 705,
+   "maintenance_gets_total": 0,
+   "against_hot": {
+    "p50_ms": {
+     "ratio_to_hot": 2.35,
+     "verdict": "SLOWER"
+    },
+    "p99_ms": {
+     "ratio_to_hot": 2.38,
+     "verdict": "SLOWER"
+    },
+    "gets_zero": false
+   }
+  },
+  "hot": {
+   "n": 40,
+   "p50_ms": 1.33,
+   "p99_ms": 3.152,
+   "gets_p50": 0,
+   "gets_max": 0,
+   "get_bytes_p50": 0,
+   "get_bytes_max": 0,
+   "maintenance_gets_total": 0
+  }
+ },
+ "by_db": {
+  "app_fn": {
+   "customers": 40,
+   "cold_customers": 40,
+   "not_cold_at_first": 0,
+   "errors": 0,
+   "first": {
+    "n": 40,
+    "p50_ms": 4.891,
+    "p99_ms": 36.556,
+    "gets_p50": 2,
+    "gets_max": 21,
+    "get_bytes_p50": 2951,
+    "get_bytes_max": 247118,
+    "maintenance_gets_total": 0
+   },
+   "next1": {
+    "n": 40,
+    "p50_ms": 5.085,
+    "p99_ms": 7.609,
+    "gets_p50": 2,
+    "gets_max": 3,
+    "get_bytes_p50": 6332,
+    "get_bytes_max": 6789,
+    "maintenance_gets_total": 0,
+    "against_hot": {
+     "p50_ms": {
+      "ratio_to_hot": 3.82,
+      "verdict": "SLOWER"
+     },
+     "p99_ms": {
+      "ratio_to_hot": 2.41,
+      "verdict": "SLOWER"
+     },
+     "gets_zero": false
+    }
+   },
+   "next2": {
+    "n": 40,
+    "p50_ms": 3.679,
+    "p99_ms": 4.519,
+    "gets_p50": 2,
+    "gets_max": 2,
+    "get_bytes_p50": 2627,
+    "get_bytes_max": 4346,
+    "maintenance_gets_total": 0,
+    "against_hot": {
+     "p50_ms": {
+      "ratio_to_hot": 2.77,
+      "verdict": "SLOWER"
+     },
+     "p99_ms": {
+      "ratio_to_hot": 1.43,
+      "verdict": "SLOWER"
+     },
+     "gets_zero": false
+    }
+   },
+   "next3": {
+    "n": 40,
+    "p50_ms": 3.128,
+    "p99_ms": 7.506,
+    "gets_p50": 1,
+    "gets_max": 1,
+    "get_bytes_p50": 629,
+    "get_bytes_max": 705,
+    "maintenance_gets_total": 0,
+    "against_hot": {
+     "p50_ms": {
+      "ratio_to_hot": 2.35,
+      "verdict": "SLOWER"
+     },
+     "p99_ms": {
+      "ratio_to_hot": 2.38,
+      "verdict": "SLOWER"
+     },
+     "gets_zero": false
+    }
+   },
+   "hot": {
+    "n": 40,
+    "p50_ms": 1.33,
+    "p99_ms": 3.152,
+    "gets_p50": 0,
+    "gets_max": 0,
+    "get_bytes_p50": 0,
+    "get_bytes_max": 0,
+    "maintenance_gets_total": 0
+   }
+  }
+ },
+ "text": "== all databases: 40 customers, 40 cold at their first request, 0 not cold (left out), 0 errors\nFIRST  messaggi latest 20: n=40 p50 4.89 ms p99 36.56 ms; GETs p50 2 max 21; bytes p50 2951 max 247118; background GETs in the window 0\nNEXT 1 eventi latest 100: n=40 p50 5.08 ms p99 7.61 ms; GETs p50 2 max 3; bytes p50 6332 max 6789; background GETs in the window 0 | vs HOT p50 x3.82 SLOWER, p99 x2.41 SLOWER, GETs NOT 0\nNEXT 2 ordini by stato: n=40 p50 3.68 ms p99 4.52 ms; GETs p50 2 max 2; bytes p50 2627 max 4346; background GETs in the window 0 | vs HOT p50 x2.77 SLOWER, p99 x1.43 SLOWER, GETs NOT 0\nNEXT 3 messaggi older page: n=40 p50 3.13 ms p99 7.51 ms; GETs p50 1 max 1; bytes p50 629 max 705; background GETs in the window 0 | vs HOT p50 x2.35 SLOWER, p99 x2.38 SLOWER, GETs NOT 0\nHOT    the first again: n=40 p50 1.33 ms p99 3.15 ms; GETs p50 0 max 0; bytes p50 0 max 0; background GETs in the window 0\n== app_fn: 40 customers, 40 cold at their first request, 0 not cold (left out), 0 errors\nFIRST  messaggi latest 20: n=40 p50 4.89 ms p99 36.56 ms; GETs p50 2 max 21; bytes p50 2951 max 247118; background GETs in the window 0\nNEXT 1 eventi latest 100: n=40 p50 5.08 ms p99 7.61 ms; GETs p50 2 max 3; bytes p50 6332 max 6789; background GETs in the window 0 | vs HOT p50 x3.82 SLOWER, p99 x2.41 SLOWER, GETs NOT 0\nNEXT 2 ordini by stato: n=40 p50 3.68 ms p99 4.52 ms; GETs p50 2 max 2; bytes p50 2627 max 4346; background GETs in the window 0 | vs HOT p50 x2.77 SLOWER, p99 x1.43 SLOWER, GETs NOT 0\nNEXT 3 messaggi older page: n=40 p50 3.13 ms p99 7.51 ms; GETs p50 1 max 1; bytes p50 629 max 705; background GETs in the window 0 | vs HOT p50 x2.35 SLOWER, p99 x2.38 SLOWER, GETs NOT 0\nHOT    the first again: n=40 p50 1.33 ms p99 3.15 ms; GETs p50 0 max 0; bytes p50 0 max 0; background GETs in the window 0",
+ "ok": true
+}

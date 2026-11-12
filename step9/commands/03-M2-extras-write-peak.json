@@ -8,12 +8,6 @@
   "measure",
   "extras"
  ],
- "programs": [
-  "s3-first-byte",
-  "sealed-run",
-  "log-ack",
-  "takeovers",
-  "write-peak"
- ],
+ "programs": ["s3-first-byte", "sealed-run", "log-ack", "first-next", "takeovers", "write-peak"],
  "pantry": "fenvix-kitchen-pantry-1000000001"
 }

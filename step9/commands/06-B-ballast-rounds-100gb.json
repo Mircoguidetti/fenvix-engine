@@ -8,8 +8,6 @@
   "measure",
   "extras"
  ],
- "programs": [
-  "ballast-rounds"
- ],
+ "programs": ["first-next", "ballast-rounds"],
  "pantry": "fenvix-kitchen-pantry-1000000001"
 }

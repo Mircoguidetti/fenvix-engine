@@ -5,6 +5,7 @@
 #   s3-first-byte   programs/s3_first_byte.py   S3 first byte by object size, and ranged GETs
 #   sealed-run      programs/sealed_run_read.py one-trip read of a sealed run (256 KiB blocks, fence in RAM)
 #   log-ack         programs/log_ack.py         3-zone log ack: through the cook (w: majority) and raw (pq commit)
+#   first-next      programs/first_next.py      first request of a cold customer, then 3 different next ones (R1)
 #   ballast-rounds  the same cold read phases as m30-corto (Q2, Q3, Q1, Q1d, Q4), on two ballast databases, through
 #                   code-irlanda's programma.py and the founder's script unchanged (100 GB and 1 TB only)
 #   takeovers       programs/takeovers.py       N takeovers cook <-> spare, 0 acknowledged writes lost
@@ -63,6 +64,16 @@ FENVIX_P1_URI=$URI $PY wait_db.py 15 >> out/steps.log 2>&1 || finish COOK_UNREAC
 has s3-first-byte && run_prog s3-first-byte $PY s3_first_byte.py "$BUCKET" out/s3-first-byte $(cfg s3_first_byte_args)
 has sealed-run && run_prog sealed-run $PY sealed_run_read.py "$BUCKET" out/sealed-run $(cfg sealed_run_args)
 has log-ack && with_status log-ack out/log-ack/log-ack-summary.json $PY log_ack.py out/log-ack --uri "$URI" --logs "$(cfg bench_logs)" --pq ./pq $(cfg log_ack_args)
+if has first-next; then
+  # total review R1 point 2: the first request of a cold customer, then three different requests of the same customer,
+  # with the cook's GETs and bytes per request; before the ballast rounds (they warm what they read). State files: the
+  # Atlas ones from the client package, the ballast ones from the pantry (the largest databases are taken)
+  mkdir -p fn-states/atlas fn-states/ballast
+  [ -f atlas-states.tar.gz ] && tar xzf atlas-states.tar.gz -C fn-states/atlas 2>/dev/null
+  $PY s3io.py get-dir "$PANTRY" step9-ballast-states/ fn-states/ballast > /dev/null 2>&1
+  # shellcheck disable=SC2046
+  with_status first-next out/first-next/first-next-summary.json $PY first_next.py out/first-next --uri "$URI" --states fn-states $(cfg first_next_args)
+fi
 if has ballast-rounds; then
   # two ballast databases, their state files from the pantry, the read phases of m30-corto through programma.py
   mkdir -p ballast/lavoro/stati

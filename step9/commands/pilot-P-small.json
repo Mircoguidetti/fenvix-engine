@@ -8,13 +8,7 @@
   "measure",
   "extras"
  ],
- "programs": [
-  "s3-first-byte",
-  "log-ack",
-  "takeovers",
-  "agent-bench",
-  "write-peak"
- ],
+ "programs": ["s3-first-byte", "log-ack", "first-next", "takeovers", "agent-bench", "write-peak"],
  "aurora": true,
  "pantry": "fenvix-kitchen-pantry-1000000001",
  "takeovers_args": "--n 5 --writers 8 --between-s 3 --lease-ttl 4 --log on",

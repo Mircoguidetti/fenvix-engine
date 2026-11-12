@@ -47,8 +47,11 @@ Fields of step9/command.json (defaults in brackets):
                 cook waits for compaction 2 to finish, on the server's own counters and the fx/ objects, and the
                 program does not run if it never does: NOT_SETTLED]
   settle_max_min the cap of that wait, and of the loader's after the load [30]; reaching it stops (never silent)
-  programs      any of "m30", "s3-first-byte", "sealed-run", "log-ack", "ballast-rounds", "takeovers", "write-peak",
-                "agent-bench" [all]. "write-peak" (aws-fixes B4): the founder's script's own load (the Atlas load's
+  programs      any of "m30", "s3-first-byte", "sealed-run", "log-ack", "first-next", "ballast-rounds", "takeovers",
+                "write-peak", "agent-bench" [all]. "first-next" (total review R1 point 2): for N cold customers of the
+                largest databases, the first request and three different next requests of the same customer, with the
+                cook's GETs and bytes per request (programs/first_next.py; first_next_args); it runs before the ballast
+                rounds, on customers the founder's script never uses (not its reserved ones). "write-peak" (aws-fixes B4): the founder's script's own load (the Atlas load's
                 shape: 6 databases at once, 16 threads each, batches of 1,000) for 25 minutes through the MEASURED cook
                 (log on, the round's server_options), from a client of the m30 client's type, after the extra programs
                 (the spare is off by then); write_peak_args
@@ -56,7 +59,8 @@ Fields of step9/command.json (defaults in brackets):
                 and Aurora are in eu-west-1a, as on Atlas (client in eu-west-1a, primary in another zone: euw1-az2,
                 MEASURED from the hello tags) | "same": clients in the cook's zone ["other"]. Every machine records its
                 zone name and zone id (IMDS) in results/<name>/zone.json; run.json lists them.
-  takeovers_args, log_ack_args, s3_first_byte_args, sealed_run_args, ballast_rounds_args: extra arguments [see DEFAULTS]
+  takeovers_args, log_ack_args, s3_first_byte_args, sealed_run_args, ballast_rounds_args, first_next_args: extra arguments
+                [see DEFAULTS]
   spend_cap     dollars; the round blocks itself there [5]. Above 5 only with "cap_approved": "<date, the founder's yes>"
   ceiling_min   minutes after which the round stops and every machine powers off [330, at most 340]
                 aws-fixes (B2): decide.py estimates the job's duration from the phases and programs (JOB_HOURS below,
@@ -73,8 +77,8 @@ import sys
 
 from machine_types import ROLES, TYPES
 
-PROGRAMS = ["m30", "s3-first-byte", "sealed-run", "log-ack", "ballast-rounds", "takeovers", "write-peak", "agent-bench"]
-EXTRA_PROGRAMS = ["s3-first-byte", "sealed-run", "log-ack", "ballast-rounds", "takeovers"]   # the extras client's
+PROGRAMS = ["m30", "s3-first-byte", "sealed-run", "log-ack", "first-next", "ballast-rounds", "takeovers", "write-peak", "agent-bench"]
+EXTRA_PROGRAMS = ["s3-first-byte", "sealed-run", "log-ack", "first-next", "ballast-rounds", "takeovers"]   # the extras client's
 # How long each part of a job takes, in hours (ESTIMATED; aws-fixes B2). Sources: the Atlas load 2.8 h (MEASURED rate on
 # Atlas M30, 2026-11-05; OUR load rate on real S3 is UNKNOWN until the load job runs: the job's own 4.3 h script limit
 # and the ceiling stop it, and the settle cap is added); m30-corto about 3.0 h (kitchen README, the Atlas round's
@@ -105,6 +109,7 @@ DEFAULTS = {
     "takeovers_off_args": "--n 50 --writers 8 --between-s 3 --lease-ttl 4 --log off --label logoff",
     "log_ack_args": "--n 1000 --conc 8,64 --secs 20",
     "s3_first_byte_args": "--objects 40 --reads 300",
+    "first_next_args": "--customers 30 --max-dbs 2",
     # read sample and erased users as the local run (bench-local review, item 8): p99 of 300 reads, not of 30
     "agent_bench_args": "--profile standard --workers 1 --read-sample 300 --erase-users 100",
     "sealed_run_args": "--run-mib 1024 --block-kib 256 --reads 300",
