@@ -160,7 +160,10 @@ def test_idle_cursors_expire():
         assert c.cdb.command("getMore", kept, collection="t", batchSize=1)["cursor"]["id"] == kept
         assert c.cdb.command("getMore", no_timeout, collection="t", batchSize=1)["cursor"]["id"] == no_timeout
         if heap1 is not None:
-            # 40 cursors held ~40 x 499 documents of ~1 KB; closing them frees that
-            assert heap2 < heap1 - 10, (heap1, heap2)
+            # A plain find is read page by page (fix-long-commands): an idle cursor keeps its position, not the ~499
+            # documents of ~1 KB it has left (about 20 MB for the 40 before). So the 40 cursors cost little memory while
+            # open, and their expiry leaves no memory behind.
+            assert heap1 < heap0 + 10, (heap0, heap1)
+            assert heap2 < heap1 + 10, (heap1, heap2)
     finally:
         srv.term()
