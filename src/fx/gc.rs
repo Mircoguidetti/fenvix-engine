@@ -25,6 +25,11 @@ use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
+/// Unreferenced runs a GC pass kept because a job running then may have written them (review R1).
+pub static KEPT_FOR_RUNNING_JOB: AtomicU64 = AtomicU64::new(0);
+/// The store's clock may be ahead of ours: a run up to this much older than a job's start is treated as its output.
+const JOB_CLOCK_MARGIN_MS: i64 = 60_000;
+
 #[derive(Default)]
 pub struct GcState {
     first_unref: Mutex<HashMap<String, Instant>>,
@@ -156,6 +161,7 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
     let run_dir = Path::from(format!("{}/run", manifest::root(id)));
     let metas: Vec<_> = store.list(Some(&run_dir)).try_collect().await?;
     let grace = c.knobs.gc_grace;
+    let job_floor = c.oldest_job_start_ms();
     let mut fu = st.first_unref.lock().unwrap().clone();
     let mut doomed = Vec::new();
     let mut live_unref = HashSet::new();
@@ -167,6 +173,15 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
         live_unref.insert(p.clone());
         let first = *fu.entry(p.clone()).or_insert_with(Instant::now);
         let age = std::time::Duration::from_millis((manifest::now_ms() as i64 - m.last_modified.timestamp_millis()).max(0) as u64);
+        // review R1: a run written since the oldest running job started may be that job's output, not published yet (a
+        // reseal publishes all its split outputs at its commit; slowed by the CPU share, a job can outlast the grace after
+        // its first output): kept until the job ends. A minute of margin for the store's clock against ours.
+        if let Some(t) = job_floor {
+            if m.last_modified.timestamp_millis() + JOB_CLOCK_MARGIN_MS >= t as i64 {
+                KEPT_FOR_RUNNING_JOB.fetch_add(1, Relaxed);
+                continue;
+            }
+        }
         if first.elapsed() >= grace && age >= grace {
             doomed.push(m.location);
         }

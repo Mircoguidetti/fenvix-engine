@@ -60,7 +60,8 @@ pub async fn erase(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
     Ok(json!({
         "database": db, "erased": true,
         "objects_deleted": report.deleted, "delete_passes": report.passes, "checkpoints_released": report.checkpoints_released,
-        "proof": { "listed_after_erase": proof, "remaining_objects": 0, "method": "fresh LIST of each prefix after the last delete" },
+        "incomplete_uploads_aborted": report.uploads_aborted,
+        "proof": { "listed_after_erase": proof, "remaining_objects": 0, "remaining_incomplete_uploads": 0, "method": "fresh LIST of each prefix after the last delete, and of the incomplete multipart uploads under tenants/{db}/" },
         "elapsed_ms": t0.elapsed().as_millis() as u64,
         "cost": cost.to_json(),
         "final_usage": final_usage,

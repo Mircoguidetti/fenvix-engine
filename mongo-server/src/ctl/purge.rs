@@ -19,6 +19,8 @@ pub struct PurgeReport {
     pub deleted: u64,
     pub passes: u32,
     pub checkpoints_released: u32,
+    /// Incomplete multipart uploads under the database's prefix, aborted (`uploads.rs`; review D1).
+    pub uploads_aborted: u64,
 }
 
 pub fn tenant_path(db: &str) -> String {
@@ -97,6 +99,9 @@ pub async fn purge_tenant(ctl: &Ctl, db: &str) -> Result<PurgeReport> {
     }
     let hints = list(&ctl.store, &rec::path(&["ttl-hints", db])).await?;
     rep.deleted += delete_all(&ctl.store, hints).await?;
+    // the parts of runs and SSTs whose upload was never completed (a cancelled compaction job, a process that exited
+    // mid-upload): the database's rows, invisible to LIST (review of d9dbc7c, D1)
+    rep.uploads_aborted = crate::uploads::abort_all(&format!("{}/", tenant_path(db))).await?.unwrap_or(0);
     Ok(rep)
 }
 
@@ -115,6 +120,10 @@ pub async fn leftovers(ctl: &Ctl, db: &str) -> Result<Vec<String>> {
         rec::path(&["control", "erasures", db]),
     ] {
         out.extend(list(&ctl.store, &prefix).await?.into_iter().map(|p| p.to_string()));
+    }
+    // incomplete multipart uploads hold data too, and LIST does not show them
+    if let Some(ups) = crate::uploads::list(&format!("{}/", tenant_path(db))).await? {
+        out.extend(ups.into_iter().map(|u| format!("incomplete upload {} ({})", u.key, u.upload_id)));
     }
     for exact in [rec::path(&["control", "pins", db]), rec::path(&["control", "retention", db]), rec::path(&["control", "ops", &format!("{db}.json")])] {
         match ctl.store.head(&exact).await {

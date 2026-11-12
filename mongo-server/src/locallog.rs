@@ -791,6 +791,13 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
             let dbs = Arc::clone(dbs);
             let log_id = log_id.clone();
             async move {
+                let mut recs = recs;
+                // perf-latency round 2: records object storage already has (a clean stop uploaded them) are dropped without
+                // opening the database: a warm spare restarted beside the cook took the cook's databases to apply nothing
+                // and held them (the cook's commands were refused, "tenant app_demo is owned by server process ...")
+                if get().map_or(false, |l| l.is_remote()) && drop_stored(&dbs, &log_id, &db, &mut recs).await {
+                    return (db, Ok(Outcome::Nothing), None, Vec::new());
+                }
                 let keep: Vec<Record> = recs.iter().map(copy_record).collect();
                 let mut seen = None;
                 let r = replay_with_timeout(&dbs, &log_id, &db, recs, false, &mut seen, timeout).await;
@@ -943,6 +950,36 @@ async fn replay_db(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str, mut recs:
     Ok(Outcome::Applied(todo.len() as u64))
 }
 
+/// The local-log marker of `db` as object storage holds it, read without opening the database (no lease): None when it
+/// cannot be read or there is none. A marker is written in the same durable batch as the records it names, so the records
+/// of its log up to its sequence number are in object storage.
+async fn stored_marker(dbs: &Arc<crate::dbs::Dbs>, db: &str) -> Option<(String, u64)> {
+    // through our manifest as well as SlateDB (`fx/pair.rs`): a drop may have left the marker in our runs only. Read
+    // without the database's lease and maybe while another process writes it: a marker read here was written durably, so
+    // at worst it is older than the newest one, and fewer records are dropped (never one that is not in object storage)
+    let mut o = slatedb::config::DbReaderOptions::default();
+    o.manifest_poll_interval = Duration::from_secs(3600);
+    let store = dbs.store();
+    let r = tenant_bench::fx::pair::PairedReader::open_follow(&store, db, tenant_bench::lifecycle::tenant_path(db), tenant_bench::fx::pair::Follow::Newest, o).await.ok()?;
+    let v = crate::layout2::Raw::Paired(&r).get(MARKER_KEY).await.ok().flatten();
+    v.as_deref().and_then(parse_marker)
+}
+
+/// perf-latency round 2: before a background retry opens a database to apply its kept records, drop the records object
+/// storage already has (the stored marker of this log covers them), without taking the database's lease. A warm spare
+/// that started while the cook's last records of `admin` were still only in the log kept them, and when the cook closed
+/// `admin` (after uploading them) the spare's retry took the lease to apply nothing and held it: the cook's next
+/// connection failed to authenticate ("tenant admin is owned by server process ..."; a standard benchmark run died).
+/// Returns true when nothing is left to apply. A marker that cannot be read leaves the records as they are.
+async fn drop_stored(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str, recs: &mut Vec<Record>) -> bool {
+    if let Some((id, done)) = stored_marker(dbs, db).await {
+        if id == log_id {
+            recs.retain(|r| r.orig > done);
+        }
+    }
+    recs.is_empty()
+}
+
 /// Retry the replay of the kept databases (1 s, then doubling up to 30 s) until none is left.
 fn spawn_retry(dbs: Arc<crate::dbs::Dbs>, timeout: Duration) {
     tokio::spawn(async move {
@@ -955,14 +992,29 @@ fn spawn_retry(dbs: Arc<crate::dbs::Dbs>, timeout: Duration) {
             if todo.is_empty() {
                 return;
             }
-            for (db, recs) in todo {
+            for (db, mut recs) in todo {
                 let mut seen = None;
                 let rec_epoch = recs.iter().map(|r| r.epoch).max().unwrap_or(0);
-                match replay_with_timeout(&dbs, &log_id, &db, recs, true, &mut seen, timeout).await {
+                let r = if drop_stored(&dbs, &log_id, &db, &mut recs).await { Ok(Outcome::Nothing) } else { replay_with_timeout(&dbs, &log_id, &db, recs, true, &mut seen, timeout).await };
+                match r {
                     Ok(Outcome::Applied(_)) | Ok(Outcome::Nothing) => {
                         // Applied durably; nothing else was written meanwhile (the database was refused): all is uploaded.
                         if let Some(e) = log.tenants.lock().unwrap().get_mut(&db) {
                             e.uploaded = e.staged;
+                        }
+                        // perf-latency round 3: the replicated log is told, as the start-up replay and a close tell it. The
+                        // kept records are in object storage now (applied, or already there by the stored marker), and
+                        // the log may drop them. Missing since round 2, when this retry stopped opening the database to
+                        // apply nothing (the database's uploader and close used to tell the log then): the replicas kept
+                        // every record from the oldest kept one on, their disks grew with all the writes (MEASURED medium
+                        // m21: 1.4 GB per replica, alarm "oldest record not on S3 1,326 s"; the standard runs filled the
+                        // disk) and a takeover would have read them all back. A position older than what the cook already
+                        // confirmed changes nothing (the log keeps the highest).
+                        if let Some(r) = &log.remote {
+                            let pos = r.committed_pos(&db);
+                            if let Err(e) = r.flush_done(&db, pos).await {
+                                eprintln!("quaderno: {e:#}");
+                            }
                         }
                         if log.pinned.lock().unwrap().remove(&db).is_some() {
                             RETRIED.fetch_add(1, Relaxed);

@@ -1,0 +1,41 @@
+.......................F.............                                    [100%]
+=================================== FAILURES ===================================
+__________________________ test_clone_copies_no_data ___________________________
+
+env = (<lib.Server object at 0x7f44d53dcef0>, 'ctl-fork-80e52e80')
+
+    def test_clone_copies_no_data(env):
+        srv, bucket = env
+        c = srv.client()
+        fill(c, "big", "c", 20000)
+        c["big"].command("tenantAdmin", close=True)
+        src_bytes = prefix_bytes(bucket, "tenants/big/")
+        st, r = srv.admin.post("/v1/databases/big/fork", {"target": "big_clone"})
+        assert st == 201
+        cost = r["fork"]["cost"]
+        fork_bytes = prefix_bytes(bucket, "tenants/big_clone/")
+        print("clone cost", cost, "source bytes", src_bytes, "fork own bytes", fork_bytes, "ms", r["fork"]["elapsed_ms"])
+        assert src_bytes > 1_000_000
+        assert cost["put_bytes"] < 20_000 and cost["get_bytes"] < 20_000, cost  # manifests only: no document data moves
+        assert fork_bytes < 20_000
+        assert cost["copy"] == 0
+        # copy mode: server-side COPY requests, no bytes through the process, bytes duplicated in the bucket
+        st, r2 = srv.admin.post("/v1/databases/big/fork", {"target": "big_copy", "mode": "copy"})
+        assert st == 201
+        cost2 = r2["fork"]["cost"]
+        print("copy cost", cost2, "fork bytes", prefix_bytes(bucket, "tenants/big_copy/"), "ms", r2["fork"]["elapsed_ms"])
+        assert cost2["copy"] >= 3 and cost2["put_bytes"] < 20_000
+>       assert abs(prefix_bytes(bucket, "tenants/big_copy/") - src_bytes) < 2000  # lease/marker only
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert 2882 < 2000
+E        +  where 2882 = abs((9846877 - 9843995))
+E        +    where 9846877 = prefix_bytes('ctl-fork-80e52e80', 'tenants/big_copy/')
+
+test_02_fork.py:99: AssertionError
+----------------------------- Captured stdout call -----------------------------
+clone cost {'copy': 0, 'delete': 3, 'get': 20, 'get_bytes': 4095, 'get_range': 0, 'get_tier_requests': 22, 'head': 2, 'list': 8, 'put': 15, 'put_bytes': 3868, 'put_tier_requests': 23} source bytes 9843995 fork own bytes 1279 ms 71
+copy cost {'copy': 20, 'delete': 3, 'get': 15, 'get_bytes': 3218, 'get_range': 0, 'get_tier_requests': 17, 'head': 2, 'list': 7, 'put': 12, 'put_bytes': 2562, 'put_tier_requests': 39} fork bytes 9846877 ms 83
+=========================== short test summary info ============================
+FAILED test_02_fork.py::test_clone_copies_no_data - AssertionError: assert 28...
+1 failed, 36 passed in 185.46s (0:03:05)
+exit 1

@@ -82,6 +82,13 @@ pub struct Version {
     /// Newest first.
     pub delta: Vec<RunLine>,
     pub next_group_id: u32,
+    /// perf-latency round 3: the L0 SSTs of the writer's SlateDB view that an absorption put into our runs, with the
+    /// highest seq of each (SST id as SlateDB prints it). A compactor that starts reads only the L0 SSTs missing here to
+    /// know which are absorbed, instead of every one (it ran under the database's exclusive lock). Optional: a version
+    /// without it (an older release, or `build.rs`) makes the compactor read the SSTs, as before; an older release ignores
+    /// it. Format 1 unchanged.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub absorbed_l0: Vec<(String, u64)>,
 }
 
 pub fn hex(b: &[u8]) -> String {

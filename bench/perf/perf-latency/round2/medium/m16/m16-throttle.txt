@@ -1,0 +1,5 @@
+nr_periods 3234 nr_throttled 1 throttled_time 101407 tokio-rt-worker 105.32
+mongo-server 0.02
+fx-bg 75.7
+jemalloc_bg_thd 0.46
+Thu Nov 12 01:48:19 UTC 2026

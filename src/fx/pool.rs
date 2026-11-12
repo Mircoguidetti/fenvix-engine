@@ -168,6 +168,241 @@ pub fn global() -> Arc<Pool> {
     Arc::clone(GLOBAL.get_or_init(|| Pool::new(Pool::default_slots())))
 }
 
+/// How much lower than the server's threads the background threads run (`setpriority`, nice +10: when a customer's
+/// command and a compaction job both want the CPU, the kernel runs the command first).
+/// perf-latency round 2: when the process may use fewer cores than the CPUs it may run on (a container's CPU quota, as
+/// `available_parallelism` reports it), pin the whole process to that many CPUs. A quota is counted per 100 ms period
+/// over every thread: threads running at once on several CPUs used a one-core quota in a fraction of the period, and then
+/// the kernel froze all of them, the commands too, to its end (MEASURED: throttled in 15-29% of the periods). On as many
+/// CPUs as the quota, the threads take turns, the quota is not overrun, and the background's lower priority works.
+/// Call before any thread is started (threads inherit the mask). Returns the CPUs chosen, None when nothing was changed.
+/// `FENVIX_PIN_CPUS=0` turns it off.
+pub fn pin_to_quota() -> Option<Vec<usize>> {
+    if std::env::var("FENVIX_PIN_CPUS").as_deref() == Ok("0") {
+        return None;
+    }
+    let quota = std::thread::available_parallelism().ok()?.get();
+    unsafe {
+        let mut set: libc::cpu_set_t = std::mem::zeroed();
+        if libc::sched_getaffinity(0, std::mem::size_of::<libc::cpu_set_t>(), &mut set) != 0 {
+            return None;
+        }
+        let allowed: Vec<usize> = (0..libc::CPU_SETSIZE as usize).filter(|c| libc::CPU_ISSET(*c, &set)).collect();
+        if allowed.len() <= quota {
+            return None;
+        }
+        // spread processes of one host over its CPUs at random (a pid is no help: in containers every server is pid 7)
+        let start = rand::random::<usize>() % allowed.len();
+        let chosen: Vec<usize> = (0..quota).map(|i| allowed[(start + i) % allowed.len()]).collect();
+        let mut pin: libc::cpu_set_t = std::mem::zeroed();
+        for c in &chosen {
+            libc::CPU_SET(*c, &mut pin);
+        }
+        if libc::sched_setaffinity(0, std::mem::size_of::<libc::cpu_set_t>(), &pin) != 0 {
+            return None;
+        }
+        Some(chosen)
+    }
+}
+
+static FLUSH: std::sync::OnceLock<tokio::runtime::Runtime> = std::sync::OnceLock::new();
+
+/// perf-latency round 3: the runtime of every writer's own background tasks (SlateDB's memtable flusher and WAL flusher).
+/// They are on the write path: a memtable not uploaded counts against `max_unflushed_bytes`, and at that limit every write
+/// stops. On the background runtime (nice +10, pinned to the same CPU as the commands) the flusher was starved exactly
+/// when writes were busiest. Two threads at normal priority: they take turns with the commands, and compaction (the
+/// background runtime) yields to both.
+pub fn flush_runtime() -> tokio::runtime::Handle {
+    FLUSH
+        .get_or_init(|| tokio::runtime::Builder::new_multi_thread().worker_threads(2).thread_name("fx-flush").thread_stack_size(16 << 20).enable_all().build().expect("flush runtime"))
+        .handle()
+        .clone()
+}
+
+static WRITE_PATH: std::sync::OnceLock<tokio::runtime::Runtime> = std::sync::OnceLock::new();
+
+/// perf-latency round 3: the runtime of the compaction work the writes wait on: absorption (L0 SSTs into delta runs) and
+/// SlateDB's fold (which then removes the absorbed L0 SSTs from the writer's manifest). SlateDB stops a database's
+/// writes when its L0 (with the uploads in flight) reaches `l0_max_ssts`; at nice +10, on the one CPU of the commands,
+/// absorption and the fold got the CPU the commands left, which was little exactly when writes were busiest: writes
+/// stopped for 1.2-5 s with 5-7 L0 SSTs visible (medium m18). Two threads at normal priority, apart from the flushers so
+/// that a long absorption never holds a memtable upload. Merges, reseals, erasures and GC stay on [`bg_runtime`].
+pub fn write_path_runtime() -> tokio::runtime::Handle {
+    WRITE_PATH
+        .get_or_init(|| tokio::runtime::Builder::new_multi_thread().worker_threads(2).thread_name("fx-wpath").thread_stack_size(16 << 20).enable_all().build().expect("write-path runtime"))
+        .handle()
+        .clone()
+}
+
+/// The runtime for a compactor's absorption and fold: [`write_path_runtime`] when the compactor runs on [`bg_runtime`]
+/// (the server), else the compactor's own runtime (tests and benches that give one).
+pub fn write_path_for(runtime: &tokio::runtime::Handle) -> tokio::runtime::Handle {
+    if BG_ON.load(std::sync::atomic::Ordering::Relaxed) && super::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed) && WRITE_PATH_ON.load(std::sync::atomic::Ordering::Relaxed) {
+        write_path_runtime()
+    } else {
+        runtime.clone()
+    }
+}
+
+/// `FENVIX_WRITE_PATH_RUNTIME=0` keeps absorption and the fold on the background runtime (the round-2 behaviour, to compare).
+pub static WRITE_PATH_ON: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
+/// Whether the server's compactors use [`bg_runtime`] (`--compaction-threads own`, the default) or the server's runtime.
+pub static BG_ON: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
+/// The runtime a compactor started from the server runs its jobs on (see [`bg_runtime`]).
+pub fn compaction_runtime() -> tokio::runtime::Handle {
+    if BG_ON.load(std::sync::atomic::Ordering::Relaxed) {
+        bg_runtime()
+    } else {
+        tokio::runtime::Handle::current()
+    }
+}
+
+pub static BG_NICE: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(10);
+
+static BG: std::sync::OnceLock<tokio::runtime::Runtime> = std::sync::OnceLock::new();
+
+/// Share of the cores the process may use (`available_parallelism`, which follows a container's CPU quota) that the
+/// background threads may take, in percent (`--compaction-cpu-pct`, default 50). Perf-latency: in a container with a CPU
+/// quota, the kernel freezes every thread of the container once the quota of its period (100 ms) is used up, whatever the
+/// threads' priority: compaction that used it up froze the command threads for the rest of the period (MEASURED: the
+/// server was throttled in 626 of 3,162 periods, 36 s in all, on the medium profile with one core). The jobs pace
+/// themselves (`pace`) so the background stays under this share on average, and the commands keep the rest.
+pub static BG_CPU_PCT: AtomicU64 = AtomicU64::new(50);
+/// CPU the background may run ahead of its share before a job pauses (microseconds).
+const BG_BURST_US: f64 = 10_000.0;
+
+thread_local! {
+    static BG_THREAD: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+    static LAST_CPU: std::cell::Cell<u64> = const { std::cell::Cell::new(0) };
+}
+
+/// The CPU the background used beyond its share (microseconds), and when that was last computed.
+static DEBT: Mutex<(f64, Option<Instant>)> = Mutex::new((0.0, None));
+/// Pauses taken by `pace`, and their total time (serverStatus-free counters, for measurements).
+pub static PACE_PAUSES: AtomicU64 = AtomicU64::new(0);
+pub static PACE_PAUSE_US: AtomicU64 = AtomicU64::new(0);
+
+tokio::task_local! {
+    /// The job is urgent (absorption with L0 close to the writer's stop): `pace` accounts its CPU but never pauses it.
+    pub static PACE_EXEMPT: Arc<dyn Fn() -> bool + Send + Sync>;
+}
+
+fn bg_rate_us_per_s() -> f64 {
+    let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1) as f64;
+    cores * 1e6 * BG_CPU_PCT.load(Relaxed) as f64 / 100.0
+}
+
+/// Share of what the cores allow in a 100 ms window (percent) that the whole process may have used before the background
+/// pauses to the end of the window (`--compaction-window-pct`, default 70; 100 = never).
+pub static WINDOW_PCT: AtomicU64 = AtomicU64::new(70);
+const WINDOW: Duration = Duration::from_millis(100);
+/// (start of the current window, the process's CPU at its start, microseconds)
+static WIN: Mutex<Option<(Instant, u64)>> = Mutex::new(None);
+
+/// The time to the end of the current window when the process already used its allowance in it (None: go on).
+fn window_full() -> Option<Duration> {
+    let pct = WINDOW_PCT.load(Relaxed);
+    if pct >= 100 {
+        return None;
+    }
+    let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1) as u64;
+    let now = Instant::now();
+    let cpu = super::compactor::process_cpu_us();
+    let mut w = WIN.lock().unwrap();
+    let (start, at) = match *w {
+        Some((s, c)) if now.duration_since(s) < WINDOW => (s, c),
+        _ => {
+            *w = Some((now, cpu));
+            (now, cpu)
+        }
+    };
+    let allowance = cores * WINDOW.as_micros() as u64 * pct / 100;
+    (cpu.saturating_sub(at) >= allowance).then(|| (start + WINDOW).saturating_duration_since(now).max(Duration::from_millis(1)))
+}
+
+/// A pace point of background work (between two blocks of a run being written or read, between two L0 blocks): on a
+/// background thread, account the CPU this thread used since its last pace point, and when the background as a whole is
+/// more than `BG_BURST_US` ahead of its share, sleep until it is back within it. Elsewhere (a command, a test): nothing.
+/// Answers never depend on it; only when the work runs.
+pub async fn pace() {
+    if !BG_THREAD.with(|b| b.get()) {
+        return;
+    }
+    let cpu = super::compactor::thread_cpu_us();
+    let used = cpu.saturating_sub(LAST_CPU.with(|c| c.replace(cpu))) as f64;
+    let rate = bg_rate_us_per_s();
+    let excess = {
+        let mut d = DEBT.lock().unwrap();
+        let now = Instant::now();
+        let dt = d.1.map_or(0.0, |t| now.duration_since(t).as_secs_f64());
+        d.0 = (d.0 + used - dt * rate).max(0.0);
+        d.1 = Some(now);
+        d.0 - BG_BURST_US
+    };
+    if PACE_EXEMPT.try_with(|f| f()).unwrap_or(false) {
+        tokio::task::yield_now().await;
+        return;
+    }
+    // perf-latency round 2: the whole process's CPU in the current 100 ms window. A CPU quota is enforced per period of
+    // 100 ms: once the container used it, the kernel freezes every thread to the end of the period (the commands too).
+    // The background stops for the rest of the window once the process used WINDOW_PCT of what its cores allow in it, so
+    // the commands keep the rest (standard profile: throttled in 29% of the periods with the average share alone).
+    if let Some(left) = window_full() {
+        PACE_PAUSES.fetch_add(1, Relaxed);
+        PACE_PAUSE_US.fetch_add(left.as_micros() as u64, Relaxed);
+        tokio::time::sleep(left).await;
+        LAST_CPU.with(|c| c.set(super::compactor::thread_cpu_us()));
+        return;
+    }
+    if excess <= 0.0 {
+        tokio::task::yield_now().await;
+        return;
+    }
+    let wait = Duration::from_secs_f64(excess / rate);
+    PACE_PAUSES.fetch_add(1, Relaxed);
+    PACE_PAUSE_US.fetch_add(wait.as_micros() as u64, Relaxed);
+    tokio::time::sleep(wait).await;
+    // the thread that resumes the job starts a new interval (its CPU before is accounted at its own pace points)
+    LAST_CPU.with(|c| c.set(super::compactor::thread_cpu_us()));
+}
+
+/// The runtime the server's compaction work runs on (perf-latency, 2026-11-11): the jobs of every database's compactor
+/// (absorption, erasures, merges, reseals, GC) and SlateDB's own compactor and worker (the fold). Before, they ran on the
+/// server's runtime, and in a machine or container with one core that runtime has one worker thread: a reseal that
+/// encoded a run kept that thread for up to 165 ms in one poll, and every command and every log acknowledgement waited
+/// behind it (MEASURED, medium profile). Its own threads (the pool's slots plus two), at a lower priority: the
+/// kernel time-slices them with the server's thread instead of the runtime running them to their next await.
+pub fn bg_runtime() -> tokio::runtime::Handle {
+    BG.get_or_init(|| {
+        tokio::runtime::Builder::new_multi_thread()
+            // the pool's slots, plus two: absorption never waits for a slot, and SlateDB's fold (on this runtime too) must
+            // run while every slot is in a long reseal, or L0 fills and the writer stops (MEASURED: writes stopped for
+            // 1.7-3.4 s with one thread). The kernel shares the CPU between them; the pool still bounds how many jobs run.
+            .worker_threads(global().slots() + 2)
+            .thread_name("fx-bg")
+            .thread_stack_size(16 << 20)
+            .on_thread_start(|| {
+                BG_THREAD.with(|b| b.set(true));
+                LAST_CPU.with(|c| c.set(super::compactor::thread_cpu_us()));
+                let nice = BG_NICE.load(std::sync::atomic::Ordering::Relaxed);
+                if nice != 0 {
+                    // a thread id with PRIO_PROCESS sets that thread's nice value only (Linux)
+                    unsafe {
+                        let tid = libc::syscall(libc::SYS_gettid) as libc::id_t;
+                        libc::setpriority(libc::PRIO_PROCESS, tid, nice);
+                    }
+                }
+            })
+            .enable_all()
+            .build()
+            .expect("background runtime")
+    })
+    .handle()
+    .clone()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -1,0 +1,8 @@
+05:20:39 fenvix-log: disk before {'free_gib': 21.4, 'used_gib': 17.0}
+05:20:45 cook root user created
+05:20:46 fenvix-log: up (log-0, log-1, log-2, cook, spare, minio)
+05:20:46 fenvix-log: durability check ok=True
+05:20:46 fenvix-log: bench.py starts
+05:40:02 fenvix-log: STOP: less than 1.5 GiB free on the disk; bench.py stopped
+05:40:02 fenvix-log: bench.py exit 6 after 1163 s
+05:40:12 fenvix-log: containers and data removed; disk {'free_gib': 21.4, 'used_gib': 17.1}

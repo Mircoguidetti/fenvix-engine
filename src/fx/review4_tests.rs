@@ -661,3 +661,202 @@ async fn r4_q6_manifest_size_and_restart_reads() {
     // read every retained version before its first drop job can start (fails today: it reads all of them)
     assert!(g1 <= 10, "a new waiter's first floor read {g1} versions");
 }
+
+// ------------------------------------------------------------------------------------------------------------------
+// perf-latency round 3, review of d9dbc7c, R1: a paced job outlasting the GC grace
+
+/// A job (a reseal split in several runs, slowed by the CPU share) writes its first output, then runs past the GC
+/// grace before its commit lists that output. GC must not delete it meanwhile: every unreferenced run written since
+/// the oldest running job started is kept until that job ends. Once the job is over, the same run (never published:
+/// a job that failed) goes after the grace as before. `control`: with no job registered the run is deleted after the
+/// grace (the test can see a deletion).
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn r3_gc_keeps_the_output_of_a_running_job_past_the_grace() {
+    let _s = SERIAL.lock().await;
+    setup();
+    for control in [false, true] {
+        let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let id = if control { "r3-gc-job-ctl" } else { "r3-gc-job" };
+        let mut t = lc(&store).create(id).await.unwrap();
+        let mut m = BTreeMap::new();
+        for i in 0..200 {
+            apply(&mut t, &mut m, vec![(ckey(1, i % 40), Some(vec![b'v'; 50]))]).await;
+        }
+        publish(&mut t, &small_opts(build::Reseal::All)).await;
+        let mut k = knobs(false);
+        k.serving_lease = Duration::from_millis(10);
+        hold::HOLD_LIFE_MS.store(10, Relaxed);
+        k.remote_lease = Duration::from_millis(400);
+        k.gc_grace = Duration::from_millis(400);
+        k.gc_every = Duration::from_secs(3600); // passes only when the test calls them
+        let c = start(&mut t, &store, &k).await;
+        let job = if control { None } else { Some(c.begin_job_for_test()) };
+        // the job's first output: a run object no version lists yet
+        let out = Path::from(manifest::run_path(id, "g0s1", 99_999, Some(1)));
+        store.put(&out, PutPayload::from(vec![7u8; 100])).await.unwrap();
+        gc::gc_once(&c).await.unwrap(); // first sight
+        tokio::time::sleep(Duration::from_millis(900)).await; // the job outlasts the grace
+        gc::gc_once(&c).await.unwrap();
+        let kept_while_running = store.head(&out).await.is_ok();
+        drop(job);
+        gc::gc_once(&c).await.unwrap();
+        tokio::time::sleep(Duration::from_millis(900)).await;
+        gc::gc_once(&c).await.unwrap();
+        let gone_after = store.head(&out).await.is_err();
+        eprintln!("R1 (control {control}): kept while the job ran {kept_while_running}, deleted after it ended {gone_after}");
+        c.stop().await;
+        t.abandon().await;
+        if control {
+            assert!(!kept_while_running, "control: with no running job the run must go after the grace");
+        } else {
+            assert!(kept_while_running, "GC deleted the output of a running job after the grace");
+            assert!(gone_after, "an output nothing publishes must still go once its job is over");
+        }
+    }
+    teardown();
+}
+
+/// R2: the store answers the version's PUT late (500 ms) while armed.
+#[derive(Debug)]
+struct SlowManifestPut {
+    inner: Arc<dyn ObjectStore>,
+    armed: std::sync::atomic::AtomicBool,
+}
+
+impl std::fmt::Display for SlowManifestPut {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SlowManifestPut")
+    }
+}
+
+#[async_trait]
+impl ObjectStore for SlowManifestPut {
+    async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> object_store::Result<PutResult> {
+        if self.armed.load(SeqCst) && location.as_ref().contains("/fx/") && location.as_ref().contains("manifest") {
+            tokio::time::sleep(Duration::from_millis(500)).await;
+        }
+        self.inner.put_opts(location, payload, opts).await
+    }
+    async fn put_multipart_opts(&self, location: &Path, opts: PutMultipartOptions) -> object_store::Result<Box<dyn MultipartUpload>> {
+        self.inner.put_multipart_opts(location, opts).await
+    }
+    async fn get_opts(&self, location: &Path, options: GetOptions) -> object_store::Result<GetResult> {
+        self.inner.get_opts(location, options).await
+    }
+    fn delete_stream(&self, locations: BoxStream<'static, object_store::Result<Path>>) -> BoxStream<'static, object_store::Result<Path>> {
+        self.inner.delete_stream(locations)
+    }
+    fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, object_store::Result<ObjectMeta>> {
+        self.inner.list(prefix)
+    }
+    fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, object_store::Result<ObjectMeta>> {
+        self.inner.list_with_offset(prefix, offset)
+    }
+    async fn list_with_delimiter(&self, prefix: Option<&Path>) -> object_store::Result<ListResult> {
+        self.inner.list_with_delimiter(prefix).await
+    }
+    async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> object_store::Result<()> {
+        self.inner.copy_opts(from, to, options).await
+    }
+    async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> object_store::Result<()> {
+        self.inner.rename_opts(from, to, options).await
+    }
+}
+
+/// R2 (review of d9dbc7c): a job cut while it waits for its version's PUT (`Compactor::create` runs the PUT in its own
+/// task) left that PUT running: the version could land after `stop` returned, so after an erase's listing. `stop` now
+/// waits for it: once `stop` returns, the version is in the store (it landed before, never after).
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn r3_no_version_lands_after_stop() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let inner: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let slow = Arc::new(SlowManifestPut { inner: Arc::clone(&inner), armed: std::sync::atomic::AtomicBool::new(false) });
+    let store: Arc<dyn ObjectStore> = slow.clone();
+    let id = "r3-late-put";
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(1, i % 20), Some(vec![b'v'; 50]))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let mut k = knobs(false);
+    k.lease = Duration::from_secs(5);
+    k.put_timeout = Duration::from_secs(2);
+    k.remote_lease = Duration::from_secs(6);
+    k.gc_grace = Duration::from_secs(6);
+    k.gc_every = Duration::from_secs(3600);
+    let c = start(&mut t, &store, &k).await;
+    let n = c.next_version_for_test().await;
+    slow.armed.store(true, SeqCst);
+    // the job: waits for its version's PUT and is cut meanwhile (as `stop` aborts its jobs)
+    let c2 = Arc::clone(&c);
+    let job = tokio::spawn(async move { c2.create_next_for_test().await });
+    tokio::time::sleep(Duration::from_millis(50)).await;
+    job.abort();
+    let _ = job.await;
+    let t0 = Instant::now();
+    c.stop().await;
+    let stop_ms = t0.elapsed().as_millis();
+    let present_at_stop = inner.head(&manifest::manifest_path(id, n)).await.is_ok();
+    eprintln!("R2: stop took {stop_ms} ms; version {n} in the store when stop returned: {present_at_stop}");
+    t.abandon().await;
+    teardown();
+    assert!(present_at_stop, "the cut job's version landed after stop returned");
+}
+
+// ------------------------------------------------------------------------------------------------------------------
+// perf-latency round 3, item 4: the L0 read of a starting compactor, out of the exclusive lock
+
+/// An absorption records the L0 SSTs it absorbed (with their highest seq) in the version (`absorbed_l0`); a compactor
+/// starting on that version takes them from it and reads none of them (before: every L0 SST was read, under the
+/// database's exclusive lock, inside the first write after an opening). The fold is off here, so the absorbed SSTs stay
+/// in L0 across the restart. Every key reads its model value afterwards, and the second compactor absorbs nothing again.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn r3_restart_takes_absorbed_l0_from_the_version() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = "r3-absorbed-l0";
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..200 {
+        apply(&mut t, &mut m, vec![(ckey(1, i % 40), Some(vec![b'v'; 50]))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let k = knobs(false);
+    let c1 = start(&mut t, &store, &k).await;
+    for round in 0..4 {
+        for i in 0..150 {
+            apply(&mut t, &mut m, vec![(ckey(2 + round, i % 60), Some(format!("r{round}-{i}").into_bytes()))]).await;
+        }
+        flush(&t).await;
+    }
+    c1.drain(false).await.unwrap();
+    let l0_absorbed = c1.absorbed_count();
+    c1.stop().await;
+    t.fx_sync();
+    let (from_v, by_read) = (compactor::L0_RECOGNISED_FROM_VERSION.load(SeqCst), compactor::L0_RECOGNISED_BY_READ.load(SeqCst));
+    let c2 = start(&mut t, &store, &k).await;
+    let (from_v2, by_read2) = (compactor::L0_RECOGNISED_FROM_VERSION.load(SeqCst) - from_v, compactor::L0_RECOGNISED_BY_READ.load(SeqCst) - by_read);
+    let absorbs_before = c2.absorbed_count();
+    let l0_at_restart = c2.l0_count();
+    c2.drain(false).await.unwrap();
+    t.fx_sync();
+    let mut wrong = 0;
+    for (key, want) in &m {
+        if t.get(key).await.unwrap().as_deref() != Some(&want[..]) {
+            wrong += 1;
+        }
+    }
+    eprintln!("item 4: {l0_absorbed} L0 SSTs absorbed before the restart, {l0_at_restart} in L0 at the restart: {from_v2} taken from the version, {by_read2} read; wrong reads {wrong}");
+    c2.stop().await;
+    t.abandon().await;
+    teardown();
+    assert!(l0_absorbed >= 2, "setup: the first compactor must absorb L0 SSTs");
+    assert!(l0_at_restart >= 2, "setup: absorbed SSTs must still be in L0 at the restart");
+    assert_eq!(from_v2 as usize, l0_at_restart, "every absorbed L0 SST still in L0 must come from the version");
+    assert_eq!(by_read2, 0, "no absorbed L0 SST may be read again at the start");
+    assert_eq!(absorbs_before, l0_at_restart, "the restarted compactor knows every L0 SST as absorbed");
+    assert_eq!(wrong, 0);
+}
