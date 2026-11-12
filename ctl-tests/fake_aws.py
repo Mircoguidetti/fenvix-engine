@@ -11,6 +11,7 @@
   token, and the SigV4 signature must match that key's secret (403 SignatureDoesNotMatch). Every request is logged with its time
   and Access Key ID, accepted or not."""
 import base64
+import calendar
 import hashlib
 import hmac
 import json
@@ -172,6 +173,8 @@ class FakeS3:
 
     # ---- authentication, as S3 checks it
     def check(self, h):
+        if "X-Amz-Signature=" in h.path:
+            return self.check_presigned(h)
         auth = h.headers.get("Authorization", "")
         m = re.match(r"AWS4-HMAC-SHA256 Credential=([^/]+)/(\d{8})/([^/]+)/s3/aws4_request, ?SignedHeaders=([^,]+), ?Signature=([0-9a-f]+)$", auth)
         if not m:
@@ -196,6 +199,43 @@ class FakeS3:
         for part in (day, region, "s3", "aws4_request"):
             k = hmac.new(k, part.encode(), hashlib.sha256).digest()
         if not hmac.compare_digest(hmac.new(k, sts.encode(), hashlib.sha256).hexdigest(), sig):
+            return key, 403, "SignatureDoesNotMatch", "signature does not match"
+        return key, None, None, None
+
+
+    def check_presigned(self, h):
+        """SigV4 in the query string (a presigned URL), as S3 checks it: the session token is a query parameter, the
+        payload is UNSIGNED-PAYLOAD, the URL expires (c2-fix-clone-uploads: the server's startup sweep of unfinished uploads
+        sends ListMultipartUploads this way)."""
+        raw_path, _, query = h.path.partition("?")
+        q = dict(urllib.parse.parse_qsl(query, keep_blank_values=True))
+        if q.get("X-Amz-Algorithm") != "AWS4-HMAC-SHA256":
+            return None, 403, "AccessDenied", "unsupported presign algorithm"
+        cred = q.get("X-Amz-Credential", "").split("/")
+        if len(cred) != 5 or cred[3:] != ["s3", "aws4_request"]:
+            return None, 403, "AuthorizationQueryParametersError", "bad X-Amz-Credential"
+        key, day, region = cred[0], cred[1], cred[2]
+        c = self.registry.get(key)
+        if c is None:
+            return key, 403, "InvalidAccessKeyId", "unknown access key"
+        if time.time() >= c["expires"]:
+            return key, 403, "ExpiredToken", "The provided token has expired."
+        if c["token"] is not None and q.get("X-Amz-Security-Token") != c["token"]:
+            return key, 403, "InvalidToken", "security token does not belong to this key"
+        amz_date = q.get("X-Amz-Date", "")
+        signed_at = calendar.timegm(time.strptime(amz_date, "%Y%m%dT%H%M%SZ"))
+        if time.time() > signed_at + int(q.get("X-Amz-Expires", "0")):
+            return key, 403, "AccessDenied", "Request has expired"
+        pairs = sorted((_q(k), _q(v)) for k, v in urllib.parse.parse_qsl(query, keep_blank_values=True) if k != "X-Amz-Signature")
+        cq = "&".join(f"{k}={v}" for k, v in pairs)
+        signed = q.get("X-Amz-SignedHeaders", "host")
+        ch = "".join(f"{n}:{' '.join((h.headers.get(n) or '').split())}\n" for n in signed.split(";"))
+        creq = "\n".join([h.command, raw_path, cq, ch, signed, "UNSIGNED-PAYLOAD"])
+        sts = "\n".join(["AWS4-HMAC-SHA256", amz_date, f"{day}/{region}/s3/aws4_request", hashlib.sha256(creq.encode()).hexdigest()])
+        k = ("AWS4" + c["secret"]).encode()
+        for part in (day, region, "s3", "aws4_request"):
+            k = hmac.new(k, part.encode(), hashlib.sha256).digest()
+        if not hmac.compare_digest(hmac.new(k, sts.encode(), hashlib.sha256).hexdigest(), q.get("X-Amz-Signature", "")):
             return key, 403, "SignatureDoesNotMatch", "signature does not match"
         return key, None, None, None
 
@@ -252,6 +292,12 @@ class _S3Handler(BaseHTTPRequestHandler):
             if not key:
                 if m == "GET" and q.get("list-type") == "2":
                     return self._list(o, bucket, q)
+                if m == "GET" and "uploads" in q:
+                    ups = "".join(f"<Upload><Key>{escape(u['key'])}</Key><UploadId>{uid}</UploadId><Initiated>{_iso(u['initiated'])}</Initiated></Upload>"
+                                  for uid, u in sorted(o.uploads.items(), key=lambda x: (x[1]["key"], x[0])) if u["bucket"] == bucket)
+                    xml = f"<ListMultipartUploadsResult><Bucket>{escape(bucket)}</Bucket><IsTruncated>false</IsTruncated>{ups}</ListMultipartUploadsResult>"
+                    self._send(200, xml.encode())
+                    return 200
                 if m == "POST" and "delete" in q:
                     return self._multi_delete(o, bucket, body)
                 if m in ("HEAD", "PUT"):
@@ -261,7 +307,7 @@ class _S3Handler(BaseHTTPRequestHandler):
                 obj = o.objects.get((bucket, key))
                 if m == "POST" and "uploads" in q:
                     uid = hashlib.md5(f"{bucket}/{key}/{time.time()}".encode()).hexdigest()
-                    o.uploads[uid] = {"bucket": bucket, "key": key, "parts": {}}
+                    o.uploads[uid] = {"bucket": bucket, "key": key, "parts": {}, "initiated": time.time()}
                     xml = f"<InitiateMultipartUploadResult><Bucket>{escape(bucket)}</Bucket><Key>{escape(key)}</Key><UploadId>{uid}</UploadId></InitiateMultipartUploadResult>"
                     self._send(200, xml.encode())
                     return 200

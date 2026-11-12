@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+.  File "/root/.fenvix-judge/env/lib/python3.12/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/root/.fenvix-judge/env/lib/python3.12/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/root/.fenvix-judge/env/lib/python3.12/socketserver.py", line 766, in __init__
+    self.handle()
+  File "/root/.fenvix-judge/env/lib/python3.12/http/server.py", line 442, in handle
+    self.handle_one_request()
+  File "/root/.fenvix-judge/env/lib/python3.12/http/server.py", line 408, in handle_one_request
+    self.raw_requestline = self.rfile.readline(65537)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+----------------------------------------
+....                                                                    [100%]
+5 passed in 31.84s

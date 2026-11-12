@@ -93,6 +93,7 @@ mod search_idx;
 mod wc;
 mod wire;
 mod xdb;
+mod uploads;
 
 use anyhow::Result;
 use clap::Parser;
@@ -541,6 +542,10 @@ struct Args {
     sealed_gc_grace_ms: u64,
     #[arg(long, default_value_t = 120_000)]
     sealed_hold_life_ms: u64,
+    /// At startup (S3 store), abort the bucket's unfinished multipart uploads under `tenants/` started more than this many
+    /// seconds ago: what a crash left (uploads.rs, where the bound is explained). 0: no sweep.
+    #[arg(long, default_value_t = 3600)]
+    abandoned_upload_secs: u64,
     /// Compaction 2, step 4: with sealed runs on, one compactor per open writer (absorption, delta tiers, reseals, GC)
     /// instead of the offline publishes and today's compaction pass. On by default since integration-3 (with sealed runs
     /// on); `--no-sealed-compactor` or FENVIX_SEALED_COMPACTOR=0 keeps step 3's offline publishes. FENVIX_SEALED_COMPACTOR=small
@@ -812,7 +817,11 @@ async fn run() -> Result<()> {
             }
             // S3 lists keys in order: the WAL cleanup finds the oldest WAL object with one LIST.
             tenant_bench::lifecycle::LIST_SORTED.store(true, std::sync::atomic::Ordering::Relaxed);
-            Arc::new(b.build()?)
+            let s3 = Arc::new(b.build()?);
+            if args.abandoned_upload_secs > 0 {
+                uploads::spawn_sweep(Arc::clone(&s3), std::time::Duration::from_secs(args.abandoned_upload_secs));
+            }
+            s3
         }
         "local" => {
             std::fs::create_dir_all(&args.local_dir)?;

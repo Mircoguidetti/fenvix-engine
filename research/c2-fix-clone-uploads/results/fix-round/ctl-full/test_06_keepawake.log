@@ -1,0 +1,11 @@
+..F..........                                                            [100%]
+=================================== FAILURES ===================================
+___________________________ test_unpin_lets_it_sleep ___________________________
+test_06_keepawake.py:65: in test_unpin_lets_it_sleep
+    wait_until(lambda: state(srv, "tmp")["state"] == "asleep", IDLE * 3 + 3, what="sleep after unpin")
+lib.py:246: in wait_until
+    raise AssertionError(f"timed out waiting for {what}: {last}")
+E   AssertionError: timed out waiting for sleep after unpin: False
+=========================== short test summary info ============================
+FAILED test_06_keepawake.py::test_unpin_lets_it_sleep - AssertionError: timed...
+1 failed, 12 passed in 167.60s (0:02:47)

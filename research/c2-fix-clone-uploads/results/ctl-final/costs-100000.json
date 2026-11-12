@@ -1,0 +1,537 @@
+{
+ "1000": {
+  "_load_seconds": 11.6,
+  "_storage_bytes": 649608,
+  "_objects": 20,
+  "create": {
+   "get_tier": 22,
+   "put_tier": 15,
+   "lists": 8,
+   "copies": 0,
+   "delete_requests_all_paths": 4,
+   "get_bytes": 162,
+   "put_bytes": 827,
+   "seconds": 1.445,
+   "by_kind": {
+    "LIST": 8,
+    "GET": 11,
+    "PUT": 7,
+    "HEAD": 11
+   }
+  },
+  "get": {
+   "get_tier": 16,
+   "put_tier": 2,
+   "lists": 2,
+   "copies": 0,
+   "delete_requests_all_paths": 0,
+   "get_bytes": 211,
+   "put_bytes": 0,
+   "seconds": 0.184,
+   "by_kind": {
+    "LIST": 2,
+    "GET": 16
+   }
+  },
+  "get_without_storage": {
+   "get_tier": 15,
+   "put_tier": 1,
+   "lists": 1,
+   "copies": 0,
+   "delete_requests_all_paths": 0,
+   "get_bytes": 211,
+   "put_bytes": 0,
+   "seconds": 0.14,
+   "by_kind": {
+    "LIST": 1,
+    "GET": 15
+   }
+  },
+  "reference_wake_and_find_one": {
+   "get_tier": 38,
+   "put_tier": 3,
+   "lists": 2,
+   "copies": 0,
+   "delete_requests_all_paths": 0,
+   "get_bytes": 68667,
+   "put_bytes": 87,
+   "seconds": 0.584,
+   "by_kind": {
+    "GET": 31,
+    "PUT": 1,
+    "HEAD": 1,
+    "LIST": 2,
+    "GET_RANGE": 6
+   }
+  },
+  "fork_clone": {
+   "get_tier": 99,
+   "put_tier": 33,
+   "lists": 13,
+   "copies": 0,
+   "delete_requests_all_paths": 6,
+   "get_bytes": 8111,
+   "put_bytes": 5177,
+   "seconds": 2.684,
+   "by_kind": {
+    "LIST": 13,
+    "GET": 97,
+    "PUT": 20,
+    "HEAD": 2
+   }
+  },
+  "fork_copy": {
+   "get_tier": 91,
+   "put_tier": 47,
+   "lists": 12,
+   "copies": 19,
+   "delete_requests_all_paths": 6,
+   "get_bytes": 6639,
+   "put_bytes": 3711,
+   "seconds": 2.379,
+   "by_kind": {
+    "LIST": 12,
+    "GET": 89,
+    "PUT": 16,
+    "COPY": 19,
+    "HEAD": 2
+   }
+  },
+  "enable_retention": {
+   "get_tier": 42,
+   "put_tier": 10,
+   "lists": 5,
+   "copies": 0,
+   "delete_requests_all_paths": 1,
+   "get_bytes": 3763,
+   "put_bytes": 1103,
+   "seconds": 0.668,
+   "by_kind": {
+    "LIST": 5,
+    "GET": 42,
+    "PUT": 5
+   }
+  },
+  "restore_1pct_changed": {
+   "get_tier": 560,
+   "put_tier": 62,
+   "lists": 27,
+   "copies": 0,
+   "delete_requests_all_paths": 4,
+   "get_bytes": 655593,
+   "put_bytes": 46616,
+   "seconds": 14.096,
+   "by_kind": {
+    "LIST": 27,
+    "GET": 508,
+    "HEAD": 29,
+    "PUT": 29,
+    "GET_RANGE": 23,
+    "MP_CREATE": 2,
+    "PUT_PART": 2,
+    "MP_COMPLETE": 2
+   },
+   "keys": {
+    "bytes_written": 1706,
+    "deleted": 0,
+    "unchanged": 2994,
+    "written": 11
+   }
+  },
+  "export_snapshot": {
+   "get_tier": 56,
+   "put_tier": 12,
+   "lists": 5,
+   "copies": 0,
+   "delete_requests_all_paths": 2,
+   "get_bytes": 44472,
+   "put_bytes": 2434,
+   "seconds": 0.955,
+   "by_kind": {
+    "LIST": 5,
+    "GET": 48,
+    "PUT": 7,
+    "HEAD": 1,
+    "GET_RANGE": 7
+   }
+  },
+  "export_download": {
+   "get_tier": 67,
+   "put_tier": 3,
+   "lists": 2,
+   "copies": 0,
+   "delete_requests_all_paths": 0,
+   "get_bytes": 84877,
+   "put_bytes": 534,
+   "seconds": 1.161,
+   "by_kind": {
+    "GET": 56,
+    "PUT": 1,
+    "LIST": 2,
+    "GET_RANGE": 11
+   },
+   "file_bytes": 157890
+  },
+  "usage_query": {
+   "get_tier": 12,
+   "put_tier": 2,
+   "lists": 2,
+   "copies": 0,
+   "delete_requests_all_paths": 0,
+   "get_bytes": 0,
+   "put_bytes": 0,
+   "seconds": 0.132,
+   "by_kind": {
+    "LIST": 2,
+    "GET": 12
+   }
+  },
+  "keep_awake_set": {
+   "get_tier": 54,
+   "put_tier": 9,
+   "lists": 4,
+   "copies": 0,
+   "delete_requests_all_paths": 0,
+   "get_bytes": 12594,
+   "put_bytes": 699,
+   "seconds": 0.793,
+   "by_kind": {
+    "GET": 50,
+    "LIST": 4,
+    "PUT": 5,
+    "HEAD": 1,
+    "GET_RANGE": 3
+   }
+  },
+  "keep_awake_130s_steady_state": {
+   "get_tier": 5107,
+   "put_tier": 16,
+   "lists": 8,
+   "copies": 0,
+   "delete_requests_all_paths": 27,
+   "get_bytes": 15663,
+   "put_bytes": 921,
+   "seconds": 130.0,
+   "by_kind": {
+    "GET": 5107,
+    "LIST": 8,
+    "PUT": 8
+   }
+  },
+  "erase_fk": {
+   "get_tier": 14,
+   "put_tier": 32,
+   "lists": 29,
+   "copies": 0,
+   "delete_requests_all_paths": 12,
+   "get_bytes": 2245,
+   "put_bytes": 288,
+   "seconds": 3.129,
+   "by_kind": {
+    "LIST": 29,
+    "GET": 8,
+    "PUT": 3,
+    "HEAD": 6
+   }
+  },
+  "erase_fc": {
+   "get_tier": 14,
+   "put_tier": 32,
+   "lists": 29,
+   "copies": 0,
+   "delete_requests_all_paths": 10,
+   "get_bytes": 2148,
+   "put_bytes": 274,
+   "seconds": 2.732,
+   "by_kind": {
+    "LIST": 29,
+    "GET": 8,
+    "PUT": 3,
+    "HEAD": 6
+   }
+  },
+  "erase_source": {
+   "get_tier": 110,
+   "put_tier": 32,
+   "lists": 29,
+   "copies": 0,
+   "delete_requests_all_paths": 10,
+   "get_bytes": 3331,
+   "put_bytes": 272,
+   "seconds": 2.704,
+   "by_kind": {
+    "LIST": 29,
+    "GET": 104,
+    "PUT": 3,
+    "HEAD": 6
+   }
+  }
+ },
+ "100000": {
+  "_load_seconds": 6.8,
+  "_storage_bytes": 68011136,
+  "_objects": 128,
+  "create": {
+   "get_tier": 22,
+   "put_tier": 15,
+   "lists": 8,
+   "copies": 0,
+   "delete_requests_all_paths": 4,
+   "get_bytes": 164,
+   "put_bytes": 829,
+   "seconds": 1.419,
+   "by_kind": {
+    "LIST": 8,
+    "GET": 11,
+    "PUT": 7,
+    "HEAD": 11
+   }
+  },
+  "get": {
+   "get_tier": 3,
+   "put_tier": 2,
+   "lists": 2,
+   "copies": 0,
+   "delete_requests_all_paths": 0,
+   "get_bytes": 213,
+   "put_bytes": 0,
+   "seconds": 0.2,
+   "by_kind": {
+    "LIST": 2,
+    "GET": 3
+   }
+  },
+  "get_without_storage": {
+   "get_tier": 3,
+   "put_tier": 1,
+   "lists": 1,
+   "copies": 0,
+   "delete_requests_all_paths": 0,
+   "get_bytes": 213,
+   "put_bytes": 0,
+   "seconds": 0.144,
+   "by_kind": {
+    "LIST": 1,
+    "GET": 3
+   }
+  },
+  "reference_wake_and_find_one": {
+   "get_tier": 20,
+   "put_tier": 3,
+   "lists": 2,
+   "copies": 0,
+   "delete_requests_all_paths": 0,
+   "get_bytes": 1080044,
+   "put_bytes": 87,
+   "seconds": 0.551,
+   "by_kind": {
+    "GET": 9,
+    "PUT": 1,
+    "HEAD": 1,
+    "LIST": 2,
+    "GET_RANGE": 10
+   }
+  },
+  "fork_clone": {
+   "get_tier": 30,
+   "put_tier": 33,
+   "lists": 13,
+   "copies": 0,
+   "delete_requests_all_paths": 6,
+   "get_bytes": 23671,
+   "put_bytes": 16439,
+   "seconds": 2.724,
+   "by_kind": {
+    "LIST": 13,
+    "GET": 28,
+    "PUT": 20,
+    "HEAD": 2
+   }
+  },
+  "fork_copy": {
+   "get_tier": 25,
+   "put_tier": 150,
+   "lists": 12,
+   "copies": 122,
+   "delete_requests_all_paths": 6,
+   "get_bytes": 20640,
+   "put_bytes": 12202,
+   "seconds": 3.548,
+   "by_kind": {
+    "LIST": 12,
+    "GET": 23,
+    "PUT": 16,
+    "COPY": 122,
+    "HEAD": 2
+   }
+  },
+  "enable_retention": {
+   "get_tier": 10,
+   "put_tier": 10,
+   "lists": 5,
+   "copies": 0,
+   "delete_requests_all_paths": 1,
+   "get_bytes": 11243,
+   "put_bytes": 2183,
+   "seconds": 0.716,
+   "by_kind": {
+    "LIST": 5,
+    "PUT": 5,
+    "GET": 10
+   }
+  },
+  "restore_1pct_changed": {
+   "get_tier": 345,
+   "put_tier": 80,
+   "lists": 28,
+   "copies": 0,
+   "delete_requests_all_paths": 4,
+   "get_bytes": 42823579,
+   "put_bytes": 1300278,
+   "seconds": 5.704,
+   "by_kind": {
+    "LIST": 28,
+    "GET": 232,
+    "HEAD": 28,
+    "PUT": 31,
+    "GET_RANGE": 85,
+    "MP_CREATE": 7,
+    "PUT_PART": 7,
+    "MP_COMPLETE": 7
+   },
+   "keys": {
+    "bytes_written": 166946,
+    "deleted": 0,
+    "unchanged": 299004,
+    "written": 1001
+   }
+  },
+  "export_snapshot": {
+   "get_tier": 22,
+   "put_tier": 10,
+   "lists": 4,
+   "copies": 0,
+   "delete_requests_all_paths": 1,
+   "get_bytes": 388154,
+   "put_bytes": 3324,
+   "seconds": 1.684,
+   "by_kind": {
+    "LIST": 4,
+    "HEAD": 1,
+    "GET": 15,
+    "PUT": 6,
+    "GET_RANGE": 6
+   }
+  },
+  "export_download": {
+   "get_tier": 52,
+   "put_tier": 3,
+   "lists": 2,
+   "copies": 0,
+   "delete_requests_all_paths": 0,
+   "get_bytes": 2588382,
+   "put_bytes": 547,
+   "seconds": 1.658,
+   "by_kind": {
+    "GET": 21,
+    "PUT": 1,
+    "LIST": 2,
+    "GET_RANGE": 31
+   },
+   "file_bytes": 15988890
+  },
+  "usage_query": {
+   "get_tier": 0,
+   "put_tier": 2,
+   "lists": 2,
+   "copies": 0,
+   "delete_requests_all_paths": 0,
+   "get_bytes": 0,
+   "put_bytes": 0,
+   "seconds": 0.149,
+   "by_kind": {
+    "LIST": 2
+   }
+  },
+  "keep_awake_set": {
+   "get_tier": 22,
+   "put_tier": 9,
+   "lists": 4,
+   "copies": 0,
+   "delete_requests_all_paths": 0,
+   "get_bytes": 222232,
+   "put_bytes": 703,
+   "seconds": 0.847,
+   "by_kind": {
+    "LIST": 4,
+    "GET": 18,
+    "PUT": 5,
+    "HEAD": 1,
+    "GET_RANGE": 3
+   }
+  },
+  "keep_awake_130s_steady_state": {
+   "get_tier": 45,
+   "put_tier": 17,
+   "lists": 9,
+   "copies": 0,
+   "delete_requests_all_paths": 49,
+   "get_bytes": 33746,
+   "put_bytes": 928,
+   "seconds": 130.0,
+   "by_kind": {
+    "LIST": 9,
+    "GET": 45,
+    "PUT": 8
+   }
+  },
+  "erase_fk": {
+   "get_tier": 14,
+   "put_tier": 32,
+   "lists": 29,
+   "copies": 0,
+   "delete_requests_all_paths": 12,
+   "get_bytes": 9534,
+   "put_bytes": 296,
+   "seconds": 3.016,
+   "by_kind": {
+    "LIST": 29,
+    "GET": 8,
+    "PUT": 3,
+    "HEAD": 6
+   }
+  },
+  "erase_fc": {
+   "get_tier": 14,
+   "put_tier": 32,
+   "lists": 29,
+   "copies": 0,
+   "delete_requests_all_paths": 10,
+   "get_bytes": 9547,
+   "put_bytes": 278,
+   "seconds": 2.836,
+   "by_kind": {
+    "LIST": 29,
+    "GET": 8,
+    "PUT": 3,
+    "HEAD": 6
+   }
+  },
+  "erase_source": {
+   "get_tier": 14,
+   "put_tier": 32,
+   "lists": 29,
+   "copies": 0,
+   "delete_requests_all_paths": 10,
+   "get_bytes": 5367,
+   "put_bytes": 276,
+   "seconds": 2.79,
+   "by_kind": {
+    "LIST": 29,
+    "GET": 8,
+    "PUT": 3,
+    "HEAD": 6
+   }
+  }
+ }
+}

@@ -852,6 +852,8 @@ impl Server {
                 "merges": tenant_bench::fx::compactor::G_MERGES.load(Relaxed) as i64,
                 "reseals": tenant_bench::fx::compactor::G_RESEALS.load(Relaxed) as i64,
                 "errors": tenant_bench::fx::compactor::G_ERRORS.load(Relaxed) as i64,
+                // builder publishes before a compactor started, catching up rows an ungated pass folded (review FIX 1)
+                "catchUps": crate::dbs::CATCH_UPS.load(Relaxed) as i64,
             },
             // agent checkpoints as a thread message log (`fx/derive.rs`, `--sealed-derive`): documents encoded and kept
             // plain by reseals, message rows written, rebuilds by reads and by reseals, rebuild errors (a wrong reference

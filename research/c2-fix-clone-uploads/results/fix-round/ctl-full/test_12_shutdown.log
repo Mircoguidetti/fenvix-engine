@@ -1,0 +1,14 @@
+F.                                                                       [100%]
+=================================== FAILURES ===================================
+_______ test_clean_exit_releases_pins_usage_and_leases[shutdown-command] _______
+test_12_shutdown.py:52: in test_clean_exit_releases_pins_usage_and_leases
+    srv2 = Server(bucket, "shut2", idle=300, extra=["--auth"], holder="other-holder").start()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib.py:99: in start
+    self.wait_ready()
+lib.py:120: in wait_ready
+    raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
+E   RuntimeError: server exited with 1; see /home/user/fenvix-engine/ctl-tests/out/shut2-33932.log
+=========================== short test summary info ============================
+FAILED test_12_shutdown.py::test_clean_exit_releases_pins_usage_and_leases[shutdown-command]
+1 failed, 1 passed in 6.76s

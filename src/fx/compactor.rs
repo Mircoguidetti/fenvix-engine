@@ -367,6 +367,8 @@ pub struct Compactor {
     /// When each group's reseal became due (the lag measure).
     due_since: Mutex<HashMap<u32, Instant>>,
     pub stopped: AtomicBool,
+    /// Woken by `stop`: the jobs running then are cancelled at their next await (c2-fix-clone-uploads).
+    stop_signal: tokio::sync::Notify,
     pub drop: Arc<super::drop::DropCtl>,
     slate: Mutex<Option<tokio::task::JoinHandle<()>>>,
     slate_stop: Mutex<Option<(Arc<slatedb::compactor::Compactor>, Arc<slatedb::CompactionWorker>)>>,
@@ -422,6 +424,7 @@ impl Compactor {
             running: Mutex::new(Running::default()),
             due_since: Mutex::new(HashMap::new()),
             stopped: AtomicBool::new(false),
+            stop_signal: tokio::sync::Notify::new(),
             paused: AtomicBool::new(false),
             drop,
             slate: Mutex::new(None),
@@ -464,9 +467,16 @@ impl Compactor {
         self.sh.erasures.lock().unwrap().push(Erasure { lo, hi, seq, asked: Instant::now(), done: None });
     }
 
-    /// Stop: no new job, SlateDB's side stopped. Jobs already running finish or abandon.
+    /// Stop: no new job, SlateDB's side stopped, jobs running now cancelled.
+    ///
+    /// c2-fix-clone-uploads: jobs used to run on after the stop and abandon at their commit. An absorption in flight when
+    /// a database closed read every L0 SST it had planned (MEASURED: 4.5-6 MB over several seconds at 100,000 documents,
+    /// read during the next fork of that database) and then threw it away. A cancelled job publishes nothing of its own:
+    /// a version create already sent runs in a task of its own (`create`) and lands or not as any PUT in flight; runs
+    /// written and not listed are orphans for GC (rule 17); a run writer dropped unfinished aborts its upload.
     pub async fn stop(&self) {
         self.stopped.store(true, Relaxed);
+        self.stop_signal.notify_waiters();
         ACTIVE.lock().unwrap().remove(self.id());
         let s = self.slate_stop.lock().unwrap().take();
         if let Some((c, w)) = s {
@@ -589,9 +599,8 @@ impl Compactor {
     /// offline builder).
     async fn recognise_absorbed(&self) -> Result<()> {
         let x_d = self.cur.lock().await.v.x_d;
-        let reader = slatedb::SstReader::new(crate::lifecycle::tenant_path(self.id()), Arc::clone(&self.store), None, None);
         for view in self.db.manifest().l0().iter() {
-            let rows = read_l0(&reader, view).await?;
+            let rows = read_l0_whole(&self.store, self.id(), view).await?;
             let max = rows.iter().map(|r| r.row.seq).max().unwrap_or(0);
             if max <= x_d {
                 self.absorbed.lock().unwrap().insert(view.id, max);
@@ -623,13 +632,12 @@ impl Compactor {
             return Ok(0);
         }
         let v0 = self.current().await;
-        let reader = slatedb::SstReader::new(crate::lifecycle::tenant_path(self.id()), Arc::clone(&self.store), None, None);
         let e_env = v0.e_env.unwrap_or(0);
         let mut rows: BTreeMap<Vec<u8>, (u64, Vec<u8>)> = BTreeMap::new();
         let mut ids = Vec::new();
         let mut x_new = v0.x_d;
         for view in &views {
-            let rs = read_l0(&reader, view).await?;
+            let rs = read_l0_whole(&self.store, self.id(), view).await?;
             let (mut lo, mut hi) = (u64::MAX, 0u64);
             for r in &rs {
                 lo = lo.min(r.row.seq);
@@ -1213,7 +1221,10 @@ impl Compactor {
             if trace {
                 eprintln!("fx trace {}: {prio:?} starts", c.id());
             }
-            let r = f(Arc::clone(&c)).await;
+            let r = tokio::select! {
+                r = f(Arc::clone(&c)) => r,
+                _ = c.stopped_wait() => Err(anyhow!("compactor of {} stopped: job cancelled", c.id())),
+            };
             if trace {
                 eprintln!("fx trace {}: {prio:?} ends after {:?}: {:?}", c.id(), w0.elapsed(), r.as_ref().err().map(|e| format!("{e:#}")));
             }
@@ -1226,6 +1237,19 @@ impl Compactor {
             }
             c.sh.stats.job_cpu_us.fetch_add(thread_cpu_us().saturating_sub(t0), Relaxed);
         });
+    }
+
+    /// Resolves once `stop` has been called.
+    async fn stopped_wait(&self) {
+        loop {
+            let n = self.stop_signal.notified();
+            tokio::pin!(n);
+            n.as_mut().enable();
+            if self.stopped.load(Relaxed) {
+                return;
+            }
+            n.await;
+        }
     }
 
     /// Run the planner every `tick` until stopped.
@@ -1328,6 +1352,89 @@ struct L0Row {
 }
 
 /// Every row of one L0 SST, raw (SlateDB tombstones included; a merge operand is an error, I4).
+/// Every row of an L0 SST, the SST fetched with one GET (c2-fix-clone-uploads). Read through `SstReader` on the store,
+/// every 4 KiB block was a GET of its own, one after the other: a close's last flush of 30 MB took about 7,500 GETs and
+/// more than the close could wait for its absorption (MEASURED: a restore of the closed database then read 634 MB from
+/// its unabsorbed, so uncompacted, L0). One SST is in memory at a time (at most one memtable).
+async fn read_l0_whole(store: &Arc<dyn ObjectStore>, id: &str, view: &slatedb::manifest::SsTableView) -> Result<Vec<L0Row>> {
+    let whole: Arc<dyn ObjectStore> = Arc::new(WholeObjects { inner: Arc::clone(store), got: tokio::sync::Mutex::new(HashMap::new()) });
+    let reader = slatedb::SstReader::new(crate::lifecycle::tenant_path(id), whole, None, None);
+    read_l0(&reader, view).await
+}
+
+/// A store that reads each object it is asked for once, whole, and answers every range of it from memory.
+#[derive(Debug)]
+struct WholeObjects {
+    inner: Arc<dyn ObjectStore>,
+    got: tokio::sync::Mutex<HashMap<Path, (bytes::Bytes, object_store::ObjectMeta)>>,
+}
+
+impl std::fmt::Display for WholeObjects {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "WholeObjects({})", self.inner)
+    }
+}
+
+#[async_trait::async_trait]
+impl ObjectStore for WholeObjects {
+    async fn put_opts(&self, l: &Path, p: object_store::PutPayload, o: object_store::PutOptions) -> object_store::Result<object_store::PutResult> {
+        self.inner.put_opts(l, p, o).await
+    }
+    async fn put_multipart_opts(&self, l: &Path, o: object_store::PutMultipartOptions) -> object_store::Result<Box<dyn object_store::MultipartUpload>> {
+        self.inner.put_multipart_opts(l, o).await
+    }
+    async fn get_opts(&self, l: &Path, o: object_store::GetOptions) -> object_store::Result<object_store::GetResult> {
+        use futures::StreamExt;
+        let (body, meta) = {
+            let mut g = self.got.lock().await;
+            match g.get(l) {
+                Some(x) => x.clone(),
+                None => {
+                    let r = object_store::ObjectStoreExt::get(&self.inner, l).await?;
+                    let meta = r.meta.clone();
+                    let b = r.bytes().await?;
+                    g.insert(l.clone(), (b.clone(), meta.clone()));
+                    (b, meta)
+                }
+            }
+        };
+        let len = body.len() as u64;
+        let range = if o.head {
+            0..0
+        } else {
+            match &o.range {
+                None => 0..len,
+                Some(object_store::GetRange::Bounded(r)) => r.start.min(len)..r.end.min(len),
+                Some(object_store::GetRange::Offset(x)) => (*x).min(len)..len,
+                Some(object_store::GetRange::Suffix(n)) => len.saturating_sub(*n)..len,
+            }
+        };
+        let part = body.slice(range.start as usize..range.end as usize);
+        Ok(object_store::GetResult {
+            payload: object_store::GetResultPayload::Stream(futures::stream::once(async move { Ok(part) }).boxed()),
+            meta,
+            range,
+            attributes: Default::default(),
+            extensions: Default::default(),
+        })
+    }
+    fn delete_stream(&self, l: futures::stream::BoxStream<'static, object_store::Result<Path>>) -> futures::stream::BoxStream<'static, object_store::Result<Path>> {
+        self.inner.delete_stream(l)
+    }
+    fn list(&self, p: Option<&Path>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.inner.list(p)
+    }
+    async fn list_with_delimiter(&self, p: Option<&Path>) -> object_store::Result<object_store::ListResult> {
+        self.inner.list_with_delimiter(p).await
+    }
+    async fn copy_opts(&self, f: &Path, t: &Path, o: object_store::CopyOptions) -> object_store::Result<()> {
+        self.inner.copy_opts(f, t, o).await
+    }
+    async fn rename_opts(&self, f: &Path, t: &Path, o: object_store::RenameOptions) -> object_store::Result<()> {
+        self.inner.rename_opts(f, t, o).await
+    }
+}
+
 async fn read_l0(reader: &slatedb::SstReader, view: &slatedb::manifest::SsTableView) -> Result<Vec<L0Row>> {
     let f = reader.open_with_handle(view.sst.clone())?;
     let n = f.index().await?.len();

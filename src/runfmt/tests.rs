@@ -789,3 +789,144 @@ async fn review_blocks_of_one_run_with_the_footer_of_another_are_an_error() {
     };
     assert!(random.is_err() && stream.is_err(), "blocks of A under the footer of B: random reader {}; stream {}", show(&random), show(&stream));
 }
+
+// ---- c2-fix-clone-uploads: an unfinished writer aborts its upload
+
+/// Counts the uploads started, completed and aborted; a part fails while `fail_parts` is set.
+struct UploadStore {
+    inner: Arc<dyn ObjectStore>,
+    started: Arc<AtomicU64>,
+    completed: Arc<AtomicU64>,
+    aborted: Arc<AtomicU64>,
+    fail_parts: Arc<std::sync::atomic::AtomicBool>,
+}
+
+impl fmt::Debug for UploadStore {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "UploadStore")
+    }
+}
+
+impl fmt::Display for UploadStore {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "UploadStore")
+    }
+}
+
+#[derive(Debug)]
+struct CountedUpload {
+    inner: Box<dyn MultipartUpload>,
+    completed: Arc<AtomicU64>,
+    aborted: Arc<AtomicU64>,
+    fail_parts: Arc<std::sync::atomic::AtomicBool>,
+}
+
+#[async_trait]
+impl MultipartUpload for CountedUpload {
+    fn put_part(&mut self, data: PutPayload) -> object_store::UploadPart {
+        if self.fail_parts.load(Relaxed) {
+            return Box::pin(async { Err(object_store::Error::Generic { store: "test", source: "injected part failure".into() }) });
+        }
+        self.inner.put_part(data)
+    }
+    async fn complete(&mut self) -> object_store::Result<PutResult> {
+        let r = self.inner.complete().await;
+        self.completed.fetch_add(1, Relaxed);
+        r
+    }
+    async fn abort(&mut self) -> object_store::Result<()> {
+        self.aborted.fetch_add(1, Relaxed);
+        self.inner.abort().await
+    }
+}
+
+#[async_trait]
+impl ObjectStore for UploadStore {
+    async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> object_store::Result<PutResult> {
+        self.inner.put_opts(location, payload, opts).await
+    }
+    async fn put_multipart_opts(&self, location: &Path, opts: PutMultipartOptions) -> object_store::Result<Box<dyn MultipartUpload>> {
+        let u = self.inner.put_multipart_opts(location, opts).await?;
+        self.started.fetch_add(1, Relaxed);
+        Ok(Box::new(CountedUpload { inner: u, completed: Arc::clone(&self.completed), aborted: Arc::clone(&self.aborted), fail_parts: Arc::clone(&self.fail_parts) }))
+    }
+    async fn get_opts(&self, location: &Path, options: GetOptions) -> object_store::Result<GetResult> {
+        self.inner.get_opts(location, options).await
+    }
+    fn delete_stream(&self, locations: BoxStream<'static, object_store::Result<Path>>) -> BoxStream<'static, object_store::Result<Path>> {
+        self.inner.delete_stream(locations)
+    }
+    fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, object_store::Result<ObjectMeta>> {
+        self.inner.list(prefix)
+    }
+    async fn list_with_delimiter(&self, prefix: Option<&Path>) -> object_store::Result<ListResult> {
+        self.inner.list_with_delimiter(prefix).await
+    }
+    async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> object_store::Result<()> {
+        self.inner.copy_opts(from, to, options).await
+    }
+    async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> object_store::Result<()> {
+        self.inner.rename_opts(from, to, options).await
+    }
+}
+
+/// Every upload a run writer starts ends completed or aborted: dropped mid-run (a job cancelled or given up), failed on a
+/// part, or refused at `finish` (an empty run). Before c2-fix-clone-uploads the three left the upload open.
+#[tokio::test]
+async fn every_upload_is_completed_or_aborted() {
+    let u = UploadStore {
+        inner: Arc::new(InMemory::new()),
+        started: Default::default(),
+        completed: Default::default(),
+        aborted: Default::default(),
+        fail_parts: Default::default(),
+    };
+    let (started, completed, aborted, fail) = (Arc::clone(&u.started), Arc::clone(&u.completed), Arc::clone(&u.aborted), Arc::clone(&u.fail_parts));
+    let store: Arc<dyn ObjectStore> = Arc::new(u);
+    let opts = RunOptions::unchecked(4096, 64 << 10, CustomerKind::V2);
+    let mut rng = StdRng::seed_from_u64(11);
+    let doc: Vec<u8> = (0..300).map(|_| rng.gen()).collect();
+    // 1. dropped after parts were sent
+    let mut w = RunWriter::new(&store, Path::from("u/1"), opts.clone()).await.unwrap();
+    for n in 0..2000u64 {
+        w.add(&doc_key((n / 100) as i64, "a", n), n, &live(&doc)).await.unwrap();
+    }
+    drop(w);
+    // 2. a part fails
+    let mut w = RunWriter::new(&store, Path::from("u/2"), opts.clone()).await.unwrap();
+    fail.store(true, Relaxed);
+    let mut failed = false;
+    for n in 0..2000u64 {
+        if w.add(&doc_key((n / 100) as i64, "a", n), n, &live(&doc)).await.is_err() {
+            failed = true;
+            break;
+        }
+    }
+    assert!(failed, "the injected part failure never reached the writer");
+    drop(w);
+    fail.store(false, Relaxed);
+    // 3. an empty run is refused at finish
+    let w = RunWriter::new(&store, Path::from("u/3"), opts.clone()).await.unwrap();
+    assert!(w.finish().await.is_err());
+    // 4. a run that finishes is completed and not aborted
+    let mut w = RunWriter::new(&store, Path::from("u/4"), opts.clone()).await.unwrap();
+    w.add(b"k", 1, &live(b"x")).await.unwrap();
+    w.finish().await.unwrap();
+    // 5. an explicit abort is one abort
+    let mut w = RunWriter::new(&store, Path::from("u/5"), opts).await.unwrap();
+    w.add(b"k", 1, &live(b"x")).await.unwrap();
+    w.abort().await.unwrap();
+    let t0 = std::time::Instant::now();
+    while aborted.load(Relaxed) < 4 && t0.elapsed() < std::time::Duration::from_secs(5) {
+        tokio::task::yield_now().await;
+    }
+    let (s, c, a) = (started.load(Relaxed), completed.load(Relaxed), aborted.load(Relaxed));
+    println!("RUNFMT uploads: started {s}, completed {c}, aborted {a}");
+    assert_eq!(s, 5);
+    assert_eq!(c, 1, "only the finished run completes");
+    assert_eq!(a, 4, "the dropped, failed, refused and aborted runs abort, once each");
+    assert!(store.head(&Path::from("u/4")).await.is_ok());
+    for p in ["u/1", "u/2", "u/3", "u/5"] {
+        assert!(store.head(&Path::from(p)).await.is_err(), "{p} is visible");
+    }
+}

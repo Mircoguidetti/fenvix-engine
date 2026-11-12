@@ -126,6 +126,10 @@ pub fn set_wake_limit(n: usize) {
 
 /// Idle and shutdown closes that may run at once.
 const CLOSE_CONCURRENCY: usize = 64;
+/// Builder publishes made before a compactor started, to catch up rows an ungated pass folded (review FIX 1).
+pub static CATCH_UPS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// How long a close waits for the compactor to absorb its last memtable flush (c2-fix-clone-uploads).
+const CLOSE_ABSORB_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
 
 pub struct Dbs {
     lc: Arc<Lifecycle>,
@@ -497,6 +501,92 @@ impl Entry {
         Ok(Some((n, c.sh.stats.derive_encoded.load(Relaxed))))
     }
 
+    /// Start this database's compactor (compaction 2, step 4) when compactors are on and the tenant is a writer with a
+    /// version of our manifest.
+    async fn maybe_start_fxc(&mut self) {
+        if self.fxc.is_none() && tenant_bench::fx::compactor::SERVER_ON.load(Relaxed) && self.tenant.as_ref().is_some_and(|t| t.is_writer() && t.fx_view().is_some()) {
+            // the registered collections' customer keys, from their stored options (after a restart nothing has been
+            // written yet: the compactor must still know which collections are keyed by thread_id)
+            for coll in crate::agentck::registered(&self.name) {
+                if let Ok(o) = self.coll_opts(&coll).await {
+                    let key = crate::custkey::of_opts(o.as_ref());
+                    crate::agentck::note_key(&self.name, &coll, key.as_ref().map(|k| k.field.as_str()));
+                }
+            }
+            // review FIX 1: rows an ungated pass may have folded out of L0 (this process with compactors off, or a release
+            // before the marks) are caught up by a builder publish, whose scan reads the sorted runs too, before the
+            // compactor's first absorption moves X_d (`fx::manifest::needs_catch_up`)
+            match tenant_bench::fx::manifest::needs_catch_up(&self.raw, &self.name).await {
+                Ok(false) => {}
+                Ok(true) => {
+                    let scan_ms = tenant_bench::fx::manifest::now_ms();
+                    let t = self.tenant.as_mut().unwrap();
+                    let mut o = t.fx_auto_opts();
+                    o.reseal = tenant_bench::fx::build::Reseal::None;
+                    match t.fx_publish(&o, None).await {
+                        Ok(Some(_)) => {
+                            CATCH_UPS.fetch_add(1, Relaxed);
+                            if let Err(e) = tenant_bench::fx::manifest::note_caught_up(&self.raw, &self.name, scan_ms).await {
+                                eprintln!("sealed runs: database {}: caught up, but the mark was not written ({e:#}); the next start catches up again", self.name);
+                            }
+                        }
+                        // nothing published yet (release E1's wait): no compactor until a publish has caught up
+                        Ok(None) => return,
+                        Err(e) => {
+                            eprintln!("sealed runs: database {}: the catch-up publish before the compactor failed ({e:#}); no compactor yet", self.name);
+                            return;
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("sealed runs: database {}: the absorption marks could not be read ({e:#}); no compactor yet", self.name);
+                    return;
+                }
+            }
+            let t = self.tenant.as_mut().unwrap();
+            {
+                let mut k = tenant_bench::fx::compactor::server_knobs();
+                k.derive = crate::agentck::spec_for(&self.name);
+                match tenant_bench::fx::compactor::Compactor::start(t, Arc::clone(&self.raw), k, tenant_bench::fx::pool::global(), tokio::runtime::Handle::current()).await {
+                    Ok(c) => {
+                        c.run();
+                        self.fxc = Some(c);
+                    }
+                    Err(e) => eprintln!("sealed runs: compactor of database {} did not start: {e:#}", self.name),
+                }
+            }
+        }
+    }
+
+    /// Before a close: flush the memtable while this database's compactor still runs, then stop it (c2-fix-clone-uploads).
+    /// A flush waits for room in L0, and with a compactor only the compactor makes that room (the old compaction pass
+    /// no longer runs on its databases, `lifecycle::compact_tenant_pass_with`); stopped first, a close with L0 full timed
+    /// out (unclean close, MEASURED in ctl test_51). A flush that fails or times out here is left to the close's own.
+    ///
+    /// Then the compactor absorbs that last flush (bounded): with every L0 row absorbed, the compaction pass may compact
+    /// the closed database (`lifecycle::compact_tenant_pass_with` runs only then).
+    async fn flush_then_stop_fxc(&mut self) {
+        // a session whose writes never started the compactor (with the log on, a write's commit is waited for by the
+        // command after this entry's lock is released) starts it now: its last flush is then absorbed like any other
+        self.maybe_start_fxc().await;
+        if let (Some(c), true) = (self.fxc.clone(), self.tenant.as_ref().is_some_and(|t| t.is_writer())) {
+            let r = tokio::time::timeout(tenant_bench::lifecycle::CLOSE_FLUSH_TIMEOUT, tenant_bench::lifecycle::flush_writer_memtable(&self.name)).await;
+            if !matches!(r, Ok(Ok(_))) {
+                eprintln!("close of {}: memtable flush with the compactor running did not finish; the close flushes", self.name);
+            } else {
+                let absorbed = tokio::time::timeout(CLOSE_ABSORB_TIMEOUT, async {
+                    while c.absorb_once().await? > 0 {}
+                    anyhow::Ok(())
+                })
+                .await;
+                if !matches!(absorbed, Ok(Ok(()))) {
+                    eprintln!("close of {}: the last L0 SSTs were not absorbed before the close; the database is compacted at its next open", self.name);
+                }
+            }
+        }
+        self.stop_fxc().await;
+    }
+
     /// Stop this database's compactor (before its tenant closes, is abandoned or dropped).
     async fn stop_fxc(&mut self) {
         if let Some(c) = self.fxc.take() {
@@ -737,7 +827,7 @@ impl Entry {
         self.sstat.clear();
         self.meta_clear();
         crate::opening::forget_db(&self.name);
-        self.stop_fxc().await;
+        self.flush_then_stop_fxc().await;
         if let Some(t) = self.tenant.take() {
             crate::fair::note_written(&self.name, 0, true);
             let r = t.close().await;
@@ -982,28 +1072,7 @@ impl Entry {
                 eprintln!("sealed runs: publish of database {} failed: {e:#}", self.name);
             }
         }
-        if self.fxc.is_none() && tenant_bench::fx::compactor::SERVER_ON.load(Relaxed) && self.tenant.as_ref().is_some_and(|t| t.is_writer() && t.fx_view().is_some()) {
-            // the registered collections' customer keys, from their stored options (after a restart nothing has been
-            // written yet: the compactor must still know which collections are keyed by thread_id)
-            for coll in crate::agentck::registered(&self.name) {
-                if let Ok(o) = self.coll_opts(&coll).await {
-                    let key = crate::custkey::of_opts(o.as_ref());
-                    crate::agentck::note_key(&self.name, &coll, key.as_ref().map(|k| k.field.as_str()));
-                }
-            }
-            let t = self.tenant.as_mut().unwrap();
-            {
-                let mut k = tenant_bench::fx::compactor::server_knobs();
-                k.derive = crate::agentck::spec_for(&self.name);
-                match tenant_bench::fx::compactor::Compactor::start(t, Arc::clone(&self.raw), k, tenant_bench::fx::pool::global(), tokio::runtime::Handle::current()).await {
-                    Ok(c) => {
-                        c.run();
-                        self.fxc = Some(c);
-                    }
-                    Err(e) => eprintln!("sealed runs: compactor of database {} did not start: {e:#}", self.name),
-                }
-            }
-        }
+        self.maybe_start_fxc().await;
         self.seq += 1;
         if self.active_txns > 0 {
             for op in &ops {
@@ -1056,18 +1125,28 @@ impl Entry {
             commit = commit.with_local(log.append(seq, &self.name, &rec_ops, epoch));
         }
         let mut slot = Some(commit);
+        let slot_was_waited = !(GROUP_COMMIT.load(Relaxed) && use_local_log);
         // `apply_durable` (the log's replays) waits here, also inside a command: the takeover replay runs inside the
         // command that opened the database, and its reads must see the replayed records
         if GROUP_COMMIT.load(Relaxed) && use_local_log {
             let _ = PENDING.try_with(|p| p.borrow_mut().push(slot.take().unwrap()));
         }
-        match slot {
+        let r = match slot {
             Some(commit) => {
                 let _flushing = crate::fair::io_wait().await;
                 commit.wait().await
             }
             None => Ok(()),
+        };
+        // c2-fix-clone-uploads: the check before this write ran while the tenant was still a reader after a reopen (only
+        // `stage` made it a writer), so a session with one write never started its compactor (MEASURED: 1 start in 8
+        // sessions of ctl test_02), which the old compaction pass made up for until it stopped running on databases
+        // with a compactor. Started here once the write is committed (between the stage and the commit wait it held
+        // the write up: ctl test_08 timed out).
+        if r.is_ok() && slot_was_waited {
+            self.maybe_start_fxc().await;
         }
+        r
     }
 
     /// Close the tenant and delete every object of the database. Holds the tenant's maintenance
@@ -1096,7 +1175,7 @@ impl Entry {
         self.sstat.clear();
         self.meta_clear();
         crate::opening::forget_db(&self.name);
-        self.stop_fxc().await;
+        self.flush_then_stop_fxc().await;
         if let Some(t) = self.tenant.take() {
             t.close().await?;
             self.closes += 1;
