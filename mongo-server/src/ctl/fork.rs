@@ -103,11 +103,12 @@ pub async fn fork(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> ApiRes
     meta::check_name(src)?;
     meta::check_name(target)?;
     // A fork that leaves no branch (its source turned out erased, a refusal, a rollback) made requests under the target's
-    // name (the intent record, the target's lease, existence checks): they are taken back, or the usage flusher writes a
-    // record of a database that does not exist (fix-erase-fork-usage; ctl test_05, an erase racing a fork).
+    // name (the intent record, the target's lease, existence checks): they are held back while the target does not exist,
+    // or the usage flusher writes a record of a database that does not exist (fix-erase-fork-usage; ctl test_05, an erase
+    // racing a fork).
     let probe = ctl.usage.begin_probe(target);
     let r = fork_probed(ctl, src, target, mode).await;
-    let present = ctl.dbs.is_open_hint(target) || meta::exists(ctl, target).await.unwrap_or(true);
+    let present = r.is_ok() || ctl.dbs.is_open_hint(target) || meta::exists(ctl, target).await.unwrap_or(true);
     ctl.usage.end_probe(probe, present);
     r
 }

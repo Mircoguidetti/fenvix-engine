@@ -19,7 +19,7 @@ fn flag(req: &Request, name: &str, default: bool) -> bool {
 
 pub async fn route(ctl: Arc<Ctl>, req: Request) -> Response {
     // A request on a database's path may find it absent (an erase that lost a race, a describe of a name that never
-    // existed): the requests it made under that name are taken back then (`usage::Usage::begin_probe`), or the usage
+    // existed): the requests it made under that name are held back then (`usage::Usage::begin_probe`), or the usage
     // flusher would leave a record of a database that does not exist (fix-erase-fork-usage).
     let segs: Vec<&str> = req.path.trim_matches('/').split('/').collect();
     let probed = match segs.as_slice() {
@@ -28,7 +28,14 @@ pub async fn route(ctl: Arc<Ctl>, req: Request) -> Response {
     };
     let r = dispatch(&ctl, &req).await;
     if let Some((db, p)) = probed {
-        let present = ctl.dbs.is_open_hint(&db) || meta::exists(&ctl, &db).await.unwrap_or(true);
+        // the answer says whether the database exists, except for the reads that also answer for a name that is not one
+        // (a mistake either way loses nothing: requests held back are counted when the database is found present)
+        let answers_absent = matches!(segs.as_slice(), ["v1", "databases", _, "erasures" | "quota" | "checkpoints"]);
+        let present = match &r {
+            Ok(_) if !answers_absent => true,
+            Err(e) if e.status == 404 => false,
+            _ => ctl.dbs.is_open_hint(&db) || meta::exists(&ctl, &db).await.unwrap_or(true),
+        };
         ctl.usage.end_probe(p, present);
     }
     match r {

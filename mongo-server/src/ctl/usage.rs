@@ -61,15 +61,15 @@ impl Counts {
 
     pub fn minus(&self, o: &Counts) -> Counts {
         Counts {
-            get: self.get - o.get,
-            get_range: self.get_range - o.get_range,
-            head: self.head - o.head,
-            put: self.put - o.put,
-            copy: self.copy - o.copy,
-            list: self.list - o.list,
-            delete: self.delete - o.delete,
-            get_bytes: self.get_bytes - o.get_bytes,
-            put_bytes: self.put_bytes - o.put_bytes,
+            get: self.get.saturating_sub(o.get),
+            get_range: self.get_range.saturating_sub(o.get_range),
+            head: self.head.saturating_sub(o.head),
+            put: self.put.saturating_sub(o.put),
+            copy: self.copy.saturating_sub(o.copy),
+            list: self.list.saturating_sub(o.list),
+            delete: self.delete.saturating_sub(o.delete),
+            get_bytes: self.get_bytes.saturating_sub(o.get_bytes),
+            put_bytes: self.put_bytes.saturating_sub(o.put_bytes),
         }
     }
 
@@ -118,6 +118,9 @@ struct Inner {
     erased: std::collections::HashSet<String>,
     /// Names with an operation open that may find the database absent ([`Usage::begin_probe`]): not flushed meanwhile.
     probing: HashMap<String, ProbeState>,
+    /// Requests made under a name while it turned out not to be a database, per day: held back (never flushed) until the
+    /// database is found present ([`Usage::confirm`]: they are counted then), dropped by an erase, forgotten after a day.
+    held: HashMap<(String, i64), Counts>,
 }
 
 struct ProbeState {
@@ -134,8 +137,9 @@ struct ProbeState {
 /// checks, a fork's intent record and the target's lease), and the flusher wrote them as `control/usage/{db}/...`: an
 /// object under the name of a database that does not exist, also right after an erase (ctl test_05, an erase racing a
 /// fork). While a probe is open the name's counters are not flushed; when the last one ends and no probe found the
-/// database, the counters go back to what they were before the first one (earlier counters, such as those of a database
-/// dropped a moment ago, are kept).
+/// database, the requests counted since the first one are moved out of the counters and held back ([`Inner::held`]):
+/// they are counted if the database appears later (a read before the first insert is still the customer's), and never
+/// written while it does not exist. Earlier counters, such as those of a database dropped a moment ago, are kept.
 pub struct UsageProbe {
     db: String,
 }
@@ -193,6 +197,7 @@ impl Usage {
     /// Note activity on a database (a command, an admin operation).
     pub fn touch(&self, db: &str) {
         self.inner.lock().unwrap().erased.remove(db);
+        self.confirm(db);
         let now = now_ms();
         self.inner.lock().unwrap().last_active.insert(db.to_string(), now);
         self.with_day(db, |d| d.last_active_ms = now);
@@ -205,6 +210,7 @@ impl Usage {
     /// A Mongo command finished. `woke` carries the latency of the request that found the database asleep.
     pub fn command(&self, db: &str, name: &str, woke: Option<Duration>) {
         self.inner.lock().unwrap().erased.remove(db);
+        self.confirm(db);
         let now = now_ms();
         self.inner.lock().unwrap().last_active.insert(db.to_string(), now);
         self.with_day(db, |d| {
@@ -239,6 +245,7 @@ impl Usage {
     pub fn drop_db(&self, db: &str) {
         let mut g = self.inner.lock().unwrap();
         g.days.retain(|(d, _), _| d != db);
+        g.held.retain(|(d, _), _| d != db);
         g.erased.insert(db.to_string());
         g.last_active.remove(db);
         g.seen_wakes.remove(db);
@@ -264,22 +271,47 @@ impl Usage {
             return;
         }
         let st = g.probing.remove(&p.db).unwrap();
-        // present, or erased meanwhile (the erase already forgot the counters, and the name is not metered)
-        if st.present || g.erased.contains(&p.db) {
+        // erased meanwhile: the erase already forgot the counters, and the name is not metered
+        if g.erased.contains(&p.db) {
             return;
         }
+        if st.present {
+            drop(g);
+            self.confirm(&p.db);
+            return;
+        }
+        let key = (p.db.clone(), st.day);
+        let cur = g.days.get(&key).map(|d| d.counts.clone()).unwrap_or_default();
+        let base_counts = st.base.as_ref().map(|d| d.counts.clone()).unwrap_or_default();
+        let delta = cur.minus(&base_counts);
         match st.base {
             Some(d) => {
-                g.days.insert((p.db.clone(), st.day), d);
+                g.days.insert(key.clone(), d);
             }
             None => {
-                g.days.remove(&(p.db.clone(), st.day));
+                g.days.remove(&key);
             }
         }
+        g.held.entry(key).or_default().add(&delta);
         let today = day_now();
         if today != st.day {
             // a day that began during the probe holds only the probe's requests
-            g.days.remove(&(p.db.clone(), today));
+            if let Some(d) = g.days.remove(&(p.db.clone(), today)) {
+                g.held.entry((p.db.clone(), today)).or_default().add(&d.counts);
+            }
+        }
+    }
+
+    /// The database exists (found by a probe, created or used by a command or an operation): the requests held back
+    /// while its name was not a database are counted now.
+    pub fn confirm(&self, db: &str) {
+        let mut g = self.inner.lock().unwrap();
+        let keys: Vec<(String, i64)> = g.held.keys().filter(|(d, _)| d == db).cloned().collect();
+        for k in keys {
+            let c = g.held.remove(&k).unwrap();
+            let d = g.days.entry(k).or_default();
+            d.counts.add(&c);
+            d.dirty = true;
         }
     }
 
@@ -328,7 +360,7 @@ impl Usage {
             let mut out = Vec::new();
             let probing: std::collections::HashSet<String> = g.probing.keys().cloned().collect();
             for ((db, day), d) in g.days.iter_mut() {
-                // not while an operation may still find the database absent (its counters may be taken back)
+                // not while an operation may still find the database absent (its requests may be held back)
                 if d.dirty && !probing.contains(db) {
                     d.dirty = false;
                     out.push((db.clone(), *day, self.doc_of(db, *day, d)));
@@ -360,6 +392,8 @@ impl Usage {
         // Forget days that are over and written.
         let cutoff = day_now() - 1;
         self.inner.lock().unwrap().days.retain(|(_, day), d| d.dirty || *day >= cutoff);
+        // requests of a name that has not become a database within a day are forgotten
+        self.inner.lock().unwrap().held.retain(|(_, day), _| *day >= cutoff);
         n
     }
 }
@@ -681,7 +715,7 @@ pub async fn after(p: Option<Probe>) {
     let Some(mut p) = p else { return };
     let Some(ctl) = super::get() else { return };
     // a command that found its database absent (a read of an erased or never created database) creates nothing: its
-    // requests are taken back and the command is not counted, or a usage record would exist for no database
+    // requests are held back and the command is not counted, or a usage record would exist for no database
     if let Some(ap) = p.absent_probe.take() {
         let absent = ctl.dbs.absent_hint(&p.db);
         ctl.usage.end_probe(ap, !absent);
