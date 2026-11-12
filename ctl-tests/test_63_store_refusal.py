@@ -225,7 +225,17 @@ def test_a_retried_write_is_applied_once():
         for w in ws:
             w.start()
         time.sleep(5)
+        # the database is closed, then opened again by the writers while its writes are refused: the open's requests
+        # fail and the writes are answered with a store error (a writer already open rides out a short refusal)
+        stop.set()
+        for w in ws:
+            w.join(120)
+        MongoClient(srv.uri, directConnection=True).r.command("tenantAdmin", close=True)
+        stop.clear()
         px.refuse(("PUT", "POST"), "/tenants/r/", 507)
+        ws = [threading.Thread(target=writer, args=(n,), daemon=True) for n in range(4, 8)]
+        for w in ws:
+            w.start()
         time.sleep(20)
         px.release()
         time.sleep(10)
@@ -234,6 +244,7 @@ def test_a_retried_write_is_applied_once():
             w.join(300)
         labelled = MongoClient(srv.uri, directConnection=True).admin.command("serverStatus").get("fenvix", {}).get("storeErrorsLabelled")
         print(f"acknowledged {len(acked)}; errors seen by the client {errors}; labelled by the server {labelled}")
+        assert labelled, "no write was answered with a store error: the test did not reach the case"
     finally:
         stop.set()
         px.release()
