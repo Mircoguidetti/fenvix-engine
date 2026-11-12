@@ -2942,6 +2942,14 @@ pub(crate) async fn compact_tenant_pass_with(
             Duration::from_millis(250)
         };
         tokio::time::sleep(poll).await;
+        // The maintenance shuts down (SIGTERM): stop now, also with the L0 over the threshold. A preemption waits for the L0
+        // (below), but at shutdown the tenants are already closed and nothing writes any more. Before, a pass whose
+        // compactor made no progress (fenced by a newer writer after a store outage: "detected newer DB client") held the
+        // shutdown for its whole stall window (30 s), and SIGTERM took longer than the process's stop limit.
+        if hooks.stop.as_ref().is_some_and(|s| s.load(std::sync::atomic::Ordering::Relaxed)) {
+            preempted = true;
+            break;
+        }
         let p = sst_progress(&counting);
         if p != progress_seen {
             progress_seen = p;
@@ -3855,18 +3863,25 @@ impl Maintenance {
     /// Stop accepting work and wait for in-flight compactions and the GC loop.
     pub async fn shutdown(self) -> Arc<Mutex<MaintenanceLog>> {
         use std::sync::atomic::Ordering::Relaxed;
+        // one line per step: a shutdown that does not return shows the step it waits in
+        let step = |s: &str| eprintln!("maintenance shutdown: {s} unix_ms={}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis()).unwrap_or(0));
         self.watch_stop.store(true, Relaxed);
+        step("waiting for the L0 watch");
         let _ = self.l0_watch.await;
         self.queue.stop();
+        step("waiting for the dispatcher");
         let _ = self.dispatcher.await;
         // Running passes stop now (a merge of sorted runs can last hours); each ends within its compactor's stop limit.
         self.stopping.store(true, Relaxed);
+        step(&format!("waiting for the running passes ({} running)", self.passes.load(Relaxed)));
         let _ = self.sem.acquire_many(self.workers as u32).await;
         while self.passes.load(Relaxed) > 0 {
             tokio::time::sleep(Duration::from_millis(50)).await;
         }
         self.gc_stop.store(true, std::sync::atomic::Ordering::Relaxed);
+        step("waiting for the GC task");
         let _ = self.gc_task.await;
+        step("done");
         self.log
     }
 }
@@ -4255,6 +4270,38 @@ mod tests {
         let r = r.expect("compaction pass did not end with the store down");
         assert!(r.unwrap().is_err(), "the pass must fail: its compactor did not stop");
         assert!(t0.elapsed() < Duration::from_secs(1) + stop_limit + Duration::from_secs(4), "pass took {:?}", t0.elapsed());
+    }
+
+    /// c2-fix-outage-loss: a pass with its L0 over the threshold and a compactor that makes no progress (here its output PUTs
+    /// hang) stops soon after the maintenance shuts down, not at the end of its stall window. Before, it ignored the
+    /// shutdown until the L0 drained or the stall window (30 s) ran out, and SIGTERM after a store outage took over 30 s.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn compaction_pass_stops_at_shutdown_with_l0_full() {
+        let id = "test-compact-shutdown-l0-full";
+        let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let db = Db::builder(tenant_path(id), Arc::clone(&raw)).with_settings(writer_settings()).build().await.unwrap();
+        for i in 0..L0_COMPACT_THRESHOLD {
+            db.put(format!("k{i}").as_bytes(), b"v").await.unwrap();
+            db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await.unwrap();
+        }
+        db.close().await.unwrap();
+        let frozen = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let s3: Arc<dyn ObjectStore> = Arc::new(Frozen { freeze_on_put: Some("compacted/"), ..Frozen::new(&raw, &frozen) });
+        let stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let pass = {
+            let (s3, raw, stop) = (Arc::clone(&s3), Arc::clone(&raw), Arc::clone(&stop));
+            let hooks = PassHooks { stop: Some(stop), ..Default::default() };
+            tokio::spawn(async move { compact_tenant_pass_with(&s3, &raw, id, COMPACTION_STALL, Duration::from_secs(3), false, hooks).await })
+        };
+        tokio::time::sleep(Duration::from_millis(1500)).await;
+        let t0 = Instant::now();
+        stop.store(true, Relaxed);
+        let r = tokio::time::timeout(Duration::from_secs(20), pass).await;
+        let was_frozen = frozen.load(Relaxed);
+        frozen.store(false, Relaxed);
+        assert!(was_frozen, "the compactor never wrote its output (the test did not reach the case)");
+        r.expect("the pass did not stop within 20 s of the shutdown").unwrap().ok();
+        assert!(t0.elapsed() < Duration::from_secs(10), "the pass took {:?} to stop after the shutdown", t0.elapsed());
     }
 
     /// `abandon` says whether the close finished. With the store down it returns false after `ABANDON_CLOSE_TIMEOUT` and

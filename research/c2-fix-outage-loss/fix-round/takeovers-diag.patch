@@ -1,0 +1,50 @@
+diff --git a/step9/programs/takeovers.py b/step9/programs/takeovers.py
+index 4d909aa..09af1ec 100644
+--- a/step9/programs/takeovers.py
++++ b/step9/programs/takeovers.py
+@@ -109,7 +109,7 @@ def wait_ping(node, wait_s=120):
+ 
+ colls = {k: client(k)["tk_app"].get_collection("w", write_concern=WriteConcern(w="majority", j=True)) for k in NODES}
+ acked = {}            # _id -> (node, time)
+-state = {"serving": "A", "killed_at": {"A": None, "B": None}, "stop": False, "failed": 0, "after_kill": 0}
++state = {"serving": "A", "killed_at": {"A": None, "B": None}, "stop": False, "failed": 0, "after_kill": 0, "started_at": {"A": None, "B": None}}  # DIAG (c2-fix-outage-loss): started_at
+ 
+ 
+ def writer(t):
+@@ -120,14 +120,21 @@ def writer(t):
+             _id = f"w{t}-{seq}"
+             seq += 1
+             try:
++                sent = time.time()
+                 colls[node].insert_one({"_id": _id, "ts": time.time()})
+                 now = time.time()
++                diag = None
+                 with lock:
+                     acked[_id] = (node, now)
++                    state["serving"] = node
+                     k = state["killed_at"][node]
+                     if k is not None and now > k:
+                         state["after_kill"] += 1   # a killed process cannot confirm: this must stay 0
+-                    state["serving"] = node
++                        st = state["started_at"][node]
++                        diag = dict(kind="after_kill_diag", node=node, id=_id, sent_minus_kill=round(sent - k, 3), recv_minus_kill=round(now - k, 3),
++                                    restart_sent=st is not None and st < now, recv_minus_restart=round(now - st, 3) if st else None)
++                if diag:
++                    note(**diag)
+                 break
+             except Exception as e:
+                 with lock:
+@@ -170,10 +177,13 @@ for i in range(a.n):
+     if first is None:
+         ok = False
+         break
++    with lock:
++        state["started_at"][victim] = time.time()
+     command(victim, "start")
+     wait_ping(victim)
+     with lock:
+         state["killed_at"][victim] = None
++        state["started_at"][victim] = None
+ state["stop"] = True
+ for t in ths:
+     t.join(timeout=30)

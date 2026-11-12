@@ -631,6 +631,7 @@ impl Server {
         }
         let stat_ops = crate::collstat::ops_for(g, &mut w.stat).await?;
         let uniq = std::mem::take(&mut w.uniq);
+        w.settle_nat_deletes(g).await?;
         let mut ops = w.final_ops()?;
         ops.extend(stat_ops);
         g.apply(ops).await?;

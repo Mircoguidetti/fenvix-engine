@@ -1,0 +1,4 @@
+longoff run 1: {"bucket": "ctl-otl-0f2aba0e", "mode": "off0", "binary": "/home/user/bins/long", "freeze_s": 40, "after": "ok", "sigterm_s": 1.4, "acked": 52502, "n_missing_merged": 0, "n_missing_slatedb": 0}
+longoff run 2: {"bucket": "ctl-otl-5d9c2cad", "mode": "off0", "binary": "/home/user/bins/long", "freeze_s": 40, "after": "ok", "sigterm_s": 1.2, "acked": 53502, "n_missing_merged": 0, "n_missing_slatedb": 0}
+longoff run 3: {"bucket": "ctl-otl-dd8d94c8", "mode": "off0", "binary": "/home/user/bins/long", "freeze_s": 40, "after": "ok", "sigterm_s": 1.3, "acked": 54002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+longoff run 4: {"bucket": "ctl-otl-56d04e5e", "mode": "off0", "binary": "/home/user/bins/long", "freeze_s": 40, "after": "ok", "sigterm_s": 0.6, "acked": 56002, "n_missing_merged": 0, "n_missing_slatedb": 0}

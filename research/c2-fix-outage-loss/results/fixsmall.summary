@@ -1,0 +1,6 @@
+fixsmall run 1: {"bucket": "ctl-otl-54f9cb8e", "mode": "small", "binary": "/home/user/bins/fix3", "freeze_s": 40, "after": "ok", "sigterm_s": 2.4, "acked": 24002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+fixsmall run 2: {"bucket": "ctl-otl-050002f4", "mode": "small", "binary": "/home/user/bins/fix3", "freeze_s": 40, "after": "ok", "sigterm_s": 5.6, "acked": 31502, "n_missing_merged": 0, "n_missing_slatedb": 0}
+fixsmall run 3: {"bucket": "ctl-otl-646f9da8", "mode": "small", "binary": "/home/user/bins/fix3", "freeze_s": 40, "after": "ok", "sigterm_s": 21.9, "acked": 32002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+fixsmall run 4: {"bucket": "ctl-otl-d0687387", "mode": "small", "binary": "/home/user/bins/fix3", "freeze_s": 40, "after": "ok", "sigterm_s": 3.1, "acked": 24002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+fixsmall run 5: {"bucket": "ctl-otl-b7ca78a2", "mode": "small", "binary": "/home/user/bins/fix3", "freeze_s": 40, "after": "ok", "sigterm_s": 22.0, "acked": 31002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+fixsmall run 6: {"bucket": "ctl-otl-c6890360", "mode": "small", "binary": "/home/user/bins/fix3", "freeze_s": 40, "after": "ok", "sigterm_s": 6.6, "acked": 32002, "n_missing_merged": 0, "n_missing_slatedb": 0}

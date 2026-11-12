@@ -1,0 +1,2 @@
+batch 64: lost 1, of which share their number with another doc of the batch: 1; distinct numbers in batch 499
+TOTAL lost 1, sharing a number 1

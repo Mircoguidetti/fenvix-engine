@@ -1,0 +1,12 @@
+vcpu_peak=10
+vcpu_peaks={'load': 8, 'measure (m30)': 6, 'extras': 10}
+x86=1
+arm=0
+run.py: code 0 in 1741 s; outcome: FINITO; {"load": "LOADED", "client": "LOADED_ONLY", "extras": "takeovers:rc=0 takeovers-logoff:rc=1"}
+2026-11-11T22:01:37Z SPESA: 0.98 $ so far at 29 minutes (upper bound; machines 0.26 $, alive: none; S3 0.72 $ from the servers' counters, storage and margin), cap 5.00 $
+teardown: code 0
+secrets check: no secret in the files (2 pieces searched, password included)
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+total time: 1853 s
+EXIT 0

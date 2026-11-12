@@ -1,0 +1,8 @@
+hangssmall run 1: {"bucket": "ctl-otl-f67b3936", "mode": "small", "binary": "/home/user/bins/hangs", "freeze_s": 40, "after": "ok", "sigterm_s": 3.6, "acked": 32002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+hangssmall run 2: {"bucket": "ctl-otl-e5d8e0e9", "mode": "small", "binary": "/home/user/bins/hangs", "freeze_s": 40, "after": "ok", "sigterm_s": 3.2, "acked": 31002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+hangssmall run 3: {"bucket": "ctl-otl-204138d6", "mode": "small", "binary": "/home/user/bins/hangs", "freeze_s": 40, "after": "ok", "sigterm_s": 6.7, "acked": 23002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+hangssmall run 4: {"bucket": "ctl-otl-5924c2dd", "mode": "small", "binary": "/home/user/bins/hangs", "freeze_s": 40, "after": "ok", "sigterm_s": 3.2, "acked": 31002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+hangssmall run 5: {"bucket": "ctl-otl-aeb45619", "mode": "small", "binary": "/home/user/bins/hangs", "freeze_s": 40, "after": "ok", "sigterm_s": 6.4, "acked": 32002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+hangssmall run 6: {"bucket": "ctl-otl-a761f882", "mode": "small", "binary": "/home/user/bins/hangs", "freeze_s": 40, "after": "ok", "sigterm_s": 3.5, "acked": 23002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+hangssmall run 7: {"bucket": "ctl-otl-977d6ab9", "mode": "small", "binary": "/home/user/bins/hangs", "freeze_s": 40, "after": "ok", "sigterm_s": 4.7, "acked": 32002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+hangssmall run 8: {"bucket": "ctl-otl-1f7b72b8", "mode": "small", "binary": "/home/user/bins/hangs", "freeze_s": 40, "after": "ok", "sigterm_s": 3.1, "acked": 24002, "n_missing_merged": 0, "n_missing_slatedb": 0}

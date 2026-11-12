@@ -189,7 +189,31 @@ pub struct Entry {
     meta: Mutex<MetaCache>,
     /// Compaction 2, step 4 (`--sealed-compactor`): the compactor of this database while its writer is open.
     fxc: Option<Arc<tenant_bench::fx::compactor::Compactor>>,
+    /// How many times this entry's tenant was abandoned (lease lost), and the count when the current command first used
+    /// the open tenant (`pin_opening`). A command that read state or took natural-order numbers from one opening must not
+    /// write into the next one: see [`Reopened`].
+    abandons: u64,
+    pinned_abandons: Option<u64>,
 }
+
+/// A write of a command whose database was abandoned (lease lost) and opened again after the command had begun to use it.
+/// What the command read and the natural-order numbers it took (`natural.rs`) belong to the old opening: the reopen
+/// forgot the numbers, so the rest of an insert batch took the same ones again and each later document overwrote an
+/// earlier one's `nat/` entry, and the earlier documents vanished from collection scans (acknowledged inserts "lost" after
+/// a store outage past the lease). The write is refused before anything is staged; the client retries the command.
+/// Writes refused with [`Reopened`] (tenantStats `maintenance.reopenedWritesRefused`).
+pub static REOPENED_REFUSED: AtomicU64 = AtomicU64::new(0);
+
+#[derive(Debug)]
+pub struct Reopened(pub String);
+
+impl std::fmt::Display for Reopened {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "database {} was reopened during the command (its lease was lost); this write was not applied (an earlier step of the same command, such as an index definition, may have been undone or kept), retry", self.0)
+    }
+}
+
+impl std::error::Error for Reopened {}
 
 /// Bytes (keys and values) a read returned: the "KiB read" of the unit of cost (fair.rs).
 trait ReadBytes {
@@ -272,6 +296,8 @@ impl Dbs {
                     sstat: HashMap::new(),
                     meta: Default::default(),
                     fxc: None,
+                    abandons: 0,
+                    pinned_abandons: None,
                 }))
             })
             .clone()
@@ -351,6 +377,8 @@ impl Dbs {
                     sstat: HashMap::new(),
                     meta: Default::default(),
                     fxc: None,
+                    abandons: 0,
+                    pinned_abandons: None,
                     }))
                 })
                 .clone()
@@ -373,6 +401,7 @@ impl Dbs {
         let mut g = self.entry(name).write_owned().await;
         g.snap = None;
         g.absent = false;
+        g.pinned_abandons = None;
         g
     }
 
@@ -704,6 +733,7 @@ impl Entry {
     /// Drop the tenant without clean-close bookkeeping (its lease was lost). Returns whether its close finished (see
     /// `Tenant::abandon`); true when no tenant was open.
     pub async fn abandon(&mut self) -> bool {
+        self.abandons += 1;
         self.nat.clear();
         self.copts.clear();
         self.ckey_decided.clear();
@@ -742,6 +772,32 @@ impl Entry {
     /// Wake the tenant as a reader if it is closed. `Ok(false)` if the database does not exist.
     /// The tenant's lease is taken first: a process that does not own the tenant gets [`lease::LeaseHeld`].
     pub async fn ensure_open(&mut self) -> Result<bool> {
+        let r = self.ensure_open_inner().await;
+        if matches!(r, Ok(true)) {
+            self.pin_opening();
+        }
+        r
+    }
+
+    /// The current command uses this opening of the tenant from now on (its first successful open, or its first
+    /// natural-order number): a later abandon makes its writes fail with [`Reopened`].
+    pub(crate) fn pin_opening(&mut self) {
+        if self.pinned_abandons.is_none() {
+            self.pinned_abandons = Some(self.abandons);
+        }
+    }
+
+    /// A transaction's commit: the command writes into the opening the transaction began on (`Txn::opened`).
+    pub(crate) fn pin_transaction(&mut self, opened: u64) {
+        self.pinned_abandons = Some(opened);
+    }
+
+    /// How many times the tenant was abandoned (lease lost) since this entry was made.
+    pub(crate) fn abandons(&self) -> u64 {
+        self.abandons
+    }
+
+    async fn ensure_open_inner(&mut self) -> Result<bool> {
         self.touch();
         // local log: a database whose kept records are not applied yet is refused (its last acknowledged writes are missing)
         crate::locallog::check_open(&self.name)?;
@@ -1062,6 +1118,12 @@ impl Entry {
             self.absent = false;
             self.wakes += 1;
             self.sync_gauges();
+        }
+        // a command that began on an opening abandoned since then writes nothing (`Reopened`); the log's replays
+        // (`apply_durable`) run inside the open itself and are not a command's write
+        if use_local_log && self.pinned_abandons.is_some_and(|a| a != self.abandons) {
+            REOPENED_REFUSED.fetch_add(1, Relaxed);
+            return Err(Reopened(self.name.clone()).into());
         }
         self.touch();
         // --sealed-runs N: a publish of our manifest every N write batches (fx/build.rs), under this exclusive lock; with

@@ -25,6 +25,12 @@ pub struct Txn {
     pub snap: Arc<tenant_bench::fx::read::Snap>,
     pub seq: u64,
     pub started: Instant,
+    /// The database's abandon count when the transaction began (`Entry::abandons`). Its reads, its natural-order numbers
+    /// and its write-conflict tracking belong to that opening: a commit after the database was abandoned (lease lost) is
+    /// refused with NoSuchTransaction, and the driver runs the whole transaction again (c2-fix-outage-loss, review defects
+    /// 1 and 2: a commit after a reopen reused natural-order numbers; after a takeover it overwrote another process's
+    /// acknowledged update).
+    pub opened: u64,
 }
 
 /// How far a running commit is, published by the commit that runs it to the repeated commits that wait for it.
@@ -223,11 +229,12 @@ impl Server {
         let started = async {
             let mut g = self.dbs.lock(db).await;
             let (snap, seq) = g.begin_snapshot().await?;
+            let opened = g.abandons();
             let mut w = Writes::new();
             w.snap_seq = Some(seq);
             let id = self.next_txn_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             w.txn_id = Some(id);
-            Ok::<_, MongoError>(Txn { id, lsid_doc: tc.lsid_doc.clone(), db: db.to_string(), number: tc.number, w, snap, seq, started: Instant::now() })
+            Ok::<_, MongoError>(Txn { id, lsid_doc: tc.lsid_doc.clone(), db: db.to_string(), number: tc.number, w, snap, seq, started: Instant::now(), opened })
         }
         .await;
         match started {
@@ -340,6 +347,13 @@ impl Server {
         let hinted = if writes { self.txn_hint(&tc.lsid, &txn.db).await } else { Ok(()) };
         let db = txn.db.clone();
         let mut g = self.dbs.lock(&db).await;
+        // the commit writes into the opening the transaction began on, or not at all: settle the lease first (a lost lease
+        // abandons the database here), then compare; a reopen during the commit's own write is refused by `apply_mode`
+        g.pin_transaction(txn.opened);
+        let reopened = match g.ensure_open().await {
+            Ok(_) => g.abandons() != txn.opened,
+            Err(_) => true,
+        };
         // a unique value this transaction adds counts like a document it writes: a plain write that committed the same value
         // after the snapshot (plain writes do not wait for the transaction's claim) is a conflict, so no duplicate commits
         // the same for the index definitions of every collection it wrote: an index built (or dropped) after the snapshot
@@ -350,10 +364,17 @@ impl Server {
         let uniq = std::mem::take(&mut txn.w.uniq);
         let result = if let Err(e) = hinted {
             Err(e)
+        } else if reopened {
+            crate::dbs::REOPENED_REFUSED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            Err(no_such(format!("database {db} was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again")))
         } else if conflict {
             Err(MongoError::write_conflict())
         } else {
-            let stat_ops = crate::collstat::ops_for(&mut g, &mut txn.w.stat).await;
+            let settled = txn.w.settle_nat_deletes(&mut g).await;
+            let stat_ops = match settled {
+                Ok(()) => crate::collstat::ops_for(&mut g, &mut txn.w.stat).await,
+                Err(e) => Err(e),
+            };
             match stat_ops.map_err(MongoError::from).and_then(|st| txn.w.final_ops().map(|mut o| {
                 o.extend(st);
                 o
@@ -363,7 +384,10 @@ impl Server {
                         ops.push(crate::retry::txn_outcome_op(&tc.lsid, txn.number));
                         ops.extend(self.session_sweep_ops(&mut g, &db, &tc.lsid).await);
                     }
-                    g.apply_txn(ops).await.map_err(MongoError::from).map(|_| {
+                    g.apply_txn(ops).await.map_err(|e| match e.downcast_ref::<crate::dbs::Reopened>() {
+                        Some(r) => no_such(format!("{r}; the transaction was not applied, run it again")),
+                        None => MongoError::from(e),
+                    }).map(|_| {
                         g.mark_unique(&uniq);
                         self.dbs.changes.publish(events)
                     })

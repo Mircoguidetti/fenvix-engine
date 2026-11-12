@@ -1,0 +1,4 @@
+hangsoff run 1: {"bucket": "ctl-otl-3ad692ec", "mode": "off0", "binary": "/home/user/bins/hangs", "freeze_s": 40, "after": "ok", "sigterm_s": 0.6, "acked": 53502, "n_missing_merged": 222, "n_missing_slatedb": 222}
+hangsoff run 2: {"bucket": "ctl-otl-0f07c220", "mode": "off0", "binary": "/home/user/bins/hangs", "freeze_s": 40, "after": "ok", "sigterm_s": 2.1, "acked": 53002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+hangsoff run 3: {"bucket": "ctl-otl-b7dede01", "mode": "off0", "binary": "/home/user/bins/hangs", "freeze_s": 40, "after": "ok", "sigterm_s": 4.3, "acked": 53002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+hangsoff run 4: {"bucket": "ctl-otl-c9c5bf81", "mode": "off0", "binary": "/home/user/bins/hangs", "freeze_s": 40, "after": "ok", "sigterm_s": 0.9, "acked": 54002, "n_missing_merged": 0, "n_missing_slatedb": 0}

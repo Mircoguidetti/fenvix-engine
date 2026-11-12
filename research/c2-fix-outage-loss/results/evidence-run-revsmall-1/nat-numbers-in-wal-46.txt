@@ -1,0 +1,9 @@
+WAL object tenants/lst/wal/00000000000000000046.sst (PUT at 1794398769.638, after the thaw); batch 64 = ids 32000..32499, acknowledged at 1794398769.645
+document _id 32000: natural-order number in its stored value 29502
+document _id 32001: natural-order number in its stored value 29502
+document _id 32002: natural-order number in its stored value 29503
+document _id 32003: natural-order number in its stored value 29504
+document _id 32498: natural-order number in its stored value 29999
+document _id 32499: natural-order number in its stored value 30000
+the only nat/t/29502 entry in the object: next bytes 0003c0df4040000000008000000000007d01000000000000 (they contain 8000000000007d01, the key encoding of the integer 32001: the entry names _id 32001; _id 32000 has no nat entry left and a collection scan does not return it, while find by _id does)
+occurrences of nat/t/29502 in the object: 1

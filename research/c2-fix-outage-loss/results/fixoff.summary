@@ -1,0 +1,4 @@
+fixoff run 1: {"bucket": "ctl-otl-a67479b4", "mode": "off0", "binary": "/home/user/bins/fix3", "freeze_s": 40, "after": "ok", "sigterm_s": 2.3, "acked": 56002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+fixoff run 2: {"bucket": "ctl-otl-306cffb0", "mode": "off0", "binary": "/home/user/bins/fix3", "freeze_s": 40, "after": "ok", "sigterm_s": 1.9, "acked": 57002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+fixoff run 3: {"bucket": "ctl-otl-2151ed17", "mode": "off0", "binary": "/home/user/bins/fix3", "freeze_s": 40, "after": "ok", "sigterm_s": 2.0, "acked": 54002, "n_missing_merged": 0, "n_missing_slatedb": 0}
+fixoff run 4: {"bucket": "ctl-otl-1549a5dd", "mode": "off0", "binary": "/home/user/bins/fix3", "freeze_s": 40, "after": "ok", "sigterm_s": 1.7, "acked": 53502, "n_missing_merged": 0, "n_missing_slatedb": 0}
