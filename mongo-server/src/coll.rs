@@ -2104,9 +2104,7 @@ pub async fn natural_page(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], fil
     let ttl = if specs.is_empty() { None } else { Some((&specs[..], crate::cmd_data::now_ms())) };
     let o = FindOpts { filter, sort: &[], want: None, hint: Hint::None, ttl, ov: None };
     let np = crate::natural::prefix(coll);
-    let dp = doc_prefix(coll);
     let stop = prefix_end(&np);
-    let ckey = crate::custkey::of(g, coll).await?;
     let mut start = match after {
         Some(s) => crate::natural::key(coll, s.saturating_add(1)),
         None => np.clone(),
@@ -2114,20 +2112,18 @@ pub async fn natural_page(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], fil
     let mut out = Vec::new();
     let mut bytes = 0usize;
     let mut last = after;
-    let mut chunk = want.saturating_mul(2).clamp(256, 4096);
+    // A chunk is sized to what the page still needs (no document is decoded only to be thrown away at the page
+    // stop); when the filter drops documents the floor doubles, so a selective filter still reads in large chunks.
+    let mut floor = 256usize;
     loop {
+        let chunk = want.saturating_sub(out.len()).clamp(floor, NATURAL_CHUNK);
         let rows = g.scan_range(&start, stop.as_deref(), false, Some(chunk), INDEX_READ_AHEAD).await?;
         let n = rows.len();
         let ids: Vec<Vec<u8>> = rows.iter().map(|(_, v)| v.to_vec()).collect();
-        // the documents of this chunk by their key suffix, to take them in entry order
-        let mut by_id: HashMap<Vec<u8>, Document> = HashMap::new();
-        for d in docs_by_ids(g, coll, &ids).await? {
-            let k = crate::custkey::doc_key(coll, ckey.as_ref(), &d);
-            by_id.insert(k[dp.len().min(k.len())..].to_vec(), d);
-        }
-        for ((k, _), id) in rows.iter().zip(&ids) {
+        let docs = docs_aligned(g, coll, &ids).await?;
+        for ((k, _), (id, d)) in rows.iter().zip(ids.iter().zip(docs)) {
             last = k.get(np.len()..).and_then(|s| s.try_into().ok()).map(u64::from_be_bytes).or(last);
-            let d = match by_id.remove(id) {
+            let d = match d {
                 Some(d) => d,
                 None => match moved_doc(g, coll, id).await? {
                     Some(d) => d,
@@ -2148,6 +2144,50 @@ pub async fn natural_page(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], fil
         let mut k = rows.last().unwrap().0.to_vec();
         k.push(0);
         start = k;
-        chunk = (chunk * 2).min(4096);
+        floor = (floor * 2).min(NATURAL_CHUNK);
     }
+}
+
+const NATURAL_CHUNK: usize = 8192;
+
+/// The documents under these key suffixes, position by position (`None` where nothing is stored under a suffix: the
+/// caller looks for a moved document). Same cost-based choice as `docs_by_ids`, without matching documents back to
+/// their keys.
+async fn docs_aligned(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Option<Document>>> {
+    let prefix = doc_prefix(coll);
+    tenant_bench::counting::set_phase(2);
+    if ids.is_empty() {
+        return Ok(vec![]);
+    }
+    if prefer_scan(g.approx_bytes(), ids.len()) {
+        let want: HashSet<&[u8]> = ids.iter().map(|i| i.as_slice()).collect();
+        let (lo, hi) = (ids.iter().min().unwrap(), ids.iter().max().unwrap());
+        let mut start = [&prefix[..], lo].concat();
+        let mut stop = [&prefix[..], hi].concat();
+        stop.push(0);
+        let mut found: HashMap<Vec<u8>, Document> = HashMap::with_capacity(ids.len());
+        loop {
+            let rows = g.scan_range(&start, Some(&stop), false, Some(FETCH_CHUNK), FETCH_SCAN_READ_AHEAD).await?;
+            let n = rows.len();
+            for (k, v) in &rows {
+                let id = &k[prefix.len()..];
+                if want.contains(id) {
+                    found.insert(id.to_vec(), decode(v)?);
+                }
+            }
+            if n < FETCH_CHUNK {
+                break;
+            }
+            let mut k = rows.last().unwrap().0.to_vec();
+            k.push(0);
+            if k >= stop {
+                break;
+            }
+            start = k;
+        }
+        return Ok(ids.iter().map(|i| found.remove(i)).collect());
+    }
+    let keys: Vec<Vec<u8>> = ids.iter().map(|id| [&prefix[..], id].concat()).collect();
+    let vals = g.get_many(&keys).await?;
+    vals.into_iter().map(|v| v.map(|v| decode(&v)).transpose()).collect()
 }
