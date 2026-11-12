@@ -1,0 +1,4 @@
+== lc5
+ttl 2 s, 1000000 documents: find answered 1000000 in 6.4 s after 0 refusals {}
+== i4
+ttl 2 s, 1000000 documents: never answered in 90 s, 57 refusals {'F7 serving lease': 57}, last: 134 database d: this process's serving lease expired; it begins no new read (F7); retry, full error: {'ok': 0.0, ' after 1.6 s
