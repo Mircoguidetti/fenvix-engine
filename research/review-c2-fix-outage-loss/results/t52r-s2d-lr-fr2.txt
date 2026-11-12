@@ -1,0 +1,220 @@
+===== lr run 1
+reopened True; commit refused: OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again, full error: {'ok': 0.0, 'errmsg': 'data; reopenedWritesRefused 1
+acknowledged ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']
+scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']
+after a restart: scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']; found by _id 11 of 11
+a fresh process after both stopped reads n=1
+now: acknowledged inserts 66401, scanned 66401, by _id index 66401, by k index 66401
+now: OK
+after a restart: acknowledged inserts 66401, scanned 66401, by _id index 66401, by k index 66401
+after a restart: OK
+lease losses 8; reopenedWritesRefused 4
+acknowledged 188200, scanned 188200, indexes ['_id_', 'k_1', 'u_1', 'k_-1_u_1'], validate valid=True errors=[]
+OK
+validate on this branch: valid=False nrecords=12 errors=['document { _id: "B" } shares its natural-order number with another document: collection scans do not return it'] warnings=['Could not complete validation of table:collection-433-2070754724282331625. This is a transient issue as the collection was actively in use by other operations.', 'Could not complete validation of table:index-434-207075
+after deleting B (hidden): scan ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'A']; A found by _id True
+.cycles 2; lease losses 15; commands that failed 0: []
+hung: []
+now cap: valid=True errors=[] repaired=0
+now ck: valid=True errors=[] repaired=0
+now cko: valid=True errors=[] repaired=0
+now cl: valid=True errors=[] repaired=0
+now plain: valid=True errors=[] repaired=0
+now ts: valid=True errors=[] repaired=0
+after a restart cap: valid=True errors=[] repaired=0
+after a restart ck: valid=True errors=[] repaired=0
+after a restart cko: valid=True errors=[] repaired=0
+after a restart cl: valid=True errors=[] repaired=0
+after a restart plain: valid=True errors=[] repaired=0
+after a restart ts: valid=True errors=[] repaired=0
+deleteMany removed 101
+many: A in the scan True, A stored True, B still found False, scan size 1
+fam: A in the scan True, A stored True, B still found False, scan size 101
+txn: A in the scan True, A stored True, B still found False, scan size 101
+ttl: A in the scan True, A stored True, B still found False, scan size 102
+one: A in the scan True, A stored True, B still found False, scan size 101
+9 passed, 2 warnings in 438.04s (0:07:18)
+===== lr run 2
+reopened True; commit refused: OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again, full error: {'ok': 0.0, 'errmsg': 'data; reopenedWritesRefused 1
+acknowledged ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']
+scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']
+after a restart: scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']; found by _id 11 of 11
+a fresh process after both stopped reads n=1
+now: acknowledged inserts 66441, scanned 66441, by _id index 66441, by k index 66441
+now: OK
+after a restart: acknowledged inserts 66441, scanned 66441, by _id index 66441, by k index 66441
+after a restart: OK
+lease losses 5; reopenedWritesRefused 2
+acknowledged 185200, scanned 185200, indexes ['_id_', 'k_1', 'u_1', 'k_-1_u_1'], validate valid=True errors=[]
+validate on this branch: valid=False nrecords=12 errors=['document { _id: "B" } shares its natural-order number with another document: collection scans do not return it'] warnings=['Could not complete validation of table:collection-433--684003129381209604. This is a transient issue as the collection was actively in use by other operations.', 'Could not complete validation of table:index-434--68400
+after deleting B (hidden): scan ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'A']; A found by _id True
+.cycles 1; lease losses 21; commands that failed 0: []
+hung: []
+now cap: valid=True errors=[] repaired=0
+now ck: valid=True errors=[] repaired=0
+now cko: valid=True errors=[] repaired=0
+now cl: valid=True errors=[] repaired=0
+now plain: valid=True errors=[] repaired=0
+now ts: valid=True errors=[] repaired=0
+after a restart cap: valid=True errors=[] repaired=0
+after a restart ck: valid=True errors=[] repaired=0
+after a restart cko: valid=True errors=[] repaired=0
+after a restart cl: valid=True errors=[] repaired=0
+after a restart plain: valid=True errors=[] repaired=0
+after a restart ts: valid=True errors=[] repaired=0
+deleteMany removed 101
+many: A in the scan True, A stored True, B still found False, scan size 1
+fam: A in the scan True, A stored True, B still found False, scan size 101
+txn: A in the scan True, A stored True, B still found False, scan size 101
+ttl: A in the scan True, A stored True, B still found False, scan size 102
+one: A in the scan True, A stored True, B still found False, scan size 101
+E   AssertionError: the read-back scan never succeeded: database d: this process's serving lease expired; it begins no new read (F7); retry, full error: {'ok': 0.0, 'errmsg': "database d: this process's serving lease expired; it begins no new read (F7); retry", 'code': 134, 'codeName': 'SealedRunsRetry', 'errorLabels': ['TransientTransactionError', 'RetryableWriteError'], '$clusterTime': {'cluster
+FAILED test_52r_review_c2_fix_outage_loss.py::test_split_insert_many_with_driver_retries
+1 failed, 8 passed, 2 warnings in 668.41s (0:11:08)
+===== lr run 3
+reopened True; commit refused: OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again, full error: {'ok': 0.0, 'errmsg': 'data; reopenedWritesRefused 1
+acknowledged ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']
+scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']
+after a restart: scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']; found by _id 11 of 11
+a fresh process after both stopped reads n=1
+now: acknowledged inserts 66441, scanned 66441, by _id index 66441, by k index 66441
+now: OK
+after a restart: acknowledged inserts 66441, scanned 66441, by _id index 66441, by k index 66441
+after a restart: OK
+lease losses 3; reopenedWritesRefused 1
+acknowledged 184400, scanned 184400, indexes ['_id_', 'k_1', 'u_1', 'k_-1_u_1'], validate valid=True errors=[]
+OK
+validate on this branch: valid=False nrecords=12 errors=['document { _id: "B" } shares its natural-order number with another document: collection scans do not return it'] warnings=['Could not complete validation of table:collection-433--1047515369421563632. This is a transient issue as the collection was actively in use by other operations.', 'Could not complete validation of table:index-434--1047
+after deleting B (hidden): scan ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'A']; A found by _id True
+.cycles 1; lease losses 12; commands that failed 0: []
+hung: []
+now cap: valid=True errors=[] repaired=0
+now ck: valid=True errors=[] repaired=0
+now cko: valid=True errors=[] repaired=0
+now cl: valid=True errors=[] repaired=0
+now plain: valid=True errors=[] repaired=0
+now ts: valid=True errors=[] repaired=0
+after a restart cap: valid=True errors=[] repaired=0
+after a restart ck: valid=True errors=[] repaired=0
+after a restart cko: valid=True errors=[] repaired=0
+after a restart cl: valid=True errors=[] repaired=0
+after a restart plain: valid=True errors=[] repaired=0
+after a restart ts: valid=True errors=[] repaired=0
+deleteMany removed 101
+many: A in the scan True, A stored True, B still found False, scan size 1
+fam: A in the scan True, A stored True, B still found False, scan size 101
+txn: A in the scan True, A stored True, B still found False, scan size 101
+ttl: A in the scan True, A stored True, B still found False, scan size 102
+one: A in the scan True, A stored True, B still found False, scan size 101
+9 passed, 2 warnings in 445.15s (0:07:25)
+===== lr run 4
+reopened True; commit refused: OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again, full error: {'ok': 0.0, 'errmsg': 'data; reopenedWritesRefused 1
+acknowledged ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']
+scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']
+after a restart: scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']; found by _id 11 of 11
+a fresh process after both stopped reads n=1
+now: acknowledged inserts 65401, scanned 65401, by _id index 65401, by k index 65401
+now: OK
+after a restart: acknowledged inserts 65401, scanned 65401, by _id index 65401, by k index 65401
+after a restart: OK
+lease losses 8; reopenedWritesRefused 4
+acknowledged 189600, scanned 189600, indexes ['_id_', 'k_1', 'u_1', 'k_-1_u_1'], validate valid=True errors=[]
+OK
+validate on this branch: valid=False nrecords=12 errors=['document { _id: "B" } shares its natural-order number with another document: collection scans do not return it'] warnings=['Could not complete validation of table:collection-433--259593934144356321. This is a transient issue as the collection was actively in use by other operations.', 'Could not complete validation of table:index-434--25959
+after deleting B (hidden): scan ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'A']; A found by _id True
+.cycles 1; lease losses 17; commands that failed 0: []
+hung: []
+now cap: valid=True errors=[] repaired=0
+now ck: valid=True errors=[] repaired=0
+now cko: valid=True errors=[] repaired=0
+now cl: valid=True errors=[] repaired=0
+now plain: valid=True errors=[] repaired=0
+now ts: valid=True errors=[] repaired=0
+after a restart cap: valid=True errors=[] repaired=0
+after a restart ck: valid=True errors=[] repaired=0
+after a restart cko: valid=True errors=[] repaired=0
+after a restart cl: valid=True errors=[] repaired=0
+after a restart plain: valid=True errors=[] repaired=0
+after a restart ts: valid=True errors=[] repaired=0
+deleteMany removed 101
+many: A in the scan True, A stored True, B still found False, scan size 1
+fam: A in the scan True, A stored True, B still found False, scan size 101
+txn: A in the scan True, A stored True, B still found False, scan size 101
+ttl: A in the scan True, A stored True, B still found False, scan size 102
+one: A in the scan True, A stored True, B still found False, scan size 101
+9 passed, 2 warnings in 410.01s (0:06:50)
+===== lr run 5
+reopened True; commit refused: OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again, full error: {'ok': 0.0, 'errmsg': 'data; reopenedWritesRefused 1
+acknowledged ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']
+scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']
+after a restart: scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']; found by _id 11 of 11
+a fresh process after both stopped reads n=1
+now: acknowledged inserts 66401, scanned 66401, by _id index 66401, by k index 66401
+now: OK
+after a restart: acknowledged inserts 66401, scanned 66401, by _id index 66401, by k index 66401
+after a restart: OK
+lease losses 5; reopenedWritesRefused 2
+acknowledged 185400, scanned 185400, indexes ['_id_', 'k_1', 'u_1', 'k_-1_u_1'], validate valid=True errors=[]
+validate on this branch: valid=False nrecords=12 errors=['document { _id: "B" } shares its natural-order number with another document: collection scans do not return it'] warnings=['Could not complete validation of table:collection-433-491451157221665708. This is a transient issue as the collection was actively in use by other operations.', 'Could not complete validation of table:index-434-4914511
+after deleting B (hidden): scan ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'A']; A found by _id True
+.cycles 1; lease losses 17; commands that failed 0: []
+hung: []
+now cap: valid=True errors=[] repaired=0
+now ck: valid=True errors=[] repaired=0
+now cko: valid=True errors=[] repaired=0
+now cl: valid=True errors=[] repaired=0
+now plain: valid=True errors=[] repaired=0
+now ts: valid=True errors=[] repaired=0
+after a restart cap: valid=True errors=[] repaired=0
+after a restart ck: valid=True errors=[] repaired=0
+after a restart cko: valid=True errors=[] repaired=0
+after a restart cl: valid=True errors=[] repaired=0
+after a restart plain: valid=True errors=[] repaired=0
+after a restart ts: valid=True errors=[] repaired=0
+deleteMany removed 101
+many: A in the scan True, A stored True, B still found False, scan size 1
+fam: A in the scan True, A stored True, B still found False, scan size 101
+txn: A in the scan True, A stored True, B still found False, scan size 101
+ttl: A in the scan True, A stored True, B still found False, scan size 102
+one: A in the scan True, A stored True, B still found False, scan size 101
+E   AssertionError: the read-back scan never succeeded: database d: this process's serving lease expired; it begins no new read (F7); retry, full error: {'ok': 0.0, 'errmsg': "database d: this process's serving lease expired; it begins no new read (F7); retry", 'code': 134, 'codeName': 'SealedRunsRetry', 'errorLabels': ['TransientTransactionError', 'RetryableWriteError'], '$clusterTime': {'cluster
+FAILED test_52r_review_c2_fix_outage_loss.py::test_split_insert_many_with_driver_retries
+1 failed, 8 passed, 2 warnings in 694.87s (0:11:34)
+===== fr2 run 1
+reopened True; commit refused: OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again, full error: {'ok': 0.0, 'errmsg': 'data; reopenedWritesRefused 1
+acknowledged ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']
+scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']
+after a restart: scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']; found by _id 11 of 11
+a fresh process after both stopped reads n=1
+now: acknowledged inserts 63401, scanned 63401, by _id index 63401, by k index 63401
+now: OK
+lease losses 7; reopenedWritesRefused 5
+acknowledged 189600, scanned 189600, indexes ['_id_', 'k_1', 'u_1', 'k_-1_u_1'], validate valid=True errors=[]
+validate on this branch: valid=False nrecords=12 errors=['document { _id: "B" } shares its natural-order number with another document: collection scans do not return it'] warnings=['Could not complete validation of table:collection-433--1010504732375190151. This is a transient issue as the collection was actively in use by other operations.', 'Could not complete validation of table:index-434--1010
+after deleting B (hidden): scan ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'A']; A found by _id True
+.cycles 2; lease losses 12; commands that failed 0: []
+hung: []
+now cap: valid=True errors=[] repaired=0
+now ck: valid=True errors=[] repaired=0
+now cko: valid=True errors=[] repaired=0
+now cl: valid=True errors=[] repaired=0
+now plain: valid=True errors=[] repaired=0
+now ts: valid=True errors=[] repaired=0
+after a restart cap: valid=True errors=[] repaired=0
+after a restart ck: valid=True errors=[] repaired=0
+after a restart cko: valid=True errors=[] repaired=0
+after a restart cl: valid=True errors=[] repaired=0
+after a restart plain: valid=True errors=[] repaired=0
+after a restart ts: valid=True errors=[] repaired=0
+deleteMany removed 101
+many: A in the scan True, A stored True, B still found False, scan size 1
+fam: A in the scan True, A stored True, B still found False, scan size 101
+txn: A in the scan True, A stored True, B still found False, scan size 101
+ttl: A in the scan True, A stored True, B still found False, scan size 102
+one: A in the scan True, A stored True, B still found False, scan size 101
+E   AssertionError: the read after a restart never succeeded: database d: our manifest was last read 1.008827275s ago, more than T_pin; retry, full error: {'ok': 0.0, 'errmsg': 'database d: our manifest was last read 1.008827275s ago, more than T_pin; retry', 'code': 134, 'codeName': 'SealedRunsRetry', 'errorLabels': ['TransientTransactionError', 'RetryableWriteError']}
+E   AssertionError: the read-back scan never succeeded: database d: this process's serving lease expired; it begins no new read (F7); retry, full error: {'ok': 0.0, 'errmsg': "database d: this process's serving lease expired; it begins no new read (F7); retry", 'code': 134, 'codeName': 'SealedRunsRetry', 'errorLabels': ['TransientTransactionError', 'RetryableWriteError'], '$clusterTime': {'cluster
+FAILED test_52r_review_c2_fix_outage_loss.py::test_mixed_writes_spanning_lease_losses
+FAILED test_52r_review_c2_fix_outage_loss.py::test_split_insert_many_with_driver_retries
+2 failed, 7 passed, 2 warnings in 995.11s (0:16:35)
+DONE

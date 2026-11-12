@@ -1,0 +1,9 @@
+lease losses 4; reopenedWritesRefused 0; read by this process; scanned 360000; calls [...]
+OK
+1 passed, 8 deselected in 80.61s (0:01:20)
+lease losses 8; reopenedWritesRefused 3; read by this process; scanned 480000; calls [...]
+OK
+1 passed, 8 deselected in 98.45s (0:01:38)
+lease losses 6; reopenedWritesRefused 3; read by this process; scanned 480000; calls [...]
+OK
+1 passed, 8 deselected in 96.44s (0:01:36)

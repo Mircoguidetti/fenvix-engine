@@ -1,0 +1,9 @@
+ttl 2 s, 300000 documents: find answered 300000 in 1.8 s after 4 refusals
+ttl 30 s, 300000 documents: find answered 300000 in 3.1 s after 0 refusals
+ttl 2 s, 1000000 documents: never answered in 90 s, 2696 refusals, last: 1 could not settle the process lease of rvlongfind-38406 (contended), full error: {'ok': 0.0, 'errmsg': 'could n after 0.0 s
+ttl 6 s, 1000000 documents: find answered 1000000 in 4.4 s after 2 refusals
+TimeoutError: timed out
+ttl 2 s, 1000000 documents: never answered in 90 s, 57 refusals {'F7 serving lease': 57}, last: 134 database d: this process's serving lease expired; it begins no new read (F7); retry, full error: {'ok': 0.0, ' after 1.6 s
+ttl 6 s, 1000000 documents: never answered in 90 s, 22 refusals {'F7 serving lease': 9, 'Data error: object store error (Object at location tenants/d': 13}, last: 1 Data error: object store error (Object at location tenants/d/compacted/01M76WSRSG59V3PV37E499GG1E.sst not foun after 4.1 s
+d3137e3: ttl 6 s, 1000000 documents: never answered in 90 s, 86 refusals {'T_pin': 86}, last: 134 database d: our manifest was last read 1.004127606s ago, more than T_pin; retry, full error: {'ok': 0.0, 'errm after 1.1 s
+merge run 2: ttl 6 s, 1000000 documents: find answered 1000000 in 4.8 s after 2 refusals {'F7 serving lease': 2}
