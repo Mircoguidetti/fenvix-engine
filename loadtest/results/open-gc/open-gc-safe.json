@@ -3,15 +3,15 @@
  "trials": [
   {
    "killed_inside_cleanup_pass": true,
-   "cleanup_passes": 6,
-   "ssts_deleted": 46,
-   "manifests_deleted": 100,
-   "acked_docs": 6722,
-   "acked_updates": 6717,
+   "cleanup_passes": 7,
+   "ssts_deleted": 20,
+   "manifests_deleted": 51,
+   "acked_docs": 6449,
+   "acked_updates": 6444,
    "lost_inserts": 0,
    "lost_updates": 0,
    "read_violations": {
-    "reads_checked": 70830,
+    "reads_checked": 55323,
     "missing": 0,
     "stale": 0,
     "padding": 0,
@@ -25,12 +25,12 @@
  "total": {
   "trials": 1,
   "killed_inside_cleanup_pass": 1,
-  "ssts_deleted": 46,
-  "acked_docs": 6722,
+  "ssts_deleted": 20,
+  "acked_docs": 6449,
   "lost_inserts": 0,
   "lost_updates": 0,
   "read_violations": {
-   "reads_checked": 70830,
+   "reads_checked": 55323,
    "missing": 0,
    "stale": 0,
    "padding": 0,
