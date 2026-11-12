@@ -330,6 +330,16 @@ impl Dbs {
         }
     }
 
+    /// Is the database open here right now? Unlike `is_open_hint`, a busy entry (being opened or closed, perhaps by a
+    /// command on an erased name) is NOT counted as open: the usage flusher then checks the store before writing.
+    pub fn is_open_now(&self, name: &str) -> bool {
+        let e = self.entries.lock().unwrap().get(name).cloned();
+        match e {
+            None => false,
+            Some(e) => e.try_read().map(|g| g.tenant.is_some()).unwrap_or(false),
+        }
+    }
+
     /// "writer", "reader" or "closed", without waiting (a busy entry reads as "busy").
     pub fn state_hint(&self, name: &str) -> String {
         let e = self.entries.lock().unwrap().get(name).cloned();

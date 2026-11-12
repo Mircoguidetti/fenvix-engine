@@ -81,6 +81,10 @@ def test_u2_a_new_database_with_an_erased_name_keeps_its_usage():
         time.sleep(4)
         o = usage_objs(b, "again")
         assert o, "the new database named like the erased one has no usage record (not billed)"
+        # a name erased in this process has its records checked again at the next flushes (and deleted if the name holds
+        # no database): the new, real database's record must survive that window (5 flushes of 1 s)
+        time.sleep(7)
+        assert usage_objs(b, "again") == o, "the usage record of the new database was deleted by the re-check"
         st, u = s.admin.get("/v1/databases/again/usage")
         assert st == 200, u
         print("U2 usage of the new database:", str(u)[:400])

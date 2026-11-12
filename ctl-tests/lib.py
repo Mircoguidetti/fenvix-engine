@@ -76,6 +76,10 @@ class Server:
         self.holder = holder or f"{tag}-{self.port}"
         self.proc = None
         self.log_path = os.path.join(OUT, f"{tag}-{self.port}.log")
+        # The log file is appended to and named by port, so an earlier test that drew the same port left its lines in it:
+        # log_text() returns only what this server wrote (restarts of this object included), or a wait for a failpoint line
+        # matches an old test's line and kills the server too early.
+        self.log_from = os.path.getsize(self.log_path) if os.path.exists(self.log_path) else 0
         self.env = env or {}
         # CTL_TEST_AUTH=1: run the server with --auth and give the tests an authenticated client (root created through the localhost
         # exception), to run the whole control-layer suite with access control on. Servers a test starts with its own --auth are left alone.
@@ -164,6 +168,7 @@ class Server:
 
     def log_text(self):
         with open(self.log_path, "rb") as f:
+            f.seek(self.log_from)
             return f.read().decode("utf8", "replace")
 
 

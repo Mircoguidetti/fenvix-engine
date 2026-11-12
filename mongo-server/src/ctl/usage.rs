@@ -124,7 +124,13 @@ struct Inner {
     /// How many times each name was erased in this process (`drop_db`). A command or a flush that began before an erase
     /// of its database counts nothing after it (fix-erase-fork-usage-c).
     epochs: HashMap<String, u64>,
+    /// Records written for a name that was erased in this process: checked again at the next flushes and deleted if the
+    /// name turns out not to hold a database (a command racing the erase reopened it for a moment). Value: the paths and
+    /// how many flushes in a row found the database present (after `RECHECK_PRESENT` the name is trusted again).
+    recheck: HashMap<String, (Vec<object_store::path::Path>, u32)>,
 }
+
+const RECHECK_PRESENT: u32 = 5;
 
 tokio::task_local! {
     /// Requests made inside this scope are counted without marking the record to be written (the flusher's own
@@ -287,6 +293,7 @@ impl Usage {
         g.last_active.remove(db);
         g.seen_wakes.remove(db);
         *g.epochs.entry(db.to_string()).or_default() += 1;
+        g.recheck.remove(db);
     }
 
     /// How many times `db` was erased in this process (see [`Inner::epochs`]).
@@ -415,6 +422,7 @@ impl Usage {
             }
             out
         };
+        self.recheck_erased(store, ops).await;
         let mut n = 0;
         for (db, day, doc, epoch) in todo {
             // Not while an operation (an erase above all) holds the database: its records must not reappear.
@@ -431,7 +439,10 @@ impl Usage {
             // Not open here: another process may have erased it. A record is written only for a database that exists,
             // checked before the write and again after it (an erase elsewhere that deleted the usage records between the
             // two would miss this one: it is deleted here instead).
-            let here = open(&db);
+            // A name erased in this process (rare) is always checked in the store: a command racing the erase may have
+            // reopened it here for a moment, so "open here" does not prove that the database exists.
+            let erased_here = epoch > 0;
+            let here = open(&db) && !erased_here;
             if !here {
                 match tenant_exists(store, &db).await {
                     Ok(true) => {}
@@ -455,7 +466,17 @@ impl Usage {
                     let _ = UNMETERED.scope((), object_store::ObjectStoreExt::delete(store.as_ref(), &p)).await;
                     DROPPED_ABSENT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                 }
-                Ok(()) => n += 1,
+                Ok(()) => {
+                    n += 1;
+                    if erased_here {
+                        let mut g = self.inner.lock().unwrap();
+                        let r = g.recheck.entry(db.clone()).or_default();
+                        if !r.0.contains(&p) {
+                            r.0.push(p.clone());
+                        }
+                        r.1 = 0;
+                    }
+                }
                 Err(e) => {
                     eprintln!("usage flush of {db}: {e:#}");
                     if let Some(d) = self.inner.lock().unwrap().days.get_mut(&(db, day)) {
@@ -470,6 +491,39 @@ impl Usage {
         // requests of a name that has not become a database within a day are forgotten
         self.inner.lock().unwrap().held.retain(|(_, day), _| *day >= cutoff);
         n
+    }
+}
+
+impl Usage {
+    /// Checks again the records written for names erased in this process (see `Inner::recheck`): a name that holds no
+    /// database has its records deleted; a name found present at `RECHECK_PRESENT` flushes in a row is trusted again.
+    /// A store error leaves the entry for the next flush. A real database is never touched: it holds objects other than
+    /// its lease and its clean marker, so `tenant_exists` is true.
+    async fn recheck_erased(&self, store: &rec::Store, ops: &super::OpLocks) {
+        let names: Vec<String> = self.inner.lock().unwrap().recheck.keys().cloned().collect();
+        for db in names {
+            let Some(_op) = ops.try_lock(&db) else { continue };
+            match tenant_exists(store, &db).await {
+                Ok(false) => {
+                    let paths = self.inner.lock().unwrap().recheck.remove(&db).map(|r| r.0).unwrap_or_default();
+                    for p in paths {
+                        let _ = UNMETERED.scope((), object_store::ObjectStoreExt::delete(store.as_ref(), &p)).await;
+                        DROPPED_ABSENT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    }
+                }
+                Ok(true) => {
+                    let mut g = self.inner.lock().unwrap();
+                    let done = g.recheck.get_mut(&db).map(|r| {
+                        r.1 += 1;
+                        r.1 >= RECHECK_PRESENT
+                    });
+                    if done == Some(true) {
+                        g.recheck.remove(&db);
+                    }
+                }
+                Err(e) => eprintln!("usage recheck of {db}: {e:#}"),
+            }
+        }
     }
 }
 
@@ -509,7 +563,7 @@ pub fn spawn_flusher(ctl: &Arc<Ctl>) {
                     }
                 }
             }
-            ctl.usage.flush(&ctl.store, &ctl.ops, &|d: &str| ctl.dbs.is_open_hint(d)).await;
+            ctl.usage.flush(&ctl.store, &ctl.ops, &|d: &str| ctl.dbs.is_open_now(d)).await;
         }
     });
 }
