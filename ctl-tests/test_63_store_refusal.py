@@ -76,7 +76,17 @@ def _sigterm_with_a_stuck_write(rule):
         px.close()
     srv2 = Server(bucket, "srterm2", idle=600).start()
     try:
-        ids = {d["_id"] for d in srv2.client().d.t.find({})}
+        # the stopped process did not release its lease (it exited without the clean close): reads are refused with
+        # "retry" (134) until the lease runs out (30 s)
+        deadline = time.time() + 90
+        while True:
+            try:
+                ids = {d["_id"] for d in srv2.client().d.t.find({})}
+                break
+            except Exception as e:
+                if "retry" not in str(e) or time.time() > deadline:
+                    raise
+                time.sleep(1)
         assert 0 in ids, ids
         if res.get("ok"):
             assert 1 in ids, f"the insert was acknowledged but is missing: {ids}"
@@ -184,3 +194,58 @@ def test_databases_answer_after_the_store_refuses_writes_507():
 
 def test_databases_answer_after_the_store_refuses_writes_503():
     _refusal(503)
+
+
+def test_a_retried_write_is_applied_once():
+    """A retryable write (lsid + txnNumber, replica-set mode) that fails because the store refuses writes is answered
+    with the RetryableWriteError label (code 1 unchanged), and the driver retries it. The retry must not apply it twice:
+    the engine records each statement in the same atomic batch (retry.rs). Each update pushes a unique token; after a
+    20 s refusal (507) every acknowledged token is there exactly once and no token appears twice."""
+    px = proxy()
+    bucket = make_bucket("srretry")
+    srv = Server(bucket, "srretry", idle=600, endpoint=px.endpoint, extra=["--replica-set", "rs0", "--lease-ttl-secs", "30"]).start()
+    acked, errors = [], {}
+    stop = threading.Event()
+
+    def writer(n):
+        cl = MongoClient(srv.uri, directConnection=True, retryWrites=True, serverSelectionTimeoutMS=600000, socketTimeoutMS=600000)
+        i = 0
+        while not stop.is_set():
+            tok = f"{n}-{i}"
+            try:
+                cl.r.t.update_one({"_id": 0}, {"$push": {"t": tok}}, upsert=True)
+                acked.append(tok)
+            except Exception as e:
+                k = f"{getattr(e, 'code', type(e).__name__)} {getattr(e, 'details', {}) and (e.details or {}).get('errorLabels')}"
+                errors[k] = errors.get(k, 0) + 1
+            i += 1
+
+    ws = [threading.Thread(target=writer, args=(n,), daemon=True) for n in range(4)]
+    try:
+        for w in ws:
+            w.start()
+        time.sleep(5)
+        px.refuse(("PUT", "POST"), "/tenants/r/", 507)
+        time.sleep(20)
+        px.release()
+        time.sleep(10)
+        stop.set()
+        for w in ws:
+            w.join(300)
+        labelled = MongoClient(srv.uri, directConnection=True).admin.command("serverStatus").get("fenvix", {}).get("storeErrorsLabelled")
+        print(f"acknowledged {len(acked)}; errors seen by the client {errors}; labelled by the server {labelled}")
+    finally:
+        stop.set()
+        px.release()
+        srv.term(timeout=STOP_BOUND_S)
+        px.close()
+    srv2 = Server(bucket, "srretry2", idle=600, extra=["--replica-set", "rs0"]).start()
+    try:
+        t = (MongoClient(srv2.uri, directConnection=True).r.t.find_one({"_id": 0}) or {}).get("t", [])
+        twice = [x for x in set(t) if t.count(x) > 1]
+        missing = sorted(set(acked) - set(t))
+        print(f"after a restart: {len(t)} tokens, {len(twice)} applied twice, {len(missing)} acknowledged missing")
+        assert not twice, f"writes applied twice by a retry: {twice[:5]}"
+        assert not missing, f"acknowledged writes missing: {missing[:5]}"
+    finally:
+        srv2.term()

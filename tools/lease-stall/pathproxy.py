@@ -141,7 +141,13 @@ class PathProxy:
 
             do_GET = do_PUT = do_POST = do_DELETE = do_HEAD = _any
 
-        self.srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+        class Srv(ThreadingHTTPServer):
+            # a listen backlog of 256, not the default 5 (fix-store-errors): a burst of parallel requests (a WAL replay)
+            # overflowed it, the client's connections failed before reaching the handler, and object_store retried them
+            # with backoff: a database looked 30 s slow to reopen, through this forwarder only (ctl-tests/proxy.py has 256)
+            request_queue_size = 256
+
+        self.srv = Srv(("127.0.0.1", port), Handler)
         self.srv.daemon_threads = True
         self.port = self.srv.server_address[1]
         threading.Thread(target=self.srv.serve_forever, daemon=True).start()

@@ -184,6 +184,33 @@ impl Server {
     }
 }
 
+/// fix-store-errors: a retryable write (`lsid` and `txnNumber`, not in a transaction) that failed because the store
+/// refused or did not answer gets the `RetryableWriteError` label, so the driver retries it. Safe because its statements
+/// and its record (this file) go in one atomic batch: either both landed and the retry answers from the record without
+/// applying anything again, or neither did and the retry applies it once. Any other write keeps code 1 without a label:
+/// its outcome is unknown and nothing deduplicates a second attempt. The code and the code name are unchanged.
+pub fn label_store_error(name: &str, cmd: &Document, e: &mut MongoError) {
+    if e.code != 1 || e.extra.as_ref().is_some_and(|x| x.contains_key("errorLabels")) {
+        return;
+    }
+    if !matches!(name, "insert" | "update" | "delete" | "findAndModify" | "findandmodify") {
+        return;
+    }
+    if !matches!(txn_number(cmd), Ok(Some(_))) || matches!(cmd.get("autocommit"), Some(Bson::Boolean(false))) || lsid_key(cmd).is_none() {
+        return;
+    }
+    let m = e.msg.as_str();
+    if m.contains("Generic S3 error") || m.contains("object store error") || m.contains("Error performing") {
+        STORE_ERRORS_LABELLED.fetch_add(1, Relaxed);
+        let mut x = e.extra.take().unwrap_or_default();
+        x.insert("errorLabels", vec![Bson::String("RetryableWriteError".into())]);
+        e.extra = Some(x);
+    }
+}
+
+/// Retryable writes answered with the `RetryableWriteError` label because the store refused or did not answer.
+pub static STORE_ERRORS_LABELLED: AtomicU64 = AtomicU64::new(0);
+
 fn too_old(number: i64, lsid: &Document, cur: i64, txn: bool) -> MongoError {
     let what = if txn { "transaction" } else { "retryable write" };
     MongoError::new(225, "TransactionTooOld", format!("Retryable write with txnNumber {number} is prohibited on session {} because a newer {what} with txnNumber {cur} has already started on this session.", lsid_text(lsid)))
