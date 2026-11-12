@@ -265,7 +265,7 @@ pub async fn shutdown() {
     if let Some(ctl) = get() {
         if ctl.args.admin_listen.is_some() {
             pin::release_all(ctl).await;
-            ctl.usage.flush(&ctl.store, &ctl.ops).await;
+            ctl.usage.flush(&ctl.store, &ctl.ops, &|d: &str| ctl.dbs.is_open_now(d)).await;
         }
     }
 }

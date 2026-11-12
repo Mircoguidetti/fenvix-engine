@@ -61,15 +61,15 @@ impl Counts {
 
     pub fn minus(&self, o: &Counts) -> Counts {
         Counts {
-            get: self.get - o.get,
-            get_range: self.get_range - o.get_range,
-            head: self.head - o.head,
-            put: self.put - o.put,
-            copy: self.copy - o.copy,
-            list: self.list - o.list,
-            delete: self.delete - o.delete,
-            get_bytes: self.get_bytes - o.get_bytes,
-            put_bytes: self.put_bytes - o.put_bytes,
+            get: self.get.saturating_sub(o.get),
+            get_range: self.get_range.saturating_sub(o.get_range),
+            head: self.head.saturating_sub(o.head),
+            put: self.put.saturating_sub(o.put),
+            copy: self.copy.saturating_sub(o.copy),
+            list: self.list.saturating_sub(o.list),
+            delete: self.delete.saturating_sub(o.delete),
+            get_bytes: self.get_bytes.saturating_sub(o.get_bytes),
+            put_bytes: self.put_bytes.saturating_sub(o.put_bytes),
         }
     }
 
@@ -116,6 +116,65 @@ struct Inner {
     marks: HashMap<String, Counts>,
     /// Erased databases: requests attributed to them are not metered until a command or an operation uses the name again.
     erased: std::collections::HashSet<String>,
+    /// Names with an operation open that may find the database absent ([`Usage::begin_probe`]): not flushed meanwhile.
+    probing: HashMap<String, ProbeState>,
+    /// Requests made under a name while it turned out not to be a database, per day: held back (never flushed) until the
+    /// database is found present ([`Usage::confirm`]: they are counted then), dropped by an erase, forgotten after a day.
+    held: HashMap<(String, i64), Counts>,
+    /// How many times each name was erased in this process (`drop_db`). A command or a flush that began before an erase
+    /// of its database counts nothing after it (fix-erase-fork-usage-c).
+    epochs: HashMap<String, u64>,
+    /// Records written for a name that was erased in this process: checked again at the next flushes and deleted if the
+    /// name turns out not to hold a database (a command racing the erase reopened it for a moment). Value: the paths and
+    /// how many flushes in a row found the database present (after `RECHECK_PRESENT` the name is trusted again).
+    recheck: HashMap<String, (Vec<object_store::path::Path>, u32)>,
+}
+
+const RECHECK_PRESENT: u32 = 5;
+
+tokio::task_local! {
+    /// Requests made inside this scope are counted without marking the record to be written (the flusher's own
+    /// existence checks: they are requests on the database's prefix, so they are counted, but they must not make the
+    /// flusher write a record again only because it checked).
+    static UNMETERED: ();
+}
+
+/// Whether a database exists in the store, by the rule of `meta::exists` (an object under `tenants/{db}/` other than a
+/// lease or a clean marker). Counted quietly (see [`UNMETERED`]).
+async fn tenant_exists(store: &rec::Store, db: &str) -> object_store::Result<bool> {
+    UNMETERED
+        .scope((), async {
+            let mut it = store.list(Some(&Path::from(format!("tenants/{db}"))));
+            while let Some(m) = it.next().await {
+                let name = m?.location.filename().unwrap_or("").to_string();
+                if name != "_lease" && name != "_clean" {
+                    return Ok(true);
+                }
+            }
+            Ok(false)
+        })
+        .await
+}
+
+struct ProbeState {
+    open: u32,
+    day: i64,
+    /// The name's counters of `day` when the first open probe began.
+    base: Option<Day>,
+    /// A probe found the database present.
+    present: bool,
+}
+
+/// An operation on a name that may turn out not to be a database (fix-erase-fork-usage). Usage is counted by object path,
+/// so an operation that finds a database absent has already counted the requests it made under its name (existence
+/// checks, a fork's intent record and the target's lease), and the flusher wrote them as `control/usage/{db}/...`: an
+/// object under the name of a database that does not exist, also right after an erase (ctl test_05, an erase racing a
+/// fork). While a probe is open the name's counters are not flushed; when the last one ends and no probe found the
+/// database, the requests counted since the first one are moved out of the counters and held back ([`Inner::held`]):
+/// they are counted if the database appears later (a read before the first insert is still the customer's), and never
+/// written while it does not exist. Earlier counters, such as those of a database dropped a moment ago, are kept.
+pub struct UsageProbe {
+    db: String,
 }
 
 pub struct Usage {
@@ -163,6 +222,16 @@ impl Usage {
     }
 
     fn record(&self, p: &Path, f: impl FnOnce(&mut Counts)) {
+        if UNMETERED.try_with(|_| ()).is_ok() {
+            if let Some(db) = db_of(p) {
+                let mut g = self.inner.lock().unwrap();
+                if !g.erased.contains(&db) {
+                    let d = g.days.entry((db, day_now())).or_default();
+                    f(&mut d.counts);
+                }
+            }
+            return;
+        }
         if let Some(db) = db_of(p) {
             self.with_day(&db, |d| f(&mut d.counts));
         }
@@ -171,6 +240,7 @@ impl Usage {
     /// Note activity on a database (a command, an admin operation).
     pub fn touch(&self, db: &str) {
         self.inner.lock().unwrap().erased.remove(db);
+        self.confirm(db);
         let now = now_ms();
         self.inner.lock().unwrap().last_active.insert(db.to_string(), now);
         self.with_day(db, |d| d.last_active_ms = now);
@@ -183,6 +253,7 @@ impl Usage {
     /// A Mongo command finished. `woke` carries the latency of the request that found the database asleep.
     pub fn command(&self, db: &str, name: &str, woke: Option<Duration>) {
         self.inner.lock().unwrap().erased.remove(db);
+        self.confirm(db);
         let now = now_ms();
         self.inner.lock().unwrap().last_active.insert(db.to_string(), now);
         self.with_day(db, |d| {
@@ -217,9 +288,81 @@ impl Usage {
     pub fn drop_db(&self, db: &str) {
         let mut g = self.inner.lock().unwrap();
         g.days.retain(|(d, _), _| d != db);
+        g.held.retain(|(d, _), _| d != db);
         g.erased.insert(db.to_string());
         g.last_active.remove(db);
         g.seen_wakes.remove(db);
+        *g.epochs.entry(db.to_string()).or_default() += 1;
+        g.recheck.remove(db);
+    }
+
+    /// How many times `db` was erased in this process (see [`Inner::epochs`]).
+    pub fn epoch(&self, db: &str) -> u64 {
+        self.inner.lock().unwrap().epochs.get(db).copied().unwrap_or(0)
+    }
+
+    /// Begin an operation that may find `db` absent; end it with [`Usage::end_probe`].
+    pub fn begin_probe(&self, db: &str) -> UsageProbe {
+        let mut g = self.inner.lock().unwrap();
+        let day = day_now();
+        let base = g.days.get(&(db.to_string(), day)).cloned();
+        let st = g.probing.entry(db.to_string()).or_insert(ProbeState { open: 0, day, base, present: false });
+        st.open += 1;
+        UsageProbe { db: db.to_string() }
+    }
+
+    /// End a probe: `present` says whether the operation found the database.
+    pub fn end_probe(&self, p: UsageProbe, present: bool) {
+        let mut g = self.inner.lock().unwrap();
+        let Some(st) = g.probing.get_mut(&p.db) else { return };
+        st.present |= present;
+        st.open -= 1;
+        if st.open > 0 {
+            return;
+        }
+        let st = g.probing.remove(&p.db).unwrap();
+        // erased meanwhile: the erase already forgot the counters, and the name is not metered
+        if g.erased.contains(&p.db) {
+            return;
+        }
+        if st.present {
+            drop(g);
+            self.confirm(&p.db);
+            return;
+        }
+        let key = (p.db.clone(), st.day);
+        let cur = g.days.get(&key).map(|d| d.counts.clone()).unwrap_or_default();
+        let base_counts = st.base.as_ref().map(|d| d.counts.clone()).unwrap_or_default();
+        let delta = cur.minus(&base_counts);
+        match st.base {
+            Some(d) => {
+                g.days.insert(key.clone(), d);
+            }
+            None => {
+                g.days.remove(&key);
+            }
+        }
+        g.held.entry(key).or_default().add(&delta);
+        let today = day_now();
+        if today != st.day {
+            // a day that began during the probe holds only the probe's requests
+            if let Some(d) = g.days.remove(&(p.db.clone(), today)) {
+                g.held.entry((p.db.clone(), today)).or_default().add(&d.counts);
+            }
+        }
+    }
+
+    /// The database exists (found by a probe, created or used by a command or an operation): the requests held back
+    /// while its name was not a database are counted now.
+    pub fn confirm(&self, db: &str) {
+        let mut g = self.inner.lock().unwrap();
+        let keys: Vec<(String, i64)> = g.held.keys().filter(|(d, _)| d == db).cloned().collect();
+        for k in keys {
+            let c = g.held.remove(&k).unwrap();
+            let d = g.days.entry(k).or_default();
+            d.counts.add(&c);
+            d.dirty = true;
+        }
     }
 
     pub fn note_storage(&self, db: &str, bytes: u64) {
@@ -260,21 +403,28 @@ impl Usage {
     }
 
     /// Write every dirty (db, day) record. Returns the number written.
-    pub async fn flush(&self, store: &rec::Store, ops: &super::OpLocks) -> usize {
+    /// `open`: whether a database is open in this process (its lease is held here, so no other process erased it).
+    pub async fn flush(&self, store: &rec::Store, ops: &super::OpLocks, open: &(dyn Fn(&str) -> bool + Sync)) -> usize {
         let holder = self.holder.lock().unwrap().clone();
-        let todo: Vec<(String, i64, Value)> = {
+        let todo: Vec<(String, i64, Value, u64)> = {
             let mut g = self.inner.lock().unwrap();
             let mut out = Vec::new();
+            let probing: std::collections::HashSet<String> = g.probing.keys().cloned().collect();
             for ((db, day), d) in g.days.iter_mut() {
-                if d.dirty {
+                // not while an operation may still find the database absent (its requests may be held back)
+                if d.dirty && !probing.contains(db) {
                     d.dirty = false;
-                    out.push((db.clone(), *day, self.doc_of(db, *day, d)));
+                    out.push((db.clone(), *day, self.doc_of(db, *day, d), 0));
                 }
+            }
+            for x in out.iter_mut() {
+                x.3 = g.epochs.get(&x.0).copied().unwrap_or(0);
             }
             out
         };
+        self.recheck_erased(store, ops).await;
         let mut n = 0;
-        for (db, day, doc) in todo {
+        for (db, day, doc, epoch) in todo {
             // Not while an operation (an erase above all) holds the database: its records must not reappear.
             let Some(_op) = ops.try_lock(&db) else {
                 if let Some(d) = self.inner.lock().unwrap().days.get_mut(&(db, day)) {
@@ -282,10 +432,51 @@ impl Usage {
                 }
                 continue;
             };
+            // erased in this process after the record was copied: the erase forgot these counters, nothing is written
+            if self.epoch(&db) != epoch {
+                continue;
+            }
+            // Not open here: another process may have erased it. A record is written only for a database that exists,
+            // checked before the write and again after it (an erase elsewhere that deleted the usage records between the
+            // two would miss this one: it is deleted here instead).
+            // A name erased in this process (rare) is always checked in the store: a command racing the erase may have
+            // reopened it here for a moment, so "open here" does not prove that the database exists.
+            let erased_here = epoch > 0;
+            let here = open(&db) && !erased_here;
+            if !here {
+                match tenant_exists(store, &db).await {
+                    Ok(true) => {}
+                    Ok(false) => {
+                        DROPPED_ABSENT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        continue;
+                    }
+                    Err(e) => {
+                        eprintln!("usage flush of {db}: existence check: {e:#}");
+                        if let Some(d) = self.inner.lock().unwrap().days.get_mut(&(db, day)) {
+                            d.dirty = true;
+                        }
+                        continue;
+                    }
+                }
+            }
             let name = format!("{holder}-{:08x}.json", self.nonce);
             let p = rec::path(&["control", "usage", &db, &day_string(day), &name]);
             match rec::put(store, &p, &doc).await {
-                Ok(()) => n += 1,
+                Ok(()) if !here && matches!(tenant_exists(store, &db).await, Ok(false)) => {
+                    let _ = UNMETERED.scope((), object_store::ObjectStoreExt::delete(store.as_ref(), &p)).await;
+                    DROPPED_ABSENT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                }
+                Ok(()) => {
+                    n += 1;
+                    if erased_here {
+                        let mut g = self.inner.lock().unwrap();
+                        let r = g.recheck.entry(db.clone()).or_default();
+                        if !r.0.contains(&p) {
+                            r.0.push(p.clone());
+                        }
+                        r.1 = 0;
+                    }
+                }
                 Err(e) => {
                     eprintln!("usage flush of {db}: {e:#}");
                     if let Some(d) = self.inner.lock().unwrap().days.get_mut(&(db, day)) {
@@ -297,9 +488,47 @@ impl Usage {
         // Forget days that are over and written.
         let cutoff = day_now() - 1;
         self.inner.lock().unwrap().days.retain(|(_, day), d| d.dirty || *day >= cutoff);
+        // requests of a name that has not become a database within a day are forgotten
+        self.inner.lock().unwrap().held.retain(|(_, day), _| *day >= cutoff);
         n
     }
 }
+
+impl Usage {
+    /// Checks again the records written for names erased in this process (see `Inner::recheck`): a name that holds no
+    /// database has its records deleted; a name found present at `RECHECK_PRESENT` flushes in a row is trusted again.
+    /// A store error leaves the entry for the next flush. A real database is never touched: it holds objects other than
+    /// its lease and its clean marker, so `tenant_exists` is true.
+    async fn recheck_erased(&self, store: &rec::Store, ops: &super::OpLocks) {
+        let names: Vec<String> = self.inner.lock().unwrap().recheck.keys().cloned().collect();
+        for db in names {
+            let Some(_op) = ops.try_lock(&db) else { continue };
+            match tenant_exists(store, &db).await {
+                Ok(false) => {
+                    let paths = self.inner.lock().unwrap().recheck.remove(&db).map(|r| r.0).unwrap_or_default();
+                    for p in paths {
+                        let _ = UNMETERED.scope((), object_store::ObjectStoreExt::delete(store.as_ref(), &p)).await;
+                        DROPPED_ABSENT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    }
+                }
+                Ok(true) => {
+                    let mut g = self.inner.lock().unwrap();
+                    let done = g.recheck.get_mut(&db).map(|r| {
+                        r.1 += 1;
+                        r.1 >= RECHECK_PRESENT
+                    });
+                    if done == Some(true) {
+                        g.recheck.remove(&db);
+                    }
+                }
+                Err(e) => eprintln!("usage recheck of {db}: {e:#}"),
+            }
+        }
+    }
+}
+
+/// Usage records not written because their database was erased (here or in another process) or does not exist.
+pub static DROPPED_ABSENT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 pub fn day_string(day: i64) -> String {
     chrono::DateTime::<chrono::Utc>::from_timestamp_millis(day * DAY_MS).map(|d| d.format("%Y-%m-%d").to_string()).unwrap_or_default()
@@ -334,7 +563,7 @@ pub fn spawn_flusher(ctl: &Arc<Ctl>) {
                     }
                 }
             }
-            ctl.usage.flush(&ctl.store, &ctl.ops).await;
+            ctl.usage.flush(&ctl.store, &ctl.ops, &|d: &str| ctl.dbs.is_open_now(d)).await;
         }
     });
 }
@@ -595,6 +824,10 @@ pub struct Probe {
     name: String,
     wakes: Option<u64>,
     t0: std::time::Instant,
+    /// The database was not open when the command began: it may find it absent.
+    absent_probe: Option<UsageProbe>,
+    /// The database's erase count when the command began.
+    epoch: u64,
 }
 
 /// Called before a command is handled (see `handle_connection`). Cheap: a map lookup and a try-lock.
@@ -608,12 +841,29 @@ pub async fn before(db: &str, command: &bson::Document) -> Option<Probe> {
         Ok(g) => Some(g.wakes),
         Err(_) => None,
     };
-    Some(Probe { db: db.to_string(), name, wakes, t0: std::time::Instant::now() })
+    let absent_probe = (!ctl.dbs.is_open_hint(db)).then(|| ctl.usage.begin_probe(db));
+    let epoch = ctl.usage.epoch(db);
+    Some(Probe { db: db.to_string(), name, wakes, t0: std::time::Instant::now(), absent_probe, epoch })
 }
 
 pub async fn after(p: Option<Probe>) {
-    let Some(p) = p else { return };
+    let Some(mut p) = p else { return };
     let Some(ctl) = super::get() else { return };
+    // a command that found its database absent (a read of an erased or never created database) creates nothing: its
+    // requests are held back and the command is not counted, or a usage record would exist for no database
+    if let Some(ap) = p.absent_probe.take() {
+        // (waits for a busy entry: several commands on an erased name at once must each see it absent)
+        let absent = ctl.dbs.absent_wait(&p.db, Duration::from_millis(200)).await;
+        ctl.usage.end_probe(ap, !absent);
+        if absent {
+            return;
+        }
+    }
+    // the database was erased while the command ran (a read in flight when the erase began): the erase forgot its
+    // counters, and the command is not counted either, unless it made the database exist again (a write after the erase)
+    if ctl.usage.epoch(&p.db) != p.epoch && !(ctl.dbs.is_open_hint(&p.db) && !ctl.dbs.absent_hint(&p.db)) {
+        return;
+    }
     let took = p.t0.elapsed();
     let mut woke = None;
     if let Some(before) = p.wakes {
