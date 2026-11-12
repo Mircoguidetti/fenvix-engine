@@ -134,7 +134,7 @@ READ_KINDS = ("resume_read", "list", "list_limit10", "time_travel")
 
 
 def mix_round(target, threads: dict, rec, expected: graph_runner.Expected, seed: int, round_name: str,
-              n_write: int, n_read: int, used: set, probe: Probe | None, extra_turns: dict) -> dict:
+              n_write: int, n_read: int, used: set, probe: Probe | None, extra_turns: dict, next_reads: bool = True) -> dict:
     """One round of the mix (see the module doc). `extra_turns[tid]`: turns added to a thread by earlier rounds."""
     write_ids, read_ids = pick_threads(threads, used, n_write, n_read, seed)
     used.update(write_ids)
@@ -164,18 +164,27 @@ def mix_round(target, threads: dict, rec, expected: graph_runner.Expected, seed:
             else:
                 kind, tid = task[1], task[2]
                 cfg = {"configurable": {"thread_id": tid, "checkpoint_ns": ""}}
-                ts.context = {"phase": phase, "gap": "read", "kind": threads[tid].kind, "task": kind,
-                              "turns": threads[tid].turns + extra_turns.get(tid, 0)}
-                if kind == "resume_read":
-                    ts.get_tuple(cfg)
-                elif kind == "list":
-                    list(ts.list(cfg))
-                elif kind == "list_limit10":
-                    list(ts.list(cfg, limit=10))
-                else:
-                    ids = sorted(cid for ns, cid in expected.written_ids(tid) if ns == "")
-                    cid = random.Random(f"{seed}:{tid}").choice(ids)
-                    ts.get_tuple({"configurable": {"thread_id": tid, "checkpoint_ns": "", "checkpoint_id": cid}})
+
+                def read(k, which):
+                    ts.context = {"phase": phase, "gap": "read", "kind": threads[tid].kind, "task": k, "which": which,
+                                  "turns": threads[tid].turns + extra_turns.get(tid, 0)}
+                    if k == "resume_read":
+                        ts.get_tuple(cfg)
+                    elif k == "list":
+                        list(ts.list(cfg))
+                    elif k == "list_limit10":
+                        list(ts.list(cfg, limit=10))
+                    else:
+                        ids = sorted(cid for ns, cid in expected.written_ids(tid) if ns == "")
+                        # P-big-speed: the NEXT time travel picks another checkpoint than the FIRST one
+                        cid = random.Random(f"{seed}:{tid}:{which}").choice(ids)
+                        ts.get_tuple({"configurable": {"thread_id": tid, "checkpoint_ns": "", "checkpoint_id": cid}})
+
+                read(kind, "first")
+                if next_reads:
+                    # P-big-speed: the NEXT requests of the same customer, right after its first one: every read kind
+                    for k in READ_KINDS:
+                        read(k, "next")
         except Exception as ex:  # noqa: BLE001 - reported; the run is then not ok
             errors.append(f"{task}: {ex!r}")
     handle.close()
@@ -187,14 +196,17 @@ SEED_OF_PLAN = [42]   # set by bench.py to --seed: the content of every new turn
 
 
 def op_key(row: dict) -> str | None:
-    """The name an op of the mix is reported under."""
+    """The name an op of the mix is reported under. P-big-speed: a read task's NEXT requests (the same customer right
+    after its first request) are reported as `<op>:next`; the write task's first turn is the customer's first request
+    after idle (resume[long] FIRST, its saves NEXT), its second turn the next requests (resume[none], save_step[none])."""
     op, gap = row["op"], row.get("gap")
+    nxt = ":next" if row.get("which") == "next" else ""
     if op == "resume":
-        return f"resume[{gap}]"
+        return f"resume[{gap}]{nxt}"
     if op == "save_step":
         return "save_step[old]" if gap == "long" else "save_step[none]"
     if op in ("list", "list_limit10", "time_travel"):
-        return op
+        return op + nxt
     return None
 
 

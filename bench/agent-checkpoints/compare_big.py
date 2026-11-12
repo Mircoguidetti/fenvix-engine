@@ -19,8 +19,10 @@ import json
 import os
 import sys
 
-OPS = ["resume[long]", "resume[none]", "resume[read]", "list", "list_limit10", "time_travel", "save_step[old]",
-       "save_step[none]", "save_step"]
+# P-big-speed: every op FIRST (the customer's first request after idle) and NEXT (the same customer right after):
+# resume[long] is a write task's first request, resume[none] its next; a read task's next requests are "<op>:next".
+OPS = ["resume[long]", "resume[none]", "resume[read]", "resume[read]:next", "list", "list:next", "list_limit10",
+       "list_limit10:next", "time_travel", "time_travel:next", "save_step[old]", "save_step[none]", "save_step"]
 TARGETS = ("postgres", "mongo", "fenvix")
 
 
@@ -82,7 +84,7 @@ def main() -> None:
                 r[q] = {"ours": ours, "postgres": L["postgres"][q], "mongo": L["mongo"][q], "best": best_t,
                         "ratio": ratio, "gap_ms": round(ours - best, 2), "verdict": verdict(ratio)}
             rows[op] = r
-            lines.append(f"{cmp_name:26s} {op:16s} p50 ours {r['p50']['ours']:9.2f} pg {r['p50']['postgres']:9.2f} mg {r['p50']['mongo']:9.2f}"
+            lines.append(f"{cmp_name:26s} {op:18s} p50 ours {r['p50']['ours']:9.2f} pg {r['p50']['postgres']:9.2f} mg {r['p50']['mongo']:9.2f}"
                          f" x{r['p50']['ratio']:<6} {r['p50']['verdict']:6s} | p99 ours {r['p99']['ours']:9.2f} pg {r['p99']['postgres']:9.2f}"
                          f" mg {r['p99']['mongo']:9.2f} x{r['p99']['ratio']:<6} {r['p99']['verdict']}   n={r['n']}")
         out["comparisons"][cmp_name] = rows

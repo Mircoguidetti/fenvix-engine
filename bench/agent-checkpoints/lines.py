@@ -371,6 +371,8 @@ def server_cmd(name: str, log_on: bool) -> list[str]:
     # P-bench-big: extra server flags (FXBENCH_SERVER_FLAGS, set by `run --server-flags`), e.g. smaller caches so our
     # server fits the same 1 GiB as every other member (with its defaults it was OOM-killed at 40% of the load)
     cmd += os.environ.get("FXBENCH_SERVER_FLAGS", "").split()
+    # P-big-speed: the control layer (fork, restore) on 8080 for bigops.py, token from BENCH_PW (environment only)
+    cmd += ["--admin-listen", "0.0.0.0:8080"]
     if log_on:
         cmd += ["--quaderno", ",".join(f"{IP[f'log-{i}']}:7200" for i in range(3)), "--quaderno-id", "cell1"]
     return cmd
@@ -378,7 +380,8 @@ def server_cmd(name: str, log_on: bool) -> list[str]:
 
 def run_ours(name: str, cmd: list[str]) -> None:
     run_container(name, MACHINE_IMAGE, ["-v", f"{SRV}:/opt/fx/mongo-server:ro", "-v", f"{PQ}:/opt/fx/pq:ro",
-                                        "-v", f"{PYLIB}:/opt/pylib:ro"], cmd, env=S3_ENV | {"PYTHONPATH": "/opt/pylib"})
+                                        "-v", f"{PYLIB}:/opt/pylib:ro"], cmd, env=S3_ENV | {"PYTHONPATH": "/opt/pylib"},
+                  secret_env={"MONGO_ADMIN_TOKEN": os.environ.get("BENCH_PW", "")})
 
 
 def create_root(name: str) -> None:
