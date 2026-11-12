@@ -30,6 +30,10 @@ Every machine powers itself off at the time ceiling (first line of its user-data
 
 Usage: run.py RESOLVED_COMMAND_JSON OUT_DIR   (mode, run id, password in the environment: S9_MODE, RUN_ID, CM_PW)
 Exit 0 = the round finished (outcomes inside), 1 = it stopped early (BLOCCO, time ceiling, a machine failed)."""
+# DECISIONS 2026-11-11 point 3: with the 8-vCPU quota the m30 program's maximum-load cells are not like for like; they
+# are printed by the founder's program (unchanged) and must be read as NOT VALID, never promised.
+MAX_LOAD_NOTE = ("m30 maximum-load cells \"hot reads per second\" and \"peak writes\": NOT VALID by design (DECISIONS "
+                 "2026-11-11, 8-vCPU quota; not promised). Peak writes with the real indexes: the write-peak program.")
 import datetime as dt
 import json
 import os
@@ -444,6 +448,7 @@ try:
                 minute("client")
             outcomes["m30"] = (get("client/done-1.json") or {}).get("outcome", "NOT DONE")
             say(f"m30 program on cook 1: {outcomes['m30']}")
+            say(MAX_LOAD_NOTE)
         else:
             wait_for("server-1/ready.json", watch="server-1", limit_min=20, what="cook")
     if client_id:
