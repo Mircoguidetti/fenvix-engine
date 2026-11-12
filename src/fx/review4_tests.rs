@@ -1008,9 +1008,9 @@ impl ObjectStore for JointHandle {
     }
 }
 
-/// A database with a published version, a running compactor (absorption at the first L0 SST, GC out of the way) and
-/// rows in the writer's memtable for the next absorption.
-async fn joint_setup(id: &str, js: &Arc<JointStore>) -> (Tenant, Arc<Compactor>, tokio::task::JoinHandle<()>) {
+/// A database with a published version, a running compactor (absorption at the first L0 SST, GC out of the way; with
+/// `drop`, SlateDB's compactor runs the fold as in production) and rows in the writer's memtable for the next absorption.
+async fn joint_setup(id: &str, js: &Arc<JointStore>, drop: bool) -> (Tenant, Arc<Compactor>, tokio::task::JoinHandle<()>) {
     let store: Arc<dyn ObjectStore> = Arc::new(JointHandle(Arc::clone(js)));
     let mut t = lc(&store).create(id).await.unwrap();
     let mut m = BTreeMap::new();
@@ -1018,7 +1018,7 @@ async fn joint_setup(id: &str, js: &Arc<JointStore>) -> (Tenant, Arc<Compactor>,
         apply(&mut t, &mut m, vec![(ckey(1, i % 20), Some(vec![b'v'; 50]))]).await;
     }
     publish(&mut t, &small_opts(build::Reseal::All)).await;
-    let mut k = knobs(false);
+    let mut k = knobs(drop);
     k.gc_every = Duration::from_secs(3600);
     k.local_max_bytes = 0; // every run goes to the store (the upload is the store's)
     let c = Compactor::start(&mut t, Arc::clone(&store), k.clone(), pool::Pool::new(2), tokio::runtime::Handle::current()).await.unwrap();
@@ -1046,8 +1046,8 @@ async fn joint_no_store_request_after_stop() {
     let _s = SERIAL.lock().await;
     setup();
     let js = JointStore::new(Arc::new(InMemory::new()));
+    let (t, c, planner) = joint_setup("joint-stop", &js, true).await;
     js.hold_l0_gets.store(true, SeqCst);
-    let (t, c, planner) = joint_setup("joint-stop", &js).await;
     flush(&t).await; // an L0 SST: the absorption starts and its read is held
     wait_held(&js, "L0 read of an absorption").await;
     let aborted0 = compactor::STOP_SLATE_ABORTED.load(SeqCst);
@@ -1081,8 +1081,8 @@ async fn joint_cut_upload_is_aborted_without_an_erase() {
     let _s = SERIAL.lock().await;
     setup();
     let js = JointStore::new(Arc::new(InMemory::new()));
+    let (t, c, _planner) = joint_setup("joint-upload", &js, false).await;
     js.hold_run_parts.store(true, SeqCst);
-    let (t, c, _planner) = joint_setup("joint-upload", &js).await;
     flush(&t).await; // the absorption writes a delta run; its part upload is held
     wait_held(&js, "part upload of a run").await;
     let open_before = js.open_uploads();
