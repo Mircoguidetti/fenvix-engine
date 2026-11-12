@@ -1,0 +1,572 @@
+/home/user/adapters/venv-lg/lib/python3.12/site-packages/pytest_asyncio/plugin.py:300: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the "fixture" caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to "function" scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.2.0, pluggy-1.7.0 -- /home/user/adapters/venv-lg/bin/python
+rootdir: /home/user/adapters/langchain-mongodb/libs/langgraph-store-mongodb
+configfile: pyproject.toml
+plugins: mock-3.17.0, repeat-0.9.4, syrupy-7.0.0, langsmith-0.14.17, anyio-4.16.0, asyncio-1.4.1.post1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 39 items
+
+tests/integration_tests/test_autoembedded_index.py::test_filters FAILED  [  2%]
+tests/integration_tests/test_store_rerank.py::test_rerank_returns_limit_results SKIPPED [  5%]
+tests/integration_tests/test_store_rerank.py::test_rerank_score_is_positive_float SKIPPED [  7%]
+tests/integration_tests/test_store_rerank.py::test_rerank_scores_are_descending SKIPPED [ 10%]
+tests/integration_tests/test_store_rerank.py::test_rerank_scores_are_not_constant SKIPPED [ 12%]
+tests/integration_tests/test_store_rerank.py::test_rerank_num_docs_to_rerank_still_returns_limit SKIPPED [ 15%]
+tests/integration_tests/test_store_rerank.py::test_rerank_semantic_ordering SKIPPED [ 17%]
+tests/integration_tests/test_store_rerank.py::test_rerank_changes_ordering_vs_vector_search SKIPPED [ 20%]
+tests/integration_tests/test_store_semantic.py::test_filters FAILED      [ 23%]
+tests/integration_tests/test_store_semantic_async.py::test_filters FAILED [ 25%]
+tests/unit_tests/test_index_config.py::test_create_vector_index_config_with_autoembeddings PASSED [ 28%]
+tests/unit_tests/test_index_config.py::test_create_vector_index_config_with_manual_embeddings PASSED [ 30%]
+tests/unit_tests/test_index_config.py::test_create_vector_index_config_requires_manual_embedding_dimensions PASSED [ 33%]
+tests/unit_tests/test_index_config.py::test_create_vector_index_config_rejects_autoembedding_dimensions PASSED [ 35%]
+tests/unit_tests/test_index_config.py::test_create_vector_index_config_rejects_autoembedding_similarity PASSED [ 38%]
+tests/unit_tests/test_index_config.py::test_store_creates_autoembedding_index_from_raw_config PASSED [ 41%]
+tests/unit_tests/test_store.py::test_list_namespaces PASSED              [ 43%]
+tests/unit_tests/test_store.py::test_get PASSED                          [ 46%]
+tests/unit_tests/test_store.py::test_ttl PASSED                          [ 48%]
+tests/unit_tests/test_store.py::test_put PASSED                          [ 51%]
+tests/unit_tests/test_store.py::test_put_no_multikey_collision PASSED    [ 53%]
+tests/unit_tests/test_store.py::test_namespace_separator_collision_raises PASSED [ 56%]
+tests/unit_tests/test_store.py::test_delete PASSED                       [ 58%]
+tests/unit_tests/test_store.py::test_batch PASSED                        [ 61%]
+tests/unit_tests/test_store.py::test_search_basic PASSED                 [ 64%]
+tests/unit_tests/test_store.py::test_search_rejects_mql_operator_keys PASSED [ 66%]
+tests/unit_tests/test_store.py::test_search_filter_normal_behavior PASSED [ 69%]
+tests/unit_tests/test_store.py::test_upgrade_from_legacy_index PASSED    [ 71%]
+tests/unit_tests/test_store.py::test_upgrade_with_conflicting_non_unique_index PASSED [ 74%]
+tests/unit_tests/test_store.py::test_upgrade_idempotent PASSED           [ 76%]
+tests/unit_tests/test_store_async.py::test_alist_namespaces PASSED       [ 79%]
+tests/unit_tests/test_store_async.py::test_aget PASSED                   [ 82%]
+tests/unit_tests/test_store_async.py::test_ttl PASSED                    [ 84%]
+tests/unit_tests/test_store_async.py::test_aput PASSED                   [ 87%]
+tests/unit_tests/test_store_async.py::test_adelete PASSED                [ 89%]
+tests/unit_tests/test_store_async.py::test_abatch PASSED                 [ 92%]
+tests/unit_tests/test_store_async.py::test_asearch_basic PASSED          [ 94%]
+tests/unit_tests/test_store_async.py::test_asearch_rejects_mql_operator_keys PASSED [ 97%]
+tests/unit_tests/test_store_async.py::test_asearch_filter_normal_behavior PASSED [100%]
+
+=================================== FAILURES ===================================
+_________________________________ test_filters _________________________________
+
+collection = Collection(Database(MongoClient(host=['localhost:27017'], document_class=dict, tz_aware=False, connect=True, directconnection=True), 'langgraph-test'), 'semantic_search_autoembedded')
+
+    def test_filters(collection: Collection) -> None:
+        """Test permutations of namespace_prefix in filter."""
+    
+        index_config = create_vector_index_config(
+            name=INDEX_NAME,
+            dims=None,
+            fields=["product"],
+            embed=AutoEmbeddings(model="voyage-4"),  # embedding
+            filters=["metadata.available"],
+        )
+        store_mdb = MongoDBStore(
+            collection, index_config=index_config, auto_index_timeout=TIMEOUT
+        )
+    
+        namespaces = [
+            ("a",),
+            ("a", "b", "c"),
+            ("a", "b", "c", "d"),
+        ]
+    
+        products = ["apples", "oranges", "pears"]
+    
+        # Add some indexed data
+        put_ops = []
+        for i, ns in enumerate(namespaces):
+            put_ops.append(
+                PutOp(
+                    namespace=ns,
+                    key=f"id_{i}",
+                    value={
+                        "product": products[i],
+                        "metadata": {"available": bool(i % 2), "grade": "A" * (i + 1)},
+                    },
+                )
+            )
+    
+        store_mdb.batch(put_ops)
+    
+        query = "What is the grade of our pears?"
+        # Case 1: fields is a string:
+        namespace_prefix = ("a",)  #  filter ("a",) catches all docs
+>       wait_until(
+            lambda: len(store_mdb.search(namespace_prefix, query=query)) == len(products),
+            TIMEOUT,
+            INTERVAL,
+        )
+
+tests/integration_tests/test_autoembedded_index.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration_tests/test_autoembedded_index.py:37: in wait_until
+    if predicate():
+       ^^^^^^^^^^^
+tests/integration_tests/test_autoembedded_index.py:106: in <lambda>
+    lambda: len(store_mdb.search(namespace_prefix, query=query)) == len(products),
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+langgraph/store/mongodb/base.py:868: in search
+    results = self.collection.aggregate(pipeline)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/collection.py:3016: in aggregate
+    return self._aggregate(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/collection.py:2913: in _aggregate
+    return self._database.client._retryable_read(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/aggregation.py:163: in get_cursor
+    result = conn.command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+response = {'ok': 0.0, 'errmsg': "Unrecognized pipeline stage name: '$vectorSearch'", 'code': 40324, 'codeName': 'Location40324', ...}
+max_wire_version = 21, allowable_errors = None, parse_write_concern_error = True
+pool_opts = None
+
+    def _check_command_response(
+        response: _DocumentOut,
+        max_wire_version: Optional[int],
+        allowable_errors: Optional[Container[Union[int, str]]] = None,
+        parse_write_concern_error: bool = False,
+        pool_opts: Optional[PoolOptions] = None,
+    ) -> None:
+        """Check the response to a command for errors."""
+        if "ok" not in response:
+            # Server didn't recognize our message as a command.
+            raise OperationFailure(
+                response.get("$err"),  # type: ignore[arg-type]
+                response.get("code"),
+                response,
+                max_wire_version,
+            )
+    
+        if parse_write_concern_error and "writeConcernError" in response:
+            _error = response["writeConcernError"]
+            _labels = response.get("errorLabels")
+            if _labels:
+                _error.update({"errorLabels": _labels})
+            _raise_write_concern_error(_error)
+    
+        if response["ok"]:
+            return
+    
+        details = response
+        errmsg = details["errmsg"]
+        code = details.get("code")
+    
+        # For allowable errors, only check for error messages when the code is not
+        # included.
+        if allowable_errors:
+            if code is not None:
+                if code in allowable_errors:
+                    return
+            elif errmsg in allowable_errors:
+                return
+    
+        # Server is "not primary" or "recovering"
+        if code is not None:
+            if code in _NOT_PRIMARY_CODES:
+                raise NotPrimaryError(errmsg, response)
+        elif HelloCompat.LEGACY_ERROR in errmsg or "node is recovering" in errmsg:
+            raise NotPrimaryError(errmsg, response)
+    
+        # Other errors
+        # findAndModify with upsert can raise duplicate key error
+        if code in (11000, 11001, 12582):
+            raise DuplicateKeyError(errmsg, code, response, max_wire_version)
+        elif code == 50:
+            # Append timeout details to MaxTimeMSExpired responses.
+            if pool_opts:
+                timeout_details = _get_timeout_details(pool_opts)
+                errmsg += format_timeout_details(timeout_details)
+            raise ExecutionTimeout(errmsg, code, response, max_wire_version)
+        elif code == 43:
+            raise CursorNotFound(errmsg, code, response, max_wire_version)
+    
+>       raise OperationFailure(errmsg, code, response, max_wire_version)
+E       pymongo.errors.OperationFailure: Unrecognized pipeline stage name: '$vectorSearch', full error: {'ok': 0.0, 'errmsg': "Unrecognized pipeline stage name: '$vectorSearch'", 'code': 40324, 'codeName': 'Location40324', '$clusterTime': {'clusterTime': Timestamp(1794494735, 6), 'signature': {'hash': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'keyId': 0}}, 'operationTime': Timestamp(1794494735, 6)}
+
+../../../venv-lg/lib/python3.12/site-packages/pymongo/helpers_shared.py:327: OperationFailure
+_________________________________ test_filters _________________________________
+
+collection = Collection(Database(MongoClient(host=['localhost:27017'], document_class=dict, tz_aware=False, connect=True, directconnection=True), 'langgraph-test'), 'semantic_search')
+
+    def test_filters(collection: Collection) -> None:
+        """Test permutations of namespace_prefix in filter."""
+    
+        index_config = create_vector_index_config(
+            name=INDEX_NAME,
+            dims=DIMENSIONS,
+            fields=["product"],
+            embed=StaticEmbeddings(),  # embedding
+            filters=["metadata.available"],
+        )
+        store_mdb = MongoDBStore(
+            collection, index_config=index_config, auto_index_timeout=TIMEOUT
+        )
+        store_in_mem = InMemoryStore(index=index_config)
+    
+        namespaces = [
+            ("a",),
+            ("a", "b", "c"),
+            ("a", "b", "c", "d"),
+        ]
+    
+        products = ["apples", "oranges", "pears"]
+    
+        # Add some indexed data
+        put_ops = []
+        for i, ns in enumerate(namespaces):
+            put_ops.append(
+                PutOp(
+                    namespace=ns,
+                    key=f"id_{i}",
+                    value={
+                        "product": products[i],
+                        "metadata": {"available": bool(i % 2), "grade": "A" * (i + 1)},
+                    },
+                )
+            )
+    
+        store_mdb.batch(put_ops)
+        store_in_mem.batch(put_ops)
+    
+        query = "What is the grade of our pears?"
+        # Case 1: fields is a string:
+        namespace_prefix = ("a",)  #  filter ("a",) catches all docs
+>       wait_until(
+            lambda: len(store_mdb.search(namespace_prefix, query=query)) == len(products),
+            TIMEOUT,
+            INTERVAL,
+        )
+
+tests/integration_tests/test_store_semantic.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration_tests/test_store_semantic.py:34: in wait_until
+    if predicate():
+       ^^^^^^^^^^^
+tests/integration_tests/test_store_semantic.py:121: in <lambda>
+    lambda: len(store_mdb.search(namespace_prefix, query=query)) == len(products),
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+langgraph/store/mongodb/base.py:868: in search
+    results = self.collection.aggregate(pipeline)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/collection.py:3016: in aggregate
+    return self._aggregate(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/collection.py:2913: in _aggregate
+    return self._database.client._retryable_read(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/aggregation.py:163: in get_cursor
+    result = conn.command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+response = {'ok': 0.0, 'errmsg': "Unrecognized pipeline stage name: '$vectorSearch'", 'code': 40324, 'codeName': 'Location40324', ...}
+max_wire_version = 21, allowable_errors = None, parse_write_concern_error = True
+pool_opts = None
+
+    def _check_command_response(
+        response: _DocumentOut,
+        max_wire_version: Optional[int],
+        allowable_errors: Optional[Container[Union[int, str]]] = None,
+        parse_write_concern_error: bool = False,
+        pool_opts: Optional[PoolOptions] = None,
+    ) -> None:
+        """Check the response to a command for errors."""
+        if "ok" not in response:
+            # Server didn't recognize our message as a command.
+            raise OperationFailure(
+                response.get("$err"),  # type: ignore[arg-type]
+                response.get("code"),
+                response,
+                max_wire_version,
+            )
+    
+        if parse_write_concern_error and "writeConcernError" in response:
+            _error = response["writeConcernError"]
+            _labels = response.get("errorLabels")
+            if _labels:
+                _error.update({"errorLabels": _labels})
+            _raise_write_concern_error(_error)
+    
+        if response["ok"]:
+            return
+    
+        details = response
+        errmsg = details["errmsg"]
+        code = details.get("code")
+    
+        # For allowable errors, only check for error messages when the code is not
+        # included.
+        if allowable_errors:
+            if code is not None:
+                if code in allowable_errors:
+                    return
+            elif errmsg in allowable_errors:
+                return
+    
+        # Server is "not primary" or "recovering"
+        if code is not None:
+            if code in _NOT_PRIMARY_CODES:
+                raise NotPrimaryError(errmsg, response)
+        elif HelloCompat.LEGACY_ERROR in errmsg or "node is recovering" in errmsg:
+            raise NotPrimaryError(errmsg, response)
+    
+        # Other errors
+        # findAndModify with upsert can raise duplicate key error
+        if code in (11000, 11001, 12582):
+            raise DuplicateKeyError(errmsg, code, response, max_wire_version)
+        elif code == 50:
+            # Append timeout details to MaxTimeMSExpired responses.
+            if pool_opts:
+                timeout_details = _get_timeout_details(pool_opts)
+                errmsg += format_timeout_details(timeout_details)
+            raise ExecutionTimeout(errmsg, code, response, max_wire_version)
+        elif code == 43:
+            raise CursorNotFound(errmsg, code, response, max_wire_version)
+    
+>       raise OperationFailure(errmsg, code, response, max_wire_version)
+E       pymongo.errors.OperationFailure: Unrecognized pipeline stage name: '$vectorSearch', full error: {'ok': 0.0, 'errmsg': "Unrecognized pipeline stage name: '$vectorSearch'", 'code': 40324, 'codeName': 'Location40324', '$clusterTime': {'clusterTime': Timestamp(1794494735, 12), 'signature': {'hash': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'keyId': 0}}, 'operationTime': Timestamp(1794494735, 12)}
+
+../../../venv-lg/lib/python3.12/site-packages/pymongo/helpers_shared.py:327: OperationFailure
+_________________________________ test_filters _________________________________
+
+collection = Collection(Database(MongoClient(host=['localhost:27017'], document_class=dict, tz_aware=False, connect=True, directconnection=True), 'langgraph-test'), 'semantic_search_async')
+
+    async def test_filters(collection: Collection) -> None:
+        """Test permutations of namespace_prefix in filter."""
+    
+        index_config = create_vector_index_config(
+            name=INDEX_NAME,
+            dims=DIMENSIONS,
+            fields=["product"],
+            embed=StaticEmbeddings(),  # embedding
+            filters=["metadata.available"],
+        )
+        store_mdb = MongoDBStore(
+            collection, index_config=index_config, auto_index_timeout=TIMEOUT
+        )
+        store_in_mem = InMemoryStore(index=index_config)
+    
+        namespaces = [
+            ("a",),
+            ("a", "b", "c"),
+            ("a", "b", "c", "d"),
+        ]
+    
+        products = ["apples", "oranges", "pears"]
+    
+        # Add some indexed data
+        put_ops = []
+        for i, ns in enumerate(namespaces):
+            put_ops.append(
+                PutOp(
+                    namespace=ns,
+                    key=f"id_{i}",
+                    value={
+                        "product": products[i],
+                        "metadata": {"available": bool(i % 2), "grade": "A" * (i + 1)},
+                    },
+                )
+            )
+    
+        await store_mdb.abatch(put_ops)
+        store_in_mem.batch(put_ops)
+    
+        query = "What is the grade of our pears?"
+        # Case 1: fields is a string:
+        namespace_prefix = ("a",)  #  filter ("a",) catches all docs
+    
+        # In our first search, we'll retry until the mongos has indexed the new docs
+        start = monotonic()
+        indexed = False
+        while monotonic() - start < TIMEOUT:
+>           if len(await store_mdb.asearch(namespace_prefix, query=query)) == len(products):
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/integration_tests/test_store_semantic_async.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../venv-lg/lib/python3.12/site-packages/langgraph/store/base/__init__.py:1131: in asearch
+    await self.abatch(
+langgraph/store/mongodb/base.py:709: in abatch
+    return await run_in_executor(None, self.batch, ops)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/langchain_core/runnables/config.py:707: in run_in_executor
+    return await asyncio.get_running_loop().run_in_executor(
+/usr/lib/python3.12/concurrent/futures/thread.py:58: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/langchain_core/runnables/config.py:698: in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+langgraph/store/mongodb/base.py:614: in batch
+    self.search(
+langgraph/store/mongodb/base.py:868: in search
+    results = self.collection.aggregate(pipeline)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/collection.py:3016: in aggregate
+    return self._aggregate(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/collection.py:2913: in _aggregate
+    return self._database.client._retryable_read(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/aggregation.py:163: in get_cursor
+    result = conn.command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+../../../venv-lg/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+response = {'ok': 0.0, 'errmsg': "Unrecognized pipeline stage name: '$vectorSearch'", 'code': 40324, 'codeName': 'Location40324', ...}
+max_wire_version = 21, allowable_errors = None, parse_write_concern_error = True
+pool_opts = None
+
+    def _check_command_response(
+        response: _DocumentOut,
+        max_wire_version: Optional[int],
+        allowable_errors: Optional[Container[Union[int, str]]] = None,
+        parse_write_concern_error: bool = False,
+        pool_opts: Optional[PoolOptions] = None,
+    ) -> None:
+        """Check the response to a command for errors."""
+        if "ok" not in response:
+            # Server didn't recognize our message as a command.
+            raise OperationFailure(
+                response.get("$err"),  # type: ignore[arg-type]
+                response.get("code"),
+                response,
+                max_wire_version,
+            )
+    
+        if parse_write_concern_error and "writeConcernError" in response:
+            _error = response["writeConcernError"]
+            _labels = response.get("errorLabels")
+            if _labels:
+                _error.update({"errorLabels": _labels})
+            _raise_write_concern_error(_error)
+    
+        if response["ok"]:
+            return
+    
+        details = response
+        errmsg = details["errmsg"]
+        code = details.get("code")
+    
+        # For allowable errors, only check for error messages when the code is not
+        # included.
+        if allowable_errors:
+            if code is not None:
+                if code in allowable_errors:
+                    return
+            elif errmsg in allowable_errors:
+                return
+    
+        # Server is "not primary" or "recovering"
+        if code is not None:
+            if code in _NOT_PRIMARY_CODES:
+                raise NotPrimaryError(errmsg, response)
+        elif HelloCompat.LEGACY_ERROR in errmsg or "node is recovering" in errmsg:
+            raise NotPrimaryError(errmsg, response)
+    
+        # Other errors
+        # findAndModify with upsert can raise duplicate key error
+        if code in (11000, 11001, 12582):
+            raise DuplicateKeyError(errmsg, code, response, max_wire_version)
+        elif code == 50:
+            # Append timeout details to MaxTimeMSExpired responses.
+            if pool_opts:
+                timeout_details = _get_timeout_details(pool_opts)
+                errmsg += format_timeout_details(timeout_details)
+            raise ExecutionTimeout(errmsg, code, response, max_wire_version)
+        elif code == 43:
+            raise CursorNotFound(errmsg, code, response, max_wire_version)
+    
+>       raise OperationFailure(errmsg, code, response, max_wire_version)
+E       pymongo.errors.OperationFailure: Unrecognized pipeline stage name: '$vectorSearch', full error: {'ok': 0.0, 'errmsg': "Unrecognized pipeline stage name: '$vectorSearch'", 'code': 40324, 'codeName': 'Location40324', '$clusterTime': {'clusterTime': Timestamp(1794494736, 6), 'signature': {'hash': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'keyId': 0}}, 'operationTime': Timestamp(1794494736, 6)}
+
+../../../venv-lg/lib/python3.12/site-packages/pymongo/helpers_shared.py:327: OperationFailure
+- generated xml file: /home/user/wI/bench/agent-adapters/results/ours/lg-py-store.xml -
+============================= slowest 5 durations ==============================
+0.49s call     tests/unit_tests/test_store_async.py::test_ttl
+0.48s call     tests/unit_tests/test_store.py::test_ttl
+0.08s setup    tests/integration_tests/test_autoembedded_index.py::test_filters
+0.06s setup    tests/unit_tests/test_store_async.py::test_aput
+0.06s setup    tests/unit_tests/test_store_async.py::test_adelete
+=========================== short test summary info ============================
+FAILED tests/integration_tests/test_autoembedded_index.py::test_filters - pym...
+FAILED tests/integration_tests/test_store_semantic.py::test_filters - pymongo...
+FAILED tests/integration_tests/test_store_semantic_async.py::test_filters - p...
+=================== 3 failed, 29 passed, 7 skipped in 3.47s ====================

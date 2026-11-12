@@ -1,0 +1,24 @@
+
+ RUN  v3.2.7 /home/user/adapters/js-lg
+
+ ✓ |int| src/tests/checkpoints.int.test.ts (9 tests) 228ms
+ ✓ |int| src/tests/store.int.test.ts (43 tests | 7 skipped) 320ms
+
+ Test Files  2 passed (2)
+      Tests  41 passed | 7 skipped (52)
+   Start at  14:42:23
+   Duration  1.90s (transform 210ms, setup 0ms, collect 2.59s, tests 548ms, environment 0ms, prepare 267ms)
+
+JUNIT report written to /home/user/wI/bench/agent-adapters/results/mongod/lg-js.xml.int
+
+ RUN  v3.2.7 /home/user/adapters/js-lg
+
+ ✓ |unit| src/tests/checkpoints.test.ts (32 tests) 22ms
+ ✓ |unit| src/tests/store.test.ts (46 tests) 39ms
+
+ Test Files  2 passed (2)
+      Tests  78 passed (78)
+   Start at  14:42:26
+   Duration  771ms (transform 163ms, setup 0ms, collect 892ms, tests 61ms, environment 0ms, prepare 146ms)
+
+JUNIT report written to /home/user/wI/bench/agent-adapters/results/mongod/lg-js.xml.unit

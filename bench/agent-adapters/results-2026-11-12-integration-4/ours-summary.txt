@@ -1,0 +1,6 @@
+lg-py-saver on ours: 9 s, 146 passed, 0 failed, 0 skipped
+lg-py-store on ours: 5 s, 29 passed, 3 failed, 7 skipped
+lg-js on ours: 4 s, 123 passed, 0 failed, 7 skipped
+oai on ours: 3 s, 72 passed, 0 failed, 0 skipped
+llama on ours: 88 s, 18 passed, 0 failed, 0 skipped
+mastra on ours: 52 s, 1073 passed, 10 failed, 392 skipped
