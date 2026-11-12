@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/user/wI/research/fix-query-limits/cs_edge.py", line 60, in <module>
+    print(f"event overhead {ov} bytes; change stream: two events fit up to 16 MiB {edge(lambda x: cs_fits(x, ov))}; tailable: two documents fit up to 16 MiB {edge(tail_fits)}")
+                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/wI/research/fix-query-limits/cs_edge.py", line 52, in edge
+    assert f(lo) and not f(hi)
+           ^^^^^^^^^^^^^^^^^^^
+AssertionError

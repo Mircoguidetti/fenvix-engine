@@ -1,0 +1,84 @@
+mongo-server listening on 127.0.0.1:27031 (idle close after 60 s, holder 13175-3433bd5b, lease ttl 30 s)
+uploads: 0 unfinished multipart uploads under tenants/, 0 older than 3600s aborted
+LEASE process_lease tenant=- holder=13175-3433bd5b unix_ms=1794498062646 inc=6ad8ef2b11e13e47 gen=1
+LEASE acquired tenant=app_in_check holder=13175-3433bd5b unix_ms=1794498062650 takeover_from=-
+LEASE acquired tenant=app_in_check holder=13175-3433bd5b unix_ms=1794498062682 takeover_from=-
+LEASE acquired tenant=app_in_check holder=13175-3433bd5b unix_ms=1794498062692 takeover_from=-
+LEASE acquired tenant=app_in_check holder=13175-3433bd5b unix_ms=1794498062702 takeover_from=-
+LEASE acquired tenant=app_in_check holder=13175-3433bd5b unix_ms=1794498062713 takeover_from=- new=true
+LEASE writer_open tenant=app_in_check holder=13175-3433bd5b unix_ms=1794498062731 
+LEASE writer_close tenant=app_in_check holder=13175-3433bd5b unix_ms=1794498063072 
+LEASE acquired tenant=app_batch_check holder=13175-3433bd5b unix_ms=1794498066415 takeover_from=-
+LEASE acquired tenant=app_batch_check holder=13175-3433bd5b unix_ms=1794498066426 takeover_from=-
+LEASE acquired tenant=app_batch_check holder=13175-3433bd5b unix_ms=1794498066847 takeover_from=-
+LEASE acquired tenant=app_batch_check holder=13175-3433bd5b unix_ms=1794498066856 takeover_from=-
+LEASE acquired tenant=app_batch_check holder=13175-3433bd5b unix_ms=1794498066864 takeover_from=-
+LEASE acquired tenant=app_batch_check holder=13175-3433bd5b unix_ms=1794498067232 takeover_from=- new=true
+LEASE writer_open tenant=app_batch_check holder=13175-3433bd5b unix_ms=1794498067251 
+SLOW insert db=app_batch_check ms=1141 ok=true
+SLOW insert db=app_batch_check ms=836 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW insert db=app_batch_check ms=541 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW insert db=app_batch_check ms=655 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW insert db=app_batch_check ms=4406 ok=true
+SLOW insert db=app_batch_check ms=1678 ok=true
+SLOW insert db=app_batch_check ms=805 ok=true
+SLOW find db=app_batch_check ms=1514 ok=true
+SLOW drop db=app_batch_check ms=879 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW insert db=app_batch_check ms=18037 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW insert db=app_batch_check ms=2145 ok=true
+SLOW insert db=app_batch_check ms=775 ok=true
+SLOW find db=app_batch_check ms=999 ok=true
+SLOW drop db=app_batch_check ms=673 ok=true
+SLOW insert db=app_batch_check ms=586 ok=true
+SLOW insert db=app_batch_check ms=551 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SSTGC begin tenant=app_batch_check unix_ms=1794498128909
+SSTGC end tenant=app_batch_check unix_ms=1794498128927 deleted_ssts=0 deleted_manifests=0 referenced=11 waiting=145
+SLOW hello db=admin ms=10005 ok=true
+SLOW insert db=app_batch_check ms=11050 ok=true
+SLOW find db=app_batch_check ms=744 ok=true
+SLOW drop db=app_batch_check ms=673 ok=true
+SLOW insert db=app_batch_check ms=715 ok=true
+SLOW insert db=app_batch_check ms=598 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW mapReduce db=app_batch_check ms=1002 ok=true
+LEASE writer_close tenant=app_batch_check holder=13175-3433bd5b unix_ms=1794498146691 
+LEASE acquired tenant=app_batch_drivers holder=13175-3433bd5b unix_ms=1794498147712 takeover_from=-
+LEASE acquired tenant=app_batch_drivers holder=13175-3433bd5b unix_ms=1794498147721 takeover_from=-
+LEASE acquired tenant=app_batch_drivers holder=13175-3433bd5b unix_ms=1794498147786 takeover_from=-
+LEASE acquired tenant=app_batch_drivers holder=13175-3433bd5b unix_ms=1794498147796 takeover_from=-
+LEASE acquired tenant=app_batch_drivers holder=13175-3433bd5b unix_ms=1794498147804 takeover_from=-
+LEASE acquired tenant=app_batch_drivers holder=13175-3433bd5b unix_ms=1794498147911 takeover_from=- new=true
+LEASE writer_open tenant=app_batch_drivers holder=13175-3433bd5b unix_ms=1794498147926 
+SLOW insert db=app_batch_drivers ms=575 ok=true
+SLOW aggregate db=app_batch_drivers ms=812 ok=true
+SLOW find db=app_batch_drivers ms=591 ok=true
+SLOW find db=app_batch_drivers ms=547 ok=true
+LEASE acquired tenant=app_cs_edge holder=13175-3433bd5b unix_ms=1794498154924 takeover_from=-
+LEASE acquired tenant=app_cs_edge holder=13175-3433bd5b unix_ms=1794498155028 takeover_from=-
+LEASE acquired tenant=app_cs_edge holder=13175-3433bd5b unix_ms=1794498155040 takeover_from=-
+LEASE acquired tenant=app_cs_edge holder=13175-3433bd5b unix_ms=1794498155050 takeover_from=-
+LEASE acquired tenant=app_cs_edge holder=13175-3433bd5b unix_ms=1794498155060 takeover_from=-
+LEASE acquired tenant=app_cs_edge holder=13175-3433bd5b unix_ms=1794498155069 takeover_from=-
+LEASE acquired tenant=app_cs_edge holder=13175-3433bd5b unix_ms=1794498155077 takeover_from=- new=true
+LEASE writer_open tenant=app_cs_edge holder=13175-3433bd5b unix_ms=1794498155094 
+shutting down: closing tenants cleanly
+LEASE writer_close tenant=app_batch_drivers holder=13175-3433bd5b unix_ms=1794498155983 
+LEASE release_begin tenant=app_batch_drivers holder=13175-3433bd5b unix_ms=1794498155983 
+LEASE release tenant=app_batch_drivers holder=13175-3433bd5b unix_ms=1794498155988 ok=true
+LEASE writer_close tenant=app_cs_edge holder=13175-3433bd5b unix_ms=1794498155994 
+LEASE release_begin tenant=app_cs_edge holder=13175-3433bd5b unix_ms=1794498155994 
+LEASE release tenant=app_cs_edge holder=13175-3433bd5b unix_ms=1794498155997 ok=true
+tenants closed; stopping maintenance
+maintenance shutdown: waiting for the L0 watch unix_ms=1794498156001
+maintenance shutdown: waiting for the dispatcher unix_ms=1794498156026
+maintenance shutdown: waiting for the running passes (0 running) unix_ms=1794498156026
+maintenance shutdown: waiting for the GC task unix_ms=1794498156026
+maintenance shutdown: done unix_ms=1794498156955
+maintenance stopped

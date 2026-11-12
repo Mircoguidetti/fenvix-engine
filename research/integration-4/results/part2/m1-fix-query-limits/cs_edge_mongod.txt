@@ -1,0 +1,1 @@
+event overhead 341 bytes; change stream: two events fit up to 16 MiB -238; tailable: two documents fit up to 16 MiB -60

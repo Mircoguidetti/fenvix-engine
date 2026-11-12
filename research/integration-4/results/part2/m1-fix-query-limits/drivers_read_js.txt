@@ -1,0 +1,4 @@
+PASS  node find: 60012 read, 60012 distinct, expected 60012
+PASS  node find batchSize 50000: 60012 read, 60012 distinct, expected 60012
+PASS  node aggregate: 60012 read, 60012 distinct, expected 60012
+RESULT PASS

@@ -1,0 +1,37 @@
+PASS  ints: 4 documents; ours 4 docs examined, plan FETCH/IXSCAN
+PASS  duplicates: 2 documents; ours 2 docs examined, plan FETCH/IXSCAN
+PASS  int long double equal: 1 documents; ours 1 docs examined, plan FETCH/IXSCAN
+PASS  mixed types: 9 documents; ours 9 docs examined, plan FETCH/IXSCAN
+PASS  min max key: 3 documents; ours 3 docs examined, plan FETCH/IXSCAN
+PASS  missing values: 1 documents; ours 1 docs examined, plan FETCH/IXSCAN
+PASS  empty list: 0 documents; ours 0 docs examined, plan FETCH/IXSCAN
+PASS  one value: 1 documents; ours 1 docs examined, plan FETCH/IXSCAN
+PASS  null in list: 2 documents; ours 2 docs examined, plan FETCH/IXSCAN
+PASS  regex in list: 12 documents; ours 243 docs examined, plan COLLSCAN/None
+PASS  array in list: 1 documents; ours 243 docs examined, plan COLLSCAN/None
+PASS  doc key order: 1 documents; ours 1 docs examined, plan FETCH/IXSCAN
+PASS  with other predicate: 10 documents; ours 67 docs examined, plan FETCH/IXSCAN
+PASS  with range on _id: 10 documents; ours 50 docs examined, plan FETCH/IXSCAN
+PASS  in $and: 3 documents; ours 3 docs examined, plan FETCH/IXSCAN
+PASS  in $or: 33 documents; ours 33 docs examined, plan SUBPLAN/FETCH
+PASS  sort desc: 4 documents; ours 4 docs examined, plan SORT/FETCH
+PASS  sort other field: 30 documents; ours 30 docs examined, plan SORT/FETCH
+PASS  limit: 2 documents; ours 5 docs examined, plan LIMIT/FETCH
+PASS  skip limit: 4 documents; ours 15 docs examined, plan LIMIT/FETCH
+PASS  sort limit: 5 documents; ours 100 docs examined, plan SORT/FETCH
+PASS  projection: 2 documents; ours 2 docs examined, plan FETCH/IXSCAN
+PASS  batch size: 150 documents; ours 150 docs examined, plan FETCH/IXSCAN
+PASS  big list: 200 documents; ours 200 docs examined, plan FETCH/IXSCAN
+FAIL  $nin: 53 documents; ours 243 docs examined, plan COLLSCAN/None
+   mongod: [{'_id': MinKey(), 'k': 6}, {'_id': None, 'k': 9}, {'_id': Decimal128('7.25'), 'k': 4}, {'_id': 190, 'k': 1, 's': 'n190', 't': 570}, {'_id': 191, 'k': 2, 's': 'n191', 't': 573}, {'_id': 192, 'k': 3, 's': 'n192', 't': 576}, {'_id': 193, 'k': 4, 's': 'n193', 't': 579}, {'_id': 194, 'k': 5, 's': 'n194', 't': 582}]
+   ours:   [{'_id': 190, 'k': 1, 's': 'n190', 't': 570}, {'_id': 191, 'k': 2, 's': 'n191', 't': 573}, {'_id': 192, 'k': 3, 's': 'n192', 't': 576}, {'_id': 193, 'k': 4, 's': 'n193', 't': 579}, {'_id': 194, 'k': 5, 's': 'n194', 't': 582}, {'_id': 195, 'k': 6, 's': 'n195', 't': 585}, {'_id': 196, 'k': 0, 's': 'n196', 't': 588}, {'_id': 197, 'k': 1, 's': 'n197', 't': 591}]
+PASS  $in on indexed k: 64 documents; ours 64 docs examined, plan FETCH/IXSCAN
+PASS  $in on indexed k with sort: 64 documents; ours 64 docs examined, plan SORT/FETCH
+PASS  strings, simple collation: 2 documents; ours 2 docs examined, plan FETCH/IXSCAN
+PASS  strings, query collation: 4 documents; ours 10 docs examined, plan COLLSCAN/None
+PASS  strings, collection collation: 2 documents; ours 5 docs examined, plan COLLSCAN/None
+PASS  numbers, collection collation: 2 documents; ours 2 docs examined, plan FETCH/IXSCAN
+PASS  writes by _id $in: 239 documents after update_many, delete_many, update_one, delete_one
+PASS  count: 4 / 4
+PASS  count empty: 0 / 0
+RESULT FAIL (1)

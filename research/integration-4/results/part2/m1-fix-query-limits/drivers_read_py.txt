@@ -1,0 +1,4 @@
+PASS  pymongo find: 60012 read, 60012 distinct, expected 60012
+PASS  pymongo find batch_size 50000: 60012 read, 60012 distinct, expected 60012
+PASS  pymongo aggregate: 60012 read, 60012 distinct, expected 60012
+RESULT PASS

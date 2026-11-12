@@ -1,0 +1,74 @@
+mongo-server listening on 127.0.0.1:27031 (idle close after 60 s, holder 13356-2c676e5f, lease ttl 30 s)
+uploads: 0 unfinished multipart uploads under tenants/, 0 older than 3600s aborted
+LEASE process_lease tenant=- holder=13356-2c676e5f unix_ms=1794498181293 inc=40691382cc012c58 gen=1
+LEASE acquired tenant=app_batch_drivers holder=13356-2c676e5f unix_ms=1794498181297 takeover_from=-
+LEASE acquired tenant=app_batch_drivers holder=13356-2c676e5f unix_ms=1794498181307 takeover_from=-
+LEASE acquired tenant=app_batch_drivers holder=13356-2c676e5f unix_ms=1794498181374 takeover_from=-
+LEASE acquired tenant=app_batch_drivers holder=13356-2c676e5f unix_ms=1794498181386 takeover_from=-
+LEASE acquired tenant=app_batch_drivers holder=13356-2c676e5f unix_ms=1794498181396 takeover_from=-
+LEASE acquired tenant=app_batch_drivers holder=13356-2c676e5f unix_ms=1794498181547 takeover_from=- new=true
+LEASE writer_open tenant=app_batch_drivers holder=13356-2c676e5f unix_ms=1794498181566 
+SLOW insert db=app_batch_drivers ms=516 ok=true
+SLOW insert db=app_batch_drivers ms=729 ok=true
+SLOW aggregate db=app_batch_drivers ms=1048 ok=true
+SLOW find db=app_batch_drivers ms=616 ok=true
+SLOW find db=app_batch_drivers ms=1372 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=app_batch_drivers ms=704 ok=true
+SLOW find db=app_batch_drivers ms=747 ok=true
+SLOW aggregate db=app_batch_drivers ms=698 ok=true
+conn 6: Connection reset by peer (os error 104)
+LEASE acquired tenant=app_tail_cs_check holder=13356-2c676e5f unix_ms=1794498198391 takeover_from=-
+LEASE acquired tenant=app_tail_cs_check holder=13356-2c676e5f unix_ms=1794498198400 takeover_from=-
+LEASE acquired tenant=app_tail_cs_check holder=13356-2c676e5f unix_ms=1794498198410 takeover_from=-
+LEASE acquired tenant=app_tail_cs_check holder=13356-2c676e5f unix_ms=1794498198418 takeover_from=-
+LEASE acquired tenant=app_tail_cs_check holder=13356-2c676e5f unix_ms=1794498198429 takeover_from=-
+LEASE acquired tenant=app_tail_cs_check holder=13356-2c676e5f unix_ms=1794498198440 takeover_from=-
+LEASE acquired tenant=app_tail_cs_check holder=13356-2c676e5f unix_ms=1794498198447 takeover_from=- new=true
+LEASE writer_open tenant=app_tail_cs_check holder=13356-2c676e5f unix_ms=1794498198462 
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW getMore db=app_tail_cs_check ms=500 ok=true
+SLOW getMore db=app_tail_cs_check ms=500 ok=true
+SLOW getMore db=app_tail_cs_check ms=501 ok=true
+SLOW getMore db=app_tail_cs_check ms=502 ok=true
+SLOW getMore db=app_tail_cs_check ms=501 ok=true
+SLOW getMore db=app_tail_cs_check ms=500 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW getMore db=app_tail_cs_check ms=500 ok=true
+SLOW getMore db=app_tail_cs_check ms=501 ok=true
+SLOW getMore db=app_tail_cs_check ms=501 ok=true
+SLOW getMore db=app_tail_cs_check ms=501 ok=true
+SLOW getMore db=app_tail_cs_check ms=500 ok=true
+SLOW getMore db=app_tail_cs_check ms=500 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW getMore db=app_tail_cs_check ms=504 ok=true
+SLOW getMore db=app_tail_cs_check ms=500 ok=true
+SLOW getMore db=app_tail_cs_check ms=501 ok=true
+SSTGC begin tenant=app_batch_drivers unix_ms=1794498242298
+SSTGC end tenant=app_batch_drivers unix_ms=1794498242324 deleted_ssts=0 deleted_manifests=0 referenced=7 waiting=59
+SLOW getMore db=app_tail_cs_check ms=501 ok=true
+SLOW getMore db=app_tail_cs_check ms=501 ok=true
+SLOW getMore db=app_tail_cs_check ms=500 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW getMore db=app_tail_cs_check ms=501 ok=true
+SLOW getMore db=app_tail_cs_check ms=501 ok=true
+SLOW getMore db=app_tail_cs_check ms=501 ok=true
+SLOW getMore db=app_tail_cs_check ms=501 ok=true
+SLOW getMore db=app_tail_cs_check ms=502 ok=true
+SLOW getMore db=app_tail_cs_check ms=501 ok=true
+LEASE writer_close tenant=app_tail_cs_check holder=13356-2c676e5f unix_ms=1794498255887 
+LEASE writer_close tenant=app_batch_drivers holder=13356-2c676e5f unix_ms=1794498255978 
+LEASE release_begin tenant=app_batch_drivers holder=13356-2c676e5f unix_ms=1794498255978 
+LEASE release tenant=app_batch_drivers holder=13356-2c676e5f unix_ms=1794498255991 ok=true
+SLOW dropDatabase db=app_tail_cs_check ms=1482 ok=true
+SLOW hello db=admin ms=10001 ok=true
+shutting down: closing tenants cleanly
+tenants closed; stopping maintenance
+maintenance shutdown: waiting for the L0 watch unix_ms=1794498257867
+maintenance shutdown: waiting for the dispatcher unix_ms=1794498258259
+maintenance shutdown: waiting for the running passes (0 running) unix_ms=1794498258260
+maintenance shutdown: waiting for the GC task unix_ms=1794498258260
+maintenance shutdown: done unix_ms=1794498258379
+maintenance stopped

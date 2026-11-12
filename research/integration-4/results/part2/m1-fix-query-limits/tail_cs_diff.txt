@@ -1,0 +1,19 @@
+PASS  tailable 12 docs of 5 MB, getMore: mongod [(1, 236), (3, 15728862), (3, 15728862), (3, 15728862), (3, 15728862)], ours [(1, 236), (3, 15728862), (3, 15728862), (3, 15728862), (3, 15728862)] (batch, bytes); 13 documents
+PASS  tailable 12 docs of 2 MB: mongod [(1, 236), (7, 14680298), (5, 10485988)], ours [(1, 236), (7, 14680298), (5, 10485988)] (batch, bytes); 13 documents
+PASS  tailable first batch: 6 docs of 4 MB already there: mongod [(5, 16000248), (2, 8000219)], ours [(5, 16000248), (2, 8000219)] (batch, bytes); 7 documents
+PASS  tailable first batch at the edge (fits): mongod [(2, 439), (1, 16777176)], ours [(2, 439), (1, 16777176)] (batch, bytes); 3 documents
+PASS  tailable first batch at the edge (does not fit): mongod [(2, 439), (1, 16777177)], ours [(2, 439), (1, 16777177)] (batch, bytes); 3 documents
+PASS  tailable getMore at the edge (fits): mongod [(1, 236), (2, 16777375), (1, 266)], ours [(1, 236), (2, 16777375), (1, 266)] (batch, bytes); 4 documents
+PASS  tailable getMore at the edge (does not fit): mongod [(1, 236), (1, 416), (2, 16777226)], ours [(1, 236), (1, 416), (2, 16777226)] (batch, bytes); 4 documents
+PASS  tailable getMore batchSize 2, 5 MB docs: mongod [(1, 236), (2, 10485979), (2, 10485979), (2, 10485979), (1, 5243096)], ours [(1, 236), (2, 10485979), (2, 10485979), (2, 10485979), (1, 5243096)] (batch, bytes); 8 documents
+PASS  tailable filter keeps every other 5 MB doc: mongod [(0, 214), (3, 15728862), (3, 15728862)], ours [(0, 214), (3, 15728862), (3, 15728862)] (batch, bytes); 6 documents
+PASS  change stream 12 inserts of 5 MB: mongod [3, 3, 3, 3], ours [3, 3, 3, 3]; events mongod 12, ours 12
+PASS  change stream 12 inserts of 2 MB: mongod [7, 5], ours [7, 5]; events mongod 12, ours 12
+PASS  change stream 30 inserts of 1 MB: mongod [15, 15], ours [15, 15]; events mongod 30, ours 30
+PASS  change stream $match keeps even ids, 12 of 5 MB: mongod [3, 3], ours [3, 3]; events mongod 6, ours 6
+PASS  change stream $project drops fullDocument, 12 of 5 MB: mongod [12], ours [12]; events mongod 12, ours 12
+PASS  change stream updates with updateLookup, 8 of 4 MB: mongod [3, 3, 3, 3, 3, 1], ours [3, 3, 3, 3, 3, 1]; events mongod 16, ours 16
+PASS  change stream getMore batchSize 2, 12 of 5 MB: mongod [2, 2, 2, 2, 2, 2], ours [2, 2, 2, 2, 2, 2]; events mongod 12, ours 12
+PASS  change stream resume after a 16 MiB batch on real: first batch 3 events, then 9 more, nothing skipped or repeated
+PASS  change stream resume after a 16 MiB batch on ours: first batch 3 events, then 9 more, nothing skipped or repeated
+RESULT PASS
