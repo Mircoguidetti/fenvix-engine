@@ -199,7 +199,7 @@ def mongo(out):
     cfg["version"] += 1
     p.admin.command("replSetReconfig", cfg, force=True)
     for s in secs:
-        lines.sh(["docker", "rm", "-f", s], check=False)
+        lines.sh(["docker", "rm", "-f", "-v", s], check=False)
     res["secondaries_removed"] = secs
     os.makedirs("/tmp/claude-0/bigops", exist_ok=True)
     # 1. copy: mongodump | mongorestore into app_copy (no file in between), until it answers like its source
