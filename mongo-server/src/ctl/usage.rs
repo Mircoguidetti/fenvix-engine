@@ -116,6 +116,28 @@ struct Inner {
     marks: HashMap<String, Counts>,
     /// Erased databases: requests attributed to them are not metered until a command or an operation uses the name again.
     erased: std::collections::HashSet<String>,
+    /// Names with an operation open that may find the database absent ([`Usage::begin_probe`]): not flushed meanwhile.
+    probing: HashMap<String, ProbeState>,
+}
+
+struct ProbeState {
+    open: u32,
+    day: i64,
+    /// The name's counters of `day` when the first open probe began.
+    base: Option<Day>,
+    /// A probe found the database present.
+    present: bool,
+}
+
+/// An operation on a name that may turn out not to be a database (fix-erase-fork-usage). Usage is counted by object path,
+/// so an operation that finds a database absent has already counted the requests it made under its name (existence
+/// checks, a fork's intent record and the target's lease), and the flusher wrote them as `control/usage/{db}/...`: an
+/// object under the name of a database that does not exist, also right after an erase (ctl test_05, an erase racing a
+/// fork). While a probe is open the name's counters are not flushed; when the last one ends and no probe found the
+/// database, the counters go back to what they were before the first one (earlier counters, such as those of a database
+/// dropped a moment ago, are kept).
+pub struct UsageProbe {
+    db: String,
 }
 
 pub struct Usage {
@@ -222,6 +244,45 @@ impl Usage {
         g.seen_wakes.remove(db);
     }
 
+    /// Begin an operation that may find `db` absent; end it with [`Usage::end_probe`].
+    pub fn begin_probe(&self, db: &str) -> UsageProbe {
+        let mut g = self.inner.lock().unwrap();
+        let day = day_now();
+        let base = g.days.get(&(db.to_string(), day)).cloned();
+        let st = g.probing.entry(db.to_string()).or_insert(ProbeState { open: 0, day, base, present: false });
+        st.open += 1;
+        UsageProbe { db: db.to_string() }
+    }
+
+    /// End a probe: `present` says whether the operation found the database.
+    pub fn end_probe(&self, p: UsageProbe, present: bool) {
+        let mut g = self.inner.lock().unwrap();
+        let Some(st) = g.probing.get_mut(&p.db) else { return };
+        st.present |= present;
+        st.open -= 1;
+        if st.open > 0 {
+            return;
+        }
+        let st = g.probing.remove(&p.db).unwrap();
+        // present, or erased meanwhile (the erase already forgot the counters, and the name is not metered)
+        if st.present || g.erased.contains(&p.db) {
+            return;
+        }
+        match st.base {
+            Some(d) => {
+                g.days.insert((p.db.clone(), st.day), d);
+            }
+            None => {
+                g.days.remove(&(p.db.clone(), st.day));
+            }
+        }
+        let today = day_now();
+        if today != st.day {
+            // a day that began during the probe holds only the probe's requests
+            g.days.remove(&(p.db.clone(), today));
+        }
+    }
+
     pub fn note_storage(&self, db: &str, bytes: u64) {
         let now = now_ms();
         self.with_day(db, |d| d.storage = Some((now, bytes)));
@@ -265,8 +326,10 @@ impl Usage {
         let todo: Vec<(String, i64, Value)> = {
             let mut g = self.inner.lock().unwrap();
             let mut out = Vec::new();
+            let probing: std::collections::HashSet<String> = g.probing.keys().cloned().collect();
             for ((db, day), d) in g.days.iter_mut() {
-                if d.dirty {
+                // not while an operation may still find the database absent (its counters may be taken back)
+                if d.dirty && !probing.contains(db) {
                     d.dirty = false;
                     out.push((db.clone(), *day, self.doc_of(db, *day, d)));
                 }
@@ -595,6 +658,8 @@ pub struct Probe {
     name: String,
     wakes: Option<u64>,
     t0: std::time::Instant,
+    /// The database was not open when the command began: it may find it absent.
+    absent_probe: Option<UsageProbe>,
 }
 
 /// Called before a command is handled (see `handle_connection`). Cheap: a map lookup and a try-lock.
@@ -608,12 +673,22 @@ pub async fn before(db: &str, command: &bson::Document) -> Option<Probe> {
         Ok(g) => Some(g.wakes),
         Err(_) => None,
     };
-    Some(Probe { db: db.to_string(), name, wakes, t0: std::time::Instant::now() })
+    let absent_probe = (!ctl.dbs.is_open_hint(db)).then(|| ctl.usage.begin_probe(db));
+    Some(Probe { db: db.to_string(), name, wakes, t0: std::time::Instant::now(), absent_probe })
 }
 
 pub async fn after(p: Option<Probe>) {
-    let Some(p) = p else { return };
+    let Some(mut p) = p else { return };
     let Some(ctl) = super::get() else { return };
+    // a command that found its database absent (a read of an erased or never created database) creates nothing: its
+    // requests are taken back and the command is not counted, or a usage record would exist for no database
+    if let Some(ap) = p.absent_probe.take() {
+        let absent = ctl.dbs.absent_hint(&p.db);
+        ctl.usage.end_probe(ap, !absent);
+        if absent {
+            return;
+        }
+    }
     let took = p.t0.elapsed();
     let mut woke = None;
     if let Some(before) = p.wakes {

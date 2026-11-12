@@ -102,6 +102,17 @@ pub(crate) async fn quiesce(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, src: &str
 pub async fn fork(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> ApiResult<Value> {
     meta::check_name(src)?;
     meta::check_name(target)?;
+    // A fork that leaves no branch (its source turned out erased, a refusal, a rollback) made requests under the target's
+    // name (the intent record, the target's lease, existence checks): they are taken back, or the usage flusher writes a
+    // record of a database that does not exist (fix-erase-fork-usage; ctl test_05, an erase racing a fork).
+    let probe = ctl.usage.begin_probe(target);
+    let r = fork_probed(ctl, src, target, mode).await;
+    let present = ctl.dbs.is_open_hint(target) || meta::exists(ctl, target).await.unwrap_or(true);
+    ctl.usage.end_probe(probe, present);
+    r
+}
+
+async fn fork_probed(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> ApiResult<Value> {
     if src == target {
         return Err(ApiError::bad("source and target are the same database"));
     }

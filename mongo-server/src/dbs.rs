@@ -299,6 +299,16 @@ impl Dbs {
             .clone()
     }
 
+    /// Without waiting: did the last open of this database find that it does not exist (a busy entry, or one never
+    /// opened, counts as not absent)? Usage accounting forgets a database a command found absent (`ctl::usage::after`).
+    pub fn absent_hint(&self, name: &str) -> bool {
+        let e = self.entries.lock().unwrap().get(name).cloned();
+        match e {
+            None => false,
+            Some(e) => e.try_read().map(|g| g.tenant.is_none() && g.absent).unwrap_or(false),
+        }
+    }
+
     /// Without waiting: is the database open in this process (a busy entry counts as open)?
     pub fn is_open_hint(&self, name: &str) -> bool {
         let e = self.entries.lock().unwrap().get(name).cloned();
