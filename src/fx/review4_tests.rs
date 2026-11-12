@@ -36,6 +36,7 @@ fn knobs(drop: bool) -> Knobs {
         tier_unit: 2 << 10,
         absorb_min_l0: 1,
         absorb_max_l0: 8,
+        recognise_in_background: false,
         local_max_bytes: 16 << 10,
         split_bytes: 40 << 10,
         merge_bytes: 18 << 10,

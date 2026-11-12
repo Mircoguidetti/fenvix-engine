@@ -978,6 +978,15 @@ async fn run() -> Result<()> {
         tenant_bench::fx::view::WAVE.store(wave, Relaxed);
         tenant_bench::fx::view::WARM_THREAD.store(std::env::var("FENVIX_WARM_THREAD").as_deref() != Ok("0"), Relaxed);
         tenant_bench::fx::pool::WRITE_PATH_ON.store(std::env::var("FENVIX_WRITE_PATH_RUNTIME").as_deref() != Ok("0"), Relaxed);
+        // fix-write-stalls: the first build off the database's lock, and the compactor's L0 recognition off it (both on by
+        // default; "0" restores the old place, to compare); test pauses inside a build (kill -9 and close tests)
+        tenant_bench::lifecycle::FIRST_BUILD_OFF_LOCK.store(std::env::var("FENVIX_FIRST_BUILD_OFF_LOCK").as_deref() != Ok("0"), Relaxed);
+        tenant_bench::fx::compactor::RECOGNISE_IN_BACKGROUND.store(std::env::var("FENVIX_RECOGNISE_IN_BACKGROUND").as_deref() != Ok("0"), Relaxed);
+        for (var, cell) in [("FENVIX_TEST_BUILD_PAUSE_SNAPSHOT_MS", &tenant_bench::fx::build::PAUSE_AFTER_SNAPSHOT_MS), ("FENVIX_TEST_BUILD_PAUSE_CREATE_MS", &tenant_bench::fx::build::PAUSE_BEFORE_CREATE_MS), ("FENVIX_TEST_RECOGNISE_PAUSE_MS", &tenant_bench::fx::compactor::PAUSE_RECOGNISE_MS)] {
+            if let Some(ms) = std::env::var(var).ok().and_then(|v| v.parse::<u64>().ok()) {
+                cell.store(ms, Relaxed);
+            }
+        }
         tenant_bench::fx::check_config()?;
     }
     tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);

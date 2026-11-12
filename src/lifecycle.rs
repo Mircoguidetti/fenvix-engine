@@ -665,7 +665,7 @@ impl Lifecycle {
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
         let scope = writer_scope(&id);
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: Default::default(), epoch: epoch };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_preempt: None, serving_until: Default::default(), epoch: epoch };
         t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
@@ -714,7 +714,7 @@ impl Lifecycle {
         let l0_at_wake = reader.manifest().l0().len();
         let reader = Arc::new(reader);
         READER_DBS.lock().unwrap().insert(id.clone(), Arc::downgrade(&reader));
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, serving_until: Default::default(), epoch: 0 };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_preempt: None, serving_until: Default::default(), epoch: 0 };
         t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
@@ -1345,6 +1345,41 @@ impl Commit {
     }
 }
 
+/// fix-write-stalls: a first build running in its own task (`Tenant::fx_first_start`). Dropped without being joined (a
+/// tenant dropped without its close), the task is aborted.
+struct FirstBuild {
+    handle: Option<tokio::task::JoinHandle<Result<Option<(crate::fx::manifest::Version, crate::fx::build::BuildReport)>>>>,
+    started: Instant,
+    epoch: Option<u64>,
+}
+
+impl Drop for FirstBuild {
+    fn drop(&mut self) {
+        if let Some(h) = self.handle.take() {
+            h.abort();
+        }
+    }
+}
+
+/// fix-write-stalls counters (serverStatus `fenvix.firstBuild`): first builds started off the lock, installed, refused at
+/// install, the longest (ms), and claims deferred because a compaction pass ran on the database.
+pub static FIRST_BUILDS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static FIRST_INSTALLS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static FIRST_INSTALL_REFUSED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static FIRST_BUILD_MS_MAX: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static CLAIMS_DEFERRED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// The first build runs off the lock (default). Off (`FENVIX_FIRST_BUILD_OFF_LOCK=0`): inside the write, as before.
+pub static FIRST_BUILD_OFF_LOCK: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
+impl Drop for Tenant {
+    fn drop(&mut self) {
+        // a claim no compactor took over (a tenant dropped without its close): given back, or passes would skip it for good
+        if self.fx_claimed {
+            crate::fx::compactor::unclaim(&self.id);
+        }
+    }
+}
+
 pub struct Tenant {
     group: Arc<GroupFlush>,
     lc: Arc<Lifecycle>,
@@ -1382,6 +1417,13 @@ pub struct Tenant {
     fx_unknown: Option<Box<crate::fx::manifest::Version>>,
     /// Step 4: the state shared with this database's compactor (`fx/compactor.rs`), when one runs.
     fx_shared: Option<Arc<crate::fx::compactor::Shared>>,
+    /// fix-write-stalls: the first build of this database, running off the database's lock (`fx_first_start`); its version
+    /// is installed at a later exclusive step (`fx_first_poll`), and every step that needs the state settled waits for it.
+    fx_first: Option<FirstBuild>,
+    /// This tenant holds the claim of its database for a compactor (`fx::compactor::claim`) and no compactor took it over.
+    fx_claimed: bool,
+    /// A claim found a compaction pass running: it is asked to stop until the claim succeeds.
+    fx_preempt: Option<PreemptGuard>,
     /// Step 4, F7: the end of this process's serving lease of the database, as the server last renewed it. Past it the
     /// tenant begins no hold (no new read, no new transaction): a waiter that was cut off rather than dead must not
     /// start reads after the new waiter's drop window opened (RULES-FOR-THE-CODE rules 27, 28 with F7).
@@ -1889,6 +1931,10 @@ impl Tenant {
         use std::sync::atomic::Ordering::Relaxed;
         anyhow::ensure!(crate::fx::ENABLED.load(Relaxed), "--sealed-runs is off");
         anyhow::ensure!(self.fx_shared.is_none(), "database {}: a compactor publishes this database's versions", self.id);
+        // fix-write-stalls: a first build running off the lock ends (and is installed) before another publish starts
+        if self.fx_first.is_some() {
+            self.fx_first_poll(true).await?;
+        }
         self.upgrade().await?;
         // no publish starts while a fence is pending (rule 25)
         self.fx_settle_fence().await?;
@@ -1948,12 +1994,166 @@ impl Tenant {
         e
     }
 
+    /// fix-write-stalls: start the first build of this database's runs off its lock. The build used to run inside the write
+    /// that triggered it, under the database's exclusive lock: it reads and writes everything written since the database
+    /// was created (the first ~33 s on the benchmark), and every write of the database waited for it (2.8-8.6 s, MEASURED
+    /// on perf-latency). Here, under the lock, only what is quick: the marker (E_env), the database's claim for its
+    /// compactor (no compaction pass may move an L0 SST from the build's snapshot until the compactor runs), then the build
+    /// starts in its own task from a WAL flush and a snapshot (`fx/build.rs`), as before. Writes go on meanwhile: their
+    /// seqs are above the snapshot's, so they stay in SlateDB above X_d and the compactor absorbs them later. The version is
+    /// installed at a later exclusive step (`fx_first_poll`), and every step that needs the state settled (an explicit
+    /// publish, an erasure, a close) waits for it first. Returns whether a build started.
+    pub async fn fx_first_start(&mut self, opts: &crate::fx::build::BuildOpts) -> Result<bool> {
+        use std::sync::atomic::Ordering::Relaxed;
+        anyhow::ensure!(crate::fx::ENABLED.load(Relaxed), "--sealed-runs is off");
+        if self.fx_first.is_some() || self.fx.is_some() || self.fx_shared.is_some() {
+            return Ok(false);
+        }
+        self.upgrade().await?;
+        // no publish starts while a fence is pending (rule 25); the fence of an unknown first publish installs a version
+        self.fx_settle_fence().await?;
+        if self.fx.is_some() {
+            return Ok(false);
+        }
+        if !self.ensure_marker().await? {
+            return Ok(false); // E1 announced, envelopes start one T_pin later (rule 26)
+        }
+        if !self.fx_claim() {
+            return Ok(false); // a compaction pass runs on the database: asked to stop, the next write tries again
+        }
+        let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
+        let db = db.clone();
+        let epoch = Some(db.manifest().writer_epoch());
+        let env = self.env.expect("marker written");
+        let store = Arc::clone(&self.lc.store);
+        let (id, opts) = (self.id.clone(), opts.clone());
+        let handle = tokio::spawn(async move { crate::fx::build::build_and_publish(&db, &store, &id, None, env, epoch, &opts, None).await });
+        self.fx_first = Some(FirstBuild { handle: Some(handle), started: Instant::now(), epoch });
+        FIRST_BUILDS.fetch_add(1, Relaxed);
+        Ok(true)
+    }
+
+    /// Whether the first build running off the lock has ended (its version is not installed yet: `fx_first_poll`).
+    pub fn fx_first_done(&self) -> bool {
+        self.fx_first.as_ref().is_some_and(|f| f.handle.as_ref().is_none_or(|h| h.is_finished()))
+    }
+
+    /// Whether a first build runs off the lock now (`fx_first_start`).
+    pub fn fx_first_running(&self) -> bool {
+        self.fx_first.is_some()
+    }
+
+    /// Install the first build's version once it is done (`wait`: wait for it). Under `&mut self`: the exclusive lock.
+    /// The version is installed only onto the state the build started from (this writer, no version installed meanwhile,
+    /// the same E_env); otherwise the newest version is loaded as an open does. A failed build is handled as a failed
+    /// publish (`fx_publish_failed`: a reload on a lost race, a fence on an unknown outcome) and gives the claim back.
+    pub async fn fx_first_poll(&mut self, wait: bool) -> Result<Option<crate::fx::build::BuildReport>> {
+        use std::sync::atomic::Ordering::Relaxed;
+        let Some(fb) = self.fx_first.as_mut() else { return Ok(None) };
+        if !wait && !fb.handle.as_ref().is_some_and(|h| h.is_finished()) {
+            return Ok(None);
+        }
+        let h = fb.handle.take().expect("first build handle");
+        let (started, epoch) = (fb.started, fb.epoch);
+        self.fx_first = None;
+        let r = match h.await {
+            Ok(r) => r,
+            Err(e) => Err(anyhow!("database {}: first build task: {e}", self.id)),
+        };
+        let ms = started.elapsed().as_millis() as u64;
+        FIRST_BUILD_MS_MAX.fetch_max(ms, Relaxed);
+        let (v, rep) = match r {
+            Ok(Some(x)) => x,
+            Ok(None) => {
+                self.fx_unclaim();
+                return Ok(None);
+            }
+            Err(e) => {
+                self.fx_unclaim();
+                eprintln!("FIRST_PUBLISH db={} failed build_ms={ms}: {e:#}", self.id);
+                return Err(self.fx_publish_failed(e).await);
+            }
+        };
+        let same = matches!(&self.mode, Some(Mode::Writer(db)) if Some(db.manifest().writer_epoch()) == epoch) && self.fx.is_none() && v.e_env == self.env && v.writer_epoch == epoch;
+        if !same {
+            FIRST_INSTALL_REFUSED.fetch_add(1, Relaxed);
+            self.fx_unclaim();
+            eprintln!("FIRST_PUBLISH db={} version={} not installed (the state changed while it was built); loading the newest", self.id, v.version);
+            self.load_fx().await?;
+            return Ok(None);
+        }
+        // every row the version holds is at or below X_d, and SlateDB still has every row (nothing drops before a compactor
+        // runs): rows written while the build ran are above X_d, where reads take them from SlateDB
+        if let Some(Mode::Writer(db)) = &self.mode {
+            let seq = db.snapshot().await?.seq();
+            anyhow::ensure!(v.x_d <= seq, "database {}: first version {} has X_d {} but SlateDB's last seq is {seq}", self.id, v.version, v.x_d);
+        }
+        let x_d = v.x_d;
+        let n = v.version;
+        self.fx_install(crate::fx::view::View::new(Arc::clone(&self.lc.store), v, None)?);
+        self.fx_loaded = Instant::now();
+        crate::fx::PUBLISHES.fetch_add(1, Relaxed);
+        FIRST_INSTALLS.fetch_add(1, Relaxed);
+        eprintln!("FIRST_PUBLISH u={:.0} db={} version={n} x_d={x_d} rows={} build_ms={ms} off_lock=1", crate::waits::unix_ms(), self.id, rep.rows_scanned);
+        Ok(Some(rep))
+    }
+
+    /// Stop a first build without waiting for its end (the lease is lost): aborted at its next await and waited for, so
+    /// nothing of it runs after this returns. A version create it had in flight may still land, as after a crash.
+    async fn fx_first_abort(&mut self) {
+        if let Some(mut fb) = self.fx_first.take() {
+            if let Some(h) = fb.handle.take() {
+                h.abort();
+                let _ = h.await;
+            }
+        }
+        self.fx_unclaim();
+    }
+
+    /// Claim this database for its compactor (`fx::compactor::claim`). When a compaction pass runs on it, the pass is asked
+    /// to stop (until a claim succeeds) and false is returned.
+    pub fn fx_claim(&mut self) -> bool {
+        use std::sync::atomic::Ordering::Relaxed;
+        if self.fx_claimed {
+            return true;
+        }
+        if crate::fx::compactor::claim(&self.id) {
+            self.fx_claimed = true;
+            self.fx_preempt = None;
+            return true;
+        }
+        CLAIMS_DEFERRED.fetch_add(1, Relaxed);
+        if self.fx_preempt.is_none() {
+            self.fx_preempt = Some(preempt_compaction(&self.id));
+        }
+        false
+    }
+
+    /// The compactor started on this tenant: it holds the database's mark from now on (its `stop` removes it).
+    pub fn fx_claim_handover(&mut self) {
+        self.fx_claimed = false;
+        self.fx_preempt = None;
+    }
+
+    /// Give the claim back (no compactor took it over).
+    pub fn fx_unclaim(&mut self) {
+        if self.fx_claimed {
+            crate::fx::compactor::unclaim(&self.id);
+            self.fx_claimed = false;
+        }
+        self.fx_preempt = None;
+    }
+
     /// Record an erasure of the customer whose deletes this writer just committed (`fx/erase.rs`): S_e is the database's
     /// last seq now. The caller holds the database's exclusive lock from before the deletes until after this call.
     /// None with `--sealed-runs` off (nothing of ours holds the rows; SlateDB's compaction removes them as before).
     pub async fn fx_erasure_register(&mut self, collection: &str, customer: &[u8], targets: &crate::fx::erase::Targets) -> Result<Option<crate::fx::erase::Erasure>> {
         if !crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed) || targets.is_empty() {
             return Ok(None);
+        }
+        // fix-write-stalls: an erasure is registered on a settled state (a first build running off the lock is installed)
+        if self.fx_first.is_some() {
+            self.fx_first_poll(true).await?;
         }
         self.upgrade().await?;
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
@@ -1972,6 +2172,9 @@ impl Tenant {
         let mut all = erase::list(&store, &self.id).await?;
         if !crate::fx::ENABLED.load(Relaxed) || all.iter().all(|e| e.done_ms.is_some()) {
             return Ok(all);
+        }
+        if self.fx_first.is_some() {
+            self.fx_first_poll(true).await?;
         }
         self.upgrade().await?;
         self.fx_settle_fence().await?;
@@ -2399,12 +2602,26 @@ impl Tenant {
         // caller holds the database's exclusive lock, so nothing is staged between the snapshot and the write
         let before = if track { Some(crate::waits::timed(crate::waits::W::StageSnap, db.snapshot()).await?) } else { None };
         let t_write = Instant::now();
-        let handle = crate::waits::timed(crate::waits::W::Stage, db.write(batch)).await?;
+        // fix-write-stalls (cause 3): while a write is held a second or more, the writer's L0 count is sampled every 100 ms;
+        // its largest value says whether the memtable flusher waited for room in L0 (`l0_max_ssts`) or for its upload
+        let write = crate::waits::timed(crate::waits::W::Stage, db.write(batch));
+        tokio::pin!(write);
+        let mut l0_max_held = 0usize;
+        let handle = match tokio::time::timeout(Duration::from_secs(1), &mut write).await {
+            Ok(r) => r?,
+            Err(_) => loop {
+                l0_max_held = l0_max_held.max(db.manifest().l0().len());
+                match tokio::time::timeout(Duration::from_millis(100), &mut write).await {
+                    Ok(r) => break r?,
+                    Err(_) => continue,
+                }
+            },
+        };
         if t_write.elapsed() >= Duration::from_secs(1) {
             // SlateDB stopped the write (unflushed memtables and WAL at `max_unflushed_bytes`): the L0 count says whether the
             // flusher waited for L0 room (at `l0_max_ssts`) or was slow itself
             SLOW_STAGES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            eprintln!("SLOW_STAGE u={:.0} db={} ms={} l0={}", crate::waits::unix_ms(), self.id, t_write.elapsed().as_millis(), db.manifest().l0().len());
+            eprintln!("SLOW_STAGE u={:.0} db={} ms={} l0={} l0_max_held={l0_max_held}", crate::waits::unix_ms(), self.id, t_write.elapsed().as_millis(), db.manifest().l0().len());
         }
         note_unflushed(&self.id, handle.seqnum());
         if let Some(b) = before {
@@ -2447,6 +2664,8 @@ impl Tenant {
     /// The lost-lease callers can ignore that (the next owner fences them); a caller about to delete the tenant's objects
     /// (erase) must not.
     pub async fn abandon(mut self) -> bool {
+        // fix-write-stalls: a first build off the lock stops before the writer is given up
+        self.fx_first_abort().await;
         self.group.vis.kill();
         forget_vis(&self.id, &self.group);
         let close = match self.mode.take() {
@@ -2474,6 +2693,14 @@ impl Tenant {
     /// Close. A writer flushes its memtable, then the marker is written, and the tenant is
     /// queued for compaction if it now holds enough L0 SSTs. A reader just closes.
     pub async fn close(mut self) -> Result<()> {
+        // fix-write-stalls: a first build running off the lock ends before the writer closes (as when it ran inside the
+        // write, under the lock the close also takes); its version, if it landed, is the next opening's to load
+        if self.fx_first.is_some() {
+            if let Err(e) = self.fx_first_poll(true).await {
+                eprintln!("close of tenant {}: first build: {e:#}", self.id);
+            }
+        }
+        self.fx_unclaim();
         match self.mode.take() {
             Some(Mode::Reader(r)) => r.close().await?,
             Some(Mode::Writer(db)) => {
@@ -2661,6 +2888,41 @@ async fn compactions_active(raw: &Arc<dyn ObjectStore>, id: &str) -> Result<bool
     Ok(admin.read_compactions(None).await?.is_some_and(|c| c.recent_compactions().any(|x| x.active())))
 }
 
+/// Negative control (tests): the compaction pass moves every L0 SST, absorbed or not (the code before fix-write-stalls).
+pub static CONTROL_NO_PASS_GATE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// L0 SSTs the pass gate kept in L0 because their rows reach above X_d (serverStatus, tests).
+pub static PASS_GATE_KEPT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// fix-write-stalls (rule 8): the L0 SSTs a compaction pass may move into a sorted run, oldest first with no gap, when
+/// the database has a version of our manifest: those whose rows are all at or below its X_d (listed in `absorbed_l0`,
+/// or read). None: no gate (sealed runs off, or no version: every row is in SlateDB's part of the read). An L0 SST
+/// with rows above X_d stays for the compactor's absorption at the next opening, and every newer one with it.
+pub(crate) async fn fx_pass_gate(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<std::collections::HashSet<ulid::Ulid>>> {
+    use std::sync::atomic::Ordering::Relaxed;
+    if !crate::fx::ENABLED.load(Relaxed) || CONTROL_NO_PASS_GATE.load(Relaxed) {
+        return Ok(None);
+    }
+    let Some(v) = crate::fx::manifest::load_newest(store, id).await? else { return Ok(None) };
+    let admin = Admin::builder(tenant_path(id), Arc::clone(store)).build();
+    let Some(m) = admin.read_manifest(None).await? else { return Ok(Some(std::collections::HashSet::new())) };
+    let listed: HashMap<String, u64> = v.absorbed_l0.iter().cloned().collect();
+    let reader = slatedb::SstReader::new(tenant_path(id), Arc::clone(store), None, None);
+    let mut allowed = std::collections::HashSet::new();
+    let total = m.l0().len();
+    for view in m.l0().iter().rev() {
+        let max = match listed.get(&view.id.to_string()) {
+            Some(s) => *s,
+            None => crate::fx::compactor::l0_max_seq(&reader, view).await?,
+        };
+        if max > v.x_d {
+            break;
+        }
+        allowed.insert(view.id);
+    }
+    PASS_GATE_KEPT.fetch_add((total - allowed.len()) as u64, Relaxed);
+    Ok(Some(allowed))
+}
+
 /// One compaction pass; with `warm`, the output that replaces blocks an open writer has in the shared block cache is read
 /// into that cache before the writer switches to the new manifest (`warm.rs`).
 pub(crate) async fn compact_tenant_pass(
@@ -2698,11 +2960,13 @@ pub(crate) async fn compact_tenant_pass_with(
 ) -> Result<Option<CompactionRecord>> {
     let id = id.to_string();
     let id = id.as_str();
-    if crate::fx::compactor::is_active(id) {
-        // compaction 2, step 4: this database's compactor runs SlateDB's compaction (the fold, or the gated tiered
-        // compaction with the drop off); two compactors on one database would fence each other
+    // compaction 2, step 4: this database's compactor runs SlateDB's compaction (the fold, or the gated tiered compaction
+    // with the drop off); two compactors on one database would fence each other. fix-write-stalls: the pass holds its slot
+    // to its end, so a compactor's claim (`fx::compactor::claim`, taken before the first build's snapshot) never overlaps a
+    // pass that could move an L0 SST written after that snapshot
+    let Some(_slot) = crate::fx::compactor::pass_enter(id) else {
         return Ok(None);
-    }
+    };
     let l0_before = l0_count(raw, id).await?;
     // perf-latency round 3: a closed database whose compaction jobs were left pending is passed too (see `Tenant::close`)
     let pending_jobs = l0_before < L0_COMPACT_THRESHOLD && !WRITER_DBS.lock().unwrap().contains_key(id) && compactions_active(raw, id).await.unwrap_or(false);
@@ -2749,7 +3013,10 @@ pub(crate) async fn compact_tenant_pass_with(
         Some(p) => cb.with_filter_policies(p),
         None => cb,
     };
-    let cb = match crate::tiered::scheduler() {
+    // fix-write-stalls (rule 8): on a database with a version of our manifest, only L0 SSTs at or below its X_d may leave
+    // L0 (`tiered::Gated`)
+    let gate = fx_pass_gate(raw, id).await?;
+    let cb = match crate::tiered::scheduler_gated(gate) {
         Some(s) => cb.with_scheduler_supplier(s),
         None => cb,
     };

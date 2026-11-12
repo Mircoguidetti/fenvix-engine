@@ -39,6 +39,73 @@ impl CompactionSchedulerSupplier for Tiered {
     }
 }
 
+/// fix-write-stalls (rule 8): the compaction pass's scheduler on a database with a version of our manifest. Only L0 SSTs
+/// whose rows are all at or below the version's X_d (`allowed`, an oldest-first prefix of L0 computed by the pass,
+/// `lifecycle::fx_pass_gate`) may leave L0. An L0 SST not absorbed yet that a pass moved into a sorted run would never be
+/// absorbed: the next absorption's X_d would pass over its rows, which the merged reader then takes from neither side
+/// (`ws_close_time_pass_keeps_unabsorbed_l0`). An L0 job of the inner scheduler is cut to the allowed oldest SSTs, or
+/// dropped when none is allowed; merges of sorted runs are unchanged.
+#[derive(Clone)]
+pub struct Gated {
+    pub inner: Tiered,
+    pub allowed: std::sync::Arc<HashSet<ulid::Ulid>>,
+}
+
+impl CompactionSchedulerSupplier for Gated {
+    fn compaction_scheduler(&self, _o: &CompactorOptions) -> Box<dyn CompactionScheduler + Send + Sync> {
+        Box::new(self.clone())
+    }
+}
+
+impl Gated {
+    /// The oldest L0 SSTs of a tree that may leave L0, newest first (the tree's read order).
+    fn prefix(&self, l0: &VecDeque<slatedb::manifest::SsTableView>) -> Vec<SourceId> {
+        let mut p: Vec<SourceId> = l0.iter().rev().take_while(|v| self.allowed.contains(&v.id)).map(|v| SourceId::SstView(v.id)).collect();
+        p.reverse();
+        p
+    }
+}
+
+impl CompactionScheduler for Gated {
+    fn propose(&self, state: &CompactorStateView) -> Vec<CompactionSpec> {
+        let m = state.manifest();
+        let mut out = Vec::new();
+        for spec in self.inner.propose(state) {
+            let has_l0 = spec.sources().iter().any(|s| matches!(s, SourceId::SstView(_)));
+            if !has_l0 {
+                out.push(spec);
+                continue;
+            }
+            let l0 = if spec.segment().is_empty() { Some(m.l0()) } else { m.segments().iter().find(|s| s.prefix() == spec.segment()).map(|s| s.l0()) };
+            let Some(l0) = l0 else { continue };
+            let p = self.prefix(l0);
+            let all_ok = spec.sources().iter().all(|s| match s {
+                SourceId::SstView(id) => self.allowed.contains(id),
+                _ => true,
+            });
+            if all_ok {
+                out.push(spec);
+            } else if !p.is_empty() {
+                if let Some(dst) = spec.destination() {
+                    out.push(CompactionSpec::for_segment(spec.segment().clone(), p, dst));
+                }
+            }
+        }
+        out
+    }
+
+    fn validate(&self, state: &CompactorStateView, spec: &CompactionSpec) -> Result<(), Error> {
+        for s in spec.sources() {
+            if let SourceId::SstView(id) = s {
+                if !self.allowed.contains(id) {
+                    return Err(Error::invalid(format!("L0 SST {id} holds rows above X_d (not absorbed): it stays in L0")));
+                }
+            }
+        }
+        self.inner.validate(state, spec)
+    }
+}
+
 type Tree = (bytes::Bytes, Vec<SourceId>, Vec<(u32, u64)>);
 
 impl CompactionScheduler for Tiered {
@@ -204,6 +271,21 @@ pub fn scheduler() -> Option<Arc<dyn CompactionSchedulerSupplier>> {
     match TIERS.load(Ordering::Relaxed) {
         0 => None,
         t => Some(Arc::new(Tiered::new(t as f64))),
+    }
+}
+
+/// [`scheduler`] gated to the L0 SSTs a pass may move (`Gated`); with no gate, [`scheduler`] itself. A gate with
+/// SlateDB's default scheduler (`--compaction-tiers 0`) uses the tiered one with T = 4.
+pub fn scheduler_gated(allowed: Option<HashSet<ulid::Ulid>>) -> Option<Arc<dyn CompactionSchedulerSupplier>> {
+    match allowed {
+        None => scheduler(),
+        Some(a) => {
+            let t = match TIERS.load(Ordering::Relaxed) {
+                0 => 4.0,
+                t => t as f64,
+            };
+            Some(Arc::new(Gated { inner: Tiered::new(t), allowed: Arc::new(a) }))
+        }
     }
 }
 
