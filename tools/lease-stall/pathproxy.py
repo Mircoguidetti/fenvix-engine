@@ -5,6 +5,10 @@ can still run its other steps. Used by ctl-tests/test_31_lease_lost_store_down.p
 
     p = PathProxy(("127.0.0.1", 9000)); p.endpoint -> "http://127.0.0.1:<port>"
     p.hold("PUT", "/tenants/db1/"); ...; p.release(); p.held -> requests held so far
+
+A rule can also refuse instead of hold (fix-store-errors): every matching request is answered at once with an error, as
+a full disk (MinIO 507 XMinioStorageFull) or S3 throttling (503 SlowDown) does, until the rule is cleared:
+    p.refuse(("PUT", "POST"), "/tenants/", 507); ...; p.release(); p.refused -> requests refused so far
 """
 import http.client
 import threading
@@ -19,6 +23,8 @@ class PathProxy:
         self.dst = dst
         self.rule = None
         self.held = 0
+        self.refusal = None   # (methods, path_part, status)
+        self.refused = 0
         self.lock = threading.Lock()
         proxy = self
 
@@ -33,6 +39,22 @@ class PathProxy:
                 body = self.rfile.read(n) if n else b""
                 if self.headers.get("Transfer-Encoding", "").lower() == "chunked":
                     body = self._chunked()
+                f = proxy.refusal
+                if f and self.command in f[0] and f[1] in self.path.split("?")[0]:
+                    with proxy.lock:
+                        proxy.refused += 1
+                    code, msg = ("XMinioStorageFull", "Storage backend has reached its minimum free drive threshold.") if f[2] == 507 else \
+                        ("SlowDown", "Please reduce your request rate.") if f[2] == 503 else ("InternalError", "We encountered an internal error.")
+                    data = f'<?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>{code}</Code><Message>{msg}</Message></Error>'.encode()
+                    try:
+                        self.send_response_only(f[2], {507: "Insufficient Storage", 503: "Slow Down"}.get(f[2], "Internal Server Error"))
+                        self.send_header("Content-Type", "application/xml")
+                        self.send_header("Content-Length", str(len(data)))
+                        self.end_headers()
+                        self.wfile.write(data)
+                    except OSError:
+                        self.close_connection = True
+                    return
                 counted = False
                 while True:
                     r = proxy.rule
@@ -92,8 +114,12 @@ class PathProxy:
     def hold(self, method, path_part):
         self.rule = (method, path_part)
 
+    def refuse(self, methods, path_part, status=507):
+        self.refusal = (tuple(methods), path_part, status)
+
     def release(self):
         self.rule = None
+        self.refusal = None
 
     def close(self):
         self.srv.shutdown()
