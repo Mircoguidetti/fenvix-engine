@@ -1,0 +1,148 @@
+.....                                                                    [100%]
+=============================== warnings summary ===============================
+test_49_review_c2_step7b.py::test_a_kill_between_the_fork_lease_and_its_intent_leaves_nothing
+  /root/.fenvix-judge/env/lib/python3.12/site-packages/_pytest/threadexception.py:54: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-1 (<lambda>)
+  
+  Traceback (most recent call last):
+    File "/root/.fenvix-judge/env/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+      self.run()
+    File "/root/.fenvix-judge/env/lib/python3.12/threading.py", line 1012, in run
+      self._target(*self._args, **self._kwargs)
+    File "/home/user/wI/ctl-tests/test_49_review_c2_step7b.py", line 95, in <lambda>
+      th = threading.Thread(target=lambda: srv.admin.post("/v1/databases/src/fork", {"target": "kid"}, timeout=10), daemon=True)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/wI/ctl-tests/lib.py", line 203, in post
+      return self.call("POST", path, body if body is not None else {}, **kw)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/wI/ctl-tests/lib.py", line 185, in call
+      with urllib.request.urlopen(req, timeout=timeout) as r:
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 215, in urlopen
+      return opener.open(url, data, timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 515, in open
+      response = self._open(req, data)
+                 ^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 532, in _open
+      result = self._call_chain(self.handle_open, protocol, protocol +
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 492, in _call_chain
+      result = func(*args)
+               ^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 1386, in http_open
+      return self.do_open(http.client.HTTPConnection, req)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 1361, in do_open
+      r = h.getresponse()
+          ^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/http/client.py", line 1478, in getresponse
+      response.begin()
+    File "/root/.fenvix-judge/env/lib/python3.12/http/client.py", line 343, in begin
+      version, status, reason = self._read_status()
+                                ^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/http/client.py", line 312, in _read_status
+      raise RemoteDisconnected("Remote end closed connection without"
+  http.client.RemoteDisconnected: Remote end closed connection without response
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+test_49_review_c2_step7b.py::test_a_kill_after_the_fork_pairing_leaves_no_checkpoint_or_pair[clone]
+  /root/.fenvix-judge/env/lib/python3.12/site-packages/_pytest/threadexception.py:54: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-2 (<lambda>)
+  
+  Traceback (most recent call last):
+    File "/root/.fenvix-judge/env/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+      self.run()
+    File "/root/.fenvix-judge/env/lib/python3.12/threading.py", line 1012, in run
+      self._target(*self._args, **self._kwargs)
+    File "/home/user/wI/ctl-tests/test_49_review_c2_step7b.py", line 129, in <lambda>
+      th = threading.Thread(target=lambda: srv.admin.post("/v1/databases/src/fork", {"target": "kid", "mode": mode}, timeout=10), daemon=True)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/wI/ctl-tests/lib.py", line 203, in post
+      return self.call("POST", path, body if body is not None else {}, **kw)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/wI/ctl-tests/lib.py", line 185, in call
+      with urllib.request.urlopen(req, timeout=timeout) as r:
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 215, in urlopen
+      return opener.open(url, data, timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 515, in open
+      response = self._open(req, data)
+                 ^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 532, in _open
+      result = self._call_chain(self.handle_open, protocol, protocol +
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 492, in _call_chain
+      result = func(*args)
+               ^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 1386, in http_open
+      return self.do_open(http.client.HTTPConnection, req)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 1361, in do_open
+      r = h.getresponse()
+          ^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/http/client.py", line 1478, in getresponse
+      response.begin()
+    File "/root/.fenvix-judge/env/lib/python3.12/http/client.py", line 343, in begin
+      version, status, reason = self._read_status()
+                                ^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/http/client.py", line 312, in _read_status
+      raise RemoteDisconnected("Remote end closed connection without"
+  http.client.RemoteDisconnected: Remote end closed connection without response
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+test_49_review_c2_step7b.py::test_a_kill_after_the_fork_pairing_leaves_no_checkpoint_or_pair[copy]
+  /root/.fenvix-judge/env/lib/python3.12/site-packages/_pytest/threadexception.py:54: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-3 (<lambda>)
+  
+  Traceback (most recent call last):
+    File "/root/.fenvix-judge/env/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+      self.run()
+    File "/root/.fenvix-judge/env/lib/python3.12/threading.py", line 1012, in run
+      self._target(*self._args, **self._kwargs)
+    File "/home/user/wI/ctl-tests/test_49_review_c2_step7b.py", line 129, in <lambda>
+      th = threading.Thread(target=lambda: srv.admin.post("/v1/databases/src/fork", {"target": "kid", "mode": mode}, timeout=10), daemon=True)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/wI/ctl-tests/lib.py", line 203, in post
+      return self.call("POST", path, body if body is not None else {}, **kw)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/wI/ctl-tests/lib.py", line 185, in call
+      with urllib.request.urlopen(req, timeout=timeout) as r:
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 215, in urlopen
+      return opener.open(url, data, timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 515, in open
+      response = self._open(req, data)
+                 ^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 532, in _open
+      result = self._call_chain(self.handle_open, protocol, protocol +
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 492, in _call_chain
+      result = func(*args)
+               ^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 1386, in http_open
+      return self.do_open(http.client.HTTPConnection, req)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/urllib/request.py", line 1361, in do_open
+      r = h.getresponse()
+          ^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/http/client.py", line 1478, in getresponse
+      response.begin()
+    File "/root/.fenvix-judge/env/lib/python3.12/http/client.py", line 343, in begin
+      version, status, reason = self._read_status()
+                                ^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/http/client.py", line 312, in _read_status
+      raise RemoteDisconnected("Remote end closed connection without"
+  http.client.RemoteDisconnected: Remote end closed connection without response
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+5 passed, 3 warnings in 22.39s

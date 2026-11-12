@@ -1,0 +1,7 @@
+test_08_costs: 3 passed in 388.44s (0:06:28)
+test_51_c2_fix_clone_uploads: 4 passed in 93.80s (0:01:33)
+test_51r_review_c2_fix_clone_uploads: 1 failed, 7 passed in 804.59s (0:13:24)
+test_48_c2_step7b_forks_erasure: 3 passed in 22.43s
+test_49_review_c2_step7b: 5 passed, 3 warnings in 22.39s
+test_42_customer_compaction: 3 passed in 158.02s (0:02:38)
+/dev/vda        252G   21G   19G  53% /
