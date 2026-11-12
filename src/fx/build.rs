@@ -136,10 +136,15 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
     // every row it holds has a seq at or below the cut: the first version lists them as absorbed (`absorbed_l0`, with the
     // cut as their highest seq, an upper bound), and a compactor starting on it reads none of them again
     let l0_before: Vec<String> = if cur.is_none() { db.manifest().l0().iter().map(|v| v.id.to_string()).collect() } else { Vec::new() };
-    // the cut: a WAL flush, then a snapshot at the last committed seq (all durable)
-    db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::Wal }).await?;
+    // the cut: a snapshot at the last committed seq, then a WAL flush, which makes every write committed so far durable,
+    // so every seq at or below the cut is durable before anything of the version is written. The order matters off the
+    // database's lock (fix-write-stalls, the first build): writes go on, and with the flush first a write staged while
+    // the flush was in flight entered the snapshot without being durable; after a crash the next owner reopened SlateDB
+    // below X_d and its new writes got seqs at or below X_d, which reads take from our runs only (the reviewer's
+    // test_68r: "manifest 1 has X_d 34 but SlateDB's last seq is 3", the database refused for good)
     let snap = db.snapshot().await?;
     let x = snap.seq();
+    db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::Wal }).await?;
     pause(&PAUSE_AFTER_SNAPSHOT_MS).await;
     ensure!(e_env <= x, "E_env {e_env} above the cut {x}");
     let (prev_x, reseal_all) = match cur {
