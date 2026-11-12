@@ -205,3 +205,80 @@ def test_p10_tailable_cursor_keeps_its_limit(both, name, mb, kw, late):
             cid = g["cursor"]["id"]
         return got, cid != 0
     same(both, f"p10_{name}", [{"_id": "x"}], run)
+
+
+# Fix round (review of 62b8619). P8: two numbers that compare different are two keys (a Decimal128 and its nearest double
+# were one key: the second insert was refused as a duplicate); two that compare equal are one key.
+@pytest.mark.parametrize("name,a,b", [
+    ("dec01_then_double01", Decimal128("0.1"), 0.1),
+    ("int10_then_dec_long", 10, Decimal128("10.0000000000000000001")),
+    ("inf_then_dec_1e400", float("inf"), Decimal128("1E+400")),
+    ("int64_then_double_near", Int64(9007199254740993), 9007199254740992.0),
+    ("dec_then_dec_one_double_apart", Decimal128("0.1"), Decimal128("0.10000000000000001")),
+    ("equal_int64_and_decimal", Int64(9007199254740993), Decimal128("9007199254740993")),
+    ("equal_double_and_decimal", 0.5, Decimal128("0.50")),
+])
+def test_p8_numbers_are_one_key_only_when_equal(both, name, a, b):
+    def run(d):
+        out = []
+        for spec in ("_id", "unique"):
+            d.drop_collection("k")
+            if spec == "unique":
+                d.k.create_index("v", unique=True)
+            for v in (a, b):
+                try:
+                    d.k.insert_one({"_id": v} if spec == "_id" else {"v": v})
+                    out.append("ok")
+                except Exception as e:
+                    out.append(getattr(e, "code", "err"))
+            f = "_id" if spec == "_id" else "v"
+            out.append(sorted(str(x[f]) for x in d.k.find({f: b})))
+        return out
+    same(both, f"p8k_{name}", [{"_id": 0}], run)
+
+
+def test_p8_decimal_finds_the_equal_int64(both):
+    docs = [{"_id": Int64(9007199254740993)}, {"_id": Int64(9007199254740992)}, {"_id": 1}]
+    same(both, "p8i", docs, lambda d: ([str(x["_id"]) for x in d.c.find({"_id": Decimal128("9007199254740993")})],
+                                       [str(x["_id"]) for x in d.c.find({"_id": {"$in": [Decimal128("9007199254740993")] + list(range(2, 300))}})]))
+
+
+# P10: a negative limit on find is refused (51024), tailable or not, as mongod's find command does.
+@pytest.mark.parametrize("kw", [{"limit": -3}, {"limit": -1, "tailable": True}, {"limit": -3, "tailable": True, "awaitData": True}, {"limit": -0.5}])
+def test_p10_negative_limit(both, kw):
+    def run(d):
+        d.drop_collection("cap")
+        d.create_collection("cap", capped=True, size=1 << 20)
+        d.cap.insert_many([{"_id": i} for i in range(5)])
+        try:
+            r = d.command(SON([("find", "cap")] + list(kw.items())))
+            return [x["_id"] for x in r["cursor"]["firstBatch"]]
+        except Exception as e:
+            return getattr(e, "code", "err")
+    same(both, "p10neg", [{"_id": 0}], run)
+
+
+# Found while lengthening test_50: two indexes whose key patterns have the same fields in another order are two indexes
+# (a Document compares equal regardless of order, so the second was refused as "an equivalent index").
+def test_index_key_order_matters(both):
+    from pymongo import IndexModel
+    def run(d):
+        names = d.c.create_indexes([IndexModel([("x", 1), ("s", 1)]), IndexModel([("s", 1), ("x", 1)])])
+        d.c.create_index([("x", -1), ("s", 1)])
+        hinted = [x["_id"] for x in d.c.find({}).hint([("s", 1), ("x", 1)])]
+        d.c.drop_index([("s", 1), ("x", 1)])
+        return names, hinted, sorted(i["name"] for i in d.c.list_indexes())
+    same(both, "idxorder", [{"_id": i, "x": i % 3, "s": str(9 - i)} for i in range(6)], run)
+
+
+# P8 fix round: ranges on an indexed field around a decimal within one double step of the bound (the decimal's key sits
+# after the double's): the answers are mongod's.
+@pytest.mark.parametrize("flt", [{"v": {"$lte": 0.1}}, {"v": {"$lt": 0.1}}, {"v": {"$gte": 0.1}}, {"v": {"$gt": 0.1}},
+                                 {"v": {"$lte": Decimal128("0.1")}}, {"v": {"$lt": Decimal128("0.1")}}, {"v": {"$gt": Decimal128("0.1")}},
+                                 {"v": {"$gte": 10, "$lt": 11}}, {"v": {"$gt": 10, "$lte": Decimal128("10.0000000000000000001")}}])
+def test_p8_index_ranges_next_to_decimals(both, flt):
+    docs = [{"_id": i, "v": v} for i, v in enumerate([0.1, Decimal128("0.1"), Decimal128("0.10000000000000001"), 0.2, 10, Decimal128("10.0000000000000000001"), 11, Decimal128("1E+400"), float("inf")])]
+    def run(d):
+        d.c.create_index("v")
+        return sorted(x["_id"] for x in d.c.find(flt).hint("v_1")), d.c.count_documents(flt, hint="v_1"), sorted(x["_id"] for x in d.c.find(flt).sort("v", -1).hint("v_1"))
+    same(both, "p8r", docs, run)
