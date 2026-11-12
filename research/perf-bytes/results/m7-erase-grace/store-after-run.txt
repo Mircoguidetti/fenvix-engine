@@ -1,0 +1,14 @@
+00:41:13 run exit 0
+00:41:14 1077163958 {'bytes': 1062846890, 'objects': 363} {'bytes': 15850202, 'objects': 4} {'bytes': 310331497, 'objects': 69} {'bytes': 736510805, 'objects': 177} 48
+00:43:14 1077202053 {'bytes': 1062851312, 'objects': 365} {'bytes': 15850202, 'objects': 4} {'bytes': 310331497, 'objects': 69} {'bytes': 736510805, 'objects': 177} 50
+00:45:14 1075523695 {'bytes': 1062742634, 'objects': 317} {'bytes': 15850202, 'objects': 4} {'bytes': 0, 'objects': 0} {'bytes': 1046842302, 'objects': 246} 2
+00:47:15 1075540774 {'bytes': 1062744845, 'objects': 318} {'bytes': 15850202, 'objects': 4} {'bytes': 0, 'objects': 0} {'bytes': 1046842302, 'objects': 246} 3
+00:49:15 1075574933 {'bytes': 1062749268, 'objects': 320} {'bytes': 15850202, 'objects': 4} {'bytes': 0, 'objects': 0} {'bytes': 1046842302, 'objects': 246} 5
+00:51:15 229214545 {'bytes': 216374012, 'objects': 192} {'bytes': 15850202, 'objects': 4} {'bytes': 0, 'objects': 0} {'bytes': 200464000, 'objects': 117} 6
+00:53:16 229210892 {'bytes': 216362956, 'objects': 187} {'bytes': 15850202, 'objects': 4} {'bytes': 0, 'objects': 0} {'bytes': 200464000, 'objects': 117} 1
+00:55:16 229210892 {'bytes': 216362956, 'objects': 187} {'bytes': 15850202, 'objects': 4} {'bytes': 0, 'objects': 0} {'bytes': 200464000, 'objects': 117} 1
+00:57:16 229210892 {'bytes': 216362956, 'objects': 187} {'bytes': 15850202, 'objects': 4} {'bytes': 0, 'objects': 0} {'bytes': 200464000, 'objects': 117} 1
+00:59:16 done
+28746892 {'_clean': 5, '_lease': 50, 'compacted': 12589391, 'compactions': 1066, 'fx': 15898956, 'gc': 6, 'manifest': 254246, 'wal': 3172} {'bytes': 15850202, 'objects': 4} {'bytes': 0, 'objects': 0} 1
+28746892 {'_clean': 5, '_lease': 50, 'compacted': 12589391, 'compactions': 1066, 'fx': 15898956, 'gc': 6, 'manifest': 254246, 'wal': 3172} {'bytes': 15850202, 'objects': 4} {'bytes': 0, 'objects': 0} 1
+28746892 {'_clean': 5, '_lease': 50, 'compacted': 12589391, 'compactions': 1066, 'fx': 15898956, 'gc': 6, 'manifest': 254246, 'wal': 3172} {'bytes': 15850202, 'objects': 4} {'bytes': 0, 'objects': 0} 1
