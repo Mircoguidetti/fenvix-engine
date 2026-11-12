@@ -122,7 +122,10 @@ def ours(out):
         time.sleep(1)
     w1 = ths[:5]
     saver_writes(lines.uri_of("fenvix-log"), w1, 2)
-    time.sleep(1.5)
+    # with the 3-zone log on, writes reach the store as WAL objects in blocks every --local-log-upload-secs (30 s), and
+    # the restore places a WAL object in time by its object-store timestamp: T is taken once the writes before it are
+    # uploaded (pilot: with T 1.5 s after them, the restore also removed them; reported as a finding)
+    time.sleep(40)
     t_target = int(now() * 1000)
     at_t = {t: newest(c, DB, t) for t in w1}
     time.sleep(1.5)
@@ -166,10 +169,15 @@ def ours(out):
 # ---- mongod ----------------------------------------------------------------------------------------------------------
 
 def tools(cmd: str, timeout=CAP_S):
-    """mongodump / mongorestore in a tools container on the bench network (not capped, like our client)."""
+    """mongodump / mongorestore in a tools container on the bench network (not capped, like our client). Past the cap
+    the container is removed and the step is reported as not finished."""
     t0 = now()
-    r = subprocess.run(["docker", "run", "--rm", "--network", lines.NET, "-v", "/tmp/claude-0/bigops:/dump", "mongo:7.0", "bash", "-c", cmd],
-                       capture_output=True, text=True, timeout=timeout)
+    try:
+        r = subprocess.run(["docker", "run", "--rm", "--name", "bigops-tools", "--network", lines.NET, "-v", "/tmp/claude-0/bigops:/dump", "mongo:7.0", "bash", "-c", cmd],
+                           capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        subprocess.run(["docker", "rm", "-f", "bigops-tools"], capture_output=True)
+        return {"rc": None, "seconds": round(now() - t0, 2), "timed_out": True, "tail": ""}
     return {"rc": r.returncode, "seconds": round(now() - t0, 2), "tail": (r.stdout + r.stderr)[-600:]}
 
 
