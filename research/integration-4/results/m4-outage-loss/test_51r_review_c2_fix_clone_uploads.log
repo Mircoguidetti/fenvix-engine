@@ -1,0 +1,117 @@
+......F.                                                                 [100%]
+=================================== FAILURES ===================================
+_____________ test_a_sweep_that_aborts_live_uploads_loses_nothing ______________
+test_51r_review_c2_fix_clone_uploads.py:414: in test_a_sweep_that_aborts_live_uploads_loses_nothing
+    write_round(col, rnd, 3000, expect)
+test_51r_review_c2_fix_clone_uploads.py:47: in write_round
+    col.bulk_write(ops)
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/collection.py:775: in bulk_write
+    bulk_api_result = blk.execute(write_concern, session, _Op.INSERT)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/bulk.py:449: in execute
+    return self.execute_command(generator, write_concern, session, operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/bulk.py:310: in execute_command
+    _ = client._retryable_write(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2154: in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2024: in _retry_with_session
+    return self._retry_internal(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+                                             ^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:3160: in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/bulk.py:300: in retryable_bulk
+    self._execute_command(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/bulk.py:244: in _execute_command
+    result, to_send = self._execute_batch(bwc, cmd, ops, client)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/bulk.py:168: in _execute_batch
+    result = self.write_command(bwc, cmd, request_id, msg, to_send, client)  # type: ignore[arg-type]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/bulk.py:86: in write_command
+    result_docs, _, _ = run_bulk_write_command(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:269: in run_bulk_write_command
+    return _run_command(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: database g was reopened during the command (its lease was lost); this write was not applied (an earlier step of the same command, such as an index definition, may have been undone or kept), retry, full error: {'ok': 0.0, 'errmsg': 'database g was reopened during the command (its lease was lost); this write was not applied (an earlier step of the same command, such as an index definition, may have been undone or kept), retry', 'code': 134, 'codeName': 'DatabaseReopened', 'errorLabels': ['TransientTransactionError', 'RetryableWriteError']}
+=============================== warnings summary ===============================
+test_51r_review_c2_fix_clone_uploads.py::test_a_close_that_hits_the_absorb_bound
+  /root/.fenvix-judge/env/lib/python3.12/site-packages/_pytest/threadexception.py:54: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-14 (<lambda>)
+  
+  Traceback (most recent call last):
+    File "/root/.fenvix-judge/env/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+      self.run()
+    File "/root/.fenvix-judge/env/lib/python3.12/threading.py", line 1012, in run
+      self._target(*self._args, **self._kwargs)
+    File "/home/user/wI/ctl-tests/test_51r_review_c2_fix_clone_uploads.py", line 181, in <lambda>
+      th = threading.Thread(target=lambda: cc["g"].command("tenantAdmin", close=True), daemon=True)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py", line 126, in csot_wrapper
+      return func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/database.py", line 946, in command
+      return self._client._retryable_read(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2116, in _retryable_read
+      return self._retry_internal(
+             ^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py", line 126, in csot_wrapper
+      return func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2077, in _retry_internal
+      ).run()
+        ^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2947, in run
+      res = self._read() if self._is_read else self._write()
+            ^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 3187, in _read
+      return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/database.py", line 934, in inner
+      return self._command(
+             ^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/database.py", line 773, in _command
+      return conn.command(
+             ^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/helpers.py", line 50, in inner
+      return func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/pool.py", line 405, in command
+      return run_command(
+             ^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py", line 440, in run_command
+      docs, _, _ = _run_command(
+                   ^^^^^^^^^^^^^
+    File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py", line 214, in _run_command
+      helpers_shared._check_command_response(
+    File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/helpers_shared.py", line 327, in _check_command_response
+      raise OperationFailure(errmsg, code, response, max_wire_version)
+  pymongo.errors.OperationFailure: final flush timed out, full error: {'ok': 0.0, 'errmsg': 'final flush timed out', 'code': 1, 'codeName': 'InternalError'}
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED test_51r_review_c2_fix_clone_uploads.py::test_a_sweep_that_aborts_live_uploads_loses_nothing
+1 failed, 7 passed, 1 warning in 753.93s (0:12:33)

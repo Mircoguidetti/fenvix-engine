@@ -44,7 +44,17 @@ def write_round(col, rnd, n, expect, batches=8):
                 v = rnd * 100 + b
                 ops.append(UpdateOne({"_id": i}, {"$set": {"v": v, "pad": "x" * 200}}, upsert=True))
                 expect[i] = v
-        col.bulk_write(ops)
+        # integration-4: with c2-fix-outage-loss a write whose database was reopened during the command (its lease lost
+        # while the store was frozen) is refused, retryable (code 134, DatabaseReopened), and not applied. The upserts
+        # are idempotent, so the round retries the bulk as a client would.
+        for attempt in range(40):
+            try:
+                col.bulk_write(ops)
+                break
+            except OperationFailure as e:
+                if e.code != 134 or attempt == 39:
+                    raise
+                time.sleep(0.5)
 
 
 def wrong(col, expect):

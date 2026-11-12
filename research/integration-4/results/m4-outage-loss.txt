@@ -1,0 +1,5 @@
+test_31_lease_lost_store_down: 2 passed in 138.99s (0:02:18)
+test_52_reopen_during_a_command: 1 failed, 1 passed, 2 skipped in 66.75s (0:01:06)
+test_52r_review_c2_fix_outage_loss: 2 failed, 5 passed, 1 skipped in 287.65s (0:04:47)
+test_51r_review_c2_fix_clone_uploads: 1 failed, 7 passed, 1 warning in 753.93s (0:12:33)
+/dev/vda        252G   28G   12G  71% /
