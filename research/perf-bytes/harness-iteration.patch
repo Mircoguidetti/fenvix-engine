@@ -1,0 +1,31 @@
+diff --git a/bench/agent-checkpoints/generator.py b/bench/agent-checkpoints/generator.py
+index 5f8c18c..b5c6cf4 100644
+--- a/bench/agent-checkpoints/generator.py
++++ b/bench/agent-checkpoints/generator.py
+@@ -80,6 +80,12 @@ PROFILES = {
+                      sessions_per_thread_mean=1.8, short_gap_share=0.6, short_gap_s=(300, 3600),
+                      long_gap_s=(86400, 30 * 86400), user_start_window_s=14 * 86400, think_s=(2.3, 8.0),
+                      read_type_s=(10, 120)),
++    # P-perf-bytes iteration (2026-11-11): the standard profile's shape with 150 users (about 1 GB logical), big enough
++    # for the compactor's reseals and derived documents, which `small` never reaches
++    "medium": Profile(users=150, threads_per_user_mean=2.5, threads_per_user_max=20, coding_share=0.15,
++                      sessions_per_thread_mean=1.8, short_gap_share=0.6, short_gap_s=(300, 3600),
++                      long_gap_s=(86400, 30 * 86400), user_start_window_s=30 * 86400, think_s=(2.3, 8.0),
++                      read_type_s=(10, 120)),
+     # AWS round: a few thousand threads, a few GB stored, one to two hours of writing per target
+     "standard": Profile(users=1000, threads_per_user_mean=2.5, threads_per_user_max=20, coding_share=0.15,
+                         sessions_per_thread_mean=1.8, short_gap_share=0.6, short_gap_s=(300, 3600),
+diff --git a/bench/agent-checkpoints/lines.py b/bench/agent-checkpoints/lines.py
+index ea88736..b042620 100644
+--- a/bench/agent-checkpoints/lines.py
++++ b/bench/agent-checkpoints/lines.py
+@@ -319,6 +319,9 @@ def server_cmd(name: str, log_on: bool) -> list[str]:
+            "--customer-key", "checkpoints=thread_id,checkpoint_writes=thread_id"]
+     if log_on:
+         cmd += ["--quaderno", ",".join(f"{IP[f'log-{i}']}:7200" for i in range(3)), "--quaderno-id", "cell1"]
++    # P-perf-bytes iteration only: extra server flags (one change at a time against the product defaults); empty in
++    # every recorded line
++    cmd += os.environ.get("FXBENCH_EXTRA_FLAGS", "").split()
+     return cmd
+ 
+ 

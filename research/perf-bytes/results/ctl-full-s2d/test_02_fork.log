@@ -1,0 +1,15 @@
+....F........                                                            [100%]
+=================================== FAILURES ===================================
+__________________________ test_clone_copies_no_data ___________________________
+test_02_fork.py:99: in test_clone_copies_no_data
+    assert abs(prefix_bytes(bucket, "tenants/big_copy/") - src_bytes) < 2000  # lease/marker only
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: assert 2951 < 2000
+E    +  where 2951 = abs((2412304 - 2409353))
+E    +    where 2412304 = prefix_bytes('ctl-fork-ad030080', 'tenants/big_copy/')
+----------------------------- Captured stdout call -----------------------------
+clone cost {'copy': 0, 'delete': 3, 'get': 22, 'get_bytes': 5198, 'get_range': 0, 'get_tier_requests': 24, 'head': 2, 'list': 8, 'put': 17, 'put_bytes': 4562, 'put_tier_requests': 25} source bytes 2409353 fork own bytes 1818 ms 129
+copy cost {'copy': 26, 'delete': 3, 'get': 17, 'get_bytes': 4304, 'get_range': 0, 'get_tier_requests': 19, 'head': 2, 'list': 7, 'put': 13, 'put_bytes': 3129, 'put_tier_requests': 46} fork bytes 2412304 ms 163
+=========================== short test summary info ============================
+FAILED test_02_fork.py::test_clone_copies_no_data - AssertionError: assert 29...
+1 failed, 12 passed in 65.61s (0:01:05)
