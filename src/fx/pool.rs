@@ -219,6 +219,34 @@ pub fn flush_runtime() -> tokio::runtime::Handle {
         .clone()
 }
 
+static WRITE_PATH: std::sync::OnceLock<tokio::runtime::Runtime> = std::sync::OnceLock::new();
+
+/// perf-latency round 3: the runtime of the compaction work the writes wait on: absorption (L0 SSTs into delta runs) and
+/// SlateDB's fold (which then removes the absorbed L0 SSTs from the writer's manifest). SlateDB stops a database's
+/// writes when its L0 (with the uploads in flight) reaches `l0_max_ssts`; at nice +10, on the one CPU of the commands,
+/// absorption and the fold got the CPU the commands left, which was little exactly when writes were busiest: writes
+/// stopped for 1.2-5 s with 5-7 L0 SSTs visible (medium m18). Two threads at normal priority, apart from the flushers so
+/// that a long absorption never holds a memtable upload. Merges, reseals, erasures and GC stay on [`bg_runtime`].
+pub fn write_path_runtime() -> tokio::runtime::Handle {
+    WRITE_PATH
+        .get_or_init(|| tokio::runtime::Builder::new_multi_thread().worker_threads(2).thread_name("fx-wpath").thread_stack_size(16 << 20).enable_all().build().expect("write-path runtime"))
+        .handle()
+        .clone()
+}
+
+/// The runtime for a compactor's absorption and fold: [`write_path_runtime`] when the compactor runs on [`bg_runtime`]
+/// (the server), else the compactor's own runtime (tests and benches that give one).
+pub fn write_path_for(runtime: &tokio::runtime::Handle) -> tokio::runtime::Handle {
+    if BG_ON.load(std::sync::atomic::Ordering::Relaxed) && super::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed) && WRITE_PATH_ON.load(std::sync::atomic::Ordering::Relaxed) {
+        write_path_runtime()
+    } else {
+        runtime.clone()
+    }
+}
+
+/// `FENVIX_WRITE_PATH_RUNTIME=0` keeps absorption and the fold on the background runtime (the round-2 behaviour, to compare).
+pub static WRITE_PATH_ON: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
 /// Whether the server's compactors use [`bg_runtime`] (`--compaction-threads own`, the default) or the server's runtime.
 pub static BG_ON: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 

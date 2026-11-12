@@ -2404,7 +2404,7 @@ impl Tenant {
             // SlateDB stopped the write (unflushed memtables and WAL at `max_unflushed_bytes`): the L0 count says whether the
             // flusher waited for L0 room (at `l0_max_ssts`) or was slow itself
             SLOW_STAGES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            eprintln!("SLOW_STAGE db={} ms={} l0={}", self.id, t_write.elapsed().as_millis(), db.manifest().l0().len());
+            eprintln!("SLOW_STAGE u={:.0} db={} ms={} l0={}", crate::waits::unix_ms(), self.id, t_write.elapsed().as_millis(), db.manifest().l0().len());
         }
         note_unflushed(&self.id, handle.seqnum());
         if let Some(b) = before {

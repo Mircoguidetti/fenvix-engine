@@ -379,6 +379,8 @@ pub struct Compactor {
     slate: Mutex<Option<tokio::task::JoinHandle<()>>>,
     slate_stop: Mutex<Option<(Arc<slatedb::compactor::Compactor>, Arc<slatedb::CompactionWorker>)>>,
     pub(crate) runtime: tokio::runtime::Handle,
+    /// Absorption and SlateDB's fold: the work the writes wait on (`pool::write_path_for`).
+    pub(crate) write_path: tokio::runtime::Handle,
     codec: Arc<dyn RowCodec>,
     /// GC's state (first sights of unreferenced objects).
     pub gc: super::gc::GcState,
@@ -438,6 +440,7 @@ impl Compactor {
             drop,
             slate: Mutex::new(None),
             slate_stop: Mutex::new(None),
+            write_path: super::pool::write_path_for(&runtime),
             runtime,
             codec: codec::identity(),
             gc: Default::default(),
@@ -1295,7 +1298,8 @@ impl Compactor {
             return; // `stop` drains `jobs` after setting `stopped`, under this lock: nothing is spawned after it
         }
         jobs.retain(|j| !j.is_finished());
-        jobs.push(self.runtime.spawn(crate::waits::polled(what, who, super::pool::PACE_EXEMPT.scope(exempt, async move {
+        let rt = if prio == Prio::Absorb { &self.write_path } else { &self.runtime };
+        jobs.push(rt.spawn(crate::waits::polled(what, who, super::pool::PACE_EXEMPT.scope(exempt, async move {
             let _permit: Permit = c.pool.acquire(prio).await;
             let t0 = thread_cpu_us();
             let w0 = Instant::now();

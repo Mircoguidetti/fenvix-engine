@@ -973,6 +973,7 @@ async fn run() -> Result<()> {
         let wave = args.sealed_wave && std::env::var("FENVIX_SEALED_WAVE").as_deref() != Ok("0");
         tenant_bench::fx::view::WAVE.store(wave, Relaxed);
         tenant_bench::fx::view::WARM_THREAD.store(std::env::var("FENVIX_WARM_THREAD").as_deref() != Ok("0"), Relaxed);
+        tenant_bench::fx::pool::WRITE_PATH_ON.store(std::env::var("FENVIX_WRITE_PATH_RUNTIME").as_deref() != Ok("0"), Relaxed);
         tenant_bench::fx::check_config()?;
     }
     tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);
