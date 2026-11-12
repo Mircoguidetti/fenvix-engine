@@ -158,9 +158,11 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
         return Err(ApiError::new(500, "erase_incomplete", format!("objects remain after the erase: {left:?}")));
     }
     ops::finish(ctl, db).await?;
-    drop(g);
-    // Proof, part two: not even the intent record.
+    super::failpoint("erase.before_proof_two").await;
+    // Proof, part two: not even the intent record. Still under the entry lock (fix-erase-500): a read of the name opened
+    // in between would take tenants/{db}/_lease and the listing would report it as left over (500 erase_incomplete).
     let left = purge::leftovers(ctl, db).await?;
+    drop(g);
     if !left.is_empty() {
         return Err(ApiError::new(500, "erase_incomplete", format!("objects remain after the erase: {left:?}")));
     }
