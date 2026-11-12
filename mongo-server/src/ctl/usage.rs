@@ -127,12 +127,14 @@ struct Inner {
 }
 
 tokio::task_local! {
-    /// Requests made inside this scope are not metered (the flusher's own existence checks).
+    /// Requests made inside this scope are counted without marking the record to be written (the flusher's own
+    /// existence checks: they are requests on the database's prefix, so they are counted, but they must not make the
+    /// flusher write a record again only because it checked).
     static UNMETERED: ();
 }
 
 /// Whether a database exists in the store, by the rule of `meta::exists` (an object under `tenants/{db}/` other than a
-/// lease or a clean marker). Not metered.
+/// lease or a clean marker). Counted quietly (see [`UNMETERED`]).
 async fn tenant_exists(store: &rec::Store, db: &str) -> object_store::Result<bool> {
     UNMETERED
         .scope((), async {
@@ -215,6 +217,13 @@ impl Usage {
 
     fn record(&self, p: &Path, f: impl FnOnce(&mut Counts)) {
         if UNMETERED.try_with(|_| ()).is_ok() {
+            if let Some(db) = db_of(p) {
+                let mut g = self.inner.lock().unwrap();
+                if !g.erased.contains(&db) {
+                    let d = g.days.entry((db, day_now())).or_default();
+                    f(&mut d.counts);
+                }
+            }
             return;
         }
         if let Some(db) = db_of(p) {
