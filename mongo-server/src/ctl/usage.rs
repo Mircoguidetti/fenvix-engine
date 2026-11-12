@@ -116,6 +116,31 @@ struct Inner {
     marks: HashMap<String, Counts>,
     /// Erased databases: requests attributed to them are not metered until a command or an operation uses the name again.
     erased: std::collections::HashSet<String>,
+    /// Databases the flusher found existing (a record with storage requests only is checked once; `drop_db` forgets).
+    known: std::collections::HashSet<String>,
+}
+
+tokio::task_local! {
+    /// Requests made inside this scope are not metered (the flusher's own existence check, which must not make the
+    /// counters it is about to write dirty again).
+    static UNMETERED: ();
+}
+
+/// Whether a database exists in the store: an object under `tenants/{db}/` other than a lease or a clean marker (the
+/// rule of `meta::exists`). Not metered.
+async fn tenant_exists(store: &rec::Store, db: &str) -> object_store::Result<bool> {
+    UNMETERED
+        .scope((), async {
+            let mut it = store.list(Some(&Path::from(format!("tenants/{db}"))));
+            while let Some(m) = it.next().await {
+                let name = m?.location.filename().unwrap_or("").to_string();
+                if name != "_lease" && name != "_clean" {
+                    return Ok(true);
+                }
+            }
+            Ok(false)
+        })
+        .await
 }
 
 pub struct Usage {
@@ -163,6 +188,9 @@ impl Usage {
     }
 
     fn record(&self, p: &Path, f: impl FnOnce(&mut Counts)) {
+        if UNMETERED.try_with(|_| ()).is_ok() {
+            return;
+        }
         if let Some(db) = db_of(p) {
             self.with_day(&db, |d| f(&mut d.counts));
         }
@@ -220,6 +248,7 @@ impl Usage {
         g.erased.insert(db.to_string());
         g.last_active.remove(db);
         g.seen_wakes.remove(db);
+        g.known.remove(db);
     }
 
     pub fn note_storage(&self, db: &str, bytes: u64) {
@@ -282,6 +311,35 @@ impl Usage {
                 }
                 continue;
             };
+            // A record of storage requests only (no command, no activity on the database) can belong to a name that
+            // does not exist: an operation that read the name's records and then answered 404 (a fork whose source an
+            // erase removed meanwhile, a fork of a missing source, a request on a missing database). No object of a
+            // database that does not exist is written: its counters are dropped. Checked under the database's operation
+            // lock, so no erase or create runs meanwhile, and once per database while it exists.
+            let only_storage = doc["commands"].as_u64() == Some(0) && doc["last_active_ms"].as_i64().unwrap_or(0) == 0 && doc["storage"].is_null();
+            if only_storage && !self.inner.lock().unwrap().known.contains(&db) {
+                match tenant_exists(store, &db).await {
+                    Ok(true) => {
+                        self.inner.lock().unwrap().known.insert(db.clone());
+                    }
+                    Ok(false) => {
+                        let mut g = self.inner.lock().unwrap();
+                        // only if nothing new came in meanwhile (a command would have set last_active)
+                        if g.days.get(&(db.clone(), day)).is_some_and(|d| d.commands == 0 && d.last_active_ms == 0) {
+                            g.days.remove(&(db.clone(), day));
+                            DROPPED_ABSENT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        }
+                        continue;
+                    }
+                    Err(e) => {
+                        eprintln!("usage flush of {db}: existence check: {e:#}");
+                        if let Some(d) = self.inner.lock().unwrap().days.get_mut(&(db, day)) {
+                            d.dirty = true;
+                        }
+                        continue;
+                    }
+                }
+            }
             let name = format!("{holder}-{:08x}.json", self.nonce);
             let p = rec::path(&["control", "usage", &db, &day_string(day), &name]);
             match rec::put(store, &p, &doc).await {
@@ -300,6 +358,9 @@ impl Usage {
         n
     }
 }
+
+/// Usage records the flusher did not write because their database does not exist (diagnostics).
+pub static DROPPED_ABSENT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 pub fn day_string(day: i64) -> String {
     chrono::DateTime::<chrono::Utc>::from_timestamp_millis(day * DAY_MS).map(|d| d.format("%Y-%m-%d").to_string()).unwrap_or_default()
