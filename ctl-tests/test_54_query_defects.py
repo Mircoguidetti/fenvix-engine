@@ -170,3 +170,38 @@ LONG = list(range(0, 400, 3)) + [Int64(150), 9.0, Decimal128("11"), "abc", {"x":
 ])
 def test_p2_long_in_lists_answer_as_mongod(both, name, flt):
     same(both, f"p2_{name}", P2_DOCS, lambda d: sorted(repr(x["_id"]) for x in d.c.find(flt)))
+
+
+@pytest.mark.parametrize("name,mb,kw,late", [
+    ("limit5_batch2", 0.001, {"limit": 5, "batchSize": 2}, False),
+    ("limit5", 0.001, {"limit": 5}, False),
+    ("skip1_limit4_batch2", 0.001, {"skip": 1, "limit": 4, "batchSize": 2}, False),
+    ("limit5_5mb", 5, {"limit": 5}, False),
+    ("limit5_inserts_after_open", 0.001, {"limit": 5, "batchSize": 2}, True),
+])
+def test_p10_tailable_cursor_keeps_its_limit(both, name, mb, kw, late):
+    """P10 (added by the coordinator): a tailable cursor's `limit` counts over its whole life, not only its first batch
+    (the review's probes/tail_limit.py: limit 5 returned 10). mongod returns the limit in total and keeps the cursor open."""
+    import time
+    def run(d):
+        d.drop_collection("cap")
+        d.create_collection("cap", capped=True, size=200 * 1024 * 1024)
+        if late:
+            d.cap.insert_one({"_id": -1})
+        for i in range(0 if late else 10):
+            d.cap.insert_one({"_id": i, "p": "x" * int(mb * 1024 * 1024)})
+        cmd = SON([("find", "cap"), ("filter", {}), ("tailable", True), ("awaitData", True)])
+        cmd.update(kw)
+        r = d.command(cmd)
+        got = [x["_id"] for x in r["cursor"]["firstBatch"]]
+        cid = r["cursor"]["id"]
+        if late:
+            for i in range(10):
+                d.cap.insert_one({"_id": i, "p": "x"})
+        t0 = time.time()
+        while cid and time.time() - t0 < 3:
+            g = d.command(SON([("getMore", cid), ("collection", "cap"), ("maxTimeMS", 200)]))
+            got += [x["_id"] for x in g["cursor"]["nextBatch"]]
+            cid = g["cursor"]["id"]
+        return got, cid != 0
+    same(both, f"p10_{name}", [{"_id": "x"}], run)

@@ -195,7 +195,7 @@ impl Server {
             let tree = if filter.is_empty() { "$and".to_string() } else { crate::update::fmt_doc(filter) };
             return Err(MongoError::bad_value(format!("error processing query: ns={ns}Tree: {tree}\nSort: {{}}\nProj: {{}}\n tailable cursor requested on non capped collection")));
         }
-        let tail = crate::capped::Tail { db: db.to_string(), coll: coll.to_string(), filter: filter.clone(), await_data, last_seq: 0 };
+        let tail = crate::capped::Tail { db: db.to_string(), coll: coll.to_string(), filter: filter.clone(), await_data, last_seq: 0, left: (limit > 0).then_some(limit as usize) };
         let first_n = batch.unwrap_or(DEFAULT_FIRST_BATCH_TAIL).min(if limit > 0 { limit as usize } else { usize::MAX });
         let (mut docs, last) = crate::capped::fetch_after(&mut g, &tail, first_n, skip, crate::cmd::FIRST_BATCH_FIXED).await?;
         drop(g);
@@ -204,7 +204,8 @@ impl Server {
                 *d = p.apply(d)?;
             }
         }
-        Ok(self.tail_reply(ns, docs, crate::capped::Tail { last_seq: last, ..tail }))
+        let left = tail.left.map(|l| l.saturating_sub(docs.len()));
+        Ok(self.tail_reply(ns, docs, crate::capped::Tail { last_seq: last, left, ..tail }))
     }
 
     pub(crate) async fn count(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {

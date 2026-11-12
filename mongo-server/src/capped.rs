@@ -215,6 +215,9 @@ pub struct Tail {
     pub await_data: bool,
     /// Sequence number of the last document looked at.
     pub last_seq: u64,
+    /// With a `limit`: how many more documents it allows over the cursor's whole life (fix-query-defects P10: every
+    /// getMore after the first batch ignored the limit). At 0 the cursor stays open and returns nothing, as on mongod.
+    pub left: Option<usize>,
 }
 
 /// Documents after `after_seq` in natural order that match `filter`, at most `limit`; with the new position.
