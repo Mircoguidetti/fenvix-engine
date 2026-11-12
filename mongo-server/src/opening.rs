@@ -614,7 +614,8 @@ impl Session {
     }
 }
 
-fn customer_value(field: &str, filter: &bson::Document) -> Option<bson::Bson> {
+/// The customer value of a filter that pins one customer (an equality on the customer field), or `None`.
+pub fn customer_value(field: &str, filter: &bson::Document) -> Option<bson::Bson> {
     use bson::Bson;
     let v = match filter.get(field)? {
         Bson::Document(d) if d.len() == 1 && d.contains_key("$eq") => d.get("$eq")?.clone(),

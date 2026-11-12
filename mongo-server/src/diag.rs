@@ -774,6 +774,17 @@ impl Server {
             },
             // compaction passes (lifecycle.rs): running now, of which long merges without a maintenance slot; ended without
             // progress; stopped on request; GC rounds that skipped a tenant busy with a pass
+            // the customer's box (custbox.rs, P-big-speed fix 3)
+            "customerBox": {
+                "enabled": crate::custbox::ENABLED.load(Relaxed),
+                "warms": crate::custbox::WARMS.load(Relaxed) as i64,
+                "warmRows": crate::custbox::WARM_ROWS.load(Relaxed) as i64,
+                "warmRuns": crate::custbox::WARM_RUNS.load(Relaxed) as i64,
+                "warmBlocks": crate::custbox::WARM_BLOCKS.load(Relaxed) as i64,
+                "warmMicros": crate::custbox::WARM_MICROS.load(Relaxed) as i64,
+                "warmErrors": crate::custbox::WARM_ERRORS.load(Relaxed) as i64,
+                "skippedRecent": crate::custbox::SKIPPED_RECENT.load(Relaxed) as i64,
+            },
             "firstCourse": {
                 "enabled": crate::opening::ENABLED.load(Relaxed),
                 "openings": crate::opening::STATS.openings.load(Relaxed) as i64,
