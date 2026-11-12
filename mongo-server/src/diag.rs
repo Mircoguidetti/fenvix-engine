@@ -799,6 +799,13 @@ impl Server {
                 "sstMapsPinned": tenant_bench::lifecycle::SST_MAPS_PINNED.load(Relaxed) as i64,
                 "runPinsStarted": tenant_bench::fx::view::PINS_STARTED.load(Relaxed) as i64,
                 "runPinErrors": tenant_bench::fx::view::PIN_ERRORS.load(Relaxed) as i64,
+                // the disk floor under the runs' block cache (fx/floor.rs)
+                "floorBytes": tenant_bench::fx::floor::usage().0 as i64,
+                "floorBlocks": tenant_bench::fx::floor::usage().1 as i64,
+                "floorWrites": tenant_bench::fx::floor::WRITES.load(Relaxed) as i64,
+                "floorHits": tenant_bench::fx::floor::HITS.load(Relaxed) as i64,
+                "floorZeroed": tenant_bench::fx::floor::ZEROED.load(Relaxed) as i64,
+                "floorErrors": tenant_bench::fx::floor::ERRORS.load(Relaxed) as i64,
             },
             "firstCourse": {
                 "enabled": crate::opening::ENABLED.load(Relaxed),

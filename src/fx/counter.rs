@@ -412,6 +412,7 @@ pub fn forget_runs(ids: &HashSet<[u8; RUN_ID_LEN]>) {
     if ids.is_empty() {
         return;
     }
+    super::floor::forget_runs(ids);
     let mut g = CACHE.lock().unwrap();
     let Some(c) = g.as_mut() else { return };
     let gone: Vec<CKey> = c.map.keys().filter(|k| ids.contains(k.run())).cloned().collect();
@@ -584,6 +585,21 @@ pub async fn fetch<'n>(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, la
         }
     }
     let _claim = if SINGLE_FLIGHT.load(Relaxed) && !miss.is_empty() { Some(Claim::new(run.run_id, &miss)) } else { None };
+    // P-big-speed fix 3: the disk floor under the RAM (`floor.rs`): a block it holds is read from the local disk, with
+    // the same checks as bytes from the store; a damaged copy is ignored (the block is then fetched from the store)
+    let mut miss = miss;
+    if !miss.is_empty() && super::floor::enabled() {
+        miss.retain(|&b| {
+            let Some(bytes) = super::floor::get(&run.run_id, b as u32) else { return true };
+            match runfmt::decode_checked(run, b, &bytes) {
+                Ok(blk) => {
+                    out[b - first] = Some(keep(run, b, blk, prefix, stale[b - first].as_deref()));
+                    false
+                }
+                Err(_) => true,
+            }
+        });
+    }
     if let (Some(&a), Some(&z)) = (miss.first(), miss.last()) {
         if std::env::var("FENVIX_COUNTER_DEBUG").is_ok() {
             eprintln!("counter: GET blocks {a}..={z} of {} for prefix {:?} (stale piece: {})", run.path, prefix.map(|p| String::from_utf8_lossy(p).to_string()), stale.iter().any(|x| x.is_some()));
@@ -601,7 +617,11 @@ pub async fn fetch<'n>(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, la
                 continue;
             }
             let (x, y) = run.fence.range(b, b);
-            let blk = runfmt::decode_checked(run, b, &data[(x - lo) as usize..(y - lo) as usize])?;
+            let stored = &data[(x - lo) as usize..(y - lo) as usize];
+            let blk = runfmt::decode_checked(run, b, stored)?;
+            if !super::view::is_local(store) {
+                super::floor::put(&run.run_id, b as u32, &run.path.to_string(), stored);
+            }
             out[b - first] = Some(keep(run, b, blk, prefix, stale[b - first].as_deref()));
         }
     }
