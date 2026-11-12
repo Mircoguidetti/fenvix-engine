@@ -161,21 +161,25 @@ def test_erase_while_clients_write(env):
     c = mk(srv, "busy", 100)
     stop = threading.Event()
     acked = []
+    sends, errs = {}, []
 
     def writer():
         cc = srv.client()
         i = 10000
         while not stop.is_set():
+            t_send = time.time()
             try:
                 cc["busy"]["c"].insert_one({"_id": i})
                 acked.append((time.time(), i))
-            except Exception:
-                pass
+                sends[i] = t_send
+            except Exception as e:
+                errs.append((t_send, time.time(), i, str(e)[:150]))
             i += 1
 
     t = threading.Thread(target=writer)
     t.start()
     time.sleep(0.8)
+    t_e0 = time.time()
     st, r = srv.admin.delete("/v1/databases/busy")
     t_done = time.time()
     time.sleep(0.5)
@@ -186,6 +190,30 @@ def test_erase_while_clients_write(env):
     after = [i for ts, i in acked if ts > t_done]
     ids = sorted(d["_id"] for d in c["busy"]["c"].find({}))
     assert all(i >= 10000 for i in ids) and not any(i < 10000 for i in ids)
+    miss = set(after) - set(ids)
+    if miss:
+        for m in sorted(miss):
+            ta = [ts for ts, i in acked if i == m][0]
+            print(f"LOSTID {m}: sent {sends[m] - t_done:+.3f} acked {ta - t_done:+.3f} s rel. erase reply; erase took {t_done - t_e0:.3f} s; by _id now: {c['busy']['c'].find_one({'_id': m})}; neighbours in db: {m-1 in ids}, {m+1 in ids}; min new id {min(ids) if ids else None}")
+        import re
+        log = srv.log_text()
+        closes = [int(x) for x in re.findall(r"LEASE writer_close tenant=busy \S+ unix_ms=(\d+)", log)]
+        opens = [int(x) for x in re.findall(r"LEASE writer_open tenant=busy \S+ unix_ms=(\d+)", log)]
+        for m in sorted(miss):
+            ta = [ts for ts, i in acked if i == m][0]
+            prev = [ts for ts, i in acked if i == m - 1]
+            print(f"LOSTID-ABS {m}: sent_ms={int(sends[m] * 1000)} acked_ms={int(ta * 1000)} prev_acked_ms={int(prev[0] * 1000) if prev else None} erase_sent_ms={int(t_e0 * 1000)} erase_reply_ms={int(t_done * 1000)} writer_close_ms={closes} writer_open_ms={opens}")
+            print(f"LOSTID-VERDICT {m}: " + ("sent AFTER the erase took the entry lock (writer_close): it waited behind the erase, ran on the re-created database: REAL LOSS" if closes and sends[m] * 1000 > max(c for c in closes if c <= t_done * 1000 + 5) else "sent BEFORE the erase took the entry lock: it may have been applied to the old database (erased with it): not a loss by itself"))
+        for line in log.splitlines():
+            if line.startswith("TRACE erase db=busy") or (line.startswith("TRACE insert db=busy") and any(f"Int32({m})" in line or f"Int64({m})" in line or f"[{m}" in line or f" {m}," in line or f"\"{m}\"" in line for m in miss)):
+                print("LOSTID-SERVER", line)
+        # the server's view of every insert around the erase (the last 3 before the lock and the first 3 after it)
+        tr = [l for l in log.splitlines() if l.startswith("TRACE insert db=busy") or l.startswith("TRACE erase db=busy")]
+        k = next((j for j, l in enumerate(tr) if "lock_taken" in l), None)
+        if k is not None:
+            for l in tr[max(0, k - 3):k + 8]:
+                print("LOSTID-AROUND", l)
+        print("LOSTID errors near the erase:", [(round(a - t_done, 3), round(b - t_done, 3), i, e) for a, b, i, e in errs][:10])
     assert set(after) <= set(ids)
     assert srv.admin.delete("/v1/databases/busy")[0] == 200 and objects_of(bucket, "busy") == []
 

@@ -95,7 +95,10 @@ pub async fn forget_settings(store: &rec::Store, db: &str) -> anyhow::Result<()>
 async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> ApiResult<purge::PurgeReport> {
     // The pin goes first so the keep-awake agent stops reopening the database.
     rec::delete(&ctl.store, &rec::path(&["control", "pins", db])).await?;
+    let trace_ms = || std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
+    eprintln!("TRACE erase db={db} lock_wait_begin unix_ms={}", trace_ms());
     let mut g = ctl.dbs.lock(db).await;
+    eprintln!("TRACE erase db={db} lock_taken wakes={} closes={} abandons={} seq={} writer={} unix_ms={}", g.wakes, g.closes, g.abandons(), g.seq, g.is_writer_open(), trace_ms());
     // A close that did not finish (store slow or down) leaves slatedb's tasks of the tenant alive, and they can still write
     // a WAL object or an SST under tenants/{db}/ after the purge below (no fencing: this process holds the lease). Stop
     // before any object is touched; the client retries once the store answers again (the close goes on in the background).
@@ -161,6 +164,7 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
     // Proof, part two: not even the intent record. Still under the entry lock (fix-erase-500): a read of the name opened
     // in between would take tenants/{db}/_lease and the listing would report it as left over (500 erase_incomplete).
     let left = purge::leftovers(ctl, db).await?;
+    eprintln!("TRACE erase db={db} lock_released wakes={} closes={} abandons={} unix_ms={}", g.wakes, g.closes, g.abandons(), trace_ms());
     drop(g);
     if !left.is_empty() {
         return Err(ApiError::new(500, "erase_incomplete", format!("objects remain after the erase: {left:?}")));

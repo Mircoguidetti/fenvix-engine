@@ -746,7 +746,15 @@ impl Server {
             b.run.stage(&mut w, &b.key);
             w.extra.extend(self.session_sweep_ops(&mut g, db, &b.key).await);
         }
-        self.commit(&mut g, coll, w, &indexes, new_coll, tx).await?;
+        let traced = db.starts_with("busy");
+        let trace_ids: Vec<String> = if traced { docs.iter().filter_map(|d| d.as_document().and_then(|d| d.get("_id")).map(|v| v.to_string())).take(3).collect() } else { vec![] };
+        let commit_r = self.commit(&mut g, coll, w, &indexes, new_coll, tx).await;
+        if traced {
+            // test05-trace (scratch branch): which opening of the database each acknowledged insert went into
+            let ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
+            eprintln!("TRACE insert db={db} coll={coll} ids={trace_ids:?} n={n} ok={} wakes={} closes={} abandons={} seq={} writer={} unix_ms={ms}", commit_r.is_ok(), g.wakes, g.closes, g.abandons(), g.seq, g.is_writer_open());
+        }
+        commit_r?;
         if let Some(b) = rr.as_mut() {
             b.run.apply();
         }
