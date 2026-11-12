@@ -895,6 +895,7 @@ impl Entry {
         self.sstat.clear();
         self.meta_clear();
         crate::opening::forget_db(&self.name);
+        crate::custbox::forget_db(&self.name);
         self.flush_then_stop_fxc().await;
         if let Some(t) = self.tenant.take() {
             crate::fair::note_written(&self.name, 0, true);
@@ -1266,6 +1267,7 @@ impl Entry {
         self.sstat.clear();
         self.meta_clear();
         crate::opening::forget_db(&self.name);
+        crate::custbox::forget_db(&self.name);
         self.flush_then_stop_fxc().await;
         if let Some(t) = self.tenant.take() {
             t.close().await?;
@@ -1820,6 +1822,21 @@ impl ReadView {
         // once its record is confirmed: serve or record only while nothing is in flight
         let all_durable = g.tenant.as_ref().map_or(false, |t| (!durable_reads(&g.name) || t.all_durable()) && t.reads_see_latest());
         *self.fc.lock().unwrap() = crate::opening::begin(&g.name, coll, &field.field, filter, &indexes, all_durable);
+    }
+
+    /// The customer's box (custbox.rs, P-big-speed fix 3): when this find pins one customer of a customer-keyed
+    /// collection and that customer was not warmed recently, read its whole key range once, so the query and the
+    /// customer's next requests find their blocks in the caches.
+    pub async fn customer_box_warm(&self, coll: &str, filter: &Document) {
+        if !crate::custbox::ENABLED.load(Relaxed) {
+            return;
+        }
+        let Some(g) = &self.g else { return };
+        let Ok(opts) = self.coll_opts(coll).await else { return };
+        let Some(field) = crate::custkey::of_opts(opts.as_ref()) else { return };
+        let Some(v) = crate::opening::customer_value(&field.field, filter) else { return };
+        let Some(t) = g.tenant.as_ref() else { return };
+        crate::custbox::warm(&g.name, &crate::custkey::comp(&v), t).await;
     }
 
     /// First course: end of the query (keeps the opening when `ok`).

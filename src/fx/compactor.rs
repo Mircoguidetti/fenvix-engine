@@ -745,7 +745,7 @@ impl Compactor {
         // at most `l0_read_parallel()` at a time, and only each SST's highest seq is kept (not its rows)
         use futures::{StreamExt, TryStreamExt};
         // big-speed merge: each SST is fetched whole with one GET (c2-fix-clone-uploads' `WholeObjects`), so in flight at
-        // most `l0_read_parallel()` SSTs are in memory at once
+        // most `l0_read_parallel()` SSTs are in memory at once (sized from the memory budget, P-big-speed fix 1)
         let jobs: Vec<_> = views
             .into_iter()
             .map(|view| {
@@ -1562,7 +1562,7 @@ fn whole_objects(store: &Arc<dyn ObjectStore>) -> Arc<dyn ObjectStore> {
 
 /// How many L0 SSTs a compactor's start reads at once (each whole in memory while it is read).
 pub fn l0_read_parallel() -> usize {
-    4
+    crate::membudget::get().l0_read_parallel
 }
 
 /// A store that reads each object it is asked for once, whole, and answers every range of it from memory.

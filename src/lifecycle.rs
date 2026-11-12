@@ -1841,6 +1841,54 @@ impl Tenant {
         Ok(r)
     }
 
+    /// P-big-speed fix 3 (the customer's box, `mongo-server/src/custbox.rs`): bring the blocks a read of the physical
+    /// range [lo, hi) needs into the caches, all at once and without decoding a row: our runs' blocks for the range (one
+    /// ranged GET per run, every run in parallel, `View::warm_range`) and, at the same time, SlateDB's blocks for it
+    /// (a raw scan with the read's X_d filter, so SSTs holding only absorbed rows are skipped as in every read, its
+    /// blocks cached). Returns (runs read, run blocks fetched, SlateDB rows passed). Answers never depend on it.
+    pub async fn warm_range(&self, lo: &[u8], hi: &[u8], read_ahead: usize) -> Result<(u64, u64, u64)> {
+        if lo >= hi {
+            return Ok((0, 0, 0));
+        }
+        let st = self.step_state().await?;
+        let view = st.fx.clone();
+        let mut opts = slatedb::config::ScanOptions {
+            read_ahead_bytes: read_ahead,
+            max_fetch_tasks: crate::tiered::scan_fetch_tasks(read_ahead),
+            cache_blocks: true,
+            durability_filter: slatedb::config::DurabilityLevel::Memory,
+            ..Default::default()
+        };
+        if let Some(c) = view.as_ref().and_then(|v| crate::fx::seqfilter::context(v.x_d)) {
+            opts.filter_context = Some(c);
+        }
+        let slate = async {
+            let range = (std::ops::Bound::Included(lo.to_vec()), std::ops::Bound::Excluded(hi.to_vec()));
+            let mut it = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
+                Mode::Reader(r) => r.scan_with_options(range, &opts).await?,
+                Mode::Writer(db) => db.scan_with_options(range, &opts).await?,
+            };
+            let mut n = 0u64;
+            while it.next().await?.is_some() {
+                n += 1;
+            }
+            Ok::<_, anyhow::Error>(n)
+        };
+        let runs = async {
+            match &view {
+                Some(v) => {
+                    let hold = self.holds.take(Arc::clone(v));
+                    let r = v.warm_range(lo, hi).await;
+                    drop(hold);
+                    r
+                }
+                None => Ok((0, 0)),
+            }
+        };
+        let (n, (r, b)) = futures::future::try_join(slate, runs).await?;
+        Ok((r, b, n))
+    }
+
     /// Load the newest version of our manifest (at open, after an upgrade, on a reader's refresh). A writer checks that
     /// SlateDB has every row up to X_d and publishes a fence version, a copy of the newest under the next number (review
     /// of step 0, F1): a late PUT of a dead process then cannot land a version this writer does not know.

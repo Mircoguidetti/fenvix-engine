@@ -130,6 +130,7 @@ impl Server {
             }
         } else if tx.is_none() {
             let mut g = self.dbs.read(db).await?;
+            g.customer_box_warm(coll, &filter).await;
             g.first_course_begin(coll, &filter).await;
             let res = self.find_part(&mut g, db, coll, &filter, &sort, want, hint_arg, None).await;
             g.first_course_end(res.is_ok());

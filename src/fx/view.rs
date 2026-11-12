@@ -434,6 +434,67 @@ impl View {
         Ok(best)
     }
 
+    /// P-big-speed fix 3 (the customer's box): every block of every run that can hold rows in [lo, hi), fetched at
+    /// once (one ranged GET per run, every run in parallel) and kept whole in the counter; no row is decoded beyond the
+    /// block's check. The runs are the ones a read of [lo, hi) would read: each group's sealed run and the delta runs
+    /// above its X_g, minus those whose customer filter excludes the range. Returns (runs read, blocks fetched).
+    /// Answers never depend on it: the blocks of a run are immutable, and every read checks the counter first.
+    pub async fn warm_range(self: &Arc<Self>, lo: &[u8], hi: &[u8]) -> Result<(u64, u64)> {
+        let mut cands: Vec<Arc<RunH>> = Vec::new();
+        let mut seen: std::collections::HashSet<[u8; RUN_ID_LEN]> = Default::default();
+        for gi in self.group_of(lo)..self.groups.len() {
+            let g = &self.groups[gi];
+            if &g.lo[..] >= hi {
+                break;
+            }
+            let glo = std::cmp::max(lo, &g.lo[..]);
+            let ghi = match self.group_hi(gi) {
+                Some(b) => std::cmp::min(hi, b),
+                None => hi,
+            };
+            let mut push = |h: &Arc<RunH>| {
+                if h.meets(glo, Some(ghi)) && !h.filter_excludes(lo, Some(hi)) && seen.insert(h.id) {
+                    cands.push(Arc::clone(h));
+                }
+            };
+            if let Some(s) = &g.sealed {
+                push(s);
+            }
+            for d in self.delta.iter().filter(|d| !skip_delta() && above_cut(d.line.max_seq, g.x_g)) {
+                push(d);
+            }
+        }
+        let store = &self.store;
+        let jobs = cands.into_iter().map(|h| async move {
+            let run = h.open(store).await?.clone();
+            let Some((a, z)) = run.fence.blocks_for(lo, Some(hi)) else { return Ok::<_, anyhow::Error>((1u64, 0u64)) };
+            if let Some(r) = run.customers.customer_of(lo) {
+                if !run.filter.may_contain(&lo[r]) {
+                    return Ok((1, 0));
+                }
+            }
+            let whole = |_: usize| super::counter::Need::Key(&[]);
+            if (a..=z).all(|b| super::counter::cached(&run, b, None, &whole(b))) {
+                return Ok((1, 0));
+            }
+            fetch_h(store, &h, &run, a, z, None, &whole).await?;
+            Ok((1, (z + 1 - a) as u64))
+        });
+        let r = futures::future::try_join_all(jobs).await?;
+        Ok(r.into_iter().fold((0, 0), |(a, b), (x, y)| (a + x, b + y)))
+    }
+
+    /// Open every run of this version (its fences and customer filter: the runs' "maps"), at most `parallel` at once.
+    /// P-big-speed fix 2: done when a version is loaded, so a cold read never waits for a run's open.
+    pub async fn open_all(self: &Arc<Self>, parallel: usize) -> Result<usize> {
+        use futures::{StreamExt, TryStreamExt};
+        let hs: Vec<Arc<RunH>> = self.groups.iter().filter_map(|g| g.sealed.clone()).chain(self.delta.iter().cloned()).filter(|h| h.run.get().is_none()).collect();
+        let n = hs.len();
+        let store = &self.store;
+        futures::stream::iter(hs.into_iter().map(|h| async move { h.open(store).await.map(|_| ()) })).buffer_unordered(parallel.max(1)).try_collect::<Vec<_>>().await?;
+        Ok(n)
+    }
+
     /// A cursor over the runs' rows in [lo, hi) (read rule applied, delete envelopes included), ascending or descending.
     pub fn cursor(self: &Arc<Self>, lo: &[u8], hi: Option<&[u8]>, reverse: bool, read_ahead: usize) -> RunsCursor {
         let mut gs: Vec<usize> = Vec::new();
