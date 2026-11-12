@@ -425,7 +425,7 @@ impl Dbs {
                 if g.tenant.as_ref().is_some_and(|t| !t.fx_refresh_due()) && g.leases.valid(&g.name) {
                     crate::locallog::check_open(&g.name)?;
                     // F7: the tenant begins no hold past the end of this process's serving lease
-                    g.tenant.as_ref().unwrap().set_serving_until(g.leases.serving_until(&g.name));
+                    g.tenant.as_ref().unwrap().set_serving_source(g.serving_source());
                     g.touch();
                     return Ok(ReadView { g: Some(Guard::Read(g)), copts: Default::default(), fc: Default::default() });
                 }
@@ -784,8 +784,18 @@ impl Entry {
         let r = self.ensure_open_inner().await;
         if matches!(r, Ok(true)) {
             self.pin_opening();
+            // also the command that opened the database has the F7 guard (before, its deadline was not set yet)
+            if let Some(t) = self.tenant.as_ref() {
+                t.set_serving_source(self.serving_source());
+            }
         }
         r
+    }
+
+    /// The F7 deadline of this database, read from the lease at each check (`Tenant::set_serving_source`).
+    pub(crate) fn serving_source(&self) -> tenant_bench::lifecycle::ServingSource {
+        let (leases, name) = (Arc::clone(&self.leases), self.name.clone());
+        Arc::new(move || leases.serving_until(&name))
     }
 
     /// The current command uses this opening of the tenant from now on (its first successful open, or its first
@@ -816,8 +826,7 @@ impl Entry {
         if self.tenant.is_some() {
             if self.leases.valid(&self.name) {
                 // F7 (compaction 2, step 4): the tenant begins no hold past the end of this process's serving lease
-                let until = self.leases.serving_until(&self.name);
-                self.tenant.as_ref().unwrap().set_serving_until(until);
+                self.tenant.as_ref().unwrap().set_serving_source(self.serving_source());
                 // a reader refreshes its version of our manifest before T_pin (fx, rule 6)
                 if self.tenant.as_ref().unwrap().fx_refresh_due() {
                     self.tenant.as_mut().unwrap().fx_refresh().await?;

@@ -1,0 +1,6 @@
+base-b10k- trial 0 cold: error after 9.2 s: database d: this process's serving lease expired; it begins no new read (F7); retry, full error: {'o
+base-b10k- trial 0 warm: first batch 3926 ms, all 1000000 in 4.6 s
+base-b10k- trial 1 cold: error after 8.0 s: database d: this process's serving lease expired; it begins no new read (F7); retry, full error: {'o
+base-b10k- trial 1 warm: first batch 3945 ms, all 1000000 in 4.6 s
+base-b10k- trial 2 cold: error after 8.2 s: database d: this process's serving lease expired; it begins no new read (F7); retry, full error: {'o
+base-b10k- trial 2 warm: first batch 4089 ms, all 1000000 in 4.8 s

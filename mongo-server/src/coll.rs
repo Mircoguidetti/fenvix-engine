@@ -2068,3 +2068,126 @@ impl Writes {
         Ok(())
     }
 }
+
+/// Whether a find can be answered page by page in natural order (`natural_page`): no sort, no transaction, a plain
+/// collection scan in natural order (no index serves the filter), no text, geo or `_id` condition (`_id` conditions get
+/// their order from the `_id` index elsewhere), insertion order kept by the collection (fix-long-commands).
+pub async fn natural_streamable(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], filter: &Document, hint: &Hint) -> R<bool> {
+    fn touches_id(f: &Document) -> bool {
+        f.iter().any(|(k, v)| k == "_id" || (k.starts_with('$') && matches!(v, Bson::Array(a) if a.iter().any(|s| matches!(s, Bson::Document(d) if touches_id(d))))))
+    }
+    if touches_id(filter) || crate::text::has_text(filter) || crate::geo_query::filter_has_geo(filter) || !matches!(hint, Hint::None | Hint::Natural(true)) {
+        return Ok(false);
+    }
+    let o = FindOpts { filter, sort: &[], want: None, hint: hint.clone(), ttl: None, ov: None };
+    if !matches!(plan_for(indexes, &o), Plan::Coll { reverse: false }) {
+        return Ok(false);
+    }
+    Ok(crate::natural::enabled(g, coll).await?)
+}
+
+/// One page of a natural-order scan: the matching documents after natural-order number `after` (exclusive; None: from
+/// the start), at most `want` of them and up to `max_bytes`, and the number of the last entry examined. `done`: the scan
+/// reached the end. A page stops exactly at its last document: the entries after it are read again by the next page,
+/// so a document deleted or changed in between is seen as it is then (nothing is held between pages). Each page is its
+/// own read; the next starts after the stored natural-order number, which is the same in every process and every
+/// opening, so pages never repeat or skip a document across a lease renewal, a reopen or a takeover.
+pub struct NaturalPage {
+    pub docs: Vec<Document>,
+    pub last: Option<u64>,
+    pub done: bool,
+}
+
+pub async fn natural_page(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], filter: &Document, after: Option<u64>, want: usize, max_bytes: usize) -> R<NaturalPage> {
+    tenant_bench::counting::set_phase(3);
+    let specs = index::ttl_specs(indexes);
+    let ttl = if specs.is_empty() { None } else { Some((&specs[..], crate::cmd_data::now_ms())) };
+    let o = FindOpts { filter, sort: &[], want: None, hint: Hint::None, ttl, ov: None };
+    let np = crate::natural::prefix(coll);
+    let stop = prefix_end(&np);
+    let mut start = match after {
+        Some(s) => crate::natural::key(coll, s.saturating_add(1)),
+        None => np.clone(),
+    };
+    let mut out = Vec::new();
+    let mut bytes = 0usize;
+    let mut last = after;
+    // A chunk is sized to what the page still needs (no document is decoded only to be thrown away at the page
+    // stop); when the filter drops documents the floor doubles, so a selective filter still reads in large chunks.
+    let mut floor = 256usize;
+    loop {
+        let chunk = want.saturating_sub(out.len()).clamp(floor, NATURAL_CHUNK);
+        let rows = g.scan_range(&start, stop.as_deref(), false, Some(chunk), INDEX_READ_AHEAD).await?;
+        let n = rows.len();
+        let ids: Vec<Vec<u8>> = rows.iter().map(|(_, v)| v.to_vec()).collect();
+        let docs = docs_aligned(g, coll, &ids).await?;
+        for ((k, _), (id, d)) in rows.iter().zip(ids.iter().zip(docs)) {
+            last = k.get(np.len()..).and_then(|s| s.try_into().ok()).map(u64::from_be_bytes).or(last);
+            let d = match d {
+                Some(d) => d,
+                None => match moved_doc(g, coll, id).await? {
+                    Some(d) => d,
+                    None => continue, // gone
+                },
+            };
+            if visible(&d, &o) && matches(&d, filter)? {
+                bytes += crate::query::bson_size(&d);
+                out.push(d);
+                if out.len() >= want || bytes >= max_bytes {
+                    return Ok(NaturalPage { docs: out, last, done: false });
+                }
+            }
+        }
+        if n < chunk {
+            return Ok(NaturalPage { docs: out, last, done: true });
+        }
+        let mut k = rows.last().unwrap().0.to_vec();
+        k.push(0);
+        start = k;
+        floor = (floor * 2).min(NATURAL_CHUNK);
+    }
+}
+
+const NATURAL_CHUNK: usize = 8192;
+
+/// The documents under these key suffixes, position by position (`None` where nothing is stored under a suffix: the
+/// caller looks for a moved document). Same cost-based choice as `docs_by_ids`, without matching documents back to
+/// their keys.
+async fn docs_aligned(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Option<Document>>> {
+    let prefix = doc_prefix(coll);
+    tenant_bench::counting::set_phase(2);
+    if ids.is_empty() {
+        return Ok(vec![]);
+    }
+    if prefer_scan(g.approx_bytes(), ids.len()) {
+        let want: HashSet<&[u8]> = ids.iter().map(|i| i.as_slice()).collect();
+        let (lo, hi) = (ids.iter().min().unwrap(), ids.iter().max().unwrap());
+        let mut start = [&prefix[..], lo].concat();
+        let mut stop = [&prefix[..], hi].concat();
+        stop.push(0);
+        let mut found: HashMap<Vec<u8>, Document> = HashMap::with_capacity(ids.len());
+        loop {
+            let rows = g.scan_range(&start, Some(&stop), false, Some(FETCH_CHUNK), FETCH_SCAN_READ_AHEAD).await?;
+            let n = rows.len();
+            for (k, v) in &rows {
+                let id = &k[prefix.len()..];
+                if want.contains(id) {
+                    found.insert(id.to_vec(), decode(v)?);
+                }
+            }
+            if n < FETCH_CHUNK {
+                break;
+            }
+            let mut k = rows.last().unwrap().0.to_vec();
+            k.push(0);
+            if k >= stop {
+                break;
+            }
+            start = k;
+        }
+        return Ok(ids.iter().map(|i| found.remove(i)).collect());
+    }
+    let keys: Vec<Vec<u8>> = ids.iter().map(|id| [&prefix[..], id].concat()).collect();
+    let vals = g.get_many(&keys).await?;
+    vals.into_iter().map(|v| v.map(|v| decode(&v)).transpose()).collect()
+}

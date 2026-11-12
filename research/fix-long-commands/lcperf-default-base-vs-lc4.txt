@@ -1,0 +1,32 @@
+base: loaded 1000000
+base trial 0 cold: error after 4.6 s: Message length (138874942) is larger than server max message size (48000000)
+base trial 0 warm: error after 2.8 s: Message length (138874942) is larger than server max message size (48000000)
+base trial 1 cold: error after 7.7 s: database d: this process's serving lease expired; it begins no new read (F7); retry, full error: {'o
+base trial 1 warm: error after 4.5 s: Message length (138874942) is larger than server max message size (48000000)
+base trial 2 cold: error after 8.3 s: database d: this process's serving lease expired; it begins no new read (F7); retry, full error: {'o
+base trial 2 warm: error after 8.4 s: database d: this process's serving lease expired; it begins no new read (F7); retry, full error: {'o
+new trial 0 cold: first batch 33 ms, all 1000000 in 8.2 s
+new trial 0 warm: first batch 2 ms, all 1000000 in 5.5 s
+new trial 1 cold: first batch 22 ms, all 1000000 in 6.8 s
+new trial 1 warm: first batch 3 ms, all 1000000 in 5.6 s
+new trial 2 cold: first batch 21 ms, all 1000000 in 6.9 s
+new trial 2 warm: first batch 3 ms, all 1000000 in 5.6 s
+base trial 0 cold: error after 9.6 s: Message length (138874942) is larger than server max message size (48000000)
+base trial 0 warm: error after 4.3 s: Message length (138874942) is larger than server max message size (48000000)
+base trial 1 cold: error after 8.4 s: Message length (138874942) is larger than server max message size (48000000)
+base trial 1 warm: error after 7.9 s: Message length (138874942) is larger than server max message size (48000000)
+base trial 2 cold: error after 8.6 s: Message length (138874942) is larger than server max message size (48000000)
+base trial 2 warm: error after 4.2 s: Message length (138874942) is larger than server max message size (48000000)
+new trial 0 cold: first batch 30 ms, all 1000000 in 7.5 s
+new trial 0 warm: first batch 2 ms, all 1000000 in 5.6 s
+new trial 1 cold: first batch 19 ms, all 1000000 in 6.4 s
+new trial 1 warm: first batch 2 ms, all 1000000 in 5.3 s
+new trial 2 cold: first batch 23 ms, all 1000000 in 6.9 s
+new trial 2 warm: first batch 3 ms, all 1000000 in 5.4 s
+base trial 0 cold: error after 9.7 s: Message length (138874942) is larger than server max message size (48000000)
+base trial 0 warm: error after 4.3 s: Message length (138874942) is larger than server max message size (48000000)
+base trial 1 cold: error after 8.4 s: Message length (138874942) is larger than server max message size (48000000)
+base trial 1 warm: error after 4.3 s: Message length (138874942) is larger than server max message size (48000000)
+base trial 2 cold: error after 7.9 s: database d: this process's serving lease expired; it begins no new read (F7); retry, full error: {'o
+base trial 2 warm: error after 4.4 s: Message length (138874942) is larger than server max message size (48000000)
+DONE

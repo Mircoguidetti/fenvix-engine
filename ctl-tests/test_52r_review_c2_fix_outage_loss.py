@@ -75,15 +75,6 @@ def scan_ids(col, secs=300):
             time.sleep(0.5)
 
 
-def not_verified_f7(e):
-    """integration-4 (coordinator's decision, 2026-11-12): with sealed runs on, one read command longer than the F7
-    serving window (about 1-1.7 s with this 2 s lease) is refused at every try (code 134; the serving deadline is set
-    when a command enters and never renewed inside it: product defect, its own fix task). The unthrottled loaders of the
-    merged engine store several times more documents than c2-fix-outage-loss alone, so their in-process read-back is
-    such a command: refused, it is recorded and the read-back after a restart decides."""
-    print(f"not verified in-process (F7, long command): {str(e)[:160]}")
-
-
 def retry_until_ok(fn, what, secs=40):
     deadline, last = time.time() + secs, None
     while time.time() < deadline:
@@ -319,14 +310,8 @@ def _mixed_writes(throttled):
             first.setdefault(k, e)
         print(f"one error of each kind: {list(first.values())}")
         print(f"lease losses {losses}; reopenedWritesRefused {st.get('reopenedWritesRefused')}; errors {kinds}; samples {errors[:3]}")
+        problems = retry_until_ok(lambda: check(c, acked, incs, "now", 300 if throttled else 30), "the read now", 300)
         assert losses > 0, "no lease loss: the test did not reach the case"
-        try:
-            problems = retry_until_ok(lambda: check(c, acked, incs, "now", 300 if throttled else 30), "the read now", 300 if throttled else 60)
-        except AssertionError as e:
-            if throttled or "134" not in str(e):
-                raise
-            not_verified_f7(e)
-            problems = []
     finally:
         stop.set()
         srv.term()
@@ -497,12 +482,10 @@ def _split_insert_many(throttled):
         # the serving window (about 1 s with this 2 s lease) is refused at every try (review fix check, the F7 window): then
         # the count is made by a fresh process with a long lease, so it always runs.
         try:
-            scanned = retry_until_ok(lambda: scan_ids(c.d.t, 60), "the read-back scan", 300 if throttled else 60)
+            scanned = retry_until_ok(lambda: scan_ids(c.d.t, 60), "the read-back scan", 60)
             read_by = "this process"
         except AssertionError as e:
-            if throttled or "134" not in str(e):
-                raise
-            not_verified_f7(e)
+            print(f"live read-back refused: {str(e)[:160]}")
             srv.term()
             fresh = Server(bucket, "rvsplit2", idle=600, extra=["--lease-ttl-secs", "30"]).start()
             try:

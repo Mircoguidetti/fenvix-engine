@@ -116,6 +116,12 @@ impl Server {
             }
             return self.find_tailable(db, coll, &filter, projection.as_ref(), limit, skip, batch, bool_arg(cmd.get("awaitData"), false), tx).await;
         }
+        // a plain find in natural order: answered page by page (fix-long-commands), its first batch as soon as it is read
+        if tx.is_none() && !ext.active() && sort.is_empty() && coll != "system.profile" && limit >= 0 {
+            if let Some(r) = self.find_streamed(db, coll, cmd, &filter, hint_arg, skip, limit, batch, single).await? {
+                return Ok(r);
+            }
+        }
         // whether the collection is clustered, when the plain read below already knows it
         let mut clustered: Option<bool> = None;
         let mut docs = if ext.active() {
@@ -178,6 +184,66 @@ impl Server {
             self.mark_no_cursor_timeout(&reply);
         }
         Ok(reply)
+    }
+
+    /// A find with no sort, no transaction and a plain natural-order scan as its plan, answered page by page: the first
+    /// batch comes from the first pages only, and each getMore reads on from the last natural-order number read
+    /// (`cmd::StreamCur`). None when the find is not of that kind (the caller answers it as before).
+    #[allow(clippy::too_many_arguments)]
+    async fn find_streamed(&self, db: &str, coll: &str, cmd: &Document, filter: &Document, hint_arg: Option<&Bson>, skip: usize, limit: i64, batch: Option<usize>, single: bool) -> R<Option<Document>> {
+        // A getMore page is read by the getMore command, outside the find's own context: a find that carries a
+        // collation, `let` variables or a snapshot read concern is answered whole, as before streaming (review of
+        // 3cb6b38: each of them changed the answers of later pages). A collection's default collation is applied again
+        // on each page (load_indexes), so it streams.
+        let snapshot = cmd.get_document("readConcern").ok().is_some_and(|r| r.get_str("level").ok() == Some("snapshot") || r.contains_key("atClusterTime"));
+        if cmd.contains_key("collation") || cmd.contains_key("let") || snapshot {
+            return Ok(None);
+        }
+        let mut g = self.dbs.read(db).await?;
+        if !g.collections().await?.iter().any(|n| n == coll) {
+            return Ok(None);
+        }
+        let indexes = self.load_indexes(&mut g, db, coll).await?;
+        let Ok(hint) = resolve_hint(&indexes, hint_arg) else { return Ok(None) };
+        if g.coll_opts(coll).await?.map(|k| k.clustered.is_some() || k.series.is_some() || k.cap.is_some()).unwrap_or(false) {
+            return Ok(None);
+        }
+        if !crate::coll::natural_streamable(&mut g, coll, &indexes, filter, &hint).await? {
+            return Ok(None);
+        }
+        let first_n = batch.unwrap_or(101);
+        let lim = (limit > 0).then_some(limit as usize);
+        let take = first_n.min(lim.unwrap_or(usize::MAX));
+        let page = if skip + take == 0 {
+            crate::coll::NaturalPage { docs: Vec::new(), last: None, done: false }   // batchSize 0: nothing read yet
+        } else {
+            crate::coll::natural_page(&mut g, coll, &indexes, filter, None, skip + take, usize::MAX).await?
+        };
+        drop(g);
+        let proj = match cmd.get_document("projection") {
+            Ok(p) => crate::projfind::parse(p, filter)?,
+            Err(_) => None,
+        };
+        let mut buf: VecDeque<Document> = VecDeque::new();
+        for mut d in page.docs.into_iter().skip(skip) {
+            if let Some(p) = &proj {
+                d = p.apply(&d)?;
+            }
+            crate::text::strip_hidden(&mut d);
+            buf.push_back(d);
+        }
+        // (`natural_page` read at least skip + take matches, or to the end)
+        let (last, done) = (page.last, page.done);
+        let first: Vec<Document> = buf.drain(..take.min(buf.len())).collect();
+        let left = lim.map(|l| l - first.len());
+        let ns = format!("{db}.{coll}");
+        let open = !single && left != Some(0) && (!buf.is_empty() || !done || (lim.is_none() && !first.is_empty() && first.len() == first_n));
+        let st = crate::cmd::StreamCur { db: db.to_string(), coll: coll.to_string(), filter: filter.clone(), proj: cmd.get_document("projection").ok().cloned(), last, done, left, buf };
+        let reply = self.stream_reply(ns, first, st, open);
+        if matches!(cmd.get("noCursorTimeout"), Some(Bson::Boolean(true))) {
+            self.mark_no_cursor_timeout(&reply);
+        }
+        Ok(Some(reply))
     }
 
     /// `find` with `tailable`: only a capped collection has a natural order that new documents are added to. The cursor
