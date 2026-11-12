@@ -954,18 +954,14 @@ async fn replay_db(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str, mut recs:
 /// cannot be read or there is none. A marker is written in the same durable batch as the records it names, so the records
 /// of its log up to its sequence number are in object storage.
 async fn stored_marker(dbs: &Arc<crate::dbs::Dbs>, db: &str) -> Option<(String, u64)> {
+    // through our manifest as well as SlateDB (`fx/pair.rs`): a drop may have left the marker in our runs only. Read
+    // without the database's lease and maybe while another process writes it: a marker read here was written durably, so
+    // at worst it is older than the newest one, and fewer records are dropped (never one that is not in object storage)
+    let mut o = slatedb::config::DbReaderOptions::default();
+    o.manifest_poll_interval = Duration::from_secs(3600);
     let store = dbs.store();
-    let r = slatedb::DbReader::builder(tenant_bench::lifecycle::tenant_path(db), tenant_bench::counting::owned(&store, db))
-        .with_options(slatedb::config::DbReaderOptions::default())
-        .build()
-        .await
-        .ok()?;
-    let env = crate::layout2::reader_env(&r).await.ok();
-    let v = match env {
-        Some(env) => crate::layout2::Raw::Reader(&r, env).get(MARKER_KEY).await.ok().flatten(),
-        None => None,
-    };
-    let _ = r.close().await;
+    let r = tenant_bench::fx::pair::PairedReader::open_follow(&store, db, tenant_bench::lifecycle::tenant_path(db), tenant_bench::fx::pair::Follow::Newest, o).await.ok()?;
+    let v = crate::layout2::Raw::Paired(&r).get(MARKER_KEY).await.ok().flatten();
     v.as_deref().and_then(parse_marker)
 }
 
