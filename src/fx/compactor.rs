@@ -894,6 +894,17 @@ impl Compactor {
                 {
                     let live: std::collections::HashSet<String> = self.db.manifest().l0().iter().map(|v| v.id.to_string()).collect();
                     let mut l: Vec<(String, u64)> = next.absorbed_l0.iter().filter(|(id, _)| live.contains(id)).cloned().collect();
+                    // perf-latency-on-i4: also the SSTs this compactor knows as absorbed without having listed them (those
+                    // its start recognised by reading them: an SST flushed before the version they were absorbed by, which
+                    // listed none). Before, they were read again at every start (MEASURED: 6 of 19 in
+                    // r3_restart_takes_absorbed_l0_from_the_version, 2 of 4 runs of the fx tests). Each is at or below
+                    // the version's X_d (recognised so), so listing it is what the start would find by reading it.
+                    let known: Vec<(String, u64)> = self.absorbed.lock().unwrap().iter().map(|(id, hi)| (id.to_string(), *hi)).collect();
+                    for (id, hi) in known {
+                        if live.contains(&id) && hi <= next.x_d && !l.iter().any(|(x, _)| *x == id) {
+                            l.push((id, hi));
+                        }
+                    }
                     for (id, hi) in &ids {
                         let id = id.to_string();
                         if !l.iter().any(|(x, _)| *x == id) {
