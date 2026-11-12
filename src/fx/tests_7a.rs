@@ -67,6 +67,8 @@ async fn envelopes_write_waits_one_t_pin_after_its_announcement() {
     settings(false);
     control("e1now", &CONTROL_E1_AT_ONCE);
     crate::envelope::START.store(true, Relaxed);
+    // c2-fix-long-reads: a read step renews a stale state before it reads; this test checks the guard behind the renewal
+    CONTROL_NO_RENEW.store(true, Relaxed);
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
     let id = "e1-write";
     let mut t = lc(&store).create(id).await.unwrap();
@@ -85,6 +87,7 @@ async fn envelopes_write_waits_one_t_pin_after_its_announcement() {
     let late_env = t.envelope_seq();
     let stale = r.get(key(2)).await;
     crate::envelope::START.store(false, Relaxed);
+    CONTROL_NO_RENEW.store(false, Relaxed);
     assert!(announced, "the first write of release E1 must announce it first (rule 26)");
     assert_eq!(early_env, None, "release E1 wrote the marker before its announcement was T_pin old (rule 26)");
     assert!(late_env.is_some(), "release E1 never started envelopes");

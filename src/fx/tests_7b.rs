@@ -580,6 +580,8 @@ async fn the_follower_window_starts_before_its_head_request() {
     settings(false);
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
     let id = "late-head";
+    // c2-fix-long-reads: a read step renews a stale state before it reads; this test checks the guard behind the renewal
+    CONTROL_NO_RENEW.store(true, Relaxed);
     let mut w = lc(&store).create(id).await.unwrap();
     put(&mut w, b"doc/c/00001", b"a").await;
     let late = Arc::new(LateHead { inner: Arc::clone(&store), delay: Duration::from_millis(200), served: Default::default() });
@@ -604,6 +606,7 @@ async fn the_follower_window_starts_before_its_head_request() {
     tokio::time::sleep(at.saturating_sub(t_req.elapsed())).await;
     let r = f.get(b"doc/c/00001".to_vec()).await;
     crate::envelope::START.store(false, Relaxed);
+    CONTROL_NO_RENEW.store(false, Relaxed);
     f.abandon().await;
     w.abandon().await;
     assert!(answered >= Duration::from_millis(200), "the answer was not late: {answered:?}");
