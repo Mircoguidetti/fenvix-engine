@@ -35,3 +35,30 @@ def cross_zone_allowance(cmd, elapsed_h):
         total += XZ_LOAD_OTHER_ZONE
     est = float(cmd.get("job_hours_total") or 0) or 1.0
     return round(total * min(1.0, max(0.0, elapsed_h) / est), 4)
+
+
+# total review R6 (2026-11-12): the jobs without the m30 program (M2, M3, B, the pilot) ended FINITO whatever their
+# programs found; a takeover run that lost an acknowledged write would have been a green job (rule 8). Now an
+# extras-type machine (extras, peak, agent) whose end file is missing, did not finish, or lists a program that returned
+# non-zero, was skipped, or never ran, makes the job red. takeovers.py exits 1 when its verdict is not PASS, so a lost
+# write is a non-zero code here.
+EXTRAS_DONE = "EXTRAS_DONE"
+
+
+def programs_blocker(name, end, asked):
+    """The reason the job must be red after machine `name`, or None. `end` is its end.json as a dict (None when
+    missing); `asked` the programs the command gave it."""
+    if not end:
+        return f"{name}: no end file"
+    if end.get("outcome") != EXTRAS_DONE:
+        return f"{name}: {end.get('outcome') or 'no outcome'}"
+    ran = {}
+    for item in str(end.get("programs", "")).split():
+        if ":" in item:
+            p, v = item.split(":", 1)
+            ran[p] = v
+    bad = [f"{p} {v}" for p, v in ran.items() if v != "rc=0"]
+    missing = [p for p in asked if p not in ran]
+    if bad or missing:
+        return f"{name}: " + "; ".join(([f"failed: {', '.join(bad)}"] if bad else []) + ([f"did not run: {', '.join(missing)}"] if missing else []))
+    return None

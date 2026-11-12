@@ -284,3 +284,5 @@ json.dump(summary, open(os.path.join(a.out, f"{tag}-summary.json"), "w"), indent
 print(json.dumps({k: v for k, v in summary.items() if k != "takeovers"}))
 print(f"TAKEOVERS: {summary['verdict']} ({len(times)}/{a.n} takeovers, {len(acked)} acknowledged, {summary['lost']} lost (missing by read {missing}), "
       f"{state['after_kill']} confirmed after a kill)")
+# total review R6: a verdict that is not PASS is a failed program (the job turns red, step9/ci/outcomes.py)
+sys.exit(0 if passed else 1)

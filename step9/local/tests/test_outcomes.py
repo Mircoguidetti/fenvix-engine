@@ -49,3 +49,39 @@ if __name__ == "__main__":
         fn()
         print(f"PASS {name}")
     print("ALL PASS")
+
+
+# total review R6 (2026-11-12): every job is red when one of its programs fails, is skipped or does not run
+def test_programs_all_zero_is_not_red():
+    end = {"finished": True, "outcome": "EXTRAS_DONE", "programs": "s3-first-byte:rc=0 log-ack:rc=0 takeovers:rc=0 takeovers-logoff:rc=0"}
+    assert outcomes.programs_blocker("extras", end, ["s3-first-byte", "log-ack", "takeovers"]) is None
+
+
+def test_a_failed_program_is_red():
+    end = {"finished": True, "outcome": "EXTRAS_DONE", "programs": "s3-first-byte:rc=0 takeovers:rc=1"}
+    assert outcomes.programs_blocker("extras", end, ["s3-first-byte", "takeovers"]) == "extras: failed: takeovers rc=1"
+
+
+def test_a_skipped_or_missing_program_is_red():
+    end = {"finished": True, "outcome": "EXTRAS_DONE", "programs": "ballast-rounds:SKIPPED"}
+    assert outcomes.programs_blocker("extras", end, ["ballast-rounds"]) == "extras: failed: ballast-rounds SKIPPED"
+    end = {"finished": True, "outcome": "EXTRAS_DONE", "programs": "s3-first-byte:rc=0"}
+    assert outcomes.programs_blocker("extras", end, ["s3-first-byte", "log-ack"]) == "extras: did not run: log-ack"
+
+
+def test_no_end_or_an_early_end_is_red():
+    assert outcomes.programs_blocker("agent-bench", None, ["agent-bench"]) == "agent-bench: no end file"
+    assert outcomes.programs_blocker("write-peak", {"finished": True, "outcome": "COOK_UNREACHABLE", "programs": ""}, ["write-peak"]) == "write-peak: COOK_UNREACHABLE"
+
+
+def test_run_py_turns_the_job_red_and_takeovers_exits_non_zero_on_fail():
+    src = open(os.path.join(CI, "run.py")).read()
+    for name in ('"extras", end_ex, extras', '"write-peak", end_pk, ["write-peak"]', '"agent-bench", end_ag, ["agent-bench"]'):
+        assert f"red_programs.append(outcomes_rules.programs_blocker({name}))" in src, name
+    i = src.index('outcome = "FINITO"\n    # total review R6')
+    assert 'outcome = "PROGRAM_FAILED: "' in src[i:i + 400]
+    assert src.rstrip().endswith('sys.exit(0 if outcome == "FINITO" else 1)')
+    tk = open(os.path.join(HERE, "..", "..", "programs", "takeovers.py")).read()
+    assert tk.rstrip().endswith("sys.exit(0 if passed else 1)")
+    ex = open(os.path.join(HERE, "..", "..", "machine", "extras.sh")).read()
+    assert 'outcomes+=("$name:rc=$rc")' in ex and "finish EXTRAS_DONE" in ex

@@ -320,6 +320,7 @@ def server_config(name, role, logs):
 # ---------- the round ----------
 PHASES = cmd["phases"]
 outcome, outcomes = None, {}
+red_programs = []   # total review R6: reasons the job is red although it ran to its end
 client_id = None
 try:
     say(f"step 9 round {RUN} ({MODE}): phases {PHASES}, data {cmd['data']}, pantry {PANTRY} ({cmd['pantry_mode']}), "
@@ -480,7 +481,9 @@ try:
                                    **{k: v for k, v in cmd.items() if k.endswith("_args")}})
         ex_id, _ = launch("extras", "extras", cmd["extras_client"], CLIENT_ZONE)
         wait_for("extras/end.json", watch="extras")
-        outcomes["extras"] = (get("extras/end.json") or {}).get("programs", "")
+        end_ex = get("extras/end.json")
+        outcomes["extras"] = (end_ex or {}).get("programs", "")
+        red_programs.append(outcomes_rules.programs_blocker("extras", end_ex, extras))
         plat.terminate([ex_id])
         machines[ex_id]["end"] = time.time()
     else:
@@ -499,7 +502,9 @@ try:
                                  "cook": {"ip": ip1, "port": 27017}, "write_peak_args": cmd["write_peak_args"]})
         pk_id, _ = launch("peak", "extras", cmd["client"], CLIENT_ZONE)
         wait_for("peak/end.json", watch="peak")
-        outcomes["write-peak"] = (get("peak/end.json") or {}).get("programs", "")
+        end_pk = get("peak/end.json")
+        outcomes["write-peak"] = (end_pk or {}).get("programs", "")
+        red_programs.append(outcomes_rules.programs_blocker("write-peak", end_pk, ["write-peak"]))
         plat.terminate([pk_id])
         machines[pk_id]["end"] = time.time()
     pg = None
@@ -547,7 +552,9 @@ try:
                 say("aurora: its target is done: deleting the cluster now, while the other targets run")
                 aurora_off()
             minute("agent")
-        outcomes["agent"] = (get("agent/end.json") or {}).get("programs", "")
+        end_ag = get("agent/end.json")
+        outcomes["agent"] = (end_ag or {}).get("programs", "")
+        red_programs.append(outcomes_rules.programs_blocker("agent-bench", end_ag, ["agent-bench"]))
         plat.terminate([ag_id])
         machines[ag_id]["end"] = time.time()
         if au["start"] and not au["end"]:
@@ -564,6 +571,11 @@ try:
         outcome = "FINITO" if outcomes.get("m30", "").startswith("FINITO") else outcomes.get("m30", "NOT DONE")
     else:
         outcome = "FINITO"
+    # total review R6: a program that failed, was skipped or did not run makes the job red, m30 or not
+    red_programs = [r for r in red_programs if r]
+    if red_programs:
+        outcome = "PROGRAM_FAILED: " + " | ".join(red_programs)
+        say(f"round red: {outcome}")
 except Stop as e:
     outcome = str(e)
     say(f"round stopped: {outcome}")
