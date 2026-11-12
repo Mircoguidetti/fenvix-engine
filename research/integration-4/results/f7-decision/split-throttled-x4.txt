@@ -1,0 +1,8 @@
+lease losses 1; reopenedWritesRefused 1; read by this process; scanned 202000; calls [('ok', 101000), ('ok', 101000)]
+1 passed, 10 deselected in 22.36s
+lease losses 1; reopenedWritesRefused 1; read by this process; scanned 202000; calls [('ok', 101000), ('ok', 101000)]
+1 passed, 10 deselected in 22.63s
+lease losses 2; reopenedWritesRefused 1; read by this process; scanned 202000; calls [('ok', 101000), ('ok', 101000)]
+1 passed, 10 deselected in 22.65s
+lease losses 2; reopenedWritesRefused 1; read by this process; scanned 202000; calls [('ok', 101000), ('ok', 101000)]
+1 passed, 10 deselected in 24.55s

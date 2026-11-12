@@ -1,0 +1,7 @@
+one error of each kind: ['OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again,', "OperationFailure 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db is closed', 'code': 1, 'codeName': 'Inte"]
+lease losses 6; reopenedWritesRefused 4; errors {'OperationFailure 251': 4, 'OperationFailure 1': 10}; samples ['OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again,', 'OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again,', "OperationFailure 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db is closed', 'code': 1, 'codeName': 'Inte"]
+now: acknowledged inserts 22621, scanned 22621, by _id index 22621, by k index 22621
+now: OK
+after a restart: acknowledged inserts 22621, scanned 22621, by _id index 22621, by k index 22621
+after a restart: OK
+1 passed, 10 deselected in 50.52s

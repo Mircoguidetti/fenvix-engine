@@ -1,0 +1,11 @@
+batches 119, acknowledged 575001 documents, refused 4 batches ['database d was reopened during the command (its lease was lost); this write was not applied (an earlier step of the same command, such as an index definition, may have been undone or kept), retry, ful', 'database d was reopened during the command (its lease was lost); this write was not applied (an earlier step of the same command, such as an index definition, may have been undone or kept), retry, ful']; lease losses 10
+reopenedWritesRefused 4
+not verified in-process (F7, long command): database d: this process's serving lease expired; it begins no new read (F7); retry, full error: {'ok': 0.0, 'errmsg': "database d: this process's serving lease
+after a restart: acknowledged 575001, scanned 575001, missing 0, twice 0, refused but stored 0
+.batches 32, acknowledged 155001 documents, refused 1 batches ['database d was reopened during the command (its lease was lost); this write was not applied (an earlier step of the same command, such as an index definition, may have been undone or kept), retry, ful']; lease losses 9
+reopenedWritesRefused 1
+acknowledged 155001, scanned in-process 155001, missing from the scan 0
+after a restart: acknowledged 155001, scanned 155001, missing 0, twice 0, refused but stored 0
+.
+2 passed, 3 deselected in 181.15s (0:03:01)
+rc=0

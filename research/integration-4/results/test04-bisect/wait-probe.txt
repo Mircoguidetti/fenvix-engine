@@ -1,0 +1,6 @@
+wait 0 s: RSS 263 -> 287 MB, growth 24 MB
+wait 45 s: RSS 127 -> 184 MB, growth 57 MB
+wait 0 s: RSS 242 -> 249 MB, growth 7 MB
+wait 45 s: RSS 127 -> 185 MB, growth 58 MB
+f6b6db18 wait 45 s: RSS 112 -> 173 MB, growth 61 MB
+f6b6db18 wait 0 s: RSS 258 -> 285 MB, growth 27 MB

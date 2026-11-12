@@ -312,10 +312,12 @@ def _mixed_writes(throttled):
                 t.join(150)
         losses = srv.log_text().count("LEASE lost")
         st = c.admin.command("tenantStats")["maintenance"]
-        kinds = {}
+        kinds, first = {}, {}
         for e in errors:
             k = e.split(" ")[0] + " " + e.split(" ")[1]
             kinds[k] = kinds.get(k, 0) + 1
+            first.setdefault(k, e)
+        print(f"one error of each kind: {list(first.values())}")
         print(f"lease losses {losses}; reopenedWritesRefused {st.get('reopenedWritesRefused')}; errors {kinds}; samples {errors[:3]}")
         assert losses > 0, "no lease loss: the test did not reach the case"
         try:
@@ -455,6 +457,9 @@ def test_split_insert_many_with_driver_retries_throttled():
     _split_insert_many(throttled=True)
 
 
+DRIVER_BATCH = 100_000   # maxWriteBatchSize: the driver's split of an insertMany into commands
+
+
 def _split_insert_many(throttled):
     """insertMany calls larger than one command (the driver splits 120,000 documents into two insert commands) with the
     driver's retryable writes on, while the lease is lost several times. What the client is told must match what is stored:
@@ -516,7 +521,18 @@ def _split_insert_many(throttled):
             elif kind == "partial" and have != ids[:n]:
                 problems.append(f"partial call {ids[0]}: told nInserted={n}, stored {len(have)} (first missing {next((i for i in ids[:n] if i not in sset), None)})")
             elif kind.startswith("error") and have:
-                problems.append(f"failed call {ids[0]} ({kind}): {len(have)} documents stored")
+                # integration-4: the driver splits a call into commands of 100,000 documents; when a later command fails
+                # with a command error (not a write error), pymongo raises it without nInserted, and the earlier commands
+                # stay applied, as on mongod. Allowed: exactly the documents of the first k whole commands.
+                if have != ids[:len(have)] or len(have) % DRIVER_BATCH:
+                    problems.append(f"failed call {ids[0]} ({kind}): {len(have)} documents stored, not whole earlier commands")
+                else:
+                    print(f"failed call {ids[0]} ({kind}): its first {len(have) // DRIVER_BATCH} command(s) applied, as on mongod")
+            if kind.startswith("error 1 "):
+                # KNOWN DEFECT, not asserted here (open since fix-lease-stall, 2026-11-02): a write that races the
+                # abandon's close gets SlateDB's "Closed error: db is closed" as code 1, which the driver cannot retry,
+                # instead of a retryable refusal (134 Reopened). The coordinator decides whether it becomes a failure.
+                print(f"KNOWN DEFECT: call {ids[0]} failed with a non-retryable code 1 during a lease loss: {kind}")
         print(f"lease losses {losses}; reopenedWritesRefused {st.get('reopenedWritesRefused')}; read by {read_by}; scanned {len(scanned)}; calls {[(k, n) for k, _, n in calls]}")
         print("\n".join(problems) or "OK")
         assert losses > 0, "no lease loss: the test did not reach the case"

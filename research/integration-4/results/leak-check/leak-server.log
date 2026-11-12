@@ -1,0 +1,191 @@
+mongo-server listening on 127.0.0.1:27031 (idle close after 3 s, holder leakcheck, lease ttl 30 s)
+uploads: 0 unfinished multipart uploads under tenants/, 0 older than 3600s aborted
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+LEASE process_lease tenant=- holder=leakcheck unix_ms=1794468279574 inc=65ef6807c7d014c7 gen=1
+LEASE acquired tenant=lk0 holder=leakcheck unix_ms=1794468279577 takeover_from=-
+LEASE acquired tenant=lk0 holder=leakcheck unix_ms=1794468279584 takeover_from=-
+LEASE acquired tenant=lk0 holder=leakcheck unix_ms=1794468279602 takeover_from=- new=true
+LEASE writer_open tenant=lk0 holder=leakcheck unix_ms=1794468279617 
+LEASE acquired tenant=lk1 holder=leakcheck unix_ms=1794468279885 takeover_from=-
+LEASE acquired tenant=lk1 holder=leakcheck unix_ms=1794468279897 takeover_from=-
+LEASE acquired tenant=lk1 holder=leakcheck unix_ms=1794468279917 takeover_from=- new=true
+LEASE writer_open tenant=lk1 holder=leakcheck unix_ms=1794468279934 
+LEASE acquired tenant=lk2 holder=leakcheck unix_ms=1794468280249 takeover_from=-
+LEASE acquired tenant=lk2 holder=leakcheck unix_ms=1794468280256 takeover_from=-
+LEASE acquired tenant=lk2 holder=leakcheck unix_ms=1794468280273 takeover_from=- new=true
+LEASE writer_open tenant=lk2 holder=leakcheck unix_ms=1794468280285 
+LEASE acquired tenant=lk3 holder=leakcheck unix_ms=1794468280558 takeover_from=-
+LEASE acquired tenant=lk3 holder=leakcheck unix_ms=1794468280569 takeover_from=-
+LEASE acquired tenant=lk3 holder=leakcheck unix_ms=1794468280593 takeover_from=- new=true
+LEASE writer_open tenant=lk3 holder=leakcheck unix_ms=1794468280615 
+LEASE acquired tenant=lk4 holder=leakcheck unix_ms=1794468281027 takeover_from=-
+LEASE acquired tenant=lk4 holder=leakcheck unix_ms=1794468281038 takeover_from=-
+LEASE acquired tenant=lk4 holder=leakcheck unix_ms=1794468281095 takeover_from=- new=true
+LEASE writer_open tenant=lk4 holder=leakcheck unix_ms=1794468281165 
+LEASE acquired tenant=lk5 holder=leakcheck unix_ms=1794468281695 takeover_from=-
+LEASE acquired tenant=lk5 holder=leakcheck unix_ms=1794468281712 takeover_from=-
+LEASE acquired tenant=lk5 holder=leakcheck unix_ms=1794468281752 takeover_from=- new=true
+LEASE writer_open tenant=lk5 holder=leakcheck unix_ms=1794468281791 
+LEASE acquired tenant=lk6 holder=leakcheck unix_ms=1794468282143 takeover_from=-
+LEASE acquired tenant=lk6 holder=leakcheck unix_ms=1794468282200 takeover_from=-
+LEASE acquired tenant=lk6 holder=leakcheck unix_ms=1794468282251 takeover_from=- new=true
+LEASE writer_open tenant=lk6 holder=leakcheck unix_ms=1794468282350 
+LEASE acquired tenant=lk7 holder=leakcheck unix_ms=1794468282860 takeover_from=-
+LEASE acquired tenant=lk7 holder=leakcheck unix_ms=1794468282867 takeover_from=-
+LEASE acquired tenant=lk7 holder=leakcheck unix_ms=1794468282893 takeover_from=- new=true
+LEASE writer_open tenant=lk7 holder=leakcheck unix_ms=1794468282917 
+LEASE writer_close tenant=lk0 holder=leakcheck unix_ms=1794468283318 
+LEASE release_begin tenant=lk0 holder=leakcheck unix_ms=1794468283318 
+LEASE acquired tenant=lk8 holder=leakcheck unix_ms=1794468283319 takeover_from=-
+LEASE release tenant=lk0 holder=leakcheck unix_ms=1794468283323 ok=true
+LEASE acquired tenant=lk8 holder=leakcheck unix_ms=1794468283331 takeover_from=-
+LEASE acquired tenant=lk8 holder=leakcheck unix_ms=1794468283362 takeover_from=- new=true
+LEASE writer_open tenant=lk8 holder=leakcheck unix_ms=1794468283385 
+LEASE acquired tenant=lk9 holder=leakcheck unix_ms=1794468283852 takeover_from=-
+LEASE writer_close tenant=lk1 holder=leakcheck unix_ms=1794468283860 
+LEASE release_begin tenant=lk1 holder=leakcheck unix_ms=1794468283861 
+LEASE writer_close tenant=lk2 holder=leakcheck unix_ms=1794468283863 
+LEASE release_begin tenant=lk2 holder=leakcheck unix_ms=1794468283863 
+LEASE acquired tenant=lk9 holder=leakcheck unix_ms=1794468283864 takeover_from=-
+LEASE release tenant=lk1 holder=leakcheck unix_ms=1794468283865 ok=true
+LEASE release tenant=lk2 holder=leakcheck unix_ms=1794468283891 ok=true
+LEASE acquired tenant=lk9 holder=leakcheck unix_ms=1794468283904 takeover_from=- new=true
+LEASE writer_open tenant=lk9 holder=leakcheck unix_ms=1794468283923 
+LEASE acquired tenant=lk10 holder=leakcheck unix_ms=1794468284272 takeover_from=-
+LEASE acquired tenant=lk10 holder=leakcheck unix_ms=1794468284294 takeover_from=-
+LEASE writer_close tenant=lk3 holder=leakcheck unix_ms=1794468284302 
+LEASE release_begin tenant=lk3 holder=leakcheck unix_ms=1794468284303 
+LEASE release tenant=lk3 holder=leakcheck unix_ms=1794468284309 ok=true
+LEASE acquired tenant=lk10 holder=leakcheck unix_ms=1794468284323 takeover_from=- new=true
+LEASE writer_open tenant=lk10 holder=leakcheck unix_ms=1794468284343 
+LEASE acquired tenant=lk11 holder=leakcheck unix_ms=1794468284782 takeover_from=-
+LEASE acquired tenant=lk11 holder=leakcheck unix_ms=1794468284801 takeover_from=-
+LEASE writer_close tenant=lk4 holder=leakcheck unix_ms=1794468284805 
+LEASE release_begin tenant=lk4 holder=leakcheck unix_ms=1794468284805 
+LEASE release tenant=lk4 holder=leakcheck unix_ms=1794468284807 ok=true
+LEASE acquired tenant=lk11 holder=leakcheck unix_ms=1794468284824 takeover_from=- new=true
+LEASE writer_open tenant=lk11 holder=leakcheck unix_ms=1794468284845 
+LEASE acquired tenant=lk12 holder=leakcheck unix_ms=1794468285339 takeover_from=-
+LEASE acquired tenant=lk12 holder=leakcheck unix_ms=1794468285369 takeover_from=-
+LEASE writer_close tenant=lk5 holder=leakcheck unix_ms=1794468285375 
+LEASE release_begin tenant=lk5 holder=leakcheck unix_ms=1794468285375 
+LEASE release tenant=lk5 holder=leakcheck unix_ms=1794468285378 ok=true
+LEASE acquired tenant=lk12 holder=leakcheck unix_ms=1794468285432 takeover_from=- new=true
+LEASE writer_open tenant=lk12 holder=leakcheck unix_ms=1794468285478 
+LEASE acquired tenant=lk13 holder=leakcheck unix_ms=1794468285861 takeover_from=-
+LEASE acquired tenant=lk13 holder=leakcheck unix_ms=1794468285883 takeover_from=-
+LEASE acquired tenant=lk13 holder=leakcheck unix_ms=1794468285909 takeover_from=- new=true
+LEASE writer_open tenant=lk13 holder=leakcheck unix_ms=1794468285922 
+LEASE acquired tenant=lk14 holder=leakcheck unix_ms=1794468286245 takeover_from=-
+LEASE acquired tenant=lk14 holder=leakcheck unix_ms=1794468286264 takeover_from=-
+LEASE acquired tenant=lk14 holder=leakcheck unix_ms=1794468286290 takeover_from=- new=true
+LEASE writer_close tenant=lk6 holder=leakcheck unix_ms=1794468286338 
+LEASE release_begin tenant=lk6 holder=leakcheck unix_ms=1794468286338 
+LEASE release tenant=lk6 holder=leakcheck unix_ms=1794468286351 ok=true
+LEASE writer_open tenant=lk14 holder=leakcheck unix_ms=1794468286354 
+LEASE acquired tenant=lk15 holder=leakcheck unix_ms=1794468286673 takeover_from=-
+LEASE acquired tenant=lk15 holder=leakcheck unix_ms=1794468286685 takeover_from=-
+LEASE acquired tenant=lk15 holder=leakcheck unix_ms=1794468286705 takeover_from=- new=true
+LEASE writer_open tenant=lk15 holder=leakcheck unix_ms=1794468286755 
+LEASE writer_close tenant=lk7 holder=leakcheck unix_ms=1794468286794 
+LEASE release_begin tenant=lk7 holder=leakcheck unix_ms=1794468286794 
+LEASE release tenant=lk7 holder=leakcheck unix_ms=1794468286798 ok=true
+LEASE acquired tenant=lk16 holder=leakcheck unix_ms=1794468287047 takeover_from=-
+LEASE acquired tenant=lk16 holder=leakcheck unix_ms=1794468287065 takeover_from=-
+LEASE acquired tenant=lk16 holder=leakcheck unix_ms=1794468287084 takeover_from=- new=true
+LEASE writer_open tenant=lk16 holder=leakcheck unix_ms=1794468287108 
+LEASE writer_close tenant=lk8 holder=leakcheck unix_ms=1794468287341 
+LEASE release_begin tenant=lk8 holder=leakcheck unix_ms=1794468287342 
+LEASE release tenant=lk8 holder=leakcheck unix_ms=1794468287369 ok=true
+LEASE acquired tenant=lk17 holder=leakcheck unix_ms=1794468287484 takeover_from=-
+LEASE acquired tenant=lk17 holder=leakcheck unix_ms=1794468287492 takeover_from=-
+LEASE acquired tenant=lk17 holder=leakcheck unix_ms=1794468287512 takeover_from=- new=true
+LEASE writer_open tenant=lk17 holder=leakcheck unix_ms=1794468287540 
+LEASE writer_close tenant=lk9 holder=leakcheck unix_ms=1794468287788 
+LEASE release_begin tenant=lk9 holder=leakcheck unix_ms=1794468287788 
+LEASE release tenant=lk9 holder=leakcheck unix_ms=1794468287795 ok=true
+LEASE acquired tenant=lk18 holder=leakcheck unix_ms=1794468288016 takeover_from=-
+LEASE acquired tenant=lk18 holder=leakcheck unix_ms=1794468288024 takeover_from=-
+LEASE acquired tenant=lk18 holder=leakcheck unix_ms=1794468288043 takeover_from=- new=true
+LEASE writer_open tenant=lk18 holder=leakcheck unix_ms=1794468288061 
+LEASE writer_close tenant=lk10 holder=leakcheck unix_ms=1794468288403 
+LEASE release_begin tenant=lk10 holder=leakcheck unix_ms=1794468288403 
+LEASE release tenant=lk10 holder=leakcheck unix_ms=1794468288413 ok=true
+LEASE acquired tenant=lk19 holder=leakcheck unix_ms=1794468288468 takeover_from=-
+LEASE acquired tenant=lk19 holder=leakcheck unix_ms=1794468288494 takeover_from=-
+LEASE acquired tenant=lk19 holder=leakcheck unix_ms=1794468288558 takeover_from=- new=true
+LEASE writer_open tenant=lk19 holder=leakcheck unix_ms=1794468288628 
+LEASE writer_close tenant=lk11 holder=leakcheck unix_ms=1794468288808 
+LEASE release_begin tenant=lk11 holder=leakcheck unix_ms=1794468288809 
+LEASE release tenant=lk11 holder=leakcheck unix_ms=1794468288815 ok=true
+LEASE writer_close tenant=lk12 holder=leakcheck unix_ms=1794468289406 
+LEASE release_begin tenant=lk12 holder=leakcheck unix_ms=1794468289406 
+LEASE release tenant=lk12 holder=leakcheck unix_ms=1794468289418 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE writer_close tenant=lk14 holder=leakcheck unix_ms=1794468289842 
+LEASE release_begin tenant=lk14 holder=leakcheck unix_ms=1794468289842 
+LEASE writer_close tenant=lk13 holder=leakcheck unix_ms=1794468289847 
+LEASE release_begin tenant=lk13 holder=leakcheck unix_ms=1794468289847 
+LEASE release tenant=lk14 holder=leakcheck unix_ms=1794468289847 ok=true
+LEASE release tenant=lk13 holder=leakcheck unix_ms=1794468289858 ok=true
+LEASE writer_close tenant=lk15 holder=leakcheck unix_ms=1794468290299 
+LEASE release_begin tenant=lk15 holder=leakcheck unix_ms=1794468290299 
+LEASE release tenant=lk15 holder=leakcheck unix_ms=1794468290311 ok=true
+LEASE writer_close tenant=lk16 holder=leakcheck unix_ms=1794468290834 
+LEASE release_begin tenant=lk16 holder=leakcheck unix_ms=1794468290834 
+LEASE release tenant=lk16 holder=leakcheck unix_ms=1794468290848 ok=true
+LEASE writer_close tenant=lk17 holder=leakcheck unix_ms=1794468291316 
+LEASE release_begin tenant=lk17 holder=leakcheck unix_ms=1794468291317 
+LEASE release tenant=lk17 holder=leakcheck unix_ms=1794468291320 ok=true
+LEASE writer_close tenant=lk18 holder=leakcheck unix_ms=1794468291803 
+LEASE release_begin tenant=lk18 holder=leakcheck unix_ms=1794468291803 
+LEASE release tenant=lk18 holder=leakcheck unix_ms=1794468291808 ok=true
+LEASE writer_close tenant=lk19 holder=leakcheck unix_ms=1794468292276 
+LEASE release_begin tenant=lk19 holder=leakcheck unix_ms=1794468292276 
+LEASE release tenant=lk19 holder=leakcheck unix_ms=1794468292279 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+LEASE acquired tenant=lk0 holder=leakcheck unix_ms=1794468379073 takeover_from=-
+LEASE acquired tenant=lk1 holder=leakcheck unix_ms=1794468379157 takeover_from=-
+LEASE acquired tenant=lk2 holder=leakcheck unix_ms=1794468379205 takeover_from=-
+LEASE acquired tenant=lk3 holder=leakcheck unix_ms=1794468379271 takeover_from=-
+LEASE acquired tenant=lk4 holder=leakcheck unix_ms=1794468379315 takeover_from=-
+LEASE acquired tenant=lk5 holder=leakcheck unix_ms=1794468379371 takeover_from=-
+LEASE acquired tenant=lk6 holder=leakcheck unix_ms=1794468379423 takeover_from=-
+LEASE acquired tenant=lk7 holder=leakcheck unix_ms=1794468379470 takeover_from=-
+LEASE acquired tenant=lk8 holder=leakcheck unix_ms=1794468379513 takeover_from=-
+LEASE acquired tenant=lk9 holder=leakcheck unix_ms=1794468379565 takeover_from=-
+SLOW hello db=admin ms=10000 ok=true
+LEASE acquired tenant=lk10 holder=leakcheck unix_ms=1794468379615 takeover_from=-
+LEASE acquired tenant=lk11 holder=leakcheck unix_ms=1794468379652 takeover_from=-
+LEASE acquired tenant=lk12 holder=leakcheck unix_ms=1794468379701 takeover_from=-
+LEASE acquired tenant=lk13 holder=leakcheck unix_ms=1794468379748 takeover_from=-
+LEASE acquired tenant=lk14 holder=leakcheck unix_ms=1794468379797 takeover_from=-
+LEASE acquired tenant=lk15 holder=leakcheck unix_ms=1794468379839 takeover_from=-
+LEASE acquired tenant=lk16 holder=leakcheck unix_ms=1794468379966 takeover_from=-
+LEASE acquired tenant=lk17 holder=leakcheck unix_ms=1794468380016 takeover_from=-
+LEASE acquired tenant=lk18 holder=leakcheck unix_ms=1794468380070 takeover_from=-
+LEASE acquired tenant=lk19 holder=leakcheck unix_ms=1794468380124 takeover_from=-
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+shutting down: closing tenants cleanly
+tenants closed; stopping maintenance
+maintenance shutdown: waiting for the L0 watch unix_ms=1794468460187
+maintenance shutdown: waiting for the dispatcher unix_ms=1794468460319
+maintenance shutdown: waiting for the running passes (0 running) unix_ms=1794468460319
+maintenance shutdown: waiting for the GC task unix_ms=1794468460319
+maintenance shutdown: done unix_ms=1794468461481
+maintenance stopped

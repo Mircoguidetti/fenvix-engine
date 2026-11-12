@@ -1,0 +1,176 @@
+acknowledged 64502 documents; abandonCloseTimeouts 0
+SIGTERM stopped the server in 7.8 s
+after a restart: 64502 acknowledged, 0 missing
+outage run 0: every acknowledged insert there
+acknowledged 70502 documents; abandonCloseTimeouts 0
+SIGTERM stopped the server in 10.0 s
+after a restart: 70502 acknowledged, 0 missing
+outage run 1: every acknowledged insert there
+acknowledged 69002 documents; abandonCloseTimeouts 0
+SIGTERM stopped the server in 8.2 s
+after a restart: 69002 acknowledged, 0 missing
+outage run 2: every acknowledged insert there
+acknowledged 69002 documents; abandonCloseTimeouts 0
+SIGTERM stopped the server in 7.1 s
+after a restart: 69002 acknowledged, 0 missing
+outage run 3: every acknowledged insert there
+acknowledged 120002 documents; abandonCloseTimeouts 0
+SIGTERM stopped the server in 7.1 s
+after a restart: 120002 acknowledged, 0 missing
+outage run 4: every acknowledged insert there
+acknowledged 74502 documents; abandonCloseTimeouts 0
+SIGTERM stopped the server in 5.4 s
+after a restart: 74502 acknowledged, 0 missing
+outage run 5: every acknowledged insert there
+acknowledged 122002 documents; abandonCloseTimeouts 0
+SIGTERM stopped the server in 6.6 s
+after a restart: 122002 acknowledged, 0 missing
+outage run 6: every acknowledged insert there
+acknowledged 31502 documents; abandonCloseTimeouts 0
+SIGTERM stopped the server in 3.4 s
+F
+=================================== FAILURES ===================================
+________ test_store_outage_past_the_lease_loses_no_acknowledged_insert _________
+
+            try:
+                relay.p.send_signal(signal.SIGCONT)
+            except Exception:
+                pass
+            p1.term()
+            relay.stop()
+    
+    
+    def test_store_outage_past_the_lease_loses_no_acknowledged_insert():
+        """Found by this review while rerunning ctl test_31 (not caused by c2-fix-clone-uploads: integration-3 lost one
+        document too). test_31's `test_engine_recovers_after_lease_lost_to_store_outage` (16 writers, the store frozen 40 s, past
+        the 6 s lease, then back), with sealed runs on, run R51_OUTAGE_RUNS times with T_pin 30 s so the final read is not
+        refused; every acknowledged insert must be there after the restart. MEASURED on this sandbox: acknowledged inserts were
+>       missing (from SlateDB too, not only from the merged reader) in 6 of 11 runs on f6b6db18 with its compactor, 3 of 9
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        with the compactor off, and 1 of 11 on integration-3 with the compactor off."""
+
+test_51r_review_c2_fix_clone_uploads.py:472: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_31_lease_lost_store_down.py:112: in test_engine_recovers_after_lease_lost_to_store_outage
+    present = set(d["_id"] for d in c.lst.t.find({}, {"_id": 1}))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_31_lease_lost_store_down.py:112: in <genexpr>
+    present = set(d["_id"] for d in c.lst.t.find({}, {"_id": 1}))
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py:404: in __next__
+    return self.next()
+           ^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py:383: in next
+    if len(self._data) or self._refresh():
+                          ^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py:334: in _refresh
+    self._send_message(q)
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py:237: in _send_message
+    response = client._run_operation(operation, self._run_with_conn, address=self._address)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:1994: in _run_operation
+    return self._retryable_read(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:1992: in _cmd
+    return run_with_conn(conn, operation, read_preference)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor_base.py:120: in _run_with_conn
+    docs, reply, duration = run_cursor_command(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:329: in run_cursor_command
+    docs, reply, duration_s = _run_command(
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+response = {'ok': 0.0, 'errmsg': 'tenant lst is owned by server process lstall-31350 (lease valid for another 5299 ms); retry', 'code': 134, 'codeName': 'TenantLeaseHeld', ...}
+max_wire_version = 21, allowable_errors = None
+parse_write_concern_error = False
+pool_opts = <pymongo.pool_options.PoolOptions object at 0x7efee1f9df00>
+
+    def _check_command_response(
+        response: _DocumentOut,
+        max_wire_version: Optional[int],
+        allowable_errors: Optional[Container[Union[int, str]]] = None,
+        parse_write_concern_error: bool = False,
+        pool_opts: Optional[PoolOptions] = None,
+    ) -> None:
+        """Check the response to a command for errors."""
+        if "ok" not in response:
+            # Server didn't recognize our message as a command.
+            raise OperationFailure(
+                response.get("$err"),  # type: ignore[arg-type]
+                response.get("code"),
+                response,
+                max_wire_version,
+            )
+    
+        if parse_write_concern_error and "writeConcernError" in response:
+            _error = response["writeConcernError"]
+            _labels = response.get("errorLabels")
+            if _labels:
+                _error.update({"errorLabels": _labels})
+            _raise_write_concern_error(_error)
+    
+        if response["ok"]:
+            return
+    
+        details = response
+        errmsg = details["errmsg"]
+        code = details.get("code")
+    
+        # For allowable errors, only check for error messages when the code is not
+        # included.
+        if allowable_errors:
+            if code is not None:
+                if code in allowable_errors:
+                    return
+            elif errmsg in allowable_errors:
+                return
+    
+        # Server is "not primary" or "recovering"
+        if code is not None:
+            if code in _NOT_PRIMARY_CODES:
+                raise NotPrimaryError(errmsg, response)
+        elif HelloCompat.LEGACY_ERROR in errmsg or "node is recovering" in errmsg:
+            raise NotPrimaryError(errmsg, response)
+    
+        # Other errors
+        # findAndModify with upsert can raise duplicate key error
+        if code in (11000, 11001, 12582):
+            raise DuplicateKeyError(errmsg, code, response, max_wire_version)
+        elif code == 50:
+            # Append timeout details to MaxTimeMSExpired responses.
+            if pool_opts:
+                timeout_details = _get_timeout_details(pool_opts)
+                errmsg += format_timeout_details(timeout_details)
+            raise ExecutionTimeout(errmsg, code, response, max_wire_version)
+        elif code == 43:
+            raise CursorNotFound(errmsg, code, response, max_wire_version)
+    
+>       raise OperationFailure(errmsg, code, response, max_wire_version)
+E       pymongo.errors.OperationFailure: tenant lst is owned by server process lstall-31350 (lease valid for another 5299 ms); retry, full error: {'ok': 0.0, 'errmsg': 'tenant lst is owned by server process lstall-31350 (lease valid for another 5299 ms); retry', 'code': 134, 'codeName': 'TenantLeaseHeld', 'errorLabels': ['RetryableWriteError']}
+
+/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/helpers_shared.py:327: OperationFailure
+=========================== short test summary info ============================
+FAILED test_51r_review_c2_fix_clone_uploads.py::test_store_outage_past_the_lease_loses_no_acknowledged_insert
+1 failed, 7 deselected in 723.67s (0:12:03)
+rc=1

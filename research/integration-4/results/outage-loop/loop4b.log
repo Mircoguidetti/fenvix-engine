@@ -1,0 +1,19 @@
+acknowledged 148502 documents; abandonCloseTimeouts 0
+SIGTERM stopped the server in 6.5 s
+after a restart: 148502 acknowledged, 0 missing
+outage run 0: every acknowledged insert there
+acknowledged 160502 documents; abandonCloseTimeouts 0
+SIGTERM stopped the server in 2.7 s
+after a restart: 160502 acknowledged, 0 missing
+outage run 1: every acknowledged insert there
+acknowledged 158502 documents; abandonCloseTimeouts 0
+SIGTERM stopped the server in 4.8 s
+after a restart: 158502 acknowledged, 0 missing
+outage run 2: every acknowledged insert there
+acknowledged 125002 documents; abandonCloseTimeouts 0
+SIGTERM stopped the server in 6.5 s
+after a restart: 125002 acknowledged, 0 missing
+outage run 3: every acknowledged insert there
+.
+1 passed, 7 deselected in 302.14s (0:05:02)
+rc=0

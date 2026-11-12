@@ -1,0 +1,8 @@
+{
+ "bucket": "leakcheck-1794468258",
+ "n": 20,
+ "gets_per_s_start": 0.0,
+ "gets_per_s_open": 426.2,
+ "gets_per_s_after_idle_close": 0.0,
+ "gets_per_s_after_drop": 0.0
+}

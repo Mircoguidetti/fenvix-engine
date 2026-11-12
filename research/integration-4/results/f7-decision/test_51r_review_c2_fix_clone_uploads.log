@@ -1,0 +1,20 @@
+round 0: absorption bound hit 0, flush bound hit 1
+round 0: wrong 0 []
+round 1: absorption bound hit 0, flush bound hit 1
+round 1: wrong 0 []
+round 2: absorption bound hit 0, flush bound hit 2
+round 2: wrong 0 []
+round 3: absorption bound hit 1, flush bound hit 2
+round 3: wrong 0 []
+round 4: absorption bound hit 1, flush bound hit 3
+round 4: wrong 0 []
+round 5: absorption bound hit 1, flush bound hit 3
+round 5: wrong 0 []
+round 6: absorption bound hit 2, flush bound hit 3
+round 6: wrong 0 []
+round 7: absorption bound hit 2, flush bound hit 4
+round 7: wrong 0 []
+after a restart: wrong 0
+.
+1 passed, 7 deselected in 245.36s (0:04:05)
+rc=0

@@ -1,0 +1,133 @@
+reopened True; commit refused: OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again, full error: {'ok': 0.0, 'errmsg': 'data; reopenedWritesRefused 1
+acknowledged ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']
+scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']
+found by _id 11 of 11
+after a restart: scanned ['pre0', 'pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'pre6', 'pre7', 'pre8', 'pre9', 'B']; found by _id 11 of 11
+.P2 saw n=1 after its increment; commit on P1: refused: OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again, full error: {'ok': 0.0, 'errmsg': 'data; final n=1; acknowledged increments 1
+a fresh process after both stopped reads n=1
+.lease losses 6; reopenedWritesRefused 6; errors {'OperationFailure 251': 4, 'OperationFailure 134': 2, 'OperationFailure 1': 9}; samples ['OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again,', 'OperationFailure 134 database d was reopened during the command (its lease was lost); this write was not applied (an earlier step of the same', 'OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again,']
+not verified in-process (F7, long command): the read now never succeeded: database d: this process's serving lease expired; it begins no new read (F7); retry, full error: {'ok': 0.0, 'errmsg': "database d
+after a restart: acknowledged inserts 113801, scanned 113801, by _id index 113801, by k index 113801
+after a restart: OK
+.lease losses 5; reopenedWritesRefused 7; errors {'OperationFailure 251': 6, 'OperationFailure 1': 9, 'OperationFailure 134': 2}; samples ['OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again,', 'OperationFailure 251 database d was reopened since the transaction began (its lease was lost); the transaction was not applied, run it again,', "OperationFailure 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db is closed', 'code': 1, 'codeName': 'Inte"]
+now: acknowledged inserts 31801, scanned 31801, by _id index 31801, by k index 31801
+now: OK
+after a restart: acknowledged inserts 31801, scanned 31801, by _id index 31801, by k index 31801
+after a restart: OK
+.k_1 attempt 0: ok in 0.8 s
+u_1 attempt 0: ok in 10.5 s
+k_-1_u_1 attempt 0: ok in 6.1 s
+lease losses 7; reopenedWritesRefused 9
+k_1 attempt 0: ok in 0.8 s
+u_1 attempt 0: ok in 10.5 s
+k_-1_u_1 attempt 0: ok in 6.1 s
+acknowledged 189200, scanned 189200, indexes ['_id_', 'k_1', 'u_1', 'k_-1_u_1'], validate valid=True errors=[]
+background build failures in the log: 0
+.lease losses 6; reopenedWritesRefused 1; read by this process; scanned 720000; calls [('ok', 120000), ('ok', 120000), ('ok', 120000), ('ok', 120000), ('ok', 120000), ('ok', 120000)]
+OK
+.lease losses 1; reopenedWritesRefused 2; read by this process; scanned 201000; calls [("error 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db ", None), ('ok', 101000)]
+failed call 0 (error 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db ): 100000 documents stored
+Fscycles 6; lease losses 16; commands that failed 0: []
+hung: []
+.collections ['cap', 'ck', 'cko', 'cl', 'plain', 'system.buckets.ts', 'ts']
+now cap: valid=True errors=[] repaired=0
+now ck: valid=True errors=[] repaired=0
+now cko: valid=True errors=[] repaired=0
+now cl: valid=True errors=[] repaired=0
+now plain: valid=True errors=[] repaired=0
+now ts: valid=True errors=[] repaired=0
+after a restart cap: valid=True errors=[] repaired=0
+after a restart ck: valid=True errors=[] repaired=0
+after a restart cko: valid=True errors=[] repaired=0
+after a restart cl: valid=True errors=[] repaired=0
+after a restart plain: valid=True errors=[] repaired=0
+after a restart ts: valid=True errors=[] repaired=0
+.s
+=================================== FAILURES ===================================
+_____________ test_split_insert_many_with_driver_retries_throttled _____________
+
+    def test_split_insert_many_with_driver_retries_throttled():
+        """The same with two calls of 101,000 documents (the driver still splits each into two commands), each started
+        when a lease loss is under way: about 200,000 documents, near c2-fix-outage-loss alone, and the in-process read-back
+        is mandatory."""
+>       _split_insert_many(throttled=True)
+
+test_52r_review_c2_fix_outage_loss.py:455: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+throttled = True
+
+    def _split_insert_many(throttled):
+        """insertMany calls larger than one command (the driver splits 120,000 documents into two insert commands) with the
+        driver's retryable writes on, while the lease is lost several times. What the client is told must match what is stored:
+        an acknowledged call has every document once; a failed ordered call has exactly the first nInserted documents; no
+        document is stored twice (scan) and none of a failed batch is stored."""
+        bucket = make_bucket("rvsplit")
+        ff = faults_file()
+        srv = rs_server(bucket, "rvsplit", "S1", ff)
+        stop = threading.Event()
+        calls = []
+        try:
+            c = MongoClient(srv.uri, serverSelectionTimeoutMS=5000, socketTimeoutMS=120000, retryWrites=True)
+            lt = threading.Thread(target=lease_rounds, args=(ff, "S1", 2 if throttled else 5, stop))
+            lt.start()
+            b = 0
+            size = 101_000 if throttled else 120_000
+            while lt.is_alive() and (not throttled or b < 2):
+                if throttled:
+                    # start the call when the lease's PUT is being delayed (the loss comes within the next TTL)
+                    while lt.is_alive() and not open(ff).read().strip():
+                        time.sleep(0.05)
+                ids = list(range(b * size, (b + 1) * size))
+                b += 1
+                try:
+                    r = c.d.t.insert_many([{"_id": i, "f": "x" * 20} for i in ids], ordered=True)
+                    calls.append(("ok", ids, len(r.inserted_ids)))
+                except BulkWriteError as e:
+                    calls.append(("partial", ids, e.details.get("nInserted")))
+                except PyMongoError as e:
+                    calls.append((f"error {getattr(e, 'code', None)} {str(e)[:80]}", ids, None))
+            lt.join()
+            losses = srv.log_text().count("LEASE lost")
+            st = c.admin.command("tenantStats")["maintenance"]
+            # a read refused right after a lease loss (F7, T_pin: code 134) is retryable. With sealed runs on, one scan longer than
+            # the serving window (about 1 s with this 2 s lease) is refused at every try (review fix check, the F7 window): then
+            # the count is made by a fresh process with a long lease, so it always runs.
+            try:
+                scanned = retry_until_ok(lambda: scan_ids(c.d.t, 60), "the read-back scan", 300 if throttled else 60)
+                read_by = "this process"
+            except AssertionError as e:
+                if throttled or "134" not in str(e):
+                    raise
+                not_verified_f7(e)
+                srv.term()
+                fresh = Server(bucket, "rvsplit2", idle=600, extra=["--lease-ttl-secs", "30"]).start()
+                try:
+                    scanned = scan_ids(fresh.client().d.t)
+                finally:
+                    fresh.term()
+                read_by = "a fresh process (lease 30 s)"
+            sset = set(scanned)
+            problems = []
+            if len(scanned) != len(sset):
+                problems.append(f"{len(scanned) - len(sset)} documents scanned twice")
+            for kind, ids, n in calls:
+                have = [i for i in ids if i in sset]
+                if kind == "ok" and len(have) != len(ids):
+                    problems.append(f"acknowledged call {ids[0]}: {len(ids) - len(have)} documents missing")
+                elif kind == "partial" and have != ids[:n]:
+                    problems.append(f"partial call {ids[0]}: told nInserted={n}, stored {len(have)} (first missing {next((i for i in ids[:n] if i not in sset), None)})")
+                elif kind.startswith("error") and have:
+                    problems.append(f"failed call {ids[0]} ({kind}): {len(have)} documents stored")
+            print(f"lease losses {losses}; reopenedWritesRefused {st.get('reopenedWritesRefused')}; read by {read_by}; scanned {len(scanned)}; calls {[(k, n) for k, _, n in calls]}")
+            print("\n".join(problems) or "OK")
+            assert losses > 0, "no lease loss: the test did not reach the case"
+>           assert not problems, "\n".join(problems)
+E           AssertionError: failed call 0 (error 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db ): 100000 documents stored
+E           assert not ["failed call 0 (error 1 Closed error: db is closed, full error: {'ok': 0.0, 'errmsg': 'Closed error: db ): 100000 documents stored"]
+
+test_52r_review_c2_fix_outage_loss.py:523: AssertionError
+=========================== short test summary info ============================
+FAILED test_52r_review_c2_fix_outage_loss.py::test_split_insert_many_with_driver_retries_throttled
+1 failed, 8 passed, 2 skipped in 486.28s (0:08:06)
+rc=1
