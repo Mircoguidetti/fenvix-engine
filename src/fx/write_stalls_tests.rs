@@ -573,3 +573,73 @@ async fn ws_l0_drains_beside_a_held_merge() {
     assert!(l0 < 4, "L0 must drain while the merge is held ({l0_written} -> {l0})");
     assert_eq!(wrong + wrong_ctl, 0, "wrong reads");
 }
+
+/// Cause 3, the other side: with the drop on, the fold takes the newest sorted run with the L0 SSTs, so it must never
+/// start beside a job on the sorted runs. A re-fold of the one run (sorted runs only) is held at its first row while 12
+/// L0 SSTs are flushed and absorbed: no other SlateDB job is proposed until it is released, and every key reads right.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_fold_never_runs_beside_a_merge() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = "ws-fold-alone";
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    let deleted = HashSet::new();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(vec![b'a'; 40]))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let mut k = knobs(true, true);
+    k.fold_one_run = true;
+    assert!(t.fx_claim());
+    let c = start(&mut t, &store, &k).await;
+    // one sorted run first (a fold of absorbed L0 SSTs)
+    let t0 = Instant::now();
+    let mut r = 0usize;
+    while t.fx_writer_db().unwrap().manifest().compacted().len() != 1 || t.writer_l0().unwrap() > 0 {
+        assert!(t0.elapsed() < Duration::from_secs(60), "no fold into one sorted run");
+        if r < 6 {
+            for i in 0..60 {
+                apply(&mut t, &mut m, vec![(ckey(1 + r, i), Some(format!("r{r}-{i}").into_bytes()))]).await;
+            }
+            flush(&t).await;
+            r += 1;
+        }
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        let _ = t.fx_writer_db().unwrap().refresh_manifest().await;
+    }
+    // a re-fold of the run alone, held
+    drop::TEST_HOLD_MERGE.store(true, Relaxed);
+    c.drop.request_refold();
+    let t1 = Instant::now();
+    while !drop::TEST_MERGE_HELD.load(Relaxed) {
+        assert!(t1.elapsed() < Duration::from_secs(30), "the re-fold was not proposed");
+        c.drop.request_refold();
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    let jobs_at_hold = c.drop.jobs.load(Relaxed);
+    let beside0 = drop::L0_JOBS_BESIDE_MERGE.load(Relaxed);
+    for f in 0..12 {
+        for i in 0..60 {
+            apply(&mut t, &mut m, vec![(ckey(40 + f, i), Some(format!("held-{f}-{i}").into_bytes()))]).await;
+        }
+        flush(&t).await;
+    }
+    tokio::time::sleep(Duration::from_secs(3)).await;
+    let jobs_during = c.drop.jobs.load(Relaxed) - jobs_at_hold;
+    let beside = drop::L0_JOBS_BESIDE_MERGE.load(Relaxed) - beside0;
+    let l0_during = t.writer_l0().unwrap();
+    drop::TEST_HOLD_MERGE.store(false, Relaxed);
+    c.drain(false).await.unwrap();
+    t.fx_sync();
+    let wrong = wrong_reads(&t, &m, &deleted).await;
+    eprintln!("ws fold alone: jobs proposed while the re-fold was held {jobs_during}, beside it {beside}, L0 then {l0_during}; wrong {wrong}");
+    c.stop().await;
+    t.close().await.unwrap();
+    teardown();
+    assert_eq!(jobs_during, 0, "a job was proposed beside the held re-fold (drop on)");
+    assert_eq!(beside, 0);
+    assert!(l0_during >= 12, "setup: the L0 SSTs must wait in L0 while the re-fold is held ({l0_during})");
+    assert_eq!(wrong, 0);
+}

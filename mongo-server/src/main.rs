@@ -984,6 +984,8 @@ async fn run() -> Result<()> {
         // default; "0" restores the old place, to compare); test pauses inside a build (kill -9 and close tests)
         tenant_bench::lifecycle::FIRST_BUILD_OFF_LOCK.store(std::env::var("FENVIX_FIRST_BUILD_OFF_LOCK").as_deref() != Ok("0"), Relaxed);
         // fix-write-stalls, cause 3: "1" proposes no SlateDB job while one runs, as before (to compare)
+        // tests (ctl test_66): every SlateDB job on sorted runs only is held at its first row (a kill -9 mid-merge)
+        tenant_bench::fx::drop::TEST_HOLD_MERGE.store(std::env::var("FENVIX_TEST_HOLD_MERGE").as_deref() == Ok("1"), Relaxed);
         tenant_bench::fx::drop::CONTROL_ONE_JOB.store(std::env::var("FENVIX_ONE_SLATE_JOB").as_deref() == Ok("1"), Relaxed);
         tenant_bench::fx::compactor::RECOGNISE_IN_BACKGROUND.store(std::env::var("FENVIX_RECOGNISE_IN_BACKGROUND").as_deref() != Ok("0"), Relaxed);
         for (var, cell) in [("FENVIX_TEST_BUILD_PAUSE_SNAPSHOT_MS", &tenant_bench::fx::build::PAUSE_AFTER_SNAPSHOT_MS), ("FENVIX_TEST_BUILD_PAUSE_CREATE_MS", &tenant_bench::fx::build::PAUSE_BEFORE_CREATE_MS), ("FENVIX_TEST_RECOGNISE_PAUSE_MS", &tenant_bench::fx::compactor::PAUSE_RECOGNISE_MS)] {

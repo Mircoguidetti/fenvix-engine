@@ -224,3 +224,44 @@ def test_erasures_in_the_middle_of_the_first_build():
         assert list_prefix(bucket, f"tenants/{other}/") == [], "objects of the erased database left (a late run or version of the first build)"
     srv.term()
     print(f"erasure during the first build: deleteMany of {n} took {took:.2f} s (it waits for the build); {kept} documents kept and read back; scrub {e['rows_erased']} rows")
+
+
+def test_kill9_mid_merge_with_an_l0_job_beside_it_then_takeover():
+    """Cause 3: an L0-only SlateDB job runs beside a merge of sorted runs. A merge is held at its first row
+    (FENVIX_TEST_HOLD_MERGE) while writes go on and L0 jobs run beside it; SIGKILL; another process takes the database
+    over (no hold): every acknowledged write reads back, the new owner's compactor runs, and everything still reads back."""
+    bucket = make_bucket("ws9merge")
+    extra = SEALED + ["--memtable-max-mb", "1"]
+    srv = Server(bucket, "ws9mergea", idle=600, extra=extra, env={"FENVIX_TEST_HOLD_MERGE": "1"}).start()
+    c = srv.client()
+    a = Acked(c[DB]["c"])
+    i, t0 = 0, time.time()
+    while not stats(c).get("mergeHeld"):
+        for _ in range(50):
+            a.insert(i, f"pre-{i}", pad=2000)
+            i += 1
+        assert time.time() - t0 < 180, "no merge of sorted runs was proposed"
+    t1 = time.time()
+    a.longest = 0.0
+    while stats(c)["l0JobsBesideMerge"] < 2:
+        for _ in range(50):
+            a.insert(i, f"during-{i}", pad=2000)
+            if i % 4 == 0:
+                a.update(i // 2, f"upd-{i}")
+            i += 1
+        assert time.time() - t1 < 120, f"no L0 job beside the held merge: {stats(c)}"
+    longest, s = a.longest, stats(c)
+    assert s["mergeHeld"] == 1, s
+    srv.kill9()
+    srv2 = Server(bucket, "ws9mergeb", idle=600, extra=extra).start()
+    c2 = srv2.client()
+    taken_over(c2)
+    n1 = a.check(c2[DB]["c"])
+    a.coll = c2[DB]["c"]
+    i = write_until_build(c2, a, i, "started")
+    for _ in range(300):
+        a.insert(i, f"after-{i}", pad=2000)
+        i += 1
+    n2 = a.check(c2[DB]["c"])
+    srv2.term()
+    print(f"kill mid-merge: {a.n} writes acknowledged, {s['l0JobsBesideMerge']} L0 jobs beside the held merge, longest write while it was held {longest:.3f} s; read back {n1} after the takeover, {n2} at the end")

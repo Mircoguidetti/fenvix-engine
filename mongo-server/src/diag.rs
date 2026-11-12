@@ -866,6 +866,7 @@ impl Server {
                 "firstBuildMsMax": tenant_bench::lifecycle::FIRST_BUILD_MS_MAX.load(Relaxed) as i64,
                 "claimsDeferred": tenant_bench::lifecycle::CLAIMS_DEFERRED.load(Relaxed) as i64,
                 "l0JobsBesideMerge": tenant_bench::fx::drop::L0_JOBS_BESIDE_MERGE.load(Relaxed) as i64,
+                "mergeHeld": tenant_bench::fx::drop::TEST_MERGE_HELD.load(Relaxed) as i64,
                 "passGateKeptL0": tenant_bench::lifecycle::PASS_GATE_KEPT.load(Relaxed) as i64,
                 "publishes": tenant_bench::fx::compactor::G_PUBLISHES.load(Relaxed) as i64,
                 "absorbs": tenant_bench::fx::compactor::G_ABSORBS.load(Relaxed) as i64,
