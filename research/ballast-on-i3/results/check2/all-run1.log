@@ -1,0 +1,65 @@
+app_data_b01: {'reads': 4236, 'wrong': 0, 'reference_documents': 314234, 'sampled_customers': 35, 'q2_tickets_found': '1740/1740', 'seconds': 2408.2}
+Traceback (most recent call last):
+  File "/home/user/fenvix-engine/research/ballast-on-i3/ballast_check.py", line 133, in <module>
+    same(f"{name}.{c} {cli} whole", raw(od[c].find(q).sort(s)), raw(rd[c].find(q).sort(s)))
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/fenvix-engine/research/ballast-on-i3/ballast_check.py", line 73, in raw
+    return [bytes(d.raw) for d in cur]
+                                  ^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py", line 404, in __next__
+    return self.next()
+           ^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py", line 383, in next
+    if len(self._data) or self._refresh():
+                          ^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py", line 357, in _refresh
+    self._send_message(g)
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py", line 237, in _send_message
+    response = client._run_operation(operation, self._run_with_conn, address=self._address)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py", line 126, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 1994, in _run_operation
+    return self._retryable_read(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2116, in _retryable_read
+    return self._retry_internal(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py", line 126, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2077, in _retry_internal
+    ).run()
+      ^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2947, in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 3187, in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 1992, in _cmd
+    return run_with_conn(conn, operation, read_preference)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/helpers.py", line 50, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor_base.py", line 120, in _run_with_conn
+    docs, reply, duration = run_cursor_command(
+                            ^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py", line 329, in run_cursor_command
+    docs, reply, duration_s = _run_command(
+                              ^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py", line 192, in _run_command
+    reply = conn.receive_message(request_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/pool.py", line 458, in receive_message
+    self._raise_connection_failure(error)
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/pool.py", line 576, in _raise_connection_failure
+    raise error
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/pool.py", line 455, in receive_message
+    return receive_message(self, request_id, self.max_message_size)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/network_layer.py", line 758, in receive_message
+    raise ProtocolError(
+pymongo.errors.ProtocolError: Message length (48845472) is larger than server max message size (48000000)

@@ -1,0 +1,15 @@
+== c2-fix-hangs 26af7fe + ballast-on-i3 = dfa10cc
+test result: ok. 78 passed; 0 failed; 8 ignored; 0 measured; 57 filtered out; finished in 238.21s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 98 filtered out; finished in 0.19s
+c2-fix-long-reads: conflict in src/fx/mod.rs solved by keeping both
+== c2-fix-long-reads 75b501d + ballast-on-i3 = 14c46e3
+test result: ok. 80 passed; 0 failed; 8 ignored; 0 measured; 57 filtered out; finished in 288.23s
+error[E0432]: unresolved import `super::tests`
+error: could not compile `tenant-bench` (lib) due to 1 previous error; 8 warnings emitted
+== claude/clone-uploads-fix-hkuyhx 1e410c6 + ballast-on-i3 = 9b1598c
+test result: ok. 78 passed; 0 failed; 8 ignored; 0 measured; 58 filtered out; finished in 227.78s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 99 filtered out; finished in 0.17s
+== c2-fix-outage-loss baca2f0 + ballast-on-i3 = fcfac3d
+test result: ok. 78 passed; 0 failed; 8 ignored; 0 measured; 58 filtered out; finished in 232.78s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 98 filtered out; finished in 0.17s
+TRIAL-DONE

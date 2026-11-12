@@ -1,0 +1,117 @@
+LEASE process_lease tenant=- holder=15276-c5dc2872 unix_ms=1794402378695 inc=d3bdaa057d100da3 gen=1
+LEASE acquired tenant=app_data_b02 holder=15276-c5dc2872 unix_ms=1794402378698 takeover_from=-
+LEASE acquired tenant=app_data_b03 holder=15276-c5dc2872 unix_ms=1794402378699 takeover_from=-
+LEASE acquired tenant=app_data_b01 holder=15276-c5dc2872 unix_ms=1794402378699 takeover_from=-
+LEASE acquired tenant=app_data_b02 holder=15276-c5dc2872 unix_ms=1794402378707 takeover_from=-
+LEASE acquired tenant=app_data_b01 holder=15276-c5dc2872 unix_ms=1794402378714 takeover_from=-
+LEASE acquired tenant=app_data_b03 holder=15276-c5dc2872 unix_ms=1794402378722 takeover_from=-
+LEASE acquired tenant=app_data_b02 holder=15276-c5dc2872 unix_ms=1794402378724 takeover_from=-
+LEASE acquired tenant=app_data_b01 holder=15276-c5dc2872 unix_ms=1794402378731 takeover_from=-
+LEASE acquired tenant=app_data_b03 holder=15276-c5dc2872 unix_ms=1794402378742 takeover_from=-
+LEASE acquired tenant=app_data_b02 holder=15276-c5dc2872 unix_ms=1794402378747 takeover_from=- new=true
+LEASE acquired tenant=app_data_b01 holder=15276-c5dc2872 unix_ms=1794402378750 takeover_from=- new=true
+LEASE acquired tenant=app_data_b03 holder=15276-c5dc2872 unix_ms=1794402378753 takeover_from=- new=true
+LEASE writer_open tenant=app_data_b01 holder=15276-c5dc2872 unix_ms=1794402378780 
+LEASE writer_open tenant=app_data_b03 holder=15276-c5dc2872 unix_ms=1794402378781 
+LEASE writer_open tenant=app_data_b02 holder=15276-c5dc2872 unix_ms=1794402378781 
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b03: waiting for the envelope marker (E1's wait)
+ballast app_data_b02: waiting for the envelope marker (E1's wait)
+ballast app_data_b03: waiting for the envelope marker (E1's wait)
+ballast app_data_b02: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b03: waiting for the envelope marker (E1's wait)
+ballast app_data_b02: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b03: waiting for the envelope marker (E1's wait)
+ballast app_data_b02: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b03: waiting for the envelope marker (E1's wait)
+ballast app_data_b02: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b03: waiting for the envelope marker (E1's wait)
+ballast app_data_b02: waiting for the envelope marker (E1's wait)
+ballast app_data_b03: waiting for the envelope marker (E1's wait)
+ballast app_data_b02: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b03: waiting for the envelope marker (E1's wait)
+ballast app_data_b02: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b03: waiting for the envelope marker (E1's wait)
+ballast app_data_b02: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b03: waiting for the envelope marker (E1's wait)
+ballast app_data_b02: waiting for the envelope marker (E1's wait)
+ballast app_data_b02: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b03: waiting for the envelope marker (E1's wait)
+ballast app_data_b03: waiting for the envelope marker (E1's wait)
+ballast app_data_b02: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b03: waiting for the envelope marker (E1's wait)
+ballast app_data_b02: waiting for the envelope marker (E1's wait)
+ballast app_data_b02: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b03: waiting for the envelope marker (E1's wait)
+ballast app_data_b03: waiting for the envelope marker (E1's wait)
+ballast app_data_b02: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b02: 125 of 1740 customers, 0.25 of 3.40 GiB of BSON, 794387 documents, 8.8 MB/s
+ballast app_data_b03: 117 of 1740 customers, 0.25 of 3.40 GiB of BSON, 796076 documents, 8.8 MB/s
+ballast app_data_b01: 132 of 1740 customers, 0.25 of 3.40 GiB of BSON, 803030 documents, 8.9 MB/s
+ballast app_data_b03: 237 of 1740 customers, 0.48 of 3.40 GiB of BSON, 1536698 documents, 8.5 MB/s
+ballast app_data_b02: 259 of 1740 customers, 0.49 of 3.40 GiB of BSON, 1559824 documents, 8.7 MB/s
+ballast app_data_b01: 236 of 1740 customers, 0.48 of 3.40 GiB of BSON, 1533057 documents, 8.5 MB/s
+ballast app_data_b03: 352 of 1740 customers, 0.71 of 3.40 GiB of BSON, 2293448 documents, 8.5 MB/s
+ballast app_data_b02: 375 of 1740 customers, 0.72 of 3.40 GiB of BSON, 2308494 documents, 8.5 MB/s
+ballast app_data_b01: 358 of 1740 customers, 0.71 of 3.40 GiB of BSON, 2289181 documents, 8.4 MB/s
+ballast app_data_b03: 491 of 1740 customers, 0.97 of 3.40 GiB of BSON, 3106434 documents, 8.6 MB/s
+ballast app_data_b02: 514 of 1740 customers, 0.97 of 3.40 GiB of BSON, 3117874 documents, 8.7 MB/s
+ballast app_data_b01: 480 of 1740 customers, 0.96 of 3.40 GiB of BSON, 3082381 documents, 8.5 MB/s
+ballast app_data_b03: 630 of 1740 customers, 1.22 of 3.40 GiB of BSON, 3901093 documents, 8.7 MB/s
+ballast app_data_b02: 642 of 1740 customers, 1.22 of 3.40 GiB of BSON, 3909037 documents, 8.7 MB/s
+ballast app_data_b01: 599 of 1740 customers, 1.20 of 3.40 GiB of BSON, 3850161 documents, 8.5 MB/s
+ballast app_data_b03: 763 of 1740 customers, 1.46 of 3.40 GiB of BSON, 4691128 documents, 8.7 MB/s
+ballast app_data_b02: 761 of 1740 customers, 1.46 of 3.40 GiB of BSON, 4685138 documents, 8.7 MB/s
+ballast app_data_b01: 725 of 1740 customers, 1.45 of 3.40 GiB of BSON, 4640764 documents, 8.6 MB/s
+ballast app_data_b03: 884 of 1740 customers, 1.71 of 3.40 GiB of BSON, 5487994 documents, 8.7 MB/s
+ballast app_data_b02: 886 of 1740 customers, 1.71 of 3.40 GiB of BSON, 5493757 documents, 8.7 MB/s
+ballast app_data_b01: 861 of 1740 customers, 1.70 of 3.40 GiB of BSON, 5446859 documents, 8.6 MB/s
+ballast app_data_b03: 1010 of 1740 customers, 1.97 of 3.40 GiB of BSON, 6316571 documents, 8.8 MB/s
+ballast app_data_b02: 1022 of 1740 customers, 1.97 of 3.40 GiB of BSON, 6318505 documents, 8.8 MB/s
+ballast app_data_b01: 984 of 1740 customers, 1.95 of 3.40 GiB of BSON, 6265901 documents, 8.7 MB/s
+ballast app_data_b03: 1088 of 1740 customers, 2.13 of 3.40 GiB of BSON, 6832682 documents, 8.4 MB/s
+ballast app_data_b02: 1105 of 1740 customers, 2.14 of 3.40 GiB of BSON, 6853913 documents, 8.5 MB/s
+ballast app_data_b01: 1070 of 1740 customers, 2.12 of 3.40 GiB of BSON, 6806547 documents, 8.4 MB/s
+ballast app_data_b02: 1183 of 1740 customers, 2.30 of 3.40 GiB of BSON, 7369429 documents, 8.2 MB/s
+ballast app_data_b03: 1170 of 1740 customers, 2.30 of 3.40 GiB of BSON, 7370294 documents, 8.2 MB/s
+ballast app_data_b01: 1153 of 1740 customers, 2.28 of 3.40 GiB of BSON, 7328403 documents, 8.1 MB/s
+ballast app_data_b03: 1268 of 1740 customers, 2.47 of 3.40 GiB of BSON, 7932416 documents, 8.0 MB/s
+ballast app_data_b01: 1251 of 1740 customers, 2.47 of 3.40 GiB of BSON, 7936547 documents, 7.9 MB/s
+ballast app_data_b02: 1273 of 1740 customers, 2.47 of 3.40 GiB of BSON, 7941048 documents, 7.9 MB/s
+ballast app_data_b03: 1385 of 1740 customers, 2.70 of 3.40 GiB of BSON, 8653924 documents, 8.0 MB/s
+ballast app_data_b01: 1372 of 1740 customers, 2.70 of 3.40 GiB of BSON, 8660236 documents, 7.9 MB/s
+ballast app_data_b02: 1387 of 1740 customers, 2.70 of 3.40 GiB of BSON, 8658657 documents, 7.9 MB/s
+ballast app_data_b03: 1504 of 1740 customers, 2.95 of 3.40 GiB of BSON, 9462743 documents, 8.0 MB/s
+ballast app_data_b01: 1504 of 1740 customers, 2.95 of 3.40 GiB of BSON, 9472833 documents, 8.0 MB/s
+ballast app_data_b02: 1513 of 1740 customers, 2.95 of 3.40 GiB of BSON, 9469758 documents, 8.0 MB/s
+ballast app_data_b03: 1630 of 1740 customers, 3.20 of 3.40 GiB of BSON, 10263149 documents, 8.1 MB/s
+ballast app_data_b01: 1640 of 1740 customers, 3.20 of 3.40 GiB of BSON, 10270316 documents, 8.1 MB/s
+ballast app_data_b02: 1637 of 1740 customers, 3.19 of 3.40 GiB of BSON, 10254394 documents, 8.1 MB/s
+BALLAST-DB app_data_b03: 3.40 GiB of BSON, 10914284 documents in 497 s (7.4 MB/s); version 1 with 8 groups
+BALLAST-DB app_data_b01: 3.40 GiB of BSON, 10914445 documents in 499 s (7.3 MB/s); version 1 with 8 groups
+BALLAST-DB app_data_b02: 3.40 GiB of BSON, 10914534 documents in 500 s (7.3 MB/s); version 1 with 8 groups
+BALLAST: DONE: 3 databases, 10.20 GiB of BSON in 500 s (21.9 MB/s together)
+LEASE writer_close tenant=app_data_b03 holder=15276-c5dc2872 unix_ms=1794402878734 
+LEASE release_begin tenant=app_data_b03 holder=15276-c5dc2872 unix_ms=1794402878734 
+LEASE release tenant=app_data_b03 holder=15276-c5dc2872 unix_ms=1794402878739 ok=true
+LEASE writer_close tenant=app_data_b01 holder=15276-c5dc2872 unix_ms=1794402878740 
+LEASE release_begin tenant=app_data_b01 holder=15276-c5dc2872 unix_ms=1794402878740 
+LEASE writer_close tenant=app_data_b02 holder=15276-c5dc2872 unix_ms=1794402878740 
+LEASE release_begin tenant=app_data_b02 holder=15276-c5dc2872 unix_ms=1794402878740 
+LEASE release tenant=app_data_b01 holder=15276-c5dc2872 unix_ms=1794402878743 ok=true
+LEASE release tenant=app_data_b02 holder=15276-c5dc2872 unix_ms=1794402878743 ok=true
+EXIT 0 WALL 500 s

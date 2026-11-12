@@ -1,0 +1,3 @@
+2026-11-11T19:04:55Z passo 1 giro app_data_b01: nessun giro di prima; --db app_data_b01 --nuova-cartella --giro s9_ballast --solo-fasi inizio,Q2,Q3,Q1,Q1d,Q4 --n-q2 300 --n-q3 300 --n-q1 300 --n-q1d 300 --n-q4 300 --dorm-q2 300 --dorm-q3 300 --dorm-q1 300 --dorm-q1d 300 --dorm-q4 300
+2026-11-11T19:30:34Z passo 1 giro app_data_b01: codice 0; fasi non 'fatta': nessuna
+2026-11-11T19:30:34Z programma finito: errori 0; macchina mai il limite

@@ -1,0 +1,71 @@
+{
+ "app_data_b01": {
+  "per_collezione": {
+   "eventi": 3811657,
+   "messaggi": 5584223,
+   "ordini": 1637174
+  },
+  "documenti": 11033054,
+  "writes": {
+   "inserted": {
+    "messaggi": 0
+   },
+   "deleted": {
+    "messaggi": 11744,
+    "eventi": 6799
+   },
+   "updated": {
+    "ordini": 2923,
+    "eventi": 6799,
+    "messaggi": 7041
+   }
+  },
+  "seconds": 75.5
+ },
+ "app_data_b02": {
+  "per_collezione": {
+   "eventi": 3811211,
+   "messaggi": 5583888,
+   "ordini": 1637601
+  },
+  "documenti": 11032700,
+  "writes": {
+   "inserted": {
+    "messaggi": 140044
+   },
+   "deleted": {
+    "messaggi": 13190,
+    "eventi": 8688
+   },
+   "updated": {
+    "ordini": 3674,
+    "eventi": 8688,
+    "messaggi": 7907
+   }
+  },
+  "seconds": 412.9
+ },
+ "app_data_b03": {
+  "per_collezione": {
+   "eventi": 3810292,
+   "messaggi": 5587207,
+   "ordini": 1637324
+  },
+  "documenti": 11034823,
+  "writes": {
+   "inserted": {
+    "messaggi": 140040
+   },
+   "deleted": {
+    "messaggi": 12218,
+    "eventi": 7283
+   },
+   "updated": {
+    "ordini": 3092,
+    "eventi": 7283,
+    "messaggi": 7324
+   }
+  },
+  "seconds": 392.2
+ }
+}

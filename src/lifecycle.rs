@@ -2149,6 +2149,46 @@ impl Tenant {
         Ok(all)
     }
 
+    /// The step 9 ballast generator (`mongo-server --ballast`), before it generates: the envelope marker (`Ok(None)` while
+    /// E1's wait runs: call again later), then a durable cut. Returns the cut `x0`, the seq every generated row carries.
+    pub async fn fx_ballast_begin(&mut self) -> Result<Option<u64>> {
+        anyhow::ensure!(crate::fx::ENABLED.load(std::sync::atomic::Ordering::Relaxed), "the ballast generator writes sealed runs: --sealed-runs must be on");
+        self.upgrade().await?;
+        self.fx_settle_fence().await?;
+        if !self.ensure_marker().await? {
+            return Ok(None);
+        }
+        let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
+        db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::Wal }).await?;
+        let x0 = db.snapshot().await?.seq();
+        Ok(Some(x0))
+    }
+
+    /// The writer epoch and the store the generated runs go to (the ballast generator's [`crate::fx::build::GroupWriter`]).
+    pub fn fx_ballast_target(&self) -> Result<(Arc<dyn ObjectStore>, String, Option<u64>)> {
+        let Some(Mode::Writer(db)) = self.mode.as_ref() else { anyhow::bail!("database {} is not open as a writer", self.id) };
+        Ok((Arc::clone(&self.lc.store), self.id.clone(), Some(db.manifest().writer_epoch())))
+    }
+
+    /// Publish the generated rows merged with SlateDB's (`fx/build.rs`, [`crate::fx::build::publish_generated`]) and read
+    /// with that version from now on, as [`Tenant::fx_publish`] does.
+    pub async fn fx_publish_generated(&mut self, opts: &crate::fx::build::BuildOpts, gen: crate::fx::build::Generated) -> Result<crate::fx::build::BuildReport> {
+        use std::sync::atomic::Ordering::Relaxed;
+        self.fx_settle_fence().await?;
+        let Some(Mode::Writer(db)) = self.mode.as_ref() else { anyhow::bail!("database {} is not open as a writer", self.id) };
+        let epoch = Some(db.manifest().writer_epoch());
+        let env = self.env.ok_or_else(|| anyhow!("no envelope marker: call fx_ballast_begin first"))?;
+        let store = Arc::clone(&self.lc.store);
+        let (v, rep) = crate::fx::build::publish_generated(db, &store, &self.id, self.fx.as_deref(), env, epoch, opts, gen).await.map_err(|e| {
+            crate::fx::PUBLISH_ERRORS.fetch_add(1, Relaxed);
+            e
+        })?;
+        self.fx = Some(Arc::new(crate::fx::view::View::new(store, v, self.fx.as_deref())?));
+        self.fx_loaded = Instant::now();
+        crate::fx::PUBLISHES.fetch_add(1, Relaxed);
+        Ok(rep)
+    }
+
     /// Read the envelope marker (at open and after an upgrade).
     async fn load_env(&mut self) -> Result<()> {
         let kv = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {

@@ -1,0 +1,57 @@
+Traceback (most recent call last):
+  File "/home/user/fenvix-engine/research/ballast-on-i3/ballast_check.py", line 100, in <module>
+    n = sum(1 for _ in do["ordini"].find({}, batch_size=5000))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/fenvix-engine/research/ballast-on-i3/ballast_check.py", line 100, in <genexpr>
+    n = sum(1 for _ in do["ordini"].find({}, batch_size=5000))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py", line 404, in __next__
+    return self.next()
+           ^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py", line 383, in next
+    if len(self._data) or self._refresh():
+                          ^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py", line 334, in _refresh
+    self._send_message(q)
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py", line 237, in _send_message
+    response = client._run_operation(operation, self._run_with_conn, address=self._address)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py", line 126, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 1994, in _run_operation
+    return self._retryable_read(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2116, in _retryable_read
+    return self._retry_internal(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py", line 126, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2077, in _retry_internal
+    ).run()
+      ^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2947, in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 3187, in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 1992, in _cmd
+    return run_with_conn(conn, operation, read_preference)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/helpers.py", line 50, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor_base.py", line 120, in _run_with_conn
+    docs, reply, duration = run_cursor_command(
+                            ^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py", line 329, in run_cursor_command
+    docs, reply, duration_s = _run_command(
+                              ^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py", line 214, in _run_command
+    helpers_shared._check_command_response(
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/helpers_shared.py", line 327, in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+pymongo.errors.OperationFailure: database app_data_b01: this process's serving lease expired; it begins no new read (F7); retry, full error: {'ok': 0.0, 'errmsg': "database app_data_b01: this process's serving lease expired; it begins no new read (F7); retry", 'code': 134, 'codeName': 'SealedRunsRetry', 'errorLabels': ['TransientTransactionError', 'RetryableWriteError'], '$clusterTime': {'clusterTime': Timestamp(1794402890, 1), 'signature': {'hash': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'keyId': 0}}, 'operationTime': Timestamp(1794402890, 1)}
+EXIT 1

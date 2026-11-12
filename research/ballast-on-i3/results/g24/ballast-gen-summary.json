@@ -1,0 +1,15 @@
+{
+  "bson_bytes": 26094343135,
+  "databases": [
+    {
+      "bson_bytes": 26094343135,
+      "db": "app_data_b01",
+      "documents": 78010058,
+      "ok": true,
+      "seconds": 2746.842579731
+    }
+  ],
+  "mb_s_total": 9.499740980790495,
+  "ok": true,
+  "seconds": 2746.84785488
+}

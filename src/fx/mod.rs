@@ -65,6 +65,8 @@ mod tests_7b;
 mod i4_joint_tests;
 #[cfg(test)]
 mod long_reads_tests;
+#[cfg(test)]
+mod tests_gen;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 
