@@ -908,7 +908,7 @@ impl Server {
         use std::sync::atomic::Ordering::Relaxed;
         let s = self.dbs.global.counters.snapshot();
         let ls = self.dbs.leases.stats.lock().unwrap().clone();
-        doc! {
+        let mut d = doc! {
             "holder": self.dbs.leases.holder.clone(),
             "pid": std::process::id() as i64,
             "openReaders": self.dbs.readers.load(Relaxed),
@@ -955,7 +955,12 @@ impl Server {
                 "get": self.dbs.global.counters.lat_get.snapshot().into_iter().map(|x| x as i64).collect::<Vec<_>>(),
             },
             "ok": 1.0
+        };
+        // (outside the macro: one more field there passes its recursion limit)
+        if let Ok(m) = d.get_document_mut("maintenance") {
+            m.insert("staleReaderErrors", tenant_bench::lifecycle::STALE_READER_ERRORS.load(Relaxed) as i64);
         }
+        d
     }
 
     /// Runs a command with object-store tracing on and returns every request it made, in order. For the wake

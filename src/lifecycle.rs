@@ -529,6 +529,48 @@ pub fn writer_settings() -> Settings {
     s
 }
 
+/// sst-not-found (2026-11-12). A reader opens SlateDB in mode `FollowLatest` (no checkpoint, no object-store write) and
+/// keeps the manifest it opened with (`LONG_POLL`). SlateDB's documentation of that mode: it "provides no protection from
+/// garbage collection. Reads using an older manifest may fail if referenced objects are deleted." When the database is
+/// compacted while a reader is open, both collectors may delete the SSTs the reader still names (`gc_tenant_ssts` keeps
+/// the latest manifest's SSTs only; SlateDB's GC of a closed tenant judges by file age), and every read through that
+/// reader failed with "compacted/<sst>.sst not found" until the reader was closed. Nothing is lost: the replaced SSTs'
+/// rows are in the compaction's output, which the latest manifest names. Such an error now marks the database stale
+/// ([`note_missing_sst`]); the server answers it with a retryable error, and the next command on the database drops the
+/// stale reader and opens a new one on the latest manifest ([`take_stale`]).
+static STALE_READERS: std::sync::LazyLock<Mutex<std::collections::HashSet<String>>> = std::sync::LazyLock::new(Default::default);
+
+/// Reads that hit an SST deleted under a stale reader (tenantStats).
+pub static STALE_READER_ERRORS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// If `e` is a read that found one of a database's compacted SSTs missing, mark that database's reader stale and return
+/// the database's id.
+pub fn note_missing_sst(e: &anyhow::Error) -> Option<String> {
+    let text = format!("{e:#}");
+    if !text.contains("not found") {
+        return None;
+    }
+    let i = text.find("tenants/")? + "tenants/".len();
+    let rest = &text[i..];
+    let (db, after) = rest.split_once('/')?;
+    if !after.starts_with("compacted/") || !after.split_whitespace().next().is_some_and(|f| f.contains(".sst")) {
+        return None;
+    }
+    STALE_READER_ERRORS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    STALE_READERS.lock().unwrap().insert(db.to_string());
+    Some(db.to_string())
+}
+
+/// Is the database's reader marked stale (without clearing the mark)?
+pub fn is_stale(db: &str) -> bool {
+    STALE_READERS.lock().unwrap().contains(db)
+}
+
+/// Clear the database's stale mark; true if it was set.
+pub fn take_stale(db: &str) -> bool {
+    STALE_READERS.lock().unwrap().remove(db)
+}
+
 fn reader_options(skip_wal_replay: bool) -> DbReaderOptions {
     let mut o = DbReaderOptions::default();
     o.skip_wal_replay = skip_wal_replay;
@@ -4342,6 +4384,105 @@ mod tests {
         assert!(was_frozen, "the compactor never wrote its output (the test did not reach the case)");
         r.expect("the pass did not stop within 20 s of the shutdown").unwrap().ok();
         assert!(t0.elapsed() < Duration::from_secs(10), "the pass took {:?} to stop after the shutdown", t0.elapsed());
+    }
+
+    /// sst-not-found (2026-11-12): a database is closed, a reader opens it (a wake after a close: `wake_inner` opens a
+    /// `DbReader` that keeps the manifest it opened with, `LONG_POLL`), then a compaction pass of the closed database
+    /// replaces the SSTs that manifest names and a garbage collector runs. Every key must still be readable through the
+    /// reader. `which` picks the collector: 0 none (control), 1 our SST GC (`gc_tenant_ssts`), 2 SlateDB's GC of a closed
+    /// tenant (`gc_tenant_closed`).
+    async fn reader_across_compaction_and_gc(which: u8) -> (usize, usize, Vec<String>, usize) {
+        let id = format!("test-reader-gc-{which}");
+        let id = id.as_str();
+        let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let db = Db::builder(tenant_path(id), Arc::clone(&raw)).with_settings(writer_settings()).build().await.unwrap();
+        let n = L0_COMPACT_THRESHOLD * 50;
+        for i in 0..n {
+            db.put(format!("k{i:05}").as_bytes(), b"v").await.unwrap();
+            if i % 50 == 49 {
+                db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await.unwrap();
+            }
+        }
+        db.close().await.unwrap();
+        let (reader, _) = open_reader(&raw, id, true, None).await.unwrap();
+        let before: Vec<String> = reader.manifest().l0().iter().map(|v| v.sst.id.value().to_string()).collect();
+        compact_tenant_pass_with(&raw, &raw, id, COMPACTION_STALL, Duration::from_secs(3), false, PassHooks::default()).await.unwrap();
+        match which {
+            1 => {
+                let old = SST_GC_MIN_UNREF_SECS.swap(0, Relaxed);
+                let _ = gc_tenant_ssts(&raw, id).await.unwrap();
+                let _ = gc_tenant_ssts(&raw, id).await.unwrap();
+                SST_GC_MIN_UNREF_SECS.store(old, Relaxed);
+            }
+            2 => {
+                gc_tenant_closed(&raw, id, Duration::ZERO).await.unwrap();
+            }
+            _ => {}
+        }
+        let mut errors = Vec::new();
+        let mut ok = 0;
+        let mut recognised = 0;
+        for i in 0..n {
+            match reader.get(format!("k{i:05}").as_bytes()).await {
+                Ok(Some(_)) => ok += 1,
+                Ok(None) => errors.push(format!("k{i:05}: missing")),
+                Err(e) => {
+                    // the server answers such an error with a retryable code and reopens the reader (`note_missing_sst`)
+                    let e = anyhow::Error::from(e);
+                    if note_missing_sst(&e).as_deref() == Some(id) && take_stale(id) {
+                        recognised += 1;
+                    }
+                    errors.push(format!("k{i:05}: {e}"));
+                }
+            }
+        }
+        let gone = {
+            let mut g = Vec::new();
+            for sst in &before {
+                if raw.head(&Path::from(format!("{}/compacted/{sst}.sst", tenant_path(id)))).await.is_err() {
+                    g.push(sst.clone());
+                }
+            }
+            g
+        };
+        // the data itself: a reader opened now, on the latest manifest, reads every key
+        let (fresh, _) = open_reader(&raw, id, true, None).await.unwrap();
+        let mut fresh_ok = 0;
+        for i in 0..n {
+            if matches!(fresh.get(format!("k{i:05}").as_bytes()).await, Ok(Some(_))) {
+                fresh_ok += 1;
+            }
+        }
+        println!("case {which}: a fresh reader reads {fresh_ok} of {n}");
+        assert_eq!(fresh_ok, n, "keys missing for a fresh reader too: data lost");
+        (ok, gone.len(), errors, recognised)
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn sst_not_found_control_no_gc() {
+        let (ok, gone, errors, _) = reader_across_compaction_and_gc(0).await;
+        println!("no GC: {ok} read, {gone} of the reader's L0 SSTs gone, errors {:?}", &errors[..errors.len().min(3)]);
+        assert!(errors.is_empty(), "{} keys unreadable: {:?}", errors.len(), &errors[..errors.len().min(3)]);
+    }
+
+    /// Our SST GC deletes the SSTs a `FollowLatest` reader still names once a compaction replaced them (SlateDB documents
+    /// that mode as unprotected): the reads fail, every failure is recognised as a stale reader (the server then retries
+    /// with a new reader), and a fresh reader reads every key (nothing is lost).
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn sst_not_found_after_our_sst_gc_is_a_stale_reader() {
+        let (ok, gone, errors, recognised) = reader_across_compaction_and_gc(1).await;
+        println!("our SST GC: {ok} read, {gone} of the reader's L0 SSTs gone, {} errors, {recognised} recognised", errors.len());
+        assert!(gone > 0 && !errors.is_empty(), "the GC deleted none of the reader's SSTs: the test did not reach the case");
+        assert_eq!(recognised, errors.len(), "errors not recognised as a stale reader: {:?}", &errors[..errors.len().min(3)]);
+    }
+
+    /// The same with SlateDB's GC of a closed tenant (it judges by file age, so an SST replaced a moment ago goes at once).
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn sst_not_found_after_slatedb_gc_is_a_stale_reader() {
+        let (ok, gone, errors, recognised) = reader_across_compaction_and_gc(2).await;
+        println!("SlateDB GC: {ok} read, {gone} of the reader's L0 SSTs gone, {} errors, {recognised} recognised", errors.len());
+        assert!(gone > 0 && !errors.is_empty(), "the GC deleted none of the reader's SSTs: the test did not reach the case");
+        assert_eq!(recognised, errors.len(), "errors not recognised as a stale reader: {:?}", &errors[..errors.len().min(3)]);
     }
 
     /// `abandon` says whether the close finished. With the store down it returns false after `ABANDON_CLOSE_TIMEOUT` and
