@@ -1,0 +1,7 @@
+three finds of 100000 ids on a reader: 0.59 s, 0.37 s, 0.33 s (T_pin 200 ms)
+            print(f"three finds of {N} ids on a reader: {', '.join(f'{r:.2f} s' for r in rounds)} (T_pin {T_PIN_MS} ms)")
+E           AssertionError: the find lasted 0.59 s, under 3 T_pin: make N larger
+test_51_c2_fix_long_reads.py:37: AssertionError
+1 failed in 14.34s
+find of 60000 ids in 2.87 s with 10 upgrades between getMores; compactor before {'enabled': True, 'started': 2, 'running': 1, 'publishes': 1, 'absorbs': 1, 'merges': 0, 'reseals': 0, 'errors': 0, 'catchUps': 1}, after the close {'enabled': True, 'started': 2, 'running': 0, 'publishes': 2, 'absorbs': 2, 'merges': 0, 'reseals': 0, 'errors': 0, 'catchUps': 1}
+1 passed in 24.28s

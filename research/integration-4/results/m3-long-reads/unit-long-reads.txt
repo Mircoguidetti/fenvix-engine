@@ -1,0 +1,3 @@
+test fx::long_reads_tests::long_reader_scan_with_compactor_and_gc ... ok
+test fx::long_reads_tests::long_reader_scan_following_e1 ... ok
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 144 filtered out; finished in 54.15s

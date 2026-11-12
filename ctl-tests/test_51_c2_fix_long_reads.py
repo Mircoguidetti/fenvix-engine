@@ -13,7 +13,9 @@ import time
 from lib import Server, make_bucket
 
 T_PIN_MS = 200
-N = 100_000
+# integration-4: 200,000 (was 100,000). With the clone-uploads fix a closed database is fully absorbed into sealed runs,
+# so the cold find got faster (0.54-0.59 s against 1.10 s on the branch) and fell under the 3 T_pin this test needs.
+N = 200_000
 
 
 def test_long_find_on_a_reader_is_not_refused():
