@@ -29,7 +29,10 @@ def test_first_build_cut_and_a_crash_before_the_staged_writes_are_durable():
     ff.close()
     bucket = make_bucket("r68")
     with open(ff.name, "w") as fh:
-        fh.write(f"delay_put tenants/{DB}/wal/ 6000\n")
+        if os.environ.get("R68_FAIL_FIRST_MS"):
+            fh.write(f"fail_put tenants/{DB}/wal/\n")
+        else:
+            fh.write(f"delay_put tenants/{DB}/wal/ {os.environ.get('R68_DELAY_MS', '6000')}\n")
     p1 = Server(bucket, "r68a", idle=600, extra=SEALED, env={"MONGO_TEST_FAULTS_FILE": ff.name}).start()
     acked, lock, stop = {}, threading.Lock(), threading.Event()
 
@@ -50,6 +53,12 @@ def test_first_build_cut_and_a_crash_before_the_staged_writes_are_durable():
     for w in ws:
         w.start()
     t0 = time.time()
+    fail_ms = int(os.environ.get("R68_FAIL_FIRST_MS", "0"))
+    if fail_ms:
+        # the flush error path: every WAL PUT fails first (the first build's flush among them), then they are delayed
+        time.sleep(fail_ms / 1000)
+        with open(ff.name, "w") as fh:
+            fh.write(f"delay_put tenants/{DB}/wal/ {os.environ.get('R68_DELAY_MS', '6000')}\n")
     try:
         wait_until(lambda: any("/fx/manifest/" in k for k, _ in list_prefix(bucket, f"tenants/{DB}/fx/")), 60, every=0.05, what="the first version")
         t_version = time.time() - t0
