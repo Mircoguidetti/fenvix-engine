@@ -115,3 +115,56 @@ def test_b_inserts_waiting_behind_the_erase_land_in_the_new_database():
         assert after
     finally:
         srv.term()
+
+
+def test_c_insert_staged_into_an_opening_abandoned_by_a_lease_loss():
+    """An insert X stages its batch and waits for its WAL write (delayed 6 s); meanwhile the process lease lapses (its
+    renewal delayed 6 s, ttl 3 s) and the database is abandoned. X must never be acknowledged unless it is durable: after
+    the abandon either the client got an error, or X is there after a restart (kill -9, then a fresh read)."""
+    ff = tempfile.NamedTemporaryFile("w", delete=False, suffix=".faults")
+    ff.close()
+    bucket = make_bucket("e65c")
+    srv = Server(bucket, "e65c", idle=300, holder="H65", extra=["--lease-ttl-secs", "3"], env={"MONGO_TEST_FAULTS_FILE": ff.name}).start()
+    try:
+        c = srv.client()
+        fill(c, "inflc", "c", 200)
+        out = {}
+        with open(ff.name, "w") as fh:
+            fh.write("delay_put tenants/inflc/wal/ 6000\ndelay_put processes/H65/_lease 6000\n")
+
+        def insert_x():
+            cx = MongoClient(srv.uri, serverSelectionTimeoutMS=10000, socketTimeoutMS=60000, retryWrites=False)
+            t0 = time.time()
+            try:
+                cx.inflc.c.insert_one({"_id": "X"})
+                out["x"] = ("ok", time.time() - t0)
+            except PyMongoError as e:
+                out["x"] = (f"error {getattr(e, 'code', None)} {str(e)[:150]}", time.time() - t0)
+        th = threading.Thread(target=insert_x)
+        th.start()
+        th.join(timeout=60)
+        with open(ff.name, "w") as fh:
+            fh.write("")
+        log = srv.log_text()
+        lost = log.count("LEASE lost") + log.count("process_lease_lapsed")
+        kind, took = out["x"]
+        time.sleep(2)
+        srv.kill9()
+        srv.proc = None
+        srv.start()
+        found = None
+        for _ in range(60):
+            try:
+                found = srv.client().inflc.c.find_one({"_id": "X"})
+                break
+            except PyMongoError:
+                time.sleep(0.5)
+        n = srv.client().inflc.c.count_documents({})
+        print(f"X: {kind} after {took:.1f} s; lease lost/lapsed lines {lost}; after kill -9 and restart X is {'present' if found else 'MISSING'}; documents {n}")
+        assert lost > 0, "the lease never lapsed: the test did not reach the case"
+        assert n >= 200, "acknowledged documents of the fill are missing"
+        if kind == "ok":
+            assert found is not None, "RULE 8: X was acknowledged but is missing after a restart"
+    finally:
+        srv.term()
+        os.unlink(ff.name)
