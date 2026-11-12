@@ -134,6 +134,14 @@ impl From<anyhow::Error> for MongoError {
             m.extra = Some(doc! { "errorLabels": ["RetryableWriteError"] });
             return m;
         }
+        if tenant_bench::fx::is_fenced(&e) {
+            // fix-store-errors (test_65 C2): this process's writer was fenced by a newer owner of the database ("detected
+            // newer DB client"). The write's WAL object was refused, so nothing of it was applied: retryable, like a
+            // database reopened after a lease loss (inside a transaction too). It was code 1, which drivers do not retry.
+            let mut m = MongoError::new(134, "DatabaseFenced", format!("database written by a newer owner; nothing of this write was applied, retry: {e:#}"));
+            m.extra = Some(doc! { "errorLabels": ["TransientTransactionError", "RetryableWriteError"] });
+            return m;
+        }
         if let Some(r) = e.downcast_ref::<tenant_bench::fx::Retry>() {
             // a revoked hold or a stale version of our manifest (fx/hold.rs, rule 5 and 6): retryable, and inside a
             // transaction the driver runs the whole transaction again

@@ -800,6 +800,8 @@ impl Server {
                 "writeHookNs": crate::opening::STATS.write_hook_ns.load(Relaxed) as i64,
                 "recordNs": crate::opening::STATS.record_ns.load(Relaxed) as i64,
             },
+            // fix-store-errors: retryable writes answered with the RetryableWriteError label after a store error
+            "storeErrorsLabelled": crate::retry::STORE_ERRORS_LABELLED.load(Relaxed) as i64,
             "customerKeys": {
                 "docsWritten": crate::custkey::DOCS_WRITTEN.load(Relaxed) as i64,
                 "locatorLookups": crate::custkey::LOCATOR_LOOKUPS.load(Relaxed) as i64,

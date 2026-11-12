@@ -304,7 +304,10 @@ impl Server {
         }
         let mut reply = match r {
             Ok(d) => d,
-            Err(e) => e.to_reply(),
+            Err(mut e) => {
+                crate::retry::label_store_error(&name, &cmd, &mut e);
+                e.to_reply()
+            }
         };
         if is_rs {
             let log = &self.dbs.changes;
