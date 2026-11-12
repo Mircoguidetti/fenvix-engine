@@ -1,0 +1,10 @@
+{
+ "engine_commit": "27014ff2e3e3e4ff223aa778746f3dce433c6549",
+ "arch": "x86_64",
+ "rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)",
+ "cargo": "cargo 1.97.0 (c980f4866 2026-06-30)",
+ "build": "fixed folder (FX_BUILD_DIR, default /tmp/fx-src) from git archive; cargo build --release --locked -p mongo-server; proto/quaderno: cargo build --release --locked --bin pq; not stripped",
+ "rustflags": "--remap-path-prefix=/tmp/fx-src=/src --remap-path-prefix=/root/.cargo=/cargo --remap-path-prefix=/root/.rustup=/rustup",
+ "mongo_server_sha256": "f684c6b1d3378821cfd60a1712e0467da5c3cfd8f13965379c5fde8b836f580b",
+ "pq_sha256": "997e1f7719fb3c92e771517dc1f3b7a25fcaab650942006e2b02411932bdbf5c"
+}
