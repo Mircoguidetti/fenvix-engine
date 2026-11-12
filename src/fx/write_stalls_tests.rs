@@ -418,7 +418,7 @@ async fn ws_recognition_runs_off_the_lock_at_once() {
 /// would move X_d past their rows, which are then in neither our runs nor SlateDB's part of the merged read. The scenario
 /// runs twice: with the pass's gate off (the code before this branch, the negative control: it must lose rows, or the
 /// test does not reach the case) and with the gate on (nothing lost).
-async fn pass_gap_scenario(control: bool) -> (usize, usize, usize, usize) {
+async fn pass_gap_scenario(control: bool) -> (usize, usize, usize, usize, Duration) {
     crate::lifecycle::CONTROL_NO_PASS_GATE.store(control, Relaxed);
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
     let id = if control { "ws-pass-gap-control" } else { "ws-pass-gap" };
@@ -433,8 +433,9 @@ async fn pass_gap_scenario(control: bool) -> (usize, usize, usize, usize) {
     k.absorb_min_l0 = 1000; // nothing is absorbed: every L0 SST written now stays unabsorbed
     assert!(t.fx_claim());
     let c = start(&mut t, &store, &k).await;
+    c.paused.store(true, Relaxed); // no absorption at all before the close (not even near the stall)
     // the gap: rows written only now (new keys), flushed into L0 SSTs that are never absorbed before the close
-    for r in 0..5 {
+    for r in 0..10 {
         for i in 0..80 {
             apply(&mut t, &mut m, vec![(ckey(20 + r, i), Some(format!("gap-{r}-{i}").into_bytes()))]).await;
         }
@@ -444,7 +445,9 @@ async fn pass_gap_scenario(control: bool) -> (usize, usize, usize, usize) {
     c.stop().await;
     t.close().await.unwrap();
     // the close-time pass (L0 at or above the threshold), as the maintenance queue runs it
+    let t_pass = Instant::now();
     let pass = crate::lifecycle::compact_tenant(&store, &store, id).await.unwrap();
+    let pass_took = t_pass.elapsed();
     let l0_after_pass = crate::lifecycle::l0_count(&store, id).await.unwrap();
     // reopen: new rows, absorbed, then every key read
     let mut t = lc(&store).wake(id).await.unwrap();
@@ -458,7 +461,7 @@ async fn pass_gap_scenario(control: bool) -> (usize, usize, usize, usize) {
     flush(&t).await;
     c.drain(false).await.unwrap();
     t.fx_sync();
-    let gap_keys: Vec<Vec<u8>> = m.keys().filter(|k| (20..25).any(|r| k.starts_with(&ckey(r, 0)[..ckey(r, 0).len() - 5]))).cloned().collect();
+    let gap_keys: Vec<Vec<u8>> = m.keys().filter(|k| (20..30).any(|r| k.starts_with(&ckey(r, 0)[..ckey(r, 0).len() - 5]))).cloned().collect();
     let mut missing = 0;
     for key in &gap_keys {
         if t.get(key).await.unwrap().as_deref() != m.get(key).map(|v| &v[..]) {
@@ -467,7 +470,7 @@ async fn pass_gap_scenario(control: bool) -> (usize, usize, usize, usize) {
     }
     let wrong = wrong_reads(&t, &m, &deleted).await;
     eprintln!(
-        "ws pass gap (gate {}): L0 at the close {l0_at_close} (all unabsorbed); pass {:?}, L0 after it {l0_after_pass}; x_d now {:?}; gap keys {} missing {missing}; wrong {wrong}",
+        "ws pass gap (gate {}): L0 at the close {l0_at_close}; pass {:?} in {pass_took:?}, L0 after it {l0_after_pass}; x_d now {:?}; gap keys {} missing {missing}; wrong {wrong}",
         if control { "off" } else { "on" },
         pass.as_ref().map(|p| (p.l0_before, p.l0_after)),
         t.fx_view().map(|v| v.x_d),
@@ -476,20 +479,22 @@ async fn pass_gap_scenario(control: bool) -> (usize, usize, usize, usize) {
     c.stop().await;
     t.close().await.unwrap();
     crate::lifecycle::CONTROL_NO_PASS_GATE.store(false, Relaxed);
-    (l0_at_close, l0_after_pass, missing, wrong)
+    (l0_at_close, l0_after_pass, missing, wrong, pass_took)
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn ws_close_time_pass_keeps_unabsorbed_l0() {
     let _s = SERIAL.lock().await;
     setup();
-    let (l0c, l0c_after, missing_c, _) = pass_gap_scenario(true).await;
-    let (l0, l0_after, missing, wrong) = pass_gap_scenario(false).await;
+    let (l0c, l0c_after, missing_c, _, _) = pass_gap_scenario(true).await;
+    let (l0, l0_after, missing, wrong, pass_took) = pass_gap_scenario(false).await;
     teardown();
     assert!(l0c >= crate::lifecycle::L0_COMPACT_THRESHOLD && l0 >= crate::lifecycle::L0_COMPACT_THRESHOLD, "setup: the close-time pass must have L0 to compact");
     assert!(l0c_after < l0c, "control: the ungated pass moves the unabsorbed L0 SSTs");
     assert!(missing_c > 0, "control: without the gate the scenario must lose rows, or the test does not reach the case");
-    assert!(l0_after >= 1 && l0_after < l0, "the gated pass moves the absorbed L0 SSTs and keeps the unabsorbed ones ({l0} -> {l0_after})");
+    assert_eq!(l0_after, l0, "nothing was absorbed: the gated pass keeps every L0 SST ({l0} -> {l0_after})");
     assert_eq!(missing, 0, "acknowledged writes lost: the pass moved L0 SSTs that were not absorbed");
+    assert!(l0_after >= crate::lifecycle::L0_COMPACT_THRESHOLD, "setup: the gate keeps at least the threshold, so the pass must not wait for L0 to drop");
+    assert!(pass_took < Duration::from_secs(10), "a gated pass ends once only kept L0 SSTs are left ({pass_took:?}; its stall timeout is 30 s)");
     assert_eq!(wrong, 0);
 }

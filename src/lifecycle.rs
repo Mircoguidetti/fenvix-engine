@@ -2900,14 +2900,14 @@ pub static PASS_GATE_KEPT: std::sync::atomic::AtomicU64 = std::sync::atomic::Ato
 /// the database has a version of our manifest: those whose rows are all at or below its X_d (listed in `absorbed_l0`,
 /// or read). None: no gate (sealed runs off, or no version: every row is in SlateDB's part of the read). An L0 SST
 /// with rows above X_d stays for the compactor's absorption at the next opening, and every newer one with it.
-pub(crate) async fn fx_pass_gate(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<std::collections::HashSet<ulid::Ulid>>> {
+pub(crate) async fn fx_pass_gate(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<(std::collections::HashSet<ulid::Ulid>, usize)>> {
     use std::sync::atomic::Ordering::Relaxed;
     if !crate::fx::ENABLED.load(Relaxed) || CONTROL_NO_PASS_GATE.load(Relaxed) || !PASS_GATE_ON.load(Relaxed) {
         return Ok(None);
     }
     let Some(v) = crate::fx::manifest::load_newest(store, id).await? else { return Ok(None) };
     let admin = Admin::builder(tenant_path(id), Arc::clone(store)).build();
-    let Some(m) = admin.read_manifest(None).await? else { return Ok(Some(std::collections::HashSet::new())) };
+    let Some(m) = admin.read_manifest(None).await? else { return Ok(Some((std::collections::HashSet::new(), 0))) };
     let listed: HashMap<String, u64> = v.absorbed_l0.iter().cloned().collect();
     let reader = slatedb::SstReader::new(tenant_path(id), Arc::clone(store), None, None);
     let mut allowed = std::collections::HashSet::new();
@@ -2922,8 +2922,9 @@ pub(crate) async fn fx_pass_gate(store: &Arc<dyn ObjectStore>, id: &str) -> Resu
         }
         allowed.insert(view.id);
     }
-    PASS_GATE_KEPT.fetch_add((total - allowed.len()) as u64, Relaxed);
-    Ok(Some(allowed))
+    let kept = total - allowed.len();
+    PASS_GATE_KEPT.fetch_add(kept as u64, Relaxed);
+    Ok(Some((allowed, kept)))
 }
 
 /// One compaction pass; with `warm`, the output that replaces blocks an open writer has in the shared block cache is read
@@ -3019,7 +3020,10 @@ pub(crate) async fn compact_tenant_pass_with(
     // fix-write-stalls (rule 8): on a database with a version of our manifest, only L0 SSTs at or below its X_d may leave
     // L0 (`tiered::Gated`)
     let gate = fx_pass_gate(raw, id).await?;
-    let cb = match crate::tiered::scheduler_gated(gate) {
+    // the L0 SSTs the gate keeps: the pass cannot take L0 below them, so its L0 work is done once only they are left
+    // (otherwise it would wait for progress it may not make, holding the maintenance lock, until its stall timeout)
+    let kept = gate.as_ref().map_or(0, |(_, k)| *k);
+    let cb = match crate::tiered::scheduler_gated(gate.map(|(a, _)| a)) {
         Some(s) => cb.with_scheduler_supplier(s),
         None => cb,
     };
@@ -3107,7 +3111,7 @@ pub(crate) async fn compact_tenant_pass_with(
                 }
             }
         }
-        if l0_after >= L0_COMPACT_THRESHOLD {
+        if l0_after >= L0_COMPACT_THRESHOLD && l0_after > kept {
             // A preemption waits for the L0 to be compacted (as long as it makes progress): the work that preempts writes
             // to the database too (a restore, a fork's source) and would find its L0 full, with no pass able to run.
             merging = false;
@@ -3237,7 +3241,7 @@ pub(crate) async fn compact_tenant_pass_with(
         }
     }
     anyhow::ensure!(
-        l0_after < L0_COMPACT_THRESHOLD || preempted,
+        l0_after < L0_COMPACT_THRESHOLD || l0_after <= kept || preempted,
         "compaction of tenant {id} made no progress for {:?} (L0 {l0_after}, pass {:.1} s)",
         stall,
         started.elapsed().as_secs_f64()
