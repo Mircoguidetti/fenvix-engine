@@ -525,6 +525,8 @@ pub struct Compactor {
     /// GC's state (first sights of unreferenced objects).
     pub gc: super::gc::GcState,
     last_gc: Mutex<Instant>,
+    /// fix-write-stalls, cause 3 (diagnostics): the last `L0_TRACE` line.
+    last_l0_trace: Mutex<Instant>,
     /// Drop jobs done when the writer last refreshed its SlateDB manifest (its L0 count, and its stalls, are by its view).
     refreshed_jobs: AtomicU64,
     absorb_lock: tokio::sync::Mutex<()>,
@@ -591,6 +593,7 @@ impl Compactor {
             codec: codec::identity(),
             gc: Default::default(),
             last_gc: Mutex::new(Instant::now()),
+            last_l0_trace: Mutex::new(Instant::now()),
             refreshed_jobs: AtomicU64::new(0),
             job_starts: Mutex::new(HashMap::new()),
             next_job: AtomicU64::new(0),
@@ -929,7 +932,10 @@ impl Compactor {
     /// Absorb the oldest L0 SSTs not absorbed yet into one delta run and publish. Returns the SSTs absorbed. One
     /// absorption at a time (rule 16: no gap).
     pub async fn absorb_once(&self) -> Result<usize> {
+        let t_call = Instant::now();
         let _one = self.absorb_lock.lock().await;
+        let t_locked = Instant::now();
+        let l0_start = self.l0_count();
         let views: Vec<_> = self.unabsorbed().into_iter().take(self.knobs.absorb_max_l0).collect();
         if views.is_empty() {
             return Ok(0);
@@ -973,6 +979,7 @@ impl Compactor {
             ids.push((view.id, hi));
         }
         let raw: u64 = rows.iter().map(|(k, (_, e))| (k.len() + e.len() + 8) as u64).sum();
+        let t_read = Instant::now();
         let mut line = None;
         if !rows.is_empty() {
             let path = manifest::run_path(self.id(), "delta", x_new, self.epoch);
@@ -990,6 +997,7 @@ impl Compactor {
             *per_group.entry(gi).or_default() += (k.len() + e.len() + 8) as u64;
         }
         let x_old = v0.x_d;
+        let t_written = Instant::now();
         let now = manifest::now_ms();
         let gids: HashMap<usize, u32> = v0.groups.iter().enumerate().map(|(i, g)| (i, g.id)).collect();
         let committed = self
@@ -1041,6 +1049,24 @@ impl Compactor {
             self.sh.stats.absorbed_rows.fetch_add(rows.len() as u64, Relaxed);
             self.sh.stats.absorbed_raw.fetch_add(raw, Relaxed);
         }
+        // diagnostics (cause 3): where an absorption's time goes, and the writer's L0 before and after it
+        let ms = |a: Instant, b: Instant| b.duration_since(a).as_millis();
+        let t_end = Instant::now();
+        eprintln!(
+            "ABSORB u={} db={} ssts={} rows={} raw_kib={} committed={} l0_start={l0_start} l0_end={} lock_ms={} read_ms={} write_ms={} commit_ms={} total_ms={}",
+            crate::waits::unix_ms(),
+            self.id(),
+            ids.len(),
+            rows.len(),
+            raw >> 10,
+            committed.is_some() as u8,
+            self.l0_count(),
+            ms(t_call, t_locked),
+            ms(t_locked, t_read),
+            ms(t_read, t_written),
+            ms(t_written, t_end),
+            ms(t_call, t_end)
+        );
         Ok(ids.len())
     }
 
@@ -1466,6 +1492,25 @@ impl Compactor {
             Err(_) => return,
         };
         let unabs = self.unabsorbed().len();
+        {
+            // diagnostics (cause 3): once a second, the writer's L0, the part not absorbed, and SlateDB's running job
+            let mut lt = self.last_l0_trace.lock().unwrap();
+            if lt.elapsed() >= Duration::from_secs(1) {
+                *lt = Instant::now();
+                let job = self.drop.cur_job.lock().unwrap().as_ref().map(|(t, d)| format!("{}ms {d}", t.elapsed().as_millis()));
+                eprintln!(
+                    "L0_TRACE u={} db={} l0={} unabs={} absorbing={} slate_jobs={}/{} slate_job={}",
+                    crate::waits::unix_ms(),
+                    self.id(),
+                    self.l0_count(),
+                    unabs,
+                    self.running.lock().unwrap().absorb as u8,
+                    self.drop.jobs_done.load(Relaxed),
+                    self.drop.jobs.load(Relaxed),
+                    job.unwrap_or_else(|| "-".into())
+                );
+            }
+        }
         let mut r = self.running.lock().unwrap();
         // absorption: L0 at the threshold, or an erasure waiting for its deletes, or L0 close to the stall
         if !r.absorb && unabs > 0 && (unabs >= self.knobs.absorb_min_l0 || self.erasure_waits_for_absorb(v.x_d) || self.sh.absorb_upto.load(Relaxed) > v.x_d || self.l0_count() >= 6) {

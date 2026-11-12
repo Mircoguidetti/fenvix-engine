@@ -80,6 +80,9 @@ pub struct DropCtl {
     pub control_ignore_holds: AtomicBool,
     pub control_lease_from_stamp: AtomicBool,
     pub control_no_takeover_window: AtomicBool,
+    /// fix-write-stalls, cause 3 (diagnostics): the SlateDB compaction job proposed last (one runs at a time), when and
+    /// what: `L0_TRACE` and `SLATE_JOB` lines.
+    pub cur_job: Mutex<Option<(Instant, String)>>,
 }
 
 impl DropCtl {
@@ -115,6 +118,7 @@ impl DropCtl {
             control_ignore_holds: AtomicBool::new(false),
             control_lease_from_stamp: AtomicBool::new(false),
             control_no_takeover_window: AtomicBool::new(false),
+            cur_job: Mutex::new(None),
         })
     }
 
@@ -403,6 +407,23 @@ impl CompactionScheduler for Sched {
         }
         let out = if self.0.drop { self.0.propose_fold(state) } else { self.0.propose_gated(state) };
         self.0.jobs.fetch_add(out.len() as u64, Relaxed);
+        if let Some(spec) = out.first() {
+            // diagnostics (cause 3): what the job reads, so a long one can be seen holding L0 work back
+            let m = state.manifest();
+            let (mut l0n, mut l0b, mut srs) = (0usize, 0u64, Vec::new());
+            for s in spec.sources() {
+                match s {
+                    SourceId::SstView(id) => {
+                        l0n += 1;
+                        l0b += m.l0().iter().find(|v| v.id == *id).map_or(0, |v| v.estimate_size());
+                    }
+                    SourceId::SortedRun(id) => srs.push(format!("{id}:{}", m.compacted().iter().find(|r| r.id == *id).map_or(0, |r| r.estimate_size()) >> 20)),
+                }
+            }
+            let desc = format!("l0_srcs={l0n} l0_mib={} srs_mib=[{}] l0_now={} runs_now={}", l0b >> 20, srs.join(","), m.l0().len(), m.compacted().len());
+            eprintln!("SLATE_JOB start u={} db={} {desc}", crate::waits::unix_ms(), self.0.sh.id);
+            *self.0.cur_job.lock().unwrap() = Some((Instant::now(), desc));
+        }
         out
     }
 
@@ -462,6 +483,9 @@ impl CompactionFilter for Filter {
         self.ctl.rows_dropped.fetch_add(self.dropped, Relaxed);
         self.ctl.rows_kept.fetch_add(self.kept, Relaxed);
         self.ctl.jobs_done.fetch_add(1, Relaxed);
+        if let Some((t0, desc)) = self.ctl.cur_job.lock().unwrap().take() {
+            eprintln!("SLATE_JOB end u={} db={} ms={} rows={} {desc}", crate::waits::unix_ms(), self.ctl.sh.id, t0.elapsed().as_millis(), self.kept + self.dropped);
+        }
         self.ctl.applied_floor.fetch_max(self.floor, Relaxed);
         Ok(())
     }
