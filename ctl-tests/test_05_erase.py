@@ -166,9 +166,10 @@ def test_erase_while_clients_write(env):
         cc = srv.client()
         i = 10000
         while not stop.is_set():
+            t_send = time.time()
             try:
                 cc["busy"]["c"].insert_one({"_id": i})
-                acked.append((time.time(), i))
+                acked.append((t_send, i))
             except Exception:
                 pass
             i += 1
@@ -182,7 +183,10 @@ def test_erase_while_clients_write(env):
     stop.set()
     t.join()
     assert st == 200, r
-    # after the erase the writer's inserts re-created a database holding only post-erase documents
+    # after the erase the writer's inserts re-created a database holding only post-erase documents. An insert SENT after the
+    # erase answered must be there. The one insert in flight when the erase answered (sent before, acknowledged after) may
+    # have been staged into the erased database (group commit replies after the entry lock is released): present or absent
+    # are both right for it (test_65 covers both sides of it deterministically).
     after = [i for ts, i in acked if ts > t_done]
     ids = sorted(d["_id"] for d in c["busy"]["c"].find({}))
     assert all(i >= 10000 for i in ids) and not any(i < 10000 for i in ids)
