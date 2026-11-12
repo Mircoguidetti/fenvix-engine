@@ -349,7 +349,36 @@ impl View {
         }
         let delta = v.delta.iter().map(&mut handle).collect::<Result<Vec<_>>>()?;
         let r3 = prev.and_then(|p| p.r3.clone());
-        Ok(View { store, version: v.version, x_d: v.x_d, e_env: v.e_env, groups, delta, meta: v, r3 })
+        let view = View { store, version: v.version, x_d: v.x_d, e_env: v.e_env, groups, delta, meta: v, r3 };
+        view.pin_runs();
+        Ok(view)
+    }
+
+    /// P-big-speed fix 2: the runs' maps pinned. Every run of a new version is opened in the background (its fences and
+    /// customer filter stay in RAM with the handle, a few bytes per 256 KiB block), so a cold read never waits for a run's
+    /// open before its block GET. Runs a previous version opened are shared (`known`), so only new runs are opened.
+    fn pin_runs(&self) {
+        if !PIN_RUNS.load(Relaxed) {
+            return;
+        }
+        let Ok(rt) = tokio::runtime::Handle::try_current() else { return };
+        let hs: Vec<Arc<RunH>> = self.groups.iter().filter_map(|g| g.sealed.clone()).chain(self.delta.iter().cloned()).filter(|h| h.run.get().is_none()).collect();
+        if hs.is_empty() {
+            return;
+        }
+        let store = Arc::clone(&self.store);
+        PINS_STARTED.fetch_add(hs.len() as u64, Relaxed);
+        rt.spawn(async move {
+            use futures::StreamExt;
+            let store = &store;
+            let mut s = futures::stream::iter(hs.into_iter().map(|h| async move { h.open(store).await.map(|_| ()) })).buffer_unordered(16);
+            while let Some(r) = s.next().await {
+                if r.is_err() {
+                    // a run deleted meanwhile (a newer version retired it) or a store error: a read opens it on demand
+                    PIN_ERRORS.fetch_add(1, Relaxed);
+                }
+            }
+        });
     }
 
     /// Index of the group holding `key`.
@@ -482,6 +511,12 @@ impl View {
         });
         let r = futures::future::try_join_all(jobs).await?;
         Ok(r.into_iter().fold((0, 0), |(a, b), (x, y)| (a + x, b + y)))
+    }
+
+    /// (runs of this version that are open, runs in all).
+    pub fn runs_opened(&self) -> (usize, usize) {
+        let all: Vec<&Arc<RunH>> = self.groups.iter().filter_map(|g| g.sealed.as_ref()).chain(self.delta.iter()).collect();
+        (all.iter().filter(|h| h.run.get().is_some()).count(), all.len())
     }
 
     /// Open every run of this version (its fences and customer filter: the runs' "maps"), at most `parallel` at once.
@@ -763,6 +798,12 @@ impl RunCur {
         }
     }
 }
+
+/// P-big-speed fix 2: open every run of a version when it is loaded (`View::pin_runs`); runs whose open was started,
+/// and opens that failed (the run is then opened on demand by the read that needs it).
+pub static PIN_RUNS: AtomicBool = AtomicBool::new(true);
+pub static PINS_STARTED: AtomicU64 = AtomicU64::new(0);
+pub static PIN_ERRORS: AtomicU64 = AtomicU64::new(0);
 
 /// perf-latency round 2: the thread warm-up of `RunCur` (on by default; `FENVIX_WARM_THREAD=0` turns it off, measurements).
 pub static WARM_THREAD: AtomicBool = AtomicBool::new(true);

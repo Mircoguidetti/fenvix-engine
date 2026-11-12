@@ -902,6 +902,17 @@ impl Server {
         }
         let cols = specs.iter().map(|s| match s.as_document() { Some(d) => crate::collation::of_statement("update", d), None => Ok(Ok(None)) }).collect::<R<Vec<_>>>()?;
         let mut rr = self.retry_begin(db, cmd, specs.len(), "update").await?;
+        if tx.is_none() {
+            // P-big-speed fix 4: an upsert must read before it writes (whether the document exists decides between
+            // update and insert, and `$setOnInsert` keeps a first value: the LangGraph saver's pending writes rely on it),
+            // so the read stays; but when the statements pin one customer, its box is warmed first, under a shared view
+            // (custbox.rs), and the reads under the exclusive lock below are served from the caches.
+            if let Some(q) = specs.first().and_then(|s| s.as_document()).and_then(|s| s.get_document("q").ok()) {
+                if let Ok(rv) = self.dbs.read(db).await {
+                    rv.customer_box_warm(coll, q).await;
+                }
+            }
+        }
         let mut g = self.dbs.lock(db).await;
         attach(&mut g, tx);
         let names = g.collections().await?;

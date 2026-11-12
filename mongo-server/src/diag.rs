@@ -760,6 +760,12 @@ impl Server {
                 d.insert("wiredTiger", doc! { "cache": { k: Bson::Int64(v) } });
             }
         }
+        let mb_doc = {
+            let b = tenant_bench::membudget::get();
+            doc! { "limitBytes": b.limit as i64, "source": b.source, "cachesBytes": b.caches as i64, "blockCacheBytes": b.block_cache as i64,
+                   "metaCacheBytes": b.meta_cache as i64, "sealedCacheBytes": b.sealed_cache as i64, "memtableBytes": b.memtable as i64,
+                   "firstCourseBytes": b.first_course as i64, "changeLogBytes": b.change_log as i64, "l0ReadParallel": b.l0_read_parallel as i64 }
+        };
         d.insert("fenvix", doc! {
             "cache": {
                 "blockBytes": cs.block_usage as i64, "blockCapacity": cs.block_capacity as i64, "blockEntries": cs.block_entries as i64,
@@ -774,6 +780,8 @@ impl Server {
             },
             // compaction passes (lifecycle.rs): running now, of which long merges without a maintenance slot; ended without
             // progress; stopped on request; GC rounds that skipped a tenant busy with a pass
+            // P-big-speed fix 1: the memory budget every cache was sized from (membudget.rs)
+            "memoryBudget": mb_doc,
             // the customer's box (custbox.rs, P-big-speed fix 3)
             "customerBox": {
                 "enabled": crate::custbox::ENABLED.load(Relaxed),
@@ -784,6 +792,13 @@ impl Server {
                 "warmMicros": crate::custbox::WARM_MICROS.load(Relaxed) as i64,
                 "warmErrors": crate::custbox::WARM_ERRORS.load(Relaxed) as i64,
                 "skippedRecent": crate::custbox::SKIPPED_RECENT.load(Relaxed) as i64,
+                // P-big-speed fix 2: index tie-completion scans run (none on unique indexes)
+                "indexTieScans": crate::coll::TIE_SCANS.load(Relaxed) as i64,
+                // P-big-speed fix 2: SSTs whose index and filters were read at a writer's open; runs opened when a version
+                // was loaded, and those opens that failed
+                "sstMapsPinned": tenant_bench::lifecycle::SST_MAPS_PINNED.load(Relaxed) as i64,
+                "runPinsStarted": tenant_bench::fx::view::PINS_STARTED.load(Relaxed) as i64,
+                "runPinErrors": tenant_bench::fx::view::PIN_ERRORS.load(Relaxed) as i64,
             },
             "firstCourse": {
                 "enabled": crate::opening::ENABLED.load(Relaxed),

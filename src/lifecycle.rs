@@ -145,6 +145,43 @@ static WRITER_DBS: std::sync::LazyLock<Mutex<HashMap<String, Db>>> = std::sync::
 pub(crate) fn writer_opened(id: &str, db: &Db) {
     OPEN_WRITERS.lock().unwrap().insert(id.to_string());
     WRITER_DBS.lock().unwrap().insert(id.to_string(), db.clone());
+    pin_sst_maps(db);
+}
+
+/// P-big-speed fix 2: SST indexes and filters pinned where they fit. When a writer opens, the index and the filters of
+/// every SST of its manifest are read into the shared metadata cache in the background (16 SSTs at once), so a cold read
+/// of the database waits for its data blocks only. Sized by the memory budget (`membudget.rs`, the metadata cache's
+/// share); SSTs that do not fit are read on demand, as before. New L0 SSTs cache their index and filters when they are
+/// flushed (`flush_cache_policy`).
+pub static PIN_SST_MAPS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+pub static SST_MAPS_PINNED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+fn pin_sst_maps(db: &Db) {
+    use slatedb::DbCacheManagerOps;
+    if !PIN_SST_MAPS.load(std::sync::atomic::Ordering::Relaxed) || DB_CACHE.get().is_none() {
+        return;
+    }
+    let Ok(rt) = tokio::runtime::Handle::try_current() else { return };
+    let ids: Vec<slatedb::manifest::SsTableId> = {
+        let m = db.manifest();
+        let mut seen = std::collections::HashSet::new();
+        m.all_sst_views().map(|v| v.sst.id).filter(|id| seen.insert(*id)).collect()
+    };
+    if ids.is_empty() {
+        return;
+    }
+    let db = db.clone();
+    rt.spawn(async move {
+        use futures::StreamExt;
+        let db = &db;
+        let mut s = futures::stream::iter(ids.into_iter().map(|id| async move { db.warm_sst(id, &[slatedb::CacheTarget::Index, slatedb::CacheTarget::Filters]).await }))
+            .buffer_unordered(16);
+        while let Some(r) = s.next().await {
+            if r.is_ok() {
+                SST_MAPS_PINNED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            }
+        }
+    });
 }
 
 pub(crate) fn writer_closed(id: &str) {

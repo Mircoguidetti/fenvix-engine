@@ -637,6 +637,10 @@ struct Args {
     /// reads the customer's whole key range once, so it and the customer's next requests are served from the caches.
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
     customer_box: bool,
+    /// P-big-speed fix 4: the `_id` check of an insert into a customer-keyed collection without a time field reads the
+    /// document key (inside the customer's box) instead of the shared locator (false: the locator, as before).
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    id_check_in_box: bool,
     /// A customer's box is warmed again after this many seconds.
     #[arg(long, default_value_t = 600)]
     customer_box_ttl_secs: u64,
@@ -946,6 +950,7 @@ async fn run() -> Result<()> {
     custkey::configure(&custkey::with_agent_defaults(&args.customer_key, &args.agent_checkpoints))?;
     opening::ENABLED.store(args.first_course, std::sync::atomic::Ordering::Relaxed);
     custbox::ENABLED.store(args.customer_box, std::sync::atomic::Ordering::Relaxed);
+    coll::ID_CHECK_IN_BOX.store(args.id_check_in_box, std::sync::atomic::Ordering::Relaxed);
     custbox::TTL_SECS.store(args.customer_box_ttl_secs, std::sync::atomic::Ordering::Relaxed);
     opening::IDLE_SECS.store(args.first_course_idle_secs, std::sync::atomic::Ordering::Relaxed);
     opening::MAX_AGE_SECS.store(args.first_course_days * 86_400, std::sync::atomic::Ordering::Relaxed);

@@ -585,6 +585,24 @@ pub async fn fetch<'n>(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, la
     let hits = out.iter().filter(|b| b.is_some()).count();
     super::view::BLOCK_HITS.fetch_add(hits as u64, Relaxed);
     let miss: Vec<usize> = (first..=last).filter(|b| out[b - first].is_none()).collect();
+    // P-big-speed fix 2, single flight: a block another fetch is getting now is waited for, not fetched again (two reads
+    // of one customer at once, or a read beside the customer's box warm-up, sent the same GET twice). Then the counter is
+    // asked again; what is still missing is fetched here.
+    if SINGLE_FLIGHT.load(Relaxed) && !miss.is_empty() {
+        let waits: Vec<tokio::sync::watch::Receiver<bool>> = {
+            let g = INFLIGHT.lock().unwrap();
+            miss.iter().filter_map(|b| g.get(&(run.run_id, *b as u32)).cloned()).collect()
+        };
+        if !waits.is_empty() {
+            SINGLE_FLIGHT_WAITS.fetch_add(1, Relaxed);
+            for mut w in waits {
+                // a fetch that failed or was dropped closes its channel: then this one fetches by itself
+                let _ = w.wait_for(|done| *done).await;
+            }
+            return Box::pin(fetch(store, run, first, last, prefix, need)).await;
+        }
+    }
+    let _claim = if SINGLE_FLIGHT.load(Relaxed) && !miss.is_empty() { Some(Claim::new(run.run_id, &miss)) } else { None };
     if let (Some(&a), Some(&z)) = (miss.first(), miss.last()) {
         if std::env::var("FENVIX_COUNTER_DEBUG").is_ok() {
             eprintln!("counter: GET blocks {a}..={z} of {} for prefix {:?} (stale piece: {})", run.path, prefix.map(|p| String::from_utf8_lossy(p).to_string()), stale.iter().any(|x| x.is_some()));
@@ -607,6 +625,46 @@ pub async fn fetch<'n>(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, la
         }
     }
     Ok(out.into_iter().map(|b| b.expect("block fetched")).collect())
+}
+
+/// Single flight of block fetches (on by default; off: every fetch sends its own GET, as before P-big-speed).
+pub static SINGLE_FLIGHT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+/// Fetches that waited for another fetch of the same blocks instead of sending a GET.
+pub static SINGLE_FLIGHT_WAITS: AtomicU64 = AtomicU64::new(0);
+/// Blocks being fetched now: (run, block) -> a channel that turns true when the fetch kept them.
+static INFLIGHT: std::sync::LazyLock<Mutex<HashMap<([u8; RUN_ID_LEN], u32), tokio::sync::watch::Receiver<bool>>>> = std::sync::LazyLock::new(Default::default);
+
+/// The blocks one fetch is getting; dropped (fetch done, failed or cancelled), it wakes the fetches waiting for them.
+struct Claim {
+    run: [u8; RUN_ID_LEN],
+    blocks: Vec<u32>,
+    tx: tokio::sync::watch::Sender<bool>,
+}
+
+impl Claim {
+    fn new(run: [u8; RUN_ID_LEN], blocks: &[usize]) -> Claim {
+        let (tx, rx) = tokio::sync::watch::channel(false);
+        let mut g = INFLIGHT.lock().unwrap();
+        let blocks: Vec<u32> = blocks.iter().map(|b| *b as u32).collect();
+        for b in &blocks {
+            g.insert((run, *b), rx.clone());
+        }
+        Claim { run, blocks, tx }
+    }
+}
+
+impl Drop for Claim {
+    fn drop(&mut self) {
+        let mut g = INFLIGHT.lock().unwrap();
+        for b in &self.blocks {
+            // only this claim's entry (a later claim of the same block, after this one, keeps its own)
+            if g.get(&(self.run, *b)).is_some_and(|r| r.same_channel(&self.tx.subscribe())) {
+                g.remove(&(self.run, *b));
+            }
+        }
+        drop(g);
+        let _ = self.tx.send(true);
+    }
 }
 
 /// Block b of `run` again, from the store, for a read that ran past a trimmed slice's interval.

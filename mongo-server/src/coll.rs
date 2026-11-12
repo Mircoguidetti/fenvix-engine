@@ -183,6 +183,15 @@ pub fn plan_for(indexes: &[IndexDef], o: &FindOpts) -> Plan {
     index::plan(&index::PlanInput { indexes, filter: o.filter, sort: o.sort, has_limit: o.want.is_some(), hint, natural })
 }
 
+/// P-big-speed fix 4: the `_id` check of an insert into a customer-keyed collection without a time component reads the
+/// document key (in the customer's box), not the shared locator. Off: the locator, as before (tests compare both).
+pub static ID_CHECK_IN_BOX: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
+/// Negative control (tests): complete runs of equal keys on unique indexes too, as before P-big-speed.
+pub static TIE_SCAN_ON_UNIQUE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Tie-completion scans run (tests and serverStatus would count them).
+pub static TIE_SCANS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 /// Walks the byte intervals of an index scan in batches.
 struct IxCursor {
     prefix: Vec<u8>,
@@ -191,6 +200,9 @@ struct IxCursor {
     reverse: bool,
     i: usize,
     resume: Option<Vec<u8>>,
+    /// P-big-speed fix 2: a unique index (built) has no two entries with the same values, so no run of equal keys to
+    /// complete after a full batch: the tie-completion scan is skipped (it read past the batch, often one more block).
+    unique: bool,
 }
 
 impl IxCursor {
@@ -217,7 +229,8 @@ impl IxCursor {
         if scan.reverse {
             ivs.reverse();
         }
-        IxCursor { prefix, pending: Vec::new(), ivs, reverse: scan.reverse, i: 0, resume: None }
+        let unique = idx.unique && idx.state == crate::index::State::Ready && !TIE_SCAN_ON_UNIQUE.load(std::sync::atomic::Ordering::Relaxed);
+        IxCursor { prefix, pending: Vec::new(), ivs, reverse: scan.reverse, i: 0, resume: None, unique }
     }
 
     /// Entries (full keys) of the next batch of at most `n`; empty when exhausted. Runs of equal keys are completed
@@ -239,8 +252,9 @@ impl IxCursor {
                 g.scan_range(&start, Some(e), false, Some(n), INDEX_READ_AHEAD).await?
             };
             let fetched = rows.len();
-            if fetched >= n {
+            if fetched >= n && !self.unique {
                 // complete the last run of equal keys so that it can be put into insertion order
+                TIE_SCANS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                 loop {
                     let last = rows.last().unwrap().0.to_vec();
                     let more = if self.reverse {
@@ -1697,6 +1711,18 @@ impl Writes {
     pub async fn exists(&self, g: &mut Entry, coll: &str, d: &Document) -> R<bool> {
         let id = d.get("_id").unwrap_or(&Bson::Null);
         if let Some(key) = crate::custkey::of(g, coll).await? {
+            if key.order.is_none() && ID_CHECK_IN_BOX.load(std::sync::atomic::Ordering::Relaxed) {
+                // P-big-speed fix 4: without a time component the document key is exactly (customer, `_id`)
+                // (`custkey::dsuf`), so a document with this `_id` exists under this customer if and only if that key
+                // exists; the locator is written in the same batch as the document, so both answers are the same. The
+                // document key lies in the customer's box (custbox.rs: warm before the upsert, no GET), the locator,
+                // keyed by `_id`, outside every box (a GET on a random key for every insert, MEASURED in test_66).
+                let dk = crate::custkey::doc_key(coll, Some(&key), d);
+                if let Some(v) = self.ov.get(&dk) {
+                    return Ok(v.is_some());
+                }
+                return Ok(g.get_live(&dk).await?.is_some());
+            }
             // the locator is the per-customer unique `_id` index of a customer-keyed collection
             let lk = crate::custkey::loc_key_of(coll, &key, d);
             if let Some(v) = self.ov.get(&lk) {
