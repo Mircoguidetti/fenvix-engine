@@ -124,7 +124,7 @@ def test_new_operations_are_compared():
     for op in ("save_step", "time_travel", "resume[write/none]", "resume[write/short]"):
         ours = clean_summary()
         ours["latency_ms"][op]["p99"] = 100.0
-        closed(tree(ours, clean_summary(2), clean_summary(2)), f"{op} p99: ours 100.00 ms > postgres")
+        closed(tree(ours, clean_summary(2), clean_summary(2)), f"{op} p99: ours 100.00 ms is 84.00 ms above the best")
 
 
 def test_stored_bytes_unknown_closes():
@@ -334,3 +334,47 @@ if __name__ == "__main__":
     print(f"{'ALL PASS' if not fails else f'{fails} FAILED'}")
     sys.exit(1 if fails else 0)
 
+
+
+# DECISIONS 2026-11-12, the speed tolerance for the AWS round: on every operation our p50 and our p99 may each be at most
+# 20 ms above the best of PostgreSQL and mongod (the same percentile); stored bytes per logical byte stays not worse.
+def _with(op, q, ours_ms, pg_ms, mongo_ms):
+    ours, pg, mongo = clean_summary(), clean_summary(), clean_summary()
+    ours["latency_ms"][op][q], pg["latency_ms"][op][q], mongo["latency_ms"][op][q] = ours_ms, pg_ms, mongo_ms
+    return tree(ours, pg, mongo)
+
+
+def test_speed_tolerance_19_9_ms_above_passes_on_either_percentile():
+    for q in ("p50", "p99"):
+        rc, out = ask(_with("save_step", q, 30.0 + 19.9, 30.0, 45.0))
+        assert rc == 0 and out.startswith("GATE: OPEN"), (q, out)
+        assert "speed tolerance of 20 ms" in out, out
+
+
+def test_speed_tolerance_20_1_ms_above_fails_on_either_percentile():
+    for q in ("p50", "p99"):
+        out = closed(_with("save_step", q, 30.0 + 20.1, 30.0, 45.0), f"save_step {q}: ours 50.10 ms is 20.10 ms above the best (postgres 30.00 ms)")
+        assert "tolerance of 20 ms" in out, out
+
+
+def test_speed_tolerance_is_against_the_best_of_the_two():
+    # 15 ms above mongo but 25 ms above postgres (the best): fails; mongo the best by the same numbers: fails too
+    closed(_with("list", "p99", 55.0, 30.0, 40.0), "list p99: ours 55.00 ms is 25.00 ms above the best (postgres 30.00 ms)")
+    closed(_with("list", "p50", 55.0, 40.0, 30.0), "list p50: ours 55.00 ms is 25.00 ms above the best (mongo 30.00 ms)")
+
+
+def test_speed_tolerance_exactly_20_ms_passes_and_slower_than_both_within_it_opens():
+    rc, out = ask(_with("erase_user", "p99", 28.0 + 20.0, 28.0, 33.0))
+    assert rc == 0 and out.startswith("GATE: OPEN"), out
+
+
+def test_speed_tolerance_applies_to_the_workers8_line_too():
+    ours, pg, mongo = clean_summary(), clean_summary(), clean_summary()
+    ours["latency_ms"]["put"]["p50"] = 2.0 + 20.1
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), w8=(ours, pg, mongo)), "put p50: ours 22.10 ms is 20.10 ms above the best")
+
+
+def test_bytes_stay_not_worse_under_the_speed_tolerance():
+    ours = clean_summary()
+    ours["bytes"]["stored_per_logical"] = 0.301
+    closed(tree(ours, clean_summary(), clean_summary()), "stored bytes per logical byte: ours 0.301 > postgres 0.300")

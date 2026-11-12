@@ -5,8 +5,10 @@ names exists and passes:
      exact commit the round's "engine" ref names (ENGINE_COMMIT, resolved by the workflow before decide.py). No report
      for that commit, or no commit at all: CLOSED. A report made on another commit does not count (the engine changed).
   1. the takeover test the report names shows no acknowledged write missing and finished (rule 8: zero loss is absolute);
-  2. in the agent benchmark the report names, our server ("fenvix") is not worse than the PostgreSQL or the mongod saver
-     on any operation: p50 or p99 latency, or stored bytes per logical byte (rule 9);
+  2. in the agent benchmark the report names, on every operation our server's ("fenvix") p50 and our p99 are each at
+     most SPEED_TOLERANCE_MS (20 ms) above the best of the PostgreSQL and the mongod saver for that percentile
+     (DECISIONS 2026-11-12, "Speed tolerance for the AWS round", which replaces rule 9's "not worse" for latency); stored
+     bytes per logical byte stays not worse than either (rule 9);
   3. (aws-fixes, B1 of the total review, 2026-11-11) that benchmark is complete and correct on every side: the summary's
      own "ok" is true for ours, PostgreSQL and mongod (no write error, no wrong read, no erased thread readable); every
      operation of OPS is present on every side with at least MIN_SAMPLES[op] samples; stored bytes per logical byte is
@@ -45,6 +47,26 @@ MIN_SAMPLES = {"put": 1000, "put_writes": 1000, "save_step": 1000, "resume[write
                "resume[read]": 30, "resume[cold]": 200, "time_travel": 90, "list": 30, "list_limit10": 30,
                "erase_user": 20}
 SIDES = ("fenvix", "postgres", "mongo")
+# DECISIONS 2026-11-12 (founder): on every operation, our p50 and our p99 may each be at most this much above the best
+# of PostgreSQL and mongod (the same percentile). Exactly 20 ms above passes; more fails.
+SPEED_TOLERANCE_MS = 20.0
+
+
+def speed_blockers(label, op, ours, others):
+    """Blockers of one operation under the 20 ms tolerance. `ours`/`others[side]` are latency dicts with p50 and p99."""
+    out = []
+    for q in ("p50", "p99"):
+        if ours.get(q) is None:
+            continue
+        theirs = {side: d.get(q) for side, d in others.items() if d and d.get(q) is not None}
+        if not theirs:
+            continue
+        best_side = min(theirs, key=theirs.get)
+        best = theirs[best_side]
+        if ours[q] - best > SPEED_TOLERANCE_MS:
+            out.append(f"{label} {op} {q}: ours {ours[q]:.2f} ms is {ours[q] - best:.2f} ms above the best ({best_side} "
+                       f"{best:.2f} ms), more than the tolerance of {SPEED_TOLERANCE_MS:.0f} ms (DECISIONS 2026-11-12)")
+    return out
 
 
 def rel(p):
@@ -105,19 +127,18 @@ def check_agent(fenvix_summary, label="agent benchmark"):
         out.append(f"{label}: the sides did not run the same plan (digests {digests})")
     ours = sums.get("fenvix")
     if ours:
+        for op in OPS:
+            if op in NOT_COMPARED:
+                continue
+            a = (ours.get("latency_ms") or {}).get(op)
+            others = {o: (sums[o].get("latency_ms") or {}).get(op) for o in ("postgres", "mongo") if o in sums}
+            if not a or not all(others.values()):
+                continue   # already a blocker above
+            out += speed_blockers(label, op, a, others)
         for other in ("postgres", "mongo"):
             them = sums.get(other)
             if not them:
                 continue
-            for op in OPS:
-                if op in NOT_COMPARED:
-                    continue
-                a, b = (ours.get("latency_ms") or {}).get(op), (them.get("latency_ms") or {}).get(op)
-                if not a or not b:
-                    continue   # already a blocker above
-                for q in ("p50", "p99"):
-                    if a.get(q) is not None and b.get(q) is not None and a[q] > b[q]:
-                        out.append(f"{label} {op} {q}: ours {a[q]:.2f} ms > {other} {b[q]:.2f} ms")
             sa, sb = (ours.get("bytes") or {}).get("stored_per_logical"), (them.get("bytes") or {}).get("stored_per_logical")
             if sa and sb and sa > sb:
                 out.append(f"{label} stored bytes per logical byte: ours {sa:.3f} > {other} {sb:.3f}")
@@ -240,8 +261,9 @@ def main():
             print(f"  - {b}")
         sys.exit(1)
     print(f"GATE: OPEN (local benchmark report {rel(found[0])} for {ref} at {commit}: takeovers 0 lost; our agent benchmark "
-          f"ok, complete ({len(OPS)} operations, written minimum samples) and not worse than PostgreSQL and mongod on any "
-          f"operation" + (", also with --workers 8" if found[1].get("agent_bench_w8") else "") + ")")
+          f"ok, complete ({len(OPS)} operations, written minimum samples); on every operation our p50 and p99 within the "
+          f"speed tolerance of {SPEED_TOLERANCE_MS:.0f} ms above the best of PostgreSQL and mongod (DECISIONS 2026-11-12), "
+          f"stored bytes per logical byte not worse" + (", also with --workers 8" if found[1].get("agent_bench_w8") else "") + ")")
 
 
 if __name__ == "__main__":

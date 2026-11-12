@@ -7,7 +7,7 @@
 # "engine" with the final merged ref, before committing a command to step9/command.json).
 # Usage: bash step9/commands/dry_run.sh > step9/commands/DRY-RUN.txt
 cd "$(dirname "$0")/../ci" || exit 1
-export RUN_ID=1000000001 ENGINE_COMMIT=${ENGINE_COMMIT:-3e4fdcc248e3f29c6687786b97c53ace630b716c}
+export RUN_ID=1000000001 ENGINE_COMMIT=${ENGINE_COMMIT:-151847ab3c6444fa15ceed56730c81f0f8d32d65}
 t=$(mktemp -d)
 echo "decide.py dry run of step9/commands/*.json, $(date -u +%FT%TZ), engine commit for the gate: $ENGINE_COMMIT"
 for f in ../commands/*.json; do

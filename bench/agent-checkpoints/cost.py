@@ -5,8 +5,9 @@ DECLARED from prices.json (with its URL), ESTIMATED is the arithmetic shown, UNK
 
 Model (all ESTIMATED, assumptions printed):
   storage for 1 M steps kept 1 year  = stored_bytes_per_checkpoint * 1e6 / 1e9 GB * $/GB-month * 12
-  requests per 1 M steps             = Aurora Standard: write I/Os = ceil(stored bytes per checkpoint / 4 KiB) per step
-                                       (Aurora counts writes in 4 KiB units; reads assumed served from cache);
+  requests per 1 M steps             = Aurora Standard and DocumentDB Standard: write I/Os = ceil(stored bytes per
+                                       checkpoint / 4 KiB) per step (Aurora counts writes in 4 KiB units; DocumentDB's
+                                       unit is an ASSUMPTION; reads assumed served from cache);
                                        Fenvix: S3 PUTs per checkpoint (MEASURED on this run) * $/1000
   compute per 1 M steps              = instance $/h * 1e6 / (steps_per_second * 3600), at the stated sustained rate
   one year of history at rate R      = storage grows linearly; month m holds m/12 of the year's bytes:
@@ -24,6 +25,11 @@ import math
 import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+# options charged per million I/O (DECLARED in prices.json): Aurora Standard and, since DECISIONS 2026-11-11 ("Amazon
+# DocumentDB joins the comparison"), DocumentDB Standard. Their I/O-Optimized options charge none.
+IO_PRICED = ("aurora_standard", "documentdb_standard")
 
 
 def v(p: dict | None):
@@ -50,10 +56,12 @@ def cost(summary: dict, opt_name: str, opt: dict, rate: float, sps: float) -> di
     s_year = None if st is None else gb_per_m * st * 12
     lines.append(f"storage, 1 M steps kept 1 year: {gb_per_m:,.2f} GB x {fmt(st, 3)}/GB-month x 12 = {fmt(s_year)} (ESTIMATED; price {opt.get('storage_gb_month', {}).get('label')})")
     req = 0.0
-    if opt_name == "aurora_standard":
+    if opt_name in IO_PRICED:
         ios = math.ceil(per_ckpt / 4096)
         req = ios * v(opt["io_per_million"])
-        lines.append(f"I/O, 1 M steps: {ios} write I/Os per step (ceil({per_ckpt:,.0f}/4096), ESTIMATED) x {fmt(v(opt['io_per_million']), 2)}/M = {fmt(req)}")
+        unit = "" if opt_name == "aurora_standard" else (" (ASSUMPTION: DocumentDB's I/O unit taken as Aurora's 4 KiB; "
+                                                         "the AWS round measures DocumentDB's I/O)")
+        lines.append(f"I/O, 1 M steps: {ios} write I/Os per step (ceil({per_ckpt:,.0f}/4096), ESTIMATED{unit}) x {fmt(v(opt['io_per_million']), 2)}/M = {fmt(req)}")
     elif summary["target"] == "fenvix" and summary.get("s3_put_requests_during_write") is not None:
         puts = summary["s3_put_requests_during_write"] / b["checkpoints"]
         req = puts * 1e6 / 1000 * v(opt["put_per_1000"])
