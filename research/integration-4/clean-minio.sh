@@ -13,7 +13,8 @@ for b in s.buckets.all():
     except Exception:
         pass
     b.delete(); n += 1
-print(f"local MinIO: {n} buckets deleted")
+s.create_bucket(Bucket="bench")   # the judge's own bucket (judge/run.sh expects it)
+print(f"local MinIO: {n} buckets deleted, bucket bench recreated empty")
 P
 rm -rf /root/.fenvix-judge/data/minio/.minio.sys/tmp/.trash/* 2>/dev/null
 df -h / | tail -1
