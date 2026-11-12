@@ -1,0 +1,6 @@
+wrote 5891750 events in 600 s (9819/s); history {'rows': 5891751, 'rowBytes': 1967844654, 'segmentsPut': 467, 'segmentRawBytes': 1958615900, 'segmentStoredBytes': 779996873, 'segmentsAdopted': 0, 'segmentGets': 0, 'segmentLists': 1, 'segmentsDeleted': 0, 'tailDeletes': 5864120, 'durableReads': 0, 'archiveErrors': 0}
+read 5891750 events in 195.5 s; history {'rows': 5891751, 'rowBytes': 1967844654, 'segmentsPut': 469, 'segmentRawBytes': 1967003976, 'segmentStoredBytes': 783339415, 'segmentsAdopted': 0, 'segmentGets': 467, 'segmentLists': 1, 'segmentsDeleted': 0, 'tailDeletes': 5889234, 'durableReads': 6071, 'archiveErrors': 0}
+exactly once: 5891750 events, 5891750 acknowledged writes
+.
+1 passed, 10 deselected in 808.76s (0:13:28)
+done 0

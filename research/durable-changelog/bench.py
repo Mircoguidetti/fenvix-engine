@@ -50,6 +50,17 @@ def rss(pid):
     return 0
 
 
+def cpu_secs(pid):
+    with open(f"/proc/{pid}/stat") as f:
+        parts = f.read().rsplit(")", 1)[1].split()
+    return (int(parts[11]) + int(parts[12])) / os.sysconf("SC_CLK_TCK")
+
+
+def minio_pid():
+    out = subprocess.run(["pgrep", "-f", "minio server"], capture_output=True, text=True).stdout.split()
+    return int(out[0]) if out else None
+
+
 def stats(c):
     t = c.admin.command("tenantStats")
     put = sum(t.get("putByCategory", {}).values())
@@ -61,13 +72,13 @@ def run(binary, history, mode, secs, workers):
     b = make_bucket("chgbench")
     p = free_port()
     s = Server(b, f"chgbench-{history}-{mode}", idle=600, port=p, binary=binary,
-               extra=["--replica-set", "rs0", "--advertise", f"localhost:{p}", "--change-history", history]).start()
+               extra=["--replica-set", "rs0", "--advertise", f"localhost:{p}", "--change-history", history] + os.environ.get("BENCH_EXTRA", "").split()).start()
     try:
         c = s.client()
         c.bench.create_collection("cs")
         stream_n = [0]
         stop = threading.Event()
-        if history == "on" and mode == "bulk":
+        if mode == "bulk" and os.environ.get("BENCH_STREAM", "auto") in (("1",) if history == "off" else ("1", "auto")):
             def reader():
                 rc = s.client()
                 r = rc.bench.command(SON([("aggregate", "cs"), ("pipeline", [{"$changeStream": {}}]), ("cursor", {})]))
@@ -77,17 +88,26 @@ def run(binary, history, mode, secs, workers):
                     stream_n[0] += len(g["cursor"]["nextBatch"])
             threading.Thread(target=reader, daemon=True).start()
         st0 = stats(c)
+        mpid = minio_pid()
+        cpu0 = (cpu_secs(s.proc.pid), cpu_secs(mpid) if mpid else 0)
         q = mp.Queue()
         procs = [mp.Process(target=client_proc, args=(s.uri, mode, secs, w, q)) for w in range(workers)]
         t0 = time.time()
         for pr in procs:
             pr.start()
         peak = 0
-        while any(pr.is_alive() for pr in procs):
+        res = []
+        # (read the results while the clients run: a client cannot exit before its result is read)
+        while len(res) < len(procs):
             peak = max(peak, rss(s.proc.pid))
-            time.sleep(0.5)
-        res = [q.get() for _ in procs]
+            try:
+                res.append(q.get(timeout=0.5))
+            except Exception:
+                pass
+        for pr in procs:
+            pr.join()
         wall = time.time() - t0
+        cpu1 = (cpu_secs(s.proc.pid), cpu_secs(mpid) if mpid else 0)
         time.sleep(1.5)
         stop.set()
         st1 = stats(c)
@@ -101,6 +121,10 @@ def run(binary, history, mode, secs, workers):
             out["p50_ms"] = lat[len(lat) // 2] * 1e3
             out["p99_ms"] = lat[int(len(lat) * 0.99)] * 1e3
         out["puts_per_write"] = out["puts"] / max(n, 1)
+        out["server_cpu_us_per_write"] = (cpu1[0] - cpu0[0]) * 1e6 / max(n, 1)
+        out["minio_cpu_us_per_write"] = (cpu1[1] - cpu0[1]) * 1e6 / max(n, 1)
+        out["server_cores"] = (cpu1[0] - cpu0[0]) / wall
+        out["minio_cores"] = (cpu1[1] - cpu0[1]) / wall
         print(json.dumps(out), flush=True)
         return out
     finally:
@@ -112,7 +136,7 @@ if __name__ == "__main__":
     secs = int(sys.argv[3]) if len(sys.argv) > 3 else 30
     workers = int(sys.argv[4]) if len(sys.argv) > 4 else 3
     results = []
-    for mode in ("save", "bulk"):
+    for mode in os.environ.get("BENCH_MODES", "save,bulk").split(","):
         for rep in range(2):
             for history in ("off", "on") if rep == 0 else ("on", "off"):
                 results.append(run(binary, history, mode, secs, workers))

@@ -1,0 +1,130 @@
+[
+ {
+  "history": "off",
+  "mode": "bulk",
+  "secs": 30,
+  "workers": 3,
+  "writes": 480900,
+  "per_sec": 16005.249882405054,
+  "rss_peak_mb": 403.18359375,
+  "client_cpu_per_proc": [
+   0.05174769898754868,
+   0.05161434117539635,
+   0.05168140942939464
+  ],
+  "puts": 5192,
+  "gets": 6232,
+  "stream_events": 0,
+  "hist": {
+   "rows": 0,
+   "rowBytes": 0,
+   "segmentsPut": 0,
+   "segmentRawBytes": 0,
+   "segmentStoredBytes": 0,
+   "segmentsAdopted": 0,
+   "segmentGets": 0,
+   "segmentLists": 0,
+   "segmentsDeleted": 0,
+   "tailDeletes": 0,
+   "durableReads": 0,
+   "archiveErrors": 0
+  },
+  "puts_per_write": 0.010796423372842586
+ },
+ {
+  "history": "on",
+  "mode": "bulk",
+  "secs": 30,
+  "workers": 3,
+  "writes": 302900,
+  "per_sec": 8933.769376836282,
+  "rss_peak_mb": 664.6171875,
+  "client_cpu_per_proc": [
+   0.03169035108597555,
+   0.031541351031736574,
+   0.031869570374605305
+  ],
+  "puts": 3571,
+  "gets": 8173,
+  "stream_events": 0,
+  "hist": {
+   "rows": 302900,
+   "rowBytes": 310169600,
+   "segmentsPut": 9,
+   "segmentRawBytes": 301980826,
+   "segmentStoredBytes": 3272162,
+   "segmentsAdopted": 0,
+   "segmentGets": 0,
+   "segmentLists": 1,
+   "segmentsDeleted": 0,
+   "tailDeletes": 294904,
+   "durableReads": 0,
+   "archiveErrors": 0
+  },
+  "puts_per_write": 0.011789369428854408
+ },
+ {
+  "history": "on",
+  "mode": "bulk",
+  "secs": 30,
+  "workers": 3,
+  "writes": 303600,
+  "per_sec": 8749.96711626462,
+  "rss_peak_mb": 859.01953125,
+  "client_cpu_per_proc": [
+   0.03071977515884482,
+   0.029789412108027522,
+   0.02979244038633716
+  ],
+  "puts": 3578,
+  "gets": 8035,
+  "stream_events": 0,
+  "hist": {
+   "rows": 303600,
+   "rowBytes": 310886400,
+   "segmentsPut": 9,
+   "segmentRawBytes": 301980826,
+   "segmentStoredBytes": 3259135,
+   "segmentsAdopted": 0,
+   "segmentGets": 0,
+   "segmentLists": 1,
+   "segmentsDeleted": 0,
+   "tailDeletes": 294904,
+   "durableReads": 0,
+   "archiveErrors": 0
+  },
+  "puts_per_write": 0.011785243741765481
+ },
+ {
+  "history": "off",
+  "mode": "bulk",
+  "secs": 30,
+  "workers": 3,
+  "writes": 513400,
+  "per_sec": 14281.505500101111,
+  "rss_peak_mb": 551.66796875,
+  "client_cpu_per_proc": [
+   0.0405068827662217,
+   0.040235267697868615,
+   0.040551506601416605
+  ],
+  "puts": 5511,
+  "gets": 7141,
+  "stream_events": 0,
+  "hist": {
+   "rows": 0,
+   "rowBytes": 0,
+   "segmentsPut": 0,
+   "segmentRawBytes": 0,
+   "segmentStoredBytes": 0,
+   "segmentsAdopted": 0,
+   "segmentGets": 0,
+   "segmentLists": 0,
+   "segmentsDeleted": 0,
+   "tailDeletes": 0,
+   "durableReads": 0,
+   "archiveErrors": 0
+  },
+  "puts_per_write": 0.010734320218153487
+ }
+]
