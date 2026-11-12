@@ -246,7 +246,7 @@ impl Server {
             let notified = log.notify.notified();
             tokio::pin!(notified);
             notified.as_mut().enable();
-            let (evs, last) = log.read(&cur.scope, cur.last, batch);
+            let (evs, last) = log.read(&cur.scope, cur.last, batch)?;
             let evs: Vec<Arc<Ev>> = evs.into_iter().filter(|e| cur.expanded || !e.spec.expanded_only).collect();
             if !evs.is_empty() || Instant::now() >= deadline {
                 break (evs, last);

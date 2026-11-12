@@ -25,6 +25,9 @@ fn est_size(s: &EvSpec) -> usize {
     384 + 3 * (doc(&s.full) + doc(&s.desc) + doc(&s.pre) + doc(&s.post) + doc(&s.op_desc) + doc(&s.state_before) + key + cust)
 }
 
+/// Change streams failed with ChangeStreamHistoryLost because they fell behind the log (tenantStats `changeStreamsLost`).
+pub static HISTORY_LOST: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 /// Set once a stream with `showExpandedEvents` was opened: data events then carry the UUID of their collection from the start.
 pub static WANTS_UUID: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
@@ -93,6 +96,8 @@ struct Inner {
     /// The highest position pushed out of the log by its bounds: a resume token at or below it is lost. (Events an
     /// erasure removes do not move it: a stream resumed from before an erasure goes on, without the erased events.)
     trimmed: u64,
+    /// The cluster time of the event at `trimmed`.
+    trimmed_time: (u32, u32),
 }
 
 pub struct ChangeLog {
@@ -108,7 +113,7 @@ pub struct ChangeLog {
 
 impl Default for ChangeLog {
     fn default() -> Self {
-        ChangeLog { inner: Mutex::new(Inner { events: VecDeque::new(), sizes: VecDeque::new(), bytes: 0, next_seq: 1, last_time: (0, 0), trimmed: 0 }), notify: Notify::new(), nonce: rand::random(), boot: (bson::DateTime::now().timestamp_millis() / 1000) as u32, born: Mutex::default() }
+        ChangeLog { inner: Mutex::new(Inner { events: VecDeque::new(), sizes: VecDeque::new(), bytes: 0, next_seq: 1, last_time: (0, 0), trimmed: 0, trimmed_time: (0, 0) }), notify: Notify::new(), nonce: rand::random(), boot: (bson::DateTime::now().timestamp_millis() / 1000) as u32, born: Mutex::default() }
     }
 }
 
@@ -160,7 +165,10 @@ impl ChangeLog {
                 let max = MAX_BYTES.load(std::sync::atomic::Ordering::Relaxed);
                 while g.events.len() > 1 && (g.events.len() > RETAINED || g.bytes > max) {
                     if let Some(e) = g.events.pop_front() {
-                        g.trimmed = g.trimmed.max(e.seq);
+                        if e.seq > g.trimmed {
+                            g.trimmed = e.seq;
+                            g.trimmed_time = (e.time.time, e.time.increment);
+                        }
                     }
                     let s = g.sizes.pop_front().unwrap_or(0);
                     g.bytes -= s;
@@ -322,9 +330,13 @@ impl ChangeLog {
         self.inner.lock().unwrap().next_seq - 1
     }
 
-    /// First position at or after the operation time.
+    /// First position at or after the operation time. A time at or before the last event pushed out of the log gives a
+    /// position before it, so the stream's first read fails with ChangeStreamHistoryLost (its start is not held).
     pub fn seq_at_time(&self, ts: Timestamp) -> u64 {
         let g = self.inner.lock().unwrap();
+        if g.trimmed > 0 && (ts.time, ts.increment) <= g.trimmed_time {
+            return g.trimmed - 1;
+        }
         for e in g.events.iter() {
             if (e.time.time, e.time.increment) >= (ts.time, ts.increment) {
                 return e.seq - 1;
@@ -333,9 +345,16 @@ impl ChangeLog {
         g.next_seq - 1
     }
 
-    /// Events past `after` that `scope` sees (at most `limit`), and the highest sequence number examined.
-    pub fn read(&self, scope: &Scope, after: u64, limit: usize) -> (Vec<Arc<Ev>>, u64) {
+    /// Events past `after` that `scope` sees (at most `limit`), and the highest sequence number examined. Fails with
+    /// ChangeStreamHistoryLost (286) when an event after `after` was already pushed out of the log by its bounds: the
+    /// stream fell behind, and reading on from the oldest event left would skip events with no sign (mongod fails an
+    /// open stream whose oplog position is gone the same way). Events an erasure removed do not count.
+    pub fn read(&self, scope: &Scope, after: u64, limit: usize) -> Result<(Vec<Arc<Ev>>, u64), MongoError> {
         let g = self.inner.lock().unwrap();
+        if g.trimmed > after {
+            HISTORY_LOST.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            return Err(MongoError::new(286, "ChangeStreamHistoryLost", format!("the change stream fell behind: events after its position were dropped from the in-memory change log (--change-log-max-mb, now {} MB); resume is not possible", MAX_BYTES.load(std::sync::atomic::Ordering::Relaxed) >> 20)));
+        }
         let mut out = Vec::new();
         let mut last = after;
         for e in g.events.iter().filter(|e| e.seq > after) {
@@ -355,7 +374,7 @@ impl ChangeLog {
                 out.push(Arc::clone(e));
             }
         }
-        (out, last)
+        Ok((out, last))
     }
 }
 

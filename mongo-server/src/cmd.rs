@@ -989,6 +989,7 @@ impl Server {
                 "gcGets": tenant_bench::lifecycle::MAINT.gc_gets.load(Relaxed) as i64,
                 "l0WatchRequests": tenant_bench::lifecycle::L0_WATCH_REQUESTS.load(Relaxed) as i64,
                 "abandonCloseTimeouts": tenant_bench::lifecycle::ABANDON_CLOSE_TIMEOUTS.load(Relaxed) as i64,
+                "changeStreamsLost": crate::changes::HISTORY_LOST.load(Relaxed) as i64,
                 "abandonClosesPending": tenant_bench::lifecycle::pending_closes() as i64,
                 "l0WatchDeferred": tenant_bench::lifecycle::L0_WATCH_DEFERRED.load(Relaxed) as i64,
                 "compactionWarm": { "runs": tenant_bench::warm::WARM_RUNS.load(Relaxed) as i64, "hotBlocks": tenant_bench::warm::WARM_HOT_BLOCKS.load(Relaxed) as i64, "ranges": tenant_bench::warm::WARM_RANGES.load(Relaxed) as i64, "fails": tenant_bench::warm::WARM_FAILS.load(Relaxed) as i64, "timeouts": tenant_bench::warm::WARM_TIMEOUTS.load(Relaxed) as i64, "truncated": tenant_bench::warm::WARM_TRUNCATED.load(Relaxed) as i64, "readersOpen": tenant_bench::warm::WARM_READERS_OPEN.load(Relaxed) as i64, "l0Stops": tenant_bench::warm::WARM_L0_STOPS.load(Relaxed) as i64, "throttled": tenant_bench::warm::WARM_THROTTLED.load(Relaxed) as i64 },
