@@ -42,26 +42,45 @@ def write_mb(client, mb, start):
 def test_erase_leaves_no_incomplete_upload():
     bucket = make_bucket("plr3mp")
     prefix = f"tenants/{DB}/"
-    # phase 1, default settings: data and compaction work behind it
+    # phase 1, default settings: the first version (and with it the compactor) comes one T_pin after the first writes;
+    # then enough data that absorptions and reseals write runs over the 16 MiB part size
     srv = Server(bucket, "plr3mp1", idle=600).start()
-    nxt = write_mb(srv.client(), 220, 0)
+    c = srv.client()
+    nxt = write_mb(c, 10, 0)
+    t0 = time.time()
+    while c.admin.command("serverStatus")["fenvix"]["compactor"]["started"] < 1 and time.time() - t0 < 300:
+        nxt = write_mb(c, 1, nxt)
+        time.sleep(1)
+    assert c.admin.command("serverStatus")["fenvix"]["compactor"]["started"] >= 1, "the compactor did not start"
+    nxt = write_mb(c, 200, nxt)
     srv.term()
     # phase 2: the background's CPU share at 1%: its jobs (reseals, merges) take minutes, so the erase catches one uploading
     srv = Server(bucket, "plr3mp2", idle=600, extra=["--compaction-cpu-pct", "1"]).start()
     t0 = time.time()
     # incomplete uploads phase 1's exit left (jobs in flight at a clean shutdown): not the case checked here
     before = set(incomplete_uploads(bucket, prefix))
-    nxt = write_mb(srv.client(), 60, nxt)
+    c = srv.client()
+    c[DB]["other"].insert_one({"x": 1})       # opens the database and starts its compactor
+
+    def runs_uploading():
+        # one of our runs (`fx/run/`): the upload the writer's drop must abort (SlateDB's own SSTs are the sweep's)
+        return [k for k, i in incomplete_uploads(bucket, prefix) if (k, i) not in before and "/fx/run/" in k]
     caught = []
-    deadline = time.time() + 240
+    # more data: delta runs, then a reseal of them, which the 1% share slows to minutes
+    for _ in range(15):
+        nxt = write_mb(c, 20, nxt)
+        caught = runs_uploading()
+        if caught:
+            break
+    deadline = time.time() + 600
     while time.time() < deadline and not caught:
-        # an upload this process started (a run of writer epoch 2, or an SST of its compaction)
-        caught = [k for k, i in incomplete_uploads(bucket, prefix) if (k, i) not in before]
+        caught = runs_uploading()
         if not caught:
             time.sleep(1)
     assert caught, "no job was caught mid-upload: the test did not reach the case it checks"
     st, r = srv.admin.delete(f"/v1/databases/{DB}")
     assert st == 200, r
+    status = srv.client().admin.command("serverStatus")["fenvix"]["compactor"]
     assert r["erased"] is True and r["proof"]["remaining_objects"] == 0 and r["proof"]["remaining_incomplete_uploads"] == 0, r
     # right after the reply, and again after any in-flight upload had time to land: nothing of the database, objects or parts
     for wait in (0, 15):
@@ -71,6 +90,8 @@ def test_erase_leaves_no_incomplete_upload():
         assert left == [], f"incomplete uploads left after the erase: {left}"
     log = srv.log_text()
     srv.term()
+    print(f"run uploads aborted by dropped writers: {status['runUploadsAbortedOnDrop']}, failed: {status['runUploadAbortErrors']}")
+    assert status["runUploadsAbortedOnDrop"] + r["incomplete_uploads_aborted"] >= 1
     print(f"caught mid-upload: {caught}; aborted by the erase: {r.get('incomplete_uploads_aborted')}; "
           f"phase 2 lasted {time.time() - t0:.0f} s")
     assert "abort after the writer was dropped failed" not in log

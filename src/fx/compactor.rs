@@ -79,6 +79,66 @@ pub fn is_active(id: &str) -> bool {
     ACTIVE.lock().unwrap().contains(id)
 }
 
+/// A running job's entry in `job_starts`, removed when the job ends or is aborted.
+pub(crate) struct JobStart {
+    c: std::sync::Weak<Compactor>,
+    n: u64,
+}
+
+impl Drop for JobStart {
+    fn drop(&mut self) {
+        if let Some(c) = self.c.upgrade() {
+            c.job_starts.lock().unwrap().remove(&self.n);
+        }
+    }
+}
+
+/// One version create in flight (`Compactor::create`).
+struct InFlight(Arc<AtomicU64>);
+
+impl InFlight {
+    fn new(n: Arc<AtomicU64>) -> Self {
+        n.fetch_add(1, Relaxed);
+        InFlight(n)
+    }
+}
+
+impl Drop for InFlight {
+    fn drop(&mut self) {
+        self.0.fetch_sub(1, Relaxed);
+    }
+}
+
+impl Compactor {
+    /// When the oldest job running now (GC aside) started, wall clock ms: its outputs were all written after it.
+    pub(crate) fn oldest_job_start_ms(&self) -> Option<u64> {
+        self.job_starts.lock().unwrap().values().min().copied()
+    }
+
+    /// Tests: create the next version (a fence of the current one) as a job's commit does; its version number.
+    #[cfg(test)]
+    pub(crate) async fn create_next_for_test(self: &Arc<Self>) -> Result<u64> {
+        let f = self.cur.lock().await.v.fence(self.epoch);
+        let n = f.version;
+        self.create(&f).await?;
+        Ok(n)
+    }
+
+    /// Tests: the version a create would write next.
+    #[cfg(test)]
+    pub(crate) async fn next_version_for_test(&self) -> u64 {
+        self.cur.lock().await.v.fence(self.epoch).version
+    }
+
+    /// Tests: a job running from now until the returned value is dropped.
+    #[cfg(test)]
+    pub(crate) fn begin_job_for_test(self: &Arc<Self>) -> JobStart {
+        let n = self.next_job.fetch_add(1, Relaxed);
+        self.job_starts.lock().unwrap().insert(n, manifest::now_ms());
+        JobStart { c: Arc::downgrade(self), n }
+    }
+}
+
 /// L0 SSTs a starting compactor knew as absorbed from its version, and L0 SSTs it had to read (round 3, diagnostics).
 pub static L0_RECOGNISED_FROM_VERSION: AtomicU64 = AtomicU64::new(0);
 pub static L0_RECOGNISED_BY_READ: AtomicU64 = AtomicU64::new(0);
@@ -392,6 +452,12 @@ pub struct Compactor {
     /// compactor stopped (a drop or an erasure deletes the database's objects right after: a run written later would be
     /// left behind; found by ctl test_05_erase once jobs could pause, perf-latency).
     jobs: Mutex<Vec<tokio::task::JoinHandle<()>>>,
+    /// Wall-clock start (ms) of each job running now, but GC (review R1): GC keeps every unreferenced run written after the
+    /// oldest of them started, so a job slowed by the CPU share cannot lose an output it wrote before its commit.
+    job_starts: Mutex<HashMap<u64, u64>>,
+    next_job: AtomicU64,
+    /// Version creates still in flight in their own task (`create`): `stop` waits for them (review R2).
+    creates_in_flight: Arc<AtomicU64>,
     /// Benches: the planner starts no job while set (jobs called directly still run).
     pub paused: AtomicBool,
 }
@@ -446,6 +512,9 @@ impl Compactor {
             gc: Default::default(),
             last_gc: Mutex::new(Instant::now()),
             refreshed_jobs: AtomicU64::new(0),
+            job_starts: Mutex::new(HashMap::new()),
+            next_job: AtomicU64::new(0),
+            creates_in_flight: Arc::new(AtomicU64::new(0)),
             absorb_lock: tokio::sync::Mutex::new(()),
             jobs: Mutex::new(Vec::new()),
         });
@@ -510,6 +579,14 @@ impl Compactor {
         }
         for j in jobs {
             let _ = j.await;
+        }
+        // a version create a cut job left in its own task: waited for (it ends within the PUT timeout)
+        let t_creates = Instant::now();
+        while self.creates_in_flight.load(Relaxed) > 0 && t_creates.elapsed() < self.knobs.put_timeout + Duration::from_secs(5) {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+        if self.creates_in_flight.load(Relaxed) > 0 {
+            eprintln!("fx compactor {}: stop: a version create still in flight after the PUT timeout", self.id());
         }
         if t_stop.elapsed() > Duration::from_secs(1) {
             eprintln!("fx compactor {}: stop took {:?} (jobs {n}: {:?})", self.id(), t_stop.elapsed(), t_jobs.elapsed());
@@ -577,7 +654,15 @@ impl Compactor {
     /// later (F6: its outcome is unknown), as a request in flight on the network would.
     async fn create(&self, v: &Version) -> Result<bool> {
         let (store, id, v) = (Arc::clone(&self.store), self.id().to_string(), v.clone());
-        tokio::spawn(async move { manifest::create(&store, &id, &v).await }).await.map_err(|e| anyhow!("manifest create task: {e}"))?
+        // its own task (a job aborted while waiting leaves it running): counted, and `stop` waits for it, so no version
+        // lands after `stop` returned (review R2)
+        let guard = InFlight::new(Arc::clone(&self.creates_in_flight));
+        tokio::spawn(async move {
+            let _g = guard;
+            manifest::create(&store, &id, &v).await
+        })
+        .await
+        .map_err(|e| anyhow!("manifest create task: {e}"))?
     }
 
     /// Take a version found in the store as the newest known one; a version by a newer writer stops this compactor (rule 28).
@@ -1298,8 +1383,16 @@ impl Compactor {
             return; // `stop` drains `jobs` after setting `stopped`, under this lock: nothing is spawned after it
         }
         jobs.retain(|j| !j.is_finished());
+        let started = if prio == Prio::Gc {
+            None
+        } else {
+            let n = self.next_job.fetch_add(1, Relaxed);
+            self.job_starts.lock().unwrap().insert(n, manifest::now_ms());
+            Some(JobStart { c: Arc::downgrade(self), n })
+        };
         let rt = if prio == Prio::Absorb { &self.write_path } else { &self.runtime };
         jobs.push(rt.spawn(crate::waits::polled(what, who, super::pool::PACE_EXEMPT.scope(exempt, async move {
+            let _started = started;
             let _permit: Permit = c.pool.acquire(prio).await;
             let t0 = thread_cpu_us();
             let w0 = Instant::now();
