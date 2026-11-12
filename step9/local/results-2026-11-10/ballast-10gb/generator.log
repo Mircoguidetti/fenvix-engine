@@ -1,0 +1,35 @@
+ballast app_data_b03: 162 of 1740 customers, 0.32 of 3.40 GiB of BSON, 1036086 documents, 11.5 MB/s
+ballast app_data_b01: 163 of 1740 customers, 0.32 of 3.40 GiB of BSON, 1027499 documents, 11.4 MB/s
+ballast app_data_b02: 163 of 1740 customers, 0.32 of 3.40 GiB of BSON, 1019009 documents, 11.3 MB/s
+ballast app_data_b02: 348 of 1740 customers, 0.66 of 3.40 GiB of BSON, 2114983 documents, 11.8 MB/s
+ballast app_data_b03: 321 of 1740 customers, 0.66 of 3.40 GiB of BSON, 2121898 documents, 11.8 MB/s
+ballast app_data_b01: 325 of 1740 customers, 0.65 of 3.40 GiB of BSON, 2088412 documents, 11.6 MB/s
+ballast app_data_b03: 501 of 1740 customers, 0.98 of 3.40 GiB of BSON, 3158253 documents, 11.7 MB/s
+ballast app_data_b02: 519 of 1740 customers, 0.98 of 3.40 GiB of BSON, 3147672 documents, 11.7 MB/s
+ballast app_data_b01: 484 of 1740 customers, 0.97 of 3.40 GiB of BSON, 3105813 documents, 11.5 MB/s
+ballast app_data_b03: 691 of 1740 customers, 1.33 of 3.40 GiB of BSON, 4283099 documents, 11.9 MB/s
+ballast app_data_b01: 656 of 1740 customers, 1.31 of 3.40 GiB of BSON, 4207871 documents, 11.7 MB/s
+ballast app_data_b02: 701 of 1740 customers, 1.33 of 3.40 GiB of BSON, 4278896 documents, 11.9 MB/s
+ballast app_data_b03: 862 of 1740 customers, 1.65 of 3.40 GiB of BSON, 5307956 documents, 11.8 MB/s
+ballast app_data_b01: 829 of 1740 customers, 1.64 of 3.40 GiB of BSON, 5250333 documents, 11.7 MB/s
+ballast app_data_b02: 857 of 1740 customers, 1.65 of 3.40 GiB of BSON, 5310977 documents, 11.8 MB/s
+ballast app_data_b03: 1023 of 1740 customers, 1.99 of 3.40 GiB of BSON, 6401435 documents, 11.9 MB/s
+ballast app_data_b01: 1000 of 1740 customers, 1.98 of 3.40 GiB of BSON, 6358700 documents, 11.8 MB/s
+ballast app_data_b02: 1034 of 1740 customers, 2.00 of 3.40 GiB of BSON, 6404935 documents, 11.8 MB/s
+ballast app_data_b03: 1175 of 1740 customers, 2.31 of 3.40 GiB of BSON, 7408249 documents, 11.8 MB/s
+ballast app_data_b01: 1167 of 1740 customers, 2.31 of 3.40 GiB of BSON, 7399989 documents, 11.7 MB/s
+ballast app_data_b02: 1196 of 1740 customers, 2.32 of 3.40 GiB of BSON, 7443663 documents, 11.8 MB/s
+ballast app_data_b03: 1365 of 1740 customers, 2.66 of 3.40 GiB of BSON, 8523993 documents, 11.9 MB/s
+ballast app_data_b01: 1348 of 1740 customers, 2.66 of 3.40 GiB of BSON, 8523814 documents, 11.8 MB/s
+ballast app_data_b02: 1372 of 1740 customers, 2.67 of 3.40 GiB of BSON, 8558017 documents, 11.9 MB/s
+ballast app_data_b03: 1519 of 1740 customers, 2.97 of 3.40 GiB of BSON, 9549285 documents, 11.8 MB/s
+ballast app_data_b01: 1522 of 1740 customers, 2.98 of 3.40 GiB of BSON, 9573667 documents, 11.8 MB/s
+ballast app_data_b02: 1535 of 1740 customers, 2.99 of 3.40 GiB of BSON, 9609958 documents, 11.8 MB/s
+ballast app_data_b03: 1696 of 1740 customers, 3.32 of 3.40 GiB of BSON, 10656813 documents, 11.9 MB/s
+ballast app_data_b01: 1704 of 1740 customers, 3.33 of 3.40 GiB of BSON, 10673263 documents, 11.9 MB/s
+ballast app_data_b02: 1707 of 1740 customers, 3.34 of 3.40 GiB of BSON, 10717802 documents, 11.9 MB/s
+BALLAST-DB app_data_b01: 3.40 GiB of BSON, 10914445 documents in 326 s (11.2 MB/s); version 1 with 8 groups
+BALLAST-DB app_data_b02: 3.40 GiB of BSON, 10914534 documents in 326 s (11.2 MB/s); version 1 with 8 groups
+BALLAST-DB app_data_b03: 3.40 GiB of BSON, 10914284 documents in 327 s (11.2 MB/s); version 1 with 8 groups
+BALLAST: DONE: 3 databases, 10.20 GiB of BSON in 327 s (33.5 MB/s together)
+EXIT 0 wall 327 s

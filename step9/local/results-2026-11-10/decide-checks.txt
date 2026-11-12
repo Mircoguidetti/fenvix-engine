@@ -1,0 +1,17 @@
+--- run without engine:
+REFUSED: engine: give the name of the final merged engine ref (branch or tag), e.g. "engine": "integration-3"; there is no default (step 9 runs on the ref holding compaction 2 steps 3-8, never on one chosen by accident)
+--- generate without the reader options:
+REFUSED: ballast_mode generate: server_options must turn on compaction 2's reader ("--sealed-runs 0" or N): the generated ballast is sealed runs and our manifest, which the server reads only with it on
+--- aurora with own-groups:
+REFUSED: aurora: only with network default-sg (the cluster joins the default VPC's security group, like every machine)
+--- 1tb generate, vCPU:
+mode=run
+engine=x
+engine_commit=None
+data=1tb
+pantry_mode=keep
+vcpu_peak=8
+vcpu_peaks={'load': 8, 'load (ballast generator)': 8}
+x86=1
+arm=1
+aurora=0

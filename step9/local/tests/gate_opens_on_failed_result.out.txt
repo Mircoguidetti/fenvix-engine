@@ -1,0 +1,91 @@
+step9/local/benchmark-report-aaaaaaaaaaaa.json: FAIL
+  - agent benchmark fenvix: ok is False (write errors 1, wrong reads 37, wrong_reads None, erased threads still readable 5)
+  - agent benchmark fenvix: operation put has no count of samples, fewer than the written minimum 1000
+  - agent benchmark fenvix: operation put_writes missing
+  - agent benchmark fenvix: operation save_step has no count of samples, fewer than the written minimum 1000
+  - agent benchmark fenvix: operation resume[read] missing
+  - agent benchmark fenvix: operation resume[write/first] missing
+  - agent benchmark fenvix: operation resume[write/long] missing
+  - agent benchmark fenvix: operation resume[cold] missing
+  - agent benchmark fenvix: operation time_travel has no count of samples, fewer than the written minimum 90
+  - agent benchmark fenvix: operation list missing
+  - agent benchmark fenvix: operation list_limit10 missing
+  - agent benchmark fenvix: operation erase_user missing
+  - agent benchmark fenvix: stored bytes per logical byte unknown
+  - agent benchmark postgres: operation put has no count of samples, fewer than the written minimum 1000
+  - agent benchmark postgres: operation put_writes has no count of samples, fewer than the written minimum 1000
+  - agent benchmark postgres: operation save_step has no count of samples, fewer than the written minimum 1000
+  - agent benchmark postgres: operation resume[read] has no count of samples, fewer than the written minimum 30
+  - agent benchmark postgres: operation resume[write/first] has no count of samples, fewer than the written minimum 300
+  - agent benchmark postgres: operation resume[write/long] has no count of samples, fewer than the written minimum 300
+  - agent benchmark postgres: operation resume[cold] missing
+  - agent benchmark postgres: operation time_travel has no count of samples, fewer than the written minimum 90
+  - agent benchmark postgres: operation list has no count of samples, fewer than the written minimum 30
+  - agent benchmark postgres: operation list_limit10 has no count of samples, fewer than the written minimum 30
+  - agent benchmark postgres: operation erase_user has no count of samples, fewer than the written minimum 20
+  - agent benchmark mongo: operation put has no count of samples, fewer than the written minimum 1000
+  - agent benchmark mongo: operation put_writes has no count of samples, fewer than the written minimum 1000
+  - agent benchmark mongo: operation save_step has no count of samples, fewer than the written minimum 1000
+  - agent benchmark mongo: operation resume[read] has no count of samples, fewer than the written minimum 30
+  - agent benchmark mongo: operation resume[write/first] has no count of samples, fewer than the written minimum 300
+  - agent benchmark mongo: operation resume[write/long] has no count of samples, fewer than the written minimum 300
+  - agent benchmark mongo: operation resume[cold] missing
+  - agent benchmark mongo: operation time_travel has no count of samples, fewer than the written minimum 90
+  - agent benchmark mongo: operation list has no count of samples, fewer than the written minimum 30
+  - agent benchmark mongo: operation list_limit10 has no count of samples, fewer than the written minimum 30
+  - agent benchmark mongo: operation erase_user has no count of samples, fewer than the written minimum 20
+  - agent benchmark: the sides did not run the same plan (digests {'fenvix': None, 'postgres': None, 'mongo': None})
+  - agent benchmark save_step p50: ours 900.00 ms > postgres 5.00 ms
+  - agent benchmark save_step p99: ours 9000.00 ms > postgres 20.00 ms
+  - agent benchmark time_travel p50: ours 500.00 ms > postgres 5.00 ms
+  - agent benchmark time_travel p99: ours 5000.00 ms > postgres 20.00 ms
+  - agent benchmark save_step p50: ours 900.00 ms > mongo 5.00 ms
+  - agent benchmark save_step p99: ours 9000.00 ms > mongo 20.00 ms
+  - agent benchmark time_travel p50: ours 500.00 ms > mongo 5.00 ms
+  - agent benchmark time_travel p99: ours 5000.00 ms > mongo 20.00 ms
+GATE: CLOSED (45 blockers; RULES.md 8-9: no AWS run, not even a pilot)
+  - step9/local/benchmark-report-aaaaaaaaaaaa.json: verdict FAIL
+  - agent benchmark fenvix: ok is False (write errors 1, wrong reads 37, wrong_reads None, erased threads still readable 5)
+  - agent benchmark fenvix: operation put has no count of samples, fewer than the written minimum 1000
+  - agent benchmark fenvix: operation put_writes missing
+  - agent benchmark fenvix: operation save_step has no count of samples, fewer than the written minimum 1000
+  - agent benchmark fenvix: operation resume[read] missing
+  - agent benchmark fenvix: operation resume[write/first] missing
+  - agent benchmark fenvix: operation resume[write/long] missing
+  - agent benchmark fenvix: operation resume[cold] missing
+  - agent benchmark fenvix: operation time_travel has no count of samples, fewer than the written minimum 90
+  - agent benchmark fenvix: operation list missing
+  - agent benchmark fenvix: operation list_limit10 missing
+  - agent benchmark fenvix: operation erase_user missing
+  - agent benchmark fenvix: stored bytes per logical byte unknown
+  - agent benchmark postgres: operation put has no count of samples, fewer than the written minimum 1000
+  - agent benchmark postgres: operation put_writes has no count of samples, fewer than the written minimum 1000
+  - agent benchmark postgres: operation save_step has no count of samples, fewer than the written minimum 1000
+  - agent benchmark postgres: operation resume[read] has no count of samples, fewer than the written minimum 30
+  - agent benchmark postgres: operation resume[write/first] has no count of samples, fewer than the written minimum 300
+  - agent benchmark postgres: operation resume[write/long] has no count of samples, fewer than the written minimum 300
+  - agent benchmark postgres: operation resume[cold] missing
+  - agent benchmark postgres: operation time_travel has no count of samples, fewer than the written minimum 90
+  - agent benchmark postgres: operation list has no count of samples, fewer than the written minimum 30
+  - agent benchmark postgres: operation list_limit10 has no count of samples, fewer than the written minimum 30
+  - agent benchmark postgres: operation erase_user has no count of samples, fewer than the written minimum 20
+  - agent benchmark mongo: operation put has no count of samples, fewer than the written minimum 1000
+  - agent benchmark mongo: operation put_writes has no count of samples, fewer than the written minimum 1000
+  - agent benchmark mongo: operation save_step has no count of samples, fewer than the written minimum 1000
+  - agent benchmark mongo: operation resume[read] has no count of samples, fewer than the written minimum 30
+  - agent benchmark mongo: operation resume[write/first] has no count of samples, fewer than the written minimum 300
+  - agent benchmark mongo: operation resume[write/long] has no count of samples, fewer than the written minimum 300
+  - agent benchmark mongo: operation resume[cold] missing
+  - agent benchmark mongo: operation time_travel has no count of samples, fewer than the written minimum 90
+  - agent benchmark mongo: operation list has no count of samples, fewer than the written minimum 30
+  - agent benchmark mongo: operation list_limit10 has no count of samples, fewer than the written minimum 30
+  - agent benchmark mongo: operation erase_user has no count of samples, fewer than the written minimum 20
+  - agent benchmark: the sides did not run the same plan (digests {'fenvix': None, 'postgres': None, 'mongo': None})
+  - agent benchmark save_step p50: ours 900.00 ms > postgres 5.00 ms
+  - agent benchmark save_step p99: ours 9000.00 ms > postgres 20.00 ms
+  - agent benchmark time_travel p50: ours 500.00 ms > postgres 5.00 ms
+  - agent benchmark time_travel p99: ours 5000.00 ms > postgres 20.00 ms
+  - agent benchmark save_step p50: ours 900.00 ms > mongo 5.00 ms
+  - agent benchmark save_step p99: ours 9000.00 ms > mongo 20.00 ms
+  - agent benchmark time_travel p50: ours 500.00 ms > mongo 5.00 ms
+  - agent benchmark time_travel p99: ours 5000.00 ms > mongo 20.00 ms

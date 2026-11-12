@@ -1,0 +1,6 @@
+bench/agent-checkpoints/recorder/test_recorder.py::test_failure_is_recorded_with_its_spend_and_the_summary_is_written PASSED [ 20%]
+bench/agent-checkpoints/recorder/test_recorder.py::test_resume_pays_nothing_again_and_retries_only_the_failed PASSED [ 40%]
+bench/agent-checkpoints/recorder/test_recorder.py::test_cap_is_checked_at_every_model_call PASSED [ 60%]
+bench/agent-checkpoints/recorder/test_recorder.py::test_replay_refuses_incomplete_recordings PASSED [ 80%]
+bench/agent-checkpoints/recorder/test_recorder.py::test_replay_renumbers_versions_like_the_postgres_saver PASSED [100%]
+============================== 5 passed in 15.85s ==============================

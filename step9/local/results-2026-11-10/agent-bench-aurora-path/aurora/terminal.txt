@@ -1,0 +1,1 @@
+[postgres] VALIDATION, NOT RESULTS: ok=True checkpoints=2551 write=12.551s save_step p50/p99=2.734/18.127 ms stored/logical=0.386 -> /tmp/claude-0/ab/out/aurora/summary.json

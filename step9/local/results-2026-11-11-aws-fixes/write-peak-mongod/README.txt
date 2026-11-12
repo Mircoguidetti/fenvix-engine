@@ -1,0 +1,3 @@
+Local validation of step9/programs/write_peak.py (aws-fixes, 2026-11-11), NOT a result: mongod 7.0 in docker (--cpus 2) on this 4-vCPU sandbox, the client on the same machine.
+Command: write_peak.py out --uri mongodb://127.0.0.1:27099/?directConnection=true --dbs 2 --threads 4 --minutes 2.5 --burst-min 0.5 --sample-s 2
+Shows: the founder's script runs unchanged (md5) as N processes, stops cleanly on SIGTERM (its own handler, state saved, exit 0), the cook's counters give documents/s and CPU, the counts are read and the databases dropped, and NOT VALID is printed when the client machine passes 80% CPU (here it shares the machine with mongod).

@@ -295,13 +295,21 @@ pub struct GroupWriter {
     last: Option<Vec<u8>>,
     /// The first group starts at the empty key (the version's first group).
     first_at_empty: bool,
+    /// The next row starts a new group ([`GroupWriter::cut`]).
+    force: bool,
     pub rows: u64,
     pub bytes: u64,
 }
 
 impl GroupWriter {
     pub fn new(store: &Arc<dyn ObjectStore>, id: &str, x: u64, epoch: Option<u64>, opts: &BuildOpts, first_id: u32, first_at_empty: bool) -> GroupWriter {
-        GroupWriter { store: Arc::clone(store), id: id.to_string(), x, epoch, opts: opts.clone(), next_id: first_id, groups: Vec::new(), cur: None, g_bytes: 0, last: None, first_at_empty, rows: 0, bytes: 0 }
+        GroupWriter { store: Arc::clone(store), id: id.to_string(), x, epoch, opts: opts.clone(), next_id: first_id, groups: Vec::new(), cur: None, g_bytes: 0, last: None, first_at_empty, force: false, rows: 0, bytes: 0 }
+    }
+
+    /// The next row starts a new group (a cut planned by the caller, e.g. at a customer boundary), whatever the bytes of
+    /// the current one.
+    pub fn cut(&mut self) {
+        self.force = true;
     }
 
     pub async fn add(&mut self, key: &[u8], seq: u64, env: &[u8]) -> Result<()> {
@@ -309,7 +317,8 @@ impl GroupWriter {
             ensure!(&l[..] < key, "generated rows out of order: {} after {}", hex(key), hex(l));
         }
         ensure!(seq <= self.x, "a generated row at seq {seq} above the cut {}", self.x);
-        if self.cur.is_none() || self.g_bytes >= self.opts.group_bytes {
+        if self.cur.is_none() || self.g_bytes >= self.opts.group_bytes || self.force {
+            self.force = false;
             if let Some(s) = self.cur.take() {
                 let l = s.finish().await?;
                 self.groups.last_mut().unwrap().sealed = l;
@@ -448,6 +457,166 @@ pub async fn publish_generated(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
         ensure!(g.x_g <= x, "group {} at X_g {} above X_d {x}", g.id, g.x_g);
     }
     let next_group_id = groups.iter().map(|g| g.id).max().map_or(0, |m| m + 1);
+    rep.runs_written = groups.iter().filter(|g| g.sealed.is_some()).count() as u64;
+    rep.groups = groups.len();
+    rep.resealed = groups.len();
+    let version = manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1);
+    let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: Vec::new(), next_group_id };
+    rep.version = version;
+    let created = match manifest::create(store, id, &v).await {
+        Ok(c) => c,
+        Err(e) => return Err(anyhow::Error::new(super::UnknownPublish { version: Box::new(v), msg: format!("{e:#}") })),
+    };
+    if !created {
+        return Err(anyhow::Error::new(super::LostRace(format!("publish of version {version} of {id} lost the race: another publisher wrote it; the generated runs are orphans"))));
+    }
+    Ok((v, rep))
+}
+
+/// One key partition of the generated shared rows for [`publish_generated_parts`]: its rows (sorted, one per key, as
+/// (key, stored envelope)) all have keys in `[lo, next part's lo)`.
+pub struct PartRows {
+    pub lo: Vec<u8>,
+    pub rows: Box<dyn SortedRows>,
+}
+
+/// What one partition wrote.
+struct PartOut {
+    groups: Vec<GroupLine>,
+    /// Its rows are below the customer space (false: above it; a partition with no row counts as below).
+    below: bool,
+    rows: u64,
+    slatedb_rows: u64,
+}
+
+/// [`publish_generated`] for a generator that wrote its customer space with several writers and cut its other rows into
+/// key partitions: the partitions are merged with SlateDB's rows of their range and written into groups in parallel
+/// (`parallel` at a time), then one version lists the groups below the customer space, the customer-space groups
+/// (`direct`, in key order), and the groups above it. The rules are those of [`publish_generated`]: the database has no
+/// run yet; every generated row carries `x0`, at or below the cut X_d taken here; on a key SlateDB also holds the
+/// generated row wins; delete envelopes are dropped; no row of the shared keyspace falls inside the customer space.
+#[allow(clippy::too_many_arguments)]
+pub async fn publish_generated_parts(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, id: &str, cur: Option<&View>, e_env: u64, epoch: Option<u64>, opts: &BuildOpts, x0: u64, direct: Vec<GroupLine>, direct_last: Option<Vec<u8>>, parts: Vec<PartRows>, parallel: usize) -> Result<(Version, BuildReport)> {
+    if let Some(v) = cur {
+        ensure!(v.meta.delta.is_empty() && v.meta.groups.iter().all(|g| g.sealed.is_none()), "database {id} already has runs: a ballast database is generated whole, into an empty database");
+    }
+    ensure!(!parts.is_empty() && parts[0].lo.is_empty(), "the first partition starts at the empty key");
+    for w in parts.windows(2) {
+        ensure!(w[0].lo < w[1].lo, "partitions out of order");
+    }
+    db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::Wal }).await?;
+    let snap = db.snapshot().await?;
+    let x = snap.seq();
+    ensure!(x >= x0, "the cut {x} is below the cut {x0} taken before the generation (SlateDB lost rows?)");
+    ensure!(e_env <= x0, "E_env {e_env} above the generation's cut {x0}");
+    // SlateDB's own rows (the catalog the server wrote through its commands, the envelope marker): few, read whole
+    let scan_opts = slatedb::config::ScanOptions { read_ahead_bytes: 4 << 20, max_fetch_tasks: 4, cache_blocks: false, ..Default::default() };
+    let mut it = snap.scan_with_options::<std::ops::RangeFull>(.., &scan_opts).await?;
+    let mut srows: Vec<(Vec<u8>, u64, Vec<u8>)> = Vec::new();
+    while let Some(kv) = it.next().await? {
+        let env = envelope_of(e_env, &kv.key, kv.seq, &kv.value)?;
+        srows.push((kv.key.to_vec(), kv.seq, env));
+        ensure!(srows.len() <= 1_000_000, "database {id}: more than a million rows in SlateDB: not a database made for the generator");
+    }
+    drop(it);
+    drop(snap);
+    let direct_lo: Option<Vec<u8>> = match direct.first() {
+        Some(g) => Some(manifest::unhex(&g.lo)?),
+        None => None,
+    };
+    let n = parts.len();
+    let los: Vec<Vec<u8>> = parts.iter().map(|p| p.lo.clone()).collect();
+    let mut by_part: Vec<Vec<(Vec<u8>, u64, Vec<u8>)>> = (0..n).map(|_| Vec::new()).collect();
+    for r in srows {
+        let p = los.partition_point(|lo| &lo[..] <= &r.0[..]) - 1;
+        by_part[p].push(r);
+    }
+    let sem = Arc::new(tokio::sync::Semaphore::new(parallel.max(1)));
+    let mut tasks = Vec::new();
+    for (p, (part, srows)) in parts.into_iter().zip(by_part).enumerate() {
+        let (store, id, opts, sem) = (Arc::clone(store), id.to_string(), opts.clone(), Arc::clone(&sem));
+        let hi = los.get(p + 1).cloned();
+        let (direct_lo, direct_last) = (direct_lo.clone(), direct_last.clone());
+        let x0 = x0;
+        tasks.push(tokio::spawn(async move {
+            let _permit = sem.acquire_owned().await?;
+            let mut rows = part.rows;
+            // group ids do not name the runs (their paths are unique): renumbered below
+            let mut w = GroupWriter::new(&store, &id, x, epoch, &opts, ((p as u32) + 1) << 20, p == 0);
+            let mut out = PartOut { groups: Vec::new(), below: true, rows: 0, slatedb_rows: 0 };
+            let (mut seen_below, mut seen_above) = (false, false);
+            let mut srows = srows.into_iter().peekable();
+            let mut g_row = rows.next_row()?;
+            loop {
+                let take_gen = match (srows.peek(), &g_row) {
+                    (None, None) => break,
+                    (None, Some(_)) => true,
+                    (Some(_), None) => false,
+                    (Some(s), Some(g)) => g.0 <= s.0,
+                };
+                let (k, seq, env) = if take_gen {
+                    let (k, v) = g_row.take().unwrap();
+                    g_row = rows.next_row()?;
+                    if let Some(g) = &g_row {
+                        ensure!(g.0 > k, "partition {p}: generated rows out of order at {}", hex(&k));
+                    }
+                    ensure!(k >= part.lo && hi.as_ref().map_or(true, |h| &k < h), "partition {p}: generated row {} outside its range", hex(&k));
+                    if srows.peek().map_or(false, |s| s.0 == k) {
+                        srows.next(); // the generated row is the newer write
+                    }
+                    (k, x0, v)
+                } else {
+                    out.slatedb_rows += 1;
+                    srows.next().unwrap()
+                };
+                if env.first() == Some(&runfmt::DELETED) {
+                    continue; // a sealed run drops delete envelopes (rule 14)
+                }
+                if direct_lo.as_ref().map_or(true, |lo| &k < lo) {
+                    seen_below = true;
+                } else {
+                    let last = direct_last.as_deref().unwrap_or(&[]);
+                    ensure!(&k[..] > last, "row {} falls inside the generated customer space", hex(&k));
+                    seen_above = true;
+                }
+                ensure!(!(seen_below && seen_above), "partition {p} has rows on both sides of the customer space: its bounds must include the customer space's start");
+                w.add(&k, seq, &env).await?;
+                out.rows += 1;
+            }
+            out.below = !seen_above;
+            out.groups = w.finish().await?;
+            Ok::<_, anyhow::Error>(out)
+        }));
+    }
+    let mut outs = Vec::new();
+    for t in tasks {
+        outs.push(t.await.map_err(|e| anyhow::anyhow!("partition task: {e}"))??);
+    }
+    let mut rep = BuildReport { x_d: x, ..Default::default() };
+    rep.rows_scanned = outs.iter().map(|o| o.slatedb_rows).sum();
+    rep.sealed_rows = outs.iter().map(|o| o.rows).sum::<u64>() + direct.iter().filter_map(|g| g.sealed.as_ref()).map(|r| r.entries).sum::<u64>();
+    let mut groups: Vec<GroupLine> = Vec::new();
+    let mut post: Vec<GroupLine> = Vec::new();
+    for o in outs {
+        if o.below {
+            groups.extend(o.groups);
+        } else {
+            post.extend(o.groups);
+        }
+    }
+    groups.extend(direct);
+    groups.extend(post);
+    for (i, g) in groups.iter_mut().enumerate() {
+        g.id = i as u32;
+    }
+    ensure!(groups.first().map_or(false, |g| g.lo.is_empty()), "the first group must start at the empty key");
+    for w in groups.windows(2) {
+        ensure!(manifest::unhex(&w[0].lo)? < manifest::unhex(&w[1].lo)?, "groups out of order");
+    }
+    for g in &groups {
+        ensure!(g.x_g <= x, "group {} at X_g {} above X_d {x}", g.id, g.x_g);
+    }
+    let next_group_id = groups.len() as u32;
     rep.runs_written = groups.iter().filter(|g| g.sealed.is_some()).count() as u64;
     rep.groups = groups.len();
     rep.resealed = groups.len();

@@ -1,0 +1,15 @@
+{
+ "mode": "run",
+ "engine": "27014ff2e3e3e4ff223aa778746f3dce433c6549",
+ "loader_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts",
+ "server_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts",
+ "data": "100gb",
+ "phases": [
+  "measure",
+  "extras"
+ ],
+ "programs": [
+  "ballast-rounds"
+ ],
+ "pantry": "fenvix-kitchen-pantry-1000000001"
+}

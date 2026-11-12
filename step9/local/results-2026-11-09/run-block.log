@@ -1,0 +1,15 @@
+2026-11-09T17:02:37Z step 9 round 162693 (local): phases ['load'], data atlas, pantry fenvix-coldread-s9d-162693 (new), cook m7i.large, spare m7i.large, log m7i.large x3, compactor none, client c7i.xlarge, programs ['m30'], cap 0.05 $, 330 minutes
+2026-11-09T17:02:37Z 1/8 buckets: the run bucket (1 day) and the pantry (our server's data)
+2026-11-09T17:02:37Z 2/8 packages, CA and the password into the run bucket (the password passes through no file and no log)
+2026-11-09T17:02:37Z 3/8 network
+2026-11-09T17:02:37Z network: {"network": "fenvix-coldread-s9-162693", "machine_s3_endpoint": "http://172.18.0.1:9300"}
+2026-11-09T17:02:37Z 4/8 the load runs without the log (the loader writes straight to S3; nothing is measured while loading)
+2026-11-09T17:02:37Z 5/8 the load through cook 0 (the loader): the m30 client (the Atlas databases)
+2026-11-09T17:02:38Z server-0: loader c7i.xlarge in eu-west-1a, a3e6a67624e0, private IP 172.18.0.2
+2026-11-09T17:02:38Z client: client c7i.xlarge in eu-west-1a, f001d043c9c9, private IP 172.18.0.3
+2026-11-09T17:02:54Z SPESA: 0.61 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.60 $ from the servers' counters, storage and margin), cap 0.05 $
+2026-11-09T17:02:54Z BLOCCO: estimated spend 0.61 $ >= 0.05 $: terminating every machine, the teardown follows
+2026-11-09T17:02:56Z round stopped: BLOCCO_SPESA
+2026-11-09T17:02:56Z SPESA: 0.11 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: none; S3 0.10 $ from the servers' counters, storage and margin), cap 0.05 $
+2026-11-09T17:02:56Z copying the results from the run bucket
+2026-11-09T17:02:56Z outcome: BLOCCO_SPESA; {}

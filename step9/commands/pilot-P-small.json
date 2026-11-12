@@ -1,0 +1,24 @@
+{
+ "mode": "run",
+ "engine": "27014ff2e3e3e4ff223aa778746f3dce433c6549",
+ "loader_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts",
+ "server_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts",
+ "data": "atlas",
+ "phases": [
+  "measure",
+  "extras"
+ ],
+ "programs": [
+  "s3-first-byte",
+  "log-ack",
+  "takeovers",
+  "agent-bench",
+  "write-peak"
+ ],
+ "aurora": true,
+ "pantry": "fenvix-kitchen-pantry-1000000001",
+ "takeovers_args": "--n 5 --writers 8 --between-s 3 --lease-ttl 4 --log on",
+ "takeovers_off_args": "--n 5 --writers 8 --between-s 3 --lease-ttl 4 --log off --label logoff",
+ "agent_bench_args": "--profile small --workers 1",
+ "write_peak_args": "--dbs 6 --threads 16 --minutes 5 --gb 2"
+}

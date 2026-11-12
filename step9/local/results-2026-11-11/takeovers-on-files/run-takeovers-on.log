@@ -1,0 +1,236 @@
+2026-11-11T10:17:11Z step 9 round 204784 (local): phases ['load', 'measure', 'extras'], data atlas, pantry fenvix-coldread-s9d-204784 (new), cook m7i.large, spare m7i.large, log m7i.large x3, compactor none, client c7i.xlarge, programs ['takeovers'], cap 5.0 $, 150 minutes
+2026-11-11T10:17:11Z 1/8 buckets: the run bucket (1 day) and the pantry (our server's data)
+2026-11-11T10:17:11Z 2/8 packages, CA and the password into the run bucket (the password passes through no file and no log)
+2026-11-11T10:17:11Z 3/8 network
+2026-11-11T10:17:11Z network: {"network": "fenvix-coldread-s9-204784", "machine_s3_endpoint": "http://172.18.0.1:9300"}
+2026-11-11T10:17:11Z 4/8 the load runs without the log (the loader writes straight to S3; nothing is measured while loading)
+2026-11-11T10:17:11Z 5/8 the load through cook 0 (the loader): the m30 client (the Atlas databases)
+2026-11-11T10:17:12Z server-0: loader c7i.xlarge in eu-west-1a, 40980aac03d4, private IP 172.18.0.2
+2026-11-11T10:17:13Z client: client c7i.xlarge in eu-west-1a, 25263ef5cbd5, private IP 172.18.0.3
+2026-11-11T10:17:28Z SPESA: 0.61 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.60 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:17:28Z   client: 2026-11-11T10:17:17Z waiting for cook 0 (at most 120 minutes)
+2026-11-11T10:17:43Z SPESA: 0.12 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.12 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:17:43Z   client: 2026-11-11T10:17:29Z load: 8 steps on cook 0 (c7i.xlarge)
+2026-11-11T10:17:58Z SPESA: 0.14 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.13 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:17:58Z   client: 2026-11-11T10:17:29Z load: 8 steps on cook 0 (c7i.xlarge)
+2026-11-11T10:18:13Z SPESA: 0.17 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.16 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:18:13Z   client: 2026-11-11T10:17:29Z load: 8 steps on cook 0 (c7i.xlarge)
+2026-11-11T10:18:28Z SPESA: 0.18 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.17 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:18:28Z   client: 2026-11-11T10:17:29Z load: 8 steps on cook 0 (c7i.xlarge)
+2026-11-11T10:18:43Z SPESA: 0.18 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.17 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:18:43Z   client: 2026-11-11T10:18:24Z load finished with code 0 in 55 s: LOAD: DONE in 55 s
+2026-11-11T10:18:58Z SPESA: 0.19 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.18 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:18:58Z   client: 2026-11-11T10:18:24Z load finished with code 0 in 55 s: LOAD: DONE in 55 s
+2026-11-11T10:19:13Z SPESA: 0.20 $ so far at 2 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.18 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:19:13Z   client: 2026-11-11T10:18:24Z load finished with code 0 in 55 s: LOAD: DONE in 55 s
+2026-11-11T10:19:29Z SPESA: 0.20 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.19 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:19:29Z   client: 2026-11-11T10:18:24Z load finished with code 0 in 55 s: LOAD: DONE in 55 s
+2026-11-11T10:19:44Z SPESA: 0.20 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.19 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:19:44Z   client: 2026-11-11T10:18:24Z load finished with code 0 in 55 s: LOAD: DONE in 55 s
+2026-11-11T10:19:59Z SPESA: 0.21 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.19 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:19:59Z   client: 2026-11-11T10:18:24Z load finished with code 0 in 55 s: LOAD: DONE in 55 s
+2026-11-11T10:20:14Z SPESA: 0.21 $ so far at 3 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.19 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:20:14Z   client: 2026-11-11T10:18:24Z load finished with code 0 in 55 s: LOAD: DONE in 55 s
+2026-11-11T10:20:29Z SPESA: 0.21 $ so far at 3 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.19 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:20:29Z   client: 2026-11-11T10:18:24Z load finished with code 0 in 55 s: LOAD: DONE in 55 s
+2026-11-11T10:20:44Z SPESA: 0.21 $ so far at 3 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.19 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:20:44Z   client: 2026-11-11T10:18:24Z load finished with code 0 in 55 s: LOAD: DONE in 55 s
+2026-11-11T10:20:59Z SPESA: 0.21 $ so far at 3 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.19 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:20:59Z   client: 2026-11-11T10:20:56Z SETTLE: calm after 151 s (93 SST)
+2026-11-11T10:20:59Z load: {"load": "LOADED"}
+2026-11-11T10:21:09Z server-0: stopped by itself
+2026-11-11T10:21:10Z 6/8 the measured kitchen: cook 1 with log-0 (zone a), log-1 (zone b), log-2 (zone c)
+2026-11-11T10:21:10Z server-1: cooklog m7i.large in eu-west-1a, 24b2f6a436ee, private IP 172.18.0.2
+2026-11-11T10:21:11Z log-1: log m7i.large in eu-west-1b, c9bede88b402, private IP 172.18.0.4
+2026-11-11T10:21:11Z log-2: log m7i.large in eu-west-1c, a9c0b218d4cf, private IP 172.18.0.5
+2026-11-11T10:21:27Z SPESA: 0.22 $ so far at 4 minutes (upper bound; machines 0.03 $, alive: c7i.xlarge, m7i.large, m7i.large, m7i.large; S3 0.19 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:21:27Z log ready: 172.18.0.2:7200,172.18.0.4:7200,172.18.0.5:7200
+2026-11-11T10:21:42Z SPESA: 0.22 $ so far at 4 minutes (upper bound; machines 0.03 $, alive: c7i.xlarge, m7i.large, m7i.large, m7i.large; S3 0.19 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:21:59Z 7/8 the warm spare (zone b), now that the m30 client is off
+2026-11-11T10:21:59Z spare: spare m7i.large in eu-west-1b, c1f7c723e5f8, private IP 172.18.0.3
+2026-11-11T10:22:15Z SPESA: 0.73 $ so far at 5 minutes (upper bound; machines 0.04 $, alive: m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:22:15Z 7/8 the extras client: ['takeovers']
+2026-11-11T10:22:15Z extras: extras c7i.large in eu-west-1a, c7a88ef13f8a, private IP 172.18.0.6
+2026-11-11T10:22:30Z SPESA: 0.73 $ so far at 5 minutes (upper bound; machines 0.04 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:22:30Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:22:45Z SPESA: 0.73 $ so far at 5 minutes (upper bound; machines 0.04 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:22:45Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:23:00Z SPESA: 0.73 $ so far at 5 minutes (upper bound; machines 0.04 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:23:00Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:23:16Z SPESA: 0.73 $ so far at 6 minutes (upper bound; machines 0.05 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:23:16Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:23:31Z SPESA: 0.74 $ so far at 6 minutes (upper bound; machines 0.05 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:23:31Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:23:46Z SPESA: 0.74 $ so far at 6 minutes (upper bound; machines 0.05 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:23:46Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:24:01Z SPESA: 0.74 $ so far at 6 minutes (upper bound; machines 0.05 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:24:01Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:24:16Z SPESA: 0.74 $ so far at 7 minutes (upper bound; machines 0.06 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:24:16Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:24:31Z SPESA: 0.75 $ so far at 7 minutes (upper bound; machines 0.06 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:24:31Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:24:46Z SPESA: 0.75 $ so far at 7 minutes (upper bound; machines 0.06 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:24:46Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:25:01Z SPESA: 0.75 $ so far at 7 minutes (upper bound; machines 0.06 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:25:01Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:25:16Z SPESA: 0.75 $ so far at 8 minutes (upper bound; machines 0.07 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:25:16Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:25:31Z SPESA: 0.76 $ so far at 8 minutes (upper bound; machines 0.07 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:25:31Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:25:46Z SPESA: 0.76 $ so far at 8 minutes (upper bound; machines 0.07 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:25:46Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:26:01Z SPESA: 0.76 $ so far at 8 minutes (upper bound; machines 0.07 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:26:01Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:26:16Z SPESA: 0.76 $ so far at 9 minutes (upper bound; machines 0.07 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:26:16Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:26:32Z SPESA: 0.77 $ so far at 9 minutes (upper bound; machines 0.08 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:26:32Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:26:47Z SPESA: 0.77 $ so far at 9 minutes (upper bound; machines 0.08 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:26:47Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:27:02Z SPESA: 0.77 $ so far at 9 minutes (upper bound; machines 0.08 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:27:02Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:27:17Z SPESA: 0.77 $ so far at 10 minutes (upper bound; machines 0.08 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:27:17Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:27:32Z SPESA: 0.77 $ so far at 10 minutes (upper bound; machines 0.09 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:27:32Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:27:47Z SPESA: 0.78 $ so far at 10 minutes (upper bound; machines 0.09 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:27:47Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:28:02Z SPESA: 0.78 $ so far at 10 minutes (upper bound; machines 0.09 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:28:02Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:28:17Z SPESA: 0.78 $ so far at 11 minutes (upper bound; machines 0.09 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:28:17Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:28:32Z SPESA: 0.78 $ so far at 11 minutes (upper bound; machines 0.10 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:28:32Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:28:47Z SPESA: 0.79 $ so far at 11 minutes (upper bound; machines 0.10 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:28:47Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:29:02Z SPESA: 0.79 $ so far at 11 minutes (upper bound; machines 0.10 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:29:02Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:29:17Z SPESA: 0.79 $ so far at 12 minutes (upper bound; machines 0.10 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:29:17Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:29:32Z SPESA: 0.79 $ so far at 12 minutes (upper bound; machines 0.11 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:29:32Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:29:48Z SPESA: 0.80 $ so far at 12 minutes (upper bound; machines 0.11 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:29:48Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:30:03Z SPESA: 0.80 $ so far at 12 minutes (upper bound; machines 0.11 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:30:03Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:30:18Z SPESA: 0.80 $ so far at 13 minutes (upper bound; machines 0.11 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:30:18Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:30:33Z SPESA: 0.80 $ so far at 13 minutes (upper bound; machines 0.12 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:30:33Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:30:48Z SPESA: 0.81 $ so far at 13 minutes (upper bound; machines 0.12 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:30:48Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:31:03Z SPESA: 0.81 $ so far at 13 minutes (upper bound; machines 0.12 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:31:03Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:31:18Z SPESA: 0.81 $ so far at 14 minutes (upper bound; machines 0.12 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:31:18Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:31:33Z SPESA: 0.81 $ so far at 14 minutes (upper bound; machines 0.13 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:31:33Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:31:48Z SPESA: 0.82 $ so far at 14 minutes (upper bound; machines 0.13 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:31:48Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:32:03Z SPESA: 0.82 $ so far at 14 minutes (upper bound; machines 0.13 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:32:03Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:32:18Z SPESA: 0.82 $ so far at 15 minutes (upper bound; machines 0.13 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:32:18Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:32:33Z SPESA: 0.82 $ so far at 15 minutes (upper bound; machines 0.14 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:32:33Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:32:48Z SPESA: 0.83 $ so far at 15 minutes (upper bound; machines 0.14 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:32:49Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:33:04Z SPESA: 0.83 $ so far at 15 minutes (upper bound; machines 0.14 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:33:04Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:33:19Z SPESA: 0.83 $ so far at 16 minutes (upper bound; machines 0.14 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:33:19Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:33:34Z SPESA: 0.83 $ so far at 16 minutes (upper bound; machines 0.15 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:33:34Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:33:49Z SPESA: 0.84 $ so far at 16 minutes (upper bound; machines 0.15 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:33:49Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:34:04Z SPESA: 0.84 $ so far at 16 minutes (upper bound; machines 0.15 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:34:04Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:34:19Z SPESA: 0.84 $ so far at 17 minutes (upper bound; machines 0.15 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:34:19Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:34:34Z SPESA: 0.84 $ so far at 17 minutes (upper bound; machines 0.16 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:34:34Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:34:49Z SPESA: 0.85 $ so far at 17 minutes (upper bound; machines 0.16 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:34:49Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:35:04Z SPESA: 0.85 $ so far at 17 minutes (upper bound; machines 0.16 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:35:04Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:35:19Z SPESA: 0.85 $ so far at 18 minutes (upper bound; machines 0.16 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:35:19Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:35:34Z SPESA: 0.85 $ so far at 18 minutes (upper bound; machines 0.17 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:35:34Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:35:49Z SPESA: 0.86 $ so far at 18 minutes (upper bound; machines 0.17 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:35:49Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:36:05Z SPESA: 0.86 $ so far at 18 minutes (upper bound; machines 0.17 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:36:05Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:36:20Z SPESA: 0.86 $ so far at 19 minutes (upper bound; machines 0.17 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:36:20Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:36:35Z SPESA: 0.86 $ so far at 19 minutes (upper bound; machines 0.17 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:36:35Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:36:50Z SPESA: 0.87 $ so far at 19 minutes (upper bound; machines 0.18 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:36:50Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:37:05Z SPESA: 0.87 $ so far at 19 minutes (upper bound; machines 0.18 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:37:05Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:37:20Z SPESA: 0.87 $ so far at 20 minutes (upper bound; machines 0.18 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:37:20Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:37:35Z SPESA: 0.87 $ so far at 20 minutes (upper bound; machines 0.18 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:37:35Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:37:50Z SPESA: 0.88 $ so far at 20 minutes (upper bound; machines 0.19 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:37:50Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:38:05Z SPESA: 0.88 $ so far at 20 minutes (upper bound; machines 0.19 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:38:05Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:38:20Z SPESA: 0.88 $ so far at 21 minutes (upper bound; machines 0.19 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:38:20Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:38:35Z SPESA: 0.88 $ so far at 21 minutes (upper bound; machines 0.19 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:38:35Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:38:50Z SPESA: 0.88 $ so far at 21 minutes (upper bound; machines 0.20 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:38:50Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:39:06Z SPESA: 0.89 $ so far at 21 minutes (upper bound; machines 0.20 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:39:06Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:39:21Z SPESA: 0.89 $ so far at 22 minutes (upper bound; machines 0.20 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:39:21Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:39:36Z SPESA: 0.89 $ so far at 22 minutes (upper bound; machines 0.20 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:39:36Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:39:51Z SPESA: 0.89 $ so far at 22 minutes (upper bound; machines 0.21 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:39:51Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:40:06Z SPESA: 0.90 $ so far at 22 minutes (upper bound; machines 0.21 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:40:06Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:40:21Z SPESA: 0.90 $ so far at 23 minutes (upper bound; machines 0.21 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:40:21Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:40:36Z SPESA: 0.90 $ so far at 23 minutes (upper bound; machines 0.21 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:40:36Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:40:51Z SPESA: 0.90 $ so far at 23 minutes (upper bound; machines 0.22 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:40:51Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:41:06Z SPESA: 0.91 $ so far at 23 minutes (upper bound; machines 0.22 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:41:06Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:41:21Z SPESA: 0.91 $ so far at 24 minutes (upper bound; machines 0.22 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:41:21Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:41:36Z SPESA: 0.91 $ so far at 24 minutes (upper bound; machines 0.22 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:41:36Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:41:51Z SPESA: 0.91 $ so far at 24 minutes (upper bound; machines 0.23 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:41:51Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:42:07Z SPESA: 0.92 $ so far at 24 minutes (upper bound; machines 0.23 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:42:07Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:42:22Z SPESA: 0.92 $ so far at 25 minutes (upper bound; machines 0.23 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:42:22Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:42:37Z SPESA: 0.92 $ so far at 25 minutes (upper bound; machines 0.23 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:42:37Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:42:52Z SPESA: 0.92 $ so far at 25 minutes (upper bound; machines 0.24 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:42:52Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:43:07Z SPESA: 0.93 $ so far at 25 minutes (upper bound; machines 0.24 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:43:07Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:43:22Z SPESA: 0.93 $ so far at 26 minutes (upper bound; machines 0.24 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:43:22Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:43:37Z SPESA: 0.93 $ so far at 26 minutes (upper bound; machines 0.24 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:43:37Z   extras: 2026-11-11T10:22:21Z program takeovers starts
+2026-11-11T10:43:52Z SPESA: 0.93 $ so far at 26 minutes (upper bound; machines 0.25 $, alive: c7i.large, m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:43:52Z   extras: 2026-11-11T10:43:52Z program takeovers: code 0 in 1291 s: TAKEOVERS: FAIL (50/50 takeovers, 405207 acknowledged, UNKNOWN lost (missing by read {'at_once': 0}), 0 confirmed after a kill)
+2026-11-11T10:44:07Z SPESA: 0.94 $ so far at 26 minutes (upper bound; machines 0.25 $, alive: m7i.large, m7i.large, m7i.large, m7i.large; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:44:07Z   extras: 2026-11-11T10:43:55Z finish: EXTRAS_DONE
+2026-11-11T10:44:09Z 8/8 everything off
+2026-11-11T10:44:29Z server-1: stopped by itself
+2026-11-11T10:44:39Z spare: stopped by itself
+2026-11-11T10:44:51Z log-1: stopped by itself
+2026-11-11T10:45:01Z log-2: stopped by itself
+2026-11-11T10:45:12Z log-0: stopped by itself
+2026-11-11T10:45:13Z SPESA: 0.94 $ so far at 28 minutes (upper bound; machines 0.25 $, alive: none; S3 0.69 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-11T10:45:13Z copying the results from the run bucket
+2026-11-11T10:45:14Z outcome: FINITO; {"load": "LOADED", "client": "LOADED_ONLY", "extras": "takeovers:rc=0 takeovers-logoff:rc=1"}

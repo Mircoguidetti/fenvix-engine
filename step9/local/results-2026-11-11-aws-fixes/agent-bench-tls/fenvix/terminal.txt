@@ -1,0 +1,1 @@
+[fenvix | equal durability: 3-zone log, a write acknowledged at 2 of 3 copies] ok=True checkpoints=631 write=1.986s save_step p50/p99=2.436/8.537 ms stored/logical=None -> out/fenvix/summary.json

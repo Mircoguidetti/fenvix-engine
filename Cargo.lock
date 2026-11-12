@@ -2223,6 +2223,7 @@ dependencies = [
  "rustls",
  "rustls-pki-types",
  "s2",
+ "serde",
  "serde_json",
  "sha1",
  "sha2",

@@ -1,0 +1,68 @@
+{
+ "what": "S3 first byte and whole object by size, from the client machine",
+ "bucket_region": "eu-west-1",
+ "objects": {
+  "1": {
+   "n": 30,
+   "ttfb_p50": 2.555,
+   "ttfb_p95": 3.371,
+   "ttfb_p99": 5.068,
+   "ttfb_max": 5.068,
+   "total_p50": 2.587,
+   "total_p95": 3.409,
+   "total_p99": 5.122,
+   "total_max": 5.122,
+   "ttfb_mean": 2.604
+  },
+  "64": {
+   "n": 30,
+   "ttfb_p50": 2.944,
+   "ttfb_p95": 3.427,
+   "ttfb_p99": 3.522,
+   "ttfb_max": 3.522,
+   "total_p50": 3.077,
+   "total_p95": 3.603,
+   "total_p99": 3.605,
+   "total_max": 3.605,
+   "ttfb_mean": 2.893
+  },
+  "1024": {
+   "n": 30,
+   "ttfb_p50": 3.292,
+   "ttfb_p95": 4.703,
+   "ttfb_p99": 5.914,
+   "ttfb_max": 5.914,
+   "total_p50": 4.062,
+   "total_p95": 6.087,
+   "total_p99": 6.92,
+   "total_max": 6.92,
+   "ttfb_mean": 3.483
+  }
+ },
+ "ranged": {
+  "64": {
+   "n": 30,
+   "ttfb_p50": 3.515,
+   "ttfb_p95": 4.754,
+   "ttfb_p99": 5.054,
+   "ttfb_max": 5.054,
+   "total_p50": 3.606,
+   "total_p95": 4.837,
+   "total_p99": 5.15,
+   "total_max": 5.15,
+   "ttfb_mean": 3.689
+  },
+  "256": {
+   "n": 30,
+   "ttfb_p50": 3.23,
+   "ttfb_p95": 3.943,
+   "ttfb_p99": 4.323,
+   "ttfb_max": 4.323,
+   "total_p50": 3.392,
+   "total_p95": 4.06,
+   "total_p99": 4.436,
+   "total_max": 4.436,
+   "ttfb_mean": 3.279
+  }
+ }
+}

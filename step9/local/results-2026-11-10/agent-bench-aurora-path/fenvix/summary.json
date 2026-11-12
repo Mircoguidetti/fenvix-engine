@@ -1,0 +1,277 @@
+{
+  "note": "LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+  "target": "fenvix",
+  "label": "our kitchen: cook m7i.large with the 3-zone log, eu-west-1",
+  "profile": "small",
+  "seed": 42,
+  "workers": 1,
+  "plan": {
+    "threads": 41,
+    "turns": 599,
+    "digest": "1618df2b0b847193"
+  },
+  "client": {
+    "python": "3.12.15",
+    "host": "vm"
+  },
+  "write": {
+    "seconds": 12.016,
+    "errors": [],
+    "steps_per_second": 212.3
+  },
+  "read": {
+    "threads_read": 30,
+    "inconsistencies": 0
+  },
+  "erase": {
+    "users_erased": 2,
+    "threads_erased": 3,
+    "threads_left_readable": 0
+  },
+  "latency_ms": {
+    "delete_thread": {
+      "n": 3,
+      "p50": 25.388,
+      "p90": 33.341,
+      "p99": 33.341,
+      "max": 33.341,
+      "mean": 20.829
+    },
+    "erase_user": {
+      "n": 2,
+      "p50": 37.199,
+      "p90": 37.199,
+      "p99": 37.199,
+      "max": 37.199,
+      "mean": 31.309
+    },
+    "list": {
+      "n": 30,
+      "p50": 57.228,
+      "p90": 326.039,
+      "p99": 935.598,
+      "max": 935.598,
+      "mean": 133.356
+    },
+    "list_limit10": {
+      "n": 30,
+      "p50": 14.496,
+      "p90": 32.921,
+      "p99": 95.161,
+      "max": 95.161,
+      "mean": 18.257
+    },
+    "put": {
+      "n": 2551,
+      "p50": 1.693,
+      "p90": 3.535,
+      "p99": 8.263,
+      "max": 35.49,
+      "mean": 2.131
+    },
+    "put[chat]": {
+      "n": 2290,
+      "p50": 1.668,
+      "p90": 3.547,
+      "p99": 8.619,
+      "max": 35.49,
+      "mean": 2.133
+    },
+    "put[coding]": {
+      "n": 261,
+      "p50": 1.846,
+      "p90": 3.402,
+      "p99": 6.865,
+      "max": 8.699,
+      "mean": 2.116
+    },
+    "put_writes": {
+      "n": 1952,
+      "p50": 1.875,
+      "p90": 4.051,
+      "p99": 9.332,
+      "max": 24.716,
+      "mean": 2.35
+    },
+    "resume[erase_verify]": {
+      "n": 3,
+      "p50": 0.654,
+      "p90": 0.843,
+      "p99": 0.843,
+      "max": 0.843,
+      "mean": 0.632
+    },
+    "resume[read]": {
+      "n": 30,
+      "p50": 1.945,
+      "p90": 3.427,
+      "p99": 4.057,
+      "max": 4.057,
+      "mean": 2.081
+    },
+    "resume[write/first]": {
+      "n": 41,
+      "p50": 0.715,
+      "p90": 1.081,
+      "p99": 4.203,
+      "max": 4.203,
+      "mean": 0.852
+    },
+    "resume[write/long]": {
+      "n": 8,
+      "p50": 2.139,
+      "p90": 2.322,
+      "p99": 2.322,
+      "max": 2.322,
+      "mean": 2.026
+    },
+    "resume[write/none]": {
+      "n": 536,
+      "p50": 2.137,
+      "p90": 4.222,
+      "p99": 8.136,
+      "max": 19.376,
+      "mean": 2.633
+    },
+    "resume[write/short]": {
+      "n": 14,
+      "p50": 1.747,
+      "p90": 2.359,
+      "p99": 2.86,
+      "max": 2.86,
+      "mean": 1.877
+    },
+    "save_step": {
+      "n": 2551,
+      "p50": 3.213,
+      "p90": 6.978,
+      "p99": 14.939,
+      "max": 35.49,
+      "mean": 3.926
+    },
+    "save_step[chat]": {
+      "n": 2290,
+      "p50": 3.158,
+      "p90": 7.003,
+      "p99": 15.589,
+      "max": 35.49,
+      "mean": 3.902
+    },
+    "save_step[coding]": {
+      "n": 261,
+      "p50": 3.502,
+      "p90": 6.551,
+      "p99": 14.303,
+      "max": 16.931,
+      "mean": 4.142
+    },
+    "time_travel": {
+      "n": 90,
+      "p50": 1.871,
+      "p90": 3.091,
+      "p99": 7.244,
+      "max": 7.244,
+      "mean": 2.003
+    }
+  },
+  "bytes": {
+    "checkpoints": 2551,
+    "put_writes_calls": 1952,
+    "checkpoint_bytes": 139707606,
+    "writes_bytes": 2336631,
+    "message_payload_bytes_all_checkpoints": 138599529,
+    "unique_message_bytes": 2359166,
+    "logical_total": 142044237,
+    "stored": null,
+    "stored_from": "UNKNOWN (no S3 access given)",
+    "stored_per_logical": null,
+    "stored_per_checkpoint": null
+  },
+  "sizes": {
+    "dbStats": {
+      "objects": 5856,
+      "dataSize": 143726181,
+      "storageSize": 143726181,
+      "indexSize": 1162919,
+      "totalSize": 144889100
+    },
+    "collStats": {
+      "checkpoint_writes": {
+        "count": 3305,
+        "size": 3252405,
+        "storageSize": 3252405,
+        "totalIndexSize": 770065
+      },
+      "checkpoints": {
+        "count": 2551,
+        "size": 140473776,
+        "storageSize": 140473776,
+        "totalIndexSize": 392854
+      }
+    },
+    "s3": null,
+    "stored_bytes": null,
+    "stored_from": "UNKNOWN (no S3 access given)",
+    "serverStatus_s3": {
+      "get": 1837,
+      "getRange": 5007,
+      "head": 28,
+      "list": 272,
+      "put": 9129,
+      "multipartPart": 52,
+      "copy": 0,
+      "delete": 8442,
+      "getBytes": 901348952,
+      "putBytes": 1208740993
+    }
+  },
+  "sizes_after_erase": {
+    "dbStats": {
+      "objects": 5208,
+      "dataSize": 123501765,
+      "storageSize": 123501765,
+      "indexSize": 1033028,
+      "totalSize": 124534793
+    },
+    "collStats": {
+      "checkpoint_writes": {
+        "count": 2924,
+        "size": 2805261,
+        "storageSize": 2805261,
+        "totalIndexSize": 681292
+      },
+      "checkpoints": {
+        "count": 2284,
+        "size": 120696504,
+        "storageSize": 120696504,
+        "totalIndexSize": 351736
+      }
+    },
+    "s3": null,
+    "stored_bytes": null,
+    "stored_from": "UNKNOWN (no S3 access given)",
+    "serverStatus_s3": {
+      "get": 1837,
+      "getRange": 5007,
+      "head": 28,
+      "list": 313,
+      "put": 9135,
+      "multipartPart": 52,
+      "copy": 0,
+      "delete": 8442,
+      "getBytes": 901348952,
+      "putBytes": 1208829320
+    }
+  },
+  "s3_put_requests_during_write": 4567,
+  "delta_test": {
+    "test": "agent checkpoint delta test",
+    "target": "fenvix",
+    "stored_bytes_source": "UNKNOWN until fenvixSstInfo exists (compaction 2 steps 4-8)",
+    "threads": 41,
+    "logical_bytes": 142044237,
+    "unique_bytes": 2359166,
+    "stored_bytes": null
+  },
+  "ok": true
+}
