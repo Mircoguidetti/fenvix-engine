@@ -128,6 +128,15 @@ pub fn set_wake_limit(n: usize) {
 const CLOSE_CONCURRENCY: usize = 64;
 /// Builder publishes made before a compactor started, to catch up rows an ungated pass folded (review FIX 1).
 pub static CATCH_UPS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// integration-4 (coordinator, CI a91a14a test_51r): why a compactor was not started when `maybe_start_fxc` was asked
+/// (diagnostics only, no behaviour change): the tenant is not a writer; it has no version of our manifest; the catch-up
+/// publish published nothing (release E1's wait); the catch-up publish failed; the absorption marks could not be read.
+/// serverStatus().fenvix.compactor.notStarted; each reason is also logged once per open of the database.
+pub static FXC_SKIP_NOT_WRITER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static FXC_SKIP_NO_VERSION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static FXC_SKIP_CATCH_UP_NOTHING: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static FXC_SKIP_CATCH_UP_FAILED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static FXC_SKIP_MARKS_UNREADABLE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// How long a close waits for the compactor to absorb its last memtable flush (c2-fix-clone-uploads).
 const CLOSE_ABSORB_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
 
@@ -158,6 +167,8 @@ pub struct Entry {
     last_used_ms: AtomicU64,
     pub wakes: u64,
     pub closes: u64,
+    /// integration-4: the reasons `maybe_start_fxc` already logged for the current open (bits; cleared by `stop_fxc`)
+    fxc_skip_logged: u8,
     /// A collection with a TTL index was used while this entry was open: a close writes the expiry hint.
     pub(crate) ttl_seen: AtomicBool,
     /// The database was found not to exist during the current command: later reads of the same command answer
@@ -279,6 +290,7 @@ impl Dbs {
                     last_used_ms: AtomicU64::new(now_ms()),
                     wakes: 0,
                     closes: 0,
+                    fxc_skip_logged: 0,
                     ttl_seen: AtomicBool::new(false),
                     absent: false,
                     hint_written: false,
@@ -392,6 +404,7 @@ impl Dbs {
                         last_used_ms: AtomicU64::new(now_ms()),
                         wakes: 0,
                         closes: 0,
+                    fxc_skip_logged: 0,
                         ttl_seen: AtomicBool::new(false),
                     absent: false,
                         hint_written: false,
@@ -571,7 +584,24 @@ impl Entry {
 
     /// Start this database's compactor (compaction 2, step 4) when compactors are on and the tenant is a writer with a
     /// version of our manifest.
+    /// integration-4: count and log (once per open of the database) why the compactor was not started; no behaviour change.
+    fn note_fxc_skip(&mut self, bit: u8, counter: &std::sync::atomic::AtomicU64, why: &str) {
+        counter.fetch_add(1, Relaxed);
+        if self.fxc_skip_logged & bit == 0 {
+            self.fxc_skip_logged |= bit;
+            eprintln!("FXC not started db={} reason={why} unix_ms={}", self.name, tenant_bench::fx::manifest::now_ms());
+        }
+    }
+
     async fn maybe_start_fxc(&mut self) {
+        // integration-4 (diagnostics): the silent cases of the guard below, counted and logged
+        if self.fxc.is_none() && tenant_bench::fx::compactor::SERVER_ON.load(Relaxed) {
+            match self.tenant.as_ref() {
+                Some(t) if !t.is_writer() => self.note_fxc_skip(1, &FXC_SKIP_NOT_WRITER, "not_writer"),
+                Some(t) if t.fx_view().is_none() => self.note_fxc_skip(2, &FXC_SKIP_NO_VERSION, "no_version_of_our_manifest"),
+                _ => {}
+            }
+        }
         if self.fxc.is_none() && tenant_bench::fx::compactor::SERVER_ON.load(Relaxed) && self.tenant.as_ref().is_some_and(|t| t.is_writer() && t.fx_view().is_some()) {
             // the registered collections' customer keys, from their stored options (after a restart nothing has been
             // written yet: the compactor must still know which collections are keyed by thread_id)
@@ -599,14 +629,19 @@ impl Entry {
                             }
                         }
                         // nothing published yet (release E1's wait): no compactor until a publish has caught up
-                        Ok(None) => return,
+                        Ok(None) => {
+                            self.note_fxc_skip(4, &FXC_SKIP_CATCH_UP_NOTHING, "catch_up_published_nothing");
+                            return;
+                        }
                         Err(e) => {
+                            FXC_SKIP_CATCH_UP_FAILED.fetch_add(1, Relaxed);
                             eprintln!("sealed runs: database {}: the catch-up publish before the compactor failed ({e:#}); no compactor yet", self.name);
                             return;
                         }
                     }
                 }
                 Err(e) => {
+                    FXC_SKIP_MARKS_UNREADABLE.fetch_add(1, Relaxed);
                     eprintln!("sealed runs: database {}: the absorption marks could not be read ({e:#}); no compactor yet", self.name);
                     return;
                 }
@@ -679,6 +714,7 @@ impl Entry {
 
     /// Stop this database's compactor (before its tenant closes, is abandoned or dropped).
     async fn stop_fxc(&mut self) {
+        self.fxc_skip_logged = 0;   // the next open logs its own reasons again
         if let Some(c) = self.fxc.take() {
             let t0 = std::time::Instant::now();
             c.stop().await;

@@ -115,11 +115,63 @@ def test_restore_replays_wal_after_the_last_point(env):
         assert r["from_point"]["wal_objects_replayed_after_it"] >= 1 or i == 0, r
 
 
+def gc_only_changes(before, after):
+    """What changed under another database's prefix that is NOT background GC of that closed database (integration-4).
+    The maintenance loop collects a closed database 30 s after its last use (SlateDB's GC of superseded manifests,
+    compactions and SSTs, which writes gc/*.boundary; since perf-bytes also our old versions, retention 0): that is not
+    the restore. Allowed: a gc/ boundary file added or rewritten; an object deleted that is not the newest numbered
+    manifest, compactions file or version of our manifest. Anything else (a new object, a rewritten object, the newest
+    of those deleted) is a change the restore made, and is returned."""
+    import re
+    bad = []
+    newest = {}
+    for k in after:
+        m = re.search(r"/(manifest|compactions|fx/manifest)/(\d+)(\.manifest|\.compactions)?$", k)
+        if m:
+            newest[m.group(1)] = max(newest.get(m.group(1), -1), int(m.group(2)))
+    for k in after:
+        if k not in before and "/gc/" not in k:
+            bad.append(f"added {k}")
+        elif k in before and after[k][:2] != before[k][:2] and "/gc/" not in k:
+            bad.append(f"rewritten {k}")
+    for k in before:
+        if k in after:
+            continue
+        m = re.search(r"/(manifest|compactions|fx/manifest)/(\d+)(\.manifest|\.compactions)?$", k)
+        if m and int(m.group(2)) >= newest.get(m.group(1), -1):
+            bad.append(f"deleted the newest {k}")
+    return bad
+
+
+def test_gc_only_changes_accepts_gc_and_catches_a_write():
+    """No server: the CI a91a14a case (gc boundaries added, superseded manifests, compactions and versions deleted) is
+    accepted; a new or rewritten object, or the newest manifest deleted, is caught."""
+    b = "tenants/by1/"
+    before = {b + "manifest/00000000000000000001.manifest": (130, "a"), b + "manifest/00000000000000000005.manifest": (500, "e"),
+              b + "compactions/00000000000000000001.compactions": (26, "c1"), b + "compactions/00000000000000000003.compactions": (40, "c3"),
+              b + "fx/manifest/00000000000000000001": (523, "f1"), b + "fx/manifest/00000000000000000003": (900, "f3"),
+              b + "compacted/01X.sst": (4000, "s")}
+    after = {k: v for k, v in before.items() if not k.endswith(("1.manifest", "1.compactions", "manifest/00000000000000000001"))}
+    after.update({b + "gc/manifest.boundary": (1, "g1"), b + "gc/compactions.boundary": (1, "g2")})
+    assert gc_only_changes(before, after) == []
+    assert gc_only_changes(before, {**after, b + "wal/00000000000000000009.sst": (10, "w")}) == [f"added {b}wal/00000000000000000009.sst"]
+    assert gc_only_changes(before, {**after, b + "compacted/01X.sst": (4000, "other")}) == [f"rewritten {b}compacted/01X.sst"]
+    gone = {k: v for k, v in after.items() if not k.endswith("5.manifest")}
+    bad = gc_only_changes(before, gone)   # no newer manifest is left: the newest deleted is caught
+    assert f"deleted the newest {b}manifest/00000000000000000005.manifest" in bad, bad
+
+
 def test_other_databases_are_untouched_byte_for_byte(env):
+    """A restore writes nothing under another database. integration-4 (CI a91a14a): the background GC of a closed
+    database (30 s after its last use) may run inside the window and tidy it (gc_only_changes); the test then also
+    proves that this GC, running while another database is restored, deletes nothing the database needs: every
+    document of by1 is read back after the restore, after its GC has certainly run, and after a restart."""
     srv, bucket = env
     c = srv.client()
     for name in ("by1", "by2"):
         fill(c, name, "c", 500)
+    want = {name: dump_db(c, name) for name in ("by1", "by2")}
+    for name in ("by1", "by2"):
         c[name].command("tenantAdmin", close=True)
     c["main"]["c"].insert_many([{"_id": i} for i in range(100)])
     enable(srv, "main")
@@ -135,9 +187,17 @@ def test_other_databases_are_untouched_byte_for_byte(env):
     time.sleep(1)
     after = {p: listing(bucket, p) for p in before}
     for p in before:
-        assert after[p] == before[p], f"objects under {p} changed during the restore of another database"
+        bad = gc_only_changes(before[p], after[p])
+        assert not bad, f"objects under {p} changed during the restore of another database: {bad[:5]}"
     assert srv.admin.get("/v1/databases/by2/checkpoints")[1] == cps_by2
-    assert c["by1"]["c"].count_documents({}) == 500
+    # rule 8: by1's GC has run (its boundary file is there) and every document of it is still read, also after a restart
+    wait_until(lambda: "tenants/by1/gc/manifest.boundary" in listing(bucket, "tenants/by1/gc/"), timeout=90,
+               what="the background GC of the closed database by1")
+    assert dump_db(c, "by1") == want["by1"]
+    srv.term()
+    srv.start()
+    c = srv.client()
+    assert dump_db(c, "by1") == want["by1"] and dump_db(c, "by2") == want["by2"]
 
 
 def test_restore_can_be_undone(env):
