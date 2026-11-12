@@ -21,5 +21,28 @@
    }
   },
   "seconds": 7356.9
+ },
+ "app_data_b02": {
+  "per_collezione": {
+   "eventi": 3811211,
+   "messaggi": 5583884,
+   "ordini": 1637601
+  },
+  "documenti": 11032696,
+  "writes": {
+   "inserted": {
+    "messaggi": 140040
+   },
+   "deleted": {
+    "messaggi": 13190,
+    "eventi": 8688
+   },
+   "updated": {
+    "ordini": 3674,
+    "eventi": 8688,
+    "messaggi": 7907
+   }
+  },
+  "seconds": 188.7
  }
 }

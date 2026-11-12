@@ -1,0 +1,139 @@
+[New LWP 32688]
+[New LWP 32687]
+[New LWP 32686]
+[New LWP 32685]
+[New LWP 32684]
+[New LWP 32683]
+[New LWP 32682]
+[New LWP 32681]
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+
+warning: 38	../sysdeps/unix/sysv/linux/x86_64/syscall.S: No such file or directory
+
+Thread 9 (Thread 0x7f458ebff6c0 (LWP 32681) "jemalloc_bg_thd"):
+#0  0x00007f458f098e51 in __futex_abstimed_wait_common64 (private=32581, cancel=true, abstime=0x7f458ebfdcb0, op=393, expected=0, futex_word=0x7f458eed6634) at ./nptl/futex-internal.c:57
+#1  __futex_abstimed_wait_common (cancel=true, private=32581, abstime=0x7f458ebfdcb0, clockid=32581, expected=0, futex_word=0x7f458eed6634) at ./nptl/futex-internal.c:87
+#2  __GI___futex_abstimed_wait_cancelable64 (futex_word=futex_word@entry=0x7f458eed6634, expected=expected@entry=0, clockid=clockid@entry=0, abstime=abstime@entry=0x7f458ebfdcb0, private=private@entry=0) at ./nptl/futex-internal.c:139
+#3  0x00007f458f09bd6e in __pthread_cond_wait_common (abstime=0x7f458ebfdcb0, clockid=0, mutex=0x7f458eed6678, cond=0x7f458eed6608) at ./nptl/pthread_cond_wait.c:503
+#4  ___pthread_cond_timedwait64 (cond=0x7f458eed6608, mutex=0x7f458eed6678, abstime=0x7f458ebfdcb0) at ./nptl/pthread_cond_wait.c:652
+#5  0x000055dee2833bfe in background_thread_entry ()
+#6  0x00007f458f09cb84 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#7  0x00007f458f129ecc in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 8 (Thread 0x7f458e3fe6c0 (LWP 32682) "tokio-rt-worker"):
+#0  0x00007f458f12a2d2 in epoll_wait (epfd=3, events=0x7f458ec12000, maxevents=1024, timeout=7) at ../sysdeps/unix/sysv/linux/epoll_wait.c:30
+#1  0x000055dee38c7d1c in <mio::poll::Poll>::poll ()
+#2  0x000055dee38b6700 in <tokio::runtime::io::driver::Driver>::turn ()
+#3  0x000055dee38b7fc1 in <tokio::runtime::time::Driver>::park_thread_timeout ()
+#4  0x000055dee38b7c1f in <tokio::runtime::time::Driver>::park_internal ()
+#5  0x000055dee38ac78a in <tokio::runtime::scheduler::multi_thread::worker::Context>::park_internal ()
+#6  0x000055dee38ad643 in <tokio::runtime::scheduler::multi_thread::worker::Context>::run ()
+#7  0x000055dee38ae398 in <tokio::runtime::context::scoped::Scoped<tokio::runtime::scheduler::Context>>::set::<tokio::runtime::scheduler::multi_thread::worker::run::{closure#0}::{closure#0}, ()> ()
+#8  0x000055dee38bb22f in tokio::runtime::context::runtime::enter_runtime::<tokio::runtime::scheduler::multi_thread::worker::run::{closure#0}, ()> ()
+#9  0x000055dee38ae0bd in tokio::runtime::scheduler::multi_thread::worker::run ()
+#10 0x000055dee38b4303 in <tokio::runtime::task::core::Core<tokio::runtime::blocking::task::BlockingTask<<tokio::runtime::scheduler::multi_thread::worker::Launch>::launch::{closure#0}>, tokio::runtime::blocking::schedule::BlockingSchedule>>::poll ()
+#11 0x000055dee389df41 in <tokio::runtime::task::harness::Harness<tokio::runtime::blocking::task::BlockingTask<<tokio::runtime::scheduler::multi_thread::worker::Launch>::launch::{closure#0}>, tokio::runtime::blocking::schedule::BlockingSchedule>>::poll ()
+#12 0x000055dee38a36dd in <tokio::runtime::blocking::pool::Inner>::run ()
+#13 0x000055dee38bd703 in std::sys::backtrace::__rust_begin_short_backtrace::<<tokio::runtime::blocking::pool::Spawner>::spawn_thread::{closure#0}, ()> ()
+#14 0x000055dee38a6ed3 in <std::thread::lifecycle::spawn_unchecked<<tokio::runtime::blocking::pool::Spawner>::spawn_thread::{closure#0}, ()>::{closure#1} as core::ops::function::FnOnce<()>>::call_once::{shim:vtable#0} ()
+#15 0x000055dee393fb0f in <std::sys::thread::unix::Thread>::new::thread_start ()
+#16 0x00007f458f09cb84 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#17 0x00007f458f129ecc in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 7 (Thread 0x7f458a3fd6c0 (LWP 32683) "tokio-rt-worker"):
+#0  syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+#1  0x000055dee38cb1b9 in <parking_lot::condvar::Condvar>::wait_until_internal ()
+#2  0x000055dee38b878e in <tokio::runtime::scheduler::multi_thread::park::Inner>::park_condvar ()
+#3  0x000055dee38ac7c9 in <tokio::runtime::scheduler::multi_thread::worker::Context>::park_internal ()
+#4  0x000055dee38ad643 in <tokio::runtime::scheduler::multi_thread::worker::Context>::run ()
+#5  0x000055dee38ae398 in <tokio::runtime::context::scoped::Scoped<tokio::runtime::scheduler::Context>>::set::<tokio::runtime::scheduler::multi_thread::worker::run::{closure#0}::{closure#0}, ()> ()
+#6  0x000055dee38bb22f in tokio::runtime::context::runtime::enter_runtime::<tokio::runtime::scheduler::multi_thread::worker::run::{closure#0}, ()> ()
+#7  0x000055dee38ae0bd in tokio::runtime::scheduler::multi_thread::worker::run ()
+#8  0x000055dee38b4303 in <tokio::runtime::task::core::Core<tokio::runtime::blocking::task::BlockingTask<<tokio::runtime::scheduler::multi_thread::worker::Launch>::launch::{closure#0}>, tokio::runtime::blocking::schedule::BlockingSchedule>>::poll ()
+#9  0x000055dee389df41 in <tokio::runtime::task::harness::Harness<tokio::runtime::blocking::task::BlockingTask<<tokio::runtime::scheduler::multi_thread::worker::Launch>::launch::{closure#0}>, tokio::runtime::blocking::schedule::BlockingSchedule>>::poll ()
+#10 0x000055dee38a36dd in <tokio::runtime::blocking::pool::Inner>::run ()
+#11 0x000055dee38bd703 in std::sys::backtrace::__rust_begin_short_backtrace::<<tokio::runtime::blocking::pool::Spawner>::spawn_thread::{closure#0}, ()> ()
+#12 0x000055dee38a6ed3 in <std::thread::lifecycle::spawn_unchecked<<tokio::runtime::blocking::pool::Spawner>::spawn_thread::{closure#0}, ()>::{closure#1} as core::ops::function::FnOnce<()>>::call_once::{shim:vtable#0} ()
+#13 0x000055dee393fb0f in <std::sys::thread::unix::Thread>::new::thread_start ()
+#14 0x00007f458f09cb84 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#15 0x00007f458f129ecc in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 6 (Thread 0x7f45863fc6c0 (LWP 32684) "tokio-rt-worker"):
+#0  syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+#1  0x000055dee38cb1b9 in <parking_lot::condvar::Condvar>::wait_until_internal ()
+#2  0x000055dee38b878e in <tokio::runtime::scheduler::multi_thread::park::Inner>::park_condvar ()
+#3  0x000055dee38ac7c9 in <tokio::runtime::scheduler::multi_thread::worker::Context>::park_internal ()
+#4  0x000055dee38ad643 in <tokio::runtime::scheduler::multi_thread::worker::Context>::run ()
+#5  0x000055dee38ae398 in <tokio::runtime::context::scoped::Scoped<tokio::runtime::scheduler::Context>>::set::<tokio::runtime::scheduler::multi_thread::worker::run::{closure#0}::{closure#0}, ()> ()
+#6  0x000055dee38bb22f in tokio::runtime::context::runtime::enter_runtime::<tokio::runtime::scheduler::multi_thread::worker::run::{closure#0}, ()> ()
+#7  0x000055dee38ae0bd in tokio::runtime::scheduler::multi_thread::worker::run ()
+#8  0x000055dee38b4303 in <tokio::runtime::task::core::Core<tokio::runtime::blocking::task::BlockingTask<<tokio::runtime::scheduler::multi_thread::worker::Launch>::launch::{closure#0}>, tokio::runtime::blocking::schedule::BlockingSchedule>>::poll ()
+#9  0x000055dee389df41 in <tokio::runtime::task::harness::Harness<tokio::runtime::blocking::task::BlockingTask<<tokio::runtime::scheduler::multi_thread::worker::Launch>::launch::{closure#0}>, tokio::runtime::blocking::schedule::BlockingSchedule>>::poll ()
+#10 0x000055dee38a36dd in <tokio::runtime::blocking::pool::Inner>::run ()
+#11 0x000055dee38bd703 in std::sys::backtrace::__rust_begin_short_backtrace::<<tokio::runtime::blocking::pool::Spawner>::spawn_thread::{closure#0}, ()> ()
+#12 0x000055dee38a6ed3 in <std::thread::lifecycle::spawn_unchecked<<tokio::runtime::blocking::pool::Spawner>::spawn_thread::{closure#0}, ()>::{closure#1} as core::ops::function::FnOnce<()>>::call_once::{shim:vtable#0} ()
+#13 0x000055dee393fb0f in <std::sys::thread::unix::Thread>::new::thread_start ()
+#14 0x00007f458f09cb84 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#15 0x00007f458f129ecc in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 5 (Thread 0x7f45823fb6c0 (LWP 32685) "tokio-rt-worker"):
+#0  syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+#1  0x000055dee38cb1b9 in <parking_lot::condvar::Condvar>::wait_until_internal ()
+#2  0x000055dee38b878e in <tokio::runtime::scheduler::multi_thread::park::Inner>::park_condvar ()
+#3  0x000055dee38ac7c9 in <tokio::runtime::scheduler::multi_thread::worker::Context>::park_internal ()
+#4  0x000055dee38ad643 in <tokio::runtime::scheduler::multi_thread::worker::Context>::run ()
+#5  0x000055dee38ae398 in <tokio::runtime::context::scoped::Scoped<tokio::runtime::scheduler::Context>>::set::<tokio::runtime::scheduler::multi_thread::worker::run::{closure#0}::{closure#0}, ()> ()
+#6  0x000055dee38bb22f in tokio::runtime::context::runtime::enter_runtime::<tokio::runtime::scheduler::multi_thread::worker::run::{closure#0}, ()> ()
+#7  0x000055dee38ae0bd in tokio::runtime::scheduler::multi_thread::worker::run ()
+#8  0x000055dee38b4303 in <tokio::runtime::task::core::Core<tokio::runtime::blocking::task::BlockingTask<<tokio::runtime::scheduler::multi_thread::worker::Launch>::launch::{closure#0}>, tokio::runtime::blocking::schedule::BlockingSchedule>>::poll ()
+#9  0x000055dee389df41 in <tokio::runtime::task::harness::Harness<tokio::runtime::blocking::task::BlockingTask<<tokio::runtime::scheduler::multi_thread::worker::Launch>::launch::{closure#0}>, tokio::runtime::blocking::schedule::BlockingSchedule>>::poll ()
+#10 0x000055dee38a36dd in <tokio::runtime::blocking::pool::Inner>::run ()
+#11 0x000055dee38bd703 in std::sys::backtrace::__rust_begin_short_backtrace::<<tokio::runtime::blocking::pool::Spawner>::spawn_thread::{closure#0}, ()> ()
+#12 0x000055dee38a6ed3 in <std::thread::lifecycle::spawn_unchecked<<tokio::runtime::blocking::pool::Spawner>::spawn_thread::{closure#0}, ()>::{closure#1} as core::ops::function::FnOnce<()>>::call_once::{shim:vtable#0} ()
+#13 0x000055dee393fb0f in <std::sys::thread::unix::Thread>::new::thread_start ()
+#14 0x00007f458f09cb84 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#15 0x00007f458f129ecc in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 4 (Thread 0x7f457d3ff6c0 (LWP 32686) "jemalloc_bg_thd"):
+#0  0x00007f458f098e51 in __futex_abstimed_wait_common64 (private=32581, cancel=true, abstime=0x7f457d3fdcb0, op=393, expected=0, futex_word=0x7f458eed6704) at ./nptl/futex-internal.c:57
+#1  __futex_abstimed_wait_common (cancel=true, private=32581, abstime=0x7f457d3fdcb0, clockid=0, expected=0, futex_word=0x7f458eed6704) at ./nptl/futex-internal.c:87
+#2  __GI___futex_abstimed_wait_cancelable64 (futex_word=futex_word@entry=0x7f458eed6704, expected=expected@entry=0, clockid=clockid@entry=0, abstime=abstime@entry=0x7f457d3fdcb0, private=private@entry=0) at ./nptl/futex-internal.c:139
+#3  0x00007f458f09bd6e in __pthread_cond_wait_common (abstime=0x7f457d3fdcb0, clockid=0, mutex=0x7f458eed6748, cond=0x7f458eed66d8) at ./nptl/pthread_cond_wait.c:503
+#4  ___pthread_cond_timedwait64 (cond=0x7f458eed66d8, mutex=0x7f458eed6748, abstime=0x7f457d3fdcb0) at ./nptl/pthread_cond_wait.c:652
+#5  0x000055dee28335c2 in background_thread_entry ()
+#6  0x00007f458f09cb84 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#7  0x00007f458f129ecc in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 3 (Thread 0x7f457cbfe6c0 (LWP 32687) "jemalloc_bg_thd"):
+#0  0x00007f458f098e51 in __futex_abstimed_wait_common64 (private=32581, cancel=true, abstime=0x7f457cbfccb0, op=393, expected=0, futex_word=0x7f458eed67d0) at ./nptl/futex-internal.c:57
+#1  __futex_abstimed_wait_common (cancel=true, private=32581, abstime=0x7f457cbfccb0, clockid=0, expected=0, futex_word=0x7f458eed67d0) at ./nptl/futex-internal.c:87
+#2  __GI___futex_abstimed_wait_cancelable64 (futex_word=futex_word@entry=0x7f458eed67d0, expected=expected@entry=0, clockid=clockid@entry=0, abstime=abstime@entry=0x7f457cbfccb0, private=private@entry=0) at ./nptl/futex-internal.c:139
+#3  0x00007f458f09bd6e in __pthread_cond_wait_common (abstime=0x7f457cbfccb0, clockid=0, mutex=0x7f458eed6818, cond=0x7f458eed67a8) at ./nptl/pthread_cond_wait.c:503
+#4  ___pthread_cond_timedwait64 (cond=0x7f458eed67a8, mutex=0x7f458eed6818, abstime=0x7f457cbfccb0) at ./nptl/pthread_cond_wait.c:652
+#5  0x000055dee28335c2 in background_thread_entry ()
+#6  0x00007f458f09cb84 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#7  0x00007f458f129ecc in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 2 (Thread 0x7f4567dff6c0 (LWP 32688) "jemalloc_bg_thd"):
+#0  0x00007f458f098e51 in __futex_abstimed_wait_common64 (private=32581, cancel=true, abstime=0x7f4567dfdcb0, op=393, expected=0, futex_word=0x7f458eed68a4) at ./nptl/futex-internal.c:57
+#1  __futex_abstimed_wait_common (cancel=true, private=32581, abstime=0x7f4567dfdcb0, clockid=0, expected=0, futex_word=0x7f458eed68a4) at ./nptl/futex-internal.c:87
+#2  __GI___futex_abstimed_wait_cancelable64 (futex_word=futex_word@entry=0x7f458eed68a4, expected=expected@entry=0, clockid=clockid@entry=0, abstime=abstime@entry=0x7f4567dfdcb0, private=private@entry=0) at ./nptl/futex-internal.c:139
+#3  0x00007f458f09bd6e in __pthread_cond_wait_common (abstime=0x7f4567dfdcb0, clockid=0, mutex=0x7f458eed68e8, cond=0x7f458eed6878) at ./nptl/pthread_cond_wait.c:503
+#4  ___pthread_cond_timedwait64 (cond=0x7f458eed6878, mutex=0x7f458eed68e8, abstime=0x7f4567dfdcb0) at ./nptl/pthread_cond_wait.c:652
+#5  0x000055dee28335c2 in background_thread_entry ()
+#6  0x00007f458f09cb84 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#7  0x00007f458f129ecc in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 1 (Thread 0x7f458f30b800 (LWP 32679) "mongo-server"):
+#0  syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+#1  0x000055dee38cb1b9 in <parking_lot::condvar::Condvar>::wait_until_internal ()
+#2  0x000055dee38b8dbe in <tokio::runtime::park::Inner>::park ()
+#3  0x000055dee2752472 in <tokio::runtime::runtime::Runtime>::block_on::<mongo_server::run::{closure#0}> ()
+#4  0x000055dee2638032 in mongo_server::main ()
+#5  0x000055dee2516653 in std::sys::backtrace::__rust_begin_short_backtrace::<fn() -> core::result::Result<(), anyhow::Error>, core::result::Result<(), anyhow::Error>> ()
+#6  0x000055dee256b63d in std::rt::lang_start::<core::result::Result<(), anyhow::Error>>::{closure#0} ()
+#7  0x000055dee39365e7 in std::rt::lang_start_internal ()
+#8  0x000055dee2697635 in main ()
+[Inferior 1 (process 32679) detached]

@@ -1,0 +1,2 @@
+SIGTERM did not stop the server in 120 s
+still not stopped about 240 s after SIGTERM (log ends at 'shutting down: closing tenants cleanly'); killed with SIGKILL

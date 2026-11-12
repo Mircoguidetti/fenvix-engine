@@ -2,3 +2,5 @@
 2026-11-12T07:28:00Z 2. our server (product defaults + layout) and the reference mongod
 2026-11-12T09:04:23Z check 1 (before compaction): exit 0 in 5783 s; BALLAST CHECK: 12708 reads compared, WRONG: 0; engine $sum last-digit differences (not data): 15; reads retried after code 134 (F7): 0
 2026-11-12T09:04:23Z 3. the same writes on both servers
+2026-11-12T13:16:23Z resume: new server process (/home/user/work/bin-fa4649b/mongo-server)
+2026-11-12T13:21:39Z resume 1. app_data_b03 after the restart: NO ANSWER in 300 s: database app_data_b03: this process's serving lease expired; it begins no new read (F7); retry, full error: {'ok': 0.0, 'errmsg': "database app_data_b

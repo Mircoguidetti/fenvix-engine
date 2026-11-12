@@ -1,0 +1,50 @@
+mongo-server listening on 127.0.0.1:27017 (idle close after 60 s, holder 18750-23866f59, lease ttl 30 s)
+uploads: 23 unfinished multipart uploads under tenants/, 23 older than 3600s aborted
+LEASE process_lease tenant=- holder=18750-23866f59 unix_ms=1794489384207 inc=284c111a4e67e587 gen=1
+SLOW hello db=admin ms=10001 ok=true
+LEASE process_lease_revoked tenant=app_data_b03 holder=18750-23866f59 unix_ms=1794489394222 of=32679-e92fd34f
+LEASE acquired tenant=app_data_b03 holder=18750-23866f59 unix_ms=1794489394225 takeover_from=32679-e92fd34f
+LEASE takeover_wake tenant=app_data_b03 holder=18750-23866f59 unix_ms=1794489394331 unclean=true takeover_from=32679-e92fd34f
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW count db=app_data_b03 ms=26586 ok=false
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW count db=app_data_b03 ms=19741 ok=false
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10036 ok=true
+SLOW count db=app_data_b03 ms=26017 ok=false
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW count db=app_data_b03 ms=19515 ok=false
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10038 ok=true
+SLOW count db=app_data_b03 ms=25950 ok=false
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW count db=app_data_b03 ms=19642 ok=false
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW count db=app_data_b03 ms=25812 ok=false
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW count db=app_data_b03 ms=20065 ok=false
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW count db=app_data_b03 ms=26131 ok=false
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW count db=app_data_b03 ms=19614 ok=false
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW count db=app_data_b03 ms=25798 ok=false
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW count db=app_data_b03 ms=19938 ok=false
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10002 ok=true

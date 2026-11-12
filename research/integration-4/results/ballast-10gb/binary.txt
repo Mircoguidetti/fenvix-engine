@@ -1,1 +1,2 @@
 3890fc919170184cbc2e2397cb84e75b3070c660c6c5253168cff9f74310d436  /home/user/wI/target/release/mongo-server
+3fa2ce6d615ce7167c44c73d923b34daae8ea4cf9b3662a5d9f83f5eae1dcb84  /home/user/work/bin-fa4649b/mongo-server
