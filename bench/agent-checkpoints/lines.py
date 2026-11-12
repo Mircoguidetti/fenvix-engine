@@ -379,8 +379,11 @@ def server_cmd(name: str, log_on: bool) -> list[str]:
 
 
 def run_ours(name: str, cmd: list[str]) -> None:
+    # diagnosis only (P-big-speed memory): FXBENCH_SERVER_ENV="K=V K=V" and FXBENCH_SERVER_DIR (mounted at /diag)
+    extra_env = dict(kv.replace("{name}", name).split("=", 1) for kv in os.environ.get("FXBENCH_SERVER_ENV", "").split() if "=" in kv)
+    diag = ["-v", f"{os.environ['FXBENCH_SERVER_DIR']}:/diag"] if os.environ.get("FXBENCH_SERVER_DIR") else []
     run_container(name, MACHINE_IMAGE, ["-v", f"{SRV}:/opt/fx/mongo-server:ro", "-v", f"{PQ}:/opt/fx/pq:ro",
-                                        "-v", f"{PYLIB}:/opt/pylib:ro"], cmd, env=S3_ENV | {"PYTHONPATH": "/opt/pylib"},
+                                        "-v", f"{PYLIB}:/opt/pylib:ro"] + diag, cmd, env=S3_ENV | {"PYTHONPATH": "/opt/pylib"} | extra_env,
                   secret_env={"MONGO_ADMIN_TOKEN": os.environ.get("BENCH_PW", "")})
 
 
