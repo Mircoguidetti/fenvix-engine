@@ -1002,6 +1002,20 @@ fn spawn_retry(dbs: Arc<crate::dbs::Dbs>, timeout: Duration) {
                         if let Some(e) = log.tenants.lock().unwrap().get_mut(&db) {
                             e.uploaded = e.staged;
                         }
+                        // perf-latency round 3: the replicated log is told, as the start-up replay and a close tell it. The
+                        // kept records are in object storage now (applied, or already there by the stored marker), and
+                        // the log may drop them. Missing since round 2, when this retry stopped opening the database to
+                        // apply nothing (the database's uploader and close used to tell the log then): the replicas kept
+                        // every record from the oldest kept one on, their disks grew with all the writes (MEASURED medium
+                        // m21: 1.4 GB per replica, alarm "oldest record not on S3 1,326 s"; the standard runs filled the
+                        // disk) and a takeover would have read them all back. A position older than what the cook already
+                        // confirmed changes nothing (the log keeps the highest).
+                        if let Some(r) = &log.remote {
+                            let pos = r.committed_pos(&db);
+                            if let Err(e) = r.flush_done(&db, pos).await {
+                                eprintln!("quaderno: {e:#}");
+                            }
+                        }
                         if log.pinned.lock().unwrap().remove(&db).is_some() {
                             RETRIED.fetch_add(1, Relaxed);
                             eprintln!("local log: database {db}: kept records applied by the retry; the database is open again");
