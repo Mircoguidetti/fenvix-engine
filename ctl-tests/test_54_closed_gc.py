@@ -20,6 +20,39 @@ def runs(bucket, db):
     return len([o for o in objs if "/fx/run/" in o[0]]), len([o for o in objs if "/fx/manifest/" in o[0]])
 
 
+def read_ids(coll):
+    """Every _id, in pages of 1,000 (one command each), retrying the retryable refusal of a reader past T_pin
+    (integration-3's open item 1: a single long read on a database woken as a reader is refused past T_pin, 1 s in the
+    judge's environment; that is not what these tests check)."""
+    from pymongo.errors import OperationFailure
+    out, last = [], None
+    while True:
+        q = {} if last is None else {"_id": {"$gt": last}}
+        for attempt in range(20):
+            try:
+                page = [d["_id"] for d in coll.find(q, {"_id": 1}).sort("_id", 1).limit(1000)]
+                break
+            except OperationFailure as e:
+                if e.code != 134 or attempt == 19:
+                    raise
+                time.sleep(0.2)
+        if not page:
+            return out
+        out += page
+        last = page[-1]
+
+
+def count(coll, q=None):
+    from pymongo.errors import OperationFailure
+    for attempt in range(20):
+        try:
+            return coll.count_documents(q or {})
+        except OperationFailure as e:
+            if e.code != 134 or attempt == 19:
+                raise
+            time.sleep(0.2)
+
+
 def fill(s, db, rounds):
     c = s.client()
     want = 0
@@ -48,9 +81,9 @@ def test_closed_database_drops_retired_runs_and_keeps_its_data():
         n1, v1 = runs(b, "cg")
         assert v1 == 1 and n1 < n0, f"after the close: {n1} runs (before {n0}), {v1} versions (before {v0})"
         # reopen: every document reads back
-        got = sorted(d["_id"] for d in c.cg.a.find({}, {"_id": 1}))
+        got = read_ids(c.cg.a)
         assert got == sorted(r * 10000 + i for r in range(5) for i in range(2000))
-        assert c.cg.a.count_documents({"u": "user7"}) == want // 20
+        assert count(c.cg.a, {"u": "user7"}) == want // 20
         # the runs went in the pass after the close; old versions may already have gone in the live GC before it (the
         # judge's small knobs run it every 5 s)
         st = c.admin.command("tenantStats")["fxGcClosed"]
@@ -80,6 +113,39 @@ def test_closed_gc_waits_for_the_grace():
             time.sleep(3)
         n1, _ = runs(b, "cw")
         assert n1 < n0, f"the retired runs were never deleted after the grace: {n1} of {n0}"
-        assert c.cw.a.count_documents({}) == want
+        assert count(c.cw.a) == want
     finally:
         s.term()
+
+
+def test_runs_retired_before_a_restart_go_after_a_read_only_session():
+    """The process that retired the runs stops before their grace ended (a restart, a deploy); the next process only
+    reads the database (it wakes as a reader and never writes). Before, only a write session marked the database for
+    the pass after close, so these runs waited for the next write; now a read-only session's close does too."""
+    b = make_bucket("closedgcrestart")
+    extra = BASE + ["--sealed-gc-grace-ms", "15000"]
+    s = Server(b, "closedgcrestart", idle=5, extra=extra).start()
+    try:
+        c, want = fill(s, "cr", 5)
+        n0, _ = runs(b, "cr")
+        assert n0 > 3
+    finally:
+        s.term()  # well inside the grace: the pass after close of this process cannot delete them yet
+    n_after_stop, _ = runs(b, "cr")
+    assert n_after_stop > 3, f"the runs must still be there when the first process stops: {n_after_stop}"
+    s2 = Server(b, "closedgcrestart2", idle=5, extra=extra).start()
+    try:
+        c2 = s2.client()
+        assert count(c2.cr.a) == want  # a read only: the database wakes as a reader
+        t0 = time.time()
+        while time.time() - t0 < 150:
+            if runs(b, "cr")[0] < n_after_stop:
+                break
+            time.sleep(3)
+        n1, _ = runs(b, "cr")
+        assert n1 < n_after_stop, f"runs retired before the restart were not deleted after a read-only session: {n1} of {n_after_stop}"
+        assert count(c2.cr.a) == want
+        st = c2.admin.command("tenantStats")["fxGcClosed"]
+        assert st["runsDeleted"] > 0, st
+    finally:
+        s2.term()

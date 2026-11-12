@@ -2459,7 +2459,15 @@ impl Tenant {
     /// queued for compaction if it now holds enough L0 SSTs. A reader just closes.
     pub async fn close(mut self) -> Result<()> {
         match self.mode.take() {
-            Some(Mode::Reader(r)) => r.close().await?,
+            Some(Mode::Reader(r)) => {
+                r.close().await?;
+                // P-perf-bytes: a database with our runs that this process only read (after a restart, say) gets the
+                // maintenance pass of a closed database too, so runs retired before the restart do not wait for the next
+                // write session (`fx::gc::gc_closed`)
+                if self.fx.is_some() {
+                    self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
+                }
+            }
             Some(Mode::Writer(db)) => {
                 // Flush the memtable while the writer is still open and registered, then close it. A flush that waits for
                 // room in L0 (slatedb's `l0_max_ssts`) needs the L0 watch of the maintenance loop to start a compaction
