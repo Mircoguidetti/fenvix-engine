@@ -7,7 +7,9 @@ can still run its other steps. Used by ctl-tests/test_31_lease_lost_store_down.p
     p.hold("PUT", "/tenants/db1/"); ...; p.release(); p.held -> requests held so far
 
 A rule can also refuse instead of hold (fix-store-errors): every matching request is answered at once with an error, as
-a full disk (MinIO 507 XMinioStorageFull) or S3 throttling (503 SlowDown) does, until the rule is cleared:
+a full disk (MinIO 507 XMinioStorageFull) or S3 throttling (503 SlowDown) does, until the rule is cleared (status
+"reset": the connection is closed without an answer; "short": the request is forwarded and a 200 answer carries half
+its body, with a matching length):
     p.refuse(("PUT", "POST"), "/tenants/", 507); ...; p.release(); p.refused -> requests refused so far
 """
 import http.client
@@ -42,7 +44,18 @@ class PathProxy:
                 if self.headers.get("Transfer-Encoding", "").lower() == "chunked":
                     body = self._chunked()
                 f = proxy.refusal
-                if f and self.command in f[0] and f[1] in self.path.split("?")[0]:
+                if f and f[2] in (0, "reset") and self.command in f[0] and f[1] in self.path.split("?")[0]:
+                    with proxy.lock:
+                        proxy.refused += 1
+                    self.close_connection = True   # no answer: the connection is closed (a reset to the client)
+                    try:
+                        self.connection.shutdown(2)
+                    except OSError:
+                        pass
+                    return
+                if f and f[2] == "short" and self.command in f[0] and f[1] in self.path.split("?")[0]:
+                    proxy.short = True  # forwarded below, then answered 200 with half the body (a lying store)
+                elif f and self.command in f[0] and f[1] in self.path.split("?")[0]:
                     with proxy.lock:
                         proxy.refused += 1
                         if proxy.journal is not None:
@@ -92,6 +105,10 @@ class PathProxy:
                             import re as _re
                             for k in _re.findall(rb"<Key>([^<]+)</Key>", body):
                                 proxy.journal.append((time.time(), "DELETE*", "/" + self.path.split("?")[0].strip("/") + "/" + k.decode(), resp.status))
+                if f and f[2] == "short" and self.command in f[0] and f[1] in self.path.split("?")[0] and resp.status == 200 and len(data) > 1:
+                    with proxy.lock:
+                        proxy.refused += 1
+                    data = data[: len(data) // 2]
                 try:
                     self.send_response_only(resp.status, resp.reason)
                     for k, v in resp.getheaders():
