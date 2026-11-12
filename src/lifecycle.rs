@@ -3007,9 +3007,6 @@ pub static CLOSE_GC_LIGHT: std::sync::atomic::AtomicU64 = std::sync::atomic::Ato
 /// point: hundreds after a few days), so it runs only when something there can be garbage: after a compaction of this
 /// process, once the manifest moved `SST_GC_MANIFEST_STEP` versions since the last full pass, or the first time this
 /// process closes the tenant.
-/// Closed databases whose second GC pass is scheduled (see the closed-database GC in `Maintenance`).
-static CLOSED_RECHECKED: std::sync::LazyLock<Mutex<std::collections::HashSet<String>>> = std::sync::LazyLock::new(Default::default);
-
 pub async fn gc_tenant_closed(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, min_age: Duration) -> Result<GcRecord> {
     use std::sync::atomic::Ordering::Relaxed;
     let id = id.to_string();
@@ -3687,22 +3684,7 @@ impl Maintenance {
                                     return;
                                 };
                                 match gc_tenant_closed(&s3, &id, gc_min_age).await {
-                                    Ok(rec) => {
-                                        log.lock().unwrap().gcs.push(rec);
-                                        // perf-latency round 2: one more pass once `gc_min_age` has passed. SSTs a compaction
-                                        // dropped shortly before the close are younger than the minimum age at the first pass
-                                        // and were kept until the database opened again (MEASURED: 5.4 GB of garbage
-                                        // `compacted/` objects kept after a close, stored/logical 4.86 against 1.6). Only one:
-                                        // a database that stays closed costs no further listing.
-                                        if CLOSED_RECHECKED.lock().unwrap().insert(id.clone()) {
-                                            // the manifest will not move while it is closed: the second pass must be a full one
-                                            FULL_GC.lock().unwrap().remove(&id);
-                                            let at = Instant::now().checked_sub(gc_after).map(|t| t + gc_min_age).unwrap_or_else(Instant::now);
-                                            touched.lock().unwrap().entry(id.clone()).or_insert(at);
-                                        } else {
-                                            CLOSED_RECHECKED.lock().unwrap().remove(&id);
-                                        }
-                                    }
+                                    Ok(rec) => log.lock().unwrap().gcs.push(rec),
                                     Err(e) => log.lock().unwrap().error(format!("gc {id}: {e:#}")),
                                 }
                             }
