@@ -1,0 +1,28 @@
+base2  in 100                             cold GETs [424, 359, 329] MB [13.3, 12.2, 11.6] ms [199.7, 135.8, 134.2] | warm GETs [0, 0, 0] ms [4.5, 5.1, 4.8] | n 100
+base2  in 1,000                           cold GETs [120, 75, 77] MB [230.3, 204.3, 204.2] ms [2180.1, 1982.0, 2006.2] | warm GETs [0, 0, 0] ms [1857.1, 1968.2, 1886.6] | n 1000
+base2  in 10,000 (half missing)           cold GETs [75] MB [204.5] ms [2527.3] | warm GETs [0] ms [2311.7] | n 5069
+base2  in 100,000 (half missing)          cold GETs [75] MB [204.5] ms [44791.5] | warm GETs [1] ms [45104.7] | n 50035
+base2  in 100 + g filter                  cold GETs [125, 125, 125] MB [7.7, 7.7, 7.7] ms [92.8, 59.3, 71.2] | warm GETs [0, 0, 0] ms [7.7, 6.1, 7.0] | n 46
+base2  in 100 sort g desc limit 5         cold GETs [125, 125, 125] MB [7.7, 7.7, 7.7] ms [73.8, 62.2, 60.7] | warm GETs [0, 0, 0] ms [6.9, 4.1, 5.5] | n 5
+base2  agg $match in 100 + $group         cold GETs [125, 125, 125] MB [7.7, 7.7, 7.7] ms [63.5, 58.3, 65.1] | warm GETs [0, 0, 0] ms [4.3, 6.4, 4.7] | n 1
+base2  count in 1,000                     cold GETs [75, 75, 77] MB [204.3, 204.3, 204.2] ms [2033.9, 1982.7, 1951.0] | warm GETs [0, 0, 0] ms [1991.7, 1910.0, 1872.3] | n 1
+base2  _id equality                       cold GETs [22, 22, 22] MB [4.9, 4.9, 4.9] ms [25.2, 26.6, 24.6] | warm GETs [0, 0, 0] ms [0.4, 0.5, 0.4] | n 1
+   error in _id range 1,000 trial 0 cold: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+   error in _id range 1,000 trial 0 warm: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+   error in _id range 1,000 trial 1 cold: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+   error in _id range 1,000 trial 1 warm: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+   error in _id range 1,000 trial 2 cold: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+   error in _id range 1,000 trial 2 warm: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+base2  _id range 1,000                    cold GETs [89, 85, 85] MB [209.2, 205.0, 205.0] ms [8573.2, 8806.8, 8417.5] | warm GETs [0, 0, 0] ms [8402.7, 8583.6, 8586.7] | n 0
+base2  g equality (index, 1,000 docs)     cold GETs [79, 79, 79] MB [204.6, 204.6, 204.6] ms [1984.7, 1975.5, 1988.6] | warm GETs [0, 0, 0] ms [2016.9, 2022.9, 1944.4] | n 1000
+base2  g $in 3 values (index)             cold GETs [85, 85, 85] MB [205.1, 205.1, 205.1] ms [1984.7, 2128.9, 2116.6] | warm GETs [0, 0, 0] ms [1978.5, 1998.6, 1958.2] | n 3000
+base2  sort _id limit 10                  cold GETs [25, 25, 25] MB [21.7, 21.7, 21.7] ms [39.2, 41.0, 38.5] | warm GETs [0, 0, 0] ms [4.0, 4.2, 4.7] | n 10
+base2  sort _id desc limit 10 skip 100    cold GETs [25, 25, 25] MB [21.7, 21.7, 21.7] ms [36.8, 36.9, 38.2] | warm GETs [0, 0, 2] ms [5.0, 4.8, 6.7] | n 10
+   error in name equality (collection scan) trial 0 cold: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+   error in name equality (collection scan) trial 0 warm: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+   error in name equality (collection scan) trial 1 cold: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+   error in name equality (collection scan) trial 1 warm: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+   error in name equality (collection scan) trial 2 cold: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+   error in name equality (collection scan) trial 2 warm: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+base2  name equality (collection scan)    cold GETs [85, 85, 85] MB [205.0, 205.0, 205.0] ms [9352.8, 8626.4, 8361.3] | warm GETs [0, 0, 0] ms [8203.4, 8612.0, 8192.0] | n 0
+base2  _id $nin 3 values, limit 20        cold GETs [281, 281, 281] MB [8.4, 8.4, 8.4] ms [118.0, 105.6, 106.6] | warm GETs [0, 0, 0] ms [14.5, 12.7, 12.0] | n 20
