@@ -46,6 +46,8 @@ def tree(ours, pg, mongo, takeovers=None, w8=None, verdict=None, takeovers_off=N
             f.write(tolerance if isinstance(tolerance, str) else json.dumps(tolerance))
     os.makedirs(os.path.join(d, "step9", "local", "results-t"))
     shutil.copy(os.path.join(REPO, "step9", "ci", "gate.py"), os.path.join(d, "step9", "ci"))
+    if w8 is None:   # total review R3 hole 1: the --workers 8 line is required; w8=False leaves it out
+        w8 = (clean_summary(), clean_summary(), clean_summary())
     for base, sums in ((BASE, (ours, pg, mongo)),) + (((BASE + "-w8", w8),) if w8 else ()):
         for side, s in zip(("fenvix", "postgres", "mongo"), sums):
             if s is None:
@@ -54,7 +56,8 @@ def tree(ours, pg, mongo, takeovers=None, w8=None, verdict=None, takeovers_off=N
             json.dump(s, open(os.path.join(d, base, side, "summary.json"), "w"))
     tk = "step9/local/results-t/takeovers-summary-on.json"
     tk_off = "step9/local/results-t/takeovers-summary-off.json"
-    clean_tk = {"verdict": "PASS", "lost": 0, "done": 50, "n": 50, "acknowledged": 500000, "engine_binary_sha256": SHA}
+    clean_tk = {"verdict": "PASS", "lost": 0, "done": 50, "n": 50, "acknowledged": 500000, "engine_binary_sha256": SHA,
+                "log_fallback": {"batches": 0}}
     json.dump(takeovers or clean_tk, open(os.path.join(d, tk), "w"))
     json.dump(takeovers_off or clean_tk, open(os.path.join(d, tk_off), "w"))
     rep = {"engine_ref": "final", "engine_commit": COMMIT, "engine_sha256": SHA, "takeovers": tk, "takeovers_off": tk_off,
@@ -209,7 +212,10 @@ def test_review_case_c_cold_only_slower_is_not_a_blocker():
     c = _gate_skips_cases()["C"]
     assert "resume[cold] p50" not in c and "resume[cold] p99" not in c, c
     lines = [l for l in c.splitlines() if l.strip().startswith("- ") and "settle record" not in l and "server status at the end" not in l and "quaderno.failed UNKNOWN" not in l and "verdict FAIL" not in l
-             and "takeovers log off" not in l and "names no engine binary" not in l and "made by binary" not in l]
+             and "takeovers log off" not in l and "names no engine binary" not in l and "made by binary" not in l
+             # total review R3 holes 1, 3, 4: the reviewer's fakes predate these records (not about cold)
+             and "--workers 8: no result named" not in l and "S3-WAL fallback are not recorded" not in l
+             and "fewer than the written minimum 50" not in l]
     assert not lines, c
 
 
@@ -466,3 +472,36 @@ def test_cold_below_its_written_minimum_closes():
     ours = clean_summary()
     ours["latency_ms"]["resume[cold]"]["n"] = 199
     closed(tree(ours, clean_summary(), clean_summary()), "fenvix: operation resume[cold] has 199 samples, fewer than the written minimum 200")
+
+
+# total review R3 (2026-11-12), the reviewer's probes P1/P2 (hole 1), P4 (hole 3), P7 (hole 4)
+def test_hole1_a_report_without_the_workers8_line_closes():
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), w8=False),
+           "agent benchmark --workers 8: no result named in the report (DECISIONS 2026-11-12")
+
+
+def test_hole1_a_slow_workers8_line_closes_and_leaving_it_out_does_not_open():
+    ours = clean_summary()
+    ours["latency_ms"]["save_step"]["p99"] += 500.0
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), w8=(ours, clean_summary(), clean_summary())), "save_step p99")
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), w8=False), "--workers 8: no result named")
+
+
+def test_hole3_fewer_than_50_takeovers_close():
+    tk = {"verdict": "PASS", "lost": 0, "done": 1, "n": 1, "acknowledged": 1000, "engine_binary_sha256": SHA, "log_fallback": {"batches": 0}}
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), takeovers=tk), "1 takeovers, fewer than the written minimum 50")
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), takeovers_off=dict(tk)), "takeovers log off: takeovers")
+
+
+def test_hole4_log_fallback_with_the_log_on_closes_and_unrecorded_closes():
+    tk = {"verdict": "PASS", "lost": 0, "done": 50, "n": 50, "acknowledged": 500000, "engine_binary_sha256": SHA, "log_fallback": {"batches": 3}}
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), takeovers=tk), "3 write batches took the S3-WAL fallback with the log on")
+    tk2 = {k: v for k, v in tk.items() if k != "log_fallback"}
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), takeovers=tk2), "S3-WAL fallback are not recorded")
+
+
+def test_hole4_the_log_off_run_may_use_the_s3_wal_path():
+    # with the log off the S3 WAL is the path itself: its batches are not a blocker
+    tk = {"verdict": "PASS", "lost": 0, "done": 50, "n": 50, "acknowledged": 500000, "engine_binary_sha256": SHA, "log_fallback": {"batches": 9}}
+    rc, out = ask(tree(clean_summary(), clean_summary(), clean_summary(), takeovers_off=tk))
+    assert rc == 0 and out.startswith("GATE: OPEN") and "takeovers at least 50 per log mode" in out, out

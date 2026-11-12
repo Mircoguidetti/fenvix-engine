@@ -145,16 +145,33 @@ def rel(p):
     return os.path.relpath(p, ROOT)
 
 
-def check_takeovers(path):
-    """Blockers of one takeover summary (step9/programs/takeovers.py)."""
+# total review R3 hole 3 (2026-11-12): one takeover instead of 50 opened the gate; the written minimum (B6: 50 takeovers)
+TAKEOVERS_MIN = 50
+
+
+def check_takeovers(path, log_on=False):
+    """Blockers of one takeover summary (step9/programs/takeovers.py). With the log on (total review R3 hole 4), a write
+    batch that took the S3-WAL fallback was acknowledged without 2 of 3 log copies, which is not equal durability
+    (DECISIONS 2026-11-11): more than 0, or a count not recorded, closes the gate."""
     if not path or not os.path.exists(path):
         return [f"takeovers: no result ({path})"]
     d = json.load(open(path))
     lost = d.get("lost")
+    out = []
     if d.get("verdict") != "PASS" or lost not in (0,) or d.get("done") != d.get("n"):
-        return [f"takeovers ({rel(path)}): verdict {d.get('verdict')}, {d.get('done')}/{d.get('n')} done, "
-                f"lost {lost} of {d.get('acknowledged')} acknowledged writes (rule 8: must be 0)"]
-    return []
+        out.append(f"takeovers ({rel(path)}): verdict {d.get('verdict')}, {d.get('done')}/{d.get('n')} done, "
+                   f"lost {lost} of {d.get('acknowledged')} acknowledged writes (rule 8: must be 0)")
+    if not isinstance(d.get("n"), int) or d.get("n") < TAKEOVERS_MIN:
+        out.append(f"takeovers ({rel(path)}): {d.get('n')} takeovers, fewer than the written minimum {TAKEOVERS_MIN}")
+    if log_on:
+        fb = (d.get("log_fallback") or {}).get("batches")
+        if fb is None:
+            out.append(f"takeovers ({rel(path)}): the write batches that took the S3-WAL fallback are not recorded "
+                       f"(log_fallback.batches): equal durability cannot be shown")
+        elif fb > 0:
+            out.append(f"takeovers ({rel(path)}): {fb} write batches took the S3-WAL fallback with the log on (not 2 of 3 "
+                       f"log copies: not equal durability, DECISIONS 2026-11-11)")
+    return out
 
 
 def check_agent(fenvix_summary, label="agent benchmark"):
@@ -274,12 +291,15 @@ def check_report_results(r):
             out.append(f"{label}: no result named in the report (RULES 8: every takeover test counts)")
             continue
         p = os.path.join(ROOT, r[key])
-        out += [f"{label}: {b}" for b in check_takeovers(p)]
+        out += [f"{label}: {b}" for b in check_takeovers(p, log_on=(key == "takeovers"))]
         got = binary_of(p) if os.path.exists(p) else None
         if want and got != want:
             out.append(f"{label}: made by binary {str(got)[:16]}, not the report's {want[:16]}")
     for key, label in (("agent_bench", "agent benchmark"), ("agent_bench_w8", "agent benchmark --workers 8")):
-        if key == "agent_bench_w8" and not r.get(key):
+        # total review R3 hole 1 (2026-11-12): DECISIONS 2026-11-12 names "repeat 1 and the --workers 8 line"; a report
+        # without the 8-worker line opened the gate, so leaving a slow line out opened it. Now it is required.
+        if not r.get(key):
+            out.append(f"{label}: no result named in the report (DECISIONS 2026-11-12: repeat 1 and the --workers 8 line)")
             continue
         p = os.path.join(ROOT, r.get(key) or "-")
         out += check_agent(p, label=label)
@@ -343,7 +363,8 @@ def main():
     print(f"GATE: OPEN (local benchmark report {rel(found[0])} for {ref} at {commit}: takeovers 0 lost; our agent benchmark "
           f"ok, complete ({len(OPS)} operations, written minimum samples); on every operation our p50 and p99 within the "
           f"speed tolerance of {tolerance_text(TOL)} above the best of PostgreSQL and mongod, "
-          f"stored bytes per logical byte not worse" + (", also with --workers 8" if found[1].get("agent_bench_w8") else "") + ")")
+          f"stored bytes per logical byte not worse, also with --workers 8; takeovers at least {TAKEOVERS_MIN} per log mode, "
+          f"0 lost, 0 write batches on the S3-WAL fallback with the log on)")
 
 
 if __name__ == "__main__":

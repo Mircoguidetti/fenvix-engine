@@ -5,7 +5,8 @@ the report and the result files on the branch the workflow runs from.
 Usage: benchmark_report.py ENGINE_REF ENGINE_COMMIT TAKEOVERS_ON_JSON AGENT_FENVIX_SUMMARY_JSON [AGENT_W8_FENVIX_SUMMARY_JSON]
          --takeovers-off TAKEOVERS_OFF_JSON --engine-sha256 SHA256_OF_MONGO_SERVER
   (both flags are required for a PASS: total review N3, the log-off takeovers; and the binary every result names)
-  (the fifth: the --workers 8 line of the same benchmark, checked by the gate with the same rules when given)
+  (the fifth: the --workers 8 line of the same benchmark, checked by the gate with the same rules; REQUIRED by the gate since
+  the total review R3, 2026-11-12: a report without it is CLOSED)
   (paths relative to the repository root, e.g. step9/local/results-2026-11-20/takeovers-summary-on.json and
    bench/agent-checkpoints/results/local-2026-11-20/fenvix/summary.json)
 The commit must be the full 40-character id the binaries were built from (git rev-parse HEAD in the engine checkout)."""
