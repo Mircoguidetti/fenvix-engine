@@ -137,12 +137,29 @@ impl Server {
     pub(crate) async fn find_ext(&self, g: &mut impl Rd, db: &str, coll: &str, filter: &Document, sort: &[(String, bool)], hint: Option<&Bson>, sort_doc: Option<&Document>, proj_doc: Option<&Document>, ov: Option<&Overlay>, ext: &ExtOpts) -> R<Vec<Document>> {
         let ns = format!("{db}.{coll}");
         let indexes = self.load_indexes(g, db, coll).await?;
+        // a hint of the `_id` index (it is not in `indexes`): min/max then bound `_id` (fix-query-defects P7)
+        let id_hint: Option<bool> = match hint {
+            Some(Bson::String(n)) if n == "_id_" => Some(true),
+            Some(Bson::Document(d)) if d.len() == 1 && d.contains_key("_id") => {
+                let v = d.get("_id").unwrap();
+                Some(!matches!(v, Bson::Int32(-1) | Bson::Int64(-1)) && !matches!(v, Bson::Double(f) if *f < 0.0))
+            }
+            _ => None,
+        };
         let hint = resolve_hint(&indexes, hint).map_err(|e| hint_error(e, &ns, filter, sort_doc, proj_doc))?;
         let bounded = ext.min.is_some() || ext.max.is_some();
-        let mut bounds: Option<(usize, Vec<bool>)> = None;
+        let mut bounds: Option<(Vec<String>, Vec<bool>)> = None;
         if bounded {
             let fail = |code: i32, name: &'static str, reason: &str| MongoError::new(code, name, planner_message(&ns, filter, sort_doc, proj_doc, reason));
             match &hint {
+                Hint::None if id_hint.is_some() => {
+                    for b in [&ext.min, &ext.max].into_iter().flatten() {
+                        if !b.is_empty() && (b.len() != 1 || !b.contains_key("_id")) {
+                            return Err(fail(51174, "Location51174", "The index chosen is not compatible with min/max"));
+                        }
+                    }
+                    bounds = Some((vec!["_id".to_string()], vec![id_hint.unwrap()]));
+                }
                 Hint::Index(i) => {
                     let idx = &indexes[*i];
                     let kp = idx.key_pattern();
@@ -152,7 +169,7 @@ impl Server {
                         }
                     }
                     let dirs = kp.values().map(|d| !matches!(d, Bson::Int32(-1) | Bson::Int64(-1)) && !matches!(d, Bson::Double(f) if *f < 0.0)).collect();
-                    bounds = Some((*i, dirs));
+                    bounds = Some((kp.keys().cloned().collect(), dirs));
                 }
                 Hint::Natural(_) => return Err(fail(291, "NoQueryExecutionPlans", "min and max are incompatible with $natural")),
                 Hint::None => {
@@ -166,9 +183,7 @@ impl Server {
         let specs = index::ttl_specs(&indexes);
         let sort_for_plan: &[(String, bool)] = if bounded { &[] } else { sort };
         let (mut docs, _, plan) = find_docs(g, coll, &indexes, &FindOpts { filter, sort: sort_for_plan, want: None, hint: hint.clone(), ttl: crate::cmd_data::ttl_ctx(&specs), ov }).await?;
-        if let Some((pos, dirs)) = &bounds {
-            let idx = &indexes[*pos];
-            let fields: Vec<String> = idx.key_pattern().keys().cloned().collect();
+        if let Some((fields, dirs)) = &bounds {
             let bound = |b: &Option<Document>| -> Option<Vec<Bson>> { b.as_ref().filter(|d| !d.is_empty()).map(|d| fields.iter().map(|f| d.get(f).cloned().unwrap_or(Bson::Null)).collect()) };
             let (lo, hi) = (bound(&ext.min), bound(&ext.max));
             if let (Some(l), Some(h)) = (&lo, &hi) {
@@ -179,7 +194,7 @@ impl Server {
             // every index key of a document (a multikey field gives one per element)
             let keys_of = |d: &Document| -> Vec<Vec<Bson>> {
                 let mut keys: Vec<Vec<Bson>> = vec![vec![]];
-                for f in &fields {
+                for f in fields.iter() {
                     let vals: Vec<Bson> = path_values(d, f).into_iter().flat_map(|v| match v {
                         Bson::Array(a) if !a.is_empty() => a.clone(),
                         other => vec![other.clone()],

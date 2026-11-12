@@ -80,7 +80,7 @@ impl Server {
             p
         } else {
             let kp = spec.get_document("keyPattern").unwrap();
-            let p = indexes.iter().position(|i| i.state == State::Ready && i.spec.get_document("key").map(|k| k == kp).unwrap_or(false));
+            let p = indexes.iter().position(|i| i.state == State::Ready && i.spec.get_document("key").map(|k| crate::index::same_key_order(k, kp)).unwrap_or(false));
             if p.is_none() && !(kp.len() == 1 && kp.contains_key("_id")) {
                 return Err(MongoError::new(27, "IndexNotFound", format!("cannot find index {} for ns {ns}", crate::update::fmt_doc(kp))));
             }

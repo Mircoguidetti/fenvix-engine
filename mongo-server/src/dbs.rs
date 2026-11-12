@@ -857,6 +857,11 @@ impl Entry {
         self.meta_clear();
                 crate::opening::forget_db(&self.name);
                 let unclean = t.unclean;
+                // Another process may have owned (and written) the database since this one last did: its events are not
+                // in this process's change log, so a stream positioned before this open cannot be served (P1).
+                if !self.leases.continuous(&self.name) {
+                    self.changes.mark_opened(&self.name);
+                }
                 self.tenant = Some(t);
                 self.wakes += 1;
                 self.sync_gauges();

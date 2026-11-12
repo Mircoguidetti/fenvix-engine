@@ -927,6 +927,13 @@ fn collect_equalities(filter: &Document, base: &mut Document) -> R<()> {
                 Bson::Document(d) if d.keys().any(|x| x.starts_with('$')) => {
                     if let Some(eq) = d.get("$eq") {
                         set_path(base, &k.split('.').collect::<Vec<_>>(), eq.clone())?;
+                    } else if let Some(Bson::Array(one)) = d.get("$in") {
+                        // mongod plans a one-value `$in` as an equality, and an upsert takes its value (fix-query-defects P6)
+                        if let [v] = one.as_slice() {
+                            if !matches!(v, Bson::RegularExpression(_)) {
+                                set_path(base, &k.split('.').collect::<Vec<_>>(), v.clone())?;
+                            }
+                        }
                     }
                 }
                 Bson::RegularExpression(_) => {}

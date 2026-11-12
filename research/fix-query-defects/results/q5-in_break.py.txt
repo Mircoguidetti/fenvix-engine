@@ -1,0 +1,146 @@
+same        long list 10000 ints, half missing
+same        long list 10000 mixed int/string missing strings
+same        long list 10000 with limit 5
+same        long list 10000 sort desc limit 7
+same        long list 10000 count
+same        long list 10000 with other predicate
+same        long list 100000 ints, half missing
+same        long list 100000 mixed int/string missing strings
+same        long list 100000 with limit 5
+same        long list 100000 sort desc limit 7
+same        long list 100000 count
+same        long list 100000 with other predicate
+same        list of only missing ids
+same        odd: nan
+same        odd: decimal nan
+same        odd: inf and -inf
+same        odd: -0.0 matches 0
+same        odd: 2^53+1 long vs 2^53 double
+same        odd: 2^53 double only
+same        odd: 2^53 as long
+same        odd: 2^53+1 only
+same        odd: 2^62 as double
+same        odd: decimal 0.1 vs double 0.1
+same        odd: double 0.1
+same        odd: decimal 1E+400
+same        odd: decimal 7.250
+same        odd: decimal 1E+2 = 100
+same        odd: date vs timestamp
+same        odd: bools
+same        odd: binary subtypes
+same        odd: code
+same        odd: minkey maxkey only
+same        odd: null only
+same        odd: strings case
+same        odd: string with NUL
+same        odd: empty string and empty doc
+same        $or [$in, k]
+same        $or single clause
+same        $or two $in
+same        $or [$in, s indexed]
+same        $nor $in
+same        $nor [$in, k]
+same        $not $in
+same        $in and $nin on _id
+same        $in and $ne on _id
+same        $in with $eq on _id
+same        $in with $exists
+same        two $in on _id in $and
+same        nested $and
+same        $and inside $or
+same        $elemMatch on arr._id $in
+same        arr._id $in (dotted)
+same        _id.tenant $in (dotted)
+same        $expr with $in on _id
+same        $in with $elemMatch value doc
+same        projection include
+same        projection exclude _id
+same        projection $elemMatch
+same        returnKey
+same        showRecordId
+same        collation numeric ids
+same        collation strings (old plan)
+same        collation doc id with string
+same        collation numbers on cc
+same        collation strings on cc
+same        collation doc with string on cc
+same        collation simple on cc
+same        hint _id_
+same        hint {_id:1}
+same        hint k
+same        hint $natural 1
+same        hint $natural -1
+same        sort $natural -1
+same        big: no sort (index order vs insertion)
+same        big: hint $natural
+same        big: sort $natural
+same        min/max on _id
+same        skip beyond
+same        batchSize 1 drain
+same        limit negative (single batch)
+same        doc ids
+same        doc ids key order
+same        doc ids long vs int inside
+same        doc ids decimal inside
+same        doc id with array inside
+same        doc id nested
+same        doc ids with sort desc
+same        agg $match first
+same        agg $match first + project
+same        agg $match first + limit
+same        agg $match first + group
+same        agg $match after $addFields
+same        agg $match after $sort
+same        agg $match after $project
+same        agg $match after $group (_id of group)
+same        agg $lookup with $in
+same        agg big $match 10k
+same        agg $match collation numeric
+same        agg hint $natural
+same        distinct k
+same        distinct _id
+same        count limit skip
+same        count empty list
+same        findAndModify update first
+same        findAndModify update first [collection after]
+same        findAndModify remove first
+same        findAndModify remove first [collection after]
+same        findAndModify sort
+same        findAndModify sort [collection after]
+same        findAndModify upsert single missing
+same        findAndModify upsert single missing [collection after]
+DIFF-SET    findAndModify upsert two missing {"real": "{'reply': b'n\\x00\\x00\\x00\\x03lastErrorObject\\x004\\x00\\x00\\x00\\x10n\\x00\\x01\\x00\\x00\\x00\\x08updatedExisting\\x00\\x00\\x07upserted\\x00j\\xf5\\x0e>\\xd9\\xb1\\xb7\\xf7\\xfen\\xf3\\xdc\\x00\\x03value\\x00\\x1d\\x00\\x00\\x00\\x07_id\\x00j\\xf5\\x0e>\\xd9\\xb1\\xb7\\xf7\\xfen\\xf3\\xdc\\x10q\\x00\\x01\\x00\\x00\\x00\\x00\\x00'}", "ours": "{'reply': b'n\\x00\\x00\\x00\\x03lastErrorObject\\x004\\x00\\x00\\x00\\x10n\\x00\\x01\\x00\\x00\\x00\\x08updatedExisting\\x00\\x00\\x07upserted\\x00j\\xf5\\x0e>\\xc0\\x86\\xa0#\\x8f.\\xa9\\x9f\\x00\\x03value\\x00\\x1d\\x00\\x00\\x00\\x07_
+DIFF-SET    findAndModify upsert two missing [collection after] {"real_n": 374, "ours_n": 374, "real_first": ["MinKey()", "None", "nan", "-inf", "-5", "0", "0.1", "1"], "ours_first": ["MinKey()", "None", "nan", "-inf", "-5", "0", "0.1", "1"], "only_real": ["6af50e3ed9b1b7f7fe6ef3dc"], "only_ours": ["6af50e3ec086a0238f2ea99f"]}
+same        update multi
+same        update multi [collection after]
+same        update one ($in picks first)
+same        update one ($in picks first) [collection after]
+same        update upsert single missing
+same        update upsert single missing [collection after]
+same        update replacement one
+same        update replacement one [collection after]
+same        update multi changes k (index)
+same        update multi changes k (index) [collection after]
+same        delete many
+same        delete many [collection after]
+same        delete one ($in picks first)
+same        delete one ($in picks first) [collection after]
+same        delete many collation
+same        delete many collation [collection after]
+same        txn: insert, update, delete then $in [step 0]
+same        txn: insert, update, delete then $in [step 1]
+same        txn: insert, update, delete then $in [step 2]
+same        txn: insert, update, delete then $in [step 3]
+same        txn: insert, update, delete then $in [step 4]
+same        txn: insert, update, delete then $in [step 5]
+same        txn: insert, update, delete then $in [step 6]
+same        txn: insert, update, delete then $in [step 7]
+same        txn: insert, update, delete then $in [step 8]
+same        txn: insert, update, delete then $in [step 9]
+same        txn: insert, update, delete then $in [step 10]
+same        txn aborted [step 0]
+same        txn aborted [step 1]
+same        txn aborted [step 2]
+same        txn aborted [step 3]
+
+142 same, 2 different (2 set, 0 order only)

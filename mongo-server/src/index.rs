@@ -725,12 +725,19 @@ fn value_intervals(c: &Constraint, multikey: bool) -> Vec<VI> {
         };
         let (lo, hi) = if multikey && lo.is_some() && hi.is_some() { (lo, &None) } else { (lo, hi) };
         let rank = type_rank(&lo.as_ref().or(hi.as_ref()).unwrap().0);
+        // A number bound reads every key with the same nearest double, both ends inclusive: a Decimal128 within one double
+        // step of the bound has a key after the double's whatever its side (keyenc, review of 62b8619 P8); the filter
+        // decides. The labels stay the query's.
+        let ep = |v: &Bson, i: bool| match keyenc::number_group(v) {
+            Some(g) => Ep::Val(g, true),
+            None => Ep::Val(keyenc::encode(v), i),
+        };
         let (lo_ep, lo_s, lo_i) = match lo {
-            Some((v, i)) => (Ep::Val(keyenc::encode(v), *i), fmt_bound(v), *i),
+            Some((v, i)) => (ep(v, *i), fmt_bound(v), *i),
             None => (Ep::Bracket, min_of_bracket(rank), true),
         };
         let (hi_ep, hi_s, hi_i) = match hi {
-            Some((v, i)) => (Ep::Val(keyenc::encode(v), *i), fmt_bound(v), *i),
+            Some((v, i)) => (ep(v, *i), fmt_bound(v), *i),
             None => (Ep::Bracket, max_of_bracket(rank), true),
         };
         return vec![VI { lo: lo_ep, hi: hi_ep, rank, lo_s, hi_s, lo_incl: lo_i, hi_incl: hi_i }];
@@ -1113,6 +1120,23 @@ pub fn plan(inp: &PlanInput) -> Plan {
                 subs.push(p);
             }
             if !subs.is_empty() {
+                // every clause a point read of `_id`: mongod reads them as one `_id` index scan (its intervals merged), so
+                // the answer is in `_id` order, not clause by clause (fix-query-defects P5)
+                let id_only = clauses.iter().all(|c| matches!(c, Bson::Document(d) if !d.is_empty() && d.keys().all(|k| k == "_id")));
+                if id_only && subs.iter().all(|p| matches!(p, Plan::Id(_) | Plan::IdIn(_))) && crate::collation::current().is_none() {
+                    let mut keyed: Vec<(Vec<u8>, Bson)> = subs
+                        .iter()
+                        .flat_map(|p| match p {
+                            Plan::Id(v) => vec![v.clone()],
+                            Plan::IdIn(vs) => vs.clone(),
+                            _ => vec![],
+                        })
+                        .map(|v| (crate::layout::encode_sortable(&v), v))
+                        .collect();
+                    keyed.sort_by(|a, b| a.0.cmp(&b.0));
+                    keyed.dedup_by(|a, b| a.0 == b.0);
+                    return Plan::IdIn(keyed.into_iter().map(|(_, v)| v).collect());
+                }
                 return Plan::Or(subs);
             }
         }
@@ -1591,4 +1615,10 @@ fn conjuncts<'a>(filter: &'a Document, field: &str) -> Vec<&'a Bson> {
 pub fn wild_hint_ok(indexes: &[IndexDef], idx: usize, filter: &Document) -> bool {
     let cs = constraints(filter);
     wild_scan(indexes, filter, &cs, Some(idx)).is_some()
+}
+
+/// Two index key patterns are the same pattern: the same fields, in the same order, with the same values. (A `Document`
+/// compares equal regardless of field order: `{x: 1, s: 1}` and `{s: 1, x: 1}` are two different indexes.)
+pub fn same_key_order(a: &bson::Document, b: &bson::Document) -> bool {
+    a.len() == b.len() && a.iter().zip(b.iter()).all(|((ka, va), (kb, vb))| ka == kb && va == vb)
 }

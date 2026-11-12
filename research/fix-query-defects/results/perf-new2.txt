@@ -1,0 +1,22 @@
+new2   in 100                             cold GETs [429, 359, 329] MB [13.4, 12.2, 11.6] ms [203.4, 130.3, 127.9] | warm GETs [0, 0, 0] ms [5.0, 6.7, 6.0] | n 100
+new2   in 1,000                           cold GETs [120, 75, 77] MB [230.3, 204.3, 204.2] ms [2115.3, 2011.6, 1977.0] | warm GETs [0, 0, 0] ms [1879.8, 1967.5, 1920.0] | n 1000
+new2   in 10,000 (half missing)           cold GETs [75] MB [204.5] ms [2021.5] | warm GETs [0] ms [1963.5] | n 5069
+new2   in 100,000 (half missing)          cold GETs [75] MB [204.5] ms [2604.1] | warm GETs [0] ms [2509.7] | n 50035
+new2   in 100 + g filter                  cold GETs [125, 125, 125] MB [7.7, 7.7, 7.7] ms [64.4, 67.0, 56.6] | warm GETs [0, 0, 0] ms [6.3, 6.6, 7.4] | n 46
+new2   in 100 sort g desc limit 5         cold GETs [125, 125, 125] MB [7.7, 7.7, 7.7] ms [73.0, 77.2, 71.0] | warm GETs [0, 0, 0] ms [6.8, 5.1, 5.5] | n 5
+new2   agg $match in 100 + $group         cold GETs [125, 125, 125] MB [7.7, 7.7, 7.7] ms [66.0, 72.3, 70.8] | warm GETs [0, 0, 0] ms [6.2, 6.4, 7.6] | n 1
+new2   count in 1,000                     cold GETs [75, 75, 77] MB [204.3, 204.3, 204.2] ms [2153.2, 1999.2, 2140.0] | warm GETs [0, 0, 0] ms [1959.5, 2062.0, 2060.7] | n 1
+new2   _id equality                       cold GETs [22, 22, 22] MB [4.9, 4.9, 4.9] ms [28.1, 24.7, 25.9] | warm GETs [0, 0, 0] ms [0.6, 0.4, 0.5] | n 1
+new2   _id range 1,000                    cold GETs [22, 22, 22] MB [5.1, 5.1, 5.1] ms [30.7, 31.2, 38.3] | warm GETs [0, 0, 0] ms [4.7, 5.3, 4.8] | n 1000
+new2   g equality (index, 1,000 docs)     cold GETs [79, 79, 79] MB [204.6, 204.6, 204.6] ms [2038.3, 2026.4, 2044.6] | warm GETs [0, 0, 0] ms [1909.6, 1974.1, 2019.8] | n 1000
+new2   g $in 3 values (index)             cold GETs [85, 85, 85] MB [205.1, 205.1, 205.1] ms [2144.0, 2084.3, 1976.6] | warm GETs [0, 0, 0] ms [2007.4, 2009.2, 1926.7] | n 3000
+new2   sort _id limit 10                  cold GETs [25, 25, 25] MB [21.7, 21.7, 21.7] ms [41.1, 40.7, 33.6] | warm GETs [0, 0, 0] ms [4.9, 4.5, 4.3] | n 10
+new2   sort _id desc limit 10 skip 100    cold GETs [25, 25, 25] MB [21.7, 21.7, 21.7] ms [44.0, 36.7, 37.4] | warm GETs [0, 0, 0] ms [5.2, 5.1, 4.7] | n 10
+   error in name equality (collection scan) trial 0 cold: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+   error in name equality (collection scan) trial 0 warm: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+   error in name equality (collection scan) trial 1 cold: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+   error in name equality (collection scan) trial 1 warm: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+   error in name equality (collection scan) trial 2 cold: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+   error in name equality (collection scan) trial 2 warm: database app_perf: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(
+new2   name equality (collection scan)    cold GETs [89, 86, 85] MB [209.2, 209.0, 205.0] ms [9120.5, 8562.4, 8380.6] | warm GETs [0, 0, 0] ms [8430.6, 8432.2, 8200.1] | n 0
+new2   _id $nin 3 values, limit 20        cold GETs [25, 25, 25] MB [21.7, 21.7, 21.7] ms [38.3, 36.4, 34.7] | warm GETs [0, 1, 1] ms [4.4, 5.2, 5.1] | n 20

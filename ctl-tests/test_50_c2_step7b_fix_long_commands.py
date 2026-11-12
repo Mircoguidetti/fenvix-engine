@@ -16,6 +16,7 @@ length. That is safe only if no read of a command reuses a version after its own
 import os
 
 import pytest
+from pymongo import IndexModel
 from pymongo.errors import OperationFailure
 
 from lib import Server, make_bucket
@@ -141,12 +142,17 @@ def test_long_commands_outlive_the_hold_life(short_hold):
     errs = []
     t0 = time.time()
     try:
-        c.lg.big.create_index([("x", 1)])
+        # four indexes in one command: since fix-query-defects (P2, P3) a single index build or a lookup by `_id` takes
+        # about 0.4 s on CI, under the hold life; the command must outlast it to test anything (review of 62b8619)
+        c.lg.big.create_indexes([IndexModel([("x", 1)]), IndexModel([("x", -1), ("_id", 1)]), IndexModel([("s", 1), ("x", 1)]), IndexModel([("x", 1), ("s", 1)])])
     except OperationFailure as e:
         errs.append(f"createIndexes: {e.code} {str(e)[:120]}")
     t1 = time.time()
     try:
-        n = len(list(c.lg.big.aggregate([{"$lookup": {"from": "big", "localField": "_id", "foreignField": "_id", "as": "j"}}, {"$limit": 100000}])))
+        n = len(list(c.lg.big.aggregate([{"$lookup": {"from": "big", "localField": "_id", "foreignField": "_id", "as": "j"}},
+                                          {"$lookup": {"from": "big", "localField": "x", "foreignField": "x", "as": "k"}},
+                                          {"$lookup": {"from": "big", "localField": "_id", "foreignField": "x", "as": "l"}},
+                                          {"$project": {"j": 0, "k": 0, "l": 0}}, {"$limit": 100000}])))
         assert n == 100000
     except OperationFailure as e:
         errs.append(f"$lookup: {e.code} {str(e)[:120]}")
@@ -154,6 +160,6 @@ def test_long_commands_outlive_the_hold_life(short_hold):
     print(f"createIndexes {t1 - t0:.2f} s, $lookup {t2 - t1:.2f} s")
     names = [i["name"] for i in c.lg.big.list_indexes()]
     if not errs:
-        assert "x_1" in names
+        assert {"x_1", "x_-1__id_1", "s_1_x_1", "x_1_s_1"} <= set(names), names
     assert not errs, f"long commands failed past the hold life: {errs}; indexes {names}"
-    assert t1 - t0 > 0.5 and t2 - t1 > 0.5, f"the commands must outlast the hold life to test it: {t1 - t0:.2f} s, {t2 - t1:.2f} s"
+    assert t1 - t0 > 0.5 and t2 - t1 > 0.5, f"the commands must outlast the hold life (500 ms) to test it: {t1 - t0:.2f} s, {t2 - t1:.2f} s"

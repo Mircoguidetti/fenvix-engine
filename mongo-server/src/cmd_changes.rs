@@ -74,6 +74,13 @@ impl Server {
         if expanded {
             crate::changes::WANTS_UUID.store(true, std::sync::atomic::Ordering::Relaxed);
         }
+        // The database is opened first (if it exists), so the log knows whether its history before now is held here
+        // (ChangeLog::mark_opened): a stream opened on a closed database is positioned after that open, not before it.
+        if let Some(d) = &scope.db {
+            if let Err(e) = self.dbs.read(d).await {
+                return Err(MongoError::from(e));
+            }
+        }
         let log = &self.dbs.changes;
         for f in ["resumeAfter", "startAfter"] {
             if let Some(v) = spec.get(f) {
@@ -95,6 +102,7 @@ impl Server {
                 _ => return Err(MongoError::new(40647, "Location40647", format!("Bad resume token: _data of missing or of wrong type. Expected string, got {}", crate::update::fmt_doc(t).replace("{ ", "{").replace(" }", "}")))),
             }
         } else if let Some(Bson::Timestamp(ts)) = spec.get("startAtOperationTime") {
+            log.check_start_time(&scope, *ts)?;
             log.seq_at_time(*ts)
         } else {
             log.head()
@@ -246,7 +254,7 @@ impl Server {
             let notified = log.notify.notified();
             tokio::pin!(notified);
             notified.as_mut().enable();
-            let (evs, last) = log.read(&cur.scope, cur.last, batch);
+            let (evs, last) = log.read(&cur.scope, cur.last, batch)?;
             let evs: Vec<Arc<Ev>> = evs.into_iter().filter(|e| cur.expanded || !e.spec.expanded_only).collect();
             if !evs.is_empty() || Instant::now() >= deadline {
                 break (evs, last);

@@ -50,6 +50,9 @@ fn cmp_numbers(a: &Bson, b: &Bson) -> Ordering {
         (Bson::Int64(x), Bson::Int64(y)) => x.cmp(y),
         (Bson::Int32(_) | Bson::Int64(_), Bson::Double(f)) => cmp_int_f64(int_of(a), *f),
         (Bson::Double(f), Bson::Int32(_) | Bson::Int64(_)) => cmp_int_f64(int_of(b), *f).reverse(),
+        // a Decimal128 against any number: exactly, as mongod (a double 0.1 is not the decimal 0.1, and 1E+400 is a finite
+        // number, not infinity: fix-query-defects P8). Through f64 both were equal.
+        (Bson::Decimal128(_), _) | (_, Bson::Decimal128(_)) => exact_num(a).cmp(&exact_num(b)),
         _ => {
             let (x, y) = (as_f64(a), as_f64(b));
             // NaN sorts before every other number.
@@ -61,6 +64,66 @@ fn cmp_numbers(a: &Bson, b: &Bson) -> Ordering {
             }
         }
     }
+}
+
+/// A number as an exact value, for comparisons with a Decimal128. NaN sorts first, as everywhere else.
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+enum ExactNum {
+    NaN,
+    NegInf,
+    Fin(bigdecimal::BigDecimal),
+    PosInf,
+}
+
+fn exact_num(v: &Bson) -> ExactNum {
+    use std::str::FromStr;
+    let of_f64 = |f: f64| {
+        if f.is_nan() {
+            ExactNum::NaN
+        } else if f.is_infinite() {
+            if f > 0.0 { ExactNum::PosInf } else { ExactNum::NegInf }
+        } else {
+            bigdecimal::BigDecimal::try_from(f).map(ExactNum::Fin).unwrap_or(ExactNum::NaN)
+        }
+    };
+    match v {
+        Bson::Int32(x) => ExactNum::Fin(bigdecimal::BigDecimal::from(*x)),
+        Bson::Int64(x) => ExactNum::Fin(bigdecimal::BigDecimal::from(*x)),
+        Bson::Double(f) => of_f64(*f),
+        Bson::Decimal128(d) => {
+            let t = d.to_string();
+            match t.as_str() {
+                "Infinity" | "+Infinity" => ExactNum::PosInf,
+                "-Infinity" => ExactNum::NegInf,
+                _ if t.ends_with("NaN") => ExactNum::NaN,
+                _ => bigdecimal::BigDecimal::from_str(&t).map(ExactNum::Fin).unwrap_or(ExactNum::NaN),
+            }
+        }
+        _ => ExactNum::NaN,
+    }
+}
+
+/// How a Decimal128 differs from its nearest double `f`, for its key (`layout::encode_sortable`): `(Some(i), None)` when
+/// it is exactly the 64-bit integer `i` but not the double (its key is the integer's); `(None, None)` when it is exactly
+/// `f` (or NaN or an infinity); `(None, Some(text))` otherwise, with its exact value, normalized (1.0 and 1.00 are one).
+pub fn decimal_key_tail(v: &Bson, f: f64) -> (Option<i64>, Option<String>) {
+    // NaN and the infinities are the double ones
+    let ExactNum::Fin(d) = exact_num(v) else { return (None, None) };
+    if f.is_infinite() {
+        // a finite decimal past the double range (its nearest double is an infinity)
+        return (None, Some(d.normalized().to_string()));
+    }
+    if let Ok(fd) = bigdecimal::BigDecimal::try_from(f) {
+        if fd == d {
+            return (None, None);
+        }
+    }
+    if d.is_integer() {
+        if let Some(i) = bigdecimal::ToPrimitive::to_i64(&d) {
+            return (Some(i), None);
+        }
+    }
+    (None, Some(d.normalized().to_string()))
 }
 
 fn int_of(v: &Bson) -> i64 {
@@ -151,6 +214,62 @@ pub fn compare(a: &Bson, b: &Bson) -> Ordering {
         }
         _ => Ordering::Equal,
     }
+}
+
+/// Whether mongod answers `filter` from the `_id` index (and so, without a sort, in `_id` order): an `_id` condition at the
+/// top level or inside `$and` (any operator: `$nin`, `$ne`, `$not`, ranges, `$exists`, `$type`, `$regex`), or a `$nor`
+/// with one clause on `_id` alone, or an `$or` whose clauses are all on `_id` alone. MEASURED with explain on mongod 7.0.34 (fix-query-defects P5); a `$nor` of two
+/// clauses is a collection scan there.
+pub fn uses_id_index(filter: &Document) -> bool {
+    filter.iter().any(|(k, v)| match (k.as_str(), v) {
+        ("_id", _) => true,
+        ("$and", Bson::Array(a)) => a.iter().any(|s| matches!(s, Bson::Document(d) if uses_id_index(d))),
+        ("$nor", Bson::Array(a)) if a.len() == 1 => matches!(&a[0], Bson::Document(d) if !d.is_empty() && d.keys().all(|k| k == "_id")),
+        // an `$or` of clauses on `_id` alone: one `_id` index scan with the clauses' intervals merged
+        ("$or", Bson::Array(a)) => !a.is_empty() && a.iter().all(|c| matches!(c, Bson::Document(d) if !d.is_empty() && d.keys().all(|k| k == "_id"))),
+        _ => false,
+    })
+}
+
+/// The bounds of `_id` range conditions (`$gt`/`$gte` and `$lt`/`$lte`) at the top level or inside `$and`, when they
+/// can bound a scan of the documents in key order: one type bracket, and not null, MinKey, MaxKey, a regex, an array or
+/// a document. Every document read is still matched against the whole filter: these only shorten the scan.
+pub fn id_range(filter: &Document) -> Option<(Option<Bson>, Option<Bson>)> {
+    fn walk(filter: &Document, lo: &mut Option<Bson>, hi: &mut Option<Bson>) {
+        for (k, v) in filter {
+            match (k.as_str(), v) {
+                ("_id", Bson::Document(d)) if is_operator_doc(d) => {
+                    for (op, x) in d {
+                        match op.as_str() {
+                            "$gt" | "$gte" if lo.is_none() => *lo = Some(x.clone()),
+                            "$lt" | "$lte" if hi.is_none() => *hi = Some(x.clone()),
+                            _ => {}
+                        }
+                    }
+                }
+                ("$and", Bson::Array(a)) => {
+                    for s in a {
+                        if let Bson::Document(sd) = s {
+                            walk(sd, lo, hi);
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+    let (mut lo, mut hi) = (None, None);
+    walk(filter, &mut lo, &mut hi);
+    let usable = |v: &Bson| !matches!(v, Bson::Null | Bson::Undefined | Bson::MinKey | Bson::MaxKey | Bson::RegularExpression(_) | Bson::Array(_) | Bson::Document(_));
+    if lo.as_ref().is_some_and(|v| !usable(v)) || hi.as_ref().is_some_and(|v| !usable(v)) || (lo.is_none() && hi.is_none()) {
+        return None;
+    }
+    if let (Some(a), Some(b)) = (&lo, &hi) {
+        if type_rank(a) != type_rank(b) {
+            return None;
+        }
+    }
+    Some((lo, hi))
 }
 
 pub fn equal(a: &Bson, b: &Bson) -> bool {
@@ -549,6 +668,95 @@ fn match_elem(e: &Bson, arg: &Document) -> R<bool> {
     }
 }
 
+/// Lists at least this long are searched in a sorted copy (`InSets`), shorter ones one value at a time.
+const IN_SET_MIN: usize = 32;
+
+tokio::task_local! {
+    /// The sorted `$in`/`$nin` lists of the filter a query matches with, by the address and length of the list. Built
+    /// from a copy of the filter that lives as long as the scope (`coll::find_docs`), so no other live list can have the
+    /// same address: a hit is always that list.
+    pub static IN_SETS: std::cell::RefCell<std::collections::HashMap<(usize, usize), std::sync::Arc<InSet>>>;
+}
+
+pub fn in_sets_active() -> bool {
+    IN_SETS.try_with(|_| ()).is_ok()
+}
+
+/// One long `$in`/`$nin` list: its ordinary values sorted by `compare` (equality there is `compare == Equal`, a total
+/// order, so a binary search finds a match exactly when one value-by-value comparison would), and the values with
+/// their own matching rules (regex, null, undefined) kept apart.
+pub struct InSet {
+    sorted: Vec<Bson>,
+    special: Vec<Bson>,
+}
+
+impl InSet {
+    fn matches(&self, vals: &[&Bson]) -> R<bool> {
+        for x in &self.special {
+            if eq_match(vals, x)? {
+                return Ok(true);
+            }
+        }
+        Ok(candidates(vals).iter().any(|c| self.sorted.binary_search_by(|x| compare(x, c)).is_ok()))
+    }
+}
+
+pub struct InSets;
+
+impl InSets {
+    /// The sorted lists of every long `$in`/`$nin` in `filter` (a list holding an operator document is left out: it
+    /// is an error, raised by the value-by-value path as before).
+    pub fn build(filter: &Document) -> std::collections::HashMap<(usize, usize), std::sync::Arc<InSet>> {
+        let mut out = std::collections::HashMap::new();
+        fn walk(v: &Bson, out: &mut std::collections::HashMap<(usize, usize), std::sync::Arc<InSet>>) {
+            match v {
+                Bson::Document(d) => {
+                    for (k, x) in d {
+                        if let ("$in" | "$nin", Bson::Array(list)) = (k.as_str(), x) {
+                            if list.len() >= IN_SET_MIN && !list.iter().any(|e| matches!(e, Bson::Document(od) if is_operator_doc(od))) {
+                                let (mut sorted, mut special) = (Vec::new(), Vec::new());
+                                for e in list {
+                                    if matches!(e, Bson::RegularExpression(_) | Bson::Null | Bson::Undefined) {
+                                        special.push(e.clone());
+                                    } else {
+                                        sorted.push(e.clone());
+                                    }
+                                }
+                                sorted.sort_by(compare);
+                                out.insert((list.as_ptr() as usize, list.len()), std::sync::Arc::new(InSet { sorted, special }));
+                                continue;
+                            }
+                        }
+                        walk(x, out);
+                    }
+                }
+                Bson::Array(a) => a.iter().for_each(|x| walk(x, out)),
+                _ => {}
+            }
+        }
+        // the values of `filter` itself (never a copy: the addresses must be those of the lists matched against)
+        for (k, x) in filter {
+            if let ("$in" | "$nin", Bson::Array(_)) = (k.as_str(), x) {
+                continue; // a top-level `$in` is not a query operator
+            }
+            walk(x, &mut out);
+        }
+        out
+    }
+}
+
+/// Whether `filter` holds an `$in`/`$nin` list long enough for `InSets`.
+pub fn has_long_in(filter: &Document) -> bool {
+    fn walk(v: &Bson) -> bool {
+        match v {
+            Bson::Document(d) => d.iter().any(|(k, x)| matches!((k.as_str(), x), ("$in" | "$nin", Bson::Array(l)) if l.len() >= IN_SET_MIN) || walk(x)),
+            Bson::Array(a) => a.iter().any(walk),
+            _ => false,
+        }
+    }
+    filter.iter().any(|(_, v)| walk(v))
+}
+
 pub fn int_arg(arg: &Bson) -> Option<i64> {
     match arg {
         Bson::Int32(i) => Some(*i as i64),
@@ -643,6 +851,12 @@ fn match_op(vals: &[&Bson], op: &str, arg: &Bson) -> R<bool> {
         }
         "$in" | "$nin" => {
             let list = arg.as_array().ok_or_else(|| bad(format!("${} needs an array", &op[1..])))?;
+            if list.len() >= IN_SET_MIN {
+                if let Some(set) = IN_SETS.try_with(|m| m.borrow().get(&(list.as_ptr() as usize, list.len())).cloned()).ok().flatten() {
+                    let any = set.matches(vals)?;
+                    return Ok(if op == "$in" { any } else { !any });
+                }
+            }
             let mut any = false;
             for x in list {
                 if let Bson::Document(d) = x {

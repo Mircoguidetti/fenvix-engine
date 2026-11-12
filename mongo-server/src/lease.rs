@@ -116,6 +116,9 @@ pub struct Leases {
     /// A renewal of the process lease is in flight: no second one is started (two concurrent renewals with the same etag
     /// made the slower one fail its condition and the process drop every database it owned, whenever S3 was slow).
     proc_renewing: std::sync::atomic::AtomicBool,
+    /// Tenants this process released cleanly, with the lease sequence its release wrote: a later acquire that finds that
+    /// same sequence knows no other process owned the tenant in between ([`Leases::continuous`]).
+    released: Mutex<HashMap<String, u64>>,
 }
 
 #[derive(Default, Debug, Clone)]
@@ -199,7 +202,7 @@ pub fn log(event: &str, tenant: &str, holder: &str, extra: &str) {
 
 impl Leases {
     pub fn new(store: Arc<dyn ObjectStore>, holder: String, ttl: Duration) -> Arc<Self> {
-        Arc::new(Self { store, holder, ttl, skew: Duration::from_millis(1500), held: Mutex::new(HashMap::new()), denied: Mutex::new(HashMap::new()), stats: Mutex::new(LeaseStats::default()), unsafe_skip: std::sync::atomic::AtomicBool::new(false), process_mode: std::sync::atomic::AtomicBool::new(false), proc: Mutex::new(None), proc_init: tokio::sync::Mutex::new(()), proc_gen_floor: std::sync::atomic::AtomicU64::new(0), disabled: std::sync::atomic::AtomicBool::new(false), proc_renewing: std::sync::atomic::AtomicBool::new(false) })
+        Arc::new(Self { store, holder, ttl, skew: Duration::from_millis(1500), held: Mutex::new(HashMap::new()), denied: Mutex::new(HashMap::new()), stats: Mutex::new(LeaseStats::default()), unsafe_skip: std::sync::atomic::AtomicBool::new(false), process_mode: std::sync::atomic::AtomicBool::new(false), proc: Mutex::new(None), proc_init: tokio::sync::Mutex::new(()), proc_gen_floor: std::sync::atomic::AtomicU64::new(0), disabled: std::sync::atomic::AtomicBool::new(false), proc_renewing: std::sync::atomic::AtomicBool::new(false), released: Mutex::new(HashMap::new()) })
     }
 
     pub fn held_count(&self) -> usize {
@@ -208,6 +211,21 @@ impl Leases {
 
     /// The instant this process stops acting as the tenant's owner if the lease is not renewed (`valid` turns false then),
     /// for the tenant's F7 guard (compaction 2, step 4: no hold begins after it). None: no lease guard (tests).
+    /// Just after an acquire: true when no other process can have owned (and written) the tenant since this process last
+    /// owned it: the lease record was created by this acquire, or it still held the sequence this process's own clean
+    /// release wrote. False after a takeover, a restart, a lapse, or a release that did not land. (The change log uses
+    /// it: events written by another owner are not in this process's log.)
+    pub fn continuous(&self, id: &str) -> bool {
+        let released = self.released.lock().unwrap().remove(id);
+        if self.disabled.load(std::sync::atomic::Ordering::Relaxed) {
+            return true;
+        }
+        match self.held.lock().unwrap().get(id) {
+            Some(h) => h.seq == 1 || (released.is_some() && released == h.seq.checked_sub(1)),
+            None => false,
+        }
+    }
+
     pub fn serving_until(&self, id: &str) -> Option<std::time::Instant> {
         if self.unsafe_skip.load(std::sync::atomic::Ordering::Relaxed) {
             return None;
@@ -579,6 +597,7 @@ impl Leases {
             match self.store.put_opts(&path, PutPayload::from(body("", 0, seq + 1)), opts).await {
                 Ok(_) => {
                     ok = true;
+                    self.released.lock().unwrap().insert(id.to_string(), seq + 1);
                     break;
                 }
                 Err(object_store::Error::Precondition { .. }) => match self.store.get(&path).await {

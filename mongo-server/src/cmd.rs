@@ -990,6 +990,7 @@ impl Server {
                 "l0WatchRequests": tenant_bench::lifecycle::L0_WATCH_REQUESTS.load(Relaxed) as i64,
                 "abandonCloseTimeouts": tenant_bench::lifecycle::ABANDON_CLOSE_TIMEOUTS.load(Relaxed) as i64,
                 "reopenedWritesRefused": crate::dbs::REOPENED_REFUSED.load(Relaxed) as i64,
+                "changeStreamsLost": crate::changes::HISTORY_LOST.load(Relaxed) as i64,
                 "abandonClosesPending": tenant_bench::lifecycle::pending_closes() as i64,
                 "l0WatchDeferred": tenant_bench::lifecycle::L0_WATCH_DEFERRED.load(Relaxed) as i64,
                 "compactionWarm": { "runs": tenant_bench::warm::WARM_RUNS.load(Relaxed) as i64, "hotBlocks": tenant_bench::warm::WARM_HOT_BLOCKS.load(Relaxed) as i64, "ranges": tenant_bench::warm::WARM_RANGES.load(Relaxed) as i64, "fails": tenant_bench::warm::WARM_FAILS.load(Relaxed) as i64, "timeouts": tenant_bench::warm::WARM_TIMEOUTS.load(Relaxed) as i64, "truncated": tenant_bench::warm::WARM_TRUNCATED.load(Relaxed) as i64, "readersOpen": tenant_bench::warm::WARM_READERS_OPEN.load(Relaxed) as i64, "l0Stops": tenant_bench::warm::WARM_L0_STOPS.load(Relaxed) as i64, "throttled": tenant_bench::warm::WARM_THROTTLED.load(Relaxed) as i64 },
@@ -1144,8 +1145,16 @@ impl Server {
         }
         let wait = std::time::Duration::from_millis(max_time.filter(|m| *m > 0).unwrap_or(1000) as u64);
         let deadline = std::time::Instant::now() + wait;
-        let limit = batch.filter(|b| *b > 0).unwrap_or(usize::MAX);
         let mut cur = tail;
+        let limit = batch.filter(|b| *b > 0).unwrap_or(usize::MAX).min(cur.left.unwrap_or(usize::MAX));
+        if limit == 0 {
+            // the cursor's limit is reached: nothing more, the cursor stays open (mongod)
+            let ns = format!("{}.{}", cur.db, cur.coll);
+            if let Some(c) = self.cursors.lock().unwrap().get_mut(&id) {
+                c.used = std::time::Instant::now();
+            }
+            return Ok(doc! { "cursor": { "nextBatch": Vec::<Bson>::new(), "id": id, "ns": ns }, "ok": 1.0 });
+        }
         loop {
             let r = {
                 let mut g = self.dbs.read(&cur.db).await?;
@@ -1159,6 +1168,7 @@ impl Server {
                 }
             };
             cur.last_seq = last;
+            cur.left = cur.left.map(|l| l.saturating_sub(docs.len()));
             if !docs.is_empty() || !cur.await_data || std::time::Instant::now() >= deadline {
                 let ns = format!("{}.{}", cur.db, cur.coll);
                 match self.cursors.lock().unwrap().get_mut(&id) {

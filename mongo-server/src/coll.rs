@@ -168,7 +168,7 @@ pub fn resolve_hint(indexes: &[IndexDef], hint: Option<&Bson>) -> R<Hint> {
             if d.len() == 1 && d.contains_key("_id") {
                 return Ok(Hint::None);
             }
-            indexes.iter().position(|i| i.state == State::Ready && !i.hidden && i.key_pattern() == *d).map(Hint::Index).ok_or_else(bad)
+            indexes.iter().position(|i| i.state == State::Ready && !i.hidden && crate::index::same_key_order(&i.key_pattern(), d)).map(Hint::Index).ok_or_else(bad)
         }
         Some(_) => Err(MongoError::new(2, "BadValue", "hint must be either a string or a document".into())),
     }
@@ -862,7 +862,17 @@ pub fn plan_summary(plan: &Plan, indexes: &[IndexDef]) -> String {
 /// Documents matching `o.filter`, in plan order (sort not applied unless the index provides it). A `$text` condition
 /// needs a text index; the documents of such a query carry their text score in the hidden [`crate::text::SCORE_KEY`] field.
 pub async fn find_docs(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
-    let r = find_docs_any(g, coll, indexes, o).await;
+    // Long `$in`/`$nin` lists: sorted once for the whole query, so each document costs one search per value it holds,
+    // not one comparison per list value (fix-query-defects P2: 100,000 ids made every document read compare 100,000
+    // values). The lists are taken from this copy of the filter, which lives as long as the scope: see `query::InSets`.
+    let r = if crate::query::has_long_in(o.filter) && !crate::query::in_sets_active() {
+        let f = o.filter.clone();
+        let sets = crate::query::InSets::build(&f);
+        let o2 = FindOpts { filter: &f, sort: o.sort, want: o.want, hint: o.hint.clone(), ttl: o.ttl, ov: o.ov };
+        crate::query::IN_SETS.scope(std::cell::RefCell::new(sets), find_docs_any(g, coll, indexes, &o2)).await
+    } else {
+        find_docs_any(g, coll, indexes, o).await
+    };
     if let Ok((_, st, plan)) = &r {
         let _ = EXEC_NOTE.try_with(|c| {
             let mut n = c.borrow_mut();
@@ -1114,6 +1124,28 @@ pub fn order_by_near(mut docs: Vec<Document>, path: &str, n: &crate::geo_query::
 
 async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
     let plan = plan_for(indexes, o);
+    // No sort, and mongod would read the `_id` index (`_id` conditions, `$in` with the transaction's own writes, an
+    // `$or` of `_id` clauses): mongod answers in `_id` order, so a limit or a single write picks the same document as
+    // mongod. Before, a scan here answered in insertion order and a transaction's own writes came last
+    // (fix-query-defects P5). Not under a collation other than the collection's (mongod cannot use the `_id` index then).
+    let implied_id = o.sort.is_empty()
+        && matches!(o.hint, Hint::None)
+        && (matches!(plan, Plan::IdIn(_)) || (matches!(plan, Plan::Coll { reverse: false }) && crate::query::uses_id_index(o.filter)))
+        && match crate::collation::current() {
+            None => true,
+            Some(eff) => crate::collation::same(&Some(eff), &g.coll_opts(coll).await?.and_then(|c| c.collation.clone())),
+        };
+    if implied_id {
+        let by_id = [("_id".to_string(), true)];
+        if o.want.is_some() {
+            // the first `want` in `_id` order: the sort-with-a-limit path keeps only those
+            let o2 = FindOpts { filter: o.filter, sort: &by_id, want: o.want, hint: Hint::None, ttl: o.ttl, ov: o.ov };
+            return find_docs_with(g, coll, indexes, &o2, plan).await;
+        }
+        let (mut out, st, p) = find_docs_with(g, coll, indexes, o, plan).await?;
+        out.sort_by(|a, b| crate::query::compare(a.get("_id").unwrap_or(&Bson::Null), b.get("_id").unwrap_or(&Bson::Null)));
+        return Ok((out, st, p));
+    }
     let coll_plan = matches!(plan, Plan::Coll { .. });
     match find_docs_with(g, coll, indexes, o, plan).await {
         // Without a limit the planner prefers a scan and a sort to reading a whole index in order; when that sort is
@@ -1181,6 +1213,13 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
         // customer-first documents: key order is customer then `_id`, not `_id`
         id_order = None;
     }
+    // `_id` range conditions: only the keys between the bounds are read (fix-query-defects P3: a 1,000-document range read
+    // the whole collection). Documents are stored in `_id` key order; not for customer-first keys.
+    let id_range = if matches!(plan, Plan::Coll { reverse: false }) && matches!(o.hint, Hint::None) && ckey.is_none() {
+        crate::query::id_range(o.filter).and_then(|(lo, hi)| crate::layout::id_key_range(&prefix, lo.as_ref(), hi.as_ref(), crate::collation::current().is_some()))
+    } else {
+        None
+    };
     if id_order.is_some() {
         if let Some(eff) = crate::collation::current() {
             // `_id`s are unique under the collection's collation; under another one two `_id`s can be equal, and their
@@ -1247,7 +1286,10 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
             let t = topk.as_mut().unwrap();
             let collated = crate::collation::current().is_some();
             let mut chunk = (o.want.unwrap_or(1) * 2).max(256);
-            let (mut start, mut stop) = (prefix.clone(), prefix_end(&prefix));
+            let (mut start, mut stop) = match &id_range {
+                Some((s, e)) => (s.clone(), e.clone()),
+                None => (prefix.clone(), prefix_end(&prefix)),
+            };
             'ids: loop {
                 let rows = g.scan_range(&start, stop.as_deref(), !asc, Some(chunk), DOC_READ_AHEAD).await?;
                 let n = rows.len();
@@ -1282,6 +1324,36 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
                     stop = Some(last);
                 }
                 chunk = (chunk * 2).min(4096);
+            }
+            stats.keys = stats.docs;
+        }
+        Plan::Coll { reverse: false } if id_range.is_some() && topk.is_none() && !blocking => {
+            tenant_bench::counting::set_phase(3);
+            let (mut start, stop) = id_range.clone().unwrap();
+            let chunk = early.map(|w| (w * 2).max(256)).unwrap_or(4096);
+            'range: loop {
+                let rows = g.scan_range(&start, stop.as_deref(), false, Some(chunk), DOC_READ_AHEAD).await?;
+                let n = rows.len();
+                for (k, v) in &rows {
+                    stats.docs += 1;
+                    if ov_keys.contains(&k.to_vec()) {
+                        continue;
+                    }
+                    let d = decode(v)?;
+                    if visible(&d, o) && matches(&d, o.filter)? {
+                        charge(&mut sort_bytes, &d)?;
+                        out.push(d);
+                        if early.map(|w| out.len() >= w).unwrap_or(false) {
+                            break 'range;
+                        }
+                    }
+                }
+                if n < chunk {
+                    break;
+                }
+                let mut k = rows.last().unwrap().0.to_vec();
+                k.push(0);
+                start = k;
             }
             stats.keys = stats.docs;
         }
