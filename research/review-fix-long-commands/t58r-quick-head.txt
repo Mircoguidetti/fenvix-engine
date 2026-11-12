@@ -1,0 +1,36 @@
+collation strength 2, filter name 'abc': ours 256, mongod 750
+Fcollection strength 2, find with the simple collation: ours 732, mongod 250
+Flet v='xyz': ours error 17276: Use of undefined variable: v, full error: {'ok': 0.0, 'errmsg': 'Use of undefined variable: v', 'code': 17276, 'codeName, mongod 250
+Fsnapshot find, 4,000 of 5,000 deleted and 100 inserted after the first batch: ours 1100, mongod 5000
+F
+=================================== FAILURES ===================================
+E   AssertionError: ours 256 documents, mongod 750
+    assert [0, 1, 2, 4, 5, 6, ...] == [0, 1, 2, 4, 5, 6, ...]
+      
+      At index 10 diff: 16 != 13
+      Right contains 494 more items, first extra item: 341
+      Use -v to get more diff
+/home/user/fenvix-engine/ctl-tests/test_58r_review_fix_long_commands.py:77: AssertionError: ours 256 documents, mongod 750
+E   AssertionError: ours 732 documents, mongod 250
+    assert [0, 4, 8, 12, 16, 20, ...] == [0, 4, 8, 12, 16, 20, ...]
+      
+      At index 10 diff: 37 != 40
+      Left contains 482 more items, first extra item: 357
+      Use -v to get more diff
+/home/user/fenvix-engine/ctl-tests/test_58r_review_fix_long_commands.py:92: AssertionError: ours 732 documents, mongod 250
+E   AssertionError: ours error 17276: Use of undefined variable: v, full error: {'ok': 0.0, 'errmsg': 'Use of undefined variable: v', 'code': 17276, 'codeName, mongod 250
+    assert "error 17276: Use of undefined variable: v, full error: {'ok': 0.0, 'errmsg': 'Use of undefined variable: v', 'code': 17276, 'codeName" == [3, 7, 11, 15, 19, 23, ...]
+/home/user/fenvix-engine/ctl-tests/test_58r_review_fix_long_commands.py:108: AssertionError: ours error 17276: Use of undefined variable: v, full error: {'ok': 0.0, 'errmsg': 'Use of undefined variable: v', 'code': 17276, 'codeName, mongod 250
+E   AssertionError: ours 1100, mongod 5000
+    assert [0, 1, 2, 3, 4, 5, ...] == [0, 1, 2, 3, 4, 5, ...]
+      
+      At index 1000 diff: 10000 != 1000
+      Right contains 3900 more items, first extra item: 1100
+      Use -v to get more diff
+/home/user/fenvix-engine/ctl-tests/test_58r_review_fix_long_commands.py:319: AssertionError: ours 1100, mongod 5000
+=========================== short test summary info ============================
+FAILED test_58r_review_fix_long_commands.py::test_find_collation_kept_by_getmore
+FAILED test_58r_review_fix_long_commands.py::test_find_simple_collation_on_a_case_insensitive_collection
+FAILED test_58r_review_fix_long_commands.py::test_find_let_kept_by_getmore - ...
+FAILED test_58r_review_fix_long_commands.py::test_snapshot_read_concern_across_getmores
+4 failed, 5 deselected in 8.59s

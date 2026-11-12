@@ -1,0 +1,3 @@
+{'$where': 'this.k == 3'} ours 143 mongod 143
+{'$expr': {'$lt': ['$$NOW', '$$NOW']}} ours 0 mongod 0
+{'$expr': {'$eq': [{'$mod': ['$k', 2]}, 0]}} ours 571 mongod 571

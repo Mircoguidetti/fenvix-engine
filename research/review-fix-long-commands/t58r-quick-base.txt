@@ -1,0 +1,6 @@
+collation strength 2, filter name 'abc': ours 750, mongod 750
+.collection strength 2, find with the simple collation: ours 250, mongod 250
+.let v='xyz': ours 250, mongod 250
+.snapshot find, 4,000 of 5,000 deleted and 100 inserted after the first batch: ours 5000, mongod 5000
+.
+4 passed, 5 deselected in 8.56s

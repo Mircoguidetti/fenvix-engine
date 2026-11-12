@@ -1,0 +1,43 @@
+head: loaded 1000000
+head trial 0 all-default cold: first 32 ms, all 1000000 in 7.39 s
+head trial 0 all-default warm: first 3 ms, all 1000000 in 6.03 s
+head trial 0 all-b10k cold: first 98 ms, all 1000000 in 7.15 s
+head trial 0 all-b10k warm: first 43 ms, all 1000000 in 5.30 s
+head trial 0 k3 cold: first 30 ms, all 142857 in 6.26 s
+head trial 0 k3 warm: first 5 ms, all 142857 in 4.67 s
+head trial 0 sparse-r0 cold: first 604 ms, all 1000 in 5.95 s
+head trial 0 sparse-r0 warm: first 369 ms, all 1000 in 4.10 s
+head trial 0 none cold: first 5951 ms, all 0 in 5.95 s
+head trial 0 none warm: first 4004 ms, all 0 in 4.00 s
+head trial 0 count cold: 1000000 in 7.84 s
+head trial 0 count warm: 1000000 in 5.36 s
+head trial 0 group cold: 1000000 in 7.62 s
+head trial 0 group warm: 1000000 in 5.06 s
+head trial 1 all-default cold: first 30 ms, all 1000000 in 7.14 s
+head trial 1 all-default warm: first 2 ms, all 1000000 in 5.70 s
+head trial 1 all-b10k cold: first 83 ms, all 1000000 in 6.79 s
+head trial 1 all-b10k warm: first 42 ms, all 1000000 in 5.36 s
+head trial 1 k3 cold: first 30 ms, all 142857 in 6.34 s
+head trial 1 k3 warm: first 5 ms, all 142857 in 4.68 s
+head trial 1 sparse-r0 cold: first 572 ms, all 1000 in 5.82 s
+head trial 1 sparse-r0 warm: first 375 ms, all 1000 in 4.00 s
+head trial 1 none cold: first 5992 ms, all 0 in 5.99 s
+head trial 1 none warm: first 4190 ms, all 0 in 4.19 s
+head trial 1 count cold: 1000000 in 7.89 s
+head trial 1 count warm: 1000000 in 5.23 s
+head trial 1 group cold: 1000000 in 7.72 s
+head trial 1 group warm: 1000000 in 5.64 s
+head trial 2 all-default cold: first 36 ms, all 1000000 in 7.79 s
+head trial 2 all-default warm: first 2 ms, all 1000000 in 5.83 s
+head trial 2 all-b10k cold: first 85 ms, all 1000000 in 7.08 s
+head trial 2 all-b10k warm: first 46 ms, all 1000000 in 6.09 s
+head trial 2 k3 cold: first 33 ms, all 142857 in 6.45 s
+head trial 2 k3 warm: first 5 ms, all 142857 in 4.48 s
+head trial 2 sparse-r0 cold: first 548 ms, all 1000 in 5.99 s
+head trial 2 sparse-r0 warm: first 368 ms, all 1000 in 4.03 s
+head trial 2 none cold: first 5717 ms, all 0 in 5.72 s
+head trial 2 none warm: first 3871 ms, all 0 in 3.87 s
+head trial 2 count cold: 1000000 in 7.63 s
+head trial 2 count warm: 1000000 in 5.28 s
+head trial 2 group cold: 1000000 in 7.56 s
+head trial 2 group warm: 1000000 in 5.61 s

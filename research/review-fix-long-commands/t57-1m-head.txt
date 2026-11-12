@@ -1,0 +1,5 @@
+1000000 documents, 1 rounds of scan + count + aggregate (last: scan 12.4 s, 200 getMores; count 141.4 s; aggregate 55.9 s); 1 getMores refused and sent again; lease lost or invalid 1500 times
+.getMore after the restart: 43 cursor id 5889245746340473229 not found, full error: {'ok': 0.0, 'errmsg': 'curs
+.after the takeover: ['refused 134']; 1000 ids seen
+.
+3 passed in 282.01s (0:04:42)

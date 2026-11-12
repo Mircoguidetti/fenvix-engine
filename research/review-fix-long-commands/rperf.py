@@ -7,7 +7,7 @@ from lib import Server
 from bson import SON
 from pymongo import MongoClient
 bucket, binary, label = sys.argv[1], sys.argv[2], sys.argv[3]
-s = Server(bucket, "rperf-" + label, idle=600, binary=binary).start()
+s = Server(bucket, "rperf-" + label, idle=600, binary=binary, extra=["--lease-ttl-secs", os.environ.get("RPERF_TTL", "6")]).start()
 CASES = [("all-default", {}, None), ("all-b10k", {}, 10000), ("k3", {"k": 3}, None), ("sparse-r0", {"r": 0}, None), ("none", {"r": -1}, None)]
 try:
     c = MongoClient(s.uri, serverSelectionTimeoutMS=10000, socketTimeoutMS=900000)

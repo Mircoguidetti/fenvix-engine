@@ -1,0 +1,43 @@
+base: loaded 1000000
+base trial 0 all-default cold: error after 7.4 s: Message length (145874235) is larger than server max message size (48000000)
+base trial 0 all-default warm: error after 5.0 s: Message length (145874235) is larger than server max message size (48000000)
+base trial 0 all-b10k cold: first 6914 ms, all 1000000 in 7.74 s
+base trial 0 all-b10k warm: first 4637 ms, all 1000000 in 5.47 s
+base trial 0 k3 cold: first 6695 ms, all 142857 in 6.91 s
+base trial 0 k3 warm: first 4807 ms, all 142857 in 5.02 s
+base trial 0 sparse-r0 cold: first 7430 ms, all 1000 in 7.43 s
+base trial 0 sparse-r0 warm: first 4675 ms, all 1000 in 4.68 s
+base trial 0 none cold: first 7005 ms, all 0 in 7.01 s
+base trial 0 none warm: first 4434 ms, all 0 in 4.43 s
+base trial 0 count cold: 1000000 in 8.24 s
+base trial 0 count warm: 1000000 in 5.41 s
+base trial 0 group cold: 1000000 in 7.63 s
+base trial 0 group warm: 1000000 in 5.40 s
+base trial 1 all-default cold: error after 7.6 s: Message length (145874235) is larger than server max message size (48000000)
+base trial 1 all-default warm: error after 5.3 s: Message length (145874235) is larger than server max message size (48000000)
+base trial 1 all-b10k cold: first 7760 ms, all 1000000 in 8.69 s
+base trial 1 all-b10k warm: first 5055 ms, all 1000000 in 6.11 s
+base trial 1 k3 cold: first 7623 ms, all 142857 in 7.87 s
+base trial 1 k3 warm: first 5435 ms, all 142857 in 5.65 s
+base trial 1 sparse-r0 cold: first 7418 ms, all 1000 in 7.42 s
+base trial 1 sparse-r0 warm: first 4753 ms, all 1000 in 4.75 s
+base trial 1 none cold: first 7021 ms, all 0 in 7.02 s
+base trial 1 none warm: first 4769 ms, all 0 in 4.77 s
+base trial 1 count cold: 1000000 in 7.99 s
+base trial 1 count warm: 1000000 in 5.27 s
+base trial 1 group cold: 1000000 in 7.74 s
+base trial 1 group warm: 1000000 in 5.52 s
+base trial 2 all-default cold: error after 8.1 s: Message length (145874235) is larger than server max message size (48000000)
+base trial 2 all-default warm: error after 5.5 s: Message length (145874235) is larger than server max message size (48000000)
+base trial 2 all-b10k cold: first 7615 ms, all 1000000 in 8.47 s
+base trial 2 all-b10k warm: first 4872 ms, all 1000000 in 5.84 s
+base trial 2 k3 cold: first 7207 ms, all 142857 in 7.42 s
+base trial 2 k3 warm: first 4557 ms, all 142857 in 4.76 s
+base trial 2 sparse-r0 cold: first 6983 ms, all 1000 in 6.99 s
+base trial 2 sparse-r0 warm: first 4389 ms, all 1000 in 4.39 s
+base trial 2 none cold: first 6939 ms, all 0 in 6.94 s
+base trial 2 none warm: first 4534 ms, all 0 in 4.53 s
+base trial 2 count cold: 1000000 in 7.22 s
+base trial 2 count warm: 1000000 in 5.10 s
+base trial 2 group cold: 1000000 in 7.20 s
+base trial 2 group warm: 1000000 in 5.52 s
