@@ -18,7 +18,7 @@
 #     are SHRUNK (same steps and phases, small numbers); ballast databases 0.05 GB; sealed run 64 MiB; 10 takeovers
 #     (the 50-takeover run is validated separately: TAKEOVERS_N=50);
 #   - a runner minute is MINUTE_S seconds (15 here) so the SPESA line is printed often.
-# Usage: local-run.sh WORK    (BLOCK_TEST=1: a last round with a $0.05 cap that must stop with BLOCCO and leave nothing)
+# Usage: local-run.sh WORK    (ENGINE_DIR + ENGINE_COMMIT: build the engine with step9/ci/build-engine.sh first; BLOCK_TEST=1: a last round with a $0.05 cap that must stop with BLOCCO and leave nothing)
 set -u
 W=$1
 HERE=$(cd "$(dirname "$0")" && pwd); S9=$(cd "$HERE/.." && pwd); ENG=$(cd "$S9/.." && pwd)
@@ -39,11 +39,20 @@ pkill -f "minio server $W/minio" 2>/dev/null; rm -rf "$W/minio"
 MINIO_ROOT_USER=$AWS_ACCESS_KEY_ID MINIO_ROOT_PASSWORD=$AWS_SECRET_ACCESS_KEY nohup "$MINIO" server "$W/minio" --address "0.0.0.0:$MPORT" --console-address ":$((MPORT + 1))" > minio.log 2>&1 &
 MINIO_PID=$!
 for _ in $(seq 1 40); do curl -fs "$AWS_ENDPOINT_URL/minio/health/live" > /dev/null && break; sleep 0.5; done
+mkdir -p "$W/bin/mongo-server-x86_64" "$W/bin/pq-x86_64"
+if [ -n "${ENGINE_COMMIT:-}" ]; then
+  # Output 2: the engine built with the workflow's reproducible recipe (step9/ci/build-engine.sh) from ENGINE_DIR at
+  # ENGINE_COMMIT, so the local round's binary has the sha256 the AWS build of that commit gives (same toolchain)
+  RUST_TOOLCHAIN=${RUST_TOOLCHAIN:-1.97.0} bash "$S9/ci/build-engine.sh" "${ENGINE_DIR:?ENGINE_DIR with ENGINE_COMMIT}" "$ENGINE_COMMIT" "$W/bin" > "$W/build.log" 2>&1 \
+    || { tail -20 "$W/build.log"; exit 1; }
+  tail -9 "$W/build.log"
+  SRV=$W/bin/mongo-server-x86_64/mongo-server; PQ=$W/bin/pq-x86_64/pq
+else
+  cp "$SRV" "$W/bin/mongo-server-x86_64/mongo-server"; echo "local $(cd "$ENG" && git rev-parse --short HEAD)" > "$W/bin/mongo-server-x86_64/motore-commit.txt"
+  cp "$PQ" "$W/bin/pq-x86_64/pq"
+fi
 echo "== 1. fake Atlas and the shrunk kitchen (fake_atlas.sh)"
 [ -d "$W/atlas-states" ] && [ -d "$W/kitchen-small" ] || bash "$HERE/fake_atlas.sh" "$W" "$SRV" "$PY" | tail -6
-mkdir -p "$W/bin/mongo-server-x86_64" "$W/bin/pq-x86_64"
-cp "$SRV" "$W/bin/mongo-server-x86_64/mongo-server"; echo "local $(cd "$ENG" && git rev-parse --short HEAD)" > "$W/bin/mongo-server-x86_64/motore-commit.txt"
-cp "$PQ" "$W/bin/pq-x86_64/pq"
 round() { # round NAME COMMAND_JSON
   local name=$1 c=$2
   export RUN_ID=$((RANDOM * 7 + 1000)) S9_MODE=local MINUTE_S=${MINUTE_S:-15} CA_DIR=$W/ca-$name PACKAGES=$W/packages-$name

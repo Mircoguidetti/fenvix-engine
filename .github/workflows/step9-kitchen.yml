@@ -86,19 +86,24 @@ jobs:
         with:
           ref: ${{ needs.decide.outputs.engine_commit }}
           persist-credentials: false
-      - name: Build mongo-server and pq (the log) for ${{ matrix.arch }}, Ubuntu 24.04 like the machines
+      # the harness (this workflow's own commit) for its build script: the engine checkout above has none
+      - uses: actions/checkout@v4
+        if: matrix.want == '1'
+        with:
+          path: harness
+          persist-credentials: false
+      - name: Build mongo-server and pq (the log) for ${{ matrix.arch }}, Ubuntu 24.04 like the machines (reproducible recipe)
         if: matrix.want == '1'
         run: |
           command -v rustup >/dev/null || { curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none; echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"; export PATH="$HOME/.cargo/bin:$PATH"; }
           rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
           [ "$(uname -m)" = "${{ matrix.arch }}" ] || { echo "::error::runner is $(uname -m)"; exit 1; }
           [ "$(git rev-parse HEAD)" = "${{ needs.decide.outputs.engine_commit }}" ] || { echo "::error::checked out $(git rev-parse HEAD), not the resolved engine commit"; exit 1; }
-          cargo +"$RUST_TOOLCHAIN" build --release --locked -p mongo-server
-          cargo +"$RUST_TOOLCHAIN" build --release --locked --manifest-path proto/quaderno/Cargo.toml --bin pq
-          mkdir -p out/mongo-server-${{ matrix.arch }} out/pq-${{ matrix.arch }}
-          cp target/release/mongo-server out/mongo-server-${{ matrix.arch }}/; git rev-parse HEAD > out/mongo-server-${{ matrix.arch }}/motore-commit.txt
-          cp proto/quaderno/target/release/pq out/pq-${{ matrix.arch }}/
-          echo "build ${{ matrix.arch }}: commit $(git rev-parse HEAD), mongo-server $(sha256sum target/release/mongo-server | cut -c1-16), pq $(sha256sum proto/quaderno/target/release/pq | cut -c1-16)" | tee -a "$GITHUB_STEP_SUMMARY"
+          # step9/ci/build-engine.sh: one fixed folder + --remap-path-prefix, so the same commit gives the same bytes as
+          # the local round's build (fenvix-tests 0ff5bc2); out/build-ARCH.json carries the sha256
+          bash harness/step9/ci/build-engine.sh "$PWD" "${{ needs.decide.outputs.engine_commit }}" out > build.log 2>&1 || { tail -40 build.log; exit 1; }
+          tail -9 build.log
+          echo "build ${{ matrix.arch }}: commit $(cat out/mongo-server-${{ matrix.arch }}/motore-commit.txt), mongo-server $(sha256sum out/mongo-server-${{ matrix.arch }}/mongo-server | cut -c1-16), pq $(sha256sum out/pq-${{ matrix.arch }}/pq | cut -c1-16)" | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: matrix.want == '1'
         with:
