@@ -9,7 +9,10 @@ import sys
 OPS = [("save one step", "save_step"), ("resume, no gap", "resume[write/none]"), ("resume, short gap", "resume[write/short]"),
        ("resume, long gap", "resume[write/long]"), ("resume, cold (after a restart)", "resume[cold]"),
        ("resume, read phase", "resume[read]"), ("time travel", "time_travel"), ("list whole history", "list"),
-       ("list last 10", "list_limit10"), ("erase one end user", "erase_user")]
+       ("list last 10", "list_limit10"), ("erase one end user", "erase_user"),
+       # total review R1 point 3: the next reads of the same thread right after its cold resume
+       ("NEXT after cold: resume", "resume[cold]:next"), ("NEXT after cold: list last 10", "list_limit10:next"),
+       ("NEXT after cold: list whole history", "list:next"), ("NEXT after cold: time travel", "time_travel:next")]
 SYS = [("ours", "fenvix"), ("Postgres", "postgres"), ("mongod", "mongo")]
 
 

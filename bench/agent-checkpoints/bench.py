@@ -14,7 +14,9 @@ Phases (in this order, all recorded in ops.jsonl with timestamps):
   5. cold   - only with --cold-cmd: the command restarts every container of the line and drops the host's page cache
               (bench/agent-checkpoints/lines.py restart); then a resume of --cold-threads threads (fixed seed, the same
               for every target: threads neither read in phase 2 nor erased in phase 4, so none was read since its last
-              write), each read once, the first read after the restart. Op "resume[cold]".
+              write), each read once, the first read after the restart. Op "resume[cold]". Right after each, the
+              NEXT reads of that thread (total review R1 point 3): "resume[cold]:next", "list_limit10:next", "list:next",
+              "time_travel:next" (--no-cold-next leaves them out).
 Every read of every phase is compared with a hash of what was written (graph_runner.Expected): "wrong_reads" in the
 summary must be 0, and it is part of "ok". Before the sizes, --settle waits until our server's compactor is idle
 (targets.wait_compaction_idle); the wait is recorded in summary["settle"].
@@ -301,8 +303,10 @@ def erase_phase(target: targets.Target, threads: dict, rec: Recorder, n_users: i
 
 
 def cold_phase(target: targets.Target, threads: dict, rec: Recorder, n: int, seed: int, cmd: str, not_these: set,
-               expected: graph_runner.Expected) -> dict:
-    """Restart the line (cmd), then resume n threads once each: the first reads after the restart."""
+               expected: graph_runner.Expected, next_ops: bool = True) -> dict:
+    """Restart the line (cmd), then resume n threads once each: the first reads after the restart ("resume[cold]"); right
+    after each, the next reads of that same thread ("resume[cold]:next", "list_limit10:next", "list:next",
+    "time_travel:next"), unless next_ops is False."""
     import subprocess
 
     eligible = sorted(t for t in threads if t not in not_these)
@@ -316,14 +320,27 @@ def cold_phase(target: targets.Target, threads: dict, rec: Recorder, n: int, see
     ts = graph_runner.TimedSaver(saver, rec, expected=expected)
     errors = []
     for tid in chosen:
+        cfg = {"configurable": {"thread_id": tid, "checkpoint_ns": ""}}
         ts.context = {"phase": "cold", "kind": threads[tid].kind, "turns": threads[tid].turns}
         try:
-            ts.get_tuple({"configurable": {"thread_id": tid, "checkpoint_ns": ""}})
+            ts.get_tuple(cfg)
+            if next_ops:
+                # total review R1 point 3 (2026-11-12): the NEXT requests of the same customer, right after its first one
+                # after the restart (the founder's goal: the first request may pay S3, the next ones must be as fast as
+                # the others). Every read kind once, reported as "<op>:next" (bench-big-speed's bigmix.op_key naming).
+                ts.context = {"phase": "cold", "which": "next", "kind": threads[tid].kind, "turns": threads[tid].turns}
+                ts.get_tuple(cfg)
+                list(ts.list(cfg, limit=10))
+                list(ts.list(cfg))
+                ids = sorted(cid for ns, cid in expected.written_ids(tid) if ns == "")
+                if ids:
+                    cid = random.Random(f"{seed}:{tid}:next").choice(ids)
+                    ts.get_tuple({"configurable": {"thread_id": tid, "checkpoint_ns": "", "checkpoint_id": cid}})
         except Exception as ex:  # noqa: BLE001 - reported, the run is then marked failed
             errors.append(f"{tid}: {ex!r}")
     handle.close()
     return {"restart": restart, "threads": len(chosen), "eligible": len(eligible), "errors": errors[:10],
-            "n_errors": len(errors), "first_thread": chosen[0] if chosen else None}
+            "n_errors": len(errors), "first_thread": chosen[0] if chosen else None, "next_ops": bool(next_ops)}
 
 
 def summarize(rows: list[dict]) -> dict:
@@ -332,6 +349,8 @@ def summarize(rows: list[dict]) -> dict:
         key = r["op"]
         if r["op"] == "resume":
             key = f"resume[{r.get('phase')}{'/' + r['gap'] if r.get('gap') else ''}]"
+        if r.get("which") == "next":   # total review R1 point 3: the next reads after a cold resume
+            key += ":next"
         by[key].append(r["ms"])
         if r["op"] in ("save_step", "put"):
             by[f"{r['op']}[{r.get('kind')}]"].append(r["ms"])
@@ -406,6 +425,7 @@ def main() -> None:
     ap.add_argument("--settle-cap-s", type=int, default=2700, help="cap of the --settle wait (default 45 minutes)")
     ap.add_argument("--cold-cmd", default="", help="shell command that restarts the line; then the cold phase runs")
     ap.add_argument("--cold-threads", type=int, default=200)
+    ap.add_argument("--no-cold-next", action="store_true", help="skip the next reads after each cold resume (R1 point 3)")
     ap.add_argument("--engine-sha256", default=os.environ.get("BENCH_ENGINE_SHA256", ""),
                     help="sha256 of the mongo-server binary under test (our target); the gate checks it against the commit")
     ap.add_argument("--health-cmd", default="", help="shell command that checks every member of the line (bench-local "
@@ -452,7 +472,8 @@ def main() -> None:
         # restart starts it again): check every member right before it
         health.append(run_health(a.health_cmd, "before cold"))
     if a.cold_cmd:
-        cold = cold_phase(target, threads, rec, a.cold_threads, a.seed, a.cold_cmd, set(read_chosen) | set(erased), expected)
+        cold = cold_phase(target, threads, rec, a.cold_threads, a.seed, a.cold_cmd, set(read_chosen) | set(erased), expected,
+                          next_ops=not a.no_cold_next)
     status_end = targets.fenvix_status(a.uri) if a.target == "fenvix" else None
     if a.health_cmd:
         health.append(run_health(a.health_cmd, "end"))

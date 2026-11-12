@@ -42,10 +42,11 @@ def docker_run(calls, name):
 
 
 # ---- F8 ----
-def test_minio_memory_capped_cpu_not():
+def test_minio_memory_capped_cpu_not(monkeypatch):
     calls = record(None)
     fake = types.SimpleNamespace(client=lambda *a, **k: types.SimpleNamespace(list_buckets=lambda: {}, create_bucket=lambda **k: None))
-    sys.modules["boto3"] = fake
+    # monkeypatch, not a bare assignment: the stub must not stay in sys.modules for the tests that run after this one
+    monkeypatch.setitem(sys.modules, "boto3", fake)
     lines.up_minio()
     c = docker_run(calls, "minio")
     i = c.index("--memory")
