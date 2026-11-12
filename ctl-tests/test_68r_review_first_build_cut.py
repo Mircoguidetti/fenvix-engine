@@ -62,6 +62,8 @@ def test_first_build_cut_and_a_crash_before_the_staged_writes_are_durable():
     try:
         wait_until(lambda: any("/fx/manifest/" in k for k, _ in list_prefix(bucket, f"tenants/{DB}/fx/")), 60, every=0.05, what="the first version")
         t_version = time.time() - t0
+        # R68_KILL_AFTER_S: let P1 go on (acknowledging writes, with more in flight) before the kill
+        time.sleep(float(os.environ.get("R68_KILL_AFTER_S", "0")))
         p1.kill9()
         stop.set()
     finally:
