@@ -3218,15 +3218,20 @@ impl Tenant {
         Ok(Arc::new(crate::fx::read::Snap { slate: db.snapshot().await?, hold, env: self.env }))
     }
 
-    /// Rough size in bytes of the data in the tenant's SSTs (from the manifest: no request). Unflushed writes are not
-    /// counted. Used to choose between point reads and a range scan.
+    /// Rough size in bytes of the tenant's data: its SSTs (from SlateDB's manifest) and the runs of the version it reads
+    /// with (from our manifest), no request. Unflushed writes are not counted. Used to choose between point reads and a
+    /// range scan. P-fix-read-amplification: the runs were not counted, so a database held in runs (a generated one, or
+    /// one whose rows were absorbed and dropped) looked as small as its few SSTs, and a whole-collection scan looked
+    /// cheaper than a few hundred point reads (`mongo-server` `coll.rs`, `prefer_scan`).
     pub fn approx_bytes(&self) -> u64 {
         let m = match self.mode.as_ref() {
             Some(Mode::Reader(r)) => r.manifest(),
             Some(Mode::Writer(db)) => db.manifest(),
             None => return 0,
         };
-        m.l0().iter().map(|v| v.estimate_size()).sum::<u64>() + m.compacted().iter().map(|r| r.estimate_size()).sum::<u64>()
+        let ssts = m.l0().iter().map(|v| v.estimate_size()).sum::<u64>() + m.compacted().iter().map(|r| r.estimate_size()).sum::<u64>();
+        let runs = self.fx.as_ref().map_or(0, |v| v.groups.iter().filter_map(|g| g.sealed.as_ref()).chain(v.delta.iter()).map(|h| h.line.size).sum::<u64>());
+        ssts + runs
     }
 
     /// Key/value pairs with `start <= key < end` (`end == None`: to the end of the keyspace), at most `limit`,

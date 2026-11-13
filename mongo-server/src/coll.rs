@@ -483,44 +483,112 @@ async fn take_in_order(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>], mut found: 
         .collect())
 }
 
-/// The documents with these ids (in the order of `ids`) from one ascending range scan over the id span.
+/// The documents with these ids (in the order of `ids`) from one ascending range scan over the id span, capped
+/// ([`scan_span`]): the ids the scan did not reach are read by point reads.
 async fn docs_by_scan(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Document>> {
     let prefix_v = doc_prefix(coll);
     let prefix = &prefix_v[..];
-    let want: HashSet<&[u8]> = ids.iter().map(|i| i.as_slice()).collect();
-    let (Some(lo), Some(hi)) = (ids.iter().min(), ids.iter().max()) else { return Ok(vec![]) };
-    let mut start = prefix.to_vec();
-    start.extend(lo);
-    let mut stop = prefix.to_vec();
-    stop.extend(hi);
-    stop.push(0);
     let mut found: HashMap<Vec<u8>, Document> = HashMap::new();
-    // fix round of big-speed: chunks of about `SCAN_CHUNK_BYTES`, not of FETCH_CHUNK rows whatever their size
-    let mut cs = ChunkSize::new(FETCH_CHUNK);
-    loop {
-        let chunk = cs.cur;
-        let rows = g.scan_range(&start, Some(&stop), false, Some(chunk), FETCH_SCAN_READ_AHEAD).await?;
-        let n = rows.len();
-        cs.seen(&rows);
-        for (k, v) in &rows {
-            let id = &k[prefix.len()..];
-            if want.contains(id) {
-                found.insert(id.to_vec(), decode(v)?);
+    let rest = scan_span(g, prefix, ids, &mut 0, |id, v| {
+        found.insert(id.to_vec(), decode(v)?);
+        Ok(())
+    })
+    .await?;
+    if let Some(from) = rest {
+        let mut late: Vec<&Vec<u8>> = ids.iter().filter(|id| !found.contains_key(*id) && reached_not(prefix, id, &from)).collect();
+        late.sort();
+        late.dedup();
+        let keys: Vec<Vec<u8>> = late.iter().map(|id| [prefix, &id[..]].concat()).collect();
+        for (id, v) in late.into_iter().zip(g.get_many(&keys).await?) {
+            if let Some(v) = v {
+                found.insert(id.clone(), decode(&v)?);
             }
         }
-        if n < chunk {
-            break;
-        }
-        let mut k = rows.last().unwrap().0.to_vec();
-        k.push(0);
-        if k >= stop {
-            break; // the chunk ended on the last wanted key: nothing is left (an empty range would panic the store)
-        }
-        start = k;
     }
     // P-command-cpu: each found document is moved out, not deep-copied (a whole-history list of large checkpoints
     // copied every one of them here)
     take_in_order(g, coll, ids, found).await
+}
+
+/// P-fix-read-amplification: the rows an id-span scan for `n` documents may read before it stops and leaves the rest to
+/// point reads. The span of the ids an index read wants is not the wanted rows: an index over many customers (or any
+/// order other than the documents' keys) wants a few documents spread over the whole collection, and the uncapped scan
+/// read every row between them (MEASURED: about 4,600 rows per document examined on a 3 GiB generated database after
+/// updates, 1.6 GB fetched for 800 documents). With the cap a fetch reads at most about 2 rows per wanted document
+/// plus a constant, at any database size; a dense span (the case the scan is for) still ends within it.
+fn span_budget(n: usize) -> usize {
+    2 * n + 32
+}
+
+/// The cap of [`span_budget`] (on by default; `FENVIX_NO_SPAN_BUDGET=1` turns it off: measurements and the negative
+/// control of `ctl-tests/test_87_read_amplification.py`).
+fn span_budget_on() -> bool {
+    static OFF: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    !*OFF.get_or_init(|| std::env::var("FENVIX_NO_SPAN_BUDGET").is_ok_and(|v| v == "1"))
+}
+
+/// Id-span scans for a fetch of documents, rows they read, and those that stopped at their cap (serverStatus
+/// `fenvix.fetch`, diagnostics and tests).
+pub static FETCH_SCANS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static FETCH_SCAN_ROWS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static FETCH_SCAN_STOPS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Whether the document key of `id` lies at or after `from`: the scan that stopped at `from` did not reach it.
+fn reached_not(prefix: &[u8], id: &[u8], from: &[u8]) -> bool {
+    [prefix, id].concat()[..] >= from[..]
+}
+
+/// One ascending scan over the span of `ids` (the smallest to the largest), handing every row whose id is wanted to
+/// `f` (once per row, whatever the number of times an id is in `ids`). It reads at most [`span_budget`] rows: `None`
+/// when it reached the end of the span, else `Some(k)`, the key where it stopped; the wanted ids whose key is at or
+/// after `k` ([`reached_not`]) were not looked at, and the caller reads them by point reads. `read` gets the bytes of
+/// every row scanned. Chunks are about `SCAN_CHUNK_BYTES` of rows (big-speed's fix round), within the cap.
+async fn scan_span(g: &mut impl Rd, prefix: &[u8], ids: &[Vec<u8>], read: &mut u64, mut f: impl FnMut(&[u8], &Bytes) -> R<()>) -> R<Option<Vec<u8>>> {
+    use std::sync::atomic::Ordering::Relaxed;
+    let (Some(lo), Some(hi)) = (ids.iter().min(), ids.iter().max()) else { return Ok(None) };
+    let want: HashSet<&[u8]> = ids.iter().map(|i| i.as_slice()).collect();
+    let mut start = [prefix, &lo[..]].concat();
+    let mut stop = [prefix, &hi[..]].concat();
+    stop.push(0);
+    let capped = span_budget_on();
+    let mut left = if capped { span_budget(ids.len()) } else { usize::MAX };
+    // the first request of a capped scan reads about what its cap needs (rows of 1 KiB), not 4 MiB per run: a sparse span
+    // stops within it; the next requests are sized from the rows seen
+    let mut read_ahead = if capped { (left.saturating_mul(1024)).clamp(64 << 10, FETCH_SCAN_READ_AHEAD) } else { FETCH_SCAN_READ_AHEAD };
+    FETCH_SCANS.fetch_add(1, Relaxed);
+    let mut cs = ChunkSize::new(FETCH_CHUNK);
+    loop {
+        if left == 0 {
+            FETCH_SCAN_STOPS.fetch_add(1, Relaxed);
+            return Ok(Some(start));
+        }
+        let chunk = cs.cur.min(left);
+        let rows = g.scan_range(&start, Some(&stop), false, Some(chunk), read_ahead).await?;
+        let n = rows.len();
+        cs.seen(&rows);
+        *read += rows.iter().map(|(k, v)| (k.len() + v.len()) as u64).sum::<u64>();
+        FETCH_SCAN_ROWS.fetch_add(n as u64, Relaxed);
+        if capped {
+            left -= n;
+            let bytes: usize = rows.iter().map(|(k, v)| k.len() + v.len()).sum();
+            read_ahead = (bytes / n.max(1)).saturating_mul(left.min(FETCH_CHUNK)).clamp(64 << 10, FETCH_SCAN_READ_AHEAD);
+        }
+        for (k, v) in &rows {
+            let id = &k[prefix.len()..];
+            if want.contains(id) {
+                f(id, v)?;
+            }
+        }
+        if n < chunk {
+            return Ok(None);
+        }
+        let mut k = rows.last().unwrap().0.to_vec();
+        k.push(0);
+        if k >= stop {
+            return Ok(None); // the chunk ended on the last wanted key: nothing is left (an empty range would panic the store)
+        }
+        start = k;
+    }
 }
 
 const FETCH_CHUNK: usize = 20_000;
@@ -532,37 +600,36 @@ async fn each_doc_by_ids(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>], mut f: im
     tenant_bench::counting::set_phase(2);
     let mut n_docs = 0;
     if prefer_scan(g.approx_bytes(), ids.len()) {
+        // an id given twice is handed over once, at its last position (as the uncapped scan did)
         let pos: HashMap<&[u8], usize> = ids.iter().enumerate().map(|(i, id)| (id.as_slice(), i)).collect();
-        let (Some(lo), Some(hi)) = (ids.iter().min(), ids.iter().max()) else { return Ok(0) };
-        let mut start = prefix.clone();
-        start.extend(lo);
-        let mut stop = prefix.clone();
-        stop.extend(hi);
-        stop.push(0);
         let mut seen = vec![false; ids.len()];
-        // fix round of big-speed: chunks of about `SCAN_CHUNK_BYTES`, not of FETCH_CHUNK rows whatever their size
-        let mut cs = ChunkSize::new(FETCH_CHUNK);
-        loop {
-            let chunk = cs.cur;
-            let rows = g.scan_range(&start, Some(&stop), false, Some(chunk), FETCH_SCAN_READ_AHEAD).await?;
-            let n = rows.len();
-            cs.seen(&rows);
-            for (k, v) in &rows {
-                if let Some(&i) = pos.get(&k[prefix.len()..]) {
-                    n_docs += 1;
-                    seen[i] = true;
-                    f(i, decode(v)?)?;
+        let rest = scan_span(g, &prefix, ids, &mut 0, |id, v| {
+            let i = pos[id];
+            n_docs += 1;
+            seen[i] = true;
+            f(i, decode(v)?)
+        })
+        .await?;
+        if let Some(from) = rest {
+            // the ids the capped scan did not reach: point reads, in chunks of about `SCAN_CHUNK_BYTES` of documents
+            // (big-speed's fix round)
+            let late: Vec<usize> = (0..ids.len()).filter(|&i| !seen[i] && pos[ids[i].as_slice()] == i && reached_not(&prefix, &ids[i], &from)).collect();
+            let mut cs = ChunkSize::new(FETCH_CHUNK);
+            let mut base = 0usize;
+            while base < late.len() {
+                let chunk = &late[base..(base + cs.cur).min(late.len())];
+                let keys: Vec<Vec<u8>> = chunk.iter().map(|&i| [&prefix[..], &ids[i][..]].concat()).collect();
+                let vals = g.get_many(&keys).await?;
+                cs.seen_sizes(vals.len(), vals.iter().map(|v| v.as_ref().map_or(0, |v| v.len() as u64)).sum());
+                for (&i, v) in chunk.iter().zip(vals) {
+                    if let Some(v) = v {
+                        n_docs += 1;
+                        seen[i] = true;
+                        f(i, decode(&v)?)?;
+                    }
                 }
+                base += chunk.len();
             }
-            if n < chunk {
-                break;
-            }
-            let mut k = rows.last().unwrap().0.to_vec();
-            k.push(0);
-            if k >= stop {
-                break;
-            }
-            start = k;
         }
         for (i, id) in ids.iter().enumerate() {
             if !seen[i] {
@@ -2830,35 +2897,25 @@ async fn docs_aligned(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>], read: &mut u
         return Ok(vec![]);
     }
     if prefer_scan(g.approx_bytes(), ids.len()) {
-        let want: HashSet<&[u8]> = ids.iter().map(|i| i.as_slice()).collect();
-        let (lo, hi) = (ids.iter().min().unwrap(), ids.iter().max().unwrap());
-        let mut start = [&prefix[..], lo].concat();
-        let mut stop = [&prefix[..], hi].concat();
-        stop.push(0);
         let mut found: HashMap<Vec<u8>, Document> = HashMap::with_capacity(ids.len());
-        // fix round of big-speed: chunks of about `SCAN_CHUNK_BYTES`
-        let mut cs = ChunkSize::new(FETCH_CHUNK);
-        loop {
-            let chunk = cs.cur;
-            let rows = g.scan_range(&start, Some(&stop), false, Some(chunk), FETCH_SCAN_READ_AHEAD).await?;
-            let n = rows.len();
-            cs.seen(&rows);
-            *read += rows.iter().map(|(k, v)| (k.len() + v.len()) as u64).sum::<u64>();
-            for (k, v) in &rows {
-                let id = &k[prefix.len()..];
-                if want.contains(id) {
-                    found.insert(id.to_vec(), decode(v)?);
+        let rest = scan_span(g, &prefix, ids, read, |id, v| {
+            found.insert(id.to_vec(), decode(v)?);
+            Ok(())
+        })
+        .await?;
+        if let Some(from) = rest {
+            let mut late: Vec<&Vec<u8>> = ids.iter().filter(|id| !found.contains_key(*id) && reached_not(&prefix, id, &from)).collect();
+            late.sort();
+            late.dedup();
+            let keys: Vec<Vec<u8>> = late.iter().map(|id| [&prefix[..], &id[..]].concat()).collect();
+            let vals = g.get_many(&keys).await?;
+            // (a point read costs at least a block)
+            *read += vals.iter().map(|v| v.as_ref().map_or(0, |v| v.len() as u64).max(POINT_READ_BYTES)).sum::<u64>();
+            for (id, v) in late.into_iter().zip(vals) {
+                if let Some(v) = v {
+                    found.insert(id.clone(), decode(&v)?);
                 }
             }
-            if n < chunk {
-                break;
-            }
-            let mut k = rows.last().unwrap().0.to_vec();
-            k.push(0);
-            if k >= stop {
-                break;
-            }
-            start = k;
         }
         return Ok(ids.iter().map(|i| found.remove(i)).collect());
     }
