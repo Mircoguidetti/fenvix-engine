@@ -203,7 +203,7 @@ def job_hours(c):
                 if p in c["programs"]:
                     if p == "first-next-ops":   # by its group size (30 customers per operation by default)
                         fa = (c.get("first_next_ops_args") or "").split()
-                        hours *= min(1.0, float(fa[fa.index("--per-op") + 1]) / 30) if "--per-op" in fa else 1.0
+                        hours *= float(fa[fa.index("--per-op") + 1]) / 30 if "--per-op" in fa else 1.0
                     h[p.replace("-", "_")] = hours
         if "write-peak" in c["programs"]:
             # its own --minutes plus the fixed part of JOB_HOURS["write_peak"] (0.6 h for the 25 minutes of the full

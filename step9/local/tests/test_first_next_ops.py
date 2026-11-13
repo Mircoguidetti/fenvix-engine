@@ -75,6 +75,7 @@ class Server:
         self.inserted, self.updates, self.write_concerns, self.max_ms, self.log, self.opened = [], [], [], [], [], []
         self.admin = self
         self.amplified = False
+        self.windows = []
         self.compactor = {"publishes": 1, "absorbs": 0}
 
     def __getitem__(self, db):
@@ -105,7 +106,7 @@ class Server:
 
     def explain(self, q, hinted):
         assert hinted == "stato_ts" and q["stato"] == "spedito"
-        assert q["ts"]["$lt"] - q["ts"]["$gte"] == dt.timedelta(days=1)
+        self.windows.append((q["ts"]["$lt"] - q["ts"]["$gte"]).total_seconds())
         self.bytes += 1_600_000_000 if self.amplified else 50_000_000
         self.rows += 3_700_000 if self.amplified else 1_600
         self.get += 1
@@ -291,6 +292,24 @@ def test_reads_after_writes_shows_the_amplification_and_the_writes():
     assert s["after-writes"]["rows_per_doc_times_before"] == 2312.5 and s["after-writes"]["mb_fetched_p50"] == 1600.0
     t = raw.text({"db": "d", "reads_per_stage": 4, "writes": w, "settle": {}, "stages": s})
     assert "rows per document x2312.5" in t
+
+
+def test_the_window_is_sized_to_examine_about_800_documents_at_any_size():
+    year = raw.T_SPAN_S
+    # the probe's 3 GiB database: about 1.44 million orders -> about one day (the probe's own window)
+    small = {"caricamento": {"per_collezione": {"ordini": 1_440_000}}}
+    assert 0.9 * 86400 < raw.window_seconds(small, 800) <= 86400
+    # 1 TB: about 480 million orders -> a window of a few minutes, 300 times shorter, the same documents examined
+    big = {"caricamento": {"per_collezione": {"ordini": 480_000_000}}}
+    w = raw.window_seconds(big, 800)
+    assert 250 < w < 280 and abs(w * 480_000_000 / 5 / year - 800) < 1
+    # only the total document count known: 15% are orders; nothing known: the probe's day
+    assert abs(raw.window_seconds({"caricamento": {"documenti": 3_200_000_000}}, 800) - w) < 1
+    assert raw.window_seconds(None, 800) == 86400.0 and raw.window_seconds({"caricamento": {}}, 800) == 86400.0
+    # the stage sends the window it was given
+    srv = Server()
+    raw.stage(srv, srv, "d", raw.the_reads(["cli-000001"], 2, 5), "before", [], w)
+    assert all(abs(x - w) < 1e-3 for x in srv.windows) and len(srv.windows) == 2
 
 
 def test_a_timed_out_read_is_a_result_and_stops_its_stage():

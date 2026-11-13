@@ -13,5 +13,6 @@
   "reads-after-writes"
  ],
  "spare": null,
- "pantry": "fenvix-kitchen-pantry-1000000001"
+ "pantry": "fenvix-kitchen-pantry-1000000001",
+ "first_next_ops_args": "--per-op 100 --max-s 120"
 }

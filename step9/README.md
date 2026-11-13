@@ -230,8 +230,12 @@ one ballast database.
     updates, right after them, and after the compactor went quiet: seconds, documents examined, rows read from sealed
     runs per document, bytes fetched. The slowdown found by the generator's second session (15 to 40 times after
     updates) is being fixed; this measures it at 1 TB either way. A read is cut at 180 s and its stage stops there.
+    Its time window is sized from the state file's order count so that a read examines about 800 documents at any
+    size (the probe's one day on 3 GiB would be about 260,000 documents on 1 TB).
   - then first-next-ops again on other cold customers (label after-writes) and
     `programs/first_next_compare.py` after-writes against before-writes.
+- Job M2 (`commands/03`) also runs first-next-ops, on the largest Atlas-shaped database: the same five requests at
+  10 GB, to set beside the 1 TB ones. It saves 150 messages there, so M2 comes after M1 (it already did: write-peak).
 - Against MongoDB at the same size: `first_next_ops.py` and `first_next_compare.py` run unchanged against any MongoDB
   URI (on a mongod the counters are WiredTiger's pages and bytes read into its cache). What is NOT built: the machine
   role that starts a mongod replica set, loads the Atlas-shaped databases through the founder's script and restarts it

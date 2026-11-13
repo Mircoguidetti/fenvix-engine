@@ -5,9 +5,14 @@ document examined instead of 2, and took 15 to 40 times longer (3 GiB: 0.4-0.8 s
 No wrong answer. At 1 TB it decides every such read after writes, so the round measures it, on the big database,
 through the measured cook, with the cook's counters around every read.
 
-The read is the probe's own (research/generator-1tb/probe_fetch.py): orders of one state and one customer in a one-day
-window, forced through the index:  ordini.find({stato: "spedito", cliente, ts in [t, t + 1 day)}).hint("stato_ts"),
-run as explain (executionStats: documents examined, documents returned), the same K reads at each stage:
+The read is the probe's own (research/generator-1tb/probe_fetch.py): orders of one state and one customer in a time
+window, forced through the index:  ordini.find({stato: "spedito", cliente, ts in [t, t + window)}).hint("stato_ts"),
+run as explain (executionStats: documents examined, documents returned), the same K reads at each stage.
+The window: the index holds every customer's orders, so the read examines every order of that state in the window to
+keep one customer's. The probe's one day examined about 800 documents on 3 GiB; on 1 TB one day holds about 260,000
+(ESTIMATED: 15% of the documents are orders, 5 states, a year), which would not end even before any write. So the
+window is sized from the state file's own order count to examine about --examine documents (800) at any size; the
+record keeps the window and the documents really examined. The stages:
   1 before       the database as the generator (or the load) left it, read only so far
   2 after-writes right after W updates of orders (10% of the orders of sampled customers: a new state, +1.5 on the
                  total: the generator proof's own writes) acknowledged at w: majority; every update is timed
@@ -22,7 +27,7 @@ server may still be working on it; more reads would only queue behind). A timed-
 of the program. The program fails (exit 1) only when a read or a write errors otherwise, or stage 1 measured nothing.
 
 Usage: reads_after_writes.py OUT_DIR --uri URI (--states DIR | --db NAME --customers-n N) [--reads 6] [--updates 13000]
-                             [--write-customers 150] [--max-read-s 180] [--settle-min 20] [--seed 5]
+                             [--write-customers 150] [--max-read-s 180] [--settle-min 20] [--seed 5] [--examine 800]
   -> OUT_DIR/reads-after-writes-summary.json, reads-after-writes.jsonl, reads-after-writes.txt"""
 import argparse
 import datetime as dt
@@ -50,6 +55,21 @@ def fx(client):
         return None
 
 
+def window_seconds(st, examine):
+    """The window that holds about `examine` orders of one state, from the state file's order count (the script's 5
+    states, spread over its year). Without a count: the probe's one day."""
+    car = (st or {}).get("caricamento") or {}
+    orders = (car.get("per_collezione") or {}).get("ordini")
+    if isinstance(orders, dict):
+        orders = orders.get("documenti") or orders.get("doc")
+    if not orders and car.get("documenti"):
+        orders = 0.15 * float(car["documenti"])          # the script's mix: 15% of the documents are orders
+    if not orders:
+        return 86400.0
+    per_second = float(orders) / len(STATES) / T_SPAN_S
+    return max(1.0, min(86400.0, examine / per_second))
+
+
 def the_reads(names, k, seed):
     """K (customer, window start) pairs, fixed by the seed: the same reads at every stage."""
     rng = random.Random(f"{seed}:reads")
@@ -61,14 +81,14 @@ def the_reads(names, k, seed):
     return out
 
 
-def one_read(coll, cli, t):
-    q = {"stato": "spedito", "cliente": cli, "ts": {"$gte": t, "$lt": t + dt.timedelta(days=1)}}
+def one_read(coll, cli, t, window_s=86400.0):
+    q = {"stato": "spedito", "cliente": cli, "ts": {"$gte": t, "$lt": t + dt.timedelta(seconds=window_s)}}
     e = coll.find(q).hint("stato_ts").explain()
     ex = e.get("executionStats") or {}
     return int(ex.get("totalDocsExamined", 0)), int(ex.get("nReturned", 0))
 
 
-def stage(client_for_reads, counters_client, dbname, reads, name, rows):
+def stage(client_for_reads, counters_client, dbname, reads, name, rows, window_s=86400.0):
     """Run the K reads of one stage; stop the stage at the first timed-out read."""
     coll = client_for_reads[dbname]["ordini"]
     for i, (cli, t) in enumerate(reads):
@@ -76,7 +96,7 @@ def stage(client_for_reads, counters_client, dbname, reads, name, rows):
         t0 = time.perf_counter()
         err, timed_out, ex, ret = None, False, None, None
         try:
-            ex, ret = one_read(coll, cli, t)
+            ex, ret = one_read(coll, cli, t, window_s)
         except Exception as e:  # noqa: BLE001
             msg = f"{type(e).__name__}: {str(e)[:200]}"
             timed_out = "timed out" in msg.lower() or "timeout" in type(e).__name__.lower()
@@ -205,31 +225,33 @@ def main(argv=None):
     ap.add_argument("--max-read-s", type=float, default=180.0)
     ap.add_argument("--settle-min", type=float, default=20.0)
     ap.add_argument("--seed", type=int, default=5)
+    ap.add_argument("--examine", type=float, default=800.0, help="documents one read should examine (sizes the window)")
     a = ap.parse_args(argv)
     import pymongo
     os.makedirs(a.out, exist_ok=True)
     client = pymongo.MongoClient(a.uri, serverSelectionTimeoutMS=30000)
     reader = pymongo.MongoClient(a.uri, serverSelectionTimeoutMS=30000, socketTimeoutMS=int(a.max_read_s * 1000))
-    dbname, n = a.db, a.customers_n
+    dbname, n, st0 = a.db, a.customers_n, None
     if a.states:
         states = fn.find_states(a.states)
         on_server = set(client.list_database_names())
         cand = sorted((d for d in states if d in on_server and (not a.db or d == a.db)),
                       key=lambda d: -float((states[d].get("caricamento") or {}).get("byte_bson") or 0))
         if cand:
-            dbname, n = cand[0], int(states[cand[0]]["clienti"]["n"])
+            dbname, n, st0 = cand[0], int(states[cand[0]]["clienti"]["n"]), states[cand[0]]
     rows, w, st = [], {}, {}
+    win = window_seconds(st0, a.examine)
     if dbname and n:
         names = [f"cli-{i:06d}" for i in range(n)]
         reads = the_reads(names, a.reads, a.seed)
-        stage(reader, client, dbname, reads, "before", rows)
+        stage(reader, client, dbname, reads, "before", rows, win)
         w = writes(client, dbname, names, a.write_customers, a.updates, a.seed)
         print(json.dumps({"writes": {k: v for k, v in w.items() if k != "errors"}}), flush=True)
-        stage(reader, client, dbname, reads, "after-writes", rows)
+        stage(reader, client, dbname, reads, "after-writes", rows, win)
         st = settle(client, a.settle_min)
-        stage(reader, client, dbname, reads, "settled", rows)
+        stage(reader, client, dbname, reads, "settled", rows, win)
     summary = {"program": "reads-after-writes", "db": dbname, "reads_per_stage": a.reads, "max_read_s": a.max_read_s,
-               "seed": a.seed, "our_counters": fx(client) is not None, "writes": w, "settle": st, "stages": summarize(rows)}
+               "seed": a.seed, "window_s": round(win, 1), "examine_target": a.examine, "our_counters": fx(client) is not None, "writes": w, "settle": st, "stages": summarize(rows)}
     with open(os.path.join(a.out, "reads-after-writes.jsonl"), "w") as f:
         for r in rows:
             f.write(json.dumps(r) + "\n")

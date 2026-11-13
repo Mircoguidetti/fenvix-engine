@@ -330,18 +330,23 @@ def plan_1tb(gib=931.4, gen="c7i.2xlarge", cook="m7i.large", log="c7g.medium", e
     line("B1, read rounds and first-next (reads only)", b1,
          f"{b1_h} h (decide.py: boot 0.3 + rounds 1.8) x (cook, log {kitchen:.4f} + extras client {hour(extras_client):.4f}) + "
          f"cross-zone 0.05 + GETs 0.10")
-    w1_h = 2.3
+    w1_h = 3.0
     w1 = (kitchen + hour(extras_client)) * w1_h + 0.05 + 0.50
     line("W1, first-next-ops and reads-after-writes", w1,
-         f"{w1_h} h (decide.py: boot 0.3 + start 0.2 + first-next-ops 0.3 + reads-after-writes 1.5, an upper bound) x "
+         f"{w1_h} h (decide.py: boot 0.3 + start 0.2 + first-next-ops with 100 customers per operation 1.0 + "
+         f"reads-after-writes 1.5, an upper bound) x "
          f"({kitchen:.4f} + {hour(extras_client):.4f}) + cross-zone 0.05 + GETs 0.50 (upper bound: up to 12 amplified "
          f"reads cut at 180 s; the bytes themselves are free inside the region)")
+    m2x = (kitchen + hour(cook) + hour(extras_client)) * 0.3
+    line("M2, first-next-ops at the Atlas size", m2x,
+         f"0.3 h more in job M2 (the same five requests on the largest Atlas-shaped database, for the comparison "
+         f"across sizes) x ({kitchen:.4f} + spare {hour(cook):.4f} + {hour(extras_client):.4f})")
     st_gb = stored + bson_gb * GEN_PARTS_PER_BSON
     st = st_gb * GBM / 30 * days_kept
     line("S3 storage of the 1 TB database", st, f"{st_gb:.0f} GB (runs {stored:.0f} + partition files until the publish "
          f"{bson_gb * GEN_PARTS_PER_BSON:.0f}) x {GBM} x {days_kept} days / 30; {st_gb * GBM / 30:.2f} $ for every further day")
-    lo, hi = (out[0][0] + b1 + w1 + st), (out[1][0] + b1 + w1 + st)
-    print(f"  THE 1 TB ADDITION, ESTIMATED: {lo:.2f} to {hi:.2f} $, {out[0][1] + b1_h + w1_h:.1f} to {out[1][1] + b1_h + w1_h:.1f} h "
+    lo, hi = (out[0][0] + b1 + w1 + m2x + st), (out[1][0] + b1 + w1 + m2x + st)
+    print(f"  THE 1 TB ADDITION, ESTIMATED: {lo:.2f} to {hi:.2f} $, {out[0][1] + b1_h + w1_h + 0.3:.1f} to {out[1][1] + b1_h + w1_h + 0.3:.1f} h "
           f"of jobs; each job under the default $5 cap")
     # the mongod line at the Atlas size: NOT BUILT (no machine role yet); printed so the amount is known before it is
     mg_h = 0.4 + 2.8 + 0.5
