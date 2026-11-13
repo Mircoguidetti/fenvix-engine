@@ -188,3 +188,80 @@ async fn cpg_close_time_pass_never_loses_unabsorbed_l0() {
     // compactors on: the pass must not have moved the unabsorbed L0 SSTs
     assert_eq!(on.1, on.0, "compactors on: the pass moved unabsorbed L0 SSTs ({} -> {})", on.0, on.1);
 }
+
+/// runwriter-and-stall (CI d660ea9, test_51r sealed runs 6, 7 and 9: no insert taken within 30 s after the store came
+/// back). A database with a compactor is reopened (after a lease loss) with L0 at SlateDB's limit, every L0 SST absorbed,
+/// and several memtables of WAL to replay. SlateDB's replay applies backpressure for each memtable: it waited for a flush
+/// that waits for L0 to shrink, which only the compactor's fold does, and the compactor starts after the writer's open,
+/// so the open never returned. Now the wake runs the gated compaction pass first (every L0 row is at or below X_d, so it
+/// may move them, rule 8): the open returns, and every row reads back.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn wake_with_full_absorbed_l0_and_wal_opens_the_writer() {
+    let _s = SERIAL.lock().await;
+    setup();
+    crate::lifecycle::L0_MAX_SSTS_OVERRIDE.store(7, Relaxed); // flushes stop with 6 SSTs in L0 (6 + 1 reaches 7)
+    let tiers0 = crate::tiered::TIERS.load(Relaxed);
+    crate::tiered::TIERS.store(4, Relaxed); // the server's default scheduler (the pass needs one)
+    compactor::SERVER_ON.store(true, Relaxed);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let (queue, rx) = crate::lifecycle::CompactionQueue::new();
+    let lc = crate::lifecycle::Lifecycle::new(Arc::new(crate::counting::CountingStore::new(Arc::clone(&store))), Some(Arc::clone(&queue)));
+    let maint = crate::lifecycle::Maintenance::start(Arc::clone(&store), Arc::clone(&store), queue, rx, Arc::clone(&lc.touched), Arc::clone(&lc.maint_locks), 2, Duration::from_secs(3600), Duration::from_secs(3600));
+    let id = "wake-full-l0";
+    let mut t = lc.create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(vec![b'a'; 40]))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let k = knobs();
+    let c = start(&mut t, &store, &k, true).await;
+    // L0 up to 6 SSTs, all absorbed (the fold is off: they stay in L0)
+    let mut r = 0;
+    while t.writer_l0().unwrap() < 6 {
+        for i in 0..80 {
+            apply(&mut t, &mut m, vec![(ckey(10 + r % 10, i), Some(format!("l0-{r}-{i}").into_bytes()))]).await;
+        }
+        flush(&t).await;
+        r += 1;
+        assert!(r < 60, "setup: L0 did not reach 6 SSTs");
+    }
+    c.drain(false).await.unwrap();
+    let l0 = t.writer_l0().unwrap();
+    c.stop().await;
+    // rows only in the WAL: about 4 memtables (3 KiB each), which cannot flush while L0 is full, over the next writer's
+    // limit on unflushed bytes (8 KiB) and well within what an emptied L0 holds (as in the server, where a memtable is
+    // MiBs and the WAL of a stalled writer fits in L0 once it is compacted)
+    for i in 0..140 {
+        apply(&mut t, &mut m, vec![(ckey(30 + i % 5, i), Some(format!("wal-{i}-{}", "w".repeat(60)).into_bytes()))]).await;
+    }
+    t.abandon().await; // a lease loss: no clean close, the WAL is replayed by the next writer
+    // the next writer's limit on unflushed bytes is under what its replay holds (in the server the live writer stalls at
+    // that limit with L0 full, so its WAL holds about that much: here the limit is lowered for the replay only)
+    crate::lifecycle::MAX_UNFLUSHED_OVERRIDE.store(8 << 10, Relaxed);
+    let passes0 = crate::lifecycle::WAKE_GATED_PASSES.load(Relaxed);
+    let mut t = lc.wake(id).await.unwrap();
+    let t0 = Instant::now();
+    let opened = tokio::time::timeout(Duration::from_secs(30), t.upgrade()).await;
+    let open_took = t0.elapsed();
+    let gated = crate::lifecycle::WAKE_GATED_PASSES.load(Relaxed) - passes0;
+    let mut wrong = 0;
+    if matches!(opened, Ok(Ok(()))) {
+        for (key, want) in &m {
+            if t.get(key).await.unwrap().as_deref() != Some(&want[..]) {
+                wrong += 1;
+            }
+        }
+    }
+    let l0_after = crate::lifecycle::l0_count(&store, id).await.unwrap();
+    t.abandon().await;
+    eprintln!("wake full L0: L0 at the abandon {l0}, in the stored manifest after the wake {l0_after}; the writer's open {} after {open_took:?}; gated passes {gated}; rows {} wrong {wrong}", match &opened { Ok(Ok(())) => "returned".to_string(), Ok(Err(e)) => format!("failed: {e:#}"), Err(_) => "did not return".to_string() }, m.len());
+    let _ = maint.shutdown().await;
+    crate::lifecycle::MAX_UNFLUSHED_OVERRIDE.store(0, Relaxed);
+    compactor::SERVER_ON.store(false, Relaxed);
+    crate::tiered::TIERS.store(tiers0, Relaxed);
+    teardown();
+    assert!(l0 >= crate::lifecycle::L0_GUARD, "setup: L0 at the abandon {l0}, under the guard");
+    assert!(matches!(opened, Ok(Ok(()))), "the writer's open did not return within 30 s with L0 full ({open_took:?})");
+    assert_eq!(wrong, 0, "rows read wrong after the reopen (rule 8)");
+}

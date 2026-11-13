@@ -9,7 +9,7 @@
 //! * Compaction and GC run outside the writer, in `Maintenance`.
 
 use crate::counting::{CountingStore, Snapshot};
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use futures::StreamExt;
 use bytes::Bytes;
 use object_store::path::Path;
@@ -31,6 +31,21 @@ pub const L0_COMPACT_THRESHOLD: usize = 4;
 /// `Settings::l0_max_ssts` default is 8; a writer whose memtable flush would exceed it blocks.
 /// Wait for compaction before writing when a tenant is already this close.
 pub const L0_GUARD: usize = 6;
+/// runwriter-and-stall: writer opens of a database with a compactor that waited for a gated compaction pass first (L0 at
+/// the guard, every L0 row at or below X_d).
+pub static WAKE_GATED_PASSES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Test control: override SlateDB's `max_unflushed_bytes` for writers built from now on (0 = keep the setting).
+pub static MAX_UNFLUSHED_OVERRIDE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Whether `compact_tenant_pass_with` would run on `id` with compactors on: a version of our manifest exists, every L0
+/// row is at or below its X_d (the pass moves only those), and the tiered scheduler is set.
+pub(crate) async fn pass_can_run_gated(raw: &Arc<dyn ObjectStore>, id: &str) -> Result<bool> {
+    let Some(v) = crate::fx::manifest::load_newest(raw, id).await? else { return Ok(false) };
+    let admin = Admin::builder(tenant_path(id), Arc::clone(raw)).build();
+    let Some(m) = admin.read_manifest(None).await? else { return Ok(false) };
+    Ok(m.last_l0_seq() <= v.x_d && crate::tiered::scheduler().is_some())
+}
 /// Tenants garbage-collected at once by the maintenance loop.
 pub const GC_CONCURRENCY: usize = 16;
 /// How often (milliseconds) the maintenance loop looks at the L0 of every open writer and queues a compaction for each one
@@ -545,6 +560,10 @@ pub fn writer_settings() -> Settings {
         s.l0_max_ssts = l0_max;
         // both limits (the per-key one is also 8 by default): a value above 8 lets a test see L0 pass 8 instead of stalling
         s.l0_max_ssts_per_key = l0_max;
+    }
+    let unflushed = MAX_UNFLUSHED_OVERRIDE.load(std::sync::atomic::Ordering::Relaxed);
+    if unflushed > 0 {
+        s.max_unflushed_bytes = unflushed as usize;
     }
     let l0_bytes = L0_SST_BYTES_OVERRIDE.load(std::sync::atomic::Ordering::Relaxed);
     if l0_bytes > 0 {
@@ -2767,23 +2786,40 @@ impl Tenant {
         // version of our manifest, compactors on): waiting for it waited for nothing, and under a caller holding the
         // maintenance lock (a restore) until the 30 s timeout failed the wake. Its compactor, started at the first
         // write, compacts L0.
-        let pass_runs = !(self.lc.l0_guard
+        let has_fxc = self.lc.l0_guard
             && self.l0_at_wake >= L0_GUARD
             && crate::fx::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed)
-            && !crate::fx::manifest::list_versions(&self.lc.store, &self.id).await?.is_empty());
+            && !crate::fx::manifest::list_versions(&self.lc.store, &self.id).await?.is_empty();
+        // runwriter-and-stall (CI d660ea9, test_51r sealed runs 6, 7, 9): with L0 full of absorbed SSTs, the writer's
+        // open below never returned. SlateDB's WAL replay applies backpressure (`maybe_apply_backpressure`): once the
+        // replayed memtables reach `max_unflushed_bytes` it waits for flushes, the flushes wait for L0 to shrink, and only
+        // the compactor's fold shrinks it, which starts after this open. Every write to the database then waited until
+        // the client gave up. When the gated pass can run (every L0 row at or below X_d: `compact_tenant_pass_with`
+        // moves only those, rule 8), it runs first, as it does for a database without a compactor. Its wait no longer
+        // fails the wake: past it the open goes ahead as before.
+        let gated_pass = has_fxc && pass_can_run_gated(&self.lc.store, &self.id).await.unwrap_or(false);
+        let pass_runs = !has_fxc || gated_pass;
         if self.lc.l0_guard && self.l0_at_wake >= L0_GUARD && pass_runs {
             if let Some(q) = &self.lc.queue {
                 let started = Instant::now();
                 for _ in 0..3 {
                     let (tx, rx) = oneshot::channel();
                     q.request(&self.id, Some(tx));
-                    let l0 = tokio::time::timeout(Duration::from_secs(30), rx)
-                        .await
-                        .context("compaction wait timed out")??;
+                    let l0 = match tokio::time::timeout(Duration::from_secs(30), rx).await {
+                        Ok(r) => r?,
+                        Err(_) if gated_pass => {
+                            eprintln!("wake {}: the gated compaction pass did not answer in 30 s; opening the writer anyway", self.id);
+                            break;
+                        }
+                        Err(e) => return Err(anyhow::Error::from(e).context("compaction wait timed out")),
+                    };
                     self.l0_at_wake = l0;
                     if l0 < L0_GUARD {
                         break;
                     }
+                }
+                if gated_pass {
+                    WAKE_GATED_PASSES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                 }
                 let mut st = self.lc.stats.lock().unwrap();
                 st.guard_waits += 1;
