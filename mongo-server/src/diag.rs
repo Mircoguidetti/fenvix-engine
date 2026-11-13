@@ -866,6 +866,12 @@ impl Server {
                 "fencedUploadSweepErrors": crate::uploads::FENCED_ERRORS.load(Relaxed) as i64,
                 "startupSweepFencedAborted": crate::uploads_sweep::FENCED.load(Relaxed) as i64,
                 // item 7: WAL replay raises, those cut by the memtable share, those dropped by a reopen once L0 drained
+                // item 5: writes answered as an unknown outcome, retries whose record was read back after a lost opening
+                "outcomesUnknown": crate::error::OUTCOMES_UNKNOWN.load(Relaxed) as i64,
+                // item 6: listed uploads the store said do not exist; interrupted erases run again after a failed restart
+                "ghostUploads": crate::uploads::GHOSTS.load(Relaxed) as i64,
+                "eraseRetries": crate::ctl::ops::ERASE_RETRIES.load(Relaxed) as i64,
+                "retryRecordsReloaded": crate::retry::RECORDS_RELOADED.load(Relaxed) as i64,
                 "replayRaises": tenant_bench::lifecycle::REPLAY_RAISES.load(Relaxed) as i64,
                 "replayRaisesCapped": tenant_bench::lifecycle::REPLAY_RAISES_CAPPED.load(Relaxed) as i64,
                 "replayRaisesDropped": tenant_bench::lifecycle::REPLAY_RAISES_DROPPED.load(Relaxed) as i64,

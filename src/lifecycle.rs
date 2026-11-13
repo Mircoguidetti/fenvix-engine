@@ -1082,6 +1082,11 @@ impl Visible {
         self.moved();
     }
 
+    /// Ownership was lost (`kill`): nothing in flight here will be confirmed by this opening.
+    pub fn is_dead(&self) -> bool {
+        self.inner.lock().unwrap().dead
+    }
+
     /// Whether any batch is in flight (reads may then need an older value for some keys).
     pub fn any(&self) -> bool {
         !self.inner.lock().unwrap().batches.is_empty()
@@ -1402,6 +1407,12 @@ impl Commit {
         Ok(())
     }
 
+    /// P-fix-slow-store item 5: the opening that staged this batch was given up (lease lost, unclean close): whether the
+    /// batch is durable is now known only to the database's next opening (its WAL replay).
+    pub fn lost(&self) -> bool {
+        self.group.vis.is_dead()
+    }
+
     /// Sequence number of the batch in its database's writer.
     pub fn seqnum(&self) -> u64 {
         self.handle.seqnum()
@@ -1446,6 +1457,15 @@ impl Commit {
                 return Err(anyhow!("ownership of database {} was lost before the write was acknowledged; its outcome is unknown, retry", self.tenant));
             }
             return Ok(());
+        }
+        // TEST ONLY (P-fix-slow-store item 5, ctl test_90): `FENVIX_TEST_COMMIT_WAIT_DELAY_MS` holds the staged batch of a
+        // database whose name starts with "inc5" before its flush, so a lease loss's abandon (WAL flush, then close)
+        // always comes first. Never set in production; read once.
+        static TEST_DELAY: std::sync::OnceLock<u64> = std::sync::OnceLock::new();
+        let d = *TEST_DELAY.get_or_init(|| std::env::var("FENVIX_TEST_COMMIT_WAIT_DELAY_MS").ok().and_then(|v| v.parse().ok()).unwrap_or(0));
+        if d > 0 && self.tenant.starts_with("inc5") {
+            eprintln!("TEST commit wait held {d} ms db={}", self.tenant);
+            tokio::time::sleep(Duration::from_millis(d)).await;
         }
         struct Waiting<'a>(&'a std::sync::atomic::AtomicU64);
         impl Drop for Waiting<'_> {

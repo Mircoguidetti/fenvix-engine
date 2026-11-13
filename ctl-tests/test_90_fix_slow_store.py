@@ -25,7 +25,7 @@ import time
 import pytest
 from pymongo import MongoClient
 
-from lib import Server, make_bucket, MINIO, s3
+from lib import Server, make_bucket, MINIO, s3, list_prefix
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools", "lease-stall"))
 from pathproxy import PathProxy  # noqa: E402
@@ -336,6 +336,152 @@ def test_a_retried_write_is_applied_once():
         assert n in (0, 1), f"the write was applied {n} times"
         if "ok" in res:
             assert n == 1, f"acknowledged but n = {n}"
+    finally:
+        px.release()
+        srv.kill9()
+        px.close()
+
+
+# ---- item 5: a write answered with a definite error must not be applied
+
+def _faults_file():
+    import tempfile
+    f = tempfile.NamedTemporaryFile("w", delete=False, suffix=".faults")
+    f.close()
+    return f.name
+
+
+def _inc_across_a_lease_loss(retry_writes, tag):
+    """One $inc whose staged batch is held before its flush (test knob FENVIX_TEST_COMMIT_WAIT_DELAY_MS, databases named
+    inc5*); meanwhile the process lease lapses and the database is abandoned: the abandon flushes the WAL (the batch is
+    then durable) and closes SlateDB. The held write then finds SlateDB closed. Returns (the client's outcome, whether its
+    error carried RetryableWriteError, the counter's value)."""
+    from lib import free_port
+    ff = _faults_file()
+    port, holder = free_port(), f"H{tag}"
+    srv = Server(make_bucket(tag), tag, idle=600, holder=holder, port=port,
+                 env={"MONGO_TEST_FAULTS_FILE": ff, "FENVIX_TEST_COMMIT_WAIT_DELAY_MS": "12000",
+                      **({"FENVIX_TEST_CONTROL_OUTCOME_DEFINITE": "1"} if os.environ.get("CONTROL_ITEM5") == "1" else {})},
+                 extra=["--lease-ttl-secs", "2", "--replica-set", "rs0", "--advertise", f"127.0.0.1:{port}"]).start()
+    try:
+        c = MongoClient(srv.uri, retryWrites=retry_writes, socketTimeoutMS=120000)
+        c.inc5.cnt.insert_one({"_id": "k", "v": 0})
+        res = {}
+
+        def inc():
+            try:
+                c.inc5.cnt.update_one({"_id": "k"}, {"$inc": {"v": 1}})
+                res["ok"] = True
+            except PyMongoError as e:
+                res["err"] = e
+
+        n0 = srv.log_text().count("TEST commit wait held")
+        th = threading.Thread(target=inc)
+        th.start()
+        t0 = time.time()
+        while srv.log_text().count("TEST commit wait held") == n0 and time.time() - t0 < 20:
+            time.sleep(0.02)
+        lost0 = srv.log_text().count("LEASE lost")
+        open(ff, "w").write(f"delay_put processes/{holder}/_lease 3500\n")
+        t0 = time.time()
+        while srv.log_text().count("LEASE lost") == lost0 and time.time() - t0 < 30:
+            time.sleep(0.05)
+        assert srv.log_text().count("LEASE lost") > lost0, "setup: the lease was not lost"
+        open(ff, "w").write("")
+        th.join(120)
+        v = None
+        t0 = time.time()
+        while time.time() - t0 < 60:
+            try:
+                v = MongoClient(srv.uri).inc5.cnt.find_one({"_id": "k"})["v"]
+                break
+            except PyMongoError:
+                time.sleep(0.5)
+        err = res.get("err")
+        label = bool(err is not None and getattr(err, "has_error_label", lambda _l: False)("RetryableWriteError"))
+        outcome = "ok" if res.get("ok") else f"{type(err).__name__} code {getattr(err, 'code', None)} labelled {label}: {str(err)[:140]}"
+        print(f"retryWrites={retry_writes}: client {outcome}; stored v = {v}")
+        return res, label, v
+    finally:
+        srv.kill9()
+        os.unlink(ff)
+
+
+def test_a_write_answered_with_a_definite_error_was_not_applied():
+    res, label, v = _inc_across_a_lease_loss(False, "inc5def")
+    assert v in (0, 1), v
+    if "err" in res and not label:
+        assert v == 0, "the client saw a definite error (no RetryableWriteError label) and the increment was applied"
+    if res.get("ok"):
+        assert v == 1
+
+
+def test_a_retried_write_across_a_lease_loss_is_applied_once():
+    res, label, v = _inc_across_a_lease_loss(True, "inc5once")
+    assert v in (0, 1), f"the increment was applied {v} times"
+    if res.get("ok"):
+        assert v == 1, "acknowledged but not applied"
+    if "err" in res and not label:
+        assert v == 0, "a definite error, and the increment was applied"
+
+
+# ---- item 6: an erase is never left half done by an upload listing
+
+def _populate(c, db):
+    for i in range(5):
+        c[db].t.insert_many([{"_id": i * 100 + k, "pad": "p" * 300} for k in range(100)])
+
+
+def test_an_upload_the_listing_shows_but_the_store_does_not_have_does_not_block_an_erase():
+    """A listing that shows an upload the store has no record of (ListParts: NoSuchUpload) is a ghost: the erase must
+    end complete. The proxy adds the ghost to every ListMultipartUploads answer; the store never had it."""
+    px = proxy()
+    bucket = make_bucket("ghosterase")
+    srv = Server(bucket, "ghosterase", idle=600, endpoint=px.endpoint).start()
+    try:
+        _populate(srv.client(), "ghostdb")
+        px.ghosts = [("tenants/ghostdb/fx/run/g0/00000000000000000011-1-eca5621d", "R2hvc3RVcGxvYWRJZA")]
+        st, body = srv.admin.delete("/v1/databases/ghostdb")
+        print(f"erase with a ghost upload listed: {st} {str(body)[:200]}")
+        assert st == 200, f"the erase did not complete: {st} {body}"
+        assert srv.admin.get("/v1/databases/ghostdb")[0] == 404
+    finally:
+        px.ghosts = []
+        srv.kill9()
+        px.close()
+
+
+def test_an_erase_left_incomplete_by_an_upload_is_finished_by_retries():
+    """A real upload whose aborts the store refuses: the erase fails and its intent stays (the data is gone). After a
+    restart, the recovery fails too while the refusal lasts; once aborts go through, the erase must end complete without
+    another restart or request (before, it stayed half done until the next restart)."""
+    px = proxy()
+    bucket = make_bucket("stuckerase")
+    srv = Server(bucket, "stuckerase", idle=600, endpoint=px.endpoint).start()
+    try:
+        _populate(srv.client(), "stuckdb")
+        key = "tenants/stuckdb/fx/run/g0/00000000000000000011-1-0badc0de"
+        up = s3().create_multipart_upload(Bucket=bucket, Key=key)["UploadId"]
+        s3().upload_part(Bucket=bucket, Key=key, UploadId=up, PartNumber=1, Body=b"x" * 1024)
+        px.refuse(("DELETE",), "/fx/run/g0/00000000000000000011-1-0badc0de", 500)
+        st, body = srv.admin.delete("/v1/databases/stuckdb")
+        print(f"erase while the upload's abort is refused: {st} {str(body)[:160]}")
+        assert st != 200
+        srv.kill9()
+        srv.proc = None
+        srv.start()
+        time.sleep(3)
+        assert list_prefix(bucket, "control/ops/stuckdb.json"), "setup: the erase's intent is not recorded"
+        px.release()
+        t0 = time.time()
+        while list_prefix(bucket, "control/ops/stuckdb.json") and time.time() - t0 < 60:
+            time.sleep(1)
+        took = time.time() - t0
+        left = incomplete_uploads(bucket, "tenants/stuckdb/")
+        print(f"after the refusal ended: intent {'gone' if not list_prefix(bucket, 'control/ops/stuckdb.json') else 'still there'} after {took:.0f} s; uploads left {left}")
+        assert not list_prefix(bucket, "control/ops/stuckdb.json"), "the interrupted erase was never finished"
+        assert not left
+        assert srv.admin.get("/v1/databases/stuckdb")[0] == 404
     finally:
         px.release()
         srv.kill9()

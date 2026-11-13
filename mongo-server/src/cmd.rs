@@ -479,7 +479,10 @@ impl Server {
                     if relax && crate::ctl::durability::relaxed_ms(c.tenant()) > 0 && crate::locallog::get().is_none() {
                         c.relax();
                     } else if let Err(e) = c.wait().await {
-                        r = Err(e.into());
+                        // P-fix-slow-store item 5: the batch is staged (in the memtable and the WAL buffer); a failed wait
+                        // does not say it was not applied (a lease loss's abandon flushes the WAL, then closes SlateDB:
+                        // the write lands, and the wait sees "db is closed"). Unknown outcome, answered as such.
+                        r = Err(crate::error::outcome_unknown(name, e.into()));
                     }
                 }
                 r

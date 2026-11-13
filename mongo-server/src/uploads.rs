@@ -76,6 +76,43 @@ pub async fn list(prefix: &str) -> Result<Option<Vec<Upload>>> {
     bail!("ListMultipartUploads: too many pages under {prefix}")
 }
 
+/// P-fix-slow-store item 6: whether a listed upload exists for the store itself: ListParts on it (`GET key?uploadId=`).
+/// S3 answers NoSuchUpload for an upload that was aborted or completed; a listing that still shows such an upload shows a
+/// ghost (CI saw MinIO list one after five aborts answered OK, not reproduced here), which holds no part and no data. Any
+/// other answer (an error included) counts as existing: never a reason to call a database erased.
+pub async fn exists(u: &Upload) -> Result<bool> {
+    let Some(s3) = S3_STORE.get() else { return Ok(true) };
+    let key: Vec<String> = u.key.split('/').map(enc).collect();
+    let url = format!("{}/{}?uploadId={}", s3.bucket_url, key.join("/"), enc(&u.upload_id));
+    match signed_get(s3, &url).await {
+        Ok(_) => Ok(true),
+        Err(e) if format!("{e}").contains("NoSuchUpload") => {
+            GHOSTS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            eprintln!("uploads: {} ({}) is listed but the store has no such upload (ListParts: NoSuchUpload): a ghost listing, not data", u.key, u.upload_id);
+            Ok(false)
+        }
+        Err(e) => {
+            eprintln!("uploads: ListParts of {} ({}) failed: {e:#}; counted as existing", u.key, u.upload_id);
+            Ok(true)
+        }
+    }
+}
+
+/// `list`, without the ghosts (`exists`): the uploads that hold parts. `None` when the store is not S3.
+pub async fn list_real(prefix: &str) -> Result<Option<Vec<Upload>>> {
+    let Some(found) = list(prefix).await? else { return Ok(None) };
+    let mut out = Vec::new();
+    for u in found {
+        if exists(&u).await? {
+            out.push(u);
+        }
+    }
+    Ok(Some(out))
+}
+
+/// Listed uploads the store said do not exist (ListParts NoSuchUpload).
+pub static GHOSTS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 /// Abort every incomplete upload under `prefix`: the number aborted (`None`: not S3). An upload gone in the meantime
 /// (completed or aborted by its writer) is not an error.
 pub async fn abort_all(prefix: &str) -> Result<Option<u64>> {
@@ -97,7 +134,8 @@ pub async fn abort_all(prefix: &str) -> Result<Option<u64>> {
                 Err(e) => return Err(anyhow!("abort of the incomplete upload {} ({}): {e}", u.key, u.upload_id)),
             }
         }
-        found = list(prefix).await?.unwrap_or_default();
+        // item 6: a ghost (listed, but ListParts says no such upload) is not left over
+        found = list_real(prefix).await?.unwrap_or_default();
         if found.is_empty() {
             break;
         }

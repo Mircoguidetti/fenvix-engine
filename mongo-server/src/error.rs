@@ -165,3 +165,33 @@ impl From<bson::error::Error> for MongoError {
         MongoError::internal(format!("bson: {e}"))
     }
 }
+
+/// P-fix-slow-store item 5: a write whose batch was staged and whose durability wait failed. Its outcome is unknown (it
+/// may be durable already, or become so by the WAL flush of an abandon), so the answer is never a definite error: code
+/// 134, as the other "retry" answers of this server (not a state-change code, so drivers keep their pools), with the
+/// `RetryableWriteError` label as mongod gives an interrupted write, and for a commit `UnknownTransactionCommitResult`.
+/// A retryable write's retry is deduplicated by its session record (`retry.rs`; after a lost opening it is read back from
+/// the database's next opening). Errors that already say what happened keep their code and labels.
+pub fn outcome_unknown(name: &str, e: MongoError) -> MongoError {
+    if e.extra.as_ref().is_some_and(|x| x.contains_key("errorLabels")) || control_definite() {
+        return e;
+    }
+    OUTCOMES_UNKNOWN.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let mut m = MongoError::new(134, "WriteOutcomeUnknown", format!("the write was staged, then its durability could not be confirmed ({}); it may or may not have been applied: retry it (a retryable write is applied once)", e.msg));
+    m.extra = Some(if matches!(name, "commitTransaction") {
+        doc! { "errorLabels": ["UnknownTransactionCommitResult", "RetryableWriteError"] }
+    } else {
+        doc! { "errorLabels": ["RetryableWriteError"] }
+    });
+    m
+}
+
+/// Writes answered with `outcome_unknown`.
+pub static OUTCOMES_UNKNOWN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// TEST ONLY (negative control of ctl test_90 item 5, `FENVIX_TEST_CONTROL_OUTCOME_DEFINITE=1`): the code before the fix
+/// (a failed durability wait answered as it came, a retry not reading the record back).
+pub fn control_definite() -> bool {
+    static C: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *C.get_or_init(|| std::env::var("FENVIX_TEST_CONTROL_OUTCOME_DEFINITE").as_deref() == Ok("1"))
+}

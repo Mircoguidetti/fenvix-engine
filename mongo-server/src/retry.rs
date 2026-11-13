@@ -213,6 +213,10 @@ pub fn label_store_error(name: &str, cmd: &Document, e: &mut MongoError) {
     }
 }
 
+/// P-fix-slow-store item 5: retries whose original was staged by an opening since given up, answered after reading the
+/// session's record back from the database.
+pub static RECORDS_RELOADED: AtomicU64 = AtomicU64::new(0);
+
 /// Retryable writes answered with the `RetryableWriteError` label because the store refused or did not answer.
 pub static STORE_ERRORS_LABELLED: AtomicU64 = AtomicU64::new(0);
 
@@ -400,7 +404,25 @@ impl Server {
             if let Some(c) = guard.durable.clone() {
                 let relaxed = crate::dbs::RELAX.try_with(|r| r.get()).unwrap_or(false) && crate::ctl::durability::relaxed_ms(c.tenant()) > 0 && crate::locallog::get().is_none();
                 if !relaxed {
-                    c.wait().await.map_err(MongoError::from)?;
+                    if let Err(e) = c.clone().wait().await {
+                        if !c.lost() || crate::error::control_definite() {
+                            return Err(crate::error::outcome_unknown(name, MongoError::from(e)));
+                        }
+                        // P-fix-slow-store item 5: the opening that staged the original was given up; the record in
+                        // memory may describe a batch that never became durable. The database's next opening (its WAL
+                        // replay) knows: forget the memory and read the record back from it, so the retry applies the
+                        // write once if the original did not land, and answers from the record if it did.
+                        RECORDS_RELOADED.fetch_add(1, Relaxed);
+                        *guard = Sess::new();
+                        self.session_load(&mut guard, db, &key).await?;
+                        if number < guard.number {
+                            return Err(too_old(number, &lsid, guard.number, guard.txn));
+                        }
+                        if number > guard.number {
+                            guard.reset(number, false);
+                            dirty = true;
+                        }
+                    }
                 }
                 guard.durable = None;
             }

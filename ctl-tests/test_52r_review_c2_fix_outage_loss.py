@@ -218,6 +218,7 @@ def _mixed_writes(throttled):
     lock = threading.Lock()
     acked = set()          # inserted _ids acknowledged
     incs = {}              # counter _id -> acknowledged increments
+    unknown = {}           # counter _id -> increments answered with an unknown outcome (P-fix-slow-store item 5)
     errors = []
     stop = threading.Event()
     try:
@@ -269,6 +270,11 @@ def _mixed_writes(throttled):
                     with lock:
                         incs[key] = incs.get(key, 0) + 1
                 except PyMongoError as e:
+                    # P-fix-slow-store item 5: an error labelled RetryableWriteError answers an unknown outcome (the
+                    # write may have been applied); only an error without it is definite and must mean "not applied"
+                    if getattr(e, "has_error_label", lambda _l: False)("RetryableWriteError"):
+                        with lock:
+                            unknown[key] = unknown.get(key, 0) + 1
                     note_err(e)
             cl.close()
 
@@ -322,20 +328,21 @@ def _mixed_writes(throttled):
         print(f"lease losses {losses}; reopenedWritesRefused {st.get('reopenedWritesRefused')}; errors {kinds}; samples {errors[:3]}")
         assert losses > 0, "no lease loss: the test did not reach the case"
         # integration-4 part 2: with fix-long-commands merged the in-process read is mandatory again, throttled or not
-        problems = retry_until_ok(lambda: check(c, acked, incs, "now", 300), "the read now", 300)
+        problems = retry_until_ok(lambda: check(c, acked, incs, "now", 300, unknown), "the read now", 300)
     finally:
         stop.set()
         srv.term()
     srv2 = Server(bucket, "rvmixed2", idle=600).start()
     try:
-        problems += retry_until_ok(lambda: check(srv2.client(), acked, incs, "after a restart"), "the read after a restart", 300)
+        problems += retry_until_ok(lambda: check(srv2.client(), acked, incs, "after a restart", unknown=unknown), "the read after a restart", 300)
     finally:
         srv2.term()
         os.unlink(ff)
     assert not problems, "\n".join(problems)
 
 
-def check(c, acked, incs, when, scan_secs=300):
+def check(c, acked, incs, when, scan_secs=300, unknown=None):
+    unknown = unknown or {}
     t = c.d.t
     scanned = scan_ids(t, scan_secs)
     sset = set(scanned)
@@ -352,7 +359,8 @@ def check(c, acked, incs, when, scan_secs=300):
     if sset != stored:
         out.append(f"{when}: scan and _id index differ: only in scan {sorted(sset - stored)[:5]}, only by _id {sorted(stored - sset)[:5]}")
     vals = {d["_id"]: d.get("v", 0) for d in c.d.cnt.find({})}
-    bad = {k: (vals.get(k, 0), n) for k, n in incs.items() if vals.get(k, 0) != n}
+    # a counter holds every acknowledged increment, plus at most the ones answered with an unknown outcome
+    bad = {k: (vals.get(k, 0), n) for k, n in incs.items() if not (n <= vals.get(k, 0) <= n + unknown.get(k, 0))}
     if bad:
         out.append(f"{when}: {len(bad)} counters differ from their acknowledged increments (stored, acknowledged), e.g. {list(bad.items())[:5]}")
     print("\n".join(out) or f"{when}: OK")

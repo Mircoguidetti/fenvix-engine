@@ -127,6 +127,34 @@ def main():
     srv.wait_ready(120)
     dbs = [f"soak{i}" for i in range(a.dbs)]
     print(f"server {srv.uri} log {srv.log_path} bucket {bucket}; proxy {px.endpoint}: {a.fail_pct}% 503, {a.tail_pct}% +{a.tail_ms} ms", flush=True)
+    # a side probe: every 200 ms one small PUT straight to MinIO and one through the forwarder (no fault injected on its
+    # path), each of 500 ms or more recorded: a stall seen by both is the store's (MinIO, the disk); one seen only through
+    # the forwarder is the forwarder's; one seen by neither, while clients stall, is the server's
+    import boto3
+    from botocore.config import Config
+    probe_stop = threading.Event()
+    px.exclude = "/soak-probe/"
+    def probe():
+        cfg = Config(retries={"max_attempts": 1}, connect_timeout=30, read_timeout=60)
+        cli = {name: boto3.client("s3", endpoint_url=ep, aws_access_key_id="minioadmin", aws_secret_access_key="minioadmin", region_name="us-east-1", config=cfg)
+               for name, ep in (("direct", MINIO), ("proxy", px.endpoint))}
+        f = open(os.path.join(a.out, "store-probe.jsonl"), "a", buffering=1)
+        n = 0
+        while not probe_stop.is_set():
+            for name, cl in cli.items():
+                t0 = time.time()
+                try:
+                    cl.put_object(Bucket=bucket, Key=f"soak-probe/{name}/{n % 50}", Body=b"x" * 512)
+                    ok = True
+                except Exception:
+                    ok = False
+                d = time.time() - t0
+                if d >= 0.5 or not ok:
+                    f.write(json.dumps({"t0": round(t0, 3), "ms": round(d * 1000), "path": name, "ok": ok}) + "\n")
+            n += 1
+            time.sleep(0.2)
+    pt = threading.Thread(target=probe, daemon=True)
+    pt.start()
     t_start = time.time()
     ps = [mp.Process(target=worker, args=(srv.uri, dbs, a.threads, a.secs, a.out, p)) for p in range(a.procs)]
     for p in ps:
@@ -134,32 +162,27 @@ def main():
     for p in ps:
         p.join()
     t_end = time.time()
+    probe_stop.set()
     # rule 8: every acknowledged insert and increment, read back on the same server through a store without faults
     px.fail_pct = px.tail_pct = 0
     from pymongo import MongoClient
     c = MongoClient(srv.uri)
     missing, short, over, n_ins, n_inc = 0, 0, 0, 0, 0
     cpu = []
+    # one sequential scan per database (random reads of a million ids cost thousands of GETs per batch)
+    stored = {db: {x["_id"]: x.get("n", 0) for x in c[db].t.find({}, {"n": 1}, batch_size=10000)} for db in dbs}
     for p in range(a.procs):
         w = json.load(open(os.path.join(a.out, f"worker-{p}.json")))
         cpu.append(w["cpu_s"] / a.secs)
         errs = {(d, i): v for d, i, v in w["errs"]}
         for db, ids in w["acked"].items():
-            have = {x["_id"] for x in c[db].t.find({"_id": {"$in": ids}}, {"_id": 1})}
-            missing += sum(1 for i in ids if i not in have)
+            missing += sum(1 for i in ids if i not in stored[db])
             n_ins += len(ids)
-        by_db = {}
         for db, i, v in w["incs"]:
             n_inc += v
-            by_db.setdefault(db, []).append((i, v))
-        for db, lst in by_db.items():
-            for k in range(0, len(lst), 1000):
-                part = lst[k:k + 1000]
-                got = {x["_id"]: x["n"] for x in c[db].t.find({"_id": {"$in": [i for i, _ in part]}}, {"n": 1})}
-                for i, v in part:
-                    g = got.get(i, -1)
-                    short += g < v
-                    over += g > v + errs.get((db, i), 0)
+            g = stored[db].get(i, -1)
+            short += g < v
+            over += g > v + errs.get((db, i), 0)
     summary = {"secs": round(t_end - t_start), "acked_inserts": n_ins, "acked_increments": n_inc, "missing_inserts": missing,
                "counters_below_acked": short, "counters_above_acked_plus_errors": over, "client_cpu_share_per_proc": [round(x, 3) for x in cpu],
                "proxy": px.counts, "server_log": srv.log_path, "bucket": bucket}

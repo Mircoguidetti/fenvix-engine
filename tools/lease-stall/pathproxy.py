@@ -29,6 +29,8 @@ class PathProxy:
         self.refused = 0
         self.slowness = None  # (methods, path_part, delay in seconds)
         self.journal = None   # a list to record (unix time, method, path, status) of every request, or None
+        self.ghosts = []      # (key, upload id): added to every ListMultipartUploads answer (a listing showing an upload
+                              # the store does not have, P-fix-slow-store item 6)
         self.lock = threading.Lock()
         proxy = self
 
@@ -105,6 +107,11 @@ class PathProxy:
                             import re as _re
                             for k in _re.findall(rb"<Key>([^<]+)</Key>", body):
                                 proxy.journal.append((time.time(), "DELETE*", "/" + self.path.split("?")[0].strip("/") + "/" + k.decode(), resp.status))
+                q = self.path.split("?", 1)[1] if "?" in self.path else ""
+                params = [p.split("=")[0] for p in q.split("&")]
+                if proxy.ghosts and self.command == "GET" and "uploads" in params and "uploadId" not in params and resp.status == 200:
+                    extra = "".join(f"<Upload><Key>{k}</Key><UploadId>{u}</UploadId><Initiated>2026-11-13T00:00:00.000Z</Initiated></Upload>" for k, u in proxy.ghosts)
+                    data = data.replace(b"</ListMultipartUploadsResult>", extra.encode() + b"</ListMultipartUploadsResult>")
                 if f and f[2] == "short" and self.command in f[0] and f[1] in self.path.split("?")[0] and not (len(f) > 3 and f[3] and f[3] in self.path) and resp.status in (200, 206) and len(data) > 1:
                     with proxy.lock:
                         proxy.refused += 1
