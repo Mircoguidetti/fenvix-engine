@@ -646,9 +646,9 @@ mod tests {
         }
         ev.extend([
             fill(0, 3, 0),
-            // A's publish writes its runs, then creates its version: its first run upload is slow (held), so the create
-            // (whose path is computed when it is sent) comes after everything below
-            Hold { p: 0, class: Class::FxRun, op: None, skip: 0, land: true, all: false, rid: 1 },
+            // A's publish reads SlateDB's manifest (its snapshot, the writer-epoch fence) before it creates its version: those
+            // answers are slow (held), so the create (whose path is computed when it is sent) comes after everything below
+            Hold { p: 0, class: Class::SlateManifest, op: None, skip: 0, land: true, all: true, rid: 1 },
             Publish { p: 0 },
             Open { p: 1, writer: true },
             DropDb { p: 1 },
@@ -663,7 +663,10 @@ mod tests {
             Abandon { p: 0 },
         ]);
         let ext = super::cluster::Ext { flavor: 3, log: false, old_kept: false };
+        // a held read answer may wait this long (the default 4 s is shorter than B's work in between)
+        std::env::set_var("SIM_MAX_HOLD_MS", "10000");
         let (f, v) = run_story3(&rt, "incarnation re-point", ext, ev);
+        std::env::remove_var("SIM_MAX_HOLD_MS");
         assert_eq!(f, 0, "{v:?}");
     }
 
