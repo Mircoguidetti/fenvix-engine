@@ -37,6 +37,9 @@ pub struct Ext {
     /// sim-test-3: the base's rules for kept records (fb38790e, before fix-takeover-retry 759f9dca), as the engine's own
     /// control switch `MONGO_TEST_KEPT_RETRY_OLD=1` restores them. For directed stories only.
     pub old_kept: bool,
+    /// sim-test-3, directed stories only: the oracle also refuses a version on top whose writer epoch is lower than a
+    /// version below it (a lost writer's late publish landed; hole G's fence).
+    pub strict_versions: bool,
 }
 
 /// A value of a write: padded to about 160 bytes with the many-groups settings.

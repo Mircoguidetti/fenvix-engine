@@ -301,6 +301,11 @@ pub enum Ev {
     /// What listDatabases, the admin API's existence check and the erase handler's first step do in slot `p`'s process,
     /// before any lock or lease (`db_exists`, the incarnation lookup).
     AdminCheck { p: usize },
+    /// A late version of a writer that lost the database lands at the next slot: the newest version again, one writer
+    /// epoch lower, with X_d at SlateDB's last L0 seq (as `write_stalls_tests::older_version_scenario` and the review of
+    /// hole C plant it). An injected fault standing for any late publisher of a lost writer (on 65dd663: the generator's
+    /// parts publish, hole G). Skipped when it would not pass the newest version's X_d.
+    PlantLate { p: usize },
 }
 
 impl Ev {
@@ -309,7 +314,7 @@ impl Ev {
         match self {
             Open { p, .. } | Upgrade { p } | Write { p, .. } | Erase { p, .. } | Flush { p } | Publish { p } | FirstStart { p } | FirstPoll { p } | CompStart { p } | CompDrain { p } | CompStop { p } | DropThrough { p } | Gc { p } | ErasePass { p } | Retire { p } | GcClosed { p } | ClosePass { p } | Close { p } | Abandon { p } | Kill { p } | Hold { p, .. } => Some(*p),
             Point { p, .. } | PointPrune { p, .. } | Restore { p, .. } | Fork { p, .. } | Generate { p, .. } | SlateGc { p } => Some(*p),
-            Upload { p } | Restart { p } | Kept { p } | LogRetry { p } | DropDb { p } | EraseDb { p } | AdminCheck { p } => Some(*p),
+            Upload { p } | Restart { p } | Kept { p } | LogRetry { p } | DropDb { p } | EraseDb { p } | AdminCheck { p } | PlantLate { p } => Some(*p),
             Release { .. } | Sleep { .. } | Mark { .. } | Storm { .. } | LogCopy { .. } | LogLeader => None,
         }
     }
@@ -1376,6 +1381,9 @@ pub async fn run_script(s: &Script) -> Run {
         violations.extend(oracle(&w).await);
     }
     violations.extend(ext::oracle_ext(&w).await);
+    if w.x3.strict_versions {
+        violations.extend(ext3::strict_versions(&w).await);
+    }
     let (issued, acked) = {
         let model = w.model.lock().unwrap();
         (model.issued, model.writes.values().flatten().filter(|x| x.status.load(SeqCst) == ACKED).count())

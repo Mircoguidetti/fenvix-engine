@@ -609,7 +609,7 @@ mod tests {
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
         let _l = super::cluster::ext3::setup_log_world();
-        let ext = |old_kept| super::cluster::Ext { flavor: 3, log: true, old_kept };
+        let ext = |old_kept| super::cluster::Ext { flavor: 3, log: true, old_kept, strict_versions: false };
         let (f_old, v_old, t_old) = run_story3_traced(&rt, "takeover retry with the log, the base's rules (fb38790e)", ext(true), takeover_retry_story(true));
         let (f_new, v_new, t_new) = run_story3_traced(&rt, "takeover retry with the log, 759f9dca's rules", ext(false), takeover_retry_story(false));
         let lost = |v: &[String]| v.iter().filter(|x| x.contains("acknowledged write lost") && x.contains("c02")).count();
@@ -662,12 +662,70 @@ mod tests {
             Sleep { ms: 1500 },
             Abandon { p: 0 },
         ]);
-        let ext = super::cluster::Ext { flavor: 3, log: false, old_kept: false };
+        let ext = super::cluster::Ext { flavor: 3, log: false, old_kept: false, strict_versions: false };
         // a held read answer may wait this long (the default 4 s is shorter than B's work in between)
         std::env::set_var("SIM_MAX_HOLD_MS", "10000");
         let (f, v) = run_story3(&rt, "incarnation re-point", ext, ev);
         std::env::remove_var("SIM_MAX_HOLD_MS");
         assert_eq!(f, 0, "{v:?}");
+    }
+
+    /// Hole C (review of the final engine) as a directed story: compactors on, a writer leaves acknowledged rows in L0 SSTs
+    /// no compactor absorbed and closes; a lost writer's late version lands at the next slot (lower writer epoch, X_d at
+    /// SlateDB's last L0 seq: `PlantLate`); readers pass over it, but the close-time compaction pass gated on the plain
+    /// newest version folds that L0 into a sorted run; another process opens the database, its compactor absorbs past
+    /// those rows, and they are read from neither side. Fails on 65dd663 (the gate on `load_newest`); passes from 5e21c5c6
+    /// (the gate on `load_newest_trusted`).
+    #[test]
+    fn sim_story_close_pass_gate_late_version() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use Ev::*;
+        let mut ev = vec![Open { p: 0, writer: true }, fill(0, 0, 0), Publish { p: 0 }];
+        // rows in L0 that no compactor absorbs before the close (no compactor runs in this process)
+        for c in 1..CUSTOMERS {
+            for half in 0..2 {
+                ev.push(Write { p: 0, ops: (half * 12..half * 12 + 12).map(|i| (c, i, false)).collect() });
+                ev.push(Flush { p: 0 });
+            }
+        }
+        ev.extend([Close { p: 0 }, PlantLate { p: 2 }, ClosePass { p: 2 }, Open { p: 1, writer: true }, Write { p: 1, ops: vec![(0, 0, false)] }, CompStart { p: 1 }, Write { p: 1, ops: (0..PER_CUSTOMER).map(|i| (0, i, false)).collect() }, Flush { p: 1 }, CompDrain { p: 1 }, Sleep { ms: 300 }, CompDrain { p: 1 }]);
+        let ext = super::cluster::Ext { flavor: 3, log: false, old_kept: false, strict_versions: false };
+        let (f, v) = run_story3(&rt, "hole C: the close-time gate and a late version", ext, ev);
+        assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
+    }
+
+    /// Hole G (review of the final engine) as a directed story: the 1 TB generator's parallel publish
+    /// (`publish_generated_parts`) of a writer that loses the database while its runs are on their way (held, as a slow
+    /// store), while another process takes the database over, writes and publishes. On 65dd663 the parts publish has no
+    /// writer-epoch fence and its version (a lower writer epoch) lands on top of the new owner's; from 5e21c5c6
+    /// `fence_check` refuses it. Judged by the story's structural check (`Ext::strict_versions`) and the oracle.
+    #[test]
+    fn sim_story_generator_parts_publish_after_a_takeover() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let ev = vec![
+            Open { p: 0, writer: true },
+            // the generator's run uploads are slow (each held up to the PUT timeout): its publish comes after the takeover
+            Hold { p: 0, class: Class::FxRun, op: Some(NOp::Put), skip: 0, land: true, all: true, rid: 1 },
+            Hold { p: 0, class: Class::FxRun, op: Some(NOp::Multipart), skip: 0, land: true, all: true, rid: 2 },
+            Generate { p: 0, writers: 3 },
+            Open { p: 1, writer: true },
+            Write { p: 1, ops: vec![(1, 1, false), (2, 2, false)] },
+            Publish { p: 1 },
+            Sleep { ms: 4000 },
+            Release { rid: 1 },
+            Release { rid: 2 },
+            Sleep { ms: 1500 },
+            Write { p: 1, ops: vec![(3, 3, false)] },
+        ];
+        let ext = super::cluster::Ext { flavor: 3, log: false, old_kept: false, strict_versions: true };
+        let (f, v) = run_story3(&rt, "hole G: the generator's parts publish after a takeover", ext, ev);
+        assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
     }
 
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.

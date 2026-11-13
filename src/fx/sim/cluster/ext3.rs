@@ -337,6 +337,7 @@ pub struct X3 {
     pub on: bool,
     pub log: Option<Arc<SimLog>>,
     pub old_kept: bool,
+    pub strict_versions: bool,
     net: Arc<Net>,
     /// Per process life.
     procs: Arc<Mutex<HashMap<u64, ProcLog>>>,
@@ -354,6 +355,7 @@ impl X3 {
             on: ext.flavor == 3 || ext.log,
             log: if ext.log { Some(Arc::new(SimLog::new())) } else { None },
             old_kept: ext.old_kept,
+            strict_versions: ext.strict_versions,
             net,
             procs: Default::default(),
             owner: Default::default(),
@@ -448,7 +450,7 @@ impl X3 {
 }
 
 pub fn is_ext3(e: &Ev) -> bool {
-    matches!(e, Ev::Upload { .. } | Ev::Restart { .. } | Ev::Kept { .. } | Ev::LogRetry { .. } | Ev::DropDb { .. } | Ev::EraseDb { .. } | Ev::AdminCheck { .. })
+    matches!(e, Ev::Upload { .. } | Ev::Restart { .. } | Ev::Kept { .. } | Ev::LogRetry { .. } | Ev::DropDb { .. } | Ev::EraseDb { .. } | Ev::AdminCheck { .. } | Ev::PlantLate { .. })
 }
 
 /// `locallog::drop_stale`.
@@ -779,10 +781,54 @@ impl World {
                     whole_db(&x3, p, life, eid, &store, &id, &tl, &compl, &model, erase).await
                 }
                 Ev::AdminCheck { .. } => admin_check(&store, &id).await,
+                Ev::PlantLate { .. } => plant_late(&store, &id).await,
                 _ => unreachable!(),
             }
         })
     }
+}
+
+/// `Ev::PlantLate`: a lost writer's late version at the next slot (see the event).
+async fn plant_late(store: &Arc<dyn ObjectStore>, id: &str) -> String {
+    let r: anyhow::Result<String> = async {
+        let Some(cur) = manifest::load_newest(store, id).await? else { return Ok("no version (skipped)".into()) };
+        let admin = slatedb::admin::Admin::builder(crate::lifecycle::tenant_path(id), Arc::clone(store)).build();
+        let last_l0 = admin.read_manifest(None).await?.map(|m| m.last_l0_seq()).unwrap_or(0);
+        let ep = cur.writer_epoch.unwrap_or(1);
+        if last_l0 <= cur.x_d || ep < 1 {
+            return Ok(format!("late version not planted (L0 last seq {last_l0}, newest X_d {}, epoch {ep})", cur.x_d));
+        }
+        let mut stale = cur.clone();
+        stale.version = cur.version + 1;
+        stale.kind = "publish".into();
+        stale.writer_epoch = Some(ep - 1);
+        stale.x_d = last_l0;
+        let made = manifest::create(store, id, &stale).await?;
+        Ok(format!("late version {} planted (epoch {}, X_d {last_l0} over {}): created {made}", stale.version, ep - 1, cur.x_d))
+    }
+    .await;
+    r.unwrap_or_else(|e| format!("plant failed: {}", short(&e)))
+}
+
+/// The stories' structural check (`Ext::strict_versions`): no version is listed above a version of a higher writer
+/// epoch (a writer that lost the database published late on top).
+pub(super) async fn strict_versions(w: &World) -> Vec<String> {
+    let mut v = Vec::new();
+    let Ok(vs) = manifest::list_versions(&w.raw, &w.id).await else { return v };
+    let mut best: Option<(u64, u64)> = None;
+    for n in vs {
+        let Ok(tv) = manifest::load(&w.raw, &w.id, n).await else { continue };
+        let e = tv.writer_epoch.unwrap_or(0);
+        if let Some((bn, be)) = best {
+            if e < be {
+                v.push(format!("a lost writer's version is on top: version {n} (writer epoch {e}) above version {bn} (writer epoch {be})"));
+            }
+        }
+        if best.map_or(true, |(_, be)| e >= be) {
+            best = Some((n, e));
+        }
+    }
+    v
 }
 
 /// What listDatabases (`dbs.rs`), the admin API's existence check (`ctl/meta.rs`) and the admin erase handler's first
@@ -1396,5 +1442,5 @@ pub fn generate3(seed: u64, steps: usize) -> Script {
             out.push(Ev::LogCopy { r: c, up: true });
         }
     }
-    Script { seed, profile: base.profile, knobs: base.knobs, events: out.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Ext { flavor: 3, log, old_kept: false } }
+    Script { seed, profile: base.profile, knobs: base.knobs, events: out.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Ext { flavor: 3, log, old_kept: false, strict_versions: false } }
 }
