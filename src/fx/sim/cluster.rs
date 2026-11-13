@@ -1135,6 +1135,15 @@ pub fn describe(s: &Script) -> String {
     out
 }
 
+/// Whether a run keeps the violation being minimized: any violation, or (`SIM_MIN_KEEP`) one that contains that text
+/// (for example `writer:` to keep a loss the writer sees, not only a reader).
+fn keeps(r: &Run) -> bool {
+    match std::env::var("SIM_MIN_KEEP") {
+        Ok(k) if !k.is_empty() => r.violations.iter().any(|v| v.contains(&k)),
+        _ => !r.violations.is_empty(),
+    }
+}
+
 /// Remove events while the violation stays (each candidate run `tries` times; a run that shows any violation counts).
 pub async fn minimize(s: &Script, tries: usize, budget: usize) -> (Script, Run) {
     let mut best = s.clone();
@@ -1157,7 +1166,7 @@ pub async fn minimize(s: &Script, tries: usize, budget: usize) -> (Script, Run) 
             for _ in 0..tries {
                 runs += 1;
                 let r = run_script(&cand).await;
-                if !r.violations.is_empty() {
+                if keeps(&r) {
                     failed = Some(r);
                     break;
                 }
