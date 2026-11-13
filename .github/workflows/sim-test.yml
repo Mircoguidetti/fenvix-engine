@@ -35,7 +35,7 @@ jobs:
           B=$(( A + ${{ inputs.seeds_per_job }} ))
           echo "seeds $A..$B"
           SIM_SEEDS=$A..$B SIM_STEPS=${{ inputs.steps }} SIM_PAR=4 SIM_REPLAYS=3 SIM_MIN_BUDGET=24 SIM_OUT=sim-out \
-            cargo test --release --lib fx::sim::tests::sim_seeds -- --nocapture 2>&1 | grep -E "^SIM|panicked" | tee sim-${{ matrix.shard }}.log
+            cargo test --release --lib fx::sim::tests::sim_seeds -- --ignored --nocapture 2>&1 | grep -E "^SIM|panicked" | tee sim-${{ matrix.shard }}.log
           ! grep -q "SIM VIOLATION" sim-${{ matrix.shard }}.log
       - if: always()
         uses: actions/upload-artifact@v4
