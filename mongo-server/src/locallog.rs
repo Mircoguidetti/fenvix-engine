@@ -826,6 +826,7 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
                 // does). Their epoch is raised to the one the replay may have opened the database with (the stored epoch it
                 // read, plus one), so a restart does not take this process's own replay for another writer.
                 eprintln!("local log: replay of database {db} failed ({e:#}); its {} records are kept, the database is refused until they are applied", keep.len());
+                hold_point("hold_kept_records", &db).await;
                 failed += 1;
                 failed_dbs.push(db.clone());
                 let epoch = keep.iter().map(|r| r.epoch).max().unwrap_or(0).max(seen.map_or(0, |s| s + 1));
@@ -846,6 +847,20 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
         spawn_retry(Arc::clone(dbs), timeout);
     }
     Ok((n_dbs, applied, conflicts, failed_dbs))
+}
+
+/// Test only (`MONGO_TEST_FAULTS_FILE`): while the faults file has a line `NAME 1`, wait here (`FAULT NAME <db>` on stderr
+/// when reached, `FAULT NAME released <db>` when the line is gone). fix-takeover-retry: `hold_kept_records` holds a restart
+/// whose replay of `db` failed, before it keeps the records, so a test can order the holder's writes and uploads around it.
+async fn hold_point(name: &str, db: &str) {
+    if crate::faults::rule_value(name).is_none() {
+        return;
+    }
+    eprintln!("FAULT {name} {db}");
+    while crate::faults::rule_value(name).is_some() {
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+    eprintln!("FAULT {name} released {db}");
 }
 
 enum Outcome {
