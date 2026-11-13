@@ -1096,6 +1096,11 @@ async fn run() -> Result<()> {
     // Default since integration-3: on, first publish after 2 write batches; off only when asked
     // P-command-cpu: the span scan of a customer's documents (coll.rs docs_by_span), off for measurements and the
     // control of its test only (answers are the same either way)
+    // fix-idle-poll: FENVIX_SLATE_IDLE_POLL_MS, the longest a held SlateDB compactor/worker poll waits while our scheduler
+    // has nothing for it (default 5,000 ms, SlateDB's own default; 0 turns the gate off: the code before)
+    if let Some(ms) = std::env::var("FENVIX_SLATE_IDLE_POLL_MS").ok().and_then(|v| v.parse::<u64>().ok()) {
+        tenant_bench::fx::drop::SLATE_IDLE_POLL_MS.store(ms, std::sync::atomic::Ordering::Relaxed);
+    }
     if std::env::var_os("FENVIX_NO_SPAN_READS").is_some() {
         crate::coll::SPAN_READS.store(false, std::sync::atomic::Ordering::Relaxed);
     }

@@ -89,6 +89,8 @@ pub struct DropCtl {
     /// not run since (`slate_pending`); a job was proposed or runs (`slate_active`); the signal that ends a held poll.
     slate_pending: AtomicBool,
     slate_active: AtomicBool,
+    /// SlateDB's compactor and worker are being stopped: no poll is held any more (`stop_slate_polls`).
+    slate_stopping: AtomicBool,
     slate_wake: tokio::sync::Notify,
 }
 
@@ -129,6 +131,7 @@ impl DropCtl {
             jobs_by_dest: Mutex::new(HashMap::new()),
             slate_pending: AtomicBool::new(false),
             slate_active: AtomicBool::new(false),
+            slate_stopping: AtomicBool::new(false),
             slate_wake: tokio::sync::Notify::new(),
         })
     }
@@ -142,7 +145,16 @@ impl DropCtl {
     }
 
     fn slate_busy(&self) -> bool {
-        self.slate_pending.load(Relaxed) || self.slate_active.load(Relaxed)
+        self.slate_pending.load(Relaxed) || self.slate_active.load(Relaxed) || self.slate_stopping.load(Relaxed)
+    }
+
+    /// Before SlateDB's compactor and worker are stopped: every held poll goes out now, and no poll is held after it.
+    /// A wake alone was not enough (MEASURED, 5 stops of 12 took 6.5 or 12.6 s instead of 2.5): the next proposal
+    /// consumed it, the loop's next poll was held again for up to `slate_idle_poll_ms`, and `stop` waited for that loop,
+    /// once for the compactor and once for the worker.
+    pub fn stop_slate_polls(&self) {
+        self.slate_stopping.store(true, Relaxed);
+        self.slate_wake.notify_waiters();
     }
 
     pub fn set_foldable(&self, absorbed: &HashMap<ulid::Ulid, u64>) {
@@ -671,10 +683,11 @@ impl CompactionFilterSupplier for Sched {
 // it reaches the store unchanged, only later. SlateDB's writes stay conditional (a fence by another process is still
 // refused at its write), and its update timeouts are 300 s.
 
-/// The slowest poll while idle (ms); 0: no gate (`FENVIX_SLATE_IDLE_POLL_MS`, the negative control of the tests).
+/// The slowest poll while idle (ms); 0: no gate, for SlateDB's compactors started from then on (the server sets it from
+/// `FENVIX_SLATE_IDLE_POLL_MS`, the negative control of the tests).
+pub static SLATE_IDLE_POLL_MS: AtomicU64 = AtomicU64::new(5_000);
 pub fn slate_idle_poll_ms() -> u64 {
-    static V: std::sync::LazyLock<u64> = std::sync::LazyLock::new(|| std::env::var("FENVIX_SLATE_IDLE_POLL_MS").ok().and_then(|v| v.parse().ok()).unwrap_or(5_000));
-    *V
+    SLATE_IDLE_POLL_MS.load(Relaxed)
 }
 /// Poll reads held while idle, and those of them a wake released early (serverStatus `compactor.slatePolls*`).
 pub static SLATE_POLLS_HELD: AtomicU64 = AtomicU64::new(0);
