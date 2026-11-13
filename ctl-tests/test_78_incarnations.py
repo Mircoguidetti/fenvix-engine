@@ -87,3 +87,38 @@ def test_erase_drop_recreate_fork_restore_and_sweep():
         assert [k for k in objs(bucket, "inc") if not k.startswith("tenants/inc/i2/") and not k.endswith("/_lease")] == []
     finally:
         srv.term()
+
+
+def test_erased_name_is_not_listed():
+    """Item 5 of P-audit-fencing-2 (GitHub CI 7657d2f, test_05 erase.after_manifests): once an erase reports finished,
+    listDatabases must not list the name. An opening of an absent name takes its lease (tenants/{db}/_lease) before it
+    learns the database is absent, and a late write of the erased incarnation can land under the old prefix: neither is
+    a database. Before the fix listDatabases listed any name with any object under tenants/{db}/."""
+    bucket = make_bucket("unlisted")
+    srv = Server(bucket, "unlisted", idle=300).start()
+    try:
+        c = srv.client()
+        c["victim"]["c"].insert_many([{"_id": i} for i in range(100)])
+        c["keep"]["c"].insert_one({"_id": 1})
+        c["victim"].command("tenantAdmin", close=True)
+        wal = sorted(k for k in objs(bucket, "victim") if "/wal/" in k)
+        body = s3().get_object(Bucket=bucket, Key=wal[-1])["Body"].read()
+        st, r = srv.admin.delete("/v1/databases/victim")
+        assert st == 200, r
+        listed = lambda: [d["name"] for d in srv.client().list_databases()]
+        assert "victim" not in listed() and "keep" in listed()
+        # what an opening of the absent name leaves for a moment: its lease
+        import bson
+        s3().put_object(Bucket=bucket, Key="tenants/victim/_lease", Body=bson.encode({"holder": "gone", "expiresMs": bson.Int64(1), "seq": bson.Int64(1)}))
+        # a late write of the erased incarnation
+        s3().put_object(Bucket=bucket, Key=f"tenants/victim/wal/{99:020}.sst", Body=body)
+        assert "victim" not in listed(), "an erased name is listed (a lease or a late write of the erased incarnation)"
+        assert srv.admin.get("/v1/databases/victim")[0] == 404
+        assert c["victim"]["c"].find_one({}) is None
+        assert "victim" not in listed()
+        # the same name created again is listed
+        c["victim"]["c"].insert_one({"_id": "new"})
+        assert "victim" in listed()
+        assert [d["_id"] for d in c["victim"]["c"].find({})] == ["new"]
+    finally:
+        srv.term()

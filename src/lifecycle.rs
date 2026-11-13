@@ -170,6 +170,29 @@ pub async fn sweep_old_incarnations(store: &Arc<dyn ObjectStore>, name: &str) ->
     Ok(n)
 }
 
+/// Whether database `name` exists: its current incarnation holds an object other than the lease and the clean marker
+/// (reads the incarnation from the store first). A lease alone (an opening of an absent name takes the lease before it
+/// learns the database is absent, then deletes it) and the leftovers of older incarnations do not count (audit-fencing
+/// round 2, item 5: an erased name listed by listDatabases after its erase finished).
+pub async fn db_exists(store: &Arc<dyn ObjectStore>, name: &str) -> Result<bool> {
+    let k = load_incarnation(store, name).await?;
+    let prefix = Path::from(tenant_path(name));
+    let mut it = store.list(Some(&prefix));
+    while let Some(m) = it.next().await {
+        let m = m?;
+        let file = m.location.filename().unwrap_or("");
+        if file == "_lease" || file == "_clean" {
+            continue;
+        }
+        // with incarnation 0 the prefix is the name's own level: a later incarnation's directory is not this one's
+        if k == 0 && m.location.as_ref().split('/').nth(2).is_some_and(|d| d.len() > 1 && d.starts_with('i') && d[1..].bytes().all(|b| b.is_ascii_digit())) {
+            continue;
+        }
+        return Ok(true);
+    }
+    Ok(false)
+}
+
 pub fn tenant_path(id: impl std::fmt::Display) -> String {
     let id = id.to_string();
     match incarnation(&id) {
