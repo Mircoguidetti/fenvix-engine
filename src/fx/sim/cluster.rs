@@ -38,6 +38,9 @@ use std::sync::atomic::{AtomicU64, AtomicU8, Ordering::SeqCst};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+pub mod ext;
+pub use ext::Ext;
+
 pub const SLOTS: usize = 3;
 pub const CUSTOMERS: usize = 6;
 pub const PER_CUSTOMER: usize = 24;
@@ -54,6 +57,13 @@ pub const GC_GRACE_MS: u64 = 2500;
 /// (no reseal, no split, no merge: runs stay listed for long, as on a large database between reseals).
 pub fn knobs_for(profile: u8) -> Knobs {
     let mut k = knobs();
+    if profile == 2 {
+        // sim-test-2: many small groups (the shape of a 1 TB database: an erasure and a scrub touch a few groups of many)
+        k.split_bytes = 3 << 10;
+        k.merge_bytes = 1 << 10;
+        k.min_seal_bytes = 1 << 10;
+        k.tier_unit = 1 << 10;
+    }
     if profile == 1 {
         k.theta = 1e9;
         k.tier_t = 64;
@@ -98,6 +108,15 @@ pub fn knobs() -> Knobs {
         read_ahead: 64 << 10,
         derive: None,
     }
+}
+
+/// The builder's settings for a seed's compactor settings (`knobs_for`): profile 2 cuts many small groups.
+pub fn build_opts_for(profile: u8) -> BuildOpts {
+    let mut o = build_opts();
+    if profile == 2 {
+        o.group_bytes = 2 << 10;
+    }
+    o
 }
 
 pub fn build_opts() -> BuildOpts {
@@ -237,6 +256,26 @@ pub enum Ev {
     Hold { p: usize, class: Class, op: Option<NOp>, skip: u64, land: bool, all: bool, rid: u64 },
     Release { rid: u64 },
     Sleep { ms: u64 },
+    // ---- sim-test-2 (`ext.rs`) ----
+    /// A named restore point now (`ctl/pitr.rs` `make_point`): a SlateDB checkpoint paired with a version of ours.
+    Point { p: usize, tag: u64 },
+    /// The restore point `tag` deleted (its window passed: `pitr::prune`).
+    PointPrune { p: usize, tag: u64 },
+    /// A wall-clock time to restore to later (the model's state now is what a restore to it must give).
+    Mark { tag: u64 },
+    /// A restore to the time of mark `mark` (`pitr::restore`): stage the newest point at or before it plus the WAL
+    /// written up to it, check the staged state against the model at the mark, and (`apply`) write it into the live
+    /// database through slot `p`'s writer.
+    Restore { p: usize, mark: u64, apply: bool },
+    /// A fork of the database (`ctl/fork.rs` `fork_paired`) by slot `p` (it quiesces its own tenant first), `clone`
+    /// (runs shared by reference) or `copy`.
+    Fork { p: usize, copy: bool, tag: u64 },
+    /// The ballast generator's parallel publish (`publish_generated_parts`) into a database with no version yet.
+    Generate { p: usize, writers: u8 },
+    /// SlateDB's own GC of the database (`gc_tenant`, the WAL kept as a restore window keeps it).
+    SlateGc { p: usize },
+    /// S3 in trouble from now on (`on`: many 503s and timeouts after the write landed) or back to the seed's profile.
+    Storm { on: bool },
 }
 
 impl Ev {
@@ -244,7 +283,8 @@ impl Ev {
         use Ev::*;
         match self {
             Open { p, .. } | Upgrade { p } | Write { p, .. } | Erase { p, .. } | Flush { p } | Publish { p } | FirstStart { p } | FirstPoll { p } | CompStart { p } | CompDrain { p } | CompStop { p } | DropThrough { p } | Gc { p } | ErasePass { p } | Retire { p } | GcClosed { p } | ClosePass { p } | Close { p } | Abandon { p } | Kill { p } | Hold { p, .. } => Some(*p),
-            Release { .. } | Sleep { .. } => None,
+            Point { p, .. } | PointPrune { p, .. } | Restore { p, .. } | Fork { p, .. } | Generate { p, .. } | SlateGc { p } => Some(*p),
+            Release { .. } | Sleep { .. } | Mark { .. } | Storm { .. } => None,
         }
     }
 }
@@ -257,6 +297,8 @@ pub struct Script {
     /// The compactor's settings (`knobs_for`).
     pub knobs: u8,
     pub events: Vec<(u32, Ev)>,
+    /// sim-test-2's additions (default: none, the scripts of `generate`).
+    pub ext: Ext,
 }
 
 /// Generate the script of `seed`: a weighted random walk over the events that apply in an abstract state (who owns the
@@ -495,7 +537,7 @@ pub fn generate(seed: u64, steps: usize) -> Script {
         }
         ev.push(chosen);
     }
-    Script { seed, profile, knobs, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect() }
+    Script { seed, profile, knobs, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Ext::default() }
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -569,6 +611,8 @@ struct World {
     inflight: Vec<(u32, tokio::task::JoinHandle<()>)>,
     log: Arc<Mutex<Vec<String>>>,
     knobs: u8,
+    /// sim-test-2: restore points, marks, forks, and the violations found during the run (`ext.rs`).
+    x: ext::XState,
 }
 
 const STEP_WAIT: Duration = Duration::from_millis(1500);
@@ -601,6 +645,14 @@ impl World {
             }
             Ev::Release { rid } => {
                 self.net.release(rid);
+                None
+            }
+            Ev::Mark { tag } => {
+                self.mark(tag).await;
+                None
+            }
+            Ev::Storm { on } => {
+                self.storm(on);
                 None
             }
             Ev::Hold { p, class, op, skip, land, all, rid } => {
@@ -641,7 +693,7 @@ impl World {
                 net.note(line.clone());
                 log.lock().unwrap().push(line);
             });
-            let wait = if matches!(e, Ev::DropThrough { .. }) { Duration::from_secs(45) } else { STEP_WAIT };
+            let wait = if matches!(e, Ev::DropThrough { .. }) { Duration::from_secs(45) } else if matches!(e, Ev::Fork { .. } | Ev::Restore { .. } | Ev::Generate { .. }) { ext::LONG_STEP_WAIT } else { STEP_WAIT };
             if tokio::time::timeout(wait, &mut h).await.is_err() {
                 self.note(format!("event {eid} still in flight after {STEP_WAIT:?}"));
                 self.inflight.push((eid, h));
@@ -663,6 +715,9 @@ impl World {
         }
         let seed = self.net.seed;
         let kp = self.knobs;
+        if ext::is_ext(&e) {
+            return self.ext_op(eid, e);
+        }
         Box::pin(async move {
             let Ok(mut g) = tl.try_lock() else { return "busy (skipped)".into() };
             let comp = compl.lock().unwrap().clone();
@@ -713,7 +768,7 @@ impl World {
                 Ev::Write { ops, .. } => {
                     let Some(t) = g.as_mut() else { return "not open (skipped)".into() };
                     let writer = t.is_writer();
-                    let kv: Vec<(Vec<u8>, Option<Vec<u8>>)> = ops.iter().enumerate().map(|(j, (c, i, del))| (ckey(*c, *i), if *del { None } else { Some(format!("s{seed}-e{eid}-{j}").into_bytes()) })).collect();
+                    let kv: Vec<(Vec<u8>, Option<Vec<u8>>)> = ops.iter().enumerate().map(|(j, (c, i, del))| (ckey(*c, *i), if *del { None } else { Some(ext::value(kp, format!("s{seed}-e{eid}-{j}"))) })).collect();
                     // the last op of a key in one batch is what the batch leaves
                     let mut last: BTreeMap<Vec<u8>, Option<Vec<u8>>> = BTreeMap::new();
                     for (k, v) in &kv {
@@ -771,7 +826,7 @@ impl World {
                     }
                     // the first publish waits out E1's announcement (rule 26), as the server's next writes would
                     for _ in 0..10 {
-                        match t.fx_publish(&build_opts(), None).await {
+                        match t.fx_publish(&build_opts_for(kp), None).await {
                             Ok(Some(r)) => return format!("published (x_d {})", r.x_d),
                             Ok(None) if t.envelope_seq().is_none() => tokio::time::sleep(Duration::from_millis(T_PIN_MS / 3)).await,
                             Ok(None) => return "nothing published".into(),
@@ -786,7 +841,7 @@ impl World {
                         return "not a writer (skipped)".into();
                     }
                     for _ in 0..10 {
-                        match t.fx_first_start(&build_opts()).await {
+                        match t.fx_first_start(&build_opts_for(kp)).await {
                             Ok(true) => return "first build started".into(),
                             Ok(false) if t.envelope_seq().is_none() && t.fx_view().is_none() => tokio::time::sleep(Duration::from_millis(T_PIN_MS / 3)).await,
                             Ok(false) => return "no first build to start".into(),
@@ -946,6 +1001,7 @@ impl World {
                     format!("abandoned (close done {})", t.abandon().await)
                 }
                 Ev::Kill { .. } | Ev::Hold { .. } | Ev::Release { .. } | Ev::Sleep { .. } => unreachable!(),
+                _ => unreachable!("sim-test-2 events run in ext.rs"),
             }
         })
     }
@@ -1242,18 +1298,20 @@ pub async fn run_script(s: &Script) -> Run {
         inflight: Vec::new(),
         log: Default::default(),
         knobs: s.knobs,
+        x: ext::XState::new(s.profile),
     };
     w.note(format!("seed {} knobs {} profile {:?}", s.seed, s.knobs, s.profile));
     for (eid, e) in &s.events {
         w.step(*eid, e).await;
     }
     w.settle().await;
-    let violations = oracle(&w).await;
+    let mut violations = oracle(&w).await;
+    violations.extend(ext::oracle_ext(&w).await);
     let (issued, acked) = {
         let model = w.model.lock().unwrap();
         (model.issued, model.writes.values().flatten().filter(|x| x.status.load(SeqCst) == ACKED).count())
     };
-    let stats = format!("events {} writes issued {issued} key-writes acked {acked} requests {} faults {}", s.events.len(), net.requests.load(SeqCst), net.faults.load(SeqCst));
+    let stats = format!("events {} writes issued {issued} key-writes acked {acked} requests {} faults {}{}", s.events.len(), net.requests.load(SeqCst), net.faults.load(SeqCst), ext::coverage(&w));
     let trace = net.trace();
     // the slots' own processes' state for this database (views, holds) is process-wide: forget it for the next seed
     view::clear_cache();
