@@ -1,0 +1,1 @@
+objects 90 bytes 17088430763 {'generator/': 101142178, 'processes/': 180, 'tenants/_clean': 5, 'tenants/_lease': 50, 'tenants/compacted': 963, 'tenants/fx': 16987285803, 'tenants/gc': 1, 'tenants/manifest': 1374, 'tenants/wal': 209}

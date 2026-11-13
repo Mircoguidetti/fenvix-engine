@@ -1,0 +1,2 @@
+stop-2-20788 {"bytes":6263075971,"db":"app_data_b01","deleted":0,"groups":7,"groups_digest":"dbf9d6f26b11e2a93fbe471f36e327fc","rows":39968518,"rows_digest":"255f82fbc2b5e4ae075b6bc1c9751ff8","rows_digest_without_collection_uuids":"c5f11743d8b0e8ca123e57ab0c19d645","rows_digest_without_seq":"1a12ca10826a6d78dd45c843d0392175","version":1,"x_d":11}
+SAME as the reference

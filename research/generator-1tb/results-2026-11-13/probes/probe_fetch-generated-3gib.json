@@ -1,0 +1,292 @@
+{
+ "stages": [
+  {
+   "stage": "1 server A, generated version, cold",
+   "reads": [
+    {
+     "secs": 0.8,
+     "docsExamined": 811,
+     "MB_fetched": 72.1,
+     "getRange": 608,
+     "rows_from_runs": 1622
+    },
+    {
+     "secs": 0.53,
+     "docsExamined": 766,
+     "MB_fetched": 58.7,
+     "getRange": 489,
+     "rows_from_runs": 1532
+    },
+    {
+     "secs": 0.37,
+     "docsExamined": 808,
+     "MB_fetched": 45.8,
+     "getRange": 380,
+     "rows_from_runs": 1616
+    },
+    {
+     "secs": 0.48,
+     "docsExamined": 796,
+     "MB_fetched": 64.3,
+     "getRange": 587,
+     "rows_from_runs": 1592
+    }
+   ],
+   "compactor": {
+    "enabled": true,
+    "started": 0,
+    "running": 0,
+    "publishes": 0,
+    "absorbs": 0,
+    "merges": 0,
+    "reseals": 0,
+    "errors": 0,
+    "catchUps": 0
+   }
+  },
+  {
+   "stage": "1b server A, same reads again (warm)",
+   "reads": [
+    {
+     "secs": 0.34,
+     "docsExamined": 811,
+     "MB_fetched": 55.5,
+     "getRange": 471,
+     "rows_from_runs": 1622
+    },
+    {
+     "secs": 0.34,
+     "docsExamined": 766,
+     "MB_fetched": 58.6,
+     "getRange": 488,
+     "rows_from_runs": 1532
+    },
+    {
+     "secs": 0.28,
+     "docsExamined": 808,
+     "MB_fetched": 45.0,
+     "getRange": 373,
+     "rows_from_runs": 1616
+    },
+    {
+     "secs": 0.37,
+     "docsExamined": 796,
+     "MB_fetched": 62.7,
+     "getRange": 574,
+     "rows_from_runs": 1592
+    }
+   ],
+   "compactor": {
+    "enabled": true,
+    "started": 0,
+    "running": 0,
+    "publishes": 0,
+    "absorbs": 0,
+    "merges": 0,
+    "reseals": 0,
+    "errors": 0,
+    "catchUps": 0
+   }
+  },
+  {
+   "stage": "2 server A after writes and absorption",
+   "reads": [
+    {
+     "secs": 12.91,
+     "docsExamined": 810,
+     "MB_fetched": 1601.3,
+     "getRange": 1055,
+     "rows_from_runs": 3712675
+    },
+    {
+     "secs": 12.88,
+     "docsExamined": 771,
+     "MB_fetched": 1600.4,
+     "getRange": 986,
+     "rows_from_runs": 3699901
+    },
+    {
+     "secs": 11.75,
+     "docsExamined": 808,
+     "MB_fetched": 1594.8,
+     "getRange": 983,
+     "rows_from_runs": 3704348
+    },
+    {
+     "secs": 11.47,
+     "docsExamined": 795,
+     "MB_fetched": 1595.8,
+     "getRange": 984,
+     "rows_from_runs": 3697595
+    }
+   ],
+   "compactor": {
+    "enabled": true,
+    "started": 1,
+    "running": 1,
+    "publishes": 0,
+    "absorbs": 0,
+    "merges": 0,
+    "reseals": 0,
+    "errors": 0,
+    "catchUps": 1
+   }
+  },
+  {
+   "stage": "3 server B after the takeover, reads only",
+   "reads": [
+    {
+     "secs": 11.21,
+     "docsExamined": 810,
+     "MB_fetched": 1602.5,
+     "getRange": 991,
+     "rows_from_runs": 3712675
+    },
+    {
+     "secs": 10.98,
+     "docsExamined": 771,
+     "MB_fetched": 1600.4,
+     "getRange": 986,
+     "rows_from_runs": 3699901
+    },
+    {
+     "secs": 11.17,
+     "docsExamined": 808,
+     "MB_fetched": 1594.8,
+     "getRange": 983,
+     "rows_from_runs": 3704348
+    },
+    {
+     "secs": 11.14,
+     "docsExamined": 795,
+     "MB_fetched": 1595.8,
+     "getRange": 984,
+     "rows_from_runs": 3697595
+    }
+   ],
+   "compactor": {
+    "enabled": true,
+    "started": 0,
+    "running": 0,
+    "publishes": 0,
+    "absorbs": 0,
+    "merges": 0,
+    "reseals": 0,
+    "errors": 0,
+    "catchUps": 0
+   }
+  },
+  {
+   "stage": "3b server B, same reads again",
+   "reads": [
+    {
+     "secs": 10.99,
+     "docsExamined": 810,
+     "MB_fetched": 1597.5,
+     "getRange": 982,
+     "rows_from_runs": 3712675
+    },
+    {
+     "secs": 10.92,
+     "docsExamined": 771,
+     "MB_fetched": 1600.4,
+     "getRange": 983,
+     "rows_from_runs": 3699901
+    },
+    {
+     "secs": 11.52,
+     "docsExamined": 808,
+     "MB_fetched": 1594.8,
+     "getRange": 980,
+     "rows_from_runs": 3704348
+    },
+    {
+     "secs": 11.12,
+     "docsExamined": 795,
+     "MB_fetched": 1595.8,
+     "getRange": 981,
+     "rows_from_runs": 3697595
+    }
+   ],
+   "compactor": {
+    "enabled": true,
+    "started": 0,
+    "running": 0,
+    "publishes": 0,
+    "absorbs": 0,
+    "merges": 0,
+    "reseals": 0,
+    "errors": 0,
+    "catchUps": 0
+   }
+  },
+  {
+   "stage": "4 server B after its own writes and its compactor",
+   "reads": [
+    {
+     "secs": 13.37,
+     "docsExamined": 811,
+     "MB_fetched": 1604.6,
+     "getRange": 1068,
+     "rows_from_runs": 3712678
+    },
+    {
+     "secs": 13.6,
+     "docsExamined": 773,
+     "MB_fetched": 1603.8,
+     "getRange": 992,
+     "rows_from_runs": 3699910
+    },
+    {
+     "secs": 12.57,
+     "docsExamined": 813,
+     "MB_fetched": 1598.3,
+     "getRange": 989,
+     "rows_from_runs": 3704354
+    },
+    {
+     "secs": 12.47,
+     "docsExamined": 795,
+     "MB_fetched": 1599.2,
+     "getRange": 990,
+     "rows_from_runs": 3697601
+    }
+   ],
+   "compactor": {
+    "enabled": true,
+    "started": 1,
+    "running": 1,
+    "publishes": 0,
+    "absorbs": 0,
+    "merges": 0,
+    "reseals": 0,
+    "errors": 0,
+    "catchUps": 0
+   }
+  }
+ ],
+ "writes_A": 13272,
+ "settle_A": {
+  "enabled": true,
+  "started": 1,
+  "running": 1,
+  "publishes": 0,
+  "absorbs": 0,
+  "merges": 0,
+  "reseals": 0,
+  "errors": 0,
+  "catchUps": 1
+ },
+ "writes_B": 14299,
+ "settle_B": {
+  "enabled": true,
+  "started": 1,
+  "running": 1,
+  "publishes": 0,
+  "absorbs": 0,
+  "merges": 0,
+  "reseals": 0,
+  "errors": 0,
+  "catchUps": 0
+ }
+}

@@ -3,7 +3,7 @@
 # writers, killed with SIGKILL mid-way and resumed; then our server (product defaults) against mongod 7.0 loaded with the
 # sampled customers (ballast_check.py); then identical writes on both (mutate.py), a takeover (SIGKILL of server A while
 # its compactor works, server B opens the database), the compactor settles on B, and the check again.
-# Usage: big.sh STEP  (gen | check1 | mutate | takeover | check2)
+# Usage: big.sh STEP  (gen | check1 | mutate | takeover | check2 | mutate2 | check3)
 set -u
 export PATH=/root/.fenvix-judge/env/bin:$PATH AWS_ACCESS_KEY_ID=minioadmin AWS_SECRET_ACCESS_KEY=minioadmin
 E=/home/user/fenvix-engine; D=/home/user/work/big; R=$E/research/generator-1tb; mkdir -p $D
@@ -91,5 +91,36 @@ PY
 check2)
   python3 $R/ballast_check.py --ours "$OURS" --ref "$REF" --plan $D/plan.json --gen-dir $D/out --out $D/check2.json --keep-ref --counts $D/counts.json --count-threads 8 --stato-window 0.003 --stato-customers 2 > $D/check2.log 2>&1
   echo "check2 exit $?" >> $D/check2.log; tail -3 $D/check2.log
+  ;;
+# 2026-11-13 (second session): server B only read after the takeover, so its compactor never started (a compactor starts
+# on a writer, dbs.rs maybe_start_fxc). These steps give B identical writes on both servers (seed 12; the expected counts
+# are cumulative: generator + reference now - reference as loaded), wait until B's compactor has started and its
+# counters are unchanged for 3 minutes, then check again.
+mutate2)
+  python3 $R/compactor_status.py "$OURS" > $D/compactor-B-before-writes.json 2>&1
+  python3 $R/mutate.py --ours "$OURS" --ref "$REF" --plan $D/plan.json --gen-dir $D/out --counts-out $D/counts2.json --seed 12 --insert-mb ${INSERT_MB:-300} > $D/mutate2.log 2>&1
+  echo "mutate2 exit $?" >> $D/mutate2.log; tail -2 $D/mutate2.log
+  python3 - "$OURS" > $D/settle-B2.log 2>&1 <<'PY'
+import json, sys, time, pymongo
+sys.path.insert(0, "/home/user/fenvix-engine/research/generator-1tb")
+from compactor_status import compactor
+c = pymongo.MongoClient(sys.argv[1], directConnection=True)
+last, same_since, t0 = None, time.time(), time.time()
+while True:
+    s = compactor(c)
+    if s != last:
+        last, same_since = s, time.time(); print(time.strftime("%H:%M:%S"), json.dumps(s)[:600], flush=True)
+    if (s or {}).get("started", 0) >= 1 and time.time() - same_since > 180:
+        break
+    if time.time() - t0 > 3600:
+        print("NOT SETTLED in 1 hour"); break
+    time.sleep(10)
+print("settled", json.dumps(last))
+PY
+  tail -2 $D/settle-B2.log
+  ;;
+check3)
+  python3 $R/ballast_check.py --ours "$OURS" --ref "$REF" --plan $D/plan.json --gen-dir $D/out --out $D/check3.json --keep-ref --counts $D/counts2.json --count-threads 8 --stato-window 0.003 > $D/check3.log 2>&1
+  echo "check3 exit $?" >> $D/check3.log; tail -3 $D/check3.log
   ;;
 esac
