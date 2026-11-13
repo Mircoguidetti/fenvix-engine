@@ -1,0 +1,106 @@
+{
+ "fxc_not_started_lines": 20,
+ "tag": "def600-base-20",
+ "binary": "/home/user/bins/base-c41559f",
+ "mode": "default",
+ "dbs": 20,
+ "secs": 600.7,
+ "s3_delta": {
+  "get": 4465180,
+  "list": 3439,
+  "put": 139,
+  "getBytes": 139920,
+  "putBytes": 123081
+ },
+ "gets_per_s_per_db": 371.6951,
+ "requests_per_s_per_db": 371.993,
+ "gets_per_10s_window_all_dbs": [
+  74575,
+  74728,
+  74764,
+  74323,
+  74753,
+  74553,
+  74441,
+  74601,
+  74780,
+  74766,
+  74607,
+  74498,
+  74699,
+  74476,
+  74252,
+  74661,
+  74665,
+  74478,
+  74223,
+  74423,
+  74835,
+  74466,
+  74655,
+  74685,
+  74927,
+  74861,
+  74173,
+  74289,
+  74439,
+  74180,
+  74384,
+  74631,
+  74286,
+  74081,
+  74275,
+  73753,
+  73797,
+  74339,
+  74312,
+  74518,
+  73857,
+  74857,
+  74598,
+  74694,
+  74734,
+  75054,
+  74679,
+  74640,
+  74509,
+  74554,
+  74472,
+  73991,
+  74380,
+  73997,
+  74362,
+  74084,
+  74522,
+  71990,
+  72829,
+  72891
+ ],
+ "get_kinds": [
+  [
+   "tenants/appNN/gc/compactions.boundary",
+   1563157
+  ],
+  [
+   "tenants/appNN/compactions/N.compactions",
+   1561323
+  ],
+  [
+   "tenants/appNN/manifest/N.manifest",
+   571085
+  ],
+  [
+   "tenants/appNN/gc/manifest.boundary",
+   571032
+  ],
+  [
+   "tenants/appNN/fx/drop-lease",
+   2581
+  ],
+  [
+   "tenants/appNN/fx/manifest/N",
+   220
+  ]
+ ],
+ "list_kinds": []
+}

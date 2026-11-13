@@ -1193,7 +1193,7 @@ async fn bft_idle_slatedb_polls_are_held() {
         eprintln!("idle poll {idle_ms} ms: L0 folded in {fold:?} ({l0_left} left), {idle_polls} polled GETs in 2 s idle, stop {stop:?}");
         seen.push((idle_ms, l0_left, idle_polls, stop));
     }
-    super::drop::SLATE_IDLE_POLL_MS.store(5_000, Relaxed);
+    super::drop::SLATE_IDLE_POLL_MS.store(120_000, Relaxed);
     teardown();
     let (_, l0_gate, polls_gate, stop_gate) = seen[0];
     let (_, _, polls_control, _) = seen[1];
@@ -1201,4 +1201,56 @@ async fn bft_idle_slatedb_polls_are_held() {
     assert!(polls_gate <= 8, "with the gate an idle database polls at most every 5 s ({polls_gate} GETs in 2 s)");
     assert!(polls_control >= 100, "control: without the gate it polls every 10-20 ms ({polls_control} GETs in 2 s)");
     assert!(stop_gate < Duration::from_secs(2), "the stop is not held by a held poll ({stop_gate:?})");
+}
+
+/// fix-idle-poll, `writer_gate`: an idle writer's manifest poll (every `WRITER_POLL_SECS`, 1 s here) is held once nothing
+/// went through its store for `ACTIVE_WINDOW`, up to `WRITER_IDLE_POLL_SECS`; the next write releases it at once and
+/// reads stay exact. Control: `SLATE_IDLE_POLL_MS` 0 (no gate): the writer keeps polling every second.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn fip_idle_writer_manifest_poll_is_held() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let mut seen = Vec::new();
+    for idle_ms in [120_000u64, 0] {
+        super::drop::SLATE_IDLE_POLL_MS.store(idle_ms, Relaxed);
+        let pc = Arc::new(PollCount { inner: Arc::new(InMemory::new()), polls: Default::default() });
+        let store: Arc<dyn ObjectStore> = pc.clone();
+        let id = format!("fx-fip-writer-{idle_ms}");
+        let mut t = lc(&store).create(&id).await.unwrap();
+        let mut m = BTreeMap::new();
+        for i in 0..20 {
+            apply(&mut t, &mut m, vec![(ckey(7, i), Some(b"v".to_vec()))]).await;
+        }
+        flush(&t).await;
+        // past the active window: then 4 s of idle polls counted
+        let held0 = super::writer_gate::WRITER_POLLS_HELD.load(Relaxed);
+        let woken0 = super::writer_gate::WRITER_POLLS_WOKEN.load(Relaxed);
+        tokio::time::sleep(super::writer_gate::ACTIVE_WINDOW + Duration::from_secs(1)).await;
+        let p0 = pc.polls.load(Relaxed);
+        tokio::time::sleep(Duration::from_secs(4)).await;
+        let idle_polls = pc.polls.load(Relaxed) - p0;
+        // a write releases the held poll
+        apply(&mut t, &mut m, vec![(ckey(7, 99), Some(b"w".to_vec()))]).await;
+        flush(&t).await;
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        let woken = super::writer_gate::WRITER_POLLS_WOKEN.load(Relaxed) - woken0;
+        let held = super::writer_gate::WRITER_POLLS_HELD.load(Relaxed) - held0;
+        for (key, want) in &m {
+            assert_eq!(t.get(key).await.unwrap().as_deref(), Some(&want[..]));
+        }
+        let t1 = Instant::now();
+        t.abandon().await;
+        let close = t1.elapsed();
+        eprintln!("idle hold {idle_ms} ms: {idle_polls} writer poll GETs in 4 s idle, held {held}, woken {woken}, close {close:?}");
+        seen.push((idle_polls, held, woken, close));
+    }
+    super::drop::SLATE_IDLE_POLL_MS.store(120_000, Relaxed);
+    teardown();
+    let (polls_gate, held_gate, woken_gate, close_gate) = seen[0];
+    let (polls_control, held_control, _, _) = seen[1];
+    assert!(polls_gate <= 2, "with the gate an idle writer does not poll every second ({polls_gate} GETs in 4 s)");
+    assert!(held_gate >= 1 && woken_gate >= 1, "the poll was held ({held_gate}) and the write released it ({woken_gate})");
+    assert!(close_gate < Duration::from_secs(5), "the close is not held by a held poll ({close_gate:?})");
+    assert!(polls_control >= 6, "control: without the gate the writer polls every second ({polls_control} GETs in 4 s)");
+    assert_eq!(held_control, 0);
 }

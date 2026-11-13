@@ -1,0 +1,7 @@
+s2d first_request run 1: 2 passed, 3 deselected in 14.40s
+s2d first_request run 2: 2 passed, 3 deselected in 14.38s
+s2d first_request run 3: 2 passed, 3 deselected in 14.40s
+s2d first_request run 4: 2 passed, 3 deselected in 14.44s
+s2d first_request run 5: 2 passed, 3 deselected in 14.32s
+s2d whole file: 1 failed, 4 passed in 22.54s
+off whole file: 5 passed in 22.64s

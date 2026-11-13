@@ -33,7 +33,7 @@ use std::sync::{Arc, Mutex, Weak};
 use std::time::{Duration, Instant};
 
 /// The slowest writer poll while idle, in seconds: `--writer-poll-secs` (the server sets it; it must stay below
-/// `--sst-gc-min-unref-secs`).
+/// `--sst-gc-min-unref-secs`), and never more than the compactor's `slate_idle_poll_ms`.
 pub static WRITER_IDLE_POLL_SECS: AtomicU64 = AtomicU64::new(60);
 /// After a wake or any other request through the writer's store, the writer polls at its own pace for this long.
 pub const ACTIVE_WINDOW: Duration = Duration::from_secs(10);
