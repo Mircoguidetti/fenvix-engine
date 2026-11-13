@@ -194,6 +194,10 @@ def write_until(srv, cond, start, timeout=60):
 
 
 def test_crash_loop_leaves_no_older_writers_upload():
+    # run uploads exist only with sealed runs on: with FENVIX_SEALED_RUNS=off no process ever opens one, and the test's
+    # first condition could never be reached (round 2: found running the CI request's "off" mode)
+    if os.environ.get("FENVIX_SEALED_RUNS") == "off":
+        pytest.skip("no run uploads with sealed runs off (item 2 is about them)")
     px = proxy()
     bucket = make_bucket("crashloop")
     acked, epochs = [], []
