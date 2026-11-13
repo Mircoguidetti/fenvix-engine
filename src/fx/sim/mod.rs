@@ -666,6 +666,59 @@ mod tests {
         assert!(refused >= 1, "the copy-mode fork's source was opened by another writer during it: it must be refused");
     }
 
+    /// fix-sim-holes-2, hole R (found by the CI batch 43479363490 on c94a477, seed 3259, generator of 0964575): a GC pass
+    /// takes its view of our versions at its start, deletes the old ones (slow here: each delete held), and only then
+    /// lists the runs. A run the new owner wrote and published meanwhile is in the listing but in no version of that
+    /// stale view; an earlier pass (just as stale) already saw it unreferenced, so both grace checks pass and the run is
+    /// deleted while the newest version lists it: every read of its rows fails. Here the passes are a zombie's (it lost
+    /// the database without noticing); an owner's slow pass has the same stale view.
+    #[test]
+    fn sim_hole_r_slow_gc_deletes_a_run_published_during_its_pass() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let old = std::env::var("SIM_MAX_HOLD_MS").ok();
+        std::env::set_var("SIM_MAX_HOLD_MS", "30000");
+        let mut ev = vec![Open { p: 0, writer: true }, fill(0, 0, 0), Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }];
+        // old versions for the GC to delete (retention 0)
+        for c in 1..4 {
+            ev.extend([fill(0, c, 0), Flush { p: 0 }, CompDrain { p: 0 }]);
+        }
+        ev.extend([
+            // pass A: its first version delete stays on the wire until released
+            Hold { p: 0, class: Class::FxVersion, op: Some(NOp::Delete), skip: 0, land: true, all: false, rid: 1 },
+            Gc { p: 0 },
+            // pass B, the same
+            Hold { p: 0, class: Class::FxVersion, op: Some(NOp::Delete), skip: 0, land: true, all: false, rid: 2 },
+            Gc { p: 0 },
+            // the takeover: p0 has not noticed; the new owner writes and its compactor publishes a run
+            Open { p: 1, writer: true },
+            CompStart { p: 1 },
+            fill(1, 4, 0),
+            Flush { p: 1 },
+            CompDrain { p: 1 },
+            // pass A goes on: it lists the runs and sees the new one unreferenced
+            Release { rid: 1 },
+            Sleep { ms: 3000 },
+            // pass B goes on, past the grace: it deletes the run the newest version lists
+            Release { rid: 2 },
+            Sleep { ms: 2000 },
+            Abandon { p: 0 },
+        ]);
+        let stale0 = crate::fx::gc::GC_PASSES_STALE.load(std::sync::atomic::Ordering::Relaxed);
+        let (f, v) = run_story(&rt, "hole R: a slow GC pass deletes a run published during it", env_u64("SIM_KNOBS", 0) as u8, ev);
+        let stale = crate::fx::gc::GC_PASSES_STALE.load(std::sync::atomic::Ordering::Relaxed) - stale0;
+        eprintln!("SIM HOLE R: GC passes that found newer versions after listing the runs: {stale}");
+        match old {
+            Some(v) => std::env::set_var("SIM_MAX_HOLD_MS", v),
+            None => std::env::remove_var("SIM_MAX_HOLD_MS"),
+        }
+        assert_eq!(f, 0, "hole R: {:?}", v.iter().take(4).collect::<Vec<_>>());
+        assert!(stale >= 1, "the passes listed the runs after the new owner's publish: at least one must see it");
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {
