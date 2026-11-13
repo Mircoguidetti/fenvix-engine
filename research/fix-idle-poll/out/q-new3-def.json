@@ -1,0 +1,90 @@
+{
+ "fxc_not_started_lines": 1,
+ "tag": "q-new3-def",
+ "binary": "/home/user/bins/new3",
+ "mode": "default",
+ "dbs": 1,
+ "secs": 150.1,
+ "s3_delta": {
+  "get": 20,
+  "list": 15,
+  "put": 15,
+  "getBytes": 1180,
+  "putBytes": 1455
+ },
+ "gets_per_s_per_db": 0.1332,
+ "requests_per_s_per_db": 0.3331,
+ "gets_per_10s_window_all_dbs": [
+  0,
+  0,
+  6,
+  0,
+  1,
+  0,
+  0,
+  0,
+  3,
+  0,
+  1,
+  0,
+  0,
+  0,
+  9
+ ],
+ "get_kinds": [
+  [
+   "tenants/appNN/fx/drop-lease",
+   4
+  ],
+  [
+   "tenants/appNN/manifest/N.manifest",
+   4
+  ],
+  [
+   "tenants/appNN/gc/manifest.boundary",
+   4
+  ],
+  [
+   "tenants/appNN/compactions/N.compactions",
+   3
+  ],
+  [
+   "tenants/appNN/gc/compactions.boundary",
+   3
+  ],
+  [
+   "tenants/appNN/fx/manifest/N",
+   2
+  ]
+ ],
+ "list_kinds": [
+  [
+   "control/pins",
+   5
+  ],
+  [
+   "tenants/appNN/fx/manifest",
+   4
+  ],
+  [
+   "control/erasures",
+   2
+  ],
+  [
+   "tenants/appNN/fx/pairs",
+   1
+  ],
+  [
+   "tenants/appNN/fx/refs",
+   1
+  ],
+  [
+   "tenants/appNN/fx/forks",
+   1
+  ],
+  [
+   "tenants/appNN/fx/run",
+   1
+  ]
+ ]
+}

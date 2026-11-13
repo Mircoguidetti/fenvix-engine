@@ -1,0 +1,66 @@
+{
+ "fxc_not_started_lines": 1,
+ "tag": "q-new3-s2d",
+ "binary": "/home/user/bins/new3",
+ "mode": "sealed2-derive",
+ "dbs": 1,
+ "secs": 120.1,
+ "s3_delta": {
+  "get": 24,
+  "list": 10,
+  "put": 12,
+  "putBytes": 1164
+ },
+ "gets_per_s_per_db": 0.1998,
+ "requests_per_s_per_db": 0.383,
+ "gets_per_10s_window_all_dbs": [
+  0,
+  0,
+  0,
+  0,
+  4,
+  0,
+  0,
+  0,
+  0,
+  0,
+  10,
+  10
+ ],
+ "get_kinds": [
+  [
+   "tenants/appNN/manifest/N.manifest",
+   8
+  ],
+  [
+   "tenants/appNN/gc/manifest.boundary",
+   8
+  ],
+  [
+   "tenants/appNN/fx/drop-lease",
+   4
+  ],
+  [
+   "tenants/appNN/gc/compactions.boundary",
+   3
+  ],
+  [
+   "tenants/appNN/compactions/N.compactions",
+   1
+  ]
+ ],
+ "list_kinds": [
+  [
+   "control/pins",
+   4
+  ],
+  [
+   "tenants/appNN/fx/manifest",
+   4
+  ],
+  [
+   "control/erasures",
+   2
+  ]
+ ]
+}

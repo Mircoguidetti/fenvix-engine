@@ -1,0 +1,30 @@
+{
+ "tag": "quick-gate",
+ "binary": "/home/user/bins/gate-d86232e9",
+ "mode": "default",
+ "dbs": 1,
+ "secs": 30.0,
+ "s3_delta": {
+  "get": 30,
+  "list": 2,
+  "put": 2,
+  "putBytes": 194
+ },
+ "gets_per_s_per_db": 0.9993,
+ "requests_per_s_per_db": 1.1325,
+ "gets_per_10s_window_all_dbs": [
+  10,
+  10,
+  10
+ ],
+ "get_kinds": [
+  [
+   "tenants/appNN/manifest/N.manifest",
+   30
+  ],
+  [
+   "tenants/appNN/gc/manifest.boundary",
+   30
+  ]
+ ]
+}
