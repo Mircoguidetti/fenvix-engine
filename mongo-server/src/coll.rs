@@ -2408,10 +2408,10 @@ impl NatScan {
         let rows = g.scan_range(&self.start, self.stop.as_deref(), false, Some(chunk), INDEX_READ_AHEAD).await?;
         let n = rows.len();
         let ids: Vec<Vec<u8>> = rows.iter().map(|(_, v)| v.to_vec()).collect();
-        let docs = docs_aligned(g, coll, &ids).await?;
-        let doc_bytes: u64 = docs.iter().map(|d| d.as_ref().map_or(0, |d| crate::query::bson_size(d) as u64)).sum();
-        self.cs.seen_sizes(docs.len(), doc_bytes);
-        self.read += doc_bytes + rows.iter().map(|(k, v)| (k.len() + v.len()) as u64).sum::<u64>();
+        // (bytes read: the entries, and what fetching their documents read, a range scan of the documents included)
+        self.read += rows.iter().map(|(k, v)| (k.len() + v.len()) as u64).sum::<u64>();
+        let docs = docs_aligned(g, coll, &ids, &mut self.read).await?;
+        self.cs.seen_sizes(docs.len(), docs.iter().map(|d| d.as_ref().map_or(0, |d| crate::query::bson_size(d) as u64)).sum());
         for ((k, _), (id, d)) in rows.iter().zip(ids.iter().zip(docs)) {
             self.last = k.get(self.np.len()..).and_then(|s| s.try_into().ok()).map(u64::from_be_bytes).or(self.last);
             let d = match d {
@@ -2561,7 +2561,7 @@ impl Ord for BySeq {
 /// whole: its matches after `after`, ordered by their stored natural-order numbers, are exactly what the scan returns
 /// (a document's number is kept when it is updated or moves to another customer, `Writes::put`); only the first `want`
 /// (and up to `max_bytes`) are held. The scan finishes when it has its page. The side that has read fewer bytes reads
-/// its next chunk, the scan first. So a page costs at most about twice the cheaper of the two: a small customer in a large collection reads its span, a large customer whose first documents
+/// its next chunk, the span first. So a page costs at most about twice the cheaper of the two: a small customer in a large collection reads its span, a large customer whose first documents
 /// come early in natural order is answered by the scan, as before. A span document without a number (none is expected:
 /// numbering a collection writes every document again) leaves the answer to the scan.
 #[allow(clippy::too_many_arguments)]
@@ -2572,9 +2572,10 @@ async fn natural_race(g: &mut impl Rd, coll: &str, o: &FindOpts<'_>, spans: Vec<
     let mut heap_bytes = 0usize;
     let mut nat = NatScan::new(coll, after);
     loop {
-        // the side that has read fewer bytes goes next, the scan first: a page the scan answers from its first chunk
-        // costs what it did before the race
-        if span_ok && span.read < nat.read {
+        // the side that has read fewer bytes goes next, the span first (its first chunk is small: 64 rows). Measured
+        // on 1,000,000 documents: the scan's first chunk can read the whole document range (`docs_aligned` prefers one
+        // range scan to scattered point reads in a large database), 450 ms for a customer of 100 documents.
+        if span_ok && span.read <= nat.read {
             let rows = span.next(g).await?;
             'rows: for (_, v) in &rows {
                 stats.docs += 1;
@@ -2611,7 +2612,7 @@ async fn natural_race(g: &mut impl Rd, coll: &str, o: &FindOpts<'_>, spans: Vec<
                 return Ok(NaturalPage { docs: kept.into_iter().map(|b| b.doc).collect(), last, done: !full, scan_won: false });
             }
         }
-        if !span_ok || nat.read <= span.read {
+        if !span_ok || nat.read < span.read {
             if let Some(mut p) = nat.step(g, coll, o, want, max_bytes, stats).await? {
                 CPLAN.race_natural.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                 p.scan_won = true;
@@ -2749,7 +2750,7 @@ const NATURAL_CHUNK: usize = 8192;
 /// The documents under these key suffixes, position by position (`None` where nothing is stored under a suffix: the
 /// caller looks for a moved document). Same cost-based choice as `docs_by_ids`, without matching documents back to
 /// their keys.
-async fn docs_aligned(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Option<Document>>> {
+async fn docs_aligned(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>], read: &mut u64) -> R<Vec<Option<Document>>> {
     let prefix = doc_prefix(coll);
     tenant_bench::counting::set_phase(2);
     if ids.is_empty() {
@@ -2769,6 +2770,7 @@ async fn docs_aligned(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Opt
             let rows = g.scan_range(&start, Some(&stop), false, Some(chunk), FETCH_SCAN_READ_AHEAD).await?;
             let n = rows.len();
             cs.seen(&rows);
+            *read += rows.iter().map(|(k, v)| (k.len() + v.len()) as u64).sum::<u64>();
             for (k, v) in &rows {
                 let id = &k[prefix.len()..];
                 if want.contains(id) {
@@ -2789,5 +2791,7 @@ async fn docs_aligned(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Opt
     }
     let keys: Vec<Vec<u8>> = ids.iter().map(|id| [&prefix[..], id].concat()).collect();
     let vals = g.get_many(&keys).await?;
+    // (a point read costs at least a block)
+    *read += vals.iter().map(|v| v.as_ref().map_or(0, |v| v.len() as u64).max(POINT_READ_BYTES)).sum::<u64>();
     vals.into_iter().map(|v| v.map(|v| decode(&v)).transpose()).collect()
 }
