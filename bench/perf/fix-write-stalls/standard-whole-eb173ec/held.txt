@@ -1,0 +1,10 @@
+/home/user/runs/whole-standard: held writes 3, slow writer uploads 0 (l0 0, wal 0), client writes >= 1 s 6
+  held 1838 ms ending at +1055 s; L0 at the end 1, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.78, cook max 0.91 cores, minio max 1.69, log copies max 0.11
+  held 1812 ms ending at +653 s; L0 at the end 2, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.76, cook max 0.90 cores, minio max 1.44, log copies max 0.12
+  held 1301 ms ending at +839 s; L0 at the end 2, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.79, cook max 0.94 cores, minio max 1.58, log copies max 0.10
+  client put_writes 1.86 s ending at +1055 s: SlateDB held 1838 ms
+  client put 1.86 s ending at +1055 s: SlateDB held 1838 ms
+  client put 1.82 s ending at +653 s: SlateDB held 1812 ms
+  client put_writes 1.82 s ending at +653 s: SlateDB held 1812 ms
+  client put_writes 1.31 s ending at +839 s: SlateDB held 1301 ms
+  client put 1.31 s ending at +839 s: SlateDB held 1301 ms

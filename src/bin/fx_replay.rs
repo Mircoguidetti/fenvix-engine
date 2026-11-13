@@ -303,6 +303,7 @@ async fn main() -> Result<()> {
             tier_unit: 4 * l0,
             absorb_min_l0: 4,
             absorb_max_l0: 8,
+            recognise_in_background: false,
             local_max_bytes: 0,
             split_bytes: 2 * d / groups,
             merge_bytes: d / groups / 4,

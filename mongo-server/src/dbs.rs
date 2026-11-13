@@ -128,6 +128,15 @@ pub fn set_wake_limit(n: usize) {
 const CLOSE_CONCURRENCY: usize = 64;
 /// Builder publishes made before a compactor started, to catch up rows an ungated pass folded (review FIX 1).
 pub static CATCH_UPS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// integration-4 (coordinator, CI a91a14a test_51r): why a compactor was not started when `maybe_start_fxc` was asked
+/// (diagnostics only, no behaviour change): the tenant is not a writer; it has no version of our manifest; the catch-up
+/// publish published nothing (release E1's wait); the catch-up publish failed; the absorption marks could not be read.
+/// serverStatus().fenvix.compactor.notStarted; each reason is also logged once per open of the database.
+pub static FXC_SKIP_NOT_WRITER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static FXC_SKIP_NO_VERSION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static FXC_SKIP_CATCH_UP_NOTHING: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static FXC_SKIP_CATCH_UP_FAILED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static FXC_SKIP_MARKS_UNREADABLE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// How long a close waits for the compactor to absorb its last memtable flush (c2-fix-clone-uploads).
 const CLOSE_ABSORB_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
 
@@ -158,6 +167,8 @@ pub struct Entry {
     last_used_ms: AtomicU64,
     pub wakes: u64,
     pub closes: u64,
+    /// integration-4: the reasons `maybe_start_fxc` already logged for the current open (bits; cleared by `stop_fxc`)
+    fxc_skip_logged: u8,
     /// A collection with a TTL index was used while this entry was open: a close writes the expiry hint.
     pub(crate) ttl_seen: AtomicBool,
     /// The database was found not to exist during the current command: later reads of the same command answer
@@ -279,6 +290,7 @@ impl Dbs {
                     last_used_ms: AtomicU64::new(now_ms()),
                     wakes: 0,
                     closes: 0,
+                    fxc_skip_logged: 0,
                     ttl_seen: AtomicBool::new(false),
                     absent: false,
                     hint_written: false,
@@ -416,6 +428,7 @@ impl Dbs {
                         last_used_ms: AtomicU64::new(now_ms()),
                         wakes: 0,
                         closes: 0,
+                    fxc_skip_logged: 0,
                         ttl_seen: AtomicBool::new(false),
                     absent: false,
                         hint_written: false,
@@ -454,7 +467,7 @@ impl Dbs {
         let token = InflightToken(counter);
         // Outside `handle` there is no scope to hold the token: it is dropped (and the count decremented) at once.
         let _ = TOKENS.try_with(|t| t.borrow_mut().push(token));
-        let mut g = self.entry(name).write_owned().await;
+        let mut g = tenant_bench::waits::timed(tenant_bench::waits::W::LockW, self.entry(name).write_owned()).await;
         g.snap = None;
         g.absent = false;
         g.pinned_abandons = None;
@@ -477,7 +490,7 @@ impl Dbs {
         }
         loop {
             {
-                let g = Arc::clone(&e).read_owned().await;
+                let g = tenant_bench::waits::timed(tenant_bench::waits::W::LockR, Arc::clone(&e).read_owned()).await;
                 if g.tenant.as_ref().is_some_and(|t| !t.fx_refresh_due()) && g.leases.valid(&g.name) && !tenant_bench::lifecycle::is_stale(&g.name) {
                     crate::locallog::check_open(&g.name)?;
                     // F7: the tenant begins no hold past the end of this process's serving lease
@@ -486,9 +499,9 @@ impl Dbs {
                     return Ok(ReadView { g: Some(Guard::Read(g)), copts: Default::default(), fc: Default::default() });
                 }
             }
-            let mut w = Arc::clone(&e).write_owned().await;
+            let mut w = tenant_bench::waits::timed(tenant_bench::waits::W::LockW, Arc::clone(&e).write_owned()).await;
             w.absent = false;
-            if !w.ensure_open().await? {
+            if !tenant_bench::waits::timed(tenant_bench::waits::W::Refresh, w.ensure_open()).await? {
                 return Ok(ReadView { g: None, copts: Default::default(), fc: Default::default() });
             }
         }
@@ -595,8 +608,29 @@ impl Entry {
 
     /// Start this database's compactor (compaction 2, step 4) when compactors are on and the tenant is a writer with a
     /// version of our manifest.
+    /// integration-4: count and log (once per open of the database) why the compactor was not started; no behaviour change.
+    fn note_fxc_skip(&mut self, bit: u8, counter: &std::sync::atomic::AtomicU64, why: &str) {
+        counter.fetch_add(1, Relaxed);
+        if self.fxc_skip_logged & bit == 0 {
+            self.fxc_skip_logged |= bit;
+            eprintln!("FXC not started db={} reason={why} unix_ms={}", self.name, tenant_bench::fx::manifest::now_ms());
+        }
+    }
+
     async fn maybe_start_fxc(&mut self) {
-        if self.fxc.is_none() && tenant_bench::fx::compactor::SERVER_ON.load(Relaxed) && self.tenant.as_ref().is_some_and(|t| t.is_writer() && t.fx_view().is_some()) {
+        // integration-4 (diagnostics): the silent cases of the guard below, counted and logged
+        if self.fxc.is_none() && tenant_bench::fx::compactor::SERVER_ON.load(Relaxed) {
+            match self.tenant.as_ref() {
+                Some(t) if !t.is_writer() => self.note_fxc_skip(1, &FXC_SKIP_NOT_WRITER, "not_writer"),
+                Some(t) if t.fx_view().is_none() => self.note_fxc_skip(2, &FXC_SKIP_NO_VERSION, "no_version_of_our_manifest"),
+                _ => {}
+            }
+        }
+        // fix-write-stalls: not while the first build runs off the lock (its version is installed at a later write), and
+        // only once the database is claimed for the compactor (`fx::compactor::claim`): a compaction pass running on it is
+        // asked to stop first, and the compactor starts at a later write. The claim is given back on every way out below
+        // that starts no compactor.
+        if self.fxc.is_none() && tenant_bench::fx::compactor::SERVER_ON.load(Relaxed) && self.tenant.as_ref().is_some_and(|t| t.is_writer() && t.fx_view().is_some() && !t.fx_first_running()) && self.tenant.as_mut().unwrap().fx_claim() {
             // the registered collections' customer keys, from their stored options (after a restart nothing has been
             // written yet: the compactor must still know which collections are keyed by thread_id)
             for coll in crate::agentck::registered(&self.name) {
@@ -623,15 +657,23 @@ impl Entry {
                             }
                         }
                         // nothing published yet (release E1's wait): no compactor until a publish has caught up
-                        Ok(None) => return,
+                        Ok(None) => {
+                            self.note_fxc_skip(4, &FXC_SKIP_CATCH_UP_NOTHING, "catch_up_published_nothing");
+                            self.tenant.as_mut().unwrap().fx_unclaim();
+                            return;
+                        }
                         Err(e) => {
+                            FXC_SKIP_CATCH_UP_FAILED.fetch_add(1, Relaxed);
                             eprintln!("sealed runs: database {}: the catch-up publish before the compactor failed ({e:#}); no compactor yet", self.name);
+                            self.tenant.as_mut().unwrap().fx_unclaim();
                             return;
                         }
                     }
                 }
                 Err(e) => {
+                    FXC_SKIP_MARKS_UNREADABLE.fetch_add(1, Relaxed);
                     eprintln!("sealed runs: database {}: the absorption marks could not be read ({e:#}); no compactor yet", self.name);
+                    self.tenant.as_mut().unwrap().fx_unclaim();
                     return;
                 }
             }
@@ -641,12 +683,17 @@ impl Entry {
                 k.derive = crate::agentck::spec_for(&self.name);
                 // c2-fix-hangs: the compactor's requests are maintenance work, counted but not drawn from the quota
                 // (`counting::maintenance`); integration-4: applied here, where the clone-uploads fix moved the start
-                match tenant_bench::fx::compactor::Compactor::start(t, tenant_bench::counting::maintenance(&self.raw), k, tenant_bench::fx::pool::global(), tokio::runtime::Handle::current()).await {
+                // big-speed merge: perf-latency's compaction runtime and start timing, with c2-fix-hangs' maintenance counting
+                match tenant_bench::waits::timed(tenant_bench::waits::W::CompStart, tenant_bench::fx::compactor::Compactor::start(t, tenant_bench::counting::maintenance(&self.raw), k, tenant_bench::fx::pool::global(), tenant_bench::fx::pool::compaction_runtime())).await {
                     Ok(c) => {
                         c.run();
                         self.fxc = Some(c);
                     }
-                    Err(e) => eprintln!("sealed runs: compactor of database {} did not start: {e:#}", self.name),
+                    Err(e) => {
+                        // the claim is given back: compaction passes keep the database's L0 down until the next start
+                        t.fx_unclaim();
+                        eprintln!("sealed runs: compactor of database {} did not start: {e:#}", self.name)
+                    }
                 }
             }
         }
@@ -702,6 +749,7 @@ impl Entry {
 
     /// Stop this database's compactor (before its tenant closes, is abandoned or dropped).
     async fn stop_fxc(&mut self) {
+        self.fxc_skip_logged = 0;   // the next open logs its own reasons again
         if let Some(c) = self.fxc.take() {
             let t0 = std::time::Instant::now();
             c.stop().await;
@@ -934,7 +982,7 @@ impl Entry {
                 self.tenant.as_ref().unwrap().set_serving_source(self.serving_source());
                 // a reader refreshes its version of our manifest before T_pin (fx, rule 6)
                 if self.tenant.as_ref().unwrap().fx_refresh_due() {
-                    self.tenant.as_mut().unwrap().fx_refresh().await?;
+                    tenant_bench::waits::timed(tenant_bench::waits::W::Refresh, self.tenant.as_mut().unwrap().fx_refresh()).await?;
                 }
                 return Ok(true);
             }
@@ -1314,11 +1362,23 @@ impl Entry {
         self.touch();
         // --sealed-runs N: a publish of our manifest every N write batches (fx/build.rs), under this exclusive lock; with
         // --sealed-compactor only the first one, then this database's compactor publishes (fx/compactor.rs)
-        if self.fxc.is_none() && self.tenant.as_mut().unwrap().fx_note_write() {
+        // fix-write-stalls: with the compactor on, the first publish is built off this lock (`Tenant::fx_first_start`) and
+        // installed here, at a later write, once it is done; this write and the next ones do not wait for it
+        let off_lock = tenant_bench::fx::compactor::SERVER_ON.load(Relaxed) && tenant_bench::lifecycle::FIRST_BUILD_OFF_LOCK.load(Relaxed);
+        if self.fxc.is_none() && self.tenant.as_ref().unwrap().fx_first_running() {
+            // a failed build was handled as a failed publish (reload or fence); the next writes start another
+            if let Err(e) = self.tenant.as_mut().unwrap().fx_first_poll(false).await {
+                eprintln!("sealed runs: first publish of database {} failed: {e:#}", self.name);
+            }
+        } else if self.fxc.is_none() && self.tenant.as_mut().unwrap().fx_note_write() {
             let t = self.tenant.as_mut().unwrap();
             let opts = t.fx_auto_opts();
-            // a failed publish leaves orphan runs only; fx_publish reloads or fences as the failure needs (rules 24, 25)
-            if let Err(e) = t.fx_publish(&opts, None).await {
+            if off_lock && t.fx_view().is_none() {
+                if let Err(e) = t.fx_first_start(&opts).await {
+                    eprintln!("sealed runs: first publish of database {} did not start: {e:#}", self.name);
+                }
+            } else if let Err(e) = t.fx_publish(&opts, None).await {
+                // a failed publish leaves orphan runs only; fx_publish reloads or fences as the failure needs (rules 24, 25)
                 eprintln!("sealed runs: publish of database {} failed: {e:#}", self.name);
             }
         }
@@ -1383,7 +1443,7 @@ impl Entry {
         }
         let r = match slot {
             Some(commit) => {
-                let _flushing = crate::fair::io_wait().await;
+                let _flushing = tenant_bench::waits::timed(tenant_bench::waits::W::IoWait, crate::fair::io_wait()).await;
                 commit.wait().await
             }
             None => Ok(()),

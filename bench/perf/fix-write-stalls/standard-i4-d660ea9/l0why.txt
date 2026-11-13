@@ -1,0 +1,21 @@
+holds of 1 s or more: 0
+SlateDB L0 jobs started beside a merge: 4
+
+== totals
+SlateDB jobs with L0 sources: n=264 sum=114s p50=445ms max=1196ms
+SlateDB sorted-run merges   : n=343 sum=159s p50=459ms max=1876ms
+   merge 1.9 s at +153 s srs_mib=[14:60,8:67,1:81,0:59]
+   merge 1.7 s at +119 s srs_mib=[25:7,19:68]
+   merge 1.6 s at +123 s srs_mib=[4:44,1:37]
+   merge 1.5 s at +91 s srs_mib=[11:32,8:34]
+   merge 1.4 s at +150 s srs_mib=[31:7,26:60]
+   merge 1.3 s at +112 s srs_mib=[24:14,19:53]
+   merge 1.3 s at +1152 s srs_mib=[231:18,229:36]
+   merge 1.3 s at +108 s srs_mib=[23:7,19:46]
+ABSORB total_ms : n=285 sum=132s p50=470ms max=1068ms
+ABSORB lock_ms  : n=285 sum=0s p50=0ms max=0ms
+ABSORB read_ms  : n=285 sum=50s p50=168ms max=672ms
+ABSORB write_ms : n=285 sum=79s p50=275ms max=632ms
+ABSORB commit_ms: n=285 sum=3s p50=6ms max=74ms
+ABSORB ssts per absorption: n=285 sum=1s p50=3ms max=4ms
+L0_TRACE samples 1422: L0 at 8 in 0, at 6+ in 233; L0 at 4+ while a sorted-run merge ran: 768

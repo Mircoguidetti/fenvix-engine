@@ -490,9 +490,6 @@ pub struct RunMeta {
     pub derived_rows: u64,
 }
 
-/// Uploads aborted because their writer was dropped unfinished (an error, a cancelled job), process-wide.
-pub static DROPPED_UPLOADS_ABORTED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-
 /// Writes one run as a multipart upload. The object becomes visible only when `finish` completes the upload.
 ///
 /// A writer dropped before `finish` or `abort` completed (an error on a part, a job that gave up or was cancelled)
@@ -501,7 +498,7 @@ pub static DROPPED_UPLOADS_ABORTED: std::sync::atomic::AtomicU64 = std::sync::at
 pub struct RunWriter {
     path: Path,
     run_id: [u8; RUN_ID_LEN],
-    /// None once the upload is completed or aborted.
+    /// `None` once the upload was completed or aborted; a writer dropped before that aborts it (`Drop`).
     upload: Option<Box<dyn MultipartUpload>>,
     opts: RunOptions,
     out: Vec<u8>,
@@ -520,6 +517,80 @@ pub struct RunWriter {
     cust_hashes: Vec<u64>,
     last_cust: Vec<u8>,
     derived_rows: u64,
+}
+
+/// Run uploads a dropped writer aborted (perf-latency round 3, review D1) and aborts that failed.
+pub static DROPPED_UPLOADS_ABORTED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static DROPPED_UPLOAD_ABORT_ERRORS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Aborts of a dropped writer that found no upload left (its complete had landed, or it was aborted already).
+pub static DROPPED_UPLOAD_ABORT_GONE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Aborts spawned by dropped writers and not finished yet (a clean shutdown waits for them: `wait_dropped_aborts`).
+static ABORTS_PENDING: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Wait, at most `limit`, until the aborts spawned by dropped run writers are done (a clean shutdown: the process exits
+/// right after, and an abort still in flight would leave the upload incomplete). True when none is pending.
+pub async fn wait_dropped_aborts(limit: std::time::Duration) -> bool {
+    let t = std::time::Instant::now();
+    while ABORTS_PENDING.load(std::sync::atomic::Ordering::Relaxed) > 0 {
+        if t.elapsed() >= limit {
+            return false;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+    }
+    true
+}
+
+/// An upload whose complete is in flight: aborted if dropped before the complete returned (`RunWriter::finish`).
+struct AbortOnDrop {
+    u: Option<Box<dyn MultipartUpload>>,
+    path: Path,
+}
+
+impl Drop for AbortOnDrop {
+    fn drop(&mut self) {
+        if let Some(u) = self.u.take() {
+            spawn_abort(u, &self.path);
+        }
+    }
+}
+
+fn spawn_abort(mut u: Box<dyn MultipartUpload>, path: &Path) {
+    let Ok(h) = tokio::runtime::Handle::try_current() else {
+        // no runtime (a process exit): the erase's and the drop's sweep of incomplete uploads finds it (ctl/purge.rs), and
+        // so does the next process's startup sweep (`mongo-server/src/uploads_sweep.rs`)
+        DROPPED_UPLOAD_ABORT_ERRORS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        return;
+    };
+    let path = path.to_string();
+    ABORTS_PENDING.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    h.spawn(async move {
+        let r = u.abort().await;
+        ABORTS_PENDING.fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
+        match r {
+            Ok(()) => {
+                DROPPED_UPLOADS_ABORTED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            }
+            Err(object_store::Error::NotFound { .. }) => {
+                // completed (a complete that landed while its job was cut) or aborted already: nothing left to abort
+                DROPPED_UPLOAD_ABORT_GONE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            }
+            Err(e) => {
+                DROPPED_UPLOAD_ABORT_ERRORS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                eprintln!("run upload {path}: abort after the writer was dropped failed: {e}");
+            }
+        }
+    });
+}
+
+/// A writer dropped without `finish` or `abort` (its job was cancelled: `Compactor::stop` aborts running jobs at their
+/// next await, perf-latency) aborts its multipart upload. Its parts held the database's rows, invisible to LIST and so to
+/// an erase's proof (review of d9dbc7c, D1: 789 MB left after `remaining_objects: 0`).
+impl Drop for RunWriter {
+    fn drop(&mut self) {
+        if let Some(u) = self.upload.take() {
+            spawn_abort(u, &self.path);
+        }
+    }
 }
 
 impl RunWriter {
@@ -601,6 +672,8 @@ impl RunWriter {
         if self.raw.is_empty() {
             return Ok(());
         }
+        // a pace point of background work (fx::pool::pace): one block written
+        crate::fx::pool::pace().await;
         let idx = (self.seps.len() - 1) as u32;
         let mut c = self.opts.codec.compress(&self.raw);
         let crc = block_crc(&self.run_id, idx, &c);
@@ -630,7 +703,7 @@ impl RunWriter {
         let data = std::mem::replace(&mut self.out, Vec::with_capacity(self.opts.part_bytes.min(64 << 20)));
         self.written += data.len() as u64;
         self.parts += 1;
-        self.upload.as_mut().ok_or_else(|| anyhow::anyhow!("run writer used after its end"))?.put_part(PutPayload::from(data)).await?;
+        self.upload.as_mut().ok_or_else(|| anyhow::anyhow!("run upload already closed"))?.put_part(PutPayload::from(data)).await?;
         Ok(())
     }
 
@@ -698,13 +771,19 @@ impl RunWriter {
         f.extend(t);
         self.push_out(&f).await?;
         self.flush_part().await?;
-        let mut u = self.upload.take().ok_or_else(|| anyhow::anyhow!("run writer used after its end"))?;
-        if let Err(e) = u.complete().await {
-            // the outcome is unknown (a timeout) or a failure: abort; an abort after a completion that did land fails
-            // with NoSuchUpload and leaves the object, which nothing references (GC removes it)
-            abort_in_background(u);
+        let u = self.upload.take().ok_or_else(|| anyhow::anyhow!("run upload already closed"))?;
+        // runwriter-and-stall: the upload is held by a guard while its complete runs. A job cut during the complete
+        // (`Compactor::stop` aborts jobs at their next await) dropped the upload as a local, with no abort: its parts
+        // stayed in the store, billed and invisible to LIST, until the next process's sweep of old uploads. Now the
+        // guard's drop aborts it (in the background); if the complete had landed meanwhile, the abort finds no upload
+        // (counted, not an error) and the run is an orphan for GC (rule 17), as any run written and never listed.
+        let mut g = AbortOnDrop { u: Some(u), path: self.path.clone() };
+        if let Err(e) = g.u.as_mut().expect("held").complete().await {
+            // the parts are not a run: abort them (in the background, the error is the caller's)
+            drop(g);
             return Err(e.into());
         }
+        g.u = None;
         Ok(RunMeta {
             path: self.path.to_string(),
             run_id: self.run_id,
@@ -725,26 +804,6 @@ impl RunWriter {
             version,
             derived_rows: self.derived_rows,
         })
-    }
-}
-
-impl Drop for RunWriter {
-    fn drop(&mut self) {
-        if let Some(u) = self.upload.take() {
-            abort_in_background(u);
-        }
-    }
-}
-
-/// Abort an upload in a task of its own (a drop cannot wait). Without a runtime (a process ending) nothing is sent: the
-/// startup sweep of the next process aborts what is left (`mongo-server/src/uploads.rs`).
-fn abort_in_background(mut u: Box<dyn MultipartUpload>) {
-    if let Ok(h) = tokio::runtime::Handle::try_current() {
-        h.spawn(async move {
-            if u.abort().await.is_ok() {
-                DROPPED_UPLOADS_ABORTED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            }
-        });
     }
 }
 
@@ -1670,6 +1729,7 @@ impl RunStream {
                 self.pos = 0;
                 continue;
             }
+            crate::fx::pool::pace().await;
             if !self.fill().await? {
                 anyhow::ensure!(self.seen == self.run.entries && self.seen_deleted == self.run.deleted, "corrupt run: entry count");
                 anyhow::ensure!(self.last.as_deref() == Some(&self.run.last_key[..]), "corrupt run: last key");

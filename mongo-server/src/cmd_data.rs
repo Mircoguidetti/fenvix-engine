@@ -196,6 +196,10 @@ impl Server {
     /// (`cmd::StreamCur`). None when the find is not of that kind (the caller answers it as before).
     #[allow(clippy::too_many_arguments)]
     async fn find_streamed(&self, db: &str, coll: &str, cmd: &Document, filter: &Document, hint_arg: Option<&Bson>, skip: usize, limit: i64, batch: Option<usize>, single: bool) -> R<Option<Document>> {
+        // integration-4 (diff-node js.where_in_elemmatch): the filter is checked as `coll::find_docs_any` checks it,
+        // before any page is read; else a `$where` inside `$elemMatch` (or on a field) on documents that never reach
+        // the predicate answered [] instead of mongod's BadValue at parse time
+        crate::js::validate_filter(filter)?;
         // A getMore page is read by the getMore command, outside the find's own context: a find that carries a
         // collation, `let` variables or a snapshot read concern is answered whole, as before streaming (review of
         // 3cb6b38: each of them changed the answers of later pages). A collection's default collation is applied again
@@ -309,6 +313,14 @@ impl Server {
         let coll = collection_name(cmd, "distinct")?;
         let key = cmd.get_str("key").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'distinct.key' is missing but a required field".into()))?;
         let filter = cmd.get_document("query").cloned().unwrap_or_default();
+        if tx.is_none() && filter.is_empty() && cmd.get("hint").is_none() && cmd.get("collation").is_none() {
+            // perf-latency round 2: a distinct over a whole collection reads its documents a chunk at a time and keeps only
+            // the values; it used to hold every document at once (`distinct("thread_id")` on 122,152 agent checkpoints of a
+            // few GB got the server OOM-killed at its 3 GB limit, where mongod answers from an index)
+            let mut g = self.dbs.read(db).await?;
+            let values = self.distinct_chunked(&mut g, db, coll, key).await?;
+            return Ok(doc! { "values": values, "ok": 1.0 });
+        }
         let docs = if tx.is_none() {
             let mut g = self.dbs.read(db).await?;
             self.matching(&mut g, db, coll, &filter, cmd.get("hint"), None).await?
@@ -319,6 +331,45 @@ impl Server {
         };
         let values = distinct_values(&docs, key);
         Ok(doc! { "values": values, "ok": 1.0 })
+    }
+
+    /// The distinct values of `key` over every visible document of `coll` (TTL-expired ones hidden, as [`Server::matching`]
+    /// with an empty filter), read in chunks of documents in key order; the same values, in the same order, as
+    /// `distinct_values` over all the documents at once.
+    async fn distinct_chunked(&self, g: &mut impl crate::coll::Rd, db: &str, coll: &str, key: &str) -> R<Vec<Bson>> {
+        // 64 documents at a time: agent checkpoints are up to a few MB each
+        const CHUNK: usize = 64;
+        let indexes = self.load_indexes(g, db, coll).await?;
+        let specs = index::ttl_specs(&indexes);
+        let now = now_ms();
+        let prefix = crate::layout::doc_prefix(coll);
+        let end = crate::keyenc::prefix_end(&prefix);
+        let mut start = prefix.clone();
+        let mut values: Vec<Bson> = Vec::new();
+        loop {
+            let rows = g.scan_range(&start, end.as_deref(), false, Some(CHUNK), 256 << 10).await?;
+            let n = rows.len();
+            let mut docs = Vec::with_capacity(n);
+            for (_, v) in &rows {
+                let d = crate::coll::decode(v)?;
+                if specs.is_empty() || !index::is_expired(&d, &specs, now) {
+                    docs.push(d);
+                }
+            }
+            for v in distinct_values(&docs, key) {
+                if !values.iter().any(|x| query::equal(x, &v)) {
+                    values.push(v);
+                }
+            }
+            if n < CHUNK {
+                break;
+            }
+            let mut next = rows[n - 1].0.to_vec();
+            next.push(0);
+            start = next;
+        }
+        values.sort_by(query::compare);
+        Ok(values)
     }
 
     pub(crate) async fn aggregate(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {

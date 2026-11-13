@@ -16,6 +16,7 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 #[export_name = "_rjem_malloc_conf"]
 pub static malloc_conf: &[u8] = b"background_thread:true\0";
 
+mod uploads;
 mod agg;
 
 /// `--sealed-runs` when neither the flag nor FENVIX_SEALED_RUNS says otherwise (integration-3: sealed runs on).
@@ -95,7 +96,7 @@ mod search_idx;
 mod wc;
 mod wire;
 mod xdb;
-mod uploads;
+mod uploads_sweep;
 
 use anyhow::Result;
 use clap::Parser;
@@ -587,6 +588,18 @@ struct Args {
     sealed_compactor: bool,
     #[arg(long)]
     no_sealed_compactor: bool,
+    /// perf-latency: where the compactors' jobs and SlateDB's fold run. `own` (default): a runtime of their own, at nice
+    /// +10 (`tenant_bench::fx::pool::bg_runtime`); `shared`: the server's runtime, as before (measurements only).
+    #[arg(long, default_value = "own")]
+    compaction_threads: String,
+    /// perf-latency: with `--compaction-threads own`, the share of the cores (percent) the background threads may use on
+    /// average; the jobs pause when ahead of it (absorption excepted near the writer's L0 stop). 100 = no pause.
+    #[arg(long, default_value_t = 50)]
+    compaction_cpu_pct: u64,
+    /// perf-latency round 2: the background pauses to the end of a 100 ms window once the whole process used this share
+    /// (percent) of what its cores allow in it (a CPU quota freezes every thread once used up). 100 = never.
+    #[arg(long, default_value_t = 70)]
+    compaction_window_pct: u64,
     /// With the compactor: the drop of SlateDB rows our sealed runs already hold (the fold's filter, `fx/drop.rs`). On by
     /// default since P-perf-bytes (before, SlateDB kept a full uncompressed copy of every row: 56% of the stored bytes of
     /// the local benchmark). `--sealed-drop false` or FENVIX_SEALED_DROP=0 keeps SlateDB a full copy.
@@ -711,6 +724,8 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
         first = false;
         match wire::read_request_bounded(&mut r, max_len, first_by, rest_within).await {
             Ok(Some(mut req)) => {
+                let t_msg = std::time::Instant::now();
+                let msg_cmd = if tenant_bench::waits::ON.load(std::sync::atomic::Ordering::Relaxed) { req.command.keys().next().cloned().unwrap_or_default() } else { String::new() };
                 let probe = ctl::usage::before(&req.db, &req.command).await;
                 server.diag.note_seq(conn_id, &req.seq_keys);
                 // the command document is handed over (not copied): the reply needs only `reply_to`
@@ -720,7 +735,9 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
                 let exhaust = (req.exhaust_allowed && cmd::awaitable_hello(&command)).then(|| command.clone());
                 // boxed: the command's future is large (about 22 KB); kept inline it would be part of every connection's
                 // task, idle or not
+                let t_h = std::time::Instant::now();
                 let reply = Box::pin(server.handle(&req.db, command, conn_id)).await;
+                let handle_ms = t_h.elapsed().as_secs_f64() * 1000.0;
                 ctl::usage::after(probe).await;
                 if reply.contains_key("$shutdown") {
                     // `shutdown`: no reply; the connection closes and the process stops
@@ -733,10 +750,14 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
                 response_id += 1;
                 let streaming = exhaust.is_some() && matches!(reply.get("ok"), Some(Bson::Double(x)) if *x == 1.0);
                 reply_to.more_to_come = streaming;
+                let t_w = std::time::Instant::now();
                 if let Err(e) = wire::write_reply(&mut w, &reply_to, &reply, response_id).await {
                     eprintln!("conn {conn_id}: write failed: {e:#}");
                     break;
                 }
+                let total = t_msg.elapsed().as_secs_f64() * 1000.0;
+                let write_ms = t_w.elapsed().as_secs_f64() * 1000.0;
+                tenant_bench::waits::report_message(&msg_cmd, handle_ms, write_ms, total - handle_ms - write_ms, total);
                 if streaming {
                     // exhaust, as mongod: every maxAwaitTimeMS (or at a topology change) another reply flagged moreToCome,
                     // each answering the previous reply, with no request in between; it ends when the driver closes the
@@ -819,15 +840,39 @@ fn main() -> Result<()> {
     heap_prof_thread();
     // The futures of the command handlers are large: the workers get stacks that are not the 2 MiB default.
     // ISO_EVENT_INTERVAL (test only, docs/isolamento.md): how many tasks a worker runs between two looks at the network.
+    // perf-latency round 2: on as many CPUs as the CPU quota allows (`fx::pool::pin_to_quota`), before any thread starts
+    let pinned = tenant_bench::fx::pool::pin_to_quota();
+    if let Some(c) = &pinned {
+        eprintln!("cpu: the process may use {} core(s) and runs on CPU(s) {c:?}", c.len());
+    }
     let mut b = tokio::runtime::Builder::new_multi_thread();
     if let Some(n) = std::env::var("ISO_EVENT_INTERVAL").ok().and_then(|v| v.parse::<u32>().ok()) {
         b.event_interval(n);
     }
+    // perf-latency: at least MIN_WORKERS worker threads, whatever the CPU quota. tokio sizes its workers to the cores it
+    // may use: one in a one-core container, where a command that spends 20-60 ms of CPU on a multi-MB document (parse,
+    // copy, re-encode) kept every other command and every log acknowledgement waiting (MEASURED, medium profile: 175 of 673
+    // operations over 30 ms waited for a stall outside their own command). With more threads than cores the kernel
+    // time-slices them, as it does mongod's threads, and a short command runs beside a long one. FENVIX_WORKER_THREADS
+    // overrides (measurements).
+    const MIN_WORKERS: usize = 4;
+    let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1);
+    let workers = std::env::var("FENVIX_WORKER_THREADS").ok().and_then(|v| v.parse::<usize>().ok()).filter(|n| *n > 0).unwrap_or(cores.max(MIN_WORKERS));
+    b.worker_threads(workers);
     b.enable_all().thread_stack_size(64 << 20).build()?.block_on(run())
 }
 
 async fn run() -> Result<()> {
     let args = Args::parse();
+    // perf-latency: per-command wait breakdown and the runtime stall probe (tenant_bench::waits), off unless FX_WAITS is set
+    if let Ok(v) = std::env::var("FX_WAITS") {
+        tenant_bench::waits::ON.store(true, std::sync::atomic::Ordering::Relaxed);
+        if let Ok(ms) = v.parse::<u64>() {
+            tenant_bench::waits::SLOW_MS.store(ms, std::sync::atomic::Ordering::Relaxed);
+        }
+        tenant_bench::waits::GETS.store(std::env::var("FX_WAITS_GETS").is_ok(), std::sync::atomic::Ordering::Relaxed);
+        tenant_bench::waits::spawn_probe();
+    }
     // The SST cleanup deletes an SST this long after it left the manifest; a reader that polls the manifest less often
     // would read SSTs that are already gone.
     anyhow::ensure!(args.writer_poll_secs < args.sst_gc_min_unref_secs, "--writer-poll-secs ({}) must be below --sst-gc-min-unref-secs ({})", args.writer_poll_secs, args.sst_gc_min_unref_secs);
@@ -861,8 +906,10 @@ async fn run() -> Result<()> {
             tenant_bench::lifecycle::LIST_SORTED.store(true, std::sync::atomic::Ordering::Relaxed);
             let s3 = Arc::new(b.build()?);
             if args.abandoned_upload_secs > 0 {
-                uploads::spawn_sweep(Arc::clone(&s3), std::time::Duration::from_secs(args.abandoned_upload_secs));
+                uploads_sweep::spawn_sweep(Arc::clone(&s3), std::time::Duration::from_secs(args.abandoned_upload_secs));
             }
+            // the erase and the drop list and abort a database's incomplete multipart uploads (uploads.rs)
+            uploads::install(Arc::clone(&s3), &args.bucket, &args.region.clone().or_else(|| std::env::var("AWS_REGION").ok().filter(|v| !v.is_empty())).or_else(|| std::env::var("AWS_DEFAULT_REGION").ok()).unwrap_or_default(), &args.endpoint)?;
             s3
         }
         "local" => {
@@ -972,6 +1019,14 @@ async fn run() -> Result<()> {
                 _ => args.sealed_drop,
             };
             tenant_bench::fx::compactor::DROP_DEFAULT.store(drop, Relaxed);
+            anyhow::ensure!(matches!(args.compaction_threads.as_str(), "own" | "shared"), "--compaction-threads is own or shared");
+            tenant_bench::fx::pool::BG_ON.store(args.compaction_threads == "own", Relaxed);
+            anyhow::ensure!((1..=100).contains(&args.compaction_cpu_pct), "--compaction-cpu-pct is 1 to 100");
+            // FENVIX_COMPACTION_CPU_PCT overrides the flag (measurements)
+            let pct = std::env::var("FENVIX_COMPACTION_CPU_PCT").ok().and_then(|v| v.parse::<u64>().ok()).filter(|p| (1..=100).contains(p)).unwrap_or(args.compaction_cpu_pct);
+            tenant_bench::fx::pool::BG_CPU_PCT.store(if pct >= 100 { 100_000 } else { pct }, Relaxed);
+            let wpct = std::env::var("FENVIX_COMPACTION_WINDOW_PCT").ok().and_then(|v| v.parse::<u64>().ok()).unwrap_or(args.compaction_window_pct);
+            tenant_bench::fx::pool::WINDOW_PCT.store(wpct.clamp(1, 100), Relaxed);
             let derive = match std::env::var("FENVIX_SEALED_DERIVE").as_deref() {
                 Ok("1") => true,
                 Ok("0") => false,
@@ -984,6 +1039,21 @@ async fn run() -> Result<()> {
         agentck::configure(&args.agent_checkpoints)?;
         let wave = args.sealed_wave && std::env::var("FENVIX_SEALED_WAVE").as_deref() != Ok("0");
         tenant_bench::fx::view::WAVE.store(wave, Relaxed);
+        tenant_bench::fx::view::WARM_THREAD.store(std::env::var("FENVIX_WARM_THREAD").as_deref() != Ok("0"), Relaxed);
+        tenant_bench::fx::pool::WRITE_PATH_ON.store(std::env::var("FENVIX_WRITE_PATH_RUNTIME").as_deref() != Ok("0"), Relaxed);
+        // fix-write-stalls: the first build off the database's lock, and the compactor's L0 recognition off it (both on by
+        // default; "0" restores the old place, to compare); test pauses inside a build (kill -9 and close tests)
+        tenant_bench::lifecycle::FIRST_BUILD_OFF_LOCK.store(std::env::var("FENVIX_FIRST_BUILD_OFF_LOCK").as_deref() != Ok("0"), Relaxed);
+        // fix-write-stalls, cause 3: "1" proposes no SlateDB job while one runs, as before (to compare)
+        // tests (ctl test_66): every SlateDB job on sorted runs only is held at its first row (a kill -9 mid-merge)
+        tenant_bench::fx::drop::TEST_HOLD_MERGE.store(std::env::var("FENVIX_TEST_HOLD_MERGE").as_deref() == Ok("1"), Relaxed);
+        tenant_bench::fx::drop::CONTROL_ONE_JOB.store(std::env::var("FENVIX_ONE_SLATE_JOB").as_deref() == Ok("1"), Relaxed);
+        tenant_bench::fx::compactor::RECOGNISE_IN_BACKGROUND.store(std::env::var("FENVIX_RECOGNISE_IN_BACKGROUND").as_deref() != Ok("0"), Relaxed);
+        for (var, cell) in [("FENVIX_TEST_BUILD_PAUSE_SNAPSHOT_MS", &tenant_bench::fx::build::PAUSE_AFTER_SNAPSHOT_MS), ("FENVIX_TEST_BUILD_PAUSE_CREATE_MS", &tenant_bench::fx::build::PAUSE_BEFORE_CREATE_MS), ("FENVIX_TEST_RECOGNISE_PAUSE_MS", &tenant_bench::fx::compactor::PAUSE_RECOGNISE_MS)] {
+            if let Some(ms) = std::env::var(var).ok().and_then(|v| v.parse::<u64>().ok()) {
+                cell.store(ms, Relaxed);
+            }
+        }
         tenant_bench::fx::check_config()?;
     }
     tenant_bench::tiered::SST_BLOCK_KB.store(args.sst_block_kb, std::sync::atomic::Ordering::Relaxed);
@@ -1187,6 +1257,10 @@ async fn run() -> Result<()> {
     let clean = tokio::time::timeout(bound, async {
         ctl::stop_agents().await;
         dbs.close_all().await;
+        // the closes stopped the compactors, whose cut jobs abort their run uploads in the background (review D1)
+        if !tenant_bench::runfmt::wait_dropped_aborts(Duration::from_secs(10)).await {
+            eprintln!("shutdown: run upload aborts still in flight after 10 s (the erase or drop of the database finds them)");
+        }
         ctl::shutdown().await;
         leases.release_process().await;
         eprintln!("tenants closed; stopping maintenance");

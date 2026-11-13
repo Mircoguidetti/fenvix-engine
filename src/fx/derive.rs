@@ -83,6 +83,31 @@ pub fn prefetch_span(run: &runfmt::Run, key: &[u8]) -> Option<(usize, usize)> {
     (last >= first && last - first < PREFETCH_MAX_BLOCKS).then_some((first, last))
 }
 
+/// perf-latency round 2: the blocks of the thread of `key` in `run`, from the block of its first message row to the block
+/// of the last key of its customer area (message rows, documents and co-located index entries, layout v2), when the run
+/// holds derived rows; None when the run has no row of that customer or the span is more than [`PREFETCH_MAX_BLOCKS`]
+/// blocks. A resume reads the newest checkpoint id from the index, then the document, then the messages it is rebuilt
+/// from: all of them in this span.
+pub fn thread_span(run: &runfmt::Run, key: &[u8]) -> Option<(usize, usize)> {
+    if run.derived_rows == 0 {
+        return None;
+    }
+    let spec = READ_SPEC.read().unwrap().clone()?;
+    let p = spec.customer_prefix(key)?;
+    if let Some(r) = run.customers.customer_of(key) {
+        if !run.filter.may_contain(&key[r]) {
+            return None;
+        }
+    }
+    let first = run.fence.count_below(&msg_key(&key[..p], 0), true).max(1) - 1;
+    let end = runfmt::prefix_successor(&key[..p])?;
+    let last = run.fence.count_below(&end, false).checked_sub(1)?;
+    (last >= first && last - first < PREFETCH_MAX_BLOCKS).then_some((first, last))
+}
+
+/// Thread warm-ups done (`view.rs`), and GETs they paid (diagnostics).
+pub static THREAD_WARMS: AtomicU64 = AtomicU64::new(0);
+
 /// Negative controls of the fix round (review of c2-delta-log), tests only: 1, the one-wave point read takes the
 /// sealed row as it is (FIX 1); 2, the erasure's scrub copies a derived thread row by row (FIX 2); 3, no shape check:
 /// every msgpack array of any binary field of a registered collection is cut (FIX 3); 4, a reseal whose spec does not

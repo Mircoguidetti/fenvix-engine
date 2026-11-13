@@ -1,0 +1,7 @@
+== /home/user/runs/base-medium
+  single writes 43011; longest 3.18 s (put_writes at ts 1794473687.0); over 1 s: 4; over 500 ms: 4
+  top writes (s since start, s): 33:3.18, 33:3.18, 285:1.53, 285:1.53, 49:0.31, 49:0.31, 66:0.24, 155:0.21
+  saves 23995; longest 6.36 s; over 1 s: 2
+  p50/p99 ms: save_step 9.3/49.5 (n=23995); put 4.7/25.0 (n=23995); put_writes 5.4/29.6 (n=19016); resume[write/none] 3.4/14.7 (n=4187); resume[write/short] 3.1/18.5 (n=196); resume[write/long] 11.2/80.0 (n=120); resume[write/first] 3.3/24.8 (n=476); resume[read] 8.5/17.6 (n=100); resume[cold] 9.2/17.4 (n=50); time_travel 2.6/6.1 (n=300); list 77.8/1248.0 (n=100); list_limit10 19.8/159.7 (n=100); erase_user 131.8/171.5 (n=5)
+  ok True wrong_reads 0 stored/logical 1.6001 stored 2132303963
+  SlateDB held writes >= 1 s: 1; ms/l0 at the end[/largest l0 while held]: 1514/6

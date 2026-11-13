@@ -400,6 +400,7 @@ impl ObjectStore for CountingStore {
         let res = passed_down(reported, self.inner.put_opts(location, payload, opts)).await;
         self.counters.put_cat[category(location.as_ref())].fetch_add(1, Relaxed);
         self.counters.lat_put.record(t0.elapsed());
+        crate::waits::add(crate::waits::W::Put, t0.elapsed());
         self.trace.end(token, bytes);
         res
     }
@@ -443,6 +444,7 @@ impl ObjectStore for CountingStore {
             "GET"
         };
         let token = self.trace.begin(op, location.as_ref());
+        let range_s = if crate::waits::GETS.load(Relaxed) { format!("{:?}", options.range) } else { String::new() };
         let t0 = Instant::now();
         let mut res = passed_down(reported, self.inner.get_opts(location, options)).await;
         self.counters.lat_get.record(t0.elapsed());
@@ -470,6 +472,11 @@ impl ObjectStore for CountingStore {
         self.counters.get_bytes.fetch_add(bytes, Relaxed);
         if !is_head {
             crate::meter::note_get(bytes, t0.elapsed());
+            crate::waits::add(crate::waits::W::Get, t0.elapsed());
+            crate::waits::add_get_bytes(bytes);
+            crate::waits::note_get(location.as_ref(), &range_s, bytes, t0.elapsed());
+        } else {
+            crate::waits::add(crate::waits::W::Other, t0.elapsed());
         }
         self.trace.end(token, bytes);
         res
@@ -601,7 +608,20 @@ impl fmt::Display for OwnedStore {
 #[async_trait]
 impl ObjectStore for OwnedStore {
     async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult> {
-        REQUEST_OWNER.scope(Arc::clone(&self.owner), self.inner.put_opts(location, payload, opts)).await
+        // fix-write-stalls (cause 3): a writer's own upload (a WAL object, or an L0 SST its memtable flusher writes) that
+        // takes 500 ms or more is logged: the writes SlateDB holds wait for exactly these
+        let t0 = (!self.background).then(Instant::now);
+        let bytes = payload.content_length();
+        let r = REQUEST_OWNER.scope(Arc::clone(&self.owner), self.inner.put_opts(location, payload, opts)).await;
+        if let Some(t0) = t0 {
+            let ms = t0.elapsed().as_millis();
+            if ms >= 500 {
+                let p = location.as_ref();
+                let kind = if p.contains("/wal/") { "wal" } else if p.ends_with(".sst") { "l0" } else { "other" };
+                eprintln!("SLOW_PUT u={:.0} db={} kind={kind} ms={ms} bytes={bytes}", crate::waits::unix_ms(), self.owner);
+            }
+        }
+        r
     }
 
     async fn put_multipart_opts(&self, location: &Path, opts: PutMultipartOptions) -> Result<Box<dyn MultipartUpload>> {

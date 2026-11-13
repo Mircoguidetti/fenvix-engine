@@ -20,7 +20,7 @@ use std::sync::atomic::Ordering::Relaxed;
 use std::sync::Arc;
 
 /// The fx tests change process-wide settings (ENABLED, hold life, T_pin): one at a time.
-pub(super) static SERIAL: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+pub(crate) static SERIAL: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
 pub(super) fn small_opts(reseal: Reseal) -> BuildOpts {
     BuildOpts {
@@ -398,7 +398,7 @@ async fn envelopes_start_one_t_pin_after_the_announcement() {
 /// The structural rules of a version.
 #[test]
 fn version_check_refuses_broken_versions() {
-    let ok = manifest::Version { format: 1, version: 3, kind: "publish".into(), writer_epoch: Some(1), x_d: 10, e_env: Some(2), published_ms: 0, groups: vec![manifest::GroupLine { id: 0, lo: String::new(), x_g: 8, sealed: None, unsealed: 0, unsealed_since_ms: 0, sealed_ms: 0 }], delta: vec![], next_group_id: 1 };
+    let ok = manifest::Version { format: 1, version: 3, kind: "publish".into(), writer_epoch: Some(1), x_d: 10, e_env: Some(2), published_ms: 0, groups: vec![manifest::GroupLine { id: 0, lo: String::new(), x_g: 8, sealed: None, unsealed: 0, unsealed_since_ms: 0, sealed_ms: 0 }], delta: vec![], next_group_id: 1, absorbed_l0: Vec::new() };
     ok.check().unwrap();
     let mut v = ok.clone();
     v.e_env = None;

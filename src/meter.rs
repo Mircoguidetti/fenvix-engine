@@ -68,9 +68,15 @@ impl MeteredCache {
     async fn dedup_fetch(&self, key: CachedKey, loader: CacheLoader) -> Result<CacheFetch, slatedb::Error> {
         let ran = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let ran2 = Arc::clone(&ran);
+        // foyer calls this closure (and builds the loader's future) on a hit too, and polls the future only on a miss:
+        // the flag is set when the future runs. (Set in the closure, every lookup counted as a miss: serverStatus showed
+        // 3,617 hits for 2.2 million lookups and 21 GB "loaded" against 8.4 GB of GETs, perf-latency round 3.)
         let fetch = self.inner.get_or_fetch(&key, move || {
-            ran2.store(true, Relaxed);
-            loader()
+            let fut = loader();
+            async move {
+                ran2.store(true, Relaxed);
+                fut.await
+            }
         });
         match fetch.await {
             Ok(entry) => {

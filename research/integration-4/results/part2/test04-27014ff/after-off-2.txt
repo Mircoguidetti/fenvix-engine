@@ -1,0 +1,52 @@
+exported 40 MB; server RSS 242 -> 263 MB
+F
+=================================== FAILURES ===================================
+______________________ test_streaming_uses_bounded_memory ______________________
+
+env = (<lib.Server object at 0x7f5a91939f40>, 'ctl-export-1740f19f')
+
+    def test_streaming_uses_bounded_memory(env):
+        """A 40 MB collection is exported while the server's resident memory grows by far less than that."""
+        srv, _ = env
+        c = srv.client()
+        big = [{"_id": i, "p": "q" * 380, "n": i} for i in range(100000)]
+        for i in range(0, 100000, 5000):
+            c["mem"]["c"].insert_many(big[i:i + 5000])
+        c["mem"].command("tenantAdmin", close=True)
+    
+        def hwm():
+            for line in open(f"/proc/{srv.proc.pid}/status"):
+                if line.startswith("VmHWM"):
+                    return int(line.split()[1]) // 1024
+        # peak RSS so far includes the loading above; read the live RSS around the download instead
+        def rss():
+            for line in open(f"/proc/{srv.proc.pid}/status"):
+                if line.startswith("VmRSS"):
+                    return int(line.split()[1]) // 1024
+        st, r = srv.admin.post("/v1/databases/mem/exports")
+        assert st == 201
+        dest = tempfile.mkdtemp(prefix="dump-")
+        base_rss = rss()
+        peak = [base_rss]
+        stop = threading.Event()
+    
+        def sampler():
+            while not stop.is_set():
+                peak[0] = max(peak[0], rss())
+                time.sleep(0.02)
+    
+        t = threading.Thread(target=sampler)
+        t.start()
+        ver = xc.download(base(srv), TOKEN, r["id"], dest)
+        stop.set(); t.join()
+        size = os.path.getsize(f"{dest}/mem/c.bson")
+        print("exported", size // 1_000_000, "MB; server RSS", base_rss, "->", peak[0], "MB")
+        assert size > 40_000_000 and ver["mem/c.bson"] == "ok"
+>       assert peak[0] - base_rss < size // 1_000_000 // 2, f"memory grew by {peak[0] - base_rss} MB for a {size // 1_000_000} MB export"
+E       AssertionError: memory grew by 21 MB for a 40 MB export
+E       assert (263 - 242) < ((40900000 // 1000000) // 2)
+
+test_04_export.py:230: AssertionError
+=========================== short test summary info ============================
+FAILED test_04_export.py::test_streaming_uses_bounded_memory - AssertionError...
+1 failed in 6.29s

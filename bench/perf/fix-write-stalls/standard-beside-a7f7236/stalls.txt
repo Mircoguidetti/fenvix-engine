@@ -1,0 +1,8 @@
+== /home/user/runs/beside-standard
+  single writes 218906; longest 0.25 s (put_writes at ts 1794513645.8); over 1 s: 0; over 500 ms: 0
+  top writes (s since start, s): 1026:0.25, 802:0.19, 802:0.19, 873:0.18, 478:0.18, 873:0.18, 976:0.18, 654:0.18
+  saves 122152; longest 0.38 s; over 1 s: 0
+  p50/p99 ms: save_step 6.4/36.8 (n=122152); put 3.3/18.9 (n=122152); put_writes 3.6/21.3 (n=96754); resume[write/none] 2.4/15.0 (n=21173); resume[write/short] 2.9/74.3 (n=1083); resume[write/long] 8.4/62.5 (n=689); resume[write/first] 1.4/28.8 (n=2453); resume[read] 6.7/17.7 (n=300); resume[cold] 6.1/15.8 (n=200); time_travel 2.2/6.5 (n=900); list 67.3/1349.1 (n=300); list_limit10 16.6/155.3 (n=300); erase_user 64.0/18998.3 (n=2)
+  ok True wrong_reads 0 stored/logical 2.0925 stored 13972259019
+    FIRST_PUBLISH u=1794512651324 db=app_demo version=1 x_d=7844 rows=41708 build_ms=1277 off_lock=1
+    L0_RECOGNISE db=app_demo read=4 absorbed=4 ms=1515 off_lock=1

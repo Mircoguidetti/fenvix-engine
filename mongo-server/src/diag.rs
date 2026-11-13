@@ -849,6 +849,30 @@ impl Server {
                 "enabled": tenant_bench::fx::compactor::SERVER_ON.load(Relaxed),
                 "started": tenant_bench::fx::compactor::G_STARTED.load(Relaxed) as i64,
                 "running": tenant_bench::fx::compactor::active_count() as i64,
+                // perf-latency round 3 (review D1): run uploads aborted by a writer dropped mid-upload, aborts that failed,
+                // incomplete uploads aborted by an erase or a drop; round 3 diagnostics: writes held 1 s or more,
+                // closed-tenant GC passes queued again, L0 SSTs a starting compactor knew from our manifest or read
+                "runUploadsAbortedOnDrop": tenant_bench::runfmt::DROPPED_UPLOADS_ABORTED.load(Relaxed) as i64,
+                "runUploadAbortErrors": tenant_bench::runfmt::DROPPED_UPLOAD_ABORT_ERRORS.load(Relaxed) as i64,
+                "incompleteUploadsAborted": crate::uploads::ABORTED.load(Relaxed) as i64,
+                "incompleteUploadsRelisted": crate::uploads::ABORT_RELISTED.load(Relaxed) as i64,
+                // perf-latency-on-i4: stop durations (<100 ms, <500 ms, <1 s, <5 s, <10 s, >=10 s) and SlateDB tasks aborted
+                "stopMs": tenant_bench::fx::compactor::STOP_MS_BUCKETS.iter().map(|b| b.load(Relaxed) as i64).collect::<Vec<_>>(),
+                "stopSlateAborted": tenant_bench::fx::compactor::STOP_SLATE_ABORTED.load(Relaxed) as i64,
+                "slowStages": tenant_bench::lifecycle::SLOW_STAGES.load(Relaxed) as i64,
+                "closeGcRequeued": tenant_bench::lifecycle::CLOSE_GC_REQUEUED.load(Relaxed) as i64,
+                "closePassesForPending": tenant_bench::lifecycle::CLOSE_PASSES_FOR_PENDING.load(Relaxed) as i64,
+                "l0RecognisedFromVersion": tenant_bench::fx::compactor::L0_RECOGNISED_FROM_VERSION.load(Relaxed) as i64,
+                "l0RecognisedByRead": tenant_bench::fx::compactor::L0_RECOGNISED_BY_READ.load(Relaxed) as i64,
+                "recogniseJobs": tenant_bench::fx::compactor::RECOGNISE_JOBS.load(Relaxed) as i64,
+                "recogniseMsMax": tenant_bench::fx::compactor::RECOGNISE_MS_MAX.load(Relaxed) as i64,
+                "firstBuilds": tenant_bench::lifecycle::FIRST_BUILDS.load(Relaxed) as i64,
+                "firstInstalls": tenant_bench::lifecycle::FIRST_INSTALLS.load(Relaxed) as i64,
+                "firstInstallRefused": tenant_bench::lifecycle::FIRST_INSTALL_REFUSED.load(Relaxed) as i64,
+                "firstBuildMsMax": tenant_bench::lifecycle::FIRST_BUILD_MS_MAX.load(Relaxed) as i64,
+                "claimsDeferred": tenant_bench::lifecycle::CLAIMS_DEFERRED.load(Relaxed) as i64,
+                "l0JobsBesideMerge": tenant_bench::fx::drop::L0_JOBS_BESIDE_MERGE.load(Relaxed) as i64,
+                "mergeHeld": tenant_bench::fx::drop::TEST_MERGE_HELD.load(Relaxed) as i64,
                 "publishes": tenant_bench::fx::compactor::G_PUBLISHES.load(Relaxed) as i64,
                 "absorbs": tenant_bench::fx::compactor::G_ABSORBS.load(Relaxed) as i64,
                 "merges": tenant_bench::fx::compactor::G_MERGES.load(Relaxed) as i64,
@@ -877,6 +901,14 @@ impl Server {
                 },
                 // builder publishes before a compactor started, catching up rows an ungated pass folded (review FIX 1)
                 "catchUps": crate::dbs::CATCH_UPS.load(Relaxed) as i64,
+                // integration-4 (diagnostics): why a compactor was not started when one was asked for
+                "notStarted": {
+                    "notWriter": crate::dbs::FXC_SKIP_NOT_WRITER.load(Relaxed) as i64,
+                    "noVersion": crate::dbs::FXC_SKIP_NO_VERSION.load(Relaxed) as i64,
+                    "catchUpPublishedNothing": crate::dbs::FXC_SKIP_CATCH_UP_NOTHING.load(Relaxed) as i64,
+                    "catchUpFailed": crate::dbs::FXC_SKIP_CATCH_UP_FAILED.load(Relaxed) as i64,
+                    "marksUnreadable": crate::dbs::FXC_SKIP_MARKS_UNREADABLE.load(Relaxed) as i64,
+                },
             },
             // agent checkpoints as a thread message log (`fx/derive.rs`, `--sealed-derive`): documents encoded and kept
             // plain by reseals, message rows written, rebuilds by reads and by reseals, rebuild errors (a wrong reference

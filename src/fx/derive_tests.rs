@@ -279,6 +279,7 @@ fn knobs(codec: BlockCodec) -> Knobs {
         tier_unit: 8 << 10,
         absorb_min_l0: 1,
         absorb_max_l0: 8,
+        recognise_in_background: false,
         local_max_bytes: 16 << 10,
         split_bytes: 400 << 10,
         merge_bytes: 60 << 10,
@@ -986,6 +987,10 @@ async fn review_follower_reads_derived_documents_exactly() {
 /// one thread; every encoded document must still rebuild exactly.
 #[test]
 fn review_near_miss_shapes_are_left_untouched() {
+    // the encoder reads the global planted-bug switch (`derive::PLANT`), which `planted_wrong_reference_is_caught` and
+    // `review_more_planted_bugs_are_caught` set to 1-4 under SERIAL: without it, a parallel run could encode these
+    // cases with a planted bug, and the rebuild below then failed (fix-write-stalls, the fx suite with --test-threads 2)
+    let _s = SERIAL.blocking_lock();
     use derive::Spec as _;
     let spec = LenSpec { colls: vec![b"ck".to_vec(), b"cw".to_vec()] };
     let mut rng = StdRng::seed_from_u64(3);

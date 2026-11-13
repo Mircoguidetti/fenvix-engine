@@ -11,7 +11,7 @@ use bytes::Bytes;
 use object_store::path::Path;
 use object_store::ObjectStore;
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
 
 /// Bytes of decoded run blocks kept in RAM, shared by every database of the process (`--sealed-cache-mb`).
@@ -637,6 +637,19 @@ impl RunCur {
                         if !run.filter.may_contain(&self.lo[r]) {
                             super::counter::FILTER_SKIPS.fetch_add(1, Relaxed);
                             self.blocks = None;
+                        } else if WARM_THREAD.load(Relaxed) {
+                            // perf-latency round 2: the first read of an agent thread in a run with derived rows fetches the
+                            // thread's whole span at once, as whole blocks: the index read, the document and the messages its
+                            // rebuild needs then come from the counter. Before, the index read kept only its area of the
+                            // block, and the document's read fetched the same block again (two trips one after the other,
+                            // MEASURED: 4 GETs and 337 KB per cold resume on the standard profile). Answers never depend on it.
+                            if let Some((a, z)) = super::derive::thread_span(&run, &self.lo) {
+                                let whole = |_: usize| super::counter::Need::Key(&[]);
+                                if !(a..=z).all(|b| super::counter::cached(&run, b, None, &whole(b))) {
+                                    super::derive::THREAD_WARMS.fetch_add(1, Relaxed);
+                                    fetch_h(store, &self.h, &run, a, z, None, &whole).await?;
+                                }
+                            }
                         }
                     }
                 }
@@ -690,6 +703,9 @@ impl RunCur {
         }
     }
 }
+
+/// perf-latency round 2: the thread warm-up of `RunCur` (on by default; `FENVIX_WARM_THREAD=0` turns it off, measurements).
+pub static WARM_THREAD: AtomicBool = AtomicBool::new(true);
 
 /// The runs of one group restricted to [lo, hi) ∩ the group: its sealed run and the delta runs that can hold rows
 /// above its X_g.
