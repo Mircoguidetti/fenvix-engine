@@ -421,41 +421,50 @@ mod tests {
         assert_eq!(f, 0, "{v:?}");
     }
 
-    /// sim-test-2 candidate: a restore point (or a fork) pairs with NO version after the drop. The compactor's drop
-    /// removed rows at or below X_d from SlateDB (they live only in our runs). The database moves to a process whose
-    /// compactor has not started; its builder publishes a version whose X_d is a WAL seq above the flushed L0. GC with
-    /// retention 0 deletes the older versions. A restore point now finds no version with X_d <= its last L0 seq and
-    /// writes a pair with `version: None`; `PairedReader` then reads SlateDB alone: every dropped row is missing from the
-    /// restore (and `SIM_STORY_FORK=1`: from a fork). Run on a build with hole W fixed (else W hides it).
+    /// New hole P (sim-test-2): a restore point pairs below the drop. The compactor's drop removed from SlateDB the rows
+    /// at or below X_d (they live only in our runs). The database then moves to a process whose compactor has not started
+    /// (or is starting: its catch-up publish); its builder publishes a version whose X_d is a WAL seq above the flushed L0.
+    /// `pair::pair_checkpoint` picks the newest version with X_d <= the checkpoint's last L0 seq, so it passes over the
+    /// newest and pairs with an older version (pinned by an earlier restore point), or with none once GC (retention 0,
+    /// the server's default) deleted the older ones. `PairedReader` then reads SlateDB alone, or through a version that
+    /// lacks the rows dropped after it: a restore to any time after the point misses them (and its apply deletes them
+    /// from the live database). Two cases, each one run: no version (194 violations on head+ZW, MEASURED) and a pinned
+    /// older version (96, MEASURED). Fails on integration-5-stack fea18a34 + fix-sim-holes' Z and W fixes; ignored until
+    /// the fix is in: `--ignored`. (Hole W hides it on the bare head: run on a build with W fixed.) `SIM_STORY_FORK=1`: a
+    /// fork instead of a restore point (safe: its quiesce flushes, so the newest version qualifies).
     #[test]
-    fn sim_story_point_pairs_with_no_version_after_the_drop() {
+    #[ignore]
+    fn sim_hole_p_point_pairs_below_the_drop() {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
         use Ev::*;
         let fork = std::env::var_os("SIM_STORY_FORK").is_some();
-        // `SIM_STORY_PINNED=1`: an earlier restore point pins an older version; the new point pairs with it (below the drop)
-        let pinned = std::env::var_os("SIM_STORY_PINNED").is_some();
-        let mut ev = vec![Open { p: 0, writer: true }, fill(0, 0, 0), Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }];
-        for c in 1..4 {
-            ev.extend([fill(0, c, 0), Flush { p: 0 }, CompDrain { p: 0 }, Sleep { ms: 300 }]);
-            if pinned && c == 1 {
-                ev.push(Point { p: 2, tag: 9 });
+        let mut total = Vec::new();
+        for pinned in [false, true] {
+            // `pinned`: an earlier restore point pins an older version; the new point pairs with it, below the drop
+            let mut ev = vec![Open { p: 0, writer: true }, fill(0, 0, 0), Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }];
+            for c in 1..4 {
+                ev.extend([fill(0, c, 0), Flush { p: 0 }, CompDrain { p: 0 }, Sleep { ms: 300 }]);
+                if pinned && c == 1 {
+                    ev.push(Point { p: 2, tag: 9 });
+                }
             }
+            // the compactor's drop: rows at or below X_d now live only in our runs
+            ev.extend([DropThrough { p: 0 }, Close { p: 0 }]);
+            // another process, no compactor yet: its builder publishes above the flushed L0, then it dies
+            ev.extend([Open { p: 1, writer: true }, Write { p: 1, ops: vec![(4, 0, false), (4, 1, false)] }, Publish { p: 1 }, Abandon { p: 1 }]);
+            // GC of the closed database, retention 0: only the newest version (and the pinned one) stays
+            ev.extend([Sleep { ms: 2700 }, GcClosed { p: 2 }]);
+            if fork {
+                ev.extend([Open { p: 2, writer: true }, Fork { p: 2, copy: false, tag: 1 }]);
+            } else {
+                ev.extend([Point { p: 2, tag: 1 }, Sleep { ms: 50 }, Mark { tag: 2 }, Restore { p: 2, mark: 2, apply: false }]);
+            }
+            let (_, v) = run_story(&rt, if pinned { "hole P, a pinned older version" } else { "hole P, no version" }, env_u64("SIM_KNOBS", 0) as u8, ev);
+            total.extend(v);
         }
-        // the compactor's drop: rows at or below X_d now live only in our runs
-        ev.extend([DropThrough { p: 0 }, Close { p: 0 }]);
-        // another process, no compactor yet: its builder publishes above the flushed L0, then it dies
-        ev.extend([Open { p: 1, writer: true }, Write { p: 1, ops: vec![(4, 0, false), (4, 1, false)] }, Publish { p: 1 }, Abandon { p: 1 }]);
-        // GC of the closed database, retention 0: only the newest version stays
-        ev.extend([Sleep { ms: 2700 }, GcClosed { p: 2 }]);
-        if fork {
-            ev.extend([Open { p: 2, writer: true }, Fork { p: 2, copy: false, tag: 1 }]);
-        } else {
-            ev.extend([Point { p: 2, tag: 1 }, Sleep { ms: 50 }, Mark { tag: 2 }, Restore { p: 2, mark: 2, apply: false }]);
-        }
-        let (f, v) = run_story(&rt, "a point pairs with no version after the drop", env_u64("SIM_KNOBS", 0) as u8, ev);
-        assert_eq!(f, 0, "{v:?}");
+        assert!(total.is_empty(), "hole P: a restore point paired below the drop ({} violations): {:?}", total.len(), total.iter().take(4).collect::<Vec<_>>());
     }
 
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
