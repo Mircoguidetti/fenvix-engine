@@ -126,7 +126,10 @@ async fn fi_compactor_commits_stay_in_the_opened_incarnation() {
         let stray = under_i1(&store, id).await;
         eprintln!("compactor, control {control}: drain {:?}; versions of i0 before {before:?} after {after_i0:?}; objects under i1/: {}", d.as_ref().err().map(|e| format!("{e:#}")), stray.len());
         if control {
-            assert!(!stray.is_empty(), "control: with paths following the table the compactor must write under i1/ (the damage)");
+            // the damage: the compactor writes under i1/, or reads its own SSTs and versions there (its jobs then fail on a
+            // prefix that is not its database's; MEASURED first run: the absorb job read `i1/compacted/...`)
+            let misread = d.as_ref().err().is_some_and(|e| format!("{e:#}").contains(&format!("tenants/{id}/i1/")));
+            assert!(!stray.is_empty() || misread, "control: with paths following the table the compactor must write or read under i1/ (the damage)");
         } else {
             assert!(after_i0.last() > before.last(), "the compactor committed no version after the move (the test shows nothing): {before:?} {after_i0:?}");
             assert!(stray.is_empty(), "a compactor of incarnation 0 wrote under i1/: {stray:?}");
