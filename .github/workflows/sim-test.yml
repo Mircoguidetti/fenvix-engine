@@ -1,0 +1,47 @@
+# P-sim-test: the seeded simulation of late writes, many seeds in parallel.
+# Each job builds the lib tests once and runs one range of seeds; a seed with a violation writes its report
+# (violations, minimal script, trace) to sim-out/, uploaded as an artifact. The job fails if any seed found one.
+# Run it by hand on any branch: Actions > sim-test > Run workflow (ref = the head to check).
+name: sim-test
+on:
+  workflow_dispatch:
+    inputs:
+      first_seed:
+        description: first seed
+        default: "0"
+      seeds_per_job:
+        description: seeds per job (20 jobs)
+        default: "250"
+      steps:
+        description: events per script
+        default: "90"
+jobs:
+  seeds:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: build
+        run: cargo test --release --lib --no-run
+      - name: seeds
+        run: |
+          A=$(( ${{ inputs.first_seed }} + ${{ matrix.shard }} * ${{ inputs.seeds_per_job }} ))
+          B=$(( A + ${{ inputs.seeds_per_job }} ))
+          echo "seeds $A..$B"
+          SIM_SEEDS=$A..$B SIM_STEPS=${{ inputs.steps }} SIM_PAR=4 SIM_REPLAYS=3 SIM_MIN_BUDGET=24 SIM_OUT=sim-out \
+            cargo test --release --lib fx::sim::tests::sim_seeds -- --nocapture 2>&1 | grep -E "^SIM|panicked" | tee sim-${{ matrix.shard }}.log
+          ! grep -q "SIM VIOLATION" sim-${{ matrix.shard }}.log
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sim-out-${{ matrix.shard }}
+          path: |
+            sim-out/
+            sim-*.log
+          if-no-files-found: ignore

@@ -86,6 +86,8 @@ mod fencing_tests;
 mod review_rolling_tests;
 #[cfg(test)]
 mod fix_incarnation_tests;
+#[cfg(test)]
+pub mod sim;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 
