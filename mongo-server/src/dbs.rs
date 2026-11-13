@@ -893,7 +893,10 @@ impl Entry {
     }
 
     async fn db_exists(&self) -> Result<bool> {
-        let prefix = Path::from(format!("tenants/{}", self.name));
+        // audit-fencing round 2: only the current incarnation's objects say the database exists (a late write of an
+        // erased or dropped incarnation lands under an older prefix)
+        tenant_bench::lifecycle::load_incarnation(&self.raw, &self.name).await?;
+        let prefix = Path::from(tenant_bench::lifecycle::tenant_path(&self.name));
         let mut it = self.raw.list(Some(&prefix));
         while let Some(m) = it.next().await {
             let name = m?.location.filename().unwrap_or("").to_string();
@@ -1573,6 +1576,9 @@ impl Entry {
         }
         // again before the objects go (the steps above can take long)
         self.leases.check_owner(&self.name)?;
+        // audit-fencing round 2: the name moves to a new incarnation before its objects go, so a late write of this one
+        // (a process that lost it) is never read by a database created again with the same name
+        tenant_bench::lifecycle::bump_incarnation(&self.raw, &self.name).await?;
         let prefix = Path::from(format!("tenants/{}", self.name));
         for _ in 0..5 {
             let objs: Vec<Path> = self.raw.list(Some(&prefix)).map(|m| m.map(|m| m.location)).try_collect().await?;

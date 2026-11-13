@@ -56,6 +56,8 @@ use std::sync::Arc;
 pub static DEADLINE_MS: AtomicU64 = AtomicU64::new(24 * 3600 * 1000);
 /// Erasures recorded, scrub versions published, rows erased from runs, runs retired (diagnostics).
 pub static REGISTERED: AtomicU64 = AtomicU64::new(0);
+/// audit-fencing: retired runs kept because the store's newest version still lists them.
+pub static RETIRE_REFUSED_LIVE: AtomicU64 = AtomicU64::new(0);
 pub static SCRUBS: AtomicU64 = AtomicU64::new(0);
 pub static ROWS_ERASED: AtomicU64 = AtomicU64::new(0);
 pub static RUNS_RETIRED: AtomicU64 = AtomicU64::new(0);
@@ -353,6 +355,10 @@ pub struct Erasure {
     pub forced_reseals: u64,
     #[serde(default)]
     pub forced_cleanses: u64,
+    /// audit-fencing round 2 (item 15): the entity tag of the record as this process last read or wrote it; `save`
+    /// writes only over that version (If-Match), so a process that lost the database cannot overwrite newer progress.
+    #[serde(skip)]
+    pub tag: RecTag,
 }
 
 impl Erasure {
@@ -429,6 +435,7 @@ pub async fn register(store: &Arc<dyn ObjectStore>, id: &str, collection: &str, 
         cleaned_by: None,
         forced_reseals: 0,
         forced_cleanses: 0,
+        tag: RecTag::default(),
     };
     let rec = async { save(store, id, &e).await };
     match also {
@@ -443,9 +450,71 @@ pub async fn register(store: &Arc<dyn ObjectStore>, id: &str, collection: &str, 
     Ok(e)
 }
 
+/// The version of a stored record this process holds (shared by the clones of an [`Erasure`]); equality ignores it.
+#[derive(Clone, Debug, Default)]
+pub struct RecTag(Arc<std::sync::Mutex<Option<object_store::UpdateVersion>>>);
+
+impl PartialEq for RecTag {
+    fn eq(&self, _: &Self) -> bool {
+        true
+    }
+}
+impl Eq for RecTag {}
+
+impl RecTag {
+    fn get(&self) -> Option<object_store::UpdateVersion> {
+        self.0.lock().unwrap().clone()
+    }
+    fn set(&self, e_tag: Option<String>, version: Option<String>) {
+        *self.0.lock().unwrap() = (e_tag.is_some() || version.is_some()).then_some(object_store::UpdateVersion { e_tag, version });
+    }
+}
+
+/// A conditional write of a record found the stored one changed since this process read it (another process wrote it):
+/// nothing written; the caller's pass ends and the next one reads the record again.
+#[derive(Debug)]
+pub struct RecordChanged(pub String);
+
+impl std::fmt::Display for RecordChanged {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+impl std::error::Error for RecordChanged {}
+
+/// Negative control of the audit-fencing tests (round 2, items 15 and 18): records and fork references written
+/// unconditionally, as before.
+pub static CONTROL_UNCONDITIONAL_RECORDS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Conditional writes of records and fork references refused because another process wrote first (diagnostics).
+pub static RECORD_CONFLICTS: AtomicU64 = AtomicU64::new(0);
+
+/// Write an erasure record: a new one with a conditional create, a read one only over the version read (If-Match).
 pub async fn save(store: &Arc<dyn ObjectStore>, id: &str, e: &Erasure) -> Result<()> {
-    store.put(&rec_path(id, &e.id), PutPayload::from(serde_json::to_vec(e)?)).await?;
-    Ok(())
+    let body = PutPayload::from(serde_json::to_vec(e)?);
+    if ctl(&CONTROL_UNCONDITIONAL_RECORDS) {
+        store.put(&rec_path(id, &e.id), body).await?;
+        return Ok(());
+    }
+    let mode = match e.tag.get() {
+        Some(v) => object_store::PutMode::Update(v),
+        None => object_store::PutMode::Create,
+    };
+    match store.put_opts(&rec_path(id, &e.id), body.clone(), object_store::PutOptions { mode, ..Default::default() }).await {
+        Ok(r) => {
+            e.tag.set(r.e_tag, r.version);
+            Ok(())
+        }
+        Err(object_store::Error::Precondition { .. }) | Err(object_store::Error::AlreadyExists { .. }) => {
+            RECORD_CONFLICTS.fetch_add(1, Relaxed);
+            Err(anyhow::Error::new(RecordChanged(format!("erasure record {} of {id} changed since this process read it: not written", e.id))))
+        }
+        // a store without conditional updates (the local file system of some tools): as before
+        Err(object_store::Error::NotImplemented { .. }) => {
+            store.put(&rec_path(id, &e.id), body).await?;
+            Ok(())
+        }
+        Err(x) => Err(x.into()),
+    }
 }
 
 /// perf-erase: where the records of erasures that are done go (`archive`), so a pass reads only the open ones.
@@ -462,7 +531,12 @@ async fn read_records(store: &Arc<dyn ObjectStore>, dir: &Path) -> Result<Vec<Er
     let got: Vec<Result<Option<Erasure>>> = futures::stream::iter(paths)
         .map(|p| async move {
             match store.get(&p).await {
-                Ok(g) => Ok(Some(serde_json::from_slice(&g.bytes().await?).with_context(|| format!("erasure record {p}"))?)),
+                Ok(g) => {
+                    let (e_tag, version) = (g.meta.e_tag.clone(), g.meta.version.clone());
+                    let e: Erasure = serde_json::from_slice(&g.bytes().await?).with_context(|| format!("erasure record {p}"))?;
+                    e.tag.set(e_tag, version);
+                    Ok(Some(e))
+                }
                 // moved to the archive meanwhile
                 Err(object_store::Error::NotFound { .. }) => Ok(None),
                 Err(e) => Err(e.into()),
@@ -817,21 +891,61 @@ pub async fn delete_run(store: &Arc<dyn ObjectStore>, id: &str, path: &str) -> R
 
 /// This database stops naming `path` in its fork reference in the run's owner (the shared run is released by
 /// reference; the owner's own versions and GC decide its life).
-async fn release_ref(store: &Arc<dyn ObjectStore>, id: &str, path: &str) -> Result<()> {
+///
+/// audit-fencing round 2 (item 18): a read-modify-write of the reference, written only over the version read (If-Match)
+/// and done again when another writer came first, so two releases (two erasures of the fork, or a process that lost it)
+/// never undo each other.
+pub(crate) async fn release_ref(store: &Arc<dyn ObjectStore>, id: &str, path: &str) -> Result<()> {
     let Some(owner) = path.strip_prefix("tenants/").and_then(|r| r.split('/').next()) else { return Ok(()) };
     let p = super::pair::fork_ref_path(owner, id);
-    let b = match store.get(&p).await {
-        Ok(g) => g.bytes().await?,
-        Err(object_store::Error::NotFound { .. }) => return Ok(()),
-        Err(e) => return Err(e.into()),
-    };
-    let mut r: super::pair::ForkRef = serde_json::from_slice(&b)?;
-    let n = r.runs.len();
-    r.runs.retain(|x| x != path);
-    if r.runs.len() != n {
-        store.put(&p, PutPayload::from(serde_json::to_vec(&r)?)).await?;
+    for _ in 0..16 {
+        let (b, e_tag, version) = match store.get(&p).await {
+            Ok(g) => {
+                let (t, v) = (g.meta.e_tag.clone(), g.meta.version.clone());
+                (g.bytes().await?, t, v)
+            }
+            Err(object_store::Error::NotFound { .. }) => return Ok(()),
+            Err(e) => return Err(e.into()),
+        };
+        let mut r: super::pair::ForkRef = serde_json::from_slice(&b)?;
+        let n = r.runs.len();
+        r.runs.retain(|x| x != path);
+        if r.runs.len() == n {
+            return Ok(());
+        }
+        let body = PutPayload::from(serde_json::to_vec(&r)?);
+        if ctl(&CONTROL_UNCONDITIONAL_RECORDS) {
+            pause_release().await;
+            store.put(&p, body).await?;
+            return Ok(());
+        }
+        let opts = object_store::PutOptions { mode: object_store::PutMode::Update(object_store::UpdateVersion { e_tag, version }), ..Default::default() };
+        pause_release().await;
+        match store.put_opts(&p, body.clone(), opts).await {
+            Ok(_) => return Ok(()),
+            Err(object_store::Error::Precondition { .. }) => {
+                RECORD_CONFLICTS.fetch_add(1, Relaxed);
+                continue; // another writer came first: read it again
+            }
+            Err(object_store::Error::NotFound { .. }) => return Ok(()),
+            Err(object_store::Error::NotImplemented { .. }) => {
+                store.put(&p, body).await?;
+                return Ok(());
+            }
+            Err(x) => return Err(x.into()),
+        }
     }
-    Ok(())
+    bail!("fork reference {p}: too many concurrent writers")
+}
+
+/// Tests: a release waits here (between its read and its write) while the notify is set.
+pub static PAUSE_RELEASE: std::sync::Mutex<Option<Arc<tokio::sync::Notify>>> = std::sync::Mutex::new(None);
+
+async fn pause_release() {
+    let n = PAUSE_RELEASE.lock().unwrap().clone();
+    if let Some(n) = n {
+        n.notified().await;
+    }
 }
 
 /// What keeps objects of a database alive besides the newest version: the versions named by pairs (restore points,
@@ -979,6 +1093,23 @@ pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &str, es: &mut [&mut E
         }
     }
     let no_retire = ctl(&CONTROL_NO_RETIRE);
+    // audit-fencing: a run the store's newest version lists is live, whatever a record says (a scrub that a process which
+    // lost the database took as published, in a slot below the newest): never deleted. The erasure is then not done.
+    let live_now: BTreeSet<String> = if manifest::CONTROL_NO_MAIN_LINE.load(Relaxed) {
+        BTreeSet::new()
+    } else {
+        // the store's newest version and the one readers trust (fix-compactor-start: an older writer's late version on
+        // top is passed over by readers, so both may be read)
+        match manifest::load_newest(store, id).await? {
+            Some(v) => {
+                let mut l: BTreeSet<String> = names(&v).0.into_iter().map(|s| s.to_string()).collect();
+                let t = manifest::trusted_at(store, id, v).await?;
+                l.extend(names(&t).0.into_iter().map(|s| s.to_string()));
+                l
+            }
+            None => BTreeSet::new(),
+        }
+    };
     let mut deleted_versions: BTreeSet<u64> = BTreeSet::new();
     let mut stray: Option<Vec<String>> = None;
     for e in es {
@@ -991,6 +1122,10 @@ pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &str, es: &mut [&mut E
             }
             if served < scrubbed {
                 by.push(format!("served version {served}"));
+            }
+            if live_now.contains(&r.path) {
+                RETIRE_REFUSED_LIVE.fetch_add(1, Relaxed);
+                by.push("listed by the newest version: the scrub is not on the main line".into());
             }
             if no_retire {
                 by.push("control".into());
@@ -1043,7 +1178,7 @@ pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &str, es: &mut [&mut E
             versions_kept.push(format!("{older} older versions in the restore window (GC deletes them and their runs when it ends)"));
         }
         e.versions_kept = versions_kept;
-        if e.live_done_ms.is_none() && served >= scrubbed {
+        if e.live_done_ms.is_none() && served >= scrubbed && !e.retired.iter().any(|r| live_now.contains(&r.path)) {
             e.live_done_ms = Some(now);
         }
         if e.retired.iter().all(|r| r.deleted_ms.is_some() || r.released_ms.is_some()) && e.versions_kept.is_empty() && e.live_done_ms.is_some() {

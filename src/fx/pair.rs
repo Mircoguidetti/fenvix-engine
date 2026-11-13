@@ -418,8 +418,7 @@ pub fn fork_ref_path(owner: &str, fork: &str) -> Path {
 
 /// The database a run path belongs to (`tenants/{db}/fx/run/...`).
 fn owner_of(run: &str) -> Option<&str> {
-    let rest = run.strip_prefix("tenants/")?;
-    let (db, tail) = rest.split_once('/')?;
+    let (db, tail) = crate::lifecycle::split_tenant_path(run)?;
     tail.starts_with("fx/").then_some(db)
 }
 
