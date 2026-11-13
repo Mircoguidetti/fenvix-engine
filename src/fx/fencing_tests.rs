@@ -12,7 +12,7 @@
 //!   the slot free and lands below the newest version. The old owner records the erasure as scrubbed; the retire step
 //!   (later, by the new owner) deletes the runs the scrub replaced, which the newest version still lists. Reads fail.
 
-use super::compactor::{Compactor, Knobs};
+use super::compactor::{self, Compactor, Knobs};
 use super::erase::{self, Batch, Targets};
 use super::tests::*;
 use super::*;
@@ -182,6 +182,10 @@ async fn wrong_reads(t: &Tenant, m: &BTreeMap<Vec<u8>, Vec<u8>>) -> (usize, usiz
 /// Returns (versions of the old writer's epoch above a version of the new one, wrong reads, read errors, acknowledged
 /// keys) after a fresh opening.
 async fn first_build_scenario(control: bool, gc_frees_slot_1: bool) -> (usize, usize, usize, usize) {
+    // the control is integration-4's code: the slot from a LIST, no main-line check, and none of fix-compactor-start's
+    // read-side guards (they would hide what a version landed on top does)
+    compactor::CONTROL_ADOPT_OLDER.store(control, Relaxed);
+    manifest::CONTROL_TRUST_NEWEST.store(control, Relaxed);
     manifest::CONTROL_LISTED_SLOT.store(control, Relaxed);
     manifest::CONTROL_NO_MAIN_LINE.store(control, Relaxed);
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
@@ -257,6 +261,8 @@ async fn first_build_scenario(control: bool, gc_frees_slot_1: bool) -> (usize, u
     }
     manifest::CONTROL_LISTED_SLOT.store(false, Relaxed);
     manifest::CONTROL_NO_MAIN_LINE.store(false, Relaxed);
+    compactor::CONTROL_ADOPT_OLDER.store(false, Relaxed);
+    manifest::CONTROL_TRUST_NEWEST.store(false, Relaxed);
     // a fresh opening of the database reads every acknowledged key
     let mut t3 = lc(&store).wake(id).await.unwrap();
     t3.upgrade().await.unwrap();

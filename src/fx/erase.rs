@@ -982,8 +982,15 @@ pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &str, es: &mut [&mut E
     let live_now: BTreeSet<String> = if manifest::CONTROL_NO_MAIN_LINE.load(Relaxed) {
         BTreeSet::new()
     } else {
+        // the store's newest version and the one readers trust (fix-compactor-start: an older writer's late version on
+        // top is passed over by readers, so both may be read)
         match manifest::load_newest(store, id).await? {
-            Some(v) => names(&v).0.into_iter().map(|s| s.to_string()).collect(),
+            Some(v) => {
+                let mut l: BTreeSet<String> = names(&v).0.into_iter().map(|s| s.to_string()).collect();
+                let t = manifest::trusted_at(store, id, v).await?;
+                l.extend(names(&t).0.into_iter().map(|s| s.to_string()));
+                l
+            }
             None => BTreeSet::new(),
         }
     };

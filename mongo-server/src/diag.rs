@@ -876,8 +876,6 @@ impl Server {
                 "firstBuildMsMax": tenant_bench::lifecycle::FIRST_BUILD_MS_MAX.load(Relaxed) as i64,
                 "firstInstallsWithoutWrite": tenant_bench::lifecycle::FIRST_INSTALLS_WITHOUT_WRITE.load(Relaxed) as i64,
                 "firstBuildsCut": tenant_bench::lifecycle::FIRST_BUILDS_CUT.load(Relaxed) as i64,
-                "fencedVersionCreates": tenant_bench::fx::build::FENCED_CREATES.load(Relaxed) as i64,
-                "fenceWindowMsMax": tenant_bench::fx::build::FENCE_WINDOW_MS_MAX.load(Relaxed) as i64,
                 "olderVersionsRefused": tenant_bench::fx::compactor::OLDER_VERSIONS_REFUSED.load(Relaxed) as i64,
                 "olderVersionsIgnored": tenant_bench::fx::manifest::OLDER_VERSIONS_IGNORED.load(Relaxed) as i64,
                 "claimsDeferred": tenant_bench::lifecycle::CLAIMS_DEFERRED.load(Relaxed) as i64,

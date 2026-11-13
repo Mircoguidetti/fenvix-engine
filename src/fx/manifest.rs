@@ -239,7 +239,8 @@ pub static CONTROL_TRUST_NEWEST: std::sync::atomic::AtomicBool = std::sync::atom
 
 /// Whether version `v` is an older writer's late publish (review of a60f4fe, rule 8): writer epochs never go down along
 /// valid versions, so a version whose writer epoch is LOWER than the version below it landed after a newer writer's
-/// (a late publish of a writer that lost the database, inside `build::fence_check`'s window). Its runs hold that writer's
+/// (a late publish of a writer that lost the database; audit-fencing's slot rule makes such a landing on top impossible for
+/// this release's publishers, so this is the read side's defence in depth). Its runs hold that writer's
 /// old snapshot: serving, pairing or fencing it drops every row between its X_d and the newer writer's. One GET (the
 /// version below); a version below collected by GC counts as nothing to compare with.
 pub async fn is_older_writers(store: &Arc<dyn ObjectStore>, id: &str, v: &Version) -> Result<bool> {

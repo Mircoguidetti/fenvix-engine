@@ -71,37 +71,6 @@ pub struct BuildReport {
     pub stage: Option<super::counter::StageReport>,
 }
 
-/// Versions refused at their create because the database's writer changed under the build (`fence_check`).
-pub static FENCED_CREATES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-
-/// Right before a version is created: the database's SlateDB writer epoch in the store must still be the build's.
-/// After a takeover (this process lost its lease and another opened the database as writer) the epoch is higher, and a
-/// version built on this writer's old snapshot must not land: the new owner would build its next versions on it, and
-/// every row between its X_d and the new owner's would leave every read (review of a60f4fe, rule 8: acknowledged writes
-/// lost when a first build finished after the lease loss). A version create already in flight can still land, as after
-/// a crash: what is left is that window, not seconds.
-/// Negative control of the tests: no check (the code of a60f4fe).
-pub static CONTROL_NO_FENCE_CHECK: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-
-/// The longest time from the start of `fence_check` to the end of the create it guards, in ms: the window in which a
-/// takeover can still let this version land (serverStatus `fenceWindowMsMax`).
-pub static FENCE_WINDOW_MS_MAX: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-
-async fn fence_check(store: &Arc<dyn ObjectStore>, id: &str, epoch: Option<u64>) -> Result<()> {
-    let Some(e) = epoch else { return Ok(()) };
-    if CONTROL_NO_FENCE_CHECK.load(std::sync::atomic::Ordering::Relaxed) {
-        return Ok(());
-    }
-    let admin = slatedb::admin::Admin::builder(crate::lifecycle::tenant_path(id), Arc::clone(store)).build();
-    if let Some(m) = admin.read_manifest(None).await? {
-        if m.writer_epoch() != e {
-            FENCED_CREATES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            anyhow::bail!("database {id}: the writer changed under this build (epoch {e}, now {}): no version created", m.writer_epoch());
-        }
-    }
-    Ok(())
-}
-
 pub(crate) fn line(m: &runfmt::RunMeta) -> RunLine {
     RunLine { path: m.path.clone(), size: m.size, id: hex(&m.run_id), min_seq: m.min_seq, max_seq: m.max_seq, first: hex(&m.first_key), last: hex(&m.last_key), entries: m.entries, raw: m.raw_bytes, local: false }
 }
@@ -314,10 +283,10 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
         rep.stage = Some(super::counter::stage(old, &staged).await);
     }
     pause(&PAUSE_BEFORE_CREATE_MS).await;
-    let fence_t0 = std::time::Instant::now();
-    fence_check(store, id, epoch).await?;
+    // audit-fencing round 2: the slot (base + 1, `manifest::next_slot`) is this create's fence, and `on_main_line` below
+    // refuses a landing in a slot GC freed; the epoch check before the create (fix-compactor-start's `fence_check`, a
+    // check before the write with a window, one SlateDB manifest read per publish) is gone
     let created = manifest::create(store, id, &v).await;
-    FENCE_WINDOW_MS_MAX.fetch_max(fence_t0.elapsed().as_millis() as u64, std::sync::atomic::Ordering::Relaxed);
     let created = match created {
         Ok(c) => c,
         // the outcome is unknown (an error, a timeout: the PUT may still land); the caller fences the slot this version
@@ -531,16 +500,16 @@ pub async fn publish_generated(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
     };
     let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: Vec::new(), next_group_id, absorbed_l0: Vec::new() };
     rep.version = version;
-    let fence_t0 = std::time::Instant::now();
-    fence_check(store, id, epoch).await?;
+    // audit-fencing round 2: the slot (base + 1, `manifest::next_slot`) is this create's fence, and `on_main_line` below
+    // refuses a landing in a slot GC freed; the epoch check before the create (fix-compactor-start's `fence_check`, a
+    // check before the write with a window, one SlateDB manifest read per publish) is gone
     let created = manifest::create(store, id, &v).await;
-    FENCE_WINDOW_MS_MAX.fetch_max(fence_t0.elapsed().as_millis() as u64, std::sync::atomic::Ordering::Relaxed);
     let created = match created {
         Ok(c) => c,
         Err(e) => return Err(anyhow::Error::new(super::UnknownPublish { version: Box::new(v), msg: format!("{e:#}") })),
     };
-    if !created {
-        return Err(anyhow::Error::new(super::LostRace(format!("publish of version {version} of {id} lost the race: another publisher wrote it; the generated runs are orphans"))));
+    if !created || !manifest::on_main_line(store, id, version).await? {
+        return Err(anyhow::Error::new(super::LostRace(format!("publish of version {version} of {id} lost the race: another publisher wrote it, or a newer version exists; the generated runs are orphans"))));
     }
     Ok((v, rep))
 }
@@ -692,7 +661,12 @@ pub async fn publish_generated_parts(db: &slatedb::Db, store: &Arc<dyn ObjectSto
     rep.runs_written = groups.iter().filter(|g| g.sealed.is_some()).count() as u64;
     rep.groups = groups.len();
     rep.resealed = groups.len();
-    let version = manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1);
+    // audit-fencing: the slot after the version this writer serves (its fence at open), never from a LIST
+    let version = if manifest::CONTROL_LISTED_SLOT.load(std::sync::atomic::Ordering::Relaxed) {
+        manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1)
+    } else {
+        manifest::next_slot(cur.map(|v| v.version))
+    };
     let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: Vec::new(), next_group_id, absorbed_l0: Vec::new() };
     rep.version = version;
     let created = match manifest::create(store, id, &v).await {
