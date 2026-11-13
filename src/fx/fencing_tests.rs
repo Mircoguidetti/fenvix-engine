@@ -20,7 +20,7 @@ use crate::lifecycle::{Op, Tenant};
 use crate::runfmt::{CustomerKind, RunOptions};
 use object_store::memory::InMemory;
 use object_store::path::Path;
-use object_store::ObjectStore;
+use object_store::{ObjectStore, ObjectStoreExt};
 use std::collections::{BTreeMap, HashSet};
 use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::sync::{Arc, Mutex};
@@ -441,4 +441,80 @@ async fn fence_scrub_lands_in_a_slot_gc_freed() {
     assert_eq!(deleted_live, 0, "the retire deleted runs the newest version lists");
     assert_eq!((wrong, errors), (0, 0), "acknowledged writes lost");
     assert_eq!(erased_readable, 0, "erased rows readable");
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// 3. A whole-database erase, then a late WAL write of the old owner, then the database created again with the same name.
+//
+// OPEN (not fixed here: the fix is a design choice for the founder, see the report). `ctl/erase.rs` deletes every object
+// under `tenants/{db}/` without fencing SlateDB first (no writer is opened, so no writer epoch is bumped and no fence WAL
+// object is written). A WAL PUT of the old owner still in flight (SlateDB retries a WAL PUT without end while the store
+// does not answer; an abandon leaves that close behind after 10 s) then lands under the empty prefix, and a database
+// created again with the same name replays it at its first open: rows of the erased database come back.
+
+async fn erase_then_late_wal() -> (Option<bytes::Bytes>, Option<bytes::Bytes>, usize, Option<String>) {
+    let base_store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let gate = Gate::new(Arc::clone(&base_store));
+    let s1: Arc<dyn ObjectStore> = gate.clone();
+    let id = "fn-erase-db";
+    let mut t1 = lc(&s1).create(id).await.unwrap();
+    t1.apply((0..20).map(|i| Op::Put(ckey(0, i), format!("erased-{i}").into_bytes())).collect()).await.unwrap();
+    flush(&t1).await;
+    // a write whose WAL PUT is in flight when the erase runs
+    gate.arm(&format!("{}/wal/", crate::lifecycle::tenant_path(id)));
+    let commit = t1.stage(vec![Op::Put(ckey(1, 0), b"in flight at the erase".to_vec())]).await.unwrap().unwrap();
+    let w = tokio::spawn(async move { commit.wait().await });
+    for _ in 0..300 {
+        if gate.waiting.load(SeqCst) > 0 {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    assert!(gate.waiting.load(SeqCst) > 0, "the WAL PUT did not reach the store");
+    // the erase (as `ctl/purge.rs` does it): every object under the database's prefix is deleted, and the prefix is empty
+    let prefix = Path::from(crate::lifecycle::tenant_path(id));
+    let objs: Vec<_> = futures::TryStreamExt::try_collect::<Vec<_>>(base_store.list(Some(&prefix))).await.unwrap();
+    for m in &objs {
+        base_store.delete(&m.location).await.unwrap();
+    }
+    let left: Vec<_> = futures::TryStreamExt::try_collect::<Vec<_>>(base_store.list(Some(&prefix))).await.unwrap();
+    assert!(left.is_empty(), "setup: the erase left objects");
+    // the late PUT lands
+    gate.release();
+    let _ = tokio::time::timeout(Duration::from_secs(10), w).await;
+    let after: Vec<_> = futures::TryStreamExt::try_collect::<Vec<_>>(base_store.list(Some(&prefix))).await.unwrap();
+    let _ = tokio::time::timeout(Duration::from_secs(15), t1.abandon()).await;
+    let after_paths: Vec<String> = after.iter().map(|m| m.location.to_string()).collect();
+    // the same name, created again
+    let (late, older, err) = match lc(&base_store).create(id).await {
+        Ok(t2) => {
+            let late = t2.get(ckey(1, 0)).await;
+            let older = t2.get(ckey(0, 3)).await;
+            let err = match (&late, &older) {
+                (Err(e), _) | (_, Err(e)) => Some(format!("read: {e:#}")),
+                _ => None,
+            };
+            let _ = t2.close().await;
+            (late.ok().flatten(), older.ok().flatten(), err)
+        }
+        Err(e) => (None, None, Some(format!("{e:#}"))),
+    };
+    eprintln!(
+        "erase then a late write: objects under the prefix after the erase 0, after the late PUT and the abandon {} ({after_paths:?}); \
+         the database created again: error {err:?}, reads the in-flight write {:?}, an older erased row {:?}",
+        after.len(),
+        late.as_deref().map(String::from_utf8_lossy),
+        older.as_deref().map(String::from_utf8_lossy)
+    );
+    (late, older, after.len(), err)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+#[ignore = "open: whole-database erase is not fenced against a late WAL PUT (design choice for the founder; P-audit-fencing report)"]
+async fn fence_erase_then_late_wal_resurrects() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (late, older, landed, err) = erase_then_late_wal().await;
+    teardown();
+    assert!(landed == 0 && late.is_none() && older.is_none() && err.is_none(), "an erased database's rows came back in the database created again with its name");
 }
