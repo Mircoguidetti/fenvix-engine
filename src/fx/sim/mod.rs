@@ -577,6 +577,34 @@ mod tests {
         assert_eq!(f, 0, "hole Z through the fork: {} violations: {:?}", v.len(), v.iter().take(3).collect::<Vec<_>>());
     }
 
+    /// sim-test-2 candidate (random seed 2296): the source is taken over and written between the fork's quiesce and its
+    /// checkpoint (the forking process lost the source's lease meanwhile). The clone carries the new owner's WAL beyond the
+    /// checkpoint's manifest; the fork's clean marker makes its readers skip the WAL replay while its writer replays it.
+    #[test]
+    fn sim_story_fork_source_written_after_its_quiesce() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let copy = std::env::var_os("SIM_STORY_COPY").is_some();
+        let ev = vec![
+            Open { p: 0, writer: true },
+            fill(0, 0, 0),
+            Publish { p: 0 },
+            // the fork's drop-lease PUT (after its quiesce closed p0) stays on the wire
+            Hold { p: 0, class: Class::FxOther, op: Some(NOp::Put), skip: 0, land: true, all: false, rid: 1 },
+            Fork { p: 0, copy, tag: 1 },
+            // meanwhile another process opens the source and writes (WAL only)
+            Open { p: 1, writer: true },
+            Write { p: 1, ops: vec![(1, 1, false), (2, 2, false), (0, 3, true)] },
+            Release { rid: 1 },
+            Sleep { ms: 3000 },
+        ];
+        let (f, v) = run_story(&rt, "fork: source written after its quiesce", 0, ev);
+        assert_eq!(f, 0, "{v:?}");
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {
