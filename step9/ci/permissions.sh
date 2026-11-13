@@ -47,10 +47,11 @@ AMI[aarch64]=$(aws ssm get-parameter --name /aws/service/canonical/ubuntu/server
 # every machine of this round, in its zone: dry launch with tag, role and disk (iam:PassRole included)
 for pair in "cook eu-west-1a" "spare eu-west-1b" "log eu-west-1a" "log eu-west-1b" "log eu-west-1c" "compactor eu-west-1c" \
             "loader eu-west-1a" "client eu-west-1a" "filler eu-west-1a" "extras_client eu-west-1a" "pgbox eu-west-1a" \
-            "generator eu-west-1a"; do
+            "generator eu-west-1a" "mongod eu-west-1a" "mongod eu-west-1b" "mongod eu-west-1c"; do
   read -r role z <<<"$pair"; t=$(r "$role"); [ -n "$t" ] || continue
   a=$(python3 "$HERE/machine_types.py" arch "$t")
   disk=${DISK_GB:-20}; [ "$role" = generator ] && disk=$(r generator_disk_gb)   # the generator's spill disk
+  [ "$role" = mongod ] && disk=$(r mongod_disk_gb); [ -n "$disk" ] && [ "$disk" != None ] || disk=${DISK_GB:-20}
   try "ec2:RunInstances $role $t ($a) in $z" aws ec2 run-instances --dry-run --image-id "${AMI[$a]}" --instance-type "$t" \
     --network-interfaces "DeviceIndex=0,SubnetId=${SUB[$z]},AssociatePublicIpAddress=true${DEFAULT_SG:+,Groups=$DEFAULT_SG}" \
     --iam-instance-profile Name="$MACHINE_ROLE" --instance-initiated-shutdown-behavior terminate \
@@ -75,5 +76,7 @@ try "s3:ListBucket" aws s3 ls "s3://$B/"
 try "s3:DeleteObject" aws s3 rm "s3://$B/check.txt"
 try "s3:DeleteBucket" aws s3api delete-bucket --bucket "$B"
 [ "$(r pantry_mode)" != new ] && try "s3:ListBucket on the kept pantry prefix (fenvix-kitchen-pantry-*)" aws s3api list-buckets --query 'length(Buckets)'
+# the MongoDB line (aws-local-round): the runner downloads mongod from MongoDB's own site when a job has phase mongod
+try "mongod 7.0.48 tarball reachable from the runner (fastdl.mongodb.org)" curl -fsSI -o /dev/null https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-7.0.48.tgz
 if [ ${#missing[@]} -eq 0 ]; then echo "PERMESSI: tutti presenti" | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"; else
   { echo "PERMESSI MANCANTI:"; printf -- '- %s\n' "${missing[@]}"; } | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"; exit 1; fi
