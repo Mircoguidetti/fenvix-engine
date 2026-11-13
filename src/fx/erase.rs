@@ -56,6 +56,8 @@ use std::sync::Arc;
 pub static DEADLINE_MS: AtomicU64 = AtomicU64::new(24 * 3600 * 1000);
 /// Erasures recorded, scrub versions published, rows erased from runs, runs retired (diagnostics).
 pub static REGISTERED: AtomicU64 = AtomicU64::new(0);
+/// audit-fencing: retired runs kept because the store's newest version still lists them.
+pub static RETIRE_REFUSED_LIVE: AtomicU64 = AtomicU64::new(0);
 pub static SCRUBS: AtomicU64 = AtomicU64::new(0);
 pub static ROWS_ERASED: AtomicU64 = AtomicU64::new(0);
 pub static RUNS_RETIRED: AtomicU64 = AtomicU64::new(0);
@@ -975,6 +977,16 @@ pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &str, es: &mut [&mut E
         }
     }
     let no_retire = ctl(&CONTROL_NO_RETIRE);
+    // audit-fencing: a run the store's newest version lists is live, whatever a record says (a scrub that a process which
+    // lost the database took as published, in a slot below the newest): never deleted. The erasure is then not done.
+    let live_now: BTreeSet<String> = if manifest::CONTROL_NO_MAIN_LINE.load(Relaxed) {
+        BTreeSet::new()
+    } else {
+        match manifest::load_newest(store, id).await? {
+            Some(v) => names(&v).0.into_iter().map(|s| s.to_string()).collect(),
+            None => BTreeSet::new(),
+        }
+    };
     let mut deleted_versions: BTreeSet<u64> = BTreeSet::new();
     let mut stray: Option<Vec<String>> = None;
     for e in es {
@@ -987,6 +999,10 @@ pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &str, es: &mut [&mut E
             }
             if served < scrubbed {
                 by.push(format!("served version {served}"));
+            }
+            if live_now.contains(&r.path) {
+                RETIRE_REFUSED_LIVE.fetch_add(1, Relaxed);
+                by.push("listed by the newest version: the scrub is not on the main line".into());
             }
             if no_retire {
                 by.push("control".into());
@@ -1039,7 +1055,7 @@ pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &str, es: &mut [&mut E
             versions_kept.push(format!("{older} older versions in the restore window (GC deletes them and their runs when it ends)"));
         }
         e.versions_kept = versions_kept;
-        if e.live_done_ms.is_none() && served >= scrubbed {
+        if e.live_done_ms.is_none() && served >= scrubbed && !e.retired.iter().any(|r| live_now.contains(&r.path)) {
             e.live_done_ms = Some(now);
         }
         if e.retired.iter().all(|r| r.deleted_ms.is_some() || r.released_ms.is_some()) && e.versions_kept.is_empty() && e.live_done_ms.is_some() {

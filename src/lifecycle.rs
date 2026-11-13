@@ -2489,7 +2489,11 @@ impl Tenant {
                 erase::trace(serde_json::json!({"ev": "erasure_scrub", "db": self.id, "erasure": e.id, "base_version": cur.version, "next": next, "pending_version": self.fx_shared.as_ref().and_then(|s| s.pending_version()), "groups": cur.groups.len(), "delta_runs": cur.delta.len(), "ranges": t.ranges.len(), "keys": t.keys.len(), "runs_retired": s.retired.len(), "rows": s.rows, "ms": t_s.elapsed().as_millis() as u64}));
                 let version = match &s.version {
                     Some(v) => {
-                        match crate::fx::manifest::create(&store, &self.id, v).await {
+                        let created = match crate::fx::manifest::create(&store, &self.id, v).await {
+                            Ok(true) => crate::fx::manifest::on_main_line(&store, &self.id, v.version).await,
+                            r => r,
+                        };
+                        match created {
                             Ok(true) => {}
                             Ok(false) => return Err(self.fx_publish_failed(anyhow::Error::new(crate::fx::LostRace(format!("erasure version {} of {} lost the race", v.version, self.id)))).await),
                             Err(x) => return Err(self.fx_publish_failed(anyhow::Error::new(crate::fx::UnknownPublish { version: Box::new(v.clone()), msg: format!("{x:#}") })).await),
@@ -2634,7 +2638,12 @@ impl Tenant {
         if let Some(Mode::Writer(db)) = self.mode.as_ref() {
             v.writer_epoch = Some(db.manifest().writer_epoch());
         }
-        match crate::fx::manifest::create(&store, &self.id, &v).await {
+        // audit-fencing: a create that landed below the newest version is a lost race, not a publish
+        let created = match crate::fx::manifest::create(&store, &self.id, &v).await {
+            Ok(true) => crate::fx::manifest::on_main_line(&store, &self.id, v.version).await,
+            r => r,
+        };
+        match created {
             Ok(true) => {}
             Ok(false) => return Err(self.fx_publish_failed(anyhow::Error::new(crate::fx::LostRace(format!("erasure version {} of {} lost the race", v.version, self.id)))).await),
             Err(x) => return Err(self.fx_publish_failed(anyhow::Error::new(crate::fx::UnknownPublish { version: Box::new(v.clone()), msg: format!("{x:#}") })).await),

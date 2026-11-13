@@ -324,8 +324,8 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
         // targeted, with this version when the store is still empty (review round 2 of step 3)
         Err(e) => return Err(anyhow::Error::new(super::UnknownPublish { version: Box::new(v), msg: format!("{e:#}") })),
     };
-    if !created {
-        return Err(anyhow::Error::new(super::LostRace(format!("publish of version {version} of {id} lost the race: another publisher wrote it; this build's runs are orphans"))));
+    if !created || !manifest::on_main_line(store, id, version).await? {
+        return Err(anyhow::Error::new(super::LostRace(format!("publish of version {version} of {id} lost the race: another publisher wrote it, or a newer version exists; this build's runs are orphans"))));
     }
     Ok(Some((v, rep)))
 }
@@ -699,8 +699,8 @@ pub async fn publish_generated_parts(db: &slatedb::Db, store: &Arc<dyn ObjectSto
         Ok(c) => c,
         Err(e) => return Err(anyhow::Error::new(super::UnknownPublish { version: Box::new(v), msg: format!("{e:#}") })),
     };
-    if !created {
-        return Err(anyhow::Error::new(super::LostRace(format!("publish of version {version} of {id} lost the race: another publisher wrote it; the generated runs are orphans"))));
+    if !created || !manifest::on_main_line(store, id, version).await? {
+        return Err(anyhow::Error::new(super::LostRace(format!("publish of version {version} of {id} lost the race: another publisher wrote it, or a newer version exists; the generated runs are orphans"))));
     }
     Ok((v, rep))
 }
