@@ -434,9 +434,14 @@ mod tests {
         let _w = setup_world();
         use Ev::*;
         let fork = std::env::var_os("SIM_STORY_FORK").is_some();
+        // `SIM_STORY_PINNED=1`: an earlier restore point pins an older version; the new point pairs with it (below the drop)
+        let pinned = std::env::var_os("SIM_STORY_PINNED").is_some();
         let mut ev = vec![Open { p: 0, writer: true }, fill(0, 0, 0), Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }];
         for c in 1..4 {
             ev.extend([fill(0, c, 0), Flush { p: 0 }, CompDrain { p: 0 }, Sleep { ms: 300 }]);
+            if pinned && c == 1 {
+                ev.push(Point { p: 2, tag: 9 });
+            }
         }
         // the compactor's drop: rows at or below X_d now live only in our runs
         ev.extend([DropThrough { p: 0 }, Close { p: 0 }]);
