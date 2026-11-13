@@ -30,6 +30,16 @@ mod tests {
         }
     }
 
+    /// The script of a seed: `SIM_GEN=2` gives sim-test-2's scripts (`cluster::ext::generate2`: restore points, restores,
+    /// forks, the generator, SlateDB's GC, storms, many groups); otherwise the scripts of sim-test.
+    fn gen(seed: u64, steps: usize) -> Script {
+        if env_u64("SIM_GEN", 1) == 2 {
+            super::cluster::ext::generate2(seed, steps)
+        } else {
+            generate(seed, steps)
+        }
+    }
+
     fn runtime() -> tokio::runtime::Runtime {
         tokio::runtime::Builder::new_multi_thread().worker_threads(env_u64("SIM_THREADS", 4) as usize).enable_all().build().unwrap()
     }
@@ -58,7 +68,7 @@ mod tests {
                 let sem = Arc::clone(&sem);
                 hs.push(tokio::spawn(async move {
                     let _p = sem.acquire_owned().await.unwrap();
-                    let s = generate(seed, steps);
+                    let s = gen(seed, steps);
                     let r = run_script(&s).await;
                     eprintln!("SIM seed {seed}: {} violations; {}", r.violations.len(), r.stats);
                     (s, r)
@@ -125,7 +135,7 @@ mod tests {
             ev.push(w(0, c));
         }
         ev.extend([Publish { p: 0 }, CompStart { p: 0 }, Erase { p: 0, cust: 1 }, Flush { p: 0 }, CompDrain { p: 0 }, Open { p: 1, writer: true }, CompStart { p: 1 }, w(1, 4), Flush { p: 1 }, CompDrain { p: 1 }, w(1, 5), Flush { p: 1 }, CompDrain { p: 1 }, Gc { p: 1 }, ErasePass { p: 0 }, Sleep { ms: 2600 }, Retire { p: 1 }, Abandon { p: 0 }]);
-        let s = Script { seed: 0, profile: Profile::none(), knobs: env_u64("SIM_KNOBS", 1) as u8, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect() };
+        let s = Script { seed: 0, profile: Profile::none(), knobs: env_u64("SIM_KNOBS", 1) as u8, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Default::default() };
         let n = env_u64("SIM_REPLAYS", 3);
         let mut failing = 0;
         for _ in 0..n {
@@ -167,7 +177,7 @@ mod tests {
             // the zombie closes the database (idle reaper, or shutdown)
             Close { p: 0 },
         ];
-        let s = Script { seed: 1, profile: Profile::none(), knobs: 1, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect() };
+        let s = Script { seed: 1, profile: Profile::none(), knobs: 1, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Default::default() };
         let r = rt.block_on(run_script(&s));
         for l in r.trace.iter().filter(|l| l.contains("->")) {
             eprintln!("  {l}");
@@ -204,7 +214,7 @@ mod tests {
         ev.push(DropThrough { p: 0 });
         // the database moves to another process, whose compactor has not started yet; its write path publishes
         ev.extend([Close { p: 0 }, Open { p: 1, writer: true }, Write { p: 1, ops: vec![(0, 1, false)] }, Publish { p: 1 }]);
-        let s = Script { seed: 2, profile: Profile::none(), knobs: env_u64("SIM_KNOBS", 0) as u8, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect() };
+        let s = Script { seed: 2, profile: Profile::none(), knobs: env_u64("SIM_KNOBS", 0) as u8, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Default::default() };
         let r = rt.block_on(run_script(&s));
         for l in r.trace.iter().filter(|l| l.contains("->")) {
             eprintln!("  {l}");
@@ -259,7 +269,7 @@ mod tests {
             ev.extend([Write { p: 1, ops: (0..PER_CUSTOMER).map(|i| (c, i, false)).collect() }, Flush { p: 1 }, CompDrain { p: 1 }]);
         }
         ev.push(DropThrough { p: 1 });
-        let s = Script { seed: 3, profile: Profile::none(), knobs: env_u64("SIM_KNOBS", 1) as u8, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect() };
+        let s = Script { seed: 3, profile: Profile::none(), knobs: env_u64("SIM_KNOBS", 1) as u8, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Default::default() };
         let n = env_u64("SIM_REPLAYS", 1);
         let mut failing = 0;
         for _ in 0..n {
@@ -276,6 +286,103 @@ mod tests {
         eprintln!("SIM STORY first build on top: {failing} of {n} runs with a violation");
     }
 
+    /// Run a hand-written script `SIM_REPLAYS` times (default 1); print its trace and violations; the number failing.
+    fn run_story(rt: &tokio::runtime::Runtime, name: &str, knobs: u8, ev: Vec<Ev>) -> (u64, Vec<String>) {
+        use super::net::Profile;
+        let s = Script { seed: 7, profile: Profile::none(), knobs, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Default::default() };
+        let n = env_u64("SIM_REPLAYS", 1);
+        let mut failing = 0;
+        let mut last = Vec::new();
+        for _ in 0..n {
+            let r = rt.block_on(run_script(&s));
+            for l in r.trace.iter().filter(|l| l.contains("->") || l.contains("mark") || l.contains("storm")) {
+                eprintln!("  {l}");
+            }
+            for v in r.violations.iter().take(8) {
+                eprintln!("VIOLATION {v}");
+            }
+            eprintln!("SIM STORY {name}: {} violations; {}", r.violations.len(), r.stats);
+            failing += (!r.violations.is_empty()) as u64;
+            last = r.violations;
+        }
+        eprintln!("SIM STORY {name}: {failing} of {n} runs with a violation");
+        (failing, last)
+    }
+
+    fn fill(p: usize, c: usize, tag: usize) -> Ev {
+        let _ = tag;
+        Ev::Write { p, ops: (0..PER_CUSTOMER).map(|i| (c, i, false)).collect() }
+    }
+
+    /// sim-test-2: a restore point, then the database goes on (writes, reseals and merges of the compactor, our GC with
+    /// retention 0, an erasure scrubbed and retired, SlateDB's GC, the drop); a restore to a mark just after the point
+    /// must give the state at the mark, during the run and at the end.
+    #[test]
+    fn sim_story_restore_after_gc_with_retention_0() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use Ev::*;
+        let mut ev = vec![Open { p: 0, writer: true }];
+        for c in 0..3 {
+            ev.push(fill(0, c, 0));
+        }
+        ev.extend([Publish { p: 0 }, CompStart { p: 0 }, Flush { p: 0 }, CompDrain { p: 0 }, Point { p: 1, tag: 1 }, Write { p: 0, ops: vec![(0, 1, false), (1, 2, true)] }, Mark { tag: 2 }]);
+        for c in 3..CUSTOMERS {
+            ev.extend([fill(0, c, 0), Flush { p: 0 }, CompDrain { p: 0 }]);
+        }
+        ev.extend([Erase { p: 0, cust: 2 }, Flush { p: 0 }, CompDrain { p: 0 }, ErasePass { p: 0 }, Gc { p: 0 }, Sleep { ms: 2700 }, Retire { p: 0 }, Gc { p: 0 }, DropThrough { p: 0 }, Gc { p: 0 }, SlateGc { p: 2 }, Restore { p: 0, mark: 2, apply: true }, fill(0, 4, 0)]);
+        let (f, v) = run_story(&rt, "restore after GC with retention 0", env_u64("SIM_KNOBS", 0) as u8, ev);
+        assert_eq!(f, 0, "{v:?}");
+    }
+
+    /// sim-test-2: a clone fork, then its source erases a customer (scrub, retire), reseals, collects (our GC with
+    /// retention 0, SlateDB's GC, the drop), while a zombie of the source writes; the fork must read its state at the fork.
+    #[test]
+    fn sim_story_fork_then_source_collects() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use Ev::*;
+        let copy = std::env::var_os("SIM_STORY_COPY").is_some();
+        let mut ev = vec![Open { p: 0, writer: true }];
+        for c in 0..4 {
+            ev.push(fill(0, c, 0));
+        }
+        ev.extend([Publish { p: 0 }, CompStart { p: 0 }, Flush { p: 0 }, CompDrain { p: 0 }, Fork { p: 0, copy, tag: 1 }, Open { p: 1, writer: true }, CompStart { p: 1 }]);
+        ev.extend([Erase { p: 1, cust: 1 }, fill(1, 4, 0), Flush { p: 1 }, CompDrain { p: 1 }, ErasePass { p: 1 }, fill(1, 5, 0), Flush { p: 1 }, CompDrain { p: 1 }, Gc { p: 1 }, Sleep { ms: 2700 }, Retire { p: 1 }, Gc { p: 1 }, DropThrough { p: 1 }, Gc { p: 1 }, SlateGc { p: 2 }, GcClosed { p: 2 }]);
+        let (f, v) = run_story(&rt, "fork then the source collects", env_u64("SIM_KNOBS", 0) as u8, ev);
+        assert_eq!(f, 0, "{v:?}");
+    }
+
+    /// sim-test-2: the generator's parallel publish (3 writers) while another process takes the database over and writes:
+    /// whichever wins, no acknowledged write is lost and a refused generation is not read.
+    #[test]
+    fn sim_story_generator_and_takeover() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::Class;
+        use Ev::*;
+        let ev = vec![
+            Open { p: 0, writer: true },
+            Write { p: 0, ops: vec![(0, 0, false), (5, 5, false)] },
+            Hold { p: 0, class: Class::FxVersion, op: None, skip: 0, land: true, all: false, rid: 1 },
+            Generate { p: 0, writers: 3 },
+            Open { p: 1, writer: true },
+            Write { p: 1, ops: vec![(1, 1, false), (2, 2, true)] },
+            Publish { p: 1 },
+            Release { rid: 1 },
+            Sleep { ms: 1500 },
+            CompStart { p: 1 },
+            fill(1, 3, 0),
+            Flush { p: 1 },
+            CompDrain { p: 1 },
+        ];
+        let (f, v) = run_story(&rt, "generator and takeover", env_u64("SIM_KNOBS", 0) as u8, ev);
+        assert_eq!(f, 0, "{v:?}");
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {
@@ -283,7 +390,7 @@ mod tests {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
-        let mut s = generate(seed, env_u64("SIM_STEPS", 90) as usize);
+        let mut s = gen(seed, env_u64("SIM_STEPS", 90) as usize);
         if let Ok(k) = std::env::var("SIM_KEEP") {
             let keep: Vec<u32> = k.split(',').map(|x| x.trim().parse().unwrap()).collect();
             s.events.retain(|(i, _)| keep.contains(i));
