@@ -880,6 +880,12 @@ impl Server {
                 "publishes": tenant_bench::fx::PUBLISHES.load(Relaxed) as i64,
                 "publishErrors": tenant_bench::fx::PUBLISH_ERRORS.load(Relaxed) as i64,
                 "fences": tenant_bench::fx::FENCES.load(Relaxed) as i64,
+                // c2-fix-long-reads and fix-box-first-trip: a reader's renewals under the shared lock, those run in the
+                // wave of a customer's box, and those whose LIST found the version already served (no GET)
+                "renewals": tenant_bench::fx::RENEWALS.load(Relaxed) as i64,
+                "renewalsWithBox": tenant_bench::fx::RENEWALS_WITH_BOX.load(Relaxed) as i64,
+                "renewalsUnchanged": tenant_bench::fx::manifest::RENEWALS_UNCHANGED.load(Relaxed) as i64,
+                "stepsPastRenewal": tenant_bench::fx::STEPS_PAST_RENEWAL.load(Relaxed) as i64,
                 "rowsFromRuns": tenant_bench::fx::view::ROWS_FROM_RUNS.load(Relaxed) as i64,
                 "runGets": tenant_bench::fx::view::RUN_GETS.load(Relaxed) as i64,
                 "runOpens": tenant_bench::fx::view::RUN_OPENS.load(Relaxed) as i64,

@@ -75,6 +75,8 @@ mod tests_gen;
 #[cfg(test)]
 mod review_long_reads_tests;
 #[cfg(test)]
+mod box_first_trip_tests;
+#[cfg(test)]
 mod perf_erase_tests;
 #[cfg(test)]
 mod write_stalls_tests;
@@ -158,6 +160,11 @@ pub static CONTROL_NO_FENCE_PENDING: AtomicBool = AtomicBool::new(false);
 
 /// c2-fix-long-reads: renewals of a reader's state made by a read step under the shared lock (diagnostics, tests).
 pub static RENEWALS: AtomicU64 = AtomicU64::new(0);
+/// fix-box-first-trip: renewals a request started at its beginning, in the same wave as its customer's box
+/// (`Tenant::renew_alongside`).
+pub static RENEWALS_WITH_BOX: AtomicU64 = AtomicU64::new(0);
+/// fix-box-first-trip: read steps that went on with their valid state while another step renewed it.
+pub static STEPS_PAST_RENEWAL: AtomicU64 = AtomicU64::new(0);
 /// Negative control of c2-fix-long-reads, tests only: a read step never renews its state (the code before the fix),
 /// so a reader's state ages with the command and the T_pin guard refuses its steps.
 #[cfg(test)]

@@ -36,7 +36,7 @@ use std::time::{Duration, Instant};
 // ---- a store that fails or delays chosen requests, and counts what a reader asks
 
 #[derive(Debug, Default)]
-struct Faults {
+pub(super) struct Faults {
     /// LIST of the manifest directory fails.
     fail_list: AtomicBool,
     /// HEAD (or GET) of E1's announcement fails.
@@ -48,8 +48,10 @@ struct Faults {
     gate_runs_until: Mutex<Option<Instant>>,
     gated: AtomicU64,
     run_not_found: AtomicU64,
-    lists: AtomicU64,
-    manifest_gets: AtomicU64,
+    pub(super) lists: AtomicU64,
+    pub(super) manifest_gets: AtomicU64,
+    /// fix-box-first-trip: a LIST of the manifest directory answers this many ms late (0: at once).
+    pub(super) delay_list_ms: AtomicU64,
     announce_heads: AtomicU64,
     run_gets: AtomicU64,
     other_gets: AtomicU64,
@@ -122,6 +124,14 @@ impl ObjectStore for FaultStore {
                 let e = injected(prefix.unwrap());
                 return Box::pin(futures::stream::once(async move { Err(e) }));
             }
+            let late = self.f.delay_list_ms.load(Relaxed);
+            if late > 0 {
+                let inner = self.inner.list(prefix);
+                return Box::pin(futures::stream::StreamExt::flatten(futures::stream::once(async move {
+                    tokio::time::sleep(Duration::from_millis(late)).await;
+                    inner
+                })));
+            }
         }
         self.inner.list(prefix)
     }
@@ -140,7 +150,7 @@ impl ObjectStore for FaultStore {
 }
 
 /// A lifecycle (another process) whose requests go through a [`FaultStore`].
-fn faulty_lc(store: &Arc<dyn ObjectStore>) -> (Arc<Lifecycle>, Arc<Faults>) {
+pub(super) fn faulty_lc(store: &Arc<dyn ObjectStore>) -> (Arc<Lifecycle>, Arc<Faults>) {
     let f = Arc::new(Faults::default());
     let fs: Arc<dyn ObjectStore> = Arc::new(FaultStore { inner: Arc::clone(store), f: Arc::clone(&f) });
     (Lifecycle::new(Arc::new(CountingStore::new(fs)), None), f)
@@ -148,7 +158,7 @@ fn faulty_lc(store: &Arc<dyn ObjectStore>) -> (Arc<Lifecycle>, Arc<Faults>) {
 
 // ---- common setup (the owner's test knobs, `long_reads_tests.rs`)
 
-const T_PIN: u64 = 300;
+pub(super) const T_PIN: u64 = 300;
 const HOLD_MS: u64 = 1500;
 const CUSTOMERS: usize = 8;
 const STABLE: usize = 200;
@@ -188,7 +198,7 @@ fn knobs(kind: CustomerKind) -> Knobs {
     }
 }
 
-fn setup() {
+pub(super) fn setup() {
     enable();
     T_PIN_MS.store(T_PIN, Relaxed);
     hold::HOLD_LIFE_MS.store(HOLD_MS, Relaxed);
@@ -199,7 +209,7 @@ fn setup() {
     view::clear_cache();
 }
 
-fn teardown() {
+pub(super) fn teardown() {
     crate::lifecycle::L0_SST_BYTES_OVERRIDE.store(0, Relaxed);
     crate::lifecycle::L0_MAX_SSTS_OVERRIDE.store(0, Relaxed);
     crate::lifecycle::WRITER_POLL_SECS.store(30, Relaxed);
@@ -309,7 +319,7 @@ async fn one_pass(r: &Tenant, key: fn(usize, usize) -> Vec<u8>, want: &BTreeMap<
     }
 }
 
-async fn stable_db(store: &Arc<dyn ObjectStore>, id: &str, key: fn(usize, usize) -> Vec<u8>, opts: &build::BuildOpts) -> (Tenant, BTreeMap<Vec<u8>, Vec<u8>>) {
+pub(super) async fn stable_db(store: &Arc<dyn ObjectStore>, id: &str, key: fn(usize, usize) -> Vec<u8>, opts: &build::BuildOpts) -> (Tenant, BTreeMap<Vec<u8>, Vec<u8>>) {
     let mut w = lc(store).create(id).await.unwrap();
     let mut want = BTreeMap::new();
     for c in 0..CUSTOMERS {
