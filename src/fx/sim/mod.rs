@@ -40,7 +40,7 @@ mod tests {
     fn sim_seeds() {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
-        setup_world();
+        let _w = setup_world();
         let steps = env_u64("SIM_STEPS", 90) as usize;
         let min_max = env_u64("SIM_MIN_MAX", 3) as usize;
         let par = env_u64("SIM_PAR", 4) as usize;
@@ -116,7 +116,7 @@ mod tests {
     fn sim_story_zombie_scrub() {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
-        setup_world();
+        let _w = setup_world();
         use super::net::Profile;
         use Ev::*;
         let w = |p: usize, c: usize| Write { p, ops: (0..PER_CUSTOMER).map(|i| (c, i, false)).collect() };
@@ -152,7 +152,7 @@ mod tests {
     fn sim_hole_zombie_close_writes_the_clean_marker() {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
-        setup_world();
+        let _w = setup_world();
         use super::net::Profile;
         use Ev::*;
         let ev = vec![
@@ -179,13 +179,50 @@ mod tests {
         assert!(r.violations.is_empty(), "hole Z: a zombie's close left the clean marker and a reader misses acknowledged writes ({} violations)", r.violations.len());
     }
 
+    /// New hole W (sim-test): a builder publish with `Reseal::All` (what `Entry`'s write path publishes, every
+    /// `RESEAL_EVERY`-th build, while a database has no compactor: after a takeover or a reopen whose compactor start is
+    /// deferred) builds every sealed run from SlateDB's rows only and leaves the base's delta runs out. Once a compactor
+    /// with the drop has run, rows at or below its X_d live only in our runs: the publish loses them.
+    /// Ignored until the fix is in (it fails on integration-5-stack 837f969): run with `--ignored`.
+    #[test]
+    #[ignore]
+    fn sim_hole_builder_reseal_after_the_drop() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::Profile;
+        use Ev::*;
+        let mut ev = vec![Open { p: 0, writer: true }, Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (0, i, false)).collect() }, Publish { p: 0 }, Write { p: 0, ops: vec![(0, 0, false)] }, CompStart { p: 0 }];
+        // rows absorbed by the compactor, flushed often enough for SlateDB's fold (with the drop) to run
+        for c in 1..CUSTOMERS {
+            ev.push(Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (c, i, false)).collect() });
+            ev.push(Flush { p: 0 });
+            ev.push(CompDrain { p: 0 });
+            ev.push(Sleep { ms: 300 });
+        }
+        // SlateDB's compaction with our drop: the rows at or below X_d now live only in our runs
+        ev.push(DropThrough { p: 0 });
+        // the database moves to another process, whose compactor has not started yet; its write path publishes
+        ev.extend([Close { p: 0 }, Open { p: 1, writer: true }, Write { p: 1, ops: vec![(0, 1, false)] }, Publish { p: 1 }]);
+        let s = Script { seed: 2, profile: Profile::none(), knobs: env_u64("SIM_KNOBS", 0) as u8, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect() };
+        let r = rt.block_on(run_script(&s));
+        for l in r.trace.iter().filter(|l| l.contains("->")) {
+            eprintln!("  {l}");
+        }
+        for v in r.violations.iter().take(6) {
+            eprintln!("VIOLATION {v}");
+        }
+        eprintln!("SIM HOLE W: {} violations; {}", r.violations.len(), r.stats);
+        assert!(r.violations.is_empty(), "hole W: a builder reseal after the drop lost rows ({} violations)", r.violations.len());
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {
         let Some(seed) = std::env::var("SIM_SEED").ok().and_then(|v| v.parse().ok()) else { return };
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
-        setup_world();
+        let _w = setup_world();
         let mut s = generate(seed, env_u64("SIM_STEPS", 90) as usize);
         if let Ok(k) = std::env::var("SIM_KEEP") {
             let keep: Vec<u32> = k.split(',').map(|x| x.trim().parse().unwrap()).collect();

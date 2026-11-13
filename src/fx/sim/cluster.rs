@@ -104,9 +104,27 @@ pub fn build_opts() -> BuildOpts {
     BuildOpts { reseal: Reseal::All, group_bytes: 16 << 10, sealed: RunOptions::unchecked(2048, 1 << 20, CustomerKind::V2), delta: RunOptions::unchecked(1024, 1 << 20, CustomerKind::V2) }
 }
 
-/// Process-wide settings of the simulated world (set once; every seed uses the same).
-pub fn setup_world() {
+/// Process-wide settings of the simulated world (every seed uses the same). The returned guard puts the previous
+/// values back when it is dropped, so the other tests of the same process see their defaults.
+#[must_use]
+pub fn setup_world() -> WorldGuard {
     use std::sync::atomic::Ordering::Relaxed;
+    let g = WorldGuard {
+        enabled: crate::fx::ENABLED.load(Relaxed),
+        publish_every: crate::fx::PUBLISH_EVERY.load(Relaxed),
+        t_pin: crate::fx::T_PIN_MS.load(Relaxed),
+        hold: crate::fx::hold::HOLD_LIFE_MS.load(Relaxed),
+        put: crate::fx::PUT_TIMEOUT_MS.load(Relaxed),
+        lease: crate::fx::LEASE_MS.load(Relaxed),
+        margin: crate::fx::LEASE_MARGIN_MS.load(Relaxed),
+        remote: crate::fx::REMOTE_LEASE_MS.load(Relaxed),
+        grace: crate::fx::GC_GRACE_MS.load(Relaxed),
+        retention: crate::fx::VERSION_RETENTION_MS.load(Relaxed),
+        l0_bytes: crate::lifecycle::L0_SST_BYTES_OVERRIDE.load(Relaxed),
+        l0_max: crate::lifecycle::L0_MAX_SSTS_OVERRIDE.load(Relaxed),
+        poll: crate::lifecycle::WRITER_POLL_SECS.load(Relaxed),
+        server_on: crate::fx::compactor::SERVER_ON.load(Relaxed),
+    };
     crate::fx::ENABLED.store(true, Relaxed);
     crate::fx::PUBLISH_EVERY.store(0, Relaxed);
     crate::fx::T_PIN_MS.store(T_PIN_MS, Relaxed);
@@ -124,6 +142,44 @@ pub fn setup_world() {
     crate::fx::compactor::SERVER_ON.store(true, Relaxed);
     crate::fx::check_config().expect("the simulated world's timing rules");
     knobs().check().expect("the simulated compactor's knobs");
+    g
+}
+
+pub struct WorldGuard {
+    enabled: bool,
+    publish_every: u64,
+    t_pin: u64,
+    hold: u64,
+    put: u64,
+    lease: u64,
+    margin: u64,
+    remote: u64,
+    grace: u64,
+    retention: u64,
+    l0_bytes: u64,
+    l0_max: usize,
+    poll: u64,
+    server_on: bool,
+}
+
+impl Drop for WorldGuard {
+    fn drop(&mut self) {
+        use std::sync::atomic::Ordering::Relaxed;
+        crate::fx::ENABLED.store(self.enabled, Relaxed);
+        crate::fx::PUBLISH_EVERY.store(self.publish_every, Relaxed);
+        crate::fx::T_PIN_MS.store(self.t_pin, Relaxed);
+        crate::fx::hold::HOLD_LIFE_MS.store(self.hold, Relaxed);
+        crate::fx::PUT_TIMEOUT_MS.store(self.put, Relaxed);
+        crate::fx::LEASE_MS.store(self.lease, Relaxed);
+        crate::fx::LEASE_MARGIN_MS.store(self.margin, Relaxed);
+        crate::fx::REMOTE_LEASE_MS.store(self.remote, Relaxed);
+        crate::fx::GC_GRACE_MS.store(self.grace, Relaxed);
+        crate::fx::VERSION_RETENTION_MS.store(self.retention, Relaxed);
+        crate::lifecycle::L0_SST_BYTES_OVERRIDE.store(self.l0_bytes, Relaxed);
+        crate::lifecycle::L0_MAX_SSTS_OVERRIDE.store(self.l0_max, Relaxed);
+        crate::lifecycle::WRITER_POLL_SECS.store(self.poll, Relaxed);
+        crate::fx::compactor::SERVER_ON.store(self.server_on, Relaxed);
+    }
 }
 
 pub fn ckey(c: usize, i: usize) -> Vec<u8> {
@@ -165,6 +221,9 @@ pub enum Ev {
     CompStart { p: usize },
     CompDrain { p: usize },
     CompStop { p: usize },
+    /// SlateDB's compaction with our drop, through the compactor's X_d now (what the fold does by itself once L0 and the
+    /// holds allow; forced here so a script does not depend on its timing).
+    DropThrough { p: usize },
     Gc { p: usize },
     /// One erasure pass with the slot's compactor: scrub, commit, record (as `ctl/erase.rs` without the agent).
     ErasePass { p: usize },
@@ -184,7 +243,7 @@ impl Ev {
     fn slot(&self) -> Option<usize> {
         use Ev::*;
         match self {
-            Open { p, .. } | Upgrade { p } | Write { p, .. } | Erase { p, .. } | Flush { p } | Publish { p } | FirstStart { p } | FirstPoll { p } | CompStart { p } | CompDrain { p } | CompStop { p } | Gc { p } | ErasePass { p } | Retire { p } | GcClosed { p } | ClosePass { p } | Close { p } | Abandon { p } | Kill { p } | Hold { p, .. } => Some(*p),
+            Open { p, .. } | Upgrade { p } | Write { p, .. } | Erase { p, .. } | Flush { p } | Publish { p } | FirstStart { p } | FirstPoll { p } | CompStart { p } | CompDrain { p } | CompStop { p } | DropThrough { p } | Gc { p } | ErasePass { p } | Retire { p } | GcClosed { p } | ClosePass { p } | Close { p } | Abandon { p } | Kill { p } | Hold { p, .. } => Some(*p),
             Release { .. } | Sleep { .. } => None,
         }
     }
@@ -264,6 +323,7 @@ pub fn generate(seed: u64, steps: usize) -> Script {
                 cands.push((7, Ev::CompDrain { p: o }));
                 cands.push((4, Ev::Gc { p: o }));
                 cands.push((4, Ev::ErasePass { p: o }));
+                cands.push((2, Ev::DropThrough { p: o }));
                 cands.push((1, Ev::CompStop { p: o }));
             }
             cands.push((5, Ev::Erase { p: o, cust: r.gen_range(0..CUSTOMERS) }));
@@ -520,7 +580,8 @@ impl World {
                 net.note(line.clone());
                 log.lock().unwrap().push(line);
             });
-            if tokio::time::timeout(STEP_WAIT, &mut h).await.is_err() {
+            let wait = if matches!(e, Ev::DropThrough { .. }) { Duration::from_secs(45) } else { STEP_WAIT };
+            if tokio::time::timeout(wait, &mut h).await.is_err() {
                 self.note(format!("event {eid} still in flight after {STEP_WAIT:?}"));
                 self.inflight.push((eid, h));
             }
@@ -746,6 +807,19 @@ impl World {
                     match r {
                         Ok(()) => format!("drained (version {})", c.current().await.version),
                         Err(e) => format!("drain failed: {}", short(&e)),
+                    }
+                }
+                Ev::DropThrough { .. } => {
+                    let Some(c) = comp else { return "no compactor (skipped)".into() };
+                    // the tenant serves the compactor's newest version first, so its own holds do not keep the old floor
+                    if let Some(t) = g.as_mut() {
+                        t.fx_sync();
+                    }
+                    drop(g);
+                    let x = c.current().await.x_d;
+                    match c.drop_through(x, Duration::from_secs(40)).await {
+                        Ok((a, b)) => format!("dropped through {x} ({a}, {b})"),
+                        Err(e) => format!("drop failed: {}", short(&e)),
                     }
                 }
                 Ev::CompStop { .. } => {
@@ -1074,7 +1148,7 @@ async fn oracle(w: &World) -> Vec<String> {
     if let Some(n) = t.fx_served_version() {
         match manifest::load(&w.raw, &w.id, n).await {
             Ok(tv) => {
-                for path in gc::runs_of(&tv) {
+                for path in tv.groups.iter().filter_map(|g| g.sealed.as_ref().map(|r| r.path.clone())).chain(tv.delta.iter().map(|d| d.path.clone())) {
                     if let Err(object_store::Error::NotFound { .. }) = w.raw.head(&object_store::path::Path::from(path.as_str())).await {
                         v.push(format!("live run deleted: version {} (served by a fresh opening) lists {path}", tv.version));
                     }
