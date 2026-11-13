@@ -2426,7 +2426,9 @@ impl Tenant {
                 };
                 let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
                 let epoch = Some(db.manifest().writer_epoch());
-                let next = manifest_next(&store, &self.id, cur.version).await?;
+                // audit-fencing: the slot after the base (the writer's fence at open), never from a LIST (the scrub may take
+                // minutes at 1 TB; after a takeover a LIST would put it on top of the new owner's versions)
+                let next = if crate::fx::manifest::CONTROL_LISTED_SLOT.load(Relaxed) { manifest_next(&store, &self.id, cur.version).await? } else { crate::fx::manifest::next_slot(Some(cur.version)) };
                 let t_s = Instant::now();
                 let s = erase::scrub_version(&store, &self.id, &cur, next, epoch, &erase::Batch::single(&t, e.s_e), opts).await?;
                 erase::trace(serde_json::json!({"ev": "erasure_scrub", "db": self.id, "erasure": e.id, "base_version": cur.version, "next": next, "pending_version": self.fx_shared.as_ref().and_then(|s| s.pending_version()), "groups": cur.groups.len(), "delta_runs": cur.delta.len(), "ranges": t.ranges.len(), "keys": t.keys.len(), "runs_retired": s.retired.len(), "rows": s.rows, "ms": t_s.elapsed().as_millis() as u64}));

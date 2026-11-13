@@ -232,6 +232,24 @@ pub async fn load_newest(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Optio
     }
 }
 
+// ---- audit-fencing (P-audit-fencing): a version create is fenced by its slot
+//
+// The conditional create of version N+1 is the fence of every publisher: the new owner of a database writes a fence
+// version at the next slot when it opens (`Tenant::load_fx`), so a process that lost the database and still publishes on
+// its own base finds that slot taken. A publisher that took its slot from a LIST instead of from its base (the first
+// build, the ballast generator, the old erasure pass) broke it: after a takeover the LIST shows the new owner's versions,
+// and the late version lands ON TOP of them; every later opening and the new owner's compactor then build on its old
+// snapshot (lost acknowledged writes). So every publisher creates base + 1 (1 when it had no version).
+
+/// Negative control of the audit-fencing tests (the code of integration-4 4f74574): the first build and the ballast
+/// take their slot from a LIST.
+pub static CONTROL_LISTED_SLOT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// The slot of a version built on `base` (None: the database's first version).
+pub fn next_slot(base: Option<u64>) -> u64 {
+    base.map_or(1, |b| b + 1)
+}
+
 /// Fail point for tests: a publish whose PUT is delayed until the test lets it go (the PUT of a dead process landing
 /// late, rule 17).
 pub static SLOW_PUT: std::sync::Mutex<Option<Arc<tokio::sync::Notify>>> = std::sync::Mutex::new(None);

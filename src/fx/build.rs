@@ -264,9 +264,12 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
     }
     let min_xg = groups.iter().map(|g| g.x_g).min().unwrap_or(x);
     delta_runs.retain(|d| d.max_seq > min_xg);
-    let version = match cur {
-        Some(v) => v.version + 1,
-        None => manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1),
+    // audit-fencing: the slot comes from the base (1 for a first version), never from a LIST: a late first build of a
+    // process that lost the database must find its slot taken by the new owner, not land on top of its versions
+    let version = if manifest::CONTROL_LISTED_SLOT.load(std::sync::atomic::Ordering::Relaxed) && cur.is_none() {
+        manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1)
+    } else {
+        manifest::next_slot(cur.map(|v| v.version))
     };
     let absorbed_l0 = l0_before.into_iter().map(|id| (id, x)).collect();
     let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: delta_runs, next_group_id, absorbed_l0 };
@@ -389,7 +392,7 @@ pub struct Generated {
 
 /// Merge SlateDB's rows at a durable cut with the generated rows and publish the database's first version with runs.
 /// The database must have no run yet (a ballast database is generated whole, once). `next_version` is the slot to create
-/// (the newest version in the store plus one: fence versions written at open come before it).
+/// (the version the writer serves plus one: its fence written at open; audit-fencing, never a LIST).
 #[allow(clippy::too_many_arguments)]
 pub async fn publish_generated(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, id: &str, cur: Option<&View>, e_env: u64, epoch: Option<u64>, opts: &BuildOpts, mut gen: Generated) -> Result<(Version, BuildReport)> {
     if let Some(v) = cur {
@@ -476,7 +479,12 @@ pub async fn publish_generated(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
     rep.runs_written = groups.iter().filter(|g| g.sealed.is_some()).count() as u64;
     rep.groups = groups.len();
     rep.resealed = groups.len();
-    let version = manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1);
+    // audit-fencing: the slot after the version this writer serves (its fence at open), never from a LIST
+    let version = if manifest::CONTROL_LISTED_SLOT.load(std::sync::atomic::Ordering::Relaxed) {
+        manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1)
+    } else {
+        manifest::next_slot(cur.map(|v| v.version))
+    };
     let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: Vec::new(), next_group_id, absorbed_l0: Vec::new() };
     rep.version = version;
     let created = match manifest::create(store, id, &v).await {
