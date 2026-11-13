@@ -30,6 +30,8 @@ pub fn prefixes(db: &str) -> Vec<String> {
 
 pub async fn erase(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
     meta::check_name(db)?;
+    // audit-fencing round 2: the paths below are the current incarnation's
+    tenant_bench::lifecycle::load_incarnation(&ctl.store, db).await.map_err(|e| ApiError::new(500, "incarnation_read_failed", format!("{e:#}")))?;
     let _op = ctl.ops.lock(db).await?;
     let present = meta::exists(ctl, db).await? || !purge::leftovers(ctl, db).await?.is_empty();
     if !present {
@@ -124,6 +126,13 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
         }
     }
     ops::phase(ctl, db, "deleting").await?;
+    // audit-fencing round 2 (item 24): the name moves to a new incarnation before anything is deleted, under the lease:
+    // a late write of the erased incarnation (a WAL PUT SlateDB retries, a run upload, a version create of a process
+    // that lost it) lands under a prefix that a database created again with this name never reads
+    let owners_pre = tenant_bench::fx::pair::fork_ref_owners(&ctl.store, db, ancestors).await?;
+    // the pins this incarnation holds in its ancestors are read from its own manifest: released before the move
+    let pins_released = purge::release_pins(&ctl.store, db).await?;
+    tenant_bench::lifecycle::bump_incarnation(&ctl.store, db).await.map_err(|e| ApiError::new(500, "incarnation_bump_failed", format!("{e:#}")))?;
     // The users and roles defined on the database live in admin.system.users / admin.system.roles, not under tenants/{db}:
     // they go with it (idempotent, so a resumed erase repeats it harmlessly).
     ctl.server.erase_database_auth(db).await.map_err(|e| ApiError::new(500, "erase_users_failed", format!("could not remove the users of {db}: {e}")))?;
@@ -133,8 +142,9 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
         l.forget_pinned(db);
     }
     // the databases holding a fork reference of this one (read before its manifest goes)
-    let owners = tenant_bench::fx::pair::fork_ref_owners(&ctl.store, db, ancestors).await?;
-    let report = purge::purge_tenant(ctl, db).await?;
+    let owners = owners_pre;
+    let mut report = purge::purge_tenant(ctl, db).await?;
+    report.checkpoints_released += pins_released;
     ctl.dbs.leases.forget(db);
     ctl.lc.touched.lock().unwrap().remove(db);
     // as a drop: a database created again with this name starts with none of the erased one's state

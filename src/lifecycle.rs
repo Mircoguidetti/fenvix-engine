@@ -46,12 +46,119 @@ pub static L0_WATCH_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::Atomic
 pub static L0_WATCH_REQUESTS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 const LONG_POLL: Duration = Duration::from_secs(3600);
 
+// ---- audit-fencing round 2: a prefix per incarnation of a database name (item 24 of the audit; option (a), the
+// coordinator's decision of 2026-11-13 under DECISIONS 2026-11-12: no layout compatibility before the first customer)
+//
+// A whole-database erase or a drop deletes every object under `tenants/{name}/`, but a write of a process that lost the
+// database (a WAL PUT that SlateDB retries without end, a run upload, a version create) can still land afterwards; a
+// database created again with the same name used to read it (MEASURED in `fx::fencing_tests`). Now every erase and
+// drop moves the name to a new incarnation before it deletes: incarnation 0 lives at `tenants/{name}`, incarnation k >= 1
+// at `tenants/{name}/i{k}`. The number is kept in `control/incarnations/{hash of name}` (it survives the erase: it holds only
+// the counter), read whenever a process takes the database's lease (`load_incarnation`, called by the server's lease
+// acquisition and existence check). A late write of an old incarnation lands under a prefix the new one never reads, and
+// `sweep_old_incarnations` deletes such leftovers. The lease (`tenants/{name}/_lease`) stays at the name's level: it
+// guards the name across incarnations.
+
+static INCARNATIONS: std::sync::LazyLock<Mutex<HashMap<String, u64>>> = std::sync::LazyLock::new(Default::default);
+/// Old-incarnation objects deleted by [`sweep_old_incarnations`] (diagnostics).
+pub static INCARNATION_SWEPT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// The incarnation this process uses for database `name` (0 until [`load_incarnation`] or [`set_incarnation`] says
+/// otherwise).
+pub fn incarnation(name: &str) -> u64 {
+    INCARNATIONS.lock().unwrap().get(name).copied().unwrap_or(0)
+}
+
+pub fn set_incarnation(name: &str, k: u64) {
+    INCARNATIONS.lock().unwrap().insert(name.to_string(), k);
+}
+
+/// The record of a name's incarnation, keyed by a hash of the name: an erase leaves no object whose key holds the
+/// erased database's name (the erase proof and `ctl-tests/test_05_erase.py` list the whole bucket for it).
+pub fn incarnation_path(name: &str) -> Path {
+    let (a, b) = (twox_hash::XxHash64::oneshot(0x696e_6361, name.as_bytes()), twox_hash::XxHash64::oneshot(0x726e_6174, name.as_bytes()));
+    Path::from(format!("control/incarnations/{a:016x}{b:016x}"))
+}
+
+/// Read the current incarnation of `name` from the store (absent: 0) and use it from now on in this process.
+pub async fn load_incarnation(store: &Arc<dyn ObjectStore>, name: &str) -> Result<u64> {
+    let k = match store.get(&incarnation_path(name)).await {
+        Ok(r) => {
+            let b = r.bytes().await?;
+            let v: serde_json::Value = serde_json::from_slice(&b)?;
+            v.get("inc").and_then(|x| x.as_u64()).ok_or_else(|| anyhow!("bad incarnation record of {name}"))?
+        }
+        Err(object_store::Error::NotFound { .. }) => 0,
+        Err(e) => return Err(e.into()),
+    };
+    set_incarnation(name, k);
+    Ok(k)
+}
+
+/// Move `name` to a new incarnation (before an erase or a drop deletes its objects; the caller holds the database's
+/// lease). Returns the new number. A repeated call (a resumed erase) moves it again, which is harmless.
+pub async fn bump_incarnation(store: &Arc<dyn ObjectStore>, name: &str) -> Result<u64> {
+    let k = load_incarnation(store, name).await? + 1;
+    store.put(&incarnation_path(name), PutPayload::from(serde_json::to_vec(&serde_json::json!({ "inc": k, "at_ms": crate::fx::manifest::now_ms() }))?)).await?;
+    set_incarnation(name, k);
+    Ok(k)
+}
+
+/// Delete the objects of older incarnations of `name` (late writes of a process that lost an erased or dropped
+/// incarnation): with the current incarnation k >= 1, everything under `tenants/{name}/` except `i{k}/` and the lease.
+/// One LIST with delimiter when there is nothing to delete. Returns the objects deleted.
+pub async fn sweep_old_incarnations(store: &Arc<dyn ObjectStore>, name: &str) -> Result<u64> {
+    use futures::TryStreamExt;
+    let k = incarnation(name);
+    if k == 0 {
+        return Ok(0);
+    }
+    let top = Path::from(format!("tenants/{name}"));
+    let keep = format!("i{k}");
+    let l = store.list_with_delimiter(Some(&top)).await?;
+    let mut doomed: Vec<Path> = l.objects.into_iter().map(|m| m.location).filter(|p| p.filename() != Some("_lease")).collect();
+    for d in l.common_prefixes {
+        if d.filename() == Some(keep.as_str()) {
+            continue;
+        }
+        let objs: Vec<Path> = store.list(Some(&d)).map_ok(|m| m.location).try_collect().await?;
+        doomed.extend(objs);
+    }
+    let n = doomed.len() as u64;
+    let mut del = store.delete_stream(futures::stream::iter(doomed.into_iter().map(Ok)).boxed());
+    while let Some(r) = del.next().await {
+        match r {
+            Ok(_) | Err(object_store::Error::NotFound { .. }) => {}
+            Err(e) => return Err(e.into()),
+        }
+    }
+    INCARNATION_SWEPT.fetch_add(n, std::sync::atomic::Ordering::Relaxed);
+    Ok(n)
+}
+
 pub fn tenant_path(id: impl std::fmt::Display) -> String {
-    format!("tenants/{id}")
+    let id = id.to_string();
+    match incarnation(&id) {
+        0 => format!("tenants/{id}"),
+        k => format!("tenants/{id}/i{k}"),
+    }
+}
+
+/// The database name and the path below its incarnation of an object path (`tenants/{name}/...` or
+/// `tenants/{name}/i{k}/...`).
+pub fn split_tenant_path(path: &str) -> Option<(&str, &str)> {
+    let rest = path.strip_prefix("tenants/")?;
+    let (name, tail) = rest.split_once('/')?;
+    if let Some((first, after)) = tail.split_once('/') {
+        if first.len() > 1 && first.starts_with('i') && first[1..].bytes().all(|b| b.is_ascii_digit()) {
+            return Some((name, after));
+        }
+    }
+    Some((name, tail))
 }
 
 pub fn marker_path(id: impl std::fmt::Display) -> Path {
-    Path::from(format!("tenants/{id}/_clean"))
+    Path::from(format!("{}/_clean", tenant_path(id)))
 }
 
 /// Requests made by the standalone compaction and GC passes (they are also counted, by object category, in the
@@ -581,9 +688,8 @@ pub fn note_missing_sst(e: &anyhow::Error) -> Option<String> {
     if !text.contains("not found") {
         return None;
     }
-    let i = text.find("tenants/")? + "tenants/".len();
-    let rest = &text[i..];
-    let (db, after) = rest.split_once('/')?;
+    let i = text.find("tenants/")?;
+    let (db, after) = split_tenant_path(&text[i..])?;
     if !after.starts_with("compacted/") || !after.split_whitespace().next().is_some_and(|f| f.contains(".sst")) {
         return None;
     }
