@@ -26,6 +26,9 @@ from lib import Server, make_bucket, list_prefix, wait_until
 BASE = ["--sealed-runs", "2", "--sealed-t-pin-ms", "1000", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait",
         "--sealed-erasure-poll-ms", "200", "--sealed-hold-life-ms", "1500", "--sealed-put-timeout-ms", "500", "--sealed-gc-grace-ms", "3100",
         "--sealed-remote-lease-ms", "3000", "--sealed-version-retention-secs", "0", "--sealed-erasure-check-ms", "500"]
+# Tests of the forced path need ordinary passes stopped: the default compactor knobs (a tiny database never reaches
+# theta), whatever the suite's mode sets (`FENVIX_SEALED_COMPACTOR=small` in the CI's sealed mode reseals within seconds).
+KNOBS = {"FENVIX_SEALED_COMPACTOR": "1"}
 PROOF = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "target", "release", "fx_erase_proof")
 
 
@@ -87,7 +90,7 @@ def wait_done(srv, c, db, timeout=240):
 
 def start(tag, extra=(), env=None):
     bucket = make_bucket(tag)
-    s = Server(bucket, tag, idle=300, extra=BASE + list(extra), env=env).start()
+    s = Server(bucket, tag, idle=300, extra=BASE + list(extra), env=env if env is not None else dict(KNOBS)).start()
     s.bucket_name = bucket
     return s
 
@@ -175,7 +178,7 @@ def test_kill9_at_every_step(step):
     # a cleanse needs a delta run that outlives the forced reseals (a group they do not touch keeps it listed): small
     # compactor knobs (groups of 4 MiB) and larger documents give several groups
     many = step == "erase.after_cleanse"
-    env = {"CTL_FAILPOINT": step}
+    env = {"CTL_FAILPOINT": step, **KNOBS}
     if many:
         env["FENVIX_SEALED_COMPACTOR"] = "small"
     s = Server(bucket, tag, idle=300, extra=extra, env=env).start()
@@ -193,7 +196,7 @@ def test_kill9_at_every_step(step):
         wait_until(lambda: f"FAILPOINT {step} reached" in s.log_text(), 60, what=f"the pass at {step}")
         unreadable(c, db, "u1", ["u1-late-3"])
         s.kill9()
-        s.env = {"FENVIX_SEALED_COMPACTOR": "small"} if many else {}
+        s.env = {"FENVIX_SEALED_COMPACTOR": "small"} if many else dict(KNOBS)
         s.start()
         c = s.client()
         others_intact(c, db)

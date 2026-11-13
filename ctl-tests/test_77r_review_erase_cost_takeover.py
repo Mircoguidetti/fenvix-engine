@@ -15,7 +15,7 @@ from pymongo import MongoClient
 from pymongo.errors import OperationFailure
 
 from lib import Server, make_bucket, wait_until
-from test_77_erase_cost import BASE, fill, unreadable, others_intact, erasures, proof
+from test_77_erase_cost import BASE, KNOBS, fill, unreadable, others_intact, erasures, proof
 
 TTL = 4
 STEPS = ["erase.after_forced_reseal", "erase.after_clear_saved", "erase.before_mark_clean"]
@@ -41,8 +41,9 @@ def test_takeover_during_the_ride_pass(step):
     tag = "ecr" + step.split(".")[1][:6].replace("_", "")
     b = make_bucket(tag)
     flags = BASE + ["--lease-ttl-secs", str(TTL), "--sealed-erasure-batch-ms", "0"]
-    p1 = Server(b, f"{tag}1", idle=600, extra=flags, env={"CTL_FAILPOINT": step, "CTL_FAILPOINT_PAUSE_MS": "2000"}).start()
-    p2 = Server(b, f"{tag}2", idle=600, extra=flags).start()
+    p1 = Server(b, f"{tag}1", idle=600, extra=flags, env={"CTL_FAILPOINT": step, "CTL_FAILPOINT_PAUSE_MS": "2000", **KNOBS}).start()
+    # the forced pass is the subject: default compactor knobs (no ordinary reseal of this tiny database first)
+    p2 = Server(b, f"{tag}2", idle=600, extra=flags, env=dict(KNOBS)).start()
     db = "ecr"
     p2.bucket_name = b
     try:
