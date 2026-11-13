@@ -128,7 +128,8 @@ pub async fn leftovers(ctl: &Ctl, db: &str) -> Result<Vec<String>> {
         out.extend(list(&ctl.store, &prefix).await?.into_iter().map(|p| p.to_string()));
     }
     // incomplete multipart uploads hold data too, and LIST does not show them
-    if let Some(ups) = crate::uploads::list(&format!("{}/", name_prefix(db))).await? {
+    // (P-fix-slow-store item 6: without the ghosts a listing may show after their abort, which hold no data)
+    if let Some(ups) = crate::uploads::list_real(&format!("{}/", name_prefix(db))).await? {
         out.extend(ups.into_iter().map(|u| format!("incomplete upload {} ({})", u.key, u.upload_id)));
     }
     for exact in [rec::path(&["control", "pins", db]), rec::path(&["control", "retention", db]), rec::path(&["control", "ops", &format!("{db}.json")])] {

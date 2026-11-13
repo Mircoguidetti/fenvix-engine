@@ -312,6 +312,9 @@ async fn run(ctl: &Arc<Ctl>, db: &str, detail: &Value, apply: bool) -> ApiResult
     if g.active_txns > 0 {
         return Err(ApiError::conflict("transactions_open", "multi-document transactions are open on this database"));
     }
+    // P-fix-slow-store-3 (round 2): the restore writes the database's data: an absent hold on the name ends here (the
+    // lease is acquired and released below by the restore itself)
+    g.take_absent_hold();
     // Quiesce: flushed and closed, no process writing, no compaction or GC pass running.
     fork::quiesce(ctl, &mut g, db).await?;
     // a compaction pass running (maybe a long merge) stops instead of making this wait for it
