@@ -172,6 +172,22 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
     // runs under this database's own prefix only (rule 30)
     let run_dir = Path::from(format!("{}/run", manifest::root(id)));
     let metas: Vec<_> = store.list(Some(&run_dir)).try_collect().await?;
+    // fix-sim-holes-2, hole R (rule 8): `referenced` comes from the versions this pass listed at its start; a pass slowed
+    // by its version deletes (or a process that lost the database without noticing) can list runs that a version
+    // published since then lists. Such a run would look unreferenced, and one seen so by an earlier, equally stale pass
+    // passes both grace checks. So the versions are listed again now, after the runs: if any appeared, this pass deletes
+    // no run (and does not age any); the next one loads them first. A run in `metas` that no version listed by now names
+    // was written at least the grace ago and still not published, which the grace rules out (rule 23).
+    let newer = manifest::list_versions_after(store, id, st.listed_upto.load(Relaxed)).await?;
+    if !newer.is_empty() {
+        GC_PASSES_STALE.fetch_add(1, Relaxed);
+        if let Some(&m) = newer.last() {
+            st.listed_upto.fetch_max(m, Relaxed);
+        }
+        st.to_load.lock().unwrap().extend(newer);
+        st.passes.fetch_add(1, Relaxed);
+        return Ok(());
+    }
     let grace = c.knobs.gc_grace;
     let job_floor = c.oldest_job_start_ms();
     let mut fu = st.first_unref.lock().unwrap().clone();
@@ -230,6 +246,10 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
     Ok(())
 }
 
+
+/// fix-sim-holes-2, hole R: live GC passes that found versions published during them after listing the runs, and so
+/// deleted no run.
+pub static GC_PASSES_STALE: AtomicU64 = AtomicU64::new(0);
 
 /// Whether an error loading a version means it is gone (and only that): any other error skips the GC pass.
 fn is_not_found(e: &anyhow::Error) -> bool {

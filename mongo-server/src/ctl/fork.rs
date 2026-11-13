@@ -20,11 +20,11 @@ use super::usage::Counts;
 use super::{meta, ops, ApiError, ApiResult, Ctl};
 use futures::{StreamExt, TryStreamExt};
 use object_store::path::Path;
-use object_store::{ObjectStoreExt, PutPayload};
+use object_store::ObjectStoreExt;
 use serde_json::{json, Value};
 use slatedb::admin::Admin;
 use std::sync::Arc;
-use tenant_bench::lifecycle::{marker_path, maint_lock, Op};
+use tenant_bench::lifecycle::{maint_lock, Op};
 
 /// Branches being created by a fork in this process, with the allow list they will get (their source's; `None` when the
 /// source has none). Until the branch's registry record exists the allow-list check reads it from here, so the branch is
@@ -84,7 +84,9 @@ pub(crate) async fn quiesce(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, src: &str
     if g.is_open() {
         g.close().await?;
     }
-    let clean = ctl.store.head(&marker_path(src)).await.is_ok();
+    // fix-sim-holes, hole Z: a marker counts only when it names the stored manifest's writer epoch (a process that lost
+    // the database without noticing may have closed it after the new owner's writes, which may be only in the WAL)
+    let clean = tenant_bench::lifecycle::marker_clean(&ctl.store, src).await.map_err(ApiError::from)?;
     if !clean {
         // A writer died without closing: its last writes are in the WAL beyond the manifest. Open it as a writer
         // (replays the WAL), rewrite a value with itself to make that real, and close it cleanly.
@@ -92,7 +94,7 @@ pub(crate) async fn quiesce(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, src: &str
         let Some(cur) = cur else { return Err(ApiError::new(500, "internal", format!("database {src} has no collection list"))) };
         g.apply(vec![Op::Put(crate::layout::META_COLLECTIONS.to_vec(), cur.to_vec())]).await?;
         g.close().await?;
-        if ctl.store.head(&marker_path(src)).await.is_err() {
+        if !tenant_bench::lifecycle::marker_clean(&ctl.store, src).await.map_err(ApiError::from)? {
             return Err(ApiError::new(500, "internal", format!("database {src} could not be closed cleanly")));
         }
     }
@@ -349,7 +351,7 @@ async fn do_fork(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, src: &str, target: &
             }
         };
         super::failpoint("fork.after_clone").await;
-        ctl.store.put(&marker_path(target), PutPayload::from_static(b"clean")).await.map_err(anyhow::Error::from)?;
+        tenant_bench::lifecycle::mark_clean_stored(&ctl.store, target).await?;
         super::failpoint("fork.after_marker").await;
         let fm = json!({ "database": src, "at_ms": now_ms(), "mode": mode });
         let m = meta::default_meta(target, now_ms(), "fork");
@@ -404,6 +406,9 @@ async fn fork_paired(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> any
     use tenant_bench::fx::pair;
     let store = &ctl.store;
     let src_admin = Admin::builder(purge::tenant_path(src), Arc::clone(store)).build();
+    // sim-test-2, hole F: the writer epoch the quiesce left; a newer one by the end of the copy means another process
+    // opened the source meanwhile (this process lost its lease): the copied state is not the quiesced one
+    let epoch0 = src_admin.read_manifest(None).await?.map(|m| m.writer_epoch());
     // named, so that the rollback of a fork killed before the cleanup below finds and deletes it (review of 7b, FIX 2)
     let opts = slatedb::config::CheckpointOptions { name: Some(pairing_name(target)), ..Default::default() };
     let (cp, p) = pair::checkpoint_paired(store, src, || async { Ok(src_admin.create_detached_checkpoint(&opts).await?) }).await?;
@@ -417,6 +422,10 @@ async fn fork_paired(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> any
             // the copy carries the source's checkpoint list; this one is the fork step's own, not a restore point
             let _ = Admin::builder(purge::tenant_path(target), Arc::clone(store)).build().delete_checkpoint(cp.id).await;
         }
+        // sim-test-2, hole F: a copy lists the source's live objects (a WAL newer than the checkpoint included); the fork's
+        // clean marker would make its readers skip that WAL while its writer replays it. Refused: the fork rolls back.
+        let epoch1 = src_admin.read_manifest(None).await?.map(|m| m.writer_epoch());
+        anyhow::ensure!(epoch1 == epoch0, "fork {src} -> {target}: the source was opened by another writer during the fork (writer epoch {epoch0:?} -> {epoch1:?}); rolled back");
         if let Some(p) = &p {
             let runs = if mode == "clone" { pair::ForkRuns::Shared } else { pair::ForkRuns::Copied };
             pair::seed_fork(store, src, target, p, runs).await?;

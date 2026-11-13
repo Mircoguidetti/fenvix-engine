@@ -1,0 +1,46 @@
+# P-sim-test-2: the seeded simulation, N seeds per runner, on any ref (Actions > sim-test-2 > Run workflow, ref = the
+# head to check). gen 2 = sim-test-2's scripts (restore points and restores, forks while the source is written, the
+# generator's parallel publish, SlateDB's GC with retention 0, storms of 503s and timeouts after the write, many groups);
+# gen 1 = sim-test's. Each runner builds once and runs its range with scripts/sim-seeds.sh; a failing seed's report
+# (violations, minimal script, trace) is uploaded. The job fails if any seed found a violation.
+name: sim-test-2
+on:
+  workflow_dispatch:
+    inputs:
+      first_seed:
+        description: first seed
+        default: "100000"
+      seeds_per_runner:
+        description: seeds per runner (20 runners)
+        default: "150"
+      gen:
+        description: "scripts: 2 (sim-test-2) or 1 (sim-test)"
+        default: "2"
+      steps:
+        description: events per base script
+        default: "90"
+jobs:
+  seeds:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: seeds
+        env:
+          SIM_STEPS: ${{ inputs.steps }}
+          SIM_OUT: sim-out
+        run: |
+          A=$(( ${{ inputs.first_seed }} + ${{ matrix.runner }} * ${{ inputs.seeds_per_runner }} ))
+          scripts/sim-seeds.sh "$A" "${{ inputs.seeds_per_runner }}" "${{ inputs.gen }}" 4
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sim-out-${{ matrix.runner }}
+          path: sim-out/
+          if-no-files-found: ignore

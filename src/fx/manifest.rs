@@ -89,6 +89,13 @@ pub struct Version {
     /// it. Format 1 unchanged.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub absorbed_l0: Vec<(String, u64)>,
+    /// fix-sim-holes, hole W (second door): our runs hold rows SlateDB does not (the ballast generator wrote them straight
+    /// into runs, or a compactor with the drop folded them out of SlateDB). The builder, which reads SlateDB only, never
+    /// reseals over such a base (`build::allowed_reseal`). Set by the generator's publish and by a dropping compactor's
+    /// commits; every other publish copies its base's (they build on a clone of it). Optional: absent means false; an
+    /// older release ignores it (and drops it on its own publishes). Format 1 unchanged.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub runs_only: bool,
 }
 
 pub fn hex(b: &[u8]) -> String {
