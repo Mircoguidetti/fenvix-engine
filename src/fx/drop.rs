@@ -293,16 +293,15 @@ impl DropCtl {
             let mut every = (self.lease / 8).clamp(Duration::from_millis(50), Duration::from_secs(5));
             // fix-idle-poll: each observation reads the store (the drop lease, a LIST of our manifest's versions). It
             // slows to `slate_idle_poll_ms` only while nothing waits for the floor: nothing for SlateDB's compactor, and
-            // the floor already at the highest absorbed seq (`known_xd`), so no absorbed L0 SST waits for it to be folded
-            // with nothing written, and no run for it to be dropped; an absorption (`set_foldable`) wakes the compactor,
-            // which makes the database busy again. (A first version slowed down on "floor unchanged since the last
+            // the floor cannot rise any more without a change this process makes (`floor_settled`); an absorption
+            // (`set_foldable`) wakes the compactor, which makes the database busy again. (A first version slowed down on "floor unchanged since the last
             // observation": MEASURED, the lazy folds and the drop then waited up to the idle pace while the floor was
             // still to rise after a publish, and 5 unit tests of the real drop failed. `refold` is not part of it: in
             // the aged mode, the default, nothing consumes it, and it stayed set for good.) The floor only decides when a re-fold is
             // proposed (a saving of storage, done that much later); a drop job computes its floor from the store when it
             // starts (rule 7, `create_compaction_filter`), so no drop ever uses an older one.
             let idle_ms = slate_idle_poll_ms();
-            if idle_ms > 0 && !self.slate_busy() && self.observed.load(Relaxed) >= self.known_xd.load(Relaxed) {
+            if idle_ms > 0 && !self.slate_busy() && self.floor_settled() {
                 every = every.max(Duration::from_millis(idle_ms));
                 if lo.is_some_and(|t| t.elapsed() >= Duration::from_secs(5) && t.elapsed() < every) {
                     FLOOR_OBSERVES_SKIPPED.fetch_add(1, Relaxed);
@@ -345,6 +344,21 @@ impl DropCtl {
         };
         let sr = self.sr_max.lock().unwrap();
         l0_left + srs.iter().filter(|id| sr.get(id).is_some_and(|hi| *hi > 0 && *hi <= x_d)).count()
+    }
+
+    /// fix-idle-poll: the floor cannot rise any more without a change this process makes: it is at the highest absorbed
+    /// seq (no absorbed L0 SST waits for it, no run either), or at the X_d of the newest version seen while no newer
+    /// version is pending, served or published past the last one listed (rows absorbed after the last publish wait for
+    /// the next publish, not for time; MEASURED in sealed2-derive: without this the observation stayed at 5 s for good
+    /// on an idle database whose last absorption was not published).
+    fn floor_settled(&self) -> bool {
+        let observed = self.observed.load(Relaxed);
+        if observed >= self.known_xd.load(Relaxed) {
+            return true;
+        }
+        let newest_seen = self.seen.lock().unwrap().values().map(|(_, x)| *x).max().unwrap_or(0);
+        let serving = self.sh.serving_version.load(Relaxed);
+        newest_seen <= observed && self.sh.pending_version().is_none() && (serving == u64::MAX || serving <= self.listed_upto.load(Relaxed))
     }
 
     /// Ask for a re-fold now (tests).

@@ -162,7 +162,12 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
     // rule 19: while a checkpoint holds the drop lease, the version it will pair with is not named anywhere yet (the lease
     // names none, step 7a's format): GC deletes nothing until the lease ends (review of step 4, FIX 1)
     if super::pair::lease_held(store, id).await? {
-        st.unsettle();
+        // fix-idle-poll: nothing can be deleted while the lease is held; an idle database looks again when a lease
+        // left by a holder that died would have expired (its life), not at every `gc_every` (MEASURED in sealed2-derive,
+        // `gc_every` 5 s: an idle database read the lease and listed the versions every 5 s for good)
+        st.next_due_ms.store(manifest::now_ms().saturating_add(super::pair::LEASE_LIFE_MS.load(Relaxed)), Relaxed);
+        st.settled_serving.store(c.sh.serving_version.load(Relaxed), Relaxed);
+        st.settled.store(true, Relaxed);
         st.passes.fetch_add(1, Relaxed);
         return Ok(());
     }
