@@ -77,6 +77,8 @@ mod perf_erase_tests;
 mod write_stalls_tests;
 #[cfg(test)]
 mod fencing_tests;
+#[cfg(test)]
+mod review_rolling_tests;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 
