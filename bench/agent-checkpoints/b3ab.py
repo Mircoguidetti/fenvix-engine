@@ -79,7 +79,7 @@ def start_compactor() -> None:
     t0 = time.time()
     while time.time() - t0 < 120:
         txt = lines.docker_logs("compactor")
-        if "compactor started" in txt:
+        if "started on version" in txt:
             log(action="compactor running", seconds=round(time.time() - t0, 1), head=txt[-600:])
             return
         if subprocess.run(["docker", "inspect", "-f", "{{.State.Running}}", "compactor"], capture_output=True, text=True).stdout.strip() != "true":
