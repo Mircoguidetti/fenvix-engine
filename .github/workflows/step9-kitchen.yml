@@ -6,7 +6,7 @@
 # size, one-trip read of a sealed run, 3-zone log ack, takeovers with 0 lost writes, ballast rounds at 100 GB and 1 TB.
 # Everything is explained in step9/README.md; the command fields in step9/ci/decide.py.
 #
-# The engine: "engine" in the command names the final merged ref (no default); the decide job resolves it to a commit, the
+# The engine: step9/ENGINE names the round's one engine commit (no default; a command may only repeat it); the decide job resolves it, the
 # build checks out exactly that commit, and the gate (step9/ci/gate.py) opens only for a local benchmark report made on
 # it. Ballast for 100gb/1tb: generated in our stored format by `mongo-server --ballast` (ballast_mode "generate").
 # Aurora PostgreSQL in the agent benchmark: "aurora": true (step9/ci/aurora.py, RDS policy in step9/README.md).
@@ -53,7 +53,8 @@ jobs:
           # the engine the command names: a full commit id (total review R5: never a branch, which moves between the
           # jobs of one round; decide.py refuses anything else). The build checks out exactly this commit, and the gate
           # opens only for a local benchmark report made on it.
-          ENGINE=$(python3 -c "import json; print(json.load(open('step9/command.json')).get('engine') or '')")
+          # review of the AWS harness (2026-11-13): the round's ONE engine input is step9/ENGINE (a command may only repeat it)
+          ENGINE=$(cd step9/ci && python3 decide.py --engine ../command.json | grep -E '^[0-9a-f]{40}$' || true)
           if [ -n "$ENGINE" ]; then
             export ENGINE_COMMIT=$ENGINE
             echo "engine commit $ENGINE_COMMIT" | tee -a "$GITHUB_STEP_SUMMARY"

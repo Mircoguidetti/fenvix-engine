@@ -27,7 +27,7 @@ stops the read itself; ExecutionTimeout counts as a cut). Recorded as timed out,
 program asks the server to stop it (killOp on what currentOp shows with the reads' comment) and waits until currentOp
 shows none of it (at most 2 x --max-read-s), so the next stage is not measured on a server still busy with it; the wait
 is recorded (review of the AWS plan, 2026-11-13, point 1). A timed-out read is a result, not a failure
-of the program. The program fails (exit 1) only when a read or a write errors otherwise, or stage 1 measured nothing.
+of the program. The program fails (exit 1) only when a read or a write errors otherwise, or stage 1 neither answered nor was cut.
 
 Usage: reads_after_writes.py OUT_DIR --uri URI (--states DIR | --db NAME --customers-n N) [--reads 6] [--updates 13000]
                              [--write-customers 150] [--max-read-s 180] [--settle-min 20] [--seed 5] [--examine 800]
@@ -339,7 +339,11 @@ def main(argv=None):
     with open(os.path.join(a.out, "reads-after-writes.jsonl"), "w") as f:
         for r in rows:
             f.write(json.dumps(r) + "\n")
-    ok = (summary["stages"]["before"]["answered"] > 0 and not any(b["errors"] for b in summary["stages"].values())
+    # review of the AWS harness (2026-11-13): stage 1 "measured" also when its read was cut at --max-read-s (a cut read is
+    # a result: "not answered within the cut"); before, a cut first read made the program FAILED and the job red, though
+    # on the 1 TB database with an amplifying engine the cut is the expected answer (aws-local-round REPORT section 5)
+    before = summary["stages"]["before"]
+    ok = ((before["answered"] > 0 or before["timed_out"] > 0) and not any(b["errors"] for b in summary["stages"].values())
           and w.get("updates", 0) > 0 and not w.get("n_errors"))
     summary["ok"] = ok
     txt = text(summary) if rows else "no database or no customers: nothing measured"

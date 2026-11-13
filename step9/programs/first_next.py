@@ -20,7 +20,7 @@ FIRST line. Verdict per NEXT line, as bench-big-speed's firstnext.py: NEXT / HOT
 FASTER under 0.9, SLOWER above 1.1; and the GETs: NEXT must make 0 GETs for "as fast as the others" to hold on S3.
 The founder's script stays frozen; this is a separate program, like write-peak.
 
-Usage: first_next.py OUT_DIR --uri URI --states DIR [--customers 30] [--max-dbs 2] [--seed 9]
+Usage: first_next.py OUT_DIR --uri URI --states DIR [--customers 30] [--max-dbs 2] [--seed 9] [--db NAME]
   DIR: folders holding <db>/risultati_p1.json (the founder's script's state files: the Atlas ones, the ballast ones);
   the largest databases present on the server are taken first (their state's caricamento.byte_bson).
   -> OUT_DIR/first-next-summary.json, OUT_DIR/first-next-requests.jsonl, a FIRST/NEXT text; exit 1 when a request
@@ -191,13 +191,15 @@ def main(argv=None):
     ap.add_argument("--customers", type=int, default=30)
     ap.add_argument("--max-dbs", type=int, default=2)
     ap.add_argument("--seed", type=int, default=9)
+    ap.add_argument("--db", default="", help="only this database (review of the AWS harness: the command's ballast "
+                    "database, when the pantry holds more than one)")
     a = ap.parse_args(argv)
     import pymongo
     os.makedirs(a.out, exist_ok=True)
     client = pymongo.MongoClient(a.uri, serverSelectionTimeoutMS=30000)
     states = find_states(a.states)
     on_server = set(client.list_database_names())
-    dbs = sorted((d for d in states if d in on_server),
+    dbs = sorted((d for d in states if d in on_server and (not a.db or d == a.db)),
                  key=lambda d: -float((states[d].get("caricamento") or {}).get("byte_bson") or 0))[: a.max_dbs]
     rows = []
     for d in dbs:

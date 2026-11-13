@@ -83,7 +83,10 @@ lists any cluster, instance, subnet group or snapshot left (RIMASTO / ALLARME). 
 
 ## The engine commit and the gate
 
-`"engine"` has no default: a run names the FULL 40-character commit id of the final merged head, never a branch or tag
+The engine is ONE input of the whole round: `step9/ENGINE`, one line, the FULL 40-character commit id of the final merged
+head (review of the AWS harness, 2026-11-13). The commands in `commands/` carry no `"engine"`; `ci/decide.py` takes
+`step9/ENGINE` for every job, and in mode aws refuses a command that names another commit. There is no default: a commit
+id, never a branch or tag
 (total review R5, 2026-11-12: a branch moves between the jobs of one round; `ci/decide.py` refuses anything else). The
 build checks out exactly that commit and builds it with `ci/build-engine.sh` (one fixed folder + path remapping, so the
 same commit gives the same bytes as the local build: `local/builds/`). `ci/gate.py` stays CLOSED unless
@@ -98,15 +101,16 @@ PostgreSQL and mongod) on every operation, stored bytes per logical byte not wor
 The workflow listens only to `step9-prep` and `aws-*`, and the AWS role trusts `aws-*` only: `step9-final` (the harness
 branch) can never start it. The round therefore runs from a branch made for it:
 
-1. The final engine head is chosen (coordinator, founder) and its full commit id written as `"engine"` in every run
-   command of `commands/` (and `commands/dry_run.sh`'s default); `bash commands/dry_run.sh` must accept them all.
+1. The final engine head is chosen (coordinator, founder) and its full commit id written in `step9/ENGINE` (one line,
+   one commit on `step9-final`); `bash commands/dry_run.sh > commands/DRY-RUN.txt` must accept every command.
 2. On that head, the local round and the local benchmark are made and the report written:
    `local/benchmark_report.py ... > local/benchmark-report-<commit>.json` with every result file it names; the gate run
    locally (`ENGINE_REF=<commit> ENGINE_COMMIT=<commit> python3 ci/gate.py`) must print `GATE: OPEN`.
 3. A branch `aws-<name>` (e.g. `aws-round-1`) is made from `step9-final` with the report and its result files committed.
    Nothing on `aws-*` is merged anywhere; `main` is never touched.
 4. Each job starts with one commit on `aws-<name>` that changes `step9/command.json` to that job's command (from
-   `commands/`, the pantry of job L filled in after L). Only the founder's go starts the first paid job (RULES).
+   `commands/`, in the order of `commands/ROUND.txt`, the pantry of job L filled in after L). Only the founder's go
+   starts the first paid job (RULES).
 5. Every job pushes its results back to that same `aws-<name>` branch; the next job's command is committed after reading
    them. A red job (a program failed, the gate closed, BLOCCO) stops the round there.
 
@@ -213,7 +217,7 @@ The founder's goal is a database of 1 TB and up where a customer's first request
 as fast as on MongoDB. The round now goes from the Atlas size straight to ONE database of 1 TB on the same kept pantry
 (the generator of fenvix-engine `generator-1tb` 7b4eb31, approved: `ballast_gib`, one database `app_data_b01`,
 resumable across jobs). The 100 GB commands (05, 06) stay as they are but are not part of this plan: a pantry holds
-one ballast database.
+one ballast database. [Superseded by the review of the AWS harness, 2026-11-13: 100 GB is back, see the last section.]
 
 - `commands/08-G1-generate-1tb.json`: the generator alone on a c7i.2xlarge. 3.8 to 6.0 hours of generation (ESTIMATED:
   the rate per writer is MEASURED locally, what 8 hyperthreads give is not), so 1 or 2 jobs: a job that ends
@@ -251,3 +255,30 @@ one ballast database.
 - Tests: `local/tests/test_first_next_ops.py` (12, with a fake server: the real runs are the local docker round and the
   pilot), `local/tests/test_plan_1tb.py` (7). `bench/agent-checkpoints/tests/review_miss_wrong_answers.py` plants its
   stale-resume fault with a fixed hash (it failed about one run in four with Python's per-process `hash()`).
+
+## The round as it runs (review of the AWS harness, 2026-11-13)
+
+fenvix-brain `sessions/2026-11-13-review-aws-harness/REPORT.md`. The order of the jobs is `commands/ROUND.txt`; the
+dollars and hours of each job come from decide.py's own resolution of its command (`python3 ci/estimate.py`, last
+section, `round_plan`); `commands/DRY-RUN.txt` ends with the round walked in that order through the pantry check.
+
+- The engine: `step9/ENGINE` (above). On Tuesday: one commit of that file with integration-4's final head, then the
+  dry run.
+- The pantry's writing marks are per database (`machine/pantry_marks.py`, used by decide.py on the runner and by
+  extras.sh on the extras client). Before, any mark refused every later reader: in this order M2 (first-next-ops saves
+  into the largest Atlas-shaped database) refused B1, the read rounds on the 1 TB database nothing had written.
+  decide.py writes each job's readers and their databases into `pantry_reads` (m30: the Atlas databases; first-next and
+  the read rounds: the command's ballast database when it has one, else the Atlas ones); a mark lists the databases
+  written (`atlas` or the ballast database's name); a mark that does not say counts as every database.
+- 100 GB and 1 TB, both (DECISIONS 2026-11-13): the generated database has its own name per size, `app_data_h01` at
+  100 GB and `app_data_b01` at 1 TB, so both live in the one kept pantry. Jobs 05 (generate 100 GB: also the
+  generator's first real run, its rate per slice before G1) and 06-BW (first-next and the read rounds, then
+  first-next-ops and reads-after-writes, 30 cold customers per operation, no spare) are back in the round.
+  `programs/first_next.py --db` reads only the command's ballast database.
+- The pair with the MongoDB line: M2 runs reads-after-writes too (then first-next-ops again, label after-writes), as
+  MG does on the mongod set, on the same database (`vecchio`, the largest Atlas-shaped one), so the two lines have
+  the same three measures at the Atlas size. M2 is now 4.8 h of its 4.95 h limit (ESTIMATED upper bounds).
+- `programs/reads_after_writes.py`: a first read cut at `--max-read-s` is a result ("not answered within the cut"), not
+  a failure of the program (before, it turned the job red where the cut is the expected answer).
+- Tests: `local/tests/test_review_aws_harness.py` (15; the run on 2eb81f56 before the fixes:
+  `local/review-aws-harness/tests-before-on-2eb81f56.txt`).

@@ -1,0 +1,20 @@
+# The AWS round, the jobs in order (review of the AWS harness, 2026-11-13). Every job: copy the file to
+# step9/command.json on the round's aws-<name> branch (made from step9-final), replace 1000000001 in "pantry" with the
+# run id of job 01-L (its kept pantry), commit that one file, push; read the job's results before the next push.
+# The engine of every job is step9/ENGINE (one line; the commands carry none).
+# step9/local/tests/test_review_aws_harness.py walks this order through decide.py and the pantry's writing marks: every
+# job is accepted, and a read of a written database is refused.
+# One line per job: the command file, then what it is for.
+00-permissions.json                                $0: permissions, vCPU quota, dry launches of every machine type and zone
+01-L-load-atlas.json                               the five Atlas-shaped databases into the kept pantry (the founder's script)
+pilot-P-small.json                                 the pilot: every role of our kitchen, 5 + 5 takeovers, reads only on the pantry
+02-M1-m30.json                                     the founder's script against Atlas's Ireland numbers (reads the Atlas databases as loaded)
+03-M2-extras-write-peak.json                       the Atlas size: S3 first byte, sealed run, log ack, first-next, first-next-ops, reads-after-writes, 50 + 50 takeovers, write-peak
+11-MG-mongod-line-atlas.json                       the mongod replica set (3 zones, majority): the same requests on the same data as M2 (its own empty bucket)
+04-M3-agent-bench.json                             the agent benchmark: ours, Aurora PostgreSQL, PostgreSQL on EC2
+05-G-generate-100gb.json                           the 100 GB database app_data_h01 (also the generator's first real run: its rate per slice before G1)
+06-BW-read-rounds-ops-raw-100gb.json               100 GB: first-next and the read rounds, then first-next-ops and reads-after-writes
+08-G1-generate-1tb.json                            the 1 TB database app_data_b01 (BALLAST_PARTIAL: the same command again resumes it)
+09-B1-read-rounds-1tb.json                         1 TB: first-next and the read rounds (reads only)
+10-W1-first-next-ops-reads-after-writes-1tb.json   1 TB: first-next-ops (100 cold customers per operation) and reads-after-writes
+07-drop-pantry.json                                drop the kept pantry

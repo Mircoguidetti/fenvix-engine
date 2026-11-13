@@ -132,8 +132,10 @@ def test_wired_into_the_round():
     assert ex.index("if has first-next && reads_as_loaded_ok first-next; then") < \
         ex.index("if has ballast-rounds && reads_as_loaded_ok ballast-rounds; then")
     assert "with_status first-next out/first-next/first-next-summary.json $PY first_next.py" in ex
+    # review of the AWS harness: the command's ballast database only, when it has one
+    assert '${FNX_DB:+--db "$FNX_DB"}' in ex
     dc = open(os.path.join(S9, "ci", "decide.py")).read()
     assert '"first-next", "ballast-rounds"' in dc and '"first_next_args": "--customers 30 --max-dbs 2"' in dc
-    for f, want in (("03-M2-extras-write-peak.json", True), ("06-B-ballast-rounds-100gb.json", True)):
+    for f, want in (("03-M2-extras-write-peak.json", True), ("06-BW-read-rounds-ops-raw-100gb.json", True)):
         c = json.load(open(os.path.join(S9, "commands", f)))
         assert ("first-next" in c["programs"]) is want, f

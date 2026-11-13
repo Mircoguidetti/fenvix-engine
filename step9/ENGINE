@@ -1,0 +1,4 @@
+# The engine of the whole AWS round: ONE input (review of the AWS harness, 2026-11-13). The full 40-character
+# fenvix-engine commit id; every job builds and gates this commit (step9/ci/decide.py round_engine). Until Tuesday it is
+# the old placeholder: replace it with integration-4's final head in one commit, then run step9/commands/dry_run.sh.
+27014ff2e3e3e4ff223aa778746f3dce433c6549

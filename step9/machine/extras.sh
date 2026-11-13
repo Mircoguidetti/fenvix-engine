@@ -71,22 +71,16 @@ fn_states() {
   return 0
 }
 # review of the AWS plan (2026-11-13), point 3: a program that reads the pantry as loaded is skipped once a writing
-# program of an EARLIER job marked it (run.py writes this job's own mark just before this machine starts: not counted)
+# program of an EARLIER job marked a database it reads (run.py writes this job's own mark just before this machine
+# starts: not counted). Review of the AWS harness (2026-11-13): per database (pantry_marks.py; the databases each reader
+# reads come from decide.py, pantry_reads), so M2's writes into an Atlas-shaped database no longer skip B1's reads of
+# the 1 TB one.
 RUN_ID_SELF=$(cfg run_id)
-written_before() {
-  $PY - "$PANTRY" "$RUN_ID_SELF" <<'PY'
-import sys
-sys.path.insert(0, ".")
-import s3io
-pantry, me = sys.argv[1], sys.argv[2]
-s3 = s3io.client()
-keys = [o["Key"] for p in s3.get_paginator("list_objects_v2").paginate(Bucket=pantry, Prefix="step9-pantry-written/")
-        for o in p.get("Contents", [])]
-sys.exit(0 if [k for k in keys if k != f"step9-pantry-written/{me}.json"] else 1)
-PY
-}
 reads_as_loaded_ok() { # reads_as_loaded_ok NAME: 0 when NAME may run, else its outcome is PANTRY_WRITTEN
-  if written_before; then step "$1: the pantry was written by an earlier job: skipped"; outcomes+=("$1:PANTRY_WRITTEN"); return 1; fi
+  local why
+  if ! why=$($PY pantry_marks.py check "$PANTRY" "$RUN_ID_SELF" "$(cfg "pantry_reads.$1")" 2>&1); then
+    step "$1: a database it reads was written by an earlier job ($why): skipped"; outcomes+=("$1:PANTRY_WRITTEN"); return 1
+  fi
   return 0
 }
 step "programs: $PROGRAMS; cook $COOK_IP:$COOK_PORT; spare ${SPARE_IP:-none}; log ${LOGS:-none}"
@@ -100,7 +94,10 @@ if has first-next && reads_as_loaded_ok first-next; then
   # Atlas ones from the client package, the ballast ones from the pantry (the largest databases are taken)
   fn_states
   # shellcheck disable=SC2046
-  with_status first-next out/first-next/first-next-summary.json $PY first_next.py out/first-next --uri "$URI" --states fn-states $(cfg first_next_args)
+  # review of the AWS harness: the command's ballast database only, when it has one (the pantry may hold the 100 GB and
+  # the 1 TB ones; the mark check above is for that database)
+  FNX_DB=$(cfg ballast_db)
+  with_status first-next out/first-next/first-next-summary.json $PY first_next.py out/first-next --uri "$URI" --states fn-states ${FNX_DB:+--db "$FNX_DB"} $(cfg first_next_args)
 fi
 if has ballast-rounds && reads_as_loaded_ok ballast-rounds; then
   # generator-1tb (2026-11-12): THE ballast database of the command (ballast_db, ballast_gib GiB of BSON: one database

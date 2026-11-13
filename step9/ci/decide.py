@@ -4,7 +4,8 @@ that run.py, packages.sh and the cost estimate use. Nothing here touches AWS.
 Fields of step9/command.json (defaults in brackets):
   mode          "permissions" ($0 check) | "run" | "teardown" | "drop-pantry" | anything else: nothing happens ["none"]
   data          "atlas" (the five m30-corto databases, about 27 GB of BSON, as loaded on Atlas M30) | "100gb" | "1tb"
-                (the same five databases plus ONE ballast database of the same shape, app_data_b01, of ballast_gib)
+                (the same five databases plus ONE ballast database of the same shape, of ballast_gib: app_data_h01
+                at 100gb, app_data_b01 at 1tb, so the two sizes share one kept pantry)
                 ["atlas"]
   ballast_gib   GiB of BSON of the one ballast database (generator-1tb, 2026-11-12: one database of the chosen size,
                 not several of a fixed size) [100gb: 93.2 (100 GB), 1tb: 931.4 (1,000 GB)]; any size from 1 to 1100
@@ -25,7 +26,9 @@ Fields of step9/command.json (defaults in brackets):
                 slice in the pantry (generator/app_data_b01/), so a job cut by its ceiling loses at most the slices in
                 flight: the same command again on the kept pantry resumes it. A generation estimated above one job is
                 accepted only with a kept pantry ("pantry": "keep" or its name), and decide.py says how many jobs.
-  engine        REQUIRED for mode run: the FULL 40-character fenvix-engine commit id the servers and the generator are
+  engine        NOT in the round's commands (review of the AWS harness, 2026-11-13): the round's engine is ONE input,
+                step9/ENGINE; a command that names one must name that same commit (mode aws). Required for mode run: the
+                FULL 40-character fenvix-engine commit id the servers and the generator are
                 built from, the final merged head of compaction 2 (no default: a round never runs on a commit chosen by
                 accident). Never a branch or tag name (total review R5, 2026-11-12): a branch moves, so two jobs of one
                 round could run two engines, and a commit added after the local report would close the gate between
@@ -92,6 +95,9 @@ import sys
 
 from machine_types import ROLES, TYPES
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "machine"))
+import pantry_marks  # noqa: E402  (the writing marks, per database: the same rules on the runner and the extras client)
+
 PROGRAMS = ["m30", "s3-first-byte", "sealed-run", "log-ack", "first-next", "ballast-rounds", "first-next-ops",
             "reads-after-writes", "takeovers", "write-peak", "agent-bench"]
 EXTRA_PROGRAMS = ["s3-first-byte", "sealed-run", "log-ack", "first-next", "ballast-rounds", "first-next-ops",
@@ -107,20 +113,52 @@ WRITING_PROGRAMS = ["first-next-ops", "reads-after-writes"]
 # local round) refuses any job that runs a program reading the pantry as loaded, and extras.sh skips such a program
 # with the outcome PANTRY_WRITTEN.
 READS_AS_LOADED = ["m30", "first-next", "ballast-rounds"]
-PANTRY_MARK_PREFIX = "step9-pantry-written/"
+PANTRY_MARK_PREFIX = pantry_marks.PREFIX
+
+
+def written_dbs(c):
+    """The databases the job's writing programs write into (pantry_marks tokens): the command's ballast database when it
+    has one (extras.sh passes it as --db), else the largest Atlas-shaped database ("atlas")."""
+    return [c.get("ballast_db") or pantry_marks.ATLAS]
+
+
+def reads_dbs(c, prog):
+    """The databases a program that reads the pantry as loaded reads (review of the AWS harness, 2026-11-13: per
+    database, so B1 on the 1 TB database is not refused because M2 wrote into an Atlas-shaped one): m30 the five Atlas
+    databases; first-next the command's ballast database when it has one (extras.sh passes it as --db), else the largest
+    Atlas ones; ballast-rounds the command's ballast database."""
+    if prog == "m30":
+        return [pantry_marks.ATLAS]
+    if prog == "first-next":
+        return [c.get("ballast_db") or pantry_marks.ATLAS]
+    if prog == "ballast-rounds":
+        return [c.get("ballast_db") or pantry_marks.ATLAS]
+    return []
+
+
+def pantry_readers(c):
+    """{program: [databases]} of the job's programs that read the pantry as loaded, in the phase where they run."""
+    return {p: reads_dbs(c, p) for p in c.get("programs") or [] if p in READS_AS_LOADED and
+            (p != "m30" or "measure" in c["phases"]) and (p == "m30" or "extras" in c["phases"])}
 
 
 def pantry_mark_refusal(c, marks):
-    """The refusal (a string) of a job on a pantry that writing programs already wrote into, or None."""
+    """The refusal (a string) of a job whose readers read a database that writing programs already wrote into, or None."""
     if not marks or c.get("mode") != "run" or c.get("pantry_mode") != "existing":
         return None
-    readers = [p for p in c.get("programs") or [] if p in READS_AS_LOADED and
-               (p != "m30" or "measure" in c["phases"]) and (p == "m30" or "extras" in c["phases"])]
-    if not readers:
+    hit = {}
+    for p, dbs in pantry_readers(c).items():
+        b = pantry_marks.blocking(marks, dbs)
+        if b:
+            hit[p] = (dbs, b)
+    if not hit:
         return None
-    by = "; ".join(f"run {m.get('run')} wrote with {m.get('programs')} into {m.get('databases')} at {m.get('time')}" for m in marks)
-    return (f"the pantry {c['pantry_name']} is no longer as loaded ({by}): {readers} read it as loaded and would check "
-            f"answers against state files that no longer match. Run them on a pantry no writing program has touched.")
+    by = "; ".join(f"{p} reads {dbs}, written by " + ", ".join(f"run {m.get('run')} ({m.get('programs')} into "
+                                                                 f"{m.get('databases')} at {m.get('time')})" for m in b)
+                   for p, (dbs, b) in hit.items())
+    return (f"the pantry {c['pantry_name']} is no longer as loaded where this job reads it: {by}. These programs check "
+            f"answers against, or pick customers from, state files that no longer match. Run them before the writing job, "
+            f"or on a pantry no writing program has touched.")
 
 
 def read_pantry_marks(pantry, s3=None):
@@ -128,11 +166,7 @@ def read_pantry_marks(pantry, s3=None):
     if s3 is None:
         import infra
         s3 = infra.s3_client()
-    out = []
-    for page in s3.get_paginator("list_objects_v2").paginate(Bucket=pantry, Prefix=PANTRY_MARK_PREFIX):
-        for o in page.get("Contents", []):
-            out.append(json.loads(s3.get_object(Bucket=pantry, Key=o["Key"])["Body"].read()))
-    return out
+    return pantry_marks.read_marks(s3, pantry)
 
 
 def pantry_mark(c, run):
@@ -143,7 +177,7 @@ def pantry_mark(c, run):
     if c.get("mode") != "run" or "extras" not in c.get("phases", []) or not w:
         return None
     import datetime as _dt
-    return {"run": str(run), "programs": w, "databases": [c.get("ballast_db") or "the largest Atlas-shaped database"],
+    return {"run": str(run), "programs": w, "databases": written_dbs(c),
             "time": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")}
 
 
@@ -163,10 +197,13 @@ CEILING_USE = 0.9   # a job is refused when its estimate is above 90% of ceiling
 DATA = {  # BSON GB of the five Atlas databases: 4 x 3.1 + 10.74 (MEASURED, Atlas state files of code-irlanda) + the 2 KB
           # collections (2 x 1.22 GiB + about 1 GiB): about 26.6 GB. generator-1tb (2026-11-12): the size is ONE ballast
           # database of ballast_gib GiB of BSON (the founder's goal: one database of 1 TB), not 3 or 40 of 24.3 GiB
-    "atlas": {"target_gb": 26.6, "ballast_dbs": 0, "ballast_gib": 0.0},
-    "100gb": {"target_gb": 126.6, "ballast_dbs": 1, "ballast_gib": 93.2},
-    "1tb": {"target_gb": 1026.6, "ballast_dbs": 1, "ballast_gib": 931.4},
+    "atlas": {"target_gb": 26.6, "ballast_dbs": 0, "ballast_gib": 0.0, "ballast_prefix": ""},
+    "100gb": {"target_gb": 126.6, "ballast_dbs": 1, "ballast_gib": 93.2, "ballast_prefix": "app_data_h"},
+    "1tb": {"target_gb": 1026.6, "ballast_dbs": 1, "ballast_gib": 931.4, "ballast_prefix": "app_data_b"},
 }
+# review of the AWS harness (2026-11-13; DECISIONS 2026-11-13: the round measures 100 GB AND 1 TB): the generated database
+# of each size has its own name (app_data_h01 at 100 GB, app_data_b01 at 1 TB), so both live in the round's one kept
+# pantry. Before, both sizes wrote app_data_b01: a pantry could hold one of them only, and the plan dropped 100 GB.
 BALLAST_GIB_MAX = 1100.0
 
 
@@ -179,7 +216,7 @@ def gib_arg(gib):
 DEFAULTS = {
     "data": "atlas", "phases": ["load", "measure", "extras"], "pantry": "new", "ballast_slice": None, "ballast_gib": None,
     "ballast_mode": "generate", "generator": None, "generator_disk_gb": 60, "generator_parallel": None,
-    "engine": None, "engine_commit": None, "atlas_states": "501c8fd",
+    "engine": None, "engine_commit": None, "engine_source": None, "atlas_states": "501c8fd",
     "cook": "m7i.large", "spare": "m7i.large", "log": "c7g.medium", "compactor": None, "compactor_options": "",
     "loader": "c7i.xlarge", "loader_options": "", "client": "c7i.xlarge", "filler": "c7i.xlarge",
     "extras_client": "c7i.large", "log_colocate": True, "pgbox": "m7i.large", "aurora": False, "network": "default-sg",
@@ -220,6 +257,39 @@ SAFE_ARGS = re.compile(r"^[A-Za-z0-9 ,._:=-]{0,400}$")
 RESERVED = {"--listen", "--store", "--bucket", "--region", "--endpoint", "--local-dir", "--replica-set", "--advertise",
             "--auth", "--tls-mode", "--tls-certificate-key-file", "--tls-ca-file", "--holder", "--no-leases",
             "--unsafe-skip-ownership-checks", "--quaderno", "--quaderno-id", "--log-commands"}
+
+
+# Review of the AWS harness (2026-11-13): the engine is ONE input of the whole round, step9/ENGINE (one line, the full
+# 40-character commit id). The commands carry no "engine"; every job of the round builds and gates that one commit, and
+# changing the engine for the round is a one-line commit of that file (integration-4's final head, on Tuesday).
+# A command may still name "engine" (the local round passes the commit it built): in mode aws it must then be the same
+# commit as step9/ENGINE, or the command is refused (two engines in one round).
+ENGINE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "ENGINE")   # S9_ENGINE_FILE overrides (tests)
+
+
+def engine_file():
+    """The commit in step9/ENGINE (first line that is not empty and not a # comment), or None."""
+    try:
+        for ln in open(os.environ.get("S9_ENGINE_FILE") or ENGINE_FILE):
+            ln = ln.strip()
+            if ln and not ln.startswith("#"):
+                return ln
+    except OSError:
+        return None
+    return None
+
+
+def round_engine(raw):
+    """(engine, source): the command's own "engine" if it names one (checked against step9/ENGINE in mode aws), else the
+    round's step9/ENGINE."""
+    f = engine_file()
+    own = raw.get("engine")
+    if own:
+        if f and own != f and os.environ.get("S9_MODE", "aws") == "aws":
+            refuse(f"engine: the command names {own} but the round's engine (step9/ENGINE) is {f}: one engine per round; "
+                   f'remove "engine" from the command, or change step9/ENGINE')
+        return own, "command"
+    return f, ("step9/ENGINE" if f else None)
 
 
 def refuse(msg):
@@ -366,10 +436,11 @@ def resolve(raw, quota=None):
         refuse("spare: must be the same type as the cook (the fair-comparison rule of 2026-11-06)")
     if c["compactor"] and not c["compactor_options"]:
         refuse("compactor: give its command line in compactor_options (compaction 2 step 4 decides it)")
+    c["engine"], c["engine_source"] = round_engine(raw)
     if c["mode"] == "run" and not c["engine"]:
-        refuse('engine: give the full 40-character commit id of the final merged engine, e.g. "engine": '
-               '"27014ff2e3e3e4ff223aa778746f3dce433c6549"; there is no default (step 9 runs on the commit holding '
-               'compaction 2 steps 3-8, never on one chosen by accident)')
+        refuse('engine: write the full 40-character commit id of the final merged engine in step9/ENGINE (one line; the '
+               'round\'s one engine input), e.g. 27014ff2e3e3e4ff223aa778746f3dce433c6549; there is no default (step 9 runs '
+               'on the commit holding compaction 2 steps 3-8, never on one chosen by accident)')
     if c["engine"] is not None and not re.match(r"^[0-9a-f]{40}$", str(c["engine"])):
         refuse(f"engine: the full 40-character commit id, never a branch or tag name (total review R5: a branch moves "
                f"between the jobs of one round); got {c['engine']!r}")
@@ -426,11 +497,11 @@ def resolve(raw, quota=None):
         refuse(f"ballast_slice: within [0, {n}]")
     # the one ballast database; --tetto-logico-gb only reaches the founder's script on the "script" path, where it is
     # its logical ceiling: above the database
-    lines = [[f"app_data_b{i + 1:02d}", "--gb", gib_arg(c["ballast_gib"]), "--seme", f"{2001 + i}", "--thread", "16",
+    lines = [[f"{d['ballast_prefix']}{i + 1:02d}", "--gb", gib_arg(c["ballast_gib"]), "--seme", f"{2001 + i}", "--thread", "16",
               "--quota-riservati", "0.4", "--tetto-logico-gb", f"{max(60, int(c['ballast_gib'] * 1.2) + 1)}",
               "--max-ore-carico", "48"] for i in range(lo, hi)]
     # the one ballast database, also in the jobs that only measure it on a kept pantry
-    c["ballast_db"] = "app_data_b01" if n else None
+    c["ballast_db"] = f"{d['ballast_prefix']}01" if n else None
     if "load" not in c["phases"]:
         lines = []
     c["ballast"] = {"parallel": max(1, TYPES[c["filler"]][0] - 1), "lines": lines}
@@ -534,12 +605,17 @@ def resolve(raw, quota=None):
                                                                 "ENGINE_COMMIT": c["engine_commit"] or ""})
         if g.returncode != 0:
             refuse("the gate before any AWS run is closed:\n" + g.stdout.strip())
+    c["pantry_reads"] = pantry_readers(c)
     c["arches"] = sorted({TYPES[c[r]][2] for r in ("cook", "spare", "log", "compactor", "loader", "generator") if c[r]} | {"x86_64"})
     c["loader_uses_log"] = False
     return c
 
 
 def main():
+    if sys.argv[1] == "--engine":
+        # decide.py --engine COMMAND_JSON: the engine commit the command will build (the workflow passes it to the build)
+        print(round_engine(json.load(open(sys.argv[2])))[0] or "")
+        return
     if sys.argv[1] == "--pantry-check":
         # decide.py --pantry-check RESOLVED_JSON: with S3 credentials (the workflow's step after the pantry's password)
         c = json.load(open(sys.argv[2]))
@@ -556,7 +632,7 @@ def main():
     quota = float(sys.argv[3]) if len(sys.argv) > 3 and sys.argv[3] else None
     c = resolve(raw, quota)
     json.dump(c, open(sys.argv[2], "w"), indent=1)
-    for k in ("mode", "engine", "engine_commit", "data", "pantry_mode", "vcpu_peak", "vcpu_peaks", "job_hours_total", "job_hours"):
+    for k in ("mode", "engine", "engine_source", "engine_commit", "data", "pantry_mode", "vcpu_peak", "vcpu_peaks", "job_hours_total", "job_hours"):
         print(f"{k}={c[k]}")
     print(f"x86={'1' if 'x86_64' in c['arches'] else '0'}")
     print(f"arm={'1' if 'aarch64' in c['arches'] else '0'}")

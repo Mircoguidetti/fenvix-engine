@@ -398,6 +398,131 @@ def mongod_line(cmd_file=None, member="m7i.large", client="c7i.large"):
     return cost, h
 
 
+def _resolved(path):
+    """decide.py's resolution of one command, in local mode (every check but the gate), engine from step9/ENGINE."""
+    import decide
+    os.environ.setdefault("RUN_ID", "1000000001")
+    mode = os.environ.get("S9_MODE")
+    os.environ["S9_MODE"] = "local"
+    try:
+        return decide.resolve(json.load(open(path)))
+    finally:
+        if mode is None:
+            os.environ.pop("S9_MODE", None)
+        else:
+            os.environ["S9_MODE"] = mode
+
+
+def job_dollars(c):
+    """(dollars, jobs, hours, how) of one resolved command, from decide.py's own parts (job_hours, ESTIMATED): each part
+    priced with the machines on during it (DECLARED prices), plus the job type's S3 and cross-zone traffic."""
+    kitchen = hour(c["cook"]) + (2 if c["log_colocate"] else 3) * hour(c["log"]) + (hour(c["compactor"]) if c.get("compactor") else 0)
+    ex_set = kitchen + (hour(c["spare"]) if c.get("spare") else 0) + hour(c["extras_client"])
+    jh, extra, how = dict(c["job_hours"]), 0.0, []
+    jobs = 1
+    if "mongod" in c["phases"]:
+        disk = int(c["mongod_disk_gb"])
+        rate = 3 * gen_hour(c["mongod"], disk) + hour(c["extras_client"])
+        gb = c["mongod_load_gib"] * GIB
+        extra += gb * XZ * 3
+        how.append(f"3 members {c['mongod']} ({disk} GB gp3) + client = {rate:.4f} $/h; load across zones {gb:.1f} GB x 3 x {XZ}")
+        hrs = sum(jh.values())
+        return rate * hrs + extra, 1, hrs, "; ".join(how)
+    if c.get("generator"):
+        gen_h = c["generator_hours_estimated"]
+        jobs = int(c.get("generator_jobs_estimated", 1))
+        hrs = gen_h + JOB_BOOT * jobs
+        rate = gen_hour(c["generator"], int(c["generator_disk_gb"]))
+        bson_gb = c["ballast_gib"] * GIB
+        puts = bson_gb * GEN1_STORED_PER_BSON * 1000 / PART_MB * PUT + GEN1_PART_PUTS_1TB * (bson_gb / 1000) * PUT
+        how.append(f"{gen_h:.2f} h of generation (decide.py, the slower end) + {JOB_BOOT} h boot x {jobs} job(s) on "
+                   f"{c['generator']} {rate:.4f} $/h + PUTs {puts:.2f}")
+        return rate * hrs + puts, jobs, hrs, "; ".join(how)
+    rates = {"boot": kitchen + hour(c["extras_client"]), "atlas_load": hour(c["loader"]) + hour(c["client"]),
+             "load_settle_cap": hour(c["loader"]) + hour(c["client"]), "measured_settle_cap": kitchen + hour(c["client"]),
+             "m30": kitchen + hour(c["client"]), "extras": ex_set, "first_next_ops": ex_set, "reads_after_writes": ex_set,
+             "write_peak": kitchen + hour(c["client"]), "agent_bench": kitchen + hour(c["pgbox"]) + hour(c["extras_client"])}
+    if c.get("atlas_load"):
+        rates["boot"] = hour(c["loader"]) + hour(c["client"])
+        extra += 26.6e9 / DOC_B / BATCH * PUT
+        how.append("WAL PUTs of the Atlas load 0.39")
+    if "m30" in c["programs"] and "measure" in c["phases"]:
+        extra += 0.15
+        how.append("m30 cross-zone and reads 0.15")
+    progs = c["programs"] if "extras" in c["phases"] else []
+    if any(p in ("s3-first-byte", "sealed-run", "log-ack", "takeovers") for p in progs):
+        extra += 0.22
+        how.append("S3 programs, log-ack and takeovers cross-zone 0.22")
+    if any(p in ("first-next", "ballast-rounds", "first-next-ops") for p in progs):
+        extra += 0.15
+        how.append("reads' GETs and cross-zone 0.15")
+    if "reads-after-writes" in progs:
+        extra += 0.50
+        how.append("reads-after-writes' GETs 0.50 (upper bound: amplified reads cut at the limit)")
+    if "write-peak" in progs:
+        a = (c.get("write_peak_args") or "").split()
+        mins = float(a[a.index("--minutes") + 1]) if "--minutes" in a else 25.0
+        gb = 25800 * 341 * mins * 60 / 1e9
+        extra += gb * XZ * 3 + gb * 1e9 / 341 / BATCH * PUT
+        how.append(f"write-peak {mins:g} min at 25,800 documents/s: {gb:.1f} GB x 3 crossings + its PUTs")
+    if "agent-bench" in progs:
+        extra += 0.10
+        if c.get("aurora"):
+            ab = (c.get("agent_bench_args") or "").split()
+            prof = ab[ab.index("--profile") + 1] if "--profile" in ab else "standard"
+            per = 0.2 if prof in ("small", "tiny") else 0.9
+            au_h = 0.3 + per + 0.2
+            au = AURORA_H * max(1.0, au_h) + (0.58 * 3 if per > 0.5 else 0.2) * AURORA_IO_M
+            extra += au
+            how.append(f"Aurora {max(1.0, au_h):.1f} h billed + I/O = {au:.2f}")
+    hrs = sum(jh.values())
+    d = sum(rates.get(k, ex_set) * v for k, v in jh.items()) + extra
+    how.insert(0, "parts " + ", ".join(f"{k} {v:g} h" for k, v in jh.items()))
+    return d, jobs, hrs, "; ".join(how)
+
+
+JOB_BOOT = 0.3
+READ_PAUSE_H = 1.0   # between two jobs: the coordinator reads the results before the next push (ESTIMATED)
+
+
+def round_plan(order_file=None):
+    """Review of the AWS harness (2026-11-13): the round as it will run, job by job in step9/commands/ROUND.txt's order,
+    each priced from decide.py's OWN resolution of its command file (the same hours decide.py checks against the
+    ceiling), plus the kept pantry's storage per database for the hours it is kept. Returns the jobs (dicts)."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    order_file = order_file or os.path.join(here, "..", "commands", "ROUND.txt")
+    files = [l.split()[0] for l in open(order_file) if l.strip() and not l.startswith("#")]
+    print("\n######## THE ROUND, job by job, from decide.py's own hours (review of the AWS harness): THE NUMBERS TO USE ########")
+    jobs, t = [], 0.0
+    started = {}
+    for f in files:
+        c = _resolved(os.path.join(here, "..", "commands", f))
+        if c["mode"] != "run":
+            continue
+        d, n, h, how = job_dollars(c)
+        if c.get("generator"):
+            started.setdefault(c["ballast_db"], t)
+        if c["mode"] == "run" and "load" in c["phases"] and c.get("atlas_load"):
+            started.setdefault("atlas", t)
+        jobs.append({"file": f, "dollars": round(d, 2), "jobs": n, "hours": round(h, 2), "how": how})
+        line(f"{f[:-5]}"[:44], d, f"{h:.2f} h in {n} job(s); {how}")
+        t += h + READ_PAUSE_H * n
+    end = t
+    # the kept pantry: the Atlas databases (43 GB with indexes and not yet compacted SSTs, upper bound), each generated
+    # database as sealed runs (0.79 byte per BSON byte) plus its partition files until the publish (0.107)
+    st = 0.0
+    for db, t0 in started.items():
+        gb = 26.6 * 1.6 if db == "atlas" else (93.2 if db.startswith("app_data_h") else 931.4) * GIB * (GEN1_STORED_PER_BSON + GEN_PARTS_PER_BSON)
+        days = (end - t0) / 24
+        st += line(f"S3 storage, {db}"[:44], gb * GBM / 30 * days, f"{gb:.0f} GB x {GBM} x {days:.2f} days / 30 (kept from its load to the drop)")
+    total = sum(j["dollars"] for j in jobs) + st
+    hours = sum(j["hours"] for j in jobs)
+    print(f"  TOTAL ESTIMATED: {total:.2f} $ in {sum(j['jobs'] for j in jobs)} jobs, {hours:.1f} h of jobs one after the "
+          f"other ({end:.0f} h with {READ_PAUSE_H:g} h to read each job's results); the largest job "
+          f"{max(j['dollars'] / j['jobs'] for j in jobs):.2f} $ (default cap 5 $). Plus the Claude API pilot ($0.24 to $2.40).")
+    return jobs
+
+
 if __name__ == "__main__":
     print("Step 9 cost estimate, 8-vCPU plan (ESTIMATED; prices DECLARED, sources in the docstring)")
     pilot()
@@ -421,4 +546,5 @@ if __name__ == "__main__":
     print(f"\n  THE ROUND WITH 1 TB, ESTIMATED: {base + lo:.2f} to {base + hi:.2f} $ (the Atlas-size jobs L, M1, M2, M3 "
           f"{base:.2f} + the 1 TB addition), plus the pilot (above); the 100 GB step is not in it (one ballast database "
           f"per pantry: the round goes from the Atlas size to 1 TB)")
+    round_plan()
     # no Atlas rerun (founder, 2026-11-09): the comparison uses the Atlas numbers measured in Ireland on 2026-11-05

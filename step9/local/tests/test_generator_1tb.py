@@ -26,9 +26,10 @@ def decide(**over):
 def test_one_database_of_the_asked_size():
     rc, out, r = decide(ballast_gib=130)
     assert r is not None, out
-    assert r["ballast_gib"] == 130.0 and r["ballast_db"] == "app_data_b01"
+    # (data 100gb: since the review of the AWS harness its database is app_data_h01; 1tb keeps app_data_b01)
+    assert r["ballast_gib"] == 130.0 and r["ballast_db"] == "app_data_h01"
     lines = r["ballast"]["lines"]
-    assert len(lines) == 1 and lines[0][0] == "app_data_b01" and lines[0][lines[0].index("--gb") + 1] == "130"
+    assert len(lines) == 1 and lines[0][0] == "app_data_h01" and lines[0][lines[0].index("--gb") + 1] == "130"
     assert r["ballast"]["parallel"] == 8 and r["generator"] == "c7i.2xlarge"
 
 
@@ -57,7 +58,8 @@ def test_a_generation_longer_than_a_job_needs_a_kept_pantry():
 def test_the_measure_jobs_name_the_ballast_database():
     rc, out, r = decide(data="100gb", phases=["measure", "extras"], programs=["ballast-rounds"], pantry="fenvix-kitchen-pantry-1000000001")
     assert r is not None, out
-    assert r["ballast_db"] == "app_data_b01" and r["ballast_gib"] == 93.2
+    # review of the AWS harness (2026-11-13): the 100 GB database has its own name, so it shares the pantry with 1 TB
+    assert r["ballast_db"] == "app_data_h01" and r["ballast_gib"] == 93.2
 
 
 def test_generator_hours_scale_with_the_size_and_the_writers():

@@ -271,7 +271,9 @@ def test_hours_of_first_next_ops_scale_with_per_op_and_double_after_writes():
     base = decide.PROGRAM_HOURS["first-next-ops"]
     assert abs(w1["job_hours"]["first_next_ops"] - round(base * 100 / 30 * 2, 2)) < 0.011
     m2 = _resolve("03-M2-extras-write-peak.json")
-    assert abs(m2["job_hours"]["first_next_ops"] - round(base, 2)) < 0.011     # 30 per operation, once
+    # review of the AWS harness (2026-11-13): M2 now runs reads-after-writes too (the pair of the mongod line's), so
+    # first-next-ops runs twice there: 30 per operation, twice
+    assert abs(m2["job_hours"]["first_next_ops"] - round(base * 2, 2)) < 0.011
 
 
 def test_dry_run_still_accepts_every_command():

@@ -1,6 +1,5 @@
 {
  "mode": "run",
- "engine": "27014ff2e3e3e4ff223aa778746f3dce433c6549",
  "data": "atlas",
  "phases": [
   "mongod"

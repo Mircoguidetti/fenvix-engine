@@ -21,7 +21,7 @@ C="$K" PACKAGES="$kp" CA_DIR="$CA_DIR" PANTRY="$PANTRY" LOAD="$LOAD" PROGRAM=m30
   BIN="$BIN" bash "$K/ci/packages.sh" > "$PACKAGES/kitchen-packages.txt"
 grep -E "^client" "$PACKAGES/kitchen-packages.txt"
 d=$(mktemp -d); tar xzf "$kp/client.tar.gz" -C "$d"
-cp "$S9"/machine/{node.sh,common.sh,cfg.py,filler.sh,ballast.py,extras.sh,mongo_client.sh} "$S9"/programs/*.py "$d"/
+cp "$S9"/machine/{node.sh,common.sh,cfg.py,filler.sh,ballast.py,extras.sh,mongo_client.sh,pantry_marks.py} "$S9"/programs/*.py "$d"/
 cp "$BIN/pq-x86_64/pq" "$d"/pq; chmod +x "$d"/pq "$d"/*.sh
 # the agent benchmark (bench/agent-checkpoints) and its libraries, apart from the kitchen's (its own vendor folder)
 AB="$S9/../bench/agent-checkpoints"

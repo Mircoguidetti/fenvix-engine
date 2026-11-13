@@ -527,6 +527,7 @@ try:
         put("extras/config.json", {"engine_sha256": cook_sha(), "run_id": RUN, "programs": extras, "pantry": PANTRY, "logs": LOGS, "bench_logs": LOGS.replace(":7200", ":7201"),
                                    "cook": {"ip": ip1, "port": 27017}, "spare": {"ip": sp[1]} if sp else {},
                                    "ballast_db": cmd.get("ballast_db"), "ballast_gib": cmd.get("ballast_gib"),
+                                   "pantry_reads": cmd.get("pantry_reads") or {},
                                    **{k: v for k, v in cmd.items() if k.endswith("_args")}})
         ex_id, _ = launch("extras", "extras", cmd["extras_client"], CLIENT_ZONE)
         wait_for("extras/end.json", watch="extras")

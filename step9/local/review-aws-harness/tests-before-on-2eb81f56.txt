@@ -1,0 +1,59 @@
+the review's new tests on aws-local-round 2eb81f56 (the harness before this review), 2026-11-13T17:17:08Z
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user/aa186bb6-fb08-5b44-b247-2fb0c6e023be/scratchpad/before/step9/commands/06-BW-read-rounds-ops-raw-100gb.json'
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user/aa186bb6-fb08-5b44-b247-2fb0c6e023be/scratchpad/before/step9/commands/06-BW-read-rounds-ops-raw-100gb.json'
+E       ModuleNotFoundError: No module named 'pantry_marks'
+E       ModuleNotFoundError: No module named 'pantry_marks'
+E       KeyError: 'pantry_reads'
+E       AssertionError: assert ('app_data_b01' == 'app_data_h01'
+E         
+E         - app_data_h01
+E         ?          ^
+E         + app_data_b01
+E         ?          ^)
+E       SystemExit: 2
+E               AssertionError: 03-M2-extras-write-peak.json
+E               assert 'engine' not in {'mode': 'run', 'engine': '27014ff2e3e3e4ff223aa778746f3dce433c6549', 'loader_options': '--sealed-runs 2 --envelopes w...--envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts', ...}
+E                +  where {'mode': 'run', 'engine': '27014ff2e3e3e4ff223aa778746f3dce433c6549', 'loader_options': '--sealed-runs 2 --envelopes w...--envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts', ...} = <function load at 0x7f6c2486d9e0>(<_io.TextIOWrapper name='/tmp/claude-0/-home-user/aa186bb6-fb08-5b44-b247-2fb0c6e023be/scratchpad/before/step9/commands/03-M2-extras-write-peak.json' mode='r' encoding='utf-8'>)
+E                +    where <function load at 0x7f6c2486d9e0> = json.load
+E                +    and   <_io.TextIOWrapper name='/tmp/claude-0/-home-user/aa186bb6-fb08-5b44-b247-2fb0c6e023be/scratchpad/before/step9/commands/03-M2-extras-write-peak.json' mode='r' encoding='utf-8'> = open('/tmp/claude-0/-home-user/aa186bb6-fb08-5b44-b247-2fb0c6e023be/scratchpad/before/step9/commands/03-M2-extras-write-peak.json')
+E                +      where '/tmp/claude-0/-home-user/aa186bb6-fb08-5b44-b247-2fb0c6e023be/scratchpad/before/step9/commands/03-M2-extras-write-peak.json' = <function join at 0x7f6c24e876a0>('/tmp/claude-0/-home-user/aa186bb6-fb08-5b44-b247-2fb0c6e023be/scratchpad/before/step9/commands', '03-M2-extras-write-peak.json')
+E                +        where <function join at 0x7f6c24e876a0> = <module 'posixpath' (frozen)>.join
+E                +          where <module 'posixpath' (frozen)> = os.path
+E       AssertionError: assert 'one engine per round' in 'REFUSED: the gate before any AWS run is closed:\nGATE: CLOSED (19 blockers; RULES.md 8-9: no AWS run, not even a pilo...\n  - (newest local results, another commit) agent benchmark stored bytes per logical byte: ours 2.466 > mongo 0.450\n'
+E        +  where 'REFUSED: the gate before any AWS run is closed:\nGATE: CLOSED (19 blockers; RULES.md 8-9: no AWS run, not even a pilo...\n  - (newest local results, another commit) agent benchmark stored bytes per logical byte: ours 2.466 > mongo 0.450\n' = CaptureResult(out='REFUSED: the gate before any AWS run is closed:\nGATE: CLOSED (19 blockers; RULES.md 8-9: no AWS ru...west local results, another commit) agent benchmark stored bytes per logical byte: ours 2.466 > mongo 0.450\n', err='').out
+E        +    where CaptureResult(out='REFUSED: the gate before any AWS run is closed:\nGATE: CLOSED (19 blockers; RULES.md 8-9: no AWS ru...west local results, another commit) agent benchmark stored bytes per logical byte: ours 2.466 > mongo 0.450\n', err='') = readouterr()
+E        +      where readouterr = <_pytest.capture.CaptureFixture object at 0x7f6c21f0b4d0>.readouterr
+E       assert 'python3 decide.py --engine ../command.json' in '# Step 9 of compaction 2: the AWS round that decides the product. Our full kitchen (3-zone log, cook, warm spare,\n# ...of the round\n        if: always() && env.MODE == \'run\'\n        run: \'[ "${{ steps.run.outcome }}" = success ]\'\n'
+E       assert (1 == 0)
+E       AssertionError: assert ['first-next-ops'] == ['first-next-...after-writes']
+E         
+E         Right contains one more item: 'reads-after-writes'
+E         Use -v to get more diff
+E       AttributeError: module 'estimate' has no attribute 'round_plan'
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user/aa186bb6-fb08-5b44-b247-2fb0c6e023be/scratchpad/before/step9/commands/ROUND.txt'
+FAILED step9/local/tests/test_review_aws_harness.py::test_1_every_job_of_the_round_in_its_order_passes_the_pantry_check
+FAILED step9/local/tests/test_review_aws_harness.py::test_1_b1_after_m2_runs_but_b1_after_w1_and_m1_after_m2_are_still_refused
+FAILED step9/local/tests/test_review_aws_harness.py::test_1_marks_name_their_database_and_an_unreadable_mark_blocks_every_reader
+FAILED step9/local/tests/test_review_aws_harness.py::test_1_the_extras_client_checks_the_databases_each_program_reads
+FAILED step9/local/tests/test_review_aws_harness.py::test_1_the_reads_reach_the_extras_client
+FAILED step9/local/tests/test_review_aws_harness.py::test_2_the_100gb_and_1tb_databases_have_their_own_names_in_the_one_pantry
+FAILED step9/local/tests/test_review_aws_harness.py::test_2_first_next_reads_only_the_given_database
+FAILED step9/local/tests/test_review_aws_harness.py::test_3_the_commands_carry_no_engine_and_every_job_takes_step9_engine
+FAILED step9/local/tests/test_review_aws_harness.py::test_3_a_command_naming_another_engine_is_refused_on_aws_and_no_engine_is_refused
+FAILED step9/local/tests/test_review_aws_harness.py::test_3_the_workflow_builds_the_engine_decide_resolves
+FAILED step9/local/tests/test_review_aws_harness.py::test_4_a_first_read_cut_at_the_limit_is_a_result_not_a_failure
+FAILED step9/local/tests/test_review_aws_harness.py::test_5_m2_and_the_mongod_line_run_the_same_programs_on_the_same_customers
+FAILED step9/local/tests/test_review_aws_harness.py::test_6_the_round_estimate_takes_every_job_and_its_hours_from_decide
+FAILED step9/local/tests/test_review_aws_harness.py::test_round_txt_is_this_order
+14 failed in 0.56s
+
+Most of the 14 fail on 2eb81f56 because a file of the fix is missing (06-BW, ROUND.txt, ENGINE, pantry_marks.py). The two
+that fail on the old LOGIC itself:
+- test_4 (a cut first read): reads_after_writes.main returned 1 (FAILED): "assert (1 == 0)".
+- the blocker, with the old file names, by decide.py on 2eb81f56 (scratchpad script order.py: resolve M2, B1, W1, M1,
+  the pilot; M2's mark; then B1's pantry check):
+M2 mark: {'run': '111', 'programs': ['first-next-ops'], 'databases': ['the largest Atlas-shaped database'], 'time': '2026-11-13T17:17:16+00:00'}
+B1 after M2: the pantry fenvix-kitchen-pantry-1000000001 is no longer as loaded (run 111 wrote with ['first-next-ops'] into ['the largest Atlas-shaped database'] at 2026-11-13T17:17:16+00:00): ['first-next', 'ballast-rounds'] read it as loaded and would check answers against state files that no longer match. Run them on a pantry no writing program has touched.
+W1 after M2: None
+pilot mark: None
+M1 after M2: True
