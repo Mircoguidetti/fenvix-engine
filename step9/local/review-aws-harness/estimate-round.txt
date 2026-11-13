@@ -1,0 +1,190 @@
+Step 9 cost estimate, 8-vCPU plan (ESTIMATED; prices DECLARED, sources in the docstring)
+
+== pilot: Atlas-size load job, then 1 h of the measured kitchen with the extra programs (5 takeovers), no m30 program
+  about 2.22 $ ESTIMATED, plus write-peak 5 minutes 0.31 $ = 2.53 $
+
+== data atlas (the size measured on Atlas): 27 GB of BSON
+  job 1 (Atlas databases): 2.8 h; ballast: 0 GB / (3 processes x 1.55 MB/s = 4.65 MB/s) = 0.0 h in 0 jobs of at most 5 h; measure job 6.1 h
+  wall time: about 9 h of jobs, one after the other; ESTIMATED (per-process rate MEASURED on Atlas; whether our loader c7i.xlarge keeps up is UNKNOWN)
+  load job 1: loader + m30 client                   1.11 $   2.8 h x (0.1989 + 0.1989) $/h
+  measure, m30: cook+log-0, 2 log nodes, client      1.44 $   3.5 h x (0.1198 + 2 x 0.0462 + 0.1989)
+  measure, extras: cook, logs, spare, extras client      1.13 $   2.6 h x (2 x 0.1198 + 2 x 0.0462 + 0.1032)
+  S3 PUT: WAL objects of the load                   0.39 $   78 M documents / 1000 per batch x 0.005 $/1000
+  S3 PUT: compaction output                         0.03 $   27 GB x 4 rewritten / 16 MB parts x PUT
+  S3 GET: compaction input and cold reads           0.11 $   about as many GETs as parts written (x 0.08 price ratio) + 0.10 $ reads
+  S3 storage (kept pantry, data x 1.6)              0.03 $   43 GB x 0.023 $/GB-month x 0.87 days
+  cross-zone: log copies of the measured writes      0.20 $   about 5 GB written during measure (ESTIMATED) x 2 zones x 0.02 $/GB
+  extras: S3 programs                               0.02 $   s3-first-byte, sealed-run: about 4,000 requests and 1.3 GB for an hour
+  agent benchmark: cook, logs, Postgres machine, client      0.44 $   1.0 h x (cook 0.1198 + Postgres m7i.large 0.1198 + 2 x 0.0462 + 0.1032)
+  TOTAL ESTIMATED: 4.91 $ (2 jobs; never more than 8 vCPU at once)
+
+== data 100gb: 100 GB of BSON
+  job 1 (Atlas databases): 2.8 h; ballast: 73 GB / (3 processes x 1.55 MB/s = 4.65 MB/s) = 4.4 h in 1 jobs of at most 5 h; measure job 6.1 h
+  wall time: about 14 h of jobs, one after the other; ESTIMATED (per-process rate MEASURED on Atlas; whether our loader c7i.xlarge keeps up is UNKNOWN)
+  load job 1: loader + m30 client                   1.11 $   2.8 h x (0.1989 + 0.1989) $/h
+  ballast jobs: loader + filler                     1.86 $   4.7 h x (0.1989 + 0.1989)
+  measure, m30: cook+log-0, 2 log nodes, client      1.44 $   3.5 h x (0.1198 + 2 x 0.0462 + 0.1989)
+  measure, extras: cook, logs, spare, extras client      1.13 $   2.6 h x (2 x 0.1198 + 2 x 0.0462 + 0.1032)
+  S3 PUT: WAL objects of the load                   1.47 $   294 M documents / 1000 per batch x 0.005 $/1000
+  S3 PUT: compaction output                         0.12 $   100 GB x 4 rewritten / 16 MB parts x PUT
+  S3 GET: compaction input and cold reads           0.15 $   about as many GETs as parts written (x 0.08 price ratio) + 0.10 $ reads
+  S3 storage (kept pantry, data x 1.6)              0.13 $   160 GB x 0.023 $/GB-month x 1.07 days
+  cross-zone: log copies of the measured writes      0.20 $   about 5 GB written during measure (ESTIMATED) x 2 zones x 0.02 $/GB
+  extras: S3 programs                               0.02 $   s3-first-byte, sealed-run: about 4,000 requests and 1.3 GB for an hour
+  agent benchmark: cook, logs, Postgres machine, client      0.44 $   1.0 h x (cook 0.1198 + Postgres m7i.large 0.1198 + 2 x 0.0462 + 0.1032)
+  TOTAL ESTIMATED: 8.08 $ (3 jobs; never more than 8 vCPU at once)
+
+== data 1tb: 1000 GB of BSON
+  job 1 (Atlas databases): 2.8 h; ballast: 973 GB / (3 processes x 1.55 MB/s = 4.65 MB/s) = 58.1 h in 12 jobs of at most 5 h; measure job 6.1 h
+  wall time: about 71 h of jobs, one after the other; ESTIMATED (per-process rate MEASURED on Atlas; whether our loader c7i.xlarge keeps up is UNKNOWN)
+  load job 1: loader + m30 client                   1.11 $   2.8 h x (0.1989 + 0.1989) $/h
+  ballast jobs: loader + filler                    24.56 $   61.7 h x (0.1989 + 0.1989)
+  measure, m30: cook+log-0, 2 log nodes, client      1.44 $   3.5 h x (0.1198 + 2 x 0.0462 + 0.1989)
+  measure, extras: cook, logs, spare, extras client      1.13 $   2.6 h x (2 x 0.1198 + 2 x 0.0462 + 0.1032)
+  S3 PUT: WAL objects of the load                  14.71 $   2941 M documents / 1000 per batch x 0.005 $/1000
+  S3 PUT: compaction output                         1.25 $   1000 GB x 4 rewritten / 16 MB parts x PUT
+  S3 GET: compaction input and cold reads           0.60 $   about as many GETs as parts written (x 0.08 price ratio) + 0.10 $ reads
+  S3 storage (kept pantry, data x 1.6)              4.22 $   1600 GB x 0.023 $/GB-month x 3.44 days
+  cross-zone: log copies of the measured writes      0.20 $   about 5 GB written during measure (ESTIMATED) x 2 zones x 0.02 $/GB
+  extras: S3 programs                               0.02 $   s3-first-byte, sealed-run: about 4,000 requests and 1.3 GB for an hour
+  agent benchmark: cook, logs, Postgres machine, client      0.44 $   1.0 h x (cook 0.1198 + Postgres m7i.large 0.1198 + 2 x 0.0462 + 0.1032)
+  TOTAL ESTIMATED: 49.68 $ (14 jobs; never more than 8 vCPU at once)
+
+== ON PAPER, data 100gb: ballast generated in our format on the loader machine
+  job 1: loader + m30 client, the 5 Atlas databases      1.11 $   2.8 h x (0.1989 + 0.1989)
+  job 1: S3 PUTs of that load (WAL)                 0.39 $   78 M documents / 1,000 per batch x $0.005 per 1,000
+  job 2: generator on the loader machine            0.10 $   73 GB / 100 MB/s = 0.20 h + 0.3 h boot, x 0.1989
+  job 2: S3 PUTs of the generated runs              0.02 $   73 GB / 16 MB parts x $0.005 per 1,000 (no WAL, no compaction rewrite)
+  job 3, m30: cook+log-0, 2 log nodes, client       1.44 $   3.5 h x (0.1198 + 2 x 0.0462 + 0.1989)
+  job 3, extras: cook, logs, spare, client          0.70 $   1.6 h x (2 x 0.1198 + 2 x 0.0462 + 0.1032)
+  job 3, agent benchmark: cook, logs, Postgres, client      0.44 $   1.0 h x (cook and Postgres 2 x 0.1198 + 2 x 0.0462 + 0.1032)
+  S3 storage while the pantry lives                 0.08 $   110 GB (x 1.1, no unmerged runs) x 0.023 x 0.89 days / 30
+  S3 GETs (reads, programs) and cross-zone log copies      0.32 $   0.10 reads + 0.20 cross-zone + 0.02 S3 programs
+  TOTAL ON PAPER: 4.59 $, 3 jobs, about 9 h of jobs; generator rate 100 MB/s ESTIMATED (compaction writes about 42 MB/s per core, MEASURED M26: 22.5-24.5 s of CPU per GB; 3 cores minus document generation)
+
+== ON PAPER, data 1tb: ballast generated in our format on the loader machine
+  job 1: loader + m30 client, the 5 Atlas databases      1.11 $   2.8 h x (0.1989 + 0.1989)
+  job 1: S3 PUTs of that load (WAL)                 0.39 $   78 M documents / 1,000 per batch x $0.005 per 1,000
+  job 2: generator on the loader machine            0.60 $   973 GB / 100 MB/s = 2.70 h + 0.3 h boot, x 0.1989
+  job 2: S3 PUTs of the generated runs              0.30 $   973 GB / 16 MB parts x $0.005 per 1,000 (no WAL, no compaction rewrite)
+  job 3, m30: cook+log-0, 2 log nodes, client       1.44 $   3.5 h x (0.1198 + 2 x 0.0462 + 0.1989)
+  job 3, extras: cook, logs, spare, client          0.70 $   1.6 h x (2 x 0.1198 + 2 x 0.0462 + 0.1032)
+  job 3, agent benchmark: cook, logs, Postgres, client      0.44 $   1.0 h x (cook and Postgres 2 x 0.1198 + 2 x 0.0462 + 0.1032)
+  S3 storage while the pantry lives                 0.84 $   1100 GB (x 1.1, no unmerged runs) x 0.023 x 1.00 days / 30
+  S3 GETs (reads, programs) and cross-zone log copies      0.32 $   0.10 reads + 0.20 cross-zone + 0.02 S3 programs
+  TOTAL ON PAPER: 6.14 $, 3 jobs, about 12 h of jobs; generator rate 100 MB/s ESTIMATED (compaction writes about 42 MB/s per core, MEASURED M26: 22.5-24.5 s of CPU per GB; 3 cores minus document generation)
+
+######## with the generator BUILT (aws-ready, 2026-11-10): the numbers to use ########
+
+== BUILT, data atlas: 0 ballast databases of 24.3 GiB = 0 GB of BSON generated on one c7i.xlarge (0 at a time), plus the five Atlas databases (26.6 GB) through the frozen script
+  job 1: loader + m30 client, the 5 Atlas databases      1.11 $   2.8 h (MEASURED rate on Atlas) x (0.1989 + 0.1989) $/h
+  job 1: S3 PUTs of that load (WAL)                 0.39 $   78 M documents / 1,000 per batch x $0.005 per 1,000
+  job 3, m30: cook+log-0, 2 log nodes, client       1.44 $   3.5 h x (0.1198 + 2 x 0.0462 + 0.1989)
+  job 3, extras: cook, logs, spare, client          0.70 $   1.6 h x (2 x 0.1198 + 2 x 0.0462 + 0.1032)
+  job 3, agent benchmark: cook, logs, Postgres, client      0.78 $   1.8 h (+0.5 h Aurora target, +0.3 h waiting for the cluster) x (2 x 0.1198 + 2 x 0.0462 + 0.1032)
+  job 3, Aurora db.r7g.large (Standard)             0.69 $   1.0 h (create 0.3 + bench 0.5 + delete 0.2; 1 h billed as an upper bound) x 0.304 + I/O 0.58 M x 3 x 0.22 $/M + 2 GB storage
+  S3 storage while the pantry lives                 0.03 $   43 GB (0 generated + 26.6 x 1.6 Atlas databases) x 0.023 x 0.90 days / 30
+  S3 GETs (reads, programs) and cross-zone log copies      0.32 $   0.10 reads + 0.20 cross-zone + 0.02 S3 programs
+  TOTAL ESTIMATED: 5.46 $, 2 jobs, about 9.7 h of jobs one after the other (job 2 alone 0.00 h); spill disk needed 0 GB of 60 GB; never more than 8 vCPU of EC2 at once (Aurora is RDS)
+
+== BUILT, data 100gb: 3 ballast databases of 24.3 GiB = 78 GB of BSON generated on one c7i.xlarge (3 at a time), plus the five Atlas databases (26.6 GB) through the frozen script
+  job 1: loader + m30 client, the 5 Atlas databases      1.11 $   2.8 h (MEASURED rate on Atlas) x (0.1989 + 0.1989) $/h
+  job 1: S3 PUTs of that load (WAL)                 0.39 $   78 M documents / 1,000 per batch x $0.005 per 1,000
+  job 2: generator c7i.xlarge (60 GB gp3)           0.20 $   1 waves x 0.68 h (24.3 GiB at 11.2 MB/s MEASURED, +5% publish) + 0.3 h boot = 0.98 h x 0.2037 $/h
+  job 2: S3 PUTs of the generated runs              0.02 $   58 GB stored (0.74 per BSON byte, MEASURED) / 16 MB parts x $0.005 per 1,000
+  job 3, m30: cook+log-0, 2 log nodes, client       1.44 $   3.5 h x (0.1198 + 2 x 0.0462 + 0.1989)
+  job 3, extras: cook, logs, spare, client          0.70 $   1.6 h x (2 x 0.1198 + 2 x 0.0462 + 0.1032)
+  job 3, agent benchmark: cook, logs, Postgres, client      0.78 $   1.8 h (+0.5 h Aurora target, +0.3 h waiting for the cluster) x (2 x 0.1198 + 2 x 0.0462 + 0.1032)
+  job 3, Aurora db.r7g.large (Standard)             0.69 $   1.0 h (create 0.3 + bench 0.5 + delete 0.2; 1 h billed as an upper bound) x 0.304 + I/O 0.58 M x 3 x 0.22 $/M + 2 GB storage
+  S3 storage while the pantry lives                 0.07 $   100 GB (58 generated + 26.6 x 1.6 Atlas databases) x 0.023 x 0.94 days / 30
+  S3 GETs (reads, programs) and cross-zone log copies      0.32 $   0.10 reads + 0.20 cross-zone + 0.02 S3 programs
+  TOTAL ESTIMATED: 5.72 $, 3 jobs, about 10.7 h of jobs one after the other (job 2 alone 0.98 h); spill disk needed 8 GB of 60 GB; never more than 8 vCPU of EC2 at once (Aurora is RDS)
+
+== BUILT, data 1tb: 40 ballast databases of 24.3 GiB = 1044 GB of BSON generated on one c7i.2xlarge (8 at a time), plus the five Atlas databases (26.6 GB) through the frozen script
+  job 1: loader + m30 client, the 5 Atlas databases      1.11 $   2.8 h (MEASURED rate on Atlas) x (0.1989 + 0.1989) $/h
+  job 1: S3 PUTs of that load (WAL)                 0.39 $   78 M documents / 1,000 per batch x $0.005 per 1,000
+  job 2: generator c7i.2xlarge (60 GB gp3)          1.46 $   5 waves x 0.68 h (24.3 GiB at 11.2 MB/s MEASURED, +5% publish) + 0.3 h boot = 3.70 h x 0.3952 $/h
+  job 2: S3 PUTs of the generated runs              0.24 $   772 GB stored (0.74 per BSON byte, MEASURED) / 16 MB parts x $0.005 per 1,000
+  job 3, m30: cook+log-0, 2 log nodes, client       1.44 $   3.5 h x (0.1198 + 2 x 0.0462 + 0.1989)
+  job 3, extras: cook, logs, spare, client          0.70 $   1.6 h x (2 x 0.1198 + 2 x 0.0462 + 0.1032)
+  job 3, agent benchmark: cook, logs, Postgres, client      0.78 $   1.8 h (+0.5 h Aurora target, +0.3 h waiting for the cluster) x (2 x 0.1198 + 2 x 0.0462 + 0.1032)
+  job 3, Aurora db.r7g.large (Standard)             0.69 $   1.0 h (create 0.3 + bench 0.5 + delete 0.2; 1 h billed as an upper bound) x 0.304 + I/O 0.58 M x 3 x 0.22 $/M + 2 GB storage
+  S3 storage while the pantry lives                 0.66 $   815 GB (772 generated + 26.6 x 1.6 Atlas databases) x 0.023 x 1.06 days / 30
+  S3 GETs (reads, programs) and cross-zone log copies      0.32 $   0.10 reads + 0.20 cross-zone + 0.02 S3 programs
+  TOTAL ESTIMATED: 7.79 $, 3 jobs, about 13.4 h of jobs one after the other (job 2 alone 3.70 h); spill disk needed 22 GB of 60 GB; never more than 8 vCPU of EC2 at once (Aurora is RDS)
+
+######## aws-fixes (2026-11-11): the job plan that fits the ceiling: THE NUMBERS TO USE ########
+(the BUILT plan above has ONE measure job of about 7 h: refused by decide.py, total review B2)
+
+== THE JOB PLAN (aws-fixes), data atlas: one kept pantry, three measure jobs
+  L, load the five Atlas databases (loader + m      1.72 $   3.35 h; 3.35 h (boot 0.3 + 2.8 at Atlas's rate + settle 0.25 expected, cap 1.0) x (0.1989 + 0.1989) + WAL PUTs 78 M documents / 1,000 x $0.005 per 1,000; client in the cook's zone (client_zone same, total review N5): no cross-zone traffic (in another zone it would add up to 0.53 $)
+  M1, m30 program alone (cook + log-0, 2 log n      1.61 $   3.55 h; 3.55 h (boot 0.3 + settle 0.25 expected, cap 0.5 + m30 3.0) x (0.2122 + 0.1989) + cross-zone client traffic and log copies about $0.05 + reads $0.10
+  M2, extra programs (spare, extras client) th      2.37 $   2.70 h; 2.1 h x (0.2122 + spare 0.1198 + 0.1032) + write-peak 0.6 h x (0.2122 + 0.1989) + S3 programs 0.02 + log-ack and takeovers cross-zone 0.20 + write-peak at 25,800 documents/s: 13.2 GB x 0.02 $/GB x 3 crossings = 0.79 + its batch PUTs 0.19 (upper bound)
+  M3, agent benchmark (Aurora first, ours, the      2.43 $   3.50 h; 3.5 h (boot 0.5 + Aurora's creation 0.3 + 3 targets x 0.9 h) x (0.2122 + Postgres 0.1198 + 0.1032) + cross-zone 0.10 + Aurora 1.4 h billed (create 0.3 + its own target 0.9 + delete 0.2; run first, deleted at once) x 0.304 + I/O 1.74 M x 0.22 $/M = 0.81
+  S3 storage of the kept pantry                     0.03 $   43 GB x 0.023 x 1.05 days / 30
+  TOTAL ESTIMATED: 8.17 $, 4 jobs, about 13.1 h of jobs one after the other; each job under the default $5 cap; the largest job 2.43 $
+  (the SPESA line of run.py now adds each job's cross-zone allowance, ci/outcomes.py XZ_ALLOWANCE: before, it printed about $1 less than the real figure in job M2)
+
+== THE JOB PLAN (aws-fixes), data 100gb: one kept pantry, three measure jobs
+  L, load the five Atlas databases (loader + m      1.72 $   3.35 h; 3.35 h (boot 0.3 + 2.8 at Atlas's rate + settle 0.25 expected, cap 1.0) x (0.1989 + 0.1989) + WAL PUTs 78 M documents / 1,000 x $0.005 per 1,000; client in the cook's zone (client_zone same, total review N5): no cross-zone traffic (in another zone it would add up to 0.53 $)
+  G, generate 3 ballast databases on c7i.xlarg      0.22 $   0.98 h; 0.98 h x 0.2037 + PUTs 58 GB / 16 MB parts
+  M1, m30 program alone (cook + log-0, 2 log n      1.61 $   3.55 h; 3.55 h (boot 0.3 + settle 0.25 expected, cap 0.5 + m30 3.0) x (0.2122 + 0.1989) + cross-zone client traffic and log copies about $0.05 + reads $0.10
+  M2, extra programs (spare, extras client) th      2.37 $   2.70 h; 2.1 h x (0.2122 + spare 0.1198 + 0.1032) + write-peak 0.6 h x (0.2122 + 0.1989) + S3 programs 0.02 + log-ack and takeovers cross-zone 0.20 + write-peak at 25,800 documents/s: 13.2 GB x 0.02 $/GB x 3 crossings = 0.79 + its batch PUTs 0.19 (upper bound)
+  M3, agent benchmark (Aurora first, ours, the      2.43 $   3.50 h; 3.5 h (boot 0.5 + Aurora's creation 0.3 + 3 targets x 0.9 h) x (0.2122 + Postgres 0.1198 + 0.1032) + cross-zone 0.10 + Aurora 1.4 h billed (create 0.3 + its own target 0.9 + delete 0.2; run first, deleted at once) x 0.304 + I/O 1.74 M x 0.22 $/M = 0.81
+  B, ballast rounds on the measured kitchen         0.91 $   2.10 h; 2.1 h (decide.py's estimate) x (0.2122 + 0.1989) + cross-zone 0.05 (upper bound)
+  S3 storage of the kept pantry                     0.09 $   100 GB x 0.023 x 1.17 days / 30
+  TOTAL ESTIMATED: 9.35 $, 6 jobs, about 16.2 h of jobs one after the other; each job under the default $5 cap; the largest job 2.43 $
+  (the SPESA line of run.py now adds each job's cross-zone allowance, ci/outcomes.py XZ_ALLOWANCE: before, it printed about $1 less than the real figure in job M2)
+
+== THE JOB PLAN (aws-fixes), data atlas, write-peak at 10,000 documents/s: one kept pantry, three measure jobs
+  L, load the five Atlas databases (loader + m      1.72 $   3.35 h; 3.35 h (boot 0.3 + 2.8 at Atlas's rate + settle 0.25 expected, cap 1.0) x (0.1989 + 0.1989) + WAL PUTs 78 M documents / 1,000 x $0.005 per 1,000; client in the cook's zone (client_zone same, total review N5): no cross-zone traffic (in another zone it would add up to 0.53 $)
+  M1, m30 program alone (cook + log-0, 2 log n      1.61 $   3.55 h; 3.55 h (boot 0.3 + settle 0.25 expected, cap 0.5 + m30 3.0) x (0.2122 + 0.1989) + cross-zone client traffic and log copies about $0.05 + reads $0.10
+  M2, extra programs (spare, extras client) th      1.76 $   2.70 h; 2.1 h x (0.2122 + spare 0.1198 + 0.1032) + write-peak 0.6 h x (0.2122 + 0.1989) + S3 programs 0.02 + log-ack and takeovers cross-zone 0.20 + write-peak at 10,000 documents/s: 5.1 GB x 0.02 $/GB x 3 crossings = 0.31 + its batch PUTs 0.08 (upper bound)
+  M3, agent benchmark (Aurora first, ours, the      2.43 $   3.50 h; 3.5 h (boot 0.5 + Aurora's creation 0.3 + 3 targets x 0.9 h) x (0.2122 + Postgres 0.1198 + 0.1032) + cross-zone 0.10 + Aurora 1.4 h billed (create 0.3 + its own target 0.9 + delete 0.2; run first, deleted at once) x 0.304 + I/O 1.74 M x 0.22 $/M = 0.81
+  S3 storage of the kept pantry                     0.03 $   43 GB x 0.023 x 1.05 days / 30
+  TOTAL ESTIMATED: 7.56 $, 4 jobs, about 13.1 h of jobs one after the other; each job under the default $5 cap; the largest job 2.43 $
+  (the SPESA line of run.py now adds each job's cross-zone allowance, ci/outcomes.py XZ_ALLOWANCE: before, it printed about $1 less than the real figure in job M2)
+
+######## 2026-11-13: the round with the 1 TB database (one kept pantry): THE NUMBERS TO USE ########
+
+== THE JOB PLAN (aws-fixes), data atlas (the part of the round at the Atlas size): one kept pantry, three measure jobs
+  L, load the five Atlas databases (loader + m      1.72 $   3.35 h; 3.35 h (boot 0.3 + 2.8 at Atlas's rate + settle 0.25 expected, cap 1.0) x (0.1989 + 0.1989) + WAL PUTs 78 M documents / 1,000 x $0.005 per 1,000; client in the cook's zone (client_zone same, total review N5): no cross-zone traffic (in another zone it would add up to 0.53 $)
+  M1, m30 program alone (cook + log-0, 2 log n      1.61 $   3.55 h; 3.55 h (boot 0.3 + settle 0.25 expected, cap 0.5 + m30 3.0) x (0.2122 + 0.1989) + cross-zone client traffic and log copies about $0.05 + reads $0.10
+  M2, extra programs (spare, extras client) th      2.37 $   2.70 h; 2.1 h x (0.2122 + spare 0.1198 + 0.1032) + write-peak 0.6 h x (0.2122 + 0.1989) + S3 programs 0.02 + log-ack and takeovers cross-zone 0.20 + write-peak at 25,800 documents/s: 13.2 GB x 0.02 $/GB x 3 crossings = 0.79 + its batch PUTs 0.19 (upper bound)
+  M3, agent benchmark (Aurora first, ours, the      2.43 $   3.50 h; 3.5 h (boot 0.5 + Aurora's creation 0.3 + 3 targets x 0.9 h) x (0.2122 + Postgres 0.1198 + 0.1032) + cross-zone 0.10 + Aurora 1.4 h billed (create 0.3 + its own target 0.9 + delete 0.2; run first, deleted at once) x 0.304 + I/O 1.74 M x 0.22 $/M = 0.81
+  S3 storage of the kept pantry                     0.03 $   43 GB x 0.023 x 1.05 days / 30
+  TOTAL ESTIMATED: 8.17 $, 4 jobs, about 13.1 h of jobs one after the other; each job under the default $5 cap; the largest job 2.43 $
+  (the SPESA line of run.py now adds each job's cross-zone allowance, ci/outcomes.py XZ_ALLOWANCE: before, it printed about $1 less than the real figure in job M2)
+
+== THE 1 TB ADDITION (2026-11-13): one database of 931.4 GiB = 1,000 GB of BSON on the kept pantry
+  G1, generator on c7i.2xlarge, if 8 hyperthre      2.15 $   4.06 h in 1 job(s) (3.76 h of generation + 0.3 h boot each) x 0.3952 + PUTs 0.55 (790 GB of runs in 16 MB parts + about 60,005 partition files)
+  G1, generator on c7i.2xlarge, if they are wo      3.16 $   6.62 h in 2 job(s) (6.02 h of generation + 0.3 h boot each) x 0.3952 + PUTs 0.55 (790 GB of runs in 16 MB parts + about 60,005 partition files)
+  B1, read rounds and first-next (reads only)       0.81 $   2.1 h (decide.py: boot 0.3 + rounds 1.8) x (cook, log 0.2122 + extras client 0.1032) + cross-zone 0.05 + GETs 0.10
+  W1, first-next-ops and reads-after-writes         1.50 $   3.0 h (decide.py: boot 0.3 + start 0.2 + first-next-ops with 100 customers per operation 1.0 + reads-after-writes 1.5, an upper bound) x (0.2122 + 0.1032) + cross-zone 0.05 + GETs 0.50 (upper bound: up to 12 amplified reads cut at 180 s; the bytes themselves are free inside the region)
+  M2, first-next-ops at the Atlas size              0.13 $   0.3 h more in job M2 (the same five requests on the largest Atlas-shaped database, for the comparison across sizes) x (0.2122 + spare 0.1198 + 0.1032)
+  S3 storage of the 1 TB database                   1.03 $   897 GB (runs 790 + partition files until the publish 107) x 0.023 x 1.5 days / 30; 0.69 $ for every further day
+  THE 1 TB ADDITION, ESTIMATED: 5.62 to 6.63 $, 9.5 to 12.0 h of jobs; each job under the default $5 cap
+
+== THE MONGODB LINE (aws-local-round): job MG, ['vecchio'] = 12.0 GB of BSON, programs ['first-next-ops', 'reads-after-writes']
+  MG, mongod replica set at the Atlas size          2.97 $   4.77 h (decide.py: {'boot': 0.3, 'mongod_load': 2.27, 'mongod_cold_restart': 0.1, 'first_next_ops': 0.6, 'reads_after_writes': 1.5}) x (3 members m7i.large with 44 GB gp3 0.1227 + client 0.1032) + the load across zones 12.0 GB x 3 crossings x 0.02 = 0.72
+  (not run) mongod at 1 TB, 1 process             302.48 $   189 h of load (1000 GB at 5.3 GB/h) = 38 GitHub jobs of 5.5 h, but the harness keeps no machine or disk between jobs; 3 members with 2020 GB gp3 0.3609/h + client; 1000 GB x 3 crossings x 0.02 = 60.00 $ across zones
+  (not run) mongod at 1 TB, Atlas's best          101.11 $   32 h of load (1000 GB at 31.7 GB/h) = 6 GitHub jobs of 5.5 h, but the harness keeps no machine or disk between jobs; 3 members with 2020 GB gp3 0.3609/h + client; 1000 GB x 3 crossings x 0.02 = 60.00 $ across zones
+
+  THE ROUND WITH 1 TB, ESTIMATED: 13.79 to 14.80 $ (the Atlas-size jobs L, M1, M2, M3 8.17 + the 1 TB addition), plus the pilot (above); the 100 GB step is not in it (one ballast database per pantry: the round goes from the Atlas size to 1 TB)
+
+######## THE ROUND, job by job, from decide.py's own hours (review of the AWS harness): THE NUMBERS TO USE ########
+  01-L-load-atlas                                   2.02 $   4.10 h in 1 job(s); parts boot 0.3 h, atlas_load 2.8 h, load_settle_cap 1 h; WAL PUTs of the Atlas load 0.39
+  pilot-P-small                                     2.50 $   3.52 h in 1 job(s); parts boot 0.3 h, extras 1.8 h, first_next_ops 0.05 h, write_peak 0.27 h, agent_bench 1.1 h; S3 programs, log-ack and takeovers cross-zone 0.22; reads' GETs and cross-zone 0.15; write-peak 5 min at 25,800 documents/s: 2.6 GB x 3 crossings + its PUTs; Aurora 1.0 h billed + I/O = 0.35
+  02-M1-m30                                         1.68 $   3.80 h in 1 job(s); parts boot 0.3 h, measured_settle_cap 0.5 h, m30 3 h; m30 cross-zone and reads 0.15
+  03-M2-extras-write-peak                           3.89 $   4.80 h in 1 job(s); parts boot 0.3 h, extras 1.8 h, first_next_ops 0.6 h, reads_after_writes 1.5 h, write_peak 0.6 h; S3 programs, log-ack and takeovers cross-zone 0.22; reads' GETs and cross-zone 0.15; reads-after-writes' GETs 0.50 (upper bound: amplified reads cut at the limit); write-peak 25 min at 25,800 documents/s: 13.2 GB x 3 crossings + its PUTs
+  11-MG-mongod-line-atlas                           2.97 $   4.77 h in 1 job(s); 3 members m7i.large (44 GB gp3) + client = 0.4713 $/h; load across zones 12.0 GB x 3 x 0.02
+  04-M3-agent-bench                                 2.40 $   3.50 h in 1 job(s); parts boot 0.3 h, agent_bench 3.2 h; Aurora 1.4 h billed + I/O = 0.81
+  05-G-generate-100gb                               0.41 $   0.90 h in 1 job(s); 0.60 h of generation (decide.py, the slower end) + 0.3 h boot x 1 job(s) on c7i.2xlarge 0.3952 $/h + PUTs 0.05
+  06-BW-read-rounds-ops-raw-100gb                   1.97 $   4.20 h in 1 job(s); parts boot 0.3 h, extras 1.8 h, first_next_ops 0.6 h, reads_after_writes 1.5 h; reads' GETs and cross-zone 0.15; reads-after-writes' GETs 0.50 (upper bound: amplified reads cut at the limit)
+  08-G1-generate-1tb                                3.16 $   6.62 h in 2 job(s); 6.02 h of generation (decide.py, the slower end) + 0.3 h boot x 2 job(s) on c7i.2xlarge 0.3952 $/h + PUTs 0.55
+  09-B1-read-rounds-1tb                             0.81 $   2.10 h in 1 job(s); parts boot 0.3 h, extras 1.8 h; reads' GETs and cross-zone 0.15
+  10-W1-first-next-ops-reads-after-writes-1tb       1.91 $   4.00 h in 1 job(s); parts boot 0.3 h, extras 0.2 h, first_next_ops 2 h, reads_after_writes 1.5 h; reads' GETs and cross-zone 0.15; reads-after-writes' GETs 0.50 (upper bound: amplified reads cut at the limit)
+  S3 storage, atlas                                 0.07 $   43 GB x 0.023 x 2.26 days / 30 (kept from its load to the drop)
+  S3 storage, app_data_h01                          0.07 $   90 GB x 0.023 x 0.99 days / 30 (kept from its load to the drop)
+  S3 storage, app_data_b01                          0.48 $   897 GB x 0.023 x 0.70 days / 30 (kept from its load to the drop)
+  TOTAL ESTIMATED: 24.34 $ in 12 jobs, 42.3 h of jobs one after the other (54 h with 1 h to read each job's results); the largest job 3.89 $ (default cap 5 $). Plus the Claude API pilot ($0.24 to $2.40).

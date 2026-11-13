@@ -1,0 +1,4 @@
+head 42314f70e42cef7e2213ad0434ffc1d47eb87299; python -m pytest -q step9/local/tests/ step9/local/test_aurora.py bench/agent-checkpoints/tests/ (origin/aws-ready fetched), three runs in a row, 2026-11-13T17:19:57Z
+run 1: 202 passed, 8 warnings in 80.93s (0:01:20)
+run 2: 202 passed, 8 warnings in 78.25s (0:01:18)
+run 3: 202 passed, 8 warnings in 78.31s (0:01:18)
