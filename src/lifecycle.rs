@@ -1412,6 +1412,8 @@ struct FirstBuild {
     handle: Option<tokio::task::JoinHandle<Result<Option<(crate::fx::manifest::Version, crate::fx::build::BuildReport)>>>>,
     started: Instant,
     epoch: Option<u64>,
+    /// When the build started, before its snapshot (`fx::manifest::note_caught_up`).
+    scan_ms: u64,
 }
 
 impl Drop for FirstBuild {
@@ -1429,6 +1431,12 @@ pub static FIRST_INSTALLS: std::sync::atomic::AtomicU64 = std::sync::atomic::Ato
 pub static FIRST_INSTALL_REFUSED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 pub static FIRST_BUILD_MS_MAX: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 pub static CLAIMS_DEFERRED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Where a first build running off the lock reports that it ended (the database's id), when the server listens
+/// (`mongo-server` `Dbs::spawn_first_build_installer`): the version is installed and the compactor started at once, under
+/// the database's lock, as a write would. Unset (tests of this crate, tools): the next write or the close installs it.
+pub static FIRST_BUILD_DONE: std::sync::OnceLock<tokio::sync::mpsc::UnboundedSender<String>> = std::sync::OnceLock::new();
+/// First builds installed by that listener (serverStatus `fenvix.firstBuild.installedWithoutWrite`).
+pub static FIRST_INSTALLS_WITHOUT_WRITE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// The first build runs off the lock (default). Off (`FENVIX_FIRST_BUILD_OFF_LOCK=0`): inside the write, as before.
 pub static FIRST_BUILD_OFF_LOCK: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 
@@ -2240,8 +2248,17 @@ impl Tenant {
         let env = self.env.expect("marker written");
         let store = Arc::clone(&self.lc.store);
         let (id, opts) = (self.id.clone(), opts.clone());
-        let handle = tokio::spawn(async move { crate::fx::build::build_and_publish(&db, &store, &id, None, env, epoch, &opts, None).await });
-        self.fx_first = Some(FirstBuild { handle: Some(handle), started: Instant::now(), epoch });
+        let scan_ms = crate::fx::manifest::now_ms();
+        let handle = tokio::spawn(async move {
+            let r = crate::fx::build::build_and_publish(&db, &store, &id, None, env, epoch, &opts, None).await;
+            // the server installs the version and starts the compactor now, not at the database's next write
+            // (`FIRST_BUILD_DONE`): a database written in a burst and then only read had no compactor until its next write
+            if let Some(tx) = FIRST_BUILD_DONE.get() {
+                let _ = tx.send(id.clone());
+            }
+            r
+        });
+        self.fx_first = Some(FirstBuild { handle: Some(handle), started: Instant::now(), epoch, scan_ms });
         FIRST_BUILDS.fetch_add(1, Relaxed);
         Ok(true)
     }
@@ -2267,7 +2284,7 @@ impl Tenant {
             return Ok(None);
         }
         let h = fb.handle.take().expect("first build handle");
-        let (started, epoch) = (fb.started, fb.epoch);
+        let (started, epoch, scan_ms) = (fb.started, fb.epoch, fb.scan_ms);
         self.fx_first = None;
         let r = match h.await {
             Ok(r) => r,
@@ -2308,6 +2325,13 @@ impl Tenant {
         crate::fx::PUBLISHES.fetch_add(1, Relaxed);
         FIRST_INSTALLS.fetch_add(1, Relaxed);
         eprintln!("FIRST_PUBLISH u={:.0} db={} version={n} x_d={x_d} rows={} build_ms={ms} off_lock=1", crate::waits::unix_ms(), self.id, rep.rows_scanned);
+        // the first build scanned SlateDB's whole snapshot, sorted runs included: it is a builder publish that caught up
+        // (integration-4's catch-up before a compactor starts, `fx::manifest::needs_catch_up`). Marked here, a compactor
+        // starts without waiting for a later publish that adds rows (review of d660ea9: a database written in a burst and
+        // then only read had none). A pass marked ungated after the scan started keeps the mark (`note_caught_up`).
+        if let Err(e) = crate::fx::manifest::note_caught_up(&self.lc.store, &self.id, scan_ms).await {
+            eprintln!("sealed runs: database {}: first build installed, but the caught-up mark was not written ({e:#}); the compactor's start catches up", self.id);
+        }
         Ok(Some(rep))
     }
 

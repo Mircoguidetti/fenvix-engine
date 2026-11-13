@@ -870,6 +870,7 @@ impl Server {
                 "firstInstalls": tenant_bench::lifecycle::FIRST_INSTALLS.load(Relaxed) as i64,
                 "firstInstallRefused": tenant_bench::lifecycle::FIRST_INSTALL_REFUSED.load(Relaxed) as i64,
                 "firstBuildMsMax": tenant_bench::lifecycle::FIRST_BUILD_MS_MAX.load(Relaxed) as i64,
+                "firstInstallsWithoutWrite": tenant_bench::lifecycle::FIRST_INSTALLS_WITHOUT_WRITE.load(Relaxed) as i64,
                 "claimsDeferred": tenant_bench::lifecycle::CLAIMS_DEFERRED.load(Relaxed) as i64,
                 "l0JobsBesideMerge": tenant_bench::fx::drop::L0_JOBS_BESIDE_MERGE.load(Relaxed) as i64,
                 "mergeHeld": tenant_bench::fx::drop::TEST_MERGE_HELD.load(Relaxed) as i64,
