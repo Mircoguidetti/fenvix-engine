@@ -39,6 +39,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 pub mod ext;
+pub mod ext3;
 pub use ext::Ext;
 
 pub const SLOTS: usize = 3;
@@ -276,6 +277,30 @@ pub enum Ev {
     SlateGc { p: usize },
     /// S3 in trouble from now on (`on`: many 503s and timeouts after the write landed) or back to the seed's profile.
     Storm { on: bool },
+    // ---- sim-test-3 (`ext3.rs`): the replicated log and the whole-database lifecycle ----
+    /// One tick of slot `p`'s uploader (`LocalLog::spawn_uploader`): its writer's WAL to the store, then the log told
+    /// "stored up to" the position it had confirmed before the flush.
+    Upload { p: usize },
+    /// Slot `p`'s process is killed (-9) and starts again: it reads back every record the log still holds and replays
+    /// them (`locallog::recover_remote`). A replay that fails stops where the server keeps the records
+    /// (`hold_kept_records`); `Kept` goes on from there.
+    Restart { p: usize },
+    /// The restart of slot `p` goes on past `hold_kept_records`: its records are kept (`replay_all`'s failure branch).
+    Kept { p: usize },
+    /// One round of slot `p`'s background retry of kept records (`locallog::spawn_retry`).
+    LogRetry { p: usize },
+    /// Copy `r` of the log goes down or comes back.
+    LogCopy { r: usize, up: bool },
+    /// The log's leader steps down; another copy is elected.
+    LogLeader,
+    /// dropDatabase by slot `p` (`Entry::drop_database`): the lease, the log's drop record, the close, the name moved to a
+    /// new incarnation, every object deleted.
+    DropDb { p: usize },
+    /// The admin erase of the whole database by slot `p` (`ctl/erase.rs` `erase` and `run`).
+    EraseDb { p: usize },
+    /// What listDatabases, the admin API's existence check and the erase handler's first step do in slot `p`'s process,
+    /// before any lock or lease (`db_exists`, the incarnation lookup).
+    AdminCheck { p: usize },
 }
 
 impl Ev {
@@ -284,7 +309,8 @@ impl Ev {
         match self {
             Open { p, .. } | Upgrade { p } | Write { p, .. } | Erase { p, .. } | Flush { p } | Publish { p } | FirstStart { p } | FirstPoll { p } | CompStart { p } | CompDrain { p } | CompStop { p } | DropThrough { p } | Gc { p } | ErasePass { p } | Retire { p } | GcClosed { p } | ClosePass { p } | Close { p } | Abandon { p } | Kill { p } | Hold { p, .. } => Some(*p),
             Point { p, .. } | PointPrune { p, .. } | Restore { p, .. } | Fork { p, .. } | Generate { p, .. } | SlateGc { p } => Some(*p),
-            Release { .. } | Sleep { .. } | Mark { .. } | Storm { .. } => None,
+            Upload { p } | Restart { p } | Kept { p } | LogRetry { p } | DropDb { p } | EraseDb { p } | AdminCheck { p } => Some(*p),
+            Release { .. } | Sleep { .. } | Mark { .. } | Storm { .. } | LogCopy { .. } | LogLeader => None,
         }
     }
 }
@@ -622,6 +648,8 @@ struct World {
     knobs: u8,
     /// sim-test-2: restore points, marks, forks, and the violations found during the run (`ext.rs`).
     x: ext::XState,
+    /// sim-test-3: the replicated log, the lease as the script gives it, the whole-database lifecycle (`ext3.rs`).
+    x3: ext3::X3,
 }
 
 const STEP_WAIT: Duration = Duration::from_millis(1500);
@@ -669,25 +697,21 @@ impl World {
                 None
             }
             Ev::Kill { p } => {
-                let s = &self.slots[p];
-                self.net.kill(s.life);
-                self.note(format!("kill -9 slot {p} (life {})", s.life));
-                // its tasks go on in memory but reach nothing; they are stopped in the background
-                let comp = s.comp.lock().unwrap().take();
-                let t = Arc::clone(&s.t);
-                tokio::spawn(async move {
-                    if let Some(c) = comp {
-                        c.stop().await;
-                    }
-                    if let Ok(mut g) = tokio::time::timeout(Duration::from_secs(30), t.lock()).await {
-                        if let Some(t) = g.take() {
-                            let _ = tokio::time::timeout(Duration::from_secs(15), t.abandon()).await;
-                        }
-                    }
-                });
-                self.next_life += 1;
-                self.slots[p] = new_slot(&self.net, self.next_life);
+                self.kill_slot(p);
                 None
+            }
+            Ev::LogCopy { r, up } => {
+                self.x3_copy(r, up);
+                None
+            }
+            Ev::LogLeader => {
+                self.x3_leader();
+                None
+            }
+            Ev::Restart { p } => {
+                // sim-test-3: kill -9, then the new process reads the log back (in its own task, as any operation)
+                self.kill_slot(p);
+                Some(self.op(eid, e.clone()))
             }
             other => Some(self.op(eid, other)),
         };
@@ -710,6 +734,29 @@ impl World {
         }
     }
 
+    /// Kill -9 of slot `p`: the process sends nothing more; a new life of the slot starts with nothing open.
+    fn kill_slot(&mut self, p: usize) {
+        let s = &self.slots[p];
+        self.net.kill(s.life);
+        self.note(format!("kill -9 slot {p} (life {})", s.life));
+        self.x3.on_kill(s.life);
+        // its tasks go on in memory but reach nothing; they are stopped in the background
+        let comp = s.comp.lock().unwrap().take();
+        let t = Arc::clone(&s.t);
+        tokio::spawn(async move {
+            if let Some(c) = comp {
+                c.stop().await;
+            }
+            if let Ok(mut g) = tokio::time::timeout(Duration::from_secs(30), t.lock()).await {
+                if let Some(t) = g.take() {
+                    let _ = tokio::time::timeout(Duration::from_secs(15), t.abandon()).await;
+                }
+            }
+        });
+        self.next_life += 1;
+        self.slots[p] = new_slot(&self.net, self.next_life);
+    }
+
     /// The future of one operation on a slot. It takes the slot's tenant lock with `try_lock`: a process busy with a
     /// stuck operation does not start another (the event is skipped).
     fn op(&mut self, eid: u32, e: Ev) -> futures::future::BoxFuture<'static, String> {
@@ -724,6 +771,9 @@ impl World {
         }
         let seed = self.net.seed;
         let kp = self.knobs;
+        if ext3::is_ext3(&e) || self.x3.routes(&e) {
+            return self.ext3_op(eid, e, created);
+        }
         if ext::is_ext(&e) {
             return self.ext_op(eid, e);
         }
@@ -1009,7 +1059,7 @@ impl World {
                     let Some(t) = g.take() else { return "not open (skipped)".into() };
                     format!("abandoned (close done {})", t.abandon().await)
                 }
-                Ev::Kill { .. } | Ev::Hold { .. } | Ev::Release { .. } | Ev::Sleep { .. } => unreachable!(),
+                Ev::Kill { .. } | Ev::Hold { .. } | Ev::Release { .. } | Ev::Sleep { .. } | Ev::LogCopy { .. } | Ev::LogLeader => unreachable!(),
                 _ => unreachable!("sim-test-2 events run in ext.rs"),
             }
         })
@@ -1027,6 +1077,8 @@ impl World {
                 self.note(format!("settle: event {eid} did not end"));
             }
         }
+        // sim-test-3: the log's copies back, a restart parked at `hold_kept_records` goes on, kept records retried
+        self.x3_settle().await;
         for p in 0..SLOTS {
             let s = &self.slots[p];
             let c = s.comp.lock().unwrap().take();
@@ -1308,19 +1360,27 @@ pub async fn run_script(s: &Script) -> Run {
         log: Default::default(),
         knobs: s.knobs,
         x: ext::XState::new(s.profile),
+        x3: ext3::X3::new(&s.ext, Arc::clone(&net)),
     };
     w.note(format!("seed {} knobs {} profile {:?}", s.seed, s.knobs, s.profile));
     for (eid, e) in &s.events {
         w.step(*eid, e).await;
     }
     w.settle().await;
-    let mut violations = oracle(&w).await;
+    // sim-test-3: with the log, a fresh process takes the database over (its takeover reads the log back) before the
+    // oracle; a database dropped or erased last is checked as absent
+    let mut violations = ext3::before_oracle(&w).await;
+    if w.x3.is_absent() {
+        violations.extend(ext3::oracle_absent(&w).await);
+    } else {
+        violations.extend(oracle(&w).await);
+    }
     violations.extend(ext::oracle_ext(&w).await);
     let (issued, acked) = {
         let model = w.model.lock().unwrap();
         (model.issued, model.writes.values().flatten().filter(|x| x.status.load(SeqCst) == ACKED).count())
     };
-    let stats = format!("events {} writes issued {issued} key-writes acked {acked} requests {} faults {}{}", s.events.len(), net.requests.load(SeqCst), net.faults.load(SeqCst), ext::coverage(&w));
+    let stats = format!("events {} writes issued {issued} key-writes acked {acked} requests {} faults {}{}{}", s.events.len(), net.requests.load(SeqCst), net.faults.load(SeqCst), ext::coverage(&w), ext3::coverage(&w));
     let trace = net.trace();
     // the slots' own processes' state for this database (views, holds) is process-wide: forget it for the next seed
     view::clear_cache();
