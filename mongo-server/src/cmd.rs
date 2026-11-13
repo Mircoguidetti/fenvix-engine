@@ -16,6 +16,25 @@ pub(crate) type R<T> = Result<T, MongoError>;
 
 const MAX_WIRE_VERSION: i32 = 21;
 const DEFAULT_FIRST_BATCH: usize = 101;
+/// The most bytes of documents one batch of a cursor carries (mongod's `kMaxBytesToReturnToClientAtOnce`, 16 MiB): a
+/// batch takes documents while the next one still fits, and always at least one.
+pub(crate) const MAX_BATCH_BYTES: usize = 16 * 1024 * 1024;
+
+/// The next batch of a cursor: at most `n` documents and at most [`MAX_BATCH_BYTES`] of them (the first always goes in).
+pub(crate) fn take_batch(docs: &mut VecDeque<Document>, n: usize) -> Vec<Bson> {
+    let mut out = Vec::with_capacity(n.min(docs.len()).min(1024));
+    let mut bytes = 0usize;
+    while out.len() < n {
+        let Some(d) = docs.front() else { break };
+        let size = crate::query::bson_size(d);
+        if !out.is_empty() && bytes + size > MAX_BATCH_BYTES {
+            break;
+        }
+        bytes += size;
+        out.push(Bson::Document(docs.pop_front().unwrap()));
+    }
+    out
+}
 
 pub struct Server {
     pub dbs: Arc<Dbs>,
@@ -1032,8 +1051,7 @@ impl Server {
     // ---- cursors ---------------------------------------------------------------------------
 
     pub(crate) fn cursor_reply(&self, ns: String, mut docs: VecDeque<Document>, batch: Option<usize>, single_batch: bool) -> Document {
-        let n = batch.unwrap_or(DEFAULT_FIRST_BATCH).min(docs.len());
-        let first: Vec<Bson> = docs.drain(..n).map(Bson::Document).collect();
+        let first = take_batch(&mut docs, batch.unwrap_or(DEFAULT_FIRST_BATCH));
         let id = if docs.is_empty() || single_batch { 0 } else { self.store_cursor(ns.clone(), docs) };
         // (the list commands put the cursor id and namespace first)
         doc! { "cursor": { "id": id, "ns": ns, "firstBatch": first }, "ok": 1.0 }
@@ -1043,8 +1061,8 @@ impl Server {
     /// next `getMore` finds out that it is exhausted), unless a `limit` was reached.
     pub(crate) fn cursor_reply_open(&self, ns: String, mut docs: VecDeque<Document>, batch: Option<usize>, single_batch: bool, limited: bool) -> Document {
         let want = batch.unwrap_or(DEFAULT_FIRST_BATCH);
-        let n = want.min(docs.len());
-        let first: Vec<Bson> = docs.drain(..n).map(Bson::Document).collect();
+        let first = take_batch(&mut docs, want);
+        let n = first.len();
         let open = !single_batch && (!docs.is_empty() || (!limited && n > 0 && n == want));
         let id = if open { self.store_cursor(ns.clone(), docs) } else { 0 };
         doc! { "cursor": { "firstBatch": first, "id": id, "ns": ns }, "ok": 1.0 }
@@ -1104,8 +1122,8 @@ impl Server {
         let mut cursors = self.cursors.lock().unwrap();
         let c = cursors.get_mut(&id).ok_or_else(|| MongoError::cursor_not_found(id))?;
         c.used = std::time::Instant::now();
-        let n = batch.unwrap_or(usize::MAX).min(c.docs.len());
-        let next: Vec<Bson> = c.docs.drain(..n).map(Bson::Document).collect();
+        let next = take_batch(&mut c.docs, batch.unwrap_or(usize::MAX));
+        let n = next.len();
         let ns = c.ns.clone();
         let done = c.docs.is_empty() && !(batch.is_some() && n > 0 && n == batch.unwrap_or(0));
         if done {
@@ -1190,3 +1208,36 @@ fn build_info() -> Document {
 }
 
 
+
+#[cfg(test)]
+mod batch_tests {
+    use super::*;
+
+    fn doc_of(bytes: usize, i: i32) -> Document {
+        doc! { "i": i, "b": Bson::Binary(bson::Binary { subtype: bson::spec::BinarySubtype::Generic, bytes: vec![7u8; bytes] }) }
+    }
+
+    /// P-command-cpu: a batch holds at most 16 MiB of documents (at least one), and the documents keep their order.
+    #[test]
+    fn batches_are_cut_at_16_mib_and_keep_every_document() {
+        let mut docs: VecDeque<Document> = (0..40).map(|i| doc_of(1_500_000, i)).collect();
+        let mut seen = Vec::new();
+        let mut sizes = Vec::new();
+        while !docs.is_empty() {
+            let b = take_batch(&mut docs, usize::MAX);
+            let bytes: usize = b.iter().map(|x| crate::query::bson_size(x.as_document().unwrap())).sum();
+            assert!(bytes <= MAX_BATCH_BYTES, "batch of {bytes} bytes");
+            sizes.push(b.len());
+            seen.extend(b.into_iter().map(|x| x.as_document().unwrap().get_i32("i").unwrap()));
+        }
+        assert_eq!(seen, (0..40).collect::<Vec<_>>());
+        assert_eq!(sizes[0], 11);
+        // a count limit still applies below the byte cap
+        let mut small: VecDeque<Document> = (0..300).map(|i| doc_of(10, i)).collect();
+        assert_eq!(take_batch(&mut small, 101).len(), 101);
+        // one document above the cap still goes alone (mongod returns it; the 16 MiB object limit is checked at write)
+        let mut huge: VecDeque<Document> = (0..2).map(|i| doc_of(MAX_BATCH_BYTES, i)).collect();
+        assert_eq!(take_batch(&mut huge, usize::MAX).len(), 1);
+        assert_eq!(take_batch(&mut huge, usize::MAX).len(), 1);
+    }
+}
