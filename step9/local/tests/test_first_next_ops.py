@@ -36,6 +36,10 @@ class Cursor:
         self.hinted = h
         return self
 
+    def comment(self, c):
+        self.commented = c
+        return self
+
     def __iter__(self):
         self.srv.request(self.coll, self.q, self.n)
         return iter([{"_id": i, "ts": 0} for i in range(self.srv.docs(self.q, self.n))])
@@ -160,9 +164,9 @@ def test_each_operation_is_first_for_its_group_and_next_for_the_others_save_last
     srv = Server(box=True)
     g, rows, s = run(srv)
     for op in ops.OPS:
-        for cli in g[op]:
+        for i, cli in enumerate(g[op]):
             mine = [r for r in rows if r["cliente"] == cli]
-            assert [r["op"] for r in mine] == ops.order_for(op)
+            assert [r["op"] for r in mine] == ops.order_for(op, rot=i)
             assert mine[0]["role"] == "first" and all(r["role"] == "next" for r in mine[1:])
             if op != "save":
                 assert mine[-1]["op"] == "save"                        # the reads see the generated history only
@@ -323,7 +327,8 @@ def test_a_timed_out_read_is_a_result_and_stops_its_stage():
     raw.stage(slow, srv, "d", raw.the_reads(["cli-000001", "cli-000002"], 5, 5), "after-writes", rows)
     assert len(rows) == 1 and rows[0]["timed_out"] and rows[0]["error"] is None
     s = raw.summarize(rows)
-    assert s["after-writes"] == {"reads": 1, "answered": 0, "timed_out": 1, "errors": 0}
+    cut = s["after-writes"].pop("after_cut")
+    assert s["after-writes"] == {"reads": 1, "answered": 0, "timed_out": 1, "errors": 0} and cut["idle"]
 
 
 def test_settle_waits_for_a_quiet_compactor_and_says_when_it_never_is():

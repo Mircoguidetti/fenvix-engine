@@ -173,6 +173,9 @@ jobs:
           p=$(python3 step9/machine/cfg.py "$RESOLVED" pantry_name)
           pw=$(aws s3 cp "s3://$p/step9-secret/pw" -) && [ -n "$pw" ] || { echo "no password in the kept pantry $p"; exit 1; }
           echo "::add-mask::$pw"; echo "CM_PW=$pw" >> "$GITHUB_ENV"
+      - name: The pantry's writing mark (a job that reads the pantry as loaded is refused once a writing program ran)
+        if: env.MODE == 'run'
+        run: cd step9/ci && python3 decide.py --pantry-check "$RESOLVED" | tee -a "$GITHUB_STEP_SUMMARY"; exit "${PIPESTATUS[0]}"
       - name: Permissions and vCPU quota ($0)
         if: env.MODE == 'permissions' || env.MODE == 'run'
         run: bash step9/ci/permissions.sh

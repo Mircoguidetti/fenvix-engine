@@ -71,7 +71,7 @@ def test_the_pilot_runs_first_next_ops_read_only_and_fits_the_ceiling():
 
 def test_extras_runs_the_writing_programs_after_the_scripts_read_rounds():
     sh = open(os.path.join(S9, "machine", "extras.sh")).read()
-    pos = {k: sh.index(f"if has {k}; then") for k in ("first-next", "ballast-rounds", "first-next-ops", "reads-after-writes", "takeovers")}
+    pos = {k: re.search(rf"if has {k}( && reads_as_loaded_ok {k})?; then", sh).start() for k in ("first-next", "ballast-rounds", "first-next-ops", "reads-after-writes", "takeovers")}
     assert pos["first-next"] < pos["ballast-rounds"] < pos["first-next-ops"] < pos["reads-after-writes"] < pos["takeovers"]
     # every program named in extras.sh's calls exists, and every argument field it reads is a decide.py default
     import decide as d

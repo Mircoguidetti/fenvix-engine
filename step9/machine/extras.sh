@@ -70,12 +70,31 @@ fn_states() {
   $PY s3io.py get-dir "$PANTRY" step9-ballast-states/ fn-states/ballast > /dev/null 2>&1
   return 0
 }
+# review of the AWS plan (2026-11-13), point 3: a program that reads the pantry as loaded is skipped once a writing
+# program of an EARLIER job marked it (run.py writes this job's own mark just before this machine starts: not counted)
+RUN_ID_SELF=$(cfg run_id)
+written_before() {
+  $PY - "$PANTRY" "$RUN_ID_SELF" <<'PY'
+import sys
+sys.path.insert(0, ".")
+import s3io
+pantry, me = sys.argv[1], sys.argv[2]
+s3 = s3io.client()
+keys = [o["Key"] for p in s3.get_paginator("list_objects_v2").paginate(Bucket=pantry, Prefix="step9-pantry-written/")
+        for o in p.get("Contents", [])]
+sys.exit(0 if [k for k in keys if k != f"step9-pantry-written/{me}.json"] else 1)
+PY
+}
+reads_as_loaded_ok() { # reads_as_loaded_ok NAME: 0 when NAME may run, else its outcome is PANTRY_WRITTEN
+  if written_before; then step "$1: the pantry was written by an earlier job: skipped"; outcomes+=("$1:PANTRY_WRITTEN"); return 1; fi
+  return 0
+}
 step "programs: $PROGRAMS; cook $COOK_IP:$COOK_PORT; spare ${SPARE_IP:-none}; log ${LOGS:-none}"
 FENVIX_P1_URI=$URI $PY wait_db.py 15 >> out/steps.log 2>&1 || finish COOK_UNREACHABLE
 has s3-first-byte && run_prog s3-first-byte $PY s3_first_byte.py "$BUCKET" out/s3-first-byte $(cfg s3_first_byte_args)
 has sealed-run && run_prog sealed-run $PY sealed_run_read.py "$BUCKET" out/sealed-run $(cfg sealed_run_args)
 has log-ack && with_status log-ack out/log-ack/log-ack-summary.json $PY log_ack.py out/log-ack --uri "$URI" --logs "$(cfg bench_logs)" --pq ./pq $(cfg log_ack_args)
-if has first-next; then
+if has first-next && reads_as_loaded_ok first-next; then
   # total review R1 point 2: the first request of a cold customer, then three different requests of the same customer,
   # with the cook's GETs and bytes per request; before the ballast rounds (they warm what they read). State files: the
   # Atlas ones from the client package, the ballast ones from the pantry (the largest databases are taken)
@@ -83,7 +102,7 @@ if has first-next; then
   # shellcheck disable=SC2046
   with_status first-next out/first-next/first-next-summary.json $PY first_next.py out/first-next --uri "$URI" --states fn-states $(cfg first_next_args)
 fi
-if has ballast-rounds; then
+if has ballast-rounds && reads_as_loaded_ok ballast-rounds; then
   # generator-1tb (2026-11-12): THE ballast database of the command (ballast_db, ballast_gib GiB of BSON: one database
   # of the chosen size, not the first two of several of 24.3 GiB), its state file from the pantry, the read phases of
   # m30-corto through programma.py

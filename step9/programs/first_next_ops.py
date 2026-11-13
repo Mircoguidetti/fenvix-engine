@@ -104,24 +104,66 @@ def run_op(db, op, cli, seed, max_ms, k=0):
     raise ValueError(op)
 
 
-def order_for(first_op, save=True):
-    """The requests of one customer: its FIRST, then the others as NEXT; in a read group the save is last.
-    save=False (--no-save): the four reads only, nothing is written."""
-    rest = [o for o in READS if o != first_op] + (["save"] if save and first_op != "save" else [])
+def order_for(first_op, save=True, rot=0):
+    """The requests of one customer: its FIRST, then the other reads as NEXT, then (in a read group) the save, last.
+    save=False (--no-save): the four reads only, nothing is written.
+    rot (review of the AWS plan, point 4): the customer's index in its group picks a row of a balanced Latin square
+    (Williams) over the NEXT reads: within every n rows (3 reads: 6 rows, 4 reads: 4) each read takes each position
+    equally and follows each other read equally (a plain rotation would keep time travel right after a whole-history read
+    in 2 orders of 3: its most favourable place); the summary also reports NEXT by position."""
+    reads = [o for o in READS if o != first_op]
+    rows = williams(len(reads))
+    rest = [reads[i] for i in rows[rot % len(rows)]] + (["save"] if save and first_op != "save" else [])
     return [first_op] + rest
+
+
+def williams(n):
+    """A balanced Latin square of order n (Williams, 1949): n rows when n is even, 2n when odd (with the reversed rows)."""
+    if n <= 1:
+        return [list(range(n))]
+    first, lo, hi = [0], 1, n - 1
+    while len(first) < n:
+        first.append(lo)
+        lo += 1
+        if len(first) < n:
+            first.append(hi)
+            hi -= 1
+    rows = [[(x + i) % n for x in first] for i in range(n)]
+    return rows + [r[::-1] for r in rows] if n % 2 else rows
 
 
 # ---------- the server's counters ----------
 def counters_fenvix(client):
+    """The process-wide GETs and bytes (tenantStats), the rows read from sealed runs, and `background`: a snapshot of
+    every counter of the server's own background work (review of the AWS plan, point 2: the GET counters are the whole
+    process's, so they also count our compactor's and the GC's reads). A request during which `background` changed is
+    left out of FIRST and NEXT (summarize) and counted; no foreground-only counter is added to the engine."""
     t = client.admin.command("tenantStats")
     r, m = t.get("requests") or {}, t.get("maintenance") or {}
     out = {"gets": int(r.get("get", 0)), "bytes": int(r.get("getBytes", 0)),
            "maintenance_gets": int(m.get("compactGets", 0)) + int(m.get("gcGets", 0))}
+    bg = {"maintenance": out["maintenance_gets"]}
     try:
-        out["rows_from_runs"] = int(client.admin.command("serverStatus")["fenvix"]["sealedRuns"]["rowsFromRuns"])
-    except Exception:  # noqa: BLE001 - an engine without the counter: the row count is left out, nothing else changes
+        f = client.admin.command("serverStatus")["fenvix"]
+        out["rows_from_runs"] = int(f["sealedRuns"]["rowsFromRuns"])
+        for k in ("compactor", "compaction", "backgroundReads"):
+            if k in f:
+                bg[k] = f[k]
+    except Exception:  # noqa: BLE001 - an engine without the counters: the row count is left out, nothing else changes
         pass
+    out["background"] = bg
     return out
+
+
+def background_moved(c0, c1):
+    """Did the server's background work move between the two snapshots: a counter changed, or a pass or compactor job
+    was running at either end (`compaction.running` > 0)."""
+    a, b = c0.get("background"), c1.get("background")
+    if a is None or b is None:
+        return False
+    if a != b:
+        return True
+    return any(int(((x.get("compaction") or {}).get("running") or 0)) > 0 for x in (a, b))
 
 
 def counters_mongod(client):
@@ -163,7 +205,7 @@ def open_database(client, dbname, cli, max_ms):
 
 def measure_customer(client, dbname, cli, first_op, seed, max_ms, cnt, rows, k, save=True):
     db = client[dbname]
-    for pos, op in enumerate(order_for(first_op, save)):
+    for pos, op in enumerate(order_for(first_op, save, rot=k)):
         c0 = cnt(client) if cnt else {}
         t0 = time.perf_counter()
         err, n = None, None
@@ -178,6 +220,8 @@ def measure_customer(client, dbname, cli, first_op, seed, max_ms, cnt, rows, k, 
         for key in ("gets", "bytes", "maintenance_gets", "rows_from_runs"):
             if key in c0 and key in c1:
                 row[key] = c1[key] - c0[key]
+        if "background" in c0 and "background" in c1:
+            row["background_moved"] = background_moved(c0, c1)
         rows.append(row)
 
 
@@ -197,19 +241,28 @@ def line_of(sel):
 
 
 def summarize(rows, has_counters):
-    """Per operation: FIRST (cold customers only) and NEXT; whether every NEXT read made 0 GETs."""
+    """Per operation: FIRST (cold customers only) and NEXT, and NEXT by position; whether every NEXT read made 0 GETs.
+    A request during which the server's background work moved (`background_moved`) is left out of both lines, since
+    its GETs may be the compactor's: counted per operation and in all (`dropped_background`). Its customer's cold test
+    then cannot be read either, so a FIRST dropped this way drops that customer's NEXT requests too."""
     ok_rows = [r for r in rows if not r["error"]]
-    firsts = [r for r in ok_rows if r["role"] == "first"]
+    dropped = [r for r in ok_rows if r.get("background_moved")]
+    clean = [r for r in ok_rows if not r.get("background_moved")]
+    firsts = [r for r in clean if r["role"] == "first"]
     cold = [r for r in firsts if not has_counters or r.get("bytes", 0) > 0 or r.get("gets", 0) > 0 or r["op"] == "save"]
     cold_customers = {r["cliente"] for r in cold}
     out = {"customers": len({r["cliente"] for r in rows}), "cold_customers": len(cold_customers),
-           "not_cold_at_first": len(firsts) - len(cold), "errors": len(rows) - len(ok_rows), "ops": {}}
+           "not_cold_at_first": len(firsts) - len(cold), "errors": len(rows) - len(ok_rows),
+           "dropped_background": len(dropped), "dropped_background_first": sum(1 for r in dropped if r["role"] == "first"),
+           "ops": {}}
     for op in OPS:
         if not any(r["op"] == op for r in rows):
             continue   # --no-save: no save line at all
         f = [r for r in cold if r["op"] == op]
-        n = [r for r in ok_rows if r["role"] == "next" and r["op"] == op and r["cliente"] in cold_customers]
-        o = {"first": line_of(f), "next": line_of(n)}
+        n = [r for r in clean if r["role"] == "next" and r["op"] == op and r["cliente"] in cold_customers]
+        o = {"first": line_of(f), "next": line_of(n), "dropped_background": sum(1 for r in dropped if r["op"] == op)}
+        if op != "save":
+            o["next_by_position"] = {str(p): line_of([r for r in n if r["pos"] == p]) for p in sorted({r["pos"] for r in n})}
         if o["first"] and o["next"]:
             o["first_minus_next_p50_ms"] = round(o["first"]["p50_ms"] - o["next"]["p50_ms"], 3)
         if o["next"] and "gets_max" in o["next"]:
@@ -221,7 +274,9 @@ def summarize(rows, has_counters):
 def text(summary):
     b = summary
     lines = [f"== {b['db']} ({b['label']}; counters: {b['counters']}): {b['customers']} customers, {b['cold_customers']} cold at "
-             f"their first request, {b['not_cold_at_first']} not cold (left out of FIRST), {b['errors']} errors"]
+             f"their first request, {b['not_cold_at_first']} not cold (left out of FIRST), {b['errors']} errors, "
+             f"{b.get('dropped_background', 0)} requests left out because the server's background work moved during them "
+             f"({b.get('dropped_background_first', 0)} of them FIRST)"]
     if b.get("opening"):
         lines.append(f"opening the database (one read of a customer outside the groups, before the measure): "
                      f"{b['opening']['ms']:.0f} ms" + (f", ERROR {b['opening']['error']}" if b['opening'].get('error') else ""))
@@ -241,6 +296,10 @@ def text(summary):
                 extra += f"; rows from runs p50 {x['rows_from_runs_p50']}"
             lines.append(f"{role.upper():5s} {NAMES[op]}: n={x['n']} p50 {x['p50_ms']:.2f} ms p99 {x['p99_ms']:.2f} ms max "
                          f"{x['max_ms']:.0f} ms; documents p50 {x['docs_p50']}{extra}")
+        bypos = o.get("next_by_position") or {}
+        if bypos:
+            lines.append(f"      NEXT {NAMES[op]} by position: " + "; ".join(
+                f"{p}: n={x['n']} p50 {x['p50_ms']:.2f} p99 {x['p99_ms']:.2f}" for p, x in bypos.items() if x))
         if "next_gets_zero" in o and op != "save":
             lines.append(f"      NEXT {NAMES[op]} without S3: {'yes, 0 GETs' if o['next_gets_zero'] else 'NO, it still reads from outside'}")
     return "\n".join(lines)

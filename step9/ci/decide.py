@@ -101,8 +101,54 @@ EXTRA_PROGRAMS = ["s3-first-byte", "sealed-run", "log-ack", "first-next", "balla
 # default list; in a job they run after the founder's script's read rounds (extras.sh's order); across jobs, only after
 # every job that must read the pantry as loaded (M1 for the Atlas databases, the ballast rounds for the big one).
 WRITING_PROGRAMS = ["first-next-ops", "reads-after-writes"]
-# their own time on top of the extras (ESTIMATED upper bounds: first-next-ops 150 customers x 5 requests, twice when
-# reads-after-writes follows it; reads-after-writes 3 stages x --reads x --max-read-s at worst, the updates, the settle)
+# Review of the AWS plan (2026-11-13), point 3: the order across jobs is enforced, not only written. When a job runs a
+# writing program, run.py first writes a mark into the pantry (PANTRY_MARK_PREFIX<run>.json: the job, the programs,
+# the databases); from then on `decide.py --pantry-check` (the workflow's step after the pantry's password, and the
+# local round) refuses any job that runs a program reading the pantry as loaded, and extras.sh skips such a program
+# with the outcome PANTRY_WRITTEN.
+READS_AS_LOADED = ["m30", "first-next", "ballast-rounds"]
+PANTRY_MARK_PREFIX = "step9-pantry-written/"
+
+
+def pantry_mark_refusal(c, marks):
+    """The refusal (a string) of a job on a pantry that writing programs already wrote into, or None."""
+    if not marks or c.get("mode") != "run" or c.get("pantry_mode") != "existing":
+        return None
+    readers = [p for p in c.get("programs") or [] if p in READS_AS_LOADED and
+               (p != "m30" or "measure" in c["phases"]) and (p == "m30" or "extras" in c["phases"])]
+    if not readers:
+        return None
+    by = "; ".join(f"run {m.get('run')} wrote with {m.get('programs')} into {m.get('databases')} at {m.get('time')}" for m in marks)
+    return (f"the pantry {c['pantry_name']} is no longer as loaded ({by}): {readers} read it as loaded and would check "
+            f"answers against state files that no longer match. Run them on a pantry no writing program has touched.")
+
+
+def read_pantry_marks(pantry, s3=None):
+    """The marks in the pantry (boto3; AWS_ENDPOINT_URL points it at MinIO locally)."""
+    if s3 is None:
+        import infra
+        s3 = infra.s3_client()
+    out = []
+    for page in s3.get_paginator("list_objects_v2").paginate(Bucket=pantry, Prefix=PANTRY_MARK_PREFIX):
+        for o in page.get("Contents", []):
+            out.append(json.loads(s3.get_object(Bucket=pantry, Key=o["Key"])["Body"].read()))
+    return out
+
+
+def pantry_mark(c, run):
+    """The mark run.py writes before the extras when the job runs a writing program, or None."""
+    w = [p for p in c.get("programs") or [] if p in WRITING_PROGRAMS]
+    if w == ["first-next-ops"] and "--no-save" in (c.get("first_next_ops_args") or "").split():
+        w = []   # the four reads only (the pilot): nothing is written
+    if c.get("mode") != "run" or "extras" not in c.get("phases", []) or not w:
+        return None
+    import datetime as _dt
+    return {"run": str(run), "programs": w, "databases": [c.get("ballast_db") or "the largest Atlas-shaped database"],
+            "time": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")}
+
+
+# their own time on top of the extras (ESTIMATED upper bounds: first-next-ops ONE run of 30 customers per operation x 5
+# requests, scaled by --per-op and doubled when reads-after-writes follows it (job_hours); reads-after-writes 3 stages x --reads x --max-read-s at worst, the updates, the settle)
 PROGRAM_HOURS = {"first-next-ops": 0.3, "reads-after-writes": 1.5}
 # How long each part of a job takes, in hours (ESTIMATED; aws-fixes B2). Sources: the Atlas load 2.8 h (MEASURED rate on
 # Atlas M30, 2026-11-05; OUR load rate on real S3 is UNKNOWN until the load job runs: the job's own 4.3 h script limit
@@ -201,9 +247,13 @@ def job_hours(c):
             h["extras"] = JOB_HOURS["spare_boot"] + (JOB_HOURS["extras"] if older else 0.0)
             for p, hours in PROGRAM_HOURS.items():
                 if p in c["programs"]:
-                    if p == "first-next-ops":   # by its group size (30 customers per operation by default)
+                    if p == "first-next-ops":
+                        # by its group size (30 customers per operation by default), and twice when reads-after-writes
+                        # follows it (extras.sh runs it again, label after-writes; review of the AWS plan, 2026-11-13)
                         fa = (c.get("first_next_ops_args") or "").split()
                         hours *= float(fa[fa.index("--per-op") + 1]) / 30 if "--per-op" in fa else 1.0
+                        if "reads-after-writes" in c["programs"]:
+                            hours *= 2
                     h[p.replace("-", "_")] = hours
         if "write-peak" in c["programs"]:
             # its own --minutes plus the fixed part of JOB_HOURS["write_peak"] (0.6 h for the 25 minutes of the full
@@ -430,6 +480,18 @@ def resolve(raw, quota=None):
 
 
 def main():
+    if sys.argv[1] == "--pantry-check":
+        # decide.py --pantry-check RESOLVED_JSON: with S3 credentials (the workflow's step after the pantry's password)
+        c = json.load(open(sys.argv[2]))
+        if c.get("mode") == "run" and c.get("pantry_mode") == "existing":
+            marks = read_pantry_marks(c["pantry_name"])
+            r = pantry_mark_refusal(c, marks)
+            if r:
+                refuse(r)
+            print(f"pantry check: {c['pantry_name']}: {len(marks)} writing marks; this job may run")
+        else:
+            print("pantry check: not an existing pantry: nothing to check")
+        return
     raw = json.load(open(sys.argv[1]))
     quota = float(sys.argv[3]) if len(sys.argv) > 3 and sys.argv[3] else None
     c = resolve(raw, quota)

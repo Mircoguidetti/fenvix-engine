@@ -22,8 +22,11 @@ Per read: seconds, documents examined and returned, and on our server the bytes 
 rows read from sealed runs (serverStatus fenvix.s3 and fenvix.sealedRuns); on any other server the time and the
 explain only. The number that matters: rows read from runs per document examined, and seconds, stage 2 against stage 1.
 
-A read is cut at --max-read-s (the client's socket timeout): recorded as timed out, and its stage stops there (the
-server may still be working on it; more reads would only queue behind). A timed-out read is a result, not a failure
+A read is cut at --max-read-s: the client's socket timeout and the server's own maxTimeMS (a server that honours it
+stops the read itself; ExecutionTimeout counts as a cut). Recorded as timed out, and its stage stops there; then the
+program asks the server to stop it (killOp on what currentOp shows with the reads' comment) and waits until currentOp
+shows none of it (at most 2 x --max-read-s), so the next stage is not measured on a server still busy with it; the wait
+is recorded (review of the AWS plan, 2026-11-13, point 1). A timed-out read is a result, not a failure
 of the program. The program fails (exit 1) only when a read or a write errors otherwise, or stage 1 measured nothing.
 
 Usage: reads_after_writes.py OUT_DIR --uri URI (--states DIR | --db NAME --customers-n N) [--reads 6] [--updates 13000]
@@ -81,30 +84,104 @@ def the_reads(names, k, seed):
     return out
 
 
-def one_read(coll, cli, t, window_s=86400.0):
+TAG = "s9-reads-after-writes"   # the comment every read carries, so currentOp finds it after a cut
+
+
+def one_read(coll, cli, t, window_s=86400.0, max_ms=None, comment=TAG):
+    """One index read, as explain. max_ms (review of the AWS plan, point 1): the server's own limit (maxTimeMS), so a
+    server that honours it stops the read by itself when the client stops waiting."""
     q = {"stato": "spedito", "cliente": cli, "ts": {"$gte": t, "$lt": t + dt.timedelta(seconds=window_s)}}
-    e = coll.find(q).hint("stato_ts").explain()
+    cur = coll.find(q).hint("stato_ts").comment(comment)
+    if max_ms:
+        cur = cur.max_time_ms(int(max_ms))
+    e = cur.explain()
     ex = e.get("executionStats") or {}
     return int(ex.get("totalDocsExamined", 0)), int(ex.get("nReturned", 0))
 
 
-def stage(client_for_reads, counters_client, dbname, reads, name, rows, window_s=86400.0):
-    """Run the K reads of one stage; stop the stage at the first timed-out read."""
+def is_timeout(e):
+    """A cut read: the client's socket timeout, or the server's maxTimeMS (ExecutionTimeout / MaxTimeMSExpired, code 50)."""
+    if getattr(e, "code", None) == 50 or type(e).__name__ == "ExecutionTimeout":
+        return True
+    msg = f"{type(e).__name__}: {e}".lower()
+    return "timed out" in msg or "timeout" in type(e).__name__.lower() or "exceeded time limit" in msg
+
+
+def ours_in_progress(admin_client, comment=TAG):
+    """The operations the server still runs for our reads (currentOp, every op whose command carries our comment), or
+    None when the server does not answer currentOp."""
+    try:
+        ops = admin_client.admin.command("currentOp", {"$all": True}).get("inprog") or []
+    except Exception:  # noqa: BLE001
+        try:
+            ops = admin_client.admin.command("currentOp").get("inprog") or []
+        except Exception:  # noqa: BLE001
+            return None
+    return [o for o in ops if comment in json.dumps(o.get("command") or {}, default=str)]
+
+
+def wait_idle(admin_client, dbname, max_s, poll_s=1.0, sleep=time.sleep, now=time.monotonic, comment=TAG):
+    """After a cut read (review point 1): ask the server to stop it (killOp on every op of ours that currentOp shows),
+    then wait until currentOp shows none of ours, at most max_s. Where currentOp does not answer: until a cheap read of
+    the database answers in under a second. Returns the record of the wait (it goes into the stage's row)."""
+    t0 = now()
+    rec = {"killed": [], "waited_s": 0.0, "idle": False, "how": "currentOp"}
+    left = ours_in_progress(admin_client, comment)
+    if left is None:
+        rec["how"] = "cheap read"
+        while now() - t0 < max_s:
+            t1 = now()
+            try:
+                admin_client[dbname]["ordini"].find_one({}, {"_id": 1})
+                if now() - t1 < 1.0:
+                    rec["idle"] = True
+                    break
+            except Exception:  # noqa: BLE001
+                pass
+            sleep(poll_s)
+        rec["waited_s"] = round(now() - t0, 1)
+        return rec
+    for o in left:
+        try:
+            admin_client.admin.command("killOp", op=o.get("opid"))
+            rec["killed"].append(o.get("opid"))
+        except Exception:  # noqa: BLE001 - recorded by what currentOp shows next
+            pass
+    while True:
+        left = ours_in_progress(admin_client, comment) or []
+        if not left:
+            rec["idle"] = True
+            break
+        if now() - t0 >= max_s:
+            rec["still_running"] = len(left)
+            break
+        sleep(poll_s)
+    rec["waited_s"] = round(now() - t0, 1)
+    return rec
+
+
+def stage(client_for_reads, counters_client, dbname, reads, name, rows, window_s=86400.0, max_read_s=None,
+          idle_max_s=None, sleep=time.sleep, now=time.monotonic):
+    """Run the K reads of one stage; stop the stage at the first timed-out read, and then wait until the server no
+    longer runs it (wait_idle), so the next stage is not measured on a server still busy with it."""
     coll = client_for_reads[dbname]["ordini"]
     for i, (cli, t) in enumerate(reads):
         a = fx(counters_client)
         t0 = time.perf_counter()
         err, timed_out, ex, ret = None, False, None, None
         try:
-            ex, ret = one_read(coll, cli, t, window_s)
+            ex, ret = one_read(coll, cli, t, window_s, max_ms=(max_read_s * 1000 if max_read_s else None))
         except Exception as e:  # noqa: BLE001
             msg = f"{type(e).__name__}: {str(e)[:200]}"
-            timed_out = "timed out" in msg.lower() or "timeout" in type(e).__name__.lower()
+            timed_out = is_timeout(e)
             err = None if timed_out else msg
         secs = time.perf_counter() - t0
         b = fx(counters_client)
         row = {"stage": name, "i": i, "cliente": cli, "t": t.isoformat(), "secs": round(secs, 3), "docs_examined": ex,
                "returned": ret, "timed_out": timed_out, "error": err}
+        if timed_out:
+            row["after_cut"] = wait_idle(counters_client, dbname, idle_max_s if idle_max_s is not None else 2 * (max_read_s or 180),
+                                         sleep=sleep, now=now)
         if a and b:
             row.update(mb_fetched=round((b["get_bytes"] - a["get_bytes"]) / 1e6, 2), ranged_gets=b["get_range"] - a["get_range"],
                        rows_from_runs=b["rows_from_runs"] - a["rows_from_runs"])
@@ -173,6 +250,9 @@ def summarize(rows):
         done = [r for r in sel if not r["timed_out"] and not r["error"]]
         b = {"reads": len(sel), "answered": len(done), "timed_out": sum(1 for r in sel if r["timed_out"]),
              "errors": sum(1 for r in sel if r["error"])}
+        cut = [r["after_cut"] for r in sel if r.get("after_cut")]
+        if cut:
+            b["after_cut"] = cut[-1]
         if done:
             b["secs_p50"], b["secs_max"] = fn.pct([r["secs"] for r in done], 0.5), max(r["secs"] for r in done)
             b["docs_examined_p50"] = fn.pct([r["docs_examined"] or 0 for r in done], 0.5)
@@ -206,6 +286,10 @@ def text(summary):
             x += f"; time x{b['secs_p50_times_before']} of before"
         if "rows_per_doc_times_before" in b:
             x += f", rows per document x{b['rows_per_doc_times_before']}"
+        if b.get("after_cut"):
+            c = b["after_cut"]
+            x += (f"; after the cut: killOp {len(c.get('killed') or [])}, server {'idle' if c.get('idle') else 'STILL BUSY'} "
+                  f"after {c.get('waited_s')} s ({c.get('how')})")
         lines.append(x)
     st = summary.get("settle") or {}
     lines.append(f"settle: waited {st.get('waited_s')} s, quiet {st.get('quiet')}, compactor counters changed {st.get('changed')}")
@@ -244,12 +328,12 @@ def main(argv=None):
     if dbname and n:
         names = [f"cli-{i:06d}" for i in range(n)]
         reads = the_reads(names, a.reads, a.seed)
-        stage(reader, client, dbname, reads, "before", rows, win)
+        stage(reader, client, dbname, reads, "before", rows, win, a.max_read_s)
         w = writes(client, dbname, names, a.write_customers, a.updates, a.seed)
         print(json.dumps({"writes": {k: v for k, v in w.items() if k != "errors"}}), flush=True)
-        stage(reader, client, dbname, reads, "after-writes", rows, win)
+        stage(reader, client, dbname, reads, "after-writes", rows, win, a.max_read_s)
         st = settle(client, a.settle_min)
-        stage(reader, client, dbname, reads, "settled", rows, win)
+        stage(reader, client, dbname, reads, "settled", rows, win, a.max_read_s)
     summary = {"program": "reads-after-writes", "db": dbname, "reads_per_stage": a.reads, "max_read_s": a.max_read_s,
                "seed": a.seed, "window_s": round(win, 1), "examine_target": a.examine, "our_counters": fx(client) is not None, "writes": w, "settle": st, "stages": summarize(rows)}
     with open(os.path.join(a.out, "reads-after-writes.jsonl"), "w") as f:

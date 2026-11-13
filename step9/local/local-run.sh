@@ -64,6 +64,8 @@ round() { # round NAME COMMAND_JSON
   if [ "$("$PY" "$S9/machine/cfg.py" "$W/resolved-$name.json" pantry_mode)" = existing ]; then   # as the workflow does
     CM_PW=$("$PY" -c "import boto3,sys; print(boto3.client('s3').get_object(Bucket=sys.argv[1], Key='step9-secret/pw')['Body'].read().decode())" \
       "$("$PY" "$S9/machine/cfg.py" "$W/resolved-$name.json" pantry_name)") || return 1
+    # as the workflow does: refused when a writing program already ran on the pantry and this job reads it as loaded
+    (cd "$S9/ci" && "$PY" decide.py --pantry-check "$W/resolved-$name.json") || return 1
   fi
   # local mode: the same fields with small numbers
   "$PY" - "$W/resolved-$name.json" "$TAKEOVERS_N" <<'PY'

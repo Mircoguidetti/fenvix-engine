@@ -43,6 +43,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import outcomes as outcomes_rules  # noqa: E402
+import decide  # noqa: E402  (the pantry's writing mark)
 import infra  # noqa: E402
 from machine_types import TYPES, minute_cost  # noqa: E402
 if os.environ.get("S9_MODE", "aws") == "aws":
@@ -484,7 +485,11 @@ try:
             cert_for("spare", sp[1])
             wait_for("spare/ready.json", watch="spare", limit_min=20, what="spare")
         say(f"7/8 the extras client: {extras}")
-        put("extras/config.json", {"engine_sha256": cook_sha(), "programs": extras, "pantry": PANTRY, "logs": LOGS, "bench_logs": LOGS.replace(":7200", ":7201"),
+        mark = decide.pantry_mark(cmd, RUN)
+        if mark:   # review of the AWS plan, point 3: from now on the pantry is no longer as loaded
+            plat.s3.put_object(Bucket=PANTRY, Key=f"{decide.PANTRY_MARK_PREFIX}{RUN}.json", Body=json.dumps(mark).encode())
+            say(f"pantry {PANTRY} marked as written by {mark['programs']}: later jobs that read it as loaded are refused")
+        put("extras/config.json", {"engine_sha256": cook_sha(), "run_id": RUN, "programs": extras, "pantry": PANTRY, "logs": LOGS, "bench_logs": LOGS.replace(":7200", ":7201"),
                                    "cook": {"ip": ip1, "port": 27017}, "spare": {"ip": sp[1]} if sp else {},
                                    "ballast_db": cmd.get("ballast_db"), "ballast_gib": cmd.get("ballast_gib"),
                                    **{k: v for k, v in cmd.items() if k.endswith("_args")}})
