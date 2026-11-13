@@ -1,0 +1,6 @@
+sealed2-derive test_56_real_drop_between_reads: 15 passed in 321.25s (0:05:21)
+off test_56_real_drop_between_reads: 15 skipped in 0.12s
+sealed2-derive test_57_closed_gc: 3 passed in 163.02s (0:02:43)
+off test_57_closed_gc: 3 skipped in 0.13s
+sealed2-derive test_66_fix_write_stalls: 7 passed in 202.83s (0:03:22)
+off test_66_fix_write_stalls: 7 skipped in 0.13s

@@ -1,0 +1,75 @@
+FF...                                                                    [100%]
+=================================== FAILURES ===================================
+_______________ test_first_request_one_trip_next_requests_no_get _______________
+
+loaded = ('ctl-bigspeed-f683224b', {('user000-thread0', '1ef00000-0000'): 'message 0 of user000-thread0 message 0 of user000-th...ge 3 of user000-thread0 message 3 of user000-thread0 message 3 of user000-thread0 message 3 of user000-thread0 ', ...})
+
+    def test_first_request_one_trip_next_requests_no_get(loaded):
+        bucket, want = loaded
+        s = Server(bucket, "bigspeed", idle=600, env=SIM).start()
+        try:
+            c = s.client()
+            db = c.app
+            warm_up_db(c, db)
+            firsts, nexts = [], []
+            for i in range(0, THREADS - 1, 2):
+                t = tid(i)
+                t0, g0 = trips(c), gets(c)
+                doc, ws = resume(db, t)
+                firsts.append((t, trips(c) - t0, gets(c) - g0))
+                check_resume(want, t, doc, ws)
+                g1 = gets(c)
+                # the NEXT requests of the same customer
+                hist = list(db.checkpoints.find({"thread_id": t, "checkpoint_ns": ""}, sort=[("checkpoint_id", -1)]))
+                assert [d["checkpoint_id"] for d in hist] == sorted((cc for (tt, cc) in want if tt == t), reverse=True)
+                last10 = list(db.checkpoints.find({"thread_id": t, "checkpoint_ns": ""}, sort=[("checkpoint_id", -1)], limit=10))
+                assert len(last10) == 10
+                old = sorted(cc for (tt, cc) in want if tt == t)[3]
+                tt_doc = db.checkpoints.find_one({"thread_id": t, "checkpoint_ns": "", "checkpoint_id": old})
+                assert tt_doc["checkpoint"] == want[(t, old)]
+                assert len(list(db.checkpoint_writes.find({"thread_id": t, "checkpoint_ns": "", "checkpoint_id": old}))) == 3
+                doc2, ws2 = resume(db, t)
+                check_resume(want, t, doc2, ws2)
+                nexts.append((t, gets(c) - g1))
+            print("FIRST (thread, trips, GETs):", firsts)
+            print("NEXT (thread, GETs):", nexts)
+>           assert all(tr == 1 for _, tr, _ in firsts), f"a FIRST request took more than one trip: {firsts}"
+E           AssertionError: a FIRST request took more than one trip: [('user000-thread0', 1, 0), ('user002-thread2', 0, 0), ('user004-thread1', 0, 0), ('user006-thread0', 0, 0), ('user008-thread2', 0, 0), ('user010-thread1', 0, 0), ('user012-thread0', 0, 0), ('user014-thread2', 0, 0), ('user016-thread1', 0, 0), ('user018-thread0', 0, 0), ('user020-thread2', 0, 0), ('user022-thread1', 0, 0)]
+E           assert False
+E            +  where False = all(<generator object test_first_request_one_trip_next_requests_no_get.<locals>.<genexpr> at 0x7feeefaadd20>)
+
+test_79_big_speed.py:172: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FIRST (thread, trips, GETs): [('user000-thread0', 1, 0), ('user002-thread2', 0, 0), ('user004-thread1', 0, 0), ('user006-thread0', 0, 0), ('user008-thread2', 0, 0), ('user010-thread1', 0, 0), ('user012-thread0', 0, 0), ('user014-thread2', 0, 0), ('user016-thread1', 0, 0), ('user018-thread0', 0, 0), ('user020-thread2', 0, 0), ('user022-thread1', 0, 0)]
+NEXT (thread, GETs): [('user000-thread0', 0), ('user002-thread2', 0), ('user004-thread1', 0), ('user006-thread0', 0), ('user008-thread2', 0), ('user010-thread1', 0), ('user012-thread0', 0), ('user014-thread2', 0), ('user016-thread1', 0), ('user018-thread0', 0), ('user020-thread2', 0), ('user022-thread1', 0)]
+_________ test_control_without_the_box_first_request_takes_more_trips __________
+
+loaded = ('ctl-bigspeed-f683224b', {('user000-thread0', '1ef00000-0000'): 'message 0 of user000-thread0 message 0 of user000-th...ge 3 of user000-thread0 message 3 of user000-thread0 message 3 of user000-thread0 message 3 of user000-thread0 ', ...})
+
+    def test_control_without_the_box_first_request_takes_more_trips(loaded):
+        bucket, want = loaded
+        s = Server(bucket, "bigspeed", idle=600, env=SIM, extra=["--customer-box", "false"]).start()
+        try:
+            c = s.client()
+            db = c.app
+            warm_up_db(c, db)
+            firsts = []
+            for i in range(1, THREADS - 1, 2):
+                t = tid(i)
+                t0 = trips(c)
+                doc, ws = resume(db, t)
+                firsts.append(trips(c) - t0)
+                check_resume(want, t, doc, ws)
+            print("control FIRST trips:", firsts)
+>           assert max(firsts) > 1, f"control: the cold resume took {firsts} trips without the box (the test could not fail)"
+E           AssertionError: control: the cold resume took [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1] trips without the box (the test could not fail)
+E           assert 1 > 1
+E            +  where 1 = max([0, 0, 0, 0, 0, 0, ...])
+
+test_79_big_speed.py:195: AssertionError
+----------------------------- Captured stdout call -----------------------------
+control FIRST trips: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+=========================== short test summary info ============================
+FAILED test_79_big_speed.py::test_first_request_one_trip_next_requests_no_get
+FAILED test_79_big_speed.py::test_control_without_the_box_first_request_takes_more_trips
+2 failed, 3 passed in 22.70s

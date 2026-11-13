@@ -1,0 +1,12 @@
+sealed2-derive test_56_real_drop_between_reads: 15 passed in 310.84s (0:05:10)
+off test_56_real_drop_between_reads: 15 skipped in 0.15s
+sealed2-derive test_57_closed_gc: 3 passed in 160.86s (0:02:40)
+off test_57_closed_gc: 3 skipped in 0.11s
+sealed2-derive test_66_fix_write_stalls: 7 passed in 171.89s (0:02:51)
+off test_66_fix_write_stalls: 7 skipped in 0.12s
+sealed2-derive test_79_big_speed: 2 failed, 3 passed in 20.66s
+off test_79_big_speed: 5 passed in 22.59s
+sealed2-derive test_80_big_speed_kill: 4 passed in 110.41s (0:01:50)
+off test_80_big_speed_kill: 4 passed in 114.39s (0:01:54)
+sealed2-derive test_87_box_first_save: 4 passed in 22.60s
+off test_87_box_first_save: 4 passed in 20.61s

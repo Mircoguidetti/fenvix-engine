@@ -19,7 +19,7 @@ class M:
     def __init__(s, c): s.c = c
     def __call__(s, label, fn):
         a = flat(T.fx(s.c)); ua = time.time(); r = fn(); b = flat(T.fx(s.c))
-        d = {k: b[k] - a.get(k, 0) for k in b if b[k] != a.get(k, 0) and (k in KEYS or "enewal" in k or "PastRenewal" in k or k.startswith("customerBox.w") or "fences" in k or (WIDE and not any(x in k.lower() for x in ("micros","ms","bytes","uptime","peak","now","depth","inflight"))))}
+        d = {k: b[k] - a.get(k, 0) for k in b if b[k] != a.get(k, 0) and (WIDE and not any(x in k.lower() for x in ("micros","ms","bytes","uptime","peak","now","depth","inflight")))}
         print("%7.3f u0=%.1f u1=%.1f %-28s %s" % (time.time() - T0, ua*1000, time.time()*1000, label, json.dumps(d, sort_keys=True)))
         return r
 
