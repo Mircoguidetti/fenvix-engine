@@ -524,6 +524,29 @@ mod tests {
         assert_eq!(f, 0, "{v:?}");
     }
 
+    /// sim-test-2: restore points around a takeover: the old owner (a zombie with its compactor) keeps committing (fenced
+    /// or late), the new owner publishes with its builder, then starts its compactor; points are taken all along, and
+    /// restores to marks between them must give the state at each mark.
+    #[test]
+    fn sim_story_points_around_a_takeover() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let mut ev = vec![Open { p: 0, writer: true }];
+        for c in 0..3 {
+            ev.push(fill(0, c, 0));
+        }
+        ev.extend([Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }, Flush { p: 0 }, CompDrain { p: 0 }, Point { p: 2, tag: 1 }, Mark { tag: 2 }]);
+        ev.extend([fill(0, 3, 0), Flush { p: 0 }, Hold { p: 0, class: Class::FxVersion, op: Some(NOp::Put), skip: 0, land: true, all: false, rid: 1 }, CompDrain { p: 0 }]);
+        ev.extend([Open { p: 1, writer: true }, Write { p: 1, ops: vec![(4, 0, false), (1, 1, true)] }, Publish { p: 1 }, Point { p: 2, tag: 3 }, Release { rid: 1 }, Sleep { ms: 300 }, Mark { tag: 4 }, Point { p: 2, tag: 5 }]);
+        ev.extend([Write { p: 1, ops: vec![(4, 2, false)] }, CompStart { p: 1 }, fill(1, 4, 0), Flush { p: 1 }, CompDrain { p: 1 }, DropThrough { p: 1 }, Gc { p: 1 }, Point { p: 2, tag: 6 }, Mark { tag: 7 }, Gc { p: 0 }, Abandon { p: 0 }, Sleep { ms: 2700 }, Gc { p: 1 }]);
+        ev.extend([Restore { p: 1, mark: 2, apply: false }, Restore { p: 1, mark: 4, apply: false }, Restore { p: 1, mark: 7, apply: true }]);
+        let (f, v) = run_story(&rt, "points around a takeover", env_u64("SIM_KNOBS", 0) as u8, ev);
+        assert_eq!(f, 0, "{v:?}");
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {
