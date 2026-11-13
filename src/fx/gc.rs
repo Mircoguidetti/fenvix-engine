@@ -130,6 +130,10 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
     let now_ms = manifest::now_ms();
     // the oldest version this process still holds or serves: it and every newer one stay
     let mut floor_v = newest;
+    // review of e3b04c5 (rule 8): an older writer's late version at the newest slot is not what readers serve
+    // (`manifest::load_newest_trusted`): the version they serve, and every newer one (the comparison that tells a late
+    // version needs the version below it), stay with their runs
+    floor_v = floor_v.min(trusted_floor(store, id, newest).await?);
     if let Some(h) = c.sh.holds.oldest_version() {
         floor_v = floor_v.min(h);
     }
@@ -219,6 +223,21 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
 }
 
 
+/// Negative control of the tests: the GC keeps from the plain newest version (the code before the review of e3b04c5).
+pub static CONTROL_GC_PLAIN_NEWEST: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// The lowest version the live GC must keep for readers: the version `manifest::trusted_at` keeps when the newest is an
+/// older writer's late version (otherwise the newest itself).
+async fn trusted_floor(store: &Arc<dyn ObjectStore>, id: &str, newest: u64) -> Result<u64> {
+    if CONTROL_GC_PLAIN_NEWEST.load(Relaxed) {
+        return Ok(newest);
+    }
+    match manifest::load(store, id, newest).await {
+        Ok(v) => Ok(manifest::trusted_at(store, id, v).await?.version),
+        Err(_) => Ok(newest), // a newer version was published meanwhile: the next pass
+    }
+}
+
 /// GC of the runs of a database this process closed (P-perf-bytes). The live GC above runs in the compactor, which stops
 /// when the database closes (60 s idle by default): runs retired within the grace before the close stayed in the store
 /// until the next open, for an idle customer for good (MEASURED: the medium bench kept 0.58 GB of retired runs for
@@ -248,8 +267,18 @@ pub async fn gc_closed(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<
     let now_ms = manifest::now_ms();
     let mut referenced: HashSet<String> = ref_runs;
     referenced.extend(runs_of(&newest));
+    // review of e3b04c5 (rule 8): the version an opening serves when the newest is an older writer's late version, and
+    // every version above it, stay with their runs (see `gc_once`)
+    let keep_from = if CONTROL_GC_PLAIN_NEWEST.load(Relaxed) { newest_n } else { manifest::trusted_at(store, id, newest.clone()).await?.version };
     for &n in &versions {
         if n == newest_n {
+            continue;
+        }
+        if n >= keep_from {
+            match manifest::load(store, id, n).await {
+                Ok(v) => referenced.extend(runs_of(&v)),
+                Err(_) => {}
+            }
             continue;
         }
         let named = ref_versions.contains(&n);

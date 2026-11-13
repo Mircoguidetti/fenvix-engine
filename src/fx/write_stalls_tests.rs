@@ -1104,3 +1104,53 @@ async fn ws_lost_race_ignores_an_older_writers_version() {
     assert!(inst >= good, "the late version was installed ({inst} < {good})");
     assert_eq!(newest_epoch, ours, "the newest version is not this writer's (no fence above the late one)");
 }
+
+/// Review of e3b04c5 (rule 8): with version retention 0 (the default, for the 24 h erasure promise) the GC of a closed
+/// database whose newest version is an older writer's late one keeps the version an opening serves
+/// (`manifest::trusted_at`) and its runs. Control (`CONTROL_GC_PLAIN_NEWEST`, the code before): the GC keeps only the
+/// late version and deletes the served version's runs; an opening then reads rows wrong or fails.
+async fn gc_with_an_older_newest(control: bool) -> (usize, usize) {
+    let id = if control { "ws-gc-older-control" } else { "ws-gc-older" };
+    let (store, m, _cur, _stale) = with_an_older_newest_version(id).await;
+    let (ret0, grace0) = (VERSION_RETENTION_MS.load(SeqCst), GC_GRACE_MS.load(SeqCst));
+    VERSION_RETENTION_MS.store(0, SeqCst);
+    GC_GRACE_MS.store(0, SeqCst);
+    gc::CONTROL_GC_PLAIN_NEWEST.store(control, Relaxed);
+    for _ in 0..5 {
+        if gc::gc_closed(&store, id).await.unwrap().is_none() {
+            break;
+        }
+    }
+    gc::CONTROL_GC_PLAIN_NEWEST.store(false, Relaxed);
+    VERSION_RETENTION_MS.store(ret0, SeqCst);
+    GC_GRACE_MS.store(grace0, SeqCst);
+    let versions = manifest::list_versions(&store, id).await.unwrap().len();
+    view::clear_cache();
+    let (mut wrong, mut failed) = (0, 0);
+    match lc(&store).wake(id).await {
+        Ok(t) => {
+            for (k, want) in &m {
+                match t.get(k).await {
+                    Ok(v) if v.as_deref() == Some(&want[..]) => {}
+                    Ok(_) => wrong += 1,
+                    Err(_) => failed += 1,
+                }
+            }
+            let _ = t.close().await;
+        }
+        Err(_) => failed = m.len(),
+    }
+    eprintln!("GC of a closed database with an older newest version (control {control}): versions left {versions}; wrong {wrong}, failed reads {failed} of {}", m.len());
+    (wrong, failed)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_gc_keeps_the_trusted_version_under_an_older_newest() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (w_ctl, f_ctl) = gc_with_an_older_newest(true).await;
+    let (w, f) = gc_with_an_older_newest(false).await;
+    teardown();
+    assert!(w_ctl + f_ctl > 0, "control: the GC must delete the served version's runs, or the test does not reach the case");
+    assert_eq!((w, f), (0, 0), "rows wrong or unreadable after the GC");
+}
