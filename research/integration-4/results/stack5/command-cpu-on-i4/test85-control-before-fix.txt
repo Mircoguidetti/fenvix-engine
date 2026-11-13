@@ -1,0 +1,21 @@
+..F..                                                                    [100%]
+=================================== FAILURES ===================================
+__________________ test_streamed_find_first_batch_and_getmore __________________
+
+srv = <lib.Server object at 0x7f951ff4f410>
+
+    def test_streamed_find_first_batch_and_getmore(srv):
+        """The natural-order find answered page by page (find_streamed): no sort, no collation. Its first batch took the
+        asked number of documents (101 by default) whatever their size: the 90 MB of the review."""
+        db = srv.client().bcap
+        load(db, "s")
+        r = db.command(SON([("find", "s"), ("filter", {})]))
+>       assert batch_bytes(r["cursor"]["firstBatch"]) <= CAP, batch_bytes(r["cursor"]["firstBatch"])
+E       AssertionError: 40001036
+E       assert 40001036 <= 16777216
+E        +  where 40001036 = batch_bytes([{'_id': 0, 'p': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'}, ...])
+
+test_85_batch_cap.py:95: AssertionError
+=========================== short test summary info ============================
+FAILED test_85_batch_cap.py::test_streamed_find_first_batch_and_getmore - Ass...
+1 failed, 4 passed in 4.24s

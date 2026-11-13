@@ -244,7 +244,20 @@ impl Server {
         }
         // (`natural_page` read at least skip + take matches, or to the end)
         let (last, done) = (page.last, page.done);
-        let first: Vec<Document> = buf.drain(..take.min(buf.len())).collect();
+        // command-cpu-on-i4 (the coordinator's 16 MiB cap on every batch builder): the first batch also stops at 16 MiB
+        // as mongod counts it (`cmd::batch_fits`, the first-batch fixed part); what does not fit stays in the stream's
+        // buffer for the next getMore. It took `take` documents whatever their size (a 90 MB first batch, review).
+        let mut first: Vec<Document> = Vec::new();
+        let mut used = 0usize;
+        while first.len() < take {
+            let Some(d) = buf.front() else { break };
+            let size = crate::query::bson_size(d);
+            if !crate::cmd::batch_fits(used, first.len(), size, crate::cmd::FIRST_BATCH_FIXED) {
+                break;
+            }
+            crate::cmd::batch_add(&mut used, first.len(), size);
+            first.push(buf.pop_front().unwrap());
+        }
         let left = lim.map(|l| l - first.len());
         let ns = format!("{db}.{coll}");
         let open = !single && left != Some(0) && (!buf.is_empty() || !done || (lim.is_none() && !first.is_empty() && first.len() == first_n));
