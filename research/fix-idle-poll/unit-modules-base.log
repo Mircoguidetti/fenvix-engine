@@ -1,0 +1,53 @@
+
+running 59 tests
+test fx::big_speed_tests::box_comes_back_from_the_disk_floor ... ok
+test fx::big_speed_tests::rvbs_retired_run_comes_back_into_the_floor_after_its_wipe ... ok
+test fx::big_speed_tests::runs_open_when_a_version_loads ... ok
+test fx::big_speed_tests::box_warm_is_one_wave_then_the_visit_needs_no_get ... ok
+test fx::big_speed_tests::rvbs_single_flight_survives_a_cancelled_leader ... ok
+test fx::big_speed_tests::rvbsf_box_above_the_customer_allowance_is_not_warmed ... ok
+test fx::big_speed_tests::rvbsf_compressible_box_stops_at_the_decoded_allowance ... ok
+test fx::big_speed_tests::rvbsf_process_allowance_is_shared_and_returned ... ok
+test fx::big_speed_tests::rvbsf_single_flight_wait_is_bounded ... ok
+test fx::big_speed_tests::single_flight_sends_each_block_get_once ... ok
+test fx::box_first_trip_tests::bft_reader_refresh_due_only_when_expired ... ok
+test fx::box_first_trip_tests::bft_step_does_not_wait_for_a_renewal_in_progress ... ok
+test fx::box_first_trip_tests::bft_step_near_expiry_waits_for_the_renewal ... ok
+test fx::box_first_trip_tests::bft_unchanged_renewal_sends_no_get ... ok
+test fx::compactor_tests::compactor_model_drop_on ... ok
+test fx::compactor_tests::floor_respects_holds_and_control_breaks ... ok
+test fx::compactor_tests::gc_keeps_the_runs_a_fork_reference_names ... ok
+test fx::compactor_tests::held_reads_across_drop_and_gc ... ok
+test fx::compactor_tests::late_put_answer_is_a_timeout_then_a_fence ... ok
+test fx::compactor_tests::perf_bytes_follower_reads_across_a_real_drop ... ok
+test fx::compactor_tests::r3_reseals_a_group_whose_reads_pay ... ok
+test fx::droptest::tests::the_stand_in_drops_rows_at_or_below_the_floor ... ok
+test fx::compactor_tests::skip_below_xd_and_control_breaks ... ok
+test fx::compactor_tests::small_delta_runs_read_from_nvme ... ok
+test fx::compactor_tests::takeover_with_an_open_transaction ... ok
+test fx::write_stalls_tests::ws_abandon_lets_the_first_build_end ... ok
+test fx::write_stalls_tests::ws_close_during_the_first_build_then_reopen_and_fold ... ok
+test fx::write_stalls_tests::ws_compactor_refuses_an_older_writers_version ... ok
+test fx::write_stalls_tests::ws_erasure_during_the_first_build ... ok
+test fx::write_stalls_tests::ws_first_build_after_a_takeover_creates_no_version ... ok
+test fx::write_stalls_tests::ws_first_build_after_an_unpublished_takeover_creates_no_version ... ok
+test fx::write_stalls_tests::ws_first_build_runs_off_the_lock_and_loses_nothing ... ok
+test fx::write_stalls_tests::ws_fold_never_runs_beside_a_merge ... ok
+test fx::write_stalls_tests::ws_follow_newest_ignores_an_older_writers_version ... ok
+test fx::write_stalls_tests::ws_gc_keeps_the_trusted_version_under_an_older_newest ... ok
+test fx::write_stalls_tests::ws_gc_once_takes_a_transient_error_for_no_deletion ... ok
+test fx::write_stalls_tests::ws_gc_takes_a_transient_error_for_no_deletion ... ok
+test fx::write_stalls_tests::ws_l0_drains_beside_a_held_merge ... ok
+test fx::write_stalls_tests::ws_l0_drains_beside_a_held_merge_with_the_drop_on ... ok
+test fx::write_stalls_tests::ws_pass_and_claim_exclude_each_other ... ok
+test fx::write_stalls_tests::ws_lost_race_ignores_an_older_writers_version ... ok
+test fx::write_stalls_tests::ws_opening_ignores_an_older_writers_newest_version ... ok
+test fx::write_stalls_tests::ws_pair_ignores_an_older_writers_newest_version ... ok
+test fx::write_stalls_tests::ws_recognition_runs_off_the_lock_at_once ... ok
+test fx::write_stalls_tests::ws_trusted_floor_takes_a_transient_error_for_no_deletion ... ok
+test lifecycle::tests::abandon_does_not_wait_for_a_full_l0 ... ok
+test lifecycle::tests::abandon_reports_an_unfinished_close ... ok
+test lifecycle::tests::always_failing_compaction_is_not_retried_every_round has been running for over 60 seconds
+test lifecycle::tests::compaction_pass_ends_when_stop_hangs has been running for over 60 seconds
+test lifecycle::tests::compaction_pass_ends_when_stopped_while_starting has been running for over 60 seconds
+test lifecycle::tests::compaction_pass_longer_than_its_stall_window_finishes has been running for over 60 seconds
