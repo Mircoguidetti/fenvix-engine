@@ -135,7 +135,9 @@ echo "{\"mode\": \"run\", \"data\": \"100gb\", \"log\": \"m7i.large\", \"phases\
 if want load-atlas; then round load-atlas "$D/a.json"; KEPT=$("$PY" "$S9/machine/cfg.py" "$W/resolved-load-atlas.json" pantry_name); echo "$KEPT" > "$W/kept-pantry"
 else KEPT=$(cat "$W/kept-pantry"); fi
 echo "kept pantry: $KEPT (still there: $(aws --version >/dev/null 2>&1; "$PY" -c "import boto3,sys; print(sys.argv[1] in [b['Name'] for b in boto3.client('s3').list_buckets()['Buckets']])" "$KEPT"))"
-echo "{\"mode\": \"run\", \"data\": \"100gb\", \"log\": \"m7i.large\", \"phases\": [\"load\"], \"pantry\": \"$KEPT\", \"ceiling_min\": 60, $X}" > "$D/b.json"
+# review of the AWS harness (2026-11-13): data "1tb" at the local size: the generated database is app_data_b01, the
+# name the 1 TB jobs (B1, W1) and the mongod line use ("100gb" is now app_data_h01, and the pair would not match)
+echo "{\"mode\": \"run\", \"data\": \"${BALLAST_DATA:-1tb}\", \"log\": \"m7i.large\", \"phases\": [\"load\"], \"pantry\": \"$KEPT\", \"ceiling_min\": 60, $X}" > "$D/b.json"
 want load-ballast && round load-ballast "$D/b.json"
 # aws-fixes (B2): the measure in three jobs, as on AWS (step9/commands/02, 03, 04)
 echo "{\"mode\": \"run\", \"data\": \"100gb\", \"log\": \"m7i.large\", \"phases\": [\"measure\"], \"programs\": [\"m30\"], \"pantry\": \"$KEPT\", \"ceiling_min\": 150, $X}" > "$D/c1.json"
@@ -148,12 +150,12 @@ want measure-agent && round measure-agent "$D/c3.json"
 # round's engine, options, size and pantry; then B1 again, which the pantry's writing mark must refuse
 plan_job() { # plan_job NAME COMMAND_FILE
   "$PY" - "$S9/commands/$2" "$D/$1.json" "$KEPT" "$ENGINE_REF" "$SO" "$BGIB" <<'PY'
-import json, sys
+import json, os, sys
 src, dst, kept, eng, so, gib = sys.argv[1:7]
 c = json.load(open(src))
 c.update({"engine": eng, "server_options": so, "loader_options": so, "pantry": kept, "log": "m7i.large", "ceiling_min": 150})
 if c.get("data") != "atlas":
-    c.update({"data": "100gb", "ballast_gib": float(gib)})
+    c.update({"data": os.environ.get("BALLAST_DATA", "1tb"), "ballast_gib": float(gib)})
 c.pop("aurora", None)
 if "agent-bench" in c.get("programs", []):
     c["programs"].remove("agent-bench")
