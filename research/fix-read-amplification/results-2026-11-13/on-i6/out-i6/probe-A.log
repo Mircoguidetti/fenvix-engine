@@ -1,0 +1,193 @@
+memory budget: limit 13673 MiB (cgroup1-own), caches 6324 MiB (block 2846, meta 948, sealed 2529), memtable 8 MiB, first course 854 MiB, change log 32 MiB, L0 reads at once 4
+box disk floor: 3565 MiB in /tmp/fenvix-box-floor-27031
+memory budget (review round): box 316 MiB per customer, 632 MiB in flight; memtables of every database 1709 MiB (writes wait past 2563 MiB); merge read-ahead 427 MiB; absorption 16 L0 SSTs
+mongo-server listening on 127.0.0.1:27031 (idle close after 60 s, holder 13047-7ef4edff, lease ttl 30 s)
+uploads: 0 unfinished multipart uploads under tenants/, 0 older than 3600s aborted
+LEASE process_lease tenant=- holder=13047-7ef4edff unix_ms=1794585637352 inc=bafefa4c4c5cde5b gen=1
+LEASE acquired tenant=app_data_b01 holder=13047-7ef4edff unix_ms=1794585637356 takeover_from=-
+SLOW explain db=app_data_b01 ms=541 ok=true
+FXC not started db=app_data_b01 reason=not_writer unix_ms=1794585639154
+SLOW_PUT u=1794585639703 db=app_data_b01 kind=other ms=542 bytes=458
+LEASE writer_open tenant=app_data_b01 holder=13047-7ef4edff unix_ms=1794585639711 
+SLOW update db=app_data_b01 ms=569 ok=true
+FXC not started db=app_data_b01 reason=catch_up_published_nothing unix_ms=1794585639736
+L0_RECOGNISE db=app_data_b01 read=1 absorbed=1 ms=2 off_lock=1
+L0_TRACE u=1794585640795.7988 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585641822.665 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585642849.0493 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585643878.0928 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585644903.6357 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585645926.1792 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585646956.401 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+SLOW hello db=admin ms=10001 ok=true
+L0_TRACE u=1794585647983.0107 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585649006.0498 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585650032.9844 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585651059.6545 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585652084.1177 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585653109.835 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585654137.7708 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585655161.4521 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585656182.1345 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585657210.907 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+SLOW hello db=admin ms=10001 ok=true
+L0_TRACE u=1794585658236.1277 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585659261.1052 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585660287.5732 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585661314.6804 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585662339.2793 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585663369.8555 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585664393.4443 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585665417.6514 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585666442.6992 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+SLOW hello db=admin ms=10012 ok=true
+L0_TRACE u=1794585667466.6582 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585668492.382 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585669519.1587 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585670546.0737 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585671582.3347 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585672603.2786 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585673627.4495 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585674650.0344 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585675677.761 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585676707.8252 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+SLOW hello db=admin ms=10011 ok=true
+L0_TRACE u=1794585677733.1682 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585678757.5835 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585679780.9653 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585680806.7566 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585681840.4082 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585682865.991 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585683891.5793 db=app_data_b01 l0=1 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585684916.4775 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585685940.061 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585686965.4216 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+SLOW hello db=admin ms=10000 ok=true
+L0_TRACE u=1794585687991.4375 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585689016.8882 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585690042.1875 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585691068.9963 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585692091.774 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585693116.397 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585694145.2188 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585695168.6895 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585696191.3513 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585697214.1692 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+SLOW hello db=admin ms=10000 ok=true
+L0_TRACE u=1794585698238.2747 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585699261.858 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585700286.3147 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585701310.9211 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585702336.3972 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585703358.2666 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585704381.458 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585705406.1191 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585706431.3735 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+SLOW hello db=admin ms=10001 ok=true
+L0_TRACE u=1794585707457.4888 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585708486.1155 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585709512.8076 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585710542.0046 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585711568.7363 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585712595.2922 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585713619.0593 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585714643.1963 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585715671.6782 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585716696.8015 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+SLOW hello db=admin ms=10000 ok=true
+L0_TRACE u=1794585717719.8008 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585718742.6804 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585719767.9277 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585720792.0623 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585721815.7915 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585722839.7622 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585723864.1143 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585724890.004 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585725894.392 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585726921.4768 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+SLOW hello db=admin ms=10000 ok=true
+L0_TRACE u=1794585727946.2673 db=app_data_b01 l0=2 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585728970.4548 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585729994.664 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585731019.5784 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585732044.8015 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585733070.1235 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585734093.928 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585735117.9568 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585736143.455 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585737165.4958 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+SLOW hello db=admin ms=10000 ok=true
+L0_TRACE u=1794585738188.8271 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585739214.0352 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585740240.2068 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585741263.911 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585742291.8318 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585743317.237 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585744343.579 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585745368.6003 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585746394.0667 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+SLOW hello db=admin ms=10001 ok=true
+L0_TRACE u=1794585747417.887 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585748444.3647 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585749469.1333 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585750494.3406 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585751517.589 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585752543.6797 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585753569.3584 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585754595.425 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585755620.319 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585756645.4714 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+SLOW hello db=admin ms=10000 ok=true
+L0_TRACE u=1794585757671.9998 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585758696.595 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585759720.279 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585760745.6494 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585761767.6272 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585762791.9626 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585763815.6045 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585764841.3044 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585765866.246 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585766891.7263 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+SLOW hello db=admin ms=10000 ok=true
+L0_TRACE u=1794585767915.102 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585768939.5127 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585769965.804 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585770988.3264 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585772012.4731 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585773041.4546 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585774070.685 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585775095.4229 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585776116.6382 db=app_data_b01 l0=3 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585777140.7202 db=app_data_b01 l0=4 unabs=3 absorbing=0 slate_jobs=0/0 slate_job=-
+SLOW hello db=admin ms=10001 ok=true
+L0_TRACE u=1794585778167.787 db=app_data_b01 l0=4 unabs=3 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585779190.045 db=app_data_b01 l0=4 unabs=3 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585780213.4695 db=app_data_b01 l0=4 unabs=3 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585781237.0498 db=app_data_b01 l0=4 unabs=3 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585782263.5564 db=app_data_b01 l0=4 unabs=3 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585783290.2366 db=app_data_b01 l0=4 unabs=3 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585784314.5105 db=app_data_b01 l0=4 unabs=3 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585785339.9373 db=app_data_b01 l0=4 unabs=3 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585786364.7952 db=app_data_b01 l0=4 unabs=3 absorbing=0 slate_jobs=0/0 slate_job=-
+SLOW hello db=admin ms=10001 ok=true
+L0_TRACE u=1794585787388.8984 db=app_data_b01 l0=4 unabs=3 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585788415.4807 db=app_data_b01 l0=4 unabs=3 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585789440.6292 db=app_data_b01 l0=4 unabs=3 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794585790465.7463 db=app_data_b01 l0=4 unabs=3 absorbing=0 slate_jobs=0/0 slate_job=-
+SLATE_JOB start u=1794585790469.3752 db=app_data_b01 l0_srcs=1 l0_mib=0 srs_mib=[] l0_now=4 runs_now=0 job=1794585790469 beside_merge=0
+SLATE_JOB end u=1794585790495.6084 db=app_data_b01 ms=26 rows=14 l0_srcs=1 l0_mib=0 srs_mib=[] l0_now=4 runs_now=0 job=1794585790469 beside_merge=0
+SLATE_JOB start u=1794585790524.2441 db=app_data_b01 l0_srcs=0 l0_mib=0 srs_mib=[0:0] l0_now=3 runs_now=1 job=1794585790524 beside_merge=0
+SLATE_JOB end u=1794585790585.6726 db=app_data_b01 ms=61 rows=1 l0_srcs=0 l0_mib=0 srs_mib=[0:0] l0_now=3 runs_now=1 job=1794585790524 beside_merge=0
+L0_TRACE u=1794585791489.2112 db=app_data_b01 l0=3 unabs=3 absorbing=0 slate_jobs=2/2 slate_job=964ms l0_srcs=0 l0_mib=0 srs_mib=[0:0] l0_now=3 runs_now=1 job=1794585790524 beside_merge=0
+shutting down: closing tenants cleanly
+ABSORB u=1794585792385.2197 db=app_data_b01 ssts=4 rows=31811 raw_kib=8570 committed=1 l0_start=4 l0_end=4 lock_ms=0 read_ms=191 write_ms=67 commit_ms=4 total_ms=262
+LEASE writer_close tenant=app_data_b01 holder=13047-7ef4edff unix_ms=1794585792394 
+LEASE release_begin tenant=app_data_b01 holder=13047-7ef4edff unix_ms=1794585792394 
+LEASE release tenant=app_data_b01 holder=13047-7ef4edff unix_ms=1794585792397 ok=true
+tenants closed; stopping maintenance
+maintenance shutdown: waiting for the L0 watch unix_ms=1794585792399
+maintenance shutdown: waiting for the dispatcher unix_ms=1794585793179
+maintenance shutdown: waiting for the running passes (1 running) unix_ms=1794585793179
+maintenance shutdown: waiting for the GC task unix_ms=1794585793237
+maintenance shutdown: done unix_ms=1794585793285
+maintenance stopped (1177 ms)
