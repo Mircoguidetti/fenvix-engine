@@ -616,6 +616,20 @@ pub(super) async fn oracle_ext(w: &World) -> Vec<String> {
             Ok(Err(e)) => v.push(format!("{what}: fresh upgrade failed: {}", short(&e))),
             Err(_) => v.push(format!("{what}: fresh upgrade did not return in 60 s")),
         }
+        // the fork's own writes: every key written once more through its writer, then read back in a fresh process (a
+        // write whose seq were at or below the paired X_d would be shadowed by the shared runs)
+        let mut own: BTreeMap<Vec<u8>, Vec<u8>> = BTreeMap::new();
+        if t.is_writer() {
+            let batch: Vec<Op> = (0..CUSTOMERS).flat_map(|c| (0..PER_CUSTOMER).map(move |i| (c, i))).map(|(c, i)| {
+                let v = format!("fork{tag}-own-{c}-{i}").into_bytes();
+                own.insert(ckey(c, i), v.clone());
+                Op::Put(ckey(c, i), v)
+            }).collect();
+            if let Err(e) = t.apply(batch).await {
+                v.push(format!("{what}: its own write failed on a calm store: {}", short(&e)));
+                own.clear();
+            }
+        }
         if let Some(n) = t.fx_served_version() {
             match runs_missing(&w.raw, &name, n).await {
                 Ok(g) if !g.is_empty() => v.push(format!("{what}: its version {n} lists {} runs that no longer exist (live run deleted), first {}", g.len(), g[0])),
@@ -624,6 +638,22 @@ pub(super) async fn oracle_ext(w: &World) -> Vec<String> {
             }
         }
         let _ = tokio::time::timeout(Duration::from_secs(20), t.close()).await;
+        if !own.is_empty() {
+            view::clear_cache();
+            let lc = Lifecycle::new(Arc::new(crate::counting::CountingStore::new(Arc::clone(&calm))), None);
+            match tokio::time::timeout(Duration::from_secs(60), lc.wake(&name)).await {
+                Ok(Ok(t)) => {
+                    let got = read_all(&t).await;
+                    let bad: Vec<String> = own.iter().filter(|(k, want)| !matches!(got.get(*k), Some(Ok(Some(g))) if g == *want)).map(|(k, _)| show(k)).collect();
+                    if !bad.is_empty() {
+                        v.push(format!("{what}: {} of its own acknowledged writes not read back by a fresh opening, first {}", bad.len(), bad[0]));
+                    }
+                    t.abandon().await;
+                }
+                Ok(Err(e)) => v.push(format!("{what}: reopening after its own writes failed: {}", short(&e))),
+                Err(_) => v.push(format!("{what}: reopening after its own writes did not return in 60 s")),
+            }
+        }
     }
     v
 }
