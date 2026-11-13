@@ -1,0 +1,195 @@
+== 0. docker image of the machines, MinIO
+{
+ "engine_commit": "fb38790efa5856a42278c5551eaecdb037d5c3eb",
+ "arch": "x86_64",
+== 1. fake Atlas and the shrunk kitchen (fake_atlas.sh)
+fake Atlas m30p     app_data_6: 204 clients, 81 dormant, loaded 29.70%
+fake Atlas m10p     app_data_3: 204 clients, 81 dormant, loaded 29.58%
+fake Atlas m30s     app_data_4: 204 clients, 99 dormant, loaded 43.76%
+fake Atlas m10s     app_data_1: 204 clients, 99 dormant, loaded 43.94%
+fake Atlas vecchio  fenvix_p1: 204 clients, 61 dormant, loaded 100.11%
+fake Atlas ready: CATENA.txt m10p m10s m30p m30s vecchio 
+== round load-atlas: {"mode": "run", "data": "100gb", "log": "m7i.large", "phases": ["load"], "pantry": "keep", "ballast_slice": [0, 0], "ceiling_min": 60, "engine": "fb38790efa5856a42278c5551eaecdb037d5c3eb", "server_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts", "loader_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts", "ballast_gib": 1}
+mode=run
+engine=fb38790efa5856a42278c5551eaecdb037d5c3eb
+engine_source=command
+engine_commit=fb38790efa5856a42278c5551eaecdb037d5c3eb
+data=100gb
+pantry_mode=keep
+vcpu_peak=8
+vcpu_peaks={'load': 8}
+job_hours_total=3.6
+job_hours={'boot': 0.3, 'atlas_load': 2.8, 'load_settle_cap': 0.5}
+x86=1
+arm=0
+aurora=0
+run.py: code 0 in 303 s; outcome: FINITO; {"load": "LOADED", "client": "LOADED_ONLY"}
+2026-11-13T17:46:06Z SPESA: 0.30 $ so far at 5 minutes (upper bound; machines 0.03 $, alive: none; S3 0.23 $ from the servers' counters, storage and margin; cross-zone allowance 0.04 $ ESTIMATED), cap
+teardown: code 0
+secrets check: no secret in the files (2 pieces searched, password included)
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+kept pantry: fenvix-kitchen-pantry-226533 (still there: True)
+== round load-ballast: {"mode": "run", "data": "1tb", "log": "m7i.large", "phases": ["load"], "pantry": "fenvix-kitchen-pantry-226533", "ceiling_min": 60, "engine": "fb38790efa5856a42278c5551eaecdb037d5c3eb", "server_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts", "loader_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts", "ballast_gib": 1}
+mode=run
+engine=fb38790efa5856a42278c5551eaecdb037d5c3eb
+engine_source=command
+engine_commit=fb38790efa5856a42278c5551eaecdb037d5c3eb
+data=1tb
+pantry_mode=existing
+vcpu_peak=8
+vcpu_peaks={'load (ballast generator)': 8}
+job_hours_total=0.31
+job_hours={'boot': 0.3, 'generator': 0.01}
+x86=1
+arm=0
+aurora=0
+pantry check: fenvix-kitchen-pantry-226533: 0 writing marks; this job may run
+run.py: code 0 in 169 s; outcome: FINITO; {"ballast": "BALLAST_GENERATED"}
+2026-11-13T17:50:03Z SPESA: 0.78 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: none; S3 0.60 $ from the servers' counters, storage and margin; cross-zone allowance 0.16 $ ESTIMATED), cap
+teardown: code 0
+secrets check: no secret in the files (2 pieces searched, password included)
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+== round pilot-ops: {
+ "mode": "run",
+ "loader_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts",
+ "server_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts",
+ "data": "atlas",
+ "phases": [
+  "measure",
+  "extras"
+ ],
+ "programs": [
+  "s3-first-byte",
+  "log-ack",
+  "first-next",
+  "first-next-ops",
+  "takeovers",
+  "write-peak"
+ ],
+ "pantry": "fenvix-kitchen-pantry-226533",
+ "takeovers_args": "--n 5 --writers 8 --between-s 3 --lease-ttl 4 --log on",
+ "takeovers_off_args": "--n 5 --writers 8 --between-s 3 --lease-ttl 4 --log off --label logoff",
+ "agent_bench_args": "--profile small --workers 1",
+ "write_peak_args": "--dbs 6 --threads 16 --minutes 5 --gb 2",
+ "first_next_ops_args": "--per-op 5 --no-save --max-s 120",
+ "engine": "fb38790efa5856a42278c5551eaecdb037d5c3eb",
+ "log": "m7i.large",
+ "ceiling_min": 150
+}
+mode=run
+engine=fb38790efa5856a42278c5551eaecdb037d5c3eb
+engine_source=command
+engine_commit=fb38790efa5856a42278c5551eaecdb037d5c3eb
+data=atlas
+pantry_mode=existing
+vcpu_peak=10
+vcpu_peaks={'measure (m30)': 6, 'extras': 10, 'write-peak': 10}
+job_hours_total=2.42
+job_hours={'boot': 0.3, 'extras': 1.8, 'first_next_ops': 0.05, 'write_peak': 0.27}
+x86=1
+arm=0
+aurora=0
+pantry check: fenvix-kitchen-pantry-226533: 0 writing marks; this job may run
+run.py: code 1 in 786 s; outcome: PROGRAM_FAILED: write-peak: failed: write-peak rc=1; {"extras": "s3-first-byte:rc=0 log-ack:rc=0 first-next:rc=0 first-next-ops:rc=0 takeovers:rc=0 takeovers-logoff:rc=0", "write-peak": "write-peak:rc=1"}
+2026-11-13T18:04:18Z SPESA: 0.81 $ so far at 13 minutes (upper bound; machines 0.12 $, alive: none; S3 0.60 $ from the servers' counters, storage and margin; cross-zone allowance 0.09 $ ESTIMATED), ca
+teardown: code 0
+secrets check: no secret in the files (2 pieces searched, password included)
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+== round b1: {
+ "mode": "run",
+ "loader_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts",
+ "server_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts",
+ "data": "1tb",
+ "phases": [
+  "measure",
+  "extras"
+ ],
+ "programs": [
+  "first-next",
+  "ballast-rounds"
+ ],
+ "spare": null,
+ "pantry": "fenvix-kitchen-pantry-226533",
+ "engine": "fb38790efa5856a42278c5551eaecdb037d5c3eb",
+ "log": "m7i.large",
+ "ceiling_min": 150,
+ "ballast_gib": 1.0
+}
+mode=run
+engine=fb38790efa5856a42278c5551eaecdb037d5c3eb
+engine_source=command
+engine_commit=fb38790efa5856a42278c5551eaecdb037d5c3eb
+data=1tb
+pantry_mode=existing
+vcpu_peak=8
+vcpu_peaks={'measure (m30)': 6, 'extras': 8}
+job_hours_total=2.1
+job_hours={'boot': 0.3, 'extras': 1.8}
+x86=1
+arm=0
+aurora=0
+pantry check: fenvix-kitchen-pantry-226533: 0 writing marks; this job may run
+run.py: code 0 in 152 s; outcome: FINITO; {"extras": "first-next:rc=0 ballast-rounds:rc=0"}
+2026-11-13T18:08:00Z SPESA: 0.12 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: none; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap
+teardown: code 0
+secrets check: no secret in the files (2 pieces searched, password included)
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+== round w1: {
+ "mode": "run",
+ "loader_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts",
+ "server_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts",
+ "data": "1tb",
+ "phases": [
+  "measure",
+  "extras"
+ ],
+ "programs": [
+  "first-next-ops",
+  "reads-after-writes"
+ ],
+ "spare": null,
+ "pantry": "fenvix-kitchen-pantry-226533",
+ "first_next_ops_args": "--per-op 100 --max-s 120",
+ "engine": "fb38790efa5856a42278c5551eaecdb037d5c3eb",
+ "log": "m7i.large",
+ "ceiling_min": 150,
+ "ballast_gib": 1.0
+}
+mode=run
+engine=fb38790efa5856a42278c5551eaecdb037d5c3eb
+engine_source=command
+engine_commit=fb38790efa5856a42278c5551eaecdb037d5c3eb
+data=1tb
+pantry_mode=existing
+vcpu_peak=8
+vcpu_peaks={'measure (m30)': 6, 'extras': 8}
+job_hours_total=4.0
+job_hours={'boot': 0.3, 'extras': 0.2, 'first_next_ops': 2.0, 'reads_after_writes': 1.5}
+x86=1
+arm=0
+aurora=0
+pantry check: fenvix-kitchen-pantry-226533: 0 writing marks; this job may run
+run.py: code 0 in 312 s; outcome: FINITO; {"extras": "first-next-ops:rc=0 reads-after-writes:rc=0 first-next-ops-after-writes:rc=0"}
+2026-11-13T18:14:21Z SPESA: 0.14 $ so far at 5 minutes (upper bound; machines 0.04 $, alive: none; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap
+teardown: code 0
+secrets check: no secret in the files (2 pieces searched, password included)
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+== round mongod: {"mode": "run", "data": "atlas", "phases": ["mongod"], "pantry": "new", "programs": ["first-next-ops", "reads-after-writes"], "mongod_states": ["vecchio"], "mongod_ballast_gib": 1, "first_next_ops_args": "--per-op 100 --max-s 120", "ceiling_min": 200, "engine": "fb38790efa5856a42278c5551eaecdb037d5c3eb"}
+mode=run
+engine=fb38790efa5856a42278c5551eaecdb037d5c3eb
+engine_source=command
+engine_commit=fb38790efa5856a42278c5551eaecdb037d5c3eb
+data=atlas
+pantry_mode=new
+vcpu_peak=8
+vcpu_peaks={'mongod': 8}
+job_hours_total=6.38
+job_hours={'boot': 0.3, 'mongod_load': 2.48, 'mongod_cold_restart': 0.1, 'first_next_ops': 2.0, 'reads_after_writes': 1.5}
+x86=1
+arm=1
+aurora=0
