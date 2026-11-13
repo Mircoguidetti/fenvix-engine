@@ -19,6 +19,9 @@ on:
       steps:
         description: events per base script
         default: "90"
+      remote:
+        description: "P-B3: 1 = the remote compactor's scripts (SIM_REMOTE=1, src/fx/sim/cluster/remote.rs)"
+        default: "0"
 jobs:
   seeds:
     runs-on: ubuntu-latest
@@ -34,6 +37,7 @@ jobs:
       - name: seeds
         env:
           SIM_STEPS: ${{ inputs.steps }}
+          SIM_REMOTE: ${{ inputs.remote }}
           SIM_OUT: sim-out
         run: |
           A=$(( ${{ inputs.first_seed }} + ${{ matrix.runner }} * ${{ inputs.seeds_per_runner }} ))
