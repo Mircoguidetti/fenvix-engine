@@ -5753,4 +5753,41 @@ mod tests {
         assert!(marker_clean(&store, id).await.unwrap());
         assert!(!lc.wake(id).await.unwrap().unclean);
     }
+
+    /// fix-sim-holes, hole Z, part 4 (the second R-rolling reviewer's case): a fenced writer with acknowledged writes
+    /// still in its memtable fails its flush at close: no marker, the close returns the error, and the next wake replays
+    /// both its acknowledged write and the new owner's WAL-only one. The new owner's clean close then gives a clean wake.
+    #[tokio::test]
+    async fn fenced_close_with_pending_writes_leaves_no_marker() {
+        let _g = settings_lock().await;
+        let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let lc = Lifecycle::new(Arc::new(CountingStore::new(Arc::clone(&store))), None);
+        let lc2 = Lifecycle::new(Arc::new(CountingStore::new(Arc::clone(&store))), None);
+        let id = "hole-z-pending";
+        let mut t = lc.create(id).await.unwrap();
+        t.apply(vec![Op::Put(b"base".to_vec(), b"0".to_vec())]).await.unwrap();
+        t.close().await.unwrap();
+        let mut a = lc.wake(id).await.unwrap();
+        a.upgrade().await.unwrap();
+        a.apply(vec![Op::Put(b"a".to_vec(), b"1".to_vec())]).await.unwrap();
+        let mut b = lc2.wake(id).await.unwrap();
+        b.upgrade().await.unwrap();
+        b.apply(vec![Op::Put(b"b".to_vec(), b"2".to_vec())]).await.unwrap();
+        assert!(a.close().await.is_err(), "a fenced writer's close with a pending memtable fails");
+        assert!(read_marker(&store, id).await.unwrap().is_none(), "and leaves no marker");
+        let r = lc.wake(id).await.unwrap();
+        assert!(r.unclean);
+        for (k, v) in [(&b"base"[..], &b"0"[..]), (b"a", b"1"), (b"b", b"2")] {
+            assert_eq!(r.get(k).await.unwrap().as_deref(), Some(v), "key {:?}", String::from_utf8_lossy(k));
+        }
+        r.close().await.unwrap();
+        b.close().await.unwrap();
+        let r = lc.wake(id).await.unwrap();
+        assert!(!r.unclean, "the owner's clean close gives a clean wake");
+        for k in [&b"base"[..], b"a", b"b"] {
+            assert!(r.get(k).await.unwrap().is_some());
+        }
+        r.close().await.unwrap();
+    }
 }
+
