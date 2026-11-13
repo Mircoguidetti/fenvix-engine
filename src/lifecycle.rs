@@ -9,7 +9,7 @@
 //! * Compaction and GC run outside the writer, in `Maintenance`.
 
 use crate::counting::{CountingStore, Snapshot};
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use futures::StreamExt;
 use bytes::Bytes;
 use object_store::path::Path;
@@ -31,6 +31,35 @@ pub const L0_COMPACT_THRESHOLD: usize = 4;
 /// `Settings::l0_max_ssts` default is 8; a writer whose memtable flush would exceed it blocks.
 /// Wait for compaction before writing when a tenant is already this close.
 pub const L0_GUARD: usize = 6;
+/// runwriter-and-stall: writer opens of a database with a compactor that waited for a gated compaction pass first (L0 at
+/// the guard, every L0 row at or below X_d).
+pub static WAKE_GATED_PASSES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// runwriter-and-stall: writer opens whose unflushed limit was raised by the WAL's size (L0 at the guard), and the largest
+/// raise (bytes).
+pub static REPLAY_RAISES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static REPLAY_RAISED_BYTES_MAX: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Bytes of the WAL objects of database `id` (an upper bound of what a writer's open replays: GC removes the objects
+/// already in L0).
+pub(crate) async fn wal_bytes(store: &Arc<dyn ObjectStore>, id: &str) -> Result<usize> {
+    use futures::TryStreamExt;
+    let prefix = Path::from(format!("{}/wal", tenant_path(id)));
+    let metas: Vec<object_store::ObjectMeta> = store.list(Some(&prefix)).try_collect().await?;
+    Ok(metas.iter().map(|m| m.size as usize).sum())
+}
+
+/// Test control: override SlateDB's `max_unflushed_bytes` for writers built from now on (0 = keep the setting).
+pub static MAX_UNFLUSHED_OVERRIDE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Whether `compact_tenant_pass_with` would run on `id` with compactors on: a version of our manifest exists, every L0
+/// row is at or below its X_d (the pass moves only those), and the tiered scheduler is set.
+pub(crate) async fn pass_can_run_gated(raw: &Arc<dyn ObjectStore>, id: &str) -> Result<bool> {
+    let Some(v) = crate::fx::manifest::load_newest(raw, id).await? else { return Ok(false) };
+    let admin = Admin::builder(tenant_path(id), Arc::clone(raw)).build();
+    let Some(m) = admin.read_manifest(None).await? else { return Ok(false) };
+    Ok(m.last_l0_seq() <= v.x_d && crate::tiered::scheduler().is_some())
+}
 /// Tenants garbage-collected at once by the maintenance loop.
 pub const GC_CONCURRENCY: usize = 16;
 /// How often (milliseconds) the maintenance loop looks at the L0 of every open writer and queues a compaction for each one
@@ -555,7 +584,14 @@ pub(crate) fn writer_builder(id: &str, store: &Arc<dyn ObjectStore>) -> slatedb:
 /// the blocks the reader cached stay warm for the writer (same database, same immutable objects). With a fresh scope every
 /// first write after a wake (the profiler's entries too) left the database with a cold cache.
 pub(crate) fn writer_builder_in(id: &str, store: &Arc<dyn ObjectStore>, scope: Option<u64>) -> slatedb::DbBuilder<String> {
+    writer_builder_raised(id, store, scope, 0)
+}
+
+/// [`writer_builder_in`] with `max_unflushed_bytes` raised by `extra` (runwriter-and-stall: the WAL a writer's open
+/// replays while L0 is full, `Tenant::upgrade_inner`).
+pub(crate) fn writer_builder_raised(id: &str, store: &Arc<dyn ObjectStore>, scope: Option<u64>, extra: usize) -> slatedb::DbBuilder<String> {
     let mut settings = writer_settings();
+    settings.max_unflushed_bytes = settings.max_unflushed_bytes.saturating_add(extra);
     let relaxed = relaxed_window(id);
     let local = LOCAL_LOG_FLUSH_SECS.load(std::sync::atomic::Ordering::Relaxed);
     if local > 0 {
@@ -596,6 +632,10 @@ pub fn writer_settings() -> Settings {
         s.l0_max_ssts = l0_max;
         // both limits (the per-key one is also 8 by default): a value above 8 lets a test see L0 pass 8 instead of stalling
         s.l0_max_ssts_per_key = l0_max;
+    }
+    let unflushed = MAX_UNFLUSHED_OVERRIDE.load(std::sync::atomic::Ordering::Relaxed);
+    if unflushed > 0 {
+        s.max_unflushed_bytes = unflushed as usize;
     }
     let l0_bytes = L0_SST_BYTES_OVERRIDE.load(std::sync::atomic::Ordering::Relaxed);
     if l0_bytes > 0 {
@@ -2911,23 +2951,40 @@ impl Tenant {
         // version of our manifest, compactors on): waiting for it waited for nothing, and under a caller holding the
         // maintenance lock (a restore) until the 30 s timeout failed the wake. Its compactor, started at the first
         // write, compacts L0.
-        let pass_runs = !(self.lc.l0_guard
+        let has_fxc = self.lc.l0_guard
             && self.l0_at_wake >= L0_GUARD
             && crate::fx::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed)
-            && !crate::fx::manifest::list_versions(&self.lc.store, &self.id).await?.is_empty());
+            && !crate::fx::manifest::list_versions(&self.lc.store, &self.id).await?.is_empty();
+        // runwriter-and-stall (CI d660ea9, test_51r sealed runs 6, 7, 9): with L0 full of absorbed SSTs, the writer's
+        // open below never returned. SlateDB's WAL replay applies backpressure (`maybe_apply_backpressure`): once the
+        // replayed memtables reach `max_unflushed_bytes` it waits for flushes, the flushes wait for L0 to shrink, and only
+        // the compactor's fold shrinks it, which starts after this open. Every write to the database then waited until
+        // the client gave up. When the gated pass can run (every L0 row at or below X_d: `compact_tenant_pass_with`
+        // moves only those, rule 8), it runs first, as it does for a database without a compactor. Its wait no longer
+        // fails the wake: past it the open goes ahead as before.
+        let gated_pass = has_fxc && pass_can_run_gated(&self.lc.store, &self.id).await.unwrap_or(false);
+        let pass_runs = !has_fxc || gated_pass;
         if self.lc.l0_guard && self.l0_at_wake >= L0_GUARD && pass_runs {
             if let Some(q) = &self.lc.queue {
                 let started = Instant::now();
                 for _ in 0..3 {
                     let (tx, rx) = oneshot::channel();
                     q.request(&self.id, Some(tx));
-                    let l0 = tokio::time::timeout(Duration::from_secs(30), rx)
-                        .await
-                        .context("compaction wait timed out")??;
+                    let l0 = match tokio::time::timeout(Duration::from_secs(30), rx).await {
+                        Ok(r) => r?,
+                        Err(_) if gated_pass => {
+                            eprintln!("wake {}: the gated compaction pass did not answer in 30 s; opening the writer anyway", self.id);
+                            break;
+                        }
+                        Err(e) => return Err(anyhow::Error::from(e).context("compaction wait timed out")),
+                    };
                     self.l0_at_wake = l0;
                     if l0 < L0_GUARD {
                         break;
                     }
+                }
+                if gated_pass {
+                    WAKE_GATED_PASSES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                 }
                 let mut st = self.lc.stats.lock().unwrap();
                 st.guard_waits += 1;
@@ -2941,9 +2998,23 @@ impl Tenant {
         phases.push(("reader_close", t0.elapsed().as_millis()));
         let store = &self.lc.store;
         let marker = marker_path(&self.id);
+        // runwriter-and-stall (coordinator's decision on the open case): L0 still at the guard here means the gated pass
+        // could not run (L0 rows above X_d, which only our compactor may move, rule 8) or did not shrink it. SlateDB's WAL
+        // replay would then wait for flushes that wait for L0 (`maybe_apply_backpressure` once the replayed memtables reach
+        // `max_unflushed_bytes`), and L0 shrinks only once our compactor runs, after this open: the database stayed
+        // unwritable for good. This writer's limit is raised by the WAL's size, so the replay holds it in memory and the
+        // open returns; nothing is moved or skipped. SlateDB 0.17 fixes its settings at the build, so the raised limit
+        // stays for this writer's life: at most about twice the normal one, and the engine's own write stall at L0 still
+        // holds new writes back until the compactor has absorbed and folded L0.
+        let extra = if self.l0_at_wake >= L0_GUARD { wal_bytes(store, &self.id).await.unwrap_or(0) } else { 0 };
+        if extra > 0 {
+            REPLAY_RAISES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            REPLAY_RAISED_BYTES_MAX.fetch_max(extra as u64, std::sync::atomic::Ordering::Relaxed);
+            eprintln!("REPLAY_RAISE db={} l0={} wal_bytes={extra}: the writer's unflushed limit is raised by the WAL's size for its open", self.id, self.l0_at_wake);
+        }
         let (del, db) = tokio::join!(
             store.delete(&marker),
-            build_writer(writer_builder_in(&self.id, store, self.scope))
+            build_writer(writer_builder_raised(&self.id, store, self.scope, extra))
         );
         match del {
             Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
