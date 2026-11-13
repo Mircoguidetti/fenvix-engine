@@ -547,6 +547,36 @@ mod tests {
         assert_eq!(f, 0, "{v:?}");
     }
 
+    /// Hole Z through the fork's door (found by random seed 2117 of sim-test-2; fix-sim-holes item 5 changed
+    /// `ctl/fork.rs` `quiesce` for it, without a test that runs a fork). A writer that lost the database without noticing
+    /// it (p0) is asked to fork: the quiesce closes its tenant (an empty memtable: the close never reaches the store and
+    /// writes the clean marker) and trusts the marker by a HEAD, so it skips the reopen that replays the WAL. The new
+    /// owner's acknowledged writes, still only in its WAL, are missing from the fork. The simulated fork mirrors the
+    /// `fork.rs` of its build: on `sim-test-2` the head's HEAD check (fails: 48 violations, MEASURED, 1 run); with
+    /// fix-sim-holes' Z fix and `lifecycle::marker_clean` in the simulated quiesce: passes (MEASURED, 1 run).
+    /// Ignored until the fix is in: `--ignored`.
+    #[test]
+    #[ignore]
+    fn sim_hole_z_fork_trusts_a_fenced_writers_marker() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use Ev::*;
+        let ev = vec![
+            Open { p: 0, writer: true },
+            fill(0, 0, 0),
+            Flush { p: 0 },
+            // the takeover: p0 has not noticed it
+            Open { p: 1, writer: true },
+            fill(1, 1, 0),
+            fill(1, 2, 0),
+            // the fork is asked of p0 (its process still believes it serves the database)
+            Fork { p: 0, copy: false, tag: 1 },
+        ];
+        let (f, v) = run_story(&rt, "hole Z through the fork", 0, ev);
+        assert_eq!(f, 0, "hole Z through the fork: {} violations: {:?}", v.len(), v.iter().take(3).collect::<Vec<_>>());
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {
