@@ -68,11 +68,13 @@ def run_first_wave(bucket, tag, extra):
     acked = []
     names = [f"agent{i:04d}" for i in range(N)]
     t0 = time.time()
-    c, ts, errs = write_wave(s.port, names, MB * 2, acked)
+    dead = threading.Event()
+    c, ts, errs = write_wave(s.port, names, MB * 2, acked, dead)
     peak = 0
     while any(t.is_alive() for t in ts):
         r = rss_mib(s.proc.pid)
-        if r < 0:
+        if r < 0 or s.proc.poll() is not None:
+            dead.set()       # the server is gone (killed): the writers stop instead of retrying a dead server
             break
         peak = max(peak, r)
         time.sleep(0.5)
