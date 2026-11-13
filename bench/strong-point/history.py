@@ -610,16 +610,23 @@ def settle(line: str, uri: str) -> dict | None:
 # B2: our server with compaction and GC off, and saves with and without compaction
 # ----------------------------------------------------------------------------------------------------------------------
 
-OFF_FLAGS = "--no-maintenance --no-sealed-compactor --wal-gc-secs 0 --sst-gc-secs 0"
+# B2 "off": no background compaction or GC loop (and no L0 guard), no compactor, no publish by the server itself
+# (--sealed-runs 0: without the compactor the server would otherwise publish runs every 2 write batches under the lock)
+OFF_FLAGS = "--no-maintenance --no-sealed-compactor --sealed-runs 0 --wal-gc-secs 0 --sst-gc-secs 0"
 
 
 def recreate_cook(extra: str) -> None:
     """Our cook again with BASE flags plus `extra` (the spare and the log copies keep running)."""
     base = os.environ.get("FXBENCH_SERVER_FLAGS_BASE", "")
     os.environ["FXBENCH_SERVER_FLAGS"] = (base + " " + extra).strip()
-    lines.sh(["docker", "rm", "-f", "cook"])
+    # a clean stop (SIGTERM, then docker's RESTART_T) closes the databases and releases the leases; `rm -f` would leave
+    # them held for the lease's ttl and the new process's first writes fail with TenantLeaseHeld (the pilot)
+    lines.sh(["docker", "stop", "-t", lines.RESTART_T, "cook"], timeout=600)
+    lines.sh(["docker", "rm", "cook"])
     lines.run_ours("cook", lines.server_cmd("cook", True))
     lines.wait_until("our server answers", lambda: lines.ours_ready("fenvix-log"), 600)
+    _, coll = mongo_coll(lines.uri_of("fenvix-log"))
+    lines.wait_until("our server takes a write", lambda: coll.database["b2_probe"].insert_one({"t": time.time()}).acknowledged, 300, 2)
     log(f"cook recreated with flags: {os.environ['FXBENCH_SERVER_FLAGS']}")
 
 
@@ -657,9 +664,12 @@ def saves(uri: str, out: str, tag: str, seconds: int, rate: float, bg_docs_per_s
     p.join()
     nbg = int(open(os.path.join(out, f"bg-{tag}.count")).read())
     # read back every acknowledged save and background document
-    got = coll.count_documents({"userId": {"$gte": SAVE_BASE, "$lt": SAVE_BASE + 100}, "ts": {"$gte": T0 + dt.timedelta(milliseconds=slot_base * 10)}})
-    gotbg = coll.count_documents({"userId": {"$gte": SAVE_BASE + 1000, "$lt": SAVE_BASE + 2000},
-                                  "ts": {"$gte": T0 + dt.timedelta(milliseconds=(slot_base + 10_000_000) * 10)}})
+    def in_range(lo_slot, n, ulo, uhi):
+        return coll.count_documents({"userId": {"$gte": ulo, "$lt": uhi},
+                                     "ts": {"$gte": T0 + dt.timedelta(milliseconds=lo_slot * 10),
+                                            "$lt": T0 + dt.timedelta(milliseconds=(lo_slot + n) * 10)}})
+    got = in_range(slot_base, len(ms), SAVE_BASE, SAVE_BASE + 100)
+    gotbg = in_range(slot_base + 10_000_000, nbg, SAVE_BASE + 1000, SAVE_BASE + 2000)
     d = _flat({k2: srv1.get(k2) for k2 in ("compactor", "compaction", "s3")})
     d0 = _flat({k2: srv0.get(k2) for k2 in ("compactor", "compaction", "s3")})
     res = {"tag": tag, "saves": len(ms), "p50_ms": round(pct(ms, .5), 2), "p90_ms": round(pct(ms, .9), 2), "p99_ms": round(pct(ms, .99), 2),
@@ -815,7 +825,7 @@ def main():
     r.add_argument("--b2-saves", action="store_true")
     r.add_argument("--save-secs", type=int, default=120)
     r.add_argument("--save-rate", type=float, default=50)
-    r.add_argument("--save-bg", type=float, default=500)
+    r.add_argument("--save-bg", type=float, default=100)
     r.add_argument("--seed", type=int, default=11)
     r.add_argument("--resume", action="store_true")
     r.add_argument("--down", action="store_true")
