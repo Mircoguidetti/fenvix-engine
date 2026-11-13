@@ -58,7 +58,6 @@ DB, COLL = "app_demo", "messages"
 T0 = dt.datetime(2026, 1, 1, tzinfo=dt.timezone.utc)
 T0_S = int(T0.timestamp())
 CLASSES = {"h50": 50, "h500": 500, "h5000": 5000}
-MEASURED_BASE = {"h50": 10_000_000, "h500": 11_000_000, "h5000": 12_000_000}
 SAVE_BASE = 50_000_000      # customers of the B2 save runs (never read by the measured phases)
 CG = "/sys/fs/cgroup"
 
@@ -140,23 +139,39 @@ def make_plan(state: str, sizes_gb: list[float], per_class: int, seed: int, fill
     rng = np.random.default_rng(seed)
     avg = avg_bson_bytes()
     n_tot = [int(g * 1e9 / avg) for g in sizes_gb]
-    measured = {c: np.arange(MEASURED_BASE[c], MEASURED_BASE[c] + per_class) for c in CLASSES}
+    # The measured customers are odd ids at random inside the filler range of size 1, and no filler ever uses them: in
+    # the key order of every system a measured customer's neighbours are filler customers (the first plan gave them
+    # adjacent ids, so on our line a block fetched for one measured customer also held the next one: its "cold" read
+    # found its data already fetched; that run was discarded).
+    odd = rng.choice(np.arange(1, fillers[0], 2), size=len(CLASSES) * per_class, replace=False)
+    measured = {c: np.sort(odd[i * per_class:(i + 1) * per_class]) for i, c in enumerate(CLASSES)}
+    reserved = np.sort(odd)
     m_slots = np.concatenate([np.repeat(ids, CLASSES[c]) for c, ids in measured.items()])
+
+    def filler(hi, cnt):
+        a = rng.integers(0, hi, cnt)
+        while True:
+            bad = np.isin(a, reserved)
+            if not bad.any():
+                return a
+            a[bad] = rng.integers(0, hi, int(bad.sum()))
+
     parts, prev = [], 0
     for k, n in enumerate(n_tot):
         cnt = n - prev
         if k == 0:
-            f = rng.integers(0, fillers[0], cnt - len(m_slots))
+            f = filler(fillers[0], cnt - len(m_slots))
             a = np.concatenate([m_slots, f])
             a = a[rng.permutation(len(a))]
         else:
-            a = rng.integers(0, fillers[min(k, 2)], cnt)
+            a = filler(fillers[min(k, 2)], cnt)
         parts.append(a.astype(np.int64))
         np.save(os.path.join(state, f"slots_{k + 1}.npy"), parts[-1])
         prev = n
     size1 = parts[0]
     # filler customers with at least 10 messages at size 1: the newest-10 set and the warm-up set
     counts = np.bincount(size1[size1 < fillers[0]], minlength=fillers[0])
+    counts[reserved] = 0
     ok = np.nonzero(counts >= 10)[0]
     pick = rng.choice(ok, size=500, replace=False)
     plan = {"seed": seed, "sizes_gb_logical": sizes_gb, "avg_bson_bytes": round(avg, 1), "slots_total": n_tot,
