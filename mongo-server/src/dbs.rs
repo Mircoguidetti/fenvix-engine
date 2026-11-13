@@ -825,6 +825,10 @@ impl Entry {
     }
 
     async fn maybe_start_fxc(&mut self) {
+        // P-B3: a writer that handed its compaction to a remote compactor starts none (and checks nothing per write)
+        if self.tenant.as_ref().is_some_and(|t| t.fx_remote()) {
+            return;
+        }
         // integration-4 (diagnostics): the silent cases of the guard below, counted and logged
         if self.fxc.is_none() && tenant_bench::fx::compactor::SERVER_ON.load(Relaxed) {
             match self.tenant.as_ref() {
@@ -883,6 +887,15 @@ impl Entry {
                     self.tenant.as_mut().unwrap().fx_unclaim();
                     return;
                 }
+            }
+            // P-B3 (`--sealed-remote-compactor`): caught up, the database is a remote compactor's to compact; this writer
+            // follows the store's versions (and keeps this process's claim, so no pass runs on it)
+            if tenant_bench::fx::remote::WAITER_DEFERS.load(Relaxed) {
+                let t = self.tenant.as_mut().unwrap();
+                if !t.fx_set_remote() {
+                    t.fx_unclaim();
+                }
+                return;
             }
             let t = self.tenant.as_mut().unwrap();
             {
@@ -1540,6 +1553,8 @@ impl Entry {
             return Ok(None);
         }
         self.touch();
+        // P-B3 prototype: the erasure pass needs the database's compactor in this process (its scrub commits through it)
+        anyhow::ensure!(!self.tenant.as_ref().unwrap().fx_remote(), "database {}: its compaction is remote (--sealed-remote-compactor); the erasure pass is not supported by the B3 prototype", self.name);
         let base = self.tenant.as_mut().unwrap().fx_erase_prepare(need).await?;
         Ok(Some(ErasePrep { base, fxc: self.fxc.clone() }))
     }
@@ -1720,6 +1735,9 @@ impl Entry {
             if let Err(e) = self.tenant.as_mut().unwrap().fx_first_poll(false).await {
                 eprintln!("sealed runs: first publish of database {} failed: {e:#}", self.name);
             }
+        } else if self.tenant.as_ref().unwrap().fx_remote() {
+            // P-B3: the remote compactor publishes; re-read SlateDB's manifest when L0 grows (its folds remove SSTs)
+            self.tenant.as_ref().unwrap().fx_remote_poke(4);
         } else if self.fxc.is_none() && self.tenant.as_mut().unwrap().fx_note_write() {
             let t = self.tenant.as_mut().unwrap();
             let opts = t.fx_auto_opts();

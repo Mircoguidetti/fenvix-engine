@@ -1155,7 +1155,7 @@ impl Lifecycle {
         self.touched.lock().unwrap().insert(id.name.clone(), Instant::now());
         writer_opened(&id.name, &db);
         let scope = writer_scope(&id.name);
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_preempt: None, serving_until: Default::default(), serving_src: Default::default(), epoch: epoch, renewed: Default::default(), renewing: Default::default(), replay_raised: 0 };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_remote: false, fx_poked: Default::default(), fx_preempt: None, serving_until: Default::default(), serving_src: Default::default(), epoch: epoch, renewed: Default::default(), renewing: Default::default(), replay_raised: 0 };
         t.holds = crate::fx::hold::for_db(&t.id.name); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
@@ -1210,7 +1210,7 @@ impl Lifecycle {
         let l0_at_wake = reader.manifest().l0().len();
         let reader = Arc::new(reader);
         READER_DBS.lock().unwrap().insert(id.name.clone(), Arc::downgrade(&reader));
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_preempt: None, serving_until: Default::default(), serving_src: Default::default(), epoch: 0, renewed: Default::default(), renewing: Default::default(), replay_raised: 0 };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_remote: false, fx_poked: Default::default(), fx_preempt: None, serving_until: Default::default(), serving_src: Default::default(), epoch: 0, renewed: Default::default(), renewing: Default::default(), replay_raised: 0 };
         t.holds = crate::fx::hold::for_db(&t.id.name); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
@@ -1957,6 +1957,11 @@ pub struct Tenant {
     fx_unknown: Option<Box<crate::fx::manifest::Version>>,
     /// Step 4: the state shared with this database's compactor (`fx/compactor.rs`), when one runs.
     fx_shared: Option<Arc<crate::fx::compactor::Shared>>,
+    /// P-B3: a remote compactor publishes this writer's versions (`fx/remote.rs`): the writer publishes nothing more and
+    /// follows our manifest as a reader does (renewed at half T_pin, no step reads with a state older than T_pin).
+    fx_remote: bool,
+    /// P-B3: when this writer last re-read SlateDB's manifest because of the remote compactor's folds.
+    fx_poked: std::sync::Mutex<Option<Instant>>,
     /// fix-write-stalls: the first build of this database, running off the database's lock (`fx_first_start`); its version
     /// is installed at a later exclusive step (`fx_first_poll`), and every step that needs the state settled waits for it.
     fx_first: Option<FirstBuild>,
@@ -2150,7 +2155,8 @@ impl Tenant {
     /// A reader in reader mode refuses to read with a version older than T_pin (rule 6): before every step that reads
     /// SlateDB. The writer is the only publisher of its database, so its version is always the newest.
     fn fx_fresh(&self, st: &StepState) -> Result<()> {
-        if matches!(self.mode, Some(Mode::Reader(_))) {
+        // P-B3: a writer under a remote compactor follows our manifest as a reader does (rule 6 for it too)
+        if matches!(self.mode, Some(Mode::Reader(_))) || (self.fx_remote && !crate::fx::remote::CONTROL_WRITER_NO_T_PIN.load(std::sync::atomic::Ordering::Relaxed)) {
             let t_pin = Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed));
             if st.loaded.elapsed() > t_pin {
                 return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: our manifest was last read {:?} ago, more than T_pin; retry", self.id, st.loaded.elapsed()))));
@@ -2320,6 +2326,10 @@ impl Tenant {
         if self.fx_fence_pending {
             return true;
         }
+        if self.fx_remote {
+            // P-B3: a writer whose versions a remote compactor publishes renews its state at half T_pin, as a reader does
+            return self.fx_loaded.elapsed() > Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed) / 2);
+        }
         if let (Some(sh), Some(v)) = (&self.fx_shared, &self.fx) {
             return sh.pending_version().is_some_and(|p| p > v.version);
         }
@@ -2376,6 +2386,9 @@ impl Tenant {
     pub async fn fx_refresh(&mut self) -> Result<()> {
         self.absorb_renewal();
         let t0 = Instant::now();
+        if self.fx_remote && !self.fx_fence_pending {
+            return self.fx_follow_remote(t0).await;
+        }
         if self.fx_shared.is_some() && !self.fx_fence_pending {
             self.fx_sync();
             return Ok(());
@@ -2997,6 +3010,81 @@ impl Tenant {
 
     /// Claim this database for its compactor (`fx::compactor::claim`). When a compaction pass runs on it, the pass is asked
     /// to stop (until a claim succeeds) and false is returned.
+    /// P-B3: hand this writer's compaction to a remote compactor (`fx/remote.rs`): from now on it publishes nothing (the
+    /// server's write path asks `fx_remote`), claims the database in this process so no compaction pass runs on it, and
+    /// follows the newest trusted version at half T_pin. Needs a version; false when the claim of this process could
+    /// not be taken yet (a pass runs: it is asked to stop, and the caller tries again later).
+    pub fn fx_set_remote(&mut self) -> bool {
+        if self.fx_remote {
+            return true;
+        }
+        if self.fx.is_none() || self.fx_shared.is_some() || self.fx_first.is_some() || !matches!(self.mode, Some(Mode::Writer(_))) {
+            return false;
+        }
+        if !self.fx_claim() {
+            return false;
+        }
+        self.fx_remote = true;
+        crate::fx::remote::WAITERS_FOLLOWING.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        true
+    }
+
+    pub fn fx_remote(&self) -> bool {
+        self.fx_remote
+    }
+
+    /// P-B3: the remote compactor's fold removes absorbed L0 SSTs in the store; this writer learns it at its manifest's
+    /// next read. With L0 at `l0` SSTs or more, re-read it now (at most every 100 ms), so writes do not stall on L0
+    /// SSTs that are already gone (the in-process compactor did this after each fold).
+    pub fn fx_remote_poke(&self, l0_at: usize) {
+        if !self.fx_remote {
+            return;
+        }
+        let Some(Mode::Writer(db)) = &self.mode else { return };
+        if db.manifest().l0().len() < l0_at {
+            return;
+        }
+        {
+            let mut p = self.fx_poked.lock().unwrap();
+            if p.is_some_and(|t| t.elapsed() < Duration::from_millis(100)) {
+                return;
+            }
+            *p = Some(Instant::now());
+        }
+        let db = db.clone();
+        tokio::spawn(crate::counting::as_maintenance(async move {
+            let _ = db.refresh_manifest().await;
+        }));
+    }
+
+    /// P-B3: a writer's renewal under a remote compactor: the newest trusted version, installed when newer, with no fence
+    /// (the writer publishes nothing; a fence of its own would take the remote compactor's next slot). Its X_d must be
+    /// at or below SlateDB's last seq (as at an opening). The state counts from `t0`, before the first request (note 5).
+    async fn fx_follow_remote(&mut self, t0: Instant) -> Result<()> {
+        use crate::fx::manifest;
+        self.load_env().await?;
+        let store = Arc::clone(&self.lc.store);
+        let known = self.fx.as_ref().map(|v| v.version);
+        match manifest::load_newest_trusted_unless(&store, &self.id, known).await? {
+            manifest::Newest::Same => {}
+            manifest::Newest::None => anyhow::bail!("database {}: our manifest vanished", self.id),
+            manifest::Newest::New(v, _slot) => {
+                if known.is_some_and(|k| v.version <= k) {
+                    // an older slot than the one served (a late version GC let in below): keep the newer one
+                } else {
+                    let Some(Mode::Writer(db)) = &self.mode else { anyhow::bail!("database {}: not a writer", self.id) };
+                    let seq = db.snapshot().await?.seq();
+                    anyhow::ensure!(v.x_d <= seq, "database {}: our manifest {} has X_d {} but SlateDB's last seq is {seq}", self.id, v.version, v.x_d);
+                    anyhow::ensure!(v.e_env == self.env, "database {}: our manifest {} has E_env {:?}, the database's marker {:?}", self.id, v.version, v.e_env, self.env);
+                    self.fx_install(crate::fx::view::View::new(store, v, self.fx.as_deref())?);
+                    crate::fx::remote::FOLLOW_INSTALLS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                }
+            }
+        }
+        self.fx_loaded = crate::fx::loaded_at(t0);
+        Ok(())
+    }
+
     pub fn fx_claim(&mut self) -> bool {
         use std::sync::atomic::Ordering::Relaxed;
         if self.fx_claimed {
@@ -4160,6 +4248,11 @@ pub(crate) async fn compact_tenant_pass_with(
     let Some(_slot) = crate::fx::compactor::pass_enter(id) else {
         return Ok(None);
     };
+    // P-B3: with a remote compactor (`--sealed-remote-compactor`) this process compacts nothing of SlateDB: a pass's SlateDB
+    // compactor would fence the remote compactor's fold
+    if crate::fx::remote::WAITER_DEFERS.load(std::sync::atomic::Ordering::Relaxed) {
+        return Ok(None);
+    }
     // c2-fix-clone-uploads: with compactors on, a database with a version of our manifest is compacted by its own
     // compactor while it is open, and by this pass only over what is absorbed. Ungated, this pass folded a close's last
     // memtable flush (never absorbed: the compactor had stopped) into a sorted run; after the next open the absorptions

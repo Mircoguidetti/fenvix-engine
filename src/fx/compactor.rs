@@ -544,8 +544,11 @@ pub struct Compactor {
     pub store: Arc<dyn ObjectStore>,
     pub knobs: Knobs,
     pub pool: Arc<Pool>,
-    db: slatedb::Db,
+    /// SlateDB's state: the writer's own (in the waiter) or the manifest read from the store (P-B3, a remote compactor).
+    db: SlateSrc,
     epoch: Option<u64>,
+    /// P-B3: the compactor claim of a remote compactor; it publishes and deletes only while the claim is valid.
+    pub claim: Option<Arc<super::remote::Claim>>,
     cur: tokio::sync::Mutex<Cur>,
     /// L0 SSTs absorbed into a published version, with their highest seq; the fold may take them.
     pub(crate) absorbed: Mutex<HashMap<ulid::Ulid, u64>>,
@@ -591,6 +594,23 @@ pub struct Compactor {
     scrubs: AtomicU64,
 }
 
+/// P-B3: where a compactor reads SlateDB's state (the L0 SSTs it absorbs and the fold may take).
+pub(crate) enum SlateSrc {
+    /// The waiter's writer: its manifest in memory, refreshed after each fold.
+    Writer(slatedb::Db),
+    /// A remote compactor: SlateDB's newest manifest read from the store.
+    Remote(super::remote::RemoteSlate),
+}
+
+impl SlateSrc {
+    pub(crate) fn manifest(&self) -> slatedb::VersionedManifest {
+        match self {
+            SlateSrc::Writer(db) => db.manifest(),
+            SlateSrc::Remote(r) => r.manifest(),
+        }
+    }
+}
+
 /// While alive, the compactor starts no rewrite of runs (`Compactor::pause_rewrites`).
 pub struct RewritePause(Arc<Compactor>);
 
@@ -633,8 +653,9 @@ impl Compactor {
             store,
             knobs,
             pool,
-            db,
+            db: SlateSrc::Writer(db),
             epoch,
+            claim: None,
             cur: tokio::sync::Mutex::new(Cur { v, fence_pending: false }),
             absorbed: Mutex::new(HashMap::new()),
             running: Mutex::new(Running::default()),
@@ -681,6 +702,90 @@ impl Compactor {
         Ok(c)
     }
 
+    /// P-B3: start the compactor of database `id` in a process that is not its waiter (`mongo-server --compactor-only`),
+    /// holding `claim`. It reads SlateDB's manifest from the store, stamps the writer epoch found there, has no holds and
+    /// serves no version: the drop floor uses the time-only remote lease (rule 10: `knobs.lease` becomes
+    /// `knobs.remote_lease`), GC keeps what its grace keeps for every reader (rule 23). The database must have a version
+    /// and be caught up (`manifest::needs_catch_up`): the waiter publishes the first version and the catch-up.
+    pub async fn start_remote(store: Arc<dyn ObjectStore>, id: crate::lifecycle::DbAt, mut knobs: Knobs, pool: Arc<Pool>, runtime: tokio::runtime::Handle, claim: Arc<super::remote::Claim>, slate_every: Duration) -> Result<Arc<Compactor>> {
+        knobs.lease = knobs.remote_lease;
+        knobs.check()?;
+        ensure!(!manifest::needs_catch_up(&store, &id).await?, "database {id}: not caught up (or a compaction pass ran ungated): the waiter must publish a catch-up version first");
+        let (v, _slot) = manifest::load_newest_trusted(&store, &id).await?.ok_or_else(|| anyhow!("database {id}: no version of our manifest yet (the waiter publishes the first one)"))?;
+        let slate = super::remote::RemoteSlate::open(&store, &id, slate_every).await?;
+        let epoch = Some(slate.manifest().writer_epoch());
+        ensure!(v.writer_epoch.unwrap_or(0) <= epoch.unwrap_or(0), "database {id}: version {} has writer epoch {:?}, above SlateDB's {:?}", v.version, v.writer_epoch, epoch);
+        let sh = Shared::new(&id, Arc::new(Holds::default()));
+        let drop = super::drop::DropCtl::new(Arc::clone(&sh), Arc::clone(&store), &knobs);
+        let c = Arc::new(Compactor {
+            sh: Arc::clone(&sh),
+            store,
+            knobs,
+            pool,
+            db: SlateSrc::Remote(slate),
+            epoch,
+            claim: Some(claim),
+            cur: tokio::sync::Mutex::new(Cur { v, fence_pending: false }),
+            absorbed: Mutex::new(HashMap::new()),
+            running: Mutex::new(Running::default()),
+            due_since: Mutex::new(HashMap::new()),
+            stopped: AtomicBool::new(false),
+            stop_signal: tokio::sync::Notify::new(),
+            paused: AtomicBool::new(false),
+            drop,
+            slate: Mutex::new(None),
+            slate_stop: Mutex::new(None),
+            write_path: super::pool::write_path_for(&runtime),
+            runtime,
+            codec: codec::identity(),
+            gc: Default::default(),
+            last_gc: Mutex::new(Instant::now()),
+            last_l0_trace: Mutex::new(Instant::now()),
+            refreshed_jobs: AtomicU64::new(0),
+            job_starts: Mutex::new(HashMap::new()),
+            next_job: AtomicU64::new(0),
+            creates_in_flight: Arc::new(AtomicU64::new(0)),
+            absorb_lock: tokio::sync::Mutex::new(()),
+            last_scrub: AtomicU64::new(0),
+            scrubs: AtomicU64::new(0),
+            jobs: Mutex::new(Vec::new()),
+        });
+        // this process's passes stay off the database (a remote process runs none, but tests share one process)
+        ACTIVE.lock().unwrap().insert(c.id().to_string());
+        G_STARTED.fetch_add(1, Relaxed);
+        if c.knobs.recognise_in_background {
+            let rest = c.recognise_listed().await;
+            c.spawn_recognise(rest);
+        } else {
+            c.recognise_absorbed().await?;
+        }
+        super::drop::start_slate(&c).await?;
+        Ok(c)
+    }
+
+    /// Read SlateDB's manifest again: the writer's own refresh, or the store's newest manifest for a remote compactor.
+    fn refresh_slate(self: &Arc<Self>) {
+        match &self.db {
+            SlateSrc::Writer(db) => {
+                let db = db.clone();
+                // c2-fix-hangs: the compactor's work, not drawn from the database's quota (`counting::as_maintenance`)
+                self.runtime.spawn(crate::counting::as_maintenance(crate::waits::polled("refresh_manifest", self.id().to_string(), async move {
+                    let _ = db.refresh_manifest().await;
+                })));
+            }
+            SlateSrc::Remote(_) => {
+                let me = Arc::clone(self);
+                self.runtime.spawn(crate::counting::as_maintenance(crate::waits::polled("refresh_manifest", self.id().to_string(), async move {
+                    if let SlateSrc::Remote(r) = &me.db {
+                        if let Err(e) = r.refresh().await {
+                            eprintln!("fx remote compactor {}: SlateDB manifest: {e:#}", me.id());
+                        }
+                    }
+                })));
+            }
+        }
+    }
+
     /// The database with the incarnation its tenant opened (fix-incarnation): every path the compactor builds uses it
     /// (`.name` for the bare name).
     pub fn id(&self) -> &crate::lifecycle::DbAt {
@@ -688,7 +793,36 @@ impl Compactor {
     }
 
     pub fn writer_db(&self) -> &slatedb::Db {
-        &self.db
+        match &self.db {
+            SlateSrc::Writer(db) => db,
+            SlateSrc::Remote(_) => panic!("compactor of {}: remote, no writer", self.id()),
+        }
+    }
+
+    /// P-B3: reads of SlateDB's manifest from the store by a remote compactor (0 in the waiter).
+    pub fn slate_reads(&self) -> u64 {
+        match &self.db {
+            SlateSrc::Remote(r) => r.reads.load(Relaxed),
+            SlateSrc::Writer(_) => 0,
+        }
+    }
+
+    /// P-B3: whether this compactor runs outside the waiter (its SlateDB state is read from the store).
+    pub fn is_remote(&self) -> bool {
+        matches!(self.db, SlateSrc::Remote(_))
+    }
+
+    /// P-B3: whether this compactor may publish or delete now: always in the waiter; for a remote one, only while its
+    /// claim is valid (counted when not).
+    pub fn may_act(&self) -> bool {
+        match &self.claim {
+            None => true,
+            Some(c) if c.valid() => true,
+            Some(_) => {
+                super::remote::PAST_DEADLINE.fetch_add(1, Relaxed);
+                false
+            }
+        }
     }
 
     /// The newest version this compactor knows.
@@ -785,6 +919,11 @@ impl Compactor {
         let mut c = self.cur.lock().await;
         if self.stopped.load(Relaxed) {
             bail!("compactor of {} stopped", self.id());
+        }
+        if !self.may_act() {
+            // P-B3: a remote compactor past its claim's deadline publishes nothing (another holder may have started)
+            self.stopped.store(true, Relaxed);
+            return Err(anyhow::Error::new(super::LostRace(format!("compactor of {}: the compactor claim's deadline passed; nothing published", self.id()))));
         }
         if c.fence_pending {
             self.fence(&mut c).await?;
@@ -1843,11 +1982,10 @@ impl Compactor {
         self.drop.maybe_refold();
         let done = self.drop.jobs_done.load(Relaxed);
         if done > self.refreshed_jobs.swap(done, Relaxed) {
-            let db = self.db.clone();
-            // c2-fix-hangs: the compactor's work, not drawn from the database's quota (`counting::as_maintenance`)
-            self.runtime.spawn(crate::counting::as_maintenance(crate::waits::polled("refresh_manifest", self.id().to_string(), async move {
-                let _ = db.refresh_manifest().await;
-            })));
+            self.refresh_slate();
+        } else if matches!(&self.db, SlateSrc::Remote(r) if r.due()) {
+            // P-B3: a remote compactor learns new L0 SSTs (the writer's flushes) only from the store
+            self.refresh_slate();
         }
     }
 

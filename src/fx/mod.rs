@@ -33,6 +33,7 @@ pub mod local;
 pub mod pool;
 pub mod manifest;
 pub mod pair;
+pub mod remote;
 pub mod read;
 pub mod seqfilter;
 pub mod view;

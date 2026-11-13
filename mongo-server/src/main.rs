@@ -28,6 +28,7 @@ mod ballast;
 mod agentlane;
 mod agentck;
 mod custkey;
+mod remotec;
 mod layout2;
 mod opening;
 mod custbox;
@@ -508,6 +509,19 @@ struct Args {
     /// `--agent-checkpoints` collection is keyed by `thread_id` unless named here (since integration-4).
     #[arg(long, default_value = "")]
     customer_key: String,
+    /// P-B3 (prototype): the waiters of this process never compact their databases: a remote compactor does
+    /// (`--compactor-only` in another process). A waiter publishes only a database's first version and the catch-up a
+    /// compactor start needs, then follows our manifest as a reader does (tenant_bench `fx/remote.rs`).
+    #[arg(long)]
+    sealed_remote_compactor: bool,
+    /// P-B3 (prototype): run no server; be the compactor of database DB, holding its compactor claim (`fx/remote.rs`).
+    #[arg(long)]
+    compactor_only: Option<String>,
+    /// P-B3: the compactor claim's lease and margin (the margin must exceed the manifest PUT timeout, F6).
+    #[arg(long, default_value_t = 60_000)]
+    compactor_claim_lease_ms: u64,
+    #[arg(long, default_value_t = 25_000)]
+    compactor_claim_margin_ms: u64,
     /// Envelope values (envelope.rs): `read` (release E0: read envelopes, write them only in a database that already has
     /// them) or `write` (release E1: also start them in a database that has none). Default `read`. Rolling back from
     /// `write` is safe only to a release that has `read`.
@@ -1166,6 +1180,7 @@ async fn run() -> Result<()> {
         let env_c = std::env::var("FENVIX_SEALED_COMPACTOR").unwrap_or_default();
         // default since integration-3: on; off with --no-sealed-compactor or FENVIX_SEALED_COMPACTOR=0
         let _ = args.sealed_compactor;
+        tenant_bench::fx::remote::WAITER_DEFERS.store(args.sealed_remote_compactor, Relaxed);
         if !args.no_sealed_compactor && env_c != "0" {
             tenant_bench::fx::compactor::SERVER_ON.store(true, Relaxed);
             tenant_bench::fx::compactor::SERVER_SMALL.store(env_c == "small", Relaxed);
@@ -1299,6 +1314,12 @@ async fn run() -> Result<()> {
     // One counter for every request this process makes (lifecycle, leases, maintenance, listings).
     let global = Arc::new(CountingStore::new(s3));
     let s3: Arc<dyn ObjectStore> = global.clone();
+    if let Some(db) = args.compactor_only.clone() {
+        // P-B3: this process is a remote compactor, not a server
+        anyhow::ensure!(tenant_bench::fx::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed), "--compactor-only needs the compactor on (sealed runs and the compactor are on by default)");
+        let holder = args.holder.clone().unwrap_or_else(|| format!("compactor-{}-{:08x}", std::process::id(), rand::random::<u32>()));
+        return remotec::run(Arc::clone(&s3), &db, &holder, Duration::from_millis(args.compactor_claim_lease_ms), Duration::from_millis(args.compactor_claim_margin_ms)).await;
+    }
     let counting = Arc::new(CountingStore::new(Arc::clone(&s3)));
     let (queue, rx) = CompactionQueue::new();
     let lc = if args.no_maintenance {

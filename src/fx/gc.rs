@@ -161,6 +161,10 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
             continue;
         }
         // a restore point past its retention (or retention 0) that nothing names: the version object goes
+        if !c.may_act() {
+            // P-B3: a remote compactor past its claim's deadline deletes nothing
+            return Ok(());
+        }
         match store.delete(&manifest::manifest_path(id, n)).await {
             Ok(_) | Err(object_store::Error::NotFound { .. }) => {
                 st.versions_deleted.fetch_add(1, Relaxed);
@@ -201,6 +205,9 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
     fu.retain(|p, _| live_unref.contains(p));
     *st.first_unref.lock().unwrap() = fu;
     for p in doomed {
+        if !c.may_act() {
+            return Ok(());
+        }
         match store.delete(&p).await {
             Ok(_) | Err(object_store::Error::NotFound { .. }) => {
                 st.runs_deleted.fetch_add(1, Relaxed);
