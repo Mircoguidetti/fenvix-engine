@@ -723,8 +723,13 @@ def run_line(a) -> int:
             settings["probe_containers"] = ids
             b_cmd = (f"{me} delay {a.delay_ms} && {me} restart {line}" if LINES[line]["target"] == "fenvix"
                      else f"{me} restart {line}")
-            cmd += ["--mix-round", f"A={me} restart {line}", "--mix-round", f"B={b_cmd}",
-                    "--mix-write", str(a.mix_write), "--mix-read", str(a.mix_read)]
+            if getattr(a, "rounds", ""):
+                # P-B3 (2026-11-13): explicit rounds NAME=CMD, as a JSON list (CMD may use {me} and {line})
+                for spec in json.loads(a.rounds):
+                    cmd += ["--mix-round", spec.replace("{me}", me).replace("{line}", line)]
+            else:
+                cmd += ["--mix-round", f"A={me} restart {line}", "--mix-round", f"B={b_cmd}"]
+            cmd += ["--mix-write", str(a.mix_write), "--mix-read", str(a.mix_read)]
         else:
             cmd += ["--read-sample", str(a.read_sample), "--erase-users", str(a.erase_users),
                     "--cold-cmd", f"{me} restart {line}", "--cold-threads", str(a.cold_threads)]
@@ -819,6 +824,7 @@ def main() -> None:
     r.add_argument("--server-flags", default="", help="--big: extra flags for our server (e.g. smaller caches)")
     r.add_argument("--mix-write", type=int, default=1000)
     r.add_argument("--mix-read", type=int, default=1200)
+    r.add_argument("--rounds", default="", help="P-B3: JSON list of NAME=CMD rounds instead of A and B ({me}, {line})")
     d = sub.add_parser("delay", help="P-bench-big: MinIO's S3-like delay from its next restart")
     d.add_argument("ms", type=int)
     for c in ("up", "restart", "check", "health"):
