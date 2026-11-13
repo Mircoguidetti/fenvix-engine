@@ -1,0 +1,2 @@
+[fenvix] VALIDATION, NOT RESULTS: ok=True checkpoints=122152 write=1644.587s save_step p50/p99=9.943/83.367 ms stored/logical=None wrong_reads=0 -> /home/user/fenvix-engine/research/erase-cost-1tb/results/bench-base/summary.json
+bench exit 0

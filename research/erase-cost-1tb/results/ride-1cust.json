@@ -1,0 +1,126 @@
+{
+ "customers": [
+  "cli-006100"
+ ],
+ "deletes": [
+  {
+   "customer": "cli-006100",
+   "coll": "messaggi",
+   "deleted": 624,
+   "ms": 132.0
+  },
+  {
+   "customer": "cli-006100",
+   "coll": "eventi",
+   "deleted": 469,
+   "ms": 78.6
+  },
+  {
+   "customer": "cli-006100",
+   "coll": "ordini",
+   "deleted": 218,
+   "ms": 31.9
+  }
+ ],
+ "delete_phase": {
+  "s": 0.27,
+  "minio": {},
+  "server": {
+   "s3.get": 49,
+   "s3.getRange": 81,
+   "s3.head": 12,
+   "s3.list": 8,
+   "s3.put": 18,
+   "s3.multipartPart": 1,
+   "s3.delete": 1,
+   "s3.getBytes": 8250586,
+   "s3.putBytes": 363550,
+   "compactor.started": 1,
+   "compactor.running": 1
+  }
+ },
+ "idle": {
+  "s": 180.01,
+  "minio": {
+   "req.completemultipartupload": 2.0,
+   "req.deletemultipleobjects": 5.0,
+   "req.getobject": 67053.0,
+   "req.headobject": 12.0,
+   "req.listobjectsv2": 69.0,
+   "req.newmultipartupload": 2.0,
+   "req.putobject": 53.0,
+   "req.putobjectpart": 2.0,
+   "received_bytes": 537116.0,
+   "sent_bytes": 24411196.0
+  },
+  "server": {
+   "s3.get": 66917,
+   "s3.getRange": 8,
+   "s3.list": 61,
+   "s3.put": 35,
+   "s3.multipartPart": 1,
+   "s3.delete": 7,
+   "s3.getBytes": 971296,
+   "s3.putBytes": 172361,
+   "compactor.publishes": 1,
+   "compactor.absorbs": 1,
+   "compactor.runBytes.absorb": 42259
+  },
+  "states": [
+   "pending",
+   "pending",
+   "pending"
+  ]
+ },
+ "run": {
+  "s": 129.63,
+  "minio": {
+   "req.completemultipartupload": 9.0,
+   "req.getobject": 43604.0,
+   "req.listobjectsv2": 56.0,
+   "req.newmultipartupload": 9.0,
+   "req.putobject": 30.0,
+   "req.putobjectpart": 149.0,
+   "received_bytes": 2414409864.0,
+   "sent_bytes": 3738586962.0
+  },
+  "server": {
+   "s3.get": 39852,
+   "s3.getRange": 3750,
+   "s3.list": 56,
+   "s3.put": 30,
+   "s3.multipartPart": 149,
+   "s3.getBytes": 3729478577,
+   "s3.putBytes": 2414396516,
+   "compactor.publishes": 8,
+   "compactor.reseals": 6,
+   "compactor.forcedReseals": 6,
+   "compactor.cleanses": 2,
+   "compactor.runBytes.reseal": 2414051422,
+   "compactor.runBytes.read": 3637522024,
+   "compactor.erasure.scrubReadBytes": 86383719,
+   "compactor.erasure.forced": 3
+  },
+  "states": [
+   "scrubbed",
+   "scrubbed",
+   "scrubbed"
+  ],
+  "cleaned_by": [
+   "forced",
+   "forced",
+   "forced"
+  ],
+  "rows_erased": [
+   0,
+   0,
+   0
+  ],
+  "runs_rewritten": [
+   0,
+   0,
+   0
+  ]
+ },
+ "unreadable_checked": true
+}

@@ -1,0 +1,393 @@
+{
+ "customers": [
+  "cli-000637",
+  "cli-001837",
+  "cli-003037",
+  "cli-004237",
+  "cli-005437",
+  "cli-006637",
+  "cli-007837",
+  "cli-009037",
+  "cli-010237",
+  "cli-011437"
+ ],
+ "deletes": [
+  {
+   "customer": "cli-000637",
+   "coll": "messaggi",
+   "deleted": 1074,
+   "ms": 188.2
+  },
+  {
+   "customer": "cli-000637",
+   "coll": "eventi",
+   "deleted": 776,
+   "ms": 110.9
+  },
+  {
+   "customer": "cli-000637",
+   "coll": "ordini",
+   "deleted": 353,
+   "ms": 39.0
+  },
+  {
+   "customer": "cli-001837",
+   "coll": "messaggi",
+   "deleted": 686,
+   "ms": 74.7
+  },
+  {
+   "customer": "cli-001837",
+   "coll": "eventi",
+   "deleted": 513,
+   "ms": 80.2
+  },
+  {
+   "customer": "cli-001837",
+   "coll": "ordini",
+   "deleted": 212,
+   "ms": 18.8
+  },
+  {
+   "customer": "cli-003037",
+   "coll": "messaggi",
+   "deleted": 2760,
+   "ms": 266.4
+  },
+  {
+   "customer": "cli-003037",
+   "coll": "eventi",
+   "deleted": 1935,
+   "ms": 164.2
+  },
+  {
+   "customer": "cli-003037",
+   "coll": "ordini",
+   "deleted": 890,
+   "ms": 107.8
+  },
+  {
+   "customer": "cli-004237",
+   "coll": "messaggi",
+   "deleted": 1249,
+   "ms": 137.0
+  },
+  {
+   "customer": "cli-004237",
+   "coll": "eventi",
+   "deleted": 895,
+   "ms": 81.8
+  },
+  {
+   "customer": "cli-004237",
+   "coll": "ordini",
+   "deleted": 353,
+   "ms": 33.0
+  },
+  {
+   "customer": "cli-005437",
+   "coll": "messaggi",
+   "deleted": 460,
+   "ms": 69.6
+  },
+  {
+   "customer": "cli-005437",
+   "coll": "eventi",
+   "deleted": 315,
+   "ms": 20.9
+  },
+  {
+   "customer": "cli-005437",
+   "coll": "ordini",
+   "deleted": 130,
+   "ms": 15.1
+  },
+  {
+   "customer": "cli-006637",
+   "coll": "messaggi",
+   "deleted": 3423,
+   "ms": 281.3
+  },
+  {
+   "customer": "cli-006637",
+   "coll": "eventi",
+   "deleted": 2447,
+   "ms": 209.8
+  },
+  {
+   "customer": "cli-006637",
+   "coll": "ordini",
+   "deleted": 1043,
+   "ms": 105.2
+  },
+  {
+   "customer": "cli-007837",
+   "coll": "messaggi",
+   "deleted": 1122,
+   "ms": 134.6
+  },
+  {
+   "customer": "cli-007837",
+   "coll": "eventi",
+   "deleted": 835,
+   "ms": 73.5
+  },
+  {
+   "customer": "cli-007837",
+   "coll": "ordini",
+   "deleted": 388,
+   "ms": 42.5
+  },
+  {
+   "customer": "cli-009037",
+   "coll": "messaggi",
+   "deleted": 2784,
+   "ms": 236.6
+  },
+  {
+   "customer": "cli-009037",
+   "coll": "eventi",
+   "deleted": 1957,
+   "ms": 137.6
+  },
+  {
+   "customer": "cli-009037",
+   "coll": "ordini",
+   "deleted": 800,
+   "ms": 55.8
+  },
+  {
+   "customer": "cli-010237",
+   "coll": "messaggi",
+   "deleted": 1576,
+   "ms": 75.6
+  },
+  {
+   "customer": "cli-010237",
+   "coll": "eventi",
+   "deleted": 1102,
+   "ms": 56.9
+  },
+  {
+   "customer": "cli-010237",
+   "coll": "ordini",
+   "deleted": 459,
+   "ms": 41.9
+  },
+  {
+   "customer": "cli-011437",
+   "coll": "messaggi",
+   "deleted": 3672,
+   "ms": 192.8
+  },
+  {
+   "customer": "cli-011437",
+   "coll": "eventi",
+   "deleted": 2514,
+   "ms": 125.4
+  },
+  {
+   "customer": "cli-011437",
+   "coll": "ordini",
+   "deleted": 1129,
+   "ms": 93.9
+  }
+ ],
+ "delete_phase": {
+  "s": 3.29,
+  "minio": {},
+  "server": {
+   "s3.get": 1107,
+   "s3.getRange": 1229,
+   "s3.head": 12,
+   "s3.list": 8,
+   "s3.put": 102,
+   "s3.multipartPart": 2,
+   "s3.delete": 1,
+   "s3.getBytes": 114940218,
+   "s3.putBytes": 10979517,
+   "compactor.started": 1,
+   "compactor.running": 1,
+   "compactor.publishes": 1,
+   "compactor.merges": 1,
+   "compactor.runBytes.merge": 59765,
+   "compactor.runBytes.read": 59440
+  }
+ },
+ "run": {
+  "s": 279.91,
+  "minio": {
+   "req.completemultipartupload": 28.0,
+   "req.deletemultipleobjects": 5.0,
+   "req.getobject": 95359.0,
+   "req.headobject": 12.0,
+   "req.listobjectsv2": 105.0,
+   "req.newmultipartupload": 28.0,
+   "req.putobject": 254.0,
+   "req.putobjectpart": 368.0,
+   "received_bytes": 5857973675.0,
+   "sent_bytes": 8225982058.0
+  },
+  "server": {
+   "s3.get": 86559,
+   "s3.getRange": 6465,
+   "s3.list": 97,
+   "s3.put": 152,
+   "s3.multipartPart": 366,
+   "s3.delete": 34,
+   "s3.getBytes": 8090954043,
+   "s3.putBytes": 5846957904,
+   "compactor.publishes": 15,
+   "compactor.absorbs": 2,
+   "compactor.reseals": 10,
+   "compactor.forcedReseals": 10,
+   "compactor.cleanses": 3,
+   "compactor.runBytes.absorb": 2296109,
+   "compactor.runBytes.reseal": 5836840606,
+   "compactor.runBytes.read": 7310002754,
+   "compactor.erasure.scrubReadBytes": 754296224,
+   "compactor.erasure.forced": 30
+  },
+  "states": [
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed",
+   "scrubbed"
+  ],
+  "cleaned_by": [
+   null,
+   null,
+   null,
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced",
+   "forced"
+  ],
+  "rows_erased": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "runs_rewritten": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ },
+ "unreadable_checked": true
+}

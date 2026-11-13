@@ -1,0 +1,1287 @@
+{
+  "note": "LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+  "target": "fenvix",
+  "label": "",
+  "durability": "not stated",
+  "profile": "standard",
+  "seed": 42,
+  "workers": 1,
+  "engine_binary_sha256": null,
+  "plan": {
+    "threads": 2453,
+    "turns": 25398,
+    "digest": "cc5dfd2ec7d93f21"
+  },
+  "client": {
+    "python": "3.13.18",
+    "host": "vm"
+  },
+  "write": {
+    "seconds": 1644.587,
+    "errors": [],
+    "processes": 1,
+    "client_cpu": {
+      "samples": 821,
+      "workers": 1,
+      "process_cores_mean": {
+        "31174": 0.447
+      },
+      "process_cores_max_mean": 0.447,
+      "host_busy_mean": 0.513,
+      "host_busy_ge_95pct_share": 0.0,
+      "client_limited": false,
+      "rule": "--workers 1: exempt from the 80% rule (one call timed at a time, client time included equally for every target; DECISIONS 2026-11-11); measured client CPU 0.447 core"
+    },
+    "steps_per_second": 74.28
+  },
+  "read": {
+    "threads_read": 300,
+    "inconsistencies": 0
+  },
+  "erase": {
+    "users_erased": 100,
+    "threads_erased": 241,
+    "threads_left_readable": 0,
+    "checkpoints_left_readable_by_id": 0
+  },
+  "latency_ms": {
+    "delete_thread": {
+      "n": 241,
+      "p50": 32.711,
+      "p90": 72.324,
+      "p99": 183.542,
+      "max": 292.766,
+      "mean": 40.144
+    },
+    "erase_user": {
+      "n": 100,
+      "p50": 109.231,
+      "p90": 325.562,
+      "p99": 643.288,
+      "max": 643.288,
+      "mean": 143.903
+    },
+    "list": {
+      "n": 300,
+      "p50": 67.92,
+      "p90": 626.074,
+      "p99": 1491.014,
+      "max": 1776.77,
+      "mean": 215.087
+    },
+    "list_limit10": {
+      "n": 300,
+      "p50": 17.557,
+      "p90": 45.158,
+      "p99": 158.84,
+      "max": 196.763,
+      "mean": 25.567
+    },
+    "put": {
+      "n": 122152,
+      "p50": 5.707,
+      "p90": 9.059,
+      "p99": 44.079,
+      "max": 831.473,
+      "mean": 7.476
+    },
+    "put[chat]": {
+      "n": 85022,
+      "p50": 5.357,
+      "p90": 8.551,
+      "p99": 40.27,
+      "max": 831.473,
+      "mean": 7.053
+    },
+    "put[coding]": {
+      "n": 37130,
+      "p50": 6.436,
+      "p90": 10.009,
+      "p99": 54.198,
+      "max": 558.416,
+      "mean": 8.447
+    },
+    "put_writes": {
+      "n": 96754,
+      "p50": 4.703,
+      "p90": 8.392,
+      "p99": 37.267,
+      "max": 552.381,
+      "mean": 6.472
+    },
+    "resume[erase_verify]": {
+      "n": 241,
+      "p50": 0.959,
+      "p90": 1.477,
+      "p99": 4.142,
+      "max": 24.112,
+      "mean": 1.237
+    },
+    "resume[read]": {
+      "n": 300,
+      "p50": 9.232,
+      "p90": 13.525,
+      "p99": 23.561,
+      "max": 25.271,
+      "mean": 9.323
+    },
+    "resume[write/first]": {
+      "n": 2453,
+      "p50": 0.944,
+      "p90": 3.396,
+      "p99": 8.567,
+      "max": 220.176,
+      "mean": 2.252
+    },
+    "resume[write/long]": {
+      "n": 689,
+      "p50": 10.388,
+      "p90": 16.046,
+      "p99": 79.411,
+      "max": 222.899,
+      "mean": 12.97
+    },
+    "resume[write/none]": {
+      "n": 21173,
+      "p50": 2.615,
+      "p90": 4.925,
+      "p99": 15.81,
+      "max": 295.879,
+      "mean": 3.556
+    },
+    "resume[write/short]": {
+      "n": 1083,
+      "p50": 2.936,
+      "p90": 11.803,
+      "p99": 91.613,
+      "max": 463.475,
+      "mean": 7.466
+    },
+    "save_step": {
+      "n": 122152,
+      "p50": 9.943,
+      "p90": 17.014,
+      "p99": 83.367,
+      "max": 1158.157,
+      "mean": 12.602
+    },
+    "save_step[chat]": {
+      "n": 85022,
+      "p50": 9.41,
+      "p90": 16.353,
+      "p99": 76.654,
+      "max": 831.473,
+      "mean": 11.844
+    },
+    "save_step[coding]": {
+      "n": 37130,
+      "p50": 11.034,
+      "p90": 18.387,
+      "p99": 98.421,
+      "max": 1158.157,
+      "mean": 14.338
+    },
+    "time_travel": {
+      "n": 900,
+      "p50": 2.33,
+      "p90": 4.058,
+      "p99": 6.625,
+      "max": 14.753,
+      "mean": 2.681
+    }
+  },
+  "bytes": {
+    "checkpoints": 122152,
+    "put_writes_calls": 96754,
+    "checkpoint_bytes": 6540802586,
+    "writes_bytes": 136532143,
+    "message_payload_bytes_all_checkpoints": 6488687295,
+    "unique_message_bytes": 137424218,
+    "logical_total": 6677334729,
+    "stored": null,
+    "stored_from": "UNKNOWN (no S3 access given)",
+    "stored_per_logical": null,
+    "stored_per_checkpoint": null
+  },
+  "sizes": {
+    "dbStats": {
+      "objects": 290262,
+      "dataSize": 6760552656,
+      "storageSize": 6760552656,
+      "indexSize": 67559684,
+      "totalSize": 6828112340
+    },
+    "collStats": {
+      "checkpoint_writes": {
+        "count": 168110,
+        "size": 183082891,
+        "storageSize": 183082891,
+        "totalIndexSize": 44717260
+      },
+      "checkpoints": {
+        "count": 122152,
+        "size": 6577469765,
+        "storageSize": 6577469765,
+        "totalIndexSize": 22842424
+      }
+    },
+    "s3": null,
+    "stored_bytes": null,
+    "stored_from": "UNKNOWN (no S3 access given)",
+    "serverStatus_s3": {
+      "get": 623847,
+      "getRange": 43128,
+      "head": 112,
+      "list": 4355,
+      "put": 225524,
+      "multipartPart": 809,
+      "copy": 0,
+      "delete": 224456,
+      "getBytes": 24304130597,
+      "putBytes": 23363934225
+    },
+    "s3_two_levels": null,
+    "status": {
+      "s3": {
+        "get": 623849,
+        "getRange": 43128,
+        "head": 112,
+        "list": 4355,
+        "put": 225524,
+        "multipartPart": 809,
+        "copy": 0,
+        "delete": 224456,
+        "getBytes": 24304130597,
+        "putBytes": 23363934225
+      },
+      "compactor": {
+        "enabled": true,
+        "started": 1,
+        "running": 1,
+        "publishes": 435,
+        "absorbs": 292,
+        "merges": 72,
+        "reseals": 71,
+        "errors": 0,
+        "catchUps": 1
+      },
+      "compaction": {
+        "passes": 3,
+        "running": 0,
+        "longMerges": 0,
+        "stalled": 0,
+        "preempted": 0,
+        "gcSkippedBusy": 4
+      },
+      "derived": {
+        "write": true,
+        "encoded": 7842545,
+        "plain": 2557322,
+        "messageRows": 4410166,
+        "fallbacks": 0,
+        "rebuilds": 2516436,
+        "resealRebuilds": 7626503,
+        "rebuildErrors": 0
+      },
+      "backgroundReads": {
+        "gets": 0,
+        "bytes": 0,
+        "micros": 0
+      },
+      "quaderno": {
+        "sent": 0,
+        "batches": 0,
+        "failed": 0,
+        "confirmedFlush": 0
+      },
+      "walGc": {
+        "passes": 85,
+        "deleted": 217235,
+        "listUs": 35095,
+        "deleteUs": 62626748,
+        "totalUs": 63039246,
+        "noop": 7
+      },
+      "sstGc": {
+        "passes": 25,
+        "deletedSsts": 2385,
+        "deletedManifests": 4075,
+        "noop": 1,
+        "closeLight": 0
+      },
+      "requests": {
+        "put": 227305,
+        "copy": 0,
+        "list": 4355,
+        "get": 666979,
+        "head": 112,
+        "delete": 224456,
+        "billedPutTier": 231660,
+        "billedGetTier": 667091,
+        "putBytes": 23363934225,
+        "getBytes": 24304130597
+      },
+      "groupCommit": {
+        "commits": 218909,
+        "flushes": 218295,
+        "windowUs": 0,
+        "adaptiveWaits": 0,
+        "adaptiveWaitUs": 0,
+        "relaxedAcks": 0
+      },
+      "localLog": {
+        "records": 0,
+        "fsyncs": 0,
+        "uploads": 0,
+        "replayed": 0
+      },
+      "agentLane": {
+        "batches": 0,
+        "mixedBatches": 0,
+        "commits": 0,
+        "flushes": 0,
+        "txnFlushes": 0,
+        "ackRefused": 0,
+        "windowUs": 100000,
+        "followed": 0,
+        "memtableFlushes": 0,
+        "followHits": 0
+      },
+      "leases": {
+        "acquired": 8,
+        "takeovers": 0,
+        "refused": 0,
+        "renewals": 176,
+        "renewFailures": 0,
+        "lost": 0
+      },
+      "maintenance": {
+        "compactRuns": 3,
+        "compactPuts": 74,
+        "compactGets": 2045,
+        "gcRuns": 85,
+        "gcDeletes": 217235,
+        "gcLists": 1,
+        "gcGets": 81,
+        "l0WatchRequests": 1063,
+        "abandonCloseTimeouts": 0,
+        "reopenedWritesRefused": 0,
+        "changeStreamsLost": 0,
+        "abandonClosesPending": 0,
+        "l0WatchDeferred": 0,
+        "compactionWarm": {
+          "runs": 3,
+          "hotBlocks": 384,
+          "ranges": 169,
+          "fails": 0,
+          "timeouts": 0,
+          "truncated": 0,
+          "readersOpen": 0,
+          "l0Stops": 0,
+          "throttled": 3
+        },
+        "staleReaderErrors": 0
+      },
+      "putByCategory": {
+        "wal": 217462,
+        "manifest": 2513,
+        "compacted_sst": 2474,
+        "lease": 184,
+        "clean_marker": 0,
+        "other": 2891
+      },
+      "getByCategory": {
+        "wal": 9,
+        "manifest": 87509,
+        "compacted_sst": 31375,
+        "lease": 8,
+        "clean_marker": 5,
+        "other": 548185
+      },
+      "openReaders": 0,
+      "openWriters": 1
+    }
+  },
+  "sizes_after_erase": {
+    "dbStats": {
+      "objects": 261924,
+      "dataSize": 6145464252,
+      "storageSize": 6145464252,
+      "indexSize": 60965115,
+      "totalSize": 6206429367
+    },
+    "collStats": {
+      "checkpoint_writes": {
+        "count": 151713,
+        "size": 165377855,
+        "storageSize": 165377855,
+        "totalIndexSize": 40355658
+      },
+      "checkpoints": {
+        "count": 110211,
+        "size": 5980086397,
+        "storageSize": 5980086397,
+        "totalIndexSize": 20609457
+      }
+    },
+    "s3": null,
+    "stored_bytes": null,
+    "stored_from": "UNKNOWN (no S3 access given)",
+    "serverStatus_s3": {
+      "get": 634155,
+      "getRange": 44390,
+      "head": 112,
+      "list": 4577,
+      "put": 226979,
+      "multipartPart": 812,
+      "copy": 0,
+      "delete": 224825,
+      "getBytes": 24402779519,
+      "putBytes": 23420395664
+    },
+    "s3_two_levels": null,
+    "status": {
+      "s3": {
+        "get": 634160,
+        "getRange": 44390,
+        "head": 112,
+        "list": 4577,
+        "put": 226979,
+        "multipartPart": 812,
+        "copy": 0,
+        "delete": 224825,
+        "getBytes": 24402779519,
+        "putBytes": 23420395664
+      },
+      "compactor": {
+        "enabled": true,
+        "started": 1,
+        "running": 1,
+        "publishes": 436,
+        "absorbs": 293,
+        "merges": 72,
+        "reseals": 71,
+        "errors": 0,
+        "catchUps": 1
+      },
+      "compaction": {
+        "passes": 3,
+        "running": 0,
+        "longMerges": 0,
+        "stalled": 0,
+        "preempted": 0,
+        "gcSkippedBusy": 4
+      },
+      "derived": {
+        "write": true,
+        "encoded": 7935119,
+        "plain": 2587622,
+        "messageRows": 4462254,
+        "fallbacks": 0,
+        "rebuilds": 2559100,
+        "resealRebuilds": 7718292,
+        "rebuildErrors": 0
+      },
+      "backgroundReads": {
+        "gets": 0,
+        "bytes": 0,
+        "micros": 0
+      },
+      "quaderno": {
+        "sent": 0,
+        "batches": 0,
+        "failed": 0,
+        "confirmedFlush": 0
+      },
+      "walGc": {
+        "passes": 86,
+        "deleted": 217604,
+        "listUs": 35095,
+        "deleteUs": 62789993,
+        "totalUs": 63204445,
+        "noop": 7
+      },
+      "sstGc": {
+        "passes": 25,
+        "deletedSsts": 2385,
+        "deletedManifests": 4075,
+        "noop": 1,
+        "closeLight": 0
+      },
+      "requests": {
+        "put": 228766,
+        "copy": 0,
+        "list": 4577,
+        "get": 678551,
+        "head": 112,
+        "delete": 224825,
+        "billedPutTier": 233343,
+        "billedGetTier": 678663,
+        "putBytes": 23420395664,
+        "getBytes": 24402779519
+      },
+      "groupCommit": {
+        "commits": 219391,
+        "flushes": 218777,
+        "windowUs": 0,
+        "adaptiveWaits": 0,
+        "adaptiveWaitUs": 0,
+        "relaxedAcks": 0
+      },
+      "localLog": {
+        "records": 0,
+        "fsyncs": 0,
+        "uploads": 0,
+        "replayed": 0
+      },
+      "agentLane": {
+        "batches": 0,
+        "mixedBatches": 0,
+        "commits": 0,
+        "flushes": 0,
+        "txnFlushes": 0,
+        "ackRefused": 0,
+        "windowUs": 100000,
+        "followed": 0,
+        "memtableFlushes": 0,
+        "followHits": 0
+      },
+      "leases": {
+        "acquired": 8,
+        "takeovers": 0,
+        "refused": 0,
+        "renewals": 179,
+        "renewFailures": 0,
+        "lost": 0
+      },
+      "maintenance": {
+        "compactRuns": 3,
+        "compactPuts": 74,
+        "compactGets": 2045,
+        "gcRuns": 86,
+        "gcDeletes": 217604,
+        "gcLists": 1,
+        "gcGets": 82,
+        "l0WatchRequests": 1070,
+        "abandonCloseTimeouts": 0,
+        "reopenedWritesRefused": 0,
+        "changeStreamsLost": 0,
+        "abandonClosesPending": 0,
+        "l0WatchDeferred": 0,
+        "compactionWarm": {
+          "runs": 3,
+          "hotBlocks": 384,
+          "ranges": 169,
+          "fails": 0,
+          "timeouts": 0,
+          "truncated": 0,
+          "readersOpen": 0,
+          "l0Stops": 0,
+          "throttled": 3
+        },
+        "staleReaderErrors": 0
+      },
+      "putByCategory": {
+        "wal": 217944,
+        "manifest": 2516,
+        "compacted_sst": 2476,
+        "lease": 187,
+        "clean_marker": 0,
+        "other": 3856
+      },
+      "getByCategory": {
+        "wal": 9,
+        "manifest": 88849,
+        "compacted_sst": 31468,
+        "lease": 8,
+        "clean_marker": 5,
+        "other": 558324
+      },
+      "openReaders": 0,
+      "openWriters": 1
+    }
+  },
+  "s3_put_requests_during_write": 225442,
+  "server_status_before": {
+    "s3": {
+      "get": 4,
+      "getRange": 0,
+      "head": 1,
+      "list": 16,
+      "put": 3,
+      "multipartPart": 0,
+      "copy": 0,
+      "delete": 5,
+      "getBytes": 0,
+      "putBytes": 258
+    },
+    "compactor": {
+      "enabled": true,
+      "started": 0,
+      "running": 0,
+      "publishes": 0,
+      "absorbs": 0,
+      "merges": 0,
+      "reseals": 0,
+      "errors": 0,
+      "catchUps": 0
+    },
+    "compaction": {
+      "passes": 0,
+      "running": 0,
+      "longMerges": 0,
+      "stalled": 0,
+      "preempted": 0,
+      "gcSkippedBusy": 0
+    },
+    "derived": {
+      "write": true,
+      "encoded": 0,
+      "plain": 0,
+      "messageRows": 0,
+      "fallbacks": 0,
+      "rebuilds": 0,
+      "resealRebuilds": 0,
+      "rebuildErrors": 0
+    },
+    "backgroundReads": {
+      "gets": 0,
+      "bytes": 0,
+      "micros": 0
+    },
+    "quaderno": {
+      "sent": 0,
+      "batches": 0,
+      "failed": 0,
+      "confirmedFlush": 0
+    },
+    "walGc": {
+      "passes": 0,
+      "deleted": 0,
+      "listUs": 0,
+      "deleteUs": 0,
+      "totalUs": 0,
+      "noop": 0
+    },
+    "sstGc": {
+      "passes": 0,
+      "deletedSsts": 0,
+      "deletedManifests": 0,
+      "noop": 0,
+      "closeLight": 0
+    },
+    "requests": {
+      "put": 3,
+      "copy": 0,
+      "list": 16,
+      "get": 4,
+      "head": 1,
+      "delete": 5,
+      "billedPutTier": 19,
+      "billedGetTier": 5,
+      "putBytes": 258,
+      "getBytes": 0
+    },
+    "groupCommit": {
+      "commits": 0,
+      "flushes": 0,
+      "windowUs": 0,
+      "adaptiveWaits": 0,
+      "adaptiveWaitUs": 0,
+      "relaxedAcks": 0
+    },
+    "localLog": {
+      "records": 0,
+      "fsyncs": 0,
+      "uploads": 0,
+      "replayed": 0
+    },
+    "agentLane": {
+      "batches": 0,
+      "mixedBatches": 0,
+      "commits": 0,
+      "flushes": 0,
+      "txnFlushes": 0,
+      "ackRefused": 0,
+      "windowUs": 100000,
+      "followed": 0,
+      "memtableFlushes": 0,
+      "followHits": 0
+    },
+    "leases": {
+      "acquired": 3,
+      "takeovers": 0,
+      "refused": 0,
+      "renewals": 0,
+      "renewFailures": 0,
+      "lost": 0
+    },
+    "maintenance": {
+      "compactRuns": 0,
+      "compactPuts": 0,
+      "compactGets": 0,
+      "gcRuns": 0,
+      "gcDeletes": 0,
+      "gcLists": 0,
+      "gcGets": 0,
+      "l0WatchRequests": 0,
+      "abandonCloseTimeouts": 0,
+      "reopenedWritesRefused": 0,
+      "changeStreamsLost": 0,
+      "abandonClosesPending": 0,
+      "l0WatchDeferred": 0,
+      "compactionWarm": {
+        "runs": 0,
+        "hotBlocks": 0,
+        "ranges": 0,
+        "fails": 0,
+        "timeouts": 0,
+        "truncated": 0,
+        "readersOpen": 0,
+        "l0Stops": 0,
+        "throttled": 0
+      },
+      "staleReaderErrors": 0
+    },
+    "putByCategory": {
+      "wal": 0,
+      "manifest": 0,
+      "compacted_sst": 0,
+      "lease": 3,
+      "clean_marker": 0,
+      "other": 0
+    },
+    "getByCategory": {
+      "wal": 0,
+      "manifest": 0,
+      "compacted_sst": 0,
+      "lease": 3,
+      "clean_marker": 1,
+      "other": 1
+    },
+    "openReaders": 0,
+    "openWriters": 0
+  },
+  "server_status_after_write": {
+    "s3": {
+      "get": 569540,
+      "getRange": 41419,
+      "head": 112,
+      "list": 4208,
+      "put": 225445,
+      "multipartPart": 809,
+      "copy": 0,
+      "delete": 221845,
+      "getBytes": 23883719326,
+      "putBytes": 23363359977
+    },
+    "compactor": {
+      "enabled": true,
+      "started": 1,
+      "running": 1,
+      "publishes": 435,
+      "absorbs": 292,
+      "merges": 72,
+      "reseals": 71,
+      "errors": 0,
+      "catchUps": 1
+    },
+    "compaction": {
+      "passes": 3,
+      "running": 0,
+      "longMerges": 0,
+      "stalled": 0,
+      "preempted": 0,
+      "gcSkippedBusy": 4
+    },
+    "derived": {
+      "write": true,
+      "encoded": 7842545,
+      "plain": 2557322,
+      "messageRows": 4410166,
+      "fallbacks": 0,
+      "rebuilds": 669,
+      "resealRebuilds": 7626503,
+      "rebuildErrors": 0
+    },
+    "backgroundReads": {
+      "gets": 0,
+      "bytes": 0,
+      "micros": 0
+    },
+    "quaderno": {
+      "sent": 0,
+      "batches": 0,
+      "failed": 0,
+      "confirmedFlush": 0
+    },
+    "walGc": {
+      "passes": 77,
+      "deleted": 215266,
+      "listUs": 35095,
+      "deleteUs": 62104177,
+      "totalUs": 62509359,
+      "noop": 0
+    },
+    "sstGc": {
+      "passes": 23,
+      "deletedSsts": 2171,
+      "deletedManifests": 3703,
+      "noop": 0,
+      "closeLight": 0
+    },
+    "requests": {
+      "put": 227226,
+      "copy": 0,
+      "list": 4208,
+      "get": 610959,
+      "head": 112,
+      "delete": 221845,
+      "billedPutTier": 231434,
+      "billedGetTier": 611071,
+      "putBytes": 23363359977,
+      "getBytes": 23883719326
+    },
+    "groupCommit": {
+      "commits": 218908,
+      "flushes": 218294,
+      "windowUs": 0,
+      "adaptiveWaits": 0,
+      "adaptiveWaitUs": 0,
+      "relaxedAcks": 0
+    },
+    "localLog": {
+      "records": 0,
+      "fsyncs": 0,
+      "uploads": 0,
+      "replayed": 0
+    },
+    "agentLane": {
+      "batches": 0,
+      "mixedBatches": 0,
+      "commits": 0,
+      "flushes": 0,
+      "txnFlushes": 0,
+      "ackRefused": 0,
+      "windowUs": 100000,
+      "followed": 0,
+      "memtableFlushes": 0,
+      "followHits": 0
+    },
+    "leases": {
+      "acquired": 8,
+      "takeovers": 0,
+      "refused": 0,
+      "renewals": 162,
+      "renewFailures": 0,
+      "lost": 0
+    },
+    "maintenance": {
+      "compactRuns": 3,
+      "compactPuts": 74,
+      "compactGets": 2045,
+      "gcRuns": 77,
+      "gcDeletes": 215266,
+      "gcLists": 1,
+      "gcGets": 77,
+      "l0WatchRequests": 1004,
+      "abandonCloseTimeouts": 0,
+      "reopenedWritesRefused": 0,
+      "changeStreamsLost": 0,
+      "abandonClosesPending": 0,
+      "l0WatchDeferred": 0,
+      "compactionWarm": {
+        "runs": 3,
+        "hotBlocks": 384,
+        "ranges": 169,
+        "fails": 0,
+        "timeouts": 0,
+        "truncated": 0,
+        "readersOpen": 0,
+        "l0Stops": 0,
+        "throttled": 3
+      },
+      "staleReaderErrors": 0
+    },
+    "putByCategory": {
+      "wal": 217460,
+      "manifest": 2497,
+      "compacted_sst": 2467,
+      "lease": 170,
+      "clean_marker": 0,
+      "other": 2851
+    },
+    "getByCategory": {
+      "wal": 9,
+      "manifest": 80418,
+      "compacted_sst": 31059,
+      "lease": 8,
+      "clean_marker": 5,
+      "other": 499572
+    },
+    "openReaders": 0,
+    "openWriters": 1
+  },
+  "server_status_before_cold": {
+    "s3": {
+      "get": 634161,
+      "getRange": 44390,
+      "head": 112,
+      "list": 4577,
+      "put": 226979,
+      "multipartPart": 812,
+      "copy": 0,
+      "delete": 224825,
+      "getBytes": 24402779519,
+      "putBytes": 23420395664
+    },
+    "compactor": {
+      "enabled": true,
+      "started": 1,
+      "running": 1,
+      "publishes": 436,
+      "absorbs": 293,
+      "merges": 72,
+      "reseals": 71,
+      "errors": 0,
+      "catchUps": 1
+    },
+    "compaction": {
+      "passes": 3,
+      "running": 0,
+      "longMerges": 0,
+      "stalled": 0,
+      "preempted": 0,
+      "gcSkippedBusy": 4
+    },
+    "derived": {
+      "write": true,
+      "encoded": 7935119,
+      "plain": 2587622,
+      "messageRows": 4462254,
+      "fallbacks": 0,
+      "rebuilds": 2559100,
+      "resealRebuilds": 7718292,
+      "rebuildErrors": 0
+    },
+    "backgroundReads": {
+      "gets": 0,
+      "bytes": 0,
+      "micros": 0
+    },
+    "quaderno": {
+      "sent": 0,
+      "batches": 0,
+      "failed": 0,
+      "confirmedFlush": 0
+    },
+    "walGc": {
+      "passes": 86,
+      "deleted": 217604,
+      "listUs": 35095,
+      "deleteUs": 62789993,
+      "totalUs": 63204445,
+      "noop": 7
+    },
+    "sstGc": {
+      "passes": 25,
+      "deletedSsts": 2385,
+      "deletedManifests": 4075,
+      "noop": 1,
+      "closeLight": 0
+    },
+    "requests": {
+      "put": 228766,
+      "copy": 0,
+      "list": 4577,
+      "get": 678551,
+      "head": 112,
+      "delete": 224825,
+      "billedPutTier": 233343,
+      "billedGetTier": 678663,
+      "putBytes": 23420395664,
+      "getBytes": 24402779519
+    },
+    "groupCommit": {
+      "commits": 219391,
+      "flushes": 218777,
+      "windowUs": 0,
+      "adaptiveWaits": 0,
+      "adaptiveWaitUs": 0,
+      "relaxedAcks": 0
+    },
+    "localLog": {
+      "records": 0,
+      "fsyncs": 0,
+      "uploads": 0,
+      "replayed": 0
+    },
+    "agentLane": {
+      "batches": 0,
+      "mixedBatches": 0,
+      "commits": 0,
+      "flushes": 0,
+      "txnFlushes": 0,
+      "ackRefused": 0,
+      "windowUs": 100000,
+      "followed": 0,
+      "memtableFlushes": 0,
+      "followHits": 0
+    },
+    "leases": {
+      "acquired": 8,
+      "takeovers": 0,
+      "refused": 0,
+      "renewals": 179,
+      "renewFailures": 0,
+      "lost": 0
+    },
+    "maintenance": {
+      "compactRuns": 3,
+      "compactPuts": 74,
+      "compactGets": 2045,
+      "gcRuns": 86,
+      "gcDeletes": 217604,
+      "gcLists": 1,
+      "gcGets": 82,
+      "l0WatchRequests": 1070,
+      "abandonCloseTimeouts": 0,
+      "reopenedWritesRefused": 0,
+      "changeStreamsLost": 0,
+      "abandonClosesPending": 0,
+      "l0WatchDeferred": 0,
+      "compactionWarm": {
+        "runs": 3,
+        "hotBlocks": 384,
+        "ranges": 169,
+        "fails": 0,
+        "timeouts": 0,
+        "truncated": 0,
+        "readersOpen": 0,
+        "l0Stops": 0,
+        "throttled": 3
+      },
+      "staleReaderErrors": 0
+    },
+    "putByCategory": {
+      "wal": 217944,
+      "manifest": 2516,
+      "compacted_sst": 2476,
+      "lease": 187,
+      "clean_marker": 0,
+      "other": 3856
+    },
+    "getByCategory": {
+      "wal": 9,
+      "manifest": 88849,
+      "compacted_sst": 31468,
+      "lease": 8,
+      "clean_marker": 5,
+      "other": 558324
+    },
+    "openReaders": 0,
+    "openWriters": 1
+  },
+  "server_status_end": {
+    "s3": {
+      "get": 634163,
+      "getRange": 44390,
+      "head": 112,
+      "list": 4577,
+      "put": 226979,
+      "multipartPart": 812,
+      "copy": 0,
+      "delete": 224825,
+      "getBytes": 24402779519,
+      "putBytes": 23420395664
+    },
+    "compactor": {
+      "enabled": true,
+      "started": 1,
+      "running": 1,
+      "publishes": 436,
+      "absorbs": 293,
+      "merges": 72,
+      "reseals": 71,
+      "errors": 0,
+      "catchUps": 1
+    },
+    "compaction": {
+      "passes": 3,
+      "running": 0,
+      "longMerges": 0,
+      "stalled": 0,
+      "preempted": 0,
+      "gcSkippedBusy": 4
+    },
+    "derived": {
+      "write": true,
+      "encoded": 7935119,
+      "plain": 2587622,
+      "messageRows": 4462254,
+      "fallbacks": 0,
+      "rebuilds": 2559100,
+      "resealRebuilds": 7718292,
+      "rebuildErrors": 0
+    },
+    "backgroundReads": {
+      "gets": 0,
+      "bytes": 0,
+      "micros": 0
+    },
+    "quaderno": {
+      "sent": 0,
+      "batches": 0,
+      "failed": 0,
+      "confirmedFlush": 0
+    },
+    "walGc": {
+      "passes": 86,
+      "deleted": 217604,
+      "listUs": 35095,
+      "deleteUs": 62789993,
+      "totalUs": 63204445,
+      "noop": 7
+    },
+    "sstGc": {
+      "passes": 25,
+      "deletedSsts": 2385,
+      "deletedManifests": 4075,
+      "noop": 1,
+      "closeLight": 0
+    },
+    "requests": {
+      "put": 228766,
+      "copy": 0,
+      "list": 4577,
+      "get": 678554,
+      "head": 112,
+      "delete": 224825,
+      "billedPutTier": 233343,
+      "billedGetTier": 678666,
+      "putBytes": 23420395664,
+      "getBytes": 24402779519
+    },
+    "groupCommit": {
+      "commits": 219391,
+      "flushes": 218777,
+      "windowUs": 0,
+      "adaptiveWaits": 0,
+      "adaptiveWaitUs": 0,
+      "relaxedAcks": 0
+    },
+    "localLog": {
+      "records": 0,
+      "fsyncs": 0,
+      "uploads": 0,
+      "replayed": 0
+    },
+    "agentLane": {
+      "batches": 0,
+      "mixedBatches": 0,
+      "commits": 0,
+      "flushes": 0,
+      "txnFlushes": 0,
+      "ackRefused": 0,
+      "windowUs": 100000,
+      "followed": 0,
+      "memtableFlushes": 0,
+      "followHits": 0
+    },
+    "leases": {
+      "acquired": 8,
+      "takeovers": 0,
+      "refused": 0,
+      "renewals": 179,
+      "renewFailures": 0,
+      "lost": 0
+    },
+    "maintenance": {
+      "compactRuns": 3,
+      "compactPuts": 74,
+      "compactGets": 2045,
+      "gcRuns": 86,
+      "gcDeletes": 217604,
+      "gcLists": 1,
+      "gcGets": 82,
+      "l0WatchRequests": 1070,
+      "abandonCloseTimeouts": 0,
+      "reopenedWritesRefused": 0,
+      "changeStreamsLost": 0,
+      "abandonClosesPending": 0,
+      "l0WatchDeferred": 0,
+      "compactionWarm": {
+        "runs": 3,
+        "hotBlocks": 384,
+        "ranges": 169,
+        "fails": 0,
+        "timeouts": 0,
+        "truncated": 0,
+        "readersOpen": 0,
+        "l0Stops": 0,
+        "throttled": 3
+      },
+      "staleReaderErrors": 0
+    },
+    "putByCategory": {
+      "wal": 217944,
+      "manifest": 2516,
+      "compacted_sst": 2476,
+      "lease": 187,
+      "clean_marker": 0,
+      "other": 3856
+    },
+    "getByCategory": {
+      "wal": 9,
+      "manifest": 88849,
+      "compacted_sst": 31468,
+      "lease": 8,
+      "clean_marker": 5,
+      "other": 558327
+    },
+    "openReaders": 0,
+    "openWriters": 1
+  },
+  "log_failed": {
+    "after_write": 0,
+    "before_cold": 0,
+    "end": 0
+  },
+  "log_failed_unknown": [],
+  "health": [],
+  "client_cpu": {
+    "samples": 821,
+    "workers": 1,
+    "process_cores_mean": {
+      "31174": 0.447
+    },
+    "process_cores_max_mean": 0.447,
+    "host_busy_mean": 0.513,
+    "host_busy_ge_95pct_share": 0.0,
+    "client_limited": false,
+    "rule": "--workers 1: exempt from the 80% rule (one call timed at a time, client time included equally for every target; DECISIONS 2026-11-11); measured client CPU 0.447 core"
+  },
+  "client_limited": false,
+  "settle": null,
+  "cold": null,
+  "read_sample": 300,
+  "erase_users": 100,
+  "correctness": {
+    "wrong_reads": 0,
+    "by_kind": {},
+    "reads_checked": 53734,
+    "checkpoints_written": 110211,
+    "examples": []
+  },
+  "wrong_reads": 0,
+  "delta_test": {
+    "test": "agent checkpoint delta test",
+    "target": "fenvix",
+    "stored_bytes_source": "UNKNOWN until fenvixSstInfo exists (compaction 2 steps 4-8)",
+    "threads": 200,
+    "logical_bytes": 3498488397,
+    "unique_bytes": 43754324,
+    "stored_bytes": null
+  },
+  "ok": true
+}

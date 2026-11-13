@@ -1,0 +1,20 @@
+op: base p50/p99 -> branch p50/p99 (ms, MEASURED, one run each, standard profile, host, no log)
+delete_thread: 32.7/183.5 -> 35.5/297.4
+erase_user: 109.2/643.3 -> 107.9/770.5
+list: 67.9/1491.0 -> 72.4/1486.1
+list_limit10: 17.6/158.8 -> 18.3/210.3
+put: 5.7/44.1 -> 5.5/42.9
+put[chat]: 5.4/40.3 -> 5.1/39.3
+put[coding]: 6.4/54.2 -> 6.2/51.5
+put_writes: 4.7/37.3 -> 4.5/35.3
+resume[erase_verify]: 1.0/4.1 -> 0.9/5.1
+resume[read]: 9.2/23.6 -> 9.4/21.0
+resume[write/first]: 0.9/8.6 -> 0.9/9.0
+resume[write/long]: 10.4/79.4 -> 9.9/56.8
+resume[write/none]: 2.6/15.8 -> 2.5/14.7
+resume[write/short]: 2.9/91.6 -> 2.8/25.7
+save_step: 9.9/83.4 -> 9.6/80.0
+save_step[chat]: 9.4/76.7 -> 9.1/72.5
+save_step[coding]: 11.0/98.4 -> 10.6/90.4
+time_travel: 2.3/6.6 -> 2.4/6.4
+erase {'users_erased': 100, 'threads_erased': 241, 'threads_left_readable': 0, 'checkpoints_left_readable_by_id': 0}

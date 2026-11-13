@@ -19,6 +19,10 @@ BASE = ["--sealed-runs", "2", "--sealed-reseal-every", "1000000", "--sealed-t-pi
         "--sealed-remote-lease-ms", "3000",
         # restore points (old versions and their runs) kept 5 s instead of 7 days, so "done" is reached within the test
         "--sealed-version-retention-secs", "5"]
+# erase-cost-1tb: with the ride (default), small compactor knobs (`FENVIX_SEALED_COMPACTOR=small`, the CI's sealed mode)
+# reseal these tiny databases within seconds and the erasures are cleaned by ordinary reseals before the run these tests
+# check. Their premise is "nothing physical before the batch": the default knobs (a tiny database never reaches theta).
+KNOBS = {"FENVIX_SEALED_COMPACTOR": "1"}
 PROOF = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "target", "release", "fx_erase_proof")
 
 
@@ -60,7 +64,7 @@ def unreadable(c, db, u):
 @pytest.fixture()
 def srv():
     bucket = make_bucket("perfer")
-    s = Server(bucket, "perfer", idle=300, extra=BASE).start()
+    s = Server(bucket, "perfer", idle=300, extra=BASE, env=dict(KNOBS)).start()
     s.bucket_name = bucket
     yield s
     s.term()
@@ -110,7 +114,7 @@ def test_the_delete_returns_before_the_physical_erasure_and_a_batch_serves_them_
 
 def test_a_full_batch_runs_without_waiting_for_the_window():
     bucket = make_bucket("perfer2")
-    s = Server(bucket, "perfer2", idle=300, extra=BASE + ["--sealed-erasure-batch-max", "3"]).start()
+    s = Server(bucket, "perfer2", idle=300, extra=BASE + ["--sealed-erasure-batch-max", "3"], env=dict(KNOBS)).start()
     s.bucket_name = bucket
     try:
         c = s.client()
@@ -136,7 +140,7 @@ def test_an_erasure_recorded_while_a_pass_runs_is_not_forgotten():
     FENVIX_CONTROL_FORGET_NOTED=1 (the agent's count reset to the pass's listing) leaves it pending for the grace."""
     control = os.environ.get("FENVIX_CONTROL_FORGET_NOTED") == "1"
     bucket = make_bucket("perfer3")
-    env = {"CTL_FAILPOINT": "erase.after_prepare", "CTL_FAILPOINT_PAUSE_MS": "4000"}
+    env = {"CTL_FAILPOINT": "erase.after_prepare", "CTL_FAILPOINT_PAUSE_MS": "4000", **KNOBS}
     if control:
         env["FENVIX_CONTROL_FORGET_NOTED"] = "1"
     extra = [x for x in BASE]

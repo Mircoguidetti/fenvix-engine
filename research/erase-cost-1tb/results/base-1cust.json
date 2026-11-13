@@ -1,0 +1,92 @@
+{
+ "customers": [
+  "cli-006000"
+ ],
+ "deletes": [
+  {
+   "customer": "cli-006000",
+   "coll": "messaggi",
+   "deleted": 1405,
+   "ms": 161.0
+  },
+  {
+   "customer": "cli-006000",
+   "coll": "eventi",
+   "deleted": 1066,
+   "ms": 127.8
+  },
+  {
+   "customer": "cli-006000",
+   "coll": "ordini",
+   "deleted": 428,
+   "ms": 66.8
+  }
+ ],
+ "delete_phase": {
+  "s": 0.38,
+  "minio": {},
+  "server": {
+   "s3.get": 36,
+   "s3.getRange": 114,
+   "s3.head": 12,
+   "s3.list": 10,
+   "s3.put": 21,
+   "s3.multipartPart": 2,
+   "s3.delete": 1,
+   "s3.getBytes": 12367336,
+   "s3.putBytes": 836241,
+   "compactor.started": 1,
+   "compactor.running": 1,
+   "compactor.catchUps": 1
+  }
+ },
+ "run": {
+  "s": 53.37,
+  "minio": {
+   "req.completemultipartupload": 12.0,
+   "req.deletemultipleobjects": 2.0,
+   "req.getobject": 14668.0,
+   "req.headobject": 13.0,
+   "req.listobjectsv2": 28.0,
+   "req.newmultipartupload": 12.0,
+   "req.putobject": 37.0,
+   "req.putobjectpart": 147.0,
+   "received_bytes": 2309981776.0,
+   "sent_bytes": 2331439998.0
+  },
+  "server": {
+   "s3.get": 14086,
+   "s3.getRange": 434,
+   "s3.head": 1,
+   "s3.list": 18,
+   "s3.put": 16,
+   "s3.multipartPart": 145,
+   "s3.delete": 9,
+   "s3.getBytes": 2312951038,
+   "s3.putBytes": 2309132150,
+   "compactor.publishes": 2,
+   "compactor.absorbs": 1
+  },
+  "states": [
+   "scrubbed",
+   "scrubbed",
+   "scrubbed"
+  ],
+  "cleaned_by": [
+   null,
+   null,
+   null
+  ],
+  "rows_erased": [
+   24048,
+   24048,
+   24048
+  ],
+  "runs_rewritten": [
+   9,
+   9,
+   9
+  ]
+ },
+ "unreadable_checked": true
+}

@@ -82,6 +82,17 @@ pub static G_ABSORBS: AtomicU64 = AtomicU64::new(0);
 pub static G_MERGES: AtomicU64 = AtomicU64::new(0);
 pub static G_RESEALS: AtomicU64 = AtomicU64::new(0);
 pub static G_ERRORS: AtomicU64 = AtomicU64::new(0);
+/// erase-cost-1tb: reseals forced by the erasure deadline scheduler, and delta runs rewritten without their dead rows.
+pub static G_FORCED_RESEALS: AtomicU64 = AtomicU64::new(0);
+/// erase-cost-1tb: stored bytes of the runs every compactor of this process wrote, by job kind (absorb, merge, reseal,
+/// erase, cleanse), and the run bytes the jobs read (the measures of rewrite cost).
+pub static G_RUN_BYTES: [AtomicU64; 5] = [AtomicU64::new(0), AtomicU64::new(0), AtomicU64::new(0), AtomicU64::new(0), AtomicU64::new(0)];
+pub static G_RUN_READ_BYTES: AtomicU64 = AtomicU64::new(0);
+pub static G_CLEANSES: AtomicU64 = AtomicU64::new(0);
+/// Negative controls of erase-cost-1tb (tests only): the cleanse keeps the dead rows (an erased customer's rows stay in
+/// the delta run); the cleanse also drops envelopes above X_g (an erased document becomes readable again).
+pub static CONTROL_CLEANSE_KEEPS_DEAD: AtomicBool = AtomicBool::new(false);
+pub static CONTROL_CLEANSE_DROPS_LIVE: AtomicBool = AtomicBool::new(false);
 
 /// Compactors running now.
 pub fn active_count() -> usize {
@@ -421,9 +432,12 @@ pub struct Stats {
     pub splits: AtomicU64,
     pub group_merges: AtomicU64,
     pub erasures_done: AtomicU64,
+    /// erase-cost-1tb: reseals forced by the erasure deadline scheduler, delta runs cleansed of their dead rows.
+    pub forced_reseals: AtomicU64,
+    pub cleanses: AtomicU64,
     pub erase_raw_out: AtomicU64,
     /// Stored (compressed) bytes of every run written, by job kind: absorb, merge, reseal, erase.
-    pub run_bytes: [AtomicU64; 4],
+    pub run_bytes: [AtomicU64; 5],
     pub runs_written: AtomicU64,
     pub local_runs: AtomicU64,
     pub run_read_bytes: AtomicU64,
@@ -1547,6 +1561,74 @@ impl Compactor {
         RewritePause(Arc::clone(self))
     }
 
+    /// erase-cost-1tb: reseal the group `gid` now (the erasure deadline scheduler, `mongo-server/src/ctl/erase.rs`): the
+    /// ordinary reseal of rule 14, brought forward, at the newest X_d. Every row of a customer erased at or below that X_d
+    /// leaves the group's sealed run (its delete envelopes and every row they shadow are dropped) and becomes dead in the
+    /// delta runs (at or below the new X_g). Ok(false): the group is gone (split or merged meanwhile: look again) or busy
+    /// (a reseal of it runs now: it ends at an X_d at least as high), or the commit abandoned.
+    pub async fn force_reseal_group(&self, gid: u32) -> Result<bool> {
+        let v0 = self.current().await;
+        let Some(i) = v0.groups.iter().position(|g| g.id == gid) else { return Ok(false) };
+        let ok = self.reseal_once(Some(i)).await?;
+        if ok {
+            self.sh.stats.forced_reseals.fetch_add(1, Relaxed);
+            G_FORCED_RESEALS.fetch_add(1, Relaxed);
+        }
+        Ok(ok)
+    }
+
+    /// erase-cost-1tb: rewrite the delta run `path` without its dead rows (at or below their group's X_g; rule 13, the
+    /// rows a merge drops: no read can see them, and X_g never goes down). The deadline scheduler uses it for a delta run
+    /// that still holds rows of an erased customer once every group of that customer is resealed past the erasure.
+    /// Ok(None): the run is not listed any more; Ok(Some(false)): it holds no dead row (nothing written); Ok(Some(true)):
+    /// the rewrite is published.
+    pub async fn cleanse_delta(&self, path: &str) -> Result<Option<bool>> {
+        let v0 = self.current().await;
+        let Some(src) = v0.delta.iter().find(|d| d.path == path).cloned() else { return Ok(None) };
+        let xg = XgMap::new(&v0)?;
+        let out = manifest::run_path(self.id(), "delta-c", src.max_seq, self.epoch);
+        let mut w = self.writer(out, &self.knobs.delta, src.raw <= self.knobs.local_max_bytes).await?;
+        let mut m = Merger::open(&self.store, std::slice::from_ref(&src), &[], None, None, self.knobs.read_ahead, &self.sh.stats).await?;
+        let mut dropped = 0u64;
+        while let Some(rows) = m.next_key().await? {
+            let r = &rows[0].row;
+            if r.seq <= xg.of(&r.key) && !CONTROL_CLEANSE_KEEPS_DEAD.load(Relaxed) {
+                dropped += 1;
+                continue;
+            }
+            if CONTROL_CLEANSE_DROPS_LIVE.load(Relaxed) && r.dead() {
+                dropped += 1;
+                continue; // negative control: an envelope above X_g dropped (the rows it shadows come back)
+            }
+            w.add(&r.key, r.seq, &r.env).await?;
+        }
+        if dropped == 0 {
+            return Ok(Some(false)); // the writer is dropped unfinished: its upload is aborted
+        }
+        let line = w.finish(&self.sh.stats, 4).await?;
+        let r = self
+            .commit(|cur| {
+                if !cur.delta.iter().any(|d| d.path == path) {
+                    return Ok(None); // merged or retired meanwhile: abandon (its run is an orphan for GC)
+                }
+                let mut next = cur.clone();
+                next.delta.retain(|d| d.path != path);
+                if let Some(l) = line.clone() {
+                    next.delta.push(l);
+                }
+                let min_xg = next.groups.iter().map(|g| g.x_g).min().unwrap_or(next.x_d);
+                next.delta.retain(|d| d.max_seq > min_xg);
+                next.delta.sort_by(|a, b| b.max_seq.cmp(&a.max_seq));
+                Ok(Some(next))
+            })
+            .await?;
+        if r.is_some() {
+            self.sh.stats.cleanses.fetch_add(1, Relaxed);
+            G_CLEANSES.fetch_add(1, Relaxed);
+        }
+        Ok(Some(r.is_some()))
+    }
+
     /// Tests only: a reseal of group `gi` planned on version `v0` (an older version than the newest: a reseal that was
     /// already running when something else committed).
     #[cfg(test)]
@@ -2073,11 +2155,12 @@ impl LazyRun {
         self.w.as_mut().unwrap().add(key, seq, env).await
     }
 
-    /// `kind`: 0 absorb, 1 merge, 2 reseal, 3 erase (the byte counters).
+    /// `kind`: 0 absorb, 1 merge, 2 reseal, 3 erase, 4 cleanse (the byte counters).
     async fn finish(self, st: &Stats, kind: usize) -> Result<Option<RunLine>> {
         let Some(w) = self.w else { return Ok(None) };
         let m = w.finish().await?;
         st.run_bytes[kind].fetch_add(m.size, Relaxed);
+        G_RUN_BYTES[kind].fetch_add(m.size, Relaxed);
         st.runs_written.fetch_add(1, Relaxed);
         if self.local {
             st.local_runs.fetch_add(1, Relaxed);
@@ -2171,6 +2254,7 @@ impl Scan {
         let (lo, hi) = self.run.fence.range(self.next, z);
         let data = runfmt::get_range(&self.store, &self.run.path, lo, hi).await?;
         st.run_read_bytes.fetch_add(data.len() as u64, Relaxed);
+        G_RUN_READ_BYTES.fetch_add(data.len() as u64, Relaxed);
         let mut out = Vec::with_capacity(z + 1 - self.next);
         for b in self.next..=z {
             let (x, y) = self.run.fence.range(b, b);

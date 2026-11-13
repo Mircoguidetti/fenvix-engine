@@ -65,8 +65,17 @@ pub static PROBE_SKIPS: AtomicU64 = AtomicU64::new(0);
 pub static BATCHES: AtomicU64 = AtomicU64::new(0);
 pub static BATCHED_ERASURES: AtomicU64 = AtomicU64::new(0);
 pub static SCRUB_ABANDONS: AtomicU64 = AtomicU64::new(0);
+/// erase-cost-1tb: stored bytes the scrub wrote and runs it rewrote, run bytes the scrub and its probe read (block GETs),
+/// erasures found clean after ordinary rewrites alone ("rode" them) and erasures whose deadline forced work.
+pub static SCRUB_BYTES: AtomicU64 = AtomicU64::new(0);
+pub static SCRUB_RUNS: AtomicU64 = AtomicU64::new(0);
+pub static SCRUB_READ_BYTES: AtomicU64 = AtomicU64::new(0);
+pub static RODE: AtomicU64 = AtomicU64::new(0);
+pub static FORCED: AtomicU64 = AtomicU64::new(0);
 /// Negative control of perf-erase: no probe, every run that meets a batch is read whole (the code before).
 pub static CONTROL_NO_PROBE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Negative control of erase-cost-1tb: the first phase of a scrub in parts drops the envelopes too (the code before).
+pub static CONTROL_PARTS_DROP_ENVELOPES: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// Negative controls of the tests (`fx/tests_7b.rs`, `FX_7B_CONTROL`): no scrub at all; delta runs not scrubbed; target
 /// rows erased whatever their seq (a document written again after the erasure is lost); retired runs never deleted.
@@ -126,6 +135,16 @@ impl Targets {
     /// Whether a run whose keys are within [first, last] may hold a target.
     pub fn meets(&self, first: &[u8], last: &[u8]) -> bool {
         self.ranges.iter().any(|(lo, hi)| &lo[..] <= last && first < &hi[..]) || self.keys.range(first.to_vec()..=last.to_vec()).next().is_some()
+    }
+
+    /// Whether a target lies in [lo, hi) (hi None: no upper bound), a group's key span.
+    pub fn meets_span(&self, lo: &[u8], hi: Option<&[u8]>) -> bool {
+        let below = |k: &[u8]| hi.is_none_or(|h| k < h);
+        self.ranges.iter().any(|(a, z)| &z[..] > lo && below(a))
+            || match hi {
+                Some(h) => self.keys.range(lo.to_vec()..h.to_vec()).next().is_some(),
+                None => self.keys.range(lo.to_vec()..).next().is_some(),
+            }
     }
 
     pub fn encode(&self) -> Vec<u8> {
@@ -316,6 +335,24 @@ pub struct Erasure {
     pub batch: Option<String>,
     #[serde(default)]
     pub batch_erasures: u64,
+    /// erase-cost-1tb ("one reseal serves many"): the version from which every group that may hold the customer had an
+    /// X_g at or above S_e (its sealed runs hold none of the rows and the delta runs only dead ones), and the delta runs
+    /// listed then that may still hold dead rows of the customer. Each leaves when a merge, a cleanse or a retire replaces
+    /// it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub groups_clear_version: Option<u64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub delta_owed: Vec<String>,
+    /// erase-cost-1tb: how the live runs became clean: "ordinary" (reseals and merges that ran anyway), "forced" (the
+    /// deadline scheduler resealed groups or cleansed delta runs for it), "scrub" (the batch scrub of perf-erase).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cleaned_by: Option<String>,
+    /// erase-cost-1tb: groups resealed and delta runs cleansed by the deadline scheduler while this erasure was due (shared
+    /// with the other erasures it served).
+    #[serde(default)]
+    pub forced_reseals: u64,
+    #[serde(default)]
+    pub forced_cleanses: u64,
 }
 
 impl Erasure {
@@ -387,6 +424,11 @@ pub async fn register(store: &Arc<dyn ObjectStore>, id: &str, collection: &str, 
         targets: Some(hex(&targets.encode())),
         batch: None,
         batch_erasures: 0,
+        groups_clear_version: None,
+        delta_owed: Vec::new(),
+        cleaned_by: None,
+        forced_reseals: 0,
+        forced_cleanses: 0,
     };
     let rec = async { save(store, id, &e).await };
     match also {
@@ -492,12 +534,19 @@ pub struct ScrubOpts {
     /// false, and the caller commits what it did and scrubs again). The runs it wrote must be published well within the
     /// GC grace, which counts from their write (`gc.rs`). None: no limit.
     pub budget: Option<std::time::Duration>,
+    /// erase-cost-1tb: keep the target rows that are delete envelopes (the first phase of a scrub in parts). A part
+    /// that removed a customer's envelopes while an older run, not rewritten yet, still held its live rows published a
+    /// version in which the erased documents were readable again until the next part
+    /// (`perf_erase_tests::no_part_of_a_scrub_makes_an_erased_document_readable`). So a scrub in parts first removes
+    /// every other target row (the envelopes keep hiding the keys), and only then, once no run holds an older row of
+    /// any target, the envelopes, in any order.
+    pub keep_envelopes: bool,
 }
 
 impl Default for ScrubOpts {
     fn default() -> Self {
         let b = super::build::BuildOpts::default();
-        ScrubOpts { sealed: b.sealed, delta: b.delta, budget: None }
+        ScrubOpts { sealed: b.sealed, delta: b.delta, budget: None, keep_envelopes: false }
     }
 }
 
@@ -551,10 +600,11 @@ async fn probe_hits(store: &Arc<dyn ObjectStore>, h: &RunH, t: &Batch, hit: &(dy
 
 /// Rewrite one run without the batch's target rows. None: the run holds none (nothing written). Some(None): every row
 /// was a target (the run leaves the version).
-async fn rewrite_run(store: &Arc<dyn ObjectStore>, h: &RunH, path: String, opts: &RunOptions, t: &Batch, dropped: &mut u64) -> Result<Option<Option<RunLine>>> {
+async fn rewrite_run(store: &Arc<dyn ObjectStore>, h: &RunH, path: String, opts: &RunOptions, t: &Batch, dropped: &mut u64, keep_env: bool) -> Result<Option<Option<RunLine>>> {
     let n = view::block_count(store, h).await?;
     let any_seq = ctl(&CONTROL_NO_SEQ_BOUND);
     let hit = |k: &[u8], seq: u64| if any_seq { t.bound(k).is_some() } else { t.hit(k, seq) };
+    let keep_env = keep_env && !ctl(&CONTROL_PARTS_DROP_ENVELOPES);
     // perf-erase: read first only the blocks that may hold a target (the run's fence); a run that holds none is not
     // read whole nor rewritten (its key span only met the batch's)
     if !ctl(&CONTROL_NO_PROBE) && !probe_hits(store, h, t, &hit).await? {
@@ -611,7 +661,7 @@ async fn rewrite_run(store: &Arc<dyn ObjectStore>, h: &RunH, path: String, opts:
                     rows.push((k.to_vec(), blk.seq(i), blk.env(i).to_vec()));
                     continue;
                 }
-                if hit(k, blk.seq(i)) {
+                if hit(k, blk.seq(i)) && !(keep_env && blk.env(i).first() == Some(&crate::runfmt::DELETED)) {
                     erased += 1;
                     continue;
                 }
@@ -629,7 +679,12 @@ async fn rewrite_run(store: &Arc<dyn ObjectStore>, h: &RunH, path: String, opts:
     }
     *dropped += erased;
     Ok(Some(match w {
-        Some(w) => Some(line(&w.finish().await?)),
+        Some(w) => {
+            let l = line(&w.finish().await?);
+            SCRUB_BYTES.fetch_add(l.size, Relaxed);
+            SCRUB_RUNS.fetch_add(1, Relaxed);
+            Some(l)
+        }
         None => None,
     }))
 }
@@ -673,7 +728,7 @@ pub async fn scrub_version(store: &Arc<dyn ObjectStore>, id: &str, cur: &View, n
         let path = manifest::run_path(id, &format!("g{}e{tag}", g.id), g.x_g, epoch);
         let t0 = std::time::Instant::now();
         let rows0 = out.rows;
-        let rw = rewrite_run(store, h, path, &opts.sealed, t, &mut out.rows).await?;
+        let rw = rewrite_run(store, h, path, &opts.sealed, t, &mut out.rows, opts.keep_envelopes).await?;
         trace(serde_json::json!({"ev": "scrub_run", "db": id, "kind": "sealed", "group": g.id, "size": h.line.size, "raw": h.line.raw, "rows_erased": out.rows - rows0, "rewritten": rw.is_some(), "ms": t0.elapsed().as_millis() as u64}));
         if let Some(new) = rw {
             out.retired.push(h.line.path.clone());
@@ -692,7 +747,7 @@ pub async fn scrub_version(store: &Arc<dyn ObjectStore>, id: &str, cur: &View, n
             let path = manifest::run_path(id, &format!("delta-e{tag}"), h.line.max_seq, epoch);
             let t0 = std::time::Instant::now();
             let rows0 = out.rows;
-            let rw = rewrite_run(store, h, path, &opts.delta, t, &mut out.rows).await?;
+            let rw = rewrite_run(store, h, path, &opts.delta, t, &mut out.rows, opts.keep_envelopes).await?;
             trace(serde_json::json!({"ev": "scrub_run", "db": id, "kind": "delta", "size": h.line.size, "raw": h.line.raw, "rows_erased": out.rows - rows0, "rewritten": rw.is_some(), "ms": t0.elapsed().as_millis() as u64}));
             match rw {
                 None => delta.push(h.line.clone()),
@@ -1052,4 +1107,188 @@ pub async fn record_scrub(store: &Arc<dyn ObjectStore>, id: &str, e: &mut Erasur
     SCRUBS.fetch_add(s.version.is_some() as u64, Relaxed);
     let _ = hex(&[]);
     Ok(())
+}
+
+// ---- erase-cost-1tb: one reseal serves many --------------------------------------------------------------------------
+//
+// The perf-erase batch rewrote every run that held a target, once per batch (hourly by default). At 1 TB, with
+// customers spread over the key space and their locators spread by `_id`, that is most of the groups every hour. Here
+// the physical erasure rides the rewrites that happen anyway, and the deadline forces only what they did not do:
+//
+// - A reseal of a group at X_cut >= S_e (rule 14) writes the newest row of each key at or below X_cut and drops every
+//   delete envelope: every key the erasure deleted (its newest row at or below S_e is the delete's envelope) leaves the
+//   group's sealed run, with every older row of it. Its rows left in delta runs are then at or below the group's X_g:
+//   dead for every read (rule 13), and a merge, a retire by the lowest X_g, or a cleanse drops them. A row written again
+//   after the erasure (seq above S_e) is new data: the reseal keeps it.
+// - So an erasure is clean in the live runs once (1) every group that may hold a target has X_g >= S_e
+//   ([`owing_groups`] empty: the manifest says so, no read) and (2) every delta run listed when (1) first held, that may
+//   hold a target row at or below S_e ([`owed_delta`]), has left the version. A delta run listed later holds no target
+//   row at or below S_e: a merge drops rows at or below X_g, an absorption holds rows above X_d >= S_e only.
+// - Then a probe of every run of the newest version that may hold a target confirms it ([`confirm_clean`]); only then
+//   is the erasure "scrubbed" and its targets forgotten.
+// - The deadline scheduler (`ctl/erase.rs`) forces, for the erasures due, a reseal of each group still owing and then a
+//   cleanse of each owed delta run that still holds a target row. Both drop only what ordinary jobs drop, through the
+//   compactor's commits: no step can make a row readable that was not readable before (a forced reseal is a reseal; a
+//   cleanse drops only rows at or below X_g).
+
+/// The groups of version `v` that may still hold a row of `t` at or below `s_e` the reads can see: X_g below `s_e` and a
+/// target in their key span.
+pub fn owing_groups(v: &Version, t: &Targets, s_e: u64) -> Result<Vec<u32>> {
+    let mut out = Vec::new();
+    for (i, g) in v.groups.iter().enumerate() {
+        if g.x_g >= s_e {
+            continue;
+        }
+        let lo = manifest::unhex(&g.lo)?;
+        let hi = v.groups.get(i + 1).map(|n| manifest::unhex(&n.lo)).transpose()?;
+        if t.meets_span(&lo, hi.as_deref()) {
+            out.push(g.id);
+        }
+    }
+    Ok(out)
+}
+
+/// The delta runs of `v` that may hold a row of `t` at or below `s_e` (live or dead).
+pub fn owed_delta(v: &Version, t: &Targets, s_e: u64) -> Result<Vec<String>> {
+    let mut out = Vec::new();
+    for d in &v.delta {
+        if d.min_seq > s_e {
+            continue;
+        }
+        let (first, last) = (manifest::unhex(&d.first)?, manifest::unhex(&d.last)?);
+        if t.meets(&first, &last) {
+            out.push(d.path.clone());
+        }
+    }
+    Ok(out)
+}
+
+/// The target rows (key, seq) of `t` in the blocks of run `h` that may hold one (message rows of derived threads are
+/// not counted: a reseal re-encodes them from the documents left; [`probe_hits`] does the same).
+pub async fn probe_rows(store: &Arc<dyn ObjectStore>, h: &RunH, t: &Batch, limit: usize) -> Result<Vec<(Vec<u8>, u64)>> {
+    let run = h.open(store).await?;
+    let mut want: BTreeSet<usize> = BTreeSet::new();
+    for (lo, hi) in t.spans_in(&h.first, &h.last) {
+        if let Some((a, z)) = run.fence.blocks_for(&lo, Some(&hi)) {
+            want.extend(a..=z);
+        }
+    }
+    let want: Vec<usize> = want.into_iter().collect();
+    let mut out = Vec::new();
+    let mut i = 0;
+    while i < want.len() {
+        let mut z = i;
+        while z + 1 < want.len() && want[z + 1] == want[z] + 1 && z + 1 - i < 64 {
+            z += 1;
+        }
+        for blk in view::blocks(store, h, want[i], want[z]).await? {
+            for r in 0..blk.len() {
+                if blk.env(r).first() != Some(&crate::runfmt::PART) && t.hit(blk.key(r), blk.seq(r)) {
+                    out.push((blk.key(r).to_vec(), blk.seq(r)));
+                    if out.len() >= limit {
+                        return Ok(out);
+                    }
+                }
+            }
+        }
+        i = z + 1;
+    }
+    Ok(out)
+}
+
+/// For each erasure of `items` (targets, S_e): whether no run of version `cur` holds one of its target rows at or below
+/// its S_e. Every run that may hold one is probed once for all of them (only the blocks that may hold a target).
+/// `only`: probe only these runs (None: every run of the version).
+pub async fn confirm_clean(store: &Arc<dyn ObjectStore>, cur: &View, items: &[(&Targets, u64)], only: Option<&BTreeSet<String>>) -> Result<Vec<bool>> {
+    let mut clean = vec![true; items.len()];
+    if items.is_empty() {
+        return Ok(clean);
+    }
+    let all = Batch::new(items);
+    let singles: Vec<Batch> = items.iter().map(|(t, s)| Batch::single(t, *s)).collect();
+    let runs = cur.groups.iter().filter_map(|g| g.sealed.as_ref()).chain(cur.delta.iter());
+    for h in runs {
+        if only.is_some_and(|o| !o.contains(&h.line.path)) {
+            continue;
+        }
+        if h.line.min_seq > all.max_s_e || !all.meets(&h.first, &h.last) {
+            continue;
+        }
+        let rows = probe_rows(store, h, &all, 100_000).await?;
+        for (i, b) in singles.iter().enumerate() {
+            if clean[i] && rows.iter().any(|(k, s)| b.hit(k, *s)) {
+                clean[i] = false;
+            }
+        }
+    }
+    Ok(clean)
+}
+
+/// The record of an erasure whose live runs became clean without a scrub (ridden, or forced through reseals and
+/// cleanses): "scrubbed" at `version`, its targets forgotten (they are the customer's data). The retire step then waits
+/// for the runs and versions the compactor replaced to leave (GC) as for a scrub.
+pub async fn record_clean(store: &Arc<dyn ObjectStore>, id: &str, e: &mut Erasure, version: u64, how: &str) -> Result<()> {
+    e.state = "scrubbed".into();
+    e.scrubbed_version = Some(version);
+    e.scrubbed_ms = Some(now_ms());
+    e.cleaned_by = Some(how.to_string());
+    e.delta_owed.clear();
+    let inline = e.targets.take().is_some();
+    save(store, id, e).await?;
+    if !inline {
+        match store.delete(&keys_path(id, &e.id)).await {
+            Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
+            Err(x) => return Err(x.into()),
+        }
+    }
+    if how == "ordinary" {
+        RODE.fetch_add(1, Relaxed);
+    }
+    Ok(())
+}
+
+/// erase-cost-1tb, review fix: the plan of one scrub pass in parts. The batch is frozen at its first part: an erasure
+/// whose deletes are absorbed while the pass runs waits for the next pass, so every erasure of the batch goes through
+/// phase 1 (every target row but the envelopes) before phase 2 drops its envelopes. Before the fix an erasure absorbed
+/// during phase 1 joined the batch in phase 2, and its envelopes could leave in one part while its live rows were still
+/// in an older run (`perf_erase_tests::review_an_erasure_joining_in_phase_two_is_not_protected`).
+#[derive(Clone, Debug)]
+pub struct PartsPlan {
+    frozen: Option<BTreeSet<String>>,
+    /// phase 1 (keep the envelopes) until it completes
+    pub keep_envelopes: bool,
+}
+
+/// Negative control of the review fix: the batch is not frozen (an erasure absorbed during phase 1 joins phase 2).
+pub static CONTROL_UNFROZEN_BATCH: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+impl Default for PartsPlan {
+    fn default() -> Self {
+        PartsPlan { frozen: None, keep_envelopes: true }
+    }
+}
+
+impl PartsPlan {
+    /// The erasures (by id) this part may scrub, of those `ready` now: the first call freezes the batch.
+    pub fn admit(&mut self, ready: &[String]) -> Vec<String> {
+        if ctl(&CONTROL_UNFROZEN_BATCH) {
+            return ready.to_vec();
+        }
+        match &self.frozen {
+            None => {
+                if !ready.is_empty() {
+                    self.frozen = Some(ready.iter().cloned().collect());
+                }
+                ready.to_vec()
+            }
+            Some(f) => ready.iter().filter(|e| f.contains(*e)).cloned().collect(),
+        }
+    }
+
+    /// After a part: a complete phase 1 starts phase 2.
+    pub fn after_part(&mut self, complete: bool) {
+        if complete {
+            self.keep_envelopes = false;
+        }
+    }
 }
