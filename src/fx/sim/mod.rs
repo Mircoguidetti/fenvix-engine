@@ -327,7 +327,8 @@ mod tests {
         for c in 0..3 {
             ev.push(fill(0, c, 0));
         }
-        ev.extend([Publish { p: 0 }, CompStart { p: 0 }, Flush { p: 0 }, CompDrain { p: 0 }, Point { p: 1, tag: 1 }, Write { p: 0, ops: vec![(0, 1, false), (1, 2, true)] }, Mark { tag: 2 }]);
+        // (a compactor starts after a write that follows the publish: the catch-up publish needs something new)
+        ev.extend([Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }, Flush { p: 0 }, CompDrain { p: 0 }, Point { p: 1, tag: 1 }, Write { p: 0, ops: vec![(0, 1, false), (1, 2, true)] }, Mark { tag: 2 }]);
         for c in 3..CUSTOMERS {
             ev.extend([fill(0, c, 0), Flush { p: 0 }, CompDrain { p: 0 }]);
         }
@@ -349,7 +350,7 @@ mod tests {
         for c in 0..4 {
             ev.push(fill(0, c, 0));
         }
-        ev.extend([Publish { p: 0 }, CompStart { p: 0 }, Flush { p: 0 }, CompDrain { p: 0 }, Fork { p: 0, copy, tag: 1 }, Open { p: 1, writer: true }, CompStart { p: 1 }]);
+        ev.extend([Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }, Flush { p: 0 }, CompDrain { p: 0 }, Fork { p: 0, copy, tag: 1 }, Open { p: 1, writer: true }, Write { p: 1, ops: vec![(5, 1, false)] }, CompStart { p: 1 }]);
         ev.extend([Erase { p: 1, cust: 1 }, fill(1, 4, 0), Flush { p: 1 }, CompDrain { p: 1 }, ErasePass { p: 1 }, fill(1, 5, 0), Flush { p: 1 }, CompDrain { p: 1 }, Gc { p: 1 }, Sleep { ms: 2700 }, Retire { p: 1 }, Gc { p: 1 }, DropThrough { p: 1 }, Gc { p: 1 }, SlateGc { p: 2 }, GcClosed { p: 2 }]);
         let (f, v) = run_story(&rt, "fork then the source collects", env_u64("SIM_KNOBS", 0) as u8, ev);
         assert_eq!(f, 0, "{v:?}");
@@ -366,14 +367,15 @@ mod tests {
         use Ev::*;
         let ev = vec![
             Open { p: 0, writer: true },
-            Write { p: 0, ops: vec![(0, 0, false), (5, 5, false)] },
-            Hold { p: 0, class: Class::FxVersion, op: None, skip: 0, land: true, all: false, rid: 1 },
+            // the generated version's create held on its way (a slow PUT): the takeover happens meanwhile
+            Hold { p: 0, class: Class::FxVersion, op: Some(super::net::Op::Put), skip: 0, land: true, all: false, rid: 1 },
             Generate { p: 0, writers: 3 },
             Open { p: 1, writer: true },
             Write { p: 1, ops: vec![(1, 1, false), (2, 2, true)] },
             Publish { p: 1 },
             Release { rid: 1 },
             Sleep { ms: 1500 },
+            Write { p: 1, ops: vec![(4, 4, false)] },
             CompStart { p: 1 },
             fill(1, 3, 0),
             Flush { p: 1 },
