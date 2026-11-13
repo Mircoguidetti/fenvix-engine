@@ -51,3 +51,25 @@ def test_batches_stay_under_16_mib(srv):
     assert len(first) == 1 and r["cursor"]["id"] != 0
     assert len(list(db.big.find({}))) == 3
     c.close()
+
+
+def test_index_reads_return_every_document_once(srv):
+    """docs_by_scan (small databases read the id span in one range scan) moves each found document out instead of
+    copying it; an id the scan gives twice still comes back as before. Same answers as the documents written."""
+    c = srv.client()
+    db = c.app2
+    db.items.create_index([("tags", 1)])
+    db.items.create_index([("k", 1)])
+    want = {}
+    for i in range(60):
+        d = {"_id": i, "k": i % 7, "tags": [f"t{i % 5}", f"t{(i + 1) % 5}", "all"], "pad": "p" * (i * 50)}
+        db.items.insert_one(d)
+        want[i] = d
+    got = list(db.items.find({"k": 3}).sort("_id", 1))
+    assert got == [want[i] for i in sorted(want) if i % 7 == 3]
+    # multikey: a document matching two values of the $in once, as mongod returns it
+    got = list(db.items.find({"tags": {"$in": ["t1", "t2"]}}).sort("_id", 1))
+    assert got == [want[i] for i in sorted(want) if {f"t{i % 5}", f"t{(i + 1) % 5}"} & {"t1", "t2"}]
+    got = list(db.items.find({"tags": "all"}).hint([("tags", 1)]))
+    assert sorted(d["_id"] for d in got) == sorted(want) and all(d == want[d["_id"]] for d in got)
+    c.close()
