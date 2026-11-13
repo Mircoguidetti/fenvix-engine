@@ -444,6 +444,7 @@ async fn ride_case(drop_live_control: bool, keep_dead_control: bool) -> (usize, 
         assert!(owed_after(&v, &items).is_empty());
     }
     c.stop().await;
+    t.close().await.unwrap();
     (readable, clean)
 }
 
@@ -508,6 +509,7 @@ async fn owing_groups_and_the_probe_are_per_erasure() {
         assert!(t.get(ckey(7, i)).await.unwrap().is_none() && t.get(ckey(30, i)).await.unwrap().is_none());
     }
     c.stop().await;
+    t.close().await.unwrap();
     hold::HOLD_LIFE_MS.store(120_000, Relaxed);
 }
 
@@ -608,5 +610,8 @@ async fn phase2_join_case(control: bool) -> Vec<(usize, usize, usize, usize)> {
     }
     assert!(done.contains(&ea.id) && eb.as_ref().is_some_and(|e| done.contains(&e.id)), "both erasures must end scrubbed");
     c.stop().await;
+    // close the writer: an open writer stays in the process-wide registry (`lifecycle::WRITER_DBS`) after this test's
+    // runtime is gone, and a later test's maintenance waited on it forever (the unit run hung, lifecycle::tests)
+    t.close().await.unwrap();
     readable
 }
