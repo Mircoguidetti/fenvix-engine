@@ -50,6 +50,21 @@ impl RawScan for Raw<'_> {
 }
 
 impl Raw<'_> {
+    /// Whether [`Raw::prefetch`] can warm run blocks for this source.
+    fn prefetches(&self) -> bool {
+        matches!(self, Raw::Tenant(..) | Raw::Visible(_) | Raw::Snap(_))
+    }
+
+    /// P-fix-read-amplification: warm the run blocks these physical keys share (a cache warm-up: answers never depend
+    /// on it).
+    async fn prefetch(&self, keys: &[Vec<u8>]) {
+        match self {
+            Raw::Tenant(t, _) | Raw::Visible(t) => t.prefetch_points(keys).await,
+            Raw::Snap(s) => s.prefetch_points(keys).await,
+            _ => {}
+        }
+    }
+
     pub async fn get(&self, key: &[u8]) -> Result<Option<Bytes>> {
         match self {
             Raw::Tenant(t, false) => t.get(key).await,
@@ -134,9 +149,30 @@ pub async fn get(raw: &Raw<'_>, key: &[u8]) -> Result<Option<Bytes>> {
 /// Point reads, in key order, at most `parallel` at once.
 pub async fn get_many(raw: &Raw<'_>, keys: &[Vec<u8>], parallel: usize) -> Result<Vec<Option<Bytes>>> {
     use futures::{StreamExt, TryStreamExt};
-    let futs: Vec<_> = keys.iter().map(|k| async move { raw.get(&phys(k)).await }).collect();
-    futures::stream::iter(futs).buffered(parallel.max(1)).try_collect().await
+    if keys.len() < 2 || !raw.prefetches() {
+        let futs: Vec<_> = keys.iter().map(|k| async move { raw.get(&phys(k)).await }).collect();
+        return futures::stream::iter(futs).buffered(parallel.max(1)).try_collect().await;
+    }
+    // P-fix-read-amplification: the keys in physical order, a chunk at a time: the run blocks two or more keys of a
+    // chunk share are fetched once, whole (`View::prefetch_points`), then the chunk's point reads find them cached.
+    // The answers are put back in the order of `keys`.
+    let mut order: Vec<(Vec<u8>, usize)> = keys.iter().enumerate().map(|(i, k)| (phys(k).into_owned(), i)).collect();
+    order.sort();
+    let mut out: Vec<Option<Bytes>> = vec![None; keys.len()];
+    for chunk in order.chunks(PREFETCH_CHUNK) {
+        let pk: Vec<Vec<u8>> = chunk.iter().map(|(k, _)| k.clone()).collect();
+        raw.prefetch(&pk).await;
+        let futs: Vec<_> = chunk.iter().map(|(k, i)| async move { Ok::<_, anyhow::Error>((*i, raw.get(k).await?)) }).collect();
+        let got: Vec<(usize, Option<Bytes>)> = futures::stream::iter(futs).buffered(parallel.max(1)).try_collect().await?;
+        for (i, v) in got {
+            out[i] = v;
+        }
+    }
+    Ok(out)
 }
+
+/// Keys whose shared blocks are warmed at once before their point reads (`get_many`).
+const PREFETCH_CHUNK: usize = 512;
 
 fn left(limit: Option<usize>, n: usize) -> Option<usize> {
     limit.map(|l| l.saturating_sub(n))

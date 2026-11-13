@@ -820,6 +820,7 @@ impl Server {
                 "spanScans": crate::coll::FETCH_SCANS.load(Relaxed) as i64,
                 "spanRows": crate::coll::FETCH_SCAN_ROWS.load(Relaxed) as i64,
                 "spanStops": crate::coll::FETCH_SCAN_STOPS.load(Relaxed) as i64,
+                "prefetchBlocks": tenant_bench::fx::view::PREFETCH_BLOCKS.load(Relaxed) as i64,
             },
             // compaction 2, step 3 (fx): versions published and installed, failed builds, fence versions written at
             // open, rows answered by our runs, GETs of run blocks, runs opened

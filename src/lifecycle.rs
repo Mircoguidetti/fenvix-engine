@@ -1616,6 +1616,14 @@ impl Tenant {
         self.env
     }
 
+    /// P-fix-read-amplification: warm the run blocks that several of these (physical) keys share before point reads of
+    /// them ([`crate::fx::view::View::prefetch_points`]); answers never depend on it, so an error is only counted.
+    pub async fn prefetch_points(&self, keys: &[Vec<u8>]) {
+        if let Some(v) = &self.fx {
+            let _ = v.prefetch_points(keys).await;
+        }
+    }
+
     /// The version of our manifest this tenant reads with (None: none, or `--sealed-runs` off).
     pub fn fx_view(&self) -> Option<&Arc<crate::fx::view::View>> {
         self.fx.as_ref()
