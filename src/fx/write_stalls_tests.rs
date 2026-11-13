@@ -1160,3 +1160,104 @@ async fn ws_gc_keeps_the_trusted_version_under_an_older_newest() {
     assert!(kept, "the GC deleted the version readers serve");
     assert_eq!((w, f), (0, 0), "rows wrong or unreadable after the GC");
 }
+
+/// A store whose GETs of one object fail with a transient error (not NotFound) while `fail` is set.
+#[derive(Debug)]
+struct FailGets {
+    inner: Arc<dyn ObjectStore>,
+    fail: Arc<std::sync::Mutex<Option<String>>>,
+}
+
+impl std::fmt::Display for FailGets {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "FailGets({})", self.inner)
+    }
+}
+
+#[async_trait::async_trait]
+impl ObjectStore for FailGets {
+    async fn put_opts(&self, l: &object_store::path::Path, p: object_store::PutPayload, o: object_store::PutOptions) -> object_store::Result<object_store::PutResult> {
+        self.inner.put_opts(l, p, o).await
+    }
+    async fn put_multipart_opts(&self, l: &object_store::path::Path, o: object_store::PutMultipartOptions) -> object_store::Result<Box<dyn object_store::MultipartUpload>> {
+        self.inner.put_multipart_opts(l, o).await
+    }
+    async fn get_opts(&self, l: &object_store::path::Path, o: object_store::GetOptions) -> object_store::Result<object_store::GetResult> {
+        if self.fail.lock().unwrap().as_deref() == Some(l.as_ref()) {
+            return Err(object_store::Error::Generic { store: "FailGets", source: "injected transient error (503 Slow Down)".into() });
+        }
+        self.inner.get_opts(l, o).await
+    }
+    fn delete_stream(&self, l: futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>> {
+        self.inner.delete_stream(l)
+    }
+    fn list(&self, p: Option<&object_store::path::Path>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.inner.list(p)
+    }
+    async fn list_with_delimiter(&self, p: Option<&object_store::path::Path>) -> object_store::Result<object_store::ListResult> {
+        self.inner.list_with_delimiter(p).await
+    }
+    async fn copy_opts(&self, f: &object_store::path::Path, t: &object_store::path::Path, o: object_store::CopyOptions) -> object_store::Result<()> {
+        self.inner.copy_opts(f, t, o).await
+    }
+}
+
+/// Review of 7f93591 (rule 8; at 1 TB, S3 errors are normal): a transient error reading a version the GC must keep (here
+/// one inside the retention window, a restore point) is not a deletion. Version 1 is kept by a 1 h retention; version 2
+/// (a full reseal) no longer lists version 1's runs. Every GET of version 1's manifest fails with a transient error during
+/// `gc_closed`. Control (`CONTROL_GC_ERRORS_AS_DELETED`, the code before): version 1's runs are deleted. Fix: the pass is
+/// skipped and they stay.
+async fn gc_with_a_transient_error(control: bool) -> (usize, usize, bool) {
+    let mem: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let fail = Arc::new(std::sync::Mutex::new(None));
+    let store: Arc<dyn ObjectStore> = Arc::new(FailGets { inner: Arc::clone(&mem), fail: Arc::clone(&fail) });
+    let id = if control { "ws-gc-err-control" } else { "ws-gc-err" };
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(format!("a-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(format!("b-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    t.close().await.unwrap();
+    let v1 = manifest::load(&store, id, 1).await.unwrap();
+    let v2 = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    let only_v1: Vec<String> = gc::runs_of(&v1).into_iter().filter(|r| !gc::runs_of(&v2).contains(r)).collect();
+    assert!(!only_v1.is_empty(), "setup: version 1 must have runs of its own");
+    let (ret0, grace0) = (VERSION_RETENTION_MS.load(SeqCst), GC_GRACE_MS.load(SeqCst));
+    VERSION_RETENTION_MS.store(3_600_000, SeqCst);
+    GC_GRACE_MS.store(0, SeqCst);
+    // the control is the code before both GC changes: no trusted version read, errors taken as deletions
+    gc::CONTROL_GC_ERRORS_AS_DELETED.store(control, Relaxed);
+    gc::CONTROL_GC_PLAIN_NEWEST.store(control, Relaxed);
+    *fail.lock().unwrap() = Some(manifest::manifest_path(id, 1).to_string());
+    let r = gc::gc_closed(&store, id).await;
+    *fail.lock().unwrap() = None;
+    gc::CONTROL_GC_ERRORS_AS_DELETED.store(false, Relaxed);
+    gc::CONTROL_GC_PLAIN_NEWEST.store(false, Relaxed);
+    VERSION_RETENTION_MS.store(ret0, SeqCst);
+    GC_GRACE_MS.store(grace0, SeqCst);
+    let mut left = 0;
+    for p in &only_v1 {
+        if object_store::ObjectStoreExt::head(&mem, &object_store::path::Path::from(p.as_str())).await.is_ok() {
+            left += 1;
+        }
+    }
+    eprintln!("GC with a transient error (control {control}): pass {:?}; version 1's own runs left {left} of {}", r.as_ref().map(|_| ()), only_v1.len());
+    (left, only_v1.len(), r.is_err())
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_gc_takes_a_transient_error_for_no_deletion() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (left_ctl, n_ctl, _) = gc_with_a_transient_error(true).await;
+    let (left, n, skipped) = gc_with_a_transient_error(false).await;
+    teardown();
+    assert!(left_ctl < n_ctl, "control: the GC must delete the retained version's runs, or the test does not reach the case");
+    assert_eq!(left, n, "runs of a retained version were deleted after a transient error");
+    assert!(skipped, "the pass must report the error (skipped)");
+}

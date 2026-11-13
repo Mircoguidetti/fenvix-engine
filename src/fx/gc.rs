@@ -45,7 +45,7 @@ pub struct GcState {
     pub passes: AtomicU64,
 }
 
-fn runs_of(v: &Version) -> Vec<String> {
+pub(crate) fn runs_of(v: &Version) -> Vec<String> {
     v.groups.iter().filter_map(|g| g.sealed.as_ref().map(|s| s.path.clone())).chain(v.delta.iter().map(|d| d.path.clone())).collect()
 }
 
@@ -102,7 +102,13 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
                 st.listed.lock().unwrap().insert(n, (runs_of(&v), v.published_ms));
                 st.versions_loaded.fetch_add(1, Relaxed);
             }
-            Err(_) => {} // deleted meanwhile
+            Err(e) if is_not_found(&e) || CONTROL_GC_ERRORS_AS_DELETED.load(Relaxed) => {} // deleted meanwhile
+            Err(e) => {
+                // a transient error is not a deletion: its runs would count as unreferenced (review of 7f93591)
+                st.to_load.lock().unwrap().push_front(n);
+                eprintln!("GC of {id}: version {n} could not be read ({e:#}); this pass is skipped");
+                return Err(e);
+            }
         }
         loaded_now += 1;
         if loaded_now >= GC_LOAD_PER_PASS {
@@ -223,6 +229,15 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
 }
 
 
+/// Whether an error loading a version means it is gone (and only that): any other error skips the GC pass.
+fn is_not_found(e: &anyhow::Error) -> bool {
+    e.downcast_ref::<object_store::Error>().is_some_and(|e| matches!(e, object_store::Error::NotFound { .. }))
+}
+
+/// Negative control of the tests: every error loading a version counts as "deleted" (the code before the review of
+/// 7f93591).
+pub static CONTROL_GC_ERRORS_AS_DELETED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
 /// Negative control of the tests: the GC keeps from the plain newest version (the code before the review of e3b04c5).
 pub static CONTROL_GC_PLAIN_NEWEST: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
@@ -234,7 +249,11 @@ async fn trusted_floor(store: &Arc<dyn ObjectStore>, id: &str, newest: u64) -> R
     }
     match manifest::load(store, id, newest).await {
         Ok(v) => Ok(manifest::trusted_at(store, id, v).await?.version),
-        Err(_) => Ok(newest), // a newer version was published meanwhile: the next pass
+        Err(e) if is_not_found(&e) || CONTROL_GC_ERRORS_AS_DELETED.load(Relaxed) => Ok(newest), // a newer version was published meanwhile: the next pass
+        Err(e) => {
+            eprintln!("GC of {id}: version {newest} could not be read ({e:#}); this pass is skipped");
+            Err(e)
+        }
     }
 }
 
@@ -277,7 +296,11 @@ pub async fn gc_closed(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<
         if n >= keep_from {
             match manifest::load(store, id, n).await {
                 Ok(v) => referenced.extend(runs_of(&v)),
-                Err(_) => {}
+                Err(e) if is_not_found(&e) || CONTROL_GC_ERRORS_AS_DELETED.load(Relaxed) => {}
+                Err(e) => {
+                    eprintln!("GC of closed {id}: version {n} could not be read ({e:#}); this pass is skipped");
+                    return Err(e);
+                }
             }
             continue;
         }
@@ -289,7 +312,13 @@ pub async fn gc_closed(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<
                     continue;
                 }
                 Ok(_) => {}
-                Err(_) => continue, // deleted meanwhile
+                Err(e) if is_not_found(&e) || CONTROL_GC_ERRORS_AS_DELETED.load(Relaxed) => continue, // deleted meanwhile
+                // a transient error is not a deletion: the runs of a named or retained version would be deleted with it
+                // (review of 7f93591; at 1 TB, S3 errors are normal)
+                Err(e) => {
+                    eprintln!("GC of closed {id}: version {n} could not be read ({e:#}); this pass is skipped");
+                    return Err(e);
+                }
             }
         }
         match store.delete(&manifest::manifest_path(id, n)).await {
