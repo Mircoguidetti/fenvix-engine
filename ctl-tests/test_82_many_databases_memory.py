@@ -160,3 +160,60 @@ def test_control_without_the_process_budget_is_oom_killed():
     s, cg, acked, errs, alive, ooms, mb, peak = run_first_wave(bucket, "t82c", ["--memtables-total-mb", "0"])
     s.kill9()
     assert (not alive) or ooms > 0, "the control (no process-wide memtable budget) was not OOM-killed: the test does not see the defect here"
+
+
+def test_kill9_while_the_governor_flushes():
+    """Rule 8 with the governor at work all the time: `--memtables-total-mb 1` (budget 1 MiB, writes wait past 1.5 MiB),
+    24 writers over 8 databases with documents of 100 B to 20 KB, kill -9 at a random moment. Every acknowledged
+    document is there after a restart, with its value; the governor's counters show it flushed and held writes."""
+    bucket = make_bucket("t82g")
+    s = Server(bucket, "t82g", idle=600, extra=["--memtables-total-mb", "1"]).start()
+    acked, stop = [], threading.Event()
+
+    def work(t):
+        from pymongo import MongoClient
+        c = MongoClient(s.uri, serverSelectionTimeoutMS=5000, socketTimeoutMS=30000)
+        k = 0
+        while not stop.is_set():
+            try:
+                c[f"g{t % 8}"].t.insert_one({"_id": f"{t}-{k}", "v": k, "pad": "x" * random.randint(100, 20000)})
+            except PyMongoError:
+                return
+            acked.append((f"g{t % 8}", f"{t}-{k}", k))
+            k += 1
+
+    ts = [threading.Thread(target=work, args=(t,)) for t in range(24)]
+    for t in ts:
+        t.start()
+    time.sleep(random.uniform(8, 14))
+    mb = s.client().admin.command("serverStatus")["fenvix"]["memoryBudget"]
+    s.kill9()
+    stop.set()
+    for t in ts:
+        t.join(60)
+    print(f"T82G before the kill: acknowledged {len(acked)}; memtables peak {mb['memtablesPeak'] >> 10} KiB (budget {mb['memtablesBytes'] >> 10}, "
+          f"hard {mb['memtablesHardBytes'] >> 10}), budget flushes {mb['memtableBudgetFlushes']}, write waits {mb['memtableBudgetWaits']}, "
+          f"wait timeouts {mb['memtableBudgetWaitTimeouts']}", flush=True)
+    r = Server(bucket, "t82gr", idle=600, extra=["--memtables-total-mb", "1"]).start()
+    from pymongo import MongoClient
+    c = MongoClient(r.uri, serverSelectionTimeoutMS=30000, socketTimeoutMS=300000)
+    by = {}
+    for d, i, v in acked:
+        by.setdefault(d, {})[i] = v
+    lost, wrong = [], []
+    for d, want in by.items():
+        for attempt in range(120):
+            try:
+                got = {x["_id"]: x["v"] for x in c[d].t.find({}, {"v": 1})}
+                break
+            except OperationFailure as e:
+                if e.code != 134 or attempt == 119:
+                    raise
+                time.sleep(0.5)
+        lost += [i for i in want if i not in got]
+        wrong += [i for i, v in want.items() if i in got and got[i] != v]
+    print(f"T82G after the restart: {len(acked)} acknowledged documents checked, lost {len(lost)}, wrong {len(wrong)}", flush=True)
+    r.term()
+    assert not lost and not wrong, (lost[:10], wrong[:10])
+    assert mb["memtableBudgetFlushes"] > 0, "the governor never flushed: the test did not exercise it"
+    assert len(acked) > 100
