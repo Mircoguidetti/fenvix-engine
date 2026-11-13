@@ -90,7 +90,8 @@ pub static CONTROL_NO_FENCE_CHECK: std::sync::atomic::AtomicBool = std::sync::at
 /// takeover can still let this version land (serverStatus `fenceWindowMsMax`).
 pub static FENCE_WINDOW_MS_MAX: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
-async fn fence_check(store: &Arc<dyn ObjectStore>, id: &str, epoch: Option<u64>) -> Result<()> {
+async fn fence_check(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), epoch: Option<u64>) -> Result<()> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let Some(e) = epoch else { return Ok(()) };
     if CONTROL_NO_FENCE_CHECK.load(std::sync::atomic::Ordering::Relaxed) {
         return Ok(());
@@ -165,7 +166,8 @@ fn envelope_of(e_env: u64, key: &[u8], seq: u64, value: &[u8]) -> Result<Vec<u8>
 /// Build the runs of the next version from `db` and publish it. `cur` is the version the writer serves (None: the first
 /// build). Returns the published version, or None when there is nothing new to publish. An error leaves only orphan
 /// runs (GC's business in step 4), never a half-published version.
-pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, id: &str, cur: Option<&View>, e_env: u64, epoch: Option<u64>, opts: &BuildOpts, fail: Option<&(dyn Fn(&str) -> Result<()> + Sync)>) -> Result<Option<(Version, BuildReport)>> {
+pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), cur: Option<&View>, e_env: u64, epoch: Option<u64>, opts: &BuildOpts, fail: Option<&(dyn Fn(&str) -> Result<()> + Sync)>) -> Result<Option<(Version, BuildReport)>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     // fix-write-stalls: the L0 SSTs in the writer's view before the cut. Each was flushed before the snapshot below, so
     // every row it holds has a seq at or below the cut: the first version lists them as absorbed (`absorbed_l0`, with the
     // cut as their highest seq, an upper bound), and a compactor starting on it reads none of them again
@@ -353,7 +355,8 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
 /// `group_bytes` raw bytes. Groups get ids from `first_id` up.
 pub struct GroupWriter {
     store: Arc<dyn ObjectStore>,
-    id: String,
+    /// The database with the incarnation its writer opened (fix-incarnation): every run path uses it.
+    id: crate::lifecycle::DbAt,
     x: u64,
     epoch: Option<u64>,
     opts: BuildOpts,
@@ -371,8 +374,8 @@ pub struct GroupWriter {
 }
 
 impl GroupWriter {
-    pub fn new(store: &Arc<dyn ObjectStore>, id: &str, x: u64, epoch: Option<u64>, opts: &BuildOpts, first_id: u32, first_at_empty: bool) -> GroupWriter {
-        GroupWriter { store: Arc::clone(store), id: id.to_string(), x, epoch, opts: opts.clone(), next_id: first_id, groups: Vec::new(), cur: None, g_bytes: 0, last: None, first_at_empty, force: false, rows: 0, bytes: 0 }
+    pub fn new(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), x: u64, epoch: Option<u64>, opts: &BuildOpts, first_id: u32, first_at_empty: bool) -> GroupWriter {
+        GroupWriter { store: Arc::clone(store), id: crate::lifecycle::DbRef::at(id), x, epoch, opts: opts.clone(), next_id: first_id, groups: Vec::new(), cur: None, g_bytes: 0, last: None, first_at_empty, force: false, rows: 0, bytes: 0 }
     }
 
     /// The next row starts a new group (a cut planned by the caller, e.g. at a customer boundary), whatever the bytes of
@@ -444,7 +447,8 @@ pub struct Generated {
 /// The database must have no run yet (a ballast database is generated whole, once). `next_version` is the slot to create
 /// (the version the writer serves plus one: its fence written at open; audit-fencing, never a LIST).
 #[allow(clippy::too_many_arguments)]
-pub async fn publish_generated(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, id: &str, cur: Option<&View>, e_env: u64, epoch: Option<u64>, opts: &BuildOpts, mut gen: Generated) -> Result<(Version, BuildReport)> {
+pub async fn publish_generated(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), cur: Option<&View>, e_env: u64, epoch: Option<u64>, opts: &BuildOpts, mut gen: Generated) -> Result<(Version, BuildReport)> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     if let Some(v) = cur {
         ensure!(v.meta.delta.is_empty() && v.meta.groups.iter().all(|g| g.sealed.is_none()), "database {id} already has runs: a ballast database is generated whole, into an empty database");
     }
@@ -577,7 +581,8 @@ struct PartOut {
 /// run yet; every generated row carries `x0`, at or below the cut X_d taken here; on a key SlateDB also holds the
 /// generated row wins; delete envelopes are dropped; no row of the shared keyspace falls inside the customer space.
 #[allow(clippy::too_many_arguments)]
-pub async fn publish_generated_parts(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, id: &str, cur: Option<&View>, e_env: u64, epoch: Option<u64>, opts: &BuildOpts, x0: u64, direct: Vec<GroupLine>, direct_last: Option<Vec<u8>>, parts: Vec<PartRows>, parallel: usize) -> Result<(Version, BuildReport)> {
+pub async fn publish_generated_parts(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), cur: Option<&View>, e_env: u64, epoch: Option<u64>, opts: &BuildOpts, x0: u64, direct: Vec<GroupLine>, direct_last: Option<Vec<u8>>, parts: Vec<PartRows>, parallel: usize) -> Result<(Version, BuildReport)> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     if let Some(v) = cur {
         ensure!(v.meta.delta.is_empty() && v.meta.groups.iter().all(|g| g.sealed.is_none()), "database {id} already has runs: a ballast database is generated whole, into an empty database");
     }
@@ -615,7 +620,7 @@ pub async fn publish_generated_parts(db: &slatedb::Db, store: &Arc<dyn ObjectSto
     let sem = Arc::new(tokio::sync::Semaphore::new(parallel.max(1)));
     let mut tasks = Vec::new();
     for (p, (part, srows)) in parts.into_iter().zip(by_part).enumerate() {
-        let (store, id, opts, sem) = (Arc::clone(store), id.to_string(), opts.clone(), Arc::clone(&sem));
+        let (store, id, opts, sem) = (Arc::clone(store), id.clone(), opts.clone(), Arc::clone(&sem));
         let hi = los.get(p + 1).cloned();
         let (direct_lo, direct_last) = (direct_lo.clone(), direct_last.clone());
         let x0 = x0;

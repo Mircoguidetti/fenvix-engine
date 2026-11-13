@@ -294,7 +294,7 @@ impl Leases {
             self.swept.lock().unwrap().insert(id.to_string());
             let (store, name) = (Arc::clone(&self.store), id.to_string());
             tokio::spawn(async move {
-                if let Err(e) = tenant_bench::lifecycle::sweep_old_incarnations(&store, &name).await {
+                if let Err(e) = tenant_bench::lifecycle::sweep_old_incarnations(&store, &name, k).await {
                     eprintln!("sweep of old incarnations of {name}: {e:#}");
                 }
             });

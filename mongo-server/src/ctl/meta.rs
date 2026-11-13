@@ -56,14 +56,8 @@ pub async fn footprint(ctl: &Ctl, prefix: &Path) -> anyhow::Result<Footprint> {
 
 /// Does the database exist (has data objects, not just a lease or marker)?
 pub async fn exists(ctl: &Ctl, db: &str) -> anyhow::Result<bool> {
-    let mut it = ctl.store.list(Some(&tenant_prefix(db)));
-    while let Some(m) = it.next().await {
-        let name = m?.location.filename().unwrap_or("").to_string();
-        if name != "_lease" && name != "_clean" {
-            return Ok(true);
-        }
-    }
-    Ok(false)
+    // audit-fencing round 2: the current incarnation's objects only (`lifecycle::db_exists`)
+    tenant_bench::lifecycle::db_exists(&ctl.store, db).await
 }
 
 pub fn default_meta(db: &str, created_ms: i64, via: &str) -> Value {

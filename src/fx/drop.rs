@@ -578,7 +578,7 @@ impl CompactionFilter for Filter {
         }
         self.ctl.applied_floor.fetch_max(self.floor, Relaxed);
         // P-perf-bytes: the SSTs this job replaced are garbage once the SST cleanup's minimum age has passed
-        crate::lifecycle::note_compacted(&self.ctl.sh.id);
+        crate::lifecycle::note_compacted(&self.ctl.sh.id.name);
         Ok(())
     }
 }
@@ -600,12 +600,12 @@ impl CompactionFilterSupplier for Sched {
 
 /// Start SlateDB's compactor and a worker on the database, with our scheduler and filter.
 pub(crate) async fn start_slate(c: &Arc<Compactor>) -> anyhow::Result<()> {
-    let id = c.id().to_string();
+    let id = c.id().name.clone();
     let sched = Sched(Arc::clone(&c.drop));
     let mut opts = CompactorOptions::default();
     opts.poll_interval = Duration::from_millis(20);
     opts.worker = None;
-    let path = crate::lifecycle::tenant_path(&id);
+    let path = crate::lifecycle::tenant_path(c.id()); // fix-incarnation: the tenant's captured incarnation
     let store = crate::counting::owned_background(&c.store, &id);
     // perf-latency: SlateDB's compactor and worker run their jobs on the runtime given here (default: the one `build` runs
     // on, which is the server's, inside the first write after an opening): the compactor's write-path runtime

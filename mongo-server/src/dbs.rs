@@ -599,13 +599,31 @@ impl Dbs {
 
     /// Database names (tenants) present in object storage.
     pub async fn list_databases(&self) -> Result<Vec<String>> {
+        use futures::StreamExt;
         let r = self.raw.list_with_delimiter(Some(&Path::from("tenants"))).await?;
-        let mut names: Vec<String> = r
+        let candidates: Vec<String> = r
             .common_prefixes
             .iter()
             .filter_map(|p| p.parts().nth(1).map(|s| s.as_ref().to_string()))
             .filter(|n| valid_db_name(n))
             .collect();
+        // audit-fencing round 2, item 5: a name is listed only when its current incarnation holds data, the rule of
+        // `meta::exists`. A prefix with only a lease (an opening of an absent name takes the lease before it learns the
+        // database is absent) or only leftovers of an erased incarnation is not a database: listed, an erased name came
+        // back after its erase finished (GitHub CI 7657d2f, test_05 erase.after_manifests). Two requests per name.
+        let raw = Arc::clone(&self.raw);
+        let checked: Vec<Result<Option<String>>> = futures::stream::iter(candidates)
+            .map(|n| {
+                let raw = Arc::clone(&raw);
+                async move { Ok(tenant_bench::lifecycle::db_exists(&raw, &n).await?.then_some(n)) }
+            })
+            .buffered(16)
+            .collect()
+            .await;
+        let mut names = Vec::new();
+        for c in checked {
+            names.extend(c?);
+        }
         names.sort();
         Ok(names)
     }
@@ -893,18 +911,8 @@ impl Entry {
     }
 
     async fn db_exists(&self) -> Result<bool> {
-        // audit-fencing round 2: only the current incarnation's objects say the database exists (a late write of an
-        // erased or dropped incarnation lands under an older prefix)
-        tenant_bench::lifecycle::load_incarnation(&self.raw, &self.name).await?;
-        let prefix = Path::from(tenant_bench::lifecycle::tenant_path(&self.name));
-        let mut it = self.raw.list(Some(&prefix));
-        while let Some(m) = it.next().await {
-            let name = m?.location.filename().unwrap_or("").to_string();
-            if name != "_lease" && name != "_clean" {
-                return Ok(true);
-            }
-        }
-        Ok(false)
+        // audit-fencing round 2: only the current incarnation's objects say the database exists
+        tenant_bench::lifecycle::db_exists(&self.raw, &self.name).await
     }
 
     fn sync_gauges(&mut self) {
@@ -1326,7 +1334,7 @@ impl Entry {
     }
 
     /// Where the ballast generator writes its runs: the store, the database's id, the writer epoch.
-    pub fn ballast_target(&self) -> Result<(Arc<dyn object_store::ObjectStore>, String, Option<u64>)> {
+    pub fn ballast_target(&self) -> Result<(Arc<dyn object_store::ObjectStore>, tenant_bench::lifecycle::DbAt, Option<u64>)> {
         self.tenant.as_ref().ok_or_else(|| anyhow::anyhow!("database {} is not open", self.name))?.fx_ballast_target()
     }
 

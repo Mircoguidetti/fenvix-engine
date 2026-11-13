@@ -752,7 +752,7 @@ fn start_slice_numbers(g: &mut Entry, s: usize) {
 struct Shared {
     cx: Ctx,
     store: Arc<dyn ObjectStore>,
-    id: String,
+    id: tenant_bench::lifecycle::DbAt, // fix-incarnation: the writer's captured incarnation
     epoch: Option<u64>,
     st: GenState,
     bounds: Vec<Vec<u8>>,
@@ -768,12 +768,12 @@ struct Shared {
     committed_here: std::sync::atomic::AtomicUsize,
 }
 
-fn refs_path(id: &str) -> object_store::path::Path {
+fn refs_path(id: &(impl tenant_bench::lifecycle::DbRef + ?Sized)) -> object_store::path::Path {
     object_store::path::Path::from(format!("{}/refs/generator", manifest::root(id)))
 }
 
 /// The reference object that keeps GC away from the runs of committed slices until the version lists them.
-async fn write_refs(store: &Arc<dyn ObjectStore>, id: &str, runs: &[String]) -> Result<()> {
+async fn write_refs(store: &Arc<dyn ObjectStore>, id: &(impl tenant_bench::lifecycle::DbRef + ?Sized), runs: &[String]) -> Result<()> {
     let body = serde_json::to_vec(&serde_json::json!({ "what": "ballast generator: runs of committed slices, not published yet", "runs": runs }))?;
     store.put(&refs_path(id), PutPayload::from(body)).await?;
     Ok(())
