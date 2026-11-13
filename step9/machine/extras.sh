@@ -80,7 +80,9 @@ if name and os.path.exists(f):
     st = json.load(open(f))
     got = st.get("config", {}).get("gb")
     # the state file must be the database of this size: a kept pantry from another size is not read as this one
-    if got is None or abs(float(got) - float(gib)) > 1e-6:
+    # relative tolerance: the plan's --gb is the exact ballast_gib (decide.gib_arg); a plan written with 6 significant
+    # digits (before the review of 148bee9) still matches (its error is at most 5e-6 relative)
+    if got is None or abs(float(got) - float(gib)) > 1e-5 * max(1.0, abs(float(gib))):
         sys.exit(f"ballast-rounds: {name} in the pantry is {got} GiB, the command says {gib} GiB")
     print(f"giro {name} --db {name} --nuova-cartella --giro s9_ballast --solo-fasi inizio,Q2,Q3,Q1,Q1d,Q4 {extra}")
 PY

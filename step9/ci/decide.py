@@ -99,6 +99,14 @@ DATA = {  # BSON GB of the five Atlas databases: 4 x 3.1 + 10.74 (MEASURED, Atla
     "1tb": {"target_gb": 1026.6, "ballast_dbs": 1, "ballast_gib": 931.4},
 }
 BALLAST_GIB_MAX = 1100.0
+
+
+def gib_arg(gib):
+    """The --gb argument of the plan: the exact value of ballast_gib (shortest round-trip form, "130" for 130.0), never a
+    rounded one: extras.sh checks the generated state file's size against ballast_gib (review of 148bee9: with "%g",
+    931.3225746 became 931.323 and the check refused the database)."""
+    s = repr(float(gib))
+    return s[:-2] if s.endswith(".0") else s
 DEFAULTS = {
     "data": "atlas", "phases": ["load", "measure", "extras"], "pantry": "new", "ballast_slice": None, "ballast_gib": None,
     "ballast_mode": "generate", "generator": None, "generator_disk_gb": 60, "generator_parallel": None,
@@ -270,7 +278,7 @@ def resolve(raw, quota=None):
         refuse(f"ballast_slice: within [0, {n}]")
     # the one ballast database; --tetto-logico-gb only reaches the founder's script on the "script" path, where it is
     # its logical ceiling: above the database
-    lines = [[f"app_data_b{i + 1:02d}", "--gb", f"{c['ballast_gib']:g}", "--seme", f"{2001 + i}", "--thread", "16",
+    lines = [[f"app_data_b{i + 1:02d}", "--gb", gib_arg(c["ballast_gib"]), "--seme", f"{2001 + i}", "--thread", "16",
               "--quota-riservati", "0.4", "--tetto-logico-gb", f"{max(60, int(c['ballast_gib'] * 1.2) + 1)}",
               "--max-ore-carico", "48"] for i in range(lo, hi)]
     # the one ballast database, also in the jobs that only measure it on a kept pantry

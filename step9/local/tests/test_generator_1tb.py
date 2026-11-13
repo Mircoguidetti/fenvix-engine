@@ -65,3 +65,31 @@ def test_generator_hours_scale_with_the_size_and_the_writers():
     h130 = estimate.generator_hours(130, "c7i.2xlarge")
     assert estimate.generator_hours(1024, "c7i.2xlarge") > 7 * h130
     assert estimate.generator_hours(130, "c7i.xlarge") > 1.9 * h130
+
+
+def _extras_size_check(state_gb, gib):
+    """Runs the size check of step9/machine/extras.sh (its embedded Python, as written) on a state file of state_gb."""
+    src = open(os.path.join(HERE, "..", "..", "machine", "extras.sh")).read()
+    body = src.split("> ballast/passi.txt <<'PY'\n", 1)[1].split("\nPY\n", 1)[0]
+    d = tempfile.mkdtemp()
+    os.makedirs(os.path.join(d, "ballast/lavoro/stati/app_data_b01"))
+    json.dump({"config": {"gb": state_gb}}, open(os.path.join(d, "ballast/lavoro/stati/app_data_b01/risultati_p1.json"), "w"))
+    return subprocess.run([sys.executable, "-", "", "app_data_b01", str(gib)], input=body, cwd=d, capture_output=True, text=True)
+
+
+def test_a_non_default_size_reaches_the_plan_exactly_and_passes_the_extras_check():
+    # review of 148bee9: "%g" wrote 931.3225746 as 931.323 and extras.sh refused the generated database
+    for gib in (931.3225746, 130, 1.5, 1099.999999, 123.456789012):
+        rc, out, r = decide(data="1tb", pantry="fenvix-kitchen-pantry-1000000001", ballast_gib=gib)
+        assert r is not None, out
+        line = r["ballast"]["lines"][0]
+        arg = line[line.index("--gb") + 1]
+        assert float(arg) == float(gib), (gib, arg)
+        # the generated state file holds the plan's --gb as a number; the measure job's ballast_gib is the command's
+        p = _extras_size_check(float(arg), r["ballast_gib"])
+        assert p.returncode == 0 and "giro app_data_b01" in p.stdout, (gib, arg, p.stdout, p.stderr)
+    # a kept pantry of another size is still refused
+    p = _extras_size_check(931.3225746, 930.0)
+    assert p.returncode != 0 and "the command says" in p.stderr, p.stderr
+    # a plan written before the fix (6 significant digits) still matches its command
+    assert _extras_size_check(931.323, 931.3225746).returncode == 0
