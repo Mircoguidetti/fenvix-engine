@@ -1,0 +1,39 @@
+{
+  "what": "sim-test-3: the decisions of the replicated log's client rules (mongo-server/src/locallog.rs) on ctl test_91's order, which the simulator ports (src/fx/sim/cluster/ext3.rs). The real engine (ctl-tests/test_95_sim_log_conformance.py) and the simulator's story (fx::sim::tests::sim_story_log_takeover_retry) are both checked against this table: a port that drifts from the code fails one of them.",
+  "order": [
+    "B holds the database; W0 acknowledged and uploaded",
+    "B's WAL uploads held; W1 acknowledged (in the log only)",
+    "A restarts: reads the log back; its replay is refused by B's lease; A stops at hold_kept_records",
+    "B's upload of W1 goes through (the log told its position); B's uploads held again",
+    "W2 acknowledged (in the log only)",
+    "A keeps its records and its retry runs (W1 is in the store)",
+    "B is killed before W2's upload; A takes the database over"
+  ],
+  "decisions": {
+    "restart_read_kept": "A's restart read the records of W1 back from the log",
+    "replay_refused_by_lease": "A's replay was refused because B holds the database's lease (before A took it)",
+    "kept_copies_in_log": "A wrote copies of its kept records to the log (at new positions)",
+    "retry_confirms_read_pos": "A's retry, not the lease holder, told the log only the highest position it read at its start",
+    "retry_done": "A's retry found its kept records stored and ended",
+    "takeover_applies_w2": "A's takeover read W2 back from the log and applied it",
+    "w2_lost": "acknowledged writes of W2 are missing after the takeover"
+  },
+  "base": {
+    "restart_read_kept": true,
+    "replay_refused_by_lease": true,
+    "kept_copies_in_log": true,
+    "retry_confirms_read_pos": false,
+    "retry_done": true,
+    "takeover_applies_w2": false,
+    "w2_lost": true
+  },
+  "fixed": {
+    "restart_read_kept": true,
+    "replay_refused_by_lease": true,
+    "kept_copies_in_log": false,
+    "retry_confirms_read_pos": true,
+    "retry_done": true,
+    "takeover_applies_w2": true,
+    "w2_lost": false
+  }
+}

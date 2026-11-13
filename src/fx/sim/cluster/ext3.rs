@@ -1043,7 +1043,8 @@ async fn retry(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<dy
             });
             let told = x3.flush_done(life, pos);
             x3.with(life, |x| x.pinned = None);
-            format!("retry: kept records stored (holder {holder}); log told {pos} {:?}", told)
+            let which = if holder || old { "its committed position" } else { "the highest it read at its start" };
+            format!("retry: kept records stored (holder {holder}); log told {pos} ({which}) {:?}", told)
         }
         Ok(Outcome::Conflict) => {
             x3.with(life, |x| x.pinned = None);
@@ -1173,6 +1174,18 @@ pub(super) async fn before_oracle(w: &World) -> Vec<String> {
     }
     let raw = w.net.proc_store(3_000_000 + w.next_life);
     let _ = crate::lifecycle::load_incarnation(&raw, &w.id).await;
+    // the trace: the current incarnation's versions and where their runs are
+    if let Ok(vs) = manifest::list_versions(&w.raw, &w.id).await {
+        let mut d = Vec::new();
+        for n in vs.iter().rev().take(4) {
+            if let Ok(tv) = manifest::load(&w.raw, &w.id, *n).await {
+                let runs: Vec<String> = tv.groups.iter().filter_map(|g| g.sealed.as_ref().map(|r| r.path.clone())).chain(tv.delta.iter().map(|r| r.path.clone())).collect();
+                let other = runs.iter().filter(|r| !r.starts_with(&format!("{}/", crate::lifecycle::tenant_path(&*w.id)))).count();
+                d.push(format!("v{n} (x_d {}, epoch {:?}, {} runs, {other} outside {})", tv.x_d, tv.writer_epoch, runs.len(), crate::lifecycle::tenant_path(&*w.id)));
+            }
+        }
+        w.note(format!("oracle: incarnation {} versions {vs:?}: {}", crate::lifecycle::incarnation(&w.id), d.join("; ")));
+    }
     if w.x3.log.is_none() {
         return v;
     }
