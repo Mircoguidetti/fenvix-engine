@@ -6,6 +6,13 @@ bucket, binary, label, script = sys.argv[1:5]
 if bucket == "new":
     bucket = make_bucket("cperf"); print("bucket", bucket, flush=True)
 s = Server(bucket, f"perf{label}", idle=900, binary=binary).start()
+import time
+from pymongo import MongoClient
+for _ in range(120):   # an earlier process's lease on the database must lapse first
+    try:
+        MongoClient(s.uri).app_cperf.command("count", "docs"); break
+    except Exception:
+        time.sleep(1)
 try:
     r = subprocess.run([sys.executable, script, "--ours", s.uri, "--label", label] + sys.argv[5:], text=True, timeout=10800)
 finally:
