@@ -7,6 +7,12 @@
 //! (kill -9, a machine lost, a process ending with a job running) nobody else would abort. At startup this sweep lists
 //! the bucket's unfinished uploads under `tenants/` and aborts those started more than `--abandoned-upload-secs` ago.
 //!
+//! P-fix-slow-store item 2: the age rule alone let a crash loop leave orphans younger than the hour. A run's key names
+//! the SlateDB writer epoch of the writer that started it (`fx::manifest::run_path`); an upload whose epoch is below its
+//! database's current one belongs to a fenced writer, which can no longer publish it, and is aborted whatever its age
+//! (here, with one manifest read per database, and at every writer open, `uploads::abort_fenced`). The age rule below
+//! stays for the uploads of the current epoch (they may be a live writer's) and for keys that name no epoch.
+//!
 //! The bound: an upload of a live process on the same bucket (the old owner during a takeover, a deploy overlap) must
 //! not be aborted while it runs. The longest upload is one run: up to `split_bytes` (2 GiB) for a sealed run, a few GiB
 //! for the largest delta tier, written at tens of MB/s, so minutes (ESTIMATED). The default, one hour, is about ten times
@@ -25,6 +31,8 @@ use std::time::Duration;
 /// Uploads listed and aborted by the startup sweeps of this process.
 pub static LISTED: AtomicU64 = AtomicU64::new(0);
 pub static ABORTED: AtomicU64 = AtomicU64::new(0);
+/// Of those, uploads aborted because an older writer epoch started them (younger than the age rule allows).
+pub static FENCED: AtomicU64 = AtomicU64::new(0);
 
 /// The prefix of every object the server writes with a multipart upload (the runs of `fx`).
 const PREFIX: &str = "tenants/";
@@ -35,8 +43,14 @@ struct Upload {
     initiated_ms: i64,
 }
 
-/// Abort the unfinished uploads under `tenants/` started more than `older_than` ago. Returns (listed, aborted).
+/// Abort the unfinished uploads under `tenants/` started more than `older_than` ago, and (P-fix-slow-store item 2) every
+/// run upload, whatever its age, whose key names a writer epoch below its database's current one (`uploads::fenced_by`,
+/// one manifest read per database): a crash loop leaves uploads younger than the hour, and those belong to no live writer
+/// once a newer writer opened the database. An upload of the current epoch may be a live writer's (another process): it
+/// keeps the age rule. Returns (listed, aborted).
 pub async fn abort_abandoned(s3: &Arc<AmazonS3>, older_than: Duration) -> anyhow::Result<(u64, u64)> {
+    let store: Arc<dyn object_store::ObjectStore> = Arc::clone(s3) as Arc<dyn object_store::ObjectStore>;
+    let mut epochs: std::collections::HashMap<String, Option<u64>> = std::collections::HashMap::new();
     let now_ms = chrono::Utc::now().timestamp_millis();
     let cut = now_ms - older_than.as_millis() as i64;
     let http = reqwest::Client::new();
@@ -58,7 +72,23 @@ pub async fn abort_abandoned(s3: &Arc<AmazonS3>, older_than: Duration) -> anyhow
         let (page, next) = parse(&body)?;
         for u in page.into_iter().filter(|u| u.key.starts_with(PREFIX)) {
             listed += 1;
-            if u.initiated_ms <= cut {
+            let mut fenced = false;
+            // the database's path is the key's part before `/fx/run/` (with a per-incarnation prefix, `tenants/{name}/i{k}`,
+            // the upload is compared with its own incarnation's writer epoch, never another's)
+            if let (Some(_), Some(i)) = (crate::uploads::run_key_epoch(&u.key), u.key.find("/fx/run/")) {
+                let tp = &u.key[..i];
+                if !epochs.contains_key(tp) {
+                    // an unreadable manifest proves nothing: the upload keeps the age rule
+                    let admin = slatedb::admin::Admin::builder(tp.to_string(), Arc::clone(&store)).build();
+                    let e = admin.read_manifest(None).await.ok().flatten().map(|m| m.writer_epoch());
+                    epochs.insert(tp.to_string(), e);
+                }
+                fenced = epochs[tp].is_some_and(|e| crate::uploads::fenced_by(&u.key, e));
+            }
+            if fenced {
+                FENCED.fetch_add(1, Relaxed);
+            }
+            if fenced || u.initiated_ms <= cut {
                 match s3.abort_multipart(&Path::from(u.key.as_str()), &u.id).await {
                     Ok(()) => aborted += 1,
                     Err(e) => eprintln!("uploads: abort of {} ({}) failed: {e}", u.key, u.id),

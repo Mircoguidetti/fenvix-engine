@@ -1,0 +1,35 @@
+1 server A, generated version, cold
+   {'secs': 0.45, 'docsExamined': 811, 'MB_fetched': 72.1, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.33, 'docsExamined': 766, 'MB_fetched': 59.0, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.23, 'docsExamined': 808, 'MB_fetched': 44.7, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.4, 'docsExamined': 796, 'MB_fetched': 63.6, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+1b server A, same reads again (warm)
+   {'secs': 0.37, 'docsExamined': 811, 'MB_fetched': 62.2, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.33, 'docsExamined': 766, 'MB_fetched': 59.5, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.28, 'docsExamined': 808, 'MB_fetched': 44.8, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.31, 'docsExamined': 796, 'MB_fetched': 62.9, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+2a server A right after the writes, before the compactor settles
+   {'secs': 0.4, 'docsExamined': 810, 'MB_fetched': 61.0, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.38, 'docsExamined': 771, 'MB_fetched': 53.1, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.29, 'docsExamined': 808, 'MB_fetched': 45.0, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.44, 'docsExamined': 795, 'MB_fetched': 62.7, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+2 server A after writes and absorption
+   {'secs': 0.43, 'docsExamined': 810, 'MB_fetched': 69.3, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.29, 'docsExamined': 771, 'MB_fetched': 47.0, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.23, 'docsExamined': 808, 'MB_fetched': 38.6, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.39, 'docsExamined': 795, 'MB_fetched': 64.5, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+3 server B after the takeover, reads only
+   {'secs': 0.47, 'docsExamined': 810, 'MB_fetched': 73.5, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.36, 'docsExamined': 771, 'MB_fetched': 60.4, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.25, 'docsExamined': 808, 'MB_fetched': 46.4, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.44, 'docsExamined': 795, 'MB_fetched': 66.4, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+3b server B, same reads again
+   {'secs': 0.37, 'docsExamined': 810, 'MB_fetched': 60.1, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.34, 'docsExamined': 771, 'MB_fetched': 60.3, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.27, 'docsExamined': 808, 'MB_fetched': 46.4, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.41, 'docsExamined': 795, 'MB_fetched': 65.0, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+4 server B after its own writes and its compactor
+   {'secs': 0.48, 'docsExamined': 811, 'MB_fetched': 62.9, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.38, 'docsExamined': 773, 'MB_fetched': 56.2, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.31, 'docsExamined': 813, 'MB_fetched': 46.1, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}
+   {'secs': 0.46, 'docsExamined': 795, 'MB_fetched': 65.1, 'rows_per_doc': 2.0, 'span_rows': 0, 'span_stops': 0}

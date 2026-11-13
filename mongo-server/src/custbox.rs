@@ -18,6 +18,10 @@
 //! the warm-up goes to the memtable, which every read consults first. So a box can be stale only in cost (a block
 //! evicted, or a new run after a reseal), never in content.
 //!
+//! The box also carries the renewal of a reader's state of our manifest (`Tenant::renew_alongside`, fix-box-first-trip):
+//! a reader must read the store's newest version at least every T_pin (rule 6), and that renewal (one LIST when nothing
+//! changed) goes out in the same wave as the box's GETs instead of in a wave of its own in front of them.
+//!
 //! The cost is the stored bytes of the box (one wave of GETs) and their place in the caches. A customer is warmed again only after `TTL_SECS` without a warm-up (its blocks may have left the caches).
 
 use std::collections::HashMap;
@@ -94,7 +98,14 @@ pub async fn warm(db: &str, comp: &[u8], t: &tenant_bench::lifecycle::Tenant) {
         return;
     }
     let t0 = Instant::now();
-    match t.warm_range(&lo, &hi, READ_AHEAD.load(Relaxed) as usize).await {
+    // fix-box-first-trip: a reader's state that is due for renewal soon is renewed in the same wave as the box's GETs
+    // (its LIST beside them), not by a step in front of them or in a later wave of the same request: in sealed mode
+    // that made a customer's first request take 4 trips instead of 1 (test_79). The renewal is polled first: it takes
+    // the renewal lock before the warm-up's own step looks at the state, so that step reads with the current, valid
+    // state instead of renewing in front of the box's GETs (MEASURED with the other order: 2 trips when the state was
+    // past half T_pin)
+    let ((), warmed) = futures::future::join(t.renew_alongside(), t.warm_range(&lo, &hi, READ_AHEAD.load(Relaxed) as usize)).await;
+    match warmed {
         Ok((runs, blocks, rows)) => {
             WARMS.fetch_add(1, Relaxed);
             WARM_RUNS.fetch_add(runs, Relaxed);

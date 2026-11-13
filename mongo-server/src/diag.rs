@@ -852,6 +852,36 @@ impl Server {
             },
             // fix-store-errors: retryable writes answered with the RetryableWriteError label after a store error
             "storeErrorsLabelled": crate::retry::STORE_ERRORS_LABELLED.load(Relaxed) as i64,
+            // P-fix-slow-store: the write deadline (item 3), the shutdown's close deadline (item 1), the uploads of older
+            // writer epochs aborted (item 2)
+            "slowStore": {
+                "writeDeadlines": crate::cmd::WRITE_DEADLINES.load(Relaxed) as i64,
+                "writeDeadlinesLabelled": crate::cmd::WRITE_DEADLINES_LABELLED.load(Relaxed) as i64,
+                // round 2: absent holds answered, voided at an open, ended by a fork/restore/export; creates refused
+                // because the database turned out to exist
+                "absentHeldAnswers": crate::dbs::ABSENT_HELD_ANSWERS.load(Relaxed) as i64,
+                "absentHoldsVoided": crate::dbs::ABSENT_HOLDS_VOIDED.load(Relaxed) as i64,
+                "absentHoldsTaken": crate::dbs::ABSENT_HOLDS_TAKEN.load(Relaxed) as i64,
+                "createsFoundExisting": crate::dbs::CREATES_FOUND_EXISTING.load(Relaxed) as i64,
+                "closeDeadlineCuts": tenant_bench::lifecycle::CLOSE_DEADLINE_CUTS.load(Relaxed) as i64,
+                "closesLeftBehind": tenant_bench::lifecycle::CLOSES_LEFT_BEHIND.load(Relaxed) as i64,
+                "closesHeldAtDeadline": crate::dbs::CLOSES_LOCK_PAST_DEADLINE.load(Relaxed) as i64,
+                "closesOptionalSkipped": crate::dbs::CLOSES_OPTIONAL_SKIPPED.load(Relaxed) as i64,
+                "fencedUploadsListed": crate::uploads::FENCED_LISTED.load(Relaxed) as i64,
+                "fencedUploadsAborted": crate::uploads::FENCED_ABORTED.load(Relaxed) as i64,
+                "fencedUploadSweepErrors": crate::uploads::FENCED_ERRORS.load(Relaxed) as i64,
+                "startupSweepFencedAborted": crate::uploads_sweep::FENCED.load(Relaxed) as i64,
+                // item 7: WAL replay raises, those cut by the memtable share, those dropped by a reopen once L0 drained
+                // item 5: writes answered as an unknown outcome, retries whose record was read back after a lost opening
+                "outcomesUnknown": crate::error::OUTCOMES_UNKNOWN.load(Relaxed) as i64,
+                // item 6: listed uploads the store said do not exist; interrupted erases run again after a failed restart
+                "ghostUploads": crate::uploads::GHOSTS.load(Relaxed) as i64,
+                "eraseRetries": crate::ctl::ops::ERASE_RETRIES.load(Relaxed) as i64,
+                "retryRecordsReloaded": crate::retry::RECORDS_RELOADED.load(Relaxed) as i64,
+                "replayRaises": tenant_bench::lifecycle::REPLAY_RAISES.load(Relaxed) as i64,
+                "replayRaisesCapped": tenant_bench::lifecycle::REPLAY_RAISES_CAPPED.load(Relaxed) as i64,
+                "replayRaisesDropped": tenant_bench::lifecycle::REPLAY_RAISES_DROPPED.load(Relaxed) as i64,
+            },
             "customerKeys": {
                 "docsWritten": crate::custkey::DOCS_WRITTEN.load(Relaxed) as i64,
                 "locatorLookups": crate::custkey::LOCATOR_LOOKUPS.load(Relaxed) as i64,
@@ -873,6 +903,14 @@ impl Server {
                 "deadRead": tenant_bench::envelope::READ_DEAD.load(Relaxed) as i64,
                 "start": tenant_bench::envelope::START.load(Relaxed),
             },
+            // P-fix-read-amplification (coll.rs): id-span scans of a document fetch, the rows they read, those stopped
+            // at their cap; and the tenant size the scan-or-point choice used for the last fetch
+            "fetch": {
+                "spanScans": crate::coll::FETCH_SCANS.load(Relaxed) as i64,
+                "spanRows": crate::coll::FETCH_SCAN_ROWS.load(Relaxed) as i64,
+                "spanStops": crate::coll::FETCH_SCAN_STOPS.load(Relaxed) as i64,
+                "prefetchBlocks": tenant_bench::fx::view::PREFETCH_BLOCKS.load(Relaxed) as i64,
+            },
             // compaction 2, step 3 (fx): versions published and installed, failed builds, fence versions written at
             // open, rows answered by our runs, GETs of run blocks, runs opened
             "sealedRuns": {
@@ -888,6 +926,12 @@ impl Server {
                 // process wrote first), and objects of older incarnations of a name swept
                 "recordConflicts": tenant_bench::fx::erase::RECORD_CONFLICTS.load(Relaxed) as i64,
                 "incarnationSwept": tenant_bench::lifecycle::INCARNATION_SWEPT.load(Relaxed) as i64,
+                // c2-fix-long-reads and fix-box-first-trip: a reader's renewals under the shared lock, those run in the
+                // wave of a customer's box, and those whose LIST found the version already served (no GET)
+                "renewals": tenant_bench::fx::RENEWALS.load(Relaxed) as i64,
+                "renewalsWithBox": tenant_bench::fx::RENEWALS_WITH_BOX.load(Relaxed) as i64,
+                "renewalsUnchanged": tenant_bench::fx::manifest::RENEWALS_UNCHANGED.load(Relaxed) as i64,
+                "stepsPastRenewal": tenant_bench::fx::STEPS_PAST_RENEWAL.load(Relaxed) as i64,
                 "rowsFromRuns": tenant_bench::fx::view::ROWS_FROM_RUNS.load(Relaxed) as i64,
                 "runGets": tenant_bench::fx::view::RUN_GETS.load(Relaxed) as i64,
                 "runOpens": tenant_bench::fx::view::RUN_OPENS.load(Relaxed) as i64,

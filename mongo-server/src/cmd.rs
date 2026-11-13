@@ -8,7 +8,7 @@ use crate::query::{self, id_equality, matches, parse_projection, parse_sort, pat
 use crate::update::{apply_update, fmt_doc, upsert_document};
 use bson::{doc, oid::ObjectId, Bson, DateTime, Document};
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::sync::atomic::{AtomicI64, Ordering::Relaxed};
+use std::sync::atomic::{AtomicI64, AtomicU64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
 use tenant_bench::lifecycle::Op;
 
@@ -26,6 +26,42 @@ const DEFAULT_FIRST_BATCH: usize = 101;
 pub(crate) const BATCH_BYTES: usize = 16 * 1024 * 1024;
 pub(crate) const FIRST_BATCH_FIXED: usize = 53;
 pub(crate) const NEXT_BATCH_FIXED: usize = 57;
+
+/// P-fix-slow-store item 3 (`--write-deadline-ms`): a single-document write (see [`write_deadline_applies`]) not
+/// acknowledged within this many milliseconds is answered with an error (0: no deadline).
+pub static WRITE_DEADLINE_MS: AtomicU64 = AtomicU64::new(0);
+/// Writes answered with the deadline's error, and of those, the ones labelled for the driver's retry (serverStatus
+/// `fenvix.slowStore`; since round 2 every one is labelled).
+pub static WRITE_DEADLINES: AtomicU64 = AtomicU64::new(0);
+pub static WRITE_DEADLINES_LABELLED: AtomicU64 = AtomicU64::new(0);
+
+/// Test control only (`FENVIX_TEST_CONTROL_DEADLINE_UNLABELLED=1`): the deadline's answer of round 1 (262, labelled only
+/// for a retryable write), so a test can show it fails on the code before round 2.
+fn control_deadline_unlabelled() -> bool {
+    static V: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| std::env::var("FENVIX_TEST_CONTROL_DEADLINE_UNLABELLED").as_deref() == Ok("1"));
+    *V
+}
+
+/// The commands the write deadline bounds: inserts, findAndModify, and updates and deletes whose every statement touches
+/// one document (`multi` false, `limit` 1), outside a transaction. Their time is the wait for the store, not the work:
+/// a multi-document update or delete can legitimately run for minutes on a large database, and a write in a
+/// transaction waits for nothing until its commit.
+pub fn write_deadline_applies(cmd: &Document) -> bool {
+    let Some(name) = cmd.keys().next() else { return false };
+    if matches!(cmd.get("autocommit"), Some(Bson::Boolean(false))) {
+        return false;
+    }
+    let one = |list: &str, single: &dyn Fn(&Document) -> bool| match cmd.get_array(list) {
+        Ok(a) => a.iter().all(|s| s.as_document().is_some_and(single)),
+        Err(_) => false,
+    };
+    match name.as_str() {
+        "insert" | "findAndModify" | "findandmodify" => true,
+        "update" => one("updates", &|u| !matches!(u.get("multi"), Some(Bson::Boolean(true)))),
+        "delete" => one("deletes", &|d| matches!(d.get("limit"), Some(Bson::Int32(1)) | Some(Bson::Int64(1))) || matches!(d.get("limit"), Some(Bson::Double(x)) if *x == 1.0)),
+        _ => false,
+    }
+}
 
 tokio::task_local! {
     /// Set around the server's own aggregations that read a whole answer from `firstBatch` (views, mapReduce): their
@@ -252,6 +288,66 @@ impl Server {
     }
 
     pub async fn handle(self: &Arc<Self>, db: &str, cmd: Document, conn_id: i64) -> Document {
+        let limit = WRITE_DEADLINE_MS.load(Relaxed);
+        if limit > 0 && write_deadline_applies(&cmd) {
+            return self.handle_within(db, cmd, conn_id, std::time::Duration::from_millis(limit)).await;
+        }
+        self.handle_measured(db, cmd, conn_id).await
+    }
+
+    /// P-fix-slow-store item 3: a write whose reply is not ready within `limit` is answered with an error, and the
+    /// command goes on in its own task (nothing is cut: a write half applied, a lock or a session record left in a middle
+    /// state, would be worse than a wait). The error says only that this write was not acknowledged (RULES 8: an error is
+    /// allowed, a lie is not): it may still be applied.
+    ///
+    /// P-fix-slow-store-3 (round 2): the answer is the unknown outcome of item 5, for every write, with or without a
+    /// txnNumber: code 134 WriteOutcomeUnknown with the `RetryableWriteError` label. Round 1 labelled only retryable writes
+    /// (lsid and txnNumber), so a client with retryWrites off, or any client of a server without `--replica-set` (drivers
+    /// send a txnNumber only to a replica set member), got code 262 without the label, the answer this server's rule
+    /// keeps for "not applied", and the write was applied afterwards (both reviews). A retryable write's driver sends it
+    /// again; the retry waits for the original on the session's record (`retry::retry_begin`), then answers from that
+    /// record once the original is durable, or applies the write once if the original applied nothing.
+    async fn handle_within(self: &Arc<Self>, db: &str, cmd: Document, conn_id: i64, limit: std::time::Duration) -> Document {
+        let name = cmd.keys().next().cloned().unwrap_or_default();
+        let retryable = crate::retry::is_retryable_write(&cmd);
+        let (me, db2) = (Arc::clone(self), db.to_string());
+        let t0 = std::time::Instant::now();
+        let mut task = tokio::spawn(async move { me.handle_measured(&db2, cmd, conn_id).await });
+        match tokio::time::timeout(limit, &mut task).await {
+            Ok(Ok(reply)) => reply,
+            Ok(Err(e)) => MongoError::internal(format!("the {name} command's task ended without a reply: {e}")).to_reply(),
+            Err(_) => {
+                WRITE_DEADLINES.fetch_add(1, Relaxed);
+                if !control_deadline_unlabelled() || retryable {
+                    WRITE_DEADLINES_LABELLED.fetch_add(1, Relaxed);
+                }
+                eprintln!("WRITE_DEADLINE {name} db={db} conn={conn_id} ms={} retryable={retryable}: answered with an error, the command goes on", limit.as_millis());
+                let db3 = db.to_string();
+                tokio::spawn(async move {
+                    let r = task.await;
+                    let ok = matches!(&r, Ok(d) if matches!(d.get("ok"), Some(Bson::Double(x)) if *x == 1.0));
+                    eprintln!("WRITE_DEADLINE_END {name} db={db3} conn={conn_id} ms={} ok={ok}", t0.elapsed().as_millis());
+                });
+                if control_deadline_unlabelled() {
+                    // test control only: round 1's answer (262, labelled only for a retryable write)
+                    let mut e = MongoError::new(262, "ExceededTimeLimit", format!("the write was not acknowledged within {} ms: it may still be applied", limit.as_millis()));
+                    if retryable {
+                        e.extra = Some(doc! { "errorLabels": ["RetryableWriteError"] });
+                    }
+                    return e.to_reply();
+                }
+                let mut e = MongoError::new(
+                    134,
+                    "WriteOutcomeUnknown",
+                    format!("the write was not acknowledged within {} ms (the store is slow or does not answer): it may or may not have been applied; retry it (a retryable write is applied once)", limit.as_millis()),
+                );
+                e.extra = Some(doc! { "errorLabels": ["RetryableWriteError"] });
+                e.to_reply()
+            }
+        }
+    }
+
+    async fn handle_measured(self: &Arc<Self>, db: &str, cmd: Document, conn_id: i64) -> Document {
         use tenant_bench::waits;
         if !waits::ON.load(Relaxed) {
             return self.handle_inner(db, cmd, conn_id).await;
@@ -402,7 +498,10 @@ impl Server {
                     if relax && crate::ctl::durability::relaxed_ms(c.tenant()) > 0 && crate::locallog::get().is_none() {
                         c.relax();
                     } else if let Err(e) = c.wait().await {
-                        r = Err(e.into());
+                        // P-fix-slow-store item 5: the batch is staged (in the memtable and the WAL buffer); a failed wait
+                        // does not say it was not applied (a lease loss's abandon flushes the WAL, then closes SlateDB:
+                        // the write lands, and the wait sees "db is closed"). Unknown outcome, answered as such.
+                        r = Err(crate::error::outcome_unknown(name, e.into()));
                     }
                 }
                 r

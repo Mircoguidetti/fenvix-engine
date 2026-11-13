@@ -126,6 +126,19 @@ pub fn set_wake_limit(n: usize) {
 
 /// Idle and shutdown closes that may run at once.
 const CLOSE_CONCURRENCY: usize = 64;
+/// P-fix-slow-store item 4: how long a database found absent keeps its lease and its "absent" answer (`absent_until`).
+/// 0 (the control `FENVIX_TEST_NO_ABSENT_HOLD=1`): the lease is discarded at once and every lock probes again.
+static ABSENT_HOLD: std::sync::LazyLock<Duration> = std::sync::LazyLock::new(|| {
+    if std::env::var("FENVIX_TEST_NO_ABSENT_HOLD").as_deref() == Ok("1") { Duration::ZERO } else { Duration::from_secs(5) }
+});
+/// Opens answered "absent" from the hold, without a probe of the store.
+pub static ABSENT_HELD_ANSWERS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// P-fix-slow-store-3: absent holds found no longer true at an open (their lease lapsed, or another path of this process
+/// acquired it), and holds ended by a fork, restore or export that took the entry lock.
+pub static ABSENT_HOLDS_VOIDED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static ABSENT_HOLDS_TAKEN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// P-fix-slow-store-3: creates of a database that turned out to hold a collection list already (refused, retryable).
+pub static CREATES_FOUND_EXISTING: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// Builder publishes made before a compactor started, to catch up rows an ungated pass folded (review FIX 1).
 pub static CATCH_UPS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// integration-4 (coordinator, CI a91a14a test_51r): why a compactor was not started when `maybe_start_fxc` was asked
@@ -139,6 +152,13 @@ pub static FXC_SKIP_CATCH_UP_FAILED: std::sync::atomic::AtomicU64 = std::sync::a
 pub static FXC_SKIP_MARKS_UNREADABLE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// How long a close waits for the compactor to absorb its last memtable flush (c2-fix-clone-uploads).
 const CLOSE_ABSORB_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
+/// P-fix-slow-store item 1: databases not closed by the shutdown because a command held them at the close's deadline.
+/// P-fix-slow-store item 1: the part of a close's time kept for its lease release.
+const LEASE_RELEASE_SHARE: std::time::Duration = std::time::Duration::from_secs(1);
+pub static CLOSES_LOCK_PAST_DEADLINE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// P-fix-slow-store item 1: closes with a deadline that skipped the optional work (the compactor's start, the absorption
+/// of the last flush) because less than half of their time was left for it.
+pub static CLOSES_OPTIONAL_SKIPPED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 pub struct Dbs {
     lc: Arc<Lifecycle>,
@@ -174,6 +194,18 @@ pub struct Entry {
     /// The database was found not to exist during the current command: later reads of the same command answer
     /// "absent" without another lease attempt and LIST (reset when the next command takes the lock).
     absent: bool,
+    /// P-fix-slow-store item 4 (the cold start): the database was found not to exist, and this process kept its lease
+    /// until then. While the lease is held no other process can create the database, so "absent" stays true without a
+    /// new probe; the first command that writes creates it with the lease it already holds. Before, every lock of the
+    /// same first insert probed again (lease GET and PUT, the clean marker, LISTs, a lease discard): three probes, about
+    /// 20 store requests in a row before the database existed (about 3 s with S3's errors and tails, MEASURED). Past
+    /// this time the reaper gives the lease up (`spawn_reaper`).
+    absent_until: Option<Instant>,
+    /// P-fix-slow-store-3 (round 2): the lease's acquire stamp (`Leases::acquire_stamp`) when the hold began. The hold is
+    /// true only while it is unchanged: another path of this process that acquires the name's lease (a fork, a restore, an
+    /// export) may create or change the database, and then "absent" is no longer known. (The review of round 1: a read of
+    /// a missing name, a fork onto it, then an insert made from the hold's "absent" lost a document from every scan.)
+    absent_stamp: u64,
     pub(crate) hint_written: bool,
     /// When each collection's expired documents were last swept by a write command.
     pub(crate) swept: HashMap<String, Instant>,
@@ -225,6 +257,32 @@ impl std::fmt::Display for Reopened {
 }
 
 impl std::error::Error for Reopened {}
+
+/// P-fix-slow-store-3: a command that found its database absent, then at its create found the database there (see
+/// `Entry::create_new`). Nothing of the command was written: retryable.
+#[derive(Debug)]
+pub struct ExistedAtCreate(pub String);
+
+impl std::fmt::Display for ExistedAtCreate {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "database {} was created by another operation while this command ran; nothing of this command was applied, retry", self.0)
+    }
+}
+
+impl std::error::Error for ExistedAtCreate {}
+
+/// Test control only (`FENVIX_TEST_CONTROL_HOLD_ROUND1=1`): the absent hold of round 1 (no acquire stamp, not ended by a
+/// fork, restore or export), so a test can show the create check alone (`Entry::create_new`) keeps the data.
+fn control_hold_round1() -> bool {
+    static V: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| std::env::var("FENVIX_TEST_CONTROL_HOLD_ROUND1").as_deref() == Ok("1"));
+    *V
+}
+
+/// Test control only (`FENVIX_TEST_NO_CREATE_CHECK=1`): `Entry::create_new` does not check for an existing collection list.
+fn no_create_check() -> bool {
+    static V: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| std::env::var("FENVIX_TEST_NO_CREATE_CHECK").as_deref() == Ok("1"));
+    *V
+}
 
 /// Bytes (keys and values) a read returned: the "KiB read" of the unit of cost (fair.rs).
 trait ReadBytes {
@@ -293,6 +351,8 @@ impl Dbs {
                     fxc_skip_logged: 0,
                     ttl_seen: AtomicBool::new(false),
                     absent: false,
+                    absent_until: None,
+                    absent_stamp: 0,
                     hint_written: false,
                     swept: HashMap::new(),
                     snap: None,
@@ -431,6 +491,8 @@ impl Dbs {
                     fxc_skip_logged: 0,
                         ttl_seen: AtomicBool::new(false),
                     absent: false,
+                    absent_until: None,
+                    absent_stamp: 0,
                         hint_written: false,
                         swept: HashMap::new(),
                     snap: None,
@@ -525,6 +587,14 @@ impl Dbs {
                 tokio::time::sleep(Duration::from_millis(500)).await;
                 let entries: Vec<Arc<AsyncMutex<Entry>>> = me.entries.lock().unwrap().values().cloned().collect();
                 for e in entries {
+                    // P-fix-slow-store item 4: an absent hold that is over gives its lease up
+                    let hold_over = matches!(e.try_read(), Ok(g) if g.tenant.is_none() && g.absent_until.is_some_and(|t| Instant::now() >= t));
+                    if hold_over {
+                        if let Ok(mut g) = Arc::clone(&e).try_write_owned() {
+                            g.end_absent_hold().await;
+                        }
+                        continue;
+                    }
                     // Cheap pre-check without waiting: skip entries in use or not idle yet.
                     let due = match e.try_read() {
                         Ok(g) => g.tenant.is_some() && g.active_txns == 0 && g.idle_for() >= me.idle,
@@ -545,6 +615,42 @@ impl Dbs {
                             }
                         }
                     });
+                }
+            }
+        });
+    }
+
+    /// P-fix-slow-store item 7: a writer whose open raised its unflushed limit for the WAL replay (`Tenant::replay_raised`,
+    /// L0 full at the wake) keeps that limit for its life (SlateDB 0.17 fixes its settings at the build). Once its L0 has
+    /// drained below the compaction threshold, it is closed (a clean close, as the idle reaper's) and the next command
+    /// opens it again with the normal limit: SlateDB's per-database backpressure is back. Checked every second, without
+    /// waiting for a database that is in use.
+    pub fn spawn_replay_raise_dropper(self: &Arc<Self>) {
+        let me = Arc::clone(self);
+        tokio::spawn(async move {
+            loop {
+                tokio::time::sleep(Duration::from_secs(1)).await;
+                let entries: Vec<Arc<AsyncMutex<Entry>>> = me.entries.lock().unwrap().values().cloned().collect();
+                for e in entries {
+                    let due = match e.try_read() {
+                        Ok(g) => g.active_txns == 0 && g.tenant.as_ref().is_some_and(|t| t.replay_raise_droppable()),
+                        Err(_) => false,
+                    };
+                    if !due {
+                        continue;
+                    }
+                    if let Ok(mut g) = e.try_write_owned() {
+                        if g.active_txns == 0 && g.tenant.as_ref().is_some_and(|t| t.replay_raise_droppable()) {
+                            let raised = g.tenant.as_ref().map_or(0, |t| t.replay_raised());
+                            match g.close().await {
+                                Ok(()) => {
+                                    tenant_bench::lifecycle::REPLAY_RAISES_DROPPED.fetch_add(1, Relaxed);
+                                    eprintln!("REPLAY_RAISE_DROPPED db={} raise={raised}: L0 drained; closed, the next command opens it with the normal limit", g.name);
+                                }
+                                Err(err) => eprintln!("close of {} to drop its replay raise failed: {err:#}", g.name),
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -586,11 +692,29 @@ impl Dbs {
     }
 
     pub async fn close_all(&self) {
-        let entries: Vec<Arc<AsyncMutex<Entry>>> = self.entries.lock().unwrap().values().cloned().collect();
+        self.close_all_by(None).await
+    }
+
+    /// P-fix-slow-store item 1: close every database, each close ending by `deadline` (the shutdown's close budget; None:
+    /// no deadline). A database whose lock a command still holds at the deadline (a write waiting on the store) is not
+    /// closed here: the process exits with it open, as after a crash (its acknowledged writes are in WAL objects, its lease
+    /// runs out, its next owner replays them).
+    pub async fn close_all_by(&self, deadline: Option<tokio::time::Instant>) {
+        let entries: Vec<(String, Arc<AsyncMutex<Entry>>)> = self.entries.lock().unwrap().iter().map(|(k, v)| (k.clone(), Arc::clone(v))).collect();
         futures::stream::iter(entries)
-            .for_each_concurrent(CLOSE_CONCURRENCY, |e| async move {
-                let mut g = e.write().await;
-                if let Err(err) = g.close().await {
+            .for_each_concurrent(CLOSE_CONCURRENCY, |(name, e)| async move {
+                let mut g = match deadline {
+                    None => e.write().await,
+                    Some(d) => match tokio::time::timeout_at(d, e.write()).await {
+                        Ok(g) => g,
+                        Err(_) => {
+                            CLOSES_LOCK_PAST_DEADLINE.fetch_add(1, Relaxed);
+                            eprintln!("close of {name}: a command still held the database at the close's deadline; left open (its lease runs out and its next owner replays the WAL)");
+                            return;
+                        }
+                    },
+                };
+                if let Err(err) = g.close_by(deadline).await {
                     eprintln!("close of {} failed: {err:#}", g.name);
                 }
             })
@@ -789,16 +913,32 @@ impl Entry {
     ///
     /// Then the compactor absorbs that last flush (bounded): with every L0 row absorbed, the compaction pass may compact
     /// the closed database (`lifecycle::compact_tenant_pass_with` runs only then).
-    async fn flush_then_stop_fxc(&mut self) {
+    ///
+    /// P-fix-slow-store item 1: with a deadline (the shutdown), this is optional work: the next opening absorbs what is
+    /// left. It gets at most half of the time left, so the close itself (the flush, SlateDB's close, the marker, the
+    /// lease) keeps the other half; a compactor that is not running is not started (its catch-up publish is the next
+    /// opening's). Cutting the flush or the absorption is what their own timeouts already did: a cut job's run writer
+    /// aborts its upload, and the version create is one conditional PUT.
+    async fn flush_then_stop_fxc(&mut self, deadline: Option<tokio::time::Instant>) {
+        let half = deadline.map(|d| d.saturating_duration_since(tokio::time::Instant::now()) / 2);
+        if half.is_some_and(|h| h < std::time::Duration::from_millis(200)) {
+            CLOSES_OPTIONAL_SKIPPED.fetch_add(1, Relaxed);
+            self.stop_fxc().await;
+            return;
+        }
         // a session whose writes never started the compactor (with the log on, a write's commit is waited for by the
         // command after this entry's lock is released) starts it now: its last flush is then absorbed like any other
-        self.maybe_start_fxc().await;
+        if deadline.is_none() {
+            self.maybe_start_fxc().await;
+        }
+        let opt_end = half.map(|h| tokio::time::Instant::now() + h);
+        let cap = |c: std::time::Duration| opt_end.map_or(c, |e| c.min(e.saturating_duration_since(tokio::time::Instant::now())));
         if let (Some(c), true) = (self.fxc.clone(), self.tenant.as_ref().is_some_and(|t| t.is_writer())) {
-            let r = tokio::time::timeout(tenant_bench::lifecycle::CLOSE_FLUSH_TIMEOUT, tenant_bench::lifecycle::flush_writer_memtable(&self.name)).await;
+            let r = tokio::time::timeout(cap(tenant_bench::lifecycle::CLOSE_FLUSH_TIMEOUT), tenant_bench::lifecycle::flush_writer_memtable(&self.name)).await;
             if !matches!(r, Ok(Ok(_))) {
                 eprintln!("close of {}: memtable flush with the compactor running did not finish; the close flushes", self.name);
             } else {
-                let absorbed = tokio::time::timeout(CLOSE_ABSORB_TIMEOUT, async {
+                let absorbed = tokio::time::timeout(cap(CLOSE_ABSORB_TIMEOUT), async {
                     while c.absorb_once().await? > 0 {}
                     anyhow::Ok(())
                 })
@@ -932,6 +1072,10 @@ impl Entry {
                 2 => {
                     self.writers.fetch_add(1, Relaxed);
                     lease::log("writer_open", &self.name, &self.leases.holder, "");
+                    // P-fix-slow-store item 2: every run upload of an older writer of this database is now proved orphaned
+                    if let Some(e) = self.tenant.as_ref().and_then(|t| t.slate_writer_epoch()) {
+                        crate::uploads::spawn_abort_fenced(self.name.clone(), e);
+                    }
                 }
                 _ => {}
             }
@@ -1059,6 +1203,17 @@ impl Entry {
         if self.tenant.is_none() && self.absent {
             return Ok(false);
         }
+        if self.absent_hold_valid() {
+            ABSENT_HELD_ANSWERS.fetch_add(1, Relaxed);
+            self.absent = true;
+            return Ok(false);
+        }
+        if self.tenant.is_none() && self.absent_until.is_some() {
+            // a hold no longer true (its lease lapsed, or another path of this process acquired the lease since): the store
+            // is asked again below; the lease, if still held, is now whoever acquired it last
+            self.absent_until = None;
+            ABSENT_HOLDS_VOIDED.fetch_add(1, Relaxed);
+        }
         // a reader whose view went stale (an SST it named was compacted and removed: sst-not-found) is replaced by a new one
         // on the latest manifest; a writer follows the manifest itself
         if tenant_bench::lifecycle::take_stale(&self.name) && self.tenant.as_ref().is_some_and(|t| !t.is_writer()) {
@@ -1092,9 +1247,11 @@ impl Entry {
             None => None,
         };
         tenant_bench::counting::set_phase(5);
-        let took = self.leases.acquire(&self.name).await?;
+        // P-fix-slow-store item 4 (the cold start): the database's durability setting is read beside the lease's
+        // acquire, not after it (one store round trip less on every open; it only refreshes a cached setting)
+        let (took, ()) = tokio::join!(self.leases.acquire(&self.name), crate::ctl::durability::refresh(&self.name));
+        let took = took?;
         lease::log("acquired", &self.name, &self.leases.holder, &format!("takeover_from={}", took.as_deref().unwrap_or("-")));
-        crate::ctl::durability::refresh(&self.name).await;
         match self.lc.wake(&self.name).await {
             Ok(t) => {
                 if took.is_some() || t.unclean {
@@ -1131,9 +1288,15 @@ impl Entry {
                 if self.db_exists().await? {
                     self.leases.release(&self.name).await;
                     Err(e)
-                } else {
+                } else if ABSENT_HOLD.is_zero() {
                     self.leases.discard(&self.name).await;
                     self.absent = true;
+                    Ok(false)
+                } else {
+                    // the lease is kept for ABSENT_HOLD (see `absent_until`): the reaper discards it if no write came
+                    self.absent = true;
+                    self.absent_until = Some(Instant::now() + *ABSENT_HOLD);
+                    self.absent_stamp = self.leases.acquire_stamp(&self.name);
                     Ok(false)
                 }
             }
@@ -1141,7 +1304,97 @@ impl Entry {
     }
 
     pub async fn close(&mut self) -> Result<()> {
-        self.write_ttl_hint().await;
+        self.close_by(None).await
+    }
+
+    /// The absent hold (`absent_until`) is running, its lease still valid, and no other path of this process acquired
+    /// that lease since the hold began (`absent_stamp`): the database is still known not to exist, and its create needs
+    /// no new acquire.
+    fn absent_hold_valid(&self) -> bool {
+        self.tenant.is_none()
+            && self.absent_until.is_some_and(|t| Instant::now() < t)
+            && self.leases.valid(&self.name)
+            && (control_hold_round1() || (self.absent_stamp != 0 && self.leases.acquire_stamp(&self.name) == self.absent_stamp))
+    }
+
+    /// Create the database a command found absent (its first write, or a transaction's snapshot), with the absent hold's
+    /// lease when the hold is still true, else with a new acquire.
+    ///
+    /// P-fix-slow-store-3 (round 2): the command's own ops were computed from "absent" (a new collection list, new
+    /// collections). If the created writer finds a collection list already, the database existed after all (something
+    /// created it between the probe and this create): its data would be overwritten as if new, and a document of it would
+    /// drop out of every scan. So the create is refused instead, nothing of the command written, with a retryable error;
+    /// the writer is closed cleanly and the next command opens the database the normal way. For a new database the check
+    /// costs no store request (an empty writer has nothing to read).
+    async fn create_new(&mut self) -> Result<()> {
+        if !self.absent_hold_valid() {
+            self.leases.acquire(&self.name).await?;
+        }
+        self.absent_until = None;
+        lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
+        self.nat.clear();
+        self.copts.clear();
+        self.ckey_decided.clear();
+        self.sstat.clear();
+        self.meta_clear();
+        crate::opening::forget_db(&self.name);
+        let t = self.lc.create(&self.name).await?;
+        let existing = if no_create_check() { None } else { t.get(crate::layout2::phys(layout::META_COLLECTIONS)).await? };
+        self.tenant = Some(t);
+        self.absent = false;
+        self.wakes += 1;
+        self.sync_gauges();
+        if existing.is_some() {
+            CREATES_FOUND_EXISTING.fetch_add(1, Relaxed);
+            eprintln!("CREATE_FOUND_EXISTING db={}: the database was found absent but its create found a collection list; the command is refused (retryable) and the database is reopened by the next command", self.name);
+            if let Err(e) = self.close().await {
+                eprintln!("CREATE_FOUND_EXISTING db={}: close: {e:#}", self.name);
+            }
+            return Err(ExistedAtCreate(self.name.clone()).into());
+        }
+        Ok(())
+    }
+
+    /// Is the lease still the one the absent hold acquired (not released, lost or acquired again by another path)?
+    fn absent_hold_owns_lease(&self) -> bool {
+        self.absent_stamp != 0 && self.leases.is_held(&self.name) && self.leases.acquire_stamp(&self.name) == self.absent_stamp
+    }
+
+    /// The reaper's part of the absent hold: once it is over and no write created the database, give the lease up (only
+    /// the lease the hold itself acquired: one acquired since by another path of this process is that path's).
+    async fn end_absent_hold(&mut self) {
+        if self.tenant.is_none() && self.absent_until.is_some_and(|t| Instant::now() >= t) {
+            self.absent_until = None;
+            if self.absent_hold_owns_lease() {
+                self.leases.discard(&self.name).await;
+            }
+        }
+    }
+
+    /// P-fix-slow-store-3 (round 2): for a path that creates, restores or replaces the database's data while it holds
+    /// the entry lock (a fork onto the name, a point-in-time restore, an export's freeze): end the absent hold, so no
+    /// later command answers "absent" or creates the database from it. True when the hold's lease is still held by
+    /// this process: the caller then owns that lease (and releases or discards it when it is done).
+    pub fn take_absent_hold(&mut self) -> bool {
+        if control_hold_round1() {
+            return false;
+        }
+        self.absent = false;
+        if self.absent_until.take().is_none() || self.tenant.is_some() {
+            return false;
+        }
+        ABSENT_HOLDS_TAKEN.fetch_add(1, Relaxed);
+        self.absent_hold_owns_lease()
+    }
+
+    /// `close`, ending by `deadline` (P-fix-slow-store item 1, the shutdown's close budget). The lease is released only
+    /// once the tenant's SlateDB handle has stopped: a writer left behind keeps it until it runs out.
+    pub async fn close_by(&mut self, deadline: Option<tokio::time::Instant>) -> Result<()> {
+        let t0 = std::time::Instant::now();
+        let left = || deadline.map_or(std::time::Duration::MAX, |d| d.saturating_duration_since(tokio::time::Instant::now()));
+        if tokio::time::timeout(left(), self.write_ttl_hint()).await.is_err() {
+            eprintln!("close of {}: the TTL hint was not written before the close's deadline", self.name);
+        }
         let had = self.tenant.is_some();
         self.nat.clear();
         self.copts.clear();
@@ -1150,10 +1403,18 @@ impl Entry {
         self.meta_clear();
         crate::opening::forget_db(&self.name);
         crate::custbox::forget_db(&self.name);
-        self.flush_then_stop_fxc().await;
+        let t_hint = t0.elapsed();
+        self.flush_then_stop_fxc(deadline).await;
+        let t_fxc = t0.elapsed();
         if let Some(t) = self.tenant.take() {
             crate::fair::note_written(&self.name, 0, true);
-            let r = t.close().await;
+            // the lease release (one conditional PUT) keeps its own share at the end of the close's time: a released lease
+            // lets the next owner open at once, without waiting for it to run out
+            let tenant_deadline = deadline.map(|d| d.checked_sub(LEASE_RELEASE_SHARE).filter(|t| *t > tokio::time::Instant::now()).unwrap_or(d.min(tokio::time::Instant::now())));
+            let (r, stopped) = t.close_within(tenant_deadline).await;
+            if t0.elapsed() >= std::time::Duration::from_secs(1) {
+                eprintln!("TIMING close db={} hint_ms={} fxc_ms={} tenant_ms={} ok={} stopped={stopped}", self.name, t_hint.as_millis(), (t_fxc - t_hint).as_millis(), (t0.elapsed() - t_fxc).as_millis(), r.is_ok());
+            }
             if r.is_ok() {
                 if let Some(l) = crate::locallog::get() {
                     l.closed(&self.name);
@@ -1161,7 +1422,17 @@ impl Entry {
             }
             self.closes += 1;
             self.sync_gauges();
-            self.leases.release(&self.name).await;
+            if stopped {
+                // one conditional PUT (a few on a race with a renewal); past the deadline it gets a short grace, then the
+                // lease runs out by itself
+                let grace = left().max(std::time::Duration::from_millis(500));
+                if tokio::time::timeout(grace, self.leases.release(&self.name)).await.is_err() {
+                    eprintln!("close of {}: the lease release did not finish before the close's deadline; it runs out by itself", self.name);
+                }
+            } else {
+                // the writer was left behind: no renewal and no release, the lease runs out and the next owner fences it
+                self.leases.forget(&self.name);
+            }
             r?;
         }
         let _ = had;
@@ -1430,18 +1701,7 @@ impl Entry {
             Op::Delete(k) => Op::Delete(k.clone()),
         }).collect::<Vec<Op>>()));
         if !self.ensure_open().await? {
-            self.leases.acquire(&self.name).await?;
-            lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
-            self.nat.clear();
-        self.copts.clear();
-        self.ckey_decided.clear();
-        self.sstat.clear();
-        self.meta_clear();
-            crate::opening::forget_db(&self.name);
-            self.tenant = Some(self.lc.create(&self.name).await?);
-            self.absent = false;
-            self.wakes += 1;
-            self.sync_gauges();
+            self.create_new().await?;
         }
         // a command that began on an opening abandoned since then writes nothing (`Reopened`); the log's replays
         // (`apply_durable`) run inside the open itself and are not a command's write
@@ -1576,7 +1836,7 @@ impl Entry {
         self.meta_clear();
         crate::opening::forget_db(&self.name);
         crate::custbox::forget_db(&self.name);
-        self.flush_then_stop_fxc().await;
+        self.flush_then_stop_fxc(None).await;
         if let Some(t) = self.tenant.take() {
             t.close().await?;
             self.closes += 1;
@@ -1862,17 +2122,7 @@ impl Entry {
     pub async fn begin_snapshot(&mut self) -> Result<(Arc<tenant_bench::fx::read::Snap>, u64)> {
         if !self.ensure_open().await? {
             // The database does not exist yet: create it so the transaction has something to snapshot.
-            self.leases.acquire(&self.name).await?;
-            self.nat.clear();
-        self.copts.clear();
-        self.ckey_decided.clear();
-        self.sstat.clear();
-        self.meta_clear();
-            crate::opening::forget_db(&self.name);
-            self.tenant = Some(self.lc.create(&self.name).await?);
-            self.absent = false;
-            self.wakes += 1;
-            self.sync_gauges();
+            self.create_new().await?;
         }
         // With the log on, a transaction reads a confirmed snapshot (no write its log has not confirmed yet): it waits,
         // holding the database's exclusive lock (nothing new is staged meanwhile), until the batches staged so far are

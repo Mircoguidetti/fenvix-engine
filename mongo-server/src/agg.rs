@@ -314,12 +314,12 @@ fn update_acc(acc: &mut Acc, spec: &AccSpec, doc: &Document) -> R<()> {
         }
         Acc::NList(_) | Acc::Top(_) | Acc::Js(_) => {}
         Acc::Sum(s) => {
-            if let Some(v) = val.filter(is_number) {
+            if let Some(v) = val.filter(query::is_numeric) {
                 s.add(&v);
             }
         }
         Acc::Avg(sum, n) => {
-            if let Some(v) = val.filter(is_number) {
+            if let Some(v) = val.filter(query::is_numeric) {
                 sum.add(&v);
                 *n += 1;
             }
@@ -439,9 +439,7 @@ fn finish(acc: Acc) -> Bson {
         Acc::Std { .. } | Acc::NList(_) | Acc::Top(_) => Bson::Null,
         Acc::Js(s) => s.unwrap_or(Bson::Null),
         Acc::Sum(s) => s.value(),
-        Acc::Avg(sum, n) => {
-            if n == 0 { Bson::Null } else { Bson::Double(sum.total() / n as f64) }
-        }
+        Acc::Avg(sum, n) => sum.avg(n),
         Acc::Min(v) | Acc::Max(v) => v.unwrap_or(Bson::Null),
         Acc::Count(n) => Bson::Int32(n as i32),
         Acc::First(v, _) => v.unwrap_or(Bson::Null),

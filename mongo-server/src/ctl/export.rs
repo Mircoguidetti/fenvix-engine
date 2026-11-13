@@ -89,6 +89,8 @@ pub async fn create(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
     let id = format!("{db}.{:016x}", rand::random::<u64>());
     // Freeze: no command runs on the database and everything acknowledged is in the manifest.
     let mut g = ctl.dbs.lock(db).await;
+    // P-fix-slow-store-3 (round 2): an absent hold on the name ends here (the export acquires and releases the lease)
+    g.take_absent_hold();
     fork::quiesce(ctl, &mut g, db).await?;
     // a compaction pass running (maybe a long merge) stops instead of making this wait for it
     let _preempt = tenant_bench::lifecycle::preempt_compaction(db);

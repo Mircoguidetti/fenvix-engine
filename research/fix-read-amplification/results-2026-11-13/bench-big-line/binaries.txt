@@ -1,0 +1,2 @@
+6fbf25f934525f1a384ed9461c2c4036c473994d0f02e6279170020f106211fc  /home/user/harness/target/release/mongo-server
+7075075a4ac3367c938c269f0b88660519202d666068bcf6e448e7a6fb8aff52  /home/user/harness/proto/quaderno/target/release/pq

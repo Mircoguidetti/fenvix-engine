@@ -334,6 +334,44 @@ pub async fn on_main_line(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecy
     Ok(true)
 }
 
+/// What a reader's renewal learns from the store ([`load_newest_trusted_unless`]).
+pub enum Newest {
+    /// The store holds no version.
+    None,
+    /// The newest slot listed is the version the reader already serves: nothing to read.
+    Same,
+    /// Another version, as [`load_newest_trusted`] gives it.
+    New(Version, u64),
+}
+
+/// fix-box-first-trip: a reader's renewal sends one LIST, and its two GETs (the newest version and the version below it,
+/// [`trusted_at`]) only when the newest slot listed is not the version `known` the reader already serves.
+///
+/// Why skipping them gives the same answer as [`load_newest_trusted`]: versions never change once written (the same
+/// number is the same version), and `known` passed [`trusted_at`] when it was loaded, so `is_older_writers(known)` was
+/// false then. It stays false: the version below `known` is immutable too, and if it was missing then (collected by GC)
+/// a later PUT at that slot can only be a dead, older writer's (lower epoch: `is_older_writers` stays false). When the
+/// newest slot is not `known` (a new publish, or a slot `trusted_at` passed over), the whole path runs as before.
+pub async fn load_newest_trusted_unless(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), known: Option<u64>) -> Result<Newest> {
+    if let Some(k) = known {
+        match list_versions(store, id).await?.last() {
+            None => return Ok(Newest::None),
+            Some(&n) if n == k => {
+                RENEWALS_UNCHANGED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                return Ok(Newest::Same);
+            }
+            Some(_) => {}
+        }
+    }
+    Ok(match load_newest_trusted(store, id).await? {
+        None => Newest::None,
+        Some((v, slot)) => Newest::New(v, slot),
+    })
+}
+
+/// Renewals that found the newest slot unchanged and sent no GET (serverStatus `sealedRuns.renewalsUnchanged`).
+pub static RENEWALS_UNCHANGED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 /// Fail point for tests: a publish whose PUT is delayed until the test lets it go (the PUT of a dead process landing
 /// late, rule 17).
 pub static SLOW_PUT: std::sync::Mutex<Option<Arc<tokio::sync::Notify>>> = std::sync::Mutex::new(None);
