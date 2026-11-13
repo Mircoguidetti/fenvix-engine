@@ -597,3 +597,151 @@ async fn rf_replay_raise_counts_only_the_wal_the_open_replays() {
     assert!(raise > 0, "setup: the open must take the raise (L0 at the guard)");
     assert!(raise <= 2 * replayed, "the raise ({raise} bytes) counts WAL the open never replays ({replayed} bytes replayed, {all} under the prefix)");
 }
+
+/// P-fix-slow-store item 7, the margin: small rows (keys of a few bytes, values of 1 byte) make SlateDB's memtable count
+/// each entry with its overhead, so a raise of the WAL's bytes alone (the old raise, margin 1) leaves the replay under its
+/// limit and the open waits for L0 for good. With the margin (2) it returns. Every row reads right.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn fss_replay_raise_margin_covers_small_rows() {
+    let _s = SERIAL.lock().await;
+    let mut out = Vec::new();
+    for margin in [1u64, 2] {
+        let tiers0 = open_case_setup(3 << 10);
+        let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let srv = server(&store);
+        let id = format!("fss-margin-{margin}");
+        let m = full_unabsorbed_l0(&srv.lc, &store, &id, 3000, 0).await;
+        let wal = crate::lifecycle::wal_bytes(&store, &id).await.unwrap();
+        crate::lifecycle::MAX_UNFLUSHED_OVERRIDE.store(8 << 10, Relaxed);
+        crate::lifecycle::REPLAY_RAISE_MARGIN.store(margin, Relaxed);
+        let mut t = srv.lc.wake(&id).await.unwrap();
+        let t0 = Instant::now();
+        let opened = tokio::time::timeout(Duration::from_secs(15), t.upgrade()).await;
+        let took = t0.elapsed();
+        let ok = matches!(opened, Ok(Ok(())));
+        let wrong = if ok { wrong_rows(&t, &m).await } else { usize::MAX };
+        eprintln!("margin {margin}: WAL {wal} bytes, raise {}; open {} after {took:?}; rows {} wrong {wrong}", t.replay_raised(), if ok { "returned" } else { "did not return" }, m.len());
+        out.push((margin, ok, wrong));
+        crate::lifecycle::REPLAY_RAISE_MARGIN.store(2, Relaxed);
+        if ok {
+            t.abandon().await;
+        }
+        let _ = srv.maint.shutdown().await;
+        open_case_teardown(tiers0);
+    }
+    assert!(!out[0].1, "control: with margin 1 the open returned (the setup does not show the per-entry overhead)");
+    assert!(out[1].1, "with the margin the open did not return within 15 s");
+    assert_eq!(out[1].2, 0, "rows read wrong after the open");
+}
+
+/// P-fix-slow-store item 7, the cap: a full unabsorbed L0 plus about 8 MiB of WAL, the writer's limit 1 MiB, under a
+/// memory budget whose memtable share is 32 MiB: the raise (2 x the WAL) fits the share, the open returns, every row
+/// reads right, and the process's RSS rise during the open is MEASURED (printed) and stays under the share. A second
+/// case with a 4 MiB share: the raise is cut to the share (counted as capped), never above it.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn fss_replay_raise_under_the_memory_budget() {
+    let _s = SERIAL.lock().await;
+    let tiers0 = open_case_setup(64 << 10);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let srv = server(&store);
+    let id = "fss-budget";
+    let m = full_unabsorbed_l0(&srv.lc, &store, id, 8000, 1000).await;
+    let wal = crate::lifecycle::wal_bytes(&store, id).await.unwrap();
+    crate::lifecycle::MAX_UNFLUSHED_OVERRIDE.store(1 << 20, Relaxed);
+    let share: usize = 32 << 20;
+    crate::lifecycle::REPLAY_RAISE_CAP_OVERRIDE.store(share as u64, Relaxed);
+    let mut t = srv.lc.wake(id).await.unwrap();
+    let base = rss_kib();
+    let peak = Arc::new(std::sync::atomic::AtomicU64::new(base));
+    let stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let sampler = {
+        let (peak, stop) = (Arc::clone(&peak), Arc::clone(&stop));
+        tokio::spawn(async move {
+            while !stop.load(Relaxed) {
+                peak.fetch_max(rss_kib(), Relaxed);
+                tokio::time::sleep(Duration::from_millis(2)).await;
+            }
+        })
+    };
+    let t0 = Instant::now();
+    let opened = tokio::time::timeout(Duration::from_secs(60), t.upgrade()).await;
+    let took = t0.elapsed();
+    stop.store(true, Relaxed);
+    let _ = sampler.await;
+    let ok = matches!(opened, Ok(Ok(())));
+    let wrong = if ok { wrong_rows(&t, &m).await } else { usize::MAX };
+    let rise = peak.load(Relaxed).saturating_sub(base);
+    let raised = t.replay_raised();
+    eprintln!("budget case: WAL {} KiB, raise {} KiB, memtable share {} KiB; open {} in {took:?}; RSS {base} KiB before, peak +{rise} KiB during the open; rows {} wrong {wrong}", wal / 1024, raised / 1024, share / 1024, if ok { "returned" } else { "did not return" }, m.len());
+    if ok {
+        t.abandon().await;
+    }
+    // the capped case: the same database, a 4 MiB share
+    let capped0 = crate::lifecycle::REPLAY_RAISES_CAPPED.load(Relaxed);
+    crate::lifecycle::REPLAY_RAISE_CAP_OVERRIDE.store(4 << 20, Relaxed);
+    let mut t2 = srv.lc.wake(id).await.unwrap();
+    let opened2 = tokio::time::timeout(Duration::from_secs(5), t2.upgrade()).await;
+    let raised2 = t2.replay_raised();
+    let capped = crate::lifecycle::REPLAY_RAISES_CAPPED.load(Relaxed) - capped0;
+    eprintln!("capped case: raise {} KiB under a 4096 KiB share (capped {capped}); open {}", raised2 / 1024, if matches!(opened2, Ok(Ok(()))) { "returned" } else { "did not return within 5 s (the replay waits for L0: the cap trades the open for the memory bound)" });
+    crate::lifecycle::REPLAY_RAISE_CAP_OVERRIDE.store(0, Relaxed);
+    if matches!(opened2, Ok(Ok(()))) {
+        t2.abandon().await;
+    }
+    let _ = srv.maint.shutdown().await;
+    open_case_teardown(tiers0);
+    assert!(ok, "the open did not return under the budget");
+    assert_eq!(wrong, 0);
+    assert!(raised >= 2 * wal && raised <= share, "raise {raised} for a WAL of {wal} (share {share})");
+    assert!((rise as usize) * 1024 < share, "RSS rose {rise} KiB during the open, over the memtable share");
+    assert!(raised2 <= 4 << 20 && capped == 1, "the capped raise {raised2} was not cut to the share");
+}
+
+/// P-fix-slow-store item 7, the drop: after a raised open, once our compactor has absorbed and L0 is below the
+/// compaction threshold, the writer is droppable; closed and opened again, it has no raise, and every row reads right.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn fss_replay_raise_is_dropped_once_l0_drained() {
+    let _s = SERIAL.lock().await;
+    let tiers0 = open_case_setup(3 << 10);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let srv = server(&store);
+    let id = "fss-drop";
+    let m = full_unabsorbed_l0(&srv.lc, &store, id, 140, 60).await;
+    crate::lifecycle::MAX_UNFLUSHED_OVERRIDE.store(8 << 10, Relaxed);
+    let mut t = srv.lc.wake(id).await.unwrap();
+    tokio::time::timeout(Duration::from_secs(30), t.upgrade()).await.expect("open").unwrap();
+    let raised = t.replay_raised();
+    let before = t.replay_raise_droppable();
+    let mut k = knobs();
+    k.absorb_min_l0 = 1;
+    let c = start(&mut t, &store, &k, true).await;
+    c.drain(false).await.unwrap();
+    t.fx_sync();
+    // SlateDB's own compaction of the absorbed L0 (the maintenance pass, as the server's L0 watch asks) drains it
+    let t0 = Instant::now();
+    while !t.replay_raise_droppable() && t0.elapsed() < Duration::from_secs(30) {
+        let _ = crate::lifecycle::flush_writer_memtable(id).await;
+        if let Some(q) = &srv.lc.queue {
+            let (tx, rx) = tokio::sync::oneshot::channel();
+            q.request(id, Some(tx));
+            let _ = tokio::time::timeout(Duration::from_secs(5), rx).await;
+        }
+        tokio::time::sleep(Duration::from_millis(200)).await;
+    }
+    let after = t.replay_raise_droppable();
+    let l0 = t.writer_l0();
+    c.stop().await;
+    t.close().await.unwrap();
+    let mut t2 = srv.lc.wake(id).await.unwrap();
+    t2.upgrade().await.unwrap();
+    let raised2 = t2.replay_raised();
+    let wrong = wrong_rows(&t2, &m).await;
+    eprintln!("drop case: raise {raised}; droppable before the absorption {before}, after {after} (L0 {l0:?}); reopened with raise {raised2}; rows {} wrong {wrong}", m.len());
+    t2.abandon().await;
+    let _ = srv.maint.shutdown().await;
+    open_case_teardown(tiers0);
+    assert!(raised > 0 && !before, "setup: the open must be raised and L0 full");
+    assert!(after, "L0 did not drain below the threshold (L0 {l0:?})");
+    assert_eq!(raised2, 0, "the reopened writer still has a raise");
+    assert_eq!(wrong, 0);
+}

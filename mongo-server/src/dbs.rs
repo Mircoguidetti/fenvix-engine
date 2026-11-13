@@ -139,6 +139,13 @@ pub static FXC_SKIP_CATCH_UP_FAILED: std::sync::atomic::AtomicU64 = std::sync::a
 pub static FXC_SKIP_MARKS_UNREADABLE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// How long a close waits for the compactor to absorb its last memtable flush (c2-fix-clone-uploads).
 const CLOSE_ABSORB_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
+/// P-fix-slow-store item 1: databases not closed by the shutdown because a command held them at the close's deadline.
+/// P-fix-slow-store item 1: the part of a close's time kept for its lease release.
+const LEASE_RELEASE_SHARE: std::time::Duration = std::time::Duration::from_secs(1);
+pub static CLOSES_LOCK_PAST_DEADLINE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// P-fix-slow-store item 1: closes with a deadline that skipped the optional work (the compactor's start, the absorption
+/// of the last flush) because less than half of their time was left for it.
+pub static CLOSES_OPTIONAL_SKIPPED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 pub struct Dbs {
     lc: Arc<Lifecycle>,
@@ -550,6 +557,42 @@ impl Dbs {
         });
     }
 
+    /// P-fix-slow-store item 7: a writer whose open raised its unflushed limit for the WAL replay (`Tenant::replay_raised`,
+    /// L0 full at the wake) keeps that limit for its life (SlateDB 0.17 fixes its settings at the build). Once its L0 has
+    /// drained below the compaction threshold, it is closed (a clean close, as the idle reaper's) and the next command
+    /// opens it again with the normal limit: SlateDB's per-database backpressure is back. Checked every second, without
+    /// waiting for a database that is in use.
+    pub fn spawn_replay_raise_dropper(self: &Arc<Self>) {
+        let me = Arc::clone(self);
+        tokio::spawn(async move {
+            loop {
+                tokio::time::sleep(Duration::from_secs(1)).await;
+                let entries: Vec<Arc<AsyncMutex<Entry>>> = me.entries.lock().unwrap().values().cloned().collect();
+                for e in entries {
+                    let due = match e.try_read() {
+                        Ok(g) => g.active_txns == 0 && g.tenant.as_ref().is_some_and(|t| t.replay_raise_droppable()),
+                        Err(_) => false,
+                    };
+                    if !due {
+                        continue;
+                    }
+                    if let Ok(mut g) = e.try_write_owned() {
+                        if g.active_txns == 0 && g.tenant.as_ref().is_some_and(|t| t.replay_raise_droppable()) {
+                            let raised = g.tenant.as_ref().map_or(0, |t| t.replay_raised());
+                            match g.close().await {
+                                Ok(()) => {
+                                    tenant_bench::lifecycle::REPLAY_RAISES_DROPPED.fetch_add(1, Relaxed);
+                                    eprintln!("REPLAY_RAISE_DROPPED db={} raise={raised}: L0 drained; closed, the next command opens it with the normal limit", g.name);
+                                }
+                                Err(err) => eprintln!("close of {} to drop its replay raise failed: {err:#}", g.name),
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     /// fix-write-stalls (review of d660ea9): a first build that ran off the database's lock is installed, and the
     /// compactor started, as soon as the build ends (`lifecycle::FIRST_BUILD_DONE`), not at the database's next write. A
     /// database written in a burst and then only read had no compactor (no absorption, reseal or GC) until its next
@@ -586,11 +629,29 @@ impl Dbs {
     }
 
     pub async fn close_all(&self) {
-        let entries: Vec<Arc<AsyncMutex<Entry>>> = self.entries.lock().unwrap().values().cloned().collect();
+        self.close_all_by(None).await
+    }
+
+    /// P-fix-slow-store item 1: close every database, each close ending by `deadline` (the shutdown's close budget; None:
+    /// no deadline). A database whose lock a command still holds at the deadline (a write waiting on the store) is not
+    /// closed here: the process exits with it open, as after a crash (its acknowledged writes are in WAL objects, its lease
+    /// runs out, its next owner replays them).
+    pub async fn close_all_by(&self, deadline: Option<tokio::time::Instant>) {
+        let entries: Vec<(String, Arc<AsyncMutex<Entry>>)> = self.entries.lock().unwrap().iter().map(|(k, v)| (k.clone(), Arc::clone(v))).collect();
         futures::stream::iter(entries)
-            .for_each_concurrent(CLOSE_CONCURRENCY, |e| async move {
-                let mut g = e.write().await;
-                if let Err(err) = g.close().await {
+            .for_each_concurrent(CLOSE_CONCURRENCY, |(name, e)| async move {
+                let mut g = match deadline {
+                    None => e.write().await,
+                    Some(d) => match tokio::time::timeout_at(d, e.write()).await {
+                        Ok(g) => g,
+                        Err(_) => {
+                            CLOSES_LOCK_PAST_DEADLINE.fetch_add(1, Relaxed);
+                            eprintln!("close of {name}: a command still held the database at the close's deadline; left open (its lease runs out and its next owner replays the WAL)");
+                            return;
+                        }
+                    },
+                };
+                if let Err(err) = g.close_by(deadline).await {
                     eprintln!("close of {} failed: {err:#}", g.name);
                 }
             })
@@ -771,16 +832,32 @@ impl Entry {
     ///
     /// Then the compactor absorbs that last flush (bounded): with every L0 row absorbed, the compaction pass may compact
     /// the closed database (`lifecycle::compact_tenant_pass_with` runs only then).
-    async fn flush_then_stop_fxc(&mut self) {
+    ///
+    /// P-fix-slow-store item 1: with a deadline (the shutdown), this is optional work: the next opening absorbs what is
+    /// left. It gets at most half of the time left, so the close itself (the flush, SlateDB's close, the marker, the
+    /// lease) keeps the other half; a compactor that is not running is not started (its catch-up publish is the next
+    /// opening's). Cutting the flush or the absorption is what their own timeouts already did: a cut job's run writer
+    /// aborts its upload, and the version create is one conditional PUT.
+    async fn flush_then_stop_fxc(&mut self, deadline: Option<tokio::time::Instant>) {
+        let half = deadline.map(|d| d.saturating_duration_since(tokio::time::Instant::now()) / 2);
+        if half.is_some_and(|h| h < std::time::Duration::from_millis(200)) {
+            CLOSES_OPTIONAL_SKIPPED.fetch_add(1, Relaxed);
+            self.stop_fxc().await;
+            return;
+        }
         // a session whose writes never started the compactor (with the log on, a write's commit is waited for by the
         // command after this entry's lock is released) starts it now: its last flush is then absorbed like any other
-        self.maybe_start_fxc().await;
+        if deadline.is_none() {
+            self.maybe_start_fxc().await;
+        }
+        let opt_end = half.map(|h| tokio::time::Instant::now() + h);
+        let cap = |c: std::time::Duration| opt_end.map_or(c, |e| c.min(e.saturating_duration_since(tokio::time::Instant::now())));
         if let (Some(c), true) = (self.fxc.clone(), self.tenant.as_ref().is_some_and(|t| t.is_writer())) {
-            let r = tokio::time::timeout(tenant_bench::lifecycle::CLOSE_FLUSH_TIMEOUT, tenant_bench::lifecycle::flush_writer_memtable(&self.name)).await;
+            let r = tokio::time::timeout(cap(tenant_bench::lifecycle::CLOSE_FLUSH_TIMEOUT), tenant_bench::lifecycle::flush_writer_memtable(&self.name)).await;
             if !matches!(r, Ok(Ok(_))) {
                 eprintln!("close of {}: memtable flush with the compactor running did not finish; the close flushes", self.name);
             } else {
-                let absorbed = tokio::time::timeout(CLOSE_ABSORB_TIMEOUT, async {
+                let absorbed = tokio::time::timeout(cap(CLOSE_ABSORB_TIMEOUT), async {
                     while c.absorb_once().await? > 0 {}
                     anyhow::Ok(())
                 })
@@ -924,6 +1001,10 @@ impl Entry {
                 2 => {
                     self.writers.fetch_add(1, Relaxed);
                     lease::log("writer_open", &self.name, &self.leases.holder, "");
+                    // P-fix-slow-store item 2: every run upload of an older writer of this database is now proved orphaned
+                    if let Some(e) = self.tenant.as_ref().and_then(|t| t.slate_writer_epoch()) {
+                        crate::uploads::spawn_abort_fenced(self.name.clone(), e);
+                    }
                 }
                 _ => {}
             }
@@ -1133,7 +1214,17 @@ impl Entry {
     }
 
     pub async fn close(&mut self) -> Result<()> {
-        self.write_ttl_hint().await;
+        self.close_by(None).await
+    }
+
+    /// `close`, ending by `deadline` (P-fix-slow-store item 1, the shutdown's close budget). The lease is released only
+    /// once the tenant's SlateDB handle has stopped: a writer left behind keeps it until it runs out.
+    pub async fn close_by(&mut self, deadline: Option<tokio::time::Instant>) -> Result<()> {
+        let t0 = std::time::Instant::now();
+        let left = || deadline.map_or(std::time::Duration::MAX, |d| d.saturating_duration_since(tokio::time::Instant::now()));
+        if tokio::time::timeout(left(), self.write_ttl_hint()).await.is_err() {
+            eprintln!("close of {}: the TTL hint was not written before the close's deadline", self.name);
+        }
         let had = self.tenant.is_some();
         self.nat.clear();
         self.copts.clear();
@@ -1142,10 +1233,18 @@ impl Entry {
         self.meta_clear();
         crate::opening::forget_db(&self.name);
         crate::custbox::forget_db(&self.name);
-        self.flush_then_stop_fxc().await;
+        let t_hint = t0.elapsed();
+        self.flush_then_stop_fxc(deadline).await;
+        let t_fxc = t0.elapsed();
         if let Some(t) = self.tenant.take() {
             crate::fair::note_written(&self.name, 0, true);
-            let r = t.close().await;
+            // the lease release (one conditional PUT) keeps its own share at the end of the close's time: a released lease
+            // lets the next owner open at once, without waiting for it to run out
+            let tenant_deadline = deadline.map(|d| d.checked_sub(LEASE_RELEASE_SHARE).filter(|t| *t > tokio::time::Instant::now()).unwrap_or(d.min(tokio::time::Instant::now())));
+            let (r, stopped) = t.close_within(tenant_deadline).await;
+            if t0.elapsed() >= std::time::Duration::from_secs(1) {
+                eprintln!("TIMING close db={} hint_ms={} fxc_ms={} tenant_ms={} ok={} stopped={stopped}", self.name, t_hint.as_millis(), (t_fxc - t_hint).as_millis(), (t0.elapsed() - t_fxc).as_millis(), r.is_ok());
+            }
             if r.is_ok() {
                 if let Some(l) = crate::locallog::get() {
                     l.closed(&self.name);
@@ -1153,7 +1252,17 @@ impl Entry {
             }
             self.closes += 1;
             self.sync_gauges();
-            self.leases.release(&self.name).await;
+            if stopped {
+                // one conditional PUT (a few on a race with a renewal); past the deadline it gets a short grace, then the
+                // lease runs out by itself
+                let grace = left().max(std::time::Duration::from_millis(500));
+                if tokio::time::timeout(grace, self.leases.release(&self.name)).await.is_err() {
+                    eprintln!("close of {}: the lease release did not finish before the close's deadline; it runs out by itself", self.name);
+                }
+            } else {
+                // the writer was left behind: no renewal and no release, the lease runs out and the next owner fences it
+                self.leases.forget(&self.name);
+            }
             r?;
         }
         let _ = had;
@@ -1568,7 +1677,7 @@ impl Entry {
         self.meta_clear();
         crate::opening::forget_db(&self.name);
         crate::custbox::forget_db(&self.name);
-        self.flush_then_stop_fxc().await;
+        self.flush_then_stop_fxc(None).await;
         if let Some(t) = self.tenant.take() {
             t.close().await?;
             self.closes += 1;

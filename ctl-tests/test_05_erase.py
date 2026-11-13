@@ -293,6 +293,14 @@ def test_random_kill_loop():
             srv.start()
             if res["r"][0] == 200:
                 assert objects_of(bucket, "victim") == [], "an erase that was acknowledged must be complete"
+            # P-fix-slow-store item 6: "objects left" does not mean "untouched". A kill after the erase wrote its intent
+            # leaves the intent record; the restart's recovery finishes the erase, and when that fails (an upload still
+            # listed, CI 2b04ff0) the intent stays and the erase is run again until it is complete. So the intent
+            # decides: present means erasing (wait for it to end complete), absent with objects means untouched.
+            t_rec = time.time()
+            while list_prefix(bucket, "control/ops/victim.json") and time.time() - t_rec < 90:
+                time.sleep(1)
+            assert list_prefix(bucket, "control/ops/victim.json") == [], "an interrupted erase was not finished in 90 s"
             now = objects_of(bucket, "victim")
             outcomes["killed_before_start_intact" if now else "finished_by_recovery_or_before_kill"] += 1
             if now:

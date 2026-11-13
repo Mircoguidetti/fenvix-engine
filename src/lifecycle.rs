@@ -54,6 +54,24 @@ pub(crate) async fn wal_bytes(store: &Arc<dyn ObjectStore>, id: &str) -> Result<
     Ok(metas.iter().filter(|m| m.location.filename().and_then(|f| f.strip_suffix(".sst")).and_then(|n| n.parse::<u64>().ok()).is_some_and(|n| n >= boundary)).map(|m| m.size as usize).sum())
 }
 
+/// P-fix-slow-store item 7: the replay raise is the replayed WAL bytes times this (SlateDB's memtable counts each entry
+/// with its overhead: about twice the WAL's bytes for small rows, R-final-engine). Tests may set 1 (the old raise).
+pub static REPLAY_RAISE_MARGIN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(2);
+/// Raises cut by the cap, and raised writers reopened once their L0 drained (the server's loop).
+pub static REPLAY_RAISES_CAPPED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static REPLAY_RAISES_DROPPED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Test control: the cap of a replay raise in bytes (0: the memory budget's memtable share).
+pub static REPLAY_RAISE_CAP_OVERRIDE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// The most one writer's unflushed limit may be raised by at its open: the memory budget's share for every memtable of
+/// the process (`membudget::Budget::memtables`, an eighth of the limit), which the memtable governor also works to.
+pub fn replay_raise_cap() -> usize {
+    match REPLAY_RAISE_CAP_OVERRIDE.load(std::sync::atomic::Ordering::Relaxed) {
+        0 => crate::membudget::get().memtables as usize,
+        n => n as usize,
+    }
+}
+
 /// Test control: override SlateDB's `max_unflushed_bytes` for writers built from now on (0 = keep the setting).
 pub static MAX_UNFLUSHED_OVERRIDE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
@@ -237,6 +255,13 @@ pub const CLOSE_FLUSH_TIMEOUT: Duration = Duration::from_secs(20);
 /// How long `Tenant::abandon` waits for slatedb's close before leaving the tenant behind (its background tasks stop on their
 /// own once fenced or once the store answers). Abandons that hit it are counted in [`ABANDON_CLOSE_TIMEOUTS`].
 pub const ABANDON_CLOSE_TIMEOUT: Duration = Duration::from_secs(10);
+/// P-fix-slow-store item 1: how long past its deadline a close cut by it gives SlateDB's close without a flush before it
+/// leaves the writer behind (`Tenant::close_within`).
+pub const CLOSE_FALLBACK_GRACE: Duration = Duration::from_secs(1);
+/// Steps of a close cut by the close's deadline (`Tenant::close_within`, the server's shutdown budget), and writers whose
+/// close was left behind (their lease is kept). serverStatus `fenvix.close`.
+pub static CLOSE_DEADLINE_CUTS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static CLOSES_LEFT_BEHIND: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// After its deadline a compaction pass stops its compactor in rounds of about 1 s (`compact_tenant_within`) for at most this
 /// long, then gives up (the pass fails; slatedb's compactor tasks are left to their store request).
 pub(crate) const COMPACTOR_STOP_LIMIT: Duration = Duration::from_secs(120);
@@ -925,7 +950,7 @@ impl Lifecycle {
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
         let scope = writer_scope(&id);
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_preempt: None, serving_until: Default::default(), serving_src: Default::default(), epoch: epoch, renewed: Default::default(), renewing: Default::default() };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_preempt: None, serving_until: Default::default(), serving_src: Default::default(), epoch: epoch, renewed: Default::default(), renewing: Default::default(), replay_raised: 0 };
         t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
@@ -974,7 +999,7 @@ impl Lifecycle {
         let l0_at_wake = reader.manifest().l0().len();
         let reader = Arc::new(reader);
         READER_DBS.lock().unwrap().insert(id.clone(), Arc::downgrade(&reader));
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_preempt: None, serving_until: Default::default(), serving_src: Default::default(), epoch: 0, renewed: Default::default(), renewing: Default::default() };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_preempt: None, serving_until: Default::default(), serving_src: Default::default(), epoch: 0, renewed: Default::default(), renewing: Default::default(), replay_raised: 0 };
         t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
@@ -1161,6 +1186,11 @@ impl Visible {
     pub fn kill(&self) {
         self.inner.lock().unwrap().dead = true;
         self.moved();
+    }
+
+    /// Ownership was lost (`kill`): nothing in flight here will be confirmed by this opening.
+    pub fn is_dead(&self) -> bool {
+        self.inner.lock().unwrap().dead
     }
 
     /// Whether any batch is in flight (reads may then need an older value for some keys).
@@ -1483,6 +1513,12 @@ impl Commit {
         Ok(())
     }
 
+    /// P-fix-slow-store item 5: the opening that staged this batch was given up (lease lost, unclean close): whether the
+    /// batch is durable is now known only to the database's next opening (its WAL replay).
+    pub fn lost(&self) -> bool {
+        self.group.vis.is_dead()
+    }
+
     /// Sequence number of the batch in its database's writer.
     pub fn seqnum(&self) -> u64 {
         self.handle.seqnum()
@@ -1527,6 +1563,15 @@ impl Commit {
                 return Err(anyhow!("ownership of database {} was lost before the write was acknowledged; its outcome is unknown, retry", self.tenant));
             }
             return Ok(());
+        }
+        // TEST ONLY (P-fix-slow-store item 5, ctl test_90): `FENVIX_TEST_COMMIT_WAIT_DELAY_MS` holds the staged batch of a
+        // database whose name starts with "inc5" before its flush, so a lease loss's abandon (WAL flush, then close)
+        // always comes first. Never set in production; read once.
+        static TEST_DELAY: std::sync::OnceLock<u64> = std::sync::OnceLock::new();
+        let d = *TEST_DELAY.get_or_init(|| std::env::var("FENVIX_TEST_COMMIT_WAIT_DELAY_MS").ok().and_then(|v| v.parse().ok()).unwrap_or(0));
+        if d > 0 && self.tenant.starts_with("inc5") {
+            eprintln!("TEST commit wait held {d} ms db={}", self.tenant);
+            tokio::time::sleep(Duration::from_millis(d)).await;
         }
         struct Waiting<'a>(&'a std::sync::atomic::AtomicU64);
         impl Drop for Waiting<'_> {
@@ -1665,6 +1710,10 @@ pub struct Tenant {
     /// The wake took the unclean path (marker missing).
     pub unclean: bool,
     pub l0_at_wake: usize,
+    /// P-fix-slow-store item 7: bytes this writer's unflushed limit was raised by at its open (0: not raised). SlateDB
+    /// keeps the limit for the writer's life; the server reopens the writer once its L0 has drained
+    /// (`replay_raise_droppable`), which drops the raise.
+    replay_raised: usize,
     /// Cache scope of the reader or writer (kept by the upgrade to a writer, see [`writer_builder_in`]).
     scope: Option<u64>,
     /// E_env, the sequence number of the envelope marker (`envelope.rs`); `None`: no marker, every row is plain.
@@ -1758,11 +1807,30 @@ impl Tenant {
     /// view of the manifest, which can still show the previous writer's epoch after this one fenced (MEASURED: most
     /// records of a writer opened at epoch 3 were stamped 2), and a restart then took that writer's acknowledged records
     /// for an older writer's ("opened by another writer after these records": not applied).
+    /// SlateDB's writer epoch of this opening (None for a reader): the epoch run keys carry (`fx::manifest::run_path`).
+    pub fn slate_writer_epoch(&self) -> Option<u64> {
+        match &self.mode {
+            Some(Mode::Writer(db)) => Some(db.manifest().writer_epoch()),
+            _ => None,
+        }
+    }
+
     pub fn writer_epoch(&self) -> Option<u64> {
         match &self.mode {
             Some(Mode::Writer(db)) => Some(if self.epoch > 0 { self.epoch } else { db.manifest().writer_epoch() }),
             _ => None,
         }
+    }
+
+    /// P-fix-slow-store item 7: bytes this writer's unflushed limit was raised by at its open (0: none).
+    pub fn replay_raised(&self) -> usize {
+        self.replay_raised
+    }
+
+    /// P-fix-slow-store item 7: a writer opened with a raise whose L0 has drained below the compaction threshold: the
+    /// replay's reason is gone, and closing it (the next command opens it again with the normal limit) drops the raise.
+    pub fn replay_raise_droppable(&self) -> bool {
+        self.replay_raised > 0 && self.writer_l0().is_some_and(|n| n < L0_COMPACT_THRESHOLD)
     }
 
     /// L0 SSTs of the writer's local manifest view (None for a reader).
@@ -3128,12 +3196,25 @@ impl Tenant {
         // open returns; nothing is moved or skipped. SlateDB 0.17 fixes its settings at the build, so the raised limit
         // stays for this writer's life: at most about twice the normal one, and the engine's own write stall at L0 still
         // holds new writes back until the compactor has absorbed and folded L0.
-        let extra = if self.l0_at_wake >= L0_GUARD { wal_bytes(store, &self.id).await.unwrap_or(0) } else { 0 };
+        //
+        // P-fix-slow-store item 7 (R-final-engine, hole M): the replayed WAL becomes memtable entries, each with SlateDB's
+        // per-entry overhead (its skip map node, sequence number and lengths), so the raise is the replayed bytes times
+        // REPLAY_RAISE_MARGIN; it is capped by the memory budget's memtable share (`replay_raise_cap`), so a long WAL can
+        // never raise one writer past what every memtable of the process may hold; and the server reopens the writer once
+        // its L0 has drained (`replay_raise_droppable`), which ends the raise.
+        let wal = if self.l0_at_wake >= L0_GUARD { wal_bytes(store, &self.id).await.unwrap_or(0) } else { 0 };
+        let want = wal.saturating_mul(REPLAY_RAISE_MARGIN.load(std::sync::atomic::Ordering::Relaxed) as usize);
+        let cap = replay_raise_cap();
+        let extra = want.min(cap);
         if extra > 0 {
             REPLAY_RAISES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             REPLAY_RAISED_BYTES_MAX.fetch_max(extra as u64, std::sync::atomic::Ordering::Relaxed);
-            eprintln!("REPLAY_RAISE db={} l0={} wal_bytes={extra}: the writer's unflushed limit is raised by the WAL's size for its open", self.id, self.l0_at_wake);
+            if extra < want {
+                REPLAY_RAISES_CAPPED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            }
+            eprintln!("REPLAY_RAISE db={} l0={} wal_bytes={wal} raise={extra} cap={cap}{}: the writer's unflushed limit is raised for its open", self.id, self.l0_at_wake, if extra < want { " (CAPPED: the replay may wait for L0)" } else { "" });
         }
+        self.replay_raised = extra;
         let (del, db) = tokio::join!(
             store.delete(&marker),
             build_writer(writer_builder_raised(&self.id, store, self.scope, extra))
@@ -3453,18 +3534,62 @@ impl Tenant {
 
     /// Close. A writer flushes its memtable, then the marker is written, and the tenant is
     /// queued for compaction if it now holds enough L0 SSTs. A reader just closes.
-    pub async fn close(mut self) -> Result<()> {
+    pub async fn close(self) -> Result<()> {
+        self.close_within(None).await.0
+    }
+
+    /// P-fix-slow-store item 1: `close` that ends by `deadline` (None: the old bounds only). Every step that waits on the
+    /// store gets what is left of it; a step that does not fit is cut where cutting it is safe, and the close goes on as
+    /// an unclean one: no marker (the next opening replays the WAL, where every acknowledged write already is), the
+    /// in-flight batches never confirmed here (`vis.kill`), and SlateDB's close without a flush, given at most
+    /// [`CLOSE_FALLBACK_GRACE`] past the deadline before it is left behind (counted in [`PENDING_CLOSES`]).
+    ///
+    /// Returns the close's result and whether the tenant's SlateDB handle has stopped (closed, or never opened): only then
+    /// may the caller release the database's lease. A writer left behind may still have a WAL PUT on its way; with the
+    /// lease kept, the next owner waits for it to run out and then fences that writer, as after a crash.
+    pub async fn close_within(mut self, deadline: Option<tokio::time::Instant>) -> (Result<()>, bool) {
+        let left = |cap: Duration| match deadline {
+            None => cap,
+            Some(d) => cap.min(d.saturating_duration_since(tokio::time::Instant::now())),
+        };
         // fix-write-stalls: a first build running off the lock ends before the writer closes (as when it ran inside the
-        // write, under the lock the close also takes); its version, if it landed, is the next opening's to load
+        // write, under the lock the close also takes); its version, if it landed, is the next opening's to load. Past the
+        // deadline it is cut instead, as an abandon does: this process still holds the lease, the build's version create
+        // is fenced (`fx::build::fence_check`) and its run uploads are aborted by their writers' drop.
         if self.fx_first.is_some() {
-            if let Err(e) = self.fx_first_poll(true).await {
-                eprintln!("close of tenant {}: first build: {e:#}", self.id);
+            let polled = tokio::time::timeout(left(Duration::MAX), self.fx_first_poll(true)).await;
+            match polled {
+                Ok(Err(e)) => eprintln!("close of tenant {}: first build: {e:#}", self.id),
+                Ok(Ok(_)) => {}
+                Err(_) => {
+                    CLOSE_DEADLINE_CUTS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    eprintln!("close of tenant {}: the first build did not end before the close's deadline; cut", self.id);
+                    self.fx_first_abort(false).await;
+                }
             }
         }
         self.fx_unclaim();
+        match self.close_mode(deadline, &left).await {
+            Ok(stopped) => (Ok(()), stopped),
+            Err((e, stopped)) => (Err(e), stopped),
+        }
+    }
+
+    async fn close_mode(&mut self, deadline: Option<tokio::time::Instant>, left: &(dyn Fn(Duration) -> Duration + Sync)) -> std::result::Result<bool, (anyhow::Error, bool)> {
         match self.mode.take() {
             Some(Mode::Reader(r)) => {
-                r.close().await?;
+                if deadline.is_none() {
+                    r.close().await.map_err(|e| (anyhow::Error::from(e), true))?;
+                } else {
+                    // a reader writes nothing: past the deadline its close is left to finish on its own
+                    let id = self.id.clone();
+                    let close = tokio::spawn(pending_close(&self.id, async move {
+                        if let Err(e) = r.close().await {
+                            eprintln!("close of reader {id}: {e}");
+                        }
+                    }));
+                    let _ = tokio::time::timeout(left(Duration::MAX), close).await;
+                }
                 // P-perf-bytes: a database with our runs that this process only read (after a restart, say) gets the
                 // maintenance pass of a closed database too, so runs retired before the restart do not wait for the next
                 // write session (`fx::gc::gc_closed`)
@@ -3478,45 +3603,74 @@ impl Tenant {
                 // and that compaction to refresh this writer's manifest; once `Db::close` has begun slatedb refuses the
                 // refresh, and the flush would wait for the writer's own manifest poll (`--writer-poll-secs`).
                 let id = self.id.clone();
-                let closed = tokio::time::timeout(CLOSE_FLUSH_TIMEOUT, async {
+                let limit = left(CLOSE_FLUSH_TIMEOUT);
+                let db2 = db.clone();
+                let closed = tokio::time::timeout(limit, async {
                     let memtable = slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable };
-                    if let Err(e) = db.flush_with_options(memtable).await {
+                    if let Err(e) = db2.flush_with_options(memtable).await {
                         eprintln!("close of tenant {id}: memtable flush before the close failed: {e}");
                     }
                     writer_closed(&id);
-                    db.close().await
+                    db2.close().await
                 })
                 .await;
                 writer_closed(&self.id);
                 match closed {
-                    Ok(r) => r?,
+                    Ok(r) => r.map_err(|e| (anyhow::Error::from(e), true))?,
                     Err(_) => {
-                        // The memtable flush is stalled (L0 full, waiting for a compaction). Everything acknowledged is in
-                        // durable WAL objects: close without the flush and leave no marker, so the next wake replays them.
-                        eprintln!("close of tenant {}: final flush did not finish in {:?}; closing without it (unclean)", self.id, CLOSE_FLUSH_TIMEOUT);
+                        // The memtable flush is stalled (L0 full, waiting for a compaction), or the store is too slow for
+                        // what is left of the deadline. Everything acknowledged is in durable WAL objects: close without
+                        // the flush and leave no marker, so the next wake replays them.
+                        if deadline.is_some() {
+                            CLOSE_DEADLINE_CUTS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        }
+                        eprintln!("close of tenant {}: final flush did not finish in {:?}; closing without it (unclean)", self.id, limit);
                         // with the log on, the last writes may be only in the log: the next wake replays them from it
                         // (unclean wake, `dbs.rs`); nothing pending here is confirmed by this writer any more
                         self.group.vis.kill();
                         forget_vis(&self.id, &self.group);
-                        let _ = db.close_with_options(slatedb::config::CloseOptions { flush_type: None }).await;
-                        return Err(anyhow!("final flush timed out"));
+                        // SlateDB's close without a flush still writes (its WAL buffer, the manifest): bounded too (it waited
+                        // without a bound before, so a store that did not answer held the close for good)
+                        let close = tokio::spawn(pending_close(&self.id, async move {
+                            let _ = db.close_with_options(slatedb::config::CloseOptions { flush_type: None }).await;
+                        }));
+                        let grace = left(CLOSE_FLUSH_TIMEOUT) + CLOSE_FALLBACK_GRACE;
+                        let stopped = tokio::time::timeout(grace, close).await.is_ok();
+                        if !stopped {
+                            CLOSES_LEFT_BEHIND.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                            eprintln!("close of tenant {}: SlateDB's close without a flush did not end in {:?}; left behind, the lease is kept", self.id, grace);
+                        }
+                        return Err((anyhow!("final flush timed out"), stopped));
                     }
                 }
                 // the close flushed the memtable: everything staged is in object storage
                 self.group.vis.confirm_all();
                 forget_vis(&self.id, &self.group);
                 let l0 = db.manifest().l0().len();
-                self.lc
-                    .store
-                    .put(&marker_path(&self.id), PutPayload::from_static(b"clean"))
-                    .await?;
+                // the marker is one PUT, atomic: without it (cut by the deadline) the next opening replays the WAL, which
+                // finds nothing more (the close flushed it); the database is closed either way
+                match tokio::time::timeout(left(Duration::MAX), self.lc.store.put(&marker_path(&self.id), PutPayload::from_static(b"clean"))).await {
+                    Ok(r) => {
+                        r.map_err(|e| (anyhow::Error::from(e), true))?;
+                    }
+                    Err(_) => {
+                        CLOSE_DEADLINE_CUTS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        eprintln!("close of tenant {}: the clean marker was not written before the close's deadline (the next opening replays the WAL)", self.id);
+                        return Ok(true);
+                    }
+                }
                 self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
                 // perf-latency round 3: also when compaction jobs are left pending (the compactor's fold, stopped by this
                 // close, puts its claimed jobs back as scheduled). SlateDB's GC deletes no SST newer than the oldest job
                 // still listed as active, so nothing after it was ever collected while the database stayed closed
                 // (MEASURED: about 5 GB of garbage `compacted/` SSTs per medium run, stored/logical 5.0 against 1.6).
                 // The pass runs those jobs (as it did when L0 was at the threshold at the close) and ends with the GC.
-                let pending = l0 < L0_COMPACT_THRESHOLD && compactions_active(&self.lc.store, &self.id).await.unwrap_or(false);
+                let pending = l0 < L0_COMPACT_THRESHOLD
+                    && match tokio::time::timeout(left(Duration::MAX), compactions_active(&self.lc.store, &self.id)).await {
+                        Ok(r) => r.unwrap_or(false),
+                        // past the deadline: the next close (or the next opening's L0 watch) asks again
+                        Err(_) => false,
+                    };
                 if l0 >= L0_COMPACT_THRESHOLD || pending {
                     if pending {
                         CLOSE_PASSES_FOR_PENDING.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -3528,7 +3682,7 @@ impl Tenant {
             }
             None => {}
         }
-        Ok(())
+        Ok(true)
     }
 }
 
