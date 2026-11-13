@@ -95,7 +95,7 @@ impl Session {
 async fn read_session(lc: &Arc<Lifecycle>, id: usize, gets: usize, traced: bool, rng: &mut impl Rng) -> Result<Session> {
     let keys: Vec<String> = (0..gets).map(|_| format!("doc:{}", rng.gen_range(0..super::DOCS_PER_TENANT))).collect();
     let (t, wake) = phase(lc, traced, None, "wake_get", async {
-        let t = lc.wake(id).await?;
+        let t = lc.wake(id.to_string()).await?;
         for k in &keys {
             anyhow::ensure!(t.get(k).await?.is_some(), "tenant {id} missing {k}");
         }
@@ -108,7 +108,7 @@ async fn read_session(lc: &Arc<Lifecycle>, id: usize, gets: usize, traced: bool,
 }
 
 async fn write_session(lc: &Arc<Lifecycle>, id: usize, docs: usize, traced: bool, timeout: Option<Duration>, expected: &Expected, rng: &mut impl Rng) -> Result<Session> {
-    let (mut t, wake) = phase(lc, traced, timeout, "wake", lc.wake(id)).await?;
+    let (mut t, wake) = phase(lc, traced, timeout, "wake", lc.wake(id.to_string())).await?;
     let unclean = t.unclean;
     let l0_at_wake = t.l0_at_wake;
     let ((), upgrade) = phase(lc, traced, timeout, "upgrade", t.upgrade()).await?;
@@ -193,11 +193,11 @@ fn pct(v: &mut Vec<f64>, p: f64) -> f64 {
 /// `replay_after_wal_id` is not enough: a clean close leaves one redundant non-empty WAL whose
 /// rows are already in L0.) Zero-byte WAL files are writer-fencing markers and are skipped.
 async fn unflushed_wal_rows(raw: &Arc<dyn ObjectStore>, id: usize) -> Result<usize> {
-    let admin = Admin::builder(tenant_path(id), Arc::clone(raw)).build();
+    let admin = Admin::builder(tenant_path(&id.to_string()), Arc::clone(raw)).build();
     let m = admin.read_manifest(None).await?.context("no manifest")?;
     let (after, last_l0_seq) = (m.replay_after_wal_id(), m.last_l0_seq());
     let mut rows = 0;
-    for f in WalReader::new(tenant_path(id), Arc::clone(raw)).list(after..).await? {
+    for f in WalReader::new(tenant_path(&id.to_string()), Arc::clone(raw)).list(after..).await? {
         if f.metadata().await?.metadata.size == 0 {
             continue;
         }
@@ -212,7 +212,7 @@ async fn unflushed_wal_rows(raw: &Arc<dyn ObjectStore>, id: usize) -> Result<usi
 }
 
 async fn marker_present(raw: &Arc<dyn ObjectStore>, id: usize) -> Result<bool> {
-    match raw.head(&marker_path(id)).await {
+    match raw.head(&marker_path(&id.to_string())).await {
         Ok(_) => Ok(true),
         Err(object_store::Error::NotFound { .. }) => Ok(false),
         Err(e) => Err(e.into()),
@@ -251,7 +251,7 @@ pub async fn crash_child(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
     let tenant = args.tenant.context("--tenant required")?;
     let acks = args.acks.context("--acks required")?;
     let lc = Lifecycle::new(Arc::new(CountingStore::new(s3)), None);
-    let mut t = lc.wake(tenant).await?;
+    let mut t = lc.wake(tenant.to_string()).await?;
     for i in 0..CRASH_WRITES {
         let h = t.put(&crash_key(i), &crash_val(tenant, i)).await?;
         if i < acks {
@@ -268,14 +268,14 @@ pub async fn crash_child(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
 pub async fn probe_wal(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
     let id = args.tenant.context("--tenant required")?;
     println!("unflushed WAL rows (seq > last_l0_seq): {}", unflushed_wal_rows(&s3, id).await?);
-    let admin = Admin::builder(tenant_path(id), Arc::clone(&s3)).build();
+    let admin = Admin::builder(tenant_path(&id.to_string()), Arc::clone(&s3)).build();
     let m = admin.read_manifest(None).await?.context("no manifest")?;
     println!(
         "manifest {} replay_after_wal_id={} next_wal_sst_id={} last_l0_seq={} l0={} marker={}",
         m.id(), m.replay_after_wal_id(), m.next_wal_sst_id(), m.last_l0_seq(), m.l0().len(), marker_present(&s3, id).await?
     );
     println!("sorted runs={} sst views referenced by manifest={} checkpoints={}", m.compacted().len(), m.all_sst_views().count(), m.checkpoints().len());
-    for f in WalReader::new(tenant_path(id), Arc::clone(&s3)).list(..).await? {
+    for f in WalReader::new(tenant_path(&id.to_string()), Arc::clone(&s3)).list(..).await? {
         println!("  wal {} size {}", f.id, f.metadata().await?.metadata.size);
     }
     Ok(())
@@ -330,7 +330,7 @@ async fn step3_sessions(
             }
             Err(e) => return Err(e),
         }
-        let l0 = l0_count(raw, id).await?;
+        let l0 = l0_count(raw, id.to_string()).await?;
         st.max_l0_after_close = st.max_l0_after_close.max(l0);
     }
     Ok(stats)
@@ -355,7 +355,7 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
             let st = Arc::clone(&load_store);
             async move {
                 super::load_tenant(Arc::clone(&st), id).await?;
-                st.put(&marker_path(id), object_store::PutPayload::from_static(b"clean")).await?;
+                st.put(&marker_path(&id.to_string()), object_store::PutPayload::from_static(b"clean")).await?;
                 anyhow::Ok(())
             }
         })
@@ -407,7 +407,7 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
     // Cost of the unclean path, measured on tenants whose marker was removed by hand (their
     // data is in fact flushed; real unclean tenants are exercised in step 4).
     for &id in unclean_ids {
-        raw.delete(&marker_path(id)).await?;
+        raw.delete(&marker_path(&id.to_string())).await?;
     }
     for &id in unclean_ids {
         let s = read_session(&lc, id, 1, true, &mut rng).await?;
@@ -416,7 +416,7 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
     }
     // Restore the markers (a read-only wake does not repair them).
     for &id in unclean_ids {
-        raw.put(&marker_path(id), object_store::PutPayload::from_static(b"clean")).await?;
+        raw.put(&marker_path(&id.to_string()), object_store::PutPayload::from_static(b"clean")).await?;
     }
 
     // ================= Step 2: mixed workload =================
@@ -469,10 +469,10 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
     let control_expected: Expected = Arc::new(Mutex::new(HashMap::new()));
     let mut control_log = Vec::new();
     for sess in 1..=CONTROL_SESSIONS {
-        let before_l0 = l0_count(&raw, control_id).await?;
+        let before_l0 = l0_count(&raw, control_id.to_string()).await?;
         let t0 = Instant::now();
         let r = write_session(&control_lc, control_id, 5, false, Some(Duration::from_secs(5)), &control_expected, &mut rng).await;
-        let after_l0 = l0_count(&raw, control_id).await?;
+        let after_l0 = l0_count(&raw, control_id.to_string()).await?;
         match r {
             Ok(_) => control_log.push(format!("session {sess}: ok in {:.0} ms, L0 {before_l0} -> {after_l0}", t0.elapsed().as_secs_f64() * 1000.0)),
             Err(e) => {
@@ -512,7 +512,7 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
         let unflushed_rows = unflushed_wal_rows(&raw, id).await?;
         let marker_after_kill = marker_present(&raw, id).await?;
         // Normal lifecycle wake.
-        let t = lc.wake(id).await?;
+        let t = lc.wake(id.to_string()).await?;
         let unclean_path = t.unclean;
         let mut lost = 0;
         for &i in &acked {
@@ -532,7 +532,7 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
         t.close().await?;
         // Negative control (first 5): what the unsafe skip_wal_replay path would have shown.
         let unsafe_visible = if ci < 5 {
-            let r = DbReader::builder(tenant_path(id), Arc::clone(&s3))
+            let r = DbReader::builder(tenant_path(&id.to_string()), Arc::clone(&s3))
                 .with_reader_mode(DbReaderMode::FollowLatest)
                 .with_options({ let mut o = DbReaderOptions::default(); o.skip_wal_replay = true; o })
                 .build().await?;
@@ -547,7 +547,7 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
         let docs = 2;
         write_session(&lc, id, docs, false, None, &expected, &mut rng).await?;
         let repaired = marker_present(&raw, id).await? && unflushed_wal_rows(&raw, id).await? == 0;
-        let t = lc.wake(id).await?;
+        let t = lc.wake(id.to_string()).await?;
         let mut ok = !t.unclean;
         for &i in &acked {
             ok &= matches!(t.get(&crash_key(i)).await?, Some(v) if v.as_ref() == crash_val(id, i).as_slice());
@@ -566,7 +566,7 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
         .map(|id| {
             let (s3, raw, sweep_log) = (Arc::clone(&s3), Arc::clone(&raw), Arc::clone(&sweep_log));
             async move {
-                if let Some(rec) = compact_tenant(&s3, &raw, id).await? {
+                if let Some(rec) = compact_tenant(&s3, &raw, id.to_string()).await? {
                     sweep_log.lock().unwrap().push(rec);
                 }
                 anyhow::Ok(())
@@ -576,7 +576,7 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
         .try_collect::<()>()
         .await?;
     let final_gc: Vec<GcRecord> = futures::stream::iter(all.clone())
-        .map(|id| { let s3 = Arc::clone(&s3); async move { gc_tenant(&s3, id, Duration::ZERO).await } })
+        .map(|id| { let s3 = Arc::clone(&s3); async move { gc_tenant(&s3, id.to_string(), Duration::ZERO).await } })
         .buffer_unordered(16)
         .try_collect()
         .await?;
@@ -585,8 +585,8 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
     let mut final_l0_max = 0;
     let mut final_cp_max = 0;
     for &id in &all {
-        final_l0_max = final_l0_max.max(l0_count(&raw, id).await?);
-        final_cp_max = final_cp_max.max(checkpoint_count(&raw, id).await?);
+        final_l0_max = final_l0_max.max(l0_count(&raw, id.to_string()).await?);
+        final_cp_max = final_cp_max.max(checkpoint_count(&raw, id.to_string()).await?);
     }
 
     // Every acknowledged write of steps 1-4 must be readable through the normal lifecycle.
@@ -595,7 +595,7 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
     let (mut verified, mut missing, mut tenants_verified) = (0usize, 0usize, 0usize);
     let exp = expected.lock().unwrap().clone();
     for (&id, writes) in &exp {
-        let t = verify_lc.wake(id).await?;
+        let t = verify_lc.wake(id.to_string()).await?;
         anyhow::ensure!(!t.unclean, "tenant {id} is still unclean after clean closes");
         for (k, h) in writes {
             match t.get(k).await? {

@@ -104,21 +104,21 @@ pub fn unhex(s: &str) -> Result<Vec<u8>> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| anyhow!("bad hex {s:?}: {e}"))).collect()
 }
 
-pub fn root(id: &str) -> String {
+pub fn root(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> String {
     format!("{}/fx", crate::lifecycle::tenant_path(id))
 }
 
-pub fn manifest_dir(id: &str) -> Path {
+pub fn manifest_dir(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Path {
     Path::from(format!("{}/manifest", root(id)))
 }
 
-pub fn manifest_path(id: &str, version: u64) -> Path {
+pub fn manifest_path(id: &(impl crate::lifecycle::DbRef + ?Sized), version: u64) -> Path {
     Path::from(format!("{}/manifest/{version:020}", root(id)))
 }
 
 /// A new run's path: predictable from the group and the cut (the spare can warm it from a manifest line), plus a random
 /// suffix so a retried build never overwrites an object that a version may list.
-pub fn run_path(id: &str, what: &str, x: u64, epoch: Option<u64>) -> String {
+pub fn run_path(id: &(impl crate::lifecycle::DbRef + ?Sized), what: &str, x: u64, epoch: Option<u64>) -> String {
     let r: u32 = rand::random();
     format!("{}/run/{what}/{x:020}-{}-{r:08x}", root(id), epoch.unwrap_or(0))
 }
@@ -169,11 +169,12 @@ impl Version {
 }
 
 /// Release E1's announcement (rule 26): written once, before envelopes start; its existence is what followers check.
-pub fn announce_path(id: &str) -> Path {
+pub fn announce_path(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Path {
     Path::from(format!("{}/e1-announced", root(id)))
 }
 
-pub async fn announced(store: &Arc<dyn ObjectStore>, id: &str) -> Result<bool> {
+pub async fn announced(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<bool> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     match store.head(&announce_path(id)).await {
         Ok(_) => Ok(true),
         Err(object_store::Error::NotFound { .. }) => Ok(false),
@@ -181,7 +182,8 @@ pub async fn announced(store: &Arc<dyn ObjectStore>, id: &str) -> Result<bool> {
     }
 }
 
-pub async fn announce(store: &Arc<dyn ObjectStore>, id: &str) -> Result<()> {
+pub async fn announce(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<()> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let opts = PutOptions { mode: PutMode::Create, ..Default::default() };
     match store.put_opts(&announce_path(id), PutPayload::from(format!("{{\"ms\":{}}}", now_ms()).into_bytes()), opts).await {
         Ok(_) | Err(object_store::Error::AlreadyExists { .. }) | Err(object_store::Error::Precondition { .. }) => Ok(()),
@@ -190,7 +192,8 @@ pub async fn announce(store: &Arc<dyn ObjectStore>, id: &str) -> Result<()> {
 }
 
 /// Version numbers present in the store, ascending.
-pub async fn list_versions(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Vec<u64>> {
+pub async fn list_versions(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<Vec<u64>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let metas: Vec<_> = store.list(Some(&manifest_dir(id))).try_collect().await?;
     let mut out: Vec<u64> = metas.iter().filter_map(|m| m.location.filename().and_then(|f| f.parse::<u64>().ok())).collect();
     out.sort_unstable();
@@ -199,7 +202,8 @@ pub async fn list_versions(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Vec
 
 /// Version numbers above `after`, ascending (one LIST page from the offset; `after` 0: every version). Review of step 4,
 /// FIX 4: the drop floor and GC page from the newest version already seen instead of listing every retained version.
-pub async fn list_versions_after(store: &Arc<dyn ObjectStore>, id: &str, after: u64) -> Result<Vec<u64>> {
+pub async fn list_versions_after(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), after: u64) -> Result<Vec<u64>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     if after == 0 {
         return list_versions(store, id).await;
     }
@@ -209,7 +213,8 @@ pub async fn list_versions_after(store: &Arc<dyn ObjectStore>, id: &str, after: 
     Ok(out)
 }
 
-pub async fn load(store: &Arc<dyn ObjectStore>, id: &str, version: u64) -> Result<Version> {
+pub async fn load(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), version: u64) -> Result<Version> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let b = store.get(&manifest_path(id, version)).await?.bytes().await?;
     let v: Version = serde_json::from_slice(&b).with_context(|| format!("manifest {version} of {id}"))?;
     ensure!(v.version == version, "manifest object {version} of {id} says version {}", v.version);
@@ -218,7 +223,8 @@ pub async fn load(store: &Arc<dyn ObjectStore>, id: &str, version: u64) -> Resul
 }
 
 /// The newest version, or None when the database has never published one.
-pub async fn load_newest(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<Version>> {
+pub async fn load_newest(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<Option<Version>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     // P-perf-bytes: GC keeps only the versions in use (retention 0 by default), so the newest version listed can be
     // deleted before it is read when a newer one was published meanwhile: list again (the newer one is then listed)
     let mut tries = 0;
@@ -243,7 +249,8 @@ pub static CONTROL_TRUST_NEWEST: std::sync::atomic::AtomicBool = std::sync::atom
 /// this release's publishers, so this is the read side's defence in depth). Its runs hold that writer's
 /// old snapshot: serving, pairing or fencing it drops every row between its X_d and the newer writer's. One GET (the
 /// version below); a version below collected by GC counts as nothing to compare with.
-pub async fn is_older_writers(store: &Arc<dyn ObjectStore>, id: &str, v: &Version) -> Result<bool> {
+pub async fn is_older_writers(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), v: &Version) -> Result<bool> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     if CONTROL_TRUST_NEWEST.load(std::sync::atomic::Ordering::Relaxed) || v.version <= 1 {
         return Ok(false);
     }
@@ -256,7 +263,8 @@ pub async fn is_older_writers(store: &Arc<dyn ObjectStore>, id: &str, v: &Versio
 
 /// The newest version at or below slot `n` that is not an older writer's late publish (`is_older_writers`), each one
 /// passed over logged (OLDER_VERSION_IGNORED, serverStatus `olderVersionsIgnored`).
-pub async fn trusted_at(store: &Arc<dyn ObjectStore>, id: &str, mut v: Version) -> Result<Version> {
+pub async fn trusted_at(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), mut v: Version) -> Result<Version> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     for _ in 0..64 {
         if !is_older_writers(store, id, &v).await? {
             return Ok(v);
@@ -275,7 +283,8 @@ pub async fn trusted_at(store: &Arc<dyn ObjectStore>, id: &str, mut v: Version) 
 /// The newest version an opening, a refresh or a pairing may use, with the newest slot in the store: the version keeps
 /// its own number (pairs, holds and GC name versions by number), and a writer places its next version, a fence first,
 /// above the newest slot. One more GET than `load_newest` in the usual case.
-pub async fn load_newest_trusted(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<(Version, u64)>> {
+pub async fn load_newest_trusted(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<Option<(Version, u64)>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let Some(newest) = load_newest(store, id).await? else { return Ok(None) };
     let slot = newest.version;
     Ok(Some((trusted_at(store, id, newest).await?, slot)))
@@ -311,7 +320,8 @@ pub fn next_slot(base: Option<u64>) -> u64 {
 /// After the conditional create of `version` succeeded: whether it is the newest version in the store (no version above
 /// it). False means it landed in a slot GC freed below versions of another publisher: no reader reads it, and its
 /// publisher must treat it as a lost race (its runs stay for GC; nothing of it is installed or recorded).
-pub async fn on_main_line(store: &Arc<dyn ObjectStore>, id: &str, version: u64) -> Result<bool> {
+pub async fn on_main_line(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), version: u64) -> Result<bool> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     if CONTROL_NO_MAIN_LINE.load(std::sync::atomic::Ordering::Relaxed) {
         return Ok(true);
     }
@@ -331,7 +341,8 @@ pub static SLOW_PUT: std::sync::Mutex<Option<Arc<tokio::sync::Notify>>> = std::s
 pub static SLOW_PUT_WAITING: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 /// Create `v` conditionally. Ok(false): another publisher already wrote that version.
-pub async fn create(store: &Arc<dyn ObjectStore>, id: &str, v: &Version) -> Result<bool> {
+pub async fn create(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), v: &Version) -> Result<bool> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     v.check()?;
     let body = serde_json::to_vec(v)?;
     let slow = SLOW_PUT.lock().unwrap().clone();
@@ -363,22 +374,24 @@ pub async fn create(store: &Arc<dyn ObjectStore>, id: &str, v: &Version) -> Resu
 //   first (`fx/build.rs` scans all of SlateDB, sorted runs included, so X_d then covers every row) and the marks are
 //   set. A database last served by a release without the marks has no `fx/caught-up`: it is caught up once.
 
-pub fn ungated_path(id: &str) -> Path {
+pub fn ungated_path(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Path {
     Path::from(format!("{}/ungated", root(id)))
 }
 
-pub fn caught_up_path(id: &str) -> Path {
+pub fn caught_up_path(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Path {
     Path::from(format!("{}/caught-up", root(id)))
 }
 
 /// Before an ungated pass compacts database `id`: the mark, with the time the pass started.
-pub async fn note_ungated(store: &Arc<dyn ObjectStore>, id: &str) -> Result<()> {
+pub async fn note_ungated(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<()> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     store.put(&ungated_path(id), PutPayload::from(serde_json::to_vec(&serde_json::json!({ "at_ms": now_ms() }))?)).await?;
     Ok(())
 }
 
 /// Whether a compactor must let the builder publish first (two HEADs).
-pub async fn needs_catch_up(store: &Arc<dyn ObjectStore>, id: &str) -> Result<bool> {
+pub async fn needs_catch_up(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<bool> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let exists = |r: object_store::Result<object_store::ObjectMeta>| match r {
         Ok(_) => Ok(true),
         Err(object_store::Error::NotFound { .. }) => Ok(false),
@@ -389,7 +402,8 @@ pub async fn needs_catch_up(store: &Arc<dyn ObjectStore>, id: &str) -> Result<bo
 
 /// After a builder publish whose scan started at `scan_ms`: `fx/caught-up` set, and `fx/ungated` removed unless a pass
 /// marked it after the scan started (that pass may have folded rows the scan did not see: the next start catches up).
-pub async fn note_caught_up(store: &Arc<dyn ObjectStore>, id: &str, scan_ms: u64) -> Result<()> {
+pub async fn note_caught_up(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), scan_ms: u64) -> Result<()> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     match store.get(&ungated_path(id)).await {
         Ok(r) => {
             let v: serde_json::Value = serde_json::from_slice(&r.bytes().await?).unwrap_or_default();

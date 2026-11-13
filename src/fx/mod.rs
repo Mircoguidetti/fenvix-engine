@@ -84,6 +84,8 @@ mod review_final_tests;
 mod fencing_tests;
 #[cfg(test)]
 mod review_rolling_tests;
+#[cfg(test)]
+mod fix_incarnation_tests;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 

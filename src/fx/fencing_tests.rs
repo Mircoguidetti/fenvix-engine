@@ -529,7 +529,7 @@ async fn erase_then_late_wal(control: bool) -> (Option<bytes::Bytes>, Option<byt
         Err(e) => (None, None, Some(format!("open: {e:#}"))),
     };
     // GC of the old prefix
-    let swept = crate::lifecycle::sweep_old_incarnations(&base_store, id).await.unwrap();
+    let swept = crate::lifecycle::sweep_old_incarnations(&base_store, id, crate::lifecycle::incarnation(id)).await.unwrap();
     let cur = format!("{}/", crate::lifecycle::tenant_path(id));
     let old_left: Vec<String> = futures::TryStreamExt::try_collect::<Vec<_>>(base_store.list(Some(&name_prefix))).await.unwrap().into_iter().map(|m| m.location.to_string()).filter(|p| control || !p.starts_with(&cur)).collect();
     eprintln!(

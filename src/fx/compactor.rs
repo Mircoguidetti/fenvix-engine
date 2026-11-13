@@ -102,8 +102,8 @@ pub fn active_count() -> usize {
 static ACTIVE: std::sync::LazyLock<Mutex<HashSet<String>>> = std::sync::LazyLock::new(Default::default);
 
 /// Whether a compactor of this process runs on database `id` (today's compaction pass then leaves it alone).
-pub fn is_active(id: &str) -> bool {
-    ACTIVE.lock().unwrap().contains(id)
+pub fn is_active(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> bool {
+    ACTIVE.lock().unwrap().contains(id.name())
 }
 
 /// fix-write-stalls: today's compaction passes running on each database, counted from before their `is_active` check
@@ -128,9 +128,9 @@ impl Drop for PassSlot {
 
 /// A compaction pass (`lifecycle::compact_tenant_pass_with`) enters database `id` with this, before it builds its own
 /// SlateDB compactor: None when a compactor of this process runs on it or claimed it (the pass then leaves it alone).
-pub fn pass_enter(id: &str) -> Option<PassSlot> {
+pub fn pass_enter(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Option<PassSlot> {
     let a = ACTIVE.lock().unwrap();
-    if a.contains(id) {
+    if a.contains(id.name()) {
         return None;
     }
     *PASS_SLOTS.lock().unwrap().entry(id.to_string()).or_default() += 1;
@@ -143,9 +143,9 @@ pub fn pass_enter(id: &str) -> Option<PassSlot> {
 /// when a pass runs on it now (the caller asks it to stop, `lifecycle::preempt_compaction`, and tries again later). A
 /// successful claim marks the database active, as a running compactor does: no pass enters it until `unclaim` or the
 /// compactor's `stop`.
-pub fn claim(id: &str) -> bool {
+pub fn claim(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> bool {
     let mut a = ACTIVE.lock().unwrap();
-    if PASS_SLOTS.lock().unwrap().contains_key(id) {
+    if PASS_SLOTS.lock().unwrap().contains_key(id.name()) {
         return false;
     }
     a.insert(id.to_string());
@@ -153,14 +153,14 @@ pub fn claim(id: &str) -> bool {
 }
 
 /// Give back a claim whose compactor never started (the first build failed, or the database closed before).
-pub fn unclaim(id: &str) {
-    ACTIVE.lock().unwrap().remove(id);
+pub fn unclaim(id: &(impl crate::lifecycle::DbRef + ?Sized)) {
+    ACTIVE.lock().unwrap().remove(id.name());
 }
 
 /// Tests: whether a pass holds a slot on `id`.
-pub fn pass_running(id: &str) -> bool {
+pub fn pass_running(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> bool {
     let _a = ACTIVE.lock().unwrap();
-    PASS_SLOTS.lock().unwrap().contains_key(id)
+    PASS_SLOTS.lock().unwrap().contains_key(id.name())
 }
 
 /// A running job's entry in `job_starts`, removed when the job ends or is aborted.
@@ -482,7 +482,8 @@ impl Stats {
 
 /// State shared by the serving `Tenant` and its compactor (and the drop job).
 pub struct Shared {
-    pub id: String,
+    /// The database, with the incarnation its tenant opened (fix-incarnation).
+    pub id: crate::lifecycle::DbAt,
     /// The tenant's holds (rule 4).
     pub holds: Arc<Holds>,
     /// X_d of the version the tenant serves; the floor never passes it (u64::MAX: none). A plain read takes a short hold,
@@ -504,8 +505,8 @@ pub struct Shared {
 }
 
 impl Shared {
-    pub fn new(id: &str, holds: Arc<Holds>) -> Arc<Shared> {
-        Arc::new(Shared { id: id.to_string(), holds, serving: AtomicU64::new(u64::MAX), serving_version: AtomicU64::new(u64::MAX), pending: Mutex::new(None), r3: Arc::new(R3Gets::default()), opened: Instant::now(), stats: Stats::default(), erasures: Mutex::new(Vec::new()), absorb_upto: AtomicU64::new(0) })
+    pub fn new(id: &(impl crate::lifecycle::DbRef + ?Sized), holds: Arc<Holds>) -> Arc<Shared> {
+        Arc::new(Shared { id: id.at(), holds, serving: AtomicU64::new(u64::MAX), serving_version: AtomicU64::new(u64::MAX), pending: Mutex::new(None), r3: Arc::new(R3Gets::default()), opened: Instant::now(), stats: Stats::default(), erasures: Mutex::new(Vec::new()), absorb_upto: AtomicU64::new(0) })
     }
 
     pub fn pending_version(&self) -> Option<u64> {
@@ -680,7 +681,9 @@ impl Compactor {
         Ok(c)
     }
 
-    pub fn id(&self) -> &str {
+    /// The database with the incarnation its tenant opened (fix-incarnation): every path the compactor builds uses it
+    /// (`.name` for the bare name).
+    pub fn id(&self) -> &crate::lifecycle::DbAt {
         &self.sh.id
     }
 
@@ -713,7 +716,7 @@ impl Compactor {
         let t_stop = Instant::now();
         self.stopped.store(true, Relaxed);
         self.stop_signal.notify_waiters();
-        ACTIVE.lock().unwrap().remove(self.id());
+        ACTIVE.lock().unwrap().remove(&self.id().name);
         let s = self.slate_stop.lock().unwrap().take();
         if let Some((c, w)) = s {
             let _ = c.stop().await;
@@ -839,7 +842,7 @@ impl Compactor {
     /// The conditional create of a version, in its own task: when the caller's timeout fires, the PUT may still land
     /// later (F6: its outcome is unknown), as a request in flight on the network would.
     async fn create(&self, v: &Version) -> Result<bool> {
-        let (store, id, v) = (Arc::clone(&self.store), self.id().to_string(), v.clone());
+        let (store, id, v) = (Arc::clone(&self.store), self.id().clone(), v.clone()); // fix-incarnation: the captured one
         // its own task (a job aborted while waiting leaves it running): counted, and `stop` waits for it, so no version
         // lands after `stop` returned (review R2)
         let guard = InFlight::new(Arc::clone(&self.creates_in_flight));
@@ -2045,7 +2048,8 @@ struct L0Row {
 /// more than the close could wait for its absorption (MEASURED: a restore of the closed database then read 634 MB from
 /// its unabsorbed, so uncompacted, L0). fix-write-stalls: an absorption reads its SSTs at once (at most `absorb_max_l0`
 /// memtables in memory), a compactor's start `l0_read_parallel()` at a time.
-async fn read_l0_whole(store: &Arc<dyn ObjectStore>, id: &str, view: &slatedb::manifest::SsTableView) -> Result<Vec<L0Row>> {
+async fn read_l0_whole(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), view: &slatedb::manifest::SsTableView) -> Result<Vec<L0Row>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let reader = slatedb::SstReader::new(crate::lifecycle::tenant_path(id), whole_objects(store), None, None);
     read_l0(&reader, view).await
 }

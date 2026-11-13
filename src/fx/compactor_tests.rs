@@ -22,7 +22,7 @@ use std::time::{Duration, Instant};
 
 const HOLD_MS: u64 = 3000;
 
-fn test_knobs(drop: bool) -> Knobs {
+pub(super) fn test_knobs(drop: bool) -> Knobs {
     Knobs {
         theta: 0.25,
         r3: true,
@@ -57,7 +57,7 @@ fn test_knobs(drop: bool) -> Knobs {
     }
 }
 
-fn setup() {
+pub(super) fn setup() {
     enable();
     compactor::REVIEW_PLANT.store(std::env::var("FX_REVIEW_PLANT").ok().and_then(|s| s.parse().ok()).unwrap_or(0), Relaxed);
     hold::HOLD_LIFE_MS.store(HOLD_MS, Relaxed);
@@ -71,7 +71,7 @@ fn setup() {
     view::clear_cache();
 }
 
-fn teardown() {
+pub(super) fn teardown() {
     crate::lifecycle::L0_SST_BYTES_OVERRIDE.store(0, Relaxed);
     crate::lifecycle::L0_MAX_SSTS_OVERRIDE.store(0, Relaxed);
     crate::lifecycle::WRITER_POLL_SECS.store(30, Relaxed);
@@ -613,7 +613,7 @@ async fn floor_respects_holds_and_control_breaks() {
     teardown();
 }
 
-async fn flush(t: &Tenant) {
+pub(super) async fn flush(t: &Tenant) {
     let db = t.fx_writer_db().unwrap();
     db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await.unwrap();
 }

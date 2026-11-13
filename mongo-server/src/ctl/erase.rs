@@ -30,8 +30,9 @@ pub fn prefixes(db: &str) -> Vec<String> {
 
 pub async fn erase(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
     meta::check_name(db)?;
-    // audit-fencing round 2: the paths below are the current incarnation's
-    tenant_bench::lifecycle::load_incarnation(&ctl.store, db).await.map_err(|e| ApiError::new(500, "incarnation_read_failed", format!("{e:#}")))?;
+    // audit-fencing round 2: the paths read below, before the lease, are the current incarnation's. fix-incarnation: read
+    // without changing this process's table (no lease is held yet: only the lease holder moves the table)
+    let k = tenant_bench::lifecycle::read_incarnation(&ctl.store, db).await.map_err(|e| ApiError::new(500, "incarnation_read_failed", format!("{e:#}")))?;
     let _op = ctl.ops.lock(db).await?;
     let present = meta::exists(ctl, db).await? || !purge::leftovers(ctl, db).await?.is_empty();
     if !present {
@@ -47,7 +48,7 @@ pub async fn erase(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
     let t0 = std::time::Instant::now();
     let final_usage = usage::query(ctl, db, None, None, false).await.ok();
     let before = ctl.usage.today_sum(&[db]);
-    let ancestors: Vec<String> = purge::ancestors(&ctl.store, db).await?.into_iter().filter_map(|(p, _)| p.strip_prefix("tenants/").map(|s| s.to_string())).collect();
+    let ancestors: Vec<String> = purge::ancestors_at(&ctl.store, &tenant_bench::lifecycle::tenant_path_at(db, k)).await?.into_iter().filter_map(|(p, _)| p.strip_prefix("tenants/").map(|s| s.to_string())).collect();
     ops::begin(ctl, db, "erase", json!({ "ancestors": ancestors })).await?;
     super::failpoint("erase.after_intent").await;
     let report = run(ctl, db, &ancestors, true).await?;
@@ -132,9 +133,12 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
     // audit-fencing round 2 (item 24): the name moves to a new incarnation before anything is deleted, under the lease:
     // a late write of the erased incarnation (a WAL PUT SlateDB retries, a run upload, a version create of a process
     // that lost it) lands under a prefix that a database created again with this name never reads
-    let owners_pre = tenant_bench::fx::pair::fork_ref_owners(&ctl.store, db, ancestors).await?;
+    // fix-incarnation: the incarnation being erased, read here (the lease, when taken above, set it in this process too;
+    // with no data left no lease is taken, and this process's table may be stale)
+    let cur = tenant_bench::lifecycle::DbAt::new(db, tenant_bench::lifecycle::read_incarnation(&ctl.store, db).await.map_err(|e| ApiError::new(500, "incarnation_read_failed", format!("{e:#}")))?);
+    let owners_pre = tenant_bench::fx::pair::fork_ref_owners(&ctl.store, &cur, ancestors).await?;
     // the pins this incarnation holds in its ancestors are read from its own manifest: released before the move
-    let pins_released = purge::release_pins(&ctl.store, db).await?;
+    let pins_released = purge::release_pins_at(&ctl.store, &tenant_bench::lifecycle::tenant_path(&cur)).await?;
     tenant_bench::lifecycle::bump_incarnation(&ctl.store, db).await.map_err(|e| ApiError::new(500, "incarnation_bump_failed", format!("{e:#}")))?;
     // The users and roles defined on the database live in admin.system.users / admin.system.roles, not under tenants/{db}:
     // they go with it (idempotent, so a resumed erase repeats it harmlessly).

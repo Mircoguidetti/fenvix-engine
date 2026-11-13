@@ -1334,7 +1334,7 @@ impl Entry {
     }
 
     /// Where the ballast generator writes its runs: the store, the database's id, the writer epoch.
-    pub fn ballast_target(&self) -> Result<(Arc<dyn object_store::ObjectStore>, String, Option<u64>)> {
+    pub fn ballast_target(&self) -> Result<(Arc<dyn object_store::ObjectStore>, tenant_bench::lifecycle::DbAt, Option<u64>)> {
         self.tenant.as_ref().ok_or_else(|| anyhow::anyhow!("database {} is not open", self.name))?.fx_ballast_target()
     }
 
