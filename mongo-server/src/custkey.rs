@@ -545,6 +545,11 @@ fn split_u(p: &[u8]) -> Option<(&[u8], &[u8])> {
     Some((&t[..n], &t[n..]))
 }
 
+/// The customer component of a physical key of the customer space (`None`: not in the customer space).
+pub fn phys_customer(p: &[u8]) -> Option<&[u8]> {
+    split_u(p).map(|(c, _)| c)
+}
+
 /// The logical key of a physical key (`None`: the key is the same in both, it is not in the customer space).
 pub fn to_logical(p: &[u8]) -> Option<Vec<u8>> {
     let (c, r) = split_u(p)?;
