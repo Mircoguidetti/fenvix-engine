@@ -176,7 +176,8 @@ impl Net {
             trace: Default::default(),
             requests: AtomicU64::new(0),
             faults: AtomicU64::new(0),
-            max_hold: Duration::from_millis(1000),
+            // `SIM_MAX_HOLD_MS`: a longer hold for directed stories (a slow LIST answer, a frozen task)
+            max_hold: Duration::from_millis(std::env::var("SIM_MAX_HOLD_MS").ok().and_then(|v| v.parse().ok()).unwrap_or(1000)),
         })
     }
 
@@ -281,7 +282,10 @@ impl Net {
                 if released {
                     break;
                 }
-                let left = self.max_hold.saturating_sub(t0.elapsed());
+                // a read (LIST, GET) may be answered late for longer: nothing it carries lands late (a frozen task, a
+                // slow answer); a write is bounded by `max_hold`, as a PUT by its timeout
+                let limit = if matches!(op, Op::List | Op::Get) { self.max_hold * 4 } else { self.max_hold };
+                let left = limit.saturating_sub(t0.elapsed());
                 if left.is_zero() || tokio::time::timeout(left, w).await.is_err() {
                     break;
                 }

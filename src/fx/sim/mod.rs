@@ -216,6 +216,66 @@ mod tests {
         assert!(r.violations.is_empty(), "hole W: a builder reseal after the drop lost rows ({} violations)", r.violations.len());
     }
 
+    /// Known hole (audit case 1, and the a60f4fe review): the old owner's first build takes its version slot from a
+    /// LIST that answers after a takeover (held here, as a slow answer or a frozen task), so its version lands ON TOP
+    /// of the new owner's; on code without the reader-side guards the new owner's compactor builds on it. With
+    /// `SIM_STORY_ABANDON=1` the old owner abandons the database instead of polling its build (a60f4fe waited for it).
+    /// Run with `SIM_MAX_HOLD_MS=4000`. A check of the oracle on the old commits, not a test of the head.
+    #[test]
+    #[ignore]
+    fn sim_story_first_build_lands_on_top() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp, Profile};
+        use Ev::*;
+        let mut ev = vec![Open { p: 0, writer: true }];
+        for c in 0..3 {
+            ev.push(Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (c, i, false)).collect() });
+        }
+        ev.push(Hold { p: 0, class: Class::FxVersion, op: Some(NOp::List), skip: 0, land: true, all: false, rid: 1 });
+        ev.push(FirstStart { p: 0 });
+        // the takeover: the new owner publishes, starts its compactor (after its catch-up publish) and absorbs
+        ev.extend([
+            Open { p: 1, writer: true },
+            Write { p: 1, ops: (0..PER_CUSTOMER).map(|i| (3, i, false)).collect() },
+            Publish { p: 1 },
+            Write { p: 1, ops: (0..PER_CUSTOMER).map(|i| (4, i, false)).collect() },
+            CompStart { p: 1 },
+            Write { p: 1, ops: (0..PER_CUSTOMER).map(|i| (5, i, false)).collect() },
+            Flush { p: 1 },
+            CompDrain { p: 1 },
+        ]);
+        // the old owner's LIST answers now: its version lands on top
+        ev.push(Release { rid: 1 });
+        ev.push(Sleep { ms: 500 });
+        if std::env::var_os("SIM_STORY_ABANDON").is_some() {
+            ev.push(Abandon { p: 0 });
+        } else {
+            ev.push(FirstPoll { p: 0 });
+        }
+        // the new owner goes on: its compactor commits after the late version
+        for c in [2, 1, 0] {
+            ev.extend([Write { p: 1, ops: (0..PER_CUSTOMER).map(|i| (c, i, false)).collect() }, Flush { p: 1 }, CompDrain { p: 1 }]);
+        }
+        ev.push(DropThrough { p: 1 });
+        let s = Script { seed: 3, profile: Profile::none(), knobs: env_u64("SIM_KNOBS", 1) as u8, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect() };
+        let n = env_u64("SIM_REPLAYS", 1);
+        let mut failing = 0;
+        for _ in 0..n {
+            let r = rt.block_on(run_script(&s));
+            for l in r.trace.iter().filter(|l| l.contains("->") || l.contains("rule")) {
+                eprintln!("  {l}");
+            }
+            for v in r.violations.iter().take(6) {
+                eprintln!("VIOLATION {v}");
+            }
+            eprintln!("SIM STORY first build on top: {} violations; {}", r.violations.len(), r.stats);
+            failing += (!r.violations.is_empty()) as u64;
+        }
+        eprintln!("SIM STORY first build on top: {failing} of {n} runs with a violation");
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {

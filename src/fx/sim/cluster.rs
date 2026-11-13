@@ -377,10 +377,13 @@ pub fn generate(seed: u64, steps: usize) -> Script {
         if !holders.is_empty() {
             let p = holders[r.gen_range(0..holders.len())];
             let class = hold_class(&mut r);
-            let op = match r.gen_range(0..6) {
+            let op = match r.gen_range(0..8) {
                 0 => None,
                 1 => Some(NOp::Delete),
                 2 if class == Class::FxRun || class == Class::Other => Some(NOp::Multipart),
+                // a slow answer to a LIST of our versions (a publish takes its slot from one, a GC decides from one)
+                3 | 4 if class == Class::FxVersion => Some(NOp::List),
+                5 => Some(NOp::Get),
                 _ => Some(NOp::Put),
             };
             cands.push((8, Ev::Hold { p, class, op, skip: r.gen_range(0..3), land: r.gen_bool(0.75), all: r.gen_bool(0.2), rid: rid + 1 }));
