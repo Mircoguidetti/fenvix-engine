@@ -248,3 +248,95 @@ def test_crash_loop_leaves_no_older_writers_upload():
     finally:
         px.release()
         px.close()
+
+
+# ---- item 3: the server-side write deadline
+
+from pymongo.errors import OperationFailure, PyMongoError  # noqa: E402
+
+DEADLINE_MS = 2000
+
+
+def deadline_server(tag, px):
+    # a replica set member, as in production: drivers send a write's session and transaction number (what makes it a
+    # retryable write) only to one
+    # (a binary without the flag, the base of this fix, runs as it is: the control)
+    import subprocess
+    from lib import free_port, BIN
+    port = free_port()
+    has = "--write-deadline-ms" in subprocess.run([BIN, "--help"], capture_output=True, text=True).stdout
+    return Server(make_bucket(tag), tag, idle=600, endpoint=px.endpoint, port=port,
+                  extra=(["--write-deadline-ms", str(DEADLINE_MS)] if has else []) + ["--replica-set", "rs0", "--advertise", f"127.0.0.1:{port}"]).start()
+
+
+def test_a_write_the_store_does_not_take_gets_a_retryable_error_in_time():
+    px = proxy()
+    srv = deadline_server("wdeadline", px)
+    try:
+        # the driver's defaults (retryable writes on): the first attempt gets the labelled error, the driver retries
+        # once, the retry waits for the original (still held) and gets the same error: about two deadlines in all
+        c = MongoClient(srv.uri, socketTimeoutMS=30000)
+        c.wdl.t.insert_one({"_id": 0, "n": 0})
+        px.hold("PUT", "/tenants/wdl/wal/")
+        t0 = time.time()
+        err = None
+        try:
+            c.wdl.t.insert_one({"_id": 1})
+        except PyMongoError as e:
+            err = e
+        took = time.time() - t0
+        print(f"insert with the WAL PUT held: {type(err).__name__} after {took:.1f} s: {getattr(err, 'details', err)}")
+        assert isinstance(err, OperationFailure), f"no server error within the deadline: {err!r} after {took:.1f} s"
+        assert err.code == 262 and err.has_error_label("RetryableWriteError"), f"wrong error: {err.details}"
+        assert took < 2 * DEADLINE_MS / 1000 + 2, f"answered after {took:.1f} s (deadline {DEADLINE_MS} ms, one retry)"
+        log = [l for l in srv.log_text().splitlines() if l.startswith("WRITE_DEADLINE ")]
+        assert len(log) == 2 and all("retryable=true" in l for l in log), log
+        # an unacknowledged write is not a lie either way: once the store answers, the database is consistent and every
+        # acknowledged write is there
+        px.release()
+        c2 = MongoClient(srv.uri)
+        c2.wdl.t.insert_one({"_id": 2})
+        have = {x["_id"] for x in c2.wdl.t.find({})}
+        assert {0, 2} <= have, have
+        print(f"after the store answers again: ids {sorted(have)} (1 may or may not be there: it was never acknowledged)")
+    finally:
+        px.release()
+        srv.kill9()
+        px.close()
+
+
+def test_a_retried_write_is_applied_once():
+    """The driver's retry of a write answered by the deadline must not apply it twice: the original goes on, and the
+    retry answers from the session's record once the original is durable."""
+    px = proxy()
+    srv = deadline_server("wdeadonce", px)
+    try:
+        c = MongoClient(srv.uri, retryWrites=True, socketTimeoutMS=60000)
+        c.wdo.t.insert_one({"_id": 0, "n": 0})
+        px.hold("PUT", "/tenants/wdo/wal/")
+        res = {}
+
+        def inc():
+            t = time.time()
+            try:
+                r = c.wdo.t.update_one({"_id": 0}, {"$inc": {"n": 1}})
+                res["ok"] = (r.modified_count, round(time.time() - t, 1))
+            except PyMongoError as e:
+                res["err"] = (repr(e)[:200], round(time.time() - t, 1))
+
+        th = threading.Thread(target=inc)
+        th.start()
+        time.sleep(DEADLINE_MS / 1000 * 1.5)   # the first attempt got the deadline's error; the driver's retry waits
+        px.release()
+        th.join(60)
+        time.sleep(1)   # an original that was answered by the deadline ends in its own task
+        n = c.wdo.t.find_one({"_id": 0})["n"]
+        print(f"$inc with the WAL held {DEADLINE_MS * 1.5:.0f} ms: {res}; n = {n}; log: "
+              f"{[l for l in srv.log_text().splitlines() if 'WRITE_DEADLINE' in l]}")
+        assert n in (0, 1), f"the write was applied {n} times"
+        if "ok" in res:
+            assert n == 1, f"acknowledged but n = {n}"
+    finally:
+        px.release()
+        srv.kill9()
+        px.close()

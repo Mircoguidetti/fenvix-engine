@@ -184,6 +184,11 @@ impl Server {
     }
 }
 
+/// A retryable write: `lsid` and `txnNumber`, not in a transaction (the statements and their record go in one batch).
+pub fn is_retryable_write(cmd: &Document) -> bool {
+    matches!(txn_number(cmd), Ok(Some(_))) && !matches!(cmd.get("autocommit"), Some(Bson::Boolean(false))) && lsid_key(cmd).is_some()
+}
+
 /// fix-store-errors: a retryable write (`lsid` and `txnNumber`, not in a transaction) that failed because the store
 /// refused or did not answer gets the `RetryableWriteError` label, so the driver retries it. Safe because its statements
 /// and its record (this file) go in one atomic batch: either both landed and the retry answers from the record without

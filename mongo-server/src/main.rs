@@ -156,6 +156,13 @@ struct Args {
     /// 200 ms per request and the whole 25 s at 1 s (MEASURED), and the process then exited with leases unreleased.
     #[arg(long, default_value_t = 8)]
     close_budget_secs: u64,
+    /// P-fix-slow-store item 3: a single-document write (an insert, a findAndModify, an update or delete of one document,
+    /// outside a transaction) not acknowledged within this many milliseconds is answered with error 262 ExceededTimeLimit;
+    /// a retryable write carries the `RetryableWriteError` label, so the driver sends it again (deduplicated by its
+    /// session record). The command itself goes on: nothing is cut, and nothing not on 2 of 3 log copies (or in a WAL
+    /// object) is ever acknowledged. Before, such a write hung its client for as long as the store did. 0: no deadline
+    #[arg(long, default_value_t = 30_000)]
+    write_deadline_ms: u64,
     /// Lease holder id (default: a unique id per process start).
     #[arg(long)]
     holder: Option<String>,
@@ -1240,6 +1247,7 @@ async fn run() -> Result<()> {
     tenant_bench::warm::COMPACTION_WARM_MAX_KEY_BYTES.store(args.compaction_warm_max_key_mb << 20, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::warm::COMPACTION_WARM_GETS_PER_SEC.store(args.compaction_warm_gets_per_sec, std::sync::atomic::Ordering::Relaxed);
     cmd::CURSOR_TIMEOUT_SECS.store(args.cursor_timeout_secs, std::sync::atomic::Ordering::Relaxed);
+    cmd::WRITE_DEADLINE_MS.store(args.write_deadline_ms, std::sync::atomic::Ordering::Relaxed);
     ctl::durability::install(args.relaxed_flush_ms)?;
     fair::install(args.fair_lag_ms, args.db_max_inflight, args.db_max_rate, args.fair_max_inflight, args.fair_max_flushing, args.db_quota_pts, args.db_burst_pts, args.db_quota_queue, &args.unit_weights).map_err(|e| anyhow::anyhow!(e))?;
     js::COMMAND_MAX_MS.store(args.js_command_max_ms, std::sync::atomic::Ordering::Relaxed);
