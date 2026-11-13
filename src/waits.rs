@@ -71,6 +71,13 @@ pub fn note_get(path: &str, range: &str, bytes: u64, d: Duration) {
     }
 }
 
+/// fix-idle-poll: every object-store LIST prints a `WAITS_LIST` line when `GETS` is on (measurements only).
+pub fn note_list(prefix: &str) {
+    if GETS.load(Relaxed) {
+        eprintln!("WAITS_LIST u={:.1} prefix={prefix} in_cmd={}", unix_ms(), WAITS.try_with(|_| ()).is_ok());
+    }
+}
+
 #[derive(Default)]
 pub struct Waits {
     pub ns: [AtomicU64; N],

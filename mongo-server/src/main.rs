@@ -1277,6 +1277,8 @@ async fn run() -> Result<()> {
     tenant_bench::lifecycle::ADAPTIVE.store(args.adaptive_group_commit, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::ADAPTIVE_MAX_US.store(args.adaptive_group_commit_max_us, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::WRITER_POLL_SECS.store(args.writer_poll_secs, std::sync::atomic::Ordering::Relaxed);
+    // fix-idle-poll: an idle writer's manifest poll is held up to this long (`fx::writer_gate`)
+    tenant_bench::fx::writer_gate::WRITER_IDLE_POLL_SECS.store(args.writer_poll_secs, std::sync::atomic::Ordering::Relaxed);
     if tenant_bench::fx::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed) {
         // a memtable flush that stalled on a full L0 retries only at the writer's manifest poll; the compactor's folds
         // free L0 within a second or two, so the writer looks at least every 2 s (step 4 report, section 4)

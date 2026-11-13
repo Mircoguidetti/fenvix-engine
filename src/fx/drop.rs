@@ -89,6 +89,8 @@ pub struct DropCtl {
     /// not run since (`slate_pending`); a job was proposed or runs (`slate_active`); the signal that ends a held poll.
     slate_pending: AtomicBool,
     slate_active: AtomicBool,
+    /// fix-idle-poll: the last floor observation found the floor it had before (`maybe_refold` slows down while idle).
+    floor_same: AtomicBool,
     /// SlateDB's compactor and worker are being stopped: no poll is held any more (`stop_slate_polls`).
     slate_stopping: AtomicBool,
     slate_wake: tokio::sync::Notify,
@@ -130,6 +132,7 @@ impl DropCtl {
             cur_job: Mutex::new(None),
             jobs_by_dest: Mutex::new(HashMap::new()),
             slate_pending: AtomicBool::new(false),
+            floor_same: AtomicBool::new(false),
             slate_active: AtomicBool::new(false),
             slate_stopping: AtomicBool::new(false),
             slate_wake: tokio::sync::Notify::new(),
@@ -142,6 +145,8 @@ impl DropCtl {
     pub fn wake_slate(&self) {
         self.slate_pending.store(true, Relaxed);
         self.slate_wake.notify_waiters();
+        // fix-idle-poll: what wakes SlateDB's compactor can change the writer's manifest (`writer_gate`)
+        super::writer_gate::wake(&self.sh.id.name);
     }
 
     fn slate_busy(&self) -> bool {
@@ -288,7 +293,19 @@ impl DropCtl {
         }
         {
             let mut lo = self.last_observe.lock().unwrap();
-            let every = (self.lease / 8).clamp(Duration::from_millis(50), Duration::from_secs(5));
+            let mut every = (self.lease / 8).clamp(Duration::from_millis(50), Duration::from_secs(5));
+            // fix-idle-poll: each observation reads the store (the drop lease, a LIST of our manifest's versions). While
+            // the database is idle (nothing for SlateDB's compactor, no re-fold asked, the last observation saw the floor
+            // unchanged) it happens at most every `slate_idle_poll_ms`. The floor only decides when a re-fold is
+            // proposed (a saving of storage, done that much later); a drop job computes its floor from the store when it
+            // starts (rule 7, `create_compaction_filter`), so no drop ever uses an older one.
+            let idle_ms = slate_idle_poll_ms();
+            if idle_ms > 0 && !self.slate_busy() && !self.refold.load(Relaxed) && self.floor_same.load(Relaxed) {
+                every = every.max(Duration::from_millis(idle_ms));
+                if lo.is_some_and(|t| t.elapsed() >= Duration::from_secs(5) && t.elapsed() < every) {
+                    FLOOR_OBSERVES_SKIPPED.fetch_add(1, Relaxed);
+                }
+            }
             if lo.is_some_and(|t| t.elapsed() < every) || self.observing.swap(true, Relaxed) {
                 return;
             }
@@ -298,6 +315,7 @@ impl DropCtl {
         tokio::spawn(async move {
             if let Ok(f) = me.floor().await {
                 let before = me.observed.swap(f, Relaxed);
+                me.floor_same.store(f == before, Relaxed);
                 if f > me.applied_floor.load(Relaxed) {
                     me.refold.store(true, Relaxed);
                 }
@@ -484,6 +502,8 @@ impl CompactionScheduler for Sched {
         self.0.slate_active.store(active, Relaxed);
         if active {
             self.0.slate_wake.notify_waiters();
+            // fix-idle-poll: a job proposed or running ends in a manifest the writer must read at its own pace
+            super::writer_gate::wake(&self.0.sh.id.name);
         }
         out
     }
@@ -677,7 +697,8 @@ impl CompactionFilterSupplier for Sched {
 // changes: an absorbed L0 SST (`set_foldable`), a floor that moved (`maybe_refold`), a re-fold asked, or a job already
 // proposed or running. So the polls are needed only then: [`SlateGate`] lets a poll read go out at once while the
 // database is busy (a wake not yet consumed by a proposal, or a job proposed or running), and otherwise holds it until
-// our side wakes it or `slate_idle_poll_ms` passes (5 s: SlateDB's own default poll). A wake lets one round of polls
+// our side wakes it or `slate_idle_poll_ms` passes (fix-idle-poll: 60 s; it was 5 s, SlateDB's own default
+// poll, which left about 0.8 GETs per second per idle database, MEASURED). A wake lets one round of polls
 // through, not a stretch of time: MEASURED with a 2 s stretch instead, the polls of the stretch after each write still
 // fell inside test_79's next-saves window. A held read is a slower poll, never a changed answer:
 // it reaches the store unchanged, only later. SlateDB's writes stay conditional (a fence by another process is still
@@ -685,7 +706,10 @@ impl CompactionFilterSupplier for Sched {
 
 /// The slowest poll while idle (ms); 0: no gate, for SlateDB's compactors started from then on (the server sets it from
 /// `FENVIX_SLATE_IDLE_POLL_MS`, the negative control of the tests).
-pub static SLATE_IDLE_POLL_MS: AtomicU64 = AtomicU64::new(5_000);
+pub static SLATE_IDLE_POLL_MS: AtomicU64 = AtomicU64::new(60_000);
+/// fix-idle-poll: floor observations an idle database skipped (serverStatus `sealedRuns.floorObservesSkipped`; counted
+/// once per compactor tick past the busy pace, so a measure of idle time, not of requests).
+pub static FLOOR_OBSERVES_SKIPPED: AtomicU64 = AtomicU64::new(0);
 pub fn slate_idle_poll_ms() -> u64 {
     SLATE_IDLE_POLL_MS.load(Relaxed)
 }
