@@ -596,9 +596,8 @@ mod tests {
     /// owner's acknowledged writes, still only in its WAL, are missing from the fork. The simulated fork mirrors the
     /// `fork.rs` of its build: on `sim-test-2` the head's HEAD check (fails: 48 violations, MEASURED, 1 run); with
     /// fix-sim-holes' Z fix and `lifecycle::marker_clean` in the simulated quiesce: passes (MEASURED, 1 run).
-    /// Ignored until the fix is in: `--ignored`.
+    /// Fixed on fix-sim-holes (c7490ec's `marker_clean` in `fork.rs`, and in the simulated quiesce): a normal test.
     #[test]
-    #[ignore]
     fn sim_hole_z_fork_trusts_a_fenced_writers_marker() {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());

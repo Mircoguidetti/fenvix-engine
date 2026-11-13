@@ -384,14 +384,15 @@ impl World {
                     if let Err(e) = t.close().await {
                         return format!("fork {tag}: quiesce close failed: {}", short(&e));
                     }
-                    let marker = crate::lifecycle::marker_path(&id);
-                    if store.head(&marker).await.is_err() {
+                    // as `ctl/fork.rs` `quiesce` (fix-sim-holes, hole Z): a marker counts only when it names the stored
+                    // manifest's writer epoch
+                    if !crate::lifecycle::marker_clean(&store, &id).await.unwrap_or(false) {
                         let r: anyhow::Result<()> = async {
                             let mut t = lc.wake(&id).await?;
                             t.upgrade().await?;
                             t.apply(vec![Op::Put(b"zz/quiesce".to_vec(), b"q".to_vec())]).await?;
                             t.close().await?;
-                            anyhow::ensure!(store.head(&marker).await.is_ok(), "could not be closed cleanly");
+                            anyhow::ensure!(crate::lifecycle::marker_clean(&store, &id).await?, "could not be closed cleanly");
                             Ok(())
                         }
                         .await;
@@ -440,7 +441,7 @@ impl World {
                         Ok(n) => n,
                         Err(e) => return format!("fork {tag} failed (the server rolls it back): {}", short(&e)),
                     };
-                    if let Err(e) = store.put(&crate::lifecycle::marker_path(&target), object_store::PutPayload::from_static(b"clean")).await {
+                    if let Err(e) = crate::lifecycle::mark_clean_stored(&store, &target).await {
                         return format!("fork {tag}: marker not written (the server rolls it back): {e}");
                     }
                     let end = counts(&model.lock().unwrap());
