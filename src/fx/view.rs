@@ -450,7 +450,9 @@ impl View {
         if !PREFETCH_POINTS.load(Relaxed) || keys.len() < 2 {
             return Ok(());
         }
-        // (run, block) -> keys that need it
+        // (run, block) -> how many of the keys need it. A block needed by two or more is fetched whole, in range GETs of
+        // adjacent blocks: the point reads of keys of many customers would fetch it (or its slices) once each, one GET
+        // per block. The caller (`layout2::get_many`) calls this only for keys of two or more customers.
         let mut need: HashMap<[u8; RUN_ID_LEN], (Arc<RunH>, std::collections::BTreeMap<usize, usize>)> = HashMap::new();
         for key in keys {
             let g = &self.groups[self.group_of(key)];

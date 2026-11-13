@@ -149,14 +149,26 @@ pub async fn get(raw: &Raw<'_>, key: &[u8]) -> Result<Option<Bytes>> {
 /// Point reads, in key order, at most `parallel` at once.
 pub async fn get_many(raw: &Raw<'_>, keys: &[Vec<u8>], parallel: usize) -> Result<Vec<Option<Bytes>>> {
     use futures::{StreamExt, TryStreamExt};
-    if keys.len() < 2 || !raw.prefetches() {
-        let futs: Vec<_> = keys.iter().map(|k| async move { raw.get(&phys(k)).await }).collect();
+    // P-fix-read-amplification: a batch of keys of two or more customers is read in physical order, a chunk at a time:
+    // the run blocks that keys of two or more customers share are fetched once, whole (`View::prefetch_points`), then
+    // the chunk's point reads find them cached; the answers are put back in the order of `keys`. Keys of one customer
+    // (or outside the customer space) share their block reads already: they are read as before, with no extra work.
+    let pks: Vec<std::borrow::Cow<'_, [u8]>> = keys.iter().map(|k| phys(k)).collect();
+    let many_customers = raw.prefetches() && {
+        let mut first: Option<&[u8]> = None;
+        pks.iter().filter_map(|p| custkey::phys_customer(p)).any(|c| match first {
+            None => {
+                first = Some(c);
+                false
+            }
+            Some(f) => f != c,
+        })
+    };
+    if keys.len() < 2 || !many_customers {
+        let futs: Vec<_> = pks.iter().map(|k| async move { raw.get(k).await }).collect();
         return futures::stream::iter(futs).buffered(parallel.max(1)).try_collect().await;
     }
-    // P-fix-read-amplification: the keys in physical order, a chunk at a time: the run blocks two or more keys of a
-    // chunk share are fetched once, whole (`View::prefetch_points`), then the chunk's point reads find them cached.
-    // The answers are put back in the order of `keys`.
-    let mut order: Vec<(Vec<u8>, usize)> = keys.iter().enumerate().map(|(i, k)| (phys(k).into_owned(), i)).collect();
+    let mut order: Vec<(Vec<u8>, usize)> = pks.into_iter().enumerate().map(|(i, k)| (k.into_owned(), i)).collect();
     order.sort();
     let mut out: Vec<Option<Bytes>> = vec![None; keys.len()];
     for chunk in order.chunks(PREFETCH_CHUNK) {
