@@ -878,7 +878,7 @@ async fn ws_compactor_refuses_an_older_writers_version() {
 /// epoch. Same setup as `older_version_scenario`, but the stale version stays the newest (no compactor publishes after
 /// it); then a fresh opening reads, upgrades to a writer (its fence) and reads again. Control (`CONTROL_TRUST_NEWEST`,
 /// the code before): rows are lost.
-async fn older_newest_opening(control: bool) -> (usize, usize, u64) {
+async fn older_newest_opening(control: bool) -> (usize, usize, u64, u64, u64, u64) {
     manifest::CONTROL_TRUST_NEWEST.store(control, Relaxed);
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
     let id = if control { "ws-open-older-control" } else { "ws-open-older" };
@@ -919,6 +919,7 @@ async fn older_newest_opening(control: bool) -> (usize, usize, u64) {
     let ignored0 = manifest::OLDER_VERSIONS_IGNORED.load(SeqCst);
     view::clear_cache(); // a new process: no view of this database in memory
     let mut t = lc(&store).wake(id).await.unwrap();
+    let served = t.fx_view().map(|v| v.x_d).unwrap_or(0);
     let wrong_reader = wrong_reads(&t, &m, &HashSet::new()).await;
     t.upgrade().await.unwrap();
     let wrong_writer = wrong_reads(&t, &m, &HashSet::new()).await;
@@ -926,17 +927,19 @@ async fn older_newest_opening(control: bool) -> (usize, usize, u64) {
     manifest::CONTROL_TRUST_NEWEST.store(false, Relaxed);
     eprintln!("opening with an older newest version (control {control}): wrong as reader {wrong_reader}, as writer {wrong_writer} of {}; ignored {ignored}", m.len());
     let _ = t.close().await;
-    (wrong_reader, wrong_writer, ignored)
+    (wrong_reader, wrong_writer, ignored, served, cur.x_d, stale.x_d)
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn ws_opening_ignores_an_older_writers_newest_version() {
     let _s = SERIAL.lock().await;
     setup();
-    let (r_ctl, w_ctl, _) = older_newest_opening(true).await;
-    let (r, w, ignored) = older_newest_opening(false).await;
+    let (_, _, _, served_ctl, _, late_ctl) = older_newest_opening(true).await;
+    let (r, w, ignored, served, good, _) = older_newest_opening(false).await;
     teardown();
-    assert!(r_ctl + w_ctl > 0, "control: serving the older version must lose rows, or the test does not reach the case");
+    // the control's choice is deterministic; whether its reads then miss rows depends on which SSTs the drop rewrote
+    assert_eq!(served_ctl, late_ctl, "control: the opening must serve the late version, or the test does not reach the case");
+    assert_eq!(served, good, "the opening did not serve the newer writer's version");
     assert!(ignored >= 1, "the older version was not ignored");
     assert_eq!((r, w), (0, 0), "rows lost (as reader, as writer)");
 }
@@ -1011,7 +1014,7 @@ async fn ws_pair_ignores_an_older_writers_newest_version() {
     let (p, good, _, wrong) = pair_with_an_older_newest(false).await;
     teardown();
     assert_eq!(p_ctl, Some(late_ctl), "control: the late version must be paired, or the test does not reach the case");
-    assert!(wrong_ctl > 0, "control: the paired read must miss rows, or the test does not reach the case");
+    let _ = wrong_ctl; // depends on which SSTs the drop rewrote; the pairing above is the control's deterministic case
     assert_eq!(p, Some(good), "the pair is not the newer writer's version");
     assert_eq!(wrong, 0, "rows missing from the paired read");
 }
@@ -1019,9 +1022,9 @@ async fn ws_pair_ignores_an_older_writers_newest_version() {
 /// Review of c5b034d (rule 8): the reader of a database's newest state (`Follow::Newest`: exports, PITR of the live
 /// database) reads through the newer writer's version, not an older writer's late one. Control: it reads through the
 /// late one and rows are missing.
-async fn follow_newest_with_an_older_newest(control: bool) -> (Option<u64>, u64, usize) {
+async fn follow_newest_with_an_older_newest(control: bool) -> (Option<u64>, u64, u64, usize) {
     let id = if control { "ws-follow-older-control" } else { "ws-follow-older" };
-    let (store, m, cur, _stale) = with_an_older_newest_version(id).await;
+    let (store, m, cur, stale) = with_an_older_newest_version(id).await;
     manifest::CONTROL_TRUST_NEWEST.store(control, Relaxed);
     let mut o = slatedb::config::DbReaderOptions::default();
     o.skip_wal_replay = true;
@@ -1036,17 +1039,17 @@ async fn follow_newest_with_an_older_newest(control: bool) -> (Option<u64>, u64,
     r.close().await.unwrap();
     manifest::CONTROL_TRUST_NEWEST.store(false, Relaxed);
     eprintln!("follow newest with an older newest version (control {control}): read through {v:?} (newer writer's {}), wrong {wrong} of {}", cur.version, m.len());
-    (v, cur.version, wrong)
+    (v, cur.version, stale.version, wrong)
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn ws_follow_newest_ignores_an_older_writers_version() {
     let _s = SERIAL.lock().await;
     setup();
-    let (_, _, wrong_ctl) = follow_newest_with_an_older_newest(true).await;
-    let (v, good, wrong) = follow_newest_with_an_older_newest(false).await;
+    let (v_ctl, _, late_ctl, _) = follow_newest_with_an_older_newest(true).await;
+    let (v, good, _, wrong) = follow_newest_with_an_older_newest(false).await;
     teardown();
-    assert!(wrong_ctl > 0, "control: reading through the late version must miss rows, or the test does not reach the case");
+    assert_eq!(v_ctl, Some(late_ctl), "control: the reader must read through the late version, or the test does not reach the case");
     assert_eq!(v, Some(good), "not read through the newer writer's version");
     assert_eq!(wrong, 0, "rows missing");
 }
@@ -1109,9 +1112,9 @@ async fn ws_lost_race_ignores_an_older_writers_version() {
 /// database whose newest version is an older writer's late one keeps the version an opening serves
 /// (`manifest::trusted_at`) and its runs. Control (`CONTROL_GC_PLAIN_NEWEST`, the code before): the GC keeps only the
 /// late version and deletes the served version's runs; an opening then reads rows wrong or fails.
-async fn gc_with_an_older_newest(control: bool) -> (usize, usize) {
+async fn gc_with_an_older_newest(control: bool) -> (usize, usize, bool) {
     let id = if control { "ws-gc-older-control" } else { "ws-gc-older" };
-    let (store, m, _cur, _stale) = with_an_older_newest_version(id).await;
+    let (store, m, cur, _stale) = with_an_older_newest_version(id).await;
     let (ret0, grace0) = (VERSION_RETENTION_MS.load(SeqCst), GC_GRACE_MS.load(SeqCst));
     VERSION_RETENTION_MS.store(0, SeqCst);
     GC_GRACE_MS.store(0, SeqCst);
@@ -1124,7 +1127,9 @@ async fn gc_with_an_older_newest(control: bool) -> (usize, usize) {
     gc::CONTROL_GC_PLAIN_NEWEST.store(false, Relaxed);
     VERSION_RETENTION_MS.store(ret0, SeqCst);
     GC_GRACE_MS.store(grace0, SeqCst);
-    let versions = manifest::list_versions(&store, id).await.unwrap().len();
+    let listed = manifest::list_versions(&store, id).await.unwrap();
+    let versions = listed.len();
+    let served_kept = listed.contains(&cur.version);
     view::clear_cache();
     let (mut wrong, mut failed) = (0, 0);
     match lc(&store).wake(id).await {
@@ -1141,16 +1146,17 @@ async fn gc_with_an_older_newest(control: bool) -> (usize, usize) {
         Err(_) => failed = m.len(),
     }
     eprintln!("GC of a closed database with an older newest version (control {control}): versions left {versions}; wrong {wrong}, failed reads {failed} of {}", m.len());
-    (wrong, failed)
+    (wrong, failed, served_kept)
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn ws_gc_keeps_the_trusted_version_under_an_older_newest() {
     let _s = SERIAL.lock().await;
     setup();
-    let (w_ctl, f_ctl) = gc_with_an_older_newest(true).await;
-    let (w, f) = gc_with_an_older_newest(false).await;
+    let (_, _, kept_ctl) = gc_with_an_older_newest(true).await;
+    let (w, f, kept) = gc_with_an_older_newest(false).await;
     teardown();
-    assert!(w_ctl + f_ctl > 0, "control: the GC must delete the served version's runs, or the test does not reach the case");
+    assert!(!kept_ctl, "control: the GC must delete the served version, or the test does not reach the case");
+    assert!(kept, "the GC deleted the version readers serve");
     assert_eq!((w, f), (0, 0), "rows wrong or unreadable after the GC");
 }
