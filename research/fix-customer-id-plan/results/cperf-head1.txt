@@ -11,3 +11,4 @@ head1  count customer                   cold GETs [25, 25, 25] MB [3.9, 3.9, 3.9
 head1  agg $match customer + $group     cold GETs [25, 25, 25] MB [3.9, 3.9, 3.9] ms [23.1, 21.5, 25.7] | warm ms [0.7, 0.6, 0.7] | examined None | n 1
 head1  update_one customer and _id      cold GETs [40, 96, 136] MB [5.1, 5.7, 45.7] ms [45.0, 59.7, 140.0] | warm ms [6208.4, 3626.9, 3980.4] | examined None | n 1
 head1  _id alone (locator)              cold GETs [32, 31, 32] MB [4.2, 3.6, 4.2] ms [30.6, 29.0, 33.1] | warm ms [0.6, 0.7, 0.5] | examined 1 | n 1
+head1  other field (whole collection)   cold GETs [68, 43, 43] MB [4.6, 4.6, 4.6] ms [68770.0, 70126.1, 72637.3] | warm ms [69175.5, 72602.9, 69884.7] | examined 1000000 | n 0
