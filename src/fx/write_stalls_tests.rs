@@ -1222,22 +1222,27 @@ async fn gc_with_a_transient_error(control: bool) -> (usize, usize, bool) {
         apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(format!("b-{i}").into_bytes()))]).await;
     }
     publish(&mut t, &small_opts(build::Reseal::All)).await;
+    // a third version, so version 1 is a retained version two below the newest: the check of the newest version
+    // (`manifest::trusted_at`, which reads the version just below it) does not read version 1 (review of 2b04ff0)
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(format!("c-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
     t.close().await.unwrap();
     let v1 = manifest::load(&store, id, 1).await.unwrap();
     let v2 = manifest::load_newest(&store, id).await.unwrap().unwrap();
-    let only_v1: Vec<String> = gc::runs_of(&v1).into_iter().filter(|r| !gc::runs_of(&v2).contains(r)).collect();
+    let v_mid = manifest::load(&store, id, 2).await.unwrap();
+    let only_v1: Vec<String> = gc::runs_of(&v1).into_iter().filter(|r| !gc::runs_of(&v2).contains(r) && !gc::runs_of(&v_mid).contains(r)).collect();
     assert!(!only_v1.is_empty(), "setup: version 1 must have runs of its own");
     let (ret0, grace0) = (VERSION_RETENTION_MS.load(SeqCst), GC_GRACE_MS.load(SeqCst));
     VERSION_RETENTION_MS.store(3_600_000, SeqCst);
     GC_GRACE_MS.store(0, SeqCst);
-    // the control is the code before both GC changes: no trusted version read, errors taken as deletions
+    // the control: errors taken as deletions (the code before 2b04ff0)
     gc::CONTROL_GC_ERRORS_AS_DELETED.store(control, Relaxed);
-    gc::CONTROL_GC_PLAIN_NEWEST.store(control, Relaxed);
     *fail.lock().unwrap() = Some(manifest::manifest_path(id, 1).to_string());
     let r = gc::gc_closed(&store, id).await;
     *fail.lock().unwrap() = None;
     gc::CONTROL_GC_ERRORS_AS_DELETED.store(false, Relaxed);
-    gc::CONTROL_GC_PLAIN_NEWEST.store(false, Relaxed);
     VERSION_RETENTION_MS.store(ret0, SeqCst);
     GC_GRACE_MS.store(grace0, SeqCst);
     let mut left = 0;
@@ -1260,4 +1265,71 @@ async fn ws_gc_takes_a_transient_error_for_no_deletion() {
     assert!(left_ctl < n_ctl, "control: the GC must delete the retained version's runs, or the test does not reach the case");
     assert_eq!(left, n, "runs of a retained version were deleted after a transient error");
     assert!(skipped, "the pass must report the error (skipped)");
+}
+
+/// Review of 2b04ff0: the same for the live GC of an open database (`gc_once`, its loading of the listed versions). The
+/// compactor's knobs keep versions for 1 h and give runs no grace; version 1, a retained version two below the newest,
+/// cannot be read (503) during the pass. Control (`CONTROL_GC_ERRORS_AS_DELETED`): it is taken as deleted and its runs
+/// go. Fix: the pass is skipped and they stay, and the next pass (no error) keeps them too.
+async fn gc_once_with_a_transient_error(control: bool) -> (usize, usize, bool) {
+    let mem: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let fail = Arc::new(std::sync::Mutex::new(None));
+    let store: Arc<dyn ObjectStore> = Arc::new(FailGets { inner: Arc::clone(&mem), fail: Arc::clone(&fail) });
+    let id = if control { "ws-gc1-err-control" } else { "ws-gc1-err" };
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for round in 0..3 {
+        for i in 0..100 {
+            apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(format!("{round}-{i}").into_bytes()))]).await;
+        }
+        publish(&mut t, &small_opts(build::Reseal::All)).await;
+    }
+    let newest = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    let mut only_v1: Vec<String> = gc::runs_of(&manifest::load(&store, id, 1).await.unwrap());
+    for n in 2..=newest.version {
+        if let Ok(v) = manifest::load(&store, id, n).await {
+            let r = gc::runs_of(&v);
+            only_v1.retain(|x| !r.contains(x));
+        }
+    }
+    assert!(!only_v1.is_empty(), "setup: version 1 must have runs of its own");
+    let mut k = knobs(false, false);
+    k.version_retention = Duration::from_secs(3600);
+    k.gc_grace = Duration::from_millis(HOLD_MS + 1000); // the shortest the compactor accepts (hold life + PUT timeout)
+    assert!(t.fx_claim());
+    let c = start(&mut t, &store, &k).await;
+    gc::CONTROL_GC_ERRORS_AS_DELETED.store(control, Relaxed);
+    *fail.lock().unwrap() = Some(manifest::manifest_path(id, 1).to_string());
+    let mut errored = false;
+    // passes over longer than the grace: an unreferenced run is deleted once it has been so for the grace
+    let t0 = Instant::now();
+    while t0.elapsed() < k.gc_grace + Duration::from_secs(2) {
+        errored |= gc::gc_once(&c).await.is_err();
+        tokio::time::sleep(Duration::from_millis(300)).await;
+    }
+    *fail.lock().unwrap() = None;
+    gc::CONTROL_GC_ERRORS_AS_DELETED.store(false, Relaxed);
+    let _ = gc::gc_once(&c).await;
+    let mut left = 0;
+    for p in &only_v1 {
+        if object_store::ObjectStoreExt::head(&mem, &object_store::path::Path::from(p.as_str())).await.is_ok() {
+            left += 1;
+        }
+    }
+    eprintln!("gc_once with a transient error (control {control}): a pass errored {errored}; version 1's own runs left {left} of {}", only_v1.len());
+    c.stop().await;
+    let _ = t.close().await;
+    (left, only_v1.len(), errored)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_gc_once_takes_a_transient_error_for_no_deletion() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (left_ctl, n_ctl, _) = gc_once_with_a_transient_error(true).await;
+    let (left, n, errored) = gc_once_with_a_transient_error(false).await;
+    teardown();
+    assert!(left_ctl < n_ctl, "control: the live GC must delete the retained version's runs, or the test does not reach the case");
+    assert_eq!(left, n, "runs of a retained version were deleted after a transient error");
+    assert!(errored, "the pass must report the error (skipped)");
 }

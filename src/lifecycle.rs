@@ -4461,7 +4461,13 @@ impl Maintenance {
                                             touched.lock().unwrap().entry(id.clone()).or_insert(at);
                                         }
                                         Ok(None) => {}
-                                        Err(e) => log.lock().unwrap().error(format!("fx gc {id}: {e:#}")),
+                                        // review of 2b04ff0: a pass stopped by an error (a version that could not be read)
+                                        // is due again later, not only at the next close
+                                        Err(e) => {
+                                            log.lock().unwrap().error(format!("fx gc {id}: {e:#}"));
+                                            let at = (Instant::now() + Duration::from_secs(60)).checked_sub(gc_after).unwrap_or_else(Instant::now);
+                                            touched.lock().unwrap().entry(id.clone()).or_insert(at);
+                                        }
                                     }
                                 }
                                 // perf-latency round 3 (review D3): SSTs that became garbage less than the minimum age before

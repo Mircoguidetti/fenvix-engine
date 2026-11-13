@@ -107,6 +107,7 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
                 // a transient error is not a deletion: its runs would count as unreferenced (review of 7f93591)
                 st.to_load.lock().unwrap().push_front(n);
                 eprintln!("GC of {id}: version {n} could not be read ({e:#}); this pass is skipped");
+                VERSION_READ_ERRORS.fetch_add(1, Relaxed);
                 return Err(e);
             }
         }
@@ -237,6 +238,8 @@ fn is_not_found(e: &anyhow::Error) -> bool {
 /// Negative control of the tests: every error loading a version counts as "deleted" (the code before the review of
 /// 7f93591).
 pub static CONTROL_GC_ERRORS_AS_DELETED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// GC passes (live and closed) skipped because a version could not be read (serverStatus `gcVersionReadErrors`).
+pub static VERSION_READ_ERRORS: AtomicU64 = AtomicU64::new(0);
 
 /// Negative control of the tests: the GC keeps from the plain newest version (the code before the review of e3b04c5).
 pub static CONTROL_GC_PLAIN_NEWEST: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
@@ -252,6 +255,7 @@ async fn trusted_floor(store: &Arc<dyn ObjectStore>, id: &str, newest: u64) -> R
         Err(e) if is_not_found(&e) || CONTROL_GC_ERRORS_AS_DELETED.load(Relaxed) => Ok(newest), // a newer version was published meanwhile: the next pass
         Err(e) => {
             eprintln!("GC of {id}: version {newest} could not be read ({e:#}); this pass is skipped");
+                VERSION_READ_ERRORS.fetch_add(1, Relaxed);
             Err(e)
         }
     }
@@ -299,6 +303,7 @@ pub async fn gc_closed(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<
                 Err(e) if is_not_found(&e) || CONTROL_GC_ERRORS_AS_DELETED.load(Relaxed) => {}
                 Err(e) => {
                     eprintln!("GC of closed {id}: version {n} could not be read ({e:#}); this pass is skipped");
+                VERSION_READ_ERRORS.fetch_add(1, Relaxed);
                     return Err(e);
                 }
             }
@@ -317,6 +322,7 @@ pub async fn gc_closed(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<
                 // (review of 7f93591; at 1 TB, S3 errors are normal)
                 Err(e) => {
                     eprintln!("GC of closed {id}: version {n} could not be read ({e:#}); this pass is skipped");
+                VERSION_READ_ERRORS.fetch_add(1, Relaxed);
                     return Err(e);
                 }
             }
