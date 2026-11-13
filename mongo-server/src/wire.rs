@@ -265,12 +265,143 @@ fn never_compressed(cmd: &Document) -> bool {
     matches!(cmd.keys().next().map(|k| k.as_str()), Some("hello" | "isMaster" | "ismaster" | "saslStart" | "saslContinue" | "getnonce" | "authenticate" | "createUser" | "updateUser" | "copydbSaslStart" | "copydbgetnonce" | "copydb"))
 }
 
+/// P-command-cpu: BSON of a document appended to `out` in one pass, the way the bson crate encodes it (same bytes; the
+/// unit test `wire_enc_tests` compares the two on every type). Returns false, with `out` cut back to where it was, when
+/// the document holds something only the bson crate's own encoder may write or refuse (a key or a regex with a NUL
+/// byte, a DBPointer, the old binary subtype): the caller then uses that encoder. The bson crate's `to_vec` grows its
+/// buffer from empty (each doubling a copy of everything so far) and the frame then copied it once more; replies of
+/// whole-history lists are megabytes, so that was most of the reply's CPU (MEASURED, cpu-prof of the dev bench).
+pub fn encode_doc_into(d: &Document, out: &mut Vec<u8>) -> bool {
+    let mark = out.len();
+    if enc_doc(d, out) {
+        true
+    } else {
+        out.truncate(mark);
+        false
+    }
+}
+
+fn enc_doc(d: &Document, out: &mut Vec<u8>) -> bool {
+    let start = out.len();
+    out.extend_from_slice(&[0u8; 4]);
+    for (k, v) in d {
+        if k.as_bytes().contains(&0) {
+            return false;
+        }
+        out.push(v.element_type() as u8);
+        out.extend_from_slice(k.as_bytes());
+        out.push(0);
+        if !enc_value(v, out) {
+            return false;
+        }
+    }
+    out.push(0);
+    let len = (out.len() - start) as i32;
+    out[start..start + 4].copy_from_slice(&len.to_le_bytes());
+    true
+}
+
+fn enc_str(s: &str, out: &mut Vec<u8>) {
+    out.extend_from_slice(&((s.len() + 1) as i32).to_le_bytes());
+    out.extend_from_slice(s.as_bytes());
+    out.push(0);
+}
+
+fn enc_value(v: &Bson, out: &mut Vec<u8>) -> bool {
+    match v {
+        Bson::Double(x) => out.extend_from_slice(&x.to_le_bytes()),
+        Bson::String(s) | Bson::JavaScriptCode(s) | Bson::Symbol(s) => enc_str(s, out),
+        Bson::Document(d) => return enc_doc(d, out),
+        Bson::Array(a) => {
+            let start = out.len();
+            out.extend_from_slice(&[0u8; 4]);
+            let mut key = itoa_buf::Buf::new();
+            for (i, x) in a.iter().enumerate() {
+                out.push(x.element_type() as u8);
+                out.extend_from_slice(key.fmt(i));
+                out.push(0);
+                if !enc_value(x, out) {
+                    return false;
+                }
+            }
+            out.push(0);
+            let len = (out.len() - start) as i32;
+            out[start..start + 4].copy_from_slice(&len.to_le_bytes());
+        }
+        Bson::Binary(b) => {
+            if matches!(b.subtype, bson::spec::BinarySubtype::BinaryOld) {
+                return false;
+            }
+            out.extend_from_slice(&(b.bytes.len() as i32).to_le_bytes());
+            out.push(u8::from(b.subtype));
+            out.extend_from_slice(&b.bytes);
+        }
+        Bson::ObjectId(o) => out.extend_from_slice(&o.bytes()),
+        Bson::Boolean(b) => out.push(*b as u8),
+        Bson::DateTime(t) => out.extend_from_slice(&t.timestamp_millis().to_le_bytes()),
+        Bson::Null | Bson::Undefined | Bson::MinKey | Bson::MaxKey => {}
+        Bson::RegularExpression(r) => {
+            out.extend_from_slice(r.pattern.as_str().as_bytes());
+            out.push(0);
+            out.extend_from_slice(r.options.as_str().as_bytes());
+            out.push(0);
+        }
+        Bson::JavaScriptCodeWithScope(c) => {
+            let start = out.len();
+            out.extend_from_slice(&[0u8; 4]);
+            enc_str(&c.code, out);
+            if !enc_doc(&c.scope, out) {
+                return false;
+            }
+            let len = (out.len() - start) as i32;
+            out[start..start + 4].copy_from_slice(&len.to_le_bytes());
+        }
+        Bson::Int32(x) => out.extend_from_slice(&x.to_le_bytes()),
+        Bson::Timestamp(t) => {
+            out.extend_from_slice(&t.increment.to_le_bytes());
+            out.extend_from_slice(&t.time.to_le_bytes());
+        }
+        Bson::Int64(x) => out.extend_from_slice(&x.to_le_bytes()),
+        Bson::Decimal128(x) => out.extend_from_slice(&x.bytes()),
+        Bson::DbPointer(_) => return false,
+    }
+    true
+}
+
+/// Decimal keys of array elements without an allocation each.
+mod itoa_buf {
+    pub struct Buf([u8; 20]);
+    impl Buf {
+        pub fn new() -> Self {
+            Buf([0; 20])
+        }
+        pub fn fmt(&mut self, mut n: usize) -> &[u8] {
+            let mut i = self.0.len();
+            loop {
+                i -= 1;
+                self.0[i] = b'0' + (n % 10) as u8;
+                n /= 10;
+                if n == 0 {
+                    break;
+                }
+            }
+            &self.0[i..]
+        }
+    }
+}
+
+/// The reply document's BSON, encoded straight after the frame's header in `out` (see [`encode_doc_into`]).
+fn append_reply_doc(reply: &Document, out: &mut Vec<u8>) -> Result<()> {
+    if !encode_doc_into(reply, out) {
+        out.extend(reply.to_vec()?);
+    }
+    Ok(())
+}
+
 pub async fn write_reply<W: AsyncWrite + Unpin>(w: &mut W, req: &ReplyTo, reply: &Document, response_id: i32) -> Result<()> {
-    let doc = reply.to_vec()?;
-    let mut out = Vec::with_capacity(doc.len() + 36);
+    let mut out = Vec::with_capacity(crate::query::bson_size(reply) + 64);
     if req.legacy {
-        let len = 16 + 4 + 8 + 4 + 4 + doc.len();
-        out.extend((len as i32).to_le_bytes());
+        out.extend([0u8; 4]); // the length, set below
         out.extend(response_id.to_le_bytes());
         out.extend(req.request_id.to_le_bytes());
         out.extend(OP_REPLY.to_le_bytes());
@@ -279,15 +410,16 @@ pub async fn write_reply<W: AsyncWrite + Unpin>(w: &mut W, req: &ReplyTo, reply:
         out.extend(0i32.to_le_bytes()); // startingFrom
         out.extend(1i32.to_le_bytes()); // numberReturned
     } else {
-        let len = 16 + 4 + 1 + doc.len();
-        out.extend((len as i32).to_le_bytes());
+        out.extend([0u8; 4]); // the length, set below
         out.extend(response_id.to_le_bytes());
         out.extend(req.request_id.to_le_bytes());
         out.extend(OP_MSG.to_le_bytes());
         out.extend((if req.more_to_come { FLAG_MORE_TO_COME } else { 0 }).to_le_bytes()); // flagBits
         out.push(0); // section kind 0
     }
-    out.extend(doc);
+    append_reply_doc(reply, &mut out)?;
+    let len = out.len() as i32;
+    out[0..4].copy_from_slice(&len.to_le_bytes());
     if let Some(id) = req.compressor {
         // OP_COMPRESSED: header, original opcode, size of the plain message body, compressor, compressed body
         let body = &out[16..];
@@ -306,4 +438,88 @@ pub async fn write_reply<W: AsyncWrite + Unpin>(w: &mut W, req: &ReplyTo, reply:
     w.write_all(&out).await?;
     w.flush().await?;
     Ok(())
+}
+
+#[cfg(test)]
+mod wire_enc_tests {
+    use super::*;
+    use bson::{doc, oid::ObjectId, spec::BinarySubtype, Binary, DateTime, Decimal128, JavaScriptCodeWithScope, Timestamp};
+
+    /// /^a.*b$/imx, by decoding (the bson crate builds a Regex only that way or from its own CString)
+    fn regex() -> Bson {
+        let mut raw = vec![0u8; 4];
+        raw.push(0x0B);
+        raw.extend(b"r\0^a.*b$\0imx\0");
+        raw.push(0);
+        let n = raw.len() as i32;
+        raw[0..4].copy_from_slice(&n.to_le_bytes());
+        Document::from_reader(&raw[..]).unwrap().remove("r").unwrap()
+    }
+
+    fn every_type() -> Document {
+        let arr: Vec<Bson> = (0..1205).map(|i| if i % 3 == 0 { Bson::Int32(i) } else { Bson::String(format!("s{i}")) }).collect();
+        doc! {
+            "d": 1.5f64, "nan": f64::NAN, "s": "héllo", "empty": "", "doc": { "a": { "b": [1, 2, { "c": Bson::Null }] } },
+            "arr": arr, "arr_empty": [],
+            "bin": Bson::Binary(Binary { subtype: BinarySubtype::Generic, bytes: vec![1, 2, 3] }),
+            "uuid": Bson::Binary(Binary { subtype: BinarySubtype::Uuid, bytes: vec![9; 16] }),
+            "userbin": Bson::Binary(Binary { subtype: BinarySubtype::UserDefined(0x80), bytes: vec![] }),
+            "undef": Bson::Undefined, "oid": ObjectId::from_bytes([7; 12]), "t": true, "f": false,
+            "date": DateTime::from_millis(-1234567), "null": Bson::Null,
+            "re": regex(),
+            "js": Bson::JavaScriptCode("function(){}".into()),
+            "sym": Bson::Symbol("sym".into()),
+            "cws": Bson::JavaScriptCodeWithScope(JavaScriptCodeWithScope { code: "x+1".into(), scope: doc! { "x": 1, "y": [ "z" ] } }),
+            "i32": -7i32, "ts": Timestamp { time: 0x01020304, increment: 0x0a0b0c0d }, "i64": i64::MIN,
+            "dec": Decimal128::from_bytes([3; 16]), "min": Bson::MinKey, "max": Bson::MaxKey,
+        }
+    }
+
+    /// P-command-cpu: the one-pass encoder writes exactly the bson crate's bytes, on every BSON type.
+    #[test]
+    fn same_bytes_as_the_bson_crate() {
+        let d = every_type();
+        let mut out = vec![0xAA; 3]; // appends after what is there
+        assert!(encode_doc_into(&d, &mut out));
+        assert_eq!(&out[..3], &[0xAA; 3]);
+        assert_eq!(&out[3..], &d.to_vec().unwrap()[..]);
+        let nested = doc! { "cursor": { "firstBatch": [Bson::Document(d.clone()), Bson::Document(d)], "id": 0i64, "ns": "a.b" }, "ok": 1.0 };
+        let mut out = Vec::new();
+        assert!(encode_doc_into(&nested, &mut out));
+        assert_eq!(out, nested.to_vec().unwrap());
+        let mut out = Vec::new();
+        assert!(encode_doc_into(&Document::new(), &mut out));
+        assert_eq!(out, Document::new().to_vec().unwrap());
+    }
+
+    /// What only the bson crate may write or refuse is left to it: `out` is cut back, and the reply path falls back.
+    #[test]
+    fn falls_back_on_what_it_does_not_write() {
+        let mut nul_key = Document::new();
+        nul_key.insert("a\0b", 1);
+        let old = doc! { "o": Bson::Binary(Binary { subtype: BinarySubtype::BinaryOld, bytes: vec![1, 2] }) };
+        // a DBPointer, only reachable by decoding: {p: DBPointer("ns", oid)}
+        let mut raw = vec![0u8; 4];
+        raw.push(0x0C);
+        raw.extend(b"p\0");
+        raw.extend(3i32.to_le_bytes());
+        raw.extend(b"ns\0");
+        raw.extend([5u8; 12]);
+        raw.push(0);
+        let n = raw.len() as i32;
+        raw[0..4].copy_from_slice(&n.to_le_bytes());
+        let dbp = Document::from_reader(&raw[..]).unwrap();
+        for d in [nul_key, old, dbp] {
+            let mut out = vec![1u8, 2];
+            assert!(!encode_doc_into(&doc! { "x": 1, "in": Bson::Document(d.clone()) }, &mut out));
+            assert_eq!(out, vec![1u8, 2]);
+            // the reply path gives the bson crate's answer (bytes or error)
+            let mut out = Vec::new();
+            let r = append_reply_doc(&d, &mut out);
+            match d.to_vec() {
+                Ok(b) => assert_eq!(out, b),
+                Err(_) => assert!(r.is_err()),
+            }
+        }
+    }
 }
