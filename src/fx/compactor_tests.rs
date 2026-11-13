@@ -1096,3 +1096,266 @@ async fn perf_bytes_follower_reads_across_a_real_drop() {
     }
     teardown();
 }
+
+/// A store that counts the GETs of SlateDB's polled objects (its manifest and `.compactions` files and their GC
+/// boundaries), and passes everything on.
+#[derive(Debug)]
+struct PollCount {
+    inner: Arc<dyn ObjectStore>,
+    polls: std::sync::atomic::AtomicU64,
+}
+
+impl std::fmt::Display for PollCount {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "PollCount")
+    }
+}
+
+#[async_trait::async_trait]
+impl ObjectStore for PollCount {
+    async fn put_opts(&self, l: &object_store::path::Path, p: object_store::PutPayload, o: object_store::PutOptions) -> object_store::Result<object_store::PutResult> {
+        self.inner.put_opts(l, p, o).await
+    }
+    async fn put_multipart_opts(&self, l: &object_store::path::Path, o: object_store::PutMultipartOptions) -> object_store::Result<Box<dyn object_store::MultipartUpload>> {
+        self.inner.put_multipart_opts(l, o).await
+    }
+    async fn get_opts(&self, l: &object_store::path::Path, o: object_store::GetOptions) -> object_store::Result<object_store::GetResult> {
+        let s = l.as_ref();
+        if !s.contains("/fx/") && (s.contains("/manifest/") || s.contains("/compactions/") || s.ends_with(".boundary")) {
+            self.polls.fetch_add(1, Relaxed);
+        }
+        self.inner.get_opts(l, o).await
+    }
+    fn delete_stream(&self, l: futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>> {
+        self.inner.delete_stream(l)
+    }
+    fn list(&self, p: Option<&object_store::path::Path>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.inner.list(p)
+    }
+    fn list_with_offset(&self, p: Option<&object_store::path::Path>, o: &object_store::path::Path) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.inner.list_with_offset(p, o)
+    }
+    async fn list_with_delimiter(&self, p: Option<&object_store::path::Path>) -> object_store::Result<object_store::ListResult> {
+        self.inner.list_with_delimiter(p).await
+    }
+    async fn copy_opts(&self, f: &object_store::path::Path, t: &object_store::path::Path, o: object_store::CopyOptions) -> object_store::Result<()> {
+        self.inner.copy_opts(f, t, o).await
+    }
+    async fn rename_opts(&self, f: &object_store::path::Path, t: &object_store::path::Path, o: object_store::RenameOptions) -> object_store::Result<()> {
+        self.inner.rename_opts(f, t, o).await
+    }
+}
+
+/// fix-box-first-trip, `drop::SlateGate`: an idle writer's SlateDB compactor and worker poll the store at most every
+/// `SLATE_IDLE_POLL_MS`, instead of every 20 and 10 ms; writes still fold (their absorbed L0 SSTs leave L0, the reads stay
+/// exact); and the stop is not held by a held poll. Control: `SLATE_IDLE_POLL_MS` 0 (no gate, the code before).
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn bft_idle_slatedb_polls_are_held() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let mut seen = Vec::new();
+    for idle_ms in [5_000u64, 0] {
+        super::drop::SLATE_IDLE_POLL_MS.store(idle_ms, Relaxed);
+        let pc = Arc::new(PollCount { inner: Arc::new(InMemory::new()), polls: Default::default() });
+        let store: Arc<dyn ObjectStore> = pc.clone();
+        let id = format!("fx-bft-poll-{idle_ms}");
+        let mut t = lc(&store).create(&id).await.unwrap();
+        let mut m = BTreeMap::new();
+        for i in 0..100 {
+            apply(&mut t, &mut m, vec![(ckey(5, i), Some(b"v".to_vec()))]).await;
+        }
+        publish(&mut t, &small_opts(build::Reseal::All)).await;
+        let c = Compactor::start(&mut t, Arc::clone(&store), test_knobs(true), pool::Pool::new(2), tokio::runtime::Handle::current()).await.unwrap();
+        // writes, absorbed and folded: their L0 SSTs leave L0 while the gate is on
+        for i in 0..200 {
+            apply(&mut t, &mut m, vec![(ckey(6, i), Some(vec![b'w'; 40]))]).await;
+        }
+        flush(&t).await;
+        c.absorb_once().await.unwrap();
+        let t0 = Instant::now();
+        while t.writer_l0().unwrap_or(0) > 0 && t0.elapsed() < Duration::from_secs(10) {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        let fold = t0.elapsed();
+        let l0_left = t.writer_l0().unwrap_or(0);
+        // idle for 2 s: SlateDB's polls
+        tokio::time::sleep(Duration::from_millis(300)).await;
+        let p0 = pc.polls.load(Relaxed);
+        tokio::time::sleep(Duration::from_secs(2)).await;
+        let idle_polls = pc.polls.load(Relaxed) - p0;
+        for (key, want) in &m {
+            assert_eq!(t.get(key).await.unwrap().as_deref(), Some(&want[..]));
+        }
+        let t1 = Instant::now();
+        c.stop().await;
+        let stop = t1.elapsed();
+        t.abandon().await;
+        eprintln!("idle poll {idle_ms} ms: L0 folded in {fold:?} ({l0_left} left), {idle_polls} polled GETs in 2 s idle, stop {stop:?}");
+        seen.push((idle_ms, l0_left, idle_polls, stop));
+    }
+    super::drop::SLATE_IDLE_POLL_MS.store(120_000, Relaxed);
+    teardown();
+    let (_, l0_gate, polls_gate, stop_gate) = seen[0];
+    let (_, _, polls_control, _) = seen[1];
+    assert_eq!(l0_gate, 0, "with the gate the absorbed L0 SSTs are folded");
+    assert!(polls_gate <= 8, "with the gate an idle database polls at most every 5 s ({polls_gate} GETs in 2 s)");
+    assert!(polls_control >= 100, "control: without the gate it polls every 10-20 ms ({polls_control} GETs in 2 s)");
+    assert!(stop_gate < Duration::from_secs(2), "the stop is not held by a held poll ({stop_gate:?})");
+}
+
+/// fix-idle-poll, `writer_gate`: an idle writer's manifest poll (every `WRITER_POLL_SECS`, 1 s here) is held once nothing
+/// went through its store for `ACTIVE_WINDOW`, up to `WRITER_IDLE_POLL_SECS`; the next write releases it at once and
+/// reads stay exact. Control: `SLATE_IDLE_POLL_MS` 0 (no gate): the writer keeps polling every second.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn fip_idle_writer_manifest_poll_is_held() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let mut seen = Vec::new();
+    for idle_ms in [120_000u64, 0] {
+        super::drop::SLATE_IDLE_POLL_MS.store(idle_ms, Relaxed);
+        let pc = Arc::new(PollCount { inner: Arc::new(InMemory::new()), polls: Default::default() });
+        let store: Arc<dyn ObjectStore> = pc.clone();
+        let id = format!("fx-fip-writer-{idle_ms}");
+        let mut t = lc(&store).create(&id).await.unwrap();
+        let mut m = BTreeMap::new();
+        for i in 0..20 {
+            apply(&mut t, &mut m, vec![(ckey(7, i), Some(b"v".to_vec()))]).await;
+        }
+        flush(&t).await;
+        // past the active window: then 4 s of idle polls counted
+        let held0 = super::writer_gate::WRITER_POLLS_HELD.load(Relaxed);
+        let woken0 = super::writer_gate::WRITER_POLLS_WOKEN.load(Relaxed);
+        tokio::time::sleep(super::writer_gate::ACTIVE_WINDOW + Duration::from_secs(1)).await;
+        let p0 = pc.polls.load(Relaxed);
+        tokio::time::sleep(Duration::from_secs(4)).await;
+        let idle_polls = pc.polls.load(Relaxed) - p0;
+        // a write releases the held poll
+        apply(&mut t, &mut m, vec![(ckey(7, 99), Some(b"w".to_vec()))]).await;
+        flush(&t).await;
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        let woken = super::writer_gate::WRITER_POLLS_WOKEN.load(Relaxed) - woken0;
+        let held = super::writer_gate::WRITER_POLLS_HELD.load(Relaxed) - held0;
+        for (key, want) in &m {
+            assert_eq!(t.get(key).await.unwrap().as_deref(), Some(&want[..]));
+        }
+        let t1 = Instant::now();
+        t.abandon().await;
+        let close = t1.elapsed();
+        eprintln!("idle hold {idle_ms} ms: {idle_polls} writer poll GETs in 4 s idle, held {held}, woken {woken}, close {close:?}");
+        seen.push((idle_polls, held, woken, close));
+    }
+    super::drop::SLATE_IDLE_POLL_MS.store(120_000, Relaxed);
+    teardown();
+    let (polls_gate, held_gate, woken_gate, close_gate) = seen[0];
+    let (polls_control, held_control, _, _) = seen[1];
+    assert!(polls_gate <= 2, "with the gate an idle writer does not poll every second ({polls_gate} GETs in 4 s)");
+    assert!(held_gate >= 1 && woken_gate >= 1, "the poll was held ({held_gate}) and the write released it ({woken_gate})");
+    assert!(close_gate < Duration::from_secs(5), "the close is not held by a held poll ({close_gate:?})");
+    assert!(polls_control >= 6, "control: without the gate the writer polls every second ({polls_control} GETs in 4 s)");
+    assert_eq!(held_control, 0);
+}
+
+/// A store that counts the GETs of the drop lease (`{db}/fx/drop-lease`), and passes everything on.
+#[derive(Debug)]
+struct LeaseCount {
+    inner: Arc<dyn ObjectStore>,
+    reads: std::sync::atomic::AtomicU64,
+}
+
+impl std::fmt::Display for LeaseCount {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "LeaseCount")
+    }
+}
+
+#[async_trait::async_trait]
+impl ObjectStore for LeaseCount {
+    async fn put_opts(&self, l: &object_store::path::Path, p: object_store::PutPayload, o: object_store::PutOptions) -> object_store::Result<object_store::PutResult> {
+        self.inner.put_opts(l, p, o).await
+    }
+    async fn put_multipart_opts(&self, l: &object_store::path::Path, o: object_store::PutMultipartOptions) -> object_store::Result<Box<dyn object_store::MultipartUpload>> {
+        self.inner.put_multipart_opts(l, o).await
+    }
+    async fn get_opts(&self, l: &object_store::path::Path, o: object_store::GetOptions) -> object_store::Result<object_store::GetResult> {
+        if l.as_ref().ends_with("/fx/drop-lease") {
+            self.reads.fetch_add(1, Relaxed);
+        }
+        self.inner.get_opts(l, o).await
+    }
+    fn delete_stream(&self, l: futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>> {
+        self.inner.delete_stream(l)
+    }
+    fn list(&self, p: Option<&object_store::path::Path>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.inner.list(p)
+    }
+    fn list_with_offset(&self, p: Option<&object_store::path::Path>, o: &object_store::path::Path) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.inner.list_with_offset(p, o)
+    }
+    async fn list_with_delimiter(&self, p: Option<&object_store::path::Path>) -> object_store::Result<object_store::ListResult> {
+        self.inner.list_with_delimiter(p).await
+    }
+    async fn copy_opts(&self, f: &object_store::path::Path, t: &object_store::path::Path, o: object_store::CopyOptions) -> object_store::Result<()> {
+        self.inner.copy_opts(f, t, o).await
+    }
+    async fn rename_opts(&self, f: &object_store::path::Path, t: &object_store::path::Path, o: object_store::RenameOptions) -> object_store::Result<()> {
+        self.inner.rename_opts(f, t, o).await
+    }
+}
+
+/// fix-idle-poll-2: while a checkpoint holds the drop lease the floor is 0 and cannot rise; an idle database observes
+/// the floor (a drop-lease GET and a LIST of our manifest's versions) at most once per lease life, not every 5 s.
+/// Control: `SLATE_IDLE_POLL_MS` 0 (no idle holds, the code before).
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn fip2_floor_not_polled_while_the_drop_lease_is_held() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let mut seen = Vec::new();
+    for idle_ms in [120_000u64, 0] {
+        super::drop::SLATE_IDLE_POLL_MS.store(idle_ms, Relaxed);
+        let lc_store = Arc::new(LeaseCount { inner: Arc::new(InMemory::new()), reads: Default::default() });
+        let store: Arc<dyn ObjectStore> = lc_store.clone();
+        let id = format!("fx-fip2-lease-{idle_ms}");
+        let mut t = lc(&store).create(&id).await.unwrap();
+        let mut m = BTreeMap::new();
+        for i in 0..50 {
+            apply(&mut t, &mut m, vec![(ckey(8, i), Some(b"v".to_vec()))]).await;
+        }
+        publish(&mut t, &small_opts(build::Reseal::All)).await;
+        let c = Compactor::start(&mut t, Arc::clone(&store), test_knobs(true), pool::Pool::new(2), tokio::runtime::Handle::current()).await.unwrap();
+        // rows absorbed above the floor: the floor would rise once the lease ends (not settled without the lease rule)
+        for i in 0..50 {
+            apply(&mut t, &mut m, vec![(ckey(9, i), Some(b"w".to_vec()))]).await;
+        }
+        flush(&t).await;
+        c.absorb_once().await.unwrap();
+        assert!(c.drop.known_xd.load(Relaxed) > 0);
+        let _lease = super::pair::take_lease(&store, &id).await.unwrap();
+        // the first observations see the lease held; then 12 s counted
+        // the compactor's planner, as its run loop drives it (every 50 ms)
+        let ticks = |secs: u64| {
+            let c = Arc::clone(&c);
+            async move {
+                let t0 = Instant::now();
+                while t0.elapsed() < Duration::from_secs(secs) {
+                    c.tick();
+                    tokio::time::sleep(Duration::from_millis(50)).await;
+                }
+            }
+        };
+        ticks(6).await;
+        let r0 = lc_store.reads.load(Relaxed);
+        ticks(12).await;
+        let reads = lc_store.reads.load(Relaxed) - r0;
+        for (key, want) in &m {
+            assert_eq!(t.get(key).await.unwrap().as_deref(), Some(&want[..]));
+        }
+        c.stop().await;
+        t.abandon().await;
+        eprintln!("idle hold {idle_ms} ms: {reads} drop-lease GETs in 12 s with the lease held");
+        seen.push(reads);
+    }
+    super::drop::SLATE_IDLE_POLL_MS.store(120_000, Relaxed);
+    teardown();
+    assert!(seen[0] <= 1, "with the lease held an idle database read it {} times in 12 s", seen[0]);
+    assert!(seen[1] >= 2, "control: the lease is read every few seconds ({} in 12 s)", seen[1]);
+}

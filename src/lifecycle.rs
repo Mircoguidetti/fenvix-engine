@@ -555,6 +555,8 @@ fn pin_sst_maps(db: &Db) {
 }
 
 pub(crate) fn writer_closed(id: &str) {
+    // fix-idle-poll: the close never waits for a held manifest poll
+    crate::fx::writer_gate::stopping(id);
     crate::memgov::forget(id);
     OPEN_WRITERS.lock().unwrap().remove(id);
     WRITER_DBS.lock().unwrap().remove(id);
@@ -943,7 +945,8 @@ pub(crate) fn writer_builder_raised(db: &(impl DbRef + ?Sized), store: &Arc<dyn 
         // Durable writes flush explicitly; the periodic flush only has to bound the relaxed ones.
         settings.flush_interval = Some(relaxed);
     }
-    let b = Db::builder(tenant_path(db), crate::counting::owned(store, id)).with_settings(settings).with_block_cache_policy(flush_cache_policy()).with_sst_block_size(crate::tiered::block_size());
+    // fix-idle-poll: the writer's manifest poll is held while the database is idle (`fx::writer_gate`)
+    let b = Db::builder(tenant_path(db), crate::fx::writer_gate::wrap(id, crate::counting::owned(store, id))).with_settings(settings).with_block_cache_policy(flush_cache_policy()).with_sst_block_size(crate::tiered::block_size());
     let b = match filter_policies() {
         Some(p) => b.with_filter_policies(p),
         None => b,
@@ -4199,6 +4202,7 @@ pub(crate) async fn compact_tenant_pass_with(
         let writer = WRITER_DBS.lock().unwrap().get(id).cloned();
         if let Some(db) = writer {
             if db.manifest().l0().len() >= L0_COMPACT_THRESHOLD {
+                crate::fx::writer_gate::wake(id);
                 let _ = db.refresh_manifest().await;
             }
         }
@@ -4454,6 +4458,7 @@ pub(crate) async fn compact_tenant_pass_with(
     // still counts the compacted L0 SSTs, and a writer written fast can fill its L0 and stall its memtable flushes.
     let writer = WRITER_DBS.lock().unwrap().get(id).cloned();
     if let Some(db) = writer {
+        crate::fx::writer_gate::wake(id);
         let refreshed = db.refresh_manifest().await.is_ok();
         // The consumed SSTs are no longer in the writer's manifest: their blocks would only age out of the cache.
         if let (true, Some((_, _, before, _))) = (refreshed, &warm_from) {

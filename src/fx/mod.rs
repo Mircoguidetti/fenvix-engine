@@ -36,6 +36,7 @@ pub mod pair;
 pub mod read;
 pub mod seqfilter;
 pub mod view;
+pub mod writer_gate;
 #[cfg(test)]
 mod counter_bench;
 #[cfg(test)]
