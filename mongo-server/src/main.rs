@@ -825,6 +825,58 @@ fn heap_prof_thread() {
     });
 }
 
+/// Measurement builds (`--features cpu-prof`): with `CPU_PROF_FILE` set, the first SIGUSR2 starts a sampling CPU
+/// profile of every thread (SIGPROF at 997 Hz) and the next SIGUSR2 writes it to that file as folded stacks
+/// (`frame;frame;... count`, root first), then the cycle repeats (`.1`, `.2`, ... appended after the first).
+#[cfg(feature = "cpu-prof")]
+fn cpu_prof_thread() {
+    let Ok(path) = std::env::var("CPU_PROF_FILE") else { return };
+    std::thread::spawn(move || {
+        let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        rt.block_on(async move {
+            let mut sig = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::user_defined2()).unwrap();
+            for n in 0u64.. {
+                sig.recv().await;
+                let guard = match pprof::ProfilerGuardBuilder::default().frequency(997).build() {
+                    Ok(g) => g,
+                    Err(e) => {
+                        eprintln!("CPUPROF start failed: {e}");
+                        continue;
+                    }
+                };
+                eprintln!("CPUPROF started n={n}");
+                sig.recv().await;
+                let out = if n == 0 { path.clone() } else { format!("{path}.{n}") };
+                match guard.report().build() {
+                    Ok(rep) => {
+                        let mut s = String::new();
+                        for (frames, count) in rep.data.iter() {
+                            let mut names: Vec<String> = Vec::new();
+                            for f in frames.frames.iter().rev() {
+                                for sym in f.iter().rev() {
+                                    // short names (`{async_fn#0}`, `poll`) get the source file and line to be told apart
+                                    let mut n = sym.name().replace(';', ":");
+                                    let (fp, line) = (sym.filename(), sym.lineno());
+                                    if line > 0 {
+                                        let tail: Vec<&str> = fp.rsplitn(3, '/').collect();
+                                        let short = if tail.len() >= 2 { format!("{}/{}", tail[1], tail[0]) } else { fp.to_string() };
+                                        n = format!("{n}@{short}:{line}");
+                                    }
+                                    names.push(n);
+                                }
+                            }
+                            s.push_str(&format!("{};{} {}\n", frames.thread_name.replace(';', ":"), names.join(";"), count));
+                        }
+                        let _ = std::fs::write(&out, s);
+                        eprintln!("CPUPROF written {out}");
+                    }
+                    Err(e) => eprintln!("CPUPROF report failed: {e}"),
+                }
+            }
+        });
+    });
+}
+
 /// jemalloc's live heap (`stats.allocated`) and the memory it holds (`stats.resident`), in bytes.
 pub(crate) fn heap_stats() -> (u64, u64) {
     use tikv_jemalloc_ctl::{epoch, stats};
@@ -835,6 +887,8 @@ pub(crate) fn heap_stats() -> (u64, u64) {
 fn main() -> Result<()> {
     #[cfg(feature = "heap-prof")]
     heap_prof_thread();
+    #[cfg(feature = "cpu-prof")]
+    cpu_prof_thread();
     // The futures of the command handlers are large: the workers get stacks that are not the 2 MiB default.
     // ISO_EVENT_INTERVAL (test only, docs/isolamento.md): how many tasks a worker runs between two looks at the network.
     // perf-latency round 2: on as many CPUs as the CPU quota allows (`fx::pool::pin_to_quota`), before any thread starts

@@ -47,7 +47,12 @@ snap = "1"
 zstd = "0.13"
 tikv-jemallocator = { version = "=0.6.0", features = ["stats"] }
 tikv-jemalloc-ctl = { version = "=0.6.0", features = ["stats"] }
+# Measurement builds only (`--features cpu-prof`): a SIGPROF sampling CPU profiler, no perf_event needed (see main.rs)
+pprof = { version = "=0.15.0", optional = true, default-features = false }
 
 [features]
 # Measurement builds only: jemalloc's heap profiler (`_RJEM_MALLOC_CONF=prof:true,...` and HEAP_PROF_DUMP_SECS, see main.rs).
 heap-prof = ["tikv-jemallocator/profiling"]
+# Measurement builds only: CPU_PROF_FILE=path, then SIGUSR2 starts a CPU profile (997 Hz) and a second SIGUSR2 writes
+# it as folded stacks (one "frame;frame;... count" line per stack) to that path.
+cpu-prof = ["dep:pprof"]
