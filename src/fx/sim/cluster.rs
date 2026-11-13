@@ -393,6 +393,64 @@ pub fn generate(seed: u64, steps: usize) -> Script {
             cands.push((6, Ev::Release { rid: open_rules[i] }));
         }
         cands.push((4, Ev::Sleep { ms: if r.gen_bool(0.2) { r.gen_range(400..1500) } else { r.gen_range(10..400) } }));
+        // v3, the late-write pattern (the family this simulator hunts): the owner's next request of a class is held, the
+        // owner starts the work that sends it, another process takes the database over and works on it, then the held
+        // request goes on. Every part is drawn at random.
+        if let (Some(o), Some(&q)) = (owner, down.first()) {
+            if ev.len() + 12 < steps && r.gen_bool(if versioned { 0.10 } else { 0.25 }) {
+                rid += 1;
+                let class = if r.gen_bool(0.7) { Class::FxVersion } else { hold_class(&mut r) };
+                let op = match r.gen_range(0..4) {
+                    0 => Some(NOp::List),
+                    1 => None,
+                    _ => Some(NOp::Put),
+                };
+                ev.push(Ev::Hold { p: o, class, op, skip: r.gen_range(0..2), land: r.gen_bool(0.85), all: r.gen_bool(0.3), rid });
+                ev.push(match r.gen_range(0..5) {
+                    // before the first version: the first build (its slot comes from a LIST) or the first publish
+                    _ if !versioned => {
+                        if r.gen_bool(0.5) {
+                            Ev::FirstStart { p: o }
+                        } else {
+                            Ev::Publish { p: o }
+                        }
+                    }
+                    0 => Ev::FirstStart { p: o },
+                    1 => Ev::Publish { p: o },
+                    2 if st[o].comp => Ev::ErasePass { p: o },
+                    3 if st[o].comp => Ev::Gc { p: o },
+                    _ if st[o].comp => Ev::CompDrain { p: o },
+                    _ => Ev::Publish { p: o },
+                });
+                ev.push(Ev::Open { p: q, writer: true });
+                st[o].role = Role::Zombie;
+                st[q] = S { role: Role::Owner, comp: false };
+                for _ in 0..r.gen_range(2..7) {
+                    ev.push(match r.gen_range(0..8) {
+                        0 | 1 => Ev::Write { p: q, ops: ops(&mut r) },
+                        2 => Ev::Flush { p: q },
+                        3 => Ev::Publish { p: q },
+                        4 => {
+                            st[q].comp = true;
+                            Ev::CompStart { p: q }
+                        }
+                        5 => Ev::CompDrain { p: q },
+                        6 => Ev::Gc { p: q },
+                        _ => Ev::Erase { p: q, cust: r.gen_range(0..CUSTOMERS) },
+                    });
+                }
+                ev.push(Ev::Release { rid });
+                if r.gen_bool(0.5) {
+                    ev.push(match r.gen_range(0..3) {
+                        0 => Ev::FirstPoll { p: o },
+                        1 => Ev::Abandon { p: o },
+                        _ => Ev::CompDrain { p: o },
+                    });
+                }
+                versioned = true;
+                continue;
+            }
+        }
         let total: u32 = cands.iter().map(|c| c.0).sum();
         let mut x = r.gen_range(0..total);
         let mut chosen = cands[0].1.clone();
