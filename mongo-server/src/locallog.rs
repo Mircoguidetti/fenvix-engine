@@ -88,6 +88,10 @@ pub struct LocalLog {
     /// are refused (like `pinned`) and never confirmed to the log until a restart reads the records back and applies
     /// them. Without this the disk-log rule (a drop record, see `dbs.rs` abandon) would discard acknowledged writes.
     frozen: Mutex<std::collections::HashSet<String>>,
+    /// Q8d, fix-takeover-retry: per database, the highest log position this process read back at its start
+    /// ([`recover_remote`]): every record of the database at or below it was read then. A process that does not hold
+    /// the database's lease confirms at most this position, and only once it proved those records are in object storage.
+    read_pos: Mutex<HashMap<String, u64>>,
 }
 
 fn checksum(b: &[u8]) -> [u8; 8] {
@@ -250,7 +254,7 @@ impl LocalLog {
         let old = list_segments(&dir)?;
         let first = old.last().map(|(n, _)| n + 1).unwrap_or(1);
         let (tx, rx) = mpsc::unbounded_channel();
-        let me = Arc::new(Self { dir: dir.clone(), id, next_seq: AtomicU64::new((boot << SEQ_BOOT_SHIFT) + 1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every, remote: None, frozen: Mutex::new(Default::default()) });
+        let me = Arc::new(Self { dir: dir.clone(), id, next_seq: AtomicU64::new((boot << SEQ_BOOT_SHIFT) + 1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every, remote: None, frozen: Mutex::new(Default::default()), read_pos: Mutex::new(HashMap::new()) });
         let w = Arc::clone(&me);
         std::thread::Builder::new().name("local-log".into()).spawn(move || w.writer_thread(rx, first))?;
         Ok((me, old))
@@ -554,10 +558,21 @@ pub async fn install_quaderno(addrs: &str, id: &str, dir: &str, upload_secs: u64
     std::fs::create_dir_all(&dir).with_context(|| format!("directory {}", dir.display()))?;
     // the disk writer is never used: its channel stays without a receiver
     let (tx, _rx) = mpsc::unbounded_channel();
-    let me = Arc::new(LocalLog { dir, id: format!("quaderno:{id}"), next_seq: AtomicU64::new(1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every: Duration::from_secs(upload_secs), remote: Some(remote), frozen: Mutex::new(Default::default()) });
+    let me = Arc::new(LocalLog { dir, id: format!("quaderno:{id}"), next_seq: AtomicU64::new(1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every: Duration::from_secs(upload_secs), remote: Some(remote), frozen: Mutex::new(Default::default()), read_pos: Mutex::new(HashMap::new()) });
     tenant_bench::lifecycle::LOCAL_LOG_FLUSH_SECS.store(upload_secs, Relaxed);
+    if old_kept_retry() {
+        eprintln!("TEST: the old handling of kept records is on (MONGO_TEST_KEPT_RETRY_OLD): it loses acknowledged writes; never use this in production");
+    }
     let _ = LOG.set(me);
     Ok(())
+}
+
+/// Test only (`MONGO_TEST_KEPT_RETRY_OLD=1`, the control of ctl test_91): the handling of kept records before
+/// fix-takeover-retry, which loses acknowledged writes (a process that does not hold the database's lease writes copies
+/// of its kept records to the replicated log and confirms the position of the last copy). Never set in production.
+fn old_kept_retry() -> bool {
+    static OLD: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *OLD.get_or_init(|| std::env::var("MONGO_TEST_KEPT_RETRY_OLD").map_or(false, |v| v == "1"))
 }
 
 /// Q8d: the restart with the replicated log. Reads back every record the log still holds (not confirmed as in object
@@ -596,6 +611,7 @@ pub async fn recover_remote(dbs: &Arc<crate::dbs::Dbs>, timeout: Duration) -> Re
         }
     }
     log.next_seq.fetch_max(max_seq + 1, Relaxed);
+    log.read_pos.lock().unwrap().extend(max_pos.iter().map(|(k, v)| (k.clone(), *v)));
     eprintln!("quaderno: restart read {n_read} records of {} databases from the log", by_db.len());
     let names: Vec<String> = by_db.keys().cloned().collect();
     let (n_dbs, applied, conflicts, failed) = replay_all(dbs, log, by_db, timeout).await?;
@@ -786,7 +802,7 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
     // Databases are independent: check (and replay) up to 32 at once. A clean shutdown leaves every database's marker at
     // its last record, so a restart only reads the markers; one at a time that took 123 s for 100 databases on S3.
     let log_id = log.id.clone();
-    let results: Vec<(String, Result<Outcome>, Option<u64>, Vec<Record>)> = futures::stream::iter(by_db.into_iter().filter(|(_, r)| !r.is_empty()))
+    let results: Vec<(String, Result<Outcome>, Option<u64>, Vec<Record>, bool)> = futures::stream::iter(by_db.into_iter().filter(|(_, r)| !r.is_empty()))
         .map(|(db, recs)| {
             let dbs = Arc::clone(dbs);
             let log_id = log_id.clone();
@@ -796,12 +812,15 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
                 // opening the database: a warm spare restarted beside the cook took the cook's databases to apply nothing
                 // and held them (the cook's commands were refused, "tenant app_demo is owned by server process ...")
                 if get().map_or(false, |l| l.is_remote()) && drop_stored(&dbs, &log_id, &db, &mut recs).await {
-                    return (db, Ok(Outcome::Nothing), None, Vec::new());
+                    return (db, Ok(Outcome::Nothing), None, Vec::new(), false);
                 }
                 let keep: Vec<Record> = recs.iter().map(copy_record).collect();
                 let mut seen = None;
+                // fix-takeover-retry: whether the replay took the database's lease (so may have opened a writer)
+                let takes = dbs.leases.takes(&db);
                 let r = replay_with_timeout(&dbs, &log_id, &db, recs, false, &mut seen, timeout).await;
-                (db, r, seen, keep)
+                let opened = dbs.leases.takes(&db) != takes;
+                (db, r, seen, keep, opened)
             }
         })
         .buffer_unordered(32)
@@ -812,7 +831,7 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
     let mut conflicts = Vec::new();
     let mut failed = 0usize;
     let mut failed_dbs = Vec::new();
-    for (db, r, seen, keep) in results {
+    for (db, r, seen, keep, opened) in results {
         match r {
             Ok(Outcome::Nothing) => {}
             Ok(Outcome::Applied(n)) => {
@@ -829,6 +848,20 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
                 hold_point("hold_kept_records", &db).await;
                 failed += 1;
                 failed_dbs.push(db.clone());
+                if log.is_remote() && !opened && !old_kept_retry() {
+                    // fix-takeover-retry (RULE 8, step 9 takeovers): the replay never took the database's lease (another
+                    // process holds it: it was refused before opening anything), so it changed no writer epoch, and the
+                    // records are already in the replicated log, where nothing confirms them until they are in object
+                    // storage. They stay there as they are and are kept in memory only, with their own numbers and epochs.
+                    // Writing them again (as below) put copies at new positions, after records the lease holder had
+                    // acknowledged meanwhile; the retry then confirmed the last copy's position and the log dropped the
+                    // holder's records although no one had stored them (MEASURED: 852, 605 and 1,335 acknowledged writes
+                    // lost in the step 9 takeovers, the same 120 of 360 in ctl test_91). A process that does not hold the
+                    // database writes nothing to the log for it.
+                    eprintln!("quaderno: database {db}: its replay was refused before it took the lease; its {} records stay in the log as they are (no copies)", keep.len());
+                    log.pinned.lock().unwrap().insert(db.clone(), keep);
+                    continue;
+                }
                 let epoch = keep.iter().map(|r| r.epoch).max().unwrap_or(0).max(seen.map_or(0, |s| s + 1));
                 let mut kept = Vec::with_capacity(keep.len());
                 for r in keep {
@@ -1010,7 +1043,12 @@ fn spawn_retry(dbs: Arc<crate::dbs::Dbs>, timeout: Duration) {
             for (db, mut recs) in todo {
                 let mut seen = None;
                 let rec_epoch = recs.iter().map(|r| r.epoch).max().unwrap_or(0);
+                let takes = dbs.leases.takes(&db);
                 let r = if drop_stored(&dbs, &log_id, &db, &mut recs).await { Ok(Outcome::Nothing) } else { replay_with_timeout(&dbs, &log_id, &db, recs, true, &mut seen, timeout).await };
+                // fix-takeover-retry: whether this attempt took the database's lease, and whether this process holds it now
+                let opened = dbs.leases.takes(&db) != takes;
+                let holder = dbs.leases.valid(&db);
+                let old = old_kept_retry();
                 match r {
                     Ok(Outcome::Applied(_)) | Ok(Outcome::Nothing) => {
                         // Applied durably; nothing else was written meanwhile (the database was refused): all is uploaded.
@@ -1025,8 +1063,21 @@ fn spawn_retry(dbs: Arc<crate::dbs::Dbs>, timeout: Duration) {
                         // m21: 1.4 GB per replica, alarm "oldest record not on S3 1,326 s"; the standard runs filled the
                         // disk) and a takeover would have read them all back. A position older than what the cook already
                         // confirmed changes nothing (the log keeps the highest).
+                        //
+                        // fix-takeover-retry (RULE 8): only the lease holder may confirm the database's position in the log.
+                        // `committed_pos` is the highest position this process knows for the database, which includes the
+                        // copies it wrote of its kept records; while another process held the database, those copies sat
+                        // after records the holder had acknowledged and not stored yet, and confirming them dropped those
+                        // records from the log (the step 9 loss). The holder (this retry opened the database: its takeover
+                        // read and applied every record up to now) confirms as before. A process that does not hold it
+                        // confirms at most the position it read at its start (`read_pos`): every record of the database at
+                        // or below it was read then, and the check above proved them in object storage (the holder's
+                        // marker). It writes no copies any more, so nothing of its own is left after that position.
                         if let Some(r) = &log.remote {
-                            let pos = r.committed_pos(&db);
+                            let pos = if holder || old { r.committed_pos(&db) } else { log.read_pos.lock().unwrap().get(&db).copied().unwrap_or(0) };
+                            if !holder && !old {
+                                eprintln!("quaderno: database {db}: not the lease holder: the log is told only up to position {pos}, the highest this process read at its start");
+                            }
                             if let Err(e) = r.flush_done(&db, pos).await {
                                 eprintln!("quaderno: {e:#}");
                             }
@@ -1043,7 +1094,15 @@ fn spawn_retry(dbs: Arc<crate::dbs::Dbs>, timeout: Duration) {
                         let path = log.dir.join(format!("kept-{db}-{}.conflict", crate::ctl::rec::now_ms()));
                         let bytes: Vec<u8> = recs.iter().flat_map(|r| encode(r.seq, &db, &r.ops, false, r.epoch, r.orig)).collect();
                         let _ = std::fs::write(&path, bytes).and_then(|_| std::fs::File::open(&path)?.sync_all());
-                        let _ = log.append_drop(&db).await;
+                        if !log.is_remote() || holder || old {
+                            let _ = log.append_drop(&db).await;
+                        } else {
+                            // fix-takeover-retry: a drop record from a process that does not hold the database would make every
+                            // later replay discard the records before it (the holder's too) and confirm its position. With the
+                            // replicated log the records need none: every replay drops them again by the same epoch and marker
+                            // checks, and the holder's confirmations remove them.
+                            eprintln!("quaderno: database {db}: not the lease holder: no drop record in the log");
+                        }
                         eprintln!("local log: database {db}: {} kept records conflict with another writer; saved in {}", recs.len(), path.display());
                     }
                     Err(e) => {
@@ -1051,7 +1110,9 @@ fn spawn_retry(dbs: Arc<crate::dbs::Dbs>, timeout: Duration) {
                         // The retry may have opened the database (stored epoch + 1): say so in the log, so that a restart before
                         // the next retry does not take this process's own replay for another writer.
                         let ep = seen.map_or(0, |s| s + 1);
-                        if rec_epoch > 0 && ep > rec_epoch {
+                        // fix-takeover-retry: with the replicated log, only when this attempt took the lease (it may have
+                        // opened a writer); a refused attempt opened nothing and writes nothing to the log
+                        if rec_epoch > 0 && ep > rec_epoch && (!log.is_remote() || opened || old) {
                             let seq = log.next_seq();
                             if let Ok(Ok(())) = log.append(seq, &db, &[], ep).await {
                                 if let Some(v) = log.pinned.lock().unwrap().get_mut(&db) {

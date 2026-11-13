@@ -121,6 +121,8 @@ pub struct Leases {
     /// Tenants this process released cleanly, with the lease sequence its release wrote: a later acquire that finds that
     /// same sequence knows no other process owned the tenant in between ([`Leases::continuous`]).
     released: Mutex<HashMap<String, u64>>,
+    /// fix-takeover-retry: how many times this process took each tenant's lease since it started ([`Leases::takes`]).
+    takes: Mutex<HashMap<String, u64>>,
 }
 
 #[derive(Default, Debug, Clone)]
@@ -204,7 +206,7 @@ pub fn log(event: &str, tenant: &str, holder: &str, extra: &str) {
 
 impl Leases {
     pub fn new(store: Arc<dyn ObjectStore>, holder: String, ttl: Duration) -> Arc<Self> {
-        Arc::new(Self { store, holder, ttl, skew: Duration::from_millis(1500), held: Mutex::new(HashMap::new()), swept: Mutex::new(Default::default()), denied: Mutex::new(HashMap::new()), stats: Mutex::new(LeaseStats::default()), unsafe_skip: std::sync::atomic::AtomicBool::new(false), process_mode: std::sync::atomic::AtomicBool::new(false), proc: Mutex::new(None), proc_init: tokio::sync::Mutex::new(()), proc_gen_floor: std::sync::atomic::AtomicU64::new(0), disabled: std::sync::atomic::AtomicBool::new(false), proc_renewing: std::sync::atomic::AtomicBool::new(false), released: Mutex::new(HashMap::new()) })
+        Arc::new(Self { store, holder, ttl, skew: Duration::from_millis(1500), held: Mutex::new(HashMap::new()), swept: Mutex::new(Default::default()), denied: Mutex::new(HashMap::new()), stats: Mutex::new(LeaseStats::default()), unsafe_skip: std::sync::atomic::AtomicBool::new(false), process_mode: std::sync::atomic::AtomicBool::new(false), proc: Mutex::new(None), proc_init: tokio::sync::Mutex::new(()), proc_gen_floor: std::sync::atomic::AtomicU64::new(0), disabled: std::sync::atomic::AtomicBool::new(false), proc_renewing: std::sync::atomic::AtomicBool::new(false), released: Mutex::new(HashMap::new()), takes: Mutex::new(HashMap::new()) })
     }
 
     pub fn held_count(&self) -> usize {
@@ -273,6 +275,17 @@ impl Leases {
         }
         self.stats.lock().unwrap().refused += 1;
         Err(LeaseHeld { tenant: id.to_string(), holder: "(ownership lost during the request)".into(), remaining_ms: 0 }.into())
+    }
+
+    /// fix-takeover-retry: how many times this process took `id`'s lease since it started. Unchanged across a step (a
+    /// replay of kept records) means the step never held the lease, so it opened no writer and changed no writer epoch:
+    /// it was refused before (another process holds the database) or failed before it reached the store.
+    pub fn takes(&self, id: &str) -> u64 {
+        self.takes.lock().unwrap().get(id).copied().unwrap_or(0)
+    }
+
+    fn note_take(&self, id: &str) {
+        *self.takes.lock().unwrap().entry(id.to_string()).or_insert(0) += 1;
     }
 
     pub fn is_held(&self, id: &str) -> bool {
@@ -509,6 +522,7 @@ impl Leases {
     fn record_owner(&self, id: &str, etag: Option<String>, version: Option<String>, seq: u64, gen: u64) {
         self.denied.lock().unwrap().remove(id);
         self.held.lock().unwrap().insert(id.to_string(), Held { gen, etag, version, valid_until: far(), renew_at: far(), seq });
+        self.note_take(id);
         self.stats.lock().unwrap().acquired += 1;
     }
 
@@ -599,6 +613,7 @@ impl Leases {
     fn record(&self, id: &str, etag: Option<String>, version: Option<String>, started: Instant, seq: u64) {
         self.denied.lock().unwrap().remove(id);
         self.held.lock().unwrap().insert(id.to_string(), Held { gen: 0, etag, version, valid_until: started + self.ttl, renew_at: started + self.ttl / 3, seq });
+        self.note_take(id);
         self.stats.lock().unwrap().acquired += 1;
     }
 
