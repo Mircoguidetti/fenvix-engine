@@ -602,7 +602,11 @@ impl Entry {
                 _ => {}
             }
         }
-        if self.fxc.is_none() && tenant_bench::fx::compactor::SERVER_ON.load(Relaxed) && self.tenant.as_ref().is_some_and(|t| t.is_writer() && t.fx_view().is_some()) {
+        // fix-write-stalls: not while the first build runs off the lock (its version is installed at a later write), and
+        // only once the database is claimed for the compactor (`fx::compactor::claim`): a compaction pass running on it is
+        // asked to stop first, and the compactor starts at a later write. The claim is given back on every way out below
+        // that starts no compactor.
+        if self.fxc.is_none() && tenant_bench::fx::compactor::SERVER_ON.load(Relaxed) && self.tenant.as_ref().is_some_and(|t| t.is_writer() && t.fx_view().is_some() && !t.fx_first_running()) && self.tenant.as_mut().unwrap().fx_claim() {
             // the registered collections' customer keys, from their stored options (after a restart nothing has been
             // written yet: the compactor must still know which collections are keyed by thread_id)
             for coll in crate::agentck::registered(&self.name) {
@@ -631,11 +635,13 @@ impl Entry {
                         // nothing published yet (release E1's wait): no compactor until a publish has caught up
                         Ok(None) => {
                             self.note_fxc_skip(4, &FXC_SKIP_CATCH_UP_NOTHING, "catch_up_published_nothing");
+                            self.tenant.as_mut().unwrap().fx_unclaim();
                             return;
                         }
                         Err(e) => {
                             FXC_SKIP_CATCH_UP_FAILED.fetch_add(1, Relaxed);
                             eprintln!("sealed runs: database {}: the catch-up publish before the compactor failed ({e:#}); no compactor yet", self.name);
+                            self.tenant.as_mut().unwrap().fx_unclaim();
                             return;
                         }
                     }
@@ -643,6 +649,7 @@ impl Entry {
                 Err(e) => {
                     FXC_SKIP_MARKS_UNREADABLE.fetch_add(1, Relaxed);
                     eprintln!("sealed runs: database {}: the absorption marks could not be read ({e:#}); no compactor yet", self.name);
+                    self.tenant.as_mut().unwrap().fx_unclaim();
                     return;
                 }
             }
@@ -658,7 +665,11 @@ impl Entry {
                         c.run();
                         self.fxc = Some(c);
                     }
-                    Err(e) => eprintln!("sealed runs: compactor of database {} did not start: {e:#}", self.name),
+                    Err(e) => {
+                        // the claim is given back: compaction passes keep the database's L0 down until the next start
+                        t.fx_unclaim();
+                        eprintln!("sealed runs: compactor of database {} did not start: {e:#}", self.name)
+                    }
                 }
             }
         }
@@ -1327,11 +1338,23 @@ impl Entry {
         self.touch();
         // --sealed-runs N: a publish of our manifest every N write batches (fx/build.rs), under this exclusive lock; with
         // --sealed-compactor only the first one, then this database's compactor publishes (fx/compactor.rs)
-        if self.fxc.is_none() && self.tenant.as_mut().unwrap().fx_note_write() {
+        // fix-write-stalls: with the compactor on, the first publish is built off this lock (`Tenant::fx_first_start`) and
+        // installed here, at a later write, once it is done; this write and the next ones do not wait for it
+        let off_lock = tenant_bench::fx::compactor::SERVER_ON.load(Relaxed) && tenant_bench::lifecycle::FIRST_BUILD_OFF_LOCK.load(Relaxed);
+        if self.fxc.is_none() && self.tenant.as_ref().unwrap().fx_first_running() {
+            // a failed build was handled as a failed publish (reload or fence); the next writes start another
+            if let Err(e) = self.tenant.as_mut().unwrap().fx_first_poll(false).await {
+                eprintln!("sealed runs: first publish of database {} failed: {e:#}", self.name);
+            }
+        } else if self.fxc.is_none() && self.tenant.as_mut().unwrap().fx_note_write() {
             let t = self.tenant.as_mut().unwrap();
             let opts = t.fx_auto_opts();
-            // a failed publish leaves orphan runs only; fx_publish reloads or fences as the failure needs (rules 24, 25)
-            if let Err(e) = t.fx_publish(&opts, None).await {
+            if off_lock && t.fx_view().is_none() {
+                if let Err(e) = t.fx_first_start(&opts).await {
+                    eprintln!("sealed runs: first publish of database {} did not start: {e:#}", self.name);
+                }
+            } else if let Err(e) = t.fx_publish(&opts, None).await {
+                // a failed publish leaves orphan runs only; fx_publish reloads or fences as the failure needs (rules 24, 25)
                 eprintln!("sealed runs: publish of database {} failed: {e:#}", self.name);
             }
         }

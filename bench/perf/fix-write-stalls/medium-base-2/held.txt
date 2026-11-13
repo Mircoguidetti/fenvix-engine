@@ -1,0 +1,8 @@
+/home/user/runs/base-medium: held writes 1, slow writer uploads 0 (l0 0, wal 0), client writes >= 1 s 6
+  held 1893 ms ending at +107 s; L0 at the end 5, largest while held None; writer uploads >= 500 ms in it: none; host busy max 0.68, cook max 0.66 cores, minio max 1.52, log copies max 0.15
+  client put 2.97 s ending at +33 s: no held write logged at that time
+  client put_writes 2.97 s ending at +33 s: no held write logged at that time
+  client put_writes 1.92 s ending at +107 s: SlateDB held 1893 ms
+  client put 1.92 s ending at +107 s: SlateDB held 1893 ms
+  client put 1.01 s ending at +88 s: no held write logged at that time
+  client put_writes 1.01 s ending at +88 s: no held write logged at that time

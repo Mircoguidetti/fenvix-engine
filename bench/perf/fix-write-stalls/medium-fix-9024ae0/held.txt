@@ -1,0 +1,4 @@
+/home/user/runs/fix-medium: held writes 1, slow writer uploads 0 (l0 0, wal 0), client writes >= 1 s 2
+  held 2041 ms ending at +216 s; L0 at the end 6, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.64, cook max 0.52 cores, minio max 1.18, log copies max 0.16
+  client put_writes 2.06 s ending at +216 s: SlateDB held 2041 ms
+  client put 2.05 s ending at +216 s: SlateDB held 2041 ms

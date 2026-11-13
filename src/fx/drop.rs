@@ -80,6 +80,11 @@ pub struct DropCtl {
     pub control_ignore_holds: AtomicBool,
     pub control_lease_from_stamp: AtomicBool,
     pub control_no_takeover_window: AtomicBool,
+    /// fix-write-stalls, cause 3 (diagnostics): the SlateDB compaction job proposed last (one runs at a time), when and
+    /// what: `L0_TRACE` and `SLATE_JOB` lines.
+    pub cur_job: Mutex<Option<(Instant, String)>>,
+    /// The same, by destination sorted run (a job's filters, one per subcompaction, find their job by it).
+    jobs_by_dest: Mutex<HashMap<u32, (Instant, String)>>,
 }
 
 impl DropCtl {
@@ -115,6 +120,8 @@ impl DropCtl {
             control_ignore_holds: AtomicBool::new(false),
             control_lease_from_stamp: AtomicBool::new(false),
             control_no_takeover_window: AtomicBool::new(false),
+            cur_job: Mutex::new(None),
+            jobs_by_dest: Mutex::new(HashMap::new()),
         })
     }
 
@@ -414,13 +421,60 @@ impl CompactionSchedulerSupplier for Sched {
 
 impl CompactionScheduler for Sched {
     fn propose(&self, state: &CompactorStateView) -> Vec<CompactionSpec> {
+        let mut beside_merge = false;
         if let Some(c) = state.compactions() {
-            if c.recent_compactions().any(|c| c.active()) {
-                return vec![];
+            let active: Vec<_> = c.recent_compactions().filter(|c| c.active()).collect();
+            if !active.is_empty() {
+                // fix-write-stalls, cause 3: with the drop off, an L0-only job may run beside a merge of sorted runs. Before,
+                // nothing was proposed while any job ran, so a merge of large runs (9.2 s for 0.6 + 2.5 GiB on the standard
+                // profile, growing with the database) kept every absorbed L0 SST in L0, L0 reached 8 and SlateDB held the
+                // writes. SlateDB allows it (`validate_compaction`: at most one L0 compaction running per segment, and an
+                // L0-only job's destination above every sorted run's id): the job reads only L0 SSTs, the merge only runs.
+                // The fold (drop on) takes the newest sorted run with the L0 SSTs, so it still waits.
+                let l0_running = active.iter().any(|c| c.spec().sources().iter().any(|s| matches!(s, SourceId::SstView(_))));
+                if self.0.drop || l0_running || CONTROL_ONE_JOB.load(Relaxed) {
+                    return vec![];
+                }
+                beside_merge = true;
             }
         }
-        let out = if self.0.drop { self.0.propose_fold(state) } else { self.0.propose_gated(state) };
+        let mut out = if self.0.drop { self.0.propose_fold(state) } else { self.0.propose_gated(state) };
+        if beside_merge {
+            let top = state.manifest().compacted().iter().map(|r| r.id).max();
+            let busy: Vec<u32> = state.compactions().map(|c| c.recent_compactions().filter(|c| c.active()).filter_map(|c| c.spec().destination()).collect()).unwrap_or_default();
+            out.retain(|spec| {
+                spec.sources().iter().all(|s| matches!(s, SourceId::SstView(_)))
+                    && spec.destination().is_some_and(|d| top.is_none_or(|t| d > t) && !busy.contains(&d))
+            });
+            out.truncate(1);
+            if !out.is_empty() {
+                L0_JOBS_BESIDE_MERGE.fetch_add(1, Relaxed);
+            }
+        }
         self.0.jobs.fetch_add(out.len() as u64, Relaxed);
+        for spec in &out {
+            // diagnostics (cause 3): what each job reads, so a long one can be seen holding L0 work back
+            let m = state.manifest();
+            let (mut l0n, mut l0b, mut srs) = (0usize, 0u64, Vec::new());
+            for s in spec.sources() {
+                match s {
+                    SourceId::SstView(id) => {
+                        l0n += 1;
+                        l0b += m.l0().iter().find(|v| v.id == *id).map_or(0, |v| v.estimate_size());
+                    }
+                    SourceId::SortedRun(id) => srs.push(format!("{id}:{}", m.compacted().iter().find(|r| r.id == *id).map_or(0, |r| r.estimate_size()) >> 20)),
+                }
+            }
+            let u = crate::waits::unix_ms();
+            let desc = format!("l0_srcs={l0n} l0_mib={} srs_mib=[{}] l0_now={} runs_now={} job={u:.0} beside_merge={}", l0b >> 20, srs.join(","), m.l0().len(), m.compacted().len(), beside_merge as u8);
+            eprintln!("SLATE_JOB start u={u} db={} {desc}", self.0.sh.id);
+            *self.0.cur_job.lock().unwrap() = Some((Instant::now(), desc.clone()));
+            if let Some(d) = spec.destination() {
+                let mut j = self.0.jobs_by_dest.lock().unwrap();
+                j.retain(|_, (t, _)| t.elapsed() < Duration::from_secs(3600));
+                j.insert(d, (Instant::now(), desc));
+            }
+        }
         out
     }
 
@@ -441,6 +495,11 @@ impl CompactionScheduler for Sched {
     }
 }
 
+/// fix-write-stalls, cause 3: L0-only jobs proposed while a merge of sorted runs ran (serverStatus, diagnostics); and the
+/// negative control (tests, `FENVIX_ONE_SLATE_JOB=1`): nothing proposed while any job runs, as before.
+pub static L0_JOBS_BESIDE_MERGE: AtomicU64 = AtomicU64::new(0);
+pub static CONTROL_ONE_JOB: AtomicBool = AtomicBool::new(false);
+
 /// Review of step 4 only: hold every drop job at its first row (its floor is computed) while set.
 pub static REVIEW_HOLD_JOB: AtomicBool = AtomicBool::new(false);
 pub static REVIEW_JOB_HELD: AtomicBool = AtomicBool::new(false);
@@ -450,11 +509,25 @@ struct Filter {
     ctl: Arc<DropCtl>,
     dropped: u64,
     kept: u64,
+    /// The job this filter belongs to (diagnostics), and whether it merges sorted runs only (`TEST_HOLD_MERGE`).
+    job: Option<(Instant, String)>,
+    merge_only: bool,
 }
+
+/// Tests (cause 3): hold every job that merges sorted runs only at its first row while set; `TEST_MERGE_HELD` says one is.
+pub static TEST_HOLD_MERGE: AtomicBool = AtomicBool::new(false);
+pub static TEST_MERGE_HELD: AtomicBool = AtomicBool::new(false);
 
 #[async_trait]
 impl CompactionFilter for Filter {
     async fn filter(&mut self, entry: &RowEntry) -> Result<CompactionFilterDecision, CompactionFilterError> {
+        if self.dropped + self.kept == 0 && self.merge_only && TEST_HOLD_MERGE.load(Relaxed) {
+            TEST_MERGE_HELD.store(true, Relaxed);
+            while TEST_HOLD_MERGE.load(Relaxed) {
+                tokio::time::sleep(Duration::from_millis(1)).await;
+            }
+            TEST_MERGE_HELD.store(false, Relaxed);
+        }
         if self.dropped + self.kept == 0 && REVIEW_HOLD_JOB.load(Relaxed) {
             REVIEW_JOB_HELD.store(true, Relaxed);
             while REVIEW_HOLD_JOB.load(Relaxed) {
@@ -480,6 +553,10 @@ impl CompactionFilter for Filter {
         self.ctl.rows_dropped.fetch_add(self.dropped, Relaxed);
         self.ctl.rows_kept.fetch_add(self.kept, Relaxed);
         self.ctl.jobs_done.fetch_add(1, Relaxed);
+        // one line per subcompaction: a job ends with its last one (l0why.py takes the longest per job)
+        if let Some((t0, desc)) = self.job.take() {
+            eprintln!("SLATE_JOB end u={} db={} ms={} rows={} {desc}", crate::waits::unix_ms(), self.ctl.sh.id, t0.elapsed().as_millis(), self.kept + self.dropped);
+        }
         self.ctl.applied_floor.fetch_max(self.floor, Relaxed);
         // P-perf-bytes: the SSTs this job replaced are garbage once the SST cleanup's minimum age has passed
         crate::lifecycle::note_compacted(&self.ctl.sh.id);
@@ -489,14 +566,16 @@ impl CompactionFilter for Filter {
 
 #[async_trait]
 impl CompactionFilterSupplier for Sched {
-    async fn create_compaction_filter(&self, _c: &CompactionJobContext) -> Result<Box<dyn CompactionFilter>, CompactionFilterError> {
+    async fn create_compaction_filter(&self, c: &CompactionJobContext) -> Result<Box<dyn CompactionFilter>, CompactionFilterError> {
         // rule 7: the floor is computed here, when the job starts, from the store
         let floor = match self.0.floor().await {
             Ok(f) => f,
             Err(e) => return Err(CompactionFilterError::CreationError(format!("drop floor: {e:#}").into())),
         };
         self.0.last_floor.store(floor, Relaxed);
-        Ok(Box::new(Filter { floor, ctl: Arc::clone(&self.0), dropped: 0, kept: 0 }))
+        let job = self.0.jobs_by_dest.lock().unwrap().get(&c.destination).cloned();
+        let merge_only = job.as_ref().is_some_and(|(_, d)| d.starts_with("l0_srcs=0 "));
+        Ok(Box::new(Filter { floor, ctl: Arc::clone(&self.0), dropped: 0, kept: 0, job, merge_only }))
     }
 }
 

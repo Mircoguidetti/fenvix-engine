@@ -1,0 +1,9 @@
+== /home/user/runs/fix-medium
+  single writes 43011; longest 2.06 s (put_writes at ts 1794505752.6); over 1 s: 2; over 500 ms: 2
+  top writes (s since start, s): 216:2.06, 216:2.05, 115:0.23, 115:0.23, 112:0.19, 127:0.19, 112:0.18, 127:0.18
+  saves 23995; longest 4.11 s; over 1 s: 1
+  p50/p99 ms: save_step 7.6/40.9 (n=23995); put 3.9/20.4 (n=23995); put_writes 4.4/24.2 (n=19016); resume[write/none] 2.9/15.0 (n=4187); resume[write/short] 2.8/17.3 (n=196); resume[write/long] 10.1/49.6 (n=120); resume[write/first] 2.8/19.0 (n=476); resume[read] 7.9/17.0 (n=100); resume[cold] 6.5/19.8 (n=50); time_travel 2.4/7.7 (n=300); list 83.7/910.8 (n=100); list_limit10 19.8/130.6 (n=100); erase_user 125.8/191.2 (n=5)
+  ok True wrong_reads 0 stored/logical 1.5906 stored 2119753367
+  SlateDB held writes >= 1 s: 1; ms/l0 at the end[/largest l0 while held]: 2041/6/8
+    FIRST_PUBLISH u=1794505567500 db=app_demo version=1 x_d=7017 rows=37264 build_ms=1200 off_lock=1
+    L0_RECOGNISE db=app_demo read=3 absorbed=3 ms=1364 off_lock=1

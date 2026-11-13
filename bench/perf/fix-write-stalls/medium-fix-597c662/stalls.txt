@@ -1,0 +1,9 @@
+== /home/user/runs/fix-medium
+  single writes 43011; longest 0.74 s (put_writes at ts 1794476089.3); over 1 s: 0; over 500 ms: 2
+  top writes (s since start, s): 258:0.74, 258:0.73, 175:0.24, 298:0.24, 175:0.24, 128:0.22, 24:0.22, 268:0.22
+  saves 23995; longest 1.47 s; over 1 s: 1
+  p50/p99 ms: save_step 9.4/49.7 (n=23995); put 4.8/26.1 (n=23995); put_writes 5.4/29.4 (n=19016); resume[write/none] 3.4/16.2 (n=4187); resume[write/short] 3.3/19.2 (n=196); resume[write/long] 11.4/58.2 (n=120); resume[write/first] 3.5/22.8 (n=476); resume[read] 8.0/17.4 (n=100); resume[cold] 7.4/20.7 (n=50); time_travel 2.4/7.3 (n=300); list 74.0/1218.8 (n=100); list_limit10 18.9/146.7 (n=100); erase_user 130.6/134.3 (n=5)
+  ok True wrong_reads 0 stored/logical 1.6079 stored 2142742934
+    FIRST_PUBLISH u=1794475862250 db=app_demo version=1 x_d=5524 rows=29396 build_ms=1247 off_lock=1
+    L0_RECOGNISE db=app_demo read=1 absorbed=1 ms=928 off_lock=1
+    L0_RECOGNISE db=app_demo read=1 absorbed=1 ms=874 off_lock=1

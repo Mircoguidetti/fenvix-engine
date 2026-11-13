@@ -1,0 +1,66 @@
+holds of 1 s or more: 2
+
+== hold 4712 ms ending at +39 s (l0 at end 4, largest 8)
+    -12.2s L0_TRACE u=1794508973990.8342 db=app_demo l0=5 unabs=5 absorbing=1 slate_jobs=39/10 slate_job=-
+    -11.2s L0_TRACE u=1794508975018.8462 db=app_demo l0=6 unabs=6 absorbing=1 slate_jobs=39/10 slate_job=-
+    -10.2s L0_TRACE u=1794508976045.0334 db=app_demo l0=7 unabs=7 absorbing=1 slate_jobs=39/10 slate_job=-
+     -9.5s ABSORB u=1794508976652.3901 db=app_demo ssts=3 rows=7200 raw_kib=23736 committed=1 l0_start=6 l0_end=8 lock_ms=0 read_ms=6245 write_ms=186 commit_ms=2 total_ms=6434
+     -9.5s SLATE_JOB start u=1794508976678.1611 db=app_demo l0_srcs=3 l0_mib=23 srs_mib=[] l0_now=8 runs_now=2
+     -9.4s SLATE_JOB end u=1794508976785.602 db=app_demo ms=107 rows=1256 l0_srcs=3 l0_mib=23 srs_mib=[] l0_now=8 runs_now=2
+     -9.3s SLATE_JOB start u=1794508976927.3347 db=app_demo l0_srcs=0 l0_mib=0 srs_mib=[2:23,1:55] l0_now=5 runs_now=3
+     -9.1s L0_TRACE u=1794508977091.1294 db=app_demo l0=8 unabs=5 absorbing=1 slate_jobs=42/12 slate_job=163ms l0_srcs=0 l0_mib=0 srs_mib=[2:23,1:55] l0_now=5 runs_now=3
+     -9.0s SLATE_JOB end u=1794508977164.4426 db=app_demo ms=237 rows=1133 l0_srcs=0 l0_mib=0 srs_mib=[2:23,1:55] l0_now=5 runs_now=3
+     -8.8s SLATE_JOB start u=1794508977415.232 db=app_demo l0_srcs=0 l0_mib=0 srs_mib=[1:78,0:249] l0_now=6 runs_now=2
+     -8.1s L0_TRACE u=1794508978102.496 db=app_demo l0=6 unabs=6 absorbing=1 slate_jobs=46/13 slate_job=687ms l0_srcs=0 l0_mib=0 srs_mib=[1:78,0:249] l0_now=6 runs_now=2
+     -7.7s SLATE_JOB end u=1794508978514.8362 db=app_demo ms=1099 rows=4375 l0_srcs=0 l0_mib=0 srs_mib=[1:78,0:249] l0_now=6 runs_now=2
+     -7.1s L0_TRACE u=1794508979137.1428 db=app_demo l0=7 unabs=7 absorbing=1 slate_jobs=50/13 slate_job=-
+     -6.0s L0_TRACE u=1794508980163.5532 db=app_demo l0=8 unabs=8 absorbing=1 slate_jobs=50/13 slate_job=-
+     -5.0s L0_TRACE u=1794508981191.955 db=app_demo l0=8 unabs=8 absorbing=1 slate_jobs=50/13 slate_job=-
+     -4.0s L0_TRACE u=1794508982218.1917 db=app_demo l0=8 unabs=8 absorbing=1 slate_jobs=50/13 slate_job=-
+     -3.0s L0_TRACE u=1794508983242.644 db=app_demo l0=8 unabs=8 absorbing=1 slate_jobs=50/13 slate_job=-
+     -2.3s ABSORB u=1794508983862.51 db=app_demo ssts=5 rows=7712 raw_kib=40237 committed=1 l0_start=8 l0_end=8 lock_ms=0 read_ms=7018 write_ms=181 commit_ms=1 total_ms=7201
+     -2.3s SLATE_JOB start u=1794508983874.0703 db=app_demo l0_srcs=5 l0_mib=39 srs_mib=[] l0_now=8 runs_now=1
+     -2.2s SLATE_JOB end u=1794508983989.5588 db=app_demo ms=115 rows=652 l0_srcs=5 l0_mib=39 srs_mib=[] l0_now=8 runs_now=1
+     -1.9s L0_TRACE u=1794508984273.848 db=app_demo l0=8 unabs=3 absorbing=1 slate_jobs=54/14 slate_job=-
+     -0.9s L0_TRACE u=1794508985299.2603 db=app_demo l0=8 unabs=3 absorbing=1 slate_jobs=54/14 slate_job=-
+     -0.9s ABSORB u=1794508985326.2239 db=app_demo ssts=3 rows=1700 raw_kib=24623 committed=1 l0_start=8 l0_end=8 lock_ms=0 read_ms=1306 write_ms=107 commit_ms=2 total_ms=1415
+     +0.1s L0_TRACE u=1794508986323.342 db=app_demo l0=5 unabs=2 absorbing=0 slate_jobs=54/14 slate_job=-
+     +0.2s SLATE_JOB start u=1794508986359.8984 db=app_demo l0_srcs=3 l0_mib=24 srs_mib=[] l0_now=6 runs_now=2
+     +0.2s SLATE_JOB end u=1794508986449.2625 db=app_demo ms=89 rows=223 l0_srcs=3 l0_mib=24 srs_mib=[] l0_now=6 runs_now=2
+     +0.4s SLATE_JOB start u=1794508986571.578 db=app_demo l0_srcs=0 l0_mib=0 srs_mib=[2:24,1:39] l0_now=3 runs_now=3
+
+== hold 1356 ms ending at +205 s (l0 at end 5, largest 8)
+     -9.2s SLATE_JOB end u=1794509143379.2651 db=app_demo ms=208 rows=67 l0_srcs=0 l0_mib=0 srs_mib=[3:16,2:32] l0_now=4 runs_now=4
+     -8.9s SLATE_JOB start u=1794509143738.4377 db=app_demo l0_srcs=0 l0_mib=0 srs_mib=[2:48,1:140] l0_now=4 runs_now=3
+     -8.7s L0_TRACE u=1794509143918.111 db=app_demo l0=5 unabs=5 absorbing=1 slate_jobs=242/66 slate_job=179ms l0_srcs=0 l0_mib=0 srs_mib=[2:48,1:140] l0_now=4 runs_now=3
+     -8.4s SLATE_JOB end u=1794509144211.0444 db=app_demo ms=472 rows=2631 l0_srcs=0 l0_mib=0 srs_mib=[2:48,1:140] l0_now=4 runs_now=3
+     -7.7s L0_TRACE u=1794509144925.3896 db=app_demo l0=6 unabs=6 absorbing=1 slate_jobs=246/66 slate_job=-
+     -6.7s L0_TRACE u=1794509145953.9265 db=app_demo l0=6 unabs=6 absorbing=1 slate_jobs=246/66 slate_job=-
+     -5.6s L0_TRACE u=1794509146982.4172 db=app_demo l0=7 unabs=7 absorbing=1 slate_jobs=246/66 slate_job=-
+     -4.6s L0_TRACE u=1794509148016.7883 db=app_demo l0=8 unabs=8 absorbing=1 slate_jobs=246/66 slate_job=-
+     -3.6s L0_TRACE u=1794509149053.22 db=app_demo l0=8 unabs=8 absorbing=1 slate_jobs=246/66 slate_job=-
+     -2.5s L0_TRACE u=1794509150102.132 db=app_demo l0=8 unabs=8 absorbing=1 slate_jobs=246/66 slate_job=-
+     -2.4s ABSORB u=1794509150250.079 db=app_demo ssts=4 rows=6332 raw_kib=32245 committed=1 l0_start=6 l0_end=8 lock_ms=0 read_ms=7127 write_ms=192 commit_ms=1 total_ms=7322
+     -2.4s SLATE_JOB start u=1794509150252.123 db=app_demo l0_srcs=4 l0_mib=31 srs_mib=[] l0_now=8 runs_now=2
+     -2.2s SLATE_JOB end u=1794509150409.4595 db=app_demo ms=157 rows=1019 l0_srcs=4 l0_mib=31 srs_mib=[] l0_now=8 runs_now=2
+     -1.5s L0_TRACE u=1794509151147.5403 db=app_demo l0=8 unabs=4 absorbing=1 slate_jobs=250/67 slate_job=-
+     -0.5s L0_TRACE u=1794509152171.5571 db=app_demo l0=8 unabs=4 absorbing=1 slate_jobs=250/67 slate_job=-
+
+== totals
+SlateDB jobs with L0 sources: n=61 sum=9s p50=143ms max=284ms
+SlateDB sorted-run merges   : n=61 sum=45s p50=370ms max=6955ms
+   merge 7.0 s at +291 s srs_mib=[1:290,0:1135]
+   merge 4.0 s at +213 s srs_mib=[1:252,0:883]
+   merge 3.9 s at +159 s srs_mib=[1:179,0:704]
+   merge 2.9 s at +109 s srs_mib=[1:156,0:547]
+   merge 1.5 s at +74 s srs_mib=[1:132,0:414]
+   merge 1.4 s at +46 s srs_mib=[1:86,0:327]
+   merge 1.4 s at +284 s srs_mib=[2:70,1:219]
+   merge 1.2 s at +384 s srs_mib=[2:93,1:273]
+ABSORB total_ms : n=60 sum=344s p50=5769ms max=14224ms
+ABSORB lock_ms  : n=60 sum=0s p50=0ms max=0ms
+ABSORB read_ms  : n=60 sum=332s p50=5519ms max=14070ms
+ABSORB write_ms : n=60 sum=12s p50=197ms max=379ms
+ABSORB commit_ms: n=60 sum=0s p50=2ms max=10ms
+ABSORB ssts per absorption: n=60 sum=0s p50=4ms max=5ms
+L0_TRACE samples 376: L0 at 8 in 57, at 6+ in 180; L0 at 4+ while a sorted-run merge ran: 35

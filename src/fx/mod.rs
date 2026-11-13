@@ -46,7 +46,7 @@ mod review6_tests;
 #[cfg(test)]
 mod counter_tests;
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
 #[cfg(test)]
 mod review_tests;
 #[cfg(test)]
@@ -73,6 +73,8 @@ mod tests_gen;
 mod review_long_reads_tests;
 #[cfg(test)]
 mod perf_erase_tests;
+#[cfg(test)]
+mod write_stalls_tests;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 
