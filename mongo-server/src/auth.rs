@@ -39,7 +39,9 @@ struct Conn {
     users: Vec<(String, String)>,
     conv: Option<ConvState>,
     next_conv: i32,
-    privs: Option<(u64, Vec<Priv>)>,
+    /// P-command-cpu: shared, not copied per command (a root user's list is hundreds of strings: copying and freeing it
+    /// twice per command was 6% of the server's CPU on NEXT requests, MEASURED on the big line)
+    privs: Option<(u64, std::sync::Arc<Vec<Priv>>)>,
     /// The connection's place in the network limits (per address before authentication, per database after).
     slot: Option<std::sync::Arc<crate::netguard::ConnSlot>>,
 }
@@ -369,18 +371,19 @@ impl Server {
         })
     }
 
-    async fn conn_privileges(&self, conn_id: i64) -> R<Vec<Priv>> {
+    async fn conn_privileges(&self, conn_id: i64) -> R<std::sync::Arc<Vec<Priv>>> {
         let gen = self.auth.gen.load(Relaxed);
-        let (users, cached) = self.with_conn(conn_id, |c| (c.users.clone(), c.privs.as_ref().filter(|(g, _)| *g == gen).map(|(_, p)| p.clone())));
+        let cached = self.with_conn(conn_id, |c| c.privs.as_ref().filter(|(g, _)| *g == gen).map(|(_, p)| std::sync::Arc::clone(p)));
         if let Some(p) = cached {
             return Ok(p);
         }
+        let users = self.with_conn(conn_id, |c| c.users.clone());
         let mut roles = Vec::new();
         for (u, db) in &users {
             roles.extend(self.user_roles_of(u, db).await?);
         }
-        let privs = self.role_privileges(&roles).await?;
-        self.with_conn(conn_id, |c| c.privs = Some((gen, privs.clone())));
+        let privs = std::sync::Arc::new(self.role_privileges(&roles).await?);
+        self.with_conn(conn_id, |c| c.privs = Some((gen, std::sync::Arc::clone(&privs))));
         Ok(privs)
     }
 
