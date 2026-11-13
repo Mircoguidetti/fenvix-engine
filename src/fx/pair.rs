@@ -19,8 +19,9 @@
 //! While the lease is held no drop runs, so the version picked in step 4 is the newest one whose rows the checkpoint's
 //! SSTs may lack. With step 4's absorption (rule 16) every version's X_d is the highest seq of an L0 SST, so the newest
 //! version always qualifies. The offline builder of step 3 sets X_d to a WAL seq, so the newest version can be above
-//! `last_l0_seq`; then an older one is picked, or none, and the pair says it is not exact. That is right only because
-//! nothing drops rows while that builder is in use.
+//! `last_l0_seq`; then an older one is picked, or none, and the pair says it is not exact. That is right only while
+//! nothing drops rows. With compactors or the drop on (the server), or over a `runs_only` version, it is not, so the
+//! pairing is refused instead (fix-sim-holes, hole P): the builder still publishes before a compactor starts.
 //!
 //! GC (step 4) must keep every version and run while the lease is held (rule 19: the pair is visible from the start of
 //! the checkpoint), and every version and run a pair lists while its checkpoint lives (rules 19, 23).
@@ -259,6 +260,8 @@ async fn pair_checkpoint(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecyc
     let versions = manifest::list_versions(store, id).await?;
     let newest = versions.last().copied();
     let mut pick = None;
+    // fix-sim-holes, hole P: the newest version that is not an older writer's late one (what readers trust)
+    let mut newest_trusted: Option<manifest::Version> = None;
     for &n in versions.iter().rev() {
         let v = manifest::load(store, id, n).await?;
         // an older writer's late version is never a pair (review of a60f4fe, rule 8): it lacks the newer writer's rows
@@ -267,9 +270,33 @@ async fn pair_checkpoint(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecyc
             eprintln!("OLDER_VERSION_IGNORED db={id} version={n} writer_epoch={:?}: not paired with checkpoint {}", v.writer_epoch, cp.id);
             continue;
         }
+        if newest_trusted.is_none() {
+            newest_trusted = Some(v.clone());
+        }
         if v.x_d <= last_l0 {
             pick = Some(v);
             break;
+        }
+    }
+    // fix-sim-holes, hole P (rule 8): passing over the newest trusted version is right only while SlateDB holds every
+    // row (the module text: "nothing drops rows while that builder is in use"). With compactors on or the drop on, a drop
+    // may have removed from SlateDB the rows at or below the newest version's X_d, and a version marked `runs_only` has
+    // rows SlateDB never held (the generator): then an older version lacks the rows dropped after it, and no version at
+    // all reads SlateDB alone. The newest is passed over when its X_d is above the checkpoint's last L0 seq (a builder
+    // version over rows not flushed yet: the write path or the catch-up publish before a compactor absorbs them). Refuse
+    // instead of writing a pair that reads less: the caller deletes the checkpoint; a restore point is taken again at
+    // the agent's next round, an export or a named point gets a retryable error.
+    if let Some(t) = &newest_trusted {
+        let dropping = super::compactor::SERVER_ON.load(Relaxed) || super::compactor::DROP_DEFAULT.load(Relaxed) || t.runs_only;
+        if dropping && !CONTROL_PAIR_BELOW_NEWEST.load(Relaxed) && pick.as_ref().map(|v| v.version) != Some(t.version) {
+            PAIRS_REFUSED_BELOW_NEWEST.fetch_add(1, Relaxed);
+            bail!(
+                "database {id}: checkpoint {} would pair with version {:?}, below the newest version {} (X_d {} above the checkpoint's last L0 seq {last_l0}): a drop may have removed rows that version lacks; try again after a flush",
+                cp.id,
+                pick.as_ref().map(|v| v.version),
+                t.version,
+                t.x_d
+            );
         }
     }
     let pair = Pair {
@@ -284,6 +311,11 @@ async fn pair_checkpoint(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecyc
     store.put(&pair_path(id, &cp.id), PutPayload::from(serde_json::to_vec(&pair)?)).await?;
     Ok(Some(pair))
 }
+
+/// fix-sim-holes, hole P: checkpoints refused because the newest trusted version could not be their pair.
+pub static PAIRS_REFUSED_BELOW_NEWEST: AtomicU64 = AtomicU64::new(0);
+/// Negative control of hole P's test: pair with an older version, or none, as before the fix.
+pub static CONTROL_PAIR_BELOW_NEWEST: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// The pair of a checkpoint (None: none recorded).
 pub async fn load_pair(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), checkpoint: &uuid::Uuid) -> Result<Option<Pair>> {

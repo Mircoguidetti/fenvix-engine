@@ -465,15 +465,16 @@ mod tests {
     /// from the live database). Two cases, each one run: no version (194 violations on head+ZW, MEASURED) and a pinned
     /// older version (96, MEASURED). Fails on integration-5-stack fea18a34 + fix-sim-holes' Z and W fixes; ignored until
     /// the fix is in: `--ignored`. (Hole W hides it on the bare head: run on a build with W fixed.) `SIM_STORY_FORK=1`: a
-    /// fork instead of a restore point (safe: its quiesce flushes, so the newest version qualifies).
+    /// fork instead of a restore point (safe: its quiesce flushes, so the newest version qualifies). Fixed on
+    /// fix-sim-holes (`pair::pair_checkpoint` refuses to pair below the newest trusted version): a normal test.
     #[test]
-    #[ignore]
     fn sim_hole_p_point_pairs_below_the_drop() {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
         use Ev::*;
         let fork = std::env::var_os("SIM_STORY_FORK").is_some();
+        let refused = crate::fx::pair::PAIRS_REFUSED_BELOW_NEWEST.load(std::sync::atomic::Ordering::Relaxed);
         let mut total = Vec::new();
         for pinned in [false, true] {
             // `pinned`: an earlier restore point pins an older version; the new point pairs with it, below the drop
@@ -499,6 +500,11 @@ mod tests {
             total.extend(v);
         }
         assert!(total.is_empty(), "hole P: a restore point paired below the drop ({} violations): {:?}", total.len(), total.iter().take(4).collect::<Vec<_>>());
+        let refused = crate::fx::pair::PAIRS_REFUSED_BELOW_NEWEST.load(std::sync::atomic::Ordering::Relaxed) - refused;
+        eprintln!("SIM HOLE P: pairings refused {refused}");
+        if !fork {
+            assert!(refused >= 2, "each case's restore point would pair below the newest version: it must be refused ({refused})");
+        }
     }
 
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
