@@ -128,6 +128,9 @@ fn envelope_of(e_env: u64, key: &[u8], seq: u64, value: &[u8]) -> Result<Vec<u8>
     }
 }
 
+/// sim-test, hole W: builder reseals turned into delta publishes (compactors on, a base with runs).
+pub static RESEALS_REFUSED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 /// Build the runs of the next version from `db` and publish it. `cur` is the version the writer serves (None: the first
 /// build). Returns the published version, or None when there is nothing new to publish. An error leaves only orphan
 /// runs (GC's business in step 4), never a half-published version.
@@ -154,6 +157,17 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
     }
     pause(&PAUSE_AFTER_SNAPSHOT_MS).await;
     ensure!(e_env <= x, "E_env {e_env} above the cut {x}");
+    // sim-test, hole W: with compactors on, SlateDB's compaction drops the rows at or below X_d (they live in our runs
+    // only), and this builder reads SlateDB only: a reseal over a base that has runs would rebuild its groups without
+    // them, and leave its delta runs out. It publishes a delta run instead; reseals are the compactor's (it reads the runs)
+    let reseal_opt = match cur {
+        Some(v) if super::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed) && !matches!(opts.reseal, Reseal::None) && (!v.meta.delta.is_empty() || v.meta.groups.iter().any(|g| g.sealed.is_some())) => {
+            RESEALS_REFUSED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            Reseal::None
+        }
+        _ => opts.reseal.clone(),
+    };
+    let opts = &BuildOpts { reseal: reseal_opt, ..opts.clone() };
     let (prev_x, reseal_all) = match cur {
         None => (0, true),
         Some(v) => (v.x_d, matches!(opts.reseal, Reseal::All)),

@@ -214,6 +214,16 @@ pub fn split_tenant_path(path: &str) -> Option<(&str, &str)> {
     Some((name, tail))
 }
 
+/// sim-test, hole Z: a clean marker is trusted only when it names the writer epoch of the stored manifest (no writer
+/// opened since it was written). A marker of an earlier release (`clean`, no epoch) is trusted as before.
+pub fn marker_trusted(body: &[u8], epoch: u64) -> bool {
+    match std::str::from_utf8(body).ok().map(str::trim) {
+        Some("clean") => true,
+        Some(s) => s.strip_prefix("clean ").and_then(|e| e.parse::<u64>().ok()) == Some(epoch),
+        None => false,
+    }
+}
+
 pub fn marker_path(id: impl std::fmt::Display) -> Path {
     Path::from(format!("{}/_clean", tenant_path(id)))
 }
@@ -984,7 +994,19 @@ impl Lifecycle {
         let (reader, head) = tokio::join!(open_reader(&self.store, &id, true, None), self.store.head(&marker));
         let (mut reader, scope) = reader?;
         let clean = match head {
-            Ok(_) => true,
+            Ok(_) => {
+                // sim-test, hole Z: the marker names the writer epoch that wrote it; a writer opened since (its open
+                // moved the epoch) makes it stale: a process that lost the database without noticing may have closed it
+                // after the new owner's writes, which may be only in the new owner's WAL
+                let epoch = reader.manifest().writer_epoch();
+                match self.store.get(&marker).await {
+                    Ok(g) => match g.bytes().await {
+                        Ok(b) => marker_trusted(&b, epoch),
+                        Err(_) => false,
+                    },
+                    Err(_) => false,
+                }
+            }
             Err(object_store::Error::NotFound { .. }) => false,
             Err(e) => return Err(e.into()),
         };
@@ -3496,6 +3518,7 @@ impl Tenant {
                 }
             }
             Some(Mode::Writer(db)) => {
+                let marker_epoch = db.manifest().writer_epoch();
                 // Flush the memtable while the writer is still open and registered, then close it. A flush that waits for
                 // room in L0 (slatedb's `l0_max_ssts`) needs the L0 watch of the maintenance loop to start a compaction
                 // and that compaction to refresh this writer's manifest; once `Db::close` has begun slatedb refuses the
@@ -3503,16 +3526,28 @@ impl Tenant {
                 let id = self.id.clone();
                 let closed = tokio::time::timeout(CLOSE_FLUSH_TIMEOUT, async {
                     let memtable = slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable };
-                    if let Err(e) = db.flush_with_options(memtable).await {
+                    let flushed = db.flush_with_options(memtable).await;
+                    if let Err(e) = &flushed {
                         eprintln!("close of tenant {id}: memtable flush before the close failed: {e}");
                     }
                     writer_closed(&id);
-                    db.close().await
+                    db.close().await.map(|()| flushed)
                 })
                 .await;
                 writer_closed(&self.id);
                 match closed {
-                    Ok(r) => r?,
+                    // sim-test, hole Z: the clean marker says "nothing to replay"; it is written only when this writer's
+                    // memtable flush succeeded. A writer fenced by a newer one (a process that lost the database without
+                    // noticing, closing it as idle or at shutdown) fails its flush: it leaves no marker, so the next
+                    // opening replays the new owner's WAL
+                    Ok(Ok(Err(e))) => {
+                        self.group.vis.kill();
+                        forget_vis(&self.id, &self.group);
+                        return Err(anyhow!("close of tenant {}: the memtable flush failed ({e}); no clean marker", self.id));
+                    }
+                    Ok(r) => {
+                        r?;
+                    }
                     Err(_) => {
                         // The memtable flush is stalled (L0 full, waiting for a compaction). Everything acknowledged is in
                         // durable WAL objects: close without the flush and leave no marker, so the next wake replays them.
@@ -3531,7 +3566,7 @@ impl Tenant {
                 let l0 = db.manifest().l0().len();
                 self.lc
                     .store
-                    .put(&marker_path(&self.id), PutPayload::from_static(b"clean"))
+                    .put(&marker_path(&self.id), PutPayload::from(format!("clean {marker_epoch}").into_bytes()))
                     .await?;
                 self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
                 // perf-latency round 3: also when compaction jobs are left pending (the compactor's fold, stopped by this
