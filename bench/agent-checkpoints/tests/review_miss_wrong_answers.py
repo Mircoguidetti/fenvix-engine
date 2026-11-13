@@ -4,7 +4,7 @@ erase_phase, cold_phase) on the tiny plan against LangGraph's InMemorySaver wrap
 Usage: python miss_wrong_answers.py BENCH_DIR   (bench/agent-checkpoints of the branch under review)
 Prints, per fault: wrong_reads, read inconsistencies, erased threads left readable, and the run's `ok` as bench.py
 computes it. A fault is CAUGHT when ok is False."""
-import os, sys, random, tempfile
+import os, sys, random, tempfile, zlib
 sys.path.insert(0, sys.argv[1])
 import bench, generator, graph_runner
 from langgraph.checkpoint.base import BaseCheckpointSaver
@@ -31,7 +31,9 @@ class Faulty(BaseCheckpointSaver):
             return None
         if self.fault == "stale_resume" and not c.get("checkpoint_id"):
             items = list(self.inner.list(config, limit=2))
-            if len(items) == 2 and hash(c["thread_id"]) % 7 == 0:
+            # total review (2026-11-12): zlib.crc32, not hash(): Python changes a string's hash() in every process, so
+            # in about 1 run in 4 no thread got the fault and the line said MISSED (the check itself was right)
+            if len(items) == 2 and zlib.crc32(c["thread_id"].encode()) % 3 == 0:
                 return items[1]   # the checkpoint before the newest
         return self.inner.get_tuple(config)
 

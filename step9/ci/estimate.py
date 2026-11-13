@@ -135,6 +135,26 @@ GEN_MB_S_PER_DB = 11.2
 GEN_STORED_PER_BSON = 0.74
 GEN_SPILL_PER_BSON = 0.104
 GEN_PUBLISH_FRACTION = 0.05
+# generator-1tb (2026-11-12, fenvix-engine branch generator-1tb, MEASURED in a 4-vCPU sandbox, Intel Xeon @ 2.1 GHz,
+# MinIO on the same machine): ONE database on several writers. One writer alone 10.16 MB/s of BSON (1 GiB); four
+# writers on the four vCPU 9.17 MB/s each while all are busy (3 GiB; MinIO's CPU included), 9.79 on the 20 GiB run. The partition files of the
+# shared rows are kept in the pantry until the publish (0.105 byte per BSON byte, MEASURED), the publish merges them in
+# parallel. On AWS the vCPU of a c7i are hyperthreads, two per core (DECLARED by AWS); what 8 busy threads give against
+# this sandbox's 4 is NOT measured: GEN_VCPU_YIELD is the ESTIMATED share of a sandbox vCPU one AWS vCPU gives when
+# all are busy (c7i: 4 cores x 1.25 for 8 threads = 0.625, the cautious end; 1.0 if a thread were worth a sandbox vCPU).
+GEN_MB_S_PER_WRITER = 9.79   # the 20 GiB run (15 slices, 4 writers, killed and resumed): 21.48 GB in 2,193 writer-seconds
+GEN_VCPU_YIELD = {"c7i": 0.625}
+GEN_PARTS_PER_BSON = 0.107   # MEASURED on the 20 GiB run (2.30 GB of partition files)
+GEN_PUBLISH_SHARE = 0.06     # the publish against the generation's wall time, MEASURED on the 20 GiB run (33 s / 548 s)
+
+
+def generator_hours(gib, gen_type, writers=None):
+    """Hours to generate and publish one ballast database of `gib` GiB of BSON on `gen_type` with `writers` writers
+    (default: its vCPU). ESTIMATED from the MEASURED rate per busy writer and the ESTIMATED yield of the type's vCPU."""
+    vcpu = TYPES[gen_type][0]
+    w = min(int(writers or vcpu), vcpu)
+    eff = w * GEN_VCPU_YIELD.get(gen_type.split(".")[0], 1.0)
+    return gib * GIB * 1000 / (eff * GEN_MB_S_PER_WRITER) / 3600 * (1 + GEN_PUBLISH_SHARE)
 # Aurora PostgreSQL (DECLARED, AWS Price List AmazonRDS eu-west-1, publication 2026-10-29T07:06:35Z): db.r7g.large
 # Single-AZ $0.304/h, storage $0.11 per GB-month, $0.22 per million I/O requests (Aurora Standard)
 AURORA_H, AURORA_GBM, AURORA_IO_M = 0.304, 0.11, 0.22
@@ -199,7 +219,7 @@ def generated(name, ballast_dbs, aurora=True, cook="m7i.large", log="c7g.medium"
 
 
 def split_plan(name, ballast_dbs, aurora=True, cook="m7i.large", log="c7g.medium", loader="c7i.xlarge", client="c7i.xlarge",
-               extras_client="c7i.large", pgbox="m7i.large", disk_gb=60, peak_docs_s=25800, agent_h_per_target=0.6):
+               extras_client="c7i.large", pgbox="m7i.large", disk_gb=60, peak_docs_s=25800, agent_h_per_target=0.9):
     """aws-fixes (B2, B4, B10; 2026-11-11): the job plan that fits the job ceiling. One kept pantry for every size (the
     total review: the 100 GB and 1 TB jobs only add ballast to it, so the Atlas databases are loaded once). The measure
     is THREE jobs, each checked by decide.py against 90% of the 330-minute ceiling:
@@ -277,6 +297,61 @@ def split_plan(name, ballast_dbs, aurora=True, cook="m7i.large", log="c7g.medium
     return tot
 
 
+GEN1_STORED_PER_BSON = 0.79   # generator-1tb REPORT.md section 5: sealed runs 0.79 byte per BSON byte (MEASURED, 20 GiB)
+GEN1_PART_PUTS_1TB = 60000    # the same section: about 233 slices x 256 partition files at 1 TB (ESTIMATED there)
+
+
+def plan_1tb(gib=931.4, gen="c7i.2xlarge", cook="m7i.large", log="c7g.medium", extras_client="c7i.large", disk_gb=60,
+             days_kept=1.5):
+    """2026-11-13 (coordinator: the 1 TB plan). What the 1 TB database adds to the Atlas-size job plan, on the SAME kept
+    pantry: G1 the generator (one database of `gib` GiB of BSON, resumable across jobs), B1 the founder's script's read
+    rounds and first-next (reads only), W1 first-next-ops and reads-after-writes (they write: the last job). No spare in
+    B1 and W1 (no takeover runs there). Durations: the generator from generator_hours (both ends of its range: a c7i
+    hyperthread worth a sandbox vCPU, or 8 threads worth 5); B1 and W1 from decide.py's estimates of
+    step9/commands/09 and 10. Returns (low, high) dollars."""
+    print(f"\n== THE 1 TB ADDITION (2026-11-13): one database of {gib:g} GiB = {gib * GIB:,.0f} GB of BSON on the kept pantry")
+    kitchen = hour(cook) + 2 * hour(log)
+    bson_gb = gib * GIB
+    stored = bson_gb * GEN1_STORED_PER_BSON
+    puts = stored * 1000 / PART_MB * PUT + GEN1_PART_PUTS_1TB * (bson_gb / 1000) * PUT
+    slow_h = generator_hours(gib, gen)
+    fast_h = slow_h * GEN_VCPU_YIELD.get(gen.split(".")[0], 1.0)
+    out = []
+    for label, gh in (("if 8 hyperthreads are worth 8 sandbox vCPU", fast_h), ("if they are worth 5", slow_h)):
+        jobs = max(1, -(-int(gh * 100) // int((0.9 * 5.5 - 0.3) * 100)))
+        hrs = gh + 0.3 * jobs
+        c = gen_hour(gen, disk_gb) * hrs + puts
+        line(f"G1, generator on {gen}, {label}"[:44], c,
+             f"{hrs:.2f} h in {jobs} job(s) ({gh:.2f} h of generation + 0.3 h boot each) x {gen_hour(gen, disk_gb):.4f} + PUTs "
+             f"{puts:.2f} ({stored:.0f} GB of runs in {PART_MB} MB parts + about {GEN1_PART_PUTS_1TB * bson_gb / 1000:,.0f} partition files)")
+        out.append((c, hrs))
+    b1_h = 2.1
+    b1 = (kitchen + hour(extras_client)) * b1_h + 0.05 + 0.10
+    line("B1, read rounds and first-next (reads only)", b1,
+         f"{b1_h} h (decide.py: boot 0.3 + rounds 1.8) x (cook, log {kitchen:.4f} + extras client {hour(extras_client):.4f}) + "
+         f"cross-zone 0.05 + GETs 0.10")
+    w1_h = 2.3
+    w1 = (kitchen + hour(extras_client)) * w1_h + 0.05 + 0.50
+    line("W1, first-next-ops and reads-after-writes", w1,
+         f"{w1_h} h (decide.py: boot 0.3 + start 0.2 + first-next-ops 0.3 + reads-after-writes 1.5, an upper bound) x "
+         f"({kitchen:.4f} + {hour(extras_client):.4f}) + cross-zone 0.05 + GETs 0.50 (upper bound: up to 12 amplified "
+         f"reads cut at 180 s; the bytes themselves are free inside the region)")
+    st_gb = stored + bson_gb * GEN_PARTS_PER_BSON
+    st = st_gb * GBM / 30 * days_kept
+    line("S3 storage of the 1 TB database", st, f"{st_gb:.0f} GB (runs {stored:.0f} + partition files until the publish "
+         f"{bson_gb * GEN_PARTS_PER_BSON:.0f}) x {GBM} x {days_kept} days / 30; {st_gb * GBM / 30:.2f} $ for every further day")
+    lo, hi = (out[0][0] + b1 + w1 + st), (out[1][0] + b1 + w1 + st)
+    print(f"  THE 1 TB ADDITION, ESTIMATED: {lo:.2f} to {hi:.2f} $, {out[0][1] + b1_h + w1_h:.1f} to {out[1][1] + b1_h + w1_h:.1f} h "
+          f"of jobs; each job under the default $5 cap")
+    # the mongod line at the Atlas size: NOT BUILT (no machine role yet); printed so the amount is known before it is
+    mg_h = 0.4 + 2.8 + 0.5
+    mg = (3 * hour(cook) + hour(extras_client)) * mg_h + 26.6 * XZ * 2
+    line("(not built) mongod replica set, Atlas size", mg,
+         f"{mg_h:.1f} h (boot 0.4 + the script's load at Atlas's rate 2.8, UNKNOWN on our machines + first-next-ops 0.5) x "
+         f"(3 x {hour(cook):.4f} + client {hour(extras_client):.4f}) + its two copies across zones 26.6 GB x 2 x {XZ}")
+    return lo, hi
+
+
 if __name__ == "__main__":
     print("Step 9 cost estimate, 8-vCPU plan (ESTIMATED; prices DECLARED, sources in the docstring)")
     pilot()
@@ -294,4 +369,10 @@ if __name__ == "__main__":
     split_plan("atlas", 0)
     split_plan("100gb", 3)
     split_plan("atlas, write-peak at 10,000 documents/s", 0, peak_docs_s=10000)
+    print("\n######## 2026-11-13: the round with the 1 TB database (one kept pantry): THE NUMBERS TO USE ########")
+    base = split_plan("atlas (the part of the round at the Atlas size)", 0)
+    lo, hi = plan_1tb()
+    print(f"\n  THE ROUND WITH 1 TB, ESTIMATED: {base + lo:.2f} to {base + hi:.2f} $ (the Atlas-size jobs L, M1, M2, M3 "
+          f"{base:.2f} + the 1 TB addition), plus the pilot (above); the 100 GB step is not in it (one ballast database "
+          f"per pantry: the round goes from the Atlas size to 1 TB)")
     # no Atlas rerun (founder, 2026-11-09): the comparison uses the Atlas numbers measured in Ireland on 2026-11-05

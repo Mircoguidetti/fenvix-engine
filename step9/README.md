@@ -47,10 +47,11 @@ Nothing here has run on AWS. Every script is meant to be read by the reviewer be
   (Graviton, $0.0910/h) / `m8g.large` ($0.1000/h), prices DECLARED (AWS Price List eu-west-1 2026-11-04). The 3-zone
   log on three copies, one per zone: log-0 on the cook's own machine, log-1 and log-2 on `c7g.medium` ($0.0388/h).
 - Data size is a parameter: `atlas` (about 27 GB of BSON, the size measured on Atlas), `100gb`, `1tb`. The bigger
-  sizes keep the five Atlas databases exactly (loaded through the founder's script, unchanged) and add ballast
-  databases of the same shape (3 or 40 of 24.3 GiB), GENERATED straight into the pantry in our stored format by the
-  ballast generator (below; `"ballast_mode": "script"` keeps the old path through the script on a filler machine); the
-  ballast rounds read two of them with the same phases.
+  sizes keep the five Atlas databases exactly (loaded through the founder's script, unchanged) and add ONE ballast
+  database of the same shape, `app_data_b01`, of `ballast_gib` GiB of BSON (generator-1tb, 2026-11-12; defaults 93.2
+  for `100gb`, 931.4 for `1tb`, any size from 1 to 1100), GENERATED straight into the pantry in our stored format by
+  the ballast generator on several writers (below; `"ballast_mode": "script"` keeps the old path through the script on
+  a filler machine); the ballast rounds read that database with the same phases.
 
 ## The ballast generator (aws-ready, 2026-11-10)
 
@@ -166,8 +167,9 @@ against Atlas's c7i.2xlarge with 5); `somma_massimo.py` says when the client was
 - 100 GB and 1 TB (every run command also names `"engine"` and, for the generator, `"server_options"` with
   `--sealed-runs` and `--customer-key`): `{"mode": "run", "data": "1tb", "phases": ["load"], "pantry": "keep",
   "ballast_slice": [0, 0]}` (the Atlas databases), then `{"mode": "run", "data": "1tb", "phases": ["load"], "pantry":
-  "<kept>"}` (the generator: all 40 ballast databases in one job, about 3.7 h ESTIMATED), then the measure jobs (1 TB as
-  built is 40 databases of 24.3 GiB, not one 1 TB database: total review question 1; not in `commands/`);
+  "<kept>"}` (the generator: the one ballast database; at 1 TB about 6-7 h on c7i.2xlarge ESTIMATED, so 2 jobs: the
+  generator commits slice by slice in the pantry, stops 20 minutes before the job's ceiling with BALLAST_PARTIAL, and
+  the same command again resumes it; generator-1tb), then the measure jobs (not in `commands/`);
   `{"mode": "drop-pantry", "pantry": "..."}` at the end. The first job stores the round password in the kept pantry;
   later jobs read it (the root user lives there).
 - `"spend_cap"` above 5 needs `"cap_approved"`: the date and words of the founder's yes.
@@ -204,3 +206,44 @@ times (at once, after 90 s, after a clean restart that replays the log) to tell 
 - N5: the 100 GB plan counts job B; the SPESA line adds each job's cross-zone allowance (`ci/outcomes.py`).
 Tests: `local/tests/test_gate.py`, `test_cold_restart.py`, `test_fenvix_status.py`, `test_outcomes.py`,
 `test_takeover_ids.py`.
+
+## The 1 TB part of the round (2026-11-13, coordinator's request to the total review; nothing run on AWS)
+
+The founder's goal is a database of 1 TB and up where a customer's first request may pay S3 and every next request is
+as fast as on MongoDB. The round now goes from the Atlas size straight to ONE database of 1 TB on the same kept pantry
+(the generator of fenvix-engine `generator-1tb` 7b4eb31, approved: `ballast_gib`, one database `app_data_b01`,
+resumable across jobs). The 100 GB commands (05, 06) stay as they are but are not part of this plan: a pantry holds
+one ballast database.
+
+- `commands/08-G1-generate-1tb.json`: the generator alone on a c7i.2xlarge. 3.8 to 6.0 hours of generation (ESTIMATED:
+  the rate per writer is MEASURED locally, what 8 hyperthreads give is not), so 1 or 2 jobs: a job that ends
+  `BALLAST_PARTIAL_RESUME_NEXT_JOB` is red on purpose; commit the same command again and it resumes from its last
+  committed slice. The first minutes of the job print the real rate per slice.
+- `commands/09-B1-read-rounds-1tb.json`: reads only. first-next, then the founder's script's cold read rounds on the
+  1 TB database. No spare (no takeover runs). The pantry stays as generated, so this job can be repeated.
+- `commands/10-W1-first-next-ops-reads-after-writes-1tb.json`: the LAST job on the pantry, because it writes:
+  - `programs/first_next_ops.py`: FIRST and NEXT of each request of the agent benchmark (resume, last 10, whole history,
+    time travel, save), the customer as the thread and its `messaggi` as its checkpoints; each operation has its own
+    cold customers; the cook's GETs, bytes and rows from sealed runs per request; the time of the opening read apart.
+    `--no-save` sends the four reads only (the pilot uses it: its pantry is read as loaded by job M1 afterwards).
+  - `programs/reads_after_writes.py`: the `stato_ts` index read (the generator's own probe) before about 13,000 order
+    updates, right after them, and after the compactor went quiet: seconds, documents examined, rows read from sealed
+    runs per document, bytes fetched. The slowdown found by the generator's second session (15 to 40 times after
+    updates) is being fixed; this measures it at 1 TB either way. A read is cut at 180 s and its stage stops there.
+  - then first-next-ops again on other cold customers (label after-writes) and
+    `programs/first_next_compare.py` after-writes against before-writes.
+- Against MongoDB at the same size: `first_next_ops.py` and `first_next_compare.py` run unchanged against any MongoDB
+  URI (on a mongod the counters are WiredTiger's pages and bytes read into its cache). What is NOT built: the machine
+  role that starts a mongod replica set, loads the Atlas-shaped databases through the founder's script and restarts it
+  cold. Until it is, the round has no MongoDB line for these five requests; the comparison with Atlas is the founder's
+  script's own cold and warm reads at the Atlas size (job M1). A mongod at 1 TB is not planned: its load through the wire
+  takes more than a day at the rate measured on Atlas.
+- Rule for the two programs that write (decide.py `WRITING_PROGRAMS`): never in the default program list; inside a job
+  they run after the script's read rounds (extras.sh's order); across jobs, only after every job that must read the
+  pantry as loaded (M1 for the Atlas databases, B1 for the 1 TB one).
+- `ci/estimate.py` prints the 1 TB addition and the round's total (`plan_1tb`); decide.py's estimate of the agent
+  benchmark is now 0.9 hours per target at the standard profile and 0.2 at the small one (the local write phases alone
+  took 19 to 33 minutes, MEASURED 2026-11-11).
+- Tests: `local/tests/test_first_next_ops.py` (12, with a fake server: the real runs are the local docker round and the
+  pilot), `local/tests/test_plan_1tb.py` (7). `bench/agent-checkpoints/tests/review_miss_wrong_answers.py` plants its
+  stale-resume fault with a fixed hash (it failed about one run in four with Python's per-process `hash()`).

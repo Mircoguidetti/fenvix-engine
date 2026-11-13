@@ -4,21 +4,27 @@ that run.py, packages.sh and the cost estimate use. Nothing here touches AWS.
 Fields of step9/command.json (defaults in brackets):
   mode          "permissions" ($0 check) | "run" | "teardown" | "drop-pantry" | anything else: nothing happens ["none"]
   data          "atlas" (the five m30-corto databases, about 27 GB of BSON, as loaded on Atlas M30) | "100gb" | "1tb"
-                (the same five databases plus ballast databases of the same shape) ["atlas"]
+                (the same five databases plus ONE ballast database of the same shape, app_data_b01, of ballast_gib)
+                ["atlas"]
+  ballast_gib   GiB of BSON of the one ballast database (generator-1tb, 2026-11-12: one database of the chosen size,
+                not several of a fixed size) [100gb: 93.2 (100 GB), 1tb: 931.4 (1,000 GB)]; any size from 1 to 1100
   phases        any of "load", "measure", "extras", in this order [all three]. A 1 TB load does not fit in one GitHub
                 job (6 hours): load in several rounds into a kept pantry, then measure in a last round.
   pantry        "new" (deleted at the end) | "keep" (kept for later rounds as fenvix-kitchen-pantry-<run>) | the name
                 of a kept pantry ["new"]
-  ballast_slice [FROM, TO]: the ballast databases this round loads (0-based, TO excluded) [all of them]
+  ballast_slice [FROM, TO]: [0, 0] loads no ballast (the Atlas databases only), [0, 1] the ballast database [0, 1]
   ballast_mode  "generate": the ballast written straight into the pantry in our stored format by the ballast generator
                 (`mongo-server <server_options> --ballast`, mongo-server/src/ballast.rs; sealed runs, our manifest, the
                 keys of the round's layout), on its own machine, no cook 0 and no client; needs "--sealed-runs" and
                 "--customer-key" in server_options (the round reads it through compaction 2's reader) | "script": loaded
                 through cook 0 by the founder's script on the filler machine (the slow path, 1.55 MB/s per process)
                 ["generate"]
-  generator     the generator machine [c7i.2xlarge (8 vCPU) when the round generates more than 4 databases, else
-                c7i.xlarge (4 vCPU): one database per vCPU at a time]; generator_disk_gb its
-                disk (the sorted spill of the shared keyspace) [60]; generator_parallel databases at once [its vCPU]
+  generator     the generator machine [c7i.2xlarge (8 vCPU)]; generator_disk_gb its disk (each writer's sorted
+                spill of one slice, then one key partition at a time at the publish: a few GB) [60];
+                generator_parallel the writers of the one database [its vCPU]. The generator commits its work slice by
+                slice in the pantry (generator/app_data_b01/), so a job cut by its ceiling loses at most the slices in
+                flight: the same command again on the kept pantry resumes it. A generation estimated above one job is
+                accepted only with a kept pantry ("pantry": "keep" or its name), and decide.py says how many jobs.
   engine        REQUIRED for mode run: the FULL 40-character fenvix-engine commit id the servers and the generator are
                 built from, the final merged head of compaction 2 (no default: a round never runs on a commit chosen by
                 accident). Never a branch or tag name (total review R5, 2026-11-12): a branch moves, so two jobs of one
@@ -47,8 +53,16 @@ Fields of step9/command.json (defaults in brackets):
                 cook waits for compaction 2 to finish, on the server's own counters and the fx/ objects, and the
                 program does not run if it never does: NOT_SETTLED]
   settle_max_min the cap of that wait, and of the loader's after the load [30]; reaching it stops (never silent)
-  programs      any of "m30", "s3-first-byte", "sealed-run", "log-ack", "first-next", "ballast-rounds", "takeovers",
-                "write-peak", "agent-bench" [all]. "first-next" (total review R1 point 2): for N cold customers of the
+  programs      any of "m30", "s3-first-byte", "sealed-run", "log-ack", "first-next", "ballast-rounds", "first-next-ops",
+                "reads-after-writes", "takeovers", "write-peak", "agent-bench" [all but the two that write into the
+                measured database, "first-next-ops" and "reads-after-writes": only when named]. "first-next-ops"
+                (2026-11-13): FIRST and NEXT of each request of the agent benchmark (resume, last 10, whole history, time
+                travel, save) on the largest database, each operation with its own cold customers
+                (programs/first_next_ops.py; it saves one message per measured customer). "reads-after-writes"
+                (2026-11-13): the stato_ts index read before and after about 13,000 order updates and after the compactor
+                settled, with the rows read from sealed runs per document (programs/reads_after_writes.py), then
+                first-next-ops again on other customers (label after-writes). Both run after the ballast rounds; across
+                jobs, only after every job that must read the pantry as loaded. "first-next" (total review R1 point 2): for N cold customers of the
                 largest databases, the first request and three different next requests of the same customer, with the
                 cook's GETs and bytes per request (programs/first_next.py; first_next_args); it runs before the ballast
                 rounds, on customers the founder's script never uses (not its reserved ones). "write-peak" (aws-fixes B4): the founder's script's own load (the Atlas load's
@@ -59,7 +73,8 @@ Fields of step9/command.json (defaults in brackets):
                 and Aurora are in eu-west-1a, as on Atlas (client in eu-west-1a, primary in another zone: euw1-az2,
                 MEASURED from the hello tags) | "same": clients in the cook's zone ["other"]. Every machine records its
                 zone name and zone id (IMDS) in results/<name>/zone.json; run.json lists them.
-  takeovers_args, log_ack_args, s3_first_byte_args, sealed_run_args, ballast_rounds_args, first_next_args: extra arguments
+  takeovers_args, log_ack_args, s3_first_byte_args, sealed_run_args, ballast_rounds_args, first_next_args,
+  first_next_ops_args, reads_after_writes_args: extra arguments
                 [see DEFAULTS]
   spend_cap     dollars; the round blocks itself there [5]. Above 5 only with "cap_approved": "<date, the founder's yes>"
   ceiling_min   minutes after which the round stops and every machine powers off [330, at most 340]
@@ -77,8 +92,18 @@ import sys
 
 from machine_types import ROLES, TYPES
 
-PROGRAMS = ["m30", "s3-first-byte", "sealed-run", "log-ack", "first-next", "ballast-rounds", "takeovers", "write-peak", "agent-bench"]
-EXTRA_PROGRAMS = ["s3-first-byte", "sealed-run", "log-ack", "first-next", "ballast-rounds", "takeovers"]   # the extras client's
+PROGRAMS = ["m30", "s3-first-byte", "sealed-run", "log-ack", "first-next", "ballast-rounds", "first-next-ops",
+            "reads-after-writes", "takeovers", "write-peak", "agent-bench"]
+EXTRA_PROGRAMS = ["s3-first-byte", "sealed-run", "log-ack", "first-next", "ballast-rounds", "first-next-ops",
+                  "reads-after-writes", "takeovers"]   # the extras client's
+# 2026-11-13 (coordinator: the 1 TB plan): the two programs that WRITE into the measured database. first-next-ops saves
+# one message per measured customer (150 by default); reads-after-writes updates about 13,000 orders. Never in the
+# default list; in a job they run after the founder's script's read rounds (extras.sh's order); across jobs, only after
+# every job that must read the pantry as loaded (M1 for the Atlas databases, the ballast rounds for the big one).
+WRITING_PROGRAMS = ["first-next-ops", "reads-after-writes"]
+# their own time on top of the extras (ESTIMATED upper bounds: first-next-ops 150 customers x 5 requests, twice when
+# reads-after-writes follows it; reads-after-writes 3 stages x --reads x --max-read-s at worst, the updates, the settle)
+PROGRAM_HOURS = {"first-next-ops": 0.3, "reads-after-writes": 1.5}
 # How long each part of a job takes, in hours (ESTIMATED; aws-fixes B2). Sources: the Atlas load 2.8 h (MEASURED rate on
 # Atlas M30, 2026-11-05; OUR load rate on real S3 is UNKNOWN until the load job runs: the job's own 4.3 h script limit
 # and the ceiling stop it, and the settle cap is added); m30-corto about 3.0 h (kitchen README, the Atlas round's
@@ -87,29 +112,41 @@ EXTRA_PROGRAMS = ["s3-first-byte", "sealed-run", "log-ack", "first-next", "balla
 # measured at the standard profile, the total review's question 2 point 6), 0.6 h each until the local bench-local run
 # measures it; Aurora's creation about 0.3 h (DECLARED order of magnitude by AWS; measured on the first run).
 JOB_HOURS = {"boot": 0.3, "atlas_load": 2.8, "m30": 3.0, "spare_boot": 0.2, "extras": 1.6, "write_peak": 0.6,
-             "agent_per_target": 0.6, "aurora_create": 0.3, "pgbox_boot": 0.2}
+             "agent_per_target": 0.9, "agent_per_target_small": 0.2, "aurora_create": 0.3, "pgbox_boot": 0.2}
 CEILING_USE = 0.9   # a job is refused when its estimate is above 90% of ceiling_min (teardown, results, margin)
 DATA = {  # BSON GB of the five Atlas databases: 4 x 3.1 + 10.74 (MEASURED, Atlas state files of code-irlanda) + the 2 KB
-          # collections (2 x 1.22 GiB + about 1 GiB): about 26.6 GB; ballast databases of 24.3 GB to reach the size
-    "atlas": {"target_gb": 26.6, "ballast_dbs": 0},
-    "100gb": {"target_gb": 100.0, "ballast_dbs": 3},
-    "1tb": {"target_gb": 1000.0, "ballast_dbs": 40},
+          # collections (2 x 1.22 GiB + about 1 GiB): about 26.6 GB. generator-1tb (2026-11-12): the size is ONE ballast
+          # database of ballast_gib GiB of BSON (the founder's goal: one database of 1 TB), not 3 or 40 of 24.3 GiB
+    "atlas": {"target_gb": 26.6, "ballast_dbs": 0, "ballast_gib": 0.0},
+    "100gb": {"target_gb": 126.6, "ballast_dbs": 1, "ballast_gib": 93.2},
+    "1tb": {"target_gb": 1026.6, "ballast_dbs": 1, "ballast_gib": 931.4},
 }
-BALLAST_DB_GB = 24.3
+BALLAST_GIB_MAX = 1100.0
+
+
+def gib_arg(gib):
+    """The --gb argument of the plan: the exact value of ballast_gib (shortest round-trip form, "130" for 130.0), never a
+    rounded one: extras.sh checks the generated state file's size against ballast_gib (review of 148bee9: with "%g",
+    931.3225746 became 931.323 and the check refused the database)."""
+    s = repr(float(gib))
+    return s[:-2] if s.endswith(".0") else s
 DEFAULTS = {
-    "data": "atlas", "phases": ["load", "measure", "extras"], "pantry": "new", "ballast_slice": None,
+    "data": "atlas", "phases": ["load", "measure", "extras"], "pantry": "new", "ballast_slice": None, "ballast_gib": None,
     "ballast_mode": "generate", "generator": None, "generator_disk_gb": 60, "generator_parallel": None,
     "engine": None, "engine_commit": None, "atlas_states": "501c8fd",
     "cook": "m7i.large", "spare": "m7i.large", "log": "c7g.medium", "compactor": None, "compactor_options": "",
     "loader": "c7i.xlarge", "loader_options": "", "client": "c7i.xlarge", "filler": "c7i.xlarge",
     "extras_client": "c7i.large", "log_colocate": True, "pgbox": "m7i.large", "aurora": False, "network": "default-sg",
-    "server_options": "", "prepare": True, "settle_max_min": 30, "programs": PROGRAMS, "client_zone": "other",
+    "server_options": "", "prepare": True, "settle_max_min": 30,
+    "programs": [p for p in PROGRAMS if p not in WRITING_PROGRAMS], "client_zone": "other",
     "write_peak_args": "--dbs 6 --threads 16 --minutes 25 --gb 10",
     "takeovers_args": "--n 50 --writers 8 --between-s 3 --lease-ttl 4 --log on",
     "takeovers_off_args": "--n 50 --writers 8 --between-s 3 --lease-ttl 4 --log off --label logoff",
     "log_ack_args": "--n 1000 --conc 8,64 --secs 20",
     "s3_first_byte_args": "--objects 40 --reads 300",
     "first_next_args": "--customers 30 --max-dbs 2",
+    "first_next_ops_args": "--per-op 30 --max-s 120",
+    "reads_after_writes_args": "--reads 6 --updates 13000 --write-customers 150 --max-read-s 180 --settle-min 20",
     # read sample and erased users as the local run (bench-local review, item 8): p99 of 300 reads, not of 30
     "agent_bench_args": "--profile standard --workers 1 --read-sample 300 --erase-users 100",
     "sealed_run_args": "--run-mib 1024 --block-kib 256 --reads 300",
@@ -142,13 +179,16 @@ def job_hours(c):
             h["load_settle_cap"] = float(c["settle_max_min"]) / 60
         if c.get("filler"):
             # through the script: 3 processes at 1.55 MB/s each (MEASURED on Atlas)
-            gb = len(c["ballast"]["lines"]) * BALLAST_DB_GB * 1.073741824
+            gb = len(c["ballast"]["lines"]) * c["ballast_gib"] * 1.073741824
             h["ballast_script"] = gb * 1000 / (c["ballast"]["parallel"] * 1.55) / 3600
         if c.get("generator"):
             import estimate
-            n = len(c["ballast"]["lines"])
-            per_db = BALLAST_DB_GB * 1.073741824 * 1000 / estimate.GEN_MB_S_PER_DB / 3600 * (1 + estimate.GEN_PUBLISH_FRACTION)
-            h["generator"] = -(-n // max(1, int(c["ballast"]["parallel"]))) * per_db
+            gen_h = estimate.generator_hours(c["ballast_gib"], c["generator"], int(c["ballast"]["parallel"]))
+            c["generator_hours_estimated"] = round(gen_h, 2)
+            # a resumable generation longer than one job runs until the ceiling; the next job resumes it (kept pantry)
+            cap_h = CEILING_USE * float(c["ceiling_min"]) / 60 - sum(h.values())
+            c["generator_jobs_estimated"] = max(1, -(-int(gen_h * 100) // max(1, int(cap_h * 100))))
+            h["generator"] = min(gen_h, max(0.0, cap_h))
     if "measure" in c["phases"]:
         if "m30" in c["programs"]:
             if c.get("prepare"):
@@ -156,7 +196,15 @@ def job_hours(c):
             h["m30"] = JOB_HOURS["m30"]
     if "extras" in c["phases"] and "measure" in c["phases"]:
         if any(p in EXTRA_PROGRAMS for p in c["programs"]):
-            h["extras"] = JOB_HOURS["spare_boot"] + JOB_HOURS["extras"]
+            # the extras client's programs: the fixed estimate for the older ones, each newer one its own
+            older = [p for p in c["programs"] if p in EXTRA_PROGRAMS and p not in PROGRAM_HOURS]
+            h["extras"] = JOB_HOURS["spare_boot"] + (JOB_HOURS["extras"] if older else 0.0)
+            for p, hours in PROGRAM_HOURS.items():
+                if p in c["programs"]:
+                    if p == "first-next-ops":   # by its group size (30 customers per operation by default)
+                        fa = (c.get("first_next_ops_args") or "").split()
+                        hours *= min(1.0, float(fa[fa.index("--per-op") + 1]) / 30) if "--per-op" in fa else 1.0
+                    h[p.replace("-", "_")] = hours
         if "write-peak" in c["programs"]:
             # its own --minutes plus the fixed part of JOB_HOURS["write_peak"] (0.6 h for the 25 minutes of the full
             # program: about 11 minutes of setup and the load's end); the pilot runs 5 minutes (total review B4)
@@ -165,8 +213,13 @@ def job_hours(c):
             h["write_peak"] = JOB_HOURS["write_peak"] - 25 / 60 + mins / 60
         if "agent-bench" in c["programs"]:
             targets = 2 + (1 if c.get("aurora") else 0)
-            h["agent_bench"] = JOB_HOURS["pgbox_boot"] + targets * JOB_HOURS["agent_per_target"] + \
-                (JOB_HOURS["aurora_create"] if c.get("aurora") else 0)
+            # total review (2026-11-12, question 3): per target at the standard profile 0.9 h, ESTIMATED from the local
+            # repeat 1 of 2026-11-11 (the write phase alone: Postgres 19 minutes, mongod 23, ours 33, MEASURED; plus the
+            # reads, the erase, our settle of at least 12 minutes and the cold phase); the small profile about 0.2 h
+            ab = (c.get("agent_bench_args") or "").split()
+            profile = ab[ab.index("--profile") + 1] if "--profile" in ab else "standard"
+            per = JOB_HOURS["agent_per_target_small"] if profile in ("small", "tiny") else JOB_HOURS["agent_per_target"]
+            h["agent_bench"] = JOB_HOURS["pgbox_boot"] + targets * per + (JOB_HOURS["aurora_create"] if c.get("aurora") else 0)
     return {k: round(v, 2) for k, v in h.items()}
 
 
@@ -185,9 +238,16 @@ def resolve(raw, quota=None):
         refuse("phases: a non-empty list of load, measure, extras")
     if not set(c["programs"]) <= set(PROGRAMS):
         refuse(f"programs: any of {PROGRAMS}")
-    if c["generator"] is None:   # the default, by the number of databases the round generates
-        lo_, hi_ = c["ballast_slice"] or [0, DATA.get(c["data"], {}).get("ballast_dbs", 0)]
-        c["generator"] = "c7i.2xlarge" if hi_ - lo_ > 4 else "c7i.xlarge"
+    if c["ballast_gib"] is None:
+        c["ballast_gib"] = DATA[c["data"]]["ballast_gib"]
+    try:
+        c["ballast_gib"] = float(c["ballast_gib"])
+    except (TypeError, ValueError):
+        refuse("ballast_gib: a number of GiB")
+    if DATA[c["data"]]["ballast_dbs"] and not 1.0 <= c["ballast_gib"] <= BALLAST_GIB_MAX:
+        refuse(f"ballast_gib: from 1 to {BALLAST_GIB_MAX} GiB of BSON")
+    if c["generator"] is None:   # the default: one database on all 8 vCPU of the quota
+        c["generator"] = "c7i.2xlarge"
     for role in ("cook", "spare", "log", "compactor", "loader", "client", "filler", "extras_client", "pgbox", "generator"):
         t = c[role]
         if t is None and role in ("spare", "compactor"):
@@ -256,8 +316,13 @@ def resolve(raw, quota=None):
     lo, hi = (c["ballast_slice"] or [0, n])
     if not (0 <= lo <= hi <= n):
         refuse(f"ballast_slice: within [0, {n}]")
-    lines = [[f"app_data_b{i + 1:02d}", "--gb", f"{BALLAST_DB_GB}", "--seme", f"{2001 + i}", "--thread", "16",
-              "--quota-riservati", "0.4", "--tetto-logico-gb", "60", "--max-ore-carico", "48"] for i in range(lo, hi)]
+    # the one ballast database; --tetto-logico-gb only reaches the founder's script on the "script" path, where it is
+    # its logical ceiling: above the database
+    lines = [[f"app_data_b{i + 1:02d}", "--gb", gib_arg(c["ballast_gib"]), "--seme", f"{2001 + i}", "--thread", "16",
+              "--quota-riservati", "0.4", "--tetto-logico-gb", f"{max(60, int(c['ballast_gib'] * 1.2) + 1)}",
+              "--max-ore-carico", "48"] for i in range(lo, hi)]
+    # the one ballast database, also in the jobs that only measure it on a kept pantry
+    c["ballast_db"] = "app_data_b01" if n else None
     if "load" not in c["phases"]:
         lines = []
     c["ballast"] = {"parallel": max(1, TYPES[c["filler"]][0] - 1), "lines": lines}
@@ -342,6 +407,10 @@ def resolve(raw, quota=None):
     if os.environ.get("S9_MODE", "aws") == "local":
         # LOCAL mode only (shrunk programs, like S9_VCPU_LIMIT): the estimate is scaled; on AWS never
         limit_h /= float(os.environ.get("S9_DURATION_SCALE", "1"))
+    if c.get("generator") and c.get("generator_jobs_estimated", 1) > 1 and c["pantry_mode"] == "new":
+        refuse(f"the generation of {c['ballast_gib']:g} GiB takes about {c['generator_hours_estimated']} h on "
+               f"{c['generator']} (ESTIMATED), about {c['generator_jobs_estimated']} jobs: it resumes across jobs only "
+               f'from a kept pantry: "pantry": "keep" (then its name in the next jobs)')
     if c["mode"] == "run" and c["job_hours_total"] > limit_h:
         refuse(f"the job would last about {c['job_hours_total']:.1f} h (ESTIMATED: {c['job_hours']}), above "
                f"{CEILING_USE:.0%} of ceiling_min {float(c['ceiling_min']):.0f} = {limit_h:.1f} h: it would be cut before its "

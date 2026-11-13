@@ -8,6 +8,9 @@
 #   first-next      programs/first_next.py      first request of a cold customer, then 3 different next ones (R1)
 #   ballast-rounds  the same cold read phases as m30-corto (Q2, Q3, Q1, Q1d, Q4), on two ballast databases, through
 #                   code-irlanda's programma.py and the founder's script unchanged (100 GB and 1 TB only)
+#   first-next-ops  programs/first_next_ops.py  FIRST and NEXT of resume, last 10, whole history, time travel, save
+#   reads-after-writes programs/reads_after_writes.py  the stato_ts index read before and after updates (then
+#                   first-next-ops again, label after-writes); these two write into the measured database
 #   takeovers       programs/takeovers.py       N takeovers cook <-> spare, 0 acknowledged writes lost
 #   write-peak      programs/write_peak.py      peak writes with the real indexes through the measured cook (the
 #                   founder's script's own load, 6 databases x 16 threads, 25 minutes); run by a client named "peak"
@@ -59,6 +62,14 @@ with_status() { # with_status NAME RESULT_JSON COMMAND...
   $PY fenvix_status.py stamp "$res" "$ENGINE_SHA256"
 }
 ENGINE_SHA256=$(cfg engine_sha256)
+# the state files of the databases in the pantry: the Atlas ones from the client package, the ballast one from the pantry
+fn_states() {
+  [ -d fn-states ] && return 0
+  mkdir -p fn-states/atlas fn-states/ballast
+  [ -f atlas-states.tar.gz ] && tar xzf atlas-states.tar.gz -C fn-states/atlas 2>/dev/null
+  $PY s3io.py get-dir "$PANTRY" step9-ballast-states/ fn-states/ballast > /dev/null 2>&1
+  return 0
+}
 step "programs: $PROGRAMS; cook $COOK_IP:$COOK_PORT; spare ${SPARE_IP:-none}; log ${LOGS:-none}"
 FENVIX_P1_URI=$URI $PY wait_db.py 15 >> out/steps.log 2>&1 || finish COOK_UNREACHABLE
 has s3-first-byte && run_prog s3-first-byte $PY s3_first_byte.py "$BUCKET" out/s3-first-byte $(cfg s3_first_byte_args)
@@ -68,30 +79,68 @@ if has first-next; then
   # total review R1 point 2: the first request of a cold customer, then three different requests of the same customer,
   # with the cook's GETs and bytes per request; before the ballast rounds (they warm what they read). State files: the
   # Atlas ones from the client package, the ballast ones from the pantry (the largest databases are taken)
-  mkdir -p fn-states/atlas fn-states/ballast
-  [ -f atlas-states.tar.gz ] && tar xzf atlas-states.tar.gz -C fn-states/atlas 2>/dev/null
-  $PY s3io.py get-dir "$PANTRY" step9-ballast-states/ fn-states/ballast > /dev/null 2>&1
+  fn_states
   # shellcheck disable=SC2046
   with_status first-next out/first-next/first-next-summary.json $PY first_next.py out/first-next --uri "$URI" --states fn-states $(cfg first_next_args)
 fi
 if has ballast-rounds; then
-  # two ballast databases, their state files from the pantry, the read phases of m30-corto through programma.py
+  # generator-1tb (2026-11-12): THE ballast database of the command (ballast_db, ballast_gib GiB of BSON: one database
+  # of the chosen size, not the first two of several of 24.3 GiB), its state file from the pantry, the read phases of
+  # m30-corto through programma.py
+  BDB=$(cfg ballast_db); BGIB=$(cfg ballast_gib)
+  step "ballast-rounds: database ${BDB:-none} of ${BGIB:-?} GiB of BSON"
   mkdir -p ballast/lavoro/stati
   cp programma.py prova_infinite.py somma_massimo.py controlla_parallelo.py ballast/
   $PY s3io.py get-dir "$PANTRY" step9-ballast-states/ ballast/lavoro/stati > /dev/null 2>&1
-  $PY - "$(cfg ballast_rounds_args)" > ballast/passi.txt <<'PY'
-import os, sys
-extra = sys.argv[1]
-names = sorted(os.listdir("ballast/lavoro/stati"))[:2]
-for n in names:
-    print(f"giro {n} --db {n} --nuova-cartella --giro s9_ballast --solo-fasi inizio,Q2,Q3,Q1,Q1d,Q4 {extra}")
+  $PY - "$(cfg ballast_rounds_args)" "$BDB" "$BGIB" > ballast/passi.txt <<'PY'
+import json, os, sys
+extra, name, gib = sys.argv[1], sys.argv[2], sys.argv[3]
+f = os.path.join("ballast/lavoro/stati", name, "risultati_p1.json")
+if name and os.path.exists(f):
+    st = json.load(open(f))
+    got = st.get("config", {}).get("gb")
+    # the state file must be the database of this size: a kept pantry from another size is not read as this one
+    # relative tolerance: the plan's --gb is the exact ballast_gib (decide.gib_arg); a plan written with 6 significant
+    # digits (before the review of 148bee9) still matches (its error is at most 5e-6 relative)
+    if got is None or abs(float(got) - float(gib)) > 1e-5 * max(1.0, abs(float(gib))):
+        sys.exit(f"ballast-rounds: {name} in the pantry is {got} GiB, the command says {gib} GiB")
+    print(f"giro {name} --db {name} --nuova-cartella --giro s9_ballast --solo-fasi inizio,Q2,Q3,Q1,Q1d,Q4 {extra}")
 PY
+  [ $? = 0 ] || { step "ballast-rounds: the pantry's ballast database is not the command's size"; : > ballast/passi.txt; }
   ln -sfn "$PWD/out/ballast-rounds" ballast/out; mkdir -p out/ballast-rounds
   if [ -s ballast/passi.txt ]; then
     run_prog ballast-rounds bash -c "cd ballast && URI_GIRO='${URI}&maxConnecting=200' FENVIX_P1_URI='$URI' $PY programma.py passi.txt"
     cp -r ballast/lavoro/stati out/ballast-rounds/stati 2>/dev/null
   else
     step "ballast-rounds: no ballast state files in the pantry (data atlas?): skipped"; outcomes+=("ballast-rounds:SKIPPED")
+  fi
+fi
+# 2026-11-13 (coordinator, the 1 TB plan). These two WRITE into the measured database, so they come after the founder's
+# script's read rounds above. Both take the largest database the pantry has a state file for (the ballast one when it
+# is there), or the command's ballast database by name.
+FN_DB=$(cfg ballast_db)
+if has first-next-ops; then
+  fn_states
+  # FIRST and NEXT of each request of the agent benchmark (resume, last 10, whole history, time travel, save), each
+  # operation with its own cold customers; the cook's GETs, bytes and rows per request
+  # shellcheck disable=SC2046
+  with_status first-next-ops out/first-next-ops/first-next-ops-summary.json $PY first_next_ops.py out/first-next-ops --uri "$URI" \
+    --states fn-states ${FN_DB:+--db "$FN_DB"} --label before-writes $(cfg first_next_ops_args)
+fi
+if has reads-after-writes; then
+  fn_states
+  # the stato_ts index read before the updates, right after them, and after the compactor settled
+  # shellcheck disable=SC2046
+  with_status reads-after-writes out/reads-after-writes/reads-after-writes-summary.json $PY reads_after_writes.py out/reads-after-writes \
+    --uri "$URI" --states fn-states ${FN_DB:+--db "$FN_DB"} $(cfg reads_after_writes_args)
+  # and the five requests again, on other cold customers, now that the database has received writes
+  if has first-next-ops; then
+    # shellcheck disable=SC2046
+    with_status first-next-ops-after-writes out/first-next-ops-after-writes/first-next-ops-summary.json $PY first_next_ops.py \
+      out/first-next-ops-after-writes --uri "$URI" --states fn-states ${FN_DB:+--db "$FN_DB"} --label after-writes $(cfg first_next_ops_args)
+    [ -s out/first-next-ops/first-next-ops-summary.json ] && $PY first_next_compare.py out/first-next-ops-after-writes/first-next-ops-summary.json \
+      out/first-next-ops/first-next-ops-summary.json out/first-next-ops-after-writes/against-before-writes.json --their-name "before the writes" \
+      > out/first-next-ops-after-writes/against-before-writes.txt 2>&1
   fi
 fi
 if has takeovers; then
