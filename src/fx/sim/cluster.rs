@@ -256,6 +256,10 @@ pub enum Ev {
     Hold { p: usize, class: Class, op: Option<NOp>, skip: u64, land: bool, all: bool, rid: u64 },
     Release { rid: u64 },
     Sleep { ms: u64 },
+    /// Read one customer's rows in process `p` (point reads, or one prefix scan), checked at once: every row this
+    /// opening of `p` had acknowledged before the read started comes back (or a later write of it), or the read fails;
+    /// never fewer rows (the coordinator's lead of 2026-11-13: reads that came back empty under a slow store).
+    ReadCheck { p: usize, cust: usize, scan: bool },
     // ---- sim-test-2 (`ext.rs`) ----
     /// A named restore point now (`ctl/pitr.rs` `make_point`): a SlateDB checkpoint paired with a version of ours.
     Point { p: usize, tag: u64 },
@@ -285,7 +289,7 @@ impl Ev {
     fn slot(&self) -> Option<usize> {
         use Ev::*;
         match self {
-            Open { p, .. } | Upgrade { p } | Write { p, .. } | Erase { p, .. } | Flush { p } | Publish { p } | FirstStart { p } | FirstPoll { p } | CompStart { p } | CompDrain { p } | CompStop { p } | DropThrough { p } | Gc { p } | ErasePass { p } | Retire { p } | GcClosed { p } | ClosePass { p } | Close { p } | Abandon { p } | Kill { p } | Hold { p, .. } => Some(*p),
+            Open { p, .. } | Upgrade { p } | Write { p, .. } | Erase { p, .. } | Flush { p } | Publish { p } | FirstStart { p } | FirstPoll { p } | CompStart { p } | CompDrain { p } | CompStop { p } | DropThrough { p } | Gc { p } | ErasePass { p } | Retire { p } | GcClosed { p } | ReadCheck { p, .. } | ClosePass { p } | Close { p } | Abandon { p } | Kill { p } | Hold { p, .. } => Some(*p),
             Point { p, .. } | PointPrune { p, .. } | Restore { p, .. } | Fork { p, .. } | Generate { p, .. } | SlateGc { p } | EraseRide { p } => Some(*p),
             Release { .. } | Sleep { .. } | Mark { .. } | Storm { .. } => None,
         }
@@ -356,6 +360,7 @@ pub fn generate(seed: u64, steps: usize) -> Script {
         };
         if let Some(o) = owner {
             cands.push((20, Ev::Write { p: o, ops: ops(&mut r) }));
+            cands.push((6, Ev::ReadCheck { p: o, cust: r.gen_range(0..CUSTOMERS), scan: r.gen_bool(0.5) }));
             cands.push((6, Ev::Flush { p: o }));
             if !st[o].comp {
                 cands.push((if versioned { 3 } else { 10 }, Ev::Publish { p: o }));
@@ -441,6 +446,38 @@ pub fn generate(seed: u64, steps: usize) -> Script {
         // v3, the late-write pattern (the family this simulator hunts): the owner's next request of a class is held, the
         // owner starts the work that sends it, another process takes the database over and works on it, then the held
         // request goes on. Every part is drawn at random.
+        // the slow-read pattern (coordinator, 2026-11-13: reads that came back empty under a slow store and a starved
+        // host): every GET of the owner's SSTs and runs (and sometimes its versions) answers late, up to 4 s (past the
+        // hold life and T_pin), while it reads one customer and other work goes on; then the store answers again
+        if let Some(o) = owner {
+            if ev.len() + 10 < steps && r.gen_bool(0.08) {
+                let mut rids = Vec::new();
+                let mut classes = vec![Class::Other, Class::FxRun];
+                if r.gen_bool(0.5) {
+                    classes.push(Class::FxVersion);
+                }
+                for class in classes {
+                    rid += 1;
+                    rids.push(rid);
+                    ev.push(Ev::Hold { p: o, class, op: Some(NOp::Get), skip: r.gen_range(0..2), land: true, all: true, rid });
+                }
+                for _ in 0..r.gen_range(1..4) {
+                    ev.push(match r.gen_range(0..5) {
+                        0 => Ev::Write { p: o, ops: ops(&mut r) },
+                        1 if st[o].comp => Ev::CompDrain { p: o },
+                        2 => Ev::Sleep { ms: r.gen_range(200..1500) },
+                        _ => Ev::ReadCheck { p: o, cust: r.gen_range(0..CUSTOMERS), scan: r.gen_bool(0.5) },
+                    });
+                }
+                ev.push(Ev::ReadCheck { p: o, cust: r.gen_range(0..CUSTOMERS), scan: r.gen_bool(0.5) });
+                for id in rids {
+                    ev.push(Ev::Release { rid: id });
+                }
+                ev.push(Ev::Sleep { ms: 300 });
+                ev.push(Ev::ReadCheck { p: o, cust: r.gen_range(0..CUSTOMERS), scan: r.gen_bool(0.5) });
+                continue;
+            }
+        }
         if let (Some(o), Some(&q)) = (owner, down.first()) {
             if ev.len() + 16 < steps && r.gen_bool(if versioned { 0.10 } else { 0.25 }) {
                 rid += 1;
@@ -625,6 +662,8 @@ struct World {
     knobs: u8,
     /// sim-test-2: restore points, marks, forks, and the violations found during the run (`ext.rs`).
     x: ext::XState,
+    /// The event of each slot's current opening (`ReadCheck` checks the writes acknowledged since).
+    opened_at: Arc<Mutex<Vec<u32>>>,
 }
 
 const STEP_WAIT: Duration = Duration::from_millis(1500);
@@ -725,6 +764,14 @@ impl World {
         if let Ev::Open { writer: true, .. } = e {
             self.created = true;
         }
+        if matches!(e, Ev::Open { .. } | Ev::Upgrade { .. }) {
+            let mut o = self.opened_at.lock().unwrap();
+            if o[p] == u32::MAX || matches!(e, Ev::Upgrade { .. }) {
+                o[p] = eid;
+            }
+        }
+        let opened = self.opened_at.lock().unwrap()[p];
+        let found = Arc::clone(&self.x.found);
         let seed = self.net.seed;
         let kp = self.knobs;
         if ext::is_ext(&e) {
@@ -821,6 +868,72 @@ impl World {
                         Ok(Some(e)) => format!("deletes acked; erasure {} registered, S_e {}", e.id, e.s_e),
                         Ok(None) => "deletes acked; no erasure (sealed runs off)".into(),
                         Err(e) => format!("deletes acked; register failed: {}", short(&e)),
+                    }
+                }
+                Ev::ReadCheck { cust, scan, .. } => {
+                    let Some(t) = g.as_ref() else { return "not open (skipped)".into() };
+                    // what must come back: per key, the last write this opening acknowledged before the read starts
+                    let snap = model.lock().unwrap().snapshot();
+                    let mut must: BTreeMap<Vec<u8>, (u32, Vec<Option<Vec<u8>>>)> = BTreeMap::new();
+                    for i in 0..PER_CUSTOMER {
+                        let k = ckey(cust, i);
+                        let Some(ws) = snap.writes.get(&k) else { continue };
+                        let Some(w) = ws.iter().rposition(|w| w.slot == p && opened != u32::MAX && w.eid > opened && w.status.load(SeqCst) == ACKED) else { continue };
+                        let legal: Vec<Option<Vec<u8>>> = ws[w..].iter().map(|x| x.value.clone()).collect();
+                        must.insert(k, (ws[w].eid, legal));
+                    }
+                    if must.is_empty() {
+                        return "nothing of this opening to check".into();
+                    }
+                    let got: Result<BTreeMap<Vec<u8>, Option<Vec<u8>>>, String> = if scan {
+                        let prefix = cust_targets(cust).ranges[0].0.clone();
+                        match t.scan_prefix(&prefix).await {
+                            Ok(rows) => {
+                                let m: BTreeMap<Vec<u8>, Vec<u8>> = rows.into_iter().map(|(k, v)| (k.to_vec(), v.to_vec())).collect();
+                                Ok(must.keys().map(|k| (k.clone(), m.get(k).cloned())).collect())
+                            }
+                            Err(e) => Err(short(&e)),
+                        }
+                    } else {
+                        let mut m = BTreeMap::new();
+                        let mut err = None;
+                        for k in must.keys() {
+                            match t.get(k).await {
+                                Ok(v) => {
+                                    m.insert(k.clone(), v.map(|b| b.to_vec()));
+                                }
+                                Err(e) => {
+                                    err = Some(short(&e));
+                                    break;
+                                }
+                            }
+                        }
+                        match err {
+                            Some(e) => Err(e),
+                            None => Ok(m),
+                        }
+                    };
+                    match got {
+                        Err(e) => format!("read failed (allowed): {e}"),
+                        Ok(m) => {
+                            let mut bad = 0;
+                            for (k, (weid, legal)) in &must {
+                                let v = m.get(k).cloned().flatten();
+                                if !legal.contains(&v) {
+                                    bad += 1;
+                                    found.lock().unwrap().push(format!(
+                                        "read-your-writes ({}): {} in process {p}: read {} where its own write of event {weid} was acknowledged before the read",
+                                        if scan { "scan" } else { "get" },
+                                        String::from_utf8_lossy(&k[3..]),
+                                        match &v {
+                                            Some(x) => String::from_utf8_lossy(x).chars().take(40).collect::<String>(),
+                                            None => "absent".into(),
+                                        }
+                                    ));
+                                }
+                            }
+                            format!("{} {} rows checked, {bad} wrong", if scan { "scan" } else { "get" }, must.len())
+                        }
                     }
                 }
                 Ev::Flush { .. } => {
@@ -1311,6 +1424,7 @@ pub async fn run_script(s: &Script) -> Run {
         log: Default::default(),
         knobs: s.knobs,
         x: ext::XState::new(s.profile),
+        opened_at: Arc::new(Mutex::new(vec![u32::MAX; SLOTS])),
     };
     w.note(format!("seed {} knobs {} profile {:?}", s.seed, s.knobs, s.profile));
     for (eid, e) in &s.events {

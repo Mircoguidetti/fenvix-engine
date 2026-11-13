@@ -719,6 +719,59 @@ mod tests {
         assert!(stale >= 1, "the passes listed the runs after the new owner's publish: at least one must see it");
     }
 
+    /// Coordinator's lead (2026-11-13, B3 run 1): reads that came back EMPTY, not an error, under a slow store (20 ms per
+    /// answer after a cold restart) and a saturated host. Here: the owner writes customers, compacts and drops, closes;
+    /// a new process opens it; every GET of its SSTs and runs (and versions) answers up to 4 s late (past the hold life
+    /// and T_pin) while it writes and reads its own rows back (point reads and prefix scans). The oracle: each read
+    /// returns this opening's acknowledged rows, or fails; never fewer rows.
+    #[test]
+    #[ignore]
+    fn sim_story_slow_reads_never_come_back_empty() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp, Profile};
+        use Ev::*;
+        let w = |p: usize, c: usize| Write { p, ops: (0..PER_CUSTOMER).map(|i| (c, i, false)).collect() };
+        let mut ev = vec![Open { p: 0, writer: true }, w(0, 0), Publish { p: 0 }, w(0, 1), CompStart { p: 0 }];
+        for c in 0..CUSTOMERS {
+            ev.extend([w(0, c), Flush { p: 0 }, CompDrain { p: 0 }]);
+        }
+        ev.extend([DropThrough { p: 0 }, Close { p: 0 }, Open { p: 1, writer: true }]);
+        for c in 0..CUSTOMERS {
+            ev.push(w(1, c));
+        }
+        ev.extend([Flush { p: 1 }, CompStart { p: 1 }, CompDrain { p: 1 }]);
+        ev.extend([
+            Hold { p: 1, class: Class::Other, op: Some(NOp::Get), skip: 0, land: true, all: true, rid: 1 },
+            Hold { p: 1, class: Class::FxRun, op: Some(NOp::Get), skip: 0, land: true, all: true, rid: 2 },
+            Hold { p: 1, class: Class::FxVersion, op: Some(NOp::Get), skip: 0, land: true, all: true, rid: 3 },
+        ]);
+        for c in 0..CUSTOMERS {
+            ev.push(ReadCheck { p: 1, cust: c, scan: c % 2 == 0 });
+        }
+        ev.extend([Sleep { ms: 2000 }, ReadCheck { p: 1, cust: 0, scan: true }, ReadCheck { p: 1, cust: 1, scan: false }]);
+        ev.extend([Release { rid: 1 }, Release { rid: 2 }, Release { rid: 3 }]);
+        for c in 0..CUSTOMERS {
+            ev.push(ReadCheck { p: 1, cust: c, scan: c % 2 == 1 });
+        }
+        let s = Script { seed: 5, profile: Profile::none(), knobs: env_u64("SIM_KNOBS", 0) as u8, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Default::default() };
+        let n = env_u64("SIM_REPLAYS", 1);
+        let mut failing = 0;
+        for _ in 0..n {
+            let r = rt.block_on(run_script(&s));
+            for l in r.trace.iter().filter(|l| l.contains("ReadCheck") || l.contains("Release")) {
+                eprintln!("  {}", l.chars().take(220).collect::<String>());
+            }
+            for v in r.violations.iter().take(8) {
+                eprintln!("VIOLATION {v}");
+            }
+            eprintln!("SIM STORY slow reads: {} violations; {}", r.violations.len(), r.stats);
+            failing += (!r.violations.is_empty()) as u64;
+        }
+        eprintln!("SIM STORY slow reads never come back empty: {failing} of {n} runs with a violation");
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {
