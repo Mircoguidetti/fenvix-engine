@@ -1,0 +1,23 @@
+{
+  "note": "Equal-durability lines of the agent benchmark (equal-durability.md). NOT RUN: to run once after compaction 2 is merged. Passwords come from the environment variable BENCH_PW, never from this file.",
+  "seed": 42,
+  "profile": "standard",
+  "lines": [
+    {"name": "postgres-sync", "target": "postgres", "durability": "primary + 2 synchronous standbys, ANY 1 (2 of 3 copies)",
+     "containers": ["pg-primary", "pg-standby1", "pg-standby2"],
+     "primary_conf": {"wal_level": "replica", "synchronous_commit": "on", "synchronous_standby_names": "'ANY 1 (standby1, standby2)'", "max_wal_senders": 10},
+     "uri": "postgresql://app_user:${BENCH_PW}@pg-primary:5432/app_demo"},
+    {"name": "mongo-rs3", "target": "mongo", "durability": "3-member replica set, w:majority, j:true",
+     "containers": ["mongo-a", "mongo-b", "mongo-c"],
+     "uri": "mongodb://mongo-a:27017,mongo-b:27017,mongo-c:27017/?replicaSet=rs0&w=majority&journal=true"},
+    {"name": "fenvix-log", "target": "fenvix", "durability": "3-zone log, acknowledged at 2 of 3 copies",
+     "containers": ["log-0", "log-1", "log-2", "cook", "spare"],
+     "uri": "mongodb://root:${BENCH_PW}@cook:27017/?directConnection=true&authSource=admin"},
+    {"name": "postgres-single", "target": "postgres", "durability": "one node, no copy", "containers": ["pg-single"],
+     "uri": "postgresql://app_user:${BENCH_PW}@pg-single:5432/app_demo"},
+    {"name": "mongo-single", "target": "mongo", "durability": "one node, no copy", "containers": ["mongo-single"],
+     "uri": "mongodb://mongo-single:27017/"},
+    {"name": "fenvix-s3", "target": "fenvix", "durability": "log off: S3 WAL, one PUT per group commit", "containers": ["cook-nolog"],
+     "uri": "mongodb://root:${BENCH_PW}@cook-nolog:27017/?directConnection=true&authSource=admin"}
+  ]
+}
