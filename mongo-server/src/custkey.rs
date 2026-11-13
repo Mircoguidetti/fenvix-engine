@@ -359,6 +359,121 @@ pub fn strip(raw: &mut Document) {
     raw.remove(RAW_ORDER);
 }
 
+/// fix-customer-id-plan: the customer values a filter pins the customer field to, by equality (`{field: v}`,
+/// `{field: {$eq: v}}`) or `$in`, at the top level or inside `$and` (the first such condition found: any other condition
+/// only narrows it further, every document read is still matched against the whole filter). `None` when no condition
+/// pins it, or when a value's documents may lie outside the spans [`spans`] reads:
+/// - a dotted customer field (a path through arrays can match an element whose document is stored under another value);
+/// - a regular expression, undefined, MinKey, MaxKey, NaN (anywhere in the value), or a document that reads as operators;
+/// - a string (anywhere in the value) under a collation: components are encoded without one, and `"a"` may equal `"A"`.
+pub fn eq_values(field: &str, filter: &Document) -> Option<Vec<Bson>> {
+    if field.contains('.') {
+        return None;
+    }
+    fn find<'a>(field: &str, filter: &'a Document) -> Option<Vec<&'a Bson>> {
+        for (k, v) in filter {
+            if k == field {
+                match v {
+                    Bson::Document(d) if !d.is_empty() && d.keys().all(|k| k.starts_with('$')) => {
+                        if let Some(x) = d.get("$eq") {
+                            return Some(vec![x]);
+                        }
+                        if let Some(Bson::Array(a)) = d.get("$in") {
+                            return Some(a.iter().collect());
+                        }
+                    }
+                    other => return Some(vec![other]),
+                }
+            } else if k == "$and" {
+                if let Bson::Array(a) = v {
+                    for s in a {
+                        if let Bson::Document(sd) = s {
+                            if let Some(x) = find(field, sd) {
+                                return Some(x);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        None
+    }
+    fn plain(v: &Bson) -> bool {
+        match v {
+            Bson::RegularExpression(_) | Bson::Undefined | Bson::MinKey | Bson::MaxKey | Bson::DbPointer(_) | Bson::JavaScriptCode(_) | Bson::JavaScriptCodeWithScope(_) => false,
+            Bson::Double(f) => !f.is_nan(),
+            Bson::Decimal128(d) => !d.to_string().to_ascii_lowercase().contains("nan"),
+            Bson::Document(d) => !d.keys().next().is_some_and(|k| k.starts_with('$')) && d.values().all(plain),
+            Bson::Array(a) => a.iter().all(plain),
+            _ => true,
+        }
+    }
+    let vals = find(field, filter)?;
+    let collated = crate::collation::current().is_some();
+    if vals.iter().any(|v| !plain(v) || (collated && crate::collopts::has_string(v))) {
+        return None;
+    }
+    Some(vals.into_iter().cloned().collect())
+}
+
+/// fix-customer-id-plan: the logical key ranges `[start, stop)` (ascending, disjoint) that hold every document of
+/// collection `coll` (customer key `key`) whose customer field can equal one of `vals` ([`eq_values`]): the span of each
+/// value's component, the span of undefined next to null (`{f: null}` reads them together), and the bracket of array
+/// values (`{f: v}` matches an array holding `v`; an array value is stored whole, as one component). `id_bounds`: the
+/// `_id` range of the filter (`query::id_range`), applied inside each value's span when the key has no time component
+/// (its documents follow `_id` order there); never to the array bracket. `collated`: the query has a collation.
+pub fn spans(coll: &str, key: &Ckey, vals: &[Bson], id_bounds: Option<&(Option<Bson>, Option<Bson>)>, collated: bool) -> Vec<(Vec<u8>, Option<Vec<u8>>)> {
+    let mut base = crate::layout::doc_prefix(coll);
+    base.push(MARK);
+    let span_of = |c: Vec<u8>| -> (Vec<u8>, Option<Vec<u8>>) {
+        let mut p = base.clone();
+        p.extend(c);
+        if key.order.is_none() {
+            if let Some((lo, hi)) = id_bounds {
+                if let Some(r) = crate::layout::id_key_range(&p, lo.as_ref(), hi.as_ref(), collated) {
+                    return r;
+                }
+            }
+        }
+        let e = crate::keyenc::prefix_end(&p);
+        (p, e)
+    };
+    let mut out: Vec<(Vec<u8>, Option<Vec<u8>>)> = Vec::new();
+    for v in vals {
+        match v {
+            Bson::Array(_) => {} // inside the bracket below
+            Bson::Null => {
+                out.push(span_of(comp(&Bson::Null)));
+                out.push(span_of(comp(&Bson::Undefined)));
+            }
+            v => out.push(span_of(comp(v))),
+        }
+    }
+    let mut bracket = base.clone();
+    bracket.push(crate::query::type_rank(&Bson::Array(vec![])));
+    let be = crate::keyenc::prefix_end(&bracket);
+    out.push((bracket, be));
+    out.sort();
+    // merge overlaps (the same value twice, mixed number types of one value)
+    let mut merged: Vec<(Vec<u8>, Option<Vec<u8>>)> = Vec::with_capacity(out.len());
+    for (s, e) in out {
+        if let Some(last) = merged.last_mut() {
+            let reaches = match &last.1 {
+                None => true,
+                Some(le) => s <= *le,
+            };
+            if reaches {
+                if last.1.is_some() && e.as_ref().map_or(true, |e| Some(e) > last.1.as_ref()) {
+                    last.1 = e;
+                }
+                continue;
+            }
+        }
+        merged.push((s, e));
+    }
+    merged
+}
+
 /// Is an index with this key pattern and collation co-located with the documents of a collection whose customer key is
 /// `key` (first field the customer field, ascending, regular, no collation)?
 pub fn colocates(key: &Ckey, pattern: &Document, regular: bool, collation: bool) -> bool {
@@ -873,5 +988,90 @@ mod default_key_tests {
     fn no_agent_collections_no_default() {
         assert_eq!(with_agent_defaults("a=b", ""), "a=b");
         assert_eq!(with_agent_defaults("", "app.checkpoints"), "app.checkpoints=thread_id");
+    }
+}
+
+#[cfg(test)]
+mod customer_plan_tests {
+    use super::*;
+    use bson::{doc, Decimal128};
+
+    fn k(field: &str, timed: bool) -> Ckey {
+        Ckey { field: field.into(), order: timed.then(|| "ts".to_string()) }
+    }
+
+    /// Does any span hold the key of document `d`?
+    fn held(spans: &[(Vec<u8>, Option<Vec<u8>>)], key: &Ckey, d: &Document) -> bool {
+        let dk = doc_key("c", Some(key), d);
+        spans.iter().any(|(s, e)| dk >= *s && e.as_ref().map_or(true, |e| dk < *e))
+    }
+
+    #[test]
+    fn equality_in_and_and_pin_the_customer() {
+        assert_eq!(eq_values("t", &doc! { "t": "a", "x": 1 }), Some(vec![Bson::String("a".into())]));
+        assert_eq!(eq_values("t", &doc! { "t": { "$eq": 5 } }), Some(vec![Bson::Int32(5)]));
+        assert_eq!(eq_values("t", &doc! { "t": { "$in": ["a", "b"] } }).map(|v| v.len()), Some(2));
+        assert_eq!(eq_values("t", &doc! { "$and": [{ "x": 1 }, { "t": "a" }] }), Some(vec![Bson::String("a".into())]));
+        assert_eq!(eq_values("t", &doc! { "t": { "a": 1 } }), Some(vec![Bson::Document(doc! { "a": 1 })]));
+    }
+
+    #[test]
+    fn what_does_not_pin_the_customer() {
+        for f in [
+            doc! { "x": "a" },
+            doc! { "t": { "$gt": "a" } },
+            doc! { "t": { "$ne": "a" } },
+            doc! { "t": bson::Regex { pattern: "^a".try_into().unwrap(), options: "".try_into().unwrap() } },
+            doc! { "t": { "$in": ["a", bson::Regex { pattern: "^a".try_into().unwrap(), options: "".try_into().unwrap() }] } },
+            doc! { "t": f64::NAN },
+            doc! { "t": { "$in": [Bson::Int32(1), Bson::Decimal128("NaN".parse::<Decimal128>().unwrap())] } },
+            doc! { "t": [1, f64::NAN] },
+            doc! { "t": Bson::Undefined },
+            doc! { "t": Bson::MinKey },
+            doc! { "$or": [{ "t": "a" }, { "t": "b" }] },
+        ] {
+            assert_eq!(eq_values("t", &f), None, "{f}");
+        }
+        assert_eq!(eq_values("t.u", &doc! { "t.u": "a" }), None, "a dotted customer field");
+    }
+
+    #[test]
+    fn spans_hold_every_document_that_can_match() {
+        for timed in [false, true] {
+            let key = k("t", timed);
+            let ts = bson::DateTime::from_millis(5);
+            // equal numbers of every type, arrays holding the value, null next to missing and undefined
+            let s1 = spans("c", &key, &[Bson::Int32(1)], None, false);
+            for d in [doc! { "_id": 1, "t": 1, "ts": ts }, doc! { "_id": 2, "t": 1.0, "ts": ts }, doc! { "_id": 3, "t": bson::Bson::Int64(1), "ts": ts },
+                      doc! { "_id": 4, "t": "1.0".parse::<Decimal128>().unwrap(), "ts": ts },
+                      doc! { "_id": 5, "t": [1, 2], "ts": ts }, doc! { "_id": 6, "t": [[1]], "ts": ts }] {
+                assert!(held(&s1, &key, &d), "{d}");
+            }
+            assert!(!held(&s1, &key, &doc! { "_id": 7, "t": 2, "ts": ts }));
+            assert!(!held(&s1, &key, &doc! { "_id": 8, "t": "1", "ts": ts }));
+            let sn = spans("c", &key, &[Bson::Null], None, false);
+            for d in [doc! { "_id": 1, "ts": ts }, doc! { "_id": 2, "t": Bson::Null, "ts": ts }, doc! { "_id": 3, "t": Bson::Undefined, "ts": ts }, doc! { "_id": 4, "t": [Bson::Null], "ts": ts }] {
+                assert!(held(&sn, &key, &d), "{d}");
+            }
+            // ranges are ascending and disjoint
+            let s = spans("c", &key, &[Bson::String("b".into()), Bson::String("a".into()), Bson::Int32(1), Bson::Double(1.0), Bson::Array(vec![])], None, false);
+            for w in s.windows(2) {
+                assert!(w[0].1.as_ref().is_some_and(|e| *e <= w[1].0), "{s:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn an_id_range_narrows_an_untimed_span_only() {
+        let key = k("t", false);
+        let b = (Some(Bson::Int32(10)), Some(Bson::Int32(20)));
+        let s = spans("c", &key, &[Bson::String("a".into())], Some(&b), false);
+        assert!(held(&s, &key, &doc! { "_id": 10, "t": "a" }) && held(&s, &key, &doc! { "_id": 20, "t": "a" }) && held(&s, &key, &doc! { "_id": 15.5, "t": "a" }));
+        assert!(!held(&s, &key, &doc! { "_id": 21, "t": "a" }) && !held(&s, &key, &doc! { "_id": 9, "t": "a" }));
+        // the array bracket is never narrowed
+        assert!(held(&s, &key, &doc! { "_id": 99, "t": ["a"] }));
+        let timed = k("t", true);
+        let s = spans("c", &timed, &[Bson::String("a".into())], Some(&b), false);
+        assert!(held(&s, &timed, &doc! { "_id": 99, "t": "a", "ts": 1 }));
     }
 }

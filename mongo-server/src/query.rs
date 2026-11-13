@@ -986,6 +986,67 @@ pub fn id_equality(filter: &Document) -> Option<&Bson> {
     }
 }
 
+/// fix-customer-id-plan: no `_id` condition of the filter compares with a string or a regular expression (the places
+/// [`uses_id_index`] looks; `$type` and `$exists` operands are not compared). Under a query collation other than the
+/// collection's, mongod still reads the `_id` index for such a filter (MEASURED with explain on mongod 7.0.34:
+/// `$ne: 5`, ranges of numbers, `$in`, `$nin`, `$not`, `$exists`, `$type`, `$or` and `$nor` of them: IXSCAN; `$ne: "a"`,
+/// `$gt: "a"`: COLLSCAN), so it answers in `_id` order, strings in the index's own order.
+pub fn id_operands_string_free(filter: &Document) -> bool {
+    fn free(v: &Bson) -> bool {
+        match v {
+            Bson::RegularExpression(_) => false,
+            Bson::Document(d) if is_operator_doc(d) => d.iter().all(|(op, x)| match op.as_str() {
+                "$type" | "$exists" => true,
+                _ => free(x),
+            }),
+            Bson::Document(d) => d.values().all(free) && !crate::collopts::has_string(v),
+            Bson::Array(a) => a.iter().all(free),
+            v => !crate::collopts::has_string(v),
+        }
+    }
+    filter.iter().all(|(k, v)| match (k.as_str(), v) {
+        ("_id", v) => free(v),
+        ("$and" | "$or" | "$nor", Bson::Array(a)) => a.iter().all(|s| match s {
+            Bson::Document(d) => id_operands_string_free(d),
+            _ => true,
+        }),
+        _ => true,
+    })
+}
+
+/// fix-customer-id-plan: an `_id` equality anywhere a document must meet it (the top level or inside `$and`), next to
+/// other conditions: the value, under the same rules as [`id_equality`]. At most one document per customer holds an
+/// `_id` (one in mongod), so such a filter is answered by looking that `_id` up and matching the whole filter.
+pub fn id_equality_within(filter: &Document) -> Option<&Bson> {
+    for (k, v) in filter {
+        match (k.as_str(), v) {
+            ("_id", v) => {
+                let v = match v {
+                    Bson::Document(d) if is_operator_doc(d) => match (d.len(), d.get("$eq")) {
+                        (1, Some(x)) => x,
+                        _ => continue,
+                    },
+                    v => v,
+                };
+                if !matches!(v, Bson::RegularExpression(_) | Bson::Null | Bson::Undefined) {
+                    return Some(v);
+                }
+            }
+            ("$and", Bson::Array(a)) => {
+                for s in a {
+                    if let Bson::Document(sd) = s {
+                        if let Some(x) = id_equality_within(sd) {
+                            return Some(x);
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
 // ---------------------------------------------------------------------------
 // Sort
 // ---------------------------------------------------------------------------
@@ -1599,5 +1660,35 @@ mod tests {
                 assert_eq!(t.into_sorted(), expect, "push_at k={k} spec={spec:?}");
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod customer_plan_tests {
+    use super::*;
+    use bson::doc;
+
+    #[test]
+    fn id_equality_next_to_other_conditions() {
+        assert_eq!(id_equality_within(&doc! { "t": "a", "_id": 5 }), Some(&Bson::Int32(5)));
+        assert_eq!(id_equality_within(&doc! { "t": "a", "_id": { "$eq": "x" } }), Some(&Bson::String("x".into())));
+        assert_eq!(id_equality_within(&doc! { "$and": [{ "t": "a" }, { "_id": 7 }] }), Some(&Bson::Int32(7)));
+        assert_eq!(id_equality_within(&doc! { "t": "a", "_id": { "$gt": 5 } }), None);
+        assert_eq!(id_equality_within(&doc! { "_id": { "$gt": 5 }, "$and": [{ "_id": 6 }] }), Some(&Bson::Int32(6)));
+        assert_eq!(id_equality_within(&doc! { "t": "a", "_id": Bson::Null }), None);
+        assert_eq!(id_equality_within(&doc! { "$or": [{ "_id": 1 }, { "_id": 2 }] }), None);
+    }
+
+    #[test]
+    fn id_operands_without_strings() {
+        assert!(id_operands_string_free(&doc! { "_id": { "$ne": 5 }, "t": "a" }));
+        assert!(id_operands_string_free(&doc! { "_id": { "$type": "number" } }));
+        assert!(id_operands_string_free(&doc! { "_id": { "$exists": true } }));
+        assert!(id_operands_string_free(&doc! { "$or": [{ "_id": 1 }, { "_id": { "$gt": 4 } }] }));
+        assert!(!id_operands_string_free(&doc! { "_id": { "$ne": "a" } }));
+        assert!(!id_operands_string_free(&doc! { "_id": { "$in": [1, "a"] } }));
+        assert!(!id_operands_string_free(&doc! { "$nor": [{ "_id": { "$gt": "a" } }] }));
+        assert!(!id_operands_string_free(&doc! { "_id": { "$not": { "$gt": "a" } } }));
+        assert!(!id_operands_string_free(&doc! { "_id": bson::Regex { pattern: "^a".try_into().unwrap(), options: "".try_into().unwrap() } }));
     }
 }

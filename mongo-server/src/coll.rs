@@ -1263,18 +1263,52 @@ pub fn order_by_near(mut docs: Vec<Document>, path: &str, n: &crate::geo_query::
 }
 
 async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
-    let plan = plan_for(indexes, o);
+    let mut plan = plan_for(indexes, o);
+    // fix-customer-id-plan: in a customer-keyed collection, an `_id` equality next to other conditions (`{thread_id: X,
+    // _id: Y}`) is looked up through the locator (every customer holding `_id` Y: one in mongod, at most one per customer
+    // here) and the whole filter is matched on what it finds. Before, no plan took it: the collection was read whole for
+    // P5's `_id` order (customer-first keys are not in `_id` order), 20 s on a 1.5 GiB customer.
+    if matches!(plan, Plan::Coll { reverse: false }) && matches!(o.hint, Hint::None) && customer_plan_on() {
+        if let Some(v) = crate::query::id_equality_within(o.filter) {
+            if crate::custkey::of(g, coll).await?.is_some() {
+                CPLAN.id_within.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                plan = Plan::Id(v.clone());
+            }
+        }
+    }
     // No sort, and mongod would read the `_id` index (`_id` conditions, `$in` with the transaction's own writes, an
     // `$or` of `_id` clauses): mongod answers in `_id` order, so a limit or a single write picks the same document as
     // mongod. Before, a scan here answered in insertion order and a transaction's own writes came last
-    // (fix-query-defects P5). Not under a collation other than the collection's (mongod cannot use the `_id` index then).
+    // (fix-query-defects P5). Under a collation other than the collection's, mongod reads the `_id` index only when no
+    // `_id` condition compares a string (fix-customer-id-plan; MEASURED, `query::id_operands_string_free`): then the
+    // order is the index's, strings in binary order (only for a collection without a default collation here).
+    let id_uses = matches!(plan, Plan::IdIn(_)) || (matches!(plan, Plan::Coll { reverse: false }) && crate::query::uses_id_index(o.filter));
+    let mut index_order_binary = false;
     let implied_id = o.sort.is_empty()
         && matches!(o.hint, Hint::None)
-        && (matches!(plan, Plan::IdIn(_)) || (matches!(plan, Plan::Coll { reverse: false }) && crate::query::uses_id_index(o.filter)))
+        && id_uses
         && match crate::collation::current() {
             None => true,
-            Some(eff) => crate::collation::same(&Some(eff), &g.coll_opts(coll).await?.and_then(|c| c.collation.clone())),
+            Some(eff) => {
+                let coll_c = g.coll_opts(coll).await?.and_then(|c| c.collation.clone());
+                if crate::collation::same(&Some(eff), &coll_c) {
+                    true
+                } else {
+                    index_order_binary = coll_c.is_none() && crate::query::id_operands_string_free(o.filter);
+                    index_order_binary
+                }
+            }
         };
+    if index_order_binary {
+        // every match, in the `_id` index's order (no collation), then the first `want`
+        let o2 = FindOpts { filter: o.filter, sort: o.sort, want: None, hint: Hint::None, ttl: o.ttl, ov: o.ov };
+        let (mut out, st, p) = find_docs_with(g, coll, indexes, &o2, plan).await?;
+        crate::collation::sync_scope(None, || out.sort_by(|a, b| crate::query::compare(a.get("_id").unwrap_or(&Bson::Null), b.get("_id").unwrap_or(&Bson::Null))));
+        if let Some(w) = o.want {
+            out.truncate(w);
+        }
+        return Ok((out, st, p));
+    }
     if implied_id {
         let by_id = [("_id".to_string(), true)];
         if o.want.is_some() {
@@ -1373,7 +1407,37 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
     let mut out: Vec<Document> = Vec::new();
     let mut ov_done: HashSet<Vec<u8>> = HashSet::new();
 
+    // fix-customer-id-plan: a collection scan of a customer-keyed collection whose filter pins the customer field
+    // (equality or `$in`) reads only those customers' spans (`custkey::spans`), in the order the scan it replaces gives:
+    // natural order by each document's stored number, or key order when the collection keeps none.
+    let mut span_done = false;
+    if let (Plan::Coll { reverse }, Hint::None | Hint::Natural(_), Some(_)) = (&plan, &o.hint, &ckey) {
+        if let Some(spans) = customer_spans(g, coll, o.filter).await? {
+            let nat = crate::natural::enabled(g, coll).await?;
+            // a reverse natural scan with a limit stops early from the end, where a span holds no order: left as it was
+            if !(nat && *reverse && early.is_some()) {
+                tenant_bench::counting::set_phase(3);
+                CPLAN.span_reads.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                let sp = SpanFind { coll, o, nat, reverse: *reverse, early, ov_keys: &ov_keys };
+                match sp.run(g, spans, &mut stats, &mut topk, &mut sort_bytes).await? {
+                    Some((docs, replaced)) => {
+                        out = docs;
+                        ov_done = replaced;
+                        span_done = true;
+                    }
+                    None => {
+                        // a document without its natural-order number: the scan below, from a clean start
+                        topk = o.want.filter(|_| !sorted_by_plan && !meta_sort).map(|k| crate::query::TopK::new(k, o.sort));
+                        sort_bytes = blocking.then_some(0);
+                        stats = Stats::default();
+                    }
+                }
+            }
+        }
+    }
+
     match &plan {
+        _ if span_done => {}
         Plan::Id(_) if id_absent => {}
         Plan::Id(id) => {
             stats.keys = 1;
@@ -2356,37 +2420,73 @@ pub struct NaturalPage {
     pub docs: Vec<Document>,
     pub last: Option<u64>,
     pub done: bool,
+    /// fix-customer-id-plan: the page raced a customer span and the natural-order scan answered it (the next pages of a
+    /// streamed find then read the scan alone, `natural_page`'s `race`).
+    pub scan_won: bool,
 }
 
-pub async fn natural_page(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], filter: &Document, after: Option<u64>, want: usize, max_bytes: usize) -> R<NaturalPage> {
+#[allow(clippy::too_many_arguments)]
+pub async fn natural_page(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], filter: &Document, after: Option<u64>, want: usize, max_bytes: usize, race: bool) -> R<NaturalPage> {
     tenant_bench::counting::set_phase(3);
     let specs = index::ttl_specs(indexes);
     let ttl = if specs.is_empty() { None } else { Some((&specs[..], crate::cmd_data::now_ms())) };
     let o = FindOpts { filter, sort: &[], want: None, hint: Hint::None, ttl, ov: None };
-    let np = crate::natural::prefix(coll);
-    let stop = prefix_end(&np);
-    let mut start = match after {
-        Some(s) => crate::natural::key(coll, s.saturating_add(1)),
-        None => np.clone(),
-    };
-    let mut out = Vec::new();
-    let mut bytes = 0usize;
-    let mut last = after;
-    // A chunk is sized to what the page still needs (no document is decoded only to be thrown away at the page
-    // stop); when the filter drops documents the floor doubles, so a selective filter still reads in large chunks.
-    let mut floor = 256usize;
-    // fix round of big-speed: and never more documents than about `SCAN_CHUNK_BYTES` at the sizes seen (8,192 documents
-    // of 256 KiB were 2 GiB in memory at once)
-    let mut cs = ChunkSize::new(NATURAL_CHUNK);
+    // fix-customer-id-plan: a filter that pins the customer of a customer-keyed collection races its spans against
+    // this scan (`natural_race`), unless an earlier page of the same find was answered by the scan (`race` false)
+    if let Some(spans) = if race { customer_spans(g, coll, filter).await? } else { None } {
+        CPLAN.span_reads.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        return natural_race(g, coll, &o, spans, after, want, max_bytes, &mut Stats::default()).await;
+    }
+    let mut nat = NatScan::new(coll, after);
     loop {
-        let chunk = want.saturating_sub(out.len()).clamp(floor, NATURAL_CHUNK).min(cs.cur);
-        let rows = g.scan_range(&start, stop.as_deref(), false, Some(chunk), INDEX_READ_AHEAD).await?;
+        if let Some(p) = nat.step(g, coll, &o, want, max_bytes, &mut Stats::default()).await? {
+            return Ok(p);
+        }
+    }
+}
+
+/// [`natural_page`]'s scan, one chunk at a time ([`NatScan::step`]): the natural-order entries after `after`, their
+/// documents, the matching ones kept until `want` of them or `max_bytes` (the document that reaches it included).
+struct NatScan {
+    np: Vec<u8>,
+    stop: Option<Vec<u8>>,
+    start: Vec<u8>,
+    out: Vec<Document>,
+    bytes: usize,
+    last: Option<u64>,
+    floor: usize,
+    cs: ChunkSize,
+    /// Bytes read so far (entries and documents), for the race.
+    read: u64,
+}
+
+impl NatScan {
+    fn new(coll: &str, after: Option<u64>) -> Self {
+        let np = crate::natural::prefix(coll);
+        let stop = prefix_end(&np);
+        let start = match after {
+            Some(s) => crate::natural::key(coll, s.saturating_add(1)),
+            None => np.clone(),
+        };
+        // A chunk is sized to what the page still needs (no document is decoded only to be thrown away at the page
+        // stop); when the filter drops documents the floor doubles, so a selective filter still reads in large chunks.
+        // fix round of big-speed: and never more documents than about `SCAN_CHUNK_BYTES` at the sizes seen (8,192
+        // documents of 256 KiB were 2 GiB in memory at once)
+        NatScan { np, stop, start, out: Vec::new(), bytes: 0, last: after, floor: 256, cs: ChunkSize::new(NATURAL_CHUNK), read: 0 }
+    }
+
+    /// One chunk; the page when it is complete.
+    async fn step(&mut self, g: &mut impl Rd, coll: &str, o: &FindOpts<'_>, want: usize, max_bytes: usize, stats: &mut Stats) -> R<Option<NaturalPage>> {
+        let chunk = want.saturating_sub(self.out.len()).clamp(self.floor, NATURAL_CHUNK).min(self.cs.cur);
+        let rows = g.scan_range(&self.start, self.stop.as_deref(), false, Some(chunk), INDEX_READ_AHEAD).await?;
         let n = rows.len();
         let ids: Vec<Vec<u8>> = rows.iter().map(|(_, v)| v.to_vec()).collect();
-        let docs = docs_aligned(g, coll, &ids).await?;
-        cs.seen_sizes(docs.len(), docs.iter().map(|d| d.as_ref().map_or(0, |d| crate::query::bson_size(d) as u64)).sum());
+        // (bytes read: the entries, and what fetching their documents read, a range scan of the documents included)
+        self.read += rows.iter().map(|(k, v)| (k.len() + v.len()) as u64).sum::<u64>();
+        let docs = docs_aligned(g, coll, &ids, &mut self.read).await?;
+        self.cs.seen_sizes(docs.len(), docs.iter().map(|d| d.as_ref().map_or(0, |d| crate::query::bson_size(d) as u64)).sum());
         for ((k, _), (id, d)) in rows.iter().zip(ids.iter().zip(docs)) {
-            last = k.get(np.len()..).and_then(|s| s.try_into().ok()).map(u64::from_be_bytes).or(last);
+            self.last = k.get(self.np.len()..).and_then(|s| s.try_into().ok()).map(u64::from_be_bytes).or(self.last);
             let d = match d {
                 Some(d) => d,
                 None => match moved_doc(g, coll, id).await? {
@@ -2394,21 +2494,327 @@ pub async fn natural_page(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], fil
                     None => continue, // gone
                 },
             };
-            if visible(&d, &o) && matches(&d, filter)? {
-                bytes += crate::query::bson_size(&d);
-                out.push(d);
-                if out.len() >= want || bytes >= max_bytes {
-                    return Ok(NaturalPage { docs: out, last, done: false });
+            stats.docs += 1;
+            if visible(&d, o) && matches(&d, o.filter)? {
+                self.bytes += crate::query::bson_size(&d);
+                self.out.push(d);
+                if self.out.len() >= want || self.bytes >= max_bytes {
+                    return Ok(Some(NaturalPage { docs: std::mem::take(&mut self.out), last: self.last, done: false, scan_won: false }));
                 }
             }
         }
         if n < chunk {
-            return Ok(NaturalPage { docs: out, last, done: true });
+            return Ok(Some(NaturalPage { docs: std::mem::take(&mut self.out), last: self.last, done: true, scan_won: false }));
         }
         let mut k = rows.last().unwrap().0.to_vec();
         k.push(0);
-        start = k;
-        floor = (floor * 2).min(NATURAL_CHUNK);
+        self.start = k;
+        self.floor = (self.floor * 2).min(NATURAL_CHUNK);
+        Ok(None)
+    }
+}
+
+/// fix-customer-id-plan: switch (on unless `FENVIX_NO_CUSTOMER_PLAN` is set: tests and measurements compare both;
+/// answers are the same either way) and counters (serverStatus `fenvix.customerKeys`).
+pub fn customer_plan_on() -> bool {
+    static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ON.get_or_init(|| std::env::var_os("FENVIX_NO_CUSTOMER_PLAN").is_none())
+}
+
+pub struct CustomerPlanStats {
+    pub id_within: std::sync::atomic::AtomicU64,
+    pub span_reads: std::sync::atomic::AtomicU64,
+    pub race_span: std::sync::atomic::AtomicU64,
+    pub race_natural: std::sync::atomic::AtomicU64,
+}
+
+pub static CPLAN: CustomerPlanStats = CustomerPlanStats {
+    id_within: std::sync::atomic::AtomicU64::new(0),
+    span_reads: std::sync::atomic::AtomicU64::new(0),
+    race_span: std::sync::atomic::AtomicU64::new(0),
+    race_natural: std::sync::atomic::AtomicU64::new(0),
+};
+
+/// The key ranges that hold every document a collection scan of `coll` with this filter can match, when the collection
+/// is customer-keyed and the filter pins its customer field ([`crate::custkey::eq_values`]); `None`: the whole collection.
+async fn customer_spans(g: &mut impl Rd, coll: &str, filter: &Document) -> R<Option<Vec<(Vec<u8>, Option<Vec<u8>>)>>> {
+    if !customer_plan_on() {
+        return Ok(None);
+    }
+    let Some(key) = crate::custkey::of(g, coll).await? else { return Ok(None) };
+    let Some(vals) = crate::custkey::eq_values(&key.field, filter) else { return Ok(None) };
+    let bounds = crate::query::id_range(filter);
+    Ok(Some(crate::custkey::spans(coll, &key, &vals, bounds.as_ref(), crate::collation::current().is_some())))
+}
+
+/// The rows of some key ranges, a chunk at a time, ranges in ascending order (descending for `reverse`, each range read
+/// backwards).
+struct SpanCursor {
+    ranges: Vec<(Vec<u8>, Option<Vec<u8>>)>,
+    i: usize,
+    /// Where the current range goes on: its next start (ascending) or its next stop (descending).
+    pos: Option<Vec<u8>>,
+    reverse: bool,
+    cs: ChunkSize,
+    /// Bytes read so far.
+    read: u64,
+}
+
+impl SpanCursor {
+    fn new(mut ranges: Vec<(Vec<u8>, Option<Vec<u8>>)>, reverse: bool, max: usize) -> Self {
+        if reverse {
+            ranges.reverse();
+        }
+        SpanCursor { ranges, i: 0, pos: None, reverse, cs: ChunkSize::new(max), read: 0 }
+    }
+
+    fn done(&self) -> bool {
+        self.i >= self.ranges.len()
+    }
+
+    /// The next rows (empty: every range is read).
+    async fn next(&mut self, g: &mut impl Rd) -> R<Vec<(Bytes, Bytes)>> {
+        while !self.done() {
+            let (lo, hi) = &self.ranges[self.i];
+            let (s, e) = if self.reverse { (lo.clone(), self.pos.clone().or_else(|| hi.clone())) } else { (self.pos.clone().unwrap_or_else(|| lo.clone()), hi.clone()) };
+            if e.as_ref().is_some_and(|e| s >= *e) {
+                // nothing left in this range (an empty range would panic the store)
+                self.i += 1;
+                self.pos = None;
+                continue;
+            }
+            let chunk = self.cs.cur;
+            let rows = g.scan_range(&s, e.as_deref(), self.reverse, Some(chunk), DOC_READ_AHEAD).await?;
+            self.cs.seen(&rows);
+            self.read += rows.iter().map(|(k, v)| (k.len() + v.len()) as u64).sum::<u64>();
+            if rows.len() < chunk {
+                self.i += 1;
+                self.pos = None;
+            } else {
+                let mut last = rows.last().unwrap().0.to_vec();
+                if !self.reverse {
+                    last.push(0);
+                }
+                self.pos = Some(last);
+            }
+            if !rows.is_empty() {
+                return Ok(rows);
+            }
+        }
+        Ok(Vec::new())
+    }
+}
+
+/// A document a span read keeps, ordered by its natural-order number (a max-heap's top is the latest).
+struct BySeq {
+    seq: u64,
+    size: usize,
+    doc: Document,
+}
+
+impl PartialEq for BySeq {
+    fn eq(&self, other: &Self) -> bool {
+        self.seq == other.seq
+    }
+}
+impl Eq for BySeq {}
+impl PartialOrd for BySeq {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl Ord for BySeq {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.seq.cmp(&other.seq)
+    }
+}
+
+/// fix-customer-id-plan: [`natural_page`] for a filter that pins the customer: the customer's spans are read against the
+/// natural-order scan, a chunk of each in turn, and the first to finish answers. The span finishes when it is read
+/// whole: its matches after `after`, ordered by their stored natural-order numbers, are exactly what the scan returns
+/// (a document's number is kept when it is updated or moves to another customer, `Writes::put`); only the first `want`
+/// (and up to `max_bytes`) are held. The scan finishes when it has its page. The side that has read fewer bytes reads
+/// its next chunk, the span first. So a page costs at most about twice the cheaper of the two: a small customer in a large collection reads its span, a large customer whose first documents
+/// come early in natural order is answered by the scan, as before. A span document without a number (none is expected:
+/// numbering a collection writes every document again) leaves the answer to the scan.
+#[allow(clippy::too_many_arguments)]
+async fn natural_race(g: &mut impl Rd, coll: &str, o: &FindOpts<'_>, spans: Vec<(Vec<u8>, Option<Vec<u8>>)>, after: Option<u64>, want: usize, max_bytes: usize, stats: &mut Stats) -> R<NaturalPage> {
+    let mut span = SpanCursor::new(spans, false, FETCH_CHUNK);
+    let mut span_ok = true;
+    let mut heap: std::collections::BinaryHeap<BySeq> = std::collections::BinaryHeap::new();
+    let mut heap_bytes = 0usize;
+    let mut nat = NatScan::new(coll, after);
+    loop {
+        // the side that has read fewer bytes goes next, the span first (its first chunk is small: 64 rows). Measured
+        // on 1,000,000 documents: the scan's first chunk can read the whole document range (`docs_aligned` prefers one
+        // range scan to scattered point reads in a large database), 450 ms for a customer of 100 documents.
+        if span_ok && span.read <= nat.read {
+            let rows = span.next(g).await?;
+            'rows: for (_, v) in &rows {
+                stats.docs += 1;
+                let Some(seq) = crate::natural::seq_of(v) else {
+                    span_ok = false;
+                    heap.clear();
+                    break 'rows;
+                };
+                if after.is_some_and(|a| seq <= a) {
+                    continue;
+                }
+                let d = decode(v)?;
+                if visible(&d, o) && matches(&d, o.filter)? {
+                    let size = crate::query::bson_size(&d);
+                    heap_bytes += size;
+                    heap.push(BySeq { seq, size, doc: d });
+                    // the latest kept is not needed once the earlier ones fill the page without it
+                    while let Some(top) = heap.peek() {
+                        if heap.len() > 1 && (heap.len() - 1 >= want || heap_bytes - top.size >= max_bytes) {
+                            heap_bytes -= top.size;
+                            heap.pop();
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+            if span_ok && span.done() {
+                CPLAN.race_span.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                let kept = heap.into_sorted_vec();
+                // as the scan: a page that reached `want` or `max_bytes` is not the end (the scan does not look further)
+                let full = kept.len() >= want || heap_bytes >= max_bytes;
+                let last = kept.last().map(|b| b.seq).or(after);
+                return Ok(NaturalPage { docs: kept.into_iter().map(|b| b.doc).collect(), last, done: !full, scan_won: false });
+            }
+        }
+        if !span_ok || nat.read < span.read {
+            if let Some(mut p) = nat.step(g, coll, o, want, max_bytes, stats).await? {
+                CPLAN.race_natural.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                p.scan_won = true;
+                return Ok(p);
+            }
+        }
+    }
+}
+
+/// fix-customer-id-plan: a collection scan of a customer-keyed collection read from the spans of the customers its
+/// filter pins (`find_docs_with`), answering exactly as the scan it replaces.
+struct SpanFind<'a, 'b> {
+    coll: &'a str,
+    o: &'a FindOpts<'b>,
+    /// The collection keeps natural order (the scan replaced reads it); otherwise key order.
+    nat: bool,
+    reverse: bool,
+    /// The scan may stop after this many matches (no sort to apply after).
+    early: Option<usize>,
+    ov_keys: &'a HashSet<&'a Vec<u8>>,
+}
+
+impl SpanFind<'_, '_> {
+    /// The matches in scan order (into `topk` instead when there is one) and the overlay documents taken at their
+    /// stored place; `None` when a document has no natural-order number (nothing is kept: the caller scans).
+    async fn run<'t>(&self, g: &mut impl Rd, spans: Vec<(Vec<u8>, Option<Vec<u8>>)>, stats: &mut Stats, topk: &mut Option<crate::query::TopK<'t>>, sort_bytes: &mut Option<usize>) -> R<Option<(Vec<Document>, HashSet<Vec<u8>>)>> {
+        let o = self.o;
+        if !self.nat {
+            // key order: the scan of the whole collection restricted to the spans, stopping as it does
+            let mut cur = SpanCursor::new(spans, self.reverse, FETCH_CHUNK);
+            let mut out = Vec::new();
+            loop {
+                let rows = cur.next(g).await?;
+                if rows.is_empty() {
+                    break;
+                }
+                for (k, v) in &rows {
+                    stats.docs += 1;
+                    if self.ov_keys.contains(&k.to_vec()) {
+                        continue;
+                    }
+                    let d = decode(v)?;
+                    if visible(&d, o) && matches(&d, o.filter)? {
+                        match topk.as_mut() {
+                            Some(t) => t.push(d),
+                            None => {
+                                charge(sort_bytes, &d)?;
+                                out.push(d)
+                            }
+                        }
+                        if self.early.is_some_and(|w| out.len() >= w) {
+                            stats.keys = stats.docs;
+                            return Ok(Some((out, HashSet::new())));
+                        }
+                    }
+                }
+            }
+            stats.keys = stats.docs;
+            return Ok(Some((out, HashSet::new())));
+        }
+        if let (Some(w), true, None, false) = (self.early, self.ov_keys.is_empty(), topk.as_ref(), self.reverse) {
+            let p = natural_race(g, self.coll, o, spans, None, w, usize::MAX, stats).await?;
+            stats.keys = stats.docs;
+            return Ok(Some((p.docs, HashSet::new())));
+        }
+        // natural order: every match of the spans, placed by its stored number. A transaction's own writes are taken as
+        // the natural-order scan takes them: a document it changed at its stored place, one it deleted and inserted
+        // again (and its new documents) after everything, by the caller.
+        let mut cur = SpanCursor::new(spans, false, FETCH_CHUNK);
+        let mut got: Vec<(u64, Document, Option<Vec<u8>>)> = Vec::new();
+        let mut topk_done: HashSet<Vec<u8>> = HashSet::new();
+        loop {
+            let rows = cur.next(g).await?;
+            if rows.is_empty() {
+                break;
+            }
+            for (k, v) in &rows {
+                stats.docs += 1;
+                let Some(seq) = crate::natural::seq_of(v) else { return Ok(None) };
+                let mut d = decode(v)?;
+                let mut replaced = None;
+                if !self.ov_keys.is_empty() && self.ov_keys.contains(&k.to_vec()) {
+                    let mut rk = b"reins/".to_vec();
+                    rk.extend(k.iter());
+                    if o.ov.is_some_and(|m| m.contains_key(&rk)) {
+                        continue; // deleted and inserted again in this transaction: listed at the end
+                    }
+                    match o.ov.and_then(|m| m.get(&k.to_vec())) {
+                        Some(Some(nd)) => {
+                            d = nd.clone(); // updated in this transaction: same position
+                            replaced = Some(k.to_vec());
+                        }
+                        Some(None) => continue,
+                        None => {}
+                    }
+                }
+                if visible(&d, o) && matches(&d, o.filter)? {
+                    match topk.as_mut() {
+                        // ties of the sort in natural order, as the scan pushes them (numbers stay far below 2^62)
+                        Some(t) => {
+                            t.push_at(if self.reverse { (1u64 << 62).saturating_sub(seq) } else { seq }, d);
+                            if let Some(k) = replaced {
+                                topk_done.insert(k);
+                            }
+                        }
+                        None => got.push((seq, d, replaced)),
+                    }
+                }
+            }
+        }
+        if self.reverse {
+            got.sort_by(|a, b| b.0.cmp(&a.0));
+        } else {
+            got.sort_by_key(|x| x.0);
+        }
+        if let Some(w) = self.early {
+            got.truncate(w);
+        }
+        let mut out = Vec::with_capacity(got.len());
+        let mut done = topk_done;
+        for (_, d, r) in got {
+            if let Some(k) = r {
+                done.insert(k);
+            }
+            charge(sort_bytes, &d)?;
+            out.push(d);
+        }
+        stats.keys = stats.docs;
+        Ok(Some((out, done)))
     }
 }
 
@@ -2417,7 +2823,7 @@ const NATURAL_CHUNK: usize = 8192;
 /// The documents under these key suffixes, position by position (`None` where nothing is stored under a suffix: the
 /// caller looks for a moved document). Same cost-based choice as `docs_by_ids`, without matching documents back to
 /// their keys.
-async fn docs_aligned(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Option<Document>>> {
+async fn docs_aligned(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>], read: &mut u64) -> R<Vec<Option<Document>>> {
     let prefix = doc_prefix(coll);
     tenant_bench::counting::set_phase(2);
     if ids.is_empty() {
@@ -2437,6 +2843,7 @@ async fn docs_aligned(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Opt
             let rows = g.scan_range(&start, Some(&stop), false, Some(chunk), FETCH_SCAN_READ_AHEAD).await?;
             let n = rows.len();
             cs.seen(&rows);
+            *read += rows.iter().map(|(k, v)| (k.len() + v.len()) as u64).sum::<u64>();
             for (k, v) in &rows {
                 let id = &k[prefix.len()..];
                 if want.contains(id) {
@@ -2457,5 +2864,7 @@ async fn docs_aligned(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Opt
     }
     let keys: Vec<Vec<u8>> = ids.iter().map(|id| [&prefix[..], id].concat()).collect();
     let vals = g.get_many(&keys).await?;
+    // (a point read costs at least a block)
+    *read += vals.iter().map(|v| v.as_ref().map_or(0, |v| v.len() as u64).max(POINT_READ_BYTES)).sum::<u64>();
     vals.into_iter().map(|v| v.map(|v| decode(&v)).transpose()).collect()
 }

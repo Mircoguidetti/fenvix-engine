@@ -126,6 +126,9 @@ pub(crate) struct StreamCur {
     pub left: Option<usize>,
     /// Documents read (projected) and not returned yet.
     pub buf: VecDeque<Document>,
+    /// fix-customer-id-plan: the next page may race a customer span against the scan (false once the scan answered a
+    /// page of this find: its customer's documents come early in natural order, the span would be read for nothing).
+    pub race: bool,
 }
 
 /// Bytes of documents in one getMore batch of a page-by-page find (mongod: 16 MiB per reply).
@@ -1221,7 +1224,7 @@ impl Server {
             let r = async {
                 let mut g = self.dbs.read(&st.db).await?;
                 let indexes = self.load_indexes(&mut g, &st.db, &st.coll).await?;
-                let page = crate::coll::natural_page(&mut g, &st.coll, &indexes, &st.filter, st.last, fill - st.buf.len(), STREAM_BATCH_BYTES).await?;
+                let page = crate::coll::natural_page(&mut g, &st.coll, &indexes, &st.filter, st.last, fill - st.buf.len(), STREAM_BATCH_BYTES, st.race).await?;
                 Ok::<_, MongoError>(page)
             }
             .await;
@@ -1248,6 +1251,7 @@ impl Server {
             }
             st.last = page.last;
             st.done = page.done;
+            st.race &= !page.scan_won;
         }
         let mut next: Vec<Bson> = Vec::new();
         let mut used = 0usize;
