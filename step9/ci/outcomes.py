@@ -45,12 +45,13 @@ def cross_zone_allowance(cmd, elapsed_h):
 EXTRAS_DONE = "EXTRAS_DONE"
 
 
-def programs_blocker(name, end, asked):
+def programs_blocker(name, end, asked, done=None):
     """The reason the job must be red after machine `name`, or None. `end` is its end.json as a dict (None when
-    missing); `asked` the programs the command gave it."""
+    missing); `asked` the programs the command gave it; `done` the outcome of a machine that ran to its end
+    (EXTRAS_DONE; the MongoDB line's client: MONGOD_LINE_DONE)."""
     if not end:
         return f"{name}: no end file"
-    if end.get("outcome") != EXTRAS_DONE:
+    if end.get("outcome") != (done or EXTRAS_DONE):
         return f"{name}: {end.get('outcome') or 'no outcome'}"
     ran = {}
     for item in str(end.get("programs", "")).split():

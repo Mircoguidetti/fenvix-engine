@@ -1,0 +1,17 @@
+{
+ "mode": "run",
+ "engine": "27014ff2e3e3e4ff223aa778746f3dce433c6549",
+ "data": "atlas",
+ "phases": [
+  "mongod"
+ ],
+ "pantry": "new",
+ "programs": [
+  "first-next-ops",
+  "reads-after-writes"
+ ],
+ "mongod_states": [
+  "vecchio"
+ ],
+ "first_next_ops_args": "--per-op 30 --max-s 120"
+}

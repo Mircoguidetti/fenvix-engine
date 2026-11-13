@@ -247,7 +247,7 @@ nohup bash ./node.sh {role} {name} {BUCKET} > node.log 2>&1 &
 def launch(name, role, mtype, zone, disk_gb=None):
     renew()
     arch = TYPES[mtype][2]
-    package = "client.tar.gz" if role in ("client", "filler", "extras") else f"node-{arch}.tar.gz"
+    package = "client.tar.gz" if role in ("client", "filler", "extras", "mongoclient") else f"node-{arch}.tar.gz"
     left = CEILING_MIN - (time.time() - T0) / 60 + 5
     mid, ip = plat.launch(name, role, mtype, zone, user_data(name, role, package, left), arch, disk_gb=disk_gb)
     machines[mid] = {"name": name, "role": role, "type": mtype, "zone": zone, "ip": ip, "start": time.time(), "end": None,
@@ -427,6 +427,34 @@ try:
             raise Stop("BALLAST_GENERATION_FAILED")
     if "load" not in PHASES:
         say("5/8 no load in this round: the pantry was loaded by an earlier round")
+
+    if "mongod" in PHASES:
+        # aws-local-round (2026-11-13): the MongoDB line, alone in its job: mongod 7.0, three members in zones a, b, c
+        # (machine/mongod.sh), then its client in the clients' zone (machine/mongo_client.sh): the script's load, a cold
+        # restart of the three, first-next-ops and reads-after-writes as on our cook
+        say(f"6/8 the MongoDB line: mongod 7.0, 3 members {cmd['mongod']} in zones a, b, c ({cmd['mongod_disk_gb']} GB disk "
+            f"each), the client {cmd['extras_client']}: load {cmd['mongod_states']}"
+            + (f" and the ballast ({cmd['mongod_ballast_gib']:g} GiB)" if cmd.get("mongod_ballast_gib") else "")
+            + f" ({cmd['mongod_load_gib']} GiB, ESTIMATED), then {cmd['programs']}")
+        mongo = {}
+        for i in range(3):
+            mongo[f"mongo-{i}"] = launch(f"mongo-{i}", "mongod", cmd["mongod"], infra.ZONES[i], disk_gb=int(cmd["mongod_disk_gb"]))
+            cert_for(f"mongo-{i}", mongo[f"mongo-{i}"][1])
+        wait_for("mongod/ready.json", watch="mongo-0", limit_min=25, what="mongod set")
+        say(f"mongod set ready: {get('mongod/ready.json')}")
+        put("mongoclient/config.json", {"programs": cmd["programs"], "mongod_states": cmd["mongod_states"],
+                                        "mongod_ballast_line": cmd["mongod_ballast_line"], "fn_db": cmd["mongod_fn_db"],
+                                        **{k: v for k, v in cmd.items() if k.endswith("_args")}})
+        mc_id, _ = launch("mongoclient", "mongoclient", cmd["extras_client"], CLIENT_ZONE)
+        wait_for("mongoclient/end.json", watch="mongoclient")
+        end_mc = get("mongoclient/end.json") or {}
+        outcomes["mongod"] = end_mc.get("outcome", "NO END")
+        outcomes["mongod_programs"] = end_mc.get("programs", "")
+        red_programs.append(outcomes_rules.programs_blocker("mongoclient", end_mc, cmd["programs"], done="MONGOD_LINE_DONE"))
+        plat.terminate([mc_id])
+        machines[mc_id]["end"] = time.time()
+        for name, (mid, _) in sorted(mongo.items()):
+            stop(name, mid, wait_s=120)
 
     mid1 = ip1 = sp = comp = None
     if "measure" in PHASES:

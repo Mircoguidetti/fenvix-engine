@@ -8,6 +8,7 @@ Atlas side (only if the founder chooses to rerun Atlas at 1 TB): Infinite M30 Ge
 10 GB of documents -> 26.45 GiB with indexes and oplog).
 Usage: estimate.py [RESOLVED_JSON]   (without it: the three sizes with the default machines)"""
 import json
+import os
 import sys
 
 from machine_types import TYPES, EBS_GB_MONTH, IPV4_HOUR
@@ -348,13 +349,53 @@ def plan_1tb(gib=931.4, gen="c7i.2xlarge", cook="m7i.large", log="c7g.medium", e
     lo, hi = (out[0][0] + b1 + w1 + m2x + st), (out[1][0] + b1 + w1 + m2x + st)
     print(f"  THE 1 TB ADDITION, ESTIMATED: {lo:.2f} to {hi:.2f} $, {out[0][1] + b1_h + w1_h + 0.3:.1f} to {out[1][1] + b1_h + w1_h + 0.3:.1f} h "
           f"of jobs; each job under the default $5 cap")
-    # the mongod line at the Atlas size: NOT BUILT (no machine role yet); printed so the amount is known before it is
-    mg_h = 0.4 + 2.8 + 0.5
-    mg = (3 * hour(cook) + hour(extras_client)) * mg_h + 26.6 * XZ * 2
-    line("(not built) mongod replica set, Atlas size", mg,
-         f"{mg_h:.1f} h (boot 0.4 + the script's load at Atlas's rate 2.8, UNKNOWN on our machines + first-next-ops 0.5) x "
-         f"(3 x {hour(cook):.4f} + client {hour(extras_client):.4f}) + its two copies across zones 26.6 GB x 2 x {XZ}")
+    mongod_line()
     return lo, hi
+
+
+def mongod_line(cmd_file=None, member="m7i.large", client="c7i.large"):
+    """aws-local-round (2026-11-13): the MongoDB line, BUILT (machine/mongod.sh, mongo_client.sh; phase "mongod").
+    Job MG (step9/commands/11): 3 mongod 7.0 members in zones a, b, c and the client in zone b; the script loads the
+    database first-next-ops measures at the Atlas size ("vecchio", fenvix_p1), cold restart, first-next-ops and
+    reads-after-writes. Hours from decide.py's estimate of that command; dollars: the four machines with their disks,
+    the load's bytes across zones (client -> primary, primary -> two secondaries). Then the same line at 1 TB, to say
+    with numbers why it is not in this round. Returns (dollars, hours) of MG."""
+    import decide
+    here = os.path.dirname(os.path.abspath(__file__))
+    raw = json.load(open(cmd_file or os.path.join(here, "..", "commands", "11-MG-mongod-line-atlas.json")))
+    os.environ.setdefault("RUN_ID", "1000000001")
+    mode = os.environ.get("S9_MODE")
+    os.environ["S9_MODE"] = "local"   # no gate here: only the estimate
+    try:
+        c = decide.resolve(raw)
+    finally:
+        if mode is None:
+            os.environ.pop("S9_MODE", None)
+        else:
+            os.environ["S9_MODE"] = mode
+    disk = int(c["mongod_disk_gb"])
+    mh = gen_hour(member, disk)
+    h = c["job_hours_total"]
+    gb = c["mongod_load_gib"] * GIB
+    xz = gb * XZ * 3
+    cost = (3 * mh + hour(client)) * h + xz
+    print(f"\n== THE MONGODB LINE (aws-local-round): job MG, {raw['mongod_states']} = {gb:.1f} GB of BSON, programs {raw['programs']}")
+    line("MG, mongod replica set at the Atlas size", cost,
+         f"{h} h (decide.py: {c['job_hours']}) x (3 members {member} with {disk} GB gp3 {mh:.4f} + client {hour(client):.4f}) "
+         f"+ the load across zones {gb:.1f} GB x 3 crossings x {XZ} = {xz:.2f}")
+    # 1 TB: the same line, loaded through the wire. One script process: decide.MONGOD_GB_PER_H; Atlas's 6 x 16 threads
+    # gave 25,800 documents/s of 341 bytes in all (MEASURED on Atlas M30, 2026-11-05) = 31.7 GB/h, the primary at 181%
+    # of its 2 vCPU: that is the most a 2-vCPU primary took, so the best case.
+    tb = 931.4 * GIB
+    for label, rate in (("1 process", decide.MONGOD_GB_PER_H), ("Atlas's best", 25800 * 341 * 3600 / 1e9)):
+        hrs = tb / rate + 0.5
+        d1 = int(2 * tb) + 20
+        c1 = (3 * gen_hour(member, d1) + hour("c7i.xlarge")) * hrs + tb * XZ * 3
+        line(f"(not run) mongod at 1 TB, {label}", c1,
+             f"{hrs:.0f} h of load ({tb:.0f} GB at {rate:.1f} GB/h) = {hrs / (0.9 * 5.5):.0f} GitHub jobs of 5.5 h, but the "
+             f"harness keeps no machine or disk between jobs; 3 members with {d1} GB gp3 {gen_hour(member, d1):.4f}/h + "
+             f"client; {tb:.0f} GB x 3 crossings x {XZ} = {tb * XZ * 3:.2f} $ across zones")
+    return cost, h
 
 
 if __name__ == "__main__":

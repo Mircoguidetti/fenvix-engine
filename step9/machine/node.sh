@@ -1,7 +1,7 @@
 #!/bin/bash
 # Step 9 · the first script every machine runs after the user-data has unpacked its package.
 #   node.sh ROLE NAME BUCKET
-#     ROLE   log | cooklog | loader | cook | spare | compactor | client | filler | extras | pgbox | generator
+#     ROLE   log | cooklog | loader | cook | spare | compactor | client | filler | extras | pgbox | generator | mongod | mongoclient
 #     NAME   this machine's folder in the run bucket (log-0, server-0, server-1, spare, compactor, client, filler, extras)
 #     BUCKET the run bucket (packages, messages between the runner and the machines, results)
 # The same package and the same scripts run on EC2 (mode aws) and in a docker container (mode local, LOCAL_TEST=1,
@@ -30,5 +30,7 @@ case "$ROLE" in
   extras)                      exec bash ./extras.sh "$BUCKET" "$NAME" ;;
   pgbox)                       exec bash ./pgbox.sh "$BUCKET" ;;
   generator)                   exec bash ./generator.sh "$NAME" "$BUCKET" ;;
+  mongod)                      exec bash ./mongod.sh "$NAME" "$BUCKET" ;;        # the MongoDB line (aws-local-round)
+  mongoclient)                 exec bash ./mongo_client.sh "$BUCKET" "$NAME" ;;
   *) echo "unknown role $ROLE"; [ -n "${LOCAL_TEST:-}" ] || shutdown -h now "step9: unknown role"; exit 1 ;;
 esac

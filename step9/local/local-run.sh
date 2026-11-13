@@ -35,12 +35,18 @@ export AWS_ENDPOINT_URL=http://127.0.0.1:$MPORT NO_PROXY=127.0.0.1,localhost no_
 export S9_VCPU_LIMIT=16 S9_DURATION_SCALE=${S9_DURATION_SCALE:-0.25}   # local only: shrunk programs
 echo "== 0. docker image of the machines, MinIO"
 docker build -q -t fenvix-step9-machine "$HERE" > /dev/null || exit 1
-pkill -f "minio server $W/minio" 2>/dev/null; rm -rf "$W/minio"
+pkill -f "minio server $W/minio" 2>/dev/null
+# aws-local-round: the pantry kept by an earlier local-run.sh (KEEP_PANTRY=1) stays when this run does not load it again
+grep -qw load-atlas <<<"${JOBS:-load-atlas}" && rm -rf "$W/minio"
 MINIO_ROOT_USER=$AWS_ACCESS_KEY_ID MINIO_ROOT_PASSWORD=$AWS_SECRET_ACCESS_KEY nohup "$MINIO" server "$W/minio" --address "0.0.0.0:$MPORT" --console-address ":$((MPORT + 1))" > minio.log 2>&1 &
 MINIO_PID=$!
 for _ in $(seq 1 40); do curl -fs "$AWS_ENDPOINT_URL/minio/health/live" > /dev/null && break; sleep 0.5; done
 mkdir -p "$W/bin/mongo-server-x86_64" "$W/bin/pq-x86_64"
-if [ -n "${ENGINE_COMMIT:-}" ]; then
+if [ -n "${PREBUILT:-}" ]; then
+  # aws-local-round: binaries already built by step9/ci/build-engine.sh (its OUT_DIR), with their motore-commit.txt
+  cp -r "$PREBUILT/mongo-server-x86_64" "$PREBUILT/pq-x86_64" "$W/bin/"; cat "$PREBUILT"/build-*.json | head -3
+  SRV=$W/bin/mongo-server-x86_64/mongo-server; PQ=$W/bin/pq-x86_64/pq
+elif [ -n "${ENGINE_COMMIT:-}" ]; then
   # Output 2: the engine built with the workflow's reproducible recipe (step9/ci/build-engine.sh) from ENGINE_DIR at
   # ENGINE_COMMIT, so the local round's binary has the sha256 the AWS build of that commit gives (same toolchain)
   RUST_TOOLCHAIN=${RUST_TOOLCHAIN:-1.97.0} bash "$S9/ci/build-engine.sh" "${ENGINE_DIR:?ENGINE_DIR with ENGINE_COMMIT}" "$ENGINE_COMMIT" "$W/bin" > "$W/build.log" 2>&1 \
@@ -72,7 +78,9 @@ round() { # round NAME COMMAND_JSON
 import json, sys
 f = sys.argv[1]; c = json.load(open(f))
 for l in c["ballast"]["lines"]:
-    l[l.index("--gb") + 1] = "0.05"; l[l.index("--thread") + 1] = "2"
+    l[l.index("--thread") + 1] = "2"
+    if c.get("ballast_mode") != "generate":
+        l[l.index("--gb") + 1] = "0.05"   # the script's path: shrunk; the generator writes the command's ballast_gib
     l += ["--mb-cliente", "0.5", "--lotto", "200"]
 c["ballast"]["parallel"] = 2
 c["s3_first_byte_args"] = "--objects 4 --reads 30 --sizes-kib 1,64,1024 --range-kib 64,256 --big-mib 16"
@@ -84,8 +92,14 @@ c["write_peak_args"] = "--dbs 2 --threads 2 --minutes 2 --gb 0.5 --burst-min 0.5
 c["takeovers_args"] = c["takeovers_args"].replace("--n 50", f"--n {sys.argv[2]}")
 c["takeovers_off_args"] = c["takeovers_off_args"].replace("--n 50", f"--n {sys.argv[2]}")
 c["data_gb_upper"] = 1
+# aws-local-round: the plan's own programs at a small size (the command's other arguments kept)
+c["first_next_ops_args"] = " ".join(x for x in (c.get("first_next_ops_args") or "").replace("--per-op 100", "--per-op 12")
+                                   .replace("--per-op 5 ", "--per-op 6 ").split())
+c["reads_after_writes_args"] = "--reads 4 --updates 3000 --write-customers 120 --max-read-s 60 --settle-min 4"
+c["first_next_args"] = c.get("first_next_args") or ""
 json.dump(c, open(f, "w"), indent=1)
 PY
+  export MONGOD_BIN=${MONGOD_BIN:-}
   ATLAS_STATES_DIR=$W/atlas-states bash "$ENG/kitchen/ci/atlas_states.sh" local "$W/atlas-$name.tgz" m10p m10s m30p m30s vecchio > /dev/null || return 1
   S9=$S9 K=$W/kitchen-small CA_DIR=$CA_DIR PACKAGES=$PACKAGES BIN=$W/bin ATLAS_TGZ=$W/atlas-$name.tgz \
     PANTRY=$("$PY" "$S9/machine/cfg.py" "$W/resolved-$name.json" pantry_name) \
@@ -101,25 +115,63 @@ PY
   "$PY" "$S9/ci/final_check.py" local; echo "final check: code $?"
 }
 D=$W/commands; mkdir -p "$D"
+# aws-local-round: JOBS chooses the jobs (default: the five of the earlier local round). The plan's 1 TB jobs, small:
+#   load-atlas load-ballast pilot-ops b1 w1 b1-after-w1 (the last must be REFUSED by the pantry's writing mark)
+JOBS=${JOBS:-load-atlas load-ballast measure-m30 measure-extras measure-agent}
+want() { grep -qw -- "$1" <<<"$JOBS"; }
+BGIB=${BALLAST_GIB:-1}
 # aws-ready (2026-11-10): a run names its engine ref (no default), and the ballast is generated (ballast_mode
 # "generate"): the cook and the generator run with compaction 2's reader and layout v2 (SO below)
 ENGINE_REF=${ENGINE_REF:-local}
-SO=${SO:---sealed-runs 2 --envelopes write --sealed-e1-wait-ms 0 --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts}
+# aws-local-round: the AWS commands' own options (step9/commands/*.json). The earlier default added --sealed-e1-wait-ms 0,
+# which integration-4 refuses (rule 26: E1's wait must be at least T_pin): the loader never started
+SO=${SO:-$("$PY" -c "import json,sys; print(json.load(open(sys.argv[1]))['server_options'])" "$S9/commands/10-W1-first-next-ops-reads-after-writes-1tb.json")}
 # aws-fixes (B6): the loader runs with the same options as the cook (one layout for every database)
-X="\"engine\": \"$ENGINE_REF\", \"server_options\": \"$SO\", \"loader_options\": \"$SO\""
+X="\"engine\": \"$ENGINE_REF\", \"server_options\": \"$SO\", \"loader_options\": \"$SO\", \"ballast_gib\": $BGIB"
 echo "{\"mode\": \"run\", \"data\": \"100gb\", \"log\": \"m7i.large\", \"phases\": [\"load\"], \"pantry\": \"keep\", \"ballast_slice\": [0, 0], \"ceiling_min\": 60, $X}" > "$D/a.json"
-round load-atlas "$D/a.json"
-KEPT=$("$PY" "$S9/machine/cfg.py" "$W/resolved-load-atlas.json" pantry_name)
+if want load-atlas; then round load-atlas "$D/a.json"; KEPT=$("$PY" "$S9/machine/cfg.py" "$W/resolved-load-atlas.json" pantry_name); echo "$KEPT" > "$W/kept-pantry"
+else KEPT=$(cat "$W/kept-pantry"); fi
 echo "kept pantry: $KEPT (still there: $(aws --version >/dev/null 2>&1; "$PY" -c "import boto3,sys; print(sys.argv[1] in [b['Name'] for b in boto3.client('s3').list_buckets()['Buckets']])" "$KEPT"))"
 echo "{\"mode\": \"run\", \"data\": \"100gb\", \"log\": \"m7i.large\", \"phases\": [\"load\"], \"pantry\": \"$KEPT\", \"ceiling_min\": 60, $X}" > "$D/b.json"
-round load-ballast "$D/b.json"
+want load-ballast && round load-ballast "$D/b.json"
 # aws-fixes (B2): the measure in three jobs, as on AWS (step9/commands/02, 03, 04)
 echo "{\"mode\": \"run\", \"data\": \"100gb\", \"log\": \"m7i.large\", \"phases\": [\"measure\"], \"programs\": [\"m30\"], \"pantry\": \"$KEPT\", \"ceiling_min\": 150, $X}" > "$D/c1.json"
-round measure-m30 "$D/c1.json"
+want measure-m30 && round measure-m30 "$D/c1.json"
 echo "{\"mode\": \"run\", \"data\": \"100gb\", \"log\": \"m7i.large\", \"phases\": [\"measure\", \"extras\"], \"programs\": [\"s3-first-byte\", \"sealed-run\", \"log-ack\", \"ballast-rounds\", \"takeovers\", \"write-peak\"], \"pantry\": \"$KEPT\", \"ceiling_min\": 150, $X}" > "$D/c2.json"
-round measure-extras "$D/c2.json"
+want measure-extras && round measure-extras "$D/c2.json"
 echo "{\"mode\": \"run\", \"data\": \"100gb\", \"log\": \"m7i.large\", \"phases\": [\"measure\", \"extras\"], \"programs\": [\"agent-bench\"], \"pantry\": \"$KEPT\", \"ceiling_min\": 150, $X}" > "$D/c3.json"
-round measure-agent "$D/c3.json"
+want measure-agent && round measure-agent "$D/c3.json"
+# aws-local-round: the plan's jobs on the generated database, from step9/commands/ (pilot-P, 09-B1, 10-W1) with this
+# round's engine, options, size and pantry; then B1 again, which the pantry's writing mark must refuse
+plan_job() { # plan_job NAME COMMAND_FILE
+  "$PY" - "$S9/commands/$2" "$D/$1.json" "$KEPT" "$ENGINE_REF" "$SO" "$BGIB" <<'PY'
+import json, sys
+src, dst, kept, eng, so, gib = sys.argv[1:7]
+c = json.load(open(src))
+c.update({"engine": eng, "server_options": so, "loader_options": so, "pantry": kept, "log": "m7i.large", "ceiling_min": 150})
+if c.get("data") != "atlas":
+    c.update({"data": "100gb", "ballast_gib": float(gib)})
+c.pop("aurora", None)
+if "agent-bench" in c.get("programs", []):
+    c["programs"].remove("agent-bench")
+json.dump(c, open(dst, "w"), indent=1)
+PY
+  round "$1" "$D/$1.json"
+}
+want pilot-ops && plan_job pilot-ops pilot-P-small.json
+want b1 && plan_job b1 09-B1-read-rounds-1tb.json
+want w1 && plan_job w1 10-W1-first-next-ops-reads-after-writes-1tb.json
+if want mongod; then
+  # the MongoDB line (phase "mongod"): the same data as our line (the shrunk Atlas load plan's "vecchio", and the ballast
+  # through the script at BALLAST_GIB), the same requests as W1 (the same arguments, seed and labels)
+  echo "{\"mode\": \"run\", \"data\": \"atlas\", \"phases\": [\"mongod\"], \"pantry\": \"new\", \"programs\": [\"first-next-ops\", \"reads-after-writes\"], \"mongod_states\": [\"vecchio\"], \"mongod_ballast_gib\": $BGIB, \"first_next_ops_args\": \"--per-op 100 --max-s 120\", \"ceiling_min\": 200, \"engine\": \"$ENGINE_REF\"}" > "$D/mongod.json"
+  MONGOD_BIN=${MONGOD_BIN:?MONGOD_BIN: a mongod 7.0 binary} round mongod "$D/mongod.json"
+fi
+if want b1-after-w1; then
+  if plan_job b1-after-w1 09-B1-read-rounds-1tb.json; then echo "PANTRY MARK: FAIL (B1 after W1 was not refused)"
+  else echo "PANTRY MARK: b1-after-w1 refused, as it must be"; fi
+fi
+if [ -n "${KEEP_PANTRY:-}" ]; then kill $MINIO_PID 2>/dev/null; echo "pantry kept: $KEPT"; exit 0; fi
 echo "== drop-pantry: the kept pantry goes"
 "$PY" -c "import sys; sys.path.insert(0, sys.argv[2]); import infra; infra.make('local').delete_bucket(sys.argv[1]); print('kept pantry deleted:', sys.argv[1])" "$KEPT" "$S9/ci"
 "$PY" "$S9/ci/final_check.py" local; echo "final check after drop-pantry: code $?"
@@ -129,5 +181,5 @@ if [ -n "${BLOCK_TEST:-}" ]; then
 fi
 kill $MINIO_PID 2>/dev/null
 echo "== checks"
-"$PY" "$HERE/check_local.py" "$W" load-atlas load-ballast measure-m30 measure-extras measure-agent
+want measure-agent && "$PY" "$HERE/check_local.py" "$W" load-atlas load-ballast measure-m30 measure-extras measure-agent
 echo "total time: $(( $(date +%s) - T0 )) s"

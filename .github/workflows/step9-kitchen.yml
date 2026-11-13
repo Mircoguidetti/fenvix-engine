@@ -188,6 +188,11 @@ jobs:
           bash kitchen/ci/atlas_states.sh "$(python3 step9/machine/cfg.py "$RESOLVED" atlas_states)" /tmp/atlas-states.tar.gz m10p m10s m30p m30s vecchio | tee -a "$GITHUB_STEP_SUMMARY"
           PANTRY=$(python3 step9/machine/cfg.py "$RESOLVED" pantry_name)
           LOAD=$(python3 -c "import json,sys; print(1 if json.load(open(sys.argv[1]))['atlas_load'] else 0)" "$RESOLVED")
+          # the MongoDB line (phase "mongod", aws-local-round): MongoDB's official mongod 7.0.48 for Ubuntu 22.04 x86_64 (it
+          # runs on the Ubuntu 24.04 image: MEASURED locally with the same version's binary); the sha256 is printed
+          if python3 -c "import json,sys; sys.exit(0 if 'mongod' in json.load(open(sys.argv[1]))['phases'] else 1)" "$RESOLVED"; then
+            export MONGOD_TGZ_URL=https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-7.0.48.tgz
+          fi
           S9=step9 K=kitchen BIN=/tmp/bin ATLAS_TGZ=/tmp/atlas-states.tar.gz PANTRY="$PANTRY" LOAD="$LOAD" WAIT_COOK_MIN=600 bash step9/ci/packages.sh | tee -a "$GITHUB_STEP_SUMMARY"
       - name: The round (log, load, measured kitchen, m30 program, extras; SPESA every minute, BLOCCO at the cap)
         id: run

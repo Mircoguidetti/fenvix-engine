@@ -200,7 +200,19 @@ DEFAULTS = {
                            "--dorm-q1 300 --dorm-q1d 300 --dorm-q4 300",
     "spend_cap": 5, "cap_approved": "", "ceiling_min": 330, "keep_days": 7, "kept_max_days": 5,
     "s3_fallback_dollars": 1.5,
+    # aws-local-round (2026-11-13): the MongoDB line, phase "mongod" alone in its job (machine/mongod.sh, mongo_client.sh)
+    "mongod": "m7i.large", "mongod_states": ["vecchio"], "mongod_ballast_gib": 0, "mongod_fn_db": "",
+    "mongod_disk_gb": None,
 }
+# The MongoDB line (aws-local-round, 2026-11-13): GiB of BSON the founder's script loads per Atlas state (the load plan
+# m30-corto stopped at the fraction Atlas reached, plus its 2 KB collection: 1.22 GiB where the plan has one), ESTIMATED
+# from the plan's --gb and the fractions of fake_atlas.sh; and the load rate of ONE script process through the wire, GB per
+# hour: 1.47 MB/s = 5.3 GB/h per database, from Atlas's 25,800 documents/s of 341 bytes over 6 databases x 16 threads
+# (MEASURED on Atlas 2026-11-05; on our m7i.large members UNKNOWN until the job prints it).
+MONGOD_LOAD_GIB = {"m10s": 6.6 * 0.4391 + 1.22, "m30s": 6.6 * 0.4371 + 1.22, "m10p": 9.67 * 0.2955, "m30p": 9.67 * 0.2967,
+                   "vecchio": 10.0 + 1.22}
+MONGOD_GB_PER_H = 5.3
+GIB_GB = 1.073741824
 # The founder's limit (2026-11-09): the on-demand standard vCPU quota stays 8; no job may run more at the same time.
 # S9_VCPU_LIMIT overrides it for the LOCAL mode only (x86 containers replace the 1-vCPU Graviton log nodes).
 VCPU_LIMIT = int(os.environ.get("S9_VCPU_LIMIT", "8"))
@@ -215,10 +227,54 @@ def refuse(msg):
     sys.exit(1)
 
 
+def mongod_line(c, raw):
+    """The MongoDB line's checks (phase "mongod" alone): the two programs that measure FIRST and NEXT and reads after
+    writes, the states to load, the optional ballast through the script, the members' disk."""
+    if c["phases"] != ["mongod"]:
+        refuse('phases: "mongod" runs alone in its job (3 members + the client = 8 vCPU)')
+    if "programs" not in raw or not c["programs"] or not set(c["programs"]) <= {"first-next-ops", "reads-after-writes"}:
+        refuse('mongod: programs: "first-next-ops" and/or "reads-after-writes" (the requests of our line)')
+    if c["pantry"] != "new":
+        refuse("mongod: the line uses no pantry of ours: pantry new (an empty bucket, deleted at the end)")
+    st = c["mongod_states"]
+    if not (isinstance(st, list) and st and set(st) <= set(MONGOD_LOAD_GIB)):
+        refuse(f"mongod_states: a non-empty list of {sorted(MONGOD_LOAD_GIB)}")
+    try:
+        bg = float(c["mongod_ballast_gib"])
+    except (TypeError, ValueError):
+        refuse("mongod_ballast_gib: a number of GiB (0: none)")
+    if bg and not 1.0 <= bg <= 30.0:
+        refuse("mongod_ballast_gib: 0, or 1 to 30 GiB (the script loads it through the wire at about 5 GB/h: a bigger one "
+               "does not fit a job; 1 TB would take about 190 hours on one process, about 32 hours at Atlas's 6 x 16)")
+    c["mongod_ballast_gib"] = bg
+    c["mongod_ballast_line"] = (["app_data_b01", "--gb", gib_arg(bg), "--seme", "2001", "--thread", "16", "--quota-riservati",
+                                 "0.4", "--tetto-logico-gb", f"{max(60, int(bg * 1.2) + 1)}", "--max-ore-carico", "48"] if bg else [])
+    load_gib = sum(MONGOD_LOAD_GIB[s] for s in st) + bg
+    c["mongod_load_gib"] = round(load_gib, 2)
+    if c["mongod_disk_gb"] is None:   # WiredTiger (snappy) under the BSON size, plus the journal and the oplog: 2x + 20
+        c["mongod_disk_gb"] = int(2 * load_gib * GIB_GB) + 20
+    if not c["mongod_fn_db"] and bg:
+        c["mongod_fn_db"] = "app_data_b01"
+
+
 def job_hours(c):
     """The job's expected duration, part by part (hours, ESTIMATED from JOB_HOURS and, for the generator, from the
     measured rate in estimate.py)."""
     h = {"boot": JOB_HOURS["boot"]}
+    if "mongod" in c["phases"]:
+        # the states' lines run one after the other in load.py's order (different states run at the same time; this
+        # is the upper bound), then the ballast; the cold restart; the programs as in a measure job
+        h["mongod_load"] = c["mongod_load_gib"] * GIB_GB / MONGOD_GB_PER_H
+        h["mongod_cold_restart"] = 0.1
+        for p, hours in PROGRAM_HOURS.items():
+            if p in c["programs"]:
+                if p == "first-next-ops":
+                    fa = (c.get("first_next_ops_args") or "").split()
+                    hours *= float(fa[fa.index("--per-op") + 1]) / 30 if "--per-op" in fa else 1.0
+                    if "reads-after-writes" in c["programs"]:
+                        hours *= 2
+                h[p.replace("-", "_")] = hours
+        return {k: round(v, 2) for k, v in h.items()}
     if "load" in c["phases"]:
         if c.get("atlas_load"):
             h["atlas_load"] = JOB_HOURS["atlas_load"]
@@ -284,8 +340,10 @@ def resolve(raw, quota=None):
         c["mode"] = "none"
     if c["data"] not in DATA:
         refuse(f"data: one of {list(DATA)}")
-    if not (isinstance(c["phases"], list) and c["phases"] and all(p in ("load", "measure", "extras") for p in c["phases"])):
-        refuse("phases: a non-empty list of load, measure, extras")
+    if not (isinstance(c["phases"], list) and c["phases"] and all(p in ("load", "measure", "extras", "mongod") for p in c["phases"])):
+        refuse("phases: a non-empty list of load, measure, extras (or mongod alone)")
+    if "mongod" in c["phases"]:
+        mongod_line(c, raw)
     if not set(c["programs"]) <= set(PROGRAMS):
         refuse(f"programs: any of {PROGRAMS}")
     if c["ballast_gib"] is None:
@@ -347,7 +405,7 @@ def resolve(raw, quota=None):
     # the prefix of the minimal kitchen's kept pantries (teardown never deletes it), or the existing one
     run = os.environ.get("RUN_ID", "0")
     c["pantry_name"] = {"new": f"fenvix-coldread-s9d-{run}", "keep": f"fenvix-kitchen-pantry-{run}"}.get(c["pantry_mode"], p)
-    if c["pantry_mode"] in ("new", "keep") and "load" not in c["phases"]:
+    if c["pantry_mode"] in ("new", "keep") and "load" not in c["phases"] and "mongod" not in c["phases"]:
         refuse("a new pantry is empty: the round must load")
     if c["network"] not in ("default-sg", "own-groups"):
         refuse("network: default-sg (the default VPC's group: no security-group permission needed) or own-groups")
@@ -413,7 +471,7 @@ def resolve(raw, quota=None):
         refuse("settle_max_min: 5 to 90 minutes")
     # aws-fixes (B2): a command that does nothing is refused (run.py starts the measured cook only in phase "measure";
     # the m30 program runs in "measure", every other program in "extras")
-    if c["mode"] == "run":
+    if c["mode"] == "run" and "mongod" not in c["phases"]:
         extra_work = [p for p in c["programs"] if p != "m30"]
         if "extras" in c["phases"] and "measure" not in c["phases"]:
             refuse('phases: "extras" needs "measure" (the extra programs run against the measured cook, which only the '
@@ -441,6 +499,8 @@ def resolve(raw, quota=None):
             peaks["write-peak"] = v(c["cook"]) + log_machines * v(c["log"]) + v(c["compactor"]) + v(c["client"])
         if "agent-bench" in c["programs"]:   # the spare is off by then; the Postgres machine is on
             peaks["agent-bench"] = v(c["cook"]) + log_machines * v(c["log"]) + v(c["compactor"]) + v(c["pgbox"]) + v(c["extras_client"])
+    if "mongod" in c["phases"]:   # three members and the client, at once
+        peaks["mongod"] = 3 * v(c["mongod"]) + v(c["extras_client"])
     c["vcpu_peaks"] = peaks
     c["vcpu_peak"] = max(peaks.values()) if peaks else 0
     if c["mode"] == "run" and c["vcpu_peak"] > VCPU_LIMIT:

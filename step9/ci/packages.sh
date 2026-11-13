@@ -21,7 +21,7 @@ C="$K" PACKAGES="$kp" CA_DIR="$CA_DIR" PANTRY="$PANTRY" LOAD="$LOAD" PROGRAM=m30
   BIN="$BIN" bash "$K/ci/packages.sh" > "$PACKAGES/kitchen-packages.txt"
 grep -E "^client" "$PACKAGES/kitchen-packages.txt"
 d=$(mktemp -d); tar xzf "$kp/client.tar.gz" -C "$d"
-cp "$S9"/machine/{node.sh,common.sh,cfg.py,filler.sh,ballast.py,extras.sh} "$S9"/programs/*.py "$d"/
+cp "$S9"/machine/{node.sh,common.sh,cfg.py,filler.sh,ballast.py,extras.sh,mongo_client.sh} "$S9"/programs/*.py "$d"/
 cp "$BIN/pq-x86_64/pq" "$d"/pq; chmod +x "$d"/pq "$d"/*.sh
 # the agent benchmark (bench/agent-checkpoints) and its libraries, apart from the kitchen's (its own vendor folder)
 AB="$S9/../bench/agent-checkpoints"
@@ -39,7 +39,18 @@ for cpu in x86_64 aarch64; do
   vendor "$d" "$cpu" 'pymongo>=4.6,<5' boto3
   cp "$BIN/mongo-server-$cpu"/mongo-server "$BIN/mongo-server-$cpu"/motore-commit.txt "$BIN/pq-$cpu"/pq "$d"/
   cp "$K"/s3io.py "$K"/create_user.py "$K"/s3_counters.py "$K"/sst_count.py "$K"/irlanda/cpu_macchina.py "$d"/
-  cp "$S9"/machine/{node.sh,common.sh,cfg.py,log.sh,cook.sh,takeover_agent.py,pgbox.sh,generator.sh,ballast_states.py} "$d"/
+  cp "$S9"/machine/{node.sh,common.sh,cfg.py,log.sh,cook.sh,takeover_agent.py,pgbox.sh,generator.sh,ballast_states.py,mongod.sh} "$d"/
+  # the MongoDB line (aws-local-round): mongod 7.0 for the x86 members, from MONGOD_BIN (local: the mongo:7.0 image's
+  # binary) or MONGOD_TGZ_URL (the workflow: MongoDB's official tarball, its sha256 printed and kept in the package)
+  if [ "$cpu" = x86_64 ] && [ -n "${MONGOD_BIN:-}" ]; then
+    cp "$MONGOD_BIN" "$d"/mongod
+  elif [ "$cpu" = x86_64 ] && [ -n "${MONGOD_TGZ_URL:-}" ]; then
+    mt=$(mktemp -d); curl -fsSL --retry 3 -o "$mt/m.tgz" "$MONGOD_TGZ_URL"
+    got=$(sha256sum "$mt/m.tgz" | cut -d' ' -f1); echo "mongod tarball $MONGOD_TGZ_URL sha256 $got"
+    [ -z "${MONGOD_TGZ_SHA256:-}" ] || [ "$got" = "$MONGOD_TGZ_SHA256" ] || { echo "mongod tarball: sha256 $got, expected $MONGOD_TGZ_SHA256"; exit 1; }
+    tar xzf "$mt/m.tgz" -C "$mt" && cp "$mt"/mongodb-linux-*/bin/mongod "$d"/mongod && echo "$got $MONGOD_TGZ_URL" > "$d"/mongod-source.txt
+  fi
+  [ -f "$d"/mongod ] && { chmod +x "$d"/mongod; echo "node $cpu: mongod $("$d"/mongod --version 2>/dev/null | head -1)"; }
   chmod +x "$d"/mongo-server "$d"/pq "$d"/*.sh
   tar czf "$PACKAGES/node-$cpu.tar.gz" -C "$d" .
   echo "node $cpu: engine $(cat "$d"/motore-commit.txt), mongo-server sha256 $(sha256sum "$d"/mongo-server | cut -c1-16), pq sha256 $(sha256sum "$d"/pq | cut -c1-16)"
