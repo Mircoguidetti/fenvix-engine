@@ -2156,7 +2156,7 @@ impl Tenant {
     /// SlateDB. The writer is the only publisher of its database, so its version is always the newest.
     fn fx_fresh(&self, st: &StepState) -> Result<()> {
         // P-B3: a writer under a remote compactor follows our manifest as a reader does (rule 6 for it too)
-        if matches!(self.mode, Some(Mode::Reader(_))) || (self.fx_remote && !crate::fx::remote::CONTROL_WRITER_NO_T_PIN.load(std::sync::atomic::Ordering::Relaxed)) {
+        if matches!(self.mode, Some(Mode::Reader(_))) || (self.follows_remote() && !crate::fx::remote::CONTROL_WRITER_NO_T_PIN.load(std::sync::atomic::Ordering::Relaxed)) {
             let t_pin = Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed));
             if st.loaded.elapsed() > t_pin {
                 return Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: our manifest was last read {:?} ago, more than T_pin; retry", self.id, st.loaded.elapsed()))));
@@ -2326,7 +2326,7 @@ impl Tenant {
         if self.fx_fence_pending {
             return true;
         }
-        if self.fx_remote {
+        if self.follows_remote() {
             // P-B3: a writer whose versions a remote compactor publishes renews its state at half T_pin, as a reader does
             return self.fx_loaded.elapsed() > Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed) / 2);
         }
@@ -2386,7 +2386,7 @@ impl Tenant {
     pub async fn fx_refresh(&mut self) -> Result<()> {
         self.absorb_renewal();
         let t0 = Instant::now();
-        if self.fx_remote && !self.fx_fence_pending {
+        if self.follows_remote() && !self.fx_fence_pending {
             return self.fx_follow_remote(t0).await;
         }
         if self.fx_shared.is_some() && !self.fx_fence_pending {
@@ -2788,8 +2788,12 @@ impl Tenant {
         use std::sync::atomic::Ordering::Relaxed;
         anyhow::ensure!(crate::fx::ENABLED.load(Relaxed), "--sealed-runs is off");
         anyhow::ensure!(self.fx_shared.is_none(), "database {}: a compactor publishes this database's versions", self.id);
-        // P-B3: a writer under a remote compactor publishes nothing (its versions are the remote compactor's)
+        // P-B3: a writer under a remote compactor publishes nothing (its versions are the remote compactor's); with
+        // `--sealed-remote-compactor`, a writer with a version publishes only the catch-up a compactor start needs
         anyhow::ensure!(!self.fx_remote, "database {}: a remote compactor publishes this database's versions", self.id);
+        if crate::fx::remote::WAITER_DEFERS.load(Relaxed) && self.fx.is_some() {
+            anyhow::ensure!(crate::fx::manifest::needs_catch_up(&self.lc.store, &self.id).await?, "database {}: a remote compactor publishes this database's versions (--sealed-remote-compactor)", self.id);
+        }
         // fix-write-stalls: a first build running off the lock ends (and is installed) before another publish starts
         if self.fx_first.is_some() {
             self.fx_first_poll(true).await?;
@@ -3033,6 +3037,19 @@ impl Tenant {
 
     pub fn fx_remote(&self) -> bool {
         self.fx_remote
+    }
+
+    /// P-B3: whether this writer follows the store's versions as a reader does: once it handed its compaction over
+    /// (`fx_set_remote`), and from its opening on in a process run with `--sealed-remote-compactor` (a remote compactor
+    /// may publish and drop rows before this writer's first write hands its compaction over), once it has a version
+    /// and no first build is running.
+    fn follows_remote(&self) -> bool {
+        self.fx_remote
+            || (crate::fx::remote::WAITER_DEFERS.load(std::sync::atomic::Ordering::Relaxed)
+                && matches!(self.mode, Some(Mode::Writer(_)))
+                && self.fx.is_some()
+                && self.fx_shared.is_none()
+                && self.fx_first.is_none())
     }
 
     /// P-B3: the remote compactor's fold removes absorbed L0 SSTs in the store; this writer learns it at its manifest's

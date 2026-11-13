@@ -1738,6 +1738,9 @@ impl Entry {
         } else if self.tenant.as_ref().unwrap().fx_remote() {
             // P-B3: the remote compactor publishes; re-read SlateDB's manifest when L0 grows (its folds remove SSTs)
             self.tenant.as_ref().unwrap().fx_remote_poke(4);
+        } else if tenant_bench::fx::remote::WAITER_DEFERS.load(Relaxed) && self.tenant.as_ref().unwrap().fx_view().is_some() {
+            // P-B3: under `--sealed-remote-compactor` a waiter publishes no builder version once the database has one (the
+            // catch-up a compactor start needs is `maybe_start_fxc`'s); the remote compactor publishes
         } else if self.fxc.is_none() && self.tenant.as_mut().unwrap().fx_note_write() {
             let t = self.tenant.as_mut().unwrap();
             let opts = t.fx_auto_opts();

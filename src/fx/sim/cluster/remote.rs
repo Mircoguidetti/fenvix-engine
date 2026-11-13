@@ -71,6 +71,10 @@ pub fn generate_remote(base: Script) -> Script {
             Ev::Open { p, writer: true } => {
                 owner = Some(p);
                 out.push(e);
+                // a new owner's reads before its first write (it follows the store from its opening)
+                if r.gen_bool(0.4) {
+                    out.push(Ev::Read { p });
+                }
             }
             Ev::CompStart { p } => {
                 out.push(Ev::Defer { p });
@@ -279,8 +283,19 @@ impl World {
                 Ev::Read { .. } => {
                     let Ok(mut g) = tl.try_lock() else { return "busy (skipped)".into() };
                     let Some(t) = g.as_mut() else { return "not open (skipped)".into() };
-                    if !t.fx_remote() {
-                        return "not deferring (skipped)".into();
+                    if !t.is_writer() {
+                        return "not a writer (skipped)".into();
+                    }
+                    // only the current owner's reads are checked (a zombie misses the new owner's writes by design): the
+                    // writer epoch in SlateDB's manifest is this writer's before and after the reads
+                    let current = |store: Arc<dyn ObjectStore>, id: String| async move {
+                        let at = crate::lifecycle::DbAt::new(&id, crate::lifecycle::read_incarnation(&store, &id).await.ok()?);
+                        let admin = slatedb::admin::Admin::builder(crate::lifecycle::tenant_path(&at), store).build();
+                        admin.read_manifest(None).await.ok().flatten().map(|m| m.writer_epoch())
+                    };
+                    let mine = t.writer_epoch();
+                    if current(Arc::clone(&store), id.clone()).await != mine {
+                        return "not the current owner (skipped)".into();
                     }
                     // as the server before a command: renew a due state under the exclusive lock (`Entry::ensure_open`)
                     if t.fx_refresh_due() && !crate::fx::remote::CONTROL_WRITER_NO_T_PIN.load(SeqCst) {
@@ -290,6 +305,9 @@ impl World {
                     }
                     let snap = model.lock().unwrap().snapshot();
                     let reads = read_all(t).await;
+                    if current(Arc::clone(&store), id.clone()).await != mine {
+                        return "lost the database during the reads (skipped)".into();
+                    }
                     let refused = reads.values().filter(|r| r.is_err()).count();
                     let ok: BTreeMap<Vec<u8>, Result<Option<Vec<u8>>, String>> = reads.into_iter().filter(|(_, r)| r.is_ok()).collect();
                     let v = check_reads(&format!("event {eid}: the deferring writer (slot {p}) reads"), &ok, &snap);
