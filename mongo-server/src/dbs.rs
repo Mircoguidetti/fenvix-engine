@@ -557,6 +557,42 @@ impl Dbs {
         });
     }
 
+    /// P-fix-slow-store item 7: a writer whose open raised its unflushed limit for the WAL replay (`Tenant::replay_raised`,
+    /// L0 full at the wake) keeps that limit for its life (SlateDB 0.17 fixes its settings at the build). Once its L0 has
+    /// drained below the compaction threshold, it is closed (a clean close, as the idle reaper's) and the next command
+    /// opens it again with the normal limit: SlateDB's per-database backpressure is back. Checked every second, without
+    /// waiting for a database that is in use.
+    pub fn spawn_replay_raise_dropper(self: &Arc<Self>) {
+        let me = Arc::clone(self);
+        tokio::spawn(async move {
+            loop {
+                tokio::time::sleep(Duration::from_secs(1)).await;
+                let entries: Vec<Arc<AsyncMutex<Entry>>> = me.entries.lock().unwrap().values().cloned().collect();
+                for e in entries {
+                    let due = match e.try_read() {
+                        Ok(g) => g.active_txns == 0 && g.tenant.as_ref().is_some_and(|t| t.replay_raise_droppable()),
+                        Err(_) => false,
+                    };
+                    if !due {
+                        continue;
+                    }
+                    if let Ok(mut g) = e.try_write_owned() {
+                        if g.active_txns == 0 && g.tenant.as_ref().is_some_and(|t| t.replay_raise_droppable()) {
+                            let raised = g.tenant.as_ref().map_or(0, |t| t.replay_raised());
+                            match g.close().await {
+                                Ok(()) => {
+                                    tenant_bench::lifecycle::REPLAY_RAISES_DROPPED.fetch_add(1, Relaxed);
+                                    eprintln!("REPLAY_RAISE_DROPPED db={} raise={raised}: L0 drained; closed, the next command opens it with the normal limit", g.name);
+                                }
+                                Err(err) => eprintln!("close of {} to drop its replay raise failed: {err:#}", g.name),
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     /// fix-write-stalls (review of d660ea9): a first build that ran off the database's lock is installed, and the
     /// compactor started, as soon as the build ends (`lifecycle::FIRST_BUILD_DONE`), not at the database's next write. A
     /// database written in a burst and then only read had no compactor (no absorption, reseal or GC) until its next

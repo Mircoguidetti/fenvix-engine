@@ -865,6 +865,10 @@ impl Server {
                 "fencedUploadsAborted": crate::uploads::FENCED_ABORTED.load(Relaxed) as i64,
                 "fencedUploadSweepErrors": crate::uploads::FENCED_ERRORS.load(Relaxed) as i64,
                 "startupSweepFencedAborted": crate::uploads_sweep::FENCED.load(Relaxed) as i64,
+                // item 7: WAL replay raises, those cut by the memtable share, those dropped by a reopen once L0 drained
+                "replayRaises": tenant_bench::lifecycle::REPLAY_RAISES.load(Relaxed) as i64,
+                "replayRaisesCapped": tenant_bench::lifecycle::REPLAY_RAISES_CAPPED.load(Relaxed) as i64,
+                "replayRaisesDropped": tenant_bench::lifecycle::REPLAY_RAISES_DROPPED.load(Relaxed) as i64,
             },
             "customerKeys": {
                 "docsWritten": crate::custkey::DOCS_WRITTEN.load(Relaxed) as i64,

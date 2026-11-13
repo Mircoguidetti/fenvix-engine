@@ -54,6 +54,24 @@ pub(crate) async fn wal_bytes(store: &Arc<dyn ObjectStore>, id: &str) -> Result<
     Ok(metas.iter().filter(|m| m.location.filename().and_then(|f| f.strip_suffix(".sst")).and_then(|n| n.parse::<u64>().ok()).is_some_and(|n| n >= boundary)).map(|m| m.size as usize).sum())
 }
 
+/// P-fix-slow-store item 7: the replay raise is the replayed WAL bytes times this (SlateDB's memtable counts each entry
+/// with its overhead: about twice the WAL's bytes for small rows, R-final-engine). Tests may set 1 (the old raise).
+pub static REPLAY_RAISE_MARGIN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(2);
+/// Raises cut by the cap, and raised writers reopened once their L0 drained (the server's loop).
+pub static REPLAY_RAISES_CAPPED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static REPLAY_RAISES_DROPPED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Test control: the cap of a replay raise in bytes (0: the memory budget's memtable share).
+pub static REPLAY_RAISE_CAP_OVERRIDE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// The most one writer's unflushed limit may be raised by at its open: the memory budget's share for every memtable of
+/// the process (`membudget::Budget::memtables`, an eighth of the limit), which the memtable governor also works to.
+pub fn replay_raise_cap() -> usize {
+    match REPLAY_RAISE_CAP_OVERRIDE.load(std::sync::atomic::Ordering::Relaxed) {
+        0 => crate::membudget::get().memtables as usize,
+        n => n as usize,
+    }
+}
+
 /// Test control: override SlateDB's `max_unflushed_bytes` for writers built from now on (0 = keep the setting).
 pub static MAX_UNFLUSHED_OVERRIDE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
@@ -826,7 +844,7 @@ impl Lifecycle {
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
         let scope = writer_scope(&id);
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_preempt: None, serving_until: Default::default(), serving_src: Default::default(), epoch: epoch, renewed: Default::default(), renewing: Default::default() };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_preempt: None, serving_until: Default::default(), serving_src: Default::default(), epoch: epoch, renewed: Default::default(), renewing: Default::default(), replay_raised: 0 };
         t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
@@ -875,7 +893,7 @@ impl Lifecycle {
         let l0_at_wake = reader.manifest().l0().len();
         let reader = Arc::new(reader);
         READER_DBS.lock().unwrap().insert(id.clone(), Arc::downgrade(&reader));
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_preempt: None, serving_until: Default::default(), serving_src: Default::default(), epoch: 0, renewed: Default::default(), renewing: Default::default() };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_preempt: None, serving_until: Default::default(), serving_src: Default::default(), epoch: 0, renewed: Default::default(), renewing: Default::default(), replay_raised: 0 };
         t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
@@ -1566,6 +1584,10 @@ pub struct Tenant {
     /// The wake took the unclean path (marker missing).
     pub unclean: bool,
     pub l0_at_wake: usize,
+    /// P-fix-slow-store item 7: bytes this writer's unflushed limit was raised by at its open (0: not raised). SlateDB
+    /// keeps the limit for the writer's life; the server reopens the writer once its L0 has drained
+    /// (`replay_raise_droppable`), which drops the raise.
+    replay_raised: usize,
     /// Cache scope of the reader or writer (kept by the upgrade to a writer, see [`writer_builder_in`]).
     scope: Option<u64>,
     /// E_env, the sequence number of the envelope marker (`envelope.rs`); `None`: no marker, every row is plain.
@@ -1672,6 +1694,17 @@ impl Tenant {
             Some(Mode::Writer(db)) => Some(if self.epoch > 0 { self.epoch } else { db.manifest().writer_epoch() }),
             _ => None,
         }
+    }
+
+    /// P-fix-slow-store item 7: bytes this writer's unflushed limit was raised by at its open (0: none).
+    pub fn replay_raised(&self) -> usize {
+        self.replay_raised
+    }
+
+    /// P-fix-slow-store item 7: a writer opened with a raise whose L0 has drained below the compaction threshold: the
+    /// replay's reason is gone, and closing it (the next command opens it again with the normal limit) drops the raise.
+    pub fn replay_raise_droppable(&self) -> bool {
+        self.replay_raised > 0 && self.writer_l0().is_some_and(|n| n < L0_COMPACT_THRESHOLD)
     }
 
     /// L0 SSTs of the writer's local manifest view (None for a reader).
@@ -3026,12 +3059,25 @@ impl Tenant {
         // open returns; nothing is moved or skipped. SlateDB 0.17 fixes its settings at the build, so the raised limit
         // stays for this writer's life: at most about twice the normal one, and the engine's own write stall at L0 still
         // holds new writes back until the compactor has absorbed and folded L0.
-        let extra = if self.l0_at_wake >= L0_GUARD { wal_bytes(store, &self.id).await.unwrap_or(0) } else { 0 };
+        //
+        // P-fix-slow-store item 7 (R-final-engine, hole M): the replayed WAL becomes memtable entries, each with SlateDB's
+        // per-entry overhead (its skip map node, sequence number and lengths), so the raise is the replayed bytes times
+        // REPLAY_RAISE_MARGIN; it is capped by the memory budget's memtable share (`replay_raise_cap`), so a long WAL can
+        // never raise one writer past what every memtable of the process may hold; and the server reopens the writer once
+        // its L0 has drained (`replay_raise_droppable`), which ends the raise.
+        let wal = if self.l0_at_wake >= L0_GUARD { wal_bytes(store, &self.id).await.unwrap_or(0) } else { 0 };
+        let want = wal.saturating_mul(REPLAY_RAISE_MARGIN.load(std::sync::atomic::Ordering::Relaxed) as usize);
+        let cap = replay_raise_cap();
+        let extra = want.min(cap);
         if extra > 0 {
             REPLAY_RAISES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             REPLAY_RAISED_BYTES_MAX.fetch_max(extra as u64, std::sync::atomic::Ordering::Relaxed);
-            eprintln!("REPLAY_RAISE db={} l0={} wal_bytes={extra}: the writer's unflushed limit is raised by the WAL's size for its open", self.id, self.l0_at_wake);
+            if extra < want {
+                REPLAY_RAISES_CAPPED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            }
+            eprintln!("REPLAY_RAISE db={} l0={} wal_bytes={wal} raise={extra} cap={cap}{}: the writer's unflushed limit is raised for its open", self.id, self.l0_at_wake, if extra < want { " (CAPPED: the replay may wait for L0)" } else { "" });
         }
+        self.replay_raised = extra;
         let (del, db) = tokio::join!(
             store.delete(&marker),
             build_writer(writer_builder_raised(&self.id, store, self.scope, extra))
