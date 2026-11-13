@@ -1,0 +1,84 @@
+diff --git a/mongo-server/src/layout2.rs b/mongo-server/src/layout2.rs
+index 8af382e..ea95a03 100644
+--- a/mongo-server/src/layout2.rs
++++ b/mongo-server/src/layout2.rs
+@@ -708,4 +708,79 @@ mod tests {
+         println!("rows read: {bounded} bounded, {before} as before");
+         assert!(before > 5 * bounded, "the negative control should read many more rows: {before} against {bounded}");
+     }
++
++    /// R-rolling (second reviewer): the bounded area reads against the logical reads on random data whose areas cross
++    /// CHUNK (1,024 rows), with customers of mixed types and sharing prefixes, random bounds, both directions, limits.
++    #[test]
++    fn rr2_bounded_area_reads_equal_logical_reads_random() {
++        use crate::custkey::{comp, doc_key, Ckey};
++        use bson::{doc, oid::ObjectId, Bson};
++        use rand::{Rng, SeedableRng};
++        let seed: u64 = std::env::var("RR2_SEED").ok().and_then(|v| v.parse().ok()).unwrap_or(1);
++        let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
++        let key = Ckey { field: "u".into(), order: None };
++        let custs: Vec<Bson> = vec![
++            Bson::String("".into()), Bson::String("a".into()), Bson::String("a\u{0}".into()), Bson::String("a\u{0}b".into()),
++            Bson::String("ab".into()), Bson::String("é".into()), Bson::String("\u{10FFFF}".into()), Bson::Int32(-1), Bson::Int32(0),
++            Bson::Int32(255), Bson::Int32(256), Bson::Int64(1 << 40), Bson::Double(0.5), Bson::Double(-2.25),
++            Bson::ObjectId(ObjectId::from_bytes([0xff; 12])), Bson::ObjectId(ObjectId::from_bytes([0; 12])), Bson::Boolean(true),
++        ];
++        let mut logical: BTreeMap<Vec<u8>, Vec<u8>> = BTreeMap::new();
++        let mut n = 0u32;
++        for u in &custs {
++            for coll in ["m", "n"] {
++                let docs = if rng.gen_bool(0.3) { rng.gen_range(1000..2600) } else { rng.gen_range(0..6) };
++                for id in 0..docs {
++                    n += 1;
++                    let d = doc! { "_id": id as i64, "u": u.clone() };
++                    logical.insert(doc_key(coll, Some(&key), &d), n.to_be_bytes().to_vec());
++                    if coll == "m" {
++                        let mut ik = Seg::index(coll.as_bytes(), b"u_1").lp;
++                        ik.extend(comp(u));
++                        ik.extend(crate::custkey::dsuf(Some(&key), &d));
++                        logical.insert(ik, n.to_be_bytes().to_vec());
++                    }
++                }
++            }
++        }
++        logical.insert(b"meta/collections".to_vec(), vec![1]);
++        logical.insert(b"zzz".to_vec(), vec![3]);
++        let model = Model::new(logical.iter().map(|(k, v)| (phys(k).to_vec(), v.clone())).collect());
++        let segs = vec![Seg::docs(b"m"), Seg::docs(b"n"), Seg::index(b"m", b"u_1")];
++        let keys: Vec<Vec<u8>> = logical.keys().cloned().collect();
++        let mut bounds: Vec<Vec<u8>> = vec![b"".to_vec(), b"doc/".to_vec(), b"zzzz".to_vec()];
++        for s in &segs {
++            bounds.push(s.lp.clone());
++            bounds.push(s.lp_end());
++            for u in &custs {
++                let mut b = s.lp.clone();
++                b.extend(comp(u));
++                bounds.push(b);
++            }
++        }
++        for _ in 0..200 {
++            bounds.push(keys[rng.gen_range(0..keys.len())].clone());
++        }
++        let rt = tokio::runtime::Builder::new_current_thread().build().unwrap();
++        let mut checked = 0;
++        for _ in 0..1500 {
++            let lo = &bounds[rng.gen_range(0..bounds.len())];
++            let hi = if rng.gen_bool(0.2) { None } else { Some(&bounds[rng.gen_range(0..bounds.len())]) };
++            let rev = rng.gen_bool(0.5);
++            let limit = match rng.gen_range(0..4) { 0 => None, 1 => Some(1), 2 => Some(rng.gen_range(2..50)), _ => Some(rng.gen_range(900..3000)) };
++            let mut want: Vec<(Vec<u8>, Vec<u8>)> = logical.range(lo.clone()..).take_while(|(k, _)| hi.map_or(true, |h| *k < *h)).map(|(k, v)| (k.clone(), v.clone())).collect();
++            if rev {
++                want.reverse();
++            }
++            if let Some(l) = limit {
++                want.truncate(l);
++            }
++            let got = rt.block_on(scan(&model, &segs, lo, hi.map(|h| h.as_slice()), rev, limit, 0)).unwrap();
++            let got: Vec<(Vec<u8>, Vec<u8>)> = got.into_iter().map(|(k, v)| (k.to_vec(), v.to_vec())).collect();
++            assert_eq!(got.len(), want.len(), "seed {seed} lo {lo:?} hi {hi:?} rev {rev} limit {limit:?}");
++            assert!(got == want, "seed {seed} lo {lo:?} hi {hi:?} rev {rev} limit {limit:?}");
++            checked += 1;
++        }
++        eprintln!("rr2: seed {seed}: {checked} reads equal, {} rows read from the model", model.rows_read());
++    }
+ }
