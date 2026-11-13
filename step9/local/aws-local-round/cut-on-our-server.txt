@@ -1,0 +1,12 @@
+aws-local-round, 2026-11-13: the cut read on our server (integration-4 4f745747ee9748bfee949ca49b90fafc95665181, mongo-server
+--store local on the fake Atlas data, fenvix_p1, 47,653 orders), reads_after_writes.one_read / stage / ours_in_progress, MEASURED:
+1. maxTimeMS on the explain (the stato_ts read over the whole year): maxTimeMS 1 ms -> answered (9,556 examined, 26 returned)
+   after 0.146 s. Our server does not honour maxTimeMS on explain (the engine checks it only for a few admin commands).
+2. stage() with a 20 ms socket timeout: timed_out true, error none (a cut is a result); after the cut, currentOp showed none
+   of ours at once (the read had ended): idle, 0 s waited.
+3. explain in a thread, currentOp polled every 5 ms, killOp on the first op seen: 3 trials; in 2 the op was never seen in
+   currentOp (each lasted about 0.18 s), in 1 it was seen 30 times, killOp sent (opid 1037), and the explain still answered
+   in full (0.16 s). The engine's killable() covers find, aggregate, count, distinct, mapReduce, getMore, not explain
+   (mongo-server/src/diag.rs).
+So on our server a cut explain runs to its end whatever the client does; the program's protection is the wait until
+currentOp no longer shows it (at most 2 x --max-read-s), recorded per stage.
