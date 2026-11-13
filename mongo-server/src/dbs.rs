@@ -1554,7 +1554,7 @@ impl Entry {
         }
         self.touch();
         // P-B3 prototype: the erasure pass needs the database's compactor in this process (its scrub commits through it)
-        anyhow::ensure!(!self.tenant.as_ref().unwrap().fx_remote(), "database {}: its compaction is remote (--sealed-remote-compactor); the erasure pass is not supported by the B3 prototype", self.name);
+        anyhow::ensure!(!tenant_bench::fx::remote::WAITER_DEFERS.load(Relaxed), "database {}: its compaction is remote (--sealed-remote-compactor); the erasure pass is not supported by the B3 prototype", self.name);
         let base = self.tenant.as_mut().unwrap().fx_erase_prepare(need).await?;
         Ok(Some(ErasePrep { base, fxc: self.fxc.clone() }))
     }

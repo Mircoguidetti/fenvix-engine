@@ -3056,7 +3056,7 @@ impl Tenant {
     /// next read. With L0 at `l0` SSTs or more, re-read it now (at most every 100 ms), so writes do not stall on L0
     /// SSTs that are already gone (the in-process compactor did this after each fold).
     pub fn fx_remote_poke(&self, l0_at: usize) {
-        if !self.fx_remote {
+        if !self.follows_remote() {
             return;
         }
         let Some(Mode::Writer(db)) = &self.mode else { return };
@@ -3350,7 +3350,7 @@ impl Tenant {
         use std::sync::atomic::Ordering::Relaxed;
         anyhow::ensure!(self.fx_shared.is_none(), "database {}: a compactor publishes this database's versions", self.id);
         // P-B3: a writer under a remote compactor publishes nothing (its versions are the remote compactor's)
-        anyhow::ensure!(!self.fx_remote, "database {}: a remote compactor publishes this database's versions", self.id);
+        anyhow::ensure!(!self.fx_remote && !crate::fx::remote::WAITER_DEFERS.load(Relaxed), "database {}: a remote compactor publishes this database's versions", self.id);
         self.fx_settle_fence().await?;
         if self.fx.as_ref().map(|x| x.version) != Some(base) {
             return Ok(false);
