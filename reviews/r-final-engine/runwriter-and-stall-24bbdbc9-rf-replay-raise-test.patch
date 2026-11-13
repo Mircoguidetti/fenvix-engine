@@ -1,0 +1,86 @@
+diff --git a/src/fx/close_pass_gate_tests.rs b/src/fx/close_pass_gate_tests.rs
+index 1c4e3c55..226c3ce3 100644
+--- a/src/fx/close_pass_gate_tests.rs
++++ b/src/fx/close_pass_gate_tests.rs
+@@ -518,3 +518,81 @@ async fn open_case_peak_memory() {
+     assert!(matches!(opened, Ok(Ok(()))), "the open did not return");
+     assert_eq!(wrong, 0);
+ }
++
++/// R-final-engine (review of 24bbdbc, the WAL replay raise): the raise is the size of EVERY WAL object under the
++/// prefix (`lifecycle::wal_bytes`), not of the WAL the open replays (objects at or above SlateDB's
++/// `replay_after_wal_id`). A database with a restore window keeps its WAL objects for the whole window on purpose
++/// (`WAL_RETAIN`, PITR), so at 1 TB with tens of thousands of writes per second the raise is days of WAL, and it stays
++/// for the writer's life. Here the history is simply not collected yet (GC every hour), as the window keeps it.
++#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
++async fn rf_replay_raise_counts_only_the_wal_the_open_replays() {
++    let _s = SERIAL.lock().await;
++    let tiers0 = open_case_setup(3 << 10);
++    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
++    let srv = server(&store);
++    let id = "rf-raise";
++    // history: 2,000 rows of about 1 KiB, flushed into L0 and published (below the replay boundary, never replayed)
++    {
++        let mut t = srv.lc.create(id).await.unwrap();
++        let mut m = BTreeMap::new();
++        for b in 0..40 {
++            let ops: Vec<_> = (0..50).map(|j| (ckey(50 + b % 5, b * 50 + j), Some(vec![b'h'; 1000]))).collect();
++            apply(&mut t, &mut m, ops).await;
++        }
++        flush(&t).await;
++        t.close().await.unwrap();
++    }
++    let _ = crate::lifecycle::compact_tenant(&store, &store, id).await;
++    // then the open case of the commit, on the same database (its writer is lost with L0 full and a WAL tail)
++    let m = {
++        let mut t = srv.lc.wake(id).await.unwrap();
++        t.upgrade().await.unwrap();
++        let mut m = BTreeMap::new();
++        for i in 0..100 {
++            apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(vec![b'a'; 40]))]).await;
++        }
++        publish(&mut t, &small_opts(build::Reseal::All)).await;
++        let mut k = knobs();
++        k.absorb_min_l0 = 1000;
++        let c = start(&mut t, &store, &k, true).await;
++        c.paused.store(true, Relaxed);
++        let mut r = 0;
++        while t.writer_l0().unwrap() < 6 {
++            for i in 0..80 {
++                apply(&mut t, &mut m, vec![(ckey(10 + r % 10, i), Some(format!("l0-{r}-{i}").into_bytes()))]).await;
++            }
++            flush(&t).await;
++            r += 1;
++            assert!(r < 60, "setup: L0 did not reach 6 SSTs");
++        }
++        c.stop().await;
++        for i in (0..140).step_by(50) {
++            let ops: Vec<_> = (i..(i + 50).min(140)).map(|j| (ckey(30 + j % 5, j), Some(format!("wal-{j}-{}", "w".repeat(60)).into_bytes()))).collect();
++            apply(&mut t, &mut m, ops).await;
++        }
++        t.abandon().await;
++        m
++    };
++    // what the open will replay: the WAL objects at or above the replay boundary
++    let admin = slatedb::admin::Admin::builder(crate::lifecycle::tenant_path(id), Arc::clone(&store)).build();
++    let boundary = admin.read_manifest(None).await.unwrap().unwrap().replay_after_wal_id();
++    use futures::TryStreamExt;
++    let metas: Vec<object_store::ObjectMeta> = store.list(Some(&object_store::path::Path::from(format!("{}/wal", crate::lifecycle::tenant_path(id))))).try_collect().await.unwrap();
++    let id_of = |m: &object_store::ObjectMeta| m.location.filename().and_then(|f| f.strip_suffix(".sst")).and_then(|n| n.parse::<u64>().ok()).unwrap_or(0);
++    let replayed: u64 = metas.iter().filter(|m| id_of(m) >= boundary).map(|m| m.size).sum();
++    let all: u64 = metas.iter().map(|m| m.size).sum();
++    crate::lifecycle::MAX_UNFLUSHED_OVERRIDE.store(8 << 10, Relaxed);
++    crate::lifecycle::REPLAY_RAISED_BYTES_MAX.store(0, Relaxed);
++    let mut t = srv.lc.wake(id).await.unwrap();
++    let opened = tokio::time::timeout(Duration::from_secs(30), t.upgrade()).await;
++    let raise = crate::lifecycle::REPLAY_RAISED_BYTES_MAX.load(Relaxed);
++    let wrong = if matches!(opened, Ok(Ok(()))) { wrong_rows(&t, &m).await } else { usize::MAX };
++    eprintln!("rf replay raise: WAL objects {} ({all} bytes), replay boundary {boundary}, bytes the open replays {replayed}; raise {raise} bytes ({:.1}x); rows wrong {wrong}", metas.len(), raise as f64 / replayed.max(1) as f64);
++    t.abandon().await;
++    let _ = srv.maint.shutdown().await;
++    open_case_teardown(tiers0);
++    assert!(matches!(opened, Ok(Ok(()))), "setup: the open must return");
++    assert!(raise > 0, "setup: the open must take the raise (L0 at the guard)");
++    assert!(raise <= 2 * replayed, "the raise ({raise} bytes) counts WAL the open never replays ({replayed} bytes replayed, {all} under the prefix)");
++}
++

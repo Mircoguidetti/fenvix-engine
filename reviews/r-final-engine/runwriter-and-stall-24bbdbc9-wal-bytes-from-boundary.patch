@@ -1,0 +1,21 @@
+diff --git a/src/lifecycle.rs b/src/lifecycle.rs
+index fff51fdc..3f93855e 100644
+--- a/src/lifecycle.rs
++++ b/src/lifecycle.rs
+@@ -44,9 +44,14 @@ pub static REPLAY_RAISED_BYTES_MAX: std::sync::atomic::AtomicU64 = std::sync::at
+ /// already in L0).
+ pub(crate) async fn wal_bytes(store: &Arc<dyn ObjectStore>, id: &str) -> Result<usize> {
+     use futures::TryStreamExt;
++    // R-final-engine: only what the open replays (objects at or above the replay boundary); a restore window keeps the
++    // older ones for days, and listing from the boundary also keeps the wake from listing them all
+     let prefix = Path::from(format!("{}/wal", tenant_path(id)));
+-    let metas: Vec<object_store::ObjectMeta> = store.list(Some(&prefix)).try_collect().await?;
+-    Ok(metas.iter().map(|m| m.size as usize).sum())
++    let admin = Admin::builder(tenant_path(id), Arc::clone(store)).build();
++    let boundary = admin.read_manifest(None).await?.map_or(0, |m| m.replay_after_wal_id());
++    let from = wal_object_path(id, boundary.saturating_sub(1));
++    let metas: Vec<object_store::ObjectMeta> = store.list_with_offset(Some(&prefix), &from).try_collect().await?;
++    Ok(metas.iter().filter(|m| m.location.filename().and_then(|f| f.strip_suffix(".sst")).and_then(|n| n.parse::<u64>().ok()).is_some_and(|n| n >= boundary)).map(|m| m.size as usize).sum())
+ }
+ 
+ /// Test control: override SlateDB's `max_unflushed_bytes` for writers built from now on (0 = keep the setting).
