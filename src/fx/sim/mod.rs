@@ -467,6 +467,26 @@ mod tests {
         assert!(total.is_empty(), "hole P: a restore point paired below the drop ({} violations): {:?}", total.len(), total.iter().take(4).collect::<Vec<_>>());
     }
 
+    /// sim-test-2: the server's default erasure path (the ride: forced reseals, cleanses, the confirmation) with many
+    /// small groups, then a takeover while the old owner (a zombie with its compactor) rides a second erasure and the new
+    /// owner rides, collects and retires.
+    #[test]
+    fn sim_story_erase_ride_many_groups() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use Ev::*;
+        let mut ev = vec![Open { p: 0, writer: true }];
+        for c in 0..CUSTOMERS {
+            ev.push(fill(0, c, 0));
+        }
+        ev.extend([Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }, Flush { p: 0 }, CompDrain { p: 0 }]);
+        ev.extend([Erase { p: 0, cust: 1 }, Erase { p: 0, cust: 3 }, Flush { p: 0 }, CompDrain { p: 0 }, EraseRide { p: 0 }, Gc { p: 0 }, Sleep { ms: 2700 }, Retire { p: 0 }, Gc { p: 0 }]);
+        ev.extend([fill(0, 1, 0), Erase { p: 0, cust: 4 }, Flush { p: 0 }, CompDrain { p: 0 }, Open { p: 1, writer: true }, Write { p: 1, ops: vec![(2, 2, false)] }, CompStart { p: 1 }, EraseRide { p: 0 }, Erase { p: 1, cust: 0 }, Flush { p: 1 }, CompDrain { p: 1 }, EraseRide { p: 1 }, DropThrough { p: 1 }, Gc { p: 1 }, Sleep { ms: 2700 }, Retire { p: 1 }, Gc { p: 1 }, Abandon { p: 0 }]);
+        let (f, v) = run_story(&rt, "erase ride, many groups", env_u64("SIM_KNOBS", 2) as u8, ev);
+        assert_eq!(f, 0, "{v:?}");
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {
