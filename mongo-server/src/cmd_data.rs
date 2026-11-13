@@ -221,9 +221,9 @@ impl Server {
         let lim = (limit > 0).then_some(limit as usize);
         let take = first_n.min(lim.unwrap_or(usize::MAX));
         let page = if skip + take == 0 {
-            crate::coll::NaturalPage { docs: Vec::new(), last: None, done: false }   // batchSize 0: nothing read yet
+            crate::coll::NaturalPage { docs: Vec::new(), last: None, done: false, scan_won: false }   // batchSize 0: nothing read yet
         } else {
-            crate::coll::natural_page(&mut g, coll, &indexes, filter, None, skip + take, usize::MAX).await?
+            crate::coll::natural_page(&mut g, coll, &indexes, filter, None, skip + take, usize::MAX, true).await?
         };
         drop(g);
         let proj = match cmd.get_document("projection") {
@@ -239,12 +239,12 @@ impl Server {
             buf.push_back(d);
         }
         // (`natural_page` read at least skip + take matches, or to the end)
-        let (last, done) = (page.last, page.done);
+        let (last, done, race) = (page.last, page.done, !page.scan_won);
         let first: Vec<Document> = buf.drain(..take.min(buf.len())).collect();
         let left = lim.map(|l| l - first.len());
         let ns = format!("{db}.{coll}");
         let open = !single && left != Some(0) && (!buf.is_empty() || !done || (lim.is_none() && !first.is_empty() && first.len() == first_n));
-        let st = crate::cmd::StreamCur { db: db.to_string(), coll: coll.to_string(), filter: filter.clone(), proj: cmd.get_document("projection").ok().cloned(), last, done, left, buf };
+        let st = crate::cmd::StreamCur { db: db.to_string(), coll: coll.to_string(), filter: filter.clone(), proj: cmd.get_document("projection").ok().cloned(), last, done, left, buf, race };
         let reply = self.stream_reply(ns, first, st, open);
         if matches!(cmd.get("noCursorTimeout"), Some(Bson::Boolean(true))) {
             self.mark_no_cursor_timeout(&reply);

@@ -2347,16 +2347,20 @@ pub struct NaturalPage {
     pub docs: Vec<Document>,
     pub last: Option<u64>,
     pub done: bool,
+    /// fix-customer-id-plan: the page raced a customer span and the natural-order scan answered it (the next pages of a
+    /// streamed find then read the scan alone, `natural_page`'s `race`).
+    pub scan_won: bool,
 }
 
-pub async fn natural_page(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], filter: &Document, after: Option<u64>, want: usize, max_bytes: usize) -> R<NaturalPage> {
+#[allow(clippy::too_many_arguments)]
+pub async fn natural_page(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], filter: &Document, after: Option<u64>, want: usize, max_bytes: usize, race: bool) -> R<NaturalPage> {
     tenant_bench::counting::set_phase(3);
     let specs = index::ttl_specs(indexes);
     let ttl = if specs.is_empty() { None } else { Some((&specs[..], crate::cmd_data::now_ms())) };
     let o = FindOpts { filter, sort: &[], want: None, hint: Hint::None, ttl, ov: None };
     // fix-customer-id-plan: a filter that pins the customer of a customer-keyed collection races its spans against
-    // this scan (`natural_race`)
-    if let Some(spans) = customer_spans(g, coll, filter).await? {
+    // this scan (`natural_race`), unless an earlier page of the same find was answered by the scan (`race` false)
+    if let Some(spans) = if race { customer_spans(g, coll, filter).await? } else { None } {
         CPLAN.span_reads.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         return natural_race(g, coll, &o, spans, after, want, max_bytes, &mut Stats::default()).await;
     }
@@ -2379,6 +2383,8 @@ struct NatScan {
     last: Option<u64>,
     floor: usize,
     cs: ChunkSize,
+    /// Bytes read so far (entries and documents), for the race.
+    read: u64,
 }
 
 impl NatScan {
@@ -2393,7 +2399,7 @@ impl NatScan {
         // stop); when the filter drops documents the floor doubles, so a selective filter still reads in large chunks.
         // fix round of big-speed: and never more documents than about `SCAN_CHUNK_BYTES` at the sizes seen (8,192
         // documents of 256 KiB were 2 GiB in memory at once)
-        NatScan { np, stop, start, out: Vec::new(), bytes: 0, last: after, floor: 256, cs: ChunkSize::new(NATURAL_CHUNK) }
+        NatScan { np, stop, start, out: Vec::new(), bytes: 0, last: after, floor: 256, cs: ChunkSize::new(NATURAL_CHUNK), read: 0 }
     }
 
     /// One chunk; the page when it is complete.
@@ -2403,7 +2409,9 @@ impl NatScan {
         let n = rows.len();
         let ids: Vec<Vec<u8>> = rows.iter().map(|(_, v)| v.to_vec()).collect();
         let docs = docs_aligned(g, coll, &ids).await?;
-        self.cs.seen_sizes(docs.len(), docs.iter().map(|d| d.as_ref().map_or(0, |d| crate::query::bson_size(d) as u64)).sum());
+        let doc_bytes: u64 = docs.iter().map(|d| d.as_ref().map_or(0, |d| crate::query::bson_size(d) as u64)).sum();
+        self.cs.seen_sizes(docs.len(), doc_bytes);
+        self.read += doc_bytes + rows.iter().map(|(k, v)| (k.len() + v.len()) as u64).sum::<u64>();
         for ((k, _), (id, d)) in rows.iter().zip(ids.iter().zip(docs)) {
             self.last = k.get(self.np.len()..).and_then(|s| s.try_into().ok()).map(u64::from_be_bytes).or(self.last);
             let d = match d {
@@ -2418,12 +2426,12 @@ impl NatScan {
                 self.bytes += crate::query::bson_size(&d);
                 self.out.push(d);
                 if self.out.len() >= want || self.bytes >= max_bytes {
-                    return Ok(Some(NaturalPage { docs: std::mem::take(&mut self.out), last: self.last, done: false }));
+                    return Ok(Some(NaturalPage { docs: std::mem::take(&mut self.out), last: self.last, done: false, scan_won: false }));
                 }
             }
         }
         if n < chunk {
-            return Ok(Some(NaturalPage { docs: std::mem::take(&mut self.out), last: self.last, done: true }));
+            return Ok(Some(NaturalPage { docs: std::mem::take(&mut self.out), last: self.last, done: true, scan_won: false }));
         }
         let mut k = rows.last().unwrap().0.to_vec();
         k.push(0);
@@ -2475,6 +2483,8 @@ struct SpanCursor {
     pos: Option<Vec<u8>>,
     reverse: bool,
     cs: ChunkSize,
+    /// Bytes read so far.
+    read: u64,
 }
 
 impl SpanCursor {
@@ -2482,7 +2492,7 @@ impl SpanCursor {
         if reverse {
             ranges.reverse();
         }
-        SpanCursor { ranges, i: 0, pos: None, reverse, cs: ChunkSize::new(max) }
+        SpanCursor { ranges, i: 0, pos: None, reverse, cs: ChunkSize::new(max), read: 0 }
     }
 
     fn done(&self) -> bool {
@@ -2503,6 +2513,7 @@ impl SpanCursor {
             let chunk = self.cs.cur;
             let rows = g.scan_range(&s, e.as_deref(), self.reverse, Some(chunk), DOC_READ_AHEAD).await?;
             self.cs.seen(&rows);
+            self.read += rows.iter().map(|(k, v)| (k.len() + v.len()) as u64).sum::<u64>();
             if rows.len() < chunk {
                 self.i += 1;
                 self.pos = None;
@@ -2549,8 +2560,8 @@ impl Ord for BySeq {
 /// natural-order scan, a chunk of each in turn, and the first to finish answers. The span finishes when it is read
 /// whole: its matches after `after`, ordered by their stored natural-order numbers, are exactly what the scan returns
 /// (a document's number is kept when it is updated or moves to another customer, `Writes::put`); only the first `want`
-/// (and up to `max_bytes`) are held. The scan finishes when it has its page. So a page costs at most about twice the
-/// cheaper of the two: a small customer in a large collection reads its span, a large customer whose first documents
+/// (and up to `max_bytes`) are held. The scan finishes when it has its page. The side that has read fewer bytes reads
+/// its next chunk, the scan first. So a page costs at most about twice the cheaper of the two: a small customer in a large collection reads its span, a large customer whose first documents
 /// come early in natural order is answered by the scan, as before. A span document without a number (none is expected:
 /// numbering a collection writes every document again) leaves the answer to the scan.
 #[allow(clippy::too_many_arguments)]
@@ -2561,7 +2572,9 @@ async fn natural_race(g: &mut impl Rd, coll: &str, o: &FindOpts<'_>, spans: Vec<
     let mut heap_bytes = 0usize;
     let mut nat = NatScan::new(coll, after);
     loop {
-        if span_ok {
+        // the side that has read fewer bytes goes next, the scan first: a page the scan answers from its first chunk
+        // costs what it did before the race
+        if span_ok && span.read < nat.read {
             let rows = span.next(g).await?;
             'rows: for (_, v) in &rows {
                 stats.docs += 1;
@@ -2595,12 +2608,15 @@ async fn natural_race(g: &mut impl Rd, coll: &str, o: &FindOpts<'_>, spans: Vec<
                 // as the scan: a page that reached `want` or `max_bytes` is not the end (the scan does not look further)
                 let full = kept.len() >= want || heap_bytes >= max_bytes;
                 let last = kept.last().map(|b| b.seq).or(after);
-                return Ok(NaturalPage { docs: kept.into_iter().map(|b| b.doc).collect(), last, done: !full });
+                return Ok(NaturalPage { docs: kept.into_iter().map(|b| b.doc).collect(), last, done: !full, scan_won: false });
             }
         }
-        if let Some(p) = nat.step(g, coll, o, want, max_bytes, stats).await? {
-            CPLAN.race_natural.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            return Ok(p);
+        if !span_ok || nat.read <= span.read {
+            if let Some(mut p) = nat.step(g, coll, o, want, max_bytes, stats).await? {
+                CPLAN.race_natural.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                p.scan_won = true;
+                return Ok(p);
+            }
         }
     }
 }
