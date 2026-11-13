@@ -24,6 +24,8 @@ def compare(ours, theirs, across_labels=False):
     "NOT THE SAME PLAN" for that pair, which is the plan)."""
     keys = ("seed", "per_op") if across_labels else ("label", "seed", "per_op")
     same = all(ours.get(k) == theirs.get(k) for k in keys)
+    if not across_labels and ours.get("customers_fingerprint") != theirs.get("customers_fingerprint"):
+        same = False   # the same label, seed and size, but other customers (other state files): not a pair
     out = {"same_plan": same, "ours_db": ours.get("db"), "theirs_db": theirs.get("db"), "ops": {}}
     for op in OPS:
         o, t = (ours.get("ops") or {}).get(op) or {}, (theirs.get("ops") or {}).get(op) or {}

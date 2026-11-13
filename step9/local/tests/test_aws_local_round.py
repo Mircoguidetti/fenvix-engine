@@ -297,3 +297,17 @@ def test_the_mongod_set_is_initiated_through_localhost_and_a_stopped_member_ends
     assert "mongodb://127.0.0.1:{port}/" in m[m.rindex("loc = ", 0, i):i]   # before: over the private IP, refused
     run = open(os.path.join(S9, "ci", "run.py")).read()
     assert "MONGOD_MEMBER_STOPPED" in run                            # before: 25 minutes of waiting after a member died
+
+
+def test_a_comparison_of_other_customers_is_not_a_pair():
+    """Found by the local round: ours and mongod's summaries had the same label, seed and size, but the state files
+    behind them had 2,048 and 512 customers: the comparison said nothing. Now the customers' fingerprint must match."""
+    import first_next_compare as cmp_
+    line = {"n": 5, "p50_ms": 1.0, "p99_ms": 2.0}
+    a = {"db": "d", "label": "before-writes", "seed": 9, "per_op": 12, "customers_fingerprint": "aaaa",
+         "ops": {"resume": {"first": line, "next": line}}}
+    assert cmp_.compare(a, dict(a))["same_plan"] is True
+    c = cmp_.compare(a, {**a, "customers_fingerprint": "bbbb"}, )
+    assert c["same_plan"] is False and "NOT THE SAME PLAN" in cmp_.text(c, "mongod")
+    # first_next_ops writes the fingerprint
+    assert "customers_fingerprint" in open(os.path.join(S9, "programs", "first_next_ops.py")).read()

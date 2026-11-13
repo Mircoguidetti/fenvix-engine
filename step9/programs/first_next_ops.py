@@ -343,7 +343,12 @@ def main(argv=None):
             for op in the_ops:
                 if i < len(g[op]):
                     measure_customer(client, dbname, g[op][i], op, a.seed, int(a.max_s * 1000), cnt, rows, i, save=not a.no_save)
+    # the customers measured, as a fingerprint: first_next_compare.py pairs two runs only when they measured the same
+    # customers (aws-local-round: ours and mongod's looked like one plan with other customers behind it)
+    import hashlib
+    fp = hashlib.sha256(json.dumps([[r["cliente"], r["op"]] for r in rows]).encode()).hexdigest()[:16] if rows else None
     summary = {"program": "first-next-ops", "db": dbname, "label": a.label, "seed": a.seed, "per_op": a.per_op,
+               "customers_fingerprint": fp,
                "saves": not a.no_save, "counters": cname, "opening": opening, "requests": len(rows),
                **summarize(rows, cnt is not None)}
     with open(os.path.join(a.out, "first-next-ops-requests.jsonl"), "w") as f:

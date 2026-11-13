@@ -92,6 +92,9 @@ c["write_peak_args"] = "--dbs 2 --threads 2 --minutes 2 --gb 0.5 --burst-min 0.5
 c["takeovers_args"] = c["takeovers_args"].replace("--n 50", f"--n {sys.argv[2]}")
 c["takeovers_off_args"] = c["takeovers_off_args"].replace("--n 50", f"--n {sys.argv[2]}")
 c["data_gb_upper"] = 1
+# the MongoDB line's ballast through the script: shrunk like ours above, so both lines hold the same customers
+if c.get("mongod_ballast_line"):
+    c["mongod_ballast_line"] = c["mongod_ballast_line"] + ["--mb-cliente", "0.5", "--lotto", "200"]
 # aws-local-round: the plan's own programs at a small size (the command's other arguments kept)
 c["first_next_ops_args"] = " ".join(x for x in (c.get("first_next_ops_args") or "").replace("--per-op 100", "--per-op 12")
                                    .replace("--per-op 5 ", "--per-op 6 ").split())
