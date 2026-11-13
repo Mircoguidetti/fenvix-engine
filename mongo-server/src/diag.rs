@@ -876,6 +876,7 @@ impl Server {
                 "fenceWindowMsMax": tenant_bench::fx::build::FENCE_WINDOW_MS_MAX.load(Relaxed) as i64,
                 "olderVersionsRefused": tenant_bench::fx::compactor::OLDER_VERSIONS_REFUSED.load(Relaxed) as i64,
                 "olderVersionsIgnored": tenant_bench::fx::manifest::OLDER_VERSIONS_IGNORED.load(Relaxed) as i64,
+                "gcVersionReadErrors": tenant_bench::fx::gc::VERSION_READ_ERRORS.load(Relaxed) as i64,
                 "claimsDeferred": tenant_bench::lifecycle::CLAIMS_DEFERRED.load(Relaxed) as i64,
                 "l0JobsBesideMerge": tenant_bench::fx::drop::L0_JOBS_BESIDE_MERGE.load(Relaxed) as i64,
                 "mergeHeld": tenant_bench::fx::drop::TEST_MERGE_HELD.load(Relaxed) as i64,
