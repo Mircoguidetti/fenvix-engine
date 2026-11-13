@@ -1,0 +1,50 @@
+diff --git a/mongo-server/src/ctl/fork.rs b/mongo-server/src/ctl/fork.rs
+index 0b300dce..cec93a28 100644
+--- a/mongo-server/src/ctl/fork.rs
++++ b/mongo-server/src/ctl/fork.rs
+@@ -406,6 +406,9 @@ async fn fork_paired(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> any
+     use tenant_bench::fx::pair;
+     let store = &ctl.store;
+     let src_admin = Admin::builder(purge::tenant_path(src), Arc::clone(store)).build();
++    // sim-test-2, hole F: the writer epoch the quiesce left; a newer one by the end of the copy means another process
++    // opened the source meanwhile (this process lost its lease): the copied state is not the quiesced one
++    let epoch0 = src_admin.read_manifest(None).await?.map(|m| m.writer_epoch());
+     // named, so that the rollback of a fork killed before the cleanup below finds and deletes it (review of 7b, FIX 2)
+     let opts = slatedb::config::CheckpointOptions { name: Some(pairing_name(target)), ..Default::default() };
+     let (cp, p) = pair::checkpoint_paired(store, src, || async { Ok(src_admin.create_detached_checkpoint(&opts).await?) }).await?;
+@@ -419,6 +422,10 @@ async fn fork_paired(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> any
+             // the copy carries the source's checkpoint list; this one is the fork step's own, not a restore point
+             let _ = Admin::builder(purge::tenant_path(target), Arc::clone(store)).build().delete_checkpoint(cp.id).await;
+         }
++        // sim-test-2, hole F: a copy lists the source's live objects (a WAL newer than the checkpoint included); the fork's
++        // clean marker would make its readers skip that WAL while its writer replays it. Refused: the fork rolls back.
++        let epoch1 = src_admin.read_manifest(None).await?.map(|m| m.writer_epoch());
++        anyhow::ensure!(epoch1 == epoch0, "fork {src} -> {target}: the source was opened by another writer during the fork (writer epoch {epoch0:?} -> {epoch1:?}); rolled back");
+         if let Some(p) = &p {
+             let runs = if mode == "clone" { pair::ForkRuns::Shared } else { pair::ForkRuns::Copied };
+             pair::seed_fork(store, src, target, p, runs).await?;
+diff --git a/src/fx/sim/cluster/ext.rs b/src/fx/sim/cluster/ext.rs
+index 41a31dee..0f2445c3 100644
+--- a/src/fx/sim/cluster/ext.rs
++++ b/src/fx/sim/cluster/ext.rs
+@@ -404,6 +404,11 @@ impl World {
+                     let target = format!("{id}-fork{tag}");
+                     let src_path = crate::lifecycle::tenant_path(&id);
+                     let src_admin = Admin::builder(src_path.clone(), Arc::clone(&store)).build();
++                    // hole F's fix in `fork.rs` (sim-test-2): the writer epoch the quiesce left
++                    let epoch0 = match src_admin.read_manifest(None).await {
++                        Ok(m) => m.map(|m| m.writer_epoch()),
++                        Err(e) => return format!("fork {tag}: manifest unreadable: {e}"),
++                    };
+                     let opts = slatedb::config::CheckpointOptions { name: Some(format!("fork-pairing:{target}")), ..Default::default() };
+                     let (cp, pr) = match pair::checkpoint_paired(&store, &id, || async { Ok(src_admin.create_detached_checkpoint(&opts).await?) }).await {
+                         Ok(x) => x,
+@@ -428,6 +433,8 @@ impl World {
+                             futures::stream::iter(copies).buffer_unordered(8).try_collect::<Vec<()>>().await?;
+                             let _ = tadmin.delete_checkpoint(cp.id).await;
+                         }
++                        let epoch1 = src_admin.read_manifest(None).await?.map(|m| m.writer_epoch());
++                        anyhow::ensure!(epoch1 == epoch0, "the source was opened by another writer during the fork (writer epoch {epoch0:?} -> {epoch1:?}); rolled back");
+                         let n = match &pr {
+                             Some(p) => pair::seed_fork(&store, &id, &target, p, if copy { ForkRuns::Copied } else { ForkRuns::Shared }).await?,
+                             None => None,

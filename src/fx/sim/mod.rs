@@ -46,6 +46,11 @@ mod tests {
         }
     }
 
+    /// fix-sim-holes' hole W counter, when that fix is in the build (0 otherwise).
+    fn reseals_refused() -> u64 {
+        0
+    }
+
     fn runtime() -> tokio::runtime::Runtime {
         tokio::runtime::Builder::new_multi_thread().worker_threads(env_u64("SIM_THREADS", 4) as usize).enable_all().build().unwrap()
     }
@@ -125,7 +130,15 @@ mod tests {
             }
             out_v
         });
-        eprintln!("SIM SUMMARY: seeds {total}, seeds with a violation {}, {:.0} s", failed.len(), t0.elapsed().as_secs_f64());
+        use std::sync::atomic::Ordering::Relaxed;
+        eprintln!(
+            "SIM SUMMARY: seeds {total}, seeds with a violation {}, {:.0} s; process-wide: WAL replay raises {}, older versions ignored {}, builder reseals refused {}",
+            failed.len(),
+            t0.elapsed().as_secs_f64(),
+            crate::lifecycle::REPLAY_RAISES.load(Relaxed),
+            crate::fx::manifest::OLDER_VERSIONS_IGNORED.load(Relaxed),
+            reseals_refused()
+        );
         if super::cluster::remote::on() {
             eprintln!("SIM REMOTE COVERAGE: {}", super::cluster::remote::coverage());
         }
@@ -526,6 +539,203 @@ mod tests {
         if !fork {
             assert!(refused >= 2, "each case's restore point would pair below the newest version: it must be refused ({refused})");
         }
+    }
+
+    /// sim-test-2: the server's default erasure path (the ride: forced reseals, cleanses, the confirmation) with many
+    /// small groups, then a takeover while the old owner (a zombie with its compactor) rides a second erasure and the new
+    /// owner rides, collects and retires.
+    #[test]
+    fn sim_story_erase_ride_many_groups() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use Ev::*;
+        let mut ev = vec![Open { p: 0, writer: true }];
+        for c in 0..CUSTOMERS {
+            ev.push(fill(0, c, 0));
+        }
+        ev.extend([Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }, Flush { p: 0 }, CompDrain { p: 0 }]);
+        ev.extend([Erase { p: 0, cust: 1 }, Erase { p: 0, cust: 3 }, Flush { p: 0 }, CompDrain { p: 0 }, EraseRide { p: 0 }, Gc { p: 0 }, Sleep { ms: 2700 }, Retire { p: 0 }, Gc { p: 0 }]);
+        ev.extend([fill(0, 1, 0), Erase { p: 0, cust: 4 }, Flush { p: 0 }, CompDrain { p: 0 }, Open { p: 1, writer: true }, Write { p: 1, ops: vec![(2, 2, false)] }, CompStart { p: 1 }, EraseRide { p: 0 }, Erase { p: 1, cust: 0 }, Flush { p: 1 }, CompDrain { p: 1 }, EraseRide { p: 1 }, DropThrough { p: 1 }, Gc { p: 1 }, Sleep { ms: 2700 }, Retire { p: 1 }, Gc { p: 1 }, Abandon { p: 0 }]);
+        let (f, v) = run_story(&rt, "erase ride, many groups", env_u64("SIM_KNOBS", 2) as u8, ev);
+        assert_eq!(f, 0, "{v:?}");
+    }
+
+    /// sim-test-2: the WAL replay raise (runwriter-and-stall, R-final-engine). L0 past the guard (8 flushed batches, no
+    /// compactor), acknowledged writes only in the WAL, the owner killed; the next writer's open raises its unflushed
+    /// limit by the WAL's size and replays; a zombie of it then writes and closes. Nothing acknowledged may be lost.
+    #[test]
+    fn sim_story_wal_replay_raise() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use Ev::*;
+        let before = crate::lifecycle::REPLAY_RAISES.load(std::sync::atomic::Ordering::Relaxed);
+        let mut ev = vec![Open { p: 0, writer: true }, fill(0, 0, 0), Publish { p: 0 }];
+        for c in 1..CUSTOMERS {
+            ev.extend([fill(0, c, 0), Flush { p: 0 }]);
+        }
+        for i in 0..4 {
+            ev.extend([Write { p: 0, ops: vec![(1, i, false), (2, i, true)] }, Flush { p: 0 }]);
+        }
+        ev.extend([Write { p: 0, ops: vec![(3, 3, false), (4, 4, true)] }, Kill { p: 0 }, Open { p: 1, writer: true }, Write { p: 1, ops: vec![(5, 5, false)] }, Open { p: 2, writer: true }, Write { p: 1, ops: vec![(0, 1, false)] }, Close { p: 1 }, Write { p: 2, ops: vec![(0, 2, false)] }, CompStart { p: 2 }, Flush { p: 2 }, CompDrain { p: 2 }]);
+        let (f, v) = run_story(&rt, "WAL replay raise", env_u64("SIM_KNOBS", 1) as u8, ev);
+        let raises = crate::lifecycle::REPLAY_RAISES.load(std::sync::atomic::Ordering::Relaxed) - before;
+        eprintln!("SIM STORY WAL replay raise: {raises} raises");
+        assert_eq!(f, 0, "{v:?}");
+    }
+
+    /// sim-test-2: restore points around a takeover: the old owner (a zombie with its compactor) keeps committing (fenced
+    /// or late), the new owner publishes with its builder, then starts its compactor; points are taken all along, and
+    /// restores to marks between them must give the state at each mark.
+    #[test]
+    fn sim_story_points_around_a_takeover() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let mut ev = vec![Open { p: 0, writer: true }];
+        for c in 0..3 {
+            ev.push(fill(0, c, 0));
+        }
+        ev.extend([Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }, Flush { p: 0 }, CompDrain { p: 0 }, Point { p: 2, tag: 1 }, Mark { tag: 2 }]);
+        ev.extend([fill(0, 3, 0), Flush { p: 0 }, Hold { p: 0, class: Class::FxVersion, op: Some(NOp::Put), skip: 0, land: true, all: false, rid: 1 }, CompDrain { p: 0 }]);
+        ev.extend([Open { p: 1, writer: true }, Write { p: 1, ops: vec![(4, 0, false), (1, 1, true)] }, Publish { p: 1 }, Point { p: 2, tag: 3 }, Release { rid: 1 }, Sleep { ms: 300 }, Mark { tag: 4 }, Point { p: 2, tag: 5 }]);
+        ev.extend([Write { p: 1, ops: vec![(4, 2, false)] }, CompStart { p: 1 }, fill(1, 4, 0), Flush { p: 1 }, CompDrain { p: 1 }, DropThrough { p: 1 }, Gc { p: 1 }, Point { p: 2, tag: 6 }, Mark { tag: 7 }, Gc { p: 0 }, Abandon { p: 0 }, Sleep { ms: 2700 }, Gc { p: 1 }]);
+        ev.extend([Restore { p: 1, mark: 2, apply: false }, Restore { p: 1, mark: 4, apply: false }, Restore { p: 1, mark: 7, apply: true }]);
+        let (f, v) = run_story(&rt, "points around a takeover", env_u64("SIM_KNOBS", 0) as u8, ev);
+        assert_eq!(f, 0, "{v:?}");
+    }
+
+    /// Hole Z through the fork's door (found by random seed 2117 of sim-test-2; fix-sim-holes item 5 changed
+    /// `ctl/fork.rs` `quiesce` for it, without a test that runs a fork). A writer that lost the database without noticing
+    /// it (p0) is asked to fork: the quiesce closes its tenant (an empty memtable: the close never reaches the store and
+    /// writes the clean marker) and trusts the marker by a HEAD, so it skips the reopen that replays the WAL. The new
+    /// owner's acknowledged writes, still only in its WAL, are missing from the fork. The simulated fork mirrors the
+    /// `fork.rs` of its build: on `sim-test-2` the head's HEAD check (fails: 48 violations, MEASURED, 1 run); with
+    /// fix-sim-holes' Z fix and `lifecycle::marker_clean` in the simulated quiesce: passes (MEASURED, 1 run).
+    /// Fixed on fix-sim-holes (c7490ec's `marker_clean` in `fork.rs`, and in the simulated quiesce): a normal test.
+    #[test]
+    fn sim_hole_z_fork_trusts_a_fenced_writers_marker() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use Ev::*;
+        let ev = vec![
+            Open { p: 0, writer: true },
+            fill(0, 0, 0),
+            Flush { p: 0 },
+            // the takeover: p0 has not noticed it
+            Open { p: 1, writer: true },
+            fill(1, 1, 0),
+            fill(1, 2, 0),
+            // the fork is asked of p0 (its process still believes it serves the database)
+            Fork { p: 0, copy: false, tag: 1 },
+        ];
+        let (f, v) = run_story(&rt, "hole Z through the fork", 0, ev);
+        assert_eq!(f, 0, "hole Z through the fork: {} violations: {:?}", v.len(), v.iter().take(3).collect::<Vec<_>>());
+    }
+
+    /// New hole F (sim-test-2, random seed 2296): a fork whose source is opened by another writer between its quiesce
+    /// and its copy. `ctl/fork.rs` holds the source's lease for the whole fork, so this needs the forking process to lose
+    /// that lease (a pause, as for every zombie case). The copy lists the source's live objects and takes the new
+    /// writer's WAL, newer than the checkpoint; the fork's clean marker then makes the fork's readers skip that WAL while
+    /// its writer replays it: a row the fork's readers saw vanishes when a writer opens it (deleted by the source's new
+    /// owner), and rows never written to the fork appear. On the head: copy mode, 3 keys where the fork's reader and
+    /// writer differ (MEASURED, 1 run; also on head + fix-sim-holes' Z and W fixes). Clone mode: 0 (MEASURED, 1 run).
+    /// Proposed fix (`reviews/sim-test-2/hole-f-fork-source-written-during-fork.patch`, in `fork.rs` and in the simulated
+    /// fork that mirrors it): the fork compares the source's writer epoch after the quiesce and after the copy, and rolls
+    /// back when it moved. Fixed on fix-sim-holes: a normal test; it also checks that the copy-mode fork was refused.
+    #[test]
+    fn sim_hole_f_fork_source_written_after_its_quiesce() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        // the fork's drop-lease PUT stays on the wire for 4 s (longer than the step wait): the takeover happens meanwhile
+        let old = std::env::var("SIM_MAX_HOLD_MS").ok();
+        std::env::set_var("SIM_MAX_HOLD_MS", "5000");
+        let refused0 = super::cluster::ext::FORKS_REFUSED_EPOCH_MOVED.load(std::sync::atomic::Ordering::Relaxed);
+        let mut total = Vec::new();
+        for copy in [true, false] {
+            let ev = vec![
+                Open { p: 0, writer: true },
+                fill(0, 0, 0),
+                Publish { p: 0 },
+                Hold { p: 0, class: Class::FxOther, op: Some(NOp::Put), skip: 0, land: true, all: false, rid: 1 },
+                Fork { p: 0, copy, tag: 1 },
+                // meanwhile another process opens the source and writes (WAL only)
+                Open { p: 1, writer: true },
+                Write { p: 1, ops: vec![(1, 1, false), (2, 2, false), (0, 3, true)] },
+                Release { rid: 1 },
+                Sleep { ms: 3000 },
+            ];
+            let (_, v) = run_story(&rt, if copy { "hole F, copy" } else { "hole F, clone" }, 0, ev);
+            total.extend(v);
+        }
+        match old {
+            Some(v) => std::env::set_var("SIM_MAX_HOLD_MS", v),
+            None => std::env::remove_var("SIM_MAX_HOLD_MS"),
+        }
+        assert!(total.is_empty(), "hole F: {} violations: {:?}", total.len(), total.iter().take(3).collect::<Vec<_>>());
+        let refused = super::cluster::ext::FORKS_REFUSED_EPOCH_MOVED.load(std::sync::atomic::Ordering::Relaxed) - refused0;
+        eprintln!("SIM HOLE F: forks refused {refused}");
+        assert!(refused >= 1, "the copy-mode fork's source was opened by another writer during it: it must be refused");
+    }
+
+    /// fix-sim-holes-2, hole R (found by the CI batch 43479363490 on c94a477, seed 3259, generator of 0964575): a GC pass
+    /// takes its view of our versions at its start, deletes the old ones (slow here: each delete held), and only then
+    /// lists the runs. A run the new owner wrote and published meanwhile is in the listing but in no version of that
+    /// stale view; an earlier pass (just as stale) already saw it unreferenced, so both grace checks pass and the run is
+    /// deleted while the newest version lists it: every read of its rows fails. Here the passes are a zombie's (it lost
+    /// the database without noticing); an owner's slow pass has the same stale view.
+    #[test]
+    fn sim_hole_r_slow_gc_deletes_a_run_published_during_its_pass() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let old = std::env::var("SIM_MAX_HOLD_MS").ok();
+        std::env::set_var("SIM_MAX_HOLD_MS", "30000");
+        let mut ev = vec![Open { p: 0, writer: true }, fill(0, 0, 0), Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }];
+        // old versions for the GC to delete (retention 0)
+        for c in 1..4 {
+            ev.extend([fill(0, c, 0), Flush { p: 0 }, CompDrain { p: 0 }]);
+        }
+        ev.extend([
+            // pass A: its first version delete stays on the wire until released
+            Hold { p: 0, class: Class::FxVersion, op: Some(NOp::Delete), skip: 0, land: true, all: false, rid: 1 },
+            Gc { p: 0 },
+            // pass B, the same
+            Hold { p: 0, class: Class::FxVersion, op: Some(NOp::Delete), skip: 0, land: true, all: false, rid: 2 },
+            Gc { p: 0 },
+            // the takeover: p0 has not noticed; the new owner writes and its compactor publishes a run
+            Open { p: 1, writer: true },
+            CompStart { p: 1 },
+            fill(1, 4, 0),
+            Flush { p: 1 },
+            CompDrain { p: 1 },
+            // pass A goes on: it lists the runs and sees the new one unreferenced
+            Release { rid: 1 },
+            Sleep { ms: 3000 },
+            // pass B goes on, past the grace: it deletes the run the newest version lists
+            Release { rid: 2 },
+            Sleep { ms: 2000 },
+            Abandon { p: 0 },
+        ]);
+        let stale0 = crate::fx::gc::GC_PASSES_STALE.load(std::sync::atomic::Ordering::Relaxed);
+        let (f, v) = run_story(&rt, "hole R: a slow GC pass deletes a run published during it", env_u64("SIM_KNOBS", 0) as u8, ev);
+        let stale = crate::fx::gc::GC_PASSES_STALE.load(std::sync::atomic::Ordering::Relaxed) - stale0;
+        eprintln!("SIM HOLE R: GC passes that found newer versions after listing the runs: {stale}");
+        match old {
+            Some(v) => std::env::set_var("SIM_MAX_HOLD_MS", v),
+            None => std::env::remove_var("SIM_MAX_HOLD_MS"),
+        }
+        assert_eq!(f, 0, "hole R: {:?}", v.iter().take(4).collect::<Vec<_>>());
+        assert!(stale >= 1, "the passes listed the runs after the new owner's publish: at least one must see it");
     }
 
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
