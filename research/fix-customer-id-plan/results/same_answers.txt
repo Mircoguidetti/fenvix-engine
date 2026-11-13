@@ -1,0 +1,7 @@
+customer alone t0      base (100, '2d7d18840c13') head (100, '2d7d18840c13') SAME
+customer alone t1      base (100, '44eda64f6391') head (100, '44eda64f6391') SAME
+customer alone t2      base (100, '389322d956b7') head (100, '389322d956b7') SAME
+customer $in 3 t0      base (300, '4997ccf1890f') head (300, '4997ccf1890f') SAME
+customer $in 3 t1      base (300, '10e048a62e7a') head (300, '10e048a62e7a') SAME
+customer $in 3 t2      base (300, '54735ac67d7b') head (300, '54735ac67d7b') SAME
+customer limit 1       base (1, '75b28a531e64') head (1, '75b28a531e64') SAME
