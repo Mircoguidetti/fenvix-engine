@@ -2359,6 +2359,11 @@ impl Tenant {
                     FIRST_BUILDS_CUT.fetch_add(1, Relaxed);
                     h.abort();
                     let _ = h.await;
+                    // its dropped run writers abort their uploads in spawned tasks: done before the abandon returns, so an
+                    // erase's sweep and proof do not race them (the reviewer's H2)
+                    if !CONTROL_CUT_FIRST_BUILD.load(Relaxed) {
+                        crate::runfmt::wait_dropped_aborts(Duration::from_secs(5)).await;
+                    }
                 }
             }
         }
