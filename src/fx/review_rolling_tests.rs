@@ -28,8 +28,14 @@ struct Outcome {
 }
 
 async fn scenario(check_in_old_process: bool, new_rows: usize) -> Outcome {
+    scenario_with(check_in_old_process, false, new_rows).await
+}
+
+/// `via_load`: the old process reads the incarnation the way the admin erase handler does first (`ctl/erase.rs:34`,
+/// before any lock or lease; present since audit-fencing round 2, so also on integration-6 0ed53558).
+async fn scenario_with(check_in_old_process: bool, via_load: bool, new_rows: usize) -> Outcome {
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
-    let id = format!("rr-inc-{check_in_old_process}-{new_rows}");
+    let id = format!("rr-inc-{check_in_old_process}-{via_load}-{new_rows}");
     let id = id.as_str();
     crate::lifecycle::set_incarnation(id, 0);
     // the old owner A, incarnation 0: three publishes (versions 1..3)
@@ -70,7 +76,11 @@ async fn scenario(check_in_old_process: bool, new_rows: usize) -> Outcome {
     crate::lifecycle::set_incarnation(id, 0);
     if check_in_old_process {
         // what listDatabases (dbs.rs) and meta::exists (admin API) now do in A's process, for every name
-        assert!(crate::lifecycle::db_exists(&store, id).await.unwrap());
+        if via_load {
+            assert_eq!(crate::lifecycle::load_incarnation(&store, id).await.unwrap(), 1);
+        } else {
+            assert!(crate::lifecycle::db_exists(&store, id).await.unwrap());
+        }
     }
     let (t1, r) = h.await.unwrap();
     eprintln!("A's late publish (existence check in A: {check_in_old_process}): {:?}", r.as_ref().map(|x| x.as_ref().map(|r| r.version)).map_err(|e| format!("{e:#}")));
@@ -133,6 +143,17 @@ async fn rr_existence_check_repoints_a_stale_publish_into_the_new_incarnation() 
     build::PAUSE_BEFORE_CREATE_MS.store(0, Relaxed);
     assert_eq!(base.stale_versions_in_new, 0, "baseline: the stale publish must stay out of the new incarnation (versions {:?})", base.versions_new);
     assert_eq!((base.wrong, base.errors, base.old_rows_seen), (0, 0, 0), "baseline broken: {:?}", base.open_err);
+    assert_eq!(hit.stale_versions_in_new, 0, "a process that lost the database published a version into the new incarnation (versions {:?})", hit.versions_new);
+    assert_eq!((hit.wrong, hit.errors, hit.old_rows_seen), (0, 0, 0), "the new incarnation reads wrong (open error {:?})", hit.open_err);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn rr_erase_handler_load_repoints_a_stale_publish_into_the_new_incarnation() {
+    let _s = SERIAL.lock().await;
+    enable();
+    view::clear_cache();
+    let hit = scenario_with(true, true, 40).await;
+    build::PAUSE_BEFORE_CREATE_MS.store(0, Relaxed);
     assert_eq!(hit.stale_versions_in_new, 0, "a process that lost the database published a version into the new incarnation (versions {:?})", hit.versions_new);
     assert_eq!((hit.wrong, hit.errors, hit.old_rows_seen), (0, 0, 0), "the new incarnation reads wrong (open error {:?})", hit.open_err);
 }
