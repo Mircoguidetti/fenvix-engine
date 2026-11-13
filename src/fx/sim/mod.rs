@@ -682,8 +682,10 @@ mod tests {
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
         use Ev::*;
-        let mut ev = vec![Open { p: 0, writer: true }, fill(0, 0, 0), Publish { p: 0 }];
-        // rows in L0 that no compactor absorbs before the close (no compactor runs in this process)
+        // as the review's scenario: the owner's compactor started (its catch-up done), then stopped before the gap rows,
+        // so nothing absorbs them before the close and no catch-up publish is owed at the next start
+        let mut ev = vec![Open { p: 0, writer: true }, fill(0, 0, 0), Publish { p: 0 }, Write { p: 0, ops: vec![(5, 23, false)] }, CompStart { p: 0 }, Flush { p: 0 }, CompDrain { p: 0 }, CompStop { p: 0 }];
+        // rows in L0 that no compactor absorbs before the close
         for c in 1..CUSTOMERS {
             for half in 0..2 {
                 ev.push(Write { p: 0, ops: (half * 12..half * 12 + 12).map(|i| (c, i, false)).collect() });
