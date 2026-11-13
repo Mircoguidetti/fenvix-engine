@@ -90,3 +90,18 @@ def test_inserts_between_getmores_appear_once(both):
     print(f"mongod {len(res[0])}, ours {len(res[1])}")
     assert len(res[1]) == len(set(res[1])), "a document came twice"
     assert res[0] == res[1]
+
+
+@pytest.mark.parametrize("flt", [{"zz": {"$elemMatch": {"$where": "1"}}}, {"zz": {"$where": "1"}}, {"zz": {"$not": {"$where": "1"}}}])
+def test_a_misplaced_where_is_refused_as_mongod_refuses_it(both, flt):
+    """integration-4 (diff-node js.where_in_elemmatch): the streamed find checks the filter as the whole-answer find does.
+    No document holds the field, so the predicate is never evaluated: mongod still refuses it when parsing (BadValue);
+    the streamed path answered [] for the $elemMatch case."""
+    codes = []
+    for c in both:
+        try:
+            c.st.command({"find": "t", "filter": flt})
+            codes.append(None)
+        except Exception as e:  # noqa: BLE001 - the error code is what is compared
+            codes.append(getattr(e, "code", None))
+    assert codes[0] == 2 and codes[1] == codes[0], (flt, codes)
