@@ -1,0 +1,16 @@
+qhead2 in 100                             cold GETs [19, 19, 19] MB [5.0, 5.0, 5.0] ms [32.9, 28.6, 26.3] | warm GETs [0, 0, 0] ms [3.1, 2.4, 2.6] | n 100
+qhead2 in 1,000                           cold GETs [19, 19, 19] MB [5.0, 5.0, 5.0] ms [286.6, 248.2, 251.4] | warm GETs [0, 0, 0] ms [234.4, 275.4, 233.2] | n 1000
+qhead2 in 10,000 (half missing)           cold GETs [19] MB [5.0] ms [349.2] | warm GETs [0] ms [292.6] | n 5069
+qhead2 in 100,000 (half missing)          cold GETs [19] MB [5.0] ms [792.2] | warm GETs [0] ms [908.4] | n 50035
+qhead2 in 100 + g filter                  cold GETs [19, 19, 19] MB [5.0, 5.0, 5.0] ms [39.7, 32.9, 29.4] | warm GETs [0, 0, 0] ms [3.1, 2.7, 3.3] | n 46
+qhead2 in 100 sort g desc limit 5         cold GETs [19, 19, 19] MB [5.0, 5.0, 5.0] ms [27.5, 25.2, 26.7] | warm GETs [0, 0, 0] ms [2.2, 2.3, 2.4] | n 5
+qhead2 agg $match in 100 + $group         cold GETs [19, 19, 19] MB [5.0, 5.0, 5.0] ms [26.9, 27.2, 25.5] | warm GETs [0, 0, 0] ms [2.7, 2.7, 2.3] | n 1
+qhead2 count in 1,000                     cold GETs [19, 19, 19] MB [5.0, 5.0, 5.0] ms [303.3, 301.2, 276.3] | warm GETs [0, 0, 0] ms [233.2, 274.1, 272.9] | n 1
+qhead2 _id equality                       cold GETs [17, 17, 17] MB [3.2, 3.2, 3.2] ms [38.9, 22.8, 19.4] | warm GETs [0, 0, 0] ms [0.4, 0.4, 0.6] | n 1
+qhead2 _id range 1,000                    cold GETs [17, 17, 17] MB [3.2, 3.2, 3.2] ms [28.5, 24.2, 25.3] | warm GETs [0, 0, 0] ms [3.7, 3.8, 3.6] | n 1000
+qhead2 g equality (index, 1,000 docs)     cold GETs [23, 20, 20] MB [5.1, 5.0, 5.0] ms [258.4, 263.4, 251.4] | warm GETs [0, 0, 0] ms [215.5, 244.9, 225.0] | n 1000
+qhead2 g $in 3 values (index)             cold GETs [26, 20, 21] MB [5.1, 5.0, 5.0] ms [273.3, 291.6, 273.8] | warm GETs [0, 0, 0] ms [250.6, 243.8, 255.9] | n 3000
+qhead2 sort _id limit 10                  cold GETs [19, 19, 19] MB [5.0, 5.0, 5.0] ms [27.2, 27.4, 27.1] | warm GETs [0, 0, 0] ms [0.8, 0.7, 0.8] | n 10
+qhead2 sort _id desc limit 10 skip 100    cold GETs [19, 19, 19] MB [5.0, 5.0, 5.0] ms [25.9, 23.4, 22.6] | warm GETs [0, 0, 0] ms [1.4, 1.1, 1.2] | n 10
+qhead2 name equality (collection scan)    cold GETs [48, 29, 29] MB [5.0, 5.0, 5.0] ms [35219.8, 34603.8, 35992.2] | warm GETs [2, 2, 2] ms [33799.8, 36946.5, 35615.2] | n 1
+qhead2 _id $nin 3 values, limit 20        cold GETs [19, 19, 19] MB [5.0, 5.0, 5.0] ms [27.6, 24.8, 27.3] | warm GETs [0, 0, 0] ms [0.7, 0.9, 0.7] | n 20
