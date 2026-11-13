@@ -1,1 +1,4 @@
 base1  find_one customer and _id        cold GETs [66] MB [4.6] ms [134061.0] | warm ms [138743.2] | examined 1000000 | n 1
+base1  find customer and _id            cold GETs [47] MB [4.6] ms [134374.8] | warm ms [133970.5] | examined 1000000 | n 1
+base1  customer alone (100 docs)        cold GETs [43] MB [4.6] ms [72617.3] | warm ms [70227.8] | examined 1000000 | n 100
+base1  customer alone, limit 1          cold GETs [31] MB [4.6] ms [5405.1] | warm ms [4495.5] | examined 48058 | n 1
