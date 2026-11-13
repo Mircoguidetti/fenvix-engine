@@ -474,7 +474,9 @@ async fn create_catalog(server: &Arc<Server>, db: &str) -> Result<()> {
 /// Every row of a database that is not generated data (the catalog), without the envelope marker: what the insert
 /// code reads. The writers' scratch catalogs must equal the real one.
 async fn catalog_rows(g: &mut Entry) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
-    let rows = g.scan_range(b"", None, false, None, 4 << 20).await?;
+    // a database the generator works on holds its catalog only (a few dozen rows) until the publish: never read more
+    let rows = g.scan_range(b"", None, false, Some(100_001), 4 << 20).await?;
+    ensure!(rows.len() <= 100_000, "the database holds more than its catalog: not one the generator is making");
     Ok(rows.into_iter().filter(|(k, _)| &k[..] != tenant_bench::envelope::MARKER).map(|(k, v)| (k.to_vec(), v.to_vec())).collect())
 }
 
@@ -1048,13 +1050,24 @@ async fn one_db(server: Arc<Server>, plan: Arc<Plan>, words: Arc<Words>, p: DbPl
             eprintln!("ballast {db}: RESUMING the generator state of the pantry");
         }
     }
+    // a run killed after its publish and before done.json: the database already holds the version (all its rows), so
+    // there is nothing to generate and its catalog is not read (that would read every row); only the report is made
+    let already = match (&old, manifest::list_versions(&raw_store, &db).await?.last()) {
+        (Some(_), Some(&n)) => manifest::load(&raw_store, &db, n).await?.groups.iter().any(|g| g.sealed.is_some()),
+        _ => false,
+    };
+    if already {
+        eprintln!("ballast {db}: the database already has its published version: no generation, only the report");
+    }
     // the writers' private catalogs: a copy of the real catalog's rows (collection UUIDs included), one batch each
-    let real_catalog0 = {
+    let real_catalog0 = if already {
+        Vec::new()
+    } else {
         let mut g = server.dbs.lock(&db).await;
         catalog_rows(&mut g).await?
     };
     let mut scratch = Vec::new();
-    for _ in 0..workers {
+    for _ in 0..(if already { 0 } else { workers }) {
         let s = make_scratch();
         s.dbs.lock(&db).await.apply(real_catalog0.iter().map(|(k, v)| Op::Put(k.clone(), v.clone())).collect()).await?;
         scratch.push(s);
@@ -1069,7 +1082,7 @@ async fn one_db(server: Arc<Server>, plan: Arc<Plan>, words: Arc<Words>, p: DbPl
     let x_now = futures::future::try_join_all(begins).await?[0];
     let mut g = server.dbs.lock(&db).await;
     let (store, id, epoch) = g.ballast_target()?;
-    let real_catalog = catalog_rows(&mut g).await?;
+    let real_catalog = if already { Vec::new() } else { catalog_rows(&mut g).await? };
     drop(g);
     same_catalog(&db, "the real database after E1's wait", &real_catalog0, &real_catalog)?;
     for (w, s) in scratch.iter().enumerate() {
@@ -1133,6 +1146,7 @@ async fn one_db(server: Arc<Server>, plan: Arc<Plan>, words: Arc<Words>, p: DbPl
     let runs: Vec<String> = done.values().flat_map(|r| r.groups.iter().filter_map(|g| g.sealed.as_ref().map(|x| x.path.clone()))).collect();
     write_refs(&store, &id, &runs).await?;
     let todo: VecDeque<usize> = (0..st.slices.len()).filter(|s| !done.contains_key(s)).collect();
+    ensure!(!already || todo.is_empty(), "{db}: a version is published but {} slices are not committed", todo.len());
     let bson_planned: f64 = t.iter().map(|(a, b)| a + b).sum();
     eprintln!("ballast {db}: {} customers, {:.2} GiB planned, {} groups, {} slices ({} committed before, {} to do), {} writers, {} key partitions, cut {}",
         t.len(), bson_planned / GB, st.cuts.len(), st.slices.len(), done.len(), todo.len(), workers, bounds.len(), st.x0);
@@ -1173,7 +1187,7 @@ async fn one_db(server: Arc<Server>, plan: Arc<Plan>, words: Arc<Words>, p: DbPl
     }
     let generate_secondi = tgen.elapsed().as_secs_f64();
     // the private catalogs are still the real one (nothing the insert code did changed a catalog)
-    {
+    if !already {
         let mut g = server.dbs.lock(&db).await;
         let real_now = catalog_rows(&mut g).await?;
         same_catalog(&db, "the real database after generating", &real_catalog, &real_now)?;
@@ -1289,7 +1303,22 @@ async fn one_db(server: Arc<Server>, plan: Arc<Plan>, words: Arc<Words>, p: DbPl
         })
         .collect();
     let opts = BuildOpts { group_bytes, ..Default::default() };
-    let b = g.ballast_publish_parts(&opts, st.x0, direct, direct_last, parts, workers).await?;
+    // a run killed after its publish and before done.json: the version is there, with every committed slice's runs
+    let mut published: Option<tenant_bench::fx::build::BuildReport> = None;
+    if let Some(&n) = manifest::list_versions(&store, &id).await?.last() {
+        let v = manifest::load(&store, &id, n).await?;
+        if v.groups.iter().any(|g| g.sealed.is_some()) {
+            let listed: HashSet<&str> = v.groups.iter().filter_map(|g| g.sealed.as_ref().map(|r| r.path.as_str())).collect();
+            let ours: Vec<&str> = direct.iter().filter_map(|g| g.sealed.as_ref().map(|r| r.path.as_str())).collect();
+            ensure!(ours.iter().all(|p| listed.contains(p)), "{db}: the database already has runs that are not this generator's committed slices: refusing to publish over them");
+            eprintln!("ballast {db}: version {n} is already published with every committed slice (a run stopped before done.json): not publishing again");
+            published = Some(tenant_bench::fx::build::BuildReport { version: n, x_d: v.x_d, groups: v.groups.len(), resealed: v.groups.len(), runs_written: listed.len() as u64, ..Default::default() });
+        }
+    }
+    let b = match published {
+        Some(b) => b,
+        None => g.ballast_publish_parts(&opts, st.x0, direct, direct_last, parts, workers).await?,
+    };
     drop(g);
     let publish_secondi = tp.elapsed().as_secs_f64();
     let _ = std::fs::remove_dir_all(&pub_dir);

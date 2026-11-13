@@ -53,7 +53,7 @@ print('objects', n, 'bytes', b, pre)" | tee $D/s3-after-gen.txt
   ;;
 check1)
   ref; { [ -f $D/server-A.pid ] && kill -0 $(cat $D/server-A.pid) 2>/dev/null; } || serve A || exit 1
-  python3 $R/ballast_check.py --ours "$OURS" --ref "$REF" --plan $D/plan.json --gen-dir $D/out --out $D/check1.json --count-threads 8 --stato-window 0.015 > $D/check1.log 2>&1
+  python3 $R/ballast_check.py --ours "$OURS" --ref "$REF" --plan $D/plan.json --gen-dir $D/out --out $D/check1.json --skip-customer-counts --stato-window 0.003 > $D/check1.log 2>&1
   echo "check1 exit $?" >> $D/check1.log; tail -3 $D/check1.log
   ;;
 mutate)
@@ -89,7 +89,7 @@ PY
   tail -2 $D/settle-B.log
   ;;
 check2)
-  python3 $R/ballast_check.py --ours "$OURS" --ref "$REF" --plan $D/plan.json --gen-dir $D/out --out $D/check2.json --keep-ref --counts $D/counts.json --count-threads 8 --stato-window 0.015 > $D/check2.log 2>&1
+  python3 $R/ballast_check.py --ours "$OURS" --ref "$REF" --plan $D/plan.json --gen-dir $D/out --out $D/check2.json --keep-ref --counts $D/counts.json --count-threads 8 --stato-window 0.003 > $D/check2.log 2>&1
   echo "check2 exit $?" >> $D/check2.log; tail -3 $D/check2.log
   ;;
 esac
