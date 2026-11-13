@@ -14,6 +14,10 @@ import pytest
 
 from lib import Server, make_bucket, list_prefix, wait_until
 
+# the judge's and CI's "off" mode sets FENVIX_SEALED_RUNS=off: no first build and no compactor of ours, so none of these cases
+# exists there
+pytestmark = pytest.mark.skipif(os.environ.get("FENVIX_SEALED_RUNS") == "off", reason="needs sealed runs (FENVIX_SEALED_RUNS=off)")
+
 DB = "ws"
 SEALED = ["--sealed-t-pin-ms", "1000", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait"]
 
@@ -117,10 +121,11 @@ def test_kill9_during_the_first_build_then_takeover(where):
 
 
 def test_kill9_after_the_version_landed_before_its_install():
-    """The first build's version is in the store but no write installed it yet (the install happens at a later write):
-    SIGKILL, takeover, every acknowledged write reads back."""
+    """The first build's version is in the store but not installed yet: SIGKILL, takeover, every acknowledged write
+    reads back. Since the review of d660ea9 the install follows the build's end at once (`spawn_first_build_installer`),
+    so this window lasts milliseconds; FENVIX_TEST_NO_FIRST_INSTALLER keeps it open (the install waits for a write)."""
     bucket = make_bucket("ws9land")
-    srv = Server(bucket, "ws9landa", idle=600, extra=SEALED, env={"FENVIX_TEST_BUILD_PAUSE_SNAPSHOT_MS": "1500"}).start()
+    srv = Server(bucket, "ws9landa", idle=600, extra=SEALED, env={"FENVIX_TEST_BUILD_PAUSE_SNAPSHOT_MS": "1500", "FENVIX_TEST_NO_FIRST_INSTALLER": "1"}).start()
     c = srv.client()
     a = Acked(c[DB]["c"])
     i = write_until_build(c, a, 0)
@@ -265,3 +270,35 @@ def test_kill9_mid_merge_with_an_l0_job_beside_it_then_takeover():
     n2 = a.check(c2[DB]["c"])
     srv2.term()
     print(f"kill mid-merge: {a.n} writes acknowledged, {s['l0JobsBesideMerge']} L0 jobs beside the held merge, longest write while it was held {longest:.3f} s; read back {n1} after the takeover, {n2} at the end")
+
+
+def burst_then_reads(tag, env):
+    """Writes until the first build starts, then reads only for 10 s: returns (seconds until a compactor ran or None,
+    first builds installed without a write, the stats at the end)."""
+    bucket = make_bucket(f"wsb{tag}")
+    srv = Server(bucket, f"wsb{tag}", idle=600, extra=SEALED, env=env).start()
+    c = srv.client()
+    a = Acked(c[DB]["c"])
+    i = write_until_build(c, a, 0)
+    t0, started = time.time(), None
+    while time.time() - t0 < 10:
+        assert c[DB]["c"].find_one({"_id": 0}) is not None
+        if started is None and stats(c)["started"] >= 1:
+            started = time.time() - t0
+        time.sleep(0.1)
+    s = stats(c)
+    a.check(c[DB]["c"])
+    srv.term()
+    return started, s["firstInstallsWithoutWrite"], s
+
+
+def test_burst_then_reads_only_starts_the_compactor():
+    """Review of d660ea9: a database written in a burst and then only read gets its compactor once the first build (off
+    the lock) ends, not at its next write. Control (FENVIX_TEST_NO_FIRST_INSTALLER=1, the code of d660ea9): no compactor
+    after 10 s of reads."""
+    started_ctl, inst_ctl, s_ctl = burst_then_reads("ctl", {"FENVIX_TEST_NO_FIRST_INSTALLER": "1"})
+    started, inst, s = burst_then_reads("fix", {})
+    assert started_ctl is None and inst_ctl == 0, f"control: a compactor ran without a later write ({started_ctl}, {s_ctl})"
+    assert started is not None and started < 5, f"no compactor within 5 s of reads after the burst ({s})"
+    assert inst >= 1, s
+    print(f"burst then reads: compactor running {started:.2f} s after the first build started (control: none in 10 s)")
