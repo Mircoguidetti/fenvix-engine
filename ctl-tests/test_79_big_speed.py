@@ -13,6 +13,7 @@ together, serverStatus fenvix.waiter.trips) is a real wait and two GETs one afte
   - fix 2: a find with a limit on a unique index runs no tie-completion scan; on a non-unique index it does (control).
   - fix 1: `--memory-limit-mb 1024` gives 256 MiB of caches (WiredTiger's rule at 1 GiB), reported in serverStatus.
 """
+import re
 import time
 
 import pytest
@@ -156,9 +157,17 @@ def test_control_without_the_box_first_request_takes_more_trips(loaded):
         s.term()
 
 
+def own_update_gets(server, n_before):
+    """The object-store GETs of their own (per-command meter, `FX_WAITS`) of the `update` commands on checkpoint_writes
+    logged after the first `n_before` of them, and how many there are in all."""
+    lines = [l for l in server.log_text().splitlines() if l.startswith("WAITS ") and " cmd=update " in l and " coll=checkpoint_writes " in l]
+    return [int(m.group(1)) if (m := re.search(r" get=[\d.]+/(\d+)", l)) else 0 for l in lines[n_before:]], len(lines)
+
+
 def test_save_first_one_trip_next_no_get_and_set_on_insert_keeps_the_first(loaded):
     bucket, want = loaded
-    s = Server(bucket, "bigspeed", idle=600, env=SIM).start()
+    # FX_WAITS: the engine's per-command meter (a WAITS line per command with its own GETs), for the next saves below
+    s = Server(bucket, "bigspeed", idle=600, env={**SIM, "FX_WAITS": "0"}).start()
     try:
         c = s.client()
         db = c.app
@@ -177,11 +186,23 @@ def test_save_first_one_trip_next_no_get_and_set_on_insert_keeps_the_first(loade
                                   {"$set": {"type": "json", "checkpoint": "new", "metadata": {}}}, upsert=True)
         first = (trips(c) - t0, gets(c) - g0)
         g1 = gets(c)
+        _, n_before = own_update_gets(s, n_before=0)
         f = {"thread_id": t, "checkpoint_ns": "", "checkpoint_id": "1ef99999-new", "task_id": "t", "task_path": "", "idx": 0}
         db.checkpoint_writes.update_one(f, {"$setOnInsert": {"value": "first"}}, upsert=True)
         db.checkpoint_writes.update_one(f, {"$setOnInsert": {"value": "second"}}, upsert=True)
-        nxt = gets(c) - g1
-        print("save FIRST (trips, GETs):", first, "NEXT GETs:", nxt)
+        # integration-6 (known failures): the next saves' own GETs (the per-command meter, as test_89 counts them). The
+        # process-wide GET counter (`gets`) also counted SlateDB's background polls of the open writer (its compactor's and
+        # GC's manifest and compaction-record reads), which land in this window or not by timing (sessions/2026-11-13-
+        # fix-box-first-trip section 5; that cost is the idle-poll item): printed, not asserted
+        own = []
+        for _ in range(50):  # the WAITS line is written when the command ends
+            own, _ = own_update_gets(s, n_before)
+            if len(own) >= 2:
+                break
+            time.sleep(0.1)
+        nxt = sum(own)
+        print("save FIRST (trips, GETs):", first, "NEXT GETs (own):", nxt, own, "process-wide GETs in the window:", gets(c) - g1)
+        assert len(own) == 2, f"setup: {len(own)} WAITS lines for the two next saves"
         assert first[0] <= 1, f"the first save of a customer took {first[0]} trips"
         assert nxt == 0, f"the next saves sent {nxt} GETs"
         # the reason the read before an upsert stays (fix 4): the second upsert must find the first document
