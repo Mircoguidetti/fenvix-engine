@@ -1,0 +1,4 @@
+documents ours 694 ref 694 same _ids True differing documents 0
+spedito n 123 exact (math.fsum) 78996.43000000001 plain sum 78996.43000000001
+ours $sum 78996.43000000001
+mongod $sum 78996.43

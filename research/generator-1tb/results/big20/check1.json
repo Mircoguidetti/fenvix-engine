@@ -1,0 +1,25 @@
+{
+ "databases": {
+  "app_data_b01": {
+   "reads": 12733,
+   "wrong": 0,
+   "reference_documents": 277045,
+   "sampled_customers": 35,
+   "q2_tickets_found": "10240/10240",
+   "seconds": 1218.3
+  }
+ },
+ "reads": 12733,
+ "wrong": 0,
+ "examples": [],
+ "retries_134": 6,
+ "retry_examples": [
+  "database app_data_b01: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(b\"o\\x01\\x00\\x00\\x01ok\\x00\\x00\\x00\\x0",
+  "database app_data_b01: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(b\"o\\x01\\x00\\x00\\x01ok\\x00\\x00\\x00\\x0",
+  "database app_data_b01: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(b\"o\\x01\\x00\\x00\\x01ok\\x00\\x00\\x00\\x0",
+  "database app_data_b01: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(b\"o\\x01\\x00\\x00\\x01ok\\x00\\x00\\x00\\x0",
+  "database app_data_b01: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(b\"o\\x01\\x00\\x00\\x01ok\\x00\\x00\\x00\\x0",
+  "database app_data_b01: this process's serving lease expired; it begins no new read (F7); retry, full error: RawBSONDocument(b\"o\\x01\\x00\\x00\\x01ok\\x00\\x00\\x00\\x0"
+ ],
+ "engine_sum_precision": 5
+}

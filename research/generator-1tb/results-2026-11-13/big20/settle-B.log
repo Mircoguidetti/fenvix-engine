@@ -1,0 +1,13 @@
+open: tenant app_data_b01 is owned by server process 22993-37935e3e (lease valid for another 18857 ms); retry, full error: {'o
+open: tenant app_data_b01 is owned by server process 22993-37935e3e (lease valid for another 16851 ms); retry, full error: {'o
+open: tenant app_data_b01 is owned by server process 22993-37935e3e (lease valid for another 14846 ms); retry, full error: {'o
+open: tenant app_data_b01 is owned by server process 22993-37935e3e (lease valid for another 12842 ms); retry, full error: {'o
+open: tenant app_data_b01 is owned by server process 22993-37935e3e (lease valid for another 10838 ms); retry, full error: {'o
+open: tenant app_data_b01 is owned by server process 22993-37935e3e (lease valid for another 8834 ms); retry, full error: {'ok
+open: tenant app_data_b01 is owned by server process 22993-37935e3e (lease valid for another 6830 ms); retry, full error: {'ok
+open: tenant app_data_b01 is owned by server process 22993-37935e3e (lease valid for another 4827 ms); retry, full error: {'ok
+open: tenant app_data_b01 is owned by server process 22993-37935e3e (lease valid for another 2823 ms); retry, full error: {'ok
+open: tenant app_data_b01 is owned by server process 22993-37935e3e (lease valid for another 818 ms); retry, full error: {'ok'
+open: tenant app_data_b01 is owned by server process 22993-37935e3e (lease valid for another 0 ms); retry, full error: {'ok': 
+02:06:10 {"enabled": true, "started": 0, "running": 0, "publishes": 0, "absorbs": 0, "merges": 0, "reseals": 0, "errors": 0, "catchUps": 0}
+settled {"enabled": true, "started": 0, "running": 0, "publishes": 0, "absorbs": 0, "merges": 0, "reseals": 0, "errors": 0, "catchUps": 0}

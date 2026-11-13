@@ -1,0 +1,25 @@
+2026-11-09T16:18:10Z step 9 round 66625 (local): phases ['load'], data 100gb, pantry fenvix-kitchen-pantry-42069 (existing), cook m7i.large, spare m7i.large, log m7i.large x3, compactor none, client c7i.xlarge, programs ['m30', 's3-first-byte', 'sealed-run', 'log-ack', 'ballast-rounds', 'takeovers'], cap 5.0 $, 60 minutes
+2026-11-09T16:18:10Z 1/8 buckets: the run bucket (1 day) and the pantry (our server's data)
+2026-11-09T16:18:11Z pantry fenvix-kitchen-pantry-42069: existing, created 0.00 days ago
+2026-11-09T16:18:11Z 2/8 packages, CA and the password into the run bucket (the password passes through no file and no log)
+2026-11-09T16:18:11Z 3/8 network
+2026-11-09T16:18:11Z network: {"network": "fenvix-coldread-s9-66625", "machine_s3_endpoint": "http://172.18.0.1:9300"}
+2026-11-09T16:18:11Z 4/8 the load runs without the log (the loader writes straight to S3; nothing is measured while loading)
+2026-11-09T16:18:11Z 5/8 the load through cook 0 (the loader): the filler (ballast)
+2026-11-09T16:18:12Z server-0: loader c7i.xlarge in eu-west-1a, d5aeeadc090f, private IP 172.18.0.2
+2026-11-09T16:18:12Z filler: filler c7i.xlarge in eu-west-1a, 36eb09b6ffc3, private IP 172.18.0.3
+2026-11-09T16:18:27Z SPESA: 0.61 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.60 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:18:27Z   filler: 2026-11-09T16:18:13Z filler start; 4 vCPU
+2026-11-09T16:18:42Z SPESA: 0.12 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.12 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:18:42Z   filler: 2026-11-09T16:18:27Z ballast: 3 databases, 2 at once
+2026-11-09T16:18:57Z SPESA: 0.13 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.13 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:18:57Z   filler: 2026-11-09T16:18:27Z ballast: 3 databases, 2 at once
+2026-11-09T16:19:12Z SPESA: 0.15 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.14 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:19:12Z   filler: 2026-11-09T16:19:05Z finish: BALLAST_LOADED
+2026-11-09T16:19:13Z load: {"ballast": "BALLAST_LOADED"}
+2026-11-09T16:19:33Z server-0: stopped by itself
+2026-11-09T16:19:34Z 7/8 no extra program in this round
+2026-11-09T16:19:34Z 8/8 everything off
+2026-11-09T16:19:34Z SPESA: 0.15 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: none; S3 0.14 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:19:34Z copying the results from the run bucket
+2026-11-09T16:19:34Z outcome: FINITO; {"ballast": "BALLAST_LOADED"}

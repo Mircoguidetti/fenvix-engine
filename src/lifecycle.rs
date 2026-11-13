@@ -2552,6 +2552,39 @@ impl Tenant {
         Ok(rep)
     }
 
+    #[cfg(test)]
+    pub(crate) fn writer_db_for_tests(&self) -> &slatedb::Db {
+        match self.mode.as_ref() {
+            Some(Mode::Writer(db)) => db,
+            _ => panic!("not a writer"),
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn env_for_tests(&self) -> Option<u64> {
+        self.env
+    }
+
+    /// [`Tenant::fx_publish_generated`] for a generator that cut its shared rows into key partitions and wrote its customer
+    /// space with several writers ([`crate::fx::build::publish_generated_parts`]).
+    #[allow(clippy::too_many_arguments)]
+    pub async fn fx_publish_generated_parts(&mut self, opts: &crate::fx::build::BuildOpts, x0: u64, direct: Vec<crate::fx::manifest::GroupLine>, direct_last: Option<Vec<u8>>, parts: Vec<crate::fx::build::PartRows>, parallel: usize) -> Result<crate::fx::build::BuildReport> {
+        use std::sync::atomic::Ordering::Relaxed;
+        self.fx_settle_fence().await?;
+        let Some(Mode::Writer(db)) = self.mode.as_ref() else { anyhow::bail!("database {} is not open as a writer", self.id) };
+        let epoch = Some(db.manifest().writer_epoch());
+        let env = self.env.ok_or_else(|| anyhow!("no envelope marker: call fx_ballast_begin first"))?;
+        let store = Arc::clone(&self.lc.store);
+        let (v, rep) = crate::fx::build::publish_generated_parts(db, &store, &self.id, self.fx.as_deref(), env, epoch, opts, x0, direct, direct_last, parts, parallel).await.map_err(|e| {
+            crate::fx::PUBLISH_ERRORS.fetch_add(1, Relaxed);
+            e
+        })?;
+        self.fx = Some(Arc::new(crate::fx::view::View::new(store, v, self.fx.as_deref())?));
+        self.fx_loaded = Instant::now();
+        crate::fx::PUBLISHES.fetch_add(1, Relaxed);
+        Ok(rep)
+    }
+
     /// perf-erase: the short first step of an erasure batch, under the exclusive lock (the caller lists the records
     /// before, without it). When X_d is below `need` (the highest S_e of the pending erasures), makes it move up: with a
     /// compactor, flushes the memtable and asks it to absorb up to `need` (the batch waits for it without the lock);

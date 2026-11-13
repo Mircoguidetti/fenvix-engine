@@ -1302,10 +1302,11 @@ impl Entry {
         self.tenant.as_ref().ok_or_else(|| anyhow::anyhow!("database {} is not open", self.name))?.fx_ballast_target()
     }
 
-    /// Publish the generated runs with SlateDB's rows (`fx/build.rs`).
-    pub async fn ballast_publish(&mut self, opts: &tenant_bench::fx::build::BuildOpts, gen: tenant_bench::fx::build::Generated) -> Result<tenant_bench::fx::build::BuildReport> {
+    /// Publish generated runs and key partitions with SlateDB's rows (`fx/build.rs`, `publish_generated_parts`).
+    #[allow(clippy::too_many_arguments)]
+    pub async fn ballast_publish_parts(&mut self, opts: &tenant_bench::fx::build::BuildOpts, x0: u64, direct: Vec<tenant_bench::fx::manifest::GroupLine>, direct_last: Option<Vec<u8>>, parts: Vec<tenant_bench::fx::build::PartRows>, parallel: usize) -> Result<tenant_bench::fx::build::BuildReport> {
         let t = self.tenant.as_mut().ok_or_else(|| anyhow::anyhow!("database {} is not open", self.name))?;
-        t.fx_publish_generated(opts, gen).await
+        t.fx_publish_generated_parts(opts, x0, direct, direct_last, parts, parallel).await
     }
 
     /// Apply writes atomically and durably, creating the database on its first write.

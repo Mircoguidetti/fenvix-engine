@@ -1,0 +1,507 @@
+"""Step 9 · tests of the gate (step9/ci/gate.py) and of the report it reads (step9/local/benchmark_report.py).
+aws-fixes, B1 of the total review (fenvix-brain sessions/2026-11-11-review-total/INTERMEDIATE-1.md): the gate opened for
+a benchmark that failed. Every case builds a result tree in a temporary folder, the way the real files are laid out, and
+asks gate.py as decide.py asks it (a subprocess, ENGINE_REF and ENGINE_COMMIT in the environment).
+  - the reviewer's script, unchanged but for "|| true": must say GATE: CLOSED;
+  - a report forged to say PASS over the same failed results: CLOSED (the gate re-reads the results, not the verdict);
+  - each defect alone, on a result set that is otherwise clean: CLOSED, with the reason named;
+  - the clean result set: OPEN (the control: without it, "always CLOSED" would pass every test).
+$0, no network. Usage: python3 step9/local/tests/test_gate.py   (or python -m pytest -q step9/local/tests/test_gate.py)"""
+import copy
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
+sys.path.insert(0, os.path.join(REPO, "step9", "ci"))
+import gate  # noqa: E402
+
+COMMIT = "b" * 40
+SHA = "a" * 64   # the binary built from COMMIT
+BASE = "bench/agent-checkpoints/results/local-t"
+
+
+def clean_summary(scale=1.0):
+    """A summary as bench.py writes it, every operation present with the written minimum of samples (and more)."""
+    lat = {op: {"n": gate.MIN_SAMPLES[op] * 2, "p50": 2.0 * scale, "p90": 4.0 * scale, "p99": 8.0 * scale}
+           for op in gate.OPS}
+    return {"ok": True, "plan": {"digest": "d1"}, "write": {"errors": []}, "read": {"inconsistencies": 0, "wrong_reads": 0},
+            "erase": {"threads_left_readable": 0}, "latency_ms": lat, "bytes": {"stored_per_logical": 0.30 * scale},
+            # our side's settle and log counters (bench-local fix round, F5 and F9); ignored on the other sides
+            "settle": {"idle": True, "capped": False, "seconds": 750.0, "compaction2_published": True},
+            "server_status_after_write": {"quaderno": {"sent": 1000, "failed": 0}},
+            "server_status_end": {"quaderno": {"sent": 1200, "failed": 0}},
+            "engine_binary_sha256": SHA}
+
+
+def tree(ours, pg, mongo, takeovers=None, w8=None, verdict=None, takeovers_off=None, report_extra=None, tolerance=None):
+    d = tempfile.mkdtemp()
+    os.makedirs(os.path.join(d, "step9", "ci"))
+    if tolerance is not None:
+        with open(os.path.join(d, "step9", "ci", "speed_tolerance.json"), "w") as f:
+            f.write(tolerance if isinstance(tolerance, str) else json.dumps(tolerance))
+    os.makedirs(os.path.join(d, "step9", "local", "results-t"))
+    shutil.copy(os.path.join(REPO, "step9", "ci", "gate.py"), os.path.join(d, "step9", "ci"))
+    if w8 is None:   # total review R3 hole 1: the --workers 8 line is required; w8=False leaves it out
+        w8 = (clean_summary(), clean_summary(), clean_summary())
+    for base, sums in ((BASE, (ours, pg, mongo)),) + (((BASE + "-w8", w8),) if w8 else ()):
+        for side, s in zip(("fenvix", "postgres", "mongo"), sums):
+            if s is None:
+                continue
+            os.makedirs(os.path.join(d, base, side))
+            json.dump(s, open(os.path.join(d, base, side, "summary.json"), "w"))
+    tk = "step9/local/results-t/takeovers-summary-on.json"
+    tk_off = "step9/local/results-t/takeovers-summary-off.json"
+    clean_tk = {"verdict": "PASS", "lost": 0, "done": 50, "n": 50, "acknowledged": 500000, "engine_binary_sha256": SHA,
+                "log_fallback": {"batches": 0}}
+    json.dump(takeovers or clean_tk, open(os.path.join(d, tk), "w"))
+    json.dump(takeovers_off or clean_tk, open(os.path.join(d, tk_off), "w"))
+    rep = {"engine_ref": "final", "engine_commit": COMMIT, "engine_sha256": SHA, "takeovers": tk, "takeovers_off": tk_off,
+           "agent_bench": BASE + "/fenvix/summary.json", "verdict": verdict or "PASS", "blockers": []}
+    rep.update(report_extra or {})
+    if w8:
+        rep["agent_bench_w8"] = BASE + "-w8/fenvix/summary.json"
+    json.dump(rep, open(os.path.join(d, "step9", "local", f"benchmark-report-{COMMIT[:12]}.json"), "w"))
+    return d
+
+
+def ask(d):
+    g = subprocess.run([sys.executable, os.path.join(d, "step9", "ci", "gate.py"), d], capture_output=True, text=True,
+                       env={**os.environ, "ENGINE_REF": "final", "ENGINE_COMMIT": COMMIT})
+    shutil.rmtree(d, ignore_errors=True)
+    return g.returncode, g.stdout
+
+
+def closed(d, why):
+    rc, out = ask(d)
+    assert rc == 1 and out.startswith("GATE: CLOSED"), out
+    assert why in out, f"expected {why!r} in:\n{out}"
+    return out
+
+
+def test_reviewer_script_says_closed():
+    t = tempfile.mkdtemp()
+    r = subprocess.run(["bash", os.path.join(HERE, "gate_opens_on_failed_result.sh"), REPO], capture_output=True, text=True, cwd=t)
+    shutil.rmtree(t, ignore_errors=True)
+    out = r.stdout
+    assert "GATE: CLOSED" in out and "GATE: OPEN" not in out, out + r.stderr
+    for why in ("fenvix: ok is False", "operation resume[read] missing", "stored bytes per logical byte unknown",
+                "save_step p50", "time_travel p50"):
+        assert why in out, f"{why!r} not in:\n{out}"
+
+
+def test_forged_pass_report_over_failed_results():
+    bad = clean_summary()
+    bad["ok"] = False
+    bad["read"]["inconsistencies"] = 37
+    closed(tree(bad, clean_summary(2), clean_summary(2), verdict="PASS"), "fenvix: ok is False")
+
+
+def test_ok_false_on_a_competitor_closes():
+    pg = clean_summary(2)
+    pg["ok"] = False
+    closed(tree(clean_summary(), pg, clean_summary(2)), "postgres: ok is False")
+
+
+def test_operation_missing_on_their_side_closes():
+    pg = clean_summary(2)
+    del pg["latency_ms"]["time_travel"]
+    closed(tree(clean_summary(), pg, clean_summary(2)), "postgres: operation time_travel missing")
+
+
+def test_operation_missing_on_our_side_closes():
+    ours = clean_summary()
+    del ours["latency_ms"]["resume[cold]"]
+    closed(tree(ours, clean_summary(2), clean_summary(2)), "fenvix: operation resume[cold] missing")
+
+
+def test_too_few_samples_closes():
+    ours = clean_summary()
+    ours["latency_ms"]["resume[write/long]"]["n"] = 8   # the small profile
+    closed(tree(ours, clean_summary(2), clean_summary(2)), "resume[write/long] has 8 samples")
+
+
+def test_new_operations_are_compared():
+    # bench-local F1: resume[write/none] and resume[write/short] are compared too
+    for op in ("save_step", "time_travel", "resume[write/none]", "resume[write/short]"):
+        ours = clean_summary()
+        ours["latency_ms"][op]["p99"] = 100.0
+        closed(tree(ours, clean_summary(2), clean_summary(2)), f"{op} p99: ours 100.00 ms is 84.00 ms above the best")
+
+
+def test_stored_bytes_unknown_closes():
+    ours = clean_summary()
+    ours["bytes"]["stored_per_logical"] = None
+    closed(tree(ours, clean_summary(2), clean_summary(2)), "fenvix: stored bytes per logical byte unknown")
+
+
+def test_different_plans_close():
+    mg = clean_summary(2)
+    mg["plan"]["digest"] = "other"
+    closed(tree(clean_summary(), clean_summary(2), mg), "did not run the same plan")
+
+
+def test_missing_competitor_closes():
+    closed(tree(clean_summary(), clean_summary(2), None), "no mongo result")
+
+
+def test_workers8_line_checked_when_named():
+    w8_ours = clean_summary()
+    w8_ours["latency_ms"]["save_step"]["p50"] = 50.0
+    closed(tree(clean_summary(), clean_summary(2), clean_summary(2), w8=(w8_ours, clean_summary(2), clean_summary(2))),
+           "agent benchmark --workers 8 save_step p50")
+
+
+def test_takeover_loss_still_closes():
+    closed(tree(clean_summary(), clean_summary(2), clean_summary(2),
+                takeovers={"verdict": "FAIL", "lost": 1, "done": 50, "n": 50, "acknowledged": 500000}), "lost 1")
+
+
+def test_clean_results_open():
+    rc, out = ask(tree(clean_summary(), clean_summary(2), clean_summary(2),
+                       w8=(clean_summary(), clean_summary(2), clean_summary(2))))
+    assert rc == 0 and out.startswith("GATE: OPEN"), out
+
+
+def test_benchmark_report_says_fail_on_failed_results():
+    """benchmark_report.py writes the verdict from the same checks: FAIL, exit 1."""
+    bad = clean_summary()
+    bad["erase"]["threads_left_readable"] = 5
+    bad["ok"] = False
+    d = tree(bad, clean_summary(2), clean_summary(2))
+    os.makedirs(os.path.join(d, "step9", "local"), exist_ok=True)
+    shutil.copy(os.path.join(REPO, "step9", "local", "benchmark_report.py"), os.path.join(d, "step9", "local"))
+    r = subprocess.run([sys.executable, os.path.join(d, "step9", "local", "benchmark_report.py"), "final", COMMIT,
+                        "step9/local/results-t/takeovers-summary-on.json", BASE + "/fenvix/summary.json",
+                        "--takeovers-off", "step9/local/results-t/takeovers-summary-off.json", "--engine-sha256", SHA],
+                       capture_output=True, text=True)
+    shutil.rmtree(d, ignore_errors=True)
+    assert r.returncode == 1 and ": FAIL" in r.stdout and "erased threads still readable 5" in r.stdout, r.stdout + r.stderr
+
+
+
+# ---- bench-local fix round (review of 2026-11-11, fenvix-brain sessions/2026-11-11-review-bench-local) ----
+
+def _gate_skips_cases():
+    """The reviewer's script (evidence/gate_skips.sh), unchanged: cases A, B, C on this checkout."""
+    t = tempfile.mkdtemp()
+    r = subprocess.run(["bash", os.path.join(HERE, "review_bench_local_gate_skips.sh"), REPO], capture_output=True, text=True, cwd=t)
+    shutil.rmtree(t, ignore_errors=True)
+    parts = r.stdout.split("== case ")[1:]
+    return {p[0]: p for p in parts}
+
+
+def test_review_case_a_failed_run_closes():
+    c = _gate_skips_cases()["A"]
+    assert "GATE: CLOSED" in c and "GATE: OPEN" not in c, c
+
+
+def test_review_case_b_none_and_short_close():
+    """F1: ours 10x slower only on resume[write/none] and resume[write/short] (87.6% of the plan's resumes)."""
+    c = _gate_skips_cases()["B"]
+    assert "GATE: CLOSED" in c and "resume[write/none] p50" in c and "resume[write/short] p99" in c, c
+
+
+def test_review_case_c_cold_only_slower_is_not_a_blocker():
+    """F4: cold is reported, not compared (DECISIONS 2026-11-11). The reviewer's fakes carry no settle record, which is
+    now a blocker of its own (F9); every other blocker must be absent, and no cold comparison."""
+    c = _gate_skips_cases()["C"]
+    assert "resume[cold] p50" not in c and "resume[cold] p99" not in c, c
+    lines = [l for l in c.splitlines() if l.strip().startswith("- ") and "settle record" not in l and "server status at the end" not in l and "quaderno.failed UNKNOWN" not in l and "verdict FAIL" not in l
+             and "takeovers log off" not in l and "names no engine binary" not in l and "made by binary" not in l
+             # total review R3 holes 1, 3, 4: the reviewer's fakes predate these records (not about cold)
+             and "--workers 8: no result named" not in l and "S3-WAL fallback are not recorded" not in l
+             and "fewer than the written minimum 50" not in l]
+    assert not lines, c
+
+
+def test_cold_slower_alone_opens():
+    ours = clean_summary()
+    ours["latency_ms"]["resume[cold]"].update(p50=200.0, p99=900.0)
+    rc, out = ask(tree(ours, clean_summary(2), clean_summary(2)))
+    assert rc == 0 and out.startswith("GATE: OPEN"), out
+
+
+def test_cold_missing_still_closes():
+    ours = clean_summary()
+    del ours["latency_ms"]["resume[cold]"]
+    closed(tree(ours, clean_summary(2), clean_summary(2)), "fenvix: operation resume[cold] missing")
+
+
+def test_none_and_short_need_their_minimum():
+    ours = clean_summary()
+    ours["latency_ms"]["resume[write/none]"]["n"] = 79   # the tiny profile
+    closed(tree(ours, clean_summary(2), clean_summary(2)), "resume[write/none] has 79 samples")
+
+
+def test_capped_settle_closes():
+    """F9: a settle that hit its cap leaves the bytes not settled."""
+    ours = clean_summary()
+    ours["settle"].update(idle=False, capped=True, seconds=2700.0)
+    closed(tree(ours, clean_summary(2), clean_summary(2)), "bytes not settled")
+
+
+def test_no_compaction2_publish_closes():
+    """F9, the reviewer's tiny run: idle, but compaction 2 never published (fx/ held a 20-byte marker)."""
+    ours = clean_summary()
+    ours["settle"]["compaction2_published"] = False
+    closed(tree(ours, clean_summary(2), clean_summary(2)), "compaction 2 never published")
+
+
+def test_publish_flag_not_recorded_closes_and_says_so():
+    ours = clean_summary()
+    del ours["settle"]["compaction2_published"]
+    out = closed(tree(ours, clean_summary(2), clean_summary(2)), "whether compaction 2 published is not recorded")
+    assert "never published" not in out, out
+
+
+def test_no_settle_record_closes():
+    ours = clean_summary()
+    del ours["settle"]
+    closed(tree(ours, clean_summary(2), clean_summary(2)), "no settle record")
+
+
+def test_log_fallback_closes():
+    """F5: with two log copies stopped, the engine acknowledged through the S3-WAL fallback; quaderno.failed grew."""
+    ours = clean_summary()
+    ours["server_status_end"]["quaderno"]["failed"] = 3
+    closed(tree(ours, clean_summary(2), clean_summary(2)), "the 3-zone log refused 3 batches")
+
+
+def test_log_failed_unknown_closes():
+    """Fix check F5: an unreadable server status left quaderno.failed None, which counted as 0."""
+    for k in ("server_status_after_write", "server_status_before_cold", "server_status_end"):
+        ours = clean_summary()
+        ours[k] = {"error": "ServerSelectionTimeoutError"}
+        closed(tree(ours, clean_summary(2), clean_summary(2)), f"quaderno.failed UNKNOWN ({k}")
+
+
+def test_client_limited_closes():
+    """F7: a line whose client was the limit is not valid."""
+    w8 = clean_summary(2)
+    w8["client_limited"] = True
+    closed(tree(clean_summary(), clean_summary(2), clean_summary(2), w8=(clean_summary(), w8, clean_summary(2))),
+           "the client was the limit")
+
+
+# ---- total review intermediate 2: N3 and the binary every result names ----
+
+def test_review_n3_log_off_loss_closes():
+    """N3: 37 acknowledged writes lost in the log-off takeovers, everything else clean: the old gate said OPEN."""
+    closed(tree(clean_summary(), clean_summary(2), clean_summary(2),
+                takeovers_off={"verdict": "FAIL", "lost": 37, "done": 50, "n": 50, "acknowledged": 250000,
+                               "engine_binary_sha256": SHA}), "takeovers log off")
+
+
+def test_report_without_log_off_closes():
+    closed(tree(clean_summary(), clean_summary(2), clean_summary(2), report_extra={"takeovers_off": None}),
+           "takeovers log off: no result named")
+
+
+def test_report_without_binary_closes():
+    closed(tree(clean_summary(), clean_summary(2), clean_summary(2), report_extra={"engine_sha256": None}),
+           "names no engine binary")
+
+
+def test_summary_from_another_binary_closes():
+    ours = clean_summary()
+    ours["engine_binary_sha256"] = "c" * 64
+    closed(tree(ours, clean_summary(2), clean_summary(2)), "made by binary cccccccccccccccc")
+
+
+def test_takeovers_from_another_binary_closes():
+    closed(tree(clean_summary(), clean_summary(2), clean_summary(2),
+                takeovers={"verdict": "PASS", "lost": 0, "done": 50, "n": 50, "acknowledged": 500000,
+                           "engine_binary_sha256": "d" * 64}), "takeovers log on: made by binary dddd")
+
+
+def test_takeovers_binary_from_sidecar():
+    d = tree(clean_summary(), clean_summary(2), clean_summary(2))
+    for m in ("on", "off"):
+        f = os.path.join(d, f"step9/local/results-t/takeovers-summary-{m}.json")
+        s = json.load(open(f))
+        del s["engine_binary_sha256"]
+        json.dump(s, open(f, "w"))
+        open(f + ".binary-sha256", "w").write(SHA + "  mongo-server\n")
+    rc, out = ask(d)
+    assert rc == 0 and out.startswith("GATE: OPEN"), out
+
+
+if __name__ == "__main__":
+    fails = 0
+    for name, fn in sorted((k, v) for k, v in dict(globals()).items() if k.startswith("test_")):
+        try:
+            fn()
+            print(f"PASS {name}")
+        except AssertionError as e:
+            fails += 1
+            print(f"FAIL {name}\n{e}")
+    print(f"{'ALL PASS' if not fails else f'{fails} FAILED'}")
+    sys.exit(1 if fails else 0)
+
+
+
+# DECISIONS 2026-11-12, the speed tolerance for the AWS round: on every operation our p50 and our p99 may each be at most
+# 20 ms above the best of PostgreSQL and mongod (the same percentile); stored bytes per logical byte stays not worse.
+def _with(op, q, ours_ms, pg_ms, mongo_ms, tolerance=None):
+    ours, pg, mongo = clean_summary(), clean_summary(), clean_summary()
+    ours["latency_ms"][op][q], pg["latency_ms"][op][q], mongo["latency_ms"][op][q] = ours_ms, pg_ms, mongo_ms
+    return tree(ours, pg, mongo, tolerance=tolerance)
+
+
+def test_speed_tolerance_19_9_ms_above_passes_on_either_percentile():
+    for q in ("p50", "p99"):
+        rc, out = ask(_with("save_step", q, 30.0 + 19.9, 30.0, 45.0))
+        assert rc == 0 and out.startswith("GATE: OPEN"), (q, out)
+        assert "speed tolerance of 20 ms" in out, out
+
+
+def test_speed_tolerance_20_1_ms_above_fails_on_either_percentile():
+    for q in ("p50", "p99"):
+        out = closed(_with("save_step", q, 30.0 + 20.1, 30.0, 45.0), f"save_step {q}: ours 50.10 ms is 20.10 ms above the best (postgres 30.00 ms)")
+        assert "tolerance of 20 ms" in out, out
+
+
+def test_speed_tolerance_is_against_the_best_of_the_two():
+    # 15 ms above mongo but 25 ms above postgres (the best): fails; mongo the best by the same numbers: fails too
+    closed(_with("list", "p99", 55.0, 30.0, 40.0), "list p99: ours 55.00 ms is 25.00 ms above the best (postgres 30.00 ms)")
+    closed(_with("list", "p50", 55.0, 40.0, 30.0), "list p50: ours 55.00 ms is 25.00 ms above the best (mongo 30.00 ms)")
+
+
+def test_speed_tolerance_exactly_20_ms_passes_and_slower_than_both_within_it_opens():
+    rc, out = ask(_with("erase_user", "p99", 28.0 + 20.0, 28.0, 33.0))
+    assert rc == 0 and out.startswith("GATE: OPEN"), out
+
+
+def test_speed_tolerance_applies_to_the_workers8_line_too():
+    ours, pg, mongo = clean_summary(), clean_summary(), clean_summary()
+    ours["latency_ms"]["put"]["p50"] = 2.0 + 20.1
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), w8=(ours, pg, mongo)), "put p50: ours 22.10 ms is 20.10 ms above the best")
+
+
+def test_bytes_stay_not_worse_under_the_speed_tolerance():
+    ours = clean_summary()
+    ours["bytes"]["stored_per_logical"] = 0.301
+    closed(tree(ours, clean_summary(), clean_summary()), "stored bytes per logical byte: ours 0.301 > postgres 0.300")
+
+
+# Output 2 (coordinator, 2026-11-12): the speed tolerance is configurable per operation and percentile
+# (step9/ci/speed_tolerance.json: ms above the best and/or ratio of the best, the larger allowance with both); the
+# committed file and a missing file both mean the DECISIONS 2026-11-12 value.
+def test_committed_tolerance_file_is_the_decisions_default():
+    cfg = json.load(open(os.path.join(REPO, "step9", "ci", "speed_tolerance.json")))
+    assert cfg["default"] == {"p50": {"ms": 20.0, "ratio": None}, "p99": {"ms": 20.0, "ratio": None}}, cfg["default"]
+    assert cfg["ops"] == {}, cfg["ops"]
+    assert "DECISIONS 2026-11-12" in cfg["source"]
+
+
+def test_committed_tolerance_file_behaves_as_no_file():
+    committed = open(os.path.join(REPO, "step9", "ci", "speed_tolerance.json")).read()
+    for q in ("p50", "p99"):
+        rc, out = ask(_with("save_step", q, 30.0 + 19.9, 30.0, 45.0, tolerance=committed))
+        assert rc == 0 and "speed tolerance of 20 ms" in out, (q, out)
+        closed(_with("save_step", q, 30.0 + 20.1, 30.0, 45.0, tolerance=committed), f"save_step {q}: ours 50.10 ms is 20.10 ms above")
+
+
+def _tol(ops=None, default=None):
+    return {"source": "test", "default": default or {"p50": {"ms": 20.0, "ratio": None}, "p99": {"ms": 20.0, "ratio": None}},
+            "ops": ops or {}}
+
+
+def test_per_operation_ms_tolerance_only_for_that_operation_and_percentile():
+    t = _tol({"list": {"p99": {"ms": 30.0, "ratio": None}}})
+    rc, out = ask(_with("list", "p99", 30.0 + 29.9, 30.0, 40.0, tolerance=t))
+    assert rc == 0 and "per operation: list p99 30 ms" in out, out
+    closed(_with("list", "p99", 30.0 + 30.1, 30.0, 40.0, tolerance=t), "list p99: ours 60.10 ms is 30.10 ms above the best (postgres 30.00 ms), more than the tolerance of 30 ms (test)")
+    closed(_with("list", "p50", 30.0 + 20.1, 30.0, 40.0, tolerance=t), "list p50: ours 50.10 ms is 20.10 ms above the best (postgres 30.00 ms), more than the tolerance of 20 ms (test)")
+    closed(_with("save_step", "p99", 30.0 + 20.1, 30.0, 40.0, tolerance=t), "save_step p99: ours 50.10 ms")
+
+
+def test_ratio_tolerance():
+    t = _tol({"time_travel": {"p50": {"ms": None, "ratio": 1.5}}})
+    rc, out = ask(_with("time_travel", "p50", 149.9, 100.0, 120.0, tolerance=t))
+    assert rc == 0 and out.startswith("GATE: OPEN"), out
+    closed(_with("time_travel", "p50", 150.1, 100.0, 120.0, tolerance=t), "time_travel p50: ours 150.10 ms is 50.10 ms above the best (postgres 100.00 ms), more than the tolerance of x1.5 (test)")
+
+
+def test_ms_and_ratio_take_the_larger_allowance():
+    t = _tol({"erase_user": {"p99": {"ms": 20.0, "ratio": 1.1}}})
+    # best 300 ms: x1.1 allows 30 ms, more than 20
+    rc, out = ask(_with("erase_user", "p99", 329.9, 300.0, 310.0, tolerance=t))
+    assert rc == 0, out
+    closed(_with("erase_user", "p99", 330.1, 300.0, 310.0, tolerance=t), "more than the tolerance of 20 ms or x1.1 (the larger) (test)")
+    # best 50 ms: x1.1 allows 5 ms, the 20 ms holds
+    rc, out = ask(_with("erase_user", "p99", 69.9, 50.0, 60.0, tolerance=t))
+    assert rc == 0, out
+    closed(_with("erase_user", "p99", 70.1, 50.0, 60.0, tolerance=t), "erase_user p99: ours 70.10 ms is 20.10 ms above")
+
+
+def test_changed_default_applies_to_every_operation():
+    t = _tol(default={"p50": {"ms": 5.0, "ratio": None}, "p99": {"ms": 40.0, "ratio": None}})
+    closed(_with("put", "p50", 2.0 + 5.1, 2.0, 3.0, tolerance=t), "put p50: ours 7.10 ms is 5.10 ms above the best")
+    rc, out = ask(_with("put", "p99", 2.0 + 39.9, 2.0, 3.0, tolerance=t))
+    assert rc == 0 and "p50 5 ms, p99 40 ms" in out, out
+
+
+def test_invalid_tolerance_file_closes_the_gate():
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), tolerance="{not json"), "speed_tolerance.json: not readable JSON")
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), tolerance=_tol({"list": {"p50": {"ms": -1, "ratio": None}}})),
+           "list p50: ms must be >= 0 and ratio >= 1")
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), tolerance=_tol({"list": {"p50": {"ms": None, "ratio": 0.9}}})),
+           "ratio >= 1")
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), tolerance=_tol({"list": {"p50": {"ms": None, "ratio": None}}})),
+           "list p50 has neither ms nor ratio")
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), tolerance=_tol({"lsit": {"p50": {"ms": 30, "ratio": None}}})),
+           "unknown operation 'lsit'")
+
+
+def test_resume_cold_is_never_compared_even_with_a_tolerance():
+    ours = clean_summary()
+    ours["latency_ms"]["resume[cold]"]["p99"] = 5000.0
+    t = _tol({"resume[cold]": {"p99": {"ms": 0.0, "ratio": None}}})
+    rc, out = ask(tree(ours, clean_summary(), clean_summary(), tolerance=t))
+    assert rc == 0 and out.startswith("GATE: OPEN"), out
+
+
+def test_cold_below_its_written_minimum_closes():
+    # DECISIONS 2026-11-11 (F4): resume[cold] is not compared, but it must be present with its minimum of samples (200)
+    ours = clean_summary()
+    ours["latency_ms"]["resume[cold]"]["n"] = 199
+    closed(tree(ours, clean_summary(), clean_summary()), "fenvix: operation resume[cold] has 199 samples, fewer than the written minimum 200")
+
+
+# total review R3 (2026-11-12), the reviewer's probes P1/P2 (hole 1), P4 (hole 3), P7 (hole 4)
+def test_hole1_a_report_without_the_workers8_line_closes():
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), w8=False),
+           "agent benchmark --workers 8: no result named in the report (DECISIONS 2026-11-12")
+
+
+def test_hole1_a_slow_workers8_line_closes_and_leaving_it_out_does_not_open():
+    ours = clean_summary()
+    ours["latency_ms"]["save_step"]["p99"] += 500.0
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), w8=(ours, clean_summary(), clean_summary())), "save_step p99")
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), w8=False), "--workers 8: no result named")
+
+
+def test_hole3_fewer_than_50_takeovers_close():
+    tk = {"verdict": "PASS", "lost": 0, "done": 1, "n": 1, "acknowledged": 1000, "engine_binary_sha256": SHA, "log_fallback": {"batches": 0}}
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), takeovers=tk), "1 takeovers, fewer than the written minimum 50")
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), takeovers_off=dict(tk)), "takeovers log off: takeovers")
+
+
+def test_hole4_log_fallback_with_the_log_on_closes_and_unrecorded_closes():
+    tk = {"verdict": "PASS", "lost": 0, "done": 50, "n": 50, "acknowledged": 500000, "engine_binary_sha256": SHA, "log_fallback": {"batches": 3}}
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), takeovers=tk), "3 write batches took the S3-WAL fallback with the log on")
+    tk2 = {k: v for k, v in tk.items() if k != "log_fallback"}
+    closed(tree(clean_summary(), clean_summary(), clean_summary(), takeovers=tk2), "S3-WAL fallback are not recorded")
+
+
+def test_hole4_the_log_off_run_may_use_the_s3_wal_path():
+    # with the log off the S3 WAL is the path itself: its batches are not a blocker
+    tk = {"verdict": "PASS", "lost": 0, "done": 50, "n": 50, "acknowledged": 500000, "engine_binary_sha256": SHA, "log_fallback": {"batches": 9}}
+    rc, out = ask(tree(clean_summary(), clean_summary(), clean_summary(), takeovers_off=tk))
+    assert rc == 0 and out.startswith("GATE: OPEN") and "takeovers at least 50 per log mode" in out, out

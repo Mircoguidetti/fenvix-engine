@@ -1,0 +1,1 @@
+--envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts --replica-set rs0 --listen 127.0.0.1:27017

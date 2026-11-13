@@ -1,0 +1,86 @@
+== 0. docker image of the machines, MinIO
+== 1. fake Atlas and the shrunk kitchen (fake_atlas.sh)
+== round load-atlas: {"mode": "run", "data": "100gb", "log": "m7i.large", "phases": ["load"], "pantry": "keep", "ballast_slice": [0, 0], "ceiling_min": 60}
+mode=run
+engine=integration
+data=100gb
+pantry_mode=keep
+vcpu_peak=8
+vcpu_peaks={'load': 8}
+x86=1
+arm=0
+run.py: code 0 in 256 s; outcome: FINITO; {"load": "LOADED", "client": "LOADED_ONLY"}
+2026-11-09T17:12:04Z SPESA: 0.19 $ so far at 4 minutes (upper bound; machines 0.03 $, alive: none; S3 0.16 $ from the servers' counters, storage and margin), cap 5.00 $
+teardown: code 0
+secrets check: no secret in the files (2 pieces searched, password included)
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+kept pantry: fenvix-kitchen-pantry-53528 (still there: True)
+== round load-ballast: {"mode": "run", "data": "100gb", "log": "m7i.large", "phases": ["load"], "pantry": "fenvix-kitchen-pantry-53528", "ceiling_min": 60}
+mode=run
+engine=integration
+data=100gb
+pantry_mode=existing
+vcpu_peak=8
+vcpu_peaks={'load': 8}
+x86=1
+arm=0
+run.py: code 0 in 86 s; outcome: FINITO; {"ballast": "BALLAST_LOADED"}
+2026-11-09T17:14:28Z SPESA: 0.15 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: none; S3 0.14 $ from the servers' counters, storage and margin), cap 5.00 $
+teardown: code 0
+secrets check: no secret in the files (2 pieces searched, password included)
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+== round measure: {"mode": "run", "data": "100gb", "log": "m7i.large", "phases": ["measure", "extras"], "pantry": "fenvix-kitchen-pantry-53528", "ceiling_min": 150}
+mode=run
+engine=integration
+data=100gb
+pantry_mode=existing
+vcpu_peak=10
+vcpu_peaks={'measure (m30)': 10, 'extras': 10, 'agent-bench': 10}
+x86=1
+arm=0
+run.py: code 0 in 1151 s; outcome: FINITO; {"m30": "FINITO_MACCHINA_LIMITE", "client": "FINITO_MACCHINA_LIMITE", "extras": "s3-first-byte:rc=0 sealed-run:rc=0 log-ack:rc=0 ballast-rounds:rc=0 takeovers:rc=0", "agent": "agent-bench:rc=0"}
+2026-11-09T17:34:33Z SPESA: 0.78 $ so far at 19 minutes (upper bound; machines 0.18 $, alive: none; S3 0.60 $ from the servers' counters, storage and margin), cap 5.00 $
+teardown: code 0
+secrets check: no secret in the files (2 pieces searched, password included)
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+== drop-pantry: the kept pantry goes
+kept pantry deleted: fenvix-kitchen-pantry-53528
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check after drop-pantry: code 0
+== checks
+OK   job A (Atlas databases): FINITO {'load': 'LOADED', 'client': 'LOADED_ONLY'}
+OK   job A: the client's load finished with code 0
+OK   job A: client package loads (LOAD=1)
+OK   job B (ballast): FINITO {'ballast': 'BALLAST_LOADED'}
+OK   job B: filler BALLAST: DONE
+OK   job C outcome FINITO ({"m30": "FINITO_MACCHINA_LIMITE", "client": "FINITO_MACCHINA_LIMITE", "extras": "s3-first-byte:rc=0 sealed-run:rc=0 log-ack:rc=0 ballast-rounds:rc=0 takeovers:rc=0", "agent": "agent-bench:rc=0"})
+OK   job A: vCPU at once by phase {'load': 8} (local types; on AWS the same command is at most 8)
+OK   job B: vCPU at once by phase {'load': 8} (local types; on AWS the same command is at most 8)
+OK   job C: vCPU at once by phase {'measure (m30)': 10, 'extras': 10, 'agent-bench': 10} (local types; on AWS the same command is at most 8)
+OK   SPESA lines: 71, last ('0.78', '19')
+OK   log copies ready in zones ['eu-west-1a', 'eu-west-1b', 'eu-west-1c']
+OK   log-0 runs on the cook's machine (same private IP)
+OK   server-1 started with the 3-zone log: yes
+OK   spare started with the 3-zone log: yes
+OK   client: PLANS: SAME (same clients and windows as the fake Atlas)
+OK   client: founder's script and code-irlanda files unchanged (md5)
+OK   client: m30 program on cook 1: ('m7i.large', 'FINITO_MACCHINA_LIMITE')
+OK   client: reads against the plan: READS: ONE TO ONE (23 phases, 272 planned reads, 272 clients in 5 databases, all served)
+OK   extras s3-first-byte: program s3-first-byte: code 0 in 1 s: S3-FIRST-BYTE: DONE
+OK   extras sealed-run: program sealed-run: code 0 in 2 s: SEALED-RUN: DONE (0 wrong of 60)
+OK   extras log-ack: program log-ack: code 0 in 55 s: LOG-ACK: DONE
+OK   extras ballast-rounds: program ballast-rounds: code 0 in 44 s: 2026-11-09T17:20:51Z programma finito: errori 0; macchina mai il limite
+OK   extras takeovers: program takeovers: code 0 in 625 s: TAKEOVERS: FAIL (3/3 takeovers, 343125 acknowledged, 23282 lost (missing by read {'at_once': 23282, 'after_settle': 23282, 'after_clean_restart
+OK   sealed run: wrong rows 0
+FAIL takeovers: FAIL, 3/3 done, acknowledged 343125, lost 23282, confirmed after a kill 0, p50 17.735 s
+OK   agent-bench (our cook, Postgres machine): program agent-bench: code 0 in 64 s: AGENT-BENCH: DONE (fenvix, postgres)
+OK   agent-bench fenvix: summary.json present
+OK   agent-bench postgres: summary.json present
+OK   pgbox: PostgreSQL ready on 5432
+OK   teardown ran after every job
+LOCAL ROUND: FAIL (1)
+total time: 1669 s
+EXIT 0

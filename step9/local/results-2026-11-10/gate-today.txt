@@ -1,0 +1,36 @@
+GATE: CLOSED (34 blockers; RULES.md 8-9: no AWS run, not even a pilot)
+  - no local benchmark report for engine integration-2 at commit 998ada23d4b3df589b0101afcd36781f65abe0be (step9/local/benchmark-report-<commit>.json, made by step9/local/benchmark_report.py on that commit)
+  - (newest local results, another commit) takeovers (step9/local/results-2026-11-09/takeovers-summary-run5-50.json): verdict FAIL, 50/50 done, lost 1769925 of 2703167 acknowledged writes (rule 8: must be 0)
+  - (newest local results, another commit) agent benchmark put p50: ours 6.00 ms > postgres 3.09 ms
+  - (newest local results, another commit) agent benchmark put p99: ours 21.70 ms > postgres 12.93 ms
+  - (newest local results, another commit) agent benchmark put_writes p50: ours 4.91 ms > postgres 1.76 ms
+  - (newest local results, another commit) agent benchmark put_writes p99: ours 21.95 ms > postgres 9.04 ms
+  - (newest local results, another commit) agent benchmark resume[read] p50: ours 5.64 ms > postgres 1.23 ms
+  - (newest local results, another commit) agent benchmark resume[read] p99: ours 11.74 ms > postgres 9.13 ms
+  - (newest local results, another commit) agent benchmark resume[write/first] p50: ours 0.86 ms > postgres 0.37 ms
+  - (newest local results, another commit) agent benchmark resume[write/first] p99: ours 3.22 ms > postgres 2.54 ms
+  - (newest local results, another commit) agent benchmark resume[write/long] p50: ours 7.21 ms > postgres 0.80 ms
+  - (newest local results, another commit) agent benchmark resume[write/long] p99: ours 11.14 ms > postgres 1.79 ms
+  - (newest local results, another commit) agent benchmark list p50: ours 142.84 ms > postgres 26.42 ms
+  - (newest local results, another commit) agent benchmark list p99: ours 1330.50 ms > postgres 958.21 ms
+  - (newest local results, another commit) agent benchmark list_limit10 p50: ours 17.70 ms > postgres 7.50 ms
+  - (newest local results, another commit) agent benchmark erase_user p50: ours 70.77 ms > postgres 6.63 ms
+  - (newest local results, another commit) agent benchmark erase_user p99: ours 70.77 ms > postgres 6.63 ms
+  - (newest local results, another commit) agent benchmark stored bytes per logical byte: ours 2.082 > postgres 0.386
+  - (newest local results, another commit) agent benchmark put p50: ours 6.00 ms > mongo 1.45 ms
+  - (newest local results, another commit) agent benchmark put p99: ours 21.70 ms > mongo 4.53 ms
+  - (newest local results, another commit) agent benchmark put_writes p50: ours 4.91 ms > mongo 1.64 ms
+  - (newest local results, another commit) agent benchmark put_writes p99: ours 21.95 ms > mongo 5.96 ms
+  - (newest local results, another commit) agent benchmark resume[read] p50: ours 5.64 ms > mongo 1.97 ms
+  - (newest local results, another commit) agent benchmark resume[read] p99: ours 11.74 ms > mongo 6.86 ms
+  - (newest local results, another commit) agent benchmark resume[write/first] p50: ours 0.86 ms > mongo 0.68 ms
+  - (newest local results, another commit) agent benchmark resume[write/first] p99: ours 3.22 ms > mongo 0.98 ms
+  - (newest local results, another commit) agent benchmark resume[write/long] p50: ours 7.21 ms > mongo 2.02 ms
+  - (newest local results, another commit) agent benchmark resume[write/long] p99: ours 11.14 ms > mongo 2.75 ms
+  - (newest local results, another commit) agent benchmark list p50: ours 142.84 ms > mongo 53.12 ms
+  - (newest local results, another commit) agent benchmark list p99: ours 1330.50 ms > mongo 966.31 ms
+  - (newest local results, another commit) agent benchmark list_limit10 p50: ours 17.70 ms > mongo 15.18 ms
+  - (newest local results, another commit) agent benchmark erase_user p50: ours 70.77 ms > mongo 11.21 ms
+  - (newest local results, another commit) agent benchmark erase_user p99: ours 70.77 ms > mongo 11.21 ms
+  - (newest local results, another commit) agent benchmark stored bytes per logical byte: ours 2.082 > mongo 0.474
+rc=1

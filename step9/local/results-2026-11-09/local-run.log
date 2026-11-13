@@ -1,0 +1,98 @@
+== 0. docker image of the machines, MinIO
+== 1. fake Atlas and the shrunk kitchen (fake_atlas.sh)
+== round load-atlas: {"mode": "run", "data": "100gb", "log": "m7i.large", "phases": ["load"], "pantry": "keep", "ballast_slice": [0, 0], "ceiling_min": 60}
+mode=run
+engine=integration
+data=100gb
+pantry_mode=keep
+vcpu_peak=8
+vcpu_peaks={'load': 8}
+x86=1
+arm=0
+run.py: code 0 in 255 s; outcome: FINITO; {"load": "LOADED", "client": "LOADED_ONLY"}
+2026-11-09T16:17:39Z SPESA: 0.19 $ so far at 4 minutes (upper bound; machines 0.03 $, alive: none; S3 0.17 $ from the servers' counters, storage and margin), cap 5.00 $
+teardown: code 0
+secrets check: no secret in the files (2 pieces searched, password included)
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+kept pantry: fenvix-kitchen-pantry-42069 (still there: True)
+== round load-ballast: {"mode": "run", "data": "100gb", "log": "m7i.large", "phases": ["load"], "pantry": "fenvix-kitchen-pantry-42069", "ceiling_min": 60}
+mode=run
+engine=integration
+data=100gb
+pantry_mode=existing
+vcpu_peak=8
+vcpu_peaks={'load': 8}
+x86=1
+arm=0
+run.py: code 0 in 84 s; outcome: FINITO; {"ballast": "BALLAST_LOADED"}
+2026-11-09T16:19:34Z SPESA: 0.15 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: none; S3 0.14 $ from the servers' counters, storage and margin), cap 5.00 $
+teardown: code 0
+secrets check: no secret in the files (2 pieces searched, password included)
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+== round measure: {"mode": "run", "data": "100gb", "log": "m7i.large", "phases": ["measure", "extras"], "pantry": "fenvix-kitchen-pantry-42069", "ceiling_min": 150}
+mode=run
+engine=integration
+data=100gb
+pantry_mode=existing
+vcpu_peak=10
+vcpu_peaks={'measure (m30)': 10, 'extras': 10}
+x86=1
+arm=0
+run.py: code 0 in 2520 s; outcome: FINITO; {"m30": "FINITO", "client": "FINITO", "extras": "s3-first-byte:rc=0 sealed-run:rc=0 log-ack:rc=0 ballast-rounds:rc=0 takeovers:rc=0"}
+2026-11-09T17:02:04Z SPESA: 1.00 $ so far at 41 minutes (upper bound; machines 0.40 $, alive: none; S3 0.60 $ from the servers' counters, storage and margin), cap 5.00 $
+teardown: code 0
+secrets check: no secret in the files (2 pieces searched, password included)
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+== drop-pantry: the kept pantry goes
+kept pantry deleted: fenvix-kitchen-pantry-42069
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check after drop-pantry: code 0
+== round block: {"mode": "run", "data": "atlas", "log": "m7i.large", "phases": ["load"], "pantry": "new", "spend_cap": 0.05, "programs": ["m30"]}
+mode=run
+engine=integration
+data=atlas
+pantry_mode=new
+vcpu_peak=8
+vcpu_peaks={'load': 8}
+x86=1
+arm=0
+run.py: code 1 in 20 s; outcome: BLOCCO_SPESA; {}
+2026-11-09T17:02:54Z BLOCCO: estimated spend 0.61 $ >= 0.05 $: terminating every machine, the teardown follows
+2026-11-09T17:02:56Z outcome: BLOCCO_SPESA; {}
+teardown: code 0
+secrets check: no secret in the files (2 pieces searched, password included)
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+== checks
+OK   job A (Atlas databases): FINITO {'load': 'LOADED', 'client': 'LOADED_ONLY'}
+OK   job A: the client's load finished with code 0
+OK   job A: client package loads (LOAD=1)
+OK   job B (ballast): FINITO {'ballast': 'BALLAST_LOADED'}
+OK   job B: filler BALLAST: DONE
+OK   job C outcome FINITO ({"m30": "FINITO", "client": "FINITO", "extras": "s3-first-byte:rc=0 sealed-run:rc=0 log-ack:rc=0 ballast-rounds:rc=0 takeovers:rc=0"})
+OK   job A: vCPU at once by phase {'load': 8} (local types; on AWS the same command is at most 8)
+OK   job B: vCPU at once by phase {'load': 8} (local types; on AWS the same command is at most 8)
+OK   job C: vCPU at once by phase {'measure (m30)': 10, 'extras': 10} (local types; on AWS the same command is at most 8)
+OK   SPESA lines: 161, last ('1.00', '41')
+OK   log copies ready in zones ['eu-west-1a', 'eu-west-1b', 'eu-west-1c']
+OK   log-0 runs on the cook's machine (same private IP)
+OK   server-1 started with the 3-zone log: yes
+OK   spare started with the 3-zone log: yes
+OK   client: PLANS: SAME (same clients and windows as the fake Atlas)
+OK   client: founder's script and code-irlanda files unchanged (md5)
+OK   client: m30 program on cook 1: ('m7i.large', 'FINITO')
+OK   client: reads against the plan: READS: ONE TO ONE (23 phases, 272 planned reads, 272 clients in 5 databases, all served)
+OK   extras s3-first-byte: program s3-first-byte: code 0 in 1 s: S3-FIRST-BYTE: DONE
+OK   extras sealed-run: program sealed-run: code 0 in 2 s: SEALED-RUN: DONE (0 wrong of 60)
+OK   extras log-ack: program log-ack: code 0 in 58 s: LOG-ACK: DONE
+OK   extras ballast-rounds: program ballast-rounds: code 0 in 45 s: 2026-11-09T16:25:33Z programma finito: errori 0; macchina mai il limite
+OK   extras takeovers: program takeovers: code 0 in 2102 s: TAKEOVERS: FAIL (10/10 takeovers, 1039087 acknowledged, 45890 lost (missing by read {'at_once': 45890, 'after_settle': 45890, 'after_clean_res
+OK   sealed run: wrong rows 0
+FAIL takeovers: FAIL, 10/10 done, acknowledged 1039087, lost 45890, confirmed after a kill 0, p50 17.859 s
+OK   teardown ran after every job
+LOCAL ROUND: FAIL (1)
+total time: 3004 s
+EXIT 0

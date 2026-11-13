@@ -1,0 +1,17 @@
+{
+ "databases": {
+  "app_data_b01": {
+   "reads": 12571,
+   "wrong": 0,
+   "reference_documents": 393464,
+   "sampled_customers": 35,
+   "q2_tickets_found": "10240/10240",
+   "seconds": 1265.9
+  }
+ },
+ "reads": 12571,
+ "wrong": 0,
+ "examples": [],
+ "whole_reads_sorted_by_the_checker": 2,
+ "engine_sum_precision": 4
+}

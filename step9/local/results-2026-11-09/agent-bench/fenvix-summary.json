@@ -1,0 +1,277 @@
+{
+  "note": "LOCAL runs are validation, not results: one sandbox, client and database on the same machine, MinIO instead of S3. Only the AWS round (runbooks/) produces comparable numbers.",
+  "target": "fenvix",
+  "label": "our kitchen: cook m7i.large with the 3-zone log, eu-west-1",
+  "profile": "small",
+  "seed": 42,
+  "workers": 1,
+  "plan": {
+    "threads": 41,
+    "turns": 599,
+    "digest": "1618df2b0b847193"
+  },
+  "client": {
+    "python": "3.12.3",
+    "host": "agent"
+  },
+  "write": {
+    "seconds": 20.442,
+    "errors": [],
+    "steps_per_second": 124.79
+  },
+  "read": {
+    "threads_read": 30,
+    "inconsistencies": 0
+  },
+  "erase": {
+    "users_erased": 2,
+    "threads_erased": 3,
+    "threads_left_readable": 0
+  },
+  "latency_ms": {
+    "delete_thread": {
+      "n": 3,
+      "p50": 43.181,
+      "p90": 43.877,
+      "p99": 43.877,
+      "max": 43.877,
+      "mean": 32.352
+    },
+    "erase_user": {
+      "n": 2,
+      "p50": 53.971,
+      "p90": 53.971,
+      "p99": 53.971,
+      "max": 53.971,
+      "mean": 48.672
+    },
+    "list": {
+      "n": 30,
+      "p50": 146.569,
+      "p90": 791.675,
+      "p99": 1658.531,
+      "max": 1658.531,
+      "mean": 264.041
+    },
+    "list_limit10": {
+      "n": 30,
+      "p50": 19.563,
+      "p90": 49.37,
+      "p99": 50.151,
+      "max": 50.151,
+      "mean": 21.815
+    },
+    "put": {
+      "n": 2551,
+      "p50": 3.836,
+      "p90": 6.417,
+      "p99": 21.855,
+      "max": 409.715,
+      "mean": 4.987
+    },
+    "put[chat]": {
+      "n": 2290,
+      "p50": 3.757,
+      "p90": 6.44,
+      "p99": 21.926,
+      "max": 409.715,
+      "mean": 4.941
+    },
+    "put[coding]": {
+      "n": 261,
+      "p50": 4.664,
+      "p90": 6.236,
+      "p99": 21.728,
+      "max": 116.962,
+      "mean": 5.39
+    },
+    "put_writes": {
+      "n": 1952,
+      "p50": 3.788,
+      "p90": 6.722,
+      "p99": 22.024,
+      "max": 155.602,
+      "mean": 4.901
+    },
+    "resume[erase_verify]": {
+      "n": 3,
+      "p50": 1.428,
+      "p90": 1.465,
+      "p99": 1.465,
+      "max": 1.465,
+      "mean": 1.26
+    },
+    "resume[read]": {
+      "n": 30,
+      "p50": 6.373,
+      "p90": 10.6,
+      "p99": 10.846,
+      "max": 10.846,
+      "mean": 6.3
+    },
+    "resume[write/first]": {
+      "n": 41,
+      "p50": 1.075,
+      "p90": 3.669,
+      "p99": 3.988,
+      "max": 3.988,
+      "mean": 1.703
+    },
+    "resume[write/long]": {
+      "n": 8,
+      "p50": 7.724,
+      "p90": 17.696,
+      "p99": 17.696,
+      "max": 17.696,
+      "mean": 8.659
+    },
+    "resume[write/none]": {
+      "n": 536,
+      "p50": 3.285,
+      "p90": 5.514,
+      "p99": 11.398,
+      "max": 22.475,
+      "mean": 3.777
+    },
+    "resume[write/short]": {
+      "n": 14,
+      "p50": 2.618,
+      "p90": 3.921,
+      "p99": 7.266,
+      "max": 7.266,
+      "mean": 3.05
+    },
+    "save_step": {
+      "n": 2551,
+      "p50": 6.956,
+      "p90": 11.917,
+      "p99": 40.496,
+      "max": 551.457,
+      "mean": 8.734
+    },
+    "save_step[chat]": {
+      "n": 2290,
+      "p50": 6.805,
+      "p90": 11.9,
+      "p99": 40.496,
+      "max": 551.457,
+      "mean": 8.593
+    },
+    "save_step[coding]": {
+      "n": 261,
+      "p50": 8.565,
+      "p90": 12.235,
+      "p99": 43.106,
+      "max": 234.139,
+      "mean": 9.968
+    },
+    "time_travel": {
+      "n": 90,
+      "p50": 2.499,
+      "p90": 3.914,
+      "p99": 7.074,
+      "max": 7.074,
+      "mean": 2.696
+    }
+  },
+  "bytes": {
+    "checkpoints": 2551,
+    "put_writes_calls": 1952,
+    "checkpoint_bytes": 139707606,
+    "writes_bytes": 2336628,
+    "message_payload_bytes_all_checkpoints": 138599529,
+    "unique_message_bytes": 2359166,
+    "logical_total": 142044234,
+    "stored": null,
+    "stored_from": "UNKNOWN (no S3 access given)",
+    "stored_per_logical": null,
+    "stored_per_checkpoint": null
+  },
+  "sizes": {
+    "dbStats": {
+      "objects": 5856,
+      "dataSize": 143726178,
+      "storageSize": 143726178,
+      "indexSize": 1162919,
+      "totalSize": 144889097
+    },
+    "collStats": {
+      "checkpoint_writes": {
+        "count": 3305,
+        "size": 3252402,
+        "storageSize": 3252402,
+        "totalIndexSize": 770065
+      },
+      "checkpoints": {
+        "count": 2551,
+        "size": 140473776,
+        "storageSize": 140473776,
+        "totalIndexSize": 392854
+      }
+    },
+    "s3": null,
+    "stored_bytes": null,
+    "stored_from": "UNKNOWN (no S3 access given)",
+    "serverStatus_s3": {
+      "get": 3612,
+      "getRange": 9253,
+      "head": 320,
+      "list": 1059,
+      "put": 713,
+      "multipartPart": 27,
+      "copy": 0,
+      "delete": 1042,
+      "getBytes": 1018963989,
+      "putBytes": 1021138921
+    }
+  },
+  "sizes_after_erase": {
+    "dbStats": {
+      "objects": 5208,
+      "dataSize": 123501503,
+      "storageSize": 123501503,
+      "indexSize": 1033028,
+      "totalSize": 124534531
+    },
+    "collStats": {
+      "checkpoint_writes": {
+        "count": 2924,
+        "size": 2804999,
+        "storageSize": 2804999,
+        "totalIndexSize": 681292
+      },
+      "checkpoints": {
+        "count": 2284,
+        "size": 120696504,
+        "storageSize": 120696504,
+        "totalIndexSize": 351736
+      }
+    },
+    "s3": null,
+    "stored_bytes": null,
+    "stored_from": "UNKNOWN (no S3 access given)",
+    "serverStatus_s3": {
+      "get": 3613,
+      "getRange": 9254,
+      "head": 320,
+      "list": 1059,
+      "put": 713,
+      "multipartPart": 27,
+      "copy": 0,
+      "delete": 1043,
+      "getBytes": 1018972613,
+      "putBytes": 1021138921
+    }
+  },
+  "s3_put_requests_during_write": 128,
+  "delta_test": {
+    "test": "agent checkpoint delta test",
+    "target": "fenvix",
+    "stored_bytes_source": "UNKNOWN until fenvixSstInfo exists (compaction 2 steps 4-8)",
+    "threads": 41,
+    "logical_bytes": 142044234,
+    "unique_bytes": 2359166,
+    "stored_bytes": null
+  },
+  "ok": true
+}

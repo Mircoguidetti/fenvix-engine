@@ -123,3 +123,99 @@ async fn generated_rows_read_back_exactly_with_slatedb_rows_and_later_writes() {
     t2.abandon().await;
     ENABLED.store(false, Relaxed);
 }
+
+/// generator-1tb: the customer space written by several writers (each its own groups, in key order once put together)
+/// and the shared rows cut into key partitions, merged in parallel with SlateDB's rows: every row reads back exactly, in
+/// this process and after a cold open; a partition whose rows straddle the customer space, or a generated row outside
+/// its partition, is refused.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn generated_parts_from_several_writers_read_back_exactly() {
+    use super::build::{publish_generated_parts, PartRows};
+    let _s = SERIAL.lock().await;
+    ENABLED.store(true, Relaxed);
+    PUBLISH_EVERY.store(0, Relaxed);
+    T_PIN_MS.store(T_PIN, Relaxed);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let lc = Lifecycle::new(Arc::new(CountingStore::new(Arc::clone(&store))), None);
+    let mut t = lc.create("fx-gen-parts").await.unwrap();
+    let mut model: BTreeMap<Vec<u8>, Vec<u8>> = BTreeMap::new();
+    let cat = vec![(b"meta/collections".to_vec(), b"msgs".to_vec()), (b"meta/nat/msgs".to_vec(), b"old".to_vec()), (b"zz/catalog".to_vec(), b"z".to_vec())];
+    t.apply(cat.iter().map(|(k, v)| Op::Put(k.clone(), v.clone())).collect()).await.unwrap();
+    model.extend(cat);
+    let x0 = begin(&mut t).await;
+    let (st, id, epoch) = t.fx_ballast_target().unwrap();
+    // three writers, each with a slice of whole customers; a planned cut inside the second slice
+    let mut direct = Vec::new();
+    let mut direct_last = None;
+    for (w, (lo, hi)) in [(0usize, 20usize), (20, 45), (45, 60)].into_iter().enumerate() {
+        let o = build::BuildOpts { group_bytes: u64::MAX, ..opts() };
+        let mut gw = GroupWriter::new(&st, &id, x0, epoch, &o, (w as u32 + 1) * 1000, false);
+        for c in lo..hi {
+            if c == 30 {
+                gw.cut();
+            }
+            for i in 0..40 {
+                let (k, v) = (ckey(c, i), format!("doc {c} {i} {}", "x".repeat(40)).into_bytes());
+                gw.add(&k, x0, &crate::runfmt::live(&v)).await.unwrap();
+                model.insert(k, v);
+            }
+        }
+        direct_last = gw.last_key().map(|k| k.to_vec());
+        let g = gw.finish().await.unwrap();
+        assert_eq!(g.len(), if w == 1 { 2 } else { 1 }, "the planned cut makes a group, bytes do not");
+        direct.extend(g);
+    }
+    // the shared rows, cut at bounds; the counter meta/nat/msgs is generated (newer) and wins over SlateDB's
+    let bounds: Vec<Vec<u8>> = vec![Vec::new(), b"loc/".to_vec(), b"meta/".to_vec(), b"u/".to_vec()];
+    let mut shared: Vec<(Vec<u8>, Vec<u8>)> = Vec::new();
+    for i in 0..500 {
+        shared.push((format!("doc/plain/{i:05}").into_bytes(), format!("p{i}").into_bytes()));
+        shared.push((format!("loc/msgs/{i:05}").into_bytes(), format!("l{i}").into_bytes()));
+    }
+    shared.push((b"meta/nat/msgs".to_vec(), b"new".to_vec()));
+    shared.push((b"zz/generated".to_vec(), b"g".to_vec()));
+    shared.sort();
+    for (k, v) in &shared {
+        model.insert(k.clone(), v.clone());
+    }
+    let parts_of = |rows: &Vec<(Vec<u8>, Vec<u8>)>, bounds: &Vec<Vec<u8>>| -> Vec<PartRows> {
+        let mut by: Vec<Vec<(Vec<u8>, Vec<u8>)>> = vec![Vec::new(); bounds.len()];
+        for (k, v) in rows {
+            by[bounds.partition_point(|b| b <= k) - 1].push((k.clone(), v.clone()));
+        }
+        bounds.iter().zip(by).map(|(lo, r)| PartRows { lo: lo.clone(), rows: Box::new(VecRows(r.into_iter())) }).collect()
+    };
+    // refused: a partition that holds rows on both sides of the customer space (no bound at "u/")
+    let bad_bounds: Vec<Vec<u8>> = vec![Vec::new(), b"loc/".to_vec()];
+    {
+        let db = t.writer_db_for_tests();
+        let e = publish_generated_parts(db, &st, &id, None, t.env_for_tests().unwrap(), epoch, &opts(), x0, direct.clone(), direct_last.clone(), parts_of(&shared, &bad_bounds), 2).await;
+        assert!(format!("{:#}", e.err().expect("must be refused")).contains("both sides"));
+        // refused: a generated row outside its partition's range
+        let mut wrong = parts_of(&shared, &bounds);
+        wrong[1] = PartRows { lo: b"loc/".to_vec(), rows: Box::new(VecRows(vec![(b"a/before".to_vec(), b"x".to_vec())].into_iter())) };
+        let e = publish_generated_parts(db, &st, &id, None, t.env_for_tests().unwrap(), epoch, &opts(), x0, direct.clone(), direct_last.clone(), wrong, 2).await;
+        assert!(format!("{:#}", e.err().expect("must be refused")).contains("outside its range"));
+    }
+    let rep = t.fx_publish_generated_parts(&opts(), x0, direct, direct_last, parts_of(&shared, &bounds), 3).await.unwrap();
+    assert!(rep.groups >= 7 && rep.x_d >= x0, "{rep:?}");
+    let marker = crate::envelope::MARKER.to_vec();
+    let check = |got: BTreeMap<Vec<u8>, Vec<u8>>, model: &BTreeMap<Vec<u8>, Vec<u8>>| {
+        let mut got = got;
+        got.remove(&marker);
+        assert_eq!(&got, model);
+    };
+    for (k, v) in &model {
+        assert_eq!(t.get(k).await.unwrap().as_deref(), Some(&v[..]), "{}", String::from_utf8_lossy(k));
+    }
+    check(as_map(t.scan_range(b"", None, false, None, 1 << 20).await.unwrap()), &model);
+    view::clear_cache();
+    let lc2 = Lifecycle::new(Arc::new(CountingStore::new(Arc::clone(&store))), None);
+    t.close().await.unwrap();
+    let mut t2 = lc2.wake("fx-gen-parts").await.unwrap();
+    check(as_map(t2.scan_range(b"", None, false, None, 1 << 20).await.unwrap()), &model);
+    t2.apply(vec![Op::Put(ckey(31, 5), b"later".to_vec())]).await.unwrap();
+    assert_eq!(t2.get(&ckey(31, 5)).await.unwrap().as_deref(), Some(&b"later"[..]));
+    t2.abandon().await;
+    ENABLED.store(false, Relaxed);
+}

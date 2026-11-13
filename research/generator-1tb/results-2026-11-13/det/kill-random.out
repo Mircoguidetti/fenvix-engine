@@ -1,0 +1,3 @@
+research/generator-1tb/determinism.sh: line 28: 20959 Killed                  env "$@" $E/target/release/mongo-server --store s3 --bucket $B --region us-east-1 --endpoint http://127.0.0.1:9000 $OPTS --ballast $W/plan-$N.json >> $W/$N.log 2>&1
+kill-random-20945 {"bytes":6263075971,"db":"app_data_b01","deleted":0,"groups":7,"groups_digest":"dbf9d6f26b11e2a93fbe471f36e327fc","rows":39968518,"rows_digest":"e81c3240083cec9c9d728f682b2d1741","rows_digest_without_collection_uuids":"c5f11743d8b0e8ca123e57ab0c19d645","rows_digest_without_seq":"63c906905ffc64705b0f3e55e793dc5d","version":1,"x_d":11}
+SAME as the reference

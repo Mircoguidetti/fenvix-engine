@@ -1200,7 +1200,7 @@ async fn run() -> Result<()> {
     }
     if let Some(plan) = &args.ballast {
         // the step 9 ballast generator: this process's options, no listener, no control layer
-        let r = ballast::run(Arc::clone(&server), plan).await;
+        let r = ballast::run(Arc::clone(&server), plan, scratch_server).await;
         dbs.close_all().await;
         leases.release_process().await;
         return r;
@@ -1267,4 +1267,19 @@ async fn run() -> Result<()> {
     }
     eprintln!("maintenance stopped ({} ms)", t0.elapsed().as_millis());
     Ok(())
+}
+
+/// A private server for the ballast generator's writers (`ballast.rs`): the same code on an in-memory store, no
+/// maintenance, no leases, no listener. A writer creates the database's catalog in it with the same commands as on the
+/// real database and runs the insert code against it; nothing it writes leaves the process.
+fn scratch_server() -> Arc<Server> {
+    let mem: Arc<dyn ObjectStore> = Arc::new(object_store::memory::InMemory::new());
+    let global = Arc::new(CountingStore::new(Arc::clone(&mem)));
+    let raw: Arc<dyn ObjectStore> = global.clone();
+    let counting = Arc::new(CountingStore::new(Arc::clone(&raw)));
+    let lc = Lifecycle::with_guard(counting, None, false);
+    let leases = lease::Leases::new(Arc::clone(&lc.store), format!("ballast-scratch-{}", std::process::id()), Duration::from_secs(3600));
+    leases.disabled.store(true, std::sync::atomic::Ordering::Relaxed);
+    let dbs = Dbs::new(lc, raw, Duration::from_secs(1 << 30), leases, global);
+    Server::new(dbs, false)
 }

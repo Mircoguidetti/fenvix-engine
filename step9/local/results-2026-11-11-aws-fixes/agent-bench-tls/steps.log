@@ -1,0 +1,11 @@
+2026-11-11T09:00:14Z pgbox: m7i.large in eu-west-1a, private IP 172.17.0.2, 4 vCPU
+2026-11-11T09:00:30Z postgres settings: shared_buffers 4021MB (25% of 16086 MiB), ssl on, hostssl only for app_user
+ * Restarting PostgreSQL 16 database server
+   ...done.
+fsync,on,,default
+max_connections,100,,configuration file
+shared_buffers,514688,8kB,configuration file
+ssl,on,,configuration file
+synchronous_commit,on,,default
+wal_level,replica,,default
+2026-11-11T09:00:33Z ready: PostgreSQL 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1) on x86_64-p on 172.17.0.2:5432

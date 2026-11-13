@@ -1,0 +1,1 @@
+{"ip": "172.17.0.2", "port": 5432, "type": "m7i.large", "az": "eu-west-1a", "durability": "single node, no copy", "tls": "required", "shared_buffers_mb": 4021}

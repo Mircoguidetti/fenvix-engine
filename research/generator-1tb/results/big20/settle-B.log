@@ -1,0 +1,12 @@
+open: tenant app_data_b01 is owned by server process 302-af5d519e (lease valid for another 18108 ms); retry, full error: {'ok'
+open: tenant app_data_b01 is owned by server process 302-af5d519e (lease valid for another 16102 ms); retry, full error: {'ok'
+open: tenant app_data_b01 is owned by server process 302-af5d519e (lease valid for another 14099 ms); retry, full error: {'ok'
+open: tenant app_data_b01 is owned by server process 302-af5d519e (lease valid for another 12093 ms); retry, full error: {'ok'
+open: tenant app_data_b01 is owned by server process 302-af5d519e (lease valid for another 10089 ms); retry, full error: {'ok'
+open: tenant app_data_b01 is owned by server process 302-af5d519e (lease valid for another 8086 ms); retry, full error: {'ok':
+open: tenant app_data_b01 is owned by server process 302-af5d519e (lease valid for another 6078 ms); retry, full error: {'ok':
+open: tenant app_data_b01 is owned by server process 302-af5d519e (lease valid for another 4074 ms); retry, full error: {'ok':
+open: tenant app_data_b01 is owned by server process 302-af5d519e (lease valid for another 2070 ms); retry, full error: {'ok':
+open: tenant app_data_b01 is owned by server process 302-af5d519e (lease valid for another 66 ms); retry, full error: {'ok': 0
+00:09:11 {"enabled": true, "started": 0, "running": 0, "publishes": 0, "absorbs": 0, "merges": 0, "reseals": 0, "errors": 0, "catchUps": 0}
+settled {"enabled": true, "started": 0, "running": 0, "publishes": 0, "absorbs": 0, "merges": 0, "reseals": 0, "errors": 0, "catchUps": 0}

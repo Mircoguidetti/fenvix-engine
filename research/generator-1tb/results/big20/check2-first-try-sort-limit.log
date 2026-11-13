@@ -1,0 +1,57 @@
+Traceback (most recent call last):
+  File "/home/user/fenvix-engine/research/generator-1tb/ballast_check.py", line 160, in <module>
+    same(f"{name}.{c} {cli} whole", raw(od[c].find(q).sort(s)), raw(rd[c].find(q).sort(s)))
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/fenvix-engine/research/generator-1tb/ballast_check.py", line 88, in raw
+    return [bytes(d.raw) for d in cur.clone().batch_size(1000)]
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py", line 404, in __next__
+    return self.next()
+           ^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py", line 383, in next
+    if len(self._data) or self._refresh():
+                          ^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py", line 334, in _refresh
+    self._send_message(q)
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor.py", line 237, in _send_message
+    response = client._run_operation(operation, self._run_with_conn, address=self._address)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py", line 126, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 1994, in _run_operation
+    return self._retryable_read(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2116, in _retryable_read
+    return self._retry_internal(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py", line 126, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2077, in _retry_internal
+    ).run()
+      ^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2947, in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 3187, in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 1992, in _cmd
+    return run_with_conn(conn, operation, read_preference)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/helpers.py", line 50, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/cursor_base.py", line 120, in _run_with_conn
+    docs, reply, duration = run_cursor_command(
+                            ^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py", line 329, in run_cursor_command
+    docs, reply, duration_s = _run_command(
+                              ^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py", line 214, in _run_command
+    helpers_shared._check_command_response(
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/helpers_shared.py", line 327, in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+pymongo.errors.OperationFailure: Sort exceeded memory limit of 104857600 bytes, but did not opt in to external sorting. This server does not sort on disk (allowDiskUse is not supported): add a limit, an index that gives the order, or a narrower filter., full error: RawBSONDocument(b'\xb7\x01\x00\x00\x01ok\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02errmsg\x00\xdc\x00\x00\x00Sort exceeded memory limit of 104857600 bytes, but did not opt in to external sorting. This server does not sort on disk (allowDiskUse is not supported): add a limit, an index that gives the order, or a narrower filter.\x00\x10code\x00$\x01\x00\x00\x02codeName\x00)\x00\x00\x00QueryExceededMemoryLimitNoDiskUseAllowed\x00\x03$clusterTime\x00X\x00\x00\x00\x11clusterTime\x00\x00\x00\x00\x00(U\xf6j\x03signature\x003\x00\x00\x00\x05hash\x00\x14\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x12keyId\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x11operationTime\x00\x00\x00\x00\x00(U\xf6j\x00', codec_options=CodecOptions(document_class=<class 'bson.raw_bson.RawBSONDocument'>, tz_aware=False, uuid_representation=UuidRepresentation.UNSPECIFIED, unicode_decode_error_handler='strict', tzinfo=None, type_registry=TypeRegistry(type_codecs=[], fallback_encoder=None), datetime_conversion=DatetimeConversion.DATETIME))
+check2 exit 1

@@ -1,0 +1,44 @@
+uploads: 0 unfinished multipart uploads under tenants/, 0 older than 3600s aborted
+LEASE process_lease tenant=- holder=24902-9839e058 unix_ms=1794518493479 inc=b01db79e6ead3b37 gen=1
+LEASE acquired tenant=app_data_b01 holder=24902-9839e058 unix_ms=1794518493481 takeover_from=-
+LEASE acquired tenant=app_data_b01 holder=24902-9839e058 unix_ms=1794518493490 takeover_from=-
+LEASE acquired tenant=app_data_b01 holder=24902-9839e058 unix_ms=1794518493496 takeover_from=-
+LEASE acquired tenant=app_data_b01 holder=24902-9839e058 unix_ms=1794518493502 takeover_from=- new=true
+LEASE writer_open tenant=app_data_b01 holder=24902-9839e058 unix_ms=1794518493516 
+LEASE acquired tenant=app_data_b01 holder=ballast-scratch-24902 unix_ms=1794518493527 takeover_from=-
+LEASE acquired tenant=app_data_b01 holder=ballast-scratch-24902 unix_ms=1794518493528 takeover_from=- new=true
+LEASE writer_open tenant=app_data_b01 holder=ballast-scratch-24902 unix_ms=1794518493528 
+LEASE acquired tenant=app_data_b01 holder=ballast-scratch-24902 unix_ms=1794518493529 takeover_from=-
+LEASE acquired tenant=app_data_b01 holder=ballast-scratch-24902 unix_ms=1794518493529 takeover_from=- new=true
+LEASE writer_open tenant=app_data_b01 holder=ballast-scratch-24902 unix_ms=1794518493529 
+LEASE acquired tenant=app_data_b01 holder=ballast-scratch-24902 unix_ms=1794518493529 takeover_from=-
+LEASE acquired tenant=app_data_b01 holder=ballast-scratch-24902 unix_ms=1794518493530 takeover_from=- new=true
+LEASE writer_open tenant=app_data_b01 holder=ballast-scratch-24902 unix_ms=1794518493530 
+LEASE acquired tenant=app_data_b01 holder=ballast-scratch-24902 unix_ms=1794518493530 takeover_from=-
+LEASE acquired tenant=app_data_b01 holder=ballast-scratch-24902 unix_ms=1794518493531 takeover_from=- new=true
+LEASE writer_open tenant=app_data_b01 holder=ballast-scratch-24902 unix_ms=1794518493531 
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: waiting for the envelope marker (E1's wait)
+ballast app_data_b01: 10240 customers, 20.00 GiB planned, 30 groups, 15 slices (0 committed before, 15 to do), 4 writers, 10 key partitions, cut 11
+LEASE writer_close tenant=app_data_b01 holder=24902-9839e058 unix_ms=1794518583758 
+LEASE release_begin tenant=app_data_b01 holder=24902-9839e058 unix_ms=1794518583758 
+LEASE release tenant=app_data_b01 holder=24902-9839e058 unix_ms=1794518583769 ok=true
+ballast app_data_b01: slice 2 done by writer 3: 1435 MB of BSON in 142.9 s (10.0 MB/s); 1 of 15 slices
+ballast app_data_b01: slice 1 done by writer 2: 1433 MB of BSON in 143.0 s (10.0 MB/s); 2 of 15 slices
+ballast app_data_b01: slice 0 done by writer 0: 1438 MB of BSON in 143.8 s (10.0 MB/s); 3 of 15 slices
+ballast app_data_b01: slice 3 done by writer 1: 1435 MB of BSON in 144.0 s (10.0 MB/s); 4 of 15 slices
+ballast app_data_b01: slice 4 done by writer 3: 1434 MB of BSON in 142.8 s (10.0 MB/s); 5 of 15 slices
+ballast app_data_b01: slice 5 done by writer 2: 1434 MB of BSON in 143.6 s (10.0 MB/s); 6 of 15 slices

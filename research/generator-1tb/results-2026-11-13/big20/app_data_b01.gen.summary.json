@@ -1,0 +1,54 @@
+{
+ "build": {
+  "delta_rows": 0,
+  "groups": 44,
+  "resealed": 44,
+  "rows_scanned": 11,
+  "runs_written": 44,
+  "sealed_rows": 266448667,
+  "stage": null,
+  "version": 1,
+  "x_d": 11
+ },
+ "byte_bson": 21476830049,
+ "customer_rows": 128409718,
+ "customer_run_bytes": 32199048048,
+ "customers": 10240,
+ "db": "app_data_b01",
+ "documenti": 64204859,
+ "generate_secondi": 275.882223119,
+ "generator": {
+  "bson_generated_here": 10002266593,
+  "digest": "42fb044f7ee44bd6",
+  "groups_planned": 30,
+  "mb_s_here": 36.255567611130886,
+  "mb_s_per_writer": 10.189577581754468,
+  "parts": 10,
+  "seconds_by_phase": {
+   "documents": 319.048694434,
+   "insert_code": 1173.2652813509987,
+   "key_mapping": 139.35495190100002,
+   "partition_files_and_uploads": 253.462412358,
+   "sealed_runs": 205.46213904100003,
+   "sort": 17.012881494000005
+  },
+  "slice_gib": 1.0,
+  "slices": 15,
+  "slices_generated_here": 7,
+  "workers": 4,
+  "writer_seconds": 2107.7252591369997
+ },
+ "mb_s": 62.81326909660631,
+ "per_collezione": {
+  "eventi": 22471579,
+  "messaggi": 32104066,
+  "ordini": 9629214
+ },
+ "publish_secondi": 35.616480705,
+ "sample_file": "/home/user/work/big/out/app_data_b01.sample.bson",
+ "secondi": 341.915495848,
+ "shared_dups_in_slices": 0,
+ "shared_rows": 138038932,
+ "spill_disk_bytes": 2298674075,
+ "x0": 11
+}

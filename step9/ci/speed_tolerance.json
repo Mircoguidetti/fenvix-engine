@@ -1,0 +1,6 @@
+{
+ "source": "DECISIONS 2026-11-12 (Speed tolerance for the AWS round)",
+ "_note": "Per operation and percentile: ours may be at most `ms` above the best of PostgreSQL and mongod, and/or at most `ratio` times the best; with both, the larger allowance. Operations not listed use `default`. A change here is the founder's decision, written in DECISIONS.md first.",
+ "default": {"p50": {"ms": 20.0, "ratio": null}, "p99": {"ms": 20.0, "ratio": null}},
+ "ops": {}
+}

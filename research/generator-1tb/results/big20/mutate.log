@@ -1,0 +1,3 @@
+app_data_b01 {'per_collezione': {'eventi': 22461876, 'messaggi': 32230188, 'ordini': 9629214}, 'documenti': 64321278, 'writes': {'inserted': {'messaggi': 140041}, 'deleted': {'messaggi': 13919, 'eventi': 9703}, 'updated': {'ordini': 4098, 'eventi': 9703, 'messaggi': 8344}}, 'seconds': 280.5}
+MUTATE: DONE
+mutate exit 0

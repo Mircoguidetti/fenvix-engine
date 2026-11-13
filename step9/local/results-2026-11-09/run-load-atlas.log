@@ -1,0 +1,47 @@
+2026-11-09T16:13:25Z step 9 round 42069 (local): phases ['load'], data 100gb, pantry fenvix-kitchen-pantry-42069 (keep), cook m7i.large, spare m7i.large, log m7i.large x3, compactor none, client c7i.xlarge, programs ['m30', 's3-first-byte', 'sealed-run', 'log-ack', 'ballast-rounds', 'takeovers'], cap 5.0 $, 60 minutes
+2026-11-09T16:13:25Z 1/8 buckets: the run bucket (1 day) and the pantry (our server's data)
+2026-11-09T16:13:25Z pantry fenvix-kitchen-pantry-42069: KEPT after this run for the next ones; its objects expire after 7 days
+2026-11-09T16:13:25Z 2/8 packages, CA and the password into the run bucket (the password passes through no file and no log)
+2026-11-09T16:13:25Z 3/8 network
+2026-11-09T16:13:25Z network: {"network": "fenvix-coldread-s9-42069", "machine_s3_endpoint": "http://172.18.0.1:9300"}
+2026-11-09T16:13:25Z 4/8 the load runs without the log (the loader writes straight to S3; nothing is measured while loading)
+2026-11-09T16:13:25Z 5/8 the load through cook 0 (the loader): the m30 client (the Atlas databases)
+2026-11-09T16:13:26Z server-0: loader c7i.xlarge in eu-west-1a, fd1574887ddf, private IP 172.18.0.2
+2026-11-09T16:13:27Z client: client c7i.xlarge in eu-west-1a, 6b8898c15fc4, private IP 172.18.0.3
+2026-11-09T16:13:42Z SPESA: 0.61 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.60 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:13:42Z   client: 2026-11-09T16:13:29Z waiting for cook 0 (at most 120 minutes)
+2026-11-09T16:13:57Z SPESA: 0.13 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.12 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:13:57Z   client: 2026-11-09T16:13:41Z load: 8 steps on cook 0 (c7i.xlarge)
+2026-11-09T16:14:12Z SPESA: 0.15 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.14 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:14:12Z   client: 2026-11-09T16:13:41Z load: 8 steps on cook 0 (c7i.xlarge)
+2026-11-09T16:14:27Z SPESA: 0.17 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.16 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:14:27Z   client: 2026-11-09T16:13:41Z load: 8 steps on cook 0 (c7i.xlarge)
+2026-11-09T16:14:42Z SPESA: 0.17 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.16 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:14:42Z   client: 2026-11-09T16:14:30Z load finished with code 0 in 49 s: LOAD: DONE in 49 s
+2026-11-09T16:14:57Z SPESA: 0.17 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.16 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:14:57Z   client: 2026-11-09T16:14:30Z load finished with code 0 in 49 s: LOAD: DONE in 49 s
+2026-11-09T16:15:12Z SPESA: 0.18 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.16 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:15:12Z   client: 2026-11-09T16:14:30Z load finished with code 0 in 49 s: LOAD: DONE in 49 s
+2026-11-09T16:15:27Z SPESA: 0.18 $ so far at 2 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.16 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:15:27Z   client: 2026-11-09T16:14:30Z load finished with code 0 in 49 s: LOAD: DONE in 49 s
+2026-11-09T16:15:43Z SPESA: 0.18 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.16 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:15:43Z   client: 2026-11-09T16:14:30Z load finished with code 0 in 49 s: LOAD: DONE in 49 s
+2026-11-09T16:15:58Z SPESA: 0.18 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.16 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:15:58Z   client: 2026-11-09T16:14:30Z load finished with code 0 in 49 s: LOAD: DONE in 49 s
+2026-11-09T16:16:13Z SPESA: 0.18 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.16 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:16:13Z   client: 2026-11-09T16:14:30Z load finished with code 0 in 49 s: LOAD: DONE in 49 s
+2026-11-09T16:16:28Z SPESA: 0.18 $ so far at 3 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.16 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:16:28Z   client: 2026-11-09T16:14:30Z load finished with code 0 in 49 s: LOAD: DONE in 49 s
+2026-11-09T16:16:43Z SPESA: 0.19 $ so far at 3 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.16 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:16:43Z   client: 2026-11-09T16:14:30Z load finished with code 0 in 49 s: LOAD: DONE in 49 s
+2026-11-09T16:16:58Z SPESA: 0.19 $ so far at 3 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.16 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:16:58Z   client: 2026-11-09T16:14:30Z load finished with code 0 in 49 s: LOAD: DONE in 49 s
+2026-11-09T16:17:13Z SPESA: 0.19 $ so far at 3 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.16 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:17:13Z   client: 2026-11-09T16:17:03Z MERGE: DONE
+2026-11-09T16:17:13Z load: {"load": "LOADED"}
+2026-11-09T16:17:23Z server-0: stopped by itself
+2026-11-09T16:17:39Z 7/8 no extra program in this round
+2026-11-09T16:17:39Z 8/8 everything off
+2026-11-09T16:17:39Z SPESA: 0.19 $ so far at 4 minutes (upper bound; machines 0.03 $, alive: none; S3 0.17 $ from the servers' counters, storage and margin), cap 5.00 $
+2026-11-09T16:17:39Z copying the results from the run bucket
+2026-11-09T16:17:40Z outcome: FINITO; {"load": "LOADED", "client": "LOADED_ONLY"}

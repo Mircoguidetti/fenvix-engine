@@ -1,0 +1,10 @@
+uploads: 0 unfinished multipart uploads under tenants/, 0 older than 3600s aborted
+ballast app_data_b01: 1536 customers, 3.00 GiB planned, 5 groups, 5 slices (0 committed before, 5 to do), 4 writers, 2 key partitions, cut 11
+ballast app_data_b01: slice 0 done by writer 0: 716 MB of BSON in 77.3 s (9.3 MB/s); 1 of 5 slices
+ballast app_data_b01: slice 3 done by writer 1: 718 MB of BSON in 79.0 s (9.1 MB/s); 2 of 5 slices
+ballast app_data_b01: slice 1 done by writer 2: 717 MB of BSON in 79.3 s (9.0 MB/s); 3 of 5 slices
+ballast app_data_b01: slice 2 done by writer 3: 718 MB of BSON in 79.7 s (9.0 MB/s); 4 of 5 slices
+ballast app_data_b01: slice 4 done by writer 0: 353 MB of BSON in 36.0 s (9.8 MB/s); 5 of 5 slices
+BALLAST-DB app_data_b01: 3.00 GiB of BSON, 9630923 documents in 168 s (19.1 MB/s); version 1 with 7 groups
+BALLAST: DONE: 1 databases, 3.00 GiB of BSON in 168 s (19.1 MB/s together)
+exit 0

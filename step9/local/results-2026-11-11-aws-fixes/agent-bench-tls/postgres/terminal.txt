@@ -1,0 +1,1 @@
+[postgres | single node, no copy (NOT equal durability: one EC2 machine, one gp3 disk)] ok=True checkpoints=631 write=3.347s save_step p50/p99=5.379/25.004 ms stored/logical=0.3822 -> out/postgres/summary.json

@@ -1,0 +1,136 @@
+{
+ "n": 10,
+ "writers": 8,
+ "lease_ttl_s": 4,
+ "log": "on",
+ "takeovers": [
+  {
+   "i": 1,
+   "killed": "B",
+   "takeover_s": 16.682,
+   "acked_before": 4164
+  },
+  {
+   "i": 2,
+   "killed": "A",
+   "takeover_s": 27.779,
+   "acked_before": 120189
+  },
+  {
+   "i": 3,
+   "killed": "B",
+   "takeover_s": 17.716,
+   "acked_before": 196100
+  },
+  {
+   "i": 4,
+   "killed": "A",
+   "takeover_s": 27.809,
+   "acked_before": 319326
+  },
+  {
+   "i": 5,
+   "killed": "B",
+   "takeover_s": 17.797,
+   "acked_before": 404277
+  },
+  {
+   "i": 6,
+   "killed": "A",
+   "takeover_s": 17.725,
+   "acked_before": 507708
+  },
+  {
+   "i": 7,
+   "killed": "B",
+   "takeover_s": 27.939,
+   "acked_before": 598750
+  },
+  {
+   "i": 8,
+   "killed": "A",
+   "takeover_s": 17.865,
+   "acked_before": 689943
+  },
+  {
+   "i": 9,
+   "killed": "B",
+   "takeover_s": 17.859,
+   "acked_before": 819801
+  },
+  {
+   "i": 10,
+   "killed": "A",
+   "takeover_s": 18.239,
+   "acked_before": 941802
+  }
+ ],
+ "verify_error": null,
+ "missing_by_read": {
+  "at_once": 45890,
+  "after_settle": 45890,
+  "after_clean_restart": 45890
+ },
+ "done": 10,
+ "acknowledged": 1039087,
+ "lost": 45890,
+ "lost_ids_first": [
+  "w0-1",
+  "w0-10",
+  "w0-100",
+  "w0-101",
+  "w0-102",
+  "w0-102071",
+  "w0-102072",
+  "w0-102073",
+  "w0-102074",
+  "w0-102075",
+  "w0-102076",
+  "w0-102077",
+  "w0-102078",
+  "w0-102079",
+  "w0-102080",
+  "w0-102081",
+  "w0-102082",
+  "w0-102083",
+  "w0-102084",
+  "w0-102085",
+  "w0-102086",
+  "w0-102087",
+  "w0-102088",
+  "w0-102089",
+  "w0-102090",
+  "w0-102091",
+  "w0-102092",
+  "w0-102093",
+  "w0-102094",
+  "w0-102095",
+  "w0-102096",
+  "w0-102097",
+  "w0-102098",
+  "w0-102099",
+  "w0-102100",
+  "w0-102101",
+  "w0-102102",
+  "w0-102103",
+  "w0-102104",
+  "w0-102105",
+  "w0-102106",
+  "w0-102107",
+  "w0-102108",
+  "w0-102109",
+  "w0-102110",
+  "w0-102111",
+  "w0-102112",
+  "w0-102113",
+  "w0-102114",
+  "w0-102115"
+ ],
+ "confirmed_after_kill": 0,
+ "failed_writes": 1352,
+ "survivor": "B",
+ "takeover_s_p50": 17.859,
+ "takeover_s_p99": 27.939,
+ "takeover_s_max": 27.939,
+ "verdict": "FAIL"
+}

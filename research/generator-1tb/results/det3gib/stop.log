@@ -1,0 +1,15 @@
+uploads: 0 unfinished multipart uploads under tenants/, 0 older than 3600s aborted
+ballast app_data_b01: 1536 customers, 3.00 GiB planned, 5 groups, 5 slices (0 committed before, 5 to do), 4 writers, 2 key partitions, cut 11
+ballast app_data_b01: slice 3 done by writer 1: 718 MB of BSON in 74.1 s (9.7 MB/s); 1 of 5 slices
+ballast app_data_b01: slice 0 done by writer 2: 716 MB of BSON in 75.3 s (9.5 MB/s); 2 of 5 slices
+ballast app_data_b01: FENVIX_GEN_STOP_AFTER=2 reached: stopping the process (test control)
+exit 3
+uploads: 1 unfinished multipart uploads under tenants/, 0 older than 3600s aborted
+ballast app_data_b01: RESUMING the generator state of the pantry
+ballast app_data_b01: 1536 customers, 3.00 GiB planned, 5 groups, 5 slices (2 committed before, 3 to do), 4 writers, 2 key partitions, cut 11
+ballast app_data_b01: slice 4 done by writer 2: 353 MB of BSON in 37.0 s (9.5 MB/s); 3 of 5 slices
+ballast app_data_b01: slice 1 done by writer 0: 717 MB of BSON in 73.1 s (9.8 MB/s); 4 of 5 slices
+ballast app_data_b01: slice 2 done by writer 1: 718 MB of BSON in 73.9 s (9.7 MB/s); 5 of 5 slices
+BALLAST-DB app_data_b01: 3.00 GiB of BSON, 9630923 documents in 118 s (27.4 MB/s); version 1 with 7 groups
+BALLAST: DONE: 1 databases, 3.00 GiB of BSON in 118 s (27.4 MB/s together)
+exit 0
