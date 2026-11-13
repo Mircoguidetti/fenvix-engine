@@ -852,6 +852,20 @@ impl Server {
             },
             // fix-store-errors: retryable writes answered with the RetryableWriteError label after a store error
             "storeErrorsLabelled": crate::retry::STORE_ERRORS_LABELLED.load(Relaxed) as i64,
+            // P-fix-slow-store: the write deadline (item 3), the shutdown's close deadline (item 1), the uploads of older
+            // writer epochs aborted (item 2)
+            "slowStore": {
+                "writeDeadlines": crate::cmd::WRITE_DEADLINES.load(Relaxed) as i64,
+                "writeDeadlinesLabelled": crate::cmd::WRITE_DEADLINES_LABELLED.load(Relaxed) as i64,
+                "closeDeadlineCuts": tenant_bench::lifecycle::CLOSE_DEADLINE_CUTS.load(Relaxed) as i64,
+                "closesLeftBehind": tenant_bench::lifecycle::CLOSES_LEFT_BEHIND.load(Relaxed) as i64,
+                "closesHeldAtDeadline": crate::dbs::CLOSES_LOCK_PAST_DEADLINE.load(Relaxed) as i64,
+                "closesOptionalSkipped": crate::dbs::CLOSES_OPTIONAL_SKIPPED.load(Relaxed) as i64,
+                "fencedUploadsListed": crate::uploads::FENCED_LISTED.load(Relaxed) as i64,
+                "fencedUploadsAborted": crate::uploads::FENCED_ABORTED.load(Relaxed) as i64,
+                "fencedUploadSweepErrors": crate::uploads::FENCED_ERRORS.load(Relaxed) as i64,
+                "startupSweepFencedAborted": crate::uploads_sweep::FENCED.load(Relaxed) as i64,
+            },
             "customerKeys": {
                 "docsWritten": crate::custkey::DOCS_WRITTEN.load(Relaxed) as i64,
                 "locatorLookups": crate::custkey::LOCATOR_LOOKUPS.load(Relaxed) as i64,

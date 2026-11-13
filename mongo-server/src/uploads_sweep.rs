@@ -7,6 +7,12 @@
 //! (kill -9, a machine lost, a process ending with a job running) nobody else would abort. At startup this sweep lists
 //! the bucket's unfinished uploads under `tenants/` and aborts those started more than `--abandoned-upload-secs` ago.
 //!
+//! P-fix-slow-store item 2: the age rule alone let a crash loop leave orphans younger than the hour. A run's key names
+//! the SlateDB writer epoch of the writer that started it (`fx::manifest::run_path`); an upload whose epoch is below its
+//! database's current one belongs to a fenced writer, which can no longer publish it, and is aborted whatever its age
+//! (here, with one manifest read per database, and at every writer open, `uploads::abort_fenced`). The age rule below
+//! stays for the uploads of the current epoch (they may be a live writer's) and for keys that name no epoch.
+//!
 //! The bound: an upload of a live process on the same bucket (the old owner during a takeover, a deploy overlap) must
 //! not be aborted while it runs. The longest upload is one run: up to `split_bytes` (2 GiB) for a sealed run, a few GiB
 //! for the largest delta tier, written at tens of MB/s, so minutes (ESTIMATED). The default, one hour, is about ten times
