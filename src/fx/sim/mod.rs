@@ -390,6 +390,36 @@ mod tests {
         assert_eq!(f, 0, "{v:?}");
     }
 
+    /// sim-test-2 candidate: GC decides from the store (drop lease free, no pair yet), then a restore point pairs with a
+    /// version that is not the newest (the newest is a builder version whose X_d is above the checkpoint's last L0 seq),
+    /// then GC deletes what it decided: the paired version and its runs. `SIM_STORY_LIVE=1`: the live GC of a zombie's
+    /// compactor instead of the closed GC.
+    #[test]
+    fn sim_story_gc_decides_before_a_point_pairs() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let mut ev = vec![Open { p: 0, writer: true }];
+        for c in 0..3 {
+            ev.push(fill(0, c, 0));
+        }
+        ev.extend([Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }, fill(0, 3, 0), Flush { p: 0 }, CompDrain { p: 0 }]);
+        ev.extend([Close { p: 0 }, Open { p: 1, writer: true }, fill(1, 4, 0), Publish { p: 1 }, Abandon { p: 1 }, Sleep { ms: 2700 }]);
+        ev.extend([
+            Hold { p: 2, class: Class::FxVersion, op: Some(NOp::Delete), skip: 0, land: true, all: false, rid: 1 },
+            GcClosed { p: 2 },
+            Point { p: 0, tag: 1 },
+            Release { rid: 1 },
+            Sleep { ms: 1000 },
+            Mark { tag: 2 },
+            Restore { p: 0, mark: 2, apply: false },
+        ]);
+        let (f, v) = run_story(&rt, "GC decides before a point pairs", env_u64("SIM_KNOBS", 0) as u8, ev);
+        assert_eq!(f, 0, "{v:?}");
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {
