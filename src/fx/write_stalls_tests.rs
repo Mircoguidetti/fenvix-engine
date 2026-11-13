@@ -591,3 +591,154 @@ async fn ws_fold_never_runs_beside_a_merge() {
     assert!(l0_during >= 12, "setup: the L0 SSTs must wait in L0 while the re-fold is held ({l0_during})");
     assert_eq!(wrong, 0);
 }
+
+/// A store whose multipart parts each take `part_ms`, counting uploads left open (created, neither completed nor
+/// aborted) and parts cut in the middle (their request dropped before it ended: on S3 such an upload stays listed while
+/// the dead request holds it, and an erase cannot prove the database gone).
+#[derive(Debug)]
+struct SlowParts {
+    inner: Arc<dyn ObjectStore>,
+    part_ms: u64,
+    open: Arc<std::sync::atomic::AtomicI64>,
+    in_flight: Arc<std::sync::atomic::AtomicI64>,
+    cut: Arc<std::sync::atomic::AtomicU64>,
+}
+
+impl std::fmt::Display for SlowParts {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SlowParts({})", self.inner)
+    }
+}
+
+#[derive(Debug)]
+struct SlowUpload {
+    inner: Box<dyn object_store::MultipartUpload>,
+    part_ms: u64,
+    open: Arc<std::sync::atomic::AtomicI64>,
+    in_flight: Arc<std::sync::atomic::AtomicI64>,
+    cut: Arc<std::sync::atomic::AtomicU64>,
+    closed: bool,
+}
+
+/// Counts a part in flight; dropped before `done`, the part was cut.
+struct PartGuard {
+    in_flight: Arc<std::sync::atomic::AtomicI64>,
+    cut: Arc<std::sync::atomic::AtomicU64>,
+    done: bool,
+}
+
+impl Drop for PartGuard {
+    fn drop(&mut self) {
+        self.in_flight.fetch_sub(1, SeqCst);
+        if !self.done {
+            self.cut.fetch_add(1, SeqCst);
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl object_store::MultipartUpload for SlowUpload {
+    fn put_part(&mut self, data: object_store::PutPayload) -> object_store::UploadPart {
+        let fut = self.inner.put_part(data);
+        let (ms, in_flight, cut) = (self.part_ms, Arc::clone(&self.in_flight), Arc::clone(&self.cut));
+        in_flight.fetch_add(1, SeqCst);
+        let g = PartGuard { in_flight, cut, done: false };
+        Box::pin(async move {
+            let mut g = g; // the whole guard moves into the future (not only its field)
+            tokio::time::sleep(Duration::from_millis(ms)).await;
+            let r = fut.await;
+            g.done = true;
+            r
+        })
+    }
+    async fn complete(&mut self) -> object_store::Result<object_store::PutResult> {
+        let r = self.inner.complete().await;
+        if r.is_ok() && !self.closed {
+            self.closed = true;
+            self.open.fetch_sub(1, SeqCst);
+        }
+        r
+    }
+    async fn abort(&mut self) -> object_store::Result<()> {
+        let r = self.inner.abort().await;
+        if !self.closed {
+            self.closed = true;
+            self.open.fetch_sub(1, SeqCst);
+        }
+        r
+    }
+}
+
+#[async_trait::async_trait]
+impl ObjectStore for SlowParts {
+    async fn put_opts(&self, l: &object_store::path::Path, p: object_store::PutPayload, o: object_store::PutOptions) -> object_store::Result<object_store::PutResult> {
+        self.inner.put_opts(l, p, o).await
+    }
+    async fn put_multipart_opts(&self, l: &object_store::path::Path, o: object_store::PutMultipartOptions) -> object_store::Result<Box<dyn object_store::MultipartUpload>> {
+        let inner = self.inner.put_multipart_opts(l, o).await?;
+        self.open.fetch_add(1, SeqCst);
+        Ok(Box::new(SlowUpload { inner, part_ms: self.part_ms, open: Arc::clone(&self.open), in_flight: Arc::clone(&self.in_flight), cut: Arc::clone(&self.cut), closed: false }))
+    }
+    async fn get_opts(&self, l: &object_store::path::Path, o: object_store::GetOptions) -> object_store::Result<object_store::GetResult> {
+        self.inner.get_opts(l, o).await
+    }
+    fn delete_stream(&self, l: futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>> {
+        self.inner.delete_stream(l)
+    }
+    fn list(&self, p: Option<&object_store::path::Path>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.inner.list(p)
+    }
+    async fn list_with_delimiter(&self, p: Option<&object_store::path::Path>) -> object_store::Result<object_store::ListResult> {
+        self.inner.list_with_delimiter(p).await
+    }
+    async fn copy_opts(&self, f: &object_store::path::Path, t: &object_store::path::Path, o: object_store::CopyOptions) -> object_store::Result<()> {
+        self.inner.copy_opts(f, t, o).await
+    }
+}
+
+/// Returns (parts cut, uploads left open, the abandon's time).
+async fn abandon_during_first_build(control: bool) -> (u64, i64, Duration) {
+    crate::lifecycle::CONTROL_CUT_FIRST_BUILD.store(control, Relaxed);
+    let open = Arc::new(std::sync::atomic::AtomicI64::new(0));
+    let in_flight = Arc::new(std::sync::atomic::AtomicI64::new(0));
+    let cut = Arc::new(std::sync::atomic::AtomicU64::new(0));
+    let store: Arc<dyn ObjectStore> = Arc::new(SlowParts { inner: Arc::new(InMemory::new()), part_ms: 300, open: Arc::clone(&open), in_flight: Arc::clone(&in_flight), cut: Arc::clone(&cut) });
+    let id = if control { "ws-abandon-control" } else { "ws-abandon" };
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..300 {
+        apply(&mut t, &mut m, vec![(ckey(i % 5, i), Some(vec![b'a'; 200]))]).await;
+    }
+    first_start(&mut t).await;
+    // the build is writing a run's part when the database is abandoned (an erase, a drop, a lost lease)
+    let t0 = Instant::now();
+    while in_flight.load(SeqCst) == 0 {
+        assert!(!t.fx_first_done() && t0.elapsed() < Duration::from_secs(30), "the first build ended without a part in flight");
+        tokio::time::sleep(Duration::from_millis(2)).await;
+    }
+    let t1 = Instant::now();
+    t.abandon().await;
+    let took = t1.elapsed();
+    // what a dropped run writer aborts is spawned: let it run
+    crate::runfmt::wait_dropped_aborts(Duration::from_secs(5)).await;
+    crate::lifecycle::CONTROL_CUT_FIRST_BUILD.store(false, Relaxed);
+    eprintln!("abandon during the first build (control {control}): parts cut {}, uploads open {}, abandon took {took:?}", cut.load(SeqCst), open.load(SeqCst));
+    (cut.load(SeqCst), open.load(SeqCst), took)
+}
+
+/// fix-compactor-start (GitHub CI 6fbd6cd, ctl test_73): an erase or a drop abandons a database whose first build runs
+/// off the lock. The build ends by itself before the writer is given up: no run upload is cut in the middle of a part
+/// (on S3 such an upload stayed listed and the erase answered `erase_incomplete`), and none is left open. Control (cut at
+/// once, the code of 6fbd6cd): a part is cut.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_abandon_lets_the_first_build_end() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (cut_ctl, _, _) = abandon_during_first_build(true).await;
+    let (cut, open, took) = abandon_during_first_build(false).await;
+    teardown();
+    assert!(cut_ctl >= 1, "control: the abandon must cut a part in flight ({cut_ctl}), or the test does not reach the case");
+    assert_eq!(cut, 0, "a run part was cut in the middle");
+    assert_eq!(open, 0, "a run upload was left open");
+    assert!(took < Duration::from_secs(10), "the abandon waited {took:?}");
+}

@@ -1431,6 +1431,12 @@ pub static FIRST_INSTALLS: std::sync::atomic::AtomicU64 = std::sync::atomic::Ato
 pub static FIRST_INSTALL_REFUSED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 pub static FIRST_BUILD_MS_MAX: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 pub static CLAIMS_DEFERRED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// How long an abandon (a lost lease, an erase, a drop) lets a first build running off the lock end by itself before
+/// cutting it (`Tenant::fx_first_abort`); first builds cut (serverStatus `fenvix.compactor.firstBuildsCut`). The negative
+/// control of the tests cuts at once (the code of 6fbd6cd).
+pub static ABANDON_FIRST_BUILD_WAIT_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(10_000);
+pub static FIRST_BUILDS_CUT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static CONTROL_CUT_FIRST_BUILD: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 /// Where a first build running off the lock reports that it ended (the database's id), when the server listens
 /// (`mongo-server` `Dbs::spawn_first_build_installer`): the version is installed and the compactor started at once, under
 /// the database's lock, as a write would. Unset (tests of this crate, tools): the next write or the close installs it.
@@ -2337,11 +2343,23 @@ impl Tenant {
 
     /// Stop a first build without waiting for its end (the lease is lost): aborted at its next await and waited for, so
     /// nothing of it runs after this returns. A version create it had in flight may still land, as after a crash.
+    ///
+    /// fix-compactor-start (GitHub CI 6fbd6cd, ctl test_73): the build is first given `ABANDON_FIRST_BUILD_WAIT_MS` to end
+    /// by itself, as an erase or a drop waited for it when it ran inside the write. Cut at once, it was cut in the middle
+    /// of a run's part upload: MinIO kept that upload listed for seconds while the dead request held it, the erase's
+    /// aborts could not remove it, and the erase answered `erase_incomplete`. Ended by itself, every run writer completes
+    /// or aborts its upload. Only a build longer than the wait is still cut (a large first build: the erase's sweep of
+    /// incomplete uploads, and the next start's, find what it leaves).
     async fn fx_first_abort(&mut self) {
+        use std::sync::atomic::Ordering::Relaxed;
         if let Some(mut fb) = self.fx_first.take() {
-            if let Some(h) = fb.handle.take() {
-                h.abort();
-                let _ = h.await;
+            if let Some(mut h) = fb.handle.take() {
+                let wait = if CONTROL_CUT_FIRST_BUILD.load(Relaxed) { 0 } else { ABANDON_FIRST_BUILD_WAIT_MS.load(Relaxed) };
+                if tokio::time::timeout(Duration::from_millis(wait), &mut h).await.is_err() {
+                    FIRST_BUILDS_CUT.fetch_add(1, Relaxed);
+                    h.abort();
+                    let _ = h.await;
+                }
             }
         }
         self.fx_unclaim();
