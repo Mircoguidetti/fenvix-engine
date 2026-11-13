@@ -880,6 +880,14 @@ impl Server {
                 "publishes": tenant_bench::fx::PUBLISHES.load(Relaxed) as i64,
                 "publishErrors": tenant_bench::fx::PUBLISH_ERRORS.load(Relaxed) as i64,
                 "fences": tenant_bench::fx::FENCES.load(Relaxed) as i64,
+                // audit-fencing: creates that landed below the newest version (not published), retired runs kept
+                // because the newest version still lists them
+                "offMainLine": tenant_bench::fx::manifest::OFF_MAIN_LINE.load(Relaxed) as i64,
+                "retireRefusedLive": tenant_bench::fx::erase::RETIRE_REFUSED_LIVE.load(Relaxed) as i64,
+                // audit-fencing round 2: conditional writes of erasure records and fork references refused (another
+                // process wrote first), and objects of older incarnations of a name swept
+                "recordConflicts": tenant_bench::fx::erase::RECORD_CONFLICTS.load(Relaxed) as i64,
+                "incarnationSwept": tenant_bench::lifecycle::INCARNATION_SWEPT.load(Relaxed) as i64,
                 "rowsFromRuns": tenant_bench::fx::view::ROWS_FROM_RUNS.load(Relaxed) as i64,
                 "runGets": tenant_bench::fx::view::RUN_GETS.load(Relaxed) as i64,
                 "runOpens": tenant_bench::fx::view::RUN_OPENS.load(Relaxed) as i64,

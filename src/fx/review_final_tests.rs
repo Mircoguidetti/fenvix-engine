@@ -93,8 +93,13 @@ async fn rf_generator_parts_publish_is_fenced_by_the_writer_epoch() {
     T_PIN_MS.store(T_PIN, Relaxed);
     let (single_created, single_refused) = generator_after_takeover(false).await;
     let (parts_created, parts_refused) = generator_after_takeover(true).await;
+    // integration-6 control: the parts publish without the epoch check (slot fence only) still creates a version
+    build::CONTROL_NO_FENCE_CHECK.store(true, Relaxed);
+    let (ctl_created, _) = generator_after_takeover(true).await;
+    build::CONTROL_NO_FENCE_CHECK.store(false, Relaxed);
     ENABLED.store(false, Relaxed);
-    eprintln!("rf generator: single publish created {single_created} refused {single_refused}; parts publish created {parts_created} refused {parts_refused}");
+    eprintln!("rf generator: single publish created {single_created} refused {single_refused}; parts publish created {parts_created} refused {parts_refused}; control (no epoch check) created {ctl_created}");
+    assert!(ctl_created >= 1, "control: without the epoch check the lost writer's parts publish must create a version, or the test does not reach the case");
     assert!(single_refused && single_created == 0, "control: the single publish must be refused by the fence (created {single_created})");
     assert!(parts_refused, "the parts publish of a writer that lost the database must be refused");
     assert_eq!(parts_created, 0, "the parts publish of a writer that lost the database created a version");

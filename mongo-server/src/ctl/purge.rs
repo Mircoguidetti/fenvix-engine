@@ -23,7 +23,13 @@ pub struct PurgeReport {
     pub uploads_aborted: u64,
 }
 
+/// The database's current incarnation's prefix (audit-fencing round 2: `lifecycle::tenant_path`).
 pub fn tenant_path(db: &str) -> String {
+    tenant_bench::lifecycle::tenant_path(db)
+}
+
+/// Every incarnation of the name: what an erase deletes.
+pub fn name_prefix(db: &str) -> String {
     format!("tenants/{db}")
 }
 
@@ -83,7 +89,7 @@ async fn delete_all(store: &Store, paths: Vec<Path>) -> Result<u64> {
 pub async fn purge_tenant(ctl: &Ctl, db: &str) -> Result<PurgeReport> {
     let mut rep = PurgeReport::default();
     rep.checkpoints_released = release_pins(&ctl.store, db).await?;
-    let prefix = Path::from(tenant_path(db));
+    let prefix = Path::from(name_prefix(db));
     for pass in 0..6 {
         rep.passes = pass + 1;
         let objs = list(&ctl.store, &prefix).await?;
@@ -101,7 +107,7 @@ pub async fn purge_tenant(ctl: &Ctl, db: &str) -> Result<PurgeReport> {
     rep.deleted += delete_all(&ctl.store, hints).await?;
     // the parts of runs and SSTs whose upload was never completed (a cancelled compaction job, a process that exited
     // mid-upload): the database's rows, invisible to LIST (review of d9dbc7c, D1)
-    rep.uploads_aborted = crate::uploads::abort_all(&format!("{}/", tenant_path(db))).await?.unwrap_or(0);
+    rep.uploads_aborted = crate::uploads::abort_all(&format!("{}/", name_prefix(db))).await?.unwrap_or(0);
     Ok(rep)
 }
 
@@ -122,7 +128,7 @@ pub async fn leftovers(ctl: &Ctl, db: &str) -> Result<Vec<String>> {
         out.extend(list(&ctl.store, &prefix).await?.into_iter().map(|p| p.to_string()));
     }
     // incomplete multipart uploads hold data too, and LIST does not show them
-    if let Some(ups) = crate::uploads::list(&format!("{}/", tenant_path(db))).await? {
+    if let Some(ups) = crate::uploads::list(&format!("{}/", name_prefix(db))).await? {
         out.extend(ups.into_iter().map(|u| format!("incomplete upload {} ({})", u.key, u.upload_id)));
     }
     for exact in [rec::path(&["control", "pins", db]), rec::path(&["control", "retention", db]), rec::path(&["control", "ops", &format!("{db}.json")])] {

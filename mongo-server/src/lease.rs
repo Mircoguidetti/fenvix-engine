@@ -100,6 +100,8 @@ pub struct Leases {
     /// Extra time after expiry before a lease may be taken over (clock skew allowance).
     skew: Duration,
     held: Mutex<HashMap<String, Held>>,
+    /// audit-fencing round 2: databases whose older incarnations this process swept since it started.
+    swept: Mutex<std::collections::HashSet<String>>,
     /// Tenants another process was just seen to own: refused without asking the store again for a moment.
     denied: Mutex<HashMap<String, (Instant, String, u64)>>,
     pub stats: Mutex<LeaseStats>,
@@ -202,7 +204,7 @@ pub fn log(event: &str, tenant: &str, holder: &str, extra: &str) {
 
 impl Leases {
     pub fn new(store: Arc<dyn ObjectStore>, holder: String, ttl: Duration) -> Arc<Self> {
-        Arc::new(Self { store, holder, ttl, skew: Duration::from_millis(1500), held: Mutex::new(HashMap::new()), denied: Mutex::new(HashMap::new()), stats: Mutex::new(LeaseStats::default()), unsafe_skip: std::sync::atomic::AtomicBool::new(false), process_mode: std::sync::atomic::AtomicBool::new(false), proc: Mutex::new(None), proc_init: tokio::sync::Mutex::new(()), proc_gen_floor: std::sync::atomic::AtomicU64::new(0), disabled: std::sync::atomic::AtomicBool::new(false), proc_renewing: std::sync::atomic::AtomicBool::new(false), released: Mutex::new(HashMap::new()) })
+        Arc::new(Self { store, holder, ttl, skew: Duration::from_millis(1500), held: Mutex::new(HashMap::new()), swept: Mutex::new(Default::default()), denied: Mutex::new(HashMap::new()), stats: Mutex::new(LeaseStats::default()), unsafe_skip: std::sync::atomic::AtomicBool::new(false), process_mode: std::sync::atomic::AtomicBool::new(false), proc: Mutex::new(None), proc_init: tokio::sync::Mutex::new(()), proc_gen_floor: std::sync::atomic::AtomicU64::new(0), disabled: std::sync::atomic::AtomicBool::new(false), proc_renewing: std::sync::atomic::AtomicBool::new(false), released: Mutex::new(HashMap::new()) })
     }
 
     pub fn held_count(&self) -> usize {
@@ -278,7 +280,29 @@ impl Leases {
     }
 
     /// Take (or renew) the lease. Returns the previous holder when an expired lease was taken over.
+    ///
+    /// audit-fencing round 2: once the lease is held, the database's incarnation is read from the store
+    /// (`lifecycle::load_incarnation`): an erase or a drop moves the name to a new incarnation under the lease, so the
+    /// number read after taking it is the current one, and this process's paths (`lifecycle::tenant_path`) follow it.
+    /// Read after, never before: an erase between a read and the take would leave this process on a dead prefix. A
+    /// newer incarnation's first opening in this process also sweeps the older ones' leftovers, in the background.
     pub async fn acquire(&self, id: &str) -> Result<Option<String>> {
+        let r = self.acquire_lease(id).await?;
+        let before = tenant_bench::lifecycle::incarnation(id);
+        let k = tenant_bench::lifecycle::load_incarnation(&self.store, id).await?;
+        if k > 0 && (k != before || !self.swept.lock().unwrap().contains(id)) {
+            self.swept.lock().unwrap().insert(id.to_string());
+            let (store, name) = (Arc::clone(&self.store), id.to_string());
+            tokio::spawn(async move {
+                if let Err(e) = tenant_bench::lifecycle::sweep_old_incarnations(&store, &name).await {
+                    eprintln!("sweep of old incarnations of {name}: {e:#}");
+                }
+            });
+        }
+        Ok(r)
+    }
+
+    async fn acquire_lease(&self, id: &str) -> Result<Option<String>> {
         if self.disabled.load(std::sync::atomic::Ordering::Relaxed) {
             self.record(id, None, None, Instant::now() + Duration::from_secs(86400 * 365), 0);
             return Ok(None);

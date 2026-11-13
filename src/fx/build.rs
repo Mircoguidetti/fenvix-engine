@@ -80,6 +80,9 @@ pub static FENCED_CREATES: std::sync::atomic::AtomicU64 = std::sync::atomic::Ato
 /// every row between its X_d and the new owner's would leave every read (review of a60f4fe, rule 8: acknowledged writes
 /// lost when a first build finished after the lease loss). A version create already in flight can still land, as after
 /// a crash: what is left is that window, not seconds.
+/// integration-6: kept next to audit-fencing's slot fence (base + 1, `manifest::next_slot`). The slot alone leaves a
+/// first version free when the new owner opened the database but has not published yet (it holds no version, so a lost
+/// writer's create of version 1 lands); this check refuses that create. Both run on every builder and generator create.
 /// Negative control of the tests: no check (the code of a60f4fe).
 pub static CONTROL_NO_FENCE_CHECK: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
@@ -295,9 +298,12 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
     }
     let min_xg = groups.iter().map(|g| g.x_g).min().unwrap_or(x);
     delta_runs.retain(|d| d.max_seq > min_xg);
-    let version = match cur {
-        Some(v) => v.version + 1,
-        None => manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1),
+    // audit-fencing: the slot comes from the base (1 for a first version), never from a LIST: a late first build of a
+    // process that lost the database must find its slot taken by the new owner, not land on top of its versions
+    let version = if manifest::CONTROL_LISTED_SLOT.load(std::sync::atomic::Ordering::Relaxed) && cur.is_none() {
+        manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1)
+    } else {
+        manifest::next_slot(cur.map(|v| v.version))
     };
     let absorbed_l0 = l0_before.into_iter().map(|id| (id, x)).collect();
     let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: delta_runs, next_group_id, absorbed_l0 };
@@ -311,6 +317,9 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
         rep.stage = Some(super::counter::stage(old, &staged).await);
     }
     pause(&PAUSE_BEFORE_CREATE_MS).await;
+    // two fences (integration-6): the slot (base + 1, `manifest::next_slot`, audit-fencing) with `on_main_line` below,
+    // which refuses a landing in a slot GC freed; and fix-compactor-start's writer-epoch check right before the create,
+    // which refuses a lost writer's version when the new owner holds no version yet (its slot 1 is still free)
     let fence_t0 = std::time::Instant::now();
     fence_check(store, id, epoch).await?;
     let created = manifest::create(store, id, &v).await;
@@ -321,8 +330,8 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
         // targeted, with this version when the store is still empty (review round 2 of step 3)
         Err(e) => return Err(anyhow::Error::new(super::UnknownPublish { version: Box::new(v), msg: format!("{e:#}") })),
     };
-    if !created {
-        return Err(anyhow::Error::new(super::LostRace(format!("publish of version {version} of {id} lost the race: another publisher wrote it; this build's runs are orphans"))));
+    if !created || !manifest::on_main_line(store, id, version).await? {
+        return Err(anyhow::Error::new(super::LostRace(format!("publish of version {version} of {id} lost the race: another publisher wrote it, or a newer version exists; this build's runs are orphans"))));
     }
     Ok(Some((v, rep)))
 }
@@ -433,7 +442,7 @@ pub struct Generated {
 
 /// Merge SlateDB's rows at a durable cut with the generated rows and publish the database's first version with runs.
 /// The database must have no run yet (a ballast database is generated whole, once). `next_version` is the slot to create
-/// (the newest version in the store plus one: fence versions written at open come before it).
+/// (the version the writer serves plus one: its fence written at open; audit-fencing, never a LIST).
 #[allow(clippy::too_many_arguments)]
 pub async fn publish_generated(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, id: &str, cur: Option<&View>, e_env: u64, epoch: Option<u64>, opts: &BuildOpts, mut gen: Generated) -> Result<(Version, BuildReport)> {
     if let Some(v) = cur {
@@ -520,9 +529,17 @@ pub async fn publish_generated(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
     rep.runs_written = groups.iter().filter(|g| g.sealed.is_some()).count() as u64;
     rep.groups = groups.len();
     rep.resealed = groups.len();
-    let version = manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1);
+    // audit-fencing: the slot after the version this writer serves (its fence at open), never from a LIST
+    let version = if manifest::CONTROL_LISTED_SLOT.load(std::sync::atomic::Ordering::Relaxed) {
+        manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1)
+    } else {
+        manifest::next_slot(cur.map(|v| v.version))
+    };
     let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: Vec::new(), next_group_id, absorbed_l0: Vec::new() };
     rep.version = version;
+    // two fences (integration-6): the slot (base + 1, `manifest::next_slot`, audit-fencing) with `on_main_line` below,
+    // which refuses a landing in a slot GC freed; and fix-compactor-start's writer-epoch check right before the create,
+    // which refuses a lost writer's version when the new owner holds no version yet (its slot 1 is still free)
     let fence_t0 = std::time::Instant::now();
     fence_check(store, id, epoch).await?;
     let created = manifest::create(store, id, &v).await;
@@ -531,8 +548,8 @@ pub async fn publish_generated(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
         Ok(c) => c,
         Err(e) => return Err(anyhow::Error::new(super::UnknownPublish { version: Box::new(v), msg: format!("{e:#}") })),
     };
-    if !created {
-        return Err(anyhow::Error::new(super::LostRace(format!("publish of version {version} of {id} lost the race: another publisher wrote it; the generated runs are orphans"))));
+    if !created || !manifest::on_main_line(store, id, version).await? {
+        return Err(anyhow::Error::new(super::LostRace(format!("publish of version {version} of {id} lost the race: another publisher wrote it, or a newer version exists; the generated runs are orphans"))));
     }
     Ok((v, rep))
 }
@@ -684,17 +701,26 @@ pub async fn publish_generated_parts(db: &slatedb::Db, store: &Arc<dyn ObjectSto
     rep.runs_written = groups.iter().filter(|g| g.sealed.is_some()).count() as u64;
     rep.groups = groups.len();
     rep.resealed = groups.len();
-    let version = manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1);
+    // audit-fencing: the slot after the version this writer serves (its fence at open), never from a LIST
+    let version = if manifest::CONTROL_LISTED_SLOT.load(std::sync::atomic::Ordering::Relaxed) {
+        manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1)
+    } else {
+        manifest::next_slot(cur.map(|v| v.version))
+    };
     let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: Vec::new(), next_group_id, absorbed_l0: Vec::new() };
     rep.version = version;
-    // R-final-engine, hole G: the writer-epoch fence of every other build (a generator that lost the database creates no version)
+    // R-final-engine, hole G: the writer-epoch fence of every other build (a generator that lost the database creates no
+    // version), next to the slot fence (integration-6: both)
+    let fence_t0 = std::time::Instant::now();
     fence_check(store, id, epoch).await?;
-    let created = match manifest::create(store, id, &v).await {
+    let created = manifest::create(store, id, &v).await;
+    FENCE_WINDOW_MS_MAX.fetch_max(fence_t0.elapsed().as_millis() as u64, std::sync::atomic::Ordering::Relaxed);
+    let created = match created {
         Ok(c) => c,
         Err(e) => return Err(anyhow::Error::new(super::UnknownPublish { version: Box::new(v), msg: format!("{e:#}") })),
     };
-    if !created {
-        return Err(anyhow::Error::new(super::LostRace(format!("publish of version {version} of {id} lost the race: another publisher wrote it; the generated runs are orphans"))));
+    if !created || !manifest::on_main_line(store, id, version).await? {
+        return Err(anyhow::Error::new(super::LostRace(format!("publish of version {version} of {id} lost the race: another publisher wrote it, or a newer version exists; the generated runs are orphans"))));
     }
     Ok((v, rep))
 }
