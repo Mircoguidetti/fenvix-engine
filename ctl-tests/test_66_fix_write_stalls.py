@@ -191,7 +191,7 @@ def test_erasures_in_the_middle_of_the_first_build():
     the erased thread reads back empty and the others whole. Then a whole-database erase while a second database's first
     build is held: nothing of the database is left, at once and after the build's pause would have ended."""
     bucket = make_bucket("wser")
-    srv = Server(bucket, "wser", idle=600, extra=SEALED + ["--sealed-erasure-poll-ms", "200"], env={"FENVIX_TEST_BUILD_PAUSE_SNAPSHOT_MS": "4000"}).start()
+    srv = Server(bucket, "wser", idle=600, extra=SEALED + ["--sealed-erasure-poll-ms", "200", "--sealed-erasure-batch-ms", "0"], env={"FENVIX_TEST_BUILD_PAUSE_SNAPSHOT_MS": "4000"}).start()
     c = srv.client()
     c[DB].create_collection("c", customerKey="thread_id")
     a = Acked(c[DB]["c"])

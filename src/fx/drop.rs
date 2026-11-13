@@ -295,6 +295,13 @@ impl DropCtl {
     /// newest merge past it). One run, always, rewrites the run at every fold, and the run holds about one lease of
     /// writes: its cost grows with write rate times lease (MEASURED in the replay).
     fn propose_aged(&self, state: &CompactorStateView) -> Vec<CompactionSpec> {
+        self.propose_aged_with(state, false)
+    }
+
+    /// `l0_only`: beside a running merge of sorted runs (`Sched::propose`), only the fold of the absorbed L0 tail into a
+    /// new run is proposed; the cap merge and the drop of runs below the floor (both on sorted runs, with bookkeeping in
+    /// `sr_max` at proposal time) wait for the merge to end.
+    fn propose_aged_with(&self, state: &CompactorStateView, l0_only: bool) -> Vec<CompactionSpec> {
         let m = state.manifest();
         let tail = self.tail(m.l0());
         let srs: Vec<u32> = m.compacted().iter().map(|r| r.id).collect(); // newest first
@@ -306,7 +313,7 @@ impl DropCtl {
             sr_max.entry(*id).or_insert(known); // a run from before (or after a restart): at most every absorbed row
         }
         sr_max.retain(|id, _| srs.contains(id));
-        if srs.len() > self.max_runs {
+        if srs.len() > self.max_runs && !l0_only {
             // past the cap, the adjacent pair with the smallest combined size merges, before any fold (the cap bounds what a
             // cold scan pays: about one GET per run, fix round of the review); tiered, so no run is rewritten at every
             // fold; the oldest can be large while the floor lags, and it leaves whole once the floor passes it
@@ -337,6 +344,9 @@ impl DropCtl {
             let dst = self.next_sr.fetch_add(1, Relaxed) as u32;
             sr_max.insert(dst, hi);
             return vec![CompactionSpec::new(tail.iter().map(|id| SourceId::SstView(*id)).collect(), dst)];
+        }
+        if l0_only {
+            return vec![];
         }
         // the oldest runs wholly at or below the floor: dropped (the job keeps only the envelope marker); a run already
         // emptied this way (its highest seq set to 0) is not proposed again on its own
@@ -431,14 +441,23 @@ impl CompactionScheduler for Sched {
                 // writes. SlateDB allows it (`validate_compaction`: at most one L0 compaction running per segment, and an
                 // L0-only job's destination above every sorted run's id): the job reads only L0 SSTs, the merge only runs.
                 // The fold (drop on) takes the newest sorted run with the L0 SSTs, so it still waits.
+                //
+                // On fix-write-stalls-on-i4: the server runs with the drop on since perf-bytes, with aged runs
+                // (`fold_one_run` false), whose fold of the absorbed L0 tail goes into a new run: L0 only, its destination
+                // above every run, the same shape. So it may run beside a merge too (`propose_aged_with`, `l0_only`). Only
+                // the one-run fold (rule 12 as written: the L0 tail with the newest run) must wait.
                 let l0_running = active.iter().any(|c| c.spec().sources().iter().any(|s| matches!(s, SourceId::SstView(_))));
-                if self.0.drop || l0_running || CONTROL_ONE_JOB.load(Relaxed) {
+                if (self.0.drop && self.0.one_run) || l0_running || CONTROL_ONE_JOB.load(Relaxed) {
                     return vec![];
                 }
                 beside_merge = true;
             }
         }
-        let mut out = if self.0.drop { self.0.propose_fold(state) } else { self.0.propose_gated(state) };
+        let mut out = match (self.0.drop, beside_merge) {
+            (true, true) => self.0.propose_aged_with(state, true),
+            (true, false) => self.0.propose_fold(state),
+            (false, _) => self.0.propose_gated(state),
+        };
         if beside_merge {
             let top = state.manifest().compacted().iter().map(|r| r.id).max();
             let busy: Vec<u32> = state.compactions().map(|c| c.recent_compactions().filter(|c| c.active()).filter_map(|c| c.spec().destination()).collect()).unwrap_or_default();

@@ -421,10 +421,17 @@ async fn ws_recognition_runs_off_the_lock_at_once() {
 /// L0 drains. The control (`drop::CONTROL_ONE_JOB`: no job proposed while one runs, the code before) keeps all of them
 /// in L0, the stop SlateDB then holds writes at (8 on the server). Every key reads its last value afterwards.
 async fn merge_hold_scenario(control: bool) -> (usize, usize, u64, usize) {
+    merge_hold_scenario_with(control, false).await
+}
+
+/// `drop`: with the drop on and aged runs (the server's setting since perf-bytes; `fold_max_runs` 2, so a cap merge of
+/// two runs comes soon), the held job is that merge and the L0 tail is folded into a new run beside it.
+async fn merge_hold_scenario_with(control: bool, drop_on: bool) -> (usize, usize, u64, usize) {
     drop::CONTROL_ONE_JOB.store(control, Relaxed);
     drop::TEST_HOLD_MERGE.store(true, Relaxed);
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
-    let id = if control { "ws-merge-control" } else { "ws-merge" };
+    let id = format!("ws-merge{}{}", if control { "-control" } else { "" }, if drop_on { "-drop" } else { "" });
+    let id = id.as_str();
     let mut t = lc(&store).create(id).await.unwrap();
     let mut m = BTreeMap::new();
     let deleted = HashSet::new();
@@ -432,7 +439,10 @@ async fn merge_hold_scenario(control: bool) -> (usize, usize, u64, usize) {
         apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(vec![b'a'; 40]))]).await;
     }
     publish(&mut t, &small_opts(build::Reseal::All)).await;
-    let k = knobs(false, true);
+    let mut k = knobs(drop_on, true);
+    if drop_on {
+        k.fold_max_runs = 2;
+    }
     assert!(t.fx_claim());
     let c = start(&mut t, &store, &k).await;
     // write until SlateDB proposes a merge of sorted runs, which the hook holds
@@ -468,7 +478,7 @@ async fn merge_hold_scenario(control: bool) -> (usize, usize, u64, usize) {
     c.drain(false).await.unwrap();
     t.fx_sync();
     let wrong = wrong_reads(&t, &m, &deleted).await;
-    eprintln!("ws merge hold (control {control}): L0 after the 12 flushes {l0_written}, after 8 s with the merge held {l0_during}; L0 jobs beside it {beside}; wrong {wrong}");
+    eprintln!("ws merge hold (control {control}, drop {drop_on}): L0 after the 12 flushes {l0_written}, after 8 s with the merge held {l0_during}; L0 jobs beside it {beside}; wrong {wrong}");
     c.stop().await;
     t.close().await.unwrap();
     drop::CONTROL_ONE_JOB.store(false, Relaxed);
@@ -488,6 +498,27 @@ async fn ws_l0_drains_beside_a_held_merge() {
     assert!(l0_written >= 4, "setup: L0 must have grown ({l0_written})");
     assert!(beside >= 1, "an L0 job must run beside the held merge");
     assert!(l0 < 4, "L0 must drain while the merge is held ({l0_written} -> {l0})");
+    assert_eq!(wrong + wrong_ctl, 0, "wrong reads");
+}
+
+/// Cause 3 on integration-4, where the server runs with the drop on and aged runs: a cap merge of two runs is held at
+/// its first row while 12 more L0 SSTs are flushed and absorbed; the absorbed L0 tail is folded into a new run beside it
+/// and L0 drains. The control (`CONTROL_ONE_JOB`) keeps them in L0.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_l0_drains_beside_a_held_merge_with_the_drop_on() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (_, l0_ctl, beside_ctl, wrong_ctl) = merge_hold_scenario_with(true, true).await;
+    let (l0_written, l0, beside, wrong) = merge_hold_scenario_with(false, true).await;
+    drop::TEST_HOLD_MERGE.store(false, Relaxed);
+    teardown();
+    assert_eq!(beside_ctl, 0, "control: no job beside the merge");
+    assert!(l0_ctl >= 12, "control: the merge must keep the L0 SSTs in L0 ({l0_ctl}), or the test does not reach the case");
+    assert!(l0_written >= 4, "setup: L0 must have grown ({l0_written})");
+    assert!(beside >= 1, "an L0 fold must run beside the held merge");
+    // the aged fold leaves L0 below `fold_at_l0` (6) while the floor has not passed it: drained means below that, far
+    // from SlateDB's stop at 8
+    assert!(l0 < 6, "L0 must drain below fold_at_l0 while the merge is held ({l0_written} -> {l0})");
     assert_eq!(wrong + wrong_ctl, 0, "wrong reads");
 }
 
