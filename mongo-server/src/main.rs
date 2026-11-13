@@ -1086,6 +1086,9 @@ async fn run() -> Result<()> {
     if let Some(ms) = std::env::var("FENVIX_FX_NEXT_WAIT_MS").ok().and_then(|v| v.parse::<u64>().ok()) {
         tenant_bench::fx::FX_NEXT_WAIT_MS.store(ms, std::sync::atomic::Ordering::Relaxed);
     }
+    if let Some(ms) = std::env::var("FENVIX_SLATE_IDLE_POLL_MS").ok().and_then(|v| v.parse::<u64>().ok()) {
+        tenant_bench::fx::drop::SLATE_IDLE_POLL_MS.store(ms, std::sync::atomic::Ordering::Relaxed);
+    }
     if std::env::var("FENVIX_OPEN_SEED").is_ok_and(|v| v == "0") {
         tenant_bench::fx::counter::SEED_WHOLE.store(false, std::sync::atomic::Ordering::Relaxed);
     }
