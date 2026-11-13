@@ -940,3 +940,78 @@ async fn ws_opening_ignores_an_older_writers_newest_version() {
     assert!(ignored >= 1, "the older version was not ignored");
     assert_eq!((r, w), (0, 0), "rows lost (as reader, as writer)");
 }
+
+/// The setup of `older_newest_opening` up to the late version: (store, rows, the newer writer's version, the late one).
+async fn with_an_older_newest_version(id: &str) -> (Arc<dyn ObjectStore>, BTreeMap<Vec<u8>, Vec<u8>>, manifest::Version, manifest::Version) {
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(format!("a-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let v1 = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    t.close().await.unwrap();
+    let mut t = lc(&store).wake(id).await.unwrap();
+    t.upgrade().await.unwrap();
+    let k = knobs(true, false);
+    assert!(t.fx_claim());
+    let c = start(&mut t, &store, &k).await;
+    for r in 0..3 {
+        for i in 0..80 {
+            apply(&mut t, &mut m, vec![(ckey(1 + r, i), Some(format!("b-{r}-{i}").into_bytes()))]).await;
+        }
+        flush(&t).await;
+    }
+    c.drain(false).await.unwrap();
+    t.fx_sync();
+    let x = c.current().await.x_d;
+    c.drop_through(x, Duration::from_secs(60)).await.unwrap();
+    c.stop().await;
+    t.close().await.unwrap();
+    let cur = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    let mut stale = v1.clone();
+    stale.version = cur.version + 1;
+    stale.kind = "publish".into();
+    assert!(stale.writer_epoch < cur.writer_epoch);
+    assert!(manifest::create(&store, id, &stale).await.unwrap());
+    view::clear_cache();
+    (store, m, cur, stale)
+}
+
+/// Review of c5b034d (rule 8): a checkpoint is never paired with an older writer's late version (restores, forks and
+/// exports read through the pair). Control (`CONTROL_TRUST_NEWEST`): it is, and rows are missing from the paired read.
+async fn pair_with_an_older_newest(control: bool) -> (Option<u64>, u64, u64, usize) {
+    let id = if control { "ws-pair-older-control" } else { "ws-pair-older" };
+    let (store, m, cur, stale) = with_an_older_newest_version(id).await;
+    manifest::CONTROL_TRUST_NEWEST.store(control, Relaxed);
+    let admin = slatedb::admin::Admin::builder(crate::lifecycle::tenant_path(id), Arc::clone(&store)).build();
+    let (cp, p) = pair::checkpoint_paired(&store, id, || async { Ok(admin.create_detached_checkpoint(&slatedb::config::CheckpointOptions::default()).await?) }).await.unwrap();
+    let mut o = slatedb::config::DbReaderOptions::default();
+    o.skip_wal_replay = true;
+    let r = pair::PairedReader::open_checkpoint(&store, id, cp.id, o).await.unwrap();
+    let mut wrong = 0;
+    for (k, want) in &m {
+        if r.get(k).await.unwrap().as_deref() != Some(&want[..]) {
+            wrong += 1;
+        }
+    }
+    r.close().await.unwrap();
+    manifest::CONTROL_TRUST_NEWEST.store(false, Relaxed);
+    let paired = p.and_then(|p| p.version);
+    eprintln!("pair with an older newest version (control {control}): paired {paired:?} (newer writer's {}, late {}), wrong {wrong} of {}", cur.version, stale.version, m.len());
+    (paired, cur.version, stale.version, wrong)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_pair_ignores_an_older_writers_newest_version() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (p_ctl, _, late_ctl, wrong_ctl) = pair_with_an_older_newest(true).await;
+    let (p, good, _, wrong) = pair_with_an_older_newest(false).await;
+    teardown();
+    assert_eq!(p_ctl, Some(late_ctl), "control: the late version must be paired, or the test does not reach the case");
+    assert!(wrong_ctl > 0, "control: the paired read must miss rows, or the test does not reach the case");
+    assert_eq!(p, Some(good), "the pair is not the newer writer's version");
+    assert_eq!(wrong, 0, "rows missing from the paired read");
+}

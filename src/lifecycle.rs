@@ -1733,7 +1733,7 @@ impl Tenant {
         let announced = if env.is_none() { manifest::announced(store, &self.id).await? } else { cur.announced };
         let fx = match manifest::load_newest_trusted(store, &self.id).await? {
             None => None,
-            Some(v) => {
+            Some((v, _)) => {
                 anyhow::ensure!(v.e_env == env, "database {}: our manifest {} has E_env {:?}, the database's marker {:?}", self.id, v.version, v.e_env, env);
                 match &cur.fx {
                     // versions never change: the same number is the same version
@@ -2003,7 +2003,7 @@ impl Tenant {
         }
         let newest = manifest::load_newest_trusted(&store, &self.id).await?;
         let newest = match (newest, self.fx_unknown.take()) {
-            (Some(v), _) => Some(v),
+            (Some(x), _) => Some(x),
             // a publish with an unknown outcome and an empty store (a first publish whose PUT may still land): fence its
             // slot with the version it tried, so a late PUT finds the slot taken; only then is the fence settled
             #[cfg(test)]
@@ -2034,7 +2034,7 @@ impl Tenant {
                 None
             }
         };
-        let Some(mut v) = newest else {
+        let Some((mut v, mut slot)) = newest else {
             // no version in the store and no publish of unknown outcome: nothing landed, nothing to fence
             self.fx = None;
             if self.fx_unknown.is_none() {
@@ -2060,14 +2060,16 @@ impl Tenant {
                 if check {
                     anyhow::ensure!(v.x_d <= seq, "database {}: our manifest {} has X_d {} but SlateDB's last seq is {seq}: rows at or below X_d are missing from SlateDB", self.id, v.version, v.x_d);
                 }
-                let f = v.fence(epoch);
+                // above the newest slot: an older writer's late version there is passed over (`load_newest_trusted`)
+                let mut f = v.fence(epoch);
+                f.version = f.version.max(slot + 1);
                 if manifest::create(&store, &self.id, &f).await? {
                     v = f;
                     fenced = true;
                     crate::fx::FENCES.fetch_add(1, Relaxed);
                     break;
                 }
-                v = manifest::load_newest_trusted(&store, &self.id).await?.ok_or_else(|| anyhow!("database {}: our manifest vanished", self.id))?;
+                (v, slot) = manifest::load_newest_trusted(&store, &self.id).await?.ok_or_else(|| anyhow!("database {}: our manifest vanished", self.id))?;
             }
             anyhow::ensure!(fenced, "database {}: could not publish a fence version of our manifest", self.id);
             self.fx_fence_pending = false;
@@ -2196,8 +2198,14 @@ impl Tenant {
                     // stopped before anything was written: the outcome is known, nothing to reload or fence (c2-fix-hangs)
                 } else if e.downcast_ref::<crate::fx::LostRace>().is_some() {
                     // the outcome is known: another publisher holds the slot; read with the newest version (rule 24)
-                    if let Some(v) = crate::fx::manifest::load_newest(&store, &self.id).await? {
-                        self.fx_install(crate::fx::view::View::new(Arc::clone(&store), v, self.fx.as_deref())?);
+                    if let Some((v, slot)) = crate::fx::manifest::load_newest_trusted(&store, &self.id).await? {
+                        if slot > v.version {
+                            // an older writer's late version holds the newest slot (review of a60f4fe): load as an opening
+                            // does, which (as a writer) fences above it
+                            self.load_fx().await?;
+                        } else {
+                            self.fx_install(crate::fx::view::View::new(Arc::clone(&store), v, self.fx.as_deref())?);
+                        }
                     }
                 } else if !crate::fx::is_fenced(&e) {
                     // the outcome of the publish's PUT may be unknown (an error, a timeout: the PUT may have landed):
