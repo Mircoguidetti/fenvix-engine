@@ -22,7 +22,7 @@ while [ "$A" -lt "$END" ]; do
   echo "seeds $A..$B (gen $GEN)"
   SIM_GEN=$GEN SIM_SEEDS=$A..$B SIM_STEPS=${SIM_STEPS:-90} SIM_PAR=$PAR SIM_REPLAYS=${SIM_REPLAYS:-2} \
     SIM_MIN_BUDGET=${SIM_MIN_BUDGET:-24} SIM_MIN_MAX=${SIM_MIN_MAX:-2} SIM_OUT=$OUT \
-    cargo test --release --lib fx::sim::tests::sim_seeds -- --nocapture 2>&1 | grep -E "^SIM|panicked" | tee -a "$OUT/summary.log" || true
+    cargo test --release --lib fx::sim::tests::sim_seeds -- --ignored --nocapture 2>&1 | grep -E "^SIM|panicked" | tee -a "$OUT/summary.log" || true
   A=$B
 done
 if grep -q "SIM VIOLATION" "$OUT/summary.log"; then FAIL=1; fi

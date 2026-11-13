@@ -4,7 +4,7 @@
 //! - `net`: the simulated store (step 1).
 //! - `cluster`: the simulated cluster, the script of a seed, the oracle, the minimizer (steps 2 and 3).
 //!
-//! Run (step 4): `SIM_SEEDS=0..200 SIM_PAR=4 cargo test --release --lib fx::sim::tests::sim_seeds -- --nocapture`.
+//! Run (step 4): `SIM_SEEDS=0..200 SIM_PAR=4 cargo test --release --lib fx::sim::tests::sim_seeds -- --ignored --nocapture`.
 //! Replay one seed (the minimal script with `SIM_KEEP`): `SIM_SEED=17 SIM_KEEP=0,4,9 cargo test --release --lib
 //! fx::sim::tests::sim_replay -- --nocapture`.
 
@@ -46,7 +46,9 @@ mod tests {
 
     /// Run every seed of `SIM_SEEDS`, `SIM_PAR` at a time. A seed with a violation is replayed (`SIM_REPLAYS`) and
     /// minimized (`SIM_MIN_BUDGET` runs); its report goes to `SIM_OUT` (default `sim-out/`). Fails if any seed found one.
+    /// Ignored in the ordinary suite (it runs minutes): `cargo test --release --lib fx::sim::tests::sim_seeds -- --ignored`.
     #[test]
+    #[ignore]
     fn sim_seeds() {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
