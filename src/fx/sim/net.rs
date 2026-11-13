@@ -143,6 +143,9 @@ pub struct Net {
     pub max_hold: Duration,
 }
 
+/// `SIM_TRACE_WRITES=1`: every PUT, DELETE and multipart completion (but WAL objects) goes in the trace.
+static TRACE_WRITES: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| std::env::var_os("SIM_TRACE_WRITES").is_some());
+
 fn mix(mut z: u64) -> u64 {
     z = z.wrapping_add(0x9e37_79b9_7f4a_7c15);
     z = (z ^ (z >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
@@ -235,6 +238,9 @@ impl Net {
     async fn admit(&self, life: u64, op: Op, path: &str) -> Result<Fault> {
         self.requests.fetch_add(1, SeqCst);
         let class = classify(path);
+        if *TRACE_WRITES && matches!(op, Op::Put | Op::Delete | Op::Multipart) && class != Class::Wal {
+            self.note(format!("write: life {life} {op:?} {path}"));
+        }
         if self.dead.lock().unwrap().contains(&life) {
             return Err(sim_err("process killed"));
         }

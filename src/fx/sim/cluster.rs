@@ -120,6 +120,8 @@ pub fn setup_world() {
     crate::lifecycle::L0_SST_BYTES_OVERRIDE.store(3 << 10, Relaxed);
     crate::lifecycle::L0_MAX_SSTS_OVERRIDE.store(64, Relaxed);
     crate::lifecycle::WRITER_POLL_SECS.store(1, Relaxed);
+    // the server with compactors on (the close-time pass gates on our versions, `lifecycle::compact_tenant_pass_with`)
+    crate::fx::compactor::SERVER_ON.store(true, Relaxed);
     crate::fx::check_config().expect("the simulated world's timing rules");
     knobs().check().expect("the simulated compactor's knobs");
 }
@@ -264,7 +266,7 @@ pub fn generate(seed: u64, steps: usize) -> Script {
                 cands.push((4, Ev::ErasePass { p: o }));
                 cands.push((1, Ev::CompStop { p: o }));
             }
-            cands.push((3, Ev::Erase { p: o, cust: r.gen_range(0..CUSTOMERS) }));
+            cands.push((5, Ev::Erase { p: o, cust: r.gen_range(0..CUSTOMERS) }));
             cands.push((2, Ev::Close { p: o }));
             cands.push((1, Ev::Abandon { p: o }));
             cands.push((2, Ev::Kill { p: o }));
@@ -294,20 +296,22 @@ pub fn generate(seed: u64, steps: usize) -> Script {
             if st[z].comp {
                 cands.push((6, Ev::CompDrain { p: z }));
                 cands.push((3, Ev::Gc { p: z }));
-                cands.push((4, Ev::ErasePass { p: z }));
+                cands.push((8, Ev::ErasePass { p: z }));
             } else {
                 cands.push((2, Ev::Publish { p: z }));
                 cands.push((2, Ev::FirstPoll { p: z }));
             }
             cands.push((2, Ev::Erase { p: z, cust: r.gen_range(0..CUSTOMERS) }));
             cands.push((3, Ev::Abandon { p: z }));
+            // a zombie that has not noticed its loss closes the database as idle (the server's reaper) or at shutdown
+            cands.push((2, Ev::Close { p: z }));
             cands.push((2, Ev::Kill { p: z }));
         }
         for &q in &readers {
             cands.push((1, Ev::Write { p: q, ops: ops(&mut r) }));
             cands.push((1, Ev::Abandon { p: q }));
         }
-        cands.push((2, Ev::Retire { p: r.gen_range(0..SLOTS) }));
+        cands.push((4, Ev::Retire { p: r.gen_range(0..SLOTS) }));
         // holds: mostly on the owner (the next to lose the database) and on zombies
         let holders: Vec<usize> = owner.into_iter().chain(zombies.iter().copied()).collect();
         if !holders.is_empty() {
@@ -325,7 +329,7 @@ pub fn generate(seed: u64, steps: usize) -> Script {
             let i = r.gen_range(0..open_rules.len());
             cands.push((6, Ev::Release { rid: open_rules[i] }));
         }
-        cands.push((4, Ev::Sleep { ms: r.gen_range(10..400) }));
+        cands.push((4, Ev::Sleep { ms: if r.gen_bool(0.2) { r.gen_range(400..1500) } else { r.gen_range(10..400) } }));
         let total: u32 = cands.iter().map(|c| c.0).sum();
         let mut x = r.gen_range(0..total);
         let mut chosen = cands[0].1.clone();
@@ -678,21 +682,52 @@ impl World {
                     }
                 }
                 Ev::CompStart { .. } => {
+                    // as the server's `Entry::maybe_start_fxc`: a writer with a version, no first build running, the
+                    // database claimed, and a catch-up publish first when an ungated pass may have folded rows out of L0
                     let Some(t) = g.as_mut() else { return "not open (skipped)".into() };
                     if comp.is_some() {
                         return "compactor already running".into();
                     }
-                    if !t.is_writer() || t.fx_view().is_none() {
-                        return "no writer or no version (skipped)".into();
+                    if !t.is_writer() || t.fx_view().is_none() || t.fx_first_running() {
+                        return "no writer, no version, or a first build running (skipped)".into();
                     }
                     if !t.fx_claim() {
                         return "claim refused".into();
+                    }
+                    let mut caught = String::new();
+                    match manifest::needs_catch_up(&store, &id).await {
+                        Ok(false) => {}
+                        Ok(true) => {
+                            let scan_ms = manifest::now_ms();
+                            let mut o = t.fx_auto_opts();
+                            o.reseal = Reseal::None;
+                            match t.fx_publish(&o, None).await {
+                                Ok(Some(_)) => {
+                                    caught = "after a catch-up publish; ".into();
+                                    if let Err(e) = manifest::note_caught_up(&store, &id, scan_ms).await {
+                                        caught = format!("after a catch-up publish (mark not written: {}); ", short(&e));
+                                    }
+                                }
+                                Ok(None) => {
+                                    t.fx_unclaim();
+                                    return "catch-up published nothing: no compactor yet".into();
+                                }
+                                Err(e) => {
+                                    t.fx_unclaim();
+                                    return format!("catch-up publish failed: {}", short(&e));
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            t.fx_unclaim();
+                            return format!("marks unreadable: {}", short(&e));
+                        }
                     }
                     match Compactor::start(t, Arc::clone(&store), knobs_for(kp), pool::Pool::new(2), tokio::runtime::Handle::current()).await {
                         Ok(c) => {
                             c.run();
                             *compl.lock().unwrap() = Some(c);
-                            "compactor started".into()
+                            format!("compactor started {caught}")
                         }
                         Err(e) => {
                             t.fx_unclaim();
@@ -837,7 +872,7 @@ async fn erase_pass(store: &Arc<dyn ObjectStore>, id: &str, c: &Arc<Compactor>) 
     let mut all = erase::list(store, id).await?;
     let mut ready = Vec::new();
     for (i, e) in all.iter().enumerate() {
-        if e.done_ms.is_none() && e.scrubbed_version.is_none() && e.s_e <= base.x_d {
+        if e.state == "pending" && e.s_e <= base.x_d {
             if let Some(t) = erase::targets_of(store, id, e).await? {
                 ready.push((i, t));
             }
@@ -849,8 +884,14 @@ async fn erase_pass(store: &Arc<dyn ObjectStore>, id: &str, c: &Arc<Compactor>) 
     let items: Vec<(&Targets, u64)> = ready.iter().map(|(i, t)| (t, all[*i].s_e)).collect();
     let batch = Batch::new(&items);
     let v = view::View::new(Arc::clone(store), base.clone(), None)?;
+    // as the server: no merge or reseal of the compactor starts meanwhile
+    let _pause = c.pause_rewrites();
     let s = erase::scrub_version(store, id, &v, base.version + 1, base.writer_epoch, &batch, &erase::ScrubOpts::default()).await?;
-    let published = c.commit_scrub(&base, &s, batch.max_s_e).await?;
+    let published = match &s.version {
+        None => Some(base.clone()),
+        Some(_) => c.commit_scrub(&base, &s, batch.max_s_e).await?,
+    };
+    drop(_pause);
     let Some(newv) = published else {
         for (_, _, n) in &s.sealed {
             if let Some(l) = n {
@@ -1029,17 +1070,18 @@ async fn oracle(w: &World) -> Vec<String> {
         Ok(Err(e)) => v.push(format!("fresh upgrade failed: {}", short(&e))),
         Err(_) => v.push("fresh upgrade did not return in 60 s".into()),
     }
-    // no live run deleted: every run of the version readers trust exists
-    match manifest::load_newest_trusted(&w.raw, &w.id).await {
-        Ok(Some((tv, _))) => {
-            for path in gc::runs_of(&tv) {
-                if let Err(object_store::Error::NotFound { .. }) = w.raw.head(&object_store::path::Path::from(path.as_str())).await {
-                    v.push(format!("live run deleted: version {} lists {path}", tv.version));
+    // no live run deleted: every run of the version the fresh opening serves exists
+    if let Some(n) = t.fx_served_version() {
+        match manifest::load(&w.raw, &w.id, n).await {
+            Ok(tv) => {
+                for path in gc::runs_of(&tv) {
+                    if let Err(object_store::Error::NotFound { .. }) = w.raw.head(&object_store::path::Path::from(path.as_str())).await {
+                        v.push(format!("live run deleted: version {} (served by a fresh opening) lists {path}", tv.version));
+                    }
                 }
             }
+            Err(e) => v.push(format!("the served version {n} is unreadable: {}", short(&e))),
         }
-        Ok(None) => {}
-        Err(e) => v.push(format!("trusted version unreadable: {}", short(&e))),
     }
     let _ = tokio::time::timeout(Duration::from_secs(20), t.close()).await;
     v

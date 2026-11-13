@@ -41,10 +41,11 @@ mod tests {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         setup_world();
-        let steps = env_u64("SIM_STEPS", 60) as usize;
+        let steps = env_u64("SIM_STEPS", 90) as usize;
+        let min_max = env_u64("SIM_MIN_MAX", 3) as usize;
         let par = env_u64("SIM_PAR", 4) as usize;
         let replays = env_u64("SIM_REPLAYS", 3) as usize;
-        let budget = env_u64("SIM_MIN_BUDGET", 40) as usize;
+        let budget = env_u64("SIM_MIN_BUDGET", 24) as usize;
         let out = std::env::var("SIM_OUT").unwrap_or_else(|_| "sim-out".into());
         std::fs::create_dir_all(&out).unwrap();
         let seeds = seeds();
@@ -72,7 +73,8 @@ mod tests {
                 failed.push((s, r));
             }
             let mut out_v = Vec::new();
-            for (s, r) in failed {
+            for (n, (s, r)) in failed.into_iter().enumerate() {
+                let budget = if n < min_max { budget } else { 0 };
                 // replay the same seed: does it fail again?
                 let mut again = 0;
                 for _ in 0..replays {
@@ -140,6 +142,43 @@ mod tests {
         eprintln!("SIM STORY zombie scrub: {failing} of {n} runs with a violation");
     }
 
+    /// New hole Z (sim-test): a process that lost the database without noticing it (a zombie) closes it, as the idle
+    /// reaper or a shutdown does. `Tenant::close` logs its failed memtable flush (fenced by the new writer) and still
+    /// writes the clean marker. The new owner's acknowledged writes sit only in its WAL (it crashed, or abandoned);
+    /// the next opening sees the marker, skips the WAL replay, and a reader misses them (until a writer opens).
+    /// Ignored until the fix is in (it fails on integration-5-stack 837f969): run with `--ignored`.
+    #[test]
+    #[ignore]
+    fn sim_hole_zombie_close_writes_the_clean_marker() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        setup_world();
+        use super::net::Profile;
+        use Ev::*;
+        let ev = vec![
+            Open { p: 0, writer: true },
+            Write { p: 0, ops: (0..10).map(|i| (0, i, false)).collect() },
+            Flush { p: 0 },
+            // the takeover: p0 has not noticed it
+            Open { p: 1, writer: true },
+            Write { p: 1, ops: (0..10).map(|i| (1, i, false)).collect() },
+            // the new owner dies with its last writes only in its WAL
+            Kill { p: 1 },
+            // the zombie closes the database (idle reaper, or shutdown)
+            Close { p: 0 },
+        ];
+        let s = Script { seed: 1, profile: Profile::none(), knobs: 1, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect() };
+        let r = rt.block_on(run_script(&s));
+        for l in r.trace.iter().filter(|l| l.contains("->")) {
+            eprintln!("  {l}");
+        }
+        for v in r.violations.iter().take(6) {
+            eprintln!("VIOLATION {v}");
+        }
+        eprintln!("SIM HOLE Z: {} violations; {}", r.violations.len(), r.stats);
+        assert!(r.violations.is_empty(), "hole Z: a zombie's close left the clean marker and a reader misses acknowledged writes ({} violations)", r.violations.len());
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {
@@ -147,7 +186,7 @@ mod tests {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         setup_world();
-        let mut s = generate(seed, env_u64("SIM_STEPS", 60) as usize);
+        let mut s = generate(seed, env_u64("SIM_STEPS", 90) as usize);
         if let Ok(k) = std::env::var("SIM_KEEP") {
             let keep: Vec<u32> = k.split(',').map(|x| x.trim().parse().unwrap()).collect();
             s.events.retain(|(i, _)| keep.contains(i));
