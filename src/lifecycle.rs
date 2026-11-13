@@ -5,7 +5,10 @@
 //!   compactor off (variant V4).
 //! * `tenants/{id}/_clean` records that the last writer closed cleanly. It is deleted
 //!   when a writer opens and written after `Db::close()` returns. A missing marker
-//!   means "unclean": the reader then replays the WAL instead of skipping it.
+//!   means "unclean": the reader then replays the WAL instead of skipping it. The marker
+//!   names the writer epoch that wrote it (`clean {epoch}`) and is trusted only when that
+//!   is the stored manifest's epoch (fix-sim-holes, hole Z: a process that lost the
+//!   database without noticing may close it after the new owner's writes).
 //! * Compaction and GC run outside the writer, in `Maintenance`.
 
 use crate::counting::{CountingStore, Snapshot};
@@ -341,6 +344,59 @@ pub fn db_of_path(path: &str) -> Option<DbAt> {
 
 pub fn marker_path(id: &(impl DbRef + ?Sized)) -> Path {
     Path::from(format!("{}/_clean", tenant_path(id)))
+}
+
+/// fix-sim-holes, hole Z: wakes that found a clean marker naming another writer epoch than the stored manifest's (a
+/// writer opened after the close that wrote it: a process that lost the database without noticing closed it late), or
+/// a marker without an epoch. They replayed the WAL.
+pub static STALE_MARKERS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// fix-sim-holes, hole Z: the body of the clean marker written by the close of the writer of slatedb writer epoch
+/// `epoch`. An older release only checks that the marker exists, so it reads this body as before.
+pub fn marker_body(epoch: u64) -> PutPayload {
+    PutPayload::from(format!("clean {epoch}").into_bytes())
+}
+
+/// fix-sim-holes, hole Z: whether a clean marker says "nothing to replay" for a database whose stored manifest has
+/// writer epoch `epoch`. Only a marker written by the close of that very writer does: any writer opened since moved the
+/// epoch, and its acknowledged writes may be only in its WAL (it crashed, or was abandoned). A marker without an epoch
+/// (an older release, which also wrote it from a process that may have lost the database) is not trusted: one WAL
+/// replay, never a skipped write.
+pub fn marker_trusted(body: &[u8], epoch: u64) -> bool {
+    std::str::from_utf8(body).ok().and_then(|s| s.trim().strip_prefix("clean ")).and_then(|e| e.parse::<u64>().ok()) == Some(epoch)
+}
+
+/// The clean marker's body, None when there is none.
+pub async fn read_marker(store: &Arc<dyn ObjectStore>, id: &(impl DbRef + ?Sized)) -> Result<Option<Bytes>> {
+    match store.get(&marker_path(id)).await {
+        Ok(g) => match g.bytes().await {
+            Ok(b) => Ok(Some(b)),
+            Err(object_store::Error::NotFound { .. }) => Ok(None),
+            Err(e) => Err(e.into()),
+        },
+        Err(object_store::Error::NotFound { .. }) => Ok(None),
+        Err(e) => Err(e.into()),
+    }
+}
+
+/// fix-sim-holes, hole Z: whether a database no process has open may be read without a WAL replay: its marker exists and
+/// names the writer epoch of its stored manifest (fork's quiesce).
+pub async fn marker_clean(store: &Arc<dyn ObjectStore>, id: &(impl DbRef + ?Sized)) -> Result<bool> {
+    let Some(body) = read_marker(store, id).await? else { return Ok(false) };
+    let epoch = stored_writer_epoch(store, id).await?.unwrap_or(0);
+    let ok = marker_trusted(&body, epoch);
+    if !ok {
+        STALE_MARKERS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    }
+    Ok(ok)
+}
+
+/// Write the clean marker of a database no writer has open, naming its stored writer epoch (a fork's new branch, whose
+/// manifest is complete; experiments and the wake trace).
+pub async fn mark_clean_stored(store: &Arc<dyn ObjectStore>, id: &(impl DbRef + ?Sized)) -> Result<()> {
+    let epoch = stored_writer_epoch(store, id).await?.unwrap_or(0);
+    store.put(&marker_path(id), marker_body(epoch)).await?;
+    Ok(())
 }
 
 /// Requests made by the standalone compaction and GC passes (they are also counted, by object category, in the
@@ -1106,13 +1162,19 @@ impl Lifecycle {
     }
 
     async fn wake_inner(self: &Arc<Self>, id: DbAt) -> Result<Tenant> {
-        let marker = marker_path(&id);
-        let (reader, head) = tokio::join!(open_reader(&self.store, &id, true, None), self.store.head(&marker));
+        // fix-sim-holes, hole Z: the marker is read (a GET of a few bytes, in parallel with the open as the HEAD was) and
+        // trusted only when it names the writer epoch of the manifest the reader opened on
+        let (reader, marker) = tokio::join!(open_reader(&self.store, &id, true, None), read_marker(&self.store, &id));
         let (mut reader, scope) = reader?;
-        let clean = match head {
-            Ok(_) => true,
-            Err(object_store::Error::NotFound { .. }) => false,
-            Err(e) => return Err(e.into()),
+        let clean = match marker? {
+            Some(body) => {
+                let ok = marker_trusted(&body, reader.manifest().writer_epoch());
+                if !ok {
+                    STALE_MARKERS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                }
+                ok
+            }
+            None => false,
         };
         if !clean {
             // Possible unflushed WAL: the speculative reader may be missing data. Reopen with replay.
@@ -3625,6 +3687,9 @@ impl Tenant {
                 }
             }
             Some(Mode::Writer(db)) => {
+                // fix-sim-holes, hole Z: the epoch this writer opened at (slatedb's state takes a newer stored manifest
+                // only when its epoch is this writer's own: a fenced writer's refresh fails), named by the marker
+                let marker_epoch = db.manifest().writer_epoch();
                 // Flush the memtable while the writer is still open and registered, then close it. A flush that waits for
                 // room in L0 (slatedb's `l0_max_ssts`) needs the L0 watch of the maintenance loop to start a compaction
                 // and that compaction to refresh this writer's manifest; once `Db::close` has begun slatedb refuses the
@@ -3632,16 +3697,25 @@ impl Tenant {
                 let id = self.id.clone();
                 let closed = tokio::time::timeout(CLOSE_FLUSH_TIMEOUT, async {
                     let memtable = slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable };
-                    if let Err(e) = db.flush_with_options(memtable).await {
+                    let flushed = db.flush_with_options(memtable).await;
+                    if let Err(e) = &flushed {
                         eprintln!("close of tenant {id}: memtable flush before the close failed: {e}");
                     }
                     writer_closed(&id.name);
-                    db.close().await
+                    db.close().await.map(|()| flushed)
                 })
                 .await;
                 writer_closed(&self.id.name);
                 match closed {
-                    Ok(r) => r?,
+                    // fix-sim-holes, hole Z: the marker says "nothing to replay"; it is written only after a memtable
+                    // flush that succeeded. A failed one (this writer fenced by a newer one, say) leaves no marker, so the
+                    // next opening replays the WAL; nothing pending here is confirmed by this writer any more
+                    Ok(Ok(Err(e))) => {
+                        self.group.vis.kill();
+                        forget_vis(&self.id.name, &self.group);
+                        return Err(anyhow!("close of tenant {}: the memtable flush failed ({e}); no clean marker", self.id));
+                    }
+                    Ok(r) => r??,
                     Err(_) => {
                         // The memtable flush is stalled (L0 full, waiting for a compaction). Everything acknowledged is in
                         // durable WAL objects: close without the flush and leave no marker, so the next wake replays them.
@@ -3660,7 +3734,7 @@ impl Tenant {
                 let l0 = db.manifest().l0().len();
                 self.lc
                     .store
-                    .put(&marker_path(&self.id), PutPayload::from_static(b"clean"))
+                    .put(&marker_path(&self.id), marker_body(marker_epoch))
                     .await?;
                 self.lc.touched.lock().unwrap().insert(self.id.name.clone(), Instant::now());
                 // perf-latency round 3: also when compaction jobs are left pending (the compactor's fold, stopped by this
@@ -5615,5 +5689,68 @@ mod tests {
         assert_eq!(log.errors.len(), MAINT_ERRORS_KEPT);
         assert_eq!(log.errors_total, (MAINT_ERRORS_KEPT + 500) as u64);
         assert_eq!(log.errors.front().unwrap(), "e500");
+    }
+
+    /// fix-sim-holes, hole Z: a clean close names its writer epoch and the next wake trusts it; a marker written by a
+    /// writer that a newer one fenced (the zombie's late close), or with no epoch (an older release), is not trusted: the
+    /// wake replays the WAL and sees the newer writer's acknowledged writes that are only in its WAL.
+    #[tokio::test]
+    async fn clean_marker_names_the_writer_epoch() {
+        let _g = settings_lock().await;
+        let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let lc = Lifecycle::new(Arc::new(CountingStore::new(Arc::clone(&store))), None);
+        let lc2 = Lifecycle::new(Arc::new(CountingStore::new(Arc::clone(&store))), None);
+        let id = "hole-z";
+        let body = |store: Arc<dyn ObjectStore>| async move { read_marker(&store, id).await.unwrap().map(|b| String::from_utf8(b.to_vec()).unwrap()) };
+        let epoch = |store: Arc<dyn ObjectStore>| async move { stored_writer_epoch(&store, id).await.unwrap().unwrap() };
+
+        // a clean close: the marker names the stored epoch, the next wake skips the replay
+        let mut t = lc.create(id).await.unwrap();
+        t.apply(vec![Op::Put(b"a".to_vec(), b"1".to_vec())]).await.unwrap();
+        t.close().await.unwrap();
+        let e1 = epoch(Arc::clone(&store)).await;
+        assert_eq!(body(Arc::clone(&store)).await.as_deref(), Some(format!("clean {e1}").as_str()));
+        let t = lc.wake(id).await.unwrap();
+        assert!(!t.unclean, "a clean close must give a clean wake");
+        t.close().await.unwrap();
+
+        // a writer that a newer one fences keeps its own epoch in its view (the fix relies on it)
+        let mut a = lc.wake(id).await.unwrap();
+        a.upgrade().await.unwrap();
+        let ea = a.writer_epoch().unwrap();
+        assert_eq!(ea, epoch(Arc::clone(&store)).await, "a new writer's view names the stored epoch");
+        let mut b = lc2.wake(id).await.unwrap();
+        b.upgrade().await.unwrap();
+        let eb = epoch(Arc::clone(&store)).await;
+        assert!(eb > ea);
+        assert_eq!(a.writer_epoch(), Some(ea), "the fenced writer's view keeps its own epoch");
+        // the new owner's acknowledged write, in its WAL only (its memtable is not flushed)
+        b.apply(vec![Op::Put(b"b".to_vec(), b"2".to_vec())]).await.unwrap();
+        // the zombie closes late (its memtable is empty: its flush does not reach the store)
+        let _ = a.close().await;
+        if let Some(m) = body(Arc::clone(&store)).await {
+            assert_eq!(m, format!("clean {ea}"), "a zombie's marker names its own epoch, never the new owner's");
+        }
+        let stale = STALE_MARKERS.load(Relaxed);
+        let r = lc.wake(id).await.unwrap();
+        assert!(r.unclean, "a marker of a fenced writer must not skip the WAL replay");
+        assert_eq!(r.get(b"b").await.unwrap().as_deref(), Some(&b"2"[..]), "the new owner's acknowledged write is read");
+        assert!(STALE_MARKERS.load(Relaxed) > stale || body(Arc::clone(&store)).await.is_none());
+        r.close().await.unwrap();
+        b.close().await.unwrap();
+        let eb2 = epoch(Arc::clone(&store)).await;
+        assert_eq!(body(Arc::clone(&store)).await.as_deref(), Some(format!("clean {eb2}").as_str()));
+
+        // a marker without an epoch (an older release) is not trusted
+        store.put(&marker_path(id), PutPayload::from_static(b"clean")).await.unwrap();
+        let r = lc.wake(id).await.unwrap();
+        assert!(r.unclean, "a marker without an epoch must not skip the WAL replay");
+        assert_eq!(r.get(b"a").await.unwrap().as_deref(), Some(&b"1"[..]));
+        r.close().await.unwrap();
+        // the fork's check and the stamp of a database no writer has open
+        assert!(!marker_clean(&store, id).await.unwrap());
+        mark_clean_stored(&store, id).await.unwrap();
+        assert!(marker_clean(&store, id).await.unwrap());
+        assert!(!lc.wake(id).await.unwrap().unclean);
     }
 }

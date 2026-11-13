@@ -146,9 +146,9 @@ mod tests {
     /// reaper or a shutdown does. `Tenant::close` logs its failed memtable flush (fenced by the new writer) and still
     /// writes the clean marker. The new owner's acknowledged writes sit only in its WAL (it crashed, or abandoned);
     /// the next opening sees the marker, skips the WAL replay, and a reader misses them (until a writer opens).
-    /// Ignored until the fix is in (it fails on integration-5-stack 837f969): run with `--ignored`.
+    /// Fixed on fix-sim-holes: the marker names the writer epoch that wrote it and is trusted only when that is the stored
+    /// manifest's (`lifecycle::marker_trusted`). Fails on integration-5-stack 837f969 and fb38790.
     #[test]
-    #[ignore]
     fn sim_hole_zombie_close_writes_the_clean_marker() {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());

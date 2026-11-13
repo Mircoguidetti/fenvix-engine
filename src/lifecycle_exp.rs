@@ -355,7 +355,7 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
             let st = Arc::clone(&load_store);
             async move {
                 super::load_tenant(Arc::clone(&st), id).await?;
-                st.put(&marker_path(&id.to_string()), object_store::PutPayload::from_static(b"clean")).await?;
+                crate::lifecycle::mark_clean_stored(&st, &id.to_string()).await?;
                 anyhow::Ok(())
             }
         })
@@ -416,7 +416,7 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
     }
     // Restore the markers (a read-only wake does not repair them).
     for &id in unclean_ids {
-        raw.put(&marker_path(&id.to_string()), object_store::PutPayload::from_static(b"clean")).await?;
+        crate::lifecycle::mark_clean_stored(&raw, &id.to_string()).await?;
     }
 
     // ================= Step 2: mixed workload =================

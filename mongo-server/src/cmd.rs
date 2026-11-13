@@ -1074,7 +1074,8 @@ impl Server {
         let marker = object_store::path::Path::from(format!("tenants/{db}/_clean"));
         match cmd.get_str("marker").unwrap_or("") {
             "present" => {
-                self.dbs.global.put(&marker, object_store::PutPayload::from_static(b"clean")).await.map_err(|e| MongoError::internal(e.to_string()))?;
+                let store: std::sync::Arc<dyn object_store::ObjectStore> = self.dbs.global.clone();
+                tenant_bench::lifecycle::mark_clean_stored(&store, db).await.map_err(|e| MongoError::internal(e.to_string()))?;
             }
             "missing" => {
                 let _ = self.dbs.global.delete(&marker).await;
