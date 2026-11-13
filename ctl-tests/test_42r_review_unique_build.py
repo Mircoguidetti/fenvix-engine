@@ -22,7 +22,9 @@ from pymongo.errors import OperationFailure, PyMongoError
 from lib import Server, free_port, make_bucket
 
 REAL = os.environ.get("REAL_MONGOD", "mongodb://127.0.0.1:27020/?directConnection=true")
-DOCS = 3000
+# integration-6 (known failures): with 3,000 documents our build (one per chunk) now ends within the 0.5 s before the writes
+# (it did not on integration-3), so the test failed without reaching its case; 20,000 keeps the build running past them
+DOCS = 20000
 
 
 @pytest.fixture(scope="module")

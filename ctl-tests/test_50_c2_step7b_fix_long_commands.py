@@ -121,8 +121,11 @@ def test_create_index_with_a_publish_and_a_drop_between_its_build_steps(srv):
 
 @pytest.fixture()
 def short_hold():
-    # hold life 500 ms (120 s in production) and T_pin 10 s: every single read step of these commands fits, their total does not
-    extra = ["--no-sealed-compactor", "--sealed-runs", "50", "--sealed-reseal-every", "1000000", "--sealed-t-pin-ms", "10000", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait", "--sealed-hold-life-ms", "500"]
+    # hold life 500 ms (120 s in production) and T_pin 10 s: every single read step of these commands fits, their total does not.
+    # The builder is held off (`--sealed-runs 1000000`), as in this file's main setup: `publish_drop` publishes by itself, and
+    # since big-speed's fix round the publish-drop stand-in refuses (409 bad_setup) a builder that would reseal from the rows
+    # it dropped (integration-6, known failures: this fixture ran with `--sealed-runs 50`)
+    extra = ["--no-sealed-compactor", "--sealed-runs", "1000000", "--sealed-reseal-every", "1000000", "--sealed-t-pin-ms", "10000", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait", "--sealed-hold-life-ms", "500"]
     s = Server(make_bucket("c2fixlong"), "c2fixlong", idle=300, extra=extra, env={"FENVIX_TEST_DROP": "1"}).start()
     yield s
     s.term()

@@ -68,29 +68,46 @@ def test_object_store_counts_match_an_independent_proxy(env):
     c[db]["c"].insert_many([{"_id": 10000 + i, "pad": "z" * 500} for i in range(500)])
     c[db].command("tenantAdmin", close=True)
     time.sleep(1.5)
+    # integration-6 (known failures): the closed database is still read in the background (SlateDB's GC and manifest
+    # polls: gc/manifest.boundary, manifest/*.manifest), so a request can land between our usage read and the proxy's
+    # snapshot (MEASURED, 2 runs: proxy before 120, ours 121, proxy after 122; then 119, 120, 121). Our counters are read
+    # between two snapshots of the proxy and must lie between them, for every kind and for the bytes: a request we did not
+    # meter makes ours fall below the first snapshot; one we metered twice puts it above the second.
+    def kinds_of(t):
+        k = {}
+        for p, v in t["by_prefix"].items():
+            if p.startswith(f"tenants/{db}"):
+                for n, c in v.items():
+                    k[n] = k.get(n, 0) + c
+        return k
+
+    def bytes_of(t):
+        bb = {k: v for k, v in t["bytes_by_prefix"].items() if k.startswith(f"tenants/{db}")}
+        return (sum(v.get("PUT:in", 0) + v.get("PUT_PART:in", 0) for v in bb.values()),
+                sum(v.get("GET:out", 0) + v.get("GET_RANGE:out", 0) for v in bb.values()))
+
+    before = proxy.snapshot()
     r = usage(srv, db, storage=0)
     ours = today(r)["object_store"]
-    truth = proxy.snapshot()
-    pre = truth["by_prefix"]
-    mine = {k: v for k, v in pre.items() if k.startswith(f"tenants/{db}")}
-    kinds = {}
-    for v in mine.values():
-        for k, n in v.items():
-            kinds[k] = kinds.get(k, 0) + n
-    print("ours", ours, "proxy", kinds)
-    assert ours["get"] == kinds.get("GET", 0)
-    assert ours["get_range"] == kinds.get("GET_RANGE", 0)
-    assert ours["head"] == kinds.get("HEAD", 0)
-    assert ours["put"] == kinds.get("PUT", 0) + kinds.get("PUT_PART", 0) + kinds.get("MP_CREATE", 0) + kinds.get("MP_COMPLETE", 0)
-    assert ours["list"] == kinds.get("LIST", 0)
+    after = proxy.snapshot()
+    k0, k1 = kinds_of(before), kinds_of(after)
+    print("ours", ours, "proxy before", k0, "proxy after", k1)
+
+    def between(name, mine, *kinds):
+        lo, hi = sum(k0.get(x, 0) for x in kinds), sum(k1.get(x, 0) for x in kinds)
+        assert lo <= mine <= hi, f"{name}: ours {mine}, proxy {lo} before and {hi} after"
+
+    between("get", ours["get"], "GET")
+    between("get_range", ours["get_range"], "GET_RANGE")
+    between("head", ours["head"], "HEAD")
+    between("put", ours["put"], "PUT", "PUT_PART", "MP_CREATE", "MP_COMPLETE")
+    between("list", ours["list"], "LIST")
     assert ours["get_tier_requests"] == ours["get"] + ours["get_range"] + ours["head"] > 20
     assert ours["put_tier_requests"] == ours["put"] + ours["copy"] + ours["list"]
     assert ours["put_bytes"] > 100_000 and ours["get_bytes"] > 10_000
-    bb = {k: v for k, v in truth["bytes_by_prefix"].items() if k.startswith(f"tenants/{db}")}
-    sent = sum(v.get("PUT:in", 0) + v.get("PUT_PART:in", 0) for v in bb.values())
-    got = sum(v.get("GET:out", 0) + v.get("GET_RANGE:out", 0) for v in bb.values())
-    assert ours["put_bytes"] == sent, (ours["put_bytes"], sent)
-    assert ours["get_bytes"] == got, (ours["get_bytes"], got)
+    (sent0, got0), (sent1, got1) = bytes_of(before), bytes_of(after)
+    assert sent0 <= ours["put_bytes"] <= sent1, (ours["put_bytes"], sent0, sent1)
+    assert got0 <= ours["get_bytes"] <= got1, (ours["get_bytes"], got0, got1)
 
 
 def test_wake_events_with_first_request_latency(env):
