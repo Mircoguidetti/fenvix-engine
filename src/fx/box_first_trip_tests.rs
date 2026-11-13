@@ -59,19 +59,24 @@ async fn bft_unchanged_renewal_sends_no_get() {
     let g0 = f.manifest_gets.load(Relaxed);
     assert_eq!(r.get(&k2).await.unwrap().as_deref(), Some(&b"after-publish"[..]));
     assert!(f.manifest_gets.load(Relaxed) - g0 >= 1, "a new version is read with GETs");
+    // fix-pass-stop-bound: a writer left registered (`WRITER_DBS`) after its test ends was compacted and nudged by the next
+    // test's maintenance, whose shutdown then hung on it (the unit-suite hang); end it as a lease loss does
+    w.abandon().await;
     teardown();
 }
 
 /// A reader of a stable database whose LISTs of the manifest directory answer `delay` ms late.
-async fn slow_list_reader(id: &str) -> (crate::lifecycle::Tenant, Arc<review_long_reads_tests::Faults>, BTreeMap<Vec<u8>, Vec<u8>>) {
+/// Also returns the writer, which stays open for the test (no close in the middle of it); fix-pass-stop-bound: the test
+/// ends it (`abandon`, as a lease loss does) instead of leaving it registered (`WRITER_DBS`) with its runtime gone, where
+/// the next test's maintenance compacted and nudged it, and its shutdown hung (the unit-suite hang).
+async fn slow_list_reader(id: &str) -> (crate::lifecycle::Tenant, Arc<review_long_reads_tests::Faults>, BTreeMap<Vec<u8>, Vec<u8>>, crate::lifecycle::Tenant) {
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
-    let (_w, want) = stable_db(&store, id, ckey, &small_opts(build::Reseal::All)).await;
+    let (w, want) = stable_db(&store, id, ckey, &small_opts(build::Reseal::All)).await;
     let (rlc, f) = faulty_lc(&store);
     let mut r = rlc.wake(id).await.unwrap();
     r.fx_own_holds();
     r.fx_refresh().await.unwrap();
-    std::mem::forget(_w); // the writer stays open (no close in the middle of the test)
-    (r, f, want)
+    (r, f, want, w)
 }
 
 const LIST_DELAY_MS: u64 = 120;
@@ -80,7 +85,7 @@ const LIST_DELAY_MS: u64 = 120;
 async fn bft_step_does_not_wait_for_a_renewal_in_progress() {
     let _s = SERIAL.lock().await;
     setup();
-    let (r, f, want) = slow_list_reader("fx-bft-alongside").await;
+    let (r, f, want, w) = slow_list_reader("fx-bft-alongside").await;
     f.delay_list_ms.store(LIST_DELAY_MS, Relaxed);
     let k = ckey(3, 11);
     // control: past half T_pin, a step alone renews in front of its read and waits for the slow LIST
@@ -107,6 +112,7 @@ async fn bft_step_does_not_wait_for_a_renewal_in_progress() {
     assert!(beside < Duration::from_millis(LIST_DELAY_MS / 2), "a step beside a renewal in progress must not wait for it ({beside:?})");
     assert!(total >= Duration::from_millis(LIST_DELAY_MS), "the renewal did run ({total:?})");
     assert_eq!((renewals, past, with_box), (1, 1, 1));
+    w.abandon().await;
     teardown();
 }
 
@@ -114,7 +120,7 @@ async fn bft_step_does_not_wait_for_a_renewal_in_progress() {
 async fn bft_step_near_expiry_waits_for_the_renewal() {
     let _s = SERIAL.lock().await;
     setup();
-    let (r, f, want) = slow_list_reader("fx-bft-near-expiry").await;
+    let (r, f, want, w) = slow_list_reader("fx-bft-near-expiry").await;
     let k = ckey(4, 5);
     // a state past 3/4 of T_pin: `renew_alongside` leaves it to the steps, and a step renews (and waits) as before
     tokio::time::sleep(Duration::from_millis(T_PIN * 3 / 4 + 20)).await;
@@ -147,6 +153,7 @@ async fn bft_step_near_expiry_waits_for_the_renewal() {
     assert_eq!(v.as_deref(), want.get(&k2).map(|v| &v[..]));
     eprintln!("bft near expiry: second step waited {waited:?} for the renewal in progress");
     assert!(waited >= Duration::from_millis(LIST_DELAY_MS), "near expiry a step waits for the renewal in progress ({waited:?})");
+    w.abandon().await;
     teardown();
 }
 
@@ -154,7 +161,7 @@ async fn bft_step_near_expiry_waits_for_the_renewal() {
 async fn bft_reader_refresh_due_only_when_expired() {
     let _s = SERIAL.lock().await;
     setup();
-    let (mut r, _f, _want) = slow_list_reader("fx-bft-due").await;
+    let (mut r, _f, _want, w) = slow_list_reader("fx-bft-due").await;
     assert!(!r.fx_refresh_due(), "fresh");
     tokio::time::sleep(Duration::from_millis(T_PIN / 2 + 20)).await;
     assert!(!r.fx_refresh_due(), "past half T_pin a reader is renewed by its steps, not refreshed in front of a command");
@@ -162,5 +169,6 @@ async fn bft_reader_refresh_due_only_when_expired() {
     assert!(r.fx_refresh_due(), "past T_pin the exclusive refresh is due");
     r.fx_refresh().await.unwrap();
     assert!(!r.fx_refresh_due());
+    w.abandon().await;
     teardown();
 }
