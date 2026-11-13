@@ -500,6 +500,30 @@ mod tests {
         assert_eq!(f, 0, "{v:?}");
     }
 
+    /// sim-test-2: the WAL replay raise (runwriter-and-stall, R-final-engine). L0 past the guard (8 flushed batches, no
+    /// compactor), acknowledged writes only in the WAL, the owner killed; the next writer's open raises its unflushed
+    /// limit by the WAL's size and replays; a zombie of it then writes and closes. Nothing acknowledged may be lost.
+    #[test]
+    fn sim_story_wal_replay_raise() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use Ev::*;
+        let before = crate::lifecycle::REPLAY_RAISES.load(std::sync::atomic::Ordering::Relaxed);
+        let mut ev = vec![Open { p: 0, writer: true }, fill(0, 0, 0), Publish { p: 0 }];
+        for c in 1..CUSTOMERS {
+            ev.extend([fill(0, c, 0), Flush { p: 0 }]);
+        }
+        for i in 0..4 {
+            ev.extend([Write { p: 0, ops: vec![(1, i, false), (2, i, true)] }, Flush { p: 0 }]);
+        }
+        ev.extend([Write { p: 0, ops: vec![(3, 3, false), (4, 4, true)] }, Kill { p: 0 }, Open { p: 1, writer: true }, Write { p: 1, ops: vec![(5, 5, false)] }, Open { p: 2, writer: true }, Write { p: 1, ops: vec![(0, 1, false)] }, Close { p: 1 }, Write { p: 2, ops: vec![(0, 2, false)] }, CompStart { p: 2 }, Flush { p: 2 }, CompDrain { p: 2 }]);
+        let (f, v) = run_story(&rt, "WAL replay raise", env_u64("SIM_KNOBS", 1) as u8, ev);
+        let raises = crate::lifecycle::REPLAY_RAISES.load(std::sync::atomic::Ordering::Relaxed) - before;
+        eprintln!("SIM STORY WAL replay raise: {raises} raises");
+        assert_eq!(f, 0, "{v:?}");
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {
