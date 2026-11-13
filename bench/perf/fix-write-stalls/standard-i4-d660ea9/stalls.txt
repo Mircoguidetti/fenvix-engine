@@ -1,0 +1,9 @@
+== /home/user/runs/i4-standard
+  single writes 218906; longest 0.44 s (put at ts 1794536839.2); over 1 s: 0; over 500 ms: 0
+  top writes (s since start, s): 32:0.44, 664:0.29, 664:0.27, 357:0.22, 505:0.21, 273:0.20, 273:0.20, 187:0.20
+  saves 122152; longest 0.55 s; over 1 s: 0
+  p50/p99 ms: save_step 7.2/36.5 (n=122152); put 3.6/18.4 (n=122152); put_writes 4.1/20.6 (n=96754); resume[write/none] 2.8/15.9 (n=21173); resume[write/short] 3.1/78.9 (n=1083); resume[write/long] 7.9/93.7 (n=689); resume[write/first] 1.1/31.1 (n=2453); resume[read] 6.1/18.9 (n=300); resume[cold] 6.0/11.1 (n=200); time_travel 2.0/6.6 (n=900); list 62.0/1649.3 (n=300); list_limit10 17.2/155.5 (n=300); erase_user 140.0/188.9 (n=2)
+  ok True wrong_reads 0 stored/logical 0.0142 stored 94654267
+    FIRST_PUBLISH u=1794536838731 db=app_demo version=1 x_d=6182 rows=32896 build_ms=1416 off_lock=1
+    L0_RECOGNISE db=app_demo read=4 absorbed=4 ms=178 off_lock=1
+    L0_RECOGNISE db=app_demo read=1 absorbed=1 ms=20 off_lock=1

@@ -1,0 +1,35 @@
+/home/user/runs/fix-standard: held writes 14, slow writer uploads 0 (l0 0, wal 0), client writes >= 1 s 25
+  held 5877 ms ending at +577 s; L0 at the end 5, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.85, cook max 0.97 cores, minio max 2.06, log copies max 0.11
+  held 5017 ms ending at +1266 s; L0 at the end 8, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.82, cook max 0.99 cores, minio max 2.05, log copies max 0.06
+  held 3217 ms ending at +1260 s; L0 at the end 8, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.84, cook max 0.99 cores, minio max 1.98, log copies max 0.08
+  held 3025 ms ending at +756 s; L0 at the end 4, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.84, cook max 0.88 cores, minio max 1.74, log copies max 0.15
+  held 2853 ms ending at +1256 s; L0 at the end 8, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.88, cook max 0.95 cores, minio max 1.81, log copies max 0.09
+  held 2293 ms ending at +963 s; L0 at the end 6, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.79, cook max 0.95 cores, minio max 1.73, log copies max 0.11
+  held 1803 ms ending at +1181 s; L0 at the end 5, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.71, cook max 0.89 cores, minio max 1.09, log copies max 0.14
+  held 1650 ms ending at +767 s; L0 at the end 6, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.72, cook max 0.88 cores, minio max 1.17, log copies max 0.14
+  held 1364 ms ending at +1029 s; L0 at the end 6, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.72, cook max 0.78 cores, minio max 1.33, log copies max 0.14
+  held 1363 ms ending at +334 s; L0 at the end 6, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.82, cook max 0.88 cores, minio max 1.64, log copies max 0.14
+  held 1297 ms ending at +72 s; L0 at the end 5, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.68, cook max 0.65 cores, minio max 1.41, log copies max 0.18
+  held 1276 ms ending at +50 s; L0 at the end 5, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.66, cook max 0.51 cores, minio max 1.21, log copies max 0.14
+  held 1224 ms ending at +78 s; L0 at the end 6, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.68, cook max 0.65 cores, minio max 1.41, log copies max 0.12
+  held 1168 ms ending at +1149 s; L0 at the end 5, largest while held 8; writer uploads >= 500 ms in it: none; host busy max 0.81, cook max 0.94 cores, minio max 1.67, log copies max 0.14
+  client put_writes 5.91 s ending at +577 s: SlateDB held 5877 ms
+  client put 5.91 s ending at +577 s: SlateDB held 5877 ms
+  client put 5.03 s ending at +1266 s: SlateDB held 5017 ms
+  client put_writes 5.03 s ending at +1266 s: SlateDB held 5017 ms
+  client put_writes 3.23 s ending at +1260 s: SlateDB held 3217 ms
+  client put 3.22 s ending at +1260 s: SlateDB held 3217 ms
+  client put_writes 3.05 s ending at +756 s: SlateDB held 3025 ms
+  client put 3.05 s ending at +756 s: SlateDB held 3025 ms
+  client put_writes 2.86 s ending at +1256 s: SlateDB held 2853 ms
+  client put 2.86 s ending at +1256 s: SlateDB held 2853 ms
+  client put 2.30 s ending at +963 s: SlateDB held 2293 ms
+  client put_writes 1.82 s ending at +1181 s: SlateDB held 1803 ms
+  client put 1.82 s ending at +1181 s: SlateDB held 1803 ms
+  client put_writes 1.68 s ending at +767 s: SlateDB held 1650 ms
+  client put 1.68 s ending at +767 s: SlateDB held 1650 ms
+  client put_writes 1.38 s ending at +1029 s: SlateDB held 1364 ms
+  client put 1.38 s ending at +1029 s: SlateDB held 1364 ms
+  client put 1.37 s ending at +334 s: SlateDB held 1363 ms
+  client put 1.34 s ending at +72 s: SlateDB held 1297 ms
+  client put_writes 1.34 s ending at +72 s: SlateDB held 1297 ms

@@ -59,6 +59,9 @@ pub static DROP_DEFAULT: AtomicBool = AtomicBool::new(false);
 pub static SERVER_ON: AtomicBool = AtomicBool::new(false);
 /// Small knobs for the judge's tiny databases (FENVIX_SEALED_COMPACTOR=small): reseals, merges and GC happen at all.
 pub static SERVER_SMALL: AtomicBool = AtomicBool::new(false);
+/// The server's compactors read the L0 SSTs their version does not list off the database's lock (`Knobs::
+/// recognise_in_background`; FENVIX_RECOGNISE_IN_BACKGROUND=0 turns it off).
+pub static RECOGNISE_IN_BACKGROUND: AtomicBool = AtomicBool::new(true);
 
 /// Process-wide counters of every compactor (serverStatus `fenvix.compactor`).
 pub static G_STARTED: AtomicU64 = AtomicU64::new(0);
@@ -85,6 +88,63 @@ static ACTIVE: std::sync::LazyLock<Mutex<HashSet<String>>> = std::sync::LazyLock
 /// Whether a compactor of this process runs on database `id` (today's compaction pass then leaves it alone).
 pub fn is_active(id: &str) -> bool {
     ACTIVE.lock().unwrap().contains(id)
+}
+
+/// fix-write-stalls: today's compaction passes running on each database, counted from before their `is_active` check
+/// (`pass_enter`) to their end. Locked only while `ACTIVE` is held, so a claim and a pass's entry are one after the other.
+static PASS_SLOTS: std::sync::LazyLock<Mutex<HashMap<String, usize>>> = std::sync::LazyLock::new(Default::default);
+
+/// A compaction pass's place on a database (`pass_enter`): while it lives, no claim of the database succeeds.
+pub struct PassSlot(String);
+
+impl Drop for PassSlot {
+    fn drop(&mut self) {
+        let _a = ACTIVE.lock().unwrap();
+        let mut m = PASS_SLOTS.lock().unwrap();
+        if let Some(n) = m.get_mut(&self.0) {
+            *n -= 1;
+            if *n == 0 {
+                m.remove(&self.0);
+            }
+        }
+    }
+}
+
+/// A compaction pass (`lifecycle::compact_tenant_pass_with`) enters database `id` with this, before it builds its own
+/// SlateDB compactor: None when a compactor of this process runs on it or claimed it (the pass then leaves it alone).
+pub fn pass_enter(id: &str) -> Option<PassSlot> {
+    let a = ACTIVE.lock().unwrap();
+    if a.contains(id) {
+        return None;
+    }
+    *PASS_SLOTS.lock().unwrap().entry(id.to_string()).or_default() += 1;
+    Some(PassSlot(id.to_string()))
+}
+
+/// fix-write-stalls: claim database `id` for its compactor before the compactor exists (the first build runs off the
+/// database's lock, and from its snapshot to the compactor's start no other SlateDB compactor may move an L0 SST: one
+/// holding rows above the cut would leave L0 unabsorbed, and the next absorption's X_d would pass over its rows). False
+/// when a pass runs on it now (the caller asks it to stop, `lifecycle::preempt_compaction`, and tries again later). A
+/// successful claim marks the database active, as a running compactor does: no pass enters it until `unclaim` or the
+/// compactor's `stop`.
+pub fn claim(id: &str) -> bool {
+    let mut a = ACTIVE.lock().unwrap();
+    if PASS_SLOTS.lock().unwrap().contains_key(id) {
+        return false;
+    }
+    a.insert(id.to_string());
+    true
+}
+
+/// Give back a claim whose compactor never started (the first build failed, or the database closed before).
+pub fn unclaim(id: &str) {
+    ACTIVE.lock().unwrap().remove(id);
+}
+
+/// Tests: whether a pass holds a slot on `id`.
+pub fn pass_running(id: &str) -> bool {
+    let _a = ACTIVE.lock().unwrap();
+    PASS_SLOTS.lock().unwrap().contains_key(id)
 }
 
 /// A running job's entry in `job_starts`, removed when the job ends or is aborted.
@@ -156,6 +216,11 @@ impl Compactor {
 /// L0 SSTs a starting compactor knew as absorbed from its version, and L0 SSTs it had to read (round 3, diagnostics).
 pub static L0_RECOGNISED_FROM_VERSION: AtomicU64 = AtomicU64::new(0);
 pub static L0_RECOGNISED_BY_READ: AtomicU64 = AtomicU64::new(0);
+/// fix-write-stalls: recognition jobs started off the database's lock, and the longest one (ms).
+pub static RECOGNISE_JOBS: AtomicU64 = AtomicU64::new(0);
+pub static RECOGNISE_MS_MAX: AtomicU64 = AtomicU64::new(0);
+/// Tests: a recognition job waits this long before it reads (kill -9 and close tests; FENVIX_TEST_RECOGNISE_PAUSE_MS).
+pub static PAUSE_RECOGNISE_MS: AtomicU64 = AtomicU64::new(0);
 
 /// An absorption is never paused by the background's CPU share once the writer has this many L0 SSTs (it stops at 8); 4
 /// is where absorption starts (`absorb_min_l0`): absorption, which keeps the writer from stopping, is not paced (round 2).
@@ -199,6 +264,11 @@ pub fn server_knobs() -> Knobs {
         k.sealed = RunOptions::unchecked(16 << 10, runfmt::DEFAULT_PART, runfmt::CustomerKind::V2K);
         k.delta = RunOptions::unchecked(16 << 10, runfmt::DEFAULT_PART, runfmt::CustomerKind::V2K);
     }
+    k.recognise_in_background = RECOGNISE_IN_BACKGROUND.load(Relaxed);
+    // tests (ctl test_66): absorb only at this many L0 SSTs (or near the stall), so a kill leaves L0 SSTs unabsorbed
+    if let Some(n) = std::env::var("FENVIX_TEST_ABSORB_MIN_L0").ok().and_then(|v| v.parse::<usize>().ok()) {
+        k.absorb_min_l0 = n.max(1);
+    }
     // integration-3: the server's keys are layout v2 as step 6 framed them (`CustomerKind::V2K`, as step 3's builder
     // writes since step 6); `Knobs::default` keeps V2 for the tests' synthetic keys
     k.sealed.customers = runfmt::CustomerKind::V2K;
@@ -225,6 +295,9 @@ pub struct Knobs {
     /// Absorb once this many L0 SSTs are not absorbed; at most `absorb_max_l0` per absorption.
     pub absorb_min_l0: usize,
     pub absorb_max_l0: usize,
+    /// fix-write-stalls: `start` takes only the L0 SSTs the version lists as absorbed and reads the others in a job of its
+    /// own (off the database's lock). The server's knobs set it; false: `start` reads them itself, as before.
+    pub recognise_in_background: bool,
     /// R1: delta runs up to this many raw bytes get an NVMe copy (0: none).
     pub local_max_bytes: u64,
     /// Groups: a reseal splits an output above `split_bytes`; groups under `merge_bytes` merge with a neighbour; a group
@@ -274,6 +347,7 @@ impl Default for Knobs {
             tier_unit: 32 << 20,
             absorb_min_l0: 4,
             absorb_max_l0: 16,
+            recognise_in_background: false,
             local_max_bytes: 2 << 30,
             split_bytes: 2 << 30,
             merge_bytes: 512 << 20,
@@ -471,6 +545,8 @@ pub struct Compactor {
     /// GC's state (first sights of unreferenced objects).
     pub gc: super::gc::GcState,
     last_gc: Mutex<Instant>,
+    /// fix-write-stalls, cause 3 (diagnostics): the last `L0_TRACE` line.
+    last_l0_trace: Mutex<Instant>,
     /// Drop jobs done when the writer last refreshed its SlateDB manifest (its L0 count, and its stalls, are by its view).
     refreshed_jobs: AtomicU64,
     absorb_lock: tokio::sync::Mutex<()>,
@@ -554,6 +630,7 @@ impl Compactor {
             codec: codec::identity(),
             gc: Default::default(),
             last_gc: Mutex::new(Instant::now()),
+            last_l0_trace: Mutex::new(Instant::now()),
             refreshed_jobs: AtomicU64::new(0),
             job_starts: Mutex::new(HashMap::new()),
             next_job: AtomicU64::new(0),
@@ -565,9 +642,21 @@ impl Compactor {
         });
         t.fx_attach(Arc::clone(&sh));
         ACTIVE.lock().unwrap().insert(c.id().to_string());
+        // fix-write-stalls: the database's mark (`claim`) is this compactor's from now on: its `stop` removes it
+        t.fx_claim_handover();
         G_STARTED.fetch_add(1, Relaxed);
         // L0 SSTs already at or below X_d (a restart) count as absorbed
-        c.recognise_absorbed().await?;
+        if c.knobs.recognise_in_background {
+            // fix-write-stalls: `start` runs under the database's exclusive lock, inside the first write after an opening.
+            // Only the SSTs the version lists as absorbed are taken here (no read); the others are read by a job that
+            // starts now, whatever the L0 count (perf-latency's deferral to the first absorption left L0 unfoldable after
+            // a reopen whose L0 never reached the absorption threshold, 8075895). The job holds the absorption lock, so no
+            // absorption plans before it ends; until then the fold sees only the listed SSTs as foldable.
+            let rest = c.recognise_listed().await;
+            c.spawn_recognise(rest);
+        } else {
+            c.recognise_absorbed().await?;
+        }
         super::drop::start_slate(&c).await?;
         Ok(c)
     }
@@ -774,6 +863,80 @@ impl Compactor {
     // ------------------------------------------------------------------------------------------------------------
     // Absorption
 
+    /// fix-write-stalls: take the L0 SSTs the version lists as absorbed (`absorbed_l0`, no read) and return the others in
+    /// the writer's view, which only a read of each tells.
+    async fn recognise_listed(&self) -> Vec<slatedb::manifest::SsTableView> {
+        let v = self.cur.lock().await.v.clone();
+        let listed: HashMap<String, u64> = v.absorbed_l0.iter().cloned().collect();
+        let mut rest = Vec::new();
+        {
+            let mut a = self.absorbed.lock().unwrap();
+            for view in self.db.manifest().l0().iter() {
+                match listed.get(&view.id.to_string()) {
+                    Some(max) if *max <= v.x_d => {
+                        a.insert(view.id, *max);
+                        L0_RECOGNISED_FROM_VERSION.fetch_add(1, Relaxed);
+                    }
+                    _ => rest.push(view.clone()),
+                }
+            }
+            self.drop.set_foldable(&a);
+        }
+        rest
+    }
+
+    /// fix-write-stalls: read `rest` (L0 SSTs not listed as absorbed) in a job of their own, off the database's lock, and
+    /// take those whose rows are all at or below X_d as absorbed. The job holds the absorption lock: an absorption waits for
+    /// it and then plans on what it found. `stop` aborts it like any job (it writes nothing).
+    fn spawn_recognise(self: &Arc<Self>, rest: Vec<slatedb::manifest::SsTableView>) {
+        if rest.is_empty() {
+            return;
+        }
+        self.running.lock().unwrap().absorb = true;
+        RECOGNISE_JOBS.fetch_add(1, Relaxed);
+        self.spawn(Prio::Absorb, move |c| async move {
+            let r = c.recognise_views(rest).await;
+            c.running.lock().unwrap().absorb = false;
+            r
+        });
+    }
+
+    async fn recognise_views(&self, views: Vec<slatedb::manifest::SsTableView>) -> Result<()> {
+        let _one = self.absorb_lock.lock().await;
+        let t0 = Instant::now();
+        let pause = PAUSE_RECOGNISE_MS.load(Relaxed);
+        if pause > 0 {
+            tokio::time::sleep(Duration::from_millis(pause)).await;
+        }
+        let x_d = self.cur.lock().await.v.x_d;
+        let n = views.len();
+        L0_RECOGNISED_BY_READ.fetch_add(n as u64, Relaxed);
+        use futures::{StreamExt, TryStreamExt};
+        // each SST with one GET (`WholeObjects`), as `recognise_absorbed`, not one GET per 4 KiB block
+        let jobs: Vec<_> = views
+            .into_iter()
+            .map(|view| {
+                let reader = slatedb::SstReader::new(crate::lifecycle::tenant_path(self.id()), whole_objects(&self.store), None, None);
+                Box::pin(async move { Ok::<_, anyhow::Error>((view.id, l0_max_seq(&reader, &view).await?)) }) as std::pin::Pin<Box<dyn std::future::Future<Output = Result<_>> + Send>>
+            })
+            .collect();
+        let maxes: Vec<_> = futures::stream::iter(jobs).buffer_unordered(l0_read_parallel()).try_collect().await?;
+        let mut found = 0;
+        {
+            let mut a = self.absorbed.lock().unwrap();
+            for (id, max) in maxes {
+                if max <= x_d {
+                    a.insert(id, max);
+                    found += 1;
+                }
+            }
+            self.drop.set_foldable(&a);
+        }
+        RECOGNISE_MS_MAX.fetch_max(t0.elapsed().as_millis() as u64, Relaxed);
+        eprintln!("L0_RECOGNISE db={} read={n} absorbed={found} ms={} off_lock=1", self.id(), t0.elapsed().as_millis());
+        Ok(())
+    }
+
     /// L0 SSTs whose rows are all at or below X_d are absorbed already (after a restart, or a version written by the
     /// offline builder).
     async fn recognise_absorbed(&self) -> Result<()> {
@@ -830,7 +993,10 @@ impl Compactor {
     /// Absorb the oldest L0 SSTs not absorbed yet into one delta run and publish. Returns the SSTs absorbed. One
     /// absorption at a time (rule 16: no gap).
     pub async fn absorb_once(&self) -> Result<usize> {
+        let t_call = Instant::now();
         let _one = self.absorb_lock.lock().await;
+        let t_locked = Instant::now();
+        let l0_start = self.l0_count();
         let views: Vec<_> = self.unabsorbed().into_iter().take(self.knobs.absorb_max_l0).collect();
         if views.is_empty() {
             return Ok(0);
@@ -840,8 +1006,9 @@ impl Compactor {
         let mut rows: BTreeMap<Vec<u8>, (u64, Vec<u8>)> = BTreeMap::new();
         let mut ids = Vec::new();
         let mut x_new = v0.x_d;
-        for view in &views {
-            let rs = read_l0_whole(&self.store, self.id(), view).await?;
+        type ReadL0<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Vec<L0Row>>> + Send + 'a>>;
+        let reads = futures::future::try_join_all(views.iter().map(|view| Box::pin(read_l0_whole(&self.store, self.id(), view)) as ReadL0<'_>)).await?;
+        for (view, rs) in views.iter().zip(reads) {
             let (mut lo, mut hi) = (u64::MAX, 0u64);
             for r in &rs {
                 lo = lo.min(r.row.seq);
@@ -873,6 +1040,7 @@ impl Compactor {
             ids.push((view.id, hi));
         }
         let raw: u64 = rows.iter().map(|(k, (_, e))| (k.len() + e.len() + 8) as u64).sum();
+        let t_read = Instant::now();
         let mut line = None;
         if !rows.is_empty() {
             let path = manifest::run_path(self.id(), "delta", x_new, self.epoch);
@@ -890,6 +1058,7 @@ impl Compactor {
             *per_group.entry(gi).or_default() += (k.len() + e.len() + 8) as u64;
         }
         let x_old = v0.x_d;
+        let t_written = Instant::now();
         let now = manifest::now_ms();
         let gids: HashMap<usize, u32> = v0.groups.iter().enumerate().map(|(i, g)| (i, g.id)).collect();
         let committed = self
@@ -952,6 +1121,24 @@ impl Compactor {
             self.sh.stats.absorbed_rows.fetch_add(rows.len() as u64, Relaxed);
             self.sh.stats.absorbed_raw.fetch_add(raw, Relaxed);
         }
+        // diagnostics (cause 3): where an absorption's time goes, and the writer's L0 before and after it
+        let ms = |a: Instant, b: Instant| b.duration_since(a).as_millis();
+        let t_end = Instant::now();
+        eprintln!(
+            "ABSORB u={} db={} ssts={} rows={} raw_kib={} committed={} l0_start={l0_start} l0_end={} lock_ms={} read_ms={} write_ms={} commit_ms={} total_ms={}",
+            crate::waits::unix_ms(),
+            self.id(),
+            ids.len(),
+            rows.len(),
+            raw >> 10,
+            committed.is_some() as u8,
+            self.l0_count(),
+            ms(t_call, t_locked),
+            ms(t_locked, t_read),
+            ms(t_read, t_written),
+            ms(t_written, t_end),
+            ms(t_call, t_end)
+        );
         Ok(ids.len())
     }
 
@@ -1441,6 +1628,25 @@ impl Compactor {
             Err(_) => return,
         };
         let unabs = self.unabsorbed().len();
+        {
+            // diagnostics (cause 3): once a second, the writer's L0, the part not absorbed, and SlateDB's running job
+            let mut lt = self.last_l0_trace.lock().unwrap();
+            if lt.elapsed() >= Duration::from_secs(1) {
+                *lt = Instant::now();
+                let job = self.drop.cur_job.lock().unwrap().as_ref().map(|(t, d)| format!("{}ms {d}", t.elapsed().as_millis()));
+                eprintln!(
+                    "L0_TRACE u={} db={} l0={} unabs={} absorbing={} slate_jobs={}/{} slate_job={}",
+                    crate::waits::unix_ms(),
+                    self.id(),
+                    self.l0_count(),
+                    unabs,
+                    self.running.lock().unwrap().absorb as u8,
+                    self.drop.jobs_done.load(Relaxed),
+                    self.drop.jobs.load(Relaxed),
+                    job.unwrap_or_else(|| "-".into())
+                );
+            }
+        }
         let mut r = self.running.lock().unwrap();
         // absorption: L0 at the threshold, or an erasure waiting for its deletes, or L0 close to the stall
         if !r.absorb && unabs > 0 && (unabs >= self.knobs.absorb_min_l0 || self.erasure_waits_for_absorb(v.x_d) || self.sh.absorb_upto.load(Relaxed) > v.x_d || self.l0_count() >= 6) {
@@ -1698,7 +1904,8 @@ struct L0Row {
 /// Every row of an L0 SST, the SST fetched with one GET (c2-fix-clone-uploads). Read through `SstReader` on the store,
 /// every 4 KiB block was a GET of its own, one after the other: a close's last flush of 30 MB took about 7,500 GETs and
 /// more than the close could wait for its absorption (MEASURED: a restore of the closed database then read 634 MB from
-/// its unabsorbed, so uncompacted, L0). One SST is in memory at a time (at most one memtable).
+/// its unabsorbed, so uncompacted, L0). fix-write-stalls: an absorption reads its SSTs at once (at most `absorb_max_l0`
+/// memtables in memory), a compactor's start `l0_read_parallel()` at a time.
 async fn read_l0_whole(store: &Arc<dyn ObjectStore>, id: &str, view: &slatedb::manifest::SsTableView) -> Result<Vec<L0Row>> {
     let reader = slatedb::SstReader::new(crate::lifecycle::tenant_path(id), whole_objects(store), None, None);
     read_l0(&reader, view).await

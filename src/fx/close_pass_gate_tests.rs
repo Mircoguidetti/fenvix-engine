@@ -54,6 +54,7 @@ fn knobs() -> Knobs {
         reseal_parallel: 1,
         read_ahead: 64 << 10,
         derive: None,
+        recognise_in_background: false,
     }
 }
 

@@ -103,6 +103,19 @@ impl Lazy {
     }
 }
 
+/// Tests (fix-write-stalls): a build waits this long right after its snapshot, and right before its version's create, so
+/// a test can write, read, close, erase or kill -9 the process while a first build runs off the database's lock. 0: no
+/// wait (FENVIX_TEST_BUILD_PAUSE_SNAPSHOT_MS, FENVIX_TEST_BUILD_PAUSE_CREATE_MS in the server).
+pub static PAUSE_AFTER_SNAPSHOT_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static PAUSE_BEFORE_CREATE_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+async fn pause(ms: &std::sync::atomic::AtomicU64) {
+    let ms = ms.load(std::sync::atomic::Ordering::Relaxed);
+    if ms > 0 {
+        tokio::time::sleep(std::time::Duration::from_millis(ms)).await;
+    }
+}
+
 /// The stored envelope of a SlateDB row (rows at or below E_env, and the marker, are plain values).
 fn envelope_of(e_env: u64, key: &[u8], seq: u64, value: &[u8]) -> Result<Vec<u8>> {
     if seq <= e_env || key == crate::envelope::MARKER {
@@ -119,17 +132,27 @@ fn envelope_of(e_env: u64, key: &[u8], seq: u64, value: &[u8]) -> Result<Vec<u8>
 /// build). Returns the published version, or None when there is nothing new to publish. An error leaves only orphan
 /// runs (GC's business in step 4), never a half-published version.
 pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, id: &str, cur: Option<&View>, e_env: u64, epoch: Option<u64>, opts: &BuildOpts, fail: Option<&(dyn Fn(&str) -> Result<()> + Sync)>) -> Result<Option<(Version, BuildReport)>> {
-    // the cut: a WAL flush, then a snapshot at the last committed seq (all durable). c2-fix-hangs: the flush waits for the
-    // WAL PUT, which SlateDB retries without end while the store does not answer; the server's publish runs inside a
-    // write, under the database's exclusive lock, so the write and every later command on the database waited forever
-    // (ctl test_31). Bounded by the F6 timeout; nothing of ours is written before this point, so the publish just fails.
+    // fix-write-stalls: the L0 SSTs in the writer's view before the cut. Each was flushed before the snapshot below, so
+    // every row it holds has a seq at or below the cut: the first version lists them as absorbed (`absorbed_l0`, with the
+    // cut as their highest seq, an upper bound), and a compactor starting on it reads none of them again
+    let l0_before: Vec<String> = if cur.is_none() { db.manifest().l0().iter().map(|v| v.id.to_string()).collect() } else { Vec::new() };
+    // the cut: a snapshot at the last committed seq, then a WAL flush, which makes every write committed so far durable,
+    // so every seq at or below the cut is durable before anything of the version is written. The order matters off the
+    // database's lock (fix-write-stalls, the first build): writes go on, and with the flush first a write staged while
+    // the flush was in flight entered the snapshot without being durable; after a crash the next owner reopened SlateDB
+    // below X_d and its new writes got seqs at or below X_d, which reads take from our runs only (the reviewer's
+    // test_68r: "manifest 1 has X_d 34 but SlateDB's last seq is 3", the database refused for good)
+    let snap = db.snapshot().await?;
+    let x = snap.seq();
+    // c2-fix-hangs: the flush waits for the WAL PUT, which SlateDB retries without end while the store does not answer; a
+    // publish under the database's exclusive lock then held every later command on the database (ctl test_31). Bounded by
+    // the F6 timeout; nothing of ours is written before this point, so the publish just fails.
     let limit = std::time::Duration::from_millis(super::PUT_TIMEOUT_MS.load(std::sync::atomic::Ordering::Relaxed));
     match tokio::time::timeout(limit, db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::Wal })).await {
         Ok(r) => r?,
         Err(_) => return Err(anyhow::Error::new(super::CutNotDurable(format!("database {id}: the WAL flush of the cut did not end in {limit:?}; nothing published")))),
     }
-    let snap = db.snapshot().await?;
-    let x = snap.seq();
+    pause(&PAUSE_AFTER_SNAPSHOT_MS).await;
     ensure!(e_env <= x, "E_env {e_env} above the cut {x}");
     let (prev_x, reseal_all) = match cur {
         None => (0, true),
@@ -245,7 +268,8 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
         Some(v) => v.version + 1,
         None => manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1),
     };
-    let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: delta_runs, next_group_id, absorbed_l0: Vec::new() };
+    let absorbed_l0 = l0_before.into_iter().map(|id| (id, x)).collect();
+    let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: delta_runs, next_group_id, absorbed_l0 };
     rep.version = version;
     rep.groups = v.groups.len();
     // the staged publish (step 6, `counter.rs`): before the version that retires runs becomes current, warm the new runs'
@@ -255,6 +279,7 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
         let staged = View::new(Arc::clone(store), v.clone(), Some(old))?;
         rep.stage = Some(super::counter::stage(old, &staged).await);
     }
+    pause(&PAUSE_BEFORE_CREATE_MS).await;
     let created = match manifest::create(store, id, &v).await {
         Ok(c) => c,
         // the outcome is unknown (an error, a timeout: the PUT may still land); the caller fences the slot this version
