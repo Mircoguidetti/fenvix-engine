@@ -43,6 +43,37 @@ pub struct GcState {
     pub versions_deleted: AtomicU64,
     pub local_deleted: AtomicU64,
     pub passes: AtomicU64,
+    /// fix-idle-poll: the last pass was whole and left nothing to delete before `next_due_ms` (wall clock; u64::MAX:
+    /// nothing at all), while the database served version `settled_serving`. See [`GcState::idle_skip`].
+    settled: std::sync::atomic::AtomicBool,
+    next_due_ms: AtomicU64,
+    settled_serving: AtomicU64,
+}
+
+/// fix-idle-poll: an idle database's GC pass (5 LISTs and 2 to 3 GETs, MEASURED) runs at least this often.
+pub const GC_IDLE_EVERY: std::time::Duration = std::time::Duration::from_secs(600);
+/// Passes an idle database skipped (serverStatus `sealedRuns.gcPassesSkippedIdle`).
+pub static GC_PASSES_SKIPPED_IDLE: AtomicU64 = AtomicU64::new(0);
+
+impl GcState {
+    /// fix-idle-poll. A GC pass that is due may be skipped while the database is idle: the last pass was whole, nothing
+    /// it kept becomes deletable before now (a version leaving its retention, a run reaching its grace), the version the
+    /// database serves is the one it saw, and the last pass ran less than `GC_IDLE_EVERY` ago. Skipping only deletes
+    /// later: what a pass keeps never depends on when it runs (references, holds, the drop lease and the grace are read
+    /// or checked by the pass itself), so a later pass is as safe as an earlier one; what others change meanwhile (a
+    /// fork, a pair, a hold released) is deleted at most `GC_IDLE_EVERY` later. `FENVIX_SLATE_IDLE_POLL_MS=0`: never
+    /// skipped (the negative control).
+    pub fn idle_skip(&self, since_last: std::time::Duration, serving: u64) -> bool {
+        super::drop::slate_idle_poll_ms() > 0
+            && self.settled.load(Relaxed)
+            && since_last < GC_IDLE_EVERY
+            && manifest::now_ms() < self.next_due_ms.load(Relaxed)
+            && self.settled_serving.load(Relaxed) == serving
+    }
+
+    fn unsettle(&self) {
+        self.settled.store(false, Relaxed);
+    }
 }
 
 pub(crate) fn runs_of(v: &Version) -> Vec<String> {
@@ -118,6 +149,7 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
         }
     }
     if !st.to_load.lock().unwrap().is_empty() {
+        st.unsettle();
         st.passes.fetch_add(1, Relaxed);
         return Ok(());
     }
@@ -130,9 +162,19 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
     // rule 19: while a checkpoint holds the drop lease, the version it will pair with is not named anywhere yet (the lease
     // names none, step 7a's format): GC deletes nothing until the lease ends (review of step 4, FIX 1)
     if super::pair::lease_held(store, id).await? {
+        // fix-idle-poll: nothing can be deleted while the lease is held; an idle database looks again when a lease
+        // left by a holder that died would have expired (its life), not at every `gc_every` (MEASURED in sealed2-derive,
+        // `gc_every` 5 s: an idle database read the lease and listed the versions every 5 s for good)
+        st.next_due_ms.store(manifest::now_ms().saturating_add(super::pair::LEASE_LIFE_MS.load(Relaxed)), Relaxed);
+        st.settled_serving.store(c.sh.serving_version.load(Relaxed), Relaxed);
+        st.settled.store(true, Relaxed);
         st.passes.fetch_add(1, Relaxed);
         return Ok(());
     }
+    st.unsettle();
+    let serving_at_start = c.sh.serving_version.load(Relaxed);
+    // fix-idle-poll: the earliest wall-clock time something this pass keeps can become deletable
+    let mut next_due = u64::MAX;
     let (ref_versions, ref_runs) = references(store, id).await?;
     let retention = c.knobs.version_retention.as_millis() as u64;
     let now_ms = manifest::now_ms();
@@ -156,6 +198,9 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
     for &n in &versions {
         let Some((runs, stamp)) = st.listed.lock().unwrap().get(&n).cloned() else { continue };
         let young = retention > 0 && now_ms.saturating_sub(stamp) < retention;
+        if young && n < floor_v && !ref_versions.contains(&n) {
+            next_due = next_due.min(stamp.saturating_add(retention));
+        }
         if n >= floor_v || ref_versions.contains(&n) || young {
             referenced.extend(runs);
             continue;
@@ -207,11 +252,15 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
         if let Some(t) = job_floor {
             if m.last_modified.timestamp_millis() + JOB_CLOCK_MARGIN_MS >= t as i64 {
                 KEPT_FOR_RUNNING_JOB.fetch_add(1, Relaxed);
+                next_due = 0;
                 continue;
             }
         }
         if first.elapsed() >= grace && age >= grace {
             doomed.push(m.location);
+        } else {
+            let wait = grace.saturating_sub(first.elapsed()).max(grace.saturating_sub(age));
+            next_due = next_due.min(manifest::now_ms().saturating_add(wait.as_millis() as u64));
         }
     }
     fu.retain(|p, _| live_unref.contains(p));
@@ -235,13 +284,22 @@ pub async fn gc_once(c: &Compactor) -> Result<()> {
         for m in metas {
             // a young copy may belong to a version published after this pass listed the versions
             let age = std::time::Duration::from_millis((manifest::now_ms() as i64 - m.last_modified.timestamp_millis()).max(0) as u64);
-            if !in_use.contains(&m.location.to_string()) && age >= grace {
-                if local.delete(&m.location).await.is_ok() {
-                    st.local_deleted.fetch_add(1, Relaxed);
+            if !in_use.contains(&m.location.to_string()) {
+                if age >= grace {
+                    if local.delete(&m.location).await.is_ok() {
+                        st.local_deleted.fetch_add(1, Relaxed);
+                    } else {
+                        next_due = 0;
+                    }
+                } else {
+                    next_due = next_due.min(manifest::now_ms().saturating_add(grace.saturating_sub(age).as_millis() as u64));
                 }
             }
         }
     }
+    st.next_due_ms.store(next_due, Relaxed);
+    st.settled_serving.store(serving_at_start, Relaxed);
+    st.settled.store(true, Relaxed);
     st.passes.fetch_add(1, Relaxed);
     Ok(())
 }

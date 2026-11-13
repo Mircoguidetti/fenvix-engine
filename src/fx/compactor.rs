@@ -565,6 +565,8 @@ pub struct Compactor {
     /// GC's state (first sights of unreferenced objects).
     pub gc: super::gc::GcState,
     last_gc: Mutex<Instant>,
+    /// fix-idle-poll: the last `gc_every` period since the last pass in which a due pass was skipped (counted once each).
+    gc_skip_k: AtomicU64,
     /// fix-write-stalls, cause 3 (diagnostics): the last `L0_TRACE` line.
     last_l0_trace: Mutex<Instant>,
     /// Drop jobs done when the writer last refreshed its SlateDB manifest (its L0 count, and its stalls, are by its view).
@@ -650,6 +652,7 @@ impl Compactor {
             codec: codec::identity(),
             gc: Default::default(),
             last_gc: Mutex::new(Instant::now()),
+            gc_skip_k: AtomicU64::new(0),
             last_l0_trace: Mutex::new(Instant::now()),
             refreshed_jobs: AtomicU64::new(0),
             job_starts: Mutex::new(HashMap::new()),
@@ -719,6 +722,8 @@ impl Compactor {
         ACTIVE.lock().unwrap().remove(&self.id().name);
         let s = self.slate_stop.lock().unwrap().take();
         if let Some((c, w)) = s {
+            // fix-box-first-trip: no poll read is held from now on (`drop::SlateGate`), so the stop is not held
+            self.drop.stop_slate_polls();
             let _ = c.stop().await;
             let _ = w.stop().await;
         }
@@ -1829,7 +1834,16 @@ impl Compactor {
                 x.map(|_| ())
             });
         }
-        let gc_due = self.last_gc.lock().unwrap().elapsed() >= self.knobs.gc_every;
+        let mut gc_due = self.last_gc.lock().unwrap().elapsed() >= self.knobs.gc_every;
+        // fix-idle-poll: an idle database's pass that can delete nothing yet is skipped (`GcState::idle_skip`)
+        if gc_due && !r.gc && self.gc.idle_skip(self.last_gc.lock().unwrap().elapsed(), self.sh.serving_version.load(Relaxed)) {
+            // the next look after another `gc_every`; `idle_skip` counts from the last pass that ran
+            gc_due = false;
+            let k = (self.last_gc.lock().unwrap().elapsed().as_millis() / self.knobs.gc_every.as_millis().max(1)) as u64;
+            if self.gc_skip_k.swap(k, Relaxed) != k {
+                super::gc::GC_PASSES_SKIPPED_IDLE.fetch_add(1, Relaxed);
+            }
+        }
         if !r.gc && gc_due {
             r.gc = true;
             *self.last_gc.lock().unwrap() = Instant::now();
@@ -1844,6 +1858,8 @@ impl Compactor {
         let done = self.drop.jobs_done.load(Relaxed);
         if done > self.refreshed_jobs.swap(done, Relaxed) {
             let db = self.db.clone();
+            // fix-idle-poll: the writer's manifest poll is not held now (the refresh goes through it)
+            super::writer_gate::wake(&self.id().name);
             // c2-fix-hangs: the compactor's work, not drawn from the database's quota (`counting::as_maintenance`)
             self.runtime.spawn(crate::counting::as_maintenance(crate::waits::polled("refresh_manifest", self.id().to_string(), async move {
                 let _ = db.refresh_manifest().await;
