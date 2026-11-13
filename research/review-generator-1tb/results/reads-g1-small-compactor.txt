@@ -1,0 +1,10 @@
+mongod loaded: 321072 documents of 51 customers in 4 s
+[A, after the generation (reader)] reads 744, wrong 0, 100 s
+[A, after writes (writer)] reads 744, wrong 0, 67 s
+A compactor before the kill: {'enabled': True, 'started': 1, 'running': 1, 'publishes': 311, 'absorbs': 35, 'merges': 10, 'reseals': 266, 'errors': 0, 'catchUps': 1}
+[B, after the takeover] reads 744, wrong 0, 67 s
+B compactor: {'enabled': True, 'started': 1, 'running': 1, 'publishes': 273, 'absorbs': 25, 'merges': 8, 'reseals': 240, 'errors': 0, 'catchUps': 0}
+[B, after writes and compaction] reads 744, wrong 0, 278 s
+[B, after a restart] reads 744, wrong 0, 70 s
+TOTAL reads 3720, wrong 0, retried 0
+RUN_DONE 0

@@ -1,0 +1,36 @@
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k1w.log:ballast app_data_b01: 1024 customers, 2.00 GiB planned, 3 groups, 3 slices (0 committed before, 3 to do), 1 writers, 2 key partitions, cut 11
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k1w.log:SIGKILL at 120 s
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k1w.log:ballast app_data_b01: RESUMING the generator state of the pantry
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k1w.log:ballast app_data_b01: 1024 customers, 2.00 GiB planned, 3 groups, 3 slices (1 committed before, 2 to do), 1 writers, 2 key partitions, cut 11
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k1w.log:SIGKILL at 75 s
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k1w.log:ballast app_data_b01: RESUMING the generator state of the pantry
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k1w.log:ballast app_data_b01: 1024 customers, 2.00 GiB planned, 3 groups, 3 slices (1 committed before, 2 to do), 1 writers, 2 key partitions, cut 11
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k1w.log:BALLAST-DB app_data_b01: FAILED: app_data_b01: slice 1: Generic S3 error: Error performing PUT http://127.0.0.1:9000/gen-k1w/generator/app_data_b01/sample/
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k1w.log:ballast app_data_b01: RESUMING the generator state of the pantry
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k1w.log:ballast app_data_b01: 1024 customers, 2.00 GiB planned, 3 groups, 3 slices (1 committed before, 2 to do), 1 writers, 2 key partitions, cut 11
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k1w.log:BALLAST: DONE: 1 databases, 2.00 GiB of BSON in 180 s (11.9 MB/s together)
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k60.log:ballast app_data_b01: 1024 customers, 2.00 GiB planned, 3 groups, 3 slices (0 committed before, 3 to do), 4 writers, 2 key partitions, cut 11
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k60.log:SIGKILL at 60 s
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k60.log:ballast app_data_b01: RESUMING the generator state of the pantry
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k60.log:ballast app_data_b01: 1024 customers, 2.00 GiB planned, 3 groups, 3 slices (0 committed before, 3 to do), 4 writers, 2 key partitions, cut 11
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k60.log:BALLAST: DONE: 1 databases, 2.00 GiB of BSON in 139 s (15.4 MB/s together)
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k105.log:ballast app_data_b01: 1024 customers, 2.00 GiB planned, 3 groups, 3 slices (0 committed before, 3 to do), 4 writers, 2 key partitions, cut 11
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k105.log:SIGKILL at 105 s
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k105.log:ballast app_data_b01: RESUMING the generator state of the pantry
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k105.log:ballast app_data_b01: 1024 customers, 2.00 GiB planned, 3 groups, 3 slices (0 committed before, 3 to do), 4 writers, 2 key partitions, cut 11
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k105.log:BALLAST: DONE: 1 databases, 2.00 GiB of BSON in 117 s (18.4 MB/s together)
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k128.log:ballast app_data_b01: 1024 customers, 2.00 GiB planned, 3 groups, 3 slices (0 committed before, 3 to do), 4 writers, 2 key partitions, cut 11
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k128.log:BALLAST: DONE: 1 databases, 2.00 GiB of BSON in 123 s (17.5 MB/s together)
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k128.log:SIGKILL at 128 s
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k128.log:ballast app_data_b01: already generated and published (generator/app_data_b01/done.json): nothing to do
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/k128.log:BALLAST: DONE: 1 databases, 2.00 GiB of BSON in 0 s (31959.3 MB/s together)
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/kp3.log:ballast app_data_b01: 1024 customers, 2.00 GiB planned, 3 groups, 3 slices (0 committed before, 3 to do), 4 writers, 2 key partitions, cut 11
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/kp3.log:SIGKILL 3 s after the last slice
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/kp3.log:ballast app_data_b01: RESUMING the generator state of the pantry
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/kp3.log:ballast app_data_b01: 1024 customers, 2.00 GiB planned, 3 groups, 3 slices (3 committed before, 0 to do), 4 writers, 2 key partitions, cut 11
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/kp3.log:BALLAST: DONE: 1 databases, 2.00 GiB of BSON in 73 s (29.6 MB/s together)
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/kp7.log:ballast app_data_b01: 1024 customers, 2.00 GiB planned, 3 groups, 3 slices (0 committed before, 3 to do), 4 writers, 2 key partitions, cut 11
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/kp7.log:SIGKILL 7 s after the last slice
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/kp7.log:ballast app_data_b01: RESUMING the generator state of the pantry
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/kp7.log:ballast app_data_b01: 1024 customers, 2.00 GiB planned, 3 groups, 3 slices (3 committed before, 0 to do), 4 writers, 2 key partitions, cut 11
+/tmp/claude-0/-home-user/65e79c2b-43d3-5019-ac3b-79a2aee6d15e/scratchpad/gen/kp7.log:BALLAST: DONE: 1 databases, 2.00 GiB of BSON in 77 s (28.0 MB/s together)

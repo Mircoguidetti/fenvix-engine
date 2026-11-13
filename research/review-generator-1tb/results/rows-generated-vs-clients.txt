@@ -1,0 +1,15 @@
+A version 1 x_d 11 groups 2; B version 1 x_d 334 groups 1
+idx/ordini: same 48063 only_A 0 only_B 0 value_differs 0
+loc/eventi: same 112309 only_A 0 only_B 0 value_differs 0
+loc/messaggi: same 160700 only_A 0 only_B 0 value_differs 0
+loc/ordini: same 48063 only_A 0 only_B 0 value_differs 0
+meta/collections: same 1 only_A 0 only_B 0 value_differs 0
+meta/copt: same 3 only_A 0 only_B 0 value_differs 0
+meta/indexes: same 3 only_A 0 only_B 0 value_differs 0
+meta/nat: same 3 only_A 0 only_B 0 value_differs 0
+meta/sstat: same 3 only_A 0 only_B 0 value_differs 0
+nat/eventi: same 112309 only_A 0 only_B 0 value_differs 0
+nat/messaggi: same 160700 only_A 0 only_B 0 value_differs 0
+nat/ordini: same 48063 only_A 0 only_B 0 value_differs 0
+sys/fx-envelopes: same 1 only_A 0 only_B 0 value_differs 0
+u/ (customer rows): same 642144 only_A 0 only_B 0 value_differs 0
