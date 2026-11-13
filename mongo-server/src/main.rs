@@ -147,6 +147,15 @@ struct Args {
     /// replays it once the leases run out.
     #[arg(long, default_value_t = 25)]
     shutdown_timeout_secs: u64,
+    /// P-fix-slow-store item 1: SIGTERM's close of the databases ends this long after the signal (at most
+    /// `--shutdown-timeout-secs`). Every step of every close shares this deadline: the optional ones (the compactor's
+    /// absorption of the last flush) get at most half of what is left, a flush or SlateDB close that does not fit is cut
+    /// into an unclean close (no marker: the next owner replays the WAL, where every acknowledged write is), and a lease
+    /// is released only by a close whose SlateDB writer stopped. Then the upload aborts, the usage counters and the
+    /// process lease get what is left plus a short grace. Before, a close waited on a slow store step by step: 8.7 s at
+    /// 200 ms per request and the whole 25 s at 1 s (MEASURED), and the process then exited with leases unreleased.
+    #[arg(long, default_value_t = 8)]
+    close_budget_secs: u64,
     /// Lease holder id (default: a unique id per process start).
     #[arg(long)]
     holder: Option<String>,
@@ -1395,19 +1404,53 @@ async fn run() -> Result<()> {
     eprintln!("shutting down: closing tenants cleanly");
     let bound = Duration::from_secs(args.shutdown_timeout_secs.max(1));
     let t0 = std::time::Instant::now();
+    // P-fix-slow-store item 1: one deadline for every database's close, then one short shared deadline for what follows
+    let close_deadline = tokio::time::Instant::now() + Duration::from_secs(args.close_budget_secs.max(1)).min(bound);
+    let tail_deadline = close_deadline + SHUTDOWN_TAIL;
     let clean = tokio::time::timeout(bound, async {
         ctl::stop_agents().await;
-        dbs.close_all().await;
-        // the closes stopped the compactors, whose cut jobs abort their run uploads in the background (review D1)
-        if !tenant_bench::runfmt::wait_dropped_aborts(Duration::from_secs(10)).await {
-            eprintln!("shutdown: run upload aborts still in flight after 10 s (the erase or drop of the database finds them)");
+        dbs.close_all_by(Some(close_deadline)).await;
+        let t_close = t0.elapsed();
+        // the closes stopped the compactors, whose cut jobs abort their run uploads in the background (review D1); an
+        // upload whose abort does not end here is left to the next owner (`uploads::abort_fenced`: its key names a writer
+        // epoch older than that owner's)
+        let tail_left = tail_deadline.saturating_duration_since(tokio::time::Instant::now());
+        if !tenant_bench::runfmt::wait_dropped_aborts(tail_left.min(Duration::from_secs(10))).await {
+            eprintln!("shutdown: run upload aborts still in flight (the next owner of the database aborts them: their writer epoch is older than its own)");
         }
-        ctl::shutdown().await;
-        leases.release_process().await;
-        eprintln!("tenants closed; stopping maintenance");
-        if let Some(m) = maintenance {
-            m.shutdown().await;
-        }
+        let t_aborts = t0.elapsed();
+        // the pins, the last usage counters and the process lease, and beside them the maintenance stop, by the tail
+        // deadline. Each is cut safely: a usage PUT and a lease PUT are atomic (a counter not written is counted by the
+        // next interval from what is stored; a lease not released runs out), and a compaction pass writes only through
+        // SlateDB's fenced compactions and conditional version PUTs.
+        // (the pins are handed over and the counters written before the process lease goes, as before)
+        let usage_then_lease = async {
+            if tokio::time::timeout_at(tail_deadline, ctl::shutdown()).await.is_err() {
+                eprintln!("shutdown: the pins and the last usage counters were not written in time");
+            }
+            if tokio::time::timeout_at(tail_deadline, leases.release_process()).await.is_err() {
+                eprintln!("shutdown: the process lease was not released in time; it runs out by itself");
+            }
+        };
+        let maint = async {
+            if let Some(m) = maintenance {
+                if tokio::time::timeout_at(tail_deadline, m.shutdown()).await.is_err() {
+                    eprintln!("shutdown: maintenance did not stop in time");
+                }
+            }
+        };
+        futures::join!(usage_then_lease, maint);
+        eprintln!(
+            "TIMING shutdown close_ms={} aborts_ms={} tail_ms={} deadline_cuts={} left_behind={} held_at_deadline={} optional_skipped={}",
+            t_close.as_millis(),
+            (t_aborts - t_close).as_millis(),
+            (t0.elapsed() - t_aborts).as_millis(),
+            tenant_bench::lifecycle::CLOSE_DEADLINE_CUTS.load(std::sync::atomic::Ordering::Relaxed),
+            tenant_bench::lifecycle::CLOSES_LEFT_BEHIND.load(std::sync::atomic::Ordering::Relaxed),
+            dbs::CLOSES_LOCK_PAST_DEADLINE.load(std::sync::atomic::Ordering::Relaxed),
+            dbs::CLOSES_OPTIONAL_SKIPPED.load(std::sync::atomic::Ordering::Relaxed),
+        );
+        eprintln!("tenants closed; stopping maintenance (done with the steps above)");
     })
     .await;
     if clean.is_err() {
@@ -1420,6 +1463,10 @@ async fn run() -> Result<()> {
     eprintln!("maintenance stopped ({} ms)", t0.elapsed().as_millis());
     Ok(())
 }
+
+/// P-fix-slow-store item 1: what the shutdown steps after the databases' close get past the close deadline, together (the
+/// upload aborts, then the usage counters, the process lease and the maintenance stop at once).
+const SHUTDOWN_TAIL: Duration = Duration::from_secs(2);
 
 /// A private server for the ballast generator's writers (`ballast.rs`): the same code on an in-memory store, no
 /// maintenance, no leases, no listener. A writer creates the database's catalog in it with the same commands as on the

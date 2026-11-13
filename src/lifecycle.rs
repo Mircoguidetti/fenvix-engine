@@ -130,6 +130,13 @@ pub const CLOSE_FLUSH_TIMEOUT: Duration = Duration::from_secs(20);
 /// How long `Tenant::abandon` waits for slatedb's close before leaving the tenant behind (its background tasks stop on their
 /// own once fenced or once the store answers). Abandons that hit it are counted in [`ABANDON_CLOSE_TIMEOUTS`].
 pub const ABANDON_CLOSE_TIMEOUT: Duration = Duration::from_secs(10);
+/// P-fix-slow-store item 1: how long past its deadline a close cut by it gives SlateDB's close without a flush before it
+/// leaves the writer behind (`Tenant::close_within`).
+pub const CLOSE_FALLBACK_GRACE: Duration = Duration::from_secs(1);
+/// Steps of a close cut by the close's deadline (`Tenant::close_within`, the server's shutdown budget), and writers whose
+/// close was left behind (their lease is kept). serverStatus `fenvix.close`.
+pub static CLOSE_DEADLINE_CUTS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static CLOSES_LEFT_BEHIND: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// After its deadline a compaction pass stops its compactor in rounds of about 1 s (`compact_tenant_within`) for at most this
 /// long, then gives up (the pass fails; slatedb's compactor tasks are left to their store request).
 pub(crate) const COMPACTOR_STOP_LIMIT: Duration = Duration::from_secs(120);
@@ -1652,6 +1659,14 @@ impl Tenant {
     /// view of the manifest, which can still show the previous writer's epoch after this one fenced (MEASURED: most
     /// records of a writer opened at epoch 3 were stamped 2), and a restart then took that writer's acknowledged records
     /// for an older writer's ("opened by another writer after these records": not applied).
+    /// SlateDB's writer epoch of this opening (None for a reader): the epoch run keys carry (`fx::manifest::run_path`).
+    pub fn slate_writer_epoch(&self) -> Option<u64> {
+        match &self.mode {
+            Some(Mode::Writer(db)) => Some(db.manifest().writer_epoch()),
+            _ => None,
+        }
+    }
+
     pub fn writer_epoch(&self) -> Option<u64> {
         match &self.mode {
             Some(Mode::Writer(db)) => Some(if self.epoch > 0 { self.epoch } else { db.manifest().writer_epoch() }),
@@ -3336,18 +3351,62 @@ impl Tenant {
 
     /// Close. A writer flushes its memtable, then the marker is written, and the tenant is
     /// queued for compaction if it now holds enough L0 SSTs. A reader just closes.
-    pub async fn close(mut self) -> Result<()> {
+    pub async fn close(self) -> Result<()> {
+        self.close_within(None).await.0
+    }
+
+    /// P-fix-slow-store item 1: `close` that ends by `deadline` (None: the old bounds only). Every step that waits on the
+    /// store gets what is left of it; a step that does not fit is cut where cutting it is safe, and the close goes on as
+    /// an unclean one: no marker (the next opening replays the WAL, where every acknowledged write already is), the
+    /// in-flight batches never confirmed here (`vis.kill`), and SlateDB's close without a flush, given at most
+    /// [`CLOSE_FALLBACK_GRACE`] past the deadline before it is left behind (counted in [`PENDING_CLOSES`]).
+    ///
+    /// Returns the close's result and whether the tenant's SlateDB handle has stopped (closed, or never opened): only then
+    /// may the caller release the database's lease. A writer left behind may still have a WAL PUT on its way; with the
+    /// lease kept, the next owner waits for it to run out and then fences that writer, as after a crash.
+    pub async fn close_within(mut self, deadline: Option<tokio::time::Instant>) -> (Result<()>, bool) {
+        let left = |cap: Duration| match deadline {
+            None => cap,
+            Some(d) => cap.min(d.saturating_duration_since(tokio::time::Instant::now())),
+        };
         // fix-write-stalls: a first build running off the lock ends before the writer closes (as when it ran inside the
-        // write, under the lock the close also takes); its version, if it landed, is the next opening's to load
+        // write, under the lock the close also takes); its version, if it landed, is the next opening's to load. Past the
+        // deadline it is cut instead, as an abandon does: this process still holds the lease, the build's version create
+        // is fenced (`fx::build::fence_check`) and its run uploads are aborted by their writers' drop.
         if self.fx_first.is_some() {
-            if let Err(e) = self.fx_first_poll(true).await {
-                eprintln!("close of tenant {}: first build: {e:#}", self.id);
+            let polled = tokio::time::timeout(left(Duration::MAX), self.fx_first_poll(true)).await;
+            match polled {
+                Ok(Err(e)) => eprintln!("close of tenant {}: first build: {e:#}", self.id),
+                Ok(Ok(_)) => {}
+                Err(_) => {
+                    CLOSE_DEADLINE_CUTS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    eprintln!("close of tenant {}: the first build did not end before the close's deadline; cut", self.id);
+                    self.fx_first_abort(false).await;
+                }
             }
         }
         self.fx_unclaim();
+        match self.close_mode(deadline, &left).await {
+            Ok(stopped) => (Ok(()), stopped),
+            Err((e, stopped)) => (Err(e), stopped),
+        }
+    }
+
+    async fn close_mode(&mut self, deadline: Option<tokio::time::Instant>, left: &(dyn Fn(Duration) -> Duration + Sync)) -> std::result::Result<bool, (anyhow::Error, bool)> {
         match self.mode.take() {
             Some(Mode::Reader(r)) => {
-                r.close().await?;
+                if deadline.is_none() {
+                    r.close().await.map_err(|e| (anyhow::Error::from(e), true))?;
+                } else {
+                    // a reader writes nothing: past the deadline its close is left to finish on its own
+                    let id = self.id.clone();
+                    let close = tokio::spawn(pending_close(&self.id, async move {
+                        if let Err(e) = r.close().await {
+                            eprintln!("close of reader {id}: {e}");
+                        }
+                    }));
+                    let _ = tokio::time::timeout(left(Duration::MAX), close).await;
+                }
                 // P-perf-bytes: a database with our runs that this process only read (after a restart, say) gets the
                 // maintenance pass of a closed database too, so runs retired before the restart do not wait for the next
                 // write session (`fx::gc::gc_closed`)
@@ -3361,45 +3420,74 @@ impl Tenant {
                 // and that compaction to refresh this writer's manifest; once `Db::close` has begun slatedb refuses the
                 // refresh, and the flush would wait for the writer's own manifest poll (`--writer-poll-secs`).
                 let id = self.id.clone();
-                let closed = tokio::time::timeout(CLOSE_FLUSH_TIMEOUT, async {
+                let limit = left(CLOSE_FLUSH_TIMEOUT);
+                let db2 = db.clone();
+                let closed = tokio::time::timeout(limit, async {
                     let memtable = slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable };
-                    if let Err(e) = db.flush_with_options(memtable).await {
+                    if let Err(e) = db2.flush_with_options(memtable).await {
                         eprintln!("close of tenant {id}: memtable flush before the close failed: {e}");
                     }
                     writer_closed(&id);
-                    db.close().await
+                    db2.close().await
                 })
                 .await;
                 writer_closed(&self.id);
                 match closed {
-                    Ok(r) => r?,
+                    Ok(r) => r.map_err(|e| (anyhow::Error::from(e), true))?,
                     Err(_) => {
-                        // The memtable flush is stalled (L0 full, waiting for a compaction). Everything acknowledged is in
-                        // durable WAL objects: close without the flush and leave no marker, so the next wake replays them.
-                        eprintln!("close of tenant {}: final flush did not finish in {:?}; closing without it (unclean)", self.id, CLOSE_FLUSH_TIMEOUT);
+                        // The memtable flush is stalled (L0 full, waiting for a compaction), or the store is too slow for
+                        // what is left of the deadline. Everything acknowledged is in durable WAL objects: close without
+                        // the flush and leave no marker, so the next wake replays them.
+                        if deadline.is_some() {
+                            CLOSE_DEADLINE_CUTS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        }
+                        eprintln!("close of tenant {}: final flush did not finish in {:?}; closing without it (unclean)", self.id, limit);
                         // with the log on, the last writes may be only in the log: the next wake replays them from it
                         // (unclean wake, `dbs.rs`); nothing pending here is confirmed by this writer any more
                         self.group.vis.kill();
                         forget_vis(&self.id, &self.group);
-                        let _ = db.close_with_options(slatedb::config::CloseOptions { flush_type: None }).await;
-                        return Err(anyhow!("final flush timed out"));
+                        // SlateDB's close without a flush still writes (its WAL buffer, the manifest): bounded too (it waited
+                        // without a bound before, so a store that did not answer held the close for good)
+                        let close = tokio::spawn(pending_close(&self.id, async move {
+                            let _ = db.close_with_options(slatedb::config::CloseOptions { flush_type: None }).await;
+                        }));
+                        let grace = left(CLOSE_FLUSH_TIMEOUT) + CLOSE_FALLBACK_GRACE;
+                        let stopped = tokio::time::timeout(grace, close).await.is_ok();
+                        if !stopped {
+                            CLOSES_LEFT_BEHIND.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                            eprintln!("close of tenant {}: SlateDB's close without a flush did not end in {:?}; left behind, the lease is kept", self.id, grace);
+                        }
+                        return Err((anyhow!("final flush timed out"), stopped));
                     }
                 }
                 // the close flushed the memtable: everything staged is in object storage
                 self.group.vis.confirm_all();
                 forget_vis(&self.id, &self.group);
                 let l0 = db.manifest().l0().len();
-                self.lc
-                    .store
-                    .put(&marker_path(&self.id), PutPayload::from_static(b"clean"))
-                    .await?;
+                // the marker is one PUT, atomic: without it (cut by the deadline) the next opening replays the WAL, which
+                // finds nothing more (the close flushed it); the database is closed either way
+                match tokio::time::timeout(left(Duration::MAX), self.lc.store.put(&marker_path(&self.id), PutPayload::from_static(b"clean"))).await {
+                    Ok(r) => {
+                        r.map_err(|e| (anyhow::Error::from(e), true))?;
+                    }
+                    Err(_) => {
+                        CLOSE_DEADLINE_CUTS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        eprintln!("close of tenant {}: the clean marker was not written before the close's deadline (the next opening replays the WAL)", self.id);
+                        return Ok(true);
+                    }
+                }
                 self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
                 // perf-latency round 3: also when compaction jobs are left pending (the compactor's fold, stopped by this
                 // close, puts its claimed jobs back as scheduled). SlateDB's GC deletes no SST newer than the oldest job
                 // still listed as active, so nothing after it was ever collected while the database stayed closed
                 // (MEASURED: about 5 GB of garbage `compacted/` SSTs per medium run, stored/logical 5.0 against 1.6).
                 // The pass runs those jobs (as it did when L0 was at the threshold at the close) and ends with the GC.
-                let pending = l0 < L0_COMPACT_THRESHOLD && compactions_active(&self.lc.store, &self.id).await.unwrap_or(false);
+                let pending = l0 < L0_COMPACT_THRESHOLD
+                    && match tokio::time::timeout(left(Duration::MAX), compactions_active(&self.lc.store, &self.id)).await {
+                        Ok(r) => r.unwrap_or(false),
+                        // past the deadline: the next close (or the next opening's L0 watch) asks again
+                        Err(_) => false,
+                    };
                 if l0 >= L0_COMPACT_THRESHOLD || pending {
                     if pending {
                         CLOSE_PASSES_FOR_PENDING.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -3411,7 +3499,7 @@ impl Tenant {
             }
             None => {}
         }
-        Ok(())
+        Ok(true)
     }
 }
 

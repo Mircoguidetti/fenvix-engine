@@ -109,6 +109,73 @@ pub async fn abort_all(prefix: &str) -> Result<Option<u64>> {
     Ok(Some(n))
 }
 
+/// The writer epoch a run's key names: `fx::manifest::run_path` writes `.../fx/run/<what>/<x:020>-<epoch>-<r:08x>`. None
+/// when the key is not a run's, or names no epoch (0: a run written without a writer).
+pub fn run_key_epoch(key: &str) -> Option<u64> {
+    if !key.contains("/fx/run/") {
+        return None;
+    }
+    let last = key.rsplit('/').next()?;
+    let mut parts = last.split('-');
+    let (x, e, r) = (parts.next()?, parts.next()?, parts.next()?);
+    if parts.next().is_some() || x.len() != 20 || !x.bytes().all(|b| b.is_ascii_digit()) || r.len() != 8 || !r.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return None;
+    }
+    e.parse::<u64>().ok().filter(|e| *e > 0)
+}
+
+/// Whether an upload is proved to belong to no live writer of its database: its key names a writer epoch below `epoch`,
+/// the database's current writer epoch. SlateDB's writer epoch rises at every writer open and fences every older writer:
+/// its WAL PUTs fail, and its version creates are refused (`fx::build::fence_check`, a compactor's own fence). Such an
+/// upload can never become part of a version; aborting it loses nothing, and if its writer is still running, its job
+/// fails and is never published.
+pub fn fenced_by(key: &str, epoch: u64) -> bool {
+    run_key_epoch(key).is_some_and(|e| e < epoch)
+}
+
+/// P-fix-slow-store item 2: at a writer's open (epoch `epoch`), abort every incomplete run upload of database `id` started
+/// by an older writer (`fenced_by`): a crash loop leaves them younger than the startup sweep's hour. Returns (listed,
+/// aborted); `None` when the store is not S3. An upload of this writer's own epoch (or of none) is never touched.
+pub async fn abort_fenced(id: &str, epoch: u64) -> Result<Option<(u64, u64)>> {
+    let prefix = format!("{}/fx/run/", tenant_bench::lifecycle::tenant_path(id));
+    let Some(found) = list(&prefix).await? else { return Ok(None) };
+    let s3 = S3_STORE.get().expect("listed");
+    let (mut aborted, listed) = (0u64, found.len() as u64);
+    for u in found.iter().filter(|u| fenced_by(&u.key, epoch)) {
+        let path = object_store::path::Path::parse(&u.key).with_context(|| format!("upload key {}", u.key))?;
+        match s3.store.abort_multipart(&path, &u.upload_id).await {
+            Ok(()) | Err(object_store::Error::NotFound { .. }) => aborted += 1,
+            Err(e) => return Err(anyhow!("abort of the fenced upload {} ({}): {e}", u.key, u.upload_id)),
+        }
+    }
+    FENCED_LISTED.fetch_add(listed, std::sync::atomic::Ordering::Relaxed);
+    FENCED_ABORTED.fetch_add(aborted, std::sync::atomic::Ordering::Relaxed);
+    Ok(Some((listed, aborted)))
+}
+
+/// `abort_fenced` in the background, after this process opened `id` as a writer at `epoch`; logged, a failure too (the
+/// next writer open, or the startup sweep, tries again).
+pub fn spawn_abort_fenced(id: String, epoch: u64) {
+    if S3_STORE.get().is_none() || epoch == 0 {
+        return;
+    }
+    tokio::spawn(async move {
+        match abort_fenced(&id, epoch).await {
+            Ok(Some((l, a))) if a > 0 => eprintln!("uploads: {id}: {a} of {l} incomplete run uploads were started by an older writer (epoch below {epoch}); aborted"),
+            Ok(_) => {}
+            Err(e) => {
+                FENCED_ERRORS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                eprintln!("uploads: {id}: the sweep of older writers' uploads failed: {e:#}")
+            }
+        }
+    });
+}
+
+/// `abort_fenced`: uploads listed, aborted, and sweeps that failed.
+pub static FENCED_LISTED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static FENCED_ABORTED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static FENCED_ERRORS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 /// Rounds of `abort_all` that found uploads still listed after aborting them.
 pub static ABORT_RELISTED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
@@ -192,6 +259,21 @@ mod tests {
         let (u, t, _, _) = parse(r#"<ListMultipartUploadsResult><IsTruncated>false</IsTruncated></ListMultipartUploadsResult>"#).unwrap();
         assert!(u.is_empty() && !t);
         assert!(parse("<Error><Code>AccessDenied</Code></Error>").is_err());
+    }
+
+    #[test]
+    fn reads_the_writer_epoch_of_a_run_key() {
+        let k = tenant_bench::fx::manifest::run_path("db1", "delta", 228, Some(7));
+        assert_eq!(run_key_epoch(&k), Some(7));
+        assert!(fenced_by(&k, 8) && !fenced_by(&k, 7) && !fenced_by(&k, 6));
+        let g = tenant_bench::fx::manifest::run_path("db-1", "g3s2", 99, Some(12));
+        assert_eq!(run_key_epoch(&g), Some(12));
+        // no epoch, not a run, a key of another shape: never proved fenced
+        assert_eq!(run_key_epoch(&tenant_bench::fx::manifest::run_path("db1", "delta", 5, None)), None);
+        assert!(!fenced_by(&tenant_bench::fx::manifest::run_path("db1", "delta", 5, None), u64::MAX));
+        assert_eq!(run_key_epoch("tenants/db1/compacted/01J0000000000000000000000.sst"), None);
+        assert_eq!(run_key_epoch("tenants/db1/fx/run/delta/123-4-5"), None);
+        assert_eq!(run_key_epoch("tenants/db1/fx/run/delta/00000000000000000228-x-7587ba69"), None);
     }
 
     #[test]
