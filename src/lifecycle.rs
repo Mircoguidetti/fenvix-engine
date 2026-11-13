@@ -1731,7 +1731,7 @@ impl Tenant {
             return Ok(StepState { fx: None, env, announced: cur.announced, loaded: crate::fx::loaded_at(t0) });
         }
         let announced = if env.is_none() { manifest::announced(store, &self.id).await? } else { cur.announced };
-        let fx = match manifest::load_newest(store, &self.id).await? {
+        let fx = match manifest::load_newest_trusted(store, &self.id).await? {
             None => None,
             Some(v) => {
                 anyhow::ensure!(v.e_env == env, "database {}: our manifest {} has E_env {:?}, the database's marker {:?}", self.id, v.version, v.e_env, env);
@@ -2001,7 +2001,7 @@ impl Tenant {
         if self.env.is_none() {
             self.fx_announced = manifest::announced(&store, &self.id).await?;
         }
-        let newest = manifest::load_newest(&store, &self.id).await?;
+        let newest = manifest::load_newest_trusted(&store, &self.id).await?;
         let newest = match (newest, self.fx_unknown.take()) {
             (Some(v), _) => Some(v),
             // a publish with an unknown outcome and an empty store (a first publish whose PUT may still land): fence its
@@ -2021,7 +2021,7 @@ impl Tenant {
                         return Ok(());
                     }
                     // the late PUT landed meanwhile: fence above it as usual
-                    Ok(false) => manifest::load_newest(&store, &self.id).await?,
+                    Ok(false) => manifest::load_newest_trusted(&store, &self.id).await?,
                     Err(e) => {
                         self.fx_unknown = Some(u);
                         self.fx_fence_pending = true;
@@ -2067,7 +2067,7 @@ impl Tenant {
                     crate::fx::FENCES.fetch_add(1, Relaxed);
                     break;
                 }
-                v = manifest::load_newest(&store, &self.id).await?.ok_or_else(|| anyhow!("database {}: our manifest vanished", self.id))?;
+                v = manifest::load_newest_trusted(&store, &self.id).await?.ok_or_else(|| anyhow!("database {}: our manifest vanished", self.id))?;
             }
             anyhow::ensure!(fenced, "database {}: could not publish a fence version of our manifest", self.id);
             self.fx_fence_pending = false;

@@ -232,6 +232,48 @@ pub async fn load_newest(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Optio
     }
 }
 
+/// Versions an opening or a refresh passed over because an older writer published them after a newer writer's
+/// (serverStatus `olderVersionsIgnored`); the negative control of the tests trusts the newest (the code before).
+pub static OLDER_VERSIONS_IGNORED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static CONTROL_TRUST_NEWEST: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// The newest version an opening or a refresh may serve (review of a60f4fe, rule 8). Writer epochs never go down along
+/// valid versions, so a newest version whose writer epoch is LOWER than the version below it is a late publish of a
+/// writer that lost the database (it landed after the takeover, inside the fence window of `build::fence_check`): its
+/// runs hold that writer's old snapshot, and serving or fencing it would drop every row between its X_d and the newer
+/// writer's. Such versions are passed over, newest first, and logged; the version kept is renumbered to the newest
+/// slot, so a writer's fence (`Version::fence`) and every later version land above the passed-over ones. One more GET
+/// than `load_newest` (the version below the newest) in the usual case.
+pub async fn load_newest_trusted(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<Version>> {
+    let Some(newest) = load_newest(store, id).await? else { return Ok(None) };
+    if CONTROL_TRUST_NEWEST.load(std::sync::atomic::Ordering::Relaxed) {
+        return Ok(Some(newest));
+    }
+    let mut keep = newest.clone();
+    for _ in 0..64 {
+        if keep.version <= 1 {
+            break;
+        }
+        let below = match load(store, id, keep.version - 1).await {
+            Ok(b) => b,
+            // collected by GC (retention 0): nothing below to compare with
+            Err(e) if e.downcast_ref::<object_store::Error>().is_some_and(|e| matches!(e, object_store::Error::NotFound { .. })) => break,
+            Err(e) => return Err(e),
+        };
+        if below.writer_epoch.unwrap_or(0) <= keep.writer_epoch.unwrap_or(0) {
+            break;
+        }
+        OLDER_VERSIONS_IGNORED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        eprintln!(
+            "OLDER_VERSION_IGNORED db={id} version={} writer_epoch={:?} x_d={}: below it version {} has writer_epoch {:?} x_d {}; serving that one",
+            keep.version, keep.writer_epoch, keep.x_d, below.version, below.writer_epoch, below.x_d
+        );
+        keep = below;
+    }
+    keep.version = newest.version;
+    Ok(Some(keep))
+}
+
 /// Fail point for tests: a publish whose PUT is delayed until the test lets it go (the PUT of a dead process landing
 /// late, rule 17).
 pub static SLOW_PUT: std::sync::Mutex<Option<Arc<tokio::sync::Notify>>> = std::sync::Mutex::new(None);

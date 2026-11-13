@@ -872,3 +872,71 @@ async fn ws_compactor_refuses_an_older_writers_version() {
     assert_eq!(wrong, 0, "rows lost");
     assert!(epoch >= Some(2), "the newest version is not the compactor's ({epoch:?})");
 }
+
+/// Review of a60f4fe, the opening (rule 8): a version of an older writer that landed at the newest slot (a late publish
+/// inside the fence window) is not what an opening serves or fences: it takes the newest version of the highest writer
+/// epoch. Same setup as `older_version_scenario`, but the stale version stays the newest (no compactor publishes after
+/// it); then a fresh opening reads, upgrades to a writer (its fence) and reads again. Control (`CONTROL_TRUST_NEWEST`,
+/// the code before): rows are lost.
+async fn older_newest_opening(control: bool) -> (usize, usize, u64) {
+    manifest::CONTROL_TRUST_NEWEST.store(control, Relaxed);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = if control { "ws-open-older-control" } else { "ws-open-older" };
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(format!("a-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let v1 = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    t.close().await.unwrap();
+    let mut t = lc(&store).wake(id).await.unwrap();
+    t.upgrade().await.unwrap();
+    // the drop on, as the server runs it: SlateDB's rows at or below the newer X_d are gone, so only the runs hold them
+    let k = knobs(true, false);
+    assert!(t.fx_claim());
+    let c = start(&mut t, &store, &k).await;
+    for r in 0..3 {
+        for i in 0..80 {
+            apply(&mut t, &mut m, vec![(ckey(1 + r, i), Some(format!("b-{r}-{i}").into_bytes()))]).await;
+        }
+        flush(&t).await;
+    }
+    c.drain(false).await.unwrap();
+    t.fx_sync(); // the tenant serves the newest version, so nothing holds the old floor
+    let x = c.current().await.x_d;
+    let dr = c.drop_through(x, Duration::from_secs(60)).await.unwrap();
+    let _ = dr;
+    c.stop().await;
+    t.close().await.unwrap();
+    // the older writer's late version lands at the newest slot, after everything
+    let cur = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    let mut stale = v1.clone();
+    stale.version = cur.version + 1;
+    stale.kind = "publish".into();
+    assert!(stale.writer_epoch < cur.writer_epoch);
+    assert!(manifest::create(&store, id, &stale).await.unwrap());
+    let ignored0 = manifest::OLDER_VERSIONS_IGNORED.load(SeqCst);
+    view::clear_cache(); // a new process: no view of this database in memory
+    let mut t = lc(&store).wake(id).await.unwrap();
+    let wrong_reader = wrong_reads(&t, &m, &HashSet::new()).await;
+    t.upgrade().await.unwrap();
+    let wrong_writer = wrong_reads(&t, &m, &HashSet::new()).await;
+    let ignored = manifest::OLDER_VERSIONS_IGNORED.load(SeqCst) - ignored0;
+    manifest::CONTROL_TRUST_NEWEST.store(false, Relaxed);
+    eprintln!("opening with an older newest version (control {control}): wrong as reader {wrong_reader}, as writer {wrong_writer} of {}; ignored {ignored}", m.len());
+    let _ = t.close().await;
+    (wrong_reader, wrong_writer, ignored)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_opening_ignores_an_older_writers_newest_version() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (r_ctl, w_ctl, _) = older_newest_opening(true).await;
+    let (r, w, ignored) = older_newest_opening(false).await;
+    teardown();
+    assert!(r_ctl + w_ctl > 0, "control: serving the older version must lose rows, or the test does not reach the case");
+    assert!(ignored >= 1, "the older version was not ignored");
+    assert_eq!((r, w), (0, 0), "rows lost (as reader, as writer)");
+}
