@@ -149,21 +149,33 @@ pub async fn bump_incarnation(store: &Arc<dyn ObjectStore>, name: &str) -> Resul
 }
 
 /// Delete the objects of older incarnations of `name` (late writes of a process that lost an erased or dropped
-/// incarnation): with the current incarnation k >= 1, everything under `tenants/{name}/` except `i{k}/` and the lease.
-/// One LIST with delimiter when there is nothing to delete. Returns the objects deleted.
+/// incarnation): everything under `tenants/{name}/` that belongs to an incarnation below the store's current one, read
+/// right before the LIST (root-level objects and directories are incarnation 0's; `i{j}/` is j), except the lease.
+/// One GET and one LIST with delimiter when there is nothing to delete. Returns the objects deleted.
 ///
-/// fix-incarnation: `k` is the incarnation the caller read under the lease, passed in, not read again from the table.
+/// fix-incarnation: `k` is the incarnation the caller read under the lease. It only says whether a sweep is wanted
+/// (k = 0: none); what is deleted comes from the store's number at the time of the sweep, never from `k`.
 pub async fn sweep_old_incarnations(store: &Arc<dyn ObjectStore>, name: &str, k: u64) -> Result<u64> {
     use futures::TryStreamExt;
     if k == 0 {
         return Ok(0);
     }
+    // review of fix-incarnation (R-rolling, rule 8): never delete on the strength of `k`, the number a past lease
+    // acquisition read. A sweep delayed past a lease loss, a drop and a re-creation of the name kept only `i{k}/` and
+    // deleted the live, newer incarnation. The store's number is read now, and only incarnations strictly below it are
+    // deleted: numbers only go up, so anything below the current one is garbage, whoever sweeps and whenever, lease or not.
+    let current = read_incarnation(store, name).await?;
+    if current == 0 {
+        return Ok(0);
+    }
+    // the incarnation a directory directly under the name belongs to: `i{j}` is j, anything else is incarnation 0's
+    let incarnation_of = |dir: &str| -> u64 { dir.strip_prefix('i').filter(|d| !d.is_empty() && d.bytes().all(|b| b.is_ascii_digit())).and_then(|d| d.parse().ok()).unwrap_or(0) };
     let top = Path::from(format!("tenants/{name}"));
-    let keep = format!("i{k}");
     let l = store.list_with_delimiter(Some(&top)).await?;
+    // root-level objects are incarnation 0's (the lease guards the name across incarnations and stays)
     let mut doomed: Vec<Path> = l.objects.into_iter().map(|m| m.location).filter(|p| p.filename() != Some("_lease")).collect();
     for d in l.common_prefixes {
-        if d.filename() == Some(keep.as_str()) {
+        if incarnation_of(d.filename().unwrap_or("")) >= current {
             continue;
         }
         let objs: Vec<Path> = store.list(Some(&d)).map_ok(|m| m.location).try_collect().await?;

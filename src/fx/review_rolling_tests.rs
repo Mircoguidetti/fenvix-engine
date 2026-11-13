@@ -157,3 +157,63 @@ async fn rr_erase_handler_load_repoints_a_stale_publish_into_the_new_incarnation
     assert_eq!(hit.stale_versions_in_new, 0, "a process that lost the database published a version into the new incarnation (versions {:?})", hit.versions_new);
     assert_eq!((hit.wrong, hit.errors, hit.old_rows_seen), (0, 0, 0), "the new incarnation reads wrong (open error {:?})", hit.open_err);
 }
+
+/// R-rolling, fix-incarnation review: the background sweep of old incarnations (`lease.rs`, run after a lease acquisition
+/// that read incarnation k) deletes everything under the name except `i{k}/`, without reading the store's incarnation
+/// again and without the lease. Process P took the lease at k = 1 and its sweep is delayed (a pause); P loses the lease;
+/// process Q drops the name (k = 2) and creates it again, with acknowledged writes. P's sweep then runs with k = 1.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn rr_delayed_sweep_deletes_the_newer_incarnation() {
+    let _s = SERIAL.lock().await;
+    enable();
+    view::clear_cache();
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = "rr-sweep";
+    // incarnation 1 exists (P took its lease and read k = 1)
+    crate::lifecycle::set_incarnation(id, 0);
+    assert_eq!(crate::lifecycle::bump_incarnation(&store, id).await.unwrap(), 1);
+    crate::lifecycle::set_incarnation(id, 1);
+    let mut t1 = lc(&store).create(id).await.unwrap();
+    let mut m1 = BTreeMap::new();
+    for i in 0..20 {
+        apply(&mut t1, &mut m1, vec![(ckey(0, i), Some(b"inc1".to_vec()))]).await;
+    }
+    t1.close().await.unwrap();
+    // Q: drop (k = 2), the same name created again, acknowledged writes, published
+    assert_eq!(crate::lifecycle::bump_incarnation(&store, id).await.unwrap(), 2);
+    crate::lifecycle::set_incarnation(id, 2);
+    let mut t2 = lc(&store).create(id).await.unwrap();
+    let mut m2 = BTreeMap::new();
+    for i in 0..50 {
+        apply(&mut t2, &mut m2, vec![(ckey(1, i), Some(format!("inc2-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t2, &small_opts(Reseal::All)).await;
+    t2.close().await.unwrap();
+    let under_i2 = |s: Arc<dyn ObjectStore>| async move {
+        futures::TryStreamExt::try_collect::<Vec<_>>(s.list(Some(&Path::from(format!("tenants/{id}/i2"))))).await.unwrap().len()
+    };
+    let before = under_i2(Arc::clone(&store)).await;
+    // P's delayed sweep, with the k its lease acquisition read
+    let swept = crate::lifecycle::sweep_old_incarnations(&store, id, 1).await.unwrap();
+    let after = under_i2(Arc::clone(&store)).await;
+    // the current owner reads its acknowledged writes
+    crate::lifecycle::set_incarnation(id, 2);
+    let (mut wrong, mut errors, mut open_err) = (0, 0, None);
+    match lc(&store).wake(id).await {
+        Ok(t3) => {
+            for (k, want) in &m2 {
+                match t3.get(k).await {
+                    Ok(v) if v.as_deref() == Some(&want[..]) => {}
+                    Ok(_) => wrong += 1,
+                    Err(_) => errors += 1,
+                }
+            }
+            let _ = t3.close().await;
+        }
+        Err(e) => open_err = Some(format!("{e:#}")),
+    }
+    crate::lifecycle::set_incarnation(id, 0);
+    eprintln!("delayed sweep with k = 1 after the name moved to 2: swept {swept}; objects under i2/ {before} -> {after}; incarnation 2 reads: wrong {wrong}, errors {errors} of {}, open error {open_err:?}", m2.len());
+    assert_eq!(after, before, "a delayed sweep deleted objects of the current incarnation");
+    assert_eq!((wrong, errors, open_err), (0, 0, None), "acknowledged writes of the current incarnation lost");
+}
