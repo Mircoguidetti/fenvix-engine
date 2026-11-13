@@ -486,3 +486,50 @@ def test_an_erase_left_incomplete_by_an_upload_is_finished_by_retries():
         px.release()
         srv.kill9()
         px.close()
+
+
+# ---- item 4: the cold start of a new database
+
+def test_the_first_insert_into_a_new_database_probes_the_store_once():
+    """The first insert of a new database read its catalog under several locks, and each lock probed the store again: a
+    lease GET and PUT, the clean marker, LISTs, then a lease discard because the database did not exist yet; then the
+    write created it. MEASURED at 100 ms per store request: 3.9 s and 3 lease PUTs with 2 discards on the base. Now the
+    "absent" answer and its lease are kept for a short hold, so the database is probed once and created with the lease
+    already held. Every request is delayed 100 ms by the proxy, so the counts and the time are deterministic."""
+    from lib import free_port
+    px = proxy()
+    port = free_port()
+    srv = Server(make_bucket("coldstart"), "coldstart", idle=600, endpoint=px.endpoint, port=port,
+                 extra=["--replica-set", "rs0", "--advertise", f"127.0.0.1:{port}"]).start()
+    try:
+        c = MongoClient(srv.uri)
+        c.warm.t.insert_one({"_id": 0})
+        time.sleep(1)
+        px.slow(("GET", "PUT", "POST", "DELETE", "HEAD"), "/", 0.1)
+        px.journal = []
+        t0 = time.time()
+        c.newdb.t.insert_one({"_id": 1})
+        took = time.time() - t0
+        j = list(px.journal)
+        px.journal = None
+        lease_puts = sum(1 for _, m, p, _s in j if m == "PUT" and p.endswith("/tenants/newdb/_lease"))
+        discards = sum(1 for _, m, p, _s in j if m in ("DELETE", "DELETE*") and p.endswith("/tenants/newdb/_lease"))
+        print(f"first insert into a new database at 100 ms per request: {took:.2f} s, {len(j)} store requests, "
+              f"{lease_puts} lease PUTs, {discards} lease discards")
+        assert lease_puts == 1 and discards == 0, f"the new database was probed {lease_puts} times ({discards} discards)"
+        assert took < 3.2, f"the first insert took {took:.2f} s"
+        assert c.newdb.t.find_one({"_id": 1}) == {"_id": 1}
+        # a name only read, never written: its lease is given up once the hold is over (the reaper), and it stays absent
+        px.release()
+        assert c.nosuchdb.t.find_one({}) is None
+        bucket = srv.bucket
+        t0 = time.time()
+        while list_prefix(bucket, "tenants/nosuchdb/") and time.time() - t0 < 15:
+            time.sleep(0.5)
+        print(f"lease of a name only read: {'given up' if not list_prefix(bucket, 'tenants/nosuchdb/') else 'still there'} after {time.time() - t0:.1f} s")
+        assert not list_prefix(bucket, "tenants/nosuchdb/"), "the absent hold kept its lease"
+        assert "nosuchdb" not in c.list_database_names()
+    finally:
+        px.release()
+        srv.kill9()
+        px.close()

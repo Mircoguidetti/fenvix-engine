@@ -101,7 +101,7 @@ class PathProxy:
                     c.close()
                 if proxy.journal is not None:
                     with proxy.lock:
-                        proxy.journal.append((time.time(), self.command, self.path.split("?")[0], resp.status))
+                        proxy.journal.append((time.time(), self.command, self.path.split("?")[0] + ("?" + self.path.split("?", 1)[1][:60] if "?" in self.path and self.command == "GET" and self.path.split("?")[0].count("/") == 1 else ""), resp.status))
                         if self.command == "POST" and "delete" in self.path.split("?", 1)[-1]:
                             # a multi-object delete: one entry per key of its body
                             import re as _re

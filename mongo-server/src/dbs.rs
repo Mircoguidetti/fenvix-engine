@@ -126,6 +126,13 @@ pub fn set_wake_limit(n: usize) {
 
 /// Idle and shutdown closes that may run at once.
 const CLOSE_CONCURRENCY: usize = 64;
+/// P-fix-slow-store item 4: how long a database found absent keeps its lease and its "absent" answer (`absent_until`).
+/// 0 (the control `FENVIX_TEST_NO_ABSENT_HOLD=1`): the lease is discarded at once and every lock probes again.
+static ABSENT_HOLD: std::sync::LazyLock<Duration> = std::sync::LazyLock::new(|| {
+    if std::env::var("FENVIX_TEST_NO_ABSENT_HOLD").as_deref() == Ok("1") { Duration::ZERO } else { Duration::from_secs(5) }
+});
+/// Opens answered "absent" from the hold, without a probe of the store.
+pub static ABSENT_HELD_ANSWERS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// Builder publishes made before a compactor started, to catch up rows an ungated pass folded (review FIX 1).
 pub static CATCH_UPS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// integration-4 (coordinator, CI a91a14a test_51r): why a compactor was not started when `maybe_start_fxc` was asked
@@ -181,6 +188,13 @@ pub struct Entry {
     /// The database was found not to exist during the current command: later reads of the same command answer
     /// "absent" without another lease attempt and LIST (reset when the next command takes the lock).
     absent: bool,
+    /// P-fix-slow-store item 4 (the cold start): the database was found not to exist, and this process kept its lease
+    /// until then. While the lease is held no other process can create the database, so "absent" stays true without a
+    /// new probe; the first command that writes creates it with the lease it already holds. Before, every lock of the
+    /// same first insert probed again (lease GET and PUT, the clean marker, LISTs, a lease discard): three probes, about
+    /// 20 store requests in a row before the database existed (about 3 s with S3's errors and tails, MEASURED). Past
+    /// this time the reaper gives the lease up (`spawn_reaper`).
+    absent_until: Option<Instant>,
     pub(crate) hint_written: bool,
     /// When each collection's expired documents were last swept by a write command.
     pub(crate) swept: HashMap<String, Instant>,
@@ -300,6 +314,7 @@ impl Dbs {
                     fxc_skip_logged: 0,
                     ttl_seen: AtomicBool::new(false),
                     absent: false,
+                    absent_until: None,
                     hint_written: false,
                     swept: HashMap::new(),
                     snap: None,
@@ -438,6 +453,7 @@ impl Dbs {
                     fxc_skip_logged: 0,
                         ttl_seen: AtomicBool::new(false),
                     absent: false,
+                    absent_until: None,
                         hint_written: false,
                         swept: HashMap::new(),
                     snap: None,
@@ -532,6 +548,14 @@ impl Dbs {
                 tokio::time::sleep(Duration::from_millis(500)).await;
                 let entries: Vec<Arc<AsyncMutex<Entry>>> = me.entries.lock().unwrap().values().cloned().collect();
                 for e in entries {
+                    // P-fix-slow-store item 4: an absent hold that is over gives its lease up
+                    let hold_over = matches!(e.try_read(), Ok(g) if g.tenant.is_none() && g.absent_until.is_some_and(|t| Instant::now() >= t));
+                    if hold_over {
+                        if let Ok(mut g) = Arc::clone(&e).try_write_owned() {
+                            g.end_absent_hold().await;
+                        }
+                        continue;
+                    }
                     // Cheap pre-check without waiting: skip entries in use or not idle yet.
                     let due = match e.try_read() {
                         Ok(g) => g.tenant.is_some() && g.active_txns == 0 && g.idle_for() >= me.idle,
@@ -1132,6 +1156,11 @@ impl Entry {
         if self.tenant.is_none() && self.absent {
             return Ok(false);
         }
+        if self.tenant.is_none() && self.absent_until.is_some_and(|t| Instant::now() < t) && self.leases.valid(&self.name) {
+            ABSENT_HELD_ANSWERS.fetch_add(1, Relaxed);
+            self.absent = true;
+            return Ok(false);
+        }
         // a reader whose view went stale (an SST it named was compacted and removed: sst-not-found) is replaced by a new one
         // on the latest manifest; a writer follows the manifest itself
         if tenant_bench::lifecycle::take_stale(&self.name) && self.tenant.as_ref().is_some_and(|t| !t.is_writer()) {
@@ -1165,9 +1194,11 @@ impl Entry {
             None => None,
         };
         tenant_bench::counting::set_phase(5);
-        let took = self.leases.acquire(&self.name).await?;
+        // P-fix-slow-store item 4 (the cold start): the database's durability setting is read beside the lease's
+        // acquire, not after it (one store round trip less on every open; it only refreshes a cached setting)
+        let (took, ()) = tokio::join!(self.leases.acquire(&self.name), crate::ctl::durability::refresh(&self.name));
+        let took = took?;
         lease::log("acquired", &self.name, &self.leases.holder, &format!("takeover_from={}", took.as_deref().unwrap_or("-")));
-        crate::ctl::durability::refresh(&self.name).await;
         match self.lc.wake(&self.name).await {
             Ok(t) => {
                 if took.is_some() || t.unclean {
@@ -1204,9 +1235,14 @@ impl Entry {
                 if self.db_exists().await? {
                     self.leases.release(&self.name).await;
                     Err(e)
-                } else {
+                } else if ABSENT_HOLD.is_zero() {
                     self.leases.discard(&self.name).await;
                     self.absent = true;
+                    Ok(false)
+                } else {
+                    // the lease is kept for ABSENT_HOLD (see `absent_until`): the reaper discards it if no write came
+                    self.absent = true;
+                    self.absent_until = Some(Instant::now() + *ABSENT_HOLD);
                     Ok(false)
                 }
             }
@@ -1215,6 +1251,21 @@ impl Entry {
 
     pub async fn close(&mut self) -> Result<()> {
         self.close_by(None).await
+    }
+
+    /// The absent hold (`absent_until`) is running and its lease still valid: the create needs no new acquire.
+    fn absent_hold_valid(&self) -> bool {
+        self.tenant.is_none() && self.absent_until.is_some_and(|t| Instant::now() < t) && self.leases.valid(&self.name)
+    }
+
+    /// The reaper's part of the absent hold: once it is over and no write created the database, give the lease up.
+    async fn end_absent_hold(&mut self) {
+        if self.tenant.is_none() && self.absent_until.is_some_and(|t| Instant::now() >= t) {
+            self.absent_until = None;
+            if self.leases.is_held(&self.name) {
+                self.leases.discard(&self.name).await;
+            }
+        }
     }
 
     /// `close`, ending by `deadline` (P-fix-slow-store item 1, the shutdown's close budget). The lease is released only
@@ -1531,7 +1582,10 @@ impl Entry {
             Op::Delete(k) => Op::Delete(k.clone()),
         }).collect::<Vec<Op>>()));
         if !self.ensure_open().await? {
-            self.leases.acquire(&self.name).await?;
+            if !self.absent_hold_valid() {
+                self.leases.acquire(&self.name).await?;
+            }
+            self.absent_until = None;
             lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
             self.nat.clear();
         self.copts.clear();
@@ -1963,7 +2017,10 @@ impl Entry {
     pub async fn begin_snapshot(&mut self) -> Result<(Arc<tenant_bench::fx::read::Snap>, u64)> {
         if !self.ensure_open().await? {
             // The database does not exist yet: create it so the transaction has something to snapshot.
-            self.leases.acquire(&self.name).await?;
+            if !self.absent_hold_valid() {
+                self.leases.acquire(&self.name).await?;
+            }
+            self.absent_until = None;
             self.nat.clear();
         self.copts.clear();
         self.ckey_decided.clear();
