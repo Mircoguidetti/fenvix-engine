@@ -814,7 +814,7 @@ impl Lifecycle {
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
         let scope = writer_scope(&id);
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_preempt: None, serving_until: Default::default(), serving_src: Default::default(), epoch: epoch, renewed: Default::default(), renewing: Default::default() };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_preempt: None, fx_next: Default::default(), serving_until: Default::default(), serving_src: Default::default(), epoch: epoch, renewed: Default::default(), renewing: Default::default() };
         t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
@@ -863,7 +863,7 @@ impl Lifecycle {
         let l0_at_wake = reader.manifest().l0().len();
         let reader = Arc::new(reader);
         READER_DBS.lock().unwrap().insert(id.clone(), Arc::downgrade(&reader));
-        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_preempt: None, serving_until: Default::default(), serving_src: Default::default(), epoch: 0, renewed: Default::default(), renewing: Default::default() };
+        let mut t = Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope, env: None, fx: None, holds: Default::default(), fx_loaded: Instant::now(), fx_writes: 0, fx_builds: 0, fx_announced: false, fx_announce_seen: None, fx_fence_pending: false, fx_unknown: None, fx_shared: None, fx_first: None, fx_claimed: false, fx_preempt: None, fx_next: Default::default(), serving_until: Default::default(), serving_src: Default::default(), epoch: 0, renewed: Default::default(), renewing: Default::default() };
         t.holds = crate::fx::hold::for_db(&t.id); // shared by every opening of the database in this process
         t.load_env().await?;
         t.load_fx().await?;
@@ -1590,6 +1590,9 @@ pub struct Tenant {
     fx_claimed: bool,
     /// A claim found a compaction pass running: it is asked to stop until the claim succeeds.
     fx_preempt: Option<PreemptGuard>,
+    /// fix-box-first-trip: the compactor's newest version, prepared for the routine refresh (`fx_next_ready`): its
+    /// view, its new runs being opened in the background, and when that began.
+    fx_next: std::sync::Mutex<Option<(Arc<crate::fx::view::View>, Instant)>>,
     /// Step 4, F7: the end of this process's serving lease of the database, as the server last renewed it. Past it the
     /// tenant begins no hold (no new read, no new transaction): a waiter that was cut off rather than dead must not
     /// start reads after the new waiter's drop window opened (RULES-FOR-THE-CODE rules 27, 28 with F7).
@@ -1919,8 +1922,9 @@ impl Tenant {
         if self.fx_fence_pending {
             return true;
         }
-        if let (Some(sh), Some(v)) = (&self.fx_shared, &self.fx) {
-            return sh.pending_version().is_some_and(|p| p > v.version);
+        if let (Some(_), Some(_)) = (&self.fx_shared, &self.fx) {
+            // fix-box-first-trip: due once the compactor's newer version has its runs open (or after FX_NEXT_WAIT)
+            return self.fx_next_ready() == Some(true);
         }
         // fix-box-first-trip: a reader whose state is past half its T_pin but still valid is NOT refreshed here, under the
         // exclusive lock before the command (three object-store trips in a row ahead of the customer's own: LIST, the
@@ -1976,7 +1980,10 @@ impl Tenant {
         self.absorb_renewal();
         let t0 = Instant::now();
         if self.fx_shared.is_some() && !self.fx_fence_pending {
-            self.fx_sync();
+            // fix-box-first-trip: the routine refresh installs the compactor's newer version once its runs are open
+            if self.fx_next_ready() != Some(false) {
+                self.fx_sync();
+            }
             return Ok(());
         }
         self.load_env().await?;
@@ -2064,15 +2071,23 @@ impl Tenant {
         let (Some(sh), Some(cur)) = (&self.fx_shared, &self.fx) else { return false };
         let p = sh.pending.lock().unwrap().clone();
         let Some(p) = p.filter(|p| p.version > cur.version) else { return false };
-        match crate::fx::view::View::new(Arc::clone(&self.lc.store), p, Some(cur)) {
-            Ok(mut nv) => {
+        // the view `fx_next_ready` prepared for this version, with the runs it opened since
+        let prepared = self.fx_next.get_mut().unwrap().take().filter(|(v, _)| v.version == p.version).map(|(v, _)| v);
+        let nv = match prepared {
+            Some(v) => Ok(v),
+            None => crate::fx::view::View::new(Arc::clone(&self.lc.store), p, Some(cur)).map(|mut nv| {
                 nv.r3 = Some(Arc::clone(&sh.r3));
+                Arc::new(nv)
+            }),
+        };
+        match nv {
+            Ok(nv) => {
                 // the floor may pass the old X_d only once nothing reads with it: holds cover reads in flight
                 sh.serving.store(nv.x_d, std::sync::atomic::Ordering::Relaxed);
                 sh.serving_version.store(nv.version, std::sync::atomic::Ordering::Relaxed);
                 // integration-3: as `fx_install` does, the counter (step 6) drops what it holds of runs this version retires
                 crate::fx::counter::forget_runs(&crate::fx::counter::retired(cur, &nv));
-                self.fx = Some(Arc::new(nv));
+                self.fx = Some(nv);
                 self.fx_loaded = Instant::now();
                 true
             }
@@ -2081,6 +2096,55 @@ impl Tenant {
                 false
             }
         }
+    }
+
+    /// fix-box-first-trip: whether the compactor's newer version may be installed by the routine refresh (None: no newer
+    /// version). The first call for a version prepares it: its view, and its runs not open yet are opened in the
+    /// background (a run of at most `OPEN_TAIL` bytes also seeds its blocks, `counter::seed_whole`). Until they are
+    /// open, or `FX_NEXT_WAIT_MS` passed, the writer keeps serving the version it serves, which stays exact: the floor
+    /// stays at its X_d (`Shared::serving`) and SlateDB keeps every row above it. Before, the version was installed at
+    /// once and the command that installed it opened the new runs itself, in waves of its own (MEASURED in test_79's
+    /// saves: the open of a new 87 KB sealed run, then a block of it). Callers that need the version now (erasure, scrub,
+    /// transactions) still call `fx_sync`, which installs at once.
+    fn fx_next_ready(&self) -> Option<bool> {
+        let (Some(sh), Some(cur)) = (&self.fx_shared, &self.fx) else { return None };
+        let p = sh.pending.lock().unwrap().clone().filter(|p| p.version > cur.version)?;
+        let mut g = self.fx_next.lock().unwrap();
+        if g.as_ref().is_none_or(|(v, _)| v.version != p.version) {
+            let nv = match crate::fx::view::View::new(Arc::clone(&self.lc.store), p, Some(cur)) {
+                Ok(mut nv) => {
+                    nv.r3 = Some(Arc::clone(&sh.r3));
+                    Arc::new(nv)
+                }
+                Err(_) => return Some(true), // `fx_sync` reports the error
+            };
+            let (opened, all) = nv.runs_opened();
+            if opened < all {
+                match tokio::runtime::Handle::try_current() {
+                    Ok(h) => {
+                        let v = Arc::clone(&nv);
+                        h.spawn(async move {
+                            if let Err(e) = v.open_all(8).await {
+                                eprintln!("sealed runs: opening the runs of version {} before its install: {e:#}", v.version);
+                            }
+                        });
+                        crate::fx::NEXT_PREPARED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    }
+                    Err(_) => return Some(true),
+                }
+            }
+            *g = Some((nv, Instant::now()));
+        }
+        let (v, t0) = g.as_ref().unwrap();
+        let (opened, all) = v.runs_opened();
+        if opened == all {
+            return Some(true);
+        }
+        let late = t0.elapsed() >= Duration::from_millis(crate::fx::FX_NEXT_WAIT_MS.load(std::sync::atomic::Ordering::Relaxed));
+        if late {
+            crate::fx::NEXT_INSTALLED_LATE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        }
+        Some(late)
     }
 
     /// The E_env to decode one step's rows with, read after the step's SlateDB view is open: the known one, or, once E1

@@ -555,3 +555,60 @@ async fn rvbsf_single_flight_wait_is_bounded() {
     println!("RVBSF single-flight waits cut short: {timeouts}");
     assert!(timeouts > 0, "no wait reached the bound: the test did not exercise it");
 }
+
+/// fix-box-first-trip: the open of a run of at most `OPEN_TAIL` bytes fetches the whole object, and its blocks are kept
+/// from those bytes (`counter::seed_whole`). A customer's box on a version whose runs are not open yet (a version the
+/// compactor just published) is then one wave, the opens, instead of the opens and then the blocks of the same objects.
+/// Control: `SEED_WHOLE` off, two waves. Every answer of the visit after it is checked, with no GET.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn bft_open_of_a_small_run_keeps_its_blocks() {
+    let _s = SERIAL.lock().await;
+    enable();
+    let ws = WaveStore::new();
+    let store: Arc<dyn ObjectStore> = ws.clone();
+    // 16 customers: the sealed run and the delta runs each stay under OPEN_TAIL (256 KiB)
+    let mut t = lc(&store).create("bs-seed").await.unwrap();
+    let mut m = BTreeMap::new();
+    for c in 0..16 {
+        let mut ops = Vec::new();
+        for i in 0..20 {
+            ops.push((doc(c, i), Some(vec![(c % 251) as u8; 300])));
+            ops.push((idx(c, i), Some(doc(c, i))));
+        }
+        for i in 0..10 {
+            ops.push((wdoc(c, i), Some(vec![7u8; 120])));
+        }
+        apply(&mut t, &mut m, ops).await;
+    }
+    publish(&mut t, &opts(Reseal::All)).await;
+    for c in 0..8 {
+        apply(&mut t, &mut m, vec![(doc(c, 20), Some(vec![1u8; 300])), (idx(c, 20), Some(doc(c, 20)))]).await;
+    }
+    publish(&mut t, &opts(Reseal::None)).await;
+    let meta = t.fx_view().unwrap().meta.clone();
+    let sizes: Vec<u64> = meta.groups.iter().filter_map(|g| g.sealed.as_ref().map(|r| r.size)).chain(meta.delta.iter().map(|r| r.size)).collect();
+    assert!(sizes.len() >= 2 && sizes.iter().all(|s| *s <= crate::runfmt::OPEN_TAIL), "every run under OPEN_TAIL: {sizes:?}");
+    for (seed, want_waves) in [(true, 1u64), (false, 2u64)] {
+        counter::SEED_WHOLE.store(seed, Relaxed);
+        view::clear_cache();
+        // a version no read has opened yet, as one the compactor just published
+        let v = Arc::new(view::View::new(Arc::clone(&store), meta.clone(), None).unwrap());
+        assert_eq!(v.runs_opened().0, 0);
+        let c = 3;
+        let (lo, hi) = range(c, "");
+        let s0 = counter::OPEN_SEEDED.load(Relaxed);
+        ws.start();
+        let (runs, _blocks) = v.warm_range(&lo, &hi).await.unwrap();
+        let (waves, gets) = ws.stop();
+        let seeded = counter::OPEN_SEEDED.load(Relaxed) - s0;
+        eprintln!("seed {seed}: the box on unopened runs: {waves} waves, {gets} GETs, {runs} runs, {seeded} blocks seeded");
+        assert_eq!(waves, want_waves, "seed {seed}: {gets} GETs, {seeded} blocks seeded");
+        assert_eq!(seeded > 0, seed);
+    }
+    counter::SEED_WHOLE.store(true, Relaxed);
+    // and the answers: the tenant's own reads of the customer, with every block from the counter
+    ws.start();
+    visit(&t, &m, 3).await;
+    let (_, gets) = ws.stop();
+    assert_eq!(gets, 0, "the visit after the box needs no GET");
+}

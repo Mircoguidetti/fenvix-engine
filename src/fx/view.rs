@@ -166,12 +166,22 @@ impl RunH {
                         opened = Some(run);
                     }
                 }
-                let run = match opened {
-                    Some(r) => r,
-                    None => Run::open_expecting(store, path, self.line.size, &self.id).await?.0,
+                let (run, whole) = match opened {
+                    Some(r) => (r, None),
+                    None => {
+                        let (r, _, whole) = Run::open_expecting_whole(store, path, self.line.size, &self.id).await?;
+                        (r, whole)
+                    }
                 };
                 ensure!(run.min_seq == self.line.min_seq && run.max_seq == self.line.max_seq && run.entries == self.line.entries, "run {} differs from its manifest line", self.line.path);
                 RUN_OPENS.fetch_add(1, Relaxed);
+                // fix-box-first-trip: the open's one GET fetched the whole run (at most `OPEN_TAIL` bytes): its blocks
+                // go into the counter from those bytes, so the read that opened it does not GET them again in a second
+                // wave (MEASURED: a first save on a version installed during its box warm-up waited 2 waves, the open
+                // of a new 87 KB sealed run and then a block of the same object)
+                if let Some(w) = whole {
+                    super::counter::seed_whole(&run, &w);
+                }
                 Ok(Arc::new(run))
             })
             .await

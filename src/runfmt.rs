@@ -1193,24 +1193,37 @@ impl Run {
 
     /// Opens a run: one GET of the last `OPEN_TAIL` bytes, a second one only when the footer is larger.
     pub async fn open(store: &Arc<dyn ObjectStore>, path: Path, size: u64) -> anyhow::Result<(Run, u64)> {
+        let (run, gets, _) = Run::open_whole(store, path, size).await?;
+        Ok((run, gets))
+    }
+
+    /// [`Run::open`], and the whole object when that one GET fetched all of it (a run of at most `OPEN_TAIL` bytes):
+    /// fix-box-first-trip, its blocks are then already in hand (`fx::counter::seed_whole`).
+    pub async fn open_whole(store: &Arc<dyn ObjectStore>, path: Path, size: u64) -> anyhow::Result<(Run, u64, Option<Bytes>)> {
         anyhow::ensure!(size > TRAILER, "corrupt run: {size} bytes");
         let a = size.saturating_sub(OPEN_TAIL);
         let tail = get_range(store, &path, a, size).await?;
         let (foff, _) = parse_trailer(&tail[tail.len() - TRAILER as usize..], size)?;
         if foff >= a {
             let run = Run::parse(path, size, &tail[(foff - a) as usize..])?;
-            return Ok((run, 1));
+            return Ok((run, 1, (a == 0).then_some(tail)));
         }
         let ft = get_range(store, &path, foff, size).await?;
-        Ok((Run::parse(path, size, &ft)?, 2))
+        Ok((Run::parse(path, size, &ft)?, 2, None))
     }
 
     /// Opens a run and checks its id against the one the caller recorded (step 3: the manifest line), so a path that now
     /// holds another object of the same size is an error.
     pub async fn open_expecting(store: &Arc<dyn ObjectStore>, path: Path, size: u64, run_id: &[u8; RUN_ID_LEN]) -> anyhow::Result<(Run, u64)> {
-        let (run, gets) = Run::open(store, path, size).await?;
-        anyhow::ensure!(&run.run_id == run_id, "run {} has another id than expected: another object at this path", run.path);
+        let (run, gets, _) = Run::open_expecting_whole(store, path, size, run_id).await?;
         Ok((run, gets))
+    }
+
+    /// [`Run::open_expecting`] with [`Run::open_whole`]'s whole object.
+    pub async fn open_expecting_whole(store: &Arc<dyn ObjectStore>, path: Path, size: u64, run_id: &[u8; RUN_ID_LEN]) -> anyhow::Result<(Run, u64, Option<Bytes>)> {
+        let (run, gets, whole) = Run::open_whole(store, path, size).await?;
+        anyhow::ensure!(&run.run_id == run_id, "run {} has another id than expected: another object at this path", run.path);
+        Ok((run, gets, whole))
     }
 
     /// RAM of this run's maps: the fence array, the customer filter and the fixed fields.

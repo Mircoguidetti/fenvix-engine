@@ -700,6 +700,32 @@ async fn fetch_claimed<'n>(store: &Arc<dyn ObjectStore>, run: &Run, first: usize
 /// fetched by another read (single flight), are skipped; blocks the disk floor holds are read from it. `left` is the
 /// customer's remaining allowance of decoded bytes: the wave stops once it is spent (the rest is read on demand).
 /// Returns (blocks kept, decoded bytes kept, GETs sent).
+/// fix-box-first-trip: blocks taken from a run's whole object fetched by its open (`runfmt::Run::open_whole`, a run of
+/// at most `OPEN_TAIL` bytes), not fetched again (serverStatus `sealedRuns.counter.openSeeded`).
+pub static OPEN_SEEDED: AtomicU64 = AtomicU64::new(0);
+
+/// Keep every block of `run` from `whole`, the run's whole stored object: decoded and checked as a fetched block is
+/// (`runfmt::decode_checked`: CRC, separators, first and last keys); a block that does not check is left to a fetch.
+/// Blocks already held are kept as they are. The counter's budget and trimming apply as to any block.
+pub fn seed_whole(run: &Run, whole: &[u8]) {
+    if !SEED_WHOLE.load(Relaxed) || whole.len() as u64 != run.size {
+        return;
+    }
+    for b in 0..run.fence.blocks() {
+        if cache_get(&CKey::Block(run.run_id, b as u32)).is_some() {
+            continue;
+        }
+        let (p, q) = run.fence.range(b, b);
+        if let Ok(blk) = runfmt::decode_checked(run, b, &whole[p as usize..q as usize]) {
+            drop(keep(run, b, blk, None, None));
+            OPEN_SEEDED.fetch_add(1, Relaxed);
+        }
+    }
+}
+
+/// `seed_whole` on (the default); off for the tests' negative control.
+pub static SEED_WHOLE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
 pub async fn warm_wave(store: &Arc<dyn ObjectStore>, run: &Run, a: usize, z: usize, left: &std::sync::atomic::AtomicI64) -> Result<(u64, u64, u64)> {
     let mut missing: Vec<usize> = (a..=z).filter(|b| cache_get(&CKey::Block(run.run_id, *b as u32)).is_none()).collect();
     // single flight, as in `fetch`: blocks another fetch is getting are waited for, then looked up again (a cancelled or

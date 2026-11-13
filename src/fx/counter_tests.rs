@@ -313,6 +313,10 @@ async fn staged_publish_keeps_hot_customers_warm_across_a_reseal() {
     let _s = SERIAL.lock().await;
     enable();
     let _m = Mode::set(SliceMode::Area);
+    // fix-box-first-trip: a run of at most OPEN_TAIL bytes keeps its blocks from its open (`counter::seed_whole`),
+    // which would answer these reads without the mechanism under test: off here, its own test is
+    // `big_speed_tests::bft_open_of_a_small_run_keeps_its_blocks`
+    counter::SEED_WHOLE.store(false, Relaxed);
     let staged_before = counter::STAGED.load(Relaxed);
     for staged in [true, false] {
         counter::STAGED.store(staged, Relaxed);
@@ -356,6 +360,7 @@ async fn staged_publish_keeps_hot_customers_warm_across_a_reseal() {
         t.abandon().await;
     }
     counter::STAGED.store(staged_before, Relaxed);
+    counter::SEED_WHOLE.store(true, Relaxed);
 }
 
 /// A staged publish that cannot finish within its deadline publishes anyway and counts what it did not warm; the reads
@@ -369,6 +374,10 @@ async fn staged_publish_past_its_deadline_publishes_anyway() {
     counter::TEST_WARM_DELAY_MS.store(50, Relaxed);
     view::clear_cache();
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    // fix-box-first-trip: a run of at most OPEN_TAIL bytes keeps its blocks from its open (`counter::seed_whole`),
+    // which would answer these reads without the mechanism under test: off here, its own test is
+    // `big_speed_tests::bft_open_of_a_small_run_keeps_its_blocks`
+    counter::SEED_WHOLE.store(false, Relaxed);
     let mut t = lc(&store).create("fx-deadline").await.unwrap();
     let mut m = BTreeMap::new();
     load(&mut t, &mut m, 100, 10, 300).await;
@@ -388,4 +397,5 @@ async fn staged_publish_past_its_deadline_publishes_anyway() {
     counter::STAGE_DEADLINE_MS.store(deadline_before, Relaxed);
     counter::TEST_WARM_DELAY_MS.store(0, Relaxed);
     t.abandon().await;
+    counter::SEED_WHOLE.store(true, Relaxed);
 }

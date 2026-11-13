@@ -163,6 +163,12 @@ pub static RENEWALS: AtomicU64 = AtomicU64::new(0);
 /// fix-box-first-trip: renewals a request started at its beginning, in the same wave as its customer's box
 /// (`Tenant::renew_alongside`).
 pub static RENEWALS_WITH_BOX: AtomicU64 = AtomicU64::new(0);
+/// fix-box-first-trip (`Tenant::fx_next_ready`): the longest a writer's routine refresh waits for the runs of the
+/// compactor's newer version to open before it installs it anyway (ms; 0: at once, the code before).
+pub static FX_NEXT_WAIT_MS: AtomicU64 = AtomicU64::new(2_000);
+/// Versions prepared with runs to open before their install, and those installed after the wait anyway.
+pub static NEXT_PREPARED: AtomicU64 = AtomicU64::new(0);
+pub static NEXT_INSTALLED_LATE: AtomicU64 = AtomicU64::new(0);
 /// fix-box-first-trip: read steps that went on with their valid state while another step renewed it.
 pub static STEPS_PAST_RENEWAL: AtomicU64 = AtomicU64::new(0);
 /// Negative control of c2-fix-long-reads, tests only: a read step never renews its state (the code before the fix),

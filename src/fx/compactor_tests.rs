@@ -806,12 +806,16 @@ async fn small_delta_runs_read_from_nvme() {
     assert!(l1 > l0);
     // without the NVMe store (another waiter): the same reads go to the store and agree
     local::set_store(None);
+    // fix-box-first-trip: off for this part, as the reader's open of a small run would keep its blocks
+    // (`counter::seed_whole`, tested in `big_speed_tests::bft_open_of_a_small_run_keeps_its_blocks`)
+    super::counter::SEED_WHOLE.store(false, Relaxed);
     let r = lc(&store).wake(id).await.unwrap();
     view::clear_cache();
     for i in 0..300 {
         assert_eq!(r.get(ckey(10, i)).await.unwrap().as_deref(), Some(&vec![b'n'; 30][..]));
     }
     assert!(view::RUN_GETS.load(Relaxed) > g1);
+    super::counter::SEED_WHOLE.store(true, Relaxed);
     r.abandon().await;
     c.stop().await;
     t.abandon().await;
@@ -1094,5 +1098,58 @@ async fn perf_bytes_follower_reads_across_a_real_drop() {
         let _ = f.abandon().await;
         t.abandon().await;
     }
+    teardown();
+}
+
+/// fix-box-first-trip: the routine refresh installs the compactor's newer version only once its runs are open
+/// (`Tenant::fx_next_ready`), so no command opens them in waves of its own; the writer serves the version it served
+/// meanwhile, with exact answers. Control: `FX_NEXT_WAIT_MS` 0 (the code before) installs at once, a new run not open.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn bft_newer_version_installed_once_its_runs_are_open() {
+    let _s = SERIAL.lock().await;
+    setup();
+    for wait_ms in [2_000u64, 0] {
+        FX_NEXT_WAIT_MS.store(wait_ms, Relaxed);
+        let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let id = format!("fx-bft-next-{wait_ms}");
+        let mut t = lc(&store).create(&id).await.unwrap();
+        let mut m = BTreeMap::new();
+        for i in 0..100 {
+            apply(&mut t, &mut m, vec![(ckey(3, i), Some(b"v".to_vec()))]).await;
+        }
+        publish(&mut t, &small_opts(build::Reseal::All)).await;
+        let c = Compactor::start(&mut t, Arc::clone(&store), test_knobs(false), pool::Pool::new(2), tokio::runtime::Handle::current()).await.unwrap();
+        for i in 0..200 {
+            apply(&mut t, &mut m, vec![(ckey(4, i), Some(vec![b'w'; 40]))]).await;
+        }
+        flush(&t).await;
+        let served = t.fx_view().unwrap().version;
+        c.absorb_once().await.unwrap();
+        assert!(c.current().await.version > served, "the compactor published a newer version");
+        let (p0, l0) = (NEXT_PREPARED.load(Relaxed), NEXT_INSTALLED_LATE.load(Relaxed));
+        let t0 = Instant::now();
+        while !t.fx_refresh_due() && t0.elapsed() < Duration::from_secs(5) {
+            // meanwhile the served version answers, exactly
+            assert_eq!(t.get(ckey(4, 7)).await.unwrap().as_deref(), m.get(&ckey(4, 7)).map(|v| &v[..]));
+            tokio::time::sleep(Duration::from_millis(1)).await;
+        }
+        t.fx_refresh().await.unwrap();
+        let v = Arc::clone(t.fx_view().unwrap());
+        let (opened, all) = v.runs_opened();
+        let (prepared, late) = (NEXT_PREPARED.load(Relaxed) - p0, NEXT_INSTALLED_LATE.load(Relaxed) - l0);
+        eprintln!("wait {wait_ms} ms: installed version {} after {:?}, runs open {opened} of {all}, prepared {prepared}, late {late}", v.version, t0.elapsed());
+        assert!(v.version > served);
+        if wait_ms > 0 {
+            assert_eq!((opened, prepared, late), (all, 1, 0), "installed with every run open, not late");
+        } else {
+            assert!(opened < all, "control: installed at once, a new run not open yet ({opened} of {all})");
+        }
+        for (key, want) in &m {
+            assert_eq!(t.get(key).await.unwrap().as_deref(), Some(&want[..]));
+        }
+        c.stop().await;
+        t.abandon().await;
+    }
+    FX_NEXT_WAIT_MS.store(2_000, Relaxed);
     teardown();
 }

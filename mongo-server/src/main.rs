@@ -1080,6 +1080,15 @@ async fn run() -> Result<()> {
     // Default since integration-3: on, first publish after 2 write batches; off only when asked
     // P-command-cpu: the span scan of a customer's documents (coll.rs docs_by_span), off for measurements and the
     // control of its test only (answers are the same either way)
+    // fix-box-first-trip: the negative controls of its tests only. FENVIX_FX_NEXT_WAIT_MS: how long a writer's routine
+    // refresh waits for the runs of the compactor's newer version to open (0: installs at once, the code before);
+    // FENVIX_OPEN_SEED=0: a run's open does not keep the blocks of the whole object it fetched
+    if let Some(ms) = std::env::var("FENVIX_FX_NEXT_WAIT_MS").ok().and_then(|v| v.parse::<u64>().ok()) {
+        tenant_bench::fx::FX_NEXT_WAIT_MS.store(ms, std::sync::atomic::Ordering::Relaxed);
+    }
+    if std::env::var("FENVIX_OPEN_SEED").is_ok_and(|v| v == "0") {
+        tenant_bench::fx::counter::SEED_WHOLE.store(false, std::sync::atomic::Ordering::Relaxed);
+    }
     if std::env::var_os("FENVIX_NO_SPAN_READS").is_some() {
         crate::coll::SPAN_READS.store(false, std::sync::atomic::Ordering::Relaxed);
     }
