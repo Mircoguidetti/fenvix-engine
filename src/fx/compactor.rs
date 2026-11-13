@@ -719,6 +719,8 @@ impl Compactor {
         ACTIVE.lock().unwrap().remove(&self.id().name);
         let s = self.slate_stop.lock().unwrap().take();
         if let Some((c, w)) = s {
+            // fix-box-first-trip: a poll read held while idle (`drop::SlateGate`) goes out now, so the stop is not held
+            self.drop.wake_slate();
             let _ = c.stop().await;
             let _ = w.stop().await;
         }

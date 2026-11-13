@@ -85,6 +85,11 @@ pub struct DropCtl {
     pub cur_job: Mutex<Option<(Instant, String)>>,
     /// The same, by destination sorted run (a job's filters, one per subcompaction, find their job by it).
     jobs_by_dest: Mutex<HashMap<u32, (Instant, String)>>,
+    /// fix-box-first-trip, SlateDB's polling ([`SlateGate`]): something to propose was signalled and the scheduler has
+    /// not run since (`slate_pending`); a job was proposed or runs (`slate_active`); the signal that ends a held poll.
+    slate_pending: AtomicBool,
+    slate_active: AtomicBool,
+    slate_wake: tokio::sync::Notify,
 }
 
 impl DropCtl {
@@ -122,14 +127,37 @@ impl DropCtl {
             control_no_takeover_window: AtomicBool::new(false),
             cur_job: Mutex::new(None),
             jobs_by_dest: Mutex::new(HashMap::new()),
+            slate_pending: AtomicBool::new(false),
+            slate_active: AtomicBool::new(false),
+            slate_wake: tokio::sync::Notify::new(),
         })
     }
 
+    /// fix-box-first-trip: SlateDB's compactor may have something to propose (an absorbed L0 SST to fold, a floor that
+    /// moved, a job that ended, a start or a stop): the polls held by [`SlateGate`] go out now, and the next ones too
+    /// until our scheduler has run (`Sched::propose` consumes the signal).
+    pub fn wake_slate(&self) {
+        self.slate_pending.store(true, Relaxed);
+        self.slate_wake.notify_waiters();
+    }
+
+    fn slate_busy(&self) -> bool {
+        self.slate_pending.load(Relaxed) || self.slate_active.load(Relaxed)
+    }
+
     pub fn set_foldable(&self, absorbed: &HashMap<ulid::Ulid, u64>) {
-        let mut f = self.foldable.lock().unwrap();
-        f.extend(absorbed.iter().map(|(k, v)| (*k, *v)));
+        let new = {
+            let mut f = self.foldable.lock().unwrap();
+            let n = f.len();
+            f.extend(absorbed.iter().map(|(k, v)| (*k, *v)));
+            f.len() > n
+        };
         if let Some(m) = absorbed.values().max() {
             self.known_xd.fetch_max(*m, Relaxed);
+        }
+        if new {
+            // an absorbed L0 SST is something to fold: SlateDB's compactor proposes it at its next poll
+            self.wake_slate();
         }
     }
 
@@ -257,9 +285,13 @@ impl DropCtl {
         let me = Arc::clone(self);
         tokio::spawn(async move {
             if let Ok(f) = me.floor().await {
-                me.observed.store(f, Relaxed);
+                let before = me.observed.swap(f, Relaxed);
                 if f > me.applied_floor.load(Relaxed) {
                     me.refold.store(true, Relaxed);
+                }
+                if f != before {
+                    // a floor that moved can make a fold or a drop of runs possible (`propose_aged_with`)
+                    me.wake_slate();
                 }
             }
             me.observing.store(false, Relaxed);
@@ -287,6 +319,7 @@ impl DropCtl {
     /// Ask for a re-fold now (tests).
     pub fn request_refold(&self) {
         self.refold.store(true, Relaxed);
+        self.wake_slate();
     }
 
     /// Aged folds (the default; measured against rule 12's one run in this step's report): every fold writes its absorbed
@@ -431,6 +464,25 @@ impl CompactionSchedulerSupplier for Sched {
 
 impl CompactionScheduler for Sched {
     fn propose(&self, state: &CompactorStateView) -> Vec<CompactionSpec> {
+        // fix-box-first-trip: the signal is consumed before the proposal (a wake that comes during it is kept), and
+        // SlateDB polls at its own pace while a job is proposed or runs (its worker claims, reports and ends it)
+        self.0.slate_pending.store(false, Relaxed);
+        let out = self.propose_inner(state);
+        let active = !out.is_empty() || state.compactions().is_some_and(|c| c.recent_compactions().any(|c| c.active()));
+        self.0.slate_active.store(active, Relaxed);
+        if active {
+            self.0.slate_wake.notify_waiters();
+        }
+        out
+    }
+
+    fn validate(&self, state: &CompactorStateView, spec: &CompactionSpec) -> Result<(), slatedb::Error> {
+        self.validate_inner(state, spec)
+    }
+}
+
+impl Sched {
+    fn propose_inner(&self, state: &CompactorStateView) -> Vec<CompactionSpec> {
         let mut beside_merge = false;
         if let Some(c) = state.compactions() {
             let active: Vec<_> = c.recent_compactions().filter(|c| c.active()).collect();
@@ -497,7 +549,7 @@ impl CompactionScheduler for Sched {
         out
     }
 
-    fn validate(&self, state: &CompactorStateView, spec: &CompactionSpec) -> Result<(), slatedb::Error> {
+    fn validate_inner(&self, state: &CompactorStateView, spec: &CompactionSpec) -> Result<(), slatedb::Error> {
         let m = state.manifest();
         let order = crate::tiered::logical_order(m.l0(), m.compacted());
         crate::tiered::check(Some(&order), spec).map_err(slatedb::Error::invalid)?;
@@ -577,6 +629,8 @@ impl CompactionFilter for Filter {
             eprintln!("SLATE_JOB end u={} db={} ms={} rows={} {desc}", crate::waits::unix_ms(), self.ctl.sh.id, t0.elapsed().as_millis(), self.kept + self.dropped);
         }
         self.ctl.applied_floor.fetch_max(self.floor, Relaxed);
+        // a job that ends can be followed by another one at once (a cap merge, the next fold)
+        self.ctl.wake_slate();
         // P-perf-bytes: the SSTs this job replaced are garbage once the SST cleanup's minimum age has passed
         crate::lifecycle::note_compacted(&self.ctl.sh.id.name);
         Ok(())
@@ -598,6 +652,111 @@ impl CompactionFilterSupplier for Sched {
     }
 }
 
+// ---- fix-box-first-trip: SlateDB's polling, held while there is nothing to do
+//
+// `start_slate` gives SlateDB's compactor a 20 ms poll and its worker a 10 ms one (compaction 2 step 4: the fold removes
+// absorbed L0 SSTs, which writes wait on). Each poll reads the store: the worker the next `.compactions` file and its
+// GC boundary, the compactor the next manifest and its boundary. MEASURED on a writer database left idle after 20
+// writes, sealed mode: about 375 GETs per second, with no request at all (0 with sealed runs off). STIMATO: about 1
+// billion GETs a month per open writer database, about $390 a month at S3's DICHIARATO $0.0004 per 1,000 GETs; and they
+// fell inside the windows test_79 measures a customer's next saves in.
+//
+// Everything SlateDB's compactor can do here is proposed by our scheduler (`Sched::propose`), from state our side
+// changes: an absorbed L0 SST (`set_foldable`), a floor that moved (`maybe_refold`), a re-fold asked, or a job already
+// proposed or running. So the polls are needed only then: [`SlateGate`] lets a poll read go out at once while the
+// database is busy (a wake not yet consumed by a proposal, or a job proposed or running), and otherwise holds it until
+// our side wakes it or `slate_idle_poll_ms` passes (5 s: SlateDB's own default poll). A wake lets one round of polls
+// through, not a stretch of time: MEASURED with a 2 s stretch instead, the polls of the stretch after each write still
+// fell inside test_79's next-saves window. A held read is a slower poll, never a changed answer:
+// it reaches the store unchanged, only later. SlateDB's writes stay conditional (a fence by another process is still
+// refused at its write), and its update timeouts are 300 s.
+
+/// The slowest poll while idle (ms); 0: no gate (`FENVIX_SLATE_IDLE_POLL_MS`, the negative control of the tests).
+pub fn slate_idle_poll_ms() -> u64 {
+    static V: std::sync::LazyLock<u64> = std::sync::LazyLock::new(|| std::env::var("FENVIX_SLATE_IDLE_POLL_MS").ok().and_then(|v| v.parse().ok()).unwrap_or(5_000));
+    *V
+}
+/// Poll reads held while idle, and those of them a wake released early (serverStatus `compactor.slatePolls*`).
+pub static SLATE_POLLS_HELD: AtomicU64 = AtomicU64::new(0);
+pub static SLATE_POLLS_WOKEN: AtomicU64 = AtomicU64::new(0);
+
+/// The reads SlateDB's compactor and worker poll: the manifest and `.compactions` files and their GC boundaries.
+fn polled(p: &object_store::path::Path) -> bool {
+    let s = p.as_ref();
+    !s.contains("/fx/") && (s.contains("/manifest/") || s.contains("/compactions/") || (s.contains("/gc/") && s.ends_with(".boundary")))
+}
+
+/// The store SlateDB's compactor and worker of one database use: every request goes to `inner` unchanged; a polled read
+/// while the database is idle waits first (see above).
+#[derive(Debug)]
+pub(crate) struct SlateGate {
+    inner: Arc<dyn ObjectStore>,
+    ctl: Arc<DropCtl>,
+}
+
+impl std::fmt::Debug for DropCtl {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "DropCtl({})", self.sh.id)
+    }
+}
+
+impl std::fmt::Display for SlateGate {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SlateGate({})", self.inner)
+    }
+}
+
+impl SlateGate {
+    async fn hold(&self, p: &object_store::path::Path) {
+        if !polled(p) {
+            return;
+        }
+        let woken = self.ctl.slate_wake.notified();
+        tokio::pin!(woken);
+        woken.as_mut().enable();
+        if self.ctl.slate_busy() {
+            return;
+        }
+        SLATE_POLLS_HELD.fetch_add(1, Relaxed);
+        tokio::select! {
+            _ = woken => { SLATE_POLLS_WOKEN.fetch_add(1, Relaxed); }
+            _ = tokio::time::sleep(Duration::from_millis(slate_idle_poll_ms())) => {}
+        }
+    }
+}
+
+#[async_trait]
+impl ObjectStore for SlateGate {
+    async fn put_opts(&self, location: &object_store::path::Path, payload: object_store::PutPayload, opts: object_store::PutOptions) -> object_store::Result<object_store::PutResult> {
+        self.inner.put_opts(location, payload, opts).await
+    }
+    async fn put_multipart_opts(&self, location: &object_store::path::Path, opts: object_store::PutMultipartOptions) -> object_store::Result<Box<dyn object_store::MultipartUpload>> {
+        self.inner.put_multipart_opts(location, opts).await
+    }
+    async fn get_opts(&self, location: &object_store::path::Path, options: object_store::GetOptions) -> object_store::Result<object_store::GetResult> {
+        self.hold(location).await;
+        self.inner.get_opts(location, options).await
+    }
+    fn delete_stream(&self, locations: futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>> {
+        self.inner.delete_stream(locations)
+    }
+    fn list(&self, prefix: Option<&object_store::path::Path>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.inner.list(prefix)
+    }
+    fn list_with_offset(&self, prefix: Option<&object_store::path::Path>, offset: &object_store::path::Path) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.inner.list_with_offset(prefix, offset)
+    }
+    async fn list_with_delimiter(&self, prefix: Option<&object_store::path::Path>) -> object_store::Result<object_store::ListResult> {
+        self.inner.list_with_delimiter(prefix).await
+    }
+    async fn copy_opts(&self, from: &object_store::path::Path, to: &object_store::path::Path, options: object_store::CopyOptions) -> object_store::Result<()> {
+        self.inner.copy_opts(from, to, options).await
+    }
+    async fn rename_opts(&self, from: &object_store::path::Path, to: &object_store::path::Path, options: object_store::RenameOptions) -> object_store::Result<()> {
+        self.inner.rename_opts(from, to, options).await
+    }
+}
+
 /// Start SlateDB's compactor and a worker on the database, with our scheduler and filter.
 pub(crate) async fn start_slate(c: &Arc<Compactor>) -> anyhow::Result<()> {
     let id = c.id().name.clone();
@@ -607,6 +766,10 @@ pub(crate) async fn start_slate(c: &Arc<Compactor>) -> anyhow::Result<()> {
     opts.worker = None;
     let path = crate::lifecycle::tenant_path(c.id()); // fix-incarnation: the tenant's captured incarnation
     let store = crate::counting::owned_background(&c.store, &id);
+    // fix-box-first-trip: SlateDB's compactor and worker poll the store every 20 and 10 ms (below); while there is
+    // nothing for them to do, their polls are held (`SlateGate`)
+    c.drop.wake_slate();
+    let store: Arc<dyn ObjectStore> = if slate_idle_poll_ms() > 0 { Arc::new(SlateGate { inner: store, ctl: Arc::clone(&c.drop) }) } else { store };
     // perf-latency: SlateDB's compactor and worker run their jobs on the runtime given here (default: the one `build` runs
     // on, which is the server's, inside the first write after an opening): the compactor's write-path runtime
     // instead (`pool::write_path_for`: the fold removes absorbed L0 SSTs, which the writes wait on)
