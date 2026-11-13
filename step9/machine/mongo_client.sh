@@ -137,7 +137,7 @@ if has reads-after-writes; then
     run_prog first-next-ops-after-writes $PY first_next_ops.py out/first-next-ops-after-writes --uri "$URI" --states fn-states \
       ${FN_DB:+--db "$FN_DB"} --counters mongod --label after-writes $(cfg first_next_ops_args)
     [ -s out/first-next-ops/first-next-ops-summary.json ] && $PY first_next_compare.py out/first-next-ops-after-writes/first-next-ops-summary.json \
-      out/first-next-ops/first-next-ops-summary.json out/first-next-ops-after-writes/against-before-writes.json --their-name "before the writes" \
+      out/first-next-ops/first-next-ops-summary.json out/first-next-ops-after-writes/against-before-writes.json --their-name "before the writes" --across-labels \
       > out/first-next-ops-after-writes/against-before-writes.txt 2>&1
   fi
 fi

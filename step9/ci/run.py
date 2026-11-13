@@ -440,7 +440,14 @@ try:
         for i in range(3):
             mongo[f"mongo-{i}"] = launch(f"mongo-{i}", "mongod", cmd["mongod"], infra.ZONES[i], disk_gb=int(cmd["mongod_disk_gb"]))
             cert_for(f"mongo-{i}", mongo[f"mongo-{i}"][1])
-        wait_for("mongod/ready.json", watch="mongo-0", limit_min=25, what="mongod set")
+        t_set = time.time()
+        while not exists("mongod/ready.json"):   # a member that stopped by itself ends the wait at once
+            minute("mongo-0")
+            gone = [n for n in mongo if exists(f"{n}/stopped")]
+            if gone:
+                raise Stop(f"MONGOD_MEMBER_STOPPED ({', '.join(gone)}: {last_line(f'results/{gone[0]}/steps.log')})")
+            if (time.time() - t_set) / 60 > 25:
+                raise Stop("NO_MONGOD_SET")
         say(f"mongod set ready: {get('mongod/ready.json')}")
         put("mongoclient/config.json", {"programs": cmd["programs"], "mongod_states": cmd["mongod_states"],
                                         "mongod_ballast_line": cmd["mongod_ballast_line"], "fn_db": cmd["mongod_fn_db"],

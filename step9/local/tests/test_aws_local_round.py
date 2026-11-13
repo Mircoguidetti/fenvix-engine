@@ -277,3 +277,23 @@ def test_hours_of_first_next_ops_scale_with_per_op_and_double_after_writes():
 def test_dry_run_still_accepts_every_command():
     out = subprocess.run(["bash", os.path.join(S9, "commands", "dry_run.sh")], capture_output=True, text=True).stdout
     assert out.count("[local] ACCEPTED") == len([f for f in os.listdir(os.path.join(S9, "commands")) if f.endswith(".json")])
+
+
+# ---------- found by the local docker round ----------
+def test_after_writes_against_before_writes_is_the_same_plan_across_labels():
+    import first_next_compare as cmp_
+    line = {"n": 5, "p50_ms": 1.0, "p99_ms": 2.0}
+    a = {"db": "d", "label": "after-writes", "seed": 9, "per_op": 30, "ops": {"resume": {"first": line, "next": line}}}
+    b = {**a, "label": "before-writes"}
+    assert cmp_.compare(a, b)["same_plan"] is False                 # ours against mongod: the labels must match
+    assert cmp_.compare(a, b, across_labels=True)["same_plan"] is True
+    for f in ("extras.sh", "mongo_client.sh"):
+        assert '--their-name "before the writes" --across-labels' in open(os.path.join(S9, "machine", f)).read()
+
+
+def test_the_mongod_set_is_initiated_through_localhost_and_a_stopped_member_ends_the_wait():
+    m = open(os.path.join(S9, "machine", "mongod.sh")).read()
+    i = m.index('"replSetInitiate"')
+    assert "mongodb://127.0.0.1:{port}/" in m[m.rindex("loc = ", 0, i):i]   # before: over the private IP, refused
+    run = open(os.path.join(S9, "ci", "run.py")).read()
+    assert "MONGOD_MEMBER_STOPPED" in run                            # before: 25 minutes of waiting after a member died

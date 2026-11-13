@@ -5,7 +5,7 @@ Two readings of every pair, both printed:
   - the benches' ratio rule: ours / theirs under 0.9 FASTER, up to 1.1 EQUAL, above SLOWER.
 FIRST is reported, never judged against the goal (a first request may pay S3); NEXT and save are the goal.
 A pair is compared only when both sides ran the same label, seed and group size; otherwise the output says so.
-Usage: first_next_compare.py OURS_SUMMARY_JSON THEIRS_SUMMARY_JSON [OUT_JSON] [--their-name mongod]
+Usage: first_next_compare.py OURS_SUMMARY_JSON THEIRS_SUMMARY_JSON [OUT_JSON] [--their-name mongod] [--across-labels]
   exit 0 always when both files are read (it reports; the decision is the reader's)."""
 import json
 import sys
@@ -18,8 +18,12 @@ def ratio_verdict(r):
     return "FASTER" if r < 0.9 else ("EQUAL" if r <= 1.1 else "SLOWER")
 
 
-def compare(ours, theirs):
-    same = all(ours.get(k) == theirs.get(k) for k in ("label", "seed", "per_op"))
+def compare(ours, theirs, across_labels=False):
+    """across_labels: the two sides ran other labels on purpose (after-writes against before-writes: other cold
+    customers of the same database), so only seed and group size must match (aws-local-round: the local W1 printed
+    "NOT THE SAME PLAN" for that pair, which is the plan)."""
+    keys = ("seed", "per_op") if across_labels else ("label", "seed", "per_op")
+    same = all(ours.get(k) == theirs.get(k) for k in keys)
     out = {"same_plan": same, "ours_db": ours.get("db"), "theirs_db": theirs.get("db"), "ops": {}}
     for op in OPS:
         o, t = (ours.get("ops") or {}).get(op) or {}, (theirs.get("ops") or {}).get(op) or {}
@@ -67,7 +71,7 @@ def main(argv):
     if "--their-name" in argv:
         args.remove(name)
     ours, theirs = json.load(open(args[0])), json.load(open(args[1]))
-    c = compare(ours, theirs)
+    c = compare(ours, theirs, across_labels="--across-labels" in argv)
     c["text"] = text(c, name)
     if len(args) > 2:
         json.dump(c, open(args[2], "w"), indent=1)

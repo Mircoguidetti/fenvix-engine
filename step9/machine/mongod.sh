@@ -107,7 +107,10 @@ import json, os, sys, time
 import pymongo
 ip0, ip1, ip2, port, ca = sys.argv[1:6]
 port = int(port)
-loc = pymongo.MongoClient(f"mongodb://{ip0}:{port}/?tls=true&tlsCAFile={ca}&directConnection=true", serverSelectionTimeoutMS=10000)
+# before any user exists, only 127.0.0.1 has the localhost exception (MEASURED locally: over the private IP the
+# initiate is refused with "requires authentication"); the certificate is for the IP: hostname check off on this link
+loc = pymongo.MongoClient(f"mongodb://127.0.0.1:{port}/?tls=true&tlsCAFile={ca}&tlsAllowInvalidHostnames=true&directConnection=true",
+                          serverSelectionTimeoutMS=10000)
 cfg = {"_id": "rsm", "members": [{"_id": 0, "host": f"{ip0}:{port}", "priority": 2},
                                  {"_id": 1, "host": f"{ip1}:{port}", "priority": 1},
                                  {"_id": 2, "host": f"{ip2}:{port}", "priority": 1}]}
@@ -117,11 +120,7 @@ while not loc.admin.command("hello").get("isWritablePrimary"):
     if time.time() - t0 > 300:
         sys.exit("no primary in 300 s")
     time.sleep(1)
-# the localhost exception does not hold over the private IP: the first user from this machine's own address is allowed
-# only through the localhost exception, so connect on 127.0.0.1 (the certificate is for the IP: hostname check off here)
-lh = pymongo.MongoClient(f"mongodb://127.0.0.1:{port}/?tls=true&tlsCAFile={ca}&tlsAllowInvalidHostnames=true&directConnection=true",
-                         serverSelectionTimeoutMS=10000)
-lh.admin.command("createUser", "root", pwd=os.environ["CM_PW"], roles=["root"], writeConcern={"w": "majority"})
+loc.admin.command("createUser", "root", pwd=os.environ["CM_PW"], roles=["root"], writeConcern={"w": "majority"})
 c = pymongo.MongoClient(f"mongodb://root:{os.environ['CM_PW']}@{ip0}:{port},{ip1}:{port},{ip2}:{port}/?replicaSet=rsm&tls=true&tlsCAFile={ca}&authSource=admin",
                         serverSelectionTimeoutMS=60000)
 t0 = time.time()
