@@ -777,7 +777,18 @@ impl Compactor {
         next.published_ms = manifest::now_ms();
         next.e_env = c.v.e_env;
         next.check()?;
-        match tokio::time::timeout(self.knobs.put_timeout, self.create(&next)).await {
+        // audit-fencing: a create that landed below the newest version (a slot GC freed after a takeover) is not
+        // published: no reader reads it; taking it would record a scrub, a known X_d or an installed version that no
+        // reader has. It is handled as a lost race (rule 24): the newest version is loaded, and a newer writer stops us.
+        let created = match tokio::time::timeout(self.knobs.put_timeout, self.create(&next)).await {
+            Ok(Ok(true)) => match manifest::on_main_line(&self.store, self.id(), next.version).await {
+                Ok(true) => Ok(Ok(true)),
+                Ok(false) => Ok(Ok(false)),
+                Err(e) => Ok(Err(e)),
+            },
+            r => r,
+        };
+        match created {
             Ok(Ok(true)) => {
                 if kind == "erase" {
                     self.last_scrub.fetch_max(next.version, Relaxed);
@@ -834,7 +845,16 @@ impl Compactor {
     async fn fence(&self, c: &mut Cur) -> Result<()> {
         for _ in 0..8 {
             let f = c.v.fence(self.epoch);
-            match tokio::time::timeout(self.knobs.put_timeout, self.create(&f)).await {
+            let created = match tokio::time::timeout(self.knobs.put_timeout, self.create(&f)).await {
+                // audit-fencing: a fence below the newest version is no fence (see `commit_as`)
+                Ok(Ok(true)) => match manifest::on_main_line(&self.store, self.id(), f.version).await {
+                    Ok(true) => Ok(Ok(true)),
+                    Ok(false) => Ok(Ok(false)),
+                    Err(e) => Ok(Err(e)),
+                },
+                r => r,
+            };
+            match created {
                 Ok(Ok(true)) => {
                     c.v = f.clone();
                     c.fence_pending = false;
