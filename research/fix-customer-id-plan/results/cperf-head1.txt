@@ -1,0 +1,54 @@
+   error in find_one customer and _id trial 0 cold: tenant app_cperf is owned by server process perfbase1-36916 (lease valid for another 5967 ms); retry, full error: RawBSONDocument(b'\xd7\x00\x00\x00\x01ok\x00\x
+   error in find_one customer and _id trial 0 warm: tenant app_cperf is owned by server process perfbase1-36916 (lease valid for another 5967 ms); retry, full error: RawBSONDocument(b'\xd7\x00\x00\x00\x01ok\x00\x
+   error in find_one customer and _id trial 1 cold: tenant app_cperf is owned by server process perfbase1-36916 (lease valid for another 5967 ms); retry, full error: RawBSONDocument(b'\xd7\x00\x00\x00\x01ok\x00\x
+   error in find_one customer and _id trial 1 warm: tenant app_cperf is owned by server process perfbase1-36916 (lease valid for another 5967 ms); retry, full error: RawBSONDocument(b'\xd7\x00\x00\x00\x01ok\x00\x
+   error in find_one customer and _id trial 2 cold: tenant app_cperf is owned by server process perfbase1-36916 (lease valid for another 5967 ms); retry, full error: RawBSONDocument(b'\xd7\x00\x00\x00\x01ok\x00\x
+   error in find_one customer and _id trial 2 warm: tenant app_cperf is owned by server process perfbase1-36916 (lease valid for another 5967 ms); retry, full error: RawBSONDocument(b'\xd7\x00\x00\x00\x01ok\x00\x
+Traceback (most recent call last):
+  File "/home/user/fenvix-engine/research/fix-customer-id-plan/cperf.py", line 95, in <module>
+    x = examined(name)
+        ^^^^^^^^^^^^^^
+  File "/home/user/fenvix-engine/research/fix-customer-id-plan/cperf.py", line 75, in examined
+    e = db.command("explain", {"find": "docs", "filter": f, **kw}, verbosity="executionStats")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py", line 133, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/database.py", line 944, in command
+    return self._client._retryable_read(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2124, in _retryable_read
+    return self._retry_internal(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/_csot.py", line 133, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2086, in _retry_internal
+    ).run()
+      ^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2890, in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 3089, in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/database.py", line 932, in inner
+    return self._command(
+           ^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/database.py", line 771, in _command
+    return conn.command(
+           ^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/helpers.py", line 50, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/pool.py", line 286, in command
+    return run_command(
+           ^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py", line 438, in run_command
+    docs, _, _ = _run_command(
+                 ^^^^^^^^^^^^^
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/synchronous/command_runner.py", line 212, in _run_command
+    helpers_shared._check_command_response(
+  File "/root/.fenvix-judge/env/lib/python3.12/site-packages/pymongo/helpers_shared.py", line 326, in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+pymongo.errors.OperationFailure: tenant app_cperf is owned by server process perfbase1-36916 (lease valid for another 5967 ms); retry, full error: {'ok': 0.0, 'errmsg': 'tenant app_cperf is owned by server process perfbase1-36916 (lease valid for another 5967 ms); retry', 'code': 134, 'codeName': 'TenantLeaseHeld', 'errorLabels': ['RetryableWriteError']}
