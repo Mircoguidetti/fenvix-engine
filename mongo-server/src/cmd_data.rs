@@ -196,6 +196,10 @@ impl Server {
     /// (`cmd::StreamCur`). None when the find is not of that kind (the caller answers it as before).
     #[allow(clippy::too_many_arguments)]
     async fn find_streamed(&self, db: &str, coll: &str, cmd: &Document, filter: &Document, hint_arg: Option<&Bson>, skip: usize, limit: i64, batch: Option<usize>, single: bool) -> R<Option<Document>> {
+        // integration-4 (diff-node js.where_in_elemmatch): the filter is checked as `coll::find_docs_any` checks it,
+        // before any page is read; else a `$where` inside `$elemMatch` (or on a field) on documents that never reach
+        // the predicate answered [] instead of mongod's BadValue at parse time
+        crate::js::validate_filter(filter)?;
         // A getMore page is read by the getMore command, outside the find's own context: a find that carries a
         // collation, `let` variables or a snapshot read concern is answered whole, as before streaming (review of
         // 3cb6b38: each of them changed the answers of later pages). A collection's default collation is applied again
