@@ -239,7 +239,8 @@ pub static CONTROL_TRUST_NEWEST: std::sync::atomic::AtomicBool = std::sync::atom
 
 /// Whether version `v` is an older writer's late publish (review of a60f4fe, rule 8): writer epochs never go down along
 /// valid versions, so a version whose writer epoch is LOWER than the version below it landed after a newer writer's
-/// (a late publish of a writer that lost the database, inside `build::fence_check`'s window). Its runs hold that writer's
+/// (a late publish of a writer that lost the database; audit-fencing's slot rule makes such a landing on top impossible for
+/// this release's publishers, so this is the read side's defence in depth). Its runs hold that writer's
 /// old snapshot: serving, pairing or fencing it drops every row between its X_d and the newer writer's. One GET (the
 /// version below); a version below collected by GC counts as nothing to compare with.
 pub async fn is_older_writers(store: &Arc<dyn ObjectStore>, id: &str, v: &Version) -> Result<bool> {
@@ -278,6 +279,49 @@ pub async fn load_newest_trusted(store: &Arc<dyn ObjectStore>, id: &str) -> Resu
     let Some(newest) = load_newest(store, id).await? else { return Ok(None) };
     let slot = newest.version;
     Ok(Some((trusted_at(store, id, newest).await?, slot)))
+}
+
+// ---- audit-fencing (P-audit-fencing): a version create is fenced by its slot, and only by its slot
+//
+// The conditional create of version N+1 is the fence of every publisher: the new owner of a database writes a fence
+// version at the next slot when it opens (`Tenant::load_fx`), so a process that lost the database and still publishes on
+// its own base finds that slot taken. Two things broke that fence:
+// - a publisher that took its slot from a LIST instead of from its base (the first build, the ballast generator, the old
+//   erasure pass): after a takeover the LIST shows the new owner's versions, and the late version lands ON TOP of them;
+//   every later opening and the new owner's compactor then build on its old snapshot (lost acknowledged writes);
+// - GC deleting versions below the newest (retention 0): the new owner's fence goes within seconds, the slot is free
+//   again, and a late create of the old owner lands BELOW the newest. Readers never read it, but the old owner takes it
+//   as published: it records an erasure scrub that is on no version anyone reads, whose retire step then deletes runs
+//   the newest version still lists.
+// So: every publisher creates base + 1 (1 when it had no version), and a create that succeeded counts only when no newer
+// version exists right after it (`on_main_line`): a slot below the newest is a slot GC freed, never the main line.
+
+/// Negative controls of the audit-fencing tests (the code of integration-4 4f74574): the first build and the ballast
+/// take their slot from a LIST; a create that landed below the newest version counts as published.
+pub static CONTROL_LISTED_SLOT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+pub static CONTROL_NO_MAIN_LINE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Creates that landed in a slot below the newest version (a slot GC freed after a takeover): refused as published.
+pub static OFF_MAIN_LINE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// The slot of a version built on `base` (None: the database's first version).
+pub fn next_slot(base: Option<u64>) -> u64 {
+    base.map_or(1, |b| b + 1)
+}
+
+/// After the conditional create of `version` succeeded: whether it is the newest version in the store (no version above
+/// it). False means it landed in a slot GC freed below versions of another publisher: no reader reads it, and its
+/// publisher must treat it as a lost race (its runs stay for GC; nothing of it is installed or recorded).
+pub async fn on_main_line(store: &Arc<dyn ObjectStore>, id: &str, version: u64) -> Result<bool> {
+    if CONTROL_NO_MAIN_LINE.load(std::sync::atomic::Ordering::Relaxed) {
+        return Ok(true);
+    }
+    let above = list_versions_after(store, id, version).await?;
+    if let Some(n) = above.last() {
+        OFF_MAIN_LINE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        eprintln!("OFF_MAIN_LINE db={id} version={version} newest={n}: the create landed below the newest version (a slot GC freed after a takeover); not published");
+        return Ok(false);
+    }
+    Ok(true)
 }
 
 /// Fail point for tests: a publish whose PUT is delayed until the test lets it go (the PUT of a dead process landing

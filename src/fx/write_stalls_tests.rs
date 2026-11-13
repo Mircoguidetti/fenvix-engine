@@ -743,13 +743,18 @@ async fn ws_abandon_lets_the_first_build_end() {
     assert!(took < Duration::from_secs(10), "the abandon waited {took:?}");
 }
 
-/// Review of a60f4fe (rule 8): a first build that ends after another process took the database over must not create a
-/// version: the new owner would build on it and lose every row between the two X_d. The build is paused right before its
-/// version create while a second writer opens the database (a takeover: SlateDB's writer epoch goes up), then resumes.
-/// Fix: the create is refused, no version. Control (`CONTROL_NO_FENCE_CHECK`, a60f4fe): the stale version lands.
-/// Also: an abandon for a lost lease (`abandon`) cuts a running first build at once.
+/// Review of a60f4fe (rule 8): a first build that ends after another process took the database over and published must
+/// not land a version above the new owner's: the new owner would build on it and lose every row between the two X_d.
+/// The build is paused after its cut, before it takes its slot, while a second writer opens the database (a takeover: SlateDB's
+/// writer epoch goes up) and publishes, then resumes. Fix (audit-fencing round 2: the slot is base + 1, so a first
+/// build creates version 1, which the new owner holds): no version of the old writer above the new one's. Control
+/// (`manifest::CONTROL_LISTED_SLOT`, the slot from a LIST as in a60f4fe): the stale version lands on top. Returns (old
+/// writer's versions above a newer writer's version, the build's poll failed).
 async fn late_first_build(control: bool) -> (usize, bool) {
-    build::CONTROL_NO_FENCE_CHECK.store(control, Relaxed);
+    manifest::CONTROL_LISTED_SLOT.store(control, Relaxed);
+    // the server's manifest poll (30 s): with this file's 1 s, the old writer's SlateDB notices the newer writer and
+    // closes itself before the build ends, which hides the case
+    crate::lifecycle::WRITER_POLL_SECS.store(30, Relaxed);
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
     let id = if control { "ws-late-control" } else { "ws-late" };
     let mut t = lc(&store).create(id).await.unwrap();
@@ -757,19 +762,36 @@ async fn late_first_build(control: bool) -> (usize, bool) {
     for i in 0..200 {
         apply(&mut t, &mut m, vec![(ckey(i % 5, i), Some(vec![b'a'; 100]))]).await;
     }
-    build::PAUSE_BEFORE_CREATE_MS.store(1500, Relaxed);
+    // paused after its cut, before it takes its slot (the a60f4fe code took it from a LIST there)
+    build::PAUSE_AFTER_SNAPSHOT_MS.store(2500, Relaxed);
     first_start(&mut t).await;
-    tokio::time::sleep(Duration::from_millis(300)).await; // the build reaches its pause
-    // the takeover: another writer opens the database (the old one is fenced)
-    let next = crate::lifecycle::writer_builder(id, &store).build().await.unwrap();
+    // the build reaches its pause: its cut is durable (the WAL flush comes before the pause)
+    tokio::time::sleep(Duration::from_millis(800)).await;
+    build::PAUSE_AFTER_SNAPSHOT_MS.store(0, Relaxed);
+    // the takeover: another writer opens the database (the old one is fenced) and publishes
+    let mut next = lc(&store).wake(id).await.unwrap();
+    next.upgrade().await.unwrap();
+    for i in 0..50 {
+        apply(&mut next, &mut m, vec![(ckey(7, i), Some(vec![b'b'; 100]))]).await;
+    }
+    publish(&mut next, &small_opts(build::Reseal::All)).await;
     let r = t.fx_first_poll(true).await;
-    build::PAUSE_BEFORE_CREATE_MS.store(0, Relaxed);
-    build::CONTROL_NO_FENCE_CHECK.store(false, Relaxed);
-    let versions = manifest::list_versions(&store, id).await.unwrap().len();
-    eprintln!("late first build (control {control}): {:?}; versions in the store {versions}", r.as_ref().map(|x| x.is_some()));
+    manifest::CONTROL_LISTED_SLOT.store(false, Relaxed);
+    let mut stale_above = 0;
+    let mut max_new = 0;
+    for n in manifest::list_versions(&store, id).await.unwrap() {
+        let v = manifest::load(&store, id, n).await.unwrap();
+        if v.writer_epoch >= Some(2) {
+            max_new = max_new.max(n);
+        } else if max_new > 0 {
+            stale_above += 1;
+        }
+    }
+    eprintln!("late first build (control {control}): {:?}; old writer's versions above the new writer's {stale_above}", r.as_ref().map(|x| x.as_ref().map(|r| r.version)).map_err(|e| format!("{e:#}")));
     let _ = next.close().await;
-    drop(t);
-    (versions, r.is_err())
+    let _ = t.abandon().await;
+    crate::lifecycle::WRITER_POLL_SECS.store(1, Relaxed);
+    (stale_above, r.is_err())
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
@@ -794,7 +816,7 @@ async fn ws_first_build_after_a_takeover_creates_no_version() {
     tokio::time::sleep(Duration::from_millis(3500)).await;
     let v_lost = manifest::list_versions(&store, "ws-lost").await.unwrap().len();
     teardown();
-    assert_eq!(v_ctl, 1, "control: the stale version must land, or the test does not reach the case");
+    assert_eq!(v_ctl, 1, "control: the stale version must land above the new owner's, or the test does not reach the case");
     assert!(refused, "the build must fail at its create");
     assert_eq!(v, 0, "a version of the old writer landed after the takeover");
     assert!(took < Duration::from_secs(1), "an abandon for a lost lease waited for the build ({took:?})");
