@@ -1,0 +1,96 @@
+{
+ "fxc_not_started_lines": 1,
+ "tag": "dbg-floor",
+ "binary": "/home/user/bins/dbg-floor",
+ "mode": "sealed2-derive",
+ "dbs": 1,
+ "secs": 300.2,
+ "s3_delta": {
+  "get": 29,
+  "list": 22,
+  "put": 31,
+  "putBytes": 3360
+ },
+ "gets_per_s_per_db": 0.0966,
+ "requests_per_s_per_db": 0.2731,
+ "gets_per_10s_window_all_dbs": [
+  0,
+  0,
+  0,
+  0,
+  4,
+  0,
+  0,
+  0,
+  0,
+  0,
+  1,
+  0,
+  0,
+  0,
+  0,
+  0,
+  11,
+  8,
+  0,
+  0,
+  0,
+  0,
+  0,
+  1,
+  0,
+  0,
+  0,
+  0,
+  3,
+  1
+ ],
+ "get_kinds": [
+  [
+   "tenants/appNN/manifest/N.manifest",
+   9
+  ],
+  [
+   "tenants/appNN/gc/manifest.boundary",
+   9
+  ],
+  [
+   "tenants/appNN/compactions/N.compactions",
+   4
+  ],
+  [
+   "tenants/appNN/fx/drop-lease",
+   3
+  ],
+  [
+   "tenants/appNN/gc/compactions.boundary",
+   3
+  ]
+ ],
+ "list_kinds": [
+  [
+   "control/pins",
+   10
+  ],
+  [
+   "control/erasures",
+   5
+  ],
+  [
+   "tenants/appNN/fx/manifest",
+   3
+  ],
+  [
+   "tenants/admin",
+   2
+  ],
+  [
+   "tenants/appNN",
+   1
+  ],
+  [
+   "control/exports",
+   1
+  ]
+ ]
+}
