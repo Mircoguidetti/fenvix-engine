@@ -12,6 +12,8 @@ WAL flush waits, writes are staged meanwhile; the version lands (fx/manifest); S
 a second process takes over and writes; every write acknowledged by either process must read back.
 """
 import os
+
+import pytest
 import tempfile
 import threading
 import time
@@ -19,6 +21,11 @@ import time
 from pymongo import MongoClient
 
 from lib import Server, make_bucket, list_prefix, wait_until
+
+# integration-4 (CI d660ea9, off 0/5): every test here needs sealed runs and their compactor, which do not exist with
+# FENVIX_SEALED_RUNS off; as test_54, test_67r and test_76, the file skips there
+pytestmark = pytest.mark.skipif(os.environ.get("FENVIX_SEALED_RUNS", "off") in ("off", "0", ""),
+                                reason="needs sealed runs and their compactor (FENVIX_SEALED_RUNS off)")
 
 DB = "cut"
 SEALED = ["--sealed-t-pin-ms", "1000", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait", "--lease-ttl-secs", "6"]
