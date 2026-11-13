@@ -169,17 +169,22 @@ def run_uploads(bucket, db=CRASH_DB):
     return out
 
 
+CRASH_ID_RANGE = 1_000_000   # ids per process: far more than one process writes before its run upload appears
+
+
 def write_until(srv, cond, start, timeout=60):
     """Insert batches into CRASH_DB until cond() (retrying while the previous owner's lease runs out); returns the
-    acknowledged ids."""
+    acknowledged ids. Every attempt uses new ids (round 2, review -r1 section 3): a failed batch may have been applied in
+    part, and the same ids sent again would answer E11000 for ever; the ids of a failed attempt are simply not counted."""
     c = MongoClient(srv.uri, serverSelectionTimeoutMS=5000, socketTimeoutMS=20000)
     acked, i, t0 = [], start, time.time()
     while time.time() - t0 < timeout:
         docs = [{"_id": i + k, "v": "y" * 300} for k in range(50)]
+        i += 50
+        assert i < start + CRASH_ID_RANGE, "id range exhausted"
         try:
             c[CRASH_DB].t.insert_many(docs)
             acked += [d["_id"] for d in docs]
-            i += 50
         except Exception:
             time.sleep(0.5)
             continue
@@ -198,7 +203,7 @@ def test_crash_loop_leaves_no_older_writers_upload():
             srv = Server(bucket, f"crash{n}", idle=600, endpoint=px.endpoint).start()
             before = {k for k, _ in run_uploads(bucket)}
             px.hold("PUT", "/fx/run/")
-            acked += write_until(srv, lambda: any(k not in before for k, _ in run_uploads(bucket)), 10_000 * (n + 1))
+            acked += write_until(srv, lambda: any(k not in before for k, _ in run_uploads(bucket)), CRASH_ID_RANGE * (n + 1))
             mine = [(k, e) for k, e in run_uploads(bucket) if k not in before]
             epochs.append(max(e for _, e in mine))
             srv.kill9()
@@ -208,7 +213,7 @@ def test_crash_loop_leaves_no_older_writers_upload():
         # the next owner opens the database: every upload of an older writer must go, whatever its age (minutes here,
         # the startup sweep's age rule is an hour)
         live = Server(bucket, "crashlive", idle=600, endpoint=px.endpoint).start()
-        acked += write_until(live, lambda: True, 90_000)
+        acked += write_until(live, lambda: True, CRASH_ID_RANGE * 10)
         t0 = time.time()
         while time.time() - t0 < 15:
             left = run_uploads(bucket)
@@ -223,7 +228,7 @@ def test_crash_loop_leaves_no_older_writers_upload():
         # (its startup sweep lists everything); the live upload must stay and complete
         px.hold("PUT", "/fx/run/")
         before = set()
-        acked += write_until(live, lambda: bool(run_uploads(bucket)), 100_000)
+        acked += write_until(live, lambda: bool(run_uploads(bucket)), CRASH_ID_RANGE * 11)
         held = run_uploads(bucket)
         other = Server(bucket, "crashother", idle=600).start()
         t0 = time.time()
@@ -287,7 +292,8 @@ def test_a_write_the_store_does_not_take_gets_a_retryable_error_in_time():
         took = time.time() - t0
         print(f"insert with the WAL PUT held: {type(err).__name__} after {took:.1f} s: {getattr(err, 'details', err)}")
         assert isinstance(err, OperationFailure), f"no server error within the deadline: {err!r} after {took:.1f} s"
-        assert err.code == 262 and err.has_error_label("RetryableWriteError"), f"wrong error: {err.details}"
+        # round 2: the unknown outcome of item 5 (134 WriteOutcomeUnknown with the label), whatever the driver sent
+        assert err.code == 134 and err.details.get("codeName") == "WriteOutcomeUnknown" and err.has_error_label("RetryableWriteError"), f"wrong error: {err.details}"
         assert took < 2 * DEADLINE_MS / 1000 + 2, f"answered after {took:.1f} s (deadline {DEADLINE_MS} ms, one retry)"
         log = [l for l in srv.log_text().splitlines() if l.startswith("WRITE_DEADLINE ")]
         assert len(log) == 2 and all("retryable=true" in l for l in log), log
@@ -336,6 +342,39 @@ def test_a_retried_write_is_applied_once():
         assert n in (0, 1), f"the write was applied {n} times"
         if "ok" in res:
             assert n == 1, f"acknowledged but n = {n}"
+    finally:
+        px.release()
+        srv.kill9()
+        px.close()
+
+
+def test_a_write_answered_by_the_deadline_with_retry_writes_off_is_labelled():
+    """Round 2 (review -r1, its test `test_rr_write_deadline_definite.py`, kept as it was): with retryWrites off the
+    driver sends no txnNumber, and round 1 answered the deadline with 262 WITHOUT the RetryableWriteError label, the
+    answer this server keeps for "not applied" (item 5, test_52r); the command went on and applied the write. On a
+    replica-set member, as in production. Now every deadline answer is 134 WriteOutcomeUnknown with the label: an
+    unknown outcome, so n = 1 afterwards is allowed. The control `FENVIX_TEST_CONTROL_DEADLINE_UNLABELLED=1` is round 1."""
+    px = proxy()
+    srv = deadline_server("rrwdl", px)
+    try:
+        c = MongoClient(srv.uri, socketTimeoutMS=30000, retryWrites=False)
+        c.rrwdl.t.insert_one({"_id": 0, "n": 0})
+        px.hold("PUT", "/tenants/rrwdl/wal/")
+        err = None
+        try:
+            c.rrwdl.t.update_one({"_id": 0}, {"$inc": {"n": 1}})
+        except PyMongoError as e:
+            err = e
+        assert isinstance(err, OperationFailure), f"expected a server error, got {err!r}"
+        labelled = err.has_error_label("RetryableWriteError")
+        print(f"$inc with the WAL held, retryWrites off: code {err.code}, labelled {labelled}: {err.details.get('errmsg')}")
+        px.release()
+        deadline = time.time() + 30
+        while time.time() < deadline and not any(l.startswith("WRITE_DEADLINE_END") for l in srv.log_text().splitlines()):
+            time.sleep(0.2)
+        n = MongoClient(srv.uri).rrwdl.t.find_one({"_id": 0})["n"]
+        print(f"after the store answers: n = {n}; log: {[l for l in srv.log_text().splitlines() if l.startswith('WRITE_DEADLINE')]}")
+        assert labelled or n == 0, f"a write answered with an unlabelled error (code {err.code}) was applied: n = {n}"
     finally:
         px.release()
         srv.kill9()
@@ -533,3 +572,107 @@ def test_the_first_insert_into_a_new_database_probes_the_store_once():
         px.release()
         srv.kill9()
         px.close()
+
+
+# ---- round 2, item 4: the absent hold and a fork onto the name (review of round 1, `rr2_fss.py fork_in_hold`)
+
+def _scan_check(c, db, want):
+    """count, the full scan and the _id lookups of db.users must all hold exactly `want`."""
+    n = c[db].users.count_documents({})
+    ids = {d["_id"] for d in c[db].users.find({}, {"_id": 1})}
+    byid = [i for i in want if c[db].users.find_one({"_id": i}) is None]
+    return n, sorted(set(want) - ids), byid
+
+
+def _fork_in_hold(tag, mode, env=None):
+    """A read of a missing name (the absent hold starts), a fork onto that name in the same process, then reads and one
+    insert, then a restart. Returns what was seen at each step."""
+    bucket = make_bucket(tag)
+    srv = Server(bucket, tag, idle=600, env=env or {}).start()
+    out = {}
+    try:
+        c = MongoClient(srv.uri, serverSelectionTimeoutMS=20000)
+        c.src.users.insert_many([{"_id": i, "n": i} for i in range(50)])
+        assert c.src.users.find_one({"_id": 0}) is not None
+        assert c.br.users.find_one({}) is None          # starts the hold (5 s)
+        st, r = srv.admin.post("/v1/databases/src/fork", {"target": "br", "mode": mode})
+        assert st == 201, (st, r)
+        out["now"] = c.br.users.count_documents({})
+        try:
+            c.br.users.insert_one({"_id": 1000, "n": "after-fork"})
+            out["insert"] = "ok"
+        except OperationFailure as e:
+            out["insert"] = f"code {e.code} {e.details.get('codeName')} labelled {e.has_error_label('RetryableWriteError')}"
+            # an error with the label is an unknown outcome: the client sends it again
+            if e.has_error_label("RetryableWriteError"):
+                try:
+                    c.br.users.insert_one({"_id": 1000, "n": "after-fork"})
+                except OperationFailure as e2:
+                    if e2.code != 11000:
+                        raise
+        want = list(range(50)) + [1000]
+        out["after"] = _scan_check(c, "br", want)
+        time.sleep(6)                                    # past the hold
+        out["late"] = _scan_check(c, "br", want)
+        srv.restart()
+        c = MongoClient(srv.uri, serverSelectionTimeoutMS=20000)
+        out["restart"] = _scan_check(c, "br", want)
+        out["log"] = [l for l in srv.log_text().splitlines() if "CREATE_FOUND_EXISTING" in l][:2]
+        print(f"fork ({mode}) during the absent hold: {out}")
+        return out
+    finally:
+        srv.kill9()
+
+
+@pytest.mark.parametrize("mode", ["clone", "copy"])
+def test_a_fork_onto_a_name_just_read_keeps_every_document(mode):
+    """Round 1's hole (review rr2, 5 of 5): the fork did not end the hold, reads of the branch answered "absent", and the
+    next insert created the database from the hold as if new: one document of the branch left every scan for good. Now
+    the fork ends the hold (`Entry::take_absent_hold`), and any acquire of the name's lease by another path voids it."""
+    out = _fork_in_hold(f"forkhold{mode}", mode)
+    assert out["now"] == 50, f"the branch read as {out['now']} documents right after the fork"
+    assert out["insert"] == "ok", out["insert"]
+    for k in ("after", "late", "restart"):
+        assert out[k] == (51, [], []), f"{k}: count, missing from the scan, missing by _id = {out[k]}"
+
+
+def test_a_create_that_finds_the_database_refuses_the_write():
+    """The second guard, on its own: with round 1's hold (`FENVIX_TEST_CONTROL_HOLD_ROUND1=1`: the fork does not end it,
+    no stamp), the insert still creates from "absent"; its create now finds the branch's collection list and refuses the
+    write (134, labelled, nothing applied) instead of overwriting the branch. The client's retry then lands on the
+    branch, and every document is in every scan. (With `FENVIX_TEST_NO_CREATE_CHECK=1` as well, round 1's loss comes back:
+    the control run in the report.)"""
+    out = _fork_in_hold("forkholdguard", "clone", env={"FENVIX_TEST_CONTROL_HOLD_ROUND1": "1"})
+    assert out["insert"].startswith("code 134 DatabaseExistedAtCreate labelled True"), out["insert"]
+    for k in ("after", "late", "restart"):
+        assert out[k] == (51, [], []), f"{k}: count, missing from the scan, missing by _id = {out[k]}"
+
+
+def test_a_fork_onto_a_name_just_read_leaves_no_lease_behind():
+    """The fork used to find the name's lease already held (by the hold) and so did not release it: the branch stayed
+    owned by this process, renewed, while nothing of it was open. Another process asking for the branch must get it at
+    once (here within 2.5 s of the fork; the hold alone lasts 5 s and the lease is renewed while held)."""
+    bucket = make_bucket("forkholdlease")
+    srv = Server(bucket, "forkholdlease", idle=600).start()
+    other = Server(bucket, "forkholdother", idle=600).start()
+    try:
+        c = MongoClient(srv.uri, serverSelectionTimeoutMS=20000)
+        c.src.users.insert_many([{"_id": i} for i in range(20)])
+        assert c.br.users.find_one({}) is None
+        st, r = srv.admin.post("/v1/databases/src/fork", {"target": "br", "mode": "clone"})
+        assert st == 201, (st, r)
+        t0 = time.time()
+        c2 = MongoClient(other.uri, serverSelectionTimeoutMS=20000, retryReads=False)
+        n, last = None, None
+        while time.time() - t0 < 2.5:
+            try:
+                n = c2.br.users.count_documents({})
+                break
+            except OperationFailure as e:
+                last = f"code {e.code}: {str(e)[:120]}"
+                time.sleep(0.1)
+        print(f"another process reads the branch: {n} documents after {time.time() - t0:.2f} s (last refusal: {last})")
+        assert n == 20, f"the branch stayed owned by the forking process: {last}"
+    finally:
+        other.kill9()
+        srv.kill9()

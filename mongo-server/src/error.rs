@@ -128,6 +128,12 @@ impl From<anyhow::Error> for MongoError {
             m.extra = Some(doc! { "errorLabels": ["TransientTransactionError", "RetryableWriteError"] });
             return m;
         }
+        if let Some(r) = e.downcast_ref::<crate::dbs::ExistedAtCreate>() {
+            // nothing was applied: retryable like a database reopened during the command
+            let mut m = MongoError::new(134, "DatabaseExistedAtCreate", r.to_string());
+            m.extra = Some(doc! { "errorLabels": ["TransientTransactionError", "RetryableWriteError"] });
+            return m;
+        }
         if let Some(r) = e.downcast_ref::<crate::locallog::RecoveryPending>() {
             // same code as a lease held elsewhere: retryable, and not a state change for the drivers
             let mut m = MongoError::new(134, "DatabaseRecoveryPending", r.to_string());

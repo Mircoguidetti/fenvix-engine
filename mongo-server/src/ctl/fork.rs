@@ -155,7 +155,12 @@ async fn fork_probed(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> Api
     // rolled back: another process asking for the branch meanwhile gets "owned elsewhere" (code 134, retry) instead of
     // writing. A process that already owns it refuses the fork (409 `owned_elsewhere`). When this process already held it
     // (an entry of its own is open on the name: the check below then finds the database), it is not released here.
-    let ours = !ctl.dbs.leases.is_held(target);
+    // P-fix-slow-store-3 (round 2): a read of the missing name just before may have left an absent hold on the branch's
+    // entry (dbs.rs `absent_until`), holding the name's lease. The fork ends it: no command may answer "absent" or create
+    // the database from it once the branch exists. Its lease is then this fork's, released when the fork is done.
+    let mut gt = gt;
+    let from_hold = gt.take_absent_hold();
+    let ours = from_hold || !ctl.dbs.leases.is_held(target);
     // Before the branch's lease is taken: a record that this process may hold it for a fork. A kill between the lease
     // and the intent record (`fork_leased`) leaves a lease object of a database that does not exist, which no intent
     // names; the recovery at the next start removes it through this record ([`recover_leases`]; review of step 7b, the

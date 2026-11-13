@@ -157,9 +157,9 @@ struct Args {
     #[arg(long, default_value_t = 8)]
     close_budget_secs: u64,
     /// P-fix-slow-store item 3: a single-document write (an insert, a findAndModify, an update or delete of one document,
-    /// outside a transaction) not acknowledged within this many milliseconds is answered with error 262 ExceededTimeLimit;
-    /// a retryable write carries the `RetryableWriteError` label, so the driver sends it again (deduplicated by its
-    /// session record). The command itself goes on: nothing is cut, and nothing not on 2 of 3 log copies (or in a WAL
+    /// outside a transaction) not acknowledged within this many milliseconds is answered as an unknown outcome: error 134
+    /// WriteOutcomeUnknown with the `RetryableWriteError` label, whether or not the driver sent a txnNumber; a retryable
+    /// write's driver sends it again (deduplicated by its session record). The command itself goes on: nothing is cut, and nothing not on 2 of 3 log copies (or in a WAL
     /// object) is ever acknowledged. Before, such a write hung its client for as long as the store did. 0: no deadline
     #[arg(long, default_value_t = 30_000)]
     write_deadline_ms: u64,

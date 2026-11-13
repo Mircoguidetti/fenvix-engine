@@ -31,9 +31,16 @@ pub(crate) const NEXT_BATCH_FIXED: usize = 57;
 /// acknowledged within this many milliseconds is answered with an error (0: no deadline).
 pub static WRITE_DEADLINE_MS: AtomicU64 = AtomicU64::new(0);
 /// Writes answered with the deadline's error, and of those, the ones labelled for the driver's retry (serverStatus
-/// `fenvix.writeDeadline`).
+/// `fenvix.slowStore`; since round 2 every one is labelled).
 pub static WRITE_DEADLINES: AtomicU64 = AtomicU64::new(0);
 pub static WRITE_DEADLINES_LABELLED: AtomicU64 = AtomicU64::new(0);
+
+/// Test control only (`FENVIX_TEST_CONTROL_DEADLINE_UNLABELLED=1`): the deadline's answer of round 1 (262, labelled only
+/// for a retryable write), so a test can show it fails on the code before round 2.
+fn control_deadline_unlabelled() -> bool {
+    static V: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| std::env::var("FENVIX_TEST_CONTROL_DEADLINE_UNLABELLED").as_deref() == Ok("1"));
+    *V
+}
 
 /// The commands the write deadline bounds: inserts, findAndModify, and updates and deletes whose every statement touches
 /// one document (`multi` false, `limit` 1), outside a transaction. Their time is the wait for the store, not the work:
@@ -291,9 +298,15 @@ impl Server {
     /// P-fix-slow-store item 3: a write whose reply is not ready within `limit` is answered with an error, and the
     /// command goes on in its own task (nothing is cut: a write half applied, a lock or a session record left in a middle
     /// state, would be worse than a wait). The error says only that this write was not acknowledged (RULES 8: an error is
-    /// allowed, a lie is not): it may still be applied. A retryable write gets the `RetryableWriteError` label, so the
-    /// driver sends it again; the retry waits for the original on the session's record (`retry::retry_begin`), then
-    /// answers from that record once the original is durable, or applies the write once if the original applied nothing.
+    /// allowed, a lie is not): it may still be applied.
+    ///
+    /// P-fix-slow-store-3 (round 2): the answer is the unknown outcome of item 5, for every write, with or without a
+    /// txnNumber: code 134 WriteOutcomeUnknown with the `RetryableWriteError` label. Round 1 labelled only retryable writes
+    /// (lsid and txnNumber), so a client with retryWrites off, or any client of a server without `--replica-set` (drivers
+    /// send a txnNumber only to a replica set member), got code 262 without the label, the answer this server's rule
+    /// keeps for "not applied", and the write was applied afterwards (both reviews). A retryable write's driver sends it
+    /// again; the retry waits for the original on the session's record (`retry::retry_begin`), then answers from that
+    /// record once the original is durable, or applies the write once if the original applied nothing.
     async fn handle_within(self: &Arc<Self>, db: &str, cmd: Document, conn_id: i64, limit: std::time::Duration) -> Document {
         let name = cmd.keys().next().cloned().unwrap_or_default();
         let retryable = crate::retry::is_retryable_write(&cmd);
@@ -305,7 +318,7 @@ impl Server {
             Ok(Err(e)) => MongoError::internal(format!("the {name} command's task ended without a reply: {e}")).to_reply(),
             Err(_) => {
                 WRITE_DEADLINES.fetch_add(1, Relaxed);
-                if retryable {
+                if !control_deadline_unlabelled() || retryable {
                     WRITE_DEADLINES_LABELLED.fetch_add(1, Relaxed);
                 }
                 eprintln!("WRITE_DEADLINE {name} db={db} conn={conn_id} ms={} retryable={retryable}: answered with an error, the command goes on", limit.as_millis());
@@ -315,14 +328,20 @@ impl Server {
                     let ok = matches!(&r, Ok(d) if matches!(d.get("ok"), Some(Bson::Double(x)) if *x == 1.0));
                     eprintln!("WRITE_DEADLINE_END {name} db={db3} conn={conn_id} ms={} ok={ok}", t0.elapsed().as_millis());
                 });
-                let mut e = MongoError::new(
-                    262,
-                    "ExceededTimeLimit",
-                    format!("the write was not acknowledged within {} ms (the store is slow or does not answer): it is not acknowledged, and it may still be applied{}", limit.as_millis(), if retryable { "; retry" } else { "" }),
-                );
-                if retryable {
-                    e.extra = Some(doc! { "errorLabels": ["RetryableWriteError"] });
+                if control_deadline_unlabelled() {
+                    // test control only: round 1's answer (262, labelled only for a retryable write)
+                    let mut e = MongoError::new(262, "ExceededTimeLimit", format!("the write was not acknowledged within {} ms: it may still be applied", limit.as_millis()));
+                    if retryable {
+                        e.extra = Some(doc! { "errorLabels": ["RetryableWriteError"] });
+                    }
+                    return e.to_reply();
                 }
+                let mut e = MongoError::new(
+                    134,
+                    "WriteOutcomeUnknown",
+                    format!("the write was not acknowledged within {} ms (the store is slow or does not answer): it may or may not have been applied; retry it (a retryable write is applied once)", limit.as_millis()),
+                );
+                e.extra = Some(doc! { "errorLabels": ["RetryableWriteError"] });
                 e.to_reply()
             }
         }
