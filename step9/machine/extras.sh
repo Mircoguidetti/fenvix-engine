@@ -85,6 +85,16 @@ reads_as_loaded_ok() { # reads_as_loaded_ok NAME: 0 when NAME may run, else its 
 }
 step "programs: $PROGRAMS; cook $COOK_IP:$COOK_PORT; spare ${SPARE_IP:-none}; log ${LOGS:-none}"
 FENVIX_P1_URI=$URI $PY wait_db.py 15 >> out/steps.log 2>&1 || finish COOK_UNREACHABLE
+# founder's decision 2026-11-13: the idle cost FIRST, before any other program opens or works a database: the S3
+# requests per second of the open database with no traffic (the cook, and the spare when there is one)
+if has idle-cost; then
+  fn_states
+  IC_DB=$(cfg ballast_db)
+  SP_URI=""; [ -n "$SPARE_IP" ] && SP_URI="mongodb://root:$CM_PW@$SPARE_IP:$COOK_PORT/?tls=true&tlsCAFile=$PWD/ca.pem&authSource=admin&directConnection=true"
+  # shellcheck disable=SC2046
+  run_prog idle-cost $PY idle_cost.py out/idle-cost --uri "$URI" ${SP_URI:+--spare-uri "$SP_URI"} --states fn-states ${IC_DB:+--db "$IC_DB"} \
+    --label "$(cfg data)" $(cfg idle_cost_args)
+fi
 has s3-first-byte && run_prog s3-first-byte $PY s3_first_byte.py "$BUCKET" out/s3-first-byte $(cfg s3_first_byte_args)
 has sealed-run && run_prog sealed-run $PY sealed_run_read.py "$BUCKET" out/sealed-run $(cfg sealed_run_args)
 has log-ack && with_status log-ack out/log-ack/log-ack-summary.json $PY log_ack.py out/log-ack --uri "$URI" --logs "$(cfg bench_logs)" --pq ./pq $(cfg log_ack_args)
@@ -159,6 +169,16 @@ if has reads-after-writes; then
       > out/first-next-ops-after-writes/against-before-writes.txt 2>&1
   fi
 fi
+if has data-ops; then
+  # founder's decision 2026-11-13: copy (fork) and restore to a past time through the cook's admin interface; it writes
+  # (the restore rewrites the database), so after the read programs and the other writing ones
+  fn_states
+  admin_token > admin-token && chmod 600 admin-token
+  DO_DB=$(cfg ballast_db)
+  # shellcheck disable=SC2046
+  with_status data-ops out/data-ops/data-ops-summary.json $PY data_ops.py out/data-ops --uri "$URI" --admin-url "http://$COOK_IP:8080" \
+    --token-file "$PWD/admin-token" --states fn-states ${DO_DB:+--db "$DO_DB"} $(cfg data_ops_args)
+fi
 if has takeovers; then
   [ -n "$SPARE_IP" ] || { step "takeovers: no spare in this round: skipped"; outcomes+=("takeovers:SKIPPED"); }
   # shellcheck disable=SC2046
@@ -168,6 +188,13 @@ if has takeovers; then
   # shellcheck disable=SC2046
   [ -n "$SPARE_IP" ] && [ -n "$(cfg takeovers_off_args)" ] && run_prog takeovers-logoff $PY takeovers.py "$BUCKET" out/takeovers --a "$COOK_IP" --b "$SPARE_IP" --ca "$PWD/ca.pem" $(cfg takeovers_off_args)
   for f in out/takeovers/takeovers-*-summary.json; do [ -e "$f" ] && $PY fenvix_status.py stamp "$f" "$ENGINE_SHA256"; done
+fi
+if has handover; then
+  # founder's decision 2026-11-13: a graceful handover (the serving process shuts down cleanly, the product's 30 s
+  # lease), the like for like of Atlas's Test Failover; the time until the spare answers writes
+  [ -n "$SPARE_IP" ] || { step "handover: no spare in this round: skipped"; outcomes+=("handover:SKIPPED"); }
+  # shellcheck disable=SC2046
+  [ -n "$SPARE_IP" ] && run_prog handover $PY takeovers.py "$BUCKET" out/takeovers --a "$COOK_IP" --b "$SPARE_IP" --ca "$PWD/ca.pem" $(cfg handover_args)
 fi
 if has agent-bench; then
   PG=$(cfg pgbox.ip); AU=$($PY s3io.py text "$BUCKET" secret/aurora-uri 2>/dev/null || true)

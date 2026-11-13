@@ -1,0 +1,12 @@
+{
+ "mode": "run",
+ "data": "100gb",
+ "phases": [
+  "atlas"
+ ],
+ "programs": [
+  "atlas-load"
+ ],
+ "atlas_ballast": true,
+ "pantry": "fenvix-kitchen-pantry-1000000001"
+}

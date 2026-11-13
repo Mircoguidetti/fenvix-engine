@@ -199,7 +199,32 @@ jobs:
         id: run
         if: env.MODE == 'run'
         continue-on-error: true
-        run: python3 step9/ci/run.py "$RESOLVED" "$OUT"
+        # the Atlas line (founder's decisions 2026-11-13; phase "atlas" only reads them): connection strings and the
+        # programmatic API key ("public:private") of the founder's Atlas project, as repository secrets
+        env:
+          ATLAS_URI: ${{ secrets.STEP9_ATLAS_URI }}
+          ATLAS_TARGET_URI: ${{ secrets.STEP9_ATLAS_TARGET_URI }}
+          ATLAS_API_KEY: ${{ secrets.STEP9_ATLAS_API_KEY }}
+          ATLAS_GROUP_ID: ${{ secrets.STEP9_ATLAS_GROUP_ID }}
+          ATLAS_CLUSTER: ${{ secrets.STEP9_ATLAS_CLUSTER }}
+          ATLAS_TARGET_CLUSTER: ${{ secrets.STEP9_ATLAS_TARGET_CLUSTER }}
+        run: |
+          # GitHub masks a secret only as a whole string: also the passwords inside the URIs (plain and decoded)
+          python3 - <<'PY'
+          import os, re, urllib.parse
+          for e in ("ATLAS_URI", "ATLAS_TARGET_URI"):
+              m = re.match(r"mongodb(\+srv)?://([^@/]+)@", os.environ.get(e, ""))
+              if m and ":" in m.group(2):
+                  p = m.group(2).split(":", 1)[1]
+                  for x in {p, urllib.parse.unquote(p)}:
+                      if len(x) >= 4:
+                          print(f"::add-mask::{x}")
+          k = os.environ.get("ATLAS_API_KEY", "")
+          for x in k.split(":"):
+              if len(x) >= 4:
+                  print(f"::add-mask::{x}")
+          PY
+          python3 step9/ci/run.py "$RESOLVED" "$OUT"
       - name: Credentials for the teardown
         if: always()
         uses: aws-actions/configure-aws-credentials@v4
@@ -220,6 +245,10 @@ jobs:
       - name: No secret in the results (otherwise nothing is published)
         id: secrets
         if: always() && env.MODE == 'run'
+        env:   # the Atlas line's secrets too (check_secrets.py looks for their passwords and the API key's parts)
+          ATLAS_URI: ${{ secrets.STEP9_ATLAS_URI }}
+          ATLAS_TARGET_URI: ${{ secrets.STEP9_ATLAS_TARGET_URI }}
+          ATLAS_API_KEY: ${{ secrets.STEP9_ATLAS_API_KEY }}
         run: |
           [ -d "$OUT" ] || { echo "no results"; exit 0; }
           grep -rl "$CM_ACCT" "$OUT" 2>/dev/null | xargs -r sed -i "s/$CM_ACCT/<ACCOUNT_ID>/g"

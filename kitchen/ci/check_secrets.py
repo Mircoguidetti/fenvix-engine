@@ -12,6 +12,15 @@ pieces = set()
 if len(pw) >= 8:
     pieces |= {pw, urllib.parse.quote(pw, safe="")}
 pieces.add("PRIVATE KEY")
+# step9's Atlas line (2026-11-13): the passwords inside the Atlas connection strings and the parts of the API key, when
+# the environment has them (absent everywhere else: nothing changes)
+import re  # noqa: E402
+for e in ("ATLAS_URI", "ATLAS_TARGET_URI"):
+    m = re.match(r"mongodb(\+srv)?://([^@/]+)@", os.environ.get(e, ""))
+    if m and ":" in m.group(2):
+        p = m.group(2).split(":", 1)[1]
+        pieces |= {x for x in (p, urllib.parse.unquote(p)) if len(x) >= 8}
+pieces |= {x for x in os.environ.get("ATLAS_API_KEY", "").split(":") if len(x) >= 8}
 found = []
 for root, _, names in os.walk(sys.argv[1]):
     for n in names:

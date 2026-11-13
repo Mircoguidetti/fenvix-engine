@@ -8,6 +8,9 @@
   "extras"
  ],
  "programs": [
+  "idle-cost",
+  "data-ops",
+  "handover",
   "agent-bench"
  ],
  "aurora": true,

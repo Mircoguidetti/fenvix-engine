@@ -428,6 +428,13 @@ def job_dollars(c):
         how.append(f"3 members {c['mongod']} ({disk} GB gp3) + client = {rate:.4f} $/h; load across zones {gb:.1f} GB x 3 x {XZ}")
         hrs = sum(jh.values())
         return rate * hrs + extra, 1, hrs, "; ".join(how)
+    if "atlas" in c["phases"]:
+        # AWS: the client machine only; the Atlas cluster is billed by Atlas (round_plan adds it apart)
+        hrs = sum(jh.values())
+        rate = hour(c["atlas_client"])
+        how.append(f"parts " + ", ".join(f"{k} {v:g} h" for k, v in jh.items()) + f"; client {c['atlas_client']} {rate:.4f} $/h "
+                   f"(AWS); the cluster's hours are on the Atlas bill (below)")
+        return rate * hrs, 1, hrs, "; ".join(how)
     if c.get("generator"):
         gen_h = c["generator_hours_estimated"]
         jobs = int(c.get("generator_jobs_estimated", 1))
@@ -482,6 +489,13 @@ def job_dollars(c):
 
 
 JOB_BOOT = 0.3
+ATLAS_M30_H = 0.77      # M30 Infinite per hour, DECLARED (Atlas console screenshot 2026-11-05; mongodb.com 0.677)
+ATLAS_GBM = 0.30        # Atlas Infinite storage per GB-month of Data Size, DECLARED
+
+
+def decide_gib(state):
+    import decide
+    return decide.MONGOD_LOAD_GIB[state]
 READ_PAUSE_H = 1.0   # between two jobs: the coordinator reads the results before the next push (ESTIMATED)
 
 
@@ -495,6 +509,7 @@ def round_plan(order_file=None):
     print("\n######## THE ROUND, job by job, from decide.py's own hours (review of the AWS harness): THE NUMBERS TO USE ########")
     jobs, t = [], 0.0
     started = {}
+    atlas = {"start": None, "end": None, "gib": 0.0, "ops": False}
     for f in files:
         c = _resolved(os.path.join(here, "..", "commands", f))
         if c["mode"] != "run":
@@ -505,6 +520,11 @@ def round_plan(order_file=None):
         if c["mode"] == "run" and "load" in c["phases"] and c.get("atlas_load"):
             started.setdefault("atlas", t)
         jobs.append({"file": f, "dollars": round(d, 2), "jobs": n, "hours": round(h, 2), "how": how})
+        if "atlas" in c["phases"]:
+            atlas["start"] = t if atlas["start"] is None else atlas["start"]
+            atlas["end"] = t + h
+            atlas["gib"] += sum(decide_gib(s_) for s_ in c["atlas_load_states"]) + (c["ballast_gib"] if c["atlas_ballast"] else 0)
+            atlas["ops"] = atlas["ops"] or "atlas-ops" in c["programs"]
         line(f"{f[:-5]}"[:44], d, f"{h:.2f} h in {n} job(s); {how}")
         t += h + READ_PAUSE_H * n
     end = t
@@ -516,10 +536,25 @@ def round_plan(order_file=None):
         days = (end - t0) / 24
         st += line(f"S3 storage, {db}"[:44], gb * GBM / 30 * days, f"{gb:.0f} GB x {GBM} x {days:.2f} days / 30 (kept from its load to the drop)")
     total = sum(j["dollars"] for j in jobs) + st
+    atlas_bill = 0.0
+    if atlas["start"] is not None:
+        # the founder's Atlas bill (not AWS): the M30 cluster from the first Atlas job to the last one (with the pauses),
+        # the restore target for about 1.5 h, and the storage of Data Size (2.6 x the BSON loaded, MEASURED on P1) for
+        # those hours; continuous backup (PITR) and snapshot storage UNKNOWN (not in the price list read here)
+        cl_h = atlas["end"] - atlas["start"] + READ_PAUSE_H
+        tgt_h = 1.5 if atlas["ops"] else 0.0
+        gb = atlas["gib"] * GIB * 2.6
+        stg = gb * ATLAS_GBM / 30 * (cl_h / 24)
+        atlas_bill = (cl_h + tgt_h) * ATLAS_M30_H + stg
+        print(f"  Atlas bill (the founder's Atlas account, not AWS), ESTIMATED: {atlas_bill:.2f} $ = M30 {cl_h:.1f} h + restore "
+              f"target {tgt_h} h at {ATLAS_M30_H} $/h (DECLARED, Atlas console 2026-11-05) + storage {gb:.0f} GB x "
+              f"{ATLAS_GBM} $/GB-month for {cl_h:.1f} h = {stg:.2f}; continuous backup and snapshots UNKNOWN")
+    print(f"  AWS TOTAL ESTIMATED: {total:.2f} $; with the Atlas bill {total + atlas_bill:.2f} $")
     hours = sum(j["hours"] for j in jobs)
     print(f"  TOTAL ESTIMATED: {total:.2f} $ in {sum(j['jobs'] for j in jobs)} jobs, {hours:.1f} h of jobs one after the "
           f"other ({end:.0f} h with {READ_PAUSE_H:g} h to read each job's results); the largest job "
           f"{max(j['dollars'] / j['jobs'] for j in jobs):.2f} $ (default cap 5 $). Plus the Claude API pilot ($0.24 to $2.40).")
+    round_plan.atlas_bill = atlas_bill
     return jobs
 
 

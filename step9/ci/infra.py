@@ -121,7 +121,7 @@ class AwsPlatform(Buckets):
         return {"subnets": self.subnet, "groups": self.group}
 
     def launch(self, name, role, mtype, az, user_data, arch, disk_gb=None):
-        group = self.group["client" if role in ("client", "filler", "extras", "mongoclient") else "kitchen"]   # pgbox: kitchen (5432 from clients)
+        group = self.group["client" if role in ("client", "filler", "extras", "mongoclient", "atlasclient") else "kitchen"]   # pgbox: kitchen (5432 from clients)
         r = self.ec2.run_instances(
             ImageId=self.ami[arch], InstanceType=mtype, MinCount=1, MaxCount=1,
             NetworkInterfaces=[{"DeviceIndex": 0, "SubnetId": self.subnet[az], "Groups": [group], "AssociatePublicIpAddress": True}],

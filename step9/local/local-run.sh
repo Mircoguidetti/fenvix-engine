@@ -95,6 +95,11 @@ c["data_gb_upper"] = 1
 # the MongoDB line's ballast through the script: shrunk like ours above, so both lines hold the same customers
 if c.get("mongod_ballast_line"):
     c["mongod_ballast_line"] = c["mongod_ballast_line"] + ["--mb-cliente", "0.5", "--lotto", "200"]
+# the founder's additions (2026-11-13), small: the Atlas line's load shrunk like ours; idle cost and handover short
+if c.get("atlas_ballast_line"):
+    c["atlas_ballast_line"] = c["atlas_ballast_line"] + ["--mb-cliente", "0.5", "--lotto", "200"]
+c["idle_cost_args"] = "--settle-s 60 --idle-s 120"
+c["handover_args"] = c.get("handover_args", "").replace("--n 10", "--n 3")
 # aws-local-round: the plan's own programs at a small size (the command's other arguments kept)
 c["first_next_ops_args"] = " ".join(x for x in (c.get("first_next_ops_args") or "").replace("--per-op 100", "--per-op 12")
                                    .replace("--per-op 5 ", "--per-op 6 ").split())
@@ -171,6 +176,33 @@ if want mongod; then
   # through the script at BALLAST_GIB), the same requests as W1 (the same arguments, seed and labels)
   echo "{\"mode\": \"run\", \"data\": \"atlas\", \"phases\": [\"mongod\"], \"pantry\": \"new\", \"programs\": [\"first-next-ops\", \"reads-after-writes\"], \"mongod_states\": [\"vecchio\"], \"mongod_ballast_gib\": $BGIB, \"first_next_ops_args\": \"--per-op 100 --max-s 120\", \"ceiling_min\": 200, \"engine\": \"$ENGINE_REF\"}" > "$D/mongod.json"
   MONGOD_BIN=${MONGOD_BIN:?MONGOD_BIN: a mongod 7.0 binary} round mongod "$D/mongod.json"
+fi
+# founder's decisions (2026-11-13): M3's idle cost, copy and restore to a past time, graceful handover (agent-bench is
+# left out locally as in every plan_job); then the Atlas line against a mongod on this machine standing in for Atlas
+# (its load, first-next without counters and the founder's read rounds; atlas-ops needs Atlas's Admin API: unit tests)
+want m3 && plan_job m3 04-M3-agent-bench.json
+if want atlas; then
+  pkill -f "mongod --replSet rsa" 2>/dev/null; rm -rf "$W/atlas-line-db"; mkdir -p "$W/atlas-line-db"
+  "${MONGOD_BIN:?MONGOD_BIN: a mongod 7.0 binary}" --replSet rsa --bind_ip_all --port 27600 --dbpath "$W/atlas-line-db" \
+    --logpath "$W/atlas-line-mongod.log" --fork > /dev/null || exit 1
+  "$PY" -c "import pymongo; pymongo.MongoClient('mongodb://127.0.0.1:27600/?directConnection=true').admin.command('replSetInitiate', {'_id': 'rsa', 'members': [{'_id': 0, 'host': '127.0.0.1:27600'}]})"
+  sleep 5
+  export ATLAS_URI="mongodb://{gateway}:27600/?directConnection=true"
+  for j in "a1:12-A1-atlas-ops-atlas-size.json" "a2:13-A2-atlas-load-100gb.json" "a3:14-A3-atlas-read-rounds-100gb.json"; do
+    n=${j%%:*}; f=${j#*:}
+    "$PY" - "$S9/commands/$f" "$D/$n.json" "$KEPT" "$ENGINE_REF" "$BGIB" <<'PY'
+import json, sys
+src, dst, kept, eng, gib = sys.argv[1:6]
+c = json.load(open(src))
+c.update({"engine": eng, "pantry": kept, "ceiling_min": 150})
+if c.get("data") != "atlas":
+    c["ballast_gib"] = float(gib)
+c["programs"] = [p for p in c["programs"] if p != "atlas-ops"] or ["atlas-load"]
+json.dump(c, open(dst, "w"), indent=1)
+PY
+    round "$n" "$D/$n.json"
+  done
+  pkill -f "mongod --replSet rsa" 2>/dev/null
 fi
 if want b1-after-w1; then
   if plan_job b1-after-w1 09-B1-read-rounds-1tb.json; then echo "PANTRY MARK: FAIL (B1 after W1 was not refused)"

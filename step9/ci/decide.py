@@ -99,14 +99,23 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import pantry_marks  # noqa: E402  (the writing marks, per database: the same rules on the runner and the extras client)
 
 PROGRAMS = ["m30", "s3-first-byte", "sealed-run", "log-ack", "first-next", "ballast-rounds", "first-next-ops",
-            "reads-after-writes", "takeovers", "write-peak", "agent-bench"]
+            "reads-after-writes", "takeovers", "write-peak", "agent-bench", "idle-cost", "data-ops", "handover", "atlas-load", "atlas-ops"]
 EXTRA_PROGRAMS = ["s3-first-byte", "sealed-run", "log-ack", "first-next", "ballast-rounds", "first-next-ops",
-                  "reads-after-writes", "takeovers"]   # the extras client's
+                  "reads-after-writes", "takeovers", "idle-cost", "data-ops", "handover"]   # the extras client's
+# Founder's decisions of 2026-11-13 (review of the AWS harness): "idle-cost" (programs/idle_cost.py: the S3 requests per
+# second and dollars per month of an open database with no traffic, on our line at each size), "data-ops"
+# (programs/data_ops.py: copy = fork and restore to a past time through the cook's admin interface; the cook gets
+# --admin-listen), and the Atlas phase's "atlas-load" and "atlas-ops" (machine/atlas_client.sh, programs/atlas_ops.py).
+ATLAS_PROGRAMS = ["atlas-load", "first-next", "ballast-rounds", "atlas-ops"]
+NOT_DEFAULT = ["idle-cost", "data-ops", "handover", "atlas-load", "atlas-ops"]
+# "handover" (founder's decision 2026-11-13, the time until a second server answers): takeovers.py --how stop with the
+# product's 30 s lease: the serving process shuts down cleanly and the warm spare takes over, the like for like of
+# Atlas's Test Failover (graceful); the "takeovers" program kills with a 4 s lease (a crash test, not the product's time)
 # 2026-11-13 (coordinator: the 1 TB plan): the two programs that WRITE into the measured database. first-next-ops saves
 # one message per measured customer (150 by default); reads-after-writes updates about 13,000 orders. Never in the
 # default list; in a job they run after the founder's script's read rounds (extras.sh's order); across jobs, only after
 # every job that must read the pantry as loaded (M1 for the Atlas databases, the ballast rounds for the big one).
-WRITING_PROGRAMS = ["first-next-ops", "reads-after-writes"]
+WRITING_PROGRAMS = ["first-next-ops", "reads-after-writes", "data-ops"]   # data-ops: the restore rewrites the database
 # Review of the AWS plan (2026-11-13), point 3: the order across jobs is enforced, not only written. When a job runs a
 # writing program, run.py first writes a mark into the pantry (PANTRY_MARK_PREFIX<run>.json: the job, the programs,
 # the databases); from then on `decide.py --pantry-check` (the workflow's step after the pantry's password, and the
@@ -183,7 +192,11 @@ def pantry_mark(c, run):
 
 # their own time on top of the extras (ESTIMATED upper bounds: first-next-ops ONE run of 30 customers per operation x 5
 # requests, scaled by --per-op and doubled when reads-after-writes follows it (job_hours); reads-after-writes 3 stages x --reads x --max-read-s at worst, the updates, the settle)
-PROGRAM_HOURS = {"first-next-ops": 0.3, "reads-after-writes": 1.5}
+PROGRAM_HOURS = {"first-next-ops": 0.3, "reads-after-writes": 1.5,
+                 # idle-cost: --settle-s 300 + --idle-s 600 and the opening; data-ops: the copy, a restore point (up to
+                 # 3 min), 40 s of log upload, the restore, each capped at 30 min (ESTIMATED: 3 s and 36 s on 13.8 GB
+                 # locally, MEASURED by big-speed)
+                 "idle-cost": 0.3, "data-ops": 0.5, "handover": 0.2}
 # How long each part of a job takes, in hours (ESTIMATED; aws-fixes B2). Sources: the Atlas load 2.8 h (MEASURED rate on
 # Atlas M30, 2026-11-05; OUR load rate on real S3 is UNKNOWN until the load job runs: the job's own 4.3 h script limit
 # and the ceiling stop it, and the settle cap is added); m30-corto about 3.0 h (kitchen README, the Atlas round's
@@ -221,7 +234,7 @@ DEFAULTS = {
     "loader": "c7i.xlarge", "loader_options": "", "client": "c7i.xlarge", "filler": "c7i.xlarge",
     "extras_client": "c7i.large", "log_colocate": True, "pgbox": "m7i.large", "aurora": False, "network": "default-sg",
     "server_options": "", "prepare": True, "settle_max_min": 30,
-    "programs": [p for p in PROGRAMS if p not in WRITING_PROGRAMS], "client_zone": "other",
+    "programs": [p for p in PROGRAMS if p not in WRITING_PROGRAMS and p not in NOT_DEFAULT], "client_zone": "other",
     "write_peak_args": "--dbs 6 --threads 16 --minutes 25 --gb 10",
     "takeovers_args": "--n 50 --writers 8 --between-s 3 --lease-ttl 4 --log on",
     "takeovers_off_args": "--n 50 --writers 8 --between-s 3 --lease-ttl 4 --log off --label logoff",
@@ -240,6 +253,16 @@ DEFAULTS = {
     # aws-local-round (2026-11-13): the MongoDB line, phase "mongod" alone in its job (machine/mongod.sh, mongo_client.sh)
     "mongod": "m7i.large", "mongod_states": ["vecchio"], "mongod_ballast_gib": 0, "mongod_fn_db": "",
     "mongod_disk_gb": None,
+    "idle_cost_args": "--settle-s 300 --idle-s 600", "data_ops_args": "",
+    "handover_args": "--n 10 --writers 8 --between-s 3 --lease-ttl 30 --log on --how stop --label handover",
+    # the Atlas phase (founder's decision 2026-11-13): "atlas_load_states" Atlas state names loaded by the founder's
+    # script through kitchen/load.py; "atlas_ballast" true: also the command's generated-size database through the
+    # script's own "carica" line (the same line as our generator: same seed, same customers); "atlas_load_gb_per_h" the
+    # rate the job's hours assume for the script into Atlas (the founder's script, one process, 16 threads: 26.8 GB/h
+    # MEASURED into a local mongod, 2026-11-13 aws-local-round 1 GiB in 144 s; on Atlas UNKNOWN until job A1 prints it);
+    # "atlas_ops_args" atlas_ops.py's; the client c7i.xlarge in eu-west-1a, as the Ireland client
+    "atlas_load_states": [], "atlas_ballast": False, "atlas_load_gb_per_h": 26.8, "atlas_client": "c7i.xlarge",
+    "atlas_ops_args": "--ops failover,copy,restore",
 }
 # The MongoDB line (aws-local-round, 2026-11-13): GiB of BSON the founder's script loads per Atlas state (the load plan
 # m30-corto stopped at the fraction Atlas reached, plus its 2 KB collection: 1.22 GiB where the plan has one), ESTIMATED
@@ -256,7 +279,8 @@ VCPU_LIMIT = int(os.environ.get("S9_VCPU_LIMIT", "8"))
 SAFE_ARGS = re.compile(r"^[A-Za-z0-9 ,._:=-]{0,400}$")
 RESERVED = {"--listen", "--store", "--bucket", "--region", "--endpoint", "--local-dir", "--replica-set", "--advertise",
             "--auth", "--tls-mode", "--tls-certificate-key-file", "--tls-ca-file", "--holder", "--no-leases",
-            "--unsafe-skip-ownership-checks", "--quaderno", "--quaderno-id", "--log-commands"}
+            "--unsafe-skip-ownership-checks", "--quaderno", "--quaderno-id", "--log-commands", "--admin-token",
+            "--admin-token-file"}
 
 
 # Review of the AWS harness (2026-11-13): the engine is ONE input of the whole round, step9/ENGINE (one line, the full
@@ -327,10 +351,45 @@ def mongod_line(c, raw):
         c["mongod_fn_db"] = "app_data_b01"
 
 
+def atlas_line(c, raw):
+    """The Atlas phase's checks (alone in its job): its programs, what it loads, the kept pantry where its state files
+    live between jobs (atlas-states/), the client."""
+    if c["phases"] != ["atlas"]:
+        refuse('phases: "atlas" runs alone in its job (one client machine; the cluster is the founder\'s, on Atlas)')
+    if "programs" not in raw or not c["programs"] or not set(c["programs"]) <= set(ATLAS_PROGRAMS):
+        refuse(f"atlas: programs: any of {ATLAS_PROGRAMS}")
+    if not re.match(r"^fenvix-kitchen-pantry-[0-9]+$", str(c["pantry"])):
+        refuse("atlas: the round's kept pantry (its name): the Atlas state files are kept there between the Atlas jobs")
+    st = c["atlas_load_states"]
+    if not isinstance(st, list) or not set(st) <= set(MONGOD_LOAD_GIB):
+        refuse(f"atlas_load_states: a list of {sorted(MONGOD_LOAD_GIB)}")
+    if ("atlas-load" in c["programs"]) != bool(st or c["atlas_ballast"]):
+        refuse('atlas: "atlas-load" with atlas_load_states or atlas_ballast, and only then')
+    if c["atlas_ballast"] and not DATA[c["data"]]["ballast_dbs"]:
+        refuse('atlas_ballast: needs data "100gb" or "1tb" (the generated-size database)')
+    if c["atlas_client"] not in ("c7i.large", "c7i.xlarge"):
+        refuse("atlas_client: c7i.large or c7i.xlarge")
+    if not 0.5 <= float(c["atlas_load_gb_per_h"]) <= 100:
+        refuse("atlas_load_gb_per_h: 0.5 to 100")
+
+
 def job_hours(c):
     """The job's expected duration, part by part (hours, ESTIMATED from JOB_HOURS and, for the generator, from the
     measured rate in estimate.py)."""
     h = {"boot": JOB_HOURS["boot"]}
+    if "atlas" in c["phases"]:
+        # the load (each state, then the generated-size database) at atlas_load_gb_per_h; first-next and the read
+        # rounds as on our line; atlas-ops: a snapshot and two restores of the Atlas-size cluster, a failover
+        if "atlas-load" in c["programs"]:
+            gib = sum(MONGOD_LOAD_GIB[s] for s in c["atlas_load_states"]) + (c["ballast_gib"] if c["atlas_ballast"] else 0)
+            h["atlas_load"] = gib * GIB_GB / float(c["atlas_load_gb_per_h"])
+        if "first-next" in c["programs"]:
+            h["first_next"] = 0.3
+        if "ballast-rounds" in c["programs"]:
+            h["ballast_rounds"] = 1.6
+        if "atlas-ops" in c["programs"]:
+            h["atlas_ops"] = 1.5
+        return {k: round(v, 2) for k, v in h.items()}
     if "mongod" in c["phases"]:
         # the states' lines run one after the other in load.py's order (different states run at the same time; this
         # is the upper bound), then the ballast; the cold restart; the programs as in a measure job
@@ -410,8 +469,8 @@ def resolve(raw, quota=None):
         c["mode"] = "none"
     if c["data"] not in DATA:
         refuse(f"data: one of {list(DATA)}")
-    if not (isinstance(c["phases"], list) and c["phases"] and all(p in ("load", "measure", "extras", "mongod") for p in c["phases"])):
-        refuse("phases: a non-empty list of load, measure, extras (or mongod alone)")
+    if not (isinstance(c["phases"], list) and c["phases"] and all(p in ("load", "measure", "extras", "mongod", "atlas") for p in c["phases"])):
+        refuse("phases: a non-empty list of load, measure, extras (or mongod alone, or atlas alone)")
     if "mongod" in c["phases"]:
         mongod_line(c, raw)
     if not set(c["programs"]) <= set(PROGRAMS):
@@ -525,6 +584,17 @@ def resolve(raw, quota=None):
     if not lines:
         c["filler"] = None
         c["generator"] = None
+    if "atlas" in c["phases"]:
+        atlas_line(c, raw)
+        # the generated-size database, loaded on Atlas by the script's own line (decide's ballast line: same seed)
+        c["atlas_ballast_line"] = ([f"{d['ballast_prefix']}01", "--gb", gib_arg(c["ballast_gib"]), "--seme", "2001", "--thread",
+                                    "16", "--quota-riservati", "0.4", "--tetto-logico-gb",
+                                    f"{max(60, int(c['ballast_gib'] * 1.2) + 1)}"] if c["atlas_ballast"] else [])
+        c["generator"] = c["filler"] = None
+    # data-ops reaches the cook's admin interface: the cook (and the spare) listen on 8080, the token is made by the
+    # machine scripts from the round's password (cook.sh, extras.sh); never in the command
+    if "data-ops" in c["programs"] and "--admin-listen" not in c["server_options"]:
+        c["server_options"] = (c["server_options"] + " --admin-listen 0.0.0.0:8080").strip()
     c["data_gb_upper"] = round(d["target_gb"] * 1.6, 1)   # BSON plus indexes and not yet compacted SSTs, upper bound
     # money and time
     cap = float(c["spend_cap"])
@@ -542,7 +612,7 @@ def resolve(raw, quota=None):
         refuse("settle_max_min: 5 to 90 minutes")
     # aws-fixes (B2): a command that does nothing is refused (run.py starts the measured cook only in phase "measure";
     # the m30 program runs in "measure", every other program in "extras")
-    if c["mode"] == "run" and "mongod" not in c["phases"]:
+    if c["mode"] == "run" and "mongod" not in c["phases"] and "atlas" not in c["phases"]:
         extra_work = [p for p in c["programs"] if p != "m30"]
         if "extras" in c["phases"] and "measure" not in c["phases"]:
             refuse('phases: "extras" needs "measure" (the extra programs run against the measured cook, which only the '
@@ -572,6 +642,8 @@ def resolve(raw, quota=None):
             peaks["agent-bench"] = v(c["cook"]) + log_machines * v(c["log"]) + v(c["compactor"]) + v(c["pgbox"]) + v(c["extras_client"])
     if "mongod" in c["phases"]:   # three members and the client, at once
         peaks["mongod"] = 3 * v(c["mongod"]) + v(c["extras_client"])
+    if "atlas" in c["phases"]:    # one client; the cluster is on Atlas
+        peaks["atlas"] = v(c["atlas_client"])
     c["vcpu_peaks"] = peaks
     c["vcpu_peak"] = max(peaks.values()) if peaks else 0
     if c["mode"] == "run" and c["vcpu_peak"] > VCPU_LIMIT:

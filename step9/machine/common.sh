@@ -38,3 +38,5 @@ serve_cold_restart() { # serve_cold_restart STOP_FUNCTION START_FUNCTION (START 
   step "cold restart $id: ok=$ok in $(( $(date +%s) - t0 )) s"
   COLD_DONE=$id
 }
+# the admin interface's token (data-ops): derived from the round's password, the same on the cook and the extras client
+admin_token() { printf 's9-admin:%s' "$CM_PW" | sha256sum | cut -c1-40; }

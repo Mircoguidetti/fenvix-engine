@@ -41,7 +41,8 @@ def test_g1_generates_one_database_of_1_tb_on_the_kept_pantry_resumable_across_j
 def test_b1_reads_only_and_w1_writes_last_no_spare_within_8_vcpu_and_the_ceiling():
     rc, out, b = decide("09-B1-read-rounds-1tb.json")
     assert b is not None, out
-    assert b["programs"] == ["first-next", "ballast-rounds"] and b["spare"] is None and b["vcpu_peak"] <= 8
+    # (founder's decision 2026-11-13: the idle cost first, reads only)
+    assert b["programs"] == ["idle-cost", "first-next", "ballast-rounds"] and b["spare"] is None and b["vcpu_peak"] <= 8
     rc, out, w = decide("10-W1-first-next-ops-reads-after-writes-1tb.json")
     assert w is not None, out
     assert w["programs"] == ["first-next-ops", "reads-after-writes"] and w["spare"] is None and w["vcpu_peak"] <= 8
@@ -53,7 +54,8 @@ def test_b1_reads_only_and_w1_writes_last_no_spare_within_8_vcpu_and_the_ceiling
 
 def test_the_programs_that_write_are_never_in_the_default_list():
     import decide as d
-    assert set(d.WRITING_PROGRAMS) == {"first-next-ops", "reads-after-writes"}
+    # (data-ops since the founder's decision of 2026-11-13: its restore rewrites the database)
+    assert set(d.WRITING_PROGRAMS) == {"first-next-ops", "reads-after-writes", "data-ops"}
     assert not set(d.WRITING_PROGRAMS) & set(d.DEFAULTS["programs"])
     assert set(d.WRITING_PROGRAMS) <= set(d.PROGRAMS) and set(d.WRITING_PROGRAMS) <= set(d.EXTRA_PROGRAMS)
     # a command that names no programs gets none of them

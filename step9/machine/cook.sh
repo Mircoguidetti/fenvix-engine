@@ -59,6 +59,11 @@ step "pantry $PANTRY; log ${LOGS:-none (S3 WAL only)}; extra options '${OPTS}'"
 $PY sst_count.py "$PANTRY" out/sst-start.json "$NAME start" 2>&1 | tee -a out/steps.log
 # 5. our server
 read -ra EXTRA <<<"$OPTS"
+# review of the AWS harness (founder's decision 2026-11-13, data-ops): with --admin-listen the admin interface needs a
+# token; it is made here from the round's password (never in the command or a log) and extras.sh makes the same one
+if grep -q -- "--admin-listen" <<<"$OPTS"; then
+  admin_token > admin-token && chmod 600 admin-token && EXTRA+=(--admin-token-file "$PWD/admin-token")
+fi
 # shellcheck disable=SC2207
 END=($(s3_endpoint_args))
 LOGARGS=(); [ -n "$LOGS" ] && LOGARGS=(--quaderno "$LOGS" --quaderno-id "${LOG_ID:-cell1}")

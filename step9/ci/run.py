@@ -247,7 +247,7 @@ nohup bash ./node.sh {role} {name} {BUCKET} > node.log 2>&1 &
 def launch(name, role, mtype, zone, disk_gb=None):
     renew()
     arch = TYPES[mtype][2]
-    package = "client.tar.gz" if role in ("client", "filler", "extras", "mongoclient") else f"node-{arch}.tar.gz"
+    package = "client.tar.gz" if role in ("client", "filler", "extras", "mongoclient", "atlasclient") else f"node-{arch}.tar.gz"
     left = CEILING_MIN - (time.time() - T0) / 60 + 5
     mid, ip = plat.launch(name, role, mtype, zone, user_data(name, role, package, left), arch, disk_gb=disk_gb)
     machines[mid] = {"name": name, "role": role, "type": mtype, "zone": zone, "ip": ip, "start": time.time(), "end": None,
@@ -351,7 +351,7 @@ try:
         # the root user lives in the pantry: later rounds on this pantry must use the same password (the workflow and
         # the local mode read it back from here, masked); the object goes away with the pantry
         s3.put_object(Bucket=PANTRY, Key="step9-secret/pw", Body=os.environ["CM_PW"].encode())
-    if "takeovers" in cmd["programs"] and "extras" in PHASES:
+    if ("takeovers" in cmd["programs"] or "handover" in cmd["programs"]) and "extras" in PHASES:
         # the takeover pair's own data bucket: its databases and its users stay apart from the measured cook's (the
         # cook's process owns the pantry's admin database, where the users live, for as long as it runs)
         plat.new_bucket(TK_BUCKET, 1)
@@ -463,6 +463,41 @@ try:
         for name, (mid, _) in sorted(mongo.items()):
             stop(name, mid, wait_s=120)
 
+    if "atlas" in PHASES:
+        # founder's decisions (2026-11-13): the Atlas line, alone in its job: one client in eu-west-1a (the Ireland
+        # round's client zone) against the founder's Atlas cluster (machine/atlas_client.sh). The connection strings and
+        # the API key come from the workflow's secrets (environment), go into the run bucket for one read, and the
+        # machine deletes them at once.
+        sec = {k: os.environ.get(e, "") for k, e in (("uri", "ATLAS_URI"), ("api_key", "ATLAS_API_KEY"), ("group", "ATLAS_GROUP_ID"),
+                                                      ("cluster", "ATLAS_CLUSTER"), ("target_cluster", "ATLAS_TARGET_CLUSTER"),
+                                                      ("target_uri", "ATLAS_TARGET_URI"), ("api", "ATLAS_API_URL"))}
+        if not sec["uri"]:
+            raise Stop("NO_ATLAS_URI (the workflow's secret STEP9_ATLAS_URI)")
+        if "atlas-ops" in cmd["programs"] and not (sec["api_key"] and sec["group"] and sec["cluster"]):
+            raise Stop("NO_ATLAS_API_KEY (secrets STEP9_ATLAS_API_KEY, STEP9_ATLAS_GROUP_ID, STEP9_ATLAS_CLUSTER)")
+        if MODE == "local" and getattr(plat, "machine_endpoint", None):
+            # local round only: the stand-in "Atlas" is a mongod on this machine, reached through the network's gateway
+            gw = plat.machine_endpoint.split("//", 1)[1].rsplit(":", 1)[0]
+            sec = {k: v.replace("{gateway}", gw) for k, v in sec.items()}
+        put("secret/atlas.json", sec)
+        other_h = sum(v for k, v in cmd["job_hours"].items() if k not in ("atlas_load",))
+        load_max_h = round(max(0.2, decide.CEILING_USE * CEILING_MIN / 60 - other_h), 2)
+        say(f"6/8 the Atlas line: client {cmd['atlas_client']} in {infra.ZONES[0]}, programs {cmd['programs']}"
+            + (f", load {cmd['atlas_load_states']}" if cmd.get("atlas_load_states") else "")
+            + (f" and {cmd['ballast_db']} ({cmd['ballast_gib']:g} GiB, at most {load_max_h} h)" if cmd.get("atlas_ballast") else ""))
+        put("atlasclient/config.json", {"programs": cmd["programs"], "pantry": PANTRY, "atlas_load_states": cmd["atlas_load_states"],
+                                        "atlas_ballast_line": cmd["atlas_ballast_line"], "ballast_db": cmd.get("ballast_db"),
+                                        "ballast_gib": cmd.get("ballast_gib"), "load_max_h": load_max_h,
+                                        **{k: v for k, v in cmd.items() if k.endswith("_args")}})
+        ac_id, _ = launch("atlasclient", "atlasclient", cmd["atlas_client"], infra.ZONES[0])
+        wait_for("atlasclient/end.json", watch="atlasclient")
+        end_ac = get("atlasclient/end.json") or {}
+        outcomes["atlas"] = end_ac.get("outcome", "NO END")
+        outcomes["atlas_programs"] = end_ac.get("programs", "")
+        red_programs.append(outcomes_rules.programs_blocker("atlasclient", end_ac, cmd["programs"], done="ATLAS_LINE_DONE"))
+        plat.terminate([ac_id])
+        machines[ac_id]["end"] = time.time()
+
     mid1 = ip1 = sp = comp = None
     if "measure" in PHASES:
         # at most 8 vCPU at once (founder, 2026-11-09): log-0 lives on the cook's own machine (as Atlas keeps its oplog
@@ -527,7 +562,7 @@ try:
         put("extras/config.json", {"engine_sha256": cook_sha(), "run_id": RUN, "programs": extras, "pantry": PANTRY, "logs": LOGS, "bench_logs": LOGS.replace(":7200", ":7201"),
                                    "cook": {"ip": ip1, "port": 27017}, "spare": {"ip": sp[1]} if sp else {},
                                    "ballast_db": cmd.get("ballast_db"), "ballast_gib": cmd.get("ballast_gib"),
-                                   "pantry_reads": cmd.get("pantry_reads") or {},
+                                   "pantry_reads": cmd.get("pantry_reads") or {}, "data": cmd.get("data"),
                                    **{k: v for k, v in cmd.items() if k.endswith("_args")}})
         ex_id, _ = launch("extras", "extras", cmd["extras_client"], CLIENT_ZONE)
         wait_for("extras/end.json", watch="extras")

@@ -32,5 +32,6 @@ case "$ROLE" in
   generator)                   exec bash ./generator.sh "$NAME" "$BUCKET" ;;
   mongod)                      exec bash ./mongod.sh "$NAME" "$BUCKET" ;;        # the MongoDB line (aws-local-round)
   mongoclient)                 exec bash ./mongo_client.sh "$BUCKET" "$NAME" ;;
+  atlasclient)                 exec bash ./atlas_client.sh "$BUCKET" "$NAME" ;;   # the Atlas line (founder, 2026-11-13)
   *) echo "unknown role $ROLE"; [ -n "${LOCAL_TEST:-}" ] || shutdown -h now "step9: unknown role"; exit 1 ;;
 esac

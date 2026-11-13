@@ -69,7 +69,12 @@ def customers(st, n, seed):
     return [cl.get("nomi_da", "cli-%06d") % i for i in pick]
 
 
+NO_COUNTERS = None   # set by --counters none: a server that is not ours (Atlas): every request counts 0 GETs, uncounted
+
+
 def counters(client):
+    if NO_COUNTERS:
+        return {"get": 0, "get_bytes": 0, "maint_get": 0}
     t = client.admin.command("tenantStats")
     r, m = t.get("requests") or {}, t.get("maintenance") or {}
     return {"get": int(r.get("get", 0)), "get_bytes": int(r.get("getBytes", 0)),
@@ -122,7 +127,7 @@ def measure(client, dbname, cli, out_rows):
         c1 = counters(client)
         row = {"db": dbname, "cliente": cli, "kind": kind, "ms": round(ms, 3), "docs": n, "error": err,
                "gets": c1["get"] - c0["get"], "get_bytes": c1["get_bytes"] - c0["get_bytes"],
-               "maintenance_gets": c1["maint_get"] - c0["maint_get"]}
+               "maintenance_gets": c1["maint_get"] - c0["maint_get"], "counted": not NO_COUNTERS}
         rows.append(row)
         out_rows.append(row)
     return rows
@@ -131,7 +136,9 @@ def measure(client, dbname, cli, out_rows):
 def summarize(rows):
     """Per database and over all: per kind p50/p99 of ms, GETs and bytes; the NEXT verdicts against HOT."""
     def block(rs):
-        cold = [r for r in rs if r["kind"] == "first" and r["gets"] > 0 and not r["error"]]
+        # without counters (a server that is not ours, --counters none) every first request is taken as cold: on Atlas the
+        # customer was never read since the load, as in the Ireland round
+        cold = [r for r in rs if r["kind"] == "first" and (r["gets"] > 0 or not r.get("counted", True)) and not r["error"]]
         cold_customers = {(r["db"], r["cliente"]) for r in cold}
         out = {"customers": len({(r["db"], r["cliente"]) for r in rs}), "cold_customers": len(cold_customers),
                "not_cold_at_first": len({(r["db"], r["cliente"]) for r in rs if r["kind"] == "first"}) - len(cold_customers),
@@ -191,9 +198,13 @@ def main(argv=None):
     ap.add_argument("--customers", type=int, default=30)
     ap.add_argument("--max-dbs", type=int, default=2)
     ap.add_argument("--seed", type=int, default=9)
+    ap.add_argument("--counters", default="fenvix", choices=("fenvix", "none"),
+                    help="none: a server that is not ours (Atlas, the founder's decision of 2026-11-13): no tenantStats")
     ap.add_argument("--db", default="", help="only this database (review of the AWS harness: the command's ballast "
                     "database, when the pantry holds more than one)")
     a = ap.parse_args(argv)
+    global NO_COUNTERS
+    NO_COUNTERS = a.counters == "none"
     import pymongo
     os.makedirs(a.out, exist_ok=True)
     client = pymongo.MongoClient(a.uri, serverSelectionTimeoutMS=30000)

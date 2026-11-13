@@ -11,10 +11,13 @@ pilot-P-small.json                                 the pilot: every role of our 
 02-M1-m30.json                                     the founder's script against Atlas's Ireland numbers (reads the Atlas databases as loaded)
 03-M2-extras-write-peak.json                       the Atlas size: S3 first byte, sealed run, log ack, first-next, first-next-ops, reads-after-writes, 50 + 50 takeovers, write-peak
 11-MG-mongod-line-atlas.json                       the mongod replica set (3 zones, majority): the same requests on the same data as M2 (its own empty bucket)
-04-M3-agent-bench.json                             the agent benchmark: ours, Aurora PostgreSQL, PostgreSQL on EC2
+04-M3-agent-bench.json                             the Atlas size: idle cost, copy and restore to a past time (data-ops), graceful handover; then the agent benchmark (ours, Aurora, PostgreSQL on EC2)
+12-A1-atlas-ops-atlas-size.json                    Atlas (the founder's cluster): load the Atlas-size database, then Test Failover, restore to another cluster, restore to a past time
+13-A2-atlas-load-100gb.json                        Atlas: load the 100 GB database app_data_h01 (only if A1's load rate says 100 GB fits one job: about 6 MB/s or more)
+14-A3-atlas-read-rounds-100gb.json                 Atlas at 100 GB: first-next and the founder's script's read rounds, the same programs as our 06-BW
 05-G-generate-100gb.json                           the 100 GB database app_data_h01 (also the generator's first real run: its rate per slice before G1)
-06-BW-read-rounds-ops-raw-100gb.json               100 GB: first-next and the read rounds, then first-next-ops and reads-after-writes
+06-BW-read-rounds-ops-raw-100gb.json               100 GB: idle cost, first-next and the read rounds, then first-next-ops and reads-after-writes
 08-G1-generate-1tb.json                            the 1 TB database app_data_b01 (BALLAST_PARTIAL: the same command again resumes it)
-09-B1-read-rounds-1tb.json                         1 TB: first-next and the read rounds (reads only)
+09-B1-read-rounds-1tb.json                         1 TB: idle cost, first-next and the read rounds (reads only)
 10-W1-first-next-ops-reads-after-writes-1tb.json   1 TB: first-next-ops (100 cold customers per operation) and reads-after-writes
 07-drop-pantry.json                                drop the kept pantry

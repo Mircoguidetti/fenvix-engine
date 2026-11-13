@@ -1,0 +1,15 @@
+{
+ "mode": "run",
+ "data": "atlas",
+ "phases": [
+  "atlas"
+ ],
+ "programs": [
+  "atlas-load",
+  "atlas-ops"
+ ],
+ "atlas_load_states": [
+  "vecchio"
+ ],
+ "pantry": "fenvix-kitchen-pantry-1000000001"
+}

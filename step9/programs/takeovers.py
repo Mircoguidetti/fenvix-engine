@@ -49,6 +49,9 @@ ap.add_argument("--log", default="on")
 ap.add_argument("--max-takeover-s", type=float, default=120)
 ap.add_argument("--label", default="")
 ap.add_argument("--settle-s", type=float, default=90.0, help="wait before the second read-back (> the log's upload interval)")
+ap.add_argument("--how", default="kill9", choices=("kill9", "stop"),
+                help="stop: a graceful handover (SIGTERM: the serving process shuts down cleanly), the like for like of "
+                     "Atlas's Test Failover (a graceful step-down); founder's decision 2026-11-13, program 'handover'")
 a = ap.parse_args()
 os.makedirs(a.out, exist_ok=True)
 tag = f"takeovers{('-' + a.label) if a.label else ''}"
@@ -163,7 +166,7 @@ for i in range(a.n):
     other = "B" if victim == "A" else "A"
     n_before = len(acked)
     victim_failed = fenvix_status.failed(fenvix_status.snapshot(client(victim)))   # its counter dies with it
-    ack = command(victim, "kill9")
+    ack = command(victim, a.how)
     with lock:
         state["killed_at"][victim] = ack["t"]
     t_kill = ack["t"]

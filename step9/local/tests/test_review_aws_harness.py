@@ -32,6 +32,7 @@ sys.path.insert(0, HERE)
 # the round's order; ROUND.txt must list the same (test_round_txt_is_this_order)
 ORDER = ["00-permissions.json", "01-L-load-atlas.json", "pilot-P-small.json", "02-M1-m30.json",
          "03-M2-extras-write-peak.json", "11-MG-mongod-line-atlas.json", "04-M3-agent-bench.json",
+         "12-A1-atlas-ops-atlas-size.json", "13-A2-atlas-load-100gb.json", "14-A3-atlas-read-rounds-100gb.json",
          "05-G-generate-100gb.json", "06-BW-read-rounds-ops-raw-100gb.json", "08-G1-generate-1tb.json",
          "09-B1-read-rounds-1tb.json", "10-W1-first-next-ops-reads-after-writes-1tb.json", "07-drop-pantry.json"]
 
@@ -76,14 +77,14 @@ def test_1_every_job_of_the_round_in_its_order_passes_the_pantry_check():
 
 def test_1_b1_after_m2_runs_but_b1_after_w1_and_m1_after_m2_are_still_refused():
     import decide
-    m2, w1, w100 = _resolve(ORDER[4]), _resolve(ORDER[11]), _resolve(ORDER[8])
-    b1, m1 = _resolve(ORDER[10]), _resolve(ORDER[3])
+    m2, w1, w100 = _resolve(ORDER[4]), _resolve(ORDER[14]), _resolve(ORDER[11])
+    b1, m1 = _resolve(ORDER[13]), _resolve(ORDER[3])
     mark_m2, mark_w1, mark_w100 = decide.pantry_mark(m2, 11), decide.pantry_mark(w1, 12), decide.pantry_mark(w100, 13)
     assert decide.pantry_mark_refusal(b1, [mark_m2]) is None           # M2 wrote an Atlas-shaped database only
     assert decide.pantry_mark_refusal(b1, [mark_w100]) is None         # the 100 GB writes are another database
     assert decide.pantry_mark_refusal(b1, [mark_w1]) is not None       # W1 wrote the 1 TB database B1 reads
     assert decide.pantry_mark_refusal(m1, [mark_m2]) is not None       # M2 wrote what M1's founder's script reads
-    assert decide.pantry_mark_refusal(_resolve(ORDER[8]), [mark_w1]) is None   # 100 GB after 1 TB: still fine
+    assert decide.pantry_mark_refusal(_resolve(ORDER[11]), [mark_w1]) is None   # 100 GB after 1 TB: still fine
 
 
 def test_1_marks_name_their_database_and_an_unreadable_mark_blocks_every_reader():
@@ -108,7 +109,7 @@ def test_1_the_extras_client_checks_the_databases_each_program_reads(monkeypatch
         s3.create_bucket(Bucket="pantry-test", CreateBucketConfiguration={"LocationConstraint": "eu-west-1"})
         s3.put_object(Bucket="pantry-test", Key=f"{pm.PREFIX}11.json", Body=json.dumps(decide.pantry_mark(_resolve(ORDER[4]), 11)))
         monkeypatch.setitem(sys.modules, "s3io", types.SimpleNamespace(client=lambda: s3))
-        b1 = _resolve(ORDER[10])
+        b1 = _resolve(ORDER[13])
         assert pm.main(["x", "check", "pantry-test", "99", json.dumps(b1["pantry_reads"]["first-next"])]) == 0
         assert pm.main(["x", "check", "pantry-test", "99", json.dumps(b1["pantry_reads"]["ballast-rounds"])]) == 0
         assert pm.main(["x", "check", "pantry-test", "99", json.dumps(["atlas"])]) == 1
@@ -117,7 +118,7 @@ def test_1_the_extras_client_checks_the_databases_each_program_reads(monkeypatch
 
 
 def test_1_the_reads_reach_the_extras_client():
-    assert _resolve(ORDER[10])["pantry_reads"] == {"first-next": ["app_data_b01"], "ballast-rounds": ["app_data_b01"]}
+    assert _resolve(ORDER[13])["pantry_reads"] == {"first-next": ["app_data_b01"], "ballast-rounds": ["app_data_b01"]}
     assert _resolve(ORDER[3])["pantry_reads"] == {"m30": ["atlas"]}
     run = open(os.path.join(CI, "run.py")).read()
     assert '"pantry_reads": cmd.get("pantry_reads") or {}' in run
@@ -128,14 +129,14 @@ def test_1_the_reads_reach_the_extras_client():
 
 # ---------- 2. 100 GB and 1 TB in one pantry ----------
 def test_2_the_100gb_and_1tb_databases_have_their_own_names_in_the_one_pantry():
-    g100, g1 = _resolve(ORDER[7]), _resolve(ORDER[9])
+    g100, g1 = _resolve(ORDER[10]), _resolve(ORDER[12])
     assert g100["pantry_name"] == g1["pantry_name"]
     assert g100["ballast_db"] == "app_data_h01" and g1["ballast_db"] == "app_data_b01"
     assert g100["ballast"]["lines"][0][0] == "app_data_h01" and g1["ballast"]["lines"][0][0] == "app_data_b01"
-    bw, b1, w1 = _resolve(ORDER[8]), _resolve(ORDER[10]), _resolve(ORDER[11])
+    bw, b1, w1 = _resolve(ORDER[11]), _resolve(ORDER[13]), _resolve(ORDER[14])
     assert bw["ballast_db"] == "app_data_h01" and b1["ballast_db"] == w1["ballast_db"] == "app_data_b01"
     # the 100 GB measure job: reads first, then the two writing programs (extras.sh's order), in one job, no spare
-    assert bw["programs"] == ["first-next", "ballast-rounds", "first-next-ops", "reads-after-writes"] and bw["spare"] is None
+    assert bw["programs"] == ["idle-cost", "first-next", "ballast-rounds", "first-next-ops", "reads-after-writes"] and bw["spare"] is None
 
 
 def test_2_first_next_reads_only_the_given_database():
@@ -312,7 +313,7 @@ def test_1_extras_sh_function_skips_only_a_reader_of_a_written_database(tmp_path
         "        return {'Body': open(os.path.join(os.environ['FAKE_S3'], Bucket, Key), 'rb')}\n"
         "def client():\n"
         "    return _C()\n")
-    b1 = _resolve(ORDER[10])
+    b1 = _resolve(ORDER[13])
     cfgf = tmp_path / "config.json"
     cfgf.write_text(json.dumps({"pantry_reads": {**b1["pantry_reads"], "m30": ["atlas"]}}))
     script = (f'set -u\nPY={sys.executable}\nPANTRY=pantry\nRUN_ID_SELF=99\noutcomes=()\n'
