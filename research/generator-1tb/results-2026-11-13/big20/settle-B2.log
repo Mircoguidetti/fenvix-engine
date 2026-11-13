@@ -1,0 +1,2 @@
+04:06:32 {"enabled": true, "started": 1, "running": 1, "publishes": 13, "absorbs": 9, "merges": 3, "reseals": 1, "errors": 0, "catchUps": 0}
+settled {"enabled": true, "started": 1, "running": 1, "publishes": 13, "absorbs": 9, "merges": 3, "reseals": 1, "errors": 0, "catchUps": 0}
