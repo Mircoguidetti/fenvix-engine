@@ -1013,6 +1013,11 @@ async fn run() -> Result<()> {
     // FENVIX_SEALED_RUNS=N: the same as --sealed-runs N, for every server a test harness starts (`judge/run.sh` with
     // JUDGE_SEALED_RUNS)
     // Default since integration-3: on, first publish after 2 write batches; off only when asked
+    // P-command-cpu: the span scan of a customer's documents (coll.rs docs_by_span), off for measurements and the
+    // control of its test only (answers are the same either way)
+    if std::env::var_os("FENVIX_NO_SPAN_READS").is_some() {
+        crate::coll::SPAN_READS.store(false, std::sync::atomic::Ordering::Relaxed);
+    }
     let env_sr = std::env::var("FENVIX_SEALED_RUNS").ok();
     // the command line wins over the environment (a test that passes --sealed-runs N gets it under FENVIX_SEALED_RUNS=off)
     let sealed_runs = if let Some(n) = args.sealed_runs {
