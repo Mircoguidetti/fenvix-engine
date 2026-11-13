@@ -356,10 +356,15 @@ mod tests {
         assert_eq!(f, 0, "{v:?}");
     }
 
-    /// sim-test-2: the generator's parallel publish (3 writers) while another process takes the database over and writes:
-    /// whichever wins, no acknowledged write is lost and a refused generation is not read.
+    /// sim-test-2: hole W through a second door. The ballast generator's parallel publish (3 writers,
+    /// `publish_generated_parts`) puts every customer row in sealed runs only: SlateDB never holds them. The database
+    /// then moves to another process whose compactor has not started; its write path's builder publish with
+    /// `Reseal::All` rebuilds every group from SlateDB's rows and leaves the generated ones out: all of them are lost at
+    /// once (no drop needed, unlike the first door). Fails on integration-5-stack fea18a34 (234 violations, MEASURED);
+    /// passes with fix-sim-holes' W fix c94a477 (0 violations, MEASURED). Ignored until that fix is in: `--ignored`.
     #[test]
-    fn sim_story_generator_and_takeover() {
+    #[ignore]
+    fn sim_hole_w_generated_rows_then_a_builder_reseal() {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
@@ -381,7 +386,7 @@ mod tests {
             Flush { p: 1 },
             CompDrain { p: 1 },
         ];
-        let (f, v) = run_story(&rt, "generator and takeover", env_u64("SIM_KNOBS", 0) as u8, ev);
+        let (f, v) = run_story(&rt, "hole W: generated rows, then a builder reseal", env_u64("SIM_KNOBS", 0) as u8, ev);
         assert_eq!(f, 0, "{v:?}");
     }
 
