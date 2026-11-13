@@ -875,6 +875,8 @@ struct JointStore {
     log: std::sync::Mutex<Vec<String>>,
     hold_l0_gets: std::sync::atomic::AtomicBool,
     hold_run_parts: std::sync::atomic::AtomicBool,
+    /// runwriter-and-stall: hold the complete of our runs' uploads (a job cut during `RunWriter::finish`'s complete)
+    hold_run_complete: std::sync::atomic::AtomicBool,
     held: AtomicU64,
     uploads: Arc<std::sync::Mutex<std::collections::HashMap<u64, String>>>,
     next_upload: AtomicU64,
@@ -933,6 +935,7 @@ impl MultipartUpload for JointUpload {
         })
     }
     async fn complete(&mut self) -> object_store::Result<PutResult> {
+        hold_while(&self.store.hold_run_complete, &self.store.held).await;
         let r = self.inner.complete().await;
         if r.is_ok() {
             self.store.uploads.lock().unwrap().remove(&self.id);
@@ -1099,4 +1102,32 @@ async fn joint_cut_upload_is_aborted_without_an_erase() {
     teardown();
     assert!(!open_before.is_empty(), "no run upload was open when the job was cut: the test did not reach its case");
     assert!(left.is_empty(), "run uploads left open after stop with no erase: {left:?}");
+}
+
+/// runwriter-and-stall (the open gap of perf-latency-on-i4's round 2): a job cut by `stop` while its run's upload is
+/// being completed (`RunWriter::finish` awaits `complete`), with no erase and no restart after it. Within 3 s no
+/// multipart upload of our runs is left open: the upload is held by a guard that aborts it when dropped. Without the
+/// guard, `finish` held the upload as a local and dropped it with no abort.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn joint_upload_cut_during_complete_is_aborted() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let js = JointStore::new(Arc::new(InMemory::new()));
+    let (t, c, _planner) = joint_setup("joint-complete", &js, false).await;
+    js.hold_run_complete.store(true, SeqCst);
+    flush(&t).await; // the absorption writes a delta run; its complete is held
+    wait_held(&js, "complete of a run upload").await;
+    let open_before = js.open_uploads();
+    c.stop().await;
+    let t0 = Instant::now();
+    while !js.open_uploads().is_empty() && t0.elapsed() < Duration::from_secs(3) {
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    let left = js.open_uploads();
+    js.hold_run_complete.store(false, SeqCst);
+    eprintln!("joint complete: open when the job was cut {open_before:?}; open 3 s after stop {left:?}");
+    t.abandon().await;
+    teardown();
+    assert!(!open_before.is_empty(), "no run upload was open when the job was cut: the test did not reach its case");
+    assert!(left.is_empty(), "run uploads left open after a job was cut during their complete: {left:?}");
 }
