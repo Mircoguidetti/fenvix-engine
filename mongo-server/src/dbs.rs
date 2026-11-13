@@ -526,6 +526,41 @@ impl Dbs {
         });
     }
 
+    /// fix-write-stalls (review of d660ea9): a first build that ran off the database's lock is installed, and the
+    /// compactor started, as soon as the build ends (`lifecycle::FIRST_BUILD_DONE`), not at the database's next write. A
+    /// database written in a burst and then only read had no compactor (no absorption, reseal or GC) until its next
+    /// write; before the build ran off the lock, the compactor started at the second write batch.
+    pub fn spawn_first_build_installer(self: &Arc<Self>) {
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
+        if tenant_bench::lifecycle::FIRST_BUILD_DONE.set(tx).is_err() {
+            return; // one listener per process
+        }
+        let me = Arc::downgrade(self);
+        tokio::spawn(async move {
+            while let Some(name) = rx.recv().await {
+                let Some(me) = me.upgrade() else { return };
+                let Some(e) = me.entries.lock().unwrap().get(&name).cloned() else { continue };
+                tokio::spawn(async move {
+                    // the build's task reports just before it ends: wait (without the lock) until it reads as ended, so
+                    // the install never waits for a running build under the database's lock (at most 2 s; then the next
+                    // write or the close installs it)
+                    for _ in 0..400 {
+                        {
+                            let g = e.read().await;
+                            match g.tenant.as_ref() {
+                                Some(t) if t.fx_first_running() && !t.fx_first_done() => {}
+                                _ => break,
+                            }
+                        }
+                        tokio::time::sleep(Duration::from_millis(5)).await;
+                    }
+                    let mut g = e.write().await;
+                    g.install_first_build().await;
+                });
+            }
+        });
+    }
+
     pub async fn close_all(&self) {
         let entries: Vec<Arc<AsyncMutex<Entry>>> = self.entries.lock().unwrap().values().cloned().collect();
         futures::stream::iter(entries)
@@ -564,6 +599,7 @@ impl Entry {
     /// L0 SST, merge, and reseal every group of this database's compactor now. Returns (groups resealed, documents
     /// encoded so far by this compactor); None without a compactor.
     pub async fn fx_reseal_now(&mut self) -> Result<Option<(u64, u64)>> {
+        self.settle_first_build().await;
         let Some(c) = self.fxc.clone() else { return Ok(None) };
         if let Some(db) = self.tenant.as_ref().and_then(|t| t.fx_writer_db()) {
             db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await?;
@@ -591,6 +627,35 @@ impl Entry {
             self.fxc_skip_logged |= bit;
             eprintln!("FXC not started db={} reason={why} unix_ms={}", self.name, tenant_bench::fx::manifest::now_ms());
         }
+    }
+
+    /// The first build that ran off the lock has ended: install its version and start the compactor, as the next write
+    /// would (`spawn_first_build_installer`). Nothing to do when a write or the close got there first.
+    async fn install_first_build(&mut self) {
+        if !self.tenant.as_ref().is_some_and(|t| t.fx_first_running() && t.fx_first_done()) {
+            return;
+        }
+        match self.tenant.as_mut().unwrap().fx_first_poll(true).await {
+            Ok(_) => {
+                tenant_bench::lifecycle::FIRST_INSTALLS_WITHOUT_WRITE.fetch_add(1, Relaxed);
+            }
+            // a failed build was handled as a failed publish (reload or fence); the next writes start another
+            Err(e) => eprintln!("sealed runs: first publish of database {} failed: {e:#}", self.name),
+        }
+        self.maybe_start_fxc().await;
+    }
+
+    /// The compactor hooks (`fenvixReseal`, publish-drop: tests and measurements) act on the compactor at once: a first
+    /// build still running off the lock is waited for, installed and the compactor started, as when the build ran inside
+    /// the first write (these hooks are not on any client's write path).
+    async fn settle_first_build(&mut self) {
+        if !self.tenant.as_ref().is_some_and(|t| t.fx_first_running()) {
+            return;
+        }
+        if let Err(e) = self.tenant.as_mut().unwrap().fx_first_poll(true).await {
+            eprintln!("sealed runs: first publish of database {} failed: {e:#}", self.name);
+        }
+        self.maybe_start_fxc().await;
     }
 
     async fn maybe_start_fxc(&mut self) {
@@ -711,6 +776,7 @@ impl Entry {
         if !self.ensure_open().await? {
             return Ok(None);
         }
+        self.settle_first_build().await;
         let Some(c) = self.fxc.clone() else { return Ok(None) };
         if let Some(db) = self.tenant.as_ref().and_then(|t| t.fx_writer_db()) {
             db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await?;
@@ -844,6 +910,17 @@ impl Entry {
     /// Drop the tenant without clean-close bookkeeping (its lease was lost). Returns whether its close finished (see
     /// `Tenant::abandon`); true when no tenant was open.
     pub async fn abandon(&mut self) -> bool {
+        self.abandon_with(false).await
+    }
+
+    /// An abandon while this process still holds the database's lease (an erase, a drop): a first build running off the
+    /// lock may end by itself first (`Tenant::abandon_waiting_first_build`). Every other abandon (a lease lost or lapsed)
+    /// cuts it at once: after a takeover its version must not land (review of a60f4fe, rule 8).
+    pub async fn abandon_owned(&mut self) -> bool {
+        self.abandon_with(true).await
+    }
+
+    async fn abandon_with(&mut self, owned: bool) -> bool {
         self.abandons += 1;
         self.nat.clear();
         self.copts.clear();
@@ -870,7 +947,7 @@ impl Entry {
         self.stop_fxc().await;
         let stop_ms = t0.elapsed().as_millis();
         if let Some(t) = self.tenant.take() {
-            closed = t.abandon().await;
+            closed = if owned { t.abandon_waiting_first_build().await } else { t.abandon().await };
             self.closes += 1;
         }
         eprintln!("TIMING abandon db={} stop_fxc_ms={stop_ms} tenant_abandon_ms={} closed={closed}", self.name, t0.elapsed().as_millis() - stop_ms);

@@ -591,3 +591,673 @@ async fn ws_fold_never_runs_beside_a_merge() {
     assert!(l0_during >= 12, "setup: the L0 SSTs must wait in L0 while the re-fold is held ({l0_during})");
     assert_eq!(wrong, 0);
 }
+
+/// A store whose multipart parts each take `part_ms`, counting uploads left open (created, neither completed nor
+/// aborted) and parts cut in the middle (their request dropped before it ended: on S3 such an upload stays listed while
+/// the dead request holds it, and an erase cannot prove the database gone).
+#[derive(Debug)]
+struct SlowParts {
+    inner: Arc<dyn ObjectStore>,
+    part_ms: u64,
+    open: Arc<std::sync::atomic::AtomicI64>,
+    in_flight: Arc<std::sync::atomic::AtomicI64>,
+    cut: Arc<std::sync::atomic::AtomicU64>,
+}
+
+impl std::fmt::Display for SlowParts {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SlowParts({})", self.inner)
+    }
+}
+
+#[derive(Debug)]
+struct SlowUpload {
+    inner: Box<dyn object_store::MultipartUpload>,
+    part_ms: u64,
+    open: Arc<std::sync::atomic::AtomicI64>,
+    in_flight: Arc<std::sync::atomic::AtomicI64>,
+    cut: Arc<std::sync::atomic::AtomicU64>,
+    closed: bool,
+}
+
+/// Counts a part in flight; dropped before `done`, the part was cut.
+struct PartGuard {
+    in_flight: Arc<std::sync::atomic::AtomicI64>,
+    cut: Arc<std::sync::atomic::AtomicU64>,
+    done: bool,
+}
+
+impl Drop for PartGuard {
+    fn drop(&mut self) {
+        self.in_flight.fetch_sub(1, SeqCst);
+        if !self.done {
+            self.cut.fetch_add(1, SeqCst);
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl object_store::MultipartUpload for SlowUpload {
+    fn put_part(&mut self, data: object_store::PutPayload) -> object_store::UploadPart {
+        let fut = self.inner.put_part(data);
+        let (ms, in_flight, cut) = (self.part_ms, Arc::clone(&self.in_flight), Arc::clone(&self.cut));
+        in_flight.fetch_add(1, SeqCst);
+        let g = PartGuard { in_flight, cut, done: false };
+        Box::pin(async move {
+            let mut g = g; // the whole guard moves into the future (not only its field)
+            tokio::time::sleep(Duration::from_millis(ms)).await;
+            let r = fut.await;
+            g.done = true;
+            r
+        })
+    }
+    async fn complete(&mut self) -> object_store::Result<object_store::PutResult> {
+        let r = self.inner.complete().await;
+        if r.is_ok() && !self.closed {
+            self.closed = true;
+            self.open.fetch_sub(1, SeqCst);
+        }
+        r
+    }
+    async fn abort(&mut self) -> object_store::Result<()> {
+        let r = self.inner.abort().await;
+        if !self.closed {
+            self.closed = true;
+            self.open.fetch_sub(1, SeqCst);
+        }
+        r
+    }
+}
+
+#[async_trait::async_trait]
+impl ObjectStore for SlowParts {
+    async fn put_opts(&self, l: &object_store::path::Path, p: object_store::PutPayload, o: object_store::PutOptions) -> object_store::Result<object_store::PutResult> {
+        self.inner.put_opts(l, p, o).await
+    }
+    async fn put_multipart_opts(&self, l: &object_store::path::Path, o: object_store::PutMultipartOptions) -> object_store::Result<Box<dyn object_store::MultipartUpload>> {
+        let inner = self.inner.put_multipart_opts(l, o).await?;
+        self.open.fetch_add(1, SeqCst);
+        Ok(Box::new(SlowUpload { inner, part_ms: self.part_ms, open: Arc::clone(&self.open), in_flight: Arc::clone(&self.in_flight), cut: Arc::clone(&self.cut), closed: false }))
+    }
+    async fn get_opts(&self, l: &object_store::path::Path, o: object_store::GetOptions) -> object_store::Result<object_store::GetResult> {
+        self.inner.get_opts(l, o).await
+    }
+    fn delete_stream(&self, l: futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>> {
+        self.inner.delete_stream(l)
+    }
+    fn list(&self, p: Option<&object_store::path::Path>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.inner.list(p)
+    }
+    async fn list_with_delimiter(&self, p: Option<&object_store::path::Path>) -> object_store::Result<object_store::ListResult> {
+        self.inner.list_with_delimiter(p).await
+    }
+    async fn copy_opts(&self, f: &object_store::path::Path, t: &object_store::path::Path, o: object_store::CopyOptions) -> object_store::Result<()> {
+        self.inner.copy_opts(f, t, o).await
+    }
+}
+
+/// Returns (parts cut, uploads left open, the abandon's time).
+async fn abandon_during_first_build(control: bool) -> (u64, i64, Duration) {
+    crate::lifecycle::CONTROL_CUT_FIRST_BUILD.store(control, Relaxed);
+    let open = Arc::new(std::sync::atomic::AtomicI64::new(0));
+    let in_flight = Arc::new(std::sync::atomic::AtomicI64::new(0));
+    let cut = Arc::new(std::sync::atomic::AtomicU64::new(0));
+    let store: Arc<dyn ObjectStore> = Arc::new(SlowParts { inner: Arc::new(InMemory::new()), part_ms: 300, open: Arc::clone(&open), in_flight: Arc::clone(&in_flight), cut: Arc::clone(&cut) });
+    let id = if control { "ws-abandon-control" } else { "ws-abandon" };
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..300 {
+        apply(&mut t, &mut m, vec![(ckey(i % 5, i), Some(vec![b'a'; 200]))]).await;
+    }
+    first_start(&mut t).await;
+    // the build is writing a run's part when the database is abandoned (an erase, a drop, a lost lease)
+    let t0 = Instant::now();
+    while in_flight.load(SeqCst) == 0 {
+        assert!(!t.fx_first_done() && t0.elapsed() < Duration::from_secs(30), "the first build ended without a part in flight");
+        tokio::time::sleep(Duration::from_millis(2)).await;
+    }
+    let t1 = Instant::now();
+    t.abandon_waiting_first_build().await;
+    let took = t1.elapsed();
+    // what a dropped run writer aborts is spawned: let it run
+    crate::runfmt::wait_dropped_aborts(Duration::from_secs(5)).await;
+    crate::lifecycle::CONTROL_CUT_FIRST_BUILD.store(false, Relaxed);
+    eprintln!("abandon during the first build (control {control}): parts cut {}, uploads open {}, abandon took {took:?}", cut.load(SeqCst), open.load(SeqCst));
+    (cut.load(SeqCst), open.load(SeqCst), took)
+}
+
+/// fix-compactor-start (GitHub CI 6fbd6cd, ctl test_73): an erase or a drop abandons a database whose first build runs
+/// off the lock. The build ends by itself before the writer is given up: no run upload is cut in the middle of a part
+/// (on S3 such an upload stayed listed and the erase answered `erase_incomplete`), and none is left open. Control (cut at
+/// once, the code of 6fbd6cd): a part is cut.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_abandon_lets_the_first_build_end() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (cut_ctl, _, _) = abandon_during_first_build(true).await;
+    let (cut, open, took) = abandon_during_first_build(false).await;
+    teardown();
+    assert!(cut_ctl >= 1, "control: the abandon must cut a part in flight ({cut_ctl}), or the test does not reach the case");
+    assert_eq!(cut, 0, "a run part was cut in the middle");
+    assert_eq!(open, 0, "a run upload was left open");
+    assert!(took < Duration::from_secs(10), "the abandon waited {took:?}");
+}
+
+/// Review of a60f4fe (rule 8): a first build that ends after another process took the database over must not create a
+/// version: the new owner would build on it and lose every row between the two X_d. The build is paused right before its
+/// version create while a second writer opens the database (a takeover: SlateDB's writer epoch goes up), then resumes.
+/// Fix: the create is refused, no version. Control (`CONTROL_NO_FENCE_CHECK`, a60f4fe): the stale version lands.
+/// Also: an abandon for a lost lease (`abandon`) cuts a running first build at once.
+async fn late_first_build(control: bool) -> (usize, bool) {
+    build::CONTROL_NO_FENCE_CHECK.store(control, Relaxed);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = if control { "ws-late-control" } else { "ws-late" };
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..200 {
+        apply(&mut t, &mut m, vec![(ckey(i % 5, i), Some(vec![b'a'; 100]))]).await;
+    }
+    build::PAUSE_BEFORE_CREATE_MS.store(1500, Relaxed);
+    first_start(&mut t).await;
+    tokio::time::sleep(Duration::from_millis(300)).await; // the build reaches its pause
+    // the takeover: another writer opens the database (the old one is fenced)
+    let next = crate::lifecycle::writer_builder(id, &store).build().await.unwrap();
+    let r = t.fx_first_poll(true).await;
+    build::PAUSE_BEFORE_CREATE_MS.store(0, Relaxed);
+    build::CONTROL_NO_FENCE_CHECK.store(false, Relaxed);
+    let versions = manifest::list_versions(&store, id).await.unwrap().len();
+    eprintln!("late first build (control {control}): {:?}; versions in the store {versions}", r.as_ref().map(|x| x.is_some()));
+    let _ = next.close().await;
+    drop(t);
+    (versions, r.is_err())
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_first_build_after_a_takeover_creates_no_version() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (v_ctl, _) = late_first_build(true).await;
+    let (v, refused) = late_first_build(false).await;
+    // a lost lease: the abandon cuts the build at once (no wait)
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let mut t = lc(&store).create("ws-lost").await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..200 {
+        apply(&mut t, &mut m, vec![(ckey(i % 5, i), Some(vec![b'a'; 100]))]).await;
+    }
+    build::PAUSE_BEFORE_CREATE_MS.store(3000, Relaxed);
+    first_start(&mut t).await;
+    let t0 = Instant::now();
+    t.abandon().await;
+    let took = t0.elapsed();
+    build::PAUSE_BEFORE_CREATE_MS.store(0, Relaxed);
+    tokio::time::sleep(Duration::from_millis(3500)).await;
+    let v_lost = manifest::list_versions(&store, "ws-lost").await.unwrap().len();
+    teardown();
+    assert_eq!(v_ctl, 1, "control: the stale version must land, or the test does not reach the case");
+    assert!(refused, "the build must fail at its create");
+    assert_eq!(v, 0, "a version of the old writer landed after the takeover");
+    assert!(took < Duration::from_secs(1), "an abandon for a lost lease waited for the build ({took:?})");
+    assert_eq!(v_lost, 0, "the cut build created a version");
+}
+
+/// Review of a60f4fe, defence in depth (rule 8): a version of an OLDER writer (a lower writer epoch) that lands at the
+/// next slot (a late publish after a takeover) is never a compactor's base. Version 1 is published by writer epoch 1;
+/// the database is reopened (epoch 2) and its compactor publishes; then version 1's content is planted at the next slot
+/// with epoch 1. More rows are absorbed. Fix: the compactor refuses it, fences over it, and a fresh opening reads every
+/// row. Control (`CONTROL_ADOPT_OLDER`, the code before): the compactor builds on it and rows are lost.
+async fn older_version_scenario(control: bool) -> (u64, usize, Option<u64>) {
+    compactor::CONTROL_ADOPT_OLDER.store(control, Relaxed);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = if control { "ws-older-control" } else { "ws-older" };
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(format!("a-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let v1 = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    t.close().await.unwrap();
+    // reopen: writer epoch 2
+    let mut t = lc(&store).wake(id).await.unwrap();
+    t.upgrade().await.unwrap();
+    let k = knobs(false, false);
+    assert!(t.fx_claim());
+    let c = start(&mut t, &store, &k).await;
+    for r in 0..3 {
+        for i in 0..80 {
+            apply(&mut t, &mut m, vec![(ckey(1 + r, i), Some(format!("b-{r}-{i}").into_bytes()))]).await;
+        }
+        flush(&t).await;
+    }
+    c.drain(false).await.unwrap();
+    // the late version of the old writer, at the next slot
+    let cur = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    let mut stale = v1.clone();
+    stale.version = cur.version + 1;
+    stale.kind = "publish".into();
+    assert!(stale.writer_epoch < cur.writer_epoch, "setup: epochs {:?} {:?}", stale.writer_epoch, cur.writer_epoch);
+    assert!(manifest::create(&store, id, &stale).await.unwrap());
+    let refused0 = compactor::OLDER_VERSIONS_REFUSED.load(SeqCst);
+    for r in 3..6 {
+        for i in 0..80 {
+            apply(&mut t, &mut m, vec![(ckey(1 + r, i), Some(format!("b-{r}-{i}").into_bytes()))]).await;
+        }
+        flush(&t).await;
+    }
+    let _ = c.drain(false).await;
+    let _ = c.drain(false).await;
+    let refused = compactor::OLDER_VERSIONS_REFUSED.load(SeqCst) - refused0;
+    c.stop().await;
+    t.close().await.unwrap();
+    compactor::CONTROL_ADOPT_OLDER.store(false, Relaxed);
+    let newest_epoch = manifest::load_newest(&store, id).await.unwrap().unwrap().writer_epoch;
+    // a fresh opening reads from the newest version in the store
+    let t = lc(&store).wake(id).await.unwrap();
+    let wrong = wrong_reads(&t, &m, &HashSet::new()).await;
+    eprintln!("older version (control {control}): refused {refused}, newest version's epoch {newest_epoch:?}, wrong reads after a reopen {wrong} of {}", m.len());
+    let _ = t.close().await;
+    (refused, wrong, newest_epoch)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_compactor_refuses_an_older_writers_version() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (_, wrong_ctl, _) = older_version_scenario(true).await;
+    let (refused, wrong, epoch) = older_version_scenario(false).await;
+    teardown();
+    assert!(wrong_ctl > 0, "control: building on the older version must lose rows, or the test does not reach the case");
+    assert!(refused >= 1, "the older version was not refused");
+    assert_eq!(wrong, 0, "rows lost");
+    assert!(epoch >= Some(2), "the newest version is not the compactor's ({epoch:?})");
+}
+
+/// Review of a60f4fe, the opening (rule 8): a version of an older writer that landed at the newest slot (a late publish
+/// inside the fence window) is not what an opening serves or fences: it takes the newest version of the highest writer
+/// epoch. Same setup as `older_version_scenario`, but the stale version stays the newest (no compactor publishes after
+/// it); then a fresh opening reads, upgrades to a writer (its fence) and reads again. Control (`CONTROL_TRUST_NEWEST`,
+/// the code before): rows are lost.
+async fn older_newest_opening(control: bool) -> (usize, usize, u64, u64, u64, u64) {
+    manifest::CONTROL_TRUST_NEWEST.store(control, Relaxed);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = if control { "ws-open-older-control" } else { "ws-open-older" };
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(format!("a-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let v1 = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    t.close().await.unwrap();
+    let mut t = lc(&store).wake(id).await.unwrap();
+    t.upgrade().await.unwrap();
+    // the drop on, as the server runs it: SlateDB's rows at or below the newer X_d are gone, so only the runs hold them
+    let k = knobs(true, false);
+    assert!(t.fx_claim());
+    let c = start(&mut t, &store, &k).await;
+    for r in 0..3 {
+        for i in 0..80 {
+            apply(&mut t, &mut m, vec![(ckey(1 + r, i), Some(format!("b-{r}-{i}").into_bytes()))]).await;
+        }
+        flush(&t).await;
+    }
+    c.drain(false).await.unwrap();
+    t.fx_sync(); // the tenant serves the newest version, so nothing holds the old floor
+    let x = c.current().await.x_d;
+    let dr = c.drop_through(x, Duration::from_secs(60)).await.unwrap();
+    let _ = dr;
+    c.stop().await;
+    t.close().await.unwrap();
+    // the older writer's late version lands at the newest slot, after everything
+    let cur = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    let mut stale = v1.clone();
+    stale.version = cur.version + 1;
+    stale.kind = "publish".into();
+    assert!(stale.writer_epoch < cur.writer_epoch);
+    assert!(manifest::create(&store, id, &stale).await.unwrap());
+    let ignored0 = manifest::OLDER_VERSIONS_IGNORED.load(SeqCst);
+    view::clear_cache(); // a new process: no view of this database in memory
+    let mut t = lc(&store).wake(id).await.unwrap();
+    let served = t.fx_view().map(|v| v.x_d).unwrap_or(0);
+    let wrong_reader = wrong_reads(&t, &m, &HashSet::new()).await;
+    t.upgrade().await.unwrap();
+    let wrong_writer = wrong_reads(&t, &m, &HashSet::new()).await;
+    let ignored = manifest::OLDER_VERSIONS_IGNORED.load(SeqCst) - ignored0;
+    manifest::CONTROL_TRUST_NEWEST.store(false, Relaxed);
+    eprintln!("opening with an older newest version (control {control}): wrong as reader {wrong_reader}, as writer {wrong_writer} of {}; ignored {ignored}", m.len());
+    let _ = t.close().await;
+    (wrong_reader, wrong_writer, ignored, served, cur.x_d, stale.x_d)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_opening_ignores_an_older_writers_newest_version() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (_, _, _, served_ctl, _, late_ctl) = older_newest_opening(true).await;
+    let (r, w, ignored, served, good, _) = older_newest_opening(false).await;
+    teardown();
+    // the control's choice is deterministic; whether its reads then miss rows depends on which SSTs the drop rewrote
+    assert_eq!(served_ctl, late_ctl, "control: the opening must serve the late version, or the test does not reach the case");
+    assert_eq!(served, good, "the opening did not serve the newer writer's version");
+    assert!(ignored >= 1, "the older version was not ignored");
+    assert_eq!((r, w), (0, 0), "rows lost (as reader, as writer)");
+}
+
+/// The setup of `older_newest_opening` up to the late version: (store, rows, the newer writer's version, the late one).
+async fn with_an_older_newest_version(id: &str) -> (Arc<dyn ObjectStore>, BTreeMap<Vec<u8>, Vec<u8>>, manifest::Version, manifest::Version) {
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(format!("a-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let v1 = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    t.close().await.unwrap();
+    let mut t = lc(&store).wake(id).await.unwrap();
+    t.upgrade().await.unwrap();
+    let k = knobs(true, false);
+    assert!(t.fx_claim());
+    let c = start(&mut t, &store, &k).await;
+    for r in 0..3 {
+        for i in 0..80 {
+            apply(&mut t, &mut m, vec![(ckey(1 + r, i), Some(format!("b-{r}-{i}").into_bytes()))]).await;
+        }
+        flush(&t).await;
+    }
+    c.drain(false).await.unwrap();
+    t.fx_sync();
+    let x = c.current().await.x_d;
+    c.drop_through(x, Duration::from_secs(60)).await.unwrap();
+    c.stop().await;
+    t.close().await.unwrap();
+    let cur = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    let mut stale = v1.clone();
+    stale.version = cur.version + 1;
+    stale.kind = "publish".into();
+    assert!(stale.writer_epoch < cur.writer_epoch);
+    assert!(manifest::create(&store, id, &stale).await.unwrap());
+    view::clear_cache();
+    (store, m, cur, stale)
+}
+
+/// Review of c5b034d (rule 8): a checkpoint is never paired with an older writer's late version (restores, forks and
+/// exports read through the pair). Control (`CONTROL_TRUST_NEWEST`): it is, and rows are missing from the paired read.
+async fn pair_with_an_older_newest(control: bool) -> (Option<u64>, u64, u64, usize) {
+    let id = if control { "ws-pair-older-control" } else { "ws-pair-older" };
+    let (store, m, cur, stale) = with_an_older_newest_version(id).await;
+    manifest::CONTROL_TRUST_NEWEST.store(control, Relaxed);
+    let admin = slatedb::admin::Admin::builder(crate::lifecycle::tenant_path(id), Arc::clone(&store)).build();
+    let (cp, p) = pair::checkpoint_paired(&store, id, || async { Ok(admin.create_detached_checkpoint(&slatedb::config::CheckpointOptions::default()).await?) }).await.unwrap();
+    let mut o = slatedb::config::DbReaderOptions::default();
+    o.skip_wal_replay = true;
+    let r = pair::PairedReader::open_checkpoint(&store, id, cp.id, o).await.unwrap();
+    let mut wrong = 0;
+    for (k, want) in &m {
+        if r.get(k).await.unwrap().as_deref() != Some(&want[..]) {
+            wrong += 1;
+        }
+    }
+    r.close().await.unwrap();
+    manifest::CONTROL_TRUST_NEWEST.store(false, Relaxed);
+    let paired = p.and_then(|p| p.version);
+    eprintln!("pair with an older newest version (control {control}): paired {paired:?} (newer writer's {}, late {}), wrong {wrong} of {}", cur.version, stale.version, m.len());
+    (paired, cur.version, stale.version, wrong)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_pair_ignores_an_older_writers_newest_version() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (p_ctl, _, late_ctl, wrong_ctl) = pair_with_an_older_newest(true).await;
+    let (p, good, _, wrong) = pair_with_an_older_newest(false).await;
+    teardown();
+    assert_eq!(p_ctl, Some(late_ctl), "control: the late version must be paired, or the test does not reach the case");
+    let _ = wrong_ctl; // depends on which SSTs the drop rewrote; the pairing above is the control's deterministic case
+    assert_eq!(p, Some(good), "the pair is not the newer writer's version");
+    assert_eq!(wrong, 0, "rows missing from the paired read");
+}
+
+/// Review of c5b034d (rule 8): the reader of a database's newest state (`Follow::Newest`: exports, PITR of the live
+/// database) reads through the newer writer's version, not an older writer's late one. Control: it reads through the
+/// late one and rows are missing.
+async fn follow_newest_with_an_older_newest(control: bool) -> (Option<u64>, u64, u64, usize) {
+    let id = if control { "ws-follow-older-control" } else { "ws-follow-older" };
+    let (store, m, cur, stale) = with_an_older_newest_version(id).await;
+    manifest::CONTROL_TRUST_NEWEST.store(control, Relaxed);
+    let mut o = slatedb::config::DbReaderOptions::default();
+    o.skip_wal_replay = true;
+    let r = pair::PairedReader::open_follow(&store, id, crate::lifecycle::tenant_path(id), pair::Follow::Newest, o).await.unwrap();
+    let mut wrong = 0;
+    for (k, want) in &m {
+        if r.get(k).await.unwrap().as_deref() != Some(&want[..]) {
+            wrong += 1;
+        }
+    }
+    let v = r.version();
+    r.close().await.unwrap();
+    manifest::CONTROL_TRUST_NEWEST.store(false, Relaxed);
+    eprintln!("follow newest with an older newest version (control {control}): read through {v:?} (newer writer's {}), wrong {wrong} of {}", cur.version, m.len());
+    (v, cur.version, stale.version, wrong)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_follow_newest_ignores_an_older_writers_version() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (v_ctl, _, late_ctl, _) = follow_newest_with_an_older_newest(true).await;
+    let (v, good, _, wrong) = follow_newest_with_an_older_newest(false).await;
+    teardown();
+    assert_eq!(v_ctl, Some(late_ctl), "control: the reader must read through the late version, or the test does not reach the case");
+    assert_eq!(v, Some(good), "not read through the newer writer's version");
+    assert_eq!(wrong, 0, "rows missing");
+}
+
+/// Review of c5b034d (rule 8): a writer's publish that loses its slot to an older writer's late version does not install
+/// that version (`fx_publish_failed`, LostRace): it keeps the newer writer's and fences above the late slot. Control:
+/// the late version is installed (its X_d is the old writer's).
+async fn lost_race_to_an_older_version(control: bool) -> (u64, u64, Option<u64>, Option<u64>) {
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = if control { "ws-race-older-control" } else { "ws-race-older" };
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(format!("a-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let v1 = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    t.close().await.unwrap();
+    // writer epoch 2, builder publishes
+    let mut t = lc(&store).wake(id).await.unwrap();
+    t.upgrade().await.unwrap();
+    for i in 0..80 {
+        apply(&mut t, &mut m, vec![(ckey(1, i), Some(format!("b-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let good = t.fx_view().unwrap().x_d;
+    // the late version takes the slot of this writer's next publish
+    let cur = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    let mut stale = v1.clone();
+    stale.version = cur.version + 1;
+    stale.kind = "publish".into();
+    assert!(stale.writer_epoch < cur.writer_epoch);
+    assert!(manifest::create(&store, id, &stale).await.unwrap());
+    manifest::CONTROL_TRUST_NEWEST.store(control, Relaxed);
+    for i in 0..80 {
+        apply(&mut t, &mut m, vec![(ckey(2, i), Some(format!("c-{i}").into_bytes()))]).await;
+    }
+    let r = t.fx_publish(&small_opts(build::Reseal::None), None).await;
+    let installed = t.fx_view().map(|v| v.x_d).unwrap_or(0);
+    let newest_epoch = manifest::load_newest(&store, id).await.unwrap().unwrap().writer_epoch;
+    manifest::CONTROL_TRUST_NEWEST.store(false, Relaxed);
+    eprintln!("lost race to an older version (control {control}): publish {:?}; installed x_d {installed} (newer writer's {good}, late {}); newest version's epoch {newest_epoch:?}", r.as_ref().map(|x| x.is_some()), stale.x_d);
+    let _ = t.close().await;
+    (installed, good, newest_epoch, cur.writer_epoch)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_lost_race_ignores_an_older_writers_version() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (inst_ctl, good_ctl, _, _) = lost_race_to_an_older_version(true).await;
+    let (inst, good, newest_epoch, ours) = lost_race_to_an_older_version(false).await;
+    teardown();
+    assert!(inst_ctl < good_ctl, "control: the late version must be installed ({inst_ctl} vs {good_ctl}), or the test does not reach the case");
+    assert!(inst >= good, "the late version was installed ({inst} < {good})");
+    assert_eq!(newest_epoch, ours, "the newest version is not this writer's (no fence above the late one)");
+}
+
+/// Review of e3b04c5 (rule 8): with version retention 0 (the default, for the 24 h erasure promise) the GC of a closed
+/// database whose newest version is an older writer's late one keeps the version an opening serves
+/// (`manifest::trusted_at`) and its runs. Control (`CONTROL_GC_PLAIN_NEWEST`, the code before): the GC keeps only the
+/// late version and deletes the served version's runs; an opening then reads rows wrong or fails.
+async fn gc_with_an_older_newest(control: bool) -> (usize, usize, bool) {
+    let id = if control { "ws-gc-older-control" } else { "ws-gc-older" };
+    let (store, m, cur, _stale) = with_an_older_newest_version(id).await;
+    let (ret0, grace0) = (VERSION_RETENTION_MS.load(SeqCst), GC_GRACE_MS.load(SeqCst));
+    VERSION_RETENTION_MS.store(0, SeqCst);
+    GC_GRACE_MS.store(0, SeqCst);
+    gc::CONTROL_GC_PLAIN_NEWEST.store(control, Relaxed);
+    for _ in 0..5 {
+        if gc::gc_closed(&store, id).await.unwrap().is_none() {
+            break;
+        }
+    }
+    gc::CONTROL_GC_PLAIN_NEWEST.store(false, Relaxed);
+    VERSION_RETENTION_MS.store(ret0, SeqCst);
+    GC_GRACE_MS.store(grace0, SeqCst);
+    let listed = manifest::list_versions(&store, id).await.unwrap();
+    let versions = listed.len();
+    let served_kept = listed.contains(&cur.version);
+    view::clear_cache();
+    let (mut wrong, mut failed) = (0, 0);
+    match lc(&store).wake(id).await {
+        Ok(t) => {
+            for (k, want) in &m {
+                match t.get(k).await {
+                    Ok(v) if v.as_deref() == Some(&want[..]) => {}
+                    Ok(_) => wrong += 1,
+                    Err(_) => failed += 1,
+                }
+            }
+            let _ = t.close().await;
+        }
+        Err(_) => failed = m.len(),
+    }
+    eprintln!("GC of a closed database with an older newest version (control {control}): versions left {versions}; wrong {wrong}, failed reads {failed} of {}", m.len());
+    (wrong, failed, served_kept)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_gc_keeps_the_trusted_version_under_an_older_newest() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (_, _, kept_ctl) = gc_with_an_older_newest(true).await;
+    let (w, f, kept) = gc_with_an_older_newest(false).await;
+    teardown();
+    assert!(!kept_ctl, "control: the GC must delete the served version, or the test does not reach the case");
+    assert!(kept, "the GC deleted the version readers serve");
+    assert_eq!((w, f), (0, 0), "rows wrong or unreadable after the GC");
+}
+
+/// A store whose GETs of one object fail with a transient error (not NotFound) while `fail` is set.
+#[derive(Debug)]
+struct FailGets {
+    inner: Arc<dyn ObjectStore>,
+    fail: Arc<std::sync::Mutex<Option<String>>>,
+}
+
+impl std::fmt::Display for FailGets {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "FailGets({})", self.inner)
+    }
+}
+
+#[async_trait::async_trait]
+impl ObjectStore for FailGets {
+    async fn put_opts(&self, l: &object_store::path::Path, p: object_store::PutPayload, o: object_store::PutOptions) -> object_store::Result<object_store::PutResult> {
+        self.inner.put_opts(l, p, o).await
+    }
+    async fn put_multipart_opts(&self, l: &object_store::path::Path, o: object_store::PutMultipartOptions) -> object_store::Result<Box<dyn object_store::MultipartUpload>> {
+        self.inner.put_multipart_opts(l, o).await
+    }
+    async fn get_opts(&self, l: &object_store::path::Path, o: object_store::GetOptions) -> object_store::Result<object_store::GetResult> {
+        if self.fail.lock().unwrap().as_deref() == Some(l.as_ref()) {
+            return Err(object_store::Error::Generic { store: "FailGets", source: "injected transient error (503 Slow Down)".into() });
+        }
+        self.inner.get_opts(l, o).await
+    }
+    fn delete_stream(&self, l: futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>> {
+        self.inner.delete_stream(l)
+    }
+    fn list(&self, p: Option<&object_store::path::Path>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.inner.list(p)
+    }
+    async fn list_with_delimiter(&self, p: Option<&object_store::path::Path>) -> object_store::Result<object_store::ListResult> {
+        self.inner.list_with_delimiter(p).await
+    }
+    async fn copy_opts(&self, f: &object_store::path::Path, t: &object_store::path::Path, o: object_store::CopyOptions) -> object_store::Result<()> {
+        self.inner.copy_opts(f, t, o).await
+    }
+}
+
+/// Review of 7f93591 (rule 8; at 1 TB, S3 errors are normal): a transient error reading a version the GC must keep (here
+/// one inside the retention window, a restore point) is not a deletion. Version 1 is kept by a 1 h retention; version 2
+/// (a full reseal) no longer lists version 1's runs. Every GET of version 1's manifest fails with a transient error during
+/// `gc_closed`. Control (`CONTROL_GC_ERRORS_AS_DELETED`, the code before): version 1's runs are deleted. Fix: the pass is
+/// skipped and they stay.
+async fn gc_with_a_transient_error(control: bool) -> (usize, usize, bool) {
+    let mem: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let fail = Arc::new(std::sync::Mutex::new(None));
+    let store: Arc<dyn ObjectStore> = Arc::new(FailGets { inner: Arc::clone(&mem), fail: Arc::clone(&fail) });
+    let id = if control { "ws-gc-err-control" } else { "ws-gc-err" };
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(format!("a-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(format!("b-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    t.close().await.unwrap();
+    let v1 = manifest::load(&store, id, 1).await.unwrap();
+    let v2 = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    let only_v1: Vec<String> = gc::runs_of(&v1).into_iter().filter(|r| !gc::runs_of(&v2).contains(r)).collect();
+    assert!(!only_v1.is_empty(), "setup: version 1 must have runs of its own");
+    let (ret0, grace0) = (VERSION_RETENTION_MS.load(SeqCst), GC_GRACE_MS.load(SeqCst));
+    VERSION_RETENTION_MS.store(3_600_000, SeqCst);
+    GC_GRACE_MS.store(0, SeqCst);
+    // the control is the code before both GC changes: no trusted version read, errors taken as deletions
+    gc::CONTROL_GC_ERRORS_AS_DELETED.store(control, Relaxed);
+    gc::CONTROL_GC_PLAIN_NEWEST.store(control, Relaxed);
+    *fail.lock().unwrap() = Some(manifest::manifest_path(id, 1).to_string());
+    let r = gc::gc_closed(&store, id).await;
+    *fail.lock().unwrap() = None;
+    gc::CONTROL_GC_ERRORS_AS_DELETED.store(false, Relaxed);
+    gc::CONTROL_GC_PLAIN_NEWEST.store(false, Relaxed);
+    VERSION_RETENTION_MS.store(ret0, SeqCst);
+    GC_GRACE_MS.store(grace0, SeqCst);
+    let mut left = 0;
+    for p in &only_v1 {
+        if object_store::ObjectStoreExt::head(&mem, &object_store::path::Path::from(p.as_str())).await.is_ok() {
+            left += 1;
+        }
+    }
+    eprintln!("GC with a transient error (control {control}): pass {:?}; version 1's own runs left {left} of {}", r.as_ref().map(|_| ()), only_v1.len());
+    (left, only_v1.len(), r.is_err())
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_gc_takes_a_transient_error_for_no_deletion() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (left_ctl, n_ctl, _) = gc_with_a_transient_error(true).await;
+    let (left, n, skipped) = gc_with_a_transient_error(false).await;
+    teardown();
+    assert!(left_ctl < n_ctl, "control: the GC must delete the retained version's runs, or the test does not reach the case");
+    assert_eq!(left, n, "runs of a retained version were deleted after a transient error");
+    assert!(skipped, "the pass must report the error (skipped)");
+}

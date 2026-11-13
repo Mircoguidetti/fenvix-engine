@@ -256,6 +256,12 @@ async fn pair_checkpoint(store: &Arc<dyn ObjectStore>, id: &str, admin: &slatedb
     let mut pick = None;
     for &n in versions.iter().rev() {
         let v = manifest::load(store, id, n).await?;
+        // an older writer's late version is never a pair (review of a60f4fe, rule 8): it lacks the newer writer's rows
+        if manifest::is_older_writers(store, id, &v).await? {
+            manifest::OLDER_VERSIONS_IGNORED.fetch_add(1, Relaxed);
+            eprintln!("OLDER_VERSION_IGNORED db={id} version={n} writer_epoch={:?}: not paired with checkpoint {}", v.writer_epoch, cp.id);
+            continue;
+        }
         if v.x_d <= last_l0 {
             pick = Some(v);
             break;
@@ -345,7 +351,8 @@ impl PairedReader {
                     None
                 }
             },
-            None => manifest::list_versions(store, id).await?.last().copied(),
+            // the newest version, unless an older writer published it late (review of a60f4fe)
+            None => manifest::load_newest_trusted(store, id).await?.map(|(v, _)| v.version),
         };
         let Some(n) = version else { return raw(reader, holds).await };
         let v = manifest::load(store, id, n).await?;

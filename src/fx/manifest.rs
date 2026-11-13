@@ -232,6 +232,54 @@ pub async fn load_newest(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Optio
     }
 }
 
+/// Versions an opening or a refresh passed over because an older writer published them after a newer writer's
+/// (serverStatus `olderVersionsIgnored`); the negative control of the tests trusts the newest (the code before).
+pub static OLDER_VERSIONS_IGNORED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static CONTROL_TRUST_NEWEST: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Whether version `v` is an older writer's late publish (review of a60f4fe, rule 8): writer epochs never go down along
+/// valid versions, so a version whose writer epoch is LOWER than the version below it landed after a newer writer's
+/// (a late publish of a writer that lost the database, inside `build::fence_check`'s window). Its runs hold that writer's
+/// old snapshot: serving, pairing or fencing it drops every row between its X_d and the newer writer's. One GET (the
+/// version below); a version below collected by GC counts as nothing to compare with.
+pub async fn is_older_writers(store: &Arc<dyn ObjectStore>, id: &str, v: &Version) -> Result<bool> {
+    if CONTROL_TRUST_NEWEST.load(std::sync::atomic::Ordering::Relaxed) || v.version <= 1 {
+        return Ok(false);
+    }
+    match load(store, id, v.version - 1).await {
+        Ok(below) => Ok(below.writer_epoch.unwrap_or(0) > v.writer_epoch.unwrap_or(0)),
+        Err(e) if e.downcast_ref::<object_store::Error>().is_some_and(|e| matches!(e, object_store::Error::NotFound { .. })) => Ok(false),
+        Err(e) => Err(e),
+    }
+}
+
+/// The newest version at or below slot `n` that is not an older writer's late publish (`is_older_writers`), each one
+/// passed over logged (OLDER_VERSION_IGNORED, serverStatus `olderVersionsIgnored`).
+pub async fn trusted_at(store: &Arc<dyn ObjectStore>, id: &str, mut v: Version) -> Result<Version> {
+    for _ in 0..64 {
+        if !is_older_writers(store, id, &v).await? {
+            return Ok(v);
+        }
+        let below = load(store, id, v.version - 1).await?;
+        OLDER_VERSIONS_IGNORED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        eprintln!(
+            "OLDER_VERSION_IGNORED db={id} version={} writer_epoch={:?} x_d={}: below it version {} has writer_epoch {:?} x_d {}; using that one",
+            v.version, v.writer_epoch, v.x_d, below.version, below.writer_epoch, below.x_d
+        );
+        v = below;
+    }
+    Ok(v)
+}
+
+/// The newest version an opening, a refresh or a pairing may use, with the newest slot in the store: the version keeps
+/// its own number (pairs, holds and GC name versions by number), and a writer places its next version, a fence first,
+/// above the newest slot. One more GET than `load_newest` in the usual case.
+pub async fn load_newest_trusted(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<(Version, u64)>> {
+    let Some(newest) = load_newest(store, id).await? else { return Ok(None) };
+    let slot = newest.version;
+    Ok(Some((trusted_at(store, id, newest).await?, slot)))
+}
+
 /// Fail point for tests: a publish whose PUT is delayed until the test lets it go (the PUT of a dead process landing
 /// late, rule 17).
 pub static SLOW_PUT: std::sync::Mutex<Option<Arc<tokio::sync::Notify>>> = std::sync::Mutex::new(None);

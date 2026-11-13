@@ -1153,6 +1153,10 @@ async fn run() -> Result<()> {
     let lc_for_ctl = Arc::clone(&lc);
     let dbs = Dbs::new(lc, Arc::clone(&s3), Duration::from_secs(args.idle_secs), Arc::clone(&leases), global);
     dbs.spawn_reaper();
+    // negative control of ctl test_66 (FENVIX_TEST_NO_FIRST_INSTALLER=1): a finished first build waits for a write
+    if std::env::var("FENVIX_TEST_NO_FIRST_INSTALLER").as_deref() != Ok("1") {
+        dbs.spawn_first_build_installer();
+    }
     {
         // a change-stream reader waiting on an event whose batch was not confirmed yet wakes when it is
         let changes = Arc::clone(&dbs.changes);

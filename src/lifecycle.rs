@@ -1412,6 +1412,8 @@ struct FirstBuild {
     handle: Option<tokio::task::JoinHandle<Result<Option<(crate::fx::manifest::Version, crate::fx::build::BuildReport)>>>>,
     started: Instant,
     epoch: Option<u64>,
+    /// When the build started, before its snapshot (`fx::manifest::note_caught_up`).
+    scan_ms: u64,
 }
 
 impl Drop for FirstBuild {
@@ -1429,6 +1431,18 @@ pub static FIRST_INSTALLS: std::sync::atomic::AtomicU64 = std::sync::atomic::Ato
 pub static FIRST_INSTALL_REFUSED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 pub static FIRST_BUILD_MS_MAX: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 pub static CLAIMS_DEFERRED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// How long an abandon (a lost lease, an erase, a drop) lets a first build running off the lock end by itself before
+/// cutting it (`Tenant::fx_first_abort`); first builds cut (serverStatus `fenvix.compactor.firstBuildsCut`). The negative
+/// control of the tests cuts at once (the code of 6fbd6cd).
+pub static ABANDON_FIRST_BUILD_WAIT_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(10_000);
+pub static FIRST_BUILDS_CUT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static CONTROL_CUT_FIRST_BUILD: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Where a first build running off the lock reports that it ended (the database's id), when the server listens
+/// (`mongo-server` `Dbs::spawn_first_build_installer`): the version is installed and the compactor started at once, under
+/// the database's lock, as a write would. Unset (tests of this crate, tools): the next write or the close installs it.
+pub static FIRST_BUILD_DONE: std::sync::OnceLock<tokio::sync::mpsc::UnboundedSender<String>> = std::sync::OnceLock::new();
+/// First builds installed by that listener (serverStatus `fenvix.firstBuild.installedWithoutWrite`).
+pub static FIRST_INSTALLS_WITHOUT_WRITE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// The first build runs off the lock (default). Off (`FENVIX_FIRST_BUILD_OFF_LOCK=0`): inside the write, as before.
 pub static FIRST_BUILD_OFF_LOCK: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 
@@ -1717,9 +1731,9 @@ impl Tenant {
             return Ok(StepState { fx: None, env, announced: cur.announced, loaded: crate::fx::loaded_at(t0) });
         }
         let announced = if env.is_none() { manifest::announced(store, &self.id).await? } else { cur.announced };
-        let fx = match manifest::load_newest(store, &self.id).await? {
+        let fx = match manifest::load_newest_trusted(store, &self.id).await? {
             None => None,
-            Some(v) => {
+            Some((v, _)) => {
                 anyhow::ensure!(v.e_env == env, "database {}: our manifest {} has E_env {:?}, the database's marker {:?}", self.id, v.version, v.e_env, env);
                 match &cur.fx {
                     // versions never change: the same number is the same version
@@ -1987,9 +2001,9 @@ impl Tenant {
         if self.env.is_none() {
             self.fx_announced = manifest::announced(&store, &self.id).await?;
         }
-        let newest = manifest::load_newest(&store, &self.id).await?;
+        let newest = manifest::load_newest_trusted(&store, &self.id).await?;
         let newest = match (newest, self.fx_unknown.take()) {
-            (Some(v), _) => Some(v),
+            (Some(x), _) => Some(x),
             // a publish with an unknown outcome and an empty store (a first publish whose PUT may still land): fence its
             // slot with the version it tried, so a late PUT finds the slot taken; only then is the fence settled
             #[cfg(test)]
@@ -2007,7 +2021,7 @@ impl Tenant {
                         return Ok(());
                     }
                     // the late PUT landed meanwhile: fence above it as usual
-                    Ok(false) => manifest::load_newest(&store, &self.id).await?,
+                    Ok(false) => manifest::load_newest_trusted(&store, &self.id).await?,
                     Err(e) => {
                         self.fx_unknown = Some(u);
                         self.fx_fence_pending = true;
@@ -2020,7 +2034,7 @@ impl Tenant {
                 None
             }
         };
-        let Some(mut v) = newest else {
+        let Some((mut v, mut slot)) = newest else {
             // no version in the store and no publish of unknown outcome: nothing landed, nothing to fence
             self.fx = None;
             if self.fx_unknown.is_none() {
@@ -2046,14 +2060,16 @@ impl Tenant {
                 if check {
                     anyhow::ensure!(v.x_d <= seq, "database {}: our manifest {} has X_d {} but SlateDB's last seq is {seq}: rows at or below X_d are missing from SlateDB", self.id, v.version, v.x_d);
                 }
-                let f = v.fence(epoch);
+                // above the newest slot: an older writer's late version there is passed over (`load_newest_trusted`)
+                let mut f = v.fence(epoch);
+                f.version = f.version.max(slot + 1);
                 if manifest::create(&store, &self.id, &f).await? {
                     v = f;
                     fenced = true;
                     crate::fx::FENCES.fetch_add(1, Relaxed);
                     break;
                 }
-                v = manifest::load_newest(&store, &self.id).await?.ok_or_else(|| anyhow!("database {}: our manifest vanished", self.id))?;
+                (v, slot) = manifest::load_newest_trusted(&store, &self.id).await?.ok_or_else(|| anyhow!("database {}: our manifest vanished", self.id))?;
             }
             anyhow::ensure!(fenced, "database {}: could not publish a fence version of our manifest", self.id);
             self.fx_fence_pending = false;
@@ -2182,8 +2198,14 @@ impl Tenant {
                     // stopped before anything was written: the outcome is known, nothing to reload or fence (c2-fix-hangs)
                 } else if e.downcast_ref::<crate::fx::LostRace>().is_some() {
                     // the outcome is known: another publisher holds the slot; read with the newest version (rule 24)
-                    if let Some(v) = crate::fx::manifest::load_newest(&store, &self.id).await? {
-                        self.fx_install(crate::fx::view::View::new(Arc::clone(&store), v, self.fx.as_deref())?);
+                    if let Some((v, slot)) = crate::fx::manifest::load_newest_trusted(&store, &self.id).await? {
+                        if slot > v.version {
+                            // an older writer's late version holds the newest slot (review of a60f4fe): load as an opening
+                            // does, which (as a writer) fences above it
+                            self.load_fx().await?;
+                        } else {
+                            self.fx_install(crate::fx::view::View::new(Arc::clone(&store), v, self.fx.as_deref())?);
+                        }
                     }
                 } else if !crate::fx::is_fenced(&e) {
                     // the outcome of the publish's PUT may be unknown (an error, a timeout: the PUT may have landed):
@@ -2240,8 +2262,17 @@ impl Tenant {
         let env = self.env.expect("marker written");
         let store = Arc::clone(&self.lc.store);
         let (id, opts) = (self.id.clone(), opts.clone());
-        let handle = tokio::spawn(async move { crate::fx::build::build_and_publish(&db, &store, &id, None, env, epoch, &opts, None).await });
-        self.fx_first = Some(FirstBuild { handle: Some(handle), started: Instant::now(), epoch });
+        let scan_ms = crate::fx::manifest::now_ms();
+        let handle = tokio::spawn(async move {
+            let r = crate::fx::build::build_and_publish(&db, &store, &id, None, env, epoch, &opts, None).await;
+            // the server installs the version and starts the compactor now, not at the database's next write
+            // (`FIRST_BUILD_DONE`): a database written in a burst and then only read had no compactor until its next write
+            if let Some(tx) = FIRST_BUILD_DONE.get() {
+                let _ = tx.send(id.clone());
+            }
+            r
+        });
+        self.fx_first = Some(FirstBuild { handle: Some(handle), started: Instant::now(), epoch, scan_ms });
         FIRST_BUILDS.fetch_add(1, Relaxed);
         Ok(true)
     }
@@ -2267,7 +2298,7 @@ impl Tenant {
             return Ok(None);
         }
         let h = fb.handle.take().expect("first build handle");
-        let (started, epoch) = (fb.started, fb.epoch);
+        let (started, epoch, scan_ms) = (fb.started, fb.epoch, fb.scan_ms);
         self.fx_first = None;
         let r = match h.await {
             Ok(r) => r,
@@ -2308,16 +2339,40 @@ impl Tenant {
         crate::fx::PUBLISHES.fetch_add(1, Relaxed);
         FIRST_INSTALLS.fetch_add(1, Relaxed);
         eprintln!("FIRST_PUBLISH u={:.0} db={} version={n} x_d={x_d} rows={} build_ms={ms} off_lock=1", crate::waits::unix_ms(), self.id, rep.rows_scanned);
+        // the first build scanned SlateDB's whole snapshot, sorted runs included: it is a builder publish that caught up
+        // (integration-4's catch-up before a compactor starts, `fx::manifest::needs_catch_up`). Marked here, a compactor
+        // starts without waiting for a later publish that adds rows (review of d660ea9: a database written in a burst and
+        // then only read had none). A pass marked ungated after the scan started keeps the mark (`note_caught_up`).
+        if let Err(e) = crate::fx::manifest::note_caught_up(&self.lc.store, &self.id, scan_ms).await {
+            eprintln!("sealed runs: database {}: first build installed, but the caught-up mark was not written ({e:#}); the compactor's start catches up", self.id);
+        }
         Ok(Some(rep))
     }
 
     /// Stop a first build without waiting for its end (the lease is lost): aborted at its next await and waited for, so
     /// nothing of it runs after this returns. A version create it had in flight may still land, as after a crash.
-    async fn fx_first_abort(&mut self) {
+    ///
+    /// fix-compactor-start (GitHub CI 6fbd6cd, ctl test_73): the build is first given `ABANDON_FIRST_BUILD_WAIT_MS` to end
+    /// by itself, as an erase or a drop waited for it when it ran inside the write. Cut at once, it was cut in the middle
+    /// of a run's part upload: MinIO kept that upload listed for seconds while the dead request held it, the erase's
+    /// aborts could not remove it, and the erase answered `erase_incomplete`. Ended by itself, every run writer completes
+    /// or aborts its upload. Only a build longer than the wait is still cut (a large first build: the erase's sweep of
+    /// incomplete uploads, and the next start's, find what it leaves).
+    async fn fx_first_abort(&mut self, wait: bool) {
+        use std::sync::atomic::Ordering::Relaxed;
         if let Some(mut fb) = self.fx_first.take() {
-            if let Some(h) = fb.handle.take() {
-                h.abort();
-                let _ = h.await;
+            if let Some(mut h) = fb.handle.take() {
+                let wait = if !wait || CONTROL_CUT_FIRST_BUILD.load(Relaxed) { 0 } else { ABANDON_FIRST_BUILD_WAIT_MS.load(Relaxed) };
+                if tokio::time::timeout(Duration::from_millis(wait), &mut h).await.is_err() {
+                    FIRST_BUILDS_CUT.fetch_add(1, Relaxed);
+                    h.abort();
+                    let _ = h.await;
+                    // its dropped run writers abort their uploads in spawned tasks: done before the abandon returns, so an
+                    // erase's sweep and proof do not race them (the reviewer's H2)
+                    if !CONTROL_CUT_FIRST_BUILD.load(Relaxed) {
+                        crate::runfmt::wait_dropped_aborts(Duration::from_secs(5)).await;
+                    }
+                }
             }
         }
         self.fx_unclaim();
@@ -3012,9 +3067,21 @@ impl Tenant {
     /// slatedb 0.17 has no `Drop` for `Db`, so a tenant left behind keeps tasks that can still write a WAL object or an SST.
     /// The lost-lease callers can ignore that (the next owner fences them); a caller about to delete the tenant's objects
     /// (erase) must not.
-    pub async fn abandon(mut self) -> bool {
+    pub async fn abandon(self) -> bool {
+        self.abandon_with(false).await
+    }
+
+    /// `abandon` while this process still holds the database's lease (an erase, a drop): a first build running off the
+    /// lock may end by itself first, up to `ABANDON_FIRST_BUILD_WAIT_MS` (`fx_first_abort`). Never for a lost lease: the
+    /// build would publish a version after the takeover, which the new owner then builds on (review of a60f4fe, rule 8:
+    /// acknowledged writes lost).
+    pub async fn abandon_waiting_first_build(self) -> bool {
+        self.abandon_with(true).await
+    }
+
+    async fn abandon_with(mut self, wait_first_build: bool) -> bool {
         // fix-write-stalls: a first build off the lock stops before the writer is given up
-        self.fx_first_abort().await;
+        self.fx_first_abort(wait_first_build).await;
         self.group.vis.kill();
         forget_vis(&self.id, &self.group);
         let close = match self.mode.take() {

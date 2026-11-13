@@ -55,6 +55,11 @@ use std::time::{Duration, Instant};
 /// `ctl-tests/test_56_real_drop_between_reads.py`). Off in tests unless a test turns it on (`Knobs::drop`).
 pub static DROP_DEFAULT: AtomicBool = AtomicBool::new(false);
 
+/// Review of a60f4fe: versions of an older writer epoch a compactor refused as its base (serverStatus); the negative
+/// control of the tests takes them (the code before).
+pub static OLDER_VERSIONS_REFUSED: AtomicU64 = AtomicU64::new(0);
+pub static CONTROL_ADOPT_OLDER: AtomicBool = AtomicBool::new(false);
+
 /// The server runs one compactor per open writer (`--sealed-compactor`, FENVIX_SEALED_COMPACTOR=1), with sealed runs on.
 pub static SERVER_ON: AtomicBool = AtomicBool::new(false);
 /// Small knobs for the judge's tiny databases (FENVIX_SEALED_COMPACTOR=small): reseals, merges and GC happen at all.
@@ -822,9 +827,30 @@ impl Compactor {
     }
 
     /// Take a version found in the store as the newest known one; a version by a newer writer stops this compactor (rule 28).
+    ///
+    /// Review of a60f4fe (rule 8): a version by an OLDER writer (a lower writer epoch) is never taken as the base. Such a
+    /// version is a late publish of a writer that lost the database (its build ended after the takeover): its runs hold
+    /// only that writer's old snapshot, and building on it drops every row between its X_d and ours from every read. Its
+    /// slot is passed over: our own version, with its number moved to that slot, is published again at the next one as a
+    /// fence (rule 25), so the newest version is ours again.
     fn adopt(&self, c: &mut Cur, newest: Version) {
-        if newest.writer_epoch.unwrap_or(0) > self.epoch.unwrap_or(0) {
+        let (theirs, ours) = (newest.writer_epoch.unwrap_or(0), self.epoch.unwrap_or(0));
+        if theirs > ours {
             self.stopped.store(true, Relaxed);
+        }
+        if theirs < ours && !CONTROL_ADOPT_OLDER.load(Relaxed) {
+            OLDER_VERSIONS_REFUSED.fetch_add(1, Relaxed);
+            eprintln!(
+                "OLDER_VERSION_REFUSED db={} version={} writer_epoch={theirs} x_d={} (this compactor: epoch {ours}, version {}, x_d {}): not taken as the base; a fence of ours follows",
+                self.id(),
+                newest.version,
+                newest.x_d,
+                c.v.version,
+                c.v.x_d
+            );
+            c.v.version = c.v.version.max(newest.version);
+            c.fence_pending = true;
+            return;
         }
         c.v = newest;
     }
@@ -848,6 +874,9 @@ impl Compactor {
                     self.adopt(c, newest);
                     if self.stopped.load(Relaxed) {
                         bail!("database {}: version {n} is by a newer writer; this compactor stops (rule 28)", self.id());
+                    }
+                    if c.fence_pending {
+                        continue; // an older writer's version took the slot: our fence goes to the next one
                     }
                     *self.sh.pending.lock().unwrap() = Some(c.v.clone());
                     c.fence_pending = false;
