@@ -1,0 +1,328 @@
+{
+ "label": "base1",
+ "n": 1000000,
+ "results": {
+  "find_one customer and _id": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 66,
+     "bytes": 4636410,
+     "ms": 134061.0,
+     "n": 1,
+     "hash": "c9ee3d68b506"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 10,
+     "bytes": 45860,
+     "ms": 138743.2,
+     "n": 1,
+     "hash": "c9ee3d68b506"
+    }
+   ],
+   "examined": 1000000
+  },
+  "find customer and _id": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 47,
+     "bytes": 4631942,
+     "ms": 134374.8,
+     "n": 1,
+     "hash": "c9ee3d68b506"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 9,
+     "bytes": 41274,
+     "ms": 133970.5,
+     "n": 1,
+     "hash": "c9ee3d68b506"
+    }
+   ],
+   "examined": 1000000
+  },
+  "customer alone (100 docs)": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 43,
+     "bytes": 4613598,
+     "ms": 72617.3,
+     "n": 100,
+     "hash": "af10c38a4883"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 5,
+     "bytes": 22930,
+     "ms": 70227.8,
+     "n": 100,
+     "hash": "af10c38a4883"
+    }
+   ],
+   "examined": 1000000
+  },
+  "customer alone, limit 1": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 31,
+     "bytes": 4586197,
+     "ms": 5405.1,
+     "n": 1,
+     "hash": "75b28a531e64"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 4495.5,
+     "n": 1,
+     "hash": "75b28a531e64"
+    }
+   ],
+   "examined": 48058
+  },
+  "customer $in 3": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 43,
+     "bytes": 4613598,
+     "ms": 71949.5,
+     "n": 300,
+     "hash": "a6b2c95a484e"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 5,
+     "bytes": 22930,
+     "ms": 72543.4,
+     "n": 300,
+     "hash": "a6b2c95a484e"
+    }
+   ],
+   "examined": 1000000
+  },
+  "customer and _id range 10": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 47,
+     "bytes": 4631942,
+     "ms": 130174.9,
+     "n": 10,
+     "hash": "c30d34157754"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 9,
+     "bytes": 41274,
+     "ms": 132934.5,
+     "n": 10,
+     "hash": "c30d34157754"
+    }
+   ],
+   "examined": 1000000
+  },
+  "customer and _id $gt, limit 2": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 47,
+     "bytes": 4631942,
+     "ms": 133166.8,
+     "n": 2,
+     "hash": "9359fe220229"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 9,
+     "bytes": 41274,
+     "ms": 133835.7,
+     "n": 2,
+     "hash": "9359fe220229"
+    }
+   ],
+   "examined": 1000000
+  },
+  "customer, sort k limit 5": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 47,
+     "bytes": 4631942,
+     "ms": 134745.4,
+     "n": 5,
+     "hash": "593b3594b93b"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 10,
+     "bytes": 45860,
+     "ms": 135568.3,
+     "n": 5,
+     "hash": "593b3594b93b"
+    }
+   ],
+   "examined": 1000000
+  },
+  "customer and k": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 44,
+     "bytes": 4618184,
+     "ms": 75097.7,
+     "n": 14,
+     "hash": "5abda2e7fb13"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 4,
+     "bytes": 18344,
+     "ms": 70017.3,
+     "n": 14,
+     "hash": "5abda2e7fb13"
+    }
+   ],
+   "examined": 1000000
+  },
+  "count customer": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 47,
+     "bytes": 4631942,
+     "ms": 134475.5,
+     "n": 1,
+     "hash": "861f5dcefbae"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 10,
+     "bytes": 45860,
+     "ms": 136434.4,
+     "n": 1,
+     "hash": "861f5dcefbae"
+    }
+   ],
+   "examined": null
+  },
+  "agg $match customer + $group": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 48,
+     "bytes": 4636528,
+     "ms": 138573.6,
+     "n": 1,
+     "hash": "843ca09a7e09"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 9,
+     "bytes": 41274,
+     "ms": 139097.2,
+     "n": 1,
+     "hash": "843ca09a7e09"
+    }
+   ],
+   "examined": null
+  },
+  "update_one customer and _id": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 61,
+     "bytes": 5704912,
+     "ms": 141123.5,
+     "n": 1,
+     "hash": "20e402dcc82e"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 184,
+     "bytes": 78845402,
+     "ms": 147100.4,
+     "n": 1,
+     "hash": "20e402dcc82e"
+    }
+   ],
+   "examined": null
+  },
+  "_id alone (locator)": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 35,
+     "bytes": 4235879,
+     "ms": 35.1,
+     "n": 1,
+     "hash": "315581a0bec1"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.6,
+     "n": 1,
+     "hash": "315581a0bec1"
+    }
+   ],
+   "examined": 1
+  },
+  "other field (whole collection)": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 49,
+     "bytes": 4624499,
+     "ms": 76796.9,
+     "n": 0,
+     "hash": "da39a3ee5e6b"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 5,
+     "bytes": 26065,
+     "ms": 76058.6,
+     "n": 0,
+     "hash": "da39a3ee5e6b"
+    }
+   ],
+   "examined": 1000000
+  }
+ }
+}
