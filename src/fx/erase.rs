@@ -1246,3 +1246,49 @@ pub async fn record_clean(store: &Arc<dyn ObjectStore>, id: &str, e: &mut Erasur
     }
     Ok(())
 }
+
+/// erase-cost-1tb, review fix: the plan of one scrub pass in parts. The batch is frozen at its first part: an erasure
+/// whose deletes are absorbed while the pass runs waits for the next pass, so every erasure of the batch goes through
+/// phase 1 (every target row but the envelopes) before phase 2 drops its envelopes. Before the fix an erasure absorbed
+/// during phase 1 joined the batch in phase 2, and its envelopes could leave in one part while its live rows were still
+/// in an older run (`perf_erase_tests::review_an_erasure_joining_in_phase_two_is_not_protected`).
+#[derive(Clone, Debug)]
+pub struct PartsPlan {
+    frozen: Option<BTreeSet<String>>,
+    /// phase 1 (keep the envelopes) until it completes
+    pub keep_envelopes: bool,
+}
+
+/// Negative control of the review fix: the batch is not frozen (an erasure absorbed during phase 1 joins phase 2).
+pub static CONTROL_UNFROZEN_BATCH: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+impl Default for PartsPlan {
+    fn default() -> Self {
+        PartsPlan { frozen: None, keep_envelopes: true }
+    }
+}
+
+impl PartsPlan {
+    /// The erasures (by id) this part may scrub, of those `ready` now: the first call freezes the batch.
+    pub fn admit(&mut self, ready: &[String]) -> Vec<String> {
+        if ctl(&CONTROL_UNFROZEN_BATCH) {
+            return ready.to_vec();
+        }
+        match &self.frozen {
+            None => {
+                if !ready.is_empty() {
+                    self.frozen = Some(ready.iter().cloned().collect());
+                }
+                ready.to_vec()
+            }
+            Some(f) => ready.iter().filter(|e| f.contains(*e)).cloned().collect(),
+        }
+    }
+
+    /// After a part: a complete phase 1 starts phase 2.
+    pub fn after_part(&mut self, complete: bool) {
+        if complete {
+            self.keep_envelopes = false;
+        }
+    }
+}

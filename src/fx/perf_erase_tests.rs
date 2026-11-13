@@ -519,9 +519,26 @@ async fn owing_groups_and_the_probe_are_per_erasure() {
 /// both.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn review_an_erasure_joining_in_phase_two_is_not_protected() {
+    // erase-cost-1tb fix: the passes follow `erase::PartsPlan` (the batch frozen at its first part), as
+    // `run_pass_scrub` does. Control `CONTROL_UNFROZEN_BATCH`: the reviewer's sequence (B joins in phase 2) must show
+    // B's rows readable between two parts.
     let _s = SERIAL.lock().await;
+    for control in [false, true] {
+        erase::CONTROL_UNFROZEN_BATCH.store(control, Relaxed);
+        let readable = phase2_join_case(control).await;
+        erase::CONTROL_UNFROZEN_BATCH.store(false, Relaxed);
+        if control {
+            assert!(!readable.is_empty(), "control: an erasure joining in phase 2 must be readable between parts");
+        } else {
+            assert!(readable.is_empty(), "erased documents readable between two parts (pass, part, customer, row): {readable:?}");
+        }
+    }
+    hold::HOLD_LIFE_MS.store(120_000, Relaxed);
+}
+
+async fn phase2_join_case(control: bool) -> Vec<(usize, usize, usize, usize)> {
     let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
-    let id = "fx-review-phase2-join";
+    let id = if control { "fx-review-phase2-join-ctl" } else { "fx-review-phase2-join" };
     let (mut t, c) = setup(&store, id).await;
     let (a, b) = (7usize, 30usize);
     // customer A: live rows in an older delta run, its envelopes in a newer one
@@ -530,59 +547,65 @@ async fn review_an_erasure_joining_in_phase_two_is_not_protected() {
     t.apply((0..30).map(|i| Op::Delete(ckey(a, i))).collect()).await.unwrap();
     let ea = t.fx_erasure_register("msgs", format!("c{a:02}").as_bytes(), &targets(a), None).await.unwrap().unwrap();
     flush_absorb(&mut t, &c).await;
-    let ta = targets(a);
-    let mut opts = erase::ScrubOpts::default();
-    opts.budget = Some(Duration::from_nanos(1));
-    opts.keep_envelopes = true;
-    // phase 1 for A alone, to its end
-    for _ in 0..200 {
-        let batch = Batch::single(&ta, ea.s_e);
-        let base = c.current().await;
-        let v = view::View::new(Arc::clone(&store), base.clone(), None).unwrap();
-        let s = erase::scrub_version(&store, id, &v, base.version + 1, base.writer_epoch, &batch, &opts).await.unwrap();
-        if s.version.is_some() {
-            assert!(c.commit_scrub(&base, &s, batch.max_s_e).await.unwrap().is_some());
-        }
-        if s.complete {
-            break;
-        }
-    }
-    // customer B arrives while A's phase 1 ran: live rows in an older delta run, envelopes in a newer one
-    t.apply((20..30).map(|i| Op::Put(ckey(b, i), vec![b'n'; 60])).collect()).await.unwrap();
-    flush_absorb(&mut t, &c).await;
-    t.apply((0..30).map(|i| Op::Delete(ckey(b, i))).collect()).await.unwrap();
-    let eb = t.fx_erasure_register("msgs", format!("c{b:02}").as_bytes(), &targets(b), None).await.unwrap().unwrap();
-    flush_absorb(&mut t, &c).await;
-    t.fx_sync();
-    for i in 0..30 {
-        assert!(t.get(ckey(b, i)).await.unwrap().is_none(), "B readable right after its delete");
-    }
-    // phase 2 for the batch {A, B}, in parts (what the loop does: keep_env already false)
-    let tb = targets(b);
-    let items: Vec<(&Targets, u64)> = vec![(&ta, ea.s_e), (&tb, eb.s_e)];
-    let batch = Batch::new(&items);
-    opts.keep_envelopes = false;
+    let (ta, tb) = (targets(a), targets(b));
+    let mut eb: Option<erase::Erasure> = None;
     let mut readable = Vec::new();
-    for part in 0..200 {
-        let base = c.current().await;
-        let v = view::View::new(Arc::clone(&store), base.clone(), None).unwrap();
-        let s = erase::scrub_version(&store, id, &v, base.version + 1, base.writer_epoch, &batch, &opts).await.unwrap();
-        if s.version.is_some() {
-            assert!(c.commit_scrub(&base, &s, batch.max_s_e).await.unwrap().is_some());
-        }
-        t.fx_sync();
-        for cu in [a, b] {
-            for i in 0..30 {
-                if t.get(ckey(cu, i)).await.unwrap().is_some() {
-                    readable.push((part, cu, i));
+    let mut done: std::collections::BTreeSet<String> = Default::default();
+    // passes until every erasure is scrubbed (each pass: phase 1 then phase 2, in parts of one run)
+    for pass in 0..4 {
+        let mut plan = erase::PartsPlan::default();
+        let mut opts = erase::ScrubOpts::default();
+        opts.budget = Some(Duration::from_nanos(1));
+        for part in 0..400 {
+            // customer B arrives while A's phase 1 ran: live rows in an older delta run, envelopes in a newer one
+            if eb.is_none() && pass == 0 && !plan.keep_envelopes {
+                t.apply((20..30).map(|i| Op::Put(ckey(b, i), vec![b'n'; 60])).collect()).await.unwrap();
+                flush_absorb(&mut t, &c).await;
+                t.apply((0..30).map(|i| Op::Delete(ckey(b, i))).collect()).await.unwrap();
+                eb = Some(t.fx_erasure_register("msgs", format!("c{b:02}").as_bytes(), &targets(b), None).await.unwrap().unwrap());
+                flush_absorb(&mut t, &c).await;
+            }
+            let mut ready = vec![ea.id.clone()];
+            ready.extend(eb.as_ref().map(|e| e.id.clone()));
+            ready.retain(|x| !done.contains(x));
+            let admitted = plan.admit(&ready);
+            if admitted.is_empty() {
+                break;
+            }
+            let mut items: Vec<(&Targets, u64)> = Vec::new();
+            if admitted.contains(&ea.id) {
+                items.push((&ta, ea.s_e));
+            }
+            if let Some(e) = eb.as_ref().filter(|e| admitted.contains(&e.id)) {
+                items.push((&tb, e.s_e));
+            }
+            let batch = Batch::new(&items);
+            opts.keep_envelopes = plan.keep_envelopes;
+            let base = c.current().await;
+            let v = view::View::new(Arc::clone(&store), base.clone(), None).unwrap();
+            let s = erase::scrub_version(&store, id, &v, base.version + 1, base.writer_epoch, &batch, &opts).await.unwrap();
+            if s.version.is_some() {
+                assert!(c.commit_scrub(&base, &s, batch.max_s_e).await.unwrap().is_some());
+            }
+            t.fx_sync();
+            for cu in [a, b] {
+                for i in 0..30 {
+                    if (cu == a || eb.is_some()) && t.get(ckey(cu, i)).await.unwrap().is_some() {
+                        readable.push((pass, part, cu, i));
+                    }
                 }
             }
+            if s.complete && !plan.keep_envelopes {
+                done.extend(admitted);
+                break;
+            }
+            plan.after_part(s.complete);
         }
-        if s.complete {
+        if eb.as_ref().is_some_and(|e| done.contains(&e.id)) && done.contains(&ea.id) {
             break;
         }
     }
+    assert!(done.contains(&ea.id) && eb.as_ref().is_some_and(|e| done.contains(&e.id)), "both erasures must end scrubbed");
     c.stop().await;
-    hold::HOLD_LIFE_MS.store(120_000, Relaxed);
-    assert!(readable.is_empty(), "erased documents readable between two parts of phase 2 (part, customer, row): {readable:?}");
+    readable
 }

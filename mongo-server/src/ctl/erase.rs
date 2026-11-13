@@ -401,7 +401,9 @@ pub async fn run_pass_scrub(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Vec<tenant_be
     let (mut abandons, mut parts) = (0u32, 0u32);
     // erase-cost-1tb: a scrub in parts first removes every target row but the delete envelopes (they keep the keys
     // hidden whatever part is published), then the envelopes (`ScrubOpts::keep_envelopes`)
-    let mut keep_env = true;
+    // review fix: the batch is frozen at the first part (`erase::PartsPlan`): an erasure absorbed meanwhile waits for
+    // the next pass, so none joins in phase 2
+    let mut plan = erase::PartsPlan::default();
     for attempt in 0..1_000u32 {
         // the records, read without the database's lock (one GET each, in parallel)
         all = erase::list(&ctl.store, db).await?;
@@ -432,7 +434,9 @@ pub async fn run_pass_scrub(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Vec<tenant_be
             None => p.base.clone(),
         };
         let Some(base) = base else { break };
-        let ready: Vec<usize> = all.iter().enumerate().filter(|(_, e)| e.state == "pending" && e.s_e <= base.x_d).map(|(i, _)| i).collect();
+        let absorbed: Vec<String> = all.iter().filter(|e| e.state == "pending" && e.s_e <= base.x_d).map(|e| e.id.clone()).collect();
+        let admitted: std::collections::BTreeSet<String> = plan.admit(&absorbed).into_iter().collect();
+        let ready: Vec<usize> = all.iter().enumerate().filter(|(_, e)| e.state == "pending" && admitted.contains(&e.id)).map(|(i, _)| i).collect();
         waiting = ready.len() < all.iter().filter(|e| e.state == "pending").count();
         if ready.is_empty() {
             break;
@@ -451,7 +455,7 @@ pub async fn run_pass_scrub(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Vec<tenant_be
         let mut opts = erase::ScrubOpts::default();
         // the runs a part writes are published well within the GC grace, which counts from their write (`gc.rs`)
         opts.budget = Some(std::time::Duration::from_millis((tenant_bench::fx::GC_GRACE_MS.load(ord()) / 4).max(1_000)));
-        opts.keep_envelopes = keep_env;
+        opts.keep_envelopes = plan.keep_envelopes;
         // no merge or reseal of the compactor starts meanwhile: they would make the commit refuse the scrub
         let _pause = p.fxc.as_ref().map(|c| c.pause_rewrites());
         let s = erase::scrub_version(&ctl.store, db, &view, base.version + 1, base.writer_epoch, &batch, &opts).await?;
@@ -492,7 +496,7 @@ pub async fn run_pass_scrub(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Vec<tenant_be
             let mut g = ctl.dbs.lock(db).await;
             g.fx_sync();
         }
-        if !s.complete || keep_env {
+        if !s.complete || plan.keep_envelopes {
             // a part: its replaced runs are recorded in every erasure of the batch (they stay pending) before the next
             // part, so a crash leaves nothing untracked; the next part starts from the version just published. The end
             // of the first phase (every target row but the envelopes gone) starts the second.
@@ -502,9 +506,7 @@ pub async fn run_pass_scrub(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Vec<tenant_be
                     erase::save(&ctl.store, db, &all[*i]).await?;
                 }
             }
-            if s.complete {
-                keep_env = false;
-            }
+            plan.after_part(s.complete);
             parts += 1;
             erase::trace(json!({"ev": "batch_part", "db": db, "part": parts, "runs_rewritten": s.runs, "keep_envelopes": opts.keep_envelopes}));
             continue;
