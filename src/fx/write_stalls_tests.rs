@@ -1015,3 +1015,92 @@ async fn ws_pair_ignores_an_older_writers_newest_version() {
     assert_eq!(p, Some(good), "the pair is not the newer writer's version");
     assert_eq!(wrong, 0, "rows missing from the paired read");
 }
+
+/// Review of c5b034d (rule 8): the reader of a database's newest state (`Follow::Newest`: exports, PITR of the live
+/// database) reads through the newer writer's version, not an older writer's late one. Control: it reads through the
+/// late one and rows are missing.
+async fn follow_newest_with_an_older_newest(control: bool) -> (Option<u64>, u64, usize) {
+    let id = if control { "ws-follow-older-control" } else { "ws-follow-older" };
+    let (store, m, cur, _stale) = with_an_older_newest_version(id).await;
+    manifest::CONTROL_TRUST_NEWEST.store(control, Relaxed);
+    let mut o = slatedb::config::DbReaderOptions::default();
+    o.skip_wal_replay = true;
+    let r = pair::PairedReader::open_follow(&store, id, crate::lifecycle::tenant_path(id), pair::Follow::Newest, o).await.unwrap();
+    let mut wrong = 0;
+    for (k, want) in &m {
+        if r.get(k).await.unwrap().as_deref() != Some(&want[..]) {
+            wrong += 1;
+        }
+    }
+    let v = r.version();
+    r.close().await.unwrap();
+    manifest::CONTROL_TRUST_NEWEST.store(false, Relaxed);
+    eprintln!("follow newest with an older newest version (control {control}): read through {v:?} (newer writer's {}), wrong {wrong} of {}", cur.version, m.len());
+    (v, cur.version, wrong)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_follow_newest_ignores_an_older_writers_version() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (_, _, wrong_ctl) = follow_newest_with_an_older_newest(true).await;
+    let (v, good, wrong) = follow_newest_with_an_older_newest(false).await;
+    teardown();
+    assert!(wrong_ctl > 0, "control: reading through the late version must miss rows, or the test does not reach the case");
+    assert_eq!(v, Some(good), "not read through the newer writer's version");
+    assert_eq!(wrong, 0, "rows missing");
+}
+
+/// Review of c5b034d (rule 8): a writer's publish that loses its slot to an older writer's late version does not install
+/// that version (`fx_publish_failed`, LostRace): it keeps the newer writer's and fences above the late slot. Control:
+/// the late version is installed (its X_d is the old writer's).
+async fn lost_race_to_an_older_version(control: bool) -> (u64, u64, Option<u64>, Option<u64>) {
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = if control { "ws-race-older-control" } else { "ws-race-older" };
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(format!("a-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let v1 = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    t.close().await.unwrap();
+    // writer epoch 2, builder publishes
+    let mut t = lc(&store).wake(id).await.unwrap();
+    t.upgrade().await.unwrap();
+    for i in 0..80 {
+        apply(&mut t, &mut m, vec![(ckey(1, i), Some(format!("b-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let good = t.fx_view().unwrap().x_d;
+    // the late version takes the slot of this writer's next publish
+    let cur = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    let mut stale = v1.clone();
+    stale.version = cur.version + 1;
+    stale.kind = "publish".into();
+    assert!(stale.writer_epoch < cur.writer_epoch);
+    assert!(manifest::create(&store, id, &stale).await.unwrap());
+    manifest::CONTROL_TRUST_NEWEST.store(control, Relaxed);
+    for i in 0..80 {
+        apply(&mut t, &mut m, vec![(ckey(2, i), Some(format!("c-{i}").into_bytes()))]).await;
+    }
+    let r = t.fx_publish(&small_opts(build::Reseal::None), None).await;
+    let installed = t.fx_view().map(|v| v.x_d).unwrap_or(0);
+    let newest_epoch = manifest::load_newest(&store, id).await.unwrap().unwrap().writer_epoch;
+    manifest::CONTROL_TRUST_NEWEST.store(false, Relaxed);
+    eprintln!("lost race to an older version (control {control}): publish {:?}; installed x_d {installed} (newer writer's {good}, late {}); newest version's epoch {newest_epoch:?}", r.as_ref().map(|x| x.is_some()), stale.x_d);
+    let _ = t.close().await;
+    (installed, good, newest_epoch, cur.writer_epoch)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_lost_race_ignores_an_older_writers_version() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (inst_ctl, good_ctl, _, _) = lost_race_to_an_older_version(true).await;
+    let (inst, good, newest_epoch, ours) = lost_race_to_an_older_version(false).await;
+    teardown();
+    assert!(inst_ctl < good_ctl, "control: the late version must be installed ({inst_ctl} vs {good_ctl}), or the test does not reach the case");
+    assert!(inst >= good, "the late version was installed ({inst} < {good})");
+    assert_eq!(newest_epoch, ours, "the newest version is not this writer's (no fence above the late one)");
+}
