@@ -40,6 +40,11 @@ mod tests {
         }
     }
 
+    /// fix-sim-holes' hole W counter, when that fix is in the build (0 otherwise).
+    fn reseals_refused() -> u64 {
+        0
+    }
+
     fn runtime() -> tokio::runtime::Runtime {
         tokio::runtime::Builder::new_multi_thread().worker_threads(env_u64("SIM_THREADS", 4) as usize).enable_all().build().unwrap()
     }
@@ -116,7 +121,15 @@ mod tests {
             }
             out_v
         });
-        eprintln!("SIM SUMMARY: seeds {total}, seeds with a violation {}, {:.0} s", failed.len(), t0.elapsed().as_secs_f64());
+        use std::sync::atomic::Ordering::Relaxed;
+        eprintln!(
+            "SIM SUMMARY: seeds {total}, seeds with a violation {}, {:.0} s; process-wide: WAL replay raises {}, older versions ignored {}, builder reseals refused {}",
+            failed.len(),
+            t0.elapsed().as_secs_f64(),
+            crate::lifecycle::REPLAY_RAISES.load(Relaxed),
+            crate::fx::manifest::OLDER_VERSIONS_IGNORED.load(Relaxed),
+            reseals_refused()
+        );
         assert!(failed.is_empty(), "seeds with a violation: {:?}", failed.iter().map(|(s, _)| *s).collect::<Vec<_>>());
     }
 
