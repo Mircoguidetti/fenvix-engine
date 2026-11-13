@@ -447,7 +447,24 @@ async fn docs_by_scan(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Doc
             }
         }
     }
-    Ok(ids.iter().filter_map(|i| found.get(i).cloned()).collect())
+    // P-command-cpu: each found document is moved out, not deep-copied (a whole-history list of large checkpoints
+    // copied every one of them here); an id given twice gets a copy for all but its last place
+    let mut left: HashMap<&[u8], usize> = HashMap::with_capacity(ids.len());
+    for i in ids {
+        *left.entry(i.as_slice()).or_insert(0) += 1;
+    }
+    Ok(ids
+        .iter()
+        .filter_map(|i| {
+            let n = left.get_mut(i.as_slice()).unwrap();
+            *n -= 1;
+            if *n == 0 {
+                found.remove(i)
+            } else {
+                found.get(i).cloned()
+            }
+        })
+        .collect())
 }
 
 const FETCH_CHUNK: usize = 20_000;
