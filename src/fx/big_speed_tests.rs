@@ -313,3 +313,76 @@ async fn box_comes_back_from_the_disk_floor() {
     super::floor::install(dir.clone(), 0).unwrap();
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+// ---- Review of big-speed (2026-11-13): tests written by the reviewer ----
+
+/// Review R2: a run the new version retires is wiped from the disk floor (`forget_runs`), but a hold on the older
+/// version that reads it afterwards ("those runs are read again only by holds on older versions, which fetch what they
+/// need", lifecycle.rs `fx_install`) writes its blocks back into the floor, and no later step wipes them.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn rvbs_retired_run_comes_back_into_the_floor_after_its_wipe() {
+    let _s = SERIAL.lock().await;
+    enable();
+    let dir = std::env::temp_dir().join(format!("rv-floor-{}", std::process::id()));
+    super::floor::install(dir.clone(), 256 << 20).unwrap();
+    let ws = WaveStore::new();
+    let store: Arc<dyn ObjectStore> = ws.clone();
+    let (mut t, mut m) = build(&store, "rv-floor").await;
+    let c = 4usize;
+    let (lo, hi) = range(c, "");
+    view::clear_cache();
+    t.warm_range(&lo, &hi, 8 << 20).await.unwrap();
+    let old = t.fx_view().unwrap().clone();
+    apply(&mut t, &mut m, vec![(doc(c, 40), Some(vec![5u8; 300]))]).await;
+    publish(&mut t, &opts(Reseal::All)).await;
+    let new = t.fx_view().unwrap().clone();
+    let gone = super::counter::retired(&old, &new);
+    let held = |ids: &std::collections::HashSet<[u8; crate::runfmt::RUN_ID_LEN]>| -> usize {
+        ids.iter().map(|id| (0..4096u32).filter(|b| super::floor::get(id, *b).is_some()).count()).sum()
+    };
+    let after_wipe = held(&gone);
+    view::clear_cache();
+    old.warm_range(&lo, &hi).await.unwrap();
+    let after_hold = held(&gone);
+    println!("RVBS retired runs {}, floor blocks of retired runs: after the wipe {after_wipe}, after a hold's read {after_hold}", gone.len());
+    super::floor::install(dir.clone(), 0).unwrap();
+    let _ = std::fs::remove_dir_all(&dir);
+    assert!(!gone.is_empty(), "the reseal retired no run");
+    assert_eq!(after_wipe, 0, "forget_runs left blocks of retired runs in the floor");
+    assert_eq!(after_hold, 0, "blocks of a retired run were written back into the disk floor after its wipe");
+}
+
+/// Review R3: single flight with a cancelled leader: a read waiting for a cancelled fetch must still finish, exactly.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn rvbs_single_flight_survives_a_cancelled_leader() {
+    let _s = SERIAL.lock().await;
+    enable();
+    let ws = WaveStore::new();
+    let store: Arc<dyn ObjectStore> = ws.clone();
+    let (t, m) = build(&store, "rv-sf").await;
+    let v = t.fx_view().unwrap().clone();
+    let mut total_waits = 0;
+    for c in [3usize, 21, 60] {
+        view::clear_cache();
+        let (lo, hi) = range(c, "");
+        ws.start();
+        let v1 = Arc::clone(&v);
+        let (lo1, hi1) = (lo.clone(), hi.clone());
+        let leader = tokio::spawn(async move { v1.warm_range(&lo1, &hi1).await });
+        tokio::time::sleep(Duration::from_millis(8)).await;
+        let w0 = counter::SINGLE_FLIGHT_WAITS.load(Relaxed);
+        let v2 = Arc::clone(&v);
+        let (lo2, hi2) = (lo.clone(), hi.clone());
+        let follower = tokio::spawn(async move { v2.warm_range(&lo2, &hi2).await });
+        tokio::time::sleep(Duration::from_millis(4)).await;
+        leader.abort();
+        let r = tokio::time::timeout(Duration::from_secs(10), follower).await;
+        ws.stop();
+        assert!(r.is_ok(), "customer {c}: the follower hung after its leader was cancelled");
+        r.unwrap().unwrap().unwrap();
+        total_waits += counter::SINGLE_FLIGHT_WAITS.load(Relaxed) - w0;
+        visit(&t, &m, c).await;
+    }
+    println!("RVBS single-flight waits on a cancelled leader: {total_waits}");
+    assert!(total_waits > 0, "the follower never waited: the test did not exercise single flight");
+}
