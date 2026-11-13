@@ -427,6 +427,19 @@ pub(crate) fn filter_policies() -> Option<Vec<Arc<dyn slatedb::FilterPolicy>>> {
     Some(vec![Arc::new(slatedb::BloomFilterPolicy::new(bits)) as Arc<dyn slatedb::FilterPolicy>, crate::fx::seqfilter::policy(), crate::fx::seqfilter::cust_policy()])
 }
 
+/// Review of big-speed, error 2 (`memgov.rs`): the newest L0 sequence number of every open writer.
+pub fn writer_l0_seqs() -> HashMap<String, u64> {
+    WRITER_DBS.lock().unwrap().iter().map(|(k, v)| (k.clone(), v.manifest().last_l0_seq())).collect()
+}
+
+/// Review of big-speed, error 2 (`memgov.rs`): flush writer `id`'s memtable to an L0 SST (the call of the age rule);
+/// returns its newest L0 sequence number after the flush, or None when no writer of `id` is open.
+pub async fn flush_writer_memtable_l0(id: &str) -> Result<Option<u64>> {
+    let Some(db) = WRITER_DBS.lock().unwrap().get(id).cloned() else { return Ok(None) };
+    db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await?;
+    Ok(Some(db.manifest().last_l0_seq()))
+}
+
 /// The open writers (T1: the maps loop looks at their manifests).
 pub fn open_writers() -> Vec<(String, Db)> {
     WRITER_DBS.lock().unwrap().iter().map(|(k, v)| (k.clone(), v.clone())).collect()

@@ -168,12 +168,13 @@ pub async fn govern_once() {
     if b == 0 {
         return;
     }
-    let dbs: HashMap<String, slatedb::Db> = crate::lifecycle::open_writers().into_iter().collect();
+    // (the writers' handles stay in lifecycle.rs: only their L0 sequence numbers and a memtable flush are asked for)
+    let dbs: HashMap<String, u64> = crate::lifecycle::writer_l0_seqs();
     let mut st = STATE.lock().unwrap();
     let ids: Vec<String> = st.dbs.keys().cloned().collect();
     for id in ids {
         match dbs.get(&id) {
-            Some(db) => reclaim(&mut st, &id, db.manifest().last_l0_seq()),
+            Some(&l0) => reclaim(&mut st, &id, l0),
             // the writer closed without telling us (a lost lease): its memtable is gone with its `Db`
             None => {
                 if let Some(a) = st.dbs.remove(&id) {
@@ -198,24 +199,33 @@ pub async fn govern_once() {
         if projected <= b / 4 * 3 {
             break;
         }
-        let Some(db) = dbs.get(&id).cloned() else { continue };
+        if !dbs.contains_key(&id) {
+            continue;
+        }
         projected = projected.saturating_sub(bytes);
         st.flushing.insert(id.clone());
-        picked.push((id, db));
+        picked.push(id);
     }
     drop(st);
-    for (id, db) in picked {
+    for id in picked {
         FLUSHES.fetch_add(1, Relaxed);
         tokio::spawn(async move {
-            let r = db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await;
+            let r = crate::lifecycle::flush_writer_memtable_l0(&id).await;
             if let Err(e) = &r {
                 FLUSH_ERRORS.fetch_add(1, Relaxed);
-                eprintln!("memtable flush (process budget) of tenant {id}: {e}");
+                eprintln!("memtable flush (process budget) of tenant {id}: {e:#}");
             }
             let mut st = STATE.lock().unwrap();
             st.flushing.remove(&id);
-            if r.is_ok() {
-                reclaim(&mut st, &id, db.manifest().last_l0_seq());
+            match r {
+                Ok(Some(l0)) => reclaim(&mut st, &id, l0),
+                // the writer closed meanwhile: its count goes with it
+                Ok(None) => {
+                    if let Some(a) = st.dbs.remove(&id) {
+                        TOTAL.fetch_sub(a.bytes, Relaxed);
+                    }
+                }
+                Err(_) => {}
             }
             drop(st);
             DRAINED.notify_waiters();
