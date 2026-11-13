@@ -292,7 +292,7 @@ mod tests {
 
     /// The shape of the generator's check 3 (REPORT-2.md section 1b): order totals whose exact sum (and Kahan's) is
     /// 2760.2599999999998 while mongod's double-double `_sum` is 2760.26. Found with a simulation of both algorithms;
-    /// mongod 7.0.34 gives 2760.26 for it (ctl-tests/test_85_sum_like_mongod.py compares many such sums with mongod).
+    /// mongod 7.0.34 gives 2760.26 for it (ctl-tests/test_88_sum_like_mongod.py compares many such sums with mongod).
     #[test]
     fn high_part_not_the_rounded_total() {
         let vals = [94.82, 942.87, 702.04, 1020.53];

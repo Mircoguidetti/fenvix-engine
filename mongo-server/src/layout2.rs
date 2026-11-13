@@ -282,7 +282,7 @@ async fn plain<R: RawScan>(raw: &R, lo: &[u8], hi: Option<&[u8]>, reverse: bool,
 /// one row is read to find it, and the read seeks to its area. Before, every read after a seek asked for every row still
 /// wanted, up to the end of the range: a range over many customers read each customer's other areas and the following
 /// customers again and again, about 17 rows per row returned on a client-written collection with two indexes
-/// (MEASURED, `ctl-tests/test_84_read_amplification.py`), and a fetch of 459 documents over 400 customers read 12,562.
+/// (MEASURED, `ctl-tests/test_87_read_amplification.py`), and a fetch of 459 documents over 400 customers read 12,562.
 /// Now: the rows of the area, plus about one row per customer crossed. `FENVIX_AREA_UNBOUNDED=1`: the reads as before
 /// (measurements and the negative control of the unit test).
 async fn area<R: RawScan>(raw: &R, s: &Seg, lo: &[u8], hi: &[u8], reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
