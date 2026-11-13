@@ -340,9 +340,9 @@ def _flat(d, prefix="") -> dict:
 class Probe:
     SERVER_KEYS = ("s3", "cache", "sealedRuns", "backgroundReads", "firstCourse", "waiter", "compactor", "compaction", "customerKeys")
 
-    def __init__(self, containers: dict[str, str], uri: str | None = None):
+    def __init__(self, containers: dict[str, str], uri: str | None = None, kind: str = "fenvix"):
         self.containers = containers
-        self.client = None
+        self.client, self.kind = None, kind
         if uri:
             from pymongo import MongoClient
             self.client = MongoClient(uri, serverSelectionTimeoutMS=10000)
@@ -371,6 +371,13 @@ class Probe:
     def _server(self) -> dict:
         if not self.client:
             return {}
+        if self.kind == "mongo":
+            # WiredTiger: pages and bytes read into its cache (from the file system: the page cache or the disk)
+            try:
+                wc = self.client.admin.command("serverStatus")["wiredTiger"]["cache"]
+            except Exception:  # noqa: BLE001
+                return {}
+            return {"srv.wt.pages_read": wc.get("pages read into cache", 0), "srv.wt.bytes_read": wc.get("bytes read into cache", 0)}
         try:
             f = self.client.admin.command("serverStatus").get("fenvix", {})
         except Exception:  # noqa: BLE001
@@ -397,6 +404,13 @@ class Reader:
         self.t = target_of(line)
         if self.t == "postgres":
             self.pg = pg_raw_conn(uri)
+            # the table, its TOAST table and TOAST index, and both indexes: their blocks fetched and hit in this
+            # transaction (pg_stat_get_xact_*), so blocks read = fetched - hit (read from the file system)
+            self.rels = [r[0] for r in self.pg.execute(
+                "SELECT c.oid FROM pg_class c WHERE c.relname IN ('messages', 'messages_pkey', 'messages_user_ts') "
+                "UNION SELECT reltoastrelid FROM pg_class WHERE relname = 'messages' AND reltoastrelid <> 0 "
+                "UNION SELECT i.indexrelid FROM pg_index i JOIN pg_class t ON t.reltoastrelid = i.indrelid WHERE t.relname = 'messages'").fetchall()]
+            self.rels = [int(bytes(x).decode()) if isinstance(x, (bytes, memoryview)) else int(x) for x in self.rels]
         else:
             self.c, self.coll = mongo_coll(uri, raw=True)
 
@@ -404,11 +418,17 @@ class Reader:
         """Timed: the request until every document is in the client, raw. Returns (seconds, client cpu s, raw rows)."""
         if self.t == "postgres":
             q = f"SELECT {PG_COLS} FROM messages WHERE user_id = %s ORDER BY ts DESC" + (f" LIMIT {limit}" if limit else "")
+            self.pg.execute("BEGIN")
             c0, t0 = time.process_time(), time.perf_counter()
             with self.pg.cursor() as cur:
                 cur.execute(q, (u,), prepare=False)
                 rows = cur.fetchall()
             t1, c1 = time.perf_counter(), time.process_time()
+            f, h = self.pg.execute("SELECT sum(pg_stat_get_xact_blocks_fetched(o))::text, sum(pg_stat_get_xact_blocks_hit(o))::text "
+                                   "FROM unnest(%s::oid[]) o", (self.rels,)).fetchone()
+            self.pg.execute("COMMIT")
+            f, h = int(bytes(f).decode()), int(bytes(h).decode())
+            self.extra = {"srv.pg.blocks_read": f - h, "srv.pg.blocks_hit": h}
             return t1 - t0, c1 - c0, rows
         c0, t0 = time.process_time(), time.perf_counter()
         cur = self.coll.find({"userId": u}, sort=[("ts", -1)], limit=limit or 0)
@@ -457,7 +477,7 @@ def measure(line: str, uri: str, pl: Plan, size: int, round_name: str, out: str,
     t_start = time.time()
     lines.restart(line)
     ids = container_ids(line)
-    probe = Probe(ids, uri if target_of(line) == "fenvix" else None)
+    probe = Probe(ids, uri if target_of(line) in ("fenvix", "mongo") else None, target_of(line))
     srv = server_container(line)
     rd = Reader(line, uri)
     P = pl.p
@@ -482,7 +502,7 @@ def measure(line: str, uri: str, pl: Plan, size: int, round_name: str, out: str,
         a = probe.after()
         n, h, nb = rd.digest(rows)
         ok = (n, h) == want
-        res = Probe.delta(b, a)
+        res = Probe.delta(b, a) | getattr(rd, "extra", {})
         row = {"op": op, "cls": cls, "u": u, "ms": round(secs * 1000, 3), "client_cpu_ms": round(ccpu * 1000, 3), "n": n,
                "bytes": nb, "ok": ok, "res": res}
         f.write(json.dumps(row) + "\n")
@@ -491,7 +511,9 @@ def measure(line: str, uri: str, pl: Plan, size: int, round_name: str, out: str,
             open(stop_file, "a").write(f"{time.strftime('%FT%TZ', time.gmtime())} WRONG READ {line} size {size} {round_name} "
                                        f"{op} {cls} customer {u}: got {n} docs hash {h[:16]}, want {want[0]} hash {want[1][:16]}\n")
         k = f"{op}|{cls}"
-        g = agg.setdefault(k, {"ms": [], "cpu": [], "gets": [], "get_bytes": [], "srv_cpu_ms": [], "disk_bytes": [], "bg_gets": []})
+        g = agg.setdefault(k, {"ms": [], "cpu": [], "gets": [], "get_bytes": [], "srv_cpu_ms": [], "disk_bytes": [], "bg_gets": [], "pages": []})
+        if target_of(line) in ("mongo", "postgres"):
+            g["pages"].append(res.get("srv.wt.pages_read", 0) + res.get("srv.pg.blocks_read", 0))
         g["ms"].append(secs * 1000)
         g["cpu"].append(ccpu * 1000)
         g["srv_cpu_ms"].append(res.get(f"cpu_ns.{srv}", 0) / 1e6)
@@ -525,6 +547,9 @@ def measure(line: str, uri: str, pl: Plan, size: int, round_name: str, out: str,
              "client_cpu_share": round(sum(g["cpu"]) / max(1e-9, sum(g["ms"])), 3),
              "server_cpu_ms_p50": round(pct(g["srv_cpu_ms"], .5), 2), "disk_read_bytes_p50": pct(g["disk_bytes"], .5),
              "disk_read_bytes_mean": round(sum(g["disk_bytes"]) / len(g["disk_bytes"]))}
+        if g["pages"]:
+            d |= {"pages_read_p50": pct(g["pages"], .5), "pages_read_p99": pct(g["pages"], .99),
+                  "pages_read_mean": round(sum(g["pages"]) / len(g["pages"]), 1)}
         if g["gets"]:
             d |= {"s3_gets_p50": pct(g["gets"], .5), "s3_gets_p99": pct(g["gets"], .99), "s3_gets_mean": round(sum(g["gets"]) / len(g["gets"]), 2),
                   "s3_get_bytes_p50": pct(g["get_bytes"], .5), "s3_get_bytes_mean": round(sum(g["get_bytes"]) / len(g["get_bytes"])),

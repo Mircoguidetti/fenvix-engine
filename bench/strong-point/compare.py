@@ -43,7 +43,7 @@ def main():
             for name, s in (("ours_" + a.round, f[a.round]), ("ours_A", f["A"]), ("ours_B2off", f["B2off"]), ("mongod", m), ("postgres", p)):
                 if s and op in s["ops"]:
                     d = s["ops"][op]
-                    row[name] = {k: d.get(k) for k in ("n", "p50_ms", "p99_ms", "client_cpu_share", "valid", "s3_gets_p50", "s3_gets_mean",
+                    row[name] = {k: d.get(k) for k in ("n", "p50_ms", "p99_ms", "client_cpu_share", "valid", "pages_read_p50", "pages_read_mean", "s3_gets_p50", "s3_gets_mean",
                                                         "s3_get_bytes_p50", "s3_get_bytes_mean", "disk_read_bytes_p50", "server_cpu_ms_p50",
                                                         "background_gets_total")}
             o = row.get("ours_" + a.round)
@@ -59,6 +59,8 @@ def main():
                 if k in row:
                     v = row[k]
                     txt += f" | {k} {v['p50_ms']}/{v['p99_ms']}" + (f" GETs {v['s3_gets_p50']} {v['s3_get_bytes_p50']}B" if v.get("s3_gets_p50") is not None and k.startswith("ours") else "")
+                    if v.get("pages_read_p50") is not None:
+                        txt += f" pages {v['pages_read_p50']}"
                     if not v.get("valid", True):
                         txt += " NOT-VALID(client)"
             if "ratio_p50_ms" in row:
