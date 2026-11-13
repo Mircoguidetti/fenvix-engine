@@ -1,0 +1,6 @@
+sealed2-derive 1: 2 failed, 7 passed in 134.85s (0:02:14)
+sealed2-derive 2: 2 failed, 7 passed in 134.80s (0:02:14)
+sealed2-derive 3: 2 failed, 7 passed in 134.89s (0:02:14)
+off 1: 9 passed in 136.76s (0:02:16)
+off 2: 9 passed in 136.82s (0:02:16)
+off 3: 9 passed in 136.90s (0:02:16)

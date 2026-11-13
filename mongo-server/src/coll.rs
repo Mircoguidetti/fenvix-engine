@@ -2120,10 +2120,19 @@ impl Writes {
                 self.check_conflict(g, lk)?;
             }
             if old.is_none() || moved_customer {
-                // the customer may already hold this `_id`
-                let taken = match self.ov.get(lk) {
+                // the customer may already hold this `_id`.
+                // fix-box-first-trip: without a time component the document key is exactly (customer, `_id`), and the
+                // locator is written in the same batch as the document, so the document key answers the same question
+                // (as `Writes::exists` does, P-big-speed fix 4). The document key lies in the customer's box, warmed
+                // before the upsert; the locator, keyed by `_id`, lies outside every box: a first save read it in a
+                // second trip (MEASURED, test_79 in sealed mode: a run the compactor had just published held locator
+                // entries of another customer, so the read could not be answered from the caches).
+                // `--id-check-in-box false` restores the locator read.
+                let in_box = ckey.as_ref().is_some_and(|k| k.order.is_none()) && ID_CHECK_IN_BOX.load(std::sync::atomic::Ordering::Relaxed);
+                let check = if in_box { [doc_prefix(coll), id_enc.clone()].concat() } else { lk.clone() };
+                let taken = match self.ov.get(&check) {
                     Some(v) => v.is_some(),
-                    None => g.get_live(lk).await?.is_some(),
+                    None => g.get_live(&check).await?.is_some(),
                 };
                 if taken {
                     return Err(MongoError::duplicate_key_c(ns, "_id_", &bson::doc! { "_id": 1 }, &bson::doc! { "_id": id.clone() }, g.collation_of(coll).as_deref()));

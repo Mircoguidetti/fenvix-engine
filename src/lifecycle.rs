@@ -1876,6 +1876,21 @@ fn renewal_due(st: &StepState) -> bool {
     st.loaded.elapsed() > Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed) / 2)
 }
 
+/// A reader's state older than T_pin: no step may read with it (rule 6, `fx_fresh`, `e1_fresh`).
+fn state_expired(st: &StepState) -> bool {
+    st.loaded.elapsed() > Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed))
+}
+
+/// A request renews a reader's state alongside its first reads from a quarter of T_pin on (`Tenant::renew_alongside`).
+fn renewal_due_early(st: &StepState) -> bool {
+    st.loaded.elapsed() > Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed) / 4)
+}
+
+/// A reader's state older than 3/4 of T_pin: a step waits for a renewal in progress instead of reading with it.
+fn state_near_expiry(st: &StepState) -> bool {
+    st.loaded.elapsed() > Duration::from_millis(crate::fx::T_PIN_MS.load(std::sync::atomic::Ordering::Relaxed) * 3 / 4)
+}
+
 /// The state one read step reads with (c2-fix-long-reads): the version of our manifest, E_env, whether release E1 was
 /// announced, and when the refresh that learnt them started (rule 6 with note 5 of the step 7a review). It is taken once,
 /// at the start of the step, and the whole step reads with it.
@@ -2047,17 +2062,33 @@ impl Tenant {
     /// its rows before it returns (resume keys are logical keys), and a version changes between two steps of a command
     /// on a writer too (`fx_sync` at the exclusive step of another command does not wait for it, see `test_50`).
     async fn step_state(&self) -> Result<StepState> {
+        self.step_state_when(renewal_due).await
+    }
+
+    /// [`Tenant::step_state`] with the age at which the state is renewed given by `due` (half T_pin for a step,
+    /// a quarter for `renew_alongside`).
+    async fn step_state_when(&self, due: fn(&StepState) -> bool) -> Result<StepState> {
         let st = self.current_state();
-        if !self.follows_store(&st) || !renewal_due(&st) {
+        if !self.follows_store(&st) || !due(&st) {
             return Ok(st);
         }
         #[cfg(test)]
         if crate::fx::CONTROL_NO_RENEW.load(std::sync::atomic::Ordering::Relaxed) {
             return Ok(st);
         }
-        let _one = self.renewing.lock().await;
+        // fix-box-first-trip: a step does not queue behind a renewal another step (or the customer's box,
+        // `renew_alongside`) is running while its state is younger than 3/4 of T_pin: that state is valid (rule 6 refuses
+        // only past T_pin) and the renewal has a quarter of T_pin left to land. Older, it waits for the renewal as before.
+        let _one = match self.renewing.try_lock() {
+            Ok(g) => g,
+            Err(_) if !state_near_expiry(&st) => {
+                crate::fx::STEPS_PAST_RENEWAL.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                return Ok(st);
+            }
+            Err(_) => self.renewing.lock().await,
+        };
         let st = self.current_state();
-        if !renewal_due(&st) {
+        if !due(&st) {
             return Ok(st); // another step renewed it meanwhile
         }
         match self.renew(&st).await {
@@ -2073,6 +2104,28 @@ impl Tenant {
             }
             Err(e) => Err(anyhow::Error::new(crate::fx::Retry(format!("database {}: the reader's state is older than T_pin and its renewal failed: {e:#}; retry", self.id)))),
         }
+    }
+
+    /// fix-box-first-trip: the renewal of a reader's state, run beside a customer's box warm-up (`mongo-server`
+    /// `custbox::warm`) so that its LIST goes out in the same wave as the box's GETs: a renewal rides on a wave the
+    /// request sends anyway, instead of being a wave of its own in front of the query.
+    ///
+    /// - From a quarter of T_pin on, a quarter earlier than a step's own renewal (half T_pin, as before): a database that
+    ///   warms boxes regularly is then renewed by its boxes, and its steps rarely have to renew on their own (MEASURED:
+    ///   with half T_pin here too, a step of the same request crossed half T_pin after the box and renewed in a wave of
+    ///   its own, 1 or 2 first requests of 12 at 2 trips).
+    /// - Only while the state is younger than 3/4 of T_pin: older, the steps renew it themselves as before, and an
+    ///   expired one is refreshed under the exclusive lock before the request (`fx_refresh_due`).
+    /// - The box warm-up and the steps that run meanwhile read with the current, valid state (`step_state` does not queue
+    ///   behind this renewal before 3/4 of T_pin; a warm-up answers nothing). The caller awaits this future with the
+    ///   warm-up, so the renewal never outlives the request. An error is left to the next step, which renews again.
+    pub async fn renew_alongside(&self) {
+        let cur = self.current_state();
+        if !self.follows_store(&cur) || !renewal_due_early(&cur) || state_near_expiry(&cur) {
+            return;
+        }
+        crate::fx::RENEWALS_WITH_BOX.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let _ = self.step_state_when(renewal_due_early).await;
     }
 
     /// Read the state a reader's refresh reads, in the same order (`fx_refresh`: `load_env`, then `load_fx_from`), into a
@@ -2093,9 +2146,15 @@ impl Tenant {
             return Ok(StepState { fx: None, env, announced: cur.announced, loaded: crate::fx::loaded_at(t0) });
         }
         let announced = if env.is_none() { manifest::announced(store, &self.id).await? } else { cur.announced };
-        let fx = match manifest::load_newest_trusted(store, &self.id).await? {
-            None => None,
-            Some((v, _)) => {
+        // fix-box-first-trip: one LIST when the newest slot is the version already served (no GET)
+        let fx = match manifest::load_newest_trusted_unless(store, &self.id, cur.fx.as_ref().map(|v| v.version)).await? {
+            manifest::Newest::None => None,
+            manifest::Newest::Same => {
+                let old = cur.fx.as_ref().expect("Same is answered only for a known version");
+                anyhow::ensure!(old.meta.e_env == env, "database {}: our manifest {} has E_env {:?}, the database's marker {:?}", self.id, old.version, old.meta.e_env, env);
+                Some(Arc::clone(old))
+            }
+            manifest::Newest::New(v, _) => {
                 anyhow::ensure!(v.e_env == env, "database {}: our manifest {} has E_env {:?}, the database's marker {:?}", self.id, v.version, v.e_env, env);
                 match &cur.fx {
                     // versions never change: the same number is the same version
@@ -2134,8 +2193,14 @@ impl Tenant {
         if let (Some(sh), Some(v)) = (&self.fx_shared, &self.fx) {
             return sh.pending_version().is_some_and(|p| p > v.version);
         }
+        // fix-box-first-trip: a reader whose state is past half its T_pin but still valid is NOT refreshed here, under the
+        // exclusive lock before the command (three object-store trips in a row ahead of the customer's own: LIST, the
+        // newest version, the version below it). Its read steps renew it under the shared lock (`step_state`, at half
+        // T_pin as before), and a find or an update of one customer renews it in the same wave as the customer's box
+        // (`renew_alongside`). This exclusive refresh stays for a state no step may read with any more (older than T_pin:
+        // a database idle that long).
         let st = self.current_state();
-        self.follows_store(&st) && renewal_due(&st)
+        self.follows_store(&st) && state_expired(&st)
     }
     /// Whether a fence is pending (rule 25; diagnostics and tests).
     pub fn fx_fence_pending(&self) -> bool {

@@ -1,0 +1,5 @@
+  7.276 u0=1794586162229.9 u1=1794586162469.9 other ckpt                   {"s3.get": 9, "s3.getRange": 1, "s3.head": 9, "s3.list": 3, "s3.put": 4, "sealedRuns.fences": 1, "sealedRuns.renewals": 1, "sealedRuns.renewalsUnchanged": 1, "waiter.trips": 13}
+  7.444 u0=1794586162472.6 u1=1794586162638.1 other write                  {"s3.get": 4, "s3.getRange": 6, "s3.head": 2, "s3.list": 4, "s3.put": 2, "waiter.trips": 8}
+  7.485 u0=1794586162645.4 u1=1794586162679.4 save FIRST                   {"customerBox.warmBlocks": 4, "customerBox.warmMicros": 27629, "customerBox.warmRuns": 2, "customerBox.warms": 1, "customerBox.waves": 1, "s3.get": 3, "s3.getRange": 2, "s3.put": 1}
+  7.493 u0=1794586162681.6 u1=1794586162686.7 save NEXT 1                  {"s3.put": 1}
+  7.499 u0=1794586162689.4 u1=1794586162692.6 save NEXT 2                  {"s3.get": 3, "s3.list": 1}

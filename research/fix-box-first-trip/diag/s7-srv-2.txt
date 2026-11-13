@@ -1,0 +1,215 @@
+SIMULATED S3 LATENCY ON (SimModel { median_ms: 25.0, sigma: 0.0, mbps: 10000.0 }): measurement only, never in production
+memory budget: limit 13673 MiB (cgroup1-own), caches 6324 MiB (block 2846, meta 948, sealed 2529), memtable 8 MiB, first course 854 MiB, change log 32 MiB, L0 reads at once 4
+box disk floor: 4096 MiB in /tmp/fenvix-box-floor-34645
+memory budget (review round): box 316 MiB per customer, 632 MiB in flight; memtables of every database 1709 MiB (writes wait past 2563 MiB); merge read-ahead 427 MiB; absorption 16 L0 SSTs
+uploads: 0 unfinished multipart uploads under tenants/, 0 older than 3600s aborted
+admin interface listening on 127.0.0.1:38338 (bearer token required)
+mongo-server listening on 127.0.0.1:34645 (idle close after 600 s, holder bigspeed-34645, lease ttl 6 s)
+ADMIN GET /v1/health -> 200 0 ms peer=127.0.0.1:58520
+WAITS t=175.1 u=1794586161565.1 ms=0.2 cmd=ismaster coll= meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=0.2
+WAITS_MSG u=1794586161565.1 ms=0.3 cmd=ismaster handle=0.2 write_reply=0.0 usage=0.0
+WAITS t=176.2 u=1794586161566.2 ms=0.1 cmd=ismaster coll= meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=0.1
+WAITS_MSG u=1794586161566.2 ms=0.1 cmd=ismaster handle=0.1 write_reply=0.0 usage=0.0
+WAITS t=176.4 u=1794586161566.4 ms=0.1 cmd=ismaster coll= meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=0.1
+WAITS_MSG u=1794586161566.4 ms=0.1 cmd=ismaster handle=0.1 write_reply=0.0 usage=0.0
+SIMGET start t=0.0 depth=1 processes/bigspeed-34645/_lease None
+WAITS_GET u=1794586161567.6 ms=0.89 bytes=0 range=None path=processes/bigspeed-34645/_lease in_cmd=true
+WAITS_GET u=1794586161567.6 ms=0.91 bytes=0 range=None path=processes/bigspeed-34645/_lease in_cmd=true
+LEASE process_lease tenant=- holder=bigspeed-34645 unix_ms=1794586161571 inc=20916015748d919b gen=1
+SIMGET start t=3.5 depth=2 tenants/app/_lease None
+WAITS_GET u=1794586161571.1 ms=27.35 bytes=50 range=None path=tenants/app/_lease in_cmd=true
+WAITS_GET u=1794586161571.1 ms=27.36 bytes=50 range=None path=tenants/app/_lease in_cmd=true
+LEASE acquired tenant=app holder=bigspeed-34645 unix_ms=1794586161601 takeover_from=-
+SIMGET start t=33.7 depth=3 control/durability/app None
+WAITS_GET u=1794586161601.4 ms=0.62 bytes=0 range=None path=control/durability/app in_cmd=true
+SIMGET start t=34.7 depth=4 tenants/app/_clean None
+SIMGET start t=61.7 depth=5 tenants/app/manifest/00000000000000000005.manifest None
+WAITS_GET u=1794586161629.3 ms=27.24 bytes=642 range=None path=tenants/app/manifest/00000000000000000005.manifest in_cmd=true
+WAITS_GET u=1794586161629.3 ms=27.26 bytes=642 range=None path=tenants/app/manifest/00000000000000000005.manifest in_cmd=true
+SIMGET start t=89.1 depth=6 tenants/app/gc/manifest.boundary None
+WAITS_GET u=1794586161656.7 ms=4.91 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=true
+WAITS_GET u=1794586161656.7 ms=4.93 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=true
+SIMGET start t=94.1 depth=7 tenants/app/manifest/00000000000000000006.manifest None
+WAITS_GET u=1794586161661.7 ms=0.72 bytes=0 range=None path=tenants/app/manifest/00000000000000000006.manifest in_cmd=true
+WAITS_GET u=1794586161661.7 ms=0.74 bytes=0 range=None path=tenants/app/manifest/00000000000000000006.manifest in_cmd=true
+SIMGET start t=94.9 depth=8 tenants/app/gc/manifest.boundary None
+WAITS_GET u=1794586161662.5 ms=0.65 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=true
+WAITS_GET u=1794586161662.5 ms=0.66 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=true
+SIMGET start t=95.8 depth=9 tenants/app/compacted/01M7ATQ9S7XAM01N410BZEN5JZ.sst Some(Bounded(187809..193705))
+SIMGET start t=96.7 depth=9 tenants/app/manifest/00000000000000000006.manifest None
+WAITS_GET u=1794586161664.3 ms=0.61 bytes=0 range=None path=tenants/app/manifest/00000000000000000006.manifest in_cmd=false
+WAITS_GET u=1794586161664.3 ms=0.62 bytes=0 range=None path=tenants/app/manifest/00000000000000000006.manifest in_cmd=false
+SIMGET start t=97.4 depth=10 tenants/app/gc/manifest.boundary None
+WAITS_GET u=1794586161665.0 ms=0.47 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=false
+WAITS_GET u=1794586161665.0 ms=0.50 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=false
+WAITS_GET u=1794586161663.4 ms=26.69 bytes=5896 range=Some(Bounded(187809..193705)) path=tenants/app/compacted/01M7ATQ9S7XAM01N410BZEN5JZ.sst in_cmd=false
+WAITS_GET u=1794586161663.4 ms=26.71 bytes=5896 range=Some(Bounded(187809..193705)) path=tenants/app/compacted/01M7ATQ9S7XAM01N410BZEN5JZ.sst in_cmd=false
+SIMGET start t=122.8 depth=11 tenants/app/compacted/01M7ATQ9S7XAM01N410BZEN5JZ.sst Some(Bounded(193705..201744))
+WAITS_GET u=1794586161690.4 ms=27.33 bytes=8039 range=Some(Bounded(193705..201744)) path=tenants/app/compacted/01M7ATQ9S7XAM01N410BZEN5JZ.sst in_cmd=false
+WAITS_GET u=1794586161690.4 ms=27.35 bytes=8039 range=Some(Bounded(193705..201744)) path=tenants/app/compacted/01M7ATQ9S7XAM01N410BZEN5JZ.sst in_cmd=false
+SIMGET start t=150.3 depth=12 tenants/app/compacted/01M7ATQ9S7XAM01N410BZEN5JZ.sst Some(Bounded(43585..44801))
+WAITS_GET u=1794586161717.9 ms=26.84 bytes=1216 range=Some(Bounded(43585..44801)) path=tenants/app/compacted/01M7ATQ9S7XAM01N410BZEN5JZ.sst in_cmd=false
+WAITS_GET u=1794586161717.9 ms=26.85 bytes=1216 range=Some(Bounded(43585..44801)) path=tenants/app/compacted/01M7ATQ9S7XAM01N410BZEN5JZ.sst in_cmd=false
+SIMGET start t=204.7 depth=14 tenants/app/fx/manifest/00000000000000000002 None
+WAITS_GET u=1794586161772.3 ms=27.41 bytes=1198 range=None path=tenants/app/fx/manifest/00000000000000000002 in_cmd=true
+WAITS_GET u=1794586161772.3 ms=27.43 bytes=1198 range=None path=tenants/app/fx/manifest/00000000000000000002 in_cmd=true
+SIMGET start t=232.2 depth=15 tenants/app/fx/manifest/00000000000000000001 None
+WAITS_GET u=1794586161799.8 ms=26.98 bytes=501 range=None path=tenants/app/fx/manifest/00000000000000000001 in_cmd=true
+WAITS_GET u=1794586161799.8 ms=27.00 bytes=501 range=None path=tenants/app/fx/manifest/00000000000000000001 in_cmd=true
+SIMGET start t=259.5 depth=16 tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e Some(Bounded(0..126753))
+SIMGET start t=259.6 depth=16 tenants/app/fx/run/g0/00000000000000000003-1-7883867d Some(Bounded(0..546))
+WAITS_GET u=1794586161827.1 ms=27.06 bytes=126753 range=Some(Bounded(0..126753)) path=tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e in_cmd=true
+WAITS_GET u=1794586161827.1 ms=27.08 bytes=126753 range=Some(Bounded(0..126753)) path=tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e in_cmd=true
+SIMGET start t=286.6 depth=17 tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e Some(Bounded(17791..21176))
+WAITS_GET u=1794586161827.2 ms=27.16 bytes=546 range=Some(Bounded(0..546)) path=tenants/app/fx/run/g0/00000000000000000003-1-7883867d in_cmd=true
+WAITS_GET u=1794586161827.2 ms=27.17 bytes=546 range=Some(Bounded(0..546)) path=tenants/app/fx/run/g0/00000000000000000003-1-7883867d in_cmd=true
+SIMGET start t=286.7 depth=17 tenants/app/fx/run/g0/00000000000000000003-1-7883867d Some(Bounded(0..342))
+WAITS_GET u=1794586161854.2 ms=26.98 bytes=3385 range=Some(Bounded(17791..21176)) path=tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e in_cmd=true
+WAITS_GET u=1794586161854.2 ms=27.00 bytes=3385 range=Some(Bounded(17791..21176)) path=tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e in_cmd=true
+WAITS_GET u=1794586161854.4 ms=28.97 bytes=342 range=Some(Bounded(0..342)) path=tenants/app/fx/run/g0/00000000000000000003-1-7883867d in_cmd=true
+WAITS_GET u=1794586161854.3 ms=28.99 bytes=342 range=Some(Bounded(0..342)) path=tenants/app/fx/run/g0/00000000000000000003-1-7883867d in_cmd=true
+WAITS t=177.4 u=1794586161567.4 ms=316.4 cmd=find coll=other admit=0.0/1 lock_w=0.0/1 lock_r=0.0/4 refresh=259.3/1 get=453.5/25 put=10.8/4 store_other=53.8/2 read_get=56.6/3 read_scan=0.1/1 meter_gets=13 meter_bytes=262152 meter_ms=277.5 rest=0.4
+WAITS_MSG u=1794586161567.4 ms=316.5 cmd=find handle=316.4 write_reply=0.0 usage=0.0
+SIMGET start t=317.2 depth=18 tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e Some(Bounded(115335..119017))
+WAITS_GET u=1794586161884.8 ms=27.32 bytes=3682 range=Some(Bounded(115335..119017)) path=tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e in_cmd=true
+WAITS_GET u=1794586161884.8 ms=27.35 bytes=3682 range=Some(Bounded(115335..119017)) path=tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e in_cmd=true
+WAITS t=494.6 u=1794586161884.6 ms=28.1 cmd=find coll=checkpoints admit=0.0/1 lock_r=0.0/2 get=54.7/2 read_get=0.2/3 read_scan=0.1/1 meter_gets=2 meter_bytes=7364 meter_ms=54.7 rest=27.9
+WAITS_MSG u=1794586161884.5 ms=28.2 cmd=find handle=28.2 write_reply=0.0 usage=0.0
+WAITS t=523.4 u=1794586161913.4 ms=0.4 cmd=find coll=checkpoint_writes admit=0.0/1 lock_r=0.0/3 read_get=0.1/5 read_scan=0.1/1 meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=0.2
+WAITS_MSG u=1794586161913.4 ms=0.5 cmd=find handle=0.4 write_reply=0.0 usage=0.0
+WAITS t=524.4 u=1794586161914.4 ms=2.4 cmd=serverStatus coll= admit=0.0/1 meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=2.4
+WAITS_MSG u=1794586161914.4 ms=2.6 cmd=serverStatus handle=2.5 write_reply=0.2 usage=0.0
+WAITS t=528.1 u=1794586161918.1 ms=1.3 cmd=serverStatus coll= admit=0.0/1 meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=1.3
+WAITS_MSG u=1794586161918.1 ms=1.4 cmd=serverStatus handle=1.3 write_reply=0.1 usage=0.0
+WAITS t=830.9 u=1794586162220.9 ms=1.5 cmd=serverStatus coll= admit=0.0/1 meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=1.5
+WAITS_MSG u=1794586162220.9 ms=1.7 cmd=serverStatus handle=1.5 write_reply=0.2 usage=0.0
+WAITS t=834.4 u=1794586162224.4 ms=2.1 cmd=serverStatus coll= admit=0.0/1 meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=2.1
+WAITS_MSG u=1794586162224.3 ms=2.3 cmd=serverStatus handle=2.1 write_reply=0.2 usage=0.0
+WAITS t=837.7 u=1794586162227.7 ms=1.4 cmd=serverStatus coll= admit=0.0/1 meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=1.4
+WAITS_MSG u=1794586162227.7 ms=1.6 cmd=serverStatus handle=1.4 write_reply=0.2 usage=0.0
+SIMGET start t=663.1 depth=1 tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e Some(Bounded(31392..33857))
+WAITS_GET u=1794586162230.7 ms=27.81 bytes=2465 range=Some(Bounded(31392..33857)) path=tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e in_cmd=true
+WAITS_GET u=1794586162230.7 ms=27.83 bytes=2465 range=Some(Bounded(31392..33857)) path=tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e in_cmd=true
+FXC not started db=app reason=not_writer unix_ms=1794586162287
+SIMGET start t=748.2 depth=4 tenants/app/manifest/00000000000000000005.manifest None
+WAITS_GET u=1794586162315.7 ms=27.27 bytes=642 range=None path=tenants/app/manifest/00000000000000000005.manifest in_cmd=false
+WAITS_GET u=1794586162315.7 ms=27.29 bytes=642 range=None path=tenants/app/manifest/00000000000000000005.manifest in_cmd=false
+SIMGET start t=775.5 depth=5 tenants/app/gc/manifest.boundary None
+WAITS_GET u=1794586162343.1 ms=0.93 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=false
+WAITS_GET u=1794586162343.1 ms=0.94 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=false
+SIMGET start t=776.5 depth=6 tenants/app/wal/00000000000000001157.sst None
+SIMGET start t=776.5 depth=6 tenants/app/wal/00000000000000001158.sst None
+SIMGET start t=776.6 depth=6 tenants/app/wal/00000000000000001160.sst None
+SIMGET start t=776.7 depth=6 tenants/app/wal/00000000000000001164.sst None
+SIMGET start t=776.8 depth=6 tenants/app/wal/00000000000000001172.sst None
+SIMGET start t=776.8 depth=6 tenants/app/wal/00000000000000001188.sst None
+SIMGET start t=776.9 depth=6 tenants/app/wal/00000000000000001220.sst None
+SIMGET start t=777.0 depth=6 tenants/app/wal/00000000000000001284.sst None
+SIMGET start t=780.7 depth=7 tenants/app/gc/manifest.boundary None
+WAITS_GET u=1794586162348.3 ms=0.55 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=false
+WAITS_GET u=1794586162348.3 ms=0.56 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=false
+SIMGET start t=783.1 depth=8 tenants/app/manifest/00000000000000000007.manifest None
+WAITS_GET u=1794586162350.7 ms=0.63 bytes=0 range=None path=tenants/app/manifest/00000000000000000007.manifest in_cmd=false
+WAITS_GET u=1794586162350.7 ms=0.64 bytes=0 range=None path=tenants/app/manifest/00000000000000000007.manifest in_cmd=false
+SIMGET start t=783.8 depth=9 tenants/app/gc/manifest.boundary None
+WAITS_GET u=1794586162351.4 ms=0.45 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=false
+WAITS_GET u=1794586162351.4 ms=0.46 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=false
+SIMGET start t=784.4 depth=10 tenants/app/wal/00000000000000001157.sst None
+SIMGET start t=785.0 depth=10 tenants/app/manifest/00000000000000000007.manifest None
+WAITS_GET u=1794586162352.6 ms=0.42 bytes=0 range=None path=tenants/app/manifest/00000000000000000007.manifest in_cmd=false
+WAITS_GET u=1794586162352.6 ms=0.43 bytes=0 range=None path=tenants/app/manifest/00000000000000000007.manifest in_cmd=false
+SIMGET start t=785.5 depth=11 tenants/app/gc/manifest.boundary None
+WAITS_GET u=1794586162353.1 ms=0.47 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=false
+WAITS_GET u=1794586162353.1 ms=0.48 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=false
+SIMGET start t=839.1 depth=13 tenants/app/fx/manifest/00000000000000000002 None
+WAITS_GET u=1794586162406.7 ms=26.34 bytes=1198 range=None path=tenants/app/fx/manifest/00000000000000000002 in_cmd=true
+WAITS_GET u=1794586162406.7 ms=26.37 bytes=1198 range=None path=tenants/app/fx/manifest/00000000000000000002 in_cmd=true
+SIMGET start t=865.5 depth=14 tenants/app/fx/manifest/00000000000000000001 None
+WAITS_GET u=1794586162433.2 ms=27.54 bytes=501 range=None path=tenants/app/fx/manifest/00000000000000000001 in_cmd=true
+WAITS_GET u=1794586162433.2 ms=27.56 bytes=501 range=None path=tenants/app/fx/manifest/00000000000000000001 in_cmd=true
+LEASE writer_open tenant=app holder=bigspeed-34645 unix_ms=1794586162463 
+WAITS t=840.2 u=1794586162230.1 ms=236.6 cmd=update coll=checkpoints admit=0.0/1 lock_w=0.0/1 lock_r=0.0/2 stage=0.1/1 wal_flush=2.8/1 io_wait=0.0/1 get=163.4/6 put=6.0/2 read_get=28.5/4 read_scan=28.1/3 meter_gets=2 meter_bytes=4930 meter_ms=55.6 rest=177.2
+WAITS_MSG u=1794586162230.1 ms=236.7 cmd=update handle=236.7 write_reply=0.1 usage=0.0
+WAITS t=1077.4 u=1794586162467.4 ms=1.5 cmd=serverStatus coll= admit=0.0/1 meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=1.5
+WAITS_MSG u=1794586162467.4 ms=1.7 cmd=serverStatus handle=1.5 write_reply=0.2 usage=0.0
+WAITS t=1080.2 u=1794586162470.2 ms=1.2 cmd=serverStatus coll= admit=0.0/1 meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=1.2
+WAITS_MSG u=1794586162470.2 ms=1.4 cmd=serverStatus handle=1.3 write_reply=0.1 usage=0.0
+SIMGET start t=905.8 depth=1 tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e Some(Bounded(28681..31392))
+WAITS_GET u=1794586162473.4 ms=26.37 bytes=2711 range=Some(Bounded(28681..31392)) path=tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e in_cmd=true
+WAITS_GET u=1794586162473.4 ms=26.39 bytes=2711 range=Some(Bounded(28681..31392)) path=tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e in_cmd=true
+SIMGET start t=932.8 depth=2 tenants/app/compacted/01M7ATQ9S7XAM01N410BZEN5JZ.sst Some(Bounded(0..43585))
+SIMGET start t=932.9 depth=2 tenants/app/compacted/01M7ATQ9S7XAM01N410BZEN5JZ.sst Some(Bounded(44801..187809))
+WAITS_GET u=1794586162500.4 ms=27.71 bytes=43585 range=Some(Bounded(0..43585)) path=tenants/app/compacted/01M7ATQ9S7XAM01N410BZEN5JZ.sst in_cmd=false
+WAITS_GET u=1794586162500.4 ms=27.73 bytes=43585 range=Some(Bounded(0..43585)) path=tenants/app/compacted/01M7ATQ9S7XAM01N410BZEN5JZ.sst in_cmd=false
+WAITS_GET u=1794586162500.5 ms=27.76 bytes=143008 range=Some(Bounded(44801..187809)) path=tenants/app/compacted/01M7ATQ9S7XAM01N410BZEN5JZ.sst in_cmd=false
+WAITS_GET u=1794586162500.5 ms=27.76 bytes=143008 range=Some(Bounded(44801..187809)) path=tenants/app/compacted/01M7ATQ9S7XAM01N410BZEN5JZ.sst in_cmd=false
+SIMGET start t=977.7 depth=1 tenants/app/fx/run/delta/00000000000000001160-2-96de3315 Some(Bounded(0..759))
+WAITS_GET u=1794586162545.3 ms=26.43 bytes=759 range=Some(Bounded(0..759)) path=tenants/app/fx/run/delta/00000000000000001160-2-96de3315 in_cmd=false
+WAITS_GET u=1794586162545.3 ms=26.45 bytes=759 range=Some(Bounded(0..759)) path=tenants/app/fx/run/delta/00000000000000001160-2-96de3315 in_cmd=false
+SIMGET start t=1004.3 depth=2 tenants/app/manifest/00000000000000000006.manifest None
+WAITS_GET u=1794586162571.9 ms=27.99 bytes=642 range=None path=tenants/app/manifest/00000000000000000006.manifest in_cmd=true
+WAITS_GET u=1794586162571.9 ms=28.01 bytes=642 range=None path=tenants/app/manifest/00000000000000000006.manifest in_cmd=true
+SIMGET start t=1032.4 depth=3 tenants/app/gc/manifest.boundary None
+WAITS_GET u=1794586162600.0 ms=0.63 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=true
+WAITS_GET u=1794586162600.0 ms=0.64 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=true
+SIMGET start t=1035.1 depth=4 tenants/app/fx/caught-up None
+SIMGET start t=1035.2 depth=4 tenants/app/fx/run/delta/00000000000000001160-2-96de3315 Some(Bounded(0..759))
+WAITS_GET u=1794586162602.8 ms=25.98 bytes=759 range=Some(Bounded(0..759)) path=tenants/app/fx/run/delta/00000000000000001160-2-96de3315 in_cmd=false
+WAITS_GET u=1794586162602.8 ms=26.01 bytes=759 range=Some(Bounded(0..759)) path=tenants/app/fx/run/delta/00000000000000001160-2-96de3315 in_cmd=false
+SIMGET start t=1062.4 depth=5 tenants/app/fx/ungated None
+SIMGET start t=1064.5 depth=6 tenants/app/compacted/01M7ATQ9S7XAM01N410BZEN5JZ.sst None
+SIMGET start t=1064.6 depth=6 tenants/app/fx/drop-lease None
+SIMGET start t=1064.8 depth=6 tenants/app/fx/run/delta/00000000000000001160-2-96de3315 Some(Bounded(0..759))
+WAITS_GET u=1794586162632.2 ms=1.24 bytes=0 range=None path=tenants/app/fx/drop-lease in_cmd=false
+WAITS t=1082.9 u=1794586162472.9 ms=161.8 cmd=update coll=checkpoint_writes admit=0.0/1 lock_w=0.0/1 lock_r=0.0/2 stage=0.1/1 wal_flush=3.2/1 io_wait=0.0/1 get=110.0/6 put=3.9/2 store_other=27.8/2 comp_start=0.5/1 read_get=0.2/4 read_scan=26.7/3 meter_gets=10 meter_bytes=379892 meter_ms=221.0 rest=131.2
+WAITS_MSG u=1794586162472.9 ms=161.8 cmd=update handle=161.8 write_reply=0.0 usage=0.0
+WAITS t=1245.3 u=1794586162635.2 ms=1.6 cmd=serverStatus coll= admit=0.0/1 meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=1.6
+WAITS_MSG u=1794586162635.2 ms=1.8 cmd=serverStatus handle=1.6 write_reply=0.2 usage=0.0
+WAITS t=1248.4 u=1794586162638.4 ms=6.0 cmd=serverStatus coll= admit=0.0/1 meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=6.0
+WAITS_MSG u=1794586162638.4 ms=6.3 cmd=serverStatus handle=6.0 write_reply=0.2 usage=0.0
+SIMGET start t=1078.3 depth=7 tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e Some(Bounded(51476..55827))
+SIMGET start t=1091.2 depth=7 tenants/app/manifest/00000000000000000006.manifest None
+WAITS_GET u=1794586162632.4 ms=27.34 bytes=759 range=Some(Bounded(0..759)) path=tenants/app/fx/run/delta/00000000000000001160-2-96de3315 in_cmd=false
+SIMGET start t=1092.2 depth=8 tenants/app/compactions/00000000000000000003.compactions None
+SIMGET start t=1092.2 depth=8 tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e Some(Bounded(0..126753))
+WAITS_GET u=1794586162632.1 ms=28.38 bytes=205473 range=None path=tenants/app/compacted/01M7ATQ9S7XAM01N410BZEN5JZ.sst in_cmd=false
+SIMGET start t=1093.5 depth=8 tenants/app/fx/manifest/00000000000000000004 None
+WAITS_GET u=1794586162645.9 ms=27.36 bytes=4351 range=Some(Bounded(51476..55827)) path=tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e in_cmd=true
+L0_RECOGNISE db=app read=1 absorbed=1 ms=41 off_lock=1
+WAITS_JOB t=1241.5 ms=41.8 cpu_polls_ms=14.0 max_poll_ms=3.5 job=absorb db=app
+WAITS_GET u=1794586162645.9 ms=27.37 bytes=4351 range=Some(Bounded(51476..55827)) path=tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e in_cmd=true
+WAITS t=1255.7 u=1794586162645.7 ms=30.7 cmd=update coll=checkpoints admit=0.0/1 lock_w=0.0/1 lock_r=0.0/2 stage=0.0/1 wal_flush=2.5/1 io_wait=0.0/1 get=54.7/2 read_get=0.1/2 read_scan=0.1/2 meter_gets=2 meter_bytes=8702 meter_ms=54.7 rest=27.9
+WAITS_MSG u=1794586162645.7 ms=30.7 cmd=update handle=30.7 write_reply=0.0 usage=0.0
+WAITS t=1286.9 u=1794586162676.8 ms=1.6 cmd=serverStatus coll= admit=0.0/1 meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=1.6
+WAITS_MSG u=1794586162676.8 ms=1.8 cmd=serverStatus handle=1.6 write_reply=0.2 usage=0.0
+WAITS t=1289.7 u=1794586162679.7 ms=1.1 cmd=serverStatus coll= admit=0.0/1 meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=1.1
+WAITS_MSG u=1794586162679.7 ms=1.3 cmd=serverStatus handle=1.1 write_reply=0.1 usage=0.0
+WAITS t=1291.8 u=1794586162681.8 ms=2.5 cmd=update coll=checkpoint_writes admit=0.0/1 lock_w=0.0/1 lock_r=0.0/2 stage=0.0/1 wal_flush=2.0/1 io_wait=0.0/1 read_get=0.0/2 read_scan=0.1/2 meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=0.3
+WAITS_MSG u=1794586162681.8 ms=2.5 cmd=update handle=2.5 write_reply=0.0 usage=0.0
+WAITS t=1294.6 u=1794586162684.6 ms=1.2 cmd=serverStatus coll= admit=0.0/1 meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=1.2
+WAITS_MSG u=1794586162684.6 ms=1.4 cmd=serverStatus handle=1.3 write_reply=0.2 usage=0.0
+WAITS_GET u=1794586162659.8 ms=26.33 bytes=42 range=None path=tenants/app/compactions/00000000000000000003.compactions in_cmd=false
+SIMGET start t=1118.5 depth=9 tenants/app/gc/compactions.boundary None
+WAITS_GET u=1794586162658.8 ms=27.33 bytes=642 range=None path=tenants/app/manifest/00000000000000000006.manifest in_cmd=false
+SIMGET start t=1118.6 depth=9 tenants/app/gc/manifest.boundary None
+WAITS_GET u=1794586162686.1 ms=0.59 bytes=0 range=None path=tenants/app/gc/compactions.boundary in_cmd=false
+SIMGET start t=1119.2 depth=10 tenants/app/compactions/00000000000000000004.compactions None
+WAITS_GET u=1794586162686.2 ms=0.65 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=false
+WAITS_GET u=1794586162686.8 ms=0.50 bytes=0 range=None path=tenants/app/compactions/00000000000000000004.compactions in_cmd=false
+SIMGET start t=1119.7 depth=11 tenants/app/gc/compactions.boundary None
+WAITS_GET u=1794586162687.3 ms=0.52 bytes=0 range=None path=tenants/app/gc/compactions.boundary in_cmd=false
+WAITS_GET u=1794586162661.1 ms=26.90 bytes=1754 range=None path=tenants/app/fx/manifest/00000000000000000004 in_cmd=false
+WAITS_GET u=1794586162659.8 ms=28.29 bytes=126753 range=Some(Bounded(0..126753)) path=tenants/app/fx/run/delta/00000000000000001159-1-e48b2c9e in_cmd=false
+SIMGET start t=1120.6 depth=12 tenants/app/fx/run/g0/00000000000000000003-1-7883867d Some(Bounded(0..546))
+WAITS t=1297.0 u=1794586162686.9 ms=1.4 cmd=serverStatus coll= admit=0.0/1 meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=1.4
+WAITS_MSG u=1794586162686.9 ms=1.6 cmd=serverStatus handle=1.5 write_reply=0.1 usage=0.0
+SIMGET start t=1121.2 depth=12 tenants/app/compactions/00000000000000000004.compactions None
+WAITS_GET u=1794586162688.8 ms=0.63 bytes=0 range=None path=tenants/app/compactions/00000000000000000004.compactions in_cmd=false
+SIMGET start t=1121.8 depth=13 tenants/app/gc/compactions.boundary None
+WAITS_GET u=1794586162689.4 ms=0.47 bytes=0 range=None path=tenants/app/gc/compactions.boundary in_cmd=false
+WAITS t=1299.6 u=1794586162689.6 ms=0.4 cmd=update coll=checkpoint_writes admit=0.0/1 lock_w=0.0/1 lock_r=0.0/2 read_get=0.0/1 read_scan=0.1/1 meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=0.2
+WAITS_MSG u=1794586162689.6 ms=0.4 cmd=update handle=0.4 write_reply=0.0 usage=0.0
+SIMGET start t=1122.6 depth=14 tenants/app/gc/manifest.boundary None
+WAITS_GET u=1794586162690.2 ms=0.49 bytes=0 range=None path=tenants/app/gc/manifest.boundary in_cmd=false
+WAITS t=1300.2 u=1794586162690.2 ms=1.6 cmd=serverStatus coll= admit=0.0/1 meter_gets=0 meter_bytes=0 meter_ms=0.0 rest=1.6
+WAITS_MSG u=1794586162690.2 ms=1.8 cmd=serverStatus handle=1.6 write_reply=0.2 usage=0.0
