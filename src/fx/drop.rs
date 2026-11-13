@@ -89,8 +89,6 @@ pub struct DropCtl {
     /// not run since (`slate_pending`); a job was proposed or runs (`slate_active`); the signal that ends a held poll.
     slate_pending: AtomicBool,
     slate_active: AtomicBool,
-    /// fix-idle-poll: the last floor observation found the floor it had before (`maybe_refold` slows down while idle).
-    floor_same: AtomicBool,
     /// SlateDB's compactor and worker are being stopped: no poll is held any more (`stop_slate_polls`).
     slate_stopping: AtomicBool,
     slate_wake: tokio::sync::Notify,
@@ -132,7 +130,6 @@ impl DropCtl {
             cur_job: Mutex::new(None),
             jobs_by_dest: Mutex::new(HashMap::new()),
             slate_pending: AtomicBool::new(false),
-            floor_same: AtomicBool::new(false),
             slate_active: AtomicBool::new(false),
             slate_stopping: AtomicBool::new(false),
             slate_wake: tokio::sync::Notify::new(),
@@ -294,15 +291,18 @@ impl DropCtl {
         {
             let mut lo = self.last_observe.lock().unwrap();
             let mut every = (self.lease / 8).clamp(Duration::from_millis(50), Duration::from_secs(5));
-            // fix-idle-poll: each observation reads the store (the drop lease, a LIST of our manifest's versions). While
-            // the database is idle (nothing for SlateDB's compactor, the last observation saw the floor unchanged) it
-            // happens at most every `slate_idle_poll_ms`. (`refold` is not part of it: in the aged mode, the default,
-            // nothing consumes it, and it stayed set for good once the floor passed the last applied one: MEASURED, the
-            // observation went back to every 5 s about 140 s after the last write.) The floor only decides when a re-fold is
+            // fix-idle-poll: each observation reads the store (the drop lease, a LIST of our manifest's versions). It
+            // slows to `slate_idle_poll_ms` only while nothing waits for the floor: nothing for SlateDB's compactor, and
+            // the floor already at the highest absorbed seq (`known_xd`), so no absorbed L0 SST waits for it to be folded
+            // with nothing written, and no run for it to be dropped; an absorption (`set_foldable`) wakes the compactor,
+            // which makes the database busy again. (A first version slowed down on "floor unchanged since the last
+            // observation": MEASURED, the lazy folds and the drop then waited up to the idle pace while the floor was
+            // still to rise after a publish, and 5 unit tests of the real drop failed. `refold` is not part of it: in
+            // the aged mode, the default, nothing consumes it, and it stayed set for good.) The floor only decides when a re-fold is
             // proposed (a saving of storage, done that much later); a drop job computes its floor from the store when it
             // starts (rule 7, `create_compaction_filter`), so no drop ever uses an older one.
             let idle_ms = slate_idle_poll_ms();
-            if idle_ms > 0 && !self.slate_busy() && self.floor_same.load(Relaxed) {
+            if idle_ms > 0 && !self.slate_busy() && self.observed.load(Relaxed) >= self.known_xd.load(Relaxed) {
                 every = every.max(Duration::from_millis(idle_ms));
                 if lo.is_some_and(|t| t.elapsed() >= Duration::from_secs(5) && t.elapsed() < every) {
                     FLOOR_OBSERVES_SKIPPED.fetch_add(1, Relaxed);
@@ -317,7 +317,6 @@ impl DropCtl {
         tokio::spawn(async move {
             if let Ok(f) = me.floor().await {
                 let before = me.observed.swap(f, Relaxed);
-                me.floor_same.store(f == before, Relaxed);
                 if f > me.applied_floor.load(Relaxed) {
                     me.refold.store(true, Relaxed);
                 }
