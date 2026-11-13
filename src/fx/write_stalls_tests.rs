@@ -1333,3 +1333,84 @@ async fn ws_gc_once_takes_a_transient_error_for_no_deletion() {
     assert_eq!(left, n, "runs of a retained version were deleted after a transient error");
     assert!(errored, "the pass must report the error (skipped)");
 }
+
+/// Review of 2b04ff0: `gc_once`'s `trusted_floor` with a transient error. An open database whose newest version (4) is an
+/// older writer's late one; version 3 is the one served. A fresh compactor (no publish, no sync, no read: nothing else
+/// lowers the floor) runs one clean GC pass (every version listed), then every GET of version 4's manifest fails (503)
+/// for passes longer than the grace. Control (`CONTROL_GC_ERRORS_AS_DELETED`): the floor falls back to version 4, and
+/// version 3 and its runs are deleted. Fix: the passes are skipped; version 3 and its runs stay.
+async fn trusted_floor_with_a_transient_error(control: bool) -> (bool, usize, usize) {
+    let mem: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let fail = Arc::new(std::sync::Mutex::new(None));
+    let store: Arc<dyn ObjectStore> = Arc::new(FailGets { inner: Arc::clone(&mem), fail: Arc::clone(&fail) });
+    let id = if control { "ws-floor-err-control" } else { "ws-floor-err" };
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(format!("a-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let v1 = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    t.close().await.unwrap();
+    // writer epoch 2: its open fences, then a full reseal
+    let mut t = lc(&store).wake(id).await.unwrap();
+    t.upgrade().await.unwrap();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(format!("b-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let served = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    // the older writer's late version at the next slot
+    let mut stale = v1.clone();
+    stale.version = served.version + 1;
+    stale.kind = "publish".into();
+    assert!(stale.writer_epoch < served.writer_epoch);
+    assert!(manifest::create(&store, id, &stale).await.unwrap());
+    let own: Vec<String> = gc::runs_of(&served).into_iter().filter(|r| !gc::runs_of(&stale).contains(r)).collect();
+    assert!(!own.is_empty(), "setup: the served version must have runs of its own");
+    let mut k = knobs(false, false);
+    k.version_retention = Duration::from_millis(0);
+    k.gc_grace = Duration::from_millis(HOLD_MS + 1000);
+    assert!(t.fx_claim());
+    // not run: no job, no publish; and the tenant is not synced with it, so it serves no version to the GC's floor
+    let c = Compactor::start(&mut t, Arc::clone(&store), k.clone(), pool::Pool::new(2), tokio::runtime::Handle::current()).await.unwrap();
+    gc::gc_once(&c).await.unwrap(); // every version listed and loaded
+    // the compactor's start records the version the tenant serves (3 here), which alone keeps the floor at or below it:
+    // in an open database `trusted_floor`'s old fallback could not go above it. Cleared here, so the floor rests on
+    // `trusted_floor` alone and its error branch is tested on its own (defence in depth)
+    assert_eq!(c.sh.serving_version.load(Relaxed), served.version, "setup: the compactor serves the newer writer's version");
+    c.sh.serving_version.store(u64::MAX, Relaxed);
+    gc::CONTROL_GC_ERRORS_AS_DELETED.store(control, Relaxed);
+    *fail.lock().unwrap() = Some(manifest::manifest_path(id, stale.version).to_string());
+    let t0 = Instant::now();
+    let mut errored = false;
+    while t0.elapsed() < k.gc_grace + Duration::from_secs(2) {
+        errored |= gc::gc_once(&c).await.is_err();
+        tokio::time::sleep(Duration::from_millis(300)).await;
+    }
+    *fail.lock().unwrap() = None;
+    gc::CONTROL_GC_ERRORS_AS_DELETED.store(false, Relaxed);
+    let served_kept = manifest::list_versions(&store, id).await.unwrap().contains(&served.version);
+    let mut left = 0;
+    for p in &own {
+        if object_store::ObjectStoreExt::head(&mem, &object_store::path::Path::from(p.as_str())).await.is_ok() {
+            left += 1;
+        }
+    }
+    eprintln!("trusted_floor with a transient error (control {control}): passes errored {errored}; served version {} kept {served_kept}; its own runs left {left} of {}", served.version, own.len());
+    c.stop().await;
+    let _ = t.close().await;
+    (served_kept, left, own.len())
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_trusted_floor_takes_a_transient_error_for_no_deletion() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (kept_ctl, left_ctl, n_ctl) = trusted_floor_with_a_transient_error(true).await;
+    let (kept, left, n) = trusted_floor_with_a_transient_error(false).await;
+    teardown();
+    assert!(!kept_ctl || left_ctl < n_ctl, "control: the GC must delete the served version or its runs, or the test does not reach the case");
+    assert!(kept, "the served version was deleted after a transient error");
+    assert_eq!(left, n, "runs of the served version were deleted after a transient error");
+}
