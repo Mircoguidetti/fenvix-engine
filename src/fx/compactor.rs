@@ -794,6 +794,9 @@ impl Compactor {
             return Ok(None);
         };
         next.version = c.v.version + 1;
+        // fix-sim-holes, hole W (second door): a base whose runs hold rows SlateDB does not stays so; a compactor with the
+        // drop makes it so (its jobs fold rows at or below X_d out of SlateDB)
+        next.runs_only = next.runs_only || c.v.runs_only || self.drop.drop;
         next.kind = kind.into();
         next.writer_epoch = self.epoch;
         next.published_ms = manifest::now_ms();

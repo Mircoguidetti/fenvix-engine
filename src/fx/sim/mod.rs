@@ -365,13 +365,37 @@ mod tests {
     /// then moves to another process whose compactor has not started; its write path's builder publish with
     /// `Reseal::All` rebuilds every group from SlateDB's rows and leaves the generated ones out: all of them are lost at
     /// once (no drop needed, unlike the first door). Fails on integration-5-stack fea18a34 (234 violations, MEASURED);
-    /// passes with fix-sim-holes' W fix c94a477 (0 violations, MEASURED). Ignored until that fix is in: `--ignored`.
+    /// passes with fix-sim-holes' W fix c94a477 (0 violations, MEASURED). Fixed on fix-sim-holes: a normal test.
     #[test]
-    #[ignore]
     fn sim_hole_w_generated_rows_then_a_builder_reseal() {
+        hole_w_generated(true);
+    }
+
+    /// fix-sim-holes: the second door with compactors off (`--no-sealed-compactor`) and the drop off: SlateDB never drops
+    /// a row, yet the generated rows are in runs only. c94a477's refusal (compactors on or the drop on) let this reseal
+    /// through; the generated version's `runs_only` mark refuses it.
+    #[test]
+    fn sim_hole_w_generated_rows_then_a_builder_reseal_without_compactors() {
+        hole_w_generated(false);
+    }
+
+    fn hole_w_generated(compactors: bool) {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
+        // the world guard restores SERVER_ON; this one restores DROP_DEFAULT (also after a failed assert)
+        struct DropDefault(bool);
+        impl Drop for DropDefault {
+            fn drop(&mut self) {
+                crate::fx::compactor::DROP_DEFAULT.store(self.0, std::sync::atomic::Ordering::Relaxed);
+            }
+        }
+        let _d = DropDefault(crate::fx::compactor::DROP_DEFAULT.load(std::sync::atomic::Ordering::Relaxed));
+        if !compactors {
+            crate::fx::compactor::SERVER_ON.store(false, std::sync::atomic::Ordering::Relaxed);
+            crate::fx::compactor::DROP_DEFAULT.store(false, std::sync::atomic::Ordering::Relaxed);
+        }
+        let refused = crate::fx::build::RESEALS_REFUSED.load(std::sync::atomic::Ordering::Relaxed);
         use super::net::Class;
         use Ev::*;
         let ev = vec![
@@ -385,13 +409,19 @@ mod tests {
             Release { rid: 1 },
             Sleep { ms: 1500 },
             Write { p: 1, ops: vec![(4, 4, false)] },
-            CompStart { p: 1 },
-            fill(1, 3, 0),
-            Flush { p: 1 },
-            CompDrain { p: 1 },
         ];
-        let (f, v) = run_story(&rt, "hole W: generated rows, then a builder reseal", env_u64("SIM_KNOBS", 0) as u8, ev);
+        let mut ev = ev;
+        if compactors {
+            ev.extend([CompStart { p: 1 }, fill(1, 3, 0), Flush { p: 1 }, CompDrain { p: 1 }]);
+        } else {
+            // no compactor ever: the write path's builder publishes again (a reseal every few builds)
+            ev.extend([fill(1, 3, 0), Flush { p: 1 }, Publish { p: 1 }]);
+        }
+        let (f, v) = run_story(&rt, if compactors { "hole W: generated rows, then a builder reseal" } else { "hole W: generated rows, then a builder reseal, no compactors" }, env_u64("SIM_KNOBS", 0) as u8, ev);
+        let refused = crate::fx::build::RESEALS_REFUSED.load(std::sync::atomic::Ordering::Relaxed) - refused;
+        eprintln!("SIM HOLE W2 (compactors {compactors}): builder reseals refused {refused}");
         assert_eq!(f, 0, "{v:?}");
+        assert!(refused > 0, "the builder publish over the generated runs was a reseal: it must be refused");
     }
 
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.

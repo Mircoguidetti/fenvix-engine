@@ -163,20 +163,22 @@ fn envelope_of(e_env: u64, key: &[u8], seq: u64, value: &[u8]) -> Result<Vec<u8>
     }
 }
 
-/// fix-sim-holes, hole W: builder reseals turned into delta publishes (compactors on, or the drop on, and a base with
-/// runs).
+/// fix-sim-holes, hole W: builder reseals turned into delta publishes (a base with runs that may hold rows SlateDB does
+/// not).
 pub static RESEALS_REFUSED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 /// fix-sim-holes, hole W: the reseal this builder may do over `cur`. It reads SlateDB only: a reseal rebuilds a group's
-/// sealed run from SlateDB's rows and leaves the base's delta runs out. With compactors on (the server) or the drop on,
-/// SlateDB's compaction drops the rows at or below X_d, which then live only in our runs, so a reseal over a base that
-/// has any run would publish a version without them. It publishes a delta run instead; reseals are the compactor's
-/// (it reads the runs). Without compactors SlateDB is a full copy and the builder reseals as before.
+/// sealed run from SlateDB's rows and leaves the base's delta runs out, so it is safe only while SlateDB holds every row
+/// of the base. It does not when compactors are on (the server) or the drop is on (SlateDB's compaction drops the rows
+/// at or below X_d: they live only in our runs; first door), nor when the base is marked `runs_only` (the ballast
+/// generator wrote its rows straight into runs, or a dropping compactor published it; second door). Then a reseal over a
+/// base that has any run is turned into a delta publish; reseals are the compactor's (it reads the runs). Otherwise
+/// (no compactors, no drop, no generated rows: SlateDB is a full copy) the builder reseals as before.
 fn allowed_reseal(cur: Option<&View>, asked: &Reseal) -> Reseal {
     use std::sync::atomic::Ordering::Relaxed;
     let dropping = super::compactor::SERVER_ON.load(Relaxed) || super::compactor::DROP_DEFAULT.load(Relaxed);
     match cur {
-        Some(v) if dropping && !matches!(asked, Reseal::None) && (!v.meta.delta.is_empty() || v.meta.groups.iter().any(|g| g.sealed.is_some())) => {
+        Some(v) if (dropping || v.meta.runs_only) && !matches!(asked, Reseal::None) && (!v.meta.delta.is_empty() || v.meta.groups.iter().any(|g| g.sealed.is_some())) => {
             RESEALS_REFUSED.fetch_add(1, Relaxed);
             Reseal::None
         }
@@ -330,7 +332,7 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
         manifest::next_slot(cur.map(|v| v.version))
     };
     let absorbed_l0 = l0_before.into_iter().map(|id| (id, x)).collect();
-    let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: delta_runs, next_group_id, absorbed_l0 };
+    let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: delta_runs, next_group_id, absorbed_l0, runs_only: cur.is_some_and(|v| v.meta.runs_only) };
     rep.version = version;
     rep.groups = v.groups.len();
     // the staged publish (step 6, `counter.rs`): before the version that retires runs becomes current, warm the new runs'
@@ -561,7 +563,7 @@ pub async fn publish_generated(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
     } else {
         manifest::next_slot(cur.map(|v| v.version))
     };
-    let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: Vec::new(), next_group_id, absorbed_l0: Vec::new() };
+    let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: Vec::new(), next_group_id, absorbed_l0: Vec::new(), runs_only: true };
     rep.version = version;
     // two fences (integration-6): the slot (base + 1, `manifest::next_slot`, audit-fencing) with `on_main_line` below,
     // which refuses a landing in a slot GC freed; and fix-compactor-start's writer-epoch check right before the create,
@@ -734,7 +736,7 @@ pub async fn publish_generated_parts(db: &slatedb::Db, store: &Arc<dyn ObjectSto
     } else {
         manifest::next_slot(cur.map(|v| v.version))
     };
-    let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: Vec::new(), next_group_id, absorbed_l0: Vec::new() };
+    let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: Vec::new(), next_group_id, absorbed_l0: Vec::new(), runs_only: true };
     rep.version = version;
     // R-final-engine, hole G: the writer-epoch fence of every other build (a generator that lost the database creates no
     // version), next to the slot fence (integration-6: both)
