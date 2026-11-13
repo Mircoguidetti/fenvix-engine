@@ -857,6 +857,12 @@ impl Server {
             "slowStore": {
                 "writeDeadlines": crate::cmd::WRITE_DEADLINES.load(Relaxed) as i64,
                 "writeDeadlinesLabelled": crate::cmd::WRITE_DEADLINES_LABELLED.load(Relaxed) as i64,
+                // round 2: absent holds answered, voided at an open, ended by a fork/restore/export; creates refused
+                // because the database turned out to exist
+                "absentHeldAnswers": crate::dbs::ABSENT_HELD_ANSWERS.load(Relaxed) as i64,
+                "absentHoldsVoided": crate::dbs::ABSENT_HOLDS_VOIDED.load(Relaxed) as i64,
+                "absentHoldsTaken": crate::dbs::ABSENT_HOLDS_TAKEN.load(Relaxed) as i64,
+                "createsFoundExisting": crate::dbs::CREATES_FOUND_EXISTING.load(Relaxed) as i64,
                 "closeDeadlineCuts": tenant_bench::lifecycle::CLOSE_DEADLINE_CUTS.load(Relaxed) as i64,
                 "closesLeftBehind": tenant_bench::lifecycle::CLOSES_LEFT_BEHIND.load(Relaxed) as i64,
                 "closesHeldAtDeadline": crate::dbs::CLOSES_LOCK_PAST_DEADLINE.load(Relaxed) as i64,

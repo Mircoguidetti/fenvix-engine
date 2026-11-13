@@ -133,6 +133,12 @@ static ABSENT_HOLD: std::sync::LazyLock<Duration> = std::sync::LazyLock::new(|| 
 });
 /// Opens answered "absent" from the hold, without a probe of the store.
 pub static ABSENT_HELD_ANSWERS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// P-fix-slow-store-3: absent holds found no longer true at an open (their lease lapsed, or another path of this process
+/// acquired it), and holds ended by a fork, restore or export that took the entry lock.
+pub static ABSENT_HOLDS_VOIDED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static ABSENT_HOLDS_TAKEN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// P-fix-slow-store-3: creates of a database that turned out to hold a collection list already (refused, retryable).
+pub static CREATES_FOUND_EXISTING: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// Builder publishes made before a compactor started, to catch up rows an ungated pass folded (review FIX 1).
 pub static CATCH_UPS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// integration-4 (coordinator, CI a91a14a test_51r): why a compactor was not started when `maybe_start_fxc` was asked
@@ -195,6 +201,11 @@ pub struct Entry {
     /// 20 store requests in a row before the database existed (about 3 s with S3's errors and tails, MEASURED). Past
     /// this time the reaper gives the lease up (`spawn_reaper`).
     absent_until: Option<Instant>,
+    /// P-fix-slow-store-3 (round 2): the lease's acquire stamp (`Leases::acquire_stamp`) when the hold began. The hold is
+    /// true only while it is unchanged: another path of this process that acquires the name's lease (a fork, a restore, an
+    /// export) may create or change the database, and then "absent" is no longer known. (The review of round 1: a read of
+    /// a missing name, a fork onto it, then an insert made from the hold's "absent" lost a document from every scan.)
+    absent_stamp: u64,
     pub(crate) hint_written: bool,
     /// When each collection's expired documents were last swept by a write command.
     pub(crate) swept: HashMap<String, Instant>,
@@ -246,6 +257,32 @@ impl std::fmt::Display for Reopened {
 }
 
 impl std::error::Error for Reopened {}
+
+/// P-fix-slow-store-3: a command that found its database absent, then at its create found the database there (see
+/// `Entry::create_new`). Nothing of the command was written: retryable.
+#[derive(Debug)]
+pub struct ExistedAtCreate(pub String);
+
+impl std::fmt::Display for ExistedAtCreate {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "database {} was created by another operation while this command ran; nothing of this command was applied, retry", self.0)
+    }
+}
+
+impl std::error::Error for ExistedAtCreate {}
+
+/// Test control only (`FENVIX_TEST_CONTROL_HOLD_ROUND1=1`): the absent hold of round 1 (no acquire stamp, not ended by a
+/// fork, restore or export), so a test can show the create check alone (`Entry::create_new`) keeps the data.
+fn control_hold_round1() -> bool {
+    static V: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| std::env::var("FENVIX_TEST_CONTROL_HOLD_ROUND1").as_deref() == Ok("1"));
+    *V
+}
+
+/// Test control only (`FENVIX_TEST_NO_CREATE_CHECK=1`): `Entry::create_new` does not check for an existing collection list.
+fn no_create_check() -> bool {
+    static V: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| std::env::var("FENVIX_TEST_NO_CREATE_CHECK").as_deref() == Ok("1"));
+    *V
+}
 
 /// Bytes (keys and values) a read returned: the "KiB read" of the unit of cost (fair.rs).
 trait ReadBytes {
@@ -315,6 +352,7 @@ impl Dbs {
                     ttl_seen: AtomicBool::new(false),
                     absent: false,
                     absent_until: None,
+                    absent_stamp: 0,
                     hint_written: false,
                     swept: HashMap::new(),
                     snap: None,
@@ -454,6 +492,7 @@ impl Dbs {
                         ttl_seen: AtomicBool::new(false),
                     absent: false,
                     absent_until: None,
+                    absent_stamp: 0,
                         hint_written: false,
                         swept: HashMap::new(),
                     snap: None,
@@ -1156,10 +1195,16 @@ impl Entry {
         if self.tenant.is_none() && self.absent {
             return Ok(false);
         }
-        if self.tenant.is_none() && self.absent_until.is_some_and(|t| Instant::now() < t) && self.leases.valid(&self.name) {
+        if self.absent_hold_valid() {
             ABSENT_HELD_ANSWERS.fetch_add(1, Relaxed);
             self.absent = true;
             return Ok(false);
+        }
+        if self.tenant.is_none() && self.absent_until.is_some() {
+            // a hold no longer true (its lease lapsed, or another path of this process acquired the lease since): the store
+            // is asked again below; the lease, if still held, is now whoever acquired it last
+            self.absent_until = None;
+            ABSENT_HOLDS_VOIDED.fetch_add(1, Relaxed);
         }
         // a reader whose view went stale (an SST it named was compacted and removed: sst-not-found) is replaced by a new one
         // on the latest manifest; a writer follows the manifest itself
@@ -1243,6 +1288,7 @@ impl Entry {
                     // the lease is kept for ABSENT_HOLD (see `absent_until`): the reaper discards it if no write came
                     self.absent = true;
                     self.absent_until = Some(Instant::now() + *ABSENT_HOLD);
+                    self.absent_stamp = self.leases.acquire_stamp(&self.name);
                     Ok(false)
                 }
             }
@@ -1253,19 +1299,84 @@ impl Entry {
         self.close_by(None).await
     }
 
-    /// The absent hold (`absent_until`) is running and its lease still valid: the create needs no new acquire.
+    /// The absent hold (`absent_until`) is running, its lease still valid, and no other path of this process acquired
+    /// that lease since the hold began (`absent_stamp`): the database is still known not to exist, and its create needs
+    /// no new acquire.
     fn absent_hold_valid(&self) -> bool {
-        self.tenant.is_none() && self.absent_until.is_some_and(|t| Instant::now() < t) && self.leases.valid(&self.name)
+        self.tenant.is_none()
+            && self.absent_until.is_some_and(|t| Instant::now() < t)
+            && self.leases.valid(&self.name)
+            && (control_hold_round1() || (self.absent_stamp != 0 && self.leases.acquire_stamp(&self.name) == self.absent_stamp))
     }
 
-    /// The reaper's part of the absent hold: once it is over and no write created the database, give the lease up.
+    /// Create the database a command found absent (its first write, or a transaction's snapshot), with the absent hold's
+    /// lease when the hold is still true, else with a new acquire.
+    ///
+    /// P-fix-slow-store-3 (round 2): the command's own ops were computed from "absent" (a new collection list, new
+    /// collections). If the created writer finds a collection list already, the database existed after all (something
+    /// created it between the probe and this create): its data would be overwritten as if new, and a document of it would
+    /// drop out of every scan. So the create is refused instead, nothing of the command written, with a retryable error;
+    /// the writer is closed cleanly and the next command opens the database the normal way. For a new database the check
+    /// costs no store request (an empty writer has nothing to read).
+    async fn create_new(&mut self) -> Result<()> {
+        if !self.absent_hold_valid() {
+            self.leases.acquire(&self.name).await?;
+        }
+        self.absent_until = None;
+        lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
+        self.nat.clear();
+        self.copts.clear();
+        self.ckey_decided.clear();
+        self.sstat.clear();
+        self.meta_clear();
+        crate::opening::forget_db(&self.name);
+        let t = self.lc.create(&self.name).await?;
+        let existing = if no_create_check() { None } else { t.get(crate::layout2::phys(layout::META_COLLECTIONS)).await? };
+        self.tenant = Some(t);
+        self.absent = false;
+        self.wakes += 1;
+        self.sync_gauges();
+        if existing.is_some() {
+            CREATES_FOUND_EXISTING.fetch_add(1, Relaxed);
+            eprintln!("CREATE_FOUND_EXISTING db={}: the database was found absent but its create found a collection list; the command is refused (retryable) and the database is reopened by the next command", self.name);
+            if let Err(e) = self.close().await {
+                eprintln!("CREATE_FOUND_EXISTING db={}: close: {e:#}", self.name);
+            }
+            return Err(ExistedAtCreate(self.name.clone()).into());
+        }
+        Ok(())
+    }
+
+    /// Is the lease still the one the absent hold acquired (not released, lost or acquired again by another path)?
+    fn absent_hold_owns_lease(&self) -> bool {
+        self.absent_stamp != 0 && self.leases.is_held(&self.name) && self.leases.acquire_stamp(&self.name) == self.absent_stamp
+    }
+
+    /// The reaper's part of the absent hold: once it is over and no write created the database, give the lease up (only
+    /// the lease the hold itself acquired: one acquired since by another path of this process is that path's).
     async fn end_absent_hold(&mut self) {
         if self.tenant.is_none() && self.absent_until.is_some_and(|t| Instant::now() >= t) {
             self.absent_until = None;
-            if self.leases.is_held(&self.name) {
+            if self.absent_hold_owns_lease() {
                 self.leases.discard(&self.name).await;
             }
         }
+    }
+
+    /// P-fix-slow-store-3 (round 2): for a path that creates, restores or replaces the database's data while it holds
+    /// the entry lock (a fork onto the name, a point-in-time restore, an export's freeze): end the absent hold, so no
+    /// later command answers "absent" or creates the database from it. True when the hold's lease is still held by
+    /// this process: the caller then owns that lease (and releases or discards it when it is done).
+    pub fn take_absent_hold(&mut self) -> bool {
+        if control_hold_round1() {
+            return false;
+        }
+        self.absent = false;
+        if self.absent_until.take().is_none() || self.tenant.is_some() {
+            return false;
+        }
+        ABSENT_HOLDS_TAKEN.fetch_add(1, Relaxed);
+        self.absent_hold_owns_lease()
     }
 
     /// `close`, ending by `deadline` (P-fix-slow-store item 1, the shutdown's close budget). The lease is released only
@@ -1582,21 +1693,7 @@ impl Entry {
             Op::Delete(k) => Op::Delete(k.clone()),
         }).collect::<Vec<Op>>()));
         if !self.ensure_open().await? {
-            if !self.absent_hold_valid() {
-                self.leases.acquire(&self.name).await?;
-            }
-            self.absent_until = None;
-            lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
-            self.nat.clear();
-        self.copts.clear();
-        self.ckey_decided.clear();
-        self.sstat.clear();
-        self.meta_clear();
-            crate::opening::forget_db(&self.name);
-            self.tenant = Some(self.lc.create(&self.name).await?);
-            self.absent = false;
-            self.wakes += 1;
-            self.sync_gauges();
+            self.create_new().await?;
         }
         // a command that began on an opening abandoned since then writes nothing (`Reopened`); the log's replays
         // (`apply_durable`) run inside the open itself and are not a command's write
@@ -2017,20 +2114,7 @@ impl Entry {
     pub async fn begin_snapshot(&mut self) -> Result<(Arc<tenant_bench::fx::read::Snap>, u64)> {
         if !self.ensure_open().await? {
             // The database does not exist yet: create it so the transaction has something to snapshot.
-            if !self.absent_hold_valid() {
-                self.leases.acquire(&self.name).await?;
-            }
-            self.absent_until = None;
-            self.nat.clear();
-        self.copts.clear();
-        self.ckey_decided.clear();
-        self.sstat.clear();
-        self.meta_clear();
-            crate::opening::forget_db(&self.name);
-            self.tenant = Some(self.lc.create(&self.name).await?);
-            self.absent = false;
-            self.wakes += 1;
-            self.sync_gauges();
+            self.create_new().await?;
         }
         // With the log on, a transaction reads a confirmed snapshot (no write its log has not confirmed yet): it waits,
         // holding the database's exclusive lock (nothing new is staged meanwhile), until the batches staged so far are

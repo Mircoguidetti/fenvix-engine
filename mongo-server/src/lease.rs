@@ -121,7 +121,15 @@ pub struct Leases {
     /// Tenants this process released cleanly, with the lease sequence its release wrote: a later acquire that finds that
     /// same sequence knows no other process owned the tenant in between ([`Leases::continuous`]).
     released: Mutex<HashMap<String, u64>>,
+    /// P-fix-slow-store-3 (round 2, item 4): a stamp per held tenant, new at every acquire and dropped at every release,
+    /// forget or failed acquire ([`Leases::acquire_stamp`]). A holder that keeps the lease for its own reason (the absent
+    /// hold in dbs.rs) records the stamp of its acquire; any later acquire by another path of this process (a fork, a
+    /// restore, an export onto the name) changes it, so that holder knows its reason may no longer be true.
+    stamps: Mutex<HashMap<String, u64>>,
 }
+
+/// Source of [`Leases::acquire_stamp`] values (never 0, never reused within the process).
+static STAMP_SRC: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
 #[derive(Default, Debug, Clone)]
 pub struct LeaseStats {
@@ -204,7 +212,14 @@ pub fn log(event: &str, tenant: &str, holder: &str, extra: &str) {
 
 impl Leases {
     pub fn new(store: Arc<dyn ObjectStore>, holder: String, ttl: Duration) -> Arc<Self> {
-        Arc::new(Self { store, holder, ttl, skew: Duration::from_millis(1500), held: Mutex::new(HashMap::new()), swept: Mutex::new(Default::default()), denied: Mutex::new(HashMap::new()), stats: Mutex::new(LeaseStats::default()), unsafe_skip: std::sync::atomic::AtomicBool::new(false), process_mode: std::sync::atomic::AtomicBool::new(false), proc: Mutex::new(None), proc_init: tokio::sync::Mutex::new(()), proc_gen_floor: std::sync::atomic::AtomicU64::new(0), disabled: std::sync::atomic::AtomicBool::new(false), proc_renewing: std::sync::atomic::AtomicBool::new(false), released: Mutex::new(HashMap::new()) })
+        Arc::new(Self { store, holder, ttl, skew: Duration::from_millis(1500), held: Mutex::new(HashMap::new()), swept: Mutex::new(Default::default()), denied: Mutex::new(HashMap::new()), stats: Mutex::new(LeaseStats::default()), unsafe_skip: std::sync::atomic::AtomicBool::new(false), process_mode: std::sync::atomic::AtomicBool::new(false), proc: Mutex::new(None), proc_init: tokio::sync::Mutex::new(()), proc_gen_floor: std::sync::atomic::AtomicU64::new(0), disabled: std::sync::atomic::AtomicBool::new(false), proc_renewing: std::sync::atomic::AtomicBool::new(false), released: Mutex::new(HashMap::new()), stamps: Mutex::new(HashMap::new()) })
+    }
+
+    /// Drop every held tenant (the process lease lapsed or was lost) and their acquire stamps.
+    fn drain_held(&self) -> Vec<String> {
+        let ids: Vec<String> = self.held.lock().unwrap().drain().map(|(k, _)| k).collect();
+        self.stamps.lock().unwrap().clear();
+        ids
     }
 
     pub fn held_count(&self) -> usize {
@@ -279,14 +294,31 @@ impl Leases {
         self.held.lock().unwrap().contains_key(id)
     }
 
-    /// Take (or renew) the lease. Returns the previous holder when an expired lease was taken over.
+    /// The stamp of the latest acquire of `id` by this process that still holds (0: not held, or its acquire failed).
+    pub fn acquire_stamp(&self, id: &str) -> u64 {
+        self.stamps.lock().unwrap().get(id).copied().unwrap_or(0)
+    }
+
+    /// Take (or renew) the lease. Returns the previous holder when an expired lease was taken over. Every call, whatever
+    /// its outcome, changes the tenant's [`Leases::acquire_stamp`].
+    pub async fn acquire(&self, id: &str) -> Result<Option<String>> {
+        self.stamps.lock().unwrap().remove(id);
+        let r = self.acquire_inner(id).await;
+        if r.is_ok() {
+            let s = STAMP_SRC.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            self.stamps.lock().unwrap().insert(id.to_string(), s);
+        }
+        r
+    }
+
+    /// [`Leases::acquire`] without the stamp.
     ///
     /// audit-fencing round 2: once the lease is held, the database's incarnation is read from the store
     /// (`lifecycle::load_incarnation`): an erase or a drop moves the name to a new incarnation under the lease, so the
     /// number read after taking it is the current one, and this process's paths (`lifecycle::tenant_path`) follow it.
     /// Read after, never before: an erase between a read and the take would leave this process on a dead prefix. A
     /// newer incarnation's first opening in this process also sweeps the older ones' leftovers, in the background.
-    pub async fn acquire(&self, id: &str) -> Result<Option<String>> {
+    async fn acquire_inner(&self, id: &str) -> Result<Option<String>> {
         let r = self.acquire_lease(id).await?;
         let before = tenant_bench::lifecycle::incarnation(id);
         let k = tenant_bench::lifecycle::load_incarnation(&self.store, id).await?;
@@ -526,7 +558,7 @@ impl Leases {
             if lapsed_at_start {
                 p.gen = self.proc_gen_floor.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
                 p.inc = fresh_inc();
-                let ids: Vec<String> = self.held.lock().unwrap().drain().map(|(k, _)| k).collect();
+                let ids: Vec<String> = self.drain_held();
                 log("process_lease_lapsed", "-", &self.holder, &format!("gen={} abandoned={}", p.gen, ids.len()));
                 self.stats.lock().unwrap().lost += ids.len() as u64;
                 for id in ids {
@@ -553,7 +585,7 @@ impl Leases {
                     if late {
                         p.valid_until = completed;
                         p.renew_at = completed;
-                        dropped = self.held.lock().unwrap().drain().map(|(k, _)| k).collect();
+                        dropped = self.drain_held();
                     } else {
                         p.valid_until = started + self.ttl;
                         p.renew_at = started + self.ttl / 3;
@@ -572,7 +604,7 @@ impl Leases {
             Err(object_store::Error::Precondition { .. }) | Err(object_store::Error::NotFound { .. }) if !unsafe_skip => {
                 // Someone else wrote our process lease (the same holder id started twice): we are not the owner of
                 // anything. Abandon everything and start over with a new lease.
-                let ids: Vec<String> = self.held.lock().unwrap().drain().map(|(k, _)| k).collect();
+                let ids: Vec<String> = self.drain_held();
                 *self.proc.lock().unwrap() = None;
                 self.stats.lock().unwrap().lost += ids.len() as u64;
                 log("process_lease_lost", "-", &self.holder, &format!("abandoned={}", ids.len()));
@@ -607,6 +639,7 @@ impl Leases {
     /// it is still ours, retry: a renewal that landed after the release would otherwise keep the tenant
     /// locked for a whole ttl.
     pub async fn release(&self, id: &str) {
+        self.stamps.lock().unwrap().remove(id);
         let Some(h) = self.held.lock().unwrap().remove(id) else { return };
         if self.disabled.load(std::sync::atomic::Ordering::Relaxed) {
             return;
@@ -643,6 +676,7 @@ impl Leases {
 
     /// Forget a lease without touching storage (the tenant never existed, or ownership was lost).
     pub fn forget(&self, id: &str) {
+        self.stamps.lock().unwrap().remove(id);
         self.held.lock().unwrap().remove(id);
     }
 
@@ -756,6 +790,7 @@ impl Leases {
                     (Some(_), None) => {
                         held.remove(id);
                         drop(held);
+                        self.stamps.lock().unwrap().remove(id);
                         self.stats.lock().unwrap().lost += 1;
                         log("lost", id, &self.holder, "");
                         let _ = lost.send(id.to_string());
@@ -770,5 +805,38 @@ impl Leases {
                 eprintln!("lease renewal of {id} failed: {e}");
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod stamp_tests {
+    use super::*;
+
+    /// P-fix-slow-store-3: every acquire gives a new stamp; a release, a forget or a failed acquire drops it.
+    #[test]
+    fn fss_acquire_stamp_changes_on_every_acquire() {
+        let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        rt.block_on(async {
+            let store: Arc<dyn ObjectStore> = Arc::new(object_store::memory::InMemory::new());
+            let l = Leases::new(Arc::clone(&store), "a".into(), Duration::from_secs(30));
+            assert_eq!(l.acquire_stamp("db"), 0);
+            l.acquire("db").await.unwrap();
+            let s1 = l.acquire_stamp("db");
+            assert_ne!(s1, 0);
+            l.acquire("db").await.unwrap(); // a renewal by another path of the process
+            let s2 = l.acquire_stamp("db");
+            assert!(s2 != 0 && s2 != s1);
+            l.release("db").await;
+            assert_eq!(l.acquire_stamp("db"), 0);
+            l.acquire("db").await.unwrap();
+            assert_ne!(l.acquire_stamp("db"), 0);
+            l.forget("db");
+            assert_eq!(l.acquire_stamp("db"), 0);
+            // another process owns it: the acquire fails and leaves no stamp
+            let other = Leases::new(store, "b".into(), Duration::from_secs(30));
+            other.acquire("db2").await.unwrap();
+            assert!(l.acquire("db2").await.is_err());
+            assert_eq!(l.acquire_stamp("db2"), 0);
+        });
     }
 }
