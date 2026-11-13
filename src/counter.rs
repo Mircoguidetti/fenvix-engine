@@ -187,15 +187,10 @@ pub struct Counter {
     pub m: CounterMeters,
 }
 
-/// Bytes of RAM the machine (or its cgroup) gives the process.
+/// Bytes of RAM the machine (or its cgroup, v1 or v2) gives the process: the memory budget's limit (P-big-speed fix 1;
+/// before, only cgroup v2's `memory.max` was read, so under cgroup v1 the counter sized itself from the whole host).
 pub fn machine_ram_bytes() -> u64 {
-    let total = std::fs::read_to_string("/proc/meminfo")
-        .ok()
-        .and_then(|s| s.lines().find(|l| l.starts_with("MemTotal:")).and_then(|l| l.split_whitespace().nth(1)?.parse::<u64>().ok()))
-        .map(|kb| kb * 1024)
-        .unwrap_or(4 << 30);
-    let cg = std::fs::read_to_string("/sys/fs/cgroup/memory.max").ok().and_then(|s| s.trim().parse::<u64>().ok());
-    cg.map_or(total, |c| c.min(total))
+    crate::membudget::get().limit
 }
 
 /// Free bytes of the file system of `dir`.
@@ -351,6 +346,8 @@ impl Counter {
     }
 
     fn maps_put(&self, k: Ck, e: CachedEntry) {
+        // P-big-speed fix 1: copied out of the GET's receive buffer before it is kept (`meter::MeteredCache::insert`)
+        let e = e.clamp_allocated_size();
         let size = e.size() as u64 + 64;
         let block = self.is_map_block(&k);
         {
@@ -406,6 +403,8 @@ impl Counter {
     }
 
     fn data_put(&self, k: Ck, e: CachedEntry, ahead: bool) {
+        // P-big-speed fix 1: copied out of the GET's receive buffer before it is kept (`meter::MeteredCache::insert`)
+        let e = e.clamp_allocated_size();
         let q = if ahead || is_prefetch() {
             self.m.prefetched_in.fetch_add(1, Relaxed);
             Q::Prefetched

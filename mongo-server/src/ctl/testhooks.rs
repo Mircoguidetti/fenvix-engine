@@ -54,6 +54,17 @@ pub async fn publish_and_drop(db: &str) -> ApiResult<Value> {
     if tenant_bench::fx::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed) {
         return publish_and_real_drop(ctl, db).await;
     }
+    // review of big-speed (2026-11-13, the reviewer's false alarm): the stand-in drop removes SlateDB's rows at or below
+    // X_d, but the in-process builder still reseals from SlateDB's rows when `--sealed-runs` / `--sealed-reseal-every`
+    // let it publish again, and its reseal then lacks the dropped rows. The stand-in is valid only with the builder held
+    // off (test_50's `--sealed-runs 1000000 --sealed-reseal-every 1000000`); any other set-up is refused, not run.
+    {
+        use std::sync::atomic::Ordering::Relaxed;
+        let (every, reseal) = (tenant_bench::fx::PUBLISH_EVERY.load(Relaxed), tenant_bench::fx::RESEAL_EVERY.load(Relaxed));
+        if every < 1_000_000 || reseal < 1_000_000 {
+            return Err(ApiError::new(409, "bad_setup", &format!("publish-drop without the compactor needs --sealed-runs 1000000 --sealed-reseal-every 1000000 (now {every} and {reseal}): the builder would reseal from dropped rows")));
+        }
+    }
     {
         let mut g = ctl.dbs.lock(db).await;
         g.fx_test_publish().await?;

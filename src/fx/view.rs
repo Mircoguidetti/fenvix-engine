@@ -18,6 +18,46 @@ use std::sync::{Arc, Mutex};
 pub static CACHE_BYTES: AtomicU64 = AtomicU64::new(256 << 20);
 /// Counters (diagnostics and tests).
 pub static RUN_GETS: AtomicU64 = AtomicU64::new(0);
+
+// ---- review of big-speed (2026-11-13, error 1): the customer's box, capped per customer and per process
+
+/// Stored bytes one customer's box warm-up may fetch, and decoded bytes it may keep (0: no cap). Set from the memory
+/// budget (`membudget::Budget::box_customer`, the runs' cache / 8) or `--customer-box-max-mb`.
+pub static BOX_CUSTOMER_BYTES: AtomicU64 = AtomicU64::new(32 << 20);
+/// Stored bytes of one wave (one range GET of one run).
+pub static BOX_WAVE_BYTES: AtomicU64 = AtomicU64::new(4 << 20);
+/// Stored bytes every box warm-up of the process has in flight together (`membudget::Budget::box_inflight`, or
+/// `--customer-box-inflight-mb`); read once, when the first warm-up starts.
+pub static BOX_INFLIGHT_BYTES: AtomicU64 = AtomicU64::new(64 << 20);
+/// Waves of one warm-up at once.
+pub const BOX_PARALLEL: usize = 16;
+/// Warm-ups skipped because the box was above the customer's allowance; warm-ups stopped at the allowance; waves sent;
+/// waves that waited for the process's allowance.
+pub static BOX_TOO_BIG: AtomicU64 = AtomicU64::new(0);
+pub static BOX_CAPPED: AtomicU64 = AtomicU64::new(0);
+pub static BOX_WAVES: AtomicU64 = AtomicU64::new(0);
+pub static BOX_PERMIT_WAITS: AtomicU64 = AtomicU64::new(0);
+
+static BOX_SEM: std::sync::OnceLock<(tokio::sync::Semaphore, u32)> = std::sync::OnceLock::new();
+
+/// A permit of the process-wide box allowance for `bytes` stored bytes (KiB units; a wave larger than the whole
+/// allowance takes all of it).
+pub async fn box_permit(bytes: u64) -> tokio::sync::SemaphorePermit<'static> {
+    let (sem, total) = BOX_SEM.get_or_init(|| {
+        let kib = (BOX_INFLIGHT_BYTES.load(Relaxed) >> 10).clamp(1, u32::MAX as u64 >> 4) as u32;
+        (tokio::sync::Semaphore::new(kib as usize), kib)
+    });
+    let want = (bytes.div_ceil(1024) as u32).clamp(1, *total);
+    if sem.available_permits() < want as usize {
+        BOX_PERMIT_WAITS.fetch_add(1, Relaxed);
+    }
+    sem.acquire_many(want).await.expect("the box semaphore is never closed")
+}
+
+/// (permits free, permits in all) of the process's box allowance, in KiB.
+pub fn box_allowance() -> (usize, u32) {
+    BOX_SEM.get().map_or((0, 0), |(s, t)| (s.available_permits(), *t))
+}
 pub static RUN_OPENS: AtomicU64 = AtomicU64::new(0);
 pub static BLOCK_HITS: AtomicU64 = AtomicU64::new(0);
 pub static ROWS_FROM_RUNS: AtomicU64 = AtomicU64::new(0);
@@ -350,7 +390,36 @@ impl View {
         }
         let delta = v.delta.iter().map(&mut handle).collect::<Result<Vec<_>>>()?;
         let r3 = prev.and_then(|p| p.r3.clone());
-        Ok(View { store, version: v.version, x_d: v.x_d, e_env: v.e_env, groups, delta, meta: v, r3 })
+        let view = View { store, version: v.version, x_d: v.x_d, e_env: v.e_env, groups, delta, meta: v, r3 };
+        view.pin_runs();
+        Ok(view)
+    }
+
+    /// P-big-speed fix 2: the runs' maps pinned. Every run of a new version is opened in the background (its fences and
+    /// customer filter stay in RAM with the handle, a few bytes per 256 KiB block), so a cold read never waits for a run's
+    /// open before its block GET. Runs a previous version opened are shared (`known`), so only new runs are opened.
+    fn pin_runs(&self) {
+        if !PIN_RUNS.load(Relaxed) {
+            return;
+        }
+        let Ok(rt) = tokio::runtime::Handle::try_current() else { return };
+        let hs: Vec<Arc<RunH>> = self.groups.iter().filter_map(|g| g.sealed.clone()).chain(self.delta.iter().cloned()).filter(|h| h.run.get().is_none()).collect();
+        if hs.is_empty() {
+            return;
+        }
+        let store = Arc::clone(&self.store);
+        PINS_STARTED.fetch_add(hs.len() as u64, Relaxed);
+        rt.spawn(async move {
+            use futures::StreamExt;
+            let store = &store;
+            let mut s = futures::stream::iter(hs.into_iter().map(|h| async move { h.open(store).await.map(|_| ()) })).buffer_unordered(16);
+            while let Some(r) = s.next().await {
+                if r.is_err() {
+                    // a run deleted meanwhile (a newer version retired it) or a store error: a read opens it on demand
+                    PIN_ERRORS.fetch_add(1, Relaxed);
+                }
+            }
+        });
     }
 
     /// Index of the group holding `key`.
@@ -433,6 +502,149 @@ impl View {
             ROWS_FROM_RUNS.fetch_add(1, Relaxed);
         }
         Ok(best)
+    }
+
+    /// P-big-speed fix 3 (the customer's box): the blocks of every run that can hold rows in [lo, hi), brought into the
+    /// counter before the customer's query runs. The runs are the ones a read of [lo, hi) would read: each group's
+    /// sealed run and the delta runs above its X_g, minus those whose customer filter excludes the range. Returns (runs
+    /// read, blocks kept). Answers never depend on it: the blocks of a run are immutable, and every read checks the
+    /// counter first.
+    ///
+    /// Review of big-speed (2026-11-13, error 1): before, every run's whole range was fetched in one GET and held
+    /// decoded until the end, with no cap: one read of a 1.5 GiB customer OOM-killed the server under 1 GiB (MEASURED by
+    /// the reviewer). Now:
+    /// - a box whose missing blocks hold more than the customer's allowance of stored bytes (`BOX_CUSTOMER_BYTES`) is not
+    ///   warmed at all (`BOX_TOO_BIG`): its query reads on demand, as with the box off;
+    /// - otherwise the blocks come in waves of at most `BOX_WAVE_BYTES` stored bytes (a small box is still one GET per
+    ///   run, all runs at once: one trip), each wave holding a permit of the process-wide `BOX_INFLIGHT_BYTES` while its
+    ///   GET buffer is alive, and decoding one block at a time into the counter ([`super::counter::warm_wave`]);
+    /// - the decoded bytes kept for one customer stop at `BOX_CUSTOMER_BYTES` too (`BOX_CAPPED`; compressible rows can
+    ///   decode to many times their stored size).
+    pub async fn warm_range(self: &Arc<Self>, lo: &[u8], hi: &[u8]) -> Result<(u64, u64)> {
+        let mut cands: Vec<Arc<RunH>> = Vec::new();
+        let mut seen: std::collections::HashSet<[u8; RUN_ID_LEN]> = Default::default();
+        for gi in self.group_of(lo)..self.groups.len() {
+            let g = &self.groups[gi];
+            if &g.lo[..] >= hi {
+                break;
+            }
+            let glo = std::cmp::max(lo, &g.lo[..]);
+            let ghi = match self.group_hi(gi) {
+                Some(b) => std::cmp::min(hi, b),
+                None => hi,
+            };
+            let mut push = |h: &Arc<RunH>| {
+                if h.meets(glo, Some(ghi)) && !h.filter_excludes(lo, Some(hi)) && seen.insert(h.id) {
+                    cands.push(Arc::clone(h));
+                }
+            };
+            if let Some(s) = &g.sealed {
+                push(s);
+            }
+            for d in self.delta.iter().filter(|d| !skip_delta() && above_cut(d.line.max_seq, g.x_g)) {
+                push(d);
+            }
+        }
+        let store = &self.store;
+        let runs = cands.len() as u64;
+        // the plan: per run, its missing blocks in waves of at most BOX_WAVE_BYTES stored bytes
+        let opened = futures::future::try_join_all(cands.into_iter().map(|h| async move {
+            let run = h.open(store).await?.clone();
+            Ok::<_, anyhow::Error>((h, run))
+        }))
+        .await?;
+        let cap = BOX_CUSTOMER_BYTES.load(Relaxed);
+        let wave = BOX_WAVE_BYTES.load(Relaxed).max(1);
+        let mut waves: Vec<(Arc<RunH>, Arc<Run>, usize, usize, u64)> = Vec::new();
+        let mut stored_total = 0u64;
+        for (h, run) in opened {
+            let Some((a, z)) = run.fence.blocks_for(lo, Some(hi)) else { continue };
+            if let Some(r) = run.customers.customer_of(lo) {
+                if !run.filter.may_contain(&lo[r]) {
+                    continue;
+                }
+            }
+            let whole = super::counter::Need::Key(&[]);
+            let mut cur: Option<(usize, usize, u64)> = None;
+            for b in a..=z {
+                if super::counter::cached(&run, b, None, &whole) {
+                    if let Some((x, y, n)) = cur.take() {
+                        waves.push((Arc::clone(&h), run.clone(), x, y, n));
+                    }
+                    continue;
+                }
+                let (p, q) = run.fence.range(b, b);
+                let n = q - p;
+                stored_total += n;
+                cur = match cur {
+                    Some((x, _, m)) if m + n <= wave => Some((x, b, m + n)),
+                    Some((x, y, m)) => {
+                        waves.push((Arc::clone(&h), run.clone(), x, y, m));
+                        Some((b, b, n))
+                    }
+                    None => Some((b, b, n)),
+                };
+            }
+            if let Some((x, y, n)) = cur {
+                waves.push((Arc::clone(&h), run.clone(), x, y, n));
+            }
+        }
+        if waves.is_empty() {
+            return Ok((runs, 0));
+        }
+        if cap > 0 && stored_total > cap {
+            BOX_TOO_BIG.fetch_add(1, Relaxed);
+            return Ok((runs, 0));
+        }
+        let left = std::sync::atomic::AtomicI64::new(if cap > 0 { cap as i64 } else { i64::MAX });
+        let left = &left;
+        let jobs = waves.into_iter().map(|(h, run, a, z, n)| async move {
+            if left.load(Relaxed) <= 0 {
+                return Ok::<_, anyhow::Error>(0u64);
+            }
+            let _permit = box_permit(n).await;
+            if left.load(Relaxed) <= 0 {
+                return Ok(0);
+            }
+            BOX_WAVES.fetch_add(1, Relaxed);
+            let s = h.read_store(store);
+            let r = match super::counter::warm_wave(s, &run, a, z, left).await {
+                Ok(r) => r,
+                Err(_) if !Arc::ptr_eq(s, store) => {
+                    h.from_local.store(false, Relaxed);
+                    super::counter::warm_wave(store, &run, a, z, left).await?
+                }
+                Err(e) => return Err(e),
+            };
+            Ok(r.0)
+        });
+        use futures::StreamExt;
+        let mut kept = 0u64;
+        let mut st = futures::stream::iter(jobs).buffer_unordered(BOX_PARALLEL);
+        while let Some(r) = st.next().await {
+            kept += r?;
+        }
+        if left.load(Relaxed) <= 0 {
+            BOX_CAPPED.fetch_add(1, Relaxed);
+        }
+        Ok((runs, kept))
+    }
+
+    /// (runs of this version that are open, runs in all).
+    pub fn runs_opened(&self) -> (usize, usize) {
+        let all: Vec<&Arc<RunH>> = self.groups.iter().filter_map(|g| g.sealed.as_ref()).chain(self.delta.iter()).collect();
+        (all.iter().filter(|h| h.run.get().is_some()).count(), all.len())
+    }
+
+    /// Open every run of this version (its fences and customer filter: the runs' "maps"), at most `parallel` at once.
+    /// P-big-speed fix 2: done when a version is loaded, so a cold read never waits for a run's open.
+    pub async fn open_all(self: &Arc<Self>, parallel: usize) -> Result<usize> {
+        use futures::{StreamExt, TryStreamExt};
+        let hs: Vec<Arc<RunH>> = self.groups.iter().filter_map(|g| g.sealed.clone()).chain(self.delta.iter().cloned()).filter(|h| h.run.get().is_none()).collect();
+        let n = hs.len();
+        let store = &self.store;
+        futures::stream::iter(hs.into_iter().map(|h| async move { h.open(store).await.map(|_| ()) })).buffer_unordered(parallel.max(1)).try_collect::<Vec<_>>().await?;
+        Ok(n)
     }
 
     /// A cursor over the runs' rows in [lo, hi) (read rule applied, delete envelopes included), ascending or descending.
@@ -703,6 +915,12 @@ impl RunCur {
         }
     }
 }
+
+/// P-big-speed fix 2: open every run of a version when it is loaded (`View::pin_runs`); runs whose open was started,
+/// and opens that failed (the run is then opened on demand by the read that needs it).
+pub static PIN_RUNS: AtomicBool = AtomicBool::new(true);
+pub static PINS_STARTED: AtomicU64 = AtomicU64::new(0);
+pub static PIN_ERRORS: AtomicU64 = AtomicU64::new(0);
 
 /// perf-latency round 2: the thread warm-up of `RunCur` (on by default; `FENVIX_WARM_THREAD=0` turns it off, measurements).
 pub static WARM_THREAD: AtomicBool = AtomicBool::new(true);

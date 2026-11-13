@@ -760,6 +760,20 @@ impl Server {
                 d.insert("wiredTiger", doc! { "cache": { k: Bson::Int64(v) } });
             }
         }
+        let mb_doc = {
+            let b = tenant_bench::membudget::get();
+            doc! { "limitBytes": b.limit as i64, "source": b.source, "cachesBytes": b.caches as i64, "blockCacheBytes": b.block_cache as i64,
+                   "metaCacheBytes": b.meta_cache as i64, "sealedCacheBytes": b.sealed_cache as i64, "memtableBytes": b.memtable as i64,
+                   "firstCourseBytes": b.first_course as i64, "changeLogBytes": b.change_log as i64, "l0ReadParallel": b.l0_read_parallel as i64,
+                   // review of big-speed: the parts bounded in the review round, and the process-wide memtables now
+                   "memtablesBytes": tenant_bench::memgov::budget() as i64, "memtablesHardBytes": tenant_bench::memgov::hard() as i64,
+                   "memtablesNow": tenant_bench::memgov::TOTAL.load(Relaxed) as i64, "memtablesPeak": tenant_bench::memgov::PEAK.load(Relaxed) as i64,
+                   "memtableBudgetFlushes": tenant_bench::memgov::FLUSHES.load(Relaxed) as i64, "memtableBudgetWaits": tenant_bench::memgov::ADMIT_WAITS.load(Relaxed) as i64,
+                   "memtableBudgetWaitTimeouts": tenant_bench::memgov::ADMIT_TIMEOUTS.load(Relaxed) as i64,
+                   "compactionBytes": b.compaction as i64, "compactionPermitWaits": tenant_bench::membudget::COMPACTION_PERMIT_WAITS.load(Relaxed) as i64,
+                   "compactionPermitTimeouts": tenant_bench::membudget::COMPACTION_PERMIT_TIMEOUTS.load(Relaxed) as i64,
+                   "boxCustomerBytes": b.box_customer as i64, "boxInflightBytes": b.box_inflight as i64, "mergeReadBytes": b.merge_read as i64, "absorbL0": b.absorb_l0 as i64 }
+        };
         d.insert("fenvix", doc! {
             "cache": {
                 "blockBytes": cs.block_usage as i64, "blockCapacity": cs.block_capacity as i64, "blockEntries": cs.block_entries as i64,
@@ -774,6 +788,42 @@ impl Server {
             },
             // compaction passes (lifecycle.rs): running now, of which long merges without a maintenance slot; ended without
             // progress; stopped on request; GC rounds that skipped a tenant busy with a pass
+            // P-big-speed fix 1: the memory budget every cache was sized from (membudget.rs)
+            "memoryBudget": mb_doc,
+            // the customer's box (custbox.rs, P-big-speed fix 3)
+            "customerBox": {
+                "enabled": crate::custbox::ENABLED.load(Relaxed),
+                "warms": crate::custbox::WARMS.load(Relaxed) as i64,
+                "warmRows": crate::custbox::WARM_ROWS.load(Relaxed) as i64,
+                "warmRuns": crate::custbox::WARM_RUNS.load(Relaxed) as i64,
+                "warmBlocks": crate::custbox::WARM_BLOCKS.load(Relaxed) as i64,
+                "warmMicros": crate::custbox::WARM_MICROS.load(Relaxed) as i64,
+                "warmErrors": crate::custbox::WARM_ERRORS.load(Relaxed) as i64,
+                "skippedRecent": crate::custbox::SKIPPED_RECENT.load(Relaxed) as i64,
+                // review of big-speed (error 1): boxes above the customer's allowance (not warmed), warm-ups stopped at
+                // it, waves sent, waves that waited for the process's allowance
+                "tooBig": tenant_bench::fx::view::BOX_TOO_BIG.load(Relaxed) as i64,
+                "capped": tenant_bench::fx::view::BOX_CAPPED.load(Relaxed) as i64,
+                "waves": tenant_bench::fx::view::BOX_WAVES.load(Relaxed) as i64,
+                "permitWaits": tenant_bench::fx::view::BOX_PERMIT_WAITS.load(Relaxed) as i64,
+                "maxBytesPerCustomer": tenant_bench::fx::view::BOX_CUSTOMER_BYTES.load(Relaxed) as i64,
+                "floorTombstones": tenant_bench::fx::floor::tombstones() as i64,
+                "floorTombstoneSkips": tenant_bench::fx::floor::TOMBSTONE_SKIPS.load(Relaxed) as i64,
+                // P-big-speed fix 2: index tie-completion scans run (none on unique indexes)
+                "indexTieScans": crate::coll::TIE_SCANS.load(Relaxed) as i64,
+                // P-big-speed fix 2: SSTs whose index and filters were read at a writer's open; runs opened when a version
+                // was loaded, and those opens that failed
+                "sstMapsPinned": tenant_bench::lifecycle::SST_MAPS_PINNED.load(Relaxed) as i64,
+                "runPinsStarted": tenant_bench::fx::view::PINS_STARTED.load(Relaxed) as i64,
+                "runPinErrors": tenant_bench::fx::view::PIN_ERRORS.load(Relaxed) as i64,
+                // the disk floor under the runs' block cache (fx/floor.rs)
+                "floorBytes": tenant_bench::fx::floor::usage().0 as i64,
+                "floorBlocks": tenant_bench::fx::floor::usage().1 as i64,
+                "floorWrites": tenant_bench::fx::floor::WRITES.load(Relaxed) as i64,
+                "floorHits": tenant_bench::fx::floor::HITS.load(Relaxed) as i64,
+                "floorZeroed": tenant_bench::fx::floor::ZEROED.load(Relaxed) as i64,
+                "floorErrors": tenant_bench::fx::floor::ERRORS.load(Relaxed) as i64,
+            },
             "firstCourse": {
                 "enabled": crate::opening::ENABLED.load(Relaxed),
                 "openings": crate::opening::STATS.openings.load(Relaxed) as i64,

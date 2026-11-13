@@ -7,6 +7,8 @@ pub mod envelope;
 pub mod fx;
 pub mod lifecycle;
 pub mod maps;
+pub mod membudget;
+pub mod memgov;
 pub mod meter;
 pub mod runfmt;
 pub mod simstore;

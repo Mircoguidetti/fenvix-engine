@@ -27,6 +27,7 @@ pub mod drop;
 pub mod gc;
 pub mod droptest;
 pub mod erase;
+pub mod floor;
 pub mod hold;
 pub mod local;
 pub mod pool;
@@ -45,6 +46,8 @@ mod close_pass_gate_tests;
 mod review6_tests;
 #[cfg(test)]
 mod counter_tests;
+#[cfg(test)]
+mod big_speed_tests;
 #[cfg(test)]
 pub(crate) mod tests;
 #[cfg(test)]

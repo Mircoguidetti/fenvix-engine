@@ -75,7 +75,8 @@ impl MeteredCache {
             let fut = loader();
             async move {
                 ran2.store(true, Relaxed);
-                fut.await
+                // copied out of the GET's receive buffer before it is kept (see `insert`)
+                fut.await.map(|e| e.clamp_allocated_size())
             }
         });
         match fetch.await {
@@ -113,7 +114,10 @@ impl DbCache for MeteredCache {
 
     async fn insert(&self, key: CachedKey, value: CachedEntry) {
         self.inserted_bytes.fetch_add(value.size() as u64, Relaxed);
-        self.inner.insert(key, value);
+        // P-big-speed fix 1: a block read from the store is a slice of the HTTP receive buffer of its GET; kept as it is,
+        // one cached 4 KiB block held that whole buffer (MEASURED, heap profile under load: 412 of 692 MB in HTTP read
+        // buffers, with 47 MB of blocks counted by this cache; the server was OOM-killed at 1 GiB). Copied out first.
+        self.inner.insert(key, value.clamp_allocated_size());
     }
 
     async fn remove(&self, key: &CachedKey) {

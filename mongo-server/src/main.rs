@@ -14,7 +14,10 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 #[allow(non_upper_case_globals)]
 #[export_name = "_rjem_malloc_conf"]
-pub static malloc_conf: &[u8] = b"background_thread:true\0";
+// P-big-speed fix 1 (review round, from the session's fallback-memory-bounds.patch): freed pages go back to the system
+// within 1 s (jemalloc's default keeps dirty pages 10 s: under the load at 1 GiB about 220 MB more resident than
+// allocated, MEASURED by the big-speed session)
+pub static malloc_conf: &[u8] = b"background_thread:true,dirty_decay_ms:1000,muzzy_decay_ms:1000\0";
 
 mod uploads;
 mod agg;
@@ -27,6 +30,7 @@ mod agentck;
 mod custkey;
 mod layout2;
 mod opening;
+mod custbox;
 mod prefetch;
 mod hostinfo;
 mod auth;
@@ -201,8 +205,9 @@ struct Args {
     /// (results-round3.md). 2 bounded the memory better but, on real S3, a database at 100 writes/s then flushed L0 so
     /// often that its writes stalled on compaction (p99 2-3 s, request cost doubled); 8 had no such stall (results-round3.md,
     /// part E). 0 = slatedb's default.
-    #[arg(long, default_value_t = 8)]
-    memtable_max_mb: u64,
+    /// Default: 8, or less under a small memory limit (`membudget.rs`).
+    #[arg(long)]
+    memtable_max_mb: Option<u64>,
     /// A writer flushes its memtable to an L0 SST once its oldest unflushed write is this old, in seconds (0 = only when the
     /// memtable is full or after slatedb's 4096 WAL flushes). Measured (mem-growth branch, 50 databases at 2 writes/s): the
     /// memtables of slowly written databases were most of the memory that grew with the writes. A database written fast
@@ -241,19 +246,26 @@ struct Args {
     cursor_timeout_secs: u64,
     /// One block cache shared by every open database, in MiB (slatedb's default is a 512 MiB cache per open database, with no
     /// limit across databases: the memory then grew with the data read by each database).
-    #[arg(long, default_value_t = 256)]
-    block_cache_mb: u64,
+    /// Default: 45% of the caches' share of the memory limit (`membudget.rs`; 0 = none).
+    #[arg(long)]
+    block_cache_mb: Option<u64>,
     /// One metadata cache (SST indexes and filters) shared by every open database, in MiB (slatedb's default: 128 MiB per database).
-    #[arg(long, default_value_t = 64)]
-    meta_cache_mb: u64,
+    /// Default: 15% of the caches' share of the memory limit (`membudget.rs`; 0 = none).
+    #[arg(long)]
+    meta_cache_mb: Option<u64>,
+    /// The memory the process may use, in MiB, instead of the one detected (the smallest of MemTotal and the cgroup v1
+    /// or v2 limit). Every cache and buffer is sized from it (`membudget.rs`, P-big-speed fix 1).
+    #[arg(long, default_value_t = 0)]
+    memory_limit_mb: u64,
     /// The waiter's tools (T1): the two-floor counter (RAM + local disk) with the maps pinned (SST indexes and filters,
     /// collection indexes, metadata), one trip per cold read, read-ahead on a signal. Replaces --block-cache-mb and
     /// --meta-cache-mb. Off by default until reviewed.
     #[arg(long, default_value_t = false)]
     waiter_tools: bool,
-    /// RAM of the counter, in percent of the machine's (or cgroup's) memory (--waiter-tools).
-    #[arg(long, default_value_t = 50)]
-    counter_ram_pct: u64,
+    /// RAM of the counter, in percent of the memory limit (--waiter-tools). Default: the block and metadata caches'
+    /// share of the memory budget (`membudget.rs`).
+    #[arg(long)]
+    counter_ram_pct: Option<u64>,
     /// RAM of the counter in MiB, instead of the percentage (0 = use the percentage).
     #[arg(long, default_value_t = 0)]
     counter_ram_mb: u64,
@@ -288,8 +300,9 @@ struct Args {
     /// Memory the change-stream event log may hold, in MiB (estimated). Older events are dropped first; a resume token older than
     /// the oldest event kept fails with ChangeStreamHistoryLost. The log keeps whole documents, so without this limit every
     /// write grew the process by ~4 KB until 100 000 events were held.
-    #[arg(long, default_value_t = 32)]
-    change_log_max_mb: usize,
+    /// Default: 1/32 of the memory limit, at most 32 (`membudget.rs`).
+    #[arg(long)]
+    change_log_max_mb: Option<usize>,
     /// Relaxed durability for databases without their own setting (`PUT /v1/databases/{db}/durability`), in milliseconds:
     /// 0 (default) = off, otherwise 1000 to 10000. A write with write concern `{w: 1, j: false}` to such a database is
     /// acknowledged before it is durable and becomes durable within this interval (lost if the process dies first);
@@ -503,8 +516,9 @@ struct Args {
     #[arg(long, default_value_t = 1024)]
     sealed_group_mb: u64,
     /// RAM for decoded blocks of our runs, shared by every database (MB).
-    #[arg(long, default_value_t = 256)]
-    sealed_cache_mb: u64,
+    /// Default: 40% of the caches' share of the memory limit (`membudget.rs`).
+    #[arg(long)]
+    sealed_cache_mb: Option<u64>,
     /// Every how many publishes every group is resealed (the others write a delta run only).
     #[arg(long, default_value_t = 3)]
     sealed_reseal_every: u64,
@@ -623,8 +637,9 @@ struct Args {
     #[arg(long, default_value_t = 14)]
     first_course_days: u64,
     /// First course: all openings together, in MiB.
-    #[arg(long, default_value_t = 1024)]
-    first_course_mb: u64,
+    /// Default: 1/16 of the memory limit (`membudget.rs`).
+    #[arg(long)]
+    first_course_mb: Option<u64>,
     /// First course: one opening at most, in KiB (trimmed above it, then dropped).
     #[arg(long, default_value_t = 256)]
     first_course_max_kb: u64,
@@ -633,6 +648,38 @@ struct Args {
     /// cold read instead).
     #[arg(long, default_value_t = 4)]
     first_course_queries: u64,
+    /// The customer's box (custbox.rs, P-big-speed fix 3): the first find of a customer of a customer-keyed collection
+    /// reads the customer's whole key range once, so it and the customer's next requests are served from the caches.
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    customer_box: bool,
+    /// P-big-speed fix 4: the `_id` check of an insert into a customer-keyed collection without a time field reads the
+    /// document key (inside the customer's box) instead of the shared locator (false: the locator, as before).
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    id_check_in_box: bool,
+    /// P-big-speed fix 3: the local-disk floor under the runs' block cache (the customer's box kept in memory, then on
+    /// local disk): its directory (emptied at start; default: `<temp dir>/fenvix-box-floor-<port>`).
+    #[arg(long, default_value = "")]
+    box_disk_dir: String,
+    /// Size of the disk floor in MiB (0 = a quarter of the free space of its file system, at most 4096; with
+    /// `--box-disk false` no floor).
+    #[arg(long, default_value_t = 0)]
+    box_disk_mb: u64,
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    box_disk: bool,
+    /// A customer's box is warmed again after this many seconds.
+    #[arg(long, default_value_t = 600)]
+    customer_box_ttl_secs: u64,
+    /// Review of big-speed (error 1): the most one customer's box warm-up fetches (stored bytes) and keeps (decoded
+    /// bytes), in MiB; a bigger box is read on demand. Default: the runs' cache / 8 (`membudget.rs`; 12 MiB at 1 GiB).
+    #[arg(long)]
+    customer_box_max_mb: Option<u64>,
+    /// The most every box warm-up of the process has in flight together, in MiB. Default: the runs' cache / 4.
+    #[arg(long)]
+    customer_box_inflight_mb: Option<u64>,
+    /// Review of big-speed (error 2): every database's memtables together, in MiB (`memgov.rs`); writes wait past 1.5
+    /// times this. Default: 1/8 of the memory limit (128 MiB at 1 GiB). 0 = no process-wide budget.
+    #[arg(long)]
+    memtables_total_mb: Option<u64>,
     /// With `--sealed-compactor`: the release flag E1 of derived documents (`fx/derive.rs`): reseals store the threads of
     /// the agent checkpoint collections as a message log plus derived documents. Reads understand them always (E0).
     /// On by default since integration-3 for the agent checkpoint collections below (the LangGraph saver's);
@@ -930,13 +977,43 @@ async fn run() -> Result<()> {
     tenant_bench::lifecycle::ACK_BEFORE_DURABLE.store(args.ack_before_durable, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::EXPLICIT_FLUSH.store(args.wal_flush_ms == 0, std::sync::atomic::Ordering::Relaxed);
     dbs::set_wake_limit(args.max_concurrent_wakes);
-    tenant_bench::lifecycle::MEMTABLE_MAX_BYTES.store(args.memtable_max_mb << 20, std::sync::atomic::Ordering::Relaxed);
+    // P-big-speed fix 1: every cache and buffer from the memory limit (an explicit flag wins)
+    let budget = tenant_bench::membudget::install(args.memory_limit_mb);
+    eprintln!("memory budget: limit {} MiB ({}), caches {} MiB (block {}, meta {}, sealed {}), memtable {} MiB, first course {} MiB, change log {} MiB, L0 reads at once {}",
+        budget.limit >> 20, budget.source, budget.caches >> 20, budget.block_cache >> 20, budget.meta_cache >> 20, budget.sealed_cache >> 20, budget.memtable >> 20, budget.first_course >> 20, budget.change_log >> 20, budget.l0_read_parallel);
+    tenant_bench::lifecycle::MEMTABLE_MAX_BYTES.store(args.memtable_max_mb.map_or(budget.memtable, |m| m << 20), std::sync::atomic::Ordering::Relaxed);
     // integration-4: the LangGraph saver's collections are customer-keyed by thread_id by default (the command line wins)
     custkey::configure(&custkey::with_agent_defaults(&args.customer_key, &args.agent_checkpoints))?;
     opening::ENABLED.store(args.first_course, std::sync::atomic::Ordering::Relaxed);
+    custbox::ENABLED.store(args.customer_box, std::sync::atomic::Ordering::Relaxed);
+    coll::ID_CHECK_IN_BOX.store(args.id_check_in_box, std::sync::atomic::Ordering::Relaxed);
+    {
+        let port = args.listen.rsplit(':').next().unwrap_or("0").to_string();
+        let dir = if args.box_disk_dir.is_empty() { std::env::temp_dir().join(format!("fenvix-box-floor-{port}")) } else { std::path::PathBuf::from(&args.box_disk_dir) };
+        if args.box_disk {
+            std::fs::create_dir_all(&dir)?;
+            let mb = if args.box_disk_mb > 0 { args.box_disk_mb } else { (tenant_bench::counter::free_disk_bytes(&dir).unwrap_or(0) / 4 >> 20).min(4096) };
+            tenant_bench::fx::floor::install(dir.clone(), mb << 20)?;
+            eprintln!("box disk floor: {} MiB in {}", mb, dir.display());
+        } else {
+            // review of big-speed: a disabled floor still empties what an earlier process left in its folder
+            tenant_bench::fx::floor::install(dir.clone(), 0)?;
+        }
+    }
+    custbox::TTL_SECS.store(args.customer_box_ttl_secs, std::sync::atomic::Ordering::Relaxed);
+    {
+        use std::sync::atomic::Ordering::Relaxed;
+        // review of big-speed: the box per customer and per process, and the memtables of every database together
+        tenant_bench::fx::view::BOX_CUSTOMER_BYTES.store(args.customer_box_max_mb.map_or(budget.box_customer, |m| m << 20), Relaxed);
+        tenant_bench::fx::view::BOX_INFLIGHT_BYTES.store(args.customer_box_inflight_mb.map_or(budget.box_inflight, |m| m << 20).max(1 << 20), Relaxed);
+        tenant_bench::memgov::BUDGET_BYTES.store(args.memtables_total_mb.map_or(budget.memtables, |m| m << 20), Relaxed);
+        eprintln!("memory budget (review round): box {} MiB per customer, {} MiB in flight; memtables of every database {} MiB (writes wait past {} MiB); merge read-ahead {} MiB; absorption {} L0 SSTs",
+            tenant_bench::fx::view::BOX_CUSTOMER_BYTES.load(Relaxed) >> 20, tenant_bench::fx::view::BOX_INFLIGHT_BYTES.load(Relaxed) >> 20,
+            tenant_bench::memgov::budget() >> 20, tenant_bench::memgov::hard() >> 20, budget.merge_read >> 20, budget.absorb_l0);
+    }
     opening::IDLE_SECS.store(args.first_course_idle_secs, std::sync::atomic::Ordering::Relaxed);
     opening::MAX_AGE_SECS.store(args.first_course_days * 86_400, std::sync::atomic::Ordering::Relaxed);
-    opening::BUDGET_BYTES.store(args.first_course_mb << 20, std::sync::atomic::Ordering::Relaxed);
+    opening::BUDGET_BYTES.store(args.first_course_mb.map_or(budget.first_course, |m| m << 20), std::sync::atomic::Ordering::Relaxed);
     opening::QUERIES.store(args.first_course_queries.max(1), std::sync::atomic::Ordering::Relaxed);
     opening::MAX_BYTES.store(args.first_course_max_kb << 10, std::sync::atomic::Ordering::Relaxed);
     match args.envelopes.as_str() {
@@ -961,7 +1038,7 @@ async fn run() -> Result<()> {
         tenant_bench::fx::ENABLED.store(true, Relaxed);
         tenant_bench::fx::PUBLISH_EVERY.store(n, Relaxed);
         tenant_bench::fx::GROUP_BYTES.store(args.sealed_group_mb.max(1) << 20, Relaxed);
-        tenant_bench::fx::view::CACHE_BYTES.store(args.sealed_cache_mb << 20, Relaxed);
+        tenant_bench::fx::view::CACHE_BYTES.store(args.sealed_cache_mb.map_or(budget.sealed_cache, |m| m << 20), Relaxed);
         tenant_bench::fx::RESEAL_EVERY.store(args.sealed_reseal_every.max(1), Relaxed);
         tenant_bench::fx::erase::DEADLINE_MS.store(args.sealed_erasure_deadline_ms, Relaxed);
         ctl::erase::POLL_MS.store(args.sealed_erasure_poll_ms, Relaxed);
@@ -1062,7 +1139,7 @@ async fn run() -> Result<()> {
     tenant_bench::tiered::SMALL_SCAN_FETCH_TASKS.store(args.small_scan_fetch_tasks, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::FILTER_BITS.store(args.filter_bits_per_key.clamp(1, 64), std::sync::atomic::Ordering::Relaxed);
     if args.waiter_tools {
-        let ram = if args.counter_ram_mb > 0 { args.counter_ram_mb << 20 } else { tenant_bench::counter::machine_ram_bytes() / 100 * args.counter_ram_pct.min(90) };
+        let ram = if args.counter_ram_mb > 0 { args.counter_ram_mb << 20 } else if let Some(p) = args.counter_ram_pct { budget.limit / 100 * p.min(90) } else { budget.counter_ram };
         let (dir, disk) = if args.counter_disk_dir.is_empty() {
             (None, 0)
         } else {
@@ -1081,11 +1158,12 @@ async fn run() -> Result<()> {
         dbs::GET_MANY_PARALLEL.store(512, std::sync::atomic::Ordering::Relaxed);
     } else {
         tenant_bench::simstore::SPLIT_GET_MIN.store(0, std::sync::atomic::Ordering::Relaxed);
-        if args.block_cache_mb > 0 || args.meta_cache_mb > 0 {
-            tenant_bench::lifecycle::install_shared_cache(args.block_cache_mb << 20, args.meta_cache_mb << 20);
+        let (block, meta) = (args.block_cache_mb.map_or(budget.block_cache, |m| m << 20), args.meta_cache_mb.map_or(budget.meta_cache, |m| m << 20));
+        if block > 0 || meta > 0 {
+            tenant_bench::lifecycle::install_shared_cache(block, meta);
         }
     }
-    changes::MAX_BYTES.store(args.change_log_max_mb << 20, std::sync::atomic::Ordering::Relaxed);
+    changes::MAX_BYTES.store(args.change_log_max_mb.map_or(budget.change_log as usize, |m| m << 20), std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::MEMTABLE_MAX_AGE_SECS.store(args.memtable_max_age_secs, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::CACHE_FLUSHED_BLOCKS.store(args.cache_flushed_blocks, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::warm::COMPACTION_WARM.store(args.compaction_warm, std::sync::atomic::Ordering::Relaxed);

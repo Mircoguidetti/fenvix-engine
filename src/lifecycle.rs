@@ -145,9 +145,47 @@ static WRITER_DBS: std::sync::LazyLock<Mutex<HashMap<String, Db>>> = std::sync::
 pub(crate) fn writer_opened(id: &str, db: &Db) {
     OPEN_WRITERS.lock().unwrap().insert(id.to_string());
     WRITER_DBS.lock().unwrap().insert(id.to_string(), db.clone());
+    pin_sst_maps(db);
+}
+
+/// P-big-speed fix 2: SST indexes and filters pinned where they fit. When a writer opens, the index and the filters of
+/// every SST of its manifest are read into the shared metadata cache in the background (16 SSTs at once), so a cold read
+/// of the database waits for its data blocks only. Sized by the memory budget (`membudget.rs`, the metadata cache's
+/// share); SSTs that do not fit are read on demand, as before. New L0 SSTs cache their index and filters when they are
+/// flushed (`flush_cache_policy`).
+pub static PIN_SST_MAPS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+pub static SST_MAPS_PINNED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+fn pin_sst_maps(db: &Db) {
+    use slatedb::DbCacheManagerOps;
+    if !PIN_SST_MAPS.load(std::sync::atomic::Ordering::Relaxed) || DB_CACHE.get().is_none() {
+        return;
+    }
+    let Ok(rt) = tokio::runtime::Handle::try_current() else { return };
+    let ids: Vec<slatedb::manifest::SsTableId> = {
+        let m = db.manifest();
+        let mut seen = std::collections::HashSet::new();
+        m.all_sst_views().map(|v| v.sst.id).filter(|id| seen.insert(*id)).collect()
+    };
+    if ids.is_empty() {
+        return;
+    }
+    let db = db.clone();
+    rt.spawn(async move {
+        use futures::StreamExt;
+        let db = &db;
+        let mut s = futures::stream::iter(ids.into_iter().map(|id| async move { db.warm_sst(id, &[slatedb::CacheTarget::Index, slatedb::CacheTarget::Filters]).await }))
+            .buffer_unordered(16);
+        while let Some(r) = s.next().await {
+            if r.is_ok() {
+                SST_MAPS_PINNED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            }
+        }
+    });
 }
 
 pub(crate) fn writer_closed(id: &str) {
+    crate::memgov::forget(id);
     OPEN_WRITERS.lock().unwrap().remove(id);
     WRITER_DBS.lock().unwrap().remove(id);
     UNFLUSHED_SINCE.lock().unwrap().remove(id);
@@ -387,6 +425,19 @@ pub const MIN_FILTER_KEYS: u32 = 1;
 pub(crate) fn filter_policies() -> Option<Vec<Arc<dyn slatedb::FilterPolicy>>> {
     let bits = FILTER_BITS.load(std::sync::atomic::Ordering::Relaxed);
     Some(vec![Arc::new(slatedb::BloomFilterPolicy::new(bits)) as Arc<dyn slatedb::FilterPolicy>, crate::fx::seqfilter::policy(), crate::fx::seqfilter::cust_policy()])
+}
+
+/// Review of big-speed, error 2 (`memgov.rs`): the newest L0 sequence number of every open writer.
+pub fn writer_l0_seqs() -> HashMap<String, u64> {
+    WRITER_DBS.lock().unwrap().iter().map(|(k, v)| (k.clone(), v.manifest().last_l0_seq())).collect()
+}
+
+/// Review of big-speed, error 2 (`memgov.rs`): flush writer `id`'s memtable to an L0 SST (the call of the age rule);
+/// returns its newest L0 sequence number after the flush, or None when no writer of `id` is open.
+pub async fn flush_writer_memtable_l0(id: &str) -> Result<Option<u64>> {
+    let Some(db) = WRITER_DBS.lock().unwrap().get(id).cloned() else { return Ok(None) };
+    db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await?;
+    Ok(Some(db.manifest().last_l0_seq()))
 }
 
 /// The open writers (T1: the maps loop looks at their manifests).
@@ -1974,6 +2025,66 @@ impl Tenant {
         Ok(r)
     }
 
+    /// P-big-speed fix 3 (the customer's box, `mongo-server/src/custbox.rs`): bring the blocks a read of the physical
+    /// range [lo, hi) needs into the caches, all at once and without decoding a row: our runs' blocks for the range (one
+    /// ranged GET per run, every run in parallel, `View::warm_range`) and, at the same time, SlateDB's blocks for it
+    /// (a raw scan with the read's X_d filter, so SSTs holding only absorbed rows are skipped as in every read, its
+    /// blocks cached). Returns (runs read, run blocks fetched, SlateDB rows passed). Answers never depend on it.
+    pub async fn warm_range(&self, lo: &[u8], hi: &[u8], read_ahead: usize) -> Result<(u64, u64, u64)> {
+        if lo >= hi {
+            return Ok((0, 0, 0));
+        }
+        let st = self.step_state().await?;
+        let view = st.fx.clone();
+        // review of big-speed (error 1): SlateDB's part of the box is read with a small read-ahead whose buffers hold a
+        // permit of the process's box allowance, and the scan stops once it passed the customer's allowance
+        // (`fx::view::BOX_CUSTOMER_BYTES`): the rest of a big customer is read on demand
+        use std::sync::atomic::Ordering::Relaxed;
+        let read_ahead = read_ahead.min(crate::fx::view::BOX_WAVE_BYTES.load(Relaxed) as usize / 4).max(64 << 10);
+        let cap = crate::fx::view::BOX_CUSTOMER_BYTES.load(Relaxed);
+        let mut opts = slatedb::config::ScanOptions {
+            read_ahead_bytes: read_ahead,
+            max_fetch_tasks: crate::tiered::scan_fetch_tasks(read_ahead),
+            cache_blocks: true,
+            durability_filter: slatedb::config::DurabilityLevel::Memory,
+            ..Default::default()
+        };
+        if let Some(c) = view.as_ref().and_then(|v| crate::fx::seqfilter::context(v.x_d)) {
+            opts.filter_context = Some(c);
+        }
+        let slate = async {
+            let _permit = crate::fx::view::box_permit((read_ahead * opts.max_fetch_tasks) as u64).await;
+            let range = (std::ops::Bound::Included(lo.to_vec()), std::ops::Bound::Excluded(hi.to_vec()));
+            let mut it = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
+                Mode::Reader(r) => r.scan_with_options(range, &opts).await?,
+                Mode::Writer(db) => db.scan_with_options(range, &opts).await?,
+            };
+            let (mut n, mut bytes) = (0u64, 0u64);
+            while let Some(kv) = it.next().await? {
+                n += 1;
+                bytes += (kv.key.len() + kv.value.len()) as u64;
+                if cap > 0 && bytes > cap {
+                    crate::fx::view::BOX_CAPPED.fetch_add(1, Relaxed);
+                    break;
+                }
+            }
+            Ok::<_, anyhow::Error>(n)
+        };
+        let runs = async {
+            match &view {
+                Some(v) => {
+                    let hold = self.holds.take(Arc::clone(v));
+                    let r = v.warm_range(lo, hi).await;
+                    drop(hold);
+                    r
+                }
+                None => Ok((0, 0)),
+            }
+        };
+        let (n, (r, b)) = futures::future::try_join(slate, runs).await?;
+        Ok((r, b, n))
+    }
+
     /// Load the newest version of our manifest (at open, after an upgrade, on a reader's refresh). A writer checks that
     /// SlateDB has every row up to X_d and publishes a fence version, a copy of the newest under the next number (review
     /// of step 0, F1): a late PUT of a dead process then cannot land a version this writer does not know.
@@ -3024,6 +3135,13 @@ impl Tenant {
             // one T_pin ago. Until then the writes stay plain, as release E0 writes them.
             self.ensure_marker().await?;
         }
+        // review of big-speed, error 2: one memtable budget for the whole process (`memgov.rs`); over its hard limit the
+        // write waits for the governor's flushes, as SlateDB's own backpressure waits for one database
+        let mem_bytes = crate::memgov::batch_bytes(ops.iter().map(|o| match o {
+            Op::Put(k, v) => (k.len(), v.len()),
+            Op::Delete(k) => (k.len(), 0),
+        }));
+        crate::memgov::admit().await;
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
         let mut batch = slatedb::WriteBatch::new();
         let enveloped = self.env.is_some();
@@ -3061,6 +3179,7 @@ impl Tenant {
             eprintln!("SLOW_STAGE u={:.0} db={} ms={} l0={} l0_max_held={l0_max_held}", crate::waits::unix_ms(), self.id, t_write.elapsed().as_millis(), db.manifest().l0().len());
         }
         note_unflushed(&self.id, handle.seqnum());
+        crate::memgov::note(&self.id, handle.seqnum(), mem_bytes);
         if let Some(b) = before {
             self.group.vis.add(handle.seqnum(), b, keys);
             let mut m = VIS_GROUPS.lock().unwrap();
@@ -3077,11 +3196,11 @@ impl Tenant {
         if self.env.is_none() && crate::envelope::START.load(std::sync::atomic::Ordering::Relaxed) {
             self.ensure_marker().await?; // release E1, as in `stage`
         }
+        crate::memgov::admit().await;
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
-        if self.env.is_some() {
-            return Ok(db.put(key, crate::envelope::live(value.to_vec())).await?);
-        }
-        Ok(db.put(key, value).await?)
+        let h = if self.env.is_some() { db.put(key, crate::envelope::live(value.to_vec())).await? } else { db.put(key, value).await? };
+        crate::memgov::note(&self.id, h.seqnum(), crate::memgov::batch_bytes(std::iter::once((key.len(), value.len()))));
+        Ok(h)
     }
 
     /// Give the tenant up without any of the clean-close bookkeeping (no marker, no compaction request):

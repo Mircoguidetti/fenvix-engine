@@ -1,0 +1,27 @@
+{
+ "store": "s3",
+ "control": false,
+ "trials": [
+  {
+   "secs": 15.0,
+   "acked_ids": 20942,
+   "acked_writes_before_kill": 41838,
+   "lost_inserts": 0,
+   "lost_updates": 0,
+   "wal_puts_per_write": 0.141
+  },
+  {
+   "secs": 15.0,
+   "acked_ids": 20250,
+   "acked_writes_before_kill": 40469,
+   "lost_inserts": 0,
+   "lost_updates": 0,
+   "wal_puts_per_write": 0.139
+  }
+ ],
+ "total": {
+  "acked_ids": 41192,
+  "lost_inserts": 0,
+  "lost_updates": 0
+ }
+}

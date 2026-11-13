@@ -806,7 +806,11 @@ pub fn owns(id: &str, path: &str) -> bool {
 pub async fn delete_run(store: &Arc<dyn ObjectStore>, id: &str, path: &str) -> Result<()> {
     ensure!(owns(id, path) || ctl(&CONTROL_NO_OWNERSHIP), "database {id} does not own run {path}: never deleted by it");
     match store.delete(&Path::from(path)).await {
-        Ok(()) | Err(object_store::Error::NotFound { .. }) => Ok(()),
+        Ok(()) | Err(object_store::Error::NotFound { .. }) => {
+            // review of big-speed, error 4: a deleted run leaves nothing on the local disk floor
+            super::floor::run_deleted(path);
+            Ok(())
+        }
         Err(x) => Err(x.into()),
     }
 }
