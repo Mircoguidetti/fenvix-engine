@@ -299,7 +299,8 @@ mod tests {
         let mut last = Vec::new();
         for _ in 0..n {
             let r = rt.block_on(run_script(&s));
-            for l in r.trace.iter().filter(|l| l.contains("->") || l.contains("mark") || l.contains("storm")) {
+            let all = std::env::var_os("SIM_STORY_ALL").is_some();
+            for l in r.trace.iter().filter(|l| all || l.contains("->") || l.contains("mark") || l.contains("storm")) {
                 eprintln!("  {l}");
             }
             for v in r.violations.iter().take(8) {
@@ -422,6 +423,82 @@ mod tests {
         eprintln!("SIM HOLE W2 (compactors {compactors}): builder reseals refused {refused}");
         assert_eq!(f, 0, "{v:?}");
         assert!(refused > 0, "the builder publish over the generated runs was a reseal: it must be refused");
+    }
+
+    /// sim-test-2 candidate: GC decides from the store (drop lease free, no pair yet), then a restore point pairs with a
+    /// version that is not the newest (the newest is a builder version whose X_d is above the checkpoint's last L0 seq),
+    /// then GC deletes what it decided: the paired version and its runs. `SIM_STORY_LIVE=1`: the live GC of a zombie's
+    /// compactor instead of the closed GC.
+    #[test]
+    fn sim_story_gc_decides_before_a_point_pairs() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let mut ev = vec![Open { p: 0, writer: true }];
+        for c in 0..3 {
+            ev.push(fill(0, c, 0));
+        }
+        ev.extend([Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }, fill(0, 3, 0), Flush { p: 0 }, CompDrain { p: 0 }]);
+        ev.extend([Close { p: 0 }, Open { p: 1, writer: true }, fill(1, 4, 0), Publish { p: 1 }, Abandon { p: 1 }, Sleep { ms: 2700 }]);
+        ev.extend([
+            Hold { p: 2, class: Class::FxVersion, op: Some(NOp::Delete), skip: 0, land: true, all: false, rid: 1 },
+            GcClosed { p: 2 },
+            Point { p: 0, tag: 1 },
+            Release { rid: 1 },
+            Sleep { ms: 1000 },
+            Mark { tag: 2 },
+            Restore { p: 0, mark: 2, apply: false },
+        ]);
+        let (f, v) = run_story(&rt, "GC decides before a point pairs", env_u64("SIM_KNOBS", 0) as u8, ev);
+        assert_eq!(f, 0, "{v:?}");
+    }
+
+    /// New hole P (sim-test-2): a restore point pairs below the drop. The compactor's drop removed from SlateDB the rows
+    /// at or below X_d (they live only in our runs). The database then moves to a process whose compactor has not started
+    /// (or is starting: its catch-up publish); its builder publishes a version whose X_d is a WAL seq above the flushed L0.
+    /// `pair::pair_checkpoint` picks the newest version with X_d <= the checkpoint's last L0 seq, so it passes over the
+    /// newest and pairs with an older version (pinned by an earlier restore point), or with none once GC (retention 0,
+    /// the server's default) deleted the older ones. `PairedReader` then reads SlateDB alone, or through a version that
+    /// lacks the rows dropped after it: a restore to any time after the point misses them (and its apply deletes them
+    /// from the live database). Two cases, each one run: no version (194 violations on head+ZW, MEASURED) and a pinned
+    /// older version (96, MEASURED). Fails on integration-5-stack fea18a34 + fix-sim-holes' Z and W fixes; ignored until
+    /// the fix is in: `--ignored`. (Hole W hides it on the bare head: run on a build with W fixed.) `SIM_STORY_FORK=1`: a
+    /// fork instead of a restore point (safe: its quiesce flushes, so the newest version qualifies).
+    #[test]
+    #[ignore]
+    fn sim_hole_p_point_pairs_below_the_drop() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use Ev::*;
+        let fork = std::env::var_os("SIM_STORY_FORK").is_some();
+        let mut total = Vec::new();
+        for pinned in [false, true] {
+            // `pinned`: an earlier restore point pins an older version; the new point pairs with it, below the drop
+            let mut ev = vec![Open { p: 0, writer: true }, fill(0, 0, 0), Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }];
+            for c in 1..4 {
+                ev.extend([fill(0, c, 0), Flush { p: 0 }, CompDrain { p: 0 }, Sleep { ms: 300 }]);
+                if pinned && c == 1 {
+                    ev.push(Point { p: 2, tag: 9 });
+                }
+            }
+            // the compactor's drop: rows at or below X_d now live only in our runs
+            ev.extend([DropThrough { p: 0 }, Close { p: 0 }]);
+            // another process, no compactor yet: its builder publishes above the flushed L0, then it dies
+            ev.extend([Open { p: 1, writer: true }, Write { p: 1, ops: vec![(4, 0, false), (4, 1, false)] }, Publish { p: 1 }, Abandon { p: 1 }]);
+            // GC of the closed database, retention 0: only the newest version (and the pinned one) stays
+            ev.extend([Sleep { ms: 2700 }, GcClosed { p: 2 }]);
+            if fork {
+                ev.extend([Open { p: 2, writer: true }, Fork { p: 2, copy: false, tag: 1 }]);
+            } else {
+                ev.extend([Point { p: 2, tag: 1 }, Sleep { ms: 50 }, Mark { tag: 2 }, Restore { p: 2, mark: 2, apply: false }]);
+            }
+            let (_, v) = run_story(&rt, if pinned { "hole P, a pinned older version" } else { "hole P, no version" }, env_u64("SIM_KNOBS", 0) as u8, ev);
+            total.extend(v);
+        }
+        assert!(total.is_empty(), "hole P: a restore point paired below the drop ({} violations): {:?}", total.len(), total.iter().take(4).collect::<Vec<_>>());
     }
 
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
