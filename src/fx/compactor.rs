@@ -710,6 +710,10 @@ impl Compactor {
     pub async fn start_remote(store: Arc<dyn ObjectStore>, id: crate::lifecycle::DbAt, mut knobs: Knobs, pool: Arc<Pool>, runtime: tokio::runtime::Handle, claim: Arc<super::remote::Claim>, slate_every: Duration) -> Result<Arc<Compactor>> {
         knobs.lease = knobs.remote_lease;
         knobs.check()?;
+        // the waiter follows our manifest as a reader: its state may be T_pin old, and a hold on it lives the hold life,
+        // and the version it renews to may land up to the PUT timeout after its first sight here (rules 6, 10, 23, F6)
+        let t_pin = Duration::from_millis(super::T_PIN_MS.load(Relaxed));
+        ensure!(knobs.remote_lease > t_pin + super::hold::hold_life() + knobs.put_timeout, "remote lease {:?} must exceed T_pin {t_pin:?} plus the hold life {:?} plus the PUT timeout {:?} (P-B3)", knobs.remote_lease, super::hold::hold_life(), knobs.put_timeout);
         ensure!(!manifest::needs_catch_up(&store, &id).await?, "database {id}: not caught up (or a compaction pass ran ungated): the waiter must publish a catch-up version first");
         let (v, _slot) = manifest::load_newest_trusted(&store, &id).await?.ok_or_else(|| anyhow!("database {id}: no version of our manifest yet (the waiter publishes the first one)"))?;
         let slate = super::remote::RemoteSlate::open(&store, &id, slate_every).await?;
@@ -2077,6 +2081,10 @@ impl Compactor {
 
     /// Run jobs inline until nothing is due (tests and the offline replay): absorb, erasures, merges, reseals.
     pub async fn drain(&self, reseals: bool) -> Result<()> {
+        // P-B3: a remote compactor drains what the store's newest SlateDB manifest lists
+        if let SlateSrc::Remote(r) = &self.db {
+            r.refresh().await?;
+        }
         loop {
             let mut did = self.absorb_once().await? > 0;
             did |= self.erase_once().await?;

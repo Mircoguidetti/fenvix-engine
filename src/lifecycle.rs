@@ -2788,6 +2788,8 @@ impl Tenant {
         use std::sync::atomic::Ordering::Relaxed;
         anyhow::ensure!(crate::fx::ENABLED.load(Relaxed), "--sealed-runs is off");
         anyhow::ensure!(self.fx_shared.is_none(), "database {}: a compactor publishes this database's versions", self.id);
+        // P-B3: a writer under a remote compactor publishes nothing (its versions are the remote compactor's)
+        anyhow::ensure!(!self.fx_remote, "database {}: a remote compactor publishes this database's versions", self.id);
         // fix-write-stalls: a first build running off the lock ends (and is installed) before another publish starts
         if self.fx_first.is_some() {
             self.fx_first_poll(true).await?;
@@ -3330,6 +3332,8 @@ impl Tenant {
     pub async fn fx_erase_publish(&mut self, base: u64, v: &crate::fx::manifest::Version) -> Result<bool> {
         use std::sync::atomic::Ordering::Relaxed;
         anyhow::ensure!(self.fx_shared.is_none(), "database {}: a compactor publishes this database's versions", self.id);
+        // P-B3: a writer under a remote compactor publishes nothing (its versions are the remote compactor's)
+        anyhow::ensure!(!self.fx_remote, "database {}: a remote compactor publishes this database's versions", self.id);
         self.fx_settle_fence().await?;
         if self.fx.as_ref().map(|x| x.version) != Some(base) {
             return Ok(false);

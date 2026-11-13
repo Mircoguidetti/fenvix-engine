@@ -33,10 +33,16 @@ mod tests {
     /// The script of a seed: `SIM_GEN=2` gives sim-test-2's scripts (`cluster::ext::generate2`: restore points, restores,
     /// forks, the generator, SlateDB's GC, storms, many groups); otherwise the scripts of sim-test.
     fn gen(seed: u64, steps: usize) -> Script {
-        if env_u64("SIM_GEN", 1) == 2 {
+        let s = if env_u64("SIM_GEN", 1) == 2 {
             super::cluster::ext::generate2(seed, steps)
         } else {
             generate(seed, steps)
+        };
+        // P-B3: `SIM_REMOTE=1`, the remote compactor's scripts (`cluster/remote.rs`)
+        if super::cluster::remote::on() {
+            super::cluster::remote::generate_remote(s)
+        } else {
+            s
         }
     }
 
@@ -53,6 +59,7 @@ mod tests {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
+        let _r = super::cluster::remote::RemoteGuard::set();
         let steps = env_u64("SIM_STEPS", 90) as usize;
         let min_max = env_u64("SIM_MIN_MAX", 3) as usize;
         let par = env_u64("SIM_PAR", 4) as usize;
@@ -119,6 +126,9 @@ mod tests {
             out_v
         });
         eprintln!("SIM SUMMARY: seeds {total}, seeds with a violation {}, {:.0} s", failed.len(), t0.elapsed().as_secs_f64());
+        if super::cluster::remote::on() {
+            eprintln!("SIM REMOTE COVERAGE: {}", super::cluster::remote::coverage());
+        }
         assert!(failed.is_empty(), "seeds with a violation: {:?}", failed.iter().map(|(s, _)| *s).collect::<Vec<_>>());
     }
 
@@ -129,6 +139,7 @@ mod tests {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
+        let _r = super::cluster::remote::RemoteGuard::set();
         use super::net::Profile;
         use Ev::*;
         let w = |p: usize, c: usize| Write { p, ops: (0..PER_CUSTOMER).map(|i| (c, i, false)).collect() };
@@ -165,6 +176,7 @@ mod tests {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
+        let _r = super::cluster::remote::RemoteGuard::set();
         use super::net::Profile;
         use Ev::*;
         let ev = vec![
@@ -202,6 +214,7 @@ mod tests {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
+        let _r = super::cluster::remote::RemoteGuard::set();
         use super::net::Profile;
         use Ev::*;
         let mut ev = vec![Open { p: 0, writer: true }, Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (0, i, false)).collect() }, Publish { p: 0 }, Write { p: 0, ops: vec![(0, 0, false)] }, CompStart { p: 0 }];
@@ -243,6 +256,7 @@ mod tests {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
+        let _r = super::cluster::remote::RemoteGuard::set();
         use super::net::{Class, Op as NOp, Profile};
         use Ev::*;
         let mut ev = vec![Open { p: 0, writer: true }];
@@ -329,6 +343,7 @@ mod tests {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
+        let _r = super::cluster::remote::RemoteGuard::set();
         use Ev::*;
         let mut ev = vec![Open { p: 0, writer: true }];
         for c in 0..3 {
@@ -351,6 +366,7 @@ mod tests {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
+        let _r = super::cluster::remote::RemoteGuard::set();
         use Ev::*;
         let copy = std::env::var_os("SIM_STORY_COPY").is_some();
         let mut ev = vec![Open { p: 0, writer: true }];
@@ -386,6 +402,7 @@ mod tests {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
+        let _r = super::cluster::remote::RemoteGuard::set();
         // the world guard restores SERVER_ON; this one restores DROP_DEFAULT (also after a failed assert)
         struct DropDefault(bool);
         impl Drop for DropDefault {
@@ -436,6 +453,7 @@ mod tests {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
+        let _r = super::cluster::remote::RemoteGuard::set();
         use super::net::{Class, Op as NOp};
         use Ev::*;
         let mut ev = vec![Open { p: 0, writer: true }];
@@ -474,6 +492,7 @@ mod tests {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
+        let _r = super::cluster::remote::RemoteGuard::set();
         use Ev::*;
         let fork = std::env::var_os("SIM_STORY_FORK").is_some();
         let refused = crate::fx::pair::PAIRS_REFUSED_BELOW_NEWEST.load(std::sync::atomic::Ordering::Relaxed);
@@ -516,6 +535,7 @@ mod tests {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
+        let _r = super::cluster::remote::RemoteGuard::set();
         let mut s = gen(seed, env_u64("SIM_STEPS", 90) as usize);
         if let Ok(k) = std::env::var("SIM_KEEP") {
             let keep: Vec<u32> = k.split(',').map(|x| x.trim().parse().unwrap()).collect();
@@ -538,5 +558,51 @@ mod tests {
             }
         }
         eprintln!("SIM REPLAY seed {seed}: {failing} of {n} runs with a violation");
+    }
+
+    /// P-B3: the remote compactor's story. The owner hands its compaction to a remote compactor on slot 1, writes and
+    /// flushes; the remote absorbs, publishes, and (once the remote lease has passed) drops the absorbed rows from SlateDB.
+    /// The owner reads every key: it must renew its state as a reader does (`Tenant::fx_follow_remote`), or it reads
+    /// with a version whose rows the remote's fold dropped. `SIM_REMOTE_CONTROL=1`: the owner never renews (the negative
+    /// control, `fx::remote::CONTROL_WRITER_NO_T_PIN`): the oracle must find lost acknowledged writes.
+    #[test]
+    fn sim_story_remote_compactor() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        let old = crate::fx::remote::WAITER_DEFERS.swap(true, std::sync::atomic::Ordering::SeqCst);
+        let control = std::env::var("SIM_REMOTE_CONTROL").as_deref() == Ok("1");
+        crate::fx::remote::CONTROL_WRITER_NO_T_PIN.store(control, std::sync::atomic::Ordering::SeqCst);
+        use super::net::Profile;
+        use Ev::*;
+        let w = |p: usize, c: usize, i0: usize| Write { p, ops: (i0..PER_CUSTOMER).step_by(3).map(|i| (c, i, false)).collect() };
+        let mut ev = vec![Open { p: 0, writer: true }];
+        for c in 0..CUSTOMERS {
+            ev.push(w(0, c, 0));
+        }
+        ev.extend([Publish { p: 0 }, Write { p: 0, ops: vec![(0, 1, false)] }, Defer { p: 0 }, RStart { p: 1 }, Read { p: 0 }]);
+        for round in 0..3 {
+            for c in 0..CUSTOMERS {
+                ev.push(w(0, c, round % 3));
+            }
+            ev.extend([Flush { p: 0 }, CompDrain { p: 1 }, Read { p: 0 }]);
+        }
+        ev.extend([Sleep { ms: 3000 }, w(0, 2, 1), Flush { p: 0 }, CompDrain { p: 1 }, DropThrough { p: 1 }, w(0, 5, 2), Flush { p: 0 }, Read { p: 0 }, Gc { p: 1 }, Kill { p: 1 }, Sleep { ms: 3500 }, RStart { p: 2 }, w(0, 1, 0), Flush { p: 0 }, CompDrain { p: 2 }, Read { p: 0 }]);
+        let s = Script { seed: 7, profile: Profile::none(), knobs: 0, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Default::default() };
+        let r = rt.block_on(run_script(&s));
+        crate::fx::remote::CONTROL_WRITER_NO_T_PIN.store(false, std::sync::atomic::Ordering::SeqCst);
+        crate::fx::remote::WAITER_DEFERS.store(old, std::sync::atomic::Ordering::SeqCst);
+        for l in r.trace.iter().filter(|l| l.contains("->")) {
+            eprintln!("  {l}");
+        }
+        for v in r.violations.iter().take(10) {
+            eprintln!("VIOLATION {v}");
+        }
+        eprintln!("SIM STORY remote compactor (control {control}): {} violations; {}", r.violations.len(), r.stats);
+        if control {
+            assert!(!r.violations.is_empty(), "the negative control (the owner reads with a state it never renews) must lose acknowledged writes");
+        } else {
+            assert!(r.violations.is_empty(), "{} violations", r.violations.len());
+        }
     }
 }

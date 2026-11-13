@@ -39,6 +39,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 pub mod ext;
+pub mod remote;
 pub use ext::Ext;
 
 pub const SLOTS: usize = 3;
@@ -276,6 +277,12 @@ pub enum Ev {
     SlateGc { p: usize },
     /// S3 in trouble from now on (`on`: many 503s and timeouts after the write landed) or back to the seed's profile.
     Storm { on: bool },
+    /// P-B3: a remote compactor on slot p (claim, `Compactor::start_remote`, renewals), its stop, the owner handing its
+    /// compaction over, and the owner's read of every key checked at once (`cluster/remote.rs`).
+    RStart { p: usize },
+    RStop { p: usize },
+    Defer { p: usize },
+    Read { p: usize },
 }
 
 impl Ev {
@@ -284,6 +291,7 @@ impl Ev {
         match self {
             Open { p, .. } | Upgrade { p } | Write { p, .. } | Erase { p, .. } | Flush { p } | Publish { p } | FirstStart { p } | FirstPoll { p } | CompStart { p } | CompDrain { p } | CompStop { p } | DropThrough { p } | Gc { p } | ErasePass { p } | Retire { p } | GcClosed { p } | ClosePass { p } | Close { p } | Abandon { p } | Kill { p } | Hold { p, .. } => Some(*p),
             Point { p, .. } | PointPrune { p, .. } | Restore { p, .. } | Fork { p, .. } | Generate { p, .. } | SlateGc { p } => Some(*p),
+            RStart { p } | RStop { p } | Defer { p } | Read { p } => Some(*p),
             Release { .. } | Sleep { .. } | Mark { .. } | Storm { .. } => None,
         }
     }
@@ -600,6 +608,8 @@ struct Slot {
     lc: Arc<Lifecycle>,
     t: Arc<tokio::sync::Mutex<Option<Tenant>>>,
     comp: Arc<Mutex<Option<Arc<Compactor>>>>,
+    /// P-B3: the compactor claim of a remote compactor running in this process.
+    rc: Arc<Mutex<Option<Arc<crate::fx::remote::Claim>>>>,
 }
 
 pub struct Run {
@@ -629,7 +639,7 @@ const STEP_WAIT: Duration = Duration::from_millis(1500);
 fn new_slot(net: &Arc<Net>, life: u64) -> Slot {
     let store = net.proc_store(life);
     let lc = Lifecycle::new(Arc::new(crate::counting::CountingStore::new(Arc::clone(&store))), None);
-    Slot { life, store, lc, t: Arc::new(tokio::sync::Mutex::new(None)), comp: Arc::new(Mutex::new(None)) }
+    Slot { life, store, lc, t: Arc::new(tokio::sync::Mutex::new(None)), comp: Arc::new(Mutex::new(None)), rc: Arc::new(Mutex::new(None)) }
 }
 
 fn short(e: &anyhow::Error) -> String {
@@ -726,6 +736,9 @@ impl World {
         let kp = self.knobs;
         if ext::is_ext(&e) {
             return self.ext_op(eid, e);
+        }
+        if remote::is_remote(&e) {
+            return self.remote_op(eid, e);
         }
         Box::pin(async move {
             let Ok(mut g) = tl.try_lock() else { return "busy (skipped)".into() };

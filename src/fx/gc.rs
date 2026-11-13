@@ -283,6 +283,10 @@ async fn trusted_floor(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle
 /// process that opened the database meanwhile reads the newest version or a newer one, whose runs are all kept. Returns
 /// how long to wait before calling again when something is left for later.
 pub async fn gc_closed(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<Option<std::time::Duration>> {
+    // P-B3: with a remote compactor, its GC is the database's only GC (a GC here does not know its jobs' outputs)
+    if super::remote::WAITER_DEFERS.load(Relaxed) {
+        return Ok(None);
+    }
     let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     use std::time::Duration;
     let versions = manifest::list_versions(store, id).await?;
