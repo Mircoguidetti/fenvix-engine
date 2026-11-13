@@ -80,6 +80,8 @@ mod perf_erase_tests;
 mod write_stalls_tests;
 #[cfg(test)]
 mod review_final_tests;
+#[cfg(test)]
+pub mod sim;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
 

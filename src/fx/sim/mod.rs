@@ -1,0 +1,173 @@
+//! P-sim-test (2026-11-13): a seeded simulation that searches the interleavings of late writes, takeovers, kills, GC,
+//! erasure, compaction and publishes, instead of finding them one hand-written case at a time.
+//!
+//! - `net`: the simulated store (step 1).
+//! - `cluster`: the simulated cluster, the script of a seed, the oracle, the minimizer (steps 2 and 3).
+//!
+//! Run (step 4): `SIM_SEEDS=0..200 SIM_PAR=4 cargo test --release --lib fx::sim::tests::sim_seeds -- --nocapture`.
+//! Replay one seed (the minimal script with `SIM_KEEP`): `SIM_SEED=17 SIM_KEEP=0,4,9 cargo test --release --lib
+//! fx::sim::tests::sim_replay -- --nocapture`.
+
+pub mod cluster;
+pub mod net;
+
+#[cfg(test)]
+mod tests {
+    use super::cluster::*;
+    use std::io::Write as _;
+    use std::sync::Arc;
+
+    fn env_u64(k: &str, d: u64) -> u64 {
+        std::env::var(k).ok().and_then(|v| v.parse().ok()).unwrap_or(d)
+    }
+
+    fn seeds() -> Vec<u64> {
+        let s = std::env::var("SIM_SEEDS").unwrap_or_else(|_| "0..8".into());
+        if let Some((a, b)) = s.split_once("..") {
+            (a.parse().unwrap()..b.parse().unwrap()).collect()
+        } else {
+            s.split(',').map(|x| x.trim().parse().unwrap()).collect()
+        }
+    }
+
+    fn runtime() -> tokio::runtime::Runtime {
+        tokio::runtime::Builder::new_multi_thread().worker_threads(env_u64("SIM_THREADS", 4) as usize).enable_all().build().unwrap()
+    }
+
+    /// Run every seed of `SIM_SEEDS`, `SIM_PAR` at a time. A seed with a violation is replayed (`SIM_REPLAYS`) and
+    /// minimized (`SIM_MIN_BUDGET` runs); its report goes to `SIM_OUT` (default `sim-out/`). Fails if any seed found one.
+    #[test]
+    fn sim_seeds() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        setup_world();
+        let steps = env_u64("SIM_STEPS", 60) as usize;
+        let par = env_u64("SIM_PAR", 4) as usize;
+        let replays = env_u64("SIM_REPLAYS", 3) as usize;
+        let budget = env_u64("SIM_MIN_BUDGET", 40) as usize;
+        let out = std::env::var("SIM_OUT").unwrap_or_else(|_| "sim-out".into());
+        std::fs::create_dir_all(&out).unwrap();
+        let seeds = seeds();
+        let total = seeds.len();
+        let t0 = std::time::Instant::now();
+        let failed: Vec<(u64, Vec<String>)> = rt.block_on(async {
+            let sem = Arc::new(tokio::sync::Semaphore::new(par));
+            let mut hs = Vec::new();
+            for seed in seeds {
+                let sem = Arc::clone(&sem);
+                hs.push(tokio::spawn(async move {
+                    let _p = sem.acquire_owned().await.unwrap();
+                    let s = generate(seed, steps);
+                    let r = run_script(&s).await;
+                    eprintln!("SIM seed {seed}: {} violations; {}", r.violations.len(), r.stats);
+                    (s, r)
+                }));
+            }
+            let mut failed = Vec::new();
+            for h in hs {
+                let (s, r) = h.await.unwrap();
+                if r.violations.is_empty() {
+                    continue;
+                }
+                failed.push((s, r));
+            }
+            let mut out_v = Vec::new();
+            for (s, r) in failed {
+                // replay the same seed: does it fail again?
+                let mut again = 0;
+                for _ in 0..replays {
+                    if !run_script(&s).await.violations.is_empty() {
+                        again += 1;
+                    }
+                }
+                let (min, mr) = if budget > 0 { minimize(&s, 2, budget).await } else { (s.clone(), run_script(&s).await) };
+                let mut rep = String::new();
+                rep.push_str(&format!("SEED {} (steps {}): {} violations; replays failing {again} of {replays}\n{}\n\nVIOLATIONS\n", s.seed, s.events.len(), r.violations.len(), r.stats));
+                for v in r.violations.iter().take(40) {
+                    rep.push_str(&format!("  {v}\n"));
+                }
+                rep.push_str(&format!("\nMINIMAL SCRIPT ({} events; SIM_KEEP={}), its run: {} violations\n", min.events.len(), min.events.iter().map(|(i, _)| i.to_string()).collect::<Vec<_>>().join(","), mr.violations.len()));
+                rep.push_str(&describe(&min));
+                for v in mr.violations.iter().take(20) {
+                    rep.push_str(&format!("  ! {v}\n"));
+                }
+                rep.push_str("\nTRACE OF THE MINIMAL RUN\n");
+                for l in &mr.trace {
+                    rep.push_str(&format!("  {l}\n"));
+                }
+                rep.push_str("\nFULL SCRIPT\n");
+                rep.push_str(&describe(&s));
+                let path = format!("{out}/seed-{}.txt", s.seed);
+                std::fs::File::create(&path).unwrap().write_all(rep.as_bytes()).unwrap();
+                eprintln!("SIM VIOLATION seed {}: replays failing {again}/{replays}; minimal {} events; report {path}; first: {}", s.seed, min.events.len(), r.violations.first().cloned().unwrap_or_default());
+                out_v.push((s.seed, r.violations));
+            }
+            out_v
+        });
+        eprintln!("SIM SUMMARY: seeds {total}, seeds with a violation {}, {:.0} s", failed.len(), t0.elapsed().as_secs_f64());
+        assert!(failed.is_empty(), "seeds with a violation: {:?}", failed.iter().map(|(s, _)| *s).collect::<Vec<_>>());
+    }
+
+    /// A hand-written script through the same executor and oracle: the audit's case 14 (a zombie's erasure scrub
+    /// commits into a slot the new owner's GC freed, the retire deletes live runs). Shows the oracle sees a known hole.
+    #[test]
+    fn sim_story_zombie_scrub() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        setup_world();
+        use super::net::Profile;
+        use Ev::*;
+        let w = |p: usize, c: usize| Write { p, ops: (0..PER_CUSTOMER).map(|i| (c, i, false)).collect() };
+        let mut ev = vec![Open { p: 0, writer: true }];
+        for c in 0..CUSTOMERS {
+            ev.push(w(0, c));
+        }
+        ev.extend([Publish { p: 0 }, CompStart { p: 0 }, Erase { p: 0, cust: 1 }, Flush { p: 0 }, CompDrain { p: 0 }, Open { p: 1, writer: true }, CompStart { p: 1 }, w(1, 4), Flush { p: 1 }, CompDrain { p: 1 }, w(1, 5), Flush { p: 1 }, CompDrain { p: 1 }, Gc { p: 1 }, ErasePass { p: 0 }, Sleep { ms: 2600 }, Retire { p: 1 }, Abandon { p: 0 }]);
+        let s = Script { seed: 0, profile: Profile::none(), knobs: env_u64("SIM_KNOBS", 1) as u8, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect() };
+        let n = env_u64("SIM_REPLAYS", 3);
+        let mut failing = 0;
+        for _ in 0..n {
+            let r = rt.block_on(run_script(&s));
+            for l in r.trace.iter().filter(|l| l.contains("->")) {
+                eprintln!("  {l}");
+            }
+            for v in r.violations.iter().take(10) {
+                eprintln!("VIOLATION {v}");
+            }
+            eprintln!("SIM STORY zombie scrub: {} violations; {}", r.violations.len(), r.stats);
+            failing += (!r.violations.is_empty()) as u64;
+        }
+        eprintln!("SIM STORY zombie scrub: {failing} of {n} runs with a violation");
+    }
+
+    /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
+    #[test]
+    fn sim_replay() {
+        let Some(seed) = std::env::var("SIM_SEED").ok().and_then(|v| v.parse().ok()) else { return };
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        setup_world();
+        let mut s = generate(seed, env_u64("SIM_STEPS", 60) as usize);
+        if let Ok(k) = std::env::var("SIM_KEEP") {
+            let keep: Vec<u32> = k.split(',').map(|x| x.trim().parse().unwrap()).collect();
+            s.events.retain(|(i, _)| keep.contains(i));
+        }
+        let n = env_u64("SIM_REPLAYS", 1);
+        let mut failing = 0;
+        for _ in 0..n {
+            let r = rt.block_on(run_script(&s));
+            eprintln!("{}", describe(&s));
+            for l in &r.trace {
+                eprintln!("  {l}");
+            }
+            for v in &r.violations {
+                eprintln!("VIOLATION {v}");
+            }
+            eprintln!("SIM REPLAY seed {seed}: {} violations; {}", r.violations.len(), r.stats);
+            if !r.violations.is_empty() {
+                failing += 1;
+            }
+        }
+        eprintln!("SIM REPLAY seed {seed}: {failing} of {n} runs with a violation");
+    }
+}
