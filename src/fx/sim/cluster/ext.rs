@@ -404,6 +404,11 @@ impl World {
                     let target = format!("{id}-fork{tag}");
                     let src_path = crate::lifecycle::tenant_path(&id);
                     let src_admin = Admin::builder(src_path.clone(), Arc::clone(&store)).build();
+                    // hole F's fix in `fork.rs` (sim-test-2): the writer epoch the quiesce left
+                    let epoch0 = match src_admin.read_manifest(None).await {
+                        Ok(m) => m.map(|m| m.writer_epoch()),
+                        Err(e) => return format!("fork {tag}: manifest unreadable: {e}"),
+                    };
                     let opts = slatedb::config::CheckpointOptions { name: Some(format!("fork-pairing:{target}")), ..Default::default() };
                     let (cp, pr) = match pair::checkpoint_paired(&store, &id, || async { Ok(src_admin.create_detached_checkpoint(&opts).await?) }).await {
                         Ok(x) => x,
@@ -428,6 +433,11 @@ impl World {
                             futures::stream::iter(copies).buffer_unordered(8).try_collect::<Vec<()>>().await?;
                             let _ = tadmin.delete_checkpoint(cp.id).await;
                         }
+                        let epoch1 = src_admin.read_manifest(None).await?.map(|m| m.writer_epoch());
+                        if epoch1 != epoch0 {
+                            FORKS_REFUSED_EPOCH_MOVED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        }
+                        anyhow::ensure!(epoch1 == epoch0, "the source was opened by another writer during the fork (writer epoch {epoch0:?} -> {epoch1:?}); rolled back");
                         let n = match &pr {
                             Some(p) => pair::seed_fork(&store, &id, &target, p, if copy { ForkRuns::Copied } else { ForkRuns::Shared }).await?,
                             None => None,
@@ -906,3 +916,6 @@ pub fn generate2(seed: u64, steps: usize) -> Script {
     }
     Script { seed, profile: base.profile, knobs, events: out.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Ext { flavor: 2 } }
 }
+
+/// fix-sim-holes, hole F: simulated forks refused because the source's writer epoch moved during them (tests).
+pub static FORKS_REFUSED_EPOCH_MOVED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);

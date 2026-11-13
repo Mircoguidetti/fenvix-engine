@@ -627,9 +627,8 @@ mod tests {
     /// writer differ (MEASURED, 1 run; also on head + fix-sim-holes' Z and W fixes). Clone mode: 0 (MEASURED, 1 run).
     /// Proposed fix (`reviews/sim-test-2/hole-f-fork-source-written-during-fork.patch`, in `fork.rs` and in the simulated
     /// fork that mirrors it): the fork compares the source's writer epoch after the quiesce and after the copy, and rolls
-    /// back when it moved. Ignored until the fix is in: `--ignored`.
+    /// back when it moved. Fixed on fix-sim-holes: a normal test; it also checks that the copy-mode fork was refused.
     #[test]
-    #[ignore]
     fn sim_hole_f_fork_source_written_after_its_quiesce() {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
@@ -639,6 +638,7 @@ mod tests {
         // the fork's drop-lease PUT stays on the wire for 4 s (longer than the step wait): the takeover happens meanwhile
         let old = std::env::var("SIM_MAX_HOLD_MS").ok();
         std::env::set_var("SIM_MAX_HOLD_MS", "5000");
+        let refused0 = super::cluster::ext::FORKS_REFUSED_EPOCH_MOVED.load(std::sync::atomic::Ordering::Relaxed);
         let mut total = Vec::new();
         for copy in [true, false] {
             let ev = vec![
@@ -661,6 +661,9 @@ mod tests {
             None => std::env::remove_var("SIM_MAX_HOLD_MS"),
         }
         assert!(total.is_empty(), "hole F: {} violations: {:?}", total.len(), total.iter().take(3).collect::<Vec<_>>());
+        let refused = super::cluster::ext::FORKS_REFUSED_EPOCH_MOVED.load(std::sync::atomic::Ordering::Relaxed) - refused0;
+        eprintln!("SIM HOLE F: forks refused {refused}");
+        assert!(refused >= 1, "the copy-mode fork's source was opened by another writer during it: it must be refused");
     }
 
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.

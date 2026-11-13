@@ -406,6 +406,9 @@ async fn fork_paired(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> any
     use tenant_bench::fx::pair;
     let store = &ctl.store;
     let src_admin = Admin::builder(purge::tenant_path(src), Arc::clone(store)).build();
+    // sim-test-2, hole F: the writer epoch the quiesce left; a newer one by the end of the copy means another process
+    // opened the source meanwhile (this process lost its lease): the copied state is not the quiesced one
+    let epoch0 = src_admin.read_manifest(None).await?.map(|m| m.writer_epoch());
     // named, so that the rollback of a fork killed before the cleanup below finds and deletes it (review of 7b, FIX 2)
     let opts = slatedb::config::CheckpointOptions { name: Some(pairing_name(target)), ..Default::default() };
     let (cp, p) = pair::checkpoint_paired(store, src, || async { Ok(src_admin.create_detached_checkpoint(&opts).await?) }).await?;
@@ -419,6 +422,10 @@ async fn fork_paired(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> any
             // the copy carries the source's checkpoint list; this one is the fork step's own, not a restore point
             let _ = Admin::builder(purge::tenant_path(target), Arc::clone(store)).build().delete_checkpoint(cp.id).await;
         }
+        // sim-test-2, hole F: a copy lists the source's live objects (a WAL newer than the checkpoint included); the fork's
+        // clean marker would make its readers skip that WAL while its writer replays it. Refused: the fork rolls back.
+        let epoch1 = src_admin.read_manifest(None).await?.map(|m| m.writer_epoch());
+        anyhow::ensure!(epoch1 == epoch0, "fork {src} -> {target}: the source was opened by another writer during the fork (writer epoch {epoch0:?} -> {epoch1:?}); rolled back");
         if let Some(p) = &p {
             let runs = if mode == "clone" { pair::ForkRuns::Shared } else { pair::ForkRuns::Copied };
             pair::seed_fork(store, src, target, p, runs).await?;
