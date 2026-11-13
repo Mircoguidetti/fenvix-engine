@@ -2100,7 +2100,7 @@ impl Tenant {
 
     /// fix-box-first-trip: whether the compactor's newer version may be installed by the routine refresh (None: no newer
     /// version). The first call for a version prepares it: its view, and its runs not open yet are opened in the
-    /// background (a run of at most `OPEN_TAIL` bytes also seeds its blocks, `counter::seed_whole`). Until they are
+    /// background (their maps: `View::pin_runs` started it, `open_all` waits for it). Until they are
     /// open, or `FX_NEXT_WAIT_MS` passed, the writer keeps serving the version it serves, which stays exact: the floor
     /// stays at its X_d (`Shared::serving`) and SlateDB keeps every row above it. Before, the version was installed at
     /// once and the command that installed it opened the new runs itself, in waves of its own (MEASURED in test_79's

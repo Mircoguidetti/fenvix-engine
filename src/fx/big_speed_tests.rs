@@ -588,6 +588,8 @@ async fn bft_open_of_a_small_run_keeps_its_blocks() {
     let meta = t.fx_view().unwrap().meta.clone();
     let sizes: Vec<u64> = meta.groups.iter().filter_map(|g| g.sealed.as_ref().map(|r| r.size)).chain(meta.delta.iter().map(|r| r.size)).collect();
     assert!(sizes.len() >= 2 && sizes.iter().all(|s| *s <= crate::runfmt::OPEN_TAIL), "every run under OPEN_TAIL: {sizes:?}");
+    // no background pin of the fresh view's runs: the box's own open is the one under test (a pin opens the maps only)
+    view::PIN_RUNS.store(false, Relaxed);
     for (seed, want_waves) in [(true, 1u64), (false, 2u64)] {
         counter::SEED_WHOLE.store(seed, Relaxed);
         view::clear_cache();
@@ -606,6 +608,7 @@ async fn bft_open_of_a_small_run_keeps_its_blocks() {
         assert_eq!(seeded > 0, seed);
     }
     counter::SEED_WHOLE.store(true, Relaxed);
+    view::PIN_RUNS.store(true, Relaxed);
     // and the answers: the tenant's own reads of the customer, with every block from the counter
     ws.start();
     visit(&t, &m, 3).await;

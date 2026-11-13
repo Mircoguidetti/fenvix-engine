@@ -154,6 +154,18 @@ impl RunH {
 
     /// The run, opened on first use with the id the manifest recorded (another object at the path is an error).
     pub async fn open(&self, store: &Arc<dyn ObjectStore>) -> Result<&Arc<Run>> {
+        self.open_with(store, true).await
+    }
+
+    /// fix-box-first-trip: the background opens of a version's runs (`View::pin_runs`, `View::open_all`) open the maps
+    /// only. A small run's blocks are kept from its open (`counter::seed_whole`) only when a read waits on that open:
+    /// seeding every small run at a version's load would bring whole databases into the counter that no customer asked
+    /// for (MEASURED: test_79's cold first requests then read nothing, 0 trips, and its control could not fail).
+    pub async fn open_maps(&self, store: &Arc<dyn ObjectStore>) -> Result<&Arc<Run>> {
+        self.open_with(store, false).await
+    }
+
+    async fn open_with(&self, store: &Arc<dyn ObjectStore>, seed: bool) -> Result<&Arc<Run>> {
         self.run
             .get_or_try_init(|| async {
                 let path = Path::from(self.line.path.as_str());
@@ -179,7 +191,7 @@ impl RunH {
                 // go into the counter from those bytes, so the read that opened it does not GET them again in a second
                 // wave (MEASURED: a first save on a version installed during its box warm-up waited 2 waves, the open
                 // of a new 87 KB sealed run and then a block of the same object)
-                if let Some(w) = whole {
+                if let (true, Some(w)) = (seed, whole) {
                     super::counter::seed_whole(&run, &w);
                 }
                 Ok(Arc::new(run))
@@ -422,7 +434,7 @@ impl View {
         rt.spawn(async move {
             use futures::StreamExt;
             let store = &store;
-            let mut s = futures::stream::iter(hs.into_iter().map(|h| async move { h.open(store).await.map(|_| ()) })).buffer_unordered(16);
+            let mut s = futures::stream::iter(hs.into_iter().map(|h| async move { h.open_maps(store).await.map(|_| ()) })).buffer_unordered(16);
             while let Some(r) = s.next().await {
                 if r.is_err() {
                     // a run deleted meanwhile (a newer version retired it) or a store error: a read opens it on demand
@@ -653,7 +665,7 @@ impl View {
         let hs: Vec<Arc<RunH>> = self.groups.iter().filter_map(|g| g.sealed.clone()).chain(self.delta.iter().cloned()).filter(|h| h.run.get().is_none()).collect();
         let n = hs.len();
         let store = &self.store;
-        futures::stream::iter(hs.into_iter().map(|h| async move { h.open(store).await.map(|_| ()) })).buffer_unordered(parallel.max(1)).try_collect::<Vec<_>>().await?;
+        futures::stream::iter(hs.into_iter().map(|h| async move { h.open_maps(store).await.map(|_| ()) })).buffer_unordered(parallel.max(1)).try_collect::<Vec<_>>().await?;
         Ok(n)
     }
 
