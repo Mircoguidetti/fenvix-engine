@@ -1254,3 +1254,108 @@ async fn fip_idle_writer_manifest_poll_is_held() {
     assert!(polls_control >= 6, "control: without the gate the writer polls every second ({polls_control} GETs in 4 s)");
     assert_eq!(held_control, 0);
 }
+
+/// A store that counts the GETs of the drop lease (`{db}/fx/drop-lease`), and passes everything on.
+#[derive(Debug)]
+struct LeaseCount {
+    inner: Arc<dyn ObjectStore>,
+    reads: std::sync::atomic::AtomicU64,
+}
+
+impl std::fmt::Display for LeaseCount {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "LeaseCount")
+    }
+}
+
+#[async_trait::async_trait]
+impl ObjectStore for LeaseCount {
+    async fn put_opts(&self, l: &object_store::path::Path, p: object_store::PutPayload, o: object_store::PutOptions) -> object_store::Result<object_store::PutResult> {
+        self.inner.put_opts(l, p, o).await
+    }
+    async fn put_multipart_opts(&self, l: &object_store::path::Path, o: object_store::PutMultipartOptions) -> object_store::Result<Box<dyn object_store::MultipartUpload>> {
+        self.inner.put_multipart_opts(l, o).await
+    }
+    async fn get_opts(&self, l: &object_store::path::Path, o: object_store::GetOptions) -> object_store::Result<object_store::GetResult> {
+        if l.as_ref().ends_with("/fx/drop-lease") {
+            self.reads.fetch_add(1, Relaxed);
+        }
+        self.inner.get_opts(l, o).await
+    }
+    fn delete_stream(&self, l: futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>> {
+        self.inner.delete_stream(l)
+    }
+    fn list(&self, p: Option<&object_store::path::Path>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.inner.list(p)
+    }
+    fn list_with_offset(&self, p: Option<&object_store::path::Path>, o: &object_store::path::Path) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.inner.list_with_offset(p, o)
+    }
+    async fn list_with_delimiter(&self, p: Option<&object_store::path::Path>) -> object_store::Result<object_store::ListResult> {
+        self.inner.list_with_delimiter(p).await
+    }
+    async fn copy_opts(&self, f: &object_store::path::Path, t: &object_store::path::Path, o: object_store::CopyOptions) -> object_store::Result<()> {
+        self.inner.copy_opts(f, t, o).await
+    }
+    async fn rename_opts(&self, f: &object_store::path::Path, t: &object_store::path::Path, o: object_store::RenameOptions) -> object_store::Result<()> {
+        self.inner.rename_opts(f, t, o).await
+    }
+}
+
+/// fix-idle-poll-2: while a checkpoint holds the drop lease the floor is 0 and cannot rise; an idle database observes
+/// the floor (a drop-lease GET and a LIST of our manifest's versions) at most once per lease life, not every 5 s.
+/// Control: `SLATE_IDLE_POLL_MS` 0 (no idle holds, the code before).
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn fip2_floor_not_polled_while_the_drop_lease_is_held() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let mut seen = Vec::new();
+    for idle_ms in [120_000u64, 0] {
+        super::drop::SLATE_IDLE_POLL_MS.store(idle_ms, Relaxed);
+        let lc_store = Arc::new(LeaseCount { inner: Arc::new(InMemory::new()), reads: Default::default() });
+        let store: Arc<dyn ObjectStore> = lc_store.clone();
+        let id = format!("fx-fip2-lease-{idle_ms}");
+        let mut t = lc(&store).create(&id).await.unwrap();
+        let mut m = BTreeMap::new();
+        for i in 0..50 {
+            apply(&mut t, &mut m, vec![(ckey(8, i), Some(b"v".to_vec()))]).await;
+        }
+        publish(&mut t, &small_opts(build::Reseal::All)).await;
+        let c = Compactor::start(&mut t, Arc::clone(&store), test_knobs(true), pool::Pool::new(2), tokio::runtime::Handle::current()).await.unwrap();
+        // rows absorbed above the floor: the floor would rise once the lease ends (not settled without the lease rule)
+        for i in 0..50 {
+            apply(&mut t, &mut m, vec![(ckey(9, i), Some(b"w".to_vec()))]).await;
+        }
+        flush(&t).await;
+        c.absorb_once().await.unwrap();
+        assert!(c.drop.known_xd.load(Relaxed) > 0);
+        let _lease = super::pair::take_lease(&store, &id).await.unwrap();
+        // the first observations see the lease held; then 12 s counted
+        // the compactor's planner, as its run loop drives it (every 50 ms)
+        let ticks = |secs: u64| {
+            let c = Arc::clone(&c);
+            async move {
+                let t0 = Instant::now();
+                while t0.elapsed() < Duration::from_secs(secs) {
+                    c.tick();
+                    tokio::time::sleep(Duration::from_millis(50)).await;
+                }
+            }
+        };
+        ticks(6).await;
+        let r0 = lc_store.reads.load(Relaxed);
+        ticks(12).await;
+        let reads = lc_store.reads.load(Relaxed) - r0;
+        for (key, want) in &m {
+            assert_eq!(t.get(key).await.unwrap().as_deref(), Some(&want[..]));
+        }
+        c.stop().await;
+        t.abandon().await;
+        eprintln!("idle hold {idle_ms} ms: {reads} drop-lease GETs in 12 s with the lease held");
+        seen.push(reads);
+    }
+    super::drop::SLATE_IDLE_POLL_MS.store(120_000, Relaxed);
+    teardown();
+    assert!(seen[0] <= 1, "with the lease held an idle database read it {} times in 12 s", seen[0]);
+    assert!(seen[1] >= 2, "control: the lease is read every few seconds ({} in 12 s)", seen[1]);
+}

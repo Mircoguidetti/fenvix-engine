@@ -89,6 +89,8 @@ pub struct DropCtl {
     /// not run since (`slate_pending`); a job was proposed or runs (`slate_active`); the signal that ends a held poll.
     slate_pending: AtomicBool,
     slate_active: AtomicBool,
+    /// fix-idle-poll-2: the last floor observation found the drop lease held (the floor was 0 for that reason).
+    lease_seen_held: AtomicBool,
     /// SlateDB's compactor and worker are being stopped: no poll is held any more (`stop_slate_polls`).
     slate_stopping: AtomicBool,
     slate_wake: tokio::sync::Notify,
@@ -130,6 +132,7 @@ impl DropCtl {
             cur_job: Mutex::new(None),
             jobs_by_dest: Mutex::new(HashMap::new()),
             slate_pending: AtomicBool::new(false),
+            lease_seen_held: AtomicBool::new(false),
             slate_active: AtomicBool::new(false),
             slate_stopping: AtomicBool::new(false),
             slate_wake: tokio::sync::Notify::new(),
@@ -208,8 +211,10 @@ impl DropCtl {
             return Ok(0);
         }
         if self.checkpoint_lease_held().await? {
+            self.lease_seen_held.store(true, Relaxed);
             return Ok(0);
         }
+        self.lease_seen_held.store(false, Relaxed);
         // FIX 4 of the review: list only the versions after the newest one already listed (one page), starting after
         // restart from the version the tenant knows, and load only the newest of each listing. X_d never goes down from
         // one version to the next, and the versions of one listing share their first sight, so the newest of them is the
@@ -301,6 +306,13 @@ impl DropCtl {
             // proposed (a saving of storage, done that much later); a drop job computes its floor from the store when it
             // starts (rule 7, `create_compaction_filter`), so no drop ever uses an older one.
             let idle_ms = slate_idle_poll_ms();
+            if idle_ms > 0 && !self.slate_busy() && !self.floor_settled() && self.lease_seen_held.load(Relaxed) {
+                // fix-idle-poll-2: the floor is 0 because a checkpoint holds the drop lease (rule 11); it cannot rise
+                // before the lease ends, so an idle database looks again after the lease's life, not every 5 s
+                // (MEASURED in sealed2-derive, a backtrace of every drop-lease GET: the observation kept its 5 s pace for
+                // good while the lease was held). Rule 7 is unchanged: a drop job reads the lease when it starts.
+                every = every.max(Duration::from_millis(idle_ms.min(super::pair::LEASE_LIFE_MS.load(Relaxed))));
+            }
             if idle_ms > 0 && !self.slate_busy() && self.floor_settled() {
                 every = every.max(Duration::from_millis(idle_ms));
                 if lo.is_some_and(|t| t.elapsed() >= Duration::from_secs(5) && t.elapsed() < every) {
