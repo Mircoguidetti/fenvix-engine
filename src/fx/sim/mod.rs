@@ -295,7 +295,8 @@ mod tests {
         let mut last = Vec::new();
         for _ in 0..n {
             let r = rt.block_on(run_script(&s));
-            for l in r.trace.iter().filter(|l| l.contains("->") || l.contains("mark") || l.contains("storm")) {
+            let all = std::env::var_os("SIM_STORY_ALL").is_some();
+            for l in r.trace.iter().filter(|l| all || l.contains("->") || l.contains("mark") || l.contains("storm")) {
                 eprintln!("  {l}");
             }
             for v in r.violations.iter().take(8) {
@@ -417,6 +418,38 @@ mod tests {
             Restore { p: 0, mark: 2, apply: false },
         ]);
         let (f, v) = run_story(&rt, "GC decides before a point pairs", env_u64("SIM_KNOBS", 0) as u8, ev);
+        assert_eq!(f, 0, "{v:?}");
+    }
+
+    /// sim-test-2 candidate: a restore point (or a fork) pairs with NO version after the drop. The compactor's drop
+    /// removed rows at or below X_d from SlateDB (they live only in our runs). The database moves to a process whose
+    /// compactor has not started; its builder publishes a version whose X_d is a WAL seq above the flushed L0. GC with
+    /// retention 0 deletes the older versions. A restore point now finds no version with X_d <= its last L0 seq and
+    /// writes a pair with `version: None`; `PairedReader` then reads SlateDB alone: every dropped row is missing from the
+    /// restore (and `SIM_STORY_FORK=1`: from a fork). Run on a build with hole W fixed (else W hides it).
+    #[test]
+    fn sim_story_point_pairs_with_no_version_after_the_drop() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use Ev::*;
+        let fork = std::env::var_os("SIM_STORY_FORK").is_some();
+        let mut ev = vec![Open { p: 0, writer: true }, fill(0, 0, 0), Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }];
+        for c in 1..4 {
+            ev.extend([fill(0, c, 0), Flush { p: 0 }, CompDrain { p: 0 }, Sleep { ms: 300 }]);
+        }
+        // the compactor's drop: rows at or below X_d now live only in our runs
+        ev.extend([DropThrough { p: 0 }, Close { p: 0 }]);
+        // another process, no compactor yet: its builder publishes above the flushed L0, then it dies
+        ev.extend([Open { p: 1, writer: true }, Write { p: 1, ops: vec![(4, 0, false), (4, 1, false)] }, Publish { p: 1 }, Abandon { p: 1 }]);
+        // GC of the closed database, retention 0: only the newest version stays
+        ev.extend([Sleep { ms: 2700 }, GcClosed { p: 2 }]);
+        if fork {
+            ev.extend([Open { p: 2, writer: true }, Fork { p: 2, copy: false, tag: 1 }]);
+        } else {
+            ev.extend([Point { p: 2, tag: 1 }, Sleep { ms: 50 }, Mark { tag: 2 }, Restore { p: 2, mark: 2, apply: false }]);
+        }
+        let (f, v) = run_story(&rt, "a point pairs with no version after the drop", env_u64("SIM_KNOBS", 0) as u8, ev);
         assert_eq!(f, 0, "{v:?}");
     }
 
