@@ -522,6 +522,8 @@ pub struct RunWriter {
 /// Run uploads a dropped writer aborted (perf-latency round 3, review D1) and aborts that failed.
 pub static DROPPED_UPLOADS_ABORTED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 pub static DROPPED_UPLOAD_ABORT_ERRORS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Aborts of a dropped writer that found no upload left (its complete had landed, or it was aborted already).
+pub static DROPPED_UPLOAD_ABORT_GONE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// Aborts spawned by dropped writers and not finished yet (a clean shutdown waits for them: `wait_dropped_aborts`).
 static ABORTS_PENDING: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
@@ -536,6 +538,20 @@ pub async fn wait_dropped_aborts(limit: std::time::Duration) -> bool {
         tokio::time::sleep(std::time::Duration::from_millis(20)).await;
     }
     true
+}
+
+/// An upload whose complete is in flight: aborted if dropped before the complete returned (`RunWriter::finish`).
+struct AbortOnDrop {
+    u: Option<Box<dyn MultipartUpload>>,
+    path: Path,
+}
+
+impl Drop for AbortOnDrop {
+    fn drop(&mut self) {
+        if let Some(u) = self.u.take() {
+            spawn_abort(u, &self.path);
+        }
+    }
 }
 
 fn spawn_abort(mut u: Box<dyn MultipartUpload>, path: &Path) {
@@ -553,6 +569,10 @@ fn spawn_abort(mut u: Box<dyn MultipartUpload>, path: &Path) {
         match r {
             Ok(()) => {
                 DROPPED_UPLOADS_ABORTED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            }
+            Err(object_store::Error::NotFound { .. }) => {
+                // completed (a complete that landed while its job was cut) or aborted already: nothing left to abort
+                DROPPED_UPLOAD_ABORT_GONE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             }
             Err(e) => {
                 DROPPED_UPLOAD_ABORT_ERRORS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -751,12 +771,19 @@ impl RunWriter {
         f.extend(t);
         self.push_out(&f).await?;
         self.flush_part().await?;
-        let mut u = self.upload.take().ok_or_else(|| anyhow::anyhow!("run upload already closed"))?;
-        if let Err(e) = u.complete().await {
+        let u = self.upload.take().ok_or_else(|| anyhow::anyhow!("run upload already closed"))?;
+        // runwriter-and-stall: the upload is held by a guard while its complete runs. A job cut during the complete
+        // (`Compactor::stop` aborts jobs at their next await) dropped the upload as a local, with no abort: its parts
+        // stayed in the store, billed and invisible to LIST, until the next process's sweep of old uploads. Now the
+        // guard's drop aborts it (in the background); if the complete had landed meanwhile, the abort finds no upload
+        // (counted, not an error) and the run is an orphan for GC (rule 17), as any run written and never listed.
+        let mut g = AbortOnDrop { u: Some(u), path: self.path.clone() };
+        if let Err(e) = g.u.as_mut().expect("held").complete().await {
             // the parts are not a run: abort them (in the background, the error is the caller's)
-            spawn_abort(u, &self.path);
+            drop(g);
             return Err(e.into());
         }
+        g.u = None;
         Ok(RunMeta {
             path: self.path.to_string(),
             run_id: self.run_id,
