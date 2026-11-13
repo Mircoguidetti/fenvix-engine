@@ -51,9 +51,13 @@ proc = None
 def serve(tag):
     global proc
     log = open(os.path.join(os.path.dirname(os.path.abspath(a.out)), f"ab-{a.kind}-{tag}.log"), "w")
+    # the judge's compactor settings (judge/run.sh with JUDGE_SEALED_RUNS): T_pin 1 s and small knobs, so that a
+    # database of this size is absorbed, merged and resealed during the run
+    env = dict(os.environ, FENVIX_SEALED_TPIN_MS="1000", FENVIX_SEALED_E1_WAIT_MS="0", FENVIX_SEALED_TEST_SHORT_E1_WAIT="1",
+               FENVIX_SEALED_COMPACTOR="small")
     proc = subprocess.Popen([a.bin, "--store", "s3", "--bucket", a.bucket, "--region", "us-east-1", "--endpoint",
                              "http://127.0.0.1:9000", "--listen", f"127.0.0.1:{a.port}"] + OPTS + a.extra.split(),
-                            stdout=log, stderr=log)
+                            stdout=log, stderr=log, env=env)
     c = pymongo.MongoClient(f"mongodb://127.0.0.1:{a.port}/?directConnection=true", serverSelectionTimeoutMS=120000,
                             socketTimeoutMS=600000)
     c.admin.command("ping")
@@ -79,11 +83,20 @@ def compactor(c):
 
 
 def settle(c, need=None, quiet=45, limit=1500):
+    """Wait until the compactor has done `need` and then nothing for `quiet` seconds. A new database's compactor starts
+    after a later committed write: a small write to a side collection (never read) every few seconds until it starts,
+    the same on every server."""
     if a.kind != "ours":
+        for i in range(3):
+            c[DB]["side"].insert_one({"k": i})
         return {}
     last, since, t0 = None, time.time(), time.time()
+    nudges = 0
     while time.time() - t0 < limit:
         s = compactor(c)
+        if s.get("started", 0) < 1 and nudges < 200:
+            c[DB]["side"].insert_one({"k": nudges})
+            nudges += 1
         if s != last:
             last, since = s, time.time()
         ok = all(s.get(k, 0) >= v for k, v in (need or {}).items())

@@ -1,0 +1,149 @@
+{
+ "phase": "measure",
+ "bin": "/home/user/bin/fix4/mongo-server",
+ "stages": [
+  {
+   "stage": "1 client-written, published, cache 32 MB",
+   "reads": [
+    {
+     "secs": 1.2,
+     "docsExamined": 7525,
+     "nReturned": 4,
+     "MB_fetched": 26.6,
+     "rows_from_runs": 29902,
+     "rows_per_doc": 4.0
+    },
+    {
+     "secs": 1.1,
+     "docsExamined": 7604,
+     "nReturned": 5,
+     "MB_fetched": 24.5,
+     "rows_from_runs": 30234,
+     "rows_per_doc": 4.0
+    },
+    {
+     "secs": 1.09,
+     "docsExamined": 7615,
+     "nReturned": 4,
+     "MB_fetched": 24.6,
+     "rows_from_runs": 30218,
+     "rows_per_doc": 4.0
+    },
+    {
+     "secs": 1.06,
+     "docsExamined": 7563,
+     "nReturned": 8,
+     "MB_fetched": 24.9,
+     "rows_from_runs": 30024,
+     "rows_per_doc": 4.0
+    }
+   ]
+  },
+  {
+   "stage": "2 after the updates, before absorption",
+   "reads": [
+    {
+     "secs": 0.5,
+     "docsExamined": 7527,
+     "nReturned": 4,
+     "MB_fetched": 25.2,
+     "rows_from_runs": 29905,
+     "rows_per_doc": 4.0
+    },
+    {
+     "secs": 0.48,
+     "docsExamined": 7597,
+     "nReturned": 5,
+     "MB_fetched": 24.1,
+     "rows_from_runs": 30213,
+     "rows_per_doc": 4.0
+    },
+    {
+     "secs": 0.58,
+     "docsExamined": 7605,
+     "nReturned": 4,
+     "MB_fetched": 24.2,
+     "rows_from_runs": 30189,
+     "rows_per_doc": 4.0
+    },
+    {
+     "secs": 0.56,
+     "docsExamined": 7571,
+     "nReturned": 8,
+     "MB_fetched": 24.2,
+     "rows_from_runs": 30047,
+     "rows_per_doc": 4.0
+    }
+   ]
+  },
+  {
+   "stage": "3 after the updates, compactor settled",
+   "reads": [
+    {
+     "secs": 0.61,
+     "docsExamined": 7527,
+     "nReturned": 4,
+     "MB_fetched": 28.5,
+     "rows_from_runs": 29970,
+     "rows_per_doc": 4.0
+    },
+    {
+     "secs": 0.52,
+     "docsExamined": 7597,
+     "nReturned": 5,
+     "MB_fetched": 24.6,
+     "rows_from_runs": 30260,
+     "rows_per_doc": 4.0
+    },
+    {
+     "secs": 0.51,
+     "docsExamined": 7605,
+     "nReturned": 4,
+     "MB_fetched": 24.6,
+     "rows_from_runs": 30239,
+     "rows_per_doc": 4.0
+    },
+    {
+     "secs": 0.57,
+     "docsExamined": 7571,
+     "nReturned": 8,
+     "MB_fetched": 24.6,
+     "rows_from_runs": 30108,
+     "rows_per_doc": 4.0
+    }
+   ]
+  }
+ ],
+ "updates": 4500,
+ "update_secs": 48.0,
+ "settle": {
+  "enabled": true,
+  "started": 1,
+  "running": 0,
+  "runUploadsAbortedOnDrop": 0,
+  "runUploadAbortErrors": 0,
+  "incompleteUploadsAborted": 0,
+  "incompleteUploadsRelisted": 0,
+  "stopSlateAborted": 0,
+  "slowStages": 0,
+  "closeGcRequeued": 1,
+  "closePassesForPending": 0,
+  "l0RecognisedFromVersion": 0,
+  "l0RecognisedByRead": 0,
+  "recogniseJobs": 0,
+  "recogniseMsMax": 0,
+  "firstBuilds": 0,
+  "firstInstalls": 0,
+  "firstInstallRefused": 0,
+  "firstBuildMsMax": 0,
+  "claimsDeferred": 2,
+  "l0JobsBesideMerge": 0,
+  "mergeHeld": 0,
+  "publishes": 3,
+  "absorbs": 1,
+  "merges": 1,
+  "reseals": 1,
+  "errors": 0,
+  "catchUps": 0
+ }
+}

@@ -1,0 +1,1837 @@
+{
+ "kind": "ours",
+ "stages": [
+  {
+   "stage": "1 published and absorbed",
+   "answers": {
+    "q00 stato_ts one customer": [
+     3,
+     "0036e452e594b4a5de14ad5bd286a630"
+    ],
+    "q01 stato_ts all customers": [
+     228,
+     "e31a04a1c9f17ddfbaeaa9c16ff8be82"
+    ],
+    "q02 stato_ts reverse": [
+     147,
+     "3ecd48ddf0bec7993de1627aa3a94e8e"
+    ],
+    "q03 stato_ts one customer": [
+     6,
+     "fa6390add3e0a181eb70705b23376425"
+    ],
+    "q04 stato_ts all customers": [
+     213,
+     "a0717e427ec74f9c7155ad57695855c8"
+    ],
+    "q05 stato_ts reverse": [
+     143,
+     "b4e7a380c547b8417aec9f3989334e19"
+    ],
+    "q06 stato_ts one customer": [
+     8,
+     "01946d97517ff10455b6db56624df21d"
+    ],
+    "q07 stato_ts all customers": [
+     197,
+     "fd63193e8699979ef0ef6761bb9bdb15"
+    ],
+    "q08 stato_ts reverse": [
+     130,
+     "bd173871d15f72941b380fc20b97ec40"
+    ],
+    "q09 stato_ts one customer": [
+     3,
+     "f12e45eab1a1862b0eb543be61791f46"
+    ],
+    "q10 stato_ts all customers": [
+     206,
+     "145286b3071943fde0c9d117591465d1"
+    ],
+    "q11 stato_ts reverse": [
+     139,
+     "2f4a93f1bd11156667ee56f0dc241175"
+    ],
+    "q12 stato_ts one customer": [
+     7,
+     "22e0530d0c8a799162b4eb330121bce4"
+    ],
+    "q13 stato_ts all customers": [
+     189,
+     "b1331c7c9b0ebe9ae38417172cd18451"
+    ],
+    "q14 stato_ts reverse": [
+     113,
+     "fd5ff69635ede6a8bfe9529af6846cc6"
+    ],
+    "q15 stato_ts one customer": [
+     5,
+     "c689017784d932b48421e9fe7d1ff6f8"
+    ],
+    "q16 stato_ts all customers": [
+     164,
+     "2abc7b9d9a0535d23e03668b7fe7adfa"
+    ],
+    "q17 stato_ts reverse": [
+     146,
+     "81047e1bcd05763b1560c06fccd9cefb"
+    ],
+    "q18 last 10 of a customer": [
+     10,
+     "49d2f5160accc2f6e480945d9258d15d"
+    ],
+    "q19 whole customer": [
+     300,
+     "08a3cf5ebfd29860a0310a3e1a126369"
+    ],
+    "q20 customer and state": [
+     130,
+     "f112076cde8ffd62f49236705ddf9024"
+    ],
+    "q21 last 10 of a customer": [
+     10,
+     "bda90b793ff70bd2f2c78e489a8c8106"
+    ],
+    "q22 whole customer": [
+     300,
+     "6b2cf90b1c61fe1bfe0f61d12502c0a5"
+    ],
+    "q23 customer and state": [
+     131,
+     "c1603ead52bff9e80db1dfa2b7d23f0d"
+    ],
+    "q24 last 10 of a customer": [
+     10,
+     "4494c326f882fb5118eeac1cbb63008b"
+    ],
+    "q25 whole customer": [
+     300,
+     "a9be75114ae44ff9e9bd67c9b393b592"
+    ],
+    "q26 customer and state": [
+     119,
+     "f49335f527c3caef6e18f6fbb718498d"
+    ],
+    "q27 last 10 of a customer": [
+     10,
+     "e478e5c17c548f970488455a550b3438"
+    ],
+    "q28 whole customer": [
+     300,
+     "ec913f2da67a216761af70beaacca674"
+    ],
+    "q29 customer and state": [
+     125,
+     "97512081df6fd1f0a90002cebc0cb65b"
+    ],
+    "q30 last 10 of a customer": [
+     10,
+     "182db6547cc205bc4b95feeb083a5676"
+    ],
+    "q31 whole customer": [
+     300,
+     "4a2898844d02d83820f0d242bd96c3f1"
+    ],
+    "q32 customer and state": [
+     124,
+     "bf8f792eec13e2082e5339c7bc9691e0"
+    ],
+    "q33 last 10 of a customer": [
+     10,
+     "800791b7c1af5712f8bc298d21ae4fd9"
+    ],
+    "q34 whole customer": [
+     300,
+     "a7d56714d07c78ca209a22323439fe0d"
+    ],
+    "q35 customer and state": [
+     132,
+     "a9ebcf353c34a23f32a60c2de2d4205b"
+    ],
+    "q36 last 10 of a customer": [
+     10,
+     "0c9f4719949ee2ec0ed8a3d222dac842"
+    ],
+    "q37 whole customer": [
+     300,
+     "4496f879d1144334c212075b121f41a2"
+    ],
+    "q38 customer and state": [
+     109,
+     "84b624bdc75c07db57d989dca1d022d3"
+    ],
+    "q39 last 10 of a customer": [
+     10,
+     "65475906aa78dea1c15175d7958cc0cc"
+    ],
+    "q40 whole customer": [
+     300,
+     "22427ee523cca5eff050d9690c1c44ce"
+    ],
+    "q41 customer and state": [
+     122,
+     "298f7c7bb272bdc858957e12a3adc684"
+    ],
+    "q42 many customers by $in": [
+     2360,
+     "77e30a81c34dbdba39348e7a524976e0"
+    ],
+    "q43 many customers sorted by total": [
+     100,
+     "a064adda226e80f41a35b73d03d9fbad"
+    ],
+    "q44 collection sorted by total, filtered": [
+     2384,
+     "38f3703ff59f776e2f7ac833f96985ac"
+    ],
+    "q45 collection top 50 by total": [
+     50,
+     "12921108435b7c9215a45cd949153cf2"
+    ],
+    "q46 range on total, no index": [
+     231,
+     "801ec9fc0463ec3b0c134be5e1726d22"
+    ],
+    "a00 sum by state of a customer": [
+     5,
+     "c80a03ff3b926cbfae542902ce415895"
+    ],
+    "a01 sum by state of a customer": [
+     5,
+     "09059b5323f0b58c4162906169cddd79"
+    ],
+    "a02 sum by state of a customer": [
+     5,
+     "23958aeb3c4d0cd82b150d73505f418a"
+    ],
+    "a03 sum by state of a customer": [
+     5,
+     "d62dcbd74cae74b2b6acedde7ed33141"
+    ],
+    "a04 sum by state of a customer": [
+     5,
+     "50428b634f4b0bb8af3089c9054be2af"
+    ],
+    "a05 sum by state of a customer": [
+     5,
+     "e8115a6c4a0a88e0bc234eb15a2155d7"
+    ],
+    "a06 count by state": [
+     5,
+     "1f392deb2ac460501ab871357329c402"
+    ],
+    "a07 count all": [
+     1,
+     "fad7044ca215833a9ac04978e60a5052"
+    ]
+   },
+   "compactor": {
+    "enabled": true,
+    "started": 1,
+    "running": 1,
+    "runUploadsAbortedOnDrop": 0,
+    "runUploadAbortErrors": 0,
+    "incompleteUploadsAborted": 0,
+    "incompleteUploadsRelisted": 0,
+    "stopMs": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "stopSlateAborted": 0,
+    "slowStages": 0,
+    "closeGcRequeued": 0,
+    "closePassesForPending": 0,
+    "l0RecognisedFromVersion": 0,
+    "l0RecognisedByRead": 0,
+    "recogniseJobs": 0,
+    "recogniseMsMax": 0,
+    "firstBuilds": 1,
+    "firstInstalls": 1,
+    "firstInstallRefused": 0,
+    "firstBuildMsMax": 82,
+    "claimsDeferred": 0,
+    "l0JobsBesideMerge": 0,
+    "mergeHeld": 0,
+    "publishes": 66,
+    "absorbs": 12,
+    "merges": 3,
+    "reseals": 51,
+    "errors": 0,
+    "catchUps": 1,
+    "notStarted": {
+     "notWriter": 0,
+     "noVersion": 4,
+     "catchUpPublishedNothing": 0,
+     "catchUpFailed": 0,
+     "marksUnreadable": 0
+    }
+   }
+  },
+  {
+   "stage": "2 after updates, before absorption",
+   "answers": {
+    "q00 stato_ts one customer": [
+     3,
+     "0036e452e594b4a5de14ad5bd286a630"
+    ],
+    "q01 stato_ts all customers": [
+     222,
+     "f4c04fdaf7698caa79972383bcf1ba38"
+    ],
+    "q02 stato_ts reverse": [
+     142,
+     "d99b16a5e3214e5a66a41c874e74624f"
+    ],
+    "q03 stato_ts one customer": [
+     5,
+     "8f332d12b9501db777054eca2f0d88cd"
+    ],
+    "q04 stato_ts all customers": [
+     221,
+     "3cc94053815404b44d6356801d8f0373"
+    ],
+    "q05 stato_ts reverse": [
+     147,
+     "26d3648fa5b2b96a2fab960333e87b74"
+    ],
+    "q06 stato_ts one customer": [
+     11,
+     "57bbe9340c72574e03d79169936f342c"
+    ],
+    "q07 stato_ts all customers": [
+     194,
+     "1d116c7742b1b7b8b234bb966a829f65"
+    ],
+    "q08 stato_ts reverse": [
+     128,
+     "f4d45eb8cc87b1a385ba0bc09be32077"
+    ],
+    "q09 stato_ts one customer": [
+     4,
+     "614b7547fb5036f6d55f6222336727f2"
+    ],
+    "q10 stato_ts all customers": [
+     208,
+     "5a53e0bb4dd76420c48fd9d54ce9ddd5"
+    ],
+    "q11 stato_ts reverse": [
+     141,
+     "d1d4e7377ae92d9e68a1367a0f7768ad"
+    ],
+    "q12 stato_ts one customer": [
+     5,
+     "7cdaa8477b2a6c560c5ffd42ff1d642c"
+    ],
+    "q13 stato_ts all customers": [
+     179,
+     "666ed744efc0b601d73af77b47dfe687"
+    ],
+    "q14 stato_ts reverse": [
+     116,
+     "f420551669e2cab34a0c44999c0133d7"
+    ],
+    "q15 stato_ts one customer": [
+     6,
+     "f6eca852f25cc889c2e55f0e38c368ca"
+    ],
+    "q16 stato_ts all customers": [
+     169,
+     "f89d9ed6613d3d3a9d34238f3709d5a0"
+    ],
+    "q17 stato_ts reverse": [
+     142,
+     "0380cb20fef209963c42a12f8284b4a2"
+    ],
+    "q18 last 10 of a customer": [
+     10,
+     "313140f9edfbc4203af0421fd3a4201b"
+    ],
+    "q19 whole customer": [
+     300,
+     "4067c73905cc11a783105e0ba6f6ced0"
+    ],
+    "q20 customer and state": [
+     131,
+     "98972786a563eb8be558524fbdc16df4"
+    ],
+    "q21 last 10 of a customer": [
+     10,
+     "bda90b793ff70bd2f2c78e489a8c8106"
+    ],
+    "q22 whole customer": [
+     300,
+     "b21761eece6af976b0f2eb48b517fcd5"
+    ],
+    "q23 customer and state": [
+     129,
+     "9c2d008335215d8e8cf9b4bd09d937c4"
+    ],
+    "q24 last 10 of a customer": [
+     10,
+     "5b407218b91cac1f8d5b8e4356594c74"
+    ],
+    "q25 whole customer": [
+     300,
+     "2f2e71ac410f0792be72a2aa8c9a1dd9"
+    ],
+    "q26 customer and state": [
+     116,
+     "8525e9685dd1b8756d97edd2af05b492"
+    ],
+    "q27 last 10 of a customer": [
+     10,
+     "e478e5c17c548f970488455a550b3438"
+    ],
+    "q28 whole customer": [
+     300,
+     "c4c52ead527cb5534888c0d06a29a52a"
+    ],
+    "q29 customer and state": [
+     126,
+     "366e4e35b847f22d711f32ae79907661"
+    ],
+    "q30 last 10 of a customer": [
+     10,
+     "6cceaa30e677b07184848ca98cd997e9"
+    ],
+    "q31 whole customer": [
+     300,
+     "a0f811f4c46b9799f5dbd5dc3b3b844b"
+    ],
+    "q32 customer and state": [
+     126,
+     "4d2852f0dfdbb05409df5c5a16cb9965"
+    ],
+    "q33 last 10 of a customer": [
+     10,
+     "13ca91c9dd472bbde7784e9c743edfc0"
+    ],
+    "q34 whole customer": [
+     300,
+     "d9e439552b1d0edcc108c833bc4f2352"
+    ],
+    "q35 customer and state": [
+     122,
+     "743666771e33538b79e98e7c0444d061"
+    ],
+    "q36 last 10 of a customer": [
+     10,
+     "8a5ad0365f82a150679e6a8557431500"
+    ],
+    "q37 whole customer": [
+     300,
+     "c0bc1d534cb12e8be9e42653e71db5e4"
+    ],
+    "q38 customer and state": [
+     110,
+     "f8c0d9080353a798934c57f93d6a8d81"
+    ],
+    "q39 last 10 of a customer": [
+     10,
+     "7b9b7719c61fee5632ba7730290d6b66"
+    ],
+    "q40 whole customer": [
+     300,
+     "a97d955147a21b3d648092cb8bc50532"
+    ],
+    "q41 customer and state": [
+     123,
+     "943c4dfdfd9fc418f6e01c8bb91b1bee"
+    ],
+    "q42 many customers by $in": [
+     2358,
+     "6ea65730493ccf842ab86a56aa5c2c5b"
+    ],
+    "q43 many customers sorted by total": [
+     100,
+     "a8efe8fb812a61e9b3a9b69a1b5b64a8"
+    ],
+    "q44 collection sorted by total, filtered": [
+     2381,
+     "2a6194f9d4dab51c1553ed975a15dba4"
+    ],
+    "q45 collection top 50 by total": [
+     50,
+     "773a814f620b010a228ae3f2e98ef370"
+    ],
+    "q46 range on total, no index": [
+     227,
+     "1ee884e0290a836a6d6913ef5d6c4382"
+    ],
+    "a00 sum by state of a customer": [
+     5,
+     "125816c07126eeae5017f099b1961fc7"
+    ],
+    "a01 sum by state of a customer": [
+     5,
+     "1b774dd25804fb4afadb6c33a34022bb"
+    ],
+    "a02 sum by state of a customer": [
+     5,
+     "f73b5151f4844b60e3389b0129f777d2"
+    ],
+    "a03 sum by state of a customer": [
+     5,
+     "ee3e4454fd52963f06529b73f4a99133"
+    ],
+    "a04 sum by state of a customer": [
+     5,
+     "04f38d5f1e28c4a4a05b628c7e74b27c"
+    ],
+    "a05 sum by state of a customer": [
+     5,
+     "7091fc9a478b78bfc3f60ac107a6da3e"
+    ],
+    "a06 count by state": [
+     5,
+     "3bc073a8a0f6151e57a109a3e36c6c9a"
+    ],
+    "a07 count all": [
+     1,
+     "fad7044ca215833a9ac04978e60a5052"
+    ]
+   },
+   "compactor": {
+    "enabled": true,
+    "started": 1,
+    "running": 1,
+    "runUploadsAbortedOnDrop": 0,
+    "runUploadAbortErrors": 0,
+    "incompleteUploadsAborted": 0,
+    "incompleteUploadsRelisted": 0,
+    "stopMs": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "stopSlateAborted": 0,
+    "slowStages": 0,
+    "closeGcRequeued": 0,
+    "closePassesForPending": 0,
+    "l0RecognisedFromVersion": 0,
+    "l0RecognisedByRead": 0,
+    "recogniseJobs": 0,
+    "recogniseMsMax": 0,
+    "firstBuilds": 1,
+    "firstInstalls": 1,
+    "firstInstallRefused": 0,
+    "firstBuildMsMax": 82,
+    "claimsDeferred": 0,
+    "l0JobsBesideMerge": 0,
+    "mergeHeld": 0,
+    "publishes": 68,
+    "absorbs": 14,
+    "merges": 3,
+    "reseals": 51,
+    "errors": 0,
+    "catchUps": 1,
+    "notStarted": {
+     "notWriter": 0,
+     "noVersion": 4,
+     "catchUpPublishedNothing": 0,
+     "catchUpFailed": 0,
+     "marksUnreadable": 0
+    }
+   }
+  },
+  {
+   "stage": "3 after deletes and whole-customer erasures",
+   "answers": {
+    "q00 stato_ts one customer": [
+     3,
+     "0036e452e594b4a5de14ad5bd286a630"
+    ],
+    "q01 stato_ts all customers": [
+     211,
+     "f88e75afa6726756296bc82d9ea81883"
+    ],
+    "q02 stato_ts reverse": [
+     139,
+     "10256c56eadade7946dccbfcf6dea138"
+    ],
+    "q03 stato_ts one customer": [
+     5,
+     "8f332d12b9501db777054eca2f0d88cd"
+    ],
+    "q04 stato_ts all customers": [
+     211,
+     "b3c94e0508368898ce39f41c47ee6a7a"
+    ],
+    "q05 stato_ts reverse": [
+     143,
+     "21bec275dc2ecb3fb6ff4740a264f96c"
+    ],
+    "q06 stato_ts one customer": [
+     11,
+     "57bbe9340c72574e03d79169936f342c"
+    ],
+    "q07 stato_ts all customers": [
+     183,
+     "d71022b9b867e17863c9c5655804ed70"
+    ],
+    "q08 stato_ts reverse": [
+     119,
+     "9a48e1022f48cbcbb94967404579ead3"
+    ],
+    "q09 stato_ts one customer": [
+     4,
+     "614b7547fb5036f6d55f6222336727f2"
+    ],
+    "q10 stato_ts all customers": [
+     194,
+     "21ff2ab1c1f00ed2a75bbd26110b4ea0"
+    ],
+    "q11 stato_ts reverse": [
+     131,
+     "c0ad40f165b0aeaa39f6e2f6d744e72e"
+    ],
+    "q12 stato_ts one customer": [
+     4,
+     "6f7b817d0b7ea5d9b620f797a2294018"
+    ],
+    "q13 stato_ts all customers": [
+     162,
+     "58da3ab3bc921d11eef44b91a140ed30"
+    ],
+    "q14 stato_ts reverse": [
+     111,
+     "72b82b291668425fdcacebc0d4c09768"
+    ],
+    "q15 stato_ts one customer": [
+     0,
+     "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "q16 stato_ts all customers": [
+     154,
+     "342d551fe6a5e1fe99f268d4f0d7e1f1"
+    ],
+    "q17 stato_ts reverse": [
+     131,
+     "e08de059fd4f41c2164f0030400ff64d"
+    ],
+    "q18 last 10 of a customer": [
+     10,
+     "2c33f0f9d5cd0f291ac812049e90ad62"
+    ],
+    "q19 whole customer": [
+     281,
+     "41fe031d75ee4288f8d5d22c4c04e546"
+    ],
+    "q20 customer and state": [
+     125,
+     "0ce76986db4f72cb8060dea0b1167824"
+    ],
+    "q21 last 10 of a customer": [
+     10,
+     "bda90b793ff70bd2f2c78e489a8c8106"
+    ],
+    "q22 whole customer": [
+     290,
+     "25ffbc212af63ba9202ab042d0963f75"
+    ],
+    "q23 customer and state": [
+     124,
+     "cba38549d47db2be9de799732fc109db"
+    ],
+    "q24 last 10 of a customer": [
+     10,
+     "55ddbdecd9de42dabcb43d822c15ccb9"
+    ],
+    "q25 whole customer": [
+     276,
+     "0c5cdddf93cfafca5c6b0e88f2119128"
+    ],
+    "q26 customer and state": [
+     109,
+     "5e21b2ef71054edfb422d02f2dcc9926"
+    ],
+    "q27 last 10 of a customer": [
+     10,
+     "e478e5c17c548f970488455a550b3438"
+    ],
+    "q28 whole customer": [
+     283,
+     "df3913ecb745df04bf62fb3246d06bec"
+    ],
+    "q29 customer and state": [
+     118,
+     "1564efa8b74811e8d51a21e3a824e826"
+    ],
+    "q30 last 10 of a customer": [
+     10,
+     "6cceaa30e677b07184848ca98cd997e9"
+    ],
+    "q31 whole customer": [
+     286,
+     "1cb05b4aece2767fa54e7854c6f19948"
+    ],
+    "q32 customer and state": [
+     123,
+     "a8b63452507933c75c52e1c08b27abfd"
+    ],
+    "q33 last 10 of a customer": [
+     10,
+     "13ca91c9dd472bbde7784e9c743edfc0"
+    ],
+    "q34 whole customer": [
+     281,
+     "2e224bf4e7767e09a38a20df431ff471"
+    ],
+    "q35 customer and state": [
+     109,
+     "2937a8ef4b2645853eb2b24edd65819e"
+    ],
+    "q36 last 10 of a customer": [
+     10,
+     "8a5ad0365f82a150679e6a8557431500"
+    ],
+    "q37 whole customer": [
+     289,
+     "cc89fd4650ab714cbb50b25616452994"
+    ],
+    "q38 customer and state": [
+     108,
+     "2be1499ad5884d856e5d372a9f664aeb"
+    ],
+    "q39 last 10 of a customer": [
+     10,
+     "7b9b7719c61fee5632ba7730290d6b66"
+    ],
+    "q40 whole customer": [
+     288,
+     "1091a868f21ab77eda272b9dbe651291"
+    ],
+    "q41 customer and state": [
+     118,
+     "86c545b9f234573604eb24efe47b8446"
+    ],
+    "q42 many customers by $in": [
+     2225,
+     "7fdea5cf2eb1ab8c0d6aa91ea37b3fe1"
+    ],
+    "q43 many customers sorted by total": [
+     100,
+     "ba6d63ca92a8321ced1be49e546a6279"
+    ],
+    "q44 collection sorted by total, filtered": [
+     2224,
+     "b61a5797e34ad966bd3c176ea82b9c5f"
+    ],
+    "q45 collection top 50 by total": [
+     50,
+     "06fb097971de60acf0a85ee90c3b95ba"
+    ],
+    "q46 range on total, no index": [
+     213,
+     "ee1ec88685dabf531061f7ce6cec8513"
+    ],
+    "a00 sum by state of a customer": [
+     5,
+     "2768ae179370a1f04eea05f85190fd0f"
+    ],
+    "a01 sum by state of a customer": [
+     5,
+     "2a3cea79f0cac4dbe0f64f104a980a91"
+    ],
+    "a02 sum by state of a customer": [
+     5,
+     "43252d56c839ca1500a304e17c397420"
+    ],
+    "a03 sum by state of a customer": [
+     5,
+     "3c87f31716e919ad7b82b366fd77c282"
+    ],
+    "a04 sum by state of a customer": [
+     5,
+     "eb681acdd37defd3367db8774f671dcb"
+    ],
+    "a05 sum by state of a customer": [
+     5,
+     "bccd17af58497519841e82481ef8c946"
+    ],
+    "a06 count by state": [
+     5,
+     "2927185b287ce10bd0c2f1a776fced32"
+    ],
+    "a07 count all": [
+     1,
+     "838656906271602256721c85e0c5105d"
+    ]
+   },
+   "compactor": {
+    "enabled": true,
+    "started": 1,
+    "running": 1,
+    "runUploadsAbortedOnDrop": 0,
+    "runUploadAbortErrors": 0,
+    "incompleteUploadsAborted": 0,
+    "incompleteUploadsRelisted": 0,
+    "stopMs": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "stopSlateAborted": 0,
+    "slowStages": 0,
+    "closeGcRequeued": 0,
+    "closePassesForPending": 0,
+    "l0RecognisedFromVersion": 0,
+    "l0RecognisedByRead": 0,
+    "recogniseJobs": 0,
+    "recogniseMsMax": 0,
+    "firstBuilds": 1,
+    "firstInstalls": 1,
+    "firstInstallRefused": 0,
+    "firstBuildMsMax": 82,
+    "claimsDeferred": 0,
+    "l0JobsBesideMerge": 0,
+    "mergeHeld": 0,
+    "publishes": 73,
+    "absorbs": 16,
+    "merges": 4,
+    "reseals": 53,
+    "errors": 0,
+    "catchUps": 1,
+    "notStarted": {
+     "notWriter": 0,
+     "noVersion": 4,
+     "catchUpPublishedNothing": 0,
+     "catchUpFailed": 0,
+     "marksUnreadable": 0
+    }
+   }
+  },
+  {
+   "stage": "4 compactor settled",
+   "answers": {
+    "q00 stato_ts one customer": [
+     3,
+     "0036e452e594b4a5de14ad5bd286a630"
+    ],
+    "q01 stato_ts all customers": [
+     211,
+     "f88e75afa6726756296bc82d9ea81883"
+    ],
+    "q02 stato_ts reverse": [
+     139,
+     "10256c56eadade7946dccbfcf6dea138"
+    ],
+    "q03 stato_ts one customer": [
+     5,
+     "8f332d12b9501db777054eca2f0d88cd"
+    ],
+    "q04 stato_ts all customers": [
+     211,
+     "b3c94e0508368898ce39f41c47ee6a7a"
+    ],
+    "q05 stato_ts reverse": [
+     143,
+     "21bec275dc2ecb3fb6ff4740a264f96c"
+    ],
+    "q06 stato_ts one customer": [
+     11,
+     "57bbe9340c72574e03d79169936f342c"
+    ],
+    "q07 stato_ts all customers": [
+     183,
+     "d71022b9b867e17863c9c5655804ed70"
+    ],
+    "q08 stato_ts reverse": [
+     119,
+     "9a48e1022f48cbcbb94967404579ead3"
+    ],
+    "q09 stato_ts one customer": [
+     4,
+     "614b7547fb5036f6d55f6222336727f2"
+    ],
+    "q10 stato_ts all customers": [
+     194,
+     "21ff2ab1c1f00ed2a75bbd26110b4ea0"
+    ],
+    "q11 stato_ts reverse": [
+     131,
+     "c0ad40f165b0aeaa39f6e2f6d744e72e"
+    ],
+    "q12 stato_ts one customer": [
+     4,
+     "6f7b817d0b7ea5d9b620f797a2294018"
+    ],
+    "q13 stato_ts all customers": [
+     162,
+     "58da3ab3bc921d11eef44b91a140ed30"
+    ],
+    "q14 stato_ts reverse": [
+     111,
+     "72b82b291668425fdcacebc0d4c09768"
+    ],
+    "q15 stato_ts one customer": [
+     0,
+     "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "q16 stato_ts all customers": [
+     154,
+     "342d551fe6a5e1fe99f268d4f0d7e1f1"
+    ],
+    "q17 stato_ts reverse": [
+     131,
+     "e08de059fd4f41c2164f0030400ff64d"
+    ],
+    "q18 last 10 of a customer": [
+     10,
+     "2c33f0f9d5cd0f291ac812049e90ad62"
+    ],
+    "q19 whole customer": [
+     281,
+     "41fe031d75ee4288f8d5d22c4c04e546"
+    ],
+    "q20 customer and state": [
+     125,
+     "0ce76986db4f72cb8060dea0b1167824"
+    ],
+    "q21 last 10 of a customer": [
+     10,
+     "bda90b793ff70bd2f2c78e489a8c8106"
+    ],
+    "q22 whole customer": [
+     290,
+     "25ffbc212af63ba9202ab042d0963f75"
+    ],
+    "q23 customer and state": [
+     124,
+     "cba38549d47db2be9de799732fc109db"
+    ],
+    "q24 last 10 of a customer": [
+     10,
+     "55ddbdecd9de42dabcb43d822c15ccb9"
+    ],
+    "q25 whole customer": [
+     276,
+     "0c5cdddf93cfafca5c6b0e88f2119128"
+    ],
+    "q26 customer and state": [
+     109,
+     "5e21b2ef71054edfb422d02f2dcc9926"
+    ],
+    "q27 last 10 of a customer": [
+     10,
+     "e478e5c17c548f970488455a550b3438"
+    ],
+    "q28 whole customer": [
+     283,
+     "df3913ecb745df04bf62fb3246d06bec"
+    ],
+    "q29 customer and state": [
+     118,
+     "1564efa8b74811e8d51a21e3a824e826"
+    ],
+    "q30 last 10 of a customer": [
+     10,
+     "6cceaa30e677b07184848ca98cd997e9"
+    ],
+    "q31 whole customer": [
+     286,
+     "1cb05b4aece2767fa54e7854c6f19948"
+    ],
+    "q32 customer and state": [
+     123,
+     "a8b63452507933c75c52e1c08b27abfd"
+    ],
+    "q33 last 10 of a customer": [
+     10,
+     "13ca91c9dd472bbde7784e9c743edfc0"
+    ],
+    "q34 whole customer": [
+     281,
+     "2e224bf4e7767e09a38a20df431ff471"
+    ],
+    "q35 customer and state": [
+     109,
+     "2937a8ef4b2645853eb2b24edd65819e"
+    ],
+    "q36 last 10 of a customer": [
+     10,
+     "8a5ad0365f82a150679e6a8557431500"
+    ],
+    "q37 whole customer": [
+     289,
+     "cc89fd4650ab714cbb50b25616452994"
+    ],
+    "q38 customer and state": [
+     108,
+     "2be1499ad5884d856e5d372a9f664aeb"
+    ],
+    "q39 last 10 of a customer": [
+     10,
+     "7b9b7719c61fee5632ba7730290d6b66"
+    ],
+    "q40 whole customer": [
+     288,
+     "1091a868f21ab77eda272b9dbe651291"
+    ],
+    "q41 customer and state": [
+     118,
+     "86c545b9f234573604eb24efe47b8446"
+    ],
+    "q42 many customers by $in": [
+     2225,
+     "7fdea5cf2eb1ab8c0d6aa91ea37b3fe1"
+    ],
+    "q43 many customers sorted by total": [
+     100,
+     "ba6d63ca92a8321ced1be49e546a6279"
+    ],
+    "q44 collection sorted by total, filtered": [
+     2224,
+     "b61a5797e34ad966bd3c176ea82b9c5f"
+    ],
+    "q45 collection top 50 by total": [
+     50,
+     "06fb097971de60acf0a85ee90c3b95ba"
+    ],
+    "q46 range on total, no index": [
+     213,
+     "ee1ec88685dabf531061f7ce6cec8513"
+    ],
+    "a00 sum by state of a customer": [
+     5,
+     "2768ae179370a1f04eea05f85190fd0f"
+    ],
+    "a01 sum by state of a customer": [
+     5,
+     "2a3cea79f0cac4dbe0f64f104a980a91"
+    ],
+    "a02 sum by state of a customer": [
+     5,
+     "43252d56c839ca1500a304e17c397420"
+    ],
+    "a03 sum by state of a customer": [
+     5,
+     "3c87f31716e919ad7b82b366fd77c282"
+    ],
+    "a04 sum by state of a customer": [
+     5,
+     "eb681acdd37defd3367db8774f671dcb"
+    ],
+    "a05 sum by state of a customer": [
+     5,
+     "bccd17af58497519841e82481ef8c946"
+    ],
+    "a06 count by state": [
+     5,
+     "2927185b287ce10bd0c2f1a776fced32"
+    ],
+    "a07 count all": [
+     1,
+     "838656906271602256721c85e0c5105d"
+    ]
+   },
+   "compactor": {
+    "enabled": true,
+    "started": 1,
+    "running": 1,
+    "runUploadsAbortedOnDrop": 0,
+    "runUploadAbortErrors": 0,
+    "incompleteUploadsAborted": 0,
+    "incompleteUploadsRelisted": 0,
+    "stopMs": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "stopSlateAborted": 0,
+    "slowStages": 0,
+    "closeGcRequeued": 0,
+    "closePassesForPending": 0,
+    "l0RecognisedFromVersion": 0,
+    "l0RecognisedByRead": 0,
+    "recogniseJobs": 0,
+    "recogniseMsMax": 0,
+    "firstBuilds": 1,
+    "firstInstalls": 1,
+    "firstInstallRefused": 0,
+    "firstBuildMsMax": 82,
+    "claimsDeferred": 0,
+    "l0JobsBesideMerge": 0,
+    "mergeHeld": 0,
+    "publishes": 73,
+    "absorbs": 16,
+    "merges": 4,
+    "reseals": 53,
+    "errors": 0,
+    "catchUps": 1,
+    "notStarted": {
+     "notWriter": 0,
+     "noVersion": 4,
+     "catchUpPublishedNothing": 0,
+     "catchUpFailed": 0,
+     "marksUnreadable": 0
+    }
+   }
+  },
+  {
+   "stage": "5 after kill -9 and takeover",
+   "answers": {
+    "q00 stato_ts one customer": [
+     3,
+     "0036e452e594b4a5de14ad5bd286a630"
+    ],
+    "q01 stato_ts all customers": [
+     211,
+     "f88e75afa6726756296bc82d9ea81883"
+    ],
+    "q02 stato_ts reverse": [
+     139,
+     "10256c56eadade7946dccbfcf6dea138"
+    ],
+    "q03 stato_ts one customer": [
+     5,
+     "8f332d12b9501db777054eca2f0d88cd"
+    ],
+    "q04 stato_ts all customers": [
+     211,
+     "b3c94e0508368898ce39f41c47ee6a7a"
+    ],
+    "q05 stato_ts reverse": [
+     143,
+     "21bec275dc2ecb3fb6ff4740a264f96c"
+    ],
+    "q06 stato_ts one customer": [
+     11,
+     "57bbe9340c72574e03d79169936f342c"
+    ],
+    "q07 stato_ts all customers": [
+     183,
+     "d71022b9b867e17863c9c5655804ed70"
+    ],
+    "q08 stato_ts reverse": [
+     119,
+     "9a48e1022f48cbcbb94967404579ead3"
+    ],
+    "q09 stato_ts one customer": [
+     4,
+     "614b7547fb5036f6d55f6222336727f2"
+    ],
+    "q10 stato_ts all customers": [
+     194,
+     "21ff2ab1c1f00ed2a75bbd26110b4ea0"
+    ],
+    "q11 stato_ts reverse": [
+     131,
+     "c0ad40f165b0aeaa39f6e2f6d744e72e"
+    ],
+    "q12 stato_ts one customer": [
+     4,
+     "6f7b817d0b7ea5d9b620f797a2294018"
+    ],
+    "q13 stato_ts all customers": [
+     162,
+     "58da3ab3bc921d11eef44b91a140ed30"
+    ],
+    "q14 stato_ts reverse": [
+     111,
+     "72b82b291668425fdcacebc0d4c09768"
+    ],
+    "q15 stato_ts one customer": [
+     0,
+     "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "q16 stato_ts all customers": [
+     154,
+     "342d551fe6a5e1fe99f268d4f0d7e1f1"
+    ],
+    "q17 stato_ts reverse": [
+     131,
+     "e08de059fd4f41c2164f0030400ff64d"
+    ],
+    "q18 last 10 of a customer": [
+     10,
+     "2c33f0f9d5cd0f291ac812049e90ad62"
+    ],
+    "q19 whole customer": [
+     281,
+     "41fe031d75ee4288f8d5d22c4c04e546"
+    ],
+    "q20 customer and state": [
+     125,
+     "0ce76986db4f72cb8060dea0b1167824"
+    ],
+    "q21 last 10 of a customer": [
+     10,
+     "bda90b793ff70bd2f2c78e489a8c8106"
+    ],
+    "q22 whole customer": [
+     290,
+     "25ffbc212af63ba9202ab042d0963f75"
+    ],
+    "q23 customer and state": [
+     124,
+     "cba38549d47db2be9de799732fc109db"
+    ],
+    "q24 last 10 of a customer": [
+     10,
+     "55ddbdecd9de42dabcb43d822c15ccb9"
+    ],
+    "q25 whole customer": [
+     276,
+     "0c5cdddf93cfafca5c6b0e88f2119128"
+    ],
+    "q26 customer and state": [
+     109,
+     "5e21b2ef71054edfb422d02f2dcc9926"
+    ],
+    "q27 last 10 of a customer": [
+     10,
+     "e478e5c17c548f970488455a550b3438"
+    ],
+    "q28 whole customer": [
+     283,
+     "df3913ecb745df04bf62fb3246d06bec"
+    ],
+    "q29 customer and state": [
+     118,
+     "1564efa8b74811e8d51a21e3a824e826"
+    ],
+    "q30 last 10 of a customer": [
+     10,
+     "6cceaa30e677b07184848ca98cd997e9"
+    ],
+    "q31 whole customer": [
+     286,
+     "1cb05b4aece2767fa54e7854c6f19948"
+    ],
+    "q32 customer and state": [
+     123,
+     "a8b63452507933c75c52e1c08b27abfd"
+    ],
+    "q33 last 10 of a customer": [
+     10,
+     "13ca91c9dd472bbde7784e9c743edfc0"
+    ],
+    "q34 whole customer": [
+     281,
+     "2e224bf4e7767e09a38a20df431ff471"
+    ],
+    "q35 customer and state": [
+     109,
+     "2937a8ef4b2645853eb2b24edd65819e"
+    ],
+    "q36 last 10 of a customer": [
+     10,
+     "8a5ad0365f82a150679e6a8557431500"
+    ],
+    "q37 whole customer": [
+     289,
+     "cc89fd4650ab714cbb50b25616452994"
+    ],
+    "q38 customer and state": [
+     108,
+     "2be1499ad5884d856e5d372a9f664aeb"
+    ],
+    "q39 last 10 of a customer": [
+     10,
+     "7b9b7719c61fee5632ba7730290d6b66"
+    ],
+    "q40 whole customer": [
+     288,
+     "1091a868f21ab77eda272b9dbe651291"
+    ],
+    "q41 customer and state": [
+     118,
+     "86c545b9f234573604eb24efe47b8446"
+    ],
+    "q42 many customers by $in": [
+     2225,
+     "7fdea5cf2eb1ab8c0d6aa91ea37b3fe1"
+    ],
+    "q43 many customers sorted by total": [
+     100,
+     "ba6d63ca92a8321ced1be49e546a6279"
+    ],
+    "q44 collection sorted by total, filtered": [
+     2224,
+     "b61a5797e34ad966bd3c176ea82b9c5f"
+    ],
+    "q45 collection top 50 by total": [
+     50,
+     "06fb097971de60acf0a85ee90c3b95ba"
+    ],
+    "q46 range on total, no index": [
+     213,
+     "ee1ec88685dabf531061f7ce6cec8513"
+    ],
+    "a00 sum by state of a customer": [
+     5,
+     "2768ae179370a1f04eea05f85190fd0f"
+    ],
+    "a01 sum by state of a customer": [
+     5,
+     "2a3cea79f0cac4dbe0f64f104a980a91"
+    ],
+    "a02 sum by state of a customer": [
+     5,
+     "43252d56c839ca1500a304e17c397420"
+    ],
+    "a03 sum by state of a customer": [
+     5,
+     "3c87f31716e919ad7b82b366fd77c282"
+    ],
+    "a04 sum by state of a customer": [
+     5,
+     "eb681acdd37defd3367db8774f671dcb"
+    ],
+    "a05 sum by state of a customer": [
+     5,
+     "bccd17af58497519841e82481ef8c946"
+    ],
+    "a06 count by state": [
+     5,
+     "2927185b287ce10bd0c2f1a776fced32"
+    ],
+    "a07 count all": [
+     1,
+     "838656906271602256721c85e0c5105d"
+    ]
+   },
+   "compactor": {
+    "enabled": true,
+    "started": 0,
+    "running": 0,
+    "runUploadsAbortedOnDrop": 0,
+    "runUploadAbortErrors": 0,
+    "incompleteUploadsAborted": 0,
+    "incompleteUploadsRelisted": 0,
+    "stopMs": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "stopSlateAborted": 0,
+    "slowStages": 0,
+    "closeGcRequeued": 0,
+    "closePassesForPending": 0,
+    "l0RecognisedFromVersion": 0,
+    "l0RecognisedByRead": 0,
+    "recogniseJobs": 0,
+    "recogniseMsMax": 0,
+    "firstBuilds": 0,
+    "firstInstalls": 0,
+    "firstInstallRefused": 0,
+    "firstBuildMsMax": 0,
+    "claimsDeferred": 0,
+    "l0JobsBesideMerge": 0,
+    "mergeHeld": 0,
+    "publishes": 0,
+    "absorbs": 0,
+    "merges": 0,
+    "reseals": 0,
+    "errors": 0,
+    "catchUps": 0,
+    "notStarted": {
+     "notWriter": 0,
+     "noVersion": 0,
+     "catchUpPublishedNothing": 0,
+     "catchUpFailed": 0,
+     "marksUnreadable": 0
+    }
+   }
+  },
+  {
+   "stage": "6 updates on the new process, compactor settled",
+   "answers": {
+    "q00 stato_ts one customer": [
+     4,
+     "dc8159b7caa47a84f5c44097fed169b2"
+    ],
+    "q01 stato_ts all customers": [
+     212,
+     "88f760590da469a4dd76a2fdbd2b7777"
+    ],
+    "q02 stato_ts reverse": [
+     142,
+     "36b5189409cf043a657ae8226e7f05ec"
+    ],
+    "q03 stato_ts one customer": [
+     5,
+     "8f332d12b9501db777054eca2f0d88cd"
+    ],
+    "q04 stato_ts all customers": [
+     215,
+     "87a614ca7ae97eeb544d74c6f99b06e6"
+    ],
+    "q05 stato_ts reverse": [
+     146,
+     "502f482c11d24747611d57c552137272"
+    ],
+    "q06 stato_ts one customer": [
+     10,
+     "dc8671b6c09aefa91ac6930b58349fda"
+    ],
+    "q07 stato_ts all customers": [
+     184,
+     "2ae84a43aee840be3f37bd9dda8ef577"
+    ],
+    "q08 stato_ts reverse": [
+     117,
+     "a135394078e38572a3918a6bc5de727c"
+    ],
+    "q09 stato_ts one customer": [
+     4,
+     "bbbe29d24096754fe0c83a53838481f2"
+    ],
+    "q10 stato_ts all customers": [
+     192,
+     "09e80b8c6530a45d08f2a8d759f74786"
+    ],
+    "q11 stato_ts reverse": [
+     120,
+     "eb2181dbd0e485cd5197101f4bb37cbb"
+    ],
+    "q12 stato_ts one customer": [
+     4,
+     "6f7b817d0b7ea5d9b620f797a2294018"
+    ],
+    "q13 stato_ts all customers": [
+     167,
+     "0bc5e63cd809ca402868c128d55c2f82"
+    ],
+    "q14 stato_ts reverse": [
+     111,
+     "2cb7b24a8a4b054a819853e76662b8c8"
+    ],
+    "q15 stato_ts one customer": [
+     0,
+     "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "q16 stato_ts all customers": [
+     163,
+     "57dbb6272dd9204e7513d75f58b4e0b0"
+    ],
+    "q17 stato_ts reverse": [
+     131,
+     "c7d7cf785f2647f3d575823f4e3dfff7"
+    ],
+    "q18 last 10 of a customer": [
+     10,
+     "2c33f0f9d5cd0f291ac812049e90ad62"
+    ],
+    "q19 whole customer": [
+     281,
+     "7e00046c66d8b7daa251729c19b42704"
+    ],
+    "q20 customer and state": [
+     122,
+     "cbbbca31e76485821384368c891071ba"
+    ],
+    "q21 last 10 of a customer": [
+     10,
+     "bda90b793ff70bd2f2c78e489a8c8106"
+    ],
+    "q22 whole customer": [
+     290,
+     "b1811dfcd29a8835bd6f77a9b7f5f70c"
+    ],
+    "q23 customer and state": [
+     126,
+     "094f6a6dcd5ab3bebd2ae7f7ad8e24e3"
+    ],
+    "q24 last 10 of a customer": [
+     10,
+     "55ddbdecd9de42dabcb43d822c15ccb9"
+    ],
+    "q25 whole customer": [
+     276,
+     "d0bb039642d19f6d57bc73ec8391e4c9"
+    ],
+    "q26 customer and state": [
+     110,
+     "fd1ce33e570db58819c51c63e891941b"
+    ],
+    "q27 last 10 of a customer": [
+     10,
+     "081635462233e38aafba096e0a96b444"
+    ],
+    "q28 whole customer": [
+     283,
+     "11ccba37469b06acbd8685ea7b5c1110"
+    ],
+    "q29 customer and state": [
+     123,
+     "1e9a3f86d6144fffe01fccc94df65230"
+    ],
+    "q30 last 10 of a customer": [
+     10,
+     "2d6037b7276a5332e01d76a30a0db087"
+    ],
+    "q31 whole customer": [
+     286,
+     "a6baf83c510544ff2cf6eca34fe30940"
+    ],
+    "q32 customer and state": [
+     119,
+     "ae0bc77bf814d69af4c92851f5e8621a"
+    ],
+    "q33 last 10 of a customer": [
+     10,
+     "89816f08cb15f451374576067d9d9c61"
+    ],
+    "q34 whole customer": [
+     281,
+     "ef7c77a4ac9125cfd01c8a82a08533cb"
+    ],
+    "q35 customer and state": [
+     110,
+     "994ee0468c832eb5aba384ee1ac5a3f1"
+    ],
+    "q36 last 10 of a customer": [
+     10,
+     "8a5ad0365f82a150679e6a8557431500"
+    ],
+    "q37 whole customer": [
+     289,
+     "460cedba9373b9eeec2a20df6c60b724"
+    ],
+    "q38 customer and state": [
+     108,
+     "0089f03c1bb4147ee602d5ce80eac799"
+    ],
+    "q39 last 10 of a customer": [
+     10,
+     "2442eba04ba96fd1ef442a788dee01ee"
+    ],
+    "q40 whole customer": [
+     288,
+     "b48f93de94c27cfcc883f637c149c2fc"
+    ],
+    "q41 customer and state": [
+     121,
+     "66ad8a9d23848d899dc13f1936347707"
+    ],
+    "q42 many customers by $in": [
+     2212,
+     "ab3b25355a9e1b42d163189e2de58c4e"
+    ],
+    "q43 many customers sorted by total": [
+     100,
+     "f4f487a5bc5d3b281b41ee2c09a25eb7"
+    ],
+    "q44 collection sorted by total, filtered": [
+     2240,
+     "15c34215c8b27b50fc55fc437718169f"
+    ],
+    "q45 collection top 50 by total": [
+     50,
+     "465dcdf0b4e223cb6d6c8d67b6ee8285"
+    ],
+    "q46 range on total, no index": [
+     215,
+     "1549daf2861f0c7b4d4573ae0d9e1142"
+    ],
+    "a00 sum by state of a customer": [
+     5,
+     "cffbf7f914822dfbb12a82b2c55c9360"
+    ],
+    "a01 sum by state of a customer": [
+     5,
+     "432917535953e67fd78a0edf730f313b"
+    ],
+    "a02 sum by state of a customer": [
+     5,
+     "0fcbe3c5b7fb7c2b974fa3bd89e2a959"
+    ],
+    "a03 sum by state of a customer": [
+     5,
+     "bdb220cdd78eaf7c9f449c99e7c463ec"
+    ],
+    "a04 sum by state of a customer": [
+     5,
+     "0527e252ceac2ea1ea5b14b2a2d2d8c5"
+    ],
+    "a05 sum by state of a customer": [
+     5,
+     "aa64659fc2ed30e3f1aa00dc0789aed1"
+    ],
+    "a06 count by state": [
+     5,
+     "c0b4c30623715bdc12744808bd355832"
+    ],
+    "a07 count all": [
+     1,
+     "838656906271602256721c85e0c5105d"
+    ]
+   },
+   "compactor": {
+    "enabled": true,
+    "started": 1,
+    "running": 1,
+    "runUploadsAbortedOnDrop": 0,
+    "runUploadAbortErrors": 0,
+    "incompleteUploadsAborted": 0,
+    "incompleteUploadsRelisted": 0,
+    "stopMs": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "stopSlateAborted": 0,
+    "slowStages": 0,
+    "closeGcRequeued": 0,
+    "closePassesForPending": 0,
+    "l0RecognisedFromVersion": 0,
+    "l0RecognisedByRead": 0,
+    "recogniseJobs": 0,
+    "recogniseMsMax": 0,
+    "firstBuilds": 0,
+    "firstInstalls": 0,
+    "firstInstallRefused": 0,
+    "firstBuildMsMax": 0,
+    "claimsDeferred": 0,
+    "l0JobsBesideMerge": 0,
+    "mergeHeld": 0,
+    "publishes": 5,
+    "absorbs": 3,
+    "merges": 0,
+    "reseals": 1,
+    "errors": 0,
+    "catchUps": 0,
+    "notStarted": {
+     "notWriter": 1,
+     "noVersion": 0,
+     "catchUpPublishedNothing": 0,
+     "catchUpFailed": 0,
+     "marksUnreadable": 0
+    }
+   }
+  }
+ ],
+ "fetch": [
+  {
+   "stage": "1 published and absorbed",
+   "secs": 16.29,
+   "rows_from_runs": 1252468,
+   "get_bytes": 28701615,
+   "fetch": {
+    "spanScans": 152,
+    "spanRows": 648793,
+    "spanStops": 21,
+    "prefetchBlocks": 2710
+   }
+  },
+  {
+   "stage": "2 after updates, before absorption",
+   "secs": 8.4,
+   "rows_from_runs": 1253303,
+   "get_bytes": 1513182,
+   "fetch": {
+    "spanScans": 152,
+    "spanRows": 648007,
+    "spanStops": 21,
+    "prefetchBlocks": 209
+   }
+  },
+  {
+   "stage": "3 after deletes and whole-customer erasures",
+   "secs": 5.79,
+   "rows_from_runs": 1256410,
+   "get_bytes": 2818112,
+   "fetch": {
+    "spanScans": 145,
+    "spanRows": 607554,
+    "spanStops": 21,
+    "prefetchBlocks": 261
+   }
+  },
+  {
+   "stage": "4 compactor settled",
+   "secs": 7.64,
+   "rows_from_runs": 1256410,
+   "get_bytes": 1170,
+   "fetch": {
+    "spanScans": 145,
+    "spanRows": 607554,
+    "spanStops": 21,
+    "prefetchBlocks": 0
+   }
+  },
+  {
+   "stage": "5 after kill -9 and takeover",
+   "secs": 13.29,
+   "rows_from_runs": 1256410,
+   "get_bytes": 30580169,
+   "fetch": {
+    "spanScans": 145,
+    "spanRows": 607554,
+    "spanStops": 21,
+    "prefetchBlocks": 3012
+   }
+  },
+  {
+   "stage": "6 updates on the new process, compactor settled",
+   "secs": 7.27,
+   "rows_from_runs": 1236639,
+   "get_bytes": 7752632,
+   "fetch": {
+    "spanScans": 146,
+    "spanRows": 609178,
+    "spanStops": 21,
+    "prefetchBlocks": 280
+   }
+  }
+ ],
+ "settle_1": {
+  "enabled": true,
+  "started": 1,
+  "running": 1,
+  "runUploadsAbortedOnDrop": 0,
+  "runUploadAbortErrors": 0,
+  "incompleteUploadsAborted": 0,
+  "incompleteUploadsRelisted": 0,
+  "stopMs": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "stopSlateAborted": 0,
+  "slowStages": 0,
+  "closeGcRequeued": 0,
+  "closePassesForPending": 0,
+  "l0RecognisedFromVersion": 0,
+  "l0RecognisedByRead": 0,
+  "recogniseJobs": 0,
+  "recogniseMsMax": 0,
+  "firstBuilds": 1,
+  "firstInstalls": 1,
+  "firstInstallRefused": 0,
+  "firstBuildMsMax": 82,
+  "claimsDeferred": 0,
+  "l0JobsBesideMerge": 0,
+  "mergeHeld": 0,
+  "publishes": 66,
+  "absorbs": 12,
+  "merges": 3,
+  "reseals": 51,
+  "errors": 0,
+  "catchUps": 1,
+  "notStarted": {
+   "notWriter": 0,
+   "noVersion": 4,
+   "catchUpPublishedNothing": 0,
+   "catchUpFailed": 0,
+   "marksUnreadable": 0
+  }
+ },
+ "updates_2": 11873,
+ "deleted_3": 7427,
+ "settle_4": {
+  "enabled": true,
+  "started": 1,
+  "running": 1,
+  "runUploadsAbortedOnDrop": 0,
+  "runUploadAbortErrors": 0,
+  "incompleteUploadsAborted": 0,
+  "incompleteUploadsRelisted": 0,
+  "stopMs": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "stopSlateAborted": 0,
+  "slowStages": 0,
+  "closeGcRequeued": 0,
+  "closePassesForPending": 0,
+  "l0RecognisedFromVersion": 0,
+  "l0RecognisedByRead": 0,
+  "recogniseJobs": 0,
+  "recogniseMsMax": 0,
+  "firstBuilds": 1,
+  "firstInstalls": 1,
+  "firstInstallRefused": 0,
+  "firstBuildMsMax": 82,
+  "claimsDeferred": 0,
+  "l0JobsBesideMerge": 0,
+  "mergeHeld": 0,
+  "publishes": 73,
+  "absorbs": 16,
+  "merges": 4,
+  "reseals": 53,
+  "errors": 0,
+  "catchUps": 1,
+  "notStarted": {
+   "notWriter": 0,
+   "noVersion": 4,
+   "catchUpPublishedNothing": 0,
+   "catchUpFailed": 0,
+   "marksUnreadable": 0
+  }
+ },
+ "updates_6": 11186,
+ "settle_6": {
+  "enabled": true,
+  "started": 1,
+  "running": 1,
+  "runUploadsAbortedOnDrop": 0,
+  "runUploadAbortErrors": 0,
+  "incompleteUploadsAborted": 0,
+  "incompleteUploadsRelisted": 0,
+  "stopMs": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "stopSlateAborted": 0,
+  "slowStages": 0,
+  "closeGcRequeued": 0,
+  "closePassesForPending": 0,
+  "l0RecognisedFromVersion": 0,
+  "l0RecognisedByRead": 0,
+  "recogniseJobs": 0,
+  "recogniseMsMax": 0,
+  "firstBuilds": 0,
+  "firstInstalls": 0,
+  "firstInstallRefused": 0,
+  "firstBuildMsMax": 0,
+  "claimsDeferred": 0,
+  "l0JobsBesideMerge": 0,
+  "mergeHeld": 0,
+  "publishes": 5,
+  "absorbs": 3,
+  "merges": 0,
+  "reseals": 1,
+  "errors": 0,
+  "catchUps": 0,
+  "notStarted": {
+   "notWriter": 1,
+   "noVersion": 0,
+   "catchUpPublishedNothing": 0,
+   "catchUpFailed": 0,
+   "marksUnreadable": 0
+  }
+ }
+}

@@ -1,0 +1,287 @@
+{
+ "stages": [
+  {
+   "stage": "1 server A, generated version, cold",
+   "reads": [
+    {
+     "secs": 0.62,
+     "docsExamined": 811,
+     "MB_fetched": 72.0,
+     "getRange": 607,
+     "rows_from_runs": 1622,
+     "rows_per_doc": 2.0,
+     "span_rows": 0,
+     "span_stops": 0,
+     "nReturned": 1
+    },
+    {
+     "secs": 0.38,
+     "docsExamined": 766,
+     "MB_fetched": 59.1,
+     "getRange": 492,
+     "rows_from_runs": 1532,
+     "rows_per_doc": 2.0,
+     "span_rows": 0,
+     "span_stops": 0,
+     "nReturned": 3
+    },
+    {
+     "secs": 0.28,
+     "docsExamined": 808,
+     "MB_fetched": 45.0,
+     "getRange": 373,
+     "rows_from_runs": 1616,
+     "rows_per_doc": 2.0,
+     "span_rows": 0,
+     "span_stops": 0,
+     "nReturned": 1
+    },
+    {
+     "secs": 0.41,
+     "docsExamined": 796,
+     "MB_fetched": 64.6,
+     "getRange": 589,
+     "rows_from_runs": 1592,
+     "rows_per_doc": 2.0,
+     "span_rows": 0,
+     "span_stops": 0,
+     "nReturned": 2
+    }
+   ],
+   "compactor": {
+    "enabled": true,
+    "started": 0,
+    "running": 0,
+    "runUploadsAbortedOnDrop": 0,
+    "runUploadAbortErrors": 0,
+    "incompleteUploadsAborted": 0,
+    "incompleteUploadsRelisted": 0,
+    "stopMs": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "stopSlateAborted": 0,
+    "slowStages": 0,
+    "closeGcRequeued": 0,
+    "closePassesForPending": 0,
+    "l0RecognisedFromVersion": 0,
+    "l0RecognisedByRead": 0,
+    "recogniseJobs": 0,
+    "recogniseMsMax": 0,
+    "firstBuilds": 0,
+    "firstInstalls": 0,
+    "firstInstallRefused": 0,
+    "firstBuildMsMax": 0,
+    "claimsDeferred": 0,
+    "l0JobsBesideMerge": 0,
+    "mergeHeld": 0,
+    "publishes": 0,
+    "absorbs": 0,
+    "merges": 0,
+    "reseals": 0,
+    "errors": 0,
+    "catchUps": 0,
+    "notStarted": {
+     "notWriter": 0,
+     "noVersion": 0,
+     "catchUpPublishedNothing": 0,
+     "catchUpFailed": 0,
+     "marksUnreadable": 0
+    }
+   }
+  },
+  {
+   "stage": "1b server A, same reads again (warm)",
+   "reads": [
+    {
+     "secs": 0.31,
+     "docsExamined": 811,
+     "MB_fetched": 57.4,
+     "getRange": 487,
+     "rows_from_runs": 1622,
+     "rows_per_doc": 2.0,
+     "span_rows": 0,
+     "span_stops": 0,
+     "nReturned": 1
+    },
+    {
+     "secs": 0.34,
+     "docsExamined": 766,
+     "MB_fetched": 58.3,
+     "getRange": 485,
+     "rows_from_runs": 1532,
+     "rows_per_doc": 2.0,
+     "span_rows": 0,
+     "span_stops": 0,
+     "nReturned": 3
+    },
+    {
+     "secs": 0.3,
+     "docsExamined": 808,
+     "MB_fetched": 45.0,
+     "getRange": 373,
+     "rows_from_runs": 1616,
+     "rows_per_doc": 2.0,
+     "span_rows": 0,
+     "span_stops": 0,
+     "nReturned": 1
+    },
+    {
+     "secs": 0.4,
+     "docsExamined": 796,
+     "MB_fetched": 63.1,
+     "getRange": 577,
+     "rows_from_runs": 1592,
+     "rows_per_doc": 2.0,
+     "span_rows": 0,
+     "span_stops": 0,
+     "nReturned": 2
+    }
+   ],
+   "compactor": {
+    "enabled": true,
+    "started": 0,
+    "running": 0,
+    "runUploadsAbortedOnDrop": 0,
+    "runUploadAbortErrors": 0,
+    "incompleteUploadsAborted": 0,
+    "incompleteUploadsRelisted": 0,
+    "stopMs": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "stopSlateAborted": 0,
+    "slowStages": 0,
+    "closeGcRequeued": 0,
+    "closePassesForPending": 0,
+    "l0RecognisedFromVersion": 0,
+    "l0RecognisedByRead": 0,
+    "recogniseJobs": 0,
+    "recogniseMsMax": 0,
+    "firstBuilds": 0,
+    "firstInstalls": 0,
+    "firstInstallRefused": 0,
+    "firstBuildMsMax": 0,
+    "claimsDeferred": 0,
+    "l0JobsBesideMerge": 0,
+    "mergeHeld": 0,
+    "publishes": 0,
+    "absorbs": 0,
+    "merges": 0,
+    "reseals": 0,
+    "errors": 0,
+    "catchUps": 0,
+    "notStarted": {
+     "notWriter": 0,
+     "noVersion": 0,
+     "catchUpPublishedNothing": 0,
+     "catchUpFailed": 0,
+     "marksUnreadable": 0
+    }
+   }
+  },
+  {
+   "stage": "2a server A right after the writes, before the compactor settles",
+   "reads": [
+    {
+     "secs": 0.45,
+     "docsExamined": 810,
+     "MB_fetched": 61.4,
+     "getRange": 539,
+     "rows_from_runs": 1621,
+     "rows_per_doc": 2.0,
+     "span_rows": 0,
+     "span_stops": 0,
+     "nReturned": 1
+    },
+    {
+     "secs": 0.39,
+     "docsExamined": 771,
+     "MB_fetched": 52.9,
+     "getRange": 455,
+     "rows_from_runs": 1537,
+     "rows_per_doc": 2.0,
+     "span_rows": 0,
+     "span_stops": 0,
+     "nReturned": 3
+    },
+    {
+     "secs": 0.29,
+     "docsExamined": 808,
+     "MB_fetched": 45.5,
+     "getRange": 387,
+     "rows_from_runs": 1616,
+     "rows_per_doc": 2.0,
+     "span_rows": 0,
+     "span_stops": 0,
+     "nReturned": 1
+    },
+    {
+     "secs": 0.4,
+     "docsExamined": 795,
+     "MB_fetched": 63.2,
+     "getRange": 589,
+     "rows_from_runs": 1591,
+     "rows_per_doc": 2.0,
+     "span_rows": 0,
+     "span_stops": 0,
+     "nReturned": 2
+    }
+   ],
+   "compactor": {
+    "enabled": true,
+    "started": 1,
+    "running": 1,
+    "runUploadsAbortedOnDrop": 0,
+    "runUploadAbortErrors": 0,
+    "incompleteUploadsAborted": 0,
+    "incompleteUploadsRelisted": 0,
+    "stopMs": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "stopSlateAborted": 0,
+    "slowStages": 0,
+    "closeGcRequeued": 0,
+    "closePassesForPending": 0,
+    "l0RecognisedFromVersion": 0,
+    "l0RecognisedByRead": 1,
+    "recogniseJobs": 1,
+    "recogniseMsMax": 1,
+    "firstBuilds": 0,
+    "firstInstalls": 0,
+    "firstInstallRefused": 0,
+    "firstBuildMsMax": 0,
+    "claimsDeferred": 0,
+    "l0JobsBesideMerge": 0,
+    "mergeHeld": 0,
+    "publishes": 0,
+    "absorbs": 0,
+    "merges": 0,
+    "reseals": 0,
+    "errors": 0,
+    "catchUps": 1,
+    "notStarted": {
+     "notWriter": 1,
+     "noVersion": 0,
+     "catchUpPublishedNothing": 1,
+     "catchUpFailed": 0,
+     "marksUnreadable": 0
+    }
+   }
+  }
+ ],
+ "writes_A": 13272
+}
