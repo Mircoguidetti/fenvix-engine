@@ -47,6 +47,8 @@ ap.add_argument("--only", default="", help="comma-separated databases of the pla
 ap.add_argument("--count-threads", type=int, default=1, help="generator-1tb: the per-customer counts, this many at a time")
 ap.add_argument("--skip-customer-counts", action="store_true", help="generator-1tb: no count of every customer's documents "
                 "(about 40 minutes on 20 GiB here); collStats and dbStats still check the totals")
+ap.add_argument("--stato-customers", type=int, default=-1, help="generator-1tb: the stato_ts reads for the first N sampled "
+                "customers only (-1: all); on 20 GiB after writes each read fetched its window's orders cold, about 100 s")
 ap.add_argument("--stato-window", type=float, default=0.1, help="generator-1tb: the stato_ts reads' time window (fraction of "
                 "the year); the hinted read walks the window across ALL customers, so 0.1 suits 3.4 GiB databases")
 a = ap.parse_args()
@@ -189,6 +191,8 @@ for d in plan["databases"]:
             same(f"{name} Q2 {oid}", raw(od["ordini"].find({"_id": oid})), raw(rd["ordini"].find({"_id": oid})))
         for st in ("nuovo", "pagato", "spedito", "consegnato", "reso"):
             x = rng.uniform(0.02, end - a.stato_window)
+            if a.stato_customers >= 0 and sampled.index(i) >= a.stato_customers:
+                continue
             q = {"stato": st, "cliente": cli, "ts": {"$gte": ts(x), "$lt": ts(x + a.stato_window)}}
             same(f"{name} stato_ts {cli} {st}", raw(od["ordini"].find(q).hint("stato_ts").sort([("ts", -1), ("_id", 1)])),
                  raw(rd["ordini"].find(q).hint("stato_ts").sort([("ts", -1), ("_id", 1)])))

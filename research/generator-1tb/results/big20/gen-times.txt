@@ -1,0 +1,2 @@
+part 1: SIGKILL after 327 s, 6 slices committed
+part 2 (resume): exit 0 after 497 s; total wall 824 s

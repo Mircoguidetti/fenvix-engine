@@ -89,7 +89,7 @@ PY
   tail -2 $D/settle-B.log
   ;;
 check2)
-  python3 $R/ballast_check.py --ours "$OURS" --ref "$REF" --plan $D/plan.json --gen-dir $D/out --out $D/check2.json --keep-ref --counts $D/counts.json --count-threads 8 --stato-window 0.003 > $D/check2.log 2>&1
+  python3 $R/ballast_check.py --ours "$OURS" --ref "$REF" --plan $D/plan.json --gen-dir $D/out --out $D/check2.json --keep-ref --counts $D/counts.json --count-threads 8 --stato-window 0.003 --stato-customers 2 > $D/check2.log 2>&1
   echo "check2 exit $?" >> $D/check2.log; tail -3 $D/check2.log
   ;;
 esac
