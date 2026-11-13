@@ -35,6 +35,20 @@ pub const L0_GUARD: usize = 6;
 /// the guard, every L0 row at or below X_d).
 pub static WAKE_GATED_PASSES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
+/// runwriter-and-stall: writer opens whose unflushed limit was raised by the WAL's size (L0 at the guard), and the largest
+/// raise (bytes).
+pub static REPLAY_RAISES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static REPLAY_RAISED_BYTES_MAX: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Bytes of the WAL objects of database `id` (an upper bound of what a writer's open replays: GC removes the objects
+/// already in L0).
+pub(crate) async fn wal_bytes(store: &Arc<dyn ObjectStore>, id: &str) -> Result<usize> {
+    use futures::TryStreamExt;
+    let prefix = Path::from(format!("{}/wal", tenant_path(id)));
+    let metas: Vec<object_store::ObjectMeta> = store.list(Some(&prefix)).try_collect().await?;
+    Ok(metas.iter().map(|m| m.size as usize).sum())
+}
+
 /// Test control: override SlateDB's `max_unflushed_bytes` for writers built from now on (0 = keep the setting).
 pub static MAX_UNFLUSHED_OVERRIDE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
@@ -519,7 +533,14 @@ pub(crate) fn writer_builder(id: &str, store: &Arc<dyn ObjectStore>) -> slatedb:
 /// the blocks the reader cached stay warm for the writer (same database, same immutable objects). With a fresh scope every
 /// first write after a wake (the profiler's entries too) left the database with a cold cache.
 pub(crate) fn writer_builder_in(id: &str, store: &Arc<dyn ObjectStore>, scope: Option<u64>) -> slatedb::DbBuilder<String> {
+    writer_builder_raised(id, store, scope, 0)
+}
+
+/// [`writer_builder_in`] with `max_unflushed_bytes` raised by `extra` (runwriter-and-stall: the WAL a writer's open
+/// replays while L0 is full, `Tenant::upgrade_inner`).
+pub(crate) fn writer_builder_raised(id: &str, store: &Arc<dyn ObjectStore>, scope: Option<u64>, extra: usize) -> slatedb::DbBuilder<String> {
     let mut settings = writer_settings();
+    settings.max_unflushed_bytes = settings.max_unflushed_bytes.saturating_add(extra);
     let relaxed = relaxed_window(id);
     let local = LOCAL_LOG_FLUSH_SECS.load(std::sync::atomic::Ordering::Relaxed);
     if local > 0 {
@@ -2833,9 +2854,23 @@ impl Tenant {
         phases.push(("reader_close", t0.elapsed().as_millis()));
         let store = &self.lc.store;
         let marker = marker_path(&self.id);
+        // runwriter-and-stall (coordinator's decision on the open case): L0 still at the guard here means the gated pass
+        // could not run (L0 rows above X_d, which only our compactor may move, rule 8) or did not shrink it. SlateDB's WAL
+        // replay would then wait for flushes that wait for L0 (`maybe_apply_backpressure` once the replayed memtables reach
+        // `max_unflushed_bytes`), and L0 shrinks only once our compactor runs, after this open: the database stayed
+        // unwritable for good. This writer's limit is raised by the WAL's size, so the replay holds it in memory and the
+        // open returns; nothing is moved or skipped. SlateDB 0.17 fixes its settings at the build, so the raised limit
+        // stays for this writer's life: at most about twice the normal one, and the engine's own write stall at L0 still
+        // holds new writes back until the compactor has absorbed and folded L0.
+        let extra = if self.l0_at_wake >= L0_GUARD { wal_bytes(store, &self.id).await.unwrap_or(0) } else { 0 };
+        if extra > 0 {
+            REPLAY_RAISES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            REPLAY_RAISED_BYTES_MAX.fetch_max(extra as u64, std::sync::atomic::Ordering::Relaxed);
+            eprintln!("REPLAY_RAISE db={} l0={} wal_bytes={extra}: the writer's unflushed limit is raised by the WAL's size for its open", self.id, self.l0_at_wake);
+        }
         let (del, db) = tokio::join!(
             store.delete(&marker),
-            build_writer(writer_builder_in(&self.id, store, self.scope))
+            build_writer(writer_builder_raised(&self.id, store, self.scope, extra))
         );
         match del {
             Ok(()) | Err(object_store::Error::NotFound { .. }) => {}

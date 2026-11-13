@@ -265,3 +265,256 @@ async fn wake_with_full_absorbed_l0_and_wal_opens_the_writer() {
     assert!(matches!(opened, Ok(Ok(()))), "the writer's open did not return within 30 s with L0 full ({open_took:?})");
     assert_eq!(wrong, 0, "rows read wrong after the reopen (rule 8)");
 }
+
+// ------------------------------------------------------------------------------------------------------------------
+// runwriter-and-stall, the open case (coordinator's decision): L0 full of SSTs NOT yet absorbed, and a WAL over the next
+// writer's limit on unflushed bytes. The gated pass may not run (rule 8), so the open's limit is raised by the WAL's size.
+
+/// Holds, while armed, the GETs of WAL objects (a writer's open in the middle of its replay).
+#[derive(Debug)]
+struct HoldWal {
+    inner: Arc<dyn ObjectStore>,
+    armed: Arc<std::sync::atomic::AtomicBool>,
+    held: Arc<std::sync::atomic::AtomicU64>,
+}
+
+impl std::fmt::Display for HoldWal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "HoldWal")
+    }
+}
+
+#[async_trait::async_trait]
+impl ObjectStore for HoldWal {
+    async fn put_opts(&self, l: &object_store::path::Path, p: object_store::PutPayload, o: object_store::PutOptions) -> object_store::Result<object_store::PutResult> {
+        self.inner.put_opts(l, p, o).await
+    }
+    async fn put_multipart_opts(&self, l: &object_store::path::Path, o: object_store::PutMultipartOptions) -> object_store::Result<Box<dyn object_store::MultipartUpload>> {
+        self.inner.put_multipart_opts(l, o).await
+    }
+    async fn get_opts(&self, l: &object_store::path::Path, o: object_store::GetOptions) -> object_store::Result<object_store::GetResult> {
+        if self.armed.load(Relaxed) && l.as_ref().contains("/wal/") {
+            self.held.fetch_add(1, Relaxed);
+            while self.armed.load(Relaxed) {
+                tokio::time::sleep(Duration::from_millis(5)).await;
+            }
+        }
+        self.inner.get_opts(l, o).await
+    }
+    fn delete_stream(&self, s: futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>> {
+        self.inner.delete_stream(s)
+    }
+    fn list(&self, p: Option<&object_store::path::Path>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.inner.list(p)
+    }
+    fn list_with_offset(&self, p: Option<&object_store::path::Path>, o: &object_store::path::Path) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.inner.list_with_offset(p, o)
+    }
+    async fn list_with_delimiter(&self, p: Option<&object_store::path::Path>) -> object_store::Result<object_store::ListResult> {
+        self.inner.list_with_delimiter(p).await
+    }
+    async fn copy_opts(&self, f: &object_store::path::Path, t: &object_store::path::Path, o: object_store::CopyOptions) -> object_store::Result<()> {
+        self.inner.copy_opts(f, t, o).await
+    }
+    async fn rename_opts(&self, f: &object_store::path::Path, t: &object_store::path::Path, o: object_store::RenameOptions) -> object_store::Result<()> {
+        self.inner.rename_opts(f, t, o).await
+    }
+}
+
+struct Server {
+    lc: Arc<crate::lifecycle::Lifecycle>,
+    maint: crate::lifecycle::Maintenance,
+}
+
+fn server(store: &Arc<dyn ObjectStore>) -> Server {
+    let (queue, rx) = crate::lifecycle::CompactionQueue::new();
+    let lc = crate::lifecycle::Lifecycle::new(Arc::new(crate::counting::CountingStore::new(Arc::clone(store))), Some(Arc::clone(&queue)));
+    let maint = crate::lifecycle::Maintenance::start(Arc::clone(store), Arc::clone(store), queue, rx, Arc::clone(&lc.touched), Arc::clone(&lc.maint_locks), 2, Duration::from_secs(3600), Duration::from_secs(3600));
+    Server { lc, maint }
+}
+
+/// The state: a version, L0 at 6 SSTs none of which is absorbed (rows above X_d: the gated pass may not run), and
+/// `wal_rows` rows of `row_bytes` only in the WAL; the writer then lost (abandoned, no close). Returns the model.
+async fn full_unabsorbed_l0(lc: &Arc<crate::lifecycle::Lifecycle>, store: &Arc<dyn ObjectStore>, id: &str, wal_rows: usize, row_bytes: usize) -> BTreeMap<Vec<u8>, Vec<u8>> {
+    let mut t = lc.create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(vec![b'a'; 40]))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let mut k = knobs();
+    k.absorb_min_l0 = 1000; // nothing absorbed: every L0 row stays above X_d
+    let c = start(&mut t, store, &k, true).await;
+    c.paused.store(true, Relaxed);
+    let mut r = 0;
+    while t.writer_l0().unwrap() < 6 {
+        for i in 0..80 {
+            apply(&mut t, &mut m, vec![(ckey(10 + r % 10, i), Some(format!("l0-{r}-{i}").into_bytes()))]).await;
+        }
+        flush(&t).await;
+        r += 1;
+        assert!(r < 60, "setup: L0 did not reach 6 SSTs");
+    }
+    c.stop().await;
+    let mut i = 0;
+    while i < wal_rows {
+        let ops: Vec<_> = (i..(i + 50).min(wal_rows)).map(|j| (ckey(30 + j % 5, j), Some(format!("wal-{j}-{}", "w".repeat(row_bytes)).into_bytes()))).collect();
+        i += ops.len();
+        apply(&mut t, &mut m, ops).await;
+    }
+    t.abandon().await;
+    m
+}
+
+async fn wrong_rows(t: &Tenant, m: &BTreeMap<Vec<u8>, Vec<u8>>) -> usize {
+    let mut wrong = 0;
+    for (key, want) in m {
+        if t.get(key).await.unwrap().as_deref() != Some(&want[..]) {
+            wrong += 1;
+        }
+    }
+    wrong
+}
+
+fn rss_kib() -> u64 {
+    std::fs::read_to_string("/proc/self/status").ok().and_then(|s| s.lines().find(|l| l.starts_with("VmRSS:")).and_then(|l| l.split_whitespace().nth(1)?.parse().ok())).unwrap_or(0)
+}
+
+fn open_case_setup(sst_bytes: u64) -> u32 {
+    setup();
+    crate::lifecycle::L0_MAX_SSTS_OVERRIDE.store(7, Relaxed);
+    crate::lifecycle::L0_SST_BYTES_OVERRIDE.store(sst_bytes, Relaxed);
+    let tiers0 = crate::tiered::TIERS.load(Relaxed);
+    crate::tiered::TIERS.store(4, Relaxed);
+    compactor::SERVER_ON.store(true, Relaxed);
+    tiers0
+}
+
+fn open_case_teardown(tiers0: u32) {
+    crate::lifecycle::MAX_UNFLUSHED_OVERRIDE.store(0, Relaxed);
+    compactor::SERVER_ON.store(false, Relaxed);
+    crate::tiered::TIERS.store(tiers0, Relaxed);
+    teardown();
+}
+
+/// The open returns (before: it waited for good), every row reads right, and after our compactor absorbs the L0 the
+/// rows still read right (rule 8).
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn open_with_full_unabsorbed_l0_and_wal_over_the_limit_returns() {
+    let _s = SERIAL.lock().await;
+    let tiers0 = open_case_setup(3 << 10);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let srv = server(&store);
+    let id = "open-unabsorbed";
+    let m = full_unabsorbed_l0(&srv.lc, &store, id, 140, 60).await;
+    let gate = crate::lifecycle::pass_can_run_gated(&store, id).await.unwrap();
+    crate::lifecycle::MAX_UNFLUSHED_OVERRIDE.store(8 << 10, Relaxed);
+    let raises0 = crate::lifecycle::REPLAY_RAISES.load(Relaxed);
+    let mut t = srv.lc.wake(id).await.unwrap();
+    let t0 = Instant::now();
+    let opened = tokio::time::timeout(Duration::from_secs(30), t.upgrade()).await;
+    let took = t0.elapsed();
+    let raised = crate::lifecycle::REPLAY_RAISES.load(Relaxed) - raises0;
+    let (mut wrong, mut wrong_after_absorb) = (usize::MAX, usize::MAX);
+    if matches!(opened, Ok(Ok(()))) {
+        wrong = wrong_rows(&t, &m).await;
+        let mut k = knobs();
+        k.absorb_min_l0 = 1;
+        let c = start(&mut t, &store, &k, true).await;
+        c.drain(false).await.unwrap();
+        t.fx_sync();
+        wrong_after_absorb = wrong_rows(&t, &m).await;
+        c.stop().await;
+    }
+    eprintln!("open case: gated pass possible {gate}; open {} after {took:?}; raised {raised}; rows {} wrong {wrong}, after absorption {wrong_after_absorb}", if matches!(opened, Ok(Ok(()))) { "returned" } else { "did not return" }, m.len());
+    t.abandon().await;
+    let _ = srv.maint.shutdown().await;
+    open_case_teardown(tiers0);
+    assert!(!gate, "setup: L0 must hold rows above X_d (the gated pass may not run)");
+    assert!(matches!(opened, Ok(Ok(()))), "the writer's open did not return within 30 s");
+    assert_eq!(wrong, 0, "rows read wrong after the open");
+    assert_eq!(wrong_after_absorb, 0, "rows read wrong after the absorption (rule 8)");
+}
+
+/// A process killed during that open (its task cut in the middle of the replay, nothing closed): a new process opens
+/// the database and every acknowledged row reads right.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn open_case_killed_mid_replay_then_reopened() {
+    let _s = SERIAL.lock().await;
+    let tiers0 = open_case_setup(3 << 10);
+    let inner: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let (armed, held) = (Arc::new(std::sync::atomic::AtomicBool::new(false)), Arc::new(std::sync::atomic::AtomicU64::new(0)));
+    let store: Arc<dyn ObjectStore> = Arc::new(HoldWal { inner: Arc::clone(&inner), armed: Arc::clone(&armed), held: Arc::clone(&held) });
+    let srv = server(&store);
+    let id = "open-killed";
+    let m = full_unabsorbed_l0(&srv.lc, &store, id, 140, 60).await;
+    crate::lifecycle::MAX_UNFLUSHED_OVERRIDE.store(8 << 10, Relaxed);
+    // process A: its open is held in the replay, then the process dies (the task is cut; nothing is closed)
+    let mut ta = srv.lc.wake(id).await.unwrap();
+    armed.store(true, Relaxed);
+    let job = tokio::spawn(async move {
+        let _ = ta.upgrade().await;
+        ta
+    });
+    let t0 = Instant::now();
+    while held.load(Relaxed) == 0 {
+        assert!(t0.elapsed() < Duration::from_secs(20), "setup: the open never read the WAL");
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    job.abort();
+    let _ = job.await;
+    let Server { lc, maint } = srv;
+    let _ = maint.shutdown().await;
+    drop(lc);
+    armed.store(false, Relaxed);
+    // process B, on the same store
+    let srv = server(&inner);
+    let mut t = srv.lc.wake(id).await.unwrap();
+    let opened = tokio::time::timeout(Duration::from_secs(30), t.upgrade()).await;
+    let wrong = if matches!(opened, Ok(Ok(()))) { wrong_rows(&t, &m).await } else { usize::MAX };
+    eprintln!("open case killed: WAL reads held {}; the next open {}; rows {} wrong {wrong}", held.load(Relaxed), if matches!(opened, Ok(Ok(()))) { "returned" } else { "did not return" }, m.len());
+    t.abandon().await;
+    let _ = srv.maint.shutdown().await;
+    open_case_teardown(tiers0);
+    assert!(matches!(opened, Ok(Ok(()))), "the open after the killed one did not return within 30 s");
+    assert_eq!(wrong, 0, "acknowledged rows read wrong after the kill and the reopen (rule 8)");
+}
+
+/// Memory of that open (MEASURED, printed): 64 KiB SSTs, a 1 MiB limit on unflushed bytes, about 8 MiB of WAL.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn open_case_peak_memory() {
+    let _s = SERIAL.lock().await;
+    let tiers0 = open_case_setup(64 << 10);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let srv = server(&store);
+    let id = "open-memory";
+    let m = full_unabsorbed_l0(&srv.lc, &store, id, 8000, 1000).await;
+    let wal = crate::lifecycle::wal_bytes(&store, id).await.unwrap();
+    crate::lifecycle::MAX_UNFLUSHED_OVERRIDE.store(1 << 20, Relaxed);
+    let mut t = srv.lc.wake(id).await.unwrap();
+    let base = rss_kib();
+    let peak = Arc::new(std::sync::atomic::AtomicU64::new(base));
+    let stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let sampler = {
+        let (peak, stop) = (Arc::clone(&peak), Arc::clone(&stop));
+        tokio::spawn(async move {
+            while !stop.load(Relaxed) {
+                peak.fetch_max(rss_kib(), Relaxed);
+                tokio::time::sleep(Duration::from_millis(2)).await;
+            }
+        })
+    };
+    let t0 = Instant::now();
+    let opened = tokio::time::timeout(Duration::from_secs(60), t.upgrade()).await;
+    let took = t0.elapsed();
+    stop.store(true, Relaxed);
+    let _ = sampler.await;
+    let wrong = if matches!(opened, Ok(Ok(()))) { wrong_rows(&t, &m).await } else { usize::MAX };
+    let rise = peak.load(Relaxed).saturating_sub(base);
+    eprintln!("open case memory: WAL {} KiB; the open {} in {took:?}; RSS {base} KiB before, peak +{rise} KiB during the open; rows {} wrong {wrong}", wal / 1024, if matches!(opened, Ok(Ok(()))) { "returned" } else { "did not return" }, m.len());
+    t.abandon().await;
+    let _ = srv.maint.shutdown().await;
+    open_case_teardown(tiers0);
+    assert!(matches!(opened, Ok(Ok(()))), "the open did not return");
+    assert_eq!(wrong, 0);
+}
