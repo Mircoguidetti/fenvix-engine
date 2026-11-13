@@ -73,6 +73,12 @@ pub static WAVE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::
 /// point read does (on by default; a filter has no false negatives, so the answer cannot change). Step 3's cursor read a
 /// block of every delta run above the group's cut, whoever wrote it. Off: the reader as step 3 built it.
 pub static RANGE_FILTER: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+/// P-fix-read-amplification: [`View::prefetch_points`] on (default) or off (measurements, `FENVIX_NO_PREFETCH_POINTS=1`
+/// in the server), and the blocks it fetched (diagnostics).
+pub static PREFETCH_POINTS: AtomicBool = AtomicBool::new(true);
+pub static PREFETCH_BLOCKS: AtomicU64 = AtomicU64::new(0);
+/// Range GETs of [`View::prefetch_points`] in flight at once (as many as the server's batched point reads).
+const PREFETCH_PARALLEL: usize = 32;
 /// Runs a range read skipped by their customer filter (diagnostics).
 pub static RANGE_FILTER_SKIPS: AtomicU64 = AtomicU64::new(0);
 
@@ -645,6 +651,73 @@ impl View {
         let store = &self.store;
         futures::stream::iter(hs.into_iter().map(|h| async move { h.open(store).await.map(|_| ()) })).buffer_unordered(parallel.max(1)).try_collect::<Vec<_>>().await?;
         Ok(n)
+    }
+
+    /// P-fix-read-amplification: before point reads of many keys, fetch once every run block that two or more of them
+    /// fall in, as whole blocks, adjacent blocks in one range GET. A point read keeps only its customer's slice of a
+    /// block (`counter.rs`), keyed by customer, so point reads of documents of many customers in one block fetched the
+    /// block once each (MEASURED: 7,500 documents of a 460,800-order client-written collection, 147 MB fetched where a
+    /// scan of the collection fetched 27 MB). The point reads then find the whole block in the counter. Answers never
+    /// depend on it (a cache warm-up, like `prefetch_thread`). `keys` sorted ascending gives the most sharing.
+    pub async fn prefetch_points(&self, keys: &[Vec<u8>]) -> Result<()> {
+        if !PREFETCH_POINTS.load(Relaxed) || keys.len() < 2 {
+            return Ok(());
+        }
+        // (run, block) -> keys that need it
+        let mut need: HashMap<[u8; RUN_ID_LEN], (Arc<RunH>, std::collections::BTreeMap<usize, usize>)> = HashMap::new();
+        for key in keys {
+            let g = &self.groups[self.group_of(key)];
+            let cands = self.delta.iter().filter(|d| !skip_delta() && above_cut(d.line.max_seq, g.x_g)).chain(g.sealed.iter());
+            for h in cands {
+                if !h.holds_key(key) {
+                    continue;
+                }
+                let run = h.open(&self.store).await?;
+                if let Some(r) = run.customers.customer_of(key) {
+                    if !run.filter.may_contain(&key[r]) {
+                        continue;
+                    }
+                }
+                let i = run.fence.count_below(key, true);
+                if i == 0 {
+                    continue;
+                }
+                *need.entry(h.id).or_insert_with(|| (h.clone(), Default::default())).1.entry(i - 1).or_default() += 1;
+            }
+        }
+        let whole = |_: usize| super::counter::Need::Key(&[]);
+        // the ranges to fetch: runs of adjacent shared blocks (at most 64 per GET), every run's, fetched concurrently as
+        // the point reads they replace would have been
+        let mut jobs: Vec<(Arc<RunH>, Arc<Run>, usize, usize)> = Vec::new();
+        for (h, blocks) in need.into_values() {
+            let run = h.open(&self.store).await?.clone();
+            let shared: Vec<usize> = blocks.into_iter().filter(|(b, n)| *n >= 2 && !super::counter::cached(&run, *b, None, &whole(*b))).map(|(b, _)| b).collect();
+            let mut i = 0;
+            while i < shared.len() {
+                let mut j = i;
+                while j + 1 < shared.len() && shared[j + 1] == shared[j] + 1 && j + 1 - i < 64 {
+                    j += 1;
+                }
+                PREFETCH_BLOCKS.fetch_add((j + 1 - i) as u64, Relaxed);
+                jobs.push((h.clone(), run.clone(), shared[i], shared[j]));
+                i = j + 1;
+            }
+        }
+        use futures::{StreamExt, TryStreamExt};
+        let futs: Vec<_> = jobs
+            .into_iter()
+            .map(|(h, run, a, z)| {
+                let store = self.store.clone();
+                // big-speed's in-flight byte permit (the box's memory bound) covers these GET buffers too
+                let (lo, hi) = run.fence.range(a, z);
+                async move {
+                    let _permit = box_permit(hi - lo).await;
+                    fetch_blocks(&store, &h, &run, a, z).await.map(|_| ())
+                }
+            })
+            .collect();
+        futures::stream::iter(futs).buffer_unordered(PREFETCH_PARALLEL).try_collect::<Vec<()>>().await?;
+        Ok(())
     }
 
     /// A cursor over the runs' rows in [lo, hi) (read rule applied, delete envelopes included), ascending or descending.
