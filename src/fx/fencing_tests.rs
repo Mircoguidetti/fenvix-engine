@@ -545,3 +545,83 @@ async fn fence_erase_then_late_wal_resurrects() {
     assert_eq!(err, None, "the new incarnation does not work");
     assert_eq!(old_left, 0, "the old incarnation's late object was not swept");
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
+// 4. Items 15 and 18 (round 2): erasure records and fork references written only over the version read.
+
+/// Two processes read the same erasure record; one records progress (the scrub), then the other, which read it before,
+/// writes its own copy. Control (unconditional PUTs): the progress is overwritten. Fix: the late write is refused.
+/// Returns (the late write refused, the record's scrubbed version after both).
+async fn record_lost_update(control: bool) -> (bool, Option<u64>) {
+    erase::CONTROL_UNCONDITIONAL_RECORDS.store(control, Relaxed);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = if control { "fn-rec-ctl" } else { "fn-rec" };
+    erase::register(&store, id, "msgs", b"c00", &targets(0), 5, None).await.unwrap();
+    let mut a = erase::list(&store, id).await.unwrap().remove(0); // the process that lost the database
+    let mut b = erase::list(&store, id).await.unwrap().remove(0); // the new owner
+    b.state = "scrubbed".into();
+    b.scrubbed_version = Some(7);
+    erase::save(&store, id, &b).await.unwrap();
+    a.rows_erased = 99;
+    let refused = match erase::save(&store, id, &a).await {
+        Ok(()) => false,
+        Err(e) => {
+            assert!(e.downcast_ref::<erase::RecordChanged>().is_some(), "{e:#}");
+            true
+        }
+    };
+    let after = erase::list(&store, id).await.unwrap().remove(0);
+    erase::CONTROL_UNCONDITIONAL_RECORDS.store(false, Relaxed);
+    eprintln!("erasure record (control {control}): the late write refused {refused}; scrubbed version after both {:?}", after.scrubbed_version);
+    (refused, after.scrubbed_version)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn fence_erasure_record_lost_update() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (refused_ctl, v_ctl) = record_lost_update(true).await;
+    let (refused, v) = record_lost_update(false).await;
+    teardown();
+    assert!(!refused_ctl && v_ctl.is_none(), "control: the late write must overwrite the progress, or the test does not reach the case");
+    assert!(refused, "the late write of an older copy was not refused");
+    assert_eq!(v, Some(7), "the recorded scrub was lost");
+}
+
+/// Two releases of runs from one fork reference interleave: A reads, B reads and writes, A writes. Control: A's write
+/// puts back the run B released (the parent keeps it for good). Fix: A's write is refused and done again on B's version.
+/// Returns the runs the reference still names.
+async fn fork_ref_releases(control: bool) -> Vec<String> {
+    erase::CONTROL_UNCONDITIONAL_RECORDS.store(control, Relaxed);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let (owner, fork) = if control { ("fn-own-ctl", "fn-fork-ctl") } else { ("fn-own", "fn-fork") };
+    let r1 = format!("tenants/{owner}/fx/run/g0/a");
+    let r2 = format!("tenants/{owner}/fx/run/g1/b");
+    let r = super::pair::ForkRef { fork: fork.into(), source: owner.into(), version: 1, runs: vec![r1.clone(), r2.clone()], created_ms: 0 };
+    store.put(&super::pair::fork_ref_path(owner, fork), object_store::PutPayload::from(serde_json::to_vec(&r).unwrap())).await.unwrap();
+    let n = Arc::new(tokio::sync::Notify::new());
+    *erase::PAUSE_RELEASE.lock().unwrap() = Some(Arc::clone(&n));
+    let (s2, f2, r1b) = (Arc::clone(&store), fork.to_string(), r1.clone());
+    let a = tokio::spawn(async move { erase::release_ref(&s2, &f2, &r1b).await });
+    tokio::time::sleep(Duration::from_millis(200)).await; // A read the reference and waits before its write
+    *erase::PAUSE_RELEASE.lock().unwrap() = None;
+    erase::release_ref(&store, fork, &r2).await.unwrap();
+    n.notify_waiters();
+    a.await.unwrap().unwrap();
+    let b = store.get(&super::pair::fork_ref_path(owner, fork)).await.unwrap().bytes().await.unwrap();
+    let left: super::pair::ForkRef = serde_json::from_slice(&b).unwrap();
+    erase::CONTROL_UNCONDITIONAL_RECORDS.store(false, Relaxed);
+    eprintln!("fork reference (control {control}): runs still named after two releases {:?}", left.runs);
+    left.runs
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn fence_fork_reference_releases_do_not_undo_each_other() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let ctl = fork_ref_releases(true).await;
+    let fixed = fork_ref_releases(false).await;
+    teardown();
+    assert_eq!(ctl.len(), 1, "control: one release must undo the other, or the test does not reach the case");
+    assert!(fixed.is_empty(), "a released run is still named: {fixed:?}");
+}
