@@ -800,3 +800,75 @@ async fn ws_first_build_after_a_takeover_creates_no_version() {
     assert!(took < Duration::from_secs(1), "an abandon for a lost lease waited for the build ({took:?})");
     assert_eq!(v_lost, 0, "the cut build created a version");
 }
+
+/// Review of a60f4fe, defence in depth (rule 8): a version of an OLDER writer (a lower writer epoch) that lands at the
+/// next slot (a late publish after a takeover) is never a compactor's base. Version 1 is published by writer epoch 1;
+/// the database is reopened (epoch 2) and its compactor publishes; then version 1's content is planted at the next slot
+/// with epoch 1. More rows are absorbed. Fix: the compactor refuses it, fences over it, and a fresh opening reads every
+/// row. Control (`CONTROL_ADOPT_OLDER`, the code before): the compactor builds on it and rows are lost.
+async fn older_version_scenario(control: bool) -> (u64, usize, Option<u64>) {
+    compactor::CONTROL_ADOPT_OLDER.store(control, Relaxed);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = if control { "ws-older-control" } else { "ws-older" };
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..100 {
+        apply(&mut t, &mut m, vec![(ckey(0, i % 40), Some(format!("a-{i}").into_bytes()))]).await;
+    }
+    publish(&mut t, &small_opts(build::Reseal::All)).await;
+    let v1 = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    t.close().await.unwrap();
+    // reopen: writer epoch 2
+    let mut t = lc(&store).wake(id).await.unwrap();
+    t.upgrade().await.unwrap();
+    let k = knobs(false, false);
+    assert!(t.fx_claim());
+    let c = start(&mut t, &store, &k).await;
+    for r in 0..3 {
+        for i in 0..80 {
+            apply(&mut t, &mut m, vec![(ckey(1 + r, i), Some(format!("b-{r}-{i}").into_bytes()))]).await;
+        }
+        flush(&t).await;
+    }
+    c.drain(false).await.unwrap();
+    // the late version of the old writer, at the next slot
+    let cur = manifest::load_newest(&store, id).await.unwrap().unwrap();
+    let mut stale = v1.clone();
+    stale.version = cur.version + 1;
+    stale.kind = "publish".into();
+    assert!(stale.writer_epoch < cur.writer_epoch, "setup: epochs {:?} {:?}", stale.writer_epoch, cur.writer_epoch);
+    assert!(manifest::create(&store, id, &stale).await.unwrap());
+    let refused0 = compactor::OLDER_VERSIONS_REFUSED.load(SeqCst);
+    for r in 3..6 {
+        for i in 0..80 {
+            apply(&mut t, &mut m, vec![(ckey(1 + r, i), Some(format!("b-{r}-{i}").into_bytes()))]).await;
+        }
+        flush(&t).await;
+    }
+    let _ = c.drain(false).await;
+    let _ = c.drain(false).await;
+    let refused = compactor::OLDER_VERSIONS_REFUSED.load(SeqCst) - refused0;
+    c.stop().await;
+    t.close().await.unwrap();
+    compactor::CONTROL_ADOPT_OLDER.store(false, Relaxed);
+    let newest_epoch = manifest::load_newest(&store, id).await.unwrap().unwrap().writer_epoch;
+    // a fresh opening reads from the newest version in the store
+    let t = lc(&store).wake(id).await.unwrap();
+    let wrong = wrong_reads(&t, &m, &HashSet::new()).await;
+    eprintln!("older version (control {control}): refused {refused}, newest version's epoch {newest_epoch:?}, wrong reads after a reopen {wrong} of {}", m.len());
+    let _ = t.close().await;
+    (refused, wrong, newest_epoch)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_compactor_refuses_an_older_writers_version() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (_, wrong_ctl, _) = older_version_scenario(true).await;
+    let (refused, wrong, epoch) = older_version_scenario(false).await;
+    teardown();
+    assert!(wrong_ctl > 0, "control: building on the older version must lose rows, or the test does not reach the case");
+    assert!(refused >= 1, "the older version was not refused");
+    assert_eq!(wrong, 0, "rows lost");
+    assert!(epoch >= Some(2), "the newest version is not the compactor's ({epoch:?})");
+}

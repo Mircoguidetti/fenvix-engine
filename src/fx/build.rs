@@ -83,6 +83,10 @@ pub static FENCED_CREATES: std::sync::atomic::AtomicU64 = std::sync::atomic::Ato
 /// Negative control of the tests: no check (the code of a60f4fe).
 pub static CONTROL_NO_FENCE_CHECK: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
+/// The longest time from the start of `fence_check` to the end of the create it guards, in ms: the window in which a
+/// takeover can still let this version land (serverStatus `fenceWindowMsMax`).
+pub static FENCE_WINDOW_MS_MAX: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 async fn fence_check(store: &Arc<dyn ObjectStore>, id: &str, epoch: Option<u64>) -> Result<()> {
     let Some(e) = epoch else { return Ok(()) };
     if CONTROL_NO_FENCE_CHECK.load(std::sync::atomic::Ordering::Relaxed) {
@@ -307,8 +311,11 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
         rep.stage = Some(super::counter::stage(old, &staged).await);
     }
     pause(&PAUSE_BEFORE_CREATE_MS).await;
+    let fence_t0 = std::time::Instant::now();
     fence_check(store, id, epoch).await?;
-    let created = match manifest::create(store, id, &v).await {
+    let created = manifest::create(store, id, &v).await;
+    FENCE_WINDOW_MS_MAX.fetch_max(fence_t0.elapsed().as_millis() as u64, std::sync::atomic::Ordering::Relaxed);
+    let created = match created {
         Ok(c) => c,
         // the outcome is unknown (an error, a timeout: the PUT may still land); the caller fences the slot this version
         // targeted, with this version when the store is still empty (review round 2 of step 3)
@@ -507,8 +514,11 @@ pub async fn publish_generated(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
     let version = manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1);
     let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: Vec::new(), next_group_id, absorbed_l0: Vec::new() };
     rep.version = version;
+    let fence_t0 = std::time::Instant::now();
     fence_check(store, id, epoch).await?;
-    let created = match manifest::create(store, id, &v).await {
+    let created = manifest::create(store, id, &v).await;
+    FENCE_WINDOW_MS_MAX.fetch_max(fence_t0.elapsed().as_millis() as u64, std::sync::atomic::Ordering::Relaxed);
+    let created = match created {
         Ok(c) => c,
         Err(e) => return Err(anyhow::Error::new(super::UnknownPublish { version: Box::new(v), msg: format!("{e:#}") })),
     };

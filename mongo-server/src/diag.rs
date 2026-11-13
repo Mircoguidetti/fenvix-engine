@@ -873,6 +873,8 @@ impl Server {
                 "firstInstallsWithoutWrite": tenant_bench::lifecycle::FIRST_INSTALLS_WITHOUT_WRITE.load(Relaxed) as i64,
                 "firstBuildsCut": tenant_bench::lifecycle::FIRST_BUILDS_CUT.load(Relaxed) as i64,
                 "fencedVersionCreates": tenant_bench::fx::build::FENCED_CREATES.load(Relaxed) as i64,
+                "fenceWindowMsMax": tenant_bench::fx::build::FENCE_WINDOW_MS_MAX.load(Relaxed) as i64,
+                "olderVersionsRefused": tenant_bench::fx::compactor::OLDER_VERSIONS_REFUSED.load(Relaxed) as i64,
                 "claimsDeferred": tenant_bench::lifecycle::CLAIMS_DEFERRED.load(Relaxed) as i64,
                 "l0JobsBesideMerge": tenant_bench::fx::drop::L0_JOBS_BESIDE_MERGE.load(Relaxed) as i64,
                 "mergeHeld": tenant_bench::fx::drop::TEST_MERGE_HELD.load(Relaxed) as i64,
