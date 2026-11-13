@@ -104,21 +104,21 @@ pub fn unhex(s: &str) -> Result<Vec<u8>> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| anyhow!("bad hex {s:?}: {e}"))).collect()
 }
 
-pub fn root(id: &str) -> String {
+pub fn root(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> String {
     format!("{}/fx", crate::lifecycle::tenant_path(id))
 }
 
-pub fn manifest_dir(id: &str) -> Path {
+pub fn manifest_dir(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Path {
     Path::from(format!("{}/manifest", root(id)))
 }
 
-pub fn manifest_path(id: &str, version: u64) -> Path {
+pub fn manifest_path(id: &(impl crate::lifecycle::DbRef + ?Sized), version: u64) -> Path {
     Path::from(format!("{}/manifest/{version:020}", root(id)))
 }
 
 /// A new run's path: predictable from the group and the cut (the spare can warm it from a manifest line), plus a random
 /// suffix so a retried build never overwrites an object that a version may list.
-pub fn run_path(id: &str, what: &str, x: u64, epoch: Option<u64>) -> String {
+pub fn run_path(id: &(impl crate::lifecycle::DbRef + ?Sized), what: &str, x: u64, epoch: Option<u64>) -> String {
     let r: u32 = rand::random();
     format!("{}/run/{what}/{x:020}-{}-{r:08x}", root(id), epoch.unwrap_or(0))
 }
@@ -169,11 +169,12 @@ impl Version {
 }
 
 /// Release E1's announcement (rule 26): written once, before envelopes start; its existence is what followers check.
-pub fn announce_path(id: &str) -> Path {
+pub fn announce_path(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Path {
     Path::from(format!("{}/e1-announced", root(id)))
 }
 
-pub async fn announced(store: &Arc<dyn ObjectStore>, id: &str) -> Result<bool> {
+pub async fn announced(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<bool> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     match store.head(&announce_path(id)).await {
         Ok(_) => Ok(true),
         Err(object_store::Error::NotFound { .. }) => Ok(false),
@@ -181,7 +182,8 @@ pub async fn announced(store: &Arc<dyn ObjectStore>, id: &str) -> Result<bool> {
     }
 }
 
-pub async fn announce(store: &Arc<dyn ObjectStore>, id: &str) -> Result<()> {
+pub async fn announce(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<()> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let opts = PutOptions { mode: PutMode::Create, ..Default::default() };
     match store.put_opts(&announce_path(id), PutPayload::from(format!("{{\"ms\":{}}}", now_ms()).into_bytes()), opts).await {
         Ok(_) | Err(object_store::Error::AlreadyExists { .. }) | Err(object_store::Error::Precondition { .. }) => Ok(()),
@@ -190,7 +192,8 @@ pub async fn announce(store: &Arc<dyn ObjectStore>, id: &str) -> Result<()> {
 }
 
 /// Version numbers present in the store, ascending.
-pub async fn list_versions(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Vec<u64>> {
+pub async fn list_versions(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<Vec<u64>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let metas: Vec<_> = store.list(Some(&manifest_dir(id))).try_collect().await?;
     let mut out: Vec<u64> = metas.iter().filter_map(|m| m.location.filename().and_then(|f| f.parse::<u64>().ok())).collect();
     out.sort_unstable();
@@ -199,7 +202,8 @@ pub async fn list_versions(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Vec
 
 /// Version numbers above `after`, ascending (one LIST page from the offset; `after` 0: every version). Review of step 4,
 /// FIX 4: the drop floor and GC page from the newest version already seen instead of listing every retained version.
-pub async fn list_versions_after(store: &Arc<dyn ObjectStore>, id: &str, after: u64) -> Result<Vec<u64>> {
+pub async fn list_versions_after(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), after: u64) -> Result<Vec<u64>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     if after == 0 {
         return list_versions(store, id).await;
     }
@@ -209,7 +213,8 @@ pub async fn list_versions_after(store: &Arc<dyn ObjectStore>, id: &str, after: 
     Ok(out)
 }
 
-pub async fn load(store: &Arc<dyn ObjectStore>, id: &str, version: u64) -> Result<Version> {
+pub async fn load(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), version: u64) -> Result<Version> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let b = store.get(&manifest_path(id, version)).await?.bytes().await?;
     let v: Version = serde_json::from_slice(&b).with_context(|| format!("manifest {version} of {id}"))?;
     ensure!(v.version == version, "manifest object {version} of {id} says version {}", v.version);
@@ -218,7 +223,8 @@ pub async fn load(store: &Arc<dyn ObjectStore>, id: &str, version: u64) -> Resul
 }
 
 /// The newest version, or None when the database has never published one.
-pub async fn load_newest(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<Version>> {
+pub async fn load_newest(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<Option<Version>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     // P-perf-bytes: GC keeps only the versions in use (retention 0 by default), so the newest version listed can be
     // deleted before it is read when a newer one was published meanwhile: list again (the newer one is then listed)
     let mut tries = 0;
@@ -239,10 +245,12 @@ pub static CONTROL_TRUST_NEWEST: std::sync::atomic::AtomicBool = std::sync::atom
 
 /// Whether version `v` is an older writer's late publish (review of a60f4fe, rule 8): writer epochs never go down along
 /// valid versions, so a version whose writer epoch is LOWER than the version below it landed after a newer writer's
-/// (a late publish of a writer that lost the database, inside `build::fence_check`'s window). Its runs hold that writer's
+/// (a late publish of a writer that lost the database; audit-fencing's slot rule makes such a landing on top impossible for
+/// this release's publishers, so this is the read side's defence in depth). Its runs hold that writer's
 /// old snapshot: serving, pairing or fencing it drops every row between its X_d and the newer writer's. One GET (the
 /// version below); a version below collected by GC counts as nothing to compare with.
-pub async fn is_older_writers(store: &Arc<dyn ObjectStore>, id: &str, v: &Version) -> Result<bool> {
+pub async fn is_older_writers(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), v: &Version) -> Result<bool> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     if CONTROL_TRUST_NEWEST.load(std::sync::atomic::Ordering::Relaxed) || v.version <= 1 {
         return Ok(false);
     }
@@ -255,7 +263,8 @@ pub async fn is_older_writers(store: &Arc<dyn ObjectStore>, id: &str, v: &Versio
 
 /// The newest version at or below slot `n` that is not an older writer's late publish (`is_older_writers`), each one
 /// passed over logged (OLDER_VERSION_IGNORED, serverStatus `olderVersionsIgnored`).
-pub async fn trusted_at(store: &Arc<dyn ObjectStore>, id: &str, mut v: Version) -> Result<Version> {
+pub async fn trusted_at(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), mut v: Version) -> Result<Version> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     for _ in 0..64 {
         if !is_older_writers(store, id, &v).await? {
             return Ok(v);
@@ -274,11 +283,94 @@ pub async fn trusted_at(store: &Arc<dyn ObjectStore>, id: &str, mut v: Version) 
 /// The newest version an opening, a refresh or a pairing may use, with the newest slot in the store: the version keeps
 /// its own number (pairs, holds and GC name versions by number), and a writer places its next version, a fence first,
 /// above the newest slot. One more GET than `load_newest` in the usual case.
-pub async fn load_newest_trusted(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<(Version, u64)>> {
+pub async fn load_newest_trusted(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<Option<(Version, u64)>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let Some(newest) = load_newest(store, id).await? else { return Ok(None) };
     let slot = newest.version;
     Ok(Some((trusted_at(store, id, newest).await?, slot)))
 }
+
+// ---- audit-fencing (P-audit-fencing): a version create is fenced by its slot, and only by its slot
+//
+// The conditional create of version N+1 is the fence of every publisher: the new owner of a database writes a fence
+// version at the next slot when it opens (`Tenant::load_fx`), so a process that lost the database and still publishes on
+// its own base finds that slot taken. Two things broke that fence:
+// - a publisher that took its slot from a LIST instead of from its base (the first build, the ballast generator, the old
+//   erasure pass): after a takeover the LIST shows the new owner's versions, and the late version lands ON TOP of them;
+//   every later opening and the new owner's compactor then build on its old snapshot (lost acknowledged writes);
+// - GC deleting versions below the newest (retention 0): the new owner's fence goes within seconds, the slot is free
+//   again, and a late create of the old owner lands BELOW the newest. Readers never read it, but the old owner takes it
+//   as published: it records an erasure scrub that is on no version anyone reads, whose retire step then deletes runs
+//   the newest version still lists.
+// So: every publisher creates base + 1 (1 when it had no version), and a create that succeeded counts only when no newer
+// version exists right after it (`on_main_line`): a slot below the newest is a slot GC freed, never the main line.
+
+/// Negative controls of the audit-fencing tests (the code of integration-4 4f74574): the first build and the ballast
+/// take their slot from a LIST; a create that landed below the newest version counts as published.
+pub static CONTROL_LISTED_SLOT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+pub static CONTROL_NO_MAIN_LINE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Creates that landed in a slot below the newest version (a slot GC freed after a takeover): refused as published.
+pub static OFF_MAIN_LINE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// The slot of a version built on `base` (None: the database's first version).
+pub fn next_slot(base: Option<u64>) -> u64 {
+    base.map_or(1, |b| b + 1)
+}
+
+/// After the conditional create of `version` succeeded: whether it is the newest version in the store (no version above
+/// it). False means it landed in a slot GC freed below versions of another publisher: no reader reads it, and its
+/// publisher must treat it as a lost race (its runs stay for GC; nothing of it is installed or recorded).
+pub async fn on_main_line(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), version: u64) -> Result<bool> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
+    if CONTROL_NO_MAIN_LINE.load(std::sync::atomic::Ordering::Relaxed) {
+        return Ok(true);
+    }
+    let above = list_versions_after(store, id, version).await?;
+    if let Some(n) = above.last() {
+        OFF_MAIN_LINE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        eprintln!("OFF_MAIN_LINE db={id} version={version} newest={n}: the create landed below the newest version (a slot GC freed after a takeover); not published");
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+/// What a reader's renewal learns from the store ([`load_newest_trusted_unless`]).
+pub enum Newest {
+    /// The store holds no version.
+    None,
+    /// The newest slot listed is the version the reader already serves: nothing to read.
+    Same,
+    /// Another version, as [`load_newest_trusted`] gives it.
+    New(Version, u64),
+}
+
+/// fix-box-first-trip: a reader's renewal sends one LIST, and its two GETs (the newest version and the version below it,
+/// [`trusted_at`]) only when the newest slot listed is not the version `known` the reader already serves.
+///
+/// Why skipping them gives the same answer as [`load_newest_trusted`]: versions never change once written (the same
+/// number is the same version), and `known` passed [`trusted_at`] when it was loaded, so `is_older_writers(known)` was
+/// false then. It stays false: the version below `known` is immutable too, and if it was missing then (collected by GC)
+/// a later PUT at that slot can only be a dead, older writer's (lower epoch: `is_older_writers` stays false). When the
+/// newest slot is not `known` (a new publish, or a slot `trusted_at` passed over), the whole path runs as before.
+pub async fn load_newest_trusted_unless(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), known: Option<u64>) -> Result<Newest> {
+    if let Some(k) = known {
+        match list_versions(store, id).await?.last() {
+            None => return Ok(Newest::None),
+            Some(&n) if n == k => {
+                RENEWALS_UNCHANGED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                return Ok(Newest::Same);
+            }
+            Some(_) => {}
+        }
+    }
+    Ok(match load_newest_trusted(store, id).await? {
+        None => Newest::None,
+        Some((v, slot)) => Newest::New(v, slot),
+    })
+}
+
+/// Renewals that found the newest slot unchanged and sent no GET (serverStatus `sealedRuns.renewalsUnchanged`).
+pub static RENEWALS_UNCHANGED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 /// Fail point for tests: a publish whose PUT is delayed until the test lets it go (the PUT of a dead process landing
 /// late, rule 17).
@@ -287,7 +379,8 @@ pub static SLOW_PUT: std::sync::Mutex<Option<Arc<tokio::sync::Notify>>> = std::s
 pub static SLOW_PUT_WAITING: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 /// Create `v` conditionally. Ok(false): another publisher already wrote that version.
-pub async fn create(store: &Arc<dyn ObjectStore>, id: &str, v: &Version) -> Result<bool> {
+pub async fn create(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), v: &Version) -> Result<bool> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     v.check()?;
     let body = serde_json::to_vec(v)?;
     let slow = SLOW_PUT.lock().unwrap().clone();
@@ -319,22 +412,24 @@ pub async fn create(store: &Arc<dyn ObjectStore>, id: &str, v: &Version) -> Resu
 //   first (`fx/build.rs` scans all of SlateDB, sorted runs included, so X_d then covers every row) and the marks are
 //   set. A database last served by a release without the marks has no `fx/caught-up`: it is caught up once.
 
-pub fn ungated_path(id: &str) -> Path {
+pub fn ungated_path(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Path {
     Path::from(format!("{}/ungated", root(id)))
 }
 
-pub fn caught_up_path(id: &str) -> Path {
+pub fn caught_up_path(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Path {
     Path::from(format!("{}/caught-up", root(id)))
 }
 
 /// Before an ungated pass compacts database `id`: the mark, with the time the pass started.
-pub async fn note_ungated(store: &Arc<dyn ObjectStore>, id: &str) -> Result<()> {
+pub async fn note_ungated(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<()> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     store.put(&ungated_path(id), PutPayload::from(serde_json::to_vec(&serde_json::json!({ "at_ms": now_ms() }))?)).await?;
     Ok(())
 }
 
 /// Whether a compactor must let the builder publish first (two HEADs).
-pub async fn needs_catch_up(store: &Arc<dyn ObjectStore>, id: &str) -> Result<bool> {
+pub async fn needs_catch_up(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<bool> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let exists = |r: object_store::Result<object_store::ObjectMeta>| match r {
         Ok(_) => Ok(true),
         Err(object_store::Error::NotFound { .. }) => Ok(false),
@@ -345,7 +440,8 @@ pub async fn needs_catch_up(store: &Arc<dyn ObjectStore>, id: &str) -> Result<bo
 
 /// After a builder publish whose scan started at `scan_ms`: `fx/caught-up` set, and `fx/ungated` removed unless a pass
 /// marked it after the scan started (that pass may have folded rows the scan did not see: the next start catches up).
-pub async fn note_caught_up(store: &Arc<dyn ObjectStore>, id: &str, scan_ms: u64) -> Result<()> {
+pub async fn note_caught_up(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), scan_ms: u64) -> Result<()> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     match store.get(&ungated_path(id)).await {
         Ok(r) => {
             let v: serde_json::Value = serde_json::from_slice(&r.bytes().await?).unwrap_or_default();

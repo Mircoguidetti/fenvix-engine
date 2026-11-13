@@ -213,8 +213,7 @@ const FOLLOW_CHECK_EVERY: Duration = Duration::from_secs(1);
 
 /// The database a WAL path belongs to (`tenants/{db}/wal/NNN.sst`).
 fn wal_db(path: &str) -> Option<&str> {
-    let rest = path.strip_prefix("tenants/")?;
-    let (db, tail) = rest.split_once('/')?;
+    let (db, tail) = tenant_bench::lifecycle::split_tenant_path(path)?;
     tail.starts_with("wal/").then_some(db)
 }
 

@@ -1,0 +1,89 @@
+FIRST (thread, trips, GETs): [('user000-thread0', 4, 3), ('user002-thread2', 1, 1), ('user004-thread1', 1, 1), ('user006-thread0', 1, 1), ('user008-thread2', 1, 1), ('user010-thread1', 1, 1), ('user012-thread0', 1, 1), ('user014-thread2', 1, 1), ('user016-thread1', 1, 1), ('user018-thread0', 4, 3), ('user020-thread2', 1, 1), ('user022-thread1', 1, 1)]
+NEXT (thread, GETs): [('user000-thread0', 0), ('user002-thread2', 0), ('user004-thread1', 0), ('user006-thread0', 0), ('user008-thread2', 0), ('user010-thread1', 0), ('user012-thread0', 0), ('user014-thread2', 0), ('user016-thread1', 0), ('user018-thread0', 0), ('user020-thread2', 0), ('user022-thread1', 0)]
+Fcontrol FIRST trips: [6, 3, 3, 3, 3, 6, 3, 3, 3, 3, 6]
+.save FIRST (trips, GETs): (0, 20) NEXT GETs: 2
+F..kill=True after 7s: acknowledged 2074 checkpoints, 2072 writes; missing 0, differ 0, writes missing 0, differ 0, stale newest 0; reader errors 0; box {'enabled': True, 'warms': 40, 'warmRows': 8294, 'warmRuns': 0, 'warmBlocks': 0, 'warmMicros': 11590, 'warmErrors': 0, 'skippedRecent': 0, 'tooBig': 0, 'capped': 0, 'waves': 0, 'permitWaits': 0, 'maxBytesPerCustomer': 13421777, 'floorTombstones': 0, 'floorTombstoneSkips': 0, 'indexTieScans': 0, 'sstMapsPinned': 0, 'runPinsStarted': 1, 'runPinErrors': 0, 'floorBytes': 342, 'floorBlocks': 1, 'floorWrites': 1, 'floorHits': 0, 'floorZeroed': 0, 'floorErrors': 0}
+.kill=True after 13s: acknowledged 3491 checkpoints, 3490 writes; missing 0, differ 0, writes missing 0, differ 0, stale newest 0; reader errors 0; box {'enabled': True, 'warms': 40, 'warmRows': 3838, 'warmRuns': 40, 'warmBlocks': 0, 'warmMicros': 10241, 'warmErrors': 0, 'skippedRecent': 0, 'tooBig': 0, 'capped': 0, 'waves': 0, 'permitWaits': 0, 'maxBytesPerCustomer': 13421777, 'floorTombstones': 0, 'floorTombstoneSkips': 0, 'indexTieScans': 0, 'sstMapsPinned': 0, 'runPinsStarted': 4, 'runPinErrors': 0, 'floorBytes': 306278, 'floorBlocks': 432, 'floorWrites': 432, 'floorHits': 0, 'floorZeroed': 0, 'floorErrors': 0}
+.kill=False after 6s: acknowledged 1656 checkpoints, 1656 writes; missing 0, differ 0, writes missing 0, differ 0, stale newest 0; reader errors 0; box {'enabled': True, 'warms': 40, 'warmRows': 0, 'warmRuns': 40, 'warmBlocks': 0, 'warmMicros': 1572, 'warmErrors': 0, 'skippedRecent': 0, 'tooBig': 0, 'capped': 0, 'waves': 0, 'permitWaits': 0, 'maxBytesPerCustomer': 13421777, 'floorTombstones': 0, 'floorTombstoneSkips': 0, 'indexTieScans': 0, 'sstMapsPinned': 0, 'runPinsStarted': 2, 'runPinErrors': 0, 'floorBytes': 321821, 'floorBlocks': 283, 'floorWrites': 283, 'floorHits': 0, 'floorZeroed': 0, 'floorErrors': 0}
+.kill=True after 9s: acknowledged 5522 checkpoints, 5520 writes; missing 756, differ 0, writes missing 755, differ 0, stale newest 40; reader errors 0; box {'enabled': True, 'warms': 40, 'warmRows': 8932, 'warmRuns': 40, 'warmBlocks': 0, 'warmMicros': 14898, 'warmErrors': 0, 'skippedRecent': 0, 'tooBig': 0, 'capped': 0, 'waves': 0, 'permitWaits': 0, 'maxBytesPerCustomer': 13421777, 'floorTombstones': 0, 'floorTombstoneSkips': 0, 'indexTieScans': 0, 'sstMapsPinned': 0, 'runPinsStarted': 4, 'runPinErrors': 0, 'floorBytes': 302727, 'floorBlocks': 430, 'floorWrites': 430, 'floorHits': 0, 'floorZeroed': 0, 'floorErrors': 0}
+.
+=================================== FAILURES ===================================
+_______________ test_first_request_one_trip_next_requests_no_get _______________
+
+loaded = ('ctl-bigspeed-ff05480e', {('user000-thread0', '1ef00000-0000'): 'message 0 of user000-thread0 message 0 of user000-th...ge 3 of user000-thread0 message 3 of user000-thread0 message 3 of user000-thread0 message 3 of user000-thread0 ', ...})
+
+    def test_first_request_one_trip_next_requests_no_get(loaded):
+        bucket, want = loaded
+        s = Server(bucket, "bigspeed", idle=600, env=SIM).start()
+        try:
+            c = s.client()
+            db = c.app
+            warm_up_db(c, db)
+            firsts, nexts = [], []
+            for i in range(0, THREADS - 1, 2):
+                t = tid(i)
+                t0, g0 = trips(c), gets(c)
+                doc, ws = resume(db, t)
+                firsts.append((t, trips(c) - t0, gets(c) - g0))
+                check_resume(want, t, doc, ws)
+                g1 = gets(c)
+                # the NEXT requests of the same customer
+                hist = list(db.checkpoints.find({"thread_id": t, "checkpoint_ns": ""}, sort=[("checkpoint_id", -1)]))
+                assert [d["checkpoint_id"] for d in hist] == sorted((cc for (tt, cc) in want if tt == t), reverse=True)
+                last10 = list(db.checkpoints.find({"thread_id": t, "checkpoint_ns": ""}, sort=[("checkpoint_id", -1)], limit=10))
+                assert len(last10) == 10
+                old = sorted(cc for (tt, cc) in want if tt == t)[3]
+                tt_doc = db.checkpoints.find_one({"thread_id": t, "checkpoint_ns": "", "checkpoint_id": old})
+                assert tt_doc["checkpoint"] == want[(t, old)]
+                assert len(list(db.checkpoint_writes.find({"thread_id": t, "checkpoint_ns": "", "checkpoint_id": old}))) == 3
+                doc2, ws2 = resume(db, t)
+                check_resume(want, t, doc2, ws2)
+                nexts.append((t, gets(c) - g1))
+            print("FIRST (thread, trips, GETs):", firsts)
+            print("NEXT (thread, GETs):", nexts)
+>           assert all(tr == 1 for _, tr, _ in firsts), f"a FIRST request took more than one trip: {firsts}"
+E           AssertionError: a FIRST request took more than one trip: [('user000-thread0', 4, 3), ('user002-thread2', 1, 1), ('user004-thread1', 1, 1), ('user006-thread0', 1, 1), ('user008-thread2', 1, 1), ('user010-thread1', 1, 1), ('user012-thread0', 1, 1), ('user014-thread2', 1, 1), ('user016-thread1', 1, 1), ('user018-thread0', 4, 3), ('user020-thread2', 1, 1), ('user022-thread1', 1, 1)]
+E           assert False
+E            +  where False = all(<generator object test_first_request_one_trip_next_requests_no_get.<locals>.<genexpr> at 0x7f9c4eb8ba00>)
+
+test_79_big_speed.py:131: AssertionError
+____ test_save_first_one_trip_next_no_get_and_set_on_insert_keeps_the_first ____
+
+loaded = ('ctl-bigspeed-ff05480e', {('user000-thread0', '1ef00000-0000'): 'message 0 of user000-thread0 message 0 of user000-th...ge 3 of user000-thread0 message 3 of user000-thread0 message 3 of user000-thread0 message 3 of user000-thread0 ', ...})
+
+    def test_save_first_one_trip_next_no_get_and_set_on_insert_keeps_the_first(loaded):
+        bucket, want = loaded
+        s = Server(bucket, "bigspeed", idle=600, env=SIM).start()
+        try:
+            c = s.client()
+            db = c.app
+            warm_up_db(c, db)
+            # the database's writer opens at its first write (a per-database cost, not a customer's: in the bench the database
+            # is always being written): a write of another customer first
+            # (and our manifest's announcement is refreshed inside a write at most every T_pin, another per-database cost):
+            # writes of another customer to both collections first, right before the measured save
+            other = tid(THREADS - 1)
+            db.checkpoints.update_one({"thread_id": other, "checkpoint_ns": "", "checkpoint_id": "1ef99999-other"}, {"$set": {"checkpoint": "x"}}, upsert=True)
+            db.checkpoint_writes.update_one({"thread_id": other, "checkpoint_ns": "", "checkpoint_id": "1ef99999-other", "task_id": "t", "task_path": "", "idx": 0},
+                                            {"$setOnInsert": {"value": "o"}}, upsert=True)
+            t = tid(5)
+            t0, g0 = trips(c), gets(c)
+            db.checkpoints.update_one({"thread_id": t, "checkpoint_ns": "", "checkpoint_id": "1ef99999-new"},
+                                      {"$set": {"type": "json", "checkpoint": "new", "metadata": {}}}, upsert=True)
+            first = (trips(c) - t0, gets(c) - g0)
+            g1 = gets(c)
+            f = {"thread_id": t, "checkpoint_ns": "", "checkpoint_id": "1ef99999-new", "task_id": "t", "task_path": "", "idx": 0}
+            db.checkpoint_writes.update_one(f, {"$setOnInsert": {"value": "first"}}, upsert=True)
+            db.checkpoint_writes.update_one(f, {"$setOnInsert": {"value": "second"}}, upsert=True)
+            nxt = gets(c) - g1
+            print("save FIRST (trips, GETs):", first, "NEXT GETs:", nxt)
+            assert first[0] <= 1, f"the first save of a customer took {first[0]} trips"
+>           assert nxt == 0, f"the next saves sent {nxt} GETs"
+E           AssertionError: the next saves sent 2 GETs
+E           assert 2 == 0
+
+test_79_big_speed.py:186: AssertionError
+=========================== short test summary info ============================
+FAILED test_79_big_speed.py::test_first_request_one_trip_next_requests_no_get
+FAILED test_79_big_speed.py::test_save_first_one_trip_next_no_get_and_set_on_insert_keeps_the_first
+2 failed, 7 passed in 134.80s (0:02:14)

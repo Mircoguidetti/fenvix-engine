@@ -1,0 +1,72 @@
+  7.045 user000-thread0 FIRST        {"customerBox.warmBlocks": 5, "customerBox.warmMicros": 27778, "customerBox.warmRuns": 1, "customerBox.warms": 1, "customerBox.waves": 1, "s3.getRange": 1, "s3.list": 1, "sealedRuns.renewals": 1, "sealedRuns.renewalsUnchanged": 1, "sealedRuns.renewalsWithBox": 1, "waiter.trips": 1}
+  7.050   hist                       {}
+  7.055   last10                     {}
+  7.060   tt                         {}
+  7.067   writes                     {}
+  7.073   resume2                    {}
+  7.106 user002-thread2 FIRST        {"customerBox.warmBlocks": 5, "customerBox.warmMicros": 28071, "customerBox.warmRuns": 1, "customerBox.warms": 1, "customerBox.waves": 1, "s3.getRange": 1, "waiter.trips": 1}
+  7.111   hist                       {}
+  7.116   last10                     {}
+  7.121   tt                         {}
+  7.125   writes                     {}
+  7.130   resume2                    {}
+  7.164 user004-thread1 FIRST        {"customerBox.warmBlocks": 5, "customerBox.warmMicros": 27042, "customerBox.warmRuns": 1, "customerBox.warms": 1, "customerBox.waves": 1, "s3.getRange": 1, "waiter.trips": 1}
+  7.169   hist                       {}
+  7.174   last10                     {}
+  7.179   tt                         {}
+  7.185   writes                     {}
+  7.191   resume2                    {}
+  7.227 user006-thread0 FIRST        {"customerBox.warmBlocks": 5, "customerBox.warmMicros": 27406, "customerBox.warmRuns": 1, "customerBox.warms": 1, "customerBox.waves": 1, "s3.getRange": 1, "waiter.trips": 1}
+  7.232   hist                       {}
+  7.237   last10                     {}
+  7.241   tt                         {}
+  7.246   writes                     {}
+  7.250   resume2                    {}
+  7.284 user008-thread2 FIRST        {"customerBox.warmBlocks": 5, "customerBox.warmMicros": 28070, "customerBox.warmRuns": 1, "customerBox.warms": 1, "customerBox.waves": 1, "s3.getRange": 1, "waiter.trips": 1}
+  7.291   hist                       {}
+  7.297   last10                     {}
+  7.302   tt                         {}
+  7.307   writes                     {}
+  7.312   resume2                    {}
+  7.352 user010-thread1 FIRST        {"customerBox.warmBlocks": 5, "customerBox.warmMicros": 28889, "customerBox.warmRuns": 1, "customerBox.warms": 1, "customerBox.waves": 1, "s3.getRange": 1, "s3.list": 1, "sealedRuns.renewals": 1, "sealedRuns.renewalsUnchanged": 1, "sealedRuns.renewalsWithBox": 1, "waiter.trips": 1}
+  7.359   hist                       {}
+  7.364   last10                     {}
+  7.369   tt                         {}
+  7.373   writes                     {}
+  7.380   resume2                    {}
+  7.414 user012-thread0 FIRST        {"customerBox.warmBlocks": 5, "customerBox.warmMicros": 27306, "customerBox.warmRuns": 1, "customerBox.warms": 1, "customerBox.waves": 1, "s3.getRange": 1, "waiter.trips": 1}
+  7.419   hist                       {}
+  7.424   last10                     {}
+  7.429   tt                         {}
+  7.435   writes                     {}
+  7.441   resume2                    {}
+  7.480 user014-thread2 FIRST        {"customerBox.warmBlocks": 5, "customerBox.warmMicros": 29064, "customerBox.warmRuns": 1, "customerBox.warms": 1, "customerBox.waves": 1, "s3.getRange": 1, "waiter.trips": 1}
+  7.485   hist                       {}
+  7.491   last10                     {}
+  7.496   tt                         {}
+  7.501   writes                     {}
+  7.506   resume2                    {}
+  7.539 user016-thread1 FIRST        {"customerBox.warmBlocks": 5, "customerBox.warmMicros": 27939, "customerBox.warmRuns": 1, "customerBox.warms": 1, "customerBox.waves": 1, "s3.getRange": 1, "waiter.trips": 1}
+  7.546   hist                       {}
+  7.551   last10                     {}
+  7.557   tt                         {}
+  7.562   writes                     {}
+  7.567   resume2                    {}
+  7.604 user018-thread0 FIRST        {"customerBox.warmBlocks": 5, "customerBox.warmMicros": 28645, "customerBox.warmRuns": 1, "customerBox.warms": 1, "customerBox.waves": 1, "s3.getRange": 1, "s3.list": 1, "sealedRuns.renewals": 1, "sealedRuns.renewalsUnchanged": 1, "sealedRuns.renewalsWithBox": 1, "waiter.trips": 1}
+  7.610   hist                       {}
+  7.615   last10                     {}
+  7.620   tt                         {}
+  7.625   writes                     {}
+  7.632   resume2                    {}
+  7.669 user020-thread2 FIRST        {"customerBox.warmBlocks": 5, "customerBox.warmMicros": 27161, "customerBox.warmRuns": 1, "customerBox.warms": 1, "customerBox.waves": 1, "s3.getRange": 1, "waiter.trips": 1}
+  7.676   hist                       {}
+  7.680   last10                     {}
+  7.685   tt                         {}
+  7.689   writes                     {}
+  7.694   resume2                    {}
+  7.728 user022-thread1 FIRST        {"customerBox.warmBlocks": 4, "customerBox.warmMicros": 27081, "customerBox.warmRuns": 1, "customerBox.warms": 1, "customerBox.waves": 1, "s3.getRange": 1, "waiter.trips": 1}
+  7.733   hist                       {}
+  7.737   last10                     {}
+  7.742   tt                         {}
+  7.747   writes                     {}
+  7.778   resume2                    {}

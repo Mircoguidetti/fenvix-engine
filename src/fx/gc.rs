@@ -50,7 +50,8 @@ pub(crate) fn runs_of(v: &Version) -> Vec<String> {
 }
 
 /// The references in the store: versions named and run paths listed.
-pub async fn references(store: &Arc<dyn ObjectStore>, id: &str) -> Result<(HashSet<u64>, HashSet<String>)> {
+pub async fn references(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<(HashSet<u64>, HashSet<String>)> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let mut versions = HashSet::new();
     let mut runs = HashSet::new();
     let root = manifest::root(id);
@@ -246,7 +247,8 @@ pub static CONTROL_GC_PLAIN_NEWEST: std::sync::atomic::AtomicBool = std::sync::a
 
 /// The lowest version the live GC must keep for readers: the version `manifest::trusted_at` keeps when the newest is an
 /// older writer's late version (otherwise the newest itself).
-async fn trusted_floor(store: &Arc<dyn ObjectStore>, id: &str, newest: u64) -> Result<u64> {
+async fn trusted_floor(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), newest: u64) -> Result<u64> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     if CONTROL_GC_PLAIN_NEWEST.load(Relaxed) {
         return Ok(newest);
     }
@@ -273,7 +275,8 @@ async fn trusted_floor(store: &Arc<dyn ObjectStore>, id: &str, newest: u64) -> R
 /// one, so it has been unreferenced at least that long: the grace of rule 23, F6) and the object itself is that old. A
 /// process that opened the database meanwhile reads the newest version or a newer one, whose runs are all kept. Returns
 /// how long to wait before calling again when something is left for later.
-pub async fn gc_closed(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<std::time::Duration>> {
+pub async fn gc_closed(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<Option<std::time::Duration>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     use std::time::Duration;
     let versions = manifest::list_versions(store, id).await?;
     let Some(&newest_n) = versions.last() else { return Ok(None) };

@@ -61,11 +61,11 @@ fn enabled() -> bool {
     super::ENABLED.load(Relaxed) && !control_raw()
 }
 
-pub fn lease_path(id: &str) -> Path {
+pub fn lease_path(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Path {
     Path::from(format!("{}/drop-lease", root(id)))
 }
 
-pub fn pair_path(id: &str, checkpoint: &uuid::Uuid) -> Path {
+pub fn pair_path(id: &(impl crate::lifecycle::DbRef + ?Sized), checkpoint: &uuid::Uuid) -> Path {
     Path::from(format!("{}/pairs/{checkpoint}", root(id)))
 }
 
@@ -81,7 +81,8 @@ pub struct Lease {
 
 /// The lease in the store with its object version (for a conditional overwrite). A lease object that cannot be read as
 /// a lease (another format, a torn write) counts as expired: no lease is held forever (FIX 1).
-pub async fn read_lease(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<(Option<Lease>, UpdateVersion)>> {
+pub async fn read_lease(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<Option<(Option<Lease>, UpdateVersion)>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     match store.get(&lease_path(id)).await {
         Ok(g) => {
             let v = UpdateVersion { e_tag: g.meta.e_tag.clone(), version: g.meta.version.clone() };
@@ -113,7 +114,8 @@ pub struct Pair {
 
 /// Whether a checkpoint holds the drop lease of database `id` now (a drop job must wait, rule 11). An expired lease is
 /// held until its expiry plus the skew margin has passed, by this clock.
-pub async fn lease_held(store: &Arc<dyn ObjectStore>, id: &str) -> Result<bool> {
+pub async fn lease_held(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<bool> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     Ok(read_lease(store, id).await?.is_some_and(|(l, _)| held(&l)))
 }
 
@@ -122,7 +124,8 @@ pub async fn lease_held(store: &Arc<dyn ObjectStore>, id: &str) -> Result<bool> 
 /// entity tag), never a delete and a create: of two takers of one expired lease only one overwrite succeeds, and the
 /// store never holds no lease meanwhile (review of step 4, FIX 2; step 7a review note 2). Waits up to 30 s for a lease
 /// held by someone else.
-pub async fn take_lease(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Lease> {
+pub async fn take_lease(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<Lease> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let path = lease_path(id);
     for _ in 0..300 {
         let now = now_ms();
@@ -165,7 +168,8 @@ pub async fn take_lease(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Lease>
 }
 
 /// Release the lease if it is still ours.
-async fn release_lease(store: &Arc<dyn ObjectStore>, id: &str, mine: &Lease) {
+async fn release_lease(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), mine: &Lease) {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let path = lease_path(id);
     if let Ok(g) = store.get(&path).await {
         if let Ok(b) = g.bytes().await {
@@ -178,7 +182,7 @@ async fn release_lease(store: &Arc<dyn ObjectStore>, id: &str, mine: &Lease) {
 
 /// Take a SlateDB checkpoint of database `id` with `make` and pair it with a version of our manifest (rule 18, the steps
 /// in the module text). Returns the checkpoint and its pair (None with `--sealed-runs` off: no pairing, no request).
-pub async fn checkpoint_paired<F, Fut>(store: &Arc<dyn ObjectStore>, id: &str, make: F) -> Result<(slatedb::CheckpointCreateResult, Option<Pair>)>
+pub async fn checkpoint_paired<F, Fut>(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), make: F) -> Result<(slatedb::CheckpointCreateResult, Option<Pair>)>
 where
     F: Fn() -> Fut,
     Fut: std::future::Future<Output = Result<slatedb::CheckpointCreateResult>>,
@@ -200,7 +204,7 @@ where
 }
 
 /// One attempt under `lease`: None when the lease expired before the checkpoint existed (the checkpoint is deleted).
-async fn paired_once<F, Fut>(store: &Arc<dyn ObjectStore>, id: &str, admin: &slatedb::admin::Admin, lease: &Lease, make: &F) -> Result<Option<(slatedb::CheckpointCreateResult, Option<Pair>)>>
+async fn paired_once<F, Fut>(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), admin: &slatedb::admin::Admin, lease: &Lease, make: &F) -> Result<Option<(slatedb::CheckpointCreateResult, Option<Pair>)>>
 where
     F: Fn() -> Fut,
     Fut: std::future::Future<Output = Result<slatedb::CheckpointCreateResult>>,
@@ -240,7 +244,8 @@ pub static CONTROL_KEEP_FAILED_CHECKPOINT: std::sync::atomic::AtomicBool = std::
 
 /// The pairing of a checkpoint that exists: Ok(None) when the lease expired first [CkNoRecheck] (the caller deletes
 /// the checkpoint and starts again).
-async fn pair_checkpoint(store: &Arc<dyn ObjectStore>, id: &str, admin: &slatedb::admin::Admin, lease: &Lease, cp: &slatedb::CheckpointCreateResult) -> Result<Option<Pair>> {
+async fn pair_checkpoint(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), admin: &slatedb::admin::Admin, lease: &Lease, cp: &slatedb::CheckpointCreateResult) -> Result<Option<Pair>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     #[cfg(test)]
     if FAIL_AFTER_MAKE.load(Relaxed) {
         bail!("database {id}: injected failure after the checkpoint was made");
@@ -281,7 +286,8 @@ async fn pair_checkpoint(store: &Arc<dyn ObjectStore>, id: &str, admin: &slatedb
 }
 
 /// The pair of a checkpoint (None: none recorded).
-pub async fn load_pair(store: &Arc<dyn ObjectStore>, id: &str, checkpoint: &uuid::Uuid) -> Result<Option<Pair>> {
+pub async fn load_pair(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), checkpoint: &uuid::Uuid) -> Result<Option<Pair>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     match store.get(&pair_path(id, checkpoint)).await {
         Ok(g) => Ok(Some(serde_json::from_slice(&g.bytes().await?).with_context(|| format!("pair of checkpoint {checkpoint} of {id}"))?)),
         Err(object_store::Error::NotFound { .. }) => Ok(None),
@@ -290,7 +296,8 @@ pub async fn load_pair(store: &Arc<dyn ObjectStore>, id: &str, checkpoint: &uuid
 }
 
 /// Forget the pair of a checkpoint that was deleted.
-pub async fn delete_pair(store: &Arc<dyn ObjectStore>, id: &str, checkpoint: &uuid::Uuid) -> Result<()> {
+pub async fn delete_pair(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), checkpoint: &uuid::Uuid) -> Result<()> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     match store.delete(&pair_path(id, checkpoint)).await {
         Ok(()) | Err(object_store::Error::NotFound { .. }) => Ok(()),
         Err(e) => Err(e.into()),
@@ -317,14 +324,16 @@ pub struct PairedReader {
 
 impl PairedReader {
     /// A checkpoint of database `id` (export).
-    pub async fn open_checkpoint(store: &Arc<dyn ObjectStore>, id: &str, checkpoint: uuid::Uuid, opts: slatedb::config::DbReaderOptions) -> Result<PairedReader> {
+    pub async fn open_checkpoint(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), checkpoint: uuid::Uuid, opts: slatedb::config::DbReaderOptions) -> Result<PairedReader> {
+        let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
         let reader = super::read::open_checkpoint_reader(crate::lifecycle::tenant_path(id), Arc::clone(store), checkpoint, opts).await?;
         Self::pair(store, id, reader, Some(checkpoint)).await
     }
 
     /// The latest state of a SlateDB database at `path` (PITR: the live database, or a staging clone), read through the
     /// version `follow` names of database `id`.
-    pub async fn open_follow(store: &Arc<dyn ObjectStore>, id: &str, path: String, follow: Follow, opts: slatedb::config::DbReaderOptions) -> Result<PairedReader> {
+    pub async fn open_follow(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), path: String, follow: Follow, opts: slatedb::config::DbReaderOptions) -> Result<PairedReader> {
+        let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
         let reader = super::read::open_follow_reader(path, Arc::clone(store), opts).await?;
         match follow {
             Follow::Newest => Self::pair(store, id, reader, None).await,
@@ -332,8 +341,9 @@ impl PairedReader {
         }
     }
 
-    async fn pair(store: &Arc<dyn ObjectStore>, id: &str, reader: slatedb::DbReader, checkpoint: Option<uuid::Uuid>) -> Result<PairedReader> {
-        let holds = for_db(id);
+    async fn pair(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), reader: slatedb::DbReader, checkpoint: Option<uuid::Uuid>) -> Result<PairedReader> {
+        let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
+        let holds = for_db(&id.name);
         let raw = |reader: slatedb::DbReader, holds: Arc<Holds>| async move {
             let env = reader.get_key_value(crate::envelope::MARKER).await?.map(|kv| kv.seq);
             Ok::<_, anyhow::Error>(PairedReader { reader, view: None, env, holds })
@@ -412,15 +422,18 @@ pub struct ForkRef {
     pub created_ms: u64,
 }
 
-pub fn fork_ref_path(owner: &str, fork: &str) -> Path {
+pub fn fork_ref_path(owner: &(impl crate::lifecycle::DbRef + ?Sized), fork: &str) -> Path {
     Path::from(format!("{}/forks/{fork}", root(owner)))
 }
 
-/// The database a run path belongs to (`tenants/{db}/fx/run/...`).
-fn owner_of(run: &str) -> Option<&str> {
-    let rest = run.strip_prefix("tenants/")?;
-    let (db, tail) = rest.split_once('/')?;
-    tail.starts_with("fx/").then_some(db)
+/// The database, and the incarnation, a run path belongs to (`tenants/{db}[/i{k}]/fx/run/...`; fix-incarnation: from the
+/// path itself, not from this process's table).
+fn owner_of(run: &str) -> Option<crate::lifecycle::DbAt> {
+    let (_, tail) = crate::lifecycle::split_tenant_path(run)?;
+    if !tail.starts_with("fx/") {
+        return None;
+    }
+    crate::lifecycle::db_of_path(run)
 }
 
 /// How a fork gets its first version of our manifest.
@@ -445,17 +458,17 @@ pub async fn seed_fork(store: &Arc<dyn ObjectStore>, src: &str, target: &str, pa
     match runs {
         ForkRuns::Shared => {
             // the references first, so GC never sees the fork's version without them
-            let mut by_owner: std::collections::BTreeMap<String, Vec<String>> = Default::default();
-            by_owner.entry(src.to_string()).or_default();
+            let mut by_owner: std::collections::BTreeMap<(String, u64), Vec<String>> = Default::default();
+            by_owner.entry((src.to_string(), crate::lifecycle::incarnation(src))).or_default();
             let paths: Vec<String> = v.groups.iter().filter_map(|g| g.sealed.as_ref().map(|r| r.path.clone())).chain(v.delta.iter().map(|r| r.path.clone())).collect();
             for p in paths {
                 if let Some(o) = owner_of(&p) {
-                    by_owner.entry(o.to_string()).or_default().push(p);
+                    by_owner.entry((o.name, o.inc)).or_default().push(p);
                 }
             }
-            for (owner, runs) in by_owner {
+            for ((owner, inc), runs) in by_owner {
                 let r = ForkRef { fork: target.to_string(), source: src.to_string(), version: n, runs, created_ms: now_ms() };
-                store.put(&fork_ref_path(&owner, target), PutPayload::from(serde_json::to_vec(&r)?)).await?;
+                store.put(&fork_ref_path(&crate::lifecycle::DbAt::new(owner, inc), target), PutPayload::from(serde_json::to_vec(&r)?)).await?;
             }
         }
         ForkRuns::Copied => {
@@ -501,14 +514,15 @@ pub async fn drop_fork_refs(store: &Arc<dyn ObjectStore>, owners: &[String], for
 
 /// The databases holding a fork reference of `fork`, read from the fork's own first version (whose runs name them),
 /// plus `extra` (the source and the ancestors the caller knows).
-pub async fn fork_ref_owners(store: &Arc<dyn ObjectStore>, fork: &str, extra: &[String]) -> Result<Vec<String>> {
+pub async fn fork_ref_owners(store: &Arc<dyn ObjectStore>, fork: &(impl crate::lifecycle::DbRef + ?Sized), extra: &[String]) -> Result<Vec<String>> {
+    let fork = &crate::lifecycle::DbRef::at(fork); // fix-incarnation: one incarnation for the whole call
     let mut out: std::collections::BTreeSet<String> = extra.iter().cloned().collect();
     if let Some(&first) = manifest::list_versions(store, fork).await?.first() {
         if let Ok(v) = manifest::load(store, fork, first).await {
             for p in v.groups.iter().filter_map(|g| g.sealed.as_ref().map(|r| r.path.as_str())).chain(v.delta.iter().map(|r| r.path.as_str())) {
                 if let Some(o) = owner_of(p) {
-                    if o != fork {
-                        out.insert(o.to_string());
+                    if o.name != fork.name {
+                        out.insert(o.name);
                     }
                 }
             }

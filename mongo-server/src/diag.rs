@@ -873,6 +873,14 @@ impl Server {
                 "deadRead": tenant_bench::envelope::READ_DEAD.load(Relaxed) as i64,
                 "start": tenant_bench::envelope::START.load(Relaxed),
             },
+            // P-fix-read-amplification (coll.rs): id-span scans of a document fetch, the rows they read, those stopped
+            // at their cap; and the tenant size the scan-or-point choice used for the last fetch
+            "fetch": {
+                "spanScans": crate::coll::FETCH_SCANS.load(Relaxed) as i64,
+                "spanRows": crate::coll::FETCH_SCAN_ROWS.load(Relaxed) as i64,
+                "spanStops": crate::coll::FETCH_SCAN_STOPS.load(Relaxed) as i64,
+                "prefetchBlocks": tenant_bench::fx::view::PREFETCH_BLOCKS.load(Relaxed) as i64,
+            },
             // compaction 2, step 3 (fx): versions published and installed, failed builds, fence versions written at
             // open, rows answered by our runs, GETs of run blocks, runs opened
             "sealedRuns": {
@@ -880,6 +888,20 @@ impl Server {
                 "publishes": tenant_bench::fx::PUBLISHES.load(Relaxed) as i64,
                 "publishErrors": tenant_bench::fx::PUBLISH_ERRORS.load(Relaxed) as i64,
                 "fences": tenant_bench::fx::FENCES.load(Relaxed) as i64,
+                // audit-fencing: creates that landed below the newest version (not published), retired runs kept
+                // because the newest version still lists them
+                "offMainLine": tenant_bench::fx::manifest::OFF_MAIN_LINE.load(Relaxed) as i64,
+                "retireRefusedLive": tenant_bench::fx::erase::RETIRE_REFUSED_LIVE.load(Relaxed) as i64,
+                // audit-fencing round 2: conditional writes of erasure records and fork references refused (another
+                // process wrote first), and objects of older incarnations of a name swept
+                "recordConflicts": tenant_bench::fx::erase::RECORD_CONFLICTS.load(Relaxed) as i64,
+                "incarnationSwept": tenant_bench::lifecycle::INCARNATION_SWEPT.load(Relaxed) as i64,
+                // c2-fix-long-reads and fix-box-first-trip: a reader's renewals under the shared lock, those run in the
+                // wave of a customer's box, and those whose LIST found the version already served (no GET)
+                "renewals": tenant_bench::fx::RENEWALS.load(Relaxed) as i64,
+                "renewalsWithBox": tenant_bench::fx::RENEWALS_WITH_BOX.load(Relaxed) as i64,
+                "renewalsUnchanged": tenant_bench::fx::manifest::RENEWALS_UNCHANGED.load(Relaxed) as i64,
+                "stepsPastRenewal": tenant_bench::fx::STEPS_PAST_RENEWAL.load(Relaxed) as i64,
                 "rowsFromRuns": tenant_bench::fx::view::ROWS_FROM_RUNS.load(Relaxed) as i64,
                 "runGets": tenant_bench::fx::view::RUN_GETS.load(Relaxed) as i64,
                 "runOpens": tenant_bench::fx::view::RUN_OPENS.load(Relaxed) as i64,

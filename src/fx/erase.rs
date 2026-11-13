@@ -56,6 +56,8 @@ use std::sync::Arc;
 pub static DEADLINE_MS: AtomicU64 = AtomicU64::new(24 * 3600 * 1000);
 /// Erasures recorded, scrub versions published, rows erased from runs, runs retired (diagnostics).
 pub static REGISTERED: AtomicU64 = AtomicU64::new(0);
+/// audit-fencing: retired runs kept because the store's newest version still lists them.
+pub static RETIRE_REFUSED_LIVE: AtomicU64 = AtomicU64::new(0);
 pub static SCRUBS: AtomicU64 = AtomicU64::new(0);
 pub static ROWS_ERASED: AtomicU64 = AtomicU64::new(0);
 pub static RUNS_RETIRED: AtomicU64 = AtomicU64::new(0);
@@ -353,6 +355,10 @@ pub struct Erasure {
     pub forced_reseals: u64,
     #[serde(default)]
     pub forced_cleanses: u64,
+    /// audit-fencing round 2 (item 15): the entity tag of the record as this process last read or wrote it; `save`
+    /// writes only over that version (If-Match), so a process that lost the database cannot overwrite newer progress.
+    #[serde(skip)]
+    pub tag: RecTag,
 }
 
 impl Erasure {
@@ -371,20 +377,20 @@ impl Erasure {
     }
 }
 
-pub fn dir(id: &str) -> Path {
+pub fn dir(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Path {
     Path::from(format!("{}/erasures", root(id)))
 }
 
-fn rec_path(id: &str, eid: &str) -> Path {
+fn rec_path(id: &(impl crate::lifecycle::DbRef + ?Sized), eid: &str) -> Path {
     Path::from(format!("{}/erasures/{eid}.json", root(id)))
 }
 
-pub fn keys_path(id: &str, eid: &str) -> Path {
+pub fn keys_path(id: &(impl crate::lifecycle::DbRef + ?Sized), eid: &str) -> Path {
     Path::from(format!("{}/erasures/{eid}.keys", root(id)))
 }
 
 /// The fork references of a database: `{db}/fx/forks/{fork}` names the version and runs a fork shares (`pair.rs`).
-pub fn forks_dir(id: &str) -> Path {
+pub fn forks_dir(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Path {
     Path::from(format!("{}/forks", root(id)))
 }
 
@@ -396,7 +402,8 @@ fn customer_hash(c: &[u8]) -> String {
 /// other write of these keys lies between the deletes and S_e). perf-erase: one PUT, the record with its targets in it;
 /// `also`, the path of an index object of the erasure (the server's `control/erasures/{db}/{id}`), is written at the same
 /// time: a crash that lands only the index leaves an index with no record, which only makes the agent look once more.
-pub async fn register(store: &Arc<dyn ObjectStore>, id: &str, collection: &str, customer: &[u8], targets: &Targets, s_e: u64, also: Option<&(dyn Fn(&str) -> Path + Sync)>) -> Result<Erasure> {
+pub async fn register(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), collection: &str, customer: &[u8], targets: &Targets, s_e: u64, also: Option<&(dyn Fn(&str) -> Path + Sync)>) -> Result<Erasure> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let now = now_ms();
     let r: u32 = rand::random();
     let eid = format!("{s_e:020}-{r:08x}");
@@ -429,6 +436,7 @@ pub async fn register(store: &Arc<dyn ObjectStore>, id: &str, collection: &str, 
         cleaned_by: None,
         forced_reseals: 0,
         forced_cleanses: 0,
+        tag: RecTag::default(),
     };
     let rec = async { save(store, id, &e).await };
     match also {
@@ -443,13 +451,76 @@ pub async fn register(store: &Arc<dyn ObjectStore>, id: &str, collection: &str, 
     Ok(e)
 }
 
-pub async fn save(store: &Arc<dyn ObjectStore>, id: &str, e: &Erasure) -> Result<()> {
-    store.put(&rec_path(id, &e.id), PutPayload::from(serde_json::to_vec(e)?)).await?;
-    Ok(())
+/// The version of a stored record this process holds (shared by the clones of an [`Erasure`]); equality ignores it.
+#[derive(Clone, Debug, Default)]
+pub struct RecTag(Arc<std::sync::Mutex<Option<object_store::UpdateVersion>>>);
+
+impl PartialEq for RecTag {
+    fn eq(&self, _: &Self) -> bool {
+        true
+    }
+}
+impl Eq for RecTag {}
+
+impl RecTag {
+    fn get(&self) -> Option<object_store::UpdateVersion> {
+        self.0.lock().unwrap().clone()
+    }
+    fn set(&self, e_tag: Option<String>, version: Option<String>) {
+        *self.0.lock().unwrap() = (e_tag.is_some() || version.is_some()).then_some(object_store::UpdateVersion { e_tag, version });
+    }
+}
+
+/// A conditional write of a record found the stored one changed since this process read it (another process wrote it):
+/// nothing written; the caller's pass ends and the next one reads the record again.
+#[derive(Debug)]
+pub struct RecordChanged(pub String);
+
+impl std::fmt::Display for RecordChanged {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+impl std::error::Error for RecordChanged {}
+
+/// Negative control of the audit-fencing tests (round 2, items 15 and 18): records and fork references written
+/// unconditionally, as before.
+pub static CONTROL_UNCONDITIONAL_RECORDS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Conditional writes of records and fork references refused because another process wrote first (diagnostics).
+pub static RECORD_CONFLICTS: AtomicU64 = AtomicU64::new(0);
+
+/// Write an erasure record: a new one with a conditional create, a read one only over the version read (If-Match).
+pub async fn save(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), e: &Erasure) -> Result<()> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
+    let body = PutPayload::from(serde_json::to_vec(e)?);
+    if ctl(&CONTROL_UNCONDITIONAL_RECORDS) {
+        store.put(&rec_path(id, &e.id), body).await?;
+        return Ok(());
+    }
+    let mode = match e.tag.get() {
+        Some(v) => object_store::PutMode::Update(v),
+        None => object_store::PutMode::Create,
+    };
+    match store.put_opts(&rec_path(id, &e.id), body.clone(), object_store::PutOptions { mode, ..Default::default() }).await {
+        Ok(r) => {
+            e.tag.set(r.e_tag, r.version);
+            Ok(())
+        }
+        Err(object_store::Error::Precondition { .. }) | Err(object_store::Error::AlreadyExists { .. }) => {
+            RECORD_CONFLICTS.fetch_add(1, Relaxed);
+            Err(anyhow::Error::new(RecordChanged(format!("erasure record {} of {id} changed since this process read it: not written", e.id))))
+        }
+        // a store without conditional updates (the local file system of some tools): as before
+        Err(object_store::Error::NotImplemented { .. }) => {
+            store.put(&rec_path(id, &e.id), body).await?;
+            Ok(())
+        }
+        Err(x) => Err(x.into()),
+    }
 }
 
 /// perf-erase: where the records of erasures that are done go (`archive`), so a pass reads only the open ones.
-pub fn done_dir(id: &str) -> Path {
+pub fn done_dir(id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Path {
     Path::from(format!("{}/erasures-done", root(id)))
 }
 
@@ -462,7 +533,12 @@ async fn read_records(store: &Arc<dyn ObjectStore>, dir: &Path) -> Result<Vec<Er
     let got: Vec<Result<Option<Erasure>>> = futures::stream::iter(paths)
         .map(|p| async move {
             match store.get(&p).await {
-                Ok(g) => Ok(Some(serde_json::from_slice(&g.bytes().await?).with_context(|| format!("erasure record {p}"))?)),
+                Ok(g) => {
+                    let (e_tag, version) = (g.meta.e_tag.clone(), g.meta.version.clone());
+                    let e: Erasure = serde_json::from_slice(&g.bytes().await?).with_context(|| format!("erasure record {p}"))?;
+                    e.tag.set(e_tag, version);
+                    Ok(Some(e))
+                }
                 // moved to the archive meanwhile
                 Err(object_store::Error::NotFound { .. }) => Ok(None),
                 Err(e) => Err(e.into()),
@@ -480,12 +556,14 @@ async fn read_records(store: &Arc<dyn ObjectStore>, dir: &Path) -> Result<Vec<Er
 
 /// The erasures of a database not archived yet (every open one, and done ones the last pass did not move yet), oldest
 /// first.
-pub async fn list(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Vec<Erasure>> {
+pub async fn list(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<Vec<Erasure>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     read_records(store, &dir(id)).await
 }
 
 /// Every erasure of a database, archived ones included (the status API), oldest first.
-pub async fn list_all(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Vec<Erasure>> {
+pub async fn list_all(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<Vec<Erasure>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let mut out = read_records(store, &done_dir(id)).await?;
     let open = list(store, id).await?;
     out.retain(|d| !open.iter().any(|o| o.id == d.id));
@@ -496,7 +574,8 @@ pub async fn list_all(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Vec<Eras
 
 /// Move the record of an erasure that is done to the archive (written there first: a crash between the two leaves it
 /// in both places, and the next pass moves it again).
-pub async fn archive(store: &Arc<dyn ObjectStore>, id: &str, e: &Erasure) -> Result<()> {
+pub async fn archive(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), e: &Erasure) -> Result<()> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     store.put(&Path::from(format!("{}/{}.json", done_dir(id), e.id)), PutPayload::from(serde_json::to_vec(e)?)).await?;
     match store.delete(&rec_path(id, &e.id)).await {
         Ok(()) | Err(object_store::Error::NotFound { .. }) => Ok(()),
@@ -505,19 +584,22 @@ pub async fn archive(store: &Arc<dyn ObjectStore>, id: &str, e: &Erasure) -> Res
 }
 
 /// Whether a database has an erasure not yet done (cheap: one LIST).
-pub async fn any_open(store: &Arc<dyn ObjectStore>, id: &str) -> Result<bool> {
+pub async fn any_open(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<bool> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     Ok(list(store, id).await?.iter().any(|e| e.done_ms.is_none()))
 }
 
 /// The targets of an erasure: in its record (perf-erase), else in `{id}.keys` (records of earlier releases).
-pub async fn targets_of(store: &Arc<dyn ObjectStore>, id: &str, e: &Erasure) -> Result<Option<Targets>> {
+pub async fn targets_of(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), e: &Erasure) -> Result<Option<Targets>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     if let Some(h) = &e.targets {
         return Ok(Some(Targets::decode(&manifest::unhex(h)?)?));
     }
     load_targets(store, id, &e.id).await
 }
 
-pub async fn load_targets(store: &Arc<dyn ObjectStore>, id: &str, eid: &str) -> Result<Option<Targets>> {
+pub async fn load_targets(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), eid: &str) -> Result<Option<Targets>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     match store.get(&keys_path(id, eid)).await {
         Ok(g) => Ok(Some(Targets::decode(&g.bytes().await?)?)),
         Err(object_store::Error::NotFound { .. }) => Ok(None),
@@ -691,7 +773,8 @@ async fn rewrite_run(store: &Arc<dyn ObjectStore>, h: &RunH, path: String, opts:
 
 /// The scrub of version `cur`: rewrite every run that may hold a target row at or below `s_e`, and build the version
 /// that lists the new runs (number `next`, kind `erase`; same X_d, groups and X_g). `version` None: no run held one.
-pub async fn scrub_version(store: &Arc<dyn ObjectStore>, id: &str, cur: &View, next: u64, epoch: Option<u64>, t: &Batch, opts: &ScrubOpts) -> Result<Scrub> {
+pub async fn scrub_version(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), cur: &View, next: u64, epoch: Option<u64>, t: &Batch, opts: &ScrubOpts) -> Result<Scrub> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let s_e = t.max_s_e;
     ensure!(cur.x_d >= s_e, "database {id}: an erasure at {s_e} needs X_d at or above it (X_d {})", cur.x_d);
     let mut out = Scrub::default();
@@ -729,7 +812,7 @@ pub async fn scrub_version(store: &Arc<dyn ObjectStore>, id: &str, cur: &View, n
         let t0 = std::time::Instant::now();
         let rows0 = out.rows;
         let rw = rewrite_run(store, h, path, &opts.sealed, t, &mut out.rows, opts.keep_envelopes).await?;
-        trace(serde_json::json!({"ev": "scrub_run", "db": id, "kind": "sealed", "group": g.id, "size": h.line.size, "raw": h.line.raw, "rows_erased": out.rows - rows0, "rewritten": rw.is_some(), "ms": t0.elapsed().as_millis() as u64}));
+        trace(serde_json::json!({"ev": "scrub_run", "db": id.name.as_str(), "kind": "sealed", "group": g.id, "size": h.line.size, "raw": h.line.raw, "rows_erased": out.rows - rows0, "rewritten": rw.is_some(), "ms": t0.elapsed().as_millis() as u64}));
         if let Some(new) = rw {
             out.retired.push(h.line.path.clone());
             out.runs += new.is_some() as u64;
@@ -748,7 +831,7 @@ pub async fn scrub_version(store: &Arc<dyn ObjectStore>, id: &str, cur: &View, n
             let t0 = std::time::Instant::now();
             let rows0 = out.rows;
             let rw = rewrite_run(store, h, path, &opts.delta, t, &mut out.rows, opts.keep_envelopes).await?;
-            trace(serde_json::json!({"ev": "scrub_run", "db": id, "kind": "delta", "size": h.line.size, "raw": h.line.raw, "rows_erased": out.rows - rows0, "rewritten": rw.is_some(), "ms": t0.elapsed().as_millis() as u64}));
+            trace(serde_json::json!({"ev": "scrub_run", "db": id.name.as_str(), "kind": "delta", "size": h.line.size, "raw": h.line.raw, "rows_erased": out.rows - rows0, "rewritten": rw.is_some(), "ms": t0.elapsed().as_millis() as u64}));
             match rw {
                 None => delta.push(h.line.clone()),
                 Some(new) => {
@@ -798,12 +881,13 @@ fn names(v: &Version) -> (Vec<&str>, Vec<Vec<u8>>) {
 /// Whether database `id` owns the object at `path` (it lives under `tenants/{id}/`). A database deletes only objects it
 /// owns: a `clone` fork's versions list runs of its ancestors, which those ancestors' versions may list too (review of
 /// step 7b, FIX 1). Step 4's GC, reseals and merges must delete runs only through [`delete_run`].
-pub fn owns(id: &str, path: &str) -> bool {
+pub fn owns(id: &(impl crate::lifecycle::DbRef + ?Sized), path: &str) -> bool {
     path.starts_with(&format!("{}/", crate::lifecycle::tenant_path(id)))
 }
 
 /// Delete a run of database `id`: refused for a run another database owns.
-pub async fn delete_run(store: &Arc<dyn ObjectStore>, id: &str, path: &str) -> Result<()> {
+pub async fn delete_run(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), path: &str) -> Result<()> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     ensure!(owns(id, path) || ctl(&CONTROL_NO_OWNERSHIP), "database {id} does not own run {path}: never deleted by it");
     match store.delete(&Path::from(path)).await {
         Ok(()) | Err(object_store::Error::NotFound { .. }) => {
@@ -817,26 +901,69 @@ pub async fn delete_run(store: &Arc<dyn ObjectStore>, id: &str, path: &str) -> R
 
 /// This database stops naming `path` in its fork reference in the run's owner (the shared run is released by
 /// reference; the owner's own versions and GC decide its life).
-async fn release_ref(store: &Arc<dyn ObjectStore>, id: &str, path: &str) -> Result<()> {
-    let Some(owner) = path.strip_prefix("tenants/").and_then(|r| r.split('/').next()) else { return Ok(()) };
-    let p = super::pair::fork_ref_path(owner, id);
-    let b = match store.get(&p).await {
-        Ok(g) => g.bytes().await?,
-        Err(object_store::Error::NotFound { .. }) => return Ok(()),
-        Err(e) => return Err(e.into()),
-    };
-    let mut r: super::pair::ForkRef = serde_json::from_slice(&b)?;
-    let n = r.runs.len();
-    r.runs.retain(|x| x != path);
-    if r.runs.len() != n {
-        store.put(&p, PutPayload::from(serde_json::to_vec(&r)?)).await?;
+///
+/// audit-fencing round 2 (item 18): a read-modify-write of the reference, written only over the version read (If-Match)
+/// and done again when another writer came first, so two releases (two erasures of the fork, or a process that lost it)
+/// never undo each other.
+pub(crate) async fn release_ref(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), path: &str) -> Result<()> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
+    // fix-incarnation: the owner's incarnation is the one in the run's path (the reference sits next to that run)
+    let Some(owner) = crate::lifecycle::db_of_path(path) else { return Ok(()) };
+    let p = super::pair::fork_ref_path(&owner, &id.name);
+    for _ in 0..16 {
+        let (b, e_tag, version) = match store.get(&p).await {
+            Ok(g) => {
+                let (t, v) = (g.meta.e_tag.clone(), g.meta.version.clone());
+                (g.bytes().await?, t, v)
+            }
+            Err(object_store::Error::NotFound { .. }) => return Ok(()),
+            Err(e) => return Err(e.into()),
+        };
+        let mut r: super::pair::ForkRef = serde_json::from_slice(&b)?;
+        let n = r.runs.len();
+        r.runs.retain(|x| x != path);
+        if r.runs.len() == n {
+            return Ok(());
+        }
+        let body = PutPayload::from(serde_json::to_vec(&r)?);
+        if ctl(&CONTROL_UNCONDITIONAL_RECORDS) {
+            pause_release().await;
+            store.put(&p, body).await?;
+            return Ok(());
+        }
+        let opts = object_store::PutOptions { mode: object_store::PutMode::Update(object_store::UpdateVersion { e_tag, version }), ..Default::default() };
+        pause_release().await;
+        match store.put_opts(&p, body.clone(), opts).await {
+            Ok(_) => return Ok(()),
+            Err(object_store::Error::Precondition { .. }) => {
+                RECORD_CONFLICTS.fetch_add(1, Relaxed);
+                continue; // another writer came first: read it again
+            }
+            Err(object_store::Error::NotFound { .. }) => return Ok(()),
+            Err(object_store::Error::NotImplemented { .. }) => {
+                store.put(&p, body).await?;
+                return Ok(());
+            }
+            Err(x) => return Err(x.into()),
+        }
     }
-    Ok(())
+    bail!("fork reference {p}: too many concurrent writers")
+}
+
+/// Tests: a release waits here (between its read and its write) while the notify is set.
+pub static PAUSE_RELEASE: std::sync::Mutex<Option<Arc<tokio::sync::Notify>>> = std::sync::Mutex::new(None);
+
+async fn pause_release() {
+    let n = PAUSE_RELEASE.lock().unwrap().clone();
+    if let Some(n) = n {
+        n.notified().await;
+    }
 }
 
 /// What keeps objects of a database alive besides the newest version: the versions named by pairs (restore points,
 /// exports) and fork references, with the name of what keeps them.
-pub async fn referenced_versions(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Vec<(u64, String, Vec<String>)>> {
+pub async fn referenced_versions(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized)) -> Result<Vec<(u64, String, Vec<String>)>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let mut out = Vec::new();
     let pairs: Vec<_> = store.list(Some(&Path::from(format!("{}/pairs", root(id))))).try_collect().await?;
     for m in pairs {
@@ -865,7 +992,8 @@ pub async fn referenced_versions(store: &Arc<dyn ObjectStore>, id: &str) -> Resu
 
 /// Retire what the scrub replaced: delete each retired run once the grace has passed and nothing keeps it, and the old
 /// versions that list a retired run or name a target key. `t`: the targets while they are still known (None after).
-pub async fn retire(store: &Arc<dyn ObjectStore>, id: &str, e: &mut Erasure, newest: u64, grace_ms: u64) -> Result<()> {
+pub async fn retire(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), e: &mut Erasure, newest: u64, grace_ms: u64) -> Result<()> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let Some(scrubbed) = e.scrubbed_version else { return Ok(()) };
     let now = now_ms();
     let in_grace = e.scrubbed_ms.map_or(true, |s| now < s + grace_ms);
@@ -948,7 +1076,8 @@ pub async fn retire(store: &Arc<dyn ObjectStore>, id: &str, e: &mut Erasure, new
 /// perf-erase: the retire step of every erasure in `es` at once: the references (pairs, forks) and the old versions are
 /// read once for all of them (the old step read them again for each erasure). `served`: the version the database's
 /// writer serves; a run of an erasure scrubbed in a newer version is kept until the writer installed it.
-pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &str, es: &mut [&mut Erasure], newest: u64, served: u64, grace_ms: u64) -> Result<()> {
+pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), es: &mut [&mut Erasure], newest: u64, served: u64, grace_ms: u64) -> Result<()> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let es: Vec<&mut &mut Erasure> = es.iter_mut().filter(|e| e.scrubbed_version.is_some() && e.done_ms.is_none()).collect();
     if es.is_empty() {
         return Ok(());
@@ -979,6 +1108,23 @@ pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &str, es: &mut [&mut E
         }
     }
     let no_retire = ctl(&CONTROL_NO_RETIRE);
+    // audit-fencing: a run the store's newest version lists is live, whatever a record says (a scrub that a process which
+    // lost the database took as published, in a slot below the newest): never deleted. The erasure is then not done.
+    let live_now: BTreeSet<String> = if manifest::CONTROL_NO_MAIN_LINE.load(Relaxed) {
+        BTreeSet::new()
+    } else {
+        // the store's newest version and the one readers trust (fix-compactor-start: an older writer's late version on
+        // top is passed over by readers, so both may be read)
+        match manifest::load_newest(store, id).await? {
+            Some(v) => {
+                let mut l: BTreeSet<String> = names(&v).0.into_iter().map(|s| s.to_string()).collect();
+                let t = manifest::trusted_at(store, id, v).await?;
+                l.extend(names(&t).0.into_iter().map(|s| s.to_string()));
+                l
+            }
+            None => BTreeSet::new(),
+        }
+    };
     let mut deleted_versions: BTreeSet<u64> = BTreeSet::new();
     let mut stray: Option<Vec<String>> = None;
     for e in es {
@@ -991,6 +1137,10 @@ pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &str, es: &mut [&mut E
             }
             if served < scrubbed {
                 by.push(format!("served version {served}"));
+            }
+            if live_now.contains(&r.path) {
+                RETIRE_REFUSED_LIVE.fetch_add(1, Relaxed);
+                by.push("listed by the newest version: the scrub is not on the main line".into());
             }
             if no_retire {
                 by.push("control".into());
@@ -1043,7 +1193,7 @@ pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &str, es: &mut [&mut E
             versions_kept.push(format!("{older} older versions in the restore window (GC deletes them and their runs when it ends)"));
         }
         e.versions_kept = versions_kept;
-        if e.live_done_ms.is_none() && served >= scrubbed {
+        if e.live_done_ms.is_none() && served >= scrubbed && !e.retired.iter().any(|r| live_now.contains(&r.path)) {
             e.live_done_ms = Some(now);
         }
         if e.retired.iter().all(|r| r.deleted_ms.is_some() || r.released_ms.is_some()) && e.versions_kept.is_empty() && e.live_done_ms.is_some() {
@@ -1064,7 +1214,8 @@ pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &str, es: &mut [&mut E
 }
 
 /// Run objects of the database that no version from `from` on lists, nor a pair or a fork (`kept`).
-async fn stray_runs(store: &Arc<dyn ObjectStore>, id: &str, from: u64, kept: &[(String, Vec<String>)]) -> Result<Vec<String>> {
+async fn stray_runs(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), from: u64, kept: &[(String, Vec<String>)]) -> Result<Vec<String>> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let mut listed: BTreeSet<String> = kept.iter().flat_map(|(_, l)| l.iter().cloned()).collect();
     for n in manifest::list_versions(store, id).await?.into_iter().filter(|n| *n >= from) {
         if let Ok(v) = manifest::load(store, id, n).await {
@@ -1093,7 +1244,8 @@ pub fn record_partial(e: &mut Erasure, s: &Scrub) {
 }
 
 /// After the scrub: the record of what it did (the targets object goes, its keys are the customer's data).
-pub async fn record_scrub(store: &Arc<dyn ObjectStore>, id: &str, e: &mut Erasure, s: &Scrub, version: u64, t: &Targets, newest: &Version) -> Result<()> {
+pub async fn record_scrub(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), e: &mut Erasure, s: &Scrub, version: u64, t: &Targets, newest: &Version) -> Result<()> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     e.state = "scrubbed".into();
     e.scrubbed_version = Some(version);
     e.scrubbed_ms = Some(now_ms());
@@ -1231,7 +1383,8 @@ pub async fn confirm_clean(store: &Arc<dyn ObjectStore>, cur: &View, items: &[(&
 /// The record of an erasure whose live runs became clean without a scrub (ridden, or forced through reseals and
 /// cleanses): "scrubbed" at `version`, its targets forgotten (they are the customer's data). The retire step then waits
 /// for the runs and versions the compactor replaced to leave (GC) as for a scrub.
-pub async fn record_clean(store: &Arc<dyn ObjectStore>, id: &str, e: &mut Erasure, version: u64, how: &str) -> Result<()> {
+pub async fn record_clean(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), e: &mut Erasure, version: u64, how: &str) -> Result<()> {
+    let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     e.state = "scrubbed".into();
     e.scrubbed_version = Some(version);
     e.scrubbed_ms = Some(now_ms());

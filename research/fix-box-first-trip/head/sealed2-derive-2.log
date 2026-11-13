@@ -1,0 +1,49 @@
+FIRST (thread, trips, GETs): [('user000-thread0', 1, 1), ('user002-thread2', 1, 1), ('user004-thread1', 1, 1), ('user006-thread0', 1, 1), ('user008-thread2', 1, 1), ('user010-thread1', 1, 1), ('user012-thread0', 1, 1), ('user014-thread2', 1, 1), ('user016-thread1', 1, 1), ('user018-thread0', 1, 1), ('user020-thread2', 1, 1), ('user022-thread1', 1, 1)]
+NEXT (thread, GETs): [('user000-thread0', 0), ('user002-thread2', 0), ('user004-thread1', 0), ('user006-thread0', 0), ('user008-thread2', 0), ('user010-thread1', 0), ('user012-thread0', 0), ('user014-thread2', 0), ('user016-thread1', 0), ('user018-thread0', 0), ('user020-thread2', 0), ('user022-thread1', 0)]
+.control FIRST trips: [4, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3]
+.save FIRST (trips, GETs): (0, 24) NEXT GETs: 5
+F..kill=True after 7s: acknowledged 2162 checkpoints, 2160 writes; missing 0, differ 0, writes missing 0, differ 0, stale newest 0; reader errors 0; box {'enabled': True, 'warms': 40, 'warmRows': 8644, 'warmRuns': 0, 'warmBlocks': 0, 'warmMicros': 14158, 'warmErrors': 0, 'skippedRecent': 0, 'tooBig': 0, 'capped': 0, 'waves': 0, 'permitWaits': 0, 'maxBytesPerCustomer': 13421777, 'floorTombstones': 0, 'floorTombstoneSkips': 0, 'indexTieScans': 0, 'sstMapsPinned': 0, 'runPinsStarted': 1, 'runPinErrors': 0, 'floorBytes': 342, 'floorBlocks': 1, 'floorWrites': 1, 'floorHits': 0, 'floorZeroed': 0, 'floorErrors': 0}
+.kill=True after 13s: acknowledged 2970 checkpoints, 2968 writes; missing 0, differ 0, writes missing 0, differ 0, stale newest 0; reader errors 0; box {'enabled': True, 'warms': 40, 'warmRows': 1756, 'warmRuns': 40, 'warmBlocks': 0, 'warmMicros': 4867, 'warmErrors': 0, 'skippedRecent': 0, 'tooBig': 0, 'capped': 0, 'waves': 0, 'permitWaits': 0, 'maxBytesPerCustomer': 13421777, 'floorTombstones': 0, 'floorTombstoneSkips': 0, 'indexTieScans': 0, 'sstMapsPinned': 0, 'runPinsStarted': 4, 'runPinErrors': 0, 'floorBytes': 309007, 'floorBlocks': 432, 'floorWrites': 432, 'floorHits': 0, 'floorZeroed': 0, 'floorErrors': 0}
+.kill=False after 6s: acknowledged 1703 checkpoints, 1703 writes; missing 0, differ 0, writes missing 0, differ 0, stale newest 0; reader errors 0; box {'enabled': True, 'warms': 40, 'warmRows': 0, 'warmRuns': 40, 'warmBlocks': 0, 'warmMicros': 9355, 'warmErrors': 0, 'skippedRecent': 0, 'tooBig': 0, 'capped': 0, 'waves': 0, 'permitWaits': 0, 'maxBytesPerCustomer': 13421777, 'floorTombstones': 0, 'floorTombstoneSkips': 0, 'indexTieScans': 0, 'sstMapsPinned': 0, 'runPinsStarted': 2, 'runPinErrors': 0, 'floorBytes': 333530, 'floorBlocks': 293, 'floorWrites': 293, 'floorHits': 0, 'floorZeroed': 0, 'floorErrors': 0}
+.kill=True after 9s: acknowledged 5704 checkpoints, 5701 writes; missing 823, differ 0, writes missing 822, differ 0, stale newest 40; reader errors 0; box {'enabled': True, 'warms': 40, 'warmRows': 9392, 'warmRuns': 40, 'warmBlocks': 0, 'warmMicros': 26192, 'warmErrors': 0, 'skippedRecent': 0, 'tooBig': 0, 'capped': 0, 'waves': 0, 'permitWaits': 0, 'maxBytesPerCustomer': 13421777, 'floorTombstones': 0, 'floorTombstoneSkips': 0, 'indexTieScans': 0, 'sstMapsPinned': 0, 'runPinsStarted': 4, 'runPinErrors': 0, 'floorBytes': 301829, 'floorBlocks': 432, 'floorWrites': 432, 'floorHits': 0, 'floorZeroed': 0, 'floorErrors': 0}
+.
+=================================== FAILURES ===================================
+____ test_save_first_one_trip_next_no_get_and_set_on_insert_keeps_the_first ____
+
+loaded = ('ctl-bigspeed-f5de68ed', {('user000-thread0', '1ef00000-0000'): 'message 0 of user000-thread0 message 0 of user000-th...ge 3 of user000-thread0 message 3 of user000-thread0 message 3 of user000-thread0 message 3 of user000-thread0 ', ...})
+
+    def test_save_first_one_trip_next_no_get_and_set_on_insert_keeps_the_first(loaded):
+        bucket, want = loaded
+        s = Server(bucket, "bigspeed", idle=600, env=SIM).start()
+        try:
+            c = s.client()
+            db = c.app
+            warm_up_db(c, db)
+            # the database's writer opens at its first write (a per-database cost, not a customer's: in the bench the database
+            # is always being written): a write of another customer first
+            # (and our manifest's announcement is refreshed inside a write at most every T_pin, another per-database cost):
+            # writes of another customer to both collections first, right before the measured save
+            other = tid(THREADS - 1)
+            db.checkpoints.update_one({"thread_id": other, "checkpoint_ns": "", "checkpoint_id": "1ef99999-other"}, {"$set": {"checkpoint": "x"}}, upsert=True)
+            db.checkpoint_writes.update_one({"thread_id": other, "checkpoint_ns": "", "checkpoint_id": "1ef99999-other", "task_id": "t", "task_path": "", "idx": 0},
+                                            {"$setOnInsert": {"value": "o"}}, upsert=True)
+            t = tid(5)
+            t0, g0 = trips(c), gets(c)
+            db.checkpoints.update_one({"thread_id": t, "checkpoint_ns": "", "checkpoint_id": "1ef99999-new"},
+                                      {"$set": {"type": "json", "checkpoint": "new", "metadata": {}}}, upsert=True)
+            first = (trips(c) - t0, gets(c) - g0)
+            g1 = gets(c)
+            f = {"thread_id": t, "checkpoint_ns": "", "checkpoint_id": "1ef99999-new", "task_id": "t", "task_path": "", "idx": 0}
+            db.checkpoint_writes.update_one(f, {"$setOnInsert": {"value": "first"}}, upsert=True)
+            db.checkpoint_writes.update_one(f, {"$setOnInsert": {"value": "second"}}, upsert=True)
+            nxt = gets(c) - g1
+            print("save FIRST (trips, GETs):", first, "NEXT GETs:", nxt)
+            assert first[0] <= 1, f"the first save of a customer took {first[0]} trips"
+>           assert nxt == 0, f"the next saves sent {nxt} GETs"
+E           AssertionError: the next saves sent 5 GETs
+E           assert 5 == 0
+
+test_79_big_speed.py:186: AssertionError
+=========================== short test summary info ============================
+FAILED test_79_big_speed.py::test_save_first_one_trip_next_no_get_and_set_on_insert_keeps_the_first
+1 failed, 8 passed in 134.90s (0:02:14)
