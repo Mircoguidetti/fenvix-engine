@@ -1984,6 +1984,14 @@ impl Tenant {
         self.env
     }
 
+    /// P-fix-read-amplification: warm the run blocks that several of these (physical) keys share before point reads of
+    /// them ([`crate::fx::view::View::prefetch_points`]); answers never depend on it, so an error is only counted.
+    pub async fn prefetch_points(&self, keys: &[Vec<u8>]) {
+        if let Some(v) = &self.fx {
+            let _ = v.prefetch_points(keys).await;
+        }
+    }
+
     /// The version of our manifest this tenant reads with (None: none, or `--sealed-runs` off).
     pub fn fx_view(&self) -> Option<&Arc<crate::fx::view::View>> {
         self.fx.as_ref()
@@ -3370,15 +3378,20 @@ impl Tenant {
         Ok(Arc::new(crate::fx::read::Snap { slate: db.snapshot().await?, hold, env: self.env }))
     }
 
-    /// Rough size in bytes of the data in the tenant's SSTs (from the manifest: no request). Unflushed writes are not
-    /// counted. Used to choose between point reads and a range scan.
+    /// Rough size in bytes of the tenant's data: its SSTs (from SlateDB's manifest) and the runs of the version it reads
+    /// with (from our manifest), no request. Unflushed writes are not counted. Used to choose between point reads and a
+    /// range scan. P-fix-read-amplification: the runs were not counted, so a database held in runs (a generated one, or
+    /// one whose rows were absorbed and dropped) looked as small as its few SSTs, and a whole-collection scan looked
+    /// cheaper than a few hundred point reads (`mongo-server` `coll.rs`, `prefer_scan`).
     pub fn approx_bytes(&self) -> u64 {
         let m = match self.mode.as_ref() {
             Some(Mode::Reader(r)) => r.manifest(),
             Some(Mode::Writer(db)) => db.manifest(),
             None => return 0,
         };
-        m.l0().iter().map(|v| v.estimate_size()).sum::<u64>() + m.compacted().iter().map(|r| r.estimate_size()).sum::<u64>()
+        let ssts = m.l0().iter().map(|v| v.estimate_size()).sum::<u64>() + m.compacted().iter().map(|r| r.estimate_size()).sum::<u64>();
+        let runs = self.fx.as_ref().map_or(0, |v| v.groups.iter().filter_map(|g| g.sealed.as_ref()).chain(v.delta.iter()).map(|h| h.line.size).sum::<u64>());
+        ssts + runs
     }
 
     /// Key/value pairs with `start <= key < end` (`end == None`: to the end of the keyspace), at most `limit`,

@@ -545,6 +545,11 @@ fn split_u(p: &[u8]) -> Option<(&[u8], &[u8])> {
     Some((&t[..n], &t[n..]))
 }
 
+/// The customer component of a physical key of the customer space (`None`: not in the customer space).
+pub fn phys_customer(p: &[u8]) -> Option<&[u8]> {
+    split_u(p).map(|(c, _)| c)
+}
+
 /// The logical key of a physical key (`None`: the key is the same in both, it is not in the customer space).
 pub fn to_logical(p: &[u8]) -> Option<Vec<u8>> {
     let (c, r) = split_u(p)?;
@@ -681,6 +686,46 @@ impl Seg {
             Some(e) if e < p => e,
             _ => p,
         }
+    }
+
+    /// P-fix-read-amplification: the customer (`u/{c}`) whose area holds the physical key `p` (or starts exactly at it),
+    /// and the end (exclusive) of that customer's area. None: `p` is not inside an area of this kind.
+    pub fn area_at(&self, p: &[u8]) -> Option<(Vec<u8>, Vec<u8>)> {
+        let (c, r) = split_u(p)?;
+        if !r.starts_with(&self.infix) {
+            return None;
+        }
+        let mut cu = U.to_vec();
+        cu.extend(c);
+        let mut a = cu.clone();
+        a.extend(&self.infix);
+        Some((cu, crate::keyenc::prefix_end(&a)?))
+    }
+
+    /// The customer whose area holds the physical key `p`, and the start of that customer's area.
+    pub fn area_start_of(&self, p: &[u8]) -> Option<(Vec<u8>, Vec<u8>)> {
+        let (c, _) = split_u(p)?;
+        let mut cu = U.to_vec();
+        cu.extend(c);
+        let mut a = cu.clone();
+        a.extend(&self.infix);
+        Some((cu, a))
+    }
+
+    /// For a reverse read whose (exclusive) upper bound is `p`: the customer whose area holds the keys just below `p`,
+    /// when `p` is inside that area or exactly at its end, and the area's start. None when not known.
+    pub fn area_below(&self, p: &[u8]) -> Option<(Vec<u8>, Vec<u8>)> {
+        let (c, r) = split_u(p)?;
+        let mut cu = U.to_vec();
+        cu.extend(c);
+        let mut a = cu.clone();
+        a.extend(&self.infix);
+        let end = crate::keyenc::prefix_end(&a)?;
+        // inside the area (past its start), or exactly its end
+        if (r.starts_with(&self.infix) && p > a.as_slice()) || p == end.as_slice() {
+            return Some((cu, a));
+        }
+        None
     }
 
     /// Where a physical key of the customer space stands against this area: `Ok(logical key)` inside it,

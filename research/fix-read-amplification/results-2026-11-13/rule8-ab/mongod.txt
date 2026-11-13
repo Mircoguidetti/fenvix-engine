@@ -1,0 +1,6 @@
+1 published and absorbed {}
+2 after updates, before absorption {}
+3 after deletes and whole-customer erasures {}
+4 compactor settled {}
+5 after kill -9 and takeover {}
+6 updates on the new process, compactor settled {}

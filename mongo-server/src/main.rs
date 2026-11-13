@@ -1098,6 +1098,10 @@ async fn run() -> Result<()> {
         tenant_bench::fx::PUBLISH_EVERY.store(n, Relaxed);
         tenant_bench::fx::GROUP_BYTES.store(args.sealed_group_mb.max(1) << 20, Relaxed);
         tenant_bench::fx::view::CACHE_BYTES.store(args.sealed_cache_mb.map_or(budget.sealed_cache, |m| m << 20), Relaxed);
+        // P-fix-read-amplification: the shared-block warm-up of batched point reads (on by default; off for measurements)
+        if std::env::var("FENVIX_NO_PREFETCH_POINTS").is_ok_and(|v| v == "1") {
+            tenant_bench::fx::view::PREFETCH_POINTS.store(false, Relaxed);
+        }
         tenant_bench::fx::RESEAL_EVERY.store(args.sealed_reseal_every.max(1), Relaxed);
         tenant_bench::fx::erase::DEADLINE_MS.store(args.sealed_erasure_deadline_ms, Relaxed);
         ctl::erase::POLL_MS.store(args.sealed_erasure_poll_ms, Relaxed);

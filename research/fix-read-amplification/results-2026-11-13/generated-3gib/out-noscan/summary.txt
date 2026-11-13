@@ -1,0 +1,15 @@
+1 server A, generated version, cold
+   {'secs': 0.62, 'docsExamined': 811, 'MB_fetched': 72.0, 'rows_per_doc': 2.0}
+   {'secs': 0.38, 'docsExamined': 766, 'MB_fetched': 59.1, 'rows_per_doc': 2.0}
+   {'secs': 0.28, 'docsExamined': 808, 'MB_fetched': 45.0, 'rows_per_doc': 2.0}
+   {'secs': 0.41, 'docsExamined': 796, 'MB_fetched': 64.6, 'rows_per_doc': 2.0}
+1b server A, same reads again (warm)
+   {'secs': 0.31, 'docsExamined': 811, 'MB_fetched': 57.4, 'rows_per_doc': 2.0}
+   {'secs': 0.34, 'docsExamined': 766, 'MB_fetched': 58.3, 'rows_per_doc': 2.0}
+   {'secs': 0.3, 'docsExamined': 808, 'MB_fetched': 45.0, 'rows_per_doc': 2.0}
+   {'secs': 0.4, 'docsExamined': 796, 'MB_fetched': 63.1, 'rows_per_doc': 2.0}
+2a server A right after the writes, before the compactor settles
+   {'secs': 0.45, 'docsExamined': 810, 'MB_fetched': 61.4, 'rows_per_doc': 2.0}
+   {'secs': 0.39, 'docsExamined': 771, 'MB_fetched': 52.9, 'rows_per_doc': 2.0}
+   {'secs': 0.29, 'docsExamined': 808, 'MB_fetched': 45.5, 'rows_per_doc': 2.0}
+   {'secs': 0.4, 'docsExamined': 795, 'MB_fetched': 63.2, 'rows_per_doc': 2.0}

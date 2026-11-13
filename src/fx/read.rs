@@ -205,6 +205,13 @@ impl Snap {
         self.slate.seq()
     }
 
+    /// P-fix-read-amplification: [`View::prefetch_points`] with the snapshot's version (a cache warm-up only).
+    pub async fn prefetch_points(&self, keys: &[Vec<u8>]) {
+        if let Some(v) = self.view() {
+            let _ = v.prefetch_points(keys).await;
+        }
+    }
+
     fn view(&self) -> Option<&Arc<View>> {
         self.hold.as_ref().map(|h| &h.view)
     }

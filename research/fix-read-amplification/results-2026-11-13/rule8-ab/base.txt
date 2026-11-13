@@ -1,0 +1,6 @@
+1 published and absorbed {"stage": "1 published and absorbed", "secs": 18.72, "rows_from_runs": 10662101, "get_bytes": 23842517, "fetch": {}}
+2 after updates, before absorption {"stage": "2 after updates, before absorption", "secs": 16.47, "rows_from_runs": 10668947, "get_bytes": 2140832, "fetch": {}}
+3 after deletes and whole-customer erasures {"stage": "3 after deletes and whole-customer erasures", "secs": 16.14, "rows_from_runs": 11207322, "get_bytes": 3632576, "fetch": {}}
+4 compactor settled {"stage": "4 compactor settled", "secs": 15.09, "rows_from_runs": 1072330, "get_bytes": 1170, "fetch": {}}
+5 after kill -9 and takeover {"stage": "5 after kill -9 and takeover", "secs": 70.29, "rows_from_runs": 1069484, "get_bytes": 422406998, "fetch": {}}
+6 updates on the new process, compactor settled {"stage": "6 updates on the new process, compactor settled", "secs": 15.92, "rows_from_runs": 10876430, "get_bytes": 15954724, "fetch": {}}

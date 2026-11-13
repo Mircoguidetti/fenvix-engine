@@ -1,0 +1,15 @@
+mongo-server listening on 127.0.0.1:27031 (idle close after 60 s, holder 5328-13eca82f, lease ttl 30 s)
+uploads: 0 unfinished multipart uploads under tenants/, 0 older than 3600s aborted
+LEASE process_lease tenant=- holder=5328-13eca82f unix_ms=1794569826745 inc=81087eab3b8c10d7 gen=1
+LEASE acquired tenant=app_data_b01 holder=5328-13eca82f unix_ms=1794569826748 takeover_from=-
+shutting down: closing tenants cleanly
+FXC not started db=app_data_b01 reason=not_writer unix_ms=1794569829362
+LEASE release_begin tenant=app_data_b01 holder=5328-13eca82f unix_ms=1794569829362 
+LEASE release tenant=app_data_b01 holder=5328-13eca82f unix_ms=1794569829365 ok=true
+tenants closed; stopping maintenance
+maintenance shutdown: waiting for the L0 watch unix_ms=1794569829368
+maintenance shutdown: waiting for the dispatcher unix_ms=1794569830266
+maintenance shutdown: waiting for the running passes (0 running) unix_ms=1794569830266
+maintenance shutdown: waiting for the GC task unix_ms=1794569830266
+maintenance shutdown: done unix_ms=1794569832265
+maintenance stopped (2903 ms)
