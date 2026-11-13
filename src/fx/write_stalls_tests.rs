@@ -717,7 +717,7 @@ async fn abandon_during_first_build(control: bool) -> (u64, i64, Duration) {
         tokio::time::sleep(Duration::from_millis(2)).await;
     }
     let t1 = Instant::now();
-    t.abandon().await;
+    t.abandon_waiting_first_build().await;
     let took = t1.elapsed();
     // what a dropped run writer aborts is spawned: let it run
     crate::runfmt::wait_dropped_aborts(Duration::from_secs(5)).await;
@@ -741,4 +741,62 @@ async fn ws_abandon_lets_the_first_build_end() {
     assert_eq!(cut, 0, "a run part was cut in the middle");
     assert_eq!(open, 0, "a run upload was left open");
     assert!(took < Duration::from_secs(10), "the abandon waited {took:?}");
+}
+
+/// Review of a60f4fe (rule 8): a first build that ends after another process took the database over must not create a
+/// version: the new owner would build on it and lose every row between the two X_d. The build is paused right before its
+/// version create while a second writer opens the database (a takeover: SlateDB's writer epoch goes up), then resumes.
+/// Fix: the create is refused, no version. Control (`CONTROL_NO_FENCE_CHECK`, a60f4fe): the stale version lands.
+/// Also: an abandon for a lost lease (`abandon`) cuts a running first build at once.
+async fn late_first_build(control: bool) -> (usize, bool) {
+    build::CONTROL_NO_FENCE_CHECK.store(control, Relaxed);
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = if control { "ws-late-control" } else { "ws-late" };
+    let mut t = lc(&store).create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..200 {
+        apply(&mut t, &mut m, vec![(ckey(i % 5, i), Some(vec![b'a'; 100]))]).await;
+    }
+    build::PAUSE_BEFORE_CREATE_MS.store(1500, Relaxed);
+    first_start(&mut t).await;
+    tokio::time::sleep(Duration::from_millis(300)).await; // the build reaches its pause
+    // the takeover: another writer opens the database (the old one is fenced)
+    let next = crate::lifecycle::writer_builder(id, &store).build().await.unwrap();
+    let r = t.fx_first_poll(true).await;
+    build::PAUSE_BEFORE_CREATE_MS.store(0, Relaxed);
+    build::CONTROL_NO_FENCE_CHECK.store(false, Relaxed);
+    let versions = manifest::list_versions(&store, id).await.unwrap().len();
+    eprintln!("late first build (control {control}): {:?}; versions in the store {versions}", r.as_ref().map(|x| x.is_some()));
+    let _ = next.close().await;
+    drop(t);
+    (versions, r.is_err())
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn ws_first_build_after_a_takeover_creates_no_version() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (v_ctl, _) = late_first_build(true).await;
+    let (v, refused) = late_first_build(false).await;
+    // a lost lease: the abandon cuts the build at once (no wait)
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let mut t = lc(&store).create("ws-lost").await.unwrap();
+    let mut m = BTreeMap::new();
+    for i in 0..200 {
+        apply(&mut t, &mut m, vec![(ckey(i % 5, i), Some(vec![b'a'; 100]))]).await;
+    }
+    build::PAUSE_BEFORE_CREATE_MS.store(3000, Relaxed);
+    first_start(&mut t).await;
+    let t0 = Instant::now();
+    t.abandon().await;
+    let took = t0.elapsed();
+    build::PAUSE_BEFORE_CREATE_MS.store(0, Relaxed);
+    tokio::time::sleep(Duration::from_millis(3500)).await;
+    let v_lost = manifest::list_versions(&store, "ws-lost").await.unwrap().len();
+    teardown();
+    assert_eq!(v_ctl, 1, "control: the stale version must land, or the test does not reach the case");
+    assert!(refused, "the build must fail at its create");
+    assert_eq!(v, 0, "a version of the old writer landed after the takeover");
+    assert!(took < Duration::from_secs(1), "an abandon for a lost lease waited for the build ({took:?})");
+    assert_eq!(v_lost, 0, "the cut build created a version");
 }

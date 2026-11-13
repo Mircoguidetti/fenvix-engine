@@ -2350,11 +2350,11 @@ impl Tenant {
     /// aborts could not remove it, and the erase answered `erase_incomplete`. Ended by itself, every run writer completes
     /// or aborts its upload. Only a build longer than the wait is still cut (a large first build: the erase's sweep of
     /// incomplete uploads, and the next start's, find what it leaves).
-    async fn fx_first_abort(&mut self) {
+    async fn fx_first_abort(&mut self, wait: bool) {
         use std::sync::atomic::Ordering::Relaxed;
         if let Some(mut fb) = self.fx_first.take() {
             if let Some(mut h) = fb.handle.take() {
-                let wait = if CONTROL_CUT_FIRST_BUILD.load(Relaxed) { 0 } else { ABANDON_FIRST_BUILD_WAIT_MS.load(Relaxed) };
+                let wait = if !wait || CONTROL_CUT_FIRST_BUILD.load(Relaxed) { 0 } else { ABANDON_FIRST_BUILD_WAIT_MS.load(Relaxed) };
                 if tokio::time::timeout(Duration::from_millis(wait), &mut h).await.is_err() {
                     FIRST_BUILDS_CUT.fetch_add(1, Relaxed);
                     h.abort();
@@ -3059,9 +3059,21 @@ impl Tenant {
     /// slatedb 0.17 has no `Drop` for `Db`, so a tenant left behind keeps tasks that can still write a WAL object or an SST.
     /// The lost-lease callers can ignore that (the next owner fences them); a caller about to delete the tenant's objects
     /// (erase) must not.
-    pub async fn abandon(mut self) -> bool {
+    pub async fn abandon(self) -> bool {
+        self.abandon_with(false).await
+    }
+
+    /// `abandon` while this process still holds the database's lease (an erase, a drop): a first build running off the
+    /// lock may end by itself first, up to `ABANDON_FIRST_BUILD_WAIT_MS` (`fx_first_abort`). Never for a lost lease: the
+    /// build would publish a version after the takeover, which the new owner then builds on (review of a60f4fe, rule 8:
+    /// acknowledged writes lost).
+    pub async fn abandon_waiting_first_build(self) -> bool {
+        self.abandon_with(true).await
+    }
+
+    async fn abandon_with(mut self, wait_first_build: bool) -> bool {
         // fix-write-stalls: a first build off the lock stops before the writer is given up
-        self.fx_first_abort().await;
+        self.fx_first_abort(wait_first_build).await;
         self.group.vis.kill();
         forget_vis(&self.id, &self.group);
         let close = match self.mode.take() {

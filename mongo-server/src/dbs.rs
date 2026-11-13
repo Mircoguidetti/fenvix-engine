@@ -910,6 +910,17 @@ impl Entry {
     /// Drop the tenant without clean-close bookkeeping (its lease was lost). Returns whether its close finished (see
     /// `Tenant::abandon`); true when no tenant was open.
     pub async fn abandon(&mut self) -> bool {
+        self.abandon_with(false).await
+    }
+
+    /// An abandon while this process still holds the database's lease (an erase, a drop): a first build running off the
+    /// lock may end by itself first (`Tenant::abandon_waiting_first_build`). Every other abandon (a lease lost or lapsed)
+    /// cuts it at once: after a takeover its version must not land (review of a60f4fe, rule 8).
+    pub async fn abandon_owned(&mut self) -> bool {
+        self.abandon_with(true).await
+    }
+
+    async fn abandon_with(&mut self, owned: bool) -> bool {
         self.abandons += 1;
         self.nat.clear();
         self.copts.clear();
@@ -936,7 +947,7 @@ impl Entry {
         self.stop_fxc().await;
         let stop_ms = t0.elapsed().as_millis();
         if let Some(t) = self.tenant.take() {
-            closed = t.abandon().await;
+            closed = if owned { t.abandon_waiting_first_build().await } else { t.abandon().await };
             self.closes += 1;
         }
         eprintln!("TIMING abandon db={} stop_fxc_ms={stop_ms} tenant_abandon_ms={} closed={closed}", self.name, t0.elapsed().as_millis() - stop_ms);

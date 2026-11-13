@@ -101,7 +101,8 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
     // A close that did not finish (store slow or down) leaves slatedb's tasks of the tenant alive, and they can still write
     // a WAL object or an SST under tenants/{db}/ after the purge below (no fencing: this process holds the lease). Stop
     // before any object is touched; the client retries once the store answers again (the close goes on in the background).
-    let closed = g.abandon().await;
+    // this process holds the lease: a first build off the lock may end first, so none of its uploads is cut mid-part
+    let closed = g.abandon_owned().await;
     if !closed || tenant_bench::lifecycle::close_pending(db) {
         if fresh {
             ops::finish(ctl, db).await?;

@@ -71,6 +71,33 @@ pub struct BuildReport {
     pub stage: Option<super::counter::StageReport>,
 }
 
+/// Versions refused at their create because the database's writer changed under the build (`fence_check`).
+pub static FENCED_CREATES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Right before a version is created: the database's SlateDB writer epoch in the store must still be the build's.
+/// After a takeover (this process lost its lease and another opened the database as writer) the epoch is higher, and a
+/// version built on this writer's old snapshot must not land: the new owner would build its next versions on it, and
+/// every row between its X_d and the new owner's would leave every read (review of a60f4fe, rule 8: acknowledged writes
+/// lost when a first build finished after the lease loss). A version create already in flight can still land, as after
+/// a crash: what is left is that window, not seconds.
+/// Negative control of the tests: no check (the code of a60f4fe).
+pub static CONTROL_NO_FENCE_CHECK: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+async fn fence_check(store: &Arc<dyn ObjectStore>, id: &str, epoch: Option<u64>) -> Result<()> {
+    let Some(e) = epoch else { return Ok(()) };
+    if CONTROL_NO_FENCE_CHECK.load(std::sync::atomic::Ordering::Relaxed) {
+        return Ok(());
+    }
+    let admin = slatedb::admin::Admin::builder(crate::lifecycle::tenant_path(id), Arc::clone(store)).build();
+    if let Some(m) = admin.read_manifest(None).await? {
+        if m.writer_epoch() != e {
+            FENCED_CREATES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            anyhow::bail!("database {id}: the writer changed under this build (epoch {e}, now {}): no version created", m.writer_epoch());
+        }
+    }
+    Ok(())
+}
+
 pub(crate) fn line(m: &runfmt::RunMeta) -> RunLine {
     RunLine { path: m.path.clone(), size: m.size, id: hex(&m.run_id), min_seq: m.min_seq, max_seq: m.max_seq, first: hex(&m.first_key), last: hex(&m.last_key), entries: m.entries, raw: m.raw_bytes, local: false }
 }
@@ -280,6 +307,7 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
         rep.stage = Some(super::counter::stage(old, &staged).await);
     }
     pause(&PAUSE_BEFORE_CREATE_MS).await;
+    fence_check(store, id, epoch).await?;
     let created = match manifest::create(store, id, &v).await {
         Ok(c) => c,
         // the outcome is unknown (an error, a timeout: the PUT may still land); the caller fences the slot this version
@@ -479,6 +507,7 @@ pub async fn publish_generated(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
     let version = manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1);
     let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: Vec::new(), next_group_id, absorbed_l0: Vec::new() };
     rep.version = version;
+    fence_check(store, id, epoch).await?;
     let created = match manifest::create(store, id, &v).await {
         Ok(c) => c,
         Err(e) => return Err(anyhow::Error::new(super::UnknownPublish { version: Box::new(v), msg: format!("{e:#}") })),
