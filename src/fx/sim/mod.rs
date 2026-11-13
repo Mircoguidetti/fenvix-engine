@@ -40,6 +40,11 @@ mod tests {
         }
     }
 
+    /// fix-sim-holes' hole W counter, when that fix is in the build (0 otherwise).
+    fn reseals_refused() -> u64 {
+        0
+    }
+
     fn runtime() -> tokio::runtime::Runtime {
         tokio::runtime::Builder::new_multi_thread().worker_threads(env_u64("SIM_THREADS", 4) as usize).enable_all().build().unwrap()
     }
@@ -118,7 +123,15 @@ mod tests {
             }
             out_v
         });
-        eprintln!("SIM SUMMARY: seeds {total}, seeds with a violation {}, {:.0} s", failed.len(), t0.elapsed().as_secs_f64());
+        use std::sync::atomic::Ordering::Relaxed;
+        eprintln!(
+            "SIM SUMMARY: seeds {total}, seeds with a violation {}, {:.0} s; process-wide: WAL replay raises {}, older versions ignored {}, builder reseals refused {}",
+            failed.len(),
+            t0.elapsed().as_secs_f64(),
+            crate::lifecycle::REPLAY_RAISES.load(Relaxed),
+            crate::fx::manifest::OLDER_VERSIONS_IGNORED.load(Relaxed),
+            reseals_refused()
+        );
         assert!(failed.is_empty(), "seeds with a violation: {:?}", failed.iter().map(|(s, _)| *s).collect::<Vec<_>>());
     }
 
@@ -507,6 +520,103 @@ mod tests {
         if !fork {
             assert!(refused >= 2, "each case's restore point would pair below the newest version: it must be refused ({refused})");
         }
+    }
+
+    /// sim-test-2: the server's default erasure path (the ride: forced reseals, cleanses, the confirmation) with many
+    /// small groups, then a takeover while the old owner (a zombie with its compactor) rides a second erasure and the new
+    /// owner rides, collects and retires.
+    #[test]
+    fn sim_story_erase_ride_many_groups() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use Ev::*;
+        let mut ev = vec![Open { p: 0, writer: true }];
+        for c in 0..CUSTOMERS {
+            ev.push(fill(0, c, 0));
+        }
+        ev.extend([Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }, Flush { p: 0 }, CompDrain { p: 0 }]);
+        ev.extend([Erase { p: 0, cust: 1 }, Erase { p: 0, cust: 3 }, Flush { p: 0 }, CompDrain { p: 0 }, EraseRide { p: 0 }, Gc { p: 0 }, Sleep { ms: 2700 }, Retire { p: 0 }, Gc { p: 0 }]);
+        ev.extend([fill(0, 1, 0), Erase { p: 0, cust: 4 }, Flush { p: 0 }, CompDrain { p: 0 }, Open { p: 1, writer: true }, Write { p: 1, ops: vec![(2, 2, false)] }, CompStart { p: 1 }, EraseRide { p: 0 }, Erase { p: 1, cust: 0 }, Flush { p: 1 }, CompDrain { p: 1 }, EraseRide { p: 1 }, DropThrough { p: 1 }, Gc { p: 1 }, Sleep { ms: 2700 }, Retire { p: 1 }, Gc { p: 1 }, Abandon { p: 0 }]);
+        let (f, v) = run_story(&rt, "erase ride, many groups", env_u64("SIM_KNOBS", 2) as u8, ev);
+        assert_eq!(f, 0, "{v:?}");
+    }
+
+    /// sim-test-2: the WAL replay raise (runwriter-and-stall, R-final-engine). L0 past the guard (8 flushed batches, no
+    /// compactor), acknowledged writes only in the WAL, the owner killed; the next writer's open raises its unflushed
+    /// limit by the WAL's size and replays; a zombie of it then writes and closes. Nothing acknowledged may be lost.
+    #[test]
+    fn sim_story_wal_replay_raise() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use Ev::*;
+        let before = crate::lifecycle::REPLAY_RAISES.load(std::sync::atomic::Ordering::Relaxed);
+        let mut ev = vec![Open { p: 0, writer: true }, fill(0, 0, 0), Publish { p: 0 }];
+        for c in 1..CUSTOMERS {
+            ev.extend([fill(0, c, 0), Flush { p: 0 }]);
+        }
+        for i in 0..4 {
+            ev.extend([Write { p: 0, ops: vec![(1, i, false), (2, i, true)] }, Flush { p: 0 }]);
+        }
+        ev.extend([Write { p: 0, ops: vec![(3, 3, false), (4, 4, true)] }, Kill { p: 0 }, Open { p: 1, writer: true }, Write { p: 1, ops: vec![(5, 5, false)] }, Open { p: 2, writer: true }, Write { p: 1, ops: vec![(0, 1, false)] }, Close { p: 1 }, Write { p: 2, ops: vec![(0, 2, false)] }, CompStart { p: 2 }, Flush { p: 2 }, CompDrain { p: 2 }]);
+        let (f, v) = run_story(&rt, "WAL replay raise", env_u64("SIM_KNOBS", 1) as u8, ev);
+        let raises = crate::lifecycle::REPLAY_RAISES.load(std::sync::atomic::Ordering::Relaxed) - before;
+        eprintln!("SIM STORY WAL replay raise: {raises} raises");
+        assert_eq!(f, 0, "{v:?}");
+    }
+
+    /// sim-test-2: restore points around a takeover: the old owner (a zombie with its compactor) keeps committing (fenced
+    /// or late), the new owner publishes with its builder, then starts its compactor; points are taken all along, and
+    /// restores to marks between them must give the state at each mark.
+    #[test]
+    fn sim_story_points_around_a_takeover() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let mut ev = vec![Open { p: 0, writer: true }];
+        for c in 0..3 {
+            ev.push(fill(0, c, 0));
+        }
+        ev.extend([Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }, Flush { p: 0 }, CompDrain { p: 0 }, Point { p: 2, tag: 1 }, Mark { tag: 2 }]);
+        ev.extend([fill(0, 3, 0), Flush { p: 0 }, Hold { p: 0, class: Class::FxVersion, op: Some(NOp::Put), skip: 0, land: true, all: false, rid: 1 }, CompDrain { p: 0 }]);
+        ev.extend([Open { p: 1, writer: true }, Write { p: 1, ops: vec![(4, 0, false), (1, 1, true)] }, Publish { p: 1 }, Point { p: 2, tag: 3 }, Release { rid: 1 }, Sleep { ms: 300 }, Mark { tag: 4 }, Point { p: 2, tag: 5 }]);
+        ev.extend([Write { p: 1, ops: vec![(4, 2, false)] }, CompStart { p: 1 }, fill(1, 4, 0), Flush { p: 1 }, CompDrain { p: 1 }, DropThrough { p: 1 }, Gc { p: 1 }, Point { p: 2, tag: 6 }, Mark { tag: 7 }, Gc { p: 0 }, Abandon { p: 0 }, Sleep { ms: 2700 }, Gc { p: 1 }]);
+        ev.extend([Restore { p: 1, mark: 2, apply: false }, Restore { p: 1, mark: 4, apply: false }, Restore { p: 1, mark: 7, apply: true }]);
+        let (f, v) = run_story(&rt, "points around a takeover", env_u64("SIM_KNOBS", 0) as u8, ev);
+        assert_eq!(f, 0, "{v:?}");
+    }
+
+    /// Hole Z through the fork's door (found by random seed 2117 of sim-test-2; fix-sim-holes item 5 changed
+    /// `ctl/fork.rs` `quiesce` for it, without a test that runs a fork). A writer that lost the database without noticing
+    /// it (p0) is asked to fork: the quiesce closes its tenant (an empty memtable: the close never reaches the store and
+    /// writes the clean marker) and trusts the marker by a HEAD, so it skips the reopen that replays the WAL. The new
+    /// owner's acknowledged writes, still only in its WAL, are missing from the fork. The simulated fork mirrors the
+    /// `fork.rs` of its build: on `sim-test-2` the head's HEAD check (fails: 48 violations, MEASURED, 1 run); with
+    /// fix-sim-holes' Z fix and `lifecycle::marker_clean` in the simulated quiesce: passes (MEASURED, 1 run).
+    /// Ignored until the fix is in: `--ignored`.
+    #[test]
+    #[ignore]
+    fn sim_hole_z_fork_trusts_a_fenced_writers_marker() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use Ev::*;
+        let ev = vec![
+            Open { p: 0, writer: true },
+            fill(0, 0, 0),
+            Flush { p: 0 },
+            // the takeover: p0 has not noticed it
+            Open { p: 1, writer: true },
+            fill(1, 1, 0),
+            fill(1, 2, 0),
+            // the fork is asked of p0 (its process still believes it serves the database)
+            Fork { p: 0, copy: false, tag: 1 },
+        ];
+        let (f, v) = run_story(&rt, "hole Z through the fork", 0, ev);
+        assert_eq!(f, 0, "hole Z through the fork: {} violations: {:?}", v.len(), v.iter().take(3).collect::<Vec<_>>());
     }
 
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.

@@ -49,7 +49,7 @@ pub fn value(kp: u8, s: String) -> Vec<u8> {
 }
 
 pub fn is_ext(e: &Ev) -> bool {
-    matches!(e, Ev::Point { .. } | Ev::PointPrune { .. } | Ev::Restore { .. } | Ev::Fork { .. } | Ev::Generate { .. } | Ev::SlateGc { .. })
+    matches!(e, Ev::Point { .. } | Ev::PointPrune { .. } | Ev::Restore { .. } | Ev::Fork { .. } | Ev::Generate { .. } | Ev::SlateGc { .. } | Ev::EraseRide { .. })
 }
 
 fn now_ms() -> i64 {
@@ -508,6 +508,20 @@ impl World {
                         }
                     }
                 }
+                Ev::EraseRide { .. } => {
+                    let c = compl.lock().unwrap().clone();
+                    let Some(c) = c else { return "no compactor (skipped)".into() };
+                    match erase_ride(&store, &id, &c).await {
+                        Ok(s) => {
+                            let mut g = tl.lock().await;
+                            if let Some(t) = g.as_mut() {
+                                t.fx_sync();
+                            }
+                            s
+                        }
+                        Err(e) => format!("erase ride failed: {}", short(&e)),
+                    }
+                }
                 Ev::SlateGc { .. } => {
                     let dir = slatedb::config::GarbageCollectorDirectoryOptions { interval: None, min_age: Duration::from_secs(5), dry_run: false };
                     // the WAL is kept as a restore window keeps it (`lifecycle::WAL_RETAIN`)
@@ -522,6 +536,97 @@ impl World {
             }
         })
     }
+}
+
+/// `ctl/erase.rs` `run_pass_ride` with every erasure due (force_all), without its timing and its agent: forced reseals
+/// of the groups still owing a ready erasure (4 rounds), the delta runs owed once the groups are clear, cleanses of those
+/// a probe finds a row in, the confirmation on the newest version, and `record_clean` (the retire step follows as for a
+/// scrub).
+async fn erase_ride(store: &Arc<dyn ObjectStore>, id: &str, c: &Arc<Compactor>) -> anyhow::Result<String> {
+    use std::collections::BTreeSet;
+    let mut all = erase::list(store, id).await?;
+    let pending: Vec<usize> = all.iter().enumerate().filter(|(_, e)| e.state == "pending").map(|(i, _)| i).collect();
+    let need = pending.iter().map(|&i| all[i].s_e).max().unwrap_or(0);
+    if need == 0 {
+        return Ok("no erasure pending".into());
+    }
+    let mut v = c.current().await;
+    let ready: Vec<usize> = pending.iter().copied().filter(|&i| all[i].s_e <= v.x_d).collect();
+    if ready.is_empty() {
+        return Ok("no erasure ready".into());
+    }
+    let mut targets: BTreeMap<usize, Targets> = BTreeMap::new();
+    for &i in &ready {
+        match erase::targets_of(store, id, &all[i]).await? {
+            Some(t) => {
+                targets.insert(i, t);
+            }
+            None => anyhow::bail!("erasure {} lost its targets before its physical erasure", all[i].id),
+        }
+    }
+    let (mut resealed, mut cleansed) = (0u64, 0u64);
+    for _round in 0..4 {
+        let mut gids: BTreeSet<u32> = BTreeSet::new();
+        for &i in &ready {
+            gids.extend(erase::owing_groups(&v, &targets[&i], all[i].s_e)?);
+        }
+        if gids.is_empty() {
+            break;
+        }
+        for gid in gids {
+            if c.force_reseal_group(gid).await? {
+                resealed += 1;
+            }
+        }
+        v = c.current().await;
+    }
+    for &i in &ready {
+        if erase::owing_groups(&v, &targets[&i], all[i].s_e)?.is_empty() && all[i].groups_clear_version.is_none() {
+            all[i].groups_clear_version = Some(v.version);
+            all[i].delta_owed = erase::owed_delta(&v, &targets[&i], all[i].s_e)?;
+            erase::save(store, id, &all[i]).await?;
+        }
+    }
+    let due_clear: Vec<usize> = ready.iter().copied().filter(|&i| all[i].groups_clear_version.is_some() && !all[i].delta_owed.is_empty()).collect();
+    if !due_clear.is_empty() {
+        let paths: BTreeSet<String> = due_clear.iter().flat_map(|&i| all[i].delta_owed.iter().cloned()).collect();
+        let items: Vec<(&Targets, u64)> = due_clear.iter().map(|&i| (&targets[&i], all[i].s_e)).collect();
+        let batch = Batch::new(&items);
+        let view = view::View::new(Arc::clone(store), v.clone(), None)?;
+        let mut clean_paths: BTreeSet<String> = BTreeSet::new();
+        for h in view.delta.iter().filter(|h| paths.contains(&h.line.path)) {
+            if erase::probe_rows(store, h, &batch, 1).await?.is_empty() {
+                clean_paths.insert(h.line.path.clone());
+                continue;
+            }
+            if c.cleanse_delta(&h.line.path).await? == Some(true) {
+                cleansed += 1;
+            }
+        }
+        v = c.current().await;
+        let listed: BTreeSet<String> = v.delta.iter().map(|d| d.path.clone()).collect();
+        for &i in &due_clear {
+            let n = all[i].delta_owed.len();
+            all[i].delta_owed.retain(|p| !clean_paths.contains(p) && listed.contains(p));
+            if all[i].delta_owed.len() != n {
+                erase::save(store, id, &all[i]).await?;
+            }
+        }
+    }
+    let cands: Vec<usize> = ready.iter().copied().filter(|&i| all[i].groups_clear_version.is_some() && all[i].delta_owed.is_empty()).collect();
+    let mut recorded = 0;
+    if !cands.is_empty() {
+        let items: Vec<(&Targets, u64)> = cands.iter().map(|&i| (&targets[&i], all[i].s_e)).collect();
+        let view = view::View::new(Arc::clone(store), v.clone(), None)?;
+        let clean = erase::confirm_clean(store, &view, &items, None).await?;
+        for (k, &i) in cands.iter().enumerate() {
+            if clean[k] {
+                erase::record_clean(store, id, &mut all[i], v.version, "forced").await?;
+                recorded += 1;
+            }
+        }
+    }
+    Ok(format!("ride of {} erasures on version {}: {resealed} forced reseals, {cleansed} cleanses, {recorded} recorded clean", ready.len(), v.version))
 }
 
 /// The oracle's additions, after the main one (the store calm, every process stopped).
@@ -616,6 +721,20 @@ pub(super) async fn oracle_ext(w: &World) -> Vec<String> {
             Ok(Err(e)) => v.push(format!("{what}: fresh upgrade failed: {}", short(&e))),
             Err(_) => v.push(format!("{what}: fresh upgrade did not return in 60 s")),
         }
+        // the fork's own writes: every key written once more through its writer, then read back in a fresh process (a
+        // write whose seq were at or below the paired X_d would be shadowed by the shared runs)
+        let mut own: BTreeMap<Vec<u8>, Vec<u8>> = BTreeMap::new();
+        if t.is_writer() {
+            let batch: Vec<Op> = (0..CUSTOMERS).flat_map(|c| (0..PER_CUSTOMER).map(move |i| (c, i))).map(|(c, i)| {
+                let v = format!("fork{tag}-own-{c}-{i}").into_bytes();
+                own.insert(ckey(c, i), v.clone());
+                Op::Put(ckey(c, i), v)
+            }).collect();
+            if let Err(e) = t.apply(batch).await {
+                v.push(format!("{what}: its own write failed on a calm store: {}", short(&e)));
+                own.clear();
+            }
+        }
         if let Some(n) = t.fx_served_version() {
             match runs_missing(&w.raw, &name, n).await {
                 Ok(g) if !g.is_empty() => v.push(format!("{what}: its version {n} lists {} runs that no longer exist (live run deleted), first {}", g.len(), g[0])),
@@ -624,6 +743,22 @@ pub(super) async fn oracle_ext(w: &World) -> Vec<String> {
             }
         }
         let _ = tokio::time::timeout(Duration::from_secs(20), t.close()).await;
+        if !own.is_empty() {
+            view::clear_cache();
+            let lc = Lifecycle::new(Arc::new(crate::counting::CountingStore::new(Arc::clone(&calm))), None);
+            match tokio::time::timeout(Duration::from_secs(60), lc.wake(&name)).await {
+                Ok(Ok(t)) => {
+                    let got = read_all(&t).await;
+                    let bad: Vec<String> = own.iter().filter(|(k, want)| !matches!(got.get(*k), Some(Ok(Some(g))) if g == *want)).map(|(k, _)| show(k)).collect();
+                    if !bad.is_empty() {
+                        v.push(format!("{what}: {} of its own acknowledged writes not read back by a fresh opening, first {}", bad.len(), bad[0]));
+                    }
+                    t.abandon().await;
+                }
+                Ok(Err(e)) => v.push(format!("{what}: reopening after its own writes failed: {}", short(&e))),
+                Err(_) => v.push(format!("{what}: reopening after its own writes did not return in 60 s")),
+            }
+        }
     }
     v
 }
@@ -644,7 +779,7 @@ pub(super) fn coverage(w: &World) -> String {
         n("-> generated published"),
         n("-> slate gc pass"),
         n("-> dropped through"),
-        n("-> scrub of"),
+        n("-> scrub of") + n("recorded clean"),
         n("storm on"),
         w.knobs == 2
     )
@@ -726,8 +861,15 @@ pub fn generate2(seed: u64, steps: usize) -> Script {
             220..=239 => out.push(Ev::DropThrough { p: o }),
             240..=264 if knobs == 2 => {
                 out.push(Ev::Erase { p: o, cust: r.gen_range(0..CUSTOMERS) });
-                out.push(Ev::ErasePass { p: o });
+                if r.gen_bool(0.6) {
+                    out.push(Ev::Flush { p: o });
+                    out.push(Ev::CompDrain { p: o });
+                    out.push(Ev::EraseRide { p: o });
+                } else {
+                    out.push(Ev::ErasePass { p: o });
+                }
             }
+            355..=379 => out.push(Ev::EraseRide { p: o }),
             265..=279 if !storm => {
                 storm = true;
                 out.push(Ev::Storm { on: true });
@@ -761,5 +903,5 @@ pub fn generate2(seed: u64, steps: usize) -> Script {
             out.push(Ev::Restore { p: o, mark: m, apply: false });
         }
     }
-    Script { seed, profile: base.profile, knobs, events: out.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Ext { flavor: 1 } }
+    Script { seed, profile: base.profile, knobs, events: out.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Ext { flavor: 2 } }
 }
