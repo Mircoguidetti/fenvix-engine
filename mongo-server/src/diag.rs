@@ -857,6 +857,12 @@ impl Server {
                 "locatorLookups": crate::custkey::LOCATOR_LOOKUPS.load(Relaxed) as i64,
                 // layout v2 (layout2.rs): seeks of range reads across customers
                 "layoutSeeks": crate::layout2::SEEKS.load(Relaxed) as i64,
+                // fix-customer-id-plan: `_id` equalities next to other conditions answered by the locator, customer
+                // span reads, and the races of a span against a natural-order scan (which side answered)
+                "idWithin": crate::coll::CPLAN.id_within.load(Relaxed) as i64,
+                "spanReads": crate::coll::CPLAN.span_reads.load(Relaxed) as i64,
+                "raceSpanWon": crate::coll::CPLAN.race_span.load(Relaxed) as i64,
+                "raceNaturalWon": crate::coll::CPLAN.race_natural.load(Relaxed) as i64,
             },
             // envelope values (envelope.rs): rows read as live and as deleted envelopes; whether this process starts them
             "envelopes": {
