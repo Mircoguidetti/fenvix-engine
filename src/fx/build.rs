@@ -687,6 +687,8 @@ pub async fn publish_generated_parts(db: &slatedb::Db, store: &Arc<dyn ObjectSto
     let version = manifest::list_versions(store, id).await?.last().map_or(1, |n| n + 1);
     let v = Version { format: manifest::FORMAT, version, kind: "publish".into(), writer_epoch: epoch, x_d: x, e_env: Some(e_env), published_ms: manifest::now_ms(), groups, delta: Vec::new(), next_group_id, absorbed_l0: Vec::new() };
     rep.version = version;
+    // R-final-engine, hole G: the writer-epoch fence of every other build (a generator that lost the database creates no version)
+    fence_check(store, id, epoch).await?;
     let created = match manifest::create(store, id, &v).await {
         Ok(c) => c,
         Err(e) => return Err(anyhow::Error::new(super::UnknownPublish { version: Box::new(v), msg: format!("{e:#}") })),

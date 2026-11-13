@@ -3403,7 +3403,9 @@ pub(crate) async fn compact_tenant_pass_with(
     // builder catch up before its first absorption.
     let mut gate: Option<Arc<std::collections::HashSet<ulid::Ulid>>> = None;
     let mut mark_ungated = false;
-    if let Some(v) = crate::fx::manifest::load_newest(raw, id).await? {
+    // R-final-engine, hole C: the version readers serve (an older writer's late version on top is passed over), not the
+    // plain newest: a late version with a higher X_d would open the gate for L0 rows no compactor absorbed
+    if let Some((v, _)) = crate::fx::manifest::load_newest_trusted(raw, id).await? {
         if crate::fx::compactor::SERVER_ON.load(std::sync::atomic::Ordering::Relaxed) {
             let admin = Admin::builder(tenant_path(id), Arc::clone(raw)).build();
             let Some(m) = admin.read_manifest(None).await? else { return Ok(None) };
