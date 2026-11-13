@@ -14,6 +14,11 @@ import pytest
 
 from lib import Server, make_bucket, s3, list_prefix
 
+# integration-4 (review of CI e6221af): every test here waits for our compactor or our runs, which do not exist with
+# sealed runs off (CI off mode: 0/5); as test_54 and test_67r, the file skips there
+pytestmark = pytest.mark.skipif(os.environ.get("FENVIX_SEALED_RUNS", "off") in ("off", "0", ""),
+                                reason="needs sealed runs and their compactor (FENVIX_SEALED_RUNS off)")
+
 DB = "mpvictim"
 
 
