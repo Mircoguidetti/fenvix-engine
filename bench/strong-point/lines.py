@@ -380,13 +380,13 @@ def server_cmd(name: str, log_on: bool) -> list[str]:
     return cmd
 
 
-def run_ours(name: str, cmd: list[str]) -> None:
+def run_ours(name: str, cmd: list[str], limits: list[str] | None = None) -> None:
     # diagnosis only (P-big-speed memory): FXBENCH_SERVER_ENV="K=V K=V" and FXBENCH_SERVER_DIR (mounted at /diag)
     extra_env = dict(kv.replace("{name}", name).split("=", 1) for kv in os.environ.get("FXBENCH_SERVER_ENV", "").split() if "=" in kv)
     diag = ["-v", f"{os.environ['FXBENCH_SERVER_DIR']}:/diag"] if os.environ.get("FXBENCH_SERVER_DIR") else []
     run_container(name, MACHINE_IMAGE, ["-v", f"{SRV}:/opt/fx/mongo-server:ro", "-v", f"{PQ}:/opt/fx/pq:ro",
                                         "-v", f"{PYLIB}:/opt/pylib:ro"] + diag, cmd, env=S3_ENV | {"PYTHONPATH": "/opt/pylib"} | extra_env,
-                  secret_env={"MONGO_ADMIN_TOKEN": os.environ.get("BENCH_PW", "")})
+                  secret_env={"MONGO_ADMIN_TOKEN": os.environ.get("BENCH_PW", "")}, limits=limits)
 
 
 def create_root(name: str) -> None:
@@ -415,8 +415,12 @@ def up_fenvix(line: str) -> None:
     if log_on:
         for i in range(3):
             peers = ",".join(f"{j}={IP[f'log-{j}']}:7100" for j in range(3) if j != i)
+            # P-B1-strong-point: FXBENCH_LOG_MEM, the log copies' own memory cap (at 512 MiB two copies were OOM-killed
+            # two minutes into the load: the prototype log keeps records in memory); they serve no reads
+            lmem = os.environ.get("FXBENCH_LOG_MEM")
             run_ours(f"log-{i}", ["/opt/fx/pq", "replica", "--id", str(i), "--dir", "/data/log", "--peer-listen", "0.0.0.0:7100",
-                                  "--client-listen", "0.0.0.0:7200", "--peers", peers])
+                                  "--client-listen", "0.0.0.0:7200", "--peers", peers],
+                     limits=(["--cpus", "1", "--memory", lmem] if lmem else None))
         time.sleep(3)
         for i in range(3):
             st = sh(["docker", "inspect", "-f", "{{.State.Running}}", f"log-{i}"]).stdout.strip()

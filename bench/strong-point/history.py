@@ -732,6 +732,14 @@ def run(a) -> int:
                 log(f"{line}: load size {size} done: {r['load']}")
                 r["health_after_load"] = lines.health(line)
                 json.dump(res, open(res_path, "w"), indent=1, default=str)
+                if not r["health_after_load"]["ok"]:
+                    log(f"line not healthy after the load: {r['health_after_load']['not_healthy']}")
+                    return 5
+                if line == "fenvix-log":
+                    q = (r["health_after_load"]["check"].get("quaderno") or {})
+                    if q.get("failed") != 0:
+                        log(f"the 3-zone log refused batches during the load (S3-WAL fallback acknowledged them): {q}")
+                        return 5
             if "settle" not in r:
                 r["settle"] = settle(line, uri)
                 r["stored"] = stored_sizes(line, uri)
