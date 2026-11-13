@@ -55,6 +55,10 @@ pub async fn active_op(ctl: &Arc<Ctl>, db: &str) -> anyhow::Result<Value> {
     })
 }
 
+/// P-fix-slow-store item 6: how often an interrupted erase that failed at the restart is run again, and how many times.
+pub const ERASE_RETRY: std::time::Duration = std::time::Duration::from_secs(10);
+pub static ERASE_RETRIES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 /// Finish what a crash interrupted, before the first client is served.
 pub async fn recover(ctl: &Arc<Ctl>) {
     let dir = rec::path(&["control", "ops"]);
@@ -72,6 +76,25 @@ pub async fn recover(ctl: &Arc<Ctl>) {
         };
         match r {
             Ok(()) => eprintln!("ctl recovery: {kind} of {name} finished"),
+            Err(e) if kind == "erase" => {
+                // P-fix-slow-store item 6: an erase is never left half done until the next restart: its intent stays
+                // recorded (the database's data is already gone) and the erase is run again until it ends complete
+                eprintln!("ctl recovery: {kind} of {name} failed: {e}; retried every {} s until complete", ERASE_RETRY.as_secs());
+                let (ctl, name, op) = (Arc::clone(ctl), name.clone(), op.clone());
+                tokio::spawn(async move {
+                    for n in 1u64.. {
+                        tokio::time::sleep(ERASE_RETRY).await;
+                        ERASE_RETRIES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        match super::erase::resume(&ctl, &name, &op).await {
+                            Ok(()) => {
+                                eprintln!("ctl recovery: erase of {name} finished on retry {n}");
+                                return;
+                            }
+                            Err(e) => eprintln!("ctl recovery: erase of {name}, retry {n}: {e}"),
+                        }
+                    }
+                });
+            }
             Err(e) => eprintln!("ctl recovery: {kind} of {name} failed: {e}"),
         }
     }

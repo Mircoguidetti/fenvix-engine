@@ -852,6 +852,36 @@ impl Server {
             },
             // fix-store-errors: retryable writes answered with the RetryableWriteError label after a store error
             "storeErrorsLabelled": crate::retry::STORE_ERRORS_LABELLED.load(Relaxed) as i64,
+            // P-fix-slow-store: the write deadline (item 3), the shutdown's close deadline (item 1), the uploads of older
+            // writer epochs aborted (item 2)
+            "slowStore": {
+                "writeDeadlines": crate::cmd::WRITE_DEADLINES.load(Relaxed) as i64,
+                "writeDeadlinesLabelled": crate::cmd::WRITE_DEADLINES_LABELLED.load(Relaxed) as i64,
+                // round 2: absent holds answered, voided at an open, ended by a fork/restore/export; creates refused
+                // because the database turned out to exist
+                "absentHeldAnswers": crate::dbs::ABSENT_HELD_ANSWERS.load(Relaxed) as i64,
+                "absentHoldsVoided": crate::dbs::ABSENT_HOLDS_VOIDED.load(Relaxed) as i64,
+                "absentHoldsTaken": crate::dbs::ABSENT_HOLDS_TAKEN.load(Relaxed) as i64,
+                "createsFoundExisting": crate::dbs::CREATES_FOUND_EXISTING.load(Relaxed) as i64,
+                "closeDeadlineCuts": tenant_bench::lifecycle::CLOSE_DEADLINE_CUTS.load(Relaxed) as i64,
+                "closesLeftBehind": tenant_bench::lifecycle::CLOSES_LEFT_BEHIND.load(Relaxed) as i64,
+                "closesHeldAtDeadline": crate::dbs::CLOSES_LOCK_PAST_DEADLINE.load(Relaxed) as i64,
+                "closesOptionalSkipped": crate::dbs::CLOSES_OPTIONAL_SKIPPED.load(Relaxed) as i64,
+                "fencedUploadsListed": crate::uploads::FENCED_LISTED.load(Relaxed) as i64,
+                "fencedUploadsAborted": crate::uploads::FENCED_ABORTED.load(Relaxed) as i64,
+                "fencedUploadSweepErrors": crate::uploads::FENCED_ERRORS.load(Relaxed) as i64,
+                "startupSweepFencedAborted": crate::uploads_sweep::FENCED.load(Relaxed) as i64,
+                // item 7: WAL replay raises, those cut by the memtable share, those dropped by a reopen once L0 drained
+                // item 5: writes answered as an unknown outcome, retries whose record was read back after a lost opening
+                "outcomesUnknown": crate::error::OUTCOMES_UNKNOWN.load(Relaxed) as i64,
+                // item 6: listed uploads the store said do not exist; interrupted erases run again after a failed restart
+                "ghostUploads": crate::uploads::GHOSTS.load(Relaxed) as i64,
+                "eraseRetries": crate::ctl::ops::ERASE_RETRIES.load(Relaxed) as i64,
+                "retryRecordsReloaded": crate::retry::RECORDS_RELOADED.load(Relaxed) as i64,
+                "replayRaises": tenant_bench::lifecycle::REPLAY_RAISES.load(Relaxed) as i64,
+                "replayRaisesCapped": tenant_bench::lifecycle::REPLAY_RAISES_CAPPED.load(Relaxed) as i64,
+                "replayRaisesDropped": tenant_bench::lifecycle::REPLAY_RAISES_DROPPED.load(Relaxed) as i64,
+            },
             "customerKeys": {
                 "docsWritten": crate::custkey::DOCS_WRITTEN.load(Relaxed) as i64,
                 "locatorLookups": crate::custkey::LOCATOR_LOOKUPS.load(Relaxed) as i64,
