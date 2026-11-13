@@ -14,7 +14,10 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 #[allow(non_upper_case_globals)]
 #[export_name = "_rjem_malloc_conf"]
-pub static malloc_conf: &[u8] = b"background_thread:true\0";
+// P-big-speed fix 1 (review round, from the session's fallback-memory-bounds.patch): freed pages go back to the system
+// within 1 s (jemalloc's default keeps dirty pages 10 s: under the load at 1 GiB about 220 MB more resident than
+// allocated, MEASURED by the big-speed session)
+pub static malloc_conf: &[u8] = b"background_thread:true,dirty_decay_ms:1000,muzzy_decay_ms:1000\0";
 
 mod uploads;
 mod agg;
@@ -654,6 +657,17 @@ struct Args {
     /// A customer's box is warmed again after this many seconds.
     #[arg(long, default_value_t = 600)]
     customer_box_ttl_secs: u64,
+    /// Review of big-speed (error 1): the most one customer's box warm-up fetches (stored bytes) and keeps (decoded
+    /// bytes), in MiB; a bigger box is read on demand. Default: the runs' cache / 8 (`membudget.rs`; 12 MiB at 1 GiB).
+    #[arg(long)]
+    customer_box_max_mb: Option<u64>,
+    /// The most every box warm-up of the process has in flight together, in MiB. Default: the runs' cache / 4.
+    #[arg(long)]
+    customer_box_inflight_mb: Option<u64>,
+    /// Review of big-speed (error 2): every database's memtables together, in MiB (`memgov.rs`); writes wait past 1.5
+    /// times this. Default: 1/8 of the memory limit (128 MiB at 1 GiB). 0 = no process-wide budget.
+    #[arg(long)]
+    memtables_total_mb: Option<u64>,
     /// With `--sealed-compactor`: the release flag E1 of derived documents (`fx/derive.rs`): reseals store the threads of
     /// the agent checkpoint collections as a message log plus derived documents. Reads understand them always (E0).
     /// On by default since integration-3 for the agent checkpoint collections below (the LangGraph saver's);
@@ -961,15 +975,30 @@ async fn run() -> Result<()> {
     opening::ENABLED.store(args.first_course, std::sync::atomic::Ordering::Relaxed);
     custbox::ENABLED.store(args.customer_box, std::sync::atomic::Ordering::Relaxed);
     coll::ID_CHECK_IN_BOX.store(args.id_check_in_box, std::sync::atomic::Ordering::Relaxed);
-    if args.box_disk {
+    {
         let port = args.listen.rsplit(':').next().unwrap_or("0").to_string();
         let dir = if args.box_disk_dir.is_empty() { std::env::temp_dir().join(format!("fenvix-box-floor-{port}")) } else { std::path::PathBuf::from(&args.box_disk_dir) };
-        std::fs::create_dir_all(&dir)?;
-        let mb = if args.box_disk_mb > 0 { args.box_disk_mb } else { (tenant_bench::counter::free_disk_bytes(&dir).unwrap_or(0) / 4 >> 20).min(4096) };
-        tenant_bench::fx::floor::install(dir.clone(), mb << 20)?;
-        eprintln!("box disk floor: {} MiB in {}", mb, dir.display());
+        if args.box_disk {
+            std::fs::create_dir_all(&dir)?;
+            let mb = if args.box_disk_mb > 0 { args.box_disk_mb } else { (tenant_bench::counter::free_disk_bytes(&dir).unwrap_or(0) / 4 >> 20).min(4096) };
+            tenant_bench::fx::floor::install(dir.clone(), mb << 20)?;
+            eprintln!("box disk floor: {} MiB in {}", mb, dir.display());
+        } else {
+            // review of big-speed: a disabled floor still empties what an earlier process left in its folder
+            tenant_bench::fx::floor::install(dir.clone(), 0)?;
+        }
     }
     custbox::TTL_SECS.store(args.customer_box_ttl_secs, std::sync::atomic::Ordering::Relaxed);
+    {
+        use std::sync::atomic::Ordering::Relaxed;
+        // review of big-speed: the box per customer and per process, and the memtables of every database together
+        tenant_bench::fx::view::BOX_CUSTOMER_BYTES.store(args.customer_box_max_mb.map_or(budget.box_customer, |m| m << 20), Relaxed);
+        tenant_bench::fx::view::BOX_INFLIGHT_BYTES.store(args.customer_box_inflight_mb.map_or(budget.box_inflight, |m| m << 20).max(1 << 20), Relaxed);
+        tenant_bench::memgov::BUDGET_BYTES.store(args.memtables_total_mb.map_or(budget.memtables, |m| m << 20), Relaxed);
+        eprintln!("memory budget (review round): box {} MiB per customer, {} MiB in flight; memtables of every database {} MiB (writes wait past {} MiB); merge read-ahead {} MiB; absorption {} L0 SSTs",
+            tenant_bench::fx::view::BOX_CUSTOMER_BYTES.load(Relaxed) >> 20, tenant_bench::fx::view::BOX_INFLIGHT_BYTES.load(Relaxed) >> 20,
+            tenant_bench::memgov::budget() >> 20, tenant_bench::memgov::hard() >> 20, budget.merge_read >> 20, budget.absorb_l0);
+    }
     opening::IDLE_SECS.store(args.first_course_idle_secs, std::sync::atomic::Ordering::Relaxed);
     opening::MAX_AGE_SECS.store(args.first_course_days * 86_400, std::sync::atomic::Ordering::Relaxed);
     opening::BUDGET_BYTES.store(args.first_course_mb.map_or(budget.first_course, |m| m << 20), std::sync::atomic::Ordering::Relaxed);

@@ -18,6 +18,46 @@ use std::sync::{Arc, Mutex};
 pub static CACHE_BYTES: AtomicU64 = AtomicU64::new(256 << 20);
 /// Counters (diagnostics and tests).
 pub static RUN_GETS: AtomicU64 = AtomicU64::new(0);
+
+// ---- review of big-speed (2026-11-13, error 1): the customer's box, capped per customer and per process
+
+/// Stored bytes one customer's box warm-up may fetch, and decoded bytes it may keep (0: no cap). Set from the memory
+/// budget (`membudget::Budget::box_customer`, the runs' cache / 8) or `--customer-box-max-mb`.
+pub static BOX_CUSTOMER_BYTES: AtomicU64 = AtomicU64::new(32 << 20);
+/// Stored bytes of one wave (one range GET of one run).
+pub static BOX_WAVE_BYTES: AtomicU64 = AtomicU64::new(4 << 20);
+/// Stored bytes every box warm-up of the process has in flight together (`membudget::Budget::box_inflight`, or
+/// `--customer-box-inflight-mb`); read once, when the first warm-up starts.
+pub static BOX_INFLIGHT_BYTES: AtomicU64 = AtomicU64::new(64 << 20);
+/// Waves of one warm-up at once.
+pub const BOX_PARALLEL: usize = 16;
+/// Warm-ups skipped because the box was above the customer's allowance; warm-ups stopped at the allowance; waves sent;
+/// waves that waited for the process's allowance.
+pub static BOX_TOO_BIG: AtomicU64 = AtomicU64::new(0);
+pub static BOX_CAPPED: AtomicU64 = AtomicU64::new(0);
+pub static BOX_WAVES: AtomicU64 = AtomicU64::new(0);
+pub static BOX_PERMIT_WAITS: AtomicU64 = AtomicU64::new(0);
+
+static BOX_SEM: std::sync::OnceLock<(tokio::sync::Semaphore, u32)> = std::sync::OnceLock::new();
+
+/// A permit of the process-wide box allowance for `bytes` stored bytes (KiB units; a wave larger than the whole
+/// allowance takes all of it).
+pub async fn box_permit(bytes: u64) -> tokio::sync::SemaphorePermit<'static> {
+    let (sem, total) = BOX_SEM.get_or_init(|| {
+        let kib = (BOX_INFLIGHT_BYTES.load(Relaxed) >> 10).clamp(1, u32::MAX as u64 >> 4) as u32;
+        (tokio::sync::Semaphore::new(kib as usize), kib)
+    });
+    let want = (bytes.div_ceil(1024) as u32).clamp(1, *total);
+    if sem.available_permits() < want as usize {
+        BOX_PERMIT_WAITS.fetch_add(1, Relaxed);
+    }
+    sem.acquire_many(want).await.expect("the box semaphore is never closed")
+}
+
+/// (permits free, permits in all) of the process's box allowance, in KiB.
+pub fn box_allowance() -> (usize, u32) {
+    BOX_SEM.get().map_or((0, 0), |(s, t)| (s.available_permits(), *t))
+}
 pub static RUN_OPENS: AtomicU64 = AtomicU64::new(0);
 pub static BLOCK_HITS: AtomicU64 = AtomicU64::new(0);
 pub static ROWS_FROM_RUNS: AtomicU64 = AtomicU64::new(0);
@@ -463,11 +503,22 @@ impl View {
         Ok(best)
     }
 
-    /// P-big-speed fix 3 (the customer's box): every block of every run that can hold rows in [lo, hi), fetched at
-    /// once (one ranged GET per run, every run in parallel) and kept whole in the counter; no row is decoded beyond the
-    /// block's check. The runs are the ones a read of [lo, hi) would read: each group's sealed run and the delta runs
-    /// above its X_g, minus those whose customer filter excludes the range. Returns (runs read, blocks fetched).
-    /// Answers never depend on it: the blocks of a run are immutable, and every read checks the counter first.
+    /// P-big-speed fix 3 (the customer's box): the blocks of every run that can hold rows in [lo, hi), brought into the
+    /// counter before the customer's query runs. The runs are the ones a read of [lo, hi) would read: each group's
+    /// sealed run and the delta runs above its X_g, minus those whose customer filter excludes the range. Returns (runs
+    /// read, blocks kept). Answers never depend on it: the blocks of a run are immutable, and every read checks the
+    /// counter first.
+    ///
+    /// Review of big-speed (2026-11-13, error 1): before, every run's whole range was fetched in one GET and held
+    /// decoded until the end, with no cap: one read of a 1.5 GiB customer OOM-killed the server under 1 GiB (MEASURED by
+    /// the reviewer). Now:
+    /// - a box whose missing blocks hold more than the customer's allowance of stored bytes (`BOX_CUSTOMER_BYTES`) is not
+    ///   warmed at all (`BOX_TOO_BIG`): its query reads on demand, as with the box off;
+    /// - otherwise the blocks come in waves of at most `BOX_WAVE_BYTES` stored bytes (a small box is still one GET per
+    ///   run, all runs at once: one trip), each wave holding a permit of the process-wide `BOX_INFLIGHT_BYTES` while its
+    ///   GET buffer is alive, and decoding one block at a time into the counter ([`super::counter::warm_wave`]);
+    /// - the decoded bytes kept for one customer stop at `BOX_CUSTOMER_BYTES` too (`BOX_CAPPED`; compressible rows can
+    ///   decode to many times their stored size).
     pub async fn warm_range(self: &Arc<Self>, lo: &[u8], hi: &[u8]) -> Result<(u64, u64)> {
         let mut cands: Vec<Arc<RunH>> = Vec::new();
         let mut seen: std::collections::HashSet<[u8; RUN_ID_LEN]> = Default::default();
@@ -494,23 +545,88 @@ impl View {
             }
         }
         let store = &self.store;
-        let jobs = cands.into_iter().map(|h| async move {
+        let runs = cands.len() as u64;
+        // the plan: per run, its missing blocks in waves of at most BOX_WAVE_BYTES stored bytes
+        let opened = futures::future::try_join_all(cands.into_iter().map(|h| async move {
             let run = h.open(store).await?.clone();
-            let Some((a, z)) = run.fence.blocks_for(lo, Some(hi)) else { return Ok::<_, anyhow::Error>((1u64, 0u64)) };
+            Ok::<_, anyhow::Error>((h, run))
+        }))
+        .await?;
+        let cap = BOX_CUSTOMER_BYTES.load(Relaxed);
+        let wave = BOX_WAVE_BYTES.load(Relaxed).max(1);
+        let mut waves: Vec<(Arc<RunH>, Arc<Run>, usize, usize, u64)> = Vec::new();
+        let mut stored_total = 0u64;
+        for (h, run) in opened {
+            let Some((a, z)) = run.fence.blocks_for(lo, Some(hi)) else { continue };
             if let Some(r) = run.customers.customer_of(lo) {
                 if !run.filter.may_contain(&lo[r]) {
-                    return Ok((1, 0));
+                    continue;
                 }
             }
-            let whole = |_: usize| super::counter::Need::Key(&[]);
-            if (a..=z).all(|b| super::counter::cached(&run, b, None, &whole(b))) {
-                return Ok((1, 0));
+            let whole = super::counter::Need::Key(&[]);
+            let mut cur: Option<(usize, usize, u64)> = None;
+            for b in a..=z {
+                if super::counter::cached(&run, b, None, &whole) {
+                    if let Some((x, y, n)) = cur.take() {
+                        waves.push((Arc::clone(&h), run.clone(), x, y, n));
+                    }
+                    continue;
+                }
+                let (p, q) = run.fence.range(b, b);
+                let n = q - p;
+                stored_total += n;
+                cur = match cur {
+                    Some((x, _, m)) if m + n <= wave => Some((x, b, m + n)),
+                    Some((x, y, m)) => {
+                        waves.push((Arc::clone(&h), run.clone(), x, y, m));
+                        Some((b, b, n))
+                    }
+                    None => Some((b, b, n)),
+                };
             }
-            fetch_h(store, &h, &run, a, z, None, &whole).await?;
-            Ok((1, (z + 1 - a) as u64))
+            if let Some((x, y, n)) = cur {
+                waves.push((Arc::clone(&h), run.clone(), x, y, n));
+            }
+        }
+        if waves.is_empty() {
+            return Ok((runs, 0));
+        }
+        if cap > 0 && stored_total > cap {
+            BOX_TOO_BIG.fetch_add(1, Relaxed);
+            return Ok((runs, 0));
+        }
+        let left = std::sync::atomic::AtomicI64::new(if cap > 0 { cap as i64 } else { i64::MAX });
+        let left = &left;
+        let jobs = waves.into_iter().map(|(h, run, a, z, n)| async move {
+            if left.load(Relaxed) <= 0 {
+                return Ok::<_, anyhow::Error>(0u64);
+            }
+            let _permit = box_permit(n).await;
+            if left.load(Relaxed) <= 0 {
+                return Ok(0);
+            }
+            BOX_WAVES.fetch_add(1, Relaxed);
+            let s = h.read_store(store);
+            let r = match super::counter::warm_wave(s, &run, a, z, left).await {
+                Ok(r) => r,
+                Err(_) if !Arc::ptr_eq(s, store) => {
+                    h.from_local.store(false, Relaxed);
+                    super::counter::warm_wave(store, &run, a, z, left).await?
+                }
+                Err(e) => return Err(e),
+            };
+            Ok(r.0)
         });
-        let r = futures::future::try_join_all(jobs).await?;
-        Ok(r.into_iter().fold((0, 0), |(a, b), (x, y)| (a + x, b + y)))
+        use futures::StreamExt;
+        let mut kept = 0u64;
+        let mut st = futures::stream::iter(jobs).buffer_unordered(BOX_PARALLEL);
+        while let Some(r) = st.next().await {
+            kept += r?;
+        }
+        if left.load(Relaxed) <= 0 {
+            BOX_CAPPED.fetch_add(1, Relaxed);
+        }
+        Ok((runs, kept))
     }
 
     /// (runs of this version that are open, runs in all).

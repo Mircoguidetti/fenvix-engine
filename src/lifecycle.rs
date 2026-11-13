@@ -185,6 +185,7 @@ fn pin_sst_maps(db: &Db) {
 }
 
 pub(crate) fn writer_closed(id: &str) {
+    crate::memgov::forget(id);
     OPEN_WRITERS.lock().unwrap().remove(id);
     WRITER_DBS.lock().unwrap().remove(id);
     UNFLUSHED_SINCE.lock().unwrap().remove(id);
@@ -2008,6 +2009,12 @@ impl Tenant {
         }
         let st = self.step_state().await?;
         let view = st.fx.clone();
+        // review of big-speed (error 1): SlateDB's part of the box is read with a small read-ahead whose buffers hold a
+        // permit of the process's box allowance, and the scan stops once it passed the customer's allowance
+        // (`fx::view::BOX_CUSTOMER_BYTES`): the rest of a big customer is read on demand
+        use std::sync::atomic::Ordering::Relaxed;
+        let read_ahead = read_ahead.min(crate::fx::view::BOX_WAVE_BYTES.load(Relaxed) as usize / 4).max(64 << 10);
+        let cap = crate::fx::view::BOX_CUSTOMER_BYTES.load(Relaxed);
         let mut opts = slatedb::config::ScanOptions {
             read_ahead_bytes: read_ahead,
             max_fetch_tasks: crate::tiered::scan_fetch_tasks(read_ahead),
@@ -2019,14 +2026,20 @@ impl Tenant {
             opts.filter_context = Some(c);
         }
         let slate = async {
+            let _permit = crate::fx::view::box_permit((read_ahead * opts.max_fetch_tasks) as u64).await;
             let range = (std::ops::Bound::Included(lo.to_vec()), std::ops::Bound::Excluded(hi.to_vec()));
             let mut it = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
                 Mode::Reader(r) => r.scan_with_options(range, &opts).await?,
                 Mode::Writer(db) => db.scan_with_options(range, &opts).await?,
             };
-            let mut n = 0u64;
-            while it.next().await?.is_some() {
+            let (mut n, mut bytes) = (0u64, 0u64);
+            while let Some(kv) = it.next().await? {
                 n += 1;
+                bytes += (kv.key.len() + kv.value.len()) as u64;
+                if cap > 0 && bytes > cap {
+                    crate::fx::view::BOX_CAPPED.fetch_add(1, Relaxed);
+                    break;
+                }
             }
             Ok::<_, anyhow::Error>(n)
         };
@@ -3021,6 +3034,13 @@ impl Tenant {
             // one T_pin ago. Until then the writes stay plain, as release E0 writes them.
             self.ensure_marker().await?;
         }
+        // review of big-speed, error 2: one memtable budget for the whole process (`memgov.rs`); over its hard limit the
+        // write waits for the governor's flushes, as SlateDB's own backpressure waits for one database
+        let mem_bytes = crate::memgov::batch_bytes(ops.iter().map(|o| match o {
+            Op::Put(k, v) => (k.len(), v.len()),
+            Op::Delete(k) => (k.len(), 0),
+        }));
+        crate::memgov::admit().await;
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
         let mut batch = slatedb::WriteBatch::new();
         let enveloped = self.env.is_some();
@@ -3058,6 +3078,7 @@ impl Tenant {
             eprintln!("SLOW_STAGE u={:.0} db={} ms={} l0={} l0_max_held={l0_max_held}", crate::waits::unix_ms(), self.id, t_write.elapsed().as_millis(), db.manifest().l0().len());
         }
         note_unflushed(&self.id, handle.seqnum());
+        crate::memgov::note(&self.id, handle.seqnum(), mem_bytes);
         if let Some(b) = before {
             self.group.vis.add(handle.seqnum(), b, keys);
             let mut m = VIS_GROUPS.lock().unwrap();
@@ -3074,11 +3095,11 @@ impl Tenant {
         if self.env.is_none() && crate::envelope::START.load(std::sync::atomic::Ordering::Relaxed) {
             self.ensure_marker().await?; // release E1, as in `stage`
         }
+        crate::memgov::admit().await;
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
-        if self.env.is_some() {
-            return Ok(db.put(key, crate::envelope::live(value.to_vec())).await?);
-        }
-        Ok(db.put(key, value).await?)
+        let h = if self.env.is_some() { db.put(key, crate::envelope::live(value.to_vec())).await? } else { db.put(key, value).await? };
+        crate::memgov::note(&self.id, h.seqnum(), crate::memgov::batch_bytes(std::iter::once((key.len(), value.len()))));
+        Ok(h)
     }
 
     /// Give the tenant up without any of the clean-close bookkeeping (no marker, no compaction request):

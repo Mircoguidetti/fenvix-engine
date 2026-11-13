@@ -997,10 +997,18 @@ impl Compactor {
         let _one = self.absorb_lock.lock().await;
         let t_locked = Instant::now();
         let l0_start = self.l0_count();
-        let views: Vec<_> = self.unabsorbed().into_iter().take(self.knobs.absorb_max_l0).collect();
+        // P-big-speed fix 1 (review round): the absorbed L0 SSTs are read whole, all at once, and their rows held decoded
+        // together: at most the memory budget's share of them (`membudget::Budget::absorb_l0`, 4 at 1 GiB), however many
+        // `absorb_max_l0` allows (16). The oldest are taken first, as before, so absorption keeps its order (rule 16).
+        let take = self.knobs.absorb_max_l0.min(crate::membudget::get().absorb_l0.max(self.knobs.absorb_min_l0).max(1));
+        let views: Vec<_> = self.unabsorbed().into_iter().take(take).collect();
         if views.is_empty() {
             return Ok(0);
         }
+        // and the process-wide allowance (every database's compactor together): the SSTs whole, their rows decoded,
+        // and the run writer's part buffer
+        let input: u64 = views.iter().map(|v| v.estimate_size()).sum();
+        let _permit = crate::membudget::compaction_permit(2 * input + input.min(16 << 20)).await;
         let v0 = self.current().await;
         let e_env = v0.e_env.unwrap_or(0);
         let mut rows: BTreeMap<Vec<u8>, (u64, Vec<u8>)> = BTreeMap::new();
@@ -2172,15 +2180,30 @@ pub(crate) struct Src {
 }
 
 /// A k-way merge of runs by key: every row of the smallest key at once.
+/// The read-ahead of each of `n` source runs of one merge: `read_ahead`, or less so that all of them together stay within
+/// the memory budget's `merge_read`.
+fn merge_read_ahead(read_ahead: usize, n: usize) -> usize {
+    read_ahead.min((crate::membudget::get().merge_read / n.max(1) as u64) as usize)
+}
+
 struct Merger<'a> {
     scans: Vec<Scan>,
     heads: Vec<Option<Row>>,
     heap: BinaryHeap<std::cmp::Reverse<(Vec<u8>, usize)>>,
     st: &'a Stats,
+    _permit: Option<tokio::sync::SemaphorePermit<'static>>,
 }
 
 impl<'a> Merger<'a> {
     async fn open(store: &Arc<dyn ObjectStore>, delta: &[RunLine], sealed: &[RunLine], lo: Option<&[u8]>, hi: Option<&[u8]>, read_ahead: usize, st: &'a Stats) -> Result<Merger<'a>> {
+        // P-big-speed fix 1 (review round): every source run reads ahead and holds what it read decoded; a reseal merges
+        // the sealed run with every delta run meeting it. The merge's read-ahead is one budget shared by its sources
+        // (`membudget::Budget::merge_read`, 32 MiB at 1 GiB), never below one block's worth for each (`Scan` reads at
+        // least one block whatever its read-ahead).
+        let n = (delta.len() + sealed.len()).max(1);
+        let read_ahead = merge_read_ahead(read_ahead, n);
+        // the process-wide allowance: the sources' read-ahead, what they hold decoded, and the run writer's part buffer
+        let permit = crate::membudget::compaction_permit(2 * (read_ahead * n) as u64 + (16 << 20)).await;
         let mut scans = Vec::new();
         for d in delta {
             scans.push(Scan::open(store, d, lo, hi, read_ahead, false).await?);
@@ -2188,7 +2211,7 @@ impl<'a> Merger<'a> {
         for s in sealed {
             scans.push(Scan::open(store, s, lo, hi, read_ahead, true).await?);
         }
-        let mut m = Merger { heads: vec![None; scans.len()], scans, heap: BinaryHeap::new(), st };
+        let mut m = Merger { heads: vec![None; scans.len()], scans, heap: BinaryHeap::new(), st, _permit: permit };
         for i in 0..m.scans.len() {
             m.pull(i).await?;
         }

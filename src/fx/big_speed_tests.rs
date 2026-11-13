@@ -386,3 +386,172 @@ async fn rvbs_single_flight_survives_a_cancelled_leader() {
     println!("RVBS single-flight waits on a cancelled leader: {total_waits}");
     assert!(total_waits > 0, "the follower never waited: the test did not exercise single flight");
 }
+
+// ---- Fix round of big-speed (2026-11-13): the box capped per customer and per process (review, error 1) ----
+
+/// A database with one big customer (`n` documents of `size` bytes, `fill`: compressible or not) and customer 1 small,
+/// all in a sealed run.
+async fn build_big(store: &Arc<dyn ObjectStore>, name: &str, n: usize, size: usize, compressible: bool) -> (Tenant, BTreeMap<Vec<u8>, Vec<u8>>) {
+    let mut t = lc(store).create(name).await.unwrap();
+    let mut m = BTreeMap::new();
+    let mut rng = 0x9e3779b97f4a7c15u64;
+    for chunk in (0..n).collect::<Vec<_>>().chunks(64) {
+        let mut ops = Vec::new();
+        for &i in chunk {
+            let v: Vec<u8> = if compressible {
+                vec![b'y'; size]
+            } else {
+                (0..size).map(|_| {
+                    rng ^= rng << 13;
+                    rng ^= rng >> 7;
+                    rng ^= rng << 17;
+                    rng as u8
+                })
+                .collect()
+            };
+            ops.push((doc(0, i), Some(v)));
+            ops.push((idx(0, i), Some(doc(0, i))));
+        }
+        apply(&mut t, &mut m, ops).await;
+    }
+    apply(&mut t, &mut m, (0..10).map(|i| (doc(1, i), Some(vec![3u8; 200]))).collect()).await;
+    publish(&mut t, &opts(Reseal::All)).await;
+    t.fx_view().unwrap().open_all(16).await.unwrap();
+    (t, m)
+}
+
+/// Error 1, incompressible rows: a box above the customer's allowance of stored bytes is not warmed at all (no GET, no
+/// byte kept); the customer's reads stay exact and are served on demand. A small customer is still warmed, in one wave.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn rvbsf_box_above_the_customer_allowance_is_not_warmed() {
+    let _s = SERIAL.lock().await;
+    enable();
+    let cap0 = view::BOX_CUSTOMER_BYTES.swap(1 << 20, Relaxed);
+    let ws = WaveStore::new();
+    let store: Arc<dyn ObjectStore> = ws.clone();
+    // 1,000 documents of 4 KiB of random bytes: about 4 MiB stored, four times the allowance
+    let (t, m) = build_big(&store, "bsf-big", 1000, 4096, false).await;
+    view::clear_cache();
+    let too0 = view::BOX_TOO_BIG.load(Relaxed);
+    let (lo, hi) = range(0, "");
+    ws.start();
+    let (_runs, blocks, _rows) = t.warm_range(&lo, &hi, 8 << 20).await.unwrap();
+    let (_waves, gets) = ws.stop();
+    let held = counter::stats().bytes;
+    println!("RVBSF too big: blocks kept {blocks}, run GETs {gets}, counter bytes {held}");
+    assert_eq!(view::BOX_TOO_BIG.load(Relaxed) - too0, 1, "the box was not refused");
+    assert_eq!(blocks, 0);
+    assert_eq!(gets, 0, "a refused box sends no GET of our runs");
+    assert!(held < 1 << 20, "the counter holds {held} bytes after a refused warm-up");
+    // the customer's reads are exact, on demand
+    let d = doc(0, 777);
+    assert_eq!(t.get(&d).await.unwrap().as_deref(), m.get(&d).map(|v| &v[..]));
+    let (ilo, ihi) = range(0, "ckpt/x/ts/");
+    assert_eq!(as_vec(t.scan_range(&ilo, Some(&ihi), true, Some(10), 64 << 10).await.unwrap()), model_range(&m, &ilo, Some(&ihi), true, Some(10)));
+    // a small customer is warmed in one wave, then read with no GET
+    view::clear_cache();
+    let (lo1, hi1) = range(1, "");
+    ws.start();
+    let (_, b1, _) = t.warm_range(&lo1, &hi1, 8 << 20).await.unwrap();
+    let (w1, _) = ws.stop();
+    assert!(b1 > 0 && w1 == 1, "small customer: {b1} blocks in {w1} waves");
+    ws.start();
+    assert_eq!(as_vec(t.scan_range(&lo1, Some(&hi1), false, None, 64 << 10).await.unwrap()), model_range(&m, &lo1, Some(&hi1), false, None));
+    let (_, g1) = ws.stop();
+    assert_eq!(g1, 0, "the small customer's box answers with no GET");
+    view::BOX_CUSTOMER_BYTES.store(cap0, Relaxed);
+}
+
+/// Error 1, compressible rows (the reviewer's 'y' * 256 KiB documents): the stored bytes pass the check, but the decoded
+/// bytes kept for the customer stop at the allowance (plus at most one block per wave in flight); answers stay exact.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn rvbsf_compressible_box_stops_at_the_decoded_allowance() {
+    let _s = SERIAL.lock().await;
+    enable();
+    let cap0 = view::BOX_CUSTOMER_BYTES.swap(1 << 20, Relaxed);
+    let ws = WaveStore::new();
+    let store: Arc<dyn ObjectStore> = ws.clone();
+    // 2,000 documents of 16 KiB of 'y': 32 MiB decoded, far less stored
+    let (t, m) = build_big(&store, "bsf-z", 2000, 16 << 10, true).await;
+    view::clear_cache();
+    let capped0 = view::BOX_CAPPED.load(Relaxed);
+    let (lo, hi) = range(0, "");
+    let (_runs, blocks, _rows) = t.warm_range(&lo, &hi, 8 << 20).await.unwrap();
+    let held = counter::stats().bytes;
+    println!("RVBSF compressible: blocks kept {blocks}, counter bytes {held}");
+    assert!(view::BOX_CAPPED.load(Relaxed) > capped0, "the warm-up did not stop at the allowance");
+    assert!(blocks > 0, "the head of the box is warmed");
+    // 1 MiB allowance, plus one decoded block (32 KiB sealed blocks, one 16 KiB row over) for each of the 16 waves
+    assert!(held <= (1 << 20) + 16 * (96 << 10), "the counter holds {held} bytes: above the allowance");
+    let (ilo, ihi) = range(0, "ckpt/x/ts/");
+    assert_eq!(as_vec(t.scan_range(&ilo, Some(&ihi), true, Some(10), 64 << 10).await.unwrap()), model_range(&m, &ilo, Some(&ihi), true, Some(10)));
+    let d = doc(0, 1999);
+    assert_eq!(t.get(&d).await.unwrap().as_deref(), m.get(&d).map(|v| &v[..]));
+    view::BOX_CUSTOMER_BYTES.store(cap0, Relaxed);
+}
+
+/// The process-wide allowance: many warm-ups at once never hold more permits than the allowance (the semaphore), and
+/// every one of them ends (no permit is lost).
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn rvbsf_process_allowance_is_shared_and_returned() {
+    let _s = SERIAL.lock().await;
+    enable();
+    let ws = WaveStore::new();
+    let store: Arc<dyn ObjectStore> = ws.clone();
+    let (t, m) = build(&store, "bsf-many").await;
+    view::clear_cache();
+    let t = Arc::new(t);
+    let mut hs = Vec::new();
+    ws.start();
+    for c in 0..80usize {
+        let t = Arc::clone(&t);
+        hs.push(tokio::spawn(async move {
+            let (lo, hi) = range(c, "");
+            t.warm_range(&lo, &hi, 8 << 20).await.unwrap()
+        }));
+    }
+    for h in hs {
+        h.await.unwrap();
+    }
+    ws.stop();
+    let (free, all) = view::box_allowance();
+    assert_eq!(free, all as usize, "permits not returned: {free} of {all}");
+    for c in [0usize, 7, 41, 79] {
+        visit(&t, &m, c).await;
+    }
+}
+
+/// Review of big-speed, risk under section 2: a read waiting for another fetch of the same blocks waits at most
+/// `SINGLE_FLIGHT_MAX_WAIT_MS`, then fetches by itself (a hung GET no longer holds back every read of its blocks).
+/// Here the leader's GET takes 25 ms and the wait is cut to 2 ms: the follower stops waiting and still answers exactly.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn rvbsf_single_flight_wait_is_bounded() {
+    let _s = SERIAL.lock().await;
+    enable();
+    let ws = WaveStore::new();
+    let store: Arc<dyn ObjectStore> = ws.clone();
+    let (t, m) = build(&store, "bsf-sfwait").await;
+    let v = t.fx_view().unwrap().clone();
+    let w0 = counter::SINGLE_FLIGHT_MAX_WAIT_MS.swap(2, Relaxed);
+    let to0 = counter::SINGLE_FLIGHT_WAIT_TIMEOUTS.load(Relaxed);
+    for c in [3usize, 21, 60] {
+        view::clear_cache();
+        let (lo, hi) = range(c, "");
+        ws.start();
+        let v1 = Arc::clone(&v);
+        let (lo1, hi1) = (lo.clone(), hi.clone());
+        let leader = tokio::spawn(async move { v1.warm_range(&lo1, &hi1).await });
+        tokio::time::sleep(Duration::from_millis(5)).await;
+        // a read of the customer while the leader's GETs are in flight
+        let (ilo, ihi) = range(c, "ckpt/x/ts/");
+        let got = t.scan_range(&ilo, Some(&ihi), true, Some(10), 64 << 10).await.unwrap();
+        assert_eq!(as_vec(got), model_range(&m, &ilo, Some(&ihi), true, Some(10)), "customer {c}");
+        leader.await.unwrap().unwrap();
+        ws.stop();
+        visit(&t, &m, c).await;
+    }
+    let timeouts = counter::SINGLE_FLIGHT_WAIT_TIMEOUTS.load(Relaxed) - to0;
+    counter::SINGLE_FLIGHT_MAX_WAIT_MS.store(w0, Relaxed);
+    println!("RVBSF single-flight waits cut short: {timeouts}");
+    assert!(timeouts > 0, "no wait reached the bound: the test did not exercise it");
+}

@@ -596,13 +596,59 @@ pub async fn fetch<'n>(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, la
         };
         if !waits.is_empty() {
             SINGLE_FLIGHT_WAITS.fetch_add(1, Relaxed);
-            for mut w in waits {
-                // a fetch that failed or was dropped closes its channel: then this one fetches by itself
-                let _ = w.wait_for(|done| *done).await;
+            // a fetch that failed or was dropped closes its channel: then this one fetches by itself. A fetch that hangs
+            // is waited for at most `SINGLE_FLIGHT_MAX_WAIT` (review of big-speed, risk under section 2: one hung GET held
+            // back every read of its blocks until the store client's timeout); past it this one fetches by itself
+            if wait_all(waits).await {
+                return Box::pin(fetch(store, run, first, last, prefix, need)).await;
             }
-            return Box::pin(fetch(store, run, first, last, prefix, need)).await;
+            SINGLE_FLIGHT_WAIT_TIMEOUTS.fetch_add(1, Relaxed);
+            return Box::pin(fetch_no_wait(store, run, first, last, prefix, need)).await;
         }
     }
+    fetch_claimed(store, run, first, last, prefix, need, out, stale, miss).await
+}
+
+/// [`fetch`] that does not wait for another fetch of the same blocks (after a wait timed out).
+async fn fetch_no_wait<'n>(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, last: usize, prefix: Option<&[u8]>, need: &(dyn Fn(usize) -> Need<'n> + Sync)) -> Result<Vec<Arc<Piece>>> {
+    let mut out: Vec<Option<Arc<Piece>>> = Vec::with_capacity(last + 1 - first);
+    let mut stale: Vec<Option<Arc<Piece>>> = Vec::with_capacity(last + 1 - first);
+    for b in first..=last {
+        let mut hit = None;
+        let mut old = None;
+        if let Some(p) = prefix {
+            if let Some(s) = cache_get(&CKey::Slice(run.run_id, b as u32, p.into())) {
+                if good(&s, &need(b)) {
+                    hit = Some(s);
+                } else {
+                    old = Some(s);
+                }
+            }
+        }
+        if hit.is_none() {
+            hit = cache_get(&CKey::Block(run.run_id, b as u32));
+        }
+        out.push(hit);
+        stale.push(old);
+    }
+    let miss: Vec<usize> = (first..=last).filter(|b| out[b - first].is_none()).collect();
+    fetch_claimed(store, run, first, last, prefix, need, out, stale, miss).await
+}
+
+/// Wait for every channel to turn true or close, at most `SINGLE_FLIGHT_MAX_WAIT` in all: false when the wait timed out.
+async fn wait_all(waits: Vec<tokio::sync::watch::Receiver<bool>>) -> bool {
+    let all = async {
+        for mut w in waits {
+            let _ = w.wait_for(|done| *done).await;
+        }
+    };
+    tokio::time::timeout(std::time::Duration::from_millis(SINGLE_FLIGHT_MAX_WAIT_MS.load(Relaxed)), all).await.is_ok()
+}
+
+/// The rest of [`fetch`]: claim the missing blocks, read them from the disk floor or the store, keep them.
+#[allow(clippy::too_many_arguments)]
+async fn fetch_claimed<'n>(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, last: usize, prefix: Option<&[u8]>, need: &(dyn Fn(usize) -> Need<'n> + Sync), mut out: Vec<Option<Arc<Piece>>>, stale: Vec<Option<Arc<Piece>>>, miss: Vec<usize>) -> Result<Vec<Arc<Piece>>> {
+    let _ = need;
     let _claim = if SINGLE_FLIGHT.load(Relaxed) && !miss.is_empty() { Some(Claim::new(run.run_id, &miss)) } else { None };
     // P-big-speed fix 3: the disk floor under the RAM (`floor.rs`): a block it holds is read from the local disk, with
     // the same checks as bytes from the store; a damaged copy is ignored (the block is then fetched from the store)
@@ -647,10 +693,98 @@ pub async fn fetch<'n>(store: &Arc<dyn ObjectStore>, run: &Run, first: usize, la
     Ok(out.into_iter().map(|b| b.expect("block fetched")).collect())
 }
 
+/// Review of big-speed (2026-11-13, error 1): one wave of a customer's box warm-up, blocks a..=z of `run` (the caller
+/// keeps a wave's stored bytes small, `view::BOX_WAVE_BYTES`). Unlike [`fetch`], nothing is returned and nothing is
+/// held: each block is decoded, kept whole in the counter (whose byte budget evicts as usual) and dropped before the
+/// next one is decoded, so the wave's memory is its GET buffer plus one decoded block. Blocks already cached, or being
+/// fetched by another read (single flight), are skipped; blocks the disk floor holds are read from it. `left` is the
+/// customer's remaining allowance of decoded bytes: the wave stops once it is spent (the rest is read on demand).
+/// Returns (blocks kept, decoded bytes kept, GETs sent).
+pub async fn warm_wave(store: &Arc<dyn ObjectStore>, run: &Run, a: usize, z: usize, left: &std::sync::atomic::AtomicI64) -> Result<(u64, u64, u64)> {
+    let mut missing: Vec<usize> = (a..=z).filter(|b| cache_get(&CKey::Block(run.run_id, *b as u32)).is_none()).collect();
+    // single flight, as in `fetch`: blocks another fetch is getting are waited for, then looked up again (a cancelled or
+    // failed fetch closes its channel: what it did not keep is fetched here)
+    if SINGLE_FLIGHT.load(Relaxed) && !missing.is_empty() {
+        let waits: Vec<tokio::sync::watch::Receiver<bool>> = {
+            let g = INFLIGHT.lock().unwrap();
+            missing.iter().filter_map(|b| g.get(&(run.run_id, *b as u32)).cloned()).collect()
+        };
+        if !waits.is_empty() {
+            SINGLE_FLIGHT_WAITS.fetch_add(1, Relaxed);
+            if wait_all(waits).await {
+                return Box::pin(warm_wave(store, run, a, z, left)).await;
+            }
+            // the other fetch hangs: a warm-up is never needed for an answer, it gives these blocks up
+            SINGLE_FLIGHT_WAIT_TIMEOUTS.fetch_add(1, Relaxed);
+            let g = INFLIGHT.lock().unwrap();
+            missing.retain(|b| !g.contains_key(&(run.run_id, *b as u32)));
+        }
+    }
+    let mine = std::mem::take(&mut missing);
+    if mine.is_empty() {
+        return Ok((0, 0, 0));
+    }
+    let _claim = if SINGLE_FLIGHT.load(Relaxed) { Some(Claim::new(run.run_id, &mine)) } else { None };
+    let (mut kept, mut bytes, mut gets) = (0u64, 0u64, 0u64);
+    let mut keep_one = |b: usize, blk: Block| {
+        let p = keep(run, b, blk, None, None);
+        let n = p.mem_bytes() as u64;
+        drop(p);
+        kept += 1;
+        bytes += n;
+        left.fetch_sub(n as i64, Relaxed);
+    };
+    let mut need = Vec::with_capacity(mine.len());
+    for b in mine {
+        if left.load(Relaxed) <= 0 {
+            break;
+        }
+        if super::floor::enabled() {
+            if let Some(stored) = super::floor::get(&run.run_id, b as u32) {
+                if let Ok(blk) = runfmt::decode_checked(run, b, &stored) {
+                    keep_one(b, blk);
+                    continue;
+                }
+            }
+        }
+        need.push(b);
+    }
+    if let (Some(&f), Some(&l)) = (need.first(), need.last()) {
+        if left.load(Relaxed) > 0 {
+            let (lo, hi) = run.fence.range(f, l);
+            let data = runfmt::get_range(store, &run.path, lo, hi).await?;
+            gets += 1;
+            if super::view::is_local(store) {
+                super::view::LOCAL_READS.fetch_add(1, Relaxed);
+            } else {
+                super::view::RUN_GETS.fetch_add(1, Relaxed);
+            }
+            let path = run.path.to_string();
+            for b in need {
+                if left.load(Relaxed) <= 0 {
+                    break;
+                }
+                let (x, y) = run.fence.range(b, b);
+                let stored = &data[(x - lo) as usize..(y - lo) as usize];
+                let blk = runfmt::decode_checked(run, b, stored)?;
+                if !super::view::is_local(store) {
+                    super::floor::put(&run.run_id, b as u32, &path, stored);
+                }
+                keep_one(b, blk);
+            }
+        }
+    }
+    Ok((kept, bytes, gets))
+}
+
 /// Single flight of block fetches (on by default; off: every fetch sends its own GET, as before P-big-speed).
 pub static SINGLE_FLIGHT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 /// Fetches that waited for another fetch of the same blocks instead of sending a GET.
 pub static SINGLE_FLIGHT_WAITS: AtomicU64 = AtomicU64::new(0);
+/// Longest wait for another fetch of the same blocks (ms); past it a read fetches by itself.
+pub static SINGLE_FLIGHT_MAX_WAIT_MS: AtomicU64 = AtomicU64::new(2_000);
+/// Waits that reached `SINGLE_FLIGHT_MAX_WAIT_MS`.
+pub static SINGLE_FLIGHT_WAIT_TIMEOUTS: AtomicU64 = AtomicU64::new(0);
 /// Blocks being fetched now: (run, block) -> a channel that turns true when the fetch kept them.
 static INFLIGHT: std::sync::LazyLock<Mutex<HashMap<([u8; RUN_ID_LEN], u32), tokio::sync::watch::Receiver<bool>>>> = std::sync::LazyLock::new(Default::default);
 

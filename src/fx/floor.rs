@@ -12,6 +12,17 @@
 //! When runs leave the version (`forget_runs`) or a database is dropped or erased (`forget_db`), every copy of their
 //! blocks is overwritten with zeros in place and forgotten. A segment is deleted whole when the floor is full (oldest
 //! first), and the directory is emptied at every start (no persistence: a restarted process starts with an empty floor).
+//!
+//! Retired runs (review of big-speed, 2026-11-13, error 4): a hold on an older version may still read a run after the
+//! new version retired it and `forget_runs` wiped it. Before, that read wrote the run's blocks back into the floor and
+//! nothing wiped them again (they stayed until their segment rolled out or the process restarted). Now `forget_runs`
+//! also records the retired ids as tombstones (process-wide, kept even while no floor is installed), `put` never keeps
+//! a block of a tombstoned run, and the run's deletion (`run_deleted`, called by `erase::delete_run`, the only path that
+//! deletes runs) wipes again whatever is left and drops the tombstone. The tombstone set is bounded (`MAX_TOMBSTONES`,
+//! oldest out first); a run that leaves it is long retired, and its deletion still wipes it.
+//!
+//! Disabled floor (`--box-disk false`, or an automatic size of 0): `install` with a cap of 0 still empties the folder,
+//! so segments of an earlier process are not left on the disk.
 
 use crate::runfmt::RUN_ID_LEN;
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -30,12 +41,49 @@ pub static HIT_BYTES: AtomicU64 = AtomicU64::new(0);
 pub static ZEROED: AtomicU64 = AtomicU64::new(0);
 pub static SEGMENTS_DROPPED: AtomicU64 = AtomicU64::new(0);
 pub static ERRORS: AtomicU64 = AtomicU64::new(0);
+/// Blocks of retired runs not kept (`put` refused by a tombstone).
+pub static TOMBSTONE_SKIPS: AtomicU64 = AtomicU64::new(0);
+
+/// Most retired run ids remembered (16 bytes each: 4 MiB).
+pub const MAX_TOMBSTONES: usize = 262_144;
+
+#[derive(Default)]
+struct Tombstones {
+    set: HashSet<[u8; RUN_ID_LEN]>,
+    order: VecDeque<[u8; RUN_ID_LEN]>,
+}
+
+static TOMBSTONES: std::sync::LazyLock<Mutex<Tombstones>> = std::sync::LazyLock::new(Default::default);
+
+fn tombstone(ids: &HashSet<[u8; RUN_ID_LEN]>) {
+    let mut t = TOMBSTONES.lock().unwrap();
+    for id in ids {
+        if t.set.insert(*id) {
+            t.order.push_back(*id);
+        }
+    }
+    while t.order.len() > MAX_TOMBSTONES {
+        if let Some(old) = t.order.pop_front() {
+            t.set.remove(&old);
+        }
+    }
+}
+
+fn is_tombstoned(id: &[u8; RUN_ID_LEN]) -> bool {
+    TOMBSTONES.lock().unwrap().set.contains(id)
+}
+
+/// Tombstones held now (tests, serverStatus).
+pub fn tombstones() -> usize {
+    TOMBSTONES.lock().unwrap().set.len()
+}
 
 type Key = ([u8; RUN_ID_LEN], u32);
 
 struct Copy {
     key: Key,
     db: String,
+    path: std::sync::Arc<str>,
     off: u64,
     len: u32,
 }
@@ -64,6 +112,15 @@ static FLOOR: Mutex<Option<Floor>> = Mutex::new(None);
 pub fn install(dir: PathBuf, cap: u64) -> std::io::Result<()> {
     if cap == 0 {
         *FLOOR.lock().unwrap() = None;
+        // review of big-speed (note under section 2): a disabled floor still empties the folder an earlier process used
+        if dir.exists() {
+            for e in std::fs::read_dir(&dir)? {
+                let p = e?.path();
+                if p.extension().is_some_and(|x| x == "seg") {
+                    std::fs::remove_file(p)?;
+                }
+            }
+        }
         return Ok(());
     }
     if dir.exists() {
@@ -112,7 +169,7 @@ impl Floor {
         }
     }
 
-    fn put(&mut self, key: Key, db: &str, bytes: &[u8]) -> std::io::Result<()> {
+    fn put(&mut self, key: Key, db: &str, path: &str, bytes: &[u8]) -> std::io::Result<()> {
         if self.index.contains_key(&key) {
             return Ok(());
         }
@@ -127,7 +184,7 @@ impl Floor {
         let off = s.used;
         s.file.write_all_at(bytes, off)?;
         s.used += len;
-        s.copies.push(Copy { key, db: db.to_string(), off, len: len as u32 });
+        s.copies.push(Copy { key, db: db.to_string(), path: path.into(), off, len: len as u32 });
         let seq = s.seq;
         self.used += len;
         self.index.insert(key, (seq, off, len as u32));
@@ -174,7 +231,12 @@ impl Floor {
 pub fn put(run: &[u8; RUN_ID_LEN], b: u32, path: &str, bytes: &[u8]) {
     let mut g = FLOOR.lock().unwrap();
     let Some(f) = g.as_mut() else { return };
-    if f.put((*run, b), &db_of(path), bytes).is_err() {
+    // a retired run is never kept again (a hold on an older version may still read it)
+    if is_tombstoned(run) {
+        TOMBSTONE_SKIPS.fetch_add(1, Relaxed);
+        return;
+    }
+    if f.put((*run, b), &db_of(path), path, bytes).is_err() {
         ERRORS.fetch_add(1, Relaxed);
     }
 }
@@ -192,9 +254,36 @@ pub fn get(run: &[u8; RUN_ID_LEN], b: u32) -> Option<Vec<u8>> {
 
 /// Runs that left the version: their copies zeroed and forgotten.
 pub fn forget_runs(ids: &HashSet<[u8; RUN_ID_LEN]>) {
+    tombstone(ids);
     let mut g = FLOOR.lock().unwrap();
     if let Some(f) = g.as_mut() {
         f.wipe(|c| ids.contains(&c.key.0));
+    }
+}
+
+/// The run at `path` was deleted from the store (`erase::delete_run`): every copy left of it is zeroed and forgotten,
+/// and its tombstone, if any, is no longer needed (no read can fetch a deleted run).
+pub fn run_deleted(path: &str) {
+    let mut g = FLOOR.lock().unwrap();
+    let mut ids = Vec::new();
+    if let Some(f) = g.as_mut() {
+        for s in &f.segs {
+            for c in &s.copies {
+                if &*c.path == path {
+                    ids.push(c.key.0);
+                }
+            }
+        }
+        f.wipe(|c| &*c.path == path);
+    }
+    drop(g);
+    if !ids.is_empty() {
+        let mut t = TOMBSTONES.lock().unwrap();
+        for id in ids {
+            if t.set.remove(&id) {
+                t.order.retain(|x| x != &id);
+            }
+        }
     }
 }
 

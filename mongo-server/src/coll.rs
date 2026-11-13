@@ -126,6 +126,40 @@ pub type Overlay = HashMap<Vec<u8>, Option<Document>>;
 const INDEX_READ_AHEAD: usize = 64 << 10;
 const DOC_READ_AHEAD: usize = 4 << 20;
 
+/// Fix round of big-speed (2026-11-13): a scan of documents reads them in chunks of about this many bytes. Before, a
+/// chunk was a number of rows (4,096, or the whole collection for a scan without a limit or sort), whatever their size:
+/// with 256 KiB documents one chunk held 1 GiB, and one `find_one` on a 1.5 GiB customer OOM-killed the server under
+/// 1 GiB with the customer's box off too (MEASURED on fix-write-stalls-on-i4 + big-speed: peak 1.6 GiB outside the
+/// cgroup; the reviewer's 199 MiB on the older base read 6 documents, before fix-query-defects P5 made that query read
+/// every document for the `_id` order).
+pub const SCAN_CHUNK_BYTES: usize = 8 << 20;
+
+/// The rows of the next chunk of a document scan: at most `max` (the plan's own chunk), and about `SCAN_CHUNK_BYTES`
+/// of documents at the sizes seen so far. The first chunk is small (64 rows): sizes are not known yet.
+pub(crate) struct ChunkSize {
+    pub max: usize,
+    pub cur: usize,
+    rows: u64,
+    bytes: u64,
+}
+
+impl ChunkSize {
+    pub fn new(max: usize) -> Self {
+        ChunkSize { max: max.max(1), cur: max.clamp(1, 64), rows: 0, bytes: 0 }
+    }
+    /// After a chunk of `rows` with these `(key, value)` pairs.
+    pub fn seen(&mut self, rows: &[(Bytes, Bytes)]) {
+        self.seen_sizes(rows.len(), rows.iter().map(|(k, v)| (k.len() + v.len()) as u64).sum::<u64>());
+    }
+    /// After a chunk of `rows` rows holding `bytes` bytes.
+    pub fn seen_sizes(&mut self, rows: usize, bytes: u64) {
+        self.rows += rows as u64;
+        self.bytes += bytes;
+        let avg = (self.bytes / self.rows.max(1)).max(1);
+        self.cur = ((SCAN_CHUNK_BYTES as u64 / avg) as usize).clamp(1, self.max).min(self.cur.saturating_mul(4));
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum Hint {
     None,
@@ -383,16 +417,20 @@ async fn docs_by_scan(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Doc
     stop.extend(hi);
     stop.push(0);
     let mut found: HashMap<Vec<u8>, Document> = HashMap::new();
+    // fix round of big-speed: chunks of about `SCAN_CHUNK_BYTES`, not of FETCH_CHUNK rows whatever their size
+    let mut cs = ChunkSize::new(FETCH_CHUNK);
     loop {
-        let rows = g.scan_range(&start, Some(&stop), false, Some(FETCH_CHUNK), FETCH_SCAN_READ_AHEAD).await?;
+        let chunk = cs.cur;
+        let rows = g.scan_range(&start, Some(&stop), false, Some(chunk), FETCH_SCAN_READ_AHEAD).await?;
         let n = rows.len();
+        cs.seen(&rows);
         for (k, v) in &rows {
             let id = &k[prefix.len()..];
             if want.contains(id) {
                 found.insert(id.to_vec(), decode(v)?);
             }
         }
-        if n < FETCH_CHUNK {
+        if n < chunk {
             break;
         }
         let mut k = rows.last().unwrap().0.to_vec();
@@ -429,9 +467,13 @@ async fn each_doc_by_ids(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>], mut f: im
         stop.extend(hi);
         stop.push(0);
         let mut seen = vec![false; ids.len()];
+        // fix round of big-speed: chunks of about `SCAN_CHUNK_BYTES`, not of FETCH_CHUNK rows whatever their size
+        let mut cs = ChunkSize::new(FETCH_CHUNK);
         loop {
-            let rows = g.scan_range(&start, Some(&stop), false, Some(FETCH_CHUNK), FETCH_SCAN_READ_AHEAD).await?;
+            let chunk = cs.cur;
+            let rows = g.scan_range(&start, Some(&stop), false, Some(chunk), FETCH_SCAN_READ_AHEAD).await?;
             let n = rows.len();
+            cs.seen(&rows);
             for (k, v) in &rows {
                 if let Some(&i) = pos.get(&k[prefix.len()..]) {
                     n_docs += 1;
@@ -439,7 +481,7 @@ async fn each_doc_by_ids(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>], mut f: im
                     f(i, decode(v)?)?;
                 }
             }
-            if n < FETCH_CHUNK {
+            if n < chunk {
                 break;
             }
             let mut k = rows.last().unwrap().0.to_vec();
@@ -459,7 +501,12 @@ async fn each_doc_by_ids(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>], mut f: im
         }
         return Ok(n_docs);
     }
-    for (c, chunk) in ids.chunks(FETCH_CHUNK).enumerate() {
+    // fix round of big-speed: point reads in chunks of about `SCAN_CHUNK_BYTES` of documents, not FETCH_CHUNK (20,000)
+    // documents whatever their size
+    let mut cs = ChunkSize::new(FETCH_CHUNK);
+    let mut base = 0usize;
+    while base < ids.len() {
+        let chunk = &ids[base..(base + cs.cur).min(ids.len())];
         let keys: Vec<Vec<u8>> = chunk
             .iter()
             .map(|id| {
@@ -468,16 +515,19 @@ async fn each_doc_by_ids(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>], mut f: im
                 k
             })
             .collect();
-        for (j, v) in g.get_many(&keys).await?.into_iter().enumerate() {
+        let vals = g.get_many(&keys).await?;
+        cs.seen_sizes(vals.len(), vals.iter().map(|v| v.as_ref().map_or(0, |v| v.len() as u64)).sum());
+        for (j, v) in vals.into_iter().enumerate() {
             let d = match v {
                 Some(v) => Some(decode(&v)?),
                 None => moved_doc(g, coll, &chunk[j]).await?,
             };
             if let Some(d) = d {
                 n_docs += 1;
-                f(c * FETCH_CHUNK + j, d)?;
+                f(base + j, d)?;
             }
         }
+        base += chunk.len();
     }
     Ok(n_docs)
 }
@@ -796,9 +846,12 @@ async fn sort_candidates(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], plan
         if scan_ok && (prefer_scan(g.approx_bytes(), so_far) || so_far >= scan_after) {
             tenant_bench::counting::set_phase(3);
             let (mut start, stop) = (prefix.clone(), prefix_end(&prefix));
+            let mut cs = ChunkSize::new(4096);
             loop {
-                let rows = g.scan_range(&start, stop.as_deref(), false, Some(4096), DOC_READ_AHEAD).await?;
+                let chunk = cs.cur;
+                let rows = g.scan_range(&start, stop.as_deref(), false, Some(chunk), DOC_READ_AHEAD).await?;
                 let n = rows.len();
+                cs.seen(&rows);
                 for (k, v) in &rows {
                     stats.docs += 1;
                     if ov_keys.contains(&k.to_vec()) {
@@ -810,7 +863,7 @@ async fn sort_candidates(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], plan
                     }
                     pos += 1;
                 }
-                if n < 4096 {
+                if n < chunk {
                     break;
                 }
                 let mut k = rows.last().unwrap().0.to_vec();
@@ -1300,13 +1353,17 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
             let t = topk.as_mut().unwrap();
             let collated = crate::collation::current().is_some();
             let mut chunk = (o.want.unwrap_or(1) * 2).max(256);
+            let mut cs = ChunkSize::new(chunk);
             let (mut start, mut stop) = match &id_range {
                 Some((s, e)) => (s.clone(), e.clone()),
                 None => (prefix.clone(), prefix_end(&prefix)),
             };
             'ids: loop {
-                let rows = g.scan_range(&start, stop.as_deref(), !asc, Some(chunk), DOC_READ_AHEAD).await?;
+                let planned = chunk;
+                let this = cs.cur.min(planned);
+                let rows = g.scan_range(&start, stop.as_deref(), !asc, Some(this), DOC_READ_AHEAD).await?;
                 let n = rows.len();
+                cs.seen(&rows);
                 for (k, v) in &rows {
                     let Some(&rank) = k.get(prefix.len()) else { continue };
                     if t.is_full() {
@@ -1326,7 +1383,7 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
                         t.push(d);
                     }
                 }
-                if n < chunk {
+                if n < this {
                     break;
                 }
                 let last = rows.last().unwrap().0.to_vec();
@@ -1337,17 +1394,20 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
                 } else {
                     stop = Some(last);
                 }
-                chunk = (chunk * 2).min(4096);
+                chunk = (planned * 2).min(4096);
+                cs.max = chunk;
             }
             stats.keys = stats.docs;
         }
         Plan::Coll { reverse: false } if id_range.is_some() && topk.is_none() && !blocking => {
             tenant_bench::counting::set_phase(3);
             let (mut start, stop) = id_range.clone().unwrap();
-            let chunk = early.map(|w| (w * 2).max(256)).unwrap_or(4096);
+            let mut cs = ChunkSize::new(early.map(|w| (w * 2).max(256)).unwrap_or(4096));
             'range: loop {
+                let chunk = cs.cur;
                 let rows = g.scan_range(&start, stop.as_deref(), false, Some(chunk), DOC_READ_AHEAD).await?;
                 let n = rows.len();
+                cs.seen(&rows);
                 for (k, v) in &rows {
                     stats.docs += 1;
                     if ov_keys.contains(&k.to_vec()) {
@@ -1374,14 +1434,18 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
         Plan::Coll { reverse } if crate::natural::enabled(g, coll).await? => {
             tenant_bench::counting::set_phase(3);
             let np = crate::natural::prefix(coll);
-            let chunk = early.map(|w| (w * 2).max(256)).unwrap_or(4096);
+            let mut cs = ChunkSize::new(early.map(|w| (w * 2).max(256)).unwrap_or(4096));
             let (mut start, mut stop) = (np.clone(), prefix_end(&np));
             let mut replaced: HashSet<Vec<u8>> = HashSet::new();
             'nat: loop {
+                let chunk = cs.cur;
                 let rows = g.scan_range(&start, stop.as_deref(), *reverse, Some(chunk), INDEX_READ_AHEAD).await?;
                 let n = rows.len();
                 let ids: Vec<Vec<u8>> = rows.iter().map(|(_, v)| v.to_vec()).collect();
-                for stored in docs_by_ids(g, coll, &ids).await? {
+                let docs = docs_by_ids(g, coll, &ids).await?;
+                // the chunk is sized by the documents it fetched, not by the natural-order entries
+                cs.seen_sizes(docs.len(), docs.iter().map(|d| crate::query::bson_size(d) as u64).sum());
+                for stored in docs {
                     stats.docs += 1;
                     let mut d = stored;
                     if !ov_keys.is_empty() {
@@ -1430,11 +1494,13 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
         Plan::Coll { reverse } => {
             tenant_bench::counting::set_phase(3);
             let end = prefix_end(&prefix);
-            let chunk = early.map(|w| (w * 2).max(256)).unwrap_or(if topk.is_some() { 4096 } else { usize::MAX });
+            let mut cs = ChunkSize::new(early.map(|w| (w * 2).max(256)).unwrap_or(4096));
             let (mut start, mut stop) = (prefix.clone(), end.clone());
             'scan: loop {
+                let chunk = cs.cur;
                 let rows = g.scan_range(&start, stop.as_deref(), *reverse, Some(chunk), DOC_READ_AHEAD).await?;
                 let n = rows.len();
+                cs.seen(&rows);
                 for (k, v) in &rows {
                     stats.docs += 1;
                     if ov_keys.contains(&k.to_vec()) {
@@ -1473,10 +1539,12 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
             let mut c = IxCursor::new(coll, &indexes[s.idx], s);
             let mut seen: HashSet<Vec<u8>> = HashSet::new();
             let mut batch = want.max(1);
+            let mut cs = ChunkSize::new(4096);
             let mut last_entry: Option<Bytes> = None;
             'ix: loop {
                 let b = c.next_batch(g, batch).await?;
-                batch = (batch * 2).min(4096);
+                // doubled, but never more documents than about `SCAN_CHUNK_BYTES` at the sizes seen
+                batch = (batch * 2).min(4096).min(cs.cur.max(1));
                 if b.is_empty() {
                     break;
                 }
@@ -1489,7 +1557,9 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
                     .filter(|id| ov_keys.is_empty() || !ov_keys.contains(&[prefix.as_slice(), id].concat()))
                     .map(|id| id.to_vec())
                     .collect();
-                for d in docs_by_ids(g, coll, &ids).await? {
+                let docs = docs_by_ids(g, coll, &ids).await?;
+                cs.seen_sizes(docs.len(), docs.iter().map(|d| crate::query::bson_size(d) as u64).sum());
+                for d in docs {
                     stats.docs += 1;
                     if visible(&d, o) && matches(&d, o.filter)? {
                         out.push(d);
@@ -2232,12 +2302,16 @@ pub async fn natural_page(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], fil
     // A chunk is sized to what the page still needs (no document is decoded only to be thrown away at the page
     // stop); when the filter drops documents the floor doubles, so a selective filter still reads in large chunks.
     let mut floor = 256usize;
+    // fix round of big-speed: and never more documents than about `SCAN_CHUNK_BYTES` at the sizes seen (8,192 documents
+    // of 256 KiB were 2 GiB in memory at once)
+    let mut cs = ChunkSize::new(NATURAL_CHUNK);
     loop {
-        let chunk = want.saturating_sub(out.len()).clamp(floor, NATURAL_CHUNK);
+        let chunk = want.saturating_sub(out.len()).clamp(floor, NATURAL_CHUNK).min(cs.cur);
         let rows = g.scan_range(&start, stop.as_deref(), false, Some(chunk), INDEX_READ_AHEAD).await?;
         let n = rows.len();
         let ids: Vec<Vec<u8>> = rows.iter().map(|(_, v)| v.to_vec()).collect();
         let docs = docs_aligned(g, coll, &ids).await?;
+        cs.seen_sizes(docs.len(), docs.iter().map(|d| d.as_ref().map_or(0, |d| crate::query::bson_size(d) as u64)).sum());
         for ((k, _), (id, d)) in rows.iter().zip(ids.iter().zip(docs)) {
             last = k.get(np.len()..).and_then(|s| s.try_into().ok()).map(u64::from_be_bytes).or(last);
             let d = match d {
@@ -2283,16 +2357,20 @@ async fn docs_aligned(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Opt
         let mut stop = [&prefix[..], hi].concat();
         stop.push(0);
         let mut found: HashMap<Vec<u8>, Document> = HashMap::with_capacity(ids.len());
+        // fix round of big-speed: chunks of about `SCAN_CHUNK_BYTES`
+        let mut cs = ChunkSize::new(FETCH_CHUNK);
         loop {
-            let rows = g.scan_range(&start, Some(&stop), false, Some(FETCH_CHUNK), FETCH_SCAN_READ_AHEAD).await?;
+            let chunk = cs.cur;
+            let rows = g.scan_range(&start, Some(&stop), false, Some(chunk), FETCH_SCAN_READ_AHEAD).await?;
             let n = rows.len();
+            cs.seen(&rows);
             for (k, v) in &rows {
                 let id = &k[prefix.len()..];
                 if want.contains(id) {
                     found.insert(id.to_vec(), decode(v)?);
                 }
             }
-            if n < FETCH_CHUNK {
+            if n < chunk {
                 break;
             }
             let mut k = rows.last().unwrap().0.to_vec();
