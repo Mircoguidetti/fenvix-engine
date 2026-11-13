@@ -397,7 +397,7 @@ pub fn generate(seed: u64, steps: usize) -> Script {
         // owner starts the work that sends it, another process takes the database over and works on it, then the held
         // request goes on. Every part is drawn at random.
         if let (Some(o), Some(&q)) = (owner, down.first()) {
-            if ev.len() + 12 < steps && r.gen_bool(if versioned { 0.10 } else { 0.25 }) {
+            if ev.len() + 16 < steps && r.gen_bool(if versioned { 0.10 } else { 0.25 }) {
                 rid += 1;
                 let class = if r.gen_bool(0.7) { Class::FxVersion } else { hold_class(&mut r) };
                 let op = match r.gen_range(0..4) {
@@ -425,6 +425,15 @@ pub fn generate(seed: u64, steps: usize) -> Script {
                 ev.push(Ev::Open { p: q, writer: true });
                 st[o].role = Role::Zombie;
                 st[q] = S { role: Role::Owner, comp: false };
+                if !versioned {
+                    // as the server's write path: a writer of a database with no version builds its first version at
+                    // its first writes, and starts its compactor at the next write once it has one
+                    ev.push(Ev::Write { p: q, ops: ops(&mut r) });
+                    ev.push(Ev::Publish { p: q });
+                    ev.push(Ev::Write { p: q, ops: ops(&mut r) });
+                    ev.push(Ev::CompStart { p: q });
+                    st[q].comp = true;
+                }
                 for _ in 0..r.gen_range(2..7) {
                     ev.push(match r.gen_range(0..8) {
                         0 | 1 => Ev::Write { p: q, ops: ops(&mut r) },
