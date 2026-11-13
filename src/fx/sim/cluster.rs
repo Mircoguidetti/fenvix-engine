@@ -446,6 +446,34 @@ pub fn generate(seed: u64, steps: usize) -> Script {
         // v3, the late-write pattern (the family this simulator hunts): the owner's next request of a class is held, the
         // owner starts the work that sends it, another process takes the database over and works on it, then the held
         // request goes on. Every part is drawn at random.
+        // the cold-restart round (B3, 2026-11-13: hole W on the bench): after many absorbed rows, every process stops
+        // cold, then one reopens as writer and its write path publishes through the builder before its compactor starts
+        if owner.is_some() && versioned && ev.len() + 12 < steps && r.gen_bool(0.05) {
+            let o = owner.unwrap();
+            if st[o].comp {
+                ev.push(Ev::CompDrain { p: o });
+                if r.gen_bool(0.7) {
+                    ev.push(Ev::DropThrough { p: o });
+                }
+            }
+            for q in 0..SLOTS {
+                if st[q].role != Role::Down {
+                    ev.push(if r.gen_bool(0.5) { Ev::Kill { p: q } } else { Ev::Close { p: q } });
+                    st[q] = S::default();
+                }
+            }
+            let q = r.gen_range(0..SLOTS);
+            ev.push(Ev::Open { p: q, writer: true });
+            st[q].role = Role::Owner;
+            for _ in 0..r.gen_range(1..4) {
+                ev.push(Ev::Write { p: q, ops: ops(&mut r) });
+                if r.gen_bool(0.6) {
+                    ev.push(Ev::Publish { p: q });
+                }
+            }
+            ev.push(Ev::ReadCheck { p: q, cust: r.gen_range(0..CUSTOMERS), scan: r.gen_bool(0.5) });
+            continue;
+        }
         // the slow-read pattern (coordinator, 2026-11-13: reads that came back empty under a slow store and a starved
         // host): every GET of the owner's SSTs and runs (and sometimes its versions) answers late, up to 4 s (past the
         // hold life and T_pin), while it reads one customer and other work goes on; then the store answers again
