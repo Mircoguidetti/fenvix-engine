@@ -382,6 +382,7 @@ fn rss_kib() -> u64 {
 
 fn open_case_setup(sst_bytes: u64) -> u32 {
     setup();
+    crate::lifecycle::MAX_UNFLUSHED_OVERRIDE.store(0, Relaxed);
     crate::lifecycle::L0_MAX_SSTS_OVERRIDE.store(7, Relaxed);
     crate::lifecycle::L0_SST_BYTES_OVERRIDE.store(sst_bytes, Relaxed);
     let tiers0 = crate::tiered::TIERS.load(Relaxed);
@@ -466,13 +467,14 @@ async fn open_case_killed_mid_replay_then_reopened() {
     let Server { lc, maint } = srv;
     let _ = maint.shutdown().await;
     drop(lc);
-    armed.store(false, Relaxed);
+    // A's hold is never released: its open runs in a task of its own (the flush runtime), which cutting the caller does
+    // not stop; a process killed with -9 would stop it, so here it stays held for good (B uses the store directly)
     // process B, on the same store
     let srv = server(&inner);
     let mut t = srv.lc.wake(id).await.unwrap();
     let opened = tokio::time::timeout(Duration::from_secs(30), t.upgrade()).await;
     let wrong = if matches!(opened, Ok(Ok(()))) { wrong_rows(&t, &m).await } else { usize::MAX };
-    eprintln!("open case killed: WAL reads held {}; the next open {}; rows {} wrong {wrong}", held.load(Relaxed), if matches!(opened, Ok(Ok(()))) { "returned" } else { "did not return" }, m.len());
+    eprintln!("open case killed: WAL reads held {} (A stays held, as if dead); the next open {}; rows {} wrong {wrong}", held.load(Relaxed), if matches!(opened, Ok(Ok(()))) { "returned" } else { "did not return" }, m.len());
     t.abandon().await;
     let _ = srv.maint.shutdown().await;
     open_case_teardown(tiers0);
