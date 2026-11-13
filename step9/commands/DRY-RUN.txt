@@ -1,4 +1,4 @@
-decide.py dry run of step9/commands/*.json, 2026-11-13T09:40:05Z, engine commit for the gate: 27014ff2e3e3e4ff223aa778746f3dce433c6549
+decide.py dry run of step9/commands/*.json, 2026-11-13T12:36:28Z, engine commit for the gate: 27014ff2e3e3e4ff223aa778746f3dce433c6549
 
 === 00-permissions.json: { "mode": "permissions", "aurora": true}
   [local] ACCEPTED: mode=permissions vcpu_peak=8 vcpu_peaks={'load': 8, 'measure (m30)': 8, 'extras': 8, 'write-peak': 8, 'agent-bench': 8} job_hours_total=12.7 job_hours={'boot': 0.3, 'atlas_load': 2.8, 'load_settle_cap': 0.5, 'measured_settle_cap': 0.5, 'm30': 3.0, 'extras': 1.8, 'write_peak': 0.6, 'agent_bench': 3.2} 
@@ -65,7 +65,14 @@ decide.py dry run of step9/commands/*.json, 2026-11-13T09:40:05Z, engine commit 
             - (newest local results, another commit) takeovers (step9/local/results-2026-11-11/takeovers-summary-on.json): verdict FAIL, 50/50 done, lost UNKNOWN of 405207 acknowledged writes (rule 8: must be 0)
 
 === 10-W1-first-next-ops-reads-after-writes-1tb.json: { "mode": "run", "engine": "27014ff2e3e3e4ff223aa778746f3dce433c6549", "loader_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts", "server_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts", "data": "1tb", "phases": [ "measure", "extras" ], "programs": [ "first-next-ops", "reads-after-writes" ], "spare": null, "pantry": "fenvix-kitchen-pantry-1000000001", "first_next_ops_args": "--per-op 100 --max-s 120"}
-  [local] ACCEPTED: mode=run vcpu_peak=6 vcpu_peaks={'measure (m30)': 4, 'extras': 6} job_hours_total=3.0 job_hours={'boot': 0.3, 'extras': 0.2, 'first_next_ops': 1.0, 'reads_after_writes': 1.5} 
+  [local] ACCEPTED: mode=run vcpu_peak=6 vcpu_peaks={'measure (m30)': 4, 'extras': 6} job_hours_total=4.0 job_hours={'boot': 0.3, 'extras': 0.2, 'first_next_ops': 2.0, 'reads_after_writes': 1.5} 
+  [aws] REFUSED: the gate before any AWS run is closed:
+          GATE: CLOSED (19 blockers; RULES.md 8-9: no AWS run, not even a pilot)
+            - no local benchmark report for engine 27014ff2e3e3e4ff223aa778746f3dce433c6549 at commit 27014ff2e3e3e4ff223aa778746f3dce433c6549 (step9/local/benchmark-report-<commit>.json, made by step9/local/benchmark_report.py on that commit)
+            - (newest local results, another commit) takeovers (step9/local/results-2026-11-11/takeovers-summary-on.json): verdict FAIL, 50/50 done, lost UNKNOWN of 405207 acknowledged writes (rule 8: must be 0)
+
+=== 11-MG-mongod-line-atlas.json: { "mode": "run", "engine": "27014ff2e3e3e4ff223aa778746f3dce433c6549", "data": "atlas", "phases": [ "mongod" ], "pantry": "new", "programs": [ "first-next-ops", "reads-after-writes" ], "mongod_states": [ "vecchio" ], "first_next_ops_args": "--per-op 30 --max-s 120"}
+  [local] ACCEPTED: mode=run vcpu_peak=8 vcpu_peaks={'mongod': 8} job_hours_total=4.77 job_hours={'boot': 0.3, 'mongod_load': 2.27, 'mongod_cold_restart': 0.1, 'first_next_ops': 0.6, 'reads_after_writes': 1.5} 
   [aws] REFUSED: the gate before any AWS run is closed:
           GATE: CLOSED (19 blockers; RULES.md 8-9: no AWS run, not even a pilot)
             - no local benchmark report for engine 27014ff2e3e3e4ff223aa778746f3dce433c6549 at commit 27014ff2e3e3e4ff223aa778746f3dce433c6549 (step9/local/benchmark-report-<commit>.json, made by step9/local/benchmark_report.py on that commit)
