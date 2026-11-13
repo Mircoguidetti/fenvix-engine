@@ -1,0 +1,12 @@
+ours (app_data_b01) against before the writes (app_data_b01) - NOT THE SAME PLAN (label, seed or group size differ): read with care
+FIRST resume: p50 3.08 vs 2.83 ms (+0.25 ms WITHIN, x1.09 EQUAL); p99 6.31 vs 5.94 ms (+0.37 ms WITHIN, x1.06 EQUAL) [FIRST: reported, not judged]
+NEXT  resume: p50 0.98 vs 0.64 ms (+0.34 ms WITHIN, x1.53 SLOWER); p99 3.58 vs 3.78 ms (-0.20 ms WITHIN, x0.95 EQUAL)
+FIRST last10: p50 3.44 vs 2.82 ms (+0.62 ms WITHIN, x1.22 SLOWER); p99 5.62 vs 4.19 ms (+1.43 ms WITHIN, x1.34 SLOWER) [FIRST: reported, not judged]
+NEXT  last10: p50 1.06 vs 0.71 ms (+0.35 ms WITHIN, x1.5 SLOWER); p99 3.17 vs 2.95 ms (+0.22 ms WITHIN, x1.07 EQUAL)
+FIRST history: p50 11.78 vs 13.76 ms (-1.98 ms WITHIN, x0.86 FASTER); p99 19.13 vs 21.66 ms (-2.53 ms WITHIN, x0.88 FASTER) [FIRST: reported, not judged]
+NEXT  history: p50 10.10 vs 9.01 ms (+1.08 ms WITHIN, x1.12 SLOWER); p99 31.58 vs 29.93 ms (+1.64 ms WITHIN, x1.05 EQUAL)
+FIRST time_travel: p50 5.39 vs 4.44 ms (+0.95 ms WITHIN, x1.21 SLOWER); p99 7.25 vs 5.05 ms (+2.20 ms WITHIN, x1.44 SLOWER) [FIRST: reported, not judged]
+NEXT  time_travel: p50 1.02 vs 0.80 ms (+0.22 ms WITHIN, x1.28 SLOWER); p99 8.17 vs 7.11 ms (+1.05 ms WITHIN, x1.15 SLOWER)
+FIRST save: p50 2.27 vs 1.94 ms (+0.33 ms WITHIN, x1.17 SLOWER); p99 2.62 vs 3.14 ms (-0.52 ms WITHIN, x0.83 FASTER) [FIRST: reported, not judged]
+NEXT  save: p50 2.62 vs 1.96 ms (+0.66 ms WITHIN, x1.33 SLOWER); p99 4.24 vs 5.97 ms (-1.74 ms WITHIN, x0.71 FASTER)
+every NEXT and save within 20 ms of before the writes: YES

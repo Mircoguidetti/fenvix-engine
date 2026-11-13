@@ -1,0 +1,18 @@
+== app_data_b01 (before-writes; counters: fenvix): 24 customers, 24 cold at their first request, 0 not cold (left out of FIRST), 0 errors, 0 requests left out because the server's background work moved during them (0 of them FIRST)
+opening the database (one read of a customer outside the groups, before the measure): 3 ms
+FIRST resume (newest 1): n=6 p50 2.97 ms p99 4.44 ms max 4 ms; documents p50 1; GETs p50 1 max 2; bytes p50 99568 max 192217; rows from runs p50 66
+NEXT  resume (newest 1): n=18 p50 0.60 ms p99 0.94 ms max 1 ms; documents p50 1; GETs p50 0 max 0; bytes p50 0 max 0; rows from runs p50 66
+      NEXT resume (newest 1) by position: 1: n=6 p50 0.69 p99 0.86; 2: n=6 p50 0.64 p99 0.94; 3: n=6 p50 0.56 p99 0.67
+      NEXT resume (newest 1) without S3: yes, 0 GETs
+FIRST last 10: n=6 p50 2.73 ms p99 3.52 ms max 4 ms; documents p50 10; GETs p50 1 max 1; bytes p50 101439 max 113370; rows from runs p50 84
+NEXT  last 10: n=18 p50 0.74 ms p99 1.07 ms max 1 ms; documents p50 10; GETs p50 0 max 0; bytes p50 0 max 0; rows from runs p50 84
+      NEXT last 10 by position: 1: n=6 p50 0.88 p99 1.07; 2: n=6 p50 0.76 p99 0.89; 3: n=6 p50 0.69 p99 0.89
+      NEXT last 10 without S3: yes, 0 GETs
+FIRST whole history: n=6 p50 58.07 ms p99 88.42 ms max 88 ms; documents p50 1040; GETs p50 65 max 66; bytes p50 6980897 max 7048597; rows from runs p50 2080
+NEXT  whole history: n=18 p50 28.30 ms p99 87.21 ms max 87 ms; documents p50 880; GETs p50 32 max 97; bytes p50 3312896 max 10524924; rows from runs p50 1760
+      NEXT whole history by position: 1: n=6 p50 27.84 p99 63.95; 2: n=6 p50 32.82 p99 50.71; 3: n=6 p50 32.58 p99 87.21
+      NEXT whole history without S3: NO, it still reads from outside
+FIRST time travel: n=6 p50 4.22 ms p99 6.21 ms max 6 ms; documents p50 1; GETs p50 2 max 3; bytes p50 186246 max 324541; rows from runs p50 66
+NEXT  time travel: n=18 p50 0.75 ms p99 3.49 ms max 3 ms; documents p50 1; GETs p50 0 max 1; bytes p50 0 max 118559; rows from runs p50 66
+      NEXT time travel by position: 1: n=6 p50 2.20 p99 2.99; 2: n=6 p50 0.76 p99 3.49; 3: n=6 p50 0.72 p99 0.82
+      NEXT time travel without S3: NO, it still reads from outside

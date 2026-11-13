@@ -1,0 +1,55 @@
+2026-11-13T13:03:51Z step 9 round 186647 (local): phases ['measure', 'extras'], data 100gb, pantry fenvix-kitchen-pantry-208536 (existing), cook m7i.large, spare None, log m7i.large x3, compactor none, client c7i.xlarge, programs ['first-next-ops', 'reads-after-writes'], cap 5.0 $, 150 minutes
+2026-11-13T13:03:51Z 1/8 buckets: the run bucket (1 day) and the pantry (our server's data)
+2026-11-13T13:03:51Z pantry fenvix-kitchen-pantry-208536: existing, created 0.02 days ago
+2026-11-13T13:03:51Z 2/8 packages, CA and the password into the run bucket (the password passes through no file and no log)
+2026-11-13T13:03:52Z 3/8 network
+2026-11-13T13:03:52Z network: {"network": "fenvix-coldread-s9-186647", "machine_s3_endpoint": "http://172.18.0.1:9300"}
+2026-11-13T13:03:52Z 4/8 the load runs without the log (the loader writes straight to S3; nothing is measured while loading)
+2026-11-13T13:03:52Z 5/8 no load in this round: the pantry was loaded by an earlier round
+2026-11-13T13:03:52Z 6/8 the measured kitchen: cook 1 with log-0 (zone a), log-1 (zone b), log-2 (zone c)
+2026-11-13T13:03:53Z server-1: cooklog m7i.large in eu-west-1a, 455756c26ae5, private IP 172.18.0.2
+2026-11-13T13:03:53Z log-1: log m7i.large in eu-west-1b, f2cb9cb4973d, private IP 172.18.0.3
+2026-11-13T13:03:54Z log-2: log m7i.large in eu-west-1c, 59e3e3f8b0a8, private IP 172.18.0.4
+2026-11-13T13:04:09Z SPESA: 0.11 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:04:09Z log ready: 172.18.0.2:7200,172.18.0.3:7200,172.18.0.4:7200
+2026-11-13T13:04:24Z SPESA: 0.11 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:04:24Z 7/8 the extras client: ['first-next-ops', 'reads-after-writes']
+2026-11-13T13:04:24Z pantry fenvix-kitchen-pantry-208536 marked as written by ['first-next-ops', 'reads-after-writes']: later jobs that read it as loaded are refused
+2026-11-13T13:04:25Z extras: extras c7i.large in eu-west-1b, 9f247f5f156f, private IP 172.18.0.5
+2026-11-13T13:04:40Z SPESA: 0.11 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:04:40Z   extras: 2026-11-13T13:04:35Z program reads-after-writes starts
+2026-11-13T13:04:55Z SPESA: 0.11 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:04:55Z   extras: 2026-11-13T13:04:35Z program reads-after-writes starts
+2026-11-13T13:05:10Z SPESA: 0.11 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:05:10Z   extras: 2026-11-13T13:04:35Z program reads-after-writes starts
+2026-11-13T13:05:25Z SPESA: 0.11 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:05:25Z   extras: 2026-11-13T13:04:35Z program reads-after-writes starts
+2026-11-13T13:05:40Z SPESA: 0.11 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:05:40Z   extras: 2026-11-13T13:04:35Z program reads-after-writes starts
+2026-11-13T13:05:55Z SPESA: 0.11 $ so far at 2 minutes (upper bound; machines 0.01 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:05:55Z   extras: 2026-11-13T13:04:35Z program reads-after-writes starts
+2026-11-13T13:06:10Z SPESA: 0.12 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:06:10Z   extras: 2026-11-13T13:04:35Z program reads-after-writes starts
+2026-11-13T13:06:25Z SPESA: 0.12 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:06:25Z   extras: 2026-11-13T13:04:35Z program reads-after-writes starts
+2026-11-13T13:06:41Z SPESA: 0.12 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:06:41Z   extras: 2026-11-13T13:04:35Z program reads-after-writes starts
+2026-11-13T13:06:56Z SPESA: 0.12 $ so far at 3 minutes (upper bound; machines 0.02 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:06:56Z   extras: 2026-11-13T13:04:35Z program reads-after-writes starts
+2026-11-13T13:07:11Z SPESA: 0.12 $ so far at 3 minutes (upper bound; machines 0.02 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:07:11Z   extras: 2026-11-13T13:04:35Z program reads-after-writes starts
+2026-11-13T13:07:26Z SPESA: 0.13 $ so far at 3 minutes (upper bound; machines 0.03 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:07:26Z   extras: 2026-11-13T13:04:35Z program reads-after-writes starts
+2026-11-13T13:07:41Z SPESA: 0.13 $ so far at 3 minutes (upper bound; machines 0.03 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:07:41Z   extras: 2026-11-13T13:07:39Z program reads-after-writes: code 0 in 184 s: READS-AFTER-WRITES: OK (database app_data_b01)
+2026-11-13T13:07:56Z SPESA: 0.13 $ so far at 4 minutes (upper bound; machines 0.03 $, alive: m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:07:56Z   extras: 2026-11-13T13:07:46Z finish: EXTRAS_DONE
+2026-11-13T13:07:58Z 8/8 everything off
+2026-11-13T13:08:08Z server-1: stopped by itself
+2026-11-13T13:08:18Z log-1: stopped by itself
+2026-11-13T13:08:29Z log-2: stopped by itself
+2026-11-13T13:08:40Z log-0: stopped by itself
+2026-11-13T13:08:41Z SPESA: 0.13 $ so far at 4 minutes (upper bound; machines 0.03 $, alive: none; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:08:41Z copying the results from the run bucket
+2026-11-13T13:08:42Z zones (name, id): extras eu-west-1b local-eu-west-1b; log-1 eu-west-1b local-eu-west-1b; log-2 eu-west-1c local-eu-west-1c; server-1 eu-west-1a local-eu-west-1a
+2026-11-13T13:08:42Z outcome: FINITO; {"extras": "first-next-ops:rc=0 reads-after-writes:rc=0 first-next-ops-after-writes:rc=0"}

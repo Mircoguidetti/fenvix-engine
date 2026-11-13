@@ -1,0 +1,2 @@
+write-peak: 2 script processes x 2 threads started for 2 minutes
+WRITE-PEAK: NOT VALID (the client machine reached 80% CPU): p50 7797 documents/s (mean 7797, min 7797, max 7797) over 1 steady minutes, cook CPU p50 83.1% of its 2 vCPU, client CPU max 85.7%; Atlas M30: 25800 (p50 26000) at 90.5%

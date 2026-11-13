@@ -1,0 +1,20 @@
+== app_data_b01 (before-writes; counters: mongod): 60 customers, 60 cold at their first request, 0 not cold (left out of FIRST), 0 errors, 0 requests left out because the server's background work moved during them (0 of them FIRST)
+opening the database (one read of a customer outside the groups, before the measure): 3 ms
+FIRST resume (newest 1): n=12 p50 0.62 ms p99 0.90 ms max 1 ms; documents p50 1; GETs p50 1 max 2; bytes p50 11737 max 29783
+NEXT  resume (newest 1): n=48 p50 0.52 ms p99 0.85 ms max 1 ms; documents p50 1; GETs p50 0 max 1; bytes p50 0 max 11526
+      NEXT resume (newest 1) by position: 1: n=15 p50 0.58 p99 0.85; 2: n=15 p50 0.49 p99 0.72; 3: n=15 p50 0.53 p99 0.80; 4: n=3 p50 0.46 p99 0.54
+      NEXT resume (newest 1) without S3: NO, it still reads from outside
+FIRST last 10: n=12 p50 0.69 ms p99 1.28 ms max 1 ms; documents p50 10; GETs p50 2 max 12; bytes p50 44242 max 397289
+NEXT  last 10: n=48 p50 0.58 ms p99 1.44 ms max 1 ms; documents p50 10; GETs p50 0 max 10; bytes p50 0 max 497256
+      NEXT last 10 by position: 1: n=15 p50 0.61 p99 1.26; 2: n=15 p50 0.59 p99 1.44; 3: n=15 p50 0.58 p99 0.85; 4: n=3 p50 0.53 p99 0.80
+      NEXT last 10 without S3: NO, it still reads from outside
+FIRST whole history: n=12 p50 14.89 ms p99 283.08 ms max 283 ms; documents p50 1268; GETs p50 103 max 1442; bytes p50 3130575 max 100759906
+NEXT  whole history: n=48 p50 14.58 ms p99 144.77 ms max 145 ms; documents p50 769; GETs p50 97 max 884; bytes p50 3340199 max 61560935
+      NEXT whole history by position: 1: n=15 p50 13.27 p99 55.98; 2: n=15 p50 19.23 p99 144.77; 3: n=15 p50 13.54 p99 47.90; 4: n=3 p50 11.22 p99 32.35
+      NEXT whole history without S3: NO, it still reads from outside
+FIRST time travel: n=12 p50 0.73 ms p99 1.11 ms max 1 ms; documents p50 1; GETs p50 1 max 2; bytes p50 8646 max 46456
+NEXT  time travel: n=48 p50 0.62 ms p99 0.93 ms max 1 ms; documents p50 1; GETs p50 0 max 2; bytes p50 0 max 57085
+      NEXT time travel by position: 1: n=15 p50 0.60 p99 0.91; 2: n=15 p50 0.64 p99 0.93; 3: n=15 p50 0.61 p99 0.89; 4: n=3 p50 0.63 p99 0.63
+      NEXT time travel without S3: NO, it still reads from outside
+FIRST save (insert 1, majority): n=12 p50 2.43 ms p99 3.16 ms max 3 ms; documents p50 1; GETs p50 1 max 2; bytes p50 12985 max 30932
+NEXT  save (insert 1, majority): n=48 p50 3.14 ms p99 10.73 ms max 11 ms; documents p50 1; GETs p50 0 max 15; bytes p50 0 max 230412

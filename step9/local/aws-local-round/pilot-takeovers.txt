@@ -1,0 +1,9 @@
+takeover 1/5: A killed, B confirmed after 15.326 s; acknowledged so far 5445
+takeover 2/5: B killed, A confirmed after 11.585 s; acknowledged so far 12001
+takeover 3/5: A killed, B confirmed after 11.594 s; acknowledged so far 27448
+takeover 4/5: B killed, A confirmed after 11.592 s; acknowledged so far 37787
+takeover 5/5: A killed, B confirmed after 12.164 s; acknowledged so far 48159
+missing acknowledged writes: {'at_once': 0, 'after_settle': 0, 'after_clean_restart': 0}
+FENVIX-STATUS takeovers: every write acknowledged by the log
+{"n": 5, "writers": 8, "lease_ttl_s": 4, "log": "on", "note": "the pair runs with the round's server_options; its lease is lease_ttl_s, not the product's 30 s, so takeover_s is not the product's takeover time (total review, question 1 point 5)", "verify_error": null, "missing_by_read": {"at_once": 0, "after_settle": 0, "after_clean_restart": 0}, "done": 5, "acknowledged": 52179, "lost": 0, "lost_ids_first": [], "confirmed_after_kill": 0, "failed_writes": 288, "survivor": "B", "takeover_s_p50": 11.594, "takeover_s_p99": 15.326, "takeover_s_max": 15.326, "log_fallback": {"batches": 0, "survivor_quaderno_failed": 0, "label": "every write acknowledged by the log"}, "verdict": "PASS"}
+TAKEOVERS: PASS (5/5 takeovers, 52179 acknowledged, 0 lost (missing by read {'at_once': 0, 'after_settle': 0, 'after_clean_restart': 0}), 0 confirmed after a kill)

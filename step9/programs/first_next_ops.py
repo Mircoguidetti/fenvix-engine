@@ -301,7 +301,10 @@ def text(summary):
             lines.append(f"      NEXT {NAMES[op]} by position: " + "; ".join(
                 f"{p}: n={x['n']} p50 {x['p50_ms']:.2f} p99 {x['p99_ms']:.2f}" for p, x in bypos.items() if x))
         if "next_gets_zero" in o and op != "save":
-            lines.append(f"      NEXT {NAMES[op]} without S3: {'yes, 0 GETs' if o['next_gets_zero'] else 'NO, it still reads from outside'}")
+            if b.get("counters") == "mongod":   # WiredTiger's pages read into its cache: the disk, not S3
+                lines.append(f"      NEXT {NAMES[op]} from the cache only: {'yes, 0 pages read' if o['next_gets_zero'] else 'NO, it still reads pages from disk'}")
+            else:
+                lines.append(f"      NEXT {NAMES[op]} without S3: {'yes, 0 GETs' if o['next_gets_zero'] else 'NO, it still reads from outside'}")
     return "\n".join(lines)
 
 

@@ -1,0 +1,19 @@
+== all databases: 60 customers, 60 cold at their first request, 0 not cold (left out), 0 errors
+FIRST  messaggi latest 20: n=60 p50 3.48 ms p99 34.84 ms; GETs p50 4 max 26; bytes p50 147144 max 3016332; background GETs in the window 0
+NEXT 1 eventi latest 100: n=60 p50 4.72 ms p99 33.11 ms; GETs p50 2 max 36; bytes p50 103514 max 3447811; background GETs in the window 0 | vs HOT p50 x5.3 SLOWER, p99 x20.41 SLOWER, GETs NOT 0
+NEXT 2 ordini by stato: n=60 p50 5.72 ms p99 50.77 ms; GETs p50 1 max 34; bytes p50 103060 max 3857956; background GETs in the window 0 | vs HOT p50 x6.43 SLOWER, p99 x31.3 SLOWER, GETs NOT 0
+NEXT 3 messaggi older page: n=60 p50 0.94 ms p99 2.09 ms; GETs p50 0 max 0; bytes p50 0 max 0; background GETs in the window 0 | vs HOT p50 x1.06 EQUAL, p99 x1.29 SLOWER, GETs 0
+HOT    the first again: n=60 p50 0.89 ms p99 1.62 ms; GETs p50 0 max 0; bytes p50 0 max 0; background GETs in the window 0
+== app_data_b01: 30 customers, 30 cold at their first request, 0 not cold (left out), 0 errors
+FIRST  messaggi latest 20: n=30 p50 2.75 ms p99 20.75 ms; GETs p50 1 max 15; bytes p50 101210 max 1501679; background GETs in the window 0
+NEXT 1 eventi latest 100: n=30 p50 4.12 ms p99 31.41 ms; GETs p50 1 max 33; bytes p50 94374 max 3447811; background GETs in the window 0 | vs HOT p50 x5.27 SLOWER, p99 x31.22 SLOWER, GETs NOT 0
+NEXT 2 ordini by stato: n=30 p50 6.48 ms p99 50.77 ms; GETs p50 1 max 34; bytes p50 105010 max 3857956; background GETs in the window 0 | vs HOT p50 x8.28 SLOWER, p99 x50.46 SLOWER, GETs NOT 0
+NEXT 3 messaggi older page: n=30 p50 0.82 ms p99 1.07 ms; GETs p50 0 max 0; bytes p50 0 max 0; background GETs in the window 0 | vs HOT p50 x1.04 EQUAL, p99 x1.06 EQUAL, GETs 0
+HOT    the first again: n=30 p50 0.78 ms p99 1.01 ms; GETs p50 0 max 0; bytes p50 0 max 0; background GETs in the window 0
+== fenvix_p1: 30 customers, 30 cold at their first request, 0 not cold (left out), 0 errors
+FIRST  messaggi latest 20: n=30 p50 4.44 ms p99 34.84 ms; GETs p50 4 max 26; bytes p50 150879 max 3016332; background GETs in the window 0
+NEXT 1 eventi latest 100: n=30 p50 6.35 ms p99 33.11 ms; GETs p50 4 max 36; bytes p50 147145 max 1229904; background GETs in the window 0 | vs HOT p50 x6.25 SLOWER, p99 x20.41 SLOWER, GETs NOT 0
+NEXT 2 ordini by stato: n=30 p50 5.29 ms p99 11.58 ms; GETs p50 2 max 5; bytes p50 78467 max 217984; background GETs in the window 0 | vs HOT p50 x5.21 SLOWER, p99 x7.14 SLOWER, GETs NOT 0
+NEXT 3 messaggi older page: n=30 p50 1.04 ms p99 2.09 ms; GETs p50 0 max 0; bytes p50 0 max 0; background GETs in the window 0 | vs HOT p50 x1.02 EQUAL, p99 x1.29 SLOWER, GETs 0
+HOT    the first again: n=30 p50 1.02 ms p99 1.62 ms; GETs p50 0 max 0; bytes p50 0 max 0; background GETs in the window 0
+FIRST-NEXT: OK (2 databases ['app_data_b01', 'fenvix_p1'], 60 cold customers, 0 errors)

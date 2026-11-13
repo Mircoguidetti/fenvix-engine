@@ -1,0 +1,55 @@
+2026-11-13T13:44:22Z step 9 round 168286 (local): phases ['mongod'], data atlas, pantry fenvix-coldread-s9d-168286 (new), cook m7i.large, spare m7i.large, log c7g.medium x3, compactor none, client c7i.xlarge, programs ['first-next-ops', 'reads-after-writes'], cap 5.0 $, 200 minutes
+2026-11-13T13:44:22Z 1/8 buckets: the run bucket (1 day) and the pantry (our server's data)
+2026-11-13T13:44:22Z 2/8 packages, CA and the password into the run bucket (the password passes through no file and no log)
+2026-11-13T13:44:22Z 3/8 network
+2026-11-13T13:44:22Z network: {"network": "fenvix-coldread-s9-168286", "machine_s3_endpoint": "http://172.18.0.1:9300"}
+2026-11-13T13:44:22Z 4/8 the load runs without the log (the loader writes straight to S3; nothing is measured while loading)
+2026-11-13T13:44:22Z 5/8 no load in this round: the pantry was loaded by an earlier round
+2026-11-13T13:44:22Z 6/8 the MongoDB line: mongod 7.0, 3 members m7i.large in zones a, b, c (46 GB disk each), the client c7i.large: load ['vecchio'] and the ballast (1 GiB) (12.22 GiB, ESTIMATED), then ['first-next-ops', 'reads-after-writes']
+2026-11-13T13:44:23Z mongo-0: mongod m7i.large in eu-west-1a, 473d3a294565, private IP 172.18.0.2
+2026-11-13T13:44:24Z mongo-1: mongod m7i.large in eu-west-1b, bb58db3ab840, private IP 172.18.0.3
+2026-11-13T13:44:24Z mongo-2: mongod m7i.large in eu-west-1c, 6a86ddabea99, private IP 172.18.0.4
+2026-11-13T13:44:40Z SPESA: 0.11 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:44:55Z SPESA: 0.11 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:44:55Z   mongo-0: 2026-11-13T13:44:48Z replica set ready: {"members": ["172.18.0.2:27017", "172.18.0.3:27017", "172.18.0.4:27017"], "set": "rsm", "primary_preferred": "172.18.0.2", "type": "m7i.large", "durability": "3 members in 3 zones,
+2026-11-13T13:44:55Z mongod set ready: {'members': ['172.18.0.2:27017', '172.18.0.3:27017', '172.18.0.4:27017'], 'set': 'rsm', 'primary_preferred': '172.18.0.2', 'type': 'm7i.large', 'durability': '3 members in 3 zones, w majority, journal', 'tls': 'required'}
+2026-11-13T13:44:55Z mongoclient: mongoclient c7i.large in eu-west-1b, 23dd7f6b5d3a, private IP 172.18.0.5
+2026-11-13T13:45:10Z SPESA: 0.11 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:45:10Z   mongoclient: 2026-11-13T13:44:59Z load: 2 lines of the load plan for ["vecchio"], through the founder's script, into the set
+2026-11-13T13:45:25Z SPESA: 0.11 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:45:25Z   mongoclient: 2026-11-13T13:44:59Z load: 2 lines of the load plan for ["vecchio"], through the founder's script, into the set
+2026-11-13T13:45:40Z SPESA: 0.11 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:45:40Z   mongoclient: 2026-11-13T13:45:18Z ballast: prova_infinite.py carica --db app_data_b01 --gb 1 --seme 2001 --thread 16 --quota-riservati 0.4 --tetto-logico-gb 60 --max-ore-carico 48 --mb-cliente 0.5 --lotto 200
+2026-11-13T13:45:55Z SPESA: 0.11 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:45:55Z   mongoclient: 2026-11-13T13:45:18Z ballast: prova_infinite.py carica --db app_data_b01 --gb 1 --seme 2001 --thread 16 --quota-riservati 0.4 --tetto-logico-gb 60 --max-ore-carico 48 --mb-cliente 0.5 --lotto 200
+2026-11-13T13:46:10Z SPESA: 0.11 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:46:10Z   mongoclient: 2026-11-13T13:45:18Z ballast: prova_infinite.py carica --db app_data_b01 --gb 1 --seme 2001 --thread 16 --quota-riservati 0.4 --tetto-logico-gb 60 --max-ore-carico 48 --mb-cliente 0.5 --lotto 200
+2026-11-13T13:46:25Z SPESA: 0.12 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:46:25Z   mongoclient: 2026-11-13T13:45:18Z ballast: prova_infinite.py carica --db app_data_b01 --gb 1 --seme 2001 --thread 16 --quota-riservati 0.4 --tetto-logico-gb 60 --max-ore-carico 48 --mb-cliente 0.5 --lotto 200
+2026-11-13T13:46:40Z SPESA: 0.12 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:46:40Z   mongoclient: 2026-11-13T13:45:18Z ballast: prova_infinite.py carica --db app_data_b01 --gb 1 --seme 2001 --thread 16 --quota-riservati 0.4 --tetto-logico-gb 60 --max-ore-carico 48 --mb-cliente 0.5 --lotto 200
+2026-11-13T13:46:55Z SPESA: 0.12 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:46:55Z   mongoclient: 2026-11-13T13:45:18Z ballast: prova_infinite.py carica --db app_data_b01 --gb 1 --seme 2001 --thread 16 --quota-riservati 0.4 --tetto-logico-gb 60 --max-ore-carico 48 --mb-cliente 0.5 --lotto 200
+2026-11-13T13:47:10Z SPESA: 0.12 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:47:10Z   mongoclient: 2026-11-13T13:45:18Z ballast: prova_infinite.py carica --db app_data_b01 --gb 1 --seme 2001 --thread 16 --quota-riservati 0.4 --tetto-logico-gb 60 --max-ore-carico 48 --mb-cliente 0.5 --lotto 200
+2026-11-13T13:47:25Z SPESA: 0.12 $ so far at 3 minutes (upper bound; machines 0.02 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:47:25Z   mongoclient: 2026-11-13T13:45:18Z ballast: prova_infinite.py carica --db app_data_b01 --gb 1 --seme 2001 --thread 16 --quota-riservati 0.4 --tetto-logico-gb 60 --max-ore-carico 48 --mb-cliente 0.5 --lotto 200
+2026-11-13T13:47:41Z SPESA: 0.12 $ so far at 3 minutes (upper bound; machines 0.02 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:47:41Z   mongoclient: 2026-11-13T13:45:18Z ballast: prova_infinite.py carica --db app_data_b01 --gb 1 --seme 2001 --thread 16 --quota-riservati 0.4 --tetto-logico-gb 60 --max-ore-carico 48 --mb-cliente 0.5 --lotto 200
+2026-11-13T13:47:56Z SPESA: 0.13 $ so far at 3 minutes (upper bound; machines 0.03 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:47:56Z   mongoclient: snapshot out/after-load.json: app_data_b01 1.00 GiB, fenvix_p1 0.10 GiB
+2026-11-13T13:48:11Z SPESA: 0.13 $ so far at 3 minutes (upper bound; machines 0.03 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:48:11Z   mongoclient: snapshot out/after-load.json: app_data_b01 1.00 GiB, fenvix_p1 0.10 GiB
+2026-11-13T13:48:26Z SPESA: 0.13 $ so far at 4 minutes (upper bound; machines 0.03 $, alive: c7i.large, m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:48:26Z   mongoclient: snapshot out/after-load.json: app_data_b01 1.00 GiB, fenvix_p1 0.10 GiB
+2026-11-13T13:48:41Z SPESA: 0.13 $ so far at 4 minutes (upper bound; machines 0.03 $, alive: m7i.large, m7i.large, m7i.large; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:48:41Z   mongoclient: 2026-11-13T13:48:38Z finish: MONGOD_LINE_DONE
+2026-11-13T13:49:13Z mongo-0: stopped by itself
+2026-11-13T13:49:34Z mongo-1: stopped by itself
+2026-11-13T13:50:06Z mongo-2: stopped by itself
+2026-11-13T13:50:07Z 7/8 no extra program in this round
+2026-11-13T13:50:07Z 8/8 everything off
+2026-11-13T13:50:07Z SPESA: 0.14 $ so far at 5 minutes (upper bound; machines 0.04 $, alive: none; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T13:50:07Z copying the results from the run bucket
+2026-11-13T13:50:08Z zones (name, id): mongo-0 eu-west-1a local-eu-west-1a; mongo-1 eu-west-1b local-eu-west-1b; mongo-2 eu-west-1c local-eu-west-1c; mongoclient eu-west-1b local-eu-west-1b
+2026-11-13T13:50:08Z outcome: FINITO; {"mongod": "MONGOD_LINE_DONE", "mongod_programs": "first-next-ops:rc=0 reads-after-writes:rc=0 first-next-ops-after-writes:rc=0"}

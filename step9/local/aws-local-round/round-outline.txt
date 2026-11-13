@@ -1,0 +1,31 @@
+== round load-atlas: {"mode": "run", "data": "100gb", "log": "m7i.large", "phases": ["load"], "pantry": "keep", "ballast_slice": [0, 0], "ceiling_min": 60, "engine": "4f745747ee9748bfee949ca49b90fafc95665181", "server_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts", "loader_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts", "ballast_gib": 1}
+run.py: code 0 in 277 s; outcome: FINITO; {"load": "LOADED", "client": "LOADED_ONLY"}
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+== round load-ballast: {"mode": "run", "data": "100gb", "log": "m7i.large", "phases": ["load"], "pantry": "fenvix-kitchen-pantry-208536", "ceiling_min": 60, "engine": "4f745747ee9748bfee949ca49b90fafc95665181", "server_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts", "loader_options": "--sealed-runs 2 --envelopes write --customer-key messaggi=cliente:ts,eventi=cliente:ts,ordini=cliente:ts,events_large=cliente:ts", "ballast_gib": 1}
+run.py: code 0 in 141 s; outcome: FINITO; {"ballast": "BALLAST_GENERATED"}
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+== round pilot-ops: {
+run.py: code 1 in 767 s; outcome: PROGRAM_FAILED: write-peak: failed: write-peak rc=1; {"extras": "s3-first-byte:rc=0 log-ack:rc=0 first-next:rc=0 first-next-ops:rc=0 takeovers:rc=0 takeovers-logoff:rc=0", "write-peak": "write-peak:rc=1"}
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+== round b1: {
+run.py: code 0 in 150 s; outcome: FINITO; {"extras": "first-next:rc=0 ballast-rounds:rc=0"}
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+== round w1: {
+run.py: code 0 in 291 s; outcome: FINITO; {"extras": "first-next-ops:rc=0 reads-after-writes:rc=0 first-next-ops-after-writes:rc=0"}
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+== round mongod: {"mode": "run", "data": "atlas", "phases": ["mongod"], "pantry": "new", "programs": ["first-next-ops", "reads-after-writes"], "mongod_states": ["vecchio"], "mongod_ballast_gib": 1, "first_next_ops_args": "--per-op 100 --max-s 120", "ceiling_min": 200, "engine": "4f745747ee9748bfee949ca49b90fafc95665181"}
+run.py: code 1 in 1510 s; outcome: NO_MONGOD SET; {}
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0
+== round b1-after-w1: {
+REFUSED: the pantry fenvix-kitchen-pantry-208536 is no longer as loaded (run 186647 wrote with ['first-next-ops', 'reads-after-writes'] into ['app_data_b01'] at 2026-11-13T13:04:24+00:00): ['first-next', 'ballast-rounds'] read it as loaded and would check answers against state files that no longer match. Run them on a pantry no writing program has touched.
+PANTRY MARK: b1-after-w1 refused, as it must be
+== round mongod: {"mode": "run", "data": "atlas", "phases": ["mongod"], "pantry": "new", "programs": ["first-next-ops", "reads-after-writes"], "mongod_states": ["vecchio"], "mongod_ballast_gib": 1, "first_next_ops_args": "--per-op 100 --max-s 120", "ceiling_min": 200, "engine": "4f745747ee9748bfee949ca49b90fafc95665181"}
+run.py: code 0 in 346 s; outcome: FINITO; {"mongod": "MONGOD_LINE_DONE", "mongod_programs": "first-next-ops:rc=0 reads-after-writes:rc=0 first-next-ops-after-writes:rc=0"}
+RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups or containers)
+final check: code 0

@@ -1,0 +1,19 @@
+2026-11-13T13:44:57Z mongod line client start; 4 vCPU
+2026-11-13T13:44:59Z the server answers (attempt 1)
+2026-11-13T13:44:59Z the set answers: 172.18.0.2:27017,172.18.0.3:27017,172.18.0.4:27017
+2026-11-13T13:44:59Z load: 2 lines of the load plan for ["vecchio"], through the founder's script, into the set
+2026-11-13T13:45:18Z load finished with code 0 in 19 s: LOAD: DONE in 19 s
+2026-11-13T13:45:18Z ballast: prova_infinite.py carica --db app_data_b01 --gb 1 --seme 2001 --thread 16 --quota-riservati 0.4 --tetto-logico-gb 60 --max-ore-carico 48 --mb-cliente 0.5 --lotto 200
+2026-11-13T13:47:42Z ballast load finished with code 0 in 144 s: [13:47:42] Caricamento finito (obiettivo raggiunto): 1.00 GB, 3,166,200 documenti, 0.04 ore, 7.136 MB/s.
+snapshot out/after-load.json: app_data_b01 1.00 GiB, fenvix_p1 0.10 GiB
+after the cold restart: a primary and two secondaries in 4 s
+2026-11-13T13:48:23Z cold restart cold-1794577663: the three members restarted with their page cache dropped ({"ok":true,"drop_caches":"notallowed","seconds":17}{"ok":true,"drop_caches":"notallowed","seconds":19}{"ok":true,"drop_caches":"notallowed","seconds":18})
+2026-11-13T13:48:23Z program first-next-ops starts
+2026-11-13T13:48:26Z program first-next-ops: code 0 in 3 s: FIRST-NEXT-OPS: OK (database app_data_b01, 60 cold customers, 0 errors)
+2026-11-13T13:48:26Z program reads-after-writes starts
+2026-11-13T13:48:34Z program reads-after-writes: code 0 in 8 s: READS-AFTER-WRITES: OK (database app_data_b01)
+2026-11-13T13:48:35Z program first-next-ops-after-writes starts
+2026-11-13T13:48:37Z program first-next-ops-after-writes: code 0 in 2 s: FIRST-NEXT-OPS: OK (database app_data_b01, 60 cold customers, 0 errors)
+snapshot out/at-end.json: app_data_b01 1.00 GiB, fenvix_p1 0.10 GiB
+2026-11-13T13:48:38Z programs done: first-next-ops:rc=0 reads-after-writes:rc=0 first-next-ops-after-writes:rc=0
+2026-11-13T13:48:38Z finish: MONGOD_LINE_DONE

@@ -1,0 +1,35 @@
+2026-11-13T12:43:21Z step 9 round 4241 (local): phases ['load'], data 100gb, pantry fenvix-kitchen-pantry-208536 (existing), cook m7i.large, spare m7i.large, log m7i.large x3, compactor none, client c7i.xlarge, programs ['m30', 's3-first-byte', 'sealed-run', 'log-ack', 'first-next', 'ballast-rounds', 'takeovers', 'write-peak', 'agent-bench'], cap 5.0 $, 60 minutes
+2026-11-13T12:43:21Z 1/8 buckets: the run bucket (1 day) and the pantry (our server's data)
+2026-11-13T12:43:21Z pantry fenvix-kitchen-pantry-208536: existing, created 0.00 days ago
+2026-11-13T12:43:21Z 2/8 packages, CA and the password into the run bucket (the password passes through no file and no log)
+2026-11-13T12:43:24Z ballast plan: ballast plan: 1 databases, 2048 customers, 1.0 GiB of BSON
+2026-11-13T12:43:24Z 3/8 network
+2026-11-13T12:43:24Z network: {"network": "fenvix-coldread-s9-4241", "machine_s3_endpoint": "http://172.18.0.1:9300"}
+2026-11-13T12:43:24Z 4/8 the load runs without the log (the loader writes straight to S3; nothing is measured while loading)
+2026-11-13T12:43:24Z 5/8 the ballast generator: one database of 1 GiB of BSON in our stored format, 2 writers, on c7i.2xlarge (about 0.01 h, 1 job(s), ESTIMATED; it resumes from the pantry)
+2026-11-13T12:43:25Z generator: generator c7i.2xlarge in eu-west-1a, e89bfaa6a5a4, private IP 172.18.0.2
+2026-11-13T12:43:40Z SPESA: 0.63 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.2xlarge; S3 0.60 $ from the servers' counters, storage and margin; cross-zone allowance 0.02 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:43:40Z   generator: 2026-11-13T12:43:28Z the generator may run 2392 s in this job (then it stops; the next job resumes it)
+2026-11-13T12:43:55Z SPESA: 0.64 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.2xlarge; S3 0.60 $ from the servers' counters, storage and margin; cross-zone allowance 0.03 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:43:55Z   generator: 2026-11-13T12:43:28Z the generator may run 2392 s in this job (then it stops; the next job resumes it)
+2026-11-13T12:44:10Z SPESA: 0.65 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.2xlarge; S3 0.60 $ from the servers' counters, storage and margin; cross-zone allowance 0.05 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:44:10Z   generator: 2026-11-13T12:43:58Z disk free 16G, memory used 1133 MiB
+2026-11-13T12:44:25Z SPESA: 0.67 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.2xlarge; S3 0.60 $ from the servers' counters, storage and margin; cross-zone allowance 0.06 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:44:25Z   generator: 2026-11-13T12:43:58Z disk free 16G, memory used 1133 MiB
+2026-11-13T12:44:40Z SPESA: 0.69 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.2xlarge; S3 0.60 $ from the servers' counters, storage and margin; cross-zone allowance 0.08 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:44:40Z   generator: 2026-11-13T12:44:28Z disk free 15G, memory used 1463 MiB
+2026-11-13T12:44:55Z SPESA: 0.70 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.2xlarge; S3 0.60 $ from the servers' counters, storage and margin; cross-zone allowance 0.09 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:44:55Z   generator: 2026-11-13T12:44:28Z disk free 15G, memory used 1463 MiB
+2026-11-13T12:45:10Z SPESA: 0.72 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.2xlarge; S3 0.60 $ from the servers' counters, storage and margin; cross-zone allowance 0.11 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:45:10Z   generator: 2026-11-13T12:44:58Z disk free 15G, memory used 1428 MiB
+2026-11-13T12:45:25Z SPESA: 0.73 $ so far at 2 minutes (upper bound; machines 0.01 $, alive: c7i.2xlarge; S3 0.60 $ from the servers' counters, storage and margin; cross-zone allowance 0.12 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:45:25Z   generator: 2026-11-13T12:44:58Z disk free 15G, memory used 1428 MiB
+2026-11-13T12:45:40Z SPESA: 0.75 $ so far at 2 minutes (upper bound; machines 0.01 $, alive: none; S3 0.60 $ from the servers' counters, storage and margin; cross-zone allowance 0.14 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:45:40Z   generator: 2026-11-13T12:45:29Z finish: BALLAST_GENERATED
+2026-11-13T12:45:41Z ballast generator: BALLAST_GENERATED
+2026-11-13T12:45:41Z 7/8 no extra program in this round
+2026-11-13T12:45:41Z 8/8 everything off
+2026-11-13T12:45:41Z SPESA: 0.75 $ so far at 2 minutes (upper bound; machines 0.01 $, alive: none; S3 0.60 $ from the servers' counters, storage and margin; cross-zone allowance 0.14 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:45:41Z copying the results from the run bucket
+2026-11-13T12:45:41Z zones (name, id): generator eu-west-1a local-eu-west-1a
+2026-11-13T12:45:41Z outcome: FINITO; {"ballast": "BALLAST_GENERATED"}

@@ -311,3 +311,9 @@ def test_a_comparison_of_other_customers_is_not_a_pair():
     assert c["same_plan"] is False and "NOT THE SAME PLAN" in cmp_.text(c, "mongod")
     # first_next_ops writes the fingerprint
     assert "customers_fingerprint" in open(os.path.join(S9, "programs", "first_next_ops.py")).read()
+
+
+def test_on_a_mongod_the_text_speaks_of_pages_from_disk_not_s3():
+    rows, s = _run(Server(fenvix=False, box=False), per_op=3)
+    t = ops.text({**s, "db": "d", "label": "l", "counters": "mongod"})
+    assert "without S3" not in t and "reads pages from disk" in t

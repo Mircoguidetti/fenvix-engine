@@ -1,0 +1,5 @@
+== reads after writes on app_data_b01: 4 reads per stage, 2744 updates on 120 customers (update p50 3.606 ms, p99 10.978 ms)
+before      : 4 of 4 answered, 0 timed out, 0 errors; p50 3.72 s, slowest 3.80 s; documents examined p50 261; rows from runs per document p50 15907.0, fetched p50 643.51 MB
+after-writes: 4 of 4 answered, 0 timed out, 0 errors; p50 3.82 s, slowest 3.99 s; documents examined p50 263; rows from runs per document p50 15907.0, fetched p50 643.51 MB; time x1.0 of before, rows per document x1.0
+settled     : 4 of 4 answered, 0 timed out, 0 errors; p50 4.12 s, slowest 4.25 s; documents examined p50 263; rows from runs per document p50 15907.1, fetched p50 644.43 MB; time x1.1 of before, rows per document x1.0
+settle: waited 125 s, quiet True, compactor counters changed True

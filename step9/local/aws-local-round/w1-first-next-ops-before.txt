@@ -1,0 +1,20 @@
+== app_data_b01 (before-writes; counters: fenvix): 60 customers, 59 cold at their first request, 0 not cold (left out of FIRST), 0 errors, 3 requests left out because the server's background work moved during them (1 of them FIRST)
+opening the database (one read of a customer outside the groups, before the measure): 23 ms
+FIRST resume (newest 1): n=12 p50 2.83 ms p99 5.94 ms max 6 ms; documents p50 1; GETs p50 3 max 7; bytes p50 101279 max 360457; rows from runs p50 66
+NEXT  resume (newest 1): n=47 p50 0.64 ms p99 3.78 ms max 4 ms; documents p50 1; GETs p50 1 max 7; bytes p50 0 max 211183; rows from runs p50 66
+      NEXT resume (newest 1) by position: 1: n=14 p50 0.63 p99 3.78; 2: n=15 p50 0.69 p99 1.70; 3: n=15 p50 0.63 p99 0.89; 4: n=3 p50 0.59 p99 0.94
+      NEXT resume (newest 1) without S3: NO, it still reads from outside
+FIRST last 10: n=12 p50 2.82 ms p99 4.19 ms max 4 ms; documents p50 10; GETs p50 3 max 6; bytes p50 101743 max 114012; rows from runs p50 84
+NEXT  last 10: n=47 p50 0.71 ms p99 2.95 ms max 3 ms; documents p50 10; GETs p50 1 max 6; bytes p50 0 max 104143; rows from runs p50 84
+      NEXT last 10 by position: 1: n=15 p50 0.74 p99 2.95; 2: n=14 p50 0.67 p99 1.25; 3: n=15 p50 0.71 p99 0.79; 4: n=3 p50 0.80 p99 1.08
+      NEXT last 10 without S3: NO, it still reads from outside
+FIRST whole history: n=11 p50 13.76 ms p99 21.66 ms max 22 ms; documents p50 1231; GETs p50 9 max 11; bytes p50 403983 max 426344; rows from runs p50 2462
+NEXT  whole history: n=48 p50 9.01 ms p99 29.93 ms max 30 ms; documents p50 758; GETs p50 5 max 18; bytes p50 105859 max 559958; rows from runs p50 1516
+      NEXT whole history by position: 1: n=15 p50 8.42 p99 29.93; 2: n=15 p50 9.45 p99 18.67; 3: n=15 p50 9.51 p99 21.03; 4: n=3 p50 4.48 p99 6.80
+      NEXT whole history without S3: NO, it still reads from outside
+FIRST time travel: n=12 p50 4.44 ms p99 5.05 ms max 5 ms; documents p50 1; GETs p50 4 max 8; bytes p50 209784 max 218907; rows from runs p50 66
+NEXT  time travel: n=47 p50 0.80 ms p99 7.11 ms max 7 ms; documents p50 1; GETs p50 2 max 9; bytes p50 0 max 219889; rows from runs p50 66
+      NEXT time travel by position: 1: n=15 p50 2.34 p99 7.11; 2: n=15 p50 0.82 p99 2.96; 3: n=14 p50 0.71 p99 2.62; 4: n=3 p50 0.79 p99 0.82
+      NEXT time travel without S3: NO, it still reads from outside
+FIRST save (insert 1, majority): n=12 p50 1.94 ms p99 3.14 ms max 3 ms; documents p50 1; GETs p50 1 max 6; bytes p50 0 max 0; rows from runs p50 0
+NEXT  save (insert 1, majority): n=45 p50 1.96 ms p99 5.97 ms max 6 ms; documents p50 1; GETs p50 2 max 7; bytes p50 0 max 0; rows from runs p50 0

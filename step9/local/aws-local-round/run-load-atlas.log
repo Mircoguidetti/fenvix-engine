@@ -1,0 +1,50 @@
+2026-11-13T12:37:51Z step 9 round 208536 (local): phases ['load'], data 100gb, pantry fenvix-kitchen-pantry-208536 (keep), cook m7i.large, spare m7i.large, log m7i.large x3, compactor none, client c7i.xlarge, programs ['m30', 's3-first-byte', 'sealed-run', 'log-ack', 'first-next', 'ballast-rounds', 'takeovers', 'write-peak', 'agent-bench'], cap 5.0 $, 60 minutes
+2026-11-13T12:37:51Z 1/8 buckets: the run bucket (1 day) and the pantry (our server's data)
+2026-11-13T12:37:51Z pantry fenvix-kitchen-pantry-208536: KEPT after this run for the next ones; its objects expire after 7 days
+2026-11-13T12:37:51Z 2/8 packages, CA and the password into the run bucket (the password passes through no file and no log)
+2026-11-13T12:37:52Z 3/8 network
+2026-11-13T12:37:52Z network: {"network": "fenvix-coldread-s9-208536", "machine_s3_endpoint": "http://172.18.0.1:9300"}
+2026-11-13T12:37:52Z 4/8 the load runs without the log (the loader writes straight to S3; nothing is measured while loading)
+2026-11-13T12:37:52Z 5/8 the load through cook 0 (the loader): the m30 client (the Atlas databases)
+2026-11-13T12:37:53Z server-0: loader c7i.xlarge in eu-west-1a, 3e853bf3c9be, private IP 172.18.0.2
+2026-11-13T12:37:56Z client: client c7i.xlarge in eu-west-1b, 61d94613161b, private IP 172.18.0.3
+2026-11-13T12:38:11Z SPESA: 0.61 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.60 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:38:11Z   client: 2026-11-13T12:38:00Z waiting for cook 0 (at most 120 minutes)
+2026-11-13T12:38:26Z SPESA: 0.11 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.10 $ from the servers' counters, storage and margin; cross-zone allowance 0.00 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:38:26Z   client: 2026-11-13T12:38:13Z load: 8 steps on cook 0 (c7i.xlarge)
+2026-11-13T12:38:41Z SPESA: 0.14 $ so far at 0 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.13 $ from the servers' counters, storage and margin; cross-zone allowance 0.01 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:38:41Z   client: 2026-11-13T12:38:13Z load: 8 steps on cook 0 (c7i.xlarge)
+2026-11-13T12:38:56Z SPESA: 0.16 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.15 $ from the servers' counters, storage and margin; cross-zone allowance 0.01 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:38:56Z   client: 2026-11-13T12:38:13Z load: 8 steps on cook 0 (c7i.xlarge)
+2026-11-13T12:39:11Z SPESA: 0.19 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.17 $ from the servers' counters, storage and margin; cross-zone allowance 0.01 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:39:11Z   client: 2026-11-13T12:38:13Z load: 8 steps on cook 0 (c7i.xlarge)
+2026-11-13T12:39:26Z SPESA: 0.20 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.18 $ from the servers' counters, storage and margin; cross-zone allowance 0.01 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:39:26Z   client: 2026-11-13T12:39:21Z load finished with code 0 in 68 s: LOAD: DONE in 68 s
+2026-11-13T12:39:41Z SPESA: 0.21 $ so far at 1 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.18 $ from the servers' counters, storage and margin; cross-zone allowance 0.01 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:39:41Z   client: 2026-11-13T12:39:21Z load finished with code 0 in 68 s: LOAD: DONE in 68 s
+2026-11-13T12:39:56Z SPESA: 0.22 $ so far at 2 minutes (upper bound; machines 0.01 $, alive: c7i.xlarge, c7i.xlarge; S3 0.19 $ from the servers' counters, storage and margin; cross-zone allowance 0.02 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:39:56Z   client: 2026-11-13T12:39:21Z load finished with code 0 in 68 s: LOAD: DONE in 68 s
+2026-11-13T12:40:11Z SPESA: 0.24 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.20 $ from the servers' counters, storage and margin; cross-zone allowance 0.02 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:40:11Z   client: 2026-11-13T12:39:21Z load finished with code 0 in 68 s: LOAD: DONE in 68 s
+2026-11-13T12:40:26Z SPESA: 0.24 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.21 $ from the servers' counters, storage and margin; cross-zone allowance 0.02 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:40:26Z   client: 2026-11-13T12:39:21Z load finished with code 0 in 68 s: LOAD: DONE in 68 s
+2026-11-13T12:40:41Z SPESA: 0.25 $ so far at 2 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.21 $ from the servers' counters, storage and margin; cross-zone allowance 0.02 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:40:41Z   client: 2026-11-13T12:39:21Z load finished with code 0 in 68 s: LOAD: DONE in 68 s
+2026-11-13T12:40:56Z SPESA: 0.25 $ so far at 3 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.21 $ from the servers' counters, storage and margin; cross-zone allowance 0.02 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:40:56Z   client: 2026-11-13T12:39:21Z load finished with code 0 in 68 s: LOAD: DONE in 68 s
+2026-11-13T12:41:11Z SPESA: 0.26 $ so far at 3 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.21 $ from the servers' counters, storage and margin; cross-zone allowance 0.03 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:41:11Z   client: 2026-11-13T12:39:21Z load finished with code 0 in 68 s: LOAD: DONE in 68 s
+2026-11-13T12:41:26Z SPESA: 0.26 $ so far at 3 minutes (upper bound; machines 0.02 $, alive: c7i.xlarge, c7i.xlarge; S3 0.21 $ from the servers' counters, storage and margin; cross-zone allowance 0.03 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:41:26Z   client: 2026-11-13T12:39:21Z load finished with code 0 in 68 s: LOAD: DONE in 68 s
+2026-11-13T12:41:42Z SPESA: 0.26 $ so far at 3 minutes (upper bound; machines 0.03 $, alive: c7i.xlarge, c7i.xlarge; S3 0.21 $ from the servers' counters, storage and margin; cross-zone allowance 0.03 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:41:42Z   client: 2026-11-13T12:39:21Z load finished with code 0 in 68 s: LOAD: DONE in 68 s
+2026-11-13T12:41:57Z SPESA: 0.27 $ so far at 4 minutes (upper bound; machines 0.03 $, alive: c7i.xlarge, c7i.xlarge; S3 0.21 $ from the servers' counters, storage and margin; cross-zone allowance 0.03 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:41:57Z   client: 2026-11-13T12:41:53Z SETTLE: calm after 151 s (71 SST, 30 fx objects): three polls with nothing running and nothing moving
+2026-11-13T12:41:57Z load: {"load": "LOADED"}
+2026-11-13T12:42:07Z server-0: stopped by itself
+2026-11-13T12:42:25Z 7/8 no extra program in this round
+2026-11-13T12:42:25Z 8/8 everything off
+2026-11-13T12:42:25Z SPESA: 0.27 $ so far at 4 minutes (upper bound; machines 0.03 $, alive: none; S3 0.21 $ from the servers' counters, storage and margin; cross-zone allowance 0.03 $ ESTIMATED), cap 5.00 $
+2026-11-13T12:42:25Z copying the results from the run bucket
+2026-11-13T12:42:25Z zones (name, id): client eu-west-1b local-eu-west-1b; server-0 eu-west-1a local-eu-west-1a
+2026-11-13T12:42:25Z outcome: FINITO; {"load": "LOADED", "client": "LOADED_ONLY"}

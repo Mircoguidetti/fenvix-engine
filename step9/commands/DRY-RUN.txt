@@ -1,4 +1,4 @@
-decide.py dry run of step9/commands/*.json, 2026-11-13T12:36:28Z, engine commit for the gate: 27014ff2e3e3e4ff223aa778746f3dce433c6549
+decide.py dry run of step9/commands/*.json, 2026-11-13T13:52:05Z, engine commit for the gate: 27014ff2e3e3e4ff223aa778746f3dce433c6549
 
 === 00-permissions.json: { "mode": "permissions", "aurora": true}
   [local] ACCEPTED: mode=permissions vcpu_peak=8 vcpu_peaks={'load': 8, 'measure (m30)': 8, 'extras': 8, 'write-peak': 8, 'agent-bench': 8} job_hours_total=12.7 job_hours={'boot': 0.3, 'atlas_load': 2.8, 'load_settle_cap': 0.5, 'measured_settle_cap': 0.5, 'm30': 3.0, 'extras': 1.8, 'write_peak': 0.6, 'agent_bench': 3.2} 

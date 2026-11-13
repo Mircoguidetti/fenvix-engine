@@ -1,0 +1,11 @@
+2026-11-13T13:44:26Z mongod member 0: m7i.large in eu-west-1a, private IP 172.18.0.2, 4 vCPU, 16086 MiB
+2026-11-13T13:44:28Z mongod up on 172.18.0.2:27017 (TLS required, keyfile, journal on, replica set rsm)
+{'ok': 1.0}
+set rsm: ['PRIMARY', 'SECONDARY', 'SECONDARY'] write concern majority default: {'w': 'majority', 'wtimeout': 0}
+status saved: out/status-ready.json
+2026-11-13T13:44:48Z replica set ready: {"members": ["172.18.0.2:27017", "172.18.0.3:27017", "172.18.0.4:27017"], "set": "rsm", "primary_preferred": "172.18.0.2", "type": "m7i.large", "durability": "3 members in 3 zones, w majority, journal
+2026-11-13T13:47:45Z cold restart cold-1794577663: stopping the server
+2026-11-13T13:48:01Z cold restart cold-1794577663: page cache dropped: not allowed; starting the server
+2026-11-13T13:48:02Z cold restart cold-1794577663: ok=true in 17 s
+2026-11-13T13:48:47Z finish: STOPPED
+status saved: out/status-end.json
