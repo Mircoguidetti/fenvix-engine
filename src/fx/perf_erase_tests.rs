@@ -509,3 +509,80 @@ async fn owing_groups_and_the_probe_are_per_erasure() {
     c.stop().await;
     hold::HOLD_LIFE_MS.store(120_000, Relaxed);
 }
+
+/// Review of erase-cost-1tb (2026-11-13): the two-phase scrub in parts protects only the erasures that went through
+/// phase 1. `run_pass_scrub` (mongo-server/src/ctl/erase.rs) sets `keep_env = true` once per pass and re-lists the
+/// pending erasures at every part, so an erasure absorbed while phase 1 runs joins the batch directly in phase 2
+/// (`keep_envelopes = false`). If phase 2 then needs several parts, the original defect returns for it: a part drops its
+/// envelopes from the newer delta run while the older one still holds its live rows. This test mirrors that loop:
+/// customer 7 runs phase 1 to its end, then customer 30 is written, erased and absorbed, then phase 2 runs in parts for
+/// both.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn review_an_erasure_joining_in_phase_two_is_not_protected() {
+    let _s = SERIAL.lock().await;
+    let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let id = "fx-review-phase2-join";
+    let (mut t, c) = setup(&store, id).await;
+    let (a, b) = (7usize, 30usize);
+    // customer A: live rows in an older delta run, its envelopes in a newer one
+    t.apply((20..30).map(|i| Op::Put(ckey(a, i), vec![b'n'; 60])).collect()).await.unwrap();
+    flush_absorb(&mut t, &c).await;
+    t.apply((0..30).map(|i| Op::Delete(ckey(a, i))).collect()).await.unwrap();
+    let ea = t.fx_erasure_register("msgs", format!("c{a:02}").as_bytes(), &targets(a), None).await.unwrap().unwrap();
+    flush_absorb(&mut t, &c).await;
+    let ta = targets(a);
+    let mut opts = erase::ScrubOpts::default();
+    opts.budget = Some(Duration::from_nanos(1));
+    opts.keep_envelopes = true;
+    // phase 1 for A alone, to its end
+    for _ in 0..200 {
+        let batch = Batch::single(&ta, ea.s_e);
+        let base = c.current().await;
+        let v = view::View::new(Arc::clone(&store), base.clone(), None).unwrap();
+        let s = erase::scrub_version(&store, id, &v, base.version + 1, base.writer_epoch, &batch, &opts).await.unwrap();
+        if s.version.is_some() {
+            assert!(c.commit_scrub(&base, &s, batch.max_s_e).await.unwrap().is_some());
+        }
+        if s.complete {
+            break;
+        }
+    }
+    // customer B arrives while A's phase 1 ran: live rows in an older delta run, envelopes in a newer one
+    t.apply((20..30).map(|i| Op::Put(ckey(b, i), vec![b'n'; 60])).collect()).await.unwrap();
+    flush_absorb(&mut t, &c).await;
+    t.apply((0..30).map(|i| Op::Delete(ckey(b, i))).collect()).await.unwrap();
+    let eb = t.fx_erasure_register("msgs", format!("c{b:02}").as_bytes(), &targets(b), None).await.unwrap().unwrap();
+    flush_absorb(&mut t, &c).await;
+    t.fx_sync();
+    for i in 0..30 {
+        assert!(t.get(ckey(b, i)).await.unwrap().is_none(), "B readable right after its delete");
+    }
+    // phase 2 for the batch {A, B}, in parts (what the loop does: keep_env already false)
+    let tb = targets(b);
+    let items: Vec<(&Targets, u64)> = vec![(&ta, ea.s_e), (&tb, eb.s_e)];
+    let batch = Batch::new(&items);
+    opts.keep_envelopes = false;
+    let mut readable = Vec::new();
+    for part in 0..200 {
+        let base = c.current().await;
+        let v = view::View::new(Arc::clone(&store), base.clone(), None).unwrap();
+        let s = erase::scrub_version(&store, id, &v, base.version + 1, base.writer_epoch, &batch, &opts).await.unwrap();
+        if s.version.is_some() {
+            assert!(c.commit_scrub(&base, &s, batch.max_s_e).await.unwrap().is_some());
+        }
+        t.fx_sync();
+        for cu in [a, b] {
+            for i in 0..30 {
+                if t.get(ckey(cu, i)).await.unwrap().is_some() {
+                    readable.push((part, cu, i));
+                }
+            }
+        }
+        if s.complete {
+            break;
+        }
+    }
+    c.stop().await;
+    hold::HOLD_LIFE_MS.store(120_000, Relaxed);
+    assert!(readable.is_empty(), "erased documents readable between two parts of phase 2 (part, customer, row): {readable:?}");
+}
