@@ -362,6 +362,16 @@ async fn docs_by_ids(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Docu
     if prefer_scan(g.approx_bytes(), ids.len()) {
         return docs_by_scan(g, coll, ids).await;
     }
+    // P-command-cpu: a customer's documents lie together (customer-keyed collections, `custkey.rs`): when the ids span
+    // few more rows than are wanted, one range scan over the span replaces one merged point read per document (a
+    // whole-history list read 60 documents with 60 point reads). The scan is capped: a sparse span gives up after
+    // `span_cap` rows and the point reads below run as before.
+    if ids.len() >= SPAN_MIN && SPAN_READS.load(std::sync::atomic::Ordering::Relaxed) && crate::custkey::of(g, coll).await?.is_some() {
+        if let Some(docs) = docs_by_span(g, coll, ids, span_cap(ids.len())).await? {
+            return Ok(docs);
+        }
+        SPAN_GAVE_UP.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    }
     let keys: Vec<Vec<u8>> = ids
         .iter()
         .map(|id| {
@@ -405,6 +415,74 @@ async fn moved_doc(g: &mut impl Rd, coll: &str, suffix: &[u8]) -> R<Option<Docum
     })
 }
 
+/// P-command-cpu: fewest ids read with one span scan (below it, point reads), and the span scan's switch (tests and
+/// measurements compare it on and off; answers are the same either way).
+const SPAN_MIN: usize = 4;
+pub static SPAN_READS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+/// Span scans that found the span too sparse and fell back to point reads, and span scans done (diagnostics, tests).
+pub static SPAN_GAVE_UP: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static SPAN_SCANS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Rows a span scan of `n` wanted documents may read before it gives up: twice as many, plus a little.
+fn span_cap(n: usize) -> usize {
+    2 * n + 32
+}
+
+/// The documents with these ids (in the order of `ids`) from one ascending range scan over the id span, if the span
+/// holds at most `cap` rows; None (nothing returned, the caller reads them one by one) if it holds more.
+async fn docs_by_span(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>], cap: usize) -> R<Option<Vec<Document>>> {
+    let prefix_v = doc_prefix(coll);
+    let prefix = &prefix_v[..];
+    let (Some(lo), Some(hi)) = (ids.iter().min(), ids.iter().max()) else { return Ok(Some(vec![])) };
+    let mut start = prefix.to_vec();
+    start.extend(lo);
+    let mut stop = prefix.to_vec();
+    stop.extend(hi);
+    stop.push(0);
+    let rows = g.scan_range(&start, Some(&stop), false, Some(cap + 1), FETCH_SCAN_READ_AHEAD).await?;
+    if rows.len() > cap {
+        return Ok(None);
+    }
+    SPAN_SCANS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let want: HashSet<&[u8]> = ids.iter().map(|i| i.as_slice()).collect();
+    let mut found: HashMap<Vec<u8>, Document> = HashMap::with_capacity(ids.len());
+    for (k, v) in &rows {
+        let id = &k[prefix.len()..];
+        if want.contains(id) {
+            found.insert(id.to_vec(), decode(v)?);
+        }
+    }
+    Ok(Some(take_in_order(g, coll, ids, found).await?))
+}
+
+/// `ids`' documents in the order of `ids` from what a scan found; an id it did not find is looked up where its document
+/// moved (as the point reads do); an id given twice gets a copy for all but its last place.
+async fn take_in_order(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>], mut found: HashMap<Vec<u8>, Document>) -> R<Vec<Document>> {
+    for id in ids {
+        if !found.contains_key(id) {
+            if let Some(d) = moved_doc(g, coll, id).await? {
+                found.insert(id.clone(), d);
+            }
+        }
+    }
+    let mut left: HashMap<&[u8], usize> = HashMap::with_capacity(ids.len());
+    for i in ids {
+        *left.entry(i.as_slice()).or_insert(0) += 1;
+    }
+    Ok(ids
+        .iter()
+        .filter_map(|i| {
+            let n = left.get_mut(i.as_slice()).unwrap();
+            *n -= 1;
+            if *n == 0 {
+                found.remove(i)
+            } else {
+                found.get(i).cloned()
+            }
+        })
+        .collect())
+}
+
 /// The documents with these ids (in the order of `ids`) from one ascending range scan over the id span.
 async fn docs_by_scan(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Document>> {
     let prefix_v = doc_prefix(coll);
@@ -440,31 +518,9 @@ async fn docs_by_scan(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Doc
         }
         start = k;
     }
-    for id in ids {
-        if !found.contains_key(id) {
-            if let Some(d) = moved_doc(g, coll, id).await? {
-                found.insert(id.clone(), d);
-            }
-        }
-    }
     // P-command-cpu: each found document is moved out, not deep-copied (a whole-history list of large checkpoints
-    // copied every one of them here); an id given twice gets a copy for all but its last place
-    let mut left: HashMap<&[u8], usize> = HashMap::with_capacity(ids.len());
-    for i in ids {
-        *left.entry(i.as_slice()).or_insert(0) += 1;
-    }
-    Ok(ids
-        .iter()
-        .filter_map(|i| {
-            let n = left.get_mut(i.as_slice()).unwrap();
-            *n -= 1;
-            if *n == 0 {
-                found.remove(i)
-            } else {
-                found.get(i).cloned()
-            }
-        })
-        .collect())
+    // copied every one of them here)
+    take_in_order(g, coll, ids, found).await
 }
 
 const FETCH_CHUNK: usize = 20_000;

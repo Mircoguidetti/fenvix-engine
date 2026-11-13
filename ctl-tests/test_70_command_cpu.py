@@ -73,3 +73,76 @@ def test_index_reads_return_every_document_once(srv):
     got = list(db.items.find({"tags": "all"}).hint([("tags", 1)]))
     assert sorted(d["_id"] for d in got) == sorted(want) and all(d == want[d["_id"]] for d in got)
     c.close()
+
+
+def _span_load(db):
+    db.checkpoints.create_index([("thread_id", 1), ("checkpoint_ns", 1), ("checkpoint_id", 1)], unique=True)
+    want = {}
+    for t in range(6):
+        tid = f"thread-{t}"
+        for s in range(30):
+            cid = f"1ef{s:05d}"
+            body = ("m%d " % s) * (20 + s * 5)
+            db.checkpoints.update_one({"thread_id": tid, "checkpoint_ns": "", "checkpoint_id": cid},
+                                      {"$set": {"checkpoint": body, "step": s}}, upsert=True)
+            want[(tid, cid)] = body
+            if s % 3 == 0:
+                # a subgraph namespace between the thread's documents: the spans of both lists hold rows not wanted
+                db.checkpoints.update_one({"thread_id": tid, "checkpoint_ns": "sub", "checkpoint_id": cid},
+                                          {"$set": {"checkpoint": "sub", "step": s}}, upsert=True)
+    # a sparse span: 5 documents of namespace "rare" spread over 300 of namespace "" (the scan gives up, point reads)
+    for s in range(300):
+        cid = f"2ef{s:05d}"
+        db.checkpoints.update_one({"thread_id": "long", "checkpoint_ns": "", "checkpoint_id": cid}, {"$set": {"step": s}}, upsert=True)
+        if s % 60 == 30:
+            db.checkpoints.update_one({"thread_id": "long", "checkpoint_ns": "rare", "checkpoint_id": cid}, {"$set": {"step": s}}, upsert=True)
+    return want
+
+
+def _span_reads(db, want):
+    out = []
+    for t in range(6):
+        tid = f"thread-{t}"
+        hist = list(db.checkpoints.find({"thread_id": tid, "checkpoint_ns": ""}, sort=[("checkpoint_id", -1)]))
+        assert [d["checkpoint_id"] for d in hist] == sorted((c for (tt, c) in want if tt == tid), reverse=True)
+        assert all(d["checkpoint"] == want[(tid, d["checkpoint_id"])] for d in hist)
+        last10 = list(db.checkpoints.find({"thread_id": tid, "checkpoint_ns": ""}, sort=[("checkpoint_id", -1)], limit=10))
+        sub = list(db.checkpoints.find({"thread_id": tid, "checkpoint_ns": "sub"}, sort=[("checkpoint_id", 1)]))
+        assert len(last10) == 10 and len(sub) == 10
+        assert [d["step"] for d in sub] == list(range(0, 30, 3))
+        out.append((hist, last10, sub))
+    rare = list(db.checkpoints.find({"thread_id": "long", "checkpoint_ns": "rare"}, sort=[("checkpoint_id", 1)]))
+    assert [d["step"] for d in rare] == [30, 90, 150, 210, 270]
+    out.append(rare)
+    return out
+
+
+@pytest.mark.parametrize("span", [True, False])
+def test_span_scan_of_a_customers_documents(span):
+    """A customer's documents read by one span scan give the same answers as one point read each (control: the scan
+    off, FENVIX_NO_SPAN_READS); the scan runs (spanScans) when on, never when off."""
+    bucket = make_bucket("cmdcpuspan" + ("on" if span else "off"))
+    # MONGO_NO_FETCH_SCAN: a database this small would otherwise read its id spans whole (coll.rs prefer_scan), the
+    # path of small databases; the big line's database takes the point reads that the span scan replaces
+    env = {"MONGO_NO_FETCH_SCAN": "1"} if span else {"MONGO_NO_FETCH_SCAN": "1", "FENVIX_NO_SPAN_READS": "1"}
+    s = Server(bucket, "cmdcpuspan", idle=600, env=env, extra=["--customer-key", "checkpoints=thread_id"]).start()
+    try:
+        c = s.client()
+        want = _span_load(c.app)
+        # a fresh process: the reads below come from storage (the writer's view after a restart)
+        c.close()
+        s.term()
+        s = Server(bucket, "cmdcpuspan", idle=600, env=env, extra=["--customer-key", "checkpoints=thread_id"]).start()
+        c = s.client()
+        before = c.admin.command("serverStatus")["fenvix"]["customerKeys"]
+        _span_reads(c.app, want)
+        after = c.admin.command("serverStatus")["fenvix"]["customerKeys"]
+        scans = after["spanScans"] - before["spanScans"]
+        gave_up = after["spanGaveUp"] - before["spanGaveUp"]
+        if span:
+            assert scans >= 18 and gave_up >= 1, after
+        else:
+            assert scans == 0 and gave_up == 0, after
+        c.close()
+    finally:
+        s.term()

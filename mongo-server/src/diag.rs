@@ -855,6 +855,9 @@ impl Server {
             "customerKeys": {
                 "docsWritten": crate::custkey::DOCS_WRITTEN.load(Relaxed) as i64,
                 "locatorLookups": crate::custkey::LOCATOR_LOOKUPS.load(Relaxed) as i64,
+                // P-command-cpu: documents of one customer read with one span scan, and spans found too sparse
+                "spanScans": crate::coll::SPAN_SCANS.load(Relaxed) as i64,
+                "spanGaveUp": crate::coll::SPAN_GAVE_UP.load(Relaxed) as i64,
                 // layout v2 (layout2.rs): seeks of range reads across customers
                 "layoutSeeks": crate::layout2::SEEKS.load(Relaxed) as i64,
             },
