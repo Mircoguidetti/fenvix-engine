@@ -618,6 +618,51 @@ mod tests {
         assert_eq!(f, 0, "hole Z through the fork: {} violations: {:?}", v.len(), v.iter().take(3).collect::<Vec<_>>());
     }
 
+    /// New hole F (sim-test-2, random seed 2296): a fork whose source is opened by another writer between its quiesce
+    /// and its copy. `ctl/fork.rs` holds the source's lease for the whole fork, so this needs the forking process to lose
+    /// that lease (a pause, as for every zombie case). The copy lists the source's live objects and takes the new
+    /// writer's WAL, newer than the checkpoint; the fork's clean marker then makes the fork's readers skip that WAL while
+    /// its writer replays it: a row the fork's readers saw vanishes when a writer opens it (deleted by the source's new
+    /// owner), and rows never written to the fork appear. On the head: copy mode, 3 keys where the fork's reader and
+    /// writer differ (MEASURED, 1 run; also on head + fix-sim-holes' Z and W fixes). Clone mode: 0 (MEASURED, 1 run).
+    /// Proposed fix (`reviews/sim-test-2/hole-f-fork-source-written-during-fork.patch`, in `fork.rs` and in the simulated
+    /// fork that mirrors it): the fork compares the source's writer epoch after the quiesce and after the copy, and rolls
+    /// back when it moved. Ignored until the fix is in: `--ignored`.
+    #[test]
+    #[ignore]
+    fn sim_hole_f_fork_source_written_after_its_quiesce() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        // the fork's drop-lease PUT stays on the wire for 4 s (longer than the step wait): the takeover happens meanwhile
+        let old = std::env::var("SIM_MAX_HOLD_MS").ok();
+        std::env::set_var("SIM_MAX_HOLD_MS", "5000");
+        let mut total = Vec::new();
+        for copy in [true, false] {
+            let ev = vec![
+                Open { p: 0, writer: true },
+                fill(0, 0, 0),
+                Publish { p: 0 },
+                Hold { p: 0, class: Class::FxOther, op: Some(NOp::Put), skip: 0, land: true, all: false, rid: 1 },
+                Fork { p: 0, copy, tag: 1 },
+                // meanwhile another process opens the source and writes (WAL only)
+                Open { p: 1, writer: true },
+                Write { p: 1, ops: vec![(1, 1, false), (2, 2, false), (0, 3, true)] },
+                Release { rid: 1 },
+                Sleep { ms: 3000 },
+            ];
+            let (_, v) = run_story(&rt, if copy { "hole F, copy" } else { "hole F, clone" }, 0, ev);
+            total.extend(v);
+        }
+        match old {
+            Some(v) => std::env::set_var("SIM_MAX_HOLD_MS", v),
+            None => std::env::remove_var("SIM_MAX_HOLD_MS"),
+        }
+        assert!(total.is_empty(), "hole F: {} violations: {:?}", total.len(), total.iter().take(3).collect::<Vec<_>>());
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {
