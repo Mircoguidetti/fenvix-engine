@@ -163,6 +163,27 @@ fn envelope_of(e_env: u64, key: &[u8], seq: u64, value: &[u8]) -> Result<Vec<u8>
     }
 }
 
+/// fix-sim-holes, hole W: builder reseals turned into delta publishes (compactors on, or the drop on, and a base with
+/// runs).
+pub static RESEALS_REFUSED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// fix-sim-holes, hole W: the reseal this builder may do over `cur`. It reads SlateDB only: a reseal rebuilds a group's
+/// sealed run from SlateDB's rows and leaves the base's delta runs out. With compactors on (the server) or the drop on,
+/// SlateDB's compaction drops the rows at or below X_d, which then live only in our runs, so a reseal over a base that
+/// has any run would publish a version without them. It publishes a delta run instead; reseals are the compactor's
+/// (it reads the runs). Without compactors SlateDB is a full copy and the builder reseals as before.
+fn allowed_reseal(cur: Option<&View>, asked: &Reseal) -> Reseal {
+    use std::sync::atomic::Ordering::Relaxed;
+    let dropping = super::compactor::SERVER_ON.load(Relaxed) || super::compactor::DROP_DEFAULT.load(Relaxed);
+    match cur {
+        Some(v) if dropping && !matches!(asked, Reseal::None) && (!v.meta.delta.is_empty() || v.meta.groups.iter().any(|g| g.sealed.is_some())) => {
+            RESEALS_REFUSED.fetch_add(1, Relaxed);
+            Reseal::None
+        }
+        _ => asked.clone(),
+    }
+}
+
 /// Build the runs of the next version from `db` and publish it. `cur` is the version the writer serves (None: the first
 /// build). Returns the published version, or None when there is nothing new to publish. An error leaves only orphan
 /// runs (GC's business in step 4), never a half-published version.
@@ -190,6 +211,7 @@ pub async fn build_and_publish(db: &slatedb::Db, store: &Arc<dyn ObjectStore>, i
     }
     pause(&PAUSE_AFTER_SNAPSHOT_MS).await;
     ensure!(e_env <= x, "E_env {e_env} above the cut {x}");
+    let opts = &BuildOpts { reseal: allowed_reseal(cur, &opts.reseal), ..opts.clone() };
     let (prev_x, reseal_all) = match cur {
         None => (0, true),
         Some(v) => (v.x_d, matches!(opts.reseal, Reseal::All)),

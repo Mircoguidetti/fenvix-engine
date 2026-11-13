@@ -183,9 +183,9 @@ mod tests {
     /// `RESEAL_EVERY`-th build, while a database has no compactor: after a takeover or a reopen whose compactor start is
     /// deferred) builds every sealed run from SlateDB's rows only and leaves the base's delta runs out. Once a compactor
     /// with the drop has run, rows at or below its X_d live only in our runs: the publish loses them.
-    /// Ignored until the fix is in (it fails on integration-5-stack 837f969): run with `--ignored`.
+    /// Fixed on fix-sim-holes: with compactors on the builder never reseals over a base with runs (`build::
+    /// allowed_reseal`). Fails on integration-5-stack 837f969 and fb38790.
     #[test]
-    #[ignore]
     fn sim_hole_builder_reseal_after_the_drop() {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
@@ -205,7 +205,10 @@ mod tests {
         // the database moves to another process, whose compactor has not started yet; its write path publishes
         ev.extend([Close { p: 0 }, Open { p: 1, writer: true }, Write { p: 1, ops: vec![(0, 1, false)] }, Publish { p: 1 }]);
         let s = Script { seed: 2, profile: Profile::none(), knobs: env_u64("SIM_KNOBS", 0) as u8, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect() };
+        let refused = crate::fx::build::RESEALS_REFUSED.load(std::sync::atomic::Ordering::Relaxed);
         let r = rt.block_on(run_script(&s));
+        let refused = crate::fx::build::RESEALS_REFUSED.load(std::sync::atomic::Ordering::Relaxed) - refused;
+        eprintln!("SIM HOLE W: builder reseals refused {refused}");
         for l in r.trace.iter().filter(|l| l.contains("->")) {
             eprintln!("  {l}");
         }
@@ -214,6 +217,7 @@ mod tests {
         }
         eprintln!("SIM HOLE W: {} violations; {}", r.violations.len(), r.stats);
         assert!(r.violations.is_empty(), "hole W: a builder reseal after the drop lost rows ({} violations)", r.violations.len());
+        assert!(refused > 0, "the script's builder publish over a base with runs was a reseal: it must be refused");
     }
 
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
