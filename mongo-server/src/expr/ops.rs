@@ -691,7 +691,7 @@ fn agg_over(name: &str, arg: &Bson, sc: &Scope) -> Out {
         }
         "$sum" => {
             let mut acc = crate::dsum::DSum::new();
-            for v in vals.iter().filter(|v| as_num(v).is_some()) {
+            for v in vals.iter().filter(|v| crate::query::is_numeric(v)) {
                 acc.add(v);
             }
             some(acc.value())
@@ -699,14 +699,14 @@ fn agg_over(name: &str, arg: &Bson, sc: &Scope) -> Out {
         _ => {
             let mut acc = crate::dsum::DSum::new();
             let mut n = 0usize;
-            for v in vals.iter().filter(|v| as_num(v).is_some()) {
+            for v in vals.iter().filter(|v| crate::query::is_numeric(v)) {
                 acc.add(v);
                 n += 1;
             }
             if n == 0 {
                 null()
             } else {
-                some(Bson::Double(acc.total() / n as f64))
+                some(acc.avg(n as i64))
             }
         }
     }
