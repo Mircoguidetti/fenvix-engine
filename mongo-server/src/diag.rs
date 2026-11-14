@@ -878,6 +878,8 @@ impl Server {
                 "ghostUploads": crate::uploads::GHOSTS.load(Relaxed) as i64,
                 "eraseRetries": crate::ctl::ops::ERASE_RETRIES.load(Relaxed) as i64,
                 "retryRecordsReloaded": crate::retry::RECORDS_RELOADED.load(Relaxed) as i64,
+                // fix-retry-lease-loss: session records dropped from memory because their command failed after staging them
+                "retryRecordsUnapplied": crate::retry::UNAPPLIED_RECORDS_DROPPED.load(Relaxed) as i64,
                 "replayRaises": tenant_bench::lifecycle::REPLAY_RAISES.load(Relaxed) as i64,
                 "replayRaisesCapped": tenant_bench::lifecycle::REPLAY_RAISES_CAPPED.load(Relaxed) as i64,
                 "replayRaisesDropped": tenant_bench::lifecycle::REPLAY_RAISES_DROPPED.load(Relaxed) as i64,
