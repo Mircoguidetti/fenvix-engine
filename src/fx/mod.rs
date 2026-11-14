@@ -86,6 +86,8 @@ mod review_final_tests;
 #[cfg(test)]
 mod fencing_tests;
 #[cfg(test)]
+mod retire_read_error_tests;
+#[cfg(test)]
 mod review_rolling_tests;
 #[cfg(test)]
 mod fix_incarnation_tests;

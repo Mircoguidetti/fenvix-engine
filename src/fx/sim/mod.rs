@@ -1212,6 +1212,32 @@ mod tests {
         assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
     }
 
+    /// fix-sim-seed-162 (gen 1 seed 162, night-head-2 61b8fe88: 4 violations): slot 1 takes the database over from
+    /// slot 0 (its opening writes a zero-byte WAL fence at slot 0's next WAL id), writes, flushes and closes; the closed
+    /// pass (`GcClosedServer`, min age 0: clock skew makes any age guard unreliable) deleted every WAL object below the
+    /// replay boundary, the fence too, and zombie slot 0's next write re-created that id and was acknowledged, lost.
+    /// Fixed by `gc_wal_with` keeping fences (as SlateDB's own WAL GC does).
+    #[test]
+    fn sim_story_closed_pass_keeps_a_zombies_wal_fence() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use Ev::*;
+        let ev = vec![
+            Open { p: 0, writer: true },
+            fill(0, 0, 0),
+            Open { p: 1, writer: true },
+            fill(1, 1, 1),
+            Flush { p: 1 },
+            Close { p: 1 },
+            GcClosedServer { p: 1, min_age_ms: 0 },
+            fill(0, 2, 2),
+            Abandon { p: 0 },
+        ];
+        let (f, v) = run_story(&rt, "closed pass keeps a zombie's WAL fence", 1, ev);
+        assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
+    }
+
     /// Candidate D (gen-3 batch 43496082968, seeds 302956 and 303209; conditional): a process that missed its lease loss
     /// (a paused VM: its monotonic clock stopped, so its per-command lease check still passes) acknowledges new writes
     /// through the plain S3 WAL into an incarnation that was dropped after it opened. Nothing fences a deleted

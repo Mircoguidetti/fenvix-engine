@@ -1004,10 +1004,8 @@ pub async fn retire(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::D
         let listed: Vec<String> = if !runs.is_empty() {
             runs.clone()
         } else {
-            match manifest::load(store, id, *n).await {
-                Ok(v) => names(&v).0.into_iter().map(|s| s.to_string()).collect(),
-                Err(_) => Vec::new(),
-            }
+            // fix-retire-read-error: only a version that is gone lists nothing; a failed read fails the pass
+            listed_runs(store, id, *n).await?.unwrap_or_default()
         };
         kept.push((why.clone(), listed));
     }
@@ -1089,10 +1087,8 @@ pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycl
         let listed: Vec<String> = if !runs.is_empty() {
             runs.clone()
         } else {
-            match manifest::load(store, id, *n).await {
-                Ok(v) => names(&v).0.into_iter().map(|s| s.to_string()).collect(),
-                Err(_) => Vec::new(),
-            }
+            // fix-retire-read-error: only a version that is gone lists nothing; a failed read fails the pass
+            listed_runs(store, id, *n).await?.unwrap_or_default()
         };
         kept.push((why.clone(), listed));
     }
@@ -1103,8 +1099,8 @@ pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycl
         if n >= top || n >= newest {
             continue;
         }
-        if let Ok(v) = manifest::load(store, id, n).await {
-            old.push((n, names(&v).0.into_iter().map(|s| s.to_string()).collect()));
+        if let Some(l) = listed_runs(store, id, n).await? {
+            old.push((n, l));
         }
     }
     let no_retire = ctl(&CONTROL_NO_RETIRE);
@@ -1213,13 +1209,30 @@ pub async fn retire_all(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycl
     Ok(())
 }
 
+/// fix-retire-read-error (RULE 8; gen-2 seeds 104673, 200400, 202173 of the night-head gate): the runs version `n`
+/// lists, None when the version is gone. Any other read error is an error: the retire, the stray-run sweep and their
+/// reference sets used to take a version they could not read (a store timeout, a 503) as listing nothing, and deleted
+/// runs a restore point's version still listed.
+async fn listed_runs(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), n: u64) -> Result<Option<Vec<String>>> {
+    match manifest::load(store, id, n).await {
+        Ok(v) => Ok(Some(names(&v).0.into_iter().map(|s| s.to_string()).collect())),
+        Err(e) if e.downcast_ref::<object_store::Error>().is_some_and(|e| matches!(e, object_store::Error::NotFound { .. })) && !CONTROL_RETIRE_READ_ERRORS_AS_GONE.load(Relaxed) => Ok(None),
+        Err(_) if CONTROL_RETIRE_READ_ERRORS_AS_GONE.load(Relaxed) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
+/// Negative control of fix-retire-read-error, tests only in effect: every error reading a version counts as "gone" (the
+/// code before).
+pub static CONTROL_RETIRE_READ_ERRORS_AS_GONE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
 /// Run objects of the database that no version from `from` on lists, nor a pair or a fork (`kept`).
 async fn stray_runs(store: &Arc<dyn ObjectStore>, id: &(impl crate::lifecycle::DbRef + ?Sized), from: u64, kept: &[(String, Vec<String>)]) -> Result<Vec<String>> {
     let id = &crate::lifecycle::DbRef::at(id); // fix-incarnation: one incarnation for the whole call
     let mut listed: BTreeSet<String> = kept.iter().flat_map(|(_, l)| l.iter().cloned()).collect();
     for n in manifest::list_versions(store, id).await?.into_iter().filter(|n| *n >= from) {
-        if let Ok(v) = manifest::load(store, id, n).await {
-            listed.extend(names(&v).0.into_iter().map(|s| s.to_string()));
+        if let Some(l) = listed_runs(store, id, n).await? {
+            listed.extend(l);
         }
     }
     let metas: Vec<_> = store.list(Some(&Path::from(format!("{}/run", root(id))))).try_collect().await?;
