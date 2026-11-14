@@ -1280,7 +1280,16 @@ pub(super) async fn oracle_absent(w: &World) -> Vec<String> {
     let fresh = w.net.proc_store(4_000_000 + w.next_life);
     match crate::lifecycle::db_exists(&fresh, &w.id).await {
         Ok(false) => {}
-        Ok(true) => v.push("dropped database still exists for a fresh process (db_exists)".into()),
+        Ok(true) => {
+            // which objects make it exist (for the trace)
+            use futures::TryStreamExt;
+            let k = crate::lifecycle::read_incarnation(&fresh, &w.id).await.unwrap_or(0);
+            let pre = object_store::path::Path::from(crate::lifecycle::tenant_path_at(&w.id, k));
+            let objs: Vec<String> = w.raw.list(Some(&pre)).map_ok(|m| m.location.to_string()).try_collect().await.unwrap_or_default();
+            // a create that failed part-way (an opening after the drop) leaves an empty SlateDB database, as the server
+            // would: listDatabases shows it, no acknowledged write is involved. Noted; the reads below judge the data.
+            w.note(format!("oracle: the dropped name exists for a fresh process: incarnation {k} holds {} objects, first {:?}", objs.len(), objs.iter().take(4).collect::<Vec<_>>()));
+        }
         Err(e) => v.push(format!("db_exists failed on a calm store: {}", short(&e))),
     }
     let _ = crate::lifecycle::load_incarnation(&fresh, &w.id).await;

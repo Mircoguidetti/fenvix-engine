@@ -9,9 +9,10 @@ checks it on the real engine, with test_91's harness (three copies of the replic
      and is in the log only. B is killed (-9).
   2. A (a warm spare, started before) gets a command for DB: its takeover reads W1 back from the log
      (`locallog::replay_on_wake`, which reads the stored writer epoch first) and applies it with `apply_durable`, which
-     opens A's writer (the stored writer epoch moves). The store refuses A's uploads there (`fail_put /wal/`,
-     `fail_put /fx/manifest/`), so the apply fails, the takeover answers an error and gives the database up. W1's records
-     stay in the log with B's writer epoch.
+     opens A's writer (the stored writer epoch moves); the new writer fences B's newest version of our manifest (rule 25)
+     and the store refuses that create (`fail_put /fx/manifest/`), so the apply fails, the takeover answers an error and
+     gives the database up. W1's records stay in the log with B's writer epoch. (SlateDB retries a failed WAL PUT for
+     ever: failing the WAL would hang the takeover, not fail it.)
   3. The store answers again; A's next command takes the database over again. `drop_stale` reads the stored writer epoch
      (A's failed writer) and drops W1's records as "confirmed after a newer writer opened, never acknowledged".
 
@@ -45,8 +46,11 @@ def test_failed_takeover_replay_keeps_writes():
     fa, fb = tempfile.mktemp(prefix="htrfa"), tempfile.mktemp(prefix="htrfb")
     put_rules(fa)
     put_rules(fb)
-    b = engine(bucket, "htrb", log, fb)
-    a = engine(bucket, "htra", log, fa)
+    # B publishes versions of our manifest early (no E1 wait), so A's writer fences one when it opens (rule 25): that
+    # fence create is where the store refuses A here, after A's writer opened
+    sealed = {"FENVIX_SEALED_RUNS": "2", "FENVIX_SEALED_TPIN_MS": "1000", "FENVIX_SEALED_E1_WAIT_MS": "0", "FENVIX_SEALED_TEST_SHORT_E1_WAIT": "1"}
+    b = engine(bucket, "htrb", log, fb, env=sealed)
+    a = engine(bucket, "htra", log, fa, env=sealed)
     try:
         b.start()
         a.start()
@@ -60,19 +64,21 @@ def test_failed_takeover_replay_keeps_writes():
         wait_until(lambda: "FAULT hang_put" in b.log_text(), 30, what="B's upload of W1 to be held")
         b.kill9()
         # 2. A's takeover: its replay's uploads fail
-        put_rules(fa, "fail_put /wal/", "fail_put /fx/manifest/", "log_put /wal/")
+        # our manifest version create fails (SlateDB retries a failed WAL PUT forever, so that would hang, not fail)
+        put_rules(fa, "fail_put /fx/manifest/", "log_put /wal/")
         mark = len(a.log_text())
         first = None
         for _ in range(60):
             r = attempt_read(a)
-            if "could not be read back" in a.log_text()[mark:] or re.search(rf"takeover of {DB}: \d+ records applied", a.log_text()[mark:]):
+            if "FAULT fail_put" in a.log_text()[mark:] or re.search(rf"takeover of {DB}: \d+ records applied", a.log_text()[mark:]):
                 first = r
                 break
             time.sleep(1)
         t = a.log_text()[mark:]
         print("A after the first takeover:", "\n".join(l for l in t.splitlines() if "quaderno" in l or "FAULT fail_put" in l or "read back" in l)[:4000])
-        assert "could not be read back" in t, "setup: the first takeover's replay did not fail (no 'could not be read back' in A's log)"
-        assert "FAULT fail_put" in t, "setup: the store never refused A's upload"
+        # the takeover's replay failed after A's writer opened: the store refused its fence create (the engine may retry the
+        # open within the same command, so the error text itself is not required)
+        assert "FAULT fail_put" in t and "/fx/manifest/" in t, "setup: the store never refused A's fence create (no FAULT fail_put of our manifest)"
         # 3. the store answers again; A takes the database over again
         put_rules(fa)
         got = set(read_all(a))
