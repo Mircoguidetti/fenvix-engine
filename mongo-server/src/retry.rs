@@ -290,6 +290,8 @@ pub struct Run {
     /// Statement ids answered from the record.
     pub retried: Vec<i32>,
     dirty: bool,
+    /// [`Run::stage`] put the record into the command's batch, and [`Run::apply`] has not run (yet): see `Drop`.
+    staged: std::sync::atomic::AtomicBool,
 }
 
 impl Run {
@@ -336,12 +338,14 @@ impl Run {
         let rec = doc! { "number": self.number, "txn": false, "last": now_ms(), "ins": ins, "stmts": stmts };
         if let Ok(bytes) = rec.to_vec() {
             w.extra.push(Op::Put(session_key(key), bytes));
+            self.staged.store(true, Relaxed);
         }
     }
 
     /// The batch was applied: the new statements join the record. A retry answered from them waits for the durability
     /// of this batch (the commit the command just staged).
     pub fn apply(&mut self) {
+        self.staged.store(false, Relaxed);
         let s = &mut *self.guard;
         if !self.new_ins.is_empty() || !self.new_stmts.is_empty() {
             s.durable = crate::dbs::staged_commit();
@@ -352,6 +356,35 @@ impl Run {
         }
         s.last = now_ms();
     }
+}
+
+/// fix-retry-lease-loss: a command that staged its record in a batch and then failed before [`Run::apply`] (the batch
+/// may be applied: an error after `Entry::apply` staged it, such as the new collection's uuid write refused because a
+/// lease loss reopened the database, answered `WriteOutcomeUnknown`) leaves the record in memory behind the stored one.
+/// A retry answered from that memory ran the statements again (E11000 on its own first attempt, the client told
+/// nInserted=0 while every document was stored). The memory is dropped instead: the next command of the session reads
+/// the record back from the database, after waiting for the durability of the batch this command staged (and, if that
+/// opening was given up, from the database's next opening, `retry_begin`).
+impl Drop for Run {
+    fn drop(&mut self) {
+        if self.staged.load(Relaxed) && !control_unapplied_kept() {
+            UNAPPLIED_RECORDS_DROPPED.fetch_add(1, Relaxed);
+            let durable = crate::dbs::staged_commit();
+            let s = &mut *self.guard;
+            *s = Sess::new();
+            s.durable = durable;
+        }
+    }
+}
+
+/// Session records dropped from memory because their command failed after staging them (see `Drop for Run`).
+pub static UNAPPLIED_RECORDS_DROPPED: AtomicU64 = AtomicU64::new(0);
+
+/// TEST ONLY (negative control of ctl test_93, `FENVIX_TEST_CONTROL_UNAPPLIED_RECORD_KEPT=1`): the code before
+/// fix-retry-lease-loss (the memory of a record staged by a failed command is kept).
+fn control_unapplied_kept() -> bool {
+    static C: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *C.get_or_init(|| std::env::var("FENVIX_TEST_CONTROL_UNAPPLIED_RECORD_KEPT").as_deref() == Ok("1"))
 }
 
 /// See [`Server::txn_stored_outcome`].
@@ -428,7 +461,7 @@ impl Server {
             }
         }
         guard.last = now_ms();
-        Ok(Some(Begun { run: Run { guard, number, ids, new_ins: Vec::new(), new_stmts: Vec::new(), retried: Vec::new(), dirty }, key }))
+        Ok(Some(Begun { run: Run { guard, number, ids, new_ins: Vec::new(), new_stmts: Vec::new(), retried: Vec::new(), dirty, staged: std::sync::atomic::AtomicBool::new(false) }, key }))
     }
 
     fn session_entry(&self, key: &str) -> Arc<AMutex<Sess>> {
@@ -653,5 +686,65 @@ impl Server {
             }
         }
         Ok(n)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A loaded session with insert 0 of transaction number 1 recorded, and a run of number 1 inserting statement 1.
+    async fn run_of(s: &Arc<AMutex<Sess>>) -> Run {
+        let mut guard = Arc::clone(s).lock_owned().await;
+        guard.loaded = true;
+        guard.number = 1;
+        guard.ins.insert(0);
+        Run { guard, number: 1, ids: vec![0, 1], new_ins: Vec::new(), new_stmts: Vec::new(), retried: Vec::new(), dirty: false, staged: std::sync::atomic::AtomicBool::new(false) }
+    }
+
+    #[tokio::test]
+    async fn a_record_staged_by_a_failed_command_is_read_back() {
+        let s = Arc::new(AMutex::new(Sess::new()));
+        let mut run = run_of(&s).await;
+        run.record_insert(1);
+        let mut w = Writes::new();
+        run.stage(&mut w, "k");
+        assert_eq!(w.extra.len(), 1);
+        // the command fails after its batch was staged: no `apply`
+        drop(run);
+        let g = s.lock().await;
+        assert!(!g.loaded, "the next command must read the record back from the database");
+        assert_eq!(g.number, -1);
+        assert!(g.ins.is_empty());
+    }
+
+    #[tokio::test]
+    async fn an_applied_record_stays_in_memory() {
+        let s = Arc::new(AMutex::new(Sess::new()));
+        let mut run = run_of(&s).await;
+        run.record_insert(1);
+        let mut w = Writes::new();
+        run.stage(&mut w, "k");
+        run.apply();
+        drop(run);
+        let g = s.lock().await;
+        assert!(g.loaded);
+        assert_eq!(g.number, 1);
+        assert_eq!(g.ins.iter().copied().collect::<Vec<_>>(), vec![0, 1]);
+    }
+
+    #[tokio::test]
+    async fn a_command_that_staged_nothing_keeps_the_memory() {
+        let s = Arc::new(AMutex::new(Sess::new()));
+        let run = run_of(&s).await;
+        let mut w = Writes::new();
+        // nothing new: no record in the batch
+        run.stage(&mut w, "k");
+        assert!(w.extra.is_empty());
+        drop(run);
+        let g = s.lock().await;
+        assert!(g.loaded);
+        assert_eq!(g.number, 1);
+        assert!(g.ins.contains(&0));
     }
 }

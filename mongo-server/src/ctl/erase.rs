@@ -139,15 +139,18 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
     let owners_pre = tenant_bench::fx::pair::fork_ref_owners(&ctl.store, &cur, ancestors).await?;
     // the pins this incarnation holds in its ancestors are read from its own manifest: released before the move
     let pins_released = purge::release_pins_at(&ctl.store, &tenant_bench::lifecycle::tenant_path(&cur)).await?;
+    if let Some(l) = crate::locallog::get() {
+        // local log (prototype): a restart must not apply the erased database's records again.
+        // fix-hole-k: written before the incarnation moves, as a drop does (`Entry::drop_database`): a restarting process
+        // reads the log, then the incarnations, then the log again (`locallog::recheck_after_incarnations`), and takes a
+        // drop record after its records for the proof that a move between its two reads is not theirs.
+        l.append_drop(db).await.map_err(|_| ApiError::new(500, "local_log_stopped", "local log stopped".to_string()))?.map_err(|e| ApiError::new(500, "local_log_drop_failed", e))?;
+        l.forget_pinned(db);
+    }
     tenant_bench::lifecycle::bump_incarnation(&ctl.store, db).await.map_err(|e| ApiError::new(500, "incarnation_bump_failed", format!("{e:#}")))?;
     // The users and roles defined on the database live in admin.system.users / admin.system.roles, not under tenants/{db}:
     // they go with it (idempotent, so a resumed erase repeats it harmlessly).
     ctl.server.erase_database_auth(db).await.map_err(|e| ApiError::new(500, "erase_users_failed", format!("could not remove the users of {db}: {e}")))?;
-    if let Some(l) = crate::locallog::get() {
-        // local log (prototype): a restart must not apply the erased database's records again
-        let _ = l.append_drop(db).await;
-        l.forget_pinned(db);
-    }
     // the databases holding a fork reference of this one (read before its manifest goes)
     let owners = owners_pre;
     let mut report = purge::purge_tenant(ctl, db).await?;

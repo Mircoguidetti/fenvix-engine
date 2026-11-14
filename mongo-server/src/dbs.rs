@@ -1109,7 +1109,10 @@ impl Entry {
         if let Some(l) = crate::locallog::get() {
             // Ownership is lost: what was not uploaded can no longer be (another process owns the database). A restart must
             // not apply those records over the new owner's writes.
-            if l.has_pending(&self.name) && !l.is_pinned(&self.name) {
+            // fix-hole-t-freeze: not after a failed takeover replay (`needs_wake`): its records are in the log, this
+            // process's next opening replays them again (and so does any other owner's takeover); freezing here refused
+            // the database until a restart while this process still held its lease (sim-test-3 test_96 on 61b8fe88)
+            if l.has_pending(&self.name) && !l.is_pinned(&self.name) && !l.needs_wake(&self.name) {
                 if l.is_remote() {
                     // Q8d: with the replicated log the records are safe on 2 copies of 3: keep them for the restart
                     l.freeze(&self.name);
@@ -1274,7 +1277,10 @@ impl Entry {
                 self.sync_gauges();
                 crate::fair::register(&self.name);
                 tenant_bench::counting::set_phase(0);
-                if unclean || took.is_some() {
+                // fix-hole-t-freeze: also when an earlier takeover replay of this process failed (`needs_wake`): the
+                // reopening of a lease this process still holds may look clean, its records are still in the log only
+                let rewake = crate::locallog::get().map_or(false, |l| l.needs_wake(&self.name));
+                if unclean || took.is_some() || rewake {
                     // the replicated log may hold acknowledged writes object storage does not have yet (review R4)
                     if let Err(e) = Box::pin(crate::locallog::replay_on_wake(self)).await {
                         // not served without them: the next command retries the open

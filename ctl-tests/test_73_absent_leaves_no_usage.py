@@ -101,6 +101,13 @@ def test_reads_of_an_absent_database_leave_nothing_and_a_dropped_one_keeps_its_u
         st, r = srv.admin.get("/v1/databases/dropped/usage")
         print(f"usage query of the dropped database: {st}")
         time.sleep(3)
+        # integration-6 (known failures): since fix-slow-store (item 4) a read of an absent name keeps its lease for the
+        # absent hold (5 s, `ABSENT_HOLD` in dbs.rs): `tenants/{name}/_lease` exists until it ends (MEASURED on fea18a34:
+        # present at 3 s, gone at 11 s). Wait for the names to empty (at most 12 s), then check again after 3 s more.
+        deadline = time.time() + 12
+        while time.time() < deadline and any(objects_of(bucket, db) for db in ("gone", "never")):
+            time.sleep(0.5)
+        time.sleep(3)
         left = {db: objects_of(bucket, db) for db in ("gone", "never")}
         kept = [k for k, _ in list_prefix(bucket, "control/usage/dropped/")]
         print(f"objects left under absent names: {left}; usage records of the dropped database before {before}, after {kept}")

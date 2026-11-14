@@ -293,6 +293,9 @@ pub struct ProcLog {
     uploaded: u64,
     pinned: Option<Vec<Rec>>,
     frozen: bool,
+    /// fix-hole-t-freeze (`LocalLog::waking`): a takeover replay read the records back and has not applied them (it
+    /// failed): nothing confirms them, the abandon does not freeze, the next opening replays again.
+    waking: bool,
     /// fix-takeover-retry: the highest position read back at the start.
     read_pos: Option<u64>,
     /// `Remote::committed` and `Remote::flushed` for the database.
@@ -302,12 +305,22 @@ pub struct ProcLog {
     takes: u64,
     /// A restart's replay that failed, stopped at `hold_kept_records`.
     parked: Option<Parked>,
+    /// fix-hole-k: `LocalLog::kept_inc`, the incarnation the kept records were acknowledged for.
+    kept_inc: Option<u64>,
 }
 
 pub struct Parked {
     keep: Vec<Rec>,
     opened: bool,
     seen: Option<u64>,
+    inc: Option<u64>,
+}
+
+/// fix-hole-k: the mutation control (`MONGO_TEST_KEPT_INC_OFF=1` in the engine): the incarnation check of kept records off.
+pub static KEPT_INC_OFF: AtomicBool = AtomicBool::new(false);
+
+fn kept_inc_on(x3: &X3) -> bool {
+    !x3.old_kept && !KEPT_INC_OFF.load(SeqCst)
 }
 
 impl ProcLog {
@@ -497,6 +510,8 @@ enum Outcome {
     Nothing,
     Applied(usize),
     Conflict,
+    /// fix-hole-k: the records' incarnation was dropped or erased since: never applied.
+    Moved,
 }
 
 /// Apply records after the stored marker durably, 256 per batch, each batch ending with its last record's marker.
@@ -522,7 +537,20 @@ async fn apply_after_marker(t: &mut Tenant, mut recs: Vec<Rec>) -> anyhow::Resul
 /// `locallog::replay_on_wake`: a takeover reads the database's records back from the log and applies the ones after the
 /// stored marker, then confirms them to the log.
 async fn replay_on_wake(x3: &X3, life: u64, store: &Arc<dyn ObjectStore>, id: &str, t: &mut Tenant) -> anyhow::Result<String> {
-    let Some(log) = x3.log.clone() else { return Ok(String::new()) };
+    if x3.log.is_none() {
+        return Ok(String::new());
+    }
+    // fix-hole-t-freeze (`locallog::replay_on_wake`): marked until the replay succeeds
+    x3.with(life, |x| x.waking = true);
+    let r = wake_apply(x3, life, store, id, t).await;
+    if r.is_ok() {
+        x3.with(life, |x| x.waking = false);
+    }
+    r
+}
+
+async fn wake_apply(x3: &X3, life: u64, store: &Arc<dyn ObjectStore>, id: &str, t: &mut Tenant) -> anyhow::Result<String> {
+    let log = x3.log.clone().unwrap();
     let raw = log.read().map_err(|e| anyhow::anyhow!(e))?;
     if raw.is_empty() {
         return Ok(String::new());
@@ -547,6 +575,11 @@ async fn replay_on_wake(x3: &X3, life: u64, store: &Arc<dyn ObjectStore>, id: &s
     let mut stale = 0;
     if let Some(s) = stored {
         stale = drop_stale(&mut recs, s);
+    }
+    // fix-hole-t-freeze: a record and its copy (same `orig`): only the last written is applied
+    if !x3.old_kept {
+        recs.sort_by_key(|r| (r.orig, std::cmp::Reverse(r.seq)));
+        recs.dedup_by_key(|r| r.orig);
     }
     let rec_epoch = recs.iter().map(|r| r.epoch).max().unwrap_or(0);
     if rec_epoch > 0 && stored.is_some_and(|s| s > rec_epoch) {
@@ -599,9 +632,10 @@ async fn open_writer(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &
         Ok(s) => s,
         Err(e) => {
             // not served without them: the next command retries the open. `Entry::abandon_with` first: records of this
-            // process not yet in the store (here the replay's copies) freeze the database in this process until a restart
+            // process not yet in the store freeze the database in this process until a restart, except while a takeover
+            // replay has not finished (`waking`, fix-hole-t-freeze): its next opening replays again
             let frozen = x3.log.is_some() && x3.with(life, |x| {
-                if x.uploaded < x.staged && !x.is_pinned() {
+                if x.uploaded < x.staged && !x.is_pinned() && !x.waking {
                     x.frozen = true;
                     true
                 } else {
@@ -771,7 +805,7 @@ impl World {
                         Ok(()) => {
                             let mut out = "closed".to_string();
                             // `LocalLog::closed`: every record confirmed so far was staged before the close
-                            if x3.log.is_some() && !x3.with(life, |x| x.is_pinned()) {
+                            if x3.log.is_some() && !x3.with(life, |x| x.is_pinned() || x.waking) {
                                 let pos = x3.with(life, |x| {
                                     x.uploaded = x.staged;
                                     x.committed
@@ -799,7 +833,7 @@ impl World {
                     let Some(t) = g.take() else { return "not open (skipped)".into() };
                     // `Entry::abandon_with`: ownership lost with records only in the log: kept for a restart (frozen)
                     let frozen = x3.log.is_some() && x3.with(life, |x| {
-                        if x.uploaded < x.staged && !x.is_pinned() {
+                        if x.uploaded < x.staged && !x.is_pinned() && !x.waking {
                             x.frozen = true;
                             true
                         } else {
@@ -964,7 +998,7 @@ async fn upload(x3: &X3, life: u64, tl: &Arc<tokio::sync::Mutex<Option<Tenant>>>
     if x3.log.is_none() {
         return "no log (skipped)".into();
     }
-    let (due, target, pos) = x3.with(life, |x| (!x.is_pinned() && x.uploaded < x.staged, x.staged, x.committed));
+    let (due, target, pos) = x3.with(life, |x| (!x.is_pinned() && !x.waking && x.uploaded < x.staged, x.staged, x.committed));
     if !due {
         return "nothing to upload".into();
     }
@@ -988,7 +1022,8 @@ async fn upload(x3: &X3, life: u64, tl: &Arc<tokio::sync::Mutex<Option<Tenant>>>
 
 /// `replay_db`: open the database through the lease (refused while another process holds it) and apply the records
 /// after the stored marker. `retry`: a background retry of kept records.
-async fn replay_db(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<dyn ObjectStore>, id: &str, tl: &Arc<tokio::sync::Mutex<Option<Tenant>>>, mut recs: Vec<Rec>, retry: bool, seen: &mut Option<u64>) -> anyhow::Result<Outcome> {
+#[allow(clippy::too_many_arguments)]
+async fn replay_db(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<dyn ObjectStore>, id: &str, tl: &Arc<tokio::sync::Mutex<Option<Tenant>>>, mut recs: Vec<Rec>, retry: bool, inc: Option<u64>, seen: &mut Option<u64>) -> anyhow::Result<Outcome> {
     if !retry {
         if let Some(stored) = crate::lifecycle::stored_writer_epoch(store, id).await? {
             drop_stale(&mut recs, stored);
@@ -1010,6 +1045,14 @@ async fn replay_db(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Ar
     if retry && !x3.with(life, |x| x.pinned.is_some()) {
         return Ok(Outcome::Nothing);
     }
+    // fix-hole-k: into the incarnation the records were acknowledged for only (checked before the lease, so a moved name
+    // is never taken or created, and again under it)
+    let inc = inc.filter(|_| kept_inc_on(x3));
+    if let Some(k) = inc {
+        if crate::lifecycle::read_incarnation(store, id).await? != k {
+            return Ok(Outcome::Moved);
+        }
+    }
     if g.is_none() || !g.as_ref().unwrap().is_writer() || !x3.holds(life) {
         // `Entry::ensure_open`: the lease first
         if x3.other_holds(life) {
@@ -1019,6 +1062,11 @@ async fn replay_db(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Ar
             let _ = t.abandon().await;
         }
         open_writer(x3, p, life, lc, store, id, x3.is_absent(), &mut g).await?;
+    }
+    if let Some(k) = inc {
+        if crate::lifecycle::read_incarnation(store, id).await? != k {
+            return Ok(Outcome::Moved);
+        }
     }
     let t = g.as_mut().unwrap();
     let (n, _) = apply_after_marker(t, recs).await?;
@@ -1050,9 +1098,29 @@ async fn restart(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<
         x.read_pos = Some(max_pos);
     });
     let n_read = recs.len();
+    // fix-hole-k (`incarnations_of`, `recheck_after_incarnations`): the incarnation, then the log again; a drop record
+    // after the last record read, or that record gone, means nothing of them is to be applied
+    let mut inc = None;
+    if !recs.is_empty() && kept_inc_on(x3) {
+        let k = match crate::lifecycle::read_incarnation(store, id).await {
+            Ok(k) => k,
+            Err(e) => return format!("restart failed (the process does not start): incarnation: {}", short(&e)),
+        };
+        let again = match log.read() {
+            Ok(r) => r,
+            Err(e) => return format!("restart failed (the process does not start): {e}"),
+        };
+        let dropped = again.iter().any(|(pos, r)| r.drop && *pos > max_pos);
+        let gone = !again.iter().any(|(pos, _)| *pos == max_pos);
+        if dropped || gone {
+            recs.clear();
+            x3.count("restart-recheck-discarded");
+        }
+        inc = Some(k);
+    }
     if recs.is_empty() {
         let _ = x3.flush_done(life, max_pos);
-        return format!("restart: {n_read} records read");
+        return format!("restart: {n_read} records read{}", if n_read > 0 { " (dropped or confirmed since: discarded)" } else { "" });
     }
     if drop_stored(store, id, &mut recs).await {
         return match x3.flush_done(life, max_pos) {
@@ -1063,10 +1131,10 @@ async fn restart(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<
     let keep = recs.clone();
     let mut seen = None;
     let takes = x3.with(life, |x| x.takes);
-    let r = tokio::time::timeout(Duration::from_secs(20), replay_db(x3, p, life, lc, store, id, tl, recs, false, &mut seen)).await.unwrap_or_else(|_| Err(anyhow::anyhow!("no progress")));
+    let r = tokio::time::timeout(Duration::from_secs(20), replay_db(x3, p, life, lc, store, id, tl, recs, false, inc, &mut seen)).await.unwrap_or_else(|_| Err(anyhow::anyhow!("no progress")));
     let opened = x3.with(life, |x| x.takes) != takes;
     match r {
-        Ok(Outcome::Nothing) | Ok(Outcome::Applied(_)) => {
+        Ok(Outcome::Nothing) | Ok(Outcome::Applied(_)) | Ok(Outcome::Moved) => {
             let n = if let Ok(Outcome::Applied(n)) = r { n } else { 0 };
             match x3.flush_done(life, max_pos) {
                 Ok(()) => format!("restart: {n_read} records read, {n} applied; log told {max_pos}"),
@@ -1075,7 +1143,7 @@ async fn restart(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<
         }
         Ok(Outcome::Conflict) => format!("restart: {n_read} records read: conflict with a later writer, kept in the log, NOT applied"),
         Err(e) => {
-            x3.with(life, |x| x.parked = Some(Parked { keep, opened, seen }));
+            x3.with(life, |x| x.parked = Some(Parked { keep, opened, seen, inc }));
             x3.count("replay-refused");
             format!("restart: {n_read} records read; replay failed ({}); stopped at hold_kept_records (took the lease: {opened})", short(&e))
         }
@@ -1086,6 +1154,7 @@ async fn restart(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<
 /// replay never took the lease; copies written to the log with the base's rules or when it did).
 async fn kept(x3: &X3, life: u64) -> String {
     let Some(pk) = x3.with(life, |x| x.parked.take()) else { return "nothing parked".into() };
+    x3.with(life, |x| x.kept_inc = pk.inc);
     if !pk.opened && !x3.old_kept {
         let n = pk.keep.len();
         x3.with(life, |x| x.pinned = Some(pk.keep));
@@ -1119,13 +1188,18 @@ async fn retry(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<dy
     let r = if drop_stored(store, id, &mut recs).await {
         Ok(Outcome::Nothing)
     } else {
-        tokio::time::timeout(Duration::from_secs(20), replay_db(x3, p, life, lc, store, id, tl, recs, true, &mut seen)).await.unwrap_or_else(|_| Err(anyhow::anyhow!("no progress")))
+        let inc = x3.with(life, |x| x.kept_inc);
+        tokio::time::timeout(Duration::from_secs(20), replay_db(x3, p, life, lc, store, id, tl, recs, true, inc, &mut seen)).await.unwrap_or_else(|_| Err(anyhow::anyhow!("no progress")))
     };
     let opened = x3.with(life, |x| x.takes) != takes;
     let holder = x3.holds(life);
     let old = x3.old_kept;
+    let moved = matches!(r, Ok(Outcome::Moved));
+    if moved {
+        x3.count("retry-moved");
+    }
     match r {
-        Ok(Outcome::Applied(_)) | Ok(Outcome::Nothing) => {
+        Ok(Outcome::Applied(_)) | Ok(Outcome::Nothing) | Ok(Outcome::Moved) => {
             // fix-takeover-retry: only the holder confirms what it knows; another process at most what it read at its start
             let pos = x3.with(life, |x| {
                 x.uploaded = x.staged;
@@ -1138,7 +1212,8 @@ async fn retry(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<dy
             let told = x3.flush_done(life, pos);
             x3.with(life, |x| x.pinned = None);
             let which = if holder || old { "its committed position" } else { "the highest it read at its start" };
-            format!("retry: kept records stored (holder {holder}); log told {pos} ({which}) {:?}", told)
+            let what = if moved { "discarded (their incarnation was dropped or erased)" } else { "stored" };
+            format!("retry: kept records {what} (holder {holder}); log told {pos} ({which}) {:?}", told)
         }
         Ok(Outcome::Conflict) => {
             x3.with(life, |x| x.pinned = None);
@@ -1217,6 +1292,14 @@ async fn whole_db(x3: &X3, p: usize, life: u64, eid: u32, store: &Arc<dyn Object
             return format!("{what} failed: ownership lost before the objects went");
         }
     }
+    if erase && x3.log.is_some() {
+        // fix-hole-k: as a drop, the log's drop record before the incarnation moves (`ctl/erase.rs`)
+        if let Err(e) = x3.append_drop(life).await {
+            x3.release(life);
+            return format!("{what} failed: the log's drop record: {e}");
+        }
+        x3.with(life, |x| x.pinned = None);
+    }
     let from = crate::lifecycle::read_incarnation(store, id).await.unwrap_or(0);
     // from here on a failure leaves the outcome unknown to the client (the name may already be in a new, empty
     // incarnation): the model gets the drop as a write of unknown outcome, and the database may be absent
@@ -1231,10 +1314,6 @@ async fn whole_db(x3: &X3, p: usize, life: u64, eid: u32, store: &Arc<dyn Object
         Ok(k) => k,
         Err(e) => return unknown(format!("{what} failed at the incarnation move (outcome unknown): {}", short(&e))),
     };
-    if erase && x3.log.is_some() {
-        let _ = x3.append_drop(life).await;
-        x3.with(life, |x| x.pinned = None);
-    }
     // every object of the name
     let prefix = object_store::path::Path::from(format!("tenants/{id}"));
     let mut deleted = 0;
