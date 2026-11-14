@@ -199,6 +199,18 @@ def main():
     if a.log_dirs != "sep":
         shutil.rmtree(os.path.dirname(dirs[0]), ignore_errors=True)
     shutil.rmtree(kept, ignore_errors=True)
+    shutil.rmtree(f"/tmp/fenvix-box-floor-{port}", ignore_errors=True)
+    if not os.environ.get("SV_KEEP_BUCKET"):
+        # the local MinIO shares this disk: a 600 s heavy run leaves GBs (a full MinIO failed the engine's lease renewals)
+        from lib import s3
+        c = s3()
+        for page in c.get_paginator("list_objects_v2").paginate(Bucket=bucket):
+            objs = [{"Key": o["Key"]} for o in page.get("Contents", [])]
+            if objs:
+                c.delete_objects(Bucket=bucket, Delete={"Objects": objs})
+        for u in c.list_multipart_uploads(Bucket=bucket).get("Uploads", []):
+            c.abort_multipart_upload(Bucket=bucket, Key=u["Key"], UploadId=u["UploadId"])
+        c.delete_bucket(Bucket=bucket)
 
 
 if __name__ == "__main__":
