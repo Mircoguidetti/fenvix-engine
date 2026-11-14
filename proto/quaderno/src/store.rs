@@ -113,8 +113,16 @@ fn recycle(path: &Path, spare: &Path, dir: &Path, seg_bytes: u64) -> std::io::Re
     Ok(())
 }
 
+/// save-p99 (2026-11-14): paced by default. Unpaced (the old default, `PQ_PREALLOC_MBS=0`), the 64 MB of zeros of the
+/// spare segment and their single sync at the end stopped the log's fdatasync on the same disk at every segment switch:
+/// MEASURED (bench/perf/save-p99, three copies on one disk, 100 insert_one/s + 400 docs/s, 600 s) acknowledged writes of
+/// 120-150 ms every ~123 s, the max of the run; paced, none over 94 ms. 32 MB/s fills a segment in 2 s, far ahead of
+/// the log's own write rate (the spare must be ready before the current segment is full, or the disk thread
+/// preallocates the next one inline, which is worse).
+const PREALLOC_MBS_DEFAULT: u64 = 32;
+
 fn prealloc_mbs() -> u64 {
-    std::env::var("PQ_PREALLOC_MBS").ok().and_then(|x| x.parse().ok()).unwrap_or(0)
+    std::env::var("PQ_PREALLOC_MBS").ok().and_then(|x| x.parse().ok()).unwrap_or(PREALLOC_MBS_DEFAULT)
 }
 
 fn open_segment(dir: &Path, seg: u32, size: u64) -> File {
