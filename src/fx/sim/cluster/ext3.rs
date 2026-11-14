@@ -345,6 +345,8 @@ pub struct X3 {
     owner: Arc<Mutex<Option<(usize, u64)>>>,
     /// The database was dropped or erased and not created again.
     absent: Arc<AtomicBool>,
+    /// A drop or erase failed after the name moved to a new incarnation: the database may or may not exist.
+    maybe_absent: Arc<AtomicBool>,
     pub found: Arc<Mutex<Vec<String>>>,
     counts: Arc<Mutex<HashMap<&'static str, u64>>>,
 }
@@ -362,6 +364,7 @@ impl X3 {
             // the database does not exist until a writer's create succeeds (the first opening can fail: a 503 on the
             // lease's incarnation read left the core's `created` true with nothing in the store, batch 43496082968)
             absent: Arc::new(AtomicBool::new(ext.flavor == 3 || ext.log)),
+            maybe_absent: Default::default(),
             found: Default::default(),
             counts: Default::default(),
         }
@@ -577,11 +580,14 @@ async fn replay_on_wake(x3: &X3, life: u64, store: &Arc<dyn ObjectStore>, id: &s
 async fn open_writer(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<dyn ObjectStore>, id: &str, create: bool, g: &mut Option<Tenant>) -> anyhow::Result<String> {
     // the lease acquisition reads the name's incarnation and uses it from now on in this process
     let k = crate::lifecycle::load_incarnation(store, id).await?;
+    // a name a failed drop left in a new, empty incarnation is created again (the server finds it absent)
+    let create = create || (x3.maybe_absent.load(SeqCst) && !crate::lifecycle::db_exists(store, id).await?);
     // the server's opening is a reader until its first write upgrades it: the takeover's replay reads the stored writer
     // epoch before this process's writer moves it (`drop_stale` keeps the last writer's records)
     let mut t = if create { lc.create(id).await? } else { lc.wake(id).await? };
     x3.take(p, life);
     x3.absent.store(false, SeqCst);
+    x3.maybe_absent.store(false, SeqCst);
     let rep = match replay_on_wake(x3, life, store, id, &mut t).await {
         Ok(s) => s,
         Err(e) => {
@@ -1191,12 +1197,18 @@ async fn whole_db(x3: &X3, p: usize, life: u64, eid: u32, store: &Arc<dyn Object
         }
     }
     let from = crate::lifecycle::read_incarnation(store, id).await.unwrap_or(0);
+    // from here on a failure leaves the outcome unknown to the client (the name may already be in a new, empty
+    // incarnation): the model gets the drop as a write of unknown outcome, and the database may be absent
+    let unknown = |why: String| {
+        x3.release(life);
+        x3.maybe_absent.store(true, SeqCst);
+        let kv: Vec<(Vec<u8>, Option<Vec<u8>>)> = (0..CUSTOMERS).flat_map(|c| (0..PER_CUSTOMER).map(move |i| (ckey(c, i), None))).collect();
+        model.lock().unwrap().issue(eid, p, &kv).store(FAILED, SeqCst);
+        why
+    };
     let k = match crate::lifecycle::bump_incarnation(store, id).await {
         Ok(k) => k,
-        Err(e) => {
-            x3.release(life);
-            return format!("{what} failed at the incarnation move: {}", short(&e));
-        }
+        Err(e) => return unknown(format!("{what} failed at the incarnation move (outcome unknown): {}", short(&e))),
     };
     if erase && x3.log.is_some() {
         let _ = x3.append_drop(life).await;
@@ -1209,10 +1221,7 @@ async fn whole_db(x3: &X3, p: usize, life: u64, eid: u32, store: &Arc<dyn Object
         use futures::TryStreamExt;
         let objs: Vec<object_store::path::Path> = match store.list(Some(&prefix)).map_ok(|m| m.location).try_collect().await {
             Ok(v) => v,
-            Err(e) => {
-                x3.release(life);
-                return format!("{what} failed while listing: {e} ({deleted} objects deleted; the client retries)");
-            }
+            Err(e) => return unknown(format!("{what} failed while listing (outcome unknown): {e} ({deleted} objects deleted; the client retries)")),
         };
         if objs.is_empty() {
             break;
@@ -1225,11 +1234,23 @@ async fn whole_db(x3: &X3, p: usize, life: u64, eid: u32, store: &Arc<dyn Object
     }
     x3.release(life);
     x3.absent.store(true, SeqCst);
+    x3.maybe_absent.store(false, SeqCst);
     x3.count(if erase { "erase-db" } else { "drop-db" });
     // the model: every key deleted, acknowledged now (a write in flight across the drop may be ordered before it)
     let kv: Vec<(Vec<u8>, Option<Vec<u8>>)> = (0..CUSTOMERS).flat_map(|c| (0..PER_CUSTOMER).map(move |i| (ckey(c, i), None))).collect();
     model.lock().unwrap().issue(eid, p, &kv).store(ACKED, SeqCst);
     format!("{what} done: incarnation {from} -> {k}, {deleted} objects deleted")
+}
+
+/// Before the oracle: a database a failed drop may have removed counts as absent when no fresh process sees it.
+pub(super) async fn settle_absent(w: &World) {
+    if w.x3.maybe_absent.load(SeqCst) && !w.x3.is_absent() {
+        let fresh = w.net.proc_store(5_000_000 + w.next_life);
+        if let Ok(false) = crate::lifecycle::db_exists(&fresh, &w.id).await {
+            w.x3.absent.store(true, SeqCst);
+            w.note("oracle: a failed drop left the name empty: the database counts as dropped".into());
+        }
+    }
 }
 
 /// With the log: a fresh process takes the database over before the oracle (its takeover reads the log back, as the
