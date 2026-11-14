@@ -730,6 +730,46 @@ mod tests {
         assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
     }
 
+    /// Hole T (found by the gen-3 batch, seeds 300169, 302946 and others; CI run 43496082968): a takeover whose replay of the
+    /// log fails after its writer opened makes the next takeover drop acknowledged records as stale. B (slot 0) acknowledges
+    /// writes through the log (not uploaded). A (slot 1) takes the database over; its replay (`locallog::replay_on_wake`)
+    /// applies the records through `apply_durable`, which opens A's writer (writer epoch 2), and the version create of that
+    /// opening fails (held, then dropped: a store error); A gives the database up and the records stay in the log with
+    /// epoch 1. C (slot 2) takes the database over: `drop_stale` reads the stored epoch 2 and drops every record of epoch 1
+    /// as "confirmed after a newer writer opened, never acknowledged". They were acknowledged. Ignored until fixed.
+    #[test]
+    #[ignore]
+    fn sim_hole_t_failed_takeover_replay_makes_records_stale() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        let _l = super::cluster::ext3::setup_log_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let ev = vec![
+            Open { p: 0, writer: true },
+            Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (0, i, false)).collect() },
+            Publish { p: 0 },
+            Upload { p: 0 },
+            // B's uploads stop: the next writes are acknowledged by the log only
+            Hold { p: 0, class: Class::Wal, op: Some(NOp::Put), skip: 0, land: false, all: true, rid: 1 },
+            Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (1, i, false)).collect() },
+            Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (2, i, false)).collect() },
+            // A's takeover: its writer opens inside the replay's apply and creates a version of our manifest, which fails
+            // (the store loses it: seed 300169 had a timeout before the store on that PUT)
+            Hold { p: 1, class: Class::FxVersion, op: Some(NOp::Put), skip: 0, land: false, all: true, rid: 2 },
+            Open { p: 1, writer: true },
+            Release { rid: 2 },
+            Sleep { ms: 300 },
+            // C takes the database over
+            Open { p: 2, writer: true },
+            Write { p: 2, ops: vec![(3, 0, false)] },
+        ];
+        let ext = super::cluster::Ext { flavor: 3, log: true, old_kept: false, strict_versions: false };
+        let (f, v) = run_story3(&rt, "hole T: a failed takeover replay makes acknowledged records stale", ext, ev);
+        assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {
