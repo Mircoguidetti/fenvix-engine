@@ -715,6 +715,31 @@ pub static L0_SST_BYTES_OVERRIDE: std::sync::atomic::AtomicU64 = std::sync::atom
 /// layer: restore points need the WAL written after them for the retention window).
 pub static WAL_RETAIN: std::sync::OnceLock<fn(&str) -> Duration> = std::sync::OnceLock::new();
 
+/// fix-pitr-point-wal: the name prefix of a restore point (`ctl/pitr.rs` `make_point`: `ret:{unix_ms}[:tag]`).
+pub const RESTORE_POINT_PREFIX: &str = "ret:";
+
+/// fix-pitr-point-wal: the oldest restore point of manifest `m` (a checkpoint named `ret:`), whatever the window. A point
+/// outlives the in-memory window that took it (a restart with a smaller `--retention-window-secs`, or 0), and while it is
+/// listed a restore can use it: the WAL from its replay boundary on must stay.
+pub fn oldest_restore_point(m: &slatedb::VersionedManifest) -> Option<&slatedb::Checkpoint> {
+    m.checkpoints().iter().filter(|c| c.name.as_deref().is_some_and(|n| n.starts_with(RESTORE_POINT_PREFIX))).min_by_key(|c| c.manifest_id)
+}
+
+/// fix-pitr-point-wal: for SlateDB's own WAL pass (modes 0 and 1), which keeps only a checkpoint's own WAL range: the
+/// minimum age that also keeps every WAL object written since the oldest restore point (its age, plus a minute for the
+/// store's clock against ours). Zero when there is no point.
+async fn restore_point_wal_age(store: &Arc<dyn ObjectStore>, id: &(impl DbRef + ?Sized)) -> Result<Duration> {
+    let admin = Admin::builder(tenant_path(id), Arc::clone(store)).build();
+    let Some(m) = admin.read_manifest(None).await? else { return Ok(Duration::ZERO) };
+    Ok(match oldest_restore_point(&m) {
+        Some(cp) => {
+            let now_ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as i64).unwrap_or(0);
+            Duration::from_millis((now_ms - cp.create_time.timestamp_millis()).max(0) as u64) + Duration::from_secs(60)
+        }
+        None => Duration::ZERO,
+    })
+}
+
 /// Memtable size (bytes) at which a writer flushes it to an L0 SST (`--memtable-max-mb`). slatedb's default is 64 MiB per
 /// database, with no limit across databases; a database written slowly kept growing its memtable for hours.
 pub static MEMTABLE_MAX_BYTES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(8 << 20);
@@ -4526,7 +4551,8 @@ pub async fn gc_tenant(s3: &Arc<dyn ObjectStore>, id: impl DbRef, min_age: Durat
     let counting = Arc::new(CountingStore::new(Arc::clone(s3)));
     let store: Arc<dyn ObjectStore> = counting.clone();
     let dir = GarbageCollectorDirectoryOptions { interval: None, min_age, dry_run: false };
-    let wal_dir = GarbageCollectorDirectoryOptions { min_age: min_age.max(WAL_RETAIN.get().map(|f| f(&id.to_string())).unwrap_or_default()), ..dir };
+    let points = restore_point_wal_age(&store, &id).await?;
+    let wal_dir = GarbageCollectorDirectoryOptions { min_age: min_age.max(WAL_RETAIN.get().map(|f| f(&id.to_string())).unwrap_or_default()).max(points), ..dir };
     let opts = GarbageCollectorOptions {
         manifest_options: Some(dir),
         wal_options: Some(wal_dir),
@@ -4748,7 +4774,7 @@ pub async fn gc_tenant_wal(s3: &Arc<dyn ObjectStore>, id: impl DbRef, min_age: D
         let retain = WAL_RETAIN.get().map(|f| f(&id)).unwrap_or_default();
         // Negative control of the test suite (`ctl-tests/test_09f_wal_retention_guard.py`): with this variable set the age guard
         // is off and the slatedb pass deletes WAL objects that restores need. Never set in production.
-        let retain = if std::env::var_os("MONGO_TEST_DISABLE_WAL_RETENTION_GUARD").is_some() { Duration::ZERO } else { retain };
+        let retain = if std::env::var_os("MONGO_TEST_DISABLE_WAL_RETENTION_GUARD").is_some() { Duration::ZERO } else { retain.max(restore_point_wal_age(s3, &at).await?) };
         gc_tenant_wal_slatedb(s3, &at, min_age.max(retain)).await?
     } else {
         let counting = Arc::new(CountingStore::new(Arc::clone(s3)));
@@ -4864,7 +4890,10 @@ async fn gc_wal_with(store: &Arc<dyn ObjectStore>, id: &(impl DbRef + ?Sized), m
         WAL_GC_NOOP.fetch_add(1, Relaxed);
         return Ok(());
     }
-    if let Some(cp) = m.checkpoints().iter().filter(|_| retained).min_by_key(|c| c.manifest_id) {
+    // fix-pitr-point-wal: a restore point keeps the WAL from its replay boundary on whatever the window (it outlives the
+    // window that took it); with a window every checkpoint does, as before
+    let oldest = if retained { m.checkpoints().iter().min_by_key(|c| c.manifest_id) } else { oldest_restore_point(m) };
+    if let Some(cp) = oldest {
         let r = match st.oldest_cp {
             Some((u, r)) if u == cp.id.as_u128() => r,
             _ => {
@@ -6101,7 +6130,25 @@ mod tests {
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn closed_gc_keeps_the_wal_of_a_restore_point_without_a_window() {
         let _l = settings_lock().await;
-        let id = "test-closed-gc-point-no-window";
+        closed_gc_point_case("test-closed-gc-point-no-window").await;
+    }
+
+    /// fix-pitr-point-wal: the same with SlateDB's own WAL pass (`--wal-gc-mode slatedb`, mode 0), which keeps only a
+    /// checkpoint's own WAL range: the restore point's age now bounds what it may delete.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn closed_gc_keeps_the_wal_of_a_restore_point_without_a_window_slatedb_mode() {
+        let _l = settings_lock().await;
+        struct Mode(u8);
+        impl Drop for Mode {
+            fn drop(&mut self) {
+                WAL_GC_MODE.store(self.0, std::sync::atomic::Ordering::Relaxed);
+            }
+        }
+        let _m = Mode(WAL_GC_MODE.swap(0, std::sync::atomic::Ordering::Relaxed));
+        closed_gc_point_case("test-closed-gc-point-no-window-slatedb").await;
+    }
+
+    async fn closed_gc_point_case(id: &str) {
         assert!(WAL_RETAIN.get().map_or(true, |f| f(id).is_zero()), "the test needs no retention window for {id}");
         let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
         let db = Db::builder(tenant_path(id), Arc::clone(&raw)).with_settings(writer_settings()).build().await.unwrap();
