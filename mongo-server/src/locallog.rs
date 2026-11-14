@@ -92,6 +92,10 @@ pub struct LocalLog {
     /// ([`recover_remote`]): every record of the database at or below it was read then. A process that does not hold
     /// the database's lease confirms at most this position, and only once it proved those records are in object storage.
     read_pos: Mutex<HashMap<String, u64>>,
+    /// fix-hole-k: per database in `pinned`, the incarnation its kept records were acknowledged for (read at the start,
+    /// see [`incarnations_of`]). The retry applies them only into that incarnation: a name dropped or erased since (by
+    /// any process: a drop by another one never reaches this process's memory) has moved on, and they are discarded.
+    kept_inc: Mutex<HashMap<String, u64>>,
 }
 
 fn checksum(b: &[u8]) -> [u8; 8] {
@@ -254,7 +258,7 @@ impl LocalLog {
         let old = list_segments(&dir)?;
         let first = old.last().map(|(n, _)| n + 1).unwrap_or(1);
         let (tx, rx) = mpsc::unbounded_channel();
-        let me = Arc::new(Self { dir: dir.clone(), id, next_seq: AtomicU64::new((boot << SEQ_BOOT_SHIFT) + 1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every, remote: None, frozen: Mutex::new(Default::default()), read_pos: Mutex::new(HashMap::new()) });
+        let me = Arc::new(Self { dir: dir.clone(), id, next_seq: AtomicU64::new((boot << SEQ_BOOT_SHIFT) + 1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every, remote: None, frozen: Mutex::new(Default::default()), read_pos: Mutex::new(HashMap::new()), kept_inc: Mutex::new(HashMap::new()) });
         let w = Arc::clone(&me);
         std::thread::Builder::new().name("local-log".into()).spawn(move || w.writer_thread(rx, first))?;
         Ok((me, old))
@@ -558,7 +562,7 @@ pub async fn install_quaderno(addrs: &str, id: &str, dir: &str, upload_secs: u64
     std::fs::create_dir_all(&dir).with_context(|| format!("directory {}", dir.display()))?;
     // the disk writer is never used: its channel stays without a receiver
     let (tx, _rx) = mpsc::unbounded_channel();
-    let me = Arc::new(LocalLog { dir, id: format!("quaderno:{id}"), next_seq: AtomicU64::new(1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every: Duration::from_secs(upload_secs), remote: Some(remote), frozen: Mutex::new(Default::default()), read_pos: Mutex::new(HashMap::new()) });
+    let me = Arc::new(LocalLog { dir, id: format!("quaderno:{id}"), next_seq: AtomicU64::new(1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every: Duration::from_secs(upload_secs), remote: Some(remote), frozen: Mutex::new(Default::default()), read_pos: Mutex::new(HashMap::new()), kept_inc: Mutex::new(HashMap::new()) });
     tenant_bench::lifecycle::LOCAL_LOG_FLUSH_SECS.store(upload_secs, Relaxed);
     if old_kept_retry() {
         eprintln!("TEST: the old handling of kept records is on (MONGO_TEST_KEPT_RETRY_OLD): it loses acknowledged writes; never use this in production");
@@ -573,6 +577,89 @@ pub async fn install_quaderno(addrs: &str, id: &str, dir: &str, upload_secs: u64
 fn old_kept_retry() -> bool {
     static OLD: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
     *OLD.get_or_init(|| std::env::var("MONGO_TEST_KEPT_RETRY_OLD").map_or(false, |v| v == "1"))
+}
+
+/// Test only (mutation control of hole K): `MONGO_TEST_KEPT_INC_OFF=1` switches the incarnation check of kept records
+/// off (the behaviour before fix-hole-k). Never in production.
+fn kept_inc_off() -> bool {
+    static OFF: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *OFF.get_or_init(|| {
+        let off = std::env::var("MONGO_TEST_KEPT_INC_OFF").map_or(false, |v| v == "1");
+        if off {
+            eprintln!("TEST: incarnation check of kept records disabled (MONGO_TEST_KEPT_INC_OFF): never use this in production");
+        }
+        off
+    })
+}
+
+/// A record of the replicated log as its value holds it (the disk log's framing: length, checksum, payload).
+fn decode_framed(bytes: &[u8]) -> Result<Record> {
+    anyhow::ensure!(bytes.len() >= 12, "a record of the log is too short");
+    let len = u32::from_le_bytes(bytes[0..4].try_into().unwrap()) as usize;
+    let payload = &bytes[12..];
+    anyhow::ensure!(payload.len() == len && checksum(payload) == bytes[4..12], "a record of the log has a bad checksum");
+    decode(payload)
+}
+
+/// fix-hole-k: the incarnation of every database that has records to replay, read from the store (no lease), 32 at once.
+/// Read AFTER the log: with the replicated log, [`recheck_after_incarnations`] then proves no drop or erase came between.
+async fn incarnations_of(dbs: &Arc<crate::dbs::Dbs>, by_db: &BTreeMap<String, Vec<Record>>) -> Result<HashMap<String, u64>> {
+    let store = dbs.store();
+    let names: Vec<String> = by_db.iter().filter(|(_, r)| !r.is_empty()).map(|(k, _)| k.clone()).collect();
+    let got: Vec<(String, Result<u64>)> = futures::stream::iter(names)
+        .map(|db| {
+            let store = Arc::clone(&store);
+            async move {
+                let k = tenant_bench::lifecycle::read_incarnation(&store, &db).await;
+                (db, k)
+            }
+        })
+        .buffer_unordered(32)
+        .collect()
+        .await;
+    let mut out = HashMap::new();
+    for (db, k) in got {
+        out.insert(db.clone(), k.map_err(|e| anyhow!("incarnation of {db}: {e:#}"))?);
+    }
+    Ok(out)
+}
+
+/// fix-hole-k (RULE 8): the records read at the start belong to the incarnation read after them ([`incarnations_of`])
+/// unless a drop or an erase came between the two reads. Both write their drop record to the log before they move the
+/// incarnation, and the log's positions only grow, so a second read of the log, made after the incarnations, shows such a
+/// drop as a drop record after the database's last record of the first read. If that last record is gone, a holder
+/// confirmed every record up to it as in object storage (or a drop was confirmed, which removes the records before it):
+/// nothing of them is left to apply. In both cases the database's records are discarded here; otherwise they are kept,
+/// for the incarnation read.
+async fn recheck_after_incarnations(remote: &crate::qlog::Remote, by_db: &mut BTreeMap<String, Vec<Record>>, max_pos: &HashMap<String, u64>) -> Result<()> {
+    if by_db.values().all(|r| r.is_empty()) {
+        return Ok(());
+    }
+    let mut present: HashMap<String, std::collections::HashSet<u64>> = HashMap::new();
+    let mut last_drop: HashMap<String, u64> = HashMap::new();
+    for (_, recs) in remote.read_pending().await? {
+        for (pos, bytes) in recs {
+            let r = decode_framed(&bytes)?;
+            if r.drop {
+                let e = last_drop.entry(r.db.clone()).or_insert(0);
+                *e = (*e).max(pos);
+            }
+            present.entry(r.db).or_default().insert(pos);
+        }
+    }
+    for (db, recs) in by_db.iter_mut() {
+        if recs.is_empty() {
+            continue;
+        }
+        let mp = max_pos.get(db).copied().unwrap_or(0);
+        let dropped = last_drop.get(db).map_or(false, |d| *d > mp);
+        let gone = !present.get(db).map_or(false, |s| s.contains(&mp));
+        if dropped || gone {
+            eprintln!("quaderno: database {db}: its {} records read at the start are {} since; not replayed", recs.len(), if dropped { "followed by a drop record (dropped or erased)" } else { "confirmed by a holder" });
+            recs.clear();
+        }
+    }
+    Ok(())
 }
 
 /// Q8d: the restart with the replicated log. Reads back every record the log still holds (not confirmed as in object
@@ -613,8 +700,13 @@ pub async fn recover_remote(dbs: &Arc<crate::dbs::Dbs>, timeout: Duration) -> Re
     log.next_seq.fetch_max(max_seq + 1, Relaxed);
     log.read_pos.lock().unwrap().extend(max_pos.iter().map(|(k, v)| (k.clone(), *v)));
     eprintln!("quaderno: restart read {n_read} records of {} databases from the log", by_db.len());
+    // fix-hole-k: the incarnation each database's records were acknowledged for (then proved by a second read of the log)
+    let incs = incarnations_of(dbs, &by_db).await?;
+    if !kept_inc_off() {
+        recheck_after_incarnations(&remote, &mut by_db, &max_pos).await?;
+    }
     let names: Vec<String> = by_db.keys().cloned().collect();
-    let (n_dbs, applied, conflicts, failed) = replay_all(dbs, log, by_db, timeout).await?;
+    let (n_dbs, applied, conflicts, failed) = replay_all(dbs, log, by_db, incs, timeout).await?;
     // confirmed: every database whose records are now in object storage (applied, or already there by the marker)
     for db in names {
         if conflicts.contains(&db) || failed.contains(&db) {
@@ -629,6 +721,9 @@ pub async fn recover_remote(dbs: &Arc<crate::dbs::Dbs>, timeout: Duration) -> Re
     }
     Ok((n_dbs, applied))
 }
+
+/// fix-hole-k: databases whose kept records were discarded because their incarnation was dropped or erased since.
+pub static KEPT_MOVED: AtomicU64 = AtomicU64::new(0);
 
 /// Records of the replicated log dropped at a replay because a later writer had opened the database (see `drop_stale`).
 pub static STALE_DROPPED: AtomicU64 = AtomicU64::new(0);
@@ -807,7 +902,9 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>, timeo
         }
     }
     log.next_seq.fetch_max(max_seq + 1, Relaxed);
-    let (n_dbs, applied, conflicts, _failed) = replay_all(dbs, log, by_db, timeout).await?;
+    // fix-hole-k: this machine's log sees no other process's drop; the incarnation is read now (see `kept_inc`)
+    let incs = incarnations_of(dbs, &by_db).await?;
+    let (n_dbs, applied, conflicts, _failed) = replay_all(dbs, log, by_db, incs, timeout).await?;
     for (_, p) in old {
         if conflicts.is_empty() {
             let _ = std::fs::remove_file(&p);
@@ -823,7 +920,7 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>, timeo
 
 /// Replay every database's records (those after its marker), up to 32 databases at once. Returns (databases applied,
 /// records applied, databases in conflict, databases whose replay failed and whose records are kept and pinned).
-async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTreeMap<String, Vec<Record>>, timeout: Duration) -> Result<(usize, u64, Vec<String>, Vec<String>)> {
+async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTreeMap<String, Vec<Record>>, incs: HashMap<String, u64>, timeout: Duration) -> Result<(usize, u64, Vec<String>, Vec<String>)> {
     // Databases are independent: check (and replay) up to 32 at once. A clean shutdown leaves every database's marker at
     // its last record, so a restart only reads the markers; one at a time that took 123 s for 100 databases on S3.
     let log_id = log.id.clone();
@@ -831,6 +928,7 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
         .map(|(db, recs)| {
             let dbs = Arc::clone(dbs);
             let log_id = log_id.clone();
+            let inc = incs.get(&db).copied();
             async move {
                 let mut recs = recs;
                 // perf-latency round 2: records object storage already has (a clean stop uploaded them) are dropped without
@@ -843,7 +941,7 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
                 let mut seen = None;
                 // fix-takeover-retry: whether the replay took the database's lease (so may have opened a writer)
                 let takes = dbs.leases.takes(&db);
-                let r = replay_with_timeout(&dbs, &log_id, &db, recs, false, &mut seen, timeout).await;
+                let r = replay_with_timeout(&dbs, &log_id, &db, recs, false, inc, &mut seen, timeout).await;
                 let opened = dbs.leases.takes(&db) != takes;
                 (db, r, seen, keep, opened)
             }
@@ -858,7 +956,7 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
     let mut failed_dbs = Vec::new();
     for (db, r, seen, keep, opened) in results {
         match r {
-            Ok(Outcome::Nothing) => {}
+            Ok(Outcome::Nothing) | Ok(Outcome::Moved) => {}
             Ok(Outcome::Applied(n)) => {
                 applied += n;
                 n_dbs += 1;
@@ -873,6 +971,9 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
                 hold_point("hold_kept_records", &db).await;
                 failed += 1;
                 failed_dbs.push(db.clone());
+                if let Some(k) = incs.get(&db) {
+                    log.kept_inc.lock().unwrap().insert(db.clone(), *k);
+                }
                 if log.is_remote() && !opened && !old_kept_retry() {
                     // fix-takeover-retry (RULE 8, step 9 takeovers): the replay never took the database's lease (another
                     // process holds it: it was refused before opening anything), so it changed no writer epoch, and the
@@ -923,6 +1024,8 @@ async fn hold_point(name: &str, db: &str) {
 
 enum Outcome {
     Nothing,
+    /// fix-hole-k: the records' incarnation is not the name's any more (dropped or erased since): never applied.
+    Moved,
     Applied(u64),
     Conflict,
 }
@@ -958,16 +1061,17 @@ pub fn check_open(db: &str) -> Result<()> {
     Ok(())
 }
 
-async fn replay_with_timeout(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str, recs: Vec<Record>, retry: bool, seen: &mut Option<u64>, timeout: Duration) -> Result<Outcome> {
-    match tokio::time::timeout(timeout, REPLAYING.scope((), replay_db(dbs, log_id, db, recs, retry, seen))).await {
+async fn replay_with_timeout(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str, recs: Vec<Record>, retry: bool, inc: Option<u64>, seen: &mut Option<u64>, timeout: Duration) -> Result<Outcome> {
+    match tokio::time::timeout(timeout, REPLAYING.scope((), replay_db(dbs, log_id, db, recs, retry, inc, seen))).await {
         Ok(r) => r,
         Err(_) => Err(anyhow!("no progress after {} s", timeout.as_secs())),
     }
 }
 
 /// Apply one database's records durably (those after its marker). `seen`: the stored writer epoch the check read.
-/// `retry`: a background retry of kept records (the database may have been dropped meanwhile).
-async fn replay_db(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str, mut recs: Vec<Record>, retry: bool, seen: &mut Option<u64>) -> Result<Outcome> {
+/// `retry`: a background retry of kept records (the database may have been dropped meanwhile). `inc`: the incarnation
+/// the records were acknowledged for (fix-hole-k); they are applied into that one only.
+async fn replay_db(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str, mut recs: Vec<Record>, retry: bool, inc: Option<u64>, seen: &mut Option<u64>) -> Result<Outcome> {
     recs.sort_by_key(|r| (r.orig, r.seq));
     // Another writer opened the database after the one that staged these records (another process took it over, or this
     // one lost and re-took it): replaying them would overwrite newer writes and leave the secondary indexes inconsistent.
@@ -995,6 +1099,23 @@ async fn replay_db(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str, mut recs:
     let log = get().ok_or_else(|| anyhow!("local log not installed"))?;
     if retry && !log.is_pinned(db) {
         return Ok(Outcome::Nothing); // dropped or erased meanwhile
+    }
+    // fix-hole-k (RULE 8): the records go into the incarnation they were acknowledged for, never into another one. A drop
+    // or an erase by another process moves the name to a new incarnation (and its objects go): applying them now would
+    // create the dropped database again (MEASURED, ctl test_97: 120 documents of a dropped database back). Checked
+    // first without the lease (a moved name is never taken), then under it: the lease acquisition reads the current
+    // incarnation, and no drop can move it while this process holds the lease. An unchanged incarnation (the records
+    // of the current one, even of a database not yet in object storage) is applied as before.
+    if let Some(k) = inc.filter(|_| !kept_inc_off()) {
+        let now = tenant_bench::lifecycle::read_incarnation(&dbs.store(), db).await?;
+        if now == k && !dbs.leases.valid(db) {
+            dbs.leases.acquire(db).await?;
+        }
+        let held = if now == k { tenant_bench::lifecycle::incarnation(db) } else { now };
+        if held != k {
+            eprintln!("local log: database {db}: its {} records were acknowledged for incarnation {k}; the name is at incarnation {held} now (dropped or erased since): NOT applied", recs.len());
+            return Ok(Outcome::Moved);
+        }
     }
     let marker = g.get_live(MARKER_KEY).await?;
     let done_seq = match marker.as_deref().and_then(parse_marker) {
@@ -1069,13 +1190,15 @@ fn spawn_retry(dbs: Arc<crate::dbs::Dbs>, timeout: Duration) {
                 let mut seen = None;
                 let rec_epoch = recs.iter().map(|r| r.epoch).max().unwrap_or(0);
                 let takes = dbs.leases.takes(&db);
-                let r = if drop_stored(&dbs, &log_id, &db, &mut recs).await { Ok(Outcome::Nothing) } else { replay_with_timeout(&dbs, &log_id, &db, recs, true, &mut seen, timeout).await };
+                let inc = log.kept_inc.lock().unwrap().get(&db).copied();
+                let r = if drop_stored(&dbs, &log_id, &db, &mut recs).await { Ok(Outcome::Nothing) } else { replay_with_timeout(&dbs, &log_id, &db, recs, true, inc, &mut seen, timeout).await };
                 // fix-takeover-retry: whether this attempt took the database's lease, and whether this process holds it now
                 let opened = dbs.leases.takes(&db) != takes;
                 let holder = dbs.leases.valid(&db);
                 let old = old_kept_retry();
+                let moved = matches!(r, Ok(Outcome::Moved));
                 match r {
-                    Ok(Outcome::Applied(_)) | Ok(Outcome::Nothing) => {
+                    Ok(Outcome::Applied(_)) | Ok(Outcome::Nothing) | Ok(Outcome::Moved) => {
                         // Applied durably; nothing else was written meanwhile (the database was refused): all is uploaded.
                         if let Some(e) = log.tenants.lock().unwrap().get_mut(&db) {
                             e.uploaded = e.staged;
@@ -1108,8 +1231,14 @@ fn spawn_retry(dbs: Arc<crate::dbs::Dbs>, timeout: Duration) {
                             }
                         }
                         if log.pinned.lock().unwrap().remove(&db).is_some() {
-                            RETRIED.fetch_add(1, Relaxed);
-                            eprintln!("local log: database {db}: kept records applied by the retry; the database is open again");
+                            log.kept_inc.lock().unwrap().remove(&db);
+                            if moved {
+                                KEPT_MOVED.fetch_add(1, Relaxed);
+                                eprintln!("local log: database {db}: kept records discarded by the retry (their incarnation was dropped or erased); the name is open again");
+                            } else {
+                                RETRIED.fetch_add(1, Relaxed);
+                                eprintln!("local log: database {db}: kept records applied by the retry; the database is open again");
+                            }
                         }
                     }
                     Ok(Outcome::Conflict) => {
