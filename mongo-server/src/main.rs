@@ -291,6 +291,11 @@ struct Args {
     /// Size of the disk floor in GiB (0 = 80% of the free space of its file system at start).
     #[arg(long, default_value_t = 0)]
     counter_disk_gb: u64,
+    /// The maps' RAM share, in percent of the counter's RAM (counter-data-floor): data never pushes the maps below it,
+    /// and maps over it go down to the disk floor (coldest first) when the data needs the RAM, so the data always keeps
+    /// the rest. 100 = the old rule (maps capped only by the whole RAM).
+    #[arg(long, default_value_t = tenant_bench::counter::DEFAULT_MAPS_RAM_PCT)]
+    counter_maps_ram_pct: u64,
     /// Ranged GETs at least this long (KiB) are sent as parallel pieces (0 = never; --waiter-tools).
     #[arg(long, default_value_t = 512)]
     split_get_min_kb: u64,
@@ -1233,7 +1238,17 @@ async fn run() -> Result<()> {
             (Some(d), gb)
         };
         anyhow::ensure!(tenant_bench::lifecycle::install_counter(ram, dir, disk)?, "a cache is installed already");
-        eprintln!("waiter tools on: counter RAM {} MiB, disk floor {} MiB ({})", ram >> 20, disk >> 20, if args.counter_disk_dir.is_empty() { "none" } else { &args.counter_disk_dir });
+        anyhow::ensure!((1..=100).contains(&args.counter_maps_ram_pct), "--counter-maps-ram-pct must be 1..=100");
+        if let Some(c) = tenant_bench::counter::COUNTER.get() {
+            c.set_maps_ram_pct(args.counter_maps_ram_pct);
+        }
+        eprintln!(
+            "waiter tools on: counter RAM {} MiB (maps share {}%), disk floor {} MiB ({})",
+            ram >> 20,
+            args.counter_maps_ram_pct,
+            disk >> 20,
+            if args.counter_disk_dir.is_empty() { "none" } else { &args.counter_disk_dir }
+        );
         tenant_bench::simstore::SPLIT_GET_MIN.store(args.split_get_min_kb << 10, std::sync::atomic::Ordering::Relaxed);
         tenant_bench::simstore::SPLIT_GET_PIECE.store(args.split_get_piece_kb << 10, std::sync::atomic::Ordering::Relaxed);
         tenant_bench::simstore::HEDGE_AFTER_MS.store(args.hedge_after_ms, std::sync::atomic::Ordering::Relaxed);

@@ -3,9 +3,14 @@
 //!
 //! **The maps** (kitchen: "le mappe sul bancone"): the index, the filters and the stats of every SST of the open
 //! databases, and the data blocks that hold the collections' indexes and metadata (every key that is not a document,
-//! see [`crate::maps`]). They are pinned: data never pushes them out. When the RAM floor is full they move to the disk
-//! floor (coldest first), never to S3. They are forgotten only when their SST leaves the manifest (compaction), or when
-//! even the disk floor is full (counted in `maps_dropped`).
+//! see [`crate::maps`]). Data never pushes them out of their RAM share (`maps_ram_pct` of the RAM, 25% by default,
+//! `--counter-maps-ram-pct`); beyond it they may use the RAM the data leaves free, but when data needs that RAM the
+//! coldest maps move to the disk floor, never to S3 (counter-data-floor: before, the maps were capped only by the whole
+//! RAM, so maps larger than the RAM left the data nothing and every hot read went to disk or S3). The data always keeps
+//! at least `100 - maps_ram_pct` percent of the RAM. A map read back from the disk floor comes back to RAM and keeps its
+//! disk copy (the bytes of an SST never change), so sending it down again costs no write. Maps are forgotten only when
+//! their SST leaves the manifest (compaction), or when even the disk floor is full, or when there is no disk floor
+//! (counted in `maps_dropped`: they are read again from S3 when needed).
 //!
 //! **The data blocks**, under an exit rule that protects what comes back (scan resistant, like 2Q / S3-FIFO):
 //! - a new block enters *probation*; a block read ahead ("preso in anticipo", [`PREFETCH`]) enters the *prefetched*
@@ -48,6 +53,9 @@ fn is_prefetch() -> bool {
 
 /// Share of the RAM data floor the protected LRU may take.
 const PROTECTED_SHARE: f64 = 0.75;
+/// The maps' RAM share by default, in percent of the counter's RAM (`--counter-maps-ram-pct`).
+pub const DEFAULT_MAPS_RAM_PCT: u64 = 25;
+
 /// Size of one segment file of the disk floor.
 const SEGMENT_BYTES: u64 = 64 << 20;
 
@@ -172,11 +180,16 @@ pub struct CounterMeters {
     pub maps_to_disk: AtomicU64,
     pub maps_dropped: AtomicU64,
     pub maps_forgotten: AtomicU64,
+    /// Entries read back from the disk floor (data and maps), and of them maps.
+    pub disk_reads: AtomicU64,
+    pub maps_hits_disk: AtomicU64,
 }
 
 /// The two-floor counter. Use [`Counter::split_cache`] to get the cache slatedb takes.
 pub struct Counter {
     ram_bytes: u64,
+    /// The maps' RAM share in percent (1..=100): data never pushes maps below it, maps never push data below the rest.
+    maps_ram_pct: AtomicU64,
     ram: Mutex<Ram>,
     maps: Mutex<Maps>,
     disk: Option<Mutex<Disk>>,
@@ -224,6 +237,7 @@ impl Counter {
         let disk_bytes = if disk.is_some() { disk_bytes } else { 0 };
         Ok(Arc::new(Counter {
             ram_bytes,
+            maps_ram_pct: AtomicU64::new(DEFAULT_MAPS_RAM_PCT),
             ram: Mutex::new(Ram::default()),
             maps: Mutex::new(Maps::default()),
             disk,
@@ -252,6 +266,18 @@ impl Counter {
 
     pub fn ram_capacity(&self) -> u64 {
         self.ram_bytes
+    }
+    /// Set the maps' RAM share (percent of the RAM, clamped to 1..=100; 100 is the old rule: maps capped only by the RAM).
+    pub fn set_maps_ram_pct(&self, pct: u64) {
+        self.maps_ram_pct.store(pct.clamp(1, 100), Relaxed);
+        self.balance();
+    }
+    pub fn maps_ram_pct(&self) -> u64 {
+        self.maps_ram_pct.load(Relaxed)
+    }
+    /// Bytes of RAM the maps keep whatever the data does (the data keeps the rest whatever the maps do).
+    pub fn maps_ram_share(&self) -> u64 {
+        (self.ram_bytes as u128 * self.maps_ram_pct.load(Relaxed) as u128 / 100) as u64
     }
     pub fn disk_capacity(&self) -> u64 {
         self.disk_bytes
@@ -338,14 +364,20 @@ impl Counter {
                 return Some(e);
             }
         }
-        // on the disk floor: back to RAM
+        // on the disk floor: back to RAM (the disk copy stays: when the map goes down again nothing is written)
         let e = self.disk_get(k)?;
         self.m.maps_hits.fetch_add(1, Relaxed);
-        self.maps_put(*k, e.clone());
+        self.m.maps_hits_disk.fetch_add(1, Relaxed);
+        self.maps_put_keep(*k, e.clone(), true);
         Some(e)
     }
 
     fn maps_put(&self, k: Ck, e: CachedEntry) {
+        self.maps_put_keep(k, e, false)
+    }
+
+    /// `keep_disk`: the entry was just read from the disk floor, its copy there stays valid.
+    fn maps_put_keep(&self, k: Ck, e: CachedEntry, keep_disk: bool) {
         // P-big-speed fix 1: copied out of the GET's receive buffer before it is kept (`meter::MeteredCache::insert`)
         let e = e.clamp_allocated_size();
         let size = e.size() as u64 + 64;
@@ -362,8 +394,10 @@ impl Counter {
             }
             m.lru.insert(t, k);
         }
-        if let Some(d) = &self.disk {
-            d.lock().unwrap().forget(&k);
+        if !keep_disk {
+            if let Some(d) = &self.disk {
+                d.lock().unwrap().forget(&k);
+            }
         }
         self.balance();
     }
@@ -424,49 +458,64 @@ impl Counter {
         self.balance();
     }
 
-    /// Keep RAM within its size: data leaves first (prefetched unused, then probation, then protected), maps leave
-    /// (to disk) only when no data is left in RAM.
+    /// Keep RAM within its size (counter-data-floor). When maps and data together are over the RAM:
+    /// - maps over their share (`maps_ram_share`) leave first, coldest first, down to the disk floor, until they are back
+    ///   to their share or everything fits (maps may borrow the RAM the data leaves free, never the data's floor);
+    /// - otherwise data leaves (prefetched unused, then probation, then protected) until it fits beside the maps.
+    ///
+    /// So the data always keeps `ram - maps_ram_share` when it needs it (less at most the one most recently used map,
+    /// which stays while it is at most half the RAM), and the maps always keep their share.
     fn balance(&self) {
+        let share = self.maps_ram_share();
         loop {
             let maps_used = self.maps.lock().unwrap().used;
             let mut out: Vec<(Ck, CachedEntry, bool)> = Vec::new();
             {
-                let mut r = self.ram.lock().unwrap();
-                let budget = self.ram_bytes.saturating_sub(maps_used);
-                let protected_cap = (budget as f64 * PROTECTED_SHARE) as u64;
-                let mut n = 0;
-                while r.used > budget && n < 64 {
-                    match r.evict_one(protected_cap, &self.m) {
-                        Some((k, e)) => out.push((k, e, false)),
-                        None => break,
-                    }
-                    n += 1;
+                let data_used = self.ram.lock().unwrap().used;
+                if maps_used + data_used <= self.ram_bytes {
+                    return;
                 }
-                if out.is_empty() && r.used <= budget {
-                    // data fits: maybe the maps alone are over the RAM size
-                    drop(r);
-                    if maps_used <= self.ram_bytes {
-                        return;
-                    }
+                if maps_used > share {
                     let mut m = self.maps.lock().unwrap();
-                    while m.used > self.ram_bytes && out.len() < 64 {
+                    // the most recently used map stays (a single map larger than the share is not read from disk at
+                    // every use), unless it alone takes more than half the RAM: then the data floor wins
+                    while m.used > share && m.used + data_used > self.ram_bytes && (m.slots.len() > 1 || m.used > self.ram_bytes / 2) && out.len() < 64 {
                         let Some((_, &k)) = m.lru.iter().next() else { break };
                         if let Some(s) = m.take(&k) {
                             out.push((k, s.entry, true));
                         }
                     }
-                    if out.is_empty() {
-                        return;
+                }
+                if out.is_empty() {
+                    // the maps are within their share (or only one is left): data leaves until it fits beside them
+                    let mut r = self.ram.lock().unwrap();
+                    let budget = self.ram_bytes.saturating_sub(maps_used);
+                    let protected_cap = (budget as f64 * PROTECTED_SHARE) as u64;
+                    while r.used > budget && out.len() < 64 {
+                        match r.evict_one(protected_cap, &self.m) {
+                            Some((k, e)) => out.push((k, e, false)),
+                            None => break,
+                        }
                     }
+                }
+                if out.is_empty() {
+                    return;
                 }
             }
             for (k, e, map) in out {
                 if map {
                     self.m.maps_to_disk.fetch_add(1, Relaxed);
+                    if self.disk_has_map(&k) {
+                        continue; // read back from the disk floor earlier: its copy there is still good
+                    }
                 }
                 self.disk_put(k, &e, map);
             }
         }
+    }
+
+    fn disk_has_map(&self, k: &Ck) -> bool {
+        self.disk.as_ref().map(|d| d.lock().unwrap().index.get(k).map(|l| l.map).unwrap_or(false)).unwrap_or(false)
     }
 
     // ---------------------------------------------------------------- disk floor
@@ -483,6 +532,7 @@ impl Counter {
         };
         let mut buf = vec![0u8; loc.len as usize];
         file.read_exact_at(&mut buf, loc.off).ok()?;
+        self.m.disk_reads.fetch_add(1, Relaxed);
         bincode::deserialize::<CachedEntry>(&buf).ok()
     }
 
@@ -1037,6 +1087,191 @@ mod tests {
             std::mem::size_of::<(Ck, MapSlot)>(),
             std::mem::size_of::<Slot>()
         );
+    }
+
+    // ------------------------------------------------ maps larger than RAM (counter-data-floor)
+
+    /// 1,000 bytes for key `k`, from `k` (so a wrong block or a wrong offset gives other bytes).
+    fn floor_val(k: &str) -> Vec<u8> {
+        let mut x: u64 = 1469598103934665603;
+        for b in k.bytes() {
+            x = (x ^ b as u64).wrapping_mul(1099511628211);
+        }
+        let mut v = k.as_bytes().to_vec();
+        while v.len() < 1000 {
+            x = x.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            v.push((x >> 56) as u8);
+        }
+        v
+    }
+
+    const FLOOR_SSTS: u32 = 16;
+    const FLOOR_DOCS: u32 = 10000;
+
+    fn floor_key(s: u32, j: u32) -> String {
+        format!("doc/s{s:02}/k{j:05}")
+    }
+
+    /// 16 SSTs of 10,000 documents of 1,000 bytes (160 MB) with disjoint key ranges, written without a cache.
+    async fn floor_db(store: &Arc<dyn ObjectStore>) {
+        let mut st = slatedb::config::Settings::default();
+        st.l0_max_ssts = 64;
+        st.l0_max_ssts_per_key = 64;
+        st.compactor_options = None;
+        st.garbage_collector_options = None;
+        st.l0_sst_size_bytes = 64 << 20;
+        let db = Db::builder("t", Arc::clone(store)).with_settings(st).with_db_cache_disabled().build().await.unwrap();
+        for s in 0..FLOOR_SSTS {
+            for j in 0..FLOOR_DOCS {
+                let k = floor_key(s, j);
+                db.put(&k, &floor_val(&k)).await.unwrap();
+            }
+            db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await.unwrap();
+        }
+        db.close().await.unwrap();
+    }
+
+    #[derive(Debug, Default)]
+    struct FloorRun {
+        hot_reads: u64,
+        hot_ram_hits: u64,
+        /// Hot reads that read nothing from the disk floor or the store.
+        hot_all_ram: u64,
+        wrong: u64,
+        p50_us: u64,
+        p99_us: u64,
+        s3_per_hot: f64,
+        disk_per_hot: f64,
+        maps_ram: u64,
+        data_ram: u64,
+        maps_disk: u64,
+        maps_to_disk: u64,
+        maps_dropped: u64,
+        maps_hits_disk: u64,
+        /// Maps loaded from the store after the warm-up: a map lost (not in RAM, not on the disk floor) is loaded again.
+        maps_loaded_after_warm: u64,
+    }
+
+    /// The reproduction: a counter of `ram` bytes (and a disk floor of 256 MiB when `disk`), maps larger than the RAM,
+    /// 3 hot customers (20 documents each, in 3 SSTs) read in rounds between waves of passing reads (each passer reads
+    /// 30 documents once, anywhere). `pct`: the maps' RAM share (None: the counter's default). Measures every hot read
+    /// of the last 20 rounds: latency, RAM hits, store GETs and disk-floor reads; and checks every byte read.
+    async fn floor_run(ram: u64, disk: bool, pct: Option<u64>, store: Arc<dyn ObjectStore>) -> FloorRun {
+        let dir = std::env::temp_dir().join(format!("counter-floor-{}-{}-{}", std::process::id(), ram, disk));
+        let c = Counter::new(ram, disk.then(|| dir.clone()), if disk { 256 << 20 } else { 0 }).unwrap();
+        floor_set_pct(&c, pct);
+        let mut o = slatedb::config::DbReaderOptions::default();
+        o.skip_wal_replay = true;
+        let db = slatedb::DbReader::builder("t", Arc::clone(&store)).with_db_cache(c.split_cache(), 1).with_options(o).build().await.unwrap();
+        // the maps of every SST (index, filters, stats) come in as a read touches each SST
+        for s in 0..FLOOR_SSTS {
+            let k = floor_key(s, 1);
+            assert_eq!(&db.get(&k).await.unwrap().unwrap()[..], &floor_val(&k)[..]);
+        }
+        let maps_loaded0 = c.m.maps_misses.load(Relaxed);
+        let hot: Vec<String> = (0..3u32).flat_map(|cst| (0..20u32).map(move |n| floor_key(cst * 5 + 2, (n * 487 + cst * 31) % FLOOR_DOCS))).collect();
+        let mut x: u64 = 777;
+        let mut r = FloorRun::default();
+        let mut lat = Vec::new();
+        for round in 0..25 {
+            for _ in 0..30 {
+                x = x.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+                let k = floor_key((x >> 40) as u32 % FLOOR_SSTS, (x >> 20) as u32 % FLOOR_DOCS);
+                if db.get(&k).await.unwrap().map(|v| v[..] != floor_val(&k)[..]).unwrap_or(true) {
+                    r.wrong += 1;
+                }
+            }
+            for k in &hot {
+                let (h0, s0, d0) = (c.m.hits_ram.load(Relaxed), crate::simstore::TRIPS.reads.load(Relaxed), c.m.disk_reads.load(Relaxed));
+                let (m0, mm0) = (c.m.misses.load(Relaxed), c.m.maps_misses.load(Relaxed));
+                let t = std::time::Instant::now();
+                let v = db.get(k).await.unwrap();
+                let us = t.elapsed().as_micros() as u64;
+                if v.map(|v| v[..] != floor_val(k)[..]).unwrap_or(true) {
+                    r.wrong += 1;
+                }
+                if round >= 5 {
+                    lat.push(us);
+                    r.hot_reads += 1;
+                    r.hot_ram_hits += c.m.hits_ram.load(Relaxed) - h0;
+                    let (s3, dk) = (crate::simstore::TRIPS.reads.load(Relaxed) - s0, c.m.disk_reads.load(Relaxed) - d0);
+                    r.s3_per_hot += s3 as f64;
+                    r.disk_per_hot += dk as f64;
+                    if s3 + dk == 0 && c.m.misses.load(Relaxed) == m0 && c.m.maps_misses.load(Relaxed) == mm0 {
+                        r.hot_all_ram += 1;
+                    }
+                }
+            }
+        }
+        lat.sort();
+        r.p50_us = lat[lat.len() / 2];
+        r.p99_us = lat[lat.len() * 99 / 100];
+        r.s3_per_hot /= r.hot_reads as f64;
+        r.disk_per_hot /= r.hot_reads as f64;
+        let (mu, _, du, _, _) = c.ram_usage();
+        r.maps_ram = mu;
+        r.data_ram = du;
+        r.maps_disk = c.disk_usage().1;
+        r.maps_to_disk = c.m.maps_to_disk.load(Relaxed);
+        r.maps_dropped = c.m.maps_dropped.load(Relaxed);
+        r.maps_hits_disk = c.m.maps_hits_disk.load(Relaxed);
+        r.maps_loaded_after_warm = c.m.maps_misses.load(Relaxed) - maps_loaded0;
+        db.close().await.unwrap();
+        let _ = std::fs::remove_dir_all(dir);
+        r
+    }
+
+    fn floor_set_pct(c: &Arc<Counter>, pct: Option<u64>) {
+        if let Some(p) = pct {
+            c.set_maps_ram_pct(p);
+        }
+    }
+
+    /// Measurement (`cargo test --lib counter::tests::floor_repro -- --ignored --nocapture`, with
+    /// `FENVIX_SIM_S3=25,0.6,90` for S3 latency): 1 MiB of RAM, maps about 1.4 MB.
+    #[tokio::test]
+    #[ignore]
+    async fn floor_repro() {
+        let store = crate::simstore::wrap_sim(Arc::new(InMemory::new()));
+        floor_db(&store).await;
+        let pcts: Vec<Option<u64>> = match std::env::var("FLOOR_PCTS") {
+            Ok(v) => v.split(',').map(|p| p.parse().ok()).collect(),
+            Err(_) => vec![None],
+        };
+        for disk in [true, false] {
+            for &pct in &pcts {
+                let r = floor_run(1 << 20, disk, pct, Arc::clone(&store)).await;
+                eprintln!("FLOOR disk={disk} pct={pct:?}: {r:?}");
+            }
+        }
+    }
+
+    /// counter-data-floor: maps (about 2.5 MB) larger than the RAM (1 MiB). With the disk floor: the hot customers are
+    /// served from RAM, every byte read is right, the maps that went down are read back from the disk floor and serve
+    /// right, and no map is lost (none is loaded from the store again after the warm-up).
+    #[tokio::test]
+    async fn maps_over_ram_keep_a_data_floor() {
+        let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        floor_db(&store).await;
+        let r = floor_run(1 << 20, true, None, Arc::clone(&store)).await;
+        eprintln!("FLOOR test disk: {r:?}");
+        assert_eq!(r.wrong, 0);
+        assert!(r.hot_all_ram * 10 >= r.hot_reads * 8, "hot reads not served from RAM: {r:?}");
+        assert!(r.data_ram >= (1 << 20) * 3 / 4 - (64 << 10), "data below its floor: {r:?}");
+        assert!(r.maps_ram <= (1 << 20) / 4 + (64 << 10), "maps over their share: {r:?}");
+        assert!(r.maps_to_disk > 0 && r.maps_hits_disk > 0, "no map went down and came back: {r:?}");
+        assert_eq!(r.maps_dropped, 0, "maps dropped: {r:?}");
+        assert_eq!(r.maps_loaded_after_warm, 0, "a map was lost and loaded from the store again: {r:?}");
+        // without a disk floor: the data keeps its floor too (the maps over their share are dropped and loaded again)
+        let r = floor_run(1 << 20, false, None, Arc::clone(&store)).await;
+        eprintln!("FLOOR test no disk: {r:?}");
+        assert_eq!(r.wrong, 0);
+        assert!(r.hot_ram_hits * 10 >= r.hot_reads * 9, "hot reads not served from RAM: {r:?}");
+        // the old rule (maps capped only by the RAM) is pct 100: the data gets almost nothing
+        let r = floor_run(1 << 20, true, Some(100), Arc::clone(&store)).await;
+        eprintln!("FLOOR test pct 100: {r:?}");
+        assert_eq!(r.wrong, 0);
+        assert!(r.hot_all_ram * 10 < r.hot_reads, "{r:?}");
     }
 
     #[tokio::test]
