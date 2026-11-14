@@ -673,38 +673,32 @@ impl World {
                 }
                 Ev::Upgrade { .. } => {
                     let Ok(mut g) = tl.try_lock() else { return "busy (skipped)".into() };
-                    let Some(t) = g.as_mut() else { return "not open (skipped)".into() };
+                    let Some(t) = g.as_ref() else { return "not open (skipped)".into() };
                     if t.is_writer() {
                         return "already writer".into();
                     }
                     if x3.with(life, |x| x.is_pinned()) {
                         return "refused: in recovery (RecoveryPending)".into();
                     }
-                    // the lease, the takeover's replay (before this writer moves the stored epoch), then the writer
-                    x3.take(p, life);
-                    let rep = match replay_on_wake(&x3, life, &store, &id, t).await {
-                        Ok(s) => s,
-                        Err(e) => {
-                            let t = g.take().unwrap();
-                            let _ = t.abandon().await;
-                            x3.release(life);
-                            return format!("the log could not be read back: {} (abandoned)", short(&e));
-                        }
-                    };
-                    let t = g.as_mut().unwrap();
-                    if t.is_writer() {
-                        return format!("upgraded by the replay (epoch {:?}){rep}", t.writer_epoch());
-                    }
-                    match t.upgrade().await {
-                        Ok(()) => format!("upgraded (epoch {:?}){rep}", t.writer_epoch()),
-                        Err(e) => {
-                            x3.release(life);
-                            format!("upgrade failed: {}", short(&e))
-                        }
+                    // the server has no reader that turns into a writer: a command that writes takes the lease
+                    // (`Entry::ensure_open`), which reads the name's current incarnation, and opens again
+                    let t = g.take().unwrap();
+                    let _ = t.abandon().await;
+                    match open_writer(&x3, p, life, &lc, &store, &id, x3.is_absent(), &mut g).await {
+                        Ok(s) => format!("upgraded through the lease: {s}"),
+                        Err(e) => format!("upgrade failed: {}", short(&e)),
                     }
                 }
                 Ev::Write { ops, .. } => {
                     let Ok(mut g) = tl.try_lock() else { return "busy (skipped)".into() };
+                    if g.as_ref().is_some_and(|t| !t.is_writer()) && !x3.with(life, |x| x.is_pinned()) {
+                        // a write on a process that opened the database as a reader: the lease first (see Upgrade)
+                        let t = g.take().unwrap();
+                        let _ = t.abandon().await;
+                        if let Err(e) = open_writer(&x3, p, life, &lc, &store, &id, x3.is_absent(), &mut g).await {
+                            return format!("not opened as writer for the write: {}", short(&e));
+                        }
+                    }
                     let Some(t) = g.as_mut() else { return "not open (skipped)".into() };
                     let kv: Vec<(Vec<u8>, Option<Vec<u8>>)> = ops.iter().enumerate().map(|(j, (c, i, del))| (ckey(*c, *i), if *del { None } else { Some(ext::value(kp, format!("s{seed}-e{eid}-{j}"))) })).collect();
                     let mut last: BTreeMap<Vec<u8>, Option<Vec<u8>>> = BTreeMap::new();
