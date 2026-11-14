@@ -993,6 +993,46 @@ mod tests {
         eprintln!("SIM STORY slow reads never come back empty: {failing} of {n} runs with a violation");
     }
 
+    /// Coordinator's report (B3 session, bench-big on c41559f): after an idle close, the closed-database GC about 600 s
+    /// later (the grace) deleted 95% of the objects; 123,544 wrong reads after the reopen. The same path here: one owner
+    /// writes many customers through its compactor (many runs), SlateDB's compaction with the drop drains L0, the reaper
+    /// closes the database, the grace passes, the server's closed pass runs (SlateDB's GC, then ours), and a fresh
+    /// process reopens and reads. `SIM_GC_MIN_AGE_MS` sets SlateDB's minimum age (default 0, the shortest).
+    #[test]
+    #[ignore]
+    fn sim_story_closed_gc_after_idle_close() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::Profile;
+        use Ev::*;
+        let min_age_ms = env_u64("SIM_GC_MIN_AGE_MS", 0);
+        let w = |p: usize, c: usize| Write { p, ops: (0..PER_CUSTOMER).map(|i| (c, i, false)).collect() };
+        let mut ev = vec![Open { p: 0, writer: true }, w(0, 0), Publish { p: 0 }, w(0, 1), CompStart { p: 0 }];
+        for round in 0..3 {
+            for c in 0..CUSTOMERS {
+                ev.extend([w(0, (c + round) % CUSTOMERS), Flush { p: 0 }, CompDrain { p: 0 }]);
+            }
+            ev.extend([Gc { p: 0 }, DropThrough { p: 0 }]);
+        }
+        ev.extend([Close { p: 0 }, ClosePass { p: 1 }, Sleep { ms: GC_GRACE_MS + 500 }, GcClosedServer { p: 1, min_age_ms }, Sleep { ms: GC_GRACE_MS + 500 }, GcClosedServer { p: 1, min_age_ms }, GcClosed { p: 1 }]);
+        let s = Script { seed: 4, profile: Profile::none(), knobs: env_u64("SIM_KNOBS", 0) as u8, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Default::default() };
+        let n = env_u64("SIM_REPLAYS", 1);
+        let mut failing = 0;
+        for _ in 0..n {
+            let r = rt.block_on(run_script(&s));
+            for l in r.trace.iter().filter(|l| l.contains("->")).filter(|l| !l.contains("Write {")) {
+                eprintln!("  {l}");
+            }
+            for v in r.violations.iter().take(8) {
+                eprintln!("VIOLATION {v}");
+            }
+            eprintln!("SIM STORY closed gc: {} violations; {}", r.violations.len(), r.stats);
+            failing += (!r.violations.is_empty()) as u64;
+        }
+        eprintln!("SIM STORY closed gc after idle close: {failing} of {n} runs with a violation");
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {

@@ -250,6 +250,10 @@ pub enum Ev {
     /// The retire step of every scrubbed erasure.
     Retire { p: usize },
     GcClosed { p: usize },
+    /// The server's pass over a closed database (`lifecycle` maintenance loop): SlateDB's closed GC
+    /// (`lifecycle::gc_tenant_closed`, WAL, manifests, compacted SSTs, compactions, with this minimum age), then our
+    /// runs' (`fx::gc::gc_closed`).
+    GcClosedServer { p: usize, min_age_ms: u64 },
     ClosePass { p: usize },
     Close { p: usize },
     Abandon { p: usize },
@@ -319,7 +323,7 @@ impl Ev {
     fn slot(&self) -> Option<usize> {
         use Ev::*;
         match self {
-            Open { p, .. } | Upgrade { p } | Write { p, .. } | Erase { p, .. } | Flush { p } | Publish { p } | FirstStart { p } | FirstPoll { p } | CompStart { p } | CompDrain { p } | CompStop { p } | DropThrough { p } | Gc { p } | ErasePass { p } | Retire { p } | GcClosed { p } | ReadCheck { p, .. } | ClosePass { p } | Close { p } | Abandon { p } | Kill { p } | Hold { p, .. } => Some(*p),
+            Open { p, .. } | Upgrade { p } | Write { p, .. } | Erase { p, .. } | Flush { p } | Publish { p } | FirstStart { p } | FirstPoll { p } | CompStart { p } | CompDrain { p } | CompStop { p } | DropThrough { p } | Gc { p } | ErasePass { p } | Retire { p } | GcClosed { p } | GcClosedServer { p, .. } | ReadCheck { p, .. } | ClosePass { p } | Close { p } | Abandon { p } | Kill { p } | Hold { p, .. } => Some(*p),
             Point { p, .. } | PointPrune { p, .. } | Restore { p, .. } | Fork { p, .. } | Generate { p, .. } | SlateGc { p } | EraseRide { p } => Some(*p),
             Upload { p } | Restart { p } | Kept { p } | LogRetry { p } | DropDb { p } | EraseDb { p } | AdminCheck { p } | PlantLate { p } => Some(*p),
             Release { .. } | Sleep { .. } | Mark { .. } | Storm { .. } | LogCopy { .. } | LogLeader => None,
@@ -429,6 +433,7 @@ pub fn generate(seed: u64, steps: usize) -> Script {
             }
             let q = r.gen_range(0..SLOTS);
             cands.push((3, Ev::GcClosed { p: q }));
+            cands.push((2, Ev::GcClosedServer { p: q, min_age_ms: if r.gen_bool(0.5) { 0 } else { GC_GRACE_MS } }));
             cands.push((3, Ev::ClosePass { p: q }));
         }
         for &z in &zombies {
@@ -1180,6 +1185,17 @@ impl World {
                         Ok(s) => s,
                         Err(e) => format!("retire failed: {}", short(&e)),
                     }
+                }
+                Ev::GcClosedServer { min_age_ms, .. } => {
+                    let a = match crate::lifecycle::gc_tenant_closed(&store, id.as_str(), Duration::from_millis(min_age_ms)).await {
+                        Ok(r) => format!("slate closed gc: {} deletes", r.requests.delete),
+                        Err(e) => format!("slate closed gc failed: {}", short(&e)),
+                    };
+                    let b = match gc::gc_closed(&store, &id).await {
+                        Ok(_) => "fx closed gc pass".to_string(),
+                        Err(e) => format!("fx closed gc failed: {}", short(&e)),
+                    };
+                    format!("{a}; {b}")
                 }
                 Ev::GcClosed { .. } => match gc::gc_closed(&store, &id).await {
                     Ok(_) => "closed gc pass".into(),
