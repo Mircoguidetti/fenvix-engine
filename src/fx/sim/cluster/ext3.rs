@@ -914,7 +914,7 @@ async fn log_write(x3: &X3, p: usize, life: u64, eid: u32, t: &mut Tenant, model
                 format!("acked {} keys", kv.len())
             }
             Err(e) => {
-                st.store(if writer { FAILED } else { FAILED_DEFINITE }, SeqCst);
+                st.store(if writer || t.is_writer() { FAILED } else { FAILED_DEFINITE }, SeqCst);
                 format!("failed{}: {}", if writer { "" } else { " (definite: not a writer)" }, short(&e))
             }
         };
@@ -933,7 +933,7 @@ async fn log_write(x3: &X3, p: usize, life: u64, eid: u32, t: &mut Tenant, model
             return "nothing to write".into();
         }
         Err(e) => {
-            st.store(if writer { FAILED } else { FAILED_DEFINITE }, SeqCst);
+            st.store(if writer || t.is_writer() { FAILED } else { FAILED_DEFINITE }, SeqCst);
             return format!("stage failed{}: {}", if writer { "" } else { " (definite: not a writer)" }, short(&e));
         }
     };

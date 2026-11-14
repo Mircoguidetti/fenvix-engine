@@ -175,6 +175,49 @@ mod tests {
         eprintln!("SIM STORY zombie scrub: {failing} of {n} runs with a violation");
     }
 
+    /// Seed 43032 (gen1, CI 43529646499 on 36c6a3e): a reader's write upgrades it to the writer (`Tenant::apply`). While
+    /// that upgrade is slow, the old writer acknowledges a write of the same key and dies; the upgrade then fences it,
+    /// replays its WAL and applies the reader's write on top. The two writes overlapped in time, so either order is
+    /// linearizable. The oracle took only writes issued after the last acknowledged one as legal and called this an
+    /// acknowledged write lost. Fixed on fix-sim-seed-43032: a write is ordered before an acknowledged one only if it ended
+    /// before that one started (`WriteRec::overlaps`).
+    #[test]
+    fn sim_story_reader_upgrade_overlaps_an_acked_write() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp, Profile};
+        use Ev::*;
+        let ev = vec![
+            Open { p: 0, writer: true },
+            Write { p: 0, ops: vec![(2, 13, false)] },
+            Close { p: 0 },
+            Open { p: 1, writer: true },
+            Open { p: 0, writer: false },
+            // p0's upgrade is slow: every WAL read of its replay waits (CI: timeouts on p0's WAL GETs)
+            Hold { p: 0, class: Class::Wal, op: Some(NOp::Get), skip: 0, land: true, all: true, rid: 1 },
+            Write { p: 0, ops: vec![(2, 13, false)] },
+            Write { p: 1, ops: vec![(2, 13, false)] },
+            Kill { p: 1 },
+            Release { rid: 1 },
+            Sleep { ms: 3000 },
+            Open { p: 2, writer: false },
+            ReadCheck { p: 2, cust: 2, scan: false },
+        ];
+        let s = Script { seed: 3, profile: Profile::none(), knobs: 1, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Default::default() };
+        let r = rt.block_on(run_script(&s));
+        for l in r.trace.iter() {
+            eprintln!("  {l}");
+        }
+        for v in r.violations.iter().take(6) {
+            eprintln!("VIOLATION {v}");
+        }
+        eprintln!("SIM STORY reader upgrade: {} violations; {}", r.violations.len(), r.stats);
+        let t = r.trace.join("\n");
+        assert!(t.contains("[6] Write { p: 0") && t.contains("[7] Write { p: 1, ops: [(2, 13, false)] } -> acked"), "the story did not play: the old writer's write must be acked while the reader's is in flight");
+        assert!(r.violations.is_empty(), "overlapping writes landing in either order are legal ({} violations)", r.violations.len());
+    }
+
     /// New hole Z (sim-test): a process that lost the database without noticing it (a zombie) closes it, as the idle
     /// reaper or a shutdown does. `Tenant::close` logs its failed memtable flush (fenced by the new writer) and still
     /// writes the clean marker. The new owner's acknowledged writes sit only in its WAL (it crashed, or abandoned);

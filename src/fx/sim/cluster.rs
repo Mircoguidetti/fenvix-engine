@@ -675,33 +675,65 @@ const ACKED: u8 = 1;
 const FAILED: u8 = 2;
 const FAILED_DEFINITE: u8 = 3;
 
+/// The outcome of one write and when it came: `done` is the number of writes issued when the outcome was stored
+/// (`u64::MAX` while pending). A write `w` ended before a write `a` started (real time) iff `a.issue > w.done`; only then
+/// may `w` be ordered before `a`. Writes that overlap may land in either order (seed 43032: a reader's write upgrades
+/// it to the writer and lands after a concurrent write the old writer acknowledged).
+struct Status {
+    s: AtomicU8,
+    done: AtomicU64,
+    clock: Arc<AtomicU64>,
+}
+
+impl Status {
+    fn store(&self, v: u8, o: std::sync::atomic::Ordering) {
+        self.done.store(self.clock.load(SeqCst), SeqCst);
+        self.s.store(v, o);
+    }
+    fn load(&self, o: std::sync::atomic::Ordering) -> u8 {
+        self.s.load(o)
+    }
+    fn done(&self) -> u64 {
+        if self.s.load(SeqCst) == PENDING { u64::MAX } else { self.done.load(SeqCst) }
+    }
+}
+
 struct WriteRec {
     issue: u64,
     eid: u32,
     slot: usize,
     value: Option<Vec<u8>>,
-    status: Arc<AtomicU8>,
+    status: Arc<Status>,
+}
+
+impl WriteRec {
+    /// Whether this write may be ordered after the write issued as `issue`: it had not ended when that one started.
+    fn overlaps(&self, issue: u64) -> bool {
+        self.status.done() >= issue
+    }
 }
 
 #[derive(Default)]
 struct Model {
     writes: BTreeMap<Vec<u8>, Vec<WriteRec>>,
     issued: u64,
+    clock: Arc<AtomicU64>,
 }
 
 impl Model {
     /// A copy with the statuses as they are now (the oracle checks against it without holding the lock).
     fn snapshot(&self) -> Model {
-        let mut m = Model { writes: BTreeMap::new(), issued: self.issued };
+        let mut m = Model { writes: BTreeMap::new(), issued: self.issued, clock: Arc::clone(&self.clock) };
         for (k, ws) in &self.writes {
-            m.writes.insert(k.clone(), ws.iter().map(|w| WriteRec { issue: w.issue, eid: w.eid, slot: w.slot, value: w.value.clone(), status: Arc::new(AtomicU8::new(w.status.load(SeqCst))) }).collect());
+            m.writes.insert(k.clone(), ws.iter().map(|w| WriteRec { issue: w.issue, eid: w.eid, slot: w.slot, value: w.value.clone(), status: Arc::new(Status { s: AtomicU8::new(w.status.load(SeqCst)), done: AtomicU64::new(w.status.done.load(SeqCst)), clock: Arc::clone(&self.clock) }) }).collect());
         }
         m
     }
 
-    fn issue(&mut self, eid: u32, slot: usize, ops: &[(Vec<u8>, Option<Vec<u8>>)]) -> Arc<AtomicU8> {
-        let st = Arc::new(AtomicU8::new(PENDING));
+    fn issue(&mut self, eid: u32, slot: usize, ops: &[(Vec<u8>, Option<Vec<u8>>)]) -> Arc<Status> {
+        let st = Arc::new(Status { s: AtomicU8::new(PENDING), done: AtomicU64::new(u64::MAX), clock: Arc::clone(&self.clock) });
         self.issued += 1;
+        self.clock.store(self.issued, SeqCst);
         for (k, v) in ops {
             self.writes.entry(k.clone()).or_default().push(WriteRec { issue: self.issued, eid, slot, value: v.clone(), status: Arc::clone(&st) });
         }
@@ -948,8 +980,10 @@ impl World {
                             format!("acked {} keys", kv.len())
                         }
                         Err(e) => {
-                            st.store(if writer { FAILED } else { FAILED_DEFINITE }, SeqCst);
-                            format!("failed{}: {}", if writer { "" } else { " (definite: not a writer)" }, short(&e))
+                            // `apply` upgrades a reader first: once it is the writer, its write may have landed
+                            let definite = !writer && !t.is_writer();
+                            st.store(if definite { FAILED_DEFINITE } else { FAILED }, SeqCst);
+                            format!("failed{}: {}", if definite { " (definite: not a writer)" } else { "" }, short(&e))
                         }
                     }
                 }
@@ -981,7 +1015,9 @@ impl World {
                         let k = ckey(cust, i);
                         let Some(ws) = snap.writes.get(&k) else { continue };
                         let Some(w) = ws.iter().rposition(|w| w.slot == p && opened != u32::MAX && w.eid > opened && w.status.load(SeqCst) == ACKED) else { continue };
-                        let legal: Vec<Option<Vec<u8>>> = ws[w..].iter().map(|x| x.value.clone()).collect();
+                        let mut legal: Vec<Option<Vec<u8>>> = ws[w..].iter().map(|x| x.value.clone()).collect();
+                        // a write of another process that overlapped this one may be ordered after it
+                        legal.extend(ws[..w].iter().filter(|x| x.status.load(SeqCst) != FAILED_DEFINITE && x.overlaps(ws[w].issue)).map(|x| x.value.clone()));
                         must.insert(k, (ws[w].eid, legal));
                     }
                     if must.is_empty() {
@@ -1422,6 +1458,12 @@ fn check_reads(what: &str, reads: &BTreeMap<Vec<u8>, Result<Option<Vec<u8>>, Str
                 legal.push(w.value.clone());
             }
         }
+        // writes issued before the last acknowledged one but not ended when it started may be ordered after it
+        if let Some(i) = last_ack {
+            for w in ws[..i].iter().filter(|w| w.status.load(SeqCst) != FAILED_DEFINITE && w.overlaps(ws[i].issue)) {
+                legal.push(w.value.clone());
+            }
+        }
         if legal.contains(got) {
             continue;
         }
@@ -1683,4 +1725,52 @@ pub fn slots_used(s: &Script) -> Vec<usize> {
     let mut v: Vec<usize> = m.into_keys().collect();
     v.sort();
     v
+}
+
+#[cfg(test)]
+mod oracle_tests {
+    use super::*;
+
+    fn read(m: &Model, k: &[u8], v: &str) -> Vec<String> {
+        let mut r = BTreeMap::new();
+        r.insert(k.to_vec(), Ok(Some(v.as_bytes().to_vec())));
+        check_reads("t", &r, &m.snapshot())
+    }
+
+    /// Seed 43032's rule: an earlier write still in flight when a later one is acknowledged may land after it; one that
+    /// ended before the later one started may not.
+    #[test]
+    fn overlapping_writes_land_in_either_order_ended_ones_do_not() {
+        let k = ckey(2, 13);
+        let kv = |v: &str| vec![(k.clone(), Some(v.as_bytes().to_vec()))];
+        // in flight: a issued, b issued and acked, a acked after
+        let mut m = Model::default();
+        let a = m.issue(83, 0, &kv("a"));
+        let b = m.issue(84, 1, &kv("b"));
+        b.store(ACKED, SeqCst);
+        a.store(ACKED, SeqCst);
+        assert!(read(&m, &k, "a").is_empty(), "an overlapping write is a legal answer");
+        assert!(read(&m, &k, "b").is_empty());
+        // still pending when read: legal too
+        let mut m = Model::default();
+        let _a = m.issue(83, 0, &kv("a"));
+        m.issue(84, 1, &kv("b")).store(ACKED, SeqCst);
+        assert!(read(&m, &k, "a").is_empty());
+        // ended before b started: reading a loses b
+        let mut m = Model::default();
+        m.issue(83, 0, &kv("a")).store(ACKED, SeqCst);
+        m.issue(84, 1, &kv("b")).store(ACKED, SeqCst);
+        assert_eq!(read(&m, &k, "a").len(), 1, "a write that ended before an acknowledged one started must not come back");
+        // failed before b started (indeterminate): still not legal after b
+        let mut m = Model::default();
+        m.issue(83, 0, &kv("a")).store(FAILED, SeqCst);
+        m.issue(84, 1, &kv("b")).store(ACKED, SeqCst);
+        assert_eq!(read(&m, &k, "a").len(), 1);
+        // a definite failure is never legal, even overlapping
+        let mut m = Model::default();
+        let a = m.issue(83, 0, &kv("a"));
+        m.issue(84, 1, &kv("b")).store(ACKED, SeqCst);
+        a.store(FAILED_DEFINITE, SeqCst);
+        assert_eq!(read(&m, &k, "a").len(), 1);
+    }
 }

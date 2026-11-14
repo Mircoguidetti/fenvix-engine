@@ -129,6 +129,12 @@ fn legal(start: &Model, end: usize, live: &Model, key: &[u8]) -> Vec<Option<Vec<
             out.push(lv[i].value.clone());
         }
     }
+    // writes issued before the last acknowledged one but not ended when it started may be ordered after it
+    if let Some(l) = last {
+        for w in lv[..l.min(lv.len())].iter().filter(|w| w.status.load(SeqCst) != FAILED_DEFINITE && w.overlaps(ws[l].issue)) {
+            out.push(w.value.clone());
+        }
+    }
     out
 }
 
