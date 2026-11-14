@@ -2388,16 +2388,18 @@ impl ReadView {
     /// The customer's box (custbox.rs, P-big-speed fix 3): when this find pins one customer of a customer-keyed
     /// collection and that customer was not warmed recently, read its whole key range once, so the query and the
     /// customer's next requests find their blocks in the caches.
-    pub async fn customer_box_warm(&self, coll: &str, filter: &Document) {
+    /// newest10-trips: the returned pin keeps what the warm-up brought into SlateDB's shared cache until it is dropped;
+    /// the caller drops it after its query.
+    pub async fn customer_box_warm(&self, coll: &str, filter: &Document) -> Option<tenant_bench::meter::BoxPin> {
         if !crate::custbox::ENABLED.load(Relaxed) {
-            return;
+            return None;
         }
-        let Some(g) = &self.g else { return };
-        let Ok(opts) = self.coll_opts(coll).await else { return };
-        let Some(field) = crate::custkey::of_opts(opts.as_ref()) else { return };
-        let Some(v) = crate::opening::customer_value(&field.field, filter) else { return };
-        let Some(t) = g.tenant.as_ref() else { return };
-        crate::custbox::warm(&g.name, &crate::custkey::comp(&v), t).await;
+        let g = self.g.as_ref()?;
+        let opts = self.coll_opts(coll).await.ok()?;
+        let field = crate::custkey::of_opts(opts.as_ref())?;
+        let v = crate::opening::customer_value(&field.field, filter)?;
+        let t = g.tenant.as_ref()?;
+        crate::custbox::warm(&g.name, &crate::custkey::comp(&v), t).await
     }
 
     /// First course: end of the query (keeps the opening when `ok`).

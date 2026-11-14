@@ -668,6 +668,10 @@ struct Args {
     /// reads the customer's whole key range once, so it and the customer's next requests are served from the caches.
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
     customer_box: bool,
+    /// newest10-trips: what a customer's box brought into SlateDB's shared cache stays pinned until that request's query
+    /// has run (`meter.rs`), so the query does not reload SST indexes the cache evicted meanwhile, one SST after the other.
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    customer_box_pin: bool,
     /// P-big-speed fix 4: the `_id` check of an insert into a customer-keyed collection without a time field reads the
     /// document key (inside the customer's box) instead of the shared locator (false: the locator, as before).
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
@@ -1056,6 +1060,7 @@ async fn run() -> Result<()> {
     custkey::configure(&custkey::with_agent_defaults(&args.customer_key, &args.agent_checkpoints))?;
     opening::ENABLED.store(args.first_course, std::sync::atomic::Ordering::Relaxed);
     custbox::ENABLED.store(args.customer_box, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::meter::PIN_ON.store(args.customer_box_pin, std::sync::atomic::Ordering::Relaxed);
     coll::ID_CHECK_IN_BOX.store(args.id_check_in_box, std::sync::atomic::Ordering::Relaxed);
     {
         let port = args.listen.rsplit(':').next().unwrap_or("0").to_string();
@@ -1076,6 +1081,8 @@ async fn run() -> Result<()> {
         // review of big-speed: the box per customer and per process, and the memtables of every database together
         tenant_bench::fx::view::BOX_CUSTOMER_BYTES.store(args.customer_box_max_mb.map_or(budget.box_customer, |m| m << 20), Relaxed);
         tenant_bench::fx::view::BOX_INFLIGHT_BYTES.store(args.customer_box_inflight_mb.map_or(budget.box_inflight, |m| m << 20).max(1 << 20), Relaxed);
+        // newest10-trips: the box pins (meter.rs) hold at most what the boxes may have in flight
+        tenant_bench::meter::PIN_CAP.store(tenant_bench::fx::view::BOX_INFLIGHT_BYTES.load(Relaxed).max(8 << 20), Relaxed);
         tenant_bench::memgov::BUDGET_BYTES.store(args.memtables_total_mb.map_or(budget.memtables, |m| m << 20), Relaxed);
         eprintln!("memory budget (review round): box {} MiB per customer, {} MiB in flight; memtables of every database {} MiB (writes wait past {} MiB); merge read-ahead {} MiB; absorption {} L0 SSTs",
             tenant_bench::fx::view::BOX_CUSTOMER_BYTES.load(Relaxed) >> 20, tenant_bench::fx::view::BOX_INFLIGHT_BYTES.load(Relaxed) >> 20,

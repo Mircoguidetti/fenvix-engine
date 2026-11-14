@@ -793,6 +793,14 @@ impl Server {
             // the customer's box (custbox.rs, P-big-speed fix 3)
             "customerBox": {
                 "enabled": crate::custbox::ENABLED.load(Relaxed),
+                // newest10-trips: the box's pins (meter.rs)
+                "pinOn": tenant_bench::meter::PIN_ON.load(Relaxed),
+                "pinHits": tenant_bench::meter::PIN_HITS.load(Relaxed) as i64,
+                "pinEntries": tenant_bench::meter::PIN_ENTRIES.load(Relaxed) as i64,
+                "pinFull": tenant_bench::meter::PIN_FULL.load(Relaxed) as i64,
+                "pinBytesMax": tenant_bench::meter::PIN_BYTES_MAX.load(Relaxed) as i64,
+                "pinnedEntriesNow": tenant_bench::meter::pinned_now().0 as i64,
+                "pinnedBytesNow": tenant_bench::meter::pinned_now().1 as i64,
                 "warms": crate::custbox::WARMS.load(Relaxed) as i64,
                 "warmRows": crate::custbox::WARM_ROWS.load(Relaxed) as i64,
                 "warmRuns": crate::custbox::WARM_RUNS.load(Relaxed) as i64,

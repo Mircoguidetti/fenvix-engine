@@ -141,9 +141,11 @@ impl Server {
             }
         } else if tx.is_none() {
             let mut g = self.dbs.read(db).await?;
-            g.customer_box_warm(coll, &filter).await;
+            // newest10-trips: the box's pin lives until the query below has run
+            let box_pin = g.customer_box_warm(coll, &filter).await;
             g.first_course_begin(coll, &filter).await;
             let res = self.find_part(&mut g, db, coll, &filter, &sort, want, hint_arg, None).await;
+            drop(box_pin);
             g.first_course_end(res.is_ok());
             let docs = res.map_err(|e| crate::find_ext::hint_error(e, &format!("{db}.{coll}"), &filter, cmd.get_document("sort").ok(), cmd.get_document("projection").ok()))?;
             // the collection's options are already in this view (read by `find_part`): no second view and no second read
@@ -926,7 +928,8 @@ impl Server {
             // (custbox.rs), and the reads under the exclusive lock below are served from the caches.
             if let Some(q) = specs.first().and_then(|s| s.as_document()).and_then(|s| s.get_document("q").ok()) {
                 if let Ok(rv) = self.dbs.read(db).await {
-                    rv.customer_box_warm(coll, q).await;
+                    // the reads below run after this view is dropped; the pin ends here (the box's blocks stay cached)
+                    drop(rv.customer_box_warm(coll, q).await);
                 }
             }
         }

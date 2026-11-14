@@ -17,6 +17,118 @@ use slatedb::db_cache::{CacheFetch, CacheLoader, CacheLookup, CachedEntry, Cache
 use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
 use std::sync::Arc;
 
+// ---- newest10-trips: the box's pins
+//
+// A customer's first find warms its box (`mongo-server/src/custbox.rs`): one wave of GETs that brings, among the rest, the
+// index blocks and data blocks of every SlateDB SST that holds the customer's range. The query of the same request then
+// reads those SSTs again. MEASURED (bench/newest10, caches small next to the data as at 10 GB under 512 MiB): between the
+// two, foyer's cache had already evicted most of what the box loaded (a new entry sits in a small probation queue and
+// leaves at the next inserts), so the query's SST iterators loaded each SST index again, one SST after the other: 14
+// GETs in 5 trips instead of 1 trip. A pin keeps every entry the shared cache served, loaded or was given while a box
+// request runs, until that request ends, under a byte cap; lookups find a pinned entry when the cache lost it.
+//
+// Why the answers cannot change: an entry is keyed by (SST id, offset) and an SST's bytes never change (`counter.rs`), so a
+// pinned entry is exactly what the store would return; pins only change whether a lookup needs a GET.
+
+/// On by default (`--customer-box-pin`).
+pub static PIN_ON: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+/// Bytes all pins together may hold (set from the box's in-flight allowance).
+pub static PIN_CAP: AtomicU64 = AtomicU64::new(64 << 20);
+/// Lookups answered by a pin (the cache had lost the entry), entries pinned, pins refused at the cap, most bytes pinned.
+pub static PIN_HITS: AtomicU64 = AtomicU64::new(0);
+pub static PIN_ENTRIES: AtomicU64 = AtomicU64::new(0);
+pub static PIN_FULL: AtomicU64 = AtomicU64::new(0);
+pub static PIN_BYTES_MAX: AtomicU64 = AtomicU64::new(0);
+static PIN_ACTIVE: AtomicU64 = AtomicU64::new(0);
+static PIN_NEXT: AtomicU64 = AtomicU64::new(1);
+
+#[derive(Default)]
+struct PinTable {
+    entries: std::collections::HashMap<CachedKey, (CachedEntry, Vec<u64>)>,
+    bytes: u64,
+    active: Vec<u64>,
+}
+
+static PINS: std::sync::LazyLock<std::sync::Mutex<PinTable>> = std::sync::LazyLock::new(Default::default);
+
+/// Held by one request from the start of its box's warm-up to the end of its query; dropping it unpins what only it held.
+pub struct BoxPin(u64);
+
+/// Start pinning for one request (None when pins are off).
+pub fn pin_start() -> Option<BoxPin> {
+    if !PIN_ON.load(Relaxed) {
+        return None;
+    }
+    let id = PIN_NEXT.fetch_add(1, Relaxed);
+    PINS.lock().unwrap().active.push(id);
+    PIN_ACTIVE.fetch_add(1, Relaxed);
+    Some(BoxPin(id))
+}
+
+impl Drop for BoxPin {
+    fn drop(&mut self) {
+        let mut t = PINS.lock().unwrap();
+        t.active.retain(|&a| a != self.0);
+        PIN_ACTIVE.fetch_sub(1, Relaxed);
+        let mut freed = 0u64;
+        t.entries.retain(|_, (e, owners)| {
+            owners.retain(|&o| o != self.0);
+            if owners.is_empty() {
+                freed += e.size() as u64;
+                false
+            } else {
+                true
+            }
+        });
+        t.bytes -= freed;
+    }
+}
+
+fn pin_note(key: &CachedKey, e: &CachedEntry) {
+    if PIN_ACTIVE.load(Relaxed) == 0 {
+        return;
+    }
+    let mut t = PINS.lock().unwrap();
+    if t.active.is_empty() {
+        return;
+    }
+    let active = t.active.clone();
+    if let Some((_, owners)) = t.entries.get_mut(key) {
+        for a in active {
+            if !owners.contains(&a) {
+                owners.push(a);
+            }
+        }
+        return;
+    }
+    let n = e.size() as u64;
+    if t.bytes + n > PIN_CAP.load(Relaxed) {
+        PIN_FULL.fetch_add(1, Relaxed);
+        return;
+    }
+    t.bytes += n;
+    PIN_BYTES_MAX.fetch_max(t.bytes, Relaxed);
+    PIN_ENTRIES.fetch_add(1, Relaxed);
+    t.entries.insert(key.clone(), (e.clone(), active));
+}
+
+fn pin_get(key: &CachedKey) -> Option<CachedEntry> {
+    if PIN_ACTIVE.load(Relaxed) == 0 {
+        return None;
+    }
+    let r = PINS.lock().unwrap().entries.get(key).map(|(e, _)| e.clone());
+    if r.is_some() {
+        PIN_HITS.fetch_add(1, Relaxed);
+    }
+    r
+}
+
+/// (entries, bytes) pinned now.
+pub fn pinned_now() -> (u64, u64) {
+    let t = PINS.lock().unwrap();
+    (t.entries.len() as u64, t.bytes)
+}
+
 /// slatedb's foyer cache, metered.
 pub struct MeteredCache {
     inner: foyer::Cache<CachedKey, CachedEntry>,
@@ -60,12 +172,23 @@ impl MeteredCache {
     }
 
     fn get(&self, key: &CachedKey) -> Option<CachedEntry> {
-        let r = self.inner.get(key).map(|e| e.value().clone());
+        let r = match self.inner.get(key).map(|e| e.value().clone()) {
+            Some(v) => {
+                pin_note(key, &v);
+                Some(v)
+            }
+            None => pin_get(key),
+        };
         self.looked(r.is_some());
         r
     }
 
     async fn dedup_fetch(&self, key: CachedKey, loader: CacheLoader) -> Result<CacheFetch, slatedb::Error> {
+        if let Some(v) = pin_get(&key) {
+            self.looked(true);
+            return Ok(CacheFetch { entry: v, lookup: CacheLookup::Hit });
+        }
+        let pin_key = (PIN_ACTIVE.load(Relaxed) > 0).then(|| key.clone());
         let ran = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let ran2 = Arc::clone(&ran);
         // foyer calls this closure (and builds the loader's future) on a hit too, and polls the future only on a miss:
@@ -86,6 +209,9 @@ impl MeteredCache {
                 self.looked(!miss);
                 if miss {
                     self.loaded_bytes.fetch_add(v.size() as u64, Relaxed);
+                }
+                if let Some(k) = &pin_key {
+                    pin_note(k, &v);
                 }
                 Ok(CacheFetch { entry: v, lookup: if miss { CacheLookup::Miss } else { CacheLookup::Hit } })
             }
@@ -117,7 +243,9 @@ impl DbCache for MeteredCache {
         // P-big-speed fix 1: a block read from the store is a slice of the HTTP receive buffer of its GET; kept as it is,
         // one cached 4 KiB block held that whole buffer (MEASURED, heap profile under load: 412 of 692 MB in HTTP read
         // buffers, with 47 MB of blocks counted by this cache; the server was OOM-killed at 1 GiB). Copied out first.
-        self.inner.insert(key, value.clamp_allocated_size());
+        let value = value.clamp_allocated_size();
+        pin_note(&key, &value);
+        self.inner.insert(key, value);
     }
 
     async fn remove(&self, key: &CachedKey) {

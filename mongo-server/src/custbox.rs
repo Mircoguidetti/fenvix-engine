@@ -89,14 +89,19 @@ pub fn forget_db(db: &str) {
 }
 
 /// Warm the box of customer `comp` of `db` on tenant `t`, unless it was warmed in the last `TTL_SECS`.
-pub async fn warm(db: &str, comp: &[u8], t: &tenant_bench::lifecycle::Tenant) {
+///
+/// newest10-trips: returns the pin of what the warm-up brought into SlateDB's shared cache (`tenant_bench::meter::BoxPin`);
+/// the caller keeps it until its query has run, so the query finds the SST indexes and blocks the box just read even when
+/// the cache already evicted them (MEASURED: otherwise the query reloaded each SST index, one SST after the other).
+pub async fn warm(db: &str, comp: &[u8], t: &tenant_bench::lifecycle::Tenant) -> Option<tenant_bench::meter::BoxPin> {
     if !ENABLED.load(Relaxed) {
-        return;
+        return None;
     }
-    let Some((lo, hi)) = range_of(comp) else { return };
+    let (lo, hi) = range_of(comp)?;
     if !claim(db, comp) {
-        return;
+        return None;
     }
+    let pin = tenant_bench::meter::pin_start();
     let t0 = Instant::now();
     // fix-box-first-trip: a reader's state that is due for renewal soon is renewed in the same wave as the box's GETs
     // (its LIST beside them), not by a step in front of them or in a later wave of the same request: in sealed mode
@@ -120,6 +125,7 @@ pub async fn warm(db: &str, comp: &[u8], t: &tenant_bench::lifecycle::Tenant) {
         }
     }
     WARM_MICROS.fetch_add(t0.elapsed().as_micros() as u64, Relaxed);
+    pin
 }
 
 #[cfg(test)]
