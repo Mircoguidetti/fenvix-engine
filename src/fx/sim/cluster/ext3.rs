@@ -359,7 +359,9 @@ impl X3 {
             net,
             procs: Default::default(),
             owner: Default::default(),
-            absent: Default::default(),
+            // the database does not exist until a writer's create succeeds (the first opening can fail: a 503 on the
+            // lease's incarnation read left the core's `created` true with nothing in the store, batch 43496082968)
+            absent: Arc::new(AtomicBool::new(ext.flavor == 3 || ext.log)),
             found: Default::default(),
             counts: Default::default(),
         }
