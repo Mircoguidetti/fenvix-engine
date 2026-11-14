@@ -6088,5 +6088,59 @@ mod tests {
         }
         r.close().await.unwrap();
     }
-}
 
+    /// sim-all-on-nh, gen 2 seed 14 (the coordinator's question): a restore point (a `ret:` checkpoint, as
+    /// `ctl/pitr.rs` `make_point` takes it) outlives the window that took it. The window is held in memory only
+    /// (`pitr::window_secs`: a database without its own setting gets `--retention-window-secs`, default 0). So after a
+    /// restart with a smaller default, the point is still listed and `pitr::choose` still restores from it (it refuses
+    /// only `w == 0 && pts.is_empty()`), while `WAL_RETAIN` answers 0. Then the closed pass (`gc_tenant_closed`,
+    /// `gc_wal_with`) deletes the WAL below the live replay boundary, and the point's restore (the point plus the WAL
+    /// after it) answers retention_gap. The rule this test asks for: while a restore point exists, the closed pass keeps
+    /// every WAL object from that point's replay boundary on, whatever the window.
+    /// Fails on night-head 36c6a3e (WAL objects 1..5 deleted, the point needs 1 on; 2..6 and 2 on sim-all-on-nh ff6ae8d).
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn closed_gc_keeps_the_wal_of_a_restore_point_without_a_window() {
+        let _l = settings_lock().await;
+        let id = "test-closed-gc-point-no-window";
+        assert!(WAL_RETAIN.get().map_or(true, |f| f(id).is_zero()), "the test needs no retention window for {id}");
+        let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let db = Db::builder(tenant_path(id), Arc::clone(&raw)).with_settings(writer_settings()).build().await.unwrap();
+        let mem = || slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable };
+        for i in 0..20 {
+            db.put(format!("a{i:03}").as_bytes(), b"before").await.unwrap();
+        }
+        db.flush_with_options(mem()).await.unwrap();
+        // the restore point, as make_point takes it (under a window that has since gone)
+        let admin = Admin::builder(tenant_path(id), Arc::clone(&raw)).build();
+        let name = format!("ret:{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis());
+        let opts = slatedb::config::CheckpointOptions { lifetime: Some(Duration::from_secs(3600)), source: None, name: Some(name) };
+        let cp = admin.create_detached_checkpoint(&opts).await.unwrap();
+        let need_from = admin.read_manifest(Some(cp.manifest_id)).await.unwrap().unwrap().replay_after_wal_id();
+        // writes after the point: its restore needs their WAL objects
+        for round in 0..4 {
+            for i in 0..20 {
+                db.put(format!("b{round}-{i:03}").as_bytes(), b"after").await.unwrap();
+            }
+            db.flush().await.unwrap();
+            db.flush_with_options(mem()).await.unwrap();
+        }
+        db.close().await.unwrap();
+        let boundary = admin.read_manifest(None).await.unwrap().unwrap().replay_after_wal_id();
+        assert!(boundary > need_from + 1, "the replay boundary did not move past the point ({need_from} -> {boundary}): the test did not reach the case");
+        let mut before = Vec::new();
+        for n in need_from..boundary {
+            if raw.head(&wal_object_path(id, n)).await.is_ok() {
+                before.push(n);
+            }
+        }
+        assert!(!before.is_empty(), "no WAL object between the point ({need_from}) and the boundary ({boundary}) before the pass");
+        gc_tenant_closed(&raw, id, Duration::ZERO).await.unwrap();
+        let mut lost = Vec::new();
+        for &n in &before {
+            if raw.head(&wal_object_path(id, n)).await.is_err() {
+                lost.push(n);
+            }
+        }
+        assert!(lost.is_empty(), "the closed pass deleted WAL objects {lost:?} that the restore point (replay boundary {need_from}) needs: a restore to it would answer retention_gap");
+    }
+}
