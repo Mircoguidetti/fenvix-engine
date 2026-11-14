@@ -35,7 +35,7 @@ use rand::{Rng, SeedableRng};
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::Write as _;
 use std::sync::atomic::{AtomicU64, AtomicU8, Ordering::SeqCst};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Duration;
 
 pub mod ext;
@@ -1523,10 +1523,43 @@ async fn oracle(w: &World) -> Vec<String> {
 
 static RUNS: AtomicU64 = AtomicU64::new(0);
 
+/// The tenants (a world's id and its forks, `{id}-fork{tag}`) that run with a restore window: the server sets
+/// `lifecycle::WAL_RETAIN` for a database with restore points, so the scripts that take points keep their WAL as the
+/// server does (`ext.rs` `SlateGc` already passes the same window to SlateDB's GC). Without it the server's closed pass
+/// (`GcClosedServer`, `lifecycle::gc_tenant_closed`) deletes the WAL below the replay boundary and a restore point's
+/// restore answers retention_gap, which a server with points never does (sim-all-on-nh, gen 2 seed 14).
+static RETAINED: LazyLock<Mutex<Vec<String>>> = LazyLock::new(Default::default);
+pub const SIM_WAL_RETAIN: Duration = Duration::from_secs(3600);
+
+fn sim_wal_retain(name: &str) -> Duration {
+    let name = name.split('@').next().unwrap_or(name);
+    if RETAINED.lock().unwrap().iter().any(|id| name == id || name.strip_prefix(id.as_str()).is_some_and(|r| r.starts_with("-fork"))) {
+        SIM_WAL_RETAIN
+    } else {
+        Duration::ZERO
+    }
+}
+
+/// Removes a world's tenants from `RETAINED` when its run ends.
+struct Retained(Option<String>);
+impl Drop for Retained {
+    fn drop(&mut self) {
+        if let Some(id) = self.0.take() {
+            RETAINED.lock().unwrap().retain(|x| *x != id);
+        }
+    }
+}
+
 pub async fn run_script(s: &Script) -> Run {
     let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
     let net = Net::new(Arc::clone(&raw), s.seed, s.profile);
     let n = RUNS.fetch_add(1, SeqCst);
+    let _ = crate::lifecycle::WAL_RETAIN.set(sim_wal_retain);
+    let _retained = Retained(s.events.iter().any(|(_, e)| matches!(e, Ev::Point { .. })).then(|| {
+        let id = format!("sim-{}-{n}", s.seed);
+        RETAINED.lock().unwrap().push(id.clone());
+        id
+    }));
     let mut w = World {
         id: format!("sim-{}-{n}", s.seed),
         net: Arc::clone(&net),
