@@ -85,17 +85,41 @@ async fn delete_all(store: &Store, paths: Vec<Path>) -> Result<u64> {
     Ok(n)
 }
 
-/// Delete every object under `tenants/{db}/` (lease and marker included) and `ttl-hints/{db}/`.
+/// fix-hole-d: an emptied WAL object of a dropped or erased name (no data; it only keeps the WAL slot taken).
+pub fn is_tombstone(m: &object_store::ObjectMeta) -> bool {
+    m.size == 0 && tenant_bench::lifecycle::is_wal_object(m.location.as_ref())
+}
+
+/// fix-hole-d: replace each object by an empty one (8 at a time).
+async fn empty_all(store: &Store, paths: Vec<Path>) -> Result<u64> {
+    let n = paths.len() as u64;
+    futures::stream::iter(paths)
+        .map(|p| async move { store.put(&p, object_store::PutPayload::new()).await.map(|_| ()) })
+        .buffer_unordered(8)
+        .try_collect::<Vec<()>>()
+        .await?;
+    Ok(n)
+}
+
+/// Delete every object under `tenants/{db}/` (lease and marker included) and `ttl-hints/{db}/`; SlateDB's WAL objects are
+/// emptied instead (fix-hole-d).
 pub async fn purge_tenant(ctl: &Ctl, db: &str) -> Result<PurgeReport> {
     let mut rep = PurgeReport::default();
     rep.checkpoints_released = release_pins(&ctl.store, db).await?;
     let prefix = Path::from(name_prefix(db));
     for pass in 0..6 {
         rep.passes = pass + 1;
-        let objs = list(&ctl.store, &prefix).await?;
-        if objs.is_empty() {
+        // fix-hole-d (RULE 8): SlateDB's WAL objects are emptied, not deleted. A writer that missed the drop or the erase
+        // (its process paused past its lease) puts its next WAL object with put-if-absent; the new owner's fence object
+        // stops it, and deleting that object let the writer acknowledge writes into the deleted incarnation. An empty WAL
+        // object holds no data (the erase stays complete) and keeps the slot taken. Tombstones in place are left alone.
+        let metas: Vec<object_store::ObjectMeta> = ctl.store.list(Some(&prefix)).try_collect().await?;
+        let (wal, objs): (Vec<object_store::ObjectMeta>, Vec<object_store::ObjectMeta>) = metas.into_iter().filter(|m| !is_tombstone(m)).partition(|m| tenant_bench::lifecycle::is_wal_object(m.location.as_ref()));
+        if wal.is_empty() && objs.is_empty() {
             break;
         }
+        rep.deleted += empty_all(&ctl.store, wal.into_iter().map(|m| m.location).collect()).await?;
+        let objs: Vec<Path> = objs.into_iter().map(|m| m.location).collect();
         let (manifests, rest): (Vec<Path>, Vec<Path>) = objs.into_iter().partition(|p| p.as_ref().contains("/manifest/"));
         rep.deleted += delete_all(&ctl.store, manifests).await?;
         super::failpoint("erase.after_manifests").await;
@@ -125,7 +149,9 @@ pub async fn leftovers(ctl: &Ctl, db: &str) -> Result<Vec<String>> {
         rec::path(&["control", "staging", db]),
         rec::path(&["control", "erasures", db]),
     ] {
-        out.extend(list(&ctl.store, &prefix).await?.into_iter().map(|p| p.to_string()));
+        // fix-hole-d: emptied WAL objects (tombstones) hold no data and are not leftovers
+        let metas: Vec<object_store::ObjectMeta> = ctl.store.list(Some(&prefix)).try_collect().await?;
+        out.extend(metas.into_iter().filter(|m| !is_tombstone(m)).map(|m| m.location.to_string()));
     }
     // incomplete multipart uploads hold data too, and LIST does not show them
     // (P-fix-slow-store item 6: without the ghosts a listing may show after their abort, which hold no data)

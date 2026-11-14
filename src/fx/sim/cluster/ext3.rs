@@ -1319,15 +1319,23 @@ async fn whole_db(x3: &X3, p: usize, life: u64, eid: u32, store: &Arc<dyn Object
     let mut deleted = 0;
     for _ in 0..5 {
         use futures::TryStreamExt;
-        let objs: Vec<object_store::path::Path> = match store.list(Some(&prefix)).map_ok(|m| m.location).try_collect().await {
+        let metas: Vec<object_store::ObjectMeta> = match store.list(Some(&prefix)).try_collect().await {
             Ok(v) => v,
             Err(e) => return unknown(format!("{what} failed while listing (outcome unknown): {e} ({deleted} objects deleted; the client retries)")),
         };
+        // fix-hole-d (`ctl/purge.rs`): a WAL object is emptied, not deleted (a tombstone), so a writer that missed the
+        // drop cannot put its next WAL object there; tombstones already in place are left alone
+        let objs: Vec<object_store::ObjectMeta> = metas.into_iter().filter(|m| !(crate::lifecycle::is_wal_object(m.location.as_ref()) && m.size == 0)).collect();
         if objs.is_empty() {
             break;
         }
         for o in objs {
-            if store.delete(&o).await.is_ok() {
+            let r = if crate::lifecycle::is_wal_object(o.location.as_ref()) && !x3.old_kept {
+                store.put(&o.location, object_store::PutPayload::new()).await.map(|_| ())
+            } else {
+                store.delete(&o.location).await
+            };
+            if r.is_ok() {
                 deleted += 1;
             }
         }

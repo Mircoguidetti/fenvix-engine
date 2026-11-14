@@ -1243,9 +1243,9 @@ mod tests {
     /// through the plain S3 WAL into an incarnation that was dropped after it opened. Nothing fences a deleted
     /// incarnation: the dropper deleted SlateDB's manifest and fence WAL objects, so the zombie's next WAL object is
     /// accepted. The writes were issued after the drop was acknowledged and are lost (the name is absent, or created
-    /// again without them). Ignored until fixed (or until the coordinator rules the paused-VM zombie out).
+    /// again without them). Fixed on fix-hole-d: a drop or an erase empties the WAL objects instead of deleting them
+    /// (tombstones), so the zombie's next WAL object is refused and it is fenced before acknowledging: a normal test.
     #[test]
-    #[ignore]
     fn sim_hole_d_paused_zombie_acks_into_a_dropped_incarnation() {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());

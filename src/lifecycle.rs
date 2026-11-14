@@ -360,6 +360,14 @@ pub fn db_of_path(path: &str) -> Option<DbAt> {
     Some(DbAt::new(name, 0))
 }
 
+/// fix-hole-d: whether `path` is one of SlateDB's WAL objects (`.../wal/{id}.sst`). A drop or an erase empties these
+/// instead of deleting them (`ctl/purge.rs`): an empty WAL object is a tombstone that holds no data and keeps a writer
+/// that missed the drop (a paused VM, say) from putting its next WAL object, so it is fenced instead of acknowledging
+/// writes into the deleted incarnation.
+pub fn is_wal_object(path: &str) -> bool {
+    path.contains("/wal/") && path.ends_with(".sst")
+}
+
 pub fn marker_path(id: &(impl DbRef + ?Sized)) -> Path {
     Path::from(format!("{}/_clean", tenant_path(id)))
 }
