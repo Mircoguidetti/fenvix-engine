@@ -35,10 +35,11 @@ use rand::{Rng, SeedableRng};
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::Write as _;
 use std::sync::atomic::{AtomicU64, AtomicU8, Ordering::SeqCst};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Duration;
 
 pub mod ext;
+pub mod ext3;
 pub use ext::Ext;
 
 pub const SLOTS: usize = 3;
@@ -249,6 +250,10 @@ pub enum Ev {
     /// The retire step of every scrubbed erasure.
     Retire { p: usize },
     GcClosed { p: usize },
+    /// The server's pass over a closed database (`lifecycle` maintenance loop): SlateDB's closed GC
+    /// (`lifecycle::gc_tenant_closed`, WAL, manifests, compacted SSTs, compactions, with this minimum age), then our
+    /// runs' (`fx::gc::gc_closed`).
+    GcClosedServer { p: usize, min_age_ms: u64 },
     ClosePass { p: usize },
     Close { p: usize },
     Abandon { p: usize },
@@ -256,6 +261,10 @@ pub enum Ev {
     Hold { p: usize, class: Class, op: Option<NOp>, skip: u64, land: bool, all: bool, rid: u64 },
     Release { rid: u64 },
     Sleep { ms: u64 },
+    /// Read one customer's rows in process `p` (point reads, or one prefix scan), checked at once: every row this
+    /// opening of `p` had acknowledged before the read started comes back (or a later write of it), or the read fails;
+    /// never fewer rows (the coordinator's lead of 2026-11-13: reads that came back empty under a slow store).
+    ReadCheck { p: usize, cust: usize, scan: bool },
     // ---- sim-test-2 (`ext.rs`) ----
     /// A named restore point now (`ctl/pitr.rs` `make_point`): a SlateDB checkpoint paired with a version of ours.
     Point { p: usize, tag: u64 },
@@ -279,15 +288,45 @@ pub enum Ev {
     /// The server's default erasure pass (`ctl/erase.rs` `run_pass_ride`, every erasure due): forced reseals of the groups
     /// still owing a ready erasure, cleanses of the delta runs still holding its rows, the confirmation, the record.
     EraseRide { p: usize },
+    // ---- sim-test-3 (`ext3.rs`): the replicated log and the whole-database lifecycle ----
+    /// One tick of slot `p`'s uploader (`LocalLog::spawn_uploader`): its writer's WAL to the store, then the log told
+    /// "stored up to" the position it had confirmed before the flush.
+    Upload { p: usize },
+    /// Slot `p`'s process is killed (-9) and starts again: it reads back every record the log still holds and replays
+    /// them (`locallog::recover_remote`). A replay that fails stops where the server keeps the records
+    /// (`hold_kept_records`); `Kept` goes on from there.
+    Restart { p: usize },
+    /// The restart of slot `p` goes on past `hold_kept_records`: its records are kept (`replay_all`'s failure branch).
+    Kept { p: usize },
+    /// One round of slot `p`'s background retry of kept records (`locallog::spawn_retry`).
+    LogRetry { p: usize },
+    /// Copy `r` of the log goes down or comes back.
+    LogCopy { r: usize, up: bool },
+    /// The log's leader steps down; another copy is elected.
+    LogLeader,
+    /// dropDatabase by slot `p` (`Entry::drop_database`): the lease, the log's drop record, the close, the name moved to a
+    /// new incarnation, every object deleted.
+    DropDb { p: usize },
+    /// The admin erase of the whole database by slot `p` (`ctl/erase.rs` `erase` and `run`).
+    EraseDb { p: usize },
+    /// What listDatabases, the admin API's existence check and the erase handler's first step do in slot `p`'s process,
+    /// before any lock or lease (`db_exists`, the incarnation lookup).
+    AdminCheck { p: usize },
+    /// A late version of a writer that lost the database lands at the next slot: the newest version again, one writer
+    /// epoch lower, with X_d at SlateDB's last L0 seq (as `write_stalls_tests::older_version_scenario` and the review of
+    /// hole C plant it). An injected fault standing for any late publisher of a lost writer (on 65dd663: the generator's
+    /// parts publish, hole G). Skipped when it would not pass the newest version's X_d.
+    PlantLate { p: usize },
 }
 
 impl Ev {
     fn slot(&self) -> Option<usize> {
         use Ev::*;
         match self {
-            Open { p, .. } | Upgrade { p } | Write { p, .. } | Erase { p, .. } | Flush { p } | Publish { p } | FirstStart { p } | FirstPoll { p } | CompStart { p } | CompDrain { p } | CompStop { p } | DropThrough { p } | Gc { p } | ErasePass { p } | Retire { p } | GcClosed { p } | ClosePass { p } | Close { p } | Abandon { p } | Kill { p } | Hold { p, .. } => Some(*p),
+            Open { p, .. } | Upgrade { p } | Write { p, .. } | Erase { p, .. } | Flush { p } | Publish { p } | FirstStart { p } | FirstPoll { p } | CompStart { p } | CompDrain { p } | CompStop { p } | DropThrough { p } | Gc { p } | ErasePass { p } | Retire { p } | GcClosed { p } | GcClosedServer { p, .. } | ReadCheck { p, .. } | ClosePass { p } | Close { p } | Abandon { p } | Kill { p } | Hold { p, .. } => Some(*p),
             Point { p, .. } | PointPrune { p, .. } | Restore { p, .. } | Fork { p, .. } | Generate { p, .. } | SlateGc { p } | EraseRide { p } => Some(*p),
-            Release { .. } | Sleep { .. } | Mark { .. } | Storm { .. } => None,
+            Upload { p } | Restart { p } | Kept { p } | LogRetry { p } | DropDb { p } | EraseDb { p } | AdminCheck { p } | PlantLate { p } => Some(*p),
+            Release { .. } | Sleep { .. } | Mark { .. } | Storm { .. } | LogCopy { .. } | LogLeader => None,
         }
     }
 }
@@ -307,7 +346,21 @@ pub struct Script {
 /// Generate the script of `seed`: a weighted random walk over the events that apply in an abstract state (who owns the
 /// database, who is a zombie, which processes have a compactor, whether a version exists). The executor still takes
 /// any event in any state (an event that does not apply is a no-op, noted in the trace).
+/// The odds of generator 1's cold-restart round and slow-read pattern at each step: `SIM_PATTERN` unset (or `mix`) keeps
+/// the defaults (0.05, 0.08), so a seed's script is the same as before; `slow-reads` makes the slow-read pattern frequent
+/// (0.4) and `cold-restart` the cold-restart round (0.3). Generators 2 and 3 build on generator 1, so they follow it.
+/// The seed's report names the pattern: replay a seed with the same `SIM_PATTERN`.
+fn pattern_odds() -> (f64, f64) {
+    match std::env::var("SIM_PATTERN").as_deref() {
+        Ok("slow-reads") => (0.05, 0.4),
+        Ok("cold-restart") => (0.3, 0.08),
+        Ok("") | Ok("mix") | Err(_) => (0.05, 0.08),
+        Ok(x) => panic!("SIM_PATTERN={x}: expected mix, slow-reads or cold-restart"),
+    }
+}
+
 pub fn generate(seed: u64, steps: usize) -> Script {
+    let (p_cold, p_slow) = pattern_odds();
     let mut r = StdRng::seed_from_u64(seed);
     let profile = match r.gen_range(0..4) {
         0 => Profile::none(),
@@ -356,6 +409,7 @@ pub fn generate(seed: u64, steps: usize) -> Script {
         };
         if let Some(o) = owner {
             cands.push((20, Ev::Write { p: o, ops: ops(&mut r) }));
+            cands.push((6, Ev::ReadCheck { p: o, cust: r.gen_range(0..CUSTOMERS), scan: r.gen_bool(0.5) }));
             cands.push((6, Ev::Flush { p: o }));
             if !st[o].comp {
                 cands.push((if versioned { 3 } else { 10 }, Ev::Publish { p: o }));
@@ -393,6 +447,7 @@ pub fn generate(seed: u64, steps: usize) -> Script {
             }
             let q = r.gen_range(0..SLOTS);
             cands.push((3, Ev::GcClosed { p: q }));
+            cands.push((2, Ev::GcClosedServer { p: q, min_age_ms: if r.gen_bool(0.5) { 0 } else { GC_GRACE_MS } }));
             cands.push((3, Ev::ClosePass { p: q }));
         }
         for &z in &zombies {
@@ -441,6 +496,66 @@ pub fn generate(seed: u64, steps: usize) -> Script {
         // v3, the late-write pattern (the family this simulator hunts): the owner's next request of a class is held, the
         // owner starts the work that sends it, another process takes the database over and works on it, then the held
         // request goes on. Every part is drawn at random.
+        // the cold-restart round (B3, 2026-11-13: hole W on the bench): after many absorbed rows, every process stops
+        // cold, then one reopens as writer and its write path publishes through the builder before its compactor starts
+        if owner.is_some() && versioned && ev.len() + 12 < steps && r.gen_bool(p_cold) {
+            let o = owner.unwrap();
+            if st[o].comp {
+                ev.push(Ev::CompDrain { p: o });
+                if r.gen_bool(0.7) {
+                    ev.push(Ev::DropThrough { p: o });
+                }
+            }
+            for q in 0..SLOTS {
+                if st[q].role != Role::Down {
+                    ev.push(if r.gen_bool(0.5) { Ev::Kill { p: q } } else { Ev::Close { p: q } });
+                    st[q] = S::default();
+                }
+            }
+            let q = r.gen_range(0..SLOTS);
+            ev.push(Ev::Open { p: q, writer: true });
+            st[q].role = Role::Owner;
+            for _ in 0..r.gen_range(1..4) {
+                ev.push(Ev::Write { p: q, ops: ops(&mut r) });
+                if r.gen_bool(0.6) {
+                    ev.push(Ev::Publish { p: q });
+                }
+            }
+            ev.push(Ev::ReadCheck { p: q, cust: r.gen_range(0..CUSTOMERS), scan: r.gen_bool(0.5) });
+            continue;
+        }
+        // the slow-read pattern (coordinator, 2026-11-13: reads that came back empty under a slow store and a starved
+        // host): every GET of the owner's SSTs and runs (and sometimes its versions) answers late, up to 4 s (past the
+        // hold life and T_pin), while it reads one customer and other work goes on; then the store answers again
+        if let Some(o) = owner {
+            if ev.len() + 10 < steps && r.gen_bool(p_slow) {
+                let mut rids = Vec::new();
+                let mut classes = vec![Class::Other, Class::FxRun];
+                if r.gen_bool(0.5) {
+                    classes.push(Class::FxVersion);
+                }
+                for class in classes {
+                    rid += 1;
+                    rids.push(rid);
+                    ev.push(Ev::Hold { p: o, class, op: Some(NOp::Get), skip: r.gen_range(0..2), land: true, all: true, rid });
+                }
+                for _ in 0..r.gen_range(1..4) {
+                    ev.push(match r.gen_range(0..5) {
+                        0 => Ev::Write { p: o, ops: ops(&mut r) },
+                        1 if st[o].comp => Ev::CompDrain { p: o },
+                        2 => Ev::Sleep { ms: r.gen_range(200..1500) },
+                        _ => Ev::ReadCheck { p: o, cust: r.gen_range(0..CUSTOMERS), scan: r.gen_bool(0.5) },
+                    });
+                }
+                ev.push(Ev::ReadCheck { p: o, cust: r.gen_range(0..CUSTOMERS), scan: r.gen_bool(0.5) });
+                for id in rids {
+                    ev.push(Ev::Release { rid: id });
+                }
+                ev.push(Ev::Sleep { ms: 300 });
+                ev.push(Ev::ReadCheck { p: o, cust: r.gen_range(0..CUSTOMERS), scan: r.gen_bool(0.5) });
+                continue;
+            }
+        }
         if let (Some(o), Some(&q)) = (owner, down.first()) {
             if ev.len() + 16 < steps && r.gen_bool(if versioned { 0.10 } else { 0.25 }) {
                 rid += 1;
@@ -625,6 +740,10 @@ struct World {
     knobs: u8,
     /// sim-test-2: restore points, marks, forks, and the violations found during the run (`ext.rs`).
     x: ext::XState,
+    /// sim-test-3: the replicated log, the lease as the script gives it, the whole-database lifecycle (`ext3.rs`).
+    x3: ext3::X3,
+    /// The event of each slot's current opening (`ReadCheck` checks the writes acknowledged since).
+    opened_at: Arc<Mutex<Vec<u32>>>,
 }
 
 const STEP_WAIT: Duration = Duration::from_millis(1500);
@@ -672,25 +791,21 @@ impl World {
                 None
             }
             Ev::Kill { p } => {
-                let s = &self.slots[p];
-                self.net.kill(s.life);
-                self.note(format!("kill -9 slot {p} (life {})", s.life));
-                // its tasks go on in memory but reach nothing; they are stopped in the background
-                let comp = s.comp.lock().unwrap().take();
-                let t = Arc::clone(&s.t);
-                tokio::spawn(async move {
-                    if let Some(c) = comp {
-                        c.stop().await;
-                    }
-                    if let Ok(mut g) = tokio::time::timeout(Duration::from_secs(30), t.lock()).await {
-                        if let Some(t) = g.take() {
-                            let _ = tokio::time::timeout(Duration::from_secs(15), t.abandon()).await;
-                        }
-                    }
-                });
-                self.next_life += 1;
-                self.slots[p] = new_slot(&self.net, self.next_life);
+                self.kill_slot(p);
                 None
+            }
+            Ev::LogCopy { r, up } => {
+                self.x3_copy(r, up);
+                None
+            }
+            Ev::LogLeader => {
+                self.x3_leader();
+                None
+            }
+            Ev::Restart { p } => {
+                // sim-test-3: kill -9, then the new process reads the log back (in its own task, as any operation)
+                self.kill_slot(p);
+                Some(self.op(eid, e.clone()))
             }
             other => Some(self.op(eid, other)),
         };
@@ -713,6 +828,29 @@ impl World {
         }
     }
 
+    /// Kill -9 of slot `p`: the process sends nothing more; a new life of the slot starts with nothing open.
+    fn kill_slot(&mut self, p: usize) {
+        let s = &self.slots[p];
+        self.net.kill(s.life);
+        self.note(format!("kill -9 slot {p} (life {})", s.life));
+        self.x3.on_kill(s.life);
+        // its tasks go on in memory but reach nothing; they are stopped in the background
+        let comp = s.comp.lock().unwrap().take();
+        let t = Arc::clone(&s.t);
+        tokio::spawn(async move {
+            if let Some(c) = comp {
+                c.stop().await;
+            }
+            if let Ok(mut g) = tokio::time::timeout(Duration::from_secs(30), t.lock()).await {
+                if let Some(t) = g.take() {
+                    let _ = tokio::time::timeout(Duration::from_secs(15), t.abandon()).await;
+                }
+            }
+        });
+        self.next_life += 1;
+        self.slots[p] = new_slot(&self.net, self.next_life);
+    }
+
     /// The future of one operation on a slot. It takes the slot's tenant lock with `try_lock`: a process busy with a
     /// stuck operation does not start another (the event is skipped).
     fn op(&mut self, eid: u32, e: Ev) -> futures::future::BoxFuture<'static, String> {
@@ -725,8 +863,19 @@ impl World {
         if let Ev::Open { writer: true, .. } = e {
             self.created = true;
         }
+        if matches!(e, Ev::Open { .. } | Ev::Upgrade { .. }) {
+            let mut o = self.opened_at.lock().unwrap();
+            if o[p] == u32::MAX || matches!(e, Ev::Upgrade { .. }) {
+                o[p] = eid;
+            }
+        }
+        let opened = self.opened_at.lock().unwrap()[p];
+        let found = Arc::clone(&self.x.found);
         let seed = self.net.seed;
         let kp = self.knobs;
+        if ext3::is_ext3(&e) || self.x3.routes(&e) {
+            return self.ext3_op(eid, e, created);
+        }
         if ext::is_ext(&e) {
             return self.ext_op(eid, e);
         }
@@ -821,6 +970,72 @@ impl World {
                         Ok(Some(e)) => format!("deletes acked; erasure {} registered, S_e {}", e.id, e.s_e),
                         Ok(None) => "deletes acked; no erasure (sealed runs off)".into(),
                         Err(e) => format!("deletes acked; register failed: {}", short(&e)),
+                    }
+                }
+                Ev::ReadCheck { cust, scan, .. } => {
+                    let Some(t) = g.as_ref() else { return "not open (skipped)".into() };
+                    // what must come back: per key, the last write this opening acknowledged before the read starts
+                    let snap = model.lock().unwrap().snapshot();
+                    let mut must: BTreeMap<Vec<u8>, (u32, Vec<Option<Vec<u8>>>)> = BTreeMap::new();
+                    for i in 0..PER_CUSTOMER {
+                        let k = ckey(cust, i);
+                        let Some(ws) = snap.writes.get(&k) else { continue };
+                        let Some(w) = ws.iter().rposition(|w| w.slot == p && opened != u32::MAX && w.eid > opened && w.status.load(SeqCst) == ACKED) else { continue };
+                        let legal: Vec<Option<Vec<u8>>> = ws[w..].iter().map(|x| x.value.clone()).collect();
+                        must.insert(k, (ws[w].eid, legal));
+                    }
+                    if must.is_empty() {
+                        return "nothing of this opening to check".into();
+                    }
+                    let got: Result<BTreeMap<Vec<u8>, Option<Vec<u8>>>, String> = if scan {
+                        let prefix = cust_targets(cust).ranges[0].0.clone();
+                        match t.scan_prefix(&prefix).await {
+                            Ok(rows) => {
+                                let m: BTreeMap<Vec<u8>, Vec<u8>> = rows.into_iter().map(|(k, v)| (k.to_vec(), v.to_vec())).collect();
+                                Ok(must.keys().map(|k| (k.clone(), m.get(k).cloned())).collect())
+                            }
+                            Err(e) => Err(short(&e)),
+                        }
+                    } else {
+                        let mut m = BTreeMap::new();
+                        let mut err = None;
+                        for k in must.keys() {
+                            match t.get(k).await {
+                                Ok(v) => {
+                                    m.insert(k.clone(), v.map(|b| b.to_vec()));
+                                }
+                                Err(e) => {
+                                    err = Some(short(&e));
+                                    break;
+                                }
+                            }
+                        }
+                        match err {
+                            Some(e) => Err(e),
+                            None => Ok(m),
+                        }
+                    };
+                    match got {
+                        Err(e) => format!("read failed (allowed): {e}"),
+                        Ok(m) => {
+                            let mut bad = 0;
+                            for (k, (weid, legal)) in &must {
+                                let v = m.get(k).cloned().flatten();
+                                if !legal.contains(&v) {
+                                    bad += 1;
+                                    found.lock().unwrap().push(format!(
+                                        "read-your-writes ({}): {} in process {p}: read {} where its own write of event {weid} was acknowledged before the read",
+                                        if scan { "scan" } else { "get" },
+                                        String::from_utf8_lossy(&k[3..]),
+                                        match &v {
+                                            Some(x) => String::from_utf8_lossy(x).chars().take(40).collect::<String>(),
+                                            None => "absent".into(),
+                                        }
+                                    ));
+                                }
+                            }
+                            format!("{} {} rows checked, {bad} wrong", if scan { "scan" } else { "get" }, must.len())
+                        }
                     }
                 }
                 Ev::Flush { .. } => {
@@ -985,6 +1200,17 @@ impl World {
                         Err(e) => format!("retire failed: {}", short(&e)),
                     }
                 }
+                Ev::GcClosedServer { min_age_ms, .. } => {
+                    let a = match crate::lifecycle::gc_tenant_closed(&store, id.as_str(), Duration::from_millis(min_age_ms)).await {
+                        Ok(r) => format!("slate closed gc: {} deletes", r.requests.delete),
+                        Err(e) => format!("slate closed gc failed: {}", short(&e)),
+                    };
+                    let b = match gc::gc_closed(&store, &id).await {
+                        Ok(_) => "fx closed gc pass".to_string(),
+                        Err(e) => format!("fx closed gc failed: {}", short(&e)),
+                    };
+                    format!("{a}; {b}")
+                }
                 Ev::GcClosed { .. } => match gc::gc_closed(&store, &id).await {
                     Ok(_) => "closed gc pass".into(),
                     Err(e) => format!("closed gc failed: {}", short(&e)),
@@ -1012,7 +1238,7 @@ impl World {
                     let Some(t) = g.take() else { return "not open (skipped)".into() };
                     format!("abandoned (close done {})", t.abandon().await)
                 }
-                Ev::Kill { .. } | Ev::Hold { .. } | Ev::Release { .. } | Ev::Sleep { .. } => unreachable!(),
+                Ev::Kill { .. } | Ev::Hold { .. } | Ev::Release { .. } | Ev::Sleep { .. } | Ev::LogCopy { .. } | Ev::LogLeader => unreachable!(),
                 _ => unreachable!("sim-test-2 events run in ext.rs"),
             }
         })
@@ -1030,6 +1256,8 @@ impl World {
                 self.note(format!("settle: event {eid} did not end"));
             }
         }
+        // sim-test-3: the log's copies back, a restart parked at `hold_kept_records` goes on, kept records retried
+        self.x3_settle().await;
         for p in 0..SLOTS {
             let s = &self.slots[p];
             let c = s.comp.lock().unwrap().take();
@@ -1295,10 +1523,43 @@ async fn oracle(w: &World) -> Vec<String> {
 
 static RUNS: AtomicU64 = AtomicU64::new(0);
 
+/// The tenants (a world's id and its forks, `{id}-fork{tag}`) that run with a restore window: the server sets
+/// `lifecycle::WAL_RETAIN` for a database with restore points, so the scripts that take points keep their WAL as the
+/// server does (`ext.rs` `SlateGc` already passes the same window to SlateDB's GC). Without it the server's closed pass
+/// (`GcClosedServer`, `lifecycle::gc_tenant_closed`) deletes the WAL below the replay boundary and a restore point's
+/// restore answers retention_gap, which a server with points never does (sim-all-on-nh, gen 2 seed 14).
+static RETAINED: LazyLock<Mutex<Vec<String>>> = LazyLock::new(Default::default);
+pub const SIM_WAL_RETAIN: Duration = Duration::from_secs(3600);
+
+fn sim_wal_retain(name: &str) -> Duration {
+    let name = name.split('@').next().unwrap_or(name);
+    if RETAINED.lock().unwrap().iter().any(|id| name == id || name.strip_prefix(id.as_str()).is_some_and(|r| r.starts_with("-fork"))) {
+        SIM_WAL_RETAIN
+    } else {
+        Duration::ZERO
+    }
+}
+
+/// Removes a world's tenants from `RETAINED` when its run ends.
+struct Retained(Option<String>);
+impl Drop for Retained {
+    fn drop(&mut self) {
+        if let Some(id) = self.0.take() {
+            RETAINED.lock().unwrap().retain(|x| *x != id);
+        }
+    }
+}
+
 pub async fn run_script(s: &Script) -> Run {
     let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
     let net = Net::new(Arc::clone(&raw), s.seed, s.profile);
     let n = RUNS.fetch_add(1, SeqCst);
+    let _ = crate::lifecycle::WAL_RETAIN.set(sim_wal_retain);
+    let _retained = Retained(s.events.iter().any(|(_, e)| matches!(e, Ev::Point { .. })).then(|| {
+        let id = format!("sim-{}-{n}", s.seed);
+        RETAINED.lock().unwrap().push(id.clone());
+        id
+    }));
     let mut w = World {
         id: format!("sim-{}-{n}", s.seed),
         net: Arc::clone(&net),
@@ -1311,19 +1572,31 @@ pub async fn run_script(s: &Script) -> Run {
         log: Default::default(),
         knobs: s.knobs,
         x: ext::XState::new(s.profile),
+        x3: ext3::X3::new(&s.ext, Arc::clone(&net)),
+        opened_at: Arc::new(Mutex::new(vec![u32::MAX; SLOTS])),
     };
     w.note(format!("seed {} knobs {} profile {:?}", s.seed, s.knobs, s.profile));
     for (eid, e) in &s.events {
         w.step(*eid, e).await;
     }
     w.settle().await;
-    let mut violations = oracle(&w).await;
+    // sim-test-3: with the log, a fresh process takes the database over (its takeover reads the log back) before the
+    // oracle; a database dropped or erased last is checked as absent
+    let mut violations = ext3::before_oracle(&w).await;
+    if w.x3.is_absent() {
+        violations.extend(ext3::oracle_absent(&w).await);
+    } else {
+        violations.extend(oracle(&w).await);
+    }
     violations.extend(ext::oracle_ext(&w).await);
+    if w.x3.strict_versions {
+        violations.extend(ext3::strict_versions(&w).await);
+    }
     let (issued, acked) = {
         let model = w.model.lock().unwrap();
         (model.issued, model.writes.values().flatten().filter(|x| x.status.load(SeqCst) == ACKED).count())
     };
-    let stats = format!("events {} writes issued {issued} key-writes acked {acked} requests {} faults {}{}", s.events.len(), net.requests.load(SeqCst), net.faults.load(SeqCst), ext::coverage(&w));
+    let stats = format!("events {} writes issued {issued} key-writes acked {acked} requests {} faults {}{}{}", s.events.len(), net.requests.load(SeqCst), net.faults.load(SeqCst), ext::coverage(&w), ext3::coverage(&w));
     let trace = net.trace();
     // the slots' own processes' state for this database (views, holds) is process-wide: forget it for the next seed
     view::clear_cache();

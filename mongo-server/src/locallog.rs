@@ -653,6 +653,9 @@ fn drop_stale(db: &str, recs: &mut Vec<Record>, stored: u64) {
 
 /// Takeovers that read the database's records back from the replicated log, and records they applied.
 pub static WAKE_REPLAYS: AtomicU64 = AtomicU64::new(0);
+/// fix-log-takeover-stale, hole T: records a takeover wrote to the log again, stamped with its writer's epoch, before
+/// applying them.
+pub static WAKE_COPIES: AtomicU64 = AtomicU64::new(0);
 pub static WAKE_REPLAYED: AtomicU64 = AtomicU64::new(0);
 
 /// Q8d, review R4: a database opened without its clean marker (a takeover from a dead or frozen owner, or this process
@@ -692,12 +695,13 @@ pub async fn replay_on_wake(g: &mut crate::dbs::Entry) -> Result<()> {
     remote.note_committed(&name, max_pos);
     log.next_seq.fetch_max(max_seq + 1, Relaxed);
     WAKE_REPLAYS.fetch_add(1, Relaxed);
-    if let Some(stored) = tenant_bench::lifecycle::stored_writer_epoch(&g.raw_store(), &name).await? {
+    let stored_epoch = tenant_bench::lifecycle::stored_writer_epoch(&g.raw_store(), &name).await?;
+    if let Some(stored) = stored_epoch {
         drop_stale(&name, &mut recs, stored);
     }
     let rec_epoch = recs.iter().map(|r| r.epoch).max().unwrap_or(0);
     if rec_epoch > 0 {
-        if let Some(stored) = tenant_bench::lifecycle::stored_writer_epoch(&g.raw_store(), &name).await? {
+        if let Some(stored) = stored_epoch {
             if stored > rec_epoch {
                 // a later writer opened the database after these records were staged: applying them would overwrite its
                 // writes (as at a restart, they stay in the log for an operator; the database is served without them)
@@ -717,6 +721,23 @@ pub async fn replay_on_wake(g: &mut crate::dbs::Entry) -> Result<()> {
     recs.sort_by_key(|r| (r.orig, r.seq));
     let todo: Vec<Record> = recs.into_iter().filter(|r| r.orig > done_seq).collect();
     let n = todo.len() as u64;
+    // fix-log-takeover-stale, hole T (RULE 8): the apply below opens this process's writer, which moves the stored writer
+    // epoch. If the apply then fails (a store error on that opening's version create, say) or this process dies, the
+    // records stay in the log with their old epoch, and the next takeover's `drop_stale` takes them for records a newer
+    // writer never saw: acknowledged writes dropped. So before applying, copies of them go to the log stamped with the
+    // epoch this writer will open with (the stored one plus one), as `replay_all`'s failure branch stamps its kept copies;
+    // whoever replays next keeps them, and the marker (`orig`) keeps a record from being applied twice. This process holds
+    // the database's lease here (`Entry::ensure_open`), so no other holder's records sit behind the copies (the case
+    // fix-takeover-retry forbids copies for). Records without an epoch (0) are always kept and are not copied.
+    let mut copies_pos = 0;
+    if let Some(stored) = stored_epoch {
+        for r in todo.iter().filter(|r| r.epoch > 0 && r.epoch <= stored) {
+            let seq = log.next_seq();
+            log.append_kept(seq, &name, &r.ops, stored + 1, r.orig).await.map_err(|_| anyhow!("local log stopped"))?.map_err(|e| anyhow!(e))?;
+            WAKE_COPIES.fetch_add(1, Relaxed);
+        }
+        copies_pos = remote.committed_pos(&name);
+    }
     for chunk in todo.chunks(256) {
         let mut ops: Vec<Op> = Vec::new();
         for r in chunk {
@@ -725,8 +746,12 @@ pub async fn replay_on_wake(g: &mut crate::dbs::Entry) -> Result<()> {
         ops.push(log.marker_op(chunk.last().unwrap().orig));
         Box::pin(g.apply_durable(ops)).await?;
     }
-    // every record read is now in object storage (applied, or already there by the marker): the log may drop them
-    remote.flush_done(&name, max_pos).await?;
+    // every record read is now in object storage (applied, or already there by the marker), and so are the copies above:
+    // the log may drop them
+    remote.flush_done(&name, max_pos.max(copies_pos)).await?;
+    if let Some(e) = log.tenants.lock().unwrap().get_mut(&name) {
+        e.uploaded = e.uploaded.max(e.staged);
+    }
     if n > 0 {
         WAKE_REPLAYED.fetch_add(n, Relaxed);
         eprintln!("quaderno: takeover of {name}: {n} records applied from the log (after record {done_seq})");
