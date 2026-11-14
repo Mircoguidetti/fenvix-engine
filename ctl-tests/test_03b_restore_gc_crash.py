@@ -65,9 +65,12 @@ def test_restore_after_compaction_and_gc_uses_retained_wal_and_ssts():
 
 def test_negative_control_without_wal_retention_the_restore_is_refused():
     """The same scenario with the WAL retention switched off: the garbage collector deletes the WAL objects the restore
-    needs, and the restore answers 409 retention_gap (it never returns a wrong state)."""
+    needs, and the restore answers 409 retention_gap (it never returns a wrong state). Since fix-pitr-point-wal a restore
+    point holds its WAL whatever the window, so the control also switches that guard off (MONGO_TEST_DISABLE_WAL_RETENTION_GUARD,
+    test-only) to create a real gap."""
     bucket = make_bucket("rgc0")
-    srv = Server(bucket, "rgc0", idle=300, extra=EXTRA, env={"CTL_DISABLE_WAL_RETENTION": "1"}).start()
+    env = {"CTL_DISABLE_WAL_RETENTION": "1", "MONGO_TEST_DISABLE_WAL_RETENTION_GUARD": "1"}
+    srv = Server(bucket, "rgc0", idle=300, extra=EXTRA, env=env).start()
     try:
         states, deleted = gc_scenario(srv, bucket, "g")
         assert [k for k in deleted if "/wal/" in k], "the GC must have collected WAL objects for the control to mean anything"

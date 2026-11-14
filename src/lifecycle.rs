@@ -4941,7 +4941,10 @@ async fn gc_wal_with(store: &Arc<dyn ObjectStore>, id: &(impl DbRef + ?Sized), m
     }
     // fix-pitr-point-wal: a restore point keeps the WAL from its replay boundary on whatever the window (it outlives the
     // window that took it); with a window every checkpoint does, as before
-    let oldest = if retained { m.checkpoints().iter().min_by_key(|c| c.manifest_id) } else { oldest_restore_point(m) };
+    // Negative control of the test suite (test_03b's control, as test_09f's for mode 0): with this variable set and no
+    // window, the restore points do not hold the WAL, so the pass deletes WAL objects a restore needs. Never set in production.
+    let guard_off = !retained && std::env::var_os("MONGO_TEST_DISABLE_WAL_RETENTION_GUARD").is_some();
+    let oldest = if retained { m.checkpoints().iter().min_by_key(|c| c.manifest_id) } else if guard_off { None } else { oldest_restore_point(m) };
     if let Some(cp) = oldest {
         let r = match st.oldest_cp {
             Some((u, r)) if u == cp.id.as_u128() => r,
