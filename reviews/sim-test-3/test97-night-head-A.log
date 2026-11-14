@@ -1,0 +1,23 @@
+TEST FAULT INJECTION ON (/tmp/kdrfa8oyfqa0k): never use this in production
+memory budget: limit 13674 MiB (cgroup1-own), caches 6325 MiB (block 2846, meta 948, sealed 2530), memtable 8 MiB, first course 854 MiB, change log 32 MiB, L0 reads at once 4
+box disk floor: 4096 MiB in /tmp/fenvix-box-floor-33859
+memory budget (review round): box 316 MiB per customer, 632 MiB in flight; memtables of every database 1709 MiB (writes wait past 2563 MiB); merge read-ahead 427 MiB; absorption 16 L0 SSTs
+quaderno: writes are acknowledged by the replicated log at 127.0.0.1:23456,127.0.0.1:26621,127.0.0.1:33532
+uploads: 0 unfinished multipart uploads under tenants/, 0 older than 3600s aborted
+quaderno: restart read 120 records of 1 databases from the log
+LEASE process_lease tenant=- holder=kdra-33859 unix_ms=1794624105517 inc=22f26045ac202937 gen=1
+local log: replay of database tkr failed (tenant tkr is owned by server process kdrb-35001 (lease valid for another 5065 ms); retry); its 120 records are kept, the database is refused until they are applied
+FAULT hold_kept_records tkr
+FAULT hold_kept_records released tkr
+quaderno: database tkr: its replay was refused before it took the lease; its 120 records stay in the log as they are (no copies)
+local log: 1 databases kept their records; retried in the background
+quaderno: restart applied 0 records to 0 databases in 3.3 s
+admin interface listening on 127.0.0.1:23669 (bearer token required)
+mongo-server listening on 127.0.0.1:33859 (idle close after 600 s, holder kdra-33859, lease ttl 6 s)
+ADMIN GET /v1/health -> 200 0 ms peer=127.0.0.1:48344
+LEASE acquired tenant=tkr holder=kdra-33859 unix_ms=1794624109715 takeover_from=-
+LEASE acquired tenant=tkr holder=kdra-33859 unix_ms=1794624109732 takeover_from=- new=true
+LEASE writer_open tenant=tkr holder=kdra-33859 unix_ms=1794624109786 
+FXC not started db=tkr reason=no_version_of_our_manifest unix_ms=1794624109786
+local log: database tkr: 120 records applied again (after record 0)
+local log: database tkr: kept records applied by the retry; the database is open again
