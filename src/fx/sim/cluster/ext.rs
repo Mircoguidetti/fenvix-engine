@@ -100,11 +100,15 @@ pub struct XState {
     pub forks: Arc<Mutex<Vec<ForkRec>>>,
     /// Violations seen during the run (a restore that staged a wrong state).
     pub found: Arc<Mutex<Vec<String>>>,
+    /// The database's operation lock of the control layer (`ctl/mod.rs` `OpLocks`): `ctl/pitr.rs` `restore` holds it for
+    /// the whole restore, and every prune of restore points (`set_retention` with window 0, the retention loop) takes it,
+    /// so a point is never pruned while a restore from it runs (fix-sim-seed-104771).
+    pub ops: Arc<tokio::sync::Mutex<()>>,
 }
 
 impl XState {
     pub fn new(profile: Profile) -> XState {
-        XState { profile, points: Default::default(), marks: Default::default(), forks: Default::default(), found: Default::default() }
+        XState { profile, points: Default::default(), marks: Default::default(), forks: Default::default(), found: Default::default(), ops: Default::default() }
     }
 }
 
@@ -275,6 +279,7 @@ impl World {
         let raw = Arc::clone(&self.raw);
         let model = Arc::clone(&self.model);
         let (points, marks, forks, found) = (Arc::clone(&self.x.points), Arc::clone(&self.x.marks), Arc::clone(&self.x.forks), Arc::clone(&self.x.found));
+        let ops = Arc::clone(&self.x.ops);
         let created = self.created;
         let seed = self.net.seed;
         let kp = self.knobs;
@@ -297,6 +302,8 @@ impl World {
                     }
                 }
                 Ev::PointPrune { tag, .. } => {
+                    // as `pitr::prune`'s callers: under the database's operation lock (waits for a restore running)
+                    let _op = ops.lock().await;
                     let cp = points.lock().unwrap().iter().find(|x| x.tag == tag && !x.pruned).map(|x| x.cp);
                     let Some(cp) = cp else { return format!("no restore point {tag} (skipped)") };
                     let admin = Admin::builder(crate::lifecycle::tenant_path(&id), Arc::clone(&store)).build();
@@ -313,6 +320,8 @@ impl World {
                     }
                 }
                 Ev::Restore { p, mark, apply } => {
+                    // as `pitr::restore`: the database's operation lock for the whole restore (no prune of its point meanwhile)
+                    let _op = ops.lock().await;
                     let m = marks.lock().unwrap().iter().find(|x| x.tag == mark).map(|x| (x.at_ms, x.snap.snapshot()));
                     let Some((target, snap)) = m else { return format!("no mark {mark} (skipped)") };
                     let pt = points.lock().unwrap().iter().filter(|x| !x.pruned && x.at_ms <= target).max_by_key(|x| x.at_ms).map(|x| (x.cp, x.manifest_id, x.tag, x.version));

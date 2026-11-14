@@ -597,6 +597,37 @@ mod tests {
         assert_eq!(f, 0, "{v:?}");
     }
 
+    /// fix-sim-seed-104771 (gen 2 seed 104771 on d8d071b3, CI only, 1 of 5,000 seeds): a restore from point 1 is slow (the
+    /// run reads of its process are held here, each longer than the hold life: read errors), so it stays in flight past
+    /// `LONG_STEP_WAIT` while the script prunes point 1 and a GC pass (retention 0) deletes the version only that point's
+    /// pair named. The restore then saw its read errors, looked for the point's version and reported "the point's version
+    /// is unreadable" as a live restore point losing its version (on d8d071b3: 1 violation, MEASURED). The server never runs the two together: `ctl/pitr.rs` `restore` holds the
+    /// database's operation lock (`ctl.ops`) for the whole restore, and every prune (`set_retention` with window 0, the
+    /// retention loop's `prune`) takes the same lock. The simulated restore and prune now take the world's copy of that
+    /// lock, so the prune waits for the restore and the point's version stays named until the restore's check is done.
+    #[test]
+    fn sim_story_point_pruned_during_its_restore() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let mut ev = vec![Open { p: 0, writer: true }];
+        for c in 0..3 {
+            ev.push(fill(0, c, 0));
+        }
+        ev.extend([Publish { p: 0 }, Write { p: 0, ops: vec![(5, 0, false)] }, CompStart { p: 0 }, Flush { p: 0 }, CompDrain { p: 0 }, Point { p: 1, tag: 1 }, Mark { tag: 2 }]);
+        // the restore's process is slow: every run read waits until rule 1 is released (or 4 s), longer than the hold
+        // life, so the restore stays in flight and sees read errors ("fx hold revoked")
+        ev.extend([Hold { p: 2, class: Class::FxRun, op: Some(NOp::Get), skip: 0, land: true, all: true, rid: 1 }, Restore { p: 2, mark: 2, apply: false }]);
+        // meanwhile point 1 is pruned, a newer version is published, and another process's GC pass of the closed kind
+        // (it reads no holds of this process) deletes every version nothing names
+        ev.extend([PointPrune { p: 1, tag: 1 }, fill(0, 3, 0), Flush { p: 0 }, CompDrain { p: 0 }, GcClosed { p: 1 }]);
+        ev.extend([Release { rid: 1 }, Sleep { ms: 1000 }]);
+        let (f, v) = run_story(&rt, "a point pruned during its restore", env_u64("SIM_KNOBS", 0) as u8, ev);
+        assert_eq!(f, 0, "{v:?}");
+    }
+
     /// Hole Z through the fork's door (found by random seed 2117 of sim-test-2; fix-sim-holes item 5 changed
     /// `ctl/fork.rs` `quiesce` for it, without a test that runs a fork). A writer that lost the database without noticing
     /// it (p0) is asked to fork: the quiesce closes its tenant (an empty memtable: the close never reaches the store and
