@@ -1,0 +1,41 @@
+02:46:05 visit 1: 400 reads in 9.9 s, wrong 0
+02:46:08 stop (SIGTERM) in 3.4 s, exit 0, page cache dropped
+02:46:32 stop (SIGTERM) in 2.1 s, exit 0, page cache dropped
+02:46:33 nh-off         whole_cold     n=200 p50   23.57 p99   24.50 ms  GETs mean 0.99 p50 1 p99 1  trips mean 0.99 p99 1  served 0
+02:46:33 nh-off         newest10_cold  n=200 p50   23.30 p99   24.46 ms  GETs mean 0.965 p50 1 p99 1  trips mean 0.965 p99 1  served 0
+02:46:33 nh-off         whole_warm     n=200 p50    0.97 p99    1.57 ms  GETs mean 0.0 p50 0 p99 0  trips mean 0.0 p99 0  served 0
+02:46:33 nh-off         newest10_warm  n=200 p50    0.74 p99    1.30 ms  GETs mean 0.0 p50 0 p99 0  trips mean 0.0 p99 0  served 0
+02:46:33 nh-off: wrong reads 0
+02:46:48 visit 1: 400 reads in 9.9 s, wrong 0
+02:46:51 stop (SIGTERM) in 2.8 s, exit 0, page cache dropped
+02:47:15 stop (SIGTERM) in 1.8 s, exit 0, page cache dropped
+02:47:16 nh-on          whole_cold     n=200 p50   23.71 p99   27.00 ms  GETs mean 0.99 p50 1 p99 1  trips mean 0.99 p99 1  served 0
+02:47:16 nh-on          newest10_cold  n=200 p50   23.35 p99   24.69 ms  GETs mean 0.965 p50 1 p99 1  trips mean 0.965 p99 1  served 0
+02:47:16 nh-on          whole_warm     n=200 p50    1.06 p99    2.27 ms  GETs mean 0.0 p50 0 p99 0  trips mean 0.0 p99 0  served 0
+02:47:16 nh-on          newest10_warm  n=200 p50    0.81 p99    1.43 ms  GETs mean 0.0 p50 0 p99 0  trips mean 0.0 p99 0  served 0
+02:47:16 nh-on: wrong reads 0
+02:47:31 visit 1: 400 reads in 9.9 s, wrong 0
+02:47:33 stop (SIGTERM) in 2.9 s, exit 0, page cache dropped
+02:47:58 stop (SIGTERM) in 1.6 s, exit 0, page cache dropped
+02:47:59 fc-off         whole_cold     n=200 p50   23.75 p99   26.84 ms  GETs mean 0.99 p50 1 p99 1  trips mean 0.99 p99 1  served 0
+02:47:59 fc-off         newest10_cold  n=200 p50   23.42 p99   26.15 ms  GETs mean 0.965 p50 1 p99 1  trips mean 0.965 p99 1  served 0
+02:47:59 fc-off         whole_warm     n=200 p50    1.02 p99    2.27 ms  GETs mean 0.0 p50 0 p99 0  trips mean 0.0 p99 0  served 0
+02:47:59 fc-off         newest10_warm  n=200 p50    0.81 p99    3.29 ms  GETs mean 0.0 p50 0 p99 0  trips mean 0.0 p99 0  served 0
+02:47:59 fc-off: wrong reads 0
+02:48:13 visit 1: 400 reads in 10.0 s, wrong 0
+02:48:16 stop (SIGTERM) in 2.5 s, exit 0, page cache dropped
+02:48:32 stop (SIGTERM) in 2.3 s, exit 0, page cache dropped
+02:48:33 fc-persist     whole_cold     n=200 p50    0.95 p99    2.09 ms  GETs mean 0.0 p50 0 p99 0  trips mean 0.0 p99 0  served 200
+02:48:33 fc-persist     newest10_cold  n=200 p50    0.67 p99    1.08 ms  GETs mean 0.0 p50 0 p99 0  trips mean 0.0 p99 0  served 200
+02:48:33 fc-persist     whole_warm     n=200 p50    0.89 p99    4.21 ms  GETs mean 0.0 p50 0 p99 0  trips mean 0.0 p99 0  served 200
+02:48:33 fc-persist     newest10_warm  n=200 p50    0.67 p99    1.91 ms  GETs mean 0.0 p50 0 p99 0  trips mean 0.0 p99 0  served 200
+02:48:33 fc-persist: wrong reads 0
+02:48:48 visit 1: 400 reads in 10.1 s, wrong 0
+02:48:50 stop (SIGTERM) in 2.4 s, exit 0, page cache dropped
+02:49:11 stop (SIGTERM) in 1.7 s, exit 0, page cache dropped
+02:49:11 fc-persist-32  whole_cold     n=200 p50   23.24 p99   25.93 ms  GETs mean 0.585 p50 1 p99 1  trips mean 0.585 p99 1  served 83
+02:49:11 fc-persist-32  newest10_cold  n=200 p50    1.14 p99   24.40 ms  GETs mean 0.465 p50 0 p99 1  trips mean 0.465 p99 1  served 104
+02:49:11 fc-persist-32  whole_warm     n=200 p50    1.00 p99    2.19 ms  GETs mean 0.0 p50 0 p99 0  trips mean 0.0 p99 0  served 83
+02:49:11 fc-persist-32  newest10_warm  n=200 p50    0.74 p99    1.20 ms  GETs mean 0.0 p50 0 p99 0  trips mean 0.0 p99 0  served 104
+02:49:11 fc-persist-32: wrong reads 0
+ALLDONE

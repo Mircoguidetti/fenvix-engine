@@ -245,6 +245,22 @@ impl Leases {
         }
     }
 
+    /// first-course-short: the sequence of the lease this process holds on `id` (None: not held).
+    pub fn held_seq(&self, id: &str) -> Option<u64> {
+        self.held.lock().unwrap().get(id).map(|h| h.seq)
+    }
+
+    /// first-course-short: the sequence this process's last clean release of `id` wrote, if it landed (read without
+    /// taking it: `continuous` still sees it).
+    pub fn released_seq(&self, id: &str) -> Option<u64> {
+        self.released.lock().unwrap().get(id).copied()
+    }
+
+    /// first-course-short: no leases at all (one process only).
+    pub fn leases_off(&self) -> bool {
+        self.disabled.load(std::sync::atomic::Ordering::Relaxed)
+    }
+
     pub fn serving_until(&self, id: &str) -> Option<std::time::Instant> {
         if self.unsafe_skip.load(std::sync::atomic::Ordering::Relaxed) {
             return None;

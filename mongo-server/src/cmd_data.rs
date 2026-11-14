@@ -141,8 +141,12 @@ impl Server {
             }
         } else if tx.is_none() {
             let mut g = self.dbs.read(db).await?;
-            g.customer_box_warm(coll, &filter).await;
+            // first-course-short: the session first; when the opening answers this query the customer's box does not
+            // read the customer's range in front of it (one whole trip to the object store the opening saves)
             g.first_course_begin(coll, &filter).await;
+            if !g.first_course_serves() {
+                g.customer_box_warm(coll, &filter).await;
+            }
             let res = self.find_part(&mut g, db, coll, &filter, &sort, want, hint_arg, None).await;
             g.first_course_end(res.is_ok());
             let docs = res.map_err(|e| crate::find_ext::hint_error(e, &format!("{db}.{coll}"), &filter, cmd.get_document("sort").ok(), cmd.get_document("projection").ok()))?;

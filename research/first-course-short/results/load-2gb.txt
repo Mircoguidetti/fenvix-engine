@@ -1,0 +1,27 @@
+02:10:06 schema userId_1_ts_-1
+02:10:08 load 0/946,570 retries 0
+02:10:14 load 50,000/946,570 retries 0
+02:10:22 load 100,000/946,570 retries 0
+02:10:30 load 150,000/946,570 retries 0
+02:10:38 load 200,000/946,570 retries 0
+02:11:02 load 250,000/946,570 retries 0
+02:11:35 load 300,000/946,570 retries 0
+02:12:10 load 350,000/946,570 retries 0
+02:12:48 load 400,000/946,570 retries 0
+02:13:27 load 450,000/946,570 retries 0
+02:14:03 load 500,000/946,570 retries 0
+02:14:44 load 550,000/946,570 retries 0
+02:15:24 load 600,000/946,570 retries 0
+02:16:02 load 650,000/946,570 retries 0
+02:16:40 load 700,000/946,570 retries 0
+02:17:21 load 750,000/946,570 retries 0
+02:18:01 load 800,000/946,570 retries 0
+02:18:38 load 850,000/946,570 retries 0
+02:19:21 load 900,000/946,570 retries 0
+Traceback (most recent call last):
+TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+pymongo.errors.NetworkTimeout: 127.0.0.1:27061: timed out (configured timeouts: socketTimeoutMS: 600000.0ms, connectTimeoutMS: 20000.0ms)

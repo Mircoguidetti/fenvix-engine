@@ -37,6 +37,11 @@ pub trait Rd: Send {
     fn tenant_name(&self) -> Option<String> {
         None
     }
+    /// first-course-short: the first course's opening knows every one of these keys exactly (the reads of them would all
+    /// be answered from it, with no object-store read).
+    fn first_course_knows(&self, _keys: &[Vec<u8>]) -> bool {
+        false
+    }
 }
 
 impl Rd for Entry {
@@ -94,6 +99,9 @@ impl Rd for tokio::sync::OwnedRwLockWriteGuard<Entry> {
 }
 
 impl Rd for ReadView {
+    fn first_course_knows(&self, keys: &[Vec<u8>]) -> bool {
+        ReadView::first_course_knows(self, keys)
+    }
     fn tenant_name(&self) -> Option<String> {
         ReadView::tenant_name(self)
     }
@@ -367,10 +375,15 @@ async fn docs_by_ids(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Docu
     // whole-history list read 60 documents with 60 point reads). The scan is capped: a sparse span gives up after
     // `span_cap` rows and the point reads below run as before.
     if ids.len() >= SPAN_MIN && SPAN_READS.load(std::sync::atomic::Ordering::Relaxed) && crate::custkey::of(g, coll).await?.is_some() {
-        if let Some(docs) = docs_by_span(g, coll, ids, span_cap(ids.len())).await? {
-            return Ok(docs);
+        // first-course-short: when the opening knows every wanted document, the point reads below are answered from it;
+        // the span scan would not be (writes since the opening was recorded extend the span past the stretch it scanned)
+        let known = g.first_course_knows(&ids.iter().map(|id| [&prefix[..], &id[..]].concat()).collect::<Vec<_>>());
+        if !known {
+            if let Some(docs) = docs_by_span(g, coll, ids, span_cap(ids.len())).await? {
+                return Ok(docs);
+            }
+            SPAN_GAVE_UP.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         }
-        SPAN_GAVE_UP.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     }
     let keys: Vec<Vec<u8>> = ids
         .iter()

@@ -664,6 +664,11 @@ struct Args {
     /// cold read instead).
     #[arg(long, default_value_t = 4)]
     first_course_queries: u64,
+    /// First course (first-course-short): a local directory where a database's openings are kept across a clean close
+    /// of its tenant (idle close, restart, deploy) and loaded at its next open when nobody else can have owned it since.
+    /// Empty (the default): openings are forgotten at every close, as before.
+    #[arg(long, default_value = "")]
+    first_course_dir: String,
     /// The customer's box (custbox.rs, P-big-speed fix 3): the first find of a customer of a customer-keyed collection
     /// reads the customer's whole key range once, so it and the customer's next requests are served from the caches.
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
@@ -1086,6 +1091,10 @@ async fn run() -> Result<()> {
     opening::BUDGET_BYTES.store(args.first_course_mb.map_or(budget.first_course, |m| m << 20), std::sync::atomic::Ordering::Relaxed);
     opening::QUERIES.store(args.first_course_queries.max(1), std::sync::atomic::Ordering::Relaxed);
     opening::MAX_BYTES.store(args.first_course_max_kb << 10, std::sync::atomic::Ordering::Relaxed);
+    if !args.first_course_dir.is_empty() {
+        std::fs::create_dir_all(&args.first_course_dir)?;
+        let _ = opening::PERSIST_DIR.set(std::path::PathBuf::from(&args.first_course_dir));
+    }
     match args.envelopes.as_str() {
         "read" => {}
         "write" => tenant_bench::envelope::START.store(true, std::sync::atomic::Ordering::Relaxed),

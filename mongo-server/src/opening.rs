@@ -570,17 +570,26 @@ pub struct Session {
     served: u64,
     missed: u64,
     record_ns: u64,
+    /// first-course-short: the customer's box was skipped because this session answers from an opening; it is due at the
+    /// first read the opening cannot answer (so a partly answered query still makes one trip, not one per read)
+    box_due: bool,
 }
 
 impl Session {
     pub fn get(&mut self, k: &[u8]) -> Option<Option<Bytes>> {
         let r = self.serve.as_ref().and_then(|o| o.get(k));
+        if r.is_none() && self.serve.is_some() && *TRACE {
+            eprintln!("first course: miss get {}", String::from_utf8_lossy(k));
+        }
         self.count(r.is_some());
         r
     }
 
     pub fn scan(&mut self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>) -> Option<Vec<(Bytes, Bytes)>> {
         let r = self.serve.as_ref().and_then(|o| o.scan(start, end, reverse, limit));
+        if r.is_none() && self.serve.is_some() && *TRACE {
+            eprintln!("first course: miss scan {} .. {:?} rev {reverse} limit {limit:?}", String::from_utf8_lossy(start), end.map(String::from_utf8_lossy));
+        }
         self.count(r.is_some());
         r
     }
@@ -672,7 +681,7 @@ pub fn begin(db: &str, coll: &str, field: &str, filter: &bson::Document, indexes
         st.access.retain(|_, t| now.duration_since(*t) < idle);
     }
     let n = QUERIES.load(Relaxed).max(1);
-    let mk = |serve: Option<Opening>| Session { db: db.to_string(), cust: cust.clone(), serve, rec: Opening::new(regions.clone(), crate::layout::doc_prefix(coll)), served: 0, missed: 0, record_ns: 0 };
+    let mk = |serve: Option<Opening>| Session { db: db.to_string(), cust: cust.clone(), box_due: serve.is_some(), serve, rec: Opening::new(regions.clone(), crate::layout::doc_prefix(coll)), served: 0, missed: 0, record_ns: 0 };
     if last.map_or(false, |t| now.duration_since(t) < idle) {
         // a later query of the visit: with N > 1 the first N queries are answered from (and recorded for) the opening
         let more = st.pending.get_mut(&cust).map_or(false, |p| {
@@ -714,7 +723,7 @@ pub fn begin(db: &str, coll: &str, field: &str, filter: &bson::Document, indexes
 /// End of the first query: keep what it read as the user's opening (when the query succeeded and the opening is
 /// exact and small enough).
 pub fn finish(s: Session, ok: bool) {
-    let Session { db, cust, serve, mut rec, served, missed, record_ns } = s;
+    let Session { db, cust, serve, mut rec, served, missed, record_ns, .. } = s;
     STATS.record_ns.fetch_add(record_ns, Relaxed);
     match (&serve, served, missed) {
         (None, _, _) => STATS.no_opening.fetch_add(1, Relaxed),
@@ -955,6 +964,282 @@ pub fn forget_db(db: &str) {
         }
         st.regions.clear();
     }
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// first-course-short: openings that outlive a close of their database (the pause between two visits)
+// ---------------------------------------------------------------------------------------------------------------------
+//
+// Without this, every open or close of the tenant forgets the database's openings (`forget_db`): an idle close, a
+// restart or a deploy between two visits leaves the returning customer with no opening, and its first read pays the
+// full object-store trip. With `--first-course-dir DIR`:
+// - at a clean close (`park_db` then `persist`): the database's openings, pending ones installed as the next visit
+//   would install them, are written to `DIR/<hex db>.fc` (temp file, fsync, rename) once the tenant has stopped and the
+//   lease release has landed, stamped with the lease sequence that release wrote. Every write accepted until the close
+//   went through `write_hook`, so the openings are exact for the database as it was closed.
+// - at the next open as owner (`restore_db`): the file is read and deleted (it is used at most once). It is loaded only
+//   when no other process can have owned, and so written, the database since: the acquire was not a takeover, and the
+//   lease this open acquired has exactly the sequence after the stamped release (the same rule as
+//   `Leases::continuous`, made to survive a restart). Whether the wake replays the WAL does not matter: every write
+//   this process acknowledged is in the opening and in the store alike, and nobody else wrote. Anything else (a takeover, a close that did not finish, a
+//   lapsed or failed release, a lease record recreated) leaves the file unused: the customer reads storage, as today.
+// - a corrupt or truncated file fails its checksum and is ignored.
+
+/// Measurement only: load kept openings without the ownership check (`FENVIX_FIRST_COURSE_SHORT_NEGATIVE_CONTROL=1`):
+/// the safety test must then find wrong reads, or it does not reach the case it guards.
+static SHORT_NEGATIVE_CONTROL: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| {
+    let on = std::env::var("FENVIX_FIRST_COURSE_SHORT_NEGATIVE_CONTROL").map_or(false, |v| v == "1");
+    if on {
+        eprintln!("first course: NEGATIVE CONTROL, kept openings are loaded without the ownership check");
+    }
+    on
+});
+
+pub static PERSIST_DIR: std::sync::OnceLock<std::path::PathBuf> = std::sync::OnceLock::new();
+pub static PERSISTED: AtomicU64 = AtomicU64::new(0);
+pub static RESTORED: AtomicU64 = AtomicU64::new(0);
+pub static RESTORE_REFUSED: AtomicU64 = AtomicU64::new(0);
+pub static RESTORE_NS: AtomicU64 = AtomicU64::new(0);
+
+fn persist_path(db: &str) -> Option<std::path::PathBuf> {
+    let d = PERSIST_DIR.get()?;
+    let hex: String = db.bytes().map(|b| format!("{b:02x}")).collect();
+    Some(d.join(format!("{hex}.fc")))
+}
+
+fn put_b(out: &mut Vec<u8>, b: &[u8]) {
+    out.extend((b.len() as u32).to_le_bytes());
+    out.extend(b);
+}
+
+fn put_ob(out: &mut Vec<u8>, b: Option<&[u8]>) {
+    match b {
+        None => out.push(0),
+        Some(b) => {
+            out.push(1);
+            put_b(out, b);
+        }
+    }
+}
+
+fn fnv(b: &[u8]) -> u64 {
+    b.iter().fold(0xcbf29ce484222325u64, |h, x| (h ^ *x as u64).wrapping_mul(0x100000001b3))
+}
+
+struct Rd<'a>(&'a [u8]);
+
+impl<'a> Rd<'a> {
+    fn take(&mut self, n: usize) -> Option<&'a [u8]> {
+        if self.0.len() < n {
+            return None;
+        }
+        let (a, b) = self.0.split_at(n);
+        self.0 = b;
+        Some(a)
+    }
+    fn u8(&mut self) -> Option<u8> {
+        Some(self.take(1)?[0])
+    }
+    fn u32(&mut self) -> Option<u32> {
+        Some(u32::from_le_bytes(self.take(4)?.try_into().ok()?))
+    }
+    fn u64(&mut self) -> Option<u64> {
+        Some(u64::from_le_bytes(self.take(8)?.try_into().ok()?))
+    }
+    fn b(&mut self) -> Option<Vec<u8>> {
+        let n = self.u32()? as usize;
+        Some(self.take(n)?.to_vec())
+    }
+    fn ob(&mut self) -> Option<Option<Vec<u8>>> {
+        match self.u8()? {
+            0 => Some(None),
+            1 => Some(Some(self.b()?)),
+            _ => None,
+        }
+    }
+}
+
+/// The openings of `db` (pending ones installed), encoded, and forgotten as `forget_db` does. `None` when persistence
+/// is off or there is nothing to keep.
+pub fn park_db(db: &str) -> Option<Vec<u8>> {
+    if !ENABLED.load(Relaxed) || PERSIST_DIR.get().is_none() {
+        forget_db(db);
+        return None;
+    }
+    let body = {
+        let mut reg = REG.lock().unwrap();
+        reg.get_mut(db).map(|st| {
+            let ps: Vec<Cust> = st.pending.keys().cloned().collect();
+            for c in ps {
+                st.install_pending(&c);
+            }
+            let now = Instant::now();
+            let mut out = Vec::new();
+            out.extend((st.openings.len() as u32).to_le_bytes());
+            for (c, o) in &st.openings {
+                put_b(&mut out, c.coll.as_bytes());
+                put_b(&mut out, &c.comp);
+                out.extend(o.visit.map_or(u64::MAX, |t| now.duration_since(t).as_secs()).to_le_bytes());
+                put_b(&mut out, &o.doc_prefix);
+                out.extend((o.regions.len() as u32).to_le_bytes());
+                for (s, e) in &o.regions {
+                    put_b(&mut out, s);
+                    put_b(&mut out, e);
+                }
+                out.extend((o.ivs.len() as u32).to_le_bytes());
+                for i in &o.ivs {
+                    put_b(&mut out, &i.lo);
+                    put_ob(&mut out, i.hi.as_deref());
+                    out.extend((i.keep as u64).to_le_bytes());
+                    out.push(i.rev as u8);
+                }
+                out.extend((o.map.len() as u32).to_le_bytes());
+                for (k, v) in &o.map {
+                    put_b(&mut out, k);
+                    put_ob(&mut out, v.as_deref());
+                }
+            }
+            (st.openings.len(), out)
+        })
+    };
+    forget_db(db);
+    match body {
+        Some((n, out)) if n > 0 => Some(out),
+        _ => None,
+    }
+}
+
+/// After a clean close whose lease release landed with sequence `released_seq`: write the parked openings.
+pub fn persist(db: &str, released_seq: u64, body: Vec<u8>) {
+    let Some(path) = persist_path(db) else { return };
+    let mut out = b"FCSHORT1".to_vec();
+    out.extend(released_seq.to_le_bytes());
+    out.extend(body);
+    let sum = fnv(&out);
+    out.extend(sum.to_le_bytes());
+    let tmp = path.with_extension("tmp");
+    let r = (|| -> std::io::Result<()> {
+        use std::io::Write;
+        let mut f = std::fs::File::create(&tmp)?;
+        f.write_all(&out)?;
+        f.sync_all()?;
+        std::fs::rename(&tmp, &path)
+    })();
+    match r {
+        Ok(()) => {
+            PERSISTED.fetch_add(1, Relaxed);
+        }
+        Err(e) => {
+            eprintln!("first course: could not keep the openings of {db}: {e}");
+            let _ = std::fs::remove_file(&tmp);
+            let _ = std::fs::remove_file(&path);
+        }
+    }
+}
+
+/// Drop any kept openings of `db` (a close that is not clean, or an open that cannot use them).
+pub fn discard(db: &str) {
+    if let Some(p) = persist_path(db) {
+        let _ = std::fs::remove_file(p);
+    }
+}
+
+/// At an open as owner, after the lease acquire: load the kept openings of `db` when `held_seq` (the sequence of the
+/// lease this open acquired) is the one after the stamped release and the open was clean; `leases_off`: no leases at
+/// all (one process only), the stamp is not checked. The file is deleted in every case.
+pub fn restore_db(db: &str, held_seq: Option<u64>, clean: bool, leases_off: bool) {
+    forget_db(db);
+    let Some(path) = persist_path(db) else { return };
+    let Ok(buf) = std::fs::read(&path) else { return };
+    let _ = std::fs::remove_file(&path);
+    if !ENABLED.load(Relaxed) {
+        return;
+    }
+    let t0 = Instant::now();
+    let ok = (|| -> Option<Vec<(Cust, Opening)>> {
+        if buf.len() < 24 || &buf[..8] != b"FCSHORT1" {
+            return None;
+        }
+        let (data, sum) = buf.split_at(buf.len() - 8);
+        if fnv(data) != u64::from_le_bytes(sum.try_into().ok()?) {
+            return None;
+        }
+        let mut r = Rd(&data[8..]);
+        let stamp = r.u64()?;
+        if !*SHORT_NEGATIVE_CONTROL && (!clean || !(leases_off || held_seq == stamp.checked_add(1))) {
+            return None;
+        }
+        let now = Instant::now();
+        let max_age = MAX_AGE_SECS.load(Relaxed);
+        let n = r.u32()?;
+        let mut v = Vec::new();
+        for _ in 0..n {
+            let coll = String::from_utf8(r.b()?).ok()?;
+            let comp = r.b()?;
+            let age = r.u64()?;
+            let doc_prefix = r.b()?;
+            let mut regions = Vec::new();
+            for _ in 0..r.u32()? {
+                regions.push((r.b()?, r.b()?));
+            }
+            let mut ivs = Vec::new();
+            for _ in 0..r.u32()? {
+                ivs.push(Iv { lo: r.b()?, hi: r.ob()?, keep: r.u64()? as usize, rev: r.u8()? != 0 });
+            }
+            let mut map = BTreeMap::new();
+            for _ in 0..r.u32()? {
+                let k = r.b()?;
+                map.insert(k, r.ob()?.map(Bytes::from));
+            }
+            if age > max_age {
+                continue;
+            }
+            let Some(visit) = now.checked_sub(Duration::from_secs(age)) else { continue };
+            let mut o = Opening { map, ivs, regions, doc_prefix, visit: Some(visit), ..Default::default() };
+            o.recount();
+            v.push((Cust { coll, comp }, o));
+        }
+        if !r.0.is_empty() {
+            return None;
+        }
+        Some(v)
+    })();
+    match ok {
+        Some(v) => {
+            let mut reg = REG.lock().unwrap();
+            let st = reg.entry(db.to_string()).or_insert_with(|| DbOpenings::new(db));
+            for (c, o) in v {
+                st.insert(c, o);
+            }
+            evict(&mut reg);
+            RESTORED.fetch_add(1, Relaxed);
+        }
+        None => {
+            RESTORE_REFUSED.fetch_add(1, Relaxed);
+        }
+    }
+    RESTORE_NS.fetch_add(t0.elapsed().as_nanos() as u64, Relaxed);
+}
+
+/// Whether a first-course session that will answer from an opening is open on this query (the customer box then
+/// does not read the customer's range in front of it).
+pub fn serves(s: &Session) -> bool {
+    s.serve.is_some()
+}
+
+/// The customer's box, when it is due on this session (taken once): the customer component to warm.
+pub fn take_box(s: &mut Session) -> Option<Vec<u8>> {
+    if s.box_due {
+        s.box_due = false;
+        Some(s.cust.comp.clone())
+    } else {
+        None
+    }
+}
+
+/// Whether the session's opening knows every one of `keys` exactly (no counters touched).
+pub fn knows(s: &Session, keys: &[Vec<u8>]) -> bool {
+    s.serve.as_ref().map_or(false, |o| !keys.is_empty() && keys.iter().all(|k| o.get(k).is_some()))
 }
 
 #[cfg(test)]
@@ -1445,5 +1730,71 @@ mod tests {
         fix_check_invariants("after eviction");
         forget_db(db);
         fix_check_invariants("end");
+    }
+
+    #[test]
+    fn kept_openings_survive_a_close_only_for_the_next_lease() {
+        let _g = GLOBALS.lock().unwrap_or_else(|e| e.into_inner());
+        use tenant_bench::lifecycle::Op;
+        ENABLED.store(true, Relaxed);
+        QUERIES.store(1, Relaxed);
+        IDLE_SECS.store(0, Relaxed); // every query starts a visit
+        let dir = std::env::temp_dir().join(format!("fc-short-unit-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let _ = PERSIST_DIR.set(dir.clone());
+        let db = "fc-unit-short";
+        let f = bson::doc! { "u": 7 };
+        let mut base = crate::layout::doc_prefix("c");
+        base.push(crate::custkey::MARK);
+        base.extend(crate::custkey::comp(&bson::Bson::Int32(7)));
+        let k = |n: u8| [base.clone(), vec![n]].concat();
+        let record = || {
+            let mut s = begin(db, "c", "u", &f, &[], true).unwrap();
+            s.note_scan(&k(0), Some(&k(9)), false, None, &[(b(&k(1)), b(b"one")), (b(&k(2)), b(b"two"))]);
+            finish(s, true);
+            // a write after the visit is followed, then kept
+            let c = write_hook(db, &[Op::Put(k(3), b"three".to_vec()), Op::Delete(k(1))]);
+            after_stage(db, c, true);
+        };
+        let first = |db: &str| {
+            let mut s = begin(db, "c", "u", &f, &[], true).unwrap();
+            let r = s.scan(&k(0), Some(&k(9)), false, None);
+            finish(s, true);
+            r
+        };
+        // kept at a release that wrote sequence 6: the next acquire (7) loads it, exactly
+        record();
+        let body = park_db(db).expect("parked");
+        persist(db, 6, body);
+        restore_db(db, Some(7), true, false);
+        let got = first(db).expect("served after the restore");
+        assert_eq!(got, vec![(b(&k(2)), b(b"two")), (b(&k(3)), b(b"three"))]);
+        // the file is used once
+        assert!(!persist_path(db).unwrap().exists());
+        // another owner between (acquire 9 after a release of 6), or a takeover: refused
+        for (seq, clean) in [(Some(9), true), (Some(7), false), (None, true)] {
+            record();
+            let body = park_db(db).expect("parked");
+            persist(db, 6, body);
+            let refused = RESTORE_REFUSED.load(Relaxed);
+            restore_db(db, seq, clean, false);
+            assert_eq!(RESTORE_REFUSED.load(Relaxed), refused + 1, "{seq:?} {clean}");
+            assert!(first(db).is_none(), "no opening after a refused restore ({seq:?} {clean})");
+        }
+        // a corrupt file is ignored
+        record();
+        persist(db, 6, park_db(db).unwrap());
+        let p = persist_path(db).unwrap();
+        let mut bytes = std::fs::read(&p).unwrap();
+        let n = bytes.len() / 2;
+        bytes[n] ^= 0x55;
+        std::fs::write(&p, bytes).unwrap();
+        let refused = RESTORE_REFUSED.load(Relaxed);
+        restore_db(db, Some(7), true, false);
+        assert_eq!(RESTORE_REFUSED.load(Relaxed), refused + 1);
+        assert!(first(db).is_none());
+        forget_db(db);
+        IDLE_SECS.store(1800, Relaxed);
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

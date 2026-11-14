@@ -1262,7 +1262,9 @@ impl Entry {
         self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
-                crate::opening::forget_db(&self.name);
+                // first-course-short: the openings kept at this process's last clean close, when nobody else can have
+                // owned the database since (opening.rs `restore_db`)
+                crate::opening::restore_db(&self.name, self.leases.held_seq(&self.name), took.is_none(), self.leases.leases_off());
                 let unclean = t.unclean;
                 // Another process may have owned (and written) the database since this one last did: its events are not
                 // in this process's change log, so a stream positioned before this open cannot be served (P1).
@@ -1401,7 +1403,12 @@ impl Entry {
         self.ckey_decided.clear();
         self.sstat.clear();
         self.meta_clear();
-        crate::opening::forget_db(&self.name);
+        // first-course-short: the owner's openings are kept for its next open (opening.rs), written below only once the
+        // tenant stopped cleanly and the lease release landed (the owner holds the lease from its wake, as reader or
+        // writer: nobody else can write meanwhile, and every write of this process went through `write_hook`)
+        let held_seq = self.leases.held_seq(&self.name);
+        let parked = if self.tenant.is_some() && (held_seq.is_some() || self.leases.leases_off()) { crate::opening::park_db(&self.name) } else { crate::opening::forget_db(&self.name); None };
+        crate::opening::discard(&self.name);
         crate::custbox::forget_db(&self.name);
         let t_hint = t0.elapsed();
         self.flush_then_stop_fxc(deadline).await;
@@ -1428,6 +1435,11 @@ impl Entry {
                 let grace = left().max(std::time::Duration::from_millis(500));
                 if tokio::time::timeout(grace, self.leases.release(&self.name)).await.is_err() {
                     eprintln!("close of {}: the lease release did not finish before the close's deadline; it runs out by itself", self.name);
+                } else if let (true, Some(body)) = (r.is_ok(), parked) {
+                    let stamp = if self.leases.leases_off() { Some(0) } else { self.leases.released_seq(&self.name).filter(|s| held_seq.map(|h| h + 1) == Some(*s)) };
+                    if let Some(seq) = stamp {
+                        crate::opening::persist(&self.name, seq, body);
+                    }
                 }
             } else {
                 // the writer was left behind: no renewal and no release, the lease runs out and the next owner fences it
@@ -1835,6 +1847,7 @@ impl Entry {
         self.sstat.clear();
         self.meta_clear();
         crate::opening::forget_db(&self.name);
+        crate::opening::discard(&self.name);
         crate::custbox::forget_db(&self.name);
         self.flush_then_stop_fxc(None).await;
         if let Some(t) = self.tenant.take() {
@@ -2307,6 +2320,7 @@ impl ReadView {
             self.fc_with(|s| s.note_scan(prefix, end.as_deref(), false, None, &r));
             return self.done(r);
         }
+        self.box_on_miss().await;
         let raw = if durable_reads(&g.name) { crate::layout2::Raw::Tenant(t, true) } else { crate::layout2::Raw::Visible(t) };
         let r = crate::layout2::scan(&raw, &segs, prefix, end.as_deref(), false, None, 4 << 20).await?;
         self.fc_with(|s| s.note_scan(prefix, end.as_deref(), false, None, &r));
@@ -2360,6 +2374,7 @@ impl ReadView {
         if let Some(v) = self.fc_with(|s| s.get(key)).flatten() {
             return self.done(v);
         }
+        self.box_on_miss().await;
         let raw = if durable_reads(&g.name) { crate::layout2::Raw::Tenant(t, true) } else { crate::layout2::Raw::Visible(t) };
         let r = crate::layout2::get(&raw, key).await?;
         self.fc_with(|s| s.note_get(key, &r));
@@ -2400,6 +2415,27 @@ impl ReadView {
         crate::custbox::warm(&g.name, &crate::custkey::comp(&v), t).await;
     }
 
+    /// first-course-short: the opening could not answer a read of a query whose customer box was skipped: the box now,
+    /// once, before the read goes to storage (custbox.rs).
+    async fn box_on_miss(&self) {
+        let comp = self.fc.lock().unwrap().as_mut().and_then(crate::opening::take_box);
+        if let (Some(comp), Some(g)) = (comp, &self.g) {
+            if let Some(t) = g.tenant.as_ref() {
+                crate::custbox::warm(&g.name, &comp, t).await;
+            }
+        }
+    }
+
+    /// first-course-short: the session's opening knows every one of `keys` exactly.
+    pub fn first_course_knows(&self, keys: &[Vec<u8>]) -> bool {
+        self.fc.lock().unwrap().as_ref().map_or(false, |s| crate::opening::knows(s, keys))
+    }
+
+    /// first-course-short: this query has a first-course session that answers from an opening.
+    pub fn first_course_serves(&self) -> bool {
+        self.fc.lock().unwrap().as_ref().map_or(false, crate::opening::serves)
+    }
+
     /// First course: end of the query (keeps the opening when `ok`).
     pub fn first_course_end(&self, ok: bool) {
         if let Some(s) = self.fc.lock().unwrap().take() {
@@ -2428,6 +2464,9 @@ impl ReadView {
             None => vec![None; keys.len()],
         };
         let miss: Vec<usize> = (0..keys.len()).filter(|i| out[*i].is_none()).collect();
+        if !miss.is_empty() {
+            self.box_on_miss().await;
+        }
         let miss_keys: Vec<Vec<u8>> = miss.iter().map(|i| keys[*i].clone()).collect();
         let fetched = crate::layout2::get_many(&crate::layout2::Raw::Visible(t), &miss_keys, GET_MANY_PARALLEL.load(Relaxed)).await?;
         for (i, v) in miss.into_iter().zip(fetched) {
@@ -2456,6 +2495,7 @@ impl ReadView {
             self.fc_with(|s| s.note_scan(start, end, reverse, limit, &r));
             return self.done(r);
         }
+        self.box_on_miss().await;
         let segs = self.segs_for(start, end).await?;
         let r = crate::layout2::scan(&crate::layout2::Raw::Visible(g.tenant.as_ref().unwrap()), &segs, start, end, reverse, limit, read_ahead).await?;
         self.fc_with(|s| s.note_scan(start, end, reverse, limit, &r));
