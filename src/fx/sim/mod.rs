@@ -770,6 +770,39 @@ mod tests {
         assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
     }
 
+    /// Hole K (found by the gen-3 batch, seed 302206 and others; CI run 43496082968): a process's kept records re-create a
+    /// dropped database. B (slot 0) acknowledges a write through the log. A (slot 2) restarts, reads it back, its replay is
+    /// refused (B holds the lease) and it keeps the record in memory (`pinned`). C (slot 1) takes the database over (its
+    /// takeover applies the record) and drops it: the log gets a drop record and C forgets its own kept records
+    /// (`forget_pinned`), but A's stay. A's background retry (`spawn_retry` -> `replay_db`) finds no stored marker for the
+    /// name, takes the lease of the absent name, and `apply_durable` creates the database again with the dropped rows.
+    /// A fresh process reads rows acknowledged before the drop. Ignored until fixed.
+    #[test]
+    #[ignore]
+    fn sim_hole_k_kept_records_recreate_a_dropped_database() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        let _l = super::cluster::ext3::setup_log_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let ev = vec![
+            Open { p: 0, writer: true },
+            // B's uploads are slow: its write is in the log only
+            Hold { p: 0, class: Class::Wal, op: Some(NOp::Put), skip: 0, land: true, all: true, rid: 1 },
+            Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (0, i, false)).collect() },
+            Restart { p: 2 },
+            Kept { p: 2 },
+            Release { rid: 1 },
+            Open { p: 1, writer: true },
+            DropDb { p: 1 },
+            LogRetry { p: 2 },
+        ];
+        let ext = super::cluster::Ext { flavor: 3, log: true, old_kept: false, strict_versions: false };
+        let (f, v) = run_story3(&rt, "hole K: kept records re-create a dropped database", ext, ev);
+        assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {

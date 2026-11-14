@@ -1374,6 +1374,7 @@ pub async fn run_script(s: &Script) -> Run {
     w.settle().await;
     // sim-test-3: with the log, a fresh process takes the database over (its takeover reads the log back) before the
     // oracle; a database dropped or erased last is checked as absent
+    ext3::settle_absent(&w).await;
     let mut violations = ext3::before_oracle(&w).await;
     if w.x3.is_absent() {
         violations.extend(ext3::oracle_absent(&w).await);
