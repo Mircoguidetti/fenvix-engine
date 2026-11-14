@@ -92,6 +92,12 @@ pub struct LocalLog {
     /// ([`recover_remote`]): every record of the database at or below it was read then. A process that does not hold
     /// the database's lease confirms at most this position, and only once it proved those records are in object storage.
     read_pos: Mutex<HashMap<String, u64>>,
+    /// fix-hole-t-freeze: databases whose takeover replay (`replay_on_wake`) read records back from the replicated log
+    /// and has not applied them yet (it failed, or is running). Their records (and the copies the replay stamped) are only
+    /// in the log: nothing confirms them to the log (the uploader and `closed` skip these databases), and this process's
+    /// next opening replays the log again whatever its lease says (`needs_wake`). A failed replay is not a lost ownership:
+    /// the database is not frozen (`dbs.rs` abandon), the next command retries.
+    waking: Mutex<std::collections::HashSet<String>>,
 }
 
 fn checksum(b: &[u8]) -> [u8; 8] {
@@ -254,7 +260,7 @@ impl LocalLog {
         let old = list_segments(&dir)?;
         let first = old.last().map(|(n, _)| n + 1).unwrap_or(1);
         let (tx, rx) = mpsc::unbounded_channel();
-        let me = Arc::new(Self { dir: dir.clone(), id, next_seq: AtomicU64::new((boot << SEQ_BOOT_SHIFT) + 1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every, remote: None, frozen: Mutex::new(Default::default()), read_pos: Mutex::new(HashMap::new()) });
+        let me = Arc::new(Self { dir: dir.clone(), id, next_seq: AtomicU64::new((boot << SEQ_BOOT_SHIFT) + 1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every, remote: None, frozen: Mutex::new(Default::default()), read_pos: Mutex::new(HashMap::new()), waking: Mutex::new(Default::default()) });
         let w = Arc::clone(&me);
         std::thread::Builder::new().name("local-log".into()).spawn(move || w.writer_thread(rx, first))?;
         Ok((me, old))
@@ -427,6 +433,12 @@ impl LocalLog {
         self.pinned.lock().unwrap().contains_key(db) || self.frozen.lock().unwrap().contains(db)
     }
 
+    /// fix-hole-t-freeze: a takeover replay of `db` read records back and did not finish applying them (see `waking`): the
+    /// next opening of `db` in this process must replay the log again before serving.
+    pub fn needs_wake(&self, db: &str) -> bool {
+        self.waking.lock().unwrap().contains(db)
+    }
+
     /// Q8d: true with the replicated log.
     pub fn is_remote(&self) -> bool {
         self.remote.is_some()
@@ -454,7 +466,7 @@ impl LocalLog {
 
     /// The database closed cleanly (its close flushed everything to object storage).
     pub fn closed(&self, db: &str) {
-        if self.is_pinned(db) {
+        if self.is_pinned(db) || self.needs_wake(db) {
             return;
         }
         if let Some(e) = self.tenants.lock().unwrap().get_mut(db) {
@@ -497,6 +509,8 @@ impl LocalLog {
                 tick.tick().await;
                 let mut pinned: std::collections::HashSet<String> = me.pinned.lock().unwrap().keys().cloned().collect();
                 pinned.extend(me.frozen.lock().unwrap().iter().cloned());
+                // fix-hole-t-freeze: a takeover replay not finished: its records are not all in the writer yet
+                pinned.extend(me.waking.lock().unwrap().iter().cloned());
                 let due: Vec<(String, u64)> = me.tenants.lock().unwrap().iter().filter(|(k, e)| e.uploaded < e.staged && !pinned.contains(*k)).map(|(k, e)| (k.clone(), e.staged)).collect();
                 futures::future::join_all(due.into_iter().map(|(db, target)| {
                     let me = Arc::clone(&me);
@@ -558,7 +572,7 @@ pub async fn install_quaderno(addrs: &str, id: &str, dir: &str, upload_secs: u64
     std::fs::create_dir_all(&dir).with_context(|| format!("directory {}", dir.display()))?;
     // the disk writer is never used: its channel stays without a receiver
     let (tx, _rx) = mpsc::unbounded_channel();
-    let me = Arc::new(LocalLog { dir, id: format!("quaderno:{id}"), next_seq: AtomicU64::new(1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every: Duration::from_secs(upload_secs), remote: Some(remote), frozen: Mutex::new(Default::default()), read_pos: Mutex::new(HashMap::new()) });
+    let me = Arc::new(LocalLog { dir, id: format!("quaderno:{id}"), next_seq: AtomicU64::new(1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every: Duration::from_secs(upload_secs), remote: Some(remote), frozen: Mutex::new(Default::default()), read_pos: Mutex::new(HashMap::new()), waking: Mutex::new(Default::default()) });
     tenant_bench::lifecycle::LOCAL_LOG_FLUSH_SECS.store(upload_secs, Relaxed);
     if old_kept_retry() {
         eprintln!("TEST: the old handling of kept records is on (MONGO_TEST_KEPT_RETRY_OLD): it loses acknowledged writes; never use this in production");
@@ -667,7 +681,28 @@ pub static WAKE_REPLAYED: AtomicU64 = AtomicU64::new(0);
 /// lapsed, and the first write of the new writer fences its WAL).
 pub async fn replay_on_wake(g: &mut crate::dbs::Entry) -> Result<()> {
     let Some(log) = get() else { return Ok(()) };
-    let Some(remote) = log.remote.clone() else { return Ok(()) };
+    if log.remote.is_none() {
+        return Ok(());
+    }
+    // fix-hole-t-freeze: from here until the records are applied and confirmed, a failure leaves them (and the copies
+    // `wake_apply` stamps) in the log only: this process's next opening replays again (`needs_wake`), nothing confirms
+    // them meanwhile, and the abandon that follows the failure does not freeze the database
+    let name = g.name().to_string();
+    log.waking.lock().unwrap().insert(name.clone());
+    let r = wake_apply(log, g).await;
+    if r.is_ok() {
+        log.waking.lock().unwrap().remove(&name);
+    } else {
+        WAKE_FAILED.fetch_add(1, Relaxed);
+    }
+    r
+}
+
+/// fix-hole-t-freeze: takeover replays that failed (their database is replayed again at its next opening).
+pub static WAKE_FAILED: AtomicU64 = AtomicU64::new(0);
+
+async fn wake_apply(log: &Arc<LocalLog>, g: &mut crate::dbs::Entry) -> Result<()> {
+    let remote = log.remote.clone().unwrap();
     let name = g.name().to_string();
     let raw = remote.read_db(&name).await?;
     if raw.is_empty() {
@@ -718,7 +753,10 @@ pub async fn replay_on_wake(g: &mut crate::dbs::Entry) -> Result<()> {
         }
         None => 0,
     };
-    recs.sort_by_key(|r| (r.orig, r.seq));
+    // fix-hole-t-freeze: a replay that failed before its writer moved the stored epoch leaves both a record and its copy
+    // (same `orig`, the copy's epoch one higher) for the next one: only one of them is applied, the last written
+    recs.sort_by_key(|r| (r.orig, std::cmp::Reverse(r.seq)));
+    recs.dedup_by_key(|r| r.orig);
     let todo: Vec<Record> = recs.into_iter().filter(|r| r.orig > done_seq).collect();
     let n = todo.len() as u64;
     // fix-log-takeover-stale, hole T (RULE 8): the apply below opens this process's writer, which moves the stored writer

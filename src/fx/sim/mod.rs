@@ -1075,6 +1075,42 @@ mod tests {
         assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
     }
 
+    /// fix-hole-t-freeze (sim-test-3 test_96 on 61b8fe88): after hole T's failed takeover replay, the process that holds
+    /// the lease opens the database again: its replay runs again (the log holds the records and the copies the first one
+    /// stamped; one of each pair is applied), it serves and writes, then C takes the database over. No acknowledged
+    /// record may be lost, none applied over a newer value.
+    #[test]
+    fn sim_hole_t_failed_takeover_replay_retried_by_the_holder() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        let _l = super::cluster::ext3::setup_log_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let ev = vec![
+            Open { p: 0, writer: true },
+            Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (0, i, false)).collect() },
+            Publish { p: 0 },
+            Upload { p: 0 },
+            Hold { p: 0, class: Class::Wal, op: Some(NOp::Put), skip: 0, land: false, all: true, rid: 1 },
+            Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (1, i, false)).collect() },
+            Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (2, i, false)).collect() },
+            Hold { p: 1, class: Class::FxVersion, op: Some(NOp::Put), skip: 0, land: false, all: true, rid: 2 },
+            Open { p: 1, writer: true },
+            Release { rid: 2 },
+            Sleep { ms: 300 },
+            // A (still the lease's holder) opens again: the replay runs again and the database serves
+            Open { p: 1, writer: true },
+            Write { p: 1, ops: (0..PER_CUSTOMER).map(|i| (1, i, true)).collect() },
+            Upload { p: 1 },
+            Open { p: 2, writer: true },
+            Write { p: 2, ops: vec![(3, 0, false)] },
+        ];
+        let ext = super::cluster::Ext { flavor: 3, log: true, old_kept: false, strict_versions: false };
+        let (f, v) = run_story3(&rt, "hole T: the failed takeover replay retried by the lease holder", ext, ev);
+        assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {
