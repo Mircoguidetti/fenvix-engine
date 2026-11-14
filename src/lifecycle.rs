@@ -4792,6 +4792,34 @@ pub async fn gc_tenant_wal(s3: &Arc<dyn ObjectStore>, id: impl DbRef, min_age: D
     Ok(rec)
 }
 
+/// The WAL objects with an id in `floor..limit` that hold data (size > 0): the zero-byte ones are writer fences.
+async fn wal_data_objects(store: &Arc<dyn ObjectStore>, id: &(impl DbRef + ?Sized), floor: u64, limit: u64) -> Result<Vec<Path>> {
+    use std::sync::atomic::Ordering::Relaxed;
+    let t = Instant::now();
+    let wal_dir = Path::from(format!("{}/wal", tenant_path(id)));
+    let sorted = LIST_SORTED.load(Relaxed);
+    let mut out = Vec::new();
+    let mut it = match floor.checked_sub(1) {
+        Some(below) => store.list_with_offset(Some(&wal_dir), &wal_object_path(id, below)),
+        None => store.list(Some(&wal_dir)),
+    };
+    while let Some(meta) = it.next().await {
+        let meta = meta?;
+        let Some(n) = meta.location.filename().and_then(|f| f.strip_suffix(".sst")).and_then(|f| f.parse::<u64>().ok()) else { continue };
+        if n >= limit {
+            if sorted {
+                break;
+            }
+            continue;
+        }
+        if n >= floor && meta.size > 0 {
+            out.push(meta.location);
+        }
+    }
+    WAL_GC_LIST_US.fetch_add(t.elapsed().as_micros() as u64, Relaxed);
+    Ok(out)
+}
+
 /// Lowest WAL id that exists (u64::MAX if none).
 async fn wal_list_min(store: &Arc<dyn ObjectStore>, id: &(impl DbRef + ?Sized)) -> Result<u64> {
     use std::sync::atomic::Ordering::Relaxed;
@@ -4913,7 +4941,12 @@ async fn gc_wal_with(store: &Arc<dyn ObjectStore>, id: &(impl DbRef + ?Sized), m
         None => wal_list_min(store, id).await?.min(limit),
     };
     if floor < limit {
-        let paths: Vec<Path> = (floor..limit).map(|n| wal_object_path(id, n)).collect();
+        // fix-sim-seed-162: never a WAL fence. A writer's opening fences the previous one by writing a zero-byte object at
+        // that writer's next WAL id; deleting it lets the fenced writer (a zombie that has not noticed) create that id
+        // again and acknowledge a write nobody will ever replay. SlateDB's own WAL GC keeps fences for the same reason
+        // (zero-byte objects; its fence GC is a separate pass, dry-run by default). So the objects below the limit are
+        // listed (one LIST page per 1000, only on a pass that deletes) and only the non-empty ones are deleted.
+        let paths = wal_data_objects(store, id, floor, limit).await?;
         let t = Instant::now();
         let n = paths.len() as u64;
         if mode == 2 {
@@ -6189,5 +6222,33 @@ mod tests {
             }
         }
         assert!(lost.is_empty(), "the closed pass deleted WAL objects {lost:?} that the restore point (replay boundary {need_from}) needs: a restore to it would answer retention_gap");
+    }
+
+    /// fix-sim-seed-162 (sim gen 1 seed 162 on night-head-2 61b8fe88): writer A loses the database to writer B, whose
+    /// opening writes a zero-byte WAL fence object at A's next WAL id. B flushes and closes; the closed pass
+    /// (`gc_tenant_closed`, incremental WAL GC, the default mode) deleted every WAL object below the replay boundary,
+    /// the fence too, so A's next durable put created that id again and was acknowledged: a write of a fenced writer,
+    /// lost. SlateDB's own WAL GC never deletes fences (zero-byte objects; its fence GC is a separate, dry-run pass).
+    #[tokio::test]
+    async fn closed_pass_keeps_the_wal_fence_of_a_zombie_writer() {
+        let id = "test-wal-fence-zombie";
+        let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let a = Db::builder(tenant_path(id), Arc::clone(&raw)).with_settings(writer_settings()).build().await.unwrap();
+        a.put(b"a1", b"v").await.unwrap();
+        a.flush().await.unwrap();
+        let b = Db::builder(tenant_path(id), Arc::clone(&raw)).with_settings(writer_settings()).build().await.unwrap();
+        for i in 0..3 {
+            b.put(format!("b{i}").as_bytes(), b"v").await.unwrap();
+            b.flush().await.unwrap();
+            b.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await.unwrap();
+        }
+        b.close().await.unwrap();
+        gc_tenant_closed(&raw, id, Duration::ZERO).await.unwrap();
+        // the put is acknowledged once its WAL object is written (the flush the engine's write path awaits)
+        let r = match a.put(b"a2", b"lost if acknowledged").await {
+            Ok(_) => a.flush().await,
+            Err(e) => Err(e),
+        };
+        assert!(r.is_err(), "the fenced writer's put was acknowledged after the closed pass: the WAL fence object was deleted");
     }
 }
