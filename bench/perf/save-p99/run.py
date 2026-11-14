@@ -85,7 +85,7 @@ def main():
     port, aport = free_port(), free_port()
     kept = tempfile.mkdtemp(prefix="svkept")
     cmd = [BIN, "--listen", f"127.0.0.1:{port}", "--admin-listen", f"127.0.0.1:{aport}", "--idle-secs", "600", "--bucket", bucket,
-           "--endpoint", "http://127.0.0.1:9000", "--holder", f"sv-{port}", "--no-ttl",
+           "--endpoint", os.environ.get("MINIO_ENDPOINT", "http://127.0.0.1:9000"), "--holder", f"sv-{port}", "--no-ttl",
            "--quaderno", addrs, "--quaderno-id", "sv", "--local-log-dir", kept] + a.server_flags.split()
     env = dict(os.environ, MONGO_ADMIN_TOKEN="test-token-0123456789abcdef", FX_WAITS="0")
     env.update(dict(kv.split("=", 1) for kv in a.env))

@@ -33,7 +33,7 @@ def parse(out):
                 d[k] = float(v)
             cmds.append(d)
         elif line.startswith("WAITS_MSG ") and " cmd=insert " in line:
-            msgs.append({k: float(v) for k, v in re.findall(r" (ms|handle|write_reply|usage)=([\d.]+)", line)})
+            msgs.append({k: float(v) for k, v in re.findall(r" (ms|handle|write_reply|usage)=(-?[\d.]+)", line)})
         elif line.startswith("WAITS_STALL"):
             stalls.append(float(re.search(r" ms=([\d.]+)", line).group(1)))
         elif line.startswith("WAITS_POLL"):
