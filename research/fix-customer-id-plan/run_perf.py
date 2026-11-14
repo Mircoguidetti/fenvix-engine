@@ -10,7 +10,7 @@ import time
 from pymongo import MongoClient
 for _ in range(120):   # an earlier process's lease on the database must lapse first
     try:
-        MongoClient(s.uri).app_cperf.command("count", "docs"); break
+        MongoClient(s.uri)[os.environ.get("RUN_DB", "app_cperf")].command("count", "docs"); break
     except Exception:
         time.sleep(1)
 try:

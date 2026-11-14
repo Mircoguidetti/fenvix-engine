@@ -1,0 +1,12 @@
+head  find_one big customer and _id               51.0 ms  examined 1  returned [5] (1)  peak RSS 40 MiB
+head  find big customer and _id >= last 3         58.7 ms  examined 3  returned [6141, 6142, 6143] (3)  peak RSS 55 MiB
+head  find_one rnd customer and _id               27.5 ms  examined 1  returned [100] (1)  peak RSS 28 MiB
+head  find small customer                         94.3 ms  examined 10  returned [0, 1, 2, 3, 4]... (10)  peak RSS 49 MiB
+head  find_one small customer                     83.6 ms  examined 74  returned [0] (1)  peak RSS 61 MiB
+head  find_one big customer                       66.8 ms  examined 65  returned [0] (1)  peak RSS 65 MiB
+base  find_one big customer and _id             3789.0 ms  examined 6410  returned [5] (1)  peak RSS 303 MiB
+base  find big customer and _id >= last 3       3329.0 ms  examined 6410  returned [6141, 6142, 6143] (3)  peak RSS 303 MiB
+base  find_one rnd customer and _id             3039.5 ms  examined 6410  returned [100] (1)  peak RSS 303 MiB
+base  find small customer                       3074.5 ms  examined 6410  returned [0, 1, 2, 3, 4]... (10)  peak RSS 282 MiB
+base  find_one small customer                   3698.4 ms  examined 6401  returned [0] (1)  peak RSS 288 MiB
+base  find_one big customer                      410.0 ms  examined 1  returned [0] (1)  peak RSS 74 MiB

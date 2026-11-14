@@ -1,0 +1,14 @@
+base1  find_one customer and _id        cold GETs [66] MB [4.6] ms [134061.0] | warm ms [138743.2] | examined 1000000 | n 1
+base1  find customer and _id            cold GETs [47] MB [4.6] ms [134374.8] | warm ms [133970.5] | examined 1000000 | n 1
+base1  customer alone (100 docs)        cold GETs [43] MB [4.6] ms [72617.3] | warm ms [70227.8] | examined 1000000 | n 100
+base1  customer alone, limit 1          cold GETs [31] MB [4.6] ms [5405.1] | warm ms [4495.5] | examined 48058 | n 1
+base1  customer $in 3                   cold GETs [43] MB [4.6] ms [71949.5] | warm ms [72543.4] | examined 1000000 | n 300
+base1  customer and _id range 10        cold GETs [47] MB [4.6] ms [130174.9] | warm ms [132934.5] | examined 1000000 | n 10
+base1  customer and _id $gt, limit 2    cold GETs [47] MB [4.6] ms [133166.8] | warm ms [133835.7] | examined 1000000 | n 2
+base1  customer, sort k limit 5         cold GETs [47] MB [4.6] ms [134745.4] | warm ms [135568.3] | examined 1000000 | n 5
+base1  customer and k                   cold GETs [44] MB [4.6] ms [75097.7] | warm ms [70017.3] | examined 1000000 | n 14
+base1  count customer                   cold GETs [47] MB [4.6] ms [134475.5] | warm ms [136434.4] | examined None | n 1
+base1  agg $match customer + $group     cold GETs [48] MB [4.6] ms [138573.6] | warm ms [139097.2] | examined None | n 1
+base1  update_one customer and _id      cold GETs [61] MB [5.7] ms [141123.5] | warm ms [147100.4] | examined None | n 1
+base1  _id alone (locator)              cold GETs [35] MB [4.2] ms [35.1] | warm ms [0.6] | examined 1 | n 1
+base1  other field (whole collection)   cold GETs [49] MB [4.6] ms [76796.9] | warm ms [76058.6] | examined 1000000 | n 0

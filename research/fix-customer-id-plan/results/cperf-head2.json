@@ -1,0 +1,832 @@
+{
+ "label": "head2",
+ "n": 1000000,
+ "results": {
+  "find_one customer and _id": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 35,
+     "bytes": 4235674,
+     "ms": 28.4,
+     "n": 1,
+     "hash": "c9ee3d68b506"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.8,
+     "n": 1,
+     "hash": "c9ee3d68b506"
+    },
+    {
+     "trial": 1,
+     "mode": "cold",
+     "gets": 34,
+     "bytes": 3576427,
+     "ms": 27.5,
+     "n": 1,
+     "hash": "b91bee81536f"
+    },
+    {
+     "trial": 1,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.4,
+     "n": 1,
+     "hash": "b91bee81536f"
+    },
+    {
+     "trial": 2,
+     "mode": "cold",
+     "gets": 34,
+     "bytes": 3577103,
+     "ms": 38.2,
+     "n": 1,
+     "hash": "1cda93846264"
+    },
+    {
+     "trial": 2,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.9,
+     "n": 1,
+     "hash": "1cda93846264"
+    }
+   ],
+   "examined": 1
+  },
+  "find customer and _id": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 33,
+     "bytes": 4194556,
+     "ms": 30.2,
+     "n": 1,
+     "hash": "c9ee3d68b506"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 1.1,
+     "n": 1,
+     "hash": "c9ee3d68b506"
+    },
+    {
+     "trial": 1,
+     "mode": "cold",
+     "gets": 32,
+     "bytes": 3535587,
+     "ms": 21.6,
+     "n": 1,
+     "hash": "b91bee81536f"
+    },
+    {
+     "trial": 1,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.6,
+     "n": 1,
+     "hash": "b91bee81536f"
+    },
+    {
+     "trial": 2,
+     "mode": "cold",
+     "gets": 32,
+     "bytes": 3535587,
+     "ms": 20.9,
+     "n": 1,
+     "hash": "1cda93846264"
+    },
+    {
+     "trial": 2,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.3,
+     "n": 1,
+     "hash": "1cda93846264"
+    }
+   ],
+   "examined": 1
+  },
+  "customer alone (100 docs)": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 34,
+     "bytes": 4587944,
+     "ms": 40.7,
+     "n": 100,
+     "hash": "810fb1b1d07e"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 2.3,
+     "n": 100,
+     "hash": "810fb1b1d07e"
+    },
+    {
+     "trial": 1,
+     "mode": "cold",
+     "gets": 34,
+     "bytes": 4587944,
+     "ms": 31.9,
+     "n": 100,
+     "hash": "eea4c67da714"
+    },
+    {
+     "trial": 1,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 2.2,
+     "n": 100,
+     "hash": "eea4c67da714"
+    },
+    {
+     "trial": 2,
+     "mode": "cold",
+     "gets": 34,
+     "bytes": 4587944,
+     "ms": 25.2,
+     "n": 100,
+     "hash": "35556366b09d"
+    },
+    {
+     "trial": 2,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 2.3,
+     "n": 100,
+     "hash": "35556366b09d"
+    }
+   ],
+   "examined": 100
+  },
+  "customer alone, limit 1": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 34,
+     "bytes": 4587944,
+     "ms": 35.5,
+     "n": 1,
+     "hash": "75b28a531e64"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 6.0,
+     "n": 1,
+     "hash": "75b28a531e64"
+    },
+    {
+     "trial": 1,
+     "mode": "cold",
+     "gets": 34,
+     "bytes": 4587944,
+     "ms": 34.4,
+     "n": 1,
+     "hash": "6ae199746910"
+    },
+    {
+     "trial": 1,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 2.2,
+     "n": 1,
+     "hash": "6ae199746910"
+    },
+    {
+     "trial": 2,
+     "mode": "cold",
+     "gets": 34,
+     "bytes": 4587944,
+     "ms": 27.5,
+     "n": 1,
+     "hash": "d55217f04298"
+    },
+    {
+     "trial": 2,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 7.0,
+     "n": 1,
+     "hash": "d55217f04298"
+    }
+   ],
+   "examined": 164
+  },
+  "customer $in 3": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 34,
+     "bytes": 4587944,
+     "ms": 28.4,
+     "n": 300,
+     "hash": "618adb65f670"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 14.3,
+     "n": 300,
+     "hash": "618adb65f670"
+    },
+    {
+     "trial": 1,
+     "mode": "cold",
+     "gets": 34,
+     "bytes": 4587944,
+     "ms": 29.7,
+     "n": 300,
+     "hash": "df0bc7b86566"
+    },
+    {
+     "trial": 1,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 4.7,
+     "n": 300,
+     "hash": "df0bc7b86566"
+    },
+    {
+     "trial": 2,
+     "mode": "cold",
+     "gets": 34,
+     "bytes": 4587944,
+     "ms": 27.8,
+     "n": 300,
+     "hash": "e3569d1fb8a6"
+    },
+    {
+     "trial": 2,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 4.6,
+     "n": 300,
+     "hash": "e3569d1fb8a6"
+    }
+   ],
+   "examined": 300
+  },
+  "customer and _id range 10": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 33,
+     "bytes": 4194556,
+     "ms": 21.5,
+     "n": 10,
+     "hash": "c30d34157754"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.5,
+     "n": 10,
+     "hash": "c30d34157754"
+    },
+    {
+     "trial": 1,
+     "mode": "cold",
+     "gets": 33,
+     "bytes": 3928975,
+     "ms": 27.2,
+     "n": 10,
+     "hash": "80445400b545"
+    },
+    {
+     "trial": 1,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.4,
+     "n": 10,
+     "hash": "80445400b545"
+    },
+    {
+     "trial": 2,
+     "mode": "cold",
+     "gets": 33,
+     "bytes": 3928975,
+     "ms": 20.5,
+     "n": 10,
+     "hash": "614049a802c0"
+    },
+    {
+     "trial": 2,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.5,
+     "n": 10,
+     "hash": "614049a802c0"
+    }
+   ],
+   "examined": 11
+  },
+  "customer and _id $gt, limit 2": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 33,
+     "bytes": 4194556,
+     "ms": 20.5,
+     "n": 2,
+     "hash": "9359fe220229"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.5,
+     "n": 2,
+     "hash": "9359fe220229"
+    },
+    {
+     "trial": 1,
+     "mode": "cold",
+     "gets": 33,
+     "bytes": 3928975,
+     "ms": 20.0,
+     "n": 2,
+     "hash": "353c26ad8dad"
+    },
+    {
+     "trial": 1,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.5,
+     "n": 2,
+     "hash": "353c26ad8dad"
+    },
+    {
+     "trial": 2,
+     "mode": "cold",
+     "gets": 33,
+     "bytes": 3928975,
+     "ms": 27.1,
+     "n": 2,
+     "hash": "853725a8c363"
+    },
+    {
+     "trial": 2,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.6,
+     "n": 2,
+     "hash": "853725a8c363"
+    }
+   ],
+   "examined": 50
+  },
+  "customer, sort k limit 5": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 33,
+     "bytes": 4194556,
+     "ms": 24.6,
+     "n": 5,
+     "hash": "593b3594b93b"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.6,
+     "n": 5,
+     "hash": "593b3594b93b"
+    },
+    {
+     "trial": 1,
+     "mode": "cold",
+     "gets": 32,
+     "bytes": 3535587,
+     "ms": 18.5,
+     "n": 5,
+     "hash": "02da8a048eca"
+    },
+    {
+     "trial": 1,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.7,
+     "n": 5,
+     "hash": "02da8a048eca"
+    },
+    {
+     "trial": 2,
+     "mode": "cold",
+     "gets": 33,
+     "bytes": 4194556,
+     "ms": 21.7,
+     "n": 5,
+     "hash": "b503d4383941"
+    },
+    {
+     "trial": 2,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.9,
+     "n": 5,
+     "hash": "b503d4383941"
+    }
+   ],
+   "examined": 100
+  },
+  "customer and k": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 34,
+     "bytes": 4587944,
+     "ms": 28.6,
+     "n": 14,
+     "hash": "5abda2e7fb13"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 2.0,
+     "n": 14,
+     "hash": "5abda2e7fb13"
+    },
+    {
+     "trial": 1,
+     "mode": "cold",
+     "gets": 34,
+     "bytes": 4587944,
+     "ms": 23.9,
+     "n": 14,
+     "hash": "abcb7f943598"
+    },
+    {
+     "trial": 1,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 2.1,
+     "n": 14,
+     "hash": "abcb7f943598"
+    },
+    {
+     "trial": 2,
+     "mode": "cold",
+     "gets": 34,
+     "bytes": 4587944,
+     "ms": 24.9,
+     "n": 14,
+     "hash": "8efa9f8ed563"
+    },
+    {
+     "trial": 2,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 2.1,
+     "n": 14,
+     "hash": "8efa9f8ed563"
+    }
+   ],
+   "examined": 100
+  },
+  "count customer": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 33,
+     "bytes": 4194556,
+     "ms": 23.6,
+     "n": 1,
+     "hash": "861f5dcefbae"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 1.0,
+     "n": 1,
+     "hash": "861f5dcefbae"
+    },
+    {
+     "trial": 1,
+     "mode": "cold",
+     "gets": 32,
+     "bytes": 3535587,
+     "ms": 22.4,
+     "n": 1,
+     "hash": "861f5dcefbae"
+    },
+    {
+     "trial": 1,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.9,
+     "n": 1,
+     "hash": "861f5dcefbae"
+    },
+    {
+     "trial": 2,
+     "mode": "cold",
+     "gets": 33,
+     "bytes": 4194556,
+     "ms": 22.8,
+     "n": 1,
+     "hash": "861f5dcefbae"
+    },
+    {
+     "trial": 2,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.6,
+     "n": 1,
+     "hash": "861f5dcefbae"
+    }
+   ],
+   "examined": null
+  },
+  "agg $match customer + $group": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 33,
+     "bytes": 4194556,
+     "ms": 26.5,
+     "n": 1,
+     "hash": "843ca09a7e09"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 1.1,
+     "n": 1,
+     "hash": "843ca09a7e09"
+    },
+    {
+     "trial": 1,
+     "mode": "cold",
+     "gets": 33,
+     "bytes": 3928975,
+     "ms": 24.9,
+     "n": 1,
+     "hash": "843ca09a7e09"
+    },
+    {
+     "trial": 1,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.7,
+     "n": 1,
+     "hash": "843ca09a7e09"
+    },
+    {
+     "trial": 2,
+     "mode": "cold",
+     "gets": 33,
+     "bytes": 3928975,
+     "ms": 26.5,
+     "n": 1,
+     "hash": "843ca09a7e09"
+    },
+    {
+     "trial": 2,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 1.1,
+     "n": 1,
+     "hash": "843ca09a7e09"
+    }
+   ],
+   "examined": null
+  },
+  "update_one customer and _id": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 48,
+     "bytes": 5657214,
+     "ms": 53.6,
+     "n": 1,
+     "hash": "20e402dcc82e"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 44,
+     "bytes": 78850050,
+     "ms": 3511.3,
+     "n": 1,
+     "hash": "20e402dcc82e"
+    },
+    {
+     "trial": 1,
+     "mode": "cold",
+     "gets": 78,
+     "bytes": 4620810,
+     "ms": 39.1,
+     "n": 1,
+     "hash": "20e402dcc82e"
+    },
+    {
+     "trial": 1,
+     "mode": "warm",
+     "gets": 106,
+     "bytes": 79535721,
+     "ms": 3496.4,
+     "n": 1,
+     "hash": "20e402dcc82e"
+    },
+    {
+     "trial": 2,
+     "mode": "cold",
+     "gets": 135,
+     "bytes": 43391894,
+     "ms": 129.3,
+     "n": 1,
+     "hash": "20e402dcc82e"
+    },
+    {
+     "trial": 2,
+     "mode": "warm",
+     "gets": 662,
+     "bytes": 129274470,
+     "ms": 3880.2,
+     "n": 1,
+     "hash": "20e402dcc82e"
+    }
+   ],
+   "examined": null
+  },
+  "_id alone (locator)": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 44,
+     "bytes": 3813997,
+     "ms": 26.0,
+     "n": 1,
+     "hash": "315581a0bec1"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.6,
+     "n": 1,
+     "hash": "315581a0bec1"
+    },
+    {
+     "trial": 1,
+     "mode": "cold",
+     "gets": 38,
+     "bytes": 3807962,
+     "ms": 27.8,
+     "n": 1,
+     "hash": "d350670c0ecc"
+    },
+    {
+     "trial": 1,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.5,
+     "n": 1,
+     "hash": "d350670c0ecc"
+    },
+    {
+     "trial": 2,
+     "mode": "cold",
+     "gets": 39,
+     "bytes": 4533227,
+     "ms": 29.5,
+     "n": 1,
+     "hash": "e4a76307eb71"
+    },
+    {
+     "trial": 2,
+     "mode": "warm",
+     "gets": 0,
+     "bytes": 0,
+     "ms": 0.6,
+     "n": 1,
+     "hash": "e4a76307eb71"
+    }
+   ],
+   "examined": 1
+  },
+  "other field (whole collection)": {
+   "rows": [
+    {
+     "trial": 0,
+     "mode": "cold",
+     "gets": 77,
+     "bytes": 4726621,
+     "ms": 82657.2,
+     "n": 0,
+     "hash": "da39a3ee5e6b"
+    },
+    {
+     "trial": 0,
+     "mode": "warm",
+     "gets": 6,
+     "bytes": 39456,
+     "ms": 82757.7,
+     "n": 0,
+     "hash": "da39a3ee5e6b"
+    },
+    {
+     "trial": 1,
+     "mode": "cold",
+     "gets": 53,
+     "bytes": 4719205,
+     "ms": 80520.0,
+     "n": 0,
+     "hash": "da39a3ee5e6b"
+    },
+    {
+     "trial": 1,
+     "mode": "warm",
+     "gets": 5,
+     "bytes": 32880,
+     "ms": 82798.8,
+     "n": 0,
+     "hash": "da39a3ee5e6b"
+    },
+    {
+     "trial": 2,
+     "mode": "cold",
+     "gets": 53,
+     "bytes": 4719205,
+     "ms": 76264.1,
+     "n": 0,
+     "hash": "da39a3ee5e6b"
+    },
+    {
+     "trial": 2,
+     "mode": "warm",
+     "gets": 5,
+     "bytes": 32880,
+     "ms": 79286.1,
+     "n": 0,
+     "hash": "da39a3ee5e6b"
+    }
+   ],
+   "examined": 1000000
+  }
+ }
+}

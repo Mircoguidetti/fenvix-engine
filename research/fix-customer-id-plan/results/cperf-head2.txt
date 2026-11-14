@@ -1,0 +1,14 @@
+head2  find_one customer and _id        cold GETs [35, 34, 34] MB [4.2, 3.6, 3.6] ms [28.4, 27.5, 38.2] | warm ms [0.8, 0.4, 0.9] | examined 1 | n 1
+head2  find customer and _id            cold GETs [33, 32, 32] MB [4.2, 3.5, 3.5] ms [30.2, 21.6, 20.9] | warm ms [1.1, 0.6, 0.3] | examined 1 | n 1
+head2  customer alone (100 docs)        cold GETs [34, 34, 34] MB [4.6, 4.6, 4.6] ms [40.7, 31.9, 25.2] | warm ms [2.3, 2.2, 2.3] | examined 100 | n 100
+head2  customer alone, limit 1          cold GETs [34, 34, 34] MB [4.6, 4.6, 4.6] ms [35.5, 34.4, 27.5] | warm ms [6.0, 2.2, 7.0] | examined 164 | n 1
+head2  customer $in 3                   cold GETs [34, 34, 34] MB [4.6, 4.6, 4.6] ms [28.4, 29.7, 27.8] | warm ms [14.3, 4.7, 4.6] | examined 300 | n 300
+head2  customer and _id range 10        cold GETs [33, 33, 33] MB [4.2, 3.9, 3.9] ms [21.5, 27.2, 20.5] | warm ms [0.5, 0.4, 0.5] | examined 11 | n 10
+head2  customer and _id $gt, limit 2    cold GETs [33, 33, 33] MB [4.2, 3.9, 3.9] ms [20.5, 20.0, 27.1] | warm ms [0.5, 0.5, 0.6] | examined 50 | n 2
+head2  customer, sort k limit 5         cold GETs [33, 32, 33] MB [4.2, 3.5, 4.2] ms [24.6, 18.5, 21.7] | warm ms [0.6, 0.7, 0.9] | examined 100 | n 5
+head2  customer and k                   cold GETs [34, 34, 34] MB [4.6, 4.6, 4.6] ms [28.6, 23.9, 24.9] | warm ms [2.0, 2.1, 2.1] | examined 100 | n 14
+head2  count customer                   cold GETs [33, 32, 33] MB [4.2, 3.5, 4.2] ms [23.6, 22.4, 22.8] | warm ms [1.0, 0.9, 0.6] | examined None | n 1
+head2  agg $match customer + $group     cold GETs [33, 33, 33] MB [4.2, 3.9, 3.9] ms [26.5, 24.9, 26.5] | warm ms [1.1, 0.7, 1.1] | examined None | n 1
+head2  update_one customer and _id      cold GETs [48, 78, 135] MB [5.7, 4.6, 43.4] ms [53.6, 39.1, 129.3] | warm ms [3511.3, 3496.4, 3880.2] | examined None | n 1
+head2  _id alone (locator)              cold GETs [44, 38, 39] MB [3.8, 3.8, 4.5] ms [26.0, 27.8, 29.5] | warm ms [0.6, 0.5, 0.6] | examined 1 | n 1
+head2  other field (whole collection)   cold GETs [77, 53, 53] MB [4.7, 4.7, 4.7] ms [82657.2, 80520.0, 76264.1] | warm ms [82757.7, 82798.8, 79286.1] | examined 1000000 | n 0
