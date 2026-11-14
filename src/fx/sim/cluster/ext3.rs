@@ -338,6 +338,7 @@ pub struct X3 {
     pub log: Option<Arc<SimLog>>,
     pub old_kept: bool,
     pub strict_versions: bool,
+    pub paused_vm: bool,
     net: Arc<Net>,
     /// Per process life.
     procs: Arc<Mutex<HashMap<u64, ProcLog>>>,
@@ -358,6 +359,7 @@ impl X3 {
             log: if ext.log { Some(Arc::new(SimLog::new())) } else { None },
             old_kept: ext.old_kept,
             strict_versions: ext.strict_versions,
+            paused_vm: ext.paused_vm,
             net,
             procs: Default::default(),
             owner: Default::default(),
@@ -596,10 +598,19 @@ async fn open_writer(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &
     let rep = match replay_on_wake(x3, life, store, id, &mut t).await {
         Ok(s) => s,
         Err(e) => {
-            // not served without them: the next command retries the open
+            // not served without them: the next command retries the open. `Entry::abandon_with` first: records of this
+            // process not yet in the store (here the replay's copies) freeze the database in this process until a restart
+            let frozen = x3.log.is_some() && x3.with(life, |x| {
+                if x.uploaded < x.staged && !x.is_pinned() {
+                    x.frozen = true;
+                    true
+                } else {
+                    false
+                }
+            });
             let _ = t.abandon().await;
             x3.release(life);
-            anyhow::bail!("taken over but its records in the log could not be read back: {e:#}");
+            anyhow::bail!("taken over but its records in the log could not be read back{}: {e:#}", if frozen { " (frozen in this process)" } else { "" });
         }
     };
     if !t.is_writer() {
@@ -875,7 +886,7 @@ async fn log_write(x3: &X3, p: usize, life: u64, eid: u32, t: &mut Tenant, model
     // database was dropped or erased since it opened (the dropper took the lease, so this process's lease had lapsed)
     // starts no new write there. Only a paused VM (its monotonic clock stopped) would; the simulator does not model it
     // for new writes after a drop (sim-test-3, candidate D in the report).
-    if x3.on {
+    if x3.on && !x3.paused_vm {
         if let Ok(k) = crate::lifecycle::read_incarnation(&x3.store_of(life), &t.id().name).await {
             if k != t.id().inc {
                 return format!("refused: the name moved to incarnation {k} since this process opened it (its lease lapsed)");
@@ -1503,5 +1514,5 @@ pub fn generate3(seed: u64, steps: usize) -> Script {
             out.push(Ev::LogCopy { r: c, up: true });
         }
     }
-    Script { seed, profile: base.profile, knobs: base.knobs, events: out.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Ext { flavor: 3, log, old_kept: false, strict_versions: false } }
+    Script { seed, profile: base.profile, knobs: base.knobs, events: out.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Ext { flavor: 3, log, old_kept: false, strict_versions: false, paused_vm: false } }
 }

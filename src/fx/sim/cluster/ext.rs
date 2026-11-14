@@ -40,6 +40,9 @@ pub struct Ext {
     /// sim-test-3, directed stories only: the oracle also refuses a version on top whose writer epoch is lower than a
     /// version below it (a lost writer's late publish landed; hole G's fence).
     pub strict_versions: bool,
+    /// sim-test-3, candidate D's story only: zombies are processes on a paused VM (their monotonic clock stopped), so
+    /// the per-command lease check does not stop their new writes after the name moved (`ext3::log_write`).
+    pub paused_vm: bool,
 }
 
 /// A value of a write: padded to about 160 bytes with the many-groups settings.
