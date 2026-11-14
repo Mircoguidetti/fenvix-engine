@@ -151,8 +151,16 @@ def test_erase_removes_the_pin_and_it_does_not_come_back(env):
     mk(srv, "gone")
     srv.admin.put("/v1/databases/gone/keep-awake")
     assert srv.admin.delete("/v1/databases/gone")[0] == 200
+    # integration-6 (known failures): since fix-slow-store (item 4) a probe of an absent name keeps its lease for the absent
+    # hold (5 s, `ABSENT_HOLD` in dbs.rs), so `tenants/gone/_lease` exists for up to 5 s after the agent's tick finds the
+    # name gone (MEASURED on 36c6a3e, 40 s sampled each second: the lease appears at 1 s, the agent's probe, and is gone at
+    # 6 s, never back). Past the probe and the hold (7 s), wait for the prefixes to empty (at most 12 s more), then several
+    # more agent ticks: nothing may come back.
+    prefixes = ("tenants/gone/", "control/pins/gone", "control/dbs/gone/", "control/ops/gone.json")
+    time.sleep(7)
+    wait_until(lambda: all(list_prefix(bucket, p) == [] for p in prefixes), 12, what="the erased name's objects gone")
     time.sleep(4)  # several agent ticks
-    for p in ("tenants/gone/", "control/pins/gone", "control/dbs/gone/", "control/ops/gone.json"):
+    for p in prefixes:
         assert list_prefix(bucket, p) == [], p
 
 
