@@ -292,6 +292,8 @@ pub struct ProcLog {
     staged: u64,
     uploaded: u64,
     pinned: Option<Vec<Rec>>,
+    /// fix-kept-after-drop, hole K (`LocalLog::pinned_inc`): the incarnation the kept records belong to
+    pinned_inc: Option<u64>,
     frozen: bool,
     /// fix-takeover-retry: the highest position read back at the start.
     read_pos: Option<u64>,
@@ -308,6 +310,8 @@ pub struct Parked {
     keep: Vec<Rec>,
     opened: bool,
     seen: Option<u64>,
+    /// fix-kept-after-drop, hole K: the database's incarnation read before the replay
+    inc: Option<u64>,
 }
 
 impl ProcLog {
@@ -1036,6 +1040,7 @@ async fn restart(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<
     let keep = recs.clone();
     let mut seen = None;
     let takes = x3.with(life, |x| x.takes);
+    let inc = crate::lifecycle::read_incarnation(store, id).await.ok();
     let r = tokio::time::timeout(Duration::from_secs(20), replay_db(x3, p, life, lc, store, id, tl, recs, false, &mut seen)).await.unwrap_or_else(|_| Err(anyhow::anyhow!("no progress")));
     let opened = x3.with(life, |x| x.takes) != takes;
     match r {
@@ -1048,7 +1053,7 @@ async fn restart(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<
         }
         Ok(Outcome::Conflict) => format!("restart: {n_read} records read: conflict with a later writer, kept in the log, NOT applied"),
         Err(e) => {
-            x3.with(life, |x| x.parked = Some(Parked { keep, opened, seen }));
+            x3.with(life, |x| x.parked = Some(Parked { keep, opened, seen, inc }));
             x3.count("replay-refused");
             format!("restart: {n_read} records read; replay failed ({}); stopped at hold_kept_records (took the lease: {opened})", short(&e))
         }
@@ -1061,9 +1066,13 @@ async fn kept(x3: &X3, life: u64) -> String {
     let Some(pk) = x3.with(life, |x| x.parked.take()) else { return "nothing parked".into() };
     if !pk.opened && !x3.old_kept {
         let n = pk.keep.len();
-        x3.with(life, |x| x.pinned = Some(pk.keep));
+        x3.with(life, |x| {
+            x.pinned = Some(pk.keep);
+            x.pinned_inc = pk.inc;
+        });
         return format!("{n} records kept in memory only (the replay never took the lease: no copies)");
     }
+    let pk_inc = pk.inc;
     let epoch = pk.keep.iter().map(|r| r.epoch).max().unwrap_or(0).max(pk.seen.map_or(0, |s| s + 1));
     let mut kept = Vec::with_capacity(pk.keep.len());
     let mut last = 0;
@@ -1077,7 +1086,10 @@ async fn kept(x3: &X3, life: u64) -> String {
         kept.push(Rec { seq, orig: r.orig, ops: r.ops, drop: false, epoch: ep });
     }
     let n = kept.len();
-    x3.with(life, |x| x.pinned = Some(kept));
+    x3.with(life, |x| {
+        x.pinned = Some(kept);
+        x.pinned_inc = pk_inc;
+    });
     x3.count("kept-copies");
     format!("{n} kept records written again to the log as copies (epoch {epoch}, last at position {last})")
 }
@@ -1089,7 +1101,19 @@ async fn retry(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<dy
     let rec_epoch = recs.iter().map(|r| r.epoch).max().unwrap_or(0);
     let takes = x3.with(life, |x| x.takes);
     let mut seen = None;
-    let r = if drop_stored(store, id, &mut recs).await {
+    // fix-kept-after-drop, hole K (`locallog::replay_db` with `retry`): dropped or erased since the records were read
+    let kept_inc = x3.with(life, |x| x.pinned_inc);
+    let dropped_since = match kept_inc {
+        Some(k) => crate::lifecycle::read_incarnation(store, id).await.map(|now| now != k),
+        None => Ok(false),
+    };
+    let dropped = dropped_since.as_ref().is_ok_and(|d| *d);
+    let r = if let Err(e) = dropped_since {
+        Err(e)
+    } else if dropped {
+        x3.count("kept-dropped-with-db");
+        Ok(Outcome::Nothing)
+    } else if drop_stored(store, id, &mut recs).await {
         Ok(Outcome::Nothing)
     } else {
         tokio::time::timeout(Duration::from_secs(20), replay_db(x3, p, life, lc, store, id, tl, recs, true, &mut seen)).await.unwrap_or_else(|_| Err(anyhow::anyhow!("no progress")))
@@ -1111,6 +1135,9 @@ async fn retry(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<dy
             let told = x3.flush_done(life, pos);
             x3.with(life, |x| x.pinned = None);
             let which = if holder || old { "its committed position" } else { "the highest it read at its start" };
+            if dropped {
+                return format!("retry: kept-dropped-with-db: the database changed incarnation since the records were read; discarded; log told {pos} ({which}) {:?}", told);
+            }
             format!("retry: kept records stored (holder {holder}); log told {pos} ({which}) {:?}", told)
         }
         Ok(Outcome::Conflict) => {

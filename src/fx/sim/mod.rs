@@ -1075,6 +1075,42 @@ mod tests {
         assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
     }
 
+    /// Hole K (fix-kept-after-drop; found by a local gen-3 batch on fix-log-takeover-stale, seed 300059): a restart whose
+    /// replay is refused (another process owns the database) keeps its records; the owner's successor drops the database;
+    /// the kept records are then retried and stored into the new incarnation, and dropped rows read again (48
+    /// violations without the fix). Fixed: the retry discards kept records whose database changed incarnation.
+    #[test]
+    fn sim_hole_k_kept_records_after_a_drop() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        let _l = super::cluster::ext3::setup_log_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let ev = vec![
+            Open { p: 0, writer: true },
+            Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (0, i, false)).collect() },
+            Publish { p: 0 },
+            Upload { p: 0 },
+            // p0's uploads stop: the next write is in the log only
+            Hold { p: 0, class: Class::Wal, op: Some(NOp::Put), skip: 0, land: false, all: true, rid: 1 },
+            Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (1, i, false)).collect() },
+            // p1 restarts: its replay reads the record, is refused (p0 owns the database) and keeps it
+            Restart { p: 1 },
+            // p0 dies; p2 takes over (applies the record from the log) and drops the database
+            Kill { p: 0 },
+            Open { p: 2, writer: true },
+            DropDb { p: 2 },
+            // p1's kept records go on and are retried
+            Kept { p: 1 },
+            LogRetry { p: 1 },
+        ];
+        let ext = super::cluster::Ext { flavor: 3, log: true, old_kept: false, strict_versions: false };
+        let (f, v, trace) = run_story3_traced(&rt, "hole K: kept records after a drop", ext, ev);
+        assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
+        assert!(trace.iter().any(|l| l.contains("kept-dropped-with-db")), "the retry must discard the kept records of the dropped incarnation");
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {

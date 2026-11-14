@@ -80,6 +80,9 @@ pub struct LocalLog {
     /// numbers). While a database is here it is refused to every client (`RecoveryPending`) and nothing marks it
     /// uploaded (its segments stay); a background task retries the replay until it succeeds, then the database leaves.
     pinned: Mutex<HashMap<String, Vec<Record>>>,
+    /// fix-kept-after-drop, hole K: the incarnation each pinned database had when its records were read back. A drop by
+    /// another process does not reach this process's `forget_pinned`: the retry compares it with the current one.
+    pinned_inc: Mutex<HashMap<String, u64>>,
     pub upload_every: Duration,
     /// Q8d: the replicated log (quaderno) instead of this machine's disk (`qlog.rs`). Records go to the log and are
     /// acknowledged when 2 copies of 3 have them; no segment files; the restart reads them back from the log.
@@ -254,7 +257,7 @@ impl LocalLog {
         let old = list_segments(&dir)?;
         let first = old.last().map(|(n, _)| n + 1).unwrap_or(1);
         let (tx, rx) = mpsc::unbounded_channel();
-        let me = Arc::new(Self { dir: dir.clone(), id, next_seq: AtomicU64::new((boot << SEQ_BOOT_SHIFT) + 1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every, remote: None, frozen: Mutex::new(Default::default()), read_pos: Mutex::new(HashMap::new()) });
+        let me = Arc::new(Self { dir: dir.clone(), id, next_seq: AtomicU64::new((boot << SEQ_BOOT_SHIFT) + 1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), pinned_inc: Mutex::new(HashMap::new()), upload_every, remote: None, frozen: Mutex::new(Default::default()), read_pos: Mutex::new(HashMap::new()) });
         let w = Arc::clone(&me);
         std::thread::Builder::new().name("local-log".into()).spawn(move || w.writer_thread(rx, first))?;
         Ok((me, old))
@@ -442,6 +445,7 @@ impl LocalLog {
 
     /// The database was dropped or erased: its kept records must not be applied (the drop record covers the restart).
     pub fn forget_pinned(&self, db: &str) {
+        self.pinned_inc.lock().unwrap().remove(db);
         if self.pinned.lock().unwrap().remove(db).is_some() {
             eprintln!("local log: database {db} was dropped while its records were kept: they are discarded with it");
         }
@@ -558,7 +562,7 @@ pub async fn install_quaderno(addrs: &str, id: &str, dir: &str, upload_secs: u64
     std::fs::create_dir_all(&dir).with_context(|| format!("directory {}", dir.display()))?;
     // the disk writer is never used: its channel stays without a receiver
     let (tx, _rx) = mpsc::unbounded_channel();
-    let me = Arc::new(LocalLog { dir, id: format!("quaderno:{id}"), next_seq: AtomicU64::new(1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every: Duration::from_secs(upload_secs), remote: Some(remote), frozen: Mutex::new(Default::default()), read_pos: Mutex::new(HashMap::new()) });
+    let me = Arc::new(LocalLog { dir, id: format!("quaderno:{id}"), next_seq: AtomicU64::new(1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), pinned_inc: Mutex::new(HashMap::new()), upload_every: Duration::from_secs(upload_secs), remote: Some(remote), frozen: Mutex::new(Default::default()), read_pos: Mutex::new(HashMap::new()) });
     tenant_bench::lifecycle::LOCAL_LOG_FLUSH_SECS.store(upload_secs, Relaxed);
     if old_kept_retry() {
         eprintln!("TEST: the old handling of kept records is on (MONGO_TEST_KEPT_RETRY_OLD): it loses acknowledged writes; never use this in production");
@@ -650,6 +654,9 @@ fn drop_stale(db: &str, recs: &mut Vec<Record>, stored: u64) {
         eprintln!("quaderno: database {db}: {n} records from a writer older than the stored one (epoch {stored}) were confirmed after a later replay read the log: never acknowledged, dropped");
     }
 }
+
+/// fix-kept-after-drop, hole K: kept records discarded because their database was dropped or erased since they were read.
+pub static KEPT_DROPPED_WITH_DB: AtomicU64 = AtomicU64::new(0);
 
 /// Takeovers that read the database's records back from the replicated log, and records they applied.
 pub static WAKE_REPLAYS: AtomicU64 = AtomicU64::new(0);
@@ -827,7 +834,7 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
     // Databases are independent: check (and replay) up to 32 at once. A clean shutdown leaves every database's marker at
     // its last record, so a restart only reads the markers; one at a time that took 123 s for 100 databases on S3.
     let log_id = log.id.clone();
-    let results: Vec<(String, Result<Outcome>, Option<u64>, Vec<Record>, bool)> = futures::stream::iter(by_db.into_iter().filter(|(_, r)| !r.is_empty()))
+    let results: Vec<(String, Result<Outcome>, Option<u64>, Vec<Record>, bool, Option<u64>)> = futures::stream::iter(by_db.into_iter().filter(|(_, r)| !r.is_empty()))
         .map(|(db, recs)| {
             let dbs = Arc::clone(dbs);
             let log_id = log_id.clone();
@@ -837,15 +844,17 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
                 // opening the database: a warm spare restarted beside the cook took the cook's databases to apply nothing
                 // and held them (the cook's commands were refused, "tenant app_demo is owned by server process ...")
                 if get().map_or(false, |l| l.is_remote()) && drop_stored(&dbs, &log_id, &db, &mut recs).await {
-                    return (db, Ok(Outcome::Nothing), None, Vec::new(), false);
+                    return (db, Ok(Outcome::Nothing), None, Vec::new(), false, None);
                 }
+                // fix-kept-after-drop, hole K: the database's incarnation now, before the replay (the records belong to it)
+                let inc = tenant_bench::lifecycle::read_incarnation(&dbs.store(), &db).await.ok();
                 let keep: Vec<Record> = recs.iter().map(copy_record).collect();
                 let mut seen = None;
                 // fix-takeover-retry: whether the replay took the database's lease (so may have opened a writer)
                 let takes = dbs.leases.takes(&db);
                 let r = replay_with_timeout(&dbs, &log_id, &db, recs, false, &mut seen, timeout).await;
                 let opened = dbs.leases.takes(&db) != takes;
-                (db, r, seen, keep, opened)
+                (db, r, seen, keep, opened, inc)
             }
         })
         .buffer_unordered(32)
@@ -856,7 +865,7 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
     let mut conflicts = Vec::new();
     let mut failed = 0usize;
     let mut failed_dbs = Vec::new();
-    for (db, r, seen, keep, opened) in results {
+    for (db, r, seen, keep, opened, inc) in results {
         match r {
             Ok(Outcome::Nothing) => {}
             Ok(Outcome::Applied(n)) => {
@@ -884,6 +893,9 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
                     // lost in the step 9 takeovers, the same 120 of 360 in ctl test_91). A process that does not hold the
                     // database writes nothing to the log for it.
                     eprintln!("quaderno: database {db}: its replay was refused before it took the lease; its {} records stay in the log as they are (no copies)", keep.len());
+                    if let Some(k) = inc {
+                        log.pinned_inc.lock().unwrap().insert(db.clone(), k);
+                    }
                     log.pinned.lock().unwrap().insert(db.clone(), keep);
                     continue;
                 }
@@ -894,6 +906,9 @@ async fn replay_all(dbs: &Arc<crate::dbs::Dbs>, log: &Arc<LocalLog>, by_db: BTre
                     let ep = if r.epoch > 0 { epoch } else { 0 };
                     log.append_kept(seq, &db, &r.ops, ep, r.orig).await.map_err(|_| anyhow!("local log stopped"))?.map_err(|e| anyhow!(e))?;
                     kept.push(Record { seq, orig: r.orig, db: db.clone(), ops: r.ops, drop: false, epoch: ep });
+                }
+                if let Some(k) = inc {
+                    log.pinned_inc.lock().unwrap().insert(db.clone(), k);
                 }
                 log.pinned.lock().unwrap().insert(db.clone(), kept);
             }
@@ -969,6 +984,24 @@ async fn replay_with_timeout(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str,
 /// `retry`: a background retry of kept records (the database may have been dropped meanwhile).
 async fn replay_db(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str, mut recs: Vec<Record>, retry: bool, seen: &mut Option<u64>) -> Result<Outcome> {
     recs.sort_by_key(|r| (r.orig, r.seq));
+    // fix-kept-after-drop, hole K (RULE 8): kept records belong to the incarnation the database had when they were read
+    // back. If it was dropped (or erased) since, by any process, they go with it: applying them would bring dropped rows
+    // back in the new incarnation (sim-fix-sim-holes, gen 3 seed 300059: a drop by the new owner, then this process's
+    // retry). A drop in this process already removes them (`forget_pinned`); a drop elsewhere only moves the incarnation.
+    if retry {
+        if let Some(l) = get() {
+            let kept_inc = l.pinned_inc.lock().unwrap().get(db).copied();
+            if let Some(k) = kept_inc {
+                let now = tenant_bench::lifecycle::read_incarnation(&dbs.store(), db).await?;
+                if now != k {
+                    KEPT_DROPPED_WITH_DB.fetch_add(recs.len() as u64, Relaxed);
+                    eprintln!("local log: database {db} was dropped or erased since its {} kept records were read (incarnation {k} -> {now}): they go with it", recs.len());
+                    l.forget_pinned(db);
+                    return Ok(Outcome::Nothing);
+                }
+            }
+        }
+    }
     // Another writer opened the database after the one that staged these records (another process took it over, or this
     // one lost and re-took it): replaying them would overwrite newer writes and leave the secondary indexes inconsistent.
     // Refused, kept as conflict, like a marker of another log.
