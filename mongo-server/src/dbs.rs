@@ -1499,6 +1499,20 @@ impl Entry {
         r
     }
 
+    /// [`Entry::get_live`] of many keys at once (the same state: the tenant's latest, whatever snapshot the entry holds),
+    /// read in physical order and in parallel (`layout2::get_many`).
+    pub async fn get_live_many(&mut self, keys: &[Vec<u8>]) -> Result<Vec<Option<Bytes>>> {
+        if keys.is_empty() || !self.ensure_open().await? {
+            return Ok(vec![None; keys.len()]);
+        }
+        let t = self.tenant.as_ref().unwrap();
+        let r = crate::layout2::get_many(&crate::layout2::Raw::Tenant(t, false), keys, GET_MANY_PARALLEL.load(Relaxed)).await;
+        if let Ok(v) = &r {
+            crate::fair::note_read(v.read_bytes());
+        }
+        r
+    }
+
     async fn get_live_uncounted(&mut self, key: &[u8]) -> Result<Option<Bytes>> {
         if !self.ensure_open().await? {
             return Ok(None);

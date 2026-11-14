@@ -1,0 +1,98 @@
+     5s docs    19,000 rate     3800/s timeouts 0
+    10s docs    32,000 rate     2600/s timeouts 0
+    15s docs    45,000 rate     2600/s timeouts 0
+    20s docs    58,000 rate     2600/s timeouts 0
+    25s docs    70,000 rate     2400/s timeouts 0
+    30s docs    82,000 rate     2400/s timeouts 0
+    35s docs    92,000 rate     2000/s timeouts 0
+    40s docs   101,500 rate     1900/s timeouts 0
+    45s docs   109,000 rate     1500/s timeouts 0
+    50s docs   118,500 rate     1900/s timeouts 0
+    55s docs   127,500 rate     1800/s timeouts 0
+    60s docs   134,500 rate     1400/s timeouts 0
+    65s docs   142,500 rate     1600/s timeouts 0
+    70s docs   150,500 rate     1600/s timeouts 0
+    75s docs   157,000 rate     1300/s timeouts 0
+    80s docs   165,000 rate     1600/s timeouts 0
+    85s docs   174,000 rate     1800/s timeouts 0
+    90s docs   180,500 rate     1300/s timeouts 0
+    95s docs   186,500 rate     1200/s timeouts 0
+   100s docs   193,500 rate     1400/s timeouts 0
+   105s docs   201,000 rate     1500/s timeouts 0
+   110s docs   208,000 rate     1400/s timeouts 0
+   115s docs   216,000 rate     1600/s timeouts 0
+   120s docs   224,000 rate     1600/s timeouts 0
+   125s docs   231,500 rate     1500/s timeouts 0
+   130s docs   239,500 rate     1600/s timeouts 0
+   135s docs   247,000 rate     1500/s timeouts 0
+   140s docs   253,500 rate     1300/s timeouts 0
+   145s docs   259,500 rate     1200/s timeouts 0
+   150s docs   267,000 rate     1500/s timeouts 0
+   155s docs   273,000 rate     1200/s timeouts 0
+   160s docs   281,000 rate     1600/s timeouts 0
+   165s docs   286,500 rate     1100/s timeouts 0
+   170s docs   292,000 rate     1100/s timeouts 0
+   175s docs   299,500 rate     1500/s timeouts 0
+   180s docs   305,000 rate     1100/s timeouts 0
+   185s docs   312,000 rate     1400/s timeouts 0
+   190s docs   317,500 rate     1100/s timeouts 0
+   195s docs   324,500 rate     1400/s timeouts 0
+   200s docs   330,000 rate     1100/s timeouts 0
+   205s docs   337,000 rate     1400/s timeouts 0
+   210s docs   343,000 rate     1200/s timeouts 0
+   215s docs   349,500 rate     1300/s timeouts 0
+   220s docs   355,500 rate     1200/s timeouts 0
+   225s docs   362,000 rate     1300/s timeouts 0
+   230s docs   368,000 rate     1200/s timeouts 0
+   235s docs   374,500 rate     1300/s timeouts 0
+   240s docs   381,000 rate     1300/s timeouts 0
+   245s docs   389,000 rate     1600/s timeouts 0
+   250s docs   396,500 rate     1500/s timeouts 0
+   255s docs   402,000 rate     1100/s timeouts 0
+   260s docs   409,500 rate     1500/s timeouts 0
+   265s docs   414,500 rate     1000/s timeouts 0
+   270s docs   421,500 rate     1400/s timeouts 0
+   275s docs   427,000 rate     1100/s timeouts 0
+   280s docs   432,500 rate     1100/s timeouts 0
+   285s docs   442,000 rate     1900/s timeouts 0
+   290s docs   447,500 rate     1100/s timeouts 0
+   295s docs   453,500 rate     1200/s timeouts 0
+   300s docs   460,000 rate     1300/s timeouts 0
+   305s docs   465,500 rate     1100/s timeouts 0
+   310s docs   471,500 rate     1200/s timeouts 0
+   315s docs   477,000 rate     1100/s timeouts 0
+   320s docs   484,000 rate     1400/s timeouts 0
+   325s docs   493,000 rate     1800/s timeouts 0
+   330s docs   498,000 rate     1000/s timeouts 0
+   335s docs   504,500 rate     1300/s timeouts 0
+   340s docs   511,000 rate     1300/s timeouts 0
+   345s docs   516,500 rate     1100/s timeouts 0
+   350s docs   523,000 rate     1300/s timeouts 0
+   355s docs   530,000 rate     1400/s timeouts 0
+   360s docs   535,500 rate     1100/s timeouts 0
+   365s docs   541,500 rate     1200/s timeouts 0
+   370s docs   546,500 rate     1000/s timeouts 0
+   375s docs   552,000 rate     1100/s timeouts 0
+   380s docs   559,500 rate     1500/s timeouts 0
+   385s docs   564,500 rate     1000/s timeouts 0
+   390s docs   570,500 rate     1200/s timeouts 0
+   395s docs   577,500 rate     1400/s timeouts 0
+   400s docs   583,500 rate     1200/s timeouts 0
+   405s docs   589,000 rate     1100/s timeouts 0
+   410s docs   595,500 rate     1300/s timeouts 0
+   415s docs   600,000 rate      900/s timeouts 0
+{
+ "clients": 4,
+ "total": 600000,
+ "done": 600000,
+ "seconds": 415.0,
+ "docs_per_s": 1446,
+ "chunk_ack_ms_p50": 1334.83,
+ "chunk_ack_ms_p99": 2844.13,
+ "chunk_ack_ms_max": 3369.32,
+ "single_insert_ms_p50": 1085.47,
+ "single_insert_ms_p99": 2801.71,
+ "single_n": 341,
+ "timeouts": 0,
+ "errors": []
+}

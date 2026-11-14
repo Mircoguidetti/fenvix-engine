@@ -1,0 +1,791 @@
+L0_TRACE u=1794626195535.418 db=fenvix-log l0=2 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794626196562.149 db=fenvix-log l0=2 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794626197584.543 db=fenvix-log l0=2 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794626198613.0642 db=fenvix-log l0=2 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794626199639.4924 db=fenvix-log l0=2 unabs=0 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794626200667.3123 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794626201694.8398 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794626202723.667 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794626203749.1821 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794626204777.0334 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794626205802.0366 db=fenvix-log l0=4 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794626206826.903 db=fenvix-log l0=4 unabs=2 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794626207849.918 db=fenvix-log l0=5 unabs=3 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794626208875.1492 db=fenvix-log l0=5 unabs=3 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794626209900.2278 db=fenvix-log l0=5 unabs=3 absorbing=0 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794626210927.9377 db=fenvix-log l0=6 unabs=4 absorbing=1 slate_jobs=0/0 slate_job=-
+L0_TRACE u=1794626211956.1895 db=fenvix-log l0=6 unabs=4 absorbing=1 slate_jobs=0/0 slate_job=-
+ABSORB u=1794626212592.7498 db=fenvix-log ssts=4 rows=58018 raw_kib=28987 committed=1 l0_start=6 l0_end=6 lock_ms=0 read_ms=2273 write_ms=37 commit_ms=22 total_ms=2333
+SLATE_JOB start u=1794626212703.5159 db=fenvix-log l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626212982.7886 db=fenvix-log l0=6 unabs=0 absorbing=0 slate_jobs=0/1 slate_job=279ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+SLATE_JOB end u=1794626213096.0427 db=fenvix-log ms=392 rows=15093 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+SLATE_JOB end u=1794626213101.9185 db=fenvix-log ms=398 rows=15091 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+SLATE_JOB end u=1794626213106.9297 db=fenvix-log ms=403 rows=14866 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+SLATE_JOB end u=1794626213164.0107 db=fenvix-log ms=460 rows=50981 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626214009.196 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=1305ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626215043.0774 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=2339ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626216069.09 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=3365ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626217092.394 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=4388ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626218118.8682 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=5415ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626219143.3015 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=6439ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626220168.4111 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=7464ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626221194.979 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=8491ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626222225.4167 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=9521ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626223253.8364 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=10550ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626224281.6062 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=11578ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626225305.5044 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=12601ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626226331.1843 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=4/1 slate_job=13627ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626227361.9224 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=4/1 slate_job=14658ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626228387.126 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=4/1 slate_job=15683ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626229413.2974 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=4/1 slate_job=16709ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626230441.0327 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=4/1 slate_job=17737ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626231468.5732 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=4/1 slate_job=18765ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626232494.9878 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=4/1 slate_job=19791ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626233519.449 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=4/1 slate_job=20815ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626234547.39 db=fenvix-log l0=4 unabs=4 absorbing=1 slate_jobs=4/1 slate_job=21843ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626235574.4297 db=fenvix-log l0=4 unabs=4 absorbing=1 slate_jobs=4/1 slate_job=22870ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+ABSORB u=1794626236270.4573 db=fenvix-log ssts=4 rows=64020 raw_kib=31691 committed=1 l0_start=4 l0_end=4 lock_ms=0 read_ms=2283 write_ms=34 commit_ms=22 total_ms=2340
+L0_TRACE u=1794626236600.3574 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=23896ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626237625.2864 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=24921ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626238657.1729 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=25953ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626239687.0132 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=26983ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626240713.23 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=28009ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626241740.507 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=29036ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626242771.7483 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=30068ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626243796.4805 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=31092ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626244823.9836 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=32120ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626245849.8848 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=33146ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626246874.5413 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=34170ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626247899.7908 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=4/1 slate_job=35196ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626248927.8052 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=4/1 slate_job=36224ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626249952.509 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=4/1 slate_job=37248ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626250979.2666 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=4/1 slate_job=38275ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626252004.8293 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=4/1 slate_job=39301ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626253031.6045 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=4/1 slate_job=40328ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626254054.5881 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=4/1 slate_job=41351ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626255081.2642 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=4/1 slate_job=42377ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+L0_TRACE u=1794626256105.6667 db=fenvix-log l0=6 unabs=2 absorbing=1 slate_jobs=4/1 slate_job=43402ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626212704 beside_merge=0
+ABSORB u=1794626256409.3064 db=fenvix-log ssts=2 rows=32012 raw_kib=15912 committed=1 l0_start=6 l0_end=6 lock_ms=0 read_ms=1133 write_ms=18 commit_ms=21 total_ms=1173
+SLATE_JOB start u=1794626256452.7415 db=fenvix-log l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+SLATE_JOB end u=1794626256931.9436 db=fenvix-log ms=479 rows=15028 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+SLATE_JOB end u=1794626256942.99 db=fenvix-log ms=490 rows=15068 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+SLATE_JOB end u=1794626256943.4714 db=fenvix-log ms=490 rows=14998 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+SLATE_JOB end u=1794626256991.6196 db=fenvix-log ms=538 rows=50934 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626257129.2908 db=fenvix-log l0=6 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=676ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626258154.4565 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=1701ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626259187.2227 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=2734ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626260213.8687 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=3761ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626261238.6733 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=4785ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626262263.5808 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=5810ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626263289.4072 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=6836ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626264314.467 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=7861ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626265338.5771 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=8885ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626266364.1616 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=9911ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626267391.1191 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=10938ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626268419.654 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=11966ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626269444.23 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=12991ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626270471.7864 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=8/2 slate_job=14018ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626271496.3254 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=8/2 slate_job=15043ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626272522.9683 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=8/2 slate_job=16070ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626273547.8577 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=8/2 slate_job=17095ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626274574.248 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=8/2 slate_job=18121ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626275599.4558 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=8/2 slate_job=19146ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626276622.94 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=8/2 slate_job=20170ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626277652.0657 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=8/2 slate_job=21199ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626278676.7097 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=8/2 slate_job=22223ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626279700.6453 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=8/2 slate_job=23247ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626280725.845 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=8/2 slate_job=24273ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626281750.8755 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=8/2 slate_job=25298ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626282775.449 db=fenvix-log l0=4 unabs=4 absorbing=1 slate_jobs=8/2 slate_job=26322ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626283800.8015 db=fenvix-log l0=4 unabs=4 absorbing=1 slate_jobs=8/2 slate_job=27348ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+ABSORB u=1794626284406.0835 db=fenvix-log ssts=4 rows=64020 raw_kib=31688 committed=1 l0_start=4 l0_end=4 lock_ms=0 read_ms=2180 write_ms=41 commit_ms=22 total_ms=2244
+L0_TRACE u=1794626284827.2754 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=28374ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626285853.3345 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=29400ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626286904.1746 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=30451ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626287945.7136 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=31492ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626288972.0388 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=32519ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626289996.5586 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=33543ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626291020.6543 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=34567ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626292045.4124 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=35592ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626293071.4873 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=36618ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626294098.3213 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=37645ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626295122.3047 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=38669ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626296148.3018 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=39695ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626297174.4373 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=40721ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626298200.0754 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=41747ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626299227.9006 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=8/2 slate_job=42775ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626300253.3518 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=8/2 slate_job=43800ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626301277.49 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=8/2 slate_job=44824ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626302303.716 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=8/2 slate_job=45850ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626303329.8413 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=8/2 slate_job=46877ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626304354.4697 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=8/2 slate_job=47901ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626305380.103 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=8/2 slate_job=48927ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626306405.0313 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=8/2 slate_job=49952ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626307428.6333 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=8/2 slate_job=50975ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+L0_TRACE u=1794626308456.089 db=fenvix-log l0=6 unabs=2 absorbing=1 slate_jobs=8/2 slate_job=52003ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=2 job=1794626256453 beside_merge=0
+ABSORB u=1794626309186.409 db=fenvix-log ssts=2 rows=32014 raw_kib=15773 committed=1 l0_start=6 l0_end=6 lock_ms=0 read_ms=1148 write_ms=23 commit_ms=22 total_ms=1194
+SLATE_JOB start u=1794626309232.549 db=fenvix-log l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626309481.2266 db=fenvix-log l0=6 unabs=0 absorbing=0 slate_jobs=8/3 slate_job=248ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+SLATE_JOB end u=1794626309727.8357 db=fenvix-log ms=495 rows=14860 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+SLATE_JOB end u=1794626309739.0789 db=fenvix-log ms=506 rows=15086 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+SLATE_JOB end u=1794626309748.8708 db=fenvix-log ms=516 rows=14788 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+SLATE_JOB end u=1794626309787.4197 db=fenvix-log ms=554 rows=51296 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626310506.8867 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=12/3 slate_job=1274ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626311533.352 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=12/3 slate_job=2300ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626312535.8252 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=12/3 slate_job=3303ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626313558.5896 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=12/3 slate_job=4326ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626314585.911 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=12/3 slate_job=5353ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626315612.6592 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=12/3 slate_job=6380ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626316638.964 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=12/3 slate_job=7406ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626317664.8164 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=12/3 slate_job=8432ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626318687.4255 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=12/3 slate_job=9454ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626319717.406 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=12/3 slate_job=10484ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626320742.5647 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=12/3 slate_job=11509ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626321770.8625 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=12/3 slate_job=12538ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626322797.0698 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=12/3 slate_job=13564ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626323826.1836 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=12/3 slate_job=14593ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626324854.7312 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=12/3 slate_job=15622ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626325879.9224 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=12/3 slate_job=16647ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626326906.8127 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=12/3 slate_job=17674ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626327934.7024 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=12/3 slate_job=18702ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626328960.8684 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=12/3 slate_job=19728ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626329989.2437 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=12/3 slate_job=20756ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626331012.8936 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=12/3 slate_job=21780ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626332037.7766 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=12/3 slate_job=22805ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626333063.1182 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=12/3 slate_job=23830ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626334089.5798 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=12/3 slate_job=24857ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626335111.7502 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=12/3 slate_job=25879ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626336138.8628 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=12/3 slate_job=26906ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626337165.3105 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=12/3 slate_job=27932ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626338190.6233 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=12/3 slate_job=28958ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626339217.1707 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=12/3 slate_job=29984ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626340244.324 db=fenvix-log l0=4 unabs=4 absorbing=1 slate_jobs=12/3 slate_job=31011ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626341266.6118 db=fenvix-log l0=4 unabs=4 absorbing=1 slate_jobs=12/3 slate_job=32034ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+ABSORB u=1794626341452.1223 db=fenvix-log ssts=4 rows=64020 raw_kib=31695 committed=1 l0_start=4 l0_end=4 lock_ms=0 read_ms=2126 write_ms=36 commit_ms=21 total_ms=2183
+L0_TRACE u=1794626342292.8088 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=12/3 slate_job=33060ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626343320.1743 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=12/3 slate_job=34087ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+L0_TRACE u=1794626344370.3208 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=12/3 slate_job=35137ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=3 job=1794626309233 beside_merge=0
+SLATE_JOB start u=1794626345390.1877 db=fenvix-log l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626345396.3918 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=12/4 slate_job=6ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+SLATE_JOB end u=1794626346033.8164 db=fenvix-log ms=643 rows=196814 l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+SLATE_JOB end u=1794626346254.2104 db=fenvix-log ms=864 rows=62354 l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+SLATE_JOB end u=1794626346354.3616 db=fenvix-log ms=964 rows=62402 l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+SLATE_JOB end u=1794626346356.8088 db=fenvix-log ms=966 rows=62538 l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626346421.9075 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=16/4 slate_job=1031ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626347449.1565 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=16/4 slate_job=2058ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626348475.7295 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=16/4 slate_job=3085ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626349499.2996 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=16/4 slate_job=4109ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626350524.9531 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=16/4 slate_job=5134ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626351552.5461 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=16/4 slate_job=6162ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626352579.6348 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=16/4 slate_job=7189ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626353605.1506 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=16/4 slate_job=8214ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626354636.4202 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=16/4 slate_job=9246ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626355659.8413 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=16/4 slate_job=10269ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626356687.8801 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=16/4 slate_job=11297ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626357713.7236 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=16/4 slate_job=12323ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626358738.0894 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=16/4 slate_job=13347ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626359763.4033 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=16/4 slate_job=14373ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626360788.4001 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=16/4 slate_job=15398ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626361814.6482 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=16/4 slate_job=16424ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626362841.6394 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=16/4 slate_job=17451ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626363870.3308 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=16/4 slate_job=18480ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626364896.6711 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=16/4 slate_job=19506ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626365922.5813 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=16/4 slate_job=20532ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626366950.9119 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=16/4 slate_job=21560ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626367974.8003 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=16/4 slate_job=22584ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626369001.6223 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=16/4 slate_job=23611ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+L0_TRACE u=1794626370027.6482 db=fenvix-log l0=6 unabs=2 absorbing=1 slate_jobs=16/4 slate_job=24637ms l0_srcs=0 l0_mib=0 srs_mib=[2:5,1:5,0:11] l0_now=4 runs_now=4 job=1794626345390 beside_merge=0
+SLATE_JOB start u=1794626370554.4736 db=fenvix-log l0_srcs=4 l0_mib=3 srs_mib=[] l0_now=6 runs_now=2 job=1794626370554 beside_merge=0
+SLATE_JOB end u=1794626370941.935 db=fenvix-log ms=387 rows=6527 l0_srcs=4 l0_mib=3 srs_mib=[] l0_now=6 runs_now=2 job=1794626370554 beside_merge=0
+SLATE_JOB end u=1794626370981.5837 db=fenvix-log ms=427 rows=11055 l0_srcs=4 l0_mib=3 srs_mib=[] l0_now=6 runs_now=2 job=1794626370554 beside_merge=0
+SLATE_JOB end u=1794626370994.5374 db=fenvix-log ms=440 rows=11114 l0_srcs=4 l0_mib=3 srs_mib=[] l0_now=6 runs_now=2 job=1794626370554 beside_merge=0
+SLATE_JOB end u=1794626371034.1035 db=fenvix-log ms=479 rows=35324 l0_srcs=4 l0_mib=3 srs_mib=[] l0_now=6 runs_now=2 job=1794626370554 beside_merge=0
+L0_TRACE u=1794626371052.8623 db=fenvix-log l0=6 unabs=2 absorbing=1 slate_jobs=20/5 slate_job=498ms l0_srcs=4 l0_mib=3 srs_mib=[] l0_now=6 runs_now=2 job=1794626370554 beside_merge=0
+SLATE_JOB start u=1794626371066.4236 db=fenvix-log l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+ABSORB u=1794626371218.9712 db=fenvix-log ssts=2 rows=32012 raw_kib=15886 committed=1 l0_start=6 l0_end=6 lock_ms=0 read_ms=1254 write_ms=17 commit_ms=21 total_ms=1294
+SLATE_JOB end u=1794626371340.0198 db=fenvix-log ms=273 rows=6548 l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+SLATE_JOB end u=1794626371426.2158 db=fenvix-log ms=359 rows=18318 l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+SLATE_JOB end u=1794626371459.5422 db=fenvix-log ms=393 rows=18400 l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+SLATE_JOB end u=1794626371506.841 db=fenvix-log ms=440 rows=52765 l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626372076.9841 db=fenvix-log l0=2 unabs=0 absorbing=0 slate_jobs=24/6 slate_job=1010ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626373102.993 db=fenvix-log l0=2 unabs=0 absorbing=0 slate_jobs=24/6 slate_job=2036ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626374108.9644 db=fenvix-log l0=2 unabs=0 absorbing=0 slate_jobs=24/6 slate_job=3042ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626375137.4724 db=fenvix-log l0=2 unabs=0 absorbing=0 slate_jobs=24/6 slate_job=4071ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626376165.0337 db=fenvix-log l0=2 unabs=0 absorbing=0 slate_jobs=24/6 slate_job=5098ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626377190.8806 db=fenvix-log l0=2 unabs=0 absorbing=0 slate_jobs=24/6 slate_job=6124ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626378216.7483 db=fenvix-log l0=2 unabs=0 absorbing=0 slate_jobs=24/6 slate_job=7150ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626379241.8735 db=fenvix-log l0=2 unabs=0 absorbing=0 slate_jobs=24/6 slate_job=8175ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626380266.64 db=fenvix-log l0=2 unabs=0 absorbing=0 slate_jobs=24/6 slate_job=9200ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626381290.88 db=fenvix-log l0=2 unabs=0 absorbing=0 slate_jobs=24/6 slate_job=10224ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626382315.6555 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=11249ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626383342.2412 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=12275ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626384366.4404 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=13299ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626385391.7297 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=14325ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626386415.1587 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=15348ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626387445.7898 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=16379ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626388471.8484 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=17405ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626389499.8342 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=18433ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626390527.2908 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=19460ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626391553.44 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=20486ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626392577.3877 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=21510ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626393602.6548 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=22536ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626394628.0293 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=23561ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626395651.7078 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=24585ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626396681.405 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=25614ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626397706.2246 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=26639ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626398731.8228 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=27665ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626399758.0188 db=fenvix-log l0=3 unabs=1 absorbing=0 slate_jobs=24/6 slate_job=28691ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626400783.8022 db=fenvix-log l0=4 unabs=2 absorbing=0 slate_jobs=24/6 slate_job=29717ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626401809.4517 db=fenvix-log l0=4 unabs=2 absorbing=0 slate_jobs=24/6 slate_job=30743ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626402834.0317 db=fenvix-log l0=5 unabs=3 absorbing=0 slate_jobs=24/6 slate_job=31767ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626403861.0115 db=fenvix-log l0=5 unabs=3 absorbing=0 slate_jobs=24/6 slate_job=32794ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+L0_TRACE u=1794626404890.5498 db=fenvix-log l0=5 unabs=3 absorbing=0 slate_jobs=24/6 slate_job=33824ms l0_srcs=0 l0_mib=0 srs_mib=[3:5,0:0] l0_now=2 runs_now=3 job=1794626371066 beside_merge=0
+SLATE_JOB start u=1794626405748.477 db=fenvix-log l0_srcs=0 l0_mib=0 srs_mib=[4:3,0:0] l0_now=5 runs_now=2 job=1794626405748 beside_merge=0
+L0_TRACE u=1794626405916.4353 db=fenvix-log l0=5 unabs=3 absorbing=0 slate_jobs=24/7 slate_job=167ms l0_srcs=0 l0_mib=0 srs_mib=[4:3,0:0] l0_now=5 runs_now=2 job=1794626405748 beside_merge=0
+SLATE_JOB end u=1794626406045.296 db=fenvix-log ms=296 rows=1024 l0_srcs=0 l0_mib=0 srs_mib=[4:3,0:0] l0_now=5 runs_now=2 job=1794626405748 beside_merge=0
+SLATE_JOB start u=1794626406054.1304 db=fenvix-log l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+SLATE_JOB end u=1794626406145.8486 db=fenvix-log ms=397 rows=13248 l0_srcs=0 l0_mib=0 srs_mib=[4:3,0:0] l0_now=5 runs_now=2 job=1794626405748 beside_merge=0
+SLATE_JOB end u=1794626406159.4424 db=fenvix-log ms=410 rows=13244 l0_srcs=0 l0_mib=0 srs_mib=[4:3,0:0] l0_now=5 runs_now=2 job=1794626405748 beside_merge=0
+SLATE_JOB end u=1794626406272.7544 db=fenvix-log ms=524 rows=36505 l0_srcs=0 l0_mib=0 srs_mib=[4:3,0:0] l0_now=5 runs_now=2 job=1794626405748 beside_merge=0
+SLATE_JOB end u=1794626406323.5635 db=fenvix-log ms=269 rows=8716 l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+SLATE_JOB end u=1794626406353.9973 db=fenvix-log ms=299 rows=23296 l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626406944.182 db=fenvix-log l0=6 unabs=4 absorbing=1 slate_jobs=30/8 slate_job=890ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626407971.2205 db=fenvix-log l0=6 unabs=4 absorbing=1 slate_jobs=30/8 slate_job=1917ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+ABSORB u=1794626408373.4094 db=fenvix-log ssts=4 rows=66026 raw_kib=32604 committed=1 l0_start=6 l0_end=4 lock_ms=0 read_ms=2291 write_ms=37 commit_ms=22 total_ms=2351
+L0_TRACE u=1794626408994.4463 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=30/8 slate_job=2940ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626410021.7388 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=30/8 slate_job=3967ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626411047.8384 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=30/8 slate_job=4993ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626412064.368 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=30/8 slate_job=6010ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626413092.1982 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=30/8 slate_job=7038ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626414120.4866 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=30/8 slate_job=8066ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626415144.4119 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=30/8 slate_job=9090ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626416171.54 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=30/8 slate_job=10117ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626417200.0837 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=30/8 slate_job=11145ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626418226.191 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=30/8 slate_job=12172ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626419253.3174 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=30/8 slate_job=13199ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626420279.704 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=30/8 slate_job=14225ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626421304.817 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=30/8 slate_job=15250ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626422330.2756 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=30/8 slate_job=16276ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626423355.7122 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=30/8 slate_job=17301ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626424386.2573 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=30/8 slate_job=18332ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626425412.363 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=30/8 slate_job=19358ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626426437.3782 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=30/8 slate_job=20383ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626427464.174 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=30/8 slate_job=21410ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626428490.0017 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=30/8 slate_job=22435ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626429517.7395 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=30/8 slate_job=23463ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626430542.8904 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=30/8 slate_job=24488ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626431568.955 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=30/8 slate_job=25514ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626432595.5652 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=30/8 slate_job=26541ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626433621.8223 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=30/8 slate_job=27567ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626434647.2896 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=30/8 slate_job=28593ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+L0_TRACE u=1794626435673.8083 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=30/8 slate_job=29619ms l0_srcs=2 l0_mib=1 srs_mib=[] l0_now=6 runs_now=2 job=1794626406054 beside_merge=1
+SLATE_JOB start u=1794626435873.2478 db=fenvix-log l0_srcs=0 l0_mib=0 srs_mib=[5:1,0:0] l0_now=5 runs_now=2 job=1794626435873 beside_merge=0
+SLATE_JOB end u=1794626436181.187 db=fenvix-log ms=307 rows=7504 l0_srcs=0 l0_mib=0 srs_mib=[5:1,0:0] l0_now=5 runs_now=2 job=1794626435873 beside_merge=0
+SLATE_JOB end u=1794626436331.3274 db=fenvix-log ms=458 rows=24509 l0_srcs=0 l0_mib=0 srs_mib=[5:1,0:0] l0_now=5 runs_now=2 job=1794626435873 beside_merge=0
+L0_TRACE u=1794626436698.006 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=32/9 slate_job=824ms l0_srcs=0 l0_mib=0 srs_mib=[5:1,0:0] l0_now=5 runs_now=2 job=1794626435873 beside_merge=0
+L0_TRACE u=1794626437724.4768 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=32/9 slate_job=1851ms l0_srcs=0 l0_mib=0 srs_mib=[5:1,0:0] l0_now=5 runs_now=2 job=1794626435873 beside_merge=0
+L0_TRACE u=1794626438750.4602 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=32/9 slate_job=2877ms l0_srcs=0 l0_mib=0 srs_mib=[5:1,0:0] l0_now=5 runs_now=2 job=1794626435873 beside_merge=0
+L0_TRACE u=1794626439773.5176 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=32/9 slate_job=3900ms l0_srcs=0 l0_mib=0 srs_mib=[5:1,0:0] l0_now=5 runs_now=2 job=1794626435873 beside_merge=0
+L0_TRACE u=1794626440801.0723 db=fenvix-log l0=6 unabs=2 absorbing=1 slate_jobs=32/9 slate_job=4927ms l0_srcs=0 l0_mib=0 srs_mib=[5:1,0:0] l0_now=5 runs_now=2 job=1794626435873 beside_merge=0
+ABSORB u=1794626441742.66 db=fenvix-log ssts=2 rows=32012 raw_kib=15913 committed=1 l0_start=6 l0_end=6 lock_ms=0 read_ms=1056 write_ms=17 commit_ms=22 total_ms=1095
+SLATE_JOB start u=1794626441765.029 db=fenvix-log l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626441824.69 db=fenvix-log l0=6 unabs=0 absorbing=0 slate_jobs=32/10 slate_job=59ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+SLATE_JOB end u=1794626442168.4558 db=fenvix-log ms=403 rows=15142 l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+SLATE_JOB end u=1794626442180.7744 db=fenvix-log ms=415 rows=15290 l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+SLATE_JOB end u=1794626442185.3806 db=fenvix-log ms=420 rows=15292 l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+SLATE_JOB end u=1794626442239.0942 db=fenvix-log ms=474 rows=52310 l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626442847.3694 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=36/10 slate_job=1082ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626443876.373 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=36/10 slate_job=2111ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626444915.2388 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=36/10 slate_job=3150ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626445946.3892 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=36/10 slate_job=4181ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626446969.9385 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=36/10 slate_job=5204ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626447996.2493 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=6231ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626449021.3208 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=7256ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626450049.5012 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=8284ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626451073.502 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=9308ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626452098.8032 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=10333ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626453126.7139 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=11361ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626454152.6418 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=12387ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626455178.3638 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=13413ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626456202.9714 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=14437ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626457229.5823 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=15464ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626458261.1824 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=16496ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626459287.7808 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=17522ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626460312.6733 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=18547ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626461337.6318 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=19572ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626462364.1938 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=20599ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626463392.9392 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=21627ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626464418.8198 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=22653ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626465444.8003 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=23679ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626466471.4272 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=24706ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626467494.6885 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=25729ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626468522.9417 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=26757ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626469548.1719 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=27783ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626470574.2454 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=28809ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626471598.52 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=29833ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626472625.0151 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=30859ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626473650.7124 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=36/10 slate_job=31885ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626474676.3408 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=36/10 slate_job=32911ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626475704.0737 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=36/10 slate_job=33939ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626476729.8284 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=36/10 slate_job=34964ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626477755.5156 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=36/10 slate_job=35990ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626478780.78 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=36/10 slate_job=37015ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626479808.2036 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=36/10 slate_job=38043ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626480833.7148 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=36/10 slate_job=39068ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626481857.8025 db=fenvix-log l0=4 unabs=4 absorbing=1 slate_jobs=36/10 slate_job=40092ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626482880.7524 db=fenvix-log l0=4 unabs=4 absorbing=1 slate_jobs=36/10 slate_job=41115ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+ABSORB u=1794626483317.024 db=fenvix-log ssts=4 rows=64020 raw_kib=31774 committed=1 l0_start=4 l0_end=4 lock_ms=0 read_ms=2158 write_ms=46 commit_ms=22 total_ms=2227
+L0_TRACE u=1794626483904.9456 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=36/10 slate_job=42139ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626484932.039 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=36/10 slate_job=43166ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626485956.5613 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=36/10 slate_job=44191ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626486981.8904 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=36/10 slate_job=45216ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626488009.06 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=36/10 slate_job=46244ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626489036.5815 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=36/10 slate_job=47271ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626490061.4207 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=36/10 slate_job=48296ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626491086.6638 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=36/10 slate_job=49321ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626492111.8772 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=36/10 slate_job=50346ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626493135.8376 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=36/10 slate_job=51370ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626494161.9573 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=36/10 slate_job=52396ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626495189.397 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=53424ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626496216.9915 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=54451ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626497242.13 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=55477ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626498267.9236 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=56502ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626499293.1306 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=57528ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626500318.554 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=58553ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626501341.4092 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=59576ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626502369.0042 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=60603ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626503393.147 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=61628ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626504421.2358 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=62656ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+L0_TRACE u=1794626505447.6816 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=36/10 slate_job=63682ms l0_srcs=6 l0_mib=6 srs_mib=[] l0_now=6 runs_now=1 job=1794626441765 beside_merge=0
+SLATE_JOB start u=1794626506260.1594 db=fenvix-log l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+L0_TRACE u=1794626506473.322 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=36/11 slate_job=213ms l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+SLATE_JOB end u=1794626506568.3015 db=fenvix-log ms=308 rows=6866 l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+SLATE_JOB end u=1794626506675.4312 db=fenvix-log ms=415 rows=18662 l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+SLATE_JOB end u=1794626506689.398 db=fenvix-log ms=429 rows=18676 l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+SLATE_JOB end u=1794626506768.9517 db=fenvix-log ms=508 rows=53831 l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+L0_TRACE u=1794626507499.1143 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=40/11 slate_job=1238ms l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+L0_TRACE u=1794626508524.77 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=40/11 slate_job=2264ms l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+L0_TRACE u=1794626509551.5735 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=40/11 slate_job=3291ms l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+L0_TRACE u=1794626510579.6262 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=40/11 slate_job=4319ms l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+L0_TRACE u=1794626511603.5322 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=40/11 slate_job=5343ms l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+L0_TRACE u=1794626512628.4512 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=40/11 slate_job=6368ms l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+L0_TRACE u=1794626513652.8171 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=40/11 slate_job=7392ms l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+L0_TRACE u=1794626514680.4885 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=40/11 slate_job=8420ms l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+L0_TRACE u=1794626515705.2 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=40/11 slate_job=9445ms l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+L0_TRACE u=1794626516730.3535 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=40/11 slate_job=10470ms l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+L0_TRACE u=1794626517758.5393 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=40/11 slate_job=11498ms l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+L0_TRACE u=1794626518783.2415 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=40/11 slate_job=12523ms l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+L0_TRACE u=1794626519808.8713 db=fenvix-log l0=6 unabs=2 absorbing=1 slate_jobs=40/11 slate_job=13548ms l0_srcs=0 l0_mib=0 srs_mib=[6:5,0:0] l0_now=5 runs_now=2 job=1794626506260 beside_merge=0
+ABSORB u=1794626520691.1655 db=fenvix-log ssts=2 rows=32014 raw_kib=15762 committed=1 l0_start=6 l0_end=6 lock_ms=0 read_ms=998 write_ms=15 commit_ms=22 total_ms=1036
+SLATE_JOB start u=1794626520713.8582 db=fenvix-log l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626520832.836 db=fenvix-log l0=6 unabs=0 absorbing=0 slate_jobs=40/12 slate_job=118ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+SLATE_JOB end u=1794626521139.713 db=fenvix-log ms=425 rows=15088 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+SLATE_JOB end u=1794626521148.6167 db=fenvix-log ms=434 rows=14859 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+SLATE_JOB end u=1794626521157.9578 db=fenvix-log ms=444 rows=14735 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+SLATE_JOB end u=1794626521201.993 db=fenvix-log ms=488 rows=51348 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626521858.0732 db=fenvix-log l0=6 unabs=0 absorbing=0 slate_jobs=44/12 slate_job=1144ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626522880.689 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=44/12 slate_job=2166ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626523907.1772 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=44/12 slate_job=3193ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626524956.34 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=44/12 slate_job=4242ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626525982.419 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=44/12 slate_job=5268ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626527017.2354 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=6303ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626528043.1777 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=7329ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626529069.0754 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=8355ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626530096.1528 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=9382ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626531123.7334 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=10409ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626532149.0012 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=11435ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626533174.1294 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=12460ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626534198.216 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=13484ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626535226.9307 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=14513ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626536252.2097 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=15538ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626537278.8845 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=16564ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626538304.6858 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=17590ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626539331.8994 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=18618ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626540357.4233 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=19643ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626541393.141 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=20679ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626542417.0383 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=21703ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626543446.321 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=22732ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626544471.0647 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=23757ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626545495.9639 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=24782ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626546521.9087 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=25808ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626547548.3855 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=26834ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626548576.9263 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=27863ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626549606.6875 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=28892ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626550633.0876 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=29919ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626551657.557 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=30943ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626552682.752 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=31968ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626553708.298 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=32994ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626554735.1938 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=44/12 slate_job=34021ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626555761.3213 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=44/12 slate_job=35047ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626556787.2322 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=44/12 slate_job=36073ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626557811.7268 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=44/12 slate_job=37097ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626558838.4548 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=44/12 slate_job=38124ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626559863.6248 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=44/12 slate_job=39149ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626560888.8767 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=44/12 slate_job=40174ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626561915.1714 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=44/12 slate_job=41201ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626562942.204 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=44/12 slate_job=42228ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626563970.2202 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=44/12 slate_job=43256ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626564995.6956 db=fenvix-log l0=4 unabs=4 absorbing=1 slate_jobs=44/12 slate_job=44281ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626566023.0771 db=fenvix-log l0=4 unabs=4 absorbing=1 slate_jobs=44/12 slate_job=45309ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+ABSORB u=1794626566247.5706 db=fenvix-log ssts=4 rows=64022 raw_kib=31586 committed=1 l0_start=4 l0_end=4 lock_ms=0 read_ms=2117 write_ms=34 commit_ms=22 total_ms=2174
+L0_TRACE u=1794626567047.9631 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=44/12 slate_job=46334ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626568075.4136 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=44/12 slate_job=47361ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626569101.3513 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=44/12 slate_job=48387ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626570142.7158 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=44/12 slate_job=49428ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626571172.374 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=44/12 slate_job=50458ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626572198.2107 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=44/12 slate_job=51484ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626573228.3904 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=44/12 slate_job=52514ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626574256.8914 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=44/12 slate_job=53542ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626575281.789 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=44/12 slate_job=54567ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626576307.2317 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=44/12 slate_job=55593ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626577333.8203 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=44/12 slate_job=56619ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626578358.998 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=57645ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626579384.4102 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=58670ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626580411.5093 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=59697ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+L0_TRACE u=1794626581437.4507 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=44/12 slate_job=60723ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626520714 beside_merge=0
+SLATE_JOB start u=1794626581736.7874 db=fenvix-log l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+SLATE_JOB end u=1794626582064.0984 db=fenvix-log ms=327 rows=6400 l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+SLATE_JOB end u=1794626582143.4792 db=fenvix-log ms=406 rows=18342 l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+SLATE_JOB end u=1794626582155.1665 db=fenvix-log ms=418 rows=18380 l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+SLATE_JOB end u=1794626582234.049 db=fenvix-log ms=497 rows=52909 l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626582462.8948 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=726ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626583488.703 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=1751ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626584513.3499 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=2776ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626585539.6155 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=3802ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626586562.556 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=4825ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626587591.7664 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=5854ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626588618.207 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=6881ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626589644.364 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=7907ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626590667.9485 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=8931ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626591695.08 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=9958ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626592721.6045 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=10984ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626593748.376 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=12011ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626594775.9165 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=13039ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626595803.3267 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=14066ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626596828.0938 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=15091ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626597854.9443 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=16118ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626598880.737 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=17143ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626599907.9568 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=18171ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626600934.1746 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=19197ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626601960.2239 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=20223ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626602986.0503 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=21249ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626604011.306 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=22274ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626605037.172 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=23300ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626606063.3381 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=48/13 slate_job=24326ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+L0_TRACE u=1794626607087.6497 db=fenvix-log l0=6 unabs=2 absorbing=1 slate_jobs=48/13 slate_job=25350ms l0_srcs=0 l0_mib=0 srs_mib=[7:5,0:0] l0_now=5 runs_now=2 job=1794626581737 beside_merge=0
+ABSORB u=1794626607219.7415 db=fenvix-log ssts=2 rows=32014 raw_kib=15837 committed=1 l0_start=6 l0_end=6 lock_ms=0 read_ms=1064 write_ms=18 commit_ms=21 total_ms=1104
+SLATE_JOB start u=1794626607241.2363 db=fenvix-log l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+SLATE_JOB end u=1794626607657.2896 db=fenvix-log ms=416 rows=15040 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+SLATE_JOB end u=1794626607661.124 db=fenvix-log ms=419 rows=14944 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+SLATE_JOB end u=1794626607664.2703 db=fenvix-log ms=423 rows=14818 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+SLATE_JOB end u=1794626607701.7278 db=fenvix-log ms=460 rows=51230 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626608109.7866 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=52/14 slate_job=868ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626609135.5835 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=52/14 slate_job=1894ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626610157.8953 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=52/14 slate_job=2916ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626611184.67 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=52/14 slate_job=3943ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626612198.7441 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=52/14 slate_job=4957ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626613225.8958 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=52/14 slate_job=5984ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626614253.4019 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=7012ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626615276.9575 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=8035ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626616303.649 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=9062ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626617330.1382 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=10088ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626618356.2817 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=11115ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626619380.4583 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=12139ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626620405.7014 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=13164ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626621430.4531 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=14189ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626622455.3718 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=15214ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626623482.2224 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=16240ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626624507.6592 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=17266ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626625532.2876 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=18291ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626626559.0154 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=19317ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626627585.3958 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=20344ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626628611.6084 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=21370ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626629636.022 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=22394ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626630661.7576 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=23420ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626631687.4304 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=24446ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626632713.9692 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=25472ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626633740.536 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=26499ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626634765.8748 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=27524ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626635792.5896 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=28551ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626636818.4927 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=29577ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626637844.633 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=30603ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626638869.3667 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=31628ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626639898.2837 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=32657ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626640924.499 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=33683ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626641950.9285 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=34709ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626642978.9531 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=52/14 slate_job=35737ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626644006.8826 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=52/14 slate_job=36765ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626645031.4763 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=52/14 slate_job=37790ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626646060.9314 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=52/14 slate_job=38819ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626647092.1987 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=52/14 slate_job=39850ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626648116.718 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=52/14 slate_job=40875ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626649143.4885 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=52/14 slate_job=41902ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626650167.9988 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=52/14 slate_job=42926ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626651193.7356 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=52/14 slate_job=43952ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626652221.2124 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=52/14 slate_job=44979ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626653247.5422 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=52/14 slate_job=46006ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626654275.2249 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=52/14 slate_job=47033ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626655303.5713 db=fenvix-log l0=4 unabs=4 absorbing=1 slate_jobs=52/14 slate_job=48062ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626656326.585 db=fenvix-log l0=4 unabs=4 absorbing=1 slate_jobs=52/14 slate_job=49085ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+ABSORB u=1794626657293.6597 db=fenvix-log ssts=4 rows=64020 raw_kib=31685 committed=1 l0_start=4 l0_end=4 lock_ms=0 read_ms=2343 write_ms=37 commit_ms=22 total_ms=2402
+L0_TRACE u=1794626657350.9075 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=52/14 slate_job=50109ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626658378.4421 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=52/14 slate_job=51137ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626659403.6985 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=52/14 slate_job=52162ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626660432.128 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=52/14 slate_job=53190ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626661466.5374 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=52/14 slate_job=54225ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626662516.105 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=52/14 slate_job=55274ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626663542.2327 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=56300ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626664568.2627 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=57327ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626665599.504 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=58358ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626666623.2493 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=59381ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626667649.269 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=60408ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626668676.7444 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=61435ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626669705.1628 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=62463ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626670730.2627 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=63489ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+L0_TRACE u=1794626671757.2476 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=52/14 slate_job=64515ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626607241 beside_merge=0
+SLATE_JOB start u=1794626672211.5525 db=fenvix-log l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+SLATE_JOB end u=1794626672552.0176 db=fenvix-log ms=340 rows=6927 l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+SLATE_JOB end u=1794626672628.4507 db=fenvix-log ms=416 rows=18188 l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+SLATE_JOB end u=1794626672639.328 db=fenvix-log ms=427 rows=18257 l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+SLATE_JOB end u=1794626672718.1587 db=fenvix-log ms=506 rows=52661 l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626672784.6443 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=573ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626673808.672 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=1597ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626674833.7349 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=2622ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626675859.7756 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=3648ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626676886.3938 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=4674ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626677911.2644 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=5699ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626678938.024 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=6726ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626679964.1921 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=7752ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626680987.5283 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=8775ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626682015.0747 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=9803ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626683050.953 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=10839ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626684079.9285 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=11868ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626685113.212 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=12901ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626686140.1953 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=13928ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626687165.159 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=14953ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626688191.0254 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=15979ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626689216.5525 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=17004ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626690242.2144 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=18030ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626691268.6016 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=19057ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626692293.7712 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=20082ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626693320.1433 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=21108ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626694349.372 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=22137ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626695382.388 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=23170ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626696407.52 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=56/15 slate_job=24195ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626697433.9946 db=fenvix-log l0=6 unabs=2 absorbing=0 slate_jobs=56/15 slate_job=25222ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+L0_TRACE u=1794626698462.3616 db=fenvix-log l0=6 unabs=2 absorbing=1 slate_jobs=56/15 slate_job=26250ms l0_srcs=0 l0_mib=0 srs_mib=[8:5,0:0] l0_now=5 runs_now=2 job=1794626672212 beside_merge=0
+ABSORB u=1794626698653.7844 db=fenvix-log ssts=2 rows=32014 raw_kib=15951 committed=1 l0_start=6 l0_end=6 lock_ms=0 read_ms=1179 write_ms=17 commit_ms=22 total_ms=1219
+SLATE_JOB start u=1794626698674.79 db=fenvix-log l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+SLATE_JOB end u=1794626699094.4873 db=fenvix-log ms=419 rows=14988 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+SLATE_JOB end u=1794626699105.5044 db=fenvix-log ms=430 rows=14912 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+SLATE_JOB end u=1794626699107.976 db=fenvix-log ms=433 rows=14862 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+SLATE_JOB end u=1794626699167.6428 db=fenvix-log ms=492 rows=51268 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626699488.401 db=fenvix-log l0=6 unabs=0 absorbing=0 slate_jobs=60/16 slate_job=813ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626700514.4163 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=60/16 slate_job=1839ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626701539.5798 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=60/16 slate_job=2864ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626702566.1077 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=60/16 slate_job=3891ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626703591.5786 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=60/16 slate_job=4916ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626704649.976 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=60/16 slate_job=5975ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626705689.7446 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=60/16 slate_job=7014ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626706712.698 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=60/16 slate_job=8037ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626707736.543 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=60/16 slate_job=9061ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626708759.499 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=10084ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626709787.0232 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=11112ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626710813.9124 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=12139ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626711837.5747 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=13162ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626712864.3281 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=14189ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626713888.4658 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=15213ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626714915.0737 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=16240ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626715941.7344 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=17266ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626716966.45 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=18291ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626717991.7625 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=19316ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626719017.9392 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=20343ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626720043.8574 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=21369ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626721069.609 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=22394ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626722095.4363 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=23420ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626723122.4697 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=24447ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626724148.1116 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=25473ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626725172.7114 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=26497ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626726199.0151 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=27524ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626727224.957 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=28550ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626728249.7322 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=29574ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626729276.907 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=30602ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626730303.0984 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=31628ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626731327.809 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=32652ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626732355.1626 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=33680ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626733380.626 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=34705ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626734403.461 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=35728ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626735428.9248 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=36754ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626736452.3525 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=37777ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626737480.649 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=38805ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626738507.3481 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=39832ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626739534.5635 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=40859ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626740558.488 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=41883ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626741585.261 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=42910ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626742610.6763 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=43935ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626743635.5508 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=60/16 slate_job=44960ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626744661.932 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=60/16 slate_job=45987ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626745689.3262 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=60/16 slate_job=47014ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626746714.9514 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=60/16 slate_job=48040ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626747740.643 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=60/16 slate_job=49065ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626748765.7292 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=60/16 slate_job=50090ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626749793.0288 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=60/16 slate_job=51118ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626750819.155 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=60/16 slate_job=52144ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626751845.7197 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=60/16 slate_job=53170ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626752870.3298 db=fenvix-log l0=4 unabs=4 absorbing=1 slate_jobs=60/16 slate_job=54195ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626753896.8506 db=fenvix-log l0=4 unabs=4 absorbing=1 slate_jobs=60/16 slate_job=55222ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+ABSORB u=1794626754605.6602 db=fenvix-log ssts=4 rows=64022 raw_kib=31705 committed=1 l0_start=4 l0_end=4 lock_ms=0 read_ms=2129 write_ms=45 commit_ms=22 total_ms=2197
+L0_TRACE u=1794626754924.4639 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=60/16 slate_job=56249ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626755951.477 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=60/16 slate_job=57276ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626756978.6458 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=60/16 slate_job=58303ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626758005.0176 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=60/16 slate_job=59330ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626759028.6516 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=60/16 slate_job=60353ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626760068.9458 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=60/16 slate_job=61394ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626761092.8435 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=60/16 slate_job=62417ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+L0_TRACE u=1794626762119.438 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=60/16 slate_job=63444ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626698675 beside_merge=0
+SLATE_JOB start u=1794626762668.3755 db=fenvix-log l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+SLATE_JOB end u=1794626762980.041 db=fenvix-log ms=311 rows=6685 l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+SLATE_JOB end u=1794626763079.481 db=fenvix-log ms=411 rows=18309 l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+SLATE_JOB end u=1794626763090.08 db=fenvix-log ms=421 rows=18214 l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626763159.0146 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=63/17 slate_job=490ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+SLATE_JOB end u=1794626763180.473 db=fenvix-log ms=512 rows=52823 l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626764182.9053 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=1514ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626765209.9604 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=2541ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626766235.0327 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=3566ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626767259.4016 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=4591ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626768288.199 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=5619ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626769315.0286 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=6646ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626770342.4338 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=7674ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626771367.5432 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=8699ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626772392.9253 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=9724ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626773418.9324 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=10750ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626774443.4597 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=11775ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626775468.2852 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=12799ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626776494.358 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=13825ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626777519.2637 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=14850ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626778546.4792 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=15878ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626779572.2468 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=16903ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626780597.3337 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=17928ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626781622.5728 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=18954ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626782648.881 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=19980ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626783674.975 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=21006ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626784698.877 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=22030ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626785727.2583 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=23058ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626786753.0469 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=24084ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626787776.636 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=25108ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626788801.7878 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=26133ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626789827.9673 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=27159ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626790852.785 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=28184ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626791877.6548 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=29209ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626792903.3442 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=30234ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626793933.3025 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=31264ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+WRITE_DEADLINE insert db=fenvix-log conn=16 ms=30000 retryable=false: answered with an error, the command goes on
+L0_TRACE u=1794626794958.5198 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=32290ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+WRITE_DEADLINE_END insert db=fenvix-log conn=16 ms=30389 ok=true
+L0_TRACE u=1794626795982.1687 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=33313ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626797006.9558 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=34338ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626798033.1912 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=35364ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626799057.175 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=64/17 slate_job=36388ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+L0_TRACE u=1794626800079.96 db=fenvix-log l0=6 unabs=2 absorbing=1 slate_jobs=64/17 slate_job=37411ms l0_srcs=0 l0_mib=0 srs_mib=[9:5,0:0] l0_now=4 runs_now=2 job=1794626762668 beside_merge=0
+ABSORB u=1794626800797.9087 db=fenvix-log ssts=2 rows=32010 raw_kib=15936 committed=1 l0_start=6 l0_end=6 lock_ms=0 read_ms=1087 write_ms=17 commit_ms=22 total_ms=1127
+SLATE_JOB start u=1794626800819.9392 db=fenvix-log l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626801105.0723 db=fenvix-log l0=6 unabs=0 absorbing=0 slate_jobs=64/18 slate_job=285ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+SLATE_JOB end u=1794626801224.6772 db=fenvix-log ms=404 rows=14952 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+SLATE_JOB end u=1794626801238.3833 db=fenvix-log ms=418 rows=14848 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+SLATE_JOB end u=1794626801243.2876 db=fenvix-log ms=423 rows=14930 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+SLATE_JOB end u=1794626801298.5105 db=fenvix-log ms=478 rows=51298 l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626802131.6057 db=fenvix-log l0=6 unabs=0 absorbing=0 slate_jobs=68/18 slate_job=1311ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626803155.6152 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=68/18 slate_job=2335ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626804181.6514 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=68/18 slate_job=3361ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626805210.2512 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=68/18 slate_job=4390ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626806234.914 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=68/18 slate_job=5414ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626807270.6687 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=68/18 slate_job=6450ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626808300.0461 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=68/18 slate_job=7480ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626809323.456 db=fenvix-log l0=0 unabs=0 absorbing=0 slate_jobs=68/18 slate_job=8503ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626810350.3184 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=9530ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626811380.606 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=10560ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626812408.7405 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=11588ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626813433.8691 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=12613ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626814458.2732 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=13638ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626815485.3682 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=14665ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626816510.6353 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=15690ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626817535.4753 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=16715ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626818560.7979 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=17740ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626819584.7478 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=18764ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626820611.3042 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=19791ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626821636.772 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=20816ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626822661.5225 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=21841ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626823689.4119 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=22869ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626824716.0784 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=23896ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626825742.853 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=24922ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626826768.798 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=25948ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626827796.6572 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=26976ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626828820.9702 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=28001ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626829849.5151 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=29029ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626830875.175 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=30055ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626831898.4067 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=31078ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626832923.4277 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=32103ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626833950.4224 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=33130ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626834975.6191 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=34155ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626836000.605 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=35180ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626837026.7683 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=36206ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626838054.932 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=37234ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626839079.988 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=38260ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626840106.3682 db=fenvix-log l0=1 unabs=1 absorbing=0 slate_jobs=68/18 slate_job=39286ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626841130.973 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=68/18 slate_job=40311ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626842156.2673 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=68/18 slate_job=41336ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626843180.0388 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=68/18 slate_job=42360ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626844206.748 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=68/18 slate_job=43386ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626845231.3906 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=68/18 slate_job=44411ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626846257.7454 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=68/18 slate_job=45437ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626847281.573 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=68/18 slate_job=46461ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626848307.2935 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=68/18 slate_job=47487ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626849334.3313 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=68/18 slate_job=48514ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626850360.8735 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=68/18 slate_job=49540ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626851386.13 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=68/18 slate_job=50566ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626852410.147 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=68/18 slate_job=51590ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626853437.617 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=68/18 slate_job=52617ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626854463.6484 db=fenvix-log l0=2 unabs=2 absorbing=0 slate_jobs=68/18 slate_job=53643ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626855488.8533 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=68/18 slate_job=54668ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626856515.4602 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=68/18 slate_job=55695ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626857541.9392 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=68/18 slate_job=56721ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626858567.6118 db=fenvix-log l0=3 unabs=3 absorbing=0 slate_jobs=68/18 slate_job=57747ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626859592.797 db=fenvix-log l0=4 unabs=4 absorbing=1 slate_jobs=68/18 slate_job=58772ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626860621.0515 db=fenvix-log l0=4 unabs=4 absorbing=1 slate_jobs=68/18 slate_job=59801ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+ABSORB u=1794626860749.3018 db=fenvix-log ssts=4 rows=64024 raw_kib=31656 committed=1 l0_start=4 l0_end=4 lock_ms=0 read_ms=2071 write_ms=36 commit_ms=22 total_ms=2130
+L0_TRACE u=1794626861647.6929 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=68/18 slate_job=60827ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+L0_TRACE u=1794626862671.4395 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=68/18 slate_job=61851ms l0_srcs=6 l0_mib=5 srs_mib=[] l0_now=6 runs_now=1 job=1794626800820 beside_merge=0
+SLATE_JOB start u=1794626863228.4072 db=fenvix-log l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+SLATE_JOB end u=1794626863544.2278 db=fenvix-log ms=315 rows=6756 l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+SLATE_JOB end u=1794626863633.5657 db=fenvix-log ms=405 rows=18240 l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+SLATE_JOB end u=1794626863665.9573 db=fenvix-log ms=437 rows=18220 l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626863697.7173 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=71/19 slate_job=469ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+SLATE_JOB end u=1794626863732.8198 db=fenvix-log ms=504 rows=52813 l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626864727.377 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=72/19 slate_job=1498ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626865758.66 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=72/19 slate_job=2530ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626866783.489 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=72/19 slate_job=3555ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626867811.235 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=72/19 slate_job=4582ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626868835.04 db=fenvix-log l0=4 unabs=0 absorbing=0 slate_jobs=72/19 slate_job=5606ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626869860.3708 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=6631ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626870885.4502 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=7657ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626871911.9314 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=8683ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626872934.696 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=9706ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626873961.499 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=10733ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626874985.8774 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=11757ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626876011.2637 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=12782ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626877036.7507 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=13808ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626878063.7842 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=14835ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626879090.4722 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=15862ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626880117.4543 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=16889ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626881143.466 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=17915ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626882168.61 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=18940ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626883197.2097 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=19968ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626884222.473 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=20994ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626885247.4802 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=22019ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626886273.5393 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=23045ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626887296.3293 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=24067ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626888323.7559 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=25095ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626889350.2783 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=26121ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626890376.6711 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=27148ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626891400.6785 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=28172ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0
+L0_TRACE u=1794626892429.1616 db=fenvix-log l0=5 unabs=1 absorbing=0 slate_jobs=72/19 slate_job=29200ms l0_srcs=0 l0_mib=0 srs_mib=[10:5,0:0] l0_now=4 runs_now=2 job=1794626863228 beside_merge=0

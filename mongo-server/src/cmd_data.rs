@@ -804,6 +804,12 @@ impl Server {
         let mut replayed = 0;
         let mut ts_ordered_fail = false;
         let docs_len = docs.len();
+        // fix-l0-stall: whether each document's key exists, read for the whole batch at once (not one point read per
+        // document in turn under the lock). Outside a transaction only: the answers are dropped before the commit.
+        if tx.is_none() && kind.as_ref().map_or(true, |k| k.series.is_none()) {
+            let ds: Vec<&Document> = docs.iter().filter_map(|d| d.as_document()).collect();
+            w.preread_ids(&mut g, coll, &ds).await?;
+        }
         for (i, raw) in docs.iter().enumerate() {
             if let Some(b) = rr.as_mut() {
                 if b.run.is_retried(i) {
@@ -881,6 +887,7 @@ impl Server {
             b.run.stage(&mut w, &b.key);
             w.extra.extend(self.session_sweep_ops(&mut g, db, &b.key).await);
         }
+        w.pre.clear();
         self.commit(&mut g, coll, w, &indexes, new_coll, tx).await?;
         if let Some(b) = rr.as_mut() {
             b.run.apply();

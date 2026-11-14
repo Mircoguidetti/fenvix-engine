@@ -1057,6 +1057,8 @@ async fn run() -> Result<()> {
     opening::ENABLED.store(args.first_course, std::sync::atomic::Ordering::Relaxed);
     custbox::ENABLED.store(args.customer_box, std::sync::atomic::Ordering::Relaxed);
     coll::ID_CHECK_IN_BOX.store(args.id_check_in_box, std::sync::atomic::Ordering::Relaxed);
+    // fix-l0-stall: the negative control turns the insert batch's existence read off (one point read per document)
+    coll::PREREAD_OFF.store(std::env::var("FENVIX_INSERT_PREREAD").is_ok_and(|v| v == "0"), std::sync::atomic::Ordering::Relaxed);
     {
         let port = args.listen.rsplit(':').next().unwrap_or("0").to_string();
         let dir = if args.box_disk_dir.is_empty() { std::env::temp_dir().join(format!("fenvix-box-floor-{port}")) } else { std::path::PathBuf::from(&args.box_disk_dir) };

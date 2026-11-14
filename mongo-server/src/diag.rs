@@ -1048,6 +1048,8 @@ impl Server {
                 "resealRebuilds": tenant_bench::fx::derive::RESEAL_REBUILDS.load(Relaxed) as i64,
                 "rebuildErrors": tenant_bench::fx::derive::REBUILD_ERRORS.load(Relaxed) as i64,
             },
+            // fix-l0-stall: document keys an insert batch read at once (`coll::Writes::preread_ids`)
+            "insertPreread": { "keys": crate::coll::PREREAD_KEYS.load(Relaxed) as i64, "off": crate::coll::PREREAD_OFF.load(Relaxed) },
             "compaction": {
                 "passes": tenant_bench::lifecycle::MAINT.compact_runs.load(Relaxed) as i64,
                 "running": tenant_bench::lifecycle::PASSES_RUNNING.load(Relaxed) as i64,

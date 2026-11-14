@@ -1,0 +1,15 @@
+{
+ "clients": 4,
+ "total": 946570,
+ "done": 946570,
+ "seconds": 345.1,
+ "docs_per_s": 2743,
+ "chunk_ack_ms_p50": 647.19,
+ "chunk_ack_ms_p99": 1785.42,
+ "chunk_ack_ms_max": 10650.37,
+ "single_insert_ms_p50": 581.59,
+ "single_insert_ms_p99": 1689.63,
+ "single_n": 516,
+ "timeouts": 0,
+ "errors": []
+}

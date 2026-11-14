@@ -220,6 +220,11 @@ pub fn plan_for(indexes: &[IndexDef], o: &FindOpts) -> Plan {
 /// P-big-speed fix 4: the `_id` check of an insert into a customer-keyed collection without a time component reads the
 /// document key (in the customer's box), not the shared locator. Off: the locator, as before (tests compare both).
 pub static ID_CHECK_IN_BOX: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+/// fix-l0-stall: turns off the batch read of `Writes::preread_ids` (the negative control: one point read per document
+/// in turn, as before). `FENVIX_INSERT_PREREAD=0`.
+pub static PREREAD_OFF: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Keys read by `Writes::preread_ids` (serverStatus `fenvix.insertPreread`).
+pub static PREREAD_KEYS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 /// Negative control (tests): complete runs of equal keys on unique indexes too, as before P-big-speed.
 pub static TIE_SCAN_ON_UNIQUE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
@@ -1894,6 +1899,10 @@ pub struct Writes {
     /// document (a collection damaged before c2-fix-outage-loss, review defect 4): (position in `ops`, key, the deleted
     /// document's `_id` encoding). Checked for the whole write set at once by [`Writes::settle_nat_deletes`].
     pub nat_dels: Vec<(usize, Vec<u8>, Vec<u8>)>,
+    /// fix-l0-stall: whether each document key of an insert batch existed, read for the whole batch at once before its
+    /// first document (`Writes::preread_ids`). Consulted after `ov` (this write set's own writes win), and only while
+    /// the database's exclusive lock is held for the same command: cleared before the commit.
+    pub pre: HashMap<Vec<u8>, bool>,
 }
 
 /// The stored values of the natural-order entries `cands` names (same order). The keys of one collection are
@@ -1954,7 +1963,7 @@ async fn read_nat_entries(g: &mut Entry, cands: &[(usize, Vec<u8>, Vec<u8>)]) ->
 
 impl Writes {
     pub fn new() -> Self {
-        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), uniq: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None, seqs: HashMap::new(), extra: Vec::new(), cap_delta: HashMap::new(), stat: HashMap::new(), quiet: false, bypass_validation: false, nat_dels: Vec::new() }
+        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), uniq: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None, seqs: HashMap::new(), extra: Vec::new(), cap_delta: HashMap::new(), stat: HashMap::new(), quiet: false, bypass_validation: false, nat_dels: Vec::new(), pre: HashMap::new() }
     }
 
     /// The collection validator on a document that is written: `old` is what an update started from.
@@ -1982,6 +1991,43 @@ impl Writes {
 
     /// Does a document with the `_id` of `d` exist now (latest committed state plus this write set)? In a customer-keyed
     /// collection: under the customer of `d` (`_id` is unique per customer, `custkey.rs`).
+    /// fix-l0-stall: read, for a whole insert batch at once, whether each document's key exists, so that `exists` and
+    /// `put` do not each make one point read per document in turn. Only for a customer-keyed collection whose document
+    /// key is exactly (customer, `_id`) (the in-box `_id` check, P-big-speed fix 4), where both of them read that key.
+    ///
+    /// MEASURED (fix-l0-stall, 4 loaders of 500 documents, local store with 20 ms GETs): every insert made 1000 point
+    /// reads one after another under the database's exclusive lock (`read_get=../1000`, up to 736 GETs and 14 s for one
+    /// batch); the other loaders waited for the lock and writes passed the 30 s deadline. Read here in physical order
+    /// and in parallel (`layout2::get_many`, the blocks keys share fetched once), a batch pays a few trips, not one per
+    /// document. The answers stay exact: the lock is held from this read to the commit, so no other writer can change
+    /// these keys, and the batch's own writes are found in `ov` first.
+    pub async fn preread_ids(&mut self, g: &mut Entry, coll: &str, docs: &[&Document]) -> R<()> {
+        if !ID_CHECK_IN_BOX.load(std::sync::atomic::Ordering::Relaxed) || PREREAD_OFF.load(std::sync::atomic::Ordering::Relaxed) || docs.len() < 2 {
+            return Ok(());
+        }
+        let Some(key) = crate::custkey::of(g, coll).await? else { return Ok(()) };
+        if key.order.is_some() {
+            return Ok(());
+        }
+        let keys: Vec<Vec<u8>> = docs
+            .iter()
+            .filter(|d| d.get("_id").is_some())
+            .map(|d| crate::custkey::doc_key(coll, Some(&key), d))
+            .filter(|k| self.ov.get(k).is_none() && !self.pre.contains_key(k))
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .collect();
+        if keys.is_empty() {
+            return Ok(());
+        }
+        let got = g.get_live_many(&keys).await?;
+        PREREAD_KEYS.fetch_add(keys.len() as u64, std::sync::atomic::Ordering::Relaxed);
+        for (k, v) in keys.into_iter().zip(got) {
+            self.pre.insert(k, v.is_some());
+        }
+        Ok(())
+    }
+
     pub async fn exists(&self, g: &mut Entry, coll: &str, d: &Document) -> R<bool> {
         let id = d.get("_id").unwrap_or(&Bson::Null);
         if let Some(key) = crate::custkey::of(g, coll).await? {
@@ -1994,6 +2040,9 @@ impl Writes {
                 let dk = crate::custkey::doc_key(coll, Some(&key), d);
                 if let Some(v) = self.ov.get(&dk) {
                     return Ok(v.is_some());
+                }
+                if let Some(b) = self.pre.get(&dk) {
+                    return Ok(*b);
                 }
                 return Ok(g.get_live(&dk).await?.is_some());
             }
@@ -2130,9 +2179,10 @@ impl Writes {
                 // `--id-check-in-box false` restores the locator read.
                 let in_box = ckey.as_ref().is_some_and(|k| k.order.is_none()) && ID_CHECK_IN_BOX.load(std::sync::atomic::Ordering::Relaxed);
                 let check = if in_box { [doc_prefix(coll), id_enc.clone()].concat() } else { lk.clone() };
-                let taken = match self.ov.get(&check) {
-                    Some(v) => v.is_some(),
-                    None => g.get_live(&check).await?.is_some(),
+                let taken = match (self.ov.get(&check), self.pre.get(&check)) {
+                    (Some(v), _) => v.is_some(),
+                    (None, Some(b)) => *b,
+                    (None, None) => g.get_live(&check).await?.is_some(),
                 };
                 if taken {
                     return Err(MongoError::duplicate_key_c(ns, "_id_", &bson::doc! { "_id": 1 }, &bson::doc! { "_id": id.clone() }, g.collation_of(coll).as_deref()));

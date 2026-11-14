@@ -1,0 +1,51 @@
+     5s docs    49,000 rate     9800/s timeouts 0
+    10s docs    92,500 rate     8700/s timeouts 0
+    15s docs   131,500 rate     7800/s timeouts 0
+    20s docs   167,000 rate     7100/s timeouts 0
+    25s docs   199,000 rate     6400/s timeouts 0
+    30s docs   235,500 rate     7300/s timeouts 0
+    35s docs   257,000 rate     4300/s timeouts 0
+    40s docs   268,000 rate     2200/s timeouts 0
+    45s docs   280,500 rate     2500/s timeouts 0
+    50s docs   294,500 rate     2800/s timeouts 0
+    55s docs   305,500 rate     2200/s timeouts 0
+    60s docs   318,500 rate     2600/s timeouts 0
+    65s docs   330,500 rate     2400/s timeouts 0
+    70s docs   343,500 rate     2600/s timeouts 0
+    75s docs   354,500 rate     2200/s timeouts 0
+    80s docs   369,500 rate     3000/s timeouts 0
+    85s docs   382,500 rate     2600/s timeouts 0
+    90s docs   393,000 rate     2100/s timeouts 0
+    95s docs   406,500 rate     2700/s timeouts 0
+   100s docs   421,500 rate     3000/s timeouts 0
+   105s docs   432,000 rate     2100/s timeouts 0
+   110s docs   443,000 rate     2200/s timeouts 0
+   115s docs   457,000 rate     2800/s timeouts 0
+   120s docs   470,000 rate     2600/s timeouts 0
+   125s docs   481,000 rate     2200/s timeouts 0
+   130s docs   493,000 rate     2400/s timeouts 0
+   135s docs   503,000 rate     2000/s timeouts 0
+   140s docs   514,500 rate     2300/s timeouts 0
+   145s docs   527,500 rate     2600/s timeouts 0
+   150s docs   539,000 rate     2300/s timeouts 0
+   155s docs   548,000 rate     1800/s timeouts 0
+   160s docs   557,000 rate     1800/s timeouts 0
+   165s docs   568,000 rate     2200/s timeouts 0
+   170s docs   581,500 rate     2700/s timeouts 0
+   175s docs   591,000 rate     1900/s timeouts 0
+   180s docs   600,000 rate     1800/s timeouts 0
+{
+ "clients": 4,
+ "total": 600000,
+ "done": 600000,
+ "seconds": 180.0,
+ "docs_per_s": 3333,
+ "chunk_ack_ms_p50": 504.83,
+ "chunk_ack_ms_p99": 1595.66,
+ "chunk_ack_ms_max": 1934.46,
+ "single_insert_ms_p50": 434.3,
+ "single_insert_ms_p99": 1494.93,
+ "single_n": 326,
+ "timeouts": 0,
+ "errors": []
+}
