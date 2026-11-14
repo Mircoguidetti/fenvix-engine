@@ -30,8 +30,16 @@ pub const LONG_STEP_WAIT: Duration = Duration::from_secs(4);
 /// The script's additions (kept for the report; the events say everything else).
 #[derive(Clone, Debug, Default)]
 pub struct Ext {
-    /// 0: a script of `generate`; 1: `generate2`.
+    /// 0: a script of `generate`; 2: `generate2`; 3: `ext3::generate3`.
     pub flavor: u8,
+    /// sim-test-3: writes go through the replicated log (`ext3.rs`), as the server with `--quaderno`.
+    pub log: bool,
+    /// sim-test-3: the base's rules for kept records (fb38790e, before fix-takeover-retry 759f9dca), as the engine's own
+    /// control switch `MONGO_TEST_KEPT_RETRY_OLD=1` restores them. For directed stories only.
+    pub old_kept: bool,
+    /// sim-test-3, directed stories only: the oracle also refuses a version on top whose writer epoch is lower than a
+    /// version below it (a lost writer's late publish landed; hole G's fence).
+    pub strict_versions: bool,
 }
 
 /// A value of a write: padded to about 160 bytes with the many-groups settings.
@@ -914,7 +922,7 @@ pub fn generate2(seed: u64, steps: usize) -> Script {
             out.push(Ev::Restore { p: o, mark: m, apply: false });
         }
     }
-    Script { seed, profile: base.profile, knobs, events: out.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Ext { flavor: 2 } }
+    Script { seed, profile: base.profile, knobs, events: out.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Ext { flavor: 2, ..Default::default() } }
 }
 
 /// fix-sim-holes, hole F: simulated forks refused because the source's writer epoch moved during them (tests).

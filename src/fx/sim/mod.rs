@@ -33,16 +33,21 @@ mod tests {
     /// The script of a seed: `SIM_GEN=2` gives sim-test-2's scripts (`cluster::ext::generate2`: restore points, restores,
     /// forks, the generator, SlateDB's GC, storms, many groups); otherwise the scripts of sim-test.
     fn gen(seed: u64, steps: usize) -> Script {
-        if env_u64("SIM_GEN", 1) == 2 {
-            super::cluster::ext::generate2(seed, steps)
-        } else {
-            generate(seed, steps)
+        match env_u64("SIM_GEN", 1) {
+            2 => super::cluster::ext::generate2(seed, steps),
+            3 => super::cluster::ext3::generate3(seed, steps),
+            _ => generate(seed, steps),
         }
     }
 
     /// fix-sim-holes' hole W counter, when that fix is in the build (0 otherwise).
     fn reseals_refused() -> u64 {
         0
+    }
+
+    /// sim-test-3: the settings of a world with the replicated log, for the scripts of `generate3` (`SIM_GEN=3`).
+    fn log_world() -> Option<super::cluster::ext3::LogWorldGuard> {
+        (env_u64("SIM_GEN", 1) == 3).then(super::cluster::ext3::setup_log_world)
     }
 
     fn runtime() -> tokio::runtime::Runtime {
@@ -58,6 +63,7 @@ mod tests {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
+        let _l = log_world();
         let steps = env_u64("SIM_STEPS", 90) as usize;
         let min_max = env_u64("SIM_MIN_MAX", 3) as usize;
         let par = env_u64("SIM_PAR", 4) as usize;
@@ -719,6 +725,221 @@ mod tests {
         assert!(stale >= 1, "the passes listed the runs after the new owner's publish: at least one must see it");
     }
 
+    /// Run a sim-test-3 story (`ext` given) `SIM_REPLAYS` times (default 1): the number of runs with a violation, and the
+    /// last run's violations.
+    fn run_story3(rt: &tokio::runtime::Runtime, name: &str, ext: super::cluster::Ext, ev: Vec<Ev>) -> (u64, Vec<String>) {
+        let (f, v, _) = run_story3_traced(rt, name, ext, ev);
+        (f, v)
+    }
+
+    /// [`run_story3`], with the last run's trace.
+    fn run_story3_traced(rt: &tokio::runtime::Runtime, name: &str, ext: super::cluster::Ext, ev: Vec<Ev>) -> (u64, Vec<String>, Vec<String>) {
+        use super::net::Profile;
+        let s = Script { seed: 11, profile: Profile::none(), knobs: env_u64("SIM_KNOBS", 1) as u8, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext };
+        let n = env_u64("SIM_REPLAYS", 1);
+        let mut failing = 0;
+        let mut last = Vec::new();
+        let mut trace = Vec::new();
+        for _ in 0..n {
+            let r = rt.block_on(run_script(&s));
+            let all = std::env::var_os("SIM_STORY_ALL").is_some();
+            for l in r.trace.iter().filter(|l| all || l.contains("->") || l.contains("log ") || l.contains("settle") || l.contains("oracle")) {
+                eprintln!("  {l}");
+            }
+            for v in r.violations.iter().take(8) {
+                eprintln!("VIOLATION {v}");
+            }
+            eprintln!("SIM STORY {name}: {} violations; {}", r.violations.len(), r.stats);
+            failing += (!r.violations.is_empty()) as u64;
+            last = r.violations;
+            trace = r.trace;
+        }
+        eprintln!("SIM STORY {name}: {failing} of {n} runs with a violation");
+        (failing, last, trace)
+    }
+
+    /// The decisions of the log's client rules in a run of `takeover_retry_story`, named as in
+    /// `ctl-tests/sim_log_conformance.json` (the real engine's ctl test_95 reads the same decisions from its own log lines).
+    fn log_decisions(trace: &[String], violations: &[String]) -> std::collections::BTreeMap<String, bool> {
+        let line = |ev: &str| trace.iter().filter(|l| l.contains(ev) && l.contains(" -> ")).cloned().collect::<Vec<_>>().join("\n");
+        let num = |s: &str, pre: &str| s.split(pre).nth(1).and_then(|x| x.split_whitespace().next()).and_then(|x| x.parse::<u64>().ok()).unwrap_or(0);
+        let restart = line("Restart { p: 1 }");
+        let kept = line("Kept { p: 1 }");
+        let retry = line("LogRetry { p: 1 }");
+        let open = line("Open { p: 1, writer: true }");
+        let mut d = std::collections::BTreeMap::new();
+        d.insert("restart_read_kept".to_string(), num(&restart, "restart: ") >= 1);
+        d.insert("replay_refused_by_lease".to_string(), restart.contains("owned by another server process") && restart.contains("took the lease: false"));
+        d.insert("kept_copies_in_log".to_string(), kept.contains("written again to the log as copies"));
+        d.insert("retry_confirms_read_pos".to_string(), retry.contains("(the highest it read at its start)"));
+        d.insert("retry_done".to_string(), retry.contains("retry: kept records stored"));
+        d.insert("takeover_applies_w2".to_string(), num(&open, "takeover replay: ") >= 1);
+        d.insert("w2_lost".to_string(), violations.iter().any(|v| v.contains("c02") && v.contains("acknowledged write lost")));
+        d
+    }
+
+    /// The order of ctl test_91 (fix-takeover-retry) as a script, with the replicated log on: B (slot 0) holds the
+    /// database; W0 is acknowledged and uploaded; B's WAL uploads are held and W1 is acknowledged (in the log only); A
+    /// (slot 1) restarts, reads W1 back, its replay is refused (B holds the lease) and it stops at `hold_kept_records`;
+    /// B's upload of W1 goes through (the log told W1's position); B's uploads are held again and W2 is acknowledged (in
+    /// the log only); A keeps its records and retries: W1 is in the store (B's marker), so A tells the log "stored"; B is
+    /// killed before W2's upload; A takes the database over. `old_kept`: the base's rules (fb38790e), where A writes
+    /// copies of its kept records after W2 and tells the log the last copy's position: the log drops W2.
+    fn takeover_retry_story(old_kept: bool) -> Vec<Ev> {
+        let _ = old_kept;
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let w = |c: usize| Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (c, i, false)).collect() };
+        vec![
+            Open { p: 0, writer: true },
+            w(0),
+            Upload { p: 0 },
+            Hold { p: 0, class: Class::Wal, op: Some(NOp::Put), skip: 0, land: true, all: true, rid: 1 },
+            w(1),
+            Restart { p: 1 },
+            Release { rid: 1 },
+            Upload { p: 0 },
+            Hold { p: 0, class: Class::Wal, op: Some(NOp::Put), skip: 0, land: false, all: true, rid: 2 },
+            w(2),
+            Kept { p: 1 },
+            LogRetry { p: 1 },
+            Kill { p: 0 },
+            Release { rid: 2 },
+            Open { p: 1, writer: true },
+        ]
+    }
+
+    /// sim-test-3, the first proof of the log in the simulator: the takeover-retry loss (step 9 takeovers, ctl test_91)
+    /// as a directed story. With the base's rules for kept records (fb38790e: the engine's own control switch
+    /// `MONGO_TEST_KEPT_RETRY_OLD=1`) the takeover misses W2, every one of its acknowledged writes; with 759f9dca's rules
+    /// nothing is lost. Both are asserted (the control must show the loss, as test_91's control does).
+    #[test]
+    fn sim_story_log_takeover_retry() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        let _l = super::cluster::ext3::setup_log_world();
+        let ext = |old_kept| super::cluster::Ext { flavor: 3, log: true, old_kept, strict_versions: false };
+        let (f_old, v_old, t_old) = run_story3_traced(&rt, "takeover retry with the log, the base's rules (fb38790e)", ext(true), takeover_retry_story(true));
+        let (f_new, v_new, t_new) = run_story3_traced(&rt, "takeover retry with the log, 759f9dca's rules", ext(false), takeover_retry_story(false));
+        let lost = |v: &[String]| v.iter().filter(|x| x.contains("acknowledged write lost") && x.contains("c02")).count();
+        eprintln!("SIM STORY takeover retry: base rules {} violations ({} of W2's keys lost per check), fixed rules {} violations", v_old.len(), lost(&v_old), v_new.len());
+        // conformance: the same decisions as the real engine on the same order (ctl test_95 checks the engine against the
+        // same table)
+        let table: serde_json::Value = serde_json::from_str(include_str!("../../../ctl-tests/sim_log_conformance.json")).unwrap();
+        for (rules, trace, v) in [("base", &t_old, &v_old), ("fixed", &t_new, &v_new)] {
+            let got = log_decisions(trace, v);
+            let want: std::collections::BTreeMap<String, bool> = table[rules].as_object().unwrap().iter().map(|(k, x)| (k.clone(), x.as_bool().unwrap())).collect();
+            eprintln!("SIM CONFORMANCE {rules}: simulator {got:?}");
+            assert_eq!(got, want, "the simulator's {rules} rules decide differently from the table the real engine is checked against (ctl test_95)");
+        }
+        assert_eq!(f_new, 0, "759f9dca's rules lost acknowledged writes: {:?}", v_new.iter().take(4).collect::<Vec<_>>());
+        assert!(f_old > 0 && lost(&v_old) > 0, "the control (the base's rules) must lose W2: {:?}", v_old.iter().take(4).collect::<Vec<_>>());
+    }
+
+    /// The incarnation re-point (review of integration-6 0ed53558) as a directed story: A (slot 0) owns the database and
+    /// publishes three versions; its next publish waits on a slow upload of its first run while B (slot 1) takes
+    /// the database over, drops it (the name moves to incarnation 1, every object deleted), creates it again with the
+    /// same name and writes; A's process then runs what the admin erase handler runs first (`AdminCheck`); A's LIST
+    /// answers and its publish goes on. On 0ed53558 the incarnation table moves A's late version into incarnation 1;
+    /// fb38790e (fix-incarnation) keeps the incarnation A's writer opened with.
+    #[test]
+    fn sim_story_incarnation_repoint() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::Class;
+        use Ev::*;
+        let mut ev = vec![Open { p: 0, writer: true }];
+        for c in 0..3 {
+            ev.extend([fill(0, c, 0), Publish { p: 0 }]);
+        }
+        ev.extend([
+            fill(0, 3, 0),
+            // A's publish reads SlateDB's manifest (its snapshot, the writer-epoch fence) before it creates its version: those
+            // answers are slow (held), so the create (whose path is computed when it is sent) comes after everything below
+            Hold { p: 0, class: Class::SlateManifest, op: None, skip: 0, land: true, all: true, rid: 1 },
+            Publish { p: 0 },
+            Open { p: 1, writer: true },
+            DropDb { p: 1 },
+            Open { p: 1, writer: true },
+            fill(1, 5, 0),
+            Write { p: 1, ops: (0..16).map(|i| (4, i, false)).collect() },
+            Publish { p: 1 },
+            Close { p: 1 },
+            AdminCheck { p: 0 },
+            Release { rid: 1 },
+            Sleep { ms: 1500 },
+            Abandon { p: 0 },
+        ]);
+        let ext = super::cluster::Ext { flavor: 3, log: false, old_kept: false, strict_versions: false };
+        // a held read answer may wait this long (the default 4 s is shorter than B's work in between)
+        std::env::set_var("SIM_MAX_HOLD_MS", "10000");
+        let (f, v) = run_story3(&rt, "incarnation re-point", ext, ev);
+        std::env::remove_var("SIM_MAX_HOLD_MS");
+        assert_eq!(f, 0, "{v:?}");
+    }
+
+    /// Hole C (review of the final engine) as a directed story: compactors on, a writer leaves acknowledged rows in L0 SSTs
+    /// no compactor absorbed and closes; a lost writer's late version lands at the next slot (lower writer epoch, X_d at
+    /// SlateDB's last L0 seq: `PlantLate`); readers pass over it, but the close-time compaction pass gated on the plain
+    /// newest version folds that L0 into a sorted run; another process opens the database, its compactor absorbs past
+    /// those rows, and they are read from neither side. Fails on 65dd663 (the gate on `load_newest`); passes from 5e21c5c6
+    /// (the gate on `load_newest_trusted`).
+    #[test]
+    fn sim_story_close_pass_gate_late_version() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use Ev::*;
+        // as the review's scenario: the owner's compactor started (its catch-up done), then stopped before the gap rows,
+        // so nothing absorbs them before the close and no catch-up publish is owed at the next start
+        let mut ev = vec![Open { p: 0, writer: true }, fill(0, 0, 0), Publish { p: 0 }, Write { p: 0, ops: vec![(5, 23, false)] }, CompStart { p: 0 }, Flush { p: 0 }, CompDrain { p: 0 }, CompStop { p: 0 }];
+        // rows in L0 that no compactor absorbs before the close
+        for c in 1..CUSTOMERS {
+            for half in 0..2 {
+                ev.push(Write { p: 0, ops: (half * 12..half * 12 + 12).map(|i| (c, i, false)).collect() });
+                ev.push(Flush { p: 0 });
+            }
+        }
+        ev.extend([Close { p: 0 }, PlantLate { p: 2 }, ClosePass { p: 2 }, Open { p: 1, writer: true }, Write { p: 1, ops: vec![(0, 0, false)] }, CompStart { p: 1 }, Write { p: 1, ops: (0..PER_CUSTOMER).map(|i| (0, i, false)).collect() }, Flush { p: 1 }, CompDrain { p: 1 }, Sleep { ms: 300 }, CompDrain { p: 1 }]);
+        let ext = super::cluster::Ext { flavor: 3, log: false, old_kept: false, strict_versions: false };
+        let (f, v) = run_story3(&rt, "hole C: the close-time gate and a late version", ext, ev);
+        assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
+    }
+
+    /// Hole G (review of the final engine) as a directed story: the 1 TB generator's parallel publish
+    /// (`publish_generated_parts`) of a writer that loses the database while its runs are on their way (held, as a slow
+    /// store), while another process takes the database over, writes and publishes. On 65dd663 the parts publish has no
+    /// writer-epoch fence and its version (a lower writer epoch) lands on top of the new owner's; from 5e21c5c6
+    /// `fence_check` refuses it. Judged by the story's structural check (`Ext::strict_versions`) and the oracle.
+    #[test]
+    fn sim_story_generator_parts_publish_after_a_takeover() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let ev = vec![
+            Open { p: 0, writer: true },
+            // the generator's run uploads are slow (each held up to the PUT timeout): its publish comes after the takeover
+            Hold { p: 0, class: Class::FxRun, op: Some(NOp::Put), skip: 0, land: true, all: true, rid: 1 },
+            Hold { p: 0, class: Class::FxRun, op: Some(NOp::Multipart), skip: 0, land: true, all: true, rid: 2 },
+            Generate { p: 0, writers: 3 },
+            Open { p: 1, writer: true },
+            Write { p: 1, ops: vec![(1, 1, false), (2, 2, false)] },
+            Publish { p: 1 },
+            Sleep { ms: 4000 },
+            Release { rid: 1 },
+            Release { rid: 2 },
+            Sleep { ms: 1500 },
+            Write { p: 1, ops: vec![(3, 3, false)] },
+        ];
+        let ext = super::cluster::Ext { flavor: 3, log: false, old_kept: false, strict_versions: true };
+        let (f, v) = run_story3(&rt, "hole G: the generator's parts publish after a takeover", ext, ev);
+        assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {
@@ -726,6 +947,7 @@ mod tests {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
+        let _l = log_world();
         let mut s = gen(seed, env_u64("SIM_STEPS", 90) as usize);
         if let Ok(k) = std::env::var("SIM_KEEP") {
             let keep: Vec<u32> = k.split(',').map(|x| x.trim().parse().unwrap()).collect();
