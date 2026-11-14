@@ -409,6 +409,15 @@ pub async fn marker_clean(store: &Arc<dyn ObjectStore>, id: &(impl DbRef + ?Size
     Ok(ok)
 }
 
+/// fix-sim-seed-104475: whether the clean marker names `epoch` (a writer epoch read before): no writer has opened the
+/// database since the close that wrote it. A fork reads its source's epoch after the quiesce and requires this, so a
+/// writer that opened the source between the quiesce and that read (its writes only in the WAL, which the fork copies
+/// but its clean marker makes readers skip) refuses the fork instead of passing the epoch check unmoved.
+pub async fn marker_names(store: &Arc<dyn ObjectStore>, id: &(impl DbRef + ?Sized), epoch: Option<u64>) -> Result<bool> {
+    let Some(body) = read_marker(store, id).await? else { return Ok(false) };
+    Ok(marker_trusted(&body, epoch.unwrap_or(0)))
+}
+
 /// Write the clean marker of a database no writer has open, naming its stored writer epoch (a fork's new branch, whose
 /// manifest is complete; experiments and the wake trace).
 pub async fn mark_clean_stored(store: &Arc<dyn ObjectStore>, id: &(impl DbRef + ?Sized)) -> Result<()> {

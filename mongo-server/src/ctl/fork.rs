@@ -409,6 +409,10 @@ async fn fork_paired(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> any
     // sim-test-2, hole F: the writer epoch the quiesce left; a newer one by the end of the copy means another process
     // opened the source meanwhile (this process lost its lease): the copied state is not the quiesced one
     let epoch0 = src_admin.read_manifest(None).await?.map(|m| m.writer_epoch());
+    // fix-sim-seed-104475: and no writer opened it between the quiesce and that read (its writes, an erasure's deletes
+    // among them, only in a WAL the copy takes and the fork's clean marker makes its readers skip): the marker the
+    // quiesce left must name epoch0. Checked before anything is created; a writer opening later moves the epoch.
+    anyhow::ensure!(tenant_bench::lifecycle::marker_names(store, src, epoch0).await?, "fork {src} -> {target}: the source was opened by another writer after its quiesce (writer epoch {epoch0:?}, clean marker not naming it); refused");
     // named, so that the rollback of a fork killed before the cleanup below finds and deletes it (review of 7b, FIX 2)
     let opts = slatedb::config::CheckpointOptions { name: Some(pairing_name(target)), ..Default::default() };
     let (cp, p) = pair::checkpoint_paired(store, src, || async { Ok(src_admin.create_detached_checkpoint(&opts).await?) }).await?;
