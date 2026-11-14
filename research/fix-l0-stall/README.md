@@ -67,7 +67,7 @@ With the fix, a batch makes 500 reads, issued in parallel (results/f1-waits-inse
 20 ms GETs, against 4-21 s before.
 
 Tests:
-- `ctl-tests/test_96_insert_preread.py` covers duplicate keys against stored documents after a restart, the same `_id`
+- `ctl-tests/test_98_insert_preread.py` covers duplicate keys against stored documents after a restart, the same `_id`
   under another customer, in-batch duplicates (ordered and unordered) and re-inserting a deleted `_id`, each with the
   batch read on and off. It passed locally through a `--store local` stand-in for `lib.py`, since there is no MinIO
   here. CI runs it with MinIO.
