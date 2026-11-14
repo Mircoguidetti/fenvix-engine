@@ -475,7 +475,8 @@ async fn rollback_locked(ctl: &Arc<Ctl>, target: &str, op: &Value) -> ApiResult<
         }
     }
     let owners = tenant_bench::fx::pair::fork_ref_owners(&ctl.store, target, &chain).await?;
-    purge::purge_tenant(ctl, target).await?;
+    // fix-hole-d: a rollback deletes the WAL objects too (no tombstones: the name keeps its incarnation)
+    purge::purge_tenant_with(ctl, target, false).await?;
     for a in &chain {
         rec::delete(&ctl.store, &fork_marker(a, target)).await?;
     }

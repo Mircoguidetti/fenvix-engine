@@ -231,6 +231,10 @@ pub async fn db_exists(store: &Arc<dyn ObjectStore>, name: &str) -> Result<bool>
         if file == "_lease" || file == "_clean" {
             continue;
         }
+        // fix-hole-d: an emptied WAL object (a drop's or an erase's tombstone) holds nothing
+        if m.size == 0 && is_wal_object(m.location.as_ref()) {
+            continue;
+        }
         // with incarnation 0 the prefix is the name's own level: a later incarnation's directory is not this one's
         if k == 0 && m.location.as_ref().split('/').nth(2).is_some_and(|d| d.len() > 1 && d.starts_with('i') && d[1..].bytes().all(|b| b.is_ascii_digit())) {
             continue;

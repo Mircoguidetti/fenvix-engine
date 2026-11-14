@@ -28,7 +28,7 @@ import time
 from pymongo import MongoClient, WriteConcern
 from pymongo.errors import OperationFailure
 
-from lib import Server, make_bucket, list_prefix, wait_until, MINIO
+from lib import Server, make_bucket, list_prefix, live_prefix, wait_until, MINIO
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools", "lease-stall"))
 from blockproxy import BlockProxy  # noqa: E402
@@ -170,7 +170,7 @@ def test_erase_does_not_delete_while_the_close_is_unfinished():
         st, r = srv.admin.delete(f"/v1/databases/{db}", timeout=120)
         assert st == 200 and r["erased"], (st, r)
         time.sleep(5)   # a late write of the old tenant would show up here
-        left = list_prefix(bucket, f"tenants/{db}/")
+        left = live_prefix(bucket, f"tenants/{db}/")
         assert left == [], f"objects under tenants/{db}/ after the erase: {left[:5]}"
     finally:
         px.release()

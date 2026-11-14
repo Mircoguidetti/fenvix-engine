@@ -104,6 +104,14 @@ async fn empty_all(store: &Store, paths: Vec<Path>) -> Result<u64> {
 /// Delete every object under `tenants/{db}/` (lease and marker included) and `ttl-hints/{db}/`; SlateDB's WAL objects are
 /// emptied instead (fix-hole-d).
 pub async fn purge_tenant(ctl: &Ctl, db: &str) -> Result<PurgeReport> {
+    purge_tenant_with(ctl, db, true).await
+}
+
+/// [`purge_tenant`]; `tombstones`: empty the WAL objects instead of deleting them (fix-hole-d). True for a drop and an
+/// erase, which move the name to a new incarnation first, so a writer that missed them is fenced. False for a fork's
+/// rollback: the name stays in the same incarnation and a retried fork reuses the same WAL ids, which tombstones would
+/// take (no client writer had the rolled-back fork open, so there is nothing to fence).
+pub async fn purge_tenant_with(ctl: &Ctl, db: &str, tombstones: bool) -> Result<PurgeReport> {
     let mut rep = PurgeReport::default();
     rep.checkpoints_released = release_pins(&ctl.store, db).await?;
     let prefix = Path::from(name_prefix(db));
@@ -114,7 +122,7 @@ pub async fn purge_tenant(ctl: &Ctl, db: &str) -> Result<PurgeReport> {
         // stops it, and deleting that object let the writer acknowledge writes into the deleted incarnation. An empty WAL
         // object holds no data (the erase stays complete) and keeps the slot taken. Tombstones in place are left alone.
         let metas: Vec<object_store::ObjectMeta> = ctl.store.list(Some(&prefix)).try_collect().await?;
-        let (wal, objs): (Vec<object_store::ObjectMeta>, Vec<object_store::ObjectMeta>) = metas.into_iter().filter(|m| !is_tombstone(m)).partition(|m| tenant_bench::lifecycle::is_wal_object(m.location.as_ref()));
+        let (wal, objs): (Vec<object_store::ObjectMeta>, Vec<object_store::ObjectMeta>) = metas.into_iter().filter(|m| !(tombstones && is_tombstone(m))).partition(|m| tombstones && tenant_bench::lifecycle::is_wal_object(m.location.as_ref()));
         if wal.is_empty() && objs.is_empty() {
             break;
         }

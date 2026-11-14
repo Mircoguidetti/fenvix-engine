@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-from lib import Server, make_bucket, list_prefix, prefix_bytes, wait_until, fill, dump_db
+from lib import Server, make_bucket, list_prefix, live_prefix, prefix_bytes, wait_until, fill, dump_db
 
 
 @pytest.fixture(scope="module")
@@ -275,6 +275,6 @@ def test_mongo_dropdatabase_respects_forks(env):
     pins = lambda: [x for x in srv.admin.get("/v1/databases/dd_src/checkpoints")[1]["checkpoints"] if x["expires_at_ms"] is None]
     assert len(pins()) == 1
     c.drop_database("dd_fork")
-    assert pins() == [] and list_prefix(bucket, "control/forks/dd_src/") == [] and list_prefix(bucket, "tenants/dd_fork/") == []
+    assert pins() == [] and list_prefix(bucket, "control/forks/dd_src/") == [] and live_prefix(bucket, "tenants/dd_fork/") == []
     c.drop_database("dd_src")
-    assert list_prefix(bucket, "tenants/dd_src/") == []
+    assert live_prefix(bucket, "tenants/dd_src/") == []

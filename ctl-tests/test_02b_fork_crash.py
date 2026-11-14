@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-from lib import Server, make_bucket, list_prefix, wait_until, fill, dump_db
+from lib import Server, make_bucket, list_prefix, live_prefix, wait_until, fill, dump_db
 
 POINTS = ["fork.after_intent", "fork.after_markers", "fork.after_clone", "fork.after_marker", "fork.after_meta"]
 
@@ -21,7 +21,7 @@ def cp_ids(srv, db):
 def assert_fork_absent(srv, bucket, target, ancestors=("src",)):
     assert srv.admin.get(f"/v1/databases/{target}")[0] == 404
     for prefix in [f"tenants/{target}/", f"ttl-hints/{target}/", f"control/dbs/{target}/", f"control/ops/{target}.json"] + [f"control/forks/{a}/{target}" for a in ancestors]:
-        assert list_prefix(bucket, prefix) == [], (prefix, list_prefix(bucket, prefix))
+        assert live_prefix(bucket, prefix) == [], (prefix, list_prefix(bucket, prefix))
     assert target not in [d["name"] for d in srv.client().list_databases()]
 
 
