@@ -386,6 +386,11 @@ impl X3 {
         }
     }
 
+    /// A store for slot reads that does not depend on the slot (the raw store through the simulated network, calm).
+    fn store_of(&self, life: u64) -> Arc<dyn ObjectStore> {
+        self.net.proc_store(life)
+    }
+
     fn count(&self, k: &'static str) {
         *self.counts.lock().unwrap().entry(k).or_default() += 1;
     }
@@ -847,6 +852,17 @@ async fn admin_check(store: &Arc<dyn ObjectStore>, id: &str) -> String {
 /// the log's confirmation if this process still holds the database); without it, as the core (`Tenant::apply`).
 async fn log_write(x3: &X3, p: usize, life: u64, eid: u32, t: &mut Tenant, model: &Arc<Mutex<Model>>, kv: Vec<(Vec<u8>, Option<Vec<u8>>)>) -> String {
     let writer = t.is_writer();
+    // the server checks its lease before every command (`Entry::ensure_open`, a monotonic clock): a process whose
+    // database was dropped or erased since it opened (the dropper took the lease, so this process's lease had lapsed)
+    // starts no new write there. Only a paused VM (its monotonic clock stopped) would; the simulator does not model it
+    // for new writes after a drop (sim-test-3, candidate D in the report).
+    if x3.on {
+        if let Ok(k) = crate::lifecycle::read_incarnation(&x3.store_of(life), &t.id().name).await {
+            if k != t.id().inc {
+                return format!("refused: the name moved to incarnation {k} since this process opened it (its lease lapsed)");
+            }
+        }
+    }
     let st = model.lock().unwrap().issue(eid, p, &kv);
     t.fx_sync();
     if x3.log.is_none() {
