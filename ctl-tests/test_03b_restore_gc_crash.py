@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from lib import Server, make_bucket, list_prefix, wait_until, fill, dump_db
+from lib import Server, make_bucket, list_prefix, live_prefix, wait_until, fill, dump_db
 from test_03_restore import GAP, listing, now_ms, restore
 
 EXTRA = ["--retention-interval-secs", "100000", "--retention-prune-secs", "3"]
@@ -273,7 +273,7 @@ def test_restore_and_erase_at_once(env):
         assert out["e"][0] == 200, out
         assert out["r"][0] in (200, 404), out
         for p in (f"tenants/{db}/", f"control/dbs/{db}/", f"control/staging/{db}/", f"control/retention/{db}", f"control/ops/{db}.json"):
-            assert list_prefix(bucket, p) == [], (p, out)
+            assert live_prefix(bucket, p) == [], (p, out)
 
 
 def test_restore_and_fork_at_once(env):

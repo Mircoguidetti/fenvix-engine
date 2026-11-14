@@ -8,7 +8,7 @@ run during the pause until the erase answers. The erase must answer 200, no read
 import threading
 import time
 
-from lib import Server, make_bucket, list_prefix, wait_until
+from lib import Server, make_bucket, list_prefix, live_prefix, wait_until
 
 
 def test_a_read_during_the_last_proof_does_not_fail_the_erase():
@@ -45,7 +45,7 @@ def test_a_read_during_the_last_proof_does_not_fail_the_erase():
         st, body = res["r"]
         assert st == 200, (st, body)
         time.sleep(1)
-        assert [k for k, _ in list_prefix(b, "tenants/gone/") if not k.endswith("/_lease")] == []
-        wait_until(lambda: list_prefix(b, "tenants/gone/") == [], 15, what="no lease left under the erased name")
+        assert [k for k, _ in live_prefix(b, "tenants/gone/") if not k.endswith("/_lease")] == []
+        wait_until(lambda: live_prefix(b, "tenants/gone/") == [], 15, what="no lease left under the erased name")
     finally:
         s.term()

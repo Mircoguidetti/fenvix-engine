@@ -12,7 +12,7 @@ import time
 
 import pytest
 
-from lib import Server, make_bucket, list_prefix, wait_until
+from lib import Server, make_bucket, list_prefix, live_prefix, wait_until
 
 # integration-4 (CI d660ea9, off 0/5): every test here needs sealed runs and their compactor, which do not exist with
 # FENVIX_SEALED_RUNS off; as test_54, test_67r and test_76, the file skips there
@@ -227,7 +227,7 @@ def test_erasures_in_the_middle_of_the_first_build():
     assert st == 200 and r["erased"] and r["proof"]["remaining_objects"] == 0, r
     for wait in (0, 6):
         time.sleep(wait)
-        assert list_prefix(bucket, f"tenants/{other}/") == [], "objects of the erased database left (a late run or version of the first build)"
+        assert live_prefix(bucket, f"tenants/{other}/") == [], "objects of the erased database left (a late run or version of the first build)"
     srv.term()
     print(f"erasure during the first build: deleteMany of {n} took {took:.2f} s (it waits for the build); {kept} documents kept and read back; scrub {e['rows_erased']} rows")
 

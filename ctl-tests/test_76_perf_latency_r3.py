@@ -12,7 +12,7 @@ import time
 
 import pytest
 
-from lib import Server, make_bucket, s3, list_prefix
+from lib import Server, make_bucket, s3, list_prefix, live_prefix
 
 # integration-4 (review of CI e6221af): every test here waits for our compactor or our runs, which do not exist with
 # sealed runs off (CI off mode: 0/5); as test_54 and test_67r, the file skips there
@@ -90,7 +90,7 @@ def test_erase_leaves_no_incomplete_upload():
     # right after the reply, and again after any in-flight upload had time to land: nothing of the database, objects or parts
     for wait in (0, 15):
         time.sleep(wait)
-        assert list_prefix(bucket, prefix) == []
+        assert live_prefix(bucket, prefix) == []
         left = incomplete_uploads(bucket, prefix)
         assert left == [], f"incomplete uploads left after the erase: {left}"
     log = srv.log_text()

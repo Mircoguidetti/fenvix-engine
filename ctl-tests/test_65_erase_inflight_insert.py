@@ -20,7 +20,7 @@ import time
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 
-from lib import Server, make_bucket, list_prefix, wait_until, fill
+from lib import Server, make_bucket, list_prefix, live_prefix, wait_until, fill
 
 
 def erase(srv, db, tries=20):
@@ -65,7 +65,7 @@ def test_a_insert_staged_before_the_erase_is_erased_with_it():
         assert st == 200, (st, r)
         kind, ts, ta = out["x"]
         time.sleep(3)                       # any write still in flight lands now
-        left = list_prefix(bucket, "tenants/infla/")
+        left = live_prefix(bucket, "tenants/infla/")
         found = c.infla.c.find_one({"_id": "X"})
         print(f"X: {kind}, sent {ts - t_done:+.3f} s, answered {ta - t_done:+.3f} s relative to the erase reply (erase took {t_done - t_e0:.3f} s); "
               f"X now: {found}; objects under tenants/infla/: {left[:5]}")

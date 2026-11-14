@@ -17,7 +17,7 @@ import time
 
 import pytest
 
-from lib import Server, make_bucket, dump_db, list_prefix, wait_until
+from lib import Server, make_bucket, dump_db, list_prefix, live_prefix, wait_until
 
 SEALED = ["--sealed-runs", "2", "--sealed-reseal-every", "1000000", "--sealed-t-pin-ms", "1000", "--sealed-e1-wait-ms", "0", "--sealed-test-short-e1-wait",
           # perf-erase: these tests check what the scrub does, so a batch is due at the agent's next poll
@@ -166,5 +166,5 @@ def test_a_whole_customer_delete_is_an_erasure(srv):
     # whole-database erasure: every object goes at once, our runs and records included
     st, r = srv.admin.delete(f"/v1/databases/{db}")
     assert st == 200 and r["proof"]["remaining_objects"] == 0, r
-    assert list_prefix(srv.bucket_name, f"tenants/{db}/") == []
+    assert live_prefix(srv.bucket_name, f"tenants/{db}/") == []
     assert list_prefix(srv.bucket_name, f"control/erasures/{db}/") == []

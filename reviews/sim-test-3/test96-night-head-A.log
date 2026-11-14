@@ -1,0 +1,24 @@
+TEST FAULT INJECTION ON (/tmp/htrfaa76_m2rp): never use this in production
+memory budget: limit 13674 MiB (cgroup1-own), caches 6325 MiB (block 2846, meta 948, sealed 2530), memtable 8 MiB, first course 854 MiB, change log 32 MiB, L0 reads at once 4
+box disk floor: 4096 MiB in /tmp/fenvix-box-floor-31044
+memory budget (review round): box 316 MiB per customer, 632 MiB in flight; memtables of every database 1709 MiB (writes wait past 2563 MiB); merge read-ahead 427 MiB; absorption 16 L0 SSTs
+quaderno: writes are acknowledged by the replicated log at 127.0.0.1:37460,127.0.0.1:34761,127.0.0.1:24107
+uploads: 0 unfinished multipart uploads under tenants/, 0 older than 3600s aborted
+quaderno: restart read 0 records of 0 databases from the log
+quaderno: restart applied 0 records to 0 databases in 0.0 s
+admin interface listening on 127.0.0.1:31626 (bearer token required)
+mongo-server listening on 127.0.0.1:31044 (idle close after 600 s, holder htra-31044, lease ttl 6 s)
+ADMIN GET /v1/health -> 200 0 ms peer=127.0.0.1:52866
+LEASE process_lease tenant=- holder=htra-31044 unix_ms=1794623949154 inc=2529d81dfef4d565 gen=1
+LEASE process_lease_revoked tenant=tkr holder=htra-31044 unix_ms=1794623956293 of=htrb-36386
+LEASE acquired tenant=tkr holder=htra-31044 unix_ms=1794623956297 takeover_from=htrb-36386
+LEASE takeover_wake tenant=tkr holder=htra-31044 unix_ms=1794623956364 unclean=true takeover_from=htrb-36386
+FXC not started db=tkr reason=not_writer unix_ms=1794623956410
+PUTLOG ok tenants/tkr/wal/00000000000000000004.sst
+FAULT fail_put tenants/tkr/fx/manifest/00000000000000000002
+LEASE writer_open tenant=tkr holder=htra-31044 unix_ms=1794623956483 
+TIMING abandon db=tkr stop_fxc_ms=0 tenant_abandon_ms=8 closed=true
+LEASE writer_close tenant=tkr holder=htra-31044 unix_ms=1794623956491 
+LEASE acquired tenant=tkr holder=htra-31044 unix_ms=1794623956508 takeover_from=-
+LEASE takeover_wake tenant=tkr holder=htra-31044 unix_ms=1794623956582 unclean=true takeover_from=-
+quaderno: database tkr: 120 records from a writer older than the stored one (epoch 2) were confirmed after a later replay read the log: never acknowledged, dropped

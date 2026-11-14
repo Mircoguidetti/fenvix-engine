@@ -17,7 +17,7 @@ from bson import Binary, Decimal128, Int64, MaxKey, MinKey, ObjectId, Regex, Tim
 from bson.json_util import loads as ejson_loads
 
 import export_client as xc
-from lib import Server, make_bucket, list_prefix, wait_until, fill, dump_db, TOKEN, OUT
+from lib import Server, make_bucket, list_prefix, live_prefix, wait_until, fill, dump_db, TOKEN, OUT
 
 MONGORESTORE = os.environ.get("MONGORESTORE", "/tmp/claude-0/mongo-img/root/usr/bin/mongorestore")
 
@@ -274,7 +274,7 @@ def test_delete_releases_the_snapshot(env):
     # erase takes the snapshot records with it
     st, r = srv.admin.post("/v1/databases/rel/exports")
     assert srv.admin.delete("/v1/databases/rel")[0] == 200
-    assert list_prefix(bucket, "control/exports/rel/") == [] and list_prefix(bucket, "tenants/rel/") == []
+    assert list_prefix(bucket, "control/exports/rel/") == [] and live_prefix(bucket, "tenants/rel/") == []
 
 
 def test_concurrent_exports_and_writes(env):

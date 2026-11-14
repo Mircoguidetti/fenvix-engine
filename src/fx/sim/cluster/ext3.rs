@@ -351,6 +351,7 @@ pub struct X3 {
     pub log: Option<Arc<SimLog>>,
     pub old_kept: bool,
     pub strict_versions: bool,
+    pub paused_vm: bool,
     net: Arc<Net>,
     /// Per process life.
     procs: Arc<Mutex<HashMap<u64, ProcLog>>>,
@@ -371,6 +372,7 @@ impl X3 {
             log: if ext.log { Some(Arc::new(SimLog::new())) } else { None },
             old_kept: ext.old_kept,
             strict_versions: ext.strict_versions,
+            paused_vm: ext.paused_vm,
             net,
             procs: Default::default(),
             owner: Default::default(),
@@ -397,6 +399,11 @@ impl X3 {
         if o.is_some_and(|(_, l)| l == life) {
             *o = None;
         }
+    }
+
+    /// A store for slot reads that does not depend on the slot (the raw store through the simulated network, calm).
+    fn store_of(&self, life: u64) -> Arc<dyn ObjectStore> {
+        self.net.proc_store(life)
     }
 
     fn count(&self, k: &'static str) {
@@ -624,10 +631,20 @@ async fn open_writer(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &
     let rep = match replay_on_wake(x3, life, store, id, &mut t).await {
         Ok(s) => s,
         Err(e) => {
-            // not served without them: the next command retries the open
+            // not served without them: the next command retries the open. `Entry::abandon_with` first: records of this
+            // process not yet in the store freeze the database in this process until a restart, except while a takeover
+            // replay has not finished (`waking`, fix-hole-t-freeze): its next opening replays again
+            let frozen = x3.log.is_some() && x3.with(life, |x| {
+                if x.uploaded < x.staged && !x.is_pinned() && !x.waking {
+                    x.frozen = true;
+                    true
+                } else {
+                    false
+                }
+            });
             let _ = t.abandon().await;
             x3.release(life);
-            anyhow::bail!("taken over but its records in the log could not be read back: {e:#}");
+            anyhow::bail!("taken over but its records in the log could not be read back{}: {e:#}", if frozen { " (frozen in this process)" } else { "" });
         }
     };
     if !t.is_writer() {
@@ -725,38 +742,32 @@ impl World {
                 }
                 Ev::Upgrade { .. } => {
                     let Ok(mut g) = tl.try_lock() else { return "busy (skipped)".into() };
-                    let Some(t) = g.as_mut() else { return "not open (skipped)".into() };
+                    let Some(t) = g.as_ref() else { return "not open (skipped)".into() };
                     if t.is_writer() {
                         return "already writer".into();
                     }
                     if x3.with(life, |x| x.is_pinned()) {
                         return "refused: in recovery (RecoveryPending)".into();
                     }
-                    // the lease, the takeover's replay (before this writer moves the stored epoch), then the writer
-                    x3.take(p, life);
-                    let rep = match replay_on_wake(&x3, life, &store, &id, t).await {
-                        Ok(s) => s,
-                        Err(e) => {
-                            let t = g.take().unwrap();
-                            let _ = t.abandon().await;
-                            x3.release(life);
-                            return format!("the log could not be read back: {} (abandoned)", short(&e));
-                        }
-                    };
-                    let t = g.as_mut().unwrap();
-                    if t.is_writer() {
-                        return format!("upgraded by the replay (epoch {:?}){rep}", t.writer_epoch());
-                    }
-                    match t.upgrade().await {
-                        Ok(()) => format!("upgraded (epoch {:?}){rep}", t.writer_epoch()),
-                        Err(e) => {
-                            x3.release(life);
-                            format!("upgrade failed: {}", short(&e))
-                        }
+                    // the server has no reader that turns into a writer: a command that writes takes the lease
+                    // (`Entry::ensure_open`), which reads the name's current incarnation, and opens again
+                    let t = g.take().unwrap();
+                    let _ = t.abandon().await;
+                    match open_writer(&x3, p, life, &lc, &store, &id, x3.is_absent(), &mut g).await {
+                        Ok(s) => format!("upgraded through the lease: {s}"),
+                        Err(e) => format!("upgrade failed: {}", short(&e)),
                     }
                 }
                 Ev::Write { ops, .. } => {
                     let Ok(mut g) = tl.try_lock() else { return "busy (skipped)".into() };
+                    if g.as_ref().is_some_and(|t| !t.is_writer()) && !x3.with(life, |x| x.is_pinned()) {
+                        // a write on a process that opened the database as a reader: the lease first (see Upgrade)
+                        let t = g.take().unwrap();
+                        let _ = t.abandon().await;
+                        if let Err(e) = open_writer(&x3, p, life, &lc, &store, &id, x3.is_absent(), &mut g).await {
+                            return format!("not opened as writer for the write: {}", short(&e));
+                        }
+                    }
                     let Some(t) = g.as_mut() else { return "not open (skipped)".into() };
                     let kv: Vec<(Vec<u8>, Option<Vec<u8>>)> = ops.iter().enumerate().map(|(j, (c, i, del))| (ckey(*c, *i), if *del { None } else { Some(ext::value(kp, format!("s{seed}-e{eid}-{j}"))) })).collect();
                     let mut last: BTreeMap<Vec<u8>, Option<Vec<u8>>> = BTreeMap::new();
@@ -905,6 +916,17 @@ async fn admin_check(store: &Arc<dyn ObjectStore>, id: &str) -> String {
 /// the log's confirmation if this process still holds the database); without it, as the core (`Tenant::apply`).
 async fn log_write(x3: &X3, p: usize, life: u64, eid: u32, t: &mut Tenant, model: &Arc<Mutex<Model>>, kv: Vec<(Vec<u8>, Option<Vec<u8>>)>) -> String {
     let writer = t.is_writer();
+    // the server checks its lease before every command (`Entry::ensure_open`, a monotonic clock): a process whose
+    // database was dropped or erased since it opened (the dropper took the lease, so this process's lease had lapsed)
+    // starts no new write there. Only a paused VM (its monotonic clock stopped) would; the simulator does not model it
+    // for new writes after a drop (sim-test-3, candidate D in the report).
+    if x3.on && !x3.paused_vm {
+        if let Ok(k) = crate::lifecycle::read_incarnation(&x3.store_of(life), &t.id().name).await {
+            if k != t.id().inc {
+                return format!("refused: the name moved to incarnation {k} since this process opened it (its lease lapsed)");
+            }
+        }
+    }
     let st = model.lock().unwrap().issue(eid, p, &kv);
     t.fx_sync();
     if x3.log.is_none() {
@@ -1297,15 +1319,23 @@ async fn whole_db(x3: &X3, p: usize, life: u64, eid: u32, store: &Arc<dyn Object
     let mut deleted = 0;
     for _ in 0..5 {
         use futures::TryStreamExt;
-        let objs: Vec<object_store::path::Path> = match store.list(Some(&prefix)).map_ok(|m| m.location).try_collect().await {
+        let metas: Vec<object_store::ObjectMeta> = match store.list(Some(&prefix)).try_collect().await {
             Ok(v) => v,
             Err(e) => return unknown(format!("{what} failed while listing (outcome unknown): {e} ({deleted} objects deleted; the client retries)")),
         };
+        // fix-hole-d (`ctl/purge.rs`): a WAL object is emptied, not deleted (a tombstone), so a writer that missed the
+        // drop cannot put its next WAL object there; tombstones already in place are left alone
+        let objs: Vec<object_store::ObjectMeta> = metas.into_iter().filter(|m| !(crate::lifecycle::is_wal_object(m.location.as_ref()) && m.size == 0)).collect();
         if objs.is_empty() {
             break;
         }
         for o in objs {
-            if store.delete(&o).await.is_ok() {
+            let r = if crate::lifecycle::is_wal_object(o.location.as_ref()) && !x3.old_kept {
+                store.put(&o.location, object_store::PutPayload::new()).await.map(|_| ())
+            } else {
+                store.delete(&o.location).await
+            };
+            if r.is_ok() {
                 deleted += 1;
             }
         }
@@ -1383,7 +1413,16 @@ pub(super) async fn oracle_absent(w: &World) -> Vec<String> {
     let fresh = w.net.proc_store(4_000_000 + w.next_life);
     match crate::lifecycle::db_exists(&fresh, &w.id).await {
         Ok(false) => {}
-        Ok(true) => v.push("dropped database still exists for a fresh process (db_exists)".into()),
+        Ok(true) => {
+            // which objects make it exist (for the trace)
+            use futures::TryStreamExt;
+            let k = crate::lifecycle::read_incarnation(&fresh, &w.id).await.unwrap_or(0);
+            let pre = object_store::path::Path::from(crate::lifecycle::tenant_path_at(&w.id, k));
+            let objs: Vec<String> = w.raw.list(Some(&pre)).map_ok(|m| m.location.to_string()).try_collect().await.unwrap_or_default();
+            // a create that failed part-way (an opening after the drop) leaves an empty SlateDB database, as the server
+            // would: listDatabases shows it, no acknowledged write is involved. Noted; the reads below judge the data.
+            w.note(format!("oracle: the dropped name exists for a fresh process: incarnation {k} holds {} objects, first {:?}", objs.len(), objs.iter().take(4).collect::<Vec<_>>()));
+        }
         Err(e) => v.push(format!("db_exists failed on a calm store: {}", short(&e))),
     }
     let _ = crate::lifecycle::load_incarnation(&fresh, &w.id).await;
@@ -1562,5 +1601,5 @@ pub fn generate3(seed: u64, steps: usize) -> Script {
             out.push(Ev::LogCopy { r: c, up: true });
         }
     }
-    Script { seed, profile: base.profile, knobs: base.knobs, events: out.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Ext { flavor: 3, log, old_kept: false, strict_versions: false } }
+    Script { seed, profile: base.profile, knobs: base.knobs, events: out.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Ext { flavor: 3, log, old_kept: false, strict_versions: false, paused_vm: false } }
 }

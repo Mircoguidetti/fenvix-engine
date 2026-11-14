@@ -866,7 +866,7 @@ mod tests {
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
         let _w = setup_world();
         let _l = super::cluster::ext3::setup_log_world();
-        let ext = |old_kept| super::cluster::Ext { flavor: 3, log: true, old_kept, strict_versions: false };
+        let ext = |old_kept| super::cluster::Ext { flavor: 3, log: true, old_kept, strict_versions: false, paused_vm: false };
         let (f_old, v_old, t_old) = run_story3_traced(&rt, "takeover retry with the log, the base's rules (fb38790e)", ext(true), takeover_retry_story(true));
         let (f_new, v_new, t_new) = run_story3_traced(&rt, "takeover retry with the log, 759f9dca's rules", ext(false), takeover_retry_story(false));
         let lost = |v: &[String]| v.iter().filter(|x| x.contains("acknowledged write lost") && x.contains("c02")).count();
@@ -919,7 +919,7 @@ mod tests {
             Sleep { ms: 1500 },
             Abandon { p: 0 },
         ]);
-        let ext = super::cluster::Ext { flavor: 3, log: false, old_kept: false, strict_versions: false };
+        let ext = super::cluster::Ext { flavor: 3, log: false, old_kept: false, strict_versions: false, paused_vm: false };
         // a held read answer may wait this long (the default 4 s is shorter than B's work in between)
         std::env::set_var("SIM_MAX_HOLD_MS", "10000");
         let (f, v) = run_story3(&rt, "incarnation re-point", ext, ev);
@@ -950,7 +950,7 @@ mod tests {
             }
         }
         ev.extend([Close { p: 0 }, PlantLate { p: 2 }, ClosePass { p: 2 }, Open { p: 1, writer: true }, Write { p: 1, ops: vec![(0, 0, false)] }, CompStart { p: 1 }, Write { p: 1, ops: (0..PER_CUSTOMER).map(|i| (0, i, false)).collect() }, Flush { p: 1 }, CompDrain { p: 1 }, Sleep { ms: 300 }, CompDrain { p: 1 }]);
-        let ext = super::cluster::Ext { flavor: 3, log: false, old_kept: false, strict_versions: false };
+        let ext = super::cluster::Ext { flavor: 3, log: false, old_kept: false, strict_versions: false, paused_vm: false };
         let (f, v) = run_story3(&rt, "hole C: the close-time gate and a late version", ext, ev);
         assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
     }
@@ -982,7 +982,7 @@ mod tests {
             Sleep { ms: 1500 },
             Write { p: 1, ops: vec![(3, 3, false)] },
         ];
-        let ext = super::cluster::Ext { flavor: 3, log: false, old_kept: false, strict_versions: true };
+        let ext = super::cluster::Ext { flavor: 3, log: false, old_kept: false, strict_versions: true, paused_vm: false };
         let (f, v) = run_story3(&rt, "hole G: the generator's parts publish after a takeover", ext, ev);
         assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
     }
@@ -1115,7 +1115,7 @@ mod tests {
             Open { p: 2, writer: true },
             Write { p: 2, ops: vec![(3, 0, false)] },
         ];
-        let ext = super::cluster::Ext { flavor: 3, log: true, old_kept: false, strict_versions: false };
+        let ext = super::cluster::Ext { flavor: 3, log: true, old_kept: false, strict_versions: false, paused_vm: false };
         let (f, v) = run_story3(&rt, "hole T: a failed takeover replay makes acknowledged records stale", ext, ev);
         assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
     }
@@ -1151,7 +1151,7 @@ mod tests {
             Open { p: 2, writer: true },
             Write { p: 2, ops: vec![(3, 0, false)] },
         ];
-        let ext = super::cluster::Ext { flavor: 3, log: true, old_kept: false, strict_versions: false };
+        let ext = super::cluster::Ext { flavor: 3, log: true, old_kept: false, strict_versions: false, paused_vm: false };
         let (f, v) = run_story3(&rt, "hole T: the failed takeover replay retried by the lease holder", ext, ev);
         assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
     }
@@ -1184,7 +1184,7 @@ mod tests {
             DropDb { p: 1 },
             LogRetry { p: 2 },
         ];
-        let ext = super::cluster::Ext { flavor: 3, log: true, old_kept: false, strict_versions: false };
+        let ext = super::cluster::Ext { flavor: 3, log: true, old_kept: false, strict_versions: false, paused_vm: false };
         let (f, v) = run_story3(&rt, "hole K: kept records re-create a dropped database", ext, ev);
         assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
     }
@@ -1214,7 +1214,7 @@ mod tests {
         let _w = setup_world();
         let _l = super::cluster::ext3::setup_log_world();
         super::cluster::ext3::KEPT_INC_OFF.store(true, std::sync::atomic::Ordering::SeqCst);
-        let ext = super::cluster::Ext { flavor: 3, log: true, old_kept: false, strict_versions: false };
+        let ext = super::cluster::Ext { flavor: 3, log: true, old_kept: false, strict_versions: false, paused_vm: false };
         let (f, _v) = run_story3(&rt, "hole K control: incarnation check off", ext, hole_k_events());
         super::cluster::ext3::KEPT_INC_OFF.store(false, std::sync::atomic::Ordering::SeqCst);
         assert!(f > 0, "the control did not see hole K (the check off must let the kept records re-create the database)");
@@ -1252,7 +1252,7 @@ mod tests {
             Sleep { ms: 300 },
             LogRetry { p: 2 },
         ];
-        let ext = super::cluster::Ext { flavor: 3, log: true, old_kept: false, strict_versions: false };
+        let ext = super::cluster::Ext { flavor: 3, log: true, old_kept: false, strict_versions: false, paused_vm: false };
         let (f, v) = run_story3(&rt, "hole K, opposite: kept records of the current incarnation are applied", ext, ev);
         assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
     }
@@ -1280,6 +1280,35 @@ mod tests {
             Abandon { p: 0 },
         ];
         let (f, v) = run_story(&rt, "closed pass keeps a zombie's WAL fence", 1, ev);
+        assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
+    }
+
+    /// Candidate D (gen-3 batch 43496082968, seeds 302956 and 303209; conditional): a process that missed its lease loss
+    /// (a paused VM: its monotonic clock stopped, so its per-command lease check still passes) acknowledges new writes
+    /// through the plain S3 WAL into an incarnation that was dropped after it opened. Nothing fences a deleted
+    /// incarnation: the dropper deleted SlateDB's manifest and fence WAL objects, so the zombie's next WAL object is
+    /// accepted. The writes were issued after the drop was acknowledged and are lost (the name is absent, or created
+    /// again without them). Fixed on fix-hole-d: a drop or an erase empties the WAL objects instead of deleting them
+    /// (tombstones), so the zombie's next WAL object is refused and it is fenced before acknowledging: a normal test.
+    #[test]
+    fn sim_hole_d_paused_zombie_acks_into_a_dropped_incarnation() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use Ev::*;
+        let ev = vec![
+            Open { p: 0, writer: true },
+            Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (0, i, false)).collect() },
+            // p0's VM pauses; p1 takes the database over (p0's lease ran out) and drops it
+            Open { p: 1, writer: true },
+            DropDb { p: 1 },
+            // p0 resumes, its lease clock stopped with it: it takes new writes on its old opening
+            Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (1, i, false)).collect() },
+            Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (2, i, false)).collect() },
+            Flush { p: 0 },
+        ];
+        let ext = super::cluster::Ext { flavor: 3, log: false, old_kept: false, strict_versions: false, paused_vm: true };
+        let (f, v) = run_story3(&rt, "candidate D: a paused zombie acknowledges into a dropped incarnation", ext, ev);
         assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
     }
 

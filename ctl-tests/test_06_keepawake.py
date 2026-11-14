@@ -4,7 +4,7 @@ import time
 
 import pytest
 
-from lib import Server, make_bucket, list_prefix, wait_until, fill, dump_db
+from lib import Server, make_bucket, list_prefix, live_prefix, wait_until, fill, dump_db
 
 IDLE = 3
 
@@ -158,10 +158,10 @@ def test_erase_removes_the_pin_and_it_does_not_come_back(env):
     # more agent ticks: nothing may come back.
     prefixes = ("tenants/gone/", "control/pins/gone", "control/dbs/gone/", "control/ops/gone.json")
     time.sleep(7)
-    wait_until(lambda: all(list_prefix(bucket, p) == [] for p in prefixes), 12, what="the erased name's objects gone")
+    wait_until(lambda: all(live_prefix(bucket, p) == [] for p in prefixes), 12, what="the erased name's objects gone")
     time.sleep(4)  # several agent ticks
     for p in prefixes:
-        assert list_prefix(bucket, p) == [], p
+        assert live_prefix(bucket, p) == [], p
 
 
 def test_fork_of_a_pinned_source_leaves_it_awake(env):

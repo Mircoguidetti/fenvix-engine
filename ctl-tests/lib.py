@@ -48,6 +48,19 @@ def list_prefix(bucket, prefix):
     return out
 
 
+def is_tombstone(key, size):
+    """fix-hole-d: an emptied SlateDB WAL object (`.../wal/{id}.sst`, 0 bytes). A drop, an erase or a fork's rollback
+    empties the WAL objects instead of deleting them, so a writer that missed it (a paused process) is fenced instead of
+    acknowledging writes into the deleted database. It holds no data; the engine's own erase proof (`purge::leftovers`)
+    ignores it the same way."""
+    return size == 0 and "/wal/" in key and key.endswith(".sst")
+
+
+def live_prefix(bucket, prefix):
+    """`list_prefix` without the tombstones of `is_tombstone`: every object that holds anything is still listed."""
+    return [(k, sz) for k, sz in list_prefix(bucket, prefix) if not is_tombstone(k, sz)]
+
+
 def prefix_bytes(bucket, prefix):
     return sum(sz for _, sz in list_prefix(bucket, prefix))
 
