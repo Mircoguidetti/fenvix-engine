@@ -31,7 +31,9 @@ mod tests {
     }
 
     /// The script of a seed: `SIM_GEN=2` gives sim-test-2's scripts (`cluster::ext::generate2`: restore points, restores,
-    /// forks, the generator, SlateDB's GC, storms, many groups); otherwise the scripts of sim-test.
+    /// forks, the generator, SlateDB's GC, storms, many groups); `SIM_GEN=3` sim-test-3's (`cluster::ext3::generate3`: the
+    /// replicated log, drop/erase/re-create, incarnations); otherwise the scripts of sim-test. `SIM_PATTERN` (`mix`,
+    /// `slow-reads`, `cold-restart`) weights generator 1's patterns, which the others build on.
     fn gen(seed: u64, steps: usize) -> Script {
         match env_u64("SIM_GEN", 1) {
             2 => super::cluster::ext::generate2(seed, steps),
@@ -107,7 +109,7 @@ mod tests {
                 }
                 let (min, mr) = if budget > 0 { minimize(&s, 2, budget).await } else { (s.clone(), run_script(&s).await) };
                 let mut rep = String::new();
-                rep.push_str(&format!("SEED {} (steps {}): {} violations; replays failing {again} of {replays}\n{}\n\nVIOLATIONS\n", s.seed, s.events.len(), r.violations.len(), r.stats));
+                rep.push_str(&format!("SEED {} (steps {}; SIM_GEN={} SIM_PATTERN={}): {} violations; replays failing {again} of {replays}\n{}\n\nVIOLATIONS\n", s.seed, s.events.len(), env_u64("SIM_GEN", 1), std::env::var("SIM_PATTERN").unwrap_or_else(|_| "mix".into()), r.violations.len(), r.stats));
                 for v in r.violations.iter().take(40) {
                     rep.push_str(&format!("  {v}\n"));
                 }

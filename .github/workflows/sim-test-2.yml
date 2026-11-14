@@ -14,8 +14,15 @@ on:
         description: seeds per runner (20 runners)
         default: "150"
       gen:
-        description: "scripts: 2 (sim-test-2) or 1 (sim-test)"
+        description: "scripts: 2 (sim-test-2), 1 (sim-test) or 3 (sim-test-3)"
         default: "2"
+        type: choice
+        options: ["1", "2", "3"]
+      pattern:
+        description: "generator 1's pattern weights: mix, slow-reads or cold-restart"
+        default: "mix"
+        type: choice
+        options: [mix, slow-reads, cold-restart]
       steps:
         description: events per base script
         default: "90"
@@ -37,7 +44,7 @@ jobs:
           SIM_OUT: sim-out
         run: |
           A=$(( ${{ inputs.first_seed }} + ${{ matrix.runner }} * ${{ inputs.seeds_per_runner }} ))
-          scripts/sim-seeds.sh "$A" "${{ inputs.seeds_per_runner }}" "${{ inputs.gen }}" 4
+          scripts/sim-seeds.sh "$A" "${{ inputs.seeds_per_runner }}" "${{ inputs.gen }}" 4 "${{ inputs.pattern }}"
       - if: always()
         uses: actions/upload-artifact@v4
         with:

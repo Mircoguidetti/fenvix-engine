@@ -346,7 +346,21 @@ pub struct Script {
 /// Generate the script of `seed`: a weighted random walk over the events that apply in an abstract state (who owns the
 /// database, who is a zombie, which processes have a compactor, whether a version exists). The executor still takes
 /// any event in any state (an event that does not apply is a no-op, noted in the trace).
+/// The odds of generator 1's cold-restart round and slow-read pattern at each step: `SIM_PATTERN` unset (or `mix`) keeps
+/// the defaults (0.05, 0.08), so a seed's script is the same as before; `slow-reads` makes the slow-read pattern frequent
+/// (0.4) and `cold-restart` the cold-restart round (0.3). Generators 2 and 3 build on generator 1, so they follow it.
+/// The seed's report names the pattern: replay a seed with the same `SIM_PATTERN`.
+fn pattern_odds() -> (f64, f64) {
+    match std::env::var("SIM_PATTERN").as_deref() {
+        Ok("slow-reads") => (0.05, 0.4),
+        Ok("cold-restart") => (0.3, 0.08),
+        Ok("") | Ok("mix") | Err(_) => (0.05, 0.08),
+        Ok(x) => panic!("SIM_PATTERN={x}: expected mix, slow-reads or cold-restart"),
+    }
+}
+
 pub fn generate(seed: u64, steps: usize) -> Script {
+    let (p_cold, p_slow) = pattern_odds();
     let mut r = StdRng::seed_from_u64(seed);
     let profile = match r.gen_range(0..4) {
         0 => Profile::none(),
@@ -484,7 +498,7 @@ pub fn generate(seed: u64, steps: usize) -> Script {
         // request goes on. Every part is drawn at random.
         // the cold-restart round (B3, 2026-11-13: hole W on the bench): after many absorbed rows, every process stops
         // cold, then one reopens as writer and its write path publishes through the builder before its compactor starts
-        if owner.is_some() && versioned && ev.len() + 12 < steps && r.gen_bool(0.05) {
+        if owner.is_some() && versioned && ev.len() + 12 < steps && r.gen_bool(p_cold) {
             let o = owner.unwrap();
             if st[o].comp {
                 ev.push(Ev::CompDrain { p: o });
@@ -514,7 +528,7 @@ pub fn generate(seed: u64, steps: usize) -> Script {
         // host): every GET of the owner's SSTs and runs (and sometimes its versions) answers late, up to 4 s (past the
         // hold life and T_pin), while it reads one customer and other work goes on; then the store answers again
         if let Some(o) = owner {
-            if ev.len() + 10 < steps && r.gen_bool(0.08) {
+            if ev.len() + 10 < steps && r.gen_bool(p_slow) {
                 let mut rids = Vec::new();
                 let mut classes = vec![Class::Other, Class::FxRun];
                 if r.gen_bool(0.5) {
