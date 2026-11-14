@@ -98,7 +98,7 @@ def main():
     # ---- warm: create both databases (first write opens them)
     c0 = MongoClient(uri, serverSelectionTimeoutMS=30000)
     c0.sv.t.insert_one({"_id": "warm"})
-    c0.bg.t.insert_one({"_id": "warm"})
+    c0.bg.bgt.insert_one({"_id": "warm"})
     time.sleep(2)
 
     stop = threading.Event()
@@ -135,7 +135,7 @@ def main():
 
     def bg():
         c = MongoClient(uri, serverSelectionTimeoutMS=30000, socketTimeoutMS=60000)
-        coll = c.bg.t
+        coll = c.bg.bgt
         n = 0
         while not stop.is_set():
             t0 = time.time()
@@ -175,7 +175,7 @@ def main():
     try:
         got = set(d["_id"] for d in c0.sv.t.find({}, {"_id": 1}))
         lost_main = [i for i in acked_main if i not in got]
-        got = set(d["_id"] for d in c0.bg.t.find({}, {"_id": 1}))
+        got = set(d["_id"] for d in c0.bg.bgt.find({}, {"_id": 1}))
         lost_bg = [i for i in acked_bg if i not in got]
     except Exception as e:  # noqa: BLE001
         print("read back failed:", e)
