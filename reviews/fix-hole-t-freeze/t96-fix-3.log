@@ -1,0 +1,6 @@
+A after the first takeover: FAULT fail_put tenants/tkr/fx/manifest/00000000000000000002
+acknowledged 240, lost 0 (W1 lost 0)
+A: quaderno: database tkr: 120 records from a writer older than the stored one (epoch 2) were confirmed after a later replay read the log: never acknowledged, dropped
+quaderno: takeover of tkr: 120 records applied from the log (after record 117612647696760832)
+.
+1 passed in 14.17s

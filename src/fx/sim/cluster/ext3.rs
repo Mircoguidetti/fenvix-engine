@@ -293,6 +293,9 @@ pub struct ProcLog {
     uploaded: u64,
     pinned: Option<Vec<Rec>>,
     frozen: bool,
+    /// fix-hole-t-freeze (`LocalLog::waking`): a takeover replay read the records back and has not applied them (it
+    /// failed): nothing confirms them, the abandon does not freeze, the next opening replays again.
+    waking: bool,
     /// fix-takeover-retry: the highest position read back at the start.
     read_pos: Option<u64>,
     /// `Remote::committed` and `Remote::flushed` for the database.
@@ -512,7 +515,20 @@ async fn apply_after_marker(t: &mut Tenant, mut recs: Vec<Rec>) -> anyhow::Resul
 /// `locallog::replay_on_wake`: a takeover reads the database's records back from the log and applies the ones after the
 /// stored marker, then confirms them to the log.
 async fn replay_on_wake(x3: &X3, life: u64, store: &Arc<dyn ObjectStore>, id: &str, t: &mut Tenant) -> anyhow::Result<String> {
-    let Some(log) = x3.log.clone() else { return Ok(String::new()) };
+    if x3.log.is_none() {
+        return Ok(String::new());
+    }
+    // fix-hole-t-freeze (`locallog::replay_on_wake`): marked until the replay succeeds
+    x3.with(life, |x| x.waking = true);
+    let r = wake_apply(x3, life, store, id, t).await;
+    if r.is_ok() {
+        x3.with(life, |x| x.waking = false);
+    }
+    r
+}
+
+async fn wake_apply(x3: &X3, life: u64, store: &Arc<dyn ObjectStore>, id: &str, t: &mut Tenant) -> anyhow::Result<String> {
+    let log = x3.log.clone().unwrap();
     let raw = log.read().map_err(|e| anyhow::anyhow!(e))?;
     if raw.is_empty() {
         return Ok(String::new());
@@ -537,6 +553,11 @@ async fn replay_on_wake(x3: &X3, life: u64, store: &Arc<dyn ObjectStore>, id: &s
     let mut stale = 0;
     if let Some(s) = stored {
         stale = drop_stale(&mut recs, s);
+    }
+    // fix-hole-t-freeze: a record and its copy (same `orig`): only the last written is applied
+    if !x3.old_kept {
+        recs.sort_by_key(|r| (r.orig, std::cmp::Reverse(r.seq)));
+        recs.dedup_by_key(|r| r.orig);
     }
     let rec_epoch = recs.iter().map(|r| r.epoch).max().unwrap_or(0);
     if rec_epoch > 0 && stored.is_some_and(|s| s > rec_epoch) {
@@ -755,7 +776,7 @@ impl World {
                         Ok(()) => {
                             let mut out = "closed".to_string();
                             // `LocalLog::closed`: every record confirmed so far was staged before the close
-                            if x3.log.is_some() && !x3.with(life, |x| x.is_pinned()) {
+                            if x3.log.is_some() && !x3.with(life, |x| x.is_pinned() || x.waking) {
                                 let pos = x3.with(life, |x| {
                                     x.uploaded = x.staged;
                                     x.committed
@@ -783,7 +804,7 @@ impl World {
                     let Some(t) = g.take() else { return "not open (skipped)".into() };
                     // `Entry::abandon_with`: ownership lost with records only in the log: kept for a restart (frozen)
                     let frozen = x3.log.is_some() && x3.with(life, |x| {
-                        if x.uploaded < x.staged && !x.is_pinned() {
+                        if x.uploaded < x.staged && !x.is_pinned() && !x.waking {
                             x.frozen = true;
                             true
                         } else {
@@ -937,7 +958,7 @@ async fn upload(x3: &X3, life: u64, tl: &Arc<tokio::sync::Mutex<Option<Tenant>>>
     if x3.log.is_none() {
         return "no log (skipped)".into();
     }
-    let (due, target, pos) = x3.with(life, |x| (!x.is_pinned() && x.uploaded < x.staged, x.staged, x.committed));
+    let (due, target, pos) = x3.with(life, |x| (!x.is_pinned() && !x.waking && x.uploaded < x.staged, x.staged, x.committed));
     if !due {
         return "nothing to upload".into();
     }
