@@ -250,13 +250,35 @@ impl crate::fx::build::SortedRows for VecRows {
     }
 }
 
+/// The model at a mark and the mark's millisecond (fix-sim-seed-200733). A restore to the mark replays every WAL object
+/// written in or before its millisecond (`copy_wal_forward`, as `pitr::copy_wal_forward`: only `mtime > target` stops),
+/// so the model at the mark must hold exactly the writes that can be in those objects. Under the model's lock, so no
+/// write is issued meanwhile: the statuses are read, then the clock, and the lock is kept until the clock has left that
+/// millisecond. A write acknowledged in the snapshot landed in or before the mark's millisecond; a write issued after
+/// the snapshot, by an operation still in flight (a restore's apply, a held write), lands after it.
+///
+/// Before, the clock was read before the snapshot and nothing kept a write issued just after the snapshot off the
+/// mark's millisecond (the pauses around a mark only hold back the script's next event): gen 2 seed 200733 (d8d071b3)
+/// had its in-flight restore to mark 14 issue its apply (every key back to mark 14's state) just after mark 15's
+/// snapshot and land it, WAL object 17, in mark 15's millisecond. The restore to mark 15 rightly replayed it; the model
+/// at mark 15 did not have it and called the 19 keys it deletes "acknowledged write lost".
+fn mark_snapshot(model: &Mutex<Model>) -> (i64, Model) {
+    let m = model.lock().unwrap();
+    let snap = m.snapshot();
+    let at = now_ms();
+    while now_ms() <= at {
+        std::thread::sleep(Duration::from_micros(50));
+    }
+    drop(m);
+    (at, snap)
+}
+
 impl World {
-    /// A point in time to restore to: the model now. A short pause on each side keeps the WAL objects of writes issued
-    /// after it off its millisecond.
+    /// A point in time to restore to: the model now (`mark_snapshot`). A short pause on each side keeps the script's
+    /// neighbouring events away from it.
     pub(super) async fn mark(&mut self, tag: u64) {
         tokio::time::sleep(Duration::from_millis(3)).await;
-        let at = now_ms();
-        let snap = self.model.lock().unwrap().snapshot();
+        let (at, snap) = mark_snapshot(&self.model);
         self.x.marks.lock().unwrap().push(MarkRec { tag, at_ms: at, snap });
         tokio::time::sleep(Duration::from_millis(3)).await;
         self.note(format!("mark {tag} at {at}"));
@@ -943,3 +965,60 @@ pub static FORKS_REFUSED_EPOCH_MOVED: std::sync::atomic::AtomicU64 = std::sync::
 /// fix-sim-seed-104475: simulated forks refused because the source's clean marker did not name the writer epoch read
 /// after the quiesce (a writer opened it in between) (tests).
 pub static FORKS_REFUSED_NOT_CLEAN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::AtomicBool;
+
+    /// fix-sim-seed-200733 (gen 2 seed 200733, night-head-6 d8d071b3: 38 violations "acknowledged write lost" after a
+    /// restore to mark 15): a write issued by an operation in flight just after a mark's snapshot must not land in the
+    /// mark's millisecond, and a write acknowledged in the snapshot must land in or before it; otherwise the oracle's
+    /// model at the mark is not the state a restore to the mark replays. A writer issues, lands (one object of the
+    /// store, as a WAL object: its `last_modified` is what `copy_wal_forward` compares) and acknowledges writes back to
+    /// back while marks are taken; what a restore to each mark reads (the writes landed in or before its millisecond) is
+    /// checked against the model at the mark by the oracle's own check. With the clock read before the snapshot and the
+    /// lock let go at once (d8d071b3's `mark`), the writes issued just after a snapshot land in its millisecond and are
+    /// read as writes issued after the point in time.
+    #[test]
+    fn sim_mark_closes_its_millisecond() {
+        let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().unwrap();
+        let model = Arc::new(Mutex::new(Model::default()));
+        let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let stop = Arc::new(AtomicBool::new(false));
+        let writer = {
+            let (model, store, stop) = (Arc::clone(&model), Arc::clone(&store), Arc::clone(&stop));
+            rt.spawn(async move {
+                let mut landed: Vec<(Vec<u8>, Vec<u8>, i64)> = Vec::new();
+                let mut n: u32 = 0;
+                while !stop.load(SeqCst) {
+                    let (k, v) = (format!("k{n:08}").into_bytes(), format!("v{n}").into_bytes());
+                    let st = model.lock().unwrap().issue(n, 0, &[(k.clone(), Some(v.clone()))]);
+                    let p = object_store::path::Path::from(format!("wal/{n:020}.sst"));
+                    store.put(&p, object_store::PutPayload::from(v.clone())).await.unwrap();
+                    let mtime = store.head(&p).await.unwrap().last_modified.timestamp_millis();
+                    st.store(ACKED, SeqCst);
+                    landed.push((k, v, mtime));
+                    n += 1;
+                    tokio::task::yield_now().await;
+                }
+                landed
+            })
+        };
+        let mut marks = Vec::new();
+        for _ in 0..30 {
+            std::thread::sleep(Duration::from_millis(2));
+            marks.push(mark_snapshot(&model));
+        }
+        stop.store(true, SeqCst);
+        let landed = rt.block_on(writer).unwrap();
+        let live = model.lock().unwrap().snapshot();
+        assert!(landed.len() > 100, "the writer wrote only {} times", landed.len());
+        let mut bad = Vec::new();
+        for (at, snap) in &marks {
+            let reads: BTreeMap<Vec<u8>, Result<Option<Vec<u8>>, String>> = landed.iter().map(|(k, v, t)| (k.clone(), Ok((*t <= *at).then(|| v.clone())))).collect();
+            bad.extend(check_at(&format!("restore to the mark at {at}"), &reads, snap, &counts(snap), &live));
+        }
+        assert!(bad.is_empty(), "{} wrong reads over {} marks and {} writes, first {:?}", bad.len(), marks.len(), landed.len(), bad.iter().take(3).collect::<Vec<_>>());
+    }
+}
