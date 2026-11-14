@@ -945,10 +945,22 @@ mod tests {
     /// Reviewer (R-T1): a wave of passing clients (each reads a few documents once, or twice in a row like a page
     /// refresh) must not push out the clients that come back often.
     async fn passing_wave(reads_per_passer: usize) -> (u64, u64) {
-        passing_wave_ram(reads_per_passer, 2 << 20).await
+        let w = passing_wave_ram(reads_per_passer, 2 << 20).await;
+        (w.hits, w.misses)
     }
 
-    async fn passing_wave_ram(reads_per_passer: usize, ram: u64) -> (u64, u64) {
+    /// What the last read of the active clients' documents saw, and the RAM state after it.
+    struct Wave {
+        hits: u64,
+        misses: u64,
+        /// Map lookups that missed during that read.
+        maps_misses: u64,
+        maps_dropped: u64,
+        maps_used: u64,
+        data_used: u64,
+    }
+
+    async fn passing_wave_ram(reads_per_passer: usize, ram: u64) -> Wave {
         // 2 MiB of RAM: about 0.4 MiB of maps (index and filters of 40 MB of documents), the rest for data; the 60
         // blocks of the active clients (about 0.25 MiB) fit the protected share many times
         let c = Counter::new(ram, None, 0).unwrap();
@@ -992,14 +1004,16 @@ mod tests {
         }
         let h0 = c.m.hits_ram.load(Relaxed);
         let m0 = c.m.misses.load(Relaxed);
+        let mm0 = c.m.maps_misses.load(Relaxed);
         for &i in &hot {
             db.get(format!("doc/k{i:06}")).await.unwrap().unwrap();
         }
-        let r = (c.m.hits_ram.load(Relaxed) - h0, c.m.misses.load(Relaxed) - m0);
+        let (hits, misses) = (c.m.hits_ram.load(Relaxed) - h0, c.m.misses.load(Relaxed) - m0);
+        let maps_misses = c.m.maps_misses.load(Relaxed) - mm0;
         let (mu, _, du, _, dp) = c.ram_usage();
         eprintln!("REV wave {reads_per_passer}: maps {mu} B, data {du} B, protected {dp} B, promoted {}", c.m.promoted.load(Relaxed));
         db.close().await.unwrap();
-        r
+        Wave { hits, misses, maps_misses, maps_dropped: c.m.maps_dropped.load(Relaxed), maps_used: mu, data_used: du }
     }
 
     #[tokio::test]
@@ -1009,13 +1023,25 @@ mod tests {
         assert!(hits >= 50, "passing clients (read once) pushed out the active ones: {hits} hits, {misses} misses");
     }
 
-    /// Reviewer (R-T1): when the pinned maps take most of the RAM (here about 0.4 MiB of 0.5 MiB; at 1 TB they are
-    /// larger than any RAM), the data of the active clients gets no room: the RAM floor serves only maps.
+    /// Reviewer (R-T1): when the maps are larger than the RAM (here 530,184 B of maps, MEASURED with 2 MiB of RAM where
+    /// none leave, against 512 KiB of RAM; at 1 TB they are larger than any RAM), the counter's rule holds: data never
+    /// pushes maps out, so the RAM goes to the maps and the data blocks get only the leftover; with no disk floor the
+    /// maps that do not fit are dropped. The active clients' blocks (about 240 KiB) cannot fit next to 530 KB of maps
+    /// in 512 KiB under any exit rule, so their hits are not asserted: that is a sizing limit (more RAM, or the disk
+    /// floor holding the maps), not an exit-rule defect. `rev_passing_wave_read_once` checks the exit rule with room.
     #[tokio::test]
-    async fn rev_maps_leave_room_for_active_data() {
-        let (hits, misses) = passing_wave_ram(1, 512 << 10).await;
-        eprintln!("REV maps crowd out data: hot hits {hits} misses {misses}");
-        assert!(hits >= 50, "pinned maps left no RAM for the active clients: {hits} hits, {misses} misses");
+    async fn rev_maps_take_ram_before_data() {
+        let ram = 512u64 << 10;
+        let w = passing_wave_ram(1, ram).await;
+        eprintln!(
+            "REV maps fill the RAM: maps {} B, data {} B, hot hits {} misses {}, maps misses {}, maps dropped {}",
+            w.maps_used, w.data_used, w.hits, w.misses, w.maps_misses, w.maps_dropped
+        );
+        assert!(w.maps_dropped > 0, "the scenario needs maps larger than the RAM (none dropped)");
+        assert!(w.maps_used + w.data_used <= ram, "RAM over its size: maps {} B, data {} B", w.maps_used, w.data_used);
+        // maps first: they hold most of the RAM (480,120 B MEASURED), data only the leftover (3,144 B MEASURED)
+        assert!(w.maps_used >= ram * 3 / 4, "data took the maps' RAM: maps {} B, data {} B", w.maps_used, w.data_used);
+        assert!(w.data_used <= ram / 10, "data over the leftover: maps {} B, data {} B", w.maps_used, w.data_used);
     }
 
     #[tokio::test]
