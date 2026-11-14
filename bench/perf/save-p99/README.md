@@ -9,25 +9,29 @@ leader's own timers. 4 vCPU cloud VM, one virtio disk (ext4, `discard`).
 
 Loads: **std** = 100 insert_one/s + 400 docs/s (20 x 1 KB every 50 ms); **heavy** = 200 insert_one/s + 2000 docs/s.
 
-## Stages (std, baseline, traced binary)
+## Stages (clean runs: background writer in its own collection; 600 s; 0 lost)
 
-| stage (ms) | p50 | p99 | max |
-|---|---|---|---|
-| client insert_one (service) | 1.7 | 4.8 | 150.2 |
-| server total | 1.4 | 4.6 | 149.6 |
-| admit (fair queue) | 0.0 | 0.0 | 18.9 |
-| lock_w (db exclusive lock) | 0.0 | 0.0 | 12.0 |
-| stage (memtable insert, SlateDB backpressure) | 0.0 | 0.1 | 10.5 |
-| **log_ack (append + 2-of-3 fdatasync)** | **1.0** | **3.6** | **149.2** |
-|   of which: queue in our log client | 0.0 | 0.1 | 2.1 |
-|   of which: log round trip | 1.0 | 3.5 | 149.1 |
-| visible (earlier batches confirmed) | 0.0 | 0.0 | 0.3 |
-| read_get (reads inside the insert) | 0.1 | 0.8 | 30.4 |
-| rest (parse + execute CPU) | 0.2 | 0.7 | 13.8 |
-| write_reply | 0.0 | 0.1 | 1.6 |
+`c-std-old` = std load, night-head behaviour (`PQ_PREALLOC_MBS=0`); `c-heavy-old` = heavy load, log cap 1 GB.
 
-Lease/fence check (`owner_valid`) is a synchronous lookup, never visible. Slowest 1% (716 writes): log_ack owns 581,
-mean 11.0 of which 10.9 is the log round trip; the log leader's append->fdatasync max 148.9 ms = the run's max.
+| stage (ms), p50/p99/max | std | heavy |
+|---|---|---|
+| client insert_one (service) | 1.5 / 4.2 / 145.7 | 1.6 / 11.0 / 152.2 |
+| server total | 1.2 / 3.6 / 145.1 | 1.2 / 9.4 / 151.5 |
+| admit (fair queue) | 0.0 / 0.0 / 11.1 | 0.0 / 0.0 / 1.9 |
+| lock_w (db exclusive lock) | 0.0 / 0.0 / 0.4 | 0.0 / 0.0 / 3.0 |
+| stage (memtable insert, SlateDB backpressure) | 0.0 / 0.1 / 2.1 | 0.0 / 0.1 / 3.5 |
+| **log_ack (append + 2-of-3 fdatasync)** | **0.9 / 3.2 / 144.7** | **0.9 / 9.0 / 151.1** |
+| &nbsp;&nbsp;queue in our log client | 0.0 / 0.1 / 2.5 | 0.0 / 0.1 / 12.6 |
+| &nbsp;&nbsp;log round trip | 0.9 / 3.1 / 144.8 | 0.9 / 8.9 / 151.0 |
+| visible (earlier batches confirmed) | 0.0 / 0.0 / 1.1 | 0.0 / 0.0 / 2.8 |
+| read_get + get (reads inside the insert) | 0.1 / 0.2 / 10.2 | 0.1 / 0.2 / 18.9 |
+| rest (parse + execute CPU) | 0.2 / 0.3 / 7.2 | 0.2 / 0.4 / 25.3 |
+| write_reply | 0.0 / 0.1 / 2.1 | 0.0 / 0.1 / 5.2 |
+| log leader append->commit (us, p50/p99/p999/max) | 711 / 2795 / 18287 / 145407 | 753 / 8111 / 43935 / 150271 |
+
+Owner of the slowest 1% (largest stage per write): log_ack 557 of 597 (std), 1183 of 1194 (heavy). Batches of 1 record
+(max 4). The lease/fence check (`owner_valid`) is a synchronous lookup, never visible. The client is above the server at
+heavy load (driver + 5 Python threads on 4 vCPU).
 
 ## Suspects, one at a time (600 s each, 0 lost in every valid run)
 
@@ -40,10 +44,13 @@ mean 11.0 of which 10.9 is the log round trip; the log leader's append->fdatasyn
 | std, `PQ_PREALLOC_MBS=16` (paced spare prealloc) | 4.7 | 94 | 5 | 121 |
 | std, MinIO tmpfs + paced 16 | 4.9 | 93 | 6 | 126 |
 | **std, fix (paced 32 by default)** | **4.6** | **81** | **7** | 130 |
+| clean std, old / **fix** | 4.2 / **4.3** | 146 / **46** | 17 / **0** | 96 / 113 |
 | heavy, cap 256 MB, old | 9.3 | 8457 | 248 | 744 |
 | heavy, cap 256 MB, fix | 9.0 | 8498 | 160 | 655 |
 | heavy, cap 1 GB, old (two runs) | 11.9 / 11.7 | 208 / 178 | 142 / 142 | 979 / 941 |
 | **heavy, cap 1 GB, fix (two runs)** | **11.0 / 10.2** | **80 / 88** | **15 / 8** | 760 / 684 |
+| clean heavy 1 GB, old / **fix** | 11.0 / **11.1** | 152 / **62** | 101 / **6** | 622 / 521 |
+| heavy 1 GB, fix, MinIO on tmpfs | 8.2 | 67 | 8 | 539 |
 
 Findings:
 1. **The save tail is the log's fdatasync on the disk the three copies share** (tmpfs copies: >=15 ms writes 132 -> 12,
@@ -58,15 +65,20 @@ Findings:
    (every `--local-log-upload-secs`, default 30 s) confirms them. A harness setting (production default = 60% of RAM),
    but any bench that copies test_91's cap will show seconds-long saves under load.
 4. What remains of p99 at heavy load (10-11 ms) is ordinary fdatasync latency with three copies + MinIO + the engine on
-   one disk (leader commit p99 7.4-8.3 ms). In the 3-zone product each copy has its own disk and the commit takes the
+   one disk (leader commit p99 7.4-8.3 ms); the fix does not move it. The local MinIO on the same disk is part of it:
+   with MinIO on tmpfs the heavy p99 is 8.2 ms (leader commit p99 4.2 ms), a local-bench artifact (S3 is remote). In the 3-zone product each copy has its own disk and the commit takes the
    2nd fastest of 3 (`node.rs maybe_commit`): one slow disk is masked. Not measurable on this one-disk box.
 
 ## Fix (branch `save-p99`)
 
 `proto/quaderno/src/store.rs`: the spare-segment preallocation is paced by default (32 MB/s; `PQ_PREALLOC_MBS=0`
 restores the one-shot fill). Durability unchanged: it only touches the spare file, never a record; an ack still means
-2 of 3 on disk. Gain: max 150 -> 81 ms (std), 178-208 -> 80-88 ms (heavy), writes >= 50 ms -90% (heavy 142 -> 8-15),
-p99 -0.2 ms (std) / -0.9 to -1.5 ms (heavy).
+2 of 3 on disk. Gain (clean pairs): max 146 -> 46 ms (std), 152 -> 62 ms (heavy); writes >= 50 ms 17 -> 0 (std), 101 -> 6 (heavy);
+mean of the slowest 1% 10.0 -> 8.8 ms (std), 25.3 -> 16.0 ms (heavy). p99 unchanged within noise (4.2 / 4.3, 11.0 / 11.1):
+the fix removes the spikes, not the ordinary fdatasync latency of a shared disk.
+
+Not done: separate disks per copy (one disk on this box), and a fix for the memory brake (finding 3: e.g. the engine
+confirming uploads sooner when the log is near its cap) - both need their own measurement.
 
 Temporary tracing (only with `FX_WAITS`): `sv_lq` / `sv_rtt` / `sv_bn` in the WAITS line (`src/waits.rs`,
 `mongo-server/src/qlog.rs`). Raw runs: scratchpad of the session (server.log of each run is large).
