@@ -577,6 +577,7 @@ def stored_sizes(line: str, uri: str) -> dict:
         if t == "postgres":
             import psycopg
             with psycopg.connect(uri, autocommit=True) as c:
+                c.execute("SET max_parallel_workers_per_gather = 0")
                 r = c.execute("SELECT pg_total_relation_size('messages'), pg_relation_size('messages'), pg_indexes_size('messages'),"
                               " pg_total_relation_size('messages') - pg_relation_size('messages') - pg_indexes_size('messages'),"
                               " (SELECT count(*) FROM messages), pg_database_size(current_database())").fetchone()
@@ -601,6 +602,7 @@ def count_all(line: str, uri: str) -> dict:
         if target_of(line) == "postgres":
             import psycopg
             with psycopg.connect(uri, autocommit=True) as c:
+                c.execute("SET max_parallel_workers_per_gather = 0")  # this session only: /dev/shm is 64 MB
                 n = c.execute("SELECT count(*) FROM messages").fetchone()[0]
         else:
             _, coll = mongo_coll(uri)
@@ -638,7 +640,7 @@ def settle(line: str, uri: str) -> dict | None:
         import psycopg
         t0 = time.time()
         with psycopg.connect(uri, autocommit=True) as c:
-            c.execute("VACUUM ANALYZE messages")
+            c.execute("VACUUM (ANALYZE, PARALLEL 0) messages")  # the container's /dev/shm is 64 MB: no parallel workers
             c.execute("CHECKPOINT")
         return {"vacuum_analyze_checkpoint_s": round(time.time() - t0, 1)}
     c, _ = mongo_coll(uri)
