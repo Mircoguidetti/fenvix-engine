@@ -279,13 +279,9 @@ impl Rounder {
         table.iter().map(move |m| *m as f64 * mult)
     }
 
-    fn finite(v: &Bson) -> R<f64> {
-        let x = as_f64(v);
-        if x.is_infinite() {
-            return Err(err(11785400, "A granularity rounder can only round finite numbers"));
-        }
-        Ok(x)
-    }
+    /// mongod 7.0 rounds +Infinity to a power of two through `static_cast<int>` of an infinite exponent, which gives
+    /// INT_MIN on x86: `2^INT_MIN` is 0 (MEASURED on mongod 7.0.34: `[1, Infinity]` gives a last bucket max of 0.0).
+    const POW2_OF_INFINITY: Bson = Bson::Double(0.0);
 
     fn up(&self, v: &Bson) -> R<Bson> {
         let x = as_f64(v);
@@ -296,7 +292,8 @@ impl Rounder {
             return self.decimal(d, true);
         }
         match self {
-            Rounder::Pow2 => Ok(pow2_bson(2f64.powf(Self::finite(v)?.log2().floor() + 1.0))),
+            Rounder::Pow2 if x.is_infinite() => Ok(Self::POW2_OF_INFINITY),
+            Rounder::Pow2 => Ok(pow2_bson(2f64.powf(x.log2().floor() + 1.0))),
             Rounder::Preferred(_, _) if x.is_infinite() => Ok(Bson::Double(x)),
             Rounder::Preferred(t, d) => {
                 let e = x.log10().floor() as i32;
@@ -319,8 +316,9 @@ impl Rounder {
             return self.decimal(d, false);
         }
         match self {
+            Rounder::Pow2 if x.is_infinite() => Ok(Self::POW2_OF_INFINITY),
             Rounder::Pow2 => {
-                let l = Self::finite(v)?.log2();
+                let l = x.log2();
                 Ok(pow2_bson(2f64.powf(if l.fract() == 0.0 { l - 1.0 } else { l.floor() })))
             }
             Rounder::Preferred(_, _) if x.is_infinite() => Ok(Bson::Double(x)),
@@ -457,12 +455,17 @@ impl Rounder {
         if text.contains("NaN") {
             return Err(err(40259, "$bucketAuto can specify a 'granularity' with numeric boundaries only, but found a NaN"));
         }
-        // beyond the double range mongod treats the number as infinite
-        if text.contains("Infinity") || text.parse::<f64>().map(f64::is_infinite).unwrap_or(false) {
-            return match self {
-                Rounder::Pow2 => Err(err(11785400, "A granularity rounder can only round finite numbers")),
-                _ => Ok(Bson::Decimal128(*d)),
-            };
+        // Infinity: powers of two give a decimal zero, as for a double (`2^INT_MIN`, MEASURED on mongod 7.0.34:
+        // `0E-6176`); a finite decimal beyond the double range is rounded exactly (1E+1000 up is 2^3322, MEASURED).
+        // The preferred series keep a number beyond the double range as it is.
+        if text.contains("Infinity") {
+            return Ok(match self {
+                Rounder::Pow2 => dec_bson("0E-6176"),
+                _ => Bson::Decimal128(*d),
+            });
+        }
+        if !matches!(self, Rounder::Pow2) && text.parse::<f64>().map(f64::is_infinite).unwrap_or(false) {
+            return Ok(Bson::Decimal128(*d));
         }
         let Some(x) = Dec::parse(&text) else { return Ok(Bson::Decimal128(*d)) };
         match self {
@@ -1355,4 +1358,29 @@ pub fn redact(arg: &Bson, docs: Vec<Document>) -> R<Vec<Document>> {
         }
     }
     Ok(out)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Answers of mongod 7.0.34 (MEASURED, judge cases `bucketauto.infinity` and `bucketauto.POWERSOF2.decimal_special`).
+    #[test]
+    fn pow2_rounds_infinity_like_mongod() {
+        let r = Rounder::Pow2;
+        assert_eq!(r.round_up(&Bson::Double(f64::INFINITY)).unwrap(), Bson::Double(0.0));
+        assert_eq!(r.round_down(&Bson::Double(f64::INFINITY)).unwrap(), Bson::Double(0.0));
+        assert_eq!(r.round_up(&Bson::Int32(1)).unwrap(), Bson::Int32(2));
+        assert_eq!(r.round_down(&Bson::Int32(1)).unwrap(), Bson::Double(0.5));
+        assert_eq!(r.round_up(&Bson::Double(1e308)).unwrap(), Bson::Double(f64::INFINITY));
+        let inf = Bson::Decimal128("Infinity".parse().unwrap());
+        assert_eq!(r.round_up(&inf).unwrap(), dec_bson("0E-6176"));
+        assert_eq!(r.round_down(&inf).unwrap(), dec_bson("0E-6176"));
+        let big = Bson::Decimal128("1E+1000".parse().unwrap());
+        assert_eq!(r.round_up(&big).unwrap(), dec_bson("1.051103774764883380737596422798045E+1000"));
+        // the preferred series keep infinities as they are
+        let r5 = Rounder::named("R5").unwrap();
+        assert_eq!(r5.round_up(&Bson::Double(f64::INFINITY)).unwrap(), Bson::Double(f64::INFINITY));
+        assert_eq!(r5.round_up(&inf).unwrap(), inf);
+    }
 }

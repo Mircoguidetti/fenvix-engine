@@ -15,6 +15,16 @@ on:
       steps:
         description: events per script
         default: "90"
+      gen:
+        description: "scripts: 1 (sim-test), 2 (sim-test-2) or 3 (sim-test-3: replicated log, drop/erase, incarnations)"
+        default: "1"
+        type: choice
+        options: ["1", "2", "3"]
+      pattern:
+        description: "generator 1's pattern weights: mix (the seeds' usual scripts), slow-reads or cold-restart"
+        default: "mix"
+        type: choice
+        options: [mix, slow-reads, cold-restart]
 jobs:
   seeds:
     runs-on: ubuntu-latest
@@ -33,8 +43,8 @@ jobs:
         run: |
           A=$(( ${{ inputs.first_seed }} + ${{ matrix.shard }} * ${{ inputs.seeds_per_job }} ))
           B=$(( A + ${{ inputs.seeds_per_job }} ))
-          echo "seeds $A..$B"
-          SIM_SEEDS=$A..$B SIM_STEPS=${{ inputs.steps }} SIM_PAR=4 SIM_REPLAYS=3 SIM_MIN_BUDGET=24 SIM_OUT=sim-out \
+          echo "seeds $A..$B (gen ${{ inputs.gen }}, pattern ${{ inputs.pattern }})"
+          SIM_GEN=${{ inputs.gen }} SIM_PATTERN=${{ inputs.pattern }} SIM_SEEDS=$A..$B SIM_STEPS=${{ inputs.steps }} SIM_PAR=4 SIM_REPLAYS=3 SIM_MIN_BUDGET=24 SIM_OUT=sim-out \
             cargo test --release --lib fx::sim::tests::sim_seeds -- --ignored --nocapture 2>&1 | grep -E "^SIM|panicked" | tee sim-${{ matrix.shard }}.log
           ! grep -q "SIM VIOLATION" sim-${{ matrix.shard }}.log
       - if: always()

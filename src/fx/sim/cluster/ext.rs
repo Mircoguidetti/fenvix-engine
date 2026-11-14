@@ -30,7 +30,7 @@ pub const LONG_STEP_WAIT: Duration = Duration::from_secs(4);
 /// The script's additions (kept for the report; the events say everything else).
 #[derive(Clone, Debug, Default)]
 pub struct Ext {
-    /// 0: a script of `generate`; 1: `generate2`; 3: `ext3::generate3`.
+    /// 0: a script of `generate`; 2: `generate2`; 3: `ext3::generate3`.
     pub flavor: u8,
     /// sim-test-3: writes go through the replicated log (`ext3.rs`), as the server with `--quaderno`.
     pub log: bool,

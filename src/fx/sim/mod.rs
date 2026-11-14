@@ -31,7 +31,9 @@ mod tests {
     }
 
     /// The script of a seed: `SIM_GEN=2` gives sim-test-2's scripts (`cluster::ext::generate2`: restore points, restores,
-    /// forks, the generator, SlateDB's GC, storms, many groups); otherwise the scripts of sim-test.
+    /// forks, the generator, SlateDB's GC, storms, many groups); `SIM_GEN=3` sim-test-3's (`cluster::ext3::generate3`: the
+    /// replicated log, drop/erase/re-create, incarnations); otherwise the scripts of sim-test. `SIM_PATTERN` (`mix`,
+    /// `slow-reads`, `cold-restart`) weights generator 1's patterns, which the others build on.
     fn gen(seed: u64, steps: usize) -> Script {
         match env_u64("SIM_GEN", 1) {
             2 => super::cluster::ext::generate2(seed, steps),
@@ -40,14 +42,14 @@ mod tests {
         }
     }
 
-    /// sim-test-3: the settings of a world with the replicated log, for the scripts of `generate3` (`SIM_GEN=3`).
-    fn log_world() -> Option<super::cluster::ext3::LogWorldGuard> {
-        (env_u64("SIM_GEN", 1) == 3).then(super::cluster::ext3::setup_log_world)
-    }
-
     /// fix-sim-holes' hole W counter, when that fix is in the build (0 otherwise).
     fn reseals_refused() -> u64 {
         0
+    }
+
+    /// sim-test-3: the settings of a world with the replicated log, for the scripts of `generate3` (`SIM_GEN=3`).
+    fn log_world() -> Option<super::cluster::ext3::LogWorldGuard> {
+        (env_u64("SIM_GEN", 1) == 3).then(super::cluster::ext3::setup_log_world)
     }
 
     fn runtime() -> tokio::runtime::Runtime {
@@ -107,7 +109,7 @@ mod tests {
                 }
                 let (min, mr) = if budget > 0 { minimize(&s, 2, budget).await } else { (s.clone(), run_script(&s).await) };
                 let mut rep = String::new();
-                rep.push_str(&format!("SEED {} (steps {}): {} violations; replays failing {again} of {replays}\n{}\n\nVIOLATIONS\n", s.seed, s.events.len(), r.violations.len(), r.stats));
+                rep.push_str(&format!("SEED {} (steps {}; SIM_GEN={} SIM_PATTERN={}): {} violations; replays failing {again} of {replays}\n{}\n\nVIOLATIONS\n", s.seed, s.events.len(), env_u64("SIM_GEN", 1), std::env::var("SIM_PATTERN").unwrap_or_else(|_| "mix".into()), r.violations.len(), r.stats));
                 for v in r.violations.iter().take(40) {
                     rep.push_str(&format!("  {v}\n"));
                 }
@@ -940,15 +942,108 @@ mod tests {
         assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
     }
 
+    /// Coordinator's lead (2026-11-13, B3 run 1): reads that came back EMPTY, not an error, under a slow store (20 ms per
+    /// answer after a cold restart) and a saturated host. Here: the owner writes customers, compacts and drops, closes;
+    /// a new process opens it; every GET of its SSTs and runs (and versions) answers up to 4 s late (past the hold life
+    /// and T_pin) while it writes and reads its own rows back (point reads and prefix scans). The oracle: each read
+    /// returns this opening's acknowledged rows, or fails; never fewer rows.
+    #[test]
+    #[ignore]
+    fn sim_story_slow_reads_never_come_back_empty() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp, Profile};
+        use Ev::*;
+        let w = |p: usize, c: usize| Write { p, ops: (0..PER_CUSTOMER).map(|i| (c, i, false)).collect() };
+        let mut ev = vec![Open { p: 0, writer: true }, w(0, 0), Publish { p: 0 }, w(0, 1), CompStart { p: 0 }];
+        for c in 0..CUSTOMERS {
+            ev.extend([w(0, c), Flush { p: 0 }, CompDrain { p: 0 }]);
+        }
+        ev.extend([DropThrough { p: 0 }, Close { p: 0 }, Open { p: 1, writer: true }]);
+        for c in 0..CUSTOMERS {
+            ev.push(w(1, c));
+        }
+        ev.extend([Flush { p: 1 }, CompStart { p: 1 }, CompDrain { p: 1 }]);
+        ev.extend([
+            Hold { p: 1, class: Class::Other, op: Some(NOp::Get), skip: 0, land: true, all: true, rid: 1 },
+            Hold { p: 1, class: Class::FxRun, op: Some(NOp::Get), skip: 0, land: true, all: true, rid: 2 },
+            Hold { p: 1, class: Class::FxVersion, op: Some(NOp::Get), skip: 0, land: true, all: true, rid: 3 },
+        ]);
+        for c in 0..CUSTOMERS {
+            ev.push(ReadCheck { p: 1, cust: c, scan: c % 2 == 0 });
+        }
+        ev.extend([Sleep { ms: 2000 }, ReadCheck { p: 1, cust: 0, scan: true }, ReadCheck { p: 1, cust: 1, scan: false }]);
+        ev.extend([Release { rid: 1 }, Release { rid: 2 }, Release { rid: 3 }]);
+        for c in 0..CUSTOMERS {
+            ev.push(ReadCheck { p: 1, cust: c, scan: c % 2 == 1 });
+        }
+        let s = Script { seed: 5, profile: Profile::none(), knobs: env_u64("SIM_KNOBS", 0) as u8, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Default::default() };
+        let n = env_u64("SIM_REPLAYS", 1);
+        let mut failing = 0;
+        for _ in 0..n {
+            let r = rt.block_on(run_script(&s));
+            for l in r.trace.iter().filter(|l| l.contains("ReadCheck") || l.contains("Release")) {
+                eprintln!("  {}", l.chars().take(220).collect::<String>());
+            }
+            for v in r.violations.iter().take(8) {
+                eprintln!("VIOLATION {v}");
+            }
+            eprintln!("SIM STORY slow reads: {} violations; {}", r.violations.len(), r.stats);
+            failing += (!r.violations.is_empty()) as u64;
+        }
+        eprintln!("SIM STORY slow reads never come back empty: {failing} of {n} runs with a violation");
+    }
+
+    /// Coordinator's report (B3 session, bench-big on c41559f): after an idle close, the closed-database GC about 600 s
+    /// later (the grace) deleted 95% of the objects; 123,544 wrong reads after the reopen. The same path here: one owner
+    /// writes many customers through its compactor (many runs), SlateDB's compaction with the drop drains L0, the reaper
+    /// closes the database, the grace passes, the server's closed pass runs (SlateDB's GC, then ours), and a fresh
+    /// process reopens and reads. `SIM_GC_MIN_AGE_MS` sets SlateDB's minimum age (default 0, the shortest).
+    #[test]
+    #[ignore]
+    fn sim_story_closed_gc_after_idle_close() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::Profile;
+        use Ev::*;
+        let min_age_ms = env_u64("SIM_GC_MIN_AGE_MS", 0);
+        let w = |p: usize, c: usize| Write { p, ops: (0..PER_CUSTOMER).map(|i| (c, i, false)).collect() };
+        let mut ev = vec![Open { p: 0, writer: true }, w(0, 0), Publish { p: 0 }, w(0, 1), CompStart { p: 0 }];
+        for round in 0..3 {
+            for c in 0..CUSTOMERS {
+                ev.extend([w(0, (c + round) % CUSTOMERS), Flush { p: 0 }, CompDrain { p: 0 }]);
+            }
+            ev.extend([Gc { p: 0 }, DropThrough { p: 0 }]);
+        }
+        ev.extend([Close { p: 0 }, ClosePass { p: 1 }, Sleep { ms: GC_GRACE_MS + 500 }, GcClosedServer { p: 1, min_age_ms }, Sleep { ms: GC_GRACE_MS + 500 }, GcClosedServer { p: 1, min_age_ms }, GcClosed { p: 1 }]);
+        let s = Script { seed: 4, profile: Profile::none(), knobs: env_u64("SIM_KNOBS", 0) as u8, events: ev.into_iter().enumerate().map(|(i, e)| (i as u32, e)).collect(), ext: Default::default() };
+        let n = env_u64("SIM_REPLAYS", 1);
+        let mut failing = 0;
+        for _ in 0..n {
+            let r = rt.block_on(run_script(&s));
+            for l in r.trace.iter().filter(|l| l.contains("->")).filter(|l| !l.contains("Write {")) {
+                eprintln!("  {l}");
+            }
+            for v in r.violations.iter().take(8) {
+                eprintln!("VIOLATION {v}");
+            }
+            eprintln!("SIM STORY closed gc: {} violations; {}", r.violations.len(), r.stats);
+            failing += (!r.violations.is_empty()) as u64;
+        }
+        eprintln!("SIM STORY closed gc after idle close: {failing} of {n} runs with a violation");
+    }
+
     /// Hole T (found by the gen-3 batch, seeds 300169, 302946 and others; CI run 43496082968): a takeover whose replay of the
     /// log fails after its writer opened makes the next takeover drop acknowledged records as stale. B (slot 0) acknowledges
     /// writes through the log (not uploaded). A (slot 1) takes the database over; its replay (`locallog::replay_on_wake`)
     /// applies the records through `apply_durable`, which opens A's writer (writer epoch 2), and the version create of that
     /// opening fails (held, then dropped: a store error); A gives the database up and the records stay in the log with
     /// epoch 1. C (slot 2) takes the database over: `drop_stale` reads the stored epoch 2 and drops every record of epoch 1
-    /// as "confirmed after a newer writer opened, never acknowledged". They were acknowledged. Ignored until fixed.
+    /// as "confirmed after a newer writer opened, never acknowledged". They were acknowledged. Fixed on
+    /// fix-log-takeover-stale (the takeover writes copies stamped with its writer's epoch before applying): a normal test.
     #[test]
-    #[ignore]
     fn sim_hole_t_failed_takeover_replay_makes_records_stale() {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
