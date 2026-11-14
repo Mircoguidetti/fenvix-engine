@@ -239,6 +239,28 @@ def cmd_run(a):
     s = Srv(a.dir, delay=a.delay, flags=a.flags, binary=a.bin, tag=a.tag, env=env)
     c = s.start()
     col = c[DB][COLL]
+    if a.pretraffic:
+        # read traffic first (newest 10 of other customers, each cold once), the compactor acts on it, then a cold
+        # restart: no close pass (SIGKILL, every write is durable), so the held L0 SSTs stay as they were
+        pre = custs[a.warm + a.n:a.warm + a.n + a.pretraffic]
+        # a write elsewhere in the database starts its compactor (a database only read since the open has none)
+        c[DB]["other"].insert_one({"x": 1})
+        time.sleep(3)
+        f0 = fx(c)
+        for u in pre:
+            list(col.find({"userId": u}).sort("ts", -1).limit(a.limit))
+        time.sleep(a.pre_settle)
+        f1 = fx(c)
+        log(f"pretraffic {len(pre)}: reseals {f0['compactor']['reseals']} -> {f1['compactor']['reseals']}, "
+            f"r3BoxGets {f1['customerBox'].get('r3BoxGets')}")
+        c.close()
+        s.p.kill()
+        s.p.wait()
+        for x in os.listdir("/tmp"):
+            if x.startswith("fenvix-box-floor-"):
+                shutil.rmtree(os.path.join("/tmp", x), ignore_errors=True)
+        c = s.start()
+        col = c[DB][COLL]
     try:
         for u in warm:
             list(col.find({"userId": u}).sort("ts", -1).limit(10))
@@ -321,6 +343,8 @@ def main():
     r.add_argument("--seed", type=int, default=5)
     r.add_argument("--hold", action="store_true", help="keep L0 unabsorbed while measuring")
     r.add_argument("--trace", action="store_true")
+    r.add_argument("--pretraffic", type=int, default=0)
+    r.add_argument("--pre-settle", type=int, default=40)
     f = sp.add_parser("scan")
     f.add_argument("--dir", required=True)
     f.add_argument("--bin", default=BIN)

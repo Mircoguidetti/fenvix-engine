@@ -79,6 +79,14 @@ pub static PREFETCH_POINTS: AtomicBool = AtomicBool::new(true);
 pub static PREFETCH_BLOCKS: AtomicU64 = AtomicU64::new(0);
 /// Range GETs of [`View::prefetch_points`] in flight at once (as many as the server's batched point reads).
 const PREFETCH_PARALLEL: usize = 32;
+/// newest10-trips: the box's GETs of delta runs count for R3 (`R3Gets`), as point reads' do (on by default,
+/// `--r3-counts-box-reads`). Before, only point reads counted: a customer read served by its box paid one GET per delta
+/// run holding it, every time it came back cold, and never moved its group toward the early reseal that removes those
+/// runs (MEASURED at 10 GB: 10 GETs per cold newest-10, bench strong-point). Counting changes only when a group is
+/// resealed (the compactor's choice), never what a read returns.
+pub static R3_BOX: AtomicBool = AtomicBool::new(true);
+/// Delta-run waves of box warm-ups counted for R3 (diagnostics).
+pub static R3_BOX_GETS: AtomicU64 = AtomicU64::new(0);
 /// Runs a range read skipped by their customer filter (diagnostics).
 pub static RANGE_FILTER_SKIPS: AtomicU64 = AtomicU64::new(0);
 
@@ -527,7 +535,8 @@ impl View {
     /// - the decoded bytes kept for one customer stop at `BOX_CUSTOMER_BYTES` too (`BOX_CAPPED`; compressible rows can
     ///   decode to many times their stored size).
     pub async fn warm_range(self: &Arc<Self>, lo: &[u8], hi: &[u8]) -> Result<(u64, u64)> {
-        let mut cands: Vec<Arc<RunH>> = Vec::new();
+        // newest10-trips: with each delta run, the group it is read for (R3 counts its paid GETs there)
+        let mut cands: Vec<(Arc<RunH>, Option<u32>)> = Vec::new();
         let mut seen: std::collections::HashSet<[u8; RUN_ID_LEN]> = Default::default();
         for gi in self.group_of(lo)..self.groups.len() {
             let g = &self.groups[gi];
@@ -539,31 +548,31 @@ impl View {
                 Some(b) => std::cmp::min(hi, b),
                 None => hi,
             };
-            let mut push = |h: &Arc<RunH>| {
+            let mut push = |h: &Arc<RunH>, group: Option<u32>| {
                 if h.meets(glo, Some(ghi)) && !h.filter_excludes(lo, Some(hi)) && seen.insert(h.id) {
-                    cands.push(Arc::clone(h));
+                    cands.push((Arc::clone(h), group));
                 }
             };
             if let Some(s) = &g.sealed {
-                push(s);
+                push(s, None);
             }
             for d in self.delta.iter().filter(|d| !skip_delta() && above_cut(d.line.max_seq, g.x_g)) {
-                push(d);
+                push(d, Some(g.id));
             }
         }
         let store = &self.store;
         let runs = cands.len() as u64;
         // the plan: per run, its missing blocks in waves of at most BOX_WAVE_BYTES stored bytes
-        let opened = futures::future::try_join_all(cands.into_iter().map(|h| async move {
+        let opened = futures::future::try_join_all(cands.into_iter().map(|(h, group)| async move {
             let run = h.open(store).await?.clone();
-            Ok::<_, anyhow::Error>((h, run))
+            Ok::<_, anyhow::Error>((h, run, group))
         }))
         .await?;
         let cap = BOX_CUSTOMER_BYTES.load(Relaxed);
         let wave = BOX_WAVE_BYTES.load(Relaxed).max(1);
-        let mut waves: Vec<(Arc<RunH>, Arc<Run>, usize, usize, u64)> = Vec::new();
+        let mut waves: Vec<(Arc<RunH>, Arc<Run>, usize, usize, u64, Option<u32>)> = Vec::new();
         let mut stored_total = 0u64;
-        for (h, run) in opened {
+        for (h, run, group) in opened {
             let Some((a, z)) = run.fence.blocks_for(lo, Some(hi)) else { continue };
             if let Some(r) = run.customers.customer_of(lo) {
                 if !run.filter.may_contain(&lo[r]) {
@@ -575,7 +584,7 @@ impl View {
             for b in a..=z {
                 if super::counter::cached(&run, b, None, &whole) {
                     if let Some((x, y, n)) = cur.take() {
-                        waves.push((Arc::clone(&h), run.clone(), x, y, n));
+                        waves.push((Arc::clone(&h), run.clone(), x, y, n, group));
                     }
                     continue;
                 }
@@ -585,14 +594,14 @@ impl View {
                 cur = match cur {
                     Some((x, _, m)) if m + n <= wave => Some((x, b, m + n)),
                     Some((x, y, m)) => {
-                        waves.push((Arc::clone(&h), run.clone(), x, y, m));
+                        waves.push((Arc::clone(&h), run.clone(), x, y, m, group));
                         Some((b, b, n))
                     }
                     None => Some((b, b, n)),
                 };
             }
             if let Some((x, y, n)) = cur {
-                waves.push((Arc::clone(&h), run.clone(), x, y, n));
+                waves.push((Arc::clone(&h), run.clone(), x, y, n, group));
             }
         }
         if waves.is_empty() {
@@ -604,7 +613,8 @@ impl View {
         }
         let left = std::sync::atomic::AtomicI64::new(if cap > 0 { cap as i64 } else { i64::MAX });
         let left = &left;
-        let jobs = waves.into_iter().map(|(h, run, a, z, n)| async move {
+        let r3 = self.r3.as_ref().filter(|_| R3_BOX.load(Relaxed));
+        let jobs = waves.into_iter().map(|(h, run, a, z, n, group)| async move {
             if left.load(Relaxed) <= 0 {
                 return Ok::<_, anyhow::Error>(0u64);
             }
@@ -614,6 +624,13 @@ impl View {
             }
             BOX_WAVES.fetch_add(1, Relaxed);
             let s = h.read_store(store);
+            // a wave of a delta run read from the store (not its local copy) is a delta GET paid for this group
+            if let (Some(c), Some(g)) = (r3, group) {
+                if Arc::ptr_eq(s, store) {
+                    c.note(g);
+                    R3_BOX_GETS.fetch_add(1, Relaxed);
+                }
+            }
             let r = match super::counter::warm_wave(s, &run, a, z, left).await {
                 Ok(r) => r,
                 Err(_) if !Arc::ptr_eq(s, store) => {

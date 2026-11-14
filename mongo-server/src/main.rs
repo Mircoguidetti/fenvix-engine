@@ -672,6 +672,10 @@ struct Args {
     /// has run (`meter.rs`), so the query does not reload SST indexes the cache evicted meanwhile, one SST after the other.
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
     customer_box_pin: bool,
+    /// newest10-trips: the box's GETs of delta runs count toward the compactor's early reseal (R3), as point reads' do
+    /// (`fx/view.rs`, `R3_BOX`).
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    r3_counts_box_reads: bool,
     /// P-big-speed fix 4: the `_id` check of an insert into a customer-keyed collection without a time field reads the
     /// document key (inside the customer's box) instead of the shared locator (false: the locator, as before).
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
@@ -1061,6 +1065,7 @@ async fn run() -> Result<()> {
     opening::ENABLED.store(args.first_course, std::sync::atomic::Ordering::Relaxed);
     custbox::ENABLED.store(args.customer_box, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::meter::PIN_ON.store(args.customer_box_pin, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::fx::view::R3_BOX.store(args.r3_counts_box_reads, std::sync::atomic::Ordering::Relaxed);
     coll::ID_CHECK_IN_BOX.store(args.id_check_in_box, std::sync::atomic::Ordering::Relaxed);
     {
         let port = args.listen.rsplit(':').next().unwrap_or("0").to_string();

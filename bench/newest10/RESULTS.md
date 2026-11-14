@@ -60,3 +60,39 @@ scan. Rows: `results/*.json`.
 What stays: the second trip of B is inside the box itself (an SST whose index is not cached: index first, then the
 block). Removing it needs SST indexes resident (the waiter's maps, `--waiter-tools`) or a box that fetches index and a
 guessed block together; not done here.
+
+## Follow-up: the 10 GB read is 1 trip, 10 parallel GETs (coordinator, rows-2-B)
+
+At 10 GB the bench's newest-10 cold is already 1 trip (waiter.trips p50 1) with 10 GETs, p50 39.7 ms against 27.4 ms
+for one GET (whole_cold h50). So the cost is the number of GETs in the wave (and their bytes), not their order.
+
+### The real HTTP path (`http_path.py`)
+
+Server `--store s3` -> the bench's s3delay (20 ms on the first byte of each response) -> FakeS3 (`ctl-tests/fake_aws.py`,
+in memory; MinIO not fetchable here), loaded with the same store. 200 cold newest-10, default budget: 1 trip, 5.85 GETs,
+p50 27.7 ms, p99 47.6 ms, 0 wrong. p50 by GETs per read: 1: 24.7, 2: 26.1, 3: 26.4, 4: 27.2, 5: 27.4, 6: 27.6, 7: 28.2,
+8: 28.4, 9: 29.3 ms (~0.6 ms per extra GET; simulated store: ~0.1). s3delay saw 11 connections in the whole run: the
+client did not serialize a wave. No client-side concurrency limit found; the per-GET cost is at the store.
+
+### Why a customer has so many runs: R3 never counted the box
+
+R3 (reseal a group early once the delta-run GETs its reads pay cost more than a reseal) counted only point reads
+(`View::get`, `get_wave`). The box's per-run GETs never counted, so a customer workload served by the box paid one
+GET per delta run on every cold read and never moved its group toward the reseal that removes those runs.
+
+Fix (`fx/view.rs`, `--r3-counts-box-reads`, on by default): each box wave of a delta run read from the store (not its
+local copy) counts one R3 GET for the group. Only when a group is resealed changes; never what a read returns.
+
+Measured (same build, switch off vs on; `run --pretraffic 1000`: one write to `app_demo.other` starts the compactor,
+cold newest-10 of 1,000 other customers, 40 s, SIGKILL, cold restart, then the usual 200 reads; 20 ms per GET):
+
+| R3 counts box | reseals during the traffic | box delta GETs counted | GETs per cold newest-10 mean (max) | trips | p50 / p99 ms | wrong |
+|---|---|---|---|---|---|---|
+| off | 0 | 0 | 2.755 (6) | 1 | 23.8 / 26.3 | 0 / 0 |
+| on  | 1 | 1,245 | 1.0 (1) | 1 | 23.6 / 26.2 | 0 / 0 |
+
+Same answers (sha `7c25783d1a3c...`). Locally a GET in the wave costs ~0.1 ms, so latency barely moves here. In the
+bench each extra GET costs ~1.4 ms of the wave ((39.7 - 27.4) / 9), so 10 -> 1-2 GETs would bring newest-10 cold
+near one GET's latency. The price is a reseal of the group when the reads have paid for it (R3's own cost model,
+470 GETs per GiB of group). Note: a database only read since its open has no compactor (it starts at the first
+write), so neither point reads nor box reads count there; the bench's read-only measured phase would not reseal.

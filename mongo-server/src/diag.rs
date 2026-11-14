@@ -795,6 +795,8 @@ impl Server {
                 "enabled": crate::custbox::ENABLED.load(Relaxed),
                 // newest10-trips: the box's pins (meter.rs)
                 "pinOn": tenant_bench::meter::PIN_ON.load(Relaxed),
+                "r3CountsBox": tenant_bench::fx::view::R3_BOX.load(Relaxed),
+                "r3BoxGets": tenant_bench::fx::view::R3_BOX_GETS.load(Relaxed) as i64,
                 "pinHits": tenant_bench::meter::PIN_HITS.load(Relaxed) as i64,
                 "pinEntries": tenant_bench::meter::PIN_ENTRIES.load(Relaxed) as i64,
                 "pinFull": tenant_bench::meter::PIN_FULL.load(Relaxed) as i64,
