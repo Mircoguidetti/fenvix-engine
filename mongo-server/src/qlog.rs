@@ -46,6 +46,8 @@ struct Item {
     db: String,
     req: CommitReq,
     done: oneshot::Sender<Result<Pos, String>>,
+    /// save-p99 tracing (FX_WAITS): the writing command's waits and the enqueue instant
+    trace: Option<(Arc<tenant_bench::waits::Waits>, std::time::Instant)>,
 }
 
 pub struct Remote {
@@ -98,7 +100,18 @@ impl Remote {
                 SENT.fetch_add(batch.len() as u64, Relaxed);
                 BATCHES.fetch_add(1, Relaxed);
                 let reqs: Vec<CommitReq> = batch.iter().map(|i| i.req.clone()).collect();
+                let t_sent = std::time::Instant::now();
                 let out = me.cl.commit_batch(&reqs, COMMIT_DEADLINE).await;
+                let rtt = t_sent.elapsed();
+                let bn = batch.len();
+                for item in &batch {
+                    if let Some((w, t0)) = &item.trace {
+                        use tenant_bench::waits::{add_to, W};
+                        add_to(w, W::SvLogQueue, t_sent.saturating_duration_since(*t0));
+                        add_to(w, W::SvLogRtt, rtt);
+                        add_to(w, W::SvLogBatch, Duration::from_millis(bn as u64));
+                    }
+                }
                 for (item, o) in batch.into_iter().zip(out) {
                     let r = match o {
                         Outcome::Committed { pos, .. } => {
@@ -124,7 +137,7 @@ impl Remote {
     pub fn append(&self, db: &str, key: Vec<u8>, bytes: Vec<u8>) -> oneshot::Receiver<Result<Pos, String>> {
         let (done, rx) = oneshot::channel();
         let req = CommitReq { txn: rand::random(), db: db_key(db), read_pos: 0, mode: Mode::Blind, writes: vec![Write { key: Bytes::from(key), kind: Kind::Put, val: Bytes::from(bytes) }], reads: vec![], session: None };
-        if let Err(e) = self.tx.send(Item { db: db.to_string(), req, done }) {
+        if let Err(e) = self.tx.send(Item { db: db.to_string(), req, done, trace: tenant_bench::waits::current().map(|w| (w, std::time::Instant::now())) }) {
             let _ = e.0.done.send(Err("the log client stopped".into()));
         }
         rx

@@ -51,12 +51,18 @@ pub enum W {
     SlateRead,
     /// the merged reader's sealed-run part (fx view: index, blocks)
     FxRead,
+    /// save-p99 tracing (sub-parts of LogAck, not summed): the record's wait in the log client's batcher (enqueue -> sent)
+    SvLogQueue,
+    /// save-p99 tracing: the log's round trip for the batch holding the record (sent -> outcome)
+    SvLogRtt,
+    /// save-p99 tracing: size of that batch (records), stored as ms
+    SvLogBatch,
 }
 
-pub const N: usize = 17;
+pub const N: usize = 20;
 pub const NAMES: [&str; N] = [
     "admit", "lock_w", "lock_r", "refresh", "stage", "stage_snap", "log_ack", "visible", "fallback", "wal_flush", "io_wait", "get", "put",
-    "store_other", "comp_start", "read_get", "read_scan",
+    "store_other", "comp_start", "read_get", "read_scan", "sv_lq", "sv_rtt", "sv_bn",
 ];
 
 pub static ON: AtomicBool = AtomicBool::new(false);
@@ -89,6 +95,20 @@ pub struct Waits {
 
 tokio::task_local! {
     pub static WAITS: Arc<Waits>;
+}
+
+/// Add `d` to category `w` of a command's `Waits` held outside its task (save-p99 tracing).
+pub fn add_to(x: &Waits, w: W, d: Duration) {
+    x.ns[w as usize].fetch_add(d.as_nanos() as u64, Relaxed);
+    x.n[w as usize].fetch_add(1, Relaxed);
+}
+
+/// The current command's `Waits`, when tracing is on.
+pub fn current() -> Option<Arc<Waits>> {
+    if !ON.load(Relaxed) {
+        return None;
+    }
+    WAITS.try_with(Arc::clone).ok()
 }
 
 /// Add `d` to category `w` of the current command, if there is one.
@@ -146,7 +166,7 @@ pub fn report(cmd: &str, coll: &str, start_ms: f64, total: Duration, x: &Waits, 
             s.push_str(&format!(" {}={:.1}/{}", NAMES[i], ns as f64 / 1e6, x.n[i].load(Relaxed)));
         }
         // the store calls and SlateDB reads overlap the read categories they happen inside: not summed
-        if !matches!(i, 11..=13) {
+        if !matches!(i, 11..=13 | 17..=19) {
             sum += ns;
         }
     }
