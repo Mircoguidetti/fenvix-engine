@@ -745,3 +745,150 @@ async fn fss_replay_raise_is_dropped_once_l0_drained() {
     assert_eq!(raised2, 0, "the reopened writer still has a raise");
     assert_eq!(wrong, 0);
 }
+
+// ------------------------------------------------------------------------------------------------------------------
+// fix-pass-stop-bound: a compaction pass on a database whose open writer no longer answers (its store stalled) must end,
+// and the maintenance's shutdown must return. Found as the unit-suite hang (integration-6, 2026-11-13): a box_first_trip
+// test left its writer registered (`WRITER_DBS`) with its runtime gone; the next test's maintenance queued a pass for it,
+// whose `refresh_manifest` on that writer never returned, and `Maintenance::shutdown` waited for the pass with no bound.
+
+/// Every request waits while armed (a store that stopped answering).
+#[derive(Debug)]
+struct Stall {
+    inner: Arc<dyn ObjectStore>,
+    armed: Arc<std::sync::atomic::AtomicBool>,
+}
+
+impl std::fmt::Display for Stall {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Stall")
+    }
+}
+
+impl Stall {
+    async fn wait(armed: &std::sync::atomic::AtomicBool) {
+        while armed.load(Relaxed) {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+    }
+    fn held<T: Send + 'static>(&self, s: futures::stream::BoxStream<'static, T>) -> futures::stream::BoxStream<'static, T> {
+        use futures::StreamExt;
+        let armed = Arc::clone(&self.armed);
+        futures::stream::once(async move {
+            Stall::wait(&armed).await;
+            s
+        })
+        .flatten()
+        .boxed()
+    }
+}
+
+#[async_trait::async_trait]
+impl ObjectStore for Stall {
+    async fn put_opts(&self, l: &object_store::path::Path, p: object_store::PutPayload, o: object_store::PutOptions) -> object_store::Result<object_store::PutResult> {
+        Stall::wait(&self.armed).await;
+        self.inner.put_opts(l, p, o).await
+    }
+    async fn put_multipart_opts(&self, l: &object_store::path::Path, o: object_store::PutMultipartOptions) -> object_store::Result<Box<dyn object_store::MultipartUpload>> {
+        Stall::wait(&self.armed).await;
+        self.inner.put_multipart_opts(l, o).await
+    }
+    async fn get_opts(&self, l: &object_store::path::Path, o: object_store::GetOptions) -> object_store::Result<object_store::GetResult> {
+        Stall::wait(&self.armed).await;
+        self.inner.get_opts(l, o).await
+    }
+    fn delete_stream(&self, s: futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::path::Path>> {
+        self.held(self.inner.delete_stream(s))
+    }
+    fn list(&self, p: Option<&object_store::path::Path>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.held(self.inner.list(p))
+    }
+    fn list_with_offset(&self, p: Option<&object_store::path::Path>, o: &object_store::path::Path) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+        self.held(self.inner.list_with_offset(p, o))
+    }
+    async fn list_with_delimiter(&self, p: Option<&object_store::path::Path>) -> object_store::Result<object_store::ListResult> {
+        Stall::wait(&self.armed).await;
+        self.inner.list_with_delimiter(p).await
+    }
+    async fn copy_opts(&self, f: &object_store::path::Path, t: &object_store::path::Path, o: object_store::CopyOptions) -> object_store::Result<()> {
+        Stall::wait(&self.armed).await;
+        self.inner.copy_opts(f, t, o).await
+    }
+    async fn rename_opts(&self, f: &object_store::path::Path, t: &object_store::path::Path, o: object_store::RenameOptions) -> object_store::Result<()> {
+        Stall::wait(&self.armed).await;
+        self.inner.rename_opts(f, t, o).await
+    }
+}
+
+/// A writer with L0 over the compaction threshold, whose store then stops answering; the maintenance (on the same bucket,
+/// still answering) compacts it, and its passes nudge that writer (`refresh_manifest`) before and after. Fix: each nudge
+/// gives up after `WRITER_NUDGE_TIMEOUT`, the shutdown returns, and once the store answers again a fresh opening reads
+/// every acknowledged row. Control (`CONTROL_UNBOUNDED_NUDGE`, the code before): the nudge waits for good and the
+/// shutdown with it (it does not return within `limit`). Returns (a pass ran, the shutdown returned within `limit`, how
+/// long it took, rows, rows read wrong).
+async fn stalled_writer_pass(control: bool, limit: Duration) -> (bool, bool, Duration, usize, usize) {
+    crate::lifecycle::CONTROL_UNBOUNDED_NUDGE.store(control, Relaxed);
+    let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+    let armed = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let stalling: Arc<dyn ObjectStore> = Arc::new(Stall { inner: Arc::clone(&raw), armed: Arc::clone(&armed) });
+    let (queue, rx) = crate::lifecycle::CompactionQueue::new();
+    let lc = crate::lifecycle::Lifecycle::new(Arc::new(crate::counting::CountingStore::new(Arc::clone(&stalling))), Some(Arc::clone(&queue)));
+    let id = if control { "pps-stalled-ctl" } else { "pps-stalled" };
+    let mut t = lc.create(id).await.unwrap();
+    let mut m = BTreeMap::new();
+    let mut r = 0;
+    while t.writer_l0().unwrap() < crate::lifecycle::L0_COMPACT_THRESHOLD + 1 {
+        for i in 0..80 {
+            apply(&mut t, &mut m, vec![(ckey(r % 10, i + 100 * r), Some(format!("v-{r}-{i}").into_bytes()))]).await;
+        }
+        flush(&t).await;
+        r += 1;
+        assert!(r < 60, "setup: L0 did not reach the threshold");
+    }
+    // the writer's store stops answering; the maintenance works on the bucket directly
+    armed.store(true, Relaxed);
+    let maint = crate::lifecycle::Maintenance::start(Arc::clone(&raw), Arc::clone(&raw), queue, rx, Arc::clone(&lc.touched), Arc::clone(&lc.maint_locks), 2, Duration::from_secs(3600), Duration::from_secs(3600));
+    // the L0 watch queues a pass from the writer's view; it compacts the bucket, then nudges the stalled writer
+    let t0 = Instant::now();
+    let mut ran = false;
+    while t0.elapsed() < Duration::from_secs(20) {
+        if crate::lifecycle::PASSES_RUNNING.load(Relaxed) > 0 {
+            ran = true;
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    tokio::time::sleep(Duration::from_secs(2)).await; // the pass reaches its nudge
+    let t1 = Instant::now();
+    let shut = tokio::time::timeout(limit, maint.shutdown()).await;
+    let took = t1.elapsed();
+    // the store answers again; the stalled writer is dropped as after a lease loss, and a fresh opening reads every row
+    armed.store(false, Relaxed);
+    crate::lifecycle::CONTROL_UNBOUNDED_NUDGE.store(false, Relaxed);
+    let _ = tokio::time::timeout(Duration::from_secs(30), t.abandon()).await;
+    let lc2 = crate::lifecycle::Lifecycle::new(Arc::new(crate::counting::CountingStore::new(Arc::clone(&raw))), None);
+    let t2 = lc2.wake(id).await.unwrap();
+    let mut wrong = 0;
+    for (k, v) in &m {
+        if t2.get(k).await.ok().flatten().as_deref() != Some(&v[..]) {
+            wrong += 1;
+        }
+    }
+    let _ = t2.close().await;
+    eprintln!("pass on a stalled writer (control {control}): a pass ran {ran}; shutdown {} in {took:?}; rows {} wrong {wrong}", if shut.is_ok() { "returned" } else { "did not return" }, m.len());
+    (ran, shut.is_ok(), took, m.len(), wrong)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn pps_pass_on_a_stalled_writer_ends_and_shutdown_returns() {
+    let _s = SERIAL.lock().await;
+    setup();
+    let (ran_c, shut_c, _, _, wrong_c) = stalled_writer_pass(true, Duration::from_secs(20)).await;
+    let (ran, shut, took, n, wrong) = stalled_writer_pass(false, Duration::from_secs(60)).await;
+    teardown();
+    assert!(ran_c && ran, "setup: no compaction pass ran (the test did not reach its case)");
+    assert!(!shut_c, "control: with the unbounded nudge the shutdown must not return, or the test does not reach the case");
+    assert!(shut, "the maintenance's shutdown did not return within 60 s with a pass on a stalled writer");
+    assert!(took < Duration::from_secs(30), "the shutdown took {took:?}");
+    assert_eq!((wrong_c, wrong), (0, 0), "rows read wrong after the stall ({n} rows; rule 8)");
+}

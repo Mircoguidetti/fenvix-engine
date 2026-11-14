@@ -506,6 +506,7 @@ impl ObjectStore for CountingStore {
     }
 
     fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>> {
+        crate::waits::note_list(prefix.map(|p| p.as_ref()).unwrap_or(""));
         let inner = if report_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true) {
             REPORTED.sync_scope((), || self.inner.list(prefix))
         } else {
@@ -516,6 +517,7 @@ impl ObjectStore for CountingStore {
     }
 
     fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, Result<ObjectMeta>> {
+        crate::waits::note_list(prefix.map(|p| p.as_ref()).unwrap_or(""));
         let inner = if report_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true) {
             REPORTED.sync_scope((), || self.inner.list_with_offset(prefix, offset))
         } else {
@@ -526,6 +528,7 @@ impl ObjectStore for CountingStore {
     }
 
     async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult> {
+        crate::waits::note_list(prefix.map(|p| p.as_ref()).unwrap_or(""));
         self.counters.list.fetch_add(1, Relaxed);
         let reported = report_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true);
         let token = self.trace.begin("LIST", &prefix.map(|p| p.to_string()).unwrap_or_default());

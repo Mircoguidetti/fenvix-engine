@@ -1,0 +1,19 @@
+
+running 14 tests
+test lifecycle::tests::always_failing_compaction_is_not_retried_every_round ... ok
+test lifecycle::tests::abandon_does_not_wait_for_a_full_l0 ... ok
+test lifecycle::tests::compaction_pass_ends_when_stop_hangs ... ok
+test lifecycle::tests::abandon_reports_an_unfinished_close ... ok
+test lifecycle::tests::compaction_pass_ends_when_stopped_while_starting ... ok
+test lifecycle::tests::failed_compaction_backs_off ... ok
+test lifecycle::tests::maintenance_log_keeps_the_last_errors ... ok
+test lifecycle::tests::sst_not_found_after_our_sst_gc_is_a_stale_reader ... ok
+test lifecycle::tests::sst_not_found_after_slatedb_gc_is_a_stale_reader ... ok
+test lifecycle::tests::sst_not_found_control_no_gc ... ok
+test lifecycle::tests::visible_state_per_key ... ok
+test lifecycle::tests::compaction_pass_longer_than_its_stall_window_finishes ... ok
+test lifecycle::tests::compaction_pass_stops_at_shutdown_with_l0_full ... ok
+test lifecycle::tests::compaction_pass_stops_when_preempted ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 227 filtered out; finished in 33.43s
+

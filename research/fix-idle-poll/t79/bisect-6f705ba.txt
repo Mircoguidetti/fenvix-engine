@@ -1,0 +1,20 @@
+all-on run 1: 2 failed, 3 deselected in 14.45s | E           assert False
+all-on run 2: 2 failed, 3 deselected in 12.35s | E           assert False
+all-on run 3: 2 failed, 3 deselected in 12.42s | E           assert False
+all-on run 4: 2 failed, 3 deselected in 14.35s | E           assert False
+all-on run 5: 2 failed, 3 deselected in 12.44s | E           assert False
+gate-off run 1: 2 failed, 3 deselected in 12.41s | E           assert False
+gate-off run 2: 2 failed, 3 deselected in 14.37s | E           assert False
+gate-off run 3: 2 failed, 3 deselected in 12.40s | E           assert False
+gate-off run 4: 2 failed, 3 deselected in 12.38s | E           assert False
+gate-off run 5: 2 failed, 3 deselected in 12.39s | E           assert False
+next-wait-off run 1: 2 failed, 3 deselected in 14.35s | E           assert False
+next-wait-off run 2: 2 failed, 3 deselected in 12.40s | E           assert False
+next-wait-off run 3: 2 failed, 3 deselected in 14.38s | E           assert False
+next-wait-off run 4: 2 failed, 3 deselected in 12.39s | E           assert False
+next-wait-off run 5: 2 failed, 3 deselected in 12.37s | E           assert False
+open-seed-off run 1: 2 passed, 3 deselected in 14.43s | 
+open-seed-off run 2: 2 passed, 3 deselected in 14.44s | 
+open-seed-off run 3: 2 passed, 3 deselected in 14.39s | 
+open-seed-off run 4: 2 passed, 3 deselected in 14.36s | 
+open-seed-off run 5: 2 passed, 3 deselected in 14.38s | 

@@ -1,0 +1,155 @@
+{
+ "fxc_not_started_lines": 20,
+ "tag": "def600-new-20",
+ "binary": "/home/user/bins/new3",
+ "mode": "default",
+ "dbs": 20,
+ "secs": 600.6,
+ "s3_delta": {
+  "get": 3009,
+  "list": 1998,
+  "put": 139,
+  "getBytes": 33888,
+  "putBytes": 122878
+ },
+ "gets_per_s_per_db": 0.2505,
+ "requests_per_s_per_db": 0.4284,
+ "gets_per_10s_window_all_dbs": [
+  0,
+  0,
+  120,
+  2,
+  18,
+  0,
+  0,
+  0,
+  60,
+  2,
+  18,
+  0,
+  0,
+  0,
+  185,
+  196,
+  40,
+  40,
+  39,
+  40,
+  79,
+  60,
+  40,
+  39,
+  39,
+  40,
+  79,
+  60,
+  39,
+  40,
+  39,
+  40,
+  80,
+  59,
+  40,
+  39,
+  39,
+  39,
+  100,
+  62,
+  70,
+  63,
+  61,
+  49,
+  107,
+  67,
+  64,
+  80,
+  53,
+  48,
+  81,
+  50,
+  60,
+  44,
+  44,
+  43,
+  80,
+  44,
+  42,
+  46
+ ],
+ "get_kinds": [
+  [
+   "tenants/appNN/fx/drop-lease",
+   1860
+  ],
+  [
+   "tenants/appNN/manifest/N.manifest",
+   390
+  ],
+  [
+   "tenants/appNN/gc/manifest.boundary",
+   374
+  ],
+  [
+   "tenants/appNN/compactions/N.compactions",
+   161
+  ],
+  [
+   "tenants/appNN/gc/compactions.boundary",
+   150
+  ],
+  [
+   "tenants/appNN/fx/manifest/N",
+   40
+  ]
+ ],
+ "list_kinds": [
+  [
+   "tenants/appNN/fx/manifest",
+   1848
+  ],
+  [
+   "control/pins",
+   20
+  ],
+  [
+   "tenants/appNN/fx/pairs",
+   20
+  ],
+  [
+   "tenants/appNN/fx/refs",
+   20
+  ],
+  [
+   "tenants/appNN/fx/forks",
+   20
+  ],
+  [
+   "tenants/appNN/fx/run",
+   20
+  ],
+  [
+   "tenants/appNN",
+   20
+  ],
+  [
+   "control/erasures",
+   10
+  ],
+  [
+   "tenants/admin",
+   4
+  ],
+  [
+   "control/exports",
+   2
+  ],
+  [
+   "txn-hints",
+   1
+  ],
+  [
+   "control/retention",
+   1
+  ]
+ ]
+}

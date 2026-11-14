@@ -277,6 +277,9 @@ pub enum Ev {
     SlateGc { p: usize },
     /// S3 in trouble from now on (`on`: many 503s and timeouts after the write landed) or back to the seed's profile.
     Storm { on: bool },
+    /// The server's default erasure pass (`ctl/erase.rs` `run_pass_ride`, every erasure due): forced reseals of the groups
+    /// still owing a ready erasure, cleanses of the delta runs still holding its rows, the confirmation, the record.
+    EraseRide { p: usize },
     // ---- sim-test-3 (`ext3.rs`): the replicated log and the whole-database lifecycle ----
     /// One tick of slot `p`'s uploader (`LocalLog::spawn_uploader`): its writer's WAL to the store, then the log told
     /// "stored up to" the position it had confirmed before the flush.
@@ -313,7 +316,7 @@ impl Ev {
         use Ev::*;
         match self {
             Open { p, .. } | Upgrade { p } | Write { p, .. } | Erase { p, .. } | Flush { p } | Publish { p } | FirstStart { p } | FirstPoll { p } | CompStart { p } | CompDrain { p } | CompStop { p } | DropThrough { p } | Gc { p } | ErasePass { p } | Retire { p } | GcClosed { p } | ClosePass { p } | Close { p } | Abandon { p } | Kill { p } | Hold { p, .. } => Some(*p),
-            Point { p, .. } | PointPrune { p, .. } | Restore { p, .. } | Fork { p, .. } | Generate { p, .. } | SlateGc { p } => Some(*p),
+            Point { p, .. } | PointPrune { p, .. } | Restore { p, .. } | Fork { p, .. } | Generate { p, .. } | SlateGc { p } | EraseRide { p } => Some(*p),
             Upload { p } | Restart { p } | Kept { p } | LogRetry { p } | DropDb { p } | EraseDb { p } | AdminCheck { p } | PlantLate { p } => Some(*p),
             Release { .. } | Sleep { .. } | Mark { .. } | Storm { .. } | LogCopy { .. } | LogLeader => None,
         }

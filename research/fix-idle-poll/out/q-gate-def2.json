@@ -1,0 +1,51 @@
+{
+ "fxc_not_started_lines": 1,
+ "tag": "q-gate-def2",
+ "binary": "/home/user/bins/gate-d86232e9",
+ "mode": "default",
+ "dbs": 1,
+ "secs": 60.0,
+ "s3_delta": {
+  "get": 99,
+  "list": 20,
+  "put": 6,
+  "getBytes": 1180,
+  "putBytes": 588
+ },
+ "gets_per_s_per_db": 1.6488,
+ "requests_per_s_per_db": 2.0818,
+ "gets_per_10s_window_all_dbs": [
+  16,
+  16,
+  19,
+  16,
+  16,
+  16
+ ],
+ "get_kinds": [
+  [
+   "tenants/appNN/manifest/N.manifest",
+   63
+  ],
+  [
+   "tenants/appNN/gc/manifest.boundary",
+   63
+  ],
+  [
+   "tenants/appNN/fx/drop-lease",
+   13
+  ],
+  [
+   "tenants/appNN/compactions/N.compactions",
+   9
+  ],
+  [
+   "tenants/appNN/gc/compactions.boundary",
+   9
+  ],
+  [
+   "tenants/appNN/fx/manifest/N",
+   2
+  ]
+ ]
+}

@@ -1,0 +1,47 @@
+{
+ "tag": "q-gate-s2d",
+ "binary": "/home/user/bins/gate-d86232e9",
+ "mode": "sealed2-derive",
+ "dbs": 1,
+ "secs": 30.0,
+ "s3_delta": {
+  "get": 60,
+  "list": 37,
+  "put": 3,
+  "getBytes": 3498,
+  "putBytes": 291
+ },
+ "gets_per_s_per_db": 1.9986,
+ "requests_per_s_per_db": 3.331,
+ "gets_per_10s_window_all_dbs": [
+  20,
+  19,
+  20
+ ],
+ "get_kinds": [
+  [
+   "tenants/appNN/manifest/N.manifest",
+   32
+  ],
+  [
+   "tenants/appNN/gc/manifest.boundary",
+   31
+  ],
+  [
+   "tenants/appNN/fx/drop-lease",
+   12
+  ],
+  [
+   "tenants/appNN/fx/manifest/N",
+   6
+  ],
+  [
+   "tenants/appNN/gc/compactions.boundary",
+   5
+  ],
+  [
+   "tenants/appNN/compactions/N.compactions",
+   4
+  ]
+ ]
+}

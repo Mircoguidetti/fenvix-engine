@@ -931,6 +931,13 @@ impl Server {
                 "renewals": tenant_bench::fx::RENEWALS.load(Relaxed) as i64,
                 "renewalsWithBox": tenant_bench::fx::RENEWALS_WITH_BOX.load(Relaxed) as i64,
                 "renewalsUnchanged": tenant_bench::fx::manifest::RENEWALS_UNCHANGED.load(Relaxed) as i64,
+                // fix-idle-poll: polls of idle databases held, and those a wake released early
+                "slatePollsHeld": tenant_bench::fx::drop::SLATE_POLLS_HELD.load(Relaxed) as i64,
+                "slatePollsWoken": tenant_bench::fx::drop::SLATE_POLLS_WOKEN.load(Relaxed) as i64,
+                "writerPollsHeld": tenant_bench::fx::writer_gate::WRITER_POLLS_HELD.load(Relaxed) as i64,
+                "writerPollsWoken": tenant_bench::fx::writer_gate::WRITER_POLLS_WOKEN.load(Relaxed) as i64,
+                "floorObservesSkipped": tenant_bench::fx::drop::FLOOR_OBSERVES_SKIPPED.load(Relaxed) as i64,
+                "gcPassesSkippedIdle": tenant_bench::fx::gc::GC_PASSES_SKIPPED_IDLE.load(Relaxed) as i64,
                 "stepsPastRenewal": tenant_bench::fx::STEPS_PAST_RENEWAL.load(Relaxed) as i64,
                 "rowsFromRuns": tenant_bench::fx::view::ROWS_FROM_RUNS.load(Relaxed) as i64,
                 "runGets": tenant_bench::fx::view::RUN_GETS.load(Relaxed) as i64,

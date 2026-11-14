@@ -469,6 +469,37 @@ pub static CLOSES_LEFT_BEHIND: std::sync::atomic::AtomicU64 = std::sync::atomic:
 /// After its deadline a compaction pass stops its compactor in rounds of about 1 s (`compact_tenant_within`) for at most this
 /// long, then gives up (the pass fails; slatedb's compactor tasks are left to their store request).
 pub(crate) const COMPACTOR_STOP_LIMIT: Duration = Duration::from_secs(120);
+/// fix-pass-stop-bound: the longest a compaction pass waits for an open writer to re-read its manifest (a nudge: the
+/// writer reads it at its next poll anyway). Unbounded before: a writer whose store stalled (or, in tests, whose runtime
+/// was gone) held the pass, its maintenance slot and lock, and `Maintenance::shutdown` forever.
+pub(crate) const WRITER_NUDGE_TIMEOUT: Duration = Duration::from_secs(5);
+/// fix-pass-stop-bound: how long past the stop request a pass may run before the dispatcher drops it, and how long
+/// `Maintenance::shutdown` waits for running passes before it goes on without them. The pass's own stop path ends within
+/// `COMPACTOR_STOP_LIMIT` plus about 2 s; the margin covers the steps before and after it.
+pub(crate) const PASS_CUT_AFTER_STOP: Duration = Duration::from_secs(COMPACTOR_STOP_LIMIT.as_secs() + 15);
+/// Writer nudges (`refresh_manifest`) that hit `WRITER_NUDGE_TIMEOUT`; passes dropped by the dispatcher past
+/// `PASS_CUT_AFTER_STOP`; shutdowns that went on with passes still running (diagnostics).
+pub static PASS_NUDGE_TIMEOUTS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static PASSES_CUT_AT_STOP: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static SHUTDOWNS_LEFT_PASSES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Negative control of the tests: the nudge waits without a bound (the code before fix-pass-stop-bound).
+pub static CONTROL_UNBOUNDED_NUDGE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// `db.refresh_manifest()`, bounded by [`WRITER_NUDGE_TIMEOUT`]; true when it returned Ok in time.
+async fn nudge_writer(id: &str, db: &Db) -> bool {
+    if CONTROL_UNBOUNDED_NUDGE.load(std::sync::atomic::Ordering::Relaxed) {
+        return db.refresh_manifest().await.is_ok();
+    }
+    match tokio::time::timeout(WRITER_NUDGE_TIMEOUT, db.refresh_manifest()).await {
+        Ok(r) => r.is_ok(),
+        Err(_) => {
+            PASS_NUDGE_TIMEOUTS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            eprintln!("compaction pass of tenant {id}: the open writer did not re-read its manifest in {WRITER_NUDGE_TIMEOUT:?}; going on");
+            false
+        }
+    }
+}
 pub static ABANDON_CLOSE_TIMEOUTS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 /// Closes of abandoned tenants still running, per tenant id ([`Tenant::abandon`] left them behind or is still waiting for them).
@@ -555,6 +586,8 @@ fn pin_sst_maps(db: &Db) {
 }
 
 pub(crate) fn writer_closed(id: &str) {
+    // fix-idle-poll: the close never waits for a held manifest poll
+    crate::fx::writer_gate::stopping(id);
     crate::memgov::forget(id);
     OPEN_WRITERS.lock().unwrap().remove(id);
     WRITER_DBS.lock().unwrap().remove(id);
@@ -943,7 +976,8 @@ pub(crate) fn writer_builder_raised(db: &(impl DbRef + ?Sized), store: &Arc<dyn 
         // Durable writes flush explicitly; the periodic flush only has to bound the relaxed ones.
         settings.flush_interval = Some(relaxed);
     }
-    let b = Db::builder(tenant_path(db), crate::counting::owned(store, id)).with_settings(settings).with_block_cache_policy(flush_cache_policy()).with_sst_block_size(crate::tiered::block_size());
+    // fix-idle-poll: the writer's manifest poll is held while the database is idle (`fx::writer_gate`)
+    let b = Db::builder(tenant_path(db), crate::fx::writer_gate::wrap(id, crate::counting::owned(store, id))).with_settings(settings).with_block_cache_policy(flush_cache_policy()).with_sst_block_size(crate::tiered::block_size());
     let b = match filter_policies() {
         Some(p) => b.with_filter_policies(p),
         None => b,
@@ -4199,7 +4233,8 @@ pub(crate) async fn compact_tenant_pass_with(
         let writer = WRITER_DBS.lock().unwrap().get(id).cloned();
         if let Some(db) = writer {
             if db.manifest().l0().len() >= L0_COMPACT_THRESHOLD {
-                let _ = db.refresh_manifest().await;
+                crate::fx::writer_gate::wake(id);
+                nudge_writer(id, &db).await;
             }
         }
         return Ok(None);
@@ -4454,7 +4489,8 @@ pub(crate) async fn compact_tenant_pass_with(
     // still counts the compacted L0 SSTs, and a writer written fast can fill its L0 and stall its memtable flushes.
     let writer = WRITER_DBS.lock().unwrap().get(id).cloned();
     if let Some(db) = writer {
-        let refreshed = db.refresh_manifest().await.is_ok();
+        crate::fx::writer_gate::wake(id);
+        let refreshed = nudge_writer(id, &db).await;
         // The consumed SSTs are no longer in the writer's manifest: their blocks would only age out of the cache.
         if let (true, Some((_, _, before, _))) = (refreshed, &warm_from) {
             let consumed = before.consumed(&db.manifest());
@@ -5087,7 +5123,26 @@ impl Maintenance {
                     let (s3, raw, queue, log, locks, stopping) = (s3.clone(), raw.clone(), queue.clone(), log.clone(), locks.clone(), stopping.clone());
                     passes.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                     let passes = passes.clone();
+                    // fix-pass-stop-bound: the pass (its lock wait included) is dropped once it outlives the stop request by
+                    // `PASS_CUT_AFTER_STOP`. A cut pass leaves nothing half-published: its writes are a marker PUT
+                    // (`note_ungated`), SlateDB's compactions (each one an atomic manifest update) and checkpoint deletes.
+                    let stop_watch = stopping.clone();
                     tokio::spawn(async move {
+                        let cut = async move {
+                            while !stop_watch.load(std::sync::atomic::Ordering::Relaxed) {
+                                tokio::time::sleep(Duration::from_millis(50)).await;
+                            }
+                            tokio::time::sleep(PASS_CUT_AFTER_STOP).await;
+                        };
+                        let pass_id = id.clone();
+                        let pass_passes = passes.clone();
+                        tokio::select! {
+                            _ = cut => {
+                                PASSES_CUT_AT_STOP.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                                eprintln!("compaction pass of tenant {pass_id}: still running {PASS_CUT_AFTER_STOP:?} after the stop request; dropped");
+                                pass_passes.fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
+                            }
+                            _ = async move {
                         let lock = maint_lock(&locks, &id);
                         let _held = lock.lock().await;
                         // The slot goes back to the dispatcher when the pass becomes a long merge, or when it ends.
@@ -5122,6 +5177,8 @@ impl Maintenance {
                         queue.finish(&id, l0_after);
                         drop(slot.lock().unwrap().take());
                         passes.fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
+                            } => {}
+                        }
                     });
                 }
             })
@@ -5333,11 +5390,20 @@ impl Maintenance {
         self.queue.stop();
         step("waiting for the dispatcher");
         let _ = self.dispatcher.await;
-        // Running passes stop now (a merge of sorted runs can last hours); each ends within its compactor's stop limit.
+        // Running passes stop now (a merge of sorted runs can last hours); each ends within its compactor's stop limit, and
+        // the dispatcher drops one that does not (fix-pass-stop-bound).
         self.stopping.store(true, Relaxed);
         step(&format!("waiting for the running passes ({} running)", self.passes.load(Relaxed)));
-        let _ = self.sem.acquire_many(self.workers as u32).await;
+        // fix-pass-stop-bound: bounded. The dispatcher drops a pass `PASS_CUT_AFTER_STOP` after the stop request; past that
+        // (plus a second) the shutdown goes on and says so, rather than holding SIGTERM forever.
+        let until = tokio::time::Instant::now() + PASS_CUT_AFTER_STOP + Duration::from_secs(1);
+        let _ = tokio::time::timeout_at(until, self.sem.acquire_many(self.workers as u32)).await;
         while self.passes.load(Relaxed) > 0 {
+            if tokio::time::Instant::now() >= until {
+                SHUTDOWNS_LEFT_PASSES.fetch_add(1, Relaxed);
+                step(&format!("{} passes still running past the deadline; going on without them", self.passes.load(Relaxed)));
+                break;
+            }
             tokio::time::sleep(Duration::from_millis(50)).await;
         }
         self.gc_stop.store(true, std::sync::atomic::Ordering::Relaxed);
