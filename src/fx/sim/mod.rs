@@ -674,6 +674,51 @@ mod tests {
         assert!(refused >= 1, "the copy-mode fork's source was opened by another writer during it: it must be refused");
     }
 
+    /// fix-sim-seed-104475 (CI run 43546860845, generator 2): the source is opened by another writer after the fork's
+    /// quiesce but before the fork reads its writer epoch. The quiesce found the marker clean (its `_clean` GET held
+    /// here); another process then opens the source and erases a customer (acknowledged, in its WAL only); the fork
+    /// reads the epoch that writer left (epoch0), copies (the WAL included), finds the epoch unmoved and writes a clean
+    /// marker: its readers skip that WAL and read the erased rows, its writer replays it. Fix: the fork requires the
+    /// source's clean marker to name epoch0 (no writer open since its last clean close), or rolls back. Copy and clone.
+    #[test]
+    fn sim_story_fork_source_opened_before_its_epoch_read() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let old = std::env::var("SIM_MAX_HOLD_MS").ok();
+        std::env::set_var("SIM_MAX_HOLD_MS", "5000");
+        let refused0 = super::cluster::ext::FORKS_REFUSED_NOT_CLEAN.load(std::sync::atomic::Ordering::Relaxed);
+        let mut total = Vec::new();
+        for copy in [true, false] {
+            let ev = vec![
+                Open { p: 0, writer: true },
+                fill(0, 0, 0),
+                fill(0, 1, 0),
+                Publish { p: 0 },
+                // the 5th GET of class Other (after the quiesce's marker check, before the fork reads epoch0) stays on the wire
+                Hold { p: 0, class: Class::Other, op: Some(NOp::Get), skip: 4, land: true, all: false, rid: 1 },
+                Fork { p: 0, copy, tag: 1 },
+                // meanwhile another process opens the source and erases customer 0 (WAL only)
+                Open { p: 1, writer: true },
+                Erase { p: 1, cust: 0 },
+                Release { rid: 1 },
+                Sleep { ms: 3000 },
+            ];
+            let (_, v) = run_story(&rt, if copy { "fork source opened before its epoch read, copy" } else { "fork source opened before its epoch read, clone" }, 0, ev);
+            total.extend(v);
+        }
+        match old {
+            Some(v) => std::env::set_var("SIM_MAX_HOLD_MS", v),
+            None => std::env::remove_var("SIM_MAX_HOLD_MS"),
+        }
+        let refused = super::cluster::ext::FORKS_REFUSED_NOT_CLEAN.load(std::sync::atomic::Ordering::Relaxed) - refused0;
+        eprintln!("SIM STORY fork source opened before its epoch read: forks refused (not clean at epoch0) {refused}");
+        assert!(total.is_empty(), "{} violations: {:?}", total.len(), total.iter().take(4).collect::<Vec<_>>());
+        assert!(refused >= 2, "each fork's source was opened by another writer after its quiesce: both must be refused ({refused})");
+    }
+
     /// fix-sim-holes-2, hole R (found by the CI batch 43479363490 on c94a477, seed 3259, generator of 0964575): a GC pass
     /// takes its view of our versions at its start, deletes the old ones (slow here: each delete held), and only then
     /// lists the runs. A run the new owner wrote and published meanwhile is in the listing but in no version of that

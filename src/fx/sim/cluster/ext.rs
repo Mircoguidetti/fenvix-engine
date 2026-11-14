@@ -420,6 +420,16 @@ impl World {
                         Ok(m) => m.map(|m| m.writer_epoch()),
                         Err(e) => return format!("fork {tag}: manifest unreadable: {e}"),
                     };
+                    // fix-sim-seed-104475, as `fork.rs`: the marker the quiesce left must name epoch0 (no writer opened
+                    // the source between the quiesce and that read)
+                    match crate::lifecycle::marker_names(&store, &id, epoch0).await {
+                        Ok(true) => {}
+                        Ok(false) => {
+                            FORKS_REFUSED_NOT_CLEAN.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                            return format!("fork {tag} failed (the server rolls it back): the source was opened by another writer after its quiesce (writer epoch {epoch0:?}, clean marker not naming it)");
+                        }
+                        Err(e) => return format!("fork {tag}: marker unreadable: {e}"),
+                    }
                     let opts = slatedb::config::CheckpointOptions { name: Some(format!("fork-pairing:{target}")), ..Default::default() };
                     let (cp, pr) = match pair::checkpoint_paired(&store, &id, || async { Ok(src_admin.create_detached_checkpoint(&opts).await?) }).await {
                         Ok(x) => x,
@@ -930,3 +940,6 @@ pub fn generate2(seed: u64, steps: usize) -> Script {
 
 /// fix-sim-holes, hole F: simulated forks refused because the source's writer epoch moved during them (tests).
 pub static FORKS_REFUSED_EPOCH_MOVED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// fix-sim-seed-104475: simulated forks refused because the source's clean marker did not name the writer epoch read
+/// after the quiesce (a writer opened it in between) (tests).
+pub static FORKS_REFUSED_NOT_CLEAN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
