@@ -542,12 +542,31 @@ async fn replay_on_wake(x3: &X3, life: u64, store: &Arc<dyn ObjectStore>, id: &s
     if rec_epoch > 0 && stored.is_some_and(|s| s > rec_epoch) {
         return Ok(format!("; takeover: {} records of epoch {rec_epoch} < stored {stored:?}: NOT applied", recs.len()));
     }
+    // fix-log-takeover-stale, hole T (`locallog::replay_on_wake`, as on fix-log-takeover-stale): before the apply opens
+    // this process's writer, copies of the records after the marker go to the log stamped with the epoch that writer
+    // will open with (the stored one plus one)
+    let mut copies_pos = 0;
+    let mut copies = 0;
+    if let Some(s) = stored.filter(|_| !x3.old_kept) {
+        let done = match t.get(MARKER_KEY).await?.as_deref().and_then(parse_marker) {
+            Some((lid, d)) if lid == LOG_ID => d,
+            _ => 0,
+        };
+        for r in recs.iter().filter(|r| r.orig > done && r.epoch > 0 && r.epoch <= s) {
+            let seq = x3.with(life, |x| x.next_seq());
+            copies_pos = x3.append(life, Rec { seq, orig: r.orig, ops: r.ops.clone(), drop: false, epoch: s + 1 }).await.map_err(|e| anyhow::anyhow!(e))?;
+            copies += 1;
+        }
+    }
     let (n, done) = match apply_after_marker(t, recs).await {
         Ok(x) => x,
         Err(e) if format!("{e:#}").contains("another log") => return Ok("; takeover: written by another log: NOT applied".into()),
         Err(e) => return Err(e),
     };
-    x3.flush_done(life, max_pos).map_err(|e| anyhow::anyhow!(e))?;
+    x3.flush_done(life, max_pos.max(copies_pos)).map_err(|e| anyhow::anyhow!(e))?;
+    if copies > 0 {
+        x3.count("takeover-copies");
+    }
     if n > 0 {
         x3.count("takeover-applied");
     }

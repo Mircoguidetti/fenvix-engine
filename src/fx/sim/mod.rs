@@ -1033,6 +1033,7 @@ mod tests {
             failing += (!r.violations.is_empty()) as u64;
         }
         eprintln!("SIM STORY closed gc after idle close: {failing} of {n} runs with a violation");
+    }
 
     /// Hole T (found by the gen-3 batch, seeds 300169, 302946 and others; CI run 43496082968): a takeover whose replay of the
     /// log fails after its writer opened makes the next takeover drop acknowledged records as stale. B (slot 0) acknowledges
@@ -1040,9 +1041,9 @@ mod tests {
     /// applies the records through `apply_durable`, which opens A's writer (writer epoch 2), and the version create of that
     /// opening fails (held, then dropped: a store error); A gives the database up and the records stay in the log with
     /// epoch 1. C (slot 2) takes the database over: `drop_stale` reads the stored epoch 2 and drops every record of epoch 1
-    /// as "confirmed after a newer writer opened, never acknowledged". They were acknowledged. Ignored until fixed.
+    /// as "confirmed after a newer writer opened, never acknowledged". They were acknowledged. Fixed on
+    /// fix-log-takeover-stale (the takeover writes copies stamped with its writer's epoch before applying): a normal test.
     #[test]
-    #[ignore]
     fn sim_hole_t_failed_takeover_replay_makes_records_stale() {
         let rt = runtime();
         let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
