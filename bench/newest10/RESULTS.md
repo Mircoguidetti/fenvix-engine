@@ -96,3 +96,17 @@ bench each extra GET costs ~1.4 ms of the wave ((39.7 - 27.4) / 9), so 10 -> 1-2
 near one GET's latency. The price is a reseal of the group when the reads have paid for it (R3's own cost model,
 470 GETs per GiB of group). Note: a database only read since its open has no compactor (it starts at the first
 write), so neither point reads nor box reads count there; the bench's read-only measured phase would not reseal.
+
+### Where the wave's cost goes at 10 GB (coordinator, rows-2-B, per-call p50)
+
+| read | ms | S3 bytes | server CPU ms | MinIO CPU ms |
+|---|---|---|---|---|
+| whole_cold h50 (1 GET) | 27.4 | 84 KB | 3.2 | 5.2 |
+| whole_cold h500 (1 GET) | 33.6 | 416 KB | 8.4 | 5.7 |
+| newest10_cold (10 GETs, 1 trip) | 39.7 | 414 KB | 6.7 | 47.2 |
+
+MinIO read nothing from disk (page cache). The newest-10 read moves the same bytes as h500 but costs MinIO ~8x the
+CPU: the price is the number of small range requests, not bytes or trips. Fewer delta runs per customer (R3 counting
+the box, above) is the lever: after read traffic, 1 request per cold newest-10 instead of ~3 locally (10 at 10 GB).
+
+CI: one request for 6070e0c (supersedes e7af7d1): sim-test 5,000 seeds, full ctl set both modes, fast judge both modes.
