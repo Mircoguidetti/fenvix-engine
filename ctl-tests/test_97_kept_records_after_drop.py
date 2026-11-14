@@ -76,7 +76,8 @@ def test_dropped_database_stays_dropped():
         wait_until(lambda: re.search(rf"database {DB}: kept records .*by the retry|database {DB}: \d+ kept records conflict", a.log_text()), 90, what="A's retry to end")
         time.sleep(2)
         # read through the process that holds the name now (after the retry, A may: it took the lease of the absent name)
-        n = wait_until(lambda: next((x for x in [_try_count(a), _try_count(b)] if x is not None), None), 60, what="a count of the dropped database")
+        # (a count is wrapped in a tuple: 0, the passing answer, must not read as "not yet" to wait_until)
+        n = wait_until(lambda: next(((x,) for x in [_try_count(a), _try_count(b)] if x is not None), None), 60, what="a count of the dropped database")[0]
         print("A:", "\n".join(l for l in a.log_text().splitlines() if "quaderno" in l or "local log" in l or "LEASE" in l)[:3000])
         print(f"documents of the dropped database read after A's retry: {n}")
         assert n == 0, f"hole K: the dropped database came back with {n} documents (A's kept records re-created it)"
