@@ -1,0 +1,103 @@
+00:27:06 cook root user created
+00:27:07 fenvix-log: up (log-0, log-1, log-2, cook, spare, minio)
+00:27:07 fenvix-log: load size 1
+00:28:08 load size 1: 124,500/2,366,425 (2,072 docs/s), disk free 22.4 GiB
+00:29:08 load size 1: 208,000/2,366,425 (1,732 docs/s), disk free 21.8 GiB
+00:30:10 load size 1: 293,000/2,366,425 (1,605 docs/s), disk free 21.3 GiB
+00:31:14 load size 1: 375,000/2,366,425 (1,521 docs/s), disk free 20.7 GiB
+00:32:14 load size 1: 462,000/2,366,425 (1,506 docs/s), disk free 20.9 GiB
+00:33:14 load size 1: 548,500/2,366,425 (1,495 docs/s), disk free 21.4 GiB
+00:34:17 load size 1: 627,000/2,366,425 (1,461 docs/s), disk free 21.2 GiB
+00:35:17 load size 1: 710,500/2,366,425 (1,453 docs/s), disk free 20.8 GiB
+00:36:17 load size 1: 788,000/2,366,425 (1,434 docs/s), disk free 20.5 GiB
+00:37:17 load size 1: 878,000/2,366,425 (1,441 docs/s), disk free 20.3 GiB
+00:38:17 load size 1: 954,000/2,366,425 (1,425 docs/s), disk free 20.2 GiB
+00:39:20 load size 1: 1,034,000/2,366,425 (1,412 docs/s), disk free 20.0 GiB
+00:40:24 load size 1: 1,118,000/2,366,425 (1,403 docs/s), disk free 19.7 GiB
+00:41:24 load size 1: 1,192,500/2,366,425 (1,392 docs/s), disk free 19.3 GiB
+00:42:25 load size 1: 1,265,000/2,366,425 (1,379 docs/s), disk free 19.5 GiB
+00:43:25 load size 1: 1,333,000/2,366,425 (1,364 docs/s), disk free 19.1 GiB
+00:44:25 load size 1: 1,395,000/2,366,425 (1,345 docs/s), disk free 19.5 GiB
+00:45:25 load size 1: 1,460,500/2,366,425 (1,331 docs/s), disk free 19.1 GiB
+00:46:25 load size 1: 1,536,500/2,366,425 (1,327 docs/s), disk free 18.8 GiB
+00:47:28 load size 1: 1,608,000/2,366,425 (1,318 docs/s), disk free 18.6 GiB
+00:48:28 load size 1: 1,684,000/2,366,425 (1,315 docs/s), disk free 18.2 GiB
+00:49:33 load size 1: 1,761,000/2,366,425 (1,309 docs/s), disk free 18.1 GiB
+00:50:33 load size 1: 1,837,500/2,366,425 (1,308 docs/s), disk free 17.7 GiB
+00:51:33 load size 1: 1,906,500/2,366,425 (1,301 docs/s), disk free 17.5 GiB
+00:52:33 load size 1: 1,984,000/2,366,425 (1,301 docs/s), disk free 17.3 GiB
+00:53:35 load size 1: 2,054,500/2,366,425 (1,294 docs/s), disk free 17.1 GiB
+00:54:35 load size 1: 2,126,000/2,366,425 (1,290 docs/s), disk free 16.8 GiB
+00:55:35 load size 1: 2,205,000/2,366,425 (1,291 docs/s), disk free 16.7 GiB
+00:56:35 load size 1: 2,278,500/2,366,425 (1,289 docs/s), disk free 16.4 GiB
+00:57:36 load size 1: 2,348,000/2,366,425 (1,284 docs/s), disk free 16.2 GiB
+00:57:52 fenvix-log: load size 1 done: {'size': 1, 'docs': 2366425, 'seconds': 1844.5, 'docs_per_s': 1283.0}
+00:57:52 fenvix-log: size 1 loaded, not measured (--measure-sizes)
+00:57:52 fenvix-log: load size 2
+00:58:53 load size 2: 77,500/2,366,425 (1,281 docs/s), disk free 15.9 GiB
+00:59:53 load size 2: 150,500/2,366,425 (1,248 docs/s), disk free 15.5 GiB
+01:00:53 load size 2: 220,500/2,366,425 (1,219 docs/s), disk free 15.5 GiB
+01:01:54 load size 2: 291,500/2,366,425 (1,207 docs/s), disk free 15.2 GiB
+01:02:54 load size 2: 368,500/2,366,425 (1,221 docs/s), disk free 15.0 GiB
+01:03:54 load size 2: 445,500/2,366,425 (1,230 docs/s), disk free 14.8 GiB
+01:04:54 load size 2: 516,000/2,366,425 (1,222 docs/s), disk free 14.8 GiB
+01:05:54 load size 2: 588,500/2,366,425 (1,220 docs/s), disk free 14.4 GiB
+01:06:54 load size 2: 662,500/2,366,425 (1,222 docs/s), disk free 14.2 GiB
+01:07:55 load size 2: 734,000/2,366,425 (1,218 docs/s), disk free 13.9 GiB
+01:08:55 load size 2: 803,500/2,366,425 (1,212 docs/s), disk free 13.7 GiB
+01:09:56 load size 2: 877,500/2,366,425 (1,212 docs/s), disk free 13.7 GiB
+01:10:56 load size 2: 946,500/2,366,425 (1,208 docs/s), disk free 13.4 GiB
+01:11:56 load size 2: 1,015,500/2,366,425 (1,203 docs/s), disk free 13.2 GiB
+01:12:56 load size 2: 1,087,500/2,366,425 (1,203 docs/s), disk free 13.0 GiB
+01:13:59 load size 2: 1,158,500/2,366,425 (1,198 docs/s), disk free 12.8 GiB
+01:15:00 load size 2: 1,228,500/2,366,425 (1,195 docs/s), disk free 12.4 GiB
+01:16:00 load size 2: 1,303,500/2,366,425 (1,198 docs/s), disk free 12.2 GiB
+01:17:01 load size 2: 1,378,000/2,366,425 (1,200 docs/s), disk free 11.8 GiB
+01:18:01 load size 2: 1,448,500/2,366,425 (1,199 docs/s), disk free 11.7 GiB
+01:19:01 load size 2: 1,520,000/2,366,425 (1,198 docs/s), disk free 11.4 GiB
+01:20:02 load size 2: 1,591,500/2,366,425 (1,197 docs/s), disk free 11.5 GiB
+01:21:02 load size 2: 1,656,500/2,366,425 (1,192 docs/s), disk free 11.2 GiB
+01:22:02 load size 2: 1,714,000/2,366,425 (1,182 docs/s), disk free 11.3 GiB
+01:23:03 load size 2: 1,777,000/2,366,425 (1,176 docs/s), disk free 10.9 GiB
+01:24:04 load size 2: 1,838,500/2,366,425 (1,170 docs/s), disk free 11.0 GiB
+01:25:04 load size 2: 1,893,500/2,366,425 (1,160 docs/s), disk free 10.8 GiB
+01:26:05 load size 2: 1,947,500/2,366,425 (1,151 docs/s), disk free 10.7 GiB
+01:27:05 load size 2: 2,004,000/2,366,425 (1,144 docs/s), disk free 10.3 GiB
+01:28:06 load size 2: 2,059,500/2,366,425 (1,136 docs/s), disk free 10.3 GiB
+01:29:06 load size 2: 2,116,000/2,366,425 (1,129 docs/s), disk free 10.1 GiB
+01:30:07 load size 2: 2,174,500/2,366,425 (1,124 docs/s), disk free 9.9 GiB
+01:31:08 load size 2: 2,231,500/2,366,425 (1,118 docs/s), disk free 9.7 GiB
+01:32:08 load size 2: 2,291,000/2,366,425 (1,114 docs/s), disk free 9.4 GiB
+01:33:08 load size 2: 2,351,000/2,366,425 (1,111 docs/s), disk free 9.4 GiB
+01:33:23 fenvix-log: load size 2 done: {'size': 2, 'docs': 2366425, 'seconds': 2130.6, 'docs_per_s': 1110.7}
+01:56:36 fenvix-log: size 2 stored {'s3_bytes_total': 6109580892, 's3_objects': 85, 's3_by_kind': {'_clean': 7, '_lease': 50, 'compacted/01M7BV20QDCZYVQ6CHFRNEQV1M.sst': 9267381, 'compacted/01M7BV20QZ1EJMAQKJH3F2BTH4.sst': 9216964, 'compacted/01M7BV20RVXJKK628KF4XDSEHA.sst': 9247162, 'compacted/01M7BV20SCNN14QBNNJ8WSZ4X5.sst': 9112155, 'compactions/00000000000000004832.compactions': 1410, 'fx/caught-up': 23, 'fx/e1-announced': 20, 'fx/manifest': 40724, 'fx/run': 6070280157, 'gc/compactions.boundary': 4, 'gc/manifest.boundary': 4, 'manifest/00000000000000004003.manifest': 1818, 'wal/00000000000000001456.sst': 2413013}, 's3_objects_by_kind': {'_clean': 1, '_lease': 1, 'compacted/01M7BV20QDCZYVQ6CHFRNEQV1M.sst': 1, 'compacted/01M7BV20QZ1EJMAQKJH3F2BTH4.sst': 1, 'compacted/01M7BV20RVXJKK628KF4XDSEHA.sst': 1, 'compacted/01M7BV20SCNN14QBNNJ8WSZ4X5.sst': 1, 'compactions/00000000000000004832.compactions': 1, 'fx/caught-up': 1, 'fx/e1-announced': 1, 'fx/manifest': 1, 'fx/run': 71, 'gc/compactions.boundary': 1, 'gc/manifest.boundary': 1, 'manifest/00000000000000004003.manifest': 1, 'wal/00000000000000001456.sst': 1}}, settle {"idle": true, "capped": false, "fx_run_bytes": 6070280157, "fx_run_objects": 71, "compaction2_published": true, "process_publishes": 429, "seconds": 1383.8, "watched": ["compactor.publishes", "compactor.absorbs", "compactor.merges", "compactor.reseals", "compactor.errors", "compaction.passes", "com
+01:56:39 restart: docker restart minio log-0 log-1 log-2 cook spare in 3.6 s
+01:56:40 drop_caches: done
+01:56:40 restart: line up again in 4.7 s, check ok=True
+01:56:40 fenvix-log size 2 A: expected answers for 800 customers
+01:58:27   newest10_cold|newest         n= 200 p50     20.87 p99     44.94 ms  client 0.02  GETs p50 13 bytes p50 495584  disk p50 0
+01:58:27   newest10_warm|h50            n= 200 p50      1.10 p99      2.12 ms  client 0.33  GETs p50 0 bytes p50 0  disk p50 0
+01:58:27   newest10_warm|h500           n= 200 p50      1.14 p99      2.72 ms  client 0.31  GETs p50 0 bytes p50 0  disk p50 0
+01:58:27   newest10_warm|h5000          n= 200 p50      1.58 p99      4.01 ms  client 0.26  GETs p50 0 bytes p50 0  disk p50 0
+01:58:27   newest10_warm|newest         n= 200 p50      1.35 p99      3.87 ms  client 0.28  GETs p50 0 bytes p50 0  disk p50 0
+01:58:27   whole_cold|h50               n= 200 p50     12.15 p99     20.51 ms  client 0.04  GETs p50 7 bytes p50 312656  disk p50 0
+01:58:27   whole_cold|h500              n= 200 p50     19.46 p99     35.79 ms  client 0.10  GETs p50 8 bytes p50 769969  disk p50 0
+01:58:27   whole_cold|h5000             n= 200 p50    126.17 p99    173.77 ms  client 0.14  GETs p50 20 bytes p50 7505961  disk p50 0
+01:58:27   whole_warm|h50               n= 200 p50      1.33 p99      2.66 ms  client 0.34  GETs p50 0 bytes p50 0  disk p50 0
+01:58:27   whole_warm|h500              n= 200 p50      5.74 p99      8.91 ms  client 0.31  GETs p50 0 bytes p50 0  disk p50 0
+01:58:27   whole_warm|h5000             n= 200 p50     66.50 p99     96.23 ms  client 0.25  GETs p50 0 bytes p50 0  disk p50 0
+01:58:34 restart: docker restart minio log-0 log-1 log-2 cook spare in 6.4 s
+01:58:34 drop_caches: done
+01:58:34 restart: line up again in 7.0 s, check ok=True
+01:58:34 fenvix-log size 2 B: expected answers for 800 customers
+02:01:08   newest10_cold|newest         n= 200 p50     41.16 p99     66.96 ms  client 0.01  GETs p50 13 bytes p50 495584  disk p50 0
+02:01:08   newest10_warm|h50            n= 200 p50      1.08 p99      2.98 ms  client 0.33  GETs p50 0 bytes p50 0  disk p50 0
+02:01:08   newest10_warm|h500           n= 200 p50      1.10 p99      2.51 ms  client 0.29  GETs p50 0 bytes p50 0  disk p50 0
+02:01:08   newest10_warm|h5000          n= 200 p50      1.48 p99      3.04 ms  client 0.27  GETs p50 0 bytes p50 0  disk p50 0
+02:01:08   newest10_warm|newest         n= 200 p50      1.29 p99      2.23 ms  client 0.30  GETs p50 0 bytes p50 0  disk p50 0
+02:01:08   whole_cold|h50               n= 200 p50     32.07 p99     40.12 ms  client 0.02  GETs p50 7 bytes p50 312656  disk p50 0
+02:01:08   whole_cold|h500              n= 200 p50     38.89 p99     52.93 ms  client 0.05  GETs p50 8 bytes p50 769969  disk p50 0
+02:01:08   whole_cold|h5000             n= 200 p50    293.50 p99    399.43 ms  client 0.06  GETs p50 22 bytes p50 7656843  disk p50 0
+02:01:08   whole_warm|h50               n= 200 p50      1.29 p99      1.98 ms  client 0.34  GETs p50 0 bytes p50 0  disk p50 0
+02:01:08   whole_warm|h500              n= 200 p50      5.49 p99      7.50 ms  client 0.32  GETs p50 0 bytes p50 0  disk p50 0
+02:01:08   whole_warm|h5000             n= 200 p50     62.27 p99    100.49 ms  client 0.26  GETs p50 0 bytes p50 0  disk p50 0

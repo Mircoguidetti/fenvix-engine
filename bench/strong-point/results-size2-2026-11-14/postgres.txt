@@ -1,0 +1,22 @@
+02:01:33 postgres-single: up (pg-single)
+02:01:33 postgres-single: load size 1
+02:02:33 load size 1: 1,584,000/2,366,425 (26,397 docs/s), disk free 20.3 GiB
+02:03:03 postgres-single: load size 1 done: {'size': 1, 'docs': 2366425, 'seconds': 89.7, 'docs_per_s': 26396.1}
+02:03:03 postgres-single: size 1 loaded, not measured (--measure-sizes)
+02:03:03 postgres-single: load size 2
+02:04:03 load size 2: 1,436,000/2,366,425 (23,906 docs/s), disk free 16.3 GiB
+02:04:40 postgres-single: load size 2 done: {'size': 2, 'docs': 2366425, 'seconds': 97.1, 'docs_per_s': 24372.4}
+Traceback (most recent call last):
+  File "/home/user/fenvix-engine/bench/strong-point/history.py", line 870, in <module>
+    main()
+  File "/home/user/fenvix-engine/bench/strong-point/history.py", line 866, in main
+    sys.exit(run(a))
+             ^^^^^^
+  File "/home/user/fenvix-engine/bench/strong-point/history.py", line 763, in run
+    r["settle"] = settle(line, uri)
+                  ^^^^^^^^^^^^^^^^^
+  File "/home/user/fenvix-engine/bench/strong-point/history.py", line 616, in settle
+    c.execute("VACUUM ANALYZE messages")
+  File "/root/.fenvix-agentbench-venv/lib/python3.12/site-packages/psycopg/connection.py", line 304, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.DiskFull: could not resize shared memory segment "/PostgreSQL.2202020512" to 67128640 bytes: No space left on device

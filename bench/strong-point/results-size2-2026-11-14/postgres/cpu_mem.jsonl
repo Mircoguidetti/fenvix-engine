@@ -1,0 +1,21 @@
+{"t": 1794621903.4, "host_cpu_busy": 0.168, "host_cores": 4, "host_mem_used_gib": 0.9, "disk_free_gib": 14.66, "c": {}, "gone": []}
+{"t": 1794621908.4, "host_cpu_busy": 0.147, "host_cores": 4, "host_mem_used_gib": 0.89, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.429, "mem_mib": 512}}, "gone": [], "client_cores": 0.0}
+{"t": 1794621913.5, "host_cpu_busy": 0.225, "host_cores": 4, "host_mem_used_gib": 1.26, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.42, "mem_mib": 482}}, "gone": [], "client_cores": 0.401}
+{"t": 1794621918.6, "host_cpu_busy": 0.249, "host_cores": 4, "host_mem_used_gib": 1.18, "disk_free_gib": 14.66, "c": {}, "gone": [], "client_cores": 0.799}
+{"t": 1794621923.7, "host_cpu_busy": 0.23, "host_cores": 4, "host_mem_used_gib": 1.13, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.376, "mem_mib": 512}}, "gone": [], "client_cores": 0.453}
+{"t": 1794621928.7, "host_cpu_busy": 0.212, "host_cores": 4, "host_mem_used_gib": 1.11, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.51, "mem_mib": 512}}, "gone": [], "client_cores": 0.246}
+{"t": 1794621933.7, "host_cpu_busy": 0.209, "host_cores": 4, "host_mem_used_gib": 1.06, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.508, "mem_mib": 512}}, "gone": [], "client_cores": 0.246}
+{"t": 1794621938.7, "host_cpu_busy": 0.214, "host_cores": 4, "host_mem_used_gib": 0.99, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.497, "mem_mib": 512}}, "gone": [], "client_cores": 0.236}
+{"t": 1794621943.7, "host_cpu_busy": 0.21, "host_cores": 4, "host_mem_used_gib": 0.98, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.496, "mem_mib": 512}}, "gone": [], "client_cores": 0.238}
+{"t": 1794621948.7, "host_cpu_busy": 0.209, "host_cores": 4, "host_mem_used_gib": 0.97, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.499, "mem_mib": 512}}, "gone": [], "client_cores": 0.244}
+{"t": 1794621953.7, "host_cpu_busy": 0.203, "host_cores": 4, "host_mem_used_gib": 0.98, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.499, "mem_mib": 512}}, "gone": [], "client_cores": 0.232}
+{"t": 1794621958.7, "host_cpu_busy": 0.209, "host_cores": 4, "host_mem_used_gib": 0.97, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.511, "mem_mib": 512}}, "gone": [], "client_cores": 0.242}
+{"t": 1794621963.7, "host_cpu_busy": 0.217, "host_cores": 4, "host_mem_used_gib": 0.97, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.503, "mem_mib": 512}}, "gone": [], "client_cores": 0.242}
+{"t": 1794621968.7, "host_cpu_busy": 0.215, "host_cores": 4, "host_mem_used_gib": 0.97, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.498, "mem_mib": 512}}, "gone": [], "client_cores": 0.24}
+{"t": 1794621973.7, "host_cpu_busy": 0.212, "host_cores": 4, "host_mem_used_gib": 0.97, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.511, "mem_mib": 512}}, "gone": [], "client_cores": 0.238}
+{"t": 1794621978.7, "host_cpu_busy": 0.213, "host_cores": 4, "host_mem_used_gib": 0.97, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.511, "mem_mib": 512}}, "gone": [], "client_cores": 0.24}
+{"t": 1794621983.7, "host_cpu_busy": 0.221, "host_cores": 4, "host_mem_used_gib": 0.97, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.526, "mem_mib": 512}}, "gone": [], "client_cores": 0.245}
+{"t": 1794621988.7, "host_cpu_busy": 0.208, "host_cores": 4, "host_mem_used_gib": 0.97, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.521, "mem_mib": 512}}, "gone": [], "client_cores": 0.242}
+{"t": 1794621993.7, "host_cpu_busy": 0.213, "host_cores": 4, "host_mem_used_gib": 0.97, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.503, "mem_mib": 512}}, "gone": [], "client_cores": 0.256}
+{"t": 1794621998.7, "host_cpu_busy": 0.213, "host_cores": 4, "host_mem_used_gib": 0.97, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.509, "mem_mib": 512}}, "gone": [], "client_cores": 0.24}
+{"t": 1794622003.7, "host_cpu_busy": 0.215, "host_cores": 4, "host_mem_used_gib": 0.97, "disk_free_gib": 14.66, "c": {"pg-single": {"cores": 0.509, "mem_mib": 512}}, "gone": [], "client_cores": 0.248}

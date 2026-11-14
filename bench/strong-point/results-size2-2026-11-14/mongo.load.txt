@@ -1,0 +1,13 @@
+00:10:59 mongo-single: up (mongo-single)
+00:10:59 mongo-single: load size 1
+00:11:59 load size 1: 1,034,500/2,366,425 (17,223 docs/s), disk free 22.2 GiB
+00:12:59 load size 1: 1,886,500/2,366,425 (15,705 docs/s), disk free 21.0 GiB
+00:13:40 mongo-single: load size 1 done: {'size': 1, 'docs': 2366425, 'seconds': 161.3, 'docs_per_s': 14674.1}
+00:13:40 mongo-single: size 1 loaded, not measured (--measure-sizes)
+00:13:40 mongo-single: load size 2
+00:14:40 load size 2: 680,000/2,366,425 (11,329 docs/s), disk free 20.0 GiB
+00:15:40 load size 2: 1,211,500/2,366,425 (10,094 docs/s), disk free 19.4 GiB
+00:16:40 load size 2: 1,697,500/2,366,425 (9,425 docs/s), disk free 19.0 GiB
+00:17:40 load size 2: 2,163,500/2,366,425 (9,010 docs/s), disk free 18.4 GiB
+00:18:05 mongo-single: load size 2 done: {'size': 2, 'docs': 2366425, 'seconds': 264.9, 'docs_per_s': 8932.0}
+00:18:05 mongo-single: size 2 loaded, not measured (--measure-sizes)

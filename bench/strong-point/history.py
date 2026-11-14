@@ -613,7 +613,8 @@ def settle(line: str, uri: str) -> dict | None:
         import psycopg
         t0 = time.time()
         with psycopg.connect(uri, autocommit=True) as c:
-            c.execute("VACUUM ANALYZE messages")
+            # PARALLEL 0: parallel vacuum needs more shared memory than docker's default 64 MB /dev/shm (DiskFull on resize)
+            c.execute("VACUUM (ANALYZE, PARALLEL 0) messages")
             c.execute("CHECKPOINT")
         return {"vacuum_analyze_checkpoint_s": round(time.time() - t0, 1)}
     c, _ = mongo_coll(uri)

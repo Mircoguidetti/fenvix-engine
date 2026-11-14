@@ -1,0 +1,17 @@
+00:20:14 mongo-single: size 1 loaded, not measured (--measure-sizes)
+00:20:18 mongo-single: size 2 stored {'count': 4732850, 'size': 9930470623, 'storageSize': 5447417856, 'totalIndexSize': 216956928, 'avgObjSize': 2098, 'indexSizes': {'_id_': 85983232, 'userId_1_ts_-1': 130973696}}, settle {"fsync": true}
+00:20:19 restart: docker restart mongo-single in 0.3 s
+00:20:20 drop_caches: done
+00:20:20 restart: line up again in 2.0 s, check ok=True
+00:20:20 mongo-single size 2 A: expected answers for 800 customers
+00:26:22   newest10_cold|newest         n= 200 p50      3.51 p99      7.83 ms  client 0.11  disk p50 466944
+00:26:22   newest10_warm|h50            n= 200 p50      0.85 p99      2.23 ms  client 0.34  disk p50 0
+00:26:22   newest10_warm|h500           n= 200 p50      1.01 p99      2.43 ms  client 0.40  disk p50 0
+00:26:22   newest10_warm|h5000          n= 200 p50      2.37 p99      6.85 ms  client 0.25  disk p50 16384
+00:26:22   newest10_warm|newest         n= 200 p50      0.84 p99      3.10 ms  client 0.31  disk p50 0
+00:26:22   whole_cold|h50               n= 200 p50      9.97 p99     20.04 ms  client 0.05  disk p50 1888256
+00:26:22   whole_cold|h500              n= 200 p50     88.64 p99    111.05 ms  client 0.03  disk p50 18608128
+00:26:22   whole_cold|h5000             n= 200 p50    838.78 p99    964.33 ms  client 0.02  disk p50 184307712
+00:26:22   whole_warm|h50               n= 200 p50      2.05 p99      7.77 ms  client 0.16  disk p50 0
+00:26:22   whole_warm|h500              n= 200 p50     24.42 p99     60.51 ms  client 0.08  disk p50 0
+00:26:22   whole_warm|h5000             n= 200 p50    691.75 p99    839.03 ms  client 0.03  disk p50 146153472

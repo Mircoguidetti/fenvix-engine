@@ -1,0 +1,9 @@
+== size 2
+whole_cold|h50         | ours_B 32.07/40.12 GETs 7 312656B | ours_A 12.15/20.51 GETs 7 312656B | mongod 9.97/20.04 | postgres 3.51/6.53 | ours/best p50 9.137 SLOWER, p99 6.144 SLOWER
+whole_cold|h500        | ours_B 38.89/52.93 GETs 8 769969B | ours_A 19.46/35.79 GETs 8 769969B | mongod 88.64/111.05 | postgres 28.96/44.19 | ours/best p50 1.343 SLOWER, p99 1.198 SLOWER
+whole_cold|h5000       | ours_B 293.5/399.43 GETs 22 7656843B | ours_A 126.17/173.77 GETs 20 7505961B | mongod 838.78/964.33 | postgres 279.63/342.69 | ours/best p50 1.05 EQUAL, p99 1.166 SLOWER
+newest10_cold|newest   | ours_B 41.16/66.96 GETs 13 495584B | ours_A 20.87/44.94 GETs 13 495584B | mongod 3.51/7.83 | postgres 1.26/2.39 | ours/best p50 32.667 SLOWER, p99 28.017 SLOWER
+whole_warm|h50         | ours_B 1.29/1.98 GETs 0 0B | ours_A 1.33/2.66 GETs 0 0B | mongod 2.05/7.77 | postgres 0.79/1.08 | ours/best p50 1.633 SLOWER, p99 1.833 SLOWER
+whole_warm|h500        | ours_B 5.49/7.5 GETs 0 0B | ours_A 5.74/8.91 GETs 0 0B | mongod 24.42/60.51 | postgres 5.34/8.07 | ours/best p50 1.028 EQUAL, p99 0.929 EQUAL
+whole_warm|h5000       | ours_B 62.27/100.49 GETs 0 0B | ours_A 66.5/96.23 GETs 0 0B | mongod 691.75/839.03 | postgres 52.58/80.54 | ours/best p50 1.184 SLOWER, p99 1.248 SLOWER
+newest10_warm|newest   | ours_B 1.29/2.23 GETs 0 0B | ours_A 1.35/3.87 GETs 0 0B | mongod 0.84/3.1 | postgres 0.37/0.61 | ours/best p50 3.486 SLOWER, p99 3.656 SLOWER

@@ -1,0 +1,17 @@
+02:04:58 postgres-single: size 1 loaded, not measured (--measure-sizes)
+02:05:14 postgres-single: size 2 stored {'total': 9146449920, 'heap': 7433322496, 'indexes': 420118528, 'toast_and_maps': 1293008896, 'rows': 4732850, 'database': 9154346007}, settle {"vacuum_analyze_checkpoint_s": 11.2}
+02:05:14 restart: docker restart pg-single in 0.3 s
+02:05:14 drop_caches: done
+02:05:14 restart: line up again in 0.4 s, check ok=True
+02:05:14 postgres-single size 2 A: expected answers for 800 customers
+02:06:47   newest10_cold|newest         n= 200 p50      1.26 p99      2.39 ms  client 0.14  disk p50 106496
+02:06:47   newest10_warm|h50            n= 200 p50      0.34 p99      0.90 ms  client 0.38  disk p50 0
+02:06:47   newest10_warm|h500           n= 200 p50      0.47 p99      0.74 ms  client 0.38  disk p50 0
+02:06:47   newest10_warm|h5000          n= 200 p50      0.75 p99      1.78 ms  client 0.37  disk p50 0
+02:06:47   newest10_warm|newest         n= 200 p50      0.37 p99      0.61 ms  client 0.39  disk p50 0
+02:06:47   whole_cold|h50               n= 200 p50      3.51 p99      6.53 ms  client 0.11  disk p50 442368
+02:06:47   whole_cold|h500              n= 200 p50     28.96 p99     44.19 ms  client 0.09  disk p50 4341760
+02:06:47   whole_cold|h5000             n= 200 p50    279.63 p99    342.69 ms  client 0.09  disk p50 43311104
+02:06:47   whole_warm|h50               n= 200 p50      0.79 p99      1.08 ms  client 0.40  disk p50 0
+02:06:47   whole_warm|h500              n= 200 p50      5.34 p99      8.07 ms  client 0.38  disk p50 0
+02:06:47   whole_warm|h5000             n= 200 p50     52.58 p99     80.54 ms  client 0.39  disk p50 0
