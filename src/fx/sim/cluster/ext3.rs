@@ -305,12 +305,22 @@ pub struct ProcLog {
     takes: u64,
     /// A restart's replay that failed, stopped at `hold_kept_records`.
     parked: Option<Parked>,
+    /// fix-hole-k: `LocalLog::kept_inc`, the incarnation the kept records were acknowledged for.
+    kept_inc: Option<u64>,
 }
 
 pub struct Parked {
     keep: Vec<Rec>,
     opened: bool,
     seen: Option<u64>,
+    inc: Option<u64>,
+}
+
+/// fix-hole-k: the mutation control (`MONGO_TEST_KEPT_INC_OFF=1` in the engine): the incarnation check of kept records off.
+pub static KEPT_INC_OFF: AtomicBool = AtomicBool::new(false);
+
+fn kept_inc_on(x3: &X3) -> bool {
+    !x3.old_kept && !KEPT_INC_OFF.load(SeqCst)
 }
 
 impl ProcLog {
@@ -348,6 +358,8 @@ pub struct X3 {
     owner: Arc<Mutex<Option<(usize, u64)>>>,
     /// The database was dropped or erased and not created again.
     absent: Arc<AtomicBool>,
+    /// A drop or erase failed after the name moved to a new incarnation: the database may or may not exist.
+    maybe_absent: Arc<AtomicBool>,
     pub found: Arc<Mutex<Vec<String>>>,
     counts: Arc<Mutex<HashMap<&'static str, u64>>>,
 }
@@ -365,6 +377,7 @@ impl X3 {
             // the database does not exist until a writer's create succeeds (the first opening can fail: a 503 on the
             // lease's incarnation read left the core's `created` true with nothing in the store, batch 43496082968)
             absent: Arc::new(AtomicBool::new(ext.flavor == 3 || ext.log)),
+            maybe_absent: Default::default(),
             found: Default::default(),
             counts: Default::default(),
         }
@@ -490,6 +503,8 @@ enum Outcome {
     Nothing,
     Applied(usize),
     Conflict,
+    /// fix-hole-k: the records' incarnation was dropped or erased since: never applied.
+    Moved,
 }
 
 /// Apply records after the stored marker durably, 256 per batch, each batch ending with its last record's marker.
@@ -598,11 +613,14 @@ async fn wake_apply(x3: &X3, life: u64, store: &Arc<dyn ObjectStore>, id: &str, 
 async fn open_writer(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<dyn ObjectStore>, id: &str, create: bool, g: &mut Option<Tenant>) -> anyhow::Result<String> {
     // the lease acquisition reads the name's incarnation and uses it from now on in this process
     let k = crate::lifecycle::load_incarnation(store, id).await?;
+    // a name a failed drop left in a new, empty incarnation is created again (the server finds it absent)
+    let create = create || (x3.maybe_absent.load(SeqCst) && !crate::lifecycle::db_exists(store, id).await?);
     // the server's opening is a reader until its first write upgrades it: the takeover's replay reads the stored writer
     // epoch before this process's writer moves it (`drop_stale` keeps the last writer's records)
     let mut t = if create { lc.create(id).await? } else { lc.wake(id).await? };
     x3.take(p, life);
     x3.absent.store(false, SeqCst);
+    x3.maybe_absent.store(false, SeqCst);
     let rep = match replay_on_wake(x3, life, store, id, &mut t).await {
         Ok(s) => s,
         Err(e) => {
@@ -982,7 +1000,8 @@ async fn upload(x3: &X3, life: u64, tl: &Arc<tokio::sync::Mutex<Option<Tenant>>>
 
 /// `replay_db`: open the database through the lease (refused while another process holds it) and apply the records
 /// after the stored marker. `retry`: a background retry of kept records.
-async fn replay_db(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<dyn ObjectStore>, id: &str, tl: &Arc<tokio::sync::Mutex<Option<Tenant>>>, mut recs: Vec<Rec>, retry: bool, seen: &mut Option<u64>) -> anyhow::Result<Outcome> {
+#[allow(clippy::too_many_arguments)]
+async fn replay_db(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<dyn ObjectStore>, id: &str, tl: &Arc<tokio::sync::Mutex<Option<Tenant>>>, mut recs: Vec<Rec>, retry: bool, inc: Option<u64>, seen: &mut Option<u64>) -> anyhow::Result<Outcome> {
     if !retry {
         if let Some(stored) = crate::lifecycle::stored_writer_epoch(store, id).await? {
             drop_stale(&mut recs, stored);
@@ -1004,6 +1023,14 @@ async fn replay_db(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Ar
     if retry && !x3.with(life, |x| x.pinned.is_some()) {
         return Ok(Outcome::Nothing);
     }
+    // fix-hole-k: into the incarnation the records were acknowledged for only (checked before the lease, so a moved name
+    // is never taken or created, and again under it)
+    let inc = inc.filter(|_| kept_inc_on(x3));
+    if let Some(k) = inc {
+        if crate::lifecycle::read_incarnation(store, id).await? != k {
+            return Ok(Outcome::Moved);
+        }
+    }
     if g.is_none() || !g.as_ref().unwrap().is_writer() || !x3.holds(life) {
         // `Entry::ensure_open`: the lease first
         if x3.other_holds(life) {
@@ -1013,6 +1040,11 @@ async fn replay_db(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Ar
             let _ = t.abandon().await;
         }
         open_writer(x3, p, life, lc, store, id, x3.is_absent(), &mut g).await?;
+    }
+    if let Some(k) = inc {
+        if crate::lifecycle::read_incarnation(store, id).await? != k {
+            return Ok(Outcome::Moved);
+        }
     }
     let t = g.as_mut().unwrap();
     let (n, _) = apply_after_marker(t, recs).await?;
@@ -1044,9 +1076,29 @@ async fn restart(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<
         x.read_pos = Some(max_pos);
     });
     let n_read = recs.len();
+    // fix-hole-k (`incarnations_of`, `recheck_after_incarnations`): the incarnation, then the log again; a drop record
+    // after the last record read, or that record gone, means nothing of them is to be applied
+    let mut inc = None;
+    if !recs.is_empty() && kept_inc_on(x3) {
+        let k = match crate::lifecycle::read_incarnation(store, id).await {
+            Ok(k) => k,
+            Err(e) => return format!("restart failed (the process does not start): incarnation: {}", short(&e)),
+        };
+        let again = match log.read() {
+            Ok(r) => r,
+            Err(e) => return format!("restart failed (the process does not start): {e}"),
+        };
+        let dropped = again.iter().any(|(pos, r)| r.drop && *pos > max_pos);
+        let gone = !again.iter().any(|(pos, _)| *pos == max_pos);
+        if dropped || gone {
+            recs.clear();
+            x3.count("restart-recheck-discarded");
+        }
+        inc = Some(k);
+    }
     if recs.is_empty() {
         let _ = x3.flush_done(life, max_pos);
-        return format!("restart: {n_read} records read");
+        return format!("restart: {n_read} records read{}", if n_read > 0 { " (dropped or confirmed since: discarded)" } else { "" });
     }
     if drop_stored(store, id, &mut recs).await {
         return match x3.flush_done(life, max_pos) {
@@ -1057,10 +1109,10 @@ async fn restart(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<
     let keep = recs.clone();
     let mut seen = None;
     let takes = x3.with(life, |x| x.takes);
-    let r = tokio::time::timeout(Duration::from_secs(20), replay_db(x3, p, life, lc, store, id, tl, recs, false, &mut seen)).await.unwrap_or_else(|_| Err(anyhow::anyhow!("no progress")));
+    let r = tokio::time::timeout(Duration::from_secs(20), replay_db(x3, p, life, lc, store, id, tl, recs, false, inc, &mut seen)).await.unwrap_or_else(|_| Err(anyhow::anyhow!("no progress")));
     let opened = x3.with(life, |x| x.takes) != takes;
     match r {
-        Ok(Outcome::Nothing) | Ok(Outcome::Applied(_)) => {
+        Ok(Outcome::Nothing) | Ok(Outcome::Applied(_)) | Ok(Outcome::Moved) => {
             let n = if let Ok(Outcome::Applied(n)) = r { n } else { 0 };
             match x3.flush_done(life, max_pos) {
                 Ok(()) => format!("restart: {n_read} records read, {n} applied; log told {max_pos}"),
@@ -1069,7 +1121,7 @@ async fn restart(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<
         }
         Ok(Outcome::Conflict) => format!("restart: {n_read} records read: conflict with a later writer, kept in the log, NOT applied"),
         Err(e) => {
-            x3.with(life, |x| x.parked = Some(Parked { keep, opened, seen }));
+            x3.with(life, |x| x.parked = Some(Parked { keep, opened, seen, inc }));
             x3.count("replay-refused");
             format!("restart: {n_read} records read; replay failed ({}); stopped at hold_kept_records (took the lease: {opened})", short(&e))
         }
@@ -1080,6 +1132,7 @@ async fn restart(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<
 /// replay never took the lease; copies written to the log with the base's rules or when it did).
 async fn kept(x3: &X3, life: u64) -> String {
     let Some(pk) = x3.with(life, |x| x.parked.take()) else { return "nothing parked".into() };
+    x3.with(life, |x| x.kept_inc = pk.inc);
     if !pk.opened && !x3.old_kept {
         let n = pk.keep.len();
         x3.with(life, |x| x.pinned = Some(pk.keep));
@@ -1113,13 +1166,18 @@ async fn retry(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<dy
     let r = if drop_stored(store, id, &mut recs).await {
         Ok(Outcome::Nothing)
     } else {
-        tokio::time::timeout(Duration::from_secs(20), replay_db(x3, p, life, lc, store, id, tl, recs, true, &mut seen)).await.unwrap_or_else(|_| Err(anyhow::anyhow!("no progress")))
+        let inc = x3.with(life, |x| x.kept_inc);
+        tokio::time::timeout(Duration::from_secs(20), replay_db(x3, p, life, lc, store, id, tl, recs, true, inc, &mut seen)).await.unwrap_or_else(|_| Err(anyhow::anyhow!("no progress")))
     };
     let opened = x3.with(life, |x| x.takes) != takes;
     let holder = x3.holds(life);
     let old = x3.old_kept;
+    let moved = matches!(r, Ok(Outcome::Moved));
+    if moved {
+        x3.count("retry-moved");
+    }
     match r {
-        Ok(Outcome::Applied(_)) | Ok(Outcome::Nothing) => {
+        Ok(Outcome::Applied(_)) | Ok(Outcome::Nothing) | Ok(Outcome::Moved) => {
             // fix-takeover-retry: only the holder confirms what it knows; another process at most what it read at its start
             let pos = x3.with(life, |x| {
                 x.uploaded = x.staged;
@@ -1132,7 +1190,8 @@ async fn retry(x3: &X3, p: usize, life: u64, lc: &Arc<Lifecycle>, store: &Arc<dy
             let told = x3.flush_done(life, pos);
             x3.with(life, |x| x.pinned = None);
             let which = if holder || old { "its committed position" } else { "the highest it read at its start" };
-            format!("retry: kept records stored (holder {holder}); log told {pos} ({which}) {:?}", told)
+            let what = if moved { "discarded (their incarnation was dropped or erased)" } else { "stored" };
+            format!("retry: kept records {what} (holder {holder}); log told {pos} ({which}) {:?}", told)
         }
         Ok(Outcome::Conflict) => {
             x3.with(life, |x| x.pinned = None);
@@ -1211,18 +1270,28 @@ async fn whole_db(x3: &X3, p: usize, life: u64, eid: u32, store: &Arc<dyn Object
             return format!("{what} failed: ownership lost before the objects went");
         }
     }
-    let from = crate::lifecycle::read_incarnation(store, id).await.unwrap_or(0);
-    let k = match crate::lifecycle::bump_incarnation(store, id).await {
-        Ok(k) => k,
-        Err(e) => {
-            x3.release(life);
-            return format!("{what} failed at the incarnation move: {}", short(&e));
-        }
-    };
     if erase && x3.log.is_some() {
-        let _ = x3.append_drop(life).await;
+        // fix-hole-k: as a drop, the log's drop record before the incarnation moves (`ctl/erase.rs`)
+        if let Err(e) = x3.append_drop(life).await {
+            x3.release(life);
+            return format!("{what} failed: the log's drop record: {e}");
+        }
         x3.with(life, |x| x.pinned = None);
     }
+    let from = crate::lifecycle::read_incarnation(store, id).await.unwrap_or(0);
+    // from here on a failure leaves the outcome unknown to the client (the name may already be in a new, empty
+    // incarnation): the model gets the drop as a write of unknown outcome, and the database may be absent
+    let unknown = |why: String| {
+        x3.release(life);
+        x3.maybe_absent.store(true, SeqCst);
+        let kv: Vec<(Vec<u8>, Option<Vec<u8>>)> = (0..CUSTOMERS).flat_map(|c| (0..PER_CUSTOMER).map(move |i| (ckey(c, i), None))).collect();
+        model.lock().unwrap().issue(eid, p, &kv).store(FAILED, SeqCst);
+        why
+    };
+    let k = match crate::lifecycle::bump_incarnation(store, id).await {
+        Ok(k) => k,
+        Err(e) => return unknown(format!("{what} failed at the incarnation move (outcome unknown): {}", short(&e))),
+    };
     // every object of the name
     let prefix = object_store::path::Path::from(format!("tenants/{id}"));
     let mut deleted = 0;
@@ -1230,10 +1299,7 @@ async fn whole_db(x3: &X3, p: usize, life: u64, eid: u32, store: &Arc<dyn Object
         use futures::TryStreamExt;
         let objs: Vec<object_store::path::Path> = match store.list(Some(&prefix)).map_ok(|m| m.location).try_collect().await {
             Ok(v) => v,
-            Err(e) => {
-                x3.release(life);
-                return format!("{what} failed while listing: {e} ({deleted} objects deleted; the client retries)");
-            }
+            Err(e) => return unknown(format!("{what} failed while listing (outcome unknown): {e} ({deleted} objects deleted; the client retries)")),
         };
         if objs.is_empty() {
             break;
@@ -1246,11 +1312,23 @@ async fn whole_db(x3: &X3, p: usize, life: u64, eid: u32, store: &Arc<dyn Object
     }
     x3.release(life);
     x3.absent.store(true, SeqCst);
+    x3.maybe_absent.store(false, SeqCst);
     x3.count(if erase { "erase-db" } else { "drop-db" });
     // the model: every key deleted, acknowledged now (a write in flight across the drop may be ordered before it)
     let kv: Vec<(Vec<u8>, Option<Vec<u8>>)> = (0..CUSTOMERS).flat_map(|c| (0..PER_CUSTOMER).map(move |i| (ckey(c, i), None))).collect();
     model.lock().unwrap().issue(eid, p, &kv).store(ACKED, SeqCst);
     format!("{what} done: incarnation {from} -> {k}, {deleted} objects deleted")
+}
+
+/// Before the oracle: a database a failed drop may have removed counts as absent when no fresh process sees it.
+pub(super) async fn settle_absent(w: &World) {
+    if w.x3.maybe_absent.load(SeqCst) && !w.x3.is_absent() {
+        let fresh = w.net.proc_store(5_000_000 + w.next_life);
+        if let Ok(false) = crate::lifecycle::db_exists(&fresh, &w.id).await {
+            w.x3.absent.store(true, SeqCst);
+            w.note("oracle: a failed drop left the name empty: the database counts as dropped".into());
+        }
+    }
 }
 
 /// With the log: a fresh process takes the database over before the oracle (its takeover reads the log back, as the

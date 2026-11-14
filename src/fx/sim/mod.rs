@@ -1111,6 +1111,107 @@ mod tests {
         assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
     }
 
+    /// Hole K (found by the gen-3 batch, seed 302206 and others; CI run 43496082968): a process's kept records re-create a
+    /// dropped database. B (slot 0) acknowledges a write through the log. A (slot 2) restarts, reads it back, its replay is
+    /// refused (B holds the lease) and it keeps the record in memory (`pinned`). C (slot 1) takes the database over (its
+    /// takeover applies the record) and drops it: the log gets a drop record and C forgets its own kept records
+    /// (`forget_pinned`), but A's stay. A's background retry (`spawn_retry` -> `replay_db`) finds no stored marker for the
+    /// name, takes the lease of the absent name, and `apply_durable` creates the database again with the dropped rows.
+    /// A fresh process reads rows acknowledged before the drop. Fixed by fix-hole-k: kept records remember the
+    /// incarnation they were acknowledged for and are applied into that one only.
+    #[test]
+    fn sim_hole_k_kept_records_recreate_a_dropped_database() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        let _l = super::cluster::ext3::setup_log_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let ev = vec![
+            Open { p: 0, writer: true },
+            // B's uploads are slow: its write is in the log only
+            Hold { p: 0, class: Class::Wal, op: Some(NOp::Put), skip: 0, land: true, all: true, rid: 1 },
+            Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (0, i, false)).collect() },
+            Restart { p: 2 },
+            Kept { p: 2 },
+            Release { rid: 1 },
+            Open { p: 1, writer: true },
+            DropDb { p: 1 },
+            LogRetry { p: 2 },
+        ];
+        let ext = super::cluster::Ext { flavor: 3, log: true, old_kept: false, strict_versions: false };
+        let (f, v) = run_story3(&rt, "hole K: kept records re-create a dropped database", ext, ev);
+        assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
+    }
+
+    fn hole_k_events() -> Vec<Ev> {
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        vec![
+            Open { p: 0, writer: true },
+            Hold { p: 0, class: Class::Wal, op: Some(NOp::Put), skip: 0, land: true, all: true, rid: 1 },
+            Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (0, i, false)).collect() },
+            Restart { p: 2 },
+            Kept { p: 2 },
+            Release { rid: 1 },
+            Open { p: 1, writer: true },
+            DropDb { p: 1 },
+            LogRetry { p: 2 },
+        ]
+    }
+
+    /// fix-hole-k, mutation control: with the incarnation check off (`KEPT_INC_OFF`, the engine's
+    /// `MONGO_TEST_KEPT_INC_OFF=1`), the story of hole K fails again (the dropped rows come back).
+    #[test]
+    fn sim_hole_k_control_check_off_recreates() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        let _l = super::cluster::ext3::setup_log_world();
+        super::cluster::ext3::KEPT_INC_OFF.store(true, std::sync::atomic::Ordering::SeqCst);
+        let ext = super::cluster::Ext { flavor: 3, log: true, old_kept: false, strict_versions: false };
+        let (f, _v) = run_story3(&rt, "hole K control: incarnation check off", ext, hole_k_events());
+        super::cluster::ext3::KEPT_INC_OFF.store(false, std::sync::atomic::Ordering::SeqCst);
+        assert!(f > 0, "the control did not see hole K (the check off must let the kept records re-create the database)");
+    }
+
+    /// fix-hole-k, the opposite risk: kept records acknowledged for the CURRENT incarnation are applied, never discarded.
+    /// B (slot 0) creates the database, drops it (incarnation 0 -> 1) and creates it again; then its uploads stop and it
+    /// acknowledges rows through the log only. A (slot 2) restarts, reads them back (after the drop record), its replay is
+    /// refused (B holds the lease) and it keeps them for incarnation 1. B dies before any upload; A's retry takes the
+    /// database over and must apply them: every acknowledged row of incarnation 1 is read by a fresh process.
+    #[test]
+    fn sim_hole_k_kept_records_of_the_current_incarnation_are_applied() {
+        let rt = runtime();
+        let _s = rt.block_on(crate::fx::tests::SERIAL.lock());
+        let _w = setup_world();
+        let _l = super::cluster::ext3::setup_log_world();
+        use super::net::{Class, Op as NOp};
+        use Ev::*;
+        let ev = vec![
+            Open { p: 0, writer: true },
+            Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (0, i, false)).collect() },
+            Publish { p: 0 },
+            Upload { p: 0 },
+            DropDb { p: 0 },
+            Open { p: 0, writer: true },
+            Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (1, i, false)).collect() },
+            Publish { p: 0 },
+            Upload { p: 0 },
+            Hold { p: 0, class: Class::Wal, op: Some(NOp::Put), skip: 0, land: false, all: true, rid: 1 },
+            Write { p: 0, ops: (0..PER_CUSTOMER).map(|i| (2, i, false)).collect() },
+            Restart { p: 2 },
+            Kept { p: 2 },
+            Kill { p: 0 },
+            Release { rid: 1 },
+            Sleep { ms: 300 },
+            LogRetry { p: 2 },
+        ];
+        let ext = super::cluster::Ext { flavor: 3, log: true, old_kept: false, strict_versions: false };
+        let (f, v) = run_story3(&rt, "hole K, opposite: kept records of the current incarnation are applied", ext, ev);
+        assert_eq!(f, 0, "{:?}", v.iter().take(6).collect::<Vec<_>>());
+    }
+
     /// Replay one seed (`SIM_SEED`), optionally only the events of `SIM_KEEP`, and print its trace.
     #[test]
     fn sim_replay() {
