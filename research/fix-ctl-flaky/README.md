@@ -16,4 +16,7 @@ broken is "a retryable write is applied once" (`error.rs::outcome_unknown`, `ret
 
 ## test_77* (sealed2-derive), test_51* (off)
 
-First runs: test_77 13/13, test_51 16/16. 5x repeats in progress; results are added here.
+Local runs: test_77 (both files) 13/13 once; test_51 (all four files) 16/16 in 3 of 3 runs. The CI's failure messages
+("state ran ahead", "window not reached") were not seen locally, so neither is classified yet and no test was changed.
+The local repeats were stopped at the coordinator's request (02:17 UTC); the repeats were sent to CI on night-head 36c6a3e:
+test_77 x10 sealed2-derive, test_51 x10 off, the test_52r retry test x5 in both modes.
