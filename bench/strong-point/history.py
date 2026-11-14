@@ -717,6 +717,7 @@ def run(a) -> int:
     uri = lines.uri_of(line)
     os.environ.setdefault("NO_PROXY", "*")
     sizes = [int(x) for x in a.sizes.split(",")]
+    a.measure_sizes = None if a.measure_sizes is None else [int(x) for x in a.measure_sizes.split(",") if x.strip()]
     res_path = os.path.join(out, "result.json")
     res = json.load(open(res_path)) if os.path.exists(res_path) and a.resume else {"line": line, "sizes": {}}
     if not a.resume:
@@ -755,6 +756,9 @@ def run(a) -> int:
                     if q.get("failed") != 0:
                         log(f"the 3-zone log refused batches during the load (S3-WAL fallback acknowledged them): {q}")
                         return 5
+            if a.measure_sizes is not None and size not in a.measure_sizes:
+                log(f"{line}: size {size} loaded, not measured (--measure-sizes)")
+                continue
             if "settle" not in r:
                 r["settle"] = settle(line, uri)
                 r["stored"] = stored_sizes(line, uri)
@@ -836,6 +840,8 @@ def main():
     r.add_argument("--line", required=True, choices=sorted(lines.LINES))
     r.add_argument("--out", required=True)
     r.add_argument("--sizes", default="1,2,3")
+    r.add_argument("--measure-sizes", default=None, help="sizes to settle and measure (default: every size of --sizes); "
+                   "the others are only loaded (size 2 alone: --sizes 1,2 --measure-sizes 2)")
     r.add_argument("--mem", default="512m")
     r.add_argument("--server-flags", default="")
     r.add_argument("--workers", type=int, default=3)
